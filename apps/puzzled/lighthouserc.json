@@ -1,0 +1,39 @@
+{
+	"ci": {
+		"collect": {
+			"numberOfRuns": 3,
+			"startServerCommand": "bun run start",
+			"startServerReadyPattern": "Ready",
+			"startServerReadyTimeout": 120000,
+			"url": [
+				"http://localhost:3000/",
+				"http://localhost:3000/pricing",
+				"http://localhost:3000/login",
+				"http://localhost:3000/signup"
+			],
+			"settings": {
+				"preset": "desktop",
+				"throttling": {
+					"cpuSlowdownMultiplier": 1
+				}
+			}
+		},
+		"assert": {
+			"preset": "lighthouse:recommended",
+			"assertions": {
+				"categories:performance": ["error", { "minScore": 0.9 }],
+				"categories:accessibility": ["error", { "minScore": 0.9 }],
+				"categories:best-practices": ["error", { "minScore": 0.9 }],
+				"categories:seo": ["warn", { "minScore": 0.85 }],
+				"first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+				"largest-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+				"cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+				"total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+				"speed-index": ["warn", { "maxNumericValue": 3000 }]
+			}
+		},
+		"upload": {
+			"target": "temporary-public-storage"
+		}
+	}
+}

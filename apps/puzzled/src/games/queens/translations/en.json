@@ -1,0 +1,17 @@
+{
+	"name": "Queens",
+	"tagline": "Logic puzzle • Place queens",
+	"highlight": "N-Queens puzzle",
+	"description": "Place queens so none can attack each other",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Place exactly one queen in each row",
+		"rule2": "Place exactly one queen in each column",
+		"rule3": "Place exactly one queen in each colored region",
+		"rule4": "Queens cannot touch each other (including diagonally)"
+	},
+	"startGame": "Start Game",
+	"hasConflicts": "Some queens are in conflict",
+	"complete": "Puzzle Complete!"
+}

@@ -1,0 +1,21 @@
+{
+	"name": "Nonogram",
+	"tagline": "10×10 grid • Pixel art",
+	"highlight": "Picture puzzle",
+	"description": "Fill cells to reveal a hidden picture",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Use number clues to fill in cells",
+		"rule2": "Numbers show consecutive filled cells",
+		"rule3": "Complete the grid to reveal the picture"
+	},
+	"startGame": "Start Game",
+	"fillMode": "Fill",
+	"markMode": "Mark",
+	"errors": "{count} errors",
+	"complete": "Picture Complete!",
+	"messages": {
+		"incorrect": "That cell should not be filled"
+	}
+}

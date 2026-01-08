@@ -1,0 +1,24 @@
+{
+	"name": "Word Ladder",
+	"tagline": "Step by step • Word chain",
+	"highlight": "Word chain",
+	"description": "Transform one word into another, one letter at a time",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Change one letter at a time",
+		"rule2": "Each step must form a valid word",
+		"rule3": "Reach the target word in as few steps as possible"
+	},
+	"startGame": "Start Game",
+	"enterWord": "Enter a word...",
+	"submit": "Go",
+	"undo": "Undo",
+	"complete": "You made it!",
+	"messages": {
+		"notInList": "Not a valid word",
+		"wrongLength": "Word must be the same length",
+		"notOneChange": "Change exactly one letter",
+		"alreadyUsed": "Already used this word"
+	}
+}

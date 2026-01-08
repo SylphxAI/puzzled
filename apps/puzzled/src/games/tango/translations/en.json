@@ -1,0 +1,16 @@
+{
+	"name": "Tango",
+	"tagline": "Balance puzzle • ☀️ & 🌙",
+	"highlight": "Binary puzzle",
+	"description": "Balance suns and moons in every row and column",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Each row and column must have equal suns and moons",
+		"rule2": "No more than 2 of the same symbol in a row",
+		"rule3": "All rows must be unique, all columns must be unique"
+	},
+	"startGame": "Start Game",
+	"hasConflicts": "Some cells violate the rules",
+	"complete": "Puzzle Complete!"
+}

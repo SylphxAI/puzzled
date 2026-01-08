@@ -1,0 +1,17 @@
+{
+	"name": "Killer Sudoku",
+	"tagline": "Sudoku • Cage sums",
+	"highlight": "Sum puzzle",
+	"description": "Sudoku with cage sum constraints",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Fill each row, column, and 3×3 box with 1-9",
+		"rule2": "Numbers in each cage must sum to the cage total",
+		"rule3": "No duplicate numbers within any cage"
+	},
+	"startGame": "Start Game",
+	"complete": "Puzzle Complete!",
+	"notes": "Notes",
+	"notesMode": "Notes Mode"
+}

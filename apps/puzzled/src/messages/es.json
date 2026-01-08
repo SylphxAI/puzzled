@@ -1,0 +1,1136 @@
+{
+  "common": {
+    "appName": "Puzzled",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "errorDescription": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "play": "Play",
+    "share": "Share",
+    "dismiss": "Dismiss",
+    "copied": "¡Copiado al portapapeles!",
+    "settings": "Configuración",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "signUp": "Registrarse",
+    "changeLanguage": "Cambiar idioma",
+    "selectLanguage": "Seleccionar idioma",
+    "languagesAvailable": "idiomas disponibles",
+    "languageChangeNote": "Los cambios se aplicarán inmediatamente",
+    "confirmLanguageChange": "¿Cambiar idioma?",
+    "confirmLanguageChangeDescription": "La interfaz cambiará a {language}. Puedes cambiarlo en cualquier momento en ajustes.",
+    "switchLanguage": "Cambiar idioma",
+    "optionsAvailable": "opciones disponibles",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "selectDifficulty": "Select Difficulty",
+      "chooseDifficulty": "Choose your challenge level",
+      "playOtherDifficulties": "Play Other Difficulties",
+      "easyDescription": "Perfect for warming up",
+      "mediumDescription": "A balanced challenge",
+      "hardDescription": "Test your limits"
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "games": "Games",
+    "stats": "Stats",
+    "leaderboard": "Leaderboard",
+    "pricing": "Pricing",
+    "profile": "Profile",
+    "main": "Navegación principal"
+  },
+  "home": {
+    "metaTitle": "Juegos Mentales Diarios - Adivina Palabra, Grupos & Quiz",
+    "metaDescription": "Juega puzzles diarios gratis: adivina palabras, agrupa palabras y trivia. Mantén tu racha, compite en clasificaciones y desafía tu mente cada día.",
+    "welcome": "Welcome to Puzzled",
+    "tagline": "Daily puzzles to challenge your mind",
+    "todaysPuzzles": "Today's Puzzles",
+    "allGames": "All Games",
+    "yourStats": "Your Stats",
+    "streak": "Current Streak",
+    "playersToday": "players today",
+    "playersCompletedToday": "players completed today"
+  },
+  "games": {
+    "wordGuess": {
+      "name": "Adivina Palabra",
+      "tagline": "5 letters • 6 tries",
+      "description": "Guess the 5-letter word in 6 tries",
+      "howToPlay": "How to Play",
+      "rules": {
+        "title": "How to Play",
+        "rule1": "Guess the word in 6 tries",
+        "rule2": "Each guess must be a valid 5-letter word",
+        "rule3": "The color of the tiles will change to show how close your guess was",
+        "correct": "Green means the letter is correct",
+        "present": "Yellow means the letter is in the word but wrong spot",
+        "absent": "Gray means the letter is not in the word"
+      },
+      "keyboard": {
+        "enter": "Enter",
+        "delete": "Delete"
+      },
+      "messages": {
+        "notEnoughLetters": "Not enough letters",
+        "notInWordList": "Not in word list",
+        "correct": "Excellent!",
+        "gameOver": "The word was {word}"
+      }
+    },
+    "wordGroups": {
+      "name": "Grupos de Palabras",
+      "tagline": "Find 4 groups of 4",
+      "description": "Group 16 words into 4 categories",
+      "howToPlay": "How to Play",
+      "rules": {
+        "title": "How to Play",
+        "rule1": "Find groups of 4 items that share something in common",
+        "rule2": "Select 4 items and tap Submit to check",
+        "rule3": "You have 4 mistakes allowed"
+      },
+      "submit": "Submit",
+      "shuffle": "Shuffle",
+      "deselect": "Deselect All",
+      "mistakes": "Mistakes remaining",
+      "messages": {
+        "correct": "Correct!",
+        "oneAway": "One away...",
+        "incorrect": "Incorrect",
+        "gameOver": "Better luck next time!"
+      },
+      "difficulty": {
+        "0": "Easy",
+        "1": "Medium",
+        "2": "Hard",
+        "3": "Tricky"
+      }
+    }
+  },
+  "stats": {
+    "title": "Statistics",
+    "gamesPlayed": "Games Played",
+    "winRate": "Win Rate",
+    "currentStreak": "Current Streak",
+    "maxStreak": "Max Streak",
+    "guessDistribution": "Guess Distribution",
+    "avgScore": "Avg Score",
+    "best": "Best",
+    "accuracy": "Accuracy",
+    "signInPrompt": "Sign in to save your progress and compete on leaderboards!"
+  },
+  "leaderboard": {
+    "streak": "Streak",
+    "score": "Score",
+    "wins": "Wins",
+    "wantToCompete": "Want to compete?",
+    "premiumPrompt": "Sign in and upgrade to Premium to appear on leaderboards!",
+    "period": {
+      "today": "Today",
+      "week": "This Week",
+      "all": "All Time"
+    },
+    "noData": "No players yet. Be the first!"
+  },
+  "subscription": {
+    "free": "Free",
+    "premium": "Premium",
+    "annual": "Annual",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "subscribe": "Subscribe",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade",
+    "features": {
+      "freeGame": "1 free game daily",
+      "allGames": "All games unlimited",
+      "noAds": "No ads",
+      "stats": "Full statistics",
+      "leaderboard": "Leaderboard access",
+      "push": "Push notifications",
+      "earlyAccess": "Early access to new games"
+    }
+  },
+  "auth": {
+    "signInTitle": "Sign in to Puzzled",
+    "signInDescription": "Sign in to track your progress, compete on leaderboards, and sync across devices.",
+    "signUpTitle": "Create your account",
+    "signUpDescription": "Create a free account to save your stats and compete with others.",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset your password",
+    "resetInstructions": "To reset your password, please contact our support team:",
+    "sendResetLink": "Send Reset Link",
+    "checkEmail": "Check your email",
+    "resetEmailSent": "We've sent a password reset link to your email address.",
+    "backToLogin": "Back to login",
+    "resetError": "Failed to send reset email. Please try again.",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "orContinueWith": "Or continue with",
+    "google": "Google",
+    "apple": "Apple",
+    "checkYourEmail": "Check your email",
+    "verificationSent": "We've sent a verification link to your email. Please click the link to verify your account.",
+    "verifyingEmail": "Verifying your email...",
+    "emailVerified": "Email verified!",
+    "redirecting": "Redirecting you to the app...",
+    "verificationFailed": "Verification failed",
+    "verificationExpired": "This verification link has expired. Please request a new one.",
+    "resendEmail": "Resend verification email",
+    "emailSent": "Email sent!",
+    "resendFailed": "Failed to resend email. Please try again.",
+    "resetPasswordTitle": "Restablecer tu contraseña",
+    "resetPasswordDescription": "Ingresa tu nueva contraseña a continuación.",
+    "newPassword": "Nueva contraseña",
+    "passwordPlaceholder": "Ingresa tu nueva contraseña",
+    "confirmPasswordPlaceholder": "Confirma tu nueva contraseña",
+    "resetPassword": "Restablecer contraseña",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+    "invalidResetLink": "Enlace de restablecimiento inválido o caducado",
+    "resetPasswordError": "Error al restablecer la contraseña. Por favor, inténtalo de nuevo.",
+    "passwordResetSuccess": "Contraseña restablecida exitosamente",
+    "passwordResetSuccessDescription": "Tu contraseña ha sido actualizada. Redirigiendo al inicio de sesión...",
+    "passwordStrength": {
+      "requirementsLabel": "Password requirements",
+      "minLength": "Al menos 8 caracteres",
+      "uppercase": "Una letra mayúscula",
+      "lowercase": "Una letra minúscula",
+      "number": "Un número",
+      "special": "Un carácter especial (!@#$%^&*)",
+      "veryWeak": "Muy débil",
+      "weak": "Débil",
+      "fair": "Regular",
+      "strong": "Fuerte",
+      "veryStrong": "Very strong"
+    },
+    "socialLoginFailed": "{provider} login failed"
+  },
+  "share": {
+    "title": "Share your result",
+    "copied": "Copied to clipboard!",
+    "text": "Puzzled - {game}\n{result}\n\nPlay at puzzled.gg",
+    "share": "Share",
+    "copy": "Copy"
+  },
+  "legal": {
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last Updated",
+      "sections": {
+        "intro": {
+          "title": "Introduction",
+          "content": "Puzzled (\"we\", \"us\", or \"our\") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our services."
+        },
+        "dataCollection": {
+          "title": "Data We Collect",
+          "content": "We collect the following types of information:",
+          "items": {
+            "account": "Account information: name, email address, and profile picture",
+            "game": "Game data: scores, statistics, streaks, and game history",
+            "payment": "Payment information: processed securely through Stripe",
+            "technical": "Technical data: IP address, browser type, and device information"
+          }
+        },
+        "dataUse": {
+          "title": "How We Use Your Data",
+          "content": "We use your data to:",
+          "items": {
+            "service": "Provide and maintain our gaming services",
+            "improve": "Improve and personalize your experience",
+            "communicate": "Send important updates and notifications",
+            "legal": "Comply with legal obligations"
+          }
+        },
+        "thirdParty": {
+          "title": "Third-Party Services",
+          "content": "We work with trusted third-party services:",
+          "stripe": "Payment processing",
+          "google": "Authentication",
+          "resend": "Email delivery"
+        },
+        "cookies": {
+          "title": "Cookies",
+          "content": "We use essential cookies to maintain your session and preferences. By using our service, you consent to our use of cookies."
+        },
+        "rights": {
+          "title": "Your Rights",
+          "content": "You have the right to:",
+          "items": {
+            "access": "Access your personal data",
+            "correct": "Correct inaccurate data",
+            "delete": "Request deletion of your data",
+            "export": "Export your data"
+          }
+        },
+        "contact": {
+          "title": "Contact Us",
+          "content": "For privacy-related inquiries, contact us at:"
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last Updated",
+      "sections": {
+        "acceptance": {
+          "title": "Acceptance of Terms",
+          "content": "By accessing or using Puzzled, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services."
+        },
+        "service": {
+          "title": "Our Service",
+          "content": "Puzzled provides daily puzzle games and challenges. We reserve the right to modify, suspend, or discontinue any part of our service at any time."
+        },
+        "accounts": {
+          "title": "User Accounts",
+          "content": "When creating an account, you agree to:",
+          "items": {
+            "accurate": "Provide accurate and complete information",
+            "secure": "Keep your login credentials secure",
+            "responsible": "Be responsible for all activity under your account"
+          }
+        },
+        "subscription": {
+          "title": "Subscriptions & Payments",
+          "content": "Premium subscriptions are billed according to your chosen plan:",
+          "items": {
+            "billing": "Subscriptions are billed monthly or annually",
+            "cancel": "You may cancel at any time; access continues until the end of the billing period",
+            "refund": "Refunds are provided at our discretion within 7 days of purchase"
+          }
+        },
+        "conduct": {
+          "title": "User Conduct",
+          "content": "You agree to:",
+          "items": {
+            "legal": "Use the service only for lawful purposes",
+            "respect": "Respect other users and our community",
+            "noCheat": "Not use cheats, exploits, or automated tools"
+          }
+        },
+        "ip": {
+          "title": "Intellectual Property",
+          "content": "All games, content, and materials on Puzzled are our property or licensed to us. You may not copy, modify, or distribute any content without permission."
+        },
+        "disclaimer": {
+          "title": "Disclaimer",
+          "content": "Our service is provided \"as is\" without warranties of any kind. We do not guarantee uninterrupted or error-free service."
+        },
+        "liability": {
+          "title": "Limitation of Liability",
+          "content": "To the maximum extent permitted by law, Puzzled shall not be liable for any indirect, incidental, or consequential damages arising from your use of our service."
+        },
+        "changes": {
+          "title": "Changes to Terms",
+          "content": "We may update these terms from time to time. Continued use of our service after changes constitutes acceptance of the new terms."
+        },
+        "contact": {
+          "title": "Contact",
+          "content": "For questions about these terms, contact us at:"
+        }
+      }
+    }
+  },
+  "consent": {
+    "message": "We use essential cookies to ensure our website works properly.",
+    "details": "These cookies help maintain your session and preferences.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "learnMore": "Learn more"
+  },
+  "footer": {
+    "copyright": "© {year} Puzzled. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact"
+  },
+  "pwa": {
+    "installTitle": "Add to Home Screen",
+    "installDescription": "Install Puzzled for the best experience with offline play and quick access.",
+    "installButton": "Install App",
+    "installInstructionsIOS": "Add this app to your home screen for the best experience.",
+    "iosTap": "Tap",
+    "iosThen": "then",
+    "iosAddHome": "Add to Home Screen"
+  },
+  "gameResult": {
+    "congratulations": "Congratulations!",
+    "gameOver": "Game Over",
+    "theWordWas": "The word was {word}",
+    "attempts": "Attempts",
+    "mistakes": "Mistakes",
+    "score": "Score",
+    "correct": "Correct",
+    "time": "Time",
+    "status": "Status",
+    "won": "Won",
+    "lost": "Failed",
+    "playAgain": "Play Again",
+    "moreGames": "More Games",
+    "comeBackTomorrow": "Come back tomorrow to continue your streak!",
+    "srWonWithAttempts": "¡Felicitaciones! ¡Ganaste en {attempts, plural, one {# intento} other {# intentos}}!",
+    "srWonWithScore": "¡Felicitaciones! ¡Obtuviste {score} puntos!",
+    "srLostWithSolution": "Fin del juego. La respuesta era {word}."
+  },
+  "streak": {
+    "keepStreak": "Keep your streak going!",
+    "streakAtRisk": "Streak at risk!",
+    "legendaryAtRisk": "Legendary streak at risk!",
+    "playToMaintain": "Play today to keep your {streak}-day streak alive",
+    "playNow": "Play Now",
+    "currentStreak": "Current Streak",
+    "bestStreak": "Best Streak",
+    "days": "days",
+    "daysToGo": "days to go",
+    "nextMilestone": "Next milestone",
+    "freezes": "Freezes",
+    "useFreeze": "Use Freeze",
+    "playToday": "Play today",
+    "dismiss": "Dismiss",
+    "emergency": "EMERGENCY! {time} to save your {streak}-day streak!",
+    "emergencyTitle": "EMERGENCY!",
+    "critical": "Your {streak}-day streak expires in {time}!",
+    "criticalTitle": "Streak Critical!",
+    "elevated": "Don't lose your {streak}-day streak! {time} remaining"
+  },
+  "calendar": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "won": "Won",
+    "played": "Played",
+    "missed": "Missed"
+  },
+  "achievements": {
+    "title": "Achievements",
+    "unlocked": "Achievement Unlocked!",
+    "locked": "Locked",
+    "nextUp": "Next Up",
+    "progress": "Progress",
+    "shareAchievement": "Share Achievement"
+  },
+  "daily": {
+    "nextPuzzle": "Next puzzle in",
+    "hours": "hours",
+    "minutes": "mins",
+    "seconds": "secs",
+    "todaysProgress": "Today's Progress",
+    "completed": "completed",
+    "allCompleteMessage": "Amazing! You've completed all games today!",
+    "puzzleNumber": "Puzzle #{number}",
+    "superStreak": "Super Streak",
+    "superStreakDesc": "Complete all games daily",
+    "alreadyCompleted": "Already Completed!",
+    "youSolvedTodays": "You solved today's {game}",
+    "youTriedTodays": "You already tried today's {game}",
+    "comeBackTomorrow": "A new puzzle unlocks at midnight UTC",
+    "wantMore": "Want to keep playing?",
+    "upgrade": "Upgrade",
+    "backToGames": "Back to all games"
+  },
+  "modes": {
+    "daily": "Daily",
+    "archive": "Archive",
+    "dailyDesc": "Today's puzzle - one chance to play",
+    "archiveDesc": "Play past puzzles",
+    "premiumRequired": "Premium required",
+    "upgrade": "Upgrade"
+  },
+  "premium": {
+    "archiveTitle": "Puzzle Archive",
+    "archiveDesc": "Play puzzles you missed or want to replay",
+    "archiveBenefit1": "Access past daily puzzles",
+    "archiveBenefit2": "Complete your collection",
+    "archiveBenefit3": "Challenge yourself with classics",
+    "streakFreezeTitle": "Streak Freeze",
+    "streakFreezeDesc": "Protect your streak when life gets busy",
+    "streakFreezeBenefit1": "Save your streak on missed days",
+    "streakFreezeBenefit2": "3-6 freezes per month",
+    "streakFreezeBenefit3": "Never lose progress again",
+    "unlockWithPremium": "Unlock with Premium",
+    "unlockPremiumPrice": "Unlock with Premium - $4.99/mo",
+    "notNow": "Not now"
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Unlock puzzle archive, and streak protection",
+    "valueProp1Title": "Streak Freeze",
+    "valueProp1Desc": "Protect your streak",
+    "valueProp2Title": "Puzzle Archive",
+    "valueProp2Desc": "Play past puzzles",
+    "startFreeTrial": "Get Started",
+    "getPremium": "Get Premium",
+    "getAnnual": "Get Annual",
+    "popular": "POPULAR",
+    "bestValue": "BEST VALUE",
+    "savePercent": "Save 33%",
+    "trialDays": "{days} días de prueba gratis",
+    "monthlyEquivalent": "{amount}/mes facturado anualmente",
+    "upgradeNow": "Actualizar ahora",
+    "comparisonTitle": "Compare Plans",
+    "features": "Features",
+    "comparisonFooter": "Start with the plan that fits you best",
+    "feature": {
+      "dailyPuzzles": "1 daily puzzle per game",
+      "allDailyPuzzles": "All daily puzzles",
+      "basicStats": "Basic statistics",
+      "fullStats": "Advanced statistics",
+      "puzzleArchive": "Full puzzle archive",
+      "streakFreeze": "3 streak freezes/month",
+      "streakFreeze6": "6 streak freezes/month",
+      "leaderboards": "Leaderboard access",
+      "noAds": "Ad-free experience",
+      "earlyAccess": "Early access to new games"
+    },
+    "streakProtectionTitle": "Never Lose Your Streak",
+    "streakProtectionDesc": "Premium includes streak freezes each month. Miss a day? Use a freeze to keep your streak alive.",
+    "learnAboutFreezes": "Learn More",
+    "questionsTitle": "Have Questions?",
+    "questionsDesc": "Contact us at support@puzzled.gg"
+  },
+  "trial": {
+    "daysLeft": "{days} días restantes de prueba",
+    "lastDay": "Último día de prueba",
+    "trialBannerDesc": "Disfruta todas las funciones Premium gratis",
+    "subscribe": "Suscribirse ahora",
+    "trialEndingSoon": "¡La prueba termina pronto!",
+    "lastDayTitle": "¡Último día de prueba!",
+    "trialEndingDesc": "Tu prueba termina en {days} días",
+    "lastDayDesc": "Tu prueba termina mañana. Suscríbete para seguir disfrutando de las funciones Premium.",
+    "keepAccessTo": "Mantén acceso a:",
+    "allGamesUnlimited": "Todos los juegos ilimitados",
+    "puzzleArchive": "Archivo completo de puzzles",
+    "streakProtection": "Protección de racha",
+    "afterTrial": "Después de la prueba",
+    "subscribeToContinue": "Suscribirse para continuar",
+    "remindLater": "Recordar más tarde"
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Puzzled!",
+    "welcomeSubtitle": "Daily puzzles to challenge your mind and compete with friends",
+    "dailyPuzzle": "Daily Puzzles",
+    "dailyPuzzleDesc": "New challenges every day at midnight UTC",
+    "buildStreak": "Build Your Streak",
+    "buildStreakDesc": "Play daily to build an unstoppable streak",
+    "compete": "Compete & Share",
+    "competeDesc": "Compare with friends and climb leaderboards",
+    "playNow": "Play Today's Puzzle",
+    "noAccountNeeded": "No account needed to start playing",
+    "niceWork": "Nice work!",
+    "signupPromptDesc": "Create a free account to save your progress",
+    "saveStreak": "Keep your streak safe",
+    "leaderboards": "Compete on leaderboards",
+    "trackStats": "Track your statistics",
+    "keepStreak": "Keep your {days}-day streak!",
+    "createFreeAccount": "Create Free Account",
+    "maybeLater": "Maybe later",
+    "signupBannerTitle": "Save your progress!",
+    "signupBannerDesc": "Create a free account to keep your streak",
+    "signupCardTitle": "Don't lose your progress",
+    "signupCardDesc": "Sign up to save your streak and stats",
+    "dayStreak": "Day Streak",
+    "streakMilestoneDesc": "You're on fire! Keep it going",
+    "protectStreak": "Protect your streak with Premium:",
+    "puzzleArchive": "Play past puzzles",
+    "streakFreeze": "Streak freeze protection",
+    "leaderboardAccess": "Full leaderboard access",
+    "tryPremiumFree": "Try Premium Free",
+    "continueFree": "Continue with Free",
+    "upgradeToPremium": "Upgrade to Premium",
+    "premiumCardDesc": "Unlock all features and protect your streak",
+    "goPremium": "Go Premium",
+    "premiumModalDesc": "Unlock the full Puzzled experience",
+    "viewPlans": "View Plans",
+    "learnMore": "Learn More"
+  },
+  "settings": {
+    "profile": "Profile",
+    "profileDescription": "Your account information",
+    "subscription": {
+      "title": "Subscription",
+      "description": "Manage your subscription plan and billing",
+      "currentPlan": "Current Plan",
+      "currentPlanDescription": "View your current subscription plan and billing information",
+      "free": "Free",
+      "premium": "Premium",
+      "lifetime": "Lifetime",
+      "trial": "Trial",
+      "active": "Active",
+      "cancelling": "Cancelling",
+      "expiresOn": "Renews on {date}",
+      "trialEndsOn": "Trial ends on {date}",
+      "trialDaysLeft": "{days} days left in trial",
+      "trialDaysRemaining": "{days} days remaining in trial",
+      "renewsOn": "Renews on {date}",
+      "accessUntil": "Access until {date}",
+      "lifetimeAccess": "Lifetime Access",
+      "lifetimeDescription": "You have unlimited access to all premium features",
+      "lifetimeAccessDescription": "Thank you for your lifetime support! Enjoy unlimited access to all premium features, forever.",
+      "cancelledOn": "Cancelled - access until {date}",
+      "upgrade": "Upgrade to Premium",
+      "upgradeToPremium": "Upgrade to Premium",
+      "upgradeTitle": "Upgrade to Premium",
+      "upgradeDescription": "Get unlimited access to all puzzles, archive games, and streak protection",
+      "upgradeToUnlock": "Upgrade to unlock",
+      "manageSubscription": "Manage Subscription",
+      "manageTitle": "Manage Your Subscription",
+      "manageDescription": "Update your subscription, payment method, and billing details",
+      "billingPortalDescription": "Opens Stripe billing portal to manage your subscription and payment methods",
+      "trialProgress": "{days} of 7 trial days remaining",
+      "daysLeft": "{days} days left",
+      "yourFeatures": "Your Features",
+      "freePlan": "Free Plan",
+      "included": "What's Included",
+      "payment": "Payment",
+      "downloadInvoice": "Download Invoice",
+      "billingHistory": "Billing History",
+      "billingHistoryDescription": "View your past invoices and payments",
+      "noHistory": "No billing history",
+      "date": "Date",
+      "amount": "Amount",
+      "status": {
+        "succeeded": "Succeeded",
+        "pending": "Pending",
+        "failed": "Failed",
+        "refunded": "Refunded",
+        "disputed": "Disputed"
+      },
+      "paymentMethod": "Payment Method",
+      "paymentMethodDescription": "Manage your default payment method",
+      "updatePaymentMethod": "Update Payment Method",
+      "updatePaymentDescription": "Manage your payment methods in the billing portal",
+      "features": {
+        "title": "Plan Features",
+        "included": "Included",
+        "notIncluded": "Not included",
+        "dailyPuzzles": "1 free daily puzzle",
+        "basicStats": "Basic statistics",
+        "allGames": "All games unlimited",
+        "puzzleArchive": "Archive access",
+        "streakFreeze": "Streak freeze protection",
+        "leaderboards": "Leaderboard access",
+        "noAds": "Ad-free experience"
+      }
+    },
+    "subscriptionDescription": "Manage your subscription plan",
+    "currentPlan": "Current plan",
+    "expiresOn": "expira {date}",
+    "manageSubscription": "Manage Subscription",
+    "preferences": {
+      "title": "Preferences",
+      "description": "Customize your experience",
+      "appearance": {
+        "title": "Appearance",
+        "description": "Customize how Puzzled looks",
+        "theme": "Theme",
+        "themeDescription": "Choose your color theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+        "reduceMotion": "Reduce Motion",
+        "reduceMotionDescription": "Minimize animations and transitions",
+        "compactMode": "Compact Mode",
+        "compactModeDescription": "Use a denser layout with smaller spacing"
+      },
+      "language": {
+        "title": "Language & Region",
+        "description": "Set your language and regional preferences",
+        "language": "Language",
+        "languageDescription": "Choose your preferred language",
+        "timezone": "Timezone",
+        "timezoneDescription": "Set your local timezone for daily puzzle resets",
+        "selectTimezone": "Select timezone",
+        "dateFormat": "Date Format",
+        "dateFormatDescription": "Choose how dates are displayed",
+        "dateFormats": {
+          "relative": "Relative (e.g., 2 days ago)",
+          "absolute": "Absolute (e.g., Dec 28, 2025)",
+          "iso": "ISO (e.g., 2025-12-28)"
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Choose what notifications you receive"
+      }
+    },
+    "preferencesDescription": "Customize your experience",
+    "theme": "Theme",
+    "themeDescription": "Choose your color theme",
+    "systemDefault": "System default",
+    "language": "Language",
+    "languageDescription": "Choose your preferred language",
+    "notifications": {
+      "metaTitle": "Notifications - Settings",
+      "title": "Notifications",
+      "description": "Manage how and when you receive updates",
+      "loadError": "Failed to load notification preferences",
+      "overview": {
+        "title": "Notification Center",
+        "description": "Stay updated on your puzzles and streaks",
+        "enabled": "Active",
+        "disabled": "All Off",
+        "push": "Push",
+        "pushActive": "{count} types active",
+        "pushOff": "Disabled",
+        "email": "Email",
+        "emailActive": "{count} types active",
+        "emailOff": "Disabled"
+      },
+      "push": {
+        "title": "Push Notifications",
+        "description": "Get notified on your device",
+        "dailyReminder": "Daily Puzzle Reminder",
+        "dailyReminderDescription": "Remind you to play today's puzzle",
+        "streakAlert": "Streak Alert",
+        "streakAlertDescription": "Warn before you lose a streak"
+      },
+      "email": {
+        "title": "Email Notifications",
+        "description": "Receive updates in your inbox",
+        "newsletter": "Newsletter",
+        "newsletterDescription": "Weekly puzzle highlights and tips",
+        "marketing": "Product Updates",
+        "marketingDescription": "New features and announcements",
+        "security": "Security Alerts",
+        "securityDescription": "Important security notifications"
+      },
+      "test": {
+        "title": "Test Notifications",
+        "description": "Verify your notification settings",
+        "push": "Send Test Push",
+        "pushSuccess": "Test notification sent!",
+        "pushError": "Failed to send notification",
+        "email": "Send Test Email",
+        "emailSuccess": "Test email sent!",
+        "emailError": "Failed to send email"
+      }
+    },
+    "notificationsDescription": "Manage push notifications",
+    "pushNotifications": "Push Notifications",
+    "pushDescription": "Get notified about daily puzzles and streaks",
+    "pushEnabled": "You'll receive notifications",
+    "pushEnable": "Enable",
+    "pushDisable": "Disable",
+    "pushUnsupported": "Your browser doesn't support push notifications",
+    "pushDisabled": "Push notifications are not available",
+    "pushDenied": "You've blocked notifications. Enable them in browser settings.",
+    "pushLoading": "Checking notification status...",
+    "dangerZone": "Danger Zone",
+    "dangerZoneDescription": "Irreversible actions",
+    "deleteAccount": "Delete Account",
+    "deleteAccountNote": "Contact support to delete your account",
+    "sessions": {
+      "title": "Sesiones activas",
+      "description": "Administra tus sesiones activas en todos los dispositivos",
+      "currentSession": "Este dispositivo",
+      "signOut": "Cerrar sesión",
+      "signOutAll": "Cerrar todas",
+      "signOutAllOther": "Cerrar sesión en otros dispositivos",
+      "signOutAllOtherDescription": "{count, plural, =1 {Se cerrará 1 sesión} other {Se cerrarán # sesiones}}",
+      "noSessions": "No se encontraron sesiones activas",
+      "fetchError": "Error al cargar sesiones",
+      "revokeError": "Error al cerrar sesión",
+      "revokeAllError": "Error al cerrar otras sesiones"
+    },
+    "securityAlerts": {
+      "title": "Security Alerts",
+      "description": "Important security events on your account",
+      "notifications": "Security notifications",
+      "unread": "unread",
+      "markAllRead": "Mark all as read",
+      "markRead": "Mark as read",
+      "noAlerts": "No security alerts",
+      "noAlertsDescription": "Security events like logins and password changes will appear here",
+      "viewAll": "View all security events",
+      "showingOf": "Showing {shown} of {total} alerts",
+      "types": {
+        "new_login": "New Sign In",
+        "password_changed": "Password Changed",
+        "2fa_enabled": "2FA Enabled",
+        "2fa_disabled": "2FA Disabled",
+        "new_device": "New Device",
+        "suspicious_login": "Suspicious Login",
+        "oauth_connected": "Account Connected",
+        "oauth_disconnected": "Account Disconnected",
+        "session_revoked": "Session Revoked"
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Manage your privacy and data",
+      "profileVisibility": {
+        "title": "Profile Visibility",
+        "description": "Control who can see your profile and information",
+        "publicProfile": "Public Profile",
+        "publicProfileDescription": "Make your profile visible at puzzled.gg/u/{username}",
+        "leaderboardVisibility": "Appear on Leaderboards",
+        "leaderboardDescription": "Show your name and stats on public leaderboards",
+        "visibleWhenPublic": "When public, others can see:",
+        "visibleName": "Your display name and avatar",
+        "visibleUsername": "Your username",
+        "visibleStats": "Your game statistics",
+        "visibleAchievements": "Your achievements and streaks"
+      },
+      "dataManagement": {
+        "title": "Data Management",
+        "description": "Export or manage your personal data"
+      },
+      "exportData": "Export Your Data",
+      "exportDescription": "Download a copy of all your data in JSON format",
+      "exportButton": "Export Data",
+      "exporting": "Preparing your data...",
+      "exportIncludes": "Your export includes:",
+      "exportProfile": "Profile information and settings",
+      "exportGameHistory": "Complete game history and daily games",
+      "exportStats": "All statistics and performance data",
+      "exportStreaks": "Streak history and achievements",
+      "analytics": {
+        "title": "Analytics",
+        "description": "Help us improve Puzzled with anonymous usage data",
+        "whatWeCollect": "What we collect",
+        "collectionDescription": "We collect anonymous analytics to improve your experience:",
+        "collectGamePlay": "Game play patterns and preferences",
+        "collectPerformance": "Performance metrics and load times",
+        "collectErrors": "Error reports and crash logs",
+        "noPersonalData": "No personal information is shared. All data is anonymized."
+      },
+      "deleteAccount": {
+        "title": "Delete Account",
+        "dangerZone": "Danger Zone",
+        "dangerZoneDescription": "Irreversible actions that permanently affect your account",
+        "deleteButton": "Delete My Account",
+        "warning": "This action cannot be undone",
+        "warningDescription": "Deleting your account is permanent. All your data will be erased forever.",
+        "whatWillBeDeleted": "What will be deleted:",
+        "deleteProfile": "Your profile and settings",
+        "deleteGameHistory": "All game history and statistics",
+        "deleteAchievements": "All achievements and streaks",
+        "deleteSubscription": "Your subscription (will be cancelled)",
+        "exportFirst": "Export your data before deleting",
+        "confirmWord": "ELIMINAR",
+        "confirmPrompt": "Type {confirmWord} to confirm deletion",
+        "typeDelete": "Type \"{confirmWord}\" in all caps to confirm",
+        "confirmButton": "Permanently Delete Account",
+        "confirmError": "Please type {confirmWord} to confirm",
+        "deleting": "Deleting your account...",
+        "permanentAction": "Warning: This is permanent",
+        "permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased."
+      }
+    }
+  },
+  "support": {
+    "title": "Soporte y Ayuda",
+    "description": "Obtén ayuda con tu cuenta, juegos o suscripción",
+    "email": {
+      "title": "Soporte por Correo Electrónico",
+      "description": "Envíanos un correo y te responderemos",
+      "responseTime": "Respuesta en 24-48 horas"
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "description": "Respuestas rápidas a preguntas comunes",
+      "q1": {
+        "question": "¿Cómo restablezco mi contraseña?",
+        "answer": "Haz clic en '¿Olvidaste tu contraseña?' en la página de inicio de sesión e ingresa tu correo electrónico. Recibirás un enlace para restablecer tu contraseña."
+      },
+      "q2": {
+        "question": "¿Cómo cancelo mi suscripción?",
+        "answer": "Ve a Configuración > Suscripción y haz clic en 'Administrar Suscripción'. Puedes cancelar en cualquier momento y mantener el acceso hasta que finalice tu período de facturación."
+      },
+      "q3": {
+        "question": "¿Por qué se reinició mi racha?",
+        "answer": "Las rachas se reinician si pierdes un día sin usar un congelador de racha. Los miembros Premium obtienen congeladores de racha cada mes para proteger su progreso."
+      }
+    },
+    "resources": {
+      "title": "Recursos Útiles",
+      "description": "Encuentra más información sobre nuestro servicio",
+      "privacy": "Política de Privacidad",
+      "terms": "Términos de Servicio",
+      "pricing": "Planes de Precios"
+    },
+    "contact": {
+      "title": "¿Necesitas Más Ayuda?",
+      "description": "¿No encuentras lo que buscas? Nuestro equipo de soporte está aquí para ayudarte.",
+      "cta": "Contactar Soporte"
+    }
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "sidebar": {
+      "dashboard": "Panel Principal",
+      "plansAndPricing": "Planes y Precios",
+      "users": "Usuarios",
+      "games": "Juegos",
+      "analytics": "Analíticas",
+      "settings": "Configuración",
+      "backToApp": "Volver a la App",
+      "dlq": "Cola de Mensajes Fallidos",
+      "auditLogs": "Registros de Auditoría",
+      "experiments": "Experimentos"
+    },
+    "dashboard": {
+      "title": "Panel Principal",
+      "subtitle": "Resumen de tu plataforma",
+      "totalUsers": "Usuarios Totales",
+      "premiumUsers": "Usuarios Premium",
+      "gameSessions": "Sesiones de Juego",
+      "estMRR": "MRR Estimado",
+      "recentUsers": "Usuarios Recientes",
+      "noUsersYet": "Aún no hay usuarios",
+      "unnamed": "Sin nombre"
+    },
+    "users": {
+      "title": "Usuarios",
+      "subtitle": "Gestionar cuentas de usuario y permisos",
+      "totalUsers": "Usuarios Totales",
+      "admins": "Administradores",
+      "premium": "Premium",
+      "verified": "Verificados",
+      "searchPlaceholder": "Buscar usuarios...",
+      "tableHeaders": {
+        "user": "Usuario",
+        "role": "Rol",
+        "plan": "Plan",
+        "verified": "Verificado",
+        "joined": "Registro",
+        "actions": "Acciones"
+      },
+      "noUsersFound": "No se encontraron usuarios",
+      "makeAdmin": "Hacer Administrador",
+      "removeAdmin": "Quitar Administrador",
+      "free": "gratis"
+    },
+    "plans": {
+      "title": "Planes y Precios",
+      "subtitle": "Gestionar planes de suscripción y sincronizar con Stripe",
+      "seedDefault": "Crear Planes Predeterminados",
+      "syncAll": "Sincronizar Todo con Stripe",
+      "noPlansYet": "Aún no hay planes",
+      "noPlansHint": "Haz clic en \"Crear Planes Predeterminados\" para crear los planes Gratis y Premium",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "stripeSynced": "Sincronizado con Stripe",
+      "syncToStripe": "Sincronizar con Stripe",
+      "slug": "Identificador",
+      "description": "Descripción",
+      "stripeProductId": "ID de Producto Stripe",
+      "features": "Características",
+      "prices": "Precios",
+      "notSynced": "No sincronizado"
+    },
+    "games": {
+      "title": "Juegos",
+      "subtitle": "Gestionar juegos y rompecabezas diarios",
+      "noGamesYet": "Aún no hay juegos",
+      "noGamesHint": "Los juegos aparecerán aquí una vez añadidos a la base de datos"
+    },
+    "dlq": {
+      "title": "Cola de Mensajes Fallidos",
+      "subtitle": "Monitorear y gestionar ejecuciones de flujos de trabajo fallidos",
+      "stats": {
+        "total": "Total",
+        "pending": "Pendientes",
+        "retrying": "Reintentando",
+        "resolved": "Resueltos",
+        "failed": "Fallidos"
+      },
+      "table": {
+        "workflow": "Flujo de Trabajo",
+        "error": "Error",
+        "retries": "Reintentos",
+        "status": "Estado",
+        "created": "Creado",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "retry": "Reintentar",
+        "resolve": "Marcar como Resuelto",
+        "fail": "Marcar como Fallido",
+        "delete": "Eliminar",
+        "viewDetails": "Ver Detalles"
+      },
+      "status": {
+        "pending": "Pendiente",
+        "retrying": "Reintentando",
+        "resolved": "Resuelto",
+        "failed": "Fallido"
+      },
+      "empty": {
+        "title": "No hay elementos en la cola",
+        "description": "Las ejecuciones de flujos de trabajo fallidos aparecerán aquí"
+      },
+      "confirmRetry": "Esto activará una nueva ejecución del flujo de trabajo. ¿Continuar?",
+      "confirmDelete": "Esto eliminará permanentemente este elemento. ¿Continuar?",
+      "confirmRetryTitle": "Reintentar Flujo de Trabajo",
+      "confirmRetryDescription": "Esto disparará un nuevo intento de ejecución del flujo de trabajo. El flujo de trabajo se procesará nuevamente con sus datos originales.",
+      "confirmDeleteTitle": "Eliminar Elemento",
+      "confirmDeleteDescription": "Esto eliminará permanentemente este elemento de la cola de mensajes no entregados. Esta acción no se puede deshacer.",
+      "retrySuccess": "Reintento activado exitosamente",
+      "forceRetry": "Forzar Reintento (omitir reintentos máximos)"
+    },
+    "auditLogs": {
+      "title": "Registros de Auditoría",
+      "subtitle": "Rastrear todas las acciones administrativas y eventos del sistema",
+      "loading": "Cargando registros de auditoría...",
+      "stats": {
+        "totalLogs": "Registros Totales",
+        "onThisPage": "En Esta Página",
+        "totalPages": "Páginas Totales",
+        "adminActions": "Acciones de Administrador"
+      },
+      "table": {
+        "timestamp": "Marca de Tiempo",
+        "action": "Acción",
+        "actor": "Actor",
+        "resource": "Recurso",
+        "ip": "Dirección IP"
+      },
+      "actions": {
+        "create": "Crear",
+        "update": "Actualizar",
+        "delete": "Eliminar",
+        "login": "Iniciar Sesión",
+        "logout": "Cerrar Sesión",
+        "role_change": "Cambio de Rol",
+        "subscription_change": "Cambio de Suscripción",
+        "impersonate_start": "Inicio de Suplantación",
+        "impersonate_end": "Fin de Suplantación",
+        "feature_flag_toggle": "Cambio de Bandera de Característica",
+        "admin_action": "Acción de Administrador"
+      },
+      "filters": {
+        "searchPlaceholder": "Buscar por ID de recurso o dirección IP...",
+        "action": "Tipo de Acción",
+        "allActions": "Todas las Acciones",
+        "resourceType": "Tipo de Recurso",
+        "allResources": "Todos los Recursos",
+        "startDate": "Fecha de Inicio",
+        "endDate": "Fecha de Fin",
+        "clearFilters": "Borrar Filtros",
+        "refresh": "Actualizar"
+      },
+      "details": {
+        "title": "Detalles del Registro de Auditoría",
+        "subtitle": "Información completa sobre este evento",
+        "notFound": "Registro de auditoría no encontrado",
+        "user": "Usuario",
+        "actor": "Actor (Administrador)",
+        "resource": "Recurso",
+        "resourceType": "Tipo de Recurso",
+        "resourceId": "ID de Recurso",
+        "technical": "Detalles Técnicos",
+        "ipAddress": "Dirección IP",
+        "userAgent": "Agente de Usuario",
+        "timestamp": "Marca de Tiempo",
+        "metadata": "Metadatos Adicionales"
+      },
+      "empty": {
+        "title": "No se encontraron registros de auditoría",
+        "description": "Intenta ajustar tus filtros o criterios de búsqueda"
+      },
+      "pagination": {
+        "showing": "Mostrando {from}-{to} de {total}",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "page": "Página {page} de {total}"
+      }
+    },
+    "experiments": {
+      "title": "Experimentos A/B",
+      "subtitle": "Monitorear y analizar resultados de experimentos",
+      "viewInPostHog": "Ver en PostHog",
+      "totalExposures": "Exposiciones Totales",
+      "variant": "Variante",
+      "exposures": "Exposiciones",
+      "conversions": "Conversiones",
+      "conversionRate": "Tasa de Conversión",
+      "performance": "Rendimiento",
+      "winner": "Ganador",
+      "recommendation": "Recomendación",
+      "howToUse": {
+        "title": "Cómo Usar los Experimentos",
+        "step1": "1. Crea experimentos en PostHog con banderas de características para cada variante",
+        "step2": "2. Agrega las definiciones de experimentos al objeto EXPERIMENTS en ab-testing.ts",
+        "step3": "3. Usa el hook useExperiment() en tus componentes para obtener la variante y rastrear exposiciones automáticamente"
+      },
+      "learnMore": "Más Información Sobre Experimentos"
+    }
+  },
+  "winBack": {
+    "day7": {
+      "subject": "¡Te extrañamos!",
+      "title": "¡Te extrañamos!",
+      "body": "Notamos que hace tiempo que no juegas. ¡Tus acertijos te están esperando!",
+      "whatYoureMissing": "Esto es lo que te estás perdiendo:",
+      "cta": "Jugar ahora"
+    },
+    "day14": {
+      "subject": "¡Esto es lo nuevo en Puzzled!",
+      "title": "¡Nuevos acertijos te esperan!",
+      "body": "Ha pasado un par de semanas desde que te vimos. ¡Hemos estado ocupados creando nuevos desafíos solo para ti!",
+      "whatsNew": "Novedades:",
+      "cta": "Ver las novedades"
+    },
+    "day30": {
+      "subject": "¡Vuelve con 50% de descuento en Premium!",
+      "title": "¡Oferta especial solo para ti!",
+      "offer": "50% de descuento en Premium",
+      "subtitle": "Nos encantaría tenerte de vuelta",
+      "body": "¡Te extrañamos como parte de la comunidad de Puzzled! Como agradecimiento especial por ser un miembro valioso, te ofrecemos un 50% de descuento en tu primer mes de Premium.",
+      "premiumBenefits": "Beneficios Premium:",
+      "fullArchive": "Archivo completo de acertijos - Accede a acertijos diarios pasados en cualquier momento",
+      "streakProtection": "Protección de congelación de racha - Nunca pierdas tu progreso",
+      "advancedStats": "Estadísticas avanzadas - Sigue tus mejoras",
+      "leaderboardAccess": "Acceso a la tabla de clasificación - Compite con otros jugadores",
+      "adFree": "Experiencia sin anuncios - Juego puro e ininterrumpido",
+      "discountCode": "Tu código de descuento exclusivo:",
+      "expiresWarning": "¡Esta oferta expira en 7 días!",
+      "cta": "Obtener 50% de descuento",
+      "noObligations": "Sin obligaciones. Cancela en cualquier momento.",
+      "unsubscribe": "Cancelar suscripción a correos de recuperación"
+    }
+  },
+  "referrals": {
+    "title": "Referencias",
+    "description": "Invita a amigos y gana recompensas juntos",
+    "yourReferralCode": "Tu código de referencia",
+    "shareWithFriends": "Comparte con amigos para ganar recompensas",
+    "referralLink": "Enlace de referencia",
+    "copy": "Copiar enlace",
+    "share": "Compartir",
+    "copied": "¡Copiado!",
+    "getStarted": "Obtén tu código de referencia",
+    "generateCodeDescription": "Comparte con amigos y gana recompensas",
+    "generateCode": "Generar código",
+    "generating": "Generando...",
+    "rewardInfo": "¡Tú y tu amigo reciben una congelación de racha cuando se registra!",
+    "yourReferrals": "Tus referencias",
+    "referralProgress": "Sigue tu progreso de referencias",
+    "totalReferrals": "Total",
+    "completed": "Completado",
+    "pending": "Pendiente",
+    "expired": "Expirado",
+    "recentReferrals": "Referencias recientes",
+    "noReferralsYet": "Aún no hay referencias. ¡Comparte tu código para empezar!",
+    "pendingUser": "Registro pendiente",
+    "andMore": "y {count} más...",
+    "shareTitle": "¡Únete a mí en Puzzled!",
+    "shareText": "Juega juegos cerebrales diarios conmigo en Puzzled. ¡Usa mi código de referencia para empezar!",
+    "howItWorks": "Cómo funciona",
+    "step1": "Comparte tu código de referencia único con amigos",
+    "step2": "Tu amigo se registra usando tu código",
+    "step3": "¡Ambos reciben una congelación de racha como recompensa!"
+  }
+}

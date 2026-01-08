@@ -1,0 +1,26 @@
+{
+	"name": "Sudoku",
+	"tagline": "9×9 grid • Classic logic",
+	"highlight": "Classic puzzle",
+	"description": "Fill the 9×9 grid with numbers 1-9",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Fill each row with numbers 1-9",
+		"rule2": "Fill each column with numbers 1-9",
+		"rule3": "Fill each 3×3 box with numbers 1-9"
+	},
+	"startGame": "Start Game",
+	"difficulty": {
+		"easy": "Easy",
+		"medium": "Medium",
+		"hard": "Hard"
+	},
+	"notes": "Notes",
+	"notesMode": "Notes Mode",
+	"clear": "Clear",
+	"complete": "Puzzle Complete!",
+	"messages": {
+		"conflict": "This number conflicts with another cell"
+	}
+}

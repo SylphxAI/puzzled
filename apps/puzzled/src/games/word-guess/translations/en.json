@@ -1,0 +1,26 @@
+{
+	"name": "Word Guess",
+	"tagline": "5 letters • 6 tries",
+	"highlight": "6 guesses",
+	"description": "Guess the 5-letter word in 6 tries",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Guess the word in 6 tries",
+		"rule2": "Each guess must be a valid 5-letter word",
+		"rule3": "The color of the tiles will change to show how close your guess was",
+		"correct": "Green means the letter is correct",
+		"present": "Yellow means the letter is in the word but wrong spot",
+		"absent": "Gray means the letter is not in the word"
+	},
+	"keyboard": {
+		"enter": "Enter",
+		"delete": "Delete"
+	},
+	"messages": {
+		"notEnoughLetters": "Not enough letters",
+		"notInWordList": "Not in word list",
+		"correct": "Excellent!",
+		"gameOver": "The word was {word}"
+	}
+}

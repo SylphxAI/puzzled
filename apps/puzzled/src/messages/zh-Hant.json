@@ -1,0 +1,1372 @@
+{
+  "common": {
+    "appName": "Puzzled",
+    "loading": "載入中...",
+    "error": "發生錯誤",
+    "errorDescription": "發生錯誤，請重試。",
+    "retry": "重試",
+    "save": "儲存",
+    "cancel": "取消",
+    "confirm": "確認",
+    "back": "返回",
+    "next": "下一步",
+    "play": "開始遊戲",
+    "share": "分享",
+    "settings": "設定",
+    "signIn": "登入",
+    "signOut": "登出",
+    "signUp": "註冊",
+    "dismiss": "關閉",
+    "copied": "已複製到剪貼簿！",
+    "changeLanguage": "更改語言",
+    "selectLanguage": "選擇語言",
+    "languagesAvailable": "種語言可選",
+    "languageChangeNote": "更改將立即生效",
+    "confirmLanguageChange": "更改語言？",
+    "confirmLanguageChangeDescription": "介面將切換至{language}。您可以隨時在設定中更改。",
+    "switchLanguage": "切換語言",
+    "optionsAvailable": "個選項可選",
+    "offline": "你已離線",
+    "syncing": "同步中...",
+    "online": "已恢復連線",
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "selectDifficulty": "Select Difficulty",
+      "chooseDifficulty": "Choose your challenge level",
+      "playOtherDifficulties": "Play Other Difficulties",
+      "easyDescription": "Perfect for warming up",
+      "mediumDescription": "A balanced challenge",
+      "hardDescription": "Test your limits"
+    }
+  },
+  "nav": {
+    "home": "首頁",
+    "games": "遊戲",
+    "stats": "統計",
+    "leaderboard": "排行榜",
+    "pricing": "訂閱",
+    "profile": "個人檔案",
+    "main": "主導覽"
+  },
+  "home": {
+    "metaTitle": "每日益智遊戲 - 猜單字、詞語分組、問答",
+    "metaDescription": "免費玩每日益智遊戲，包括猜單字、詞語分組和知識問答。追蹤連勝紀錄，參與排行榜競爭，每天挑戰你的頭腦。",
+    "welcome": "歡迎來到 Puzzled",
+    "tagline": "每日益智挑戰",
+    "todaysPuzzles": "今日謎題",
+    "allGames": "所有遊戲",
+    "yourStats": "你的統計",
+    "streak": "連勝紀錄",
+    "playersToday": "位玩家今日",
+    "playersCompletedToday": "位玩家已完成今日挑戰"
+  },
+  "games": {
+    "wordGuess": {
+      "name": "猜單字",
+      "tagline": "5 letters • 6 tries",
+      "description": "6 次機會猜出 5 字母單字",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "你有 6 次機會猜出單字",
+        "rule2": "每次猜測必須是有效的 5 字母單字",
+        "rule3": "方塊顏色會顯示你的猜測有多接近",
+        "correct": "綠色表示字母正確且位置正確",
+        "present": "黃色表示字母在單字中但位置錯誤",
+        "absent": "灰色表示字母不在單字中"
+      },
+      "keyboard": {
+        "enter": "確認",
+        "delete": "刪除"
+      },
+      "messages": {
+        "notEnoughLetters": "字母不足",
+        "notInWordList": "不在單字庫中",
+        "correct": "太厲害了！",
+        "gameOver": "答案是 {word}"
+      }
+    },
+    "wordGroups": {
+      "name": "詞語分組",
+      "tagline": "Find 4 groups of 4",
+      "description": "將 16 個詞語分成 4 組",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "找出 4 組有共同點的詞語",
+        "rule2": "選擇 4 個詞語並點擊提交",
+        "rule3": "你有 4 次錯誤機會"
+      },
+      "submit": "提交",
+      "shuffle": "洗牌",
+      "deselect": "取消選擇",
+      "mistakes": "剩餘錯誤次數",
+      "messages": {
+        "correct": "正確！",
+        "oneAway": "差一點...",
+        "incorrect": "錯誤",
+        "gameOver": "下次再加油！"
+      },
+      "difficulty": {
+        "0": "簡單",
+        "1": "中等",
+        "2": "困難",
+        "3": "刁鑽"
+      }
+    },
+    "wordHive": {
+      "name": "拼字蜂",
+      "tagline": "7 個字母 • 無限單字",
+      "highlight": "找單字",
+      "description": "用 7 個字母能拼出多少單字？",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "使用顯示的 7 個字母造詞",
+        "rule2": "每個單字必須包含中心字母",
+        "rule3": "單字必須至少 4 個字母",
+        "rule4": "字母可以重複使用"
+      },
+      "messages": {
+        "tooShort": "單字必須至少 4 個字母",
+        "missingCenter": "缺少中心字母",
+        "invalidLetter": "使用了無效字母",
+        "notInList": "不在單字庫中",
+        "alreadyFound": "已經找過了！"
+      },
+      "shuffle": "洗牌",
+      "delete": "刪除",
+      "enter": "確認",
+      "foundWords": "已找到單字",
+      "pangram": "全字母詞",
+      "pangramBonus": "+7 加分",
+      "ranks": {
+        "beginner": "初學者",
+        "goodStart": "好的開始",
+        "movingUp": "進步中",
+        "good": "不錯",
+        "solid": "穩固",
+        "nice": "很好",
+        "great": "太棒了",
+        "amazing": "驚人",
+        "genius": "天才",
+        "queenBee": "蜂后"
+      }
+    },
+    "crossword": {
+      "name": "迷你填字",
+      "tagline": "5×5 格 • 快速解謎",
+      "highlight": "5×5 謎題",
+      "description": "解開一個小型填字遊戲",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "根據提示填寫 5×5 格子",
+        "rule2": "點擊格子並輸入字母",
+        "rule3": "再次點擊同一格子可切換方向"
+      },
+      "startGame": "開始遊戲",
+      "across": "橫向",
+      "down": "縱向",
+      "selectCell": "點擊格子開始",
+      "complete": "謎題完成！",
+      "messages": {
+        "correct": "正確！",
+        "incorrect": "再試一次"
+      }
+    },
+    "sudoku": {
+      "name": "數獨",
+      "tagline": "9×9 格 • 經典邏輯",
+      "highlight": "經典謎題",
+      "description": "用數字 1-9 填滿 9×9 格子",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "每一行都要填入 1-9",
+        "rule2": "每一列都要填入 1-9",
+        "rule3": "每個 3×3 方格都要填入 1-9"
+      },
+      "startGame": "開始遊戲",
+      "difficulty": {
+        "easy": "簡單",
+        "medium": "中等",
+        "hard": "困難"
+      },
+      "notes": "筆記",
+      "notesMode": "筆記模式",
+      "clear": "清除",
+      "complete": "謎題完成！",
+      "messages": {
+        "conflict": "此數字與其他格子衝突"
+      }
+    },
+    "nonogram": {
+      "name": "數織",
+      "tagline": "10×10 格 • 像素畫",
+      "highlight": "圖畫謎題",
+      "description": "填滿格子來揭示隱藏圖案",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "根據數字線索填滿格子",
+        "rule2": "數字表示連續填滿的格子數",
+        "rule3": "完成格子來揭示圖案"
+      },
+      "startGame": "開始遊戲",
+      "fillMode": "填滿",
+      "markMode": "標記",
+      "errors": "{count} 個錯誤",
+      "complete": "圖案完成！",
+      "messages": {
+        "incorrect": "這個格子不應該被填滿"
+      }
+    },
+    "wordLadder": {
+      "name": "文字階梯",
+      "tagline": "一步一步 • 文字接龍",
+      "highlight": "文字接龍",
+      "description": "一次改變一個字母，將一個單詞變成另一個",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "一次只能改變一個字母",
+        "rule2": "每一步都必須是有效的單詞",
+        "rule3": "用最少的步驟到達目標單詞"
+      },
+      "startGame": "開始遊戲",
+      "enterWord": "輸入單詞...",
+      "submit": "確定",
+      "undo": "撤銷",
+      "complete": "成功了！",
+      "messages": {
+        "notInList": "不是有效的單詞",
+        "wrongLength": "單詞長度必須相同",
+        "notOneChange": "只能改變一個字母",
+        "alreadyUsed": "這個單詞已經用過了"
+      }
+    },
+    "arithmo": {
+      "name": "算式猜謎",
+      "tagline": "8 個字元 • 數學謎題",
+      "highlight": "算式謎題",
+      "description": "6 次機會猜出算式",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "在 6 次嘗試內猜出隱藏的算式",
+        "rule2": "每次猜測必須是有效的算式",
+        "rule3": "顏色會顯示你的猜測有多接近"
+      },
+      "startGame": "開始遊戲",
+      "keyboard": {
+        "enter": "確認",
+        "delete": "刪除"
+      },
+      "messages": {
+        "notComplete": "字元不足",
+        "invalid": "無效的算式"
+      }
+    },
+    "patternMatch": {
+      "name": "圖案配對",
+      "tagline": "12 張卡片 • 找出組合",
+      "highlight": "組合遊戲",
+      "description": "找出具有匹配圖案的 3 張卡片組合",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "找出 3 張卡片，每個屬性都完全相同或完全不同",
+        "rule2": "每張卡片有 4 個屬性：形狀、顏色、填充和數量",
+        "rule3": "選擇 3 張形成有效組合的卡片"
+      },
+      "startGame": "開始遊戲",
+      "setsFound": "組合已找到",
+      "clear": "清除",
+      "giveUp": "放棄",
+      "hint": "選擇 3 張卡片來檢查是否形成有效組合",
+      "complete": "所有組合已找到！",
+      "messages": {
+        "correct": "有效組合！",
+        "notASet": "不是有效的組合",
+        "alreadyFound": "組合已經找過了"
+      }
+    },
+    "blockSlide": {
+      "name": "滑塊拼圖",
+      "tagline": "華容道 • 滑動過關",
+      "highlight": "滑塊遊戲",
+      "description": "滑動方塊讓目標脫出",
+      "howToPlay": "玩法說明",
+      "rules": {
+        "title": "玩法說明",
+        "rule1": "滑動方塊，可水平或垂直移動",
+        "rule2": "引導紅色目標方塊到達底部出口",
+        "rule3": "嘗試用最少步數完成"
+      },
+      "startGame": "開始遊戲",
+      "moves": "步數",
+      "minMoves": "最少",
+      "reset": "重置",
+      "giveUp": "放棄",
+      "hint": "點擊方塊後使用方向鍵移動，或直接拖曳"
+    }
+  },
+  "stats": {
+    "title": "統計資料",
+    "gamesPlayed": "遊戲次數",
+    "winRate": "勝率",
+    "currentStreak": "目前連勝",
+    "maxStreak": "最高連勝",
+    "guessDistribution": "猜測分佈",
+    "avgScore": "平均分數",
+    "best": "最佳",
+    "accuracy": "準確率",
+    "signInPrompt": "登入以儲存進度並參與排行榜競爭！"
+  },
+  "leaderboard": {
+    "streak": "連勝",
+    "score": "分數",
+    "wins": "勝場",
+    "wantToCompete": "想要參與競爭？",
+    "premiumPrompt": "登入並升級 Premium 即可出現在排行榜上！",
+    "period": {
+      "today": "今日",
+      "week": "本週",
+      "all": "全部"
+    },
+    "noData": "尚無玩家，成為第一個吧！"
+  },
+  "subscription": {
+    "free": "免費",
+    "premium": "Premium",
+    "annual": "年費",
+    "perMonth": "/月",
+    "perYear": "/年",
+    "subscribe": "訂閱",
+    "currentPlan": "目前方案",
+    "upgrade": "升級",
+    "features": {
+      "freeGame": "每日 1 款免費遊戲",
+      "allGames": "所有遊戲無限玩",
+      "noAds": "無廣告",
+      "stats": "完整統計",
+      "leaderboard": "排行榜",
+      "push": "推播通知",
+      "earlyAccess": "新遊戲搶先玩"
+    }
+  },
+  "auth": {
+    "signInTitle": "登入 Puzzled",
+    "signInDescription": "登入以追蹤進度、參與排行榜競爭，並在不同裝置間同步。",
+    "signUpTitle": "建立帳號",
+    "signUpDescription": "建立免費帳號以儲存統計數據並與他人競爭。",
+    "signIn": "登入",
+    "signUp": "註冊",
+    "close": "關閉",
+    "email": "電子郵件",
+    "password": "密碼",
+    "confirmPassword": "確認密碼",
+    "forgotPassword": "忘記密碼？",
+    "forgotPasswordTitle": "重設密碼",
+    "resetInstructions": "如需重設密碼，請聯絡我們的客服團隊：",
+    "sendResetLink": "發送重設連結",
+    "checkEmail": "請檢查您的電子郵件",
+    "resetEmailSent": "我們已將密碼重設連結發送到您的電子郵件地址。",
+    "backToLogin": "返回登入",
+    "resetError": "發送重設郵件失敗，請重試。",
+    "noAccount": "還沒有帳號？",
+    "hasAccount": "已有帳號？",
+    "orContinueWith": "或使用以下方式登入",
+    "google": "Google",
+    "apple": "Apple",
+    "checkYourEmail": "請查看您的電子郵件",
+    "verificationSent": "我們已發送驗證連結到您的電子郵件。請點擊連結以驗證您的帳戶。",
+    "verifyingEmail": "正在驗證您的電子郵件...",
+    "emailVerified": "電子郵件已驗證！",
+    "redirecting": "正在跳轉...",
+    "verificationFailed": "驗證失敗",
+    "verificationExpired": "此驗證連結已過期，請重新申請。",
+    "resendEmail": "重新發送驗證郵件",
+    "emailSent": "郵件已發送！",
+    "resendFailed": "發送失敗，請重試。",
+    "resetPasswordTitle": "重設密碼",
+    "resetPasswordDescription": "請輸入您的新密碼。",
+    "newPassword": "新密碼",
+    "passwordPlaceholder": "請輸入新密碼",
+    "confirmPasswordPlaceholder": "請確認新密碼",
+    "resetPassword": "重設密碼",
+    "passwordsDoNotMatch": "密碼不一致",
+    "passwordTooShort": "密碼必須至少包含8個字元",
+    "invalidResetLink": "重設連結無效或已過期",
+    "resetPasswordError": "重設密碼失敗，請重試。",
+    "passwordResetSuccess": "密碼重設成功",
+    "passwordResetSuccessDescription": "您的密碼已更新。正在跳轉到登入頁面...",
+    "passwordStrength": {
+      "requirementsLabel": "Password requirements",
+      "minLength": "至少8個字元",
+      "uppercase": "至少1個大寫字母",
+      "lowercase": "至少1個小寫字母",
+      "number": "至少1個數字",
+      "special": "至少1個特殊字元 (!@#$%^&*)",
+      "veryWeak": "非常弱",
+      "weak": "弱",
+      "fair": "一般",
+      "strong": "強",
+      "veryStrong": "非常強"
+    },
+    "socialLoginFailed": "{provider} login failed"
+  },
+  "share": {
+    "title": "分享你的成績",
+    "copied": "已複製到剪貼簿！",
+    "text": "Puzzled - {game}\n{result}\n\n來 puzzled.gg 一起玩",
+    "share": "分享",
+    "copy": "複製"
+  },
+  "legal": {
+    "privacy": {
+      "title": "隱私權政策",
+      "lastUpdated": "最後更新",
+      "sections": {
+        "intro": {
+          "title": "簡介",
+          "content": "Puzzled（「我們」）尊重您的隱私並致力於保護您的個人資料。本隱私權政策說明我們如何在您使用服務時收集、使用和保護您的資訊。"
+        },
+        "dataCollection": {
+          "title": "我們收集的資料",
+          "content": "我們收集以下類型的資訊：",
+          "items": {
+            "account": "帳戶資訊：姓名、電子郵件地址和個人頭像",
+            "game": "遊戲資料：分數、統計數據、連勝紀錄和遊戲歷史",
+            "payment": "付款資訊：透過 Stripe 安全處理",
+            "technical": "技術資料：IP 位址、瀏覽器類型和裝置資訊"
+          }
+        },
+        "dataUse": {
+          "title": "我們如何使用您的資料",
+          "content": "我們使用您的資料來：",
+          "items": {
+            "service": "提供和維護我們的遊戲服務",
+            "improve": "改進和個人化您的體驗",
+            "communicate": "發送重要更新和通知",
+            "legal": "遵守法律義務"
+          }
+        },
+        "thirdParty": {
+          "title": "第三方服務",
+          "content": "我們與受信任的第三方服務合作：",
+          "stripe": "付款處理",
+          "google": "身份驗證",
+          "resend": "電子郵件發送"
+        },
+        "cookies": {
+          "title": "Cookie",
+          "content": "我們使用必要的 Cookie 來維護您的工作階段和偏好設定。使用我們的服務即表示您同意我們使用 Cookie。"
+        },
+        "rights": {
+          "title": "您的權利",
+          "content": "您有權：",
+          "items": {
+            "access": "存取您的個人資料",
+            "correct": "更正不正確的資料",
+            "delete": "要求刪除您的資料",
+            "export": "匯出您的資料"
+          }
+        },
+        "contact": {
+          "title": "聯絡我們",
+          "content": "如有隱私相關問題，請聯繫我們："
+        }
+      }
+    },
+    "terms": {
+      "title": "服務條款",
+      "lastUpdated": "最後更新",
+      "sections": {
+        "acceptance": {
+          "title": "條款接受",
+          "content": "使用 Puzzled 即表示您同意受這些服務條款的約束。如果您不同意這些條款，請勿使用我們的服務。"
+        },
+        "service": {
+          "title": "我們的服務",
+          "content": "Puzzled 提供每日益智遊戲和挑戰。我們保留隨時修改、暫停或停止任何部分服務的權利。"
+        },
+        "accounts": {
+          "title": "用戶帳戶",
+          "content": "建立帳戶時，您同意：",
+          "items": {
+            "accurate": "提供準確完整的資訊",
+            "secure": "保護您的登入憑證安全",
+            "responsible": "對您帳戶下的所有活動負責"
+          }
+        },
+        "subscription": {
+          "title": "訂閱與付款",
+          "content": "Premium 訂閱依您選擇的方案計費：",
+          "items": {
+            "billing": "訂閱按月或按年計費",
+            "cancel": "您可隨時取消；取消後可繼續使用至計費週期結束",
+            "refund": "購買後 7 天內可依我們的判斷提供退款"
+          }
+        },
+        "conduct": {
+          "title": "用戶行為",
+          "content": "您同意：",
+          "items": {
+            "legal": "僅將服務用於合法目的",
+            "respect": "尊重其他用戶和我們的社群",
+            "noCheat": "不使用作弊、漏洞利用或自動化工具"
+          }
+        },
+        "ip": {
+          "title": "智慧財產權",
+          "content": "Puzzled 上的所有遊戲、內容和資料均為我們的財產或經授權使用。未經許可，您不得複製、修改或分發任何內容。"
+        },
+        "disclaimer": {
+          "title": "免責聲明",
+          "content": "我們的服務按「現狀」提供，不提供任何形式的保證。我們不保證服務不中斷或無錯誤。"
+        },
+        "liability": {
+          "title": "責任限制",
+          "content": "在法律允許的最大範圍內，Puzzled 不對您使用我們服務所產生的任何間接、附帶或後果性損害負責。"
+        },
+        "changes": {
+          "title": "條款變更",
+          "content": "我們可能會不時更新這些條款。在變更後繼續使用我們的服務即表示接受新條款。"
+        },
+        "contact": {
+          "title": "聯絡方式",
+          "content": "如對這些條款有疑問，請聯繫我們："
+        }
+      }
+    }
+  },
+  "consent": {
+    "message": "我們使用必要的 Cookie 來確保網站正常運作。",
+    "details": "這些 Cookie 用於維護您的工作階段和偏好設定。",
+    "accept": "接受",
+    "decline": "拒絕",
+    "learnMore": "瞭解更多"
+  },
+  "footer": {
+    "copyright": "© {year} Puzzled. 版權所有。",
+    "privacy": "隱私權政策",
+    "terms": "服務條款",
+    "contact": "聯絡我們"
+  },
+  "pwa": {
+    "installTitle": "加到主畫面",
+    "installDescription": "安裝 Puzzled 獲得最佳體驗，支援離線遊戲和快速存取。",
+    "installButton": "安裝應用",
+    "installInstructionsIOS": "將此應用加到主畫面以獲得最佳體驗。",
+    "iosTap": "點選",
+    "iosThen": "然後",
+    "iosAddHome": "加到主畫面"
+  },
+  "gameResult": {
+    "congratulations": "恭喜！",
+    "gameOver": "遊戲結束",
+    "theWordWas": "答案是 {word}",
+    "attempts": "嘗試次數",
+    "mistakes": "錯誤次數",
+    "score": "分數",
+    "correct": "正確",
+    "time": "用時",
+    "playAgain": "再玩一次",
+    "moreGames": "更多遊戲",
+    "comeBackTomorrow": "明天回來繼續保持連勝！",
+    "status": "狀態",
+    "won": "成功",
+    "lost": "失敗",
+    "srWonWithAttempts": "恭喜！您在 {attempts, plural, one {# 次嘗試} other {# 次嘗試}}中獲勝！",
+    "srWonWithScore": "恭喜！您獲得了 {score} 分！",
+    "srLostWithSolution": "遊戲結束。答案是 {word}。",
+    "beatPercent": "你擊敗了今天 {percent}% 的玩家！",
+    "topPercent": "今日前 {percent}%！",
+    "perfectGame": "完美通關！🎯",
+    "playersToday": "{count} 位玩家今日挑戰",
+    "backToHome": "返回首頁",
+    "missedCategories": "你錯過咗："
+  },
+  "streak": {
+    "keepStreak": "保持連勝！",
+    "streakAtRisk": "連勝紀錄危險！",
+    "legendaryAtRisk": "傳奇連勝危險！",
+    "playToMaintain": "今天玩一局以保持你的 {streak} 天連勝",
+    "playNow": "立即遊戲",
+    "currentStreak": "目前連勝",
+    "bestStreak": "最佳連勝",
+    "days": "天",
+    "daysToGo": "天後達成",
+    "nextMilestone": "下個里程碑",
+    "freezes": "凍結次數",
+    "useFreeze": "使用凍結",
+    "playToday": "今日遊戲",
+    "dismiss": "關閉",
+    "emergency": "緊急！還剩 {time} 來拯救你的 {streak} 天連勝！",
+    "emergencyTitle": "緊急！",
+    "critical": "你的 {streak} 天連勝將在 {time} 後結束！",
+    "criticalTitle": "連勝危急！",
+    "elevated": "別丟失你的 {streak} 天連勝！還剩 {time}"
+  },
+  "calendar": {
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "won": "獲勝",
+    "played": "已玩",
+    "missed": "錯過"
+  },
+  "achievements": {
+    "title": "成就",
+    "unlocked": "已解鎖",
+    "locked": "未解鎖",
+    "nextUp": "即將達成",
+    "progress": "進度",
+    "shareAchievement": "分享成就"
+  },
+  "daily": {
+    "nextPuzzle": "下個謎題",
+    "hours": "小時",
+    "minutes": "分鐘",
+    "seconds": "秒",
+    "todaysProgress": "今日進度",
+    "completed": "已完成",
+    "allCompleteMessage": "太棒了！你已完成今日所有遊戲！",
+    "puzzleNumber": "謎題 #{number}",
+    "superStreak": "超級連勝",
+    "superStreakDesc": "每日完成所有遊戲",
+    "alreadyCompleted": "已完成！",
+    "youSolvedTodays": "你已解開今日的 {game}",
+    "youTriedTodays": "你已嘗試過今日的 {game}",
+    "comeBackTomorrow": "新謎題將於 UTC 午夜解鎖",
+    "wantMore": "想繼續玩？",
+    "upgrade": "升級",
+    "backToGames": "返回遊戲列表"
+  },
+  "modes": {
+    "daily": "每日",
+    "archive": "歷史",
+    "dailyDesc": "今日謎題 - 僅有一次機會",
+    "archiveDesc": "遊玩過去的謎題",
+    "premiumRequired": "需要 Premium",
+    "upgrade": "升級"
+  },
+  "premium": {
+    "archiveTitle": "謎題歷史",
+    "archiveDesc": "遊玩錯過或想重玩的謎題",
+    "archiveBenefit1": "存取過去的每日謎題",
+    "archiveBenefit2": "完成你的收藏",
+    "archiveBenefit3": "挑戰經典謎題",
+    "unlockWithPremium": "升級 Premium 解鎖",
+    "notNow": "稍後",
+    "streakFreezeTitle": "連勝凍結",
+    "streakFreezeDesc": "在忙碌時保護您的連勝",
+    "streakFreezeBenefit1": "在錯過的日子保存連勝",
+    "streakFreezeBenefit2": "每月 3-6 次凍結",
+    "streakFreezeBenefit3": "永不丟失進度",
+    "unlockPremiumPrice": "使用 Premium 解鎖 - $4.99/月"
+  },
+  "pricing": {
+    "title": "選擇方案",
+    "subtitle": "解鎖無限練習、謎題歷史和連勝保護",
+    "valueProp1Title": "連勝凍結",
+    "valueProp1Desc": "保護你的連勝",
+    "valueProp2Title": "謎題歷史",
+    "valueProp2Desc": "遊玩過去的謎題",
+    "startFreeTrial": "開始免費試用",
+    "getPremium": "取得 Premium",
+    "getAnnual": "取得年度方案",
+    "popular": "熱門",
+    "bestValue": "最划算",
+    "savePercent": "節省 33%",
+    "trialDays": "{days}天免費試用",
+    "monthlyEquivalent": "{amount}/月（按年計費）",
+    "upgradeNow": "立即升級",
+    "comparisonTitle": "比較方案",
+    "features": "功能",
+    "comparisonFooter": "選擇最適合您的方案",
+    "feature": {
+      "dailyPuzzles": "每日謎題",
+      "allDailyPuzzles": "所有每日謎題",
+      "basicStats": "基本統計",
+      "fullStats": "進階統計",
+      "puzzleArchive": "謎題歷史",
+      "streakFreeze": "連勝凍結",
+      "streakFreeze6": "每月 6 次連勝凍結",
+      "leaderboards": "排行榜",
+      "noAds": "無廣告",
+      "earlyAccess": "搶先體驗新遊戲"
+    },
+    "streakProtectionTitle": "永不丟失連勝",
+    "streakProtectionDesc": "Premium 每月包含連勝凍結。錯過一天？使用凍結保持連勝。",
+    "learnAboutFreezes": "了解更多",
+    "questionsTitle": "有問題？",
+    "questionsDesc": "通過 support@puzzled.gg 聯繫我們"
+  },
+  "trial": {
+    "daysLeft": "試用期還剩 {days} 天",
+    "lastDay": "試用期最後一天",
+    "trialBannerDesc": "免費享用所有 Premium 功能",
+    "subscribe": "立即訂閱",
+    "trialEndingSoon": "試用期即將結束！",
+    "lastDayTitle": "試用期最後一天！",
+    "trialEndingDesc": "您的試用期將在 {days} 天後結束",
+    "lastDayDesc": "您的試用期明天結束。立即訂閱以繼續享用 Premium 功能。",
+    "keepAccessTo": "繼續使用：",
+    "allGamesUnlimited": "所有遊戲無限制",
+    "puzzleArchive": "完整謎題檔案庫",
+    "streakProtection": "連勝保護",
+    "afterTrial": "試用期結束後",
+    "subscribeToContinue": "訂閱以繼續",
+    "remindLater": "稍後提醒"
+  },
+  "onboarding": {
+    "welcomeTitle": "歡迎來到 Puzzled！",
+    "welcomeSubtitle": "每日謎題挑戰你的頭腦，與朋友競爭",
+    "dailyPuzzle": "每日謎題",
+    "dailyPuzzleDesc": "每天 UTC 午夜更新新挑戰",
+    "buildStreak": "建立連勝",
+    "buildStreakDesc": "每日遊玩，建立無敵連勝",
+    "compete": "競爭與分享",
+    "competeDesc": "與朋友比較，攀登排行榜",
+    "playNow": "玩今日謎題",
+    "noAccountNeeded": "無需帳號即可開始",
+    "niceWork": "做得好！",
+    "signupPromptDesc": "建立免費帳號以儲存進度",
+    "saveStreak": "保護你的連勝",
+    "leaderboards": "參與排行榜競爭",
+    "trackStats": "追蹤你的統計",
+    "keepStreak": "保持你的 {days} 天連勝！",
+    "createFreeAccount": "建立免費帳號",
+    "maybeLater": "稍後再說",
+    "signupBannerTitle": "儲存你的進度！",
+    "signupBannerDesc": "建立免費帳號以保持連勝",
+    "signupCardTitle": "別丟失進度",
+    "signupCardDesc": "註冊以儲存連勝和統計",
+    "dayStreak": "天連勝",
+    "streakMilestoneDesc": "你正在火熱中！繼續保持",
+    "protectStreak": "升級 Premium 保護連勝：",
+    "puzzleArchive": "遊玩過去的謎題",
+    "streakFreeze": "連勝凍結保護",
+    "leaderboardAccess": "完整排行榜存取",
+    "tryPremiumFree": "免費試用 Premium",
+    "continueFree": "繼續免費版",
+    "upgradeToPremium": "升級至 Premium",
+    "premiumCardDesc": "解鎖所有功能並保護您的連勝",
+    "goPremium": "升級 Premium",
+    "premiumModalDesc": "解鎖完整的 Puzzled 體驗",
+    "viewPlans": "查看方案",
+    "learnMore": "了解更多"
+  },
+  "settings": {
+    "overview": {
+      "metaTitle": "設定 - Puzzled",
+      "metaDescription": "管理您的 Puzzled 帳戶設定",
+      "title": "設定",
+      "subtitle": "管理您的帳戶和偏好設定",
+      "welcomeBack": "歡迎回來",
+      "quickActions": "快捷操作",
+      "editPlayerCard": "編輯玩家卡片",
+      "securityScore": "安全評分",
+      "securityScoreDesc": "帳戶保護等級",
+      "viewSecurity": "查看安全",
+      "improveSecurity": "提高安全",
+      "allSettings": "所有設定",
+      "badges": {
+        "premium": "高級版",
+        "secure": "安全",
+        "new": "新",
+        "beta": "測試版"
+      },
+      "level": "等級 {level}",
+      "moreAchievements": "+{count} 更多",
+      "quickNotifications": {
+        "title": "通知",
+        "allActive": "全部啟用",
+        "partialActive": "部分啟用",
+        "inactive": "已關閉",
+        "manage": "管理"
+      }
+    },
+    "profile": "個人資料",
+    "profileDescription": "您的帳戶資訊",
+    "subscription": {
+      "title": "Subscription",
+      "description": "Manage your subscription plan and billing",
+      "currentPlan": "Current Plan",
+      "currentPlanDescription": "View your current subscription plan and billing information",
+      "free": "Free",
+      "premium": "Premium",
+      "lifetime": "Lifetime",
+      "trial": "Trial",
+      "active": "Active",
+      "cancelling": "Cancelling",
+      "expiresOn": "Renews on {date}",
+      "trialEndsOn": "Trial ends on {date}",
+      "trialDaysLeft": "{days} days left in trial",
+      "trialDaysRemaining": "{days} days remaining in trial",
+      "renewsOn": "Renews on {date}",
+      "accessUntil": "Access until {date}",
+      "lifetimeAccess": "Lifetime Access",
+      "lifetimeDescription": "You have unlimited access to all premium features",
+      "lifetimeAccessDescription": "Thank you for your lifetime support! Enjoy unlimited access to all premium features, forever.",
+      "cancelledOn": "Cancelled - access until {date}",
+      "upgrade": "Upgrade to Premium",
+      "upgradeToPremium": "Upgrade to Premium",
+      "upgradeTitle": "Upgrade to Premium",
+      "upgradeDescription": "Get unlimited access to all puzzles, archive games, and streak protection",
+      "upgradeToUnlock": "Upgrade to unlock",
+      "manageSubscription": "Manage Subscription",
+      "manageTitle": "Manage Your Subscription",
+      "manageDescription": "Update your subscription, payment method, and billing details",
+      "billingPortalDescription": "Opens Stripe billing portal to manage your subscription and payment methods",
+      "trialProgress": "{days} of 7 trial days remaining",
+      "daysLeft": "{days} days left",
+      "yourFeatures": "Your Features",
+      "freePlan": "Free Plan",
+      "included": "What's Included",
+      "payment": "Payment",
+      "downloadInvoice": "Download Invoice",
+      "billingHistory": "Billing History",
+      "billingHistoryDescription": "View your past invoices and payments",
+      "noHistory": "No billing history",
+      "date": "Date",
+      "amount": "Amount",
+      "status": {
+        "succeeded": "Succeeded",
+        "pending": "Pending",
+        "failed": "Failed",
+        "refunded": "Refunded",
+        "disputed": "Disputed"
+      },
+      "paymentMethod": "Payment Method",
+      "paymentMethodDescription": "Manage your default payment method",
+      "updatePaymentMethod": "Update Payment Method",
+      "updatePaymentDescription": "Manage your payment methods in the billing portal",
+      "features": {
+        "title": "Plan Features",
+        "included": "Included",
+        "notIncluded": "Not included",
+        "dailyPuzzles": "1 free daily puzzle",
+        "basicStats": "Basic statistics",
+        "allGames": "All games unlimited",
+        "puzzleArchive": "Archive access",
+        "streakFreeze": "Streak freeze protection",
+        "leaderboards": "Leaderboard access",
+        "noAds": "Ad-free experience"
+      }
+    },
+    "subscriptionDescription": "管理您的訂閱方案",
+    "currentPlan": "目前方案",
+    "expiresOn": "{date} 到期",
+    "manageSubscription": "管理訂閱",
+    "preferences": {
+      "title": "Preferences",
+      "description": "Customize your experience",
+      "appearance": {
+        "title": "Appearance",
+        "description": "Customize how Puzzled looks",
+        "theme": "Theme",
+        "themeDescription": "Choose your color theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System",
+        "reduceMotion": "Reduce Motion",
+        "reduceMotionDescription": "Minimize animations and transitions",
+        "compactMode": "Compact Mode",
+        "compactModeDescription": "Use a denser layout with smaller spacing"
+      },
+      "language": {
+        "title": "Language & Region",
+        "description": "Set your language and regional preferences",
+        "language": "Language",
+        "languageDescription": "Choose your preferred language",
+        "timezone": "Timezone",
+        "timezoneDescription": "Set your local timezone for daily puzzle resets",
+        "selectTimezone": "Select timezone",
+        "dateFormat": "Date Format",
+        "dateFormatDescription": "Choose how dates are displayed",
+        "dateFormats": {
+          "relative": "Relative (e.g., 2 days ago)",
+          "absolute": "Absolute (e.g., Dec 28, 2025)",
+          "iso": "ISO (e.g., 2025-12-28)"
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Choose what notifications you receive"
+      }
+    },
+    "preferencesDescription": "自訂您的使用體驗",
+    "theme": "主題",
+    "themeDescription": "選擇您的顏色主題",
+    "systemDefault": "系統預設",
+    "language": "語言",
+    "languageDescription": "選擇您偏好的語言",
+    "notifications": {
+      "metaTitle": "Notifications - Settings",
+      "title": "Notifications",
+      "description": "Manage how and when you receive updates",
+      "loadError": "Failed to load notification preferences",
+      "overview": {
+        "title": "Notification Center",
+        "description": "Stay updated on your puzzles and streaks",
+        "enabled": "Active",
+        "disabled": "All Off",
+        "push": "Push",
+        "pushActive": "{count} types active",
+        "pushOff": "Disabled",
+        "email": "Email",
+        "emailActive": "{count} types active",
+        "emailOff": "Disabled"
+      },
+      "push": {
+        "title": "Push Notifications",
+        "description": "Get notified on your device",
+        "dailyReminder": "Daily Puzzle Reminder",
+        "dailyReminderDescription": "Remind you to play today's puzzle",
+        "streakAlert": "Streak Alert",
+        "streakAlertDescription": "Warn before you lose a streak"
+      },
+      "email": {
+        "title": "Email Notifications",
+        "description": "Receive updates in your inbox",
+        "newsletter": "Newsletter",
+        "newsletterDescription": "Weekly puzzle highlights and tips",
+        "marketing": "Product Updates",
+        "marketingDescription": "New features and announcements",
+        "security": "Security Alerts",
+        "securityDescription": "Important security notifications"
+      },
+      "test": {
+        "title": "Test Notifications",
+        "description": "Verify your notification settings",
+        "push": "Send Test Push",
+        "pushSuccess": "Test notification sent!",
+        "pushError": "Failed to send notification",
+        "email": "Send Test Email",
+        "emailSuccess": "Test email sent!",
+        "emailError": "Failed to send email"
+      }
+    },
+    "notificationsDescription": "管理推播通知",
+    "pushNotifications": "推播通知",
+    "pushDescription": "接收每日謎題和連勝提醒",
+    "pushEnabled": "您將收到通知",
+    "pushEnable": "啟用",
+    "pushDisable": "停用",
+    "pushUnsupported": "您的瀏覽器不支援推播通知",
+    "pushDisabled": "推播通知目前無法使用",
+    "pushDenied": "您已封鎖通知。請在瀏覽器設定中啟用。",
+    "pushLoading": "正在檢查通知狀態...",
+    "dangerZone": "危險區域",
+    "dangerZoneDescription": "不可逆的操作",
+    "deleteAccount": "刪除帳戶",
+    "deleteAccountNote": "請聯絡客服刪除您的帳戶",
+    "sessions": {
+      "title": "活動工作階段",
+      "description": "管理所有裝置上的活動工作階段",
+      "currentSession": "目前裝置",
+      "signOut": "登出",
+      "signOutAll": "全部登出",
+      "signOutAllOther": "登出所有其他裝置",
+      "signOutAllOtherDescription": "{count, plural, =1 {將登出 1 個工作階段} other {將登出 # 個工作階段}}",
+      "noSessions": "未找到活動工作階段",
+      "fetchError": "載入工作階段失敗",
+      "revokeError": "登出失敗",
+      "revokeAllError": "登出其他工作階段失敗"
+    },
+    "securityAlerts": {
+      "title": "Security Alerts",
+      "description": "Important security events on your account",
+      "notifications": "Security notifications",
+      "unread": "unread",
+      "markAllRead": "Mark all as read",
+      "markRead": "Mark as read",
+      "noAlerts": "No security alerts",
+      "noAlertsDescription": "Security events like logins and password changes will appear here",
+      "viewAll": "View all security events",
+      "showingOf": "Showing {shown} of {total} alerts",
+      "types": {
+        "new_login": "New Sign In",
+        "password_changed": "Password Changed",
+        "2fa_enabled": "2FA Enabled",
+        "2fa_disabled": "2FA Disabled",
+        "new_device": "New Device",
+        "suspicious_login": "Suspicious Login",
+        "oauth_connected": "Account Connected",
+        "oauth_disconnected": "Account Disconnected",
+        "session_revoked": "Session Revoked"
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "description": "Manage your privacy and data",
+      "profileVisibility": {
+        "title": "Profile Visibility",
+        "description": "Control who can see your profile and information",
+        "publicProfile": "Public Profile",
+        "publicProfileDescription": "Make your profile visible at puzzled.gg/u/{username}",
+        "leaderboardVisibility": "Appear on Leaderboards",
+        "leaderboardDescription": "Show your name and stats on public leaderboards",
+        "visibleWhenPublic": "When public, others can see:",
+        "visibleName": "Your display name and avatar",
+        "visibleUsername": "Your username",
+        "visibleStats": "Your game statistics",
+        "visibleAchievements": "Your achievements and streaks"
+      },
+      "dataManagement": {
+        "title": "Data Management",
+        "description": "Export or manage your personal data"
+      },
+      "exportData": "Export Your Data",
+      "exportDescription": "Download a copy of all your data in JSON format",
+      "exportButton": "Export Data",
+      "exporting": "Preparing your data...",
+      "exportIncludes": "Your export includes:",
+      "exportProfile": "Profile information and settings",
+      "exportGameHistory": "Complete game history and daily games",
+      "exportStats": "All statistics and performance data",
+      "exportStreaks": "Streak history and achievements",
+      "analytics": {
+        "title": "Analytics",
+        "description": "Help us improve Puzzled with anonymous usage data",
+        "whatWeCollect": "What we collect",
+        "collectionDescription": "We collect anonymous analytics to improve your experience:",
+        "collectGamePlay": "Game play patterns and preferences",
+        "collectPerformance": "Performance metrics and load times",
+        "collectErrors": "Error reports and crash logs",
+        "noPersonalData": "No personal information is shared. All data is anonymized."
+      },
+      "deleteAccount": {
+        "title": "Delete Account",
+        "dangerZone": "Danger Zone",
+        "dangerZoneDescription": "Irreversible actions that permanently affect your account",
+        "deleteButton": "Delete My Account",
+        "warning": "This action cannot be undone",
+        "warningDescription": "Deleting your account is permanent. All your data will be erased forever.",
+        "whatWillBeDeleted": "What will be deleted:",
+        "deleteProfile": "Your profile and settings",
+        "deleteGameHistory": "All game history and statistics",
+        "deleteAchievements": "All achievements and streaks",
+        "deleteSubscription": "Your subscription (will be cancelled)",
+        "exportFirst": "Export your data before deleting",
+        "confirmWord": "DELETE",
+        "confirmPrompt": "Type {confirmWord} to confirm deletion",
+        "typeDelete": "Type \"{confirmWord}\" in all caps to confirm",
+        "confirmButton": "Permanently Delete Account",
+        "confirmError": "Please type {confirmWord} to confirm",
+        "deleting": "Deleting your account...",
+        "permanentAction": "Warning: This is permanent",
+        "permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased."
+      }
+    }
+  },
+  "support": {
+    "title": "支援與協助",
+    "description": "獲取有關您的帳戶、遊戲或訂閱的協助",
+    "email": {
+      "title": "電子郵件支援",
+      "description": "傳送電子郵件給我們，我們會回覆您",
+      "responseTime": "24-48 小時內回覆"
+    },
+    "faq": {
+      "title": "常見問題",
+      "description": "常見問題的快速解答",
+      "q1": {
+        "question": "如何重設密碼？",
+        "answer": "在登入頁面點擊「忘記密碼？」並輸入您的電子郵件。您將收到重設密碼的連結。"
+      },
+      "q2": {
+        "question": "如何取消訂閱？",
+        "answer": "前往設定 > 訂閱並點擊「管理訂閱」。您可以隨時取消，並在帳單週期結束前保留存取權限。"
+      },
+      "q3": {
+        "question": "為什麼我的連勝被重設了？",
+        "answer": "如果您在沒有使用連勝凍結的情況下錯過一天，連勝將被重設。Premium 會員每月獲得連勝凍結來保護進度。"
+      }
+    },
+    "resources": {
+      "title": "有用資源",
+      "description": "查找有關我們服務的更多資訊",
+      "privacy": "隱私政策",
+      "terms": "服務條款",
+      "pricing": "定價方案"
+    },
+    "contact": {
+      "title": "需要更多協助？",
+      "description": "找不到您要找的內容？我們的支援團隊隨時為您提供協助。",
+      "cta": "聯絡支援"
+    }
+  },
+  "admin": {
+    "title": "管理面板",
+    "sidebar": {
+      "dashboard": "儀表板",
+      "plansAndPricing": "方案與定價",
+      "users": "用戶",
+      "games": "遊戲",
+      "analytics": "分析",
+      "settings": "設定",
+      "backToApp": "返回應用",
+      "dlq": "死信佇列",
+      "auditLogs": "稽核日誌",
+      "experiments": "實驗"
+    },
+    "dashboard": {
+      "title": "儀表板",
+      "subtitle": "平台概覽",
+      "totalUsers": "總用戶數",
+      "premiumUsers": "Premium 用戶",
+      "gameSessions": "遊戲會話",
+      "estMRR": "預估 MRR",
+      "recentUsers": "近期用戶",
+      "noUsersYet": "尚無用戶",
+      "unnamed": "未命名"
+    },
+    "users": {
+      "title": "用戶",
+      "subtitle": "管理用戶帳戶和權限",
+      "totalUsers": "總用戶數",
+      "admins": "管理員",
+      "premium": "Premium",
+      "verified": "已驗證",
+      "searchPlaceholder": "搜尋用戶...",
+      "tableHeaders": {
+        "user": "用戶",
+        "role": "角色",
+        "plan": "方案",
+        "verified": "已驗證",
+        "joined": "加入時間",
+        "actions": "操作"
+      },
+      "noUsersFound": "未找到用戶",
+      "makeAdmin": "設為管理員",
+      "removeAdmin": "移除管理員",
+      "free": "免費"
+    },
+    "plans": {
+      "title": "方案與定價",
+      "subtitle": "管理訂閱方案並與 Stripe 同步",
+      "seedDefault": "生成預設方案",
+      "syncAll": "全部同步至 Stripe",
+      "noPlansYet": "尚無方案",
+      "noPlansHint": "點擊「生成預設方案」建立免費和 Premium 方案",
+      "active": "啟用",
+      "inactive": "停用",
+      "stripeSynced": "已同步 Stripe",
+      "syncToStripe": "同步至 Stripe",
+      "slug": "識別符",
+      "description": "描述",
+      "stripeProductId": "Stripe 產品 ID",
+      "features": "功能",
+      "prices": "價格",
+      "notSynced": "未同步"
+    },
+    "games": {
+      "title": "遊戲",
+      "subtitle": "管理遊戲和每日謎題",
+      "noGamesYet": "尚無遊戲",
+      "noGamesHint": "加到資料庫後，遊戲將顯示在此處"
+    },
+    "dlq": {
+      "title": "死信佇列",
+      "subtitle": "監控和管理失敗的工作流程執行",
+      "stats": {
+        "total": "總計",
+        "pending": "待處理",
+        "retrying": "重試中",
+        "resolved": "已解決",
+        "failed": "已失敗"
+      },
+      "table": {
+        "workflow": "工作流程",
+        "error": "錯誤",
+        "retries": "重試次數",
+        "status": "狀態",
+        "created": "建立時間",
+        "actions": "操作"
+      },
+      "actions": {
+        "retry": "重試",
+        "resolve": "標記為已解決",
+        "fail": "標記為失敗",
+        "delete": "刪除",
+        "viewDetails": "查看詳情"
+      },
+      "status": {
+        "pending": "待處理",
+        "retrying": "重試中",
+        "resolved": "已解決",
+        "failed": "已失敗"
+      },
+      "empty": {
+        "title": "佇列中無項目",
+        "description": "失敗的工作流程執行將顯示在此處"
+      },
+      "confirmRetry": "這將觸發新的工作流程執行。是否繼續？",
+      "confirmDelete": "這將永久刪除此項目。是否繼續？",
+      "confirmRetryTitle": "重試工作流程",
+      "confirmRetryDescription": "這將觸發新的工作流程執行嘗試。工作流程將使用其原始資料重新處理。",
+      "confirmDeleteTitle": "刪除項目",
+      "confirmDeleteDescription": "這將永久刪除此死信佇列項目。此操作無法撤銷。",
+      "retrySuccess": "重試已成功觸發",
+      "forceRetry": "強制重試（繞過最大重試次數）"
+    },
+    "auditLogs": {
+      "title": "稽核日誌",
+      "subtitle": "追蹤所有管理操作和系統事件",
+      "loading": "正在載入稽核日誌...",
+      "stats": {
+        "totalLogs": "總日誌數",
+        "onThisPage": "本頁",
+        "totalPages": "總頁數",
+        "adminActions": "管理操作"
+      },
+      "table": {
+        "timestamp": "時間戳記",
+        "action": "操作",
+        "actor": "執行者",
+        "resource": "資源",
+        "ip": "IP 位址"
+      },
+      "actions": {
+        "create": "建立",
+        "update": "更新",
+        "delete": "刪除",
+        "login": "登入",
+        "logout": "登出",
+        "role_change": "角色變更",
+        "subscription_change": "訂閱變更",
+        "impersonate_start": "開始模擬",
+        "impersonate_end": "結束模擬",
+        "feature_flag_toggle": "功能旗標切換",
+        "admin_action": "管理操作"
+      },
+      "filters": {
+        "searchPlaceholder": "按資源 ID 或 IP 位址搜尋...",
+        "action": "操作類型",
+        "allActions": "所有操作",
+        "resourceType": "資源類型",
+        "allResources": "所有資源",
+        "startDate": "開始日期",
+        "endDate": "結束日期",
+        "clearFilters": "清除篩選",
+        "refresh": "重新整理"
+      },
+      "details": {
+        "title": "稽核日誌詳情",
+        "subtitle": "關於此事件的完整資訊",
+        "notFound": "未找到稽核日誌",
+        "user": "用戶",
+        "actor": "執行者（管理員）",
+        "resource": "資源",
+        "resourceType": "資源類型",
+        "resourceId": "資源 ID",
+        "technical": "技術詳情",
+        "ipAddress": "IP 位址",
+        "userAgent": "使用者代理",
+        "timestamp": "時間戳記",
+        "metadata": "其他中繼資料"
+      },
+      "empty": {
+        "title": "未找到稽核日誌",
+        "description": "嘗試調整篩選條件或搜尋條件"
+      },
+      "pagination": {
+        "showing": "顯示第 {from}-{to} 筆，共 {total} 筆",
+        "previous": "上一頁",
+        "next": "下一頁",
+        "page": "第 {page} 頁，共 {total} 頁"
+      }
+    },
+    "experiments": {
+      "title": "A/B 實驗",
+      "subtitle": "監控和分析實驗結果",
+      "viewInPostHog": "在 PostHog 中檢視",
+      "totalExposures": "總曝光次數",
+      "variant": "變體",
+      "exposures": "曝光次數",
+      "conversions": "轉換次數",
+      "conversionRate": "轉換率",
+      "performance": "效能",
+      "winner": "優勝者",
+      "recommendation": "建議",
+      "howToUse": {
+        "title": "如何使用實驗",
+        "step1": "1. 在 PostHog 中為每個變體建立功能旗標實驗",
+        "step2": "2. 將實驗定義新增到 ab-testing.ts 的 EXPERIMENTS 物件中",
+        "step3": "3. 在元件中使用 useExperiment() 鉤子獲取變體並自動追蹤曝光"
+      },
+      "learnMore": "深入了解實驗"
+    }
+  },
+  "winBack": {
+    "day7": {
+      "subject": "我們想念您！",
+      "title": "我們想念您！",
+      "body": "我們注意到您有一段時間沒有玩了。您的謎題正在等您！",
+      "whatYoureMissing": "您錯過的內容：",
+      "cta": "立即遊戲"
+    },
+    "day14": {
+      "subject": "Puzzled 有新內容了！",
+      "title": "新謎題在等您！",
+      "body": "已經有幾週沒見到您了。我們一直在為您建立新挑戰！",
+      "whatsNew": "新內容：",
+      "cta": "查看新內容"
+    },
+    "day30": {
+      "subject": "Premium 5折優惠，歡迎回來！",
+      "title": "專為您準備的特別優惠！",
+      "offer": "Premium 5折優惠",
+      "subtitle": "我們希望您回來",
+      "body": "我們很想念您作為 Puzzled 社群的一員！作為對尊貴會員的特別感謝，我們為您提供 Premium 首月5折優惠。",
+      "premiumBenefits": "Premium 福利：",
+      "fullArchive": "完整謎題存檔 - 隨時存取過去的每日謎題",
+      "streakProtection": "連勝凍結保護 - 永不丟失進度",
+      "advancedStats": "進階統計 - 追蹤您的改進",
+      "leaderboardAccess": "排行榜存取 - 與其他玩家競爭",
+      "adFree": "無廣告體驗 - 純粹、不間斷的遊戲體驗",
+      "discountCode": "您的專屬折扣碼：",
+      "expiresWarning": "此優惠將在7天後過期！",
+      "cta": "領取5折優惠",
+      "noObligations": "無任何義務。隨時取消。",
+      "unsubscribe": "取消訂閱召回郵件"
+    }
+  },
+  "referrals": {
+    "title": "推薦好友",
+    "description": "邀請朋友，一起贏取獎勵",
+    "yourReferralCode": "您的推薦碼",
+    "shareWithFriends": "與朋友分享以賺取獎勵",
+    "referralLink": "推薦連結",
+    "copy": "複製連結",
+    "share": "分享",
+    "copied": "已複製！",
+    "getStarted": "取得推薦碼",
+    "generateCodeDescription": "與朋友分享並賺取獎勵",
+    "generateCode": "產生代碼",
+    "generating": "產生中...",
+    "rewardInfo": "當您的朋友註冊時，您和朋友都會獲得連勝凍結！",
+    "yourReferrals": "您的推薦",
+    "referralProgress": "追蹤您的推薦進度",
+    "totalReferrals": "總計",
+    "completed": "已完成",
+    "pending": "待處理",
+    "expired": "已過期",
+    "recentReferrals": "最近的推薦",
+    "noReferralsYet": "還沒有推薦。分享您的代碼開始吧！",
+    "pendingUser": "待註冊",
+    "andMore": "以及其他{count}人...",
+    "shareTitle": "和我一起玩 Puzzled！",
+    "shareText": "在 Puzzled 上和我一起玩每日腦力遊戲。使用我的推薦碼開始吧！",
+    "howItWorks": "如何運作",
+    "step1": "與朋友分享您的唯一推薦碼",
+    "step2": "您的朋友使用您的代碼註冊",
+    "step3": "您和朋友都會獲得連勝凍結作為獎勵！"
+  }
+}

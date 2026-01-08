@@ -1,0 +1,15 @@
+{
+	"name": "Cryptogram",
+	"tagline": "Decode quotes • Word puzzle",
+	"highlight": "Famous quotes",
+	"description": "Decrypt famous quotes by letter substitution",
+	"howToPlay": "How to Play Cryptogram",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Each letter has been replaced with a different letter",
+		"rule2": "Figure out the substitution to reveal the quote",
+		"rule3": "The same letter always maps to the same replacement"
+	},
+	"startGame": "Start Game",
+	"complete": "Quote Solved!"
+}

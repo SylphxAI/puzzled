@@ -1,0 +1,19 @@
+{
+	"name": "Quordle",
+	"tagline": "4 words • 9 guesses",
+	"highlight": "4x Wordle",
+	"description": "Solve 4 Wordle puzzles at once",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Guess all 4 hidden words in 9 tries",
+		"rule2": "Each guess applies to all 4 boards",
+		"rule3": "Green = correct, Yellow = wrong position, Gray = not in word"
+	},
+	"startGame": "Start Game",
+	"complete": "Puzzle Complete!",
+	"messages": {
+		"notEnoughLetters": "Not enough letters",
+		"notInWordList": "Not in word list"
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"name": "Letter Boxed",
+	"tagline": "12 letters • Chain words",
+	"highlight": "Word chain",
+	"description": "Connect letters around the box to form words",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Form words using the 12 letters on the box sides",
+		"rule2": "Consecutive letters must be from different sides",
+		"rule3": "Each new word starts with the last letter of the previous word"
+	},
+	"startGame": "Start Game",
+	"complete": "Puzzle Complete!"
+}

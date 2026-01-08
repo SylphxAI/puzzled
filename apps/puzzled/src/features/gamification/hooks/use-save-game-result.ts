@@ -1,0 +1,140 @@
+'use client'
+
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSession } from '@/features/auth'
+import type { PuzzleDifficulty } from '@/games/types'
+import { trpc } from '@/trpc'
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+/**
+ * Input for saving game results
+ *
+ * IMPORTANT: No `score` field - score is calculated server-side
+ * Client sends submission data, server validates and calculates score
+ */
+export type GameResultInput = {
+	status: 'won' | 'lost'
+	attempts: number
+	timeSpentMs: number
+	mode?: 'daily' | 'archive'
+	archiveDate?: string
+	puzzleId: string
+	/** Difficulty level for games that support it */
+	difficulty?: PuzzleDifficulty
+	/**
+	 * Game-specific submission data for server validation
+	 * Each game defines what data it needs:
+	 * - Wordle: { guesses: string[] }
+	 * - Sudoku: { finalGrid: number[][] }
+	 * - Queens: { finalGrid: boolean[][] }
+	 * - etc.
+	 */
+	data: unknown
+}
+
+/**
+ * Response from saveResult includes server-calculated score
+ */
+export type SaveResultResponse = {
+	success: boolean
+	score?: number
+	error?: string
+}
+
+export function useSaveGameResult(gameSlug: string) {
+	const { data: session } = useSession()
+	const [status, setStatus] = useState<SaveStatus>('idle')
+	const [error, setError] = useState<string | null>(null)
+	const savedRef = useRef(false)
+
+	// tRPC utils for cache invalidation
+	const utils = trpc.useUtils()
+
+	// tRPC mutation
+	const mutation = trpc.games.saveResult.useMutation({
+		onSuccess: () => {
+			// savedRef.current already set before mutation started (prevents race condition)
+			setStatus('saved')
+			// Invalidate related queries so UI reflects updated stats/streaks
+			utils.stats.getUserStats.invalidate()
+			utils.gamification.getStreakInfo.invalidate()
+			utils.gamification.getTodayCompletions.invalidate()
+		},
+		onError: (err) => {
+			// savedRef.current reset in catch block to allow retry
+			setStatus('error')
+			setError(err.message)
+		},
+	})
+
+	// Reset saved ref when session changes (user login/logout)
+	// This effect intentionally depends on userId to reset state on login/logout
+	const userId = session?.user?.id
+	// biome-ignore lint/correctness/useExhaustiveDependencies: userId dep is intentional for resetting on auth change
+	useEffect(() => {
+		savedRef.current = false
+		setStatus('idle')
+	}, [userId])
+
+	const saveResult = useCallback(
+		async (input: GameResultInput): Promise<SaveResultResponse> => {
+			// Don't save if not logged in
+			if (!userId) {
+				return { success: false, error: 'Not logged in' }
+			}
+
+			// Don't save twice - set flag BEFORE async operation to prevent race condition
+			if (savedRef.current) {
+				return { success: false, error: 'Already saved' }
+			}
+			savedRef.current = true // Lock immediately to prevent concurrent saves
+
+			setStatus('saving')
+			setError(null)
+
+			try {
+				const response = await mutation.mutateAsync({
+					gameSlug,
+					status: input.status,
+					attempts: input.attempts,
+					timeSpentMs: input.timeSpentMs,
+					mode: input.mode,
+					archiveDate: input.archiveDate,
+					puzzleId: input.puzzleId,
+					difficulty: input.difficulty,
+					data: input.data,
+				})
+
+				// Return server-calculated score
+				return {
+					success: response.success,
+					score: response.score,
+				}
+			} catch (err) {
+				// On error, allow retry by resetting the flag
+				savedRef.current = false
+				const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+				return { success: false, error: errorMessage }
+			}
+		},
+		[userId, gameSlug, mutation],
+	)
+
+	const reset = useCallback(() => {
+		savedRef.current = false
+		setStatus('idle')
+		setError(null)
+		mutation.reset()
+	}, [mutation])
+
+	return {
+		saveResult,
+		reset,
+		status,
+		error,
+		isLoggedIn: !!userId,
+		hasSaved: savedRef.current,
+		isPending: mutation.isPending,
+	}
+}

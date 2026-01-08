@@ -1,0 +1,15 @@
+{
+	"name": "Word Hunt",
+	"tagline": "Find words • Themed puzzles",
+	"highlight": "Hidden words",
+	"description": "Find hidden words in the letter grid",
+	"howToPlay": "How to Play Word Hunt",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Find all hidden words in the letter grid",
+		"rule2": "Words can be horizontal, vertical, or diagonal",
+		"rule3": "Drag from first to last letter to select"
+	},
+	"startGame": "Start Game",
+	"complete": "All Words Found!"
+}

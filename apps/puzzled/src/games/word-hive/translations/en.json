@@ -1,0 +1,39 @@
+{
+	"name": "Spelling Bee",
+	"tagline": "7 letters • Endless words",
+	"highlight": "Find words",
+	"description": "How many words can you make with 7 letters?",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Create words using the 7 letters shown",
+		"rule2": "Every word must include the center letter",
+		"rule3": "Words must be at least 4 letters long",
+		"rule4": "Letters can be used more than once"
+	},
+	"messages": {
+		"tooShort": "Words must be at least 4 letters",
+		"missingCenter": "Missing center letter",
+		"invalidLetter": "Invalid letter used",
+		"notInList": "Not in word list",
+		"alreadyFound": "Already found!"
+	},
+	"shuffle": "Shuffle",
+	"delete": "Delete",
+	"enter": "Enter",
+	"foundWords": "Found Words",
+	"pangram": "Pangram",
+	"pangramBonus": "+7 bonus",
+	"ranks": {
+		"beginner": "Beginner",
+		"goodStart": "Good Start",
+		"movingUp": "Moving Up",
+		"good": "Good",
+		"solid": "Solid",
+		"nice": "Nice",
+		"great": "Great",
+		"amazing": "Amazing",
+		"genius": "Genius",
+		"queenBee": "Queen Bee"
+	}
+}

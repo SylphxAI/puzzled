@@ -1,0 +1,30 @@
+{
+	"name": "Word Groups",
+	"tagline": "Find 4 groups of 4",
+	"highlight": "4 categories",
+	"description": "Group 16 words into 4 categories",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Find groups of 4 items that share something in common",
+		"rule2": "Select 4 items and tap Submit to check",
+		"rule3": "You have 4 mistakes allowed"
+	},
+	"submit": "Submit",
+	"shuffle": "Shuffle",
+	"deselect": "Deselect All",
+	"mistakes": "Mistakes remaining",
+	"mistakesRemaining": "{remaining} of {total} mistakes remaining",
+	"messages": {
+		"correct": "Correct!",
+		"oneAway": "One away...",
+		"incorrect": "Incorrect",
+		"gameOver": "Better luck next time!"
+	},
+	"difficulty": {
+		"0": "Easy",
+		"1": "Medium",
+		"2": "Hard",
+		"3": "Tricky"
+	}
+}

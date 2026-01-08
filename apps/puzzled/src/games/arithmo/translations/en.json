@@ -1,0 +1,22 @@
+{
+	"name": "Arithmo",
+	"tagline": "8 characters • Math puzzle",
+	"highlight": "Equation puzzle",
+	"description": "Guess the equation in 6 tries",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Guess the hidden equation in 6 tries",
+		"rule2": "Each guess must be a valid equation",
+		"rule3": "Colors show how close your guess was"
+	},
+	"startGame": "Start Game",
+	"keyboard": {
+		"enter": "Enter",
+		"delete": "Delete"
+	},
+	"messages": {
+		"notComplete": "Not enough characters",
+		"invalid": "Invalid equation"
+	}
+}

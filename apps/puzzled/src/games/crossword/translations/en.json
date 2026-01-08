@@ -1,0 +1,22 @@
+{
+	"name": "Crossword Mini",
+	"tagline": "5×5 grid • Quick solve",
+	"highlight": "5×5 puzzle",
+	"description": "Solve a compact crossword puzzle",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Fill in the 5×5 grid using the clues",
+		"rule2": "Tap a cell and type letters",
+		"rule3": "Tap the same cell to switch direction"
+	},
+	"startGame": "Start Game",
+	"across": "Across",
+	"down": "Down",
+	"selectCell": "Tap a cell to start",
+	"complete": "Puzzle Complete!",
+	"messages": {
+		"correct": "Correct!",
+		"incorrect": "Try again"
+	}
+}

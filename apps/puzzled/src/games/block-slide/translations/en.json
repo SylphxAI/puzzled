@@ -1,0 +1,19 @@
+{
+	"name": "Block Slide",
+	"tagline": "Klotski puzzle • Slide to win",
+	"highlight": "Sliding puzzle",
+	"description": "Slide blocks to free the target",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Move blocks by sliding them horizontally or vertically",
+		"rule2": "Guide the red target block to the exit at the bottom",
+		"rule3": "Try to solve in minimum moves"
+	},
+	"startGame": "Start Game",
+	"moves": "moves",
+	"minMoves": "Min",
+	"reset": "Reset",
+	"giveUp": "Give Up",
+	"hint": "Tap a block then use arrows to move, or drag directly"
+}

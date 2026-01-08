@@ -1,0 +1,30 @@
+/**
+ * Shared Game Utilities (Server-Safe)
+ *
+ * Consolidated utilities used across multiple games:
+ * - Random: Deterministic seeded random for puzzle generation
+ * - Format: Time and value formatting
+ *
+ * NOTE: useGameSession is NOT exported here to keep this barrel server-safe.
+ * Game components should import directly from '@/games/shared/use-game-session'
+ */
+
+// Format utilities
+export {
+	compareByTime,
+	formatTime,
+	formatTimer,
+	formatTimeScore,
+	isPerfectGame,
+} from './format'
+// Random utilities (FROZEN - do not modify algorithms)
+export { pickRandom, pickRandomN, seededRandom, seededShuffle, shuffleArray } from './random'
+
+// Types only (no runtime code) - safe for server
+export type {
+	GameEndData,
+	GameEndStatus,
+	GamePhase,
+	UseGameSessionOptions,
+	UseGameSessionReturn,
+} from './use-game-session'

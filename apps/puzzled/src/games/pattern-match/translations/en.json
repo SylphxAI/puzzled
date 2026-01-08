@@ -1,0 +1,24 @@
+{
+	"name": "Pattern Match",
+	"tagline": "12 cards • Find sets",
+	"highlight": "Set finder",
+	"description": "Find sets of 3 cards with matching patterns",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Find sets of 3 cards where each property is all same OR all different",
+		"rule2": "Each card has 4 properties: shape, color, fill, and count",
+		"rule3": "Select 3 cards that form a valid set"
+	},
+	"startGame": "Start Game",
+	"setsFound": "sets found",
+	"clear": "Clear",
+	"giveUp": "Give Up",
+	"hint": "Select 3 cards to check if they form a valid set",
+	"complete": "All sets found!",
+	"messages": {
+		"correct": "Valid set!",
+		"notASet": "Not a valid set",
+		"alreadyFound": "Set already found"
+	}
+}
