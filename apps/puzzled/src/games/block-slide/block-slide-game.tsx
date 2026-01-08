@@ -13,14 +13,8 @@ import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
-import {
-	BlockSlideIcon,
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-} from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { Board } from './components/board'
 import type { BlockSlideClientData } from './config'

@@ -4,7 +4,7 @@ import { Apple, Facebook, Github, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { signIn } from '@/features/auth'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 // Custom icons for providers not in lucide
 function DiscordIcon({ className }: { className?: string }) {

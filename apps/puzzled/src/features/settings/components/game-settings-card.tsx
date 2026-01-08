@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/components/ui'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@sylphx/ui'
 
 interface GameSettingsCardProps {
 	title: string

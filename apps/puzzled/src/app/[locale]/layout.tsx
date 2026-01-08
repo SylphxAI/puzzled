@@ -7,7 +7,7 @@ import { GTMProvider, PostHogProvider, WebVitalsReporter } from '@/features/anal
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { ThemeProvider } from '@/shared/components/theme'
-import { ToastProvider } from '@/shared/components/ui'
+import { ToastProvider } from '@sylphx/ui'
 import { TRPCProvider } from '@/trpc'
 import '../globals.css'
 

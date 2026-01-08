@@ -4,7 +4,7 @@ import { Download, FileText, Loader2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { cn, formatCurrency } from '@/lib/utils'
-import { Badge, Button } from '@/shared/components/ui'
+import { Badge, Button } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 const PAGE_SIZE = 10

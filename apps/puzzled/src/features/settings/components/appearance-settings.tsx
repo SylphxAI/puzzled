@@ -4,8 +4,8 @@ import { Eye, Minimize2, Palette } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState, useTransition } from 'react'
 import { ThemeToggle } from '@/shared/components/theme'
-import { Switch } from '@/shared/components/ui'
-import { useToast } from '@/shared/components/ui/toast'
+import { Switch } from '@sylphx/ui'
+import { useToast } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type AppearanceSettingsProps = {

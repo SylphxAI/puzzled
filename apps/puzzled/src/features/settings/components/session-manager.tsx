@@ -5,7 +5,7 @@ import { Clock, Globe, Loader2, LogOut, Shield } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Badge, Button, Skeleton, useAlertDialog, useToast } from '@/shared/components/ui'
+import { Badge, Button, Skeleton, useAlertDialog, useToast } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 import { DeviceIcon } from './device-icon'
 

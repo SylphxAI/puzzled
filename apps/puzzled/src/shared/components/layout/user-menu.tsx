@@ -14,7 +14,7 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 type UserMenuProps = {
 	/** Size variant for the trigger button */

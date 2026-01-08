@@ -12,7 +12,7 @@ import {
 	type UserAchievement,
 } from '@/features/gamification'
 import { cn } from '@/lib/utils'
-import { Icon } from '@/shared/components/ui'
+import { Icon } from '@sylphx/ui'
 
 type AchievementsProps = {
 	stats: {

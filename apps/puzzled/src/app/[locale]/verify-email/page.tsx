@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { sendVerificationEmail, verifyEmail } from '@/features/auth'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon } from '@/shared/components/ui'
+import { Button, GamepadIcon } from '@sylphx/ui'
 
 type VerificationState = 'verifying' | 'success' | 'error' | 'pending'
 

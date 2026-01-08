@@ -18,7 +18,7 @@ import { useTranslations } from 'next-intl'
 import QRCode from 'qrcode'
 import { useCallback, useEffect, useState } from 'react'
 import { APP_NAME } from '@/lib/config/app'
-import { Button, Input } from '@/shared/components/ui'
+import { Button, Input } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 import { ChallengeDialog } from './challenge-dialog'
 

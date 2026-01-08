@@ -15,7 +15,7 @@ import {
 } from '@/features/subscription/server'
 import { TRIAL_CONFIG } from '@/lib/config/subscription'
 import { cn } from '@/lib/utils'
-import { Progress } from '@/shared/components/ui/progress'
+import { Progress } from '@sylphx/ui'
 
 type Props = {
 	params: Promise<{ locale: string }>

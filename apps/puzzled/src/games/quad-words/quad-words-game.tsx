@@ -15,7 +15,7 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { quadWordsConfig } from './config'
 import type { LetterStatus } from './types'

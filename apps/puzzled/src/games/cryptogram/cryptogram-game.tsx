@@ -15,7 +15,7 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { triggerHaptic } from '@/shared/hooks'
 import { cryptogramConfig } from './config'
 import { ALPHABET, MAX_HINTS } from './types'

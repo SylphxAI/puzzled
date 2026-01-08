@@ -6,7 +6,7 @@ import { useEffect, useState, useTransition } from 'react'
 import { usePushNotifications } from '@/features/notifications'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Switch } from '@/shared/components/ui'
+import { Switch } from '@sylphx/ui'
 import { type NotificationPreferences, updateNotificationPreferences } from '../server'
 
 type QuickNotificationTogglesProps = {

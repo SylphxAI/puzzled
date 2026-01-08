@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
 import { authClient, ChallengeDialog, useChallenge } from '@/features/auth'
 import { cn } from '@/lib/utils'
-import { Badge, Progress } from '@/shared/components/ui'
+import { Badge, Progress } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 import { PROVIDER_CONFIG, ProviderCard } from './provider-card'
 

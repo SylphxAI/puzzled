@@ -11,7 +11,7 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 export default function ForgotPasswordPage() {
 	const t = useTranslations('auth')

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
 import { APP_DOMAIN, APP_NAME } from '@/lib/config/app'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@sylphx/ui'
 
 type ShareCardType = 'daily-result' | 'streak-milestone' | 'achievement'
 

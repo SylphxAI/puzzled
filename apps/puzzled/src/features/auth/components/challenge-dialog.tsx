@@ -9,7 +9,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 import { ChallengeForm, type ChallengeRequirement } from './challenge-form'
 
 // ==================

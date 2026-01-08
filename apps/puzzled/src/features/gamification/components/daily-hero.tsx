@@ -8,7 +8,8 @@ import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Card, GameIcon } from '@/shared/components/ui'
+import { Card } from '@sylphx/ui'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type GameInfo = {
 	slug: string

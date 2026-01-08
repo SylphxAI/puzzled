@@ -1,7 +1,7 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import { Dialog, DialogContent } from '@/shared/components/ui'
+import { Dialog, DialogContent } from '@sylphx/ui'
 import { GameResultCard } from './game-result'
 
 type GameResultModalProps = ComponentProps<typeof GameResultCard> & {

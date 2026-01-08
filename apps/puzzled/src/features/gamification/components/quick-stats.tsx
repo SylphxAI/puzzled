@@ -4,7 +4,7 @@ import { Flame, Percent, Target, Trophy } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Card } from '@/shared/components/ui'
+import { Card } from '@sylphx/ui'
 
 type StatItem = {
 	id: string

@@ -3,7 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { APP_NAME, SUPPORT_EMAIL } from '@/lib/config/app'
 import { Link } from '@/lib/i18n/routing'
 import { Footer, Header } from '@/shared/components/layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 
 type Props = {
 	params: Promise<{ locale: string }>

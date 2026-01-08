@@ -12,7 +12,7 @@ import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 /**
  * LanguageSelector - Elegant language selector for settings page

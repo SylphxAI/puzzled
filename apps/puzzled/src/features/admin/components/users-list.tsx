@@ -24,7 +24,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from '@/shared/components/ui/dropdown-menu'
+} from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type UserWithSubscription = User & { subscription: Subscription | null }

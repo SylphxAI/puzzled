@@ -3,7 +3,7 @@
 import { Check, ChevronsUpDown, Loader2, Search } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Popover, PopoverContent, PopoverTrigger, ScrollArea } from '@/shared/components/ui'
+import { Popover, PopoverContent, PopoverTrigger, ScrollArea } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type Model = {

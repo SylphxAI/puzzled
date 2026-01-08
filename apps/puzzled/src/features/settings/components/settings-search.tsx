@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Dialog, DialogContent } from '@/shared/components/ui'
+import { Dialog, DialogContent } from '@sylphx/ui'
 import {
 	clearRecentSearches,
 	getRecentSearches,

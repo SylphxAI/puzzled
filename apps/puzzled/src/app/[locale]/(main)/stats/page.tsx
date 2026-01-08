@@ -4,8 +4,8 @@ import { getServerUser } from '@/features/auth/server'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
 import { createServerCaller } from '@/trpc/server'
 
 type Props = {

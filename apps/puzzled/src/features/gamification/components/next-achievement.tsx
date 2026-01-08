@@ -3,7 +3,7 @@
 import { Target } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { Card, CardContent } from '@/shared/components/ui'
+import { Card, CardContent } from '@sylphx/ui'
 
 type NextAchievementProps = {
 	achievement: {

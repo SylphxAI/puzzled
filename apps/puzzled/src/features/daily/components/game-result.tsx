@@ -6,7 +6,7 @@ import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-cou
 import { type GameSlug, getGameConfig } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type MissedCategory = {

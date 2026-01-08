@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
-import { Switch } from '@/shared/components/ui'
+import { Switch } from '@sylphx/ui'
 import { updatePrivacySettings } from '../actions/privacy-actions'
 
 type PrivacyToggleProps = {

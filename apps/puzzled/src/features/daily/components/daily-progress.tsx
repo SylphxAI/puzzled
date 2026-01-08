@@ -4,7 +4,7 @@ import { Check, Circle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { DEFAULT_GAME_COLORS, type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import { cn } from '@/lib/utils'
-import { GameIcon } from '@/shared/components/ui'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type GameCompletion = {
 	slug: string

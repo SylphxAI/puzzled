@@ -4,7 +4,7 @@ import { Download, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 interface BeforeInstallPromptEvent extends Event {
 	prompt: () => Promise<void>

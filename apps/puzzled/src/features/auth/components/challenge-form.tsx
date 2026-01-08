@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, KeyRound, Loader2, Mail, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Input } from '@/shared/components/ui'
+import { Button, Input } from '@sylphx/ui'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 

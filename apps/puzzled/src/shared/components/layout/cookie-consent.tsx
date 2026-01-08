@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { getConsentStatus, setConsentStatus } from '@/features/analytics/lib/consent'
 import { Link } from '@/lib/i18n/routing'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 export function CookieConsent() {
 	const t = useTranslations('consent')

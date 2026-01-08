@@ -4,7 +4,7 @@ import { Bell, CreditCard, Eye, Home, Link2, Settings2, Shield, User } from 'luc
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/shared/components/ui'
+import { Badge } from '@sylphx/ui'
 
 type NavItem = {
 	href: string

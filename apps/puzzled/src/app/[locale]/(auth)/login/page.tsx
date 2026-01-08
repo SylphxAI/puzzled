@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { signIn } from '@/features/auth'
 import { SocialLoginButtons } from '@/features/auth/components'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon } from '@/shared/components/ui'
+import { Button, GamepadIcon } from '@sylphx/ui'
 
 export default function LoginPage() {
 	const t = useTranslations('auth')

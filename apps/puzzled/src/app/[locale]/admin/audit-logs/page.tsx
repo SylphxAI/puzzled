@@ -9,7 +9,7 @@ import {
 } from '@/features/admin/components/audit-log-filters'
 import { AuditLogTable } from '@/features/admin/components/audit-log-table'
 import { PAGINATION } from '@/lib/config/validation'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 export default function AdminAuditLogsPage() {

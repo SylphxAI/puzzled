@@ -25,6 +25,10 @@
 		"db:seed": "npx tsx src/lib/db/seed.ts"
 	},
 	"dependencies": {
+		"@sylphx/admin": "workspace:*",
+		"@sylphx/auth": "workspace:*",
+		"@sylphx/billing": "workspace:*",
+		"@sylphx/ui": "workspace:*",
 		"@iconify-icon/react": "^3.0.3",
 		"@neondatabase/serverless": "^1.0.2",
 		"@openrouter/ai-sdk-provider": "^1.5.4",

@@ -15,7 +15,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { PAGINATION } from '@/lib/config/validation'
 import type { deadLetterQueue } from '@/lib/db/schema'
-import { ConfirmDialog } from '@/shared/components/ui/alert-dialog'
+import { ConfirmDialog } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type DLQItem = typeof deadLetterQueue.$inferSelect

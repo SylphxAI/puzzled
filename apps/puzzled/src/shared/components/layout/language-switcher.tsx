@@ -14,7 +14,7 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 const locales = Object.keys(localeNames) as Locale[]
 

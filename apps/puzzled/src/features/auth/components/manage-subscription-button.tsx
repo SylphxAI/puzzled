@@ -5,7 +5,7 @@ import { isRedirectError } from 'next/dist/client/components/redirect-error'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { createPortalSession } from '@/features/subscription'
-import { Button, useToast } from '@/shared/components/ui'
+import { Button, useToast } from '@sylphx/ui'
 
 type Props = {
 	label: string

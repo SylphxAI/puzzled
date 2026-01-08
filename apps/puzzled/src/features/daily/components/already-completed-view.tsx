@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn, getBaseUrl } from '@/lib/utils'
-import { Button, Card, CardContent } from '@/shared/components/ui'
+import { Button, Card, CardContent } from '@sylphx/ui'
 import { DifficultyBadge } from './difficulty-selector'
 import { NextPuzzleCountdown } from './next-puzzle-countdown'
 

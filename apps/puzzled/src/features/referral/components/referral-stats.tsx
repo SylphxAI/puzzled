@@ -9,7 +9,7 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from '@/shared/components/ui/card'
+} from '@sylphx/ui'
 
 type ReferralStatsProps = {
 	totalReferrals: number

@@ -13,14 +13,8 @@ import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
-import {
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	PatternMatchIcon,
-} from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { PatternMatchIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { PatternBoard } from './components/board'
 import type { PatternMatchClientData } from './config'

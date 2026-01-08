@@ -3,7 +3,7 @@
 import { Flame, Snowflake, TrendingUp } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { Card, CardContent } from '@/shared/components/ui/card'
+import { Card, CardContent } from '@sylphx/ui'
 
 type StreakCardProps = {
 	currentStreak: number

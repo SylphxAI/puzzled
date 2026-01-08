@@ -2,7 +2,7 @@
 
 import { Bell, BellOff, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { usePushNotifications } from '../hooks/use-push-notifications'
 
 export function PushNotificationToggle() {

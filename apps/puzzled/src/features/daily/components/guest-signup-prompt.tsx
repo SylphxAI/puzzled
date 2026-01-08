@@ -11,7 +11,7 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 type GuestSignupPromptProps = {
 	open: boolean

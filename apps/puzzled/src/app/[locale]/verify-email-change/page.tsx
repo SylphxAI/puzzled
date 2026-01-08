@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon } from '@/shared/components/ui'
+import { Button, GamepadIcon } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type VerificationState = 'verifying' | 'success' | 'error'

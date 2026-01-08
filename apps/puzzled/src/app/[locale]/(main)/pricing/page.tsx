@@ -7,7 +7,7 @@ import { TRIAL_CONFIG } from '@/lib/config/subscription'
 import { cn } from '@/lib/utils'
 import { formatCurrency, getMonthlyEquivalent } from '@/lib/utils/locale-map'
 import { Header } from '@/shared/components/layout'
-import { Button, Card, CardContent } from '@/shared/components/ui'
+import { Button, Card, CardContent } from '@sylphx/ui'
 
 type Props = {
 	params: Promise<{ locale: string }>

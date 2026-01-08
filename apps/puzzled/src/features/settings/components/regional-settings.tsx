@@ -4,8 +4,8 @@ import { Calendar, Check, ChevronDown, Clock, Globe2, Loader2, Search } from 'lu
 import { useTranslations } from 'next-intl'
 import { useCallback, useMemo, useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
-import { Icon, Input, Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui'
-import { useToast } from '@/shared/components/ui/toast'
+import { Icon, Input, Popover, PopoverContent, PopoverTrigger } from '@sylphx/ui'
+import { useToast } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 // Timezone data with regions for grouping

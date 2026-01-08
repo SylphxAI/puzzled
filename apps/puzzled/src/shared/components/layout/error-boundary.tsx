@@ -3,7 +3,7 @@
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Component, type ReactNode } from 'react'
 import { captureError } from '@/lib/sentry'
-import { Button } from '@/shared/components/ui/button'
+import { Button } from '@sylphx/ui'
 
 type ErrorBoundaryProps = {
 	children: ReactNode

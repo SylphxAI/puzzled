@@ -7,7 +7,7 @@
 
 import { Delete, PencilLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 type Props = {
 	onNumberPress: (value: number) => void

@@ -25,7 +25,7 @@ import { type Achievement, TIER_BG_COLORS, TIER_COLORS } from '@/features/gamifi
 import { isPremiumPlan } from '@/features/subscription'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Badge, Icon, Progress, Skeleton } from '@/shared/components/ui'
+import { Badge, Icon, Progress, Skeleton } from '@sylphx/ui'
 import type { NotificationPreferences } from '../server'
 import { QuickNotificationToggles } from './quick-notification-toggles'
 import { SecurityScoreRing } from './security-score'

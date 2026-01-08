@@ -3,7 +3,7 @@
 import { Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { DeleteAccountModal } from './delete-account-modal'
 
 export function DeleteAccountButton() {

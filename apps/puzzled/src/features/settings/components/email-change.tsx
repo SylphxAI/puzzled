@@ -13,7 +13,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	Input,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 export function EmailChange() {

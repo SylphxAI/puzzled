@@ -4,7 +4,7 @@ import { Check, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { PLAN_FEATURES } from '@/features/subscription/lib/plan-features'
 import { cn } from '@/lib/utils'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 
 type FeatureComparisonProps = {
 	className?: string

@@ -2,7 +2,7 @@
 
 import { RefreshCw, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { Button, useToast } from '@/shared/components/ui'
+import { Button, useToast } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 export function SeedPlansButton() {

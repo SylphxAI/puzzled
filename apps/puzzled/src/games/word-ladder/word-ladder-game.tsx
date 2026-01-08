@@ -14,15 +14,8 @@ import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
-import {
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	Input,
-	WordLadderIcon,
-} from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@sylphx/ui'
+import { WordLadderIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { WordLadderDisplay } from './components'
 import { wordLadderConfig } from './config'

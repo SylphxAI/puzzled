@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, Flame, Medal, Minus, Trophy } from 'lucide-react'
 import Image from 'next/image'
 import { useLocale } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { AvatarIcon } from '@/shared/components/ui'
+import { AvatarIcon } from '@sylphx/ui'
 
 type RankChange = 'up' | 'down' | 'same' | 'new'
 

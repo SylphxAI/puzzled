@@ -6,8 +6,8 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
 import { FILE_LIMITS } from '@/lib/config/validation'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
-import { useToast } from '@/shared/components/ui/toast'
+import { Button } from '@sylphx/ui'
+import { useToast } from '@sylphx/ui'
 
 type AvatarUploadProps = {
 	currentImage: string | null

@@ -3,7 +3,7 @@
 import { Flame, Snowflake } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { Icon } from '@/shared/components/ui'
+import { Icon } from '@sylphx/ui'
 
 // Streak milestones for progression
 const MILESTONES = [7, 30, 100, 365] as const

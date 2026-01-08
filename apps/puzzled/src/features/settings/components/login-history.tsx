@@ -5,7 +5,7 @@ import { AlertCircle, CheckCircle, Globe, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { maskIpAddress, parseUserAgent } from '@/lib/user-agent'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 import { DeviceIcon } from './device-icon'
 

@@ -13,7 +13,7 @@ import {
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { createServerCaller } from '@/trpc/server'
 
 type Props = {

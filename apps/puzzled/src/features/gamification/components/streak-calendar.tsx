@@ -4,7 +4,7 @@ import { Check, ChevronLeft, ChevronRight, Flame, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 type DayStatus = 'played' | 'won' | 'lost' | 'missed' | 'future' | 'today'
 

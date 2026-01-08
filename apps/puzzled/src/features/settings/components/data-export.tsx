@@ -4,7 +4,7 @@ import { Download, FileDown, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { downloadJson, getExportFilename } from '@/lib/download'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { exportUserData } from '../actions/privacy-actions'
 
 export function DataExport() {

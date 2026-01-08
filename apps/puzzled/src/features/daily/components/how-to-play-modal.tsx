@@ -4,14 +4,8 @@ import { useTranslations } from 'next-intl'
 import { type GameSlug, getGameConfig } from '@/games/registry'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import { cn } from '@/lib/utils'
-import {
-	Dialog,
-	DialogBody,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	GameIcon,
-} from '@/shared/components/ui'
+import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from '@sylphx/ui'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type HowToPlayModalProps = {
 	open: boolean

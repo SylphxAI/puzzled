@@ -3,7 +3,7 @@
 import { Flame, Sparkles, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { Button, Dialog, DialogContent } from '@/shared/components/ui'
+import { Button, Dialog, DialogContent } from '@sylphx/ui'
 
 type WelcomeModalProps = {
 	open?: boolean

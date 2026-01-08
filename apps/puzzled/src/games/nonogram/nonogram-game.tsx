@@ -14,14 +14,8 @@ import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
-import {
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	NonogramIcon,
-} from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { NonogramIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic } from '@/shared/hooks'
 import { NonogramGrid } from './components'
 import { nonogramConfig } from './config'

@@ -5,7 +5,8 @@ import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { AvatarIcon, GameIcon, Podium } from '@/shared/components/ui'
+import { AvatarIcon, Podium } from '@sylphx/ui'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 import { createServerCaller } from '@/trpc/server'
 
 type Props = {

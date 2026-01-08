@@ -7,7 +7,7 @@ import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { DifficultyBadge } from './difficulty-selector'
 import { ModeBadge } from './mode-badge'
 

@@ -4,7 +4,8 @@ import { Check, Sparkles, Star } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Card, CardContent, GameIcon } from '@/shared/components/ui'
+import { Card, CardContent } from '@sylphx/ui'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type GameProgress = {
 	slug: string

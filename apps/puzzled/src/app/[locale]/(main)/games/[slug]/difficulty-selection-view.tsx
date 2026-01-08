@@ -6,7 +6,7 @@ import { DifficultyBadge } from '@/features/daily/components'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button, Card, CardContent } from '@/shared/components/ui'
+import { Button, Card, CardContent } from '@sylphx/ui'
 
 type DifficultySelectionViewProps = {
 	gameSlug: string

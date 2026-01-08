@@ -14,14 +14,8 @@ import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
-import {
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	CrosswordIcon,
-} from '@/shared/components/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { CrosswordIcon } from '@/shared/components/ui/game-icons'
 import { ClueList, CrosswordGrid, CrosswordKeyboard, CurrentClueDisplay } from './components'
 import { crosswordConfig } from './config'
 import type { CrosswordDirection } from './types'

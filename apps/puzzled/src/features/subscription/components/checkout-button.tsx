@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useTransition } from 'react'
 import { trackExperimentConversion, useExperiment } from '@/features/analytics/lib/ab-testing'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 import { createCheckout } from '../actions'
 
 type Props = {

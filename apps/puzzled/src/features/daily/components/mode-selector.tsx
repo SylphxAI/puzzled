@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button } from '@/shared/components/ui'
+import { Button } from '@sylphx/ui'
 
 type ModeSelectorProps = {
 	currentMode: GameMode

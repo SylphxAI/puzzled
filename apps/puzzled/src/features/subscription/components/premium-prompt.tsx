@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { PREMIUM_PROMPT_FEATURES } from '@/features/subscription/lib/plan-features'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button, Card, Dialog, DialogContent } from '@/shared/components/ui'
+import { Button, Card, Dialog, DialogContent } from '@sylphx/ui'
 
 type PremiumPromptProps = {
 	open?: boolean

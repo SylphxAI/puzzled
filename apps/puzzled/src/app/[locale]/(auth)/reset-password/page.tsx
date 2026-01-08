@@ -14,7 +14,7 @@ import {
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from '@/shared/components/ui'
+} from '@sylphx/ui'
 
 export default function ResetPasswordPage() {
 	return (

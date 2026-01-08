@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Icon } from '@/shared/components/ui'
+import { Icon } from '@sylphx/ui'
 
 type UrgencyLevel = 'normal' | 'elevated' | 'critical' | 'emergency'
 

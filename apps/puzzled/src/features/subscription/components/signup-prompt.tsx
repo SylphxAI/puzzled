@@ -4,7 +4,7 @@ import { Check, Flame, Trophy, UserPlus, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button, Card, Dialog, DialogContent } from '@/shared/components/ui'
+import { Button, Card, Dialog, DialogContent } from '@sylphx/ui'
 
 type SignupPromptProps = {
 	open?: boolean
