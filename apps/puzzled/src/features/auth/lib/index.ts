@@ -1,6 +1,11 @@
+/**
+ * Auth Library Exports
+ *
+ * Re-exports from @sylphx/auth packages with app-specific additions.
+ */
+
 export type { Session, SessionUser } from './auth'
 export { auth } from './auth'
-// enabledProviders moved to @/lib/oauth-providers
 
 export {
 	authClient,
@@ -14,10 +19,15 @@ export {
 
 export { getServerSession, getServerUser } from './auth-server'
 
+// Re-export password validation from @sylphx/auth
 export {
 	getPasswordStrength,
+	getStrengthColor,
 	getStrengthLabel,
+	isPasswordValid,
 	PASSWORD_REQUIREMENTS,
-	type PasswordValidationResult,
 	validatePassword,
-} from './password-validation'
+	type PasswordStrength,
+	type PasswordStrengthLabel,
+	type PasswordValidationResult,
+} from '@sylphx/auth/password'

@@ -20,11 +20,11 @@ export {
 	verifyEmail,
 } from './lib/auth-client'
 
-// Password validation - client-safe
+// Password validation - client-safe (re-exported from @sylphx/auth/password via lib)
 export {
 	getPasswordStrength,
 	getStrengthLabel,
 	PASSWORD_REQUIREMENTS,
 	type PasswordValidationResult,
 	validatePassword,
-} from './lib/password-validation'
+} from './lib'
