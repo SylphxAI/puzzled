@@ -1,4 +1,6 @@
 {
+	"installCommand": "cd ../.. && bun install",
+	"buildCommand": "cd ../.. && bun run build --filter=@sylphx/puzzled",
 	"crons": [
 		{
 			"path": "/api/cron/generate-daily-puzzles",
