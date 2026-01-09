@@ -5,66 +5,33 @@ import {
 	ArrowRight,
 	CheckCircle2,
 	Gamepad2,
-	Loader2,
 	RefreshCw,
-	Sparkles,
 	TrendingUp,
 	Users,
-	Wand2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 import { trpc } from '@/trpc/client'
 
-type GameCategory = 'word' | 'logic' | 'math' | 'spatial'
-
-const categoryColors: Record<GameCategory, string> = {
-	word: 'var(--admin-info)',
-	logic: 'var(--admin-accent)',
-	math: 'var(--admin-warning)',
-	spatial: '#a855f7', // purple
-}
-
-const categoryLabels: Record<GameCategory, string> = {
-	word: 'Word',
-	logic: 'Logic',
-	math: 'Math',
-	spatial: 'Spatial',
-}
-
+/**
+ * Games Overview
+ *
+ * Shows all games with basic stats from getGamesOverview.
+ * The router returns: { slug, name, todayGamesPlayed, todayWins, allTimeGamesPlayed, allTimeWins }
+ */
 export function GamesOverview() {
 	const t = useTranslations('admin.games')
-	const [generateStatus, setGenerateStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
 
-	const { data, isLoading, refetch, isRefetching } = trpc.admin.getGamesOverview.useQuery(undefined, {
+	const { data: games, isLoading, refetch, isRefetching } = trpc.admin.getGamesOverview.useQuery(undefined, {
 		refetchInterval: 60000, // Refresh every minute
 	})
-
-	const generateMutation = trpc.admin.triggerPuzzleGeneration.useMutation({
-		onMutate: () => setGenerateStatus('pending'),
-		onSuccess: () => {
-			setGenerateStatus('success')
-			// Refetch after a delay to allow workflow to complete
-			setTimeout(() => {
-				refetch()
-				setGenerateStatus('idle')
-			}, 5000)
-		},
-		onError: () => setGenerateStatus('error'),
-	})
-
-	const handleGeneratePuzzles = () => {
-		const today = new Date().toISOString().split('T')[0]
-		generateMutation.mutate({ targetDate: today })
-	}
 
 	if (isLoading) {
 		return <GamesOverviewSkeleton />
 	}
 
-	if (!data) {
+	if (!games || games.length === 0) {
 		return (
 			<div className="admin-card p-8 text-center">
 				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
@@ -73,17 +40,12 @@ export function GamesOverview() {
 		)
 	}
 
-	const { games } = data
-
-	// Group by puzzle status
-	const withPuzzle = games.filter((g) => g.hasTodayPuzzle)
-	const withoutPuzzle = games.filter((g) => !g.hasTodayPuzzle)
-
-	// Stats summary
-	const totalPlays7d = games.reduce((sum, g) => sum + g.plays7d, 0)
-	const totalPlaysToday = games.reduce((sum, g) => sum + g.playsToday, 0)
-	const avgCompletionRate = games.length > 0
-		? Math.round(games.reduce((sum, g) => sum + g.completionRate, 0) / games.length)
+	// Calculate summary stats
+	const totalPlaysToday = games.reduce((sum, g) => sum + g.todayGamesPlayed, 0)
+	const totalPlaysAllTime = games.reduce((sum, g) => sum + g.allTimeGamesPlayed, 0)
+	const totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0)
+	const avgWinRate = totalPlaysAllTime > 0
+		? Math.round((games.reduce((sum, g) => sum + g.allTimeWins, 0) / totalPlaysAllTime) * 100)
 		: 0
 
 	return (
@@ -113,8 +75,8 @@ export function GamesOverview() {
 				/>
 				<SummaryCard
 					icon={<TrendingUp className="h-5 w-5" />}
-					label="Plays (7d)"
-					value={totalPlays7d.toLocaleString()}
+					label="All Time Plays"
+					value={totalPlaysAllTime.toLocaleString()}
 				/>
 				<SummaryCard
 					icon={<Users className="h-5 w-5" />}
@@ -123,52 +85,10 @@ export function GamesOverview() {
 				/>
 				<SummaryCard
 					icon={<CheckCircle2 className="h-5 w-5" />}
-					label="Avg Completion"
-					value={`${avgCompletionRate}%`}
+					label="Avg Win Rate"
+					value={`${avgWinRate}%`}
 				/>
 			</div>
-
-			{/* Puzzle Status Alert */}
-			{withoutPuzzle.length > 0 && (
-				<div className="admin-card border-[var(--admin-warning)]/30 bg-[var(--admin-warning)]/5 p-4">
-					<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-						<div className="flex items-start gap-3">
-							<AlertCircle className="h-5 w-5 shrink-0 text-[var(--admin-warning)]" />
-							<div>
-								<h4 className="font-medium text-[var(--admin-warning)]">
-									{withoutPuzzle.length} game{withoutPuzzle.length > 1 ? 's' : ''} missing today&apos;s puzzle
-								</h4>
-								<p className="mt-1 text-sm text-[var(--admin-warning)]/80">
-									{withoutPuzzle.map((g) => g.name).join(', ')}
-								</p>
-							</div>
-						</div>
-						<button
-							type="button"
-							onClick={handleGeneratePuzzles}
-							disabled={generateStatus === 'pending'}
-							className="admin-btn admin-btn-warning shrink-0"
-						>
-							{generateStatus === 'pending' ? (
-								<>
-									<Loader2 className="h-4 w-4 animate-spin" />
-									Generating...
-								</>
-							) : generateStatus === 'success' ? (
-								<>
-									<CheckCircle2 className="h-4 w-4" />
-									Triggered!
-								</>
-							) : (
-								<>
-									<Wand2 className="h-4 w-4" />
-									Generate Now
-								</>
-							)}
-						</button>
-					</div>
-				</div>
-			)}
 
 			{/* Games Grid */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -207,18 +127,16 @@ function SummaryCard({
 type GameData = {
 	slug: string
 	name: string
-	category: GameCategory
-	generationStrategy: 'seed' | 'llm'
-	hasTodayPuzzle: boolean
-	puzzleGeneratedAt: string | null
-	plays7d: number
-	completionRate: number
-	uniquePlayers7d: number
-	playsToday: number
+	todayGamesPlayed: number
+	todayWins: number
+	allTimeGamesPlayed: number
+	allTimeWins: number
 }
 
 function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
-	const categoryColor = categoryColors[game.category] || 'var(--admin-text-muted)'
+	const winRate = game.allTimeGamesPlayed > 0
+		? Math.round((game.allTimeWins / game.allTimeGamesPlayed) * 100)
+		: 0
 
 	return (
 		<Link
@@ -236,57 +154,28 @@ function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 						<h3 className="font-semibold text-[var(--admin-text-primary)] group-hover:text-[var(--admin-accent)]">
 							{game.name}
 						</h3>
-						<div className="mt-1 flex items-center gap-2">
-							<span
-								className="text-xs font-medium"
-								style={{ color: categoryColor }}
-							>
-								{categoryLabels[game.category]}
-							</span>
-							{game.generationStrategy === 'llm' && (
-								<span className="flex items-center gap-1 text-xs text-purple-400">
-									<Sparkles className="h-3 w-3" />
-									AI
-								</span>
-							)}
-						</div>
 					</div>
 				</div>
 				<ArrowRight className="h-4 w-4 text-[var(--admin-text-muted)] opacity-0 transition-opacity group-hover:opacity-100" />
-			</div>
-
-			{/* Puzzle Status */}
-			<div className="mt-4 flex items-center gap-2">
-				{game.hasTodayPuzzle ? (
-					<>
-						<CheckCircle2 className="h-4 w-4 text-[var(--admin-success)]" />
-						<span className="text-sm text-[var(--admin-success)]">Today&apos;s puzzle ready</span>
-					</>
-				) : (
-					<>
-						<AlertCircle className="h-4 w-4 text-[var(--admin-warning)]" />
-						<span className="text-sm text-[var(--admin-warning)]">No puzzle for today</span>
-					</>
-				)}
 			</div>
 
 			{/* Stats */}
 			<div className="mt-4 grid grid-cols-3 gap-2 border-t border-[var(--admin-border)] pt-4">
 				<div>
 					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{game.plays7d.toLocaleString()}
+						{game.allTimeGamesPlayed.toLocaleString()}
 					</p>
-					<p className="text-xs text-[var(--admin-text-muted)]">Plays (7d)</p>
+					<p className="text-xs text-[var(--admin-text-muted)]">All Time</p>
 				</div>
 				<div>
 					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{game.completionRate}%
+						{winRate}%
 					</p>
 					<p className="text-xs text-[var(--admin-text-muted)]">Win Rate</p>
 				</div>
 				<div>
 					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{game.playsToday.toLocaleString()}
+						{game.todayGamesPlayed.toLocaleString()}
 					</p>
 					<p className="text-xs text-[var(--admin-text-muted)]">Today</p>
 				</div>
@@ -330,7 +219,6 @@ function GamesOverviewSkeleton() {
 								<div className="h-3 w-16 animate-pulse rounded bg-[var(--admin-bg-surface)]" />
 							</div>
 						</div>
-						<div className="mt-4 h-5 w-40 animate-pulse rounded bg-[var(--admin-bg-surface)]" />
 						<div className="mt-4 grid grid-cols-3 gap-2 border-t border-[var(--admin-border)] pt-4">
 							{[1, 2, 3].map((j) => (
 								<div key={j} className="space-y-1">

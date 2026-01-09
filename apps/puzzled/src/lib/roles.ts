@@ -1,59 +1,57 @@
 /**
- * Role-Based Access Control (RBAC)
+ * Role Utilities
  *
- * Defines roles and permissions for the application.
- * UserRole type is derived from schema (SSOT).
+ * Role definitions and utilities for admin access control.
+ * Roles are managed by the platform, we just check them here.
+ *
+ * ARCHITECTURE:
+ * - Roles come from platform SDK (user.role)
+ * - Apps don't manage roles, platform does
+ * - This file provides utility functions for role checking
  */
 
-import type { UserRole } from '@/lib/db/schema'
+/** User role type from platform */
+export type UserRole = 'user' | 'admin' | 'super_admin'
 
-// Re-export UserRole from schema (SSOT)
-export type { UserRole }
-
-// Role constants
-export const ROLE_USER = 'user' as const
-export const ROLE_ADMIN = 'admin' as const
-export const ROLE_SUPER_ADMIN = 'super_admin' as const
-
-// Admin roles that require elevated privileges
-export const ADMIN_ROLES = [ROLE_ADMIN, ROLE_SUPER_ADMIN] as const
-export type AdminRole = (typeof ADMIN_ROLES)[number]
-
-// All roles in the system
-export const ALL_ROLES = [ROLE_USER, ROLE_ADMIN, ROLE_SUPER_ADMIN] as const
+/** Role hierarchy for comparison (higher = more powerful) */
+const ROLE_LEVELS = {
+	user: 1,
+	admin: 2,
+	super_admin: 3,
+} as const
 
 /**
  * Check if a role has admin privileges (admin or super_admin)
  */
-export function isAdminRole(role: string | null | undefined): role is AdminRole {
-	return role != null && ADMIN_ROLES.includes(role as AdminRole)
+export function isAdminRole(role: string | null | undefined): boolean {
+	if (!role) return false
+	return role === 'admin' || role === 'super_admin'
 }
 
 /**
- * Check if a role is super_admin
+ * Check if a role has super_admin privileges
  */
 export function isSuperAdminRole(role: string | null | undefined): boolean {
-	return role === ROLE_SUPER_ADMIN
+	return role === 'super_admin'
 }
 
 /**
- * Role hierarchy for permission checks
+ * Check if roleA has at least the same level as roleB
  */
-export const ROLE_HIERARCHY = {
-	super_admin: 3,
-	admin: 2,
-	user: 1,
-} as const
+export function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): boolean {
+	if (!roleA) return false
+	const levelA = ROLE_LEVELS[roleA as UserRole] ?? 0
+	const levelB = ROLE_LEVELS[roleB]
+	return levelA >= levelB
+}
 
 /**
- * Check if user role has at least the required level
+ * Check if roleA has a higher level than roleB
  */
-export function hasRoleAtLeast(
-	userRole: string | null | undefined,
-	requiredRole: UserRole
-): boolean {
-	if (!userRole) return false
-	const userLevel = ROLE_HIERARCHY[userRole as UserRole] ?? 0
-	const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0
-	return userLevel >= requiredLevel
+export function hasHigherRole(roleA: string | null | undefined, roleB: string | null | undefined): boolean {
+	if (!roleA) return false
+	if (!roleB) return true
+	const levelA = ROLE_LEVELS[roleA as UserRole] ?? 0
+	const levelB = ROLE_LEVELS[roleB as UserRole] ?? 0
+	return levelA > levelB
 }

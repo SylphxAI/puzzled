@@ -21,17 +21,8 @@ type Props = {
 
 /**
  * Admin access error page - shows why access was denied
- * Only for true access denials (NOT_ADMIN, MFA_NOT_ENABLED)
- * Verification flows use seamless redirects instead
  */
-function AdminAccessDenied({ code, message }: { code: string; message: string }) {
-	const actions: Record<string, { href: string; label: string }> = {
-		NOT_ADMIN: { href: '/', label: 'Go Home' },
-		MFA_NOT_ENABLED: { href: '/settings/security', label: 'Enable 2FA' },
-	}
-
-	const action = actions[code] || { href: '/', label: 'Go Home' }
-
+function AdminAccessDenied({ message }: { message: string }) {
 	return (
 		<div className="admin-theme flex min-h-screen items-center justify-center">
 			<div className="admin-card mx-auto max-w-md p-8 text-center">
@@ -42,8 +33,8 @@ function AdminAccessDenied({ code, message }: { code: string; message: string })
 					Admin Access Required
 				</h1>
 				<p className="mb-6 text-[var(--admin-text-secondary)]">{message}</p>
-				<Link href={action.href} className="admin-btn admin-btn-primary">
-					{action.label}
+				<Link href="/" className="admin-btn admin-btn-primary">
+					Go Home
 				</Link>
 			</div>
 		</div>
@@ -56,22 +47,15 @@ export default async function AdminLayout({ children }: Props) {
 	} catch (error) {
 		if (error instanceof AdminError) {
 			switch (error.code) {
-				// Seamless redirects - user just needs to complete a step
 				case 'NOT_LOGGED_IN':
 					redirect('/login?callbackUrl=/admin')
-				case 'MFA_NOT_VERIFIED':
-					// Direct redirect to verification - no intermediate error page
-					redirect('/challenge?require=mfa&redirect=/admin&theme=admin')
-
-				// Actual access denials - show error UI
 				case 'NOT_ADMIN':
-				case 'MFA_NOT_ENABLED':
-					return <AdminAccessDenied code={error.code} message={error.message} />
+				case 'FORBIDDEN':
+					return <AdminAccessDenied message={error.message} />
 			}
 		}
 
-		// Unknown error - show generic error
-		return <AdminAccessDenied code="UNKNOWN" message="An unexpected error occurred." />
+		return <AdminAccessDenied message="An unexpected error occurred." />
 	}
 
 	return (

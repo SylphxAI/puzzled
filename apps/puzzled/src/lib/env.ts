@@ -208,3 +208,29 @@ export function isFeatureConfigured(feature: 'stripe' | 'email' | 'push' | 'ai')
 			return false
 	}
 }
+
+/**
+ * Typed environment object for platform SDK and common config
+ */
+export const env = {
+	/** Platform SDK App ID */
+	get SYLPHX_APP_ID() {
+		return getRequiredEnv('SYLPHX_APP_ID')
+	},
+	/** Platform SDK Secret Key (server-side only) */
+	get SYLPHX_SECRET_KEY() {
+		return getRequiredEnv('SYLPHX_SECRET_KEY')
+	},
+	/** Database URL */
+	get DATABASE_URL() {
+		return getRequiredEnv('DATABASE_URL')
+	},
+	/** Node environment */
+	get NODE_ENV() {
+		return process.env.NODE_ENV || 'development'
+	},
+	/** Base URL for the app */
+	get NEXT_PUBLIC_APP_URL() {
+		return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+	},
+}

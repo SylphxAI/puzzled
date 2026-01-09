@@ -2,15 +2,17 @@
  * Settings Router
  *
  * Test notification endpoints for push and email.
- * Note: Notification preferences CRUD is handled via server actions in
- * src/features/settings/server.ts which use atomic upsert operations.
+ *
+ * ARCHITECTURE:
+ * - User data (email, name) comes from platform SDK (ctx.user)
+ * - Notification preferences stored locally
  */
 
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { sendTestEmail } from '@/features/notifications/server'
 import { db } from '@/lib/db'
-import { notificationPreferences, users } from '@/lib/db/schema'
+import { notificationPreferences } from '@/lib/db/schema'
 import { cache } from '@/lib/redis'
 import { protectedProcedure, router } from '../trpc'
 
@@ -117,13 +119,11 @@ export const settingsRouter = router({
 			})
 		}
 
-		// Get user's email and name
-		const user = await db.query.users.findFirst({
-			where: eq(users.id, ctx.user.id),
-			columns: { email: true, name: true },
-		})
+		// Get user's email and name from platform auth context
+		const email = ctx.user.email
+		const name = ctx.user.name
 
-		if (!user?.email) {
+		if (!email) {
 			throw new TRPCError({
 				code: 'NOT_FOUND',
 				message: 'User email not found',
@@ -133,7 +133,7 @@ export const settingsRouter = router({
 		// Send test email with proper error handling
 		let result: Awaited<ReturnType<typeof sendTestEmail>>
 		try {
-			result = await sendTestEmail({ email: user.email, name: user.name })
+			result = await sendTestEmail({ email, name })
 		} catch (err) {
 			console.error('[Settings] Failed to send test email:', err)
 			throw new TRPCError({

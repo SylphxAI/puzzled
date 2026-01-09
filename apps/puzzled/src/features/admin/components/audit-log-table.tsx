@@ -16,10 +16,6 @@ type AuditLog = {
 	ipAddress: string | null
 	userAgent: string | null
 	createdAt: Date
-	userName: string | null
-	userEmail: string | null
-	actorName: string | null
-	actorEmail: string | null
 }
 
 type AuditLogTableProps = {
@@ -104,21 +100,14 @@ export function AuditLogTable({ logs, onRefresh }: AuditLogTableProps) {
 										</span>
 									</td>
 									<td>
-										{log.actorId ? (
-											<div>
-												<div className="text-sm font-medium text-[var(--admin-text-primary)]">
-													{log.actorName || 'Unknown'}
-												</div>
-												<div className="admin-data-mono">{log.actorEmail}</div>
+										<div>
+											<div className="text-sm font-medium text-[var(--admin-text-primary)]">
+												{log.actorId ? 'Admin' : log.userId ? 'User' : 'System'}
 											</div>
-										) : (
-											<div>
-												<div className="text-sm font-medium text-[var(--admin-text-primary)]">
-													{log.userName || 'System'}
-												</div>
-												<div className="admin-data-mono">{log.userEmail}</div>
+											<div className="admin-data-mono text-xs">
+												{(log.actorId || log.userId)?.slice(0, 8) || 'N/A'}...
 											</div>
-										)}
+										</div>
 									</td>
 									<td>
 										<div className="text-sm font-medium text-[var(--admin-text-primary)]">

@@ -9,7 +9,6 @@ import { router } from '../trpc'
 import { adminRouter } from './admin'
 import { gamesRouter } from './games'
 import { gamificationRouter } from './gamification'
-import { referralsRouter } from './referrals'
 import { settingsRouter } from './settings'
 import { statsRouter } from './stats'
 import { userRouter } from './user'
@@ -17,14 +16,17 @@ import { userRouter } from './user'
 /**
  * Main app router - combines all feature routers
  *
- * Auth, billing, security, 2FA, email changes are handled by Sylphx Platform SDK
+ * PLATFORM SDK HANDLES:
+ * - Auth, billing, security, 2FA, email changes
+ * - Referrals (via useReferral hook)
+ * - Push notifications (via usePush hook)
+ * - Analytics (via useAnalytics hook)
  */
 export const appRouter = router({
 	admin: adminRouter,
 	games: gamesRouter,
 	stats: statsRouter,
 	gamification: gamificationRouter,
-	referrals: referralsRouter,
 	settings: settingsRouter,
 	user: userRouter,
 })

@@ -138,7 +138,7 @@ function AnnouncementEditorModal({
 			}
 
 			if (isEditing && announcement) {
-				updateMutation.mutate({ announcementId: announcement.id, ...data })
+				updateMutation.mutate({ id: announcement.id, ...data })
 			} else {
 				createMutation.mutate(data)
 			}
@@ -148,7 +148,7 @@ function AnnouncementEditorModal({
 
 	const handleDelete = useCallback(() => {
 		if (announcement) {
-			deleteMutation.mutate({ announcementId: announcement.id })
+			deleteMutation.mutate({ id: announcement.id })
 		}
 	}, [announcement, deleteMutation])
 

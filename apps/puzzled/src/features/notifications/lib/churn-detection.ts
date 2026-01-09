@@ -1,7 +1,16 @@
+/**
+ * Churn Detection
+ *
+ * Identifies users who haven't played recently for win-back campaigns.
+ * Uses platform SDK for user info (email, name) and local DB for activity data.
+ */
+
 import { and, desc, eq, lt, sql } from 'drizzle-orm'
+import { createServerClient } from '@sylphx/platform-sdk/server'
+import { env } from '@/lib/env'
 import { getAllGames } from '@/games/registry'
 import { db } from '@/lib/db'
-import { notificationPreferences, userStats, users } from '@/lib/db/schema'
+import { notificationPreferences, userStats } from '@/lib/db/schema'
 
 export type ChurnRisk = 'low' | 'medium' | 'high'
 
@@ -24,45 +33,74 @@ export async function getChurnedUsers(daysSinceLastPlay: number): Promise<Churne
 	cutoffDate.setDate(cutoffDate.getDate() - daysSinceLastPlay)
 
 	// Find users who:
-	// 1. Have played at least once (have game sessions)
+	// 1. Have played at least once (have userStats with lastPlayedAt)
 	// 2. Haven't played since the cutoff date
-	// 3. Have verified email
-	const result = await db
+	const inactiveUserStats = await db
 		.select({
-			id: users.id,
-			email: users.email,
-			name: users.name,
+			userId: userStats.userId,
 			lastPlayedAt: userStats.lastPlayedAt,
 		})
-		.from(users)
-		.innerJoin(userStats, eq(userStats.userId, users.id))
+		.from(userStats)
 		.where(
 			and(
-				eq(users.emailVerified, true),
 				lt(userStats.lastPlayedAt, cutoffDate),
-				// Ensure they have actually played (not null)
 				sql`${userStats.lastPlayedAt} IS NOT NULL`,
 			),
 		)
-		.groupBy(users.id, users.email, users.name, userStats.lastPlayedAt)
+		.groupBy(userStats.userId, userStats.lastPlayedAt)
 		.orderBy(desc(userStats.lastPlayedAt))
 
-	// Map to ChurnedUser objects with risk calculation
-	return result.map((user) => {
-		const lastActivityDate = user.lastPlayedAt
-		const daysSince = lastActivityDate
-			? Math.floor((Date.now() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24))
-			: daysSinceLastPlay
+	if (inactiveUserStats.length === 0) {
+		return []
+	}
 
-		return {
-			id: user.id,
-			email: user.email,
-			name: user.name,
-			lastActivityDate,
-			daysSinceLastPlay: daysSince,
-			churnRisk: calculateChurnRisk({ lastActivityDate, daysSince }),
-		}
+	// Get user info from platform
+	const sylphx = createServerClient({
+		appId: env.SYLPHX_APP_ID,
+		secretKey: env.SYLPHX_SECRET_KEY,
 	})
+
+	const userIds = inactiveUserStats.map((s) => s.userId)
+	const batchResult = await sylphx.users.getBatch(userIds)
+
+	// Get full user details for those we found
+	const userDetails = await Promise.all(
+		userIds
+			.filter((id) => batchResult.users[id])
+			.map(async (userId) => {
+				const user = await sylphx.users.get(userId)
+				return user
+			})
+	)
+
+	const userMap = new Map(
+		userDetails
+			.filter((u): u is NonNullable<typeof u> => u !== null)
+			.map((u) => [u.id, u])
+	)
+
+	// Map to ChurnedUser objects with risk calculation
+	return inactiveUserStats
+		.filter((stat) => {
+			const user = userMap.get(stat.userId)
+			return user && user.emailVerified
+		})
+		.map((stat) => {
+			const user = userMap.get(stat.userId)!
+			const lastActivityDate = stat.lastPlayedAt
+			const daysSince = lastActivityDate
+				? Math.floor((Date.now() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24))
+				: daysSinceLastPlay
+
+			return {
+				id: user.id,
+				email: user.email,
+				name: user.name,
+				lastActivityDate,
+				daysSinceLastPlay: daysSince,
+				churnRisk: calculateChurnRisk({ lastActivityDate, daysSince }),
+			}
+		})
 }
 
 /**
@@ -146,40 +184,65 @@ export async function getUsersForWinBackEmail(exactDays: 7 | 14 | 30): Promise<C
 
 	// CAN-SPAM: Only send to users who have marketing emails enabled
 	// Use notificationPreferences as SSOT for email preferences
-	const result = await db
+	const inactiveUserStats = await db
 		.select({
-			id: users.id,
-			email: users.email,
-			name: users.name,
+			userId: userStats.userId,
 			lastPlayedAt: userStats.lastPlayedAt,
 		})
-		.from(users)
-		.innerJoin(userStats, eq(userStats.userId, users.id))
-		.innerJoin(notificationPreferences, eq(notificationPreferences.userId, users.id))
+		.from(userStats)
+		.innerJoin(notificationPreferences, eq(notificationPreferences.userId, userStats.userId))
 		.where(
 			and(
-				eq(users.emailVerified, true),
-				// CAN-SPAM: Only send to users who haven't unsubscribed (SSOT: notificationPreferences)
+				// CAN-SPAM: Only send to users who haven't unsubscribed
 				eq(notificationPreferences.emailMarketing, true),
 				sql`${userStats.lastPlayedAt} >= ${startDate}`,
 				sql`${userStats.lastPlayedAt} <= ${endDate}`,
 			),
 		)
-		.groupBy(users.id, users.email, users.name, userStats.lastPlayedAt)
+		.groupBy(userStats.userId, userStats.lastPlayedAt)
 
-	return result.map((user) => {
-		const lastActivityDate = user.lastPlayedAt
-		const daysSince = lastActivityDate
-			? Math.floor((Date.now() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24))
-			: exactDays
+	if (inactiveUserStats.length === 0) {
+		return []
+	}
 
-		return {
-			id: user.id,
-			email: user.email,
-			name: user.name,
-			lastActivityDate,
-			daysSinceLastPlay: daysSince,
-			churnRisk: calculateChurnRisk({ lastActivityDate, daysSince }),
-		}
+	// Get user info from platform (includes email verification status)
+	const sylphx = createServerClient({
+		appId: env.SYLPHX_APP_ID,
+		secretKey: env.SYLPHX_SECRET_KEY,
 	})
+
+	const userIds = inactiveUserStats.map((s) => s.userId)
+
+	// Get full user details (need email address for sending)
+	const userDetails = await Promise.all(
+		userIds.map(async (userId) => {
+			const user = await sylphx.users.get(userId)
+			return user
+		})
+	)
+
+	const userMap = new Map(
+		userDetails
+			.filter((u): u is NonNullable<typeof u> => u !== null && u.emailVerified)
+			.map((u) => [u.id, u])
+	)
+
+	return inactiveUserStats
+		.filter((stat) => userMap.has(stat.userId))
+		.map((stat) => {
+			const user = userMap.get(stat.userId)!
+			const lastActivityDate = stat.lastPlayedAt
+			const daysSince = lastActivityDate
+				? Math.floor((Date.now() - lastActivityDate.getTime()) / (1000 * 60 * 60 * 24))
+				: exactDays
+
+			return {
+				id: user.id,
+				email: user.email,
+				name: user.name,
+				lastActivityDate,
+				daysSinceLastPlay: daysSince,
+				churnRisk: calculateChurnRisk({ lastActivityDate, daysSince }),
+			}
+		})
 }

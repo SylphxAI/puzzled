@@ -1,152 +1,99 @@
 export const dynamic = 'force-dynamic'
 
-import { and, count, desc, eq, gte, sql } from 'drizzle-orm'
+import { count, desc, eq, gte, sql } from 'drizzle-orm'
 import { daysAgo } from '@/lib/constants/time'
 import {
 	Activity,
 	AlertTriangle,
 	ArrowDownRight,
 	ArrowUpRight,
-	CreditCard,
 	Gamepad2,
-	Plus,
 	Server,
 	Settings,
 	TrendingUp,
-	UserPlus,
 	Users,
 	Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { createServerClient } from '@sylphx/platform-sdk/server'
+import { env } from '@/lib/env'
 import { db } from '@/lib/db'
-import {
-	auditLogs,
-	deadLetterQueue,
-	gameSessions,
-	plans,
-	subscriptions,
-	users,
-} from '@/lib/db/schema'
+import { auditLogs, deadLetterQueue, gameSessions } from '@/lib/db/schema'
+
+/**
+ * Admin Dashboard
+ *
+ * Shows app-specific metrics (games, DLQ) and platform metrics (users, revenue).
+ * Platform handles user/billing management; this page provides overview only.
+ */
 
 // Get comprehensive dashboard stats
 async function getDashboardStats() {
 	const now = new Date()
 	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 	const sevenDaysAgo = daysAgo(7, today)
-	const fourteenDaysAgo = daysAgo(14, today)
 
-	// Total counts
-	const [userCount] = await db.select({ count: count() }).from(users)
-	const [premiumCount] = await db
-		.select({ count: count() })
-		.from(subscriptions)
-		.where(eq(subscriptions.plan, 'premium'))
-	const [sessionCount] = await db.select({ count: count() }).from(gameSessions)
-	const [planCount] = await db.select({ count: count() }).from(plans)
+	// Platform metrics (users, billing) from SDK
+	const sylphx = createServerClient({
+		appId: env.SYLPHX_APP_ID,
+		secretKey: env.SYLPHX_SECRET_KEY,
+	})
 
-	// This week's stats
-	const [usersThisWeek] = await db
-		.select({ count: count() })
-		.from(users)
-		.where(gte(users.createdAt, sevenDaysAgo))
-
-	const [usersLastWeek] = await db
-		.select({ count: count() })
-		.from(users)
-		.where(and(gte(users.createdAt, fourteenDaysAgo), sql`${users.createdAt} < ${sevenDaysAgo}`))
-
-	const [sessionsThisWeek] = await db
-		.select({ count: count() })
-		.from(gameSessions)
-		.where(gte(gameSessions.completedAt, sevenDaysAgo))
-
-	const [sessionsLastWeek] = await db
-		.select({ count: count() })
-		.from(gameSessions)
-		.where(
-			and(
-				gte(gameSessions.completedAt, fourteenDaysAgo),
-				sql`${gameSessions.completedAt} < ${sevenDaysAgo}`,
-			),
-		)
-
-	// DLQ stats for system health
-	const [dlqPending] = await db
-		.select({ count: count() })
-		.from(deadLetterQueue)
-		.where(eq(deadLetterQueue.status, 'pending'))
-
-	const [dlqFailed] = await db
-		.select({ count: count() })
-		.from(deadLetterQueue)
-		.where(eq(deadLetterQueue.status, 'failed'))
-
-	// Daily signups for sparkline (last 14 days)
-	const dailySignups = await db
-		.select({
-			date: sql<string>`DATE(${users.createdAt})`,
-			count: count(),
-		})
-		.from(users)
-		.where(gte(users.createdAt, fourteenDaysAgo))
-		.groupBy(sql`DATE(${users.createdAt})`)
-		.orderBy(sql`DATE(${users.createdAt})`)
-
-	// Revenue this month
-	const premiumUsers = premiumCount?.count || 0
-	const estimatedMRR = premiumUsers * 4.99
-
-	// Calculate week-over-week changes
-	const userGrowth = usersLastWeek?.count
-		? ((usersThisWeek?.count || 0) - usersLastWeek.count) / usersLastWeek.count
-		: 0
-	const sessionGrowth = sessionsLastWeek?.count
-		? ((sessionsThisWeek?.count || 0) - sessionsLastWeek.count) / sessionsLastWeek.count
-		: 0
+	// App-specific metrics from local database
+	const [
+		sessionCount,
+		sessionsThisWeek,
+		dlqPending,
+		dlqFailed,
+		platformOverview,
+	] = await Promise.all([
+		db.select({ count: count() }).from(gameSessions),
+		db
+			.select({ count: count() })
+			.from(gameSessions)
+			.where(gte(gameSessions.completedAt, sevenDaysAgo)),
+		db
+			.select({ count: count() })
+			.from(deadLetterQueue)
+			.where(eq(deadLetterQueue.status, 'pending')),
+		db
+			.select({ count: count() })
+			.from(deadLetterQueue)
+			.where(eq(deadLetterQueue.status, 'failed')),
+		sylphx.analytics.overview().catch(() => null),
+	])
 
 	return {
-		users: userCount?.count || 0,
-		premium: premiumUsers,
-		sessions: sessionCount?.count || 0,
-		plans: planCount?.count || 0,
-		mrr: estimatedMRR,
-		usersThisWeek: usersThisWeek?.count || 0,
-		sessionsThisWeek: sessionsThisWeek?.count || 0,
-		userGrowth: Math.round(userGrowth * 100),
-		sessionGrowth: Math.round(sessionGrowth * 100),
-		dlqPending: dlqPending?.count || 0,
-		dlqFailed: dlqFailed?.count || 0,
-		dailySignups: dailySignups.map((d) => d.count),
+		// Platform stats (from SDK)
+		users: platformOverview?.totalUsers ?? 0,
+		premium: platformOverview?.subscriptions.active ?? 0,
+		mrr: platformOverview?.revenue.month ?? 0,
+		newUsersThisWeek: platformOverview?.newUsers.week ?? 0,
+		// App-specific stats (from local DB)
+		sessions: sessionCount[0]?.count ?? 0,
+		sessionsThisWeek: sessionsThisWeek[0]?.count ?? 0,
+		dlqPending: dlqPending[0]?.count ?? 0,
+		dlqFailed: dlqFailed[0]?.count ?? 0,
 	}
 }
 
 // Get recent activity from audit logs
 async function getRecentActivity() {
-	return db.query.auditLogs.findMany({
+	const logs = await db.query.auditLogs.findMany({
 		orderBy: desc(auditLogs.createdAt),
 		limit: 8,
-		with: {
-			user: true,
-		},
 	})
-}
 
-// Get recent users
-async function getRecentUsers() {
-	return db.query.users.findMany({
-		orderBy: desc(users.createdAt),
-		limit: 5,
-	})
+	return logs
 }
 
 export default async function AdminDashboard() {
 	const locale = await getLocale()
 	const t = await getTranslations('admin.dashboard')
-	const [stats, recentActivity, recentUsers] = await Promise.all([
+	const [stats, recentActivity] = await Promise.all([
 		getDashboardStats(),
 		getRecentActivity(),
-		getRecentUsers(),
 	])
 
 	// System health status
@@ -189,31 +136,26 @@ export default async function AdminDashboard() {
 				<EnhancedStatCard
 					title={t('totalUsers')}
 					value={stats.users}
-					change={stats.userGrowth}
 					icon={Users}
-					sparklineData={stats.dailySignups}
 					delay={0}
-				/>
-				<EnhancedStatCard
-					title={t('premiumUsers')}
-					value={stats.premium}
-					change={12}
-					icon={CreditCard}
-					accentColor="emerald"
-					delay={1}
 				/>
 				<EnhancedStatCard
 					title={t('gameSessions')}
 					value={stats.sessions}
-					change={stats.sessionGrowth}
 					icon={Gamepad2}
 					accentColor="purple"
+					delay={1}
+				/>
+				<EnhancedStatCard
+					title={t('premiumUsers')}
+					value={stats.premium}
+					icon={TrendingUp}
+					accentColor="emerald"
 					delay={2}
 				/>
 				<EnhancedStatCard
 					title={t('estMRR')}
 					value={`$${stats.mrr.toFixed(0)}`}
-					change={15}
 					icon={TrendingUp}
 					accentColor="amber"
 					delay={3}
@@ -230,20 +172,6 @@ export default async function AdminDashboard() {
 				</div>
 
 				<div className="admin-quick-actions">
-					<Link href="/admin/users" className="admin-quick-action">
-						<div className="admin-quick-action-icon">
-							<UserPlus className="h-5 w-5" aria-hidden="true" />
-						</div>
-						<span className="admin-quick-action-label">{t('viewUsers')}</span>
-					</Link>
-
-					<Link href="/admin/plans" className="admin-quick-action">
-						<div className="admin-quick-action-icon">
-							<Plus className="h-5 w-5" aria-hidden="true" />
-						</div>
-						<span className="admin-quick-action-label">{t('managePlans')}</span>
-					</Link>
-
 					<Link href="/admin/dlq" className="admin-quick-action">
 						<div
 							className="admin-quick-action-icon"
@@ -289,67 +217,22 @@ export default async function AdminDashboard() {
 				</div>
 			</div>
 
-			{/* Two Column Layout: Activity + Recent Users */}
-			<div className="grid gap-6 lg:grid-cols-2">
-				{/* Activity Feed */}
-				<div className="admin-activity-feed admin-animate-in" style={{ animationDelay: '0.25s' }}>
-					<div className="admin-activity-header">
-						<span className="admin-activity-title">{t('recentActivity')}</span>
-						<Link href="/admin/audit-logs" className="admin-btn admin-btn-ghost text-xs">
-							{t('viewAll')}
-						</Link>
-					</div>
-					<div className="admin-activity-list">
-						{recentActivity.length === 0 ? (
-							<div className="px-5 py-12 text-center text-[var(--admin-text-muted)]">
-								{t('noActivity')}
-							</div>
-						) : (
-							recentActivity.map((log) => <ActivityItem key={log.id} log={log} locale={locale} />)
-						)}
-					</div>
+			{/* Activity Feed */}
+			<div className="admin-activity-feed admin-animate-in" style={{ animationDelay: '0.25s' }}>
+				<div className="admin-activity-header">
+					<span className="admin-activity-title">{t('recentActivity')}</span>
+					<Link href="/admin/audit-logs" className="admin-btn admin-btn-ghost text-xs">
+						{t('viewAll')}
+					</Link>
 				</div>
-
-				{/* Recent Users */}
-				<div className="admin-card admin-animate-in" style={{ animationDelay: '0.3s' }}>
-					<div className="admin-panel-header">
-						<span className="admin-panel-title">
-							<Users className="h-4 w-4" aria-hidden="true" />
-							{t('recentUsers')}
-						</span>
-						<Link href="/admin/users" className="admin-btn admin-btn-ghost text-xs">
-							{t('viewAll')}
-						</Link>
-					</div>
-					<div className="divide-y divide-[var(--admin-border)]">
-						{recentUsers.length === 0 ? (
-							<div className="px-6 py-12 text-center text-[var(--admin-text-muted)]">
-								{t('noUsersYet')}
-							</div>
-						) : (
-							recentUsers.map((user) => (
-								<div
-									key={user.id}
-									className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-[var(--admin-bg-surface)]"
-								>
-									<div className="flex items-center gap-3">
-										<div className="admin-avatar h-9 w-9 text-sm">
-											{user.name?.[0] || user.email[0].toUpperCase()}
-										</div>
-										<div>
-											<div className="text-sm font-medium text-[var(--admin-text-primary)]">
-												{user.name || t('unnamed')}
-											</div>
-											<div className="text-xs text-[var(--admin-text-muted)]">{user.email}</div>
-										</div>
-									</div>
-									<div className="text-xs text-[var(--admin-text-muted)]">
-										{formatRelativeTime(user.createdAt, locale)}
-									</div>
-								</div>
-							))
-						)}
-					</div>
+				<div className="admin-activity-list">
+					{recentActivity.length === 0 ? (
+						<div className="px-5 py-12 text-center text-[var(--admin-text-muted)]">
+							{t('noActivity')}
+						</div>
+					) : (
+						recentActivity.map((log) => <ActivityItem key={log.id} log={log} locale={locale} />)
+					)}
 				</div>
 			</div>
 
@@ -362,7 +245,7 @@ export default async function AdminDashboard() {
 				<div className="grid gap-4 sm:grid-cols-3">
 					<div className="admin-metric-row border-none py-0">
 						<span className="admin-metric-label">{t('newUsers')}</span>
-						<span className="admin-metric-value">{stats.usersThisWeek}</span>
+						<span className="admin-metric-value">{stats.newUsersThisWeek}</span>
 					</div>
 					<div className="admin-metric-row border-none py-0">
 						<span className="admin-metric-label">{t('gamesPlayed')}</span>
@@ -402,27 +285,20 @@ function HealthIndicator({
 	)
 }
 
-// Enhanced Stat Card with Sparkline
+// Enhanced Stat Card
 function EnhancedStatCard({
 	title,
 	value,
-	change,
 	icon: Icon,
-	sparklineData,
 	accentColor = 'default',
 	delay = 0,
 }: {
 	title: string
 	value: string | number
-	change: number
 	icon: typeof Users
-	sparklineData?: number[]
 	accentColor?: 'default' | 'emerald' | 'purple' | 'amber'
 	delay?: number
 }) {
-	const isPositive = change >= 0
-	const maxSparkline = sparklineData ? Math.max(...sparklineData, 1) : 1
-
 	const iconColors = {
 		default: 'admin-stat-icon',
 		emerald: 'admin-stat-icon-success',
@@ -439,36 +315,12 @@ function EnhancedStatCard({
 				<div className={`rounded-lg p-2.5 ${iconColors[accentColor]}`}>
 					<Icon className="h-5 w-5" aria-hidden="true" />
 				</div>
-				<span
-					className={`admin-stat-change ${isPositive ? 'admin-stat-change-up' : 'admin-stat-change-down'}`}
-				>
-					{isPositive ? (
-						<ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-					) : (
-						<ArrowDownRight className="h-3 w-3" aria-hidden="true" />
-					)}
-					{Math.abs(change)}%
-				</span>
 			</div>
 
 			<div className="admin-stat-main">
 				<span className="admin-stat-value-lg">{value}</span>
 			</div>
 			<div className="admin-stat-label mt-1">{title}</div>
-
-			{sparklineData && sparklineData.length > 0 && (
-				<div className="admin-stat-footer">
-					<div className="admin-sparkline">
-						{sparklineData.slice(-14).map((val, i) => (
-							<div
-								key={i}
-								className="admin-sparkline-bar"
-								style={{ height: `${(val / maxSparkline) * 100}%` }}
-							/>
-						))}
-					</div>
-				</div>
-			)}
 		</div>
 	)
 }
@@ -481,22 +333,21 @@ function ActivityItem({
 	log: {
 		id: string
 		action: string
+		actorId: string | null
 		metadata: unknown
 		createdAt: Date
-		user: { name: string | null; email: string } | null
 	}
 	locale: string
 }) {
 	const iconMap: Record<string, { icon: typeof Activity; className: string }> = {
-		user: { icon: UserPlus, className: 'admin-activity-icon-user' },
-		subscription: { icon: CreditCard, className: 'admin-activity-icon-payment' },
-		payment: { icon: CreditCard, className: 'admin-activity-icon-payment' },
 		game: { icon: Gamepad2, className: 'admin-activity-icon-game' },
-		system: { icon: Zap, className: 'admin-activity-icon-system' },
+		achievement: { icon: TrendingUp, className: 'admin-activity-icon-payment' },
+		streak: { icon: Zap, className: 'admin-activity-icon-system' },
+		admin: { icon: Settings, className: 'admin-activity-icon-user' },
 	}
 
-	const actionType = log.action.split('_')[0] || 'system'
-	const { icon: ActivityIcon, className: iconClass } = iconMap[actionType] || iconMap.system
+	const actionType = log.action.split('_')[0] || 'admin'
+	const { icon: ActivityIcon, className: iconClass } = iconMap[actionType] || iconMap.admin
 
 	return (
 		<div className="admin-activity-item">
@@ -505,8 +356,6 @@ function ActivityItem({
 			</div>
 			<div className="admin-activity-content">
 				<div className="admin-activity-text">
-					<span className="font-medium">{log.user?.name || log.user?.email || 'System'}</span>
-					{' • '}
 					<span className="text-[var(--admin-text-secondary)]">{formatAction(log.action)}</span>
 				</div>
 				<div className="admin-activity-time">{formatRelativeTime(log.createdAt, locale)}</div>

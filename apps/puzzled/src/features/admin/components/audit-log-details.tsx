@@ -1,7 +1,6 @@
 'use client'
 
 import { Loader2 } from 'lucide-react'
-import Image from 'next/image'
 import { useLocale, useTranslations } from 'next-intl'
 import { trpc } from '@/trpc/client'
 
@@ -10,6 +9,15 @@ type AuditLogDetailsProps = {
 	onRefresh: () => void
 }
 
+/**
+ * Audit Log Details
+ *
+ * Expanded view for an audit log entry.
+ * Shows metadata, IP address, user agent, and timestamps.
+ *
+ * Note: User info (actor/user) is displayed in the parent table.
+ * This component focuses on technical details.
+ */
 export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 	const t = useTranslations('admin.auditLogs')
 	const locale = useLocale()
@@ -39,67 +47,6 @@ export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 				<p className="text-sm text-[var(--admin-text-secondary)]">{t('details.subtitle')}</p>
 			</div>
 
-			{/* Basic Info */}
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-				{/* User Info */}
-				{log.user && (
-					<div className="space-y-2">
-						<h4 className="admin-data-label">{t('details.user')}</h4>
-						<div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-bg-elevated)] p-4">
-							<div className="flex items-center gap-3">
-								{log.user.image && (
-									<Image
-										src={log.user.image}
-										width={40}
-										height={40}
-										alt={log.user.name || 'User'}
-										className="h-10 w-10 rounded-full"
-									/>
-								)}
-								<div>
-									<div className="font-medium text-[var(--admin-text-primary)]">
-										{log.user.name || 'Unknown'}
-									</div>
-									<div className="text-sm text-[var(--admin-text-muted)]">{log.user.email}</div>
-									<div className="mt-1 text-xs text-[var(--admin-text-muted)]">
-										Role: {log.user.role}
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				)}
-
-				{/* Actor Info (if different from user) */}
-				{log.actor && log.actorId !== log.userId && (
-					<div className="space-y-2">
-						<h4 className="admin-data-label">{t('details.actor')}</h4>
-						<div className="rounded-lg border border-[var(--admin-border)] bg-[var(--admin-bg-elevated)] p-4">
-							<div className="flex items-center gap-3">
-								{log.actor.image && (
-									<Image
-										src={log.actor.image}
-										width={40}
-										height={40}
-										alt={log.actor.name || 'Actor'}
-										className="h-10 w-10 rounded-full"
-									/>
-								)}
-								<div>
-									<div className="font-medium text-[var(--admin-text-primary)]">
-										{log.actor.name || 'Unknown'}
-									</div>
-									<div className="text-sm text-[var(--admin-text-muted)]">{log.actor.email}</div>
-									<div className="mt-1 text-xs text-[var(--admin-text-muted)]">
-										Role: {log.actor.role}
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				)}
-			</div>
-
 			{/* Resource Info */}
 			<div className="space-y-2">
 				<h4 className="admin-data-label">{t('details.resource')}</h4>
@@ -113,6 +60,18 @@ export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 							<div>
 								<div className="admin-data-label">{t('details.resourceId')}</div>
 								<div className="admin-data-mono">{log.resourceId}</div>
+							</div>
+						)}
+						{log.userId && (
+							<div>
+								<div className="admin-data-label">User ID</div>
+								<div className="admin-data-mono text-xs">{log.userId}</div>
+							</div>
+						)}
+						{log.actorId && (
+							<div>
+								<div className="admin-data-label">Actor ID</div>
+								<div className="admin-data-mono text-xs">{log.actorId}</div>
 							</div>
 						)}
 					</div>
@@ -133,7 +92,7 @@ export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 						{log.userAgent && (
 							<div>
 								<div className="admin-data-label">{t('details.userAgent')}</div>
-								<div className="admin-data-value">{log.userAgent}</div>
+								<div className="admin-data-value text-xs break-all">{log.userAgent}</div>
 							</div>
 						)}
 						<div>

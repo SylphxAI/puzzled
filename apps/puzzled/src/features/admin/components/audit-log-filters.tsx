@@ -18,28 +18,25 @@ type AuditLogFiltersProps = {
 	onRefresh: () => void
 }
 
+// Actions that match the AuditAction type in schema
 const ACTION_TYPES = [
 	'create',
 	'update',
 	'delete',
-	'login',
-	'logout',
-	'role_change',
-	'subscription_change',
-	'impersonate_start',
-	'impersonate_end',
-	'feature_flag_toggle',
+	'game_complete',
+	'streak_update',
+	'achievement_unlock',
 	'admin_action',
 ] as const
 
+// Resource types for app-specific audit logs
 const RESOURCE_TYPES = [
-	'user',
-	'subscription',
 	'game',
 	'session',
 	'feature_flag',
-	'plan',
-	'admin',
+	'announcement',
+	'dlq',
+	'app_setting',
 ] as const
 
 export function AuditLogFilters({ filters, onFiltersChange, onRefresh }: AuditLogFiltersProps) {

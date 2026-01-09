@@ -1,7 +1,12 @@
 /**
  * User Settings Router
  *
- * Handles user profile updates, avatar uploads, username validation
+ * Handles app-specific user preferences (username, bio, compactMode, etc.)
+ *
+ * ARCHITECTURE:
+ * - Profile data (name, email, image) comes from platform SDK (ctx.user)
+ * - App-specific preferences stored in local userPreferences table
+ * - Global preferences (timezone, locale) are on platform - update via SDK
  */
 
 import { TRPCError } from '@trpc/server'
@@ -9,7 +14,7 @@ import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { LIMITS } from '@/lib/config/user'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
+import { userPreferences } from '@/lib/db/schema'
 import { protectedProcedure, protectedRateLimitedProcedure, router } from '../trpc'
 
 // ==========================================
@@ -34,18 +39,14 @@ const bioSchema = z
 	.optional()
 
 const updateProfileSchema = z.object({
-	name: z.string().min(1, 'Name is required').max(100).optional(),
 	username: usernameSchema.optional(),
 	bio: bioSchema,
 	isPublicProfile: z.boolean().optional(),
 })
 
 const updatePreferencesSchema = z.object({
-	timezone: z.string().max(50).optional(),
-	locale: z.string().max(10).optional(),
-	dateFormat: z.enum(['relative', 'absolute', 'iso']).optional(),
-	reduceMotion: z.boolean().optional(),
 	compactMode: z.boolean().optional(),
+	leaderboardVisible: z.boolean().optional(),
 })
 
 const checkUsernameSchema = z.object({
@@ -58,7 +59,7 @@ const checkUsernameSchema = z.object({
 
 export const userRouter = router({
 	/**
-	 * Update user profile
+	 * Update app-specific user profile (username, bio, etc.)
 	 * Rate limited to prevent abuse
 	 */
 	updateProfile: protectedRateLimitedProcedure
@@ -69,12 +70,12 @@ export const userRouter = router({
 			// If username is being updated, check if it's available
 			if (input.username) {
 				const [existing] = await db
-					.select({ id: users.id })
-					.from(users)
-					.where(eq(users.username, input.username))
+					.select({ userId: userPreferences.userId })
+					.from(userPreferences)
+					.where(eq(userPreferences.username, input.username))
 					.limit(1)
 
-				if (existing && existing.id !== userId) {
+				if (existing && existing.userId !== userId) {
 					throw new TRPCError({
 						code: 'CONFLICT',
 						message: 'Username is already taken',
@@ -82,14 +83,25 @@ export const userRouter = router({
 				}
 			}
 
-			// Update user profile
+			// Upsert user preferences
 			const [updated] = await db
-				.update(users)
-				.set({
-					...input,
+				.insert(userPreferences)
+				.values({
+					userId,
+					username: input.username,
+					bio: input.bio,
+					isPublicProfile: input.isPublicProfile ?? false,
 					updatedAt: new Date(),
 				})
-				.where(eq(users.id, userId))
+				.onConflictDoUpdate({
+					target: userPreferences.userId,
+					set: {
+						...(input.username !== undefined && { username: input.username }),
+						...(input.bio !== undefined && { bio: input.bio }),
+						...(input.isPublicProfile !== undefined && { isPublicProfile: input.isPublicProfile }),
+						updatedAt: new Date(),
+					},
+				})
 				.returning()
 
 			if (!updated) {
@@ -101,13 +113,11 @@ export const userRouter = router({
 
 			return {
 				success: true,
-				user: {
-					id: updated.id,
-					name: updated.name,
+				preferences: {
+					userId: updated.userId,
 					username: updated.username,
 					bio: updated.bio,
 					isPublicProfile: updated.isPublicProfile,
-					image: updated.image,
 				},
 			}
 		}),
@@ -119,12 +129,12 @@ export const userRouter = router({
 		.input(checkUsernameSchema)
 		.query(async ({ ctx, input }) => {
 			const [existing] = await db
-				.select({ id: users.id })
-				.from(users)
-				.where(eq(users.username, input.username))
+				.select({ userId: userPreferences.userId })
+				.from(userPreferences)
+				.where(eq(userPreferences.username, input.username))
 				.limit(1)
 
-			const isAvailable = !existing || existing.id === ctx.user.id
+			const isAvailable = !existing || existing.userId === ctx.user.id
 
 			return {
 				available: isAvailable,
@@ -133,42 +143,36 @@ export const userRouter = router({
 		}),
 
 	/**
-	 * Get current user profile
+	 * Get current user's app preferences
+	 * Combines platform user data with local preferences
 	 */
 	getProfile: protectedProcedure.query(async ({ ctx }) => {
-		const [user] = await db
-			.select({
-				id: users.id,
-				name: users.name,
-				email: users.email,
-				emailVerified: users.emailVerified,
-				username: users.username,
-				bio: users.bio,
-				image: users.image,
-				isPublicProfile: users.isPublicProfile,
-				timezone: users.timezone,
-				locale: users.locale,
-				dateFormat: users.dateFormat,
-				reduceMotion: users.reduceMotion,
-				compactMode: users.compactMode,
-				leaderboardVisible: users.leaderboardVisible,
-			})
-			.from(users)
-			.where(eq(users.id, ctx.user.id))
+		// Get app-specific preferences
+		const [prefs] = await db
+			.select()
+			.from(userPreferences)
+			.where(eq(userPreferences.userId, ctx.user.id))
 			.limit(1)
 
-		if (!user) {
-			throw new TRPCError({
-				code: 'NOT_FOUND',
-				message: 'User not found',
-			})
-		}
+		// Combine platform user data with app preferences
+		return {
+			// Platform data (from ctx.user via SDK auth)
+			id: ctx.user.id,
+			name: ctx.user.name,
+			email: ctx.user.email,
+			image: ctx.user.image,
 
-		return user
+			// App-specific preferences (local)
+			username: prefs?.username ?? null,
+			bio: prefs?.bio ?? null,
+			isPublicProfile: prefs?.isPublicProfile ?? false,
+			compactMode: prefs?.compactMode ?? false,
+			leaderboardVisible: prefs?.leaderboardVisible ?? true,
+		}
 	}),
 
 	/**
-	 * Update user preferences (timezone, locale, dateFormat, appearance)
+	 * Update app-specific preferences (compactMode, leaderboardVisible)
 	 * Rate limited to prevent abuse
 	 */
 	updatePreferences: protectedRateLimitedProcedure
@@ -176,19 +180,28 @@ export const userRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			const userId = ctx.user.id
 
+			// Upsert preferences
 			const [updated] = await db
-				.update(users)
-				.set({
-					...input,
+				.insert(userPreferences)
+				.values({
+					userId,
+					compactMode: input.compactMode ?? false,
+					leaderboardVisible: input.leaderboardVisible ?? true,
 					updatedAt: new Date(),
 				})
-				.where(eq(users.id, userId))
+				.onConflictDoUpdate({
+					target: userPreferences.userId,
+					set: {
+						...(input.compactMode !== undefined && { compactMode: input.compactMode }),
+						...(input.leaderboardVisible !== undefined && {
+							leaderboardVisible: input.leaderboardVisible,
+						}),
+						updatedAt: new Date(),
+					},
+				})
 				.returning({
-					timezone: users.timezone,
-					locale: users.locale,
-					dateFormat: users.dateFormat,
-					reduceMotion: users.reduceMotion,
-					compactMode: users.compactMode,
+					compactMode: userPreferences.compactMode,
+					leaderboardVisible: userPreferences.leaderboardVisible,
 				})
 
 			if (!updated) {

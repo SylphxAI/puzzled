@@ -7,7 +7,6 @@ import {
 	Loader2,
 	Play,
 	RefreshCw,
-	Trash2,
 	XCircle,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -39,28 +38,24 @@ export function DLQDashboard({ initialStats, initialItems }: DLQDashboardProps) 
 	const router = useRouter()
 	const [filter, setFilter] = useState<string | undefined>(undefined)
 
-	// Use tRPC for data with initial values
-	const { data: statsData, refetch: refetchStats } = trpc.admin.dlqStats.useQuery(undefined, {
-		initialData: initialStats,
-		refetchInterval: 30000, // Refresh every 30s
-	})
-	const stats = statsData ?? initialStats
-
-	const { data: itemsData, refetch: refetchItems } = trpc.admin.dlqList.useQuery(
+	// Use dlqList with includeStats
+	const { data, refetch } = trpc.admin.dlqList.useQuery(
 		{
 			status: filter as 'pending' | 'retrying' | 'resolved' | 'failed' | undefined,
 			limit: PAGINATION.ADMIN_MAX_LIMIT,
+			includeStats: true,
 		},
 		{
-			initialData: { items: initialItems },
+			initialData: { items: initialItems, stats: initialStats },
 			refetchInterval: 30000,
 		},
 	)
-	const items = itemsData?.items ?? initialItems
+
+	const items = data?.items ?? initialItems
+	const stats = data?.stats ?? initialStats
 
 	const handleRefresh = () => {
-		refetchStats()
-		refetchItems()
+		refetch()
 		router.refresh()
 	}
 
@@ -199,8 +194,6 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 	const locale = useLocale()
 	const [loading, setLoading] = useState<string | null>(null)
 	const [retryDialogOpen, setRetryDialogOpen] = useState(false)
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-	const [pendingForce, setPendingForce] = useState(false)
 
 	const retryMutation = trpc.admin.dlqRetry.useMutation({
 		onSuccess: () => {
@@ -209,47 +202,37 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 		onSettled: () => setLoading(null),
 	})
 
-	const updateStatusMutation = trpc.admin.dlqUpdateStatus.useMutation({
+	const resolveMutation = trpc.admin.dlqResolve.useMutation({
 		onSuccess: () => {
 			onUpdate()
 		},
 		onSettled: () => setLoading(null),
 	})
 
-	const deleteMutation = trpc.admin.dlqDelete.useMutation({
+	const markFailedMutation = trpc.admin.dlqMarkFailed.useMutation({
 		onSuccess: () => {
 			onUpdate()
 		},
 		onSettled: () => setLoading(null),
 	})
 
-	const handleRetryClick = (force = false) => {
-		setPendingForce(force)
+	const handleRetryClick = () => {
 		setRetryDialogOpen(true)
 	}
 
 	const handleRetryConfirm = () => {
 		setLoading('retry')
-		retryMutation.mutate({ id: item.id, force: pendingForce })
+		retryMutation.mutate({ id: item.id })
 	}
 
 	const handleResolve = () => {
 		setLoading('resolve')
-		updateStatusMutation.mutate({ id: item.id, action: 'resolve' })
+		resolveMutation.mutate({ id: item.id })
 	}
 
 	const handleFail = () => {
 		setLoading('fail')
-		updateStatusMutation.mutate({ id: item.id, action: 'fail' })
-	}
-
-	const handleDeleteClick = () => {
-		setDeleteDialogOpen(true)
-	}
-
-	const handleDeleteConfirm = () => {
-		setLoading('delete')
-		deleteMutation.mutate({ id: item.id })
+		markFailedMutation.mutate({ id: item.id })
 	}
 
 	const statusBadgeClass: Record<string, string> = {
@@ -268,7 +251,6 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 
 	const canRetry = item.status === 'pending' || item.status === 'failed'
 	const canResolve = item.status === 'pending' || item.status === 'retrying'
-	const canDelete = item.status === 'resolved' || item.status === 'failed'
 	const exceedsRetries = item.retryCount >= item.maxRetries
 
 	return (
@@ -313,9 +295,9 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 							<button
 								type="button"
 								className="admin-btn admin-btn-ghost p-2"
-								onClick={() => handleRetryClick(exceedsRetries)}
+								onClick={handleRetryClick}
 								disabled={loading !== null}
-								aria-label={exceedsRetries ? t('forceRetry') : t('actions.retry')}
+								aria-label={t('actions.retry')}
 							>
 								{loading === 'retry' ? (
 									<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -354,27 +336,12 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 								)}
 							</button>
 						)}
-						{canDelete && (
-							<button
-								type="button"
-								className="admin-btn admin-btn-ghost p-2"
-								onClick={handleDeleteClick}
-								disabled={loading !== null}
-								aria-label={t('actions.delete')}
-							>
-								{loading === 'delete' ? (
-									<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-								) : (
-									<Trash2 className="h-4 w-4 text-[var(--admin-text-muted)]" aria-hidden="true" />
-								)}
-							</button>
-						)}
 					</div>
-					{(retryMutation.error || updateStatusMutation.error || deleteMutation.error) && (
+					{(retryMutation.error || resolveMutation.error || markFailedMutation.error) && (
 						<span className="text-xs text-[var(--admin-error)]">
 							{retryMutation.error?.message ||
-								updateStatusMutation.error?.message ||
-								deleteMutation.error?.message}
+								resolveMutation.error?.message ||
+								markFailedMutation.error?.message}
 						</span>
 					)}
 				</div>
@@ -390,18 +357,6 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 				cancelLabel={tCommon('cancel')}
 				onConfirm={handleRetryConfirm}
 				variant="default"
-			/>
-
-			{/* Delete Confirmation Dialog */}
-			<ConfirmDialog
-				open={deleteDialogOpen}
-				onOpenChange={setDeleteDialogOpen}
-				title={t('confirmDeleteTitle')}
-				description={t('confirmDeleteDescription')}
-				confirmLabel={t('actions.delete')}
-				cancelLabel={tCommon('cancel')}
-				onConfirm={handleDeleteConfirm}
-				variant="destructive"
 			/>
 		</tr>
 	)

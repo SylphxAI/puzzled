@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
-import { notificationPreferences, users } from '@/lib/db/schema'
+import { notificationPreferences } from '@/lib/db/schema'
 
 export const runtime = 'nodejs' // Required for crypto
 
@@ -98,6 +98,9 @@ const unsubscribeSchema = z.object({
 /**
  * POST /api/email/unsubscribe
  * Unsubscribe a user from marketing emails using a signed token
+ *
+ * Note: User existence is validated by the signed token itself.
+ * If a user was deleted, the notification preferences upsert is harmless.
  */
 export async function POST(request: Request) {
 	try {
@@ -113,19 +116,7 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: 'Invalid or expired unsubscribe link' }, { status: 400 })
 		}
 
-		// Update notification preference (SSOT for marketing emails)
-		// First check if user exists
-		const [user] = await db
-			.select({ id: users.id })
-			.from(users)
-			.where(eq(users.id, userId))
-			.limit(1)
-
-		if (!user) {
-			return NextResponse.json({ error: 'User not found' }, { status: 404 })
-		}
-
-		// Update notificationPreferences (create if doesn't exist)
+		// Update notificationPreferences (upsert - create if doesn't exist)
 		const existingPrefs = await db.query.notificationPreferences.findFirst({
 			where: eq(notificationPreferences.userId, userId),
 		})
@@ -171,20 +162,8 @@ export async function GET(request: Request) {
 		return NextResponse.redirect(new URL('/unsubscribe?error=invalid_token', request.url))
 	}
 
-	// Update notification preference (SSOT for marketing emails)
 	try {
-		// First check if user exists
-		const [user] = await db
-			.select({ id: users.id })
-			.from(users)
-			.where(eq(users.id, userId))
-			.limit(1)
-
-		if (!user) {
-			return NextResponse.redirect(new URL('/unsubscribe?error=not_found', request.url))
-		}
-
-		// Update notificationPreferences (create if doesn't exist)
+		// Update notificationPreferences (upsert - create if doesn't exist)
 		const existingPrefs = await db.query.notificationPreferences.findFirst({
 			where: eq(notificationPreferences.userId, userId),
 		})

@@ -117,7 +117,9 @@ function FeatureFlagEditorModal({ flag, onClose }: { flag?: FeatureFlag; onClose
 			e.preventDefault()
 
 			if (isEditing && flag) {
-				updateMutation.mutate({ flagId: flag.id, ...formData })
+				// Extract key from formData to avoid duplicate key error
+				const { key: _, ...updateData } = formData
+				updateMutation.mutate({ key: flag.key, ...updateData })
 			} else {
 				createMutation.mutate(formData)
 			}
@@ -127,7 +129,7 @@ function FeatureFlagEditorModal({ flag, onClose }: { flag?: FeatureFlag; onClose
 
 	const handleDelete = useCallback(() => {
 		if (flag) {
-			deleteMutation.mutate({ flagId: flag.id })
+			deleteMutation.mutate({ key: flag.key })
 		}
 	}, [flag, deleteMutation])
 

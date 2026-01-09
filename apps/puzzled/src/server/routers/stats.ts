@@ -2,7 +2,12 @@
  * Stats Router
  *
  * User statistics and leaderboard procedures.
- * Leaderboards are cached in Redis for performance (cache invalidated on stat updates).
+ * Leaderboards are cached in Redis for performance.
+ *
+ * ARCHITECTURE:
+ * - User privacy settings (leaderboardVisible) come from local userPreferences table
+ * - User display data (name, image) come from userDisplayCache + platform batch API
+ * - No direct user table references - platform is source of truth
  */
 
 import { and, desc, eq, gte, inArray, sql } from 'drizzle-orm'
@@ -11,9 +16,16 @@ import { getTodayUTC } from '@/features/daily/server'
 import { getAllGames, getGameConfig, isValidGameSlug } from '@/games/registry'
 import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
-import { GAME_RESULT_STATUSES, gameSessions, userStats, users } from '@/lib/db/schema'
+import {
+	GAME_RESULT_STATUSES,
+	gameSessions,
+	userDisplayCache,
+	userPreferences,
+	userStats,
+} from '@/lib/db/schema'
 import { cache, keys } from '@/lib/redis'
 import { protectedProcedure, publicProcedure, rateLimitedProcedure, router } from '../trpc'
+import { getDisplayData } from '../services/display-cache'
 
 // Cache TTLs in seconds (keyed by cache period)
 const LEADERBOARD_CACHE_TTL = {
@@ -93,7 +105,7 @@ export const statsRouter = router({
 			const totalPlayers = todaySessions.length
 
 			// Use registry-driven comparison or default logic
-			const userStats = {
+			const userStatsData = {
 				status: input.status,
 				attempts: input.attempts,
 				score: input.score,
@@ -112,7 +124,7 @@ export const statsRouter = router({
 					timeSpentMs: session.timeSpentMs ?? undefined,
 				}
 				// Positive means user is better
-				return compareFunc(userStats, sessionStats) > 0
+				return compareFunc(userStatsData, sessionStats) > 0
 			}).length
 
 			const percentile = Math.round((betterThan / totalPlayers) * 100)
@@ -141,9 +153,7 @@ export const statsRouter = router({
 				guessDistribution: userStats.guessDistribution,
 			})
 			.from(userStats)
-			.where(
-				and(eq(userStats.userId, ctx.user.id), inArray(userStats.gameSlug, activeGameSlugs)),
-			)
+			.where(and(eq(userStats.userId, ctx.user.id), inArray(userStats.gameSlug, activeGameSlugs)))
 
 		// Fetch ALL won sessions for this user in one query (fixes N+1)
 		const gameSlugs = stats.map((s) => s.gameSlug)
@@ -323,7 +333,11 @@ export const statsRouter = router({
 
 	/**
 	 * Get leaderboard for a specific game
-	 * Results are cached in Redis to reduce database load
+	 *
+	 * ARCHITECTURE:
+	 * - Privacy filter uses local userPreferences.leaderboardVisible
+	 * - Display data (name, image) comes from userDisplayCache
+	 * - Cache is refreshed async via platform batch API
 	 */
 	getLeaderboard: publicProcedure
 		.input(
@@ -341,6 +355,7 @@ export const statsRouter = router({
 			// Map input period to cache key period
 			const cachePeriod =
 				input.period === 'today' ? 'daily' : input.period === 'week' ? 'weekly' : 'all'
+
 			// Check cache first
 			const cacheKey = `${keys.leaderboard(input.gameSlug, cachePeriod)}:${input.type}:${input.limit}`
 			const cached = await cache.get<LeaderboardEntry[]>(cacheKey)
@@ -348,64 +363,58 @@ export const statsRouter = router({
 				return cached
 			}
 
-			let results: LeaderboardEntry[]
+			let rankings: { userId: string; value: number }[]
 
 			// All-time leaderboard
 			if (input.period === 'all') {
 				const orderColumn = input.type === 'streak' ? userStats.maxStreak : userStats.totalScore
 
-				// Use explicit join to filter by leaderboardVisible privacy setting
+				// Query user stats with privacy filter from userPreferences
 				const dbResults = await db
 					.select({
 						userId: userStats.userId,
-						userName: users.name,
-						userImage: users.image,
 						maxStreak: userStats.maxStreak,
 						totalScore: userStats.totalScore,
 					})
 					.from(userStats)
-					.innerJoin(users, eq(userStats.userId, users.id))
-					.where(and(eq(userStats.gameSlug, input.gameSlug), eq(users.leaderboardVisible, true)))
+					.innerJoin(userPreferences, eq(userStats.userId, userPreferences.userId))
+					.where(
+						and(eq(userStats.gameSlug, input.gameSlug), eq(userPreferences.leaderboardVisible, true)),
+					)
 					.orderBy(desc(orderColumn))
 					.limit(input.limit)
 
-				results = dbResults.map((r, i) => ({
-					rank: i + 1,
+				rankings = dbResults.map((r) => ({
 					userId: r.userId,
-					userName: r.userName,
-					userImage: r.userImage,
 					value: input.type === 'streak' ? r.maxStreak : r.totalScore,
 				}))
 			} else {
-				// Period-based leaderboard (use UTC for consistency)
+				// Period-based leaderboard
 				let startDate: Date
-
 				if (input.period === 'today') {
 					startDate = getTodayUTC()
 				} else {
-					// 7 days ago at midnight UTC
 					startDate = getTodayUTC()
 					startDate.setUTCDate(startDate.getUTCDate() - 7)
 				}
 
+				// Query game sessions with privacy filter from userPreferences
 				const dbResults = await db
 					.select({
 						userId: gameSessions.userId,
-						userName: users.name,
-						userImage: users.image,
 						totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
 						gamesWon: sql<number>`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)`,
 					})
 					.from(gameSessions)
-					.innerJoin(users, eq(gameSessions.userId, users.id))
+					.innerJoin(userPreferences, eq(gameSessions.userId, userPreferences.userId))
 					.where(
 						and(
 							eq(gameSessions.gameSlug, input.gameSlug),
 							gte(gameSessions.completedAt, startDate),
-							eq(users.leaderboardVisible, true),
+							eq(userPreferences.leaderboardVisible, true),
 						),
 					)
-					.groupBy(gameSessions.userId, users.name, users.image)
+					.groupBy(gameSessions.userId)
 					.orderBy(
 						desc(
 							input.type === 'score'
@@ -415,14 +424,24 @@ export const statsRouter = router({
 					)
 					.limit(input.limit)
 
-				results = dbResults.map((r, i) => ({
-					rank: i + 1,
+				rankings = dbResults.map((r) => ({
 					userId: r.userId,
-					userName: r.userName,
-					userImage: r.userImage,
 					value: input.type === 'score' ? Number(r.totalScore) : Number(r.gamesWon),
 				}))
 			}
+
+			// Get display data for all users (from cache + platform batch API)
+			const userIds = rankings.map((r) => r.userId)
+			const displayData = await getDisplayData(userIds)
+
+			// Build final results with display data
+			const results: LeaderboardEntry[] = rankings.map((r, i) => ({
+				rank: i + 1,
+				userId: r.userId,
+				userName: displayData[r.userId]?.displayName ?? 'Anonymous',
+				userImage: displayData[r.userId]?.avatarUrl ?? null,
+				value: r.value,
+			}))
 
 			// Cache the results
 			const ttl = LEADERBOARD_CACHE_TTL[cachePeriod]

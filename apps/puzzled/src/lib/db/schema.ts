@@ -1,3 +1,13 @@
+/**
+ * Puzzled Database Schema
+ *
+ * ARCHITECTURE: Apps store ONLY business data.
+ * Platform (Sylphx) owns: Identity, Auth, Billing, Sessions, Security
+ *
+ * User references use `userId: uuid('user_id').notNull()` - no FK constraint.
+ * Platform is source of truth for user data.
+ */
+
 import { relations, sql } from 'drizzle-orm'
 import {
 	boolean,
@@ -12,410 +22,208 @@ import {
 	uuid,
 } from 'drizzle-orm/pg-core'
 
-// ==================
-// Enums
-// ==================
+// ==========================================
+// ENUMS (Business Logic Only)
+// ==========================================
 
-// Role hierarchy: super_admin > admin > user
-// Per spec: MFA required for admin and super_admin roles
-export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'super_admin'])
-
-export const subscriptionPlanEnum = pgEnum('subscription_plan', ['free', 'premium', 'lifetime'])
-
-export const subscriptionStatusEnum = pgEnum('subscription_status', [
-	'active',
-	'cancelled',
-	'past_due',
-	'trialing',
-])
-
+/** Game completion status */
 export const gameStatusEnum = pgEnum('game_status', ['in_progress', 'won', 'lost', 'abandoned'])
 
+/** Streak types: game-specific, play streak, or super streak */
 export const streakTypeEnum = pgEnum('streak_type', ['game', 'play', 'super'])
 
+/** Game mode: daily puzzle or archive */
 export const gameModeEnum = pgEnum('game_mode', ['daily', 'archive'])
 
+/** Puzzle difficulty levels */
 export const puzzleDifficultyEnum = pgEnum('puzzle_difficulty', ['easy', 'medium', 'hard'])
 
+/** Referral tracking status */
 export const referralStatusEnum = pgEnum('referral_status', ['pending', 'completed', 'expired'])
 
+/** Referral reward types */
 export const referralRewardTypeEnum = pgEnum('referral_reward_type', [
 	'streak_freeze',
 	'premium_trial',
 	'points',
 ])
 
+/** Win-back email sequence types */
 export const winBackEmailTypeEnum = pgEnum('win_back_email_type', ['day7', 'day14', 'day30'])
 
-export const securityAlertTypeEnum = pgEnum('security_alert_type', [
-	'new_login',
-	'password_changed',
-	'email_changed',
-	'2fa_enabled',
-	'2fa_disabled',
-	'new_device',
-	'suspicious_login',
-	'oauth_connected',
-	'oauth_disconnected',
-	'session_revoked',
-	'all_sessions_revoked',
-])
-
-// Billing interval (moved to enum section to avoid forward reference)
-export const billingIntervalEnum = pgEnum('billing_interval', ['monthly', 'annual', 'lifetime'])
-
-// Billing transaction types for ledger
-export const transactionTypeEnum = pgEnum('transaction_type', [
-	'charge',
-	'refund',
-	'dispute',
-	'dispute_reversal',
-])
-
-export const transactionStatusEnum = pgEnum('transaction_status', [
-	'pending',
-	'succeeded',
-	'failed',
-	'refunded',
-	'disputed',
-])
-
-// DLQ status enum (defined here for forward reference in SSOT exports)
+/** Dead letter queue status */
 export const dlqStatusEnum = pgEnum('dlq_status', [
-	'pending', // Ready for retry
-	'retrying', // Currently being retried
-	'resolved', // Successfully processed after retry
-	'failed', // Permanently failed after all retries
+	'pending',
+	'retrying',
+	'resolved',
+	'failed',
 ])
 
-// ==================
-// Enum Type Exports (SSOT)
-// ==================
+/** Audit log action types */
+export const auditActionEnum = pgEnum('audit_action', [
+	'create',
+	'update',
+	'delete',
+	'game_complete',
+	'streak_update',
+	'achievement_unlock',
+	'admin_action',
+])
 
-/** User role type derived from schema enum */
-export type UserRole = (typeof userRoleEnum.enumValues)[number]
+/** Announcement display types */
+export const announcementTypeEnum = pgEnum('announcement_type', [
+	'info',
+	'warning',
+	'success',
+	'maintenance',
+])
 
-/** Subscription plan type derived from schema enum */
-export type SubscriptionPlan = (typeof subscriptionPlanEnum.enumValues)[number]
+// ==========================================
+// ENUM TYPE EXPORTS (SSOT)
+// ==========================================
 
-/** Subscription status type derived from schema enum */
-export type SubscriptionStatus = (typeof subscriptionStatusEnum.enumValues)[number]
-
-/** Game status type derived from schema enum */
+/** Game status type */
 export type GameStatus = (typeof gameStatusEnum.enumValues)[number]
 
-/** Streak type derived from schema enum */
+/** Streak type */
 export type StreakType = (typeof streakTypeEnum.enumValues)[number]
 
-/** Billing interval type derived from schema enum */
-export type BillingInterval = (typeof billingIntervalEnum.enumValues)[number]
+/** Game mode type */
+export type GameMode = (typeof gameModeEnum.enumValues)[number]
 
-// ==================
-// Enum Value Arrays (SSOT for Zod schemas)
-// ==================
+/** Puzzle difficulty type */
+export type PuzzleDifficulty = (typeof puzzleDifficultyEnum.enumValues)[number]
+
+/** Referral status type */
+export type ReferralStatus = (typeof referralStatusEnum.enumValues)[number]
+
+/** Referral reward type */
+export type ReferralRewardType = (typeof referralRewardTypeEnum.enumValues)[number]
+
+/** Win-back email type */
+export type WinBackEmailType = (typeof winBackEmailTypeEnum.enumValues)[number]
+
+/** DLQ status type */
+export type DLQStatus = (typeof dlqStatusEnum.enumValues)[number]
+
+/** Audit action type */
+export type AuditAction = (typeof auditActionEnum.enumValues)[number]
+
+/** Announcement type */
+export type AnnouncementType = (typeof announcementTypeEnum.enumValues)[number]
+
+// ==========================================
+// ENUM VALUE ARRAYS (For Zod Schemas)
+// ==========================================
 
 /** All game status values */
 export const GAME_STATUS_VALUES = gameStatusEnum.enumValues
 
-/** Game result statuses (subset: only won/lost, not in_progress/abandoned) */
+/** Game result statuses (won/lost only, not in_progress/abandoned) */
 export const GAME_RESULT_STATUSES = ['won', 'lost'] as const satisfies readonly GameStatus[]
 export type GameResultStatus = (typeof GAME_RESULT_STATUSES)[number]
 
 /** All game mode values */
 export const GAME_MODE_VALUES = gameModeEnum.enumValues
 
-/** Puzzle difficulty type derived from schema enum */
-export type DBPuzzleDifficulty = (typeof puzzleDifficultyEnum.enumValues)[number]
-
 /** All puzzle difficulty values */
-export const PUZZLE_DIFFICULTY_DB_VALUES = puzzleDifficultyEnum.enumValues
+export const PUZZLE_DIFFICULTY_VALUES = puzzleDifficultyEnum.enumValues
 
 /** DLQ status values */
 export const DLQ_STATUS_VALUES = dlqStatusEnum.enumValues
 
-// ==================
-// Users & Auth (BetterAuth compatible)
-// ==================
+// ==========================================
+// USER PREFERENCES (App-Specific Settings)
+// ==========================================
 
-export const users = pgTable(
-	'users',
+/**
+ * App-specific user preferences.
+ * userId is the platform user ID (no FK - platform is source of truth).
+ */
+export const userPreferences = pgTable(
+	'user_preferences',
 	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		name: text('name'),
-		email: text('email').notNull().unique(),
-		emailVerified: boolean('email_verified').default(false),
-		image: text('image'),
-		role: userRoleEnum('role').default('user').notNull(),
-		// Per spec: MFA required for admin and super_admin roles
-		twoFactorEnabled: boolean('two_factor_enabled').default(false),
-		referralCode: text('referral_code').unique(),
-		// Email preferences (CAN-SPAM compliance)
-		marketingEmailsEnabled: boolean('marketing_emails_enabled').default(true),
-		// Profile settings
-		username: text('username').unique(),
-		bio: text('bio'),
-		isPublicProfile: boolean('is_public_profile').default(false).notNull(),
-		// Accessibility & UI preferences
-		reduceMotion: boolean('reduce_motion').default(false).notNull(),
+		/** Platform user ID (primary key, no FK) */
+		userId: uuid('user_id').primaryKey(),
+
+		// Privacy Settings
+		/** Whether user appears on public leaderboards */
+		leaderboardVisible: boolean('leaderboard_visible').default(true).notNull(),
+
+		// UI Preferences
+		/** Compact mode for dense information display */
 		compactMode: boolean('compact_mode').default(false).notNull(),
-		// Locale & timezone preferences
-		timezone: text('timezone').default('UTC'),
-		locale: text('locale').default('en'),
-		dateFormat: text('date_format').default('relative'), // 'relative' | 'absolute' | 'iso'
-		// Privacy settings
-		leaderboardVisible: boolean('leaderboard_visible').default(true),
+
+		// App-Specific Profile
+		/** Optional in-app username (distinct from platform name) */
+		username: text('username').unique(),
+		/** User bio for profile display */
+		bio: text('bio'),
+		/** Whether profile is publicly visible */
+		isPublicProfile: boolean('is_public_profile').default(false).notNull(),
+
+		// Timestamps
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(table) => [
-		// PERFORMANCE: Index for leaderboard visibility filtering in JOIN queries
-		index('users_leaderboard_visible_idx').on(table.leaderboardVisible),
+		// Index for leaderboard visibility filtering
+		index('user_preferences_leaderboard_visible_idx').on(table.leaderboardVisible),
 	],
 )
 
-export const sessions = pgTable(
-	'sessions',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		token: text('token').notNull().unique(),
-		expiresAt: timestamp('expires_at').notNull(),
-		ipAddress: text('ip_address'),
-		userAgent: text('user_agent'),
-		// Per spec: Track if session has verified MFA
-		twoFactorVerified: boolean('two_factor_verified').default(false),
-		// Re-authentication: timestamp of last identity verification (password or email code)
-		// Used for sensitive operations - valid for 10 minutes (SESSION_VERIFIED_TTL_MINUTES)
-		verifiedAt: timestamp('verified_at'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('sessions_user_idx').on(table.userId),
-		index('sessions_expires_at_idx').on(table.expiresAt),
-	],
-)
+// ==========================================
+// USER DISPLAY CACHE (For Leaderboards)
+// ==========================================
 
-// ==================
-// Two-Factor Authentication (better-auth compatible)
-// Per spec: MFA required for admin and super_admin roles
-// ==================
+/**
+ * Cached user display data from platform.
+ * Refreshed via batch API for efficient leaderboard rendering.
+ */
+export const userDisplayCache = pgTable('user_display_cache', {
+	/** Platform user ID (primary key, no FK) */
+	userId: uuid('user_id').primaryKey(),
 
-export const twoFactors = pgTable(
-	'two_factors',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		// TOTP secret (encrypted by better-auth)
-		secret: text('secret').notNull(),
-		// Backup codes for account recovery (JSON array, encrypted)
-		backupCodes: text('backup_codes').notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [index('two_factors_user_idx').on(table.userId)],
-)
+	/** Cached display name from platform */
+	displayName: text('display_name'),
 
-// ==================
-// Verification Codes (for re-authentication)
-// Used for sensitive operations when user needs to verify identity
-// OAuth users use email codes, password users can use password or email codes
-// ==================
+	/** Cached avatar URL from platform */
+	avatarUrl: text('avatar_url'),
 
-export const verificationCodeTypeEnum = pgEnum('verification_code_type', [
-	'reauth', // General re-authentication
-	'email_change', // Changing email address
-	'delete_account', // Deleting account
-	'enable_2fa', // Enabling 2FA
-])
-
-/** Valid verification code types */
-export type VerificationCodeType = (typeof verificationCodeTypeEnum.enumValues)[number]
-
-/** Array of valid verification code types for use in schemas */
-export const VERIFICATION_CODE_TYPES = verificationCodeTypeEnum.enumValues
-
-export const verificationCodes = pgTable(
-	'verification_codes',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		// 6-digit code
-		code: text('code').notNull(),
-		// What operation this code is for
-		type: verificationCodeTypeEnum('type').notNull(),
-		// When the code expires (10 minutes from creation)
-		expiresAt: timestamp('expires_at').notNull(),
-		// When the code was used (null if not used)
-		usedAt: timestamp('used_at'),
-		// Number of failed attempts (for brute force protection)
-		attempts: integer('attempts').default(0).notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('verification_codes_user_idx').on(table.userId),
-		index('verification_codes_expires_idx').on(table.expiresAt),
-		index('verification_codes_user_type_idx').on(table.userId, table.type),
-	],
-)
-
-export const accounts = pgTable(
-	'accounts',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		accountId: text('account_id').notNull(),
-		providerId: text('provider_id').notNull(),
-		accessToken: text('access_token'),
-		refreshToken: text('refresh_token'),
-		accessTokenExpiresAt: timestamp('access_token_expires_at'),
-		refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
-		scope: text('scope'),
-		idToken: text('id_token'),
-		password: text('password'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('accounts_user_idx').on(table.userId),
-		index('accounts_provider_account_idx').on(table.providerId, table.accountId),
-	],
-)
-
-export const verifications = pgTable(
-	'verifications',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		identifier: text('identifier').notNull(),
-		value: text('value').notNull(),
-		expiresAt: timestamp('expires_at').notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [index('verifications_identifier_expires_idx').on(table.identifier, table.expiresAt)],
-)
-
-// ==================
-// Login History
-// ==================
-
-export const loginHistory = pgTable(
-	'login_history',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		ipAddress: text('ip_address'),
-		userAgent: text('user_agent'),
-		country: text('country'),
-		city: text('city'),
-		device: text('device'), // parsed from UA: 'Chrome on macOS'
-		success: boolean('success').default(true).notNull(),
-		failureReason: text('failure_reason'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('login_history_user_idx').on(table.userId),
-		index('login_history_created_at_idx').on(table.createdAt),
-	],
-)
-
-// ==================
-// Subscriptions
-// ==================
-
-export const subscriptions = pgTable(
-	'subscriptions',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' })
-			.unique(),
-		stripeCustomerId: text('stripe_customer_id').unique(),
-		stripeSubscriptionId: text('stripe_subscription_id').unique(),
-		plan: subscriptionPlanEnum('plan').default('free').notNull(),
-		status: subscriptionStatusEnum('status').default('active').notNull(),
-		currentPeriodStart: timestamp('current_period_start'),
-		currentPeriodEnd: timestamp('current_period_end'),
-		trialEnd: timestamp('trial_end'),
-		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [index('subscriptions_stripe_customer_idx').on(table.stripeCustomerId)],
-)
-
-// ==================
-// Plans & Pricing (Admin managed, synced to Stripe)
-// ==================
-
-export const plans = pgTable('plans', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	slug: text('slug').notNull().unique(), // 'free', 'premium'
-	name: text('name').notNull(),
-	description: text('description'),
-	features: jsonb('features').$type<string[]>().default([]).notNull(),
-	stripeProductId: text('stripe_product_id'), // null for free plan
-	isActive: boolean('is_active').default(true).notNull(),
-	sortOrder: integer('sort_order').default(0).notNull(),
-	createdAt: timestamp('created_at').defaultNow().notNull(),
-	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+	/** When this cache entry was last refreshed */
+	cachedAt: timestamp('cached_at').defaultNow().notNull(),
 })
 
-export const planPrices = pgTable(
-	'plan_prices',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		planId: uuid('plan_id')
-			.notNull()
-			.references(() => plans.id, { onDelete: 'cascade' }),
-		interval: billingIntervalEnum('interval').notNull(),
-		amount: integer('amount').notNull(), // in cents
-		currency: text('currency').default('usd').notNull(),
-		stripePriceId: text('stripe_price_id'), // synced from Stripe
-		isActive: boolean('is_active').default(true).notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		uniqueIndex('plan_prices_plan_interval_idx').on(table.planId, table.interval),
-		index('plan_prices_stripe_idx').on(table.stripePriceId),
-	],
-)
+// ==========================================
+// DAILY PUZZLES
+// ==========================================
 
-// ==================
-// Daily Puzzles
-// ==================
-
+/**
+ * Daily puzzles for all games.
+ * No user reference - this is pure game content.
+ */
 export const dailyPuzzles = pgTable(
 	'daily_puzzles',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
+		/** Game identifier (e.g., 'wordle', 'number-game') */
 		gameSlug: text('game_slug').notNull(),
+		/** Date this puzzle is for */
 		puzzleDate: timestamp('puzzle_date').notNull(),
+		/** Puzzle configuration/data (game-specific JSON) */
 		puzzleData: jsonb('puzzle_data').notNull(),
+		/** Puzzle solution (game-specific JSON) */
 		solution: jsonb('solution'),
-		// Difficulty level for games that support difficulty selection
-		// NULL for games without difficulty support (backward compatible)
+		/** Difficulty level (null for games without difficulty) */
 		difficulty: puzzleDifficultyEnum('difficulty'),
-		// Immutable history: record seed and version for audit trail
-		seed: integer('seed'), // The seed used for generation (YYYYMMDD)
-		generatorVersion: text('generator_version').default('v1.0'), // Algorithm version for migration tracking
+		/** Generation seed for reproducibility (YYYYMMDD format) */
+		seed: integer('seed'),
+		/** Generator algorithm version for migration tracking */
+		generatorVersion: text('generator_version').default('v1.0'),
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 	},
 	(table) => [
-		// Unique constraint: one puzzle per game per date per difficulty
-		// For games without difficulty, difficulty is NULL (only one puzzle per day)
-		// For games with difficulty, each difficulty level has its own puzzle
+		// Unique: one puzzle per game per date per difficulty
 		uniqueIndex('daily_puzzles_game_date_difficulty_idx').on(
 			table.gameSlug,
 			table.puzzleDate,
@@ -426,30 +234,55 @@ export const dailyPuzzles = pgTable(
 	],
 )
 
-// ==================
-// Game Sessions
-// ==================
+// ==========================================
+// GAME SESSIONS
+// ==========================================
 
+/**
+ * Individual game play sessions.
+ * Tracks game progress, attempts, and results.
+ */
 export const gameSessions = pgTable(
 	'game_sessions',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
+
+		/** Platform user ID (no FK - platform is source of truth) */
+		userId: uuid('user_id').notNull(),
+
+		/** Game identifier */
 		gameSlug: text('game_slug').notNull(),
+
+		/** Reference to the puzzle being played */
 		puzzleId: uuid('puzzle_id').references(() => dailyPuzzles.id, { onDelete: 'set null' }),
+
+		/** Puzzle date (denormalized for query efficiency) */
 		puzzleDate: timestamp('puzzle_date'),
-		// Difficulty level for games that support difficulty selection
-		// NULL for games without difficulty support
+
+		/** Difficulty level for games that support it */
 		difficulty: puzzleDifficultyEnum('difficulty'),
-		mode: gameModeEnum('mode').default('daily').notNull(), // 'daily' | 'archive'
-		archiveDate: timestamp('archive_date'), // Only set when mode = 'archive'
+
+		/** Game mode: daily or archive */
+		mode: gameModeEnum('mode').default('daily').notNull(),
+
+		/** Archive date (only set when mode = 'archive') */
+		archiveDate: timestamp('archive_date'),
+
+		/** Current game status */
 		status: gameStatusEnum('status').default('in_progress').notNull(),
+
+		/** Game state (game-specific JSON for resuming) */
 		state: jsonb('state'),
+
+		/** Final score (set on completion) */
 		score: integer('score'),
+
+		/** Number of attempts/guesses */
 		attempts: integer('attempts').default(0).notNull(),
+
+		/** Time spent playing (milliseconds) */
 		timeSpentMs: integer('time_spent_ms'),
+
 		startedAt: timestamp('started_at').defaultNow().notNull(),
 		completedAt: timestamp('completed_at'),
 	},
@@ -464,75 +297,120 @@ export const gameSessions = pgTable(
 			table.puzzleDate,
 			table.mode,
 		),
-		// Index for difficulty-aware queries
 		index('game_sessions_difficulty_idx').on(table.difficulty),
-		// PERFORMANCE: Additional indexes for common query patterns
-		index('game_sessions_completed_at_idx').on(table.completedAt), // For period-based leaderboards
-		index('game_sessions_status_idx').on(table.status), // For filtering won/lost
-		index('game_sessions_archive_date_idx').on(table.archiveDate), // For archive mode queries
+		index('game_sessions_completed_at_idx').on(table.completedAt),
+		index('game_sessions_status_idx').on(table.status),
+		index('game_sessions_archive_date_idx').on(table.archiveDate),
 		index('game_sessions_game_slug_status_completed_idx').on(
 			table.gameSlug,
 			table.status,
 			table.completedAt,
-		), // Composite for leaderboard queries with status filter
-		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt), // For period-based queries without status filter
+		),
+		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
 	],
 )
 
-// ==================
-// User Stats (per game)
-// ==================
+// ==========================================
+// USER STATS (Per Game Aggregates)
+// ==========================================
 
+/**
+ * Aggregated statistics per user per game.
+ * Updated after each game completion.
+ */
 export const userStats = pgTable(
 	'user_stats',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
+
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+
+		/** Game identifier */
 		gameSlug: text('game_slug').notNull(),
+
+		/** Total games played */
 		gamesPlayed: integer('games_played').default(0).notNull(),
+
+		/** Total games won */
 		gamesWon: integer('games_won').default(0).notNull(),
+
+		/** Current win streak */
 		currentStreak: integer('current_streak').default(0).notNull(),
+
+		/** Maximum win streak achieved */
 		maxStreak: integer('max_streak').default(0).notNull(),
+
+		/** Total accumulated score */
 		totalScore: integer('total_score').default(0).notNull(),
+
+		/** Average attempts per game */
 		averageAttempts: integer('average_attempts'),
+
+		/** Guess distribution histogram (JSON) */
 		guessDistribution: jsonb('guess_distribution'),
+
+		/** Last time this user played this game */
 		lastPlayedAt: timestamp('last_played_at'),
+
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(table) => [
 		uniqueIndex('user_stats_user_game_slug_idx').on(table.userId, table.gameSlug),
 		index('user_stats_streak_idx').on(table.currentStreak),
 		index('user_stats_game_slug_idx').on(table.gameSlug),
+		// For leaderboard queries
+		index('user_stats_total_score_idx').on(table.totalScore),
 	],
 )
 
-// ==================
-// Enhanced Streak System
-// ==================
+// ==========================================
+// USER STREAKS (Enhanced Streak System)
+// ==========================================
 
+/**
+ * Multi-type streak tracking.
+ * - game: Per-game win streaks
+ * - play: Daily play streaks (any game)
+ * - super: Win all games in a day
+ */
 export const userStreaks = pgTable(
 	'user_streaks',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		type: streakTypeEnum('type').notNull(), // 'game' | 'play' | 'super'
-		gameSlug: text('game_slug'), // null for play/super streaks
+
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+
+		/** Streak type */
+		type: streakTypeEnum('type').notNull(),
+
+		/** Game slug (null for play/super streaks) */
+		gameSlug: text('game_slug'),
+
+		/** Current streak count */
 		currentStreak: integer('current_streak').default(0).notNull(),
+
+		/** Maximum streak achieved */
 		maxStreak: integer('max_streak').default(0).notNull(),
+
+		/** Last played date for streak calculation */
 		lastPlayedDate: timestamp('last_played_date'),
+
+		/** Available streak freezes */
 		freezesAvailable: integer('freezes_available').default(0).notNull(),
+
+		/** Total freezes used */
 		freezesUsed: integer('freezes_used').default(0).notNull(),
+
+		/** Auto-freeze enabled setting */
 		autoFreezeEnabled: boolean('auto_freeze_enabled').default(false).notNull(),
+
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
 	(table) => [
-		// Partial unique indexes to handle NULL gameSlug correctly
-		// PostgreSQL allows multiple NULLs in UNIQUE indexes, so we need two partial indexes
+		// Partial unique indexes for NULL gameSlug handling
 		uniqueIndex('user_streaks_user_type_game_slug_idx')
 			.on(table.userId, table.type, table.gameSlug)
 			.where(sql`${table.gameSlug} IS NOT NULL`),
@@ -543,59 +421,191 @@ export const userStreaks = pgTable(
 	],
 )
 
-// ==================
-// Webhook Events (Idempotency + Out-of-Order Handling)
-// ==================
+// ==========================================
+// NOTIFICATION PREFERENCES
+// ==========================================
 
-export const webhookEvents = pgTable(
-	'webhook_events',
+/**
+ * User notification preferences for this app.
+ */
+export const notificationPreferences = pgTable('notification_preferences', {
+	id: uuid('id').primaryKey().defaultRandom(),
+
+	/** Platform user ID (no FK) */
+	userId: uuid('user_id').notNull().unique(),
+
+	// Push Notifications
+	/** Master push toggle */
+	pushEnabled: boolean('push_enabled').default(true).notNull(),
+	/** Daily puzzle reminder */
+	pushDailyReminder: boolean('push_daily_reminder').default(true).notNull(),
+	/** Streak at risk alerts */
+	pushStreakAlert: boolean('push_streak_alert').default(true).notNull(),
+	/** New game announcements */
+	pushNewGames: boolean('push_new_games').default(true).notNull(),
+	/** Daily reminder time (HH:mm format) */
+	dailyReminderTime: text('daily_reminder_time').default('09:00'),
+
+	// Email Notifications
+	/** Master email toggle */
+	emailEnabled: boolean('email_enabled').default(true).notNull(),
+	/** Weekly stats digest */
+	emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
+	/** Marketing emails (CAN-SPAM compliant) */
+	emailMarketing: boolean('email_marketing').default(true).notNull(),
+
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+// ==========================================
+// PUSH SUBSCRIPTIONS
+// ==========================================
+
+/**
+ * Web Push subscription endpoints.
+ */
+export const pushSubscriptions = pgTable(
+	'push_subscriptions',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		stripeEventId: text('stripe_event_id').notNull().unique(),
-		eventType: text('event_type').notNull(),
-		// Per spec: Store Stripe event creation time for out-of-order handling
-		stripeCreatedAt: timestamp('stripe_created_at').notNull(),
-		processedAt: timestamp('processed_at').defaultNow().notNull(),
-		// Store subscription ID for ordering events within same subscription
-		subscriptionId: text('subscription_id'),
+
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+
+		/** Push endpoint URL */
+		endpoint: text('endpoint').notNull().unique(),
+
+		/** P-256 public key */
+		p256dh: text('p256dh').notNull(),
+
+		/** Auth secret */
+		auth: text('auth').notNull(),
+
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [index('push_subscriptions_user_idx').on(table.userId)],
+)
+
+// ==========================================
+// REFERRALS
+// ==========================================
+
+/**
+ * Referral tracking for this app.
+ */
+export const referrals = pgTable(
+	'referrals',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+
+		/** User who made the referral (no FK) */
+		referrerId: uuid('referrer_id').notNull(),
+
+		/** User who was referred (no FK, nullable if not yet signed up) */
+		referredUserId: uuid('referred_user_id'),
+
+		/** Referral code used */
+		referralCode: text('referral_code').notNull(),
+
+		/** Referral status */
+		status: referralStatusEnum('status').default('pending').notNull(),
+
+		/** Reward type for completion */
+		rewardType: referralRewardTypeEnum('reward_type').default('streak_freeze').notNull(),
+
+		/** Additional referral metadata */
+		metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		completedAt: timestamp('completed_at'),
 	},
 	(table) => [
-		index('webhook_events_stripe_event_idx').on(table.stripeEventId),
-		// Index for ordering queries
-		index('webhook_events_sub_created_idx').on(table.subscriptionId, table.stripeCreatedAt),
+		index('referrals_referrer_idx').on(table.referrerId),
+		index('referrals_referred_user_idx').on(table.referredUserId),
+		index('referrals_code_idx').on(table.referralCode),
+		index('referrals_status_idx').on(table.status),
+		// One referral per referred user
+		uniqueIndex('referrals_referred_user_unique_idx').on(table.referredUserId),
 	],
 )
 
-// ==================
-// Audit Logs (Admin RBAC)
-// ==================
+// ==========================================
+// WIN-BACK EMAIL TRACKING
+// ==========================================
 
-export const auditActionEnum = pgEnum('audit_action', [
-	'create',
-	'update',
-	'delete',
-	'login',
-	'logout',
-	'role_change',
-	'subscription_change',
-	'impersonate_start',
-	'impersonate_end',
-	'feature_flag_toggle',
-	'admin_action',
-])
+/**
+ * Track win-back email sequence for churned users.
+ */
+export const winBackEmails = pgTable(
+	'win_back_emails',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
 
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+
+		/** Email type in sequence */
+		emailType: winBackEmailTypeEnum('email_type').notNull(),
+
+		/** When email was sent */
+		sentAt: timestamp('sent_at').defaultNow().notNull(),
+
+		/** Promotion code (for day30 emails) */
+		promotionCode: text('promotion_code'),
+
+		/** Whether user returned after this email */
+		userReturned: boolean('user_returned').default(false),
+		returnedAt: timestamp('returned_at'),
+
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+	},
+	(table) => [
+		index('win_back_emails_user_idx').on(table.userId),
+		index('win_back_emails_type_idx').on(table.emailType),
+		index('win_back_emails_sent_at_idx').on(table.sentAt),
+		// One email per type per user
+		uniqueIndex('win_back_emails_user_type_idx').on(table.userId, table.emailType),
+	],
+)
+
+// ==========================================
+// AUDIT LOGS
+// ==========================================
+
+/**
+ * Audit trail for important app actions.
+ * Note: Auth/billing audit logs are handled by platform.
+ */
 export const auditLogs = pgTable(
 	'audit_logs',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
-		actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }), // Admin who performed action (for impersonation)
+
+		/** User who was affected (no FK) */
+		userId: uuid('user_id'),
+
+		/** Actor who performed action (no FK) - for admin actions */
+		actorId: uuid('actor_id'),
+
+		/** Action type */
 		action: auditActionEnum('action').notNull(),
-		resourceType: text('resource_type').notNull(), // 'user', 'subscription', 'game', 'feature_flag', etc.
-		resourceId: text('resource_id'), // ID of affected resource
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(), // Additional context
+
+		/** Resource type (e.g., 'game_session', 'achievement') */
+		resourceType: text('resource_type').notNull(),
+
+		/** Resource ID */
+		resourceId: text('resource_id'),
+
+		/** Additional context */
+		metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+
+		/** Request IP (for admin actions) */
 		ipAddress: text('ip_address'),
+
+		/** User agent (for admin actions) */
 		userAgent: text('user_agent'),
+
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 	},
 	(table) => [
@@ -607,25 +617,51 @@ export const auditLogs = pgTable(
 	],
 )
 
-// ==================
-// Dead Letter Queue (Workflow Failures)
-// ==================
+// ==========================================
+// DEAD LETTER QUEUE
+// ==========================================
 
+/**
+ * Failed workflow/job tracking for retry and debugging.
+ */
 export const deadLetterQueue = pgTable(
 	'dead_letter_queue',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
+
+		/** Workflow/job name */
 		workflowName: text('workflow_name').notNull(),
-		workflowRunId: text('workflow_run_id'), // Upstash workflow run ID
+
+		/** External workflow run ID (e.g., Upstash) */
+		workflowRunId: text('workflow_run_id'),
+
+		/** Job payload */
 		payload: jsonb('payload').$type<Record<string, unknown>>(),
+
+		/** Error message */
 		error: text('error').notNull(),
+
+		/** Full error stack */
 		errorStack: text('error_stack'),
+
+		/** Current status */
 		status: dlqStatusEnum('status').default('pending').notNull(),
+
+		/** Retry count */
 		retryCount: integer('retry_count').default(0).notNull(),
+
+		/** Max retries allowed */
 		maxRetries: integer('max_retries').default(3).notNull(),
+
+		/** Last retry timestamp */
 		lastRetryAt: timestamp('last_retry_at'),
+
+		/** When successfully resolved */
 		resolvedAt: timestamp('resolved_at'),
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(), // Additional context
+
+		/** Additional context */
+		metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 	},
 	(table) => [
@@ -635,513 +671,96 @@ export const deadLetterQueue = pgTable(
 	],
 )
 
-// ==================
-// Push Subscriptions
-// ==================
+// ==========================================
+// WEBHOOK EVENTS (Idempotency)
+// ==========================================
 
-export const pushSubscriptions = pgTable(
-	'push_subscriptions',
+/**
+ * Track processed webhook events for idempotency.
+ * Note: Billing webhooks are handled by platform.
+ * This is for app-specific webhooks only.
+ */
+export const webhookEvents = pgTable(
+	'webhook_events',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		endpoint: text('endpoint').notNull().unique(),
-		p256dh: text('p256dh').notNull(),
-		auth: text('auth').notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [index('push_subscriptions_user_idx').on(table.userId)],
-)
 
-// ==================
-// Notification Preferences
-// ==================
+		/** External event ID (for idempotency) */
+		eventId: text('event_id').notNull().unique(),
 
-export const notificationPreferences = pgTable(
-	'notification_preferences',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' })
-			.unique(),
-		// Push notifications
-		pushEnabled: boolean('push_enabled').default(true).notNull(),
-		pushDailyReminder: boolean('push_daily_reminder').default(true).notNull(),
-		pushStreakAlert: boolean('push_streak_alert').default(true).notNull(),
-		pushNewGames: boolean('push_new_games').default(true).notNull(),
-		dailyReminderTime: text('daily_reminder_time').default('09:00'), // HH:mm format
-		// Email notifications
-		emailEnabled: boolean('email_enabled').default(true).notNull(),
-		emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
-		emailMarketing: boolean('email_marketing').default(true).notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	// Note: userId already has unique constraint which creates an index
-)
+		/** Event type/name */
+		eventType: text('event_type').notNull(),
 
-// ==================
-// Referrals
-// ==================
+		/** External event timestamp */
+		eventCreatedAt: timestamp('event_created_at').notNull(),
 
-export const referrals = pgTable(
-	'referrals',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		referrerId: uuid('referrer_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		referredUserId: uuid('referred_user_id').references(() => users.id, { onDelete: 'set null' }),
-		referralCode: text('referral_code').notNull(),
-		status: referralStatusEnum('status').default('pending').notNull(),
-		rewardType: referralRewardTypeEnum('reward_type').default('streak_freeze').notNull(),
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(), // Additional context (e.g., reward details)
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		completedAt: timestamp('completed_at'),
+		/** When we processed it */
+		processedAt: timestamp('processed_at').defaultNow().notNull(),
+
+		/** Related resource ID (optional) */
+		resourceId: text('resource_id'),
 	},
 	(table) => [
-		index('referrals_referrer_idx').on(table.referrerId),
-		index('referrals_referred_user_idx').on(table.referredUserId),
-		index('referrals_code_idx').on(table.referralCode),
-		index('referrals_status_idx').on(table.status),
-		uniqueIndex('referrals_referred_user_unique_idx').on(table.referredUserId), // One referral per user
+		index('webhook_events_event_idx').on(table.eventId),
+		index('webhook_events_resource_created_idx').on(table.resourceId, table.eventCreatedAt),
 	],
 )
 
-// ==================
-// Win-Back Email Tracking
-// ==================
+// ==========================================
+// ANNOUNCEMENTS
+// ==========================================
 
-export const winBackEmails = pgTable(
-	'win_back_emails',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		emailType: winBackEmailTypeEnum('email_type').notNull(),
-		sentAt: timestamp('sent_at').defaultNow().notNull(),
-		// Store promotion code for day30 emails
-		promotionCode: text('promotion_code'),
-		// Track if user returned after this email
-		userReturned: boolean('user_returned').default(false),
-		returnedAt: timestamp('returned_at'),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('win_back_emails_user_idx').on(table.userId),
-		index('win_back_emails_type_idx').on(table.emailType),
-		index('win_back_emails_sent_at_idx').on(table.sentAt),
-		// Ensure we don't send the same email type to a user multiple times
-		uniqueIndex('win_back_emails_user_type_idx').on(table.userId, table.emailType),
-	],
-)
-
-// ==================
-// Billing Transactions (Ledger)
-// ==================
-
-export const billingTransactions = pgTable(
-	'billing_transactions',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		stripeCustomerId: text('stripe_customer_id').notNull(),
-		stripeInvoiceId: text('stripe_invoice_id'),
-		stripeChargeId: text('stripe_charge_id'),
-		stripePaymentIntentId: text('stripe_payment_intent_id'),
-		/** Customer-facing invoice URL (from Stripe hosted_invoice_url) */
-		hostedInvoiceUrl: text('hosted_invoice_url'),
-		amountCents: integer('amount_cents').notNull(),
-		currency: text('currency').default('usd').notNull(),
-		type: transactionTypeEnum('type').notNull(),
-		status: transactionStatusEnum('status').notNull(),
-		description: text('description'),
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(),
-		stripeCreatedAt: timestamp('stripe_created_at').notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('billing_transactions_user_idx').on(table.userId),
-		index('billing_transactions_customer_idx').on(table.stripeCustomerId),
-		index('billing_transactions_invoice_idx').on(table.stripeInvoiceId),
-		index('billing_transactions_charge_idx').on(table.stripeChargeId),
-		index('billing_transactions_type_idx').on(table.type),
-		index('billing_transactions_status_idx').on(table.status),
-		index('billing_transactions_created_at_idx').on(table.createdAt),
-	],
-)
-
-// ==================
-// App Settings (Key-Value Store)
-// ==================
-
-export const appSettings = pgTable('app_settings', {
-	key: text('key').primaryKey(),
-	value: jsonb('value').$type<unknown>().notNull(),
-	description: text('description'),
-	updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
-})
-
-// Type-safe setting keys
-// Note: No fallback model - errors must be visible, not masked
-export type AppSettingKey = 'puzzle_generator_model'
-
-// ==================
-// Relations
-// ==================
-
-export const usersRelations = relations(users, ({ many, one }) => ({
-	sessions: many(sessions),
-	accounts: many(accounts),
-	twoFactor: one(twoFactors, {
-		fields: [users.id],
-		references: [twoFactors.userId],
-	}),
-	subscription: one(subscriptions, {
-		fields: [users.id],
-		references: [subscriptions.userId],
-	}),
-	gameSessions: many(gameSessions),
-	stats: many(userStats),
-	pushSubscriptions: many(pushSubscriptions),
-	notificationPreference: one(notificationPreferences, {
-		fields: [users.id],
-		references: [notificationPreferences.userId],
-	}),
-	loginHistory: many(loginHistory),
-	referralsMade: many(referrals, { relationName: 'referrer' }),
-	// Note: referredBy relation is queried via referrals table where referredUserId = user.id
-	winBackEmails: many(winBackEmails),
-	billingTransactions: many(billingTransactions),
-	securityAlerts: many(securityAlerts),
-}))
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-	user: one(users, {
-		fields: [sessions.userId],
-		references: [users.id],
-	}),
-}))
-
-export const accountsRelations = relations(accounts, ({ one }) => ({
-	user: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}))
-
-export const twoFactorsRelations = relations(twoFactors, ({ one }) => ({
-	user: one(users, {
-		fields: [twoFactors.userId],
-		references: [users.id],
-	}),
-}))
-
-export const verificationCodesRelations = relations(verificationCodes, ({ one }) => ({
-	user: one(users, {
-		fields: [verificationCodes.userId],
-		references: [users.id],
-	}),
-}))
-
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
-	user: one(users, {
-		fields: [subscriptions.userId],
-		references: [users.id],
-	}),
-}))
-
-export const plansRelations = relations(plans, ({ many }) => ({
-	prices: many(planPrices),
-}))
-
-export const planPricesRelations = relations(planPrices, ({ one }) => ({
-	plan: one(plans, {
-		fields: [planPrices.planId],
-		references: [plans.id],
-	}),
-}))
-
-export const dailyPuzzlesRelations = relations(dailyPuzzles, ({ many }) => ({
-	sessions: many(gameSessions),
-}))
-
-export const gameSessionsRelations = relations(gameSessions, ({ one }) => ({
-	user: one(users, {
-		fields: [gameSessions.userId],
-		references: [users.id],
-	}),
-	puzzle: one(dailyPuzzles, {
-		fields: [gameSessions.puzzleId],
-		references: [dailyPuzzles.id],
-	}),
-}))
-
-export const userStatsRelations = relations(userStats, ({ one }) => ({
-	user: one(users, {
-		fields: [userStats.userId],
-		references: [users.id],
-	}),
-}))
-
-export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
-	user: one(users, {
-		fields: [pushSubscriptions.userId],
-		references: [users.id],
-	}),
-}))
-
-export const userStreaksRelations = relations(userStreaks, ({ one }) => ({
-	user: one(users, {
-		fields: [userStreaks.userId],
-		references: [users.id],
-	}),
-}))
-
-export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
-	user: one(users, {
-		fields: [auditLogs.userId],
-		references: [users.id],
-	}),
-	actor: one(users, {
-		fields: [auditLogs.actorId],
-		references: [users.id],
-	}),
-}))
-
-export const referralsRelations = relations(referrals, ({ one }) => ({
-	referrer: one(users, {
-		fields: [referrals.referrerId],
-		references: [users.id],
-		relationName: 'referrer',
-	}),
-	referredUser: one(users, {
-		fields: [referrals.referredUserId],
-		references: [users.id],
-		relationName: 'referred',
-	}),
-}))
-
-export const winBackEmailsRelations = relations(winBackEmails, ({ one }) => ({
-	user: one(users, {
-		fields: [winBackEmails.userId],
-		references: [users.id],
-	}),
-}))
-
-export const billingTransactionsRelations = relations(billingTransactions, ({ one }) => ({
-	user: one(users, {
-		fields: [billingTransactions.userId],
-		references: [users.id],
-	}),
-}))
-
-export const loginHistoryRelations = relations(loginHistory, ({ one }) => ({
-	user: one(users, {
-		fields: [loginHistory.userId],
-		references: [users.id],
-	}),
-}))
-
-export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
-	user: one(users, {
-		fields: [notificationPreferences.userId],
-		references: [users.id],
-	}),
-}))
-
-// ==================
-// Types
-// ==================
-
-export type User = typeof users.$inferSelect
-export type NewUser = typeof users.$inferInsert
-
-export type Subscription = typeof subscriptions.$inferSelect
-export type NewSubscription = typeof subscriptions.$inferInsert
-
-export type DailyPuzzle = typeof dailyPuzzles.$inferSelect
-export type NewDailyPuzzle = typeof dailyPuzzles.$inferInsert
-
-export type GameSession = typeof gameSessions.$inferSelect
-export type NewGameSession = typeof gameSessions.$inferInsert
-
-export type UserStat = typeof userStats.$inferSelect
-export type NewUserStat = typeof userStats.$inferInsert
-
-export type Plan = typeof plans.$inferSelect
-export type NewPlan = typeof plans.$inferInsert
-
-export type PlanPrice = typeof planPrices.$inferSelect
-export type NewPlanPrice = typeof planPrices.$inferInsert
-
-export type UserStreak = typeof userStreaks.$inferSelect
-export type NewUserStreak = typeof userStreaks.$inferInsert
-
-export type GameMode = (typeof gameModeEnum.enumValues)[number]
-
-export type WebhookEvent = typeof webhookEvents.$inferSelect
-export type NewWebhookEvent = typeof webhookEvents.$inferInsert
-
-export type AuditLog = typeof auditLogs.$inferSelect
-export type NewAuditLog = typeof auditLogs.$inferInsert
-
-export type AuditAction = (typeof auditActionEnum.enumValues)[number]
-
-export type TwoFactor = typeof twoFactors.$inferSelect
-export type NewTwoFactor = typeof twoFactors.$inferInsert
-
-export type Referral = typeof referrals.$inferSelect
-export type NewReferral = typeof referrals.$inferInsert
-
-export type ReferralStatus = (typeof referralStatusEnum.enumValues)[number]
-export type ReferralRewardType = (typeof referralRewardTypeEnum.enumValues)[number]
-
-export type WinBackEmail = typeof winBackEmails.$inferSelect
-export type NewWinBackEmail = typeof winBackEmails.$inferInsert
-
-export type WinBackEmailType = (typeof winBackEmailTypeEnum.enumValues)[number]
-
-export type BillingTransaction = typeof billingTransactions.$inferSelect
-export type NewBillingTransaction = typeof billingTransactions.$inferInsert
-
-export type TransactionType = (typeof transactionTypeEnum.enumValues)[number]
-export type TransactionStatus = (typeof transactionStatusEnum.enumValues)[number]
-
-/** Array of valid transaction status values for use in schemas */
-export const TRANSACTION_STATUS_VALUES = transactionStatusEnum.enumValues
-
-export type LoginHistory = typeof loginHistory.$inferSelect
-export type NewLoginHistory = typeof loginHistory.$inferInsert
-
-export type NotificationPreference = typeof notificationPreferences.$inferSelect
-export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
-
-// ==================
-// Security Alerts
-// ==================
-
-export const securityAlerts = pgTable(
-	'security_alerts',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		type: securityAlertTypeEnum('type').notNull(),
-		title: text('title').notNull(),
-		description: text('description'),
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(), // device info, location, etc.
-		read: boolean('read').default(false).notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('security_alerts_user_idx').on(table.userId),
-		index('security_alerts_user_read_idx').on(table.userId, table.read),
-		index('security_alerts_created_at_idx').on(table.createdAt),
-	],
-)
-
-export const securityAlertsRelations = relations(securityAlerts, ({ one }) => ({
-	user: one(users, {
-		fields: [securityAlerts.userId],
-		references: [users.id],
-	}),
-}))
-
-export type SecurityAlert = typeof securityAlerts.$inferSelect
-export type NewSecurityAlert = typeof securityAlerts.$inferInsert
-export type SecurityAlertType = (typeof securityAlertTypeEnum.enumValues)[number]
-
-// ==================
-// Email Change Requests
-// ==================
-
-export const emailChangeRequests = pgTable(
-	'email_change_requests',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
-		newEmail: text('new_email').notNull(),
-		token: text('token').notNull().unique(),
-		expiresAt: timestamp('expires_at').notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-	},
-	(table) => [
-		index('email_change_requests_user_idx').on(table.userId),
-		// Note: token already has unique constraint which creates an index
-		index('email_change_requests_expires_at_idx').on(table.expiresAt),
-	],
-)
-
-export const emailChangeRequestsRelations = relations(emailChangeRequests, ({ one }) => ({
-	user: one(users, {
-		fields: [emailChangeRequests.userId],
-		references: [users.id],
-	}),
-}))
-
-export type EmailChangeRequest = typeof emailChangeRequests.$inferSelect
-export type NewEmailChangeRequest = typeof emailChangeRequests.$inferInsert
-
-// ==================
-// Announcements (System-wide notifications)
-// ==================
-
-export const announcementTypeEnum = pgEnum('announcement_type', [
-	'info', // General information
-	'warning', // Important notice
-	'success', // Positive news
-	'maintenance', // Scheduled maintenance
-])
-
+/**
+ * System-wide announcements and notifications.
+ */
 export const announcements = pgTable('announcements', {
 	id: uuid('id').primaryKey().defaultRandom(),
+
 	title: text('title').notNull(),
 	content: text('content').notNull(),
 	type: announcementTypeEnum('type').default('info').notNull(),
+
+	/** Whether announcement is currently active */
 	isActive: boolean('is_active').default(true).notNull(),
+
 	// Targeting
+	/** Show to all users */
 	targetAllUsers: boolean('target_all_users').default(true).notNull(),
+	/** Show only to premium users (determined via platform SDK) */
 	targetPremiumOnly: boolean('target_premium_only').default(false).notNull(),
-	// Display options
+
+	// Display Options
+	/** Can user dismiss this announcement */
 	dismissible: boolean('dismissible').default(true).notNull(),
-	showOnce: boolean('show_once').default(false).notNull(), // Show only once per user
+	/** Show only once per user */
+	showOnce: boolean('show_once').default(false).notNull(),
+
 	// Scheduling
 	startsAt: timestamp('starts_at'),
 	endsAt: timestamp('ends_at'),
-	// Metadata
-	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+
+	/** Admin who created (no FK - platform user ID) */
+	createdBy: uuid('created_by'),
+
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export const announcementsRelations = relations(announcements, ({ one }) => ({
-	creator: one(users, {
-		fields: [announcements.createdBy],
-		references: [users.id],
-	}),
-}))
-
-// Track which users have dismissed which announcements
+/**
+ * Track which users dismissed which announcements.
+ */
 export const announcementDismissals = pgTable(
 	'announcement_dismissals',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
+
 		announcementId: uuid('announcement_id')
 			.notNull()
 			.references(() => announcements.id, { onDelete: 'cascade' }),
-		userId: uuid('user_id')
-			.notNull()
-			.references(() => users.id, { onDelete: 'cascade' }),
+
+		/** Platform user ID (no FK) */
+		userId: uuid('user_id').notNull(),
+
 		dismissedAt: timestamp('dismissed_at').defaultNow().notNull(),
 	},
 	(table) => [
@@ -1149,70 +768,170 @@ export const announcementDismissals = pgTable(
 	],
 )
 
-export type Announcement = typeof announcements.$inferSelect
-export type NewAnnouncement = typeof announcements.$inferInsert
-export type AnnouncementType = (typeof announcementTypeEnum.enumValues)[number]
+// ==========================================
+// FEATURE FLAGS
+// ==========================================
 
-// ==================
-// Feature Flags
-// ==================
-
+/**
+ * App-specific feature flags.
+ * Note: Some feature flags may also exist at platform level.
+ */
 export const featureFlags = pgTable('feature_flags', {
 	id: uuid('id').primaryKey().defaultRandom(),
-	key: text('key').notNull().unique(), // e.g., 'new_game_mode', 'beta_feature'
-	name: text('name').notNull(), // Human readable name
+
+	/** Unique key (e.g., 'new_game_mode', 'beta_feature') */
+	key: text('key').notNull().unique(),
+
+	/** Human-readable name */
+	name: text('name').notNull(),
+
+	/** Description */
 	description: text('description'),
+
+	/** Master enable toggle */
 	enabled: boolean('enabled').default(false).notNull(),
-	// Rollout percentage (0-100)
+
+	/** Gradual rollout percentage (0-100) */
 	rolloutPercentage: integer('rollout_percentage').default(0).notNull(),
-	// Target specific user segments
+
+	// Targeting
+	/** Premium users only (determined via platform SDK) */
 	targetPremiumOnly: boolean('target_premium_only').default(false).notNull(),
+	/** Admin users only */
 	targetAdminOnly: boolean('target_admin_only').default(false).notNull(),
-	// Metadata
-	createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+
+	/** Admin who created (no FK - platform user ID) */
+	createdBy: uuid('created_by'),
+
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
-export const featureFlagsRelations = relations(featureFlags, ({ one }) => ({
-	creator: one(users, {
-		fields: [featureFlags.createdBy],
-		references: [users.id],
+// ==========================================
+// APP SETTINGS (Key-Value Store)
+// ==========================================
+
+/**
+ * App-wide configuration settings.
+ */
+export const appSettings = pgTable('app_settings', {
+	/** Setting key */
+	key: text('key').primaryKey(),
+
+	/** Setting value (JSON) */
+	value: jsonb('value').$type<unknown>().notNull(),
+
+	/** Description */
+	description: text('description'),
+
+	updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
+	/** Admin who last updated (no FK - platform user ID) */
+	updatedBy: uuid('updated_by'),
+})
+
+/** Type-safe setting keys */
+export type AppSettingKey = 'puzzle_generator_model' | 'maintenance_mode' | 'daily_puzzle_time'
+
+// ==========================================
+// RELATIONS
+// ==========================================
+
+export const userPreferencesRelations = relations(userPreferences, ({ many }) => ({
+	// User preferences can be linked to game sessions for queries
+	// but the actual relation is via userId, not FK
+}))
+
+export const dailyPuzzlesRelations = relations(dailyPuzzles, ({ many }) => ({
+	sessions: many(gameSessions),
+}))
+
+export const gameSessionsRelations = relations(gameSessions, ({ one }) => ({
+	puzzle: one(dailyPuzzles, {
+		fields: [gameSessions.puzzleId],
+		references: [dailyPuzzles.id],
 	}),
 }))
 
-export type FeatureFlag = typeof featureFlags.$inferSelect
-export type NewFeatureFlag = typeof featureFlags.$inferInsert
+export const announcementsRelations = relations(announcements, ({ many }) => ({
+	dismissals: many(announcementDismissals),
+}))
 
-// ==================
-// Additional Type Exports
-// ==================
+export const announcementDismissalsRelations = relations(announcementDismissals, ({ one }) => ({
+	announcement: one(announcements, {
+		fields: [announcementDismissals.announcementId],
+		references: [announcements.id],
+	}),
+}))
 
-// Session types (better-auth compatible with custom fields)
-export type Session = typeof sessions.$inferSelect
-export type NewSession = typeof sessions.$inferInsert
+// ==========================================
+// TYPE EXPORTS
+// ==========================================
 
-// Account types (OAuth provider accounts)
-export type Account = typeof accounts.$inferSelect
-export type NewAccount = typeof accounts.$inferInsert
+// User Preferences
+export type UserPreferences = typeof userPreferences.$inferSelect
+export type NewUserPreferences = typeof userPreferences.$inferInsert
 
-// Verification types (better-auth email verification)
-export type Verification = typeof verifications.$inferSelect
-export type NewVerification = typeof verifications.$inferInsert
+// User Display Cache
+export type UserDisplayCache = typeof userDisplayCache.$inferSelect
+export type NewUserDisplayCache = typeof userDisplayCache.$inferInsert
 
-// Verification code types (re-authentication codes)
-export type VerificationCode = typeof verificationCodes.$inferSelect
-export type NewVerificationCode = typeof verificationCodes.$inferInsert
+// Daily Puzzles
+export type DailyPuzzle = typeof dailyPuzzles.$inferSelect
+export type NewDailyPuzzle = typeof dailyPuzzles.$inferInsert
 
-// Dead letter queue types (workflow error tracking)
-export type DeadLetterQueueEntry = typeof deadLetterQueue.$inferSelect
-export type NewDeadLetterQueueEntry = typeof deadLetterQueue.$inferInsert
-export type DLQStatus = (typeof dlqStatusEnum.enumValues)[number]
+// Game Sessions
+export type GameSession = typeof gameSessions.$inferSelect
+export type NewGameSession = typeof gameSessions.$inferInsert
 
-// Push subscription types
+// User Stats
+export type UserStat = typeof userStats.$inferSelect
+export type NewUserStat = typeof userStats.$inferInsert
+
+// User Streaks
+export type UserStreak = typeof userStreaks.$inferSelect
+export type NewUserStreak = typeof userStreaks.$inferInsert
+
+// Notification Preferences
+export type NotificationPreference = typeof notificationPreferences.$inferSelect
+export type NewNotificationPreference = typeof notificationPreferences.$inferInsert
+
+// Push Subscriptions
 export type PushSubscription = typeof pushSubscriptions.$inferSelect
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert
 
-// App settings types (key-value store)
+// Referrals
+export type Referral = typeof referrals.$inferSelect
+export type NewReferral = typeof referrals.$inferInsert
+
+// Win-Back Emails
+export type WinBackEmail = typeof winBackEmails.$inferSelect
+export type NewWinBackEmail = typeof winBackEmails.$inferInsert
+
+// Audit Logs
+export type AuditLog = typeof auditLogs.$inferSelect
+export type NewAuditLog = typeof auditLogs.$inferInsert
+
+// Dead Letter Queue
+export type DeadLetterQueueEntry = typeof deadLetterQueue.$inferSelect
+export type NewDeadLetterQueueEntry = typeof deadLetterQueue.$inferInsert
+
+// Webhook Events
+export type WebhookEvent = typeof webhookEvents.$inferSelect
+export type NewWebhookEvent = typeof webhookEvents.$inferInsert
+
+// Announcements
+export type Announcement = typeof announcements.$inferSelect
+export type NewAnnouncement = typeof announcements.$inferInsert
+
+// Announcement Dismissals
+export type AnnouncementDismissal = typeof announcementDismissals.$inferSelect
+export type NewAnnouncementDismissal = typeof announcementDismissals.$inferInsert
+
+// Feature Flags
+export type FeatureFlag = typeof featureFlags.$inferSelect
+export type NewFeatureFlag = typeof featureFlags.$inferInsert
+
+// App Settings
 export type AppSetting = typeof appSettings.$inferSelect
 export type NewAppSetting = typeof appSettings.$inferInsert
