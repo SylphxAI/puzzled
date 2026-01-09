@@ -50,6 +50,7 @@
 		"@sentry/nextjs": "^10.31.0",
 		"@serwist/next": "^9.2.3",
 		"@sylphx/admin": "workspace:*",
+		"@sylphx/auth": "workspace:*",
 		"@sylphx/ui": "workspace:*",
 		"@sylphx/platform-sdk": "workspace:*",
 		"@tanstack/react-query": "^5.90.12",
