@@ -3,13 +3,12 @@
 /**
  * Sylphx Platform Provider Wrapper
  *
- * Conditionally wraps the app with SylphxProvider when:
- * 1. SYLPHX_APP_ID is configured
- * 2. appId prop is provided
+ * Wraps the app with SylphxProvider when SYLPHX_APP_ID is configured.
  *
- * This enables a hybrid auth setup where:
- * - BetterAuth handles local auth (email/password, OAuth)
- * - Sylphx Platform handles centralized auth (optional)
+ * Architecture:
+ * - Sylphx Platform handles ALL auth (email, OAuth, 2FA, sessions)
+ * - Sylphx Platform handles ALL billing (subscriptions, checkout, portal)
+ * - App contains business logic only (games, streaks, achievements)
  */
 
 import { SylphxProvider } from '@sylphx/platform-sdk/react'

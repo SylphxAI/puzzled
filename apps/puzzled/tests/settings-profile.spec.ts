@@ -32,7 +32,7 @@ test.describe('Profile Settings - Username', () => {
 			// Set auth cookie if available
 			if (process.env.TEST_AUTH_COOKIE) {
 				await page.context().addCookies([{
-					name: 'better-auth.session_token',
+					name: 'sylphx_access_token',
 					value: process.env.TEST_AUTH_COOKIE,
 					domain: 'localhost',
 					path: '/',
@@ -167,7 +167,7 @@ test.describe('Profile Settings - Display Name', () => {
 		test.beforeEach(async ({ page }) => {
 			if (process.env.TEST_AUTH_COOKIE) {
 				await page.context().addCookies([{
-					name: 'better-auth.session_token',
+					name: 'sylphx_access_token',
 					value: process.env.TEST_AUTH_COOKIE,
 					domain: 'localhost',
 					path: '/',
@@ -214,7 +214,7 @@ test.describe('Profile Settings - Bio', () => {
 		test.beforeEach(async ({ page }) => {
 			if (process.env.TEST_AUTH_COOKIE) {
 				await page.context().addCookies([{
-					name: 'better-auth.session_token',
+					name: 'sylphx_access_token',
 					value: process.env.TEST_AUTH_COOKIE,
 					domain: 'localhost',
 					path: '/',
@@ -271,7 +271,7 @@ test.describe('Profile Settings - Public Profile Toggle', () => {
 		test.beforeEach(async ({ page }) => {
 			if (process.env.TEST_AUTH_COOKIE) {
 				await page.context().addCookies([{
-					name: 'better-auth.session_token',
+					name: 'sylphx_access_token',
 					value: process.env.TEST_AUTH_COOKIE,
 					domain: 'localhost',
 					path: '/',
@@ -312,7 +312,7 @@ test.describe('Settings Page - Navigation', () => {
 
 		if (process.env.TEST_AUTH_COOKIE) {
 			await page.context().addCookies([{
-				name: 'better-auth.session_token',
+				name: 'sylphx_access_token',
 				value: process.env.TEST_AUTH_COOKIE,
 				domain: 'localhost',
 				path: '/',
