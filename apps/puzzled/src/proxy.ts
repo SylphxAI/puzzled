@@ -38,12 +38,56 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 }
 
 /**
+ * Decode JWT payload without verification (for checking expiry)
+ *
+ * Note: Full signature verification should be done server-side.
+ * Middleware checks expiry to reduce load on protected routes.
+ */
+function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
+	try {
+		const parts = token.split('.')
+		if (parts.length !== 3) return null
+		const payload = parts[1]
+		// Handle URL-safe base64
+		const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+		const jsonPayload = atob(base64)
+		return JSON.parse(jsonPayload)
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Check if a JWT token is expired
+ */
+function isTokenExpired(token: string): boolean {
+	const payload = decodeJwtPayload(token)
+	if (!payload || !payload.exp) {
+		// If we can't decode or no exp claim, treat as expired for safety
+		return true
+	}
+	// exp is in seconds, Date.now() is in milliseconds
+	// Add a small buffer (30 seconds) to account for clock skew
+	return payload.exp * 1000 < Date.now() + 30000
+}
+
+/**
  * Check if user is authenticated via Sylphx Platform
+ *
+ * Validates:
+ * 1. Access token exists AND is not expired, OR
+ * 2. Refresh token exists (client will handle refresh)
  */
 function isAuthenticated(request: NextRequest): boolean {
-	const hasSylphxToken = request.cookies.has(SYLPHX_COOKIE_NAMES.ACCESS_TOKEN)
-	const hasSylphxRefresh = request.cookies.has(SYLPHX_COOKIE_NAMES.REFRESH_TOKEN)
-	return hasSylphxToken || hasSylphxRefresh
+	const accessToken = request.cookies.get(SYLPHX_COOKIE_NAMES.ACCESS_TOKEN)?.value
+	const hasRefreshToken = request.cookies.has(SYLPHX_COOKIE_NAMES.REFRESH_TOKEN)
+
+	// Token is valid only if it exists AND is not expired
+	const hasValidToken = accessToken ? !isTokenExpired(accessToken) : false
+
+	// User can still authenticate if they have a refresh token
+	// (will be handled by client-side SDK)
+	return hasValidToken || hasRefreshToken
 }
 
 /**
