@@ -1,14 +1,16 @@
 'use client'
 
-import { useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/platform-sdk/react'
 import { TopNav } from '@/shared/components/layout'
 import { trpc } from '@/trpc'
 
 /**
  * Client component wrapper for TopNav that fetches streak data
+ *
+ * Gracefully handles when Sylphx Platform is not configured.
  */
 export function LayoutTopNav() {
-	const { user } = useUser()
+	const { user } = useSafeUser()
 
 	// Only fetch streak info when user is authenticated
 	const { data: streakInfo } = trpc.gamification.getStreakInfo.useQuery(undefined, {

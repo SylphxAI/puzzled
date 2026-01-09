@@ -2,7 +2,7 @@
 
 import { Flame } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/platform-sdk/react'
 import { Link, usePathname } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
@@ -24,7 +24,7 @@ type TopNavProps = {
 export function TopNav({ currentStreak = 0 }: TopNavProps) {
 	const t = useTranslations()
 	const pathname = usePathname()
-	const { user } = useUser()
+	const { user } = useSafeUser()
 
 	// User ID available for guest data migration if needed
 	void user?.id

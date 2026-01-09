@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/platform-sdk/react'
 import { Link } from '@/lib/i18n/routing'
 import { SoundToggleCompact } from '@/shared/components/sound'
 import { ThemeToggleCompact } from '@/shared/components/theme'
@@ -19,10 +19,11 @@ type Props = {
 /**
  * Header component for inner pages
  * Shows on mobile only - desktop uses TopNav from layout
+ * Gracefully handles when Sylphx Platform is not configured.
  */
 export function Header({ showBack = false, backHref = '/', title }: Props) {
 	const t = useTranslations()
-	const { user } = useUser()
+	const { user } = useSafeUser()
 
 	// User ID available for guest data migration if needed
 	void user?.id

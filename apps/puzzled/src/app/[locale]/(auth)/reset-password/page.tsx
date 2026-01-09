@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { useAuth } from '@sylphx/platform-sdk/react'
+import { useSafeAuth } from '@sylphx/platform-sdk/react'
 import {
 	Button,
 	Card,
@@ -33,7 +33,7 @@ function ResetPasswordContent() {
 	const t = useTranslations('auth')
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const { resetPassword } = useAuth()
+	const { resetPassword } = useSafeAuth()
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [loading, setLoading] = useState(false)
@@ -63,6 +63,11 @@ function ResetPasswordContent() {
 
 		if (!token) {
 			setError(t('invalidResetLink'))
+			return
+		}
+
+		if (!resetPassword) {
+			setError(t('resetPasswordError'))
 			return
 		}
 

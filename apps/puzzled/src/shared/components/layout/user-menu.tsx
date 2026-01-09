@@ -3,7 +3,7 @@
 import { LogIn, LogOut, Settings, User } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { useUser, useAuth } from '@sylphx/platform-sdk/react'
+import { useSafeUser, useSafeAuth } from '@sylphx/platform-sdk/react'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import {
@@ -28,11 +28,12 @@ type UserMenuProps = {
 /**
  * User Menu Dropdown - shared component for navigation
  * Handles authenticated user menu and sign-in button
+ * Gracefully handles when Sylphx Platform is not configured.
  */
 export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: UserMenuProps) {
 	const t = useTranslations()
-	const { user, isLoading } = useUser()
-	const { signOut } = useAuth()
+	const { user, isLoading } = useSafeUser()
+	const { signOut } = useSafeAuth()
 
 	const handleSignOut = async () => {
 		await signOut()

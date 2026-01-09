@@ -5,10 +5,11 @@
  *
  * A button that redirects to Sylphx Platform for centralized auth.
  * Only renders when NEXT_PUBLIC_SYLPHX_APP_ID is configured.
+ * Gracefully handles when Sylphx Platform is not configured.
  */
 
 import { useCallback } from 'react'
-import { useAuth, useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser, useSafeAuth } from '@sylphx/platform-sdk/react'
 import { Button } from '@sylphx/ui'
 import { ExternalLink } from 'lucide-react'
 
@@ -29,14 +30,19 @@ export function SylphxSignInButton({
 	className,
 	disabled,
 }: SylphxSignInButtonProps) {
-	const { signIn } = useAuth()
-	const { isLoaded, isSignedIn } = useUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+	const { signIn } = useSafeAuth()
 
 	const handleClick = useCallback(() => {
 		signIn({
 			redirectUrl: redirectUrl || '/dashboard',
 		})
 	}, [signIn, redirectUrl])
+
+	// Don't render if Sylphx is not configured
+	if (!isConfigured) {
+		return null
+	}
 
 	// Don't render if user is already signed in
 	if (isLoaded && isSignedIn) {

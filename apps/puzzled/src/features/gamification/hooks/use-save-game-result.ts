@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/platform-sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 
@@ -43,7 +43,7 @@ export type SaveResultResponse = {
 }
 
 export function useSaveGameResult(gameSlug: string) {
-	const { user } = useUser()
+	const { user } = useSafeUser()
 	const [status, setStatus] = useState<SaveStatus>('idle')
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)

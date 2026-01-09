@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/platform-sdk/react'
 import { trpc } from '@/trpc'
 import { checkAchievements } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
@@ -12,9 +12,10 @@ const CHECK_INTERVAL_MS = 5000 // Don't check more than once per 5 seconds
 /**
  * Component that checks for new achievements after game completions
  * Mount this once in the layout to enable achievement toasts
+ * Gracefully handles when Sylphx Platform is not configured.
  */
 export function AchievementChecker() {
-	const { user } = useUser()
+	const { user } = useSafeUser()
 	const { checkAndShowNewAchievement } = useAchievementToast()
 	const lastCheck = useRef<number>(0)
 	const hasChecked = useRef(false)

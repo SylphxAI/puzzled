@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { useAuth } from '@sylphx/platform-sdk/react'
+import { useSafeAuth } from '@sylphx/platform-sdk/react'
 import { Button, GamepadIcon } from '@sylphx/ui'
 
 type VerificationState = 'verifying' | 'success' | 'error' | 'pending'
@@ -29,7 +29,7 @@ function VerifyEmailContent() {
 	const tCommon = useTranslations('common')
 	const router = useRouter()
 	const searchParams = useSearchParams()
-	const { verifyEmail, resendVerificationEmail } = useAuth()
+	const { verifyEmail, resendVerificationEmail } = useSafeAuth()
 	const token = searchParams.get('token')
 	const email = searchParams.get('email')
 
@@ -39,7 +39,7 @@ function VerifyEmailContent() {
 	const [resent, setResent] = useState(false)
 
 	useEffect(() => {
-		if (!token) return
+		if (!token || !verifyEmail) return
 
 		const verify = async () => {
 			try {
@@ -56,7 +56,7 @@ function VerifyEmailContent() {
 	}, [token, verifyEmail, t, router])
 
 	const handleResend = async () => {
-		if (!email) return
+		if (!email || !resendVerificationEmail) return
 
 		setResending(true)
 		try {
