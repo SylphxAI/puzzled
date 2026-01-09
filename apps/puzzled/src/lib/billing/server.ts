@@ -1,11 +1,91 @@
 /**
  * Server-side Billing Utilities
  *
- * Uses platform SDK for all billing checks.
+ * Single source of truth for all billing logic.
+ * Uses platform SDK for subscription checks.
  * Apps don't manage billing - platform does.
  */
 
 import { createServerClient } from '@sylphx/platform-sdk/server'
+
+// ==========================================
+// Plan Constants
+// ==========================================
+
+/**
+ * Premium plan slugs (paid plans)
+ */
+const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
+
+/**
+ * Game rotation for free tier
+ * One game is free each day, rotates through the list
+ *
+ * NOTE: These must match actual game slugs in src/games/*/config.ts
+ */
+const FREE_GAME_ROTATION = [
+	'word-guess',    // Wordle-style word game
+	'word-groups',   // Connections-style grouping
+	'queens',        // N-Queens puzzle
+	'sudoku',        // Classic sudoku
+	'crossword',     // Daily crossword
+] as const
+
+// ==========================================
+// Plan Checking
+// ==========================================
+
+/**
+ * Check if a plan slug represents a premium (paid) plan
+ */
+export function isPremiumPlan(planSlug: string | null | undefined): boolean {
+	if (!planSlug) return false
+	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
+}
+
+/**
+ * Check if a plan slug is the free plan
+ */
+export function isFreePlan(planSlug: string | null | undefined): boolean {
+	return !planSlug || planSlug === 'free'
+}
+
+// ==========================================
+// Free Game Rotation
+// ==========================================
+
+/**
+ * Get today's free game based on day rotation
+ *
+ * Free users can play one game per day, rotating through the list.
+ * Uses UTC date to ensure consistent rotation across timezones.
+ */
+export function getTodaysFreeGame(): string {
+	const today = new Date()
+	// Use UTC date to ensure consistent rotation across timezones
+	const dayOfYear = Math.floor(
+		(today.getTime() - new Date(today.getUTCFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
+	)
+	return FREE_GAME_ROTATION[dayOfYear % FREE_GAME_ROTATION.length]
+}
+
+/**
+ * Check if a game is free today for free-tier users
+ */
+export function isGameFreeToday(gameSlug: string): boolean {
+	return gameSlug === getTodaysFreeGame()
+}
+
+/**
+ * Get the list of games in free rotation
+ */
+export function getFreeGameRotation(): readonly string[] {
+	return FREE_GAME_ROTATION
+}
+
+// ==========================================
+// Platform SDK Integration
+// ==========================================
 
 /**
  * Create platform client for billing checks
@@ -51,29 +131,29 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
 }
 
 /**
- * Check if a plan slug is premium
+ * Check if a user can access a specific game
+ *
+ * Premium users: All games
+ * Free users: Only today's free game
+ *
+ * @param userId - Platform user ID (null for anonymous)
+ * @param gameSlug - Game to check access for
  */
-export function isPremiumPlan(planSlug: string | null): boolean {
-	if (!planSlug) return false
-	return planSlug === 'premium' || planSlug === 'lifetime' || planSlug === 'pro'
+export async function canAccessGame(userId: string | null, gameSlug: string): Promise<boolean> {
+	// Anonymous users can only play the free game
+	if (!userId) {
+		return isGameFreeToday(gameSlug)
+	}
+
+	// Check if user has premium
+	const hasPremium = await hasPremiumAccess(userId)
+	if (hasPremium) {
+		return true
+	}
+
+	// Free user - can only play today's free game
+	return isGameFreeToday(gameSlug)
 }
 
-/**
- * Check if a plan slug is free
- */
-export function isFreePlan(planSlug: string | null): boolean {
-	return !planSlug || planSlug === 'free'
-}
-
-/**
- * Get today's free game slug
- * Free users can play one game per day
- */
-export function getTodaysFreeGame(): string {
-	// Rotate through games based on day of year
-	const games = ['word-guess', 'number-game', 'sequence']
-	const dayOfYear = Math.floor(
-		(Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
-	)
-	return games[dayOfYear % games.length]
-}
+// Re-export for convenience (alias)
+export { isPremiumPlan as hasPremiumPlanSlug }
