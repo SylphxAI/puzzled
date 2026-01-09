@@ -27,9 +27,15 @@ const SERVER_REQUIRED: EnvVar[] = [
 		runtimes: ['nodejs'],
 	},
 	{
-		name: 'BETTER_AUTH_SECRET',
+		name: 'SYLPHX_APP_ID',
 		required: true,
-		description: 'Secret for auth token encryption',
+		description: 'Sylphx Platform App ID',
+	},
+	{
+		name: 'SYLPHX_SECRET_KEY',
+		required: true,
+		description: 'Sylphx Platform Secret Key',
+		runtimes: ['nodejs'],
 	},
 	{
 		name: 'KV_REST_API_URL',
@@ -44,17 +50,8 @@ const SERVER_REQUIRED: EnvVar[] = [
 ]
 
 // Feature-specific variables (validated when feature is used)
+// Note: Stripe/billing is handled by Sylphx Platform SDK
 const FEATURE_VARS: EnvVar[] = [
-	{
-		name: 'STRIPE_SECRET_KEY',
-		required: false, // Checked at runtime by stripe.ts
-		description: 'Stripe API key for payments',
-	},
-	{
-		name: 'STRIPE_WEBHOOK_SECRET',
-		required: false,
-		description: 'Stripe webhook signing secret',
-	},
 	{
 		name: 'RESEND_API_KEY',
 		required: false, // Checked at runtime by email.ts
@@ -193,11 +190,10 @@ export function getOptionalEnv(name: string, defaultValue: string): string {
 
 /**
  * Check if a feature is configured (has required env vars)
+ * Note: Billing/Stripe is handled by Sylphx Platform SDK
  */
-export function isFeatureConfigured(feature: 'stripe' | 'email' | 'push' | 'ai'): boolean {
+export function isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
 	switch (feature) {
-		case 'stripe':
-			return !!process.env.STRIPE_SECRET_KEY
 		case 'email':
 			return !!process.env.RESEND_API_KEY
 		case 'push':

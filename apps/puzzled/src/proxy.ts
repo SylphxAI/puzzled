@@ -12,9 +12,6 @@ const SYLPHX_COOKIE_NAMES = {
 	REFRESH_TOKEN: 'sylphx_refresh_token',
 }
 
-// BetterAuth cookie name
-const BETTER_AUTH_COOKIE = 'better-auth.session_token'
-
 // Routes that require authentication (without locale prefix)
 const PROTECTED_ROUTES = ['/dashboard', '/settings']
 
@@ -41,16 +38,12 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 }
 
 /**
- * Check if user is authenticated via Sylphx Platform or BetterAuth
+ * Check if user is authenticated via Sylphx Platform
  */
 function isAuthenticated(request: NextRequest): boolean {
-	// Check Sylphx Platform tokens first
 	const hasSylphxToken = request.cookies.has(SYLPHX_COOKIE_NAMES.ACCESS_TOKEN)
 	const hasSylphxRefresh = request.cookies.has(SYLPHX_COOKIE_NAMES.REFRESH_TOKEN)
-	if (hasSylphxToken || hasSylphxRefresh) return true
-
-	// Fall back to BetterAuth session
-	return request.cookies.has(BETTER_AUTH_COOKIE)
+	return hasSylphxToken || hasSylphxRefresh
 }
 
 /**
