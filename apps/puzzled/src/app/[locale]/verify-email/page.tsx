@@ -4,8 +4,8 @@ import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
-import { sendVerificationEmail, verifyEmail } from '@/features/auth'
 import { Link } from '@/lib/i18n/routing'
+import { useAuth } from '@sylphx/platform-sdk/react'
 import { Button, GamepadIcon } from '@sylphx/ui'
 
 type VerificationState = 'verifying' | 'success' | 'error' | 'pending'
@@ -29,6 +29,7 @@ function VerifyEmailContent() {
 	const tCommon = useTranslations('common')
 	const router = useRouter()
 	const searchParams = useSearchParams()
+	const { verifyEmail, resendVerificationEmail } = useAuth()
 	const token = searchParams.get('token')
 	const email = searchParams.get('email')
 
@@ -42,34 +43,24 @@ function VerifyEmailContent() {
 
 		const verify = async () => {
 			try {
-				const result = await verifyEmail({ query: { token } })
-
-				if (result.error) {
-					setState('error')
-					setError(result.error.message || t('verificationFailed'))
-				} else {
-					setState('success')
-					// Redirect to home after 2 seconds
-					setTimeout(() => router.push('/'), 2000)
-				}
-			} catch {
+				await verifyEmail({ token })
+				setState('success')
+				setTimeout(() => router.push('/'), 2000)
+			} catch (err) {
 				setState('error')
-				setError(t('verificationFailed'))
+				setError(err instanceof Error ? err.message : t('verificationFailed'))
 			}
 		}
 
 		verify()
-	}, [token, t, router])
+	}, [token, verifyEmail, t, router])
 
 	const handleResend = async () => {
 		if (!email) return
 
 		setResending(true)
 		try {
-			await sendVerificationEmail({
-				email,
-				callbackURL: '/',
-			})
+			await resendVerificationEmail({ email })
 			setResent(true)
 		} catch {
 			setError(t('resendFailed'))

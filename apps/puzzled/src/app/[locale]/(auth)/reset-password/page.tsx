@@ -1,12 +1,11 @@
 'use client'
 
-import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Lock } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Loader2, Lock } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
-import { validatePassword } from '@/features/auth'
-import { PasswordStrength } from '@/features/auth/components'
 import { Link } from '@/lib/i18n/routing'
+import { useAuth } from '@sylphx/platform-sdk/react'
 import {
 	Button,
 	Card,
@@ -32,39 +31,33 @@ export default function ResetPasswordPage() {
 
 function ResetPasswordContent() {
 	const t = useTranslations('auth')
-	const tPassword = useTranslations('auth.passwordStrength')
 	const router = useRouter()
 	const searchParams = useSearchParams()
+	const { resetPassword } = useAuth()
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState('')
 	const [success, setSuccess] = useState(false)
-	const [token, setToken] = useState<string | null>(null)
+	const token = searchParams.get('token')
 
 	useEffect(() => {
-		const tokenParam = searchParams.get('token')
-		if (tokenParam) {
-			setToken(tokenParam)
-		} else {
+		if (!token) {
 			setError(t('invalidResetLink'))
 		}
-	}, [searchParams, t])
+	}, [token, t])
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setError('')
 
-		// Validate passwords match
 		if (password !== confirmPassword) {
 			setError(t('passwordsDoNotMatch'))
 			return
 		}
 
-		// Validate password against security policy
-		const validation = validatePassword(password)
-		if (!validation.isValid && validation.errors[0]) {
-			setError(tPassword(validation.errors[0]))
+		if (password.length < 8) {
+			setError(t('passwordTooShort'))
 			return
 		}
 
@@ -76,27 +69,9 @@ function ResetPasswordContent() {
 		setLoading(true)
 
 		try {
-			const res = await fetch('/api/auth/reset-password', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					newPassword: password,
-					token,
-				}),
-			})
-
-			const data = await res.json()
-
-			if (!res.ok) {
-				throw new Error(data.error || t('resetPasswordError'))
-			}
-
+			await resetPassword({ token, newPassword: password })
 			setSuccess(true)
-
-			// Redirect to login after 2 seconds
-			setTimeout(() => {
-				router.push('/login')
-			}, 2000)
+			setTimeout(() => router.push('/login'), 2000)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : t('resetPasswordError'))
 		} finally {
@@ -134,8 +109,7 @@ function ResetPasswordContent() {
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{error && (
-						<div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-							<AlertCircle className="h-4 w-4" />
+						<div className="rounded-lg bg-destructive/10 p-3 text-center text-sm text-destructive">
 							{error}
 						</div>
 					)}
@@ -158,7 +132,6 @@ function ResetPasswordContent() {
 									className="w-full rounded-lg border bg-background py-2 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
 								/>
 							</div>
-							<PasswordStrength password={password} />
 						</div>
 
 						<div className="space-y-2">
@@ -182,7 +155,7 @@ function ResetPasswordContent() {
 
 						<Button type="submit" className="w-full" disabled={loading || !token}>
 							{loading ? (
-								<div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+								<Loader2 className="h-4 w-4 animate-spin" />
 							) : (
 								t('resetPassword')
 							)}

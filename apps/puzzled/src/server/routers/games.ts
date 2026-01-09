@@ -8,7 +8,7 @@ import { TRPCError } from '@trpc/server'
 import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
-import { hasPremiumAccess } from '@/features/subscription/server'
+import { hasPremiumAccess } from '@/lib/billing/server'
 import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
 import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
@@ -103,9 +103,9 @@ export const gamesRouter = router({
 			// Check completion for authenticated users
 			// For games with difficulty, check completion for specific difficulty
 			let completedSession = null
-			if (ctx.session?.user) {
+			if (ctx.user) {
 				const conditions = [
-					eq(gameSessions.userId, ctx.session.user.id),
+					eq(gameSessions.userId, ctx.user.id),
 					eq(gameSessions.gameSlug, input.gameSlug),
 					eq(gameSessions.puzzleDate, today),
 					eq(gameSessions.mode, 'daily'),

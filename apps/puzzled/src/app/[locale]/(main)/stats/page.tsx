@@ -1,6 +1,6 @@
 import { BarChart3, Flame, Sparkles, Star, Target, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getServerUser } from '@/features/auth/server'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
@@ -66,7 +66,7 @@ export default async function StatsPage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const t = await getTranslations('stats')
-	const user = await getServerUser()
+	const user = await currentUser()
 	const trpc = await createServerCaller()
 
 	// Get real stats if user is logged in, otherwise use demo stats

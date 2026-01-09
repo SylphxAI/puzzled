@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useGuestDataMigration, useSession } from '@/features/auth'
+import { useUser } from '@sylphx/platform-sdk/react'
 import { Link } from '@/lib/i18n/routing'
 import { SoundToggleCompact } from '@/shared/components/sound'
 import { ThemeToggleCompact } from '@/shared/components/theme'
@@ -22,10 +22,10 @@ type Props = {
  */
 export function Header({ showBack = false, backHref = '/', title }: Props) {
 	const t = useTranslations()
-	const { data: session } = useSession()
+	const { user } = useUser()
 
-	// Migrate guest data to server when user logs in
-	useGuestDataMigration(session?.user?.id)
+	// User ID available for guest data migration if needed
+	void user?.id
 
 	return (
 		<header className="sticky top-0 z-header border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:hidden">

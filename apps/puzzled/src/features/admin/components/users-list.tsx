@@ -15,7 +15,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useCallback, useMemo, useState } from 'react'
-import { isPremiumPlan } from '@/features/subscription'
+import { isPremiumPlan } from '@/lib/billing/plans'
 import type { Subscription, User } from '@/lib/db/schema'
 import { isAdminRole, isSuperAdminRole, ROLE_ADMIN, ROLE_USER } from '@/lib/roles'
 import {

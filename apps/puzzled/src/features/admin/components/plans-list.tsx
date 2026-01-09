@@ -1,10 +1,8 @@
 'use client'
 
-import { Check, RefreshCw } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Check } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { Plan, PlanPrice } from '@/lib/db/schema'
-import { trpc } from '@/trpc/client'
 import { EditPlanButton } from './plan-editor'
 
 type PlanWithPrices = Plan & { prices: PlanPrice[] }
@@ -21,13 +19,6 @@ export function PlansList({ plans }: { plans: PlanWithPrices[] }) {
 
 function PlanCard({ plan, delay = 0 }: { plan: PlanWithPrices; delay?: number }) {
 	const t = useTranslations('admin.plans')
-	const router = useRouter()
-
-	const syncMutation = trpc.admin.syncPlan.useMutation({
-		onSuccess: () => {
-			router.refresh()
-		},
-	})
 
 	return (
 		<div className="admin-card admin-animate-in" style={{ animationDelay: `${delay * 0.05}s` }}>
@@ -44,27 +35,8 @@ function PlanCard({ plan, delay = 0 }: { plan: PlanWithPrices; delay?: number })
 						<span className="admin-badge admin-badge-accent">{t('stripeSynced')}</span>
 					)}
 				</div>
-				<div className="flex flex-col items-end gap-1">
-					<div className="flex items-center gap-2">
-						{plan.slug !== 'free' && (
-							<button
-								type="button"
-								className="admin-btn admin-btn-ghost"
-								onClick={() => syncMutation.mutate({ planId: plan.id })}
-								disabled={syncMutation.isPending}
-							>
-								<RefreshCw
-									className={`h-4 w-4 ${syncMutation.isPending ? 'animate-spin' : ''}`}
-									aria-hidden="true"
-								/>
-								{t('syncToStripe')}
-							</button>
-						)}
-						<EditPlanButton plan={plan} />
-					</div>
-					{syncMutation.error && (
-						<span className="text-xs text-[var(--admin-error)]">{syncMutation.error.message}</span>
-					)}
+				<div className="flex items-center gap-2">
+					<EditPlanButton plan={plan} />
 				</div>
 			</div>
 

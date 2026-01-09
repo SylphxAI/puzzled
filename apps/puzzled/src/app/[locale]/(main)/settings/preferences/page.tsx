@@ -1,13 +1,10 @@
-import { Globe, Palette, Settings } from 'lucide-react'
+export const dynamic = 'force-dynamic'
+
+import { Globe, Settings } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import {
-	AppearanceSettings,
-	GameCardRow,
-	GameSettingsCard,
-	LanguageSelector,
-	RegionalSettings,
-} from '@/features/settings/components'
-import { getUserPreferences } from '@/features/settings/server'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { LanguageSwitcher } from '@/shared/components/layout'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -26,11 +23,13 @@ export default async function PreferencesPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	// Auth is handled by layout - no need to check here
-	const t = await getTranslations('settings')
+	const user = await currentUser()
 
-	// Get user preferences
-	const userPrefs = await getUserPreferences()
+	if (!user) {
+		redirect(`/${locale}/login?callbackUrl=/settings/preferences`)
+	}
+
+	const t = await getTranslations('settings')
 
 	return (
 		<div className="space-y-6">
@@ -45,42 +44,28 @@ export default async function PreferencesPage({ params }: Props) {
 				</div>
 			</div>
 
-			{/* Appearance Section */}
-			<GameSettingsCard
-				title={t('preferences.appearance.title')}
-				description={t('preferences.appearance.description')}
-				iconElement={<Palette className="h-5 w-5 text-amber-500 dark:text-amber-400" />}
-				variant="premium"
-			>
-				<AppearanceSettings
-					initialReduceMotion={userPrefs?.reduceMotion ?? false}
-					initialCompactMode={userPrefs?.compactMode ?? false}
-				/>
-			</GameSettingsCard>
-
-			{/* Language & Region Section */}
-			<GameSettingsCard
-				title={t('preferences.language.title')}
-				description={t('preferences.language.description')}
-				iconElement={<Globe className="h-5 w-5 text-primary" />}
-				variant="default"
-			>
-				<div className="space-y-4">
-					{/* Language Selector */}
-					<GameCardRow
-						label={t('preferences.language.language')}
-						description={t('preferences.language.languageDescription')}
-					>
-						<LanguageSelector />
-					</GameCardRow>
-
-					{/* Timezone and Date Format */}
-					<RegionalSettings
-						initialTimezone={userPrefs?.timezone ?? 'UTC'}
-						initialDateFormat={userPrefs?.dateFormat ?? 'relative'}
-					/>
+			{/* Language Section */}
+			<div className="rounded-2xl border bg-card p-6">
+				<div className="flex items-start gap-4">
+					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+						<Globe className="h-5 w-5 text-primary" />
+					</div>
+					<div className="flex-1">
+						<h2 className="font-semibold">{t('preferences.language.title')}</h2>
+						<p className="mb-4 text-sm text-muted-foreground">
+							{t('preferences.language.description')}
+						</p>
+						<LanguageSwitcher />
+					</div>
 				</div>
-			</GameSettingsCard>
+			</div>
+
+			{/* Coming Soon Notice */}
+			<div className="rounded-xl border bg-muted/30 p-4">
+				<p className="text-sm text-muted-foreground">
+					More preferences like appearance settings and regional formats will be available soon.
+				</p>
+			</div>
 		</div>
 	)
 }

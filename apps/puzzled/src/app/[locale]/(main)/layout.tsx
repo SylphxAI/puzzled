@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'

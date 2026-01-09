@@ -12,7 +12,7 @@ import { del, put } from '@vercel/blob'
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
-import { getServerSession } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import { FILE_LIMITS } from '@/lib/config/validation'
 import { db, users } from '@/lib/db'
 
@@ -28,8 +28,8 @@ const AVATAR_SIZE = 256
  */
 export async function POST(request: Request) {
 	try {
-		const session = await getServerSession()
-		if (!session?.user) {
+		const { userId } = await auth()
+		if (!userId) {
 			return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 		}
 
@@ -67,10 +67,10 @@ export async function POST(request: Request) {
 		}
 
 		// Get current user to check for existing avatar
-		const [currentUser] = await db
+		const [currentUserRecord] = await db
 			.select({ image: users.image })
 			.from(users)
-			.where(eq(users.id, session.user.id))
+			.where(eq(users.id, userId))
 			.limit(1)
 
 		// Process image with sharp
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
 		// Generate unique filename with user ID prefix
 		const timestamp = Date.now()
-		const filename = `avatars/${session.user.id}/${timestamp}.webp`
+		const filename = `avatars/${userId}/${timestamp}.webp`
 
 		// Upload to Vercel Blob
 		const blob = await put(filename, optimizedImage, {
@@ -97,15 +97,15 @@ export async function POST(request: Request) {
 		})
 
 		// Update user.image in database
-		await db.update(users).set({ image: blob.url }).where(eq(users.id, session.user.id))
+		await db.update(users).set({ image: blob.url }).where(eq(users.id, userId))
 
 		// Delete old avatar if it was stored in Vercel Blob
-		if (currentUser?.image?.includes('blob.vercel-storage.com')) {
+		if (currentUserRecord?.image?.includes('blob.vercel-storage.com')) {
 			try {
-				await del(currentUser.image)
+				await del(currentUserRecord.image)
 			} catch {
 				// Ignore deletion errors - old file may already be deleted
-				console.warn('[Avatar Upload] Failed to delete old avatar:', currentUser.image)
+				console.warn('[Avatar Upload] Failed to delete old avatar:', currentUserRecord.image)
 			}
 		}
 
@@ -133,29 +133,29 @@ export async function POST(request: Request) {
  */
 export async function DELETE() {
 	try {
-		const session = await getServerSession()
-		if (!session?.user) {
+		const { userId } = await auth()
+		if (!userId) {
 			return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
 		}
 
 		// Get current user avatar
-		const [currentUser] = await db
+		const [currentUserRecord] = await db
 			.select({ image: users.image })
 			.from(users)
-			.where(eq(users.id, session.user.id))
+			.where(eq(users.id, userId))
 			.limit(1)
 
 		// Delete from Vercel Blob if it's a blob URL
-		if (currentUser?.image?.includes('blob.vercel-storage.com')) {
+		if (currentUserRecord?.image?.includes('blob.vercel-storage.com')) {
 			try {
-				await del(currentUser.image)
+				await del(currentUserRecord.image)
 			} catch {
-				console.warn('[Avatar Upload] Failed to delete avatar:', currentUser.image)
+				console.warn('[Avatar Upload] Failed to delete avatar:', currentUserRecord.image)
 			}
 		}
 
 		// Clear user.image in database
-		await db.update(users).set({ image: null }).where(eq(users.id, session.user.id))
+		await db.update(users).set({ image: null }).where(eq(users.id, userId))
 
 		return NextResponse.json({
 			success: true,

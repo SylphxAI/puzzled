@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getServerUser } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import { getReferralStats, getUserReferrer } from '@/features/referral'
 
 export const runtime = 'nodejs'
@@ -8,15 +8,15 @@ export const runtime = 'nodejs'
 // Get referral stats for the authenticated user
 export async function GET(_request: NextRequest) {
 	try {
-		const user = await getServerUser()
+		const { userId } = await auth()
 
-		if (!user) {
+		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 		}
 
 		const [stats, referrer] = await Promise.all([
-			getReferralStats(user.id),
-			getUserReferrer(user.id),
+			getReferralStats(userId),
+			getUserReferrer(userId),
 		])
 
 		return NextResponse.json({

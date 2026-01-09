@@ -1,44 +1,14 @@
 'use client'
 
-import { Loader2, Mail, X } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
-import { signIn } from '@/features/auth'
-import { SocialLoginButtons } from '@/features/auth/components'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon } from '@sylphx/ui'
+import { GamepadIcon } from '@sylphx/ui'
+import { SignIn } from '@sylphx/platform-sdk/react'
 
 export default function LoginPage() {
 	const t = useTranslations('auth')
-	const router = useRouter()
-	const [email, setEmail] = useState('')
-	const [password, setPassword] = useState('')
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState('')
-
-	const handleEmailLogin = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setLoading(true)
-		setError('')
-
-		try {
-			const result = await signIn.email({
-				email,
-				password,
-			})
-
-			if (result.error) {
-				setError(result.error.message || 'Login failed')
-			} else {
-				router.push('/')
-			}
-		} catch {
-			setError('An error occurred')
-		} finally {
-			setLoading(false)
-		}
-	}
+	const tCommon = useTranslations('common')
 
 	return (
 		<div className="relative flex min-h-screen flex-col items-center justify-center px-4">
@@ -61,77 +31,21 @@ export default function LoginPage() {
 					<p className="text-muted-foreground">{t('signInTitle')}</p>
 				</div>
 
-				{/* Error message */}
-				{error && (
-					<div className="rounded-lg bg-wrong/10 p-3 text-center text-sm text-wrong">{error}</div>
-				)}
-
-				{/* Email form */}
-				<form onSubmit={handleEmailLogin} className="space-y-4">
-					<div>
-						<label htmlFor="email" className="mb-1 block text-sm font-medium">
-							{t('email')}
-						</label>
-						<input
-							id="email"
-							type="email"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-							placeholder="you@example.com"
-							required
-						/>
-					</div>
-
-					<div>
-						<label htmlFor="password" className="mb-1 block text-sm font-medium">
-							{t('password')}
-						</label>
-						<input
-							id="password"
-							type="password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							className="w-full rounded-lg border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-							placeholder="••••••••"
-							required
-						/>
-					</div>
-
-					<div className="text-right">
-						<Link href="/forgot-password" className="text-sm text-primary hover:underline">
-							{t('forgotPassword')}
-						</Link>
-					</div>
-
-					<Button type="submit" className="w-full" disabled={loading}>
-						{loading ? (
-							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-						) : (
-							<Mail className="mr-2 h-4 w-4" />
-						)}
-						{t('signIn')}
-					</Button>
-				</form>
-
-				{/* Divider */}
-				<div className="relative">
-					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t" />
-					</div>
-					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-background px-2 text-muted-foreground">{t('orContinueWith')}</span>
-					</div>
-				</div>
-
-				{/* Social login - shows only enabled providers */}
-				<SocialLoginButtons disabled={loading} />
+				{/* SDK Sign In Form */}
+				<SignIn
+					mode="embedded"
+					redirectUrl="/dashboard"
+					providers={['google', 'github']}
+					signUpUrl="/signup"
+					forgotPasswordUrl="/forgot-password"
+					showCard={false}
+				/>
 
 				{/* Sign up link */}
 				<p className="text-center text-sm text-muted-foreground">
 					{t('noAccount')}{' '}
 					<Link href="/signup" className="text-primary hover:underline">
-						{t('signUp')}
+						{tCommon('signUp')}
 					</Link>
 				</p>
 			</div>

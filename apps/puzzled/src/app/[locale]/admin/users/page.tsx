@@ -1,11 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { desc } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { Crown, Shield, UserCheck, Users } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { currentUserId } from '@sylphx/platform-sdk/nextjs'
 import { UsersList } from '@/features/admin/components/users-list'
-import { getServerUser } from '@/features/auth/lib/auth-server'
-import { isPremiumPlan } from '@/features/subscription/server'
+import { isPremiumPlan } from '@/lib/billing/plans'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles'
@@ -20,13 +20,20 @@ async function getUsers() {
 }
 
 export default async function AdminUsersPage() {
-	const [t, allUsers, currentUser] = await Promise.all([
+	const [t, allUsers, userId] = await Promise.all([
 		getTranslations('admin.users'),
 		getUsers(),
-		getServerUser(),
+		currentUserId(),
 	])
 
-	const currentUserIsSuperAdmin = currentUser ? isSuperAdminRole(currentUser.role) : false
+	// Fetch current user's role from the database
+	const currentUserRecord = userId
+		? await db.query.users.findFirst({
+				where: eq(users.id, userId),
+			})
+		: null
+
+	const currentUserIsSuperAdmin = currentUserRecord ? isSuperAdminRole(currentUserRecord.role) : false
 
 	const stats = {
 		total: allUsers.length,

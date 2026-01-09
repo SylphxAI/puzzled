@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerUser } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import { completeReferral } from '@/features/referral'
 import { referralCodeSchema } from '@/lib/config/validation'
 import { ratelimit } from '@/lib/redis'
@@ -16,14 +16,14 @@ const completeReferralSchema = z.object({
 // Body: { referralCode: string }
 export async function POST(request: NextRequest) {
 	try {
-		const user = await getServerUser()
+		const { userId } = await auth()
 
-		if (!user) {
+		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 		}
 
 		// Rate limit by user ID (3 requests per hour - completion is typically once)
-		const { success: rateLimitOk } = await ratelimit.limit(`referral-complete:${user.id}`)
+		const { success: rateLimitOk } = await ratelimit.limit(`referral-complete:${userId}`)
 		if (!rateLimitOk) {
 			return NextResponse.json(
 				{ error: 'Too many requests. Please try again later.' },
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Complete the referral (this also applies rewards internally)
-		const result = await completeReferral(validation.referrerId, user.id)
+		const result = await completeReferral(validation.referrerId, userId)
 
 		if (!result.success) {
 			return NextResponse.json({ error: result.error }, { status: 400 })

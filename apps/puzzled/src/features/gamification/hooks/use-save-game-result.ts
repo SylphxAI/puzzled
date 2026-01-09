@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSession } from '@/features/auth'
+import { useUser } from '@sylphx/platform-sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 
@@ -43,7 +43,7 @@ export type SaveResultResponse = {
 }
 
 export function useSaveGameResult(gameSlug: string) {
-	const { data: session } = useSession()
+	const { user } = useUser()
 	const [status, setStatus] = useState<SaveStatus>('idle')
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)
@@ -68,9 +68,9 @@ export function useSaveGameResult(gameSlug: string) {
 		},
 	})
 
-	// Reset saved ref when session changes (user login/logout)
+	// Reset saved ref when user changes (user login/logout)
 	// This effect intentionally depends on userId to reset state on login/logout
-	const userId = session?.user?.id
+	const userId = user?.id
 	// biome-ignore lint/correctness/useExhaustiveDependencies: userId dep is intentional for resetting on auth change
 	useEffect(() => {
 		savedRef.current = false

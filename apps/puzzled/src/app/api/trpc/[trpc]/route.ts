@@ -5,7 +5,7 @@
  * Supports both GET (queries) and POST (mutations) requests.
  */
 
-// Node.js runtime - tRPC with better-auth context needs Node.js
+// Node.js runtime for tRPC context
 export const runtime = 'nodejs'
 
 import * as Sentry from '@sentry/nextjs'
@@ -41,7 +41,7 @@ const handler = (req: Request) =>
 						},
 						extra: {
 							// Include user context if available (without PII)
-							userId: ctx?.session?.user?.id,
+							userId: ctx?.userId,
 						},
 					})
 				}

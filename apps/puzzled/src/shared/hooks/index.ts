@@ -1,4 +1,5 @@
 export { useBadge } from './use-badge'
+export { useGuestOnboarding } from './use-guest-onboarding'
 export { HAPTIC_PATTERNS, type HapticPattern, triggerHaptic, useHaptic } from './use-haptic'
 export { useMounted } from './use-mounted'
 export { useReducedMotion } from './use-reduced-motion'

@@ -2,18 +2,21 @@
  * tRPC Context
  *
  * Creates the context that is available in all tRPC procedures.
- * Includes auth session and database access.
+ * Uses Sylphx Platform SDK for authentication.
  */
 
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { headers } from 'next/headers'
-import { auth } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
+import type { User } from '@sylphx/platform-sdk'
 
 /**
  * Context available to all procedures
  */
 export type Context = {
-	session: Awaited<ReturnType<typeof auth.api.getSession>> | null
+	user: User | null
+	userId: string | null
+	accessToken: string | null
 	headers: Headers
 }
 
@@ -24,13 +27,13 @@ export type Context = {
 export async function createContext(_opts?: FetchCreateContextFnOptions): Promise<Context> {
 	const headersList = await headers()
 
-	// Get session from better-auth
-	const session = await auth.api.getSession({
-		headers: headersList,
-	})
+	// Get auth from Sylphx Platform SDK
+	const { userId, user, accessToken } = await auth()
 
 	return {
-		session,
+		user,
+		userId,
+		accessToken,
 		headers: headersList,
 	}
 }

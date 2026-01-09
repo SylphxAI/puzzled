@@ -1,7 +1,8 @@
-import { Camera, User, UserCircle } from 'lucide-react'
+import { UserCircle } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { requireServerUser } from '@/features/auth/server'
-import { AvatarUpload, GameSettingsCard, ProfileForm } from '@/features/settings/components'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { Avatar, AvatarFallback, AvatarImage } from '@sylphx/ui'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -20,9 +21,23 @@ export default async function ProfileSettingsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	// Auth is handled by layout, but we need user data for components
-	const user = await requireServerUser(locale)
+	const user = await currentUser()
+
+	if (!user) {
+		redirect(`/${locale}/login?callbackUrl=/settings/profile`)
+	}
+
 	const t = await getTranslations('settings')
+
+	// Get initials for avatar fallback
+	const initials = user.name
+		? user.name
+				.split(' ')
+				.map((n) => n[0])
+				.join('')
+				.toUpperCase()
+				.slice(0, 2)
+		: user.email?.charAt(0).toUpperCase() || '?'
 
 	return (
 		<div className="space-y-6">
@@ -37,36 +52,26 @@ export default async function ProfileSettingsPage({ params }: Props) {
 				</div>
 			</div>
 
-			{/* Avatar Section */}
-			<GameSettingsCard
-				title={t('profile.avatar')}
-				description={t('profile.avatarDescription')}
-				iconElement={<Camera className="h-5 w-5 text-primary" />}
-				variant="default"
-			>
-				<AvatarUpload
-					currentImage={user.image ?? null}
-					userName={user.name}
-					userEmail={user.email}
-				/>
-			</GameSettingsCard>
+			{/* Profile Card */}
+			<div className="rounded-2xl border bg-card p-6">
+				<div className="flex items-start gap-4">
+					<Avatar className="h-16 w-16">
+						<AvatarImage src={user.image || undefined} alt={user.name || 'Profile'} />
+						<AvatarFallback className="text-lg">{initials}</AvatarFallback>
+					</Avatar>
+					<div className="flex-1 space-y-1">
+						<h2 className="text-lg font-semibold">{user.name || 'Anonymous User'}</h2>
+						<p className="text-sm text-muted-foreground">{user.email}</p>
+					</div>
+				</div>
 
-			{/* Profile Information */}
-			<GameSettingsCard
-				title={t('profile.personalInfo')}
-				description={t('profile.personalInfoDescription')}
-				iconElement={<User className="h-5 w-5 text-primary" />}
-				variant="default"
-			>
-				<ProfileForm
-					user={{
-						name: user.name,
-						email: user.email,
-						username: user.username ?? null,
-						bio: user.bio ?? null,
-					}}
-				/>
-			</GameSettingsCard>
+				<div className="mt-6 rounded-xl border bg-muted/30 p-4">
+					<p className="text-sm text-muted-foreground">
+						Profile editing is coming soon. You can manage your profile through the Sylphx
+						Platform settings.
+					</p>
+				</div>
+			</div>
 		</div>
 	)
 }

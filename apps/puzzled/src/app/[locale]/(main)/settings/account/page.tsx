@@ -1,11 +1,7 @@
-import { Key, Link2, Mail, UserCircle } from 'lucide-react'
+import { ExternalLink, UserCircle } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import {
-	ConnectedAccounts,
-	EmailChange,
-	GameSettingsCard,
-	PasswordSection,
-} from '@/features/settings/components'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -24,7 +20,12 @@ export default async function AccountSettingsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	// Auth is handled by layout - no need to check here
+	const user = await currentUser()
+
+	if (!user) {
+		redirect(`/${locale}/login?callbackUrl=/settings/account`)
+	}
+
 	const t = await getTranslations('settings')
 
 	return (
@@ -40,35 +41,30 @@ export default async function AccountSettingsPage({ params }: Props) {
 				</div>
 			</div>
 
-			{/* Email Section */}
-			<GameSettingsCard
-				title={t('email.title')}
-				description={t('email.description')}
-				iconElement={<Mail className="h-5 w-5 text-primary" />}
-				variant="default"
-			>
-				<EmailChange />
-			</GameSettingsCard>
-
-			{/* Connected Accounts Section */}
-			<GameSettingsCard
-				title={t('connectedAccounts.title')}
-				description={t('account.connectedAccountsDescription')}
-				iconElement={<Link2 className="h-5 w-5 text-primary" />}
-				variant="default"
-			>
-				<ConnectedAccounts />
-			</GameSettingsCard>
-
-			{/* Password Section */}
-			<GameSettingsCard
-				title={t('account.password.title')}
-				description={t('account.password.description')}
-				iconElement={<Key className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />}
-				variant="security"
-			>
-				<PasswordSection />
-			</GameSettingsCard>
+			{/* Platform Managed Notice */}
+			<div className="rounded-2xl border bg-card p-6">
+				<div className="flex flex-col items-center justify-center py-8 text-center">
+					<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+						<UserCircle className="h-8 w-8 text-primary" />
+					</div>
+					<h2 className="mb-2 text-lg font-semibold">
+						Account settings are managed through the Sylphx Platform
+					</h2>
+					<p className="mb-6 max-w-md text-sm text-muted-foreground">
+						Email, password, and connected accounts are managed through the central Sylphx
+						Platform for a unified experience across all applications.
+					</p>
+					<a
+						href="https://platform.sylphx.com/settings/account"
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+					>
+						Open Platform Account Settings
+						<ExternalLink className="h-4 w-4" />
+					</a>
+				</div>
+			</div>
 		</div>
 	)
 }

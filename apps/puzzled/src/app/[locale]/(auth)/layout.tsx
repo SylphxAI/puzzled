@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { auth } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 
 type Props = {
 	children: React.ReactNode
@@ -26,11 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function AuthLayout({ children }: Props) {
 	// If user is already logged in, redirect to home
 	// Auth pages (login, signup, forgot-password) should not be accessible when logged in
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	})
+	const { userId } = await auth()
 
-	if (session?.user) {
+	if (userId) {
 		redirect('/')
 	}
 

@@ -7,7 +7,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { LIMITS } from '@/features/settings'
+import { LIMITS } from '@/lib/config/user'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { protectedProcedure, protectedRateLimitedProcedure, router } from '../trpc'

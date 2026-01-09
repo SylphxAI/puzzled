@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useSession } from '@/features/auth'
+import { useUser } from '@sylphx/platform-sdk/react'
 import { trpc } from '@/trpc'
 import { checkAchievements } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
@@ -14,26 +14,26 @@ const CHECK_INTERVAL_MS = 5000 // Don't check more than once per 5 seconds
  * Mount this once in the layout to enable achievement toasts
  */
 export function AchievementChecker() {
-	const { data: session } = useSession()
+	const { user } = useUser()
 	const { checkAndShowNewAchievement } = useAchievementToast()
 	const lastCheck = useRef<number>(0)
 	const hasChecked = useRef(false)
 
 	// Fetch user stats for achievement checking
 	const { data: streakInfo } = trpc.gamification.getStreakInfo.useQuery(undefined, {
-		enabled: !!session?.user,
+		enabled: !!user,
 		staleTime: 10000,
 	})
 
 	// Fetch per-game stats
 	const { data: userStats } = trpc.stats.getUserStats.useQuery(undefined, {
-		enabled: !!session?.user,
+		enabled: !!user,
 		staleTime: 10000,
 	})
 
 	// Check for new achievements when stats update
 	useEffect(() => {
-		if (!session?.user || !streakInfo || !userStats) return
+		if (!user || !streakInfo || !userStats) return
 
 		// Throttle checks
 		const now = Date.now()
@@ -88,7 +88,7 @@ export function AchievementChecker() {
 		if (unlocked.length > 0) {
 			checkAndShowNewAchievement(unlocked)
 		}
-	}, [session?.user, streakInfo, userStats, checkAndShowNewAchievement])
+	}, [user, streakInfo, userStats, checkAndShowNewAchievement])
 
 	return null
 }

@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { getServerUser } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import { generateReferralCode } from '@/features/referral'
 import { ratelimit } from '@/lib/redis'
 
@@ -9,14 +9,14 @@ export const runtime = 'nodejs'
 // Generate a referral code for the authenticated user
 export async function POST(_request: NextRequest) {
 	try {
-		const user = await getServerUser()
+		const { userId } = await auth()
 
-		if (!user) {
+		if (!userId) {
 			return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 		}
 
 		// Rate limit by user ID (5 requests per day - code generation is infrequent)
-		const { success: rateLimitOk } = await ratelimit.limit(`referral-create:${user.id}`)
+		const { success: rateLimitOk } = await ratelimit.limit(`referral-create:${userId}`)
 		if (!rateLimitOk) {
 			return NextResponse.json(
 				{ error: 'Too many requests. Please try again later.' },
@@ -24,7 +24,7 @@ export async function POST(_request: NextRequest) {
 			)
 		}
 
-		const referralCode = await generateReferralCode(user.id)
+		const referralCode = await generateReferralCode(userId)
 
 		return NextResponse.json({
 			success: true,

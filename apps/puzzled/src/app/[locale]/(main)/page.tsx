@@ -1,15 +1,9 @@
 import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getServerUser } from '@/features/auth/server'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
-import {
-	getGameDisplayName,
-	getTodaysFreeGame,
-	getTomorrowsFreeGame,
-	hasPremiumAccess,
-} from '@/features/subscription/server'
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
@@ -45,14 +39,13 @@ export default async function HomePage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await getServerUser()
+	const user = await currentUser()
 	const trpc = await createServerCaller()
 
-	// Get today's free game and check premium status
-	const todaysFreeGame = getTodaysFreeGame()
-	const tomorrowsFreeGame = getTomorrowsFreeGame()
-	const tomorrowsFreeGameName = getGameDisplayName(tomorrowsFreeGame)
-	const isPremium = user ? await hasPremiumAccess(user.id) : false
+	// For now, all games are available (premium check via SDK billing in future)
+	const isPremium = true // All games unlocked
+	const todaysFreeGame = 'wordle' // Default free game
+	const tomorrowsFreeGameName = 'Connections' // Placeholder
 
 	// Fetch user's streak info, today's completions, and player count
 	let streakInfo: StreakInfo | null = null

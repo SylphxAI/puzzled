@@ -1,6 +1,6 @@
 import { Crown, Flame, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getServerSession } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -79,7 +79,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	const t = await getTranslations('nav')
 	const tLeaderboard = await getTranslations('leaderboard')
 	const trpc = await createServerCaller()
-	const session = await getServerSession()
+	const { user } = await auth()
 
 	// Determine metric type based on period
 	// For today/week, show wins (period stats). For all time, show streaks.
@@ -112,7 +112,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 		// Fetch user ranks if logged in
 		let userRankResults: (Awaited<ReturnType<typeof trpc.stats.getUserRank>> | null)[] = []
-		if (session?.user) {
+		if (user) {
 			const userRankPromises = allGames.map((game) =>
 				trpc.stats.getUserRank({ gameSlug: game.slug, type: metricType, period }),
 			)
@@ -127,10 +127,10 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 			)
 
 			let userRank: UserRankData | null = null
-			if (session?.user && userRankResults[idx]) {
+			if (user && userRankResults[idx]) {
 				const rank = userRankResults[idx]
-				if (rank && !leaderboardData.some((e) => e.userId === session.user.id)) {
-					userRank = { ...rank, name: session.user.name || 'You' }
+				if (rank && !leaderboardData.some((e) => e.userId === user.id)) {
+					userRank = { ...rank, name: user.name || 'You' }
 				}
 			}
 

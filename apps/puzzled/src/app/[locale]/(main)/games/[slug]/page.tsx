@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getServerUser } from '@/features/auth/server'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -80,7 +80,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const t = await getTranslations('games')
 
 	// Get user and tRPC caller
-	const user = await getServerUser()
+	const user = await currentUser()
 	const trpc = await createServerCaller()
 
 	// Get game name from translations using SSOT pattern

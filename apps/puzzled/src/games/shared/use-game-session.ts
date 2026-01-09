@@ -18,9 +18,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily'
 import { useSaveGameResult } from '@/features/gamification'
-import { useOnboardingState } from '@/features/subscription'
 import type { PuzzleDifficulty } from '@/games/types'
-import { triggerHaptic, triggerSound } from '@/shared/hooks'
+import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 
 /** Final game outcome - what gets saved to database */
 export type GameEndStatus = 'won' | 'lost'
@@ -159,7 +158,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	// Hooks
 	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
-	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useOnboardingState()
+	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useGuestOnboarding()
 
 	// State
 	const [gamePhase, setGamePhase] = useState<GamePhase>(() => {

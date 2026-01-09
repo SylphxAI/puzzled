@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerUser } from '@/features/auth/server'
+import { auth } from '@sylphx/platform-sdk/nextjs'
 import {
 	getVapidPublicKey,
 	isPushConfigured,
@@ -37,9 +37,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-	const user = await getServerUser()
+	const { userId } = await auth()
 
-	if (!user) {
+	if (!userId) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 			)
 		}
 
-		await subscribeToPush(user.id, parsed.data.subscription)
+		await subscribeToPush(userId, parsed.data.subscription)
 
 		return NextResponse.json({ success: true })
 	} catch (error) {
@@ -68,9 +68,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-	const user = await getServerUser()
+	const { userId } = await auth()
 
-	if (!user) {
+	if (!userId) {
 		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 

@@ -1,9 +1,9 @@
 'use client'
 
-import { LogIn, LogOut, Settings, Shield, User } from 'lucide-react'
+import { LogIn, LogOut, Settings, User } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
-import { signOut, useIsAdmin, useSession } from '@/features/auth'
+import { useUser, useAuth } from '@sylphx/platform-sdk/react'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import {
@@ -31,8 +31,8 @@ type UserMenuProps = {
  */
 export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: UserMenuProps) {
 	const t = useTranslations()
-	const { data: session, isPending } = useSession()
-	const { isAdmin } = useIsAdmin()
+	const { user, isLoading } = useUser()
+	const { signOut } = useAuth()
 
 	const handleSignOut = async () => {
 		await signOut()
@@ -44,7 +44,7 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 	const menuWidth = size === 'sm' ? 'w-48' : 'w-56'
 
 	// Loading state
-	if (isPending) {
+	if (isLoading) {
 		return (
 			<div className={cn('flex items-center justify-center', buttonSize)}>
 				<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -53,7 +53,7 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 	}
 
 	// Authenticated user menu
-	if (session?.user) {
+	if (user) {
 		return (
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
@@ -66,10 +66,10 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 						)}
 						aria-label={t('common.userMenu')}
 					>
-						{session.user.image ? (
+						{user.image ? (
 							<Image
-								src={session.user.image}
-								alt={`${session.user.name || 'User'}'s avatar`}
+								src={user.image}
+								alt={`${user.name || 'User'}'s avatar`}
 								width={size === 'sm' ? 28 : 32}
 								height={size === 'sm' ? 28 : 32}
 								className={cn('rounded-full', avatarSize)}
@@ -83,7 +83,7 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 									avatarSize,
 								)}
 							>
-								{session.user.name?.charAt(0) || session.user.email?.charAt(0) || '?'}
+								{user.name?.charAt(0) || user.email?.charAt(0) || '?'}
 							</div>
 						)}
 					</button>
@@ -91,20 +91,12 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 				<DropdownMenuContent align="end" className={menuWidth}>
 					<DropdownMenuLabel className="font-normal">
 						<div className="flex flex-col space-y-1">
-							<p className="truncate text-sm font-medium">{session.user.name}</p>
-							<p className="truncate text-xs text-muted-foreground">{session.user.email}</p>
+							<p className="truncate text-sm font-medium">{user.name}</p>
+							<p className="truncate text-xs text-muted-foreground">{user.email}</p>
 						</div>
 					</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuGroup>
-						{isAdmin && (
-							<DropdownMenuItem asChild>
-								<Link href="/admin" className="flex items-center gap-2">
-									<Shield className="h-4 w-4" />
-									{t('common.admin')}
-								</Link>
-							</DropdownMenuItem>
-						)}
 						<DropdownMenuItem asChild>
 							<Link href="/settings" className="flex items-center gap-2">
 								<Settings className="h-4 w-4" />

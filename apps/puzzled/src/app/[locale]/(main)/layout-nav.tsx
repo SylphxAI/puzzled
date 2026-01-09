@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from '@/features/auth'
+import { useUser } from '@sylphx/platform-sdk/react'
 import { TopNav } from '@/shared/components/layout'
 import { trpc } from '@/trpc'
 
@@ -8,11 +8,11 @@ import { trpc } from '@/trpc'
  * Client component wrapper for TopNav that fetches streak data
  */
 export function LayoutTopNav() {
-	const { data: session } = useSession()
+	const { user } = useUser()
 
 	// Only fetch streak info when user is authenticated
 	const { data: streakInfo } = trpc.gamification.getStreakInfo.useQuery(undefined, {
-		enabled: !!session?.user, // Skip query when not logged in
+		enabled: !!user, // Skip query when not logged in
 		staleTime: 60 * 1000, // 1 minute
 		retry: false, // Don't retry on auth failure
 	})

@@ -1,11 +1,7 @@
-import { Calendar, Check, Crown, Flame, Snowflake, Sparkles, X } from 'lucide-react'
+import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getServerUser } from '@/features/auth/server'
-import { CheckoutButton, FeatureComparison } from '@/features/subscription'
-import { getPlans, getPricingFeatures, hasPremiumAccess } from '@/features/subscription/server'
-import { TRIAL_CONFIG } from '@/lib/config/subscription'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 import { cn } from '@/lib/utils'
-import { formatCurrency, getMonthlyEquivalent } from '@/lib/utils/locale-map'
 import { Header } from '@/shared/components/layout'
 import { Button, Card, CardContent } from '@sylphx/ui'
 
@@ -22,30 +18,51 @@ export async function generateMetadata({ params }: Props) {
 	}
 }
 
-// Plan display configuration (prices come from database)
-const PLAN_CONFIG = {
-	free: {
+// Static plan configuration
+const PLANS = [
+	{
+		id: 'free',
+		price: 0,
+		currency: 'usd',
+		period: null,
 		highlight: false,
 		badge: null,
-		ctaKey: 'startFreeTrial',
 		badgeColor: null,
+		features: ['dailyPuzzle', 'basicStats'],
 	},
-	premium: {
+	{
+		id: 'premium',
+		price: 499,
+		currency: 'usd',
+		period: 'perMonth',
 		highlight: true,
 		badge: 'popular',
-		ctaKey: 'startFreeTrial',
 		badgeColor: 'bg-primary',
-		trialDays: TRIAL_CONFIG.TRIAL_PERIOD_DAYS,
+		trialDays: 7,
+		features: ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive'],
 	},
-	annual: {
+	{
+		id: 'annual',
+		price: 3999,
+		currency: 'usd',
+		period: 'perYear',
 		highlight: false,
 		badge: 'bestValue',
-		ctaKey: 'startFreeTrial',
-		savings: 'savePercent',
 		badgeColor: 'bg-emerald-500',
-		trialDays: TRIAL_CONFIG.TRIAL_PERIOD_DAYS,
+		trialDays: 7,
+		savings: 'savePercent',
+		features: ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive'],
 	},
-} as const
+] as const
+
+function formatCurrency(amount: number, currency: string, locale: string): string {
+	return new Intl.NumberFormat(locale, {
+		style: 'currency',
+		currency: currency.toUpperCase(),
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 2,
+	}).format(amount / 100)
+}
 
 export default async function PricingPage({ params }: Props) {
 	const { locale } = await params
@@ -54,35 +71,9 @@ export default async function PricingPage({ params }: Props) {
 	const t = await getTranslations('subscription')
 	const tPricing = await getTranslations('pricing')
 
-	const user = await getServerUser()
-	const isPremium = user ? await hasPremiumAccess(user.id) : false
-
-	// Fetch prices from database (Stripe as source of truth)
-	const dbPlans = await getPlans()
-
-	// Build plan data with prices from database
-	const plans = (['free', 'premium', 'annual'] as const).map((planId) => {
-		const config = PLAN_CONFIG[planId]
-		const dbPlan = dbPlans.find((p) => p.slug === (planId === 'annual' ? 'premium' : planId))
-		const price =
-			planId === 'free'
-				? { amount: 0, currency: 'usd', interval: null }
-				: dbPlan?.prices.find((p) => p.interval === (planId === 'annual' ? 'annual' : 'monthly'))
-
-		return {
-			id: planId,
-			price: price?.amount ?? 0,
-			currency: price?.currency ?? 'usd',
-			period: planId === 'free' ? null : planId === 'annual' ? 'perYear' : 'perMonth',
-			...config,
-		}
-	})
-
-	// Get annual price for monthly equivalent calculation
-	const annualPlan = plans.find((p) => p.id === 'annual')
-	const monthlyEquivalent = annualPlan
-		? getMonthlyEquivalent(annualPlan.price, annualPlan.currency, locale)
-		: null
+	const user = await currentUser()
+	// For now, premium status would come from SDK billing in the future
+	const isPremium = false
 
 	return (
 		<>
@@ -96,7 +87,7 @@ export default async function PricingPage({ params }: Props) {
 						</div>
 						<h1 className="text-3xl font-bold sm:text-4xl">{tPricing('title')}</h1>
 						<p className="mt-3 text-lg text-muted-foreground">{tPricing('subtitle')}</p>
-						<p className="mt-2 text-sm text-muted-foreground">⭐ {tPricing('socialProof')}</p>
+						<p className="mt-2 text-sm text-muted-foreground">Join thousands of daily puzzlers</p>
 					</div>
 
 					{/* Value Props */}
@@ -126,118 +117,82 @@ export default async function PricingPage({ params }: Props) {
 
 					{/* Plans */}
 					<div className="grid gap-6 sm:grid-cols-3">
-						{plans.map((plan) => {
-							const planFeatures = getPricingFeatures(plan.id as 'free' | 'premium' | 'annual')
-							return (
-								<Card
-									key={plan.id}
-									className={cn(
-										'relative overflow-hidden transition-all hover:shadow-xl',
-										plan.highlight &&
-											'border-primary ring-2 ring-primary shadow-lg sm:scale-[1.05]',
-									)}
-								>
-									{plan.badge && (
-										<div
-											className={cn(
-												'absolute -right-8 top-6 rotate-45 px-10 py-1 text-xs font-semibold text-white',
-												plan.badgeColor,
-											)}
-										>
-											{tPricing(plan.badge)}
-										</div>
-									)}
+						{PLANS.map((plan) => (
+							<Card
+								key={plan.id}
+								className={cn(
+									'relative overflow-hidden transition-all hover:shadow-xl',
+									plan.highlight && 'border-primary ring-2 ring-primary shadow-lg sm:scale-[1.05]',
+								)}
+							>
+								{plan.badge && (
+									<div
+										className={cn(
+											'absolute -right-8 top-6 rotate-45 px-10 py-1 text-xs font-semibold text-white',
+											plan.badgeColor,
+										)}
+									>
+										{tPricing(plan.badge)}
+									</div>
+								)}
 
-									<CardContent className="p-6">
-										<div className="mb-4">
-											<h3 className="text-xl font-bold">
-												{t(plan.id as 'free' | 'premium' | 'annual')}
-											</h3>
-											{'savings' in plan && plan.savings && (
-												<span className="inline-block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-													{tPricing(plan.savings)}
+								<CardContent className="p-6">
+									<div className="mb-4">
+										<h3 className="text-xl font-bold">
+											{t(plan.id as 'free' | 'premium' | 'annual')}
+										</h3>
+										{'savings' in plan && plan.savings && (
+											<span className="inline-block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+												{tPricing(plan.savings)}
+											</span>
+										)}
+									</div>
+
+									<div className="mb-6">
+										<div className="flex items-baseline gap-1">
+											<span className="text-4xl font-bold">
+												{formatCurrency(plan.price, plan.currency, locale)}
+											</span>
+											{plan.period && (
+												<span className="text-base text-muted-foreground">
+													{t(plan.period as 'perMonth' | 'perYear')}
 												</span>
 											)}
 										</div>
+										{'trialDays' in plan && plan.trialDays && (
+											<p className="mt-2 text-sm font-medium text-primary">
+												{tPricing('trialDays', { days: plan.trialDays })}
+											</p>
+										)}
+									</div>
 
-										<div className="mb-6">
-											<div className="flex items-baseline gap-1">
-												<span className="text-4xl font-bold">
-													{formatCurrency(plan.price, plan.currency, locale)}
+									{/* Feature list */}
+									<ul className="mb-6 space-y-3">
+										{plan.features.map((feature) => (
+											<li key={feature} className="flex items-start gap-3">
+												<Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+												<span className="text-sm leading-tight">
+													{tPricing(`feature.${feature}`)}
 												</span>
-												{plan.period && (
-													<span className="text-base text-muted-foreground">
-														{t(plan.period as 'perMonth' | 'perYear')}
-													</span>
-												)}
-											</div>
-											{plan.id === 'annual' && monthlyEquivalent && (
-												<p className="mt-1 text-sm text-muted-foreground">
-													{tPricing('monthlyEquivalent', { amount: monthlyEquivalent })}
-												</p>
-											)}
-											{'trialDays' in plan && plan.trialDays && (
-												<p className="mt-2 text-sm font-medium text-primary">
-													{tPricing('trialDays', { days: plan.trialDays })}
-												</p>
-											)}
-										</div>
+											</li>
+										))}
+									</ul>
 
-										{/* Feature list */}
-										<ul className="mb-6 space-y-3">
-											{planFeatures.map((feature) => {
-												const Icon = feature.icon
-												return (
-													<li key={feature.key} className="flex items-start gap-3">
-														{feature.included ? (
-															<Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-														) : (
-															<X className="h-5 w-5 text-muted-foreground/50 shrink-0 mt-0.5" />
-														)}
-														<div className="flex items-center gap-2 flex-1">
-															<Icon
-																aria-hidden="true"
-																className={cn(
-																	'h-4 w-4 shrink-0',
-																	feature.included ? 'text-foreground' : 'text-muted-foreground/50',
-																)}
-															/>
-															<span
-																className={cn(
-																	'text-sm leading-tight',
-																	!feature.included && 'text-muted-foreground/50 line-through',
-																)}
-															>
-																{tPricing(`feature.${feature.key}`)}
-															</span>
-														</div>
-													</li>
-												)
-											})}
-										</ul>
-
-										<CheckoutButton
-											planId={plan.id as 'free' | 'premium' | 'annual'}
-											userId={user?.id ?? null}
-											userEmail={user?.email ?? null}
-											isPremium={isPremium}
-											highlight={plan.highlight}
-											ctaKey={plan.ctaKey}
-										/>
-									</CardContent>
-								</Card>
-							)
-						})}
+									<Button
+										className={cn('w-full', plan.highlight && 'bg-primary hover:bg-primary/90')}
+										variant={plan.highlight ? 'default' : 'outline'}
+										disabled={plan.id === 'free' || isPremium}
+									>
+										{isPremium
+											? t('currentPlan')
+											: plan.id === 'free'
+												? t('currentPlan')
+												: tPricing('startFreeTrial')}
+									</Button>
+								</CardContent>
+							</Card>
+						))}
 					</div>
-
-					{/* Feature Comparison Table */}
-					<FeatureComparison
-						premiumPriceFormatted={formatCurrency(
-							plans.find((p) => p.id === 'premium')?.price ?? 499,
-							plans.find((p) => p.id === 'premium')?.currency ?? 'usd',
-							locale,
-						)}
-					/>
 
 					{/* Streak Protection Callout */}
 					<Card className="overflow-hidden border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent">

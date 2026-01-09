@@ -7,6 +7,7 @@ import { GTMProvider, PostHogProvider, WebVitalsReporter } from '@/features/anal
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { ThemeProvider } from '@/shared/components/theme'
+import { PlatformProvider } from '@/shared/components/platform'
 import { ToastProvider } from '@sylphx/ui'
 import { TRPCProvider } from '@/trpc'
 import '../globals.css'
@@ -233,11 +234,16 @@ export default async function LocaleLayout({ children, params }: Props) {
 					<PostHogProvider>
 						<GTMProvider />
 						<WebVitalsReporter />
-						<TRPCProvider>
-							<NextIntlClientProvider messages={messages}>
-								<ToastProvider>{children}</ToastProvider>
-							</NextIntlClientProvider>
-						</TRPCProvider>
+						<PlatformProvider
+							appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
+							platformUrl={process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL}
+						>
+							<TRPCProvider>
+								<NextIntlClientProvider messages={messages}>
+									<ToastProvider>{children}</ToastProvider>
+								</NextIntlClientProvider>
+							</TRPCProvider>
+						</PlatformProvider>
 					</PostHogProvider>
 				</ThemeProvider>
 			</body>

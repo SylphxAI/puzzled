@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { isFreePlan } from '@/features/subscription/server'
+import { isFreePlan } from '@/lib/billing/plans'
 import { TRIAL_CONFIG } from '@/lib/config/subscription'
 import { referralCodeSchema } from '@/lib/config/validation'
 import { db } from '@/lib/db'

@@ -1,12 +1,7 @@
-import { count, eq } from 'drizzle-orm'
+import { Settings } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { getAuthState, getSecurityScore, getServerUser } from '@/features/auth/server'
-import { SettingsOverview } from '@/features/settings/components/settings-overview'
-import { getNotificationPreferences } from '@/features/settings/server'
-import { getUserSubscription } from '@/features/subscription/server'
-import { db } from '@/lib/db'
-import { accounts, userStats, userStreaks } from '@/lib/db/schema'
+import { currentUser } from '@sylphx/platform-sdk/nextjs'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -24,55 +19,40 @@ export default async function SettingsOverviewPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await getServerUser()
+	const user = await currentUser()
 
 	if (!user) {
 		redirect(`/${locale}/login?callbackUrl=/settings`)
 	}
 
-	const userId = user.id
-
-	// Fetch user stats, streak, auth state (SSOT for security), subscription, and notification preferences in parallel
-	const [stats, streak, connectedAccountsResult, authState, subscription, notificationPrefs] =
-		await Promise.all([
-			db.query.userStats.findFirst({
-				where: eq(userStats.userId, userId),
-			}),
-			db.query.userStreaks.findFirst({
-				where: eq(userStreaks.userId, userId),
-			}),
-			db.select({ count: count() }).from(accounts).where(eq(accounts.userId, userId)),
-			getAuthState(userId),
-			getUserSubscription(userId),
-			getNotificationPreferences(),
-		])
-
-	// Use SSOT security score calculation
-	const securityScore = getSecurityScore(authState)
-	const accountCount = connectedAccountsResult[0]?.count ?? 0
-
-	// Check if user has played today
-	const today = new Date()
-	today.setHours(0, 0, 0, 0)
-	const hasPlayedToday = streak?.lastPlayedDate ? new Date(streak.lastPlayedDate) >= today : false
-
 	return (
-		<SettingsOverview
-			stats={
-				stats
-					? {
-							currentStreak: streak?.currentStreak ?? 0,
-							maxStreak: streak?.maxStreak ?? 0,
-							totalWins: stats.gamesWon,
-							gamesPlayed: stats.gamesPlayed,
-						}
-					: undefined
-			}
-			subscription={subscription}
-			securityScore={securityScore}
-			connectedAccounts={accountCount}
-			hasPlayedToday={hasPlayedToday}
-			notificationPreferences={notificationPrefs}
-		/>
+		<div className="space-y-6">
+			{/* Page Header */}
+			<div className="flex items-center gap-3">
+				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20">
+					<Settings className="h-6 w-6 text-primary" />
+				</div>
+				<div>
+					<h1 className="text-xl font-semibold tracking-tight">Settings Overview</h1>
+					<p className="text-sm text-muted-foreground">
+						Welcome back, {user.name || user.email}
+					</p>
+				</div>
+			</div>
+
+			{/* Placeholder Card */}
+			<div className="rounded-2xl border bg-card p-6">
+				<div className="flex flex-col items-center justify-center py-8 text-center">
+					<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+						<Settings className="h-8 w-8 text-muted-foreground" />
+					</div>
+					<h2 className="mb-2 text-lg font-semibold">Settings coming soon</h2>
+					<p className="max-w-md text-sm text-muted-foreground">
+						We are working on bringing you a comprehensive settings experience. In the meantime,
+						use the navigation to explore available options.
+					</p>
+				</div>
+			</div>
+		</div>
 	)
 }

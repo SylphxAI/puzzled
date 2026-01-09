@@ -16,7 +16,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import { z } from 'zod'
 import { hasSuperAdminRole } from '@/features/admin/lib/admin'
 import { daysAgo, hoursAgo, minutesAgo } from '@/lib/constants/time'
-import { syncAllPlansToStripe, syncPlanToStripe } from '@/features/subscription/lib'
+// Note: Stripe sync removed - platform handles billing
 import { getAllGames } from '@/games/registry'
 import {
 	logAdminAction,
@@ -573,123 +573,67 @@ export const adminRouter = router({
 	/**
 	 * Seed default plans (Free + Premium)
 	 * Only works if no plans exist
+	 *
+	 * Note: Stripe sync removed - platform handles billing
 	 */
-	seedPlans: adminProcedure
-		.input(z.object({ syncToStripe: z.boolean().default(false) }).optional())
-		.mutation(async ({ input, ctx }) => {
-			const existingPlans = await db.query.plans.findMany()
-			if (existingPlans.length > 0) {
-				throw new TRPCError({
-					code: 'BAD_REQUEST',
-					message: 'Plans already exist',
+	seedPlans: adminProcedure.mutation(async ({ ctx }) => {
+		const existingPlans = await db.query.plans.findMany()
+		if (existingPlans.length > 0) {
+			throw new TRPCError({
+				code: 'BAD_REQUEST',
+				message: 'Plans already exist',
+			})
+		}
+
+		// Use transaction for atomicity
+		await db.transaction(async (tx) => {
+			// Create Free plan
+			await tx.insert(plans).values({
+				slug: 'free',
+				name: 'Free',
+				description: 'Get started with daily puzzles',
+				features: ['1 free game daily', 'Basic statistics', '7 days history'],
+				sortOrder: 0,
+			})
+
+			// Create Premium plan
+			const [premiumPlan] = await tx
+				.insert(plans)
+				.values({
+					slug: 'premium',
+					name: 'Premium',
+					description: 'Unlimited access to all games',
+					features: [
+						'All games unlimited',
+						'Full statistics',
+						'Permanent history',
+						'Leaderboards',
+						'Push notifications',
+						'Early access to new games',
+						'No ads',
+					],
+					sortOrder: 1,
 				})
-			}
+				.returning()
 
-			// Use transaction for atomicity
-			await db.transaction(async (tx) => {
-				// Create Free plan
-				await tx.insert(plans).values({
-					slug: 'free',
-					name: 'Free',
-					description: 'Get started with daily puzzles',
-					features: ['1 free game daily', 'Basic statistics', '7 days history'],
-					sortOrder: 0,
-				})
-
-				// Create Premium plan
-				const [premiumPlan] = await tx
-					.insert(plans)
-					.values({
-						slug: 'premium',
-						name: 'Premium',
-						description: 'Unlimited access to all games',
-						features: [
-							'All games unlimited',
-							'Full statistics',
-							'Permanent history',
-							'Leaderboards',
-							'Push notifications',
-							'Early access to new games',
-							'No ads',
-						],
-						sortOrder: 1,
-					})
-					.returning()
-
-				// Create Premium prices
-				await tx.insert(planPrices).values([
-					{ planId: premiumPlan.id, interval: 'monthly', amount: 499, currency: 'usd' },
-					{ planId: premiumPlan.id, interval: 'annual', amount: 3999, currency: 'usd' },
-				])
-			})
-
-			// Optionally sync to Stripe (outside transaction - external API)
-			let stripeSynced = false
-			if (input?.syncToStripe) {
-				await syncAllPlansToStripe()
-				stripeSynced = true
-			}
-
-			await logAdminAction(ctx.user.id, 'create', 'plan', 'seed', {
-				action: 'seed_plans',
-				stripeSynced,
-			})
-
-			const result = await db.query.plans.findMany({
-				with: { prices: true },
-				orderBy: plans.sortOrder,
-			})
-
-			return { success: true, stripeSynced, plans: result }
-		}),
-
-	/**
-	 * Sync all plans to Stripe
-	 */
-	syncAllPlans: adminProcedure.mutation(async ({ ctx }) => {
-		const results = await syncAllPlansToStripe()
-
-		await logAdminAction(ctx.user.id, 'update', 'plan', 'all', {
-			action: 'stripe_sync_all',
-			synced: results.length,
+			// Create Premium prices
+			await tx.insert(planPrices).values([
+				{ planId: premiumPlan.id, interval: 'monthly', amount: 499, currency: 'usd' },
+				{ planId: premiumPlan.id, interval: 'annual', amount: 3999, currency: 'usd' },
+			])
 		})
 
-		return { success: true, synced: results.length, plans: results }
+		await logAdminAction(ctx.user.id, 'create', 'plan', 'seed', {
+			action: 'seed_plans',
+		})
+
+		const result = await db.query.plans.findMany({
+			with: { prices: true },
+			orderBy: plans.sortOrder,
+		})
+
+		return { success: true, plans: result }
 	}),
-
-	/**
-	 * Sync a single plan to Stripe
-	 */
-	syncPlan: adminProcedure
-		.input(z.object({ planId: z.string().uuid() }))
-		.mutation(async ({ input, ctx }) => {
-			const existing = await db.query.plans.findFirst({
-				where: eq(plans.id, input.planId),
-			})
-
-			if (!existing) {
-				throw new TRPCError({
-					code: 'NOT_FOUND',
-					message: 'Plan not found',
-				})
-			}
-
-			if (existing.slug === 'free') {
-				throw new TRPCError({
-					code: 'BAD_REQUEST',
-					message: 'Free plan does not need Stripe sync',
-				})
-			}
-
-			const synced = await syncPlanToStripe(input.planId)
-
-			await logAdminAction(ctx.user.id, 'update', 'plan', input.planId, {
-				planSlug: existing.slug,
-				action: 'stripe_sync',
-			})
-
-			return { plan: synced }
-		}),
 
 	/**
 	 * Create a new plan with prices

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { CreditCard } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { CreatePlanButton } from '@/features/admin/components/plan-editor'
-import { SeedPlansButton, SyncPlansButton } from '@/features/admin/components/plans-actions'
+import { SeedPlansButton } from '@/features/admin/components/plans-actions'
 import { PlansList } from '@/features/admin/components/plans-list'
 import { db } from '@/lib/db'
 import { plans } from '@/lib/db/schema'
@@ -29,7 +29,6 @@ export default async function AdminPlansPage() {
 				</div>
 				<div className="flex gap-2">
 					{allPlans.length === 0 && <SeedPlansButton />}
-					{allPlans.length > 0 && <SyncPlansButton />}
 					<CreatePlanButton />
 				</div>
 			</div>

@@ -11,11 +11,21 @@ import {
 	sendWinBackDay14Email,
 	sendWinBackDay30Email,
 } from '@/features/notifications/server'
-import { createWinBackPromotionCode } from '@/features/subscription/server'
+// Note: Promo codes now handled by platform billing
 import { db } from '@/lib/db'
 import { winBackEmails } from '@/lib/db/schema'
 import { handleWorkflowFailure } from '@/lib/dlq'
 import { sleep } from '@/lib/utils'
+
+/**
+ * Generate a placeholder promo code for win-back emails
+ * TODO: Replace with platform billing SDK when available
+ */
+function generateWinBackPromoCode(userId: string): string {
+	// Generate a simple code based on user ID
+	const shortId = userId.slice(0, 8).toUpperCase()
+	return `WINBACK-${shortId}`
+}
 
 // Rate limiting: 500ms delay between emails to avoid hitting Resend limits
 const EMAIL_DELAY_MS = 500
@@ -163,8 +173,9 @@ export const { POST } = serve<WinBackEmailPayload>(
 						continue
 					}
 
-					// Create unique promotion code for this user
-					const promotionCode = await createWinBackPromotionCode(user.id)
+					// Create promo code for this user
+					// Note: This is a placeholder - real promo validation happens in platform billing
+					const promotionCode = generateWinBackPromoCode(user.id)
 
 					// Send email
 					await sendWinBackDay30Email({
