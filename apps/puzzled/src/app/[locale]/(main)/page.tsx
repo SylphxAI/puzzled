@@ -5,6 +5,11 @@ import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
+import {
+	getFreeGameRotation,
+	getTodaysFreeGame,
+	hasPremiumAccess,
+} from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
 import { Button } from '@sylphx/ui'
@@ -42,10 +47,29 @@ export default async function HomePage({ params }: Props) {
 	const user = await currentUser()
 	const trpc = await createServerCaller()
 
-	// For now, all games are available (premium check via SDK billing in future)
-	const isPremium = true // All games unlocked
-	const todaysFreeGame = 'wordle' // Default free game
-	const tomorrowsFreeGameName = 'Connections' // Placeholder
+	// Get user's premium status from platform
+	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+
+	// Get today's free game from rotation
+	const todaysFreeGame = getTodaysFreeGame()
+
+	// Calculate tomorrow's free game for preview
+	const freeGameRotation = getFreeGameRotation()
+	const todayIndex = freeGameRotation.indexOf(todaysFreeGame)
+	const tomorrowsFreeGame = freeGameRotation[(todayIndex + 1) % freeGameRotation.length]
+
+	// Slug to readable name mapping (for tomorrow's preview)
+	const gameNameMap: Record<string, string> = {
+		'word-guess': 'Word Guess',
+		'word-groups': 'Word Groups',
+		queens: 'Queens',
+		sudoku: 'Sudoku',
+		crossword: 'Crossword',
+		'word-hive': 'Word Hive',
+		arithmo: 'Arithmo',
+		tango: 'Tango',
+	}
+	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
 	// Fetch user's streak info, today's completions, and player count
 	let streakInfo: StreakInfo | null = null

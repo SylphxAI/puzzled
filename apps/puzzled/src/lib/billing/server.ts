@@ -21,7 +21,7 @@ const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
  * Game rotation for free tier
  * One game is free each day, rotates through the list
  *
- * NOTE: These must match actual game slugs in src/games/*/config.ts
+ * NOTE: These must match actual game slugs from the games registry
  */
 const FREE_GAME_ROTATION = [
 	'word-guess',    // Wordle-style word game

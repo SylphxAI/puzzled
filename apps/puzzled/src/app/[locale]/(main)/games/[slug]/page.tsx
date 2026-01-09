@@ -1,3 +1,4 @@
+import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { currentUser } from '@sylphx/platform-sdk/nextjs'
@@ -5,7 +6,10 @@ import { AlreadyCompletedView } from '@/features/daily/components/already-comple
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
+import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
+import { Link } from '@/lib/i18n/routing'
+import { Button } from '@sylphx/ui'
 import { createServerCaller } from '@/trpc/server'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GamePageClient } from './game-page-client'
@@ -86,6 +90,66 @@ export default async function GamePage({ params, searchParams }: Props) {
 	// Get game name from translations using SSOT pattern
 	const translationKey = slugToCamelCase(slug)
 	const gameName = t(`${translationKey}.name`)
+
+	// Check if user has access to this game
+	const hasAccess = await canAccessGame(user?.id ?? null, slug)
+	const todaysFreeGame = getTodaysFreeGame()
+
+	// Show paywall if user doesn't have access
+	if (!hasAccess) {
+		return (
+			<div className="flex flex-1 flex-col">
+				<main className="flex flex-1 flex-col items-center justify-center gap-6 p-4 text-center">
+					{/* Lock icon */}
+					<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+						<Lock className="h-10 w-10 text-primary" />
+					</div>
+
+					{/* Title */}
+					<div className="space-y-2">
+						<h1 className="text-2xl font-bold">{gameName}</h1>
+						<p className="text-muted-foreground">
+							{user
+								? 'This game requires a premium subscription'
+								: 'Sign in to play or upgrade to premium'}
+						</p>
+					</div>
+
+					{/* Free game hint */}
+					<div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+						<p>
+							Today's free game:{' '}
+							<Link href={`/games/${todaysFreeGame}`} className="font-medium text-primary underline">
+								{t(`${slugToCamelCase(todaysFreeGame)}.name`)}
+							</Link>
+						</p>
+					</div>
+
+					{/* Actions */}
+					<div className="flex flex-col gap-3 sm:flex-row">
+						{!user && (
+							<Link href={`/login?callbackUrl=/games/${slug}`}>
+								<Button variant="outline" className="w-full sm:w-auto">
+									Sign In
+								</Button>
+							</Link>
+						)}
+						<Link href="/pricing">
+							<Button className="w-full gap-2 sm:w-auto">
+								<Crown className="h-4 w-4" />
+								Unlock All Games
+							</Button>
+						</Link>
+					</div>
+
+					{/* Back to home */}
+					<Link href="/" className="text-sm text-muted-foreground hover:underline">
+						← Back to all games
+					</Link>
+				</main>
+			</div>
+		)
+	}
 
 	// For games with difficulty support, if no difficulty selected, show difficulty selection
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
