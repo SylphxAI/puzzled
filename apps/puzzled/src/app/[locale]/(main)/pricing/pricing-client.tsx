@@ -1,10 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { Crown, Sparkles, Snowflake, Calendar, Check, Flame } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useBilling } from '@sylphx/platform-sdk/react'
 import { cn } from '@/lib/utils'
-import { Button, Card, CardContent } from '@sylphx/ui'
+import { Button, Card, CardContent, useToast } from '@sylphx/ui'
 
 // Static plan configuration matching platform plans
 const PLANS = [
@@ -59,15 +60,47 @@ function formatCurrency(amount: number, currency: string, locale: string): strin
 export function PricingContent({ locale }: { locale: string }) {
 	const t = useTranslations('subscription')
 	const tPricing = useTranslations('pricing')
+	const toast = useToast()
+	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
 	const { isPremium, subscription, createCheckout, isLoading } = useBilling()
 
 	const handleCheckout = async (planSlug: string, interval: 'monthly' | 'annual' = 'monthly') => {
+		const planKey = interval === 'annual' ? `${planSlug}-annual` : planSlug
+		setCheckoutLoading(planKey)
+
 		try {
 			const checkoutUrl = await createCheckout(planSlug, interval)
+			// Show success toast before redirect
+			toast.success(
+				tPricing('redirectingToCheckout'),
+				tPricing('securePaymentMessage')
+			)
 			window.location.href = checkoutUrl
 		} catch (error) {
 			console.error('Checkout error:', error)
+
+			// Parse error message for user-friendly feedback
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
+			if (errorMessage.includes('not authenticated') || errorMessage.includes('sign in')) {
+				toast.error(
+					tPricing('signInRequired'),
+					tPricing('signInToSubscribe')
+				)
+			} else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+				toast.error(
+					tPricing('networkError'),
+					tPricing('checkConnectionRetry')
+				)
+			} else {
+				toast.error(
+					tPricing('checkoutFailed'),
+					tPricing('tryAgainLater')
+				)
+			}
+		} finally {
+			setCheckoutLoading(null)
 		}
 	}
 
@@ -178,7 +211,7 @@ export function PricingContent({ locale }: { locale: string }) {
 								<Button
 									className={cn('w-full', plan.highlight && 'bg-primary hover:bg-primary/90')}
 									variant={plan.highlight ? 'default' : 'outline'}
-									disabled={isFree || isCurrentPlan || isLoading}
+									disabled={isFree || isCurrentPlan || isLoading || checkoutLoading !== null}
 									onClick={() => {
 										if (!isFree && !isCurrentPlan) {
 											const interval = 'interval' in plan ? plan.interval : 'monthly'
@@ -186,13 +219,15 @@ export function PricingContent({ locale }: { locale: string }) {
 										}
 									}}
 								>
-									{isCurrentPlan
-										? t('currentPlan')
-										: isFree
+									{checkoutLoading === plan.id
+										? tPricing('processing')
+										: isCurrentPlan
 											? t('currentPlan')
-											: isPremium
-												? t('switchPlan')
-												: tPricing('startFreeTrial')}
+											: isFree
+												? t('currentPlan')
+												: isPremium
+													? t('switchPlan')
+													: tPricing('startFreeTrial')}
 								</Button>
 							</CardContent>
 						</Card>
