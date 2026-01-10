@@ -90,7 +90,7 @@ describe('Billing Logic', () => {
 	describe('Free Game Rotation', () => {
 		test('returns a valid game slug', () => {
 			const todaysGame = getTodaysFreeGame()
-			expect(FREE_GAME_ROTATION).toContain(todaysGame)
+			expect((FREE_GAME_ROTATION as readonly string[]).includes(todaysGame)).toBe(true)
 		})
 
 		test('isGameFreeToday returns true for today\'s game', () => {
