@@ -46,8 +46,15 @@ export const { POST } = serve<WinBackEmailPayload>(
 		const day7Sent = await context.run('send-day7-emails', async () => {
 			let sent = 0
 			let failed = 0
+			let skipped = 0
 			for (const user of day7Users) {
 				try {
+					// Skip users without email (can't send win-back emails)
+					if (!user.email) {
+						skipped++
+						continue
+					}
+
 					// Check if we've already sent this email type
 					const existing = await db.query.winBackEmails.findFirst({
 						where: (winBackEmails, { and, eq }) =>
@@ -62,7 +69,7 @@ export const { POST } = serve<WinBackEmailPayload>(
 					// Send email
 					await sendWinBackDay7Email({
 						email: user.email,
-						name: user.name,
+						name: user.displayName,
 						userId: user.id,
 					})
 
@@ -83,8 +90,8 @@ export const { POST } = serve<WinBackEmailPayload>(
 					console.error(`[WinBack] Failed to send day7 email to ${user.email}:`, error)
 				}
 			}
-			if (failed > 0) {
-				console.warn(`[WinBack] Day 7 emails: ${sent} sent, ${failed} failed`)
+			if (failed > 0 || skipped > 0) {
+				console.warn(`[WinBack] Day 7 emails: ${sent} sent, ${failed} failed, ${skipped} skipped (no email)`)
 			}
 			return sent
 		})
@@ -106,8 +113,15 @@ export const { POST } = serve<WinBackEmailPayload>(
 		const day14Sent = await context.run('send-day14-emails', async () => {
 			let sent = 0
 			let failed = 0
+			let skipped = 0
 			for (const user of day14Users) {
 				try {
+					// Skip users without email (can't send win-back emails)
+					if (!user.email) {
+						skipped++
+						continue
+					}
+
 					// Check if we've already sent this email type
 					const existing = await db.query.winBackEmails.findFirst({
 						where: (winBackEmails, { and, eq }) =>
@@ -122,7 +136,7 @@ export const { POST } = serve<WinBackEmailPayload>(
 					// Send email
 					await sendWinBackDay14Email({
 						email: user.email,
-						name: user.name,
+						name: user.displayName,
 						userId: user.id,
 						newFeatures,
 					})
@@ -144,8 +158,8 @@ export const { POST } = serve<WinBackEmailPayload>(
 					console.error(`[WinBack] Failed to send day14 email to ${user.email}:`, error)
 				}
 			}
-			if (failed > 0) {
-				console.warn(`[WinBack] Day 14 emails: ${sent} sent, ${failed} failed`)
+			if (failed > 0 || skipped > 0) {
+				console.warn(`[WinBack] Day 14 emails: ${sent} sent, ${failed} failed, ${skipped} skipped (no email)`)
 			}
 			return sent
 		})
@@ -160,8 +174,15 @@ export const { POST } = serve<WinBackEmailPayload>(
 		const day30Sent = await context.run('send-day30-emails', async () => {
 			let sent = 0
 			let failed = 0
+			let skipped = 0
 			for (const user of day30Users) {
 				try {
+					// Skip users without email (can't send win-back emails)
+					if (!user.email) {
+						skipped++
+						continue
+					}
+
 					// Check if we've already sent this email type
 					const existing = await db.query.winBackEmails.findFirst({
 						where: (winBackEmails, { and, eq }) =>
@@ -180,7 +201,7 @@ export const { POST } = serve<WinBackEmailPayload>(
 					// Send email
 					await sendWinBackDay30Email({
 						email: user.email,
-						name: user.name,
+						name: user.displayName,
 						userId: user.id,
 						discountCode: promotionCode,
 					})
@@ -203,8 +224,8 @@ export const { POST } = serve<WinBackEmailPayload>(
 					console.error(`[WinBack] Failed to send day30 email to ${user.email}:`, error)
 				}
 			}
-			if (failed > 0) {
-				console.warn(`[WinBack] Day 30 emails: ${sent} sent, ${failed} failed`)
+			if (failed > 0 || skipped > 0) {
+				console.warn(`[WinBack] Day 30 emails: ${sent} sent, ${failed} failed, ${skipped} skipped (no email)`)
 			}
 			return sent
 		})

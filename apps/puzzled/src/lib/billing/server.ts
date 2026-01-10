@@ -92,17 +92,17 @@ export function getFreeGameRotation(): readonly string[] {
  */
 function getPlatformClient() {
 	const appId = process.env.SYLPHX_APP_ID
-	const secretKey = process.env.SYLPHX_APP_SECRET
+	const appSecret = process.env.SYLPHX_APP_SECRET
 	const platformUrl = process.env.SYLPHX_PLATFORM_URL
 
-	if (!appId || !secretKey) {
+	if (!appId || !appSecret) {
 		console.warn('[Billing] Missing platform credentials')
 		return null
 	}
 
 	return createServerClient({
 		appId,
-		secretKey,
+		appSecret,
 		platformUrl,
 	})
 }
@@ -110,15 +110,18 @@ function getPlatformClient() {
 /**
  * Check if a user has premium access via platform SDK
  *
- * @param userId - Platform user ID
+ * Note: This uses the current user's session context.
+ * The SDK's billing.getSubscription() returns the authenticated user's subscription.
+ *
+ * @param _userId - Platform user ID (unused, kept for interface compatibility)
  * @returns true if user has an active premium subscription
  */
-export async function hasPremiumAccess(userId: string): Promise<boolean> {
+export async function hasPremiumAccess(_userId: string): Promise<boolean> {
 	const client = getPlatformClient()
 	if (!client) return false
 
 	try {
-		const result = await client.subscriptions.get(userId)
+		const result = await client.billing.getSubscription()
 		if (!result) return false
 
 		// Check if subscription is active and on a premium plan

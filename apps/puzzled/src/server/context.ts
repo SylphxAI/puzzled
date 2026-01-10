@@ -7,8 +7,12 @@
 
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { headers } from 'next/headers'
-import { auth } from '@sylphx/platform-sdk/nextjs'
-import type { User } from '@sylphx/platform-sdk'
+import { auth, type AuthResult } from '@sylphx/platform-sdk/nextjs'
+
+/**
+ * Platform user (from auth result)
+ */
+type User = NonNullable<AuthResult['user']>
 
 /**
  * Context available to all procedures

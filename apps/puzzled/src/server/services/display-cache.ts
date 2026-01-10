@@ -2,32 +2,34 @@
  * User Display Cache Service
  *
  * Manages caching of user display data (names, avatars) from the platform.
- * Uses local database cache + background refresh via platform batch API.
+ * Uses local database cache populated via webhooks from the platform.
  *
  * ARCHITECTURE:
- * - Primary source: Local userDisplayCache table (fast)
- * - Refresh source: Platform batch API (authoritative)
- * - Cache TTL: 1 hour (configurable)
- * - Refresh: Non-blocking background updates
+ * - Primary source: Local userDisplayCache table (SSOT for app-local display data)
+ * - Population: Platform webhooks (user.created, user.updated)
+ * - Cache TTL: 1 hour (for staleness checking only)
+ *
+ * Note: The platform SDK is for current-user operations. For bulk user data,
+ * use platform webhooks to keep the local cache in sync.
  */
 
-import { inArray } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { userDisplayCache, type UserDisplayCache } from '@/lib/db/schema'
-import { createServerClient } from '@sylphx/platform-sdk/server'
 
-/** Cache TTL in milliseconds (1 hour) */
+/** Cache TTL in milliseconds (1 hour) - used for staleness warnings only */
 const CACHE_TTL_MS = 60 * 60 * 1000
 
 /** Display data returned by this service */
 export interface DisplayData {
+	email: string | null
 	displayName: string | null
 	avatarUrl: string | null
 }
 
 /**
  * Get display data for multiple user IDs.
- * Returns cached data immediately, refreshes stale entries in background.
+ * Returns cached data from local database.
  *
  * @param userIds - Array of platform user IDs
  * @returns Record mapping userId to display data
@@ -56,25 +58,23 @@ export async function getDisplayData(
 	const now = Date.now()
 	const staleThreshold = now - CACHE_TTL_MS
 
-	// Find stale or missing entries
-	const needsRefresh = uniqueIds.filter((id) => {
+	// Log stale entries (for monitoring)
+	const staleCount = uniqueIds.filter((id) => {
 		const entry = cacheMap.get(id)
-		return !entry || entry.cachedAt.getTime() < staleThreshold
-	})
+		return entry && entry.cachedAt.getTime() < staleThreshold
+	}).length
 
-	// Trigger background refresh for stale entries (non-blocking)
-	if (needsRefresh.length > 0) {
-		refreshDisplayCache(needsRefresh).catch((error) => {
-			console.error('[DisplayCache] Background refresh failed:', error)
-		})
+	if (staleCount > 0) {
+		console.debug(`[DisplayCache] ${staleCount} stale entries detected`)
 	}
 
-	// Return current cache data (may be stale, but that's OK for display)
+	// Return current cache data
 	const result: Record<string, DisplayData | null> = {}
 	for (const id of uniqueIds) {
 		const entry = cacheMap.get(id)
 		result[id] = entry
 			? {
+					email: entry.email,
 					displayName: entry.displayName,
 					avatarUrl: entry.avatarUrl,
 				}
@@ -94,75 +94,89 @@ export async function getDisplayDataSingle(userId: string): Promise<DisplayData 
 }
 
 /**
- * Refresh display cache entries from platform batch API.
- * Called in background - don't await in request path.
+ * Update display cache for a user.
+ * Called from platform webhooks (user.created, user.updated).
  *
- * @param userIds - User IDs to refresh
+ * @param userId - Platform user ID
+ * @param data - Display data to cache
  */
-export async function refreshDisplayCache(userIds: string[]): Promise<void> {
-	if (userIds.length === 0) return
+export async function updateDisplayCache(
+	userId: string,
+	data: {
+		email?: string | null
+		displayName?: string | null
+		avatarUrl?: string | null
+	},
+): Promise<void> {
+	const now = new Date()
 
-	const appId = process.env.SYLPHX_APP_ID
-	const secretKey = process.env.SYLPHX_APP_SECRET
-	const platformUrl = process.env.SYLPHX_PLATFORM_URL
-
-	if (!appId || !secretKey) {
-		console.warn('[DisplayCache] Missing platform credentials, skipping refresh')
-		return
-	}
-
-	try {
-		const client = createServerClient({
-			appId,
-			secretKey,
-			platformUrl,
+	await db
+		.insert(userDisplayCache)
+		.values({
+			userId,
+			email: data.email ?? null,
+			displayName: data.displayName ?? null,
+			avatarUrl: data.avatarUrl ?? null,
+			cachedAt: now,
 		})
-
-		const { users } = await client.users.getBatch(userIds)
-
-		// Upsert cache entries
-		const now = new Date()
-		for (const [userId, data] of Object.entries(users)) {
-			await db
-				.insert(userDisplayCache)
-				.values({
-					userId,
-					displayName: data.name,
-					avatarUrl: data.image,
-					cachedAt: now,
-				})
-				.onConflictDoUpdate({
-					target: userDisplayCache.userId,
-					set: {
-						displayName: data.name,
-						avatarUrl: data.image,
-						cachedAt: now,
-					},
-				})
-		}
-
-		console.log(`[DisplayCache] Refreshed ${Object.keys(users).length} entries`)
-	} catch (error) {
-		console.error('[DisplayCache] Failed to refresh from platform:', error)
-		throw error
-	}
+		.onConflictDoUpdate({
+			target: userDisplayCache.userId,
+			set: {
+				email: data.email ?? null,
+				displayName: data.displayName ?? null,
+				avatarUrl: data.avatarUrl ?? null,
+				cachedAt: now,
+			},
+		})
 }
 
 /**
  * Invalidate cache for a specific user.
- * Call this when you know user data has changed (e.g., webhook).
+ * Call this when you know user data has changed.
  */
 export async function invalidateDisplayCache(userId: string): Promise<void> {
-	await db.delete(userDisplayCache).where(inArray(userDisplayCache.userId, [userId]))
+	await db.delete(userDisplayCache).where(eq(userDisplayCache.userId, userId))
 }
 
 /**
- * Pre-warm cache for a list of users.
- * Useful for batch operations where you know you'll need the data.
+ * Batch update display cache.
+ * Used for initial sync or bulk operations.
+ *
+ * @param users - Array of user data to cache
  */
-export async function prewarmDisplayCache(userIds: string[]): Promise<void> {
-	if (userIds.length === 0) return
+export async function batchUpdateDisplayCache(
+	users: Array<{
+		userId: string
+		email?: string | null
+		displayName?: string | null
+		avatarUrl?: string | null
+	}>,
+): Promise<void> {
+	if (users.length === 0) return
 
-	// Trigger immediate refresh (blocking)
-	await refreshDisplayCache(userIds)
+	const now = new Date()
+
+	// Use individual upserts for now (Drizzle doesn't have bulk upsert)
+	for (const user of users) {
+		await db
+			.insert(userDisplayCache)
+			.values({
+				userId: user.userId,
+				email: user.email ?? null,
+				displayName: user.displayName ?? null,
+				avatarUrl: user.avatarUrl ?? null,
+				cachedAt: now,
+			})
+			.onConflictDoUpdate({
+				target: userDisplayCache.userId,
+				set: {
+					email: user.email ?? null,
+					displayName: user.displayName ?? null,
+					avatarUrl: user.avatarUrl ?? null,
+					cachedAt: now,
+				},
+			})
+	}
+
+	console.log(`[DisplayCache] Updated ${users.length} entries`)
 }

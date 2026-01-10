@@ -1,23 +1,18 @@
 export const dynamic = 'force-dynamic'
 
-import { count, desc, eq, gte, sql } from 'drizzle-orm'
+import { count, desc, eq, gte } from 'drizzle-orm'
 import { daysAgo } from '@/lib/constants/time'
 import {
 	Activity,
 	AlertTriangle,
-	ArrowDownRight,
-	ArrowUpRight,
 	Gamepad2,
 	Server,
 	Settings,
 	TrendingUp,
-	Users,
 	Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { createServerClient } from '@sylphx/platform-sdk/server'
-import { env } from '@/lib/env'
 import { db } from '@/lib/db'
 import { auditLogs, deadLetterQueue, gameSessions } from '@/lib/db/schema'
 
@@ -34,19 +29,13 @@ async function getDashboardStats() {
 	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 	const sevenDaysAgo = daysAgo(7, today)
 
-	// Platform metrics (users, billing) from SDK
-	const sylphx = createServerClient({
-		appId: env.SYLPHX_APP_ID,
-		secretKey: env.SYLPHX_SECRET_KEY,
-	})
-
 	// App-specific metrics from local database
+	// Note: Platform metrics (users, revenue) are viewable in the Sylphx admin dashboard
 	const [
 		sessionCount,
 		sessionsThisWeek,
 		dlqPending,
 		dlqFailed,
-		platformOverview,
 	] = await Promise.all([
 		db.select({ count: count() }).from(gameSessions),
 		db
@@ -61,16 +50,11 @@ async function getDashboardStats() {
 			.select({ count: count() })
 			.from(deadLetterQueue)
 			.where(eq(deadLetterQueue.status, 'failed')),
-		sylphx.analytics.overview().catch(() => null),
 	])
 
 	return {
-		// Platform stats (from SDK)
-		users: platformOverview?.totalUsers ?? 0,
-		premium: platformOverview?.subscriptions.active ?? 0,
-		mrr: platformOverview?.revenue.month ?? 0,
-		newUsersThisWeek: platformOverview?.newUsers.week ?? 0,
 		// App-specific stats (from local DB)
+		// Platform stats (users, revenue, subscriptions) are in Sylphx Platform admin
 		sessions: sessionCount[0]?.count ?? 0,
 		sessionsThisWeek: sessionsThisWeek[0]?.count ?? 0,
 		dlqPending: dlqPending[0]?.count ?? 0,
@@ -131,33 +115,34 @@ export default async function AdminDashboard() {
 				<p className="admin-page-subtitle">{t('subtitle')}</p>
 			</div>
 
-			{/* Enhanced Stats Grid */}
+			{/* App Stats Grid */}
 			<div className="admin-metrics-grid admin-metrics-grid-4">
-				<EnhancedStatCard
-					title={t('totalUsers')}
-					value={stats.users}
-					icon={Users}
-					delay={0}
-				/>
 				<EnhancedStatCard
 					title={t('gameSessions')}
 					value={stats.sessions}
 					icon={Gamepad2}
 					accentColor="purple"
+					delay={0}
+				/>
+				<EnhancedStatCard
+					title={t('sessionsThisWeek')}
+					value={stats.sessionsThisWeek}
+					icon={TrendingUp}
+					accentColor="emerald"
 					delay={1}
 				/>
 				<EnhancedStatCard
-					title={t('premiumUsers')}
-					value={stats.premium}
-					icon={TrendingUp}
-					accentColor="emerald"
+					title={t('dlqPending')}
+					value={stats.dlqPending}
+					icon={AlertTriangle}
+					accentColor="amber"
 					delay={2}
 				/>
 				<EnhancedStatCard
-					title={t('estMRR')}
-					value={`$${stats.mrr.toFixed(0)}`}
-					icon={TrendingUp}
-					accentColor="amber"
+					title={t('dlqFailed')}
+					value={stats.dlqFailed}
+					icon={AlertTriangle}
+					accentColor="default"
 					delay={3}
 				/>
 			</div>
@@ -242,20 +227,14 @@ export default async function AdminDashboard() {
 					<h3 className="font-semibold text-[var(--admin-text-primary)]">{t('keyMetrics')}</h3>
 					<span className="text-xs text-[var(--admin-text-muted)]">{t('last7Days')}</span>
 				</div>
-				<div className="grid gap-4 sm:grid-cols-3">
-					<div className="admin-metric-row border-none py-0">
-						<span className="admin-metric-label">{t('newUsers')}</span>
-						<span className="admin-metric-value">{stats.newUsersThisWeek}</span>
-					</div>
+				<div className="grid gap-4 sm:grid-cols-2">
 					<div className="admin-metric-row border-none py-0">
 						<span className="admin-metric-label">{t('gamesPlayed')}</span>
 						<span className="admin-metric-value">{stats.sessionsThisWeek}</span>
 					</div>
 					<div className="admin-metric-row border-none py-0">
-						<span className="admin-metric-label">{t('conversionRate')}</span>
-						<span className="admin-metric-value">
-							{stats.users > 0 ? ((stats.premium / stats.users) * 100).toFixed(1) : 0}%
-						</span>
+						<span className="admin-metric-label">{t('failedJobs')}</span>
+						<span className="admin-metric-value">{stats.dlqFailed}</span>
 					</div>
 				</div>
 			</div>
@@ -295,7 +274,7 @@ function EnhancedStatCard({
 }: {
 	title: string
 	value: string | number
-	icon: typeof Users
+	icon: typeof Gamepad2
 	accentColor?: 'default' | 'emerald' | 'purple' | 'amber'
 	delay?: number
 }) {

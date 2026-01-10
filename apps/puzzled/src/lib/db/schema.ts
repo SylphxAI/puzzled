@@ -178,11 +178,16 @@ export const userPreferences = pgTable(
 
 /**
  * Cached user display data from platform.
- * Refreshed via batch API for efficient leaderboard rendering.
+ * Refreshed via webhooks for efficient leaderboard rendering and win-back emails.
+ *
+ * Email is stored for CAN-SPAM compliant marketing (users have opted in via notificationPreferences).
  */
 export const userDisplayCache = pgTable('user_display_cache', {
 	/** Platform user ID (primary key, no FK) */
 	userId: uuid('user_id').primaryKey(),
+
+	/** User email (for win-back emails - CAN-SPAM requires storing opted-in emails) */
+	email: text('email'),
 
 	/** Cached display name from platform */
 	displayName: text('display_name'),
