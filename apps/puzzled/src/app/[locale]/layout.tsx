@@ -234,10 +234,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 					<PostHogProvider>
 						<GTMProvider />
 						<WebVitalsReporter />
-						<PlatformProvider
-							appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
-							platformUrl={process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL}
-						>
+						<PlatformProvider appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}>
 							<TRPCProvider>
 								<NextIntlClientProvider messages={messages}>
 									<ToastProvider>{children}</ToastProvider>
