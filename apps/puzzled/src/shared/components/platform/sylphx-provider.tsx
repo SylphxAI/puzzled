@@ -17,16 +17,26 @@ interface PlatformProviderProps {
 	children: React.ReactNode
 	/** Sylphx App ID (from NEXT_PUBLIC_SYLPHX_APP_ID env var) */
 	appId?: string
+	/** Sylphx Publishable Key (from NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY env var) */
+	publishableKey?: string
 }
 
-export function PlatformProvider({ children, appId }: PlatformProviderProps) {
+export function PlatformProvider({
+	children,
+	appId,
+	publishableKey,
+}: PlatformProviderProps) {
 	// If Sylphx is not configured, just render children
-	if (!appId) {
+	if (!appId || !publishableKey) {
 		return <>{children}</>
 	}
 
 	return (
-		<SylphxProvider appId={appId} afterSignOutUrl="/login">
+		<SylphxProvider
+			appId={appId}
+			publishableKey={publishableKey}
+			afterSignOutUrl="/login"
+		>
 			{children}
 		</SylphxProvider>
 	)
