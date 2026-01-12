@@ -1,4 +1,4 @@
-import type { LanguageModelV1 } from 'ai'
+import type { LanguageModel } from 'ai'
 import { generateText } from 'ai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
@@ -97,10 +97,10 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 			const { text } = await generateText({
 				// Type assertion needed: OpenRouter provider returns compatible model
 				// but TypeScript can't verify due to version differences in type exports
-				model: openrouter(model) as unknown as LanguageModelV1,
+				model: openrouter(model) as unknown as LanguageModel,
 				system: config.systemPrompt,
 				prompt: config.userPrompt,
-				maxTokens: config.maxOutputTokens || 1000,
+				maxOutputTokens: config.maxOutputTokens || 1000,
 				temperature: config.temperature,
 			})
 
