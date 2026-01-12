@@ -9,7 +9,6 @@ import { router } from '../trpc'
 import { adminRouter } from './admin'
 import { gamesRouter } from './games'
 import { gamificationRouter } from './gamification'
-import { settingsRouter } from './settings'
 import { statsRouter } from './stats'
 import { userRouter } from './user'
 
@@ -27,7 +26,6 @@ export const appRouter = router({
 	games: gamesRouter,
 	stats: statsRouter,
 	gamification: gamificationRouter,
-	settings: settingsRouter,
 	user: userRouter,
 })
 
