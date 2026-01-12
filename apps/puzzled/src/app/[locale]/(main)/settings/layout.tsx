@@ -27,6 +27,7 @@ const settingsLinks = [
 	{ href: '/settings/notifications', label: 'Notifications' },
 	{ href: '/settings/security', label: 'Security' },
 	{ href: '/settings/subscription', label: 'Subscription' },
+	{ href: '/settings/referrals', label: 'Referrals' },
 	{ href: '/settings/privacy', label: 'Privacy' },
 ]
 
