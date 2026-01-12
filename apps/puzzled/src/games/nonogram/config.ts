@@ -97,14 +97,10 @@ export const nonogramConfig: GameConfig<
 	compareForPercentile: compareByTime,
 
 	/**
-	 * Generate puzzle from seed with optional difficulty
+	 * Generate puzzle from seed
 	 * Currently uses 10x10 patterns for all difficulties.
-	 * TODO: Add 5x5 patterns for easy, 15x15 for hard
 	 */
-	generatePuzzle(seed: number, difficulty?: PuzzleDifficulty) {
-		// Currently all difficulties use 10x10 patterns
-		// Future: pass gridSize to generate different sizes
-		const _targetSize = difficulty === 'easy' ? 5 : difficulty === 'hard' ? 15 : 10
+	generatePuzzle(seed: number, _difficulty?: PuzzleDifficulty) {
 		const { puzzleData, solution } = generateNonogramPuzzle(seed)
 
 		return {

@@ -29,7 +29,6 @@ type Props = {
 
 export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.blockSlide')
-	const _tCommon = useTranslations('common')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() => {

@@ -30,7 +30,6 @@ type Props = {
 
 export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.arithmo')
-	const _tCommon = useTranslations('common')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() => defaultParsePuzzleData(arithmoConfig, puzzleData, puzzleId))

@@ -91,7 +91,6 @@ export const arithmoConfig: GameConfig<
 
 		// Get result
 		const result = getGuessResult(equation, solution.equation)
-		const _isCorrect = equation === solution.equation
 
 		return {
 			valid: true,

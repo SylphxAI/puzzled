@@ -113,8 +113,6 @@ export function getWordsForLetters(letters: string[]): string[] {
  * Find pangrams (words using all 7 letters)
  */
 export function findPangrams(letters: string[], words: string[]): string[] {
-	const _letterSet = new Set(letters.map((l) => l.toUpperCase()))
-
 	return words.filter((word) => {
 		const wordLetters = new Set(word.split(''))
 		return letters.every((l) => wordLetters.has(l.toUpperCase()))

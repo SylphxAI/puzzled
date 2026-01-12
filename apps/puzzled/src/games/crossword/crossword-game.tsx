@@ -29,8 +29,6 @@ type Props = {
 
 export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.crossword')
-	const _tCommon = useTranslations('common')
-	const _tShare = useTranslations('share')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() => defaultParsePuzzleData(crosswordConfig, puzzleData, puzzleId))

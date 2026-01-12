@@ -29,7 +29,6 @@ type Props = {
 
 export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.wordLadder')
-	const _tCommon = useTranslations('common')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() => defaultParsePuzzleData(wordLadderConfig, puzzleData, puzzleId))

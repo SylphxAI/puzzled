@@ -13,12 +13,6 @@ import {
 	usesValidLetters,
 } from './types'
 
-// Simple word dictionary check (in production, use a real dictionary API)
-const _COMMON_WORDS = new Set([
-	// This should be a comprehensive dictionary
-	// For now, just allow words 3+ letters that pass the box rules
-])
-
 type LetterBoxedAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }

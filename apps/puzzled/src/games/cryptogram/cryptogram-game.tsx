@@ -28,7 +28,6 @@ type Props = {
 }
 
 export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
-	const _t = useTranslations('games.cryptogram')
 	const tCommon = useTranslations('common')
 
 	const [puzzle] = useState(() => defaultParsePuzzleData(cryptogramConfig, puzzleData, puzzleId))

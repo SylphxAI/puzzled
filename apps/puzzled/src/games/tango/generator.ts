@@ -147,12 +147,8 @@ function createPuzzle(
 	for (const [r, c] of positions) {
 		if (cluesRemaining <= targetClues) break
 
-		const _saved = puzzle[r][c]
 		puzzle[r][c] = null
 		cluesRemaining--
-
-		// Simple check: ensure at least some constraint remains
-		// For a proper implementation, we'd verify unique solvability
 	}
 
 	return puzzle
