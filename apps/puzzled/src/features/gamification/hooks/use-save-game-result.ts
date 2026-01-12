@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSafeUser } from '@sylphx/platform-sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
+import { useGameAnalytics } from '@/features/analytics'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -47,6 +48,7 @@ export function useSaveGameResult(gameSlug: string) {
 	const [status, setStatus] = useState<SaveStatus>('idle')
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)
+	const { trackGameComplete } = useGameAnalytics()
 
 	// tRPC utils for cache invalidation
 	const utils = trpc.useUtils()
@@ -104,6 +106,18 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleId: input.puzzleId,
 					difficulty: input.difficulty,
 					data: input.data,
+				})
+
+				// Track game completion via SDK analytics
+				trackGameComplete({
+					game: gameSlug,
+					status: input.status,
+					attempts: input.attempts,
+					timeSpentMs: input.timeSpentMs,
+					score: response.score,
+					mode: input.mode ?? 'daily',
+					difficulty: input.difficulty,
+					puzzleId: input.puzzleId,
 				})
 
 				// Return server-calculated score

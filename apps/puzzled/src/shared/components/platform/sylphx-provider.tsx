@@ -8,10 +8,17 @@
  * Architecture:
  * - Sylphx Platform handles ALL auth (email, OAuth, 2FA, sessions)
  * - Sylphx Platform handles ALL billing (subscriptions, checkout, portal)
+ * - Sylphx Platform handles feature flags (gradual rollouts, A/B testing)
  * - App contains business logic only (games, streaks, achievements)
  */
 
-import { SylphxProvider } from '@sylphx/platform-sdk/react'
+import * as React from 'react'
+import {
+	SylphxProvider,
+	FeatureFlagProvider,
+	useSafeUser,
+	useBilling,
+} from '@sylphx/platform-sdk/react'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
@@ -19,6 +26,36 @@ interface PlatformProviderProps {
 	appId?: string
 	/** Sylphx Publishable Key (from NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY env var) */
 	publishableKey?: string
+}
+
+/**
+ * Inner component that has access to user context for feature flags
+ */
+function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
+	const { user } = useSafeUser()
+	const { subscription, isPremium } = useBilling()
+
+	return (
+		<FeatureFlagProvider
+			endpoint="/api/flags"
+			userContext={
+				user
+					? {
+							userId: user.id,
+							email: user.email ?? undefined,
+							attributes: {
+								isPremium,
+								plan: subscription?.planSlug,
+							},
+						}
+					: undefined
+			}
+			refreshInterval={5 * 60 * 1000} // Refresh every 5 minutes
+			enableCache
+		>
+			{children}
+		</FeatureFlagProvider>
+	)
 }
 
 export function PlatformProvider({
@@ -37,7 +74,7 @@ export function PlatformProvider({
 			publishableKey={publishableKey}
 			afterSignOutUrl="/login"
 		>
-			{children}
+			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)
 }
