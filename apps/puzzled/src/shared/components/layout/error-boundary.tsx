@@ -2,7 +2,7 @@
 
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Component, type ReactNode } from 'react'
-import { captureError } from '@/lib/sentry'
+import { captureError } from '@/lib/monitoring'
 import { Button } from '@sylphx/ui'
 
 type ErrorBoundaryProps = {
@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 		// Log locally for development
 		console.error('Error caught by boundary:', error, errorInfo)
 
-		// Send to Sentry with component stack context
+		// Report to platform monitoring with component stack context
 		captureError(error, {
 			tags: { errorBoundary: 'component' },
 			extra: {

@@ -1,10 +1,10 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { Button } from '@sylphx/ui'
+import { captureError } from '@/lib/monitoring'
 
 type ErrorProps = {
 	error: Error & { digest?: string }
@@ -15,8 +15,8 @@ export default function GameError({ error, reset }: ErrorProps) {
 	const t = useTranslations('common')
 
 	useEffect(() => {
-		// Report error to Sentry with game context
-		Sentry.captureException(error, {
+		// Report error to platform monitoring with game context
+		captureError(error, {
 			tags: { location: 'game-page' },
 		})
 	}, [error])

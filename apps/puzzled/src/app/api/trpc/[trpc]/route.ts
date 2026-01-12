@@ -8,10 +8,10 @@
 // Node.js runtime for tRPC context
 export const runtime = 'nodejs'
 
-import * as Sentry from '@sentry/nextjs'
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { createContext } from '@/server/context'
 import { appRouter } from '@/server/routers'
+import { captureError } from '@/lib/monitoring'
 
 /**
  * Request handler configuration
@@ -28,12 +28,12 @@ const handler = (req: Request) =>
 				console.error(`❌ tRPC failed on ${path ?? '<no-path>'}: ${error.message}`)
 			}
 
-			// Report to Sentry in production (skip expected client errors)
+			// Report to platform monitoring in production (skip expected client errors)
 			if (process.env.NODE_ENV === 'production') {
 				// Don't report expected auth errors (401/403) or not found (404)
 				const isExpectedError = ['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND'].includes(error.code)
 				if (!isExpectedError) {
-					Sentry.captureException(error, {
+					captureError(error, {
 						tags: {
 							trpc_path: path ?? 'unknown',
 							trpc_type: type,

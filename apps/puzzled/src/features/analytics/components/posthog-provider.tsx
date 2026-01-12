@@ -1,9 +1,10 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { usePathname, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useConsent } from '@sylphx/platform-sdk/react'
 
 // Flag to track if PostHog has been initialized
@@ -112,10 +113,25 @@ function ConsentAwarePostHog({ children }: { children: React.ReactNode }) {
  *
  * This provider defers PostHog initialization until analytics consent is granted.
  * Uses Sylphx Platform SDK's consent management for GDPR compliance.
+ *
+ * Note: ConsentAwarePostHog is only rendered on the client side to avoid
+ * SSG/SSR errors when SylphxProvider isn't available during static generation.
  */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
+	const [isMounted, setIsMounted] = useState(false)
+
+	// Only render consent-aware tracking on client side
+	useEffect(() => {
+		setIsMounted(true)
+	}, [])
+
 	if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 		// PostHog not configured - render children without tracking
+		return <>{children}</>
+	}
+
+	// During SSG/SSR, just render children without tracking
+	if (!isMounted) {
 		return <>{children}</>
 	}
 

@@ -8,10 +8,10 @@
  * - Admin interface for reviewing/retrying failed jobs
  */
 
-import * as Sentry from '@sentry/nextjs'
 import { and, eq, lte } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
+import { captureMessage } from '@/lib/monitoring'
 
 export type DLQEntry = {
 	workflowName: string
@@ -40,8 +40,8 @@ export async function addToDLQ(entry: DLQEntry): Promise<string> {
 		})
 		.returning({ id: deadLetterQueue.id })
 
-	// Also report to Sentry for visibility
-	Sentry.captureMessage(`Workflow added to DLQ: ${entry.workflowName}`, {
+	// Also report to platform monitoring for visibility
+	captureMessage(`Workflow added to DLQ: ${entry.workflowName}`, {
 		level: 'error',
 		tags: {
 			workflow: entry.workflowName,
@@ -172,8 +172,8 @@ export async function markDLQResolved(id: string): Promise<void> {
 export async function markDLQFailed(id: string): Promise<void> {
 	await db.update(deadLetterQueue).set({ status: 'failed' }).where(eq(deadLetterQueue.id, id))
 
-	// Report permanent failure to Sentry
-	Sentry.captureMessage(`DLQ item permanently failed: ${id}`, {
+	// Report permanent failure to platform monitoring
+	captureMessage(`DLQ item permanently failed: ${id}`, {
 		level: 'fatal',
 		tags: { dlq_entry_id: id },
 	})

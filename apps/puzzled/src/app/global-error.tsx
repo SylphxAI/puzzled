@@ -1,7 +1,7 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
+import { captureError } from '@/lib/monitoring'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -14,8 +14,8 @@ type Props = {
  */
 export default function GlobalError({ error, reset }: Props) {
 	useEffect(() => {
-		// Report error to Sentry with high priority
-		Sentry.captureException(error, {
+		// Report error to platform monitoring with high priority
+		captureError(error, {
 			level: 'fatal',
 			tags: { errorBoundary: 'global' },
 		})

@@ -34,7 +34,7 @@ export default function LoginPage() {
 				{/* SDK Sign In Form */}
 				<SignIn
 					mode="embedded"
-					redirectUrl="/dashboard"
+					afterSignInUrl="/dashboard"
 					providers={['google', 'github']}
 					signUpUrl="/signup"
 					forgotPasswordUrl="/forgot-password"

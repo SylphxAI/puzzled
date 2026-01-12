@@ -2,12 +2,12 @@
 // which doesn't exist in edge runtime
 export const runtime = 'nodejs'
 
-import * as Sentry from '@sentry/nextjs'
 import { serve } from '@upstash/workflow/nextjs'
 import { and, eq, isNull } from 'drizzle-orm'
 import { GAME_CONFIGS, getAllGames, isValidGameSlug } from '@/games/registry'
 import { formatGenerationSummary, generateGamePuzzle, shouldAlert } from '@/games/registry.server'
 import type { GenerationSummary, PuzzleDifficulty, PuzzleGenerationResult } from '@/games/types'
+import { captureMessage } from '@/lib/monitoring'
 
 const DIFFICULTY_LEVELS: PuzzleDifficulty[] = ['easy', 'medium', 'hard']
 import { db } from '@/lib/db'
@@ -60,13 +60,13 @@ async function sendAlert(summary: GenerationSummary): Promise<void> {
 }
 
 /**
- * Report generation issues to Sentry
+ * Report generation issues to platform monitoring
  */
-function reportToSentry(summary: GenerationSummary): void {
+function reportToMonitoring(summary: GenerationSummary): void {
 	// Report failures as errors
 	for (const result of summary.results) {
 		if (!result.success) {
-			Sentry.captureMessage(`Puzzle generation failed: ${result.gameSlug}`, {
+			captureMessage(`Puzzle generation failed: ${result.gameSlug}`, {
 				level: 'error',
 				tags: {
 					game: result.gameSlug,
@@ -264,11 +264,11 @@ export const { POST } = serve<GeneratePuzzlesPayload>(
 			console.log(formatGenerationSummary(summary))
 		})
 
-		// Step 6: Send alert and report to Sentry if needed
+		// Step 6: Send alert and report to monitoring if needed
 		if (shouldAlert(summary)) {
 			await context.run('send-alert', async () => {
 				await sendAlert(summary)
-				reportToSentry(summary)
+				reportToMonitoring(summary)
 			})
 		}
 
@@ -295,8 +295,8 @@ export const { POST } = serve<GeneratePuzzlesPayload>(
 				context.workflowRunId,
 			)
 
-			// Report to Sentry
-			Sentry.captureMessage(errorMessage, {
+			// Report to platform monitoring
+			captureMessage(errorMessage, {
 				level: 'fatal',
 				tags: {
 					workflow: 'generate-puzzles',

@@ -1,4 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs'
 import withSerwistInit from '@serwist/next'
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
@@ -183,7 +182,7 @@ const nextConfig: NextConfig = {
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: https: blob: https://www.googletagmanager.com https://www.google-analytics.com",
 							"font-src 'self' data:",
-							"connect-src 'self' https://*.posthog.com https://*.sentry.io https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
+							"connect-src 'self' https://*.posthog.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
 							"frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
 							"object-src 'none'",
 							"base-uri 'self'",
@@ -207,28 +206,5 @@ const nextConfig: NextConfig = {
 }
 
 // Compose all config wrappers
-const composedConfig = withSerwist(withNextIntl(nextConfig))
-
-// Sentry configuration options
-const sentryOptions = {
-	// Suppress source map upload logs
-	silent: true,
-
-	// Upload source maps to Sentry
-	org: process.env.SENTRY_ORG,
-	project: process.env.SENTRY_PROJECT,
-
-	// Automatically tree-shake Sentry logger statements
-	disableLogger: true,
-
-	// Hide source maps from browsers in production
-	hideSourceMaps: true,
-
-	// Tunnel Sentry requests to avoid ad blockers (optional)
-	// tunnelRoute: '/monitoring-tunnel',
-
-	// Disable Sentry during development builds
-	disable: process.env.NODE_ENV !== 'production',
-}
-
-export default withSentryConfig(composedConfig, sentryOptions)
+// Note: Error tracking via Sylphx Platform SDK (see src/lib/monitoring.ts)
+export default withSerwist(withNextIntl(nextConfig))

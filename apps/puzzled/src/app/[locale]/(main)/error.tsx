@@ -1,10 +1,10 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { Button } from '@sylphx/ui'
+import { captureError } from '@/lib/monitoring'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -15,8 +15,10 @@ export default function ErrorPage({ error, reset }: Props) {
 	const t = useTranslations('common')
 
 	useEffect(() => {
-		// Report error to Sentry
-		Sentry.captureException(error)
+		// Report error to platform monitoring
+		captureError(error, {
+			tags: { errorBoundary: 'main-layout' },
+		})
 	}, [error])
 
 	return (

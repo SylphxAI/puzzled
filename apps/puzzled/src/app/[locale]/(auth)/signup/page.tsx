@@ -34,7 +34,7 @@ export default function SignUpPage() {
 				{/* SDK Sign Up Form */}
 				<SignUp
 					mode="embedded"
-					redirectUrl="/dashboard"
+					afterSignUpUrl="/dashboard"
 					providers={['google', 'github']}
 					signInUrl="/login"
 					termsUrl="/terms"
