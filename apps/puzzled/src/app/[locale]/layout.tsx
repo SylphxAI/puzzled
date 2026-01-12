@@ -231,20 +231,21 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
-					<PostHogProvider>
-						<GTMProvider />
-						<WebVitalsReporter />
-						<PlatformProvider
-							appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
-							publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
-						>
+					<PlatformProvider
+						appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
+						publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
+					>
+						{/* PostHog now inside PlatformProvider to access SDK's useConsent */}
+						<PostHogProvider>
+							<GTMProvider />
+							<WebVitalsReporter />
 							<TRPCProvider>
 								<NextIntlClientProvider messages={messages}>
 									<ToastProvider>{children}</ToastProvider>
 								</NextIntlClientProvider>
 							</TRPCProvider>
-						</PlatformProvider>
-					</PostHogProvider>
+						</PostHogProvider>
+					</PlatformProvider>
 				</ThemeProvider>
 			</body>
 		</html>

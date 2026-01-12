@@ -1,4 +1,6 @@
 export { BottomNav } from './bottom-nav'
+export { ConsentBanner } from './consent-banner'
+/** @deprecated Use ConsentBanner instead - this uses the old localStorage-only consent */
 export { CookieConsent } from './cookie-consent'
 export { EmptyState, NoGamesPlayed } from './empty-state'
 export { ErrorBoundary, ErrorFallback, InlineError } from './error-boundary'

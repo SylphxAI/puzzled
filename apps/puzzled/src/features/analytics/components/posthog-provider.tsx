@@ -4,20 +4,19 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
 import { PostHogProvider as PHProvider, usePostHog } from 'posthog-js/react'
 import { Suspense, useCallback, useEffect, useState } from 'react'
-import { type ConsentStatus, hasAnalyticsConsent, onConsentChange } from '../lib/consent'
+import { useConsent } from '@sylphx/platform-sdk/react'
 
 // Flag to track if PostHog has been initialized
 let isPostHogInitialized = false
 
 /**
- * Initialize PostHog only when consent is granted
- * This ensures GDPR compliance by not tracking until user consents
+ * Initialize PostHog
+ * This is called only after consent is verified via SDK
  */
 function initializePostHog(): boolean {
 	if (isPostHogInitialized) return true
 	if (typeof window === 'undefined') return false
 	if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return false
-	if (!hasAnalyticsConsent()) return false
 
 	posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
 		api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
@@ -47,65 +46,54 @@ function PostHogPageView() {
 	const pathname = usePathname()
 	const searchParams = useSearchParams()
 	const ph = usePostHog()
+	const { hasConsent } = useConsent()
 
 	useEffect(() => {
-		if (!pathname || !ph || !hasAnalyticsConsent()) return
+		if (!pathname || !ph || !hasConsent('analytics')) return
 
 		let url = window.origin + pathname
 		if (searchParams.toString()) {
 			url = `${url}?${searchParams.toString()}`
 		}
 		ph.capture('$pageview', { $current_url: url })
-	}, [pathname, searchParams, ph])
+	}, [pathname, searchParams, ph, hasConsent])
 
 	return null
 }
 
 /**
- * Component that handles consent-based initialization
+ * Component that handles SDK consent-based initialization
+ * Uses Sylphx Platform SDK's useConsent hook for GDPR compliance
  */
 function ConsentAwarePostHog({ children }: { children: React.ReactNode }) {
-	const [hasConsent, setHasConsent] = useState(false)
+	const { hasConsent, isLoading } = useConsent()
 	const [isReady, setIsReady] = useState(false)
 
 	// Check consent and initialize PostHog
 	const checkAndInitialize = useCallback(() => {
-		const consent = hasAnalyticsConsent()
-		setHasConsent(consent)
+		const analyticsConsent = hasConsent('analytics')
 
-		if (consent) {
+		if (analyticsConsent) {
 			const initialized = initializePostHog()
 			setIsReady(initialized)
 		} else {
+			// If consent is revoked, opt out
+			if (isPostHogInitialized) {
+				posthog.opt_out_capturing()
+			}
 			setIsReady(false)
 		}
-	}, [])
+	}, [hasConsent])
 
-	// Initial check
+	// React to consent changes
 	useEffect(() => {
-		checkAndInitialize()
-	}, [checkAndInitialize])
+		if (!isLoading) {
+			checkAndInitialize()
+		}
+	}, [isLoading, checkAndInitialize])
 
-	// Listen for consent changes
-	useEffect(() => {
-		const unsubscribe = onConsentChange((status: ConsentStatus) => {
-			if (status === 'accepted') {
-				checkAndInitialize()
-			} else if (status === 'declined') {
-				// If consent is revoked, opt out
-				if (isPostHogInitialized) {
-					posthog.opt_out_capturing()
-				}
-				setHasConsent(false)
-				setIsReady(false)
-			}
-		})
-
-		return unsubscribe
-	}, [checkAndInitialize])
-
-	// If no consent or not ready, render children without PostHog
-	if (!hasConsent || !isReady) {
+	// If loading or no consent, render children without PostHog
+	if (isLoading || !hasConsent('analytics') || !isReady) {
 		return <>{children}</>
 	}
 
@@ -123,7 +111,7 @@ function ConsentAwarePostHog({ children }: { children: React.ReactNode }) {
  * PostHog provider wrapper for Next.js App Router
  *
  * This provider defers PostHog initialization until analytics consent is granted.
- * This ensures GDPR compliance by not tracking users before they consent.
+ * Uses Sylphx Platform SDK's consent management for GDPR compliance.
  */
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
 	if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {

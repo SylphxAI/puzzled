@@ -1,8 +1,17 @@
 /**
- * Consent Management System
+ * Consent Management System (Legacy)
  *
- * Provides GDPR-compliant consent tracking that gates analytics initialization.
- * This module is the single source of truth for consent state.
+ * @deprecated This module uses localStorage-only consent storage.
+ * For new code, use the SDK's useConsent hook from '@sylphx/platform-sdk/react'.
+ *
+ * The SDK's consent system uses server-side storage as Single Source of Truth (SSOT).
+ * This module is kept for backward compatibility with non-React code.
+ *
+ * Migration path:
+ * - React components: Use `useConsent` from '@sylphx/platform-sdk/react'
+ * - Non-React code: Continue using this module (localStorage-based)
+ *
+ * The ConsentBanner component syncs SDK consent to localStorage for compatibility.
  */
 
 const CONSENT_KEY = 'puzzled-cookie-consent'
