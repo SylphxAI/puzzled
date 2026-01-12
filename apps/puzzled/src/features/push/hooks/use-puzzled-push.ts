@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { usePush, useAnalytics } from '@sylphx/platform-sdk/react'
+import { trpc } from '@/trpc'
 
 /**
  * Puzzled-specific notification types
@@ -33,19 +34,11 @@ export interface PuzzledNotification {
  * Notification preferences for Puzzled
  */
 export interface PuzzledNotificationPreferences {
-	dailyPuzzle: boolean
-	streakReminders: boolean
-	achievements: boolean
-	friendChallenges: boolean
-	leaderboard: boolean
-}
-
-const DEFAULT_PREFERENCES: PuzzledNotificationPreferences = {
-	dailyPuzzle: true,
-	streakReminders: true,
-	achievements: true,
-	friendChallenges: true,
-	leaderboard: false,
+	pushEnabled: boolean
+	pushDailyReminder: boolean
+	pushStreakAlert: boolean
+	pushNewGames: boolean
+	dailyReminderTime: string
 }
 
 /**
@@ -83,6 +76,20 @@ export function usePuzzledPush() {
 		preferences: sdkPreferences,
 	} = usePush()
 
+	// Fetch preferences from server
+	const { data: serverPreferences, refetch: refetchPreferences } =
+		trpc.notifications.getPreferences.useQuery(undefined, {
+			// Don't refetch too aggressively
+			staleTime: 5 * 60 * 1000, // 5 minutes
+		})
+
+	// Mutation to update preferences
+	const updateMutation = trpc.notifications.updatePushPreferences.useMutation({
+		onSuccess: () => {
+			refetchPreferences()
+		},
+	})
+
 	/**
 	 * Request push notification permission
 	 */
@@ -110,28 +117,28 @@ export function usePuzzledPush() {
 	}, [unsubscribe, track])
 
 	/**
-	 * Get notification preferences
-	 * In a real app, these would be stored server-side
+	 * Get notification preferences from server
 	 */
-	const preferences = useMemo<PuzzledNotificationPreferences>(() => {
-		// For now, return defaults
-		// TODO: Fetch from server when preferences API is available
-		return DEFAULT_PREFERENCES
-	}, [])
+	const preferences: PuzzledNotificationPreferences = {
+		pushEnabled: serverPreferences?.pushEnabled ?? true,
+		pushDailyReminder: serverPreferences?.pushDailyReminder ?? true,
+		pushStreakAlert: serverPreferences?.pushStreakAlert ?? true,
+		pushNewGames: serverPreferences?.pushNewGames ?? true,
+		dailyReminderTime: serverPreferences?.dailyReminderTime ?? '09:00',
+	}
 
 	/**
-	 * Update notification preferences
-	 * In a real app, this would call the server
+	 * Update notification preferences on server
 	 */
 	const updatePreferences = useCallback(
 		async (updates: Partial<PuzzledNotificationPreferences>) => {
-			// TODO: Call server to update preferences
+			await updateMutation.mutateAsync(updates)
 			track('push_preferences_updated', {
 				...updates,
 			})
 			return true
 		},
-		[track],
+		[updateMutation, track],
 	)
 
 	return {
@@ -145,10 +152,12 @@ export function usePuzzledPush() {
 		disablePush,
 		/** Error if any */
 		error,
-		/** Notification preferences */
+		/** Notification preferences (from server) */
 		preferences,
 		/** Update notification preferences */
 		updatePreferences,
+		/** Whether preferences are loading */
+		isLoadingPreferences: !serverPreferences,
 		/** SDK push preferences (for advanced usage) */
 		sdkPreferences,
 	}

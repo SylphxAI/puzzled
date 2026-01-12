@@ -9,6 +9,7 @@ import { router } from '../trpc'
 import { adminRouter } from './admin'
 import { gamesRouter } from './games'
 import { gamificationRouter } from './gamification'
+import { notificationsRouter } from './notifications'
 import { statsRouter } from './stats'
 import { userRouter } from './user'
 
@@ -18,14 +19,18 @@ import { userRouter } from './user'
  * PLATFORM SDK HANDLES:
  * - Auth, billing, security, 2FA, email changes
  * - Referrals (via useReferral hook)
- * - Push notifications (via usePush hook)
+ * - Push subscriptions (via usePush hook)
  * - Analytics (via useAnalytics hook)
+ *
+ * APP HANDLES:
+ * - Notification preferences (which types of notifications to receive)
  */
 export const appRouter = router({
 	admin: adminRouter,
 	games: gamesRouter,
 	stats: statsRouter,
 	gamification: gamificationRouter,
+	notifications: notificationsRouter,
 	user: userRouter,
 })
 

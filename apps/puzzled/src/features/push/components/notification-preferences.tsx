@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
 	usePuzzledPush,
 	type PuzzledNotificationPreferences,
@@ -38,17 +38,23 @@ export function NotificationPreferences({
 		preferences,
 		updatePreferences,
 		error,
+		isLoadingPreferences,
 	} = usePuzzledPush()
 
 	const [localPrefs, setLocalPrefs] =
 		useState<PuzzledNotificationPreferences>(preferences)
 	const [isSaving, setIsSaving] = useState(false)
 
+	// Sync local state when server preferences load
+	useEffect(() => {
+		setLocalPrefs(preferences)
+	}, [preferences])
+
 	const handleToggle = useCallback(
 		(key: keyof PuzzledNotificationPreferences) => {
 			setLocalPrefs((prev) => ({
 				...prev,
-				[key]: !prev[key],
+				[key]: typeof prev[key] === 'boolean' ? !prev[key] : prev[key],
 			}))
 		},
 		[],
@@ -174,51 +180,45 @@ export function NotificationPreferences({
 				<div className="mt-4 space-y-1">
 					<h4 className="text-sm font-medium mb-2">Notification Types</h4>
 
-					<PreferenceItem
-						label="Daily Puzzle"
-						description="Get reminded when the new daily puzzle is available"
-						checked={localPrefs.dailyPuzzle}
-						onChange={() => handleToggle('dailyPuzzle')}
-					/>
+					{isLoadingPreferences ? (
+						<div className="py-8 text-center text-muted-foreground text-sm">
+							Loading preferences...
+						</div>
+					) : (
+						<>
+							<PreferenceItem
+								label="Daily Puzzle Reminder"
+								description="Get reminded when the new daily puzzle is available"
+								checked={localPrefs.pushDailyReminder}
+								onChange={() => handleToggle('pushDailyReminder')}
+							/>
 
-					<PreferenceItem
-						label="Streak Reminders"
-						description="Get a reminder before your streak is about to expire"
-						checked={localPrefs.streakReminders}
-						onChange={() => handleToggle('streakReminders')}
-					/>
+							<PreferenceItem
+								label="Streak Alerts"
+								description="Get a reminder before your streak is about to expire"
+								checked={localPrefs.pushStreakAlert}
+								onChange={() => handleToggle('pushStreakAlert')}
+							/>
 
-					<PreferenceItem
-						label="Achievements"
-						description="Get notified when you unlock new achievements"
-						checked={localPrefs.achievements}
-						onChange={() => handleToggle('achievements')}
-					/>
+							<PreferenceItem
+								label="New Games"
+								description="Get notified when new games are added"
+								checked={localPrefs.pushNewGames}
+								onChange={() => handleToggle('pushNewGames')}
+							/>
 
-					<PreferenceItem
-						label="Friend Challenges"
-						description="Get notified when a friend challenges you to a game"
-						checked={localPrefs.friendChallenges}
-						onChange={() => handleToggle('friendChallenges')}
-					/>
-
-					<PreferenceItem
-						label="Leaderboard Updates"
-						description="Get notified about leaderboard changes"
-						checked={localPrefs.leaderboard}
-						onChange={() => handleToggle('leaderboard')}
-					/>
-
-					<div className="pt-4">
-						<button
-							type="button"
-							onClick={handleSave}
-							disabled={isSaving}
-							className="w-full px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 disabled:opacity-50"
-						>
-							{isSaving ? 'Saving...' : 'Save Preferences'}
-						</button>
-					</div>
+							<div className="pt-4">
+								<button
+									type="button"
+									onClick={handleSave}
+									disabled={isSaving}
+									className="w-full px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 disabled:opacity-50"
+								>
+									{isSaving ? 'Saving...' : 'Save Preferences'}
+								</button>
+							</div>
+						</>
+					)}
 				</div>
 			)}
 

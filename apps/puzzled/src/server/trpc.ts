@@ -134,12 +134,34 @@ export const protectedRateLimitedProcedure = t.procedure
 	.use(rateLimitMiddleware)
 	.use(authMiddleware)
 
+// Role hierarchy for permission inheritance (matches Platform SDK)
+const ROLE_HIERARCHY: Record<string, number> = {
+	super_admin: 100,
+	admin: 80,
+	billing: 60,
+	analytics: 50,
+	developer: 40,
+	viewer: 20,
+	member: 10,
+}
+
+/**
+ * Check if user has the required role (with hierarchy support)
+ */
+function hasRole(userRole: string | undefined, requiredRole: string): boolean {
+	if (!userRole) return false
+	if (userRole === requiredRole) return true
+	// Higher roles inherit lower role access
+	const userLevel = ROLE_HIERARCHY[userRole] ?? 0
+	const requiredLevel = ROLE_HIERARCHY[requiredRole] ?? 0
+	return userLevel >= requiredLevel
+}
+
 /**
  * Admin procedure - requires admin role via Platform
  *
- * TODO: Admin roles are managed by Sylphx Platform.
- * For now, this checks authentication only.
- * Full RBAC will use Platform's permission system.
+ * Checks user.role against the role hierarchy.
+ * admin, super_admin have access.
  */
 const adminMiddleware = middleware(async ({ ctx, next }) => {
 	if (!ctx.user || !ctx.userId) {
@@ -149,9 +171,12 @@ const adminMiddleware = middleware(async ({ ctx, next }) => {
 		})
 	}
 
-	// TODO: Check admin role via Platform SDK
-	// const { hasPermission } = await checkPermission(ctx.accessToken, 'admin')
-	// For now, we'll allow authenticated users (Platform handles permissions)
+	if (!hasRole(ctx.user.role, 'admin')) {
+		throw new TRPCError({
+			code: 'FORBIDDEN',
+			message: 'You need admin privileges to perform this action',
+		})
+	}
 
 	return next({
 		ctx: {
@@ -164,6 +189,8 @@ const adminMiddleware = middleware(async ({ ctx, next }) => {
 
 /**
  * Super admin middleware - requires super_admin role via Platform
+ *
+ * Only super_admin users have access.
  */
 const superAdminMiddleware = middleware(async ({ ctx, next }) => {
 	if (!ctx.user || !ctx.userId) {
@@ -173,8 +200,12 @@ const superAdminMiddleware = middleware(async ({ ctx, next }) => {
 		})
 	}
 
-	// TODO: Check super_admin role via Platform SDK
-	// For now, we'll allow authenticated users (Platform handles permissions)
+	if (!hasRole(ctx.user.role, 'super_admin')) {
+		throw new TRPCError({
+			code: 'FORBIDDEN',
+			message: 'You need super admin privileges to perform this action',
+		})
+	}
 
 	return next({
 		ctx: {

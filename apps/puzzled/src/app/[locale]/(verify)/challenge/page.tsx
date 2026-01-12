@@ -41,12 +41,9 @@ function ChallengePageContent() {
 	const theme = searchParams.get('theme')
 	const isAdminTheme = theme === 'admin'
 
-	// TODO: Authentication challenges are now handled by the platform
-	// This page should redirect to the platform's verification flow
-	// For now, we just redirect to the target URL since the platform handles MFA
-
+	// Authentication challenges are handled by the Sylphx Platform.
+	// This page redirects to the target URL since the platform handles MFA verification.
 	useEffect(() => {
-		// Redirect to the target URL since platform handles verification
 		router.replace(redirectUrl)
 	}, [router, redirectUrl])
 
