@@ -40,7 +40,7 @@
 		"@upstash/ratelimit": "^2.0.8",
 		"@upstash/redis": "^1.36.1",
 		"@upstash/workflow": "^0.2.23",
-		"ai": "^6.0.29",
+		"ai": "^6.0.30",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
 		"drizzle-orm": "^0.45.1",
