@@ -22,7 +22,7 @@ function getClient(): ReturnType<typeof createServerClient> | null {
 	if (client) return client
 
 	const appId = process.env.SYLPHX_APP_ID || process.env.NEXT_PUBLIC_SYLPHX_APP_ID
-	const appSecret = process.env.SYLPHX_APP_SECRET
+	const appSecret = process.env.SYLPHX_SECRET_KEY
 
 	if (!appId || !appSecret) {
 		// SDK not configured - silently skip in development
