@@ -1,7 +1,13 @@
+// ============================================
 // Components
+// ============================================
+
 export { GTMProvider, PostHogProvider, WebVitalsReporter } from './components'
 
+// ============================================
 // Consent Management
+// ============================================
+
 export {
 	type ConsentCategory,
 	type ConsentPreferences,
@@ -15,14 +21,14 @@ export {
 	setConsentStatus,
 } from './lib/consent'
 
-// Events
-export {
-	identifyUser,
-	resetUser,
-	trackEvent,
-} from './lib/events'
+// ============================================
+// SDK Analytics (Recommended)
+// ============================================
 
-// SDK-Integrated Analytics (uses Sylphx Platform)
+/**
+ * SDK-integrated analytics for consistent event tracking.
+ * Use these for all new analytics code.
+ */
 export {
 	useGameAnalytics,
 	type GameStartEvent,
@@ -31,8 +37,36 @@ export {
 	type StreakEvent,
 } from './lib/sdk-analytics'
 
-// GTM
-export { initGTM } from './lib/gtm'
+// ============================================
+// A/B Testing
+// ============================================
 
-// Web Vitals
+export {
+	useExperiment,
+	useExperimentTracking,
+	EXPERIMENTS,
+	type ExperimentKey,
+} from './lib/ab-testing'
+
+// ============================================
+// GTM & Web Vitals
+// ============================================
+
+export { initGTM } from './lib/gtm'
 export { initWebVitals } from './lib/web-vitals'
+
+// ============================================
+// Deprecated (Direct PostHog)
+// ============================================
+
+/**
+ * @deprecated These use direct PostHog calls.
+ * Use SDK analytics instead:
+ * - useGameAnalytics() for game events
+ * - useAnalytics() from '@sylphx/platform-sdk/react' for custom events
+ */
+export {
+	identifyUser,
+	resetUser,
+	trackEvent,
+} from './lib/events'
