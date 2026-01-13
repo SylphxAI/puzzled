@@ -1,14 +1,20 @@
 /**
  * Feature Flags API Route
  *
- * Returns feature flags for the Puzzled app.
+ * Proxies feature flag requests to the Sylphx Platform SDK.
+ * All flag configuration is managed centrally in the Platform dashboard.
  *
- * In production, this would call the Sylphx Platform to evaluate flags
- * based on user context. For now, it returns app-defined defaults
- * that can be overridden via environment variables.
+ * The Platform handles:
+ * - Flag creation and configuration
+ * - Rollout percentages
+ * - User targeting
+ * - Premium/admin gating
+ *
+ * This route simply forwards requests to the Platform's featureFlags.getAll endpoint.
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@sylphx/platform-sdk/server'
 
 interface FeatureFlag {
 	key: string
@@ -25,90 +31,77 @@ interface FlagRequestBody {
 	}
 }
 
+// Environment configuration
+const APP_ID = process.env.NEXT_PUBLIC_SYLPHX_APP_ID
+const APP_SECRET = process.env.SYLPHX_SECRET_KEY
+
 /**
- * Get feature flags based on user context
- *
- * Flags can be controlled via environment variables:
- * - FEATURE_PREMIUM_HINTS=true
- * - FEATURE_NEW_GAME_UI=true
- * etc.
+ * Get feature flags from the Sylphx Platform
  */
-function getFeatureFlags(context?: FlagRequestBody['context']): FeatureFlag[] {
-	const isPremium = context?.attributes?.isPremium === true
+async function getPlatformFlags(userId?: string): Promise<FeatureFlag[]> {
+	// If Platform not configured, return empty (graceful degradation)
+	if (!APP_ID || !APP_SECRET) {
+		console.warn('[api/flags] Platform not configured, using defaults')
+		return getDefaultFlags()
+	}
 
-	// Define flags with defaults and environment overrides
-	const flags: FeatureFlag[] = [
-		// Premium features (enabled for premium users)
-		{
-			key: 'premium-hints',
-			value: isPremium || process.env.FEATURE_PREMIUM_HINTS === 'true',
-			enabled: isPremium || process.env.FEATURE_PREMIUM_HINTS === 'true',
-		},
-		{
-			key: 'premium-statistics',
-			value: isPremium || process.env.FEATURE_PREMIUM_STATISTICS === 'true',
-			enabled: isPremium || process.env.FEATURE_PREMIUM_STATISTICS === 'true',
-		},
-		{
-			key: 'premium-themes',
-			value: isPremium || process.env.FEATURE_PREMIUM_THEMES === 'true',
-			enabled: isPremium || process.env.FEATURE_PREMIUM_THEMES === 'true',
-		},
-		{
-			key: 'archive-access',
-			value: isPremium || process.env.FEATURE_ARCHIVE_ACCESS === 'true',
-			enabled: isPremium || process.env.FEATURE_ARCHIVE_ACCESS === 'true',
-		},
-		// Experiments (controlled via env vars for rollout)
-		{
-			key: 'new-game-ui',
-			value: process.env.FEATURE_NEW_GAME_UI === 'true',
-			enabled: process.env.FEATURE_NEW_GAME_UI === 'true',
-		},
-		{
-			key: 'social-features',
-			value: process.env.FEATURE_SOCIAL === 'true',
-			enabled: process.env.FEATURE_SOCIAL === 'true',
-		},
-		{
-			key: 'leaderboard-v2',
-			value: process.env.FEATURE_LEADERBOARD_V2 === 'true',
-			enabled: process.env.FEATURE_LEADERBOARD_V2 === 'true',
-		},
-		// Game rollouts
-		{
-			key: 'crossword-game',
-			value: process.env.FEATURE_CROSSWORD !== 'false', // Enabled by default
-			enabled: process.env.FEATURE_CROSSWORD !== 'false',
-		},
-		{
-			key: 'multiplayer-mode',
-			value: process.env.FEATURE_MULTIPLAYER === 'true',
-			enabled: process.env.FEATURE_MULTIPLAYER === 'true',
-		},
-		{
-			key: 'ai-generated-puzzles',
-			value: process.env.FEATURE_AI_PUZZLES === 'true',
-			enabled: process.env.FEATURE_AI_PUZZLES === 'true',
-		},
+	try {
+		// Create SDK server client
+		const client = createServerClient({
+			appId: APP_ID,
+			appSecret: APP_SECRET,
+		})
+
+		// Call the Platform's featureFlags.getAll endpoint
+		const flagMap = await client.featureFlags.getAll(userId)
+
+		// Transform to array format expected by SDK provider
+		return Object.entries(flagMap).map(([key, enabled]) => ({
+			key,
+			value: enabled,
+			enabled,
+		}))
+	} catch (error) {
+		console.error('[api/flags] Error fetching from Platform:', error)
+		// Fallback to defaults on error
+		return getDefaultFlags()
+	}
+}
+
+/**
+ * Default flags for graceful degradation when Platform is unavailable
+ */
+function getDefaultFlags(): FeatureFlag[] {
+	return [
+		// Core features - always enabled as defaults
+		{ key: 'crossword-game', value: true, enabled: true },
+		// Experimental features - disabled by default
+		{ key: 'premium-hints', value: false, enabled: false },
+		{ key: 'premium-statistics', value: false, enabled: false },
+		{ key: 'premium-themes', value: false, enabled: false },
+		{ key: 'archive-access', value: false, enabled: false },
+		{ key: 'new-game-ui', value: false, enabled: false },
+		{ key: 'social-features', value: false, enabled: false },
+		{ key: 'leaderboard-v2', value: false, enabled: false },
+		{ key: 'multiplayer-mode', value: false, enabled: false },
+		{ key: 'ai-generated-puzzles', value: false, enabled: false },
 	]
-
-	return flags
 }
 
 export async function POST(request: NextRequest) {
 	try {
 		const body: FlagRequestBody = await request.json()
-		const flags = getFeatureFlags(body.context)
+		const flags = await getPlatformFlags(body.context?.userId)
 
 		return NextResponse.json({ flags })
 	} catch (error) {
-		console.error('[api/flags] Error getting flags:', error)
-		return NextResponse.json({ flags: getFeatureFlags() })
+		console.error('[api/flags] Error:', error)
+		// Always return valid response for graceful degradation
+		return NextResponse.json({ flags: getDefaultFlags() })
 	}
 }
 
 export async function GET() {
-	const flags = getFeatureFlags()
+	const flags = await getPlatformFlags()
 	return NextResponse.json({ flags })
 }
