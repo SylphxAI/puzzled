@@ -47,15 +47,15 @@ export function Podium({ entries, metricLabel, locale = 'en', className }: Podiu
 	const heights = ['h-20', 'h-28', 'h-16'] // 2nd, 1st, 3rd
 	const positions = [2, 1, 3]
 	const gradients = [
-		'from-gray-300/20 to-gray-400/10 dark:from-gray-600/30 dark:to-gray-700/20', // Silver
-		'from-amber-300/30 to-yellow-400/20 dark:from-amber-500/30 dark:to-yellow-600/20', // Gold
-		'from-orange-300/20 to-amber-400/10 dark:from-orange-600/30 dark:to-amber-700/20', // Bronze
+		'from-rank-silver/20 to-rank-silver/10', // Silver
+		'from-rank-gold/25 to-rank-gold/15', // Gold
+		'from-rank-bronze/20 to-rank-bronze/10', // Bronze
 	]
 	const iconColors = ['text-rank-silver', 'text-rank-gold', 'text-rank-bronze']
 	const borderColors = [
-		'border-gray-300/50 dark:border-gray-500/50',
-		'border-amber-400/50 dark:border-amber-500/50',
-		'border-orange-300/50 dark:border-orange-600/50',
+		'border-rank-silver/50',
+		'border-rank-gold/50',
+		'border-rank-bronze/50',
 	]
 
 	return (
@@ -83,7 +83,7 @@ export function Podium({ entries, metricLabel, locale = 'en', className }: Podiu
 						>
 							{/* Crown for 1st place */}
 							{positions[i] === 1 && !isEmpty && (
-								<Crown className="mb-1 h-5 w-5 text-amber-500 animate-in fade-in zoom-in duration-500 delay-300" />
+								<Crown className="mb-1 h-5 w-5 text-rank-gold animate-in fade-in zoom-in duration-500 delay-300" />
 							)}
 
 							{/* Avatar */}
@@ -105,9 +105,9 @@ export function Podium({ entries, metricLabel, locale = 'en', className }: Podiu
 								<div
 									className={cn(
 										'absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background text-[10px] font-bold',
-										positions[i] === 1 && 'bg-amber-400 text-amber-950',
-										positions[i] === 2 && 'bg-gray-300 text-gray-800 dark:bg-gray-400',
-										positions[i] === 3 && 'bg-orange-400 text-orange-950',
+										positions[i] === 1 && 'bg-rank-gold text-foreground',
+										positions[i] === 2 && 'bg-rank-silver text-foreground',
+										positions[i] === 3 && 'bg-rank-bronze text-foreground',
 									)}
 								>
 									{positions[i]}
