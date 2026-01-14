@@ -19,18 +19,18 @@ export function buttonVariants({
 	className?: string
 } = {}) {
 	return cn(
-		// Base styles - Playful roundness with brand-tinted shadows
-		'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50',
+		// Base styles - Professional with subtle feedback
+		'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50',
 		// Variants
 		variant === 'default' &&
-			'bg-gradient-to-b from-primary to-primary/90 text-white shadow-[var(--shadow-button)] hover:shadow-[0_4px_12px_-2px_rgb(99_102_241/0.35)] hover:brightness-110',
+			'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:-translate-y-px',
 		variant === 'secondary' &&
-			'bg-muted text-foreground shadow-[var(--shadow-button)] hover:bg-muted/80 hover:shadow-[var(--shadow-tile-hover)]',
+			'bg-muted text-foreground hover:bg-muted/80',
 		variant === 'outline' &&
-			'border-2 bg-background shadow-[var(--shadow-tile)] hover:bg-muted hover:border-primary/30 hover:shadow-[var(--shadow-tile-hover)]',
+			'border border-border bg-background hover:bg-muted hover:border-muted-foreground/30',
 		variant === 'ghost' && 'hover:bg-muted',
 		variant === 'destructive' &&
-			'bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-md shadow-destructive/25 hover:shadow-lg hover:brightness-110',
+			'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 		// Sizes - all meet 44px+ minimum touch target
 		size === 'default' && 'h-11 px-5 py-2',
 		size === 'sm' && 'h-10 px-4 text-sm',
