@@ -108,6 +108,9 @@ export const OAuthIcons = {
 
 export type OAuthProvider = keyof typeof OAuthIcons
 
+// Provider array for iteration (derived from OAuthIcons)
+export const OAUTH_PROVIDERS = Object.keys(OAuthIcons) as OAuthProvider[]
+
 // Provider metadata
 export const OAUTH_PROVIDER_META: Record<OAuthProvider, { name: string; color: string }> = {
 	google: { name: 'Google', color: '#4285F4' },
