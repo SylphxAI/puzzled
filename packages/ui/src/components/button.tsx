@@ -53,11 +53,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	 */
 	variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'
 	/**
-	 * Size variant. All sizes meet 44px+ minimum touch target.
-	 * - `default`: Standard size (h-11)
-	 * - `sm`: Small size (h-10)
-	 * - `lg`: Large size (h-12)
-	 * - `icon`: Square button for icons (h-11 w-11)
+	 * Size variant. All sizes meet 44px minimum touch target (WCAG 2.1 AA).
+	 * - `default`: Standard size (h-11 = 44px)
+	 * - `sm`: Compact text, standard height (h-11 = 44px)
+	 * - `lg`: Large size (h-12 = 48px)
+	 * - `icon`: Square button for icons (h-11 w-11 = 44x44px)
 	 */
 	size?: 'default' | 'sm' | 'lg' | 'icon'
 	/**
@@ -104,9 +104,9 @@ export function buttonVariants({
 		variant === 'ghost' && 'hover:bg-muted',
 		variant === 'destructive' &&
 			'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-		// Sizes - all meet 44px+ minimum touch target
+		// Sizes - all meet 44px (h-11) minimum touch target (WCAG 2.1 AA)
 		size === 'default' && 'h-11 px-5 py-2',
-		size === 'sm' && 'h-10 px-4 text-sm',
+		size === 'sm' && 'h-11 px-4 text-sm',
 		size === 'lg' && 'h-12 px-6 text-lg',
 		size === 'icon' && 'h-11 w-11',
 		className,
