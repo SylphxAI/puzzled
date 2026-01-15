@@ -79,6 +79,7 @@ const ToastClose = forwardRef<
 			className,
 		)}
 		toast-close=""
+		aria-label="Close"
 		{...props}
 	>
 		<X className="h-4 w-4" />
