@@ -23,6 +23,7 @@
  * @module @sylphx/ui/breadcrumb
  */
 
+import { Slot } from '@radix-ui/react-slot'
 import { ChevronRight } from 'lucide-react'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
@@ -80,17 +81,21 @@ BreadcrumbItem.displayName = 'BreadcrumbItem'
 /**
  * Breadcrumb link for navigation items.
  * Use for intermediate items that link to parent pages.
+ * Supports asChild for composition with Next.js Link or other components.
  */
 const BreadcrumbLink = forwardRef<
 	HTMLAnchorElement,
 	React.ComponentPropsWithoutRef<'a'> & { asChild?: boolean }
->(({ className, ...props }, ref) => (
-	<a
-		ref={ref}
-		className={cn('transition-colors hover:text-foreground', className)}
-		{...props}
-	/>
-))
+>(({ className, asChild, ...props }, ref) => {
+	const Comp = asChild ? Slot : 'a'
+	return (
+		<Comp
+			ref={ref}
+			className={cn('transition-colors hover:text-foreground', className)}
+			{...props}
+		/>
+	)
+})
 BreadcrumbLink.displayName = 'BreadcrumbLink'
 
 /**
