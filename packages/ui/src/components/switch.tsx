@@ -1,14 +1,72 @@
+/**
+ * @sylphx/ui - Switch Component
+ *
+ * Accessible toggle switch built on Radix UI primitives.
+ * Supports optional label and description.
+ *
+ * @example
+ * ```tsx
+ * import { Switch } from '@sylphx/ui'
+ *
+ * // Basic switch
+ * <Switch />
+ *
+ * // Controlled switch
+ * const [enabled, setEnabled] = useState(false)
+ * <Switch checked={enabled} onCheckedChange={setEnabled} />
+ *
+ * // With label
+ * <Switch label="Dark mode" />
+ *
+ * // With label and description
+ * <Switch
+ *   label="Email notifications"
+ *   description="Receive emails about account activity"
+ * />
+ * ```
+ *
+ * @module @sylphx/ui/switch
+ */
+
 'use client'
 
 import * as SwitchPrimitive from '@radix-ui/react-switch'
 import { forwardRef, useId } from 'react'
 import { cn } from '../utils'
 
+/**
+ * Props for the Switch component.
+ * Extends Radix UI Switch props with optional label and description.
+ */
 type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> & {
+	/** Label text displayed next to the switch */
 	label?: string
+	/** Description text displayed below the label */
 	description?: string
 }
 
+/**
+ * Toggle switch component for binary on/off settings.
+ *
+ * Features:
+ * - Built on Radix UI for accessibility
+ * - Keyboard navigable (Space/Enter to toggle)
+ * - Optional label and description
+ * - Auto-generated IDs for label association
+ * - Focus ring for keyboard navigation
+ * - Disabled state styling
+ *
+ * @example
+ * ```tsx
+ * // Settings toggle
+ * <Switch
+ *   label="Push notifications"
+ *   description="Get notified when someone mentions you"
+ *   checked={notifications}
+ *   onCheckedChange={setNotifications}
+ * />
+ * ```
+ */
 const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchProps>(
 	({ className, label, description, id: providedId, ...props }, ref) => {
 		const generatedId = useId()
