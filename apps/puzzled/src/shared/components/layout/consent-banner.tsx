@@ -3,19 +3,20 @@
 /**
  * Consent Banner Wrapper
  *
- * Uses SDK's CookieBanner with localStorage sync for backward compatibility.
- * This bridges SDK's server-side consent with legacy localStorage-based consent checks.
+ * Uses SDK's CookieBanner with localStorage sync.
+ * This bridges SDK's server-side consent with client-side scripts (GTM, Web Vitals)
+ * that need synchronous consent checks before SDK hydration.
  */
 
 import { CookieBanner, useConsent } from '@sylphx/platform-sdk/react'
 import { useEffect } from 'react'
 
-// LocalStorage keys (must match legacy consent.ts)
+// LocalStorage keys (must match features/analytics/lib/consent.ts)
 const CONSENT_KEY = 'puzzled-cookie-consent'
 const CONSENT_TIMESTAMP_KEY = 'puzzled-cookie-consent-timestamp'
 
 /**
- * Sync SDK consent state to localStorage for legacy code compatibility
+ * Sync SDK consent state to localStorage for client-side scripts
  */
 function ConsentSync() {
 	const { hasConsent, hasConsented, isLoading } = useConsent()
@@ -29,7 +30,7 @@ function ConsentSync() {
 			localStorage.setItem(CONSENT_KEY, analyticsConsent ? 'accepted' : 'declined')
 			localStorage.setItem(CONSENT_TIMESTAMP_KEY, new Date().toISOString())
 
-			// Dispatch event for legacy code listening
+			// Dispatch event for client-side scripts listening
 			window.dispatchEvent(
 				new CustomEvent('consent-change', {
 					detail: {
@@ -48,7 +49,7 @@ function ConsentSync() {
  * Consent Banner with localStorage sync
  *
  * Uses SDK's CookieBanner for UI and consent management,
- * but also syncs consent state to localStorage for legacy code.
+ * and syncs consent state to localStorage for client-side scripts.
  */
 export function ConsentBanner() {
 	const handleSave = () => {

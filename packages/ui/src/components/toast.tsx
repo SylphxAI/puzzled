@@ -231,7 +231,7 @@ export function ToastProviderWithContext({ children }: { children: React.ReactNo
 	)
 }
 
-// Re-export as ToastProvider for backward compatibility
+// Primary export - use ToastProvider in your app
 export { ToastProviderWithContext as ToastProvider }
 
 export { Toast, ToastAction, ToastClose, ToastDescription, ToastTitle, ToastViewport }

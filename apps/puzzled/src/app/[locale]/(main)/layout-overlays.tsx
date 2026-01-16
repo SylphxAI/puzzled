@@ -9,7 +9,7 @@ export function LayoutOverlays() {
 		<AchievementToastProvider>
 			<AchievementChecker />
 			<PWAInstallPrompt />
-			{/* SDK CookieBanner with localStorage sync for legacy code */}
+			{/* SDK CookieBanner with localStorage sync for client-side scripts */}
 			<ConsentBanner />
 		</AchievementToastProvider>
 	)

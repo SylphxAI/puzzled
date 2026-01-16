@@ -34,7 +34,7 @@ export { PatternMatchIcon } from '@/games/pattern-match/icon'
 export { BlockSlideIcon } from '@/games/block-slide/icon'
 export { ArithmoIcon } from '@/games/arithmo/icon'
 
-// Legacy aliases for backwards compatibility
+// Familiar name aliases (our games are inspired by these popular puzzles)
 export { WordGuessIcon as WordleIcon } from '@/games/word-guess/icon'
 export { WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
 export { WordHiveIcon as SpellingBeeIcon } from '@/games/word-hive/icon'
