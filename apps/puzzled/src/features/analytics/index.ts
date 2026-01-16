@@ -55,18 +55,3 @@ export {
 export { initGTM } from './lib/gtm'
 export { initWebVitals } from './lib/web-vitals'
 
-// ============================================
-// Deprecated (Direct PostHog)
-// ============================================
-
-/**
- * @deprecated These use direct PostHog calls.
- * Use SDK analytics instead:
- * - useGameAnalytics() for game events
- * - useAnalytics() from '@sylphx/platform-sdk/react' for custom events
- */
-export {
-	identifyUser,
-	resetUser,
-	trackEvent,
-} from './lib/events'

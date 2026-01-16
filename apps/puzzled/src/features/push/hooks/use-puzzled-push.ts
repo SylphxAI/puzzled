@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { usePush, useAnalytics } from '@sylphx/platform-sdk/react'
+import { useNotifications, useAnalytics } from '@sylphx/platform-sdk/react'
 import { trpc } from '@/trpc'
 
 /**
@@ -74,7 +74,7 @@ export function usePuzzledPush() {
 		unsubscribe,
 		error,
 		preferences: sdkPreferences,
-	} = usePush()
+	} = useNotifications()
 
 	// Fetch preferences from server
 	const { data: serverPreferences, refetch: refetchPreferences } =

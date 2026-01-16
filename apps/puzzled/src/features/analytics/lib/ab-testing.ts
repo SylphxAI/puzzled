@@ -59,7 +59,8 @@ export function useExperiment(experimentKey: string): string {
  * Uses SDK analytics for consistent event tracking.
  *
  * @example
- * trackExperimentConversion('pricing_cta_variant', 'start_trial', { plan: 'premium' })
+ * const { trackConversion } = useExperimentTracking()
+ * trackConversion('pricing_cta_variant', 'start_trial', { plan: 'premium' })
  */
 export function useExperimentTracking() {
 	const { track } = useAnalytics()
@@ -76,20 +77,6 @@ export function useExperimentTracking() {
 	)
 
 	return { trackConversion }
-}
-
-/**
- * @deprecated Use useExperimentTracking().trackConversion instead
- */
-export function trackExperimentConversion(
-	experimentKey: string,
-	variant: string,
-	properties?: Record<string, unknown>,
-) {
-	// This is a no-op now - callers should migrate to useExperimentTracking hook
-	console.warn(
-		'[analytics] trackExperimentConversion is deprecated. Use useExperimentTracking().trackConversion instead.',
-	)
 }
 
 // ==========================================

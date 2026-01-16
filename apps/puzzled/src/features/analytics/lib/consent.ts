@@ -1,17 +1,11 @@
 /**
- * Consent Management System (Legacy)
+ * Consent Management System
  *
- * @deprecated This module uses localStorage-only consent storage.
- * For new code, use the SDK's useConsent hook from '@sylphx/platform-sdk/react'.
+ * Client-side consent state using localStorage.
+ * Used by GTM and Web Vitals to check consent before tracking.
  *
- * The SDK's consent system uses server-side storage as Single Source of Truth (SSOT).
- * This module is kept for backward compatibility with non-React code.
- *
- * Migration path:
- * - React components: Use `useConsent` from '@sylphx/platform-sdk/react'
- * - Non-React code: Continue using this module (localStorage-based)
- *
- * The ConsentBanner component syncs SDK consent to localStorage for compatibility.
+ * For React components, prefer `useConsent` from '@sylphx/platform-sdk/react'
+ * which uses server-side storage as SSOT.
  */
 
 const CONSENT_KEY = 'puzzled-cookie-consent'
