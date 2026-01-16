@@ -12,7 +12,7 @@
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { LIMITS } from '@/lib/config/user'
+import { USER_LIMITS } from '@/lib/config/user'
 import { db } from '@/lib/db'
 import { userPreferences } from '@/lib/db/schema'
 import { protectedProcedure, protectedRateLimitedProcedure, router } from '../trpc'
@@ -24,18 +24,18 @@ import { protectedProcedure, protectedRateLimitedProcedure, router } from '../tr
 const usernameSchema = z
 	.string()
 	.min(
-		LIMITS.USERNAME_MIN_LENGTH,
-		`Username must be at least ${LIMITS.USERNAME_MIN_LENGTH} characters`,
+		USER_LIMITS.USERNAME_MIN_LENGTH,
+		`Username must be at least ${USER_LIMITS.USERNAME_MIN_LENGTH} characters`,
 	)
 	.max(
-		LIMITS.USERNAME_MAX_LENGTH,
-		`Username must be at most ${LIMITS.USERNAME_MAX_LENGTH} characters`,
+		USER_LIMITS.USERNAME_MAX_LENGTH,
+		`Username must be at most ${USER_LIMITS.USERNAME_MAX_LENGTH} characters`,
 	)
 	.regex(/^[a-z0-9_]+$/, 'Username can only contain lowercase letters, numbers, and underscores')
 
 const bioSchema = z
 	.string()
-	.max(LIMITS.BIO_MAX_LENGTH, `Bio must be at most ${LIMITS.BIO_MAX_LENGTH} characters`)
+	.max(USER_LIMITS.BIO_MAX_LENGTH, `Bio must be at most ${USER_LIMITS.BIO_MAX_LENGTH} characters`)
 	.optional()
 
 const updateProfileSchema = z.object({

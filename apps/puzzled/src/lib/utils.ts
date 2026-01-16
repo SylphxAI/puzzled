@@ -1,9 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-// Re-export formatCurrency from SSOT location for backward compatibility
-export { formatCurrency } from './utils/locale-map'
-
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }

@@ -14,6 +14,3 @@ export const USER_LIMITS = {
 	/** Maximum display name length */
 	NAME_MAX_LENGTH: 100,
 } as const
-
-// Legacy export for backward compatibility
-export const LIMITS = USER_LIMITS
