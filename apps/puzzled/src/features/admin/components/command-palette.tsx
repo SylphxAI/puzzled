@@ -141,7 +141,7 @@ export function AdminCommandPalette() {
 			label: t('sidebar.experiments'),
 			icon: FlaskConical,
 			action: () => navigate('/admin/experiments'),
-			keywords: ['ab', 'testing', 'variants', 'posthog'],
+			keywords: ['ab', 'testing', 'variants', 'experiment'],
 			shortcut: 'G E',
 			group: 'navigation',
 		},

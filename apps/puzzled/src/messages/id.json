@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "Eksperimen A/B",
       "subtitle": "Pantau dan analisis hasil eksperimen",
-      "viewInPostHog": "Lihat di PostHog",
       "totalExposures": "Total Eksposur",
       "variant": "Varian",
       "exposures": "Eksposur",
@@ -1053,11 +1052,10 @@
       "recommendation": "Rekomendasi",
       "howToUse": {
         "title": "Cara Menggunakan Eksperimen",
-        "step1": "1. Buat eksperimen di PostHog dengan flag fitur untuk setiap varian",
-        "step2": "2. Tambahkan definisi eksperimen ke objek EXPERIMENTS di ab-testing.ts",
+        "step1": "1. Definisikan eksperimen di objek EXPERIMENTS di ab-testing.ts",
+        "step2": "2. Konfigurasikan flag fitur di konsol Sylphx Platform",
         "step3": "3. Gunakan hook useExperiment() di komponen Anda untuk mendapatkan varian dan melacak eksposur secara otomatis"
-      },
-      "learnMore": "Pelajari Lebih Lanjut Tentang Eksperimen"
+      }
     }
   },
   "winBack": {

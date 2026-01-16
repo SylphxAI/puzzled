@@ -1050,7 +1050,6 @@
     "experiments": {
       "title": "A/B実験",
       "subtitle": "実験結果の監視と分析",
-      "viewInPostHog": "PostHogで表示",
       "totalExposures": "総露出数",
       "variant": "バリアント",
       "exposures": "露出数",
@@ -1061,11 +1060,10 @@
       "recommendation": "推奨事項",
       "howToUse": {
         "title": "実験の使い方",
-        "step1": "1. PostHogで各バリアントの機能フラグを使用して実験を作成",
-        "step2": "2. ab-testing.tsのEXPERIMENTSオブジェクトに実験定義を追加",
+        "step1": "1. ab-testing.tsのEXPERIMENTSオブジェクトで実験を定義",
+        "step2": "2. Sylphx Platformコンソールで機能フラグを設定",
         "step3": "3. コンポーネントでuseExperiment()フックを使用してバリアントを取得し、自動的に露出を追跡"
-      },
-      "learnMore": "実験について詳しく見る"
+      }
     }
   },
   "winBack": {

@@ -2,7 +2,7 @@
 // Components
 // ============================================
 
-export { GTMProvider, PostHogProvider, WebVitalsReporter } from './components'
+export { WebVitalsReporter } from './components'
 
 // ============================================
 // Consent Management
@@ -49,9 +49,8 @@ export {
 } from './lib/ab-testing'
 
 // ============================================
-// GTM & Web Vitals
+// Web Vitals
 // ============================================
 
-export { initGTM } from './lib/gtm'
-export { initWebVitals } from './lib/web-vitals'
+export { initWebVitals, setWebVitalsTracker } from './lib/web-vitals'
 

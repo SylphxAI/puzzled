@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "Thử Nghiệm A/B",
       "subtitle": "Giám sát và phân tích kết quả thử nghiệm",
-      "viewInPostHog": "Xem trong PostHog",
       "totalExposures": "Tổng Lượt Hiển Thị",
       "variant": "Biến Thể",
       "exposures": "Lượt Hiển Thị",
@@ -1053,11 +1052,10 @@
       "recommendation": "Khuyến Nghị",
       "howToUse": {
         "title": "Cách Sử Dụng Thử Nghiệm",
-        "step1": "1. Tạo thử nghiệm trong PostHog với cờ tính năng cho mỗi biến thể",
-        "step2": "2. Thêm định nghĩa thử nghiệm vào đối tượng EXPERIMENTS trong ab-testing.ts",
+        "step1": "1. Định nghĩa thử nghiệm trong đối tượng EXPERIMENTS trong ab-testing.ts",
+        "step2": "2. Cấu hình cờ tính năng trong bảng điều khiển Sylphx Platform",
         "step3": "3. Sử dụng hook useExperiment() trong các component của bạn để lấy biến thể và tự động theo dõi lượt hiển thị"
-      },
-      "learnMore": "Tìm Hiểu Thêm Về Thử Nghiệm"
+      }
     }
   },
   "winBack": {

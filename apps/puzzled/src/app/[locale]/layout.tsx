@@ -3,7 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
-import { GTMProvider, PostHogProvider, WebVitalsReporter } from '@/features/analytics'
+import { WebVitalsReporter } from '@/features/analytics'
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { ThemeProvider } from '@/shared/components/theme'
@@ -199,7 +199,6 @@ export default async function LocaleLayout({ children, params }: Props) {
 				{/* Preconnect to critical third-party origins for performance */}
 				<link rel="preconnect" href="https://fonts.googleapis.com" />
 				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-				<link rel="dns-prefetch" href="https://us.i.posthog.com" />
 				<link rel="dns-prefetch" href="https://js.stripe.com" />
 				<link rel="dns-prefetch" href="https://api.iconify.design" />
 				{/* FOUC prevention: Apply theme class before React hydration */}
@@ -235,16 +234,12 @@ export default async function LocaleLayout({ children, params }: Props) {
 						appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
 						publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
 					>
-						{/* PostHog now inside PlatformProvider to access SDK's useConsent */}
-						<PostHogProvider>
-							<GTMProvider />
-							<WebVitalsReporter />
-							<TRPCProvider>
-								<NextIntlClientProvider messages={messages}>
-									<ToastProvider>{children}</ToastProvider>
-								</NextIntlClientProvider>
-							</TRPCProvider>
-						</PostHogProvider>
+						<WebVitalsReporter />
+						<TRPCProvider>
+							<NextIntlClientProvider messages={messages}>
+								<ToastProvider>{children}</ToastProvider>
+							</NextIntlClientProvider>
+						</TRPCProvider>
 					</PlatformProvider>
 				</ThemeProvider>
 			</body>

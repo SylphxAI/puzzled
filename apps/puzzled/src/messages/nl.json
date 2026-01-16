@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "A/B Experimenten",
       "subtitle": "Bewaak en analyseer experimentresultaten",
-      "viewInPostHog": "Bekijken in PostHog",
       "totalExposures": "Totaal Vertoningen",
       "variant": "Variant",
       "exposures": "Vertoningen",
@@ -1053,11 +1052,10 @@
       "recommendation": "Aanbeveling",
       "howToUse": {
         "title": "Hoe Experimenten te Gebruiken",
-        "step1": "1. Maak experimenten aan in PostHog met feature flags voor elke variant",
-        "step2": "2. Voeg experimentdefinities toe aan het EXPERIMENTS-object in ab-testing.ts",
+        "step1": "1. Definieer experimenten in het EXPERIMENTS-object in ab-testing.ts",
+        "step2": "2. Configureer feature flags in de Sylphx Platform-console",
         "step3": "3. Gebruik de useExperiment() hook in je componenten om de variant op te halen en vertoningen automatisch bij te houden"
-      },
-      "learnMore": "Meer Leren Over Experimenten"
+      }
     }
   },
   "winBack": {

@@ -2,7 +2,7 @@
  * Consent Management System
  *
  * Client-side consent state using localStorage.
- * Used by GTM and Web Vitals to check consent before tracking.
+ * Used by Web Vitals to check consent before tracking.
  *
  * For React components, prefer `useConsent` from '@sylphx/platform-sdk/react'
  * which uses server-side storage as SSOT.
@@ -70,17 +70,14 @@ export function hasAnalyticsConsent(): boolean {
  *
  * Returns true only when ALL conditions are met:
  * 1. Running in browser (typeof window !== 'undefined')
- * 2. PostHog is configured (NEXT_PUBLIC_POSTHOG_KEY is set)
- * 3. User has granted consent
+ * 2. User has granted consent
  *
  * Use this instead of duplicating the check across analytics modules.
  *
  * Per GDPR spec: Analytics must NOT fire without explicit consent
  */
 export function canTrackAnalytics(): boolean {
-	return (
-		typeof window !== 'undefined' && !!process.env.NEXT_PUBLIC_POSTHOG_KEY && hasAnalyticsConsent()
-	)
+	return typeof window !== 'undefined' && hasAnalyticsConsent()
 }
 
 /**

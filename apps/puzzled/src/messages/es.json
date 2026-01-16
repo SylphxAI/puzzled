@@ -1050,7 +1050,6 @@
     "experiments": {
       "title": "Experimentos A/B",
       "subtitle": "Monitorear y analizar resultados de experimentos",
-      "viewInPostHog": "Ver en PostHog",
       "totalExposures": "Exposiciones Totales",
       "variant": "Variante",
       "exposures": "Exposiciones",
@@ -1061,11 +1060,10 @@
       "recommendation": "Recomendación",
       "howToUse": {
         "title": "Cómo Usar los Experimentos",
-        "step1": "1. Crea experimentos en PostHog con banderas de características para cada variante",
-        "step2": "2. Agrega las definiciones de experimentos al objeto EXPERIMENTS en ab-testing.ts",
+        "step1": "1. Define los experimentos en el objeto EXPERIMENTS en ab-testing.ts",
+        "step2": "2. Configura las banderas de características en la consola de Sylphx Platform",
         "step3": "3. Usa el hook useExperiment() en tus componentes para obtener la variante y rastrear exposiciones automáticamente"
-      },
-      "learnMore": "Más Información Sobre Experimentos"
+      }
     }
   },
   "winBack": {

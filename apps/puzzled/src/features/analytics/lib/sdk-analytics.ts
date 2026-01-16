@@ -1,10 +1,10 @@
 /**
  * SDK-Integrated Analytics
  *
- * Uses the Sylphx Platform SDK's analytics service for server-side
+ * Uses the Sylphx Platform SDK's analytics service for
  * event tracking, deduplication, and billing.
  *
- * This complements the client-side PostHog tracking with:
+ * Features:
  * - Server-side validation
  * - Event deduplication
  * - Platform-level analytics (funnels, cohorts)

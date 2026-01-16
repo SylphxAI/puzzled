@@ -4,7 +4,7 @@
  * Consent Banner Wrapper
  *
  * Uses SDK's CookieBanner with localStorage sync.
- * This bridges SDK's server-side consent with client-side scripts (GTM, Web Vitals)
+ * This bridges SDK's server-side consent with client-side scripts
  * that need synchronous consent checks before SDK hydration.
  */
 

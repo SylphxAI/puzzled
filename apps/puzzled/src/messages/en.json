@@ -1985,7 +1985,6 @@
     "experiments": {
       "title": "A/B Experiments",
       "subtitle": "Monitor and analyze experiment results",
-      "viewInPostHog": "View in PostHog",
       "totalExposures": "total exposures",
       "variant": "Variant",
       "exposures": "Exposures",
@@ -1996,16 +1995,14 @@
       "recommendation": "Recommendation",
       "emptyState": {
         "title": "No Experiments Yet",
-        "description": "Create your first A/B experiment in PostHog to start testing different variants and optimize your conversion rates.",
-        "createFirst": "Create First Experiment"
+        "description": "Define your first A/B experiment to start testing different variants and optimize your conversion rates."
       },
       "howToUse": {
         "title": "How to Use Experiments",
-        "step1": "1. Create experiments in PostHog with feature flags for each variant",
-        "step2": "2. Add experiment definitions to the EXPERIMENTS object in ab-testing.ts",
+        "step1": "1. Define experiments in the EXPERIMENTS object in ab-testing.ts",
+        "step2": "2. Configure feature flags in the Sylphx Platform console",
         "step3": "3. Use the useExperiment() hook in your components to get the variant and track exposures automatically"
-      },
-      "learnMore": "Learn More About Experiments"
+      }
     },
     "settings": {
       "title": "Settings",

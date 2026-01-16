@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "การทดลอง A/B",
       "subtitle": "ตรวจสอบและวิเคราะห์ผลการทดลอง",
-      "viewInPostHog": "ดูใน PostHog",
       "totalExposures": "การแสดงผลทั้งหมด",
       "variant": "ตัวแปร",
       "exposures": "การแสดงผล",
@@ -1053,11 +1052,10 @@
       "recommendation": "คำแนะนำ",
       "howToUse": {
         "title": "วิธีใช้การทดลอง",
-        "step1": "1. สร้างการทดลองใน PostHog พร้อมแฟล็กคุณสมบัติสำหรับแต่ละตัวแปร",
-        "step2": "2. เพิ่มคำจำกัดความการทดลองไปยังออบเจ็กต์ EXPERIMENTS ใน ab-testing.ts",
+        "step1": "1. กำหนดการทดลองในออบเจ็กต์ EXPERIMENTS ใน ab-testing.ts",
+        "step2": "2. กำหนดค่าแฟล็กคุณสมบัติในคอนโซล Sylphx Platform",
         "step3": "3. ใช้ hook useExperiment() ในคอมโพเนนต์ของคุณเพื่อรับตัวแปรและติดตามการแสดงผลโดยอัตโนมัติ"
-      },
-      "learnMore": "เรียนรู้เพิ่มเติมเกี่ยวกับการทดลอง"
+      }
     }
   },
   "winBack": {

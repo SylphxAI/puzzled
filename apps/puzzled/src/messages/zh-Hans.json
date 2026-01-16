@@ -1079,7 +1079,6 @@
     "experiments": {
       "title": "A/B 实验",
       "subtitle": "监控和分析实验结果",
-      "viewInPostHog": "在 PostHog 中查看",
       "totalExposures": "总曝光次数",
       "variant": "变体",
       "exposures": "曝光次数",
@@ -1090,11 +1089,10 @@
       "recommendation": "推荐",
       "howToUse": {
         "title": "如何使用实验",
-        "step1": "1. 在 PostHog 中为每个变体创建功能标志实验",
-        "step2": "2. 将实验定义添加到 ab-testing.ts 的 EXPERIMENTS 对象中",
+        "step1": "1. 在 ab-testing.ts 的 EXPERIMENTS 对象中定义实验",
+        "step2": "2. 在 Sylphx Platform 控制台中配置功能标志",
         "step3": "3. 在组件中使用 useExperiment() 钩子获取变体并自动追踪曝光"
-      },
-      "learnMore": "了解更多关于实验的信息"
+      }
     }
   },
   "winBack": {

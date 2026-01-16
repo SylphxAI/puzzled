@@ -1,14 +1,10 @@
-'use client'
-
-import posthog from 'posthog-js'
-import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
-import { hasAnalyticsConsent } from './consent'
-
 /**
- * Web Vitals reporting to PostHog
+ * Web Vitals Reporting
  *
  * Tracks Core Web Vitals (CLS, INP, LCP) and other performance metrics (FCP, TTFB)
- * Only runs in production, only if PostHog is initialized, and only with user consent.
+ * using the SDK's analytics service.
+ *
+ * Only runs in production and only with user consent.
  *
  * GDPR Compliance: Web vitals are considered analytics data and require explicit consent.
  *
@@ -20,25 +16,59 @@ import { hasAnalyticsConsent } from './consent'
  * - TTFB (Time to First Byte): Server response time
  */
 
-function sendToPostHog(metric: Metric) {
+'use client'
+
+import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
+import { hasAnalyticsConsent } from './consent'
+
+// Buffer to collect metrics before SDK is ready
+const metricsBuffer: Metric[] = []
+let trackFn: ((event: string, properties: Record<string, unknown>) => void) | null = null
+
+function sendMetric(metric: Metric) {
 	// Only send in production
 	if (process.env.NODE_ENV !== 'production') return
 
 	// GDPR: Require explicit analytics consent before sending web vitals
 	if (!hasAnalyticsConsent()) return
 
-	// Only send if PostHog is initialized
-	if (!posthog.__loaded) return
-
-	// Send metric to PostHog
-	posthog.capture('web_vital', {
+	const properties = {
 		metric_name: metric.name,
 		value: metric.value,
 		rating: metric.rating,
 		delta: metric.delta,
 		id: metric.id,
 		navigation_type: metric.navigationType,
-	})
+	}
+
+	// If track function is available, send immediately
+	if (trackFn) {
+		trackFn('web_vital', properties)
+	} else {
+		// Buffer until track function is set
+		metricsBuffer.push(metric)
+	}
+}
+
+/**
+ * Set the track function from SDK
+ * Call this when the SDK context is ready
+ */
+export function setWebVitalsTracker(track: (event: string, properties: Record<string, unknown>) => void) {
+	trackFn = track
+
+	// Flush buffered metrics
+	for (const metric of metricsBuffer) {
+		track('web_vital', {
+			metric_name: metric.name,
+			value: metric.value,
+			rating: metric.rating,
+			delta: metric.delta,
+			id: metric.id,
+			navigation_type: metric.navigationType,
+		})
+	}
+	metricsBuffer.length = 0
 }
 
 /**
@@ -53,9 +83,9 @@ export function initWebVitals() {
 	if (process.env.NODE_ENV !== 'production') return
 
 	// Register all web vitals listeners
-	onCLS(sendToPostHog)
-	onINP(sendToPostHog)
-	onLCP(sendToPostHog)
-	onFCP(sendToPostHog)
-	onTTFB(sendToPostHog)
+	onCLS(sendMetric)
+	onINP(sendMetric)
+	onLCP(sendMetric)
+	onFCP(sendMetric)
+	onTTFB(sendMetric)
 }

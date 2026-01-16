@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "A/B Deneyleri",
       "subtitle": "Deney sonuçlarını izleyin ve analiz edin",
-      "viewInPostHog": "PostHog'da Görüntüle",
       "totalExposures": "Toplam Gösterim",
       "variant": "Varyant",
       "exposures": "Gösterimler",
@@ -1053,11 +1052,10 @@
       "recommendation": "Öneri",
       "howToUse": {
         "title": "Deneyleri Nasıl Kullanılır",
-        "step1": "1. PostHog'da her varyant için özellik bayraklarıyla deneyler oluşturun",
-        "step2": "2. ab-testing.ts dosyasındaki EXPERIMENTS nesnesine deney tanımlarını ekleyin",
+        "step1": "1. ab-testing.ts dosyasındaki EXPERIMENTS nesnesinde deneyleri tanımlayın",
+        "step2": "2. Sylphx Platform konsolunda özellik bayraklarını yapılandırın",
         "step3": "3. Bileşenlerinizde useExperiment() kancasını kullanarak varyantı alın ve gösterimleri otomatik olarak takip edin"
-      },
-      "learnMore": "Deneyler Hakkında Daha Fazla Bilgi Edinin"
+      }
     }
   },
   "winBack": {

@@ -1042,7 +1042,6 @@
     "experiments": {
       "title": "A/B 실험",
       "subtitle": "실험 결과 모니터링 및 분석",
-      "viewInPostHog": "PostHog에서 보기",
       "totalExposures": "총 노출 수",
       "variant": "변형",
       "exposures": "노출 수",
@@ -1053,11 +1052,10 @@
       "recommendation": "권장사항",
       "howToUse": {
         "title": "실험 사용 방법",
-        "step1": "1. PostHog에서 각 변형에 대한 기능 플래그로 실험 생성",
-        "step2": "2. ab-testing.ts의 EXPERIMENTS 객체에 실험 정의 추가",
+        "step1": "1. ab-testing.ts의 EXPERIMENTS 객체에서 실험 정의",
+        "step2": "2. Sylphx Platform 콘솔에서 기능 플래그 구성",
         "step3": "3. 컴포넌트에서 useExperiment() 훅을 사용하여 변형 가져오기 및 자동 노출 추적"
-      },
-      "learnMore": "실험에 대해 자세히 알아보기"
+      }
     }
   },
   "winBack": {
