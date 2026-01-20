@@ -391,6 +391,18 @@ export {
 	type LeaderboardOptions,
 } from './referrals'
 
+// Referrals Code First (Reward Config)
+export {
+	createReferralConfig,
+	hashReferralConfig,
+	presetRewards,
+	presetReferralConfigs,
+	type ReferralRewardType,
+	type RewardConfig,
+	type ReferralConfig as ReferralProgramConfig,
+	type ReferralConfigInput,
+} from './lib/referrals'
+
 // =============================================================================
 // Engagement Functions (Streaks, Leaderboards, Achievements)
 // =============================================================================
