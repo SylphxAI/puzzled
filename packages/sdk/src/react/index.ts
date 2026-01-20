@@ -45,9 +45,6 @@
 // Provider
 export { SylphxProvider, type SylphxProviderProps } from './provider'
 
-// Platform Mode Provider (for dogfooding - Platform uses SDK directly)
-export { PlatformModeProvider, type PlatformModeProviderProps, type BetterAuthClient } from './platform-mode-provider'
-
 // Auth Context (for advanced usage)
 export {
 	AuthContext,
