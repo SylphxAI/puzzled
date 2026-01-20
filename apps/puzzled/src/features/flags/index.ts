@@ -15,6 +15,12 @@
 
 'use client'
 
+import {
+	useFeatureFlag,
+	useFeatureFlags,
+} from '@sylphx/sdk/react'
+
+// Re-export SDK hooks and types for convenience
 export {
 	useFeatureFlag,
 	useFeatureFlags,
@@ -51,22 +57,27 @@ export type PuzzledFeatureFlags =
 
 /**
  * Hook for Puzzled feature flags with type-safe keys
+ *
+ * @example
+ * ```tsx
+ * const { isEnabled, value } = usePuzzledFlag('premium-hints')
+ * ```
  */
 export function usePuzzledFlag(
 	key: PuzzledFeatureFlags,
 	defaultValue = false,
 ) {
-	// Re-export with type safety
-	// biome-ignore lint/correctness/useHookAtTopLevel: This is a wrapper hook
-	const { useFeatureFlag } = require('@sylphx/sdk/react')
 	return useFeatureFlag(key, { defaultValue })
 }
 
 /**
- * Hook for checking multiple Puzzled flags
+ * Hook for checking multiple Puzzled flags at once
+ *
+ * @example
+ * ```tsx
+ * const flags = usePuzzledFlags(['premium-hints', 'archive-access'])
+ * ```
  */
 export function usePuzzledFlags(keys: PuzzledFeatureFlags[]) {
-	// biome-ignore lint/correctness/useHookAtTopLevel: This is a wrapper hook
-	const { useFeatureFlags } = require('@sylphx/sdk/react')
 	return useFeatureFlags(keys)
 }
