@@ -103,3 +103,25 @@ export type {
 } from './types'
 
 export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
+
+// Event Schema (Code First)
+export {
+	defineEvent,
+	defineEventCategory,
+	createAnalyticsSchema,
+	hashAnalyticsSchema,
+	presetEvents,
+	presetCategories,
+	type PropertyType,
+	type PropertyDefinition,
+	type EventCategory,
+	type EventDefinition,
+	type EventCategoryDefinition,
+	type AnalyticsSchema,
+	type AnalyticsSchemaInput,
+	type ExtractEventNames,
+	type ExtractEventProps,
+} from './events'
+
+// Typed Tracker
+export { createTypedTracker, type TypedTracker } from './typed-tracker'

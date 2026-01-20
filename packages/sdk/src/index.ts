@@ -160,6 +160,26 @@ export {
 	type BatchEvent,
 } from './analytics'
 
+// Analytics Code First (Event Schemas)
+export {
+	defineEvent,
+	defineEventCategory,
+	createAnalyticsSchema,
+	hashAnalyticsSchema,
+	presetEvents,
+	presetCategories,
+	createTypedTracker,
+	type PropertyType,
+	type PropertyDefinition,
+	type EventCategory,
+	type EventDefinition,
+	type EventCategoryDefinition,
+	type AnalyticsSchema,
+	type AnalyticsSchemaInput,
+	type ExtractEventNames,
+	type TypedTracker,
+} from './lib/analytics'
+
 // =============================================================================
 // AI Functions
 // =============================================================================
