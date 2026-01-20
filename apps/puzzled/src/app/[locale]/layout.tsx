@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics'
+import { SessionReplayProvider } from '@/features/monitoring'
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { ThemeProvider } from '@/shared/components/theme'
@@ -234,12 +235,14 @@ export default async function LocaleLayout({ children, params }: Props) {
 						appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
 						publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
 					>
-						<WebVitalsReporter />
-						<TRPCProvider>
-							<NextIntlClientProvider messages={messages}>
-								<ToastProvider>{children}</ToastProvider>
-							</NextIntlClientProvider>
-						</TRPCProvider>
+						<SessionReplayProvider>
+							<WebVitalsReporter />
+							<TRPCProvider>
+								<NextIntlClientProvider messages={messages}>
+									<ToastProvider>{children}</ToastProvider>
+								</NextIntlClientProvider>
+							</TRPCProvider>
+						</SessionReplayProvider>
 					</PlatformProvider>
 				</ThemeProvider>
 			</body>
