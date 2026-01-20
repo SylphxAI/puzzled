@@ -1,25 +1,78 @@
 /**
- * @sylphx/platform-sdk
+ * @sylphx/sdk
  *
- * SDK for integrating apps with the Sylphx Platform.
+ * State-of-the-art platform SDK with pure functions.
+ *
+ * ## Architecture (see ADR.md for full details)
+ *
+ * This SDK follows Firebase's architecture pattern:
+ * - **Pure functions** - No hidden state, config passed explicitly
+ * - **Tree-shakeable** - Import only what you use, bundler removes the rest
+ * - **4 entry points only** - Separate only when peer dependencies differ
+ *
+ * ## Entry Points
+ *
+ * | Entry | Purpose | Peer Dependencies |
+ * |-------|---------|-------------------|
+ * | `@sylphx/sdk` | All pure functions | None |
+ * | `@sylphx/sdk/react` | React hooks & components | react, react-dom |
+ * | `@sylphx/sdk/server` | Server utilities (JWT, webhooks) | jose |
+ * | `@sylphx/sdk/nextjs` | Next.js integration | next |
+ *
+ * ## Usage
  *
  * @example
  * ```typescript
- * import { createSylphx } from '@sylphx/platform-sdk'
+ * // Pure functions - tree-shakeable, works anywhere
+ * import { createConfig, track, signIn, getPlans } from '@sylphx/sdk'
  *
- * const sylphx = createSylphx({
- *   appId: 'your-app-slug',
- *   appSecret: process.env.SYLPHX_APP_SECRET!,
+ * const config = createConfig({
+ *   appId: 'my-app',
+ *   appSecret: process.env.SYLPHX_SECRET!,
  * })
  *
- * // Full type inference from server - no manual types
+ * // Analytics
+ * await track(config, { event: 'purchase', properties: { amount: 99 } })
+ *
+ * // Auth
+ * const result = await signIn(config, { email, password })
+ *
+ * // Billing
+ * const plans = await getPlans(config)
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // tRPC client - full type inference from server
+ * import { createSylphx } from '@sylphx/sdk'
+ *
+ * const sylphx = createSylphx({
+ *   appId: 'my-app',
+ *   appSecret: process.env.SYLPHX_SECRET!,
+ * })
+ *
+ * // Full autocomplete from server types
  * const user = await sylphx.user.getProfile.query()
  * const plans = await sylphx.billing.getPlans.query()
- * await sylphx.analytics.track.mutate({ event: 'purchase', properties: {} })
  * ```
  */
 
-// Primary exports - new tRPC-based client with full type inference
+// =============================================================================
+// Configuration (Foundation)
+// =============================================================================
+
+export {
+	createConfig,
+	createPlatformConfig,
+	withToken,
+	type SylphxConfig,
+	type SylphxConfigInput,
+} from './config'
+
+// =============================================================================
+// tRPC Client (Full Type Inference)
+// =============================================================================
+
 export {
 	createSylphx,
 	createDynamicSylphx,
@@ -31,7 +84,22 @@ export {
 	type AppRouter,
 } from './trpc-client'
 
-// Error classes and utilities
+// Legacy tRPC exports (deprecated, will be removed in v1.0)
+export { createPlatformAPI, createDynamicPlatformAPI } from './trpc'
+export type {
+	PlatformAPI,
+	TRPCClientConfig,
+	ChallengeLevel,
+	ChallengeRequirement,
+	ChallengeStatus,
+	IdentityMethod,
+	MfaMethod,
+} from './trpc'
+
+// =============================================================================
+// Error Handling
+// =============================================================================
+
 export {
 	SylphxError,
 	NetworkError,
@@ -53,52 +121,237 @@ export {
 	type SylphxErrorOptions,
 } from './errors'
 
-// Re-export tRPC type utilities for advanced usage
-export type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
+// =============================================================================
+// Auth Functions
+// =============================================================================
 
-// Legacy exports for backward compatibility
-// @deprecated Use createSylphx instead - will be removed in next major version
-export { createPlatformAPI, createDynamicPlatformAPI } from './trpc'
-export type {
-	PlatformAPI,
-	TRPCClientConfig,
-	// Challenge types for step-up authentication
-	ChallengeLevel,
-	ChallengeRequirement,
-	ChallengeStatus,
-	IdentityMethod,
-	MfaMethod,
-} from './trpc'
+export {
+	signIn,
+	signUp,
+	signOut,
+	refreshToken,
+	verifyEmail,
+	forgotPassword,
+	resetPassword,
+	getSession,
+	verifyTwoFactor,
+	type SignInInput,
+	type SignInResult,
+	type SignUpInput,
+	type SignUpResult,
+	type TokenResult,
+	type SessionResult,
+} from './auth'
 
-// Re-export types from api-types
+// =============================================================================
+// Analytics Functions
+// =============================================================================
+
+export {
+	track,
+	page,
+	identify,
+	trackBatch,
+	generateAnonymousId,
+	createTracker,
+	type TrackInput,
+	type PageInput,
+	type IdentifyInput,
+	type BatchEvent,
+} from './analytics'
+
+// =============================================================================
+// AI Functions
+// =============================================================================
+
+export {
+	chat,
+	chatStream,
+	embed,
+	complete,
+	streamToString,
+	type ChatMessage,
+	type ContentPart,
+	type ToolCall,
+	type Tool,
+	type ChatInput,
+	type ChatResult,
+	type ChatStreamChunk,
+	type EmbedInput,
+	type EmbedResult,
+} from './ai'
+
+// =============================================================================
+// Billing Functions
+// =============================================================================
+
+export {
+	getPlans,
+	getSubscription,
+	createCheckout,
+	createPortalSession,
+	getBillingBalance,
+	getBillingUsage,
+	type Plan,
+	type Subscription,
+	type CheckoutInput,
+} from './billing'
+
+// =============================================================================
+// Storage Functions
+// =============================================================================
+
+export {
+	uploadFile,
+	uploadAvatar,
+	deleteFile,
+	getFileUrl,
+	getFileInfo,
+	type UploadOptions,
+	type UploadProgressEvent,
+	type UploadResult,
+	type FileInfo,
+} from './storage'
+
+// =============================================================================
+// Notifications Functions
+// =============================================================================
+
+export {
+	registerPush,
+	unregisterPush,
+	sendPush,
+	getPushPreferences,
+	updatePushPreferences,
+	type PushSubscription,
+	type PushNotification,
+} from './notifications'
+
+// =============================================================================
+// Jobs Functions
+// =============================================================================
+
+export {
+	scheduleJob,
+	getJob,
+	cancelJob,
+	listJobs,
+	createCron,
+	pauseCron,
+	resumeCron,
+	deleteCron,
+	type JobInput,
+	type JobResult,
+	type CronInput,
+	type CronSchedule,
+} from './jobs'
+
+// =============================================================================
+// Feature Flags Functions
+// =============================================================================
+
+export {
+	checkFlag,
+	getFlags,
+	isEnabled,
+	getVariant,
+	getFlagPayload,
+	type FlagResult,
+	type FlagContext,
+} from './flags'
+
+// =============================================================================
+// Webhooks Functions
+// =============================================================================
+
+export {
+	getWebhookDeliveries,
+	getWebhookDelivery,
+	type WebhookDelivery,
+	type WebhookDeliveriesResult,
+} from './webhooks'
+
+// =============================================================================
+// Email Functions
+// =============================================================================
+
+export {
+	sendEmail,
+	sendTemplatedEmail,
+	sendEmailToUser,
+	scheduleEmail,
+	cancelScheduledEmail,
+	rescheduleEmail,
+	listScheduledEmails,
+	getScheduledEmail,
+	getScheduledEmailStats,
+	isEmailConfigured,
+	type SendEmailOptions,
+	type SendTemplatedEmailOptions,
+	type SendToUserOptions,
+	type ScheduleEmailOptions,
+	type ScheduledEmail,
+	type ScheduledEmailsResult,
+	type ScheduledEmailStats,
+	type ListScheduledEmailsOptions,
+	type SendResult,
+} from './email'
+
+// =============================================================================
+// Consent Functions (GDPR/CCPA)
+// =============================================================================
+
+export {
+	getConsentTypes,
+	getUserConsents,
+	setConsents,
+	acceptAllConsents,
+	declineOptionalConsents,
+	linkAnonymousConsents,
+	type ConsentCategory,
+	type ConsentType,
+	type UserConsent,
+	type SetConsentsInput,
+	type GetConsentsInput,
+	type LinkAnonymousConsentsInput,
+} from './consent'
+
+// =============================================================================
+// Referrals Functions
+// =============================================================================
+
+export {
+	getMyReferralCode,
+	getReferralStats,
+	redeemReferralCode,
+	getReferralLeaderboard,
+	regenerateReferralCode,
+	type ReferralCode,
+	type ReferralStats,
+	type RedeemReferralInput,
+	type RedeemResult,
+	type LeaderboardEntry,
+	type LeaderboardResult,
+	type LeaderboardOptions,
+} from './referrals'
+
+// =============================================================================
+// Common Types (re-exported from types.ts)
+// =============================================================================
+
 export type {
+	// User & Auth
 	User,
-	Plan,
-	Subscription,
 	UserProfile,
 	SecuritySettings,
 	LoginHistoryEntry,
-	ReferralStats,
-	FeatureFlagResult,
-	UploadedFile,
-	TokenResponse,
 	AccessTokenPayload,
+	TokenResponse,
+	// Organizations
 	Organization,
 	OrganizationMember,
-	TrackEventInput,
-	BatchEventsInput,
-	IdentifyInput,
-	UpdateProfileInput,
-	ChangePasswordInput,
-	CheckoutInput,
-	RegisterPushInput,
-	RedeemReferralInput,
-	CheckFeatureFlagInput,
-	UploadFileInput,
-	PaginationInput,
-	PaginatedResponse,
-	SuccessResponse,
-	ErrorResponse,
+	// Storage
+	UploadedFile,
 	// AI Types
 	AIProvider,
 	AIRequestType,
@@ -123,4 +376,12 @@ export type {
 	AIModelInfo,
 	AIAppConfig,
 	AIRateLimitInfo,
+	// Common
+	PaginationInput,
+	PaginatedResponse,
+	SuccessResponse,
+	ErrorResponse,
 } from './types'
+
+// Re-export tRPC type utilities for advanced usage
+export type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
