@@ -45,7 +45,11 @@ export function ModeSelector({
 
 	return (
 		<div className={cn('flex flex-col gap-2', className)}>
-			<div className="flex items-center justify-center gap-1 rounded-lg bg-muted/50 p-1">
+			<div
+				className="flex items-center justify-center gap-1 rounded-lg bg-muted/50 p-1"
+				role="group"
+				aria-label="Game mode"
+			>
 				{modes.map((mode) => {
 					const isActive = currentMode === mode.id
 					const isDisabled = mode.disabled || (mode.locked && !hasPremium)
@@ -57,6 +61,8 @@ export function ModeSelector({
 							key={mode.id}
 							onClick={() => !isDisabled && onModeChange(mode.id)}
 							disabled={isDisabled}
+							aria-pressed={isActive}
+							aria-label={mode.locked ? `${mode.label} (${t('premiumRequired')})` : mode.label}
 							className={cn(
 								'relative flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-all',
 								isActive
@@ -65,9 +71,9 @@ export function ModeSelector({
 								isDisabled && 'cursor-not-allowed opacity-50',
 							)}
 						>
-							<Icon className="h-4 w-4" />
+							<Icon className="h-4 w-4" aria-hidden="true" />
 							<span>{mode.label}</span>
-							{mode.locked && <Lock className="absolute -right-1 -top-1 h-3 w-3 text-primary" />}
+							{mode.locked && <Lock className="absolute -right-1 -top-1 h-3 w-3 text-primary" aria-hidden="true" />}
 						</button>
 					)
 				})}
@@ -75,8 +81,8 @@ export function ModeSelector({
 
 			{/* Show upgrade prompt for locked modes */}
 			{currentMode === 'archive' && !hasPremium && (
-				<div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3">
-					<Lock className="h-4 w-4 text-primary" />
+				<div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3" role="alert">
+					<Lock className="h-4 w-4 text-primary" aria-hidden="true" />
 					<span className="text-sm text-muted-foreground">{t('premiumRequired')}</span>
 					<Link href="/pricing">
 						<Button size="sm" variant="outline" className="h-7 gap-1">
@@ -123,8 +129,10 @@ export function ModeIndicator({ mode, className }: ModeIndicatorProps) {
 				config.color,
 				className,
 			)}
+			role="status"
+			aria-label={config.label}
 		>
-			<Icon className="h-3 w-3" />
+			<Icon className="h-3 w-3" aria-hidden="true" />
 			<span>{config.label}</span>
 		</div>
 	)

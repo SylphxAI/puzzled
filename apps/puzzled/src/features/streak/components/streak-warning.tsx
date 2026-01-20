@@ -27,6 +27,8 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 
 	return (
 		<div
+			role="alert"
+			aria-live="polite"
 			className={cn(
 				'relative flex items-center gap-3 rounded-xl p-4',
 				isLegendaryStreak
@@ -40,9 +42,9 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 				type="button"
 				onClick={() => setDismissed(true)}
 				className="absolute right-2 top-2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-				aria-label="Dismiss"
+				aria-label={t('dismiss')}
 			>
-				<X className="h-3 w-3" />
+				<X className="h-3 w-3" aria-hidden="true" />
 			</button>
 
 			<div
@@ -54,6 +56,7 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 							? 'bg-orange-500/15'
 							: 'bg-yellow-500/15',
 				)}
+				aria-hidden="true"
 			>
 				{isLegendaryStreak ? (
 					<AlertTriangle className="h-6 w-6 text-orange-500" />
@@ -100,18 +103,22 @@ export function StreakBadge({
 	streak: number
 	hasPlayedToday: boolean
 }) {
+	const t = useTranslations('streak')
+
 	if (streak === 0) return null
 
 	return (
 		<div
+			role="status"
+			aria-label={`${streak} day streak${!hasPlayedToday ? ' - play today to keep it' : ''}`}
 			className={cn(
 				'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
 				hasPlayedToday ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600',
 			)}
 		>
-			<Flame className="h-3 w-3" />
+			<Flame className="h-3 w-3" aria-hidden="true" />
 			{streak}
-			{!hasPlayedToday && <span className="text-xs">!</span>}
+			{!hasPlayedToday && <span className="text-xs" aria-hidden="true">!</span>}
 		</div>
 	)
 }

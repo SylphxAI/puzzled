@@ -103,13 +103,18 @@ export function StreakBar({
 
 	if (variant === 'compact') {
 		return (
-			<div className={cn('flex items-center gap-1.5', className)}>
+			<div
+				className={cn('flex items-center gap-1.5', className)}
+				role="status"
+				aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
+			>
 				<Flame
 					className={cn(
 						'h-4 w-4',
 						currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
 						currentStreak >= 7 && 'animate-streak-pulse',
 					)}
+					aria-hidden="true"
 				/>
 				<span
 					className={cn(
@@ -122,7 +127,7 @@ export function StreakBar({
 				{/* Show freeze count if user has any */}
 				{freezesAvailable > 0 && (
 					<div className="flex items-center gap-0.5 rounded-full bg-cyan-500/10 px-1.5 py-0.5">
-						<Snowflake className="h-3 w-3 text-cyan-500" />
+						<Snowflake className="h-3 w-3 text-cyan-500" aria-hidden="true" />
 						<span className="text-xs font-medium tabular-nums text-cyan-600 dark:text-cyan-400">
 							{freezesAvailable}
 						</span>
@@ -145,7 +150,7 @@ export function StreakBar({
 		const milestoneBadge = getMilestoneBadge()
 
 		return (
-			<div className={cn('rounded-xl p-4', style.bg, className)}>
+			<div className={cn('rounded-xl p-4', style.bg, className)} role="status" aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}>
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className={cn('relative', style.glow)}>
@@ -154,6 +159,7 @@ export function StreakBar({
 									'h-8 w-8',
 									currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
 								)}
+								aria-hidden="true"
 							/>
 						</div>
 						<div>
@@ -203,7 +209,14 @@ export function StreakBar({
 								{daysToGo} {t('daysToGo')}
 							</span>
 						</div>
-						<div className="h-2 overflow-hidden rounded-full bg-background/50">
+						<div
+							className="h-2 overflow-hidden rounded-full bg-background/50"
+							role="progressbar"
+							aria-valuenow={Math.round(progress)}
+							aria-valuemin={0}
+							aria-valuemax={100}
+							aria-label={`${Math.round(progress)}% to next milestone`}
+						>
 							<div
 								className={cn('h-full rounded-full transition-all duration-500', style.bar)}
 								style={{ width: `${progress}%` }}
@@ -217,7 +230,7 @@ export function StreakBar({
 
 	// Default variant
 	return (
-		<div className={cn('flex items-center gap-3', className)}>
+		<div className={cn('flex items-center gap-3', className)} role="status" aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}>
 			<div className="flex items-center gap-2">
 				<Flame
 					className={cn(
@@ -225,6 +238,7 @@ export function StreakBar({
 						currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground',
 						currentStreak >= 7 && 'animate-streak-pulse',
 					)}
+					aria-hidden="true"
 				/>
 				<span
 					className={cn(
@@ -238,7 +252,13 @@ export function StreakBar({
 
 			{showMilestone && currentStreak > 0 && currentStreak < 365 && (
 				<div className="flex flex-1 items-center gap-2">
-					<div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+					<div
+						className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
+						role="progressbar"
+						aria-valuenow={Math.round(progress)}
+						aria-valuemin={0}
+						aria-valuemax={100}
+					>
 						<div
 							className={cn('h-full rounded-full animate-progress-fill', style.bar)}
 							style={{ width: `${progress}%` }}

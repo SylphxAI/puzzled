@@ -27,15 +27,16 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 
 	if (!mounted) {
 		return (
-			<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}>
-				{themes.map(({ value, icon: Icon }) => (
+			<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)} role="group" aria-label="Theme selection">
+				{themes.map(({ value, icon: Icon, label }) => (
 					<button
 						type="button"
 						key={value}
 						className="flex h-8 w-8 items-center justify-center rounded-md"
 						disabled
+						aria-label={`${label} theme (loading)`}
 					>
-						<Icon className="h-4 w-4" />
+						<Icon className="h-4 w-4" aria-hidden="true" />
 					</button>
 				))}
 			</div>
@@ -43,7 +44,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 	}
 
 	return (
-		<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}>
+		<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)} role="group" aria-label="Theme selection">
 			{themes.map(({ value, icon: Icon, label }) => {
 				const isActive = theme === value
 				return (
@@ -57,9 +58,10 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 								? 'bg-background text-foreground shadow-sm'
 								: 'text-muted-foreground hover:text-foreground',
 						)}
-						title={label}
+						aria-label={`Set theme to ${label}`}
+						aria-pressed={isActive}
 					>
-						<Icon className="h-4 w-4" />
+						<Icon className="h-4 w-4" aria-hidden="true" />
 						{showLabel && <span className="text-sm">{label}</span>}
 					</button>
 				)
@@ -83,8 +85,9 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 				type="button"
 				className={cn('flex h-10 w-10 items-center justify-center rounded-full', className)}
 				disabled
+				aria-label="Theme toggle (loading)"
 			>
-				<Sun className="h-5 w-5" />
+				<Sun className="h-5 w-5" aria-hidden="true" />
 			</button>
 		)
 	}
@@ -99,6 +102,8 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 
 	const Icon = resolvedTheme === 'dark' ? Moon : theme === 'system' ? Monitor : Sun
 
+	const currentLabel = theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'
+
 	return (
 		<button
 			type="button"
@@ -107,9 +112,10 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 				'flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted',
 				className,
 			)}
-			title={`Theme: ${theme}`}
+			aria-label={`Toggle theme (current: ${currentLabel})`}
 		>
-			<Icon className="h-5 w-5" />
+			<Icon className="h-5 w-5" aria-hidden="true" />
+			<span className="sr-only">Current theme: {currentLabel}</span>
 		</button>
 	)
 }

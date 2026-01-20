@@ -57,12 +57,16 @@ export function DifficultySelector({
 
 	return (
 		<div className={cn('flex flex-col gap-3', className)}>
-			<div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-				<Gauge className="h-4 w-4" />
+			<div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" id="difficulty-label">
+				<Gauge className="h-4 w-4" aria-hidden="true" />
 				<span className="font-medium">{t('selectDifficulty')}</span>
 			</div>
 
-			<div className="flex items-center justify-center gap-1.5 rounded-xl bg-muted/50 p-1.5">
+			<div
+				className="flex items-center justify-center gap-1.5 rounded-xl bg-muted/50 p-1.5"
+				role="group"
+				aria-labelledby="difficulty-label"
+			>
 				{options.map((option) => {
 					const config = difficultyConfig[option.level]
 					const isSelected = selected === option.level
@@ -73,6 +77,8 @@ export function DifficultySelector({
 							type="button"
 							key={option.level}
 							onClick={() => onSelect(option.level)}
+							aria-pressed={isSelected}
+							aria-label={config.label}
 							className={cn(
 								'relative flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
 								isSelected
@@ -87,6 +93,7 @@ export function DifficultySelector({
 										'h-3.5 w-3.5',
 										isSelected ? config.color : 'text-emerald-500',
 									)}
+									aria-hidden="true"
 								/>
 							)}
 							<span>{config.label}</span>
@@ -145,8 +152,10 @@ export function DifficultyBadge({
 				c.bg,
 				className,
 			)}
+			role="status"
+			aria-label={c.label}
 		>
-			{showIcon && <Gauge className="h-3 w-3" />}
+			{showIcon && <Gauge className="h-3 w-3" aria-hidden="true" />}
 			{c.label}
 		</span>
 	)
