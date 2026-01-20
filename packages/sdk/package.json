@@ -1,0 +1,92 @@
+{
+	"name": "@sylphx/sdk",
+	"version": "0.1.0",
+	"description": "Sylphx SDK - State-of-the-art platform SDK with pure functions",
+	"type": "module",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"import": "./dist/index.js"
+		},
+		"./auth": {
+			"types": "./src/auth.ts",
+			"import": "./dist/auth.js"
+		},
+		"./ai": {
+			"types": "./src/ai.ts",
+			"import": "./dist/ai.js"
+		},
+		"./analytics": {
+			"types": "./src/analytics.ts",
+			"import": "./dist/analytics.js"
+		},
+		"./billing": {
+			"types": "./src/billing.ts",
+			"import": "./dist/billing.js"
+		},
+		"./storage": {
+			"types": "./src/storage.ts",
+			"import": "./dist/storage.js"
+		},
+		"./notifications": {
+			"types": "./src/notifications.ts",
+			"import": "./dist/notifications.js"
+		},
+		"./jobs": {
+			"types": "./src/jobs.ts",
+			"import": "./dist/jobs.js"
+		},
+		"./flags": {
+			"types": "./src/flags.ts",
+			"import": "./dist/flags.js"
+		},
+		"./config": {
+			"types": "./src/config.ts",
+			"import": "./dist/config.js"
+		},
+		"./react": {
+			"types": "./src/react/index.ts",
+			"import": "./dist/react/index.js"
+		},
+		"./nextjs": {
+			"types": "./src/nextjs/index.ts",
+			"import": "./dist/nextjs/index.js"
+		},
+		"./server": {
+			"types": "./src/server/index.ts",
+			"import": "./dist/server/index.js"
+		}
+	},
+	"main": "./dist/index.js",
+	"types": "./src/index.ts",
+	"files": ["dist", "src"],
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"typecheck": "tsc --noEmit",
+		"test": "bun test"
+	},
+	"peerDependencies": {
+		"react": ">=18",
+		"react-dom": ">=18",
+		"use-sync-external-store": ">=1"
+	},
+	"peerDependenciesMeta": {
+		"react": {
+			"optional": true
+		},
+		"react-dom": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^25",
+		"@types/react": "^19",
+		"@types/react-dom": "^19",
+		"react": "^19",
+		"react-dom": "^19",
+		"tsup": "^8.5.1",
+		"typescript": "^5"
+	}
+}

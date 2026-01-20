@@ -1,0 +1,148 @@
+/**
+ * Notifications Functions
+ *
+ * Pure functions for push notifications.
+ */
+
+import { type SylphxConfig, callTrpc } from './config'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface PushSubscription {
+	endpoint: string
+	keys: {
+		p256dh: string
+		auth: string
+	}
+}
+
+export interface PushNotification {
+	title: string
+	body: string
+	icon?: string
+	url?: string
+}
+
+// ============================================================================
+// Functions
+// ============================================================================
+
+/**
+ * Register a push subscription
+ *
+ * @example
+ * ```typescript
+ * // Get subscription from browser
+ * const registration = await navigator.serviceWorker.ready
+ * const sub = await registration.pushManager.subscribe({
+ *   userVisibleOnly: true,
+ *   applicationServerKey: vapidPublicKey,
+ * })
+ *
+ * // Register with platform
+ * await registerPush(config, {
+ *   endpoint: sub.endpoint,
+ *   keys: {
+ *     p256dh: sub.toJSON().keys!.p256dh,
+ *     auth: sub.toJSON().keys!.auth,
+ *   },
+ * })
+ * ```
+ */
+export async function registerPush(
+	config: SylphxConfig,
+	subscription: PushSubscription
+): Promise<void> {
+	await callTrpc(
+		config,
+		'notifications.register',
+		{ subscription },
+		'mutation'
+	)
+}
+
+/**
+ * Unregister a push subscription
+ *
+ * @example
+ * ```typescript
+ * await unregisterPush(config, subscription.endpoint)
+ * ```
+ */
+export async function unregisterPush(config: SylphxConfig, endpoint: string): Promise<void> {
+	await callTrpc(
+		config,
+		'notifications.unregister',
+		{ endpoint },
+		'mutation'
+	)
+}
+
+/**
+ * Send a push notification to a user (admin only)
+ *
+ * @example
+ * ```typescript
+ * await sendPush(config, 'user-123', {
+ *   title: 'New message',
+ *   body: 'You have a new message',
+ *   url: '/messages',
+ * })
+ * ```
+ */
+export async function sendPush(
+	config: SylphxConfig,
+	userId: string,
+	notification: PushNotification
+): Promise<{ sentTo: number; expired: number }> {
+	return callTrpc(
+		config,
+		'notifications.sendToUser',
+		{ userId, ...notification },
+		'mutation'
+	)
+}
+
+/**
+ * Get push notification preferences
+ *
+ * @example
+ * ```typescript
+ * const prefs = await getPushPreferences(config)
+ * ```
+ */
+export async function getPushPreferences(
+	config: SylphxConfig
+): Promise<{ enabled: boolean; categories: Record<string, boolean> }> {
+	return callTrpc(
+		config,
+		'notifications.getPreferences',
+		undefined,
+		'query'
+	)
+}
+
+/**
+ * Update push notification preferences
+ *
+ * @example
+ * ```typescript
+ * await updatePushPreferences(config, {
+ *   enabled: true,
+ *   categories: { marketing: false, updates: true },
+ * })
+ * ```
+ */
+export async function updatePushPreferences(
+	config: SylphxConfig,
+	preferences: { enabled?: boolean; categories?: Record<string, boolean> }
+): Promise<void> {
+	await callTrpc(
+		config,
+		'notifications.updatePreferences',
+		preferences,
+		'mutation'
+	)
+}
