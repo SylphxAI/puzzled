@@ -552,7 +552,7 @@ export function PlatformModeProvider({
 					access: 'public',
 					handleUploadUrl: `${platformUrl}/api/storage/upload`,
 					clientPayload: JSON.stringify({
-						appId: 'sylphx-platform',
+						appId: 'sylphx-console',
 						userId: authState.user?.id,
 						type: 'file',
 						folder: options?.path,
@@ -580,7 +580,7 @@ export function PlatformModeProvider({
 					access: 'public',
 					handleUploadUrl: `${platformUrl}/api/storage/upload`,
 					clientPayload: JSON.stringify({
-						appId: 'sylphx-platform',
+						appId: 'sylphx-console',
 						userId: authState.user.id,
 						type: 'avatar',
 					}),
@@ -641,7 +641,7 @@ export function PlatformModeProvider({
 
 	const platformValue = useMemo(
 		() => ({
-			appId: 'sylphx-platform',
+			appId: 'sylphx-console',
 			publishableKey: '',
 			platformUrl: typeof window !== 'undefined' ? window.location.origin : '',
 			anonymousId,
