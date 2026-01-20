@@ -117,15 +117,19 @@ const { session, refresh } = useSession()
 ```tsx
 import { useBilling } from '@sylphx/sdk/react'
 
-const { subscription, isPremium, plans, checkout, openBillingPortal } = useBilling()
+const { subscription, isPremium, plans, createCheckout, openPortal } = useBilling()
 
 // Check premium status
 if (isPremium) {
   // Show premium features
 }
 
-// Start checkout
-await checkout({ planSlug: 'pro', interval: 'monthly' })
+// Start checkout (returns URL to redirect to)
+const checkoutUrl = await createCheckout('pro', 'monthly')
+window.location.href = checkoutUrl
+
+// Open billing portal to manage subscription
+await openPortal()
 ```
 
 ### Analytics
@@ -162,41 +166,48 @@ const { embed, embedding } = useEmbedding()
 ### Storage
 
 ```tsx
-import { useStorage, useFileUpload } from '@sylphx/sdk/react'
+import { useStorage } from '@sylphx/sdk/react'
 
-const { upload, getUrl, deleteFile } = useStorage()
-const { uploadFile, progress, isUploading } = useFileUpload()
+const { upload, uploadAvatar, deleteFile, getUrl, isUploading, progress } = useStorage()
 
-// Upload avatar
-const url = await upload.avatar(file)
+// Upload avatar (special handling for profile images)
+const avatarUrl = await uploadAvatar(file)
 
-// Upload file
-const result = await uploadFile(file, { path: 'documents/' })
+// Upload file with optional path
+const fileUrl = await upload(file, { path: 'documents/' })
+
+// Show progress while uploading
+if (isUploading) {
+  console.log(`Upload progress: ${progress}%`)
+}
 ```
 
 ### More Hooks
 
 ```tsx
-// Push notifications
-import { usePush } from '@sylphx/sdk/react'
+// Feature flags - check if features are enabled
+import { useFeatureFlag, useFeatureFlags } from '@sylphx/sdk/react'
+const { isEnabled, variant, isLoading } = useFeatureFlag('new-dashboard')
+const flags = useFeatureFlags(['dark-mode', 'beta-features'])
 
-// Referrals
+// Error tracking - capture exceptions and breadcrumbs
+import { useErrorTracking } from '@sylphx/sdk/react'
+const { captureException, addBreadcrumb, setRoute } = useErrorTracking()
+
+// Referrals - referral program management
 import { useReferral } from '@sylphx/sdk/react'
 
-// Feature flags
-import { useFeatureFlag } from '@sylphx/sdk/react'
-
-// Error tracking
-import { useErrorTracking } from '@sylphx/sdk/react'
-
-// Privacy/consent
+// Privacy/consent - GDPR consent management
 import { useConsent } from '@sylphx/sdk/react'
 
-// Background jobs
+// Background jobs - async task management
 import { useJobs } from '@sylphx/sdk/react'
 
-// Organizations
+// Organizations - multi-tenant support
 import { useOrganization } from '@sylphx/sdk/react'
+
+// Notifications - in-app notification center
+import { useNotifications } from '@sylphx/sdk/react'
 ```
 
 ---
@@ -309,37 +320,37 @@ export default async function Page() {
 ### Server API Client
 
 ```tsx
-import { createPlatformAPI } from '@sylphx/sdk'
+import { createSylphx } from '@sylphx/sdk'
 
-const platform = createPlatformAPI({
+const sylphx = createSylphx({
   appId: process.env.SYLPHX_APP_ID!,
   appSecret: process.env.SYLPHX_APP_SECRET!,
 })
 
-// Track events
-await platform.analytics.track({
+// Track events (tRPC-style with full type inference)
+await sylphx.analytics.track.mutate({
   event: 'purchase_completed',
   userId: user.id,
   properties: { amount: 99.99 },
 })
 
 // Get subscription
-const subscription = await platform.billing.getSubscription()
+const subscription = await sylphx.billing.getSubscription.query()
 
 // Check feature flag
-const isEnabled = await platform.flags.check('new-feature')
+const isEnabled = await sylphx.flags.check.query({ key: 'new-feature' })
 ```
 
 ---
 
 ## API Reference
 
-### `createPlatformAPI(config)`
+### `createSylphx(config)`
 
-Creates a server-side API client.
+Creates a server-side API client with full TypeScript inference.
 
 ```ts
-const platform = createPlatformAPI({
+const sylphx = createSylphx({
   appId: string,          // Your app slug
   appSecret: string,      // sk_dev_*, sk_stg_*, or sk_prod_*
   platformUrl?: string,   // Default: https://sylphx.com
@@ -347,7 +358,11 @@ const platform = createPlatformAPI({
 })
 ```
 
-**Available Methods:**
+> **Note**: `createPlatformAPI` is deprecated. Use `createSylphx` instead.
+
+**Available Namespaces:**
+
+All methods use tRPC patterns: `.query()` for reads, `.mutate()` for writes.
 
 | Namespace | Methods |
 |-----------|---------|
@@ -355,10 +370,11 @@ const platform = createPlatformAPI({
 | `user` | `getProfile`, `updateProfile`, `changePassword`, `getSecuritySettings`, `getLoginHistory`, `deleteAccount` |
 | `billing` | `getPlans`, `getSubscription`, `createCheckout`, `createPortalSession`, `cancelSubscription` |
 | `analytics` | `track`, `trackBatch`, `identify`, `pageView` |
-| `push` | `register`, `unregister`, `getPreferences` |
+| `notifications` | `list`, `markRead`, `getUnreadCount`, `getPreferences` |
 | `referrals` | `getMyCode`, `redeem`, `getStats` |
 | `flags` | `check`, `getAll`, `checkWithDetail`, `getAllWithDetail` |
 | `storage` | `getUploadUrl`, `uploadAvatar` |
+| `jobs` | `submit`, `getStatus`, `cancel`, `list` |
 
 ---
 
