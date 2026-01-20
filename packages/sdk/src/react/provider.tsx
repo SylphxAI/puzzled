@@ -67,6 +67,16 @@ import {
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
 import type { User, TokenResponse } from '../types'
+import type {
+	EngagementConfig,
+	StreakState,
+	RecordActivityResult,
+	LeaderboardResult,
+	LeaderboardQueryOptions,
+	SubmitScoreResult,
+	UserAchievement,
+	AchievementUnlockEvent,
+} from '../lib/engagement/types'
 
 // Dynamic import for @vercel/blob/client to avoid SSR issues with undici
 let blobUploadCache: typeof import('@vercel/blob/client').upload | null = null
@@ -131,6 +141,26 @@ export interface SylphxProviderProps {
 	 * or other same-origin applications.
 	 */
 	platformMode?: boolean
+	/**
+	 * Engagement config (Code First approach)
+	 *
+	 * Define streaks, leaderboards, and achievements in your app code.
+	 * Config is automatically synced to the platform on mount.
+	 *
+	 * @example
+	 * ```tsx
+	 * import { createEngagementConfig, defineStreak } from '@sylphx/sdk'
+	 *
+	 * const engagement = createEngagementConfig({
+	 *   streaks: [
+	 *     defineStreak({ id: 'daily', name: 'Daily', frequency: 'daily' }),
+	 *   ],
+	 * })
+	 *
+	 * <SylphxProvider appId="my-app" engagement={engagement}>
+	 * ```
+	 */
+	engagement?: EngagementConfig
 }
 
 // ============================================
@@ -146,6 +176,7 @@ export function SylphxProvider({
 	vapidPublicKey,
 	autoTracking = true,
 	platformMode = false,
+	engagement,
 }: SylphxProviderProps) {
 	// In platform mode, derive URL from current origin; otherwise use provided or default
 	const platformUrl = platformMode
@@ -224,6 +255,10 @@ export function SylphxProvider({
 	const [mobilePushConfig, setMobilePushConfig] = useState<MobilePushConfig | null>(null)
 	const [mobilePushPreferences, setMobilePushPreferences] = useState<MobilePushPreferences | null>(null)
 	const [mobilePushError, setMobilePushError] = useState<Error | null>(null)
+
+	// Engagement State
+	const [engagementConfigSynced, setEngagementConfigSynced] = useState(false)
+	const [engagementLastSyncAt, setEngagementLastSyncAt] = useState<string | null>(null)
 
 	// ============================================
 	// In-App Messages (Inbox) State
@@ -1278,12 +1313,113 @@ export function SylphxProvider({
 		return data.code
 	}, [api])
 
-	const getLeaderboard = useCallback(
+	const getReferralLeaderboard = useCallback(
 		async (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => {
 			return api.referrals.getLeaderboard.query(options)
 		},
 		[api]
 	)
+
+	// ============================================
+	// Engagement Actions (Streaks, Leaderboards, Achievements)
+	// ============================================
+	const getStreak = useCallback(
+		async (streakId: string): Promise<StreakState> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to get streak')
+			}
+			return api.engagement.getStreak.query({ streakId, userId: authState.user.id })
+		},
+		[api, authState.user?.id]
+	)
+
+	const recordStreakActivity = useCallback(
+		async (streakId: string, metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to record activity')
+			}
+			return api.engagement.recordActivity.mutate({ streakId, userId: authState.user.id, metadata })
+		},
+		[api, authState.user?.id]
+	)
+
+	const recoverStreak = useCallback(
+		async (streakId: string): Promise<{ success: boolean; streak: StreakState }> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to recover streak')
+			}
+			return api.engagement.recoverStreak.mutate({ streakId, userId: authState.user.id })
+		},
+		[api, authState.user?.id]
+	)
+
+	const getEngagementLeaderboard = useCallback(
+		async (leaderboardId: string, options?: LeaderboardQueryOptions): Promise<LeaderboardResult> => {
+			return api.engagement.getLeaderboard.query({
+				leaderboardId,
+				userId: authState.user?.id ?? null,
+				...options,
+			})
+		},
+		[api, authState.user?.id]
+	)
+
+	const submitScore = useCallback(
+		async (leaderboardId: string, value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to submit score')
+			}
+			return api.engagement.submitScore.mutate({ leaderboardId, value, userId: authState.user.id, metadata })
+		},
+		[api, authState.user?.id]
+	)
+
+	const getAchievements = useCallback(async (): Promise<UserAchievement[]> => {
+		if (!authState.user?.id) {
+			throw new Error('User must be authenticated to get achievements')
+		}
+		return api.engagement.getAchievements.query({ userId: authState.user.id })
+	}, [api, authState.user?.id])
+
+	const unlockAchievement = useCallback(
+		async (achievementId: string): Promise<AchievementUnlockEvent> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to unlock achievement')
+			}
+			return api.engagement.unlockAchievement.mutate({ achievementId, userId: authState.user.id })
+		},
+		[api, authState.user?.id]
+	)
+
+	const incrementAchievementProgress = useCallback(
+		async (achievementId: string, amount: number): Promise<UserAchievement> => {
+			if (!authState.user?.id) {
+				throw new Error('User must be authenticated to increment progress')
+			}
+			return api.engagement.incrementProgress.mutate({ achievementId, amount, userId: authState.user.id })
+		},
+		[api, authState.user?.id]
+	)
+
+	// Sync engagement config on mount (Code First)
+	useEffect(() => {
+		if (!engagement) return
+
+		const syncConfig = async () => {
+			try {
+				const result = await api.engagement.syncConfig.mutate({
+					hash: '', // Hash computed server-side or by SDK
+					config: engagement,
+				})
+				setEngagementConfigSynced(result.synced)
+				setEngagementLastSyncAt(new Date().toISOString())
+			} catch (err) {
+				console.error('[Engagement] Failed to sync config:', err)
+			}
+		}
+
+		syncConfig()
+	}, [engagement, api])
 
 	// ============================================
 	// In-App Messages (Inbox) Actions
@@ -2392,7 +2528,7 @@ export function SylphxProvider({
 			referralError,
 			copyReferralCode,
 			regenerateReferralCode,
-			getLeaderboard,
+			getReferralLeaderboard,
 			// In-App Messages (Inbox)
 			inboxMessages,
 			inboxUnreadCount,
@@ -2411,6 +2547,19 @@ export function SylphxProvider({
 			getBillingUsage: async (options?: { month?: string }) => {
 				return await api.billing.getUsage.query(options)
 			},
+			// Engagement
+			user: authState.user,
+			engagementConfig: engagement ?? null,
+			engagementConfigSynced,
+			engagementLastSyncAt,
+			getStreak,
+			recordStreakActivity,
+			recoverStreak,
+			getLeaderboard: getEngagementLeaderboard, // Engagement leaderboard
+			submitScore,
+			getAchievements,
+			unlockAchievement,
+			incrementAchievementProgress,
 		}),
 		[
 			api,
@@ -2453,7 +2602,7 @@ export function SylphxProvider({
 			referralError,
 			copyReferralCode,
 			regenerateReferralCode,
-			getLeaderboard,
+			getReferralLeaderboard,
 			// Inbox deps
 			inboxMessages,
 			inboxUnreadCount,
@@ -2466,6 +2615,19 @@ export function SylphxProvider({
 			dismissInboxMessage,
 			recordInboxMessageClick,
 			updateInboxPreferences,
+			// Engagement deps
+			authState.user,
+			engagement,
+			engagementConfigSynced,
+			engagementLastSyncAt,
+			getStreak,
+			recordStreakActivity,
+			recoverStreak,
+			getEngagementLeaderboard,
+			submitScore,
+			getAchievements,
+			unlockAchievement,
+			incrementAchievementProgress,
 		]
 	)
 

@@ -438,8 +438,8 @@ export interface LeaderboardEntry {
 	isCurrentUser: boolean
 }
 
-/** Leaderboard result */
-export interface LeaderboardResult {
+/** Referral leaderboard result */
+export interface ReferralLeaderboardResult {
 	period: 'all' | 'month' | 'week'
 	entries: LeaderboardEntry[]
 	currentUserRank: number | null
@@ -471,7 +471,7 @@ export interface UseReferralReturn {
 	 * @param options.limit - Maximum entries (1-100, default: 10)
 	 * @param options.period - Time period ('all', 'month', 'week')
 	 */
-	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<LeaderboardResult>
+	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<ReferralLeaderboardResult>
 }
 
 /**
@@ -520,7 +520,7 @@ export function useReferral(): UseReferralReturn {
 		copyCode,
 		copyLink,
 		regenerateCode: ctx.regenerateReferralCode,
-		getLeaderboard: ctx.getLeaderboard,
+		getLeaderboard: ctx.getReferralLeaderboard,
 	}
 }
 

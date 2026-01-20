@@ -13,7 +13,18 @@ import type {
 	Plan,
 	Subscription,
 	ReferralStats,
+	User,
 } from '../types'
+import type {
+	EngagementConfig,
+	StreakState,
+	RecordActivityResult,
+	LeaderboardResult,
+	LeaderboardQueryOptions,
+	SubmitScoreResult,
+	UserAchievement,
+	AchievementUnlockEvent,
+} from '../lib/engagement/types'
 
 // Import InAppMessage types from trpc.ts (SSOT - inferred from router)
 import type {
@@ -264,7 +275,7 @@ export interface PlatformContextValue {
 	referralError: Error | null
 	copyReferralCode: () => Promise<void>
 	regenerateReferralCode: () => Promise<string>
-	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<{
+	getReferralLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<{
 		period: 'all' | 'month' | 'week'
 		entries: Array<{
 			rank: number
@@ -322,6 +333,32 @@ export interface PlatformContextValue {
 			authMau: number
 		} | null
 	}>
+
+	// Engagement (Streaks, Leaderboards, Achievements)
+	/** Current authenticated user (needed for engagement features) */
+	user: User | null
+	/** Engagement config (Code First - defined in app code) */
+	engagementConfig: EngagementConfig | null
+	/** Whether engagement config has been synced to platform */
+	engagementConfigSynced: boolean
+	/** Last sync timestamp */
+	engagementLastSyncAt: string | null
+	/** Get streak state for a user */
+	getStreak: (streakId: string) => Promise<StreakState>
+	/** Record activity to extend streak */
+	recordStreakActivity: (streakId: string, metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
+	/** Recover streak within grace period */
+	recoverStreak: (streakId: string) => Promise<{ success: boolean; streak: StreakState }>
+	/** Get leaderboard data */
+	getLeaderboard: (leaderboardId: string, options?: LeaderboardQueryOptions) => Promise<LeaderboardResult>
+	/** Submit score to leaderboard */
+	submitScore: (leaderboardId: string, value: number, metadata?: Record<string, unknown>) => Promise<SubmitScoreResult>
+	/** Get all user achievements */
+	getAchievements: () => Promise<UserAchievement[]>
+	/** Unlock an achievement */
+	unlockAchievement: (achievementId: string) => Promise<AchievementUnlockEvent>
+	/** Increment achievement progress */
+	incrementAchievementProgress: (achievementId: string, amount: number) => Promise<UserAchievement>
 }
 
 export const PlatformContext = createContext<PlatformContextValue | null>(null)

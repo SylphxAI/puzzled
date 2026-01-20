@@ -318,6 +318,17 @@ export {
 	type UseWebhookStatsReturn,
 } from './webhooks-hooks'
 
+// Engagement Hooks (Streaks, Leaderboards, Achievements)
+export {
+	useStreak,
+	useLeaderboard,
+	useAchievements,
+	useEngagementConfig,
+	type UseStreakReturn,
+	type UseLeaderboardReturn,
+	type UseAchievementsReturn,
+} from './engagement-hooks'
+
 // Headless Hooks (for custom UIs)
 export {
 	useSignInForm,

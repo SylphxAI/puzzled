@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '../hooks'
-import { useReferral, type LeaderboardEntry, type LeaderboardResult } from '../platform-hooks'
+import { useReferral, type LeaderboardEntry, type ReferralLeaderboardResult } from '../platform-hooks'
 import {
 	type ThemeVariables,
 	defaultTheme,
@@ -74,7 +74,7 @@ export function ReferralLeaderboard({
 	const styles = baseStyles(theme)
 
 	const [period, setPeriod] = useState<LeaderboardPeriod>(defaultPeriod)
-	const [leaderboard, setLeaderboard] = useState<LeaderboardResult | null>(null)
+	const [leaderboard, setLeaderboard] = useState<ReferralLeaderboardResult | null>(null)
 	const [personalStats, setPersonalStats] = useState<{
 		totalReferrals: number
 		completedReferrals: number

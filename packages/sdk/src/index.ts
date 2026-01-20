@@ -336,6 +336,66 @@ export {
 } from './referrals'
 
 // =============================================================================
+// Engagement Functions (Streaks, Leaderboards, Achievements)
+// =============================================================================
+
+export {
+	// Config builders (Code First)
+	defineStreak,
+	defineLeaderboard,
+	defineAchievement,
+	defineAchievementCategory,
+	createEngagementConfig,
+	hashEngagementConfig,
+	// Streak functions
+	getStreak,
+	getAllStreaks,
+	recordStreakActivity,
+	recoverStreak,
+	// Leaderboard functions
+	getLeaderboard,
+	submitScore,
+	getUserLeaderboardRank,
+	// Achievement functions
+	getAchievements,
+	getAchievement,
+	unlockAchievement,
+	incrementAchievementProgress,
+	getAchievementPoints,
+	// Config sync (internal)
+	syncEngagementConfig,
+	// Constants
+	ACHIEVEMENT_TIER_CONFIG,
+	// Types
+	type StreakDefinition,
+	type StreakState,
+	type StreakFrequency,
+	type RecordActivityInput,
+	type RecordActivityResult,
+	type LeaderboardDefinition,
+	type LeaderboardEntry as EngagementLeaderboardEntry,
+	type LeaderboardResult as EngagementLeaderboardResult,
+	type LeaderboardQueryOptions,
+	type LeaderboardSortDirection,
+	type LeaderboardResetPeriod,
+	type LeaderboardAggregation,
+	type SubmitScoreInput,
+	type SubmitScoreResult,
+	type AchievementDefinition,
+	type AchievementType,
+	type AchievementTier,
+	type AchievementCategory,
+	type AchievementCriteria,
+	type AchievementCriterion,
+	type CriteriaOperator,
+	type UserAchievement,
+	type AchievementUnlockEvent,
+	type EngagementConfig,
+	type EngagementConfigInput,
+	type AchievementCategoryInput,
+} from './engagement'
+
+// =============================================================================
 // Common Types (re-exported from types.ts)
 // =============================================================================
 
