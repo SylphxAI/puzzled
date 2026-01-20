@@ -2,15 +2,31 @@
  * Consent Functions
  *
  * Pure functions for GDPR/CCPA consent management.
+ * Config is defined in app code (Code First) and synced automatically.
  */
 
 import { type SylphxConfig, callTrpc } from './config'
 
+// Re-export types and config builders
+export type {
+	ConsentCategory,
+	ConsentPurposeDefinition,
+	ConsentConfig,
+	ConsentConfigInput,
+} from './lib/consent/config'
+
+export {
+	defineConsentPurpose,
+	createConsentConfig,
+	hashConsentConfig,
+	presetPurposes,
+} from './lib/consent/config'
+
 // ============================================================================
-// Types
+// Types (Runtime)
 // ============================================================================
 
-export type ConsentCategory = 'necessary' | 'analytics' | 'marketing' | 'functional'
+import type { ConsentCategory } from './lib/consent/config'
 
 export interface ConsentType {
 	id: string
@@ -160,4 +176,36 @@ export async function linkAnonymousConsents(
 	input: LinkAnonymousConsentsInput
 ): Promise<void> {
 	return callTrpc(config, 'consent.linkAnonymousConsents', input, 'mutation')
+}
+
+// ============================================================================
+// Config Sync (Internal - called by SDK on init)
+// ============================================================================
+
+import type { ConsentConfig } from './lib/consent/config'
+import { hashConsentConfig } from './lib/consent/config'
+
+/**
+ * Sync consent config to platform (called automatically by SDK)
+ *
+ * This is called during SylphxProvider initialization to ensure
+ * the platform has the latest consent purposes from app code.
+ *
+ * @internal
+ */
+export async function syncConsentConfig(
+	config: SylphxConfig,
+	consent: ConsentConfig
+): Promise<{ synced: boolean; hash: string }> {
+	const hash = hashConsentConfig(consent)
+
+	return callTrpc(
+		config,
+		'consent.syncConfig',
+		{
+			hash,
+			config: consent,
+		},
+		'mutation'
+	)
 }

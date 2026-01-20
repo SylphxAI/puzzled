@@ -302,13 +302,24 @@ export {
 // =============================================================================
 
 export {
+	// Config builders (Code First)
+	defineConsentPurpose,
+	createConsentConfig,
+	hashConsentConfig,
+	presetPurposes,
+	// Runtime functions
 	getConsentTypes,
 	getUserConsents,
 	setConsents,
 	acceptAllConsents,
 	declineOptionalConsents,
 	linkAnonymousConsents,
+	syncConsentConfig,
+	// Types
 	type ConsentCategory,
+	type ConsentPurposeDefinition,
+	type ConsentConfig,
+	type ConsentConfigInput,
 	type ConsentType,
 	type UserConsent,
 	type SetConsentsInput,

@@ -77,6 +77,7 @@ import type {
 	UserAchievement,
 	AchievementUnlockEvent,
 } from '../lib/engagement/types'
+import type { ConsentConfig } from '../lib/consent/config'
 
 // Dynamic import for @vercel/blob/client to avoid SSR issues with undici
 let blobUploadCache: typeof import('@vercel/blob/client').upload | null = null
@@ -161,6 +162,29 @@ export interface SylphxProviderProps {
 	 * ```
 	 */
 	engagement?: EngagementConfig
+	/**
+	 * Consent config (Code First approach)
+	 *
+	 * Define consent purposes in your app code.
+	 * Config is automatically synced to the platform on mount.
+	 *
+	 * @example
+	 * ```tsx
+	 * import { createConsentConfig, presetPurposes } from '@sylphx/sdk'
+	 *
+	 * const consent = createConsentConfig({
+	 *   purposes: [
+	 *     presetPurposes.necessary,
+	 *     presetPurposes.analytics,
+	 *     presetPurposes.marketing,
+	 *   ],
+	 *   version: '1.0',
+	 * })
+	 *
+	 * <SylphxProvider appId="my-app" consent={consent}>
+	 * ```
+	 */
+	consent?: ConsentConfig
 }
 
 // ============================================
@@ -177,6 +201,7 @@ export function SylphxProvider({
 	autoTracking = true,
 	platformMode = false,
 	engagement,
+	consent,
 }: SylphxProviderProps) {
 	// In platform mode, derive URL from current origin; otherwise use provided or default
 	const platformUrl = platformMode
@@ -259,6 +284,10 @@ export function SylphxProvider({
 	// Engagement State
 	const [engagementConfigSynced, setEngagementConfigSynced] = useState(false)
 	const [engagementLastSyncAt, setEngagementLastSyncAt] = useState<string | null>(null)
+
+	// Consent State (Code First)
+	const [consentConfigSynced, setConsentConfigSynced] = useState(false)
+	const [consentLastSyncAt, setConsentLastSyncAt] = useState<string | null>(null)
 
 	// ============================================
 	// In-App Messages (Inbox) State
@@ -1420,6 +1449,26 @@ export function SylphxProvider({
 
 		syncConfig()
 	}, [engagement, api])
+
+	// Sync consent config on mount (Code First)
+	useEffect(() => {
+		if (!consent) return
+
+		const syncConfig = async () => {
+			try {
+				const result = await api.consent.syncConfig.mutate({
+					hash: '', // Hash computed by SDK
+					config: consent,
+				})
+				setConsentConfigSynced(result.synced)
+				setConsentLastSyncAt(new Date().toISOString())
+			} catch (err) {
+				console.error('[Consent] Failed to sync config:', err)
+			}
+		}
+
+		syncConfig()
+	}, [consent, api])
 
 	// ============================================
 	// In-App Messages (Inbox) Actions
