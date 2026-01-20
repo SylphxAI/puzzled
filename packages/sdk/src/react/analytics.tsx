@@ -15,7 +15,7 @@ import {
 	useRef,
 	type ReactNode,
 } from 'react'
-import { useSylphxConfig } from './provider'
+import { useSylphxConfig } from './composable/core'
 import {
 	trackBatch,
 	generateAnonymousId,

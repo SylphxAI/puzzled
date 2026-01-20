@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useSylphxConfig } from './provider'
+import { useSylphxConfig } from './composable/core'
 import {
 	uploadFile as uploadFileFn,
 	getFileUrl as getFileUrlFn,

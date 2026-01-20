@@ -15,7 +15,7 @@ import {
 	useState,
 	type ReactNode,
 } from 'react'
-import { useSylphxConfig } from './provider'
+import { useSylphxConfig } from './composable/core'
 import {
 	getPlans as getPlansFn,
 	getSubscription as getSubscriptionFn,

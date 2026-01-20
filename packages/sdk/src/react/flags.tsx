@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSylphxConfig } from './provider'
+import { useSylphxConfig } from './composable/core'
 import {
 	checkFlag as checkFlagFn,
 	getFlags as getFlagsFn,

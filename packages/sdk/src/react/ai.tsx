@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { useSylphxConfig } from './provider'
+import { useSylphxConfig } from './composable/core'
 import {
 	chat as chatFn,
 	chatStream as chatStreamFn,

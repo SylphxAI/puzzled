@@ -41,6 +41,22 @@
 			"types": "./src/flags.ts",
 			"import": "./dist/flags.js"
 		},
+		"./webhooks": {
+			"types": "./src/webhooks.ts",
+			"import": "./dist/webhooks.js"
+		},
+		"./email": {
+			"types": "./src/email.ts",
+			"import": "./dist/email.js"
+		},
+		"./consent": {
+			"types": "./src/consent.ts",
+			"import": "./dist/consent.js"
+		},
+		"./referrals": {
+			"types": "./src/referrals.ts",
+			"import": "./dist/referrals.js"
+		},
 		"./config": {
 			"types": "./src/config.ts",
 			"import": "./dist/config.js"

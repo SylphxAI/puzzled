@@ -17,6 +17,10 @@ export default defineConfig([
 			'src/notifications.ts',
 			'src/jobs.ts',
 			'src/flags.ts',
+			'src/webhooks.ts',
+			'src/email.ts',
+			'src/consent.ts',
+			'src/referrals.ts',
 		],
 		format: ['esm'],
 		dts: false, // DTS requires standalone types (TODO: fix type architecture)
