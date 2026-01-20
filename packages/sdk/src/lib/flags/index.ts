@@ -108,3 +108,31 @@ export type {
 } from './types'
 
 export { DEFAULT_FLAGS_CONFIG } from './types'
+
+// Config (Code First)
+export {
+	defineBooleanFlag,
+	defineStringFlag,
+	defineNumberFlag,
+	defineJsonFlag,
+	defineVariantFlag,
+	defineFlag,
+	createFlagsConfig,
+	hashFlagsConfig,
+	presetFlags,
+	type FlagType,
+	type FlagCategory,
+	type FlagDefinitionBase,
+	type BooleanFlagDefinition,
+	type StringFlagDefinition,
+	type NumberFlagDefinition,
+	type JsonFlagDefinition,
+	type VariantFlagDefinition,
+	type AnyFlagDefinition,
+	type FlagsConfig,
+	type FlagsConfigInput,
+	type ExtractFlagKeys,
+} from './config'
+
+// Typed Flags
+export { createTypedFlags, type TypedFlags } from './typed-flags'

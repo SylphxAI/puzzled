@@ -280,6 +280,31 @@ export {
 	type FlagContext,
 } from './flags'
 
+// Feature Flags Code First (Flag Definitions)
+export {
+	defineBooleanFlag,
+	defineStringFlag,
+	defineNumberFlag,
+	defineJsonFlag,
+	defineVariantFlag,
+	defineFlag,
+	createFlagsConfig,
+	hashFlagsConfig,
+	presetFlags,
+	createTypedFlags,
+	type FlagType,
+	type FlagCategory,
+	type BooleanFlagDefinition,
+	type StringFlagDefinition,
+	type NumberFlagDefinition,
+	type JsonFlagDefinition,
+	type VariantFlagDefinition,
+	type AnyFlagDefinition,
+	type FlagsConfig,
+	type ExtractFlagKeys,
+	type TypedFlags,
+} from './lib/flags'
+
 // =============================================================================
 // Webhooks Functions
 // =============================================================================
