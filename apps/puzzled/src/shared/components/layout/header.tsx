@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useSafeUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/sdk/react'
 import { Link } from '@/lib/i18n/routing'
 import { SoundToggleCompact } from '@/shared/components/sound'
 import { ThemeToggleCompact } from '@/shared/components/theme'

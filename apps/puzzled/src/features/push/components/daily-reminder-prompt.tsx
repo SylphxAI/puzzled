@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PushPrompt } from '@sylphx/platform-sdk/react'
+import { PushPrompt } from '@sylphx/sdk/react'
 import { usePuzzledPush } from '../hooks/use-puzzled-push'
 
 interface DailyReminderPromptProps {

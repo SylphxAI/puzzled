@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { auth } from '@sylphx/platform-sdk/nextjs'
+import { auth } from '@sylphx/sdk/nextjs'
 
 type Props = {
 	children: React.ReactNode

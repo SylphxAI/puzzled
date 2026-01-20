@@ -17,7 +17,7 @@
 
 'use client'
 
-export { useNotifications, PushPrompt, NotificationBell } from '@sylphx/platform-sdk/react'
+export { useNotifications, PushPrompt, NotificationBell } from '@sylphx/sdk/react'
 
 // Re-export with Puzzled-specific types
 export { usePuzzledPush, type PuzzledNotification } from './hooks/use-puzzled-push'

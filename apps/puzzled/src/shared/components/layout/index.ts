@@ -10,6 +10,6 @@ export { UserMenu } from './user-menu'
 
 /**
  * Error Boundary - Use SDK's version directly
- * @example import { ErrorBoundary } from '@sylphx/platform-sdk/react'
+ * @example import { ErrorBoundary } from '@sylphx/sdk/react'
  */
-export { ErrorBoundary, SylphxErrorBoundary } from '@sylphx/platform-sdk/react'
+export { ErrorBoundary, SylphxErrorBoundary } from '@sylphx/sdk/react'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useNotifications, useAnalytics } from '@sylphx/platform-sdk/react'
+import { useNotifications, useAnalytics } from '@sylphx/sdk/react'
 import { trpc } from '@/trpc'
 
 /**

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Crown, Sparkles, Snowflake, Calendar, Check, Flame } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useBilling } from '@sylphx/platform-sdk/react'
+import { useBilling } from '@sylphx/sdk/react'
 import { cn } from '@/lib/utils'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
 

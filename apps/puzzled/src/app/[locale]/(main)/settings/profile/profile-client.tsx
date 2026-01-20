@@ -2,7 +2,7 @@
 
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { UserProfile } from '@sylphx/platform-sdk/react'
+import { UserProfile } from '@sylphx/sdk/react'
 
 /**
  * Profile Settings Client Component

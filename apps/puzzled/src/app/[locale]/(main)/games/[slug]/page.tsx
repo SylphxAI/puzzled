@@ -1,7 +1,7 @@
 import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'

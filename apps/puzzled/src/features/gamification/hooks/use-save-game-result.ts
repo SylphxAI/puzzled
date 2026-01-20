@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSafeUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 import { useGameAnalytics } from '@/features/analytics'

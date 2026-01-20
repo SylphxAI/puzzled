@@ -5,11 +5,11 @@
  * This replaces Sentry for server-side error capture.
  *
  * For client-side React components, use:
- * - useErrorTracking from '@sylphx/platform-sdk/react'
- * - ErrorBoundary from '@sylphx/platform-sdk/react'
+ * - useErrorTracking from '@sylphx/sdk/react'
+ * - ErrorBoundary from '@sylphx/sdk/react'
  */
 
-import { createServerClient } from '@sylphx/platform-sdk/server'
+import { createServerClient } from '@sylphx/sdk/server'
 
 // Singleton instance (lazy initialized)
 let client: ReturnType<typeof createServerClient> | null = null

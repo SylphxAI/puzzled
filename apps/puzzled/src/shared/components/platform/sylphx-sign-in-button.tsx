@@ -9,7 +9,7 @@
  */
 
 import { useCallback } from 'react'
-import { useSafeUser, useSafeAuth } from '@sylphx/platform-sdk/react'
+import { useSafeUser, useSafeAuth } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { ExternalLink } from 'lucide-react'
 

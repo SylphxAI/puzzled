@@ -14,7 +14,7 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useAnalytics } from '@sylphx/platform-sdk/react'
+import { useAnalytics } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 
 // ==========================================

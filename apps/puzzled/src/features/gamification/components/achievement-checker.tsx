@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useSafeUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/sdk/react'
 import { trpc } from '@/trpc'
 import { checkAchievements } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'

@@ -1,6 +1,6 @@
 import { Crown, Flame, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { auth } from '@sylphx/platform-sdk/nextjs'
+import { auth } from '@sylphx/sdk/nextjs'
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'

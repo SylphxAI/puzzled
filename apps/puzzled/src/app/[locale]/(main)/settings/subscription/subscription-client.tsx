@@ -3,7 +3,7 @@
 import { Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { useBilling, BillingSection } from '@sylphx/platform-sdk/react'
+import { useBilling, BillingSection } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 
 /**

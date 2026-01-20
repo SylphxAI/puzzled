@@ -2,7 +2,7 @@
 
 import { Shield } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { SecuritySettings } from '@sylphx/platform-sdk/react'
+import { SecuritySettings } from '@sylphx/sdk/react'
 
 /**
  * Security Settings Client Component

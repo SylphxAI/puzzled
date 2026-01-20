@@ -1,6 +1,6 @@
 import { BarChart3, Flame, Sparkles, Star, Target, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'

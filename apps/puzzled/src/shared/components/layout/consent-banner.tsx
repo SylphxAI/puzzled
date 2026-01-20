@@ -8,7 +8,7 @@
  * that need synchronous consent checks before SDK hydration.
  */
 
-import { CookieBanner, useConsent } from '@sylphx/platform-sdk/react'
+import { CookieBanner, useConsent } from '@sylphx/sdk/react'
 import { useEffect } from 'react'
 
 // LocalStorage keys (must match features/analytics/lib/consent.ts)

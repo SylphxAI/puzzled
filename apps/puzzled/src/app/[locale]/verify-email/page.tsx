@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { useSafeAuth } from '@sylphx/platform-sdk/react'
+import { useSafeAuth } from '@sylphx/sdk/react'
 import { Button, GamepadIcon } from '@sylphx/ui'
 
 type VerificationState = 'verifying' | 'success' | 'error' | 'pending'

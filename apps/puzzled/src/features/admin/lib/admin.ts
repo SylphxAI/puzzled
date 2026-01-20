@@ -8,7 +8,7 @@
  * - No local users table - platform is source of truth
  */
 
-import { auth } from '@sylphx/platform-sdk/nextjs'
+import { auth } from '@sylphx/sdk/nextjs'
 import { isAdminRole, isSuperAdminRole } from '@/lib/roles'
 
 /** Admin error codes */

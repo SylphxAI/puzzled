@@ -23,7 +23,7 @@ export {
 	type FeatureFlag,
 	type FlagValue,
 	type UseFeatureFlagReturn,
-} from '@sylphx/platform-sdk/react'
+} from '@sylphx/sdk/react'
 
 // ==========================================
 // Puzzled-specific Flag Keys
@@ -58,7 +58,7 @@ export function usePuzzledFlag(
 ) {
 	// Re-export with type safety
 	// biome-ignore lint/correctness/useHookAtTopLevel: This is a wrapper hook
-	const { useFeatureFlag } = require('@sylphx/platform-sdk/react')
+	const { useFeatureFlag } = require('@sylphx/sdk/react')
 	return useFeatureFlag(key, { defaultValue })
 }
 
@@ -67,6 +67,6 @@ export function usePuzzledFlag(
  */
 export function usePuzzledFlags(keys: PuzzledFeatureFlags[]) {
 	// biome-ignore lint/correctness/useHookAtTopLevel: This is a wrapper hook
-	const { useFeatureFlags } = require('@sylphx/platform-sdk/react')
+	const { useFeatureFlags } = require('@sylphx/sdk/react')
 	return useFeatureFlags(keys)
 }

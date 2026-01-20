@@ -1,7 +1,7 @@
 import { Settings } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { currentUser } from '@sylphx/sdk/nextjs'
 
 type Props = {
 	params: Promise<{ locale: string }>

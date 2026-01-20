@@ -14,7 +14,7 @@
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@sylphx/platform-sdk/server'
+import { createServerClient } from '@sylphx/sdk/server'
 
 interface FeatureFlag {
 	key: string

@@ -6,7 +6,7 @@
  * Apps don't manage billing - platform does.
  */
 
-import { createServerClient } from '@sylphx/platform-sdk/server'
+import { createServerClient } from '@sylphx/sdk/server'
 
 // ==========================================
 // Plan Constants

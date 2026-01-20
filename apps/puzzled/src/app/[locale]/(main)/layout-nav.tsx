@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeUser } from '@sylphx/platform-sdk/react'
+import { useSafeUser } from '@sylphx/sdk/react'
 import { TopNav } from '@/shared/components/layout'
 import { trpc } from '@/trpc'
 

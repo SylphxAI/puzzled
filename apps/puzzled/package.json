@@ -31,7 +31,7 @@
 		"@radix-ui/react-dialog": "^1.1.15",
 		"@serwist/next": "^9.5.0",
 		"@sylphx/ui": "workspace:*",
-		"@sylphx/platform-sdk": "workspace:*",
+		"@sylphx/sdk": "workspace:*",
 		"@tanstack/react-query": "^5.90.16",
 		"@trpc/client": "^11.8.1",
 		"@trpc/react-query": "^11.8.1",

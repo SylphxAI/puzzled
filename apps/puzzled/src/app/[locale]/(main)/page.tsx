@@ -1,6 +1,6 @@
 import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/platform-sdk/nextjs'
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'

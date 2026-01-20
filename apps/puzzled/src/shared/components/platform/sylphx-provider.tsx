@@ -18,7 +18,7 @@ import {
 	FeatureFlagProvider,
 	useSafeUser,
 	useBilling,
-} from '@sylphx/platform-sdk/react'
+} from '@sylphx/sdk/react'
 
 interface PlatformProviderProps {
 	children: React.ReactNode

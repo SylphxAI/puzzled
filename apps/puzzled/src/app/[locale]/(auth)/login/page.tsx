@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
 import { GamepadIcon } from '@sylphx/ui'
-import { SignIn } from '@sylphx/platform-sdk/react'
+import { SignIn } from '@sylphx/sdk/react'
 
 export default function LoginPage() {
 	const t = useTranslations('auth')

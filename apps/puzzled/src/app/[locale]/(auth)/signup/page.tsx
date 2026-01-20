@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
 import { GamepadIcon } from '@sylphx/ui'
-import { SignUp } from '@sylphx/platform-sdk/react'
+import { SignUp } from '@sylphx/sdk/react'
 
 export default function SignUpPage() {
 	const t = useTranslations('auth')

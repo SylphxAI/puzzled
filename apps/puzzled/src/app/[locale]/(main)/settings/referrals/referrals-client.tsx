@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Copy, Check, RefreshCw, Gift, Users, UserCheck, Clock, Share2 } from 'lucide-react'
-import { useReferral } from '@sylphx/platform-sdk/react'
+import { useReferral } from '@sylphx/sdk/react'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 
 export function ReferralsContent() {

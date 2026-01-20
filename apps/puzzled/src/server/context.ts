@@ -7,7 +7,7 @@
 
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { headers } from 'next/headers'
-import { auth, type AuthResult } from '@sylphx/platform-sdk/nextjs'
+import { auth, type AuthResult } from '@sylphx/sdk/nextjs'
 
 /**
  * Platform user (from auth result)

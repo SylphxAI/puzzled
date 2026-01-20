@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAnalytics } from '@sylphx/platform-sdk/react'
+import { useAnalytics } from '@sylphx/sdk/react'
 import { initWebVitals, setWebVitalsTracker } from '../lib/web-vitals'
 
 /**
