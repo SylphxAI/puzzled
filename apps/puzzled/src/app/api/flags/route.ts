@@ -52,14 +52,14 @@ async function getPlatformFlags(userId?: string): Promise<FeatureFlag[]> {
 			appSecret: APP_SECRET,
 		})
 
-		// Call the Platform's featureFlags.getAll endpoint
-		const flagMap = await client.featureFlags.getAll(userId)
+		// Call the Platform's flags.getAll endpoint
+		const flagMap = await client.flags.getAll(userId) as Record<string, boolean>
 
 		// Transform to array format expected by SDK provider
 		return Object.entries(flagMap).map(([key, enabled]) => ({
 			key,
-			value: enabled,
-			enabled,
+			value: enabled as boolean,
+			enabled: enabled as boolean,
 		}))
 	} catch (error) {
 		console.error('[api/flags] Error fetching from Platform:', error)
