@@ -16,7 +16,11 @@ export interface ChatMessage {
 	content: string | ContentPart[]
 	name?: string
 	tool_call_id?: string
+	/** Alias for tool_call_id (camelCase for UI compat) */
+	toolCallId?: string
 	tool_calls?: ToolCall[]
+	/** Timestamp for UI display */
+	timestamp?: Date
 }
 
 export interface ContentPart {

@@ -46,12 +46,9 @@ export interface AIClientOptions {
 	apiKey?: string
 }
 
-export interface ChatMessage {
-	role: 'system' | 'user' | 'assistant' | 'tool'
-	content: string
-	name?: string
-	tool_call_id?: string
-}
+// ChatMessage re-exported from ai.ts (SSOT)
+export type { ChatMessage } from '../ai'
+import type { ChatMessage } from '../ai'
 
 export interface ChatCompletionOptions {
 	model: string

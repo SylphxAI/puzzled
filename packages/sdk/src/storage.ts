@@ -6,11 +6,15 @@
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
 
+// Re-export types from SSOT
+export type { UploadProgressEvent, UploadResult } from './lib/storage/types'
+import type { UploadProgressEvent, UploadResult } from './lib/storage/types'
+
 // ============================================================================
-// Types
+// Types (Function-specific)
 // ============================================================================
 
-export interface UploadOptions {
+export interface FileUploadOptions {
 	/** Folder path */
 	path?: string
 	/** File type (file, avatar, etc.) */
@@ -21,18 +25,8 @@ export interface UploadOptions {
 	onProgress?: (event: UploadProgressEvent) => void
 }
 
-export interface UploadProgressEvent {
-	loaded: number
-	total: number
-	progress: number // 0-100
-}
-
-export interface UploadResult {
-	url: string
-	pathname: string
-	contentType: string
-	size: number
-}
+/** @deprecated Use FileUploadOptions instead */
+export type UploadOptions = FileUploadOptions
 
 export interface FileInfo {
 	id: string
@@ -66,7 +60,7 @@ export interface FileInfo {
 export async function uploadFile(
 	config: SylphxConfig,
 	file: File,
-	options?: UploadOptions
+	options?: FileUploadOptions
 ): Promise<UploadResult> {
 	// Get upload token from platform
 	const tokenResponse = await fetch(`${config.platformUrl}/api/storage/upload`, {
@@ -141,7 +135,7 @@ export async function uploadAvatar(
 	config: SylphxConfig,
 	file: File,
 	userId: string,
-	options?: Pick<UploadOptions, 'onProgress'>
+	options?: Pick<FileUploadOptions, 'onProgress'>
 ): Promise<UploadResult> {
 	return uploadFile(config, file, {
 		...options,

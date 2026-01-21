@@ -35,15 +35,21 @@ export interface ConsentPurpose {
 // ============================================================================
 
 /**
- * User consent record
+ * Consent decision for a purpose (client-side consent banner)
+ * Note: For API response type, use UserConsent from consent.ts
  */
-export interface UserConsent {
+export interface ConsentDecision {
 	purposeId: string
 	granted: boolean
 	timestamp: string
 	source: 'banner' | 'preferences' | 'api' | 'default'
 	version?: string
 }
+
+/**
+ * @deprecated Use ConsentDecision instead. UserConsent from consent.ts is for API responses.
+ */
+export type UserConsent = ConsentDecision
 
 /**
  * Complete consent state for a user

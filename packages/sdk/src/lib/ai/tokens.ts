@@ -156,9 +156,9 @@ function countContentTokens(
 	// Multi-modal content
 	let tokens = 0
 	for (const part of content) {
-		if (part.type === 'text') {
+		if (part.type === 'text' && part.text) {
 			tokens += estimateTextTokens(part.text, family)
-		} else if (part.type === 'image_url') {
+		} else if (part.type === 'image_url' && part.image_url) {
 			const detail = part.image_url.detail ?? 'auto'
 			tokens += IMAGE_TOKENS[detail]
 		}

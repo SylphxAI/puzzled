@@ -86,20 +86,20 @@ export interface TokenCount {
 }
 
 /**
+ * Multi-modal message content
+ * Re-exported from ai.ts for compatibility
+ */
+export type { ContentPart as MessageContent } from '../../ai'
+import type { ContentPart } from '../../ai'
+
+/**
  * Message for token counting
  */
 export interface CountableMessage {
 	role: 'system' | 'user' | 'assistant' | 'tool'
-	content: string | MessageContent[]
+	content: string | ContentPart[]
 	name?: string
 }
-
-/**
- * Multi-modal message content
- */
-export type MessageContent =
-	| { type: 'text'; text: string }
-	| { type: 'image_url'; image_url: { url: string; detail?: 'low' | 'high' | 'auto' } }
 
 /**
  * Options for token counting
@@ -201,13 +201,10 @@ export interface CompiledPrompt {
 
 /**
  * Chat message for building conversations
+ * Re-exported from ai.ts (SSOT)
  */
-export interface ChatMessage {
-	role: 'system' | 'user' | 'assistant' | 'tool'
-	content: string
-	name?: string
-	tool_call_id?: string
-}
+export type { ChatMessage } from '../../ai'
+import type { ChatMessage } from '../../ai'
 
 /**
  * Conversation context

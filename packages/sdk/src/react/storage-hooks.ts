@@ -11,18 +11,11 @@ import { useState, useCallback } from 'react'
 import { useStorageContext, type UploadProgressEvent } from './services-context'
 
 // ============================================
-// Types
+// Types (Re-exported from SSOT)
 // ============================================
 
-export interface StorageFile {
-	id: string
-	path: string
-	filename: string
-	mimeType: string
-	sizeBytes: number
-	publicUrl?: string | null
-	createdAt: string
-}
+// StorageFile - SSOT: lib/storage/types.ts
+export type { StorageFile } from '../lib/storage/types'
 
 export interface UploadResult {
 	id: string

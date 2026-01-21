@@ -130,13 +130,17 @@ export interface EvaluationResult<T = FlagValue> {
 /** Why a particular value was returned */
 export type EvaluationReason =
 	| 'flag_disabled'
+	| 'flag_not_found'
 	| 'default'
+	| 'default_value'
 	| 'rule_match'
 	| 'percentage_rollout'
 	| 'targeting_match'
 	| 'error'
 	| 'cache_hit'
 	| 'stale'
+	// Extended reason with debug info
+	| { rolloutBucket?: number; [key: string]: unknown }
 
 /** Evaluation error */
 export interface EvaluationError {

@@ -57,6 +57,24 @@ export type {
 // Note: CheckoutInput is also exported directly from billing.ts
 export type { Plan, Subscription } from './billing'
 
+// Storage types - SSOT: lib/storage/types.ts
+export type {
+	StorageFile,
+	StorageConfig,
+	UploadOptions,
+	UploadProgressEvent,
+	UploadResult,
+	ListFilesOptions,
+	ListFilesResult,
+	ImageFormat,
+	ImageFit,
+	ImageTransformOptions,
+	ImageTransformResult,
+} from './lib/storage/types'
+
+// Feature Flags - SSOT: lib/flags/types.ts
+export type { EvaluationReason } from './lib/flags/types'
+
 // ==========================================
 // OAuth Provider Types
 // ==========================================
@@ -236,6 +254,7 @@ export type LeaderboardPeriod = 'all' | 'month' | 'week'
 
 // ==========================================
 // Feature Flags Types
+// Note: EvaluationReason is re-exported from lib/flags/types.ts at top of file
 // ==========================================
 
 export interface FeatureFlagResult {
@@ -243,19 +262,14 @@ export interface FeatureFlagResult {
 	value: unknown
 }
 
+// Import for local use in FeatureFlagDetailResult
+import type { EvaluationReason } from './lib/flags/types'
+
 export interface FeatureFlagDetailResult {
 	enabled: boolean
 	value: unknown
 	reason: EvaluationReason
 }
-
-export type EvaluationReason =
-	| 'flag_not_found'
-	| 'targeting_match'
-	| 'default_value'
-	| 'percentage_rollout'
-	| 'error'
-	| { rolloutBucket?: number; [key: string]: unknown }
 
 // ==========================================
 // AI Types
@@ -532,17 +546,9 @@ export interface JobsListResult {
 }
 
 // ==========================================
-// Storage Types
+// Storage Types (Additional)
+// Note: StorageFile and other core types are re-exported from lib/storage/types.ts above
 // ==========================================
-
-export interface StorageFile {
-	id: string
-	name: string
-	size: number
-	mimeType: string
-	url: string
-	createdAt: string
-}
 
 export interface StorageUsage {
 	bytesUsed: number
@@ -550,6 +556,7 @@ export interface StorageUsage {
 	fileCount: number
 }
 
+/** @deprecated Use StorageFile from lib/storage/types.ts instead */
 export interface UploadedFile {
 	id: string
 	url: string

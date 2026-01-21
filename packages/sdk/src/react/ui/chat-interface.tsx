@@ -65,13 +65,9 @@ export interface ChatInterfaceProps extends UseChatOptions {
 	onModelChange?: (modelId: string) => void
 }
 
-export interface ChatMessage {
-	role: 'user' | 'assistant' | 'system' | 'tool'
-	content: string
-	timestamp?: Date
-	toolCallId?: string
-	name?: string
-}
+// ChatMessage re-exported from ai.ts (SSOT)
+export type { ChatMessage } from '../../ai'
+import type { ChatMessage } from '../../ai'
 
 // ============================================
 // ChatInterface Component

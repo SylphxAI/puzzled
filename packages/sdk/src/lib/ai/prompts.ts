@@ -316,8 +316,18 @@ export function createConversationContext(config: {
 
 	let totalTokens = systemMessage ? estimateTokens(systemMessage, config.model) + 4 : 0
 
+	/** Extract text content from message content (handles string and ContentPart[]) */
+	function getTextContent(content: ChatMessage['content']): string {
+		if (typeof content === 'string') return content
+		// Extract text from ContentPart[]
+		return content
+			.filter((part) => part.type === 'text' && part.text)
+			.map((part) => part.text!)
+			.join('\n')
+	}
+
 	function addMessage(message: ChatMessage): void {
-		const messageTokens = estimateTokens(message.content, config.model) + 4
+		const messageTokens = estimateTokens(getTextContent(message.content), config.model) + 4
 		messages.push(message)
 		totalTokens += messageTokens
 	}
@@ -328,7 +338,7 @@ export function createConversationContext(config: {
 		while (totalTokens > targetTokens && messages.length > 0) {
 			const removed = messages.shift()
 			if (removed) {
-				totalTokens -= estimateTokens(removed.content, config.model) + 4
+				totalTokens -= estimateTokens(getTextContent(removed.content), config.model) + 4
 			}
 		}
 	}
