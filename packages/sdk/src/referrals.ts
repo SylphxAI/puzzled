@@ -76,7 +76,8 @@ export interface RedeemReferralInput {
 
 export interface RedeemResult {
 	success: boolean
-	rewardType: 'points' | 'premium_trial' | 'discount'
+	/** Reward type - platform types or app-specific types */
+	rewardType: 'points' | 'premium_trial' | 'discount' | 'credit' | (string & {})
 	referredReward?: Record<string, unknown>
 	referrerReward?: Record<string, unknown>
 }

@@ -1754,7 +1754,7 @@ export function SylphxProvider({
 			listModels: async (options) => {
 				const response = await api.ai.listModels.query(options ?? {})
 				return {
-					models: response.models.map((m) => ({
+					models: response.models.map((m: typeof response.models[number]) => ({
 						id: m.id,
 						name: m.name || m.id,
 						contextWindow: m.contextWindow || 0,
@@ -1905,7 +1905,7 @@ export function SylphxProvider({
 						anonymousId,
 					})
 					// Find consent for this purpose
-					const consent = consents.find((c) => c.slug === purposeSlug)
+					const consent = consents.find((c: typeof consents[number]) => c.slug === purposeSlug)
 					if (consent) {
 						return consent.granted
 					}
@@ -2296,7 +2296,7 @@ export function SylphxProvider({
 			getLoginHistory: async (options) => {
 				const history = await api.user.getLoginHistory.query()
 				const items = options?.limit ? history.slice(0, options.limit) : history
-				return items.map((h) => ({
+				return items.map((h: typeof items[number]) => ({
 					id: h.id ?? '',
 					ipAddress: h.ipAddress ?? null,
 					userAgent: h.userAgent ?? null,
@@ -2310,7 +2310,7 @@ export function SylphxProvider({
 			},
 			getSessions: async () => {
 				const response = await api.user.getSessions.query()
-				return response.map((s) => ({
+				return response.map((s: typeof response[number]) => ({
 					id: s.id,
 					isCurrent: s.isCurrent,
 					deviceName: s.deviceName,
@@ -2332,7 +2332,7 @@ export function SylphxProvider({
 			},
 			getConnectedAccounts: async () => {
 				const accounts = await api.user.getConnectedAccounts.query()
-				return accounts.map((a) => ({
+				return accounts.map((a: typeof accounts[number]) => ({
 					provider: a.provider,
 					accountId: '', // Not available in the API response
 					email: null, // Not available in the API response
@@ -2405,7 +2405,7 @@ export function SylphxProvider({
 			},
 			passkeyList: async () => {
 				const response = await api.security.passkeyList.query()
-				return response.map((p) => ({
+				return response.map((p: typeof response[number]) => ({
 					id: p.id,
 					name: p.deviceName ?? undefined, // API returns deviceName (null -> undefined)
 					deviceType: undefined, // Not returned by API
