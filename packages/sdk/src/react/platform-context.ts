@@ -35,6 +35,10 @@ import type {
 	InAppMessageWithReadStatus,
 } from '../trpc'
 
+// Import referral inline defaults for auto-discovery
+import type { ReferralRewardDefaults, RedeemResult } from '../referrals'
+export type { ReferralRewardDefaults, RedeemResult }
+
 // Re-export types for convenience
 export type { Plan, ReferralStats, Subscription }
 
@@ -277,6 +281,13 @@ export interface PlatformContextValue {
 	referralError: Error | null
 	copyReferralCode: () => Promise<void>
 	regenerateReferralCode: () => Promise<string>
+	/**
+	 * Redeem a referral code with optional inline defaults
+	 *
+	 * @param code - Referral code to redeem
+	 * @param defaults - Optional inline defaults for reward configuration
+	 */
+	redeemReferralCode: (code: string, defaults?: ReferralRewardDefaults) => Promise<RedeemResult>
 	getReferralLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<{
 		period: 'all' | 'month' | 'week'
 		entries: Array<{

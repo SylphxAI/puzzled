@@ -2,6 +2,27 @@
  * Referrals Functions
  *
  * Pure functions for referral code management and tracking.
+ *
+ * ## Architecture (ADR-004)
+ *
+ * Referrals uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides optional inline defaults when redeeming referral codes
+ * - Platform uses defaults if no Console override exists
+ * - Console can override reward values without deployment
+ *
+ * @example
+ * ```typescript
+ * import { redeemReferralCode } from '@sylphx/sdk'
+ *
+ * // Redeem with inline defaults (overridable in Console)
+ * const result = await redeemReferralCode(config, {
+ *   code: 'ABC123',
+ *   userId: 'new-user-456',
+ * }, {
+ *   referrerReward: { type: 'premium_trial', days: 7 },
+ *   refereeReward: { type: 'premium_trial', days: 7 },
+ * })
+ * ```
  */
 
 import { type SylphxConfig, callTrpc } from './config'
@@ -55,16 +76,55 @@ export interface RedeemReferralInput {
 
 export interface RedeemResult {
 	success: boolean
-	message: string
-	reward?: {
-		type: 'points' | 'premium_trial' | 'discount'
-		value: number | string
-	}
+	rewardType: 'points' | 'premium_trial' | 'discount'
+	referredReward?: Record<string, unknown>
+	referrerReward?: Record<string, unknown>
 }
 
 export interface LeaderboardOptions {
 	/** Number of entries to return (default: 10) */
 	limit?: number
+}
+
+/**
+ * Reward configuration for inline defaults
+ */
+export interface ReferralRewardConfig {
+	/** Reward type */
+	type: 'points' | 'premium_trial' | 'discount' | 'credit'
+	/** Points to award (for type: 'points') */
+	points?: number
+	/** Trial days to grant (for type: 'premium_trial') */
+	days?: number
+	/** Discount percentage (for type: 'discount') */
+	discountPercent?: number
+	/** Credit amount in cents (for type: 'credit') */
+	creditCents?: number
+}
+
+/**
+ * Inline defaults for referral program auto-discovery
+ *
+ * @example
+ * ```typescript
+ * await redeemReferralCode(config, {
+ *   code: 'ABC123',
+ *   userId: 'new-user-456',
+ * }, {
+ *   referrerReward: { type: 'premium_trial', days: 7 },
+ *   refereeReward: { type: 'premium_trial', days: 7 },
+ * })
+ * ```
+ */
+export interface ReferralRewardDefaults {
+	/** Reward for the person who shared the code */
+	referrerReward?: ReferralRewardConfig
+	/** Reward for the person using the code */
+	refereeReward?: ReferralRewardConfig
+	/** Whether both parties get rewarded (default: true) */
+	doubleReward?: boolean
+	/** Minimum days before rewards are granted (anti-fraud) */
+	minimumDaysBeforeReward?: number
 }
 
 // ============================================================================
@@ -108,11 +168,28 @@ export async function getReferralStats(
 /**
  * Redeem a referral code
  *
+ * If the referral program rewards aren't configured in Console, the provided
+ * defaults will be used. Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param input - Referral redemption input (code, userId)
+ * @param defaults - Optional inline defaults for reward configuration
+ *
  * @example
  * ```typescript
+ * // Basic redemption (uses Console-configured rewards)
  * const result = await redeemReferralCode(config, {
  *   code: 'ABC123',
  *   userId: 'new-user-456',
+ * })
+ *
+ * // With inline defaults (auto-discovered if not in Console)
+ * const result = await redeemReferralCode(config, {
+ *   code: 'ABC123',
+ *   userId: 'new-user-456',
+ * }, {
+ *   referrerReward: { type: 'premium_trial', days: 7 },
+ *   refereeReward: { type: 'premium_trial', days: 7 },
  * })
  *
  * if (result.success) {
@@ -122,9 +199,10 @@ export async function getReferralStats(
  */
 export async function redeemReferralCode(
 	config: SylphxConfig,
-	input: RedeemReferralInput
+	input: RedeemReferralInput,
+	defaults?: ReferralRewardDefaults
 ): Promise<RedeemResult> {
-	return callTrpc(config, 'referrals.redeem', input, 'mutation')
+	return callTrpc(config, 'referrals.redeem', { ...input, defaults }, 'mutation')
 }
 
 /**

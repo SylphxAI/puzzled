@@ -1288,6 +1288,15 @@ export function SylphxProvider({
 		return data.code
 	}, [api])
 
+	const redeemReferralCode = useCallback(
+		async (code: string, _defaults?: import('../referrals').ReferralRewardDefaults) => {
+			// Note: defaults parameter is for future use when server supports auto-discovery
+			// Currently the server uses Console-configured rewards
+			return api.referrals.redeem.mutate({ code })
+		},
+		[api]
+	)
+
 	const getReferralLeaderboard = useCallback(
 		async (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => {
 			return api.referrals.getLeaderboard.query(options)
@@ -2503,6 +2512,7 @@ export function SylphxProvider({
 			referralError,
 			copyReferralCode,
 			regenerateReferralCode,
+			redeemReferralCode,
 			getReferralLeaderboard,
 			// In-App Messages (Inbox)
 			inboxMessages,
@@ -2574,6 +2584,7 @@ export function SylphxProvider({
 			referralError,
 			copyReferralCode,
 			regenerateReferralCode,
+			redeemReferralCode,
 			getReferralLeaderboard,
 			// Inbox deps
 			inboxMessages,

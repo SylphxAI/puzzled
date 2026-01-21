@@ -23,6 +23,8 @@ import {
 	type InAppMessageType,
 	type InAppMessagePriority,
 	type InboxPreferences,
+	type ReferralRewardDefaults,
+	type RedeemResult,
 } from './platform-context'
 
 // Re-export types for convenience
@@ -465,6 +467,31 @@ export interface UseReferralReturn {
 	/** Regenerate referral code */
 	regenerateCode: () => Promise<string>
 	/**
+	 * Redeem a referral code with optional inline defaults
+	 *
+	 * If the referral program rewards aren't configured in Console, the provided
+	 * defaults will be used. Console can override any values without deployment.
+	 *
+	 * @param code - Referral code to redeem
+	 * @param defaults - Optional inline defaults for reward configuration
+	 *
+	 * @example
+	 * ```tsx
+	 * const { redeemCode } = useReferral()
+	 *
+	 * const handleRedeem = async (code: string) => {
+	 *   const result = await redeemCode(code, {
+	 *     referrerReward: { type: 'premium_trial', days: 7 },
+	 *     refereeReward: { type: 'premium_trial', days: 7 },
+	 *   })
+	 *   if (result.success) {
+	 *     toast.success('Code redeemed!')
+	 *   }
+	 * }
+	 * ```
+	 */
+	redeemCode: (code: string, defaults?: ReferralRewardDefaults) => Promise<RedeemResult>
+	/**
 	 * Get leaderboard of top referrers
 	 *
 	 * @param options - Leaderboard options
@@ -520,6 +547,7 @@ export function useReferral(): UseReferralReturn {
 		copyCode,
 		copyLink,
 		regenerateCode: ctx.regenerateReferralCode,
+		redeemCode: ctx.redeemReferralCode,
 		getLeaderboard: ctx.getReferralLeaderboard,
 	}
 }
