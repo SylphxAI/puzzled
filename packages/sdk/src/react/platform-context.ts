@@ -23,6 +23,9 @@ import type {
 	SubmitScoreResult,
 	UserAchievement,
 	AchievementUnlockEvent,
+	StreakDefaults,
+	LeaderboardDefaults,
+	AchievementDefaults,
 } from '../lib/engagement/types'
 
 // Import InAppMessage types from trpc.ts (SSOT - inferred from router)
@@ -338,20 +341,33 @@ export interface PlatformContextValue {
 	user: User | null
 	/** Get streak state for a user */
 	getStreak: (streakId: string) => Promise<StreakState>
-	/** Record activity to extend streak */
-	recordStreakActivity: (streakId: string, metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
+	/** Record activity to extend streak (with optional inline defaults for auto-discovery) */
+	recordStreakActivity: (
+		streakId: string,
+		metadata?: Record<string, unknown>,
+		defaults?: StreakDefaults
+	) => Promise<RecordActivityResult>
 	/** Recover streak within grace period */
 	recoverStreak: (streakId: string) => Promise<{ success: boolean; streak: StreakState }>
 	/** Get leaderboard data */
 	getLeaderboard: (leaderboardId: string, options?: LeaderboardQueryOptions) => Promise<LeaderboardResult>
-	/** Submit score to leaderboard */
-	submitScore: (leaderboardId: string, value: number, metadata?: Record<string, unknown>) => Promise<SubmitScoreResult>
+	/** Submit score to leaderboard (with optional inline defaults for auto-discovery) */
+	submitScore: (
+		leaderboardId: string,
+		value: number,
+		metadata?: Record<string, unknown>,
+		defaults?: LeaderboardDefaults
+	) => Promise<SubmitScoreResult>
 	/** Get all user achievements */
 	getAchievements: () => Promise<UserAchievement[]>
-	/** Unlock an achievement */
-	unlockAchievement: (achievementId: string) => Promise<AchievementUnlockEvent>
-	/** Increment achievement progress */
-	incrementAchievementProgress: (achievementId: string, amount: number) => Promise<UserAchievement>
+	/** Unlock an achievement (with optional inline defaults for auto-discovery) */
+	unlockAchievement: (achievementId: string, defaults?: AchievementDefaults) => Promise<AchievementUnlockEvent>
+	/** Increment achievement progress (with optional inline defaults for auto-discovery) */
+	incrementAchievementProgress: (
+		achievementId: string,
+		amount: number,
+		defaults?: AchievementDefaults
+	) => Promise<UserAchievement>
 }
 
 export const PlatformContext = createContext<PlatformContextValue | null>(null)

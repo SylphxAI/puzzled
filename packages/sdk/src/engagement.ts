@@ -5,29 +5,42 @@
  *
  * ## Architecture (ADR-004)
  *
- * Engagement uses **Auto-Discovery + Console Override**:
- * - Code calls engagement functions - platform auto-discovers entities
- * - Console can override names, descriptions, values
- * - No config files required
+ * Engagement uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides optional inline defaults when calling functions
+ * - Platform auto-discovers/creates entities when first referenced
+ * - Console can override names, descriptions, values without deployment
  *
  * @example
  * ```typescript
  * import { unlockAchievement, recordStreakActivity, submitScore } from '@sylphx/sdk'
  *
- * // Unlock achievement - auto-discovered if doesn't exist
- * await unlockAchievement(config, 'first-win', userId)
+ * // Unlock achievement with inline defaults (auto-discovered if doesn't exist)
+ * await unlockAchievement(config, 'first-win', userId, {
+ *   name: 'First Win',
+ *   description: 'Won your first game',
+ *   points: 100,
+ *   tier: 'bronze',
+ * })
  *
- * // Record streak activity
- * await recordStreakActivity(config, { streakId: 'daily-login' }, userId)
+ * // Record streak activity with inline defaults
+ * await recordStreakActivity(config, { streakId: 'daily-login' }, userId, {
+ *   name: 'Daily Login',
+ *   frequency: 'daily',
+ *   gracePeriodHours: 12,
+ * })
  *
- * // Submit leaderboard score
- * await submitScore(config, { leaderboardId: 'high-scores', value: 1500 }, userId)
+ * // Submit leaderboard score with inline defaults
+ * await submitScore(config, { leaderboardId: 'high-scores', value: 1500 }, userId, {
+ *   name: 'High Scores',
+ *   sortDirection: 'desc',
+ *   resetPeriod: 'weekly',
+ * })
  * ```
  */
 
 import { type SylphxConfig, callTrpc } from './config'
 
-// Re-export types from types file (not config)
+// Re-export types from types file
 export type {
 	// Streaks
 	StreakDefinition,
@@ -35,6 +48,7 @@ export type {
 	StreakFrequency,
 	RecordActivityInput,
 	RecordActivityResult,
+	StreakDefaults,
 	// Leaderboards
 	LeaderboardDefinition,
 	LeaderboardEntry,
@@ -45,6 +59,7 @@ export type {
 	LeaderboardAggregation,
 	SubmitScoreInput,
 	SubmitScoreResult,
+	LeaderboardDefaults,
 	// Achievements
 	AchievementDefinition,
 	AchievementType,
@@ -55,6 +70,7 @@ export type {
 	CriteriaOperator,
 	UserAchievement,
 	AchievementUnlockEvent,
+	AchievementDefaults,
 } from './lib/engagement/types'
 
 export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'
@@ -63,7 +79,12 @@ export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'
 // Streak Functions
 // ============================================================================
 
-import type { RecordActivityInput, RecordActivityResult, StreakState } from './lib/engagement/types'
+import type {
+	RecordActivityInput,
+	RecordActivityResult,
+	StreakState,
+	StreakDefaults,
+} from './lib/engagement/types'
 
 /**
  * Get current streak state for a user
@@ -101,11 +122,23 @@ export async function getAllStreaks(config: SylphxConfig, userId: string): Promi
 /**
  * Record an activity to extend/maintain a streak
  *
+ * If the streak doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param input - Activity input (streakId required)
+ * @param userId - User ID
+ * @param defaults - Optional inline defaults for auto-discovery
+ *
  * @example
  * ```typescript
  * const result = await recordStreakActivity(config, {
  *   streakId: 'daily-challenge',
- * }, userId)
+ * }, userId, {
+ *   name: 'Daily Challenge',
+ *   frequency: 'daily',
+ *   gracePeriodHours: 12,
+ * })
  *
  * if (result.extended) {
  *   console.log(`Streak extended to ${result.streak.current}!`)
@@ -118,9 +151,15 @@ export async function getAllStreaks(config: SylphxConfig, userId: string): Promi
 export async function recordStreakActivity(
 	config: SylphxConfig,
 	input: RecordActivityInput,
-	userId: string
+	userId: string,
+	defaults?: StreakDefaults
 ): Promise<RecordActivityResult> {
-	return callTrpc(config, 'engagement.recordActivity', { ...input, userId }, 'mutation')
+	return callTrpc(
+		config,
+		'engagement.recordActivity',
+		{ ...input, userId, defaults },
+		'mutation'
+	)
 }
 
 /**
@@ -151,6 +190,7 @@ import type {
 	LeaderboardResult,
 	SubmitScoreInput,
 	SubmitScoreResult,
+	LeaderboardDefaults,
 } from './lib/engagement/types'
 
 /**
@@ -189,13 +229,26 @@ export async function getLeaderboard(
 /**
  * Submit a score to a leaderboard
  *
+ * If the leaderboard doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param input - Score submission input (leaderboardId, value required)
+ * @param userId - User ID
+ * @param defaults - Optional inline defaults for auto-discovery
+ *
  * @example
  * ```typescript
  * const result = await submitScore(config, {
  *   leaderboardId: 'high-scores',
  *   value: 1500,
  *   metadata: { level: 'hard' },
- * }, userId)
+ * }, userId, {
+ *   name: 'High Scores',
+ *   sortDirection: 'desc',
+ *   resetPeriod: 'weekly',
+ *   aggregation: 'max',
+ * })
  *
  * if (result.newPersonalBest) {
  *   console.log('New personal best!')
@@ -208,9 +261,15 @@ export async function getLeaderboard(
 export async function submitScore(
 	config: SylphxConfig,
 	input: SubmitScoreInput,
-	userId: string
+	userId: string,
+	defaults?: LeaderboardDefaults
 ): Promise<SubmitScoreResult> {
-	return callTrpc(config, 'engagement.submitScore', { ...input, userId }, 'mutation')
+	return callTrpc(
+		config,
+		'engagement.submitScore',
+		{ ...input, userId, defaults },
+		'mutation'
+	)
 }
 
 /**
@@ -236,7 +295,11 @@ export async function getUserLeaderboardRank(
 // Achievement Functions
 // ============================================================================
 
-import type { AchievementUnlockEvent, UserAchievement } from './lib/engagement/types'
+import type {
+	AchievementUnlockEvent,
+	UserAchievement,
+	AchievementDefaults,
+} from './lib/engagement/types'
 
 /**
  * Get all achievements with user progress
@@ -281,14 +344,24 @@ export async function getAchievement(
 }
 
 /**
- * Manually unlock an achievement (for achievements that can't be auto-detected)
+ * Manually unlock an achievement
  *
- * Most achievements are unlocked automatically via event tracking.
- * Use this for edge cases like admin grants or migrations.
+ * If the achievement doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param achievementId - Achievement ID
+ * @param userId - User ID
+ * @param defaults - Optional inline defaults for auto-discovery
  *
  * @example
  * ```typescript
- * const result = await unlockAchievement(config, 'special-event-2024', userId)
+ * const result = await unlockAchievement(config, 'first-purchase', userId, {
+ *   name: 'First Purchase',
+ *   description: 'Made your first purchase',
+ *   points: 100,
+ *   tier: 'bronze',
+ * })
  * if (result.isNew) {
  *   showAchievementToast(result.achievement)
  * }
@@ -297,18 +370,39 @@ export async function getAchievement(
 export async function unlockAchievement(
 	config: SylphxConfig,
 	achievementId: string,
-	userId: string
+	userId: string,
+	defaults?: AchievementDefaults
 ): Promise<AchievementUnlockEvent> {
-	return callTrpc(config, 'engagement.unlockAchievement', { achievementId, userId }, 'mutation')
+	return callTrpc(
+		config,
+		'engagement.unlockAchievement',
+		{ achievementId, userId, defaults },
+		'mutation'
+	)
 }
 
 /**
  * Increment progress on an incremental achievement
  *
+ * If the achievement doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param achievementId - Achievement ID
+ * @param amount - Amount to increment
+ * @param userId - User ID
+ * @param defaults - Optional inline defaults for auto-discovery
+ *
  * @example
  * ```typescript
  * // User collected an item
- * const result = await incrementAchievementProgress(config, 'collector-100', 1, userId)
+ * const result = await incrementAchievementProgress(config, 'collector-100', 1, userId, {
+ *   name: 'Collector',
+ *   description: 'Collect 100 items',
+ *   type: 'incremental',
+ *   target: 100,
+ *   tier: 'silver',
+ * })
  *
  * if (result.unlocked) {
  *   console.log('Achievement unlocked!')
@@ -321,12 +415,13 @@ export async function incrementAchievementProgress(
 	config: SylphxConfig,
 	achievementId: string,
 	amount: number,
-	userId: string
+	userId: string,
+	defaults?: AchievementDefaults
 ): Promise<UserAchievement> {
 	return callTrpc(
 		config,
 		'engagement.incrementProgress',
-		{ achievementId, amount, userId },
+		{ achievementId, amount, userId, defaults },
 		'mutation'
 	)
 }

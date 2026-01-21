@@ -1888,6 +1888,25 @@ export function SylphxProvider({
 					anonymousId,
 				})
 			},
+			checkConsent: async (purposeSlug, defaults) => {
+				// Get user's current consents
+				try {
+					const consents = await api.consent.getUserConsents.query({
+						userId: authState.user?.id,
+						anonymousId,
+					})
+					// Find consent for this purpose
+					const consent = consents.find((c) => c.slug === purposeSlug)
+					if (consent) {
+						return consent.granted
+					}
+					// Purpose not found - use default if provided, otherwise false
+					return defaults?.defaultEnabled ?? false
+				} catch {
+					// On error, use default if provided
+					return defaults?.defaultEnabled ?? false
+				}
+			},
 		}),
 		[api, anonymousId, authState.user?.id]
 	)

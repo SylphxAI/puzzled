@@ -5,14 +5,24 @@
  *
  * ## Architecture (ADR-004)
  *
- * Consent uses **Auto-Discovery + Console Override**:
- * - Code calls consent functions - platform auto-discovers consent types
- * - Console can override names, descriptions, requirements
- * - No config files required
+ * Consent uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides optional inline defaults when checking consent
+ * - Platform auto-discovers/creates consent types when first referenced
+ * - Console can override names, descriptions, requirements without deployment
  *
  * @example
  * ```typescript
- * import { getUserConsents, setConsents, acceptAllConsents } from '@sylphx/sdk'
+ * import { hasConsent, getUserConsents, setConsents } from '@sylphx/sdk'
+ *
+ * // Check consent with inline defaults (auto-discovered if doesn't exist)
+ * if (await hasConsent(config, 'analytics', { userId: 'user-123' }, {
+ *   name: 'Analytics Cookies',
+ *   description: 'Help us understand how visitors use our site',
+ *   category: 'analytics',
+ *   required: false,
+ * })) {
+ *   track('pageview')
+ * }
  *
  * // Get user's current consents
  * const consents = await getUserConsents(config, { userId: 'user-123' })
@@ -22,9 +32,6 @@
  *   userId: 'user-123',
  *   consents: { analytics: true, marketing: false }
  * })
- *
- * // Accept all consents
- * await acceptAllConsents(config, { userId: 'user-123' })
  * ```
  */
 
@@ -78,6 +85,34 @@ export interface GetConsentsInput {
 	anonymousId?: string
 }
 
+/**
+ * Inline defaults for consent purpose auto-discovery
+ *
+ * @example
+ * ```typescript
+ * await hasConsent(config, 'analytics', { userId: 'user-123' }, {
+ *   name: 'Analytics Cookies',
+ *   description: 'Help us understand how visitors use our site',
+ *   category: 'analytics',
+ *   required: false,
+ * })
+ * ```
+ */
+export interface ConsentPurposeDefaults {
+	/** Display name */
+	name?: string
+	/** Description */
+	description?: string
+	/** Category */
+	category?: ConsentCategory
+	/** Whether consent is required (always granted) */
+	required?: boolean
+	/** Whether enabled by default */
+	defaultEnabled?: boolean
+	/** Sort order in UI */
+	sortOrder?: number
+}
+
 // ============================================================================
 // Functions
 // ============================================================================
@@ -95,6 +130,53 @@ export interface GetConsentsInput {
  */
 export async function getConsentTypes(config: SylphxConfig): Promise<ConsentType[]> {
 	return callTrpc(config, 'consent.getConsentTypes', undefined, 'query')
+}
+
+/**
+ * Check if user has granted consent for a specific purpose
+ *
+ * If the consent type doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param config - SDK configuration
+ * @param purposeSlug - Consent purpose slug (e.g., 'analytics', 'marketing')
+ * @param input - User identification (userId or anonymousId)
+ * @param defaults - Optional inline defaults for auto-discovery
+ * @returns Whether consent is granted
+ *
+ * @example
+ * ```typescript
+ * // Check analytics consent with inline defaults
+ * if (await hasConsent(config, 'analytics', { userId: 'user-123' }, {
+ *   name: 'Analytics Cookies',
+ *   description: 'Help us understand how visitors use our site',
+ *   category: 'analytics',
+ *   required: false,
+ * })) {
+ *   track('pageview')
+ * }
+ *
+ * // Required consent always returns true
+ * const hasNecessary = await hasConsent(config, 'necessary', { userId }, {
+ *   name: 'Essential Cookies',
+ *   description: 'Required for the website to function',
+ *   category: 'necessary',
+ *   required: true,
+ * })
+ * ```
+ */
+export async function hasConsent(
+	config: SylphxConfig,
+	purposeSlug: string,
+	input: GetConsentsInput,
+	defaults?: ConsentPurposeDefaults
+): Promise<boolean> {
+	return callTrpc(
+		config,
+		'consent.hasConsent',
+		{ purposeSlug, ...input, defaults },
+		'query'
+	)
 }
 
 /**

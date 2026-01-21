@@ -4,7 +4,12 @@
  * React hooks for GDPR/CCPA consent management.
  * Uses server as Single Source of Truth (SSOT) - no local localStorage duplication.
  *
- * Uses proper React Context pattern (no module singletons).
+ * ## Architecture (ADR-004)
+ *
+ * Consent uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides optional inline defaults when checking consent
+ * - Platform auto-discovers/creates consent types when first referenced
+ * - Console can override names, descriptions, requirements without deployment
  */
 
 'use client'
@@ -16,6 +21,7 @@ import {
 	type ConsentType,
 	type UserConsent,
 } from './services-context'
+import type { ConsentPurposeDefaults } from '../consent'
 
 // Re-export types from services-context for convenience
 export type { ConsentCategory, ConsentType, UserConsent }
@@ -376,7 +382,99 @@ export function ConsentGuard({
 	return children
 }
 
+// ============================================
+// useConsentCheck (Auto-Discovery)
+// ============================================
+
+// Re-export ConsentPurposeDefaults for convenience
+export type { ConsentPurposeDefaults } from '../consent'
+
+export interface UseConsentCheckOptions {
+	/** Consent purpose slug (e.g., 'analytics', 'marketing') */
+	purposeSlug: string
+	/** Optional inline defaults for auto-discovery */
+	defaults?: ConsentPurposeDefaults
+}
+
+export interface UseConsentCheckReturn {
+	/** Whether consent is granted */
+	hasConsent: boolean
+	/** Whether consent check is loading */
+	isLoading: boolean
+	/** Error if any */
+	error: Error | null
+	/** Refresh consent status */
+	refresh: () => Promise<void>
+}
+
+/**
+ * Hook to check consent for a specific purpose with auto-discovery support
+ *
+ * If the consent type doesn't exist, it will be auto-discovered with the provided defaults.
+ * Console can override any values without deployment.
+ *
+ * @param options - Purpose slug and optional inline defaults
+ *
+ * @example
+ * ```tsx
+ * function AnalyticsTracker() {
+ *   const { hasConsent, isLoading } = useConsentCheck({
+ *     purposeSlug: 'analytics',
+ *     defaults: {
+ *       name: 'Analytics Cookies',
+ *       description: 'Help us understand how visitors use our site',
+ *       category: 'analytics',
+ *       required: false,
+ *     },
+ *   })
+ *
+ *   useEffect(() => {
+ *     if (!isLoading && hasConsent) {
+ *       // Initialize analytics
+ *       track('page_view')
+ *     }
+ *   }, [hasConsent, isLoading])
+ *
+ *   return null
+ * }
+ * ```
+ */
+export function useConsentCheck(options: UseConsentCheckOptions): UseConsentCheckReturn {
+	const ctx = useConsentContext()
+	const [hasConsent, setHasConsent] = useState(false)
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<Error | null>(null)
+
+	const refresh = useCallback(async () => {
+		setIsLoading(true)
+		setError(null)
+
+		try {
+			const result = await ctx.checkConsent(options.purposeSlug, options.defaults)
+			setHasConsent(result)
+		} catch (err) {
+			setError(err instanceof Error ? err : new Error('Failed to check consent'))
+			setHasConsent(false)
+		} finally {
+			setIsLoading(false)
+		}
+	}, [ctx, options.purposeSlug, options.defaults])
+
+	// Check consent on mount
+	useEffect(() => {
+		refresh()
+	}, [refresh])
+
+	return {
+		hasConsent,
+		isLoading,
+		error,
+		refresh,
+	}
+}
+
 // The useConsent hook is the primary export for consent management.
 // Additional exports:
 // - useConsentGate for gating features behind consent
 // - ConsentGuard for gating components behind consent
+// - useConsentCheck for checking specific purposes with auto-discovery

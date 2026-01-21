@@ -189,6 +189,10 @@ export type EmailTemplateName = string
 // Consent type aliases (category is typically the slug)
 export type ConsentCategory = string
 
+// Import consent inline defaults for auto-discovery
+import type { ConsentPurposeDefaults } from '../consent'
+export type { ConsentPurposeDefaults }
+
 // ============================================================================
 // SDK-Specific Types for Monitoring (Sentry-compatible)
 // ============================================================================
@@ -437,6 +441,8 @@ export interface ConsentContextValue {
 	setConsents: (consents: { slug: string; granted: boolean }[]) => Promise<SetConsentsResult>
 	acceptAll: () => Promise<SetConsentsResult>
 	declineOptional: () => Promise<SetConsentsResult>
+	/** Check consent for a purpose with optional inline defaults for auto-discovery */
+	checkConsent: (purposeSlug: string, defaults?: ConsentPurposeDefaults) => Promise<boolean>
 }
 
 export const ConsentContext = createContext<ConsentContextValue | null>(null)

@@ -2,7 +2,13 @@
  * Engagement Service Types
  *
  * Core types for streaks, leaderboards, and achievements.
- * These are defined in app code (Code First) and synced to platform.
+ *
+ * ## Architecture (ADR-004)
+ *
+ * Engagement uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides optional inline defaults when calling APIs
+ * - Platform auto-discovers/creates entities when first referenced
+ * - Console can override names, descriptions, values without deployment
  */
 
 // ============================================================================
@@ -12,7 +18,7 @@
 /** Streak activity frequency */
 export type StreakFrequency = 'daily' | 'weekly' | 'custom'
 
-/** Streak definition (defined in app code) */
+/** Streak definition (auto-discovered or from Console) */
 export interface StreakDefinition {
 	/** Unique identifier */
 	id: string
@@ -83,7 +89,7 @@ export type LeaderboardResetPeriod = 'hourly' | 'daily' | 'weekly' | 'monthly' |
 /** Score aggregation method */
 export type LeaderboardAggregation = 'max' | 'sum' | 'latest' | 'count' | 'min' | 'avg'
 
-/** Leaderboard definition (defined in app code) */
+/** Leaderboard definition (auto-discovered or from Console) */
 export interface LeaderboardDefinition {
 	/** Unique identifier */
 	id: string
@@ -211,7 +217,7 @@ export interface AchievementCriteria {
 	conditions?: AchievementCriterion[]
 }
 
-/** Achievement definition (defined in app code) */
+/** Achievement definition (auto-discovered or from Console) */
 export interface AchievementDefinition {
 	/** Unique identifier */
 	id: string
@@ -268,10 +274,10 @@ export interface AchievementUnlockEvent {
 }
 
 // ============================================================================
-// Engagement Config (Code First)
+// Engagement Config (from Platform)
 // ============================================================================
 
-/** Complete engagement configuration (defined in app code) */
+/** Complete engagement configuration (fetched from platform) */
 export interface EngagementConfig {
 	/** Streak definitions */
 	streaks?: StreakDefinition[]
@@ -299,3 +305,102 @@ export const ACHIEVEMENT_TIER_CONFIG = {
 	platinum: { color: '#00CED1', points: 100 },
 	diamond: { color: '#B9F2FF', points: 200 },
 } as const
+
+// ============================================================================
+// Inline Defaults (Auto-Discovery)
+// ============================================================================
+// These types define the optional inline defaults that can be passed when
+// calling engagement functions. If the entity doesn't exist, the platform
+// will auto-create it with these defaults. Console can override any values.
+
+/**
+ * Inline defaults for streak auto-discovery
+ *
+ * @example
+ * ```typescript
+ * await recordStreakActivity(config, { streakId: 'daily-login' }, userId, {
+ *   name: 'Daily Login',
+ *   frequency: 'daily',
+ *   gracePeriodHours: 12,
+ * })
+ * ```
+ */
+export interface StreakDefaults {
+	/** Display name */
+	name?: string
+	/** Description */
+	description?: string
+	/** Activity frequency */
+	frequency?: StreakFrequency
+	/** Grace period in hours (default: 0) */
+	gracePeriodHours?: number
+	/** Whether streak resets on miss (default: true) */
+	resetOnMiss?: boolean
+	/** Maximum streak value (optional cap) */
+	maxValue?: number
+	/** Custom interval in hours (only for 'custom' frequency) */
+	customIntervalHours?: number
+}
+
+/**
+ * Inline defaults for leaderboard auto-discovery
+ *
+ * @example
+ * ```typescript
+ * await submitScore(config, { leaderboardId: 'high-scores', value: 1500 }, userId, {
+ *   name: 'High Scores',
+ *   sortDirection: 'desc',
+ *   resetPeriod: 'weekly',
+ * })
+ * ```
+ */
+export interface LeaderboardDefaults {
+	/** Display name */
+	name?: string
+	/** Description */
+	description?: string
+	/** Sort direction (desc = higher is better) */
+	sortDirection?: LeaderboardSortDirection
+	/** Reset period */
+	resetPeriod?: LeaderboardResetPeriod
+	/** How to aggregate multiple scores from same user */
+	aggregation?: LeaderboardAggregation
+	/** Maximum entries to keep per period */
+	maxEntries?: number
+}
+
+/**
+ * Inline defaults for achievement auto-discovery
+ *
+ * @example
+ * ```typescript
+ * await unlockAchievement(config, 'first-purchase', userId, {
+ *   name: 'First Purchase',
+ *   description: 'Made your first purchase',
+ *   points: 100,
+ *   tier: 'bronze',
+ * })
+ * ```
+ */
+export interface AchievementDefaults {
+	/** Display name */
+	name?: string
+	/** Description (shown before unlock) */
+	description?: string
+	/** Description shown after unlock */
+	unlockedDescription?: string
+	/** Achievement type */
+	type?: AchievementType
+	/** Tier/rarity */
+	tier?: AchievementTier
+	/** Category (app-defined) */
+	category?: AchievementCategory
+	/** Icon (Iconify name or URL) */
+	icon?: string
+	/** Points awarded */
+	points?: number
+	/** Target value for incremental achievements */
+	target?: number
+	/** Whether to show in list before unlock */
+	secret?: boolean
+}
