@@ -21,6 +21,24 @@
 
 import { defineConfig } from 'tsup'
 
+// Shared externals: peer dependencies that consumers must provide
+const PEER_EXTERNALS = [
+	// React (peer dependency)
+	'react',
+	'react-dom',
+	'react/jsx-runtime',
+	'react/jsx-dev-runtime',
+	'use-sync-external-store',
+	'use-sync-external-store/shim',
+	// Next.js (peer dependency)
+	'next',
+	'next/server',
+	'next/headers',
+	'next/navigation',
+	'next/link',
+	'next/image',
+]
+
 export default defineConfig([
 	// ==========================================================================
 	// Main Entry Point - All Pure Functions
@@ -34,21 +52,14 @@ export default defineConfig([
 		splitting: false,
 		sourcemap: true,
 		clean: true,
-		external: [
-			// Peer dependencies (user must install if needed)
-			'react',
-			'react-dom',
-			'next',
-			'next/server',
-			'next/headers',
-			// tRPC (user installs @trpc/client if using createSylphx)
+		external: PEER_EXTERNALS,
+		// Bundle all dependencies (tRPC, superjson, etc.) into the SDK
+		noExternal: [
 			'@trpc/client',
 			'@trpc/server',
 			'superjson',
-			// These are used by server/nextjs entry points, not main
 			'jose',
-			// Monorepo internal packages (type-only imports)
-			'@sylphx/platform/trpc',
+			'@sylphx/ui',
 		],
 	},
 
@@ -62,21 +73,8 @@ export default defineConfig([
 		dts: false,
 		splitting: false,
 		sourcemap: true,
-		external: [
-			'react',
-			'react-dom',
-			'next',
-			'next/server',
-			'next/headers',
-			// jose is now external (peer dependency)
-			'jose',
-			// tRPC (may be used in server context)
-			'@trpc/client',
-			'@trpc/server',
-			'superjson',
-			// Monorepo internal packages
-			'@sylphx/platform/trpc',
-		],
+		external: PEER_EXTERNALS,
+		noExternal: ['jose'],
 	},
 
 	// ==========================================================================
@@ -89,20 +87,8 @@ export default defineConfig([
 		dts: false,
 		splitting: false,
 		sourcemap: true,
-		external: [
-			'react',
-			'react-dom',
-			'next',
-			'next/server',
-			'next/headers',
-			'jose',
-			// tRPC (may be used in Next.js context)
-			'@trpc/client',
-			'@trpc/server',
-			'superjson',
-			// Monorepo internal packages
-			'@sylphx/platform/trpc',
-		],
+		external: PEER_EXTERNALS,
+		noExternal: ['jose'],
 	},
 
 	// ==========================================================================
@@ -116,24 +102,14 @@ export default defineConfig([
 		dts: false,
 		splitting: false,
 		sourcemap: true,
-		external: [
-			'react',
-			'react-dom',
-			'use-sync-external-store',
-			'next',
-			'next/server',
-			'next/headers',
-			// tRPC (inherited from main entry)
+		external: PEER_EXTERNALS,
+		// Bundle all SDK dependencies
+		noExternal: [
 			'@trpc/client',
 			'@trpc/server',
 			'superjson',
-			// Session replay
 			'rrweb',
-			// UI package (monorepo)
 			'@sylphx/ui',
-			// Monorepo internal packages (type-only imports)
-			'@sylphx/platform/trpc',
-			// Vercel Blob causes SSR issues if bundled
 			'@vercel/blob',
 		],
 	},
