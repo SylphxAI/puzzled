@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSafeUser, useStreak } from '@sylphx/sdk/react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useSafeUser, useStreak, PlatformContext } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 import { useGameAnalytics } from '@/features/analytics'
@@ -49,6 +49,9 @@ export function useSaveGameResult(gameSlug: string) {
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)
 	const { trackGameComplete } = useGameAnalytics()
+
+	// SDK Platform context for leaderboard score submission
+	const platformContext = useContext(PlatformContext)
 
 	// SDK streak hook for Platform-managed streak tracking
 	const { recordActivity } = useStreak('daily-play', {
@@ -140,6 +143,66 @@ export function useSaveGameResult(gameSlug: string) {
 					} catch {
 						// Don't fail the save if streak sync fails
 						// Platform will eventually be consistent via next activity
+					}
+
+					// Submit score to Platform leaderboards (daily, weekly, all-time)
+					// Each game has separate leaderboards for different time periods
+					if (platformContext && response.score !== undefined) {
+						const gameName = gameSlug.charAt(0).toUpperCase() + gameSlug.slice(1)
+						const metadata = {
+							puzzleId: input.puzzleId,
+							attempts: input.attempts,
+							timeSpentMs: input.timeSpentMs,
+							mode: input.mode,
+							difficulty: input.difficulty,
+						}
+
+						// Submit to all three leaderboard periods in parallel
+						// Don't await - fire and forget for performance
+						Promise.all([
+							// Daily leaderboard
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-daily`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} Daily`,
+									description: `Daily high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'daily',
+									aggregation: 'max',
+								}
+							),
+							// Weekly leaderboard
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-weekly`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} Weekly`,
+									description: `Weekly high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'weekly',
+									aggregation: 'max',
+								}
+							),
+							// All-time leaderboard
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-all`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} All Time`,
+									description: `All-time high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'never',
+									aggregation: 'max',
+								}
+							),
+						]).catch(() => {
+							// Don't fail the save if leaderboard sync fails
+							// Users can still see their score in local stats
+						})
 					}
 				}
 

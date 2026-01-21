@@ -1,13 +1,14 @@
-import { Crown, Flame, Medal, Trophy, User } from 'lucide-react'
+import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { auth } from '@sylphx/sdk/nextjs'
+import { getLeaderboard, type EngagementLeaderboardResult } from '@sylphx/sdk'
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+import { getSdkConfig } from '@/lib/sdk-server'
 import { Header } from '@/shared/components/layout'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { GameIcon } from '@/shared/components/ui/game-icons'
-import { createServerCaller } from '@/trpc/server'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -27,21 +28,11 @@ type LeaderboardEntry = {
 	rank: number
 	name: string
 	avatarIndex: number
-	streak?: number
-	wins?: number
 	score?: number
-	accuracy?: number
+	isCurrentUser?: boolean
 }
 
 type LeaderboardPeriod = 'today' | 'week' | 'all'
-
-type DbLeaderboardEntry = {
-	rank: number
-	userId: string
-	userName: string | null
-	userImage: string | null
-	value: number
-}
 
 type UserRankData = {
 	rank: number
@@ -49,18 +40,28 @@ type UserRankData = {
 	name: string
 }
 
-// Convert DB leaderboard entry to display format
-function mapDbEntry(
-	entry: DbLeaderboardEntry,
-	metric: 'streak' | 'score' | 'wins',
+// Map SDK leaderboard entry to display format
+function mapSdkEntry(
+	entry: EngagementLeaderboardResult['entries'][0],
 ): LeaderboardEntry {
 	return {
 		rank: entry.rank,
-		name: entry.userName || 'Anonymous',
+		name: entry.displayName || 'Anonymous',
 		avatarIndex: entry.rank - 1, // Use rank as avatar index for variety
-		streak: metric === 'streak' ? entry.value : undefined,
-		score: metric === 'score' ? entry.value : undefined,
-		wins: metric === 'wins' ? entry.value : undefined,
+		score: entry.value,
+		isCurrentUser: entry.isCurrentUser,
+	}
+}
+
+// Map period to SDK leaderboard suffix
+function getPeriodSuffix(period: LeaderboardPeriod): string {
+	switch (period) {
+		case 'today':
+			return 'daily'
+		case 'week':
+			return 'weekly'
+		case 'all':
+			return 'all'
 	}
 }
 
@@ -78,17 +79,14 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 	const t = await getTranslations('nav')
 	const tLeaderboard = await getTranslations('leaderboard')
-	const trpc = await createServerCaller()
 	const { user } = await auth()
-
-	// Determine metric type based on period
-	// For today/week, show wins (period stats). For all time, show streaks.
-	const metricType = period === 'all' ? 'streak' : 'score'
+	const sdkConfig = getSdkConfig()
 
 	// Registry-driven game list - show leaderboards for ALL games
 	const allGames = getAllGameMetadata()
+	const periodSuffix = getPeriodSuffix(period)
 
-	// Fetch real leaderboard data for all games
+	// Fetch real leaderboard data for all games from SDK
 	type GameLeaderboardData = {
 		slug: string
 		name: string
@@ -101,36 +99,31 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	try {
 		// Fetch leaderboards for all games in parallel
 		const leaderboardPromises = allGames.map((game) =>
-			trpc.stats.getLeaderboard({
-				gameSlug: game.slug,
-				type: metricType,
-				period,
-				limit: game.slug === allGames[0].slug ? 10 : 5, // Primary game gets 10, others get 5
-			}),
+			getLeaderboard(
+				sdkConfig,
+				`puzzled-${game.slug}-${periodSuffix}`,
+				user?.id ?? null,
+				{ limit: game.slug === allGames[0].slug ? 10 : 5 }, // Primary game gets 10, others get 5
+			).catch(() => null), // Gracefully handle missing leaderboards
 		)
 		const leaderboardResults = await Promise.all(leaderboardPromises)
 
-		// Fetch user ranks if logged in
-		let userRankResults: (Awaited<ReturnType<typeof trpc.stats.getUserRank>> | null)[] = []
-		if (user) {
-			const userRankPromises = allGames.map((game) =>
-				trpc.stats.getUserRank({ gameSlug: game.slug, type: metricType, period }),
-			)
-			userRankResults = await Promise.all(userRankPromises)
-		}
-
 		// Map results to game leaderboard data
 		allGames.forEach((game, idx) => {
-			const leaderboardData = leaderboardResults[idx]
-			const entries = leaderboardData.map((e) =>
-				mapDbEntry(e, period === 'all' ? 'streak' : 'wins'),
-			)
+			const sdkResult = leaderboardResults[idx]
+			const entries = sdkResult?.entries.map(mapSdkEntry) ?? []
 
+			// SDK includes currentUserEntry if user is not in top entries
 			let userRank: UserRankData | null = null
-			if (user && userRankResults[idx]) {
-				const rank = userRankResults[idx]
-				if (rank && !leaderboardData.some((e) => e.userId === user.id)) {
-					userRank = { ...rank, name: user.name || 'You' }
+			if (user && sdkResult?.currentUserEntry && !sdkResult.currentUserEntry.isCurrentUser) {
+				// User is outside top entries, show their rank separately
+				const entry = sdkResult.currentUserEntry
+				if (!entries.some((e) => e.isCurrentUser)) {
+					userRank = {
+						rank: entry.rank,
+						value: entry.value,
+						name: user.name || 'You',
+					}
 				}
 			}
 
@@ -154,11 +147,11 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 				rank: entry.rank,
 				name: entry.name,
 				avatarIndex: entry.avatarIndex,
-				value: entry.streak ?? entry.wins ?? entry.score ?? 0,
+				value: entry.score ?? 0,
 			}))
 		: []
 
-	const podiumMetricLabel = tLeaderboard(period === 'all' ? 'streak' : 'wins')
+	const podiumMetricLabel = tLeaderboard('score')
 
 	return (
 		<>
@@ -204,8 +197,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 							title={game.name}
 							icon={<GameIcon slug={game.slug} size={24} aria-hidden="true" />}
 							entries={game.entries}
-							metric={period === 'all' ? 'streak' : 'wins'}
-							metricLabel={tLeaderboard(period === 'all' ? 'streak' : 'wins')}
+							metricLabel={tLeaderboard('score')}
 							emptyMessage={tLeaderboard('noData')}
 							locale={locale}
 							userRank={game.userRank}
@@ -229,7 +221,6 @@ function LeaderboardSection({
 	title,
 	icon,
 	entries,
-	metric,
 	metricLabel,
 	emptyMessage,
 	locale,
@@ -239,7 +230,6 @@ function LeaderboardSection({
 	title: string
 	icon: React.ReactNode
 	entries: LeaderboardEntry[]
-	metric: 'streak' | 'score' | 'wins'
 	metricLabel: string
 	emptyMessage: string
 	locale: string
@@ -260,7 +250,11 @@ function LeaderboardSection({
 					{entries.map((entry) => (
 						<div
 							key={entry.rank}
-							className={cn('flex items-center gap-3 p-3', entry.rank <= 3 && 'bg-muted/30')}
+							className={cn(
+								'flex items-center gap-3 p-3',
+								entry.rank <= 3 && 'bg-muted/30',
+								entry.isCurrentUser && 'bg-primary/5 ring-1 ring-inset ring-primary/20',
+							)}
 						>
 							{/* Rank */}
 							<div className="flex h-8 w-8 items-center justify-center">
@@ -271,28 +265,26 @@ function LeaderboardSection({
 								) : entry.rank === 3 ? (
 									<Medal className="h-6 w-6 text-rank-bronze" aria-label="3rd place" />
 								) : (
-									<span className="text-sm font-medium text-muted-foreground">{entry.rank}</span>
+									<span className={cn(
+										'text-sm font-medium',
+										entry.isCurrentUser ? 'text-primary' : 'text-muted-foreground',
+									)}>
+										{entry.rank}
+									</span>
 								)}
 							</div>
 
 							{/* Avatar & Name */}
 							<div className="flex flex-1 items-center gap-2">
 								<AvatarIcon index={entry.avatarIndex} size={24} className="text-muted-foreground" />
-								<span className="font-medium">{entry.name}</span>
+								<span className={cn('font-medium', entry.isCurrentUser && 'text-primary')}>
+									{entry.name}
+								</span>
 							</div>
 
-							{/* Metric */}
+							{/* Score */}
 							<div className="flex items-center gap-1 text-right">
-								{metric === 'streak' && (
-									<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-								)}
-								<span className="font-bold">
-									{metric === 'streak'
-										? entry.streak
-										: metric === 'wins'
-											? entry.wins
-											: entry.score?.toLocaleString(locale)}
-								</span>
+								<span className="font-bold">{entry.score?.toLocaleString(locale)}</span>
 								<span className="text-xs text-muted-foreground">{metricLabel}</span>
 							</div>
 						</div>
@@ -318,11 +310,8 @@ function LeaderboardSection({
 									<span className="text-xs text-muted-foreground">({yourRankLabel})</span>
 								</div>
 
-								{/* Metric */}
+								{/* Score */}
 								<div className="flex items-center gap-1 text-right">
-									{metric === 'streak' && (
-										<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-									)}
 									<span className="font-bold">{userRank.value.toLocaleString(locale)}</span>
 									<span className="text-xs text-muted-foreground">{metricLabel}</span>
 								</div>
