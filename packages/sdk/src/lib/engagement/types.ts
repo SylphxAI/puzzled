@@ -147,10 +147,12 @@ export interface LeaderboardResult {
 	leaderboardId: string
 	/** Period (for periodic leaderboards) */
 	period?: string
-	/** Entries */
+	/** Entries (top N or paginated) */
 	entries: LeaderboardEntry[]
 	/** Current user's entry (may not be in top entries) */
 	currentUserEntry: LeaderboardEntry | null
+	/** Entries surrounding the current user (when includeSurrounding=true and user is outside main entries) */
+	surroundingEntries?: LeaderboardEntry[]
 	/** Total participants */
 	totalParticipants: number
 	/** Next reset time (for periodic leaderboards) */
