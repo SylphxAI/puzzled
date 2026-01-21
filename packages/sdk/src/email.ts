@@ -4,7 +4,7 @@
  * Pure functions for transactional email operations.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -123,7 +123,7 @@ export interface SendResult {
  * ```
  */
 export async function isEmailConfigured(config: SylphxConfig): Promise<boolean> {
-	return callTrpc(config, 'email.isConfigured', undefined, 'query')
+	return callApi(config, '/email/configured', { method: 'GET' })
 }
 
 /**
@@ -142,7 +142,7 @@ export async function sendEmail(
 	config: SylphxConfig,
 	options: SendEmailOptions
 ): Promise<SendResult> {
-	return callTrpc(config, 'email.send', options, 'mutation')
+	return callApi(config, '/email/send', { method: 'POST', body: options })
 }
 
 /**
@@ -161,7 +161,7 @@ export async function sendTemplatedEmail(
 	config: SylphxConfig,
 	options: SendTemplatedEmailOptions
 ): Promise<SendResult> {
-	return callTrpc(config, 'email.sendTemplated', options, 'mutation')
+	return callApi(config, '/email/send-templated', { method: 'POST', body: options })
 }
 
 /**
@@ -180,7 +180,7 @@ export async function sendEmailToUser(
 	config: SylphxConfig,
 	options: SendToUserOptions
 ): Promise<SendResult> {
-	return callTrpc(config, 'email.sendToUser', options, 'mutation')
+	return callApi(config, '/email/send-to-user', { method: 'POST', body: options })
 }
 
 /**
@@ -200,7 +200,7 @@ export async function scheduleEmail(
 	config: SylphxConfig,
 	options: ScheduleEmailOptions
 ): Promise<ScheduledEmail> {
-	return callTrpc(config, 'email.schedule', options, 'mutation')
+	return callApi(config, '/email/schedule', { method: 'POST', body: options })
 }
 
 /**
@@ -218,7 +218,10 @@ export async function listScheduledEmails(
 	config: SylphxConfig,
 	options?: ListScheduledEmailsOptions
 ): Promise<ScheduledEmailsResult> {
-	return callTrpc(config, 'email.listScheduled', options ?? {}, 'query')
+	return callApi(config, '/email/scheduled', {
+		method: 'GET',
+		query: options as Record<string, string | number | undefined>,
+	})
 }
 
 /**
@@ -234,7 +237,7 @@ export async function getScheduledEmail(
 	config: SylphxConfig,
 	emailId: string
 ): Promise<ScheduledEmail> {
-	return callTrpc(config, 'email.getScheduled', { id: emailId }, 'query')
+	return callApi(config, `/email/scheduled/${emailId}`, { method: 'GET' })
 }
 
 /**
@@ -249,7 +252,7 @@ export async function cancelScheduledEmail(
 	config: SylphxConfig,
 	emailId: string
 ): Promise<void> {
-	return callTrpc(config, 'email.cancelScheduled', { id: emailId }, 'mutation')
+	return callApi(config, `/email/scheduled/${emailId}/cancel`, { method: 'POST' })
 }
 
 /**
@@ -265,7 +268,10 @@ export async function rescheduleEmail(
 	emailId: string,
 	scheduledFor: string
 ): Promise<ScheduledEmail> {
-	return callTrpc(config, 'email.reschedule', { id: emailId, scheduledFor }, 'mutation')
+	return callApi(config, `/email/scheduled/${emailId}/reschedule`, {
+		method: 'POST',
+		body: { scheduledFor },
+	})
 }
 
 /**
@@ -278,5 +284,5 @@ export async function rescheduleEmail(
  * ```
  */
 export async function getScheduledEmailStats(config: SylphxConfig): Promise<ScheduledEmailStats> {
-	return callTrpc(config, 'email.scheduledStats', undefined, 'query')
+	return callApi(config, '/email/scheduled/stats', { method: 'GET' })
 }

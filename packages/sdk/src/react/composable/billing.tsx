@@ -23,7 +23,7 @@ import {
 	createPortalSession as createPortalSessionFn,
 	type Plan,
 	type Subscription,
-} from '../../functions/billing'
+} from '../../billing'
 
 // ============================================================================
 // Types

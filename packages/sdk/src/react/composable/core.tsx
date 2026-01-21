@@ -8,7 +8,7 @@
 'use client'
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { createConfig, type SylphxConfig } from '../../functions/config'
+import { createConfig, type SylphxConfig } from '../../config'
 
 // ============================================================================
 // Context

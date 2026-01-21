@@ -4,7 +4,7 @@
  * Pure functions for file storage operations.
  */
 
-import { type SylphxConfig, buildHeaders } from './config'
+import { type SylphxConfig, buildHeaders, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -159,16 +159,7 @@ export async function uploadAvatar(
  * ```
  */
 export async function deleteFile(config: SylphxConfig, fileId: string): Promise<void> {
-	const response = await fetch(`${config.platformUrl}/api/trpc/storage.deleteFile`, {
-		method: 'POST',
-		headers: buildHeaders(config),
-		body: JSON.stringify({ json: { id: fileId } }),
-	})
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to delete file' }))
-		throw new Error(error.error?.message ?? error.message ?? 'Failed to delete file')
-	}
+	await callApi(config, `/storage/files/${fileId}`, { method: 'DELETE' })
 }
 
 /**
@@ -180,21 +171,8 @@ export async function deleteFile(config: SylphxConfig, fileId: string): Promise<
  * ```
  */
 export async function getFileUrl(config: SylphxConfig, fileId: string): Promise<string> {
-	const response = await fetch(
-		`${config.platformUrl}/api/trpc/storage.getFile?input=${encodeURIComponent(JSON.stringify({ json: { id: fileId } }))}`,
-		{
-			method: 'GET',
-			headers: buildHeaders(config),
-		}
-	)
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to get file' }))
-		throw new Error(error.error?.message ?? error.message ?? 'Failed to get file')
-	}
-
-	const data = await response.json()
-	return data.result?.data?.json?.url ?? data.result?.data?.url
+	const data = await callApi<{ url: string }>(config, `/storage/files/${fileId}`, { method: 'GET' })
+	return data.url
 }
 
 /**
@@ -207,19 +185,5 @@ export async function getFileUrl(config: SylphxConfig, fileId: string): Promise<
  * ```
  */
 export async function getFileInfo(config: SylphxConfig, fileId: string): Promise<FileInfo> {
-	const response = await fetch(
-		`${config.platformUrl}/api/trpc/storage.getFile?input=${encodeURIComponent(JSON.stringify({ json: { id: fileId } }))}`,
-		{
-			method: 'GET',
-			headers: buildHeaders(config),
-		}
-	)
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ message: 'Failed to get file' }))
-		throw new Error(error.error?.message ?? error.message ?? 'Failed to get file')
-	}
-
-	const data = await response.json()
-	return data.result?.data?.json ?? data.result?.data
+	return callApi<FileInfo>(config, `/storage/files/${fileId}`, { method: 'GET' })
 }

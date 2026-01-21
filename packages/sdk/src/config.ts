@@ -114,38 +114,70 @@ export function buildHeaders(config: SylphxConfig): Record<string, string> {
 }
 
 /**
- * Internal: Build tRPC URL
+ * Internal: Build REST API URL
  */
-export function buildTrpcUrl(config: SylphxConfig, procedure: string): string {
-	return `${config.platformUrl}/api/trpc/${procedure}`
+export function buildApiUrl(config: SylphxConfig, path: string): string {
+	const base = config.platformUrl.replace(/\/$/, '')
+	const cleanPath = path.startsWith('/') ? path : `/${path}`
+	return `${base}/api/sdk${cleanPath}`
 }
 
 /**
- * Internal: Call tRPC procedure
+ * Internal: Call REST API endpoint
  */
-export async function callTrpc<TInput, TOutput>(
+export async function callApi<TOutput>(
 	config: SylphxConfig,
-	procedure: string,
-	input: TInput,
-	type: 'query' | 'mutation' = 'mutation'
+	path: string,
+	options: {
+		method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+		body?: unknown
+		query?: Record<string, string | number | boolean | undefined>
+	} = {}
 ): Promise<TOutput> {
-	const url = type === 'query'
-		? `${buildTrpcUrl(config, procedure)}?input=${encodeURIComponent(JSON.stringify({ json: input }))}`
-		: buildTrpcUrl(config, procedure)
+	const { method = 'GET', body, query } = options
 
-	const response = await fetch(url, {
-		method: type === 'query' ? 'GET' : 'POST',
+	let url = buildApiUrl(config, path)
+
+	// Add query parameters
+	if (query) {
+		const params = new URLSearchParams()
+		for (const [key, value] of Object.entries(query)) {
+			if (value !== undefined) {
+				params.set(key, String(value))
+			}
+		}
+		const queryString = params.toString()
+		if (queryString) {
+			url += `?${queryString}`
+		}
+	}
+
+	const fetchOptions: RequestInit = {
+		method,
 		headers: buildHeaders(config),
-		// In platform mode, include cookies for same-origin auth
-		...(config.platformMode && { credentials: 'include' as const }),
-		...(type === 'mutation' && { body: JSON.stringify({ json: input }) }),
-	})
+	}
+
+	// In platform mode, include cookies for same-origin auth
+	if (config.platformMode) {
+		fetchOptions.credentials = 'include'
+	}
+
+	if (body) {
+		fetchOptions.body = JSON.stringify(body)
+	}
+
+	const response = await fetch(url, fetchOptions)
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
 		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
 	}
 
-	const data = await response.json()
-	return data.result?.data?.json ?? data.result?.data ?? data
+	// Handle empty responses (204 No Content)
+	const text = await response.text()
+	if (!text) {
+		return {} as TOutput
+	}
+
+	return JSON.parse(text) as TOutput
 }

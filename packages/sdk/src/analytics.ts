@@ -5,7 +5,7 @@
  * Events are sent directly to the platform.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -72,18 +72,16 @@ export interface BatchEvent {
  * ```
  */
 export async function track(config: SylphxConfig, input: TrackInput): Promise<void> {
-	await callTrpc(
-		config,
-		'analytics.track',
-		{
+	await callApi(config, '/analytics/track', {
+		method: 'POST',
+		body: {
 			event: input.event,
 			properties: input.properties ?? {},
 			userId: input.userId,
 			anonymousId: input.anonymousId,
 			timestamp: input.timestamp ?? new Date().toISOString(),
 		},
-		'mutation'
-	)
+	})
 }
 
 /**
@@ -98,18 +96,16 @@ export async function track(config: SylphxConfig, input: TrackInput): Promise<vo
  * ```
  */
 export async function page(config: SylphxConfig, input: PageInput): Promise<void> {
-	await callTrpc(
-		config,
-		'analytics.page',
-		{
+	await callApi(config, '/analytics/page', {
+		method: 'POST',
+		body: {
 			name: input.name,
 			properties: input.properties ?? {},
 			userId: input.userId,
 			anonymousId: input.anonymousId,
 			timestamp: new Date().toISOString(),
 		},
-		'mutation'
-	)
+	})
 }
 
 /**
@@ -125,16 +121,14 @@ export async function page(config: SylphxConfig, input: PageInput): Promise<void
  * ```
  */
 export async function identify(config: SylphxConfig, input: IdentifyInput): Promise<void> {
-	await callTrpc(
-		config,
-		'analytics.identify',
-		{
+	await callApi(config, '/analytics/identify', {
+		method: 'POST',
+		body: {
 			userId: input.userId,
 			traits: input.traits ?? {},
 			anonymousId: input.anonymousId,
 		},
-		'mutation'
-	)
+	})
 }
 
 /**
@@ -150,10 +144,9 @@ export async function identify(config: SylphxConfig, input: IdentifyInput): Prom
  * ```
  */
 export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Promise<void> {
-	await callTrpc(
-		config,
-		'analytics.trackBatch',
-		{
+	await callApi(config, '/analytics/batch', {
+		method: 'POST',
+		body: {
 			events: events.map((e) => ({
 				event: e.type === 'track' ? e.event : e.type === 'page' ? `$pageview` : '$identify',
 				properties: {
@@ -166,8 +159,7 @@ export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Pr
 				timestamp: e.timestamp ?? new Date().toISOString(),
 			})),
 		},
-		'mutation'
-	)
+	})
 }
 
 // ============================================================================

@@ -4,7 +4,7 @@
  * Pure functions for push notifications.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -55,12 +55,10 @@ export async function registerPush(
 	config: SylphxConfig,
 	subscription: PushSubscription
 ): Promise<void> {
-	await callTrpc(
-		config,
-		'notifications.register',
-		{ subscription },
-		'mutation'
-	)
+	await callApi(config, '/notifications/register', {
+		method: 'POST',
+		body: { subscription },
+	})
 }
 
 /**
@@ -72,12 +70,10 @@ export async function registerPush(
  * ```
  */
 export async function unregisterPush(config: SylphxConfig, endpoint: string): Promise<void> {
-	await callTrpc(
-		config,
-		'notifications.unregister',
-		{ endpoint },
-		'mutation'
-	)
+	await callApi(config, '/notifications/unregister', {
+		method: 'POST',
+		body: { endpoint },
+	})
 }
 
 /**
@@ -97,12 +93,10 @@ export async function sendPush(
 	userId: string,
 	notification: PushNotification
 ): Promise<{ sentTo: number; expired: number }> {
-	return callTrpc(
-		config,
-		'notifications.sendToUser',
-		{ userId, ...notification },
-		'mutation'
-	)
+	return callApi(config, '/notifications/send', {
+		method: 'POST',
+		body: { userId, ...notification },
+	})
 }
 
 /**
@@ -116,12 +110,7 @@ export async function sendPush(
 export async function getPushPreferences(
 	config: SylphxConfig
 ): Promise<{ enabled: boolean; categories: Record<string, boolean> }> {
-	return callTrpc(
-		config,
-		'notifications.getPreferences',
-		undefined,
-		'query'
-	)
+	return callApi(config, '/notifications/preferences', { method: 'GET' })
 }
 
 /**
@@ -139,10 +128,8 @@ export async function updatePushPreferences(
 	config: SylphxConfig,
 	preferences: { enabled?: boolean; categories?: Record<string, boolean> }
 ): Promise<void> {
-	await callTrpc(
-		config,
-		'notifications.updatePreferences',
-		preferences,
-		'mutation'
-	)
+	await callApi(config, '/notifications/preferences', {
+		method: 'PUT',
+		body: preferences,
+	})
 }

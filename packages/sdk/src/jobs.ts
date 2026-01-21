@@ -4,7 +4,7 @@
  * Pure functions for background job scheduling.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -74,7 +74,7 @@ export interface CronSchedule {
  * ```
  */
 export async function scheduleJob(config: SylphxConfig, input: JobInput): Promise<JobResult> {
-	return callTrpc<JobInput, JobResult>(config, 'jobs.schedule', input, 'mutation')
+	return callApi<JobResult>(config, '/jobs/schedule', { method: 'POST', body: input })
 }
 
 /**
@@ -87,7 +87,7 @@ export async function scheduleJob(config: SylphxConfig, input: JobInput): Promis
  * ```
  */
 export async function getJob(config: SylphxConfig, jobId: string): Promise<JobResult> {
-	return callTrpc<{ jobId: string }, JobResult>(config, 'jobs.get', { jobId }, 'query')
+	return callApi<JobResult>(config, `/jobs/${jobId}`, { method: 'GET' })
 }
 
 /**
@@ -99,12 +99,9 @@ export async function getJob(config: SylphxConfig, jobId: string): Promise<JobRe
  * ```
  */
 export async function cancelJob(config: SylphxConfig, jobId: string): Promise<boolean> {
-	const result = await callTrpc<{ jobId: string }, { success: boolean }>(
-		config,
-		'jobs.cancel',
-		{ jobId },
-		'mutation'
-	)
+	const result = await callApi<{ success: boolean }>(config, `/jobs/${jobId}/cancel`, {
+		method: 'POST',
+	})
 	return result.success
 }
 
@@ -120,7 +117,10 @@ export async function listJobs(
 	config: SylphxConfig,
 	options?: { status?: JobResult['status']; limit?: number; offset?: number }
 ): Promise<{ jobs: JobResult[]; total: number }> {
-	return callTrpc(config, 'jobs.list', options ?? {}, 'query')
+	return callApi(config, '/jobs', {
+		method: 'GET',
+		query: options as Record<string, string | number | undefined>,
+	})
 }
 
 /**
@@ -137,7 +137,7 @@ export async function listJobs(
  * ```
  */
 export async function createCron(config: SylphxConfig, input: CronInput): Promise<CronSchedule> {
-	return callTrpc<CronInput, CronSchedule>(config, 'jobs.createCron', input, 'mutation')
+	return callApi<CronSchedule>(config, '/jobs/cron', { method: 'POST', body: input })
 }
 
 /**
@@ -149,12 +149,9 @@ export async function createCron(config: SylphxConfig, input: CronInput): Promis
  * ```
  */
 export async function pauseCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callTrpc<{ scheduleId: string }, { success: boolean }>(
-		config,
-		'jobs.pauseCron',
-		{ scheduleId },
-		'mutation'
-	)
+	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}/pause`, {
+		method: 'POST',
+	})
 	return result.success
 }
 
@@ -167,12 +164,9 @@ export async function pauseCron(config: SylphxConfig, scheduleId: string): Promi
  * ```
  */
 export async function resumeCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callTrpc<{ scheduleId: string }, { success: boolean }>(
-		config,
-		'jobs.resumeCron',
-		{ scheduleId },
-		'mutation'
-	)
+	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}/resume`, {
+		method: 'POST',
+	})
 	return result.success
 }
 
@@ -185,11 +179,8 @@ export async function resumeCron(config: SylphxConfig, scheduleId: string): Prom
  * ```
  */
 export async function deleteCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callTrpc<{ scheduleId: string }, { success: boolean }>(
-		config,
-		'jobs.deleteCron',
-		{ scheduleId },
-		'mutation'
-	)
+	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}`, {
+		method: 'DELETE',
+	})
 	return result.success
 }

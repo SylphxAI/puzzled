@@ -25,8 +25,8 @@ import {
 	getSession,
 	type SignInInput,
 	type SignInResult,
-} from '../../functions/auth'
-import { withToken, type SylphxConfig } from '../../functions/config'
+} from '../../auth'
+import { withToken, type SylphxConfig } from '../../config'
 
 // ============================================================================
 // Types

@@ -15,7 +15,7 @@ import {
 	getVariant as getVariantFn,
 	type FlagResult,
 	type FlagContext,
-} from '../../functions/flags'
+} from '../../flags'
 
 // ============================================================================
 // Hooks

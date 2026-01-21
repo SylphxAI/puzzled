@@ -17,7 +17,7 @@ import {
 	type ChatResult,
 	type EmbedInput,
 	type EmbedResult,
-} from '../../functions/ai'
+} from '../../ai'
 
 // ============================================================================
 // Types

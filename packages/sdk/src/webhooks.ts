@@ -4,7 +4,7 @@
  * Pure functions for webhook configuration and delivery management.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -76,7 +76,7 @@ export interface ListDeliveriesOptions {
  * ```
  */
 export async function getWebhookConfig(config: SylphxConfig): Promise<WebhookConfig> {
-	return callTrpc(config, 'webhooks.getConfig', undefined, 'query')
+	return callApi(config, '/webhooks/config', { method: 'GET' })
 }
 
 /**
@@ -94,7 +94,7 @@ export async function updateWebhookConfig(
 	config: SylphxConfig,
 	data: WebhookConfigUpdate
 ): Promise<void> {
-	return callTrpc(config, 'webhooks.updateConfig', data, 'mutation')
+	return callApi(config, '/webhooks/config', { method: 'PUT', body: data })
 }
 
 /**
@@ -112,7 +112,10 @@ export async function getWebhookDeliveries(
 	config: SylphxConfig,
 	options?: ListDeliveriesOptions
 ): Promise<WebhookDeliveriesResult> {
-	return callTrpc(config, 'webhooks.getDeliveries', options ?? {}, 'query')
+	return callApi(config, '/webhooks/deliveries', {
+		method: 'GET',
+		query: options as Record<string, string | number | undefined>,
+	})
 }
 
 /**
@@ -128,7 +131,7 @@ export async function getWebhookDelivery(
 	config: SylphxConfig,
 	deliveryId: string
 ): Promise<WebhookDelivery> {
-	return callTrpc(config, 'webhooks.getDelivery', { id: deliveryId }, 'query')
+	return callApi(config, `/webhooks/deliveries/${deliveryId}`, { method: 'GET' })
 }
 
 /**
@@ -143,7 +146,7 @@ export async function replayWebhookDelivery(
 	config: SylphxConfig,
 	deliveryId: string
 ): Promise<void> {
-	return callTrpc(config, 'webhooks.replayDelivery', { id: deliveryId }, 'mutation')
+	return callApi(config, `/webhooks/deliveries/${deliveryId}/replay`, { method: 'POST' })
 }
 
 /**
@@ -159,5 +162,8 @@ export async function getWebhookStats(
 	config: SylphxConfig,
 	environmentId?: string
 ): Promise<WebhookStats> {
-	return callTrpc(config, 'webhooks.getStats', { environmentId }, 'query')
+	return callApi(config, '/webhooks/stats', {
+		method: 'GET',
+		query: environmentId ? { environmentId } : undefined,
+	})
 }

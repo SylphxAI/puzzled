@@ -25,7 +25,7 @@
  * ```
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -147,7 +147,10 @@ export async function getMyReferralCode(
 	config: SylphxConfig,
 	userId: string
 ): Promise<ReferralCode> {
-	return callTrpc(config, 'referrals.getMyCode', { userId }, 'query')
+	return callApi(config, '/referrals/code', {
+		method: 'GET',
+		query: { userId },
+	})
 }
 
 /**
@@ -163,7 +166,10 @@ export async function getReferralStats(
 	config: SylphxConfig,
 	userId: string
 ): Promise<ReferralStats> {
-	return callTrpc(config, 'referrals.getStats', { userId }, 'query')
+	return callApi(config, '/referrals/stats', {
+		method: 'GET',
+		query: { userId },
+	})
 }
 
 /**
@@ -203,7 +209,10 @@ export async function redeemReferralCode(
 	input: RedeemReferralInput,
 	defaults?: ReferralRewardDefaults
 ): Promise<RedeemResult> {
-	return callTrpc(config, 'referrals.redeem', { ...input, defaults }, 'mutation')
+	return callApi(config, '/referrals/redeem', {
+		method: 'POST',
+		body: { ...input, defaults },
+	})
 }
 
 /**
@@ -223,7 +232,10 @@ export async function getReferralLeaderboard(
 	userId: string,
 	options?: LeaderboardOptions
 ): Promise<LeaderboardResult> {
-	return callTrpc(config, 'referrals.getLeaderboard', { userId, ...options }, 'query')
+	return callApi(config, '/referrals/leaderboard', {
+		method: 'GET',
+		query: { userId, ...options } as Record<string, string | number | undefined>,
+	})
 }
 
 /**
@@ -241,5 +253,8 @@ export async function regenerateReferralCode(
 	config: SylphxConfig,
 	userId: string
 ): Promise<ReferralCode> {
-	return callTrpc(config, 'referrals.regenerateCode', { userId }, 'mutation')
+	return callApi(config, '/referrals/code/regenerate', {
+		method: 'POST',
+		body: { userId },
+	})
 }

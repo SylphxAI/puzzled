@@ -38,7 +38,7 @@
  * ```
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // Re-export types from types file
 export type {
@@ -101,7 +101,10 @@ export async function getStreak(
 	streakId: string,
 	userId: string
 ): Promise<StreakState> {
-	return callTrpc(config, 'engagement.getStreak', { streakId, userId }, 'query')
+	return callApi(config, '/engagement/streaks/get', {
+		method: 'GET',
+		query: { streakId, userId },
+	})
 }
 
 /**
@@ -116,7 +119,10 @@ export async function getStreak(
  * ```
  */
 export async function getAllStreaks(config: SylphxConfig, userId: string): Promise<StreakState[]> {
-	return callTrpc(config, 'engagement.getAllStreaks', { userId }, 'query')
+	return callApi(config, '/engagement/streaks', {
+		method: 'GET',
+		query: { userId },
+	})
 }
 
 /**
@@ -154,12 +160,10 @@ export async function recordStreakActivity(
 	userId: string,
 	defaults?: StreakDefaults
 ): Promise<RecordActivityResult> {
-	return callTrpc(
-		config,
-		'engagement.recordActivity',
-		{ ...input, userId, defaults },
-		'mutation'
-	)
+	return callApi(config, '/engagement/streaks/record', {
+		method: 'POST',
+		body: { ...input, userId, defaults },
+	})
 }
 
 /**
@@ -178,7 +182,10 @@ export async function recoverStreak(
 	streakId: string,
 	userId: string
 ): Promise<{ success: boolean; streak: StreakState }> {
-	return callTrpc(config, 'engagement.recoverStreak', { streakId, userId }, 'mutation')
+	return callApi(config, '/engagement/streaks/recover', {
+		method: 'POST',
+		body: { streakId, userId },
+	})
 }
 
 // ============================================================================
@@ -218,12 +225,13 @@ export async function getLeaderboard(
 	userId: string | null,
 	options?: LeaderboardQueryOptions
 ): Promise<LeaderboardResult> {
-	return callTrpc(
-		config,
-		'engagement.getLeaderboard',
-		{ leaderboardId, userId, ...options },
-		'query'
-	)
+	return callApi(config, '/engagement/leaderboards/get', {
+		method: 'GET',
+		query: { leaderboardId, userId: userId ?? undefined, ...options } as Record<
+			string,
+			string | number | boolean | undefined
+		>,
+	})
 }
 
 /**
@@ -264,12 +272,10 @@ export async function submitScore(
 	userId: string,
 	defaults?: LeaderboardDefaults
 ): Promise<SubmitScoreResult> {
-	return callTrpc(
-		config,
-		'engagement.submitScore',
-		{ ...input, userId, defaults },
-		'mutation'
-	)
+	return callApi(config, '/engagement/leaderboards/submit', {
+		method: 'POST',
+		body: { ...input, userId, defaults },
+	})
 }
 
 /**
@@ -288,7 +294,10 @@ export async function getUserLeaderboardRank(
 	leaderboardId: string,
 	userId: string
 ): Promise<{ rank: number; value: number } | null> {
-	return callTrpc(config, 'engagement.getUserRank', { leaderboardId, userId }, 'query')
+	return callApi(config, '/engagement/leaderboards/rank', {
+		method: 'GET',
+		query: { leaderboardId, userId },
+	})
 }
 
 // ============================================================================
@@ -321,7 +330,10 @@ export async function getAchievements(
 	config: SylphxConfig,
 	userId: string
 ): Promise<UserAchievement[]> {
-	return callTrpc(config, 'engagement.getAchievements', { userId }, 'query')
+	return callApi(config, '/engagement/achievements', {
+		method: 'GET',
+		query: { userId },
+	})
 }
 
 /**
@@ -340,7 +352,10 @@ export async function getAchievement(
 	achievementId: string,
 	userId: string
 ): Promise<UserAchievement | null> {
-	return callTrpc(config, 'engagement.getAchievement', { achievementId, userId }, 'query')
+	return callApi(config, '/engagement/achievements/get', {
+		method: 'GET',
+		query: { achievementId, userId },
+	})
 }
 
 /**
@@ -373,12 +388,10 @@ export async function unlockAchievement(
 	userId: string,
 	defaults?: AchievementDefaults
 ): Promise<AchievementUnlockEvent> {
-	return callTrpc(
-		config,
-		'engagement.unlockAchievement',
-		{ achievementId, userId, defaults },
-		'mutation'
-	)
+	return callApi(config, '/engagement/achievements/unlock', {
+		method: 'POST',
+		body: { achievementId, userId, defaults },
+	})
 }
 
 /**
@@ -418,12 +431,10 @@ export async function incrementAchievementProgress(
 	userId: string,
 	defaults?: AchievementDefaults
 ): Promise<UserAchievement> {
-	return callTrpc(
-		config,
-		'engagement.incrementProgress',
-		{ achievementId, amount, userId, defaults },
-		'mutation'
-	)
+	return callApi(config, '/engagement/achievements/progress', {
+		method: 'POST',
+		body: { achievementId, amount, userId, defaults },
+	})
 }
 
 /**
@@ -440,6 +451,8 @@ export async function getAchievementPoints(
 	config: SylphxConfig,
 	userId: string
 ): Promise<{ total: number; thisMonth: number; rank: number | null }> {
-	return callTrpc(config, 'engagement.getPoints', { userId }, 'query')
+	return callApi(config, '/engagement/achievements/points', {
+		method: 'GET',
+		query: { userId },
+	})
 }
-

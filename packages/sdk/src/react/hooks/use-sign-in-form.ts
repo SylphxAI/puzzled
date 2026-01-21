@@ -342,7 +342,7 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 				if (magicLinkHandler) {
 					await magicLinkHandler(form.email)
 				} else {
-					// Magic link not implemented in current tRPC router
+					// Magic link requires custom handler
 					throw new Error('Magic link sign-in requires a custom magicLinkHandler')
 				}
 
@@ -367,7 +367,7 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 			if (otpRequestHandler) {
 				await otpRequestHandler(form.email)
 			} else {
-				// OTP not implemented in current tRPC router
+				// OTP requires custom handler
 				throw new Error('OTP sign-in requires a custom otpRequestHandler')
 			}
 
@@ -392,7 +392,7 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 				if (otpVerifyHandler) {
 					await otpVerifyHandler(form.email, form.otp)
 				} else {
-					// OTP not implemented in current tRPC router
+					// OTP requires custom handler
 					throw new Error('OTP verification requires a custom otpVerifyHandler')
 				}
 

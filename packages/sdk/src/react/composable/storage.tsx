@@ -15,7 +15,7 @@ import {
 	type UploadOptions,
 	type UploadResult,
 	type UploadProgressEvent,
-} from '../../functions/storage'
+} from '../../storage'
 
 // ============================================================================
 // Types

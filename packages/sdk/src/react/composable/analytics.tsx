@@ -20,7 +20,7 @@ import {
 	trackBatch,
 	generateAnonymousId,
 	type BatchEvent,
-} from '../../functions/analytics'
+} from '../../analytics'
 
 // ============================================================================
 // Types

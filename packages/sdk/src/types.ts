@@ -784,7 +784,6 @@ export interface ErrorResponse {
 // ==========================================
 
 // These are placeholders for backward compatibility
-// They allow existing code to compile while transitioning away from tRPC
 export type RouterInputs = Record<string, unknown>
 export type RouterOutputs = Record<string, unknown>
 

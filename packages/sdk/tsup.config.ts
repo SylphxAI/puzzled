@@ -51,11 +51,8 @@ export default defineConfig([
 		sourcemap: true,
 		clean: true,
 		external: PEER_EXTERNALS,
-		// Bundle all dependencies (tRPC, superjson, etc.) into the SDK
+		// Bundle all dependencies into the SDK
 		noExternal: [
-			'@trpc/client',
-			'@trpc/server',
-			'superjson',
 			'jose',
 			'@sylphx/ui',
 		],
@@ -103,9 +100,6 @@ export default defineConfig([
 		external: PEER_EXTERNALS,
 		// Bundle all SDK dependencies
 		noExternal: [
-			'@trpc/client',
-			'@trpc/server',
-			'superjson',
 			'rrweb',
 			'@sylphx/ui',
 			'@vercel/blob',

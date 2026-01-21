@@ -2,7 +2,7 @@
  * Services Context
  *
  * React Context for all SDK services including Auth, AI, Jobs, etc.
- * All types are INFERRED from the tRPC router - no manual type definitions.
+ * All types are imported from types.ts (SSOT).
  */
 
 import { createContext, useContext, type Context } from 'react'
@@ -113,7 +113,6 @@ export type {
 
 // ============================================================================
 // Type Aliases for Backward Compatibility
-// Maps old hook type names to new tRPC-inferred types
 // ============================================================================
 
 // ============================================================================

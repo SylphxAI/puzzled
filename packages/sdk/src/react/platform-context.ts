@@ -4,7 +4,7 @@
  * Context for platform services: billing, analytics, push, referrals.
  *
  * Type Strategy:
- * - Types that match API responses are imported from ../trpc (SSOT)
+ * - Types that match API responses are imported from ../types (SSOT)
  * - SDK-specific types (transformed/computed) are defined here with Sdk prefix
  */
 
@@ -55,7 +55,6 @@ export interface PushPreferences {
 // Mobile Push Types (SDK-specific)
 //
 // These are SDK transformations of the API types.
-// The API types (MobilePushConfig, MobilePushPreferences) are in trpc.ts.
 // ==========================================
 
 /** SDK mobile push platform - includes 'web' for SDK flexibility */
@@ -84,7 +83,6 @@ export interface SdkMobilePushConfig {
 }
 
 // Type aliases for backward compatibility
-// These are the SDK versions used in the context (not the raw API types from trpc.ts)
 export type MobilePushPreferences = SdkMobilePushPreferences
 export type MobilePushConfig = SdkMobilePushConfig
 

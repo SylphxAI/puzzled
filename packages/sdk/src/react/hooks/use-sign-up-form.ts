@@ -395,7 +395,7 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 						throw new Error('Email verification requires SylphxProvider or a custom verifyEmailHandler')
 					}
 
-					// Note: tRPC verifyEmail uses token, not email+code
+					// verifyEmail uses the verification token
 					// The verification code IS the token in this case
 					await authContext.verifyEmail(form.verificationCode)
 					result = {}

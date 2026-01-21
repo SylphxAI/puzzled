@@ -35,7 +35,7 @@
  * ```
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -129,7 +129,7 @@ export interface ConsentPurposeDefaults {
  * ```
  */
 export async function getConsentTypes(config: SylphxConfig): Promise<ConsentType[]> {
-	return callTrpc(config, 'consent.getConsentTypes', undefined, 'query')
+	return callApi(config, '/consent/types', { method: 'GET' })
 }
 
 /**
@@ -171,12 +171,10 @@ export async function hasConsent(
 	input: GetConsentsInput,
 	defaults?: ConsentPurposeDefaults
 ): Promise<boolean> {
-	return callTrpc(
-		config,
-		'consent.hasConsent',
-		{ purposeSlug, ...input, defaults },
-		'query'
-	)
+	return callApi(config, '/consent/check', {
+		method: 'POST',
+		body: { purposeSlug, ...input, defaults },
+	})
 }
 
 /**
@@ -195,7 +193,10 @@ export async function getUserConsents(
 	config: SylphxConfig,
 	input: GetConsentsInput
 ): Promise<UserConsent[]> {
-	return callTrpc(config, 'consent.getUserConsents', input, 'query')
+	return callApi(config, '/consent/user', {
+		method: 'GET',
+		query: input as Record<string, string | undefined>,
+	})
 }
 
 /**
@@ -216,7 +217,7 @@ export async function setConsents(
 	config: SylphxConfig,
 	input: SetConsentsInput
 ): Promise<void> {
-	return callTrpc(config, 'consent.setConsents', input, 'mutation')
+	return callApi(config, '/consent/set', { method: 'POST', body: input })
 }
 
 /**
@@ -231,7 +232,7 @@ export async function acceptAllConsents(
 	config: SylphxConfig,
 	input: GetConsentsInput
 ): Promise<void> {
-	return callTrpc(config, 'consent.acceptAll', input, 'mutation')
+	return callApi(config, '/consent/accept-all', { method: 'POST', body: input })
 }
 
 /**
@@ -246,7 +247,7 @@ export async function declineOptionalConsents(
 	config: SylphxConfig,
 	input: GetConsentsInput
 ): Promise<void> {
-	return callTrpc(config, 'consent.declineOptional', input, 'mutation')
+	return callApi(config, '/consent/decline-optional', { method: 'POST', body: input })
 }
 
 /**
@@ -266,6 +267,5 @@ export async function linkAnonymousConsents(
 	config: SylphxConfig,
 	input: LinkAnonymousConsentsInput
 ): Promise<void> {
-	return callTrpc(config, 'consent.linkAnonymousConsents', input, 'mutation')
+	return callApi(config, '/consent/link-anonymous', { method: 'POST', body: input })
 }
-

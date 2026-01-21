@@ -4,7 +4,7 @@
  * Pure functions for feature flag evaluation.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -54,12 +54,15 @@ export async function checkFlag(
 	flagKey: string,
 	context?: FlagContext
 ): Promise<FlagResult> {
-	return callTrpc<{ key: string } & FlagContext, FlagResult>(
-		config,
-		'flags.check',
-		{ key: flagKey, ...context },
-		'query'
-	)
+	return callApi<FlagResult>(config, '/flags/check', {
+		method: 'GET',
+		query: {
+			key: flagKey,
+			userId: context?.userId,
+			anonymousId: context?.anonymousId,
+			properties: context?.properties ? JSON.stringify(context.properties) : undefined,
+		},
+	})
 }
 
 /**
