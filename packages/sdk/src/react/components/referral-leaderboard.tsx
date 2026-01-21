@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useUser } from '../hooks'
 import { useReferral, type LeaderboardEntry, type ReferralLeaderboardResult } from '../platform-hooks'
 import {
@@ -82,6 +82,7 @@ export function ReferralLeaderboard({
 	} | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [retryCount, setRetryCount] = useState(0)
 
 	// Inject global styles
 	useEffect(() => {
@@ -117,7 +118,12 @@ export function ReferralLeaderboard({
 		}
 
 		loadData()
-	}, [getLeaderboard, limit, period])
+	}, [getLeaderboard, limit, period, retryCount])
+
+	// Retry handler
+	const handleRetry = useCallback(() => {
+		setRetryCount((c) => c + 1)
+	}, [])
 
 	// Rank badge color
 	const getRankColor = (rank: number) => {
@@ -179,7 +185,18 @@ export function ReferralLeaderboard({
 		return (
 			<div className={className}>
 				<div style={mergeStyles(styles.alert, styles.alertError)}>
-					{error}
+					<div style={{ marginBottom: '0.75rem' }}>{error}</div>
+					<button
+						type="button"
+						onClick={handleRetry}
+						style={mergeStyles(styles.button, styles.buttonOutline, {
+							padding: '0.5rem 1rem',
+							fontSize: theme.fontSizeSm,
+						})}
+					>
+						<RefreshIcon size={14} color={theme.colorForeground} />
+						Try Again
+					</button>
 				</div>
 			</div>
 		)
@@ -431,5 +448,26 @@ function MedalIcon({ rank, size = 16 }: { rank: number; size?: number }) {
 		<span style={{ fontSize: size, lineHeight: 1 }}>
 			{medals[rank] || rank}
 		</span>
+	)
+}
+
+function RefreshIcon({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) {
+	return (
+		<svg
+			width={size}
+			height={size}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke={color}
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			style={{ flexShrink: 0, marginRight: '0.25rem' }}
+		>
+			<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+			<path d="M3 3v5h5" />
+			<path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+			<path d="M16 16h5v5" />
+		</svg>
 	)
 }

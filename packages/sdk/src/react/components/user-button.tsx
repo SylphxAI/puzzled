@@ -8,10 +8,17 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useUser, useAuth } from '../hooks'
+import {
+	type ThemeVariables,
+	defaultTheme,
+	injectGlobalStyles,
+} from '../ui/styles'
 
 export interface UserButtonProps {
 	/** URL to redirect to after sign out */
 	afterSignOutUrl?: string
+	/** Theme variables */
+	theme?: ThemeVariables
 	/** Custom appearance */
 	appearance?: {
 		avatarSize?: number
@@ -37,6 +44,7 @@ export interface UserButtonProps {
  */
 export function UserButton({
 	afterSignOutUrl = '/',
+	theme = defaultTheme,
 	appearance,
 	className,
 	showName = false,
@@ -46,6 +54,11 @@ export function UserButton({
 	const [isOpen, setIsOpen] = useState(false)
 	const menuRef = useRef<HTMLDivElement>(null)
 	const buttonRef = useRef<HTMLButtonElement>(null)
+
+	// Inject global styles
+	useEffect(() => {
+		injectGlobalStyles()
+	}, [])
 
 	// Close menu on outside click
 	useEffect(() => {
@@ -63,6 +76,19 @@ export function UserButton({
 		document.addEventListener('mousedown', handleClickOutside)
 		return () => document.removeEventListener('mousedown', handleClickOutside)
 	}, [])
+
+	// Close menu on Escape key
+	useEffect(() => {
+		const handleEscape = (event: KeyboardEvent) => {
+			if (event.key === 'Escape' && isOpen) {
+				setIsOpen(false)
+				buttonRef.current?.focus()
+			}
+		}
+
+		document.addEventListener('keydown', handleEscape)
+		return () => document.removeEventListener('keydown', handleEscape)
+	}, [isOpen])
 
 	// Don't show if not signed in
 	if (!isLoaded || !isSignedIn || !user) {
@@ -105,13 +131,13 @@ export function UserButton({
 		width: avatarSize,
 		height: avatarSize,
 		borderRadius: '9999px',
-		backgroundColor: '#e5e7eb',
+		backgroundColor: theme.colorMuted,
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 		fontSize: avatarSize * 0.4,
 		fontWeight: 500,
-		color: '#374151',
+		color: theme.colorMutedForeground,
 		overflow: 'hidden',
 	}
 
@@ -120,9 +146,9 @@ export function UserButton({
 		top: 'calc(100% + 0.5rem)',
 		right: 0,
 		minWidth: '200px',
-		backgroundColor: '#fff',
-		border: '1px solid #e5e7eb',
-		borderRadius: '0.5rem',
+		backgroundColor: theme.colorBackground,
+		border: `1px solid ${theme.colorBorder}`,
+		borderRadius: theme.borderRadius,
 		boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
 		zIndex: 50,
 		overflow: 'hidden',
@@ -137,8 +163,8 @@ export function UserButton({
 		border: 'none',
 		background: 'transparent',
 		cursor: 'pointer',
-		fontSize: '0.875rem',
-		color: '#374151',
+		fontSize: theme.fontSizeSm,
+		color: theme.colorForeground,
 	}
 
 	return (
@@ -148,14 +174,15 @@ export function UserButton({
 				onClick={() => setIsOpen(!isOpen)}
 				style={buttonStyles}
 				type="button"
+				aria-label={`User menu for ${user.name || user.email}`}
 				aria-haspopup="menu"
 				aria-expanded={isOpen}
 			>
-				<div style={avatarStyles}>
+				<div style={avatarStyles} aria-hidden="true">
 					{user.image ? (
 						<img
 							src={user.image}
-							alt={user.name || 'User'}
+							alt=""
 							style={{
 								width: '100%',
 								height: '100%',
@@ -167,27 +194,27 @@ export function UserButton({
 					)}
 				</div>
 				{showName && (
-					<span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+					<span style={{ fontSize: theme.fontSizeSm, fontWeight: 500, color: theme.colorForeground }}>
 						{user.name || user.email}
 					</span>
 				)}
 			</button>
 
 			{isOpen && (
-				<div ref={menuRef} style={menuStyles} role="menu">
+				<div ref={menuRef} style={menuStyles} role="menu" aria-label="User menu">
 					<div
 						style={{
 							padding: '0.75rem 1rem',
-							borderBottom: '1px solid #e5e7eb',
+							borderBottom: `1px solid ${theme.colorBorder}`,
 						}}
 					>
-						<p style={{ fontWeight: 500, fontSize: '0.875rem' }}>
+						<p style={{ fontWeight: 500, fontSize: theme.fontSizeSm, color: theme.colorForeground }}>
 							{user.name || 'User'}
 						</p>
 						<p
 							style={{
-								fontSize: '0.75rem',
-								color: '#6b7280',
+								fontSize: theme.fontSizeXs,
+								color: theme.colorMutedForeground,
 								marginTop: '0.125rem',
 							}}
 						>
@@ -201,9 +228,15 @@ export function UserButton({
 						type="button"
 						role="menuitem"
 						onMouseEnter={(e) => {
-							e.currentTarget.style.backgroundColor = '#f3f4f6'
+							e.currentTarget.style.backgroundColor = theme.colorMuted
 						}}
 						onMouseLeave={(e) => {
+							e.currentTarget.style.backgroundColor = 'transparent'
+						}}
+						onFocus={(e) => {
+							e.currentTarget.style.backgroundColor = theme.colorMuted
+						}}
+						onBlur={(e) => {
 							e.currentTarget.style.backgroundColor = 'transparent'
 						}}
 					>
