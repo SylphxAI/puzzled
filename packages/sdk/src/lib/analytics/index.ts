@@ -8,33 +8,29 @@
  * - User identification & sessions
  * - UTM & referrer attribution
  *
+ * ## Architecture (ADR-004)
+ *
+ * Analytics uses **Auto-Discovery** - events are automatically discovered
+ * when tracked. No pre-definition or schema required.
+ *
  * @example
  * ```typescript
- * import { initAnalytics, getAnalyticsTracker } from '@sylphx/platform-sdk/analytics'
+ * import { track, identify, page } from '@sylphx/sdk'
  *
- * // Initialize analytics
- * const analytics = initAnalytics({
- *   apiEndpoint: '/api/analytics/track',
- *   autocapture: true,
- *   debug: true,
+ * // Track any event - auto-discovered by platform
+ * await track(config, {
+ *   event: 'purchase_completed',
+ *   properties: { amount: 99.99, product: 'Pro Plan' }
  * })
  *
  * // Identify user
- * analytics.identify('user-123', {
- *   email: 'user@example.com',
- *   plan: 'pro',
+ * await identify(config, {
+ *   userId: 'user-123',
+ *   traits: { email: 'user@example.com', plan: 'pro' }
  * })
  *
- * // Track custom events
- * analytics.track('purchase_completed', {
- *   amount: 99.99,
- *   product: 'Pro Plan',
- * })
- *
- * // Set user properties
- * analytics.setUserProperties({
- *   lifetime_value: 199.99,
- * })
+ * // Track page view
+ * await page(config, { name: 'Pricing', properties: { variant: 'A' } })
  * ```
  */
 
@@ -103,25 +99,3 @@ export type {
 } from './types'
 
 export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
-
-// Event Schema (Code First)
-export {
-	defineEvent,
-	defineEventCategory,
-	createAnalyticsSchema,
-	hashAnalyticsSchema,
-	presetEvents,
-	presetCategories,
-	type PropertyType,
-	type PropertyDefinition,
-	type EventCategory,
-	type EventDefinition,
-	type EventCategoryDefinition,
-	type AnalyticsSchema,
-	type AnalyticsSchemaInput,
-	type ExtractEventNames,
-	type ExtractEventProps,
-} from './events'
-
-// Typed Tracker
-export { createTypedTracker, type TypedTracker } from './typed-tracker'

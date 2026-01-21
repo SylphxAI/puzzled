@@ -160,26 +160,6 @@ export {
 	type BatchEvent,
 } from './analytics'
 
-// Analytics Code First (Event Schemas)
-export {
-	defineEvent,
-	defineEventCategory,
-	createAnalyticsSchema,
-	hashAnalyticsSchema,
-	presetEvents,
-	presetCategories,
-	createTypedTracker,
-	type PropertyType,
-	type PropertyDefinition,
-	type EventCategory,
-	type EventDefinition,
-	type EventCategoryDefinition,
-	type AnalyticsSchema,
-	type AnalyticsSchemaInput,
-	type ExtractEventNames,
-	type TypedTracker,
-} from './lib/analytics'
-
 // =============================================================================
 // AI Functions
 // =============================================================================
@@ -280,31 +260,6 @@ export {
 	type FlagContext,
 } from './flags'
 
-// Feature Flags Code First (Flag Definitions)
-export {
-	defineBooleanFlag,
-	defineStringFlag,
-	defineNumberFlag,
-	defineJsonFlag,
-	defineVariantFlag,
-	defineFlag,
-	createFlagsConfig,
-	hashFlagsConfig,
-	presetFlags,
-	createTypedFlags,
-	type FlagType,
-	type FlagCategory,
-	type BooleanFlagDefinition,
-	type StringFlagDefinition,
-	type NumberFlagDefinition,
-	type JsonFlagDefinition,
-	type VariantFlagDefinition,
-	type AnyFlagDefinition,
-	type FlagsConfig,
-	type ExtractFlagKeys,
-	type TypedFlags,
-} from './lib/flags'
-
 // =============================================================================
 // Webhooks Functions
 // =============================================================================
@@ -347,11 +302,6 @@ export {
 // =============================================================================
 
 export {
-	// Config builders (Code First)
-	defineConsentPurpose,
-	createConsentConfig,
-	hashConsentConfig,
-	presetPurposes,
 	// Runtime functions
 	getConsentTypes,
 	getUserConsents,
@@ -359,12 +309,7 @@ export {
 	acceptAllConsents,
 	declineOptionalConsents,
 	linkAnonymousConsents,
-	syncConsentConfig,
 	// Types
-	type ConsentCategory,
-	type ConsentPurposeDefinition,
-	type ConsentConfig,
-	type ConsentConfigInput,
 	type ConsentType,
 	type UserConsent,
 	type SetConsentsInput,
@@ -397,13 +342,6 @@ export {
 // =============================================================================
 
 export {
-	// Config builders (Code First)
-	defineStreak,
-	defineLeaderboard,
-	defineAchievement,
-	defineAchievementCategory,
-	createEngagementConfig,
-	hashEngagementConfig,
 	// Streak functions
 	getStreak,
 	getAllStreaks,
@@ -419,8 +357,6 @@ export {
 	unlockAchievement,
 	incrementAchievementProgress,
 	getAchievementPoints,
-	// Config sync (internal)
-	syncEngagementConfig,
 	// Constants
 	ACHIEVEMENT_TIER_CONFIG,
 	// Types
@@ -447,9 +383,6 @@ export {
 	type CriteriaOperator,
 	type UserAchievement,
 	type AchievementUnlockEvent,
-	type EngagementConfig,
-	type EngagementConfigInput,
-	type AchievementCategoryInput,
 } from './engagement'
 
 // =============================================================================

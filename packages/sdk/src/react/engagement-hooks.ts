@@ -2,22 +2,24 @@
  * Engagement React Hooks
  *
  * Hooks for streaks, leaderboards, and achievements.
- * Uses config defined in app code (Code First approach).
+ *
+ * ## Architecture (ADR-004)
+ *
+ * Engagement uses **Auto-Discovery + Console Override**:
+ * - Entities are auto-discovered when first referenced
+ * - No config required - just use the hooks
+ * - Console can override values without deployment
  */
 
 'use client'
 
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type {
-	AchievementDefinition,
 	AchievementUnlockEvent,
-	EngagementConfig,
-	LeaderboardDefinition,
 	LeaderboardEntry,
 	LeaderboardQueryOptions,
 	LeaderboardResult,
 	RecordActivityResult,
-	StreakDefinition,
 	StreakState,
 	SubmitScoreResult,
 	UserAchievement,
@@ -41,8 +43,6 @@ function useEngagementContext() {
 // ============================================================================
 
 export interface UseStreakReturn {
-	/** Streak definition (from config) */
-	definition: StreakDefinition | null
 	/** Current streak state */
 	state: StreakState | null
 	/** Whether loading */
@@ -108,11 +108,6 @@ export function useStreak(streakId: string): UseStreakReturn {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<Error | null>(null)
 
-	// Get definition from config
-	const definition = useMemo(() => {
-		return ctx.engagementConfig?.streaks?.find((s) => s.id === streakId) ?? null
-	}, [ctx.engagementConfig, streakId])
-
 	// Fetch streak state
 	const refresh = useCallback(async () => {
 		if (!ctx.user) {
@@ -157,7 +152,6 @@ export function useStreak(streakId: string): UseStreakReturn {
 	}, [ctx, streakId])
 
 	return {
-		definition,
 		state,
 		isLoading,
 		error,
@@ -176,8 +170,6 @@ export function useStreak(streakId: string): UseStreakReturn {
 // ============================================================================
 
 export interface UseLeaderboardReturn {
-	/** Leaderboard definition (from config) */
-	definition: LeaderboardDefinition | null
 	/** Leaderboard data */
 	data: LeaderboardResult | null
 	/** Whether loading */
@@ -239,11 +231,6 @@ export function useLeaderboard(
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<Error | null>(null)
 
-	// Get definition from config
-	const definition = useMemo(() => {
-		return ctx.engagementConfig?.leaderboards?.find((l) => l.id === leaderboardId) ?? null
-	}, [ctx.engagementConfig, leaderboardId])
-
 	// Stable options reference
 	const optionsKey = JSON.stringify(options ?? {})
 
@@ -279,7 +266,6 @@ export function useLeaderboard(
 	)
 
 	return {
-		definition,
 		data,
 		isLoading,
 		error,
@@ -296,8 +282,6 @@ export function useLeaderboard(
 // ============================================================================
 
 export interface UseAchievementsReturn {
-	/** All achievement definitions (from config) */
-	definitions: AchievementDefinition[]
 	/** User achievement states */
 	achievements: UserAchievement[]
 	/** Whether loading */
@@ -308,13 +292,8 @@ export interface UseAchievementsReturn {
 	unlocked: UserAchievement[]
 	/** Locked achievements (with progress) */
 	locked: UserAchievement[]
-	/** Total points earned */
-	totalPoints: number
-	/** Get achievement by ID with definition */
-	getAchievement: (id: string) => {
-		definition: AchievementDefinition | null
-		state: UserAchievement | null
-	}
+	/** Get achievement state by ID */
+	getAchievement: (id: string) => UserAchievement | null
 	/** Manually unlock an achievement */
 	unlock: (achievementId: string) => Promise<AchievementUnlockEvent>
 	/** Increment progress */
@@ -334,10 +313,9 @@ export interface UseAchievementsReturn {
  * ```tsx
  * function AchievementsPage() {
  *   const {
- *     definitions,
+ *     achievements,
  *     unlocked,
  *     locked,
- *     totalPoints,
  *     getAchievement,
  *     recentUnlock,
  *     dismissRecentUnlock,
@@ -345,29 +323,22 @@ export interface UseAchievementsReturn {
  *
  *   return (
  *     <div>
- *       <h2>Achievements ({unlocked.length}/{definitions.length})</h2>
- *       <p>Points: {totalPoints}</p>
+ *       <h2>Achievements ({unlocked.length}/{achievements.length})</h2>
  *
  *       <h3>Unlocked</h3>
- *       {unlocked.map(a => {
- *         const { definition } = getAchievement(a.achievementId)
- *         return (
- *           <AchievementCard key={a.achievementId} achievement={definition} unlocked />
- *         )
- *       })}
+ *       {unlocked.map(a => (
+ *         <AchievementCard key={a.achievementId} achievement={a} unlocked />
+ *       ))}
  *
  *       <h3>In Progress</h3>
- *       {locked.filter(a => a.progress > 0).map(a => {
- *         const { definition } = getAchievement(a.achievementId)
- *         return (
- *           <AchievementCard
- *             key={a.achievementId}
- *             achievement={definition}
- *             progress={a.progress}
- *             target={a.target}
- *           />
- *         )
- *       })}
+ *       {locked.filter(a => a.progress > 0).map(a => (
+ *         <AchievementCard
+ *           key={a.achievementId}
+ *           achievement={a}
+ *           progress={a.progress}
+ *           target={a.target}
+ *         />
+ *       ))}
  *
  *       {recentUnlock && (
  *         <AchievementToast
@@ -386,11 +357,6 @@ export function useAchievements(): UseAchievementsReturn {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<Error | null>(null)
 	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
-
-	// Get definitions from config
-	const definitions = useMemo(() => {
-		return ctx.engagementConfig?.achievements ?? []
-	}, [ctx.engagementConfig])
 
 	// Fetch achievements
 	const refresh = useCallback(async () => {
@@ -419,21 +385,13 @@ export function useAchievements(): UseAchievementsReturn {
 	// Computed values
 	const unlocked = useMemo(() => achievements.filter((a) => a.unlocked), [achievements])
 	const locked = useMemo(() => achievements.filter((a) => !a.unlocked), [achievements])
-	const totalPoints = useMemo(() => {
-		return unlocked.reduce((sum, a) => {
-			const def = definitions.find((d) => d.id === a.achievementId)
-			return sum + (def?.points ?? 0)
-		}, 0)
-	}, [unlocked, definitions])
 
 	// Get achievement by ID
 	const getAchievement = useCallback(
-		(id: string) => {
-			const definition = definitions.find((d) => d.id === id) ?? null
-			const state = achievements.find((a) => a.achievementId === id) ?? null
-			return { definition, state }
+		(id: string): UserAchievement | null => {
+			return achievements.find((a) => a.achievementId === id) ?? null
 		},
-		[definitions, achievements]
+		[achievements]
 	)
 
 	// Unlock achievement
@@ -453,20 +411,10 @@ export function useAchievements(): UseAchievementsReturn {
 	const incrementProgress = useCallback(
 		async (achievementId: string, amount: number): Promise<UserAchievement> => {
 			const result = await ctx.incrementAchievementProgress(achievementId, amount)
-			if (result.unlocked) {
-				const definition = definitions.find((d) => d.id === achievementId)
-				if (definition) {
-					setRecentUnlock({
-						achievement: definition,
-						userAchievement: result,
-						isNew: true,
-					})
-				}
-			}
 			await refresh()
 			return result
 		},
-		[ctx, definitions, refresh]
+		[ctx, refresh]
 	)
 
 	// Dismiss recent unlock
@@ -475,13 +423,11 @@ export function useAchievements(): UseAchievementsReturn {
 	}, [])
 
 	return {
-		definitions,
 		achievements,
 		isLoading,
 		error,
 		unlocked,
 		locked,
-		totalPoints,
 		getAchievement,
 		unlock,
 		incrementProgress,
@@ -491,39 +437,3 @@ export function useAchievements(): UseAchievementsReturn {
 	}
 }
 
-// ============================================================================
-// useEngagementConfig
-// ============================================================================
-
-/**
- * Hook to access the engagement config (for debugging/admin)
- *
- * @example
- * ```tsx
- * function EngagementDebug() {
- *   const { config, isSynced, lastSyncAt } = useEngagementConfig()
- *
- *   return (
- *     <pre>
- *       Streaks: {config?.streaks?.length ?? 0}
- *       Leaderboards: {config?.leaderboards?.length ?? 0}
- *       Achievements: {config?.achievements?.length ?? 0}
- *       Synced: {isSynced ? 'Yes' : 'No'}
- *     </pre>
- *   )
- * }
- * ```
- */
-export function useEngagementConfig(): {
-	config: EngagementConfig | null
-	isSynced: boolean
-	lastSyncAt: string | null
-} {
-	const ctx = useEngagementContext()
-
-	return {
-		config: ctx.engagementConfig ?? null,
-		isSynced: ctx.engagementConfigSynced ?? false,
-		lastSyncAt: ctx.engagementLastSyncAt ?? null,
-	}
-}

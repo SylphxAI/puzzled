@@ -8,36 +8,30 @@
  * - Flexible targeting rules
  * - A/B testing support
  *
+ * ## Architecture (ADR-004)
+ *
+ * Feature Flags are **Console First** - define flags in the Console,
+ * then consume them in code. This allows product/marketing teams
+ * to control flag rollouts without code deployments.
+ *
  * @example
  * ```typescript
- * import { initFeatureFlags, getEvaluator } from '@sylphx/platform-sdk/flags'
+ * import { checkFlag, isEnabled, getVariant } from '@sylphx/sdk'
  *
- * // Initialize with context
- * const evaluator = initFeatureFlags({
- *   streamEndpoint: '/api/flags/stream',
- *   debug: true,
- * })
- *
- * evaluator.setContext({
- *   userId: 'user-123',
- *   email: 'user@example.com',
- *   attributes: {
- *     plan: 'pro',
- *     company: 'acme',
- *   },
- * })
- *
- * // Evaluate flags
- * if (evaluator.isEnabled('new-dashboard')) {
- *   // Show new dashboard
+ * // Check if flag is enabled
+ * if (await isEnabled(config, 'new-checkout')) {
+ *   renderNewCheckout()
  * }
  *
- * // Get string variant
- * const theme = evaluator.getString('theme-variant', 'light')
+ * // Get variant for A/B test
+ * const variant = await getVariant(config, 'pricing-experiment')
+ * if (variant === 'variant-a') {
+ *   showHorizontalPricing()
+ * }
  *
- * // Full evaluation with metadata
- * const result = evaluator.evaluate('pricing-tier', 'basic')
- * console.log(result.variant, result.reason)
+ * // Full flag result with metadata
+ * const result = await checkFlag(config, 'feature-x', { userId: 'user-123' })
+ * console.log(result.enabled, result.variant, result.payload)
  * ```
  */
 
@@ -108,31 +102,3 @@ export type {
 } from './types'
 
 export { DEFAULT_FLAGS_CONFIG } from './types'
-
-// Config (Code First)
-export {
-	defineBooleanFlag,
-	defineStringFlag,
-	defineNumberFlag,
-	defineJsonFlag,
-	defineVariantFlag,
-	defineFlag,
-	createFlagsConfig,
-	hashFlagsConfig,
-	presetFlags,
-	type FlagType,
-	type FlagCategory,
-	type FlagDefinitionBase,
-	type BooleanFlagDefinition,
-	type StringFlagDefinition,
-	type NumberFlagDefinition,
-	type JsonFlagDefinition,
-	type VariantFlagDefinition,
-	type AnyFlagDefinition,
-	type FlagsConfig,
-	type FlagsConfigInput,
-	type ExtractFlagKeys,
-} from './config'
-
-// Typed Flags
-export { createTypedFlags, type TypedFlags } from './typed-flags'

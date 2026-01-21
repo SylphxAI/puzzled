@@ -2,12 +2,32 @@
  * Engagement Functions
  *
  * Pure functions for streaks, leaderboards, and achievements.
- * Config is defined in app code (Code First) and synced automatically.
+ *
+ * ## Architecture (ADR-004)
+ *
+ * Engagement uses **Auto-Discovery + Console Override**:
+ * - Code calls engagement functions - platform auto-discovers entities
+ * - Console can override names, descriptions, values
+ * - No config files required
+ *
+ * @example
+ * ```typescript
+ * import { unlockAchievement, recordStreakActivity, submitScore } from '@sylphx/sdk'
+ *
+ * // Unlock achievement - auto-discovered if doesn't exist
+ * await unlockAchievement(config, 'first-win', userId)
+ *
+ * // Record streak activity
+ * await recordStreakActivity(config, { streakId: 'daily-login' }, userId)
+ *
+ * // Submit leaderboard score
+ * await submitScore(config, { leaderboardId: 'high-scores', value: 1500 }, userId)
+ * ```
  */
 
 import { type SylphxConfig, callTrpc } from './config'
 
-// Re-export types and config builders
+// Re-export types from types file (not config)
 export type {
 	// Streaks
 	StreakDefinition,
@@ -35,20 +55,7 @@ export type {
 	CriteriaOperator,
 	UserAchievement,
 	AchievementUnlockEvent,
-	// Config
-	EngagementConfig,
 } from './lib/engagement/types'
-
-export {
-	defineStreak,
-	defineLeaderboard,
-	defineAchievement,
-	defineAchievementCategory,
-	createEngagementConfig,
-	hashEngagementConfig,
-	type EngagementConfigInput,
-	type AchievementCategoryInput,
-} from './lib/engagement/config'
 
 export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'
 
@@ -341,34 +348,3 @@ export async function getAchievementPoints(
 	return callTrpc(config, 'engagement.getPoints', { userId }, 'query')
 }
 
-// ============================================================================
-// Config Sync (Internal - called by SDK on init)
-// ============================================================================
-
-import type { EngagementConfig } from './lib/engagement/types'
-import { hashEngagementConfig } from './lib/engagement/config'
-
-/**
- * Sync engagement config to platform (called automatically by SDK)
- *
- * This is called during SylphxProvider initialization to ensure
- * the platform has the latest config from app code.
- *
- * @internal
- */
-export async function syncEngagementConfig(
-	config: SylphxConfig,
-	engagement: EngagementConfig
-): Promise<{ synced: boolean; hash: string }> {
-	const hash = hashEngagementConfig(engagement)
-
-	return callTrpc(
-		config,
-		'engagement.syncConfig',
-		{
-			hash,
-			config: engagement,
-		},
-		'mutation'
-	)
-}

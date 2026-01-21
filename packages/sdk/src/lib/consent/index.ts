@@ -3,57 +3,36 @@
  *
  * GDPR/CCPA compliance utilities for consent management.
  *
+ * ## Architecture (ADR-004)
+ *
+ * Consent uses **Inline Defaults + Auto-Discovery + Console Override**:
+ * - Code provides inline defaults when checking consent
+ * - Platform auto-discovers consent types when first referenced
+ * - Console can override descriptions, requirements without deployment
+ *
+ * @example
+ * ```typescript
+ * import { hasConsent, setConsent } from '@sylphx/sdk'
+ *
+ * // Check consent with inline defaults
+ * if (await hasConsent(config, 'analytics', {
+ *   name: 'Analytics Cookies',
+ *   description: 'Help us understand how visitors use our site',
+ *   required: false,
+ * })) {
+ *   track('pageview')
+ * }
+ *
+ * // Set consent
+ * await setConsent(config, { analytics: true, marketing: false })
+ * ```
+ *
  * ## Features
  *
  * - **Region Detection** - Determine applicable privacy regulation from location
  * - **Consent Validation** - Validate consent state and check compliance
  * - **Privacy Signals** - Detect DNT/GPC browser signals
  * - **Consent Strings** - Parse/generate IAB TCF and US Privacy strings
- *
- * @example
- * ```typescript
- * import {
- *   // Region detection
- *   detectRegion,
- *   extractRegionFromHeaders,
- *   requiresConsentFirst,
- *
- *   // Validation
- *   validateConsentState,
- *   checkCompliance,
- *   hasConsentForCategory,
- *
- *   // Privacy signals
- *   detectPrivacySignals,
- *   hasOptOutSignal,
- *
- *   // Consent strings
- *   parseTCFString,
- *   parseUSPrivacyString,
- *   generateSimpleConsentString,
- * } from '@sylphx/platform-sdk/consent'
- *
- * // Server-side: detect region from headers
- * export async function middleware(request: Request) {
- *   const region = extractRegionFromHeaders(request.headers)
- *
- *   // Check if consent is needed before analytics
- *   if (requiresConsentFirst(region)) {
- *     // Show consent banner before loading analytics
- *   }
- *
- *   // Check for GPC opt-out (CCPA requirement)
- *   if (region.regulation === 'CCPA' && hasGPCHeader(request.headers)) {
- *     // Must respect opt-out signal
- *   }
- * }
- *
- * // Client-side: validate consent
- * const validation = validateConsentState(userConsent, purposes)
- * if (!validation.valid) {
- *   console.error(validation.errors)
- * }
- * ```
  *
  * @module @sylphx/consent
  */

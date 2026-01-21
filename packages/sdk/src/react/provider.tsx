@@ -68,7 +68,6 @@ import {
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
 import type { User, TokenResponse } from '../types'
 import type {
-	EngagementConfig,
 	StreakState,
 	RecordActivityResult,
 	LeaderboardResult,
@@ -77,7 +76,6 @@ import type {
 	UserAchievement,
 	AchievementUnlockEvent,
 } from '../lib/engagement/types'
-import type { ConsentConfig } from '../lib/consent/config'
 
 // Dynamic import for @vercel/blob/client to avoid SSR issues with undici
 let blobUploadCache: typeof import('@vercel/blob/client').upload | null = null
@@ -142,49 +140,6 @@ export interface SylphxProviderProps {
 	 * or other same-origin applications.
 	 */
 	platformMode?: boolean
-	/**
-	 * Engagement config (Code First approach)
-	 *
-	 * Define streaks, leaderboards, and achievements in your app code.
-	 * Config is automatically synced to the platform on mount.
-	 *
-	 * @example
-	 * ```tsx
-	 * import { createEngagementConfig, defineStreak } from '@sylphx/sdk'
-	 *
-	 * const engagement = createEngagementConfig({
-	 *   streaks: [
-	 *     defineStreak({ id: 'daily', name: 'Daily', frequency: 'daily' }),
-	 *   ],
-	 * })
-	 *
-	 * <SylphxProvider appId="my-app" engagement={engagement}>
-	 * ```
-	 */
-	engagement?: EngagementConfig
-	/**
-	 * Consent config (Code First approach)
-	 *
-	 * Define consent purposes in your app code.
-	 * Config is automatically synced to the platform on mount.
-	 *
-	 * @example
-	 * ```tsx
-	 * import { createConsentConfig, presetPurposes } from '@sylphx/sdk'
-	 *
-	 * const consent = createConsentConfig({
-	 *   purposes: [
-	 *     presetPurposes.necessary,
-	 *     presetPurposes.analytics,
-	 *     presetPurposes.marketing,
-	 *   ],
-	 *   version: '1.0',
-	 * })
-	 *
-	 * <SylphxProvider appId="my-app" consent={consent}>
-	 * ```
-	 */
-	consent?: ConsentConfig
 }
 
 // ============================================
@@ -200,8 +155,6 @@ export function SylphxProvider({
 	vapidPublicKey,
 	autoTracking = true,
 	platformMode = false,
-	engagement,
-	consent,
 }: SylphxProviderProps) {
 	// In platform mode, derive URL from current origin; otherwise use provided or default
 	const platformUrl = platformMode
@@ -281,13 +234,6 @@ export function SylphxProvider({
 	const [mobilePushPreferences, setMobilePushPreferences] = useState<MobilePushPreferences | null>(null)
 	const [mobilePushError, setMobilePushError] = useState<Error | null>(null)
 
-	// Engagement State
-	const [engagementConfigSynced, setEngagementConfigSynced] = useState(false)
-	const [engagementLastSyncAt, setEngagementLastSyncAt] = useState<string | null>(null)
-
-	// Consent State (Code First)
-	const [consentConfigSynced, setConsentConfigSynced] = useState(false)
-	const [consentLastSyncAt, setConsentLastSyncAt] = useState<string | null>(null)
 
 	// ============================================
 	// In-App Messages (Inbox) State
@@ -1430,45 +1376,6 @@ export function SylphxProvider({
 		[api, authState.user?.id]
 	)
 
-	// Sync engagement config on mount (Code First)
-	useEffect(() => {
-		if (!engagement) return
-
-		const syncConfig = async () => {
-			try {
-				const result = await api.engagement.syncConfig.mutate({
-					hash: '', // Hash computed server-side or by SDK
-					config: engagement,
-				})
-				setEngagementConfigSynced(result.synced)
-				setEngagementLastSyncAt(new Date().toISOString())
-			} catch (err) {
-				console.error('[Engagement] Failed to sync config:', err)
-			}
-		}
-
-		syncConfig()
-	}, [engagement, api])
-
-	// Sync consent config on mount (Code First)
-	useEffect(() => {
-		if (!consent) return
-
-		const syncConfig = async () => {
-			try {
-				const result = await api.consent.syncConfig.mutate({
-					hash: '', // Hash computed by SDK
-					config: consent,
-				})
-				setConsentConfigSynced(result.synced)
-				setConsentLastSyncAt(new Date().toISOString())
-			} catch (err) {
-				console.error('[Consent] Failed to sync config:', err)
-			}
-		}
-
-		syncConfig()
-	}, [consent, api])
 
 	// ============================================
 	// In-App Messages (Inbox) Actions
@@ -2598,9 +2505,6 @@ export function SylphxProvider({
 			},
 			// Engagement
 			user: authState.user,
-			engagementConfig: engagement ?? null,
-			engagementConfigSynced,
-			engagementLastSyncAt,
 			getStreak,
 			recordStreakActivity,
 			recoverStreak,
@@ -2666,9 +2570,6 @@ export function SylphxProvider({
 			updateInboxPreferences,
 			// Engagement deps
 			authState.user,
-			engagement,
-			engagementConfigSynced,
-			engagementLastSyncAt,
 			getStreak,
 			recordStreakActivity,
 			recoverStreak,

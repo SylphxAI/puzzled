@@ -16,7 +16,6 @@ import type {
 	User,
 } from '../types'
 import type {
-	EngagementConfig,
 	StreakState,
 	RecordActivityResult,
 	LeaderboardResult,
@@ -337,12 +336,6 @@ export interface PlatformContextValue {
 	// Engagement (Streaks, Leaderboards, Achievements)
 	/** Current authenticated user (needed for engagement features) */
 	user: User | null
-	/** Engagement config (Code First - defined in app code) */
-	engagementConfig: EngagementConfig | null
-	/** Whether engagement config has been synced to platform */
-	engagementConfigSynced: boolean
-	/** Last sync timestamp */
-	engagementLastSyncAt: string | null
 	/** Get streak state for a user */
 	getStreak: (streakId: string) => Promise<StreakState>
 	/** Record activity to extend streak */

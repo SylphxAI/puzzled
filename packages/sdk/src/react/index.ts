@@ -323,7 +323,6 @@ export {
 	useStreak,
 	useLeaderboard,
 	useAchievements,
-	useEngagementConfig,
 	type UseStreakReturn,
 	type UseLeaderboardReturn,
 	type UseAchievementsReturn,

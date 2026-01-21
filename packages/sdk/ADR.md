@@ -209,6 +209,204 @@ export function useAnalytics() {
 
 ---
 
+## ADR-004: Configuration Architecture - Inline Defaults + Auto-Discovery + Console Override
+
+**Date:** 2025-01-21
+
+**Status:** Accepted
+
+### Context
+
+The SDK initially implemented a "Code First" configuration pattern where developers define configs in separate files:
+
+```typescript
+// OLD APPROACH (REJECTED)
+// engagement.config.ts
+export const engagementConfig = createEngagementConfig({
+  streaks: [defineStreak({ id: 'daily', name: 'Daily', frequency: 'daily' })],
+  achievements: [defineAchievement({ id: 'first-win', ... })],
+})
+
+// app.tsx
+<SylphxProvider engagement={engagementConfig}>
+```
+
+This pattern required:
+1. Separate config files with builder functions
+2. Provider props to pass configs
+3. Sync logic to push configs to platform on mount
+4. Type-safe wrappers around base functions
+
+After analyzing industry standards and user feedback, we determined this adds unnecessary complexity.
+
+### Decision
+
+Replace Code First config files with **Inline Defaults + Auto-Discovery + Console Override**:
+
+```typescript
+// NEW APPROACH (ACCEPTED)
+// Just call the function with inline defaults - no config file needed
+await unlockAchievement(config, userId, 'first-win', {
+  // Inline defaults - auto-discovered if achievement doesn't exist
+  name: 'First Win',
+  description: 'Win your first game',
+  tier: 'bronze',
+  points: 100,
+})
+
+// Console can override these values without code changes
+```
+
+### Service Categories
+
+| Category | Services | Configuration Pattern |
+|----------|----------|----------------------|
+| **Pure API** | Auth, AI, Storage, Push, Jobs | No config - just API calls |
+| **Console First** | Feature Flags, Billing, Webhooks, Email Templates, In-App Messages | Configure in Console, consume in code |
+| **Auto-Discovery + Override** | Analytics, Consent, Engagement, Referrals | Inline defaults → Auto-discover → Console override |
+
+### Pattern Details
+
+**Auto-Discovery + Console Override (Category C):**
+
+1. **Code provides inline defaults at call time**
+   - Defaults embedded in function calls
+   - No separate config files
+   - Works immediately without Console setup
+
+2. **Platform auto-discovers entities**
+   - When code calls API with unknown entity, platform creates it
+   - Uses inline defaults as initial values
+   - No manual registration required
+
+3. **Console can override**
+   - Change values without code deployment
+   - Override takes precedence over code defaults
+   - Marketing/product teams can adjust independently
+
+**Example - Consent:**
+```typescript
+// Old (Code First - REMOVED)
+const consentConfig = createConsentConfig({
+  purposes: [defineConsentPurpose({ id: 'analytics', ... })]
+})
+<SylphxProvider consent={consentConfig}>
+
+// New (Inline Defaults - ADOPTED)
+if (await hasConsent(config, 'analytics', {
+  name: 'Analytics Cookies',
+  description: 'Help us understand site usage',
+  required: false,
+})) {
+  track('pageview')
+}
+```
+
+**Example - Engagement:**
+```typescript
+// Old (Code First - REMOVED)
+const engagementConfig = createEngagementConfig({
+  achievements: [defineAchievement({ id: 'first-win', ... })]
+})
+
+// New (Inline Defaults - ADOPTED)
+await unlockAchievement(config, userId, 'first-win', {
+  name: 'First Win',
+  description: 'Win your first game',
+  tier: 'bronze',
+})
+```
+
+### Rationale
+
+**Why NOT Code First config files:**
+
+1. **Unnecessary indirection** - Why define in file A to use in file B?
+2. **Sync complexity** - Requires Provider props and mount effects
+3. **Deploy dependency** - Config changes require code deployment
+4. **Against industry patterns**:
+   - Analytics (PostHog, Mixpanel, Amplitude): Schema-less, auto-discover
+   - Consent (OneTrust, Cookiebot): Console-first management
+   - Engagement (Badgeville): Event-driven, not pre-defined
+
+**Why Inline Defaults + Auto-Discovery:**
+
+1. **Zero setup** - Works immediately, no Console setup required
+2. **Code documents intent** - Defaults are visible in code
+3. **Flexible override** - Marketing can adjust without engineers
+4. **Progressive disclosure** - Simple case is simple, advanced is possible
+5. **Firebase pattern** - Matches Remote Config model
+
+### Files Removed
+
+The following Code First files are deleted:
+
+```
+packages/sdk/src/lib/engagement/config.ts    # defineStreak, defineLeaderboard, etc.
+packages/sdk/src/lib/consent/config.ts       # defineConsentPurpose, createConsentConfig
+packages/sdk/src/lib/flags/config.ts         # defineBooleanFlag, createFlagsConfig
+packages/sdk/src/lib/flags/typed-flags.ts    # createTypedFlags
+packages/sdk/src/lib/analytics/events.ts     # defineEvent, createAnalyticsSchema
+packages/sdk/src/lib/analytics/typed-tracker.ts  # createTypedTracker
+```
+
+### Provider Changes
+
+Removed props:
+- `engagement?: EngagementConfig` - No longer needed
+- `consent?: ConsentConfig` - No longer needed
+
+Removed effects:
+- Engagement config sync on mount
+- Consent config sync on mount
+
+### Consequences
+
+**Positive:**
+- Simpler SDK surface area
+- No config files to maintain
+- Faster onboarding (no Provider config required)
+- Marketing/product teams can adjust without deploys
+- Matches industry standard patterns
+
+**Negative:**
+- Less compile-time type safety for entity names
+- Users must provide defaults inline (slightly more verbose)
+- Existing users using Code First must migrate
+
+### Migration
+
+```typescript
+// Before: Code First
+import { createEngagementConfig, defineAchievement } from '@sylphx/sdk'
+
+const config = createEngagementConfig({
+  achievements: [
+    defineAchievement({
+      id: 'first-win',
+      name: 'First Win',
+      description: 'Win your first game',
+      tier: 'bronze',
+    })
+  ]
+})
+
+<SylphxProvider engagement={config}>
+// ... later
+await unlockAchievement(sylphxConfig, userId, 'first-win')
+
+// After: Inline Defaults
+<SylphxProvider>  // No engagement prop needed
+// ... later
+await unlockAchievement(sylphxConfig, userId, 'first-win', {
+  name: 'First Win',
+  description: 'Win your first game',
+  tier: 'bronze',
+})
+```
+
+---
+
 ## Summary
 
 The SDK follows these principles:
@@ -217,5 +415,6 @@ The SDK follows these principles:
 2. **Pure functions** - no hidden state, explicit config
 3. **React as convenience** - hooks wrap pure functions
 4. **Tree-shaking by design** - `sideEffects: false`, pure functions
+5. **Inline defaults + auto-discovery** - no config files, Console override
 
 This matches Firebase's architecture pattern, which is considered industry best practice for SDK design.
