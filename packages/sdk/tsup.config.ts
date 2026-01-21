@@ -28,8 +28,6 @@ const PEER_EXTERNALS = [
 	'react-dom',
 	'react/jsx-runtime',
 	'react/jsx-dev-runtime',
-	'use-sync-external-store',
-	'use-sync-external-store/shim',
 	// Next.js (peer dependency)
 	'next',
 	'next/server',
@@ -111,6 +109,7 @@ export default defineConfig([
 			'rrweb',
 			'@sylphx/ui',
 			'@vercel/blob',
+			'use-sync-external-store',
 		],
 	},
 ])
