@@ -43,17 +43,17 @@
  *
  * @example
  * ```typescript
- * // tRPC client - full type inference from server
- * import { createSylphx } from '@sylphx/sdk'
+ * // REST client for direct API access
+ * import { createRestClient } from '@sylphx/sdk'
  *
- * const sylphx = createSylphx({
+ * const client = createRestClient({
  *   appId: 'my-app',
  *   appSecret: process.env.SYLPHX_SECRET!,
  * })
  *
- * // Full autocomplete from server types
- * const user = await sylphx.user.getProfile.query()
- * const plans = await sylphx.billing.getPlans.query()
+ * // Type-safe REST calls
+ * const { data: plans } = await client.GET('/billing/plans')
+ * const { data: user } = await client.GET('/auth/me')
  * ```
  */
 
@@ -70,7 +70,7 @@ export {
 } from './config'
 
 // =============================================================================
-// REST Client (Recommended for new code)
+// REST Client
 // =============================================================================
 
 export {
@@ -85,37 +85,6 @@ export {
 	type RetryConfig,
 	type paths as RestPaths,
 } from './rest-client'
-
-// =============================================================================
-// tRPC Client (Legacy - being phased out)
-// =============================================================================
-
-/**
- * @deprecated Use `createRestClient` or `createDynamicRestClient` instead.
- * tRPC client will be removed in the next major version.
- */
-export {
-	createSylphx,
-	createDynamicSylphx,
-	isTRPCError,
-	getTRPCErrorMessage,
-	type SylphxClient,
-	type SylphxClientConfig,
-	type SylphxDynamicConfig,
-	type AppRouter,
-} from './trpc-client'
-
-// Legacy tRPC exports (deprecated, will be removed in v1.0)
-export { createPlatformAPI, createDynamicPlatformAPI } from './trpc'
-export type {
-	PlatformAPI,
-	TRPCClientConfig,
-	ChallengeLevel,
-	ChallengeRequirement,
-	ChallengeStatus,
-	IdentityMethod,
-	MfaMethod,
-} from './trpc'
 
 // =============================================================================
 // Error Handling
@@ -356,7 +325,6 @@ export {
 	type LeaderboardResult,
 	type LeaderboardOptions,
 } from './referrals'
-// Note: Referrals is Console First - config managed in dashboard, not code
 
 // =============================================================================
 // Engagement Functions (Streaks, Leaderboards, Achievements)
@@ -453,6 +421,3 @@ export type {
 	SuccessResponse,
 	ErrorResponse,
 } from './types'
-
-// Re-export tRPC type utilities for advanced usage
-export type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'

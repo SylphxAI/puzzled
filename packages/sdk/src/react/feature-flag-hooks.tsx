@@ -543,7 +543,10 @@ export function useFeatureFlagWithDetail(
 
 	const enabled = detail?.enabled ?? options.defaultValue ?? false
 	const reason = detail?.reason ?? null
-	const rolloutBucket = detail?.reason?.rolloutBucket ?? null
+	const rolloutBucket =
+		detail?.reason && typeof detail.reason === 'object' && 'rolloutBucket' in detail.reason
+			? (detail.reason as { rolloutBucket?: number }).rolloutBucket ?? null
+			: null
 
 	return {
 		enabled,

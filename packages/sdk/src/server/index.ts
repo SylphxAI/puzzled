@@ -1,25 +1,25 @@
 /**
  * Sylphx Server SDK
  *
- * Server-side operations using tRPC for type safety.
+ * Server-side operations using REST API for type safety.
  * Uses Secret Key for authentication - NEVER expose this to client-side.
  *
  * @example
  * ```typescript
- * import { createServerClient, verifyWebhook } from '@sylphx/platform-sdk/server'
+ * import { createServerClient, verifyWebhook } from '@sylphx/sdk/server'
  *
- * const sylphx = createServerClient({
+ * const client = createServerClient({
  *   appId: process.env.SYLPHX_APP_ID!,
  *   appSecret: process.env.SYLPHX_APP_SECRET!,
  * })
  *
- * // All operations go through tRPC
- * const plans = await sylphx.billing.getPlans()
- * const user = await sylphx.user.getProfile()
+ * // REST API calls
+ * const { data: plans } = await client.GET('/billing/plans')
+ * const { data: user } = await client.GET('/user/profile')
  * ```
  */
 
-import { createPlatformAPI, type TRPCClientConfig, type PlatformAPI } from '../trpc'
+import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
 
@@ -88,27 +88,26 @@ export interface ServerConfig {
 /**
  * Create a Server Client for platform operations.
  *
- * Uses tRPC for type-safe API calls.
+ * Uses REST API for type-safe API calls.
  *
  * @example
  * ```typescript
- * const sylphx = createServerClient({
+ * const client = createServerClient({
  *   appId: process.env.SYLPHX_APP_ID!,
  *   appSecret: process.env.SYLPHX_APP_SECRET!,
  * })
  *
- * // Auth
- * const result = await sylphx.auth.login(email, password)
- *
  * // Billing
- * const plans = await sylphx.billing.getPlans()
- * const subscription = await sylphx.billing.getSubscription()
+ * const { data: plans } = await client.GET('/billing/plans')
+ * const { data: subscription } = await client.GET('/billing/subscription')
  *
  * // Analytics
- * await sylphx.analytics.track({ event: 'purchase', properties: { amount: 99 } })
+ * await client.POST('/analytics/track', {
+ *   body: { events: [{ event: 'purchase', properties: { amount: 99 } }] }
+ * })
  * ```
  */
-export function createServerClient(config: ServerConfig): PlatformAPI {
+export function createServerClient(config: ServerConfig): RestClient {
 	if (!config.appId) {
 		throw new Error('Missing appId in Server Client config')
 	}
@@ -116,7 +115,7 @@ export function createServerClient(config: ServerConfig): PlatformAPI {
 		throw new Error('Missing appSecret in Server Client config')
 	}
 
-	return createPlatformAPI({
+	return createRestClient({
 		appId: config.appId,
 		appSecret: config.appSecret,
 		platformUrl: config.platformUrl,
@@ -129,12 +128,19 @@ export function createServerClient(config: ServerConfig): PlatformAPI {
 export function createAuthenticatedServerClient(
 	config: ServerConfig,
 	accessToken: string
-): PlatformAPI {
-	return createPlatformAPI({
+): RestClient {
+	// For authenticated requests, we need to use createDynamicRestClient
+	// But for simplicity, we'll add the token via headers
+	const baseUrl = config.platformUrl || 'https://sylphx.com'
+
+	// Import dynamically to avoid circular dependency
+	const { createDynamicRestClient } = require('../rest-client')
+
+	return createDynamicRestClient({
 		appId: config.appId,
 		appSecret: config.appSecret,
 		platformUrl: config.platformUrl,
-		accessToken,
+		getAccessToken: () => accessToken,
 	})
 }
 
@@ -279,7 +285,7 @@ export interface WebhookVerifyOptions {
  *
  * @example
  * ```typescript
- * import { verifyWebhook } from '@sylphx/platform-sdk/server'
+ * import { verifyWebhook } from '@sylphx/sdk/server'
  *
  * export async function POST(request: Request) {
  *   const signature = request.headers.get('x-sylphx-signature')
@@ -390,7 +396,7 @@ function timingSafeEqual(a: string, b: string): boolean {
  *
  * @example
  * ```typescript
- * import { createWebhookHandler } from '@sylphx/platform-sdk/server'
+ * import { createWebhookHandler } from '@sylphx/sdk/server'
  *
  * const handler = createWebhookHandler({
  *   secret: process.env.SYLPHX_WEBHOOK_SECRET!,
@@ -464,7 +470,7 @@ export function createWebhookHandler(config: {
 }
 
 // Re-export types
-export type { PlatformAPI, TRPCClientConfig }
+export type { RestClient, RestClientConfig as ServerClientConfig }
 
 // AI Client
 export { createAI, getAI } from './ai'

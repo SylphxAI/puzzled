@@ -233,7 +233,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 					for await (const chunk of ctx.chatStream(chatInput)) {
 						if (shouldAbortRef.current) break
 
-						const token = chunk.choices[0]?.delta?.content ?? ''
+						const token = chunk.choices?.[0]?.delta?.content ?? chunk.delta?.content ?? ''
 						if (token) {
 							fullContent += token
 							setStreamingContent(fullContent)
@@ -351,12 +351,17 @@ export function useCompletion(options: UseCompletionOptions = {}): UseCompletion
 			setError(null)
 
 			try {
+				const stopSequences = options.stop
+					? Array.isArray(options.stop)
+						? options.stop
+						: [options.stop]
+					: undefined
 				const response = await ctx.complete({
 					model: options.model,
 					prompt,
 					temperature: options.temperature,
 					maxTokens: options.maxTokens,
-					stop: options.stop,
+					stop: stopSequences,
 				})
 
 				const text = response.choices[0]?.text ?? ''

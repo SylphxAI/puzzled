@@ -30,8 +30,8 @@ interface ActiveSession {
 	browser: string
 	ip: string
 	location?: string
-	lastActive: string
-	createdAt: string
+	lastActive?: string
+	createdAt?: string
 }
 
 interface LoginHistoryEntry {
@@ -136,12 +136,12 @@ export function SecuritySettings({
 			if (sessionsData) {
 				setSessions(sessionsData.map(s => ({
 					id: s.id,
-					current: s.isCurrent,
-					device: s.deviceName || s.deviceType || 'Unknown',
+					current: s.isCurrent ?? s.current ?? false,
+					device: s.deviceName || s.deviceType || s.device || 'Unknown',
 					browser: s.browser || 'Unknown',
-					ip: s.ipAddress || 'Unknown',
-					location: s.city && s.country ? `${s.city}, ${s.country}` : s.country ?? undefined,
-					lastActive: s.lastActiveAt || s.createdAt,
+					ip: s.ipAddress || s.ip || 'Unknown',
+					location: s.city && s.country ? `${s.city}, ${s.country}` : (s.location || s.country || undefined),
+					lastActive: s.lastActiveAt || s.lastActive || s.createdAt,
 					createdAt: s.createdAt,
 				})))
 			}
@@ -605,7 +605,7 @@ export function SecuritySettings({
 											</div>
 											<div style={mergeStyles(styles.textXs, styles.textMuted, { marginTop: '0.25rem' })}>
 												{session.location && `${session.location} · `}
-												{session.ip} · Last active {formatTimeAgo(session.lastActive)}
+												{session.ip} · Last active {session.lastActive ? formatTimeAgo(session.lastActive) : 'Unknown'}
 											</div>
 										</div>
 									</div>

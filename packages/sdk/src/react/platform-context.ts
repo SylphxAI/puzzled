@@ -28,12 +28,12 @@ import type {
 	AchievementDefaults,
 } from '../lib/engagement/types'
 
-// Import InAppMessage types from trpc.ts (SSOT - inferred from router)
+// Import InAppMessage types from types.ts
 import type {
 	InAppMessageType,
 	InAppMessagePriority,
 	InAppMessageWithReadStatus,
-} from '../trpc'
+} from '../types'
 
 // Import referral inline defaults for auto-discovery
 import type { ReferralRewardDefaults, RedeemResult } from '../referrals'
@@ -42,7 +42,7 @@ export type { ReferralRewardDefaults, RedeemResult }
 // Re-export types for convenience
 export type { Plan, ReferralStats, Subscription }
 
-// Re-export InAppMessage types (SSOT from trpc.ts)
+// Re-export InAppMessage types
 export type { InAppMessageType, InAppMessagePriority, InAppMessageWithReadStatus }
 
 export interface PushPreferences {

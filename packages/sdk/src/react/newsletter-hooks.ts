@@ -405,7 +405,7 @@ export function useSubscriberForm(options: UseSubscriberFormOptions = {}): UseSu
 				})
 				setSuccess(result.success)
 				setRequiresVerification(result.requiresVerification)
-				setAlreadySubscribed(result.alreadySubscribed)
+				setAlreadySubscribed(result.alreadySubscribed ?? false)
 				options.onSuccess?.(result)
 			} catch (err) {
 				const error = err instanceof Error ? err : new Error('Failed to subscribe')

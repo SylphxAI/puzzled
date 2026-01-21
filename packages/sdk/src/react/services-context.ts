@@ -8,13 +8,10 @@
 import { createContext, useContext, type Context } from 'react'
 
 // ============================================================================
-// Import ALL types from tRPC (inferred from API router)
+// Import ALL types from types.ts
 // ============================================================================
 
 import type {
-	// Router inference helpers
-	RouterInputs,
-	RouterOutputs,
 	// Jobs
 	Job,
 	JobsListResult,
@@ -77,7 +74,7 @@ import type {
 	// Email
 	SendEmailResult,
 	SendTemplatedResult,
-} from '../trpc'
+} from '../types'
 
 // Re-export commonly used types for convenience
 export type {

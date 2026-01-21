@@ -40,7 +40,20 @@ import {
 	type SessionReplayConfig,
 	type SessionData,
 } from '../../lib/monitoring'
-import type { PlatformAPI } from '../../trpc'
+
+/** REST API client interface for session replay */
+interface SessionReplayAPI {
+	upload: (data: {
+		metadata: SessionData['metadata']
+		events: SessionData['events']
+		markers: SessionData['markers']
+		rageClicks: SessionData['rageClicks']
+		deadClicks: SessionData['deadClicks']
+		networkRequests: SessionData['networkRequests']
+		consoleLogs: SessionData['consoleLogs']
+	}) => Promise<void>
+	endSession: (sessionId: string, duration: number) => Promise<void>
+}
 
 // ==========================================
 // Types
@@ -82,15 +95,14 @@ export interface UseSessionReplayOptions extends Partial<SessionReplayConfig> {
 
 	/**
 	 * SDK API client for automatic backend integration
-	 * Pass the api from useSylphx() hook
+	 * Pass an object with upload and endSession methods
 	 *
 	 * @example
 	 * ```tsx
-	 * const { api } = useSylphx()
-	 * const { sessionId } = useSessionReplay({ api })
+	 * const { sessionId } = useSessionReplay({ api: sessionReplayApi })
 	 * ```
 	 */
-	api?: PlatformAPI
+	api?: SessionReplayAPI
 }
 
 export interface UseSessionReplayReturn {
@@ -144,7 +156,7 @@ export function useSessionReplay(options: UseSessionReplayOptions = {}): UseSess
 	} = options
 
 	// Store API in ref for async access
-	const apiRef = useRef(api)
+	const apiRef = useRef<SessionReplayAPI | undefined>(api)
 
 	// Update API ref when it changes
 	useEffect(() => {
@@ -217,7 +229,7 @@ export function useSessionReplay(options: UseSessionReplayOptions = {}): UseSess
 			if (stopOnUnmount && recorderRef.current) {
 				// End session on backend
 				if (currentSessionIdRef.current && apiRef.current) {
-					void apiRef.current.sessionReplay.endSession(
+					void apiRef.current.endSession(
 						currentSessionIdRef.current,
 						recorderRef.current.getStatus().duration
 					)
@@ -303,7 +315,7 @@ export function useSessionReplay(options: UseSessionReplayOptions = {}): UseSess
  * Create upload handler that uses the SDK API client
  */
 function createApiUploadHandler(
-	apiRef: React.MutableRefObject<PlatformAPI | undefined>
+	apiRef: React.MutableRefObject<SessionReplayAPI | undefined>
 ): (data: SessionData) => Promise<void> {
 	return async (data: SessionData) => {
 		const api = apiRef.current
@@ -311,7 +323,7 @@ function createApiUploadHandler(
 			throw new Error('API client not available')
 		}
 
-		await api.sessionReplay.upload({
+		await api.upload({
 			metadata: data.metadata,
 			events: data.events,
 			markers: data.markers,

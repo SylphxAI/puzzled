@@ -111,7 +111,12 @@ function createAuthMiddleware(config: RestDynamicConfig): Middleware {
  */
 function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Middleware {
 	if (retryConfig === false) {
-		return {} // No-op middleware
+		// No-op middleware - just passes through
+		return {
+			async onResponse({ response }) {
+				return response
+			},
+		}
 	}
 
 	const {

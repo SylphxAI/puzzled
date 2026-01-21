@@ -419,7 +419,7 @@ function ConfigSection({ theme, styles, onError, onSecretGenerated }: ConfigSect
 								)}
 
 								<div style={{ marginTop: '0.5rem', fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
-									Last updated: {new Date(env.updatedAt).toLocaleString()}
+									Last updated: {env.updatedAt ? new Date(env.updatedAt).toLocaleString() : 'Never'}
 								</div>
 							</div>
 
@@ -748,7 +748,7 @@ function DeliveryDetails({ delivery, theme }: DeliveryDetailsProps) {
 						<div style={{ fontSize: theme.fontSizeSm }}>HTTP {delivery.responseStatus}</div>
 					</div>
 				)}
-				{delivery.retryCount > 0 && (
+				{(delivery.retryCount ?? 0) > 0 && (
 					<div>
 						<div style={labelStyle}>Retry Count</div>
 						<div style={{ fontSize: theme.fontSizeSm }}>{delivery.retryCount}</div>

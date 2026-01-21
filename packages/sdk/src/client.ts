@@ -1,13 +1,11 @@
 /**
- * @sylphx/platform-sdk/client
+ * @sylphx/sdk/client
  *
- * Type-safe client for the Sylphx Platform.
- *
- * ## Recommended: REST Client
+ * Type-safe REST client for the Sylphx Platform.
  *
  * @example
  * ```typescript
- * import { createRestClient } from '@sylphx/platform-sdk/client'
+ * import { createRestClient } from '@sylphx/sdk/client'
  *
  * const client = createRestClient({
  *   appId: 'your-app-slug',
@@ -21,25 +19,10 @@
  *   body: { email, password }
  * })
  * ```
- *
- * ## Legacy: tRPC Client (being phased out)
- *
- * @example
- * ```typescript
- * import { createSylphx } from '@sylphx/platform-sdk/client'
- *
- * const sylphx = createSylphx({
- *   appId: 'your-app-slug',
- *   appSecret: process.env.SYLPHX_APP_SECRET!,
- * })
- *
- * // tRPC-style calls
- * const plans = await sylphx.billing.getPlans.query()
- * ```
  */
 
 // =============================================================================
-// REST Client (Recommended)
+// REST Client
 // =============================================================================
 
 export {
@@ -56,41 +39,9 @@ export {
 } from './rest-client'
 
 // =============================================================================
-// tRPC Client (Legacy - being phased out)
+// Types
 // =============================================================================
 
-/**
- * @deprecated Use `createRestClient` instead.
- */
-export {
-	createSylphx,
-	createDynamicSylphx,
-	isTRPCError,
-	getTRPCErrorMessage,
-	type SylphxClient,
-	type SylphxClientConfig,
-	type SylphxDynamicConfig,
-	type AppRouter,
-} from './trpc-client'
-
-// Re-export tRPC type utilities for advanced usage
-export type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-
-// Legacy exports for backward compatibility
-// TODO: Remove in next major version
-export {
-	createPlatformAPI,
-	createDynamicPlatformAPI,
-	type PlatformAPI,
-	type TRPCClientConfig,
-	type ChallengeLevel,
-	type ChallengeRequirement,
-	type ChallengeStatus,
-	type IdentityMethod,
-	type MfaMethod,
-} from './trpc'
-
-// Re-export types needed for client usage
 export type {
 	// User & Auth types
 	User,

@@ -66,7 +66,7 @@ import {
 	type ClickIds,
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
-import type { User, TokenResponse } from '../types'
+import type { User, TokenResponse, AIProvider } from '../types'
 import type {
 	StreakState,
 	RecordActivityResult,
@@ -89,7 +89,96 @@ async function getBlobUpload() {
 	}
 	return blobUploadCache
 }
-import { createDynamicSylphx, type SylphxClient } from '../trpc-client'
+
+// ============================================
+// REST API Helper
+// ============================================
+interface RestConfig {
+	appId: string
+	appSecret?: string
+	platformUrl: string
+	platformMode: boolean
+	getAccessToken?: () => string | null | undefined
+}
+
+/**
+ * Infer AI provider from model ID
+ */
+function inferProviderFromModelId(modelId: string): AIProvider {
+	if (modelId.startsWith('gpt-') || modelId.includes('openai')) return 'openai'
+	if (modelId.startsWith('claude-') || modelId.includes('anthropic')) return 'anthropic'
+	if (modelId.startsWith('gemini-') || modelId.includes('google')) return 'google'
+	if (modelId.startsWith('mistral-') || modelId.includes('mistral')) return 'mistral'
+	if (modelId.includes('groq')) return 'groq'
+	if (modelId.includes('together')) return 'together'
+	return 'openai' // Default
+}
+
+function createRestApi(config: RestConfig) {
+	const baseUrl = `${config.platformUrl}/api/sdk`
+
+	const headers = () => {
+		const h: Record<string, string> = {
+			'Content-Type': 'application/json',
+			'x-app-id': config.appId,
+		}
+		if (!config.platformMode) {
+			if (config.appSecret) h['x-app-secret'] = config.appSecret
+			const token = config.getAccessToken?.()
+			if (token) h['Authorization'] = `Bearer ${token}`
+		}
+		return h
+	}
+
+	const fetchOptions = (method: string, body?: unknown) => ({
+		method,
+		headers: headers(),
+		...(config.platformMode && { credentials: 'include' as const }),
+		...(body !== undefined && { body: JSON.stringify(body) }),
+	})
+
+	async function get<T>(path: string, query?: Record<string, string | undefined>): Promise<T> {
+		const url = new URL(`${baseUrl}${path}`)
+		if (query) Object.entries(query).forEach(([k, v]) => v && url.searchParams.set(k, v))
+		const res = await fetch(url.toString(), fetchOptions('GET'))
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
+		}
+		return res.json()
+	}
+
+	async function post<T>(path: string, body?: unknown): Promise<T> {
+		const res = await fetch(`${baseUrl}${path}`, fetchOptions('POST', body))
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
+		}
+		return res.json()
+	}
+
+	async function put<T>(path: string, body?: unknown): Promise<T> {
+		const res = await fetch(`${baseUrl}${path}`, fetchOptions('PUT', body))
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
+		}
+		return res.json()
+	}
+
+	async function del<T>(path: string): Promise<T> {
+		const res = await fetch(`${baseUrl}${path}`, fetchOptions('DELETE'))
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
+		}
+		return res.json()
+	}
+
+	return { get, post, put, del }
+}
+
+type RestApiClient = ReturnType<typeof createRestApi>
 
 // ============================================
 // Types
@@ -186,11 +275,11 @@ export function SylphxProvider({
 	}, [storage])
 
 	// ============================================
-	// tRPC Client (for type-safe API calls)
+	// REST API Client
 	// ============================================
 	const api = useMemo(
 		() =>
-			createDynamicSylphx({
+			createRestApi({
 				appId,
 				appSecret: publishableKey,
 				platformUrl,
@@ -523,7 +612,7 @@ export function SylphxProvider({
 			setSubscriptionLoading(true)
 			setSubscriptionError(null)
 			try {
-				const data = await api.billing.getSubscription.query({ userId: authState.user.id })
+				const data = await api.get<Subscription | null>('/billing/subscription', { userId: authState.user.id })
 				setSubscription(data)
 			} catch (error) {
 				setSubscriptionError(error instanceof Error ? error : new Error('Failed to load subscription'))
@@ -537,8 +626,8 @@ export function SylphxProvider({
 			setReferralError(null)
 			try {
 				const [stats, codeData] = await Promise.all([
-					api.referrals.getStats.query(),
-					api.referrals.getMyCode.query(),
+					api.get<ReferralStats>('/referrals/stats'),
+					api.get<{ code: string }>('/referrals/code'),
 				])
 				setReferralStats(stats)
 				setReferralCode(codeData.code)
@@ -552,7 +641,7 @@ export function SylphxProvider({
 		const loadPushPreferences = async () => {
 			setPushError(null)
 			try {
-				const data = await api.notifications.getPreferences.query()
+				const data = await api.get<PushPreferences>('/notifications/preferences')
 				setPushPreferences(data)
 			} catch (error) {
 				setPushError(error instanceof Error ? error : new Error('Failed to load push preferences'))
@@ -562,9 +651,9 @@ export function SylphxProvider({
 		const loadMobilePushConfig = async () => {
 			setMobilePushError(null)
 			try {
-				const config = await api.notifications.isMobileConfigured.query()
+				const config = await api.get<MobilePushConfig>('/notifications/mobile/config')
 				setMobilePushConfig(config)
-				const prefs = await api.notifications.getMobilePreferences.query()
+				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
 				setMobilePushPreferences(prefs)
 			} catch (error) {
 				setMobilePushError(error instanceof Error ? error : new Error('Failed to load mobile push config'))
@@ -583,7 +672,7 @@ export function SylphxProvider({
 			setPlansLoading(true)
 			setPlansError(null)
 			try {
-				const data = await api.billing.getPlans.query()
+				const data = await api.get<Plan[]>('/billing/plans')
 				setPlans(data)
 			} catch (error) {
 				setPlansError(error instanceof Error ? error : new Error('Failed to load plans'))
@@ -803,7 +892,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to create checkout')
 			}
-			const data = await api.billing.createCheckout.mutate({
+			const data = await api.post<{ checkoutUrl?: string }>('/billing/checkout', {
 				userId: authState.user.id,
 				planSlug,
 				interval,
@@ -819,7 +908,7 @@ export function SylphxProvider({
 		if (!authState.user?.id) {
 			throw new Error('User must be signed in to access billing portal')
 		}
-		const data = await api.billing.createPortalSession.mutate({ userId: authState.user.id, returnUrl: window.location.href })
+		const data = await api.post<{ portalUrl: string }>('/billing/portal', { userId: authState.user.id, returnUrl: window.location.href })
 		window.location.href = data.portalUrl
 	}, [api, authState.user?.id])
 
@@ -827,7 +916,7 @@ export function SylphxProvider({
 		if (!authState.user?.id) return
 		setSubscriptionLoading(true)
 		try {
-			const data = await api.billing.getSubscription.query({ userId: authState.user.id })
+			const data = await api.get<Subscription | null>('/billing/subscription', { userId: authState.user.id })
 			setSubscription(data)
 		} finally {
 			setSubscriptionLoading(false)
@@ -846,7 +935,7 @@ export function SylphxProvider({
 		analyticsQueue.current = []
 
 		try {
-			await api.analytics.trackBatch.mutate({
+			await api.post('/analytics/track', {
 				events: events.map(({ type, data }) => ({
 					event: type,
 					properties: data,
@@ -967,7 +1056,7 @@ export function SylphxProvider({
 	const queryAnalytics = useCallback(
 		async (analyticsQuery: import('./platform-context').AnalyticsQuery): Promise<import('./platform-context').AnalyticsQueryResult> => {
 			try {
-				const result = await api.analytics.query.query(analyticsQuery)
+				const result = await api.post<import('./platform-context').AnalyticsQueryResult>('/analytics/query', analyticsQuery)
 				return {
 					data: result.data,
 					total: result.total,
@@ -1172,7 +1261,7 @@ export function SylphxProvider({
 
 			const json = sub.toJSON()
 
-			await api.notifications.register.mutate({
+			await api.post('/notifications/register', {
 				subscription: {
 					endpoint: json.endpoint!,
 					keys: {
@@ -1195,7 +1284,7 @@ export function SylphxProvider({
 			const sub = await registration.pushManager.getSubscription()
 
 			if (sub) {
-				await api.notifications.unregister.mutate({ endpoint: sub.endpoint })
+				await api.post('/notifications/unregister', { endpoint: sub.endpoint })
 				await sub.unsubscribe()
 			}
 
@@ -1234,12 +1323,12 @@ export function SylphxProvider({
 		}): Promise<{ success: boolean; tokenId: string }> => {
 			try {
 				// Cast platform to the API expected type (web devices are read-only)
-				const result = await api.notifications.registerDevice.mutate({
+				const result = await api.post<{ success: boolean; tokenId: string }>('/notifications/mobile/register', {
 					...options,
 					platform: options.platform as 'ios' | 'android',
 				})
 				// Refresh preferences after registration
-				const prefs = await api.notifications.getMobilePreferences.query()
+				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
 				setMobilePushPreferences(prefs)
 				return result
 			} catch (err) {
@@ -1253,9 +1342,9 @@ export function SylphxProvider({
 	const unregisterMobileDevice = useCallback(
 		async (token: string): Promise<void> => {
 			try {
-				await api.notifications.unregisterDevice.mutate({ token })
+				await api.post('/notifications/mobile/unregister', { token })
 				// Refresh preferences after unregistration
-				const prefs = await api.notifications.getMobilePreferences.query()
+				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
 				setMobilePushPreferences(prefs)
 			} catch (err) {
 				setMobilePushError(err instanceof Error ? err : new Error('Failed to unregister device'))
@@ -1267,7 +1356,7 @@ export function SylphxProvider({
 
 	const getMobilePushPreferences = useCallback(async (): Promise<MobilePushPreferences> => {
 		try {
-			const prefs = await api.notifications.getMobilePreferences.query()
+			const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
 			setMobilePushPreferences(prefs)
 			return prefs
 		} catch (err) {
@@ -1286,23 +1375,38 @@ export function SylphxProvider({
 	}, [referralCode])
 
 	const regenerateReferralCode = useCallback(async (): Promise<string> => {
-		const data = await api.referrals.regenerateCode.mutate()
+		const data = await api.post<{ code: string }>('/referrals/code/regenerate')
 		setReferralCode(data.code)
 		return data.code
 	}, [api])
 
 	const redeemReferralCode = useCallback(
-		async (code: string, _defaults?: import('../referrals').ReferralRewardDefaults) => {
+		async (code: string, _defaults?: import('../referrals').ReferralRewardDefaults): Promise<import('../referrals').RedeemResult> => {
 			// Note: defaults parameter is for future use when server supports auto-discovery
 			// Currently the server uses Console-configured rewards
-			return api.referrals.redeem.mutate({ code })
+			return api.post<import('../referrals').RedeemResult>('/referrals/redeem', { code })
 		},
 		[api]
 	)
 
 	const getReferralLeaderboard = useCallback(
-		async (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => {
-			return api.referrals.getLeaderboard.query(options)
+		async (options?: { limit?: number; period?: 'all' | 'month' | 'week' }): Promise<{
+			period: 'all' | 'month' | 'week'
+			entries: Array<{
+				rank: number
+				userId: string | null
+				displayName: string
+				avatarUrl: string | null
+				completedReferrals: number
+				totalReferrals: number
+				isCurrentUser: boolean
+			}>
+			currentUserRank: number | null
+		}> => {
+			return api.get('/referrals/leaderboard', {
+				limit: options?.limit?.toString(),
+				period: options?.period,
+			})
 		},
 		[api]
 	)
@@ -1315,7 +1419,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to get streak')
 			}
-			return api.engagement.getStreak.query({ streakId, userId: authState.user.id })
+			return api.get<StreakState>(`/engagement/streaks/${streakId}`, { userId: authState.user.id })
 		},
 		[api, authState.user?.id]
 	)
@@ -1329,7 +1433,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to record activity')
 			}
-			return api.engagement.recordActivity.mutate({ streakId, userId: authState.user.id, metadata, defaults })
+			return api.post<RecordActivityResult>(`/engagement/streaks/${streakId}/activity`, { userId: authState.user.id, metadata, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1339,7 +1443,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to recover streak')
 			}
-			return api.engagement.recoverStreak.mutate({ streakId, userId: authState.user.id })
+			return api.post<{ success: boolean; streak: StreakState }>(`/engagement/streaks/${streakId}/recover`, { userId: authState.user.id })
 		},
 		[api, authState.user?.id]
 	)
@@ -1347,12 +1451,13 @@ export function SylphxProvider({
 	const getEngagementLeaderboard = useCallback(
 		async (
 			leaderboardId: string,
-			options?: LeaderboardQueryOptions & { defaults?: LeaderboardDefaults }
+			options?: LeaderboardQueryOptions & { defaults?: LeaderboardDefaults; period?: string }
 		): Promise<LeaderboardResult> => {
-			return api.engagement.getLeaderboard.query({
-				leaderboardId,
-				userId: authState.user?.id ?? null,
-				...options,
+			return api.get<LeaderboardResult>(`/engagement/leaderboards/${leaderboardId}`, {
+				userId: authState.user?.id ?? undefined,
+				limit: options?.limit?.toString(),
+				offset: options?.offset?.toString(),
+				period: options?.period,
 			})
 		},
 		[api, authState.user?.id]
@@ -1368,7 +1473,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to submit score')
 			}
-			return api.engagement.submitScore.mutate({ leaderboardId, value, userId: authState.user.id, metadata, defaults })
+			return api.post<SubmitScoreResult>(`/engagement/leaderboards/${leaderboardId}/score`, { value, userId: authState.user.id, metadata, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1377,7 +1482,7 @@ export function SylphxProvider({
 		if (!authState.user?.id) {
 			throw new Error('User must be authenticated to get achievements')
 		}
-		return api.engagement.getAchievements.query({ userId: authState.user.id })
+		return api.get<UserAchievement[]>('/engagement/achievements', { userId: authState.user.id })
 	}, [api, authState.user?.id])
 
 	const unlockAchievement = useCallback(
@@ -1385,7 +1490,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to unlock achievement')
 			}
-			return api.engagement.unlockAchievement.mutate({ achievementId, userId: authState.user.id, defaults })
+			return api.post<AchievementUnlockEvent>(`/engagement/achievements/${achievementId}/unlock`, { userId: authState.user.id, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1395,7 +1500,7 @@ export function SylphxProvider({
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to increment progress')
 			}
-			return api.engagement.incrementProgress.mutate({ achievementId, amount, userId: authState.user.id, defaults })
+			return api.post<UserAchievement>(`/engagement/achievements/${achievementId}/progress`, { amount, userId: authState.user.id, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1410,11 +1515,11 @@ export function SylphxProvider({
 		setInboxError(null)
 		try {
 			const [messages, unreadCountResult, preferences] = await Promise.all([
-				api.notifications.getMessages.query({ limit: 50 }),
-				api.notifications.getUnreadCount.query(),
-				api.notifications.getMessagePreferences.query(),
+				api.get<InAppMessageWithReadStatus[]>('/notifications/messages', { limit: '50' }),
+				api.get<{ count: number }>('/notifications/messages/unread-count'),
+				api.get<InboxPreferences>('/notifications/messages/preferences'),
 			])
-			setInboxMessages(messages as InAppMessageWithReadStatus[])
+			setInboxMessages(messages)
 			setInboxUnreadCount(unreadCountResult.count)
 			setInboxPreferences(preferences)
 		} catch (err) {
@@ -1432,7 +1537,7 @@ export function SylphxProvider({
 			)
 			setInboxUnreadCount((prev) => Math.max(0, prev - 1))
 			try {
-				await api.notifications.markAsRead.mutate({ messageId })
+				await api.post(`/notifications/messages/${messageId}/read`)
 			} catch (err) {
 				// Rollback on error
 				await refreshInbox()
@@ -1447,7 +1552,7 @@ export function SylphxProvider({
 		setInboxMessages((prev) => prev.map((m) => ({ ...m, isRead: true, readAt: new Date().toISOString() })))
 		setInboxUnreadCount(0)
 		try {
-			await api.notifications.markAllAsRead.mutate()
+			await api.post('/notifications/messages/mark-all-read')
 		} catch (err) {
 			// Rollback on error
 			await refreshInbox()
@@ -1460,7 +1565,7 @@ export function SylphxProvider({
 			// Optimistic update - remove from list
 			setInboxMessages((prev) => prev.filter((m) => m.id !== messageId))
 			try {
-				await api.notifications.dismiss.mutate({ messageId })
+				await api.post(`/notifications/messages/${messageId}/dismiss`)
 			} catch (err) {
 				// Rollback on error
 				await refreshInbox()
@@ -1477,7 +1582,7 @@ export function SylphxProvider({
 				prev.map((m) => (m.id === messageId ? { ...m, isRead: true, readAt: new Date().toISOString() } : m))
 			)
 			try {
-				await api.notifications.recordClick.mutate({ messageId, action })
+				await api.post(`/notifications/messages/${messageId}/click`, { action })
 			} catch (err) {
 				console.error('Failed to record message click:', err)
 				// Don't throw - this is a non-critical action
@@ -1491,7 +1596,7 @@ export function SylphxProvider({
 			// Optimistic update
 			setInboxPreferences((prev) => (prev ? { ...prev, ...prefs } : null))
 			try {
-				await api.notifications.updateMessagePreferences.mutate(prefs)
+				await api.put('/notifications/messages/preferences', prefs)
 			} catch (err) {
 				// Rollback on error
 				await refreshInbox()
@@ -1715,6 +1820,7 @@ export function SylphxProvider({
 				return {
 					id: crypto.randomUUID(),
 					model: response.model,
+					embeddings: response.data.map(d => d.embedding),
 					data: response.data,
 					usage: {
 						promptTokens: response.usage.prompt_tokens,
@@ -1761,18 +1867,37 @@ export function SylphxProvider({
 				}
 			},
 			getUsage: async (period) => {
-				return await api.ai.getUsage.query({ period })
+				return await api.get('/ai/usage', { period })
 			},
 			getRateLimitStatus: async () => {
-				return await api.ai.getRateLimitStatus.query()
+				return await api.get('/ai/rate-limit')
 			},
 			listModels: async (options) => {
-				const response = await api.ai.listModels.query(options ?? {})
+				const response = await api.get<{
+					models: Array<{
+						id: string
+						name?: string
+						contextWindow?: number
+						capabilities?: string[]
+						inputCostPer1M?: number
+						outputCostPer1M?: number
+						description?: string
+					}>
+					total: number
+					hasMore: boolean
+				}>('/ai/models', {
+					capability: options?.capability,
+					search: options?.search,
+					limit: options?.limit?.toString(),
+					offset: options?.offset?.toString(),
+				})
 				return {
-					models: response.models.map((m: typeof response.models[number]) => ({
+					models: response.models.map((m) => ({
 						id: m.id,
 						name: m.name || m.id,
+						provider: inferProviderFromModelId(m.id),
 						contextWindow: m.contextWindow || 0,
+						maxOutputTokens: Math.floor((m.contextWindow || 4096) / 4),
 						capabilities: m.capabilities || ['chat'],
 						inputCostPer1M: m.inputCostPer1M ?? 0,
 						outputCostPer1M: m.outputCostPer1M ?? 0,
@@ -1783,7 +1908,7 @@ export function SylphxProvider({
 				}
 			},
 		}),
-		[aiApiCall, api, platformUrl]
+		[aiApiCall, api, platformUrl, publishableKey]
 	)
 
 	// ============================================
@@ -1792,39 +1917,40 @@ export function SylphxProvider({
 	const jobsValue: JobsContextValue = useMemo(
 		() => ({
 			checkStatus: async () => {
-				return await api.jobs.status.query()
+				return await api.get('/jobs/status')
 			},
 			schedule: async (options) => {
-				return await api.jobs.schedule.mutate(options)
+				return await api.post('/jobs/schedule', options)
 			},
 			createCron: async (options) => {
-				return await api.jobs.createCron.mutate(options)
+				return await api.post('/jobs/cron', options)
 			},
 			pauseCron: async (scheduleId) => {
-				const result = await api.jobs.pauseCron.mutate({ scheduleId })
+				const result = await api.post<{ success: boolean }>(`/jobs/cron/${scheduleId}/pause`)
 				return result.success
 			},
 			resumeCron: async (scheduleId) => {
-				const result = await api.jobs.resumeCron.mutate({ scheduleId })
+				const result = await api.post<{ success: boolean }>(`/jobs/cron/${scheduleId}/resume`)
 				return result.success
 			},
 			deleteCron: async (scheduleId) => {
-				const result = await api.jobs.deleteCron.mutate({ scheduleId })
+				const result = await api.del<{ success: boolean }>(`/jobs/cron/${scheduleId}`)
 				return result.success
 			},
 			getJob: async (jobId) => {
-				return await api.jobs.get.query({ jobId })
+				return await api.get(`/jobs/${jobId}`)
 			},
 			listJobs: async (options = {}) => {
 				// Cast status to exclude 'cancelled' which isn't in API enum
-				const apiOptions = {
-					...options,
-					status: options.status === 'cancelled' ? undefined : options.status,
-				} as Parameters<typeof api.jobs.list.query>[0]
-				return await api.jobs.list.query(apiOptions)
+				const status = options.status === 'cancelled' ? undefined : options.status
+				return await api.get('/jobs', {
+					status,
+					limit: options.limit?.toString(),
+					offset: options.offset?.toString(),
+				})
 			},
 			cancelJob: async (jobId) => {
-				const result = await api.jobs.cancel.mutate({ jobId })
+				const result = await api.post<{ success: boolean }>(`/jobs/${jobId}/cancel`)
 				return result.success
 			},
 		}),
@@ -1854,7 +1980,7 @@ export function SylphxProvider({
 						}
 					}
 				}
-				return await api.monitoring.captureException.mutate({
+				return await api.post('/monitoring/exception', {
 					exception: { values: [{ type: error.name || 'Error', value: error.message, stacktrace: frames.length > 0 ? { frames } : undefined }] },
 					level: options.level,
 					tags: options.tags,
@@ -1865,7 +1991,7 @@ export function SylphxProvider({
 				})
 			},
 			captureMessage: async (message, options = {}) => {
-				return await api.monitoring.captureMessage.mutate({
+				return await api.post('/monitoring/message', {
 					message,
 					level: options.level,
 					tags: options.tags,
@@ -1885,29 +2011,29 @@ export function SylphxProvider({
 			anonymousId,
 			userId: authState.user?.id ?? null,
 			getConsentTypes: async () => {
-				return await api.consent.getConsentTypes.query()
+				return await api.get('/consent/types')
 			},
 			getUserConsents: async () => {
-				return await api.consent.getUserConsents.query({
+				return await api.get<Array<{ slug: string; granted: boolean }>>('/consent', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
 			},
 			setConsents: async (consents) => {
-				return await api.consent.setConsents.mutate({
+				return await api.post('/consent', {
 					userId: authState.user?.id,
 					anonymousId,
 					consents,
 				})
 			},
 			acceptAll: async () => {
-				return await api.consent.acceptAll.mutate({
+				return await api.post('/consent/accept-all', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
 			},
 			declineOptional: async () => {
-				return await api.consent.declineOptional.mutate({
+				return await api.post('/consent/decline-optional', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
@@ -1915,12 +2041,12 @@ export function SylphxProvider({
 			checkConsent: async (purposeSlug, defaults) => {
 				// Get user's current consents
 				try {
-					const consents = await api.consent.getUserConsents.query({
+					const consents = await api.get<Array<{ slug: string; granted: boolean }>>('/consent', {
 						userId: authState.user?.id,
 						anonymousId,
 					})
 					// Find consent for this purpose
-					const consent = consents.find((c: typeof consents[number]) => c.slug === purposeSlug)
+					const consent = consents.find((c) => c.slug === purposeSlug)
 					if (consent) {
 						return consent.granted
 					}
@@ -2008,10 +2134,10 @@ export function SylphxProvider({
 				return blob.url
 			},
 			deleteFile: async (fileId: string) => {
-				await api.storage.deleteFile.mutate({ id: fileId })
+				await api.del(`/storage/files/${fileId}`)
 			},
 			getUrl: async (fileId: string) => {
-				const data = await api.storage.getFile.query({ id: fileId })
+				const data = await api.get<{ url: string }>(`/storage/files/${fileId}`)
 				return data.url
 			},
 		}),
@@ -2024,25 +2150,25 @@ export function SylphxProvider({
 	const newsletterValue: NewsletterContextValue = useMemo(
 		() => ({
 			subscribe: async (options) => {
-				return await api.newsletter.sdkSubscribe.mutate(options)
+				return await api.post('/newsletter/subscribe', options)
 			},
 			verify: async (token) => {
-				return await api.newsletter.sdkVerify.mutate({ token })
+				return await api.post('/newsletter/verify', { token })
 			},
 			unsubscribe: async (email, token) => {
-				return await api.newsletter.sdkUnsubscribe.mutate({ email, token })
+				return await api.post('/newsletter/unsubscribe', { email, token })
 			},
 			resendVerification: async (email) => {
-				return await api.newsletter.sdkResendVerification.mutate({ email })
+				return await api.post('/newsletter/resend-verification', { email })
 			},
 			getUnsubscribeInfo: async (token) => {
-				return await api.newsletter.sdkGetUnsubscribeInfo.query({ token })
+				return await api.get('/newsletter/unsubscribe-info', { token })
 			},
 			updatePreferences: async (email, preferences) => {
-				return await api.newsletter.sdkUpdatePreferences.mutate({ email, preferences })
+				return await api.put('/newsletter/preferences', { email, preferences })
 			},
 			getPreferences: async (email) => {
-				return await api.newsletter.sdkGetPreferences.query({ email })
+				return await api.get('/newsletter/preferences', { email })
 			},
 		}),
 		[api]
@@ -2087,41 +2213,41 @@ export function SylphxProvider({
 		() => ({
 			// Transactional Email
 			send: async (options) => {
-				return await api.email.send.mutate(options)
+				return await api.post('/email/send', options)
 			},
 			sendTemplated: async (options) => {
 				// Cast template to expected type - SDK accepts any string, API has fixed set
-				const result = await api.email.sendTemplated.mutate({
+				const result = await api.post<{ success: boolean }>('/email/send-templated', {
 					...options,
 					template: options.template as 'welcome' | 'verification' | 'password_reset' | 'security_alert',
 				})
 				return { success: result.success, template: options.template }
 			},
 			sendToUser: async (options) => {
-				return await api.email.sendToUser.mutate(options)
+				return await api.post('/email/send-to-user', options)
 			},
 			// Marketing Email (Newsletter)
 			newsletter: {
 				subscribe: async (options) => {
-					return await api.newsletter.sdkSubscribe.mutate(options)
+					return await api.post('/newsletter/subscribe', options)
 				},
 				verify: async (token) => {
-					return await api.newsletter.sdkVerify.mutate({ token })
+					return await api.post('/newsletter/verify', { token })
 				},
 				unsubscribe: async (email, token) => {
-					return await api.newsletter.sdkUnsubscribe.mutate({ email, token })
+					return await api.post('/newsletter/unsubscribe', { email, token })
 				},
 				resendVerification: async (email) => {
-					return await api.newsletter.sdkResendVerification.mutate({ email })
+					return await api.post('/newsletter/resend-verification', { email })
 				},
 				getUnsubscribeInfo: async (token) => {
-					return await api.newsletter.sdkGetUnsubscribeInfo.query({ token })
+					return await api.get('/newsletter/unsubscribe-info', { token })
 				},
 				updatePreferences: async (email, preferences) => {
-					return await api.newsletter.sdkUpdatePreferences.mutate({ email, preferences })
+					return await api.put('/newsletter/preferences', { email, preferences })
 				},
 				getPreferences: async (email) => {
-					return await api.newsletter.sdkGetPreferences.query({ email })
+					return await api.get('/newsletter/preferences', { email })
 				},
 			},
 		}),
@@ -2134,19 +2260,23 @@ export function SylphxProvider({
 	const webhooksValue: WebhooksContextValue = useMemo(
 		() => ({
 			getConfig: async () => {
-				return await api.webhooks.getConfig.query()
+				return await api.get('/webhooks/config')
 			},
 			updateConfig: async (options) => {
-				return await api.webhooks.updateConfig.mutate(options)
+				return await api.put('/webhooks/config', options)
 			},
 			getDeliveries: async (options = {}) => {
-				return await api.webhooks.getDeliveries.query(options)
+				return await api.get('/webhooks/deliveries', {
+					limit: options.limit?.toString(),
+					offset: options.offset?.toString(),
+					status: options.status,
+				})
 			},
 			replayDelivery: async (deliveryId) => {
-				return await api.webhooks.replayDelivery.mutate({ deliveryId })
+				return await api.post(`/webhooks/deliveries/${deliveryId}/replay`)
 			},
 			getStats: async (period) => {
-				return await api.webhooks.getStats.query({ period })
+				return await api.get('/webhooks/stats', { period })
 			},
 		}),
 		[api]
@@ -2158,7 +2288,11 @@ export function SylphxProvider({
 	const sdkAuthValue: SdkAuthContextValue = useMemo(
 		() => ({
 			login: async (email, password) => {
-				const result = await api.auth.login.mutate({ email, password })
+				const result = await api.post<{
+					requiresTwoFactor?: boolean
+					userId?: string
+					user?: { id: string; email: string; name?: string | null; image?: string | null; emailVerified?: boolean }
+				}>('/auth/login', { email, password })
 				return {
 					requiresTwoFactor: result.requiresTwoFactor ?? false,
 					userId: result.userId,
@@ -2173,7 +2307,12 @@ export function SylphxProvider({
 				}
 			},
 			verifyTwoFactor: async (userId, code) => {
-				const result = await api.auth.verifyTwoFactor.mutate({ userId, code })
+				const result = await api.post<{
+					accessToken: string
+					refreshToken: string
+					expiresIn: number
+					user: { id: string; email: string; name?: string | null; image?: string | null; emailVerified?: boolean }
+				}>('/auth/verify-2fa', { userId, code })
 				// Save tokens after successful 2FA
 				saveTokens({
 					accessToken: result.accessToken,
@@ -2196,7 +2335,9 @@ export function SylphxProvider({
 				}
 			},
 			register: async (name, email, password) => {
-				const result = await api.auth.register.mutate({ email, password, name })
+				const result = await api.post<{
+					user: { id: string; email: string; name?: string | null }
+				}>('/auth/register', { email, password, name })
 				return {
 					requiresVerification: true,
 					message: 'Please check your email to verify your account',
@@ -2208,11 +2349,11 @@ export function SylphxProvider({
 				}
 			},
 			forgotPassword: async (email) => {
-				const result = await api.auth.forgotPassword.mutate({ email })
+				const result = await api.post<{ success: boolean }>('/auth/forgot-password', { email })
 				return { success: result.success, message: 'Password reset email sent' }
 			},
 			resetPassword: async (token, password) => {
-				return await api.auth.resetPassword.mutate({ token, password })
+				return await api.post('/auth/reset-password', { token, newPassword: password })
 			},
 			verifyEmail: async (token) => {
 				// Call platform verify email endpoint
@@ -2227,15 +2368,22 @@ export function SylphxProvider({
 				}
 				return { success: true }
 			},
-			logout: async (refreshToken) => {
-				await api.auth.logout.mutate()
+			logout: async (_refreshToken) => {
+				await api.post('/auth/logout')
 				clearTokens()
 				return { success: true }
 			},
 			me: async () => {
-				const profile = await api.user.getProfile.query()
+				const profile = await api.get<{
+					id: string
+					email: string
+					name?: string | null
+					image?: string | null
+					emailVerified?: boolean
+					createdAt?: string
+				}>('/user/profile')
 				// Get 2FA status from security settings
-				const security = await api.user.getSecuritySettings.query()
+				const security = await api.get<{ twoFactorEnabled?: boolean }>('/user/security')
 				return {
 					id: profile.id,
 					email: profile.email,
@@ -2261,11 +2409,46 @@ export function SylphxProvider({
 	// ============================================
 	// User Context Value (for profile/session management)
 	// ============================================
+	// Type definitions for user API responses
+	type ProfileResponse = {
+		id: string
+		email: string
+		name?: string | null
+		image?: string | null
+		emailVerified?: boolean
+		createdAt?: string
+	}
+	type SecuritySettingsResponse = { twoFactorEnabled?: boolean; hasPassword?: boolean }
+	type SessionResponse = {
+		id: string
+		isCurrent: boolean
+		deviceName?: string
+		browser?: string
+		os?: string
+		deviceType?: string
+		ipAddress?: string
+		country?: string
+		city?: string
+		lastActiveAt?: string
+		createdAt?: string
+	}
+	type LoginHistoryEntry = {
+		id?: string
+		ipAddress?: string
+		userAgent?: string
+		city?: string
+		country?: string
+		device?: string
+		createdAt?: string
+		success?: boolean
+	}
+	type ConnectedAccountResponse = { provider: string; connectedAt?: string }
+
 	const userValue: UserContextValue = useMemo(
 		() => ({
 			getProfile: async () => {
-				const profile = await api.user.getProfile.query()
-				const security = await api.user.getSecuritySettings.query()
+				const profile = await api.get<ProfileResponse>('/user/profile')
+				const security = await api.get<SecuritySettingsResponse>('/user/security')
 				return {
 					id: profile.id,
 					email: profile.email,
@@ -2277,7 +2460,7 @@ export function SylphxProvider({
 				}
 			},
 			updateProfile: async (data) => {
-				const profile = await api.user.updateProfile.mutate(data)
+				const profile = await api.put<ProfileResponse>('/user/profile', data)
 				// Update local auth state if user info changed
 				if (authState.user) {
 					setAuthState({
@@ -2290,8 +2473,8 @@ export function SylphxProvider({
 					})
 				}
 				// updateProfile returns minimal data, fetch full profile for complete info
-				const fullProfile = await api.user.getProfile.query()
-				const security = await api.user.getSecuritySettings.query()
+				const fullProfile = await api.get<ProfileResponse>('/user/profile')
+				const security = await api.get<SecuritySettingsResponse>('/user/security')
 				return {
 					id: profile.id,
 					email: profile.email,
@@ -2304,14 +2487,14 @@ export function SylphxProvider({
 			},
 			changePassword: async (currentPassword, newPassword) => {
 				// First verify identity with current password
-				await api.challenge.verifyIdentity.mutate({ method: 'password', value: currentPassword })
+				await api.post('/challenge/verify', { method: 'password', value: currentPassword })
 				// Then change password
-				return await api.user.changePassword.mutate({ newPassword })
+				return await api.post('/user/profile', { password: newPassword })
 			},
 			getLoginHistory: async (options) => {
-				const history = await api.user.getLoginHistory.query()
+				const history = await api.get<LoginHistoryEntry[]>('/user/sessions')
 				const items = options?.limit ? history.slice(0, options.limit) : history
-				return items.map((h: typeof items[number]) => ({
+				return items.map((h) => ({
 					id: h.id ?? '',
 					ipAddress: h.ipAddress ?? null,
 					userAgent: h.userAgent ?? null,
@@ -2324,8 +2507,8 @@ export function SylphxProvider({
 				}))
 			},
 			getSessions: async () => {
-				const response = await api.user.getSessions.query()
-				return response.map((s: typeof response[number]) => ({
+				const response = await api.get<SessionResponse[]>('/user/sessions')
+				return response.map((s) => ({
 					id: s.id,
 					isCurrent: s.isCurrent,
 					deviceName: s.deviceName,
@@ -2340,14 +2523,16 @@ export function SylphxProvider({
 				}))
 			},
 			revokeSession: async (sessionId) => {
-				return await api.user.revokeSession.mutate({ sessionId })
+				return await api.del(`/user/sessions/${sessionId}`)
 			},
 			revokeAllSessions: async () => {
-				return await api.user.revokeAllSessions.mutate()
+				return await api.post('/user/sessions/revoke-all')
 			},
 			getConnectedAccounts: async () => {
-				const accounts = await api.user.getConnectedAccounts.query()
-				return accounts.map((a: typeof accounts[number]) => ({
+				// Connected accounts are part of security settings
+				const security = await api.get<{ connectedAccounts?: ConnectedAccountResponse[] }>('/user/security')
+				const accounts = security.connectedAccounts ?? []
+				return accounts.map((a) => ({
 					provider: a.provider,
 					accountId: '', // Not available in the API response
 					email: null, // Not available in the API response
@@ -2359,15 +2544,15 @@ export function SylphxProvider({
 			deleteAccount: async (password) => {
 				// Challenge verification handled by user.deleteAccount via challenge system
 				if (password) {
-					await api.challenge.verifyIdentity.mutate({ method: 'password', value: password })
+					await api.post('/challenge/verify', { method: 'password', value: password })
 				}
-				return await api.user.deleteAccount.mutate()
+				return await api.del('/user/account')
 			},
 			exportData: async () => {
-				const response = await api.user.exportData.query()
+				const response = await api.get<{ downloadUrl: string; expiresAt: string }>('/user/export')
 				return {
-					downloadUrl: response.downloadUrl as string,
-					expiresAt: new Date(response.expiresAt as string),
+					downloadUrl: response.downloadUrl,
+					expiresAt: new Date(response.expiresAt),
 				}
 			},
 		}),
@@ -2377,10 +2562,18 @@ export function SylphxProvider({
 	// ============================================
 	// Security Context Value (for 2FA, passkeys, etc.)
 	// ============================================
+	// Type definitions for security API responses
+	type PasskeyResponse = {
+		id: string
+		deviceName?: string | null
+		createdAt: string
+		lastUsedAt?: string | null
+	}
+
 	const securityValue: SecurityContextValue = useMemo(
 		() => ({
 			getTwoFactorStatus: async () => {
-				const settings = await api.user.getSecuritySettings.query()
+				const settings = await api.get<SecuritySettingsResponse>('/user/security')
 				// Backup codes count is retrieved separately if needed
 				return {
 					enabled: settings.twoFactorEnabled ?? false,
@@ -2388,39 +2581,39 @@ export function SylphxProvider({
 				}
 			},
 			twoFactorSetup: async () => {
-				return await api.security.twoFactorSetup.mutate()
+				return await api.post('/security/2fa/setup')
 			},
 			twoFactorVerify: async (code) => {
-				return await api.security.twoFactorVerify.mutate({ code })
+				return await api.post('/security/2fa/verify', { code })
 			},
 			twoFactorDisable: async (_code) => {
 				// Note: Code verification is handled by challenge middleware, not the method itself
-				return await api.security.twoFactorDisable.mutate()
+				return await api.post('/security/2fa/disable')
 			},
 			backupCodesView: async (_code) => {
 				// Note: Code verification is handled by challenge middleware, not the method itself
-				return await api.security.backupCodesView.query()
+				return await api.get('/security/backup-codes')
 			},
 			backupCodesRegenerate: async (_code) => {
 				// Note: Code verification is handled by challenge middleware, not the method itself
-				return await api.security.backupCodesRegenerate.mutate()
+				return await api.post('/security/backup-codes/regenerate')
 			},
 			getPasswordStatus: async () => {
-				const settings = await api.user.getSecuritySettings.query()
+				const settings = await api.get<SecuritySettingsResponse>('/user/security')
 				return { hasPassword: settings.hasPassword ?? true }
 			},
 			passwordSet: async (password) => {
-				return await api.security.passwordSet.mutate({ password })
+				return await api.post('/security/password/set', { password })
 			},
 			emailChangeRequest: async (newEmail) => {
-				return await api.security.emailChangeRequest.mutate({ newEmail })
+				return await api.post('/security/email/change', { newEmail })
 			},
 			emailChangeConfirm: async (token) => {
-				return await api.security.emailChangeConfirm.mutate({ token })
+				return await api.post('/security/email/confirm', { token })
 			},
 			passkeyList: async () => {
-				const response = await api.security.passkeyList.query()
-				return response.map((p: typeof response[number]) => ({
+				const response = await api.get<PasskeyResponse[]>('/security/passkeys')
+				return response.map((p) => ({
 					id: p.id,
 					name: p.deviceName ?? undefined, // API returns deviceName (null -> undefined)
 					deviceType: undefined, // Not returned by API
@@ -2429,16 +2622,16 @@ export function SylphxProvider({
 				}))
 			},
 			passkeyRegisterStart: async () => {
-				return await api.security.passkeyRegisterStart.mutate()
+				return await api.post('/security/passkeys/register/start')
 			},
 			passkeyRegisterVerify: async (credential, name) => {
-				return await api.security.passkeyRegisterVerify.mutate({ credential, deviceName: name ?? 'Passkey' })
+				return await api.post('/security/passkeys/register/verify', { credential, deviceName: name ?? 'Passkey' })
 			},
 			passkeyRename: async (passkeyId: string, name: string) => {
-				return await api.security.passkeyRename.mutate({ passkeyId, name })
+				return await api.put(`/security/passkeys/${passkeyId}`, { name })
 			},
 			passkeyDelete: async (passkeyId: string) => {
-				return await api.security.passkeyDelete.mutate({ passkeyId })
+				return await api.del(`/security/passkeys/${passkeyId}`)
 			},
 			oauthConnect: async (provider) => {
 				const redirectUri = window.location.href
@@ -2447,10 +2640,10 @@ export function SylphxProvider({
 				}
 			},
 			oauthDisconnect: async (provider) => {
-				return await api.security.oauthDisconnect.mutate({ provider })
+				return await api.post('/security/oauth/disconnect', { provider })
 			},
 			getSecurityScore: async () => {
-				return await api.security.getSecurityScore.query()
+				return await api.get('/security/score')
 			},
 		}),
 		[api, platformUrl, appId]
@@ -2542,10 +2735,38 @@ export function SylphxProvider({
 			recordInboxMessageClick,
 			updateInboxPreferences,
 			getBillingBalance: async () => {
-				return await api.billing.getBalance.query()
+				return await api.get<{
+					balance: { current: number; currentFormatted: string }
+					status: { level: string; isHealthy: boolean; isLow: boolean; alertThreshold: number }
+					billingType: string
+					trustLevel: string
+					spendingCap: number | null
+					currentMonthSpend: number
+					spendingCapPercent: number | null
+					gracePeriodEndsAt: string | null
+					isAdminOrg: boolean
+				}>('/billing/balance')
 			},
 			getBillingUsage: async (options?: { month?: string }) => {
-				return await api.billing.getUsage.query(options)
+				return await api.get<{
+					period: { type: string; start: string; end: string }
+					metrics: {
+						aiCostMicrodollars: number
+						storageBytesUsed: number
+						storageEgressBytes: number
+						storageUploads: number
+						dbStorageBytes: number
+						dbComputeSeconds: number
+						emailSentCount: number
+						jobInvocationCount: number
+						cronActiveCount: number
+						pushSentCount?: number
+						analyticsEventCount: number
+						webhookDeliveryCount: number
+						errorEventCount: number
+						authMau: number
+					} | null
+				}>('/billing/usage', { month: options?.month })
 			},
 			// Engagement
 			user: authState.user,
