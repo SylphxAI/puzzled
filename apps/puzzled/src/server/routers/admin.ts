@@ -18,7 +18,6 @@
  */
 
 import { TRPCError } from '@trpc/server'
-import { Client } from '@upstash/qstash'
 import { and, count, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { daysAgo, hoursAgo, minutesAgo } from '@/lib/constants/time'
@@ -50,17 +49,10 @@ import { redis } from '@/lib/redis'
 import { getServerBaseUrl } from '@/lib/utils'
 import { adminProcedure, router } from '../trpc'
 
-/** Workflow endpoint registry for DLQ retries */
-const WORKFLOW_ENDPOINTS: Record<string, string> = {
-	'daily-reminder': '/api/workflow/daily-reminder',
-	'generate-puzzles': '/api/workflow/generate-puzzles',
-}
-
-/** Get QStash client */
-function getQStashClient() {
-	const token = process.env.QSTASH_TOKEN
-	if (!token) throw new Error('QSTASH_TOKEN not configured')
-	return new Client({ token })
+/** Job endpoint registry for DLQ retries */
+const JOB_ENDPOINTS: Record<string, string> = {
+	'daily-reminder': '/api/jobs/daily-reminder',
+	'generate-puzzles': '/api/jobs/generate-puzzles',
 }
 
 export const adminRouter = router({
@@ -98,14 +90,24 @@ export const adminRouter = router({
 			})
 			if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'DLQ item not found' })
 
-			const endpoint = WORKFLOW_ENDPOINTS[item.workflowName]
+			const endpoint = JOB_ENDPOINTS[item.workflowName]
 			if (!endpoint) throw new TRPCError({ code: 'BAD_REQUEST', message: `Unknown workflow: ${item.workflowName}` })
 
 			await markDLQRetrying(input.id)
-			const qstash = getQStashClient()
-			await qstash.publishJSON({
-				url: `${getServerBaseUrl()}${endpoint}`,
-				body: item.payload,
+
+			// Fire-and-forget: trigger the job directly
+			const jobUrl = `${getServerBaseUrl()}${endpoint}`
+			fetch(jobUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-internal-call': 'true',
+					'x-dlq-retry': 'true',
+					'x-dlq-item-id': input.id,
+				},
+				body: JSON.stringify(item.payload),
+			}).catch((error) => {
+				console.error(`[DLQ Admin] Failed to trigger retry for ${input.id}:`, error)
 			})
 
 			await logAdminAction(ctx.user.id, 'admin_action', 'dlq', input.id, { action: 'retry', workflow: item.workflowName })

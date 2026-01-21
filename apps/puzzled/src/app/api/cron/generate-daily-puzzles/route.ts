@@ -1,4 +1,5 @@
-import { createWorkflowCronHandler } from '@/lib/api/cron'
+import { cronSuccess, verifyCronAuth } from '@/lib/api/cron'
+import { getServerBaseUrl } from '@/lib/utils'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -7,15 +8,32 @@ export const dynamic = 'force-dynamic'
  * Daily puzzle generation cron job
  *
  * Triggered by Vercel Cron at 23:00 UTC daily (see vercel.json)
- * Fire-and-forget: triggers Upstash Workflow and returns immediately
+ * Calls the puzzle generation job directly.
  *
  * Architecture:
- * - Vercel Cron triggers this endpoint (< 1s, lightweight)
- * - This endpoint fires the Upstash Workflow (no timeout, retry, DLQ)
- * - Workflow generates puzzles for all 17 games for tomorrow
+ * - Vercel Cron triggers this endpoint
+ * - This endpoint triggers /api/jobs/generate-puzzles (fire-and-forget)
+ * - Job generates puzzles for all games for tomorrow
  */
-export const GET = createWorkflowCronHandler({
-	workflowPath: '/api/workflow/generate-puzzles',
-	logPrefix: '[PuzzleGeneration]',
-	successMessage: 'Puzzle generation workflow triggered',
-})
+export function GET(request: Request): Response {
+	const authError = verifyCronAuth(request, '[PuzzleGeneration]')
+	if (authError) return authError
+
+	const baseUrl = getServerBaseUrl()
+	const jobUrl = `${baseUrl}/api/jobs/generate-puzzles`
+
+	console.log('[PuzzleGeneration] Triggering puzzle generation job')
+
+	// Fire-and-forget - don't await
+	fetch(jobUrl, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'x-internal-call': 'true',
+		},
+	}).catch((error) => {
+		console.error('[PuzzleGeneration] Failed to trigger job:', error)
+	})
+
+	return cronSuccess('Puzzle generation job triggered')
+}
