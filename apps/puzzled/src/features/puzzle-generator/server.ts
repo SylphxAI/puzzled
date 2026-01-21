@@ -12,7 +12,7 @@ export {
 	getTodayDateString,
 	getTomorrowDateString,
 } from './lib/generator'
-export { openrouter } from './lib/openrouter'
+export { ai } from './lib/openrouter'
 export {
 	type ConnectionsValidationResult,
 	parseConnectionsResponse,

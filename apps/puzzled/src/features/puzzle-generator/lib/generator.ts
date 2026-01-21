@@ -1,9 +1,7 @@
-import type { LanguageModel } from 'ai'
-import { generateText } from 'ai'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { appSettings } from '@/lib/db/schema'
-import { openrouter } from './openrouter'
+import { ai } from './openrouter'
 import { CONNECTIONS_SYSTEM_PROMPT, CONNECTIONS_USER_PROMPT } from './prompts/connections'
 import { CROSSWORD_SYSTEM_PROMPT, CROSSWORD_USER_PROMPT } from './prompts/crossword'
 import { NONOGRAM_SYSTEM_PROMPT, NONOGRAM_USER_PROMPT } from './prompts/nonogram'
@@ -94,15 +92,18 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 		try {
 			console.log(`[${config.name}] Attempt ${attempt}/${maxRetries}`)
 
-			const { text } = await generateText({
-				// Type assertion needed: OpenRouter provider returns compatible model
-				// but TypeScript can't verify due to version differences in type exports
-				model: openrouter(model) as unknown as LanguageModel,
-				system: config.systemPrompt,
-				prompt: config.userPrompt,
-				maxOutputTokens: config.maxOutputTokens || 1000,
+			// Use SDK AI client which routes through Platform
+			const response = await ai.chat({
+				model,
+				messages: [
+					{ role: 'system', content: config.systemPrompt },
+					{ role: 'user', content: config.userPrompt },
+				],
+				max_tokens: config.maxOutputTokens || 1000,
 				temperature: config.temperature,
 			})
+
+			const text = response.choices[0]?.message.content ?? ''
 
 			const parsed = config.parse(text)
 			if (!parsed) {

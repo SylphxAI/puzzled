@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSafeUser } from '@sylphx/sdk/react'
+import { useSafeUser, useStreak } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 import { useGameAnalytics } from '@/features/analytics'
@@ -49,6 +49,14 @@ export function useSaveGameResult(gameSlug: string) {
 	const [error, setError] = useState<string | null>(null)
 	const savedRef = useRef(false)
 	const { trackGameComplete } = useGameAnalytics()
+
+	// SDK streak hook for Platform-managed streak tracking
+	const { recordActivity } = useStreak('daily-play', {
+		name: 'Daily Play Streak',
+		description: 'Play at least one game daily to maintain your streak',
+		frequency: 'daily',
+		gracePeriodHours: 12,
+	})
 
 	// tRPC utils for cache invalidation
 	const utils = trpc.useUtils()
@@ -119,6 +127,21 @@ export function useSaveGameResult(gameSlug: string) {
 					difficulty: input.difficulty,
 					puzzleId: input.puzzleId,
 				})
+
+				// Record streak activity to Platform (only on win)
+				// This syncs Puzzled's play streak to the Platform engagement service
+				if (input.status === 'won') {
+					try {
+						await recordActivity({
+							gameSlug,
+							score: response.score,
+							puzzleId: input.puzzleId,
+						})
+					} catch {
+						// Don't fail the save if streak sync fails
+						// Platform will eventually be consistent via next activity
+					}
+				}
 
 				// Return server-calculated score
 				return {

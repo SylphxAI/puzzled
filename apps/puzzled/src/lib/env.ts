@@ -57,11 +57,7 @@ const FEATURE_VARS: EnvVar[] = [
 		required: false, // Checked at runtime by email.ts
 		description: 'Resend API key for email',
 	},
-	{
-		name: 'OPENROUTER_API_KEY',
-		required: false,
-		description: 'OpenRouter API key for puzzle generation',
-	},
+	// Note: AI/LLM now goes through Sylphx Platform SDK (uses SYLPHX_SECRET_KEY)
 	{
 		name: 'CRON_SECRET',
 		required: false,
@@ -199,7 +195,8 @@ export function isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
 		case 'push':
 			return !!process.env.VAPID_PRIVATE_KEY && !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 		case 'ai':
-			return !!process.env.OPENROUTER_API_KEY
+			// AI goes through Sylphx Platform SDK
+			return !!process.env.SYLPHX_SECRET_KEY
 		default:
 			return false
 	}

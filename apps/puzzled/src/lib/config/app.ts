@@ -25,6 +25,3 @@ export const PRIVACY_EMAIL = `privacy@${APP_DOMAIN}`
 
 /** Default from email (fallback when env not set) */
 export const DEFAULT_FROM_EMAIL = `hello@${APP_DOMAIN}`
-
-/** OpenRouter API base URL for LLM model fetching */
-export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1' as const

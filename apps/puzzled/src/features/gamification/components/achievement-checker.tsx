@@ -1,67 +1,83 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useSafeUser } from '@sylphx/sdk/react'
+import { useSafeUser, useAchievements, useStreak } from '@sylphx/sdk/react'
 import { trpc } from '@/trpc'
-import { checkAchievements } from '../lib/achievements'
+import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
 
-const LAST_CHECK_KEY = 'puzzled_achievement_last_check'
 const CHECK_INTERVAL_MS = 5000 // Don't check more than once per 5 seconds
 
 /**
  * Component that checks for new achievements after game completions
- * Mount this once in the layout to enable achievement toasts
- * Gracefully handles when Sylphx Platform is not configured.
+ * Uses SDK's useAchievements and useStreak hooks for Platform-managed tracking.
+ * Mount this once in the layout to enable achievement toasts.
  */
 export function AchievementChecker() {
 	const { user } = useSafeUser()
-	const { checkAndShowNewAchievement } = useAchievementToast()
+	const { showAchievement } = useAchievementToast()
 	const lastCheck = useRef<number>(0)
 	const hasChecked = useRef(false)
 
-	// Fetch user stats for achievement checking
-	const { data: streakInfo } = trpc.gamification.getStreakInfo.useQuery(undefined, {
-		enabled: !!user,
-		staleTime: 10000,
+	// SDK achievements hook - tracks state server-side
+	const {
+		achievements: sdkAchievements,
+		unlock,
+		recentUnlock,
+		dismissRecentUnlock,
+		isLoading: achievementsLoading,
+	} = useAchievements()
+
+	// SDK streak hook - Platform-managed streak tracking
+	const { longest: maxStreak, isLoading: streakLoading } = useStreak('daily-play', {
+		name: 'Daily Play Streak',
+		description: 'Play at least one game daily to maintain your streak',
+		frequency: 'daily',
+		gracePeriodHours: 12,
 	})
 
-	// Fetch per-game stats
+	// Fetch per-game stats (still from local tRPC - game stats are Puzzled-specific)
 	const { data: userStats } = trpc.stats.getUserStats.useQuery(undefined, {
 		enabled: !!user,
 		staleTime: 10000,
 	})
 
+	// Show toast when SDK reports a recent unlock
+	useEffect(() => {
+		if (recentUnlock) {
+			// Find local achievement definition for rich display data
+			const localDef = ACHIEVEMENTS.find((a) => a.id === recentUnlock.achievement.id)
+			if (localDef) {
+				showAchievement(localDef)
+			}
+			dismissRecentUnlock()
+		}
+	}, [recentUnlock, showAchievement, dismissRecentUnlock])
+
 	// Check for new achievements when stats update
 	useEffect(() => {
-		if (!user || !streakInfo || !userStats) return
+		if (!user || !userStats || achievementsLoading || streakLoading) return
 
 		// Throttle checks
 		const now = Date.now()
 		if (now - lastCheck.current < CHECK_INTERVAL_MS) return
 		lastCheck.current = now
 
-		// Prevent double-checking on initial load (only check on updates)
+		// Prevent checking on initial load
 		if (!hasChecked.current) {
-			// Mark last check time from localStorage to prevent toasts on page refresh
-			const storedLastCheck = localStorage.getItem(LAST_CHECK_KEY)
-			if (storedLastCheck) {
-				const lastCheckTime = parseInt(storedLastCheck, 10)
-				// If we checked recently, skip
-				if (now - lastCheckTime < 60000) {
-					hasChecked.current = true
-					return
-				}
-			}
+			hasChecked.current = true
+			return
 		}
 
-		hasChecked.current = true
-		localStorage.setItem(LAST_CHECK_KEY, now.toString())
+		// Build set of already unlocked achievement IDs
+		const unlockedIds = new Set(
+			sdkAchievements.filter((a) => a.unlocked).map((a) => a.achievementId)
+		)
 
-		// Calculate total wins
+		// Calculate stats
 		const totalWins = (userStats.wordle?.gamesWon ?? 0) + (userStats.connections?.gamesWon ?? 0)
 
-		// Get best attempts from guess distribution if available
+		// Get best attempts from guess distribution
 		const wordleDistribution = userStats.wordle?.guessDistribution as
 			| Record<string, number>
 			| null
@@ -74,22 +90,94 @@ export function AchievementChecker() {
 				)
 			: undefined
 
-		const achievementStats = {
-			totalWins,
-			maxStreak: streakInfo.maxStreak ?? 0,
-			wordleWins: userStats.wordle?.gamesWon ?? 0,
-			connectionsWins: userStats.connections?.gamesWon ?? 0,
-			wordleBestAttempts:
-				wordleBestAttempts === Number.POSITIVE_INFINITY ? undefined : wordleBestAttempts,
-			connectionsPerfectGames: userStats.connections?.perfectGames ?? undefined,
+		const wordleWins = userStats.wordle?.gamesWon ?? 0
+		const connectionsWins = userStats.connections?.gamesWon ?? 0
+		const connectionsPerfectGames = userStats.connections?.perfectGames ?? undefined
+
+		// Check and unlock achievements via SDK
+		const checkAndUnlock = async (
+			id: string,
+			condition: boolean,
+			localDef: (typeof ACHIEVEMENTS)[number]
+		) => {
+			if (condition && !unlockedIds.has(id)) {
+				await unlock(id, {
+					name: localDef.name,
+					description: localDef.description,
+					points: getTierPoints(localDef.tier),
+					tier: localDef.tier,
+					icon: localDef.icon,
+				})
+			}
 		}
 
-		// Check and show new achievements
-		const unlocked = checkAchievements(achievementStats)
-		if (unlocked.length > 0) {
-			checkAndShowNewAchievement(unlocked)
-		}
-	}, [user, streakInfo, userStats, checkAndShowNewAchievement])
+		// Streak achievements
+		const streak3 = ACHIEVEMENTS.find((a) => a.id === 'streak-3')!
+		const streak7 = ACHIEVEMENTS.find((a) => a.id === 'streak-7')!
+		const streak30 = ACHIEVEMENTS.find((a) => a.id === 'streak-30')!
+		const streak100 = ACHIEVEMENTS.find((a) => a.id === 'streak-100')!
+
+		checkAndUnlock('streak-3', maxStreak >= 3, streak3)
+		checkAndUnlock('streak-7', maxStreak >= 7, streak7)
+		checkAndUnlock('streak-30', maxStreak >= 30, streak30)
+		checkAndUnlock('streak-100', maxStreak >= 100, streak100)
+
+		// Win count achievements
+		const wins10 = ACHIEVEMENTS.find((a) => a.id === 'wins-10')!
+		const wins50 = ACHIEVEMENTS.find((a) => a.id === 'wins-50')!
+		const wins100 = ACHIEVEMENTS.find((a) => a.id === 'wins-100')!
+		const wins500 = ACHIEVEMENTS.find((a) => a.id === 'wins-500')!
+
+		checkAndUnlock('wins-10', totalWins >= 10, wins10)
+		checkAndUnlock('wins-50', totalWins >= 50, wins50)
+		checkAndUnlock('wins-100', totalWins >= 100, wins100)
+		checkAndUnlock('wins-500', totalWins >= 500, wins500)
+
+		// Special achievements
+		const wordlePerfect = ACHIEVEMENTS.find((a) => a.id === 'wordle-perfect')!
+		const wordleFast = ACHIEVEMENTS.find((a) => a.id === 'wordle-fast')!
+		const connectionsPerfect = ACHIEVEMENTS.find((a) => a.id === 'connections-perfect')!
+		const allGames = ACHIEVEMENTS.find((a) => a.id === 'all-games')!
+
+		checkAndUnlock(
+			'wordle-perfect',
+			wordleBestAttempts === 1,
+			wordlePerfect
+		)
+		checkAndUnlock(
+			'wordle-fast',
+			wordleBestAttempts !== undefined && wordleBestAttempts <= 2,
+			wordleFast
+		)
+		checkAndUnlock(
+			'connections-perfect',
+			connectionsPerfectGames !== undefined && connectionsPerfectGames > 0,
+			connectionsPerfect
+		)
+		checkAndUnlock(
+			'all-games',
+			wordleWins > 0 && connectionsWins > 0,
+			allGames
+		)
+	}, [user, userStats, achievementsLoading, streakLoading, maxStreak, sdkAchievements, unlock])
 
 	return null
+}
+
+// Helper to convert tier to points
+function getTierPoints(tier: string): number {
+	switch (tier) {
+		case 'bronze':
+			return 10
+		case 'silver':
+			return 25
+		case 'gold':
+			return 50
+		case 'platinum':
+			return 100
+		case 'diamond':
+			return 250
+		default:
+			return 10
+	}
 }
