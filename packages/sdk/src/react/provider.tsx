@@ -75,6 +75,9 @@ import type {
 	SubmitScoreResult,
 	UserAchievement,
 	AchievementUnlockEvent,
+	StreakDefaults,
+	LeaderboardDefaults,
+	AchievementDefaults,
 } from '../lib/engagement/types'
 
 // Dynamic import for @vercel/blob/client to avoid SSR issues with undici
@@ -1318,11 +1321,15 @@ export function SylphxProvider({
 	)
 
 	const recordStreakActivity = useCallback(
-		async (streakId: string, metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
+		async (
+			streakId: string,
+			metadata?: Record<string, unknown>,
+			defaults?: StreakDefaults
+		): Promise<RecordActivityResult> => {
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to record activity')
 			}
-			return api.engagement.recordActivity.mutate({ streakId, userId: authState.user.id, metadata })
+			return api.engagement.recordActivity.mutate({ streakId, userId: authState.user.id, metadata, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1338,7 +1345,10 @@ export function SylphxProvider({
 	)
 
 	const getEngagementLeaderboard = useCallback(
-		async (leaderboardId: string, options?: LeaderboardQueryOptions): Promise<LeaderboardResult> => {
+		async (
+			leaderboardId: string,
+			options?: LeaderboardQueryOptions & { defaults?: LeaderboardDefaults }
+		): Promise<LeaderboardResult> => {
 			return api.engagement.getLeaderboard.query({
 				leaderboardId,
 				userId: authState.user?.id ?? null,
@@ -1349,11 +1359,16 @@ export function SylphxProvider({
 	)
 
 	const submitScore = useCallback(
-		async (leaderboardId: string, value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
+		async (
+			leaderboardId: string,
+			value: number,
+			metadata?: Record<string, unknown>,
+			defaults?: LeaderboardDefaults
+		): Promise<SubmitScoreResult> => {
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to submit score')
 			}
-			return api.engagement.submitScore.mutate({ leaderboardId, value, userId: authState.user.id, metadata })
+			return api.engagement.submitScore.mutate({ leaderboardId, value, userId: authState.user.id, metadata, defaults })
 		},
 		[api, authState.user?.id]
 	)
@@ -1366,21 +1381,21 @@ export function SylphxProvider({
 	}, [api, authState.user?.id])
 
 	const unlockAchievement = useCallback(
-		async (achievementId: string): Promise<AchievementUnlockEvent> => {
+		async (achievementId: string, defaults?: AchievementDefaults): Promise<AchievementUnlockEvent> => {
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to unlock achievement')
 			}
-			return api.engagement.unlockAchievement.mutate({ achievementId, userId: authState.user.id })
+			return api.engagement.unlockAchievement.mutate({ achievementId, userId: authState.user.id, defaults })
 		},
 		[api, authState.user?.id]
 	)
 
 	const incrementAchievementProgress = useCallback(
-		async (achievementId: string, amount: number): Promise<UserAchievement> => {
+		async (achievementId: string, amount: number, defaults?: AchievementDefaults): Promise<UserAchievement> => {
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to increment progress')
 			}
-			return api.engagement.incrementProgress.mutate({ achievementId, amount, userId: authState.user.id })
+			return api.engagement.incrementProgress.mutate({ achievementId, amount, userId: authState.user.id, defaults })
 		},
 		[api, authState.user?.id]
 	)
