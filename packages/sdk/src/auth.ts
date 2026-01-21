@@ -7,7 +7,7 @@
  * Uses REST API at /api/sdk/auth/* for all operations.
  */
 
-import { type SylphxConfig, buildHeaders } from './config'
+import { type SylphxConfig, buildHeaders, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -78,46 +78,6 @@ export interface SessionResult {
 }
 
 // ============================================================================
-// Internal Helpers
-// ============================================================================
-
-/**
- * Build REST API URL for SDK endpoints
- */
-function buildRestUrl(config: SylphxConfig, path: string): string {
-	return `${config.platformUrl}/api/sdk${path}`
-}
-
-/**
- * Make a REST API call and handle errors
- */
-async function callRest<TOutput>(
-	config: SylphxConfig,
-	path: string,
-	options: {
-		method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
-		body?: unknown
-	} = {}
-): Promise<TOutput> {
-	const { method = 'GET', body } = options
-	const url = buildRestUrl(config, path)
-
-	const response = await fetch(url, {
-		method,
-		headers: buildHeaders(config),
-		...(config.platformMode && { credentials: 'include' as const }),
-		...(body !== undefined && { body: JSON.stringify(body) }),
-	})
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
-		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
-	}
-
-	return response.json()
-}
-
-// ============================================================================
 // Functions
 // ============================================================================
 
@@ -136,7 +96,7 @@ async function callRest<TOutput>(
  * ```
  */
 export async function signIn(config: SylphxConfig, input: SignInInput): Promise<SignInResult> {
-	return callRest<SignInResult>(config, '/auth/login', {
+	return callApi<SignInResult>(config, '/auth/login', {
 		method: 'POST',
 		body: input,
 	})
@@ -156,7 +116,7 @@ export async function signIn(config: SylphxConfig, input: SignInInput): Promise<
  * ```
  */
 export async function signUp(config: SylphxConfig, input: SignUpInput): Promise<SignUpResult> {
-	const result = await callRest<{ user: SignUpResult['user'] }>(config, '/auth/register', {
+	const result = await callApi<{ user: SignUpResult['user'] }>(config, '/auth/register', {
 		method: 'POST',
 		body: input,
 	})
@@ -175,7 +135,7 @@ export async function signUp(config: SylphxConfig, input: SignUpInput): Promise<
  * ```
  */
 export async function signOut(config: SylphxConfig): Promise<void> {
-	await callRest<void>(config, '/auth/logout', { method: 'POST' })
+	await callApi<void>(config, '/auth/logout', { method: 'POST' })
 }
 
 /**
@@ -239,7 +199,7 @@ export async function verifyEmail(config: SylphxConfig, token: string): Promise<
  * ```
  */
 export async function forgotPassword(config: SylphxConfig, email: string): Promise<void> {
-	await callRest<{ success: boolean }>(config, '/auth/forgot-password', {
+	await callApi<{ success: boolean }>(config, '/auth/forgot-password', {
 		method: 'POST',
 		body: { email },
 	})
@@ -257,7 +217,7 @@ export async function resetPassword(
 	config: SylphxConfig,
 	input: { token: string; password: string }
 ): Promise<void> {
-	await callRest<{ success: boolean }>(config, '/auth/reset-password', {
+	await callApi<{ success: boolean }>(config, '/auth/reset-password', {
 		method: 'POST',
 		body: { token: input.token, newPassword: input.password },
 	})
@@ -280,7 +240,7 @@ export async function getSession(config: SylphxConfig): Promise<SessionResult> {
 	}
 
 	try {
-		const user = await callRest<SessionResult['user']>(config, '/auth/me')
+		const user = await callApi<SessionResult['user']>(config, '/auth/me')
 		return { user }
 	} catch {
 		return { user: null }
@@ -303,7 +263,7 @@ export async function verifyTwoFactor(
 	userId: string,
 	code: string
 ): Promise<TokenResult> {
-	return callRest<TokenResult>(config, '/auth/verify-2fa', {
+	return callApi<TokenResult>(config, '/auth/verify-2fa', {
 		method: 'POST',
 		body: { userId, code },
 	})

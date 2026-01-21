@@ -1,8 +1,61 @@
 /**
  * Platform SDK Types
  *
- * All type definitions for the SDK. These types mirror the REST API responses.
+ * Type definitions for the SDK. Domain-specific types are re-exported from
+ * their respective modules (SSOT). Additional UI/React types are defined here.
  */
+
+// ==========================================
+// Re-exports from Domain Modules (SSOT)
+// ==========================================
+
+// Consent types - SSOT: consent.ts
+// Import for local use, then re-export
+import type {
+	ConsentType as ConsentTypeBase,
+	UserConsent as UserConsentBase,
+	ConsentCategory,
+	SetConsentsInput,
+	GetConsentsInput,
+	LinkAnonymousConsentsInput,
+	ConsentPurposeDefaults,
+} from './consent'
+
+export type {
+	ConsentTypeBase as ConsentType,
+	UserConsentBase as UserConsent,
+	ConsentCategory,
+	SetConsentsInput,
+	GetConsentsInput,
+	LinkAnonymousConsentsInput,
+	ConsentPurposeDefaults,
+}
+
+// Webhook types - SSOT: webhooks.ts
+// Import for local use, then re-export
+import type {
+	WebhookConfig as WebhookConfigBase,
+	WebhookEnvironment as WebhookEnvironmentBase,
+	WebhookDelivery as WebhookDeliveryBase,
+	WebhookDeliveriesResult,
+	WebhookStats as WebhookStatsBase,
+	WebhookConfigUpdate,
+	ListDeliveriesOptions,
+} from './webhooks'
+
+export type {
+	WebhookConfigBase as WebhookConfig,
+	WebhookEnvironmentBase as WebhookEnvironment,
+	WebhookDeliveryBase as WebhookDelivery,
+	WebhookDeliveriesResult,
+	WebhookStatsBase as WebhookStats,
+	WebhookConfigUpdate,
+	ListDeliveriesOptions,
+}
+
+// Billing types - SSOT: billing.ts
+// Note: CheckoutInput is also exported directly from billing.ts
+export type { Plan, Subscription } from './billing'
 
 // ==========================================
 // OAuth Provider Types
@@ -122,37 +175,8 @@ export interface DeviceSession {
 
 // ==========================================
 // Billing Types
+// Note: Plan, Subscription, CheckoutInput are exported from billing.ts (SSOT)
 // ==========================================
-
-export interface Plan {
-	id: string
-	slug: string
-	name: string
-	description: string | null
-	monthlyPrice: number
-	priceMonthly: number
-	annualPrice: number
-	priceAnnual: number
-	lifetimePrice: number | null
-	priceLifetime: number | null
-	features: string[]
-	limits: Record<string, number>
-	isDefault: boolean
-	sortOrder: number
-}
-
-export interface Subscription {
-	id: string
-	status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete'
-	planId: string
-	planSlug: string
-	planName: string
-	interval: 'monthly' | 'annual' | 'lifetime'
-	currentPeriodStart: string
-	currentPeriodEnd: string
-	cancelAtPeriodEnd: boolean
-	trialEnd: string | null
-}
 
 export interface BillingBalance {
 	current: number
@@ -536,76 +560,13 @@ export interface UploadedFile {
 
 // ==========================================
 // Webhooks Types
+// Note: WebhookConfig, WebhookDelivery, WebhookStats, etc. are exported from webhooks.ts (SSOT)
 // ==========================================
-
-export interface WebhookConfig {
-	enabled: boolean
-	url: string | null
-	secret: string | null
-	events: string[]
-	environments: WebhookEnvironment[]
-	supportedEvents: string[]
-}
-
-export interface WebhookDelivery {
-	id: string
-	event: string
-	status: 'pending' | 'success' | 'failed' | 'delivered'
-	statusCode: number | null
-	responseStatus?: number | null
-	attemptCount: number
-	retryCount?: number
-	lastAttemptAt: string | null
-	createdAt: string
-	url?: string
-	error?: string | null
-}
-
-export interface WebhookDeliveriesResult {
-	deliveries: WebhookDelivery[]
-	total: number
-	hasMore: boolean
-}
-
-export interface WebhookStats {
-	period: 'day' | 'week' | 'month' | string
-	total: number
-	successful: number
-	failed: number
-	pending: number
-	// Extended stats (array format, used by webhooks-hooks)
-	totals: {
-		total: number
-		delivered: number
-		failed: number
-		pending: number
-		deliveryRate: string | number
-	}
-	byEvent: Array<{ event: string; count: number }>
-	byStatus: Array<{ status: string; count: number }>
-}
 
 // ==========================================
 // Consent Types
+// Note: ConsentType, UserConsent, SetConsentsInput, etc. are exported from consent.ts (SSOT)
 // ==========================================
-
-export interface ConsentType {
-	id: string
-	slug: string
-	name: string
-	description: string
-	required: boolean
-	defaultValue: boolean
-	defaultEnabled: boolean
-	category?: string
-}
-
-export interface UserConsent {
-	slug: string
-	granted: boolean
-	grantedAt?: string | null
-	revokedAt?: string | null
-}
 
 // ==========================================
 // In-App Message Types
@@ -818,20 +779,13 @@ export interface JobsStatusResult {
 	quotaLimit: number
 }
 
-// Webhooks additional types
+// Webhooks additional types (React layer)
+// Note: Core types re-exported from webhooks.ts above
 export type WebhookEnvironmentType = 'development' | 'staging' | 'production'
 export type WebhookDeliveryStatus = 'pending' | 'success' | 'failed' | 'delivered'
 export type WebhookStatsPeriod = 'day' | 'week' | 'month'
 
-export interface WebhookEnvironment {
-	id: string
-	name: string
-	webhookUrl: string | null
-	hasSecret: boolean
-	updatedAt: string | null
-	events?: string[]
-}
-
+/** Extended webhook config update for React context (includes regenerateSecret) */
 export interface UpdateWebhookConfigInput {
 	environmentId: string
 	webhookUrl: string | null
@@ -847,7 +801,7 @@ export interface UpdateWebhookConfigResult {
 	webhookUrl: string | null
 	secretGenerated: boolean
 	webhookSecret?: string
-	config?: WebhookConfig
+	config?: WebhookConfigBase
 }
 
 export interface ReplayDeliveryResult {
@@ -855,6 +809,7 @@ export interface ReplayDeliveryResult {
 	deliveryId: string
 }
 
+/** Extended delivery query options for React context */
 export interface GetDeliveriesInput {
 	limit?: number
 	offset?: number
@@ -863,10 +818,11 @@ export interface GetDeliveriesInput {
 	environmentId?: string
 }
 
-// Consent additional types
+// Consent additional types (React layer)
+// Note: Core types re-exported from consent.ts above
 export interface SetConsentsResult {
 	success: boolean
-	consents: UserConsent[]
+	consents: UserConsentBase[]
 }
 
 // Monitoring types

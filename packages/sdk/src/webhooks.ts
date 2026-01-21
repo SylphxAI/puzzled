@@ -14,13 +14,20 @@ export interface WebhookEnvironment {
 	id: string
 	name: string
 	webhookUrl: string | null
-	webhookSecret: string | null
+	webhookSecret?: string | null
+	hasSecret?: boolean
+	events?: string[]
 	createdAt: string
-	updatedAt: string
+	updatedAt: string | null
 }
 
 export interface WebhookConfig {
 	environments: WebhookEnvironment[]
+	supportedEvents?: string[]
+	enabled?: boolean
+	url?: string | null
+	secret?: string | null
+	events?: string[]
 }
 
 export interface WebhookConfigUpdate {
@@ -31,11 +38,18 @@ export interface WebhookConfigUpdate {
 export interface WebhookDelivery {
 	id: string
 	eventType: string
-	status: 'pending' | 'queued' | 'delivered' | 'failed'
+	event?: string // Alias for eventType
+	status: 'pending' | 'queued' | 'delivered' | 'failed' | 'success'
 	statusCode: number | null
+	responseStatus?: number | null // Alias for statusCode
 	attempts: number
+	attemptCount?: number // Alias for attempts
+	retryCount?: number
 	payload: Record<string, unknown>
 	response: string | null
+	error?: string | null
+	url?: string
+	lastAttemptAt?: string | null
 	createdAt: string
 	deliveredAt: string | null
 }
@@ -47,12 +61,24 @@ export interface WebhookDeliveriesResult {
 }
 
 export interface WebhookStats {
+	// Summary totals
 	total: number
 	delivered: number
 	failed: number
 	pending: number
 	deliveryRate: number
 	avgLatencyMs: number | null
+	// Extended stats (for UI)
+	period?: string
+	totals?: {
+		total: number
+		delivered: number
+		failed: number
+		pending: number
+		deliveryRate: number | string
+	}
+	byEvent?: Array<{ event: string; count: number }>
+	byStatus?: Array<{ status: string; count: number }>
 }
 
 export interface ListDeliveriesOptions {

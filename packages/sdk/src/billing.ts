@@ -5,7 +5,7 @@
  * Uses REST API at /api/sdk/billing/* for all operations.
  */
 
-import { type SylphxConfig, buildHeaders } from './config'
+import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
 // Types
@@ -17,11 +17,21 @@ export interface Plan {
 	name: string
 	description: string | null
 	features: string[]
+	// Primary price fields
 	monthlyPrice: number
 	annualPrice: number
 	lifetimePrice: number | null
+	// Alternate naming (same values, for backward compat)
+	priceMonthly?: number
+	priceAnnual?: number
+	priceLifetime?: number | null
+	// Display flags
 	isPopular: boolean
 	isActive: boolean
+	isDefault?: boolean
+	// Additional metadata
+	limits?: Record<string, number>
+	sortOrder?: number
 }
 
 export interface Subscription {
@@ -34,6 +44,7 @@ export interface Subscription {
 	currentPeriodStart: string
 	currentPeriodEnd: string
 	cancelAtPeriodEnd: boolean
+	trialEnd?: string | null
 }
 
 export interface CheckoutInput {
@@ -50,55 +61,6 @@ export interface CheckoutInput {
 }
 
 // ============================================================================
-// Internal Helpers
-// ============================================================================
-
-/**
- * Build REST API URL for SDK endpoints
- */
-function buildRestUrl(config: SylphxConfig, path: string, query?: Record<string, string>): string {
-	const url = new URL(`${config.platformUrl}/api/sdk${path}`)
-	if (query) {
-		Object.entries(query).forEach(([key, value]) => {
-			if (value !== undefined) {
-				url.searchParams.set(key, value)
-			}
-		})
-	}
-	return url.toString()
-}
-
-/**
- * Make a REST API call and handle errors
- */
-async function callRest<TOutput>(
-	config: SylphxConfig,
-	path: string,
-	options: {
-		method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
-		body?: unknown
-		query?: Record<string, string>
-	} = {}
-): Promise<TOutput> {
-	const { method = 'GET', body, query } = options
-	const url = buildRestUrl(config, path, query)
-
-	const response = await fetch(url, {
-		method,
-		headers: buildHeaders(config),
-		...(config.platformMode && { credentials: 'include' as const }),
-		...(body !== undefined && { body: JSON.stringify(body) }),
-	})
-
-	if (!response.ok) {
-		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
-		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
-	}
-
-	return response.json()
-}
-
-// ============================================================================
 // Functions
 // ============================================================================
 
@@ -112,7 +74,7 @@ async function callRest<TOutput>(
  * ```
  */
 export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
-	return callRest<Plan[]>(config, '/billing/plans')
+	return callApi<Plan[]>(config, '/billing/plans')
 }
 
 /**
@@ -130,7 +92,7 @@ export async function getSubscription(
 	config: SylphxConfig,
 	userId: string
 ): Promise<Subscription | null> {
-	return callRest<Subscription | null>(config, '/billing/subscription', {
+	return callApi<Subscription | null>(config, '/billing/subscription', {
 		query: { userId },
 	})
 }
@@ -155,7 +117,7 @@ export async function createCheckout(
 	config: SylphxConfig,
 	input: CheckoutInput
 ): Promise<{ checkoutUrl: string }> {
-	return callRest<{ checkoutUrl: string }>(config, '/billing/checkout', {
+	return callApi<{ checkoutUrl: string }>(config, '/billing/checkout', {
 		method: 'POST',
 		body: input,
 	})
@@ -178,7 +140,7 @@ export async function createPortalSession(
 	config: SylphxConfig,
 	input: { userId: string; returnUrl: string }
 ): Promise<{ portalUrl: string }> {
-	return callRest<{ portalUrl: string }>(config, '/billing/portal', {
+	return callApi<{ portalUrl: string }>(config, '/billing/portal', {
 		method: 'POST',
 		body: input,
 	})
@@ -196,7 +158,7 @@ export async function createPortalSession(
 export async function getBillingBalance(
 	config: SylphxConfig
 ): Promise<{ credits: number; currency: string }> {
-	return callRest<{ credits: number; currency: string }>(config, '/billing/balance')
+	return callApi<{ credits: number; currency: string }>(config, '/billing/balance')
 }
 
 /**
@@ -211,7 +173,7 @@ export async function getBillingUsage(
 	config: SylphxConfig,
 	options?: { month?: string }
 ): Promise<Record<string, unknown>> {
-	return callRest<Record<string, unknown>>(config, '/billing/usage', {
+	return callApi<Record<string, unknown>>(config, '/billing/usage', {
 		query: options?.month ? { month: options.month } : undefined,
 	})
 }

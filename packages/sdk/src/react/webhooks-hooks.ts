@@ -17,7 +17,7 @@ import {
 } from './services-context'
 
 // Re-export types for convenience
-export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, StatsPeriod }
+export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, StatsPeriod, WebhookStats }
 
 // ============================================
 // useWebhooks
@@ -101,7 +101,7 @@ export function useWebhooks(): UseWebhooksReturn {
 		try {
 			const config = await ctx.getConfig()
 			setEnvironments(config.environments)
-			setSupportedEvents([...config.supportedEvents])
+			setSupportedEvents(config.supportedEvents ?? [])
 		} catch (err) {
 			const error = err instanceof Error ? err : new Error('Failed to fetch webhook config')
 			setError(error)
@@ -320,18 +320,8 @@ export function useWebhookDeliveries(
 // useWebhookStats
 // ============================================
 
-export interface WebhookStats {
-	period: string
-	totals: {
-		total: number
-		delivered: number
-		failed: number
-		pending: number
-		deliveryRate: number | string
-	}
-	byEvent: Array<{ event: string; count: number }>
-	byStatus: Array<{ status: string; count: number }>
-}
+// WebhookStats is imported from services-context (SSOT: webhooks.ts)
+import type { WebhookStats } from './services-context'
 
 export interface UseWebhookStatsReturn {
 	/** Webhook statistics */

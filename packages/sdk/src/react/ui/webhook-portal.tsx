@@ -830,31 +830,33 @@ function StatsSection({ theme, period, onError }: StatsSectionProps) {
 			</div>
 
 			{/* Summary Cards */}
-			<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-				<div style={statCardStyle}>
-					<div style={statValueStyle}>{stats.totals.total.toLocaleString()}</div>
-					<div style={statLabelStyle}>Total</div>
-				</div>
-				<div style={statCardStyle}>
-					<div style={{ ...statValueStyle, color: theme.colorSuccess }}>
-						{stats.totals.delivered.toLocaleString()}
+			{stats.totals && (
+				<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+					<div style={statCardStyle}>
+						<div style={statValueStyle}>{stats.totals.total.toLocaleString()}</div>
+						<div style={statLabelStyle}>Total</div>
 					</div>
-					<div style={statLabelStyle}>Delivered</div>
-				</div>
-				<div style={statCardStyle}>
-					<div style={{ ...statValueStyle, color: theme.colorDestructive }}>
-						{stats.totals.failed.toLocaleString()}
+					<div style={statCardStyle}>
+						<div style={{ ...statValueStyle, color: theme.colorSuccess }}>
+							{stats.totals.delivered.toLocaleString()}
+						</div>
+						<div style={statLabelStyle}>Delivered</div>
 					</div>
-					<div style={statLabelStyle}>Failed</div>
+					<div style={statCardStyle}>
+						<div style={{ ...statValueStyle, color: theme.colorDestructive }}>
+							{stats.totals.failed.toLocaleString()}
+						</div>
+						<div style={statLabelStyle}>Failed</div>
+					</div>
+					<div style={statCardStyle}>
+						<div style={{ ...statValueStyle, color: theme.colorSuccess }}>{stats.totals.deliveryRate}</div>
+						<div style={statLabelStyle}>Success Rate</div>
+					</div>
 				</div>
-				<div style={statCardStyle}>
-					<div style={{ ...statValueStyle, color: theme.colorSuccess }}>{stats.totals.deliveryRate}</div>
-					<div style={statLabelStyle}>Success Rate</div>
-				</div>
-			</div>
+			)}
 
 			{/* Breakdown by Event */}
-			{stats.byEvent.length > 0 && (
+			{stats.byEvent && stats.byEvent.length > 0 && (
 				<div style={{ marginBottom: '1.5rem' }}>
 					<h4 style={{ margin: '0 0 0.75rem', fontSize: theme.fontSizeSm, fontWeight: 600 }}>By Event</h4>
 					<div
@@ -872,7 +874,7 @@ function StatsSection({ theme, period, onError }: StatsSectionProps) {
 									alignItems: 'center',
 									justifyContent: 'space-between',
 									padding: '0.5rem 1rem',
-									borderBottom: i === stats.byEvent.length - 1 ? 'none' : `1px solid ${theme.colorBorder}`,
+									borderBottom: i === (stats.byEvent?.length ?? 0) - 1 ? 'none' : `1px solid ${theme.colorBorder}`,
 								}}
 							>
 								<span style={{ fontFamily: 'monospace', fontSize: theme.fontSizeSm }}>{item.event}</span>
@@ -884,11 +886,11 @@ function StatsSection({ theme, period, onError }: StatsSectionProps) {
 			)}
 
 			{/* Breakdown by Status */}
-			{stats.byStatus.length > 0 && (
+			{stats.byStatus && stats.byStatus.length > 0 && (
 				<div>
 					<h4 style={{ margin: '0 0 0.75rem', fontSize: theme.fontSizeSm, fontWeight: 600 }}>By Status</h4>
 					<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-						{stats.byStatus.map((item) => (
+						{stats.byStatus?.map((item) => (
 							<div
 								key={item.status}
 								style={{

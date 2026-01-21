@@ -2014,10 +2014,18 @@ export function SylphxProvider({
 				return await api.get('/consent/types')
 			},
 			getUserConsents: async () => {
-				return await api.get<Array<{ slug: string; granted: boolean }>>('/consent', {
+				const consents = await api.get<Array<{ slug: string; enabled: boolean; consentTypeId?: string; updatedAt?: string }>>('/consent', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
+				// Map API response to UserConsent shape
+				return consents.map((c) => ({
+					consentTypeId: c.consentTypeId ?? '',
+					slug: c.slug,
+					enabled: c.enabled,
+					granted: c.enabled, // Alias
+					updatedAt: c.updatedAt ?? new Date().toISOString(),
+				}))
 			},
 			setConsents: async (consents) => {
 				return await api.post('/consent', {
