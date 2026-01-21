@@ -93,7 +93,7 @@ export function ReferralLeaderboard({
 		if (showPersonalStats && user && stats) {
 			setPersonalStats({
 				totalReferrals: stats.totalReferrals,
-				completedReferrals: stats.completedReferrals,
+				completedReferrals: stats.completedReferrals ?? stats.successfulReferrals,
 				code: code ?? null,
 			})
 		}

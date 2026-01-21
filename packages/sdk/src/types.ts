@@ -54,8 +54,7 @@ export type {
 }
 
 // Billing types - SSOT: billing.ts
-// Note: CheckoutInput is also exported directly from billing.ts
-export type { Plan, Subscription } from './billing'
+export type { Plan, Subscription, CheckoutInput } from './billing'
 
 // Storage types - SSOT: lib/storage/types.ts
 export type {
@@ -222,35 +221,16 @@ export interface BillingUsage {
 }
 
 // ==========================================
-// Referrals Types
+// Referrals Types - SSOT: referrals.ts
 // ==========================================
 
-export interface ReferralStats {
-	code: string
-	totalReferrals: number
-	completedReferrals: number
-	pendingReferrals: number
-	totalRewards: number
-	rewardsEarned: number
-}
-
-export interface LeaderboardResult {
-	period: 'all' | 'month' | 'week'
-	entries: LeaderboardEntry[]
-	currentUserRank: number | null
-}
-
-export interface LeaderboardEntry {
-	rank: number
-	userId: string | null
-	displayName: string
-	avatarUrl: string | null
-	completedReferrals: number
-	totalReferrals: number
-	isCurrentUser: boolean
-}
-
-export type LeaderboardPeriod = 'all' | 'month' | 'week'
+export type {
+	ReferralStats,
+	LeaderboardEntry,
+	LeaderboardResult,
+	LeaderboardPeriod,
+	RedeemReferralInput,
+} from './referrals'
 
 // ==========================================
 // Feature Flags Types
@@ -679,20 +659,13 @@ export interface ChangePasswordInput {
 	newPassword: string
 }
 
-export interface CheckoutInput {
-	planSlug: string
-	interval: 'monthly' | 'annual' | 'lifetime'
-	successUrl?: string
-	cancelUrl?: string
-}
+// CheckoutInput re-exported from billing.ts above
 
 export interface RegisterPushInput {
 	subscription: PushSubscriptionJSON
 }
 
-export interface RedeemReferralInput {
-	code: string
-}
+// RedeemReferralInput re-exported from referrals.ts above
 
 export interface CheckFeatureFlagInput {
 	key: string
