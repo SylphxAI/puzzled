@@ -436,7 +436,9 @@ export function useSylphx(): UseSylphxReturn {
 }
 
 // ============================================
-// useOrganization (placeholder for future SDK implementation)
+// useOrganization
+// Organization SDK endpoints are not yet available on the platform.
+// This hook provides a stable API surface - mutations direct users to Console.
 // ============================================
 
 // Import Organization types from types.ts (SSOT)
@@ -446,7 +448,7 @@ export type { Organization, OrganizationMember, OrgRole }
 /**
  * Return type for useOrganization hook
  *
- * @beta This interface is part of a placeholder implementation.
+ * Organization SDK endpoints are not yet available.
  * Organization management is currently only available via the Sylphx Console.
  */
 export interface UseOrganizationReturn {
@@ -479,10 +481,8 @@ export interface UseOrganizationReturn {
 /**
  * Hook to manage organizations and RBAC
  *
- * @beta **PLACEHOLDER IMPLEMENTATION** - Returns empty/no-op values.
- *
+ * Organization SDK endpoints are not yet available on the platform.
  * Organization management is available via the Sylphx Console.
- * SDK-based organization management will be available in a future release.
  *
  * **Current behavior:**
  * - `organization` is always `null`
@@ -502,8 +502,7 @@ export interface UseOrganizationReturn {
  * ```
  */
 export function useOrganization(): UseOrganizationReturn {
-	// PLACEHOLDER: Returns empty state - organization management via Console only
-	// TODO: Implement when server-side organization endpoints are ready
+	// Organization SDK endpoints not yet available - management via Console only
 	return {
 		organization: null,
 		organizations: [],

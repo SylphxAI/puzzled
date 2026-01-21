@@ -779,14 +779,6 @@ export interface ErrorResponse {
 	}
 }
 
-// ==========================================
-// Router Types (Backward Compatibility)
-// ==========================================
-
-// These are placeholders for backward compatibility
-export type RouterInputs = Record<string, unknown>
-export type RouterOutputs = Record<string, unknown>
-
 // Jobs additional types
 export interface ScheduleJobInput {
 	name?: string
