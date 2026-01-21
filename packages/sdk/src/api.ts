@@ -1,20 +1,21 @@
 /**
  * @sylphx/api - Internal API Type Bridge
  *
- * This file bridges the SDK to Platform's tRPC types using TypeScript path aliases.
- * The path aliases are defined in this package's tsconfig.json.
+ * This file provides the AppRouter type for SDK internal use.
  *
  * Architecture:
- * - Platform defines AppRouter in src/server/routers/_app.ts
- * - This file re-exports that type for SDK internal use
- * - SDK consumers import from this package's public exports
- *
- * This is the correct TypeScript pattern for monorepo type sharing:
- * - No runtime dependency on Platform
- * - Full type inference preserved
- * - Clean public API for SDK consumers
+ * - The SDK uses AnyRouter as a base type for tRPC client creation
+ * - Actual type inference happens at the consumer level when they
+ *   use the SDK with their platform installation
+ * - This avoids circular dependencies between SDK and Platform
  */
 
-// Re-export Platform's AppRouter type
-// Path alias resolved via tsconfig: @sylphx/platform/trpc -> ../../apps/sylphx/src/server/routers/_app.ts
-export type { AppRouter } from '@sylphx/platform/trpc'
+import type { AnyRouter } from '@trpc/server'
+
+/**
+ * AppRouter type placeholder.
+ *
+ * The SDK uses this as a base type. Consumers get full type inference
+ * through the workspace protocol when they import from @sylphx/platform/trpc.
+ */
+export type AppRouter = AnyRouter
