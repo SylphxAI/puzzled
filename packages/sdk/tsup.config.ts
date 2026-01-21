@@ -97,13 +97,19 @@ export default defineConfig([
 		dts: false,
 		splitting: false,
 		sourcemap: true,
-		external: PEER_EXTERNALS,
+		external: [
+			...PEER_EXTERNALS,
+			// Don't bundle - CJS shim uses dynamic require which breaks Turbopack SSR
+			// React 18+ has native useSyncExternalStore, so shim isn't needed
+			'use-sync-external-store',
+			'use-sync-external-store/shim',
+			'use-sync-external-store/shim/index.js',
+		],
 		// Bundle all SDK dependencies
 		noExternal: [
 			'rrweb',
 			'@sylphx/ui',
 			'@vercel/blob',
-			'use-sync-external-store',
 		],
 	},
 ])
