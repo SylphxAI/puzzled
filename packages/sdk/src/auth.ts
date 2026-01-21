@@ -3,9 +3,11 @@
  *
  * Pure functions for authentication - no hidden state.
  * Each function takes config as the first parameter.
+ *
+ * Uses REST API at /api/sdk/auth/* for all operations.
  */
 
-import { type SylphxConfig, callTrpc, buildHeaders } from './config'
+import { type SylphxConfig, buildHeaders } from './config'
 
 // ============================================================================
 // Types
@@ -76,6 +78,46 @@ export interface SessionResult {
 }
 
 // ============================================================================
+// Internal Helpers
+// ============================================================================
+
+/**
+ * Build REST API URL for SDK endpoints
+ */
+function buildRestUrl(config: SylphxConfig, path: string): string {
+	return `${config.platformUrl}/api/sdk${path}`
+}
+
+/**
+ * Make a REST API call and handle errors
+ */
+async function callRest<TOutput>(
+	config: SylphxConfig,
+	path: string,
+	options: {
+		method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+		body?: unknown
+	} = {}
+): Promise<TOutput> {
+	const { method = 'GET', body } = options
+	const url = buildRestUrl(config, path)
+
+	const response = await fetch(url, {
+		method,
+		headers: buildHeaders(config),
+		...(config.platformMode && { credentials: 'include' as const }),
+		...(body !== undefined && { body: JSON.stringify(body) }),
+	})
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
+		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
+	}
+
+	return response.json()
+}
+
+// ============================================================================
 // Functions
 // ============================================================================
 
@@ -94,7 +136,10 @@ export interface SessionResult {
  * ```
  */
 export async function signIn(config: SylphxConfig, input: SignInInput): Promise<SignInResult> {
-	return callTrpc<SignInInput, SignInResult>(config, 'auth.login', input, 'mutation')
+	return callRest<SignInResult>(config, '/auth/login', {
+		method: 'POST',
+		body: input,
+	})
 }
 
 /**
@@ -111,12 +156,10 @@ export async function signIn(config: SylphxConfig, input: SignInInput): Promise<
  * ```
  */
 export async function signUp(config: SylphxConfig, input: SignUpInput): Promise<SignUpResult> {
-	const result = await callTrpc<SignUpInput, { user: SignUpResult['user'] }>(
-		config,
-		'auth.register',
-		input,
-		'mutation'
-	)
+	const result = await callRest<{ user: SignUpResult['user'] }>(config, '/auth/register', {
+		method: 'POST',
+		body: input,
+	})
 	return {
 		requiresVerification: true,
 		user: result.user,
@@ -132,7 +175,7 @@ export async function signUp(config: SylphxConfig, input: SignUpInput): Promise<
  * ```
  */
 export async function signOut(config: SylphxConfig): Promise<void> {
-	await callTrpc<void, void>(config, 'auth.logout', undefined, 'mutation')
+	await callRest<void>(config, '/auth/logout', { method: 'POST' })
 }
 
 /**
@@ -196,12 +239,10 @@ export async function verifyEmail(config: SylphxConfig, token: string): Promise<
  * ```
  */
 export async function forgotPassword(config: SylphxConfig, email: string): Promise<void> {
-	await callTrpc<{ email: string }, { success: boolean }>(
-		config,
-		'auth.forgotPassword',
-		{ email },
-		'mutation'
-	)
+	await callRest<{ success: boolean }>(config, '/auth/forgot-password', {
+		method: 'POST',
+		body: { email },
+	})
 }
 
 /**
@@ -216,12 +257,10 @@ export async function resetPassword(
 	config: SylphxConfig,
 	input: { token: string; password: string }
 ): Promise<void> {
-	await callTrpc<typeof input, { success: boolean }>(
-		config,
-		'auth.resetPassword',
-		input,
-		'mutation'
-	)
+	await callRest<{ success: boolean }>(config, '/auth/reset-password', {
+		method: 'POST',
+		body: { token: input.token, newPassword: input.password },
+	})
 }
 
 /**
@@ -236,18 +275,13 @@ export async function resetPassword(
  * ```
  */
 export async function getSession(config: SylphxConfig): Promise<SessionResult> {
-	if (!config.accessToken) {
+	if (!config.accessToken && !config.platformMode) {
 		return { user: null }
 	}
 
 	try {
-		const profile = await callTrpc<void, SessionResult['user']>(
-			config,
-			'user.getProfile',
-			undefined,
-			'query'
-		)
-		return { user: profile }
+		const user = await callRest<SessionResult['user']>(config, '/auth/me')
+		return { user }
 	} catch {
 		return { user: null }
 	}
@@ -269,10 +303,8 @@ export async function verifyTwoFactor(
 	userId: string,
 	code: string
 ): Promise<TokenResult> {
-	return callTrpc<{ userId: string; code: string }, TokenResult>(
-		config,
-		'auth.verifyTwoFactor',
-		{ userId, code },
-		'mutation'
-	)
+	return callRest<TokenResult>(config, '/auth/verify-2fa', {
+		method: 'POST',
+		body: { userId, code },
+	})
 }

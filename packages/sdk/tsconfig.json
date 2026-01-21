@@ -8,7 +8,11 @@
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"noEmit": true
+		"noEmit": true,
+		"paths": {
+			"@sylphx/platform/*": ["../../apps/sylphx/src/*"],
+			"@sylphx/platform/trpc": ["../../apps/sylphx/src/server/routers/_app.ts"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist"]

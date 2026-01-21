@@ -4,18 +4,13 @@
  * This file provides the AppRouter type for SDK internal use.
  *
  * Architecture:
- * - The SDK uses AnyRouter as a base type for tRPC client creation
- * - Actual type inference happens at the consumer level when they
- *   use the SDK with their platform installation
- * - This avoids circular dependencies between SDK and Platform
+ * - SDK imports AppRouter type from Platform via project references
+ * - This is a TYPE-ONLY import (erased at compile time)
+ * - No runtime circular dependency exists
+ * - TypeScript project references handle type resolution order
  */
 
-import type { AnyRouter } from '@trpc/server'
+// Type-only import from Platform - resolved via TypeScript project references
+import type { AppRouter } from '@sylphx/platform/trpc'
 
-/**
- * AppRouter type placeholder.
- *
- * The SDK uses this as a base type. Consumers get full type inference
- * through the workspace protocol when they import from @sylphx/platform/trpc.
- */
-export type AppRouter = AnyRouter
+export type { AppRouter }

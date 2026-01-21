@@ -70,9 +70,30 @@ export {
 } from './config'
 
 // =============================================================================
-// tRPC Client (Full Type Inference)
+// REST Client (Recommended for new code)
 // =============================================================================
 
+export {
+	createRestClient,
+	createDynamicRestClient,
+	hasError,
+	getRestErrorMessage,
+	type RestClient,
+	type DynamicRestClient,
+	type RestClientConfig,
+	type RestDynamicConfig,
+	type RetryConfig,
+	type paths as RestPaths,
+} from './rest-client'
+
+// =============================================================================
+// tRPC Client (Legacy - being phased out)
+// =============================================================================
+
+/**
+ * @deprecated Use `createRestClient` or `createDynamicRestClient` instead.
+ * tRPC client will be removed in the next major version.
+ */
 export {
 	createSylphx,
 	createDynamicSylphx,

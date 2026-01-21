@@ -2,7 +2,27 @@
  * @sylphx/platform-sdk/client
  *
  * Type-safe client for the Sylphx Platform.
- * Uses tRPC with full type inference from the server.
+ *
+ * ## Recommended: REST Client
+ *
+ * @example
+ * ```typescript
+ * import { createRestClient } from '@sylphx/platform-sdk/client'
+ *
+ * const client = createRestClient({
+ *   appId: 'your-app-slug',
+ *   appSecret: process.env.SYLPHX_APP_SECRET!,
+ * })
+ *
+ * // Type-safe REST calls
+ * const { data: plans } = await client.GET('/billing/plans')
+ * const { data: user } = await client.GET('/auth/me')
+ * const { data: result } = await client.POST('/auth/login', {
+ *   body: { email, password }
+ * })
+ * ```
+ *
+ * ## Legacy: tRPC Client (being phased out)
  *
  * @example
  * ```typescript
@@ -13,14 +33,35 @@
  *   appSecret: process.env.SYLPHX_APP_SECRET!,
  * })
  *
- * // Full type inference - no manual types needed
- * const user = await sylphx.user.getProfile.query()
+ * // tRPC-style calls
  * const plans = await sylphx.billing.getPlans.query()
- * await sylphx.analytics.track.mutate({ event: 'page_view', properties: {} })
  * ```
  */
 
-// Primary exports - new tRPC-based client
+// =============================================================================
+// REST Client (Recommended)
+// =============================================================================
+
+export {
+	createRestClient,
+	createDynamicRestClient,
+	hasError,
+	getRestErrorMessage,
+	type RestClient,
+	type DynamicRestClient,
+	type RestClientConfig,
+	type RestDynamicConfig,
+	type RetryConfig,
+	type paths as RestPaths,
+} from './rest-client'
+
+// =============================================================================
+// tRPC Client (Legacy - being phased out)
+// =============================================================================
+
+/**
+ * @deprecated Use `createRestClient` instead.
+ */
 export {
 	createSylphx,
 	createDynamicSylphx,

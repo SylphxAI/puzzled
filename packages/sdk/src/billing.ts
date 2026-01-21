@@ -2,9 +2,10 @@
  * Billing Functions
  *
  * Pure functions for billing and subscriptions.
+ * Uses REST API at /api/sdk/billing/* for all operations.
  */
 
-import { type SylphxConfig, callTrpc } from './config'
+import { type SylphxConfig, buildHeaders } from './config'
 
 // ============================================================================
 // Types
@@ -49,6 +50,55 @@ export interface CheckoutInput {
 }
 
 // ============================================================================
+// Internal Helpers
+// ============================================================================
+
+/**
+ * Build REST API URL for SDK endpoints
+ */
+function buildRestUrl(config: SylphxConfig, path: string, query?: Record<string, string>): string {
+	const url = new URL(`${config.platformUrl}/api/sdk${path}`)
+	if (query) {
+		Object.entries(query).forEach(([key, value]) => {
+			if (value !== undefined) {
+				url.searchParams.set(key, value)
+			}
+		})
+	}
+	return url.toString()
+}
+
+/**
+ * Make a REST API call and handle errors
+ */
+async function callRest<TOutput>(
+	config: SylphxConfig,
+	path: string,
+	options: {
+		method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+		body?: unknown
+		query?: Record<string, string>
+	} = {}
+): Promise<TOutput> {
+	const { method = 'GET', body, query } = options
+	const url = buildRestUrl(config, path, query)
+
+	const response = await fetch(url, {
+		method,
+		headers: buildHeaders(config),
+		...(config.platformMode && { credentials: 'include' as const }),
+		...(body !== undefined && { body: JSON.stringify(body) }),
+	})
+
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
+		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
+	}
+
+	return response.json()
+}
+
+// ============================================================================
 // Functions
 // ============================================================================
 
@@ -62,7 +112,7 @@ export interface CheckoutInput {
  * ```
  */
 export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
-	return callTrpc<void, Plan[]>(config, 'billing.getPlans', undefined, 'query')
+	return callRest<Plan[]>(config, '/billing/plans')
 }
 
 /**
@@ -80,12 +130,9 @@ export async function getSubscription(
 	config: SylphxConfig,
 	userId: string
 ): Promise<Subscription | null> {
-	return callTrpc<{ userId: string }, Subscription | null>(
-		config,
-		'billing.getSubscription',
-		{ userId },
-		'query'
-	)
+	return callRest<Subscription | null>(config, '/billing/subscription', {
+		query: { userId },
+	})
 }
 
 /**
@@ -108,12 +155,10 @@ export async function createCheckout(
 	config: SylphxConfig,
 	input: CheckoutInput
 ): Promise<{ checkoutUrl: string }> {
-	return callTrpc<CheckoutInput, { checkoutUrl: string }>(
-		config,
-		'billing.createCheckout',
-		input,
-		'mutation'
-	)
+	return callRest<{ checkoutUrl: string }>(config, '/billing/checkout', {
+		method: 'POST',
+		body: input,
+	})
 }
 
 /**
@@ -133,12 +178,10 @@ export async function createPortalSession(
 	config: SylphxConfig,
 	input: { userId: string; returnUrl: string }
 ): Promise<{ portalUrl: string }> {
-	return callTrpc<typeof input, { portalUrl: string }>(
-		config,
-		'billing.createPortalSession',
-		input,
-		'mutation'
-	)
+	return callRest<{ portalUrl: string }>(config, '/billing/portal', {
+		method: 'POST',
+		body: input,
+	})
 }
 
 /**
@@ -153,12 +196,7 @@ export async function createPortalSession(
 export async function getBillingBalance(
 	config: SylphxConfig
 ): Promise<{ credits: number; currency: string }> {
-	return callTrpc<void, { credits: number; currency: string }>(
-		config,
-		'billing.getBalance',
-		undefined,
-		'query'
-	)
+	return callRest<{ credits: number; currency: string }>(config, '/billing/balance')
 }
 
 /**
@@ -173,10 +211,7 @@ export async function getBillingUsage(
 	config: SylphxConfig,
 	options?: { month?: string }
 ): Promise<Record<string, unknown>> {
-	return callTrpc<typeof options, Record<string, unknown>>(
-		config,
-		'billing.getUsage',
-		options ?? {},
-		'query'
-	)
+	return callRest<Record<string, unknown>>(config, '/billing/usage', {
+		query: options?.month ? { month: options.month } : undefined,
+	})
 }
