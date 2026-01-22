@@ -12,52 +12,19 @@
  *   - X-Sylphx-Job-Id: Job ID (for tracking)
  *   - Body: { appId, userId, payload, timestamp }
  *
- * This centralizes job scheduling through Platform for unified billing.
+ * Optimization (v2):
+ * - Jobs are now executed synchronously within the webhook handler
+ * - Eliminates the unnecessary HTTP hop to internal endpoints
+ * - Reduces 3-hop to 2-hop: Platform → QStash → App webhook (direct execution)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerBaseUrl } from '@/lib/utils'
 import { env } from '@/lib/env'
+import { executeJob, JOB_HANDLERS } from '@/lib/jobs/handlers'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-// ==========================================
-// Job Handlers Registry
-// ==========================================
-
-/**
- * Map of cron job names to their handlers
- * Each handler returns the internal endpoint to trigger
- */
-const JOB_HANDLERS: Record<string, () => { endpoint: string; body?: Record<string, unknown> }> = {
-	// Puzzle generation - daily at 23:00 UTC
-	'generate-daily-puzzles': () => ({
-		endpoint: '/api/jobs/generate-puzzles',
-	}),
-
-	// Daily reminder notifications - daily at 08:00 UTC
-	'daily-reminder': () => ({
-		endpoint: '/api/workflow/daily-reminder',
-		body: { type: 'all' },
-	}),
-
-	// Streak-at-risk notifications - daily at 18:00 UTC
-	'streak-at-risk': () => ({
-		endpoint: '/api/workflow/daily-reminder',
-		body: { type: 'streak-at-risk' },
-	}),
-
-	// Win-back emails - daily at 10:00 UTC
-	'win-back-emails': () => ({
-		endpoint: '/api/workflow/win-back-emails',
-	}),
-
-	// DLQ retry - hourly
-	'dlq-retry': () => ({
-		endpoint: '/api/jobs/dlq-retry',
-	}),
-}
+export const maxDuration = 300 // 5 minutes for long-running jobs like puzzle generation
 
 // ==========================================
 // Request Verification
@@ -118,40 +85,28 @@ export async function POST(req: NextRequest) {
 		// Body is optional
 	}
 
-	// Find handler for this job
-	const handler = JOB_HANDLERS[cronName]
-	if (!handler) {
+	// Check if we have a handler for this job
+	const handlerFactory = JOB_HANDLERS[cronName]
+	if (!handlerFactory) {
 		console.error(`${logPrefix} Unknown job: ${cronName}`)
 		return NextResponse.json({ error: `Unknown job: ${cronName}` }, { status: 404 })
 	}
 
-	// Get endpoint config
-	const config = handler()
-	const baseUrl = getServerBaseUrl()
-	const targetUrl = `${baseUrl}${config.endpoint}`
+	console.log(`${logPrefix} Executing job directly`)
 
-	console.log(`${logPrefix} Triggering: ${config.endpoint}`)
-
-	// Fire-and-forget - trigger the internal endpoint
-	fetch(targetUrl, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'x-internal-call': 'true',
-		},
-		body: JSON.stringify({
-			...config.body,
-			...payload?.payload,
-			_platformJobId: jobId,
-		}),
-	}).catch((error) => {
-		console.error(`${logPrefix} Failed to trigger ${config.endpoint}:`, error)
+	// Execute job synchronously (no HTTP hop)
+	const result = await executeJob(cronName, payload?.payload ?? {}, {
+		jobId: jobId ?? undefined,
+		timestamp: new Date(),
 	})
+
+	console.log(`${logPrefix} Job completed: ${result.success ? 'success' : 'failed'}`)
 
 	return NextResponse.json({
-		success: true,
+		success: result.success,
 		job: cronName,
-		triggered: config.endpoint,
+		result: result.data,
+		error: result.error,
 		timestamp: new Date().toISOString(),
-	})
+	}, { status: result.success ? 200 : 500 })
 }
