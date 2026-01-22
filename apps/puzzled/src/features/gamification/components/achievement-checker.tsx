@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useSafeUser, useAchievements, useStreak } from '@sylphx/sdk/react'
+import { useSafeUser, useSafeAchievements, useSafeStreak } from '@sylphx/sdk/react'
 import { trpc } from '@/trpc'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
@@ -10,7 +10,8 @@ const CHECK_INTERVAL_MS = 5000 // Don't check more than once per 5 seconds
 
 /**
  * Component that checks for new achievements after game completions
- * Uses SDK's useAchievements and useStreak hooks for Platform-managed tracking.
+ * Uses SDK's useSafeAchievements and useSafeStreak hooks for Platform-managed tracking.
+ * Safe versions handle SSR/prerendering gracefully.
  * Mount this once in the layout to enable achievement toasts.
  */
 export function AchievementChecker() {
@@ -19,17 +20,18 @@ export function AchievementChecker() {
 	const lastCheck = useRef<number>(0)
 	const hasChecked = useRef(false)
 
-	// SDK achievements hook - tracks state server-side
+	// SDK achievements hook - tracks state server-side (SSR-safe)
 	const {
 		achievements: sdkAchievements,
 		unlock,
 		recentUnlock,
 		dismissRecentUnlock,
 		isLoading: achievementsLoading,
-	} = useAchievements()
+		isConfigured: achievementsConfigured,
+	} = useSafeAchievements()
 
-	// SDK streak hook - Platform-managed streak tracking
-	const { longest: maxStreak, isLoading: streakLoading } = useStreak('daily-play', {
+	// SDK streak hook - Platform-managed streak tracking (SSR-safe)
+	const { longest: maxStreak, isLoading: streakLoading, isConfigured: streakConfigured } = useSafeStreak('daily-play', {
 		defaults: {
 			name: 'Daily Play Streak',
 			description: 'Play at least one game daily to maintain your streak',
@@ -58,7 +60,9 @@ export function AchievementChecker() {
 
 	// Check for new achievements when stats update
 	useEffect(() => {
-		if (!user || !userStats || achievementsLoading || streakLoading) return
+		// Skip if not configured (SSR/prerendering) or still loading
+		if (!user || !userStats || !achievementsConfigured || !streakConfigured) return
+		if (achievementsLoading || streakLoading) return
 
 		// Throttle checks
 		const now = Date.now()
@@ -161,7 +165,7 @@ export function AchievementChecker() {
 			wordleWins > 0 && connectionsWins > 0,
 			allGames
 		)
-	}, [user, userStats, achievementsLoading, streakLoading, maxStreak, sdkAchievements, unlock])
+	}, [user, userStats, achievementsLoading, streakLoading, achievementsConfigured, streakConfigured, maxStreak, sdkAchievements, unlock])
 
 	return null
 }

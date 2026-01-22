@@ -1,20 +1,21 @@
 'use client'
 
-import { useSafeUser, useStreak } from '@sylphx/sdk/react'
+import { useSafeUser, useSafeStreak } from '@sylphx/sdk/react'
 import { TopNav } from '@/shared/components/layout'
 
 /**
  * Client component wrapper for TopNav that fetches streak data
  *
- * Uses SDK's useStreak hook for Platform-managed streak tracking.
- * Gracefully handles when Sylphx Platform is not configured.
+ * Uses SDK's useSafeStreak hook for Platform-managed streak tracking.
+ * Gracefully handles when Sylphx Platform is not configured (SSR/prerendering).
  */
 export function LayoutTopNav() {
 	const { user } = useSafeUser()
 
-	// Use SDK's useStreak hook for Platform-managed streaks
+	// Use SDK's useSafeStreak hook for Platform-managed streaks
+	// Safe version won't throw during SSR/static generation
 	// The streak is auto-discovered with these defaults if it doesn't exist
-	const { current, isLoading } = useStreak('daily-play', {
+	const { current, isLoading, isConfigured } = useSafeStreak('daily-play', {
 		defaults: {
 			name: 'Daily Play Streak',
 			description: 'Play at least one game daily to maintain your streak',
@@ -23,8 +24,8 @@ export function LayoutTopNav() {
 		},
 	})
 
-	// Show streak only when user is authenticated and data is loaded
-	const displayStreak = user && !isLoading ? current : 0
+	// Show streak only when user is authenticated, configured, and data is loaded
+	const displayStreak = user && isConfigured && !isLoading ? current : 0
 
 	return <TopNav currentStreak={displayStreak} />
 }

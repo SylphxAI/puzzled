@@ -313,9 +313,16 @@ export {
 	useStreak,
 	useLeaderboard,
 	useAchievements,
+	// Safe versions (for SSR/prerendering)
+	useSafeStreak,
+	useSafeLeaderboard,
+	useSafeAchievements,
 	type UseStreakReturn,
 	type UseLeaderboardReturn,
 	type UseAchievementsReturn,
+	type UseSafeStreakReturn,
+	type UseSafeLeaderboardReturn,
+	type UseSafeAchievementsReturn,
 } from './engagement-hooks'
 
 // Headless Hooks (for custom UIs)

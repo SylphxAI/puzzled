@@ -49,6 +49,13 @@ function useEngagementContext() {
 	return context
 }
 
+/**
+ * Safe version that returns null if no provider (for SSR/prerendering)
+ */
+function useEngagementContextSafe() {
+	return useContext(PlatformContext)
+}
+
 // ============================================================================
 // useStreak
 // ============================================================================
@@ -499,5 +506,311 @@ export function useAchievements(): UseAchievementsReturn {
 		refresh,
 		recentUnlock,
 		dismissRecentUnlock,
+	}
+}
+
+// ============================================================================
+// Safe Versions (for SSR/prerendering)
+// ============================================================================
+
+// No-op async function for safe hooks
+const noopAsync = async () => {}
+
+/** Safe return type for useStreak when outside provider */
+export interface UseSafeStreakReturn {
+	state: StreakState | null
+	isLoading: boolean
+	error: Error | null
+	current: number
+	longest: number
+	canRecover: boolean
+	timeRemainingMs: number | null
+	userTimezone: string | null
+	recordActivity: (metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
+	recover: () => Promise<{ success: boolean; streak: StreakState }>
+	refresh: () => Promise<void>
+	isConfigured: boolean
+}
+
+/**
+ * SSR-safe version of useStreak
+ *
+ * Returns safe defaults when called outside SylphxProvider.
+ * Use this in components that may render during static generation.
+ */
+export function useSafeStreak(streakId: string, options?: UseStreakOptions): UseSafeStreakReturn {
+	const ctx = useEngagementContextSafe()
+
+	// If no context, return safe defaults
+	if (!ctx) {
+		return {
+			state: null,
+			isLoading: false,
+			error: null,
+			current: 0,
+			longest: 0,
+			canRecover: false,
+			timeRemainingMs: null,
+			userTimezone: null,
+			recordActivity: noopAsync as unknown as UseSafeStreakReturn['recordActivity'],
+			recover: noopAsync as unknown as UseSafeStreakReturn['recover'],
+			refresh: noopAsync,
+			isConfigured: false,
+		}
+	}
+
+	const { defaults, userTimezone } = options ?? {}
+
+	// React Query for streak data
+	const streakQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+		queryFn: () => ctx.getStreak(streakId, userTimezone),
+		enabled: !!ctx.user,
+		staleTime: 60 * 1000,
+	})
+
+	const state = streakQuery.data ?? null
+
+	const recordActivity = useCallback(
+		async (metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
+			const result = await ctx.recordStreakActivity(streakId, metadata, defaults, userTimezone)
+			ctx.queryClient.setQueryData(
+				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+				result.streak
+			)
+			return result
+		},
+		[ctx, streakId, defaults, userTimezone]
+	)
+
+	const recover = useCallback(async (): Promise<{ success: boolean; streak: StreakState }> => {
+		const result = await ctx.recoverStreak(streakId, userTimezone)
+		if (result.success) {
+			ctx.queryClient.setQueryData(
+				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+				result.streak
+			)
+		}
+		return result
+	}, [ctx, streakId, userTimezone])
+
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'streak', streakId],
+		})
+	}, [ctx, streakId])
+
+	return {
+		state,
+		isLoading: streakQuery.isLoading,
+		error: streakQuery.error as Error | null,
+		current: state?.current ?? 0,
+		longest: state?.longest ?? 0,
+		canRecover: state?.canRecover ?? false,
+		timeRemainingMs: state?.timeRemainingMs ?? null,
+		userTimezone: state?.userTimezone ?? null,
+		recordActivity,
+		recover,
+		refresh,
+		isConfigured: true,
+	}
+}
+
+/** Safe return type for useLeaderboard when outside provider */
+export interface UseSafeLeaderboardReturn {
+	data: LeaderboardResult | null
+	isLoading: boolean
+	error: Error | null
+	entries: LeaderboardEntry[]
+	currentUserEntry: LeaderboardEntry | null
+	totalParticipants: number
+	submitScore: (value: number, metadata?: Record<string, unknown>) => Promise<SubmitScoreResult>
+	refresh: () => Promise<void>
+	isConfigured: boolean
+}
+
+/**
+ * SSR-safe version of useLeaderboard
+ *
+ * Returns safe defaults when called outside SylphxProvider.
+ * Use this in components that may render during static generation.
+ */
+export function useSafeLeaderboard(
+	leaderboardId: string,
+	options?: LeaderboardQueryOptions,
+	defaults?: LeaderboardDefaults
+): UseSafeLeaderboardReturn {
+	const ctx = useEngagementContextSafe()
+
+	// If no context, return safe defaults
+	if (!ctx) {
+		return {
+			data: null,
+			isLoading: false,
+			error: null,
+			entries: [],
+			currentUserEntry: null,
+			totalParticipants: 0,
+			submitScore: noopAsync as unknown as UseSafeLeaderboardReturn['submitScore'],
+			refresh: noopAsync,
+			isConfigured: false,
+		}
+	}
+
+	const optionsKey = JSON.stringify(options ?? {})
+
+	const leaderboardQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
+		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
+		staleTime: 2 * 60 * 1000,
+	})
+
+	const data = leaderboardQuery.data ?? null
+
+	const submitScore = useCallback(
+		async (value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
+			const result = await ctx.submitScore(leaderboardId, value, metadata, defaults)
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
+			})
+			return result
+		},
+		[ctx, leaderboardId, defaults]
+	)
+
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
+		})
+	}, [ctx, leaderboardId])
+
+	return {
+		data,
+		isLoading: leaderboardQuery.isLoading,
+		error: leaderboardQuery.error as Error | null,
+		entries: data?.entries ?? [],
+		currentUserEntry: data?.currentUserEntry ?? null,
+		totalParticipants: data?.totalParticipants ?? 0,
+		submitScore,
+		refresh,
+		isConfigured: true,
+	}
+}
+
+/** Safe return type for useAchievements when outside provider */
+export interface UseSafeAchievementsReturn {
+	achievements: UserAchievement[]
+	isLoading: boolean
+	error: Error | null
+	unlocked: UserAchievement[]
+	locked: UserAchievement[]
+	getAchievement: (id: string) => UserAchievement | null
+	unlock: (achievementId: string, defaults?: AchievementDefaults) => Promise<AchievementUnlockEvent>
+	incrementProgress: (
+		achievementId: string,
+		amount: number,
+		defaults?: AchievementDefaults
+	) => Promise<UserAchievement>
+	refresh: () => Promise<void>
+	recentUnlock: AchievementUnlockEvent | null
+	dismissRecentUnlock: () => void
+	isConfigured: boolean
+}
+
+/**
+ * SSR-safe version of useAchievements
+ *
+ * Returns safe defaults when called outside SylphxProvider.
+ * Use this in components that may render during static generation.
+ */
+export function useSafeAchievements(): UseSafeAchievementsReturn {
+	const ctx = useEngagementContextSafe()
+	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
+
+	// If no context, return safe defaults
+	if (!ctx) {
+		return {
+			achievements: [],
+			isLoading: false,
+			error: null,
+			unlocked: [],
+			locked: [],
+			getAchievement: () => null,
+			unlock: noopAsync as unknown as UseSafeAchievementsReturn['unlock'],
+			incrementProgress: noopAsync as unknown as UseSafeAchievementsReturn['incrementProgress'],
+			refresh: noopAsync,
+			recentUnlock: null,
+			dismissRecentUnlock: () => {},
+			isConfigured: false,
+		}
+	}
+
+	const achievementsQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'achievements'],
+		queryFn: () => ctx.getAchievements(),
+		enabled: !!ctx.user,
+		staleTime: 5 * 60 * 1000,
+	})
+
+	const achievements = achievementsQuery.data ?? []
+
+	const unlocked = useMemo(() => achievements.filter((a) => a.unlocked), [achievements])
+	const locked = useMemo(() => achievements.filter((a) => !a.unlocked), [achievements])
+
+	const getAchievement = useCallback(
+		(id: string): UserAchievement | null => {
+			return achievements.find((a) => a.achievementId === id) ?? null
+		},
+		[achievements]
+	)
+
+	const unlock = useCallback(
+		async (achievementId: string, defaults?: AchievementDefaults): Promise<AchievementUnlockEvent> => {
+			const result = await ctx.unlockAchievement(achievementId, defaults)
+			if (result.isNew) {
+				setRecentUnlock(result)
+			}
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'achievements'],
+			})
+			return result
+		},
+		[ctx]
+	)
+
+	const incrementProgress = useCallback(
+		async (achievementId: string, amount: number, defaults?: AchievementDefaults): Promise<UserAchievement> => {
+			const result = await ctx.incrementAchievementProgress(achievementId, amount, defaults)
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'achievements'],
+			})
+			return result
+		},
+		[ctx]
+	)
+
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'achievements'],
+		})
+	}, [ctx])
+
+	const dismissRecentUnlock = useCallback(() => {
+		setRecentUnlock(null)
+	}, [])
+
+	return {
+		achievements,
+		isLoading: achievementsQuery.isLoading,
+		error: achievementsQuery.error as Error | null,
+		unlocked,
+		locked,
+		getAchievement,
+		unlock,
+		incrementProgress,
+		refresh,
+		recentUnlock,
+		dismissRecentUnlock,
+		isConfigured: true,
 	}
 }

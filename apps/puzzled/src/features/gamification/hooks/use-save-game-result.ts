@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { useSafeUser, useStreak, PlatformContext } from '@sylphx/sdk/react'
+import { useSafeUser, useSafeStreak, PlatformContext } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
 import { useGameAnalytics } from '@/features/analytics'
@@ -53,8 +53,8 @@ export function useSaveGameResult(gameSlug: string) {
 	// SDK Platform context for leaderboard score submission
 	const platformContext = useContext(PlatformContext)
 
-	// SDK streak hook for Platform-managed streak tracking
-	const { recordActivity } = useStreak('daily-play', {
+	// SDK streak hook for Platform-managed streak tracking (SSR-safe)
+	const { recordActivity, isConfigured: streakConfigured } = useSafeStreak('daily-play', {
 		defaults: {
 			name: 'Daily Play Streak',
 			description: 'Play at least one game daily to maintain your streak',
@@ -133,18 +133,20 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleId: input.puzzleId,
 				})
 
-				// Record streak activity to Platform (only on win)
+				// Record streak activity to Platform (only on win, if configured)
 				// This syncs Puzzled's play streak to the Platform engagement service
 				if (input.status === 'won') {
-					try {
-						await recordActivity({
-							gameSlug,
-							score: response.score,
-							puzzleId: input.puzzleId,
-						})
-					} catch {
-						// Don't fail the save if streak sync fails
-						// Platform will eventually be consistent via next activity
+					if (streakConfigured) {
+						try {
+							await recordActivity({
+								gameSlug,
+								score: response.score,
+								puzzleId: input.puzzleId,
+							})
+						} catch {
+							// Don't fail the save if streak sync fails
+							// Platform will eventually be consistent via next activity
+						}
 					}
 
 					// Submit score to Platform leaderboards (daily, weekly, all-time)
@@ -220,7 +222,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return { success: false, error: errorMessage }
 			}
 		},
-		[userId, gameSlug, mutation],
+		[userId, gameSlug, mutation, streakConfigured, recordActivity, trackGameComplete, platformContext],
 	)
 
 	const reset = useCallback(() => {
