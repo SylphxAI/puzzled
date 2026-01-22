@@ -72,6 +72,7 @@ export type {
 	CaptureMessageOptions,
 	// Callbacks
 	UploadCallback,
+	UploadResult,
 	CaptureResult,
 } from './types'
 

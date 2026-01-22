@@ -49,6 +49,10 @@ export class ErrorTracker {
 	private userEmail: string | null = null
 	private userName: string | null = null
 
+	// Adaptive sampling - server-recommended rate overrides config
+	private serverRecommendedSampleRate: number | null = null
+	private enableAdaptiveSampling = true
+
 	constructor(config: Partial<ErrorTrackingConfig> = {}) {
 		this.config = { ...DEFAULT_ERROR_CONFIG, ...config }
 	}
@@ -112,6 +116,41 @@ export class ErrorTracker {
 	}
 
 	// ==========================================
+	// Adaptive Sampling
+	// ==========================================
+
+	/**
+	 * Enable/disable adaptive sampling based on server recommendations
+	 * When enabled, server's recommendedSampleRate takes precedence over config
+	 */
+	setAdaptiveSampling(enabled: boolean): void {
+		this.enableAdaptiveSampling = enabled
+		if (!enabled) {
+			this.serverRecommendedSampleRate = null
+		}
+	}
+
+	/**
+	 * Update sample rate based on server recommendation
+	 * Called by upload callback when server returns quota feedback
+	 */
+	updateServerRecommendedSampleRate(rate: number | null): void {
+		if (this.enableAdaptiveSampling && rate !== null) {
+			this.serverRecommendedSampleRate = Math.max(0, Math.min(1, rate))
+		}
+	}
+
+	/**
+	 * Get effective sample rate (server recommendation takes precedence)
+	 */
+	getEffectiveSampleRate(): number {
+		if (this.enableAdaptiveSampling && this.serverRecommendedSampleRate !== null) {
+			return this.serverRecommendedSampleRate
+		}
+		return this.config.sampleRate
+	}
+
+	// ==========================================
 	// User & Session Context
 	// ==========================================
 
@@ -166,8 +205,9 @@ export class ErrorTracker {
 			return { eventId: '' }
 		}
 
-		// Sample rate check
-		if (Math.random() > this.config.sampleRate) {
+		// Sample rate check (uses server-recommended rate if adaptive sampling is enabled)
+		const effectiveSampleRate = this.getEffectiveSampleRate()
+		if (Math.random() > effectiveSampleRate) {
 			return { eventId: '' }
 		}
 
@@ -225,7 +265,12 @@ export class ErrorTracker {
 		// Upload
 		try {
 			if (this.uploadCallback) {
-				await this.uploadCallback(processedEvent)
+				const uploadResult = await this.uploadCallback(processedEvent)
+
+				// Update adaptive sampling based on server feedback
+				if (uploadResult.recommendedSampleRate !== undefined) {
+					this.updateServerRecommendedSampleRate(uploadResult.recommendedSampleRate)
+				}
 			}
 
 			// Clear breadcrumbs after successful send

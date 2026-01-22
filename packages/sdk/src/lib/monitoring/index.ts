@@ -70,6 +70,7 @@ export type {
 	CaptureMessageOptions,
 	// Callbacks
 	UploadCallback as ErrorUploadCallback,
+	UploadResult as ErrorUploadResult,
 	CaptureResult,
 } from './error-tracking'
 

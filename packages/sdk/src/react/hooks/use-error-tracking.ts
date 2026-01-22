@@ -274,9 +274,16 @@ export function useEnhancedErrorTracking(
 // Helpers
 // ==========================================
 
+interface UploadResponse {
+	eventId: string
+	isNewError?: boolean
+	recommendedSampleRate?: number
+	quotaUsage?: number
+}
+
 function createDefaultUploadHandler(
 	endpoint: string
-): (event: unknown) => Promise<{ eventId: string }> {
+): (event: unknown) => Promise<UploadResponse> {
 	return async (event: unknown) => {
 		const response = await fetch(endpoint, {
 			method: 'POST',
@@ -287,11 +294,34 @@ function createDefaultUploadHandler(
 		})
 
 		if (!response.ok) {
+			// Try to extract quota feedback from error response
+			try {
+				const errorData = await response.json() as {
+					error?: { message: string }
+					recommendedSampleRate?: number
+					quotaUsage?: number
+				}
+				// Return with quota feedback for adaptive sampling even on error
+				if (errorData.recommendedSampleRate !== undefined) {
+					return {
+						eventId: '',
+						recommendedSampleRate: errorData.recommendedSampleRate,
+						quotaUsage: errorData.quotaUsage,
+					}
+				}
+			} catch {
+				// Ignore JSON parse error
+			}
 			throw new Error(`Upload failed: ${response.status}`)
 		}
 
-		const data = (await response.json()) as { eventId: string }
-		return { eventId: data.eventId }
+		const data = await response.json() as UploadResponse
+		return {
+			eventId: data.eventId,
+			isNewError: data.isNewError,
+			recommendedSampleRate: data.recommendedSampleRate,
+			quotaUsage: data.quotaUsage,
+		}
 	}
 }
 

@@ -294,7 +294,20 @@ export interface CaptureMessageOptions {
 /**
  * Upload callback
  */
-export type UploadCallback = (event: ErrorEvent) => Promise<{ eventId: string }>
+export type UploadCallback = (event: ErrorEvent) => Promise<UploadResult>
+
+/**
+ * Upload result from server
+ */
+export interface UploadResult {
+	eventId: string
+	/** Whether this is a new unique error (vs duplicate) */
+	isNewError?: boolean
+	/** Server-recommended sample rate based on quota usage (0-1) */
+	recommendedSampleRate?: number
+	/** Current quota usage percentage (0-100+) */
+	quotaUsage?: number
+}
 
 /**
  * Capture result
