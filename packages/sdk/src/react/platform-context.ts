@@ -9,6 +9,7 @@
  */
 
 import { createContext } from 'react'
+import type { QueryClient } from '@tanstack/react-query'
 import type {
 	Plan,
 	Subscription,
@@ -194,6 +195,8 @@ export interface PlatformContextValue {
 	platformUrl: string
 	/** Anonymous ID for tracking (persisted in localStorage) */
 	anonymousId: string
+	/** React Query client for hooks to use caching/deduplication */
+	queryClient: QueryClient
 	/**
 	 * Auto-captured click IDs for conversion attribution
 	 * Captured from URL on provider mount (gclid, fbclid, ttclid)

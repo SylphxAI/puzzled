@@ -3,15 +3,28 @@
  *
  * React hooks for Sylphx Platform webhooks service.
  * Configure webhooks, view deliveries, and replay failed attempts.
+ *
+ * ## React Query Integration
+ *
+ * All hooks use React Query for:
+ * - Automatic caching and deduplication
+ * - Stale-while-revalidate updates
+ * - Background refetching with refetchInterval
+ * - Infinite query for paginated deliveries
  */
 
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import {
-	useWebhooksContext,
-} from './services-context'
-import type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, WebhookStatsPeriod, WebhookStats } from '../types'
+import { useCallback } from 'react'
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { useWebhooksContext } from './services-context'
+import type {
+	WebhookEnvironment,
+	WebhookDelivery,
+	WebhookDeliveryStatus,
+	WebhookStatsPeriod,
+	WebhookStats,
+} from '../types'
 
 // Re-export types for convenience
 export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, WebhookStatsPeriod, WebhookStats }
@@ -86,59 +99,46 @@ export interface UseWebhooksReturn {
  */
 export function useWebhooks(): UseWebhooksReturn {
 	const ctx = useWebhooksContext()
-	const [environments, setEnvironments] = useState<WebhookEnvironment[]>([])
-	const [supportedEvents, setSupportedEvents] = useState<string[]>([])
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
+	const queryClient = useQueryClient()
 
-	const refresh = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
+	// React Query for webhook config
+	const configQuery = useQuery({
+		queryKey: ['sylphx', 'webhooks', 'config'],
+		queryFn: () => ctx.getConfig(),
+		staleTime: 5 * 60 * 1000, // 5 min - config rarely changes
+	})
 
-		try {
-			const config = await ctx.getConfig()
-			setEnvironments(config.environments)
-			setSupportedEvents(config.supportedEvents ?? [])
-		} catch (err) {
-			const error = err instanceof Error ? err : new Error('Failed to fetch webhook config')
-			setError(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx])
+	const config = configQuery.data
 
-	// Initial fetch
-	useEffect(() => {
-		refresh()
-	}, [refresh])
-
+	// Update config
 	const updateConfig = useCallback(
 		async (options: {
 			environmentId: string
 			webhookUrl: string | null
 			regenerateSecret?: boolean
 		}) => {
-			setError(null)
-
-			try {
-				const result = await ctx.updateConfig(options)
-				// Refresh to get updated state
-				await refresh()
-				return result
-			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to update webhook config')
-				setError(error)
-				throw error
-			}
+			const result = await ctx.updateConfig(options)
+			// Invalidate to get updated state
+			await queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'webhooks', 'config'],
+			})
+			return result
 		},
-		[ctx, refresh]
+		[ctx, queryClient]
 	)
 
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'webhooks', 'config'],
+		})
+	}, [queryClient])
+
 	return {
-		environments,
-		supportedEvents,
-		isLoading,
-		error,
+		environments: config?.environments ?? [],
+		supportedEvents: config?.supportedEvents ?? [],
+		isLoading: configQuery.isLoading,
+		error: configQuery.error as Error | null,
 		updateConfig,
 		refresh,
 	}
@@ -153,21 +153,23 @@ export interface UseWebhookDeliveriesOptions {
 	status?: WebhookDeliveryStatus
 	/** Filter by event type */
 	event?: string
-	/** Number of deliveries to fetch */
+	/** Number of deliveries to fetch per page */
 	limit?: number
 	/** Whether to skip initial fetch */
 	skip?: boolean
-	/** Refetch interval in ms */
+	/** Refetch interval in ms (uses React Query's refetchInterval) */
 	refetchInterval?: number
 }
 
 export interface UseWebhookDeliveriesReturn {
-	/** Webhook deliveries */
+	/** Webhook deliveries (all loaded pages) */
 	deliveries: WebhookDelivery[]
 	/** Total count of matching deliveries */
 	total: number
 	/** Whether deliveries are loading */
 	isLoading: boolean
+	/** Whether fetching next page */
+	isFetchingNextPage: boolean
 	/** Last error */
 	error: Error | null
 	/** Replay a delivery */
@@ -183,12 +185,15 @@ export interface UseWebhookDeliveriesReturn {
 /**
  * Hook for viewing webhook delivery history
  *
+ * Uses React Query's useInfiniteQuery for efficient pagination.
+ *
  * @example
  * ```tsx
  * function WebhookDeliveries() {
- *   const { deliveries, isLoading, replay, refresh } = useWebhookDeliveries({
+ *   const { deliveries, isLoading, replay, refresh, loadMore, hasMore } = useWebhookDeliveries({
  *     status: 'failed',
  *     limit: 50,
+ *     refetchInterval: 30000, // Auto-refresh every 30s
  *   })
  *
  *   return (
@@ -216,6 +221,9 @@ export interface UseWebhookDeliveriesReturn {
  *           ))}
  *         </tbody>
  *       </table>
+ *       {hasMore && (
+ *         <button onClick={loadMore}>Load More</button>
+ *       )}
  *     </div>
  *   )
  * }
@@ -226,90 +234,68 @@ export function useWebhookDeliveries(
 ): UseWebhookDeliveriesReturn {
 	const { status, event, limit = 50, skip = false, refetchInterval } = options
 	const ctx = useWebhooksContext()
-	const [deliveries, setDeliveries] = useState<WebhookDelivery[]>([])
-	const [total, setTotal] = useState(0)
-	const [isLoading, setIsLoading] = useState(!skip)
-	const [error, setError] = useState<Error | null>(null)
-	const [offset, setOffset] = useState(0)
+	const queryClient = useQueryClient()
 
-	const refresh = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-		setOffset(0)
+	// React Query infinite query for paginated deliveries
+	const deliveriesQuery = useInfiniteQuery({
+		queryKey: ['sylphx', 'webhooks', 'deliveries', { status, event, limit }],
+		queryFn: async ({ pageParam = 0 }) => {
+			return ctx.getDeliveries({ status, event, limit, offset: pageParam })
+		},
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages) => {
+			const loadedCount = allPages.reduce((sum, page) => sum + page.deliveries.length, 0)
+			if (loadedCount >= lastPage.total) {
+				return undefined // No more pages
+			}
+			return loadedCount // Next offset
+		},
+		enabled: !skip,
+		staleTime: 30 * 1000, // 30 sec - deliveries change moderately
+		refetchInterval: refetchInterval ?? false,
+	})
 
-		try {
-			const result = await ctx.getDeliveries({ status, event, limit, offset: 0 })
-			setDeliveries(result.deliveries)
-			setTotal(result.total)
-		} catch (err) {
-			const error = err instanceof Error ? err : new Error('Failed to fetch deliveries')
-			setError(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, status, event, limit])
+	// Flatten all pages into single deliveries array
+	const deliveries = deliveriesQuery.data?.pages.flatMap((page) => page.deliveries) ?? []
+	const total = deliveriesQuery.data?.pages[0]?.total ?? 0
 
-	const loadMore = useCallback(async () => {
-		if (isLoading || deliveries.length >= total) return
-
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			const newOffset = offset + limit
-			const result = await ctx.getDeliveries({ status, event, limit, offset: newOffset })
-			setDeliveries((prev) => [...prev, ...result.deliveries])
-			setOffset(newOffset)
-		} catch (err) {
-			const error = err instanceof Error ? err : new Error('Failed to load more deliveries')
-			setError(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, status, event, limit, offset, isLoading, deliveries.length, total])
-
-	// Initial fetch
-	useEffect(() => {
-		if (!skip) {
-			refresh()
-		}
-	}, [skip, refresh])
-
-	// Refetch interval
-	useEffect(() => {
-		if (refetchInterval && refetchInterval > 0) {
-			const interval = setInterval(refresh, refetchInterval)
-			return () => clearInterval(interval)
-		}
-	}, [refetchInterval, refresh])
-
+	// Replay delivery
 	const replay = useCallback(
 		async (deliveryId: string): Promise<{ success: boolean; newDeliveryId?: string }> => {
-			setError(null)
-
-			try {
-				const result = await ctx.replayDelivery(deliveryId)
-				// Refresh to get updated status
-				await refresh()
-				return result
-			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to replay delivery')
-				setError(error)
-				throw error
-			}
+			const result = await ctx.replayDelivery(deliveryId)
+			// Invalidate to get updated status
+			await queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'webhooks', 'deliveries'],
+			})
+			return result
 		},
-		[ctx, refresh]
+		[ctx, queryClient]
 	)
+
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'webhooks', 'deliveries'],
+		})
+	}, [queryClient])
+
+	// Load more via fetchNextPage
+	const loadMore = useCallback(async () => {
+		if (deliveriesQuery.hasNextPage && !deliveriesQuery.isFetchingNextPage) {
+			await deliveriesQuery.fetchNextPage()
+		}
+	}, [deliveriesQuery])
 
 	return {
 		deliveries,
 		total,
-		isLoading,
-		error,
+		isLoading: deliveriesQuery.isLoading,
+		isFetchingNextPage: deliveriesQuery.isFetchingNextPage,
+		error: deliveriesQuery.error as Error | null,
 		replay,
 		refresh,
 		loadMore,
-		hasMore: deliveries.length < total,
+		hasMore: deliveriesQuery.hasNextPage ?? false,
 	}
 }
 
@@ -348,38 +334,28 @@ export interface UseWebhookStatsReturn {
  * }
  * ```
  */
-export function useWebhookStats(
-	period: WebhookStatsPeriod = 'week'
-): UseWebhookStatsReturn {
+export function useWebhookStats(period: WebhookStatsPeriod = 'week'): UseWebhookStatsReturn {
 	const ctx = useWebhooksContext()
-	const [stats, setStats] = useState<WebhookStats | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
+	const queryClient = useQueryClient()
 
+	// React Query for webhook stats
+	const statsQuery = useQuery({
+		queryKey: ['sylphx', 'webhooks', 'stats', period],
+		queryFn: () => ctx.getStats(period),
+		staleTime: 2 * 60 * 1000, // 2 min - stats aggregate data
+	})
+
+	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			const result = await ctx.getStats(period)
-			setStats(result)
-		} catch (err) {
-			const error = err instanceof Error ? err : new Error('Failed to fetch webhook stats')
-			setError(error)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, period])
-
-	// Initial fetch
-	useEffect(() => {
-		refresh()
-	}, [refresh])
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'webhooks', 'stats', period],
+		})
+	}, [queryClient, period])
 
 	return {
-		stats,
-		isLoading,
-		error,
+		stats: statsQuery.data ?? null,
+		isLoading: statsQuery.isLoading,
+		error: statsQuery.error as Error | null,
 		refresh,
 	}
 }

@@ -9,11 +9,19 @@
  * - Entities are auto-discovered when first referenced
  * - No config required - just use the hooks
  * - Console can override values without deployment
+ *
+ * ## React Query Integration
+ *
+ * All hooks use React Query for:
+ * - Automatic caching and deduplication
+ * - Stale-while-revalidate updates
+ * - Background refetching
  */
 
 'use client'
 
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import type {
 	AchievementUnlockEvent,
 	LeaderboardEntry,
@@ -132,39 +140,26 @@ export interface UseStreakOptions {
 export function useStreak(streakId: string, options?: UseStreakOptions): UseStreakReturn {
 	const { defaults, userTimezone } = options ?? {}
 	const ctx = useEngagementContext()
-	const [state, setState] = useState<StreakState | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
 
-	// Fetch streak state
-	const refresh = useCallback(async () => {
-		if (!ctx.user) {
-			setIsLoading(false)
-			return
-		}
+	// React Query for streak data
+	const streakQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+		queryFn: () => ctx.getStreak(streakId, userTimezone),
+		enabled: !!ctx.user,
+		staleTime: 60 * 1000, // 1 min - streaks can change frequently
+	})
 
-		try {
-			setIsLoading(true)
-			const streakState = await ctx.getStreak(streakId, userTimezone)
-			setState(streakState)
-			setError(null)
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to fetch streak'))
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, streakId, userTimezone])
-
-	// Initial fetch
-	useEffect(() => {
-		refresh()
-	}, [refresh])
+	const state = streakQuery.data ?? null
 
 	// Record activity (passes inline defaults for auto-discovery and timezone)
 	const recordActivity = useCallback(
 		async (metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
 			const result = await ctx.recordStreakActivity(streakId, metadata, defaults, userTimezone)
-			setState(result.streak)
+			// Update cache with new streak state
+			ctx.queryClient.setQueryData(
+				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+				result.streak
+			)
 			return result
 		},
 		[ctx, streakId, defaults, userTimezone]
@@ -174,15 +169,25 @@ export function useStreak(streakId: string, options?: UseStreakOptions): UseStre
 	const recover = useCallback(async (): Promise<{ success: boolean; streak: StreakState }> => {
 		const result = await ctx.recoverStreak(streakId, userTimezone)
 		if (result.success) {
-			setState(result.streak)
+			ctx.queryClient.setQueryData(
+				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+				result.streak
+			)
 		}
 		return result
 	}, [ctx, streakId, userTimezone])
 
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'streak', streakId],
+		})
+	}, [ctx, streakId])
+
 	return {
 		state,
-		isLoading,
-		error,
+		isLoading: streakQuery.isLoading,
+		error: streakQuery.error as Error | null,
 		current: state?.current ?? 0,
 		longest: state?.longest ?? 0,
 		canRecover: state?.canRecover ?? false,
@@ -268,48 +273,43 @@ export function useLeaderboard(
 	defaults?: LeaderboardDefaults
 ): UseLeaderboardReturn {
 	const ctx = useEngagementContext()
-	const [data, setData] = useState<LeaderboardResult | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
 
-	// Stable options reference
+	// Stable key for options
 	const optionsKey = JSON.stringify(options ?? {})
 
-	// Fetch leaderboard
-	const refresh = useCallback(async () => {
-		try {
-			setIsLoading(true)
-			const result = await ctx.getLeaderboard(leaderboardId, options)
-			setData(result)
-			setError(null)
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to fetch leaderboard'))
-		} finally {
-			setIsLoading(false)
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ctx, leaderboardId, optionsKey])
+	// React Query for leaderboard data
+	const leaderboardQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
+		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
+		staleTime: 2 * 60 * 1000, // 2 min - leaderboards change moderately
+	})
 
-	// Initial fetch
-	useEffect(() => {
-		refresh()
-	}, [refresh])
+	const data = leaderboardQuery.data ?? null
 
 	// Submit score (passes inline defaults for auto-discovery)
 	const submitScore = useCallback(
 		async (value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
 			const result = await ctx.submitScore(leaderboardId, value, metadata, defaults)
-			// Refresh to get updated rankings
-			await refresh()
+			// Invalidate to get updated rankings
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
+			})
 			return result
 		},
-		[ctx, leaderboardId, refresh, defaults]
+		[ctx, leaderboardId, defaults]
 	)
+
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
+		})
+	}, [ctx, leaderboardId])
 
 	return {
 		data,
-		isLoading,
-		error,
+		isLoading: leaderboardQuery.isLoading,
+		error: leaderboardQuery.error as Error | null,
 		entries: data?.entries ?? [],
 		currentUserEntry: data?.currentUserEntry ?? null,
 		totalParticipants: data?.totalParticipants ?? 0,
@@ -422,34 +422,17 @@ export interface UseAchievementsReturn {
  */
 export function useAchievements(): UseAchievementsReturn {
 	const ctx = useEngagementContext()
-	const [achievements, setAchievements] = useState<UserAchievement[]>([])
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
 	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
 
-	// Fetch achievements
-	const refresh = useCallback(async () => {
-		if (!ctx.user) {
-			setIsLoading(false)
-			return
-		}
+	// React Query for achievements data
+	const achievementsQuery = useQuery({
+		queryKey: ['sylphx', ctx.appId, 'achievements'],
+		queryFn: () => ctx.getAchievements(),
+		enabled: !!ctx.user,
+		staleTime: 5 * 60 * 1000, // 5 min - achievements don't change often
+	})
 
-		try {
-			setIsLoading(true)
-			const userAchievements = await ctx.getAchievements()
-			setAchievements(userAchievements)
-			setError(null)
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to fetch achievements'))
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx])
-
-	// Initial fetch
-	useEffect(() => {
-		refresh()
-	}, [refresh])
+	const achievements = achievementsQuery.data ?? []
 
 	// Computed values
 	const unlocked = useMemo(() => achievements.filter((a) => a.unlocked), [achievements])
@@ -470,21 +453,34 @@ export function useAchievements(): UseAchievementsReturn {
 			if (result.isNew) {
 				setRecentUnlock(result)
 			}
-			await refresh()
+			// Invalidate to get updated achievements list
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'achievements'],
+			})
 			return result
 		},
-		[ctx, refresh]
+		[ctx]
 	)
 
 	// Increment progress (passes inline defaults for auto-discovery)
 	const incrementProgress = useCallback(
 		async (achievementId: string, amount: number, defaults?: AchievementDefaults): Promise<UserAchievement> => {
 			const result = await ctx.incrementAchievementProgress(achievementId, amount, defaults)
-			await refresh()
+			// Invalidate to get updated achievements list
+			void ctx.queryClient.invalidateQueries({
+				queryKey: ['sylphx', ctx.appId, 'achievements'],
+			})
 			return result
 		},
-		[ctx, refresh]
+		[ctx]
 	)
+
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await ctx.queryClient.invalidateQueries({
+			queryKey: ['sylphx', ctx.appId, 'achievements'],
+		})
+	}, [ctx])
 
 	// Dismiss recent unlock
 	const dismissRecentUnlock = useCallback(() => {
@@ -493,8 +489,8 @@ export function useAchievements(): UseAchievementsReturn {
 
 	return {
 		achievements,
-		isLoading,
-		error,
+		isLoading: achievementsQuery.isLoading,
+		error: achievementsQuery.error as Error | null,
 		unlocked,
 		locked,
 		getAchievement,
@@ -505,4 +501,3 @@ export function useAchievements(): UseAchievementsReturn {
 		dismissRecentUnlock,
 	}
 }
-

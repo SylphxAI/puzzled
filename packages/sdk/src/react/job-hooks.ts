@@ -10,6 +10,7 @@
 'use client'
 
 import { useCallback, useState, useEffect, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
 	useJobsContext,
 	type JobStatus,
@@ -326,8 +327,8 @@ export interface UseJobProgressReturn {
 /**
  * Hook for tracking job progress with polling
  *
- * Polls the job status at a configurable interval and provides
- * progress information including phase, percentage, and timing.
+ * Uses React Query for automatic polling with configurable interval.
+ * Automatically stops polling when job completes, fails, or is cancelled.
  *
  * @example
  * ```tsx
@@ -402,19 +403,73 @@ export function useJobProgress(
 	} = options
 
 	const ctx = useJobsContext()
-	const [job, setJob] = useState<Job | null>(null)
-	const [isPolling, setIsPolling] = useState(false)
-	const [error, setError] = useState<Error | null>(null)
+	const queryClient = useQueryClient()
 
+	// Track whether we should continue polling
+	const [shouldPoll, setShouldPoll] = useState(!!jobId)
 	const pollCountRef = useRef(0)
 	const previousStatusRef = useRef<JobStatus | null>(null)
-	const startTimeRef = useRef<number | null>(null)
-	const intervalRef = useRef<NodeJS.Timeout | null>(null)
+	const startTimeRef = useRef<number>(Date.now())
+	const callbacksFiredRef = useRef<{ complete: boolean; failed: boolean }>({ complete: false, failed: false })
+
+	// Reset state when jobId changes
+	useEffect(() => {
+		if (jobId) {
+			setShouldPoll(true)
+			pollCountRef.current = 0
+			startTimeRef.current = Date.now()
+			previousStatusRef.current = null
+			callbacksFiredRef.current = { complete: false, failed: false }
+		} else {
+			setShouldPoll(false)
+		}
+	}, [jobId])
+
+	// React Query for job polling
+	const jobQuery = useQuery({
+		queryKey: ['sylphx', 'job', 'progress', jobId],
+		queryFn: () => ctx.getJob(jobId!),
+		enabled: !!jobId && shouldPoll,
+		staleTime: 0, // Always refetch for progress tracking
+		refetchInterval: shouldPoll ? pollInterval : false,
+	})
+
+	const job = jobQuery.data ?? null
+
+	// Handle status changes and callbacks
+	useEffect(() => {
+		if (!job) return
+
+		const currentStatus = job.status as JobStatus
+		pollCountRef.current++
+
+		// Fire status change callback
+		if (previousStatusRef.current !== currentStatus) {
+			onStatusChange?.(job, previousStatusRef.current)
+			previousStatusRef.current = currentStatus
+		}
+
+		// Handle terminal states
+		const isTerminal = ['completed', 'failed', 'cancelled'].includes(currentStatus)
+
+		if (currentStatus === 'completed' && !callbacksFiredRef.current.complete) {
+			callbacksFiredRef.current.complete = true
+			onComplete?.(job)
+		} else if (currentStatus === 'failed' && !callbacksFiredRef.current.failed) {
+			callbacksFiredRef.current.failed = true
+			onFailed?.(job, job.lastError ?? null)
+		}
+
+		// Stop polling on terminal state or max polls reached
+		if ((isTerminal && stopOnComplete) || pollCountRef.current >= maxPolls) {
+			setShouldPoll(false)
+		}
+	}, [job, stopOnComplete, maxPolls, onComplete, onFailed, onStatusChange])
 
 	// Calculate progress based on job status
 	const calculateProgress = useCallback((job: Job | null): JobProgress => {
 		const now = Date.now()
-		const startTime = startTimeRef.current ?? now
+		const startTime = startTimeRef.current
 
 		if (!job) {
 			return {
@@ -490,7 +545,6 @@ export function useJobProgress(
 		}
 
 		// Estimate remaining time based on average completion time
-		// This is a simple estimate; could be enhanced with historical data
 		let estimatedRemainingMs: number | null = null
 		if (isInProgress && elapsedMs > 0 && progress > 0 && progress < 100) {
 			const progressRate = progress / elapsedMs
@@ -509,139 +563,34 @@ export function useJobProgress(
 		}
 	}, [])
 
-	// Fetch job status
-	const fetchJob = useCallback(async (): Promise<Job | null> => {
-		if (!jobId) return null
-
-		try {
-			const jobData = await ctx.getJob(jobId)
-			return jobData
-		} catch (err) {
-			const fetchError = err instanceof Error ? err : new Error('Failed to fetch job')
-			setError(fetchError)
-			return null
-		}
-	}, [ctx, jobId])
-
-	// Polling logic
-	const poll = useCallback(async () => {
-		pollCountRef.current++
-
-		const jobData = await fetchJob()
-		if (!jobData) return
-
-		// Check for status change
-		const currentStatus = jobData.status as JobStatus
-		if (previousStatusRef.current !== currentStatus) {
-			onStatusChange?.(jobData, previousStatusRef.current)
-			previousStatusRef.current = currentStatus
-		}
-
-		setJob(jobData)
-
-		// Check for completion/failure
-		if (currentStatus === 'completed') {
-			onComplete?.(jobData)
-			if (stopOnComplete) {
-				setIsPolling(false)
-				if (intervalRef.current) {
-					clearInterval(intervalRef.current)
-					intervalRef.current = null
-				}
-			}
-		} else if (currentStatus === 'failed') {
-			onFailed?.(jobData, jobData.lastError ?? null)
-			if (stopOnComplete) {
-				setIsPolling(false)
-				if (intervalRef.current) {
-					clearInterval(intervalRef.current)
-					intervalRef.current = null
-				}
-			}
-		} else if (currentStatus === 'cancelled') {
-			if (stopOnComplete) {
-				setIsPolling(false)
-				if (intervalRef.current) {
-					clearInterval(intervalRef.current)
-					intervalRef.current = null
-				}
-			}
-		}
-
-		// Check max polls
-		if (pollCountRef.current >= maxPolls) {
-			setIsPolling(false)
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current)
-				intervalRef.current = null
-			}
-		}
-	}, [fetchJob, maxPolls, onComplete, onFailed, onStatusChange, stopOnComplete])
-
 	// Start polling
 	const start = useCallback(() => {
-		if (!jobId || isPolling) return
-
-		setIsPolling(true)
-		setError(null)
+		if (!jobId) return
 		pollCountRef.current = 0
 		startTimeRef.current = Date.now()
-
-		// Initial fetch
-		poll()
-
-		// Start interval
-		intervalRef.current = setInterval(poll, pollInterval)
-	}, [jobId, isPolling, poll, pollInterval])
+		callbacksFiredRef.current = { complete: false, failed: false }
+		setShouldPoll(true)
+	}, [jobId])
 
 	// Stop polling
 	const stop = useCallback(() => {
-		setIsPolling(false)
-		if (intervalRef.current) {
-			clearInterval(intervalRef.current)
-			intervalRef.current = null
-		}
+		setShouldPoll(false)
 	}, [])
 
-	// Manual refresh
+	// Manual refresh via React Query invalidation
 	const refresh = useCallback(async () => {
-		const jobData = await fetchJob()
-		if (jobData) {
-			setJob(jobData)
-		}
-	}, [fetchJob])
-
-	// Auto-start polling when jobId changes
-	useEffect(() => {
-		if (jobId) {
-			start()
-		} else {
-			stop()
-			setJob(null)
-			previousStatusRef.current = null
-		}
-
-		return () => {
-			stop()
-		}
-	}, [jobId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Cleanup on unmount
-	useEffect(() => {
-		return () => {
-			if (intervalRef.current) {
-				clearInterval(intervalRef.current)
-			}
-		}
-	}, [])
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'job', 'progress', jobId],
+		})
+	}, [queryClient, jobId])
 
 	const progress = calculateProgress(job)
 
 	return {
 		job,
 		progress,
-		isPolling,
-		error,
+		isPolling: shouldPoll && jobQuery.isFetching,
+		error: jobQuery.error as Error | null,
 		start,
 		stop,
 		refresh,

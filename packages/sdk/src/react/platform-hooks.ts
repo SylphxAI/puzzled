@@ -6,7 +6,8 @@
 
 'use client'
 
-import { useContext, useCallback, useState, useEffect } from 'react'
+import { useContext, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
 	PlatformContext,
 	type Subscription,
@@ -583,6 +584,8 @@ export interface UseAnalyticsQueryReturn {
 /**
  * Hook for querying analytics data
  *
+ * Uses React Query for automatic caching, deduplication, and background refetching.
+ *
  * @example
  * ```tsx
  * function AnalyticsDashboard() {
@@ -593,6 +596,7 @@ export interface UseAnalyticsQueryReturn {
  *       groupBy: ['day'],
  *       metrics: ['count'],
  *     },
+ *     refetchInterval: 60000, // Auto-refresh every minute
  *   })
  *
  *   if (isLoading) return <Spinner />
@@ -609,53 +613,31 @@ export interface UseAnalyticsQueryReturn {
  */
 export function useAnalyticsQuery(options: UseAnalyticsQueryOptions): UseAnalyticsQueryReturn {
 	const ctx = usePlatformContext()
-	const [data, setData] = useState<AnalyticsQueryResult | null>(null)
-	const [isLoading, setIsLoading] = useState(!options.skip)
-	const [isInitialized, setIsInitialized] = useState(false)
-	const [error, setError] = useState<Error | null>(null)
+	const queryClient = useQueryClient()
 
-	// Stable query reference to prevent infinite loops when query object is inline
-	const queryKey = JSON.stringify(options.query)
+	// Stable query key from options
+	const queryKey = ['sylphx', ctx.appId, 'analytics', options.query] as const
 
+	// React Query for analytics data
+	const analyticsQuery = useQuery({
+		queryKey,
+		queryFn: () => ctx.queryAnalytics(options.query),
+		enabled: !options.skip,
+		staleTime: 60 * 1000, // 1 min - analytics data is often time-sensitive
+		refetchInterval: options.refetchInterval ?? false,
+	})
+
+	// Refetch via React Query invalidation
 	const refetch = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			// Call the analytics query API
-			const result = await ctx.queryAnalytics(options.query)
-			setData(result)
-			setIsInitialized(true)
-		} catch (err) {
-			const error = err instanceof Error ? err : new Error('Analytics query failed')
-			setError(error)
-		} finally {
-			setIsLoading(false)
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps -- queryKey is stable serialization of options.query
-	}, [ctx, queryKey])
-
-	// Initial fetch
-	useEffect(() => {
-		if (!options.skip) {
-			refetch()
-		}
-	}, [options.skip, refetch])
-
-	// Refetch interval
-	useEffect(() => {
-		if (options.refetchInterval && options.refetchInterval > 0) {
-			const interval = setInterval(refetch, options.refetchInterval)
-			return () => clearInterval(interval)
-		}
-	}, [options.refetchInterval, refetch])
+		await queryClient.invalidateQueries({ queryKey })
+	}, [queryClient, queryKey])
 
 	return {
-		data,
-		isLoading,
-		isInitialized,
-		error,
-		isError: error !== null,
+		data: analyticsQuery.data ?? null,
+		isLoading: analyticsQuery.isLoading,
+		isInitialized: analyticsQuery.isFetched,
+		error: analyticsQuery.error as Error | null,
+		isError: analyticsQuery.isError,
 		refetch,
 	}
 }
