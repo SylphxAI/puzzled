@@ -5,9 +5,75 @@
  * Displays the puzzle grid with row/column clues
  */
 
+import { memo, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 import type { CellState, NonogramPuzzleData } from '../types'
+
+type CellProps = {
+	cell: CellState
+	row: number
+	col: number
+	isSelected: boolean
+	puzzleWidth: number
+	puzzleHeight: number
+	disabled: boolean
+	onClick: (row: number, col: number) => void
+	onRightClick: (row: number, col: number) => void
+}
+
+/**
+ * Memoized nonogram cell - only re-renders when its props change
+ */
+const NonogramCell = memo(function NonogramCell({
+	cell,
+	row,
+	col,
+	isSelected,
+	puzzleWidth,
+	puzzleHeight,
+	disabled,
+	onClick,
+	onRightClick,
+}: CellProps) {
+	const handleClick = useCallback(() => onClick(row, col), [onClick, row, col])
+	const handleContextMenu = useCallback(
+		(e: React.MouseEvent) => {
+			e.preventDefault()
+			onRightClick(row, col)
+		},
+		[onRightClick, row, col],
+	)
+
+	return (
+		<button
+			type="button"
+			onClick={handleClick}
+			onContextMenu={handleContextMenu}
+			disabled={disabled}
+			className={cn(
+				'w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8',
+				'border border-border/50',
+				'transition-colors duration-75',
+				'flex items-center justify-center',
+				'text-base sm:text-lg font-bold',
+				// Grid lines every 5 cells
+				col % 5 === 4 && col < puzzleWidth - 1 && 'border-r-2 border-r-primary/30',
+				row % 5 === 4 && row < puzzleHeight - 1 && 'border-b-2 border-b-primary/30',
+				// Cell states
+				cell === 'filled' && 'bg-foreground',
+				cell === 'marked' && 'bg-muted',
+				cell === 'empty' && 'bg-background hover:bg-muted/50',
+				// Selection
+				isSelected && 'ring-2 ring-primary ring-inset',
+				// Disabled
+				disabled && 'cursor-not-allowed opacity-50',
+			)}
+		>
+			{cell === 'marked' && <span className="text-muted-foreground text-sm">×</span>}
+		</button>
+	)
+})
 
 type NonogramGridProps = {
 	puzzle: NonogramPuzzleData
@@ -33,13 +99,24 @@ export function NonogramGrid({
 	disabled = false,
 }: NonogramGridProps) {
 	// Calculate max clue length for sizing
-	const maxRowClues = Math.max(...puzzle.rowClues.map((c) => c.length))
-	const maxColClues = Math.max(...puzzle.colClues.map((c) => c.length))
+	const maxRowClues = useMemo(
+		() => Math.max(...puzzle.rowClues.map((c) => c.length)),
+		[puzzle.rowClues],
+	)
+	const maxColClues = useMemo(
+		() => Math.max(...puzzle.colClues.map((c) => c.length)),
+		[puzzle.colClues],
+	)
 
-	const handleContextMenu = (e: React.MouseEvent, row: number, col: number) => {
-		e.preventDefault()
-		onCellRightClick(row, col)
-	}
+	// Memoize stable handlers
+	const handleCellClick = useCallback(
+		(row: number, col: number) => onCellClick(row, col),
+		[onCellClick],
+	)
+	const handleCellRightClick = useCallback(
+		(row: number, col: number) => onCellRightClick(row, col),
+		[onCellRightClick],
+	)
 
 	return (
 		<div className="flex flex-col items-center gap-0 overflow-x-auto max-w-full">
@@ -112,39 +189,20 @@ export function NonogramGrid({
 
 						{/* Grid cells */}
 						{row.map((cell, colIndex) => (
-							<button
-								type="button"
+							<NonogramCell
 								key={colIndex}
-								onClick={() => onCellClick(rowIndex, colIndex)}
-								onContextMenu={(e) => handleContextMenu(e, rowIndex, colIndex)}
+								cell={cell}
+								row={rowIndex}
+								col={colIndex}
+								isSelected={
+									selectedCell?.row === rowIndex && selectedCell?.col === colIndex
+								}
+								puzzleWidth={puzzle.width}
+								puzzleHeight={puzzle.height}
 								disabled={disabled}
-								className={cn(
-									'w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8',
-									'border border-border/50',
-									'transition-colors duration-75',
-									'flex items-center justify-center',
-									'text-base sm:text-lg font-bold',
-									// Grid lines every 5 cells
-									colIndex % 5 === 4 &&
-										colIndex < puzzle.width - 1 &&
-										'border-r-2 border-r-primary/30',
-									rowIndex % 5 === 4 &&
-										rowIndex < puzzle.height - 1 &&
-										'border-b-2 border-b-primary/30',
-									// Cell states
-									cell === 'filled' && 'bg-foreground',
-									cell === 'marked' && 'bg-muted',
-									cell === 'empty' && 'bg-background hover:bg-muted/50',
-									// Selection
-									selectedCell?.row === rowIndex &&
-										selectedCell?.col === colIndex &&
-										'ring-2 ring-primary ring-inset',
-									// Disabled
-									disabled && 'cursor-not-allowed opacity-50',
-								)}
-							>
-								{cell === 'marked' && <span className="text-muted-foreground text-sm">×</span>}
-							</button>
+								onClick={handleCellClick}
+								onRightClick={handleCellRightClick}
+							/>
 						))}
 					</div>
 				))}

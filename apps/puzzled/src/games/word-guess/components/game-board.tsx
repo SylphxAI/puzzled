@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { LetterStatus, TileState } from '../types'
 import { MAX_GUESSES, WORD_LENGTH } from '../types'
@@ -21,7 +22,10 @@ const STATUS_LABELS: Record<LetterStatus, string> = {
 	pending: 'entered',
 }
 
-function Tile({ letter, status, delay = 0, isCurrentRow, position }: TileProps) {
+/**
+ * Memoized tile component - only re-renders when its props change
+ */
+const Tile = memo(function Tile({ letter, status, delay = 0, isCurrentRow, position }: TileProps) {
 	// Enhanced tile colors with brand-tinted shadows and playful roundness (Puzzled signature look)
 	// Uses violet-tinted shadows instead of NYT's neutral gray shadows
 	const statusColors: Record<LetterStatus, string> = {
@@ -62,7 +66,7 @@ function Tile({ letter, status, delay = 0, isCurrentRow, position }: TileProps) 
 			{letter}
 		</div>
 	)
-}
+})
 
 type RowProps = {
 	guess: string
@@ -71,7 +75,10 @@ type RowProps = {
 	rowIndex?: number
 }
 
-function Row({ guess, evaluation, isCurrentRow, rowIndex }: RowProps) {
+/**
+ * Memoized row component - only re-renders when its props change
+ */
+const Row = memo(function Row({ guess, evaluation, isCurrentRow, rowIndex }: RowProps) {
 	const tiles: TileState[] = []
 
 	for (let i = 0; i < WORD_LENGTH; i++) {
@@ -107,7 +114,7 @@ function Row({ guess, evaluation, isCurrentRow, rowIndex }: RowProps) {
 			))}
 		</div>
 	)
-}
+})
 
 type GameBoardProps = {
 	guesses: string[]

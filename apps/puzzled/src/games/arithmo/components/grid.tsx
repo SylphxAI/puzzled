@@ -5,6 +5,7 @@
  * Displays the equation guessing grid
  */
 
+import { memo } from 'react'
 import { cn } from '@/lib/utils'
 
 import type { CharStatus } from '../types'
@@ -72,7 +73,10 @@ type CellProps = {
 	hasChar: boolean
 }
 
-function Cell({ char, status, isCurrentRow, hasChar }: CellProps) {
+/**
+ * Memoized cell component - only re-renders when its props change
+ */
+const Cell = memo(function Cell({ char, status, isCurrentRow, hasChar }: CellProps) {
 	return (
 		<div
 			className={cn(
@@ -93,4 +97,4 @@ function Cell({ char, status, isCurrentRow, hasChar }: CellProps) {
 			{char !== ' ' && char}
 		</div>
 	)
-}
+})
