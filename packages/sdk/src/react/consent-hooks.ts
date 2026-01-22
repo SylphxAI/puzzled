@@ -24,8 +24,10 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useContext } from 'react'
 import {
 	useConsentContext,
+	ConsentContext,
 	type ConsentCategory,
 	type ConsentType,
 	type UserConsent,
@@ -466,8 +468,223 @@ export function useConsentCheck(options: UseConsentCheckOptions): UseConsentChec
 	}
 }
 
+// ============================================
+// Safe Versions (for SSR/prerendering)
+// ============================================
+
+// No-op async function for safe hooks
+const noopAsync = async () => {}
+
+/** Safe return type for useConsent when outside provider */
+export interface UseSafeConsentReturn {
+	types: ConsentType[]
+	consents: Record<string, boolean>
+	isLoading: boolean
+	error: Error | null
+	showBanner: boolean
+	hasConsented: boolean
+	hasConsent: (category: ConsentCategory) => boolean
+	setConsent: (typeId: string, value: boolean) => void
+	setConsents: (consents: Record<string, boolean>) => void
+	acceptAll: () => Promise<void>
+	declineOptional: () => Promise<void>
+	saveConsents: () => Promise<void>
+	openPreferences: () => void
+	closeBanner: () => void
+	isConfigured: boolean
+}
+
+/**
+ * SSR-safe version of useConsent
+ *
+ * Returns safe defaults when called outside SylphxProvider.
+ * Use this in components that may render during static generation.
+ */
+export function useSafeConsent(): UseSafeConsentReturn {
+	const ctx = useContext(ConsentContext)
+
+	// If no context, return safe defaults
+	if (!ctx) {
+		return {
+			types: [],
+			consents: {},
+			isLoading: false,
+			error: null,
+			showBanner: false,
+			hasConsented: false,
+			hasConsent: () => false,
+			setConsent: () => {},
+			setConsents: () => {},
+			acceptAll: noopAsync,
+			declineOptional: noopAsync,
+			saveConsents: noopAsync,
+			openPreferences: () => {},
+			closeBanner: () => {},
+			isConfigured: false,
+		}
+	}
+
+	// Use the standard hook when context is available
+	const queryClient = useQueryClient()
+
+	// Local state for user selections (before saving)
+	const [localConsents, setLocalConsentsState] = useState<Record<string, boolean>>({})
+	const [showBanner, setShowBanner] = useState(false)
+	const [initialized, setInitialized] = useState(false)
+
+	// React Query for consent types
+	const typesQuery = useQuery({
+		queryKey: ['sylphx', 'consent', 'types'],
+		queryFn: () => ctx.getConsentTypes(),
+		staleTime: 5 * 60 * 1000,
+	})
+
+	// React Query for user consents
+	const userConsentsQuery = useQuery({
+		queryKey: ['sylphx', 'consent', 'user'],
+		queryFn: async () => {
+			try {
+				const consentsResponse = await ctx.getUserConsents()
+				const consentsMap: Record<string, boolean> = {}
+				for (const consent of consentsResponse) {
+					consentsMap[consent.slug] = consent.enabled ?? false
+				}
+				return consentsMap
+			} catch {
+				return {} as Record<string, boolean>
+			}
+		},
+		staleTime: 5 * 60 * 1000,
+	})
+
+	// Initialize local state and banner visibility when data loads
+	useEffect(() => {
+		if (!typesQuery.isLoading && !userConsentsQuery.isLoading && !initialized) {
+			const serverConsents = userConsentsQuery.data ?? {}
+			setLocalConsentsState(serverConsents)
+			setShowBanner(Object.keys(serverConsents).length === 0)
+			setInitialized(true)
+		}
+	}, [typesQuery.isLoading, userConsentsQuery.isLoading, userConsentsQuery.data, initialized])
+
+	// Mutations for saving consents
+	const saveConsentsMutation = useMutation({
+		mutationFn: async (consentList: Array<{ slug: string; granted: boolean }>) => {
+			await ctx.setConsents(consentList)
+			return consentList
+		},
+		onSuccess: (consentList) => {
+			const consentsMap: Record<string, boolean> = {}
+			for (const consent of consentList) {
+				consentsMap[consent.slug] = consent.granted
+			}
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], consentsMap)
+			setLocalConsentsState(consentsMap)
+			setShowBanner(false)
+		},
+	})
+
+	const acceptAllMutation = useMutation({
+		mutationFn: async () => {
+			await ctx.acceptAll()
+		},
+		onSuccess: () => {
+			const types = typesQuery.data ?? []
+			const allConsents: Record<string, boolean> = {}
+			for (const type of types) {
+				allConsents[type.slug] = true
+			}
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], allConsents)
+			setLocalConsentsState(allConsents)
+			setShowBanner(false)
+		},
+	})
+
+	const declineOptionalMutation = useMutation({
+		mutationFn: async () => {
+			await ctx.declineOptional()
+		},
+		onSuccess: () => {
+			const types = typesQuery.data ?? []
+			const requiredConsents: Record<string, boolean> = {}
+			for (const type of types) {
+				requiredConsents[type.slug] = type.required
+			}
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], requiredConsents)
+			setLocalConsentsState(requiredConsents)
+			setShowBanner(false)
+		},
+	})
+
+	const types = typesQuery.data ?? []
+	const consents = localConsents
+	const hasConsented = Object.keys(userConsentsQuery.data ?? {}).length > 0
+	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading
+	const error = (typesQuery.error ?? userConsentsQuery.error ?? saveConsentsMutation.error ?? acceptAllMutation.error ?? declineOptionalMutation.error) as Error | null
+
+	const hasConsentFn = useCallback(
+		(category: ConsentCategory): boolean => {
+			if (category === 'necessary') return true
+			const categoryTypes = types.filter((t) => t.category === category)
+			return categoryTypes.some((t) => consents[t.slug] ?? t.defaultEnabled)
+		},
+		[types, consents]
+	)
+
+	const setConsent = useCallback((typeId: string, value: boolean) => {
+		setLocalConsentsState((prev) => ({ ...prev, [typeId]: value }))
+	}, [])
+
+	const setConsents = useCallback((newConsents: Record<string, boolean>) => {
+		setLocalConsentsState((prev) => ({ ...prev, ...newConsents }))
+	}, [])
+
+	const saveConsents = useCallback(async () => {
+		const consentList = types.map((type) => ({
+			slug: type.slug,
+			granted: consents[type.slug] ?? type.defaultEnabled,
+		}))
+		await saveConsentsMutation.mutateAsync(consentList)
+	}, [types, consents, saveConsentsMutation])
+
+	const acceptAll = useCallback(async () => {
+		await acceptAllMutation.mutateAsync()
+	}, [acceptAllMutation])
+
+	const declineOptional = useCallback(async () => {
+		await declineOptionalMutation.mutateAsync()
+	}, [declineOptionalMutation])
+
+	const openPreferences = useCallback(() => {
+		setShowBanner(true)
+	}, [])
+
+	const closeBanner = useCallback(() => {
+		setShowBanner(false)
+	}, [])
+
+	return {
+		types,
+		consents,
+		isLoading,
+		error,
+		showBanner,
+		hasConsented,
+		hasConsent: hasConsentFn,
+		setConsent,
+		setConsents,
+		acceptAll,
+		declineOptional,
+		saveConsents,
+		openPreferences,
+		closeBanner,
+		isConfigured: true,
+	}
+}
+
 // The useConsent hook is the primary export for consent management.
 // Additional exports:
 // - useConsentGate for gating features behind consent
 // - ConsentGuard for gating components behind consent
 // - useConsentCheck for checking specific purposes with auto-discovery
+// - useSafeConsent for SSR-safe consent management

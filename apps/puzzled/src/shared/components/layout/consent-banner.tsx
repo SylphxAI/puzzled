@@ -8,7 +8,7 @@
  * that need synchronous consent checks before SDK hydration.
  */
 
-import { CookieBanner, useConsent } from '@sylphx/sdk/react'
+import { CookieBanner, useSafeConsent } from '@sylphx/sdk/react'
 import { useEffect } from 'react'
 import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
@@ -16,7 +16,10 @@ import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
  * Sync SDK consent state to localStorage for client-side scripts
  */
 function ConsentSync() {
-	const { hasConsent, hasConsented, isLoading } = useConsent()
+	const { hasConsent, hasConsented, isLoading, isConfigured } = useSafeConsent()
+
+	// Don't sync if SDK is not configured (SSR/prerendering)
+	if (!isConfigured) return null
 
 	useEffect(() => {
 		if (isLoading || typeof window === 'undefined') return
@@ -43,26 +46,43 @@ function ConsentSync() {
 }
 
 /**
- * Consent Banner with localStorage sync
- *
- * Uses SDK's CookieBanner for UI and consent management,
- * and syncs consent state to localStorage for client-side scripts.
+ * Inner component that only renders when SDK is configured
+ * CookieBanner uses useConsent internally which throws during SSR
  */
-export function ConsentBanner() {
+function ConsentBannerInner() {
 	const handleSave = () => {
 		// SDK handles the save, localStorage sync happens via ConsentSync
 		// This callback is for any additional actions after save
 	}
 
 	return (
+		<CookieBanner
+			position="bottom"
+			privacyPolicyUrl="/privacy"
+			variant="bar"
+			onSave={handleSave}
+		/>
+	)
+}
+
+/**
+ * Consent Banner with localStorage sync
+ *
+ * Uses SDK's CookieBanner for UI and consent management,
+ * and syncs consent state to localStorage for client-side scripts.
+ *
+ * Only renders when SylphxProvider is available (client-side).
+ */
+export function ConsentBanner() {
+	const { isConfigured } = useSafeConsent()
+
+	// Don't render if SDK is not configured (SSR/prerendering)
+	if (!isConfigured) return null
+
+	return (
 		<>
 			<ConsentSync />
-			<CookieBanner
-				position="bottom"
-				privacyPolicyUrl="/privacy"
-				variant="bar"
-				onSave={handleSave}
-			/>
+			<ConsentBannerInner />
 		</>
 	)
 }

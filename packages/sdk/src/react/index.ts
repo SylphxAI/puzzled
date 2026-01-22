@@ -255,12 +255,14 @@ export {
 // Consent Hooks (GDPR/CCPA)
 export {
 	useConsent,
+	useSafeConsent,
 	useConsentGate,
 	ConsentGuard,
 	type ConsentCategory,
 	type ConsentType,
 	type UserConsent,
 	type UseConsentReturn,
+	type UseSafeConsentReturn,
 	type UseConsentGateOptions,
 	type UseConsentGateReturn,
 	type ConsentGuardProps,
