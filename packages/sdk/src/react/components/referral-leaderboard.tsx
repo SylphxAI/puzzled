@@ -7,7 +7,8 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUser } from '../hooks'
 import { useReferral, type LeaderboardEntry, type ReferralLeaderboardResult } from '../platform-hooks'
 import {
@@ -71,59 +72,43 @@ export function ReferralLeaderboard({
 }: ReferralLeaderboardProps) {
 	const { user } = useUser()
 	const { stats, code, getLeaderboard } = useReferral()
+	const queryClient = useQueryClient()
 	const styles = baseStyles(theme)
 
 	const [period, setPeriod] = useState<LeaderboardPeriod>(defaultPeriod)
-	const [leaderboard, setLeaderboard] = useState<ReferralLeaderboardResult | null>(null)
-	const [personalStats, setPersonalStats] = useState<{
-		totalReferrals: number
-		completedReferrals: number
-		code: string | null
-	} | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-	const [retryCount, setRetryCount] = useState(0)
 
 	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
 	}, [])
 
-	// Sync personal stats from hook
-	useEffect(() => {
-		if (showPersonalStats && user && stats) {
-			setPersonalStats({
-				totalReferrals: stats.totalReferrals,
-				completedReferrals: stats.completedReferrals ?? stats.successfulReferrals,
-				code: code ?? null,
-			})
+	// React Query for leaderboard data
+	const leaderboardQuery = useQuery({
+		queryKey: ['sylphx', 'referral', 'leaderboard', limit, period],
+		queryFn: () => getLeaderboard({ limit, period }),
+		staleTime: 60 * 1000, // 1 min - leaderboard may change
+	})
+
+	const leaderboard = leaderboardQuery.data ?? null
+	const isLoading = leaderboardQuery.isLoading
+	const error = leaderboardQuery.error instanceof Error
+		? leaderboardQuery.error.message
+		: leaderboardQuery.error ? 'Failed to load leaderboard' : null
+
+	// Derive personal stats from hook data (memoized)
+	const personalStats = useMemo(() => {
+		if (!showPersonalStats || !user || !stats) return null
+		return {
+			totalReferrals: stats.totalReferrals,
+			completedReferrals: stats.completedReferrals ?? stats.successfulReferrals,
+			code: code ?? null,
 		}
 	}, [showPersonalStats, user, stats, code])
 
-	// Load leaderboard data
-	useEffect(() => {
-		async function loadData() {
-			setIsLoading(true)
-			setError(null)
-
-			try {
-				const leaderboardData = await getLeaderboard({ limit, period })
-				setLeaderboard(leaderboardData)
-			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to load leaderboard'
-				setError(message)
-			} finally {
-				setIsLoading(false)
-			}
-		}
-
-		loadData()
-	}, [getLeaderboard, limit, period, retryCount])
-
-	// Retry handler
+	// Retry handler via React Query
 	const handleRetry = useCallback(() => {
-		setRetryCount((c) => c + 1)
-	}, [])
+		queryClient.invalidateQueries({ queryKey: ['sylphx', 'referral', 'leaderboard'] })
+	}, [queryClient])
 
 	// Rank badge color
 	const getRankColor = (rank: number) => {
