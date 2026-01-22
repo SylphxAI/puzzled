@@ -12,7 +12,7 @@ import { useSylphxConfig } from './composable/core'
 import {
 	uploadFile as uploadFileFn,
 	getFileUrl as getFileUrlFn,
-	type UploadOptions,
+	type FileUploadOptions,
 	type UploadResult,
 	type UploadProgressEvent,
 } from '../storage'
@@ -67,7 +67,7 @@ export function useUpload() {
 	})
 
 	const upload = useCallback(
-		async (file: File, options?: Omit<UploadOptions, 'onProgress'>): Promise<UploadResult> => {
+		async (file: File, options?: Omit<FileUploadOptions, 'onProgress'>): Promise<UploadResult> => {
 			setState({ isUploading: true, progress: 0, error: null, result: null })
 
 			try {

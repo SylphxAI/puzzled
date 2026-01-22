@@ -23,7 +23,7 @@ import {
 	useWebhookStats,
 	type WebhookStats,
 	type WebhookDeliveryStatus,
-	type StatsPeriod,
+	type WebhookStatsPeriod,
 } from '../webhooks-hooks'
 import type { WebhookEnvironment, WebhookDelivery } from '../services-context'
 
@@ -49,7 +49,7 @@ export interface WebhookPortalProps {
 	/** Maximum deliveries to display */
 	maxDeliveries?: number
 	/** Stats period */
-	statsPeriod?: StatsPeriod
+	statsPeriod?: WebhookStatsPeriod
 	/** Auto-refresh deliveries interval in ms (0 = disabled) */
 	deliveriesRefreshInterval?: number
 	/** Callback when secret is generated */
@@ -771,7 +771,7 @@ function DeliveryDetails({ delivery, theme }: DeliveryDetailsProps) {
 
 interface StatsSectionProps {
 	theme: ThemeVariables
-	period: StatsPeriod
+	period: WebhookStatsPeriod
 	onError: (error: Error | null) => void
 }
 

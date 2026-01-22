@@ -15,12 +15,11 @@ import {
 	useNewsletterContext,
 	type SubscriberStatus,
 	type Subscriber,
-	type SubscribeOptions,
-	type SubscribeResult,
 } from './services-context'
+import type { NewsletterSubscribeInput, NewsletterSubscribeResult } from '../types'
 
 // Re-export types for convenience
-export type { SubscriberStatus, Subscriber, SubscribeOptions, SubscribeResult }
+export type { SubscriberStatus, Subscriber, NewsletterSubscribeInput, NewsletterSubscribeResult }
 
 // ============================================
 // useNewsletter
@@ -30,7 +29,7 @@ import type { SubscriberPreferenceKey } from './services-context'
 
 export interface UseNewsletterReturn {
 	/** Subscribe an email to the newsletter */
-	subscribe: (options: SubscribeOptions) => Promise<SubscribeResult>
+	subscribe: (options: NewsletterSubscribeInput) => Promise<NewsletterSubscribeResult>
 	/** Verify a subscription with token */
 	verify: (token: string) => Promise<{ success: boolean; message: string; email: string }>
 	/** Unsubscribe an email (requires token) */
@@ -113,7 +112,7 @@ export function useNewsletter(): UseNewsletterReturn {
 	}, [])
 
 	const subscribe = useCallback(
-		async (options: SubscribeOptions): Promise<SubscribeResult> => {
+		async (options: NewsletterSubscribeInput): Promise<NewsletterSubscribeResult> => {
 			setIsLoading(true)
 			setError(null)
 			setSuccess(false)
@@ -268,7 +267,7 @@ export interface UseSubscriberFormOptions {
 	/** Additional metadata */
 	metadata?: Record<string, unknown>
 	/** Callback on successful subscription */
-	onSuccess?: (result: SubscribeResult) => void
+	onSuccess?: (result: NewsletterSubscribeResult) => void
 	/** Callback on error */
 	onError?: (error: Error) => void
 }

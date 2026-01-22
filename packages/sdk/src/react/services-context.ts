@@ -12,9 +12,7 @@ import { createContext, useContext, type Context } from 'react'
 // ============================================================================
 
 import type {
-	// Jobs
-	Job,
-	JobsListResult,
+	// Jobs (SDK defines its own Job/JobsListResult with Date types)
 	JobStatusEnum,
 	JobTypeEnum,
 	ScheduleJobInput,
@@ -35,6 +33,7 @@ import type {
 	GetDeliveriesInput,
 	WebhookDeliveriesResult,
 	// Consent
+	ConsentCategory,
 	ConsentType,
 	UserConsent,
 	SetConsentsResult,
@@ -93,6 +92,7 @@ export type {
 	WebhookStats,
 	WebhookStatsPeriod,
 	// Consent
+	ConsentCategory,
 	ConsentType,
 	UserConsent,
 	// User
@@ -112,80 +112,41 @@ export type {
 }
 
 // ============================================================================
-// Type Aliases for Backward Compatibility
-// ============================================================================
-
-// ============================================================================
 // SDK-Specific Job Types
 // The SDK layer uses its own job status enum that includes all possible states
 // ============================================================================
 
-/** SDK Job status - includes all possible states */
-export type SdkJobStatus = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'paused' | 'deleted'
+/** Job status - includes all possible states */
+export type JobStatus = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'paused' | 'deleted'
 
-/** SDK Job status filter for listing jobs */
-export type SdkJobStatusFilter = SdkJobStatus
+/** Job status filter for listing jobs */
+export type JobStatusFilter = JobStatus
 
-// Jobs type aliases for backward compatibility
-/** @deprecated Use SdkJobStatus instead */
-export type JobStatus = SdkJobStatus
-/** @deprecated Use SdkJobStatusFilter instead */
-export type JobStatusFilter = SdkJobStatusFilter
-/** @deprecated Use ScheduleJobInput instead */
-export type ScheduleJobOptions = ScheduleJobInput
-/** @deprecated Use CreateCronInput instead */
-export type CreateCronOptions = CreateCronInput
-/** @deprecated Use ScheduleJobResult instead */
-export type ScheduleResult = ScheduleJobResult
-/** @deprecated Use CreateCronResult instead */
-export type CronResult = CreateCronResult
+// ============================================================================
+// Email Types
+// ============================================================================
 
-// Monitoring type aliases
-/** @deprecated Use MonitoringLevel instead */
-export type ErrorLevel = MonitoringLevel
-
-// Webhooks type aliases
-/** @deprecated Use WebhookStatsPeriod instead */
-export type StatsPeriod = WebhookStatsPeriod
-
-// Auth type aliases
-/** @deprecated Use AuthLoginResult instead */
-export type LoginResult = AuthLoginResult
-/** @deprecated Use AuthRegisterResult instead */
-export type RegisterResult = AuthRegisterResult
-
-// User type aliases
-/** @deprecated Use UserProfile instead */
-export type UserProfileData = UserProfile
-/** @deprecated Use LoginHistoryEntry instead */
-export type LoginHistoryItem = LoginHistoryEntry
-
-// Security type aliases
-/** @deprecated Use SecurityScoreResult instead */
-export type SecurityScore = SecurityScoreResult
-
-// Newsletter type aliases
-/** @deprecated Use NewsletterSubscribeInput instead */
-export type SubscribeOptions = NewsletterSubscribeInput
-/** @deprecated Use NewsletterSubscribeResult instead */
-export type SubscribeResult = NewsletterSubscribeResult
-
-// Email type aliases
-export type EmailOptions = {
+export interface EmailOptions {
 	to: string
 	subject: string
 	html: string
 	text?: string
 	replyTo?: string
 }
+
+/** Simple alias for EmailOptions */
 export type SimpleEmailOptions = EmailOptions
+
+/** Email delivery status */
 export type EmailStatus = 'sent' | 'pending' | 'failed'
+
+/** Email template name type */
 export type EmailTemplateName = string
 
-// Consent type aliases (category is typically the slug)
-export type ConsentCategory = string
+// ============================================================================
+// Consent Types
+// ============================================================================
 
-// Import consent inline defaults for auto-discovery
 import type { ConsentPurposeDefaults } from '../consent'
 export type { ConsentPurposeDefaults }
 
@@ -341,28 +302,28 @@ export function useAIContext(): AIContextValue {
 // Jobs Context
 // ============================================
 
-/** SDK Job type with all optional fields for flexibility */
-export interface SdkJob {
+/** Job type with all optional fields for flexibility */
+export interface Job {
 	id: string
 	name: string | null
 	type: string
-	status: SdkJobStatus
+	status: JobStatus
 	callbackUrl: string
 	payload?: unknown
-	scheduledFor: Date | null
-	startedAt?: Date | null
-	completedAt?: Date | null
-	failedAt?: Date | null
+	scheduledFor: string | null
+	startedAt?: string | null
+	completedAt?: string | null
+	failedAt?: string | null
 	errorMessage?: string | null
 	lastError?: string | null
 	retries: number
 	maxRetries: number
-	createdAt: Date
+	createdAt: string
 }
 
-/** SDK Jobs List Result */
-export interface SdkJobsListResult {
-	jobs: SdkJob[]
+/** Jobs List Result */
+export interface JobsListResult {
+	jobs: Job[]
 	total: number
 	limit?: number
 	offset?: number
@@ -376,13 +337,13 @@ export interface JobsContextValue {
 	pauseCron: (scheduleId: string) => Promise<boolean>
 	resumeCron: (scheduleId: string) => Promise<boolean>
 	deleteCron: (scheduleId: string) => Promise<boolean>
-	getJob: (jobId: string) => Promise<SdkJob>
+	getJob: (jobId: string) => Promise<Job>
 	listJobs: (options?: {
-		status?: SdkJobStatusFilter
+		status?: JobStatusFilter
 		type?: 'one-time' | 'cron'
 		limit?: number
 		offset?: number
-	}) => Promise<SdkJobsListResult>
+	}) => Promise<JobsListResult>
 	cancelJob: (jobId: string) => Promise<boolean>
 }
 

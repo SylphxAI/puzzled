@@ -12,17 +12,14 @@
 import { useCallback, useState, useEffect, useRef } from 'react'
 import {
 	useJobsContext,
-	type SdkJobStatus as JobStatus,
-	type SdkJobStatusFilter as JobStatusFilter,
-	type SdkJob as Job,
-	type ScheduleJobOptions,
-	type CreateCronOptions,
-	type ScheduleResult,
-	type CronResult,
+	type JobStatus,
+	type JobStatusFilter,
+	type Job,
 } from './services-context'
+import type { ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult } from '../types'
 
-// Re-export types from services-context for convenience
-export type { JobStatus, JobStatusFilter, Job, ScheduleJobOptions, CreateCronOptions, ScheduleResult, CronResult }
+// Re-export types for convenience
+export type { JobStatus, JobStatusFilter, Job, ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult }
 
 // ============================================
 // useJobs
@@ -32,9 +29,9 @@ export interface UseJobsReturn {
 	/** Check if background jobs are available */
 	isAvailable: () => Promise<boolean>
 	/** Schedule a one-time job */
-	schedule: (options: ScheduleJobOptions) => Promise<ScheduleResult>
+	schedule: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
 	/** Create a recurring cron job */
-	createCron: (options: CreateCronOptions) => Promise<CronResult>
+	createCron: (options: CreateCronInput) => Promise<CreateCronResult>
 	/** Pause a cron job */
 	pauseCron: (scheduleId: string) => Promise<boolean>
 	/** Resume a paused cron job */
@@ -115,7 +112,7 @@ export function useJobs(): UseJobsReturn {
 	}, [ctx])
 
 	const schedule = useCallback(
-		async (options: ScheduleJobOptions): Promise<ScheduleResult> => {
+		async (options: ScheduleJobInput): Promise<ScheduleJobResult> => {
 			setIsLoading(true)
 			setError(null)
 
@@ -133,7 +130,7 @@ export function useJobs(): UseJobsReturn {
 	)
 
 	const createCron = useCallback(
-		async (options: CreateCronOptions): Promise<CronResult> => {
+		async (options: CreateCronInput): Promise<CreateCronResult> => {
 			setIsLoading(true)
 			setError(null)
 
@@ -662,7 +659,7 @@ export interface UseScheduleWithProgressOptions extends UseJobProgressOptions {
 
 export interface UseScheduleWithProgressReturn {
 	/** Schedule a job and start tracking */
-	scheduleAndTrack: (options: ScheduleJobOptions) => Promise<ScheduleResult>
+	scheduleAndTrack: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
 	/** Current job being tracked */
 	job: Job | null
 	/** Progress information */
@@ -751,7 +748,7 @@ export function useScheduleWithProgress(
 	)
 
 	const scheduleAndTrack = useCallback(
-		async (scheduleOptions: ScheduleJobOptions): Promise<ScheduleResult> => {
+		async (scheduleOptions: ScheduleJobInput): Promise<ScheduleJobResult> => {
 			setIsScheduling(true)
 			setScheduleError(null)
 

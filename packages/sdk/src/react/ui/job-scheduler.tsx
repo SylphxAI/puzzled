@@ -130,11 +130,11 @@ export function JobScheduler({
 				name: name || null,
 				type: 'one-time',
 				status: 'pending',
-				scheduledFor: result.scheduledFor ? new Date(result.scheduledFor) : null,
+				scheduledFor: result.scheduledFor ?? null,
 				callbackUrl,
 				retries: 0,
 				maxRetries: 3,
-				createdAt: new Date(),
+				createdAt: new Date().toISOString(),
 			})
 		}
 	}

@@ -536,15 +536,6 @@ export interface StorageUsage {
 	fileCount: number
 }
 
-/** @deprecated Use StorageFile from lib/storage/types.ts instead */
-export interface UploadedFile {
-	id: string
-	url: string
-	name: string
-	size: number
-	mimeType: string
-}
-
 // ==========================================
 // Webhooks Types
 // Note: WebhookConfig, WebhookDelivery, WebhookStats, etc. are exported from webhooks.ts (SSOT)
@@ -612,17 +603,9 @@ export interface OrganizationMember {
 	orgId: string
 	role: OrgRole
 	joinedAt: string
-	// Flattened user properties for convenience
 	name: string | null
 	email: string
 	image: string | null
-	// Also keep nested user object for backward compatibility
-	user: {
-		id: string
-		name: string | null
-		email: string
-		image: string | null
-	}
 }
 
 export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer' | 'developer' | 'analytics' | 'billing' | 'super_admin'

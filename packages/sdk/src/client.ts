@@ -63,9 +63,6 @@ export type {
 	// Feature flags
 	FeatureFlagResult,
 
-	// Storage
-	UploadedFile,
-
 	// Referrals
 	ReferralStats,
 

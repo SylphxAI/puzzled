@@ -112,27 +112,26 @@ export {
 	type DataState,
 	// Auth types
 	type AuthUser,
-	type LoginResult,
-	type RegisterResult,
-	// User types
-	type UserProfileData,
-	type LoginHistoryItem,
-	type ConnectedAccount,
-	// Security types
-	type TwoFactorStatus,
-	type TwoFactorSetupResult,
-	type PasskeyInfo,
-	type SecurityScore,
 	// Newsletter types
 	type SubscriberStatus,
 	type Subscriber,
-	type SubscribeOptions,
 	// Database types
 	type QueryResult,
 	// Email types
-	type EmailStatus,
 	type EmailOptions,
+	// Re-export from types.ts for convenience
+	// Note: UserProfile type not exported here - conflicts with UserProfile component
+	// Import from '@sylphx/platform-sdk' or '../types' directly
+	type LoginHistoryEntry,
+	type ConnectedAccount,
+	type TwoFactorStatus,
+	type TwoFactorSetupResult,
+	type PasskeyInfo,
+	type SecurityScoreResult,
 } from './services-context'
+
+// Re-export auth types from types.ts
+export type { AuthLoginResult, AuthRegisterResult } from '../types'
 
 // Auth Hooks
 export {
@@ -230,7 +229,7 @@ export {
 	type UseErrorTrackingReturn,
 	type UseErrorBoundaryOptions,
 	type UseGlobalErrorHandlerOptions,
-	type ErrorLevel,
+	type MonitoringLevel,
 	type Breadcrumb,
 	type CaptureExceptionOptions,
 	type CaptureMessageOptions,
@@ -242,10 +241,11 @@ export {
 	type UseJobsReturn,
 	type Job,
 	type JobStatus,
-	type ScheduleJobOptions,
-	type CreateCronOptions,
-	type ScheduleResult,
-	type CronResult,
+	type JobStatusFilter,
+	type ScheduleJobInput,
+	type CreateCronInput,
+	type ScheduleJobResult,
+	type CreateCronResult,
 } from './job-hooks'
 
 // Consent Hooks (GDPR/CCPA)

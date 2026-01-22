@@ -2868,7 +2868,7 @@ export function SylphxProvider({
 											<ConsentContext.Provider value={consentValue}>
 												<DatabaseContext.Provider value={databaseValue}>
 													<EmailContext.Provider value={emailValue}>
-														{/* Newsletter is now part of Email - keeping for backward compat */}
+														{/* Newsletter: Marketing/bulk email subscriptions */}
 														<NewsletterContext.Provider value={newsletterValue}>
 															<WebhooksContext.Provider value={webhooksValue}>
 																{children}

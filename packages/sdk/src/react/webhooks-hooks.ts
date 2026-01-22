@@ -10,14 +10,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
 	useWebhooksContext,
-	type WebhookEnvironment,
-	type WebhookDelivery,
-	type WebhookDeliveryStatus,
-	type StatsPeriod,
 } from './services-context'
+import type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, WebhookStatsPeriod, WebhookStats } from '../types'
 
 // Re-export types for convenience
-export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, StatsPeriod, WebhookStats }
+export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, WebhookStatsPeriod, WebhookStats }
 
 // ============================================
 // useWebhooks
@@ -320,9 +317,6 @@ export function useWebhookDeliveries(
 // useWebhookStats
 // ============================================
 
-// WebhookStats is imported from services-context (SSOT: webhooks.ts)
-import type { WebhookStats } from './services-context'
-
 export interface UseWebhookStatsReturn {
 	/** Webhook statistics */
 	stats: WebhookStats | null
@@ -355,7 +349,7 @@ export interface UseWebhookStatsReturn {
  * ```
  */
 export function useWebhookStats(
-	period: StatsPeriod = 'week'
+	period: WebhookStatsPeriod = 'week'
 ): UseWebhookStatsReturn {
 	const ctx = useWebhooksContext()
 	const [stats, setStats] = useState<WebhookStats | null>(null)

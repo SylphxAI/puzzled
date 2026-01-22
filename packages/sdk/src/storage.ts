@@ -25,8 +25,6 @@ export interface FileUploadOptions {
 	onProgress?: (event: UploadProgressEvent) => void
 }
 
-/** @deprecated Use FileUploadOptions instead */
-export type UploadOptions = FileUploadOptions
 
 export interface FileInfo {
 	id: string

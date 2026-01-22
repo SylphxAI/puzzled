@@ -12,15 +12,15 @@
 import { useCallback, useEffect, useRef } from 'react'
 import {
 	useMonitoringContext,
-	type ErrorLevel,
 	type Breadcrumb,
 	type ExceptionValue,
 	type CaptureExceptionOptions,
 	type CaptureMessageOptions,
 } from './services-context'
+import type { MonitoringLevel } from '../types'
 
-// Re-export types from services-context for convenience
-export type { ErrorLevel, Breadcrumb, ExceptionValue, CaptureExceptionOptions, CaptureMessageOptions }
+// Re-export types for convenience
+export type { MonitoringLevel, Breadcrumb, ExceptionValue, CaptureExceptionOptions, CaptureMessageOptions }
 
 // ============================================
 // Helper Functions

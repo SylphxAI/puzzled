@@ -197,7 +197,7 @@ export {
 	deleteFile,
 	getFileUrl,
 	getFileInfo,
-	type UploadOptions,
+	type FileUploadOptions,
 	type UploadProgressEvent,
 	type UploadResult,
 	type FileInfo,
@@ -390,8 +390,6 @@ export type {
 	// Organizations
 	Organization,
 	OrganizationMember,
-	// Storage
-	UploadedFile,
 	// AI Types
 	AIProvider,
 	AIRequestType,

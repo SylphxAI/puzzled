@@ -67,18 +67,12 @@ export interface StorageFile {
 	path: string
 	/** Original filename */
 	filename: string
-	/** Alias for filename (for backward compat) */
-	name?: string
 	/** MIME type */
 	mimeType: string
 	/** Size in bytes */
 	sizeBytes: number
-	/** Alias for sizeBytes (for backward compat) */
-	size?: number
 	/** Public URL (if public) */
 	publicUrl?: string | null
-	/** Alias for publicUrl (for backward compat) */
-	url?: string
 	/** Created timestamp */
 	createdAt: string
 	/** Custom metadata */
