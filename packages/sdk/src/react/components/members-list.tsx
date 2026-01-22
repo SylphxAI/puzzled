@@ -8,7 +8,7 @@
 
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useOrganization, useUser, type OrgRole, type OrganizationMember } from '../hooks'
 import {
 	type ThemeVariables,
@@ -17,7 +17,6 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
-import { useOptimisticList } from '../../lib/optimistic'
 
 export interface MembersListProps {
 	/** Theme variables */
@@ -101,48 +100,22 @@ export function MembersList({
 	}, [])
 
 	/**
-	 * Optimistic list management with proper rollback.
-	 * Uses Map-based snapshots to handle concurrent mutations correctly.
+	 * Optimistic list management using simple React state.
+	 * Syncs with server data and handles rollback on failure.
 	 */
-	const {
-		items: members,
-		remove: optimisticRemove,
-		update: optimisticUpdate,
-		isPending,
-	} = useOptimisticList(
-		serverMembers,
-		{
-			// Remove member operation
-			remove: async (memberId: string | number) => {
-				const member = serverMembers.find((m) => m.id === memberId)
-				if (member) {
-					await removeMember(member.userId)
-				}
-			},
-			// Update member role operation
-			update: async (memberId: string | number, data: Partial<OrganizationMember>) => {
-				const member = serverMembers.find((m) => m.id === memberId)
-				if (member && data.role) {
-					await updateMemberRole(member.userId, data.role)
-				}
-				// Return the updated member for the optimistic state
-				return { ...member!, ...data }
-			},
-		},
-		{
-			onError: (err, operation) => {
-				const message = err instanceof Error ? err.message : `Failed to ${operation} member`
-				setError(message)
-				setPendingAction(null)
-			},
-			onRollback: (_previousItems, operation) => {
-				// Rollback already handled by useOptimisticList
-				setPendingAction(null)
-			},
-		}
-	)
+	const [members, setMembers] = useState<OrganizationMember[]>(serverMembers)
+	const [isPending, setIsPending] = useState(false)
+	const prevServerMembersRef = useRef(serverMembers)
 
-	// Optimistic role update
+	// Sync with server data when it changes (and no pending operations)
+	useEffect(() => {
+		if (serverMembers !== prevServerMembersRef.current && !isPending) {
+			setMembers(serverMembers)
+			prevServerMembersRef.current = serverMembers
+		}
+	}, [serverMembers, isPending])
+
+	// Optimistic role update with rollback
 	const handleRoleChange = useCallback(
 		async (userId: string, newRole: OrgRole) => {
 			setError(null)
@@ -151,19 +124,30 @@ export function MembersList({
 
 			setPendingAction(userId)
 			setEditingMember(null)
+			setIsPending(true)
+
+			// Snapshot for rollback
+			const snapshot = [...members]
+
+			// Apply optimistic update
+			setMembers((prev) => prev.map((m) => (m.userId === userId ? { ...m, role: newRole } : m)))
 
 			try {
-				await optimisticUpdate?.(member.id, { role: newRole })
-			} catch {
-				// Error already handled in onError callback
+				await updateMemberRole(userId, newRole)
+			} catch (err) {
+				// Rollback on failure
+				setMembers(snapshot)
+				const message = err instanceof Error ? err.message : 'Failed to update role'
+				setError(message)
 			} finally {
 				setPendingAction(null)
+				setIsPending(false)
 			}
 		},
-		[members, optimisticUpdate]
+		[members, updateMemberRole]
 	)
 
-	// Optimistic remove
+	// Optimistic remove with rollback
 	const handleRemove = useCallback(
 		async (userId: string) => {
 			setError(null)
@@ -172,16 +156,27 @@ export function MembersList({
 
 			setPendingAction(userId)
 			setConfirmingRemove(null)
+			setIsPending(true)
+
+			// Snapshot for rollback
+			const snapshot = [...members]
+
+			// Apply optimistic update
+			setMembers((prev) => prev.filter((m) => m.userId !== userId))
 
 			try {
-				await optimisticRemove?.(member.id)
-			} catch {
-				// Error already handled in onError callback
+				await removeMember(userId)
+			} catch (err) {
+				// Rollback on failure
+				setMembers(snapshot)
+				const message = err instanceof Error ? err.message : 'Failed to remove member'
+				setError(message)
 			} finally {
 				setPendingAction(null)
+				setIsPending(false)
 			}
 		},
-		[members, optimisticRemove]
+		[members, removeMember]
 	)
 
 	// Loading state for individual actions
