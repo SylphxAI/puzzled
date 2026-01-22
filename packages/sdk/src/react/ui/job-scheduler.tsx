@@ -6,10 +6,12 @@
 
 'use client'
 
-import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
+import { useState, useEffect, useCallback, type CSSProperties, type FormEvent } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useJobs, type Job, type JobStatus, type JobStatusFilter } from '../job-hooks'
+import { useJobsContext } from '../services-context'
 
 // ============================================
 // Types
@@ -354,8 +356,8 @@ export function JobList({
 	refreshInterval = 0,
 	emptyMessage = 'No jobs scheduled',
 }: JobListProps) {
-	const { listJobs, cancelJob, isLoading } = useJobs()
-	const [jobs, setJobs] = useState<Job[]>(propJobs ?? [])
+	const ctx = useJobsContext()
+	const queryClient = useQueryClient()
 	// UI filter includes 'cancelled' for display filtering, but API doesn't support it as a filter
 	const [filter, setFilter] = useState<JobStatusFilter | 'cancelled' | 'all'>('all')
 
@@ -365,40 +367,44 @@ export function JobList({
 		injectGlobalStyles()
 	}, [])
 
-	// Fetch jobs if not provided
-	useEffect(() => {
-		if (!propJobs) {
-			const fetchJobs = async () => {
-				// API doesn't support 'cancelled' filter, so fetch all and filter client-side
-				const apiStatus = filter === 'all' || filter === 'cancelled' ? undefined : filter
-				const result = await listJobs({ status: apiStatus })
-				setJobs(result)
-			}
-			fetchJobs()
+	// React Query for fetching jobs with automatic refresh via refetchInterval
+	const jobsQuery = useQuery({
+		queryKey: ['sylphx', 'jobs', 'list', filter],
+		queryFn: async () => {
+			// API doesn't support 'cancelled' filter, so fetch all and filter client-side
+			const apiStatus = filter === 'all' || filter === 'cancelled' ? undefined : filter
+			const result = await ctx.listJobs({ status: apiStatus })
+			return result.jobs
+		},
+		enabled: !propJobs, // Only fetch if jobs not provided as prop
+		staleTime: 30 * 1000, // 30 seconds
+		refetchInterval: !propJobs && refreshInterval > 0 ? refreshInterval : undefined,
+	})
 
-			if (refreshInterval > 0) {
-				const interval = setInterval(fetchJobs, refreshInterval)
-				return () => clearInterval(interval)
-			}
-		}
-	}, [propJobs, filter, listJobs, refreshInterval])
-
-	useEffect(() => {
-		if (propJobs) {
-			setJobs(propJobs)
-		}
-	}, [propJobs])
+	// Use prop jobs if provided, otherwise use query data
+	const jobs: Job[] = propJobs ?? jobsQuery.data ?? []
+	const isLoading = !propJobs && jobsQuery.isLoading
 
 	const filteredJobs = filter === 'all' ? jobs : jobs.filter((j) => j.status === filter)
 
-	const handleCancel = async (jobId: string) => {
-		if (onCancel) {
-			onCancel(jobId)
-		} else {
-			await cancelJob(jobId)
-			setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, status: 'cancelled' as JobStatus } : j)))
-		}
-	}
+	// Mutation for cancelling jobs
+	const cancelMutation = useMutation({
+		mutationFn: (jobId: string) => ctx.cancelJob(jobId),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['sylphx', 'jobs', 'list'] })
+		},
+	})
+
+	const handleCancel = useCallback(
+		async (jobId: string) => {
+			if (onCancel) {
+				onCancel(jobId)
+			} else {
+				await cancelMutation.mutateAsync(jobId)
+			}
+		},
+		[onCancel, cancelMutation]
+	)
 
 	const statusColors: Record<string, { bg: string; text: string }> = {
 		pending: { bg: `${theme.colorWarning}20`, text: theme.colorWarning },

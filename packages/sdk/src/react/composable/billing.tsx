@@ -1,20 +1,22 @@
 /**
- * Billing Provider
+ * Billing Hooks
  *
- * Composable billing provider with plans and subscription hooks.
+ * Composable hooks for billing plans and subscriptions.
+ * No provider needed - uses config directly.
+ *
+ * ## React Query Integration
+ *
+ * All hooks use React Query for:
+ * - Automatic caching (plans: 30 min, subscription: 5 min)
+ * - Deduplication of concurrent requests
+ * - Background refetching
+ * - Optimistic updates
  */
 
 'use client'
 
-import {
-	createContext,
-	useContext,
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-	type ReactNode,
-} from 'react'
+import { useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSylphxConfig } from './core'
 import {
 	getPlans as getPlansFn,
@@ -26,249 +28,201 @@ import {
 } from '../../billing'
 
 // ============================================================================
-// Types
-// ============================================================================
-
-interface BillingContextValue {
-	plans: Plan[]
-	plansLoading: boolean
-	plansError: Error | null
-	subscription: Subscription | null
-	subscriptionLoading: boolean
-	subscriptionError: Error | null
-	createCheckout: (planSlug: string, interval: 'monthly' | 'annual' | 'lifetime') => Promise<string>
-	openPortal: () => Promise<void>
-	refreshSubscription: () => Promise<void>
-}
-
-// ============================================================================
-// Context
-// ============================================================================
-
-const BillingContext = createContext<BillingContextValue | null>(null)
-
-// ============================================================================
-// Provider
-// ============================================================================
-
-interface BillingProviderProps {
-	children: ReactNode
-	/** User ID (required for subscription fetching) */
-	userId?: string
-}
-
-/**
- * Billing provider
- *
- * @example
- * ```tsx
- * <SylphxCore appId="my-app" secretKey={key}>
- *   <BillingProvider userId={user?.id}>
- *     <PricingPage />
- *   </BillingProvider>
- * </SylphxCore>
- * ```
- */
-export function BillingProvider({ children, userId }: BillingProviderProps) {
-	const config = useSylphxConfig()
-
-	// Plans state
-	const [plans, setPlans] = useState<Plan[]>([])
-	const [plansLoading, setPlansLoading] = useState(true)
-	const [plansError, setPlansError] = useState<Error | null>(null)
-
-	// Subscription state
-	const [subscription, setSubscription] = useState<Subscription | null>(null)
-	const [subscriptionLoading, setSubscriptionLoading] = useState(false)
-	const [subscriptionError, setSubscriptionError] = useState<Error | null>(null)
-
-	// Load plans
-	useEffect(() => {
-		let cancelled = false
-
-		const loadPlans = async () => {
-			setPlansLoading(true)
-			setPlansError(null)
-
-			try {
-				const data = await getPlansFn(config)
-				if (!cancelled) {
-					setPlans(data)
-				}
-			} catch (e) {
-				if (!cancelled) {
-					setPlansError(e instanceof Error ? e : new Error('Failed to load plans'))
-				}
-			} finally {
-				if (!cancelled) {
-					setPlansLoading(false)
-				}
-			}
-		}
-
-		loadPlans()
-		return () => {
-			cancelled = true
-		}
-	}, [config])
-
-	// Load subscription when userId changes
-	const refreshSubscription = useCallback(async () => {
-		if (!userId) {
-			setSubscription(null)
-			return
-		}
-
-		setSubscriptionLoading(true)
-		setSubscriptionError(null)
-
-		try {
-			const data = await getSubscriptionFn(config, userId)
-			setSubscription(data)
-		} catch (e) {
-			setSubscriptionError(e instanceof Error ? e : new Error('Failed to load subscription'))
-		} finally {
-			setSubscriptionLoading(false)
-		}
-	}, [config, userId])
-
-	useEffect(() => {
-		refreshSubscription()
-	}, [refreshSubscription])
-
-	// Create checkout
-	const createCheckout = useCallback(
-		async (planSlug: string, interval: 'monthly' | 'annual' | 'lifetime'): Promise<string> => {
-			if (!userId) {
-				throw new Error('User must be authenticated to checkout')
-			}
-
-			const { checkoutUrl } = await createCheckoutFn(config, {
-				userId,
-				planSlug,
-				interval,
-				successUrl: window.location.href,
-				cancelUrl: window.location.href,
-			})
-
-			return checkoutUrl
-		},
-		[config, userId]
-	)
-
-	// Open portal
-	const openPortal = useCallback(async () => {
-		if (!userId) {
-			throw new Error('User must be authenticated to access billing portal')
-		}
-
-		const { portalUrl } = await createPortalSessionFn(config, {
-			userId,
-			returnUrl: window.location.href,
-		})
-
-		window.location.href = portalUrl
-	}, [config, userId])
-
-	const value = useMemo(
-		() => ({
-			plans,
-			plansLoading,
-			plansError,
-			subscription,
-			subscriptionLoading,
-			subscriptionError,
-			createCheckout,
-			openPortal,
-			refreshSubscription,
-		}),
-		[
-			plans,
-			plansLoading,
-			plansError,
-			subscription,
-			subscriptionLoading,
-			subscriptionError,
-			createCheckout,
-			openPortal,
-			refreshSubscription,
-		]
-	)
-
-	return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>
-}
-
-// ============================================================================
 // Hooks
 // ============================================================================
 
 /**
- * Full billing context
- */
-export function useBilling(): BillingContextValue {
-	const context = useContext(BillingContext)
-	if (!context) {
-		throw new Error('useBilling must be used within a BillingProvider')
-	}
-	return context
-}
-
-/**
- * Just plans
+ * Plans hook with caching
+ *
+ * Uses React Query for caching - plans rarely change so 30 min staleTime.
  *
  * @example
  * ```tsx
  * function PricingTable() {
- *   const { plans, isLoading } = usePlans()
+ *   const { plans, isLoading, error } = usePlans()
+ *
+ *   if (isLoading) return <Spinner />
+ *   if (error) return <Error message={error.message} />
+ *
  *   return plans.map(plan => <PlanCard key={plan.id} plan={plan} />)
  * }
  * ```
  */
 export function usePlans() {
-	const { plans, plansLoading, plansError } = useBilling()
-	return { plans, isLoading: plansLoading, error: plansError }
+	const config = useSylphxConfig()
+	const queryClient = useQueryClient()
+
+	// React Query for plans fetching
+	const plansQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'plans'],
+		queryFn: () => getPlansFn(config),
+		staleTime: 30 * 60 * 1000, // 30 min - plans rarely change
+	})
+
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'billing', 'plans'],
+		})
+	}, [queryClient])
+
+	return {
+		plans: plansQuery.data ?? [],
+		isLoading: plansQuery.isLoading,
+		error: plansQuery.error as Error | null,
+		refetch,
+	}
 }
 
 /**
- * Just subscription
+ * Subscription hook with caching
+ *
+ * Uses React Query for caching - subscription may change so 5 min staleTime.
  *
  * @example
  * ```tsx
- * function SubscriptionStatus() {
- *   const { subscription, isLoading } = useSubscription()
+ * function SubscriptionStatus({ userId }) {
+ *   const { subscription, isLoading } = useSubscription(userId)
+ *
+ *   if (isLoading) return <Spinner />
  *   if (subscription?.status === 'active') return <Badge>Pro</Badge>
  *   return <Button>Upgrade</Button>
  * }
  * ```
  */
-export function useSubscription() {
-	const { subscription, subscriptionLoading, subscriptionError, refreshSubscription } = useBilling()
+export function useSubscription(userId: string | null | undefined) {
+	const config = useSylphxConfig()
+	const queryClient = useQueryClient()
+
+	// React Query for subscription fetching
+	const subscriptionQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'subscription', userId],
+		queryFn: () => getSubscriptionFn(config, userId!),
+		enabled: !!userId,
+		staleTime: 5 * 60 * 1000, // 5 min - subscription may change
+	})
+
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'billing', 'subscription', userId],
+		})
+	}, [queryClient, userId])
+
 	return {
-		subscription,
-		isLoading: subscriptionLoading,
-		error: subscriptionError,
-		refresh: refreshSubscription,
+		subscription: subscriptionQuery.data ?? null,
+		isLoading: subscriptionQuery.isLoading,
+		error: subscriptionQuery.error as Error | null,
+		refetch,
 	}
 }
 
 /**
- * Checkout action
+ * Checkout mutation hook
  *
  * @example
  * ```tsx
- * function UpgradeButton({ plan }) {
- *   const checkout = useCheckout()
+ * function UpgradeButton({ plan, userId }) {
+ *   const { checkout, isLoading, error } = useCheckout()
+ *
+ *   const handleClick = async () => {
+ *     const url = await checkout({
+ *       userId,
+ *       planSlug: plan.slug,
+ *       interval: 'monthly',
+ *     })
+ *     window.location.href = url
+ *   }
+ *
  *   return (
- *     <button onClick={async () => {
- *       const url = await checkout(plan.slug, 'monthly')
- *       window.location.href = url
- *     }}>
- *       Upgrade to {plan.name}
+ *     <button onClick={handleClick} disabled={isLoading}>
+ *       {isLoading ? 'Loading...' : `Upgrade to ${plan.name}`}
  *     </button>
  *   )
  * }
  * ```
  */
 export function useCheckout() {
-	return useBilling().createCheckout
+	const config = useSylphxConfig()
+	const queryClient = useQueryClient()
+
+	const mutation = useMutation({
+		mutationFn: async (input: {
+			userId: string
+			planSlug: string
+			interval: 'monthly' | 'annual' | 'lifetime'
+			successUrl?: string
+			cancelUrl?: string
+		}) => {
+			const { checkoutUrl } = await createCheckoutFn(config, {
+				userId: input.userId,
+				planSlug: input.planSlug,
+				interval: input.interval,
+				successUrl: input.successUrl ?? window.location.href,
+				cancelUrl: input.cancelUrl ?? window.location.href,
+			})
+			return checkoutUrl
+		},
+		onSuccess: (_data, variables) => {
+			// Invalidate subscription when checkout completes
+			queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'billing', 'subscription', variables.userId],
+			})
+		},
+	})
+
+	return {
+		checkout: mutation.mutateAsync,
+		isLoading: mutation.isPending,
+		error: mutation.error as Error | null,
+	}
 }
+
+/**
+ * Portal session mutation hook
+ *
+ * @example
+ * ```tsx
+ * function ManageBillingButton({ userId }) {
+ *   const { openPortal, isLoading } = usePortal()
+ *
+ *   return (
+ *     <button onClick={() => openPortal({ userId })} disabled={isLoading}>
+ *       Manage Billing
+ *     </button>
+ *   )
+ * }
+ * ```
+ */
+export function usePortal() {
+	const config = useSylphxConfig()
+	const queryClient = useQueryClient()
+
+	const mutation = useMutation({
+		mutationFn: async (input: {
+			userId: string
+			returnUrl?: string
+		}) => {
+			const { portalUrl } = await createPortalSessionFn(config, {
+				userId: input.userId,
+				returnUrl: input.returnUrl ?? window.location.href,
+			})
+			return portalUrl
+		},
+		onSuccess: (_data, variables) => {
+			// Invalidate subscription when returning from portal
+			queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'billing', 'subscription', variables.userId],
+			})
+		},
+	})
+
+	return {
+		openPortal: mutation.mutateAsync,
+		isLoading: mutation.isPending,
+		error: mutation.error as Error | null,
+	}
+}
+
+// Re-export types for convenience
+export type { Plan, Subscription }

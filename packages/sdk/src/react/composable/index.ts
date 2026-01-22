@@ -56,14 +56,18 @@ export {
 	useEmbed,
 } from './ai'
 
-// Billing provider and hooks
+// Billing hooks (composable, no provider needed)
 export {
-	BillingProvider,
-	useBilling,
 	usePlans,
 	useSubscription,
 	useCheckout,
+	usePortal,
+	type Plan,
+	type Subscription,
 } from './billing'
+
+// Billing provider (for shared state pattern)
+export { BillingProvider, useBilling } from '../billing'
 
 // Storage hooks (no provider needed)
 export {

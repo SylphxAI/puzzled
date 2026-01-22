@@ -3,11 +3,19 @@
  *
  * React hooks for feature flag management.
  * Enables gradual rollouts, A/B testing, and feature gating.
+ *
+ * ## React Query Integration
+ *
+ * All data fetching uses React Query for:
+ * - Automatic caching (configurable staleTime)
+ * - Deduplication of concurrent requests
+ * - Background refetching via refetchInterval (no manual setInterval)
  */
 
 'use client'
 
-import { useState, useEffect, useCallback, useRef, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext, useMemo, type ReactNode } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { EvaluationReason, FeatureFlagDetailResult } from '../types'
 
 // ============================================
@@ -69,7 +77,7 @@ export interface FeatureFlagProviderProps {
 		email?: string
 		attributes?: Record<string, unknown>
 	}
-	/** Refresh interval in ms (0 to disable) */
+	/** Refresh interval in ms (0 to disable) - uses React Query refetchInterval */
 	refreshInterval?: number
 	/** Enable localStorage caching */
 	enableCache?: boolean
@@ -80,11 +88,14 @@ const CACHE_KEY = 'sylphx_feature_flags'
 /**
  * Feature Flag Provider
  *
+ * Uses React Query for data fetching with refetchInterval for automatic refreshes.
+ *
  * @example
  * ```tsx
  * <FeatureFlagProvider
  *   endpoint="/api/flags"
  *   userContext={{ userId: user.id }}
+ *   refreshInterval={60000} // Refresh every minute via React Query
  * >
  *   <App />
  * </FeatureFlagProvider>
@@ -98,13 +109,23 @@ export function FeatureFlagProvider({
 	refreshInterval = 0,
 	enableCache = true,
 }: FeatureFlagProviderProps) {
-	const [flags, setFlags] = useState<Map<string, FeatureFlag>>(() => {
-		const map = new Map<string, FeatureFlag>()
-		initialFlags.forEach(flag => map.set(flag.key, flag))
-		return map
+	const queryClient = useQueryClient()
+
+	// Initialize from localStorage cache
+	const [cachedInitialFlags] = useState<FeatureFlag[]>(() => {
+		if (!enableCache || typeof window === 'undefined') return initialFlags
+		try {
+			const cached = localStorage.getItem(CACHE_KEY)
+			if (cached && !initialFlags.length) {
+				return JSON.parse(cached) as FeatureFlag[]
+			}
+		} catch {
+			// Ignore cache errors
+		}
+		return initialFlags
 	})
-	const [isLoading, setIsLoading] = useState(!initialFlags.length)
-	const [error, setError] = useState<Error | null>(null)
+
+	// Overrides state with localStorage persistence
 	const [overrides, setOverrides] = useState<FlagOverrides>(() => {
 		if (typeof window === 'undefined') return {}
 		try {
@@ -115,32 +136,14 @@ export function FeatureFlagProvider({
 		}
 	})
 
-	const userContextRef = useRef(userContext)
-	userContextRef.current = userContext
-
-	// Load cached flags on mount
-	useEffect(() => {
-		if (!enableCache || typeof window === 'undefined') return
-		try {
-			const cached = localStorage.getItem(CACHE_KEY)
-			if (cached && !initialFlags.length) {
-				const parsed = JSON.parse(cached) as FeatureFlag[]
-				const map = new Map<string, FeatureFlag>()
-				parsed.forEach(flag => map.set(flag.key, flag))
-				setFlags(map)
-			}
-		} catch {
-			// Ignore cache errors
-		}
-	}, [enableCache, initialFlags.length])
-
-	// Fetch flags from server
-	const fetchFlags = useCallback(async () => {
-		try {
+	// React Query for flag fetching with automatic refetch
+	const flagsQuery = useQuery({
+		queryKey: ['sylphx', 'feature-flags', endpoint, userContext?.userId, userContext?.email],
+		queryFn: async () => {
 			const response = await fetch(endpoint, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ context: userContextRef.current }),
+				body: JSON.stringify({ context: userContext }),
 			})
 
 			if (!response.ok) {
@@ -150,35 +153,26 @@ export function FeatureFlagProvider({
 			const data = await response.json()
 			const flagList = data.flags as FeatureFlag[]
 
-			const map = new Map<string, FeatureFlag>()
-			flagList.forEach(flag => map.set(flag.key, flag))
-			setFlags(map)
-			setError(null)
-
-			// Cache flags
+			// Cache flags to localStorage
 			if (enableCache && typeof window !== 'undefined') {
 				localStorage.setItem(CACHE_KEY, JSON.stringify(flagList))
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to fetch flags'))
-		} finally {
-			setIsLoading(false)
-		}
-	}, [endpoint, enableCache])
 
-	// Initial fetch
-	useEffect(() => {
-		if (!initialFlags.length) {
-			fetchFlags()
-		}
-	}, [fetchFlags, initialFlags.length])
+			return flagList
+		},
+		initialData: cachedInitialFlags.length > 0 ? cachedInitialFlags : undefined,
+		staleTime: 60 * 1000, // 1 minute - flags change occasionally
+		refetchInterval: refreshInterval > 0 ? refreshInterval : undefined,
+		enabled: cachedInitialFlags.length === 0 || refreshInterval > 0,
+	})
 
-	// Refresh interval
-	useEffect(() => {
-		if (refreshInterval <= 0) return
-		const interval = setInterval(fetchFlags, refreshInterval)
-		return () => clearInterval(interval)
-	}, [refreshInterval, fetchFlags])
+	// Convert flag array to Map for fast lookups
+	const flags = useMemo(() => {
+		const map = new Map<string, FeatureFlag>()
+		const flagList = flagsQuery.data ?? cachedInitialFlags
+		flagList.forEach(flag => map.set(flag.key, flag))
+		return map
+	}, [flagsQuery.data, cachedInitialFlags])
 
 	// Get flag value (with override support)
 	const getFlag = useCallback(
@@ -231,14 +225,21 @@ export function FeatureFlagProvider({
 		}
 	}, [])
 
+	// Refresh via React Query invalidation
+	const refresh = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'feature-flags', endpoint],
+		})
+	}, [queryClient, endpoint])
+
 	const value: FeatureFlagContextValue = {
 		getFlag,
 		isEnabled,
 		getVariant,
 		flags,
-		isLoading,
-		error,
-		refresh: fetchFlags,
+		isLoading: flagsQuery.isLoading,
+		error: flagsQuery.error as Error | null,
+		refresh,
 		overrides,
 		setOverride,
 		clearOverrides,
@@ -458,6 +459,8 @@ export interface UseFeatureFlagDetailReturn {
  * LaunchDarkly-style detailed evaluation with full reason metadata.
  * Useful for debugging, analytics, and understanding rollout behavior.
  *
+ * Uses React Query for caching and automatic data management.
+ *
  * @example
  * ```tsx
  * function DebugPanel() {
@@ -496,51 +499,26 @@ export function useFeatureFlagWithDetail(
 	key: string,
 	options: UseFeatureFlagDetailOptions = {}
 ): UseFeatureFlagDetailReturn {
-	const [detail, setDetail] = useState<FeatureFlagDetailResult | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
+	// React Query for flag detail fetching
+	const detailQuery = useQuery({
+		queryKey: ['sylphx', 'feature-flag-detail', key, options.userContext],
+		queryFn: async () => {
+			const response = await fetch(`/api/flags/${encodeURIComponent(key)}/detail`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ userContext: options.userContext }),
+			})
 
-	const optionsRef = useRef(options)
-	optionsRef.current = options
-
-	useEffect(() => {
-		let cancelled = false
-
-		const fetchDetail = async () => {
-			try {
-				const response = await fetch(`/api/flags/${encodeURIComponent(key)}/detail`, {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ userContext: optionsRef.current.userContext }),
-				})
-
-				if (!response.ok) {
-					throw new Error(`Failed to fetch flag detail: ${response.status}`)
-				}
-
-				const data = await response.json()
-				if (!cancelled) {
-					setDetail(data)
-					setError(null)
-				}
-			} catch (err) {
-				if (!cancelled) {
-					setError(err instanceof Error ? err : new Error('Failed to fetch flag detail'))
-				}
-			} finally {
-				if (!cancelled) {
-					setIsLoading(false)
-				}
+			if (!response.ok) {
+				throw new Error(`Failed to fetch flag detail: ${response.status}`)
 			}
-		}
 
-		fetchDetail()
+			return response.json() as Promise<FeatureFlagDetailResult>
+		},
+		staleTime: 5 * 60 * 1000, // 5 min - flag details don't change frequently
+	})
 
-		return () => {
-			cancelled = true
-		}
-	}, [key])
-
+	const detail = detailQuery.data ?? null
 	const enabled = detail?.enabled ?? options.defaultValue ?? false
 	const reason = detail?.reason ?? null
 	const rolloutBucket =
@@ -550,8 +528,8 @@ export function useFeatureFlagWithDetail(
 
 	return {
 		enabled,
-		isLoading,
-		error,
+		isLoading: detailQuery.isLoading,
+		error: detailQuery.error as Error | null,
 		detail,
 		reason,
 		rolloutBucket,

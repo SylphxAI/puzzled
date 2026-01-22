@@ -1,7 +1,15 @@
 /**
- * Billing Provider
+ * Billing Provider (Legacy)
  *
- * Composable billing provider with plans and subscription hooks.
+ * Provider-based billing for components that need shared state.
+ * For simpler use cases, prefer the composable hooks from './composable/billing'.
+ *
+ * ## React Query Integration
+ *
+ * All data fetching uses React Query internally for:
+ * - Automatic caching (plans: 30 min, subscription: 5 min)
+ * - Deduplication of concurrent requests
+ * - Background refetching
  */
 
 'use client'
@@ -10,11 +18,10 @@ import {
 	createContext,
 	useContext,
 	useCallback,
-	useEffect,
 	useMemo,
-	useState,
 	type ReactNode,
 } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSylphxConfig } from './composable/core'
 import {
 	getPlans as getPlansFn,
@@ -24,6 +31,14 @@ import {
 	type Plan,
 	type Subscription,
 } from '../billing'
+
+// Re-export composable hooks for direct usage
+export {
+	usePlans as usePlansHook,
+	useSubscription as useSubscriptionHook,
+	useCheckout as useCheckoutHook,
+	usePortal as usePortalHook,
+} from './composable/billing'
 
 // ============================================================================
 // Types
@@ -60,6 +75,10 @@ interface BillingProviderProps {
 /**
  * Billing provider
  *
+ * For simpler use cases, prefer the composable hooks:
+ * - usePlans() - Get plans without a provider
+ * - useSubscription(userId) - Get subscription without a provider
+ *
  * @example
  * ```tsx
  * <SylphxCore appId="my-app" secretKey={key}>
@@ -71,124 +90,104 @@ interface BillingProviderProps {
  */
 export function BillingProvider({ children, userId }: BillingProviderProps) {
 	const config = useSylphxConfig()
+	const queryClient = useQueryClient()
 
-	// Plans state
-	const [plans, setPlans] = useState<Plan[]>([])
-	const [plansLoading, setPlansLoading] = useState(true)
-	const [plansError, setPlansError] = useState<Error | null>(null)
+	// Plans query with React Query
+	const plansQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'plans'],
+		queryFn: () => getPlansFn(config),
+		staleTime: 30 * 60 * 1000, // 30 min - plans rarely change
+	})
 
-	// Subscription state
-	const [subscription, setSubscription] = useState<Subscription | null>(null)
-	const [subscriptionLoading, setSubscriptionLoading] = useState(false)
-	const [subscriptionError, setSubscriptionError] = useState<Error | null>(null)
+	// Subscription query with React Query
+	const subscriptionQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'subscription', userId],
+		queryFn: () => getSubscriptionFn(config, userId!),
+		enabled: !!userId,
+		staleTime: 5 * 60 * 1000, // 5 min - subscription may change
+	})
 
-	// Load plans
-	useEffect(() => {
-		let cancelled = false
-
-		const loadPlans = async () => {
-			setPlansLoading(true)
-			setPlansError(null)
-
-			try {
-				const data = await getPlansFn(config)
-				if (!cancelled) {
-					setPlans(data)
-				}
-			} catch (e) {
-				if (!cancelled) {
-					setPlansError(e instanceof Error ? e : new Error('Failed to load plans'))
-				}
-			} finally {
-				if (!cancelled) {
-					setPlansLoading(false)
-				}
+	// Checkout mutation
+	const checkoutMutation = useMutation({
+		mutationFn: async (input: { planSlug: string; interval: 'monthly' | 'annual' | 'lifetime' }) => {
+			if (!userId) {
+				throw new Error('User must be authenticated to checkout')
 			}
-		}
+			const { checkoutUrl } = await createCheckoutFn(config, {
+				userId,
+				planSlug: input.planSlug,
+				interval: input.interval,
+				successUrl: window.location.href,
+				cancelUrl: window.location.href,
+			})
+			return checkoutUrl
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'billing', 'subscription', userId],
+			})
+		},
+	})
 
-		loadPlans()
-		return () => {
-			cancelled = true
-		}
-	}, [config])
-
-	// Load subscription when userId changes
-	const refreshSubscription = useCallback(async () => {
-		if (!userId) {
-			setSubscription(null)
-			return
-		}
-
-		setSubscriptionLoading(true)
-		setSubscriptionError(null)
-
-		try {
-			const data = await getSubscriptionFn(config, userId)
-			setSubscription(data)
-		} catch (e) {
-			setSubscriptionError(e instanceof Error ? e : new Error('Failed to load subscription'))
-		} finally {
-			setSubscriptionLoading(false)
-		}
-	}, [config, userId])
-
-	useEffect(() => {
-		refreshSubscription()
-	}, [refreshSubscription])
+	// Portal mutation
+	const portalMutation = useMutation({
+		mutationFn: async () => {
+			if (!userId) {
+				throw new Error('User must be authenticated to access billing portal')
+			}
+			const { portalUrl } = await createPortalSessionFn(config, {
+				userId,
+				returnUrl: window.location.href,
+			})
+			return portalUrl
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: ['sylphx', 'billing', 'subscription', userId],
+			})
+		},
+	})
 
 	// Create checkout
 	const createCheckout = useCallback(
 		async (planSlug: string, interval: 'monthly' | 'annual' | 'lifetime'): Promise<string> => {
-			if (!userId) {
-				throw new Error('User must be authenticated to checkout')
-			}
-
-			const { checkoutUrl } = await createCheckoutFn(config, {
-				userId,
-				planSlug,
-				interval,
-				successUrl: window.location.href,
-				cancelUrl: window.location.href,
-			})
-
-			return checkoutUrl
+			return checkoutMutation.mutateAsync({ planSlug, interval })
 		},
-		[config, userId]
+		[checkoutMutation]
 	)
 
 	// Open portal
 	const openPortal = useCallback(async () => {
-		if (!userId) {
-			throw new Error('User must be authenticated to access billing portal')
-		}
-
-		const { portalUrl } = await createPortalSessionFn(config, {
-			userId,
-			returnUrl: window.location.href,
-		})
-
+		const portalUrl = await portalMutation.mutateAsync()
 		window.location.href = portalUrl
-	}, [config, userId])
+	}, [portalMutation])
+
+	// Refresh subscription
+	const refreshSubscription = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'billing', 'subscription', userId],
+		})
+	}, [queryClient, userId])
 
 	const value = useMemo(
 		() => ({
-			plans,
-			plansLoading,
-			plansError,
-			subscription,
-			subscriptionLoading,
-			subscriptionError,
+			plans: plansQuery.data ?? [],
+			plansLoading: plansQuery.isLoading,
+			plansError: plansQuery.error as Error | null,
+			subscription: subscriptionQuery.data ?? null,
+			subscriptionLoading: subscriptionQuery.isLoading,
+			subscriptionError: subscriptionQuery.error as Error | null,
 			createCheckout,
 			openPortal,
 			refreshSubscription,
 		}),
 		[
-			plans,
-			plansLoading,
-			plansError,
-			subscription,
-			subscriptionLoading,
-			subscriptionError,
+			plansQuery.data,
+			plansQuery.isLoading,
+			plansQuery.error,
+			subscriptionQuery.data,
+			subscriptionQuery.isLoading,
+			subscriptionQuery.error,
 			createCheckout,
 			openPortal,
 			refreshSubscription,

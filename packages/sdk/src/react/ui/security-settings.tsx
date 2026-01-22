@@ -7,7 +7,8 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { ThemeVariables } from './styles'
 import {
 	defaultTheme,
@@ -86,88 +87,98 @@ export function SecuritySettings({
 }: SecuritySettingsProps) {
 	const userContext = useUserContext()
 	const securityContext = useSecurityContext()
+	const queryClient = useQueryClient()
 	const styles = baseStyles(theme)
 
-	// State
-	const [twoFactor, setTwoFactor] = useState<TwoFactorStatus>({ enabled: false })
-	const [sessions, setSessions] = useState<ActiveSession[]>([])
-	const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([])
-	const [isLoading, setIsLoading] = useState(true)
+	// UI state for messages
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState<string | null>(null)
 
-	// 2FA setup state
+	// 2FA setup UI state
 	const [showSetup2FA, setShowSetup2FA] = useState(false)
 	const [totpSecret, setTotpSecret] = useState<string | null>(null)
 	const [totpQrCode, setTotpQrCode] = useState<string | null>(null)
 	const [verifyCode, setVerifyCode] = useState('')
-	const [isEnabling2FA, setIsEnabling2FA] = useState(false)
 
-	// Password change state
+	// Password change UI state
 	const [showPasswordChange, setShowPasswordChange] = useState(false)
 	const [currentPassword, setCurrentPassword] = useState('')
 	const [newPassword, setNewPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
-	const [isChangingPassword, setIsChangingPassword] = useState(false)
 
 	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
 	}, [])
 
-	// Fetch security data
-	const fetchSecurityData = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
+	// React Query for 2FA status
+	const twoFactorQuery = useQuery({
+		queryKey: ['sylphx', 'security', '2fa-status'],
+		queryFn: async () => {
+			const data = await securityContext.getTwoFactorStatus()
+			return {
+				enabled: data.enabled,
+				method: data.enabled ? 'totp' as const : undefined,
+			}
+		},
+		enabled: show2FA,
+		staleTime: 5 * 60 * 1000, // 5 min
+	})
 
-		try {
-			const [twoFactorData, sessionsData, historyData] = await Promise.all([
-				show2FA ? securityContext.getTwoFactorStatus() : null,
-				showSessions ? userContext.getSessions() : null,
-				showLoginHistory ? userContext.getLoginHistory({ limit: 10 }) : null,
-			])
+	// React Query for sessions
+	const sessionsQuery = useQuery({
+		queryKey: ['sylphx', 'security', 'sessions'],
+		queryFn: async () => {
+			const data = await userContext.getSessions()
+			return data.map(s => ({
+				id: s.id,
+				current: s.isCurrent ?? false,
+				device: s.deviceType || s.device || 'Unknown',
+				browser: s.browser || 'Unknown',
+				ip: s.ipAddress || 'Unknown',
+				location: s.city && s.country ? `${s.city}, ${s.country}` : (s.location || s.country || undefined),
+				lastActive: s.lastActiveAt || s.createdAt,
+				createdAt: s.createdAt,
+			}))
+		},
+		enabled: showSessions,
+		staleTime: 60 * 1000, // 1 min - sessions can change
+	})
 
-			if (twoFactorData) {
-				setTwoFactor({
-					enabled: twoFactorData.enabled,
-					method: twoFactorData.enabled ? 'totp' : undefined,
-				})
-			}
-			if (sessionsData) {
-				setSessions(sessionsData.map(s => ({
-					id: s.id,
-					current: s.isCurrent ?? false,
-					device: s.deviceType || s.device || 'Unknown',
-					browser: s.browser || 'Unknown',
-					ip: s.ipAddress || 'Unknown',
-					location: s.city && s.country ? `${s.city}, ${s.country}` : (s.location || s.country || undefined),
-					lastActive: s.lastActiveAt || s.createdAt,
-					createdAt: s.createdAt,
-				})))
-			}
-			if (historyData) {
-				setLoginHistory(historyData.map(h => ({
-					id: h.id,
-					ip: h.ipAddress || 'Unknown',
-					device: h.device || 'Unknown',
-					browser: h.browser || 'Unknown',
-					location: h.location ?? undefined,
-					success: h.successful,
-					createdAt: h.loginAt.toISOString(),
-				})))
-			}
-		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to load security settings'
+	// React Query for login history
+	const loginHistoryQuery = useQuery({
+		queryKey: ['sylphx', 'security', 'login-history'],
+		queryFn: async () => {
+			const data = await userContext.getLoginHistory({ limit: 10 })
+			return data.map(h => ({
+				id: h.id,
+				ip: h.ipAddress || 'Unknown',
+				device: h.device || 'Unknown',
+				browser: h.browser || 'Unknown',
+				location: h.location ?? undefined,
+				success: h.successful,
+				createdAt: h.loginAt.toISOString(),
+			}))
+		},
+		enabled: showLoginHistory,
+		staleTime: 60 * 1000, // 1 min
+	})
+
+	// Derived state from queries
+	const twoFactor = twoFactorQuery.data ?? { enabled: false }
+	const sessions = sessionsQuery.data ?? []
+	const loginHistory = loginHistoryQuery.data ?? []
+	const isLoading = twoFactorQuery.isLoading || sessionsQuery.isLoading || loginHistoryQuery.isLoading
+
+	// Combined query error
+	const queryError = twoFactorQuery.error || sessionsQuery.error || loginHistoryQuery.error
+	useEffect(() => {
+		if (queryError) {
+			const message = queryError instanceof Error ? queryError.message : 'Failed to load security settings'
 			setError(message)
 			onError?.(message)
-		} finally {
-			setIsLoading(false)
 		}
-	}, [securityContext, userContext, show2FA, showSessions, showLoginHistory, onError])
-
-	useEffect(() => {
-		fetchSecurityData()
-	}, [fetchSecurityData])
+	}, [queryError, onError])
 
 	// Clear messages after timeout
 	useEffect(() => {
@@ -180,130 +191,170 @@ export function SecuritySettings({
 		}
 	}, [success, error])
 
-	// Start 2FA setup
-	const handleStart2FASetup = async () => {
-		try {
-			const data = await securityContext.twoFactorSetup()
+	// Mutation: Start 2FA setup
+	const setup2FAMutation = useMutation({
+		mutationFn: () => securityContext.twoFactorSetup(),
+		onSuccess: (data) => {
 			setTotpSecret(data.secret)
-			// API returns 'uri' for the TOTP URI (for QR code generation)
 			setTotpQrCode((data as { uri?: string }).uri ?? null)
 			setShowSetup2FA(true)
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Failed to start 2FA setup'
 			setError(message)
 			onError?.(message)
-		}
-	}
+		},
+	})
 
-	// Verify and enable 2FA
-	const handleEnable2FA = async (e: React.FormEvent) => {
-		e.preventDefault()
-		if (!verifyCode || verifyCode.length !== 6) {
-			setError('Please enter a 6-digit code')
-			return
-		}
-
-		setIsEnabling2FA(true)
-		setError(null)
-
-		try {
-			await securityContext.twoFactorVerify(verifyCode)
-			setTwoFactor({ enabled: true, method: 'totp' })
+	// Mutation: Enable 2FA (verify code)
+	const enable2FAMutation = useMutation({
+		mutationFn: (code: string) => securityContext.twoFactorVerify(code),
+		onSuccess: () => {
+			queryClient.setQueryData(['sylphx', 'security', '2fa-status'], { enabled: true, method: 'totp' })
 			setShowSetup2FA(false)
 			setVerifyCode('')
 			setSuccess('Two-factor authentication enabled')
 			onSuccess?.('Two-factor authentication enabled')
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Invalid verification code'
 			setError(message)
 			onError?.(message)
-		} finally {
-			setIsEnabling2FA(false)
-		}
-	}
+		},
+	})
 
-	// Disable 2FA
-	const handleDisable2FA = async () => {
-		const code = prompt('Enter your 2FA code to disable two-factor authentication:')
-		if (!code) return
-
-		try {
-			await securityContext.twoFactorDisable(code)
-			setTwoFactor({ enabled: false })
+	// Mutation: Disable 2FA
+	const disable2FAMutation = useMutation({
+		mutationFn: (code: string) => securityContext.twoFactorDisable(code),
+		onSuccess: () => {
+			queryClient.setQueryData(['sylphx', 'security', '2fa-status'], { enabled: false })
 			setSuccess('Two-factor authentication disabled')
 			onSuccess?.('Two-factor authentication disabled')
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Failed to disable 2FA'
 			setError(message)
 			onError?.(message)
-		}
-	}
+		},
+	})
 
-	// Change password
-	const handlePasswordChange = async (e: React.FormEvent) => {
-		e.preventDefault()
-
-		if (newPassword !== confirmPassword) {
-			setError('Passwords do not match')
-			return
-		}
-
-		if (newPassword.length < 8) {
-			setError('Password must be at least 8 characters')
-			return
-		}
-
-		setIsChangingPassword(true)
-		setError(null)
-
-		try {
-			await userContext.changePassword(currentPassword, newPassword)
+	// Mutation: Change password
+	const changePasswordMutation = useMutation({
+		mutationFn: ({ current, newPwd }: { current: string; newPwd: string }) =>
+			userContext.changePassword(current, newPwd),
+		onSuccess: () => {
 			setShowPasswordChange(false)
 			setCurrentPassword('')
 			setNewPassword('')
 			setConfirmPassword('')
 			setSuccess('Password changed successfully')
 			onSuccess?.('Password changed successfully')
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Failed to change password'
 			setError(message)
 			onError?.(message)
-		} finally {
-			setIsChangingPassword(false)
-		}
-	}
+		},
+	})
 
-	// Revoke session
-	const handleRevokeSession = async (sessionId: string) => {
-		try {
-			await userContext.revokeSession(sessionId)
-			setSessions((prev) => prev.filter((s) => s.id !== sessionId))
+	// Mutation: Revoke session
+	const revokeSessionMutation = useMutation({
+		mutationFn: (sessionId: string) => userContext.revokeSession(sessionId),
+		onSuccess: (_data, sessionId) => {
+			queryClient.setQueryData<ActiveSession[]>(['sylphx', 'security', 'sessions'], (prev) =>
+				prev?.filter((s) => s.id !== sessionId) ?? []
+			)
 			setSuccess('Session revoked')
 			onSuccess?.('Session revoked')
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Failed to revoke session'
 			setError(message)
 			onError?.(message)
-		}
-	}
+		},
+	})
 
-	// Revoke all other sessions
-	const handleRevokeAllSessions = async () => {
-		if (!confirm('Are you sure you want to sign out all other devices?')) {
-			return
-		}
-
-		try {
-			await userContext.revokeAllSessions()
-			setSessions((prev) => prev.filter((s) => s.current))
+	// Mutation: Revoke all sessions
+	const revokeAllSessionsMutation = useMutation({
+		mutationFn: () => userContext.revokeAllSessions(),
+		onSuccess: () => {
+			queryClient.setQueryData<ActiveSession[]>(['sylphx', 'security', 'sessions'], (prev) =>
+				prev?.filter((s) => s.current) ?? []
+			)
 			setSuccess('All other sessions revoked')
 			onSuccess?.('All other sessions revoked')
-		} catch (err) {
+		},
+		onError: (err) => {
 			const message = err instanceof Error ? err.message : 'Failed to revoke sessions'
 			setError(message)
 			onError?.(message)
+		},
+	})
+
+	// Handler: Start 2FA setup
+	const handleStart2FASetup = useCallback(() => {
+		setup2FAMutation.mutate()
+	}, [setup2FAMutation])
+
+	// Handler: Enable 2FA
+	const handleEnable2FA = useCallback(
+		(e: React.FormEvent) => {
+			e.preventDefault()
+			if (!verifyCode || verifyCode.length !== 6) {
+				setError('Please enter a 6-digit code')
+				return
+			}
+			enable2FAMutation.mutate(verifyCode)
+		},
+		[verifyCode, enable2FAMutation]
+	)
+
+	// Handler: Disable 2FA
+	const handleDisable2FA = useCallback(() => {
+		const code = prompt('Enter your 2FA code to disable two-factor authentication:')
+		if (!code) return
+		disable2FAMutation.mutate(code)
+	}, [disable2FAMutation])
+
+	// Handler: Change password
+	const handlePasswordChange = useCallback(
+		(e: React.FormEvent) => {
+			e.preventDefault()
+
+			if (newPassword !== confirmPassword) {
+				setError('Passwords do not match')
+				return
+			}
+
+			if (newPassword.length < 8) {
+				setError('Password must be at least 8 characters')
+				return
+			}
+
+			changePasswordMutation.mutate({ current: currentPassword, newPwd: newPassword })
+		},
+		[newPassword, confirmPassword, currentPassword, changePasswordMutation]
+	)
+
+	// Handler: Revoke session
+	const handleRevokeSession = useCallback(
+		(sessionId: string) => {
+			revokeSessionMutation.mutate(sessionId)
+		},
+		[revokeSessionMutation]
+	)
+
+	// Handler: Revoke all sessions
+	const handleRevokeAllSessions = useCallback(() => {
+		if (!confirm('Are you sure you want to sign out all other devices?')) {
+			return
 		}
-	}
+		revokeAllSessionsMutation.mutate()
+	}, [revokeAllSessionsMutation])
+
+	// Derived loading states for UI
+	const isEnabling2FA = enable2FAMutation.isPending
+	const isChangingPassword = changePasswordMutation.isPending
 
 	const cardStyles: React.CSSProperties = mergeStyles(styles.card, {
 		padding: '1rem',
