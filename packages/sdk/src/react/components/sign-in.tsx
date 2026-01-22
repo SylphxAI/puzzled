@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSafeAuth, useSafeUser } from '../hooks'
 import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
 import type { OAuthProviderId } from '../../types'
@@ -101,10 +101,31 @@ export function SignIn({
 	const { signIn, isConfigured: authConfigured } = useSafeAuth()
 	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const [modalOpen, setModalOpen] = useState(false)
+	const [isMounted, setIsMounted] = useState(false)
 
-	// Don't render during SSR when SDK is not configured
-	if (!authConfigured || !userConfigured) {
+	// Track client-side mount
+	useEffect(() => {
+		setIsMounted(true)
+	}, [])
+
+	// During SSR, return null (will hydrate on client)
+	if (typeof window === 'undefined') {
 		return null
+	}
+
+	// On client, if SDK not configured after mount, show message
+	if (!authConfigured || !userConfigured) {
+		// Still loading / hydrating
+		if (!isMounted) {
+			return null
+		}
+		// SDK genuinely not configured - show helpful message
+		return (
+			<div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+				<p>Authentication not configured.</p>
+				<p style={{ fontSize: '0.875rem' }}>Please configure SYLPHX_APP_ID and SYLPHX_PUBLISHABLE_KEY.</p>
+			</div>
+		)
 	}
 
 	// Don't show if already signed in
