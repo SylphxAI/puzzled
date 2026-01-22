@@ -646,25 +646,6 @@ export {
 } from './ui/unsubscribe-confirm'
 
 // ============================================================================
-// Optimistic Updates (SDK)
-// ============================================================================
-// Lightweight optimistic update hooks for SDK UI components.
-// Works with any async function, without tRPC dependency.
-
-export {
-	useOptimisticAction,
-	useOptimisticValue,
-	useOptimisticToggle,
-	useOptimisticList,
-	type UseOptimisticActionOptions,
-	type UseOptimisticActionReturn,
-	type UseOptimisticValueOptions,
-	type UseOptimisticToggleOptions,
-	type UseOptimisticListOptions,
-	type ListOperations,
-} from '../lib/optimistic'
-
-// ============================================================================
 // Security Utilities
 // ============================================================================
 // Safe redirect and URL validation functions to prevent XSS attacks.
