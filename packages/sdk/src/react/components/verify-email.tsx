@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSylphx, useUser } from '../hooks'
+import { useSafeAuth, useSafeUser } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -61,9 +61,14 @@ export function VerifyEmail({
 	showCard = true,
 	header,
 }: VerifyEmailProps) {
-	const { config, verifyEmail, resendVerificationEmail } = useSylphx()
-	const { isSignedIn, isLoaded } = useUser()
+	const { verifyEmail, resendVerificationEmail, isConfigured: authConfigured } = useSafeAuth()
+	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const styles = baseStyles(theme)
+
+	// Don't render during SSR when SDK is not configured
+	if (!authConfigured || !userConfigured) {
+		return null
+	}
 
 	const [code, setCode] = useState('')
 	const [error, setError] = useState<string | null>(null)
@@ -102,6 +107,9 @@ export function VerifyEmail({
 		setError(null)
 
 		try {
+			if (!verifyEmail) {
+				throw new Error('Authentication not configured')
+			}
 			await verifyEmail({ token })
 			setIsSuccess(true)
 			onSuccess?.()
@@ -130,6 +138,9 @@ export function VerifyEmail({
 			setError(null)
 
 			try {
+				if (!verifyEmail) {
+					throw new Error('Authentication not configured')
+				}
 				// For code-based verification, we treat the code as the token
 				await verifyEmail({ token: code })
 				setIsSuccess(true)
@@ -159,6 +170,9 @@ export function VerifyEmail({
 		setError(null)
 
 		try {
+			if (!resendVerificationEmail) {
+				throw new Error('Authentication not configured')
+			}
 			await resendVerificationEmail({ email })
 			setResendCooldown(60) // 60 second cooldown
 		} catch (err) {

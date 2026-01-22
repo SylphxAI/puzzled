@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSylphx, useUser } from '../hooks'
+import { useSafeAuth, useSafeUser } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -68,8 +68,8 @@ export function ForgotPassword({
 	showCard = true,
 	header,
 }: ForgotPasswordProps) {
-	const { config, forgotPassword } = useSylphx()
-	const { isSignedIn, isLoaded } = useUser()
+	const { forgotPassword, isConfigured: authConfigured } = useSafeAuth()
+	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const styles = baseStyles(theme)
 
 	const [modalOpen, setModalOpen] = useState(false)
@@ -84,6 +84,11 @@ export function ForgotPassword({
 		injectGlobalStyles()
 	}, [])
 
+	// Don't render during SSR when SDK is not configured
+	if (!authConfigured || !userConfigured) {
+		return null
+	}
+
 	// Don't show if already signed in
 	if (isLoaded && isSignedIn) {
 		return null
@@ -96,6 +101,9 @@ export function ForgotPassword({
 			setError(null)
 
 			try {
+				if (!forgotPassword) {
+					throw new Error('Authentication not configured')
+				}
 				await forgotPassword({ email })
 				setIsSubmitted(true)
 				onSuccess?.()

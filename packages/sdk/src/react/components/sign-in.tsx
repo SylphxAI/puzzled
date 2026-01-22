@@ -7,7 +7,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth, useUser } from '../hooks'
+import { useSafeAuth, useSafeUser } from '../hooks'
 import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
 import type { OAuthProviderId } from '../../types'
 
@@ -98,9 +98,14 @@ export function SignIn({
 	onError,
 	showCard = true,
 }: SignInProps) {
-	const { signIn } = useAuth()
-	const { isSignedIn, isLoaded } = useUser()
+	const { signIn, isConfigured: authConfigured } = useSafeAuth()
+	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const [modalOpen, setModalOpen] = useState(false)
+
+	// Don't render during SSR when SDK is not configured
+	if (!authConfigured || !userConfigured) {
+		return null
+	}
 
 	// Don't show if already signed in
 	if (isLoaded && isSignedIn) {

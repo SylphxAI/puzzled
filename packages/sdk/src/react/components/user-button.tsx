@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useUser, useAuth } from '../hooks'
+import { useSafeUser, useSafeAuth } from '../hooks'
 import {
 	type ThemeVariables,
 	defaultTheme,
@@ -49,8 +49,8 @@ export function UserButton({
 	className,
 	showName = false,
 }: UserButtonProps) {
-	const { user, isLoaded, isSignedIn } = useUser()
-	const { signOut } = useAuth()
+	const { user, isLoaded, isSignedIn, isConfigured: userConfigured } = useSafeUser()
+	const { signOut, isConfigured: authConfigured } = useSafeAuth()
 	const [isOpen, setIsOpen] = useState(false)
 	const menuRef = useRef<HTMLDivElement>(null)
 	const buttonRef = useRef<HTMLButtonElement>(null)
@@ -90,8 +90,8 @@ export function UserButton({
 		return () => document.removeEventListener('keydown', handleEscape)
 	}, [isOpen])
 
-	// Don't show if not signed in
-	if (!isLoaded || !isSignedIn || !user) {
+	// Don't render during SSR or if not signed in
+	if (!userConfigured || !authConfigured || !isLoaded || !isSignedIn || !user) {
 		return null
 	}
 

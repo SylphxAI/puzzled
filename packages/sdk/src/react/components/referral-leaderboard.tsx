@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useUser } from '../hooks'
+import { useSafeUser } from '../hooks'
 import { useReferral, type LeaderboardEntry, type ReferralLeaderboardResult } from '../platform-hooks'
 import {
 	type ThemeVariables,
@@ -70,7 +70,7 @@ export function ReferralLeaderboard({
 	compact = false,
 	onEntryClick,
 }: ReferralLeaderboardProps) {
-	const { user } = useUser()
+	const { user, isConfigured: userConfigured } = useSafeUser()
 	const { stats, code, getLeaderboard } = useReferral()
 	const queryClient = useQueryClient()
 	const styles = baseStyles(theme)

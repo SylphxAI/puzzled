@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSylphx, useUser } from '../hooks'
+import { useSafeAuth, useSafeUser } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -62,9 +62,14 @@ export function ResetPassword({
 	showCard = true,
 	header,
 }: ResetPasswordProps) {
-	const { resetPassword } = useSylphx()
-	const { isSignedIn, isLoaded } = useUser()
+	const { resetPassword, isConfigured: authConfigured } = useSafeAuth()
+	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const styles = baseStyles(theme)
+
+	// Don't render during SSR when SDK is not configured
+	if (!authConfigured || !userConfigured) {
+		return null
+	}
 
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
@@ -130,6 +135,9 @@ export function ResetPassword({
 			setIsLoading(true)
 
 			try {
+				if (!resetPassword) {
+					throw new Error('Authentication not configured')
+				}
 				await resetPassword({ token, newPassword: password })
 				setIsSuccess(true)
 				onSuccess?.()
