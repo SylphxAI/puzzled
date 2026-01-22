@@ -1,10 +1,11 @@
-import { BarChart3, Flame, Sparkles, Star, Target, Trophy } from 'lucide-react'
+import { BarChart3, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-react'
+import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
 import { createServerCaller } from '@/trpc/server'
 
@@ -32,33 +33,21 @@ type GameStats = {
 	perfectGames: number
 }
 
+// Empty stats for new users or games not played
+const emptyStats: GameStats = {
+	gamesPlayed: 0,
+	gamesWon: 0,
+	currentStreak: 0,
+	maxStreak: 0,
+	totalScore: 0,
+	averageAttempts: null,
+	guessDistribution: null,
+	perfectGames: 0,
+}
+
 type StatsData = {
 	wordle: GameStats
 	connections: GameStats
-}
-
-// Demo stats for users who are not logged in
-const demoStats: StatsData = {
-	wordle: {
-		gamesPlayed: 42,
-		gamesWon: 38,
-		currentStreak: 7,
-		maxStreak: 15,
-		totalScore: 0,
-		averageAttempts: 4,
-		guessDistribution: { '1': 2, '2': 5, '3': 12, '4': 14, '5': 4, '6': 1 },
-		perfectGames: 2,
-	},
-	connections: {
-		gamesPlayed: 28,
-		gamesWon: 22,
-		currentStreak: 3,
-		maxStreak: 8,
-		totalScore: 0,
-		averageAttempts: null,
-		guessDistribution: null,
-		perfectGames: 3,
-	},
 }
 
 export default async function StatsPage({ params }: Props) {
@@ -67,45 +56,64 @@ export default async function StatsPage({ params }: Props) {
 
 	const t = await getTranslations('stats')
 	const user = await currentUser()
+
+	// Logged-out users see login prompt, not fake data
+	if (!user) {
+		return (
+			<>
+				<Header />
+				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+					<div className="mx-auto max-w-md text-center">
+						<div className="mb-6 flex justify-center">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+								<BarChart3 className="h-10 w-10 text-muted-foreground" />
+							</div>
+						</div>
+						<h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
+						<p className="mb-6 text-muted-foreground">
+							{t('signInToSeeStats')}
+						</p>
+						<Button asChild>
+							<Link href={`/${locale}/login?callbackUrl=/${locale}/stats`}>
+								<LogIn className="mr-2 h-4 w-4" />
+								{t('signIn')}
+							</Link>
+						</Button>
+					</div>
+				</main>
+			</>
+		)
+	}
+
 	const trpc = await createServerCaller()
 
-	// Get real stats if user is logged in, otherwise use demo stats
-	let stats: StatsData = demoStats
-	let isDemo = true
+	// Get user's real stats
+	let stats: StatsData = { wordle: emptyStats, connections: emptyStats }
 
-	if (user) {
-		try {
-			const userStats = await trpc.stats.getUserStats()
-			// Only use real stats if user has played at least one game
-			const hasPlayed =
-				(userStats.wordle?.gamesPlayed ?? 0) > 0 || (userStats.connections?.gamesPlayed ?? 0) > 0
-
-			if (hasPlayed) {
-				stats = {
-					wordle: userStats.wordle
-						? {
-								...userStats.wordle,
-								guessDistribution: userStats.wordle.guessDistribution as Record<
-									string,
-									number
-								> | null,
-							}
-						: demoStats.wordle,
-					connections: userStats.connections
-						? {
-								...userStats.connections,
-								guessDistribution: userStats.connections.guessDistribution as Record<
-									string,
-									number
-								> | null,
-							}
-						: demoStats.connections,
-				}
-				isDemo = false
-			}
-		} catch {
-			// Fall back to demo stats on error
+	try {
+		const userStats = await trpc.stats.getUserStats()
+		stats = {
+			wordle: userStats.wordle
+				? {
+						...userStats.wordle,
+						guessDistribution: userStats.wordle.guessDistribution as Record<
+							string,
+							number
+						> | null,
+					}
+				: emptyStats,
+			connections: userStats.connections
+				? {
+						...userStats.connections,
+						guessDistribution: userStats.connections.guessDistribution as Record<
+							string,
+							number
+						> | null,
+					}
+				: emptyStats,
 		}
+	} catch {
+		// Use empty stats on error
 	}
 
 	const totalGamesPlayed = stats.wordle.gamesPlayed + stats.connections.gamesPlayed
@@ -114,6 +122,33 @@ export default async function StatsPage({ params }: Props) {
 	const bestStreak = Math.max(stats.wordle.maxStreak, stats.connections.maxStreak)
 	const winRate = totalGamesPlayed > 0 ? Math.round((totalGamesWon / totalGamesPlayed) * 100) : 0
 	const totalPerfectGames = stats.wordle.perfectGames + stats.connections.perfectGames
+
+	// Show empty state if user hasn't played any games yet
+	if (totalGamesPlayed === 0) {
+		return (
+			<>
+				<Header />
+				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+					<div className="mx-auto max-w-md text-center">
+						<div className="mb-6 flex justify-center">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+								<Trophy className="h-10 w-10 text-muted-foreground" />
+							</div>
+						</div>
+						<h1 className="mb-2 text-2xl font-bold">{t('noStatsYet')}</h1>
+						<p className="mb-6 text-muted-foreground">
+							{t('playFirstGame')}
+						</p>
+						<Button asChild>
+							<Link href={`/${locale}`}>
+								{t('startPlaying')}
+							</Link>
+						</Button>
+					</div>
+				</main>
+			</>
+		)
+	}
 
 	// Determine which stat to feature based on what's impressive
 	const featuredStat =
@@ -209,106 +244,110 @@ export default async function StatsPage({ params }: Props) {
 					</div>
 
 					{/* Wordle Stats */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<WordleIcon size={24} className="text-game-wordle" aria-hidden="true" />
-								Wordle
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-								<div>
-									<div className="text-2xl font-bold">{stats.wordle.gamesPlayed}</div>
-									<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
-								</div>
-								<div>
-									<div className="text-2xl font-bold">
-										{stats.wordle.gamesPlayed > 0
-											? Math.round((stats.wordle.gamesWon / stats.wordle.gamesPlayed) * 100)
-											: 0}
-										%
+					{stats.wordle.gamesPlayed > 0 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<WordleIcon size={24} className="text-game-wordle" aria-hidden="true" />
+									Wordle
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+									<div>
+										<div className="text-2xl font-bold">{stats.wordle.gamesPlayed}</div>
+										<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
 									</div>
-									<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+									<div>
+										<div className="text-2xl font-bold">
+											{stats.wordle.gamesPlayed > 0
+												? Math.round((stats.wordle.gamesWon / stats.wordle.gamesPlayed) * 100)
+												: 0}
+											%
+										</div>
+										<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+									</div>
+									<div>
+										<div className="text-2xl font-bold">{stats.wordle.currentStreak}</div>
+										<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
+									</div>
+									<div>
+										<div className="text-2xl font-bold">{stats.wordle.maxStreak}</div>
+										<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
+									</div>
 								</div>
-								<div>
-									<div className="text-2xl font-bold">{stats.wordle.currentStreak}</div>
-									<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
-								</div>
-								<div>
-									<div className="text-2xl font-bold">{stats.wordle.maxStreak}</div>
-									<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
-								</div>
-							</div>
 
-							{/* Guess Distribution */}
-							{stats.wordle.guessDistribution && (
-								<div>
-									<h4 className="mb-2 text-sm font-medium">{t('guessDistribution')}</h4>
-									<div className="space-y-1">
-										{Object.entries(stats.wordle.guessDistribution).map(([guess, count]) => {
-											const maxCount = Math.max(
-												...Object.values(stats.wordle.guessDistribution as Record<string, number>),
-											)
-											const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
-											return (
-												<div key={guess} className="flex items-center gap-2">
-													<span className="w-4 text-sm font-medium">{guess}</span>
-													<div className="flex-1">
-														<div
-															className="flex h-5 items-center rounded bg-primary px-2"
-															style={{ width: `${Math.max(percentage, 10)}%` }}
-														>
-															<span className="text-xs font-medium text-primary-foreground">
-																{count}
-															</span>
+								{/* Guess Distribution */}
+								{stats.wordle.guessDistribution && (
+									<div>
+										<h4 className="mb-2 text-sm font-medium">{t('guessDistribution')}</h4>
+										<div className="space-y-1">
+											{Object.entries(stats.wordle.guessDistribution).map(([guess, count]) => {
+												const maxCount = Math.max(
+													...Object.values(stats.wordle.guessDistribution as Record<string, number>),
+												)
+												const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
+												return (
+													<div key={guess} className="flex items-center gap-2">
+														<span className="w-4 text-sm font-medium">{guess}</span>
+														<div className="flex-1">
+															<div
+																className="flex h-5 items-center rounded bg-primary px-2"
+																style={{ width: `${Math.max(percentage, 10)}%` }}
+															>
+																<span className="text-xs font-medium text-primary-foreground">
+																	{count}
+																</span>
+															</div>
 														</div>
 													</div>
-												</div>
-											)
-										})}
+												)
+											})}
+										</div>
 									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
+								)}
+							</CardContent>
+						</Card>
+					)}
 
 					{/* Connections Stats */}
-					<Card>
-						<CardHeader>
-							<CardTitle className="flex items-center gap-2">
-								<ConnectionsIcon size={24} className="text-game-connections" aria-hidden="true" />
-								Connections
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-								<div>
-									<div className="text-2xl font-bold">{stats.connections.gamesPlayed}</div>
-									<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
-								</div>
-								<div>
-									<div className="text-2xl font-bold">
-										{stats.connections.gamesPlayed > 0
-											? Math.round(
-													(stats.connections.gamesWon / stats.connections.gamesPlayed) * 100,
-												)
-											: 0}
-										%
+					{stats.connections.gamesPlayed > 0 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<ConnectionsIcon size={24} className="text-game-connections" aria-hidden="true" />
+									Connections
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+									<div>
+										<div className="text-2xl font-bold">{stats.connections.gamesPlayed}</div>
+										<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
 									</div>
-									<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+									<div>
+										<div className="text-2xl font-bold">
+											{stats.connections.gamesPlayed > 0
+												? Math.round(
+														(stats.connections.gamesWon / stats.connections.gamesPlayed) * 100,
+													)
+												: 0}
+											%
+										</div>
+										<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+									</div>
+									<div>
+										<div className="text-2xl font-bold">{stats.connections.currentStreak}</div>
+										<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
+									</div>
+									<div>
+										<div className="text-2xl font-bold">{stats.connections.maxStreak}</div>
+										<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
+									</div>
 								</div>
-								<div>
-									<div className="text-2xl font-bold">{stats.connections.currentStreak}</div>
-									<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
-								</div>
-								<div>
-									<div className="text-2xl font-bold">{stats.connections.maxStreak}</div>
-									<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
-								</div>
-							</div>
-						</CardContent>
-					</Card>
+							</CardContent>
+						</Card>
+					)}
 
 					{/* Achievements */}
 					<Card>
@@ -329,11 +368,6 @@ export default async function StatsPage({ params }: Props) {
 							/>
 						</CardContent>
 					</Card>
-
-					{/* Sign in prompt - only show for demo data */}
-					{isDemo && (
-						<p className="text-center text-sm text-muted-foreground">{t('signInPrompt')}</p>
-					)}
 				</div>
 			</main>
 		</>
