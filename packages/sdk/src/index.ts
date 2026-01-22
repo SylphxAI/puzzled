@@ -232,6 +232,7 @@ export {
 	deleteCron,
 	type JobInput,
 	type JobResult,
+	type JobStatus,
 	type CronInput,
 	type CronSchedule,
 } from './jobs'

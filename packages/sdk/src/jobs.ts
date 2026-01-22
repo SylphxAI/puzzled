@@ -11,48 +11,80 @@ import { type SylphxConfig, callApi } from './config'
 // ============================================================================
 
 export interface JobInput {
+	/** Callback URL to call when job executes */
+	callbackUrl: string
 	/** Job name/type */
-	name: string
-	/** Job payload */
+	name?: string
+	/** Job type for categorization */
+	type?: string
+	/** Job payload sent to callback */
 	payload?: Record<string, unknown>
-	/** Delay before executing (in seconds) */
+	/** HTTP method for callback (default: POST) */
+	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+	/** Additional headers for callback */
+	headers?: Record<string, string>
+	/** Delay before executing (in seconds, max 604800 = 7 days) */
 	delay?: number
 	/** Schedule for later (ISO timestamp) */
-	runAt?: string
+	scheduledFor?: string
+	/** Number of retries on failure (0-5, default: 3) */
+	retries?: number
+	/** Request timeout in seconds (1-300, default: 30) */
+	timeout?: number
 }
 
 export interface JobResult {
+	/** Job ID */
+	jobId: string
+	/** QStash message ID */
+	messageId?: string
+	/** Scheduled execution time */
+	scheduledFor?: string
+}
+
+export interface JobStatus {
 	id: string
-	name: string
-	status: 'pending' | 'running' | 'completed' | 'failed'
+	name?: string
+	status: 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
 	payload?: Record<string, unknown>
 	result?: unknown
 	error?: string
 	createdAt: string
+	queuedAt?: string
 	startedAt?: string
 	completedAt?: string
 }
 
 export interface CronInput {
-	/** Job name */
-	name: string
+	/** Callback URL to call on each cron trigger */
+	callbackUrl: string
 	/** Cron expression (e.g., '0 0 * * *' for daily at midnight) */
-	schedule: string
-	/** Job payload */
+	cron: string
+	/** Job name (required, max 200 chars) */
+	name: string
+	/** Job type for categorization */
+	type?: string
+	/** Job payload sent to callback */
 	payload?: Record<string, unknown>
-	/** Timezone (e.g., 'America/New_York') */
-	timezone?: string
+	/** HTTP method for callback (default: POST) */
+	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+	/** Additional headers for callback */
+	headers?: Record<string, string>
+	/** Number of retries on failure (0-5, default: 3) */
+	retries?: number
+	/** Start in paused state */
+	paused?: boolean
 }
 
 export interface CronSchedule {
-	id: string
-	name: string
-	schedule: string
-	timezone: string
-	payload?: Record<string, unknown>
-	isPaused: boolean
-	lastRunAt?: string
-	nextRunAt?: string
+	/** Internal job ID */
+	jobId?: string
+	/** QStash schedule ID */
+	scheduleId: string
+	/** Cron expression */
+	cron: string
+	/** Whether currently paused */
+	paused: boolean
 }
 
 // ============================================================================
@@ -60,17 +92,18 @@ export interface CronSchedule {
 // ============================================================================
 
 /**
- * Schedule a job for execution
+ * Schedule a one-time job for execution
  *
  * @example
  * ```typescript
  * const job = await scheduleJob(config, {
+ *   callbackUrl: 'https://myapp.com/api/jobs/send-email',
  *   name: 'send-email',
  *   payload: { to: 'user@example.com', template: 'welcome' },
  *   delay: 60, // Run in 60 seconds
  * })
  *
- * console.log(`Job scheduled: ${job.id}`)
+ * console.log(`Job scheduled: ${job.jobId}`)
  * ```
  */
 export async function scheduleJob(config: SylphxConfig, input: JobInput): Promise<JobResult> {
@@ -78,7 +111,7 @@ export async function scheduleJob(config: SylphxConfig, input: JobInput): Promis
 }
 
 /**
- * Get a job by ID
+ * Get a job's status by ID
  *
  * @example
  * ```typescript
@@ -86,8 +119,8 @@ export async function scheduleJob(config: SylphxConfig, input: JobInput): Promis
  * console.log(job.status) // 'completed'
  * ```
  */
-export async function getJob(config: SylphxConfig, jobId: string): Promise<JobResult> {
-	return callApi<JobResult>(config, `/jobs/${jobId}`, { method: 'GET' })
+export async function getJob(config: SylphxConfig, jobId: string): Promise<JobStatus> {
+	return callApi<JobStatus>(config, `/jobs/${jobId}`, { method: 'GET' })
 }
 
 /**
@@ -115,8 +148,8 @@ export async function cancelJob(config: SylphxConfig, jobId: string): Promise<bo
  */
 export async function listJobs(
 	config: SylphxConfig,
-	options?: { status?: JobResult['status']; limit?: number; offset?: number }
-): Promise<{ jobs: JobResult[]; total: number }> {
+	options?: { status?: JobStatus['status']; limit?: number; offset?: number }
+): Promise<{ jobs: JobStatus[]; total: number }> {
 	return callApi(config, '/jobs', {
 		method: 'GET',
 		query: options as Record<string, string | number | undefined>,
@@ -124,16 +157,18 @@ export async function listJobs(
 }
 
 /**
- * Create a cron schedule
+ * Create a recurring cron job
  *
  * @example
  * ```typescript
  * const cron = await createCron(config, {
+ *   callbackUrl: 'https://myapp.com/api/webhooks/platform-jobs',
+ *   cron: '0 9 * * *', // Every day at 9am UTC
  *   name: 'daily-report',
- *   schedule: '0 9 * * *', // Every day at 9am
- *   timezone: 'America/New_York',
  *   payload: { type: 'daily' },
  * })
+ *
+ * console.log(`Cron created: ${cron.scheduleId}`)
  * ```
  */
 export async function createCron(config: SylphxConfig, input: CronInput): Promise<CronSchedule> {

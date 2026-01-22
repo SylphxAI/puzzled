@@ -1,34 +1,4 @@
 {
 	"installCommand": "cd ../.. && bun install",
-	"buildCommand": "cd ../.. && bun run build:puzzled",
-	"crons": [
-		{
-			"path": "/api/cron/generate-daily-puzzles",
-			"schedule": "0 23 * * *"
-		},
-		{
-			"path": "/api/cron/dlq-retry",
-			"schedule": "0 * * * *"
-		},
-		{
-			"path": "/api/cron/daily-reminder",
-			"schedule": "0 8 * * *"
-		},
-		{
-			"path": "/api/cron/streak-at-risk",
-			"schedule": "0 18 * * *"
-		},
-		{
-			"path": "/api/cron/win-back-emails",
-			"schedule": "0 10 * * *"
-		},
-		{
-			"path": "/api/cron/check-price-drift",
-			"schedule": "0 9 * * *"
-		},
-		{
-			"path": "/api/cron/cleanup-sessions",
-			"schedule": "0 3 * * *"
-		}
-	]
+	"buildCommand": "cd ../.. && bun run build:puzzled"
 }

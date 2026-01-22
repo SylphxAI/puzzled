@@ -22,7 +22,8 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"db:seed": "bun run src/lib/db/seed.ts"
+		"db:seed": "bun run src/lib/db/seed.ts",
+		"jobs:register": "bun run src/lib/jobs/register-crons.ts"
 	},
 	"dependencies": {
 		"@iconify-icon/react": "^3.0.3",
