@@ -15,10 +15,12 @@ export function LayoutTopNav() {
 	// Use SDK's useStreak hook for Platform-managed streaks
 	// The streak is auto-discovered with these defaults if it doesn't exist
 	const { current, isLoading } = useStreak('daily-play', {
-		name: 'Daily Play Streak',
-		description: 'Play at least one game daily to maintain your streak',
-		frequency: 'daily',
-		gracePeriodHours: 12, // 12-hour grace period
+		defaults: {
+			name: 'Daily Play Streak',
+			description: 'Play at least one game daily to maintain your streak',
+			frequency: 'daily',
+			gracePeriodHours: 12, // 12-hour grace period
+		},
 	})
 
 	// Show streak only when user is authenticated and data is loaded

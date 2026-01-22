@@ -30,10 +30,12 @@ export function AchievementChecker() {
 
 	// SDK streak hook - Platform-managed streak tracking
 	const { longest: maxStreak, isLoading: streakLoading } = useStreak('daily-play', {
-		name: 'Daily Play Streak',
-		description: 'Play at least one game daily to maintain your streak',
-		frequency: 'daily',
-		gracePeriodHours: 12,
+		defaults: {
+			name: 'Daily Play Streak',
+			description: 'Play at least one game daily to maintain your streak',
+			frequency: 'daily',
+			gracePeriodHours: 12,
+		},
 	})
 
 	// Fetch per-game stats (still from local tRPC - game stats are Puzzled-specific)

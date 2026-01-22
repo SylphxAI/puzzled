@@ -1,20 +1,11 @@
 /**
  * Feature Flags API Route
  *
- * Proxies feature flag requests to the Sylphx Platform SDK.
- * All flag configuration is managed centrally in the Platform dashboard.
- *
- * The Platform handles:
- * - Flag creation and configuration
- * - Rollout percentages
- * - User targeting
- * - Premium/admin gating
- *
- * This route simply forwards requests to the Platform's featureFlags.getAll endpoint.
+ * Returns feature flags for the app.
+ * Platform integration pending - currently returns hardcoded defaults.
  */
 
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@sylphx/sdk/server'
 
 interface FeatureFlag {
 	key: string
@@ -31,41 +22,13 @@ interface FlagRequestBody {
 	}
 }
 
-// Environment configuration
-const APP_ID = process.env.NEXT_PUBLIC_SYLPHX_APP_ID
-const APP_SECRET = process.env.SYLPHX_SECRET_KEY
-
 /**
- * Get feature flags from the Sylphx Platform
+ * Get feature flags
+ * Platform REST API integration pending - using defaults for now
  */
-async function getPlatformFlags(userId?: string): Promise<FeatureFlag[]> {
-	// If Platform not configured, return empty (graceful degradation)
-	if (!APP_ID || !APP_SECRET) {
-		console.warn('[api/flags] Platform not configured, using defaults')
-		return getDefaultFlags()
-	}
-
-	try {
-		// Create SDK server client
-		const client = createServerClient({
-			appId: APP_ID,
-			appSecret: APP_SECRET,
-		})
-
-		// Call the Platform's flags.getAll endpoint
-		const flagMap = await client.flags.getAll(userId) as Record<string, boolean>
-
-		// Transform to array format expected by SDK provider
-		return Object.entries(flagMap).map(([key, enabled]) => ({
-			key,
-			value: enabled as boolean,
-			enabled: enabled as boolean,
-		}))
-	} catch (error) {
-		console.error('[api/flags] Error fetching from Platform:', error)
-		// Fallback to defaults on error
-		return getDefaultFlags()
-	}
+async function getPlatformFlags(_userId?: string): Promise<FeatureFlag[]> {
+	// TODO: Integrate with platform once flags REST API is available
+	return getDefaultFlags()
 }
 
 /**

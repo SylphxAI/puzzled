@@ -382,10 +382,11 @@ export class DeadClickDetector {
 		const detector = this
 
 		// Intercept fetch
-		const originalFetch = window.fetch
-		window.fetch = async function (...args) {
+		const originalFetch = window.fetch.bind(window) as typeof window.fetch
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- window.fetch type varies by runtime
+		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 			detector.networkActivity = true
-			return originalFetch.apply(window, args)
+			return originalFetch(input, init)
 		}
 
 		// Intercept XHR
@@ -402,7 +403,7 @@ export class DeadClickDetector {
 		}
 
 		const originalSend = XMLHttpRequest.prototype.send
-		XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+		XMLHttpRequest.prototype.send = function (body?: XMLHttpRequestBodyInit | null) {
 			const xhr = this as XMLHttpRequest & { _deadClickActive?: boolean }
 			if (xhr._deadClickActive) {
 				detector.networkActivity = true

@@ -55,10 +55,12 @@ export function useSaveGameResult(gameSlug: string) {
 
 	// SDK streak hook for Platform-managed streak tracking
 	const { recordActivity } = useStreak('daily-play', {
-		name: 'Daily Play Streak',
-		description: 'Play at least one game daily to maintain your streak',
-		frequency: 'daily',
-		gracePeriodHours: 12,
+		defaults: {
+			name: 'Daily Play Streak',
+			description: 'Play at least one game daily to maintain your streak',
+			frequency: 'daily',
+			gracePeriodHours: 12,
+		},
 	})
 
 	// tRPC utils for cache invalidation

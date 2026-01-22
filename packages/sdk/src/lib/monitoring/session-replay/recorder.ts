@@ -405,16 +405,15 @@ export class SessionRecorder {
 		const recorder = this
 
 		// Intercept fetch
-		const originalFetch = window.fetch
-		window.fetch = async function (...args) {
+		const originalFetch = window.fetch.bind(window) as typeof window.fetch
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- window.fetch type varies by runtime
+		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 			const startTime = Date.now()
-			const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url
-			const method =
-				(args[1] as RequestInit | undefined)?.method ||
-				(args[0] instanceof Request ? args[0].method : 'GET')
+			const url = typeof input === 'string' ? input : (input as Request).url
+			const method = init?.method || (input instanceof Request ? input.method : 'GET')
 
 			try {
-				const response = await originalFetch.apply(window, args)
+				const response = await originalFetch(input, init)
 				const duration = Date.now() - startTime
 
 				recorder.networkRequests.push({
@@ -458,7 +457,7 @@ export class SessionRecorder {
 			return originalOpen.call(this, method, url, async ?? true, username, password)
 		}
 
-		XMLHttpRequest.prototype.send = function (body?: Document | XMLHttpRequestBodyInit | null) {
+		XMLHttpRequest.prototype.send = function (body?: XMLHttpRequestBodyInit | null) {
 			const xhr = this as XMLHttpRequest & { _srMethod: string; _srUrl: string; _srStart: number }
 			xhr._srStart = Date.now()
 

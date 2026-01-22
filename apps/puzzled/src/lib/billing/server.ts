@@ -2,11 +2,8 @@
  * Server-side Billing Utilities
  *
  * Single source of truth for all billing logic.
- * Uses platform SDK for subscription checks.
- * Apps don't manage billing - platform does.
+ * Platform SDK integration pending - using defaults for now.
  */
-
-import { createServerClient } from '@sylphx/sdk/server'
 
 // ==========================================
 // Plan Constants
@@ -88,49 +85,18 @@ export function getFreeGameRotation(): readonly string[] {
 // ==========================================
 
 /**
- * Create platform client for billing checks
- */
-function getPlatformClient() {
-	const appId = process.env.SYLPHX_APP_ID
-	const appSecret = process.env.SYLPHX_APP_SECRET
-	const platformUrl = process.env.SYLPHX_PLATFORM_URL
-
-	if (!appId || !appSecret) {
-		console.warn('[Billing] Missing platform credentials')
-		return null
-	}
-
-	return createServerClient({
-		appId,
-		appSecret,
-		platformUrl,
-	})
-}
-
-/**
- * Check if a user has premium access via platform SDK
+ * Check if a user has premium access
  *
- * Note: This uses the current user's session context.
- * The SDK's billing.getSubscription() returns the authenticated user's subscription.
+ * Platform SDK integration pending - currently returns false (free tier).
+ * TODO: Integrate with platform billing API once available.
  *
- * @param _userId - Platform user ID (unused, kept for interface compatibility)
+ * @param _userId - Platform user ID
  * @returns true if user has an active premium subscription
  */
 export async function hasPremiumAccess(_userId: string): Promise<boolean> {
-	const client = getPlatformClient()
-	if (!client) return false
-
-	try {
-		const result = await client.billing.getSubscription()
-		if (!result) return false
-
-		// Check if subscription is active and on a premium plan
-		const isActive = result.status === 'active' || result.status === 'trialing'
-		return isActive && isPremiumPlan(result.planSlug)
-	} catch (error) {
-		console.error('[Billing] Failed to check premium access:', error)
-		return false
-	}
+	// TODO: Integrate with platform billing API
+	// For now, all users are on free tier
+	return false
 }
 
 /**
