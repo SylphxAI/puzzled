@@ -3,11 +3,19 @@
  *
  * Composable hooks for file uploads.
  * No provider needed - uses config directly.
+ *
+ * ## React Query Integration
+ *
+ * useFileUrl uses React Query for:
+ * - Automatic caching (1 hour staleTime - URLs are stable)
+ * - Deduplication of concurrent requests
+ * - Background refetching
  */
 
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSylphxConfig } from './core'
 import {
 	uploadFile as uploadFileFn,
@@ -103,6 +111,8 @@ export function useUpload() {
 /**
  * Get file URL hook
  *
+ * Uses React Query for caching - file URLs are stable so 1 hour cache.
+ *
  * @example
  * ```tsx
  * function FilePreview({ fileId }) {
@@ -116,40 +126,27 @@ export function useUpload() {
  */
 export function useFileUrl(fileId: string | null) {
 	const config = useSylphxConfig()
-	const [state, setState] = useState<{
-		url: string | null
-		isLoading: boolean
-		error: Error | null
-	}>({
-		url: null,
-		isLoading: false,
-		error: null,
+	const queryClient = useQueryClient()
+
+	// React Query for file URL fetching
+	const urlQuery = useQuery({
+		queryKey: ['sylphx', 'fileUrl', fileId],
+		queryFn: () => getFileUrlFn(config, fileId!),
+		enabled: !!fileId,
+		staleTime: 60 * 60 * 1000, // 1 hour - file URLs are stable
 	})
 
-	const fetch = useCallback(async () => {
-		if (!fileId) {
-			setState({ url: null, isLoading: false, error: null })
-			return
-		}
-
-		setState((s) => ({ ...s, isLoading: true, error: null }))
-
-		try {
-			const url = await getFileUrlFn(config, fileId)
-			setState({ url, isLoading: false, error: null })
-		} catch (e) {
-			const error = e instanceof Error ? e : new Error('Failed to get file URL')
-			setState({ url: null, isLoading: false, error })
-		}
-	}, [config, fileId])
-
-	// Auto-fetch on mount and when fileId changes
-	useEffect(() => {
-		fetch()
-	}, [fetch])
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'fileUrl', fileId],
+		})
+	}, [queryClient, fileId])
 
 	return {
-		...state,
-		refetch: fetch,
+		url: urlQuery.data ?? null,
+		isLoading: urlQuery.isLoading,
+		error: urlQuery.error as Error | null,
+		refetch,
 	}
 }

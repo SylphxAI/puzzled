@@ -9,7 +9,8 @@
 
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useAIContext } from './services-context'
 import type {
 	AIMessage,
@@ -769,87 +770,67 @@ export interface UseModelsReturn {
  */
 export function useModels(options: UseModelsOptions = {}): UseModelsReturn {
 	const ctx = useAIContext()
-	const [models, setModels] = useState<AIModelInfo[]>([])
-	const [total, setTotal] = useState(0)
-	const [hasMore, setHasMore] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<Error | null>(null)
+	const queryClient = useQueryClient()
 	const [search, setSearch] = useState(options.search ?? '')
 	const [capability, setCapability] = useState(options.capability)
-	const [offset, setOffset] = useState(0)
+	const [debouncedSearch, setDebouncedSearch] = useState(search)
 	const pageSize = options.pageSize ?? 50
 
-	const fetch = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
-		setOffset(0)
-
-		try {
-			const response = await ctx.listModels({
-				capability,
-				search: search || undefined,
-				limit: pageSize,
-				offset: 0,
-			})
-			setModels(response.models)
-			setTotal(response.total)
-			setHasMore(response.hasMore)
-			setOffset(pageSize)
-		} catch (err) {
-			const e = err instanceof Error ? err : new Error('Failed to fetch models')
-			setError(e)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, capability, search, pageSize])
-
-	const loadMore = useCallback(async () => {
-		if (isLoading || !hasMore) return
-
-		setIsLoading(true)
-		setError(null)
-
-		try {
-			const response = await ctx.listModels({
-				capability,
-				search: search || undefined,
-				limit: pageSize,
-				offset,
-			})
-			setModels((prev) => [...prev, ...response.models])
-			setTotal(response.total)
-			setHasMore(response.hasMore)
-			setOffset((prev) => prev + pageSize)
-		} catch (err) {
-			const e = err instanceof Error ? err : new Error('Failed to fetch more models')
-			setError(e)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [ctx, capability, search, pageSize, offset, isLoading, hasMore])
-
-	// Fetch on mount if requested
+	// Debounce search input
 	useEffect(() => {
-		if (options.fetchOnMount !== false) {
-			fetch()
-		}
-	}, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Refetch when filters change
-	useEffect(() => {
-		// Debounce search
 		const timer = setTimeout(() => {
-			fetch()
+			setDebouncedSearch(search)
 		}, 300)
 		return () => clearTimeout(timer)
-	}, [search, capability]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [search])
+
+	// React Query infinite query for paginated models
+	const modelsQuery = useInfiniteQuery({
+		queryKey: ['sylphx', 'ai-models', capability, debouncedSearch, pageSize],
+		queryFn: async ({ pageParam = 0 }) => {
+			return ctx.listModels({
+				capability,
+				search: debouncedSearch || undefined,
+				limit: pageSize,
+				offset: pageParam,
+			})
+		},
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, allPages) => {
+			if (!lastPage.hasMore) return undefined
+			return allPages.length * pageSize
+		},
+		enabled: options.fetchOnMount !== false,
+		staleTime: 5 * 60 * 1000, // 5 min - model list is stable
+	})
+
+	// Flatten all pages into single models array
+	const models = useMemo(
+		() => modelsQuery.data?.pages.flatMap((page) => page.models) ?? [],
+		[modelsQuery.data]
+	)
+	const total = modelsQuery.data?.pages[0]?.total ?? 0
+
+	// Fetch (refresh) via React Query invalidation
+	const fetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'ai-models'],
+		})
+	}, [queryClient])
+
+	// Load more via fetchNextPage
+	const loadMore = useCallback(async () => {
+		if (modelsQuery.hasNextPage && !modelsQuery.isFetchingNextPage) {
+			await modelsQuery.fetchNextPage()
+		}
+	}, [modelsQuery])
 
 	return {
 		models,
 		total,
-		hasMore,
-		isLoading,
-		error,
+		hasMore: modelsQuery.hasNextPage ?? false,
+		isLoading: modelsQuery.isLoading,
+		error: modelsQuery.error as Error | null,
 		fetch,
 		loadMore,
 		setSearch,

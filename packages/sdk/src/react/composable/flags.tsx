@@ -3,11 +3,19 @@
  *
  * Composable hooks for feature flag evaluation.
  * No provider needed - uses config directly.
+ *
+ * ## React Query Integration
+ *
+ * All hooks use React Query for:
+ * - Automatic caching (5 min staleTime)
+ * - Deduplication of concurrent requests
+ * - Background refetching
  */
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSylphxConfig } from './core'
 import {
 	checkFlag as checkFlagFn,
@@ -37,39 +45,29 @@ import {
  */
 export function useFlag(flagKey: string, context?: FlagContext) {
 	const config = useSylphxConfig()
-	const [state, setState] = useState<{
-		result: FlagResult | null
-		isLoading: boolean
-		error: Error | null
-	}>({
-		result: null,
-		isLoading: true,
-		error: null,
+	const queryClient = useQueryClient()
+
+	// React Query for flag evaluation
+	const flagQuery = useQuery({
+		queryKey: ['sylphx', 'flag', flagKey, context?.userId, context?.anonymousId],
+		queryFn: () => checkFlagFn(config, flagKey, context),
+		staleTime: 5 * 60 * 1000, // 5 min - flags are relatively stable
 	})
 
-	const fetch = useCallback(async () => {
-		setState((s) => ({ ...s, isLoading: true, error: null }))
-
-		try {
-			const result = await checkFlagFn(config, flagKey, context)
-			setState({ result, isLoading: false, error: null })
-		} catch (e) {
-			const error = e instanceof Error ? e : new Error('Failed to check flag')
-			setState({ result: null, isLoading: false, error })
-		}
-	}, [config, flagKey, context?.userId, context?.anonymousId])
-
-	useEffect(() => {
-		fetch()
-	}, [fetch])
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'flag', flagKey],
+		})
+	}, [queryClient, flagKey])
 
 	return {
-		enabled: state.result?.enabled ?? false,
-		variant: state.result?.variant,
-		payload: state.result?.payload,
-		isLoading: state.isLoading,
-		error: state.error,
-		refetch: fetch,
+		enabled: flagQuery.data?.enabled ?? false,
+		variant: flagQuery.data?.variant,
+		payload: flagQuery.data?.payload,
+		isLoading: flagQuery.isLoading,
+		error: flagQuery.error as Error | null,
+		refetch,
 	}
 }
 
@@ -95,37 +93,30 @@ export function useFlag(flagKey: string, context?: FlagContext) {
  */
 export function useFlags(flagKeys: string[], context?: FlagContext) {
 	const config = useSylphxConfig()
-	const [state, setState] = useState<{
-		flags: Record<string, FlagResult>
-		isLoading: boolean
-		error: Error | null
-	}>({
-		flags: {},
-		isLoading: true,
-		error: null,
+	const queryClient = useQueryClient()
+
+	// Stable key for array
+	const flagKeysKey = flagKeys.join(',')
+
+	// React Query for batch flag evaluation
+	const flagsQuery = useQuery({
+		queryKey: ['sylphx', 'flags', flagKeysKey, context?.userId, context?.anonymousId],
+		queryFn: () => getFlagsFn(config, flagKeys, context),
+		staleTime: 5 * 60 * 1000, // 5 min - flags are relatively stable
 	})
 
-	const fetch = useCallback(async () => {
-		setState((s) => ({ ...s, isLoading: true, error: null }))
-
-		try {
-			const flags = await getFlagsFn(config, flagKeys, context)
-			setState({ flags, isLoading: false, error: null })
-		} catch (e) {
-			const error = e instanceof Error ? e : new Error('Failed to check flags')
-			setState({ flags: {}, isLoading: false, error })
-		}
-	}, [config, flagKeys.join(','), context?.userId, context?.anonymousId])
-
-	useEffect(() => {
-		fetch()
-	}, [fetch])
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'flags', flagKeysKey],
+		})
+	}, [queryClient, flagKeysKey])
 
 	return {
-		flags: state.flags,
-		isLoading: state.isLoading,
-		error: state.error,
-		refetch: fetch,
+		flags: flagsQuery.data ?? ({} as Record<string, FlagResult>),
+		isLoading: flagsQuery.isLoading,
+		error: flagsQuery.error as Error | null,
+		refetch,
 	}
 }
 
@@ -152,36 +143,26 @@ export function useFlags(flagKeys: string[], context?: FlagContext) {
  */
 export function useVariant(flagKey: string, context?: FlagContext) {
 	const config = useSylphxConfig()
-	const [state, setState] = useState<{
-		variant: string | undefined
-		isLoading: boolean
-		error: Error | null
-	}>({
-		variant: undefined,
-		isLoading: true,
-		error: null,
+	const queryClient = useQueryClient()
+
+	// React Query for variant evaluation
+	const variantQuery = useQuery({
+		queryKey: ['sylphx', 'variant', flagKey, context?.userId, context?.anonymousId],
+		queryFn: () => getVariantFn(config, flagKey, context),
+		staleTime: 5 * 60 * 1000, // 5 min - variants are relatively stable
 	})
 
-	const fetch = useCallback(async () => {
-		setState((s) => ({ ...s, isLoading: true, error: null }))
-
-		try {
-			const variant = await getVariantFn(config, flagKey, context)
-			setState({ variant, isLoading: false, error: null })
-		} catch (e) {
-			const error = e instanceof Error ? e : new Error('Failed to get variant')
-			setState({ variant: undefined, isLoading: false, error })
-		}
-	}, [config, flagKey, context?.userId, context?.anonymousId])
-
-	useEffect(() => {
-		fetch()
-	}, [fetch])
+	// Refetch via React Query
+	const refetch = useCallback(async () => {
+		await queryClient.invalidateQueries({
+			queryKey: ['sylphx', 'variant', flagKey],
+		})
+	}, [queryClient, flagKey])
 
 	return {
-		variant: state.variant,
-		isLoading: state.isLoading,
-		error: state.error,
-		refetch: fetch,
+		variant: variantQuery.data,
+		isLoading: variantQuery.isLoading,
+		error: variantQuery.error as Error | null,
+		refetch,
 	}
 }
