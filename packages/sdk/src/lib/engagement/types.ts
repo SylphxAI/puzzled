@@ -54,12 +54,16 @@ export interface StreakState {
 	canRecover: boolean
 	/** Time remaining until expiry in ms */
 	timeRemainingMs: number | null
+	/** User's timezone preference for streak expiry (IANA timezone, e.g., 'America/New_York') */
+	userTimezone: string | null
 }
 
 /** Activity recording input */
 export interface RecordActivityInput {
 	/** Streak ID */
 	streakId: string
+	/** User's IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight */
+	userTimezone?: string
 	/** Optional metadata */
 	metadata?: Record<string, unknown>
 }
