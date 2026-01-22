@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react'
 import { useNotifications, useAnalytics } from '@sylphx/sdk/react'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { trpc } from '@/trpc'
 
 /**
@@ -80,7 +81,7 @@ export function usePuzzledPush() {
 	const { data: serverPreferences, refetch: refetchPreferences } =
 		trpc.notifications.getPreferences.useQuery(undefined, {
 			// Don't refetch too aggressively
-			staleTime: 5 * 60 * 1000, // 5 minutes
+			staleTime: 5 * MINUTE_MS,
 		})
 
 	// Mutation to update preferences

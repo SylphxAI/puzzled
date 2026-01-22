@@ -8,6 +8,7 @@ import {
 	TrendingUp,
 } from 'lucide-react'
 import { useState } from 'react'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 import { trpc } from '@/trpc/client'
 
@@ -30,7 +31,7 @@ export function GameDashboard({ slug }: { slug: string }) {
 		isRefetching,
 	} = trpc.admin.getSingleGameAnalytics.useQuery(
 		{ slug, days },
-		{ refetchInterval: 60000 },
+		{ refetchInterval: MINUTE_MS },
 	)
 
 	if (isLoading) {

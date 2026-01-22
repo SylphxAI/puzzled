@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 import { trpc } from '@/trpc/client'
 
@@ -24,7 +25,7 @@ export function GamesOverview() {
 	const t = useTranslations('admin.games')
 
 	const { data: games, isLoading, refetch, isRefetching } = trpc.admin.getGamesOverview.useQuery(undefined, {
-		refetchInterval: 60000, // Refresh every minute
+		refetchInterval: MINUTE_MS,
 	})
 
 	if (isLoading) {

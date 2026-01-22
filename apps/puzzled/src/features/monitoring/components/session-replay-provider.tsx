@@ -15,6 +15,7 @@
 import { useEffect, useRef } from 'react'
 import { useSessionReplay, useSafeUser, useBilling } from '@sylphx/sdk/react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
+import { WEEK_MS } from '@/lib/constants/time'
 import { getSessionReplayConfig, getAdjustedSampleRate } from '../lib'
 
 export interface SessionReplayProviderProps {
@@ -52,7 +53,7 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 
 	// Check if user is new (created in last 7 days)
 	const isNewUser = user?.createdAt
-		? Date.now() - new Date(user.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000
+		? Date.now() - new Date(user.createdAt).getTime() < WEEK_MS
 		: false
 
 	// Calculate sample rate based on user segment

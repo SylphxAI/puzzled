@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink, loggerLink } from '@trpc/client'
 import { useState } from 'react'
 import superjson from 'superjson'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { getBaseUrl } from '@/lib/utils'
 import { trpc } from './client'
 
@@ -23,7 +24,7 @@ function makeQueryClient() {
 			queries: {
 				// With SSR, we usually want to set some default staleTime
 				// above 0 to avoid refetching immediately on the client
-				staleTime: 60 * 1000, // 1 minute
+				staleTime: MINUTE_MS,
 				// Retry failed requests up to 3 times
 				retry: 3,
 				// Refetch on window focus for fresh data

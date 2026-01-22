@@ -3,12 +3,14 @@
  * Decrypt famous quotes by substituting letters
  */
 
+import { ALPHABET } from '@/lib/constants/strings'
+
 // ==========================================
 // Constants
 // ==========================================
 
 export const MAX_HINTS = 3
-export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+export { ALPHABET }
 
 // ==========================================
 // Core Types

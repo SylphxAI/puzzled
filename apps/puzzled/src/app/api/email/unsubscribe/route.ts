@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { notificationPreferences } from '@/lib/db/schema'
+import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
 
 export const runtime = 'nodejs' // Required for crypto
 
@@ -19,7 +20,7 @@ const UNSUBSCRIBE_SECRET = getSecret()
 
 // Token expiration: 30 days
 const TOKEN_EXPIRY_DAYS = 30
-const TOKEN_EXPIRY_MS = TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+const TOKEN_EXPIRY_MS = TOKEN_EXPIRY_DAYS * DAY_MS
 
 /**
  * Generate a signed unsubscribe token for a user ID
@@ -64,7 +65,7 @@ function verifyUnsubscribeToken(token: string): string | null {
 		}
 
 		// Check if token is from the future (clock skew protection, allow 5 min)
-		if (tokenTime > now + 5 * 60 * 1000) {
+		if (tokenTime > now + 5 * MINUTE_MS) {
 			console.log('[Unsubscribe] Token from future, likely tampering')
 			return null
 		}

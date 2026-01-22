@@ -4,6 +4,7 @@
  */
 
 import dynamic from 'next/dynamic'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { compareByTime, formatTimeScore } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -57,7 +58,7 @@ export const wordSearchConfig: GameConfig<
 
 	// Custom: perfect game = won in under 60 seconds (not based on mistakes)
 	isPerfectGame: (stats) => {
-		return stats.status === 'won' && (stats.timeSpentMs ?? Infinity) < 60000
+		return stats.status === 'won' && (stats.timeSpentMs ?? Infinity) < MINUTE_MS
 	},
 
 	/**

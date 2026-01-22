@@ -1,4 +1,5 @@
 export { AchievementChecker } from './achievement-checker'
+export { Achievements } from './achievements'
 export { AchievementToast } from './achievement-toast'
 export { AchievementToastProvider, useAchievementToast } from './achievement-toast-provider'
 export { DailyChallengeProgress } from './daily-challenge-progress'

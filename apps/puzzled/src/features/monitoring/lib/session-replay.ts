@@ -12,6 +12,7 @@
  */
 
 import type { SessionReplayConfig, PrivacyMode } from '@sylphx/sdk/react'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 /**
  * Default session replay configuration for Puzzled app
@@ -53,7 +54,7 @@ export const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
 	consoleCapture: true,
 
 	// Performance settings
-	maxDuration: 30 * 60 * 1000, // 30 minutes max session
+	maxDuration: 30 * MINUTE_MS, // 30 minutes max session
 	compress: true,
 	batchSize: 50,
 	uploadInterval: 10000, // Upload every 10 seconds

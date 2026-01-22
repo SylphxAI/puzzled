@@ -9,6 +9,7 @@
  */
 
 import { and, eq, lte } from 'drizzle-orm'
+import { HOUR_MS, MINUTE_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
 import { captureMessage } from '@/lib/monitoring'
@@ -186,8 +187,8 @@ export async function markDLQFailed(id: string): Promise<void> {
  * Base: 1 minute, max: 1 hour
  */
 export function calculateBackoffDelay(retryCount: number): number {
-	const baseDelay = 60 * 1000 // 1 minute
-	const maxDelay = 60 * 60 * 1000 // 1 hour
+	const baseDelay = MINUTE_MS
+	const maxDelay = HOUR_MS
 	const delay = Math.min(baseDelay * 2 ** retryCount, maxDelay)
 	// Add jitter (0-10% of delay)
 	const jitter = delay * Math.random() * 0.1

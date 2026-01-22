@@ -16,9 +16,10 @@
 import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { userDisplayCache, type UserDisplayCache } from '@/lib/db/schema'
+import { HOUR_MS } from '@/lib/constants/time'
 
 /** Cache TTL in milliseconds (1 hour) - used for staleness warnings only */
-const CACHE_TTL_MS = 60 * 60 * 1000
+const CACHE_TTL_MS = HOUR_MS
 
 /** Display data returned by this service */
 export interface DisplayData {

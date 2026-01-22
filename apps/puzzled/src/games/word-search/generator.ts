@@ -5,6 +5,7 @@
  * Uses curated word lists organized by theme.
  */
 
+import { ALPHABET } from '@/lib/constants/strings'
 import type { Direction, PlacedWord, WordSearchPuzzleData, WordSearchSolution } from './types'
 import {
 	GRID_SIZE,
@@ -403,11 +404,10 @@ function tryPlaceWord(grid: string[][], word: string, random: () => number): Pla
  * Fill empty cells with random letters
  */
 function fillEmptyCells(grid: string[][], random: () => number): void {
-	const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	for (let row = 0; row < GRID_SIZE; row++) {
 		for (let col = 0; col < GRID_SIZE; col++) {
 			if (grid[row][col] === '') {
-				grid[row][col] = letters[Math.floor(random() * letters.length)]
+				grid[row][col] = ALPHABET[Math.floor(random() * ALPHABET.length)]
 			}
 		}
 	}

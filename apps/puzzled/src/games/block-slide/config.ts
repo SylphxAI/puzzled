@@ -6,6 +6,7 @@
  */
 
 import dynamic from 'next/dynamic'
+import { MINUTE_MS } from '@/lib/constants/time'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -222,7 +223,7 @@ export const blockSlideConfig: GameConfig<
 		// Calculate score
 		const extraMoves = moveCount - solution.minMoves
 		const movePenalty = extraMoves * 5
-		const timeBonus = submission.timeSpentMs < 60000 ? 50 : 0
+		const timeBonus = submission.timeSpentMs < MINUTE_MS ? 50 : 0
 		const score = Math.max(100, 500 - movePenalty + timeBonus)
 
 		return { valid: true, status: 'won', score }

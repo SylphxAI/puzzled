@@ -4,6 +4,7 @@
  */
 
 import dynamic from 'next/dynamic'
+import { MINUTE_MS } from '@/lib/constants/time'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -61,8 +62,8 @@ export const cryptogramConfig: GameConfig<
 	formatScoreDisplay: (stats) => {
 		if (stats.status === 'lost') return 'Lost'
 		if (stats.timeSpentMs) {
-			const mins = Math.floor(stats.timeSpentMs / 60000)
-			const secs = Math.floor((stats.timeSpentMs % 60000) / 1000)
+			const mins = Math.floor(stats.timeSpentMs / MINUTE_MS)
+			const secs = Math.floor((stats.timeSpentMs % MINUTE_MS) / 1000)
 			return `${mins}:${secs.toString().padStart(2, '0')}`
 		}
 		return stats.score ? `${stats.score} pts` : 'Won'

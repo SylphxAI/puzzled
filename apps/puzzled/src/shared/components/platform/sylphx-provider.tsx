@@ -19,6 +19,7 @@ import {
 	useSafeUser,
 	useBilling,
 } from '@sylphx/sdk/react'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
@@ -50,7 +51,7 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 						}
 					: undefined
 			}
-			refreshInterval={5 * 60 * 1000} // Refresh every 5 minutes
+			refreshInterval={5 * MINUTE_MS}
 			enableCache
 		>
 			{children}
