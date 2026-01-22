@@ -18,17 +18,6 @@ import {
 import { useBilling } from '../platform-hooks'
 import type { Subscription, Plan } from '../platform-context'
 
-interface BillingHistoryEntry {
-	id: string
-	amount: number
-	currency: string
-	status: 'succeeded' | 'pending' | 'failed' | 'refunded'
-	description: string
-	createdAt: string
-	invoiceUrl?: string
-	receiptUrl?: string
-}
-
 export interface BillingSectionProps {
 	/** Theme variables */
 	theme?: ThemeVariables
@@ -44,8 +33,6 @@ export interface BillingSectionProps {
 	showCurrentPlan?: boolean
 	/** Show available plans */
 	showPlans?: boolean
-	/** Show billing history */
-	showHistory?: boolean
 	/** Allow plan changes */
 	allowPlanChange?: boolean
 }
@@ -69,7 +56,6 @@ export function BillingSection({
 	currencySymbol = '$',
 	showCurrentPlan = true,
 	showPlans = true,
-	showHistory = true,
 	allowPlanChange = true,
 }: BillingSectionProps) {
 	const {
@@ -85,8 +71,6 @@ export function BillingSection({
 	} = useBilling()
 	const styles = baseStyles(theme)
 
-	const [billingHistory, setBillingHistory] = useState<BillingHistoryEntry[]>([])
-	const [historyLoading, setHistoryLoading] = useState(false)
 	const [selectedInterval, setSelectedInterval] = useState<'monthly' | 'annual'>('monthly')
 	const [processingPlan, setProcessingPlan] = useState<string | null>(null)
 	const [error, setError] = useState<string | null>(null)
@@ -422,155 +406,6 @@ export function BillingSection({
 								</div>
 							)
 						})}
-					</div>
-				</div>
-			)}
-
-			{/* Billing History */}
-			{showHistory && billingHistory.length > 0 && (
-				<div style={cardStyles}>
-					<h4 style={{ margin: '0 0 1rem', fontWeight: 500 }}>Billing History</h4>
-					<div style={{ overflowX: 'auto' }}>
-						<table style={{ width: '100%', borderCollapse: 'collapse' }}>
-							<thead>
-								<tr>
-									<th
-										style={{
-											textAlign: 'left',
-											padding: '0.5rem',
-											borderBottom: `1px solid ${theme.colorBorder}`,
-											fontSize: theme.fontSizeXs,
-											fontWeight: 500,
-											color: theme.colorMutedForeground,
-											textTransform: 'uppercase',
-										}}
-									>
-										Date
-									</th>
-									<th
-										style={{
-											textAlign: 'left',
-											padding: '0.5rem',
-											borderBottom: `1px solid ${theme.colorBorder}`,
-											fontSize: theme.fontSizeXs,
-											fontWeight: 500,
-											color: theme.colorMutedForeground,
-											textTransform: 'uppercase',
-										}}
-									>
-										Description
-									</th>
-									<th
-										style={{
-											textAlign: 'right',
-											padding: '0.5rem',
-											borderBottom: `1px solid ${theme.colorBorder}`,
-											fontSize: theme.fontSizeXs,
-											fontWeight: 500,
-											color: theme.colorMutedForeground,
-											textTransform: 'uppercase',
-										}}
-									>
-										Amount
-									</th>
-									<th
-										style={{
-											textAlign: 'center',
-											padding: '0.5rem',
-											borderBottom: `1px solid ${theme.colorBorder}`,
-											fontSize: theme.fontSizeXs,
-											fontWeight: 500,
-											color: theme.colorMutedForeground,
-											textTransform: 'uppercase',
-										}}
-									>
-										Status
-									</th>
-									<th
-										style={{
-											textAlign: 'right',
-											padding: '0.5rem',
-											borderBottom: `1px solid ${theme.colorBorder}`,
-										}}
-									/>
-								</tr>
-							</thead>
-							<tbody>
-								{billingHistory.map((entry) => (
-									<tr key={entry.id}>
-										<td
-											style={{
-												padding: '0.75rem 0.5rem',
-												borderBottom: `1px solid ${theme.colorBorder}`,
-												fontSize: theme.fontSizeSm,
-											}}
-										>
-											{new Date(entry.createdAt).toLocaleDateString()}
-										</td>
-										<td
-											style={{
-												padding: '0.75rem 0.5rem',
-												borderBottom: `1px solid ${theme.colorBorder}`,
-												fontSize: theme.fontSizeSm,
-											}}
-										>
-											{entry.description}
-										</td>
-										<td
-											style={{
-												padding: '0.75rem 0.5rem',
-												borderBottom: `1px solid ${theme.colorBorder}`,
-												fontSize: theme.fontSizeSm,
-												textAlign: 'right',
-												fontWeight: 500,
-											}}
-										>
-											{formatPrice(entry.amount)}
-										</td>
-										<td
-											style={{
-												padding: '0.75rem 0.5rem',
-												borderBottom: `1px solid ${theme.colorBorder}`,
-												textAlign: 'center',
-											}}
-										>
-											<span
-												style={mergeStyles(
-													styles.badge,
-													entry.status === 'succeeded'
-														? styles.badgeSuccess
-														: entry.status === 'pending'
-														? styles.badgeWarning
-														: entry.status === 'refunded'
-														? styles.badgePrimary
-														: styles.badgeDestructive
-												)}
-											>
-												{entry.status}
-											</span>
-										</td>
-										<td
-											style={{
-												padding: '0.75rem 0.5rem',
-												borderBottom: `1px solid ${theme.colorBorder}`,
-												textAlign: 'right',
-											}}
-										>
-											{entry.invoiceUrl && (
-												<a
-													href={entry.invoiceUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													style={mergeStyles(styles.link, { fontSize: theme.fontSizeXs })}
-												>
-													Invoice
-												</a>
-											)}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
 					</div>
 				</div>
 			)}
