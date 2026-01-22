@@ -362,25 +362,57 @@ export function SylphxProvider({
 	const referralCode = referralsQuery.data?.code ?? null
 	const referralLoading = referralsQuery.isLoading
 	const referralError = referralsQuery.error as Error | null
+
+	// Push Preferences - React Query (enabled when signed in)
+	const pushPreferencesQuery = useQuery({
+		queryKey: ['sylphx', appId, 'pushPreferences'],
+		queryFn: () => api.get<PushPreferences>('/notifications/preferences'),
+		enabled: authState.isSignedIn,
+		staleTime: 5 * 60 * 1000, // 5 min
+	})
+	const pushPreferences = pushPreferencesQuery.data ?? null
+	const pushError = pushPreferencesQuery.error as Error | null
 	const [pushSubscribed, setPushSubscribed] = useState(false)
-	const [pushPreferences, setPushPreferences] = useState<PushPreferences | null>(null)
-	const [pushError, setPushError] = useState<Error | null>(null)
 	const [analyticsError, setAnalyticsError] = useState<Error | null>(null)
 
-	// Mobile Push State
-	const [mobilePushConfig, setMobilePushConfig] = useState<MobilePushConfig | null>(null)
-	const [mobilePushPreferences, setMobilePushPreferences] = useState<MobilePushPreferences | null>(null)
-	const [mobilePushError, setMobilePushError] = useState<Error | null>(null)
-
+	// Mobile Push Config/Preferences - React Query (enabled when signed in)
+	const mobilePushQuery = useQuery({
+		queryKey: ['sylphx', appId, 'mobilePush'],
+		queryFn: async () => {
+			const [config, preferences] = await Promise.all([
+				api.get<MobilePushConfig>('/notifications/mobile/config'),
+				api.get<MobilePushPreferences>('/notifications/mobile/preferences'),
+			])
+			return { config, preferences }
+		},
+		enabled: authState.isSignedIn,
+		staleTime: 5 * 60 * 1000, // 5 min
+	})
+	const mobilePushConfig = mobilePushQuery.data?.config ?? null
+	const mobilePushPreferences = mobilePushQuery.data?.preferences ?? null
+	const mobilePushError = mobilePushQuery.error as Error | null
 
 	// ============================================
-	// In-App Messages (Inbox) State
+	// In-App Messages (Inbox) - React Query (enabled when signed in)
 	// ============================================
-	const [inboxMessages, setInboxMessages] = useState<InAppMessageWithReadStatus[]>([])
-	const [inboxUnreadCount, setInboxUnreadCount] = useState(0)
-	const [inboxLoading, setInboxLoading] = useState(false)
-	const [inboxError, setInboxError] = useState<Error | null>(null)
-	const [inboxPreferences, setInboxPreferences] = useState<InboxPreferences | null>(null)
+	const inboxQuery = useQuery({
+		queryKey: ['sylphx', appId, 'inbox'],
+		queryFn: async () => {
+			const [messages, unreadCountResult, preferences] = await Promise.all([
+				api.get<InAppMessageWithReadStatus[]>('/notifications/messages', { limit: '50' }),
+				api.get<{ count: number }>('/notifications/messages/unread-count'),
+				api.get<InboxPreferences>('/notifications/messages/preferences'),
+			])
+			return { messages, unreadCount: unreadCountResult.count, preferences }
+		},
+		enabled: authState.isSignedIn,
+		staleTime: 1 * 60 * 1000, // 1 min - inbox changes frequently
+	})
+	const inboxMessages = inboxQuery.data?.messages ?? []
+	const inboxUnreadCount = inboxQuery.data?.unreadCount ?? 0
+	const inboxPreferences = inboxQuery.data?.preferences ?? null
+	const inboxLoading = inboxQuery.isLoading
+	const inboxError = inboxQuery.error as Error | null
 
 	// Check if push is supported
 	const pushSupported =
@@ -640,44 +672,14 @@ export function SylphxProvider({
 	}, [authState.isSignedIn, authState.refreshToken, refreshTokens, storage])
 
 	// ============================================
-	// Load Platform Data when signed in
-	// Note: Subscription, Referrals, and Plans are now handled by React Query
+	// All server data is now handled by React Query:
+	// - Plans (plansQuery)
+	// - Subscription (subscriptionQuery)
+	// - Referrals (referralsQuery)
+	// - Push Preferences (pushPreferencesQuery)
+	// - Mobile Push (mobilePushQuery)
+	// - Inbox Messages (inboxQuery)
 	// ============================================
-	useEffect(() => {
-		if (!authState.isSignedIn) {
-			// Clear push state on sign out (React Query handles subscription/referrals)
-			setPushPreferences(null)
-			setPushError(null)
-			return
-		}
-
-		const loadPushPreferences = async () => {
-			setPushError(null)
-			try {
-				const data = await api.get<PushPreferences>('/notifications/preferences')
-				setPushPreferences(data)
-			} catch (error) {
-				setPushError(error instanceof Error ? error : new Error('Failed to load push preferences'))
-			}
-		}
-
-		const loadMobilePushConfig = async () => {
-			setMobilePushError(null)
-			try {
-				const config = await api.get<MobilePushConfig>('/notifications/mobile/config')
-				setMobilePushConfig(config)
-				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
-				setMobilePushPreferences(prefs)
-			} catch (error) {
-				setMobilePushError(error instanceof Error ? error : new Error('Failed to load mobile push config'))
-			}
-		}
-
-		loadPushPreferences()
-		loadMobilePushConfig()
-	}, [authState.isSignedIn, api])
-
-	// Plans are loaded via useQuery (plansQuery) - no useEffect needed
 
 	// ============================================
 	// Auth Actions
@@ -1290,17 +1292,22 @@ export function SylphxProvider({
 			if (prefs.enabled === false) {
 				await unsubscribePush()
 			}
-			// Update local state for any custom categories
+			// Optimistic update for categories via React Query
 			if (prefs.categories && pushPreferences) {
-				setPushPreferences({ ...pushPreferences, categories: prefs.categories })
+				queryClient.setQueryData<PushPreferences>(['sylphx', appId, 'pushPreferences'], (old) => {
+					if (!old) return old
+					return { ...old, categories: prefs.categories! }
+				})
 			}
 		},
-		[pushPreferences, unsubscribePush]
+		[pushPreferences, unsubscribePush, queryClient, appId]
 	)
 
 	// ============================================
-	// Mobile Push Notification Actions
+	// Mobile Push Notification Actions - React Query cache updates
 	// ============================================
+	const mobilePushQueryKey = ['sylphx', appId, 'mobilePush']
+
 	const registerMobileDevice = useCallback(
 		async (options: {
 			platform: MobilePushPlatform
@@ -1310,49 +1317,36 @@ export function SylphxProvider({
 			appVersion?: string
 			osVersion?: string
 		}): Promise<{ success: boolean; tokenId: string }> => {
-			try {
-				// Cast platform to the API expected type (web devices are read-only)
-				const result = await api.post<{ success: boolean; tokenId: string }>('/notifications/mobile/register', {
-					...options,
-					platform: options.platform as 'ios' | 'android',
-				})
-				// Refresh preferences after registration
-				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
-				setMobilePushPreferences(prefs)
-				return result
-			} catch (err) {
-				setMobilePushError(err instanceof Error ? err : new Error('Failed to register device'))
-				throw err
-			}
+			// Cast platform to the API expected type (web devices are read-only)
+			const result = await api.post<{ success: boolean; tokenId: string }>('/notifications/mobile/register', {
+				...options,
+				platform: options.platform as 'ios' | 'android',
+			})
+			// Refresh mobile push data via React Query
+			void queryClient.invalidateQueries({ queryKey: mobilePushQueryKey })
+			return result
 		},
-		[api]
+		[api, queryClient, appId]
 	)
 
 	const unregisterMobileDevice = useCallback(
 		async (token: string): Promise<void> => {
-			try {
-				await api.post('/notifications/mobile/unregister', { token })
-				// Refresh preferences after unregistration
-				const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
-				setMobilePushPreferences(prefs)
-			} catch (err) {
-				setMobilePushError(err instanceof Error ? err : new Error('Failed to unregister device'))
-				throw err
-			}
+			await api.post('/notifications/mobile/unregister', { token })
+			// Refresh mobile push data via React Query
+			void queryClient.invalidateQueries({ queryKey: mobilePushQueryKey })
 		},
-		[api]
+		[api, queryClient, appId]
 	)
 
 	const getMobilePushPreferences = useCallback(async (): Promise<MobilePushPreferences> => {
-		try {
-			const prefs = await api.get<MobilePushPreferences>('/notifications/mobile/preferences')
-			setMobilePushPreferences(prefs)
-			return prefs
-		} catch (err) {
-			setMobilePushError(err instanceof Error ? err : new Error('Failed to get mobile push preferences'))
-			throw err
+		// Trigger refetch via React Query and wait for fresh data
+		await queryClient.invalidateQueries({ queryKey: mobilePushQueryKey })
+		const data = queryClient.getQueryData<{ config: MobilePushConfig; preferences: MobilePushPreferences }>(mobilePushQueryKey)
+		if (!data?.preferences) {
+			throw new Error('Failed to get mobile push preferences')
 		}
-	}, [api])
+		return data.preferences
+	}, [queryClient, appId])
 
 	// ============================================
 	// Referral Actions
@@ -1497,80 +1491,98 @@ export function SylphxProvider({
 
 
 	// ============================================
-	// In-App Messages (Inbox) Actions
+	// In-App Messages (Inbox) Actions - React Query optimistic updates
 	// ============================================
+	type InboxQueryData = {
+		messages: InAppMessageWithReadStatus[]
+		unreadCount: number
+		preferences: InboxPreferences | null
+	}
+	const inboxQueryKey = ['sylphx', appId, 'inbox']
+
 	const refreshInbox = useCallback(async (): Promise<void> => {
-		if (!authState.user) return
-		setInboxLoading(true)
-		setInboxError(null)
-		try {
-			const [messages, unreadCountResult, preferences] = await Promise.all([
-				api.get<InAppMessageWithReadStatus[]>('/notifications/messages', { limit: '50' }),
-				api.get<{ count: number }>('/notifications/messages/unread-count'),
-				api.get<InboxPreferences>('/notifications/messages/preferences'),
-			])
-			setInboxMessages(messages)
-			setInboxUnreadCount(unreadCountResult.count)
-			setInboxPreferences(preferences)
-		} catch (err) {
-			setInboxError(err instanceof Error ? err : new Error('Failed to load inbox'))
-		} finally {
-			setInboxLoading(false)
-		}
-	}, [api, authState.user])
+		await queryClient.invalidateQueries({ queryKey: inboxQueryKey })
+	}, [queryClient, appId])
 
 	const markInboxMessageAsRead = useCallback(
 		async (messageId: string): Promise<void> => {
-			// Optimistic update
-			setInboxMessages((prev) =>
-				prev.map((m) => (m.id === messageId ? { ...m, isRead: true, readAt: new Date().toISOString() } : m))
-			)
-			setInboxUnreadCount((prev) => Math.max(0, prev - 1))
+			// Optimistic update via React Query
+			const previousData = queryClient.getQueryData<InboxQueryData>(inboxQueryKey)
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old
+				return {
+					...old,
+					messages: old.messages.map((m) =>
+						m.id === messageId ? { ...m, isRead: true, readAt: new Date().toISOString() } : m
+					),
+					unreadCount: Math.max(0, old.unreadCount - 1),
+				}
+			})
 			try {
 				await api.post(`/notifications/messages/${messageId}/read`)
 			} catch (err) {
 				// Rollback on error
-				await refreshInbox()
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData)
 				throw err
 			}
 		},
-		[api, refreshInbox]
+		[api, queryClient, appId]
 	)
 
 	const markAllInboxMessagesAsRead = useCallback(async (): Promise<void> => {
-		// Optimistic update
-		setInboxMessages((prev) => prev.map((m) => ({ ...m, isRead: true, readAt: new Date().toISOString() })))
-		setInboxUnreadCount(0)
+		// Optimistic update via React Query
+		const previousData = queryClient.getQueryData<InboxQueryData>(inboxQueryKey)
+		queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+			if (!old) return old
+			return {
+				...old,
+				messages: old.messages.map((m) => ({ ...m, isRead: true, readAt: new Date().toISOString() })),
+				unreadCount: 0,
+			}
+		})
 		try {
 			await api.post('/notifications/messages/mark-all-read')
 		} catch (err) {
 			// Rollback on error
-			await refreshInbox()
+			if (previousData) queryClient.setQueryData(inboxQueryKey, previousData)
 			throw err
 		}
-	}, [api, refreshInbox])
+	}, [api, queryClient, appId])
 
 	const dismissInboxMessage = useCallback(
 		async (messageId: string): Promise<void> => {
-			// Optimistic update - remove from list
-			setInboxMessages((prev) => prev.filter((m) => m.id !== messageId))
+			// Optimistic update via React Query - remove from list
+			const previousData = queryClient.getQueryData<InboxQueryData>(inboxQueryKey)
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old
+				return {
+					...old,
+					messages: old.messages.filter((m) => m.id !== messageId),
+				}
+			})
 			try {
 				await api.post(`/notifications/messages/${messageId}/dismiss`)
 			} catch (err) {
 				// Rollback on error
-				await refreshInbox()
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData)
 				throw err
 			}
 		},
-		[api, refreshInbox]
+		[api, queryClient, appId]
 	)
 
 	const recordInboxMessageClick = useCallback(
 		async (messageId: string, action: 'primary' | 'secondary'): Promise<void> => {
-			// Optimistic update - mark as read
-			setInboxMessages((prev) =>
-				prev.map((m) => (m.id === messageId ? { ...m, isRead: true, readAt: new Date().toISOString() } : m))
-			)
+			// Optimistic update via React Query - mark as read
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old
+				return {
+					...old,
+					messages: old.messages.map((m) =>
+						m.id === messageId ? { ...m, isRead: true, readAt: new Date().toISOString() } : m
+					),
+				}
+			})
 			try {
 				await api.post(`/notifications/messages/${messageId}/click`, { action })
 			} catch (err) {
@@ -1578,22 +1590,29 @@ export function SylphxProvider({
 				// Don't throw - this is a non-critical action
 			}
 		},
-		[api]
+		[api, queryClient, appId]
 	)
 
 	const updateInboxPreferences = useCallback(
 		async (prefs: { enabled?: boolean; mutedTopics?: string[]; highPriorityOnly?: boolean }): Promise<void> => {
-			// Optimistic update
-			setInboxPreferences((prev) => (prev ? { ...prev, ...prefs } : null))
+			// Optimistic update via React Query
+			const previousData = queryClient.getQueryData<InboxQueryData>(inboxQueryKey)
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old
+				return {
+					...old,
+					preferences: old.preferences ? { ...old.preferences, ...prefs } : null,
+				}
+			})
 			try {
 				await api.put('/notifications/messages/preferences', prefs)
 			} catch (err) {
 				// Rollback on error
-				await refreshInbox()
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData)
 				throw err
 			}
 		},
-		[api, refreshInbox]
+		[api, queryClient, appId]
 	)
 
 	// ============================================
