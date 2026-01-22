@@ -145,46 +145,9 @@ export const gamificationRouter = router({
 		})
 	}),
 
-	/**
-	 * Get achievements (placeholder for future expansion)
-	 */
-	getAchievements: protectedProcedure.query(async ({ ctx }) => {
-		// This could be expanded to track specific achievements
-		const stats = await db.select().from(userStats).where(eq(userStats.userId, ctx.user.id))
-
-		// Aggregate stats across all games to avoid duplicate achievements
-		const aggregated = {
-			totalGamesPlayed: 0,
-			maxCurrentStreak: 0,
-			maxOverallStreak: 0,
-			totalGamesWon: 0,
-		}
-
-		for (const stat of stats) {
-			aggregated.totalGamesPlayed += stat.gamesPlayed
-			aggregated.maxCurrentStreak = Math.max(aggregated.maxCurrentStreak, stat.currentStreak)
-			aggregated.maxOverallStreak = Math.max(aggregated.maxOverallStreak, stat.maxStreak)
-			aggregated.totalGamesWon += stat.gamesWon
-		}
-
-		const achievements = []
-
-		// Check for achievement conditions using aggregated stats
-		if (aggregated.totalGamesPlayed >= 1) {
-			achievements.push({ id: 'first_game', name: 'First Steps', unlocked: true })
-		}
-		if (aggregated.maxCurrentStreak >= 7) {
-			achievements.push({ id: 'week_streak', name: 'Week Warrior', unlocked: true })
-		}
-		if (aggregated.maxOverallStreak >= 30) {
-			achievements.push({ id: 'month_streak', name: 'Monthly Master', unlocked: true })
-		}
-		if (aggregated.totalGamesWon >= 100) {
-			achievements.push({ id: 'centurion', name: 'Centurion', unlocked: true })
-		}
-
-		return achievements
-	}),
+	// NOTE: Achievements are tracked via Platform SDK (useAchievements hook).
+	// See: AchievementChecker component + lib/achievements.ts for definitions.
+	// The SDK is SSOT for achievement unlock state.
 
 	/**
 	 * Toggle auto-freeze setting

@@ -55,6 +55,16 @@ export function getTodayUTC(): Date {
 }
 
 /**
+ * Get yesterday's date at midnight UTC
+ * Used for streak-at-risk notifications
+ */
+export function getYesterdayUTC(): Date {
+	const today = getTodayUTC()
+	today.setUTCDate(today.getUTCDate() - 1)
+	return today
+}
+
+/**
  * Get puzzle date string (YYYY-MM-DD) in UTC
  */
 export function getPuzzleDateStringUTC(date: Date = new Date()): string {

@@ -9,4 +9,5 @@ export {
 	getPuzzleNumber,
 	getTimeUntilNextUTCMidnight,
 	getTodayUTC,
+	getYesterdayUTC,
 } from './lib/puzzle-utils'

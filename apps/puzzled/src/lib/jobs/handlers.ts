@@ -49,8 +49,7 @@ export const JOB_HANDLERS: Record<string, () => Promise<JobHandler>> = {
 	'dlq-retry': () =>
 		import('./handlers/dlq-retry').then((m) => m.dlqRetryHandler),
 
-	// Placeholder handlers for notification jobs
-	// These can be implemented when the workflow endpoints are migrated
+	// Notification jobs - send push/email notifications via Platform SDK
 	'daily-reminder': () =>
 		import('./handlers/notifications').then((m) => m.dailyReminderHandler),
 
