@@ -8,8 +8,7 @@
  * which uses server-side storage as SSOT.
  */
 
-const CONSENT_KEY = 'puzzled-cookie-consent'
-const CONSENT_TIMESTAMP_KEY = 'puzzled-cookie-consent-timestamp'
+import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
 export type ConsentStatus = 'pending' | 'accepted' | 'declined'
 

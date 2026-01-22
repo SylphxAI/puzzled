@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
+import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 
 /** Final game outcome - what gets saved to database */
@@ -153,7 +154,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		guestPromptDelay = 2000,
 	} = options
 
-	const storageKey = `played_${gameSlug}`
+	const storageKey = getGameSessionKey(gameSlug)
 
 	// Hooks
 	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)

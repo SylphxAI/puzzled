@@ -4,6 +4,7 @@ import { Download, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { PWA_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { Button } from '@sylphx/ui'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -29,7 +30,7 @@ export function PWAInstallPrompt() {
 		setIsIOS(isIOSDevice)
 
 		// Check if dismissed recently (within 7 days)
-		const dismissedAt = localStorage.getItem('pwa-prompt-dismissed')
+		const dismissedAt = localStorage.getItem(PWA_PROMPT_DISMISSED_KEY)
 		if (dismissedAt) {
 			const dismissedDate = new Date(dismissedAt)
 			const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24)
@@ -70,7 +71,7 @@ export function PWAInstallPrompt() {
 
 	const handleDismiss = () => {
 		setShowPrompt(false)
-		localStorage.setItem('pwa-prompt-dismissed', new Date().toISOString())
+		localStorage.setItem(PWA_PROMPT_DISMISSED_KEY, new Date().toISOString())
 	}
 
 	// Don't show if already installed or prompt not ready

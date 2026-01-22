@@ -8,8 +8,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'puzzled_guest_onboarding'
+import { GUEST_ONBOARDING_KEY } from '@/lib/storage-keys'
 const GAMES_BEFORE_PROMPT = 3
 
 interface OnboardingState {
@@ -23,7 +22,7 @@ function getStoredState(): OnboardingState {
 	}
 
 	try {
-		const stored = localStorage.getItem(STORAGE_KEY)
+		const stored = localStorage.getItem(GUEST_ONBOARDING_KEY)
 		if (stored) {
 			return JSON.parse(stored)
 		}
@@ -38,7 +37,7 @@ function saveState(state: OnboardingState): void {
 	if (typeof window === 'undefined') return
 
 	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+		localStorage.setItem(GUEST_ONBOARDING_KEY, JSON.stringify(state))
 	} catch {
 		// Ignore storage errors
 	}

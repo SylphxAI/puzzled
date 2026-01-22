@@ -12,6 +12,7 @@ import { Celebration } from '@/features/celebration/components'
 import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
@@ -72,10 +73,8 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
-		const minutes = Math.floor(timeMs / 60000)
-		const seconds = Math.floor((timeMs % 60000) / 1000)
 
-		const text = `☀️🌙 Tango\n⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}\n\npuzzled.gg`
+		const text = `☀️🌙 Tango\n⏱️ ${formatTimer(timeMs)}\n\npuzzled.gg`
 		navigator.clipboard.writeText(text)
 	}, [game.state.endTime, startTime])
 

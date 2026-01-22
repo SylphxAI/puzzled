@@ -4,7 +4,7 @@
  */
 
 import dynamic from 'next/dynamic'
-import { pickRandom } from '@/games/shared'
+import { calculateWordleScore, pickRandom } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -217,11 +217,9 @@ export const wordGuessConfig: GameConfig<
 			return { valid: false, error: 'Invalid loss claim - final guess matches solution' }
 		}
 
-		// Calculate score
-		// Win: 100 - (attempts-1)*15
-		// Loss: 0
+		// Calculate score using shared Wordle-style formula
 		const attempts = guesses.length
-		const score = won ? Math.max(25, 100 - (attempts - 1) * 15) : 0
+		const score = calculateWordleScore(won, attempts)
 
 		return { valid: true, status: won ? 'won' : 'lost', score }
 	},

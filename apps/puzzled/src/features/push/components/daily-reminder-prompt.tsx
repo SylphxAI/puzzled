@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PushPrompt } from '@sylphx/sdk/react'
+import { PUSH_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { usePuzzledPush } from '../hooks/use-puzzled-push'
 
 interface DailyReminderPromptProps {
@@ -48,7 +49,7 @@ export function DailyReminderPrompt({
 
 	// Check if user has already dismissed this prompt
 	useEffect(() => {
-		const hasDismissed = localStorage.getItem('puzzled_push_prompt_dismissed')
+		const hasDismissed = localStorage.getItem(PUSH_PROMPT_DISMISSED_KEY)
 		if (hasDismissed) {
 			setDismissed(true)
 		}
@@ -65,14 +66,14 @@ export function DailyReminderPrompt({
 	}
 
 	const handleDismissed = () => {
-		localStorage.setItem('puzzled_push_prompt_dismissed', 'true')
+		localStorage.setItem(PUSH_PROMPT_DISMISSED_KEY, 'true')
 		setDismissed(true)
 		onDismissed?.()
 	}
 
 	const handleEnabled = () => {
 		// Clear dismissed flag since they enabled
-		localStorage.removeItem('puzzled_push_prompt_dismissed')
+		localStorage.removeItem(PUSH_PROMPT_DISMISSED_KEY)
 		onEnabled?.()
 	}
 

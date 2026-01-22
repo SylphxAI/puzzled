@@ -12,6 +12,7 @@ import { Celebration } from '@/features/celebration/components'
 import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
@@ -140,11 +141,9 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
-		const minutes = Math.floor(timeMs / 60000)
-		const seconds = Math.floor((timeMs % 60000) / 1000)
 		const solved = game.getSolvedCount()
 
-		const text = `4️⃣ Quordle\n${solved}/4 solved in ${game.state.guessHistory.length}/${MAX_GUESSES} guesses\n⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}\n\npuzzled.gg`
+		const text = `4️⃣ Quordle\n${solved}/4 solved in ${game.state.guessHistory.length}/${MAX_GUESSES} guesses\n⏱️ ${formatTimer(timeMs)}\n\npuzzled.gg`
 		navigator.clipboard.writeText(text)
 	}, [game, startTime])
 

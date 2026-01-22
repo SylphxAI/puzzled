@@ -36,8 +36,7 @@ export type SoundEffect =
 	| 'almostThere'
 	| 'shuffle'
 
-// Storage key for sound preferences
-const SOUND_ENABLED_KEY = 'puzzled:sound-enabled'
+import { SOUND_ENABLED_KEY } from '@/lib/storage-keys'
 
 /**
  * Get or create a shared AudioContext

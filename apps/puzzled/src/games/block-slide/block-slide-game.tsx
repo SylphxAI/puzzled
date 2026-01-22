@@ -12,6 +12,7 @@ import { Celebration } from '@/features/celebration/components'
 import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
@@ -104,12 +105,10 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 	// Share result
 	const handleShare = useCallback(() => {
 		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0
-		const minutes = Math.floor(timeMs / 60000)
-		const seconds = Math.floor((timeMs % 60000) / 1000)
 
 		const emoji = game.status === 'won' ? '🎉' : '😔'
 		const efficiency = game.minMoves > 0 ? Math.round((game.minMoves / game.moveCount) * 100) : 0
-		const text = `🧊 Block Slide\n${emoji} ${game.moveCount} moves (min: ${game.minMoves}) • ${efficiency}% efficiency\n⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}\n\nPlay at puzzled.gg`
+		const text = `🧊 Block Slide\n${emoji} ${game.moveCount} moves (min: ${game.minMoves}) • ${efficiency}% efficiency\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
 		navigator.clipboard.writeText(text)
 	}, [game.status, game.endTime, game.moveCount, game.minMoves, startTime])
 

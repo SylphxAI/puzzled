@@ -1,11 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { SEEN_ACHIEVEMENTS_KEY } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import type { Achievement, UserAchievement } from '../lib/achievements'
 import { ACHIEVEMENTS, checkAchievements } from '../lib/achievements'
-
-const SEEN_ACHIEVEMENTS_KEY = 'puzzled_seen_achievements'
 
 type AchievementStats = {
 	totalWins: number

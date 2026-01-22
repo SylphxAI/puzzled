@@ -1,8 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'puzzled_guest_games'
+import { GUEST_GAMES_KEY } from '@/lib/storage-keys'
 const RETENTION_DAYS = 7
 
 type GuestCompletedGame = {
@@ -32,7 +31,7 @@ function loadGuestStore(): GuestGameStore {
 	}
 
 	try {
-		const stored = localStorage.getItem(STORAGE_KEY)
+		const stored = localStorage.getItem(GUEST_GAMES_KEY)
 		if (!stored) {
 			return { version: 1, games: [] }
 		}
@@ -47,7 +46,7 @@ function saveGuestStore(store: GuestGameStore): void {
 	if (typeof window === 'undefined') return
 
 	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(store))
+		localStorage.setItem(GUEST_GAMES_KEY, JSON.stringify(store))
 	} catch {
 		// localStorage not available or full
 	}

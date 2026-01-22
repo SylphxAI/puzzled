@@ -16,14 +16,15 @@ import {
 	generateNonogramPuzzle,
 } from '@/features/puzzle-generator/server'
 import type { LLMGeneratorResult } from './types'
+import {
+	MAX_MISTAKES,
+	WORDS_PER_CATEGORY,
+	TOTAL_CATEGORIES,
+} from './word-groups/types'
 
 // ==========================================
 // Connections LLM Generator
 // ==========================================
-
-const MAX_MISTAKES = 4
-const WORDS_PER_CATEGORY = 4
-const TOTAL_CATEGORIES = 4
 
 /**
  * Deterministic shuffle based on seed

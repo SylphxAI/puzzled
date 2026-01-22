@@ -10,10 +10,7 @@
 
 import { CookieBanner, useConsent } from '@sylphx/sdk/react'
 import { useEffect } from 'react'
-
-// LocalStorage keys (must match features/analytics/lib/consent.ts)
-const CONSENT_KEY = 'puzzled-cookie-consent'
-const CONSENT_TIMESTAMP_KEY = 'puzzled-cookie-consent-timestamp'
+import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
 /**
  * Sync SDK consent state to localStorage for client-side scripts

@@ -12,6 +12,7 @@ import { Celebration } from '@/features/celebration/components'
 import { HowToPlayModal } from '@/features/daily/components'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
@@ -76,10 +77,8 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	// Share result
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
-		const minutes = Math.floor(timeMs / 60000)
-		const seconds = Math.floor((timeMs % 60000) / 1000)
 
-		const text = `👑 Queens ${puzzle.puzzleData.size}×${puzzle.puzzleData.size}\n⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}\n\nPlay at puzzled.gg`
+		const text = `👑 Queens ${puzzle.puzzleData.size}×${puzzle.puzzleData.size}\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
 		navigator.clipboard.writeText(text)
 	}, [game.state.endTime, startTime, puzzle.puzzleData.size])
 

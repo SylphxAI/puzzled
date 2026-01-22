@@ -97,3 +97,23 @@ export function compareByTime(a: GameCompletionStats, b: GameCompletionStats): n
 	if (a.status !== 'won' && b.status === 'won') return -1
 	return (b.timeSpentMs ?? Infinity) - (a.timeSpentMs ?? Infinity)
 }
+
+// ==========================================
+// Scoring Functions
+// ==========================================
+
+/**
+ * Wordle-style scoring: 100 points minus penalty per attempt.
+ * Used by games where fewer attempts = higher score.
+ *
+ * Formula: 100 - (attempts - 1) * 15, minimum 25 points for win
+ * - 1 attempt: 100 points
+ * - 2 attempts: 85 points
+ * - 3 attempts: 70 points
+ * - 4 attempts: 55 points
+ * - 5 attempts: 40 points
+ * - 6 attempts: 25 points (minimum)
+ */
+export function calculateWordleScore(won: boolean, attempts: number): number {
+	return won ? Math.max(25, 100 - (attempts - 1) * 15) : 0
+}

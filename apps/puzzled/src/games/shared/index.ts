@@ -11,6 +11,7 @@
 
 // Format utilities
 export {
+	calculateWordleScore,
 	compareByTime,
 	formatTime,
 	formatTimer,

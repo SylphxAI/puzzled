@@ -24,13 +24,16 @@ import { canTrackAnalytics } from './consent'
 // Constants
 // ==========================================
 
+import {
+	ANALYTICS_OFFLINE_QUEUE_KEY,
+	SESSION_START_KEY,
+	SESSION_ID_KEY,
+} from '@/lib/storage-keys'
+
 const BATCH_SIZE = 10
 const BATCH_INTERVAL_MS = 5000
 const MAX_RETRIES = 5
 const BASE_RETRY_DELAY_MS = 1000
-const OFFLINE_QUEUE_KEY = 'puzzled-analytics-offline-queue'
-const SESSION_START_KEY = 'puzzled-session-start'
-const SESSION_ID_KEY = 'puzzled-session-id'
 
 // ==========================================
 // Types
@@ -175,11 +178,11 @@ async function saveToOfflineQueue(events: QueuedEvent[]): Promise<void> {
 		const db = await openDB()
 		if (!db) {
 			// Fallback to localStorage if IndexedDB unavailable
-			const existing = localStorage.getItem(OFFLINE_QUEUE_KEY)
+			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY)
 			const queue: QueuedEvent[] = existing ? JSON.parse(existing) : []
 			queue.push(...events)
 			// Limit to 1000 events
-			localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-1000)))
+			localStorage.setItem(ANALYTICS_OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-1000)))
 			return
 		}
 
@@ -206,7 +209,7 @@ async function getOfflineQueue(): Promise<QueuedEvent[]> {
 		const db = await openDB()
 		if (!db) {
 			// Fallback to localStorage
-			const existing = localStorage.getItem(OFFLINE_QUEUE_KEY)
+			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY)
 			return existing ? JSON.parse(existing) : []
 		}
 
@@ -227,7 +230,7 @@ async function clearOfflineQueue(): Promise<void> {
 	try {
 		const db = await openDB()
 		if (!db) {
-			localStorage.removeItem(OFFLINE_QUEUE_KEY)
+			localStorage.removeItem(ANALYTICS_OFFLINE_QUEUE_KEY)
 			return
 		}
 
