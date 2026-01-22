@@ -34,11 +34,15 @@
 		"generate:types:local": "openapi-typescript http://localhost:3002/api/openapi.json -o src/generated/api.d.ts"
 	},
 	"peerDependencies": {
+		"@tanstack/react-query": ">=5",
 		"react": ">=18",
 		"react-dom": ">=18",
 		"next": ">=14"
 	},
 	"peerDependenciesMeta": {
+		"@tanstack/react-query": {
+			"optional": true
+		},
 		"react": {
 			"optional": true
 		},
@@ -58,6 +62,7 @@
 		"use-sync-external-store": "^1.4.0"
 	},
 	"devDependencies": {
+		"@tanstack/react-query": "^5",
 		"@types/node": "^25",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",

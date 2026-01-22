@@ -10,11 +10,11 @@
  * - All localStorage keys are namespaced by appId to prevent collisions
  * - Services use proper React Context (not module singletons)
  * - Auto-tracking events are deduplicated by tracking IDs
+ * - React Query provides caching, deduplication, and stale-while-revalidate for server data
  */
 
-'use client'
-
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
 import {
 	PlatformContext,
@@ -248,6 +248,23 @@ export function SylphxProvider({
 	autoTracking = true,
 	platformMode = false,
 }: SylphxProviderProps) {
+	// ============================================
+	// React Query Client (internal, for caching server data)
+	// ============================================
+	const [queryClient] = useState(
+		() =>
+			new QueryClient({
+				defaultOptions: {
+					queries: {
+						// SDK default: 5 min stale time, no refetch on window focus
+						staleTime: 5 * 60 * 1000,
+						refetchOnWindowFocus: false,
+						retry: 1,
+					},
+				},
+			})
+	)
+
 	// In platform mode, derive URL from current origin; otherwise use provided or default
 	const platformUrl = platformMode
 		? (typeof window !== 'undefined' ? window.location.origin : '')
@@ -304,18 +321,47 @@ export function SylphxProvider({
 	})
 
 	// ============================================
-	// Platform State
+	// Platform State - React Query for server data
 	// ============================================
-	const [subscription, setSubscription] = useState<Subscription | null>(null)
-	const [subscriptionLoading, setSubscriptionLoading] = useState(false)
-	const [subscriptionError, setSubscriptionError] = useState<Error | null>(null)
-	const [plans, setPlans] = useState<Plan[]>([])
-	const [plansLoading, setPlansLoading] = useState(false)
-	const [plansError, setPlansError] = useState<Error | null>(null)
-	const [referralStats, setReferralStats] = useState<ReferralStats | null>(null)
-	const [referralCode, setReferralCode] = useState<string | null>(null)
-	const [referralLoading, setReferralLoading] = useState(false)
-	const [referralError, setReferralError] = useState<Error | null>(null)
+
+	// Plans - React Query (public, cached)
+	const plansQuery = useQuery({
+		queryKey: ['sylphx', appId, 'plans'],
+		queryFn: () => api.get<Plan[]>('/billing/plans'),
+		staleTime: 10 * 60 * 1000, // 10 min - plans rarely change
+	})
+	const plans = plansQuery.data ?? []
+	const plansLoading = plansQuery.isLoading
+	const plansError = plansQuery.error as Error | null
+
+	// Subscription - React Query (enabled when signed in)
+	const subscriptionQuery = useQuery({
+		queryKey: ['sylphx', appId, 'subscription', authState.user?.id],
+		queryFn: () => api.get<Subscription | null>('/billing/subscription', { userId: authState.user!.id }),
+		enabled: authState.isSignedIn && !!authState.user?.id,
+		staleTime: 2 * 60 * 1000, // 2 min - subscription can change after payment
+	})
+	const subscription = subscriptionQuery.data ?? null
+	const subscriptionLoading = subscriptionQuery.isLoading
+	const subscriptionError = subscriptionQuery.error as Error | null
+
+	// Referrals - React Query (enabled when signed in)
+	const referralsQuery = useQuery({
+		queryKey: ['sylphx', appId, 'referrals'],
+		queryFn: async () => {
+			const [stats, codeData] = await Promise.all([
+				api.get<ReferralStats>('/referrals/stats'),
+				api.get<{ code: string }>('/referrals/code'),
+			])
+			return { stats, code: codeData.code }
+		},
+		enabled: authState.isSignedIn,
+		staleTime: 5 * 60 * 1000, // 5 min
+	})
+	const referralStats = referralsQuery.data?.stats ?? null
+	const referralCode = referralsQuery.data?.code ?? null
+	const referralLoading = referralsQuery.isLoading
+	const referralError = referralsQuery.error as Error | null
 	const [pushSubscribed, setPushSubscribed] = useState(false)
 	const [pushPreferences, setPushPreferences] = useState<PushPreferences | null>(null)
 	const [pushError, setPushError] = useState<Error | null>(null)
@@ -595,47 +641,14 @@ export function SylphxProvider({
 
 	// ============================================
 	// Load Platform Data when signed in
+	// Note: Subscription, Referrals, and Plans are now handled by React Query
 	// ============================================
 	useEffect(() => {
 		if (!authState.isSignedIn) {
-			setSubscription(null)
-			setSubscriptionError(null)
-			setReferralStats(null)
-			setReferralError(null)
+			// Clear push state on sign out (React Query handles subscription/referrals)
 			setPushPreferences(null)
 			setPushError(null)
 			return
-		}
-
-		const loadSubscription = async () => {
-			if (!authState.user?.id) return
-			setSubscriptionLoading(true)
-			setSubscriptionError(null)
-			try {
-				const data = await api.get<Subscription | null>('/billing/subscription', { userId: authState.user.id })
-				setSubscription(data)
-			} catch (error) {
-				setSubscriptionError(error instanceof Error ? error : new Error('Failed to load subscription'))
-			} finally {
-				setSubscriptionLoading(false)
-			}
-		}
-
-		const loadReferrals = async () => {
-			setReferralLoading(true)
-			setReferralError(null)
-			try {
-				const [stats, codeData] = await Promise.all([
-					api.get<ReferralStats>('/referrals/stats'),
-					api.get<{ code: string }>('/referrals/code'),
-				])
-				setReferralStats(stats)
-				setReferralCode(codeData.code)
-			} catch (error) {
-				setReferralError(error instanceof Error ? error : new Error('Failed to load referrals'))
-			} finally {
-				setReferralLoading(false)
-			}
 		}
 
 		const loadPushPreferences = async () => {
@@ -660,29 +673,11 @@ export function SylphxProvider({
 			}
 		}
 
-		loadSubscription()
-		loadReferrals()
 		loadPushPreferences()
 		loadMobilePushConfig()
 	}, [authState.isSignedIn, api])
 
-	// Load plans (public, no auth needed)
-	useEffect(() => {
-		const loadPlans = async () => {
-			setPlansLoading(true)
-			setPlansError(null)
-			try {
-				const data = await api.get<Plan[]>('/billing/plans')
-				setPlans(data)
-			} catch (error) {
-				setPlansError(error instanceof Error ? error : new Error('Failed to load plans'))
-			} finally {
-				setPlansLoading(false)
-			}
-		}
-
-		loadPlans()
-	}, [api])
+	// Plans are loaded via useQuery (plansQuery) - no useEffect needed
 
 	// ============================================
 	// Auth Actions
@@ -913,15 +908,9 @@ export function SylphxProvider({
 	}, [api, authState.user?.id])
 
 	const refreshSubscription = useCallback(async (): Promise<void> => {
-		if (!authState.user?.id) return
-		setSubscriptionLoading(true)
-		try {
-			const data = await api.get<Subscription | null>('/billing/subscription', { userId: authState.user.id })
-			setSubscription(data)
-		} finally {
-			setSubscriptionLoading(false)
-		}
-	}, [api, authState.user?.id])
+		// Use React Query invalidation to refetch subscription
+		await queryClient.invalidateQueries({ queryKey: ['sylphx', appId, 'subscription'] })
+	}, [queryClient, appId])
 
 	// ============================================
 	// Analytics Actions (with deduplication)
@@ -1376,9 +1365,10 @@ export function SylphxProvider({
 
 	const regenerateReferralCode = useCallback(async (): Promise<string> => {
 		const data = await api.post<{ code: string }>('/referrals/code/regenerate')
-		setReferralCode(data.code)
+		// Invalidate referrals query to refetch the new code
+		void queryClient.invalidateQueries({ queryKey: ['sylphx', appId, 'referrals'] })
 		return data.code
-	}, [api])
+	}, [api, queryClient, appId])
 
 	const redeemReferralCode = useCallback(
 		async (code: string, _defaults?: import('../referrals').ReferralRewardDefaults): Promise<import('../referrals').RedeemResult> => {
@@ -2856,35 +2846,37 @@ export function SylphxProvider({
 	)
 
 	return (
-		<AuthContext.Provider value={authValue}>
-			<SdkAuthContext.Provider value={sdkAuthValue}>
-				<UserContext.Provider value={userValue}>
-					<SecurityContext.Provider value={securityValue}>
-						<PlatformContext.Provider value={platformValue}>
-							<StorageContext.Provider value={storageValue}>
-								<AIContext.Provider value={aiValue}>
-									<JobsContext.Provider value={jobsValue}>
-										<MonitoringContext.Provider value={monitoringValue}>
-											<ConsentContext.Provider value={consentValue}>
-												<DatabaseContext.Provider value={databaseValue}>
-													<EmailContext.Provider value={emailValue}>
-														{/* Newsletter: Marketing/bulk email subscriptions */}
-														<NewsletterContext.Provider value={newsletterValue}>
-															<WebhooksContext.Provider value={webhooksValue}>
-																{children}
-															</WebhooksContext.Provider>
-														</NewsletterContext.Provider>
-													</EmailContext.Provider>
-												</DatabaseContext.Provider>
-											</ConsentContext.Provider>
-										</MonitoringContext.Provider>
-									</JobsContext.Provider>
-								</AIContext.Provider>
-							</StorageContext.Provider>
-						</PlatformContext.Provider>
-					</SecurityContext.Provider>
-				</UserContext.Provider>
-			</SdkAuthContext.Provider>
-		</AuthContext.Provider>
+		<QueryClientProvider client={queryClient}>
+			<AuthContext.Provider value={authValue}>
+				<SdkAuthContext.Provider value={sdkAuthValue}>
+					<UserContext.Provider value={userValue}>
+						<SecurityContext.Provider value={securityValue}>
+							<PlatformContext.Provider value={platformValue}>
+								<StorageContext.Provider value={storageValue}>
+									<AIContext.Provider value={aiValue}>
+										<JobsContext.Provider value={jobsValue}>
+											<MonitoringContext.Provider value={monitoringValue}>
+												<ConsentContext.Provider value={consentValue}>
+													<DatabaseContext.Provider value={databaseValue}>
+														<EmailContext.Provider value={emailValue}>
+															{/* Newsletter: Marketing/bulk email subscriptions */}
+															<NewsletterContext.Provider value={newsletterValue}>
+																<WebhooksContext.Provider value={webhooksValue}>
+																	{children}
+																</WebhooksContext.Provider>
+															</NewsletterContext.Provider>
+														</EmailContext.Provider>
+													</DatabaseContext.Provider>
+												</ConsentContext.Provider>
+											</MonitoringContext.Provider>
+										</JobsContext.Provider>
+									</AIContext.Provider>
+								</StorageContext.Provider>
+							</PlatformContext.Provider>
+						</SecurityContext.Provider>
+					</UserContext.Provider>
+				</SdkAuthContext.Provider>
+			</AuthContext.Provider>
+		</QueryClientProvider>
 	)
 }
