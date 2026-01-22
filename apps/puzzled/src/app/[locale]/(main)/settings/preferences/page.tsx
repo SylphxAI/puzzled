@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { Globe, Settings } from 'lucide-react'
+import { Globe, Palette, Sliders } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { LanguageSwitcher } from '@/shared/components/layout'
+import { ThemeToggle } from '@/shared/components/theme'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -36,11 +37,27 @@ export default async function PreferencesPage({ params }: Props) {
 			{/* Page Header */}
 			<div className="flex items-center gap-3">
 				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
-					<Settings className="h-6 w-6 text-violet-500" />
+					<Sliders className="h-6 w-6 text-violet-500" />
 				</div>
 				<div>
 					<h1 className="text-xl font-semibold tracking-tight">{t('preferences.title')}</h1>
 					<p className="text-sm text-muted-foreground">{t('preferences.description')}</p>
+				</div>
+			</div>
+
+			{/* Appearance Section */}
+			<div className="rounded-2xl border bg-card p-6">
+				<div className="flex items-start gap-4">
+					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+						<Palette className="h-5 w-5 text-violet-500" />
+					</div>
+					<div className="flex-1">
+						<h2 className="font-semibold">{t('preferences.appearance.title')}</h2>
+						<p className="mb-4 text-sm text-muted-foreground">
+							{t('preferences.appearance.description')}
+						</p>
+						<ThemeToggle showLabel />
+					</div>
 				</div>
 			</div>
 
@@ -58,13 +75,6 @@ export default async function PreferencesPage({ params }: Props) {
 						<LanguageSwitcher />
 					</div>
 				</div>
-			</div>
-
-			{/* Coming Soon Notice */}
-			<div className="rounded-xl border bg-muted/30 p-4">
-				<p className="text-sm text-muted-foreground">
-					More preferences like appearance settings and regional formats will be available soon.
-				</p>
 			</div>
 		</div>
 	)
