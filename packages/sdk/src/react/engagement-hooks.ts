@@ -60,12 +60,22 @@ export interface UseStreakReturn {
 	canRecover: boolean
 	/** Time remaining until expiry (ms) */
 	timeRemainingMs: number | null
+	/** User's stored timezone preference (IANA timezone) */
+	userTimezone: string | null
 	/** Record activity to extend streak */
 	recordActivity: (metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
 	/** Recover streak (if within grace period) */
 	recover: () => Promise<{ success: boolean; streak: StreakState }>
 	/** Refresh streak state */
 	refresh: () => Promise<void>
+}
+
+/** Options for useStreak hook */
+export interface UseStreakOptions {
+	/** Optional inline defaults for auto-discovery */
+	defaults?: StreakDefaults
+	/** User's IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight */
+	userTimezone?: string
 }
 
 /**
@@ -75,7 +85,7 @@ export interface UseStreakReturn {
  * Console can override any values without deployment.
  *
  * @param streakId - Streak identifier
- * @param defaults - Optional inline defaults for auto-discovery
+ * @param options - Optional options including defaults for auto-discovery and user timezone
  *
  * @example
  * ```tsx
@@ -87,10 +97,14 @@ export interface UseStreakReturn {
  *     canRecover,
  *     recordActivity,
  *     recover,
+ *     userTimezone,
  *   } = useStreak('daily-challenge', {
- *     name: 'Daily Challenge',
- *     frequency: 'daily',
- *     gracePeriodHours: 12,
+ *     defaults: {
+ *       name: 'Daily Challenge',
+ *       frequency: 'daily',
+ *       gracePeriodHours: 12,
+ *     },
+ *     userTimezone: 'America/New_York', // Streak expires at user's local midnight
  *   })
  *
  *   const handleComplete = async () => {
@@ -115,7 +129,11 @@ export interface UseStreakReturn {
  * }
  * ```
  */
-export function useStreak(streakId: string, defaults?: StreakDefaults): UseStreakReturn {
+export function useStreak(streakId: string, options?: UseStreakOptions | StreakDefaults): UseStreakReturn {
+	// Support both new options format and legacy defaults-only format
+	const { defaults, userTimezone } = options && 'defaults' in options
+		? options
+		: { defaults: options as StreakDefaults | undefined, userTimezone: undefined }
 	const ctx = useEngagementContext()
 	const [state, setState] = useState<StreakState | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
@@ -130,7 +148,7 @@ export function useStreak(streakId: string, defaults?: StreakDefaults): UseStrea
 
 		try {
 			setIsLoading(true)
-			const streakState = await ctx.getStreak(streakId)
+			const streakState = await ctx.getStreak(streakId, userTimezone)
 			setState(streakState)
 			setError(null)
 		} catch (err) {
@@ -138,31 +156,31 @@ export function useStreak(streakId: string, defaults?: StreakDefaults): UseStrea
 		} finally {
 			setIsLoading(false)
 		}
-	}, [ctx, streakId])
+	}, [ctx, streakId, userTimezone])
 
 	// Initial fetch
 	useEffect(() => {
 		refresh()
 	}, [refresh])
 
-	// Record activity (passes inline defaults for auto-discovery)
+	// Record activity (passes inline defaults for auto-discovery and timezone)
 	const recordActivity = useCallback(
 		async (metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
-			const result = await ctx.recordStreakActivity(streakId, metadata, defaults)
+			const result = await ctx.recordStreakActivity(streakId, metadata, defaults, userTimezone)
 			setState(result.streak)
 			return result
 		},
-		[ctx, streakId, defaults]
+		[ctx, streakId, defaults, userTimezone]
 	)
 
-	// Recover streak
+	// Recover streak (passes timezone)
 	const recover = useCallback(async (): Promise<{ success: boolean; streak: StreakState }> => {
-		const result = await ctx.recoverStreak(streakId)
+		const result = await ctx.recoverStreak(streakId, userTimezone)
 		if (result.success) {
 			setState(result.streak)
 		}
 		return result
-	}, [ctx, streakId])
+	}, [ctx, streakId, userTimezone])
 
 	return {
 		state,
@@ -172,6 +190,7 @@ export function useStreak(streakId: string, defaults?: StreakDefaults): UseStrea
 		longest: state?.longest ?? 0,
 		canRecover: state?.canRecover ?? false,
 		timeRemainingMs: state?.timeRemainingMs ?? null,
+		userTimezone: state?.userTimezone ?? null,
 		recordActivity,
 		recover,
 		refresh,

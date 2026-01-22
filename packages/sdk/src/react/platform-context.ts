@@ -348,16 +348,31 @@ export interface PlatformContextValue {
 	// Engagement (Streaks, Leaderboards, Achievements)
 	/** Current authenticated user (needed for engagement features) */
 	user: User | null
-	/** Get streak state for a user */
-	getStreak: (streakId: string) => Promise<StreakState>
-	/** Record activity to extend streak (with optional inline defaults for auto-discovery) */
+	/**
+	 * Get streak state for a user
+	 * @param streakId - Streak identifier
+	 * @param userTimezone - Optional IANA timezone (e.g., 'America/New_York') for expiry display
+	 */
+	getStreak: (streakId: string, userTimezone?: string) => Promise<StreakState>
+	/**
+	 * Record activity to extend streak (with optional inline defaults for auto-discovery)
+	 * @param streakId - Streak identifier
+	 * @param metadata - Optional metadata
+	 * @param defaults - Optional inline defaults for auto-discovery
+	 * @param userTimezone - Optional IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight
+	 */
 	recordStreakActivity: (
 		streakId: string,
 		metadata?: Record<string, unknown>,
-		defaults?: StreakDefaults
+		defaults?: StreakDefaults,
+		userTimezone?: string
 	) => Promise<RecordActivityResult>
-	/** Recover streak within grace period */
-	recoverStreak: (streakId: string) => Promise<{ success: boolean; streak: StreakState }>
+	/**
+	 * Recover streak within grace period
+	 * @param streakId - Streak identifier
+	 * @param userTimezone - Optional IANA timezone (e.g., 'America/New_York') for calculating new expiry
+	 */
+	recoverStreak: (streakId: string, userTimezone?: string) => Promise<{ success: boolean; streak: StreakState }>
 	/** Get leaderboard data */
 	getLeaderboard: (leaderboardId: string, options?: LeaderboardQueryOptions) => Promise<LeaderboardResult>
 	/** Submit score to leaderboard (with optional inline defaults for auto-discovery) */
