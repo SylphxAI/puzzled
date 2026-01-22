@@ -437,7 +437,7 @@ export function useStorageContext(): StorageContextValue {
 }
 
 // ============================================
-// Newsletter Context (deprecated - use Email)
+// Newsletter Context (Marketing/Bulk Email)
 // ============================================
 
 export interface NewsletterContextValue {
@@ -450,10 +450,8 @@ export interface NewsletterContextValue {
 	getPreferences: (email: string) => Promise<NewsletterPreferences>
 }
 
-/** @deprecated Use EmailContext instead */
 export const NewsletterContext = createContext<NewsletterContextValue | null>(null)
 
-/** @deprecated Use useEmailContext().newsletter instead */
 export function useNewsletterContext(): NewsletterContextValue {
 	return useRequiredContext(NewsletterContext, 'Newsletter')
 }

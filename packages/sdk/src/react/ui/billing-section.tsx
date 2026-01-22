@@ -253,8 +253,8 @@ export function BillingSection({
 									<div style={{ fontWeight: 500, marginTop: '0.25rem' }}>
 										{formatPrice(
 											subscription.interval === 'monthly'
-												? plans.find((p) => p.slug === subscription.planSlug)?.priceMonthly
-												: plans.find((p) => p.slug === subscription.planSlug)?.priceAnnual
+												? plans.find((p) => p.slug === subscription.planSlug)?.monthlyPrice
+												: plans.find((p) => p.slug === subscription.planSlug)?.annualPrice
 										)}
 										{subscription.interval !== 'lifetime' && `/${subscription.interval === 'monthly' ? 'mo' : 'yr'}`}
 									</div>
@@ -319,7 +319,7 @@ export function BillingSection({
 					<div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(plans.length, 3)}, 1fr)`, gap: '1rem' }}>
 						{plans.map((plan) => {
 							const isCurrentPlan = subscription?.planSlug === plan.slug
-							const price = selectedInterval === 'monthly' ? plan.priceMonthly : plan.priceAnnual
+							const price = selectedInterval === 'monthly' ? plan.monthlyPrice : plan.annualPrice
 
 							return (
 								<div

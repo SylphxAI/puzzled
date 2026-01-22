@@ -59,7 +59,6 @@ export interface UserConsent {
 	consentTypeId: string
 	slug: string
 	enabled: boolean
-	granted?: boolean // Alias for enabled (for UI compat)
 	updatedAt: string
 	grantedAt?: string | null
 	revokedAt?: string | null

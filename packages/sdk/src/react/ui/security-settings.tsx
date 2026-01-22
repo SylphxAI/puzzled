@@ -136,12 +136,12 @@ export function SecuritySettings({
 			if (sessionsData) {
 				setSessions(sessionsData.map(s => ({
 					id: s.id,
-					current: s.isCurrent ?? s.current ?? false,
-					device: s.deviceName || s.deviceType || s.device || 'Unknown',
+					current: s.isCurrent ?? false,
+					device: s.deviceType || s.device || 'Unknown',
 					browser: s.browser || 'Unknown',
-					ip: s.ipAddress || s.ip || 'Unknown',
+					ip: s.ipAddress || 'Unknown',
 					location: s.city && s.country ? `${s.city}, ${s.country}` : (s.location || s.country || undefined),
-					lastActive: s.lastActiveAt || s.lastActive || s.createdAt,
+					lastActive: s.lastActiveAt || s.createdAt,
 					createdAt: s.createdAt,
 				})))
 			}

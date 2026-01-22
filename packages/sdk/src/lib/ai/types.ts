@@ -86,8 +86,7 @@ export interface TokenCount {
 }
 
 /**
- * Multi-modal message content
- * Re-exported from ai.ts for compatibility
+ * Multi-modal message content (text or image)
  */
 export type { ContentPart as MessageContent } from '../../ai'
 import type { ContentPart } from '../../ai'

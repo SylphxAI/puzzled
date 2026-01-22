@@ -642,11 +642,11 @@ function DeliveriesSection({ theme, styles, maxDeliveries, refreshInterval, onEr
 											{delivery.status}
 										</span>
 										<span style={{ fontWeight: 500, fontSize: theme.fontSizeSm, fontFamily: 'monospace' }}>
-											{delivery.event}
+											{delivery.eventType}
 										</span>
-										{delivery.responseStatus && (
+										{delivery.statusCode && (
 											<span style={{ fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
-												HTTP {delivery.responseStatus}
+												HTTP {delivery.statusCode}
 											</span>
 										)}
 									</div>
@@ -742,10 +742,10 @@ function DeliveryDetails({ delivery, theme }: DeliveryDetailsProps) {
 					<div style={labelStyle}>Endpoint</div>
 					<div style={{ fontSize: theme.fontSizeSm, fontFamily: 'monospace' }}>{delivery.url}</div>
 				</div>
-				{delivery.responseStatus && (
+				{delivery.statusCode && (
 					<div>
 						<div style={labelStyle}>Response Status</div>
-						<div style={{ fontSize: theme.fontSizeSm }}>HTTP {delivery.responseStatus}</div>
+						<div style={{ fontSize: theme.fontSizeSm }}>HTTP {delivery.statusCode}</div>
 					</div>
 				)}
 				{(delivery.retryCount ?? 0) > 0 && (

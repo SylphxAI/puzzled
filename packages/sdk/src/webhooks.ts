@@ -38,12 +38,9 @@ export interface WebhookConfigUpdate {
 export interface WebhookDelivery {
 	id: string
 	eventType: string
-	event?: string // Alias for eventType
 	status: 'pending' | 'queued' | 'delivered' | 'failed' | 'success'
 	statusCode: number | null
-	responseStatus?: number | null // Alias for statusCode
 	attempts: number
-	attemptCount?: number // Alias for attempts
 	retryCount?: number
 	payload: Record<string, unknown>
 	response: string | null

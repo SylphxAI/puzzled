@@ -47,11 +47,6 @@ export interface ConsentDecision {
 }
 
 /**
- * @deprecated Use ConsentDecision instead. UserConsent from consent.ts is for API responses.
- */
-export type UserConsent = ConsentDecision
-
-/**
  * Complete consent state for a user
  */
 export interface ConsentState {

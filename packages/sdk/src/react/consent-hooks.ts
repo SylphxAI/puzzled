@@ -132,8 +132,7 @@ export function useConsent(): UseConsentReturn {
 					const consentsResponse = await ctx.getUserConsents()
 					const consentsMap: Record<string, boolean> = {}
 					for (const consent of consentsResponse) {
-						// Use enabled (primary field) or granted (alias)
-						consentsMap[consent.slug] = consent.enabled ?? consent.granted ?? false
+						consentsMap[consent.slug] = consent.enabled ?? false
 					}
 					setConsentsState(consentsMap)
 

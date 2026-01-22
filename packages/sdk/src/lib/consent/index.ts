@@ -45,7 +45,7 @@ export type {
 	// Categories and purposes
 	ConsentCategory,
 	ConsentPurpose,
-	UserConsent,
+	ConsentDecision,
 	ConsentState,
 
 	// Geographic/regulatory

@@ -70,21 +70,18 @@ export interface MobileDevice {
 }
 
 /** SDK mobile push preferences (transformed from API) */
-export interface SdkMobilePushPreferences {
+export interface MobilePushPreferences {
 	enabled: boolean
 	devices: MobileDevice[]
 }
 
 /** SDK mobile push config (transformed from API) */
-export interface SdkMobilePushConfig {
+export interface MobilePushConfig {
 	ios: boolean
 	android: boolean
 	anyConfigured: boolean
 }
 
-// Type aliases for backward compatibility
-export type MobilePushPreferences = SdkMobilePushPreferences
-export type MobilePushConfig = SdkMobilePushConfig
 
 // ==========================================
 // In-App Message Types (SDK-specific)

@@ -17,14 +17,10 @@ export interface Plan {
 	name: string
 	description: string | null
 	features: string[]
-	// Primary price fields
+	// Price fields
 	monthlyPrice: number
 	annualPrice: number
 	lifetimePrice: number | null
-	// Alternate naming (same values, for backward compat)
-	priceMonthly?: number
-	priceAnnual?: number
-	priceLifetime?: number | null
 	// Display flags
 	isPopular: boolean
 	isActive: boolean

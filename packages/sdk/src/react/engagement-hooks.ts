@@ -129,11 +129,8 @@ export interface UseStreakOptions {
  * }
  * ```
  */
-export function useStreak(streakId: string, options?: UseStreakOptions | StreakDefaults): UseStreakReturn {
-	// Support both new options format and legacy defaults-only format
-	const { defaults, userTimezone } = options && 'defaults' in options
-		? options
-		: { defaults: options as StreakDefaults | undefined, userTimezone: undefined }
+export function useStreak(streakId: string, options?: UseStreakOptions): UseStreakReturn {
+	const { defaults, userTimezone } = options ?? {}
 	const ctx = useEngagementContext()
 	const [state, setState] = useState<StreakState | null>(null)
 	const [isLoading, setIsLoading] = useState(true)

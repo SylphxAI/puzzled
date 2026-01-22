@@ -838,20 +838,15 @@ export interface AuthMeResult {
 // User types
 export interface UserSessionInfo {
 	id: string
-	// These can be either form (REST vs legacy)
 	device?: string | null
-	deviceName?: string
 	deviceType?: string
 	browser?: string | null
 	os?: string | null
 	ipAddress?: string | null
-	ip?: string | null
 	location?: string | null
 	country?: string
 	city?: string
-	lastActive?: string
 	lastActiveAt?: string
-	current?: boolean
 	isCurrent?: boolean
 	createdAt?: string
 }

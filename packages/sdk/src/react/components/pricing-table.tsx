@@ -135,11 +135,11 @@ export function PricingTable({
 	const getPlanPrice = (plan: (typeof plans)[0], int: 'monthly' | 'annual' | 'lifetime') => {
 		switch (int) {
 			case 'monthly':
-				return plan.priceMonthly || 0
+				return plan.monthlyPrice || 0
 			case 'annual':
-				return plan.priceAnnual || 0
+				return plan.annualPrice || 0
 			case 'lifetime':
-				return plan.priceLifetime || 0
+				return plan.lifetimePrice || 0
 			default:
 				return 0
 		}
@@ -147,8 +147,8 @@ export function PricingTable({
 
 	// Calculate annual savings
 	const getAnnualSavings = (plan: (typeof plans)[0]) => {
-		const monthly = plan.priceMonthly || 0
-		const annual = plan.priceAnnual || 0
+		const monthly = plan.monthlyPrice || 0
+		const annual = plan.annualPrice || 0
 		if (monthly > 0 && annual > 0) {
 			const yearlyFromMonthly = monthly * 12
 			const savings = Math.round(((yearlyFromMonthly - annual) / yearlyFromMonthly) * 100)
