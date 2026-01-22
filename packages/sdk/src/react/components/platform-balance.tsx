@@ -9,7 +9,8 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useContext } from 'react'
+import { useEffect, useCallback, useContext } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PlatformContext } from '../platform-context'
 import {
 	type ThemeVariables,
@@ -80,53 +81,48 @@ export function PlatformBalanceCard({
 	const ctx = useContext(PlatformContext)
 	const styles = baseStyles(theme)
 
-	const [balance, setBalance] = useState<BalanceData | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-
 	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
 	}, [])
 
-	// Fetch balance data
-	useEffect(() => {
-		async function fetchBalance() {
-			if (!ctx) return
-
-			try {
-				setIsLoading(true)
-				const data = await ctx.getBillingBalance()
-				// Map to expected format
-				setBalance({
-					balance: {
-						current: data.balance.current,
-						currentFormatted: data.balance.currentFormatted,
-						creditLimit: data.spendingCap ?? 0,
-						creditLimitFormatted: data.spendingCap ? `$${(data.spendingCap / 1_000_000).toFixed(2)}` : '$0.00',
-						lifetimeCredits: 0, // Not available in new API
-						lifetimeUsage: data.currentMonthSpend,
-					},
-					status: {
-						level: data.status.level as 'healthy' | 'low' | 'critical' | 'blocked',
-						isHealthy: data.status.isHealthy,
-						isLow: data.status.isLow,
-						threshold: data.status.alertThreshold,
-						available: data.balance.current,
-						availableFormatted: data.balance.currentFormatted,
-					},
-					alertThreshold: data.status.alertThreshold,
-					isAdminOrg: data.isAdminOrg,
-				})
-			} catch (err) {
-				setError(err instanceof Error ? err.message : 'Failed to load balance')
-			} finally {
-				setIsLoading(false)
+	// Fetch balance data with React Query
+	const balanceQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'balance'],
+		queryFn: async (): Promise<BalanceData> => {
+			if (!ctx) throw new Error('Platform context not available')
+			const data = await ctx.getBillingBalance()
+			// Map to expected format
+			return {
+				balance: {
+					current: data.balance.current,
+					currentFormatted: data.balance.currentFormatted,
+					creditLimit: data.spendingCap ?? 0,
+					creditLimitFormatted: data.spendingCap ? `$${(data.spendingCap / 1_000_000).toFixed(2)}` : '$0.00',
+					lifetimeCredits: 0, // Not available in new API
+					lifetimeUsage: data.currentMonthSpend,
+				},
+				status: {
+					level: data.status.level as 'healthy' | 'low' | 'critical' | 'blocked',
+					isHealthy: data.status.isHealthy,
+					isLow: data.status.isLow,
+					threshold: data.status.alertThreshold,
+					available: data.balance.current,
+					availableFormatted: data.balance.currentFormatted,
+				},
+				alertThreshold: data.status.alertThreshold,
+				isAdminOrg: data.isAdminOrg,
 			}
-		}
+		},
+		enabled: !!ctx,
+		staleTime: 60 * 1000, // 1 min - balance may change frequently
+	})
 
-		fetchBalance()
-	}, [ctx])
+	const balance = balanceQuery.data ?? null
+	const isLoading = balanceQuery.isLoading
+	const error = balanceQuery.error instanceof Error
+		? balanceQuery.error.message
+		: balanceQuery.error ? 'Failed to load balance' : null
 
 	const handleAddCredits = useCallback(() => {
 		if (onAddCredits) {

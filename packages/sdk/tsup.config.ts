@@ -46,7 +46,10 @@ export default defineConfig([
 	{
 		entry: ['src/index.ts'],
 		format: ['esm'],
-		dts: false, // TODO: Enable when we fix type architecture
+		// dts: false - We use "source types" pattern instead of .d.ts generation
+		// TypeScript consumers get types from source files via package.json "types" field
+		// This provides perfect type fidelity without dts generation issues
+		dts: false,
 		splitting: false,
 		sourcemap: true,
 		clean: true,

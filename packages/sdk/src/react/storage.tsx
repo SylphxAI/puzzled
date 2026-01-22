@@ -7,7 +7,8 @@
 
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSylphxConfig } from './composable/core'
 import {
 	uploadFile as uploadFileFn,
@@ -116,40 +117,25 @@ export function useUpload() {
  */
 export function useFileUrl(fileId: string | null) {
 	const config = useSylphxConfig()
-	const [state, setState] = useState<{
-		url: string | null
-		isLoading: boolean
-		error: Error | null
-	}>({
-		url: null,
-		isLoading: false,
-		error: null,
+	const queryClient = useQueryClient()
+
+	const query = useQuery({
+		queryKey: ['sylphx', 'storage', 'fileUrl', fileId],
+		queryFn: () => getFileUrlFn(config, fileId!),
+		enabled: !!fileId,
+		staleTime: 30 * 60 * 1000, // 30 min - URLs are relatively stable
 	})
 
-	const fetch = useCallback(async () => {
-		if (!fileId) {
-			setState({ url: null, isLoading: false, error: null })
-			return
+	const refetch = useCallback(() => {
+		if (fileId) {
+			queryClient.invalidateQueries({ queryKey: ['sylphx', 'storage', 'fileUrl', fileId] })
 		}
-
-		setState((s) => ({ ...s, isLoading: true, error: null }))
-
-		try {
-			const url = await getFileUrlFn(config, fileId)
-			setState({ url, isLoading: false, error: null })
-		} catch (e) {
-			const error = e instanceof Error ? e : new Error('Failed to get file URL')
-			setState({ url: null, isLoading: false, error })
-		}
-	}, [config, fileId])
-
-	// Auto-fetch on mount and when fileId changes
-	useEffect(() => {
-		fetch()
-	}, [fetch])
+	}, [queryClient, fileId])
 
 	return {
-		...state,
-		refetch: fetch,
+		url: query.data ?? null,
+		isLoading: query.isLoading,
+		error: query.error instanceof Error ? query.error : query.error ? new Error('Failed to get file URL') : null,
+		refetch,
 	}
 }

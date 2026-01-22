@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ThemeVariables } from './styles'
 import {
 	defaultTheme,
@@ -85,10 +86,10 @@ export function SubscriberPreferences({
 		getPreferences,
 		updatePreferences,
 	} = useNewsletter()
+	const queryClient = useQueryClient()
 
 	const styles = baseStyles(theme)
 	const [selectedPreferences, setSelectedPreferences] = useState<string[]>([])
-	const [fetchLoading, setFetchLoading] = useState(true)
 	const [saving, setSaving] = useState(false)
 	const [unsubscribing, setUnsubscribing] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -99,25 +100,27 @@ export function SubscriberPreferences({
 		injectGlobalStyles()
 	}, [])
 
-	// Fetch subscriber preferences on mount
+	// Fetch subscriber preferences with React Query
+	const prefsQuery = useQuery({
+		queryKey: ['sylphx', 'newsletter', 'preferences', email],
+		queryFn: async () => {
+			const prefs = await getPreferences(email)
+			// Convert Record<string, boolean> to string[]
+			return Object.entries(prefs)
+				.filter(([, enabled]) => enabled)
+				.map(([key]) => key)
+		},
+		staleTime: 5 * 60 * 1000, // 5 min
+	})
+
+	// Sync selectedPreferences with query data when it loads
 	useEffect(() => {
-		const fetchPrefs = async () => {
-			try {
-				const prefs = await getPreferences(email)
-				// Convert Record<string, boolean> to string[]
-				const selectedPrefs = Object.entries(prefs)
-					.filter(([, enabled]) => enabled)
-					.map(([key]) => key)
-				setSelectedPreferences(selectedPrefs)
-			} catch (err) {
-				// Subscriber might not exist yet
-				console.warn('Could not fetch subscriber preferences:', err)
-			} finally {
-				setFetchLoading(false)
-			}
+		if (prefsQuery.data) {
+			setSelectedPreferences(prefsQuery.data)
 		}
-		fetchPrefs()
-	}, [email, getPreferences])
+	}, [prefsQuery.data])
+
+	const fetchLoading = prefsQuery.isLoading
 
 	const togglePreference = (id: string) => {
 		setSelectedPreferences((prev) =>
@@ -140,6 +143,8 @@ export function SubscriberPreferences({
 			}, {} as Record<string, boolean>)
 
 			await updatePreferences(email, prefsRecord)
+			// Invalidate cache to refresh data
+			queryClient.invalidateQueries({ queryKey: ['sylphx', 'newsletter', 'preferences', email] })
 			setSuccess('Preferences updated successfully')
 			onSuccess?.(selectedPreferences)
 		} catch (err) {
@@ -167,6 +172,8 @@ export function SubscriberPreferences({
 				return acc
 			}, {} as Record<string, boolean>)
 			await updatePreferences(email, prefsRecord)
+			// Invalidate cache to refresh data
+			queryClient.invalidateQueries({ queryKey: ['sylphx', 'newsletter', 'preferences', email] })
 			setSelectedPreferences([])
 			setSuccess('You have been unsubscribed from all emails')
 			onSuccess?.([])

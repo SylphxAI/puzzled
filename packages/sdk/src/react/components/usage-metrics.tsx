@@ -7,7 +7,8 @@
 
 'use client'
 
-import { useState, useEffect, useContext } from 'react'
+import { useEffect, useContext } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PlatformContext } from '../platform-context'
 import {
 	type ThemeVariables,
@@ -89,67 +90,62 @@ export function UsageMetrics({
 	const ctx = useContext(PlatformContext)
 	const styles = baseStyles(theme)
 
-	const [usage, setUsage] = useState<UsageData | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-
 	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
 	}, [])
 
-	// Fetch usage data
-	useEffect(() => {
-		async function fetchUsage() {
-			if (!ctx) return
+	// Fetch usage data with React Query
+	const usageQuery = useQuery({
+		queryKey: ['sylphx', 'billing', 'usage', period],
+		queryFn: async (): Promise<UsageData> => {
+			if (!ctx) throw new Error('Platform context not available')
+			// Convert period to month format (YYYY-MM) if needed
+			// The new API only supports monthly granularity
+			const now = new Date()
+			const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+			const data = await ctx.getBillingUsage({ month: monthStr })
 
-			try {
-				setIsLoading(true)
-				// Convert period to month format (YYYY-MM) if needed
-				// The new API only supports monthly granularity
-				const now = new Date()
-				const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-				const data = await ctx.getBillingUsage({ month: monthStr })
-
-				// Map to expected UsageData format
-				setUsage({
-					period: {
-						type: period,
-						start: data.period.start,
-						end: data.period.end,
-					},
-					metrics: data.metrics ? {
-						aiInputTokens: 0, // Not available in new API
-						aiOutputTokens: 0,
-						aiCostMicrodollars: data.metrics.aiCostMicrodollars,
-						aiImageCount: 0,
-						storageBytesSnapshot: data.metrics.storageBytesUsed,
-						storageUploadCount: data.metrics.storageUploads,
-						storageDownloadCount: 0, // Not available
-						storageEgressBytes: data.metrics.storageEgressBytes,
-						dbStorageBytes: data.metrics.dbStorageBytes,
-						dbComputeSeconds: data.metrics.dbComputeSeconds,
-						dbWrittenBytes: 0, // Not available
-						dbDataTransferBytes: 0, // Not available
-						emailSentCount: data.metrics.emailSentCount,
-						jobInvocationCount: data.metrics.jobInvocationCount,
-						cronActiveCount: data.metrics.cronActiveCount,
-						pushSentCount: data.metrics.pushSentCount ?? 0,
-						analyticsEventCount: data.metrics.analyticsEventCount,
-						webhookDeliveryCount: data.metrics.webhookDeliveryCount,
-						errorEventCount: data.metrics.errorEventCount,
-						authMau: data.metrics.authMau,
-					} : null,
-				})
-			} catch (err) {
-				setError(err instanceof Error ? err.message : 'Failed to load usage')
-			} finally {
-				setIsLoading(false)
+			// Map to expected UsageData format
+			return {
+				period: {
+					type: period,
+					start: data.period.start,
+					end: data.period.end,
+				},
+				metrics: data.metrics ? {
+					aiInputTokens: 0, // Not available in new API
+					aiOutputTokens: 0,
+					aiCostMicrodollars: data.metrics.aiCostMicrodollars,
+					aiImageCount: 0,
+					storageBytesSnapshot: data.metrics.storageBytesUsed,
+					storageUploadCount: data.metrics.storageUploads,
+					storageDownloadCount: 0, // Not available
+					storageEgressBytes: data.metrics.storageEgressBytes,
+					dbStorageBytes: data.metrics.dbStorageBytes,
+					dbComputeSeconds: data.metrics.dbComputeSeconds,
+					dbWrittenBytes: 0, // Not available
+					dbDataTransferBytes: 0, // Not available
+					emailSentCount: data.metrics.emailSentCount,
+					jobInvocationCount: data.metrics.jobInvocationCount,
+					cronActiveCount: data.metrics.cronActiveCount,
+					pushSentCount: data.metrics.pushSentCount ?? 0,
+					analyticsEventCount: data.metrics.analyticsEventCount,
+					webhookDeliveryCount: data.metrics.webhookDeliveryCount,
+					errorEventCount: data.metrics.errorEventCount,
+					authMau: data.metrics.authMau,
+				} : null,
 			}
-		}
+		},
+		enabled: !!ctx,
+		staleTime: 5 * 60 * 1000, // 5 min - usage data is relatively stable
+	})
 
-		fetchUsage()
-	}, [ctx, period])
+	const usage = usageQuery.data ?? null
+	const isLoading = usageQuery.isLoading
+	const error = usageQuery.error instanceof Error
+		? usageQuery.error.message
+		: usageQuery.error ? 'Failed to load usage' : null
 
 	// Format helpers
 	const formatBytes = (bytes: number): string => {
