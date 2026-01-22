@@ -46,6 +46,14 @@ function usePlatformContext() {
 	return context
 }
 
+/**
+ * Internal hook to get platform context (safe version - returns null if no provider)
+ * Use this for hooks that need to work outside SylphxProvider during SSR/prerendering
+ */
+function usePlatformContextSafe() {
+	return useContext(PlatformContext)
+}
+
 // ============================================
 // useBilling
 // ============================================
@@ -129,6 +137,69 @@ export function useBilling(): UseBillingReturn {
 		createCheckout: ctx.createCheckout,
 		openPortal: ctx.openPortal,
 		refresh: ctx.refreshSubscription,
+	}
+}
+
+// ============================================
+// useSafeBilling (SSR-safe version)
+// ============================================
+
+export interface UseSafeBillingReturn {
+	/** Whether SDK is configured */
+	isConfigured: boolean
+	/** Current subscription (null if free/none or not configured) */
+	subscription: Subscription | null
+	/** Whether subscription is loading */
+	isLoading: boolean
+	/** Whether user has an active paid subscription */
+	isPremium: boolean
+	/** Whether user is on a trial */
+	isTrialing: boolean
+}
+
+/**
+ * SSR-safe version of useBilling that returns safe defaults when outside SylphxProvider
+ *
+ * Use this in components that may render during SSR/static generation.
+ *
+ * @example
+ * ```tsx
+ * function FeatureGate({ children }) {
+ *   const { isConfigured, isPremium } = useSafeBilling()
+ *
+ *   // Not configured - show content to all
+ *   if (!isConfigured) return children
+ *
+ *   // Configured - check premium status
+ *   return isPremium ? children : <UpgradePrompt />
+ * }
+ * ```
+ */
+export function useSafeBilling(): UseSafeBillingReturn {
+	const ctx = usePlatformContextSafe()
+
+	if (!ctx) {
+		return {
+			isConfigured: false,
+			subscription: null,
+			isLoading: false,
+			isPremium: false,
+			isTrialing: false,
+		}
+	}
+
+	const isPremium =
+		ctx.subscription?.status === 'active' ||
+		ctx.subscription?.status === 'trialing'
+
+	const isTrialing = ctx.subscription?.status === 'trialing'
+
+	return {
+		isConfigured: true,
+		subscription: ctx.subscription,
+		isLoading: ctx.subscriptionLoading,
+		isPremium,
+		isTrialing,
 	}
 }
 
@@ -225,6 +296,63 @@ export function useAnalytics(): UseAnalyticsReturn {
 		identify: ctx.identify,
 		error: ctx.analyticsError,
 		isError: ctx.analyticsError !== null,
+	}
+}
+
+// ============================================
+// useSafeAnalytics (SSR-safe version)
+// ============================================
+
+export interface UseSafeAnalyticsReturn {
+	/** Whether SDK is configured */
+	isConfigured: boolean
+	/** Track a custom event (no-op if not configured) */
+	track: (event: string, properties?: Record<string, unknown>, options?: TrackOptions) => Promise<void>
+	/** Track a page view (no-op if not configured) */
+	page: (name: string, properties?: Record<string, unknown>) => Promise<void>
+	/** Identify user with traits (no-op if not configured) */
+	identify: (traits?: Record<string, unknown>) => Promise<void>
+}
+
+// No-op async function for safe hooks
+const noopAsync = async () => {}
+
+/**
+ * SSR-safe version of useAnalytics that returns no-op functions when outside SylphxProvider
+ *
+ * Use this in components that may render during SSR/static generation.
+ *
+ * @example
+ * ```tsx
+ * function Analytics() {
+ *   const { isConfigured, track } = useSafeAnalytics()
+ *
+ *   useEffect(() => {
+ *     // Safe to call even outside provider
+ *     track('page_view', { path: window.location.pathname })
+ *   }, [])
+ *
+ *   return null
+ * }
+ * ```
+ */
+export function useSafeAnalytics(): UseSafeAnalyticsReturn {
+	const ctx = usePlatformContextSafe()
+
+	if (!ctx) {
+		return {
+			isConfigured: false,
+			track: noopAsync,
+			page: noopAsync,
+			identify: noopAsync,
+		}
+	}
+
+	return {
+		isConfigured: true,
+		track: ctx.track,
+		page: ctx.page,
+		identify: ctx.identify,
 	}
 }
 

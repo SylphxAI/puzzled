@@ -1,3 +1,6 @@
+// Force dynamic rendering - admin pages should never be statically generated
+export const dynamic = 'force-dynamic'
+
 import { ShieldOff } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'

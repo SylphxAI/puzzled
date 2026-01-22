@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef } from 'react'
-import { useSessionReplay, useSafeUser, useBilling } from '@sylphx/sdk/react'
+import { useSessionReplay, useSafeUser, useSafeBilling } from '@sylphx/sdk/react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'
 import { getSessionReplayConfig, getAdjustedSampleRate } from '../lib'
@@ -45,7 +45,7 @@ export function SessionReplayProvider({ children }: SessionReplayProviderProps) 
  */
 function SessionReplayInner({ children }: { children: React.ReactNode }) {
 	const { user } = useSafeUser()
-	const { isPremium } = useBilling()
+	const { isPremium } = useSafeBilling()
 
 	// Track whether we've started recording
 	const hasStartedRef = useRef(false)

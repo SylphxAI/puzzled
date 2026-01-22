@@ -162,7 +162,9 @@ export { type DeviceSession } from '../types'
 // Platform Hooks
 export {
 	useBilling,
+	useSafeBilling,
 	useAnalytics,
+	useSafeAnalytics,
 	useAnalyticsQuery,
 	useNotifications,
 	useMobilePush,
@@ -170,7 +172,9 @@ export {
 	useConversionTracking,
 	useInbox,
 	type UseBillingReturn,
+	type UseSafeBillingReturn,
 	type UseAnalyticsReturn,
+	type UseSafeAnalyticsReturn,
 	type UseAnalyticsQueryOptions,
 	type UseAnalyticsQueryReturn,
 	type UseNotificationsReturn,

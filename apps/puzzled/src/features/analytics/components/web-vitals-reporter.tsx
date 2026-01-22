@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAnalytics } from '@sylphx/sdk/react'
+import { useSafeAnalytics } from '@sylphx/sdk/react'
 import { initWebVitals, setWebVitalsTracker } from '../lib/web-vitals'
 
 /**
@@ -30,7 +30,7 @@ export function WebVitalsReporter() {
  * Only rendered client-side after mount
  */
 function WebVitalsReporterInner() {
-	const { track } = useAnalytics()
+	const { track } = useSafeAnalytics()
 
 	useEffect(() => {
 		// Initialize web vitals listeners

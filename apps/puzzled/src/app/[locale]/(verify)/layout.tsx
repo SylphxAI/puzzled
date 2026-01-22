@@ -1,3 +1,6 @@
+// Force dynamic rendering - verification pages should never be statically generated
+export const dynamic = 'force-dynamic'
+
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

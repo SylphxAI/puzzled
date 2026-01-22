@@ -17,7 +17,7 @@ import {
 	SylphxProvider,
 	FeatureFlagProvider,
 	useSafeUser,
-	useBilling,
+	useSafeBilling,
 } from '@sylphx/sdk/react'
 import { MINUTE_MS } from '@/lib/constants/time'
 
@@ -34,7 +34,7 @@ interface PlatformProviderProps {
  */
 function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 	const { user } = useSafeUser()
-	const { subscription, isPremium } = useBilling()
+	const { subscription, isPremium } = useSafeBilling()
 
 	return (
 		<FeatureFlagProvider
