@@ -12,6 +12,9 @@
 // Utility functions
 export { cn } from './utils'
 
+// Motion system
+export * from './motion'
+
 // Components
 export * from './components/accordion'
 export * from './components/alert-dialog'

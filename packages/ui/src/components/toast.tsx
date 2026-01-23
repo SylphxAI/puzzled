@@ -2,8 +2,10 @@
 
 import * as ToastPrimitive from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react'
 import { createContext, forwardRef, useCallback, useContext, useState } from 'react'
+import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
 
 const ToastProvider = ToastPrimitive.Provider
@@ -25,7 +27,7 @@ const ToastViewport = forwardRef<
 ToastViewport.displayName = ToastPrimitive.Viewport.displayName
 
 const toastVariants = cva(
-	'pointer-events-auto group relative flex w-full items-start gap-3 overflow-hidden rounded-lg border p-4 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-bottom-full sm:data-[state=open]:slide-in-from-right-full',
+	'pointer-events-auto group relative flex w-full items-start gap-3 overflow-hidden rounded-lg border p-4 shadow-lg',
 	{
 		variants: {
 			variant: {
@@ -155,30 +157,45 @@ export function useToast() {
 	return context
 }
 
-// Toaster component that renders all toasts
+// Toaster component that renders all toasts with smooth animations
 function Toaster() {
 	const { toasts, removeToast } = useToast()
 
 	return (
 		<>
-			{toasts.map((toast) => {
-				const Icon = variantIcons[toast.type]
-				return (
-					<Toast
-						key={toast.id}
-						variant={toast.type}
-						duration={toast.duration}
-						onOpenChange={(open: boolean) => !open && removeToast(toast.id)}
-					>
-						{Icon && <Icon className={cn('h-5 w-5 shrink-0', iconStyles[toast.type])} />}
-						<div className="flex-1 min-w-0">
-							<ToastTitle>{toast.title}</ToastTitle>
-							{toast.description && <ToastDescription>{toast.description}</ToastDescription>}
-						</div>
-						<ToastClose />
-					</Toast>
-				)
-			})}
+			<AnimatePresence mode="popLayout">
+				{toasts.map((toast) => {
+					const Icon = variantIcons[toast.type]
+					return (
+						<motion.div
+							key={toast.id}
+							layout
+							initial={{ opacity: 0, y: 50, scale: 0.9 }}
+							animate={{ opacity: 1, y: 0, scale: 1 }}
+							exit={{ opacity: 0, x: 100, scale: 0.9 }}
+							transition={{
+								type: 'spring',
+								stiffness: 500,
+								damping: 35,
+								mass: 1,
+							}}
+						>
+							<Toast
+								variant={toast.type}
+								duration={toast.duration}
+								onOpenChange={(open: boolean) => !open && removeToast(toast.id)}
+							>
+								{Icon && <Icon className={cn('h-5 w-5 shrink-0', iconStyles[toast.type])} />}
+								<div className="flex-1 min-w-0">
+									<ToastTitle>{toast.title}</ToastTitle>
+									{toast.description && <ToastDescription>{toast.description}</ToastDescription>}
+								</div>
+								<ToastClose />
+							</Toast>
+						</motion.div>
+					)
+				})}
+			</AnimatePresence>
 			<ToastViewport />
 		</>
 	)
