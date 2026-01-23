@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSafeAuth, useSafeUser } from '../hooks'
+import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -17,7 +17,6 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
-import { ConfigurationError } from '../ui/configuration-error'
 
 export interface VerifyEmailProps {
 	/** Verification token (if using link-based verification) */
@@ -62,8 +61,15 @@ export function VerifyEmail({
 	showCard = true,
 	header,
 }: VerifyEmailProps) {
-	const { verifyEmail, resendVerificationEmail, isConfigured: authConfigured } = useSafeAuth()
-	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
+	// SDK readiness check (SSOT for SSR safety and configuration)
+	const { isReady, renderError } = useSdkReady({
+		services: ['auth', 'user'],
+		componentType: 'auth',
+		theme,
+	})
+
+	const { verifyEmail, resendVerificationEmail } = useSafeAuth()
+	const { isSignedIn, isLoaded } = useSafeUser()
 	const styles = baseStyles(theme)
 
 	const [code, setCode] = useState('')
@@ -74,31 +80,15 @@ export function VerifyEmail({
 	const [autoVerified, setAutoVerified] = useState(false)
 	const [focusedField, setFocusedField] = useState<string | null>(null)
 	const [resendCooldown, setResendCooldown] = useState(0)
-	const [isMounted, setIsMounted] = useState(false)
 
-	// Inject global styles and track mount
+	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
-		setIsMounted(true)
 	}, [])
 
-	// During SSR, return null
-	if (typeof window === 'undefined') {
-		return null
-	}
-
-	// On client, if SDK not configured after mount, show error
-	if (!authConfigured || !userConfigured) {
-		if (!isMounted) {
-			return null
-		}
-		return (
-			<ConfigurationError
-				theme={theme}
-				componentType="auth"
-				onRetry={() => window.location.reload()}
-			/>
-		)
+	// SDK not ready - render error or null
+	if (!isReady) {
+		return renderError()
 	}
 
 	// Auto-verify if token is provided

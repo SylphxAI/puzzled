@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { RequireSdk } from '../hooks'
 import { useBilling } from '../platform-hooks'
 import {
 	type ThemeVariables,
@@ -50,7 +51,16 @@ export interface PricingTableProps {
  * />
  * ```
  */
-export function PricingTable({
+export function PricingTable(props: PricingTableProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<PricingTableInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function PricingTableInner({
 	theme = defaultTheme,
 	defaultInterval = 'monthly',
 	showIntervalToggle = true,

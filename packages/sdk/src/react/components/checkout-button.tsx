@@ -7,6 +7,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { RequireSdk } from '../hooks'
 import { useBilling } from '../platform-hooks'
 import {
 	type ThemeVariables,
@@ -51,7 +52,16 @@ export interface CheckoutButtonProps {
  * </CheckoutButton>
  * ```
  */
-export function CheckoutButton({
+export function CheckoutButton(props: CheckoutButtonProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<CheckoutButtonInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function CheckoutButtonInner({
 	planSlug,
 	interval = 'monthly',
 	theme = defaultTheme,

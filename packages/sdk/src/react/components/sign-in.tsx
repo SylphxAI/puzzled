@@ -7,8 +7,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSafeAuth, useSafeUser } from '../hooks'
-import { SignInForm, Modal, ConfigurationError, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
+import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
+import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
 import type { OAuthProviderId } from '../../types'
 
 // Re-export for convenience
@@ -98,35 +98,20 @@ export function SignIn({
 	onError,
 	showCard = true,
 }: SignInProps) {
-	const { signIn, isConfigured: authConfigured } = useSafeAuth()
-	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
+	// SDK readiness check (SSOT for SSR safety and configuration)
+	const { isReady, renderError } = useSdkReady({
+		services: ['auth', 'user'],
+		componentType: 'sign-in',
+		theme,
+	})
+
+	const { signIn } = useSafeAuth()
+	const { isSignedIn, isLoaded } = useSafeUser()
 	const [modalOpen, setModalOpen] = useState(false)
-	const [isMounted, setIsMounted] = useState(false)
 
-	// Track client-side mount
-	useEffect(() => {
-		setIsMounted(true)
-	}, [])
-
-	// During SSR, return null (will hydrate on client)
-	if (typeof window === 'undefined') {
-		return null
-	}
-
-	// On client, if SDK not configured after mount, show error
-	if (!authConfigured || !userConfigured) {
-		// Still loading / hydrating
-		if (!isMounted) {
-			return null
-		}
-		// SDK genuinely not configured - show environment-aware error
-		return (
-			<ConfigurationError
-				theme={theme}
-				componentType="sign-in"
-				onRetry={() => window.location.reload()}
-			/>
-		)
+	// SDK not ready - render error or null
+	if (!isReady) {
+		return renderError()
 	}
 
 	// Don't show if already signed in

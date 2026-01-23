@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { RequireSdk } from '../hooks'
 import { useBilling } from '../platform-hooks'
 import {
 	type ThemeVariables,
@@ -47,7 +48,16 @@ export interface BillingCardProps {
  * />
  * ```
  */
-export function BillingCard({
+export function BillingCard(props: BillingCardProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<BillingCardInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function BillingCardInner({
 	theme = defaultTheme,
 	pricingUrl = '/pricing',
 	showManageButton = true,

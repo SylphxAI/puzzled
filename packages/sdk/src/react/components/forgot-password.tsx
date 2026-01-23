@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSafeAuth, useSafeUser } from '../hooks'
+import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -18,7 +18,6 @@ import {
 	injectGlobalStyles,
 } from '../ui/styles'
 import { Modal } from '../ui/modal'
-import { ConfigurationError } from '../ui/configuration-error'
 
 export interface ForgotPasswordProps {
 	/** URL to redirect after password reset email is sent */
@@ -69,8 +68,15 @@ export function ForgotPassword({
 	showCard = true,
 	header,
 }: ForgotPasswordProps) {
-	const { forgotPassword, isConfigured: authConfigured } = useSafeAuth()
-	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
+	// SDK readiness check (SSOT for SSR safety and configuration)
+	const { isReady, renderError } = useSdkReady({
+		services: ['auth', 'user'],
+		componentType: 'auth',
+		theme,
+	})
+
+	const { forgotPassword } = useSafeAuth()
+	const { isSignedIn, isLoaded } = useSafeUser()
 	const styles = baseStyles(theme)
 
 	const [modalOpen, setModalOpen] = useState(false)
@@ -79,31 +85,15 @@ export function ForgotPassword({
 	const [isLoading, setIsLoading] = useState(false)
 	const [isSubmitted, setIsSubmitted] = useState(false)
 	const [focusedField, setFocusedField] = useState<string | null>(null)
-	const [isMounted, setIsMounted] = useState(false)
 
-	// Inject global styles and track mount
+	// Inject global styles
 	useEffect(() => {
 		injectGlobalStyles()
-		setIsMounted(true)
 	}, [])
 
-	// During SSR, return null
-	if (typeof window === 'undefined') {
-		return null
-	}
-
-	// On client, if SDK not configured after mount, show error
-	if (!authConfigured || !userConfigured) {
-		if (!isMounted) {
-			return null
-		}
-		return (
-			<ConfigurationError
-				theme={theme}
-				componentType="auth"
-				onRetry={() => window.location.reload()}
-			/>
-		)
+	// SDK not ready - render error or null
+	if (!isReady) {
+		return renderError()
 	}
 
 	// Don't show if already signed in

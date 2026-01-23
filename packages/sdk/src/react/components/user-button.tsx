@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useSafeUser, useSafeAuth } from '../hooks'
+import { useSafeUser, useSafeAuth, useSdkReady } from '../hooks'
 import {
 	type ThemeVariables,
 	defaultTheme,
@@ -49,8 +49,16 @@ export function UserButton({
 	className,
 	showName = false,
 }: UserButtonProps) {
-	const { user, isLoaded, isSignedIn, isConfigured: userConfigured } = useSafeUser()
-	const { signOut, isConfigured: authConfigured } = useSafeAuth()
+	// SDK readiness check with silent fallback (returns null if not configured)
+	const { isReady } = useSdkReady({
+		services: ['auth', 'user'],
+		componentType: 'user-button',
+		theme,
+		fallback: 'null', // Silent - don't show error, just return null
+	})
+
+	const { user, isLoaded, isSignedIn } = useSafeUser()
+	const { signOut } = useSafeAuth()
 	const [isOpen, setIsOpen] = useState(false)
 	const menuRef = useRef<HTMLDivElement>(null)
 	const buttonRef = useRef<HTMLButtonElement>(null)
@@ -90,8 +98,8 @@ export function UserButton({
 		return () => document.removeEventListener('keydown', handleEscape)
 	}, [isOpen])
 
-	// Don't render during SSR or if not signed in
-	if (!userConfigured || !authConfigured || !isLoaded || !isSignedIn || !user) {
+	// Don't render if SDK not ready or user not signed in
+	if (!isReady || !isLoaded || !isSignedIn || !user) {
 		return null
 	}
 
