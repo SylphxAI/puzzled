@@ -472,6 +472,124 @@ export function createWebhookHandler(config: {
 // Re-export types
 export type { RestClient, RestClientConfig as ServerClientConfig }
 
+// ============================================================================
+// OAuth Providers (Server-Side)
+// ============================================================================
+
+import type { OAuthProvider } from '@sylphx/ui'
+export type { OAuthProvider }
+
+/** OAuth provider with display name */
+export interface OAuthProviderInfo {
+	id: OAuthProvider
+	name: string
+}
+
+/** Cache for OAuth providers (per app) */
+const oauthProvidersCache: Map<string, { providers: OAuthProviderInfo[]; expiresAt: number }> = new Map()
+
+/**
+ * Get enabled OAuth providers for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 5 minutes.
+ *
+ * @example
+ * ```tsx
+ * // app/login/page.tsx (Server Component)
+ * import { getOAuthProviders } from '@sylphx/sdk/server'
+ * import { LoginForm } from './login-form'
+ *
+ * export default async function LoginPage() {
+ *   const providers = await getOAuthProviders({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *   })
+ *
+ *   return <LoginForm providers={providers} />
+ * }
+ * ```
+ */
+export async function getOAuthProviders(options: {
+	appId: string
+	platformUrl?: string
+}): Promise<OAuthProvider[]> {
+	const { appId, platformUrl = 'https://sylphx.com' } = options
+	const cacheKey = `${platformUrl}:${appId}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = oauthProvidersCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.providers.map(p => p.id)
+	}
+
+	try {
+		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch OAuth providers:', response.status)
+			return []
+		}
+
+		const data = await response.json() as { providers: OAuthProviderInfo[] }
+		const providers = data.providers || []
+
+		// Cache for 5 minutes
+		oauthProvidersCache.set(cacheKey, {
+			providers,
+			expiresAt: now + 5 * 60 * 1000,
+		})
+
+		return providers.map(p => p.id)
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch OAuth providers:', error)
+		return []
+	}
+}
+
+/**
+ * Get enabled OAuth providers with full info (server-side)
+ */
+export async function getOAuthProvidersWithInfo(options: {
+	appId: string
+	platformUrl?: string
+}): Promise<OAuthProviderInfo[]> {
+	const { appId, platformUrl = 'https://sylphx.com' } = options
+	const cacheKey = `${platformUrl}:${appId}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = oauthProvidersCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.providers
+	}
+
+	try {
+		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			return []
+		}
+
+		const data = await response.json() as { providers: OAuthProviderInfo[] }
+		const providers = data.providers || []
+
+		oauthProvidersCache.set(cacheKey, {
+			providers,
+			expiresAt: now + 5 * 60 * 1000,
+		})
+
+		return providers
+	} catch {
+		return []
+	}
+}
+
 // AI Client
 export { createAI, getAI } from './ai'
 export type {
