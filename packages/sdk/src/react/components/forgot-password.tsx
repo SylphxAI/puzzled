@@ -18,6 +18,7 @@ import {
 	injectGlobalStyles,
 } from '../ui/styles'
 import { Modal } from '../ui/modal'
+import { ConfigurationError } from '../ui/configuration-error'
 
 export interface ForgotPasswordProps {
 	/** URL to redirect after password reset email is sent */
@@ -78,15 +79,31 @@ export function ForgotPassword({
 	const [isLoading, setIsLoading] = useState(false)
 	const [isSubmitted, setIsSubmitted] = useState(false)
 	const [focusedField, setFocusedField] = useState<string | null>(null)
+	const [isMounted, setIsMounted] = useState(false)
 
-	// Inject global styles
+	// Inject global styles and track mount
 	useEffect(() => {
 		injectGlobalStyles()
+		setIsMounted(true)
 	}, [])
 
-	// Don't render during SSR when SDK is not configured
-	if (!authConfigured || !userConfigured) {
+	// During SSR, return null
+	if (typeof window === 'undefined') {
 		return null
+	}
+
+	// On client, if SDK not configured after mount, show error
+	if (!authConfigured || !userConfigured) {
+		if (!isMounted) {
+			return null
+		}
+		return (
+			<ConfigurationError
+				theme={theme}
+				componentType="auth"
+				onRetry={() => window.location.reload()}
+			/>
+		)
 	}
 
 	// Don't show if already signed in

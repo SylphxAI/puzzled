@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSafeAuth, useSafeUser } from '../hooks'
-import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
+import { SignInForm, Modal, ConfigurationError, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
 import type { OAuthProviderId } from '../../types'
 
 // Re-export for convenience
@@ -113,18 +113,19 @@ export function SignIn({
 		return null
 	}
 
-	// On client, if SDK not configured after mount, show message
+	// On client, if SDK not configured after mount, show error
 	if (!authConfigured || !userConfigured) {
 		// Still loading / hydrating
 		if (!isMounted) {
 			return null
 		}
-		// SDK genuinely not configured - show helpful message
+		// SDK genuinely not configured - show environment-aware error
 		return (
-			<div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
-				<p>Authentication not configured.</p>
-				<p style={{ fontSize: '0.875rem' }}>Please configure SYLPHX_APP_ID and SYLPHX_PUBLISHABLE_KEY.</p>
-			</div>
+			<ConfigurationError
+				theme={theme}
+				componentType="sign-in"
+				onRetry={() => window.location.reload()}
+			/>
 		)
 	}
 

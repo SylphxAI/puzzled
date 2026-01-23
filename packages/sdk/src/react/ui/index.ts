@@ -20,6 +20,9 @@ export {
 // Modal
 export { Modal, useModal, type ModalProps } from './modal'
 
+// Configuration Error (for SDK not configured state)
+export { ConfigurationError, type ConfigurationErrorProps } from './configuration-error'
+
 // OAuth
 export {
 	OAuthButton,

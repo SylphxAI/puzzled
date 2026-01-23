@@ -17,6 +17,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
+import { ConfigurationError } from '../ui/configuration-error'
 
 export interface ResetPasswordProps {
 	/** Password reset token (usually from URL) */
@@ -66,22 +67,38 @@ export function ResetPassword({
 	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const styles = baseStyles(theme)
 
-	// Don't render during SSR when SDK is not configured
-	if (!authConfigured || !userConfigured) {
-		return null
-	}
-
 	const [password, setPassword] = useState('')
 	const [confirmPassword, setConfirmPassword] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState(false)
 	const [isSuccess, setIsSuccess] = useState(false)
 	const [focusedField, setFocusedField] = useState<string | null>(null)
+	const [isMounted, setIsMounted] = useState(false)
 
-	// Inject global styles
+	// Inject global styles and track mount
 	useEffect(() => {
 		injectGlobalStyles()
+		setIsMounted(true)
 	}, [])
+
+	// During SSR, return null
+	if (typeof window === 'undefined') {
+		return null
+	}
+
+	// On client, if SDK not configured after mount, show error
+	if (!authConfigured || !userConfigured) {
+		if (!isMounted) {
+			return null
+		}
+		return (
+			<ConfigurationError
+				theme={theme}
+				componentType="auth"
+				onRetry={() => window.location.reload()}
+			/>
+		)
+	}
 
 	// Redirect if already signed in
 	if (isLoaded && isSignedIn) {

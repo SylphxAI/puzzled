@@ -17,6 +17,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
+import { ConfigurationError } from '../ui/configuration-error'
 
 export interface VerifyEmailProps {
 	/** Verification token (if using link-based verification) */
@@ -65,11 +66,6 @@ export function VerifyEmail({
 	const { isSignedIn, isLoaded, isConfigured: userConfigured } = useSafeUser()
 	const styles = baseStyles(theme)
 
-	// Don't render during SSR when SDK is not configured
-	if (!authConfigured || !userConfigured) {
-		return null
-	}
-
 	const [code, setCode] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState(false)
@@ -78,11 +74,32 @@ export function VerifyEmail({
 	const [autoVerified, setAutoVerified] = useState(false)
 	const [focusedField, setFocusedField] = useState<string | null>(null)
 	const [resendCooldown, setResendCooldown] = useState(0)
+	const [isMounted, setIsMounted] = useState(false)
 
-	// Inject global styles
+	// Inject global styles and track mount
 	useEffect(() => {
 		injectGlobalStyles()
+		setIsMounted(true)
 	}, [])
+
+	// During SSR, return null
+	if (typeof window === 'undefined') {
+		return null
+	}
+
+	// On client, if SDK not configured after mount, show error
+	if (!authConfigured || !userConfigured) {
+		if (!isMounted) {
+			return null
+		}
+		return (
+			<ConfigurationError
+				theme={theme}
+				componentType="auth"
+				onRetry={() => window.location.reload()}
+			/>
+		)
+	}
 
 	// Auto-verify if token is provided
 	useEffect(() => {
