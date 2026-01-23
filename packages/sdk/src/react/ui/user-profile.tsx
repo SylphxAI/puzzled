@@ -15,7 +15,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from './styles'
-import { useUser } from '../hooks'
+import { useUser, RequireSdk } from '../hooks'
 import { useStorage } from '../storage-hooks'
 import { useUserContext } from '../services-context'
 import { SecuritySettings } from './security-settings'
@@ -55,7 +55,16 @@ interface ProfileFormState {
 /**
  * User profile management component
  */
-export function UserProfile({
+export function UserProfile(props: UserProfileProps) {
+	return (
+		<RequireSdk services={['auth', 'storage']} componentType="user" theme={props.theme}>
+			<UserProfileInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function UserProfileInner({
 	theme = defaultTheme,
 	sections = ['profile', 'security', 'notifications'],
 	onSuccess,

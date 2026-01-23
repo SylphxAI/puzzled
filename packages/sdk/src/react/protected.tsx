@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useUser } from './hooks'
+import { useSafeUser } from './hooks'
 import { safeRedirect } from './security-utils'
 
 interface ChildrenProps {
@@ -25,9 +25,10 @@ interface ChildrenProps {
  * ```
  */
 export function SignedIn({ children }: ChildrenProps) {
-	const { isLoaded, isSignedIn } = useUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
 
-	if (!isLoaded || !isSignedIn) {
+	// Gracefully handle unconfigured SDK
+	if (!isConfigured || !isLoaded || !isSignedIn) {
 		return null
 	}
 
@@ -46,7 +47,12 @@ export function SignedIn({ children }: ChildrenProps) {
  * ```
  */
 export function SignedOut({ children }: ChildrenProps) {
-	const { isLoaded, isSignedIn } = useUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+
+	// Gracefully handle unconfigured SDK - show SignedOut content
+	if (!isConfigured) {
+		return <>{children}</>
+	}
 
 	if (!isLoaded || isSignedIn) {
 		return null
@@ -77,7 +83,12 @@ export function ProtectedRoute({
 	redirectTo = '/login',
 	fallback = null,
 }: ProtectedRouteProps) {
-	const { isLoaded, isSignedIn } = useUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+
+	// Gracefully handle unconfigured SDK - render children (dev experience)
+	if (!isConfigured) {
+		return <>{children}</>
+	}
 
 	if (!isLoaded) {
 		return <>{fallback}</>
@@ -108,7 +119,12 @@ interface AuthLoadingProps extends ChildrenProps {
  * ```
  */
 export function AuthLoading({ children, loading = null }: AuthLoadingProps) {
-	const { isLoaded } = useUser()
+	const { isConfigured, isLoaded } = useSafeUser()
+
+	// Gracefully handle unconfigured SDK - render children
+	if (!isConfigured) {
+		return <>{children}</>
+	}
 
 	if (!isLoaded) {
 		return <>{loading}</>

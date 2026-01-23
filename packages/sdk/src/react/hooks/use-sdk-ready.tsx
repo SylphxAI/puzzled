@@ -50,6 +50,8 @@ export type ComponentType =
 	| 'sign-in'
 	| 'sign-up'
 	| 'user-button'
+	| 'user'
+	| 'account'
 	| 'auth'
 	| 'billing'
 	| 'storage'

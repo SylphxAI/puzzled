@@ -15,7 +15,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from './styles'
-import { useUser, useAuth } from '../hooks'
+import { useUser, useAuth, RequireSdk } from '../hooks'
 import { useUserContext, useSecurityContext } from '../services-context'
 
 export interface AccountSectionProps {
@@ -48,7 +48,16 @@ export interface AccountSectionProps {
  * />
  * ```
  */
-export function AccountSection({
+export function AccountSection(props: AccountSectionProps) {
+	return (
+		<RequireSdk services={['auth']} componentType="account" theme={props.theme}>
+			<AccountSectionInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function AccountSectionInner({
 	theme = defaultTheme,
 	onSuccess,
 	onError,

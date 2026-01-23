@@ -11,6 +11,7 @@ import { useState, useRef, useCallback, useEffect, type CSSProperties, type Drag
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useFileUpload, useStorage } from '../storage-hooks'
+import { RequireSdk } from '../hooks'
 
 // ============================================
 // FileUpload
@@ -51,7 +52,16 @@ export interface FileUploadProps {
  * />
  * ```
  */
-export function FileUpload({
+export function FileUpload(props: FileUploadProps) {
+	return (
+		<RequireSdk services={['storage']} componentType="storage" theme={props.theme}>
+			<FileUploadInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses storage hooks */
+function FileUploadInner({
 	theme = defaultTheme,
 	accept,
 	maxSize,
@@ -274,7 +284,16 @@ export interface ImageUploaderProps {
  * />
  * ```
  */
-export function ImageUploader({
+export function ImageUploader(props: ImageUploaderProps) {
+	return (
+		<RequireSdk services={['storage']} componentType="storage" theme={props.theme}>
+			<ImageUploaderInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses storage hooks */
+function ImageUploaderInner({
 	theme = defaultTheme,
 	maxSize = 5 * 1024 * 1024,
 	value,
@@ -481,7 +500,16 @@ export interface AvatarUploadProps {
  * />
  * ```
  */
-export function AvatarUpload({
+export function AvatarUpload(props: AvatarUploadProps) {
+	return (
+		<RequireSdk services={['storage']} componentType="storage" theme={props.theme}>
+			<AvatarUploadInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses storage hooks */
+function AvatarUploadInner({
 	theme = defaultTheme,
 	maxSize = 2 * 1024 * 1024,
 	value,
