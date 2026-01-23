@@ -68,6 +68,7 @@ export {
 	// List animations
 	AnimatedList,
 	AnimatedListItem,
+	AnimatedRow,
 	// Interactive elements
 	InteractiveCard,
 	Collapse,
@@ -76,6 +77,11 @@ export {
 	AnimatedGrid,
 	AnimatedSection,
 	AnimatedEmptyState,
+	// Button/Form animations
+	AnimatedButtonContent,
+	SuccessCheck,
+	Shake,
+	Pulse,
 	// Framer Motion re-exports
 	AnimatePresence,
 	motion,

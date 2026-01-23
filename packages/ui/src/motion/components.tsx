@@ -675,6 +675,329 @@ export function AnimatedEmptyState({
 }
 
 // ============================================================================
+// Animated Button States
+// ============================================================================
+
+type ButtonState = 'idle' | 'loading' | 'success' | 'error'
+
+interface AnimatedButtonContentProps {
+	/** Current button state */
+	state: ButtonState
+	/** Default content (shown in idle state) */
+	children: ReactNode
+	/** Loading text (optional, defaults to "Loading...") */
+	loadingText?: string
+	/** Success text (optional, defaults to "Done!") */
+	successText?: string
+	/** Error text (optional, defaults to "Error") */
+	errorText?: string
+	/** Class name for the container */
+	className?: string
+}
+
+/**
+ * AnimatedButtonContent - Smooth state transitions for button content
+ *
+ * Wrap button children with this for animated loading/success/error states.
+ * Works with any button component.
+ *
+ * @example
+ * <Button disabled={isPending}>
+ *   <AnimatedButtonContent
+ *     state={isPending ? 'loading' : success ? 'success' : 'idle'}
+ *   >
+ *     Save Changes
+ *   </AnimatedButtonContent>
+ * </Button>
+ */
+export function AnimatedButtonContent({
+	state,
+	children,
+	loadingText = 'Loading...',
+	successText = 'Done!',
+	errorText = 'Error',
+	className,
+}: AnimatedButtonContentProps) {
+	return (
+		<span className={`relative inline-flex items-center justify-center gap-2 ${className ?? ''}`}>
+			<AnimatePresence mode="wait">
+				{state === 'idle' && (
+					<motion.span
+						key="idle"
+						initial={{ opacity: 0, y: 8 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -8 }}
+						transition={{ duration: duration.fast, ease: easing.easeOut }}
+						className="inline-flex items-center gap-2"
+					>
+						{children}
+					</motion.span>
+				)}
+				{state === 'loading' && (
+					<motion.span
+						key="loading"
+						initial={{ opacity: 0, y: 8 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -8 }}
+						transition={{ duration: duration.fast, ease: easing.easeOut }}
+						className="inline-flex items-center gap-2"
+					>
+						<motion.span
+							animate={{ rotate: 360 }}
+							transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+							className="inline-block"
+						>
+							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" strokeLinecap="round" />
+							</svg>
+						</motion.span>
+						{loadingText}
+					</motion.span>
+				)}
+				{state === 'success' && (
+					<motion.span
+						key="success"
+						initial={{ opacity: 0, scale: 0.8 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.8 }}
+						transition={{ duration: duration.fast, ease: easing.easeOut }}
+						className="inline-flex items-center gap-2"
+					>
+						<motion.span
+							initial={{ scale: 0 }}
+							animate={{ scale: 1 }}
+							transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
+						>
+							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+								<motion.path
+									d="M5 13l4 4L19 7"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									initial={{ pathLength: 0 }}
+									animate={{ pathLength: 1 }}
+									transition={{ duration: 0.3, delay: 0.1 }}
+								/>
+							</svg>
+						</motion.span>
+						{successText}
+					</motion.span>
+				)}
+				{state === 'error' && (
+					<motion.span
+						key="error"
+						initial={{ opacity: 0, x: -8 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: 8 }}
+						transition={{ duration: duration.fast, ease: easing.easeOut }}
+						className="inline-flex items-center gap-2"
+					>
+						<motion.span
+							animate={{ x: [0, -3, 3, -3, 3, 0] }}
+							transition={{ duration: 0.4 }}
+						>
+							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+								<path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+							</svg>
+						</motion.span>
+						{errorText}
+					</motion.span>
+				)}
+			</AnimatePresence>
+		</span>
+	)
+}
+
+// ============================================================================
+// Animated Row (for lists, tables, activity feeds)
+// ============================================================================
+
+interface AnimatedRowProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+	/** Children to animate */
+	children: ReactNode
+	/** Index for stagger delay calculation */
+	index?: number
+	/** Base delay before animation starts */
+	baseDelay?: number
+}
+
+/**
+ * AnimatedRow - Individual row with entrance animation
+ *
+ * Can be used standalone or inside an AnimatedList.
+ * Supports index-based staggering when used in a loop.
+ *
+ * @example
+ * {items.map((item, i) => (
+ *   <AnimatedRow key={item.id} index={i}>
+ *     <TableRow data={item} />
+ *   </AnimatedRow>
+ * ))}
+ */
+export const AnimatedRow = forwardRef<HTMLDivElement, AnimatedRowProps>(
+	({ children, index = 0, baseDelay = 0, ...props }, ref) => {
+		return (
+			<motion.div
+				ref={ref}
+				initial={{ opacity: 0, y: 8 }}
+				animate={{ opacity: 1, y: 0 }}
+				exit={{ opacity: 0, y: -4 }}
+				transition={{
+					duration: duration.fast,
+					ease: easing.easeOut,
+					delay: baseDelay + (index * stagger.fast),
+				}}
+				{...props}
+			>
+				{children}
+			</motion.div>
+		)
+	}
+)
+AnimatedRow.displayName = 'AnimatedRow'
+
+// ============================================================================
+// Pulse Animation (for notifications, badges)
+// ============================================================================
+
+interface PulseProps extends Omit<HTMLMotionProps<'span'>, 'animate'> {
+	/** Children to wrap with pulse */
+	children: ReactNode
+	/** Whether to show the pulse animation */
+	active?: boolean
+}
+
+/**
+ * Pulse - Attention-grabbing pulse animation
+ *
+ * @example
+ * <Pulse active={hasUnread}>
+ *   <Badge>3</Badge>
+ * </Pulse>
+ */
+export const Pulse = forwardRef<HTMLSpanElement, PulseProps>(
+	({ children, active = true, ...props }, ref) => {
+		return (
+			<motion.span
+				ref={ref}
+				animate={active ? {
+					scale: [1, 1.05, 1],
+					opacity: [1, 0.8, 1],
+				} : undefined}
+				transition={{
+					duration: 2,
+					repeat: Infinity,
+					ease: 'easeInOut',
+				}}
+				{...props}
+			>
+				{children}
+			</motion.span>
+		)
+	}
+)
+Pulse.displayName = 'Pulse'
+
+// ============================================================================
+// Shake Animation (for errors, validation)
+// ============================================================================
+
+interface ShakeProps extends Omit<HTMLMotionProps<'div'>, 'animate'> {
+	/** Children to wrap */
+	children: ReactNode
+	/** Trigger shake animation */
+	shake?: boolean
+	/** Callback when shake completes */
+	onShakeComplete?: () => void
+}
+
+/**
+ * Shake - Error shake animation for form validation
+ *
+ * @example
+ * <Shake shake={hasError} onShakeComplete={() => setHasError(false)}>
+ *   <Input error={hasError} />
+ * </Shake>
+ */
+export const Shake = forwardRef<HTMLDivElement, ShakeProps>(
+	({ children, shake = false, onShakeComplete, ...props }, ref) => {
+		return (
+			<motion.div
+				ref={ref}
+				animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
+				transition={{ duration: 0.4, ease: 'easeInOut' }}
+				onAnimationComplete={() => {
+					if (shake && onShakeComplete) {
+						onShakeComplete()
+					}
+				}}
+				{...props}
+			>
+				{children}
+			</motion.div>
+		)
+	}
+)
+Shake.displayName = 'Shake'
+
+// ============================================================================
+// Success Checkmark Animation
+// ============================================================================
+
+interface SuccessCheckProps {
+	/** Whether to show the check animation */
+	show: boolean
+	/** Size in pixels */
+	size?: number
+	/** Additional class name */
+	className?: string
+}
+
+/**
+ * SuccessCheck - Animated checkmark for success states
+ *
+ * @example
+ * <SuccessCheck show={formSubmitted} />
+ */
+export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) {
+	return (
+		<AnimatePresence>
+			{show && (
+				<motion.svg
+					initial={{ opacity: 0, scale: 0.5 }}
+					animate={{ opacity: 1, scale: 1 }}
+					exit={{ opacity: 0, scale: 0.5 }}
+					transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+					className={className}
+					width={size}
+					height={size}
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2.5"
+				>
+					<motion.circle
+						cx="12"
+						cy="12"
+						r="10"
+						initial={{ pathLength: 0 }}
+						animate={{ pathLength: 1 }}
+						transition={{ duration: 0.4, ease: 'easeOut' }}
+					/>
+					<motion.path
+						d="M8 12l3 3 5-6"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						initial={{ pathLength: 0 }}
+						animate={{ pathLength: 1 }}
+						transition={{ duration: 0.3, delay: 0.3 }}
+					/>
+				</motion.svg>
+			)}
+		</AnimatePresence>
+	)
+}
+
+// ============================================================================
 // Re-export Framer Motion primitives
 // ============================================================================
 
