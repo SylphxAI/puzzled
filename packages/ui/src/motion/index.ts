@@ -69,6 +69,7 @@ export {
 	AnimatedList,
 	AnimatedListItem,
 	AnimatedRow,
+	AnimatedTableRow,
 	// Interactive elements
 	InteractiveCard,
 	Collapse,

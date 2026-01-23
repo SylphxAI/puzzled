@@ -856,6 +856,56 @@ export const AnimatedRow = forwardRef<HTMLDivElement, AnimatedRowProps>(
 AnimatedRow.displayName = 'AnimatedRow'
 
 // ============================================================================
+// Animated Table Row (for data tables)
+// ============================================================================
+
+interface AnimatedTableRowProps extends Omit<HTMLMotionProps<'tr'>, 'initial' | 'animate' | 'exit'> {
+	/** Children to animate */
+	children: ReactNode
+	/** Index for stagger delay calculation */
+	index?: number
+	/** Base delay before animation starts */
+	baseDelay?: number
+}
+
+/**
+ * AnimatedTableRow - Table row with staggered entrance animation
+ *
+ * Use inside <tbody> for animated table rows. Provides same animation
+ * as AnimatedRow but for HTML table elements.
+ *
+ * @example
+ * <tbody>
+ *   {items.map((item, i) => (
+ *     <AnimatedTableRow key={item.id} index={i}>
+ *       <td>Content</td>
+ *     </AnimatedTableRow>
+ *   ))}
+ * </tbody>
+ */
+export const AnimatedTableRow = forwardRef<HTMLTableRowElement, AnimatedTableRowProps>(
+	({ children, index = 0, baseDelay = 0, ...props }, ref) => {
+		return (
+			<motion.tr
+				ref={ref}
+				initial={{ opacity: 0, y: 8 }}
+				animate={{ opacity: 1, y: 0 }}
+				exit={{ opacity: 0, y: -4 }}
+				transition={{
+					duration: duration.fast,
+					ease: easing.easeOut,
+					delay: baseDelay + (index * stagger.fast),
+				}}
+				{...props}
+			>
+				{children}
+			</motion.tr>
+		)
+	}
+)
+AnimatedTableRow.displayName = 'AnimatedTableRow'
+
+// ============================================================================
 // Pulse Animation (for notifications, badges)
 // ============================================================================
 
