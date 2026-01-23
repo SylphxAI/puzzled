@@ -238,6 +238,13 @@ export interface SylphxProviderProps {
 // Provider Component
 // ============================================
 
+/**
+ * SylphxProvider
+ *
+ * Wrapper that sets up QueryClientProvider first, then renders the inner provider.
+ * This is necessary because the inner provider uses useQuery hooks that require
+ * QueryClientProvider context.
+ */
 export function SylphxProvider({
 	children,
 	appId,
@@ -248,9 +255,7 @@ export function SylphxProvider({
 	autoTracking = true,
 	platformMode = false,
 }: SylphxProviderProps) {
-	// ============================================
-	// React Query Client (internal, for caching server data)
-	// ============================================
+	// Create QueryClient at the outer level
 	const [queryClient] = useState(
 		() =>
 			new QueryClient({
@@ -264,6 +269,42 @@ export function SylphxProvider({
 				},
 			})
 	)
+
+	// Wrap with QueryClientProvider FIRST, then render inner provider
+	return (
+		<QueryClientProvider client={queryClient}>
+			<SylphxProviderInner
+				appId={appId}
+				publishableKey={publishableKey}
+				platformUrl={providedPlatformUrl}
+				afterSignOutUrl={afterSignOutUrl}
+				vapidPublicKey={vapidPublicKey}
+				autoTracking={autoTracking}
+				platformMode={platformMode}
+				queryClient={queryClient}
+			>
+				{children}
+			</SylphxProviderInner>
+		</QueryClientProvider>
+	)
+}
+
+/**
+ * SylphxProviderInner
+ *
+ * Inner provider that uses useQuery hooks. Must be rendered inside QueryClientProvider.
+ */
+function SylphxProviderInner({
+	children,
+	appId,
+	publishableKey,
+	platformUrl: providedPlatformUrl,
+	afterSignOutUrl = '/',
+	vapidPublicKey,
+	autoTracking = true,
+	platformMode = false,
+	queryClient,
+}: SylphxProviderProps & { queryClient: QueryClient }) {
 
 	// In platform mode, derive URL from current origin; otherwise use provided or default
 	const platformUrl = platformMode
@@ -2866,38 +2907,37 @@ export function SylphxProvider({
 		]
 	)
 
+	// QueryClientProvider is now provided by the outer SylphxProvider wrapper
 	return (
-		<QueryClientProvider client={queryClient}>
-			<AuthContext.Provider value={authValue}>
-				<SdkAuthContext.Provider value={sdkAuthValue}>
-					<UserContext.Provider value={userValue}>
-						<SecurityContext.Provider value={securityValue}>
-							<PlatformContext.Provider value={platformValue}>
-								<StorageContext.Provider value={storageValue}>
-									<AIContext.Provider value={aiValue}>
-										<JobsContext.Provider value={jobsValue}>
-											<MonitoringContext.Provider value={monitoringValue}>
-												<ConsentContext.Provider value={consentValue}>
-													<DatabaseContext.Provider value={databaseValue}>
-														<EmailContext.Provider value={emailValue}>
-															{/* Newsletter: Marketing/bulk email subscriptions */}
-															<NewsletterContext.Provider value={newsletterValue}>
-																<WebhooksContext.Provider value={webhooksValue}>
-																	{children}
-																</WebhooksContext.Provider>
-															</NewsletterContext.Provider>
-														</EmailContext.Provider>
-													</DatabaseContext.Provider>
-												</ConsentContext.Provider>
-											</MonitoringContext.Provider>
-										</JobsContext.Provider>
-									</AIContext.Provider>
-								</StorageContext.Provider>
-							</PlatformContext.Provider>
-						</SecurityContext.Provider>
-					</UserContext.Provider>
-				</SdkAuthContext.Provider>
-			</AuthContext.Provider>
-		</QueryClientProvider>
+		<AuthContext.Provider value={authValue}>
+			<SdkAuthContext.Provider value={sdkAuthValue}>
+				<UserContext.Provider value={userValue}>
+					<SecurityContext.Provider value={securityValue}>
+						<PlatformContext.Provider value={platformValue}>
+							<StorageContext.Provider value={storageValue}>
+								<AIContext.Provider value={aiValue}>
+									<JobsContext.Provider value={jobsValue}>
+										<MonitoringContext.Provider value={monitoringValue}>
+											<ConsentContext.Provider value={consentValue}>
+												<DatabaseContext.Provider value={databaseValue}>
+													<EmailContext.Provider value={emailValue}>
+														{/* Newsletter: Marketing/bulk email subscriptions */}
+														<NewsletterContext.Provider value={newsletterValue}>
+															<WebhooksContext.Provider value={webhooksValue}>
+																{children}
+															</WebhooksContext.Provider>
+														</NewsletterContext.Provider>
+													</EmailContext.Provider>
+												</DatabaseContext.Provider>
+											</ConsentContext.Provider>
+										</MonitoringContext.Provider>
+									</JobsContext.Provider>
+								</AIContext.Provider>
+							</StorageContext.Provider>
+						</PlatformContext.Provider>
+					</SecurityContext.Provider>
+				</UserContext.Provider>
+			</SdkAuthContext.Provider>
+		</AuthContext.Provider>
 	)
 }
