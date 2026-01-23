@@ -45,7 +45,7 @@ export default function LoginPage() {
 				{/* Logo & Title */}
 				<div className="text-center">
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
-						<GamepadIcon size={32} className="text-primary" />
+						<GamepadIcon size={40} className="text-primary" />
 					</div>
 					<h1 className="text-2xl font-bold tracking-tight">
 						{t('welcomeBack')}
