@@ -89,3 +89,6 @@ export {
 	type HTMLMotionProps,
 	type MotionProps,
 } from './components'
+
+// Page transitions
+export { PageTransition, PageTransitionMain } from './page-transition'
