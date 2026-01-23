@@ -179,7 +179,8 @@ export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseR
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						throw new Error('Reset password requires SylphxProvider or a custom submitHandler')
+						setError('SDK not configured. Please wrap your app with SylphxProvider.')
+						return
 					}
 
 					await authContext.resetPassword(token, form.password)

@@ -120,7 +120,8 @@ export function useForgotPasswordForm(options: UseForgotPasswordFormOptions = {}
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						throw new Error('Forgot password requires SylphxProvider or a custom submitHandler')
+						setError('SDK not configured. Please wrap your app with SylphxProvider.')
+						return
 					}
 
 					await authContext.forgotPassword(form.email)

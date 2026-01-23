@@ -329,7 +329,8 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						throw new Error('Sign-up requires SylphxProvider or a custom submitHandler')
+						setError('SDK not configured. Please wrap your app with SylphxProvider.')
+						return
 					}
 
 					const registerResult = await authContext.register(form.name, form.email, form.password)
@@ -392,7 +393,8 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						throw new Error('Email verification requires SylphxProvider or a custom verifyEmailHandler')
+						setError('SDK not configured. Please wrap your app with SylphxProvider.')
+						return
 					}
 
 					// verifyEmail uses the verification token

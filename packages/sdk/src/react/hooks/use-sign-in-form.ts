@@ -241,7 +241,8 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 
 				// Use auth context (SDK mode)
 				if (!authContext) {
-					throw new Error('Sign-in requires SylphxProvider or a custom submitHandler')
+					setError('SDK not configured. Please wrap your app with SylphxProvider.')
+					return
 				}
 
 				const result = await authContext.login(form.email, form.password)
@@ -289,7 +290,8 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 
 			try {
 				if (!authContext) {
-					throw new Error('Two-factor verification requires SylphxProvider')
+					setError('SDK not configured. Please wrap your app with SylphxProvider.')
+					return
 				}
 
 				await authContext.verifyTwoFactor(pendingTwoFactor.userId, form.otp)

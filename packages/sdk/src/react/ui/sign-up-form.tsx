@@ -18,7 +18,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { OAuthButtons, OrDivider, type OAuthProvider } from './oauth-buttons'
-import { useSylphx } from '../hooks'
+import { useSylphx, RequireSdk } from '../hooks'
 import {
 	useSignUpForm,
 	type AdditionalField,
@@ -69,7 +69,16 @@ export interface SignUpFormProps {
 /**
  * Full sign-up form component (uses useSignUpForm hook)
  */
-export function SignUpForm({
+export function SignUpForm(props: SignUpFormProps) {
+	return (
+		<RequireSdk services={['auth']} componentType="sign-up" theme={props.theme}>
+			<SignUpFormInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function SignUpFormInner({
 	theme = defaultTheme,
 	providers = [],
 	afterSignUpUrl = '/dashboard',

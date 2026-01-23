@@ -19,6 +19,7 @@ import {
 } from './styles'
 import { OAuthButtons, OrDivider, type OAuthProvider } from './oauth-buttons'
 import { useSignInForm, type SignInMethod } from '../hooks/use-sign-in-form'
+import { RequireSdk } from '../hooks'
 
 export type { SignInMethod } from '../hooks/use-sign-in-form'
 
@@ -54,7 +55,16 @@ export interface SignInFormProps {
 /**
  * Full sign-in form component (uses useSignInForm hook)
  */
-export function SignInForm({
+export function SignInForm(props: SignInFormProps) {
+	return (
+		<RequireSdk services={['auth']} componentType="sign-in" theme={props.theme}>
+			<SignInFormInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function SignInFormInner({
 	theme = defaultTheme,
 	methods = ['password'],
 	providers = [],
