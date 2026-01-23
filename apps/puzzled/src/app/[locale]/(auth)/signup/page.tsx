@@ -5,9 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useState, useMemo } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
-import { useSignUpForm, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
-
-const PROVIDERS: OAuthProvider[] = ['google', 'github']
+import { useSignUpForm, useOAuthProviders, OAuthIcons } from '@sylphx/sdk/react'
 
 // Password strength calculation
 function calculatePasswordStrength(password: string): {
@@ -43,6 +41,9 @@ export default function SignUpPage() {
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
 
+	// Fetch enabled OAuth providers from platform
+	const { providers, isLoading: providersLoading } = useOAuthProviders()
+
 	const {
 		form,
 		setName,
@@ -56,7 +57,7 @@ export default function SignUpPage() {
 		handleSubmit,
 		handleOAuthSignUp,
 	} = useSignUpForm({
-		providers: PROVIDERS,
+		providers,
 		afterSignUpUrl: '/',
 		minPasswordLength: 8,
 	})
@@ -123,41 +124,50 @@ export default function SignUpPage() {
 					</p>
 				</div>
 
-				{/* OAuth Buttons */}
-				<div className="space-y-3">
-					{PROVIDERS.map((provider) => {
-						const Icon = OAuthIcons[provider]
-						const isProviderLoading = loadingProvider === provider
-						return (
-							<Button
-								key={provider}
-								variant="outline"
-								className="relative h-12 w-full gap-3 text-base font-medium"
-								onClick={() => handleOAuthSignUp(provider)}
-								disabled={isLoading}
-							>
-								{isProviderLoading ? (
-									<Loader2 className="h-5 w-5 animate-spin" />
-								) : (
-									<Icon className="h-5 w-5" />
-								)}
-								{t('continueWith', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })}
-							</Button>
-						)
-					})}
-				</div>
+				{/* OAuth Buttons - only show if providers are enabled */}
+				{providersLoading ? (
+					<div className="space-y-3">
+						<div className="h-12 w-full animate-pulse rounded-md bg-muted" />
+						<div className="h-12 w-full animate-pulse rounded-md bg-muted" />
+					</div>
+				) : providers.length > 0 ? (
+					<>
+						<div className="space-y-3">
+							{providers.map((provider) => {
+								const Icon = OAuthIcons[provider]
+								const isProviderLoading = loadingProvider === provider
+								return (
+									<Button
+										key={provider}
+										variant="outline"
+										className="relative h-12 w-full gap-3 text-base font-medium"
+										onClick={() => handleOAuthSignUp(provider)}
+										disabled={isLoading}
+									>
+										{isProviderLoading ? (
+											<Loader2 className="h-5 w-5 animate-spin" />
+										) : (
+											<Icon className="h-5 w-5" />
+										)}
+										{t('continueWith', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })}
+									</Button>
+								)
+							})}
+						</div>
 
-				{/* Divider */}
-				<div className="relative">
-					<div className="absolute inset-0 flex items-center">
-						<div className="w-full border-t" />
-					</div>
-					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-background px-2 text-muted-foreground">
-							{t('orContinueWith')}
-						</span>
-					</div>
-				</div>
+						{/* Divider */}
+						<div className="relative">
+							<div className="absolute inset-0 flex items-center">
+								<div className="w-full border-t" />
+							</div>
+							<div className="relative flex justify-center text-xs uppercase">
+								<span className="bg-background px-2 text-muted-foreground">
+									{t('orContinueWith')}
+								</span>
+							</div>
+						</div>
+					</>
+				) : null}
 
 				{/* Email/Password Form */}
 				<form onSubmit={handleSubmit} className="space-y-4">

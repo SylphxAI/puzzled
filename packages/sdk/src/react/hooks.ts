@@ -544,3 +544,10 @@ export {
 	type UseSdkReadyReturn,
 	type RequireSdkProps,
 } from './hooks/use-sdk-ready'
+
+// OAuth Providers Hook - fetch enabled providers from platform
+export {
+	useOAuthProviders,
+	type EnabledProvider,
+	type UseOAuthProvidersReturn,
+} from './hooks/use-oauth-providers'

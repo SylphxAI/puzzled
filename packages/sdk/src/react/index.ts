@@ -143,12 +143,16 @@ export {
 	// Safe hooks (don't throw when outside provider)
 	useSafeUser,
 	useSafeAuth,
+	// OAuth providers hook
+	useOAuthProviders,
 	type UseUserReturn,
 	type UseAuthReturn,
 	type UseSessionReturn,
 	type UseOrganizationReturn,
 	type UseSafeUserReturn,
 	type UseSafeAuthReturn,
+	type UseOAuthProvidersReturn,
+	type EnabledProvider,
 	type AuthSession,
 	// Organization types (re-exported from types.ts - SSOT)
 	type Organization,
