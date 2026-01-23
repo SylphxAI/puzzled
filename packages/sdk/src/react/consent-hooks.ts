@@ -128,10 +128,12 @@ export function useConsent(): UseConsentReturn {
 	const [initialized, setInitialized] = useState(false)
 
 	// React Query for consent types
+	// Use initialData for SSR hydration to avoid loading states
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
 		staleTime: 5 * 60 * 1000, // 5 min
+		initialData: ctx.initialConsentTypes,
 	})
 
 	// React Query for user consents
@@ -533,10 +535,12 @@ export function useSafeConsent(): UseSafeConsentReturn {
 	const [initialized, setInitialized] = useState(false)
 
 	// React Query for consent types
+	// Use initialData for SSR hydration to avoid loading states
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
 		staleTime: 5 * 60 * 1000,
+		initialData: ctx.initialConsentTypes,
 	})
 
 	// React Query for user consents

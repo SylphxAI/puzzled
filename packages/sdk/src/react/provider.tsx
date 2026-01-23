@@ -48,6 +48,7 @@ import {
 	type MonitoringContextValue,
 	type NewsletterContextValue,
 	type ConsentContextValue,
+	type ConsentType,
 	type StorageContextValue,
 	type UploadOptions,
 	type UploadProgressEvent,
@@ -232,6 +233,32 @@ export interface SylphxProviderProps {
 	 * or other same-origin applications.
 	 */
 	platformMode?: boolean
+	/**
+	 * Initial plans data for SSR hydration (optional)
+	 *
+	 * Use `getPlans()` from '@sylphx/sdk/server' in Server Components
+	 * to fetch plans and pass them here to avoid loading states.
+	 *
+	 * @example
+	 * ```tsx
+	 * const plans = await getPlans({ appId, appSecret })
+	 * return <SylphxProvider initialPlans={plans}>...</SylphxProvider>
+	 * ```
+	 */
+	initialPlans?: Plan[]
+	/**
+	 * Initial consent types data for SSR hydration (optional)
+	 *
+	 * Use `getConsentTypes()` from '@sylphx/sdk/server' in Server Components
+	 * to fetch consent types and pass them here to avoid loading states.
+	 *
+	 * @example
+	 * ```tsx
+	 * const consentTypes = await getConsentTypes({ appId, appSecret })
+	 * return <SylphxProvider initialConsentTypes={consentTypes}>...</SylphxProvider>
+	 * ```
+	 */
+	initialConsentTypes?: ConsentType[]
 }
 
 // ============================================
@@ -254,6 +281,8 @@ export function SylphxProvider({
 	vapidPublicKey,
 	autoTracking = true,
 	platformMode = false,
+	initialPlans,
+	initialConsentTypes,
 }: SylphxProviderProps) {
 	// Create QueryClient at the outer level
 	const [queryClient] = useState(
@@ -282,6 +311,8 @@ export function SylphxProvider({
 				autoTracking={autoTracking}
 				platformMode={platformMode}
 				queryClient={queryClient}
+				initialPlans={initialPlans}
+				initialConsentTypes={initialConsentTypes}
 			>
 				{children}
 			</SylphxProviderInner>
@@ -304,6 +335,8 @@ function SylphxProviderInner({
 	autoTracking = true,
 	platformMode = false,
 	queryClient,
+	initialPlans,
+	initialConsentTypes,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
 
 	// In platform mode, derive URL from current origin; otherwise use provided or default
@@ -366,13 +399,15 @@ function SylphxProviderInner({
 	// ============================================
 
 	// Plans - React Query (public, cached)
+	// Use initialData for SSR hydration to avoid loading states
 	const plansQuery = useQuery({
 		queryKey: ['sylphx', appId, 'plans'],
 		queryFn: () => api.get<Plan[]>('/billing/plans'),
 		staleTime: 10 * 60 * 1000, // 10 min - plans rarely change
+		initialData: initialPlans,
 	})
 	const plans = plansQuery.data ?? []
-	const plansLoading = plansQuery.isLoading
+	const plansLoading = plansQuery.isLoading && !initialPlans
 	const plansError = plansQuery.error as Error | null
 
 	// Subscription - React Query (enabled when signed in)
@@ -2060,6 +2095,7 @@ function SylphxProviderInner({
 		() => ({
 			anonymousId,
 			userId: authState.user?.id ?? null,
+			initialConsentTypes,
 			getConsentTypes: async () => {
 				return await api.get('/consent/types')
 			},
@@ -2116,7 +2152,7 @@ function SylphxProviderInner({
 				}
 			},
 		}),
-		[api, anonymousId, authState.user?.id]
+		[api, anonymousId, authState.user?.id, initialConsentTypes]
 	)
 
 	// ============================================

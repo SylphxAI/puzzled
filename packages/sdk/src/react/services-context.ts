@@ -400,6 +400,8 @@ export interface ConsentContextValue {
 	declineOptional: () => Promise<SetConsentsResult>
 	/** Check consent for a purpose with optional inline defaults for auto-discovery */
 	checkConsent: (purposeSlug: string, defaults?: ConsentPurposeDefaults) => Promise<boolean>
+	/** Initial consent types for SSR hydration (optional) */
+	initialConsentTypes?: ConsentType[]
 }
 
 export const ConsentContext = createContext<ConsentContextValue | null>(null)

@@ -590,6 +590,175 @@ export async function getOAuthProvidersWithInfo(options: {
 	}
 }
 
+// ============================================================================
+// Plans (Server-Side)
+// ============================================================================
+
+import type { Plan } from '../billing'
+export type { Plan }
+
+/** Options for fetching plans server-side */
+export interface GetPlansOptions {
+	appId: string
+	appSecret: string
+	platformUrl?: string
+}
+
+/** Cache for plans (per app) */
+const plansCache: Map<string, { plans: Plan[]; expiresAt: number }> = new Map()
+
+/**
+ * Get subscription plans for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 10 minutes.
+ *
+ * @example
+ * ```tsx
+ * // app/pricing/page.tsx (Server Component)
+ * import { getPlans } from '@sylphx/sdk/server'
+ * import { PricingTable } from './pricing-table'
+ *
+ * export default async function PricingPage() {
+ *   const plans = await getPlans({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *   })
+ *
+ *   return <PricingTable initialPlans={plans} />
+ * }
+ * ```
+ */
+export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
+	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+	const cacheKey = `plans:${platformUrl}:${appId}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = plansCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.plans
+	}
+
+	try {
+		const response = await fetch(`${platformUrl}/api/sdk/billing/plans`, {
+			headers: {
+				'x-app-id': appId,
+				'x-app-secret': appSecret,
+			},
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch plans:', response.status)
+			return []
+		}
+
+		const data = await response.json() as { data: Plan[] }
+		const plans = data.data || []
+
+		// Cache for 10 minutes
+		plansCache.set(cacheKey, {
+			plans,
+			expiresAt: now + 10 * 60 * 1000,
+		})
+
+		return plans
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch plans:', error)
+		return []
+	}
+}
+
+// ============================================================================
+// Consent Types (Server-Side)
+// ============================================================================
+
+import type { ConsentType } from '../consent'
+export type { ConsentType }
+
+/** Options for fetching consent types server-side */
+export interface GetConsentTypesOptions {
+	appId: string
+	appSecret: string
+	platformUrl?: string
+}
+
+/** Cache for consent types (per app) */
+const consentTypesCache: Map<string, { types: ConsentType[]; expiresAt: number }> = new Map()
+
+/**
+ * Get consent types for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 5 minutes.
+ *
+ * @example
+ * ```tsx
+ * // app/layout.tsx (Server Component)
+ * import { getConsentTypes } from '@sylphx/sdk/server'
+ * import { CookieBanner } from './cookie-banner'
+ *
+ * export default async function RootLayout({ children }) {
+ *   const consentTypes = await getConsentTypes({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *   })
+ *
+ *   return (
+ *     <html>
+ *       <body>
+ *         {children}
+ *         <CookieBanner initialConsentTypes={consentTypes} />
+ *       </body>
+ *     </html>
+ *   )
+ * }
+ * ```
+ */
+export async function getConsentTypes(options: GetConsentTypesOptions): Promise<ConsentType[]> {
+	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+	const cacheKey = `consent:${platformUrl}:${appId}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = consentTypesCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.types
+	}
+
+	try {
+		const response = await fetch(`${platformUrl}/api/sdk/consent/types`, {
+			headers: {
+				'x-app-id': appId,
+				'x-app-secret': appSecret,
+			},
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch consent types:', response.status)
+			return []
+		}
+
+		const data = await response.json() as { data: ConsentType[] }
+		const types = data.data || []
+
+		// Cache for 5 minutes
+		consentTypesCache.set(cacheKey, {
+			types,
+			expiresAt: now + 5 * 60 * 1000,
+		})
+
+		return types
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch consent types:', error)
+		return []
+	}
+}
+
 // AI Client
 export { createAI, getAI } from './ai'
 export type {
