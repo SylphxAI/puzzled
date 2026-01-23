@@ -13,7 +13,7 @@ import {
 	type MotionProps,
 	motion,
 } from 'framer-motion'
-import { type ReactNode, forwardRef } from 'react'
+import { Children, type ReactNode, forwardRef } from 'react'
 import { duration, easing, spring, stagger } from './config'
 import {
 	fadeDownVariants,
@@ -518,6 +518,159 @@ export function Collapse({ isOpen, children, className }: CollapseProps) {
 				</motion.div>
 			)}
 		</AnimatePresence>
+	)
+}
+
+// ============================================================================
+// Page-Level Wrappers for Server Component Content
+// ============================================================================
+
+interface AnimatedPageProps {
+	/** Children to animate */
+	children: ReactNode
+	/** Additional class name */
+	className?: string
+}
+
+/**
+ * AnimatedPage - Wraps server component content with fade animation
+ *
+ * Use at the top level of page content for entrance animation.
+ *
+ * @example
+ * // In a client component wrapper
+ * <AnimatedPage>
+ *   {serverRenderedContent}
+ * </AnimatedPage>
+ */
+export function AnimatedPage({ children, className }: AnimatedPageProps) {
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 8 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: duration.medium, ease: easing.easeOut }}
+			className={className}
+		>
+			{children}
+		</motion.div>
+	)
+}
+
+interface AnimatedGridProps {
+	/** Children to animate (should be direct child elements) */
+	children: ReactNode
+	/** Stagger speed */
+	speed?: StaggerSpeed
+	/** Additional class name for the grid container */
+	className?: string
+}
+
+/**
+ * AnimatedGrid - Staggers grid/list children with animations
+ *
+ * Wraps each direct child in a staggered animation.
+ * Perfect for card grids, lists, etc.
+ *
+ * @example
+ * <AnimatedGrid className="grid grid-cols-3 gap-4" speed="fast">
+ *   <Card>1</Card>
+ *   <Card>2</Card>
+ *   <Card>3</Card>
+ * </AnimatedGrid>
+ */
+export function AnimatedGrid({ children, speed = 'fast', className }: AnimatedGridProps) {
+	return (
+		<motion.div
+			variants={staggerSpeedVariants[speed]}
+			initial="initial"
+			animate="animate"
+			className={className}
+		>
+			{Children.map(children, (child) => (
+				<motion.div variants={staggerItemFadeVariants}>{child}</motion.div>
+			))}
+		</motion.div>
+	)
+}
+
+interface AnimatedSectionProps {
+	/** Children to animate */
+	children: ReactNode
+	/** Delay before animation starts (in seconds) */
+	delay?: number
+	/** Additional class name */
+	className?: string
+}
+
+/**
+ * AnimatedSection - Fades in a section with optional delay
+ *
+ * @example
+ * <AnimatedSection delay={0.1}>
+ *   <h2>Section Title</h2>
+ *   <p>Content...</p>
+ * </AnimatedSection>
+ */
+export function AnimatedSection({ children, delay = 0, className }: AnimatedSectionProps) {
+	return (
+		<motion.section
+			initial={{ opacity: 0, y: 12 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{
+				duration: duration.medium,
+				ease: easing.easeOut,
+				delay,
+			}}
+			className={className}
+		>
+			{children}
+		</motion.section>
+	)
+}
+
+interface AnimatedEmptyStateProps {
+	/** Icon component */
+	icon: ReactNode
+	/** Title text */
+	title: string
+	/** Description text */
+	description?: string
+	/** Action button/link */
+	action?: ReactNode
+	/** Additional class name */
+	className?: string
+}
+
+/**
+ * AnimatedEmptyState - Empty state with staggered entrance
+ *
+ * @example
+ * <AnimatedEmptyState
+ *   icon={<FolderIcon />}
+ *   title="No items yet"
+ *   description="Create your first item to get started."
+ *   action={<Button>Create Item</Button>}
+ * />
+ */
+export function AnimatedEmptyState({
+	icon,
+	title,
+	description,
+	action,
+	className,
+}: AnimatedEmptyStateProps) {
+	return (
+		<motion.div
+			variants={staggerContainerFast}
+			initial="initial"
+			animate="animate"
+			className={className}
+		>
+			<motion.div variants={staggerItemVariants}>{icon}</motion.div>
+			<motion.h3 variants={staggerItemVariants}>{title}</motion.h3>
+			{description && <motion.p variants={staggerItemVariants}>{description}</motion.p>}
+			{action && <motion.div variants={staggerItemVariants}>{action}</motion.div>}
+		</motion.div>
 	)
 }
 

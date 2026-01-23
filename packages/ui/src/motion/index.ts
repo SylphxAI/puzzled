@@ -71,6 +71,11 @@ export {
 	// Interactive elements
 	InteractiveCard,
 	Collapse,
+	// Page-level wrappers (for server component content)
+	AnimatedPage,
+	AnimatedGrid,
+	AnimatedSection,
+	AnimatedEmptyState,
 	// Framer Motion re-exports
 	AnimatePresence,
 	motion,
