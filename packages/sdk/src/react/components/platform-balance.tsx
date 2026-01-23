@@ -11,6 +11,7 @@
 
 import { useEffect, useCallback, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { RequireSdk } from '../hooks'
 import { PlatformContext } from '../platform-context'
 import {
 	type ThemeVariables,
@@ -69,7 +70,16 @@ export interface PlatformBalanceCardProps {
  * />
  * ```
  */
-export function PlatformBalanceCard({
+export function PlatformBalanceCard(props: PlatformBalanceCardProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<PlatformBalanceCardInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform context */
+function PlatformBalanceCardInner({
 	theme = defaultTheme,
 	onAddCredits,
 	addCreditsUrl = '/settings/billing/add-credits',

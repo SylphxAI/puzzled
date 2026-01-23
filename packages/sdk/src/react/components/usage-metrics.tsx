@@ -9,6 +9,7 @@
 
 import { useEffect, useContext } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { RequireSdk } from '../hooks'
 import { PlatformContext } from '../platform-context'
 import {
 	type ThemeVariables,
@@ -80,7 +81,16 @@ export interface UsageMetricsProps {
  * />
  * ```
  */
-export function UsageMetrics({
+export function UsageMetrics(props: UsageMetricsProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<UsageMetricsInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform context */
+function UsageMetricsInner({
 	theme = defaultTheme,
 	period = 'month',
 	services,
