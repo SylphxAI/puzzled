@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
-import { useSignInForm, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
+import { useSignInForm, useSafeAuth, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
 
 interface LoginFormProps {
 	providers: OAuthProvider[]
@@ -15,6 +15,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
+	const { signIn } = useSafeAuth()
 
 	const {
 		form,
@@ -29,6 +30,13 @@ export function LoginForm({ providers }: LoginFormProps) {
 		methods: ['password'],
 		providers,
 		afterSignInUrl: '/',
+		// OAuth handler: redirect to platform OAuth flow
+		oauthHandler: async (provider) => {
+			signIn({
+				redirectUrl: '/',
+				providers: [provider],
+			})
+		},
 	})
 
 	return (

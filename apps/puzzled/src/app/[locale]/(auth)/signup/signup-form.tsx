@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { useState, useMemo } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
-import { useSignUpForm, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
+import { useSignUpForm, useSafeAuth, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
 
 // Password strength calculation
 function calculatePasswordStrength(password: string): {
@@ -44,6 +44,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
+	const { signUp } = useSafeAuth()
 
 	const {
 		form,
@@ -61,6 +62,13 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		providers,
 		afterSignUpUrl: '/',
 		minPasswordLength: 8,
+		// OAuth handler: redirect to platform OAuth flow
+		oauthHandler: async (provider) => {
+			signUp({
+				redirectUrl: '/',
+				providers: [provider],
+			})
+		},
 	})
 
 	const passwordStrength = useMemo(
