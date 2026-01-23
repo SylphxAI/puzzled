@@ -1,18 +1,37 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { GamepadIcon } from '@sylphx/ui'
-import { SignIn } from '@sylphx/sdk/react'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
+import { useSignInForm, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
+
+const PROVIDERS: OAuthProvider[] = ['google', 'github']
 
 export default function LoginPage() {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
+	const [showPassword, setShowPassword] = useState(false)
+
+	const {
+		form,
+		setEmail,
+		setPassword,
+		isLoading,
+		loadingProvider,
+		error,
+		handlePasswordSubmit,
+		handleOAuthSignIn,
+	} = useSignInForm({
+		methods: ['password'],
+		providers: PROVIDERS,
+		afterSignInUrl: '/',
+	})
 
 	return (
 		<div className="relative flex min-h-screen flex-col items-center justify-center px-4">
-			{/* Close button for PWA navigation */}
+			{/* Close button */}
 			<Link
 				href="/"
 				className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -21,30 +40,145 @@ export default function LoginPage() {
 				<X className="h-6 w-6" />
 			</Link>
 
-			<div className="w-full max-w-sm space-y-6">
-				{/* Logo */}
+			<div className="w-full max-w-[400px] space-y-8">
+				{/* Logo & Title */}
 				<div className="text-center">
-					<h1 className="mb-2 flex items-center justify-center gap-2 text-2xl font-bold">
-						<GamepadIcon size={28} className="text-primary" />
-						Puzzled
+					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
+						<GamepadIcon size={32} className="text-primary" />
+					</div>
+					<h1 className="text-2xl font-bold tracking-tight">
+						{t('welcomeBack')}
 					</h1>
-					<p className="text-muted-foreground">{t('signInTitle')}</p>
+					<p className="mt-2 text-muted-foreground">
+						{t('signInToContinue')}
+					</p>
 				</div>
 
-				{/* SDK Sign In Form */}
-				<SignIn
-					mode="embedded"
-					afterSignInUrl="/dashboard"
-					providers={['google', 'github']}
-					signUpUrl="/signup"
-					forgotPasswordUrl="/forgot-password"
-					showCard={false}
-				/>
+				{/* OAuth Buttons */}
+				<div className="space-y-3">
+					{PROVIDERS.map((provider) => {
+						const Icon = OAuthIcons[provider]
+						const isProviderLoading = loadingProvider === provider
+						return (
+							<Button
+								key={provider}
+								variant="outline"
+								className="relative h-12 w-full gap-3 text-base font-medium"
+								onClick={() => handleOAuthSignIn(provider)}
+								disabled={isLoading}
+							>
+								{isProviderLoading ? (
+									<Loader2 className="h-5 w-5 animate-spin" />
+								) : (
+									<Icon className="h-5 w-5" />
+								)}
+								{t('continueWith', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })}
+							</Button>
+						)
+					})}
+				</div>
 
-				{/* Sign up link */}
+				{/* Divider */}
+				<div className="relative">
+					<div className="absolute inset-0 flex items-center">
+						<div className="w-full border-t" />
+					</div>
+					<div className="relative flex justify-center text-xs uppercase">
+						<span className="bg-background px-2 text-muted-foreground">
+							{t('orContinueWith')}
+						</span>
+					</div>
+				</div>
+
+				{/* Email/Password Form */}
+				<form onSubmit={handlePasswordSubmit} className="space-y-4">
+					{/* Email */}
+					<div className="space-y-2">
+						<label htmlFor="email" className="text-sm font-medium">
+							{t('email')}
+						</label>
+						<Input
+							id="email"
+							type="email"
+							placeholder="you@example.com"
+							value={form.email}
+							onChange={(e) => setEmail(e.target.value)}
+							disabled={isLoading}
+							autoComplete="email"
+							className="h-12"
+							required
+						/>
+					</div>
+
+					{/* Password */}
+					<div className="space-y-2">
+						<div className="flex items-center justify-between">
+							<label htmlFor="password" className="text-sm font-medium">
+								{t('password')}
+							</label>
+							<Link
+								href="/forgot-password"
+								className="text-sm text-primary hover:underline"
+							>
+								{t('forgotPassword')}
+							</Link>
+						</div>
+						<div className="relative">
+							<Input
+								id="password"
+								type={showPassword ? 'text' : 'password'}
+								placeholder="••••••••"
+								value={form.password}
+								onChange={(e) => setPassword(e.target.value)}
+								disabled={isLoading}
+								autoComplete="current-password"
+								className="h-12 pr-10"
+								minLength={8}
+								required
+							/>
+							<button
+								type="button"
+								onClick={() => setShowPassword(!showPassword)}
+								className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+								tabIndex={-1}
+							>
+								{showPassword ? (
+									<EyeOff className="h-5 w-5" />
+								) : (
+									<Eye className="h-5 w-5" />
+								)}
+							</button>
+						</div>
+					</div>
+
+					{/* Error Message */}
+					{error && (
+						<div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+							{error}
+						</div>
+					)}
+
+					{/* Submit Button */}
+					<Button
+						type="submit"
+						className="h-12 w-full text-base font-medium"
+						disabled={isLoading}
+					>
+						{isLoading && !loadingProvider ? (
+							<>
+								<Loader2 className="mr-2 h-5 w-5 animate-spin" />
+								{t('signingIn')}
+							</>
+						) : (
+							tCommon('signIn')
+						)}
+					</Button>
+				</form>
+
+				{/* Sign Up Link */}
 				<p className="text-center text-sm text-muted-foreground">
 					{t('noAccount')}{' '}
-					<Link href="/signup" className="text-primary hover:underline">
+					<Link href="/signup" className="font-medium text-primary hover:underline">
 						{tCommon('signUp')}
 					</Link>
 				</p>
