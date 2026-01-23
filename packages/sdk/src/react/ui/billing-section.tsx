@@ -15,6 +15,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from './styles'
+import { RequireSdk } from '../hooks'
 import { useBilling } from '../platform-hooks'
 import type { Subscription, Plan } from '../platform-context'
 
@@ -48,7 +49,16 @@ export interface BillingSectionProps {
  * />
  * ```
  */
-export function BillingSection({
+export function BillingSection(props: BillingSectionProps) {
+	return (
+		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+			<BillingSectionInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function BillingSectionInner({
 	theme = defaultTheme,
 	onSuccess,
 	onError,

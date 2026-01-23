@@ -15,6 +15,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from './styles'
+import { RequireSdk } from '../hooks'
 import { useReferral } from '../platform-hooks'
 
 export interface ReferralCardProps {
@@ -50,7 +51,16 @@ export interface ReferralCardProps {
  * />
  * ```
  */
-export function ReferralCard({
+export function ReferralCard(props: ReferralCardProps) {
+	return (
+		<RequireSdk services={['analytics']} componentType="referral" theme={props.theme}>
+			<ReferralCardInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function ReferralCardInner({
 	theme = defaultTheme,
 	onSuccess,
 	onError,

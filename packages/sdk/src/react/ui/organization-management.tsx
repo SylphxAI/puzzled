@@ -9,7 +9,7 @@
 import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
-import { useOrganization, type Organization, type OrganizationMember, type OrgRole } from '../hooks'
+import { useOrganization, RequireSdk, type Organization, type OrganizationMember, type OrgRole } from '../hooks'
 
 // ============================================
 // OrganizationProfile
@@ -45,7 +45,16 @@ export interface OrganizationProfileProps {
  * />
  * ```
  */
-export function OrganizationProfile({
+export function OrganizationProfile(props: OrganizationProfileProps) {
+	return (
+		<RequireSdk services={['organization']} componentType="organization" theme={props.theme}>
+			<OrganizationProfileInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function OrganizationProfileInner({
 	theme = defaultTheme,
 	className,
 	organization: propOrg,
