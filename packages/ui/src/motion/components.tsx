@@ -631,10 +631,10 @@ export function AnimatedSection({ children, delay = 0, className }: AnimatedSect
 interface AnimatedEmptyStateProps {
 	/** Icon component */
 	icon: ReactNode
-	/** Title text */
-	title: string
-	/** Description text */
-	description?: string
+	/** Title text or element */
+	title: ReactNode
+	/** Description text or element */
+	description?: ReactNode
 	/** Action button/link */
 	action?: ReactNode
 	/** Additional class name */
