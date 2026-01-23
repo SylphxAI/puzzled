@@ -55,6 +55,9 @@ export type ComponentType =
 	| 'storage'
 	| 'analytics'
 	| 'organization'
+	| 'notifications'
+	| 'protect'
+	| 'referral'
 	| 'general'
 
 export interface UseSdkReadyOptions {

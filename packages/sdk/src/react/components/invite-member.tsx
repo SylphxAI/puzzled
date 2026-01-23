@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useOrganization, type OrgRole } from '../hooks'
+import { useOrganization, RequireSdk, type OrgRole } from '../hooks'
 import {
 	type ThemeVariables,
 	defaultTheme,
@@ -64,7 +64,16 @@ const ROLE_OPTIONS: { value: OrgRole; label: string; description: string }[] = [
  * />
  * ```
  */
-export function InviteMember({
+export function InviteMember(props: InviteMemberProps) {
+	return (
+		<RequireSdk services={['organization']} componentType="organization" theme={props.theme}>
+			<InviteMemberInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function InviteMemberInner({
 	theme = defaultTheme,
 	onSuccess,
 	onError,

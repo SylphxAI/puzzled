@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useOrganization, useUser } from '../hooks'
+import { useOrganization, useUser, RequireSdk } from '../hooks'
 import { safeRedirect } from '../security-utils'
 import {
 	type ThemeVariables,
@@ -48,7 +48,16 @@ export interface OrganizationSwitcherProps {
  * />
  * ```
  */
-export function OrganizationSwitcher({
+export function OrganizationSwitcher(props: OrganizationSwitcherProps) {
+	return (
+		<RequireSdk services={['organization']} componentType="organization" theme={props.theme}>
+			<OrganizationSwitcherInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function OrganizationSwitcherInner({
 	theme = defaultTheme,
 	hidePersonal = false,
 	onOrganizationSwitch,

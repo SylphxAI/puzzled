@@ -46,19 +46,16 @@
 'use client'
 
 import { type ReactNode, useContext } from 'react'
-import { useAuth, useUser } from '../hooks'
+import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
 import { PlatformContext } from '../platform-context'
 import type { User } from '../../types'
 
 /**
- * Internal hook to get platform context for Protect component
+ * Internal hook to get platform context for Protect component (safe version)
  */
-function usePlatformContext() {
+function useSafePlatformContext() {
 	const context = useContext(PlatformContext)
-	if (!context) {
-		throw new Error('Protect component must be used within a SylphxProvider')
-	}
-	return context
+	return context // Returns null if not configured, doesn't throw
 }
 
 // Standard role types (can be extended via platform admin)
@@ -188,9 +185,22 @@ export function Protect({
 	condition,
 	loading = null,
 }: ProtectProps) {
-	const { isSignedIn } = useAuth()
-	const { user, isLoaded } = useUser()
-	const { subscription } = usePlatformContext()
+	// SDK readiness check - silent fallback if not configured
+	const { isReady } = useSdkReady({
+		services: ['auth', 'user'],
+		componentType: 'protect',
+		fallback: 'null', // Silent - just render fallback if not configured
+	})
+
+	const { isSignedIn } = useSafeAuth()
+	const { user, isLoaded } = useSafeUser()
+	const platformContext = useSafePlatformContext()
+	const subscription = platformContext?.subscription
+
+	// If SDK not ready, render fallback (silent behavior)
+	if (!isReady) {
+		return <>{fallback}</>
+	}
 
 	// Show loading while auth state is being determined
 	if (!isLoaded) {
@@ -284,13 +294,15 @@ export function PremiumOnly({
 
 // Hook for programmatic access checks
 export function useProtect() {
-	const { isSignedIn } = useAuth()
-	const { user, isLoaded } = useUser()
-	const { subscription } = usePlatformContext()
+	const { isSignedIn } = useSafeAuth()
+	const { user, isLoaded, isConfigured } = useSafeUser()
+	const platformContext = useSafePlatformContext()
+	const subscription = platformContext?.subscription
 
 	return {
 		isLoaded,
 		isSignedIn,
+		isConfigured, // SDK configuration status
 		user,
 
 		/**

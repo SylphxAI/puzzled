@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useSafeUser } from '../hooks'
+import { useSafeUser, RequireSdk } from '../hooks'
 import { useReferral, type LeaderboardEntry, type ReferralLeaderboardResult } from '../platform-hooks'
 import {
 	type ThemeVariables,
@@ -59,7 +59,16 @@ const PERIOD_LABELS: Record<LeaderboardPeriod, string> = {
  * />
  * ```
  */
-export function ReferralLeaderboard({
+export function ReferralLeaderboard(props: ReferralLeaderboardProps) {
+	return (
+		<RequireSdk services={['analytics']} componentType="referral" theme={props.theme}>
+			<ReferralLeaderboardInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function ReferralLeaderboardInner({
 	theme = defaultTheme,
 	defaultPeriod = 'all',
 	showPeriodSelector = true,

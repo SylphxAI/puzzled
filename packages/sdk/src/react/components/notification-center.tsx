@@ -7,8 +7,10 @@
 
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useContext } from 'react'
+import { RequireSdk } from '../hooks'
 import { useInbox, type InAppMessage, type InAppMessageType } from '../platform-hooks'
+import { PlatformContext } from '../platform-context'
 
 // ============================================
 // Types
@@ -141,7 +143,16 @@ function getTypeColor(type: InAppMessageType): string {
  * }
  * ```
  */
-export function NotificationBadge({
+export function NotificationBadge(props: NotificationBadgeProps) {
+	return (
+		<RequireSdk services={['notifications']} componentType="notifications" fallback="null">
+			<NotificationBadgeInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function NotificationBadgeInner({
 	className = '',
 	showZero = false,
 	max = 99,
@@ -470,7 +481,16 @@ function DefaultMessageCard({
  * />
  * ```
  */
-export function NotificationCenter({
+export function NotificationCenter(props: NotificationCenterProps) {
+	return (
+		<RequireSdk services={['notifications']} componentType="notifications">
+			<NotificationCenterInner {...props} />
+		</RequireSdk>
+	)
+}
+
+/** Inner component that safely uses platform hooks */
+function NotificationCenterInner({
 	maxMessages = 50,
 	unreadOnly = false,
 	topic,
@@ -699,18 +719,24 @@ export function NotificationCenter({
 // ============================================
 
 /**
- * Hook for notification bell with dropdown
+ * Hook for notification bell with dropdown state management.
+ * Returns safe defaults when SDK is not configured.
+ *
+ * Note: Use NotificationBadge component for unread count display.
  *
  * @example
  * ```tsx
  * function NotificationBell() {
- *   const { isOpen, toggle, close, unreadCount } = useNotificationDropdown()
+ *   const { isOpen, toggle, close, isConfigured } = useNotificationDropdown()
+ *
+ *   // Hide if SDK not configured
+ *   if (!isConfigured) return null
  *
  *   return (
  *     <div style={{ position: 'relative' }}>
  *       <button onClick={toggle}>
  *         <BellIcon />
- *         {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
+ *         <NotificationBadge max={99} />
  *       </button>
  *       {isOpen && (
  *         <div style={{ position: 'absolute', top: '100%', right: 0 }}>
@@ -724,7 +750,10 @@ export function NotificationCenter({
  */
 export function useNotificationDropdown() {
 	const [isOpen, setIsOpen] = useState(false)
-	const { unreadCount, refresh } = useInbox()
+
+	// Check if SDK is configured
+	const platformContext = useContext(PlatformContext)
+	const isConfigured = Boolean(platformContext?.appId && platformContext?.publishableKey)
 
 	const toggle = useCallback(() => {
 		setIsOpen((prev) => !prev)
@@ -732,8 +761,7 @@ export function useNotificationDropdown() {
 
 	const open = useCallback(() => {
 		setIsOpen(true)
-		refresh() // Refresh when opening
-	}, [refresh])
+	}, [])
 
 	const close = useCallback(() => {
 		setIsOpen(false)
@@ -744,6 +772,6 @@ export function useNotificationDropdown() {
 		toggle,
 		open,
 		close,
-		unreadCount,
+		isConfigured,
 	}
 }
