@@ -1,9 +1,14 @@
 'use client'
 
 import * as SelectPrimitive from '@radix-ui/react-select'
+import { motion } from 'framer-motion'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { forwardRef } from 'react'
+import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
+
+// Create motion-enhanced div
+const MotionDiv = motion.create('div')
 
 const Select = SelectPrimitive.Root
 const SelectGroup = SelectPrimitive.Group
@@ -70,7 +75,6 @@ const SelectContent = forwardRef<
 			ref={ref}
 			className={cn(
 				'relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-lg border bg-card text-card-foreground shadow-lg',
-				'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
 				position === 'popper' &&
 					'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
 				className,
@@ -78,17 +82,23 @@ const SelectContent = forwardRef<
 			position={position}
 			{...props}
 		>
-			<SelectScrollUpButton />
-			<SelectPrimitive.Viewport
-				className={cn(
-					'p-1',
-					position === 'popper' &&
-						'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
-				)}
+			<MotionDiv
+				initial={{ opacity: 0, scale: 0.95, y: -4 }}
+				animate={{ opacity: 1, scale: 1, y: 0 }}
+				transition={{ duration: duration.fast, ease: easing.easeOut }}
 			>
-				{children}
-			</SelectPrimitive.Viewport>
-			<SelectScrollDownButton />
+				<SelectScrollUpButton />
+				<SelectPrimitive.Viewport
+					className={cn(
+						'p-1',
+						position === 'popper' &&
+							'h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]',
+					)}
+				>
+					{children}
+				</SelectPrimitive.Viewport>
+				<SelectScrollDownButton />
+			</MotionDiv>
 		</SelectPrimitive.Content>
 	</SelectPrimitive.Portal>
 ))
