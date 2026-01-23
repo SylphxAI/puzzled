@@ -759,6 +759,311 @@ export async function getConsentTypes(options: GetConsentTypesOptions): Promise<
 	}
 }
 
+// ============================================================================
+// Feature Flags (Server-Side)
+// ============================================================================
+
+/** Feature flag definition for SSR */
+export interface FeatureFlagDefinition {
+	key: string
+	name: string
+	description: string | null
+	enabled: boolean
+	rolloutPercentage: number
+	targetPremiumOnly: boolean
+	targetAdminOnly: boolean
+}
+
+/** Options for fetching feature flags server-side */
+export interface GetFeatureFlagsOptions {
+	appId: string
+	appSecret: string
+	platformUrl?: string
+}
+
+/** Cache for feature flags (per app) */
+const featureFlagsCache: Map<string, { flags: FeatureFlagDefinition[]; expiresAt: number }> = new Map()
+
+/**
+ * Get feature flag definitions for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 1 minute (flags can change more frequently than config).
+ *
+ * Note: This returns flag definitions. Evaluation (rollout, targeting) happens
+ * client-side using the LocalEvaluator with user context.
+ *
+ * @example
+ * ```tsx
+ * // app/layout.tsx (Server Component)
+ * import { getFeatureFlags } from '@sylphx/sdk/server'
+ *
+ * export default async function RootLayout({ children }) {
+ *   const flags = await getFeatureFlags({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *   })
+ *
+ *   return (
+ *     <html>
+ *       <body>
+ *         <FeatureFlagsProvider initialFlags={flags}>
+ *           {children}
+ *         </FeatureFlagsProvider>
+ *       </body>
+ *     </html>
+ *   )
+ * }
+ * ```
+ */
+export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<FeatureFlagDefinition[]> {
+	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+	const cacheKey = `flags:${platformUrl}:${appId}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = featureFlagsCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.flags
+	}
+
+	try {
+		const response = await fetch(`${platformUrl}/api/sdk/flags`, {
+			headers: {
+				'x-app-id': appId,
+				'x-app-secret': appSecret,
+			},
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch feature flags:', response.status)
+			return []
+		}
+
+		const data = await response.json() as { data: FeatureFlagDefinition[] }
+		const flags = data.data || []
+
+		// Cache for 1 minute (flags can change more frequently)
+		featureFlagsCache.set(cacheKey, {
+			flags,
+			expiresAt: now + 60 * 1000,
+		})
+
+		return flags
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch feature flags:', error)
+		return []
+	}
+}
+
+// ============================================================================
+// Referral Leaderboard (Server-Side)
+// ============================================================================
+
+/** Referral leaderboard entry */
+export interface ReferralLeaderboardEntry {
+	rank: number
+	userId: string
+	name: string
+	completedReferrals: number
+	isCurrentUser: boolean
+}
+
+/** Referral leaderboard result */
+export interface ReferralLeaderboardResult {
+	entries: ReferralLeaderboardEntry[]
+	total: number
+	period: 'all' | 'month' | 'week'
+}
+
+/** Options for fetching referral leaderboard server-side */
+export interface GetReferralLeaderboardOptions {
+	appId: string
+	appSecret: string
+	platformUrl?: string
+	/** Number of entries to fetch (default: 10, max: 100) */
+	limit?: number
+	/** Time period for leaderboard (default: 'all') */
+	period?: 'all' | 'month' | 'week'
+}
+
+/** Cache for referral leaderboard (per app + period) */
+const referralLeaderboardCache: Map<string, { data: ReferralLeaderboardResult; expiresAt: number }> = new Map()
+
+/**
+ * Get referral leaderboard for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 2 minutes.
+ *
+ * @example
+ * ```tsx
+ * // app/referrals/page.tsx (Server Component)
+ * import { getReferralLeaderboard } from '@sylphx/sdk/server'
+ * import { ReferralLeaderboard } from './referral-leaderboard'
+ *
+ * export default async function ReferralsPage() {
+ *   const leaderboard = await getReferralLeaderboard({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     limit: 10,
+ *     period: 'month',
+ *   })
+ *
+ *   return <ReferralLeaderboard initialData={leaderboard} />
+ * }
+ * ```
+ */
+export async function getReferralLeaderboard(options: GetReferralLeaderboardOptions): Promise<ReferralLeaderboardResult> {
+	const { appId, appSecret, platformUrl = 'https://sylphx.com', limit = 10, period = 'all' } = options
+	const cacheKey = `referral-leaderboard:${platformUrl}:${appId}:${period}:${limit}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = referralLeaderboardCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.data
+	}
+
+	try {
+		const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
+		url.searchParams.set('limit', String(limit))
+		url.searchParams.set('period', period)
+
+		const response = await fetch(url.toString(), {
+			headers: {
+				'x-app-id': appId,
+				'x-app-secret': appSecret,
+			},
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch referral leaderboard:', response.status)
+			return { entries: [], total: 0, period }
+		}
+
+		const data = await response.json() as { data: ReferralLeaderboardResult }
+		const result = data.data || { entries: [], total: 0, period }
+
+		// Cache for 2 minutes
+		referralLeaderboardCache.set(cacheKey, {
+			data: result,
+			expiresAt: now + 2 * 60 * 1000,
+		})
+
+		return result
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch referral leaderboard:', error)
+		return { entries: [], total: 0, period }
+	}
+}
+
+// ============================================================================
+// Engagement Leaderboard (Server-Side)
+// ============================================================================
+
+/** Engagement leaderboard entry */
+export interface EngagementLeaderboardEntry {
+	rank: number
+	userId: string
+	name: string
+	score: number
+	isCurrentUser: boolean
+}
+
+/** Engagement leaderboard result */
+export interface EngagementLeaderboardResult {
+	leaderboardId: string
+	entries: EngagementLeaderboardEntry[]
+	period: string
+	resetTime: string | null
+	userEntry: EngagementLeaderboardEntry | null
+}
+
+/** Options for fetching engagement leaderboard server-side */
+export interface GetEngagementLeaderboardOptions {
+	appId: string
+	appSecret: string
+	leaderboardId: string
+	platformUrl?: string
+	/** Number of entries to fetch (default: 10, max: 100) */
+	limit?: number
+}
+
+/** Cache for engagement leaderboards (per app + leaderboard) */
+const engagementLeaderboardCache: Map<string, { data: EngagementLeaderboardResult; expiresAt: number }> = new Map()
+
+/**
+ * Get engagement leaderboard for an app (server-side)
+ *
+ * Use this in Server Components to avoid client-side loading states.
+ * Results are cached for 2 minutes.
+ *
+ * @example
+ * ```tsx
+ * // app/leaderboard/page.tsx (Server Component)
+ * import { getEngagementLeaderboard } from '@sylphx/sdk/server'
+ * import { Leaderboard } from './leaderboard'
+ *
+ * export default async function LeaderboardPage() {
+ *   const leaderboard = await getEngagementLeaderboard({
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     leaderboardId: 'high-scores',
+ *     limit: 20,
+ *   })
+ *
+ *   return <Leaderboard initialData={leaderboard} />
+ * }
+ * ```
+ */
+export async function getEngagementLeaderboard(options: GetEngagementLeaderboardOptions): Promise<EngagementLeaderboardResult> {
+	const { appId, appSecret, leaderboardId, platformUrl = 'https://sylphx.com', limit = 10 } = options
+	const cacheKey = `engagement-leaderboard:${platformUrl}:${appId}:${leaderboardId}:${limit}`
+	const now = Date.now()
+
+	// Check cache
+	const cached = engagementLeaderboardCache.get(cacheKey)
+	if (cached && cached.expiresAt > now) {
+		return cached.data
+	}
+
+	try {
+		const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
+		url.searchParams.set('limit', String(limit))
+
+		const response = await fetch(url.toString(), {
+			headers: {
+				'x-app-id': appId,
+				'x-app-secret': appSecret,
+			},
+			cache: 'force-cache',
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn('[Sylphx] Failed to fetch engagement leaderboard:', response.status)
+			return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
+		}
+
+		const data = await response.json() as { data: EngagementLeaderboardResult }
+		const result = data.data || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
+
+		// Cache for 2 minutes
+		engagementLeaderboardCache.set(cacheKey, {
+			data: result,
+			expiresAt: now + 2 * 60 * 1000,
+		})
+
+		return result
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch engagement leaderboard:', error)
+		return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
+	}
+}
+
 // AI Client
 export { createAI, getAI } from './ai'
 export type {
