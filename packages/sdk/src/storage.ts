@@ -23,6 +23,16 @@ export interface FileUploadOptions {
 	userId?: string
 	/** Progress callback */
 	onProgress?: (event: UploadProgressEvent) => void
+	/**
+	 * Enable multipart upload for large files.
+	 * - `true`: Always use multipart upload
+	 * - `false`: Never use multipart upload
+	 * - `'auto'` (default): Auto-enable for files > 5MB
+	 *
+	 * Multipart uploads support files up to 5TB with better
+	 * reliability for large files.
+	 */
+	multipart?: boolean | 'auto'
 }
 
 
@@ -43,6 +53,23 @@ export interface FileInfo {
  * Upload a file to storage
  *
  * Uses client-side upload for optimal performance (direct to CDN).
+ *
+ * ## File Size Limits
+ * - Standard uploads: up to 500MB
+ * - For files > 500MB: use React hooks with `multipart: true` (supports up to 5TB)
+ *
+ * ## Multipart Uploads
+ * For large files (> 5MB), multipart uploads provide:
+ * - Better reliability with chunked uploads
+ * - Resumable upload capability
+ * - Progress tracking per chunk
+ *
+ * Use the `multipart` option or React hooks for large files:
+ * ```typescript
+ * // React hooks (recommended for large files)
+ * const { upload } = useStorage()
+ * await upload(file, { multipart: true })
+ * ```
  *
  * @example
  * ```typescript

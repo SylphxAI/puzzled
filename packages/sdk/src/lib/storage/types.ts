@@ -34,6 +34,16 @@ export interface UploadOptions {
 	contentType?: string
 	/** Custom metadata */
 	metadata?: Record<string, string>
+	/**
+	 * Enable multipart upload for large files.
+	 * - `true`: Always use multipart upload
+	 * - `false`: Never use multipart upload
+	 * - `'auto'` (default): Auto-enable for files > 5MB
+	 *
+	 * Multipart uploads support files up to 5TB and provide
+	 * better reliability for large files with resumable uploads.
+	 */
+	multipart?: boolean | 'auto'
 }
 
 export interface UploadProgressEvent {

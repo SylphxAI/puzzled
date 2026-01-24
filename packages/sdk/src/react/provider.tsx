@@ -2174,13 +2174,24 @@ function SylphxProviderInner({
 	 * - Real progress tracking
 	 * - Edge compatible
 	 */
+	// Multipart threshold: files > 5MB should use multipart upload
+	const MULTIPART_THRESHOLD = 5 * 1024 * 1024
+
 	const storageValue: StorageContextValue = useMemo(
 		() => ({
 			upload: async (file: File, options?: UploadOptions) => {
 				const blobUpload = await getBlobUpload()
+
+				// Determine if multipart should be used
+				// Default is 'auto' which enables multipart for files > 5MB
+				const shouldUseMultipart =
+					options?.multipart === true ||
+					(options?.multipart !== false && file.size > MULTIPART_THRESHOLD)
+
 				const blob = await blobUpload(file.name, file, {
 					access: 'public',
 					handleUploadUrl: `${platformUrl}/api/storage/upload`,
+					multipart: shouldUseMultipart,
 					clientPayload: JSON.stringify({
 						appId,
 						userId: authState.user?.id,

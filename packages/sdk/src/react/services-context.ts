@@ -423,6 +423,16 @@ export interface UploadProgressEvent {
 export interface UploadOptions {
 	path?: string
 	onProgress?: (event: UploadProgressEvent) => void
+	/**
+	 * Enable multipart upload for large files.
+	 * - `true`: Always use multipart upload
+	 * - `false`: Never use multipart upload
+	 * - `'auto'` (default): Auto-enable for files > 5MB
+	 *
+	 * Multipart uploads support files up to 5TB with better
+	 * reliability for large files.
+	 */
+	multipart?: boolean | 'auto'
 }
 
 export interface StorageContextValue {
