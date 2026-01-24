@@ -1,0 +1,19 @@
+{
+  "free": "免费",
+  "premium": "Premium",
+  "annual": "年费",
+  "perMonth": "/月",
+  "perYear": "/年",
+  "subscribe": "订阅",
+  "currentPlan": "当前方案",
+  "upgrade": "升级",
+  "features": {
+    "freeGame": "每日 1 款免费游戏",
+    "allGames": "所有游戏无限玩",
+    "noAds": "无广告",
+    "stats": "完整统计",
+    "leaderboard": "排行榜",
+    "push": "推送通知",
+    "earlyAccess": "新游戏抢先玩"
+  }
+}

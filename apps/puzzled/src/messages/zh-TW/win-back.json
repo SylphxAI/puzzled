@@ -1,0 +1,34 @@
+{
+  "day7": {
+    "subject": "我們想念您！",
+    "title": "我們想念您！",
+    "body": "我們注意到您有一段時間沒有玩了。您的謎題正在等您！",
+    "whatYoureMissing": "您錯過的內容：",
+    "cta": "立即遊戲"
+  },
+  "day14": {
+    "subject": "Puzzled 有新內容了！",
+    "title": "新謎題在等您！",
+    "body": "已經有幾週沒見到您了。我們一直在為您建立新挑戰！",
+    "whatsNew": "新內容：",
+    "cta": "查看新內容"
+  },
+  "day30": {
+    "subject": "Premium 5折優惠，歡迎回來！",
+    "title": "專為您準備的特別優惠！",
+    "offer": "Premium 5折優惠",
+    "subtitle": "我們希望您回來",
+    "body": "我們很想念您作為 Puzzled 社群的一員！作為對尊貴會員的特別感謝，我們為您提供 Premium 首月5折優惠。",
+    "premiumBenefits": "Premium 福利：",
+    "fullArchive": "完整謎題存檔 - 隨時存取過去的每日謎題",
+    "streakProtection": "連勝凍結保護 - 永不丟失進度",
+    "advancedStats": "進階統計 - 追蹤您的改進",
+    "leaderboardAccess": "排行榜存取 - 與其他玩家競爭",
+    "adFree": "無廣告體驗 - 純粹、不間斷的遊戲體驗",
+    "discountCode": "您的專屬折扣碼：",
+    "expiresWarning": "此優惠將在7天後過期！",
+    "cta": "領取5折優惠",
+    "noObligations": "無任何義務。隨時取消。",
+    "unsubscribe": "取消訂閱召回郵件"
+  }
+}

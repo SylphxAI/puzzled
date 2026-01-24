@@ -1,0 +1,21 @@
+{
+  "free": "Free",
+  "premium": "Premium",
+  "annual": "Annual",
+  "perMonth": "/month",
+  "perYear": "/year",
+  "subscribe": "Subscribe",
+  "currentPlan": "Current Plan",
+  "upgrade": "Upgrade",
+  "features": {
+    "freeGame": "1 free game daily",
+    "allGames": "All games unlimited",
+    "noAds": "No ads",
+    "stats": "Full statistics",
+    "leaderboard": "Leaderboard access",
+    "push": "Push notifications",
+    "earlyAccess": "Early access to new games"
+  },
+  "portalError": "Unable to open billing portal",
+  "portalErrorDescription": "Please try again or contact support if the problem persists."
+}

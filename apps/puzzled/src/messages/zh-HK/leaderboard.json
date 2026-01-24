@@ -1,0 +1,13 @@
+{
+  "streak": "連勝",
+  "score": "分數",
+  "wins": "勝場",
+  "wantToCompete": "想要參與競爭？",
+  "premiumPrompt": "登入並升級 Premium 即可出現在排行榜上！",
+  "period": {
+    "today": "今日",
+    "week": "本週",
+    "all": "全部"
+  },
+  "noData": "尚無玩家，成為第一個吧！"
+}

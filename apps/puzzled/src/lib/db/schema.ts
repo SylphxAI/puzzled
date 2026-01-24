@@ -154,6 +154,10 @@ export const userPreferences = pgTable(
 		/** Compact mode for dense information display */
 		compactMode: boolean('compact_mode').default(false).notNull(),
 
+		// Language Preference
+		/** User's preferred locale (e.g., 'en-US', 'zh-HK') */
+		locale: text('locale').default('en-US'),
+
 		// App-Specific Profile
 		/** Optional in-app username (distinct from platform name) */
 		username: text('username').unique(),

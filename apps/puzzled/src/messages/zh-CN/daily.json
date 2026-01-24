@@ -1,0 +1,19 @@
+{
+  "nextPuzzle": "下个谜题",
+  "hours": "小时",
+  "minutes": "分钟",
+  "seconds": "秒",
+  "todaysProgress": "今日进度",
+  "completed": "已完成",
+  "allCompleteMessage": "太棒了！你已完成今日所有游戏！",
+  "puzzleNumber": "谜题 #{number}",
+  "superStreak": "超级连胜",
+  "superStreakDesc": "每日完成所有游戏",
+  "alreadyCompleted": "已完成！",
+  "youSolvedTodays": "你已解开今日的 {game}",
+  "youTriedTodays": "你已尝试过今日的 {game}",
+  "comeBackTomorrow": "新谜题将于 UTC 午夜解锁",
+  "wantMore": "想继续玩？",
+  "upgrade": "升级",
+  "backToGames": "返回游戏列表"
+}

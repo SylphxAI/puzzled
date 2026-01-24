@@ -1,0 +1,12 @@
+{
+  "title": "統計資料",
+  "gamesPlayed": "遊戲次數",
+  "winRate": "勝率",
+  "currentStreak": "目前連勝",
+  "maxStreak": "最高連勝",
+  "guessDistribution": "猜測分佈",
+  "avgScore": "平均分數",
+  "best": "最佳",
+  "accuracy": "準確率",
+  "signInPrompt": "登入以儲存進度並參與排行榜競爭！"
+}

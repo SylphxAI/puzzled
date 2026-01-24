@@ -72,7 +72,7 @@ export default async function PreferencesPage({ params }: Props) {
 						<p className="mb-4 text-sm text-muted-foreground">
 							{t('preferences.language.description')}
 						</p>
-						<LanguageSwitcher />
+						<LanguageSwitcher variant="button" />
 					</div>
 				</div>
 			</div>

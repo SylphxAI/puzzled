@@ -1,0 +1,21 @@
+{
+  "keepStreak": "保持连胜！",
+  "streakAtRisk": "连胜记录危险！",
+  "legendaryAtRisk": "传奇连胜危险！",
+  "playToMaintain": "今天玩一局以保持你的 {streak} 天连胜",
+  "playNow": "立即游戏",
+  "currentStreak": "当前连胜",
+  "bestStreak": "最佳连胜",
+  "days": "天",
+  "daysToGo": "天后达成",
+  "nextMilestone": "下个里程碑",
+  "freezes": "冻结次数",
+  "useFreeze": "使用冻结",
+  "playToday": "今日游戏",
+  "dismiss": "关闭",
+  "emergency": "紧急！还剩 {time} 来拯救你的 {streak} 天连胜！",
+  "emergencyTitle": "紧急！",
+  "critical": "你的 {streak} 天连胜将在 {time} 后结束！",
+  "criticalTitle": "连胜危急！",
+  "elevated": "别丢失你的 {streak} 天连胜！还剩 {time}"
+}

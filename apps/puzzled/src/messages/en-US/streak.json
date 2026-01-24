@@ -1,0 +1,21 @@
+{
+  "keepStreak": "Keep your streak going!",
+  "streakAtRisk": "Streak at risk!",
+  "legendaryAtRisk": "Legendary streak at risk!",
+  "playToMaintain": "Play today to keep your {streak}-day streak alive",
+  "playNow": "Play Now",
+  "currentStreak": "Current Streak",
+  "bestStreak": "Best Streak",
+  "days": "days",
+  "daysToGo": "days to go",
+  "nextMilestone": "Next milestone",
+  "freezes": "Freezes",
+  "useFreeze": "Use Freeze",
+  "playToday": "Play today",
+  "dismiss": "Dismiss",
+  "emergency": "EMERGENCY! {time} to save your {streak}-day streak!",
+  "emergencyTitle": "EMERGENCY!",
+  "critical": "Your {streak}-day streak expires in {time}!",
+  "criticalTitle": "Streak Critical!",
+  "elevated": "Don't lose your {streak}-day streak! {time} remaining"
+}

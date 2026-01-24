@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { type Locale, defaultLocale, isValidLocale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 
 // Next.js 16: proxy.ts replaces middleware.ts
@@ -15,15 +16,15 @@ const SYLPHX_COOKIE_NAMES = {
 // Routes that require authentication (without locale prefix)
 const PROTECTED_ROUTES = ['/dashboard', '/settings']
 
+// Locale pattern for URL matching
+const LOCALE_PATTERN = new RegExp(`^/(${locales.join('|')})/`)
+
 /**
  * Check if a path matches a route pattern (with or without locale prefix)
  */
 function matchesRoute(pathname: string, routes: string[]): boolean {
 	// Strip locale prefix if present for matching
-	const pathWithoutLocale = pathname.replace(
-		/^\/(zh-Hans|zh-Hant|es|ja|ko|de|fr|pt-BR|it|nl|pl|tr|id|th|vi)\//,
-		'/'
-	)
+	const pathWithoutLocale = pathname.replace(LOCALE_PATTERN, '/')
 	const normalizedPath = pathWithoutLocale === '' ? '/' : pathWithoutLocale
 
 	return routes.some((route) => {
@@ -35,6 +36,17 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 		}
 		return false
 	})
+}
+
+/**
+ * Extract locale from URL path
+ */
+function getLocaleFromPath(pathname: string): Locale | null {
+	const match = pathname.match(LOCALE_PATTERN)
+	if (match?.[1] && isValidLocale(match[1])) {
+		return match[1] as Locale
+	}
+	return null
 }
 
 /**
@@ -92,23 +104,40 @@ function isAuthenticated(request: NextRequest): boolean {
 
 /**
  * Proxy function that:
- * 1. Permanently redirects /en/* to non-prefixed equivalents (English is default)
- * 2. Handles i18n routing for all other locales
- * 3. Protects routes when Sylphx Platform is enabled
+ * 1. Permanently redirects /en-US/* to non-prefixed equivalents (en-US is default)
+ * 2. Respects user locale preference from NEXT_LOCALE cookie
+ * 3. Handles i18n routing for all other locales
+ * 4. Protects routes when Sylphx Platform is enabled
  */
 export function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl
 
-	// Redirect /en/* to non-prefixed equivalent (English is default, non-prefixed)
-	// Per spec: "/en/* must not exist; permanently redirect to non-prefixed equivalent"
-	if (pathname.startsWith('/en/') || pathname === '/en') {
-		const newPathname = pathname === '/en' ? '/' : pathname.replace(/^\/en/, '')
+	// Redirect /en-US/* to non-prefixed equivalent (en-US is default, non-prefixed)
+	// Per spec: "/en-US/* must not exist; permanently redirect to non-prefixed equivalent"
+	if (pathname.startsWith('/en-US/') || pathname === '/en-US') {
+		const newPathname = pathname === '/en-US' ? '/' : pathname.replace(/^\/en-US/, '')
 		const url = request.nextUrl.clone()
 		url.pathname = newPathname
 		return NextResponse.redirect(url, 308) // 308 = Permanent Redirect
 	}
 
-	// Apply i18n middleware first
+	// Check for user locale preference in cookie
+	const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+
+	// If user has a preferred locale and is on a non-prefixed path (default locale),
+	// redirect to their preferred locale
+	if (cookieLocale && isValidLocale(cookieLocale) && cookieLocale !== defaultLocale) {
+		const pathLocale = getLocaleFromPath(pathname)
+
+		// If no locale in path (using default en-US) and user prefers different locale
+		if (!pathLocale) {
+			const url = request.nextUrl.clone()
+			url.pathname = `/${cookieLocale}${pathname}`
+			return NextResponse.redirect(url)
+		}
+	}
+
+	// Apply i18n middleware
 	const intlResponse = intlMiddleware(request)
 
 	// Check if Sylphx Platform is configured

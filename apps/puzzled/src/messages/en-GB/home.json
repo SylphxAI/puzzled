@@ -1,0 +1,35 @@
+{
+  "metaTitle": "Daily Brain Games - Word Guess, Word Groups & Quiz",
+  "metaDescription": "Play free daily puzzles including word guessing, word grouping, and trivia quiz. Track your streak, compete on leaderboards, and challenge your mind every day.",
+  "welcome": "Welcome to Puzzled",
+  "tagline": "Daily puzzles to challenge your mind",
+  "todaysPuzzles": "Today's Puzzles",
+  "allGames": "All Games",
+  "yourStats": "Your Stats",
+  "streak": "Current Streak",
+  "playersToday": "players today",
+  "playersCompletedToday": "players completed today",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Late night puzzling?",
+    "default": "Ready to play"
+  },
+  "streakMessage": {
+    "none": "Start your streak today!",
+    "low": "Keep it going!",
+    "medium": "You're on fire!",
+    "high": "Incredible streak!",
+    "legend": "Legendary status!"
+  },
+  "dailyChallenge": "Daily Challenge",
+  "completedAll": "All done for today!",
+  "comeBackTomorrow": "Come back tomorrow for fresh puzzles",
+  "gamesPlayed": "Played",
+  "bestStreak": "Best",
+  "streakMilestone": "{days} Day Streak!",
+  "streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
+  "unlockAll": "Unlock All Games",
+  "premiumBenefits": "Play unlimited puzzles, protect your streak & more"
+}

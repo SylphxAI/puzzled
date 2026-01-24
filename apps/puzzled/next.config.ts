@@ -20,9 +20,47 @@ const nextConfig: NextConfig = {
 		ignoreBuildErrors: true,
 	},
 
-	// Redirects for renamed games (old URLs → new URLs)
+	// Redirects for renamed games and legacy locales
 	async redirects() {
 		return [
+			// Legacy locale redirects (old BCP-47 → new regional locales)
+			// Redirect zh-Hans (Simplified Chinese) → zh-CN
+			{ source: '/zh-Hans', destination: '/zh-CN', permanent: true },
+			{ source: '/zh-Hans/:path*', destination: '/zh-CN/:path*', permanent: true },
+			// Redirect zh-Hant (Traditional Chinese) → zh-HK (Hong Kong as default)
+			{ source: '/zh-Hant', destination: '/zh-HK', permanent: true },
+			{ source: '/zh-Hant/:path*', destination: '/zh-HK/:path*', permanent: true },
+			// Redirect old single-language locales → default (en-US, no prefix)
+			{ source: '/en', destination: '/', permanent: true },
+			{ source: '/en/:path*', destination: '/:path*', permanent: true },
+			// Redirect removed locales → default (users can switch in settings)
+			{ source: '/es', destination: '/', permanent: false },
+			{ source: '/es/:path*', destination: '/:path*', permanent: false },
+			{ source: '/ja', destination: '/', permanent: false },
+			{ source: '/ja/:path*', destination: '/:path*', permanent: false },
+			{ source: '/ko', destination: '/', permanent: false },
+			{ source: '/ko/:path*', destination: '/:path*', permanent: false },
+			{ source: '/de', destination: '/', permanent: false },
+			{ source: '/de/:path*', destination: '/:path*', permanent: false },
+			{ source: '/fr', destination: '/', permanent: false },
+			{ source: '/fr/:path*', destination: '/:path*', permanent: false },
+			{ source: '/pt-BR', destination: '/', permanent: false },
+			{ source: '/pt-BR/:path*', destination: '/:path*', permanent: false },
+			{ source: '/it', destination: '/', permanent: false },
+			{ source: '/it/:path*', destination: '/:path*', permanent: false },
+			{ source: '/nl', destination: '/', permanent: false },
+			{ source: '/nl/:path*', destination: '/:path*', permanent: false },
+			{ source: '/pl', destination: '/', permanent: false },
+			{ source: '/pl/:path*', destination: '/:path*', permanent: false },
+			{ source: '/tr', destination: '/', permanent: false },
+			{ source: '/tr/:path*', destination: '/:path*', permanent: false },
+			{ source: '/id', destination: '/', permanent: false },
+			{ source: '/id/:path*', destination: '/:path*', permanent: false },
+			{ source: '/th', destination: '/', permanent: false },
+			{ source: '/th/:path*', destination: '/:path*', permanent: false },
+			{ source: '/vi', destination: '/', permanent: false },
+			{ source: '/vi/:path*', destination: '/:path*', permanent: false },
+
 			// Old game slugs → new slugs (permanent redirects)
 			{ source: '/games/wordle', destination: '/games/word-guess', permanent: true },
 			{ source: '/games/connections', destination: '/games/word-groups', permanent: true },

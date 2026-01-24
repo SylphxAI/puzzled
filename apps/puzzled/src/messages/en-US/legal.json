@@ -1,0 +1,118 @@
+{
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last Updated",
+    "sections": {
+      "intro": {
+        "title": "Introduction",
+        "content": "Puzzled (\"we\", \"us\", or \"our\") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our services."
+      },
+      "dataCollection": {
+        "title": "Data We Collect",
+        "content": "We collect the following types of information:",
+        "items": {
+          "account": "Account information: name, email address, and profile picture",
+          "game": "Game data: scores, statistics, streaks, and game history",
+          "payment": "Payment information: processed securely through Stripe",
+          "technical": "Technical data: IP address, browser type, and device information"
+        }
+      },
+      "dataUse": {
+        "title": "How We Use Your Data",
+        "content": "We use your data to:",
+        "items": {
+          "service": "Provide and maintain our gaming services",
+          "improve": "Improve and personalize your experience",
+          "communicate": "Send important updates and notifications",
+          "legal": "Comply with legal obligations"
+        }
+      },
+      "thirdParty": {
+        "title": "Third-Party Services",
+        "content": "We work with trusted third-party services:",
+        "stripe": "Payment processing",
+        "google": "Authentication",
+        "resend": "Email delivery"
+      },
+      "cookies": {
+        "title": "Cookies",
+        "content": "We use essential cookies to maintain your session and preferences. By using our service, you consent to our use of cookies."
+      },
+      "rights": {
+        "title": "Your Rights",
+        "content": "You have the right to:",
+        "items": {
+          "access": "Access your personal data",
+          "correct": "Correct inaccurate data",
+          "delete": "Request deletion of your data",
+          "export": "Export your data"
+        }
+      },
+      "contact": {
+        "title": "Contact Us",
+        "content": "For privacy-related inquiries, contact us at:"
+      }
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last Updated",
+    "sections": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "content": "By accessing or using Puzzled, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services."
+      },
+      "service": {
+        "title": "Our Service",
+        "content": "Puzzled provides daily puzzle games and challenges. We reserve the right to modify, suspend, or discontinue any part of our service at any time."
+      },
+      "accounts": {
+        "title": "User Accounts",
+        "content": "When creating an account, you agree to:",
+        "items": {
+          "accurate": "Provide accurate and complete information",
+          "secure": "Keep your login credentials secure",
+          "responsible": "Be responsible for all activity under your account"
+        }
+      },
+      "subscription": {
+        "title": "Subscriptions & Payments",
+        "content": "Premium subscriptions are billed according to your chosen plan:",
+        "items": {
+          "billing": "Subscriptions are billed monthly or annually",
+          "cancel": "You may cancel at any time; access continues until the end of the billing period",
+          "refund": "Refunds are provided at our discretion within 7 days of purchase"
+        }
+      },
+      "conduct": {
+        "title": "User Conduct",
+        "content": "You agree to:",
+        "items": {
+          "legal": "Use the service only for lawful purposes",
+          "respect": "Respect other users and our community",
+          "noCheat": "Not use cheats, exploits, or automated tools"
+        }
+      },
+      "ip": {
+        "title": "Intellectual Property",
+        "content": "All games, content, and materials on Puzzled are our property or licensed to us. You may not copy, modify, or distribute any content without permission."
+      },
+      "disclaimer": {
+        "title": "Disclaimer",
+        "content": "Our service is provided \"as is\" without warranties of any kind. We do not guarantee uninterrupted or error-free service."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "content": "To the maximum extent permitted by law, Puzzled shall not be liable for any indirect, incidental, or consequential damages arising from your use of our service."
+      },
+      "changes": {
+        "title": "Changes to Terms",
+        "content": "We may update these terms from time to time. Continued use of our service after changes constitutes acceptance of the new terms."
+      },
+      "contact": {
+        "title": "Contact",
+        "content": "For questions about these terms, contact us at:"
+      }
+    }
+  }
+}

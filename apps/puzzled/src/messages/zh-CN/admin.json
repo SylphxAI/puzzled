@@ -1,0 +1,200 @@
+{
+  "title": "管理面板",
+  "sidebar": {
+    "dashboard": "仪表板",
+    "plansAndPricing": "方案与定价",
+    "users": "用户",
+    "games": "游戏",
+    "analytics": "分析",
+    "settings": "设置",
+    "backToApp": "返回应用",
+    "dlq": "死信队列",
+    "auditLogs": "审计日志",
+    "experiments": "实验"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "subtitle": "平台概览",
+    "totalUsers": "总用户数",
+    "premiumUsers": "Premium 用户",
+    "gameSessions": "游戏会话",
+    "estMRR": "预估 MRR",
+    "recentUsers": "近期用户",
+    "noUsersYet": "暂无用户",
+    "unnamed": "未命名"
+  },
+  "users": {
+    "title": "用户",
+    "subtitle": "管理用户账户和权限",
+    "totalUsers": "总用户数",
+    "admins": "管理员",
+    "premium": "Premium",
+    "verified": "已验证",
+    "searchPlaceholder": "搜索用户...",
+    "tableHeaders": {
+      "user": "用户",
+      "role": "角色",
+      "plan": "方案",
+      "verified": "已验证",
+      "joined": "加入时间",
+      "actions": "操作"
+    },
+    "noUsersFound": "未找到用户",
+    "makeAdmin": "设为管理员",
+    "removeAdmin": "移除管理员",
+    "free": "免费"
+  },
+  "plans": {
+    "title": "方案与定价",
+    "subtitle": "管理订阅方案并与 Stripe 同步",
+    "seedDefault": "生成默认方案",
+    "syncAll": "全部同步至 Stripe",
+    "noPlansYet": "暂无方案",
+    "noPlansHint": "点击「生成默认方案」创建免费和 Premium 方案",
+    "active": "启用",
+    "inactive": "停用",
+    "stripeSynced": "已同步 Stripe",
+    "syncToStripe": "同步至 Stripe",
+    "slug": "标识符",
+    "description": "描述",
+    "stripeProductId": "Stripe 产品 ID",
+    "features": "功能",
+    "prices": "价格",
+    "notSynced": "未同步"
+  },
+  "games": {
+    "title": "游戏",
+    "subtitle": "管理游戏和每日谜题",
+    "noGamesYet": "暂无游戏",
+    "noGamesHint": "添加到数据库后，游戏将显示在此处"
+  },
+  "dlq": {
+    "title": "死信队列",
+    "subtitle": "监控和管理失败的工作流执行",
+    "stats": {
+      "total": "总计",
+      "pending": "待处理",
+      "retrying": "重试中",
+      "resolved": "已解决",
+      "failed": "已失败"
+    },
+    "table": {
+      "workflow": "工作流",
+      "error": "错误",
+      "retries": "重试次数",
+      "status": "状态",
+      "created": "创建时间",
+      "actions": "操作"
+    },
+    "actions": {
+      "retry": "重试",
+      "resolve": "标记为已解决",
+      "fail": "标记为失败",
+      "delete": "删除",
+      "viewDetails": "查看详情"
+    },
+    "status": {
+      "pending": "待处理",
+      "retrying": "重试中",
+      "resolved": "已解决",
+      "failed": "已失败"
+    },
+    "empty": {
+      "title": "队列中无项目",
+      "description": "失败的工作流执行将显示在此处"
+    },
+    "confirmRetry": "这将触发新的工作流执行。是否继续？",
+    "confirmDelete": "这将永久删除此项目。是否继续？",
+    "confirmRetryTitle": "重试工作流",
+    "confirmRetryDescription": "这将触发新的工作流执行尝试。工作流将使用其原始数据重新处理。",
+    "confirmDeleteTitle": "删除项目",
+    "confirmDeleteDescription": "这将永久删除此死信队列项目。此操作无法撤消。",
+    "retrySuccess": "重试已成功触发",
+    "forceRetry": "强制重试（绕过最大重试次数）"
+  },
+  "auditLogs": {
+    "title": "审计日志",
+    "subtitle": "追踪所有管理操作和系统事件",
+    "loading": "正在加载审计日志...",
+    "stats": {
+      "totalLogs": "总日志数",
+      "onThisPage": "本页",
+      "totalPages": "总页数",
+      "adminActions": "管理操作"
+    },
+    "table": {
+      "timestamp": "时间戳",
+      "action": "操作",
+      "actor": "执行者",
+      "resource": "资源",
+      "ip": "IP 地址"
+    },
+    "actions": {
+      "create": "创建",
+      "update": "更新",
+      "delete": "删除",
+      "login": "登录",
+      "logout": "登出",
+      "role_change": "角色变更",
+      "subscription_change": "订阅变更",
+      "impersonate_start": "开始模拟",
+      "impersonate_end": "结束模拟",
+      "feature_flag_toggle": "功能标志切换",
+      "admin_action": "管理操作"
+    },
+    "filters": {
+      "searchPlaceholder": "按资源 ID 或 IP 地址搜索...",
+      "action": "操作类型",
+      "allActions": "所有操作",
+      "resourceType": "资源类型",
+      "allResources": "所有资源",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "clearFilters": "清除筛选",
+      "refresh": "刷新"
+    },
+    "details": {
+      "title": "审计日志详情",
+      "subtitle": "关于此事件的完整信息",
+      "notFound": "未找到审计日志",
+      "user": "用户",
+      "actor": "执行者（管理员）",
+      "resource": "资源",
+      "resourceType": "资源类型",
+      "resourceId": "资源 ID",
+      "technical": "技术详情",
+      "ipAddress": "IP 地址",
+      "userAgent": "用户代理",
+      "timestamp": "时间戳",
+      "metadata": "其他元数据"
+    },
+    "empty": {
+      "title": "未找到审计日志",
+      "description": "尝试调整筛选条件或搜索条件"
+    },
+    "pagination": {
+      "showing": "显示第 {from}-{to} 条，共 {total} 条",
+      "previous": "上一页",
+      "next": "下一页",
+      "page": "第 {page} 页，共 {total} 页"
+    }
+  },
+  "experiments": {
+    "title": "A/B 实验",
+    "subtitle": "监控和分析实验结果",
+    "totalExposures": "总曝光次数",
+    "variant": "变体",
+    "exposures": "曝光次数",
+    "conversions": "转化次数",
+    "conversionRate": "转化率",
+    "performance": "性能",
+    "winner": "优胜者",
+    "recommendation": "推荐",
+    "howToUse": {
+      "title": "如何使用实验",
+      "step1": "1. 在 ab-testing.ts 的 EXPERIMENTS 对象中定义实验",
+      "step2": "2. 在 Sylphx Platform 控制台中配置功能标志",
+      "step3": "3. 在组件中使用 useExperiment() 钩子获取变体并自动追踪曝光"
+    }
+  }
+}
