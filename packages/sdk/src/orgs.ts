@@ -6,80 +6,25 @@
  *
  * Uses REST API at /api/sdk/orgs/* for all operations.
  *
- * Note: Types here mirror apps/sylphx/src/lib/orgs/service.ts (SSOT).
- * They must be kept in sync. Duplication is necessary because:
- * - SDK runs in browser (can't import server-only code)
- * - Service layer is server-only
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export interface Organization {
-	id: string
-	name: string
-	slug: string
-	logoUrl: string | null
-	email: string | null
-	billingEmail: string | null
-	createdAt: string
-}
-
-export interface OrganizationMember {
-	id: string
-	userId: string
-	email: string
-	name: string | null
-	image: string | null
-	role: OrgRole
-	joinedAt: string
-}
-
-export interface OrganizationInvitation {
-	id: string
-	email: string
-	role: OrgRole
-	status: 'pending' | 'accepted' | 'expired' | 'revoked'
-	invitedById: string
-	invitedByName: string | null
-	expiresAt: string
-	createdAt: string
-}
-
-export interface OrganizationMembership {
-	role: OrgRole
-	joinedAt: string
-}
-
-export type OrgRole =
-	| 'super_admin'
-	| 'admin'
-	| 'billing'
-	| 'analytics'
-	| 'developer'
-	| 'viewer'
-
-export interface CreateOrgInput {
-	name: string
-	slug?: string
-	email?: string
-}
-
-export interface UpdateOrgInput {
-	name?: string
-	slug?: string
-	logoUrl?: string | null
-	email?: string | null
-	billingEmail?: string | null
-}
-
-export interface InviteMemberInput {
-	email: string
-	role: OrgRole
-}
+export type Organization = components['schemas']['Organization']
+export type OrganizationMember = components['schemas']['OrganizationMember']
+export type OrganizationInvitation = components['schemas']['OrganizationInvitation']
+export type OrganizationMembership = components['schemas']['OrganizationMembership']
+export type OrgRole = components['schemas']['OrgRole']
+export type CreateOrgInput = components['schemas']['CreateOrgRequest']
+export type UpdateOrgInput = components['schemas']['UpdateOrgRequest']
+export type InviteMemberInput = components['schemas']['InviteMemberRequest']
 
 // ============================================================================
 // Organization CRUD
