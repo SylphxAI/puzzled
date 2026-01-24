@@ -5,6 +5,11 @@
  * Each function takes config as the first parameter.
  *
  * Uses REST API at /api/sdk/orgs/* for all operations.
+ *
+ * Note: Types here mirror apps/sylphx/src/lib/orgs/service.ts (SSOT).
+ * They must be kept in sync. Duplication is necessary because:
+ * - SDK runs in browser (can't import server-only code)
+ * - Service layer is server-only
  */
 
 import { type SylphxConfig, callApi } from './config'
