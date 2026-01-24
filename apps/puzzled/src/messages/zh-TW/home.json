@@ -8,5 +8,28 @@
   "yourStats": "你的統計",
   "streak": "連勝紀錄",
   "playersToday": "位玩家今日",
-  "playersCompletedToday": "位玩家已完成今日挑戰"
+  "playersCompletedToday": "位玩家已完成今日挑戰",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Late night puzzling?",
+    "default": "Ready to play"
+  },
+  "streakMessage": {
+    "none": "Start your streak today!",
+    "low": "Keep it going!",
+    "medium": "You're on fire!",
+    "high": "Incredible streak!",
+    "legend": "Legendary status!"
+  },
+  "dailyChallenge": "Daily Challenge",
+  "completedAll": "All done for today!",
+  "comeBackTomorrow": "Come back tomorrow for fresh puzzles",
+  "gamesPlayed": "Played",
+  "bestStreak": "Best",
+  "streakMilestone": "{days} Day Streak!",
+  "streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
+  "unlockAll": "Unlock All Games",
+  "premiumBenefits": "Play unlimited puzzles, protect your streak & more"
 }

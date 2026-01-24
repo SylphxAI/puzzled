@@ -1,6 +1,11 @@
 {
   "title": "推薦好友",
   "description": "邀請朋友，一起贏取獎勵",
+  "inviteFriends": "Invite Friends",
+  "inviteDescription": "Share Puzzled with friends and both earn rewards",
+  "earnRewards": "Earn Streak Freezes",
+  "streakFreezeReward": "Get 2 free streak freezes when a friend joins",
+  "viewReferrals": "View Referrals",
   "yourReferralCode": "您的推薦碼",
   "shareWithFriends": "與朋友分享以賺取獎勵",
   "referralLink": "推薦連結",

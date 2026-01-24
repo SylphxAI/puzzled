@@ -15,5 +15,10 @@
   "comeBackTomorrow": "新謎題將於 UTC 午夜解鎖",
   "wantMore": "想繼續玩？",
   "upgrade": "升級",
-  "backToGames": "返回遊戲列表"
+  "backToGames": "返回遊戲列表",
+  "freeToday": "Free",
+  "tomorrowsFreeGame": "Tomorrow: {game} is free",
+  "unlockWithPremium": "Unlock with Premium",
+  "viewResult": "View Result",
+  "backToHome": "Back to Home"
 }

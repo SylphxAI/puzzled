@@ -9,5 +9,7 @@
     "week": "本週",
     "all": "全部"
   },
-  "noData": "尚無玩家，成為第一個吧！"
+  "noData": "尚無玩家，成為第一個吧！",
+  "yourRank": "Your Rank",
+  "topPlayers": "Top Players"
 }

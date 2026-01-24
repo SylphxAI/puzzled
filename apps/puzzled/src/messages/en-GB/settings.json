@@ -20,7 +20,7 @@
     "privacy": "Privacy",
     "privacyDesc": "Data & visibility",
     "helpText": "Need help with your account?",
-    "helpLink": "Visit Help Center"
+    "helpLink": "Visit Help Centre"
   },
   "search": {
     "placeholder": "Search settings...",
@@ -81,9 +81,9 @@
     "startPlaying": "Start Playing",
     "sections": {
       "identity": "Profile & Identity",
-      "identityDesc": "Customize your public appearance",
+      "identityDesc": "Customise your public appearance",
       "profile": "Profile & Identity",
-      "profileDesc": "Customize your appearance",
+      "profileDesc": "Customise your appearance",
       "security": "Security",
       "securityDesc": "Protect your account",
       "account": "Connected Accounts",
@@ -287,7 +287,7 @@
     "title": "Profile",
     "description": "Manage your public profile and personal information",
     "avatar": "Profile Photo",
-    "avatarDescription": "Upload a photo to personalize your profile",
+    "avatarDescription": "Upload a photo to personalise your profile",
     "avatarUpload": {
       "uploadPhoto": "Upload Photo",
       "uploading": "Uploading... {progress}%",
@@ -685,17 +685,17 @@
   },
   "preferences": {
     "title": "Preferences",
-    "description": "Customize your experience",
+    "description": "Customise your experience",
     "appearance": {
       "title": "Appearance",
-      "description": "Customize how Puzzled looks",
+      "description": "Customise how Puzzled looks",
       "theme": "Theme",
-      "themeDescription": "Choose your color theme",
+      "themeDescription": "Choose your colour theme",
       "light": "Light",
       "dark": "Dark",
       "system": "System",
       "reduceMotion": "Reduce Motion",
-      "reduceMotionDescription": "Minimize animations and transitions",
+      "reduceMotionDescription": "Minimise animations and transitions",
       "compactMode": "Compact Mode",
       "compactModeDescription": "Use a denser layout with smaller spacing"
     },
@@ -730,7 +730,7 @@
     "description": "Manage how and when you receive updates",
     "loadError": "Failed to load notification preferences",
     "overview": {
-      "title": "Notification Center",
+      "title": "Notification Centre",
       "description": "Stay updated on your puzzles and streaks",
       "enabled": "Active",
       "disabled": "All Off",
@@ -788,9 +788,9 @@
   "testEmailSentDescription": "Check your inbox for the test email",
   "testEmailFailed": "Failed to send email",
   "theme": "Theme",
-  "themeDescription": "Choose your color theme preference",
+  "themeDescription": "Choose your colour theme preference",
   "reduceMotion": "Reduce Motion",
-  "reduceMotionDescription": "Minimize animations and transitions for accessibility",
+  "reduceMotionDescription": "Minimise animations and transitions for accessibility",
   "compactMode": "Compact Mode",
   "compactModeDescription": "Use a denser layout with smaller spacing",
   "privacy": {

@@ -373,7 +373,7 @@
   },
   "experiments": {
     "title": "A/B Experiments",
-    "subtitle": "Monitor and analyze experiment results",
+    "subtitle": "Monitor and analyse experiment results",
     "totalExposures": "total exposures",
     "variant": "Variant",
     "exposures": "Exposures",
@@ -384,7 +384,7 @@
     "recommendation": "Recommendation",
     "emptyState": {
       "title": "No Experiments Yet",
-      "description": "Define your first A/B experiment to start testing different variants and optimize your conversion rates."
+      "description": "Define your first A/B experiment to start testing different variants and optimise your conversion rates."
     },
     "howToUse": {
       "title": "How to Use Experiments",

@@ -15,5 +15,7 @@
     "leaderboard": "排行榜",
     "push": "推播通知",
     "earlyAccess": "新遊戲搶先玩"
-  }
+  },
+  "portalError": "Unable to open billing portal",
+  "portalErrorDescription": "Please try again or contact support if the problem persists."
 }

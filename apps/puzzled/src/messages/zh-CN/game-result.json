@@ -7,13 +7,19 @@
   "score": "分数",
   "correct": "正确",
   "time": "用时",
-  "playAgain": "再玩一次",
-  "moreGames": "更多游戏",
-  "comeBackTomorrow": "明天回来继续保持连胜！",
   "status": "状态",
   "won": "成功",
   "lost": "失败",
+  "playAgain": "再玩一次",
+  "moreGames": "更多游戏",
+  "comeBackTomorrow": "明天回来继续保持连胜！",
   "srWonWithAttempts": "恭喜！您在 {attempts, plural, one {# 次尝试} other {# 次尝试}}中获胜！",
   "srWonWithScore": "恭喜！您获得了 {score} 分！",
-  "srLostWithSolution": "游戏结束。答案是 {word}。"
+  "srLostWithSolution": "游戏结束。答案是 {word}。",
+  "beatPercent": "You beat {percent}% of players today!",
+  "topPercent": "Top {percent}% today!",
+  "perfectGame": "Perfect game! 🎯",
+  "playersToday": "{count} players today",
+  "backToHome": "Back to Home",
+  "missedCategories": "You missed:"
 }
