@@ -20,8 +20,9 @@
 		"lighthouse": "lhci autorun",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:push": "drizzle-kit push",
+		"db:push": "echo '⚠️  db:push is disabled. Use db:generate + db:migrate for production-safe migrations.' && exit 1",
 		"db:studio": "drizzle-kit studio",
+		"db:check": "drizzle-kit check",
 		"db:seed": "bun run src/lib/db/seed.ts",
 		"jobs:register": "bun run src/lib/jobs/register-crons.ts"
 	},
