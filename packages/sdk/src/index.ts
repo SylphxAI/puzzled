@@ -125,12 +125,17 @@ export {
 	resetPassword,
 	getSession,
 	verifyTwoFactor,
+	introspectToken,
+	revokeToken,
+	revokeAllTokens,
 	type SignInInput,
 	type SignInResult,
 	type SignUpInput,
 	type SignUpResult,
 	type TokenResult,
 	type SessionResult,
+	type TokenIntrospectionResult,
+	type RevokeTokenOptions,
 } from './auth'
 
 // =============================================================================

@@ -77,6 +77,46 @@ export interface SessionResult {
 	} | null
 }
 
+/**
+ * Token introspection result (RFC 7662)
+ */
+export interface TokenIntrospectionResult {
+	/** Whether the token is active/valid */
+	active: boolean
+	/** Token type (access_token or refresh_token) */
+	token_type?: 'access_token' | 'refresh_token'
+	/** User ID */
+	sub?: string
+	/** User email */
+	email?: string
+	/** User name */
+	name?: string
+	/** App ID */
+	client_id?: string
+	/** Audience */
+	aud?: string
+	/** Issuer */
+	iss?: string
+	/** Expiration time (Unix timestamp) */
+	exp?: number
+	/** Issued at time (Unix timestamp) */
+	iat?: number
+	/** User role */
+	role?: string
+	/** Email verification status */
+	email_verified?: boolean
+}
+
+/**
+ * Token revocation options
+ */
+export interface RevokeTokenOptions {
+	/** Revoke all tokens for a user in this app */
+	revokeAll?: boolean
+	/** User ID (required when revoking all) */
+	userId?: string
+}
+
 // ============================================================================
 // Functions
 // ============================================================================
@@ -267,4 +307,96 @@ export async function verifyTwoFactor(
 		method: 'POST',
 		body: { userId, code },
 	})
+}
+
+/**
+ * Introspect a token to check its validity (RFC 7662)
+ *
+ * Use this to verify token status without decoding. Essential for:
+ * - Checking if a token has been revoked
+ * - Validating tokens at the edge
+ * - Security-critical operations
+ *
+ * @example
+ * ```typescript
+ * const result = await introspectToken(config, accessToken)
+ * if (!result.active) {
+ *   // Token is invalid, revoked, or expired
+ *   await refreshTokens()
+ * }
+ * ```
+ */
+export async function introspectToken(
+	config: SylphxConfig,
+	token: string,
+	tokenTypeHint?: 'access_token' | 'refresh_token'
+): Promise<TokenIntrospectionResult> {
+	const response = await fetch(`${config.platformUrl}/api/auth/introspect`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			token,
+			token_type_hint: tokenTypeHint,
+			app_id: config.appId,
+			app_secret: config.appSecret,
+		}),
+	})
+
+	if (!response.ok) {
+		// Per RFC 7662, errors should return inactive
+		return { active: false }
+	}
+
+	return response.json()
+}
+
+/**
+ * Revoke a token (RFC 7009)
+ *
+ * Use cases:
+ * - Sign out user from specific device
+ * - Security response to compromised token
+ * - User-initiated session termination
+ *
+ * @example
+ * ```typescript
+ * // Revoke single refresh token
+ * await revokeToken(config, refreshToken)
+ *
+ * // Revoke all tokens for a user (logout everywhere)
+ * await revokeToken(config, '', { revokeAll: true, userId: 'user-123' })
+ * ```
+ */
+export async function revokeToken(
+	config: SylphxConfig,
+	token: string,
+	options?: RevokeTokenOptions
+): Promise<void> {
+	await fetch(`${config.platformUrl}/api/auth/revoke`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			token: options?.revokeAll ? undefined : token,
+			app_id: config.appId,
+			app_secret: config.appSecret,
+			user_id: options?.userId,
+			revoke_all: options?.revokeAll,
+		}),
+	})
+	// Per RFC 7009, always succeeds (200 OK)
+}
+
+/**
+ * Revoke all tokens for a user (logout from all devices)
+ *
+ * Convenience wrapper around revokeToken with revokeAll option.
+ *
+ * @example
+ * ```typescript
+ * // After password change, revoke all sessions
+ * await revokeAllTokens(config, userId)
+ * ```
+ */
+export async function revokeAllTokens(config: SylphxConfig, userId: string): Promise<void> {
+	await revokeToken(config, '', { revokeAll: true, userId })
 }
