@@ -376,6 +376,43 @@ export {
 } from './engagement'
 
 // =============================================================================
+// Organization Functions
+// =============================================================================
+
+export {
+	// CRUD
+	getOrganizations,
+	getOrganization,
+	createOrganization,
+	updateOrganization,
+	deleteOrganization,
+	// Members
+	getOrganizationMembers,
+	inviteOrganizationMember,
+	updateOrganizationMemberRole,
+	removeOrganizationMember,
+	leaveOrganization,
+	// Invitations
+	getOrganizationInvitations,
+	acceptOrganizationInvitation,
+	revokeOrganizationInvitation,
+	// Permission helpers
+	hasRole,
+	canManageMembers,
+	canManageSettings,
+	canDeleteOrganization,
+	// Types
+	type Organization,
+	type OrganizationMember,
+	type OrganizationInvitation,
+	type OrganizationMembership,
+	type OrgRole,
+	type CreateOrgInput,
+	type UpdateOrgInput,
+	type InviteMemberInput,
+} from './orgs'
+
+// =============================================================================
 // Common Types (re-exported from types.ts)
 // =============================================================================
 
@@ -387,9 +424,6 @@ export type {
 	LoginHistoryEntry,
 	AccessTokenPayload,
 	TokenResponse,
-	// Organizations
-	Organization,
-	OrganizationMember,
 	// AI Types
 	AIProvider,
 	AIRequestType,

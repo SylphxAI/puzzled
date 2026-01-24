@@ -437,43 +437,59 @@ export function useSylphx(): UseSylphxReturn {
 
 // ============================================
 // useOrganization
-// Organization SDK endpoints are not yet available on the platform.
-// This hook provides a stable API surface - mutations direct users to Console.
+// Full organization management via SDK REST API
 // ============================================
 
-// Import Organization types from types.ts (SSOT)
-import type { Organization, OrganizationMember, OrgRole } from '../types'
-export type { Organization, OrganizationMember, OrgRole }
+// Import Organization types and functions from orgs.ts (SSOT)
+import * as OrgFunctions from '../orgs'
+import type {
+	Organization,
+	OrganizationMember,
+	OrganizationInvitation,
+	OrgRole,
+} from '../orgs'
+import { createPlatformConfig } from '../config'
+
+export type { Organization, OrganizationMember, OrganizationInvitation, OrgRole }
 
 /**
  * Return type for useOrganization hook
- *
- * Organization SDK endpoints are not yet available.
- * Organization management is currently only available via the Sylphx Console.
  */
 export interface UseOrganizationReturn {
-	/** Current organization (if any) - always null in current implementation */
+	/** Current selected organization */
 	organization: Organization | null
 	/** List of all user's organizations */
 	organizations: Organization[]
 	/** Members of current organization */
 	members: OrganizationMember[]
+	/** Pending invitations (if admin) */
+	invitations: OrganizationInvitation[]
 	/** Whether data is loading */
 	isLoading: boolean
+	/** Loading error */
+	error: Error | null
 	/** User's role in current organization */
 	role: OrgRole | null
 	/** Check if user has a specific permission */
 	hasPermission: (permission: 'manage_members' | 'access_billing' | 'manage_apps' | 'view_analytics') => boolean
 	/** Switch to a different organization */
-	setOrganization: (orgId: string | null) => void
+	setOrganization: (orgIdOrSlug: string | null) => Promise<void>
 	/** Create a new organization */
-	createOrganization: (data: { name: string; slug: string }) => Promise<Organization>
+	createOrganization: (data: { name: string; slug?: string; email?: string }) => Promise<Organization>
+	/** Update current organization */
+	updateOrganization: (data: { name?: string; slug?: string; logoUrl?: string | null }) => Promise<Organization>
+	/** Delete current organization (requires super_admin) */
+	deleteOrganization: () => Promise<void>
 	/** Invite a member to current organization */
-	inviteMember: (email: string, role: OrgRole) => Promise<void>
+	inviteMember: (email: string, role: OrgRole) => Promise<OrganizationInvitation>
 	/** Update a member's role */
-	updateMemberRole: (userId: string, role: OrgRole) => Promise<void>
+	updateMemberRole: (userId: string, role: OrgRole) => Promise<OrganizationMember>
 	/** Remove a member from organization */
 	removeMember: (userId: string) => Promise<void>
+	/** Leave current organization */
+	leave: () => Promise<void>
+	/** Revoke a pending invitation */
+	revokeInvitation: (invitationId: string) => Promise<void>
 	/** Refresh organization data */
 	refresh: () => Promise<void>
 }
@@ -481,51 +497,233 @@ export interface UseOrganizationReturn {
 /**
  * Hook to manage organizations and RBAC
  *
- * Organization SDK endpoints are not yet available on the platform.
- * Organization management is available via the Sylphx Console.
- *
- * **Current behavior:**
- * - `organization` is always `null`
- * - `organizations` is always `[]`
- * - All mutation methods throw errors directing users to Console
+ * Provides full organization management including CRUD operations,
+ * member management, and invitation handling.
  *
  * @example
  * ```tsx
  * function OrgSettings() {
- *   const { organization, isLoading } = useOrganization()
+ *   const { organization, organizations, isLoading, role } = useOrganization()
  *
  *   if (isLoading) return <Spinner />
- *   if (!organization) return <div>Organizations are managed via Console</div>
+ *   if (!organization) return <CreateOrgForm />
  *
- *   return <div>{organization.name}</div>
+ *   return (
+ *     <div>
+ *       <h1>{organization.name}</h1>
+ *       <p>Your role: {role}</p>
+ *     </div>
+ *   )
  * }
  * ```
  */
 export function useOrganization(): UseOrganizationReturn {
-	// Organization SDK endpoints not yet available - management via Console only
+	const platform = useContext(PlatformContext)
+	const [organizations, setOrganizations] = useState<Organization[]>([])
+	const [organization, setOrganization] = useState<Organization | null>(null)
+	const [members, setMembers] = useState<OrganizationMember[]>([])
+	const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
+	const [role, setRole] = useState<OrgRole | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<Error | null>(null)
+
+	// Create config for API calls
+	const config = platform
+		? createPlatformConfig(platform.appId)
+		: null
+
+	// Load organizations on mount
+	useEffect(() => {
+		if (!config) {
+			setIsLoading(false)
+			return
+		}
+
+		let mounted = true
+
+		async function loadOrgs() {
+			try {
+				const result = await OrgFunctions.getOrganizations(config!)
+				if (mounted) {
+					setOrganizations(result.organizations)
+					// Auto-select first org if none selected
+					if (result.organizations.length > 0 && !organization) {
+						await selectOrganization(result.organizations[0].slug)
+					}
+					setIsLoading(false)
+				}
+			} catch (err) {
+				if (mounted) {
+					setError(err instanceof Error ? err : new Error('Failed to load organizations'))
+					setIsLoading(false)
+				}
+			}
+		}
+
+		loadOrgs()
+		return () => { mounted = false }
+	}, [config?.appId])
+
+	// Select an organization by ID or slug
+	const selectOrganization = useCallback(async (orgIdOrSlug: string | null) => {
+		if (!config || !orgIdOrSlug) {
+			setOrganization(null)
+			setMembers([])
+			setInvitations([])
+			setRole(null)
+			return
+		}
+
+		try {
+			const result = await OrgFunctions.getOrganization(config, orgIdOrSlug)
+			setOrganization(result.organization)
+			setRole(result.membership?.role ?? null)
+
+			// Load members
+			const membersResult = await OrgFunctions.getOrganizationMembers(config, orgIdOrSlug)
+			setMembers(membersResult.members)
+
+			// Load invitations if admin
+			if (result.membership && ['super_admin', 'admin'].includes(result.membership.role)) {
+				try {
+					const invResult = await OrgFunctions.getOrganizationInvitations(config, orgIdOrSlug)
+					setInvitations(invResult.invitations)
+				} catch {
+					// May not have permission
+					setInvitations([])
+				}
+			} else {
+				setInvitations([])
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err : new Error('Failed to load organization'))
+		}
+	}, [config])
+
+	// Permission checking
+	const hasPermission = useCallback((permission: string): boolean => {
+		if (!role) return false
+
+		const rolePermissions: Record<OrgRole, string[]> = {
+			super_admin: ['manage_members', 'access_billing', 'manage_apps', 'view_analytics'],
+			admin: ['manage_members', 'access_billing', 'manage_apps', 'view_analytics'],
+			billing: ['access_billing'],
+			analytics: ['view_analytics'],
+			developer: ['manage_apps', 'view_analytics'],
+			viewer: ['view_analytics'],
+		}
+
+		return rolePermissions[role]?.includes(permission) ?? false
+	}, [role])
+
+	// CRUD operations
+	const createOrg = useCallback(async (data: { name: string; slug?: string; email?: string }) => {
+		if (!config) throw new Error('Not configured')
+		const result = await OrgFunctions.createOrganization(config, data)
+		setOrganizations(prev => [...prev, result.organization])
+		await selectOrganization(result.organization.slug)
+		return result.organization
+	}, [config, selectOrganization])
+
+	const updateOrg = useCallback(async (data: { name?: string; slug?: string; logoUrl?: string | null }) => {
+		if (!config || !organization) throw new Error('No organization selected')
+		const result = await OrgFunctions.updateOrganization(config, organization.id, data)
+		setOrganization(result.organization)
+		setOrganizations(prev => prev.map(o => o.id === result.organization.id ? result.organization : o))
+		return result.organization
+	}, [config, organization])
+
+	const deleteOrg = useCallback(async () => {
+		if (!config || !organization) throw new Error('No organization selected')
+		await OrgFunctions.deleteOrganization(config, organization.id)
+		setOrganizations(prev => prev.filter(o => o.id !== organization.id))
+		const remaining = organizations.filter(o => o.id !== organization.id)
+		if (remaining.length > 0) {
+			await selectOrganization(remaining[0].slug)
+		} else {
+			setOrganization(null)
+			setMembers([])
+			setRole(null)
+		}
+	}, [config, organization, organizations, selectOrganization])
+
+	// Member operations
+	const inviteMember = useCallback(async (email: string, memberRole: OrgRole) => {
+		if (!config || !organization) throw new Error('No organization selected')
+		const result = await OrgFunctions.inviteOrganizationMember(config, organization.id, { email, role: memberRole })
+		setInvitations(prev => [...prev, result.invitation])
+		return result.invitation
+	}, [config, organization])
+
+	const updateMemberRole = useCallback(async (userId: string, newRole: OrgRole) => {
+		if (!config || !organization) throw new Error('No organization selected')
+		const result = await OrgFunctions.updateOrganizationMemberRole(config, organization.id, userId, newRole)
+		setMembers(prev => prev.map(m => m.userId === userId ? result.member : m))
+		return result.member
+	}, [config, organization])
+
+	const removeMember = useCallback(async (userId: string) => {
+		if (!config || !organization) throw new Error('No organization selected')
+		await OrgFunctions.removeOrganizationMember(config, organization.id, userId)
+		setMembers(prev => prev.filter(m => m.userId !== userId))
+	}, [config, organization])
+
+	const leave = useCallback(async () => {
+		if (!config || !organization) throw new Error('No organization selected')
+		await OrgFunctions.leaveOrganization(config, organization.id)
+		setOrganizations(prev => prev.filter(o => o.id !== organization.id))
+		const remaining = organizations.filter(o => o.id !== organization.id)
+		if (remaining.length > 0) {
+			await selectOrganization(remaining[0].slug)
+		} else {
+			setOrganization(null)
+			setMembers([])
+			setRole(null)
+		}
+	}, [config, organization, organizations, selectOrganization])
+
+	const revokeInvitation = useCallback(async (invitationId: string) => {
+		if (!config || !organization) throw new Error('No organization selected')
+		await OrgFunctions.revokeOrganizationInvitation(config, organization.id, invitationId)
+		setInvitations(prev => prev.filter(i => i.id !== invitationId))
+	}, [config, organization])
+
+	// Refresh all data
+	const refresh = useCallback(async () => {
+		if (!config) return
+		setIsLoading(true)
+		try {
+			const result = await OrgFunctions.getOrganizations(config)
+			setOrganizations(result.organizations)
+			if (organization) {
+				await selectOrganization(organization.slug)
+			}
+		} catch (err) {
+			setError(err instanceof Error ? err : new Error('Failed to refresh'))
+		} finally {
+			setIsLoading(false)
+		}
+	}, [config, organization, selectOrganization])
+
 	return {
-		organization: null,
-		organizations: [],
-		members: [],
-		isLoading: false,
-		role: null,
-		hasPermission: () => false,
-		setOrganization: () => {
-			console.warn('[Sylphx] Organization management is not yet available via SDK. Use the Console.')
-		},
-		createOrganization: async () => {
-			throw new Error('Organization management is not yet available via SDK. Use the Sylphx Console.')
-		},
-		inviteMember: async () => {
-			throw new Error('Organization management is not yet available via SDK. Use the Sylphx Console.')
-		},
-		updateMemberRole: async () => {
-			throw new Error('Organization management is not yet available via SDK. Use the Sylphx Console.')
-		},
-		removeMember: async () => {
-			throw new Error('Organization management is not yet available via SDK. Use the Sylphx Console.')
-		},
-		refresh: async () => {},
+		organization,
+		organizations,
+		members,
+		invitations,
+		isLoading,
+		error,
+		role,
+		hasPermission,
+		setOrganization: selectOrganization,
+		createOrganization: createOrg,
+		updateOrganization: updateOrg,
+		deleteOrganization: deleteOrg,
+		inviteMember,
+		updateMemberRole,
+		removeMember,
+		leave,
+		revokeInvitation,
+		refresh,
 	}
 }
 

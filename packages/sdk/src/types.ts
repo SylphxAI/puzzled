@@ -585,30 +585,9 @@ export type IdentityMethod = 'password' | 'totp' | 'passkey' | 'email_code' | 'o
 export type MfaMethod = 'totp' | 'passkey' | 'email_code'
 
 // ==========================================
-// Organizations Types
+// Organizations Types - SSOT: orgs.ts
+// Import types from orgs.ts if needed locally
 // ==========================================
-
-export interface Organization {
-	id: string
-	name: string
-	slug: string
-	image: string | null
-	logoUrl: string | null
-	createdAt: string
-}
-
-export interface OrganizationMember {
-	id: string
-	userId: string
-	orgId: string
-	role: OrgRole
-	joinedAt: string
-	name: string | null
-	email: string
-	image: string | null
-}
-
-export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer' | 'developer' | 'analytics' | 'billing' | 'super_admin'
 
 // ==========================================
 // Input Types

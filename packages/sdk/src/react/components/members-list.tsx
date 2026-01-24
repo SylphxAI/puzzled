@@ -36,10 +36,8 @@ export interface MembersListProps {
 }
 
 const ROLE_LABELS: Record<OrgRole, string> = {
-	owner: 'Owner',
 	super_admin: 'Super Admin',
 	admin: 'Admin',
-	member: 'Member',
 	billing: 'Billing',
 	analytics: 'Analytics',
 	developer: 'Developer',
@@ -47,17 +45,15 @@ const ROLE_LABELS: Record<OrgRole, string> = {
 }
 
 const ROLE_DESCRIPTIONS: Record<OrgRole, string> = {
-	owner: 'Organization owner with full control',
 	super_admin: 'Full access to everything',
-	admin: 'Manage members, apps, and analytics',
-	member: 'Standard member access',
+	admin: 'Manage members, apps, and settings',
 	billing: 'Access billing and payments',
 	analytics: 'View analytics and reports',
 	developer: 'Manage apps and deployments',
-	viewer: 'Read-only access to analytics',
+	viewer: 'Read-only access',
 }
 
-const ROLE_ORDER: OrgRole[] = ['owner', 'super_admin', 'admin', 'member', 'billing', 'analytics', 'developer', 'viewer']
+const ROLE_ORDER: OrgRole[] = ['super_admin', 'admin', 'billing', 'analytics', 'developer', 'viewer']
 
 /**
  * MembersList component for displaying organization members
