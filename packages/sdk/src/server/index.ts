@@ -374,8 +374,7 @@ async function computeHmacSha256(message: string, secret: string): Promise<strin
 	)
 
 	const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData)
-	const hashArray = Array.from(new Uint8Array(signature))
-	return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+	return Buffer.from(signature).toString('hex')
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
