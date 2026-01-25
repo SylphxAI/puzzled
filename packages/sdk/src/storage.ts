@@ -42,7 +42,32 @@ export interface FileInfo {
 	name: string
 	size: number
 	contentType: string
+	isPrivate: boolean
 	createdAt: string
+}
+
+export interface SignedUrlOptions {
+	/** Expiration in seconds (default: 3600, max: 604800 = 7 days) */
+	expiresIn?: number
+	/** Force download (attachment) vs inline display (default: attachment) */
+	disposition?: 'attachment' | 'inline'
+	/** Restrict access to specific user */
+	userId?: string
+}
+
+export interface SignedUrlResult {
+	/** The signed download URL */
+	url: string
+	/** When the URL expires (ISO string) */
+	expiresAt: string
+	/** File metadata */
+	file: {
+		id: string
+		filename: string
+		mimeType: string
+		sizeBytes: number
+		isPrivate: boolean
+	}
 }
 
 // ============================================================================
@@ -205,4 +230,44 @@ export async function getFileUrl(config: SylphxConfig, fileId: string): Promise<
  */
 export async function getFileInfo(config: SylphxConfig, fileId: string): Promise<FileInfo> {
 	return callApi<FileInfo>(config, `/storage/files/${fileId}`, { method: 'GET' })
+}
+
+/**
+ * Generate a signed URL for accessing a private file
+ *
+ * Signed URLs provide time-limited access to private files without
+ * exposing permanent URLs. Useful for:
+ * - Secure document downloads
+ * - Private media streaming
+ * - Temporary file sharing
+ *
+ * @example
+ * ```typescript
+ * // Generate a download URL valid for 1 hour
+ * const { url, expiresAt } = await getSignedUrl(config, 'file-123')
+ *
+ * // Generate an inline preview URL valid for 5 minutes
+ * const preview = await getSignedUrl(config, 'file-123', {
+ *   expiresIn: 300,
+ *   disposition: 'inline',
+ * })
+ *
+ * // Restrict access to a specific user
+ * const userOnly = await getSignedUrl(config, 'file-123', {
+ *   userId: 'user-456',
+ * })
+ * ```
+ */
+export async function getSignedUrl(
+	config: SylphxConfig,
+	fileId: string,
+	options?: SignedUrlOptions
+): Promise<SignedUrlResult> {
+	return callApi<SignedUrlResult>(config, '/storage/signed-url', {
+		method: 'POST',
+		body: {
+			fileId,
+			...options,
+		},
+	})
 }

@@ -202,10 +202,13 @@ export {
 	deleteFile,
 	getFileUrl,
 	getFileInfo,
+	getSignedUrl,
 	type FileUploadOptions,
 	type UploadProgressEvent,
 	type UploadResult,
 	type FileInfo,
+	type SignedUrlOptions,
+	type SignedUrlResult,
 } from './storage'
 
 // =============================================================================
