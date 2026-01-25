@@ -350,13 +350,10 @@ export class ErrorTracker {
 	// ==========================================
 
 	private generateEventId(): string {
-		// Sentry uses 32-char hex IDs
-		const chars = '0123456789abcdef'
-		let id = ''
-		for (let i = 0; i < 32; i++) {
-			id += chars[Math.floor(Math.random() * 16)]
-		}
-		return id
+		// Sentry uses 32-char hex IDs (16 bytes = 32 hex chars)
+		const bytes = new Uint8Array(16)
+		crypto.getRandomValues(bytes)
+		return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 	}
 
 	private parseException(error: Error): ExceptionValue {

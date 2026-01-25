@@ -664,7 +664,10 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private generateId(): string {
-		// UUID v4
+		// Use crypto.randomUUID if available, otherwise fallback to manual UUID v4
+		if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+			return crypto.randomUUID()
+		}
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
 			const r = (Math.random() * 16) | 0
 			const v = c === 'x' ? r : (r & 0x3) | 0x8

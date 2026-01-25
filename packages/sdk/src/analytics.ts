@@ -176,7 +176,12 @@ export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Pr
  * ```
  */
 export function generateAnonymousId(): string {
-	return `anon_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
+	// Use crypto.randomUUID if available, otherwise fallback
+	const randomPart =
+		typeof crypto !== 'undefined' && crypto.randomUUID
+			? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+			: Math.random().toString(36).slice(2, 11)
+	return `anon_${Date.now()}_${randomPart}`
 }
 
 /**
