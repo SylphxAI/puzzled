@@ -1,7 +1,7 @@
 'use client'
 
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'
 import { cn } from '../utils'

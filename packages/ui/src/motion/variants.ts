@@ -5,7 +5,7 @@
  * Use these with the `variants` prop on motion components.
  */
 
-import type { Variants } from 'framer-motion'
+import type { Variants } from 'motion/react'
 import { duration, easing, spring, stagger } from './config'
 
 // ============================================================================

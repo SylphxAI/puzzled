@@ -2,7 +2,7 @@
 
 import * as ToastPrimitive from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'motion/react'
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react'
 import { createContext, forwardRef, useCallback, useContext, useState } from 'react'
 import { duration, easing } from '../motion/config'

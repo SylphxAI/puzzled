@@ -1,7 +1,7 @@
 'use client'
 
 import * as SelectPrimitive from '@radix-ui/react-select'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'

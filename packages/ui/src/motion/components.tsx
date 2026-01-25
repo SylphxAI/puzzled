@@ -18,7 +18,7 @@ import {
 	type MotionProps,
 	motion,
 	useInView,
-} from 'framer-motion'
+} from 'motion/react'
 import {
 	Children,
 	type HTMLAttributes,

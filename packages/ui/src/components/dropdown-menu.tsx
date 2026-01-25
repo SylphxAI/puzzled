@@ -1,7 +1,7 @@
 'use client'
 
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { Check, ChevronRight, Circle } from 'lucide-react'
 import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'

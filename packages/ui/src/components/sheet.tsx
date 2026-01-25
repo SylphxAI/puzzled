@@ -9,7 +9,7 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { type VariantProps, cva } from 'class-variance-authority'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 import { X } from 'lucide-react'
 import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'
