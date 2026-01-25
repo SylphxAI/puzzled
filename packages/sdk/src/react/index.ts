@@ -262,6 +262,7 @@ export {
 	useSafeConsent,
 	useConsentGate,
 	ConsentGuard,
+	useConsentCheck,
 	type ConsentCategory,
 	type ConsentType,
 	type UserConsent,
@@ -270,7 +271,40 @@ export {
 	type UseConsentGateOptions,
 	type UseConsentGateReturn,
 	type ConsentGuardProps,
+	type UseConsentCheckOptions,
+	type UseConsentCheckReturn,
 } from './consent-hooks'
+
+// Consent-Aware Script Loading (GDPR/CCPA Auto-Block)
+export {
+	// Core Script Components
+	ConsentScript,
+	ScriptManagerProvider,
+	useScriptManager,
+	// Known Script Components
+	GoogleAnalytics,
+	GoogleTagManager,
+	FacebookPixel,
+	Hotjar,
+	Intercom,
+	// Google Consent Mode v2
+	GoogleConsentMode,
+	useGoogleConsentMode,
+	// Types
+	type ConsentScriptProps,
+	type ScriptStrategy,
+	type ScriptQueueItem,
+	type ScriptManagerContextValue,
+	type GoogleAnalyticsProps,
+	type GoogleTagManagerProps,
+	type FacebookPixelProps,
+	type HotjarProps,
+	type IntercomProps,
+	type GoogleConsentType,
+	type GoogleConsentState,
+	type GoogleConsentModeConfig,
+	type GoogleConsentModeProps,
+} from './consent-scripts'
 
 // Feature Flag Hooks
 export {
