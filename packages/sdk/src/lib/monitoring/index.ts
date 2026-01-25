@@ -121,3 +121,33 @@ export type {
 	RecorderState,
 	RecorderStatus,
 } from './session-replay'
+
+// ==========================================
+// Web Vitals
+// ==========================================
+
+export {
+	// Core functions
+	initWebVitals,
+	getWebVitalsReport,
+	getMetric,
+	checkCoreWebVitals,
+	resetWebVitals,
+	isWebVitalsInitialized,
+	// Constants
+	WEB_VITALS_THRESHOLDS,
+	DEFAULT_WEB_VITALS_CONFIG,
+} from './web-vitals'
+
+export type {
+	// Metric types
+	CoreWebVitalName,
+	WebVitalName,
+	MetricRating,
+	WebVitalMetric,
+	WebVitalAttribution,
+	// Report types
+	WebVitalsReport,
+	// Configuration
+	WebVitalsConfig,
+} from './web-vitals'

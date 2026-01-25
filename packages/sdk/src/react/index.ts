@@ -738,6 +738,44 @@ export {
 } from '../lib/monitoring'
 
 // ============================================================================
+// Web Vitals (Core Web Vitals Monitoring)
+// ============================================================================
+// State-of-the-art performance monitoring with automatic Core Web Vitals
+// tracking, analytics integration, and performance scoring.
+
+export {
+	// Hooks
+	useWebVitals,
+	useWebVital,
+	useWebVitalsAnalytics,
+	// Types
+	type UseWebVitalsOptions,
+	type UseWebVitalsReturn,
+	type UseWebVitalOptions,
+	type UseWebVitalReturn,
+	type UseWebVitalsAnalyticsOptions,
+} from './hooks/use-web-vitals'
+
+// Web Vitals Core (for advanced usage)
+export {
+	initWebVitals,
+	getWebVitalsReport,
+	getMetric,
+	checkCoreWebVitals,
+	resetWebVitals,
+	isWebVitalsInitialized,
+	WEB_VITALS_THRESHOLDS,
+	DEFAULT_WEB_VITALS_CONFIG,
+	type CoreWebVitalName,
+	type WebVitalName,
+	type MetricRating,
+	type WebVitalMetric,
+	type WebVitalAttribution,
+	type WebVitalsReport,
+	type WebVitalsConfig,
+} from '../lib/monitoring'
+
+// ============================================================================
 // Enhanced Error Tracking (with Session Replay integration)
 // ============================================================================
 // Sentry-compatible error tracking with automatic breadcrumb collection
