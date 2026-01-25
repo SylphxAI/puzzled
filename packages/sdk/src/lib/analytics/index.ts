@@ -99,3 +99,22 @@ export type {
 } from './types'
 
 export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
+
+// Destination Routing
+export {
+	createDestinationRouter,
+	type DestinationType,
+	type ConsentCategory as DestinationConsentCategory,
+	type BaseDestinationConfig,
+	type SylphxDestinationConfig,
+	type GA4DestinationConfig,
+	type GTMDestinationConfig,
+	type MixpanelDestinationConfig,
+	type SegmentDestinationConfig,
+	type PostHogDestinationConfig,
+	type AmplitudeDestinationConfig,
+	type CustomDestinationConfig,
+	type DestinationConfig,
+	type DestinationRouterConfig,
+	type DestinationRouter,
+} from './destinations'

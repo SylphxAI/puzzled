@@ -918,6 +918,42 @@ export {
 } from '../lib/analytics'
 
 // ============================================================================
+// Analytics Destination Routing
+// ============================================================================
+// Route analytics events to multiple destinations (GA4, Mixpanel, Segment, etc.)
+// with consent-aware routing and event transformation.
+
+export {
+	// Hook & Provider
+	useDestinationRouter,
+	DestinationRouterProvider,
+	useRouterContext,
+	// Types
+	type UseDestinationRouterOptions,
+	type UseDestinationRouterReturn,
+	type DestinationRouterProviderProps,
+} from './hooks/use-destination-router'
+
+// Destination Router Core (for advanced usage)
+export {
+	createDestinationRouter,
+	type DestinationType,
+	type DestinationConsentCategory,
+	type BaseDestinationConfig,
+	type SylphxDestinationConfig,
+	type GA4DestinationConfig,
+	type GTMDestinationConfig,
+	type MixpanelDestinationConfig,
+	type SegmentDestinationConfig,
+	type PostHogDestinationConfig,
+	type AmplitudeDestinationConfig,
+	type CustomDestinationConfig,
+	type DestinationConfig,
+	type DestinationRouterConfig,
+	type DestinationRouter,
+} from '../lib/analytics'
+
+// ============================================================================
 // SOTA Background Jobs (Workflow DSL + Durable Execution)
 // ============================================================================
 // Inngest/Trigger.dev-style workflow builder with type-safe step definitions,
