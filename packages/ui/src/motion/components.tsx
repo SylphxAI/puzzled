@@ -3,8 +3,13 @@
 /**
  * Motion Components
  *
- * Pre-configured motion components for common animation patterns.
- * These wrap Framer Motion primitives with sensible defaults.
+ * CSS-first animation system with Framer Motion reserved for
+ * interactive/transient animations that CSS cannot handle
+ * (AnimatePresence exits, springs, path drawing).
+ *
+ * Entrance animations use CSS transitions + IntersectionObserver
+ * to avoid persistent `will-change` compositing layers that cause
+ * subpixel rendering artifacts on card borders and shadows.
  */
 
 import {
@@ -14,14 +19,19 @@ import {
 	motion,
 	useInView,
 } from 'framer-motion'
-import { Children, type ReactNode, forwardRef, useRef } from 'react'
+import {
+	Children,
+	type HTMLAttributes,
+	type ReactNode,
+	type TableHTMLAttributes,
+	createContext,
+	forwardRef,
+	useContext,
+	useRef,
+	useState,
+} from 'react'
 import { duration, easing, spring, stagger } from './config'
 import {
-	fadeDownVariants,
-	fadeLeftVariants,
-	fadeRightVariants,
-	fadeUpVariants,
-	fadeVariants,
 	scaleSpringVariants,
 	scaleVariants,
 	sidebarContentVariants,
@@ -29,13 +39,36 @@ import {
 	slideLeftVariants,
 	slideRightVariants,
 	slideUpVariants,
-	staggerContainer,
-	staggerContainerFast,
-	staggerContainerSlow,
-	staggerItemFadeVariants,
-	staggerItemScaleVariants,
-	staggerItemVariants,
 } from './variants'
+
+// ============================================================================
+// Shared CSS Transition Helpers
+// ============================================================================
+
+/** Pre-computed cubic-bezier string for easeOut */
+const EASE_OUT = `cubic-bezier(${easing.easeOut.join(',')})`
+
+/** Build a CSS transition string for opacity + transform */
+function cssTransition(dur: number) {
+	return `opacity ${dur}s ${EASE_OUT}, transform ${dur}s ${EASE_OUT}`
+}
+
+/** CSS entrance style: hidden state or visible state */
+function entranceStyle(
+	inView: boolean,
+	opts: {
+		duration: number
+		delay?: number
+		translate?: string
+	}
+) {
+	return {
+		opacity: inView ? 1 : 0,
+		transform: inView ? 'none' : (opts.translate ?? 'translateY(8px)'),
+		transition: cssTransition(opts.duration),
+		transitionDelay: inView ? `${opts.delay ?? 0}s` : '0s',
+	} as const
+}
 
 // ============================================================================
 // Types
@@ -44,7 +77,7 @@ import {
 type Direction = 'up' | 'down' | 'left' | 'right'
 type StaggerSpeed = 'fast' | 'normal' | 'slow'
 
-interface FadeProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface FadeProps {
 	/** Direction of movement during fade */
 	direction?: Direction
 	/** Custom duration override */
@@ -53,6 +86,8 @@ interface FadeProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' |
 	delay?: number
 	/** Children to animate */
 	children: ReactNode
+	/** Additional class name */
+	className?: string
 }
 
 interface ScaleProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
@@ -69,18 +104,22 @@ interface SlideProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' 
 	children: ReactNode
 }
 
-interface StaggerListProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface StaggerListProps {
 	/** Stagger speed */
 	speed?: StaggerSpeed
 	/** Children to animate */
 	children: ReactNode
+	/** Additional class name */
+	className?: string
 }
 
-interface StaggerItemProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface StaggerItemProps {
 	/** Animation type */
 	type?: 'fade' | 'fadeUp' | 'scale'
 	/** Children to animate */
 	children: ReactNode
+	/** Additional class name */
+	className?: string
 }
 
 interface PresenceProps {
@@ -95,59 +134,61 @@ interface PresenceProps {
 }
 
 // ============================================================================
-// Fade Component
+// Fade Component — CSS First
 // ============================================================================
 
-const fadeDirectionVariants = {
-	up: fadeUpVariants,
-	down: fadeDownVariants,
-	left: fadeLeftVariants,
-	right: fadeRightVariants,
-	none: fadeVariants,
+const fadeTranslates: Record<Direction | 'none', string> = {
+	up: 'translateY(10px)',
+	down: 'translateY(-10px)',
+	left: 'translateX(20px)',
+	right: 'translateX(-20px)',
+	none: 'none',
 }
 
 /**
- * Fade - Animated fade in/out with optional direction
+ * Fade - CSS transition fade with optional direction
+ *
+ * Uses IntersectionObserver for viewport-triggered animation.
+ * No persistent compositing layers after animation completes.
  *
  * @example
  * <Fade direction="up">Content fades up</Fade>
  * <Fade delay={0.1}>Delayed fade</Fade>
  */
-export const Fade = forwardRef<HTMLDivElement, FadeProps>(
-	({ direction, duration: customDuration, delay, children, ...props }, ref) => {
-		const variants = fadeDirectionVariants[direction ?? 'none']
+export function Fade({
+	direction,
+	duration: customDuration,
+	delay,
+	children,
+	className,
+}: FadeProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+	const dir = direction ?? 'none'
 
-		return (
-			<motion.div
-				ref={ref}
-				variants={variants}
-				initial="initial"
-				animate="animate"
-				exit="exit"
-				transition={
-					customDuration || delay
-						? {
-								duration: customDuration,
-								delay,
-								ease: easing.easeOut,
-							}
-						: undefined
-				}
-				{...props}
-			>
-				{children}
-			</motion.div>
-		)
-	}
-)
-Fade.displayName = 'Fade'
+	return (
+		<div
+			ref={ref}
+			className={className}
+			style={entranceStyle(inView, {
+				duration: customDuration ?? duration.medium,
+				delay,
+				translate: fadeTranslates[dir],
+			})}
+		>
+			{children}
+		</div>
+	)
+}
 
 // ============================================================================
-// Scale Component
+// Scale Component — Framer Motion (AnimatePresence compatible)
 // ============================================================================
 
 /**
  * Scale - Animated scale in/out
+ *
+ * Kept as Framer Motion for AnimatePresence exit animations.
  *
  * @example
  * <Scale>Modal content</Scale>
@@ -172,7 +213,7 @@ export const Scale = forwardRef<HTMLDivElement, ScaleProps>(
 Scale.displayName = 'Scale'
 
 // ============================================================================
-// Slide Component
+// Slide Component — Framer Motion (AnimatePresence compatible)
 // ============================================================================
 
 const slideDirectionVariants = {
@@ -184,6 +225,8 @@ const slideDirectionVariants = {
 
 /**
  * Slide - Full slide animation (100% translation)
+ *
+ * Kept as Framer Motion for AnimatePresence exit animations.
  *
  * @example
  * <Slide direction="left">Drawer content</Slide>
@@ -207,17 +250,34 @@ export const Slide = forwardRef<HTMLDivElement, SlideProps>(
 Slide.displayName = 'Slide'
 
 // ============================================================================
-// Stagger Components
+// Stagger Components — CSS First
 // ============================================================================
 
-const staggerSpeedVariants = {
-	fast: staggerContainerFast,
-	normal: staggerContainer,
-	slow: staggerContainerSlow,
+/**
+ * Context for passing viewport state and stagger timing from
+ * StaggerList/AnimatedList to their child items.
+ */
+interface StaggerContextValue {
+	inView: boolean
+	step: number
+	nextIndex: () => number
+}
+
+const StaggerContext = createContext<StaggerContextValue>({
+	inView: true,
+	step: 0,
+	nextIndex: () => 0,
+})
+
+function resolveStep(speed: StaggerSpeed) {
+	return speed === 'fast' ? stagger.fast : speed === 'normal' ? stagger.normal : stagger.slow
 }
 
 /**
- * StaggerList - Container for staggered child animations
+ * StaggerList - CSS transition container for staggered child animations
+ *
+ * Uses IntersectionObserver + React context to coordinate
+ * stagger timing across StaggerItem children.
  *
  * @example
  * <StaggerList speed="fast">
@@ -225,49 +285,59 @@ const staggerSpeedVariants = {
  *   <StaggerItem>Item 2</StaggerItem>
  * </StaggerList>
  */
-export const StaggerList = forwardRef<HTMLDivElement, StaggerListProps>(
-	({ speed = 'normal', children, ...props }, ref) => {
-		return (
-			<motion.div
-				ref={ref}
-				variants={staggerSpeedVariants[speed]}
-				initial="initial"
-				animate="animate"
-				exit="exit"
-				{...props}
-			>
-				{children}
-			</motion.div>
-		)
-	}
-)
-StaggerList.displayName = 'StaggerList'
+export function StaggerList({ speed = 'normal', children, className }: StaggerListProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+	const step = resolveStep(speed)
+	const indexRef = useRef(0)
+	// Reset counter on each render so items get consistent indices
+	indexRef.current = 0
 
-const staggerItemTypeVariants = {
-	fade: staggerItemFadeVariants,
-	fadeUp: staggerItemVariants,
-	scale: staggerItemScaleVariants,
+	return (
+		<StaggerContext.Provider value={{ inView, step, nextIndex: () => indexRef.current++ }}>
+			<div ref={ref} className={className}>
+				{children}
+			</div>
+		</StaggerContext.Provider>
+	)
+}
+
+const staggerItemTranslates = {
+	fade: 'none',
+	fadeUp: 'translateY(10px)',
+	scale: 'scale(0.9)',
 }
 
 /**
- * StaggerItem - Child item for StaggerList
+ * StaggerItem - CSS transition child for StaggerList
+ *
+ * Captures its stagger index on mount and applies
+ * a progressive delay via CSS transition-delay.
  *
  * @example
  * <StaggerItem type="fadeUp">List item</StaggerItem>
  */
-export const StaggerItem = forwardRef<HTMLDivElement, StaggerItemProps>(
-	({ type = 'fadeUp', children, ...props }, ref) => {
-		return (
-			<motion.div ref={ref} variants={staggerItemTypeVariants[type]} {...props}>
-				{children}
-			</motion.div>
-		)
-	}
-)
-StaggerItem.displayName = 'StaggerItem'
+export function StaggerItem({ type = 'fadeUp', children, className }: StaggerItemProps) {
+	const { inView, step, nextIndex } = useContext(StaggerContext)
+	const [index] = useState(() => nextIndex())
+	const dur = type === 'fade' ? duration.normal : duration.medium
+
+	return (
+		<div
+			className={className}
+			style={entranceStyle(inView, {
+				duration: dur,
+				delay: index * step,
+				translate: staggerItemTranslates[type],
+			})}
+		>
+			{children}
+		</div>
+	)
+}
 
 // ============================================================================
-// Presence Wrapper
+// Presence Wrapper — Framer Motion
 // ============================================================================
 
 /**
@@ -287,7 +357,7 @@ export function Presence({ id, mode = 'wait', children, initial = false }: Prese
 }
 
 // ============================================================================
-// Sidebar Animation Component
+// Sidebar Animation Component — Framer Motion (AnimatePresence)
 // ============================================================================
 
 interface SidebarContentProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
@@ -299,6 +369,8 @@ interface SidebarContentProps extends Omit<HTMLMotionProps<'div'>, 'initial' | '
 
 /**
  * SidebarContent - Animated sidebar content with context switching
+ *
+ * Kept as Framer Motion for AnimatePresence exit animations.
  *
  * @example
  * <AnimatePresence mode="wait">
@@ -327,7 +399,7 @@ export const SidebarContent = forwardRef<HTMLDivElement, SidebarContentProps>(
 SidebarContent.displayName = 'SidebarContent'
 
 // ============================================================================
-// Loading/Skeleton Transition
+// Loading/Skeleton Transition — Framer Motion (AnimatePresence)
 // ============================================================================
 
 interface LoadingTransitionProps {
@@ -343,6 +415,8 @@ interface LoadingTransitionProps {
 
 /**
  * LoadingTransition - Smooth crossfade between skeleton and content
+ *
+ * Kept as Framer Motion for AnimatePresence exit animations.
  *
  * @example
  * <LoadingTransition isLoading={isLoading} skeleton={<Skeleton />}>
@@ -381,18 +455,20 @@ export function LoadingTransition({
 }
 
 // ============================================================================
-// Animated List for Data Tables
+// Animated List for Data Tables — CSS First
 // ============================================================================
 
-interface AnimatedListProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate'> {
+interface AnimatedListProps {
 	/** Children to animate */
 	children: ReactNode
 	/** Stagger speed */
 	speed?: StaggerSpeed
+	/** Additional class name */
+	className?: string
 }
 
 /**
- * AnimatedList - Container for animated list items
+ * AnimatedList - CSS transition container for animated list items
  *
  * Use with AnimatedListItem for staggered reveal of list contents.
  * Perfect for data tables, search results, etc.
@@ -406,52 +482,60 @@ interface AnimatedListProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'an
  *   ))}
  * </AnimatedList>
  */
-export const AnimatedList = forwardRef<HTMLDivElement, AnimatedListProps>(
-	({ speed = 'fast', children, ...props }, ref) => {
-		return (
-			<motion.div
-				ref={ref}
-				variants={staggerSpeedVariants[speed]}
-				initial="initial"
-				animate="animate"
-				{...props}
-			>
-				{children}
-			</motion.div>
-		)
-	}
-)
-AnimatedList.displayName = 'AnimatedList'
+export function AnimatedList({ speed = 'fast', children, className }: AnimatedListProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+	const step = resolveStep(speed)
+	const indexRef = useRef(0)
+	indexRef.current = 0
 
-interface AnimatedListItemProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate'> {
+	return (
+		<StaggerContext.Provider value={{ inView, step, nextIndex: () => indexRef.current++ }}>
+			<div ref={ref} className={className}>
+				{children}
+			</div>
+		</StaggerContext.Provider>
+	)
+}
+
+interface AnimatedListItemProps {
 	/** Children to animate */
 	children: ReactNode
+	/** Additional class name */
+	className?: string
 }
 
 /**
- * AnimatedListItem - Individual list item with stagger animation
+ * AnimatedListItem - CSS transition list item with stagger animation
  *
  * @example
  * <AnimatedListItem>
  *   <div className="p-4 border-b">Row content</div>
  * </AnimatedListItem>
  */
-export const AnimatedListItem = forwardRef<HTMLDivElement, AnimatedListItemProps>(
-	({ children, ...props }, ref) => {
-		return (
-			<motion.div ref={ref} variants={staggerItemFadeVariants} {...props}>
-				{children}
-			</motion.div>
-		)
-	}
-)
-AnimatedListItem.displayName = 'AnimatedListItem'
+export function AnimatedListItem({ children, className }: AnimatedListItemProps) {
+	const { inView, step, nextIndex } = useContext(StaggerContext)
+	const [index] = useState(() => nextIndex())
+
+	return (
+		<div
+			className={className}
+			style={entranceStyle(inView, {
+				duration: duration.normal,
+				delay: index * step,
+				translate: 'none',
+			})}
+		>
+			{children}
+		</div>
+	)
+}
 
 // ============================================================================
-// Interactive Card
+// Interactive Card — CSS First
 // ============================================================================
 
-interface InteractiveCardProps extends Omit<HTMLMotionProps<'div'>, 'whileHover' | 'whileTap'> {
+interface InteractiveCardProps extends HTMLAttributes<HTMLDivElement> {
 	/** Children to render */
 	children: ReactNode
 	/** Enable tap/press animation */
@@ -459,31 +543,59 @@ interface InteractiveCardProps extends Omit<HTMLMotionProps<'div'>, 'whileHover'
 }
 
 /**
- * InteractiveCard - Card with hover lift and optional press effect
+ * InteractiveCard - Card with CSS hover lift and optional press effect
+ *
+ * Uses CSS transitions for hover/active states instead of Framer Motion.
+ * No persistent compositing layers.
  *
  * @example
  * <InteractiveCard pressable className="p-6 rounded-xl border bg-card">
  *   <h3>Clickable Card</h3>
  * </InteractiveCard>
  */
-export const InteractiveCard = forwardRef<HTMLDivElement, InteractiveCardProps>(
-	({ pressable = false, children, ...props }, ref) => {
-		return (
-			<motion.div
-				ref={ref}
-				whileHover={{ y: -2, transition: { duration: duration.fast, ease: easing.easeOut } }}
-				whileTap={pressable ? { scale: 0.98 } : undefined}
-				{...props}
-			>
-				{children}
-			</motion.div>
-		)
-	}
-)
-InteractiveCard.displayName = 'InteractiveCard'
+export function InteractiveCard({
+	pressable = false,
+	children,
+	className,
+	style,
+	...props
+}: InteractiveCardProps) {
+	return (
+		<div
+			className={className}
+			style={{
+				transition: `transform ${duration.fast}s ${EASE_OUT}`,
+				...style,
+			}}
+			onMouseEnter={(e) => {
+				e.currentTarget.style.transform = 'translateY(-2px)'
+			}}
+			onMouseLeave={(e) => {
+				e.currentTarget.style.transform = 'none'
+			}}
+			onMouseDown={
+				pressable
+					? (e) => {
+							e.currentTarget.style.transform = 'scale(0.98)'
+						}
+					: undefined
+			}
+			onMouseUp={
+				pressable
+					? (e) => {
+							e.currentTarget.style.transform = 'translateY(-2px)'
+						}
+					: undefined
+			}
+			{...props}
+		>
+			{children}
+		</div>
+	)
+}
 
 // ============================================================================
-// Collapse Animation
+// Collapse Animation — Framer Motion (AnimatePresence)
 // ============================================================================
 
 interface CollapseProps {
@@ -497,6 +609,8 @@ interface CollapseProps {
 
 /**
  * Collapse - Animated height transition for expandable content
+ *
+ * Kept as Framer Motion for AnimatePresence height animation.
  *
  * @example
  * <Collapse isOpen={expanded}>
@@ -523,7 +637,7 @@ export function Collapse({ isOpen, children, className }: CollapseProps) {
 }
 
 // ============================================================================
-// Page-Level Wrappers for Server Component Content
+// Page-Level Wrappers for Server Component Content — CSS First
 // ============================================================================
 
 interface AnimatedPageProps {
@@ -534,26 +648,31 @@ interface AnimatedPageProps {
 }
 
 /**
- * AnimatedPage - Wraps server component content with fade animation
+ * AnimatedPage - CSS transition page entrance animation
  *
- * Use at the top level of page content for entrance animation.
+ * Uses IntersectionObserver for viewport-triggered fade-up.
+ * No persistent compositing layers after animation completes.
  *
  * @example
- * // In a client component wrapper
  * <AnimatedPage>
  *   {serverRenderedContent}
  * </AnimatedPage>
  */
 export function AnimatedPage({ children, className }: AnimatedPageProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true })
+
 	return (
-		<motion.div
-			initial={{ opacity: 0, y: 8 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: duration.medium, ease: easing.easeOut }}
+		<div
+			ref={ref}
 			className={className}
+			style={entranceStyle(inView, {
+				duration: duration.medium,
+				translate: 'translateY(8px)',
+			})}
 		>
 			{children}
-		</motion.div>
+		</div>
 	)
 }
 
@@ -587,20 +706,18 @@ interface AnimatedGridProps {
 export function AnimatedGrid({ children, speed = 'fast', className }: AnimatedGridProps) {
 	const ref = useRef<HTMLDivElement>(null)
 	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const step = speed === 'fast' ? stagger.fast : speed === 'normal' ? stagger.normal : stagger.slow
-	const ease = easing.easeOut.join(',')
+	const step = resolveStep(speed)
 
 	return (
 		<div ref={ref} className={className}>
 			{Children.map(children, (child, i) =>
 				child != null ? (
 					<div
-						style={{
-							opacity: inView ? 1 : 0,
-							transform: inView ? 'none' : 'translateY(8px)',
-							transition: `opacity ${duration.slower}s cubic-bezier(${ease}), transform ${duration.slower}s cubic-bezier(${ease})`,
-							transitionDelay: inView ? `${i * step}s` : '0s',
-						}}
+						style={entranceStyle(inView, {
+							duration: duration.slower,
+							delay: i * step,
+							translate: 'translateY(8px)',
+						})}
 					>
 						{child}
 					</div>
@@ -620,7 +737,10 @@ interface AnimatedSectionProps {
 }
 
 /**
- * AnimatedSection - Fades in a section with optional delay
+ * AnimatedSection - CSS transition section with optional delay
+ *
+ * Uses IntersectionObserver for viewport-triggered fade-up.
+ * No persistent compositing layers after animation completes.
  *
  * @example
  * <AnimatedSection delay={0.1}>
@@ -629,19 +749,21 @@ interface AnimatedSectionProps {
  * </AnimatedSection>
  */
 export function AnimatedSection({ children, delay = 0, className }: AnimatedSectionProps) {
+	const ref = useRef<HTMLElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+
 	return (
-		<motion.section
-			initial={{ opacity: 0, y: 12 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{
-				duration: duration.medium,
-				ease: easing.easeOut,
-				delay,
-			}}
+		<section
+			ref={ref}
 			className={className}
+			style={entranceStyle(inView, {
+				duration: duration.medium,
+				delay,
+				translate: 'translateY(12px)',
+			})}
 		>
 			{children}
-		</motion.section>
+		</section>
 	)
 }
 
@@ -659,7 +781,10 @@ interface AnimatedEmptyStateProps {
 }
 
 /**
- * AnimatedEmptyState - Empty state with staggered entrance
+ * AnimatedEmptyState - CSS transition empty state with staggered entrance
+ *
+ * Each child element (icon, title, description, action) enters
+ * with a progressive delay for a staggered reveal effect.
  *
  * @example
  * <AnimatedEmptyState
@@ -676,23 +801,30 @@ export function AnimatedEmptyState({
 	action,
 	className,
 }: AnimatedEmptyStateProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+	const step = stagger.fast
+
+	const itemStyle = (i: number) =>
+		entranceStyle(inView, {
+			duration: duration.medium,
+			delay: i * step,
+			translate: 'translateY(10px)',
+		})
+
+	let idx = 0
 	return (
-		<motion.div
-			variants={staggerContainerFast}
-			initial="initial"
-			animate="animate"
-			className={className}
-		>
-			<motion.div variants={staggerItemVariants}>{icon}</motion.div>
-			<motion.h3 variants={staggerItemVariants}>{title}</motion.h3>
-			{description && <motion.p variants={staggerItemVariants}>{description}</motion.p>}
-			{action && <motion.div variants={staggerItemVariants}>{action}</motion.div>}
-		</motion.div>
+		<div ref={ref} className={className}>
+			<div style={itemStyle(idx++)}>{icon}</div>
+			<h3 style={itemStyle(idx++)}>{title}</h3>
+			{description && <p style={itemStyle(idx++)}>{description}</p>}
+			{action && <div style={itemStyle(idx++)}>{action}</div>}
+		</div>
 	)
 }
 
 // ============================================================================
-// Animated Button States
+// Animated Button States — Framer Motion (AnimatePresence)
 // ============================================================================
 
 type ButtonState = 'idle' | 'loading' | 'success' | 'error'
@@ -715,8 +847,8 @@ interface AnimatedButtonContentProps {
 /**
  * AnimatedButtonContent - Smooth state transitions for button content
  *
- * Wrap button children with this for animated loading/success/error states.
- * Works with any button component.
+ * Kept as Framer Motion for AnimatePresence state switching
+ * and SVG path drawing animations.
  *
  * @example
  * <Button disabled={isPending}>
@@ -825,10 +957,10 @@ export function AnimatedButtonContent({
 }
 
 // ============================================================================
-// Animated Row (for lists, tables, activity feeds)
+// Animated Row (for lists, tables, activity feeds) — CSS First
 // ============================================================================
 
-interface AnimatedRowProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface AnimatedRowProps extends HTMLAttributes<HTMLDivElement> {
 	/** Children to animate */
 	children: ReactNode
 	/** Index for stagger delay calculation */
@@ -838,10 +970,10 @@ interface AnimatedRowProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'ani
 }
 
 /**
- * AnimatedRow - Individual row with entrance animation
+ * AnimatedRow - CSS transition row with staggered entrance
  *
- * Can be used standalone or inside an AnimatedList.
- * Supports index-based staggering when used in a loop.
+ * Uses IntersectionObserver per row for viewport-triggered animation.
+ * No persistent compositing layers after animation completes.
  *
  * @example
  * {items.map((item, i) => (
@@ -850,33 +982,41 @@ interface AnimatedRowProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'ani
  *   </AnimatedRow>
  * ))}
  */
-export const AnimatedRow = forwardRef<HTMLDivElement, AnimatedRowProps>(
-	({ children, index = 0, baseDelay = 0, ...props }, ref) => {
-		return (
-			<motion.div
-				ref={ref}
-				initial={{ opacity: 0, y: 8 }}
-				animate={{ opacity: 1, y: 0 }}
-				exit={{ opacity: 0, y: -4 }}
-				transition={{
+export function AnimatedRow({
+	children,
+	index = 0,
+	baseDelay = 0,
+	className,
+	style,
+	...props
+}: AnimatedRowProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-64px' })
+
+	return (
+		<div
+			ref={ref}
+			className={className}
+			style={{
+				...entranceStyle(inView, {
 					duration: duration.fast,
-					ease: easing.easeOut,
-					delay: baseDelay + (index * stagger.fast),
-				}}
-				{...props}
-			>
-				{children}
-			</motion.div>
-		)
-	}
-)
-AnimatedRow.displayName = 'AnimatedRow'
+					delay: baseDelay + index * stagger.fast,
+					translate: 'translateY(8px)',
+				}),
+				...style,
+			}}
+			{...props}
+		>
+			{children}
+		</div>
+	)
+}
 
 // ============================================================================
-// Animated Table Row (for data tables)
+// Animated Table Row (for data tables) — CSS First
 // ============================================================================
 
-interface AnimatedTableRowProps extends Omit<HTMLMotionProps<'tr'>, 'initial' | 'animate' | 'exit'> {
+interface AnimatedTableRowProps extends HTMLAttributes<HTMLTableRowElement> {
 	/** Children to animate */
 	children: ReactNode
 	/** Index for stagger delay calculation */
@@ -886,10 +1026,10 @@ interface AnimatedTableRowProps extends Omit<HTMLMotionProps<'tr'>, 'initial' | 
 }
 
 /**
- * AnimatedTableRow - Table row with staggered entrance animation
+ * AnimatedTableRow - CSS transition table row with staggered entrance
  *
- * Use inside <tbody> for animated table rows. Provides same animation
- * as AnimatedRow but for HTML table elements.
+ * Uses IntersectionObserver per row for viewport-triggered animation.
+ * No persistent compositing layers after animation completes.
  *
  * @example
  * <tbody>
@@ -900,30 +1040,38 @@ interface AnimatedTableRowProps extends Omit<HTMLMotionProps<'tr'>, 'initial' | 
  *   ))}
  * </tbody>
  */
-export const AnimatedTableRow = forwardRef<HTMLTableRowElement, AnimatedTableRowProps>(
-	({ children, index = 0, baseDelay = 0, ...props }, ref) => {
-		return (
-			<motion.tr
-				ref={ref}
-				initial={{ opacity: 0, y: 8 }}
-				animate={{ opacity: 1, y: 0 }}
-				exit={{ opacity: 0, y: -4 }}
-				transition={{
+export function AnimatedTableRow({
+	children,
+	index = 0,
+	baseDelay = 0,
+	className,
+	style,
+	...props
+}: AnimatedTableRowProps) {
+	const ref = useRef<HTMLTableRowElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-64px' })
+
+	return (
+		<tr
+			ref={ref}
+			className={className}
+			style={{
+				...entranceStyle(inView, {
 					duration: duration.fast,
-					ease: easing.easeOut,
-					delay: baseDelay + (index * stagger.fast),
-				}}
-				{...props}
-			>
-				{children}
-			</motion.tr>
-		)
-	}
-)
-AnimatedTableRow.displayName = 'AnimatedTableRow'
+					delay: baseDelay + index * stagger.fast,
+					translate: 'translateY(8px)',
+				}),
+				...style,
+			}}
+			{...props}
+		>
+			{children}
+		</tr>
+	)
+}
 
 // ============================================================================
-// Pulse Animation (for notifications, badges)
+// Pulse Animation (for notifications, badges) — Framer Motion
 // ============================================================================
 
 interface PulseProps extends Omit<HTMLMotionProps<'span'>, 'animate'> {
@@ -935,6 +1083,8 @@ interface PulseProps extends Omit<HTMLMotionProps<'span'>, 'animate'> {
 
 /**
  * Pulse - Attention-grabbing pulse animation
+ *
+ * Kept as Framer Motion for continuous keyframe animation.
  *
  * @example
  * <Pulse active={hasUnread}>
@@ -965,7 +1115,7 @@ export const Pulse = forwardRef<HTMLSpanElement, PulseProps>(
 Pulse.displayName = 'Pulse'
 
 // ============================================================================
-// Shake Animation (for errors, validation)
+// Shake Animation (for errors, validation) — Framer Motion
 // ============================================================================
 
 interface ShakeProps extends Omit<HTMLMotionProps<'div'>, 'animate'> {
@@ -979,6 +1129,8 @@ interface ShakeProps extends Omit<HTMLMotionProps<'div'>, 'animate'> {
 
 /**
  * Shake - Error shake animation for form validation
+ *
+ * Kept as Framer Motion for keyframe animation + completion callback.
  *
  * @example
  * <Shake shake={hasError} onShakeComplete={() => setHasError(false)}>
@@ -1007,7 +1159,7 @@ export const Shake = forwardRef<HTMLDivElement, ShakeProps>(
 Shake.displayName = 'Shake'
 
 // ============================================================================
-// Success Checkmark Animation
+// Success Checkmark Animation — Framer Motion
 // ============================================================================
 
 interface SuccessCheckProps {
@@ -1021,6 +1173,8 @@ interface SuccessCheckProps {
 
 /**
  * SuccessCheck - Animated checkmark for success states
+ *
+ * Kept as Framer Motion for SVG path drawing + spring animations.
  *
  * @example
  * <SuccessCheck show={formSubmitted} />

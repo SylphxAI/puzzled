@@ -1,14 +1,17 @@
 'use client'
 
 /**
- * Page Transition Component
+ * Page Transition Component — CSS First
  *
  * Provides consistent page entrance animations across the application.
- * Use in layouts to animate page content on navigation.
+ * Uses CSS transitions triggered on mount instead of Framer Motion.
+ *
+ * No persistent `will-change` compositing layers after animation completes.
+ * `transform: none` end state avoids stacking context side effects.
  */
 
-import { motion } from 'framer-motion'
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { duration, easing } from './config'
 
 interface PageTransitionProps {
@@ -20,28 +23,19 @@ interface PageTransitionProps {
 	variant?: 'fade' | 'fadeUp' | 'fadeScale'
 }
 
-const variants = {
-	fade: {
-		initial: { opacity: 0 },
-		animate: { opacity: 1 },
-		exit: { opacity: 0 },
-	},
-	fadeUp: {
-		initial: { opacity: 0, y: 16 },
-		animate: { opacity: 1, y: 0 },
-		exit: { opacity: 0, y: -8 },
-	},
-	fadeScale: {
-		initial: { opacity: 0, scale: 0.98 },
-		animate: { opacity: 1, scale: 1 },
-		exit: { opacity: 0, scale: 0.98 },
-	},
+const EASE_OUT = `cubic-bezier(${easing.easeOut.join(',')})`
+
+const initialTransforms: Record<PageTransitionProps['variant'] & string, string> = {
+	fade: 'none',
+	fadeUp: 'translateY(16px)',
+	fadeScale: 'scale(0.98)',
 }
 
 /**
- * PageTransition - Wraps page content with entrance animation
+ * PageTransition - Wraps page content with CSS entrance animation
  *
- * Use in layout files to provide consistent page transitions.
+ * Triggers on mount via requestAnimationFrame to ensure the browser
+ * paints the initial (hidden) state before transitioning.
  *
  * @example
  * // In layout.tsx
@@ -54,20 +48,24 @@ export function PageTransition({
 	className,
 	variant = 'fadeUp',
 }: PageTransitionProps) {
-	const selectedVariant = variants[variant]
+	const [mounted, setMounted] = useState(false)
+
+	useEffect(() => {
+		const raf = requestAnimationFrame(() => setMounted(true))
+		return () => cancelAnimationFrame(raf)
+	}, [])
 
 	return (
-		<motion.div
-			initial={selectedVariant.initial}
-			animate={selectedVariant.animate}
-			transition={{
-				duration: duration.medium,
-				ease: easing.easeOut,
-			}}
+		<div
 			className={className}
+			style={{
+				opacity: mounted ? 1 : 0,
+				transform: mounted ? 'none' : initialTransforms[variant],
+				transition: `opacity ${duration.medium}s ${EASE_OUT}, transform ${duration.medium}s ${EASE_OUT}`,
+			}}
 		>
 			{children}
-		</motion.div>
+		</div>
 	)
 }
 
