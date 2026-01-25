@@ -12,8 +12,9 @@ import {
 	type HTMLMotionProps,
 	type MotionProps,
 	motion,
+	useInView,
 } from 'framer-motion'
-import { Children, type ReactNode, forwardRef } from 'react'
+import { Children, type ReactNode, forwardRef, useRef } from 'react'
 import { duration, easing, spring, stagger } from './config'
 import {
 	fadeDownVariants,
@@ -566,10 +567,15 @@ interface AnimatedGridProps {
 }
 
 /**
- * AnimatedGrid - Staggers grid/list children with animations
+ * AnimatedGrid - Staggers grid/list children with viewport-triggered animations
  *
- * Wraps each direct child in a staggered animation.
- * Perfect for card grids, lists, etc.
+ * Uses CSS transitions instead of Framer Motion wrappers to avoid
+ * `will-change` compositing layers that cause subpixel rendering
+ * artifacts on card borders and shadows.
+ *
+ * Each child gets a staggered fade-up entrance when the grid
+ * enters the viewport. After animation, `transform: none` ensures
+ * no persistent stacking context.
  *
  * @example
  * <AnimatedGrid className="grid grid-cols-3 gap-4" speed="fast">
@@ -579,17 +585,28 @@ interface AnimatedGridProps {
  * </AnimatedGrid>
  */
 export function AnimatedGrid({ children, speed = 'fast', className }: AnimatedGridProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-32px' })
+	const step = speed === 'fast' ? stagger.fast : speed === 'normal' ? stagger.normal : stagger.slow
+	const ease = easing.easeOut.join(',')
+
 	return (
-		<motion.div
-			variants={staggerSpeedVariants[speed]}
-			initial="initial"
-			animate="animate"
-			className={className}
-		>
-			{Children.map(children, (child) => (
-				<motion.div variants={staggerItemFadeVariants}>{child}</motion.div>
-			))}
-		</motion.div>
+		<div ref={ref} className={className}>
+			{Children.map(children, (child, i) =>
+				child != null ? (
+					<div
+						style={{
+							opacity: inView ? 1 : 0,
+							transform: inView ? 'none' : 'translateY(8px)',
+							transition: `opacity ${duration.slower}s cubic-bezier(${ease}), transform ${duration.slower}s cubic-bezier(${ease})`,
+							transitionDelay: inView ? `${i * step}s` : '0s',
+						}}
+					>
+						{child}
+					</div>
+				) : null
+			)}
+		</div>
 	)
 }
 
