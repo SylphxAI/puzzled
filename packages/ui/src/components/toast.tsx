@@ -4,7 +4,7 @@ import * as ToastPrimitive from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react'
-import { createContext, forwardRef, useCallback, useContext, useState } from 'react'
+import { createContext, forwardRef, useCallback, useContext, useEffect, useState } from 'react'
 import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
 
@@ -164,9 +164,28 @@ export function useToast() {
 	return context
 }
 
+/**
+ * Hook to detect reduced motion preference
+ */
+function usePrefersReducedMotion(): boolean {
+	const [prefersReduced, setPrefersReduced] = useState(false)
+
+	useEffect(() => {
+		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+		setPrefersReduced(mq.matches)
+
+		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
+		mq.addEventListener('change', handler)
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+
+	return prefersReduced
+}
+
 // Toaster component that renders all toasts with smooth animations
 function Toaster() {
 	const { toasts, removeToast } = useToast()
+	const prefersReducedMotion = usePrefersReducedMotion()
 
 	return (
 		<>
@@ -176,16 +195,18 @@ function Toaster() {
 					return (
 						<motion.div
 							key={toast.id}
-							layout
-							initial={{ opacity: 0, y: 50, scale: 0.9 }}
+							layout={!prefersReducedMotion}
+							initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 50, scale: 0.9 }}
 							animate={{ opacity: 1, y: 0, scale: 1 }}
-							exit={{ opacity: 0, x: 100, scale: 0.9 }}
-							transition={{
-								type: 'spring',
-								stiffness: 500,
-								damping: 35,
-								mass: 1,
-							}}
+							exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 100, scale: 0.9 }}
+							transition={prefersReducedMotion
+								? { duration: 0.15 }
+								: {
+									type: 'spring',
+									stiffness: 500,
+									damping: 35,
+									mass: 1,
+								}}
 						>
 							<Toast
 								variant={toast.type}
