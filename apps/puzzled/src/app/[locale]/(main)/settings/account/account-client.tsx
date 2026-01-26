@@ -3,6 +3,7 @@
 import { AccountSection } from '@sylphx/sdk/react'
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { SettingsPageHeader } from '@/shared/components/layout'
 
 /**
  * Account Settings Client Component
@@ -18,18 +19,14 @@ export function AccountSettingsContent() {
 
 	return (
 		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-center gap-3">
-				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/20">
-					<UserCircle className="h-6 w-6 text-primary" />
-				</div>
-				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('account.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('account.description')}</p>
-				</div>
-			</div>
+			<SettingsPageHeader
+				icon={UserCircle}
+				gradientClasses="from-primary/20 to-blue-500/20"
+				iconColorClass="text-primary"
+				title={t('account.title')}
+				description={t('account.description')}
+			/>
 
-			{/* SDK Account Section Component */}
 			<div className="rounded-2xl border bg-card overflow-hidden p-6">
 				<AccountSection />
 			</div>

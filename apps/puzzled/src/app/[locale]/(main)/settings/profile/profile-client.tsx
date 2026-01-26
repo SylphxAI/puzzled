@@ -3,6 +3,7 @@
 import { UserProfile } from '@sylphx/sdk/react'
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { SettingsPageHeader } from '@/shared/components/layout'
 
 /**
  * Profile Settings Client Component
@@ -15,18 +16,14 @@ export function ProfileSettingsContent() {
 
 	return (
 		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-center gap-3">
-				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500/20 to-pink-500/20">
-					<UserCircle className="h-6 w-6 text-rose-500" />
-				</div>
-				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('profile.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('profile.description')}</p>
-				</div>
-			</div>
+			<SettingsPageHeader
+				icon={UserCircle}
+				gradientClasses="from-rose-500/20 to-pink-500/20"
+				iconColorClass="text-rose-500"
+				title={t('profile.title')}
+				description={t('profile.description')}
+			/>
 
-			{/* SDK UserProfile Component */}
 			<div className="rounded-2xl border bg-card overflow-hidden">
 				<UserProfile sections={['profile']} showCard={false} header={null} />
 			</div>

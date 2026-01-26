@@ -5,6 +5,7 @@ import { Button } from '@sylphx/ui'
 import { Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { SettingsPageHeader } from '@/shared/components/layout'
 
 /**
  * Subscription Settings Client Component
@@ -21,16 +22,13 @@ export function SubscriptionSettingsContent() {
 
 	return (
 		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-center gap-3">
-				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20">
-					<Crown className="h-6 w-6 text-amber-500" />
-				</div>
-				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('subscription.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('subscription.description')}</p>
-				</div>
-			</div>
+			<SettingsPageHeader
+				icon={Crown}
+				gradientClasses="from-amber-500/20 to-orange-500/20"
+				iconColorClass="text-amber-500"
+				title={t('subscription.title')}
+				description={t('subscription.description')}
+			/>
 
 			{/* Current Plan Status */}
 			<div className="rounded-2xl border bg-card p-6">
