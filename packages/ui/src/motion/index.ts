@@ -18,6 +18,13 @@
 // Configuration
 export { duration, easing, spring, stagger, transition } from './config'
 
+// Hooks
+export {
+	useReducedMotion,
+	getReducedMotionProps,
+	getReducedMotionTransition,
+} from './use-reduced-motion'
+
 // Variants
 export {
 	// Fade

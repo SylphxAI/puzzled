@@ -3,9 +3,27 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { motion } from 'motion/react'
 import { X } from 'lucide-react'
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
 import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
+
+/**
+ * Hook to detect reduced motion preference
+ */
+function usePrefersReducedMotion(): boolean {
+	const [prefersReduced, setPrefersReduced] = useState(false)
+
+	useEffect(() => {
+		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+		setPrefersReduced(mq.matches)
+
+		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
+		mq.addEventListener('change', handler)
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+
+	return prefersReduced
+}
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -15,24 +33,75 @@ const DialogClose = DialogPrimitive.Close
 // Create motion-enhanced div for overlay
 const MotionOverlay = motion.create('div')
 
+function OverlayAnimation() {
+	const prefersReduced = usePrefersReducedMotion()
+
+	return (
+		<MotionOverlay
+			initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={prefersReduced ? { opacity: 0 } : { opacity: 0 }}
+			transition={prefersReduced ? { duration: 0 } : { duration: duration.normal, ease: easing.easeOut }}
+			className="absolute inset-0 bg-black/50"
+		/>
+	)
+}
+
 const DialogOverlay = forwardRef<
 	HTMLDivElement,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
 	<DialogPrimitive.Overlay ref={ref} className={cn('fixed inset-0 z-modal', className)} {...props}>
-		<MotionOverlay
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
-			transition={{ duration: duration.normal, ease: easing.easeOut }}
-			className="absolute inset-0 bg-black/50"
-		/>
+		<OverlayAnimation />
 	</DialogPrimitive.Overlay>
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 // Create motion-enhanced div for content
 const MotionContent = motion.create('div')
+
+function ContentAnimation({
+	children,
+	hideCloseButton,
+}: {
+	children: React.ReactNode
+	hideCloseButton?: boolean
+}) {
+	const prefersReduced = usePrefersReducedMotion()
+
+	return (
+		<MotionContent
+			initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.95, y: -10 }}
+			animate={{ opacity: 1, scale: 1, y: 0 }}
+			transition={
+				prefersReduced
+					? { duration: 0 }
+					: {
+							type: 'spring',
+							stiffness: 400,
+							damping: 30,
+						}
+			}
+			className="max-h-[90vh] overflow-auto"
+		>
+			{children}
+			{!hideCloseButton && (
+				<DialogPrimitive.Close
+					className={cn(
+						// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
+						'absolute right-3 top-3 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
+						'hover:bg-muted hover:opacity-100',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+						'disabled:pointer-events-none',
+					)}
+					aria-label="Close dialog"
+				>
+					<X className="h-4 w-4" aria-hidden="true" />
+				</DialogPrimitive.Close>
+			)}
+		</MotionContent>
+	)
+}
 
 const DialogContent = forwardRef<
 	React.ComponentRef<typeof DialogPrimitive.Content>,
@@ -50,32 +119,7 @@ const DialogContent = forwardRef<
 			)}
 			{...props}
 		>
-			<MotionContent
-				initial={{ opacity: 0, scale: 0.95, y: -10 }}
-				animate={{ opacity: 1, scale: 1, y: 0 }}
-				transition={{
-					type: 'spring',
-					stiffness: 400,
-					damping: 30,
-				}}
-				className="overflow-auto max-h-[90vh]"
-			>
-				{children}
-				{!hideCloseButton && (
-					<DialogPrimitive.Close
-						className={cn(
-							// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
-							'absolute right-3 top-3 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
-							'hover:bg-muted hover:opacity-100',
-							'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-							'disabled:pointer-events-none',
-						)}
-						aria-label="Close dialog"
-					>
-						<X className="h-4 w-4" aria-hidden="true" />
-					</DialogPrimitive.Close>
-				)}
-			</MotionContent>
+			<ContentAnimation hideCloseButton={hideCloseButton}>{children}</ContentAnimation>
 		</DialogPrimitive.Content>
 	</DialogPortal>
 ))

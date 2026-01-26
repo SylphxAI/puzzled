@@ -5,15 +5,34 @@
  *
  * A side panel that slides in from the edge of the screen.
  * Uses Framer Motion for smooth spring-based animations.
+ * Respects prefers-reduced-motion for accessibility.
  */
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { type VariantProps, cva } from 'class-variance-authority'
 import { motion } from 'motion/react'
 import { X } from 'lucide-react'
-import { forwardRef } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
 import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
+
+/**
+ * Hook to detect reduced motion preference
+ */
+function usePrefersReducedMotion(): boolean {
+	const [prefersReduced, setPrefersReduced] = useState(false)
+
+	useEffect(() => {
+		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+		setPrefersReduced(mq.matches)
+
+		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
+		mq.addEventListener('change', handler)
+		return () => mq.removeEventListener('change', handler)
+	}, [])
+
+	return prefersReduced
+}
 
 const Sheet = DialogPrimitive.Root
 const SheetTrigger = DialogPrimitive.Trigger
@@ -23,18 +42,26 @@ const SheetPortal = DialogPrimitive.Portal
 // Create motion-enhanced div for overlay
 const MotionOverlay = motion.create('div')
 
+function OverlayAnimation() {
+	const prefersReduced = usePrefersReducedMotion()
+
+	return (
+		<MotionOverlay
+			initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={prefersReduced ? { opacity: 0 } : { opacity: 0 }}
+			transition={prefersReduced ? { duration: 0 } : { duration: duration.normal, ease: easing.easeOut }}
+			className="absolute inset-0 bg-black/50"
+		/>
+	)
+}
+
 const SheetOverlay = forwardRef<
 	HTMLDivElement,
 	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
 	<DialogPrimitive.Overlay ref={ref} className={cn('fixed inset-0 z-modal', className)} {...props}>
-		<MotionOverlay
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
-			transition={{ duration: duration.normal, ease: easing.easeOut }}
-			className="absolute inset-0 bg-black/50"
-		/>
+		<OverlayAnimation />
 	</DialogPrimitive.Overlay>
 ))
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName
@@ -70,10 +97,55 @@ interface SheetContentProps
 	hideCloseButton?: boolean
 }
 
+function ContentAnimation({
+	children,
+	hideCloseButton,
+	side,
+}: {
+	children: React.ReactNode
+	hideCloseButton?: boolean
+	side: 'top' | 'bottom' | 'left' | 'right'
+}) {
+	const prefersReduced = usePrefersReducedMotion()
+	const variants = slideVariants[side]
+
+	return (
+		<MotionContent
+			initial={prefersReduced ? {} : variants.initial}
+			animate={variants.animate}
+			exit={prefersReduced ? {} : variants.exit}
+			transition={
+				prefersReduced
+					? { duration: 0 }
+					: {
+							type: 'spring',
+							stiffness: 400,
+							damping: 40,
+						}
+			}
+			className="h-full"
+		>
+			{children}
+			{!hideCloseButton && (
+				<DialogPrimitive.Close
+					className={cn(
+						// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
+						'absolute right-4 top-4 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
+						'hover:bg-muted hover:opacity-100',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+						'disabled:pointer-events-none',
+					)}
+					aria-label="Close panel"
+				>
+					<X className="h-4 w-4" aria-hidden="true" />
+				</DialogPrimitive.Close>
+			)}
+		</MotionContent>
+	)
+}
+
 const SheetContent = forwardRef<React.ComponentRef<typeof DialogPrimitive.Content>, SheetContentProps>(
 	({ side = 'right', className, children, hideCloseButton, ...props }, ref) => {
-		const variants = slideVariants[side || 'right']
-
 		return (
 			<SheetPortal>
 				<SheetOverlay />
@@ -82,25 +154,9 @@ const SheetContent = forwardRef<React.ComponentRef<typeof DialogPrimitive.Conten
 					className={cn(sheetVariants({ side }), 'overflow-hidden', className)}
 					{...props}
 				>
-					<MotionContent
-						initial={variants.initial}
-						animate={variants.animate}
-						exit={variants.exit}
-						transition={{
-							type: 'spring',
-							stiffness: 400,
-							damping: 40,
-						}}
-						className="h-full"
-					>
+					<ContentAnimation side={side || 'right'} hideCloseButton={hideCloseButton}>
 						{children}
-						{!hideCloseButton && (
-							<DialogPrimitive.Close className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity hover:bg-muted hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-								<X className="h-4 w-4" />
-								<span className="sr-only">Close</span>
-							</DialogPrimitive.Close>
-						)}
-					</MotionContent>
+					</ContentAnimation>
 				</DialogPrimitive.Content>
 			</SheetPortal>
 		)
