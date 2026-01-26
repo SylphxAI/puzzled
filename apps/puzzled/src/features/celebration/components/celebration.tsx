@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Icon } from '@sylphx/ui'
+import { useEffect, useState } from 'react'
 
 type CelebrationProps = {
 	show: boolean

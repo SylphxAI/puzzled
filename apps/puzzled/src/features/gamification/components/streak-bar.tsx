@@ -1,9 +1,9 @@
 'use client'
 
+import { Icon } from '@sylphx/ui'
 import { Flame, Snowflake } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
-import { Icon } from '@sylphx/ui'
 
 // Streak milestones for progression
 const MILESTONES = [7, 30, 100, 365] as const
@@ -150,7 +150,11 @@ export function StreakBar({
 		const milestoneBadge = getMilestoneBadge()
 
 		return (
-			<div className={cn('rounded-xl p-4', style.bg, className)} role="status" aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}>
+			<div
+				className={cn('rounded-xl p-4', style.bg, className)}
+				role="status"
+				aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
+			>
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className={cn('relative', style.glow)}>
@@ -230,7 +234,11 @@ export function StreakBar({
 
 	// Default variant
 	return (
-		<div className={cn('flex items-center gap-3', className)} role="status" aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}>
+		<div
+			className={cn('flex items-center gap-3', className)}
+			role="status"
+			aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
+		>
 			<div className="flex items-center gap-2">
 				<Flame
 					className={cn(

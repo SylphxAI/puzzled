@@ -18,7 +18,7 @@
  * - Reduces 3-hop to 2-hop: Platform → QStash → App webhook (direct execution)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { env } from '@/lib/env'
 import { executeJob, JOB_HANDLERS } from '@/lib/jobs/handlers'
 
@@ -102,11 +102,14 @@ export async function POST(req: NextRequest) {
 
 	console.log(`${logPrefix} Job completed: ${result.success ? 'success' : 'failed'}`)
 
-	return NextResponse.json({
-		success: result.success,
-		job: cronName,
-		result: result.data,
-		error: result.error,
-		timestamp: new Date().toISOString(),
-	}, { status: result.success ? 200 : 500 })
+	return NextResponse.json(
+		{
+			success: result.success,
+			job: cronName,
+			result: result.data,
+			error: result.error,
+			timestamp: new Date().toISOString(),
+		},
+		{ status: result.success ? 200 : 500 },
+	)
 }

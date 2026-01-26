@@ -43,4 +43,3 @@ export function QuadWordsIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

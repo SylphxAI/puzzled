@@ -241,4 +241,3 @@ export const wordHiveConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

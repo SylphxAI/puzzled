@@ -17,9 +17,6 @@
 
 'use client'
 
-
-
 // Re-export with Puzzled-specific types
-
 
 export { NotificationPreferences } from './components/notification-preferences'

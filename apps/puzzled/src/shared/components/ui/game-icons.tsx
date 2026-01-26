@@ -17,27 +17,20 @@ type GameIconProps = {
 
 // Re-export individual icons from their game modules
 
-
-
+export { ArithmoIcon } from '@/games/arithmo/icon'
+export { BlockSlideIcon } from '@/games/block-slide/icon'
 export { CrosswordIcon } from '@/games/crossword/icon'
-export { WordLadderIcon } from '@/games/word-ladder/icon'
-
-
-
-
-export { SudokuIcon } from '@/games/sudoku/icon'
 
 export { NonogramIcon } from '@/games/nonogram/icon'
 
-
 export { PatternMatchIcon } from '@/games/pattern-match/icon'
-export { BlockSlideIcon } from '@/games/block-slide/icon'
-export { ArithmoIcon } from '@/games/arithmo/icon'
+export { SudokuIcon } from '@/games/sudoku/icon'
+export { WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
 
 // Familiar name aliases (our games are inspired by these popular puzzles)
 export { WordGuessIcon as WordleIcon } from '@/games/word-guess/icon'
-export { WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
 export { WordHiveIcon as SpellingBeeIcon } from '@/games/word-hive/icon'
+export { WordLadderIcon } from '@/games/word-ladder/icon'
 
 /**
  * Universal GameIcon component
@@ -81,12 +74,7 @@ const AVATAR_ICONS = [
 	'mdi:school',
 ] as const
 
-function AvatarIcon({
-	index,
-	className,
-	size = 24,
-	...props
-}: GameIconProps & { index: number }) {
+function AvatarIcon({ index, className, size = 24, ...props }: GameIconProps & { index: number }) {
 	const iconName = AVATAR_ICONS[index % AVATAR_ICONS.length]
 	return <Icon icon={iconName} className={className} size={size} {...props} />
 }

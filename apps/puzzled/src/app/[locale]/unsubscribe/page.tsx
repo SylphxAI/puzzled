@@ -1,10 +1,10 @@
 'use client'
 
+import { Button, GamepadIcon } from '@sylphx/ui'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon } from '@sylphx/ui'
 
 type UnsubscribeState = 'loading' | 'success' | 'error' | 'idle'
 

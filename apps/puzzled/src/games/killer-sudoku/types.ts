@@ -56,12 +56,7 @@ export type KillerSudokuGuessResult = {
 /**
  * Check if a value conflicts with row
  */
-function hasRowConflict(
-	cells: KillerCell[][],
-	row: number,
-	col: number,
-	value: number,
-): boolean {
+function hasRowConflict(cells: KillerCell[][], row: number, col: number, value: number): boolean {
 	for (let c = 0; c < 9; c++) {
 		if (c !== col && cells[row][c].value === value) {
 			return true
@@ -73,12 +68,7 @@ function hasRowConflict(
 /**
  * Check if a value conflicts with column
  */
-function hasColConflict(
-	cells: KillerCell[][],
-	row: number,
-	col: number,
-	value: number,
-): boolean {
+function hasColConflict(cells: KillerCell[][], row: number, col: number, value: number): boolean {
 	for (let r = 0; r < 9; r++) {
 		if (r !== row && cells[r][col].value === value) {
 			return true
@@ -90,12 +80,7 @@ function hasColConflict(
 /**
  * Check if a value conflicts with 3x3 box
  */
-function hasBoxConflict(
-	cells: KillerCell[][],
-	row: number,
-	col: number,
-	value: number,
-): boolean {
+function hasBoxConflict(cells: KillerCell[][], row: number, col: number, value: number): boolean {
 	const boxRow = Math.floor(row / 3) * 3
 	const boxCol = Math.floor(col / 3) * 3
 

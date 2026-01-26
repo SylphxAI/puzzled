@@ -49,4 +49,3 @@ export function WordSearchIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

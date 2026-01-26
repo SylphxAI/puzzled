@@ -6,4 +6,4 @@
  *
  * @see https://iconify.design/docs/iconify-icon/
  */
-export { Icon,  } from '@iconify-icon/react'
+export { Icon } from '@iconify-icon/react'

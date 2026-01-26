@@ -1,12 +1,6 @@
 'use client'
 
-import {
-	CheckCircle,
-	Database,
-	HardDrive,
-	RefreshCw,
-	XCircle,
-} from 'lucide-react'
+import { CheckCircle, Database, HardDrive, RefreshCw, XCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { trpc } from '@/trpc/client'
 
@@ -25,10 +19,7 @@ export function SystemHealthDashboard() {
 		isLoading,
 		refetch,
 		isFetching,
-	} = trpc.admin.getSystemHealth.useQuery(
-		undefined,
-		{ refetchInterval: 30000 },
-	)
+	} = trpc.admin.getSystemHealth.useQuery(undefined, { refetchInterval: 30000 })
 
 	if (isLoading) {
 		return (
@@ -62,14 +53,16 @@ export function SystemHealthDashboard() {
 	return (
 		<div className="space-y-8">
 			{/* Overall Status Card */}
-			<div className={`admin-card admin-animate-in overflow-hidden ${
-				allHealthy ? 'bg-emerald-500/10' : 'bg-red-500/10'
-			}`}>
+			<div
+				className={`admin-card admin-animate-in overflow-hidden ${
+					allHealthy ? 'bg-emerald-500/10' : 'bg-red-500/10'
+				}`}
+			>
 				<div className="flex items-center justify-between p-6">
 					<div className="flex items-center gap-4">
-						<div className={`rounded-full p-3 ${
-							allHealthy ? 'bg-emerald-500/10' : 'bg-red-500/10'
-						}`}>
+						<div
+							className={`rounded-full p-3 ${allHealthy ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}
+						>
 							{allHealthy ? (
 								<CheckCircle className="h-5 w-5 text-emerald-400" />
 							) : (
@@ -77,9 +70,9 @@ export function SystemHealthDashboard() {
 							)}
 						</div>
 						<div>
-							<h2 className={`text-2xl font-bold ${
-								allHealthy ? 'text-emerald-400' : 'text-red-400'
-							}`}>
+							<h2
+								className={`text-2xl font-bold ${allHealthy ? 'text-emerald-400' : 'text-red-400'}`}
+							>
 								{t(`status.${overallStatus}`)}
 							</h2>
 							<p className="text-sm text-[var(--admin-text-muted)]">
@@ -140,19 +133,12 @@ function ServiceCard({
 	const statusBg = healthy ? 'bg-emerald-500/10' : 'bg-red-500/10'
 
 	return (
-		<div
-			className="admin-card admin-animate-in p-4"
-			style={{ animationDelay: `${delay * 0.05}s` }}
-		>
+		<div className="admin-card admin-animate-in p-4" style={{ animationDelay: `${delay * 0.05}s` }}>
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-3">
-					<div className={`rounded-lg p-2 ${statusBg}`}>
-						{icon}
-					</div>
+					<div className={`rounded-lg p-2 ${statusBg}`}>{icon}</div>
 					<div>
-						<h4 className="font-medium capitalize text-[var(--admin-text-primary)]">
-							{name}
-						</h4>
+						<h4 className="font-medium capitalize text-[var(--admin-text-primary)]">{name}</h4>
 						<p className="text-sm text-[var(--admin-text-muted)]">
 							{healthy ? 'Connected' : 'Disconnected'}
 						</p>

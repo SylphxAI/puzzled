@@ -35,7 +35,3 @@ export const createServerCaller = cache(async () => {
 	return appRouter.createCaller(context)
 })
 
-/**
- * Type helper for the server caller
- */
-type ServerCaller = Awaited<ReturnType<typeof createServerCaller>>

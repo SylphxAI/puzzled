@@ -43,4 +43,3 @@ export function BlockSlideIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

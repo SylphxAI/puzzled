@@ -1,5 +1,6 @@
 'use client'
 
+import { Card } from '@sylphx/ui'
 import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
@@ -8,7 +9,6 @@ import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Card } from '@sylphx/ui'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type GameInfo = {

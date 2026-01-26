@@ -25,8 +25,6 @@ const GameComponent = dynamic(() =>
 	import('./quad-words-game').then((m) => ({ default: m.QuadWordsGame })),
 )
 
-
-
 export const quadWordsConfig: GameConfig<
 	QuordlePuzzleData,
 	QuordleSolution,
@@ -143,4 +141,3 @@ export const quadWordsConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

@@ -207,4 +207,3 @@ export const patternMatchConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

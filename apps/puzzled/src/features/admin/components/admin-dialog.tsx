@@ -117,14 +117,9 @@ AdminDialogFooter.displayName = 'AdminDialogFooter'
 
 export {
 	AdminDialog,
-	
-	
-	
-	
 	AdminDialogContent,
 	AdminDialogHeader,
 	AdminDialogTitle,
-	
 	AdminDialogBody,
 	AdminDialogFooter,
 }

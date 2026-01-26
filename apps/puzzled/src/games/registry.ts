@@ -268,17 +268,7 @@ export function validateAndScore(
 // ==========================================
 
 export type {
-	
 	GameConfig,
-	
-	
 	GameResult,
 	GameSubmission,
-	
-	
-	
-	
-	
 } from './types'
-
-

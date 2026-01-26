@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
-import { type Locale, defaultLocale, isValidLocale, locales } from '@/lib/i18n/config'
+import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 
 // Next.js 16: proxy.ts replaces middleware.ts

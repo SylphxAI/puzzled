@@ -24,7 +24,12 @@ import { trpc } from '@/trpc/client'
 export function GamesOverview() {
 	const t = useTranslations('admin.games')
 
-	const { data: games, isLoading, refetch, isRefetching } = trpc.admin.getGamesOverview.useQuery(undefined, {
+	const {
+		data: games,
+		isLoading,
+		refetch,
+		isRefetching,
+	} = trpc.admin.getGamesOverview.useQuery(undefined, {
 		refetchInterval: MINUTE_MS,
 	})
 
@@ -45,9 +50,10 @@ export function GamesOverview() {
 	const totalPlaysToday = games.reduce((sum, g) => sum + g.todayGamesPlayed, 0)
 	const totalPlaysAllTime = games.reduce((sum, g) => sum + g.allTimeGamesPlayed, 0)
 	const totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0)
-	const avgWinRate = totalPlaysAllTime > 0
-		? Math.round((games.reduce((sum, g) => sum + g.allTimeWins, 0) / totalPlaysAllTime) * 100)
-		: 0
+	const avgWinRate =
+		totalPlaysAllTime > 0
+			? Math.round((games.reduce((sum, g) => sum + g.allTimeWins, 0) / totalPlaysAllTime) * 100)
+			: 0
 
 	return (
 		<div className="space-y-6">
@@ -135,9 +141,8 @@ type GameData = {
 }
 
 function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
-	const winRate = game.allTimeGamesPlayed > 0
-		? Math.round((game.allTimeWins / game.allTimeGamesPlayed) * 100)
-		: 0
+	const winRate =
+		game.allTimeGamesPlayed > 0 ? Math.round((game.allTimeWins / game.allTimeGamesPlayed) * 100) : 0
 
 	return (
 		<Link
@@ -169,9 +174,7 @@ function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 					<p className="text-xs text-[var(--admin-text-muted)]">All Time</p>
 				</div>
 				<div>
-					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{winRate}%
-					</p>
+					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">{winRate}%</p>
 					<p className="text-xs text-[var(--admin-text-muted)]">Win Rate</p>
 				</div>
 				<div>

@@ -323,4 +323,3 @@ export const wordGroupsConfig: GameConfig<
 		return 'Can you solve it with fewer mistakes?'
 	},
 }
-

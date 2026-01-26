@@ -90,7 +90,8 @@ function generatePuzzleData(
 	// Both produce YYYYMMDD integer (e.g., 20241228)
 	// For difficulty-enabled games, add offset to ensure different puzzles per difficulty
 	const baseSeed = getSeedFromDate(date)
-	const difficultyOffset = difficulty === 'easy' ? 0 : difficulty === 'medium' ? 1 : difficulty === 'hard' ? 2 : 0
+	const difficultyOffset =
+		difficulty === 'easy' ? 0 : difficulty === 'medium' ? 1 : difficulty === 'hard' ? 2 : 0
 	const seed = baseSeed + difficultyOffset
 
 	const { puzzleData, solution } = config.generatePuzzle(seed, difficulty)
@@ -128,10 +129,7 @@ export async function getOrCreatePuzzle(
 	// Build query conditions based on whether difficulty is provided
 	// For games with difficulty: match specific difficulty level
 	// For games without difficulty: match null difficulty
-	const conditions = [
-		eq(dailyPuzzles.gameSlug, gameSlug),
-		eq(dailyPuzzles.puzzleDate, date),
-	]
+	const conditions = [eq(dailyPuzzles.gameSlug, gameSlug), eq(dailyPuzzles.puzzleDate, date)]
 
 	if (difficulty) {
 		conditions.push(eq(dailyPuzzles.difficulty, difficulty))

@@ -41,4 +41,3 @@ export function PatternMatchIcon({ size = 24, className, ...props }: IconProps) 
 		</svg>
 	)
 }
-

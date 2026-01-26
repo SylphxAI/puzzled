@@ -2,4 +2,4 @@
  * Monitoring Components
  */
 
-export { SessionReplayProvider,  } from './session-replay-provider'
+export { SessionReplayProvider } from './session-replay-provider'

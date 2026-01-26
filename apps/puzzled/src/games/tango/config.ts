@@ -25,8 +25,6 @@ import { isSolved } from './types'
 
 const GameComponent = dynamic(() => import('./tango-game').then((m) => ({ default: m.TangoGame })))
 
-
-
 export const tangoConfig: GameConfig<
 	TangoPuzzleData,
 	TangoSolution,
@@ -136,4 +134,3 @@ export const tangoConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

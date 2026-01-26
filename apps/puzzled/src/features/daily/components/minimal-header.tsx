@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@sylphx/ui'
 import { ArrowLeft, HelpCircle, MoreVertical } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { StreakBar } from '@/features/gamification/components/streak-bar'
@@ -7,7 +8,6 @@ import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button } from '@sylphx/ui'
 import { DifficultyBadge } from './difficulty-selector'
 import { ModeBadge } from './mode-badge'
 

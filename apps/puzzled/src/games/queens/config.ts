@@ -173,4 +173,3 @@ export const queensConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

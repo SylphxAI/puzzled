@@ -27,12 +27,10 @@ export default async function AdminSettingsPage() {
 						<Settings className="h-6 w-6 text-[var(--admin-text-muted)]" />
 					</div>
 					<div>
-						<h3 className="font-semibold text-[var(--admin-text-primary)]">
-							App Settings
-						</h3>
+						<h3 className="font-semibold text-[var(--admin-text-primary)]">App Settings</h3>
 						<p className="mt-1 text-sm text-[var(--admin-text-secondary)]">
-							App-specific settings are configured through feature flags and announcements.
-							For user management, billing, and authentication settings, use the platform admin.
+							App-specific settings are configured through feature flags and announcements. For user
+							management, billing, and authentication settings, use the platform admin.
 						</p>
 					</div>
 				</div>
@@ -40,19 +38,28 @@ export default async function AdminSettingsPage() {
 
 			{/* Quick Links */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				<a href="/admin/feature-flags" className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]">
+				<a
+					href="/admin/feature-flags"
+					className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]"
+				>
 					<h4 className="font-medium text-[var(--admin-text-primary)]">Feature Flags</h4>
 					<p className="mt-1 text-sm text-[var(--admin-text-muted)]">
 						Control feature rollouts and experiments
 					</p>
 				</a>
-				<a href="/admin/announcements" className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]">
+				<a
+					href="/admin/announcements"
+					className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]"
+				>
 					<h4 className="font-medium text-[var(--admin-text-primary)]">Announcements</h4>
 					<p className="mt-1 text-sm text-[var(--admin-text-muted)]">
 						Manage in-app announcements and alerts
 					</p>
 				</a>
-				<a href="/admin/dlq" className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]">
+				<a
+					href="/admin/dlq"
+					className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]"
+				>
 					<h4 className="font-medium text-[var(--admin-text-primary)]">Dead Letter Queue</h4>
 					<p className="mt-1 text-sm text-[var(--admin-text-muted)]">
 						Monitor and retry failed workflows

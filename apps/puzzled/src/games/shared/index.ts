@@ -13,13 +13,10 @@
 export {
 	calculateWordleScore,
 	compareByTime,
-	
-	
 	formatTimeScore,
 	isPerfectGame,
 } from './format'
 // Random utilities (FROZEN - do not modify algorithms)
-export { pickRandom,     } from './random'
+export { pickRandom } from './random'
 
 // Types only (no runtime code) - safe for server
-

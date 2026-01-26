@@ -1,3 +1,4 @@
+import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { notFound } from 'next/navigation'
@@ -7,9 +8,8 @@ import { WebVitalsReporter } from '@/features/analytics'
 import { SessionReplayProvider } from '@/features/monitoring'
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
-import { ThemeProvider } from '@/shared/components/theme'
 import { PlatformProvider } from '@/shared/components/platform'
-import { ToastProvider } from '@sylphx/ui'
+import { ThemeProvider } from '@/shared/components/theme'
 import { TRPCProvider } from '@/trpc'
 import '../globals.css'
 
@@ -54,12 +54,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		type: 'website',
 		locale: 'en_US',
-		alternateLocale: [
-			'en_GB',
-			'zh_HK',
-			'zh_TW',
-			'zh_CN',
-		],
+		alternateLocale: ['en_GB', 'zh_HK', 'zh_TW', 'zh_CN'],
 		url: baseUrl,
 		siteName: 'Puzzled',
 		title: 'Puzzled',

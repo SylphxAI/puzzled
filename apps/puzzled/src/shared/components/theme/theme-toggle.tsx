@@ -27,7 +27,11 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 
 	if (!mounted) {
 		return (
-			<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)} role="group" aria-label="Theme selection">
+			<div
+				className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}
+				role="group"
+				aria-label="Theme selection"
+			>
 				{themes.map(({ value, icon: Icon, label }) => (
 					<button
 						type="button"
@@ -44,7 +48,11 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 	}
 
 	return (
-		<div className={cn('flex gap-1 rounded-lg bg-muted p-1', className)} role="group" aria-label="Theme selection">
+		<div
+			className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}
+			role="group"
+			aria-label="Theme selection"
+		>
 			{themes.map(({ value, icon: Icon, label }) => {
 				const isActive = theme === value
 				return (

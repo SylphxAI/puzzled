@@ -54,7 +54,9 @@ function sendMetric(metric: Metric) {
  * Set the track function from SDK
  * Call this when the SDK context is ready
  */
-export function setWebVitalsTracker(track: (event: string, properties: Record<string, unknown>) => void) {
+export function setWebVitalsTracker(
+	track: (event: string, properties: Record<string, unknown>) => void,
+) {
 	trackFn = track
 
 	// Flush buffered metrics

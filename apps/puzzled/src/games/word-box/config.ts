@@ -31,8 +31,6 @@ const GameComponent = dynamic(() =>
 	import('./word-box-game').then((m) => ({ default: m.WordBoxGame })),
 )
 
-
-
 export const wordBoxConfig: GameConfig<
 	LetterBoxedPuzzleData,
 	LetterBoxedSolution,
@@ -176,4 +174,3 @@ export const wordBoxConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

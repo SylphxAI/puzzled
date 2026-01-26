@@ -1,6 +1,6 @@
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { ProfileSettingsContent } from './profile-client'
 
 type Props = {

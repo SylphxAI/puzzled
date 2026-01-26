@@ -8,10 +8,10 @@ import { TRPCError } from '@trpc/server'
 import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
-import { hasPremiumAccess } from '@/lib/billing/server'
 import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
 import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
+import { hasPremiumAccess } from '@/lib/billing/server'
 import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
 import {
@@ -471,9 +471,7 @@ export const gamesRouter = router({
 					mode: gameSessions.mode,
 				})
 				.from(gameSessions)
-				.where(
-					and(eq(gameSessions.userId, ctx.user.id), eq(gameSessions.gameSlug, input.gameSlug)),
-				)
+				.where(and(eq(gameSessions.userId, ctx.user.id), eq(gameSessions.gameSlug, input.gameSlug)))
 				.orderBy(desc(gameSessions.completedAt))
 				.limit(input.limit)
 

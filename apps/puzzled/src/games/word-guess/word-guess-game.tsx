@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@sylphx/ui'
 import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -9,7 +10,6 @@ import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
-import { Button } from '@sylphx/ui'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
@@ -329,4 +329,3 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 }
 
 // Export the help handler type for parent components
-

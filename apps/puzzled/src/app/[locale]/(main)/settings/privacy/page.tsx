@@ -1,7 +1,7 @@
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { ExternalLink, Shield } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -51,9 +51,8 @@ export default async function PrivacySettingsPage({ params }: Props) {
 						Privacy settings are managed through the Sylphx Platform
 					</h2>
 					<p className="mb-6 max-w-md text-sm text-muted-foreground">
-						Data privacy, profile visibility, and account deletion options are managed through
-						the central Sylphx Platform to ensure consistent privacy controls across all
-						applications.
+						Data privacy, profile visibility, and account deletion options are managed through the
+						central Sylphx Platform to ensure consistent privacy controls across all applications.
 					</p>
 					<a
 						href="https://platform.sylphx.com/settings/privacy"

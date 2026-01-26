@@ -9,16 +9,8 @@ export { WebVitalsReporter } from './components'
 // ============================================
 
 export {
-	
-	
-	
-	
-	
-	
-	
 	hasAnalyticsConsent,
 	onConsentChange,
-	
 } from './lib/consent'
 
 // ============================================
@@ -36,27 +28,12 @@ export {
  * - Offline queue with sync when back online
  * - GDPR-compliant consent checks
  */
-export {
-	useGameAnalytics,
-	
-	
-	
-	
-	
-	
-	
-	
-} from './lib/sdk-analytics'
+export { useGameAnalytics } from './lib/sdk-analytics'
 
 // ============================================
 // A/B Testing
 // ============================================
 
-
-
 // ============================================
 // Web Vitals
 // ============================================
-
-
-

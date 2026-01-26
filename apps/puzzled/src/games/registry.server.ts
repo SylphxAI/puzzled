@@ -48,7 +48,8 @@ async function generatePuzzleWithLLM(
 	// Seed is always derived from date for consistent audit trail
 	// For difficulty-enabled games, we add an offset to ensure different puzzles per difficulty
 	const baseSeed = parseInt(date.replace(/-/g, ''), 10)
-	const difficultyOffset = difficulty === 'easy' ? 0 : difficulty === 'medium' ? 1 : difficulty === 'hard' ? 2 : 0
+	const difficultyOffset =
+		difficulty === 'easy' ? 0 : difficulty === 'medium' ? 1 : difficulty === 'hard' ? 2 : 0
 	const seed = baseSeed + difficultyOffset
 
 	// Seed-based generation: deterministic, never fails

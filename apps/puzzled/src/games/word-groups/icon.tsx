@@ -46,4 +46,3 @@ export function WordGroupsIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

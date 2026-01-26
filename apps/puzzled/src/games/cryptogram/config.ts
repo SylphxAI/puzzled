@@ -27,8 +27,6 @@ const GameComponent = dynamic(() =>
 	import('./cryptogram-game').then((m) => ({ default: m.CryptogramGame })),
 )
 
-
-
 export const cryptogramConfig: GameConfig<
 	CryptogramPuzzleData,
 	CryptogramSolution,
@@ -171,4 +169,3 @@ export const cryptogramConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

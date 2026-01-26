@@ -24,8 +24,8 @@ import {
 	userStats,
 } from '@/lib/db/schema'
 import { cache, keys } from '@/lib/redis'
-import { protectedProcedure, publicProcedure, rateLimitedProcedure, router } from '../trpc'
 import { getDisplayData } from '../services/display-cache'
+import { protectedProcedure, publicProcedure, rateLimitedProcedure, router } from '../trpc'
 
 // Cache TTLs in seconds (keyed by cache period)
 const LEADERBOARD_CACHE_TTL = {
@@ -379,7 +379,10 @@ export const statsRouter = router({
 					.from(userStats)
 					.innerJoin(userPreferences, eq(userStats.userId, userPreferences.userId))
 					.where(
-						and(eq(userStats.gameSlug, input.gameSlug), eq(userPreferences.leaderboardVisible, true)),
+						and(
+							eq(userStats.gameSlug, input.gameSlug),
+							eq(userPreferences.leaderboardVisible, true),
+						),
 					)
 					.orderBy(desc(orderColumn))
 					.limit(input.limit)

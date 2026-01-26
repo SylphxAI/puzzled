@@ -1,1 +1,1 @@
-export {  SoundToggleCompact } from './sound-toggle'
+export { SoundToggleCompact } from './sound-toggle'

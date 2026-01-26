@@ -1,12 +1,12 @@
 'use client'
 
+import { useResetPasswordForm } from '@sylphx/sdk/react'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useMemo } from 'react'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon, Input } from '@sylphx/ui'
-import { useResetPasswordForm } from '@sylphx/sdk/react'
 
 // Password strength calculation (reused from signup)
 function calculatePasswordStrength(password: string): {
@@ -74,10 +74,7 @@ function ResetPasswordContent() {
 		afterResetUrl: '/login',
 	})
 
-	const passwordStrength = useMemo(
-		() => calculatePasswordStrength(form.password),
-		[form.password]
-	)
+	const passwordStrength = useMemo(() => calculatePasswordStrength(form.password), [form.password])
 
 	// Invalid token state
 	if (!token) {
@@ -97,9 +94,7 @@ function ResetPasswordContent() {
 					</div>
 					<div>
 						<h1 className="text-2xl font-bold">{t('invalidResetLink')}</h1>
-						<p className="mt-2 text-muted-foreground">
-							{t('invalidResetLinkDescription')}
-						</p>
+						<p className="mt-2 text-muted-foreground">{t('invalidResetLinkDescription')}</p>
 					</div>
 					<Link href="/forgot-password">
 						<Button className="w-full">{t('requestNewLink')}</Button>
@@ -127,9 +122,7 @@ function ResetPasswordContent() {
 					</div>
 					<div>
 						<h1 className="text-2xl font-bold">{t('passwordResetSuccess')}</h1>
-						<p className="mt-2 text-muted-foreground">
-							{t('passwordResetSuccessDescription')}
-						</p>
+						<p className="mt-2 text-muted-foreground">{t('passwordResetSuccessDescription')}</p>
 					</div>
 					<Link href="/login">
 						<Button className="w-full">{t('backToLogin')}</Button>
@@ -156,12 +149,8 @@ function ResetPasswordContent() {
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
 						<GamepadIcon size={40} className="text-primary" />
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight">
-						{t('resetPasswordTitle')}
-					</h1>
-					<p className="mt-2 text-muted-foreground">
-						{t('resetPasswordDescription')}
-					</p>
+					<h1 className="text-2xl font-bold tracking-tight">{t('resetPasswordTitle')}</h1>
+					<p className="mt-2 text-muted-foreground">{t('resetPasswordDescription')}</p>
 				</div>
 
 				{/* Form */}
@@ -190,11 +179,7 @@ function ResetPasswordContent() {
 								className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 								tabIndex={-1}
 							>
-								{showPassword ? (
-									<EyeOff className="h-5 w-5" />
-								) : (
-									<Eye className="h-5 w-5" />
-								)}
+								{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
 							</button>
 						</div>
 

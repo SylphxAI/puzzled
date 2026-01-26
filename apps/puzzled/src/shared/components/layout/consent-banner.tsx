@@ -37,7 +37,7 @@ function ConsentSync() {
 						status: analyticsConsent ? 'accepted' : 'declined',
 						timestamp: new Date().toISOString(),
 					},
-				})
+				}),
 			)
 		}
 	}, [hasConsent, hasConsented, isLoading])
@@ -56,12 +56,7 @@ function ConsentBannerInner() {
 	}
 
 	return (
-		<CookieBanner
-			position="bottom"
-			privacyPolicyUrl="/privacy"
-			variant="bar"
-			onSave={handleSave}
-		/>
+		<CookieBanner position="bottom" privacyPolicyUrl="/privacy" variant="bar" onSave={handleSave} />
 	)
 }
 

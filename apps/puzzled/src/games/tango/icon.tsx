@@ -41,4 +41,3 @@ export function TangoIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

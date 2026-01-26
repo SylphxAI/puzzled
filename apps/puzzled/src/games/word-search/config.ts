@@ -4,8 +4,8 @@
  */
 
 import dynamic from 'next/dynamic'
-import { MINUTE_MS } from '@/lib/constants/time'
 import { compareByTime, formatTimeScore } from '@/games/shared'
+import { MINUTE_MS } from '@/lib/constants/time'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -25,8 +25,6 @@ import type {
 const GameComponent = dynamic(() =>
 	import('./word-search-game').then((m) => ({ default: m.WordSearchGame })),
 )
-
-
 
 export const wordSearchConfig: GameConfig<
 	WordSearchPuzzleData,
@@ -135,4 +133,3 @@ export const wordSearchConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

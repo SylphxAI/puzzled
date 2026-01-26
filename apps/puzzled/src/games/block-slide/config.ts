@@ -6,8 +6,8 @@
  */
 
 import dynamic from 'next/dynamic'
-import { MINUTE_MS } from '@/lib/constants/time'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
+import { MINUTE_MS } from '@/lib/constants/time'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type DifficultyLevelConfig,
@@ -229,4 +229,3 @@ export const blockSlideConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

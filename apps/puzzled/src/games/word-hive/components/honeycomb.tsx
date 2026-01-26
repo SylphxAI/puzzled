@@ -14,7 +14,13 @@ type HexButtonProps = {
 /**
  * Memoized hex button - only re-renders when its props change
  */
-const HexButton = memo(function HexButton({ letter, onClick, isCenter, disabled, style }: HexButtonProps) {
+const HexButton = memo(function HexButton({
+	letter,
+	onClick,
+	isCenter,
+	disabled,
+	style,
+}: HexButtonProps) {
 	return (
 		<button
 			type="button"
@@ -62,7 +68,10 @@ type HoneycombProps = {
  */
 export function Honeycomb({ centerLetter, outerLetters, onLetterClick, disabled }: HoneycombProps) {
 	// Memoize click handler to avoid creating new functions on each render
-	const handleCenterClick = useCallback(() => onLetterClick(centerLetter), [onLetterClick, centerLetter])
+	const handleCenterClick = useCallback(
+		() => onLetterClick(centerLetter),
+		[onLetterClick, centerLetter],
+	)
 
 	return (
 		<div className="relative mx-auto h-[260px] w-[260px] sm:h-[300px] sm:w-[300px] md:h-[320px] md:w-[320px]">

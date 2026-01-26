@@ -293,4 +293,3 @@ export const wordGuessConfig: GameConfig<
 		return 'Can you do better?'
 	},
 }
-

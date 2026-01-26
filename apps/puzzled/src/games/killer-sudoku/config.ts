@@ -27,8 +27,6 @@ const GameComponent = dynamic(() =>
 	import('./killer-sudoku-game').then((m) => ({ default: m.KillerSudokuGame })),
 )
 
-
-
 /**
  * Difficulty level configurations for Killer Sudoku
  * Each level defines how many given digits to show (fewer = harder)
@@ -173,4 +171,3 @@ export const killerSudokuConfig: GameConfig<
 		return { valid: true, status: 'won', score }
 	},
 }
-

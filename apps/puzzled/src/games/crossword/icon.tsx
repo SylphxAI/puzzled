@@ -39,4 +39,3 @@ export function CrosswordIcon({ size = 24, className, ...props }: IconProps) {
 		</svg>
 	)
 }
-

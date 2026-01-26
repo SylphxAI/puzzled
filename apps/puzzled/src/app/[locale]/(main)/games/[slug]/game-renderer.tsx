@@ -42,7 +42,12 @@ export function GameRenderer({
 
 	return (
 		<div className="w-full sm:max-w-lg">
-			<GameComponent puzzleId={puzzleId} puzzleData={puzzleData} mode={mode} difficulty={difficulty} />
+			<GameComponent
+				puzzleId={puzzleId}
+				puzzleData={puzzleData}
+				mode={mode}
+				difficulty={difficulty}
+			/>
 		</div>
 	)
 }
