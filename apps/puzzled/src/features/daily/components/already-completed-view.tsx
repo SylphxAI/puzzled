@@ -1,12 +1,12 @@
 'use client'
 
-import { Button, Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn, getBaseUrl } from '@/lib/utils'
+import { Button, Card, CardContent } from '@sylphx/ui'
 import { DifficultyBadge } from './difficulty-selector'
 import { NextPuzzleCountdown } from './next-puzzle-countdown'
 

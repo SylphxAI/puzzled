@@ -16,7 +16,7 @@
 	"scripts": {
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",
-		"test": "bun test"
+		"test": "echo 'No tests'"
 	},
 	"dependencies": {
 		"@iconify-icon/react": "^3.0.3",

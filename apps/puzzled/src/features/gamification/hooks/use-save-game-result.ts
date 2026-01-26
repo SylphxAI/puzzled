@@ -1,10 +1,10 @@
 'use client'
 
-import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { useGameAnalytics } from '@/features/analytics'
+import { useSafeUser, useSafeStreak, PlatformContext } from '@sylphx/sdk/react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { trpc } from '@/trpc'
+import { useGameAnalytics } from '@/features/analytics'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -165,29 +165,44 @@ export function useSaveGameResult(gameSlug: string) {
 						// Don't await - fire and forget for performance
 						Promise.all([
 							// Daily leaderboard
-							platformContext.submitScore(`puzzled-${gameSlug}-daily`, response.score, metadata, {
-								name: `${gameName} Daily`,
-								description: `Daily high scores for ${gameName}`,
-								sortDirection: 'desc',
-								resetPeriod: 'daily',
-								aggregation: 'max',
-							}),
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-daily`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} Daily`,
+									description: `Daily high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'daily',
+									aggregation: 'max',
+								}
+							),
 							// Weekly leaderboard
-							platformContext.submitScore(`puzzled-${gameSlug}-weekly`, response.score, metadata, {
-								name: `${gameName} Weekly`,
-								description: `Weekly high scores for ${gameName}`,
-								sortDirection: 'desc',
-								resetPeriod: 'weekly',
-								aggregation: 'max',
-							}),
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-weekly`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} Weekly`,
+									description: `Weekly high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'weekly',
+									aggregation: 'max',
+								}
+							),
 							// All-time leaderboard
-							platformContext.submitScore(`puzzled-${gameSlug}-all`, response.score, metadata, {
-								name: `${gameName} All Time`,
-								description: `All-time high scores for ${gameName}`,
-								sortDirection: 'desc',
-								resetPeriod: 'never',
-								aggregation: 'max',
-							}),
+							platformContext.submitScore(
+								`puzzled-${gameSlug}-all`,
+								response.score,
+								metadata,
+								{
+									name: `${gameName} All Time`,
+									description: `All-time high scores for ${gameName}`,
+									sortDirection: 'desc',
+									resetPeriod: 'never',
+									aggregation: 'max',
+								}
+							),
 						]).catch(() => {
 							// Don't fail the save if leaderboard sync fails
 							// Users can still see their score in local stats
@@ -207,15 +222,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return { success: false, error: errorMessage }
 			}
 		},
-		[
-			userId,
-			gameSlug,
-			mutation,
-			streakConfigured,
-			recordActivity,
-			trackGameComplete,
-			platformContext,
-		],
+		[userId, gameSlug, mutation, streakConfigured, recordActivity, trackGameComplete, platformContext],
 	)
 
 	const reset = useCallback(() => {

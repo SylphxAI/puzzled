@@ -18,10 +18,10 @@ import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 function ConsentSync() {
 	const { hasConsent, hasConsented, isLoading, isConfigured } = useSafeConsent()
 
-	// Hook must be called unconditionally - handle unconfigured state inside effect
+	// Don't sync if SDK is not configured (SSR/prerendering)
+	if (!isConfigured) return null
+
 	useEffect(() => {
-		// Don't sync if SDK is not configured (SSR/prerendering)
-		if (!isConfigured) return
 		if (isLoading || typeof window === 'undefined') return
 
 		// Sync to localStorage when consent state changes
@@ -37,10 +37,10 @@ function ConsentSync() {
 						status: analyticsConsent ? 'accepted' : 'declined',
 						timestamp: new Date().toISOString(),
 					},
-				}),
+				})
 			)
 		}
-	}, [hasConsent, hasConsented, isLoading, isConfigured])
+	}, [hasConsent, hasConsented, isLoading])
 
 	return null
 }
@@ -56,7 +56,12 @@ function ConsentBannerInner() {
 	}
 
 	return (
-		<CookieBanner position="bottom" privacyPolicyUrl="/privacy" variant="bar" onSave={handleSave} />
+		<CookieBanner
+			position="bottom"
+			privacyPolicyUrl="/privacy"
+			variant="bar"
+			onSave={handleSave}
+		/>
 	)
 }
 

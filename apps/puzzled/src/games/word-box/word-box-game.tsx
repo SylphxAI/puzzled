@@ -5,7 +5,6 @@
 
 'use client'
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { Delete, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -17,6 +16,7 @@ import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
 import { cn } from '@/lib/utils'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { wordBoxConfig } from './config'
 import { useWordBox } from './use-word-box'

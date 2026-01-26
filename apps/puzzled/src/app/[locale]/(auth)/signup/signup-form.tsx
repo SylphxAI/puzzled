@@ -1,11 +1,11 @@
 'use client'
 
-import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignUpForm } from '@sylphx/sdk/react'
-import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useMemo, useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
+import { useSignUpForm, useSafeAuth, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
 
 // Password strength calculation
 function calculatePasswordStrength(password: string): {
@@ -71,7 +71,10 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		},
 	})
 
-	const passwordStrength = useMemo(() => calculatePasswordStrength(form.password), [form.password])
+	const passwordStrength = useMemo(
+		() => calculatePasswordStrength(form.password),
+		[form.password]
+	)
 
 	// Email verification step
 	if (step === 'verify-email') {
@@ -91,7 +94,9 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					</div>
 					<div>
 						<h1 className="text-2xl font-bold">{t('checkYourEmail')}</h1>
-						<p className="mt-2 text-muted-foreground">{t('verificationSent')}</p>
+						<p className="mt-2 text-muted-foreground">
+							{t('verificationSent')}
+						</p>
 					</div>
 					<Link href="/login">
 						<Button variant="outline" className="w-full">
@@ -120,8 +125,12 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
 						<GamepadIcon size={40} className="text-primary" />
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight">{t('createAccount')}</h1>
-					<p className="mt-2 text-muted-foreground">{t('joinToContinue')}</p>
+					<h1 className="text-2xl font-bold tracking-tight">
+						{t('createAccount')}
+					</h1>
+					<p className="mt-2 text-muted-foreground">
+						{t('joinToContinue')}
+					</p>
 				</div>
 
 				{/* OAuth Buttons - only show if providers are enabled */}
@@ -144,9 +153,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 										) : (
 											<Icon className="h-5 w-5" />
 										)}
-										{t('continueWith', {
-											provider: provider.charAt(0).toUpperCase() + provider.slice(1),
-										})}
+										{t('continueWith', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })}
 									</Button>
 								)
 							})}
@@ -228,7 +235,11 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 								className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 								tabIndex={-1}
 							>
-								{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+								{showPassword ? (
+									<EyeOff className="h-5 w-5" />
+								) : (
+									<Eye className="h-5 w-5" />
+								)}
 							</button>
 						</div>
 

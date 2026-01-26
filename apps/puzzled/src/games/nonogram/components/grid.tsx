@@ -194,7 +194,9 @@ export function NonogramGrid({
 								cell={cell}
 								row={rowIndex}
 								col={colIndex}
-								isSelected={selectedCell?.row === rowIndex && selectedCell?.col === colIndex}
+								isSelected={
+									selectedCell?.row === rowIndex && selectedCell?.col === colIndex
+								}
 								puzzleWidth={puzzle.width}
 								puzzleHeight={puzzle.height}
 								disabled={disabled}

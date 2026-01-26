@@ -8,10 +8,10 @@
  * Gracefully handles when Sylphx Platform is not configured.
  */
 
-import { useSafeAuth, useSafeUser } from '@sylphx/sdk/react'
+import { useCallback } from 'react'
+import { useSafeUser, useSafeAuth } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { ExternalLink } from 'lucide-react'
-import { useCallback } from 'react'
 
 interface SylphxSignInButtonProps {
 	/** URL to redirect back to after sign in */

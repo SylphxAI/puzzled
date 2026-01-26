@@ -12,8 +12,8 @@ import {
 	type GameSubmission,
 } from '../types'
 import { ArithmoHowToPlay } from './components/how-to-play'
-import { getPuzzleFromSeed } from './equations'
 import { ArithmoIcon } from './icon'
+import { getPuzzleFromSeed } from './equations'
 import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
 import { getGuessResult, isValidEquation } from './types'
 

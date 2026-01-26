@@ -1,11 +1,11 @@
 'use client'
 
-import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignInForm } from '@sylphx/sdk/react'
-import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
+import { useSignInForm, useSafeAuth, OAuthIcons, type OAuthProvider } from '@sylphx/sdk/react'
 
 interface LoginFormProps {
 	providers: OAuthProvider[]
@@ -56,8 +56,12 @@ export function LoginForm({ providers }: LoginFormProps) {
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
 						<GamepadIcon size={40} className="text-primary" />
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight">{t('welcomeBack')}</h1>
-					<p className="mt-2 text-muted-foreground">{t('signInToContinue')}</p>
+					<h1 className="text-2xl font-bold tracking-tight">
+						{t('welcomeBack')}
+					</h1>
+					<p className="mt-2 text-muted-foreground">
+						{t('signInToContinue')}
+					</p>
 				</div>
 
 				{/* OAuth Buttons - only show if providers are enabled */}
@@ -80,9 +84,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 										) : (
 											<Icon className="h-5 w-5" />
 										)}
-										{t('continueWith', {
-											provider: provider.charAt(0).toUpperCase() + provider.slice(1),
-										})}
+										{t('continueWith', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })}
 									</Button>
 								)
 							})}
@@ -128,7 +130,10 @@ export function LoginForm({ providers }: LoginFormProps) {
 							<label htmlFor="password" className="text-sm font-medium">
 								{t('password')}
 							</label>
-							<Link href="/forgot-password" className="text-sm text-primary hover:underline">
+							<Link
+								href="/forgot-password"
+								className="text-sm text-primary hover:underline"
+							>
 								{t('forgotPassword')}
 							</Link>
 						</div>
@@ -151,7 +156,11 @@ export function LoginForm({ providers }: LoginFormProps) {
 								className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 								tabIndex={-1}
 							>
-								{showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+								{showPassword ? (
+									<EyeOff className="h-5 w-5" />
+								) : (
+									<Eye className="h-5 w-5" />
+								)}
 							</button>
 						</div>
 					</div>
@@ -164,7 +173,11 @@ export function LoginForm({ providers }: LoginFormProps) {
 					)}
 
 					{/* Submit Button */}
-					<Button type="submit" className="h-12 w-full text-base font-medium" disabled={isLoading}>
+					<Button
+						type="submit"
+						className="h-12 w-full text-base font-medium"
+						disabled={isLoading}
+					>
 						{isLoading && !loadingProvider ? (
 							<>
 								<Loader2 className="mr-2 h-5 w-5 animate-spin" />

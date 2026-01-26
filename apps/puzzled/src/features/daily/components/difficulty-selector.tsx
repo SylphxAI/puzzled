@@ -57,10 +57,7 @@ export function DifficultySelector({
 
 	return (
 		<div className={cn('flex flex-col gap-3', className)}>
-			<div
-				className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-				id="difficulty-label"
-			>
+			<div className="flex items-center justify-center gap-2 text-sm text-muted-foreground" id="difficulty-label">
 				<Gauge className="h-4 w-4" aria-hidden="true" />
 				<span className="font-medium">{t('selectDifficulty')}</span>
 			</div>
@@ -92,7 +89,10 @@ export function DifficultySelector({
 						>
 							{isCompleted && (
 								<Check
-									className={cn('h-3.5 w-3.5', isSelected ? config.color : 'text-emerald-500')}
+									className={cn(
+										'h-3.5 w-3.5',
+										isSelected ? config.color : 'text-emerald-500',
+									)}
 									aria-hidden="true"
 								/>
 							)}
@@ -114,10 +114,17 @@ type DifficultyBadgeProps = {
 	className?: string
 }
 
-export function DifficultyBadge({ difficulty, showIcon = false, className }: DifficultyBadgeProps) {
+export function DifficultyBadge({
+	difficulty,
+	showIcon = false,
+	className,
+}: DifficultyBadgeProps) {
 	const t = useTranslations('common.difficulty')
 
-	const config: Record<PuzzleDifficulty, { label: string; color: string; bg: string }> = {
+	const config: Record<
+		PuzzleDifficulty,
+		{ label: string; color: string; bg: string }
+	> = {
 		easy: {
 			label: t('easy'),
 			color: 'text-emerald-600 dark:text-emerald-400',

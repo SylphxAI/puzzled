@@ -1,4 +1,3 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
 import {
 	Bell,
 	CreditCard,
@@ -12,6 +11,7 @@ import {
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@sylphx/sdk/nextjs'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -134,7 +134,9 @@ export default async function SettingsOverviewPage({ params }: Props) {
 							<h3 className="font-medium leading-tight group-hover:text-primary">
 								{t(`nav.${card.labelKey}`)}
 							</h3>
-							<p className="mt-0.5 text-sm text-muted-foreground">{t(`nav.${card.descKey}`)}</p>
+							<p className="mt-0.5 text-sm text-muted-foreground">
+								{t(`nav.${card.descKey}`)}
+							</p>
 						</div>
 					</Link>
 				))}

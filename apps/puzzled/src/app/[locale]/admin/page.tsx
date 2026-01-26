@@ -1,10 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { count, desc, eq, gte } from 'drizzle-orm'
-import { Activity, AlertTriangle, Gamepad2, Server, Settings, TrendingUp, Zap } from 'lucide-react'
+import { daysAgo } from '@/lib/constants/time'
+import {
+	Activity,
+	AlertTriangle,
+	Gamepad2,
+	Server,
+	Settings,
+	TrendingUp,
+	Zap,
+} from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { daysAgo } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { auditLogs, deadLetterQueue, gameSessions } from '@/lib/db/schema'
 
@@ -23,7 +31,12 @@ async function getDashboardStats() {
 
 	// App-specific metrics from local database
 	// Note: Platform metrics (users, revenue) are viewable in the Sylphx admin dashboard
-	const [sessionCount, sessionsThisWeek, dlqPending, dlqFailed] = await Promise.all([
+	const [
+		sessionCount,
+		sessionsThisWeek,
+		dlqPending,
+		dlqFailed,
+	] = await Promise.all([
 		db.select({ count: count() }).from(gameSessions),
 		db
 			.select({ count: count() })
@@ -33,7 +46,10 @@ async function getDashboardStats() {
 			.select({ count: count() })
 			.from(deadLetterQueue)
 			.where(eq(deadLetterQueue.status, 'pending')),
-		db.select({ count: count() }).from(deadLetterQueue).where(eq(deadLetterQueue.status, 'failed')),
+		db
+			.select({ count: count() })
+			.from(deadLetterQueue)
+			.where(eq(deadLetterQueue.status, 'failed')),
 	])
 
 	return {
@@ -59,7 +75,10 @@ async function getRecentActivity() {
 export default async function AdminDashboard() {
 	const locale = await getLocale()
 	const t = await getTranslations('admin.dashboard')
-	const [stats, recentActivity] = await Promise.all([getDashboardStats(), getRecentActivity()])
+	const [stats, recentActivity] = await Promise.all([
+		getDashboardStats(),
+		getRecentActivity(),
+	])
 
 	// System health status
 	const systemHealth = stats.dlqFailed > 0 ? 'error' : stats.dlqPending > 5 ? 'warning' : 'healthy'

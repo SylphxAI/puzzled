@@ -1,6 +1,12 @@
 'use client'
 
-import { AlertCircle, BarChart3, Gamepad2, RefreshCw, TrendingUp } from 'lucide-react'
+import {
+	AlertCircle,
+	BarChart3,
+	Gamepad2,
+	RefreshCw,
+	TrendingUp,
+} from 'lucide-react'
 import { useState } from 'react'
 import { MINUTE_MS } from '@/lib/constants/time'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -23,7 +29,10 @@ export function GameDashboard({ slug }: { slug: string }) {
 		isLoading,
 		refetch,
 		isRefetching,
-	} = trpc.admin.getSingleGameAnalytics.useQuery({ slug, days }, { refetchInterval: MINUTE_MS })
+	} = trpc.admin.getSingleGameAnalytics.useQuery(
+		{ slug, days },
+		{ refetchInterval: MINUTE_MS },
+	)
 
 	if (isLoading) {
 		return <GameDashboardSkeleton />
@@ -43,12 +52,9 @@ export function GameDashboard({ slug }: { slug: string }) {
 	// Calculate overview stats from daily data
 	const totalPlays = dailyStats.reduce((sum, d) => sum + d.gamesPlayed, 0)
 	const totalWins = dailyStats.reduce((sum, d) => sum + (d.wins ?? 0), 0)
-	const avgAttempts =
-		dailyStats.length > 0
-			? Math.round(
-					(dailyStats.reduce((sum, d) => sum + (d.avgAttempts ?? 0), 0) / dailyStats.length) * 10,
-				) / 10
-			: 0
+	const avgAttempts = dailyStats.length > 0
+		? Math.round(dailyStats.reduce((sum, d) => sum + (d.avgAttempts ?? 0), 0) / dailyStats.length * 10) / 10
+		: 0
 	const winRate = totalPlays > 0 ? Math.round((totalWins / totalPlays) * 100) : 0
 
 	return (
@@ -150,7 +156,9 @@ export function GameDashboard({ slug }: { slug: string }) {
 					</h3>
 				</div>
 				{dailyStats.length === 0 ? (
-					<div className="p-8 text-center text-[var(--admin-text-muted)]">No data available</div>
+					<div className="p-8 text-center text-[var(--admin-text-muted)]">
+						No data available
+					</div>
 				) : (
 					<div className="max-h-96 overflow-y-auto">
 						<table className="admin-table">
@@ -165,8 +173,9 @@ export function GameDashboard({ slug }: { slug: string }) {
 							</thead>
 							<tbody>
 								{dailyStats.map((day) => {
-									const dayWinRate =
-										day.gamesPlayed > 0 ? Math.round(((day.wins ?? 0) / day.gamesPlayed) * 100) : 0
+									const dayWinRate = day.gamesPlayed > 0
+										? Math.round(((day.wins ?? 0) / day.gamesPlayed) * 100)
+										: 0
 									return (
 										<tr key={day.date}>
 											<td className="font-medium">{day.date}</td>
@@ -240,8 +249,7 @@ function PlaysChart({
 			<div className="flex h-48 items-end gap-1">
 				{data.map((day) => {
 					const height = (day.gamesPlayed / maxPlays) * 100
-					const winRate =
-						day.gamesPlayed > 0 ? Math.round(((day.wins ?? 0) / day.gamesPlayed) * 100) : 0
+					const winRate = day.gamesPlayed > 0 ? Math.round(((day.wins ?? 0) / day.gamesPlayed) * 100) : 0
 
 					return (
 						<div

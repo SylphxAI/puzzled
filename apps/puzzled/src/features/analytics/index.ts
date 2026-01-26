@@ -37,15 +37,15 @@ export {
  * - GDPR-compliant consent checks
  */
 export {
-	type AchievementEvent,
-	type DeviceType,
-	type EventDimensions,
-	type GameCompleteEvent,
-	type GameStartEvent,
-	type StreakEvent,
-	type UserJourneyStage,
 	useGameAnalytics,
 	useJourneyStage,
+	type GameStartEvent,
+	type GameCompleteEvent,
+	type AchievementEvent,
+	type StreakEvent,
+	type UserJourneyStage,
+	type DeviceType,
+	type EventDimensions,
 } from './lib/sdk-analytics'
 
 // ============================================
@@ -53,10 +53,10 @@ export {
 // ============================================
 
 export {
-	EXPERIMENTS,
-	type ExperimentKey,
 	useExperiment,
 	useExperimentTracking,
+	EXPERIMENTS,
+	type ExperimentKey,
 } from './lib/ab-testing'
 
 // ============================================
@@ -64,3 +64,4 @@ export {
 // ============================================
 
 export { initWebVitals, setWebVitalsTracker } from './lib/web-vitals'
+

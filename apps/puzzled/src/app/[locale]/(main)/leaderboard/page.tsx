@@ -1,13 +1,13 @@
-import { type EngagementLeaderboardResult, getLeaderboard } from '@sylphx/sdk'
-import { auth } from '@sylphx/sdk/nextjs'
-import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { auth } from '@sylphx/sdk/nextjs'
+import { getLeaderboard, type EngagementLeaderboardResult } from '@sylphx/sdk'
 import { getAllGameMetadata } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
-import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
+import { getSdkConfig } from '@/lib/sdk-server'
 import { Header } from '@/shared/components/layout'
+import { AvatarIcon, Podium } from '@sylphx/ui'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
@@ -41,7 +41,9 @@ type UserRankData = {
 }
 
 // Map SDK leaderboard entry to display format
-function mapSdkEntry(entry: EngagementLeaderboardResult['entries'][0]): LeaderboardEntry {
+function mapSdkEntry(
+	entry: EngagementLeaderboardResult['entries'][0],
+): LeaderboardEntry {
 	return {
 		rank: entry.rank,
 		name: entry.displayName || 'Anonymous',
@@ -96,14 +98,13 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 	try {
 		// Fetch leaderboards for all games in parallel
-		const leaderboardPromises = allGames.map(
-			(game) =>
-				getLeaderboard(
-					sdkConfig,
-					`puzzled-${game.slug}-${periodSuffix}`,
-					user?.id ?? null,
-					{ limit: game.slug === allGames[0].slug ? 10 : 5 }, // Primary game gets 10, others get 5
-				).catch(() => null), // Gracefully handle missing leaderboards
+		const leaderboardPromises = allGames.map((game) =>
+			getLeaderboard(
+				sdkConfig,
+				`puzzled-${game.slug}-${periodSuffix}`,
+				user?.id ?? null,
+				{ limit: game.slug === allGames[0].slug ? 10 : 5 }, // Primary game gets 10, others get 5
+			).catch(() => null), // Gracefully handle missing leaderboards
 		)
 		const leaderboardResults = await Promise.all(leaderboardPromises)
 
@@ -264,12 +265,10 @@ function LeaderboardSection({
 								) : entry.rank === 3 ? (
 									<Medal className="h-6 w-6 text-rank-bronze" aria-label="3rd place" />
 								) : (
-									<span
-										className={cn(
-											'text-sm font-medium',
-											entry.isCurrentUser ? 'text-primary' : 'text-muted-foreground',
-										)}
-									>
+									<span className={cn(
+										'text-sm font-medium',
+										entry.isCurrentUser ? 'text-primary' : 'text-muted-foreground',
+									)}>
 										{entry.rank}
 									</span>
 								)}

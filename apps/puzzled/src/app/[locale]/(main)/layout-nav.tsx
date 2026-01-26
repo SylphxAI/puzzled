@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
+import { useSafeUser, useSafeStreak } from '@sylphx/sdk/react'
 import { TopNav } from '@/shared/components/layout'
 
 /**

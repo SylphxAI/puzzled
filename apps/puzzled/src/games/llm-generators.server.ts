@@ -16,7 +16,11 @@ import {
 	generateNonogramPuzzle,
 } from '@/features/puzzle-generator/server'
 import type { LLMGeneratorResult } from './types'
-import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './word-groups/types'
+import {
+	MAX_MISTAKES,
+	WORDS_PER_CATEGORY,
+	TOTAL_CATEGORIES,
+} from './word-groups/types'
 
 // ==========================================
 // Connections LLM Generator

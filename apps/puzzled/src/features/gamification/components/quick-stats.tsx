@@ -1,10 +1,10 @@
 'use client'
 
-import { Card } from '@sylphx/ui'
 import { Flame, Percent, Target, Trophy } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Card } from '@sylphx/ui'
 
 type StatItem = {
 	id: string

@@ -13,8 +13,8 @@ import {
 	type GameSubmission,
 	type PuzzleDifficulty,
 } from '../types'
-import { NonogramHowToPlay } from './components/how-to-play'
 import { generateNonogramPuzzle } from './generator'
+import { NonogramHowToPlay } from './components/how-to-play'
 import { NonogramIcon } from './icon'
 import type {
 	NonogramGuess,

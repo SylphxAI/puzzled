@@ -1,6 +1,5 @@
 'use client'
 
-import { Icon } from '@sylphx/ui'
 import { Lock } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import {
@@ -13,6 +12,7 @@ import {
 	type UserAchievement,
 } from '@/features/gamification'
 import { cn } from '@/lib/utils'
+import { Icon } from '@sylphx/ui'
 
 type AchievementsProps = {
 	stats: {

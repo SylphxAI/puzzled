@@ -5,20 +5,20 @@
  * Uses Platform SDK for email and push notification delivery.
  */
 
-import { sendEmailToUser, sendPush } from '@sylphx/sdk'
 import { and, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm'
-import { getTodayUTC, getYesterdayUTC } from '@/features/daily/server'
+import { sendEmailToUser, sendPush } from '@sylphx/sdk'
+import type { JobHandler } from '../handlers'
 import { db } from '@/lib/db'
 import {
 	gameSessions,
 	notificationPreferences,
 	userDisplayCache,
 	userStats,
-	type WinBackEmailType,
 	winBackEmails,
+	type WinBackEmailType,
 } from '@/lib/db/schema'
 import { getSdkConfig } from '@/lib/sdk-server'
-import type { JobHandler } from '../handlers'
+import { getTodayUTC, getYesterdayUTC } from '@/features/daily/server'
 
 // ==========================================
 // Daily Reminder Handler
@@ -30,7 +30,7 @@ import type { JobHandler } from '../handlers'
  * Sends daily reminder push notifications to users who have opted in.
  * Runs hourly, sends to users whose reminder time matches current hour.
  */
-export const dailyReminderHandler: JobHandler = async (_payload, context) => {
+export const dailyReminderHandler: JobHandler = async (payload, context) => {
 	const logPrefix = `[DailyReminder] [${context.jobId}]`
 	console.log(`${logPrefix} Starting daily reminder job`)
 
@@ -56,8 +56,8 @@ export const dailyReminderHandler: JobHandler = async (_payload, context) => {
 			and(
 				eq(notificationPreferences.pushEnabled, true),
 				eq(notificationPreferences.pushDailyReminder, true),
-				sql`LEFT(${notificationPreferences.dailyReminderTime}, 2) = ${currentHour}`,
-			),
+				sql`LEFT(${notificationPreferences.dailyReminderTime}, 2) = ${currentHour}`
+			)
 		)
 
 	if (eligibleUsers.length === 0) {
@@ -71,7 +71,12 @@ export const dailyReminderHandler: JobHandler = async (_payload, context) => {
 	const playedToday = await db
 		.select({ userId: gameSessions.userId })
 		.from(gameSessions)
-		.where(and(inArray(gameSessions.userId, userIds), gt(gameSessions.completedAt, todayUTC)))
+		.where(
+			and(
+				inArray(gameSessions.userId, userIds),
+				gt(gameSessions.completedAt, todayUTC)
+			)
+		)
 		.groupBy(gameSessions.userId)
 
 	const playedTodaySet = new Set(playedToday.map((u) => u.userId))
@@ -93,8 +98,8 @@ export const dailyReminderHandler: JobHandler = async (_payload, context) => {
 	for (const user of usersToNotify) {
 		try {
 			await sendPush(config, user.userId, {
-				title: 'Time to play! 🎮',
-				body: 'Your daily puzzles are ready. Keep your streak alive!',
+				title: "Time to play! 🎮",
+				body: "Your daily puzzles are ready. Keep your streak alive!",
 				url: '/',
 			})
 			sent++
@@ -145,15 +150,18 @@ export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 			gameSlug: userStats.gameSlug,
 		})
 		.from(userStats)
-		.innerJoin(notificationPreferences, eq(userStats.userId, notificationPreferences.userId))
+		.innerJoin(
+			notificationPreferences,
+			eq(userStats.userId, notificationPreferences.userId)
+		)
 		.where(
 			and(
 				gt(userStats.currentStreak, 0),
 				lt(userStats.lastPlayedAt, todayUTC),
 				gt(userStats.lastPlayedAt, yesterdayUTC),
 				eq(notificationPreferences.pushEnabled, true),
-				eq(notificationPreferences.pushStreakAlert, true),
-			),
+				eq(notificationPreferences.pushStreakAlert, true)
+			)
 		)
 
 	if (usersAtRisk.length === 0) {
@@ -185,7 +193,7 @@ export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 		try {
 			const streakText = data.maxStreak === 1 ? '1 day' : `${data.maxStreak} days`
 			await sendPush(config, userId, {
-				title: '🔥 Streak at risk!',
+				title: "🔥 Streak at risk!",
 				body: `Your ${streakText} streak is about to end! Play now to keep it alive.`,
 				url: '/',
 			})
@@ -232,7 +240,7 @@ const WIN_BACK_SEQUENCE: WinBackConfig[] = [
 	{
 		type: 'day14',
 		daysInactive: 14,
-		subject: 'Your puzzles miss you! 🧩',
+		subject: "Your puzzles miss you! 🧩",
 		getHtml: (name) => `
 			<h1>It's been a while${name ? `, ${name}` : ''}!</h1>
 			<p>Two weeks have passed and we've added new puzzles and features.</p>
@@ -288,9 +296,7 @@ export const winBackEmailsHandler: JobHandler = async (_payload, context) => {
 		const targetDateStart = new Date(targetDate.setHours(0, 0, 0, 0))
 		const targetDateEnd = new Date(targetDate.setHours(23, 59, 59, 999))
 
-		console.log(
-			`${logPrefix} Processing ${emailConfig.type} (inactive since ${targetDateStart.toISOString()})`,
-		)
+		console.log(`${logPrefix} Processing ${emailConfig.type} (inactive since ${targetDateStart.toISOString()})`)
 
 		// Find users who:
 		// 1. Have email enabled and marketing enabled
@@ -305,14 +311,20 @@ export const winBackEmailsHandler: JobHandler = async (_payload, context) => {
 				lastPlayedAt: userStats.lastPlayedAt,
 			})
 			.from(userStats)
-			.innerJoin(notificationPreferences, eq(userStats.userId, notificationPreferences.userId))
-			.innerJoin(userDisplayCache, eq(userStats.userId, userDisplayCache.userId))
+			.innerJoin(
+				notificationPreferences,
+				eq(userStats.userId, notificationPreferences.userId)
+			)
+			.innerJoin(
+				userDisplayCache,
+				eq(userStats.userId, userDisplayCache.userId)
+			)
 			.leftJoin(
 				winBackEmails,
 				and(
 					eq(userStats.userId, winBackEmails.userId),
-					eq(winBackEmails.emailType, emailConfig.type),
-				),
+					eq(winBackEmails.emailType, emailConfig.type)
+				)
 			)
 			.where(
 				and(
@@ -320,14 +332,14 @@ export const winBackEmailsHandler: JobHandler = async (_payload, context) => {
 					eq(notificationPreferences.emailMarketing, true),
 					gt(userStats.lastPlayedAt, targetDateStart),
 					lt(userStats.lastPlayedAt, targetDateEnd),
-					isNull(winBackEmails.id), // Not yet sent this email type
-				),
+					isNull(winBackEmails.id) // Not yet sent this email type
+				)
 			)
 			.groupBy(
 				userStats.userId,
 				userDisplayCache.email,
 				userDisplayCache.displayName,
-				userStats.lastPlayedAt,
+				userStats.lastPlayedAt
 			)
 
 		// Filter to users with valid emails

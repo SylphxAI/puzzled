@@ -46,14 +46,18 @@ export const JOB_HANDLERS: Record<string, () => Promise<JobHandler>> = {
 		import('./handlers/generate-puzzles').then((m) => m.generatePuzzlesHandler),
 
 	// DLQ retry - hourly
-	'dlq-retry': () => import('./handlers/dlq-retry').then((m) => m.dlqRetryHandler),
+	'dlq-retry': () =>
+		import('./handlers/dlq-retry').then((m) => m.dlqRetryHandler),
 
 	// Notification jobs - send push/email notifications via Platform SDK
-	'daily-reminder': () => import('./handlers/notifications').then((m) => m.dailyReminderHandler),
+	'daily-reminder': () =>
+		import('./handlers/notifications').then((m) => m.dailyReminderHandler),
 
-	'streak-at-risk': () => import('./handlers/notifications').then((m) => m.streakAtRiskHandler),
+	'streak-at-risk': () =>
+		import('./handlers/notifications').then((m) => m.streakAtRiskHandler),
 
-	'win-back-emails': () => import('./handlers/notifications').then((m) => m.winBackEmailsHandler),
+	'win-back-emails': () =>
+		import('./handlers/notifications').then((m) => m.winBackEmailsHandler),
 }
 
 // ==========================================

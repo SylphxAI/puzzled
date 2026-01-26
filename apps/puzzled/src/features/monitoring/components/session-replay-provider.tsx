@@ -12,11 +12,11 @@
  * Provides error correlation for debugging support issues.
  */
 
-import { useSafeBilling, useSafeUser, useSessionReplay } from '@sylphx/sdk/react'
 import { useEffect, useRef } from 'react'
+import { useSessionReplay, useSafeUser, useSafeBilling } from '@sylphx/sdk/react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'
-import { getAdjustedSampleRate, getSessionReplayConfig } from '../lib'
+import { getSessionReplayConfig, getAdjustedSampleRate } from '../lib'
 
 export interface SessionReplayProviderProps {
 	children: React.ReactNode
@@ -71,19 +71,25 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 	// Initialize session replay with consent check
 	// Uses default endpoint (/api/session-replay) for uploads
 	const shouldRecord = consentRef.current
-	const { sessionId, isRecording, markError, markNavigation, markConversion, stop } =
-		useSessionReplay({
-			...config,
-			autoStart: shouldRecord,
-			stopOnUnmount: true,
-			// Uses /api/session-replay endpoint by default
-			uploadEndpoint: '/api/session-replay',
-			userId: user?.id,
-			onError: (error) => {
-				// Log but don't break the app
-				console.warn('[SessionReplay] Recording error:', error.message)
-			},
-		})
+	const {
+		sessionId,
+		isRecording,
+		markError,
+		markNavigation,
+		markConversion,
+		stop,
+	} = useSessionReplay({
+		...config,
+		autoStart: shouldRecord,
+		stopOnUnmount: true,
+		// Uses /api/session-replay endpoint by default
+		uploadEndpoint: '/api/session-replay',
+		userId: user?.id,
+		onError: (error) => {
+			// Log but don't break the app
+			console.warn('[SessionReplay] Recording error:', error.message)
+		},
+	})
 
 	// Handle consent changes
 	useEffect(() => {

@@ -6,9 +6,9 @@
  * Catches errors in login, signup, password reset pages.
  */
 
-import { Button } from '@sylphx/ui'
-import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import { useEffect } from 'react'
+import { Button } from '@sylphx/ui'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { captureError } from '@/lib/monitoring'
 
 interface ErrorProps {

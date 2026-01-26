@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { GUEST_GAMES_KEY } from '@/lib/storage-keys'
-
 const RETENTION_DAYS = 7
 
 type GuestCompletedGame = {

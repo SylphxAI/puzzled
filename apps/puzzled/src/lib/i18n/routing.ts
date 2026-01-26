@@ -22,6 +22,7 @@ export const routing = defineRouting({
 	// Users stay on default (en-US) unless they explicitly switch
 	// This prevents confusing redirects and maintains SEO
 	localeDetection: false,
+
 })
 
 // Export locale-aware navigation utilities

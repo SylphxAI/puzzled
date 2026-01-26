@@ -5,9 +5,9 @@
  * Uses Sylphx Platform SDK for authentication.
  */
 
-import { type AuthResult, auth } from '@sylphx/sdk/nextjs'
 import type { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import { headers } from 'next/headers'
+import { auth, type AuthResult } from '@sylphx/sdk/nextjs'
 
 /**
  * Platform user (from auth result)

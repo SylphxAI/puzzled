@@ -1,12 +1,12 @@
 'use client'
 
-import { Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Gauge } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { DifficultyBadge } from '@/features/daily/components'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+import { Button, Card, CardContent } from '@sylphx/ui'
 
 type DifficultySelectionViewProps = {
 	gameSlug: string
@@ -67,7 +67,8 @@ export function DifficultySelectionView({
 		},
 	}
 
-	const allCompleted = completionStatus.easy && completionStatus.medium && completionStatus.hard
+	const allCompleted =
+		completionStatus.easy && completionStatus.medium && completionStatus.hard
 	const completedCount = [
 		completionStatus.easy,
 		completionStatus.medium,
@@ -99,7 +100,11 @@ export function DifficultySelectionView({
 							const isCompleted = completionStatus[level]
 
 							return (
-								<Link key={level} href={`/games/${gameSlug}?difficulty=${level}`} className="group">
+								<Link
+									key={level}
+									href={`/games/${gameSlug}?difficulty=${level}`}
+									className="group"
+								>
 									<Card
 										className={cn(
 											'border-2 transition-all',
@@ -114,7 +119,9 @@ export function DifficultySelectionView({
 											<div
 												className={cn(
 													'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-													isCompleted ? 'bg-emerald-500/20' : config.bgColor,
+													isCompleted
+														? 'bg-emerald-500/20'
+														: config.bgColor,
 												)}
 											>
 												{isCompleted ? (
@@ -130,14 +137,18 @@ export function DifficultySelectionView({
 											{/* Content */}
 											<div className="flex-1">
 												<div className="flex items-center gap-2">
-													<span className={cn('font-semibold', config.color)}>{config.label}</span>
+													<span className={cn('font-semibold', config.color)}>
+														{config.label}
+													</span>
 													{isCompleted && (
 														<span className="text-xs text-emerald-600 dark:text-emerald-400">
 															✓ Done
 														</span>
 													)}
 												</div>
-												<p className="text-sm text-muted-foreground">{config.description}</p>
+												<p className="text-sm text-muted-foreground">
+													{config.description}
+												</p>
 											</div>
 
 											{/* Arrow */}
@@ -160,7 +171,9 @@ export function DifficultySelectionView({
 							<p className="font-medium text-emerald-600 dark:text-emerald-400">
 								🎉 {tDaily('allCompleteMessage')}
 							</p>
-							<p className="mt-1 text-sm text-muted-foreground">{tDaily('comeBackTomorrow')}</p>
+							<p className="mt-1 text-sm text-muted-foreground">
+								{tDaily('comeBackTomorrow')}
+							</p>
 						</div>
 					)}
 

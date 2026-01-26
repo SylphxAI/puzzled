@@ -3,6 +3,6 @@
  */
 
 export {
-	type UseSessionReplayErrorReturn,
 	useSessionReplayError,
+	type UseSessionReplayErrorReturn,
 } from './use-session-replay-error'

@@ -6,9 +6,9 @@
  * Catches errors in admin panel pages.
  */
 
-import { Button } from '@sylphx/ui'
-import { AlertTriangle, LayoutDashboard, RefreshCw } from 'lucide-react'
 import { useEffect } from 'react'
+import { Button } from '@sylphx/ui'
+import { AlertTriangle, RefreshCw, LayoutDashboard } from 'lucide-react'
 import { captureError } from '@/lib/monitoring'
 
 interface ErrorProps {

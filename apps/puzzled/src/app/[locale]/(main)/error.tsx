@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@sylphx/ui'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
+import { Button } from '@sylphx/ui'
 import { captureError } from '@/lib/monitoring'
 
 type Props = {

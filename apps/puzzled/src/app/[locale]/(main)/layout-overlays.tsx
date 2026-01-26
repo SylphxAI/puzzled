@@ -1,8 +1,8 @@
 'use client'
 
 import { AchievementChecker, AchievementToastProvider } from '@/features/gamification'
-import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { PWAInstallPrompt } from '@/shared/components/pwa-install-prompt'
+import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 
 export function LayoutOverlays() {
 	return (

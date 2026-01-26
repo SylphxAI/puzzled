@@ -105,7 +105,7 @@ export function isValidLocale(locale: string): locale is Locale {
 	return locales.includes(locale as Locale)
 }
 
-export function getLocaleDirection(_locale: Locale): 'ltr' | 'rtl' {
+export function getLocaleDirection(locale: Locale): 'ltr' | 'rtl' {
 	// All current locales are LTR
 	// Add RTL locales here if needed (ar, he, fa, etc.)
 	return 'ltr'

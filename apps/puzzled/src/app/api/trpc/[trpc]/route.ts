@@ -9,9 +9,9 @@
 export const runtime = 'nodejs'
 
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
-import { captureError } from '@/lib/monitoring'
 import { createContext } from '@/server/context'
 import { appRouter } from '@/server/routers'
+import { captureError } from '@/lib/monitoring'
 
 /**
  * Request handler configuration

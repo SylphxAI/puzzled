@@ -108,9 +108,7 @@ async function generateForGame(
 			})
 
 			if (existing) {
-				console.log(
-					`[Puzzle Generator] ${game.slug} (${difficulty}) already exists for ${targetDate}`,
-				)
+				console.log(`[Puzzle Generator] ${game.slug} (${difficulty}) already exists for ${targetDate}`)
 				successCount++
 				continue
 			}
@@ -119,10 +117,7 @@ async function generateForGame(
 			const generation = await generateGamePuzzle(game.slug, targetDate, difficulty)
 
 			if (!generation.result.success) {
-				console.error(
-					`[Puzzle Generator] ${game.slug} (${difficulty}) failed:`,
-					generation.result.error,
-				)
+				console.error(`[Puzzle Generator] ${game.slug} (${difficulty}) failed:`, generation.result.error)
 				failCount++
 				continue
 			}

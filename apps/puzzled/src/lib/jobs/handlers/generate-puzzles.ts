@@ -13,7 +13,7 @@ import { db } from '@/lib/db'
 import { dailyPuzzles } from '@/lib/db/schema'
 import { handleWorkflowFailure } from '@/lib/dlq'
 import { captureMessage } from '@/lib/monitoring'
-import type { JobHandler } from '../handlers'
+import type { JobHandler, JobResult } from '../handlers'
 
 const DIFFICULTY_LEVELS: PuzzleDifficulty[] = ['easy', 'medium', 'hard']
 
@@ -100,9 +100,7 @@ async function generateForGame(
 			})
 
 			if (existing) {
-				console.log(
-					`[Puzzle Generator] ${game.slug} (${difficulty}) already exists for ${targetDate}`,
-				)
+				console.log(`[Puzzle Generator] ${game.slug} (${difficulty}) already exists for ${targetDate}`)
 				successCount++
 				continue
 			}
@@ -110,10 +108,7 @@ async function generateForGame(
 			const generation = await generateGamePuzzle(game.slug, targetDate, difficulty)
 
 			if (!generation.result.success) {
-				console.error(
-					`[Puzzle Generator] ${game.slug} (${difficulty}) failed:`,
-					generation.result.error,
-				)
+				console.error(`[Puzzle Generator] ${game.slug} (${difficulty}) failed:`, generation.result.error)
 				failCount++
 				continue
 			}
@@ -190,9 +185,7 @@ export const generatePuzzlesHandler: JobHandler = async (payload, context) => {
 	const targetDateObj = new Date(`${targetDate}T00:00:00Z`)
 	const runId = `gen-${targetDate}-${Date.now()}`
 
-	console.log(
-		`[Puzzle Generator] Starting for ${targetDate} (runId: ${runId}, jobId: ${context.jobId})`,
-	)
+	console.log(`[Puzzle Generator] Starting for ${targetDate} (runId: ${runId}, jobId: ${context.jobId})`)
 
 	try {
 		const registeredGames = getAllGames().map((g) => ({

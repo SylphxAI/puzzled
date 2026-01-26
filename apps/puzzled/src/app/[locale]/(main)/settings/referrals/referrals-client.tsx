@@ -1,10 +1,10 @@
 'use client'
 
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Copy, Check, RefreshCw, Gift, Users, UserCheck, Clock, Share2 } from 'lucide-react'
 import { useReferral } from '@sylphx/sdk/react'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
-import { Check, Clock, Copy, Gift, RefreshCw, Share2, UserCheck, Users } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { useState } from 'react'
 
 export function ReferralsContent() {
 	const t = useTranslations('referrals')
@@ -94,7 +94,12 @@ export function ReferralsContent() {
 							<div className="flex-1 rounded-lg bg-muted px-4 py-3 font-mono text-lg font-semibold tracking-wider text-center">
 								{code}
 							</div>
-							<Button variant="outline" size="icon" onClick={handleCopyCode} className="shrink-0">
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={handleCopyCode}
+								className="shrink-0"
+							>
 								{copied === 'code' ? (
 									<Check className="h-4 w-4 text-green-500" />
 								) : (
@@ -138,7 +143,12 @@ export function ReferralsContent() {
 									readOnly
 									className="flex-1 rounded-lg border bg-muted px-3 py-2 text-sm"
 								/>
-								<Button variant="outline" size="sm" onClick={handleCopyLink} className="shrink-0">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={handleCopyLink}
+									className="shrink-0"
+								>
 									{copied === 'link' ? (
 										<>
 											<Check className="mr-2 h-4 w-4 text-green-500" />
@@ -197,7 +207,9 @@ export function ReferralsContent() {
 					</div>
 
 					{stats?.totalReferrals === 0 && (
-						<p className="mt-4 text-center text-sm text-muted-foreground">{t('noReferralsYet')}</p>
+						<p className="mt-4 text-center text-sm text-muted-foreground">
+							{t('noReferralsYet')}
+						</p>
 					)}
 				</CardContent>
 			</Card>

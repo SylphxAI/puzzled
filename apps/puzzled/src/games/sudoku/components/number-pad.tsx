@@ -5,10 +5,10 @@
 
 'use client'
 
-import { Button } from '@sylphx/ui'
-import { Delete, PencilLine } from 'lucide-react'
 import { memo, useCallback } from 'react'
+import { Delete, PencilLine } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@sylphx/ui'
 
 type NumberButtonProps = {
 	num: number
@@ -62,7 +62,10 @@ export function SudokuNumberPad({
 	disabled = false,
 }: Props) {
 	// Memoize stable handler
-	const handleNumberPress = useCallback((value: number) => onNumberPress(value), [onNumberPress])
+	const handleNumberPress = useCallback(
+		(value: number) => onNumberPress(value),
+		[onNumberPress],
+	)
 
 	return (
 		<div className="w-full space-y-2">

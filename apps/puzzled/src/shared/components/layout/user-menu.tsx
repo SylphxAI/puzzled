@@ -1,6 +1,11 @@
 'use client'
 
-import { useSafeAuth, useSafeUser } from '@sylphx/sdk/react'
+import { LogIn, LogOut, Settings, User } from 'lucide-react'
+import Image from 'next/image'
+import { useTranslations } from 'next-intl'
+import { useSafeUser, useSafeAuth } from '@sylphx/sdk/react'
+import { Link } from '@/lib/i18n/routing'
+import { cn } from '@/lib/utils'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,11 +15,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@sylphx/ui'
-import { LogIn, LogOut, Settings, User } from 'lucide-react'
-import Image from 'next/image'
-import { useTranslations } from 'next-intl'
-import { Link } from '@/lib/i18n/routing'
-import { cn } from '@/lib/utils'
 
 type UserMenuProps = {
 	/** Size variant for the trigger button */

@@ -27,7 +27,10 @@ export function WordHiveIcon({ size = 24, className, ...props }: IconProps) {
 			{...props}
 		>
 			{/* Center hexagon - filled */}
-			<path d="M12 6l4 2.3v4.6l-4 2.3-4-2.3V8.3L12 6z" fill="currentColor" />
+			<path
+				d="M12 6l4 2.3v4.6l-4 2.3-4-2.3V8.3L12 6z"
+				fill="currentColor"
+			/>
 			{/* Surrounding hexagons */}
 			<path d="M12 1l3 1.7v3.4L12 7.8 9 6.1V2.7L12 1z" />
 			<path d="M18.5 4.5l3 1.7v3.4l-3 1.7-3-1.7V6.2l3-1.7z" />

@@ -1,7 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { PushPrompt } from '@sylphx/sdk/react'
-import { useEffect, useState } from 'react'
 import { PUSH_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { usePuzzledPush } from '../hooks/use-puzzled-push'
 
@@ -39,12 +39,12 @@ export function DailyReminderPrompt({
 	showDelay = 5000,
 	showAfterWin = false,
 	title = 'Never miss a puzzle!',
-	description = 'Get notified when the daily puzzle is ready. Keep your streak going strong! 🔥',
+	description = "Get notified when the daily puzzle is ready. Keep your streak going strong! 🔥",
 	onEnabled,
 	onDismissed,
 }: DailyReminderPromptProps) {
 	const { isSupported, isEnabled } = usePuzzledPush()
-	const [shouldRender, _setShouldRender] = useState(false)
+	const [shouldRender, setShouldRender] = useState(false)
 	const [dismissed, setDismissed] = useState(false)
 
 	// Check if user has already dismissed this prompt

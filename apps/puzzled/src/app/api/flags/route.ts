@@ -5,7 +5,7 @@
  * Platform integration pending - currently returns hardcoded defaults.
  */
 
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 interface FeatureFlag {
 	key: string

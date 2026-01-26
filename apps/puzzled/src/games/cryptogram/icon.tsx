@@ -34,12 +34,8 @@ export function CryptogramIcon({ size = 24, className, ...props }: IconProps) {
 			<path d="M12 3v2M12 19v2M3 12h2M19 12h2" />
 			<path d="M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4" />
 			{/* Letters hint */}
-			<text x="12" y="9" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">
-				A
-			</text>
-			<text x="12" y="16.5" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">
-				?
-			</text>
+			<text x="12" y="9" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">A</text>
+			<text x="12" y="16.5" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">?</text>
 			{/* Pointer */}
 			<path d="M12 7v3" strokeWidth="2" />
 		</svg>

@@ -1,8 +1,8 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { Header } from '@/shared/components/layout'
 
 type Props = {

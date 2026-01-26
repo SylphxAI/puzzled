@@ -2,9 +2,9 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { notificationPreferences } from '@/lib/db/schema'
+import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
 
 export const runtime = 'nodejs' // Required for crypto
 

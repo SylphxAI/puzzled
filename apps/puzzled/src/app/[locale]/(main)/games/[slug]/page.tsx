@@ -1,8 +1,7 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { Button } from '@sylphx/ui'
 import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -10,6 +9,7 @@ import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
+import { Button } from '@sylphx/ui'
 import { createServerCaller } from '@/trpc/server'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GamePageClient } from './game-page-client'
@@ -119,10 +119,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 					<div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
 						<p>
 							Today's free game:{' '}
-							<Link
-								href={`/games/${todaysFreeGame}`}
-								className="font-medium text-primary underline"
-							>
+							<Link href={`/games/${todaysFreeGame}`} className="font-medium text-primary underline">
 								{t(`${slugToCamelCase(todaysFreeGame)}.name`)}
 							</Link>
 						</p>

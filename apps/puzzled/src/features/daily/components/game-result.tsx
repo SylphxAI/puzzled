@@ -1,12 +1,12 @@
 'use client'
 
-import { Button } from '@sylphx/ui'
 import { BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { type GameSlug, getGameConfig } from '@/games/registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+import { Button } from '@sylphx/ui'
 import { trpc } from '@/trpc/client'
 
 type MissedCategory = {

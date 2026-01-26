@@ -13,7 +13,7 @@
  * and routes to the appropriate job handler.
  */
 
-import { type CronSchedule, createCron, deleteCron } from '@sylphx/sdk'
+import { createCron, deleteCron, type CronSchedule } from '@sylphx/sdk'
 import { getSdkConfig } from '@/lib/sdk-server'
 
 // ==========================================
@@ -78,9 +78,10 @@ export const CRON_JOBS: CronJobDefinition[] = [
  */
 function getCallbackUrl(): string {
 	// Use environment-specific base URL
-	const baseUrl = process.env.VERCEL_URL
-		? `https://${process.env.VERCEL_URL}`
-		: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+	const baseUrl =
+		process.env.VERCEL_URL
+			? `https://${process.env.VERCEL_URL}`
+			: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 	return `${baseUrl}/api/webhooks/platform-jobs`
 }

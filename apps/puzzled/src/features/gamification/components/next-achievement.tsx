@@ -1,9 +1,9 @@
 'use client'
 
-import { Card, CardContent } from '@sylphx/ui'
 import { Target } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
+import { Card, CardContent } from '@sylphx/ui'
 
 type NextAchievementProps = {
 	achievement: {

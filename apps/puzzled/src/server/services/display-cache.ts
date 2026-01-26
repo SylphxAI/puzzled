@@ -14,9 +14,9 @@
  */
 
 import { eq, inArray } from 'drizzle-orm'
-import { HOUR_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
-import { type UserDisplayCache, userDisplayCache } from '@/lib/db/schema'
+import { userDisplayCache, type UserDisplayCache } from '@/lib/db/schema'
+import { HOUR_MS } from '@/lib/constants/time'
 
 /** Cache TTL in milliseconds (1 hour) - used for staleness warnings only */
 const CACHE_TTL_MS = HOUR_MS

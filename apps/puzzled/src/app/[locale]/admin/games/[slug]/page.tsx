@@ -3,8 +3,8 @@ export const dynamic = 'force-dynamic'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { GameDashboard } from '@/features/admin/components/game-dashboard'
 import { getGameConfig } from '@/games/registry'
+import { GameDashboard } from '@/features/admin/components/game-dashboard'
 
 type Params = Promise<{ slug: string }>
 

@@ -15,8 +15,8 @@
 
 'use client'
 
+import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useAnalytics } from '@sylphx/sdk/react'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { canTrackAnalytics } from './consent'
 
@@ -24,7 +24,11 @@ import { canTrackAnalytics } from './consent'
 // Constants
 // ==========================================
 
-import { ANALYTICS_OFFLINE_QUEUE_KEY, SESSION_ID_KEY, SESSION_START_KEY } from '@/lib/storage-keys'
+import {
+	ANALYTICS_OFFLINE_QUEUE_KEY,
+	SESSION_START_KEY,
+	SESSION_ID_KEY,
+} from '@/lib/storage-keys'
 
 const BATCH_SIZE = 10
 const BATCH_INTERVAL_MS = 5000
@@ -107,7 +111,7 @@ function getDeviceType(): DeviceType {
 
 	// Check for mobile
 	const isMobileUA = /mobile|iphone|ipod|android.*mobile|blackberry|opera mini|iemobile/i.test(
-		userAgent,
+		userAgent
 	)
 	if (isMobileUA || screenWidth < 768) return 'mobile'
 
@@ -264,14 +268,10 @@ function setupFirstInteractionTracking(): void {
 	const handler = () => {
 		recordFirstInteraction()
 		// Remove listeners after first interaction
-		for (const event of events) {
-			window.removeEventListener(event, handler, { capture: true })
-		}
+		events.forEach((event) => window.removeEventListener(event, handler, { capture: true }))
 	}
 
-	for (const event of events) {
-		window.addEventListener(event, handler, { capture: true, once: true })
-	}
+	events.forEach((event) => window.addEventListener(event, handler, { capture: true, once: true }))
 }
 
 function getEventDimensions(journeyStage: UserJourneyStage): EventDimensions {
@@ -293,7 +293,7 @@ function getEventDimensions(journeyStage: UserJourneyStage): EventDimensions {
 
 function calculateRetryDelay(retryCount: number): number {
 	// Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped)
-	const delay = Math.min(BASE_RETRY_DELAY_MS * 2 ** retryCount, 30000)
+	const delay = Math.min(BASE_RETRY_DELAY_MS * Math.pow(2, retryCount), 30000)
 	// Add jitter (0-25% of delay)
 	const jitter = delay * 0.25 * Math.random()
 	return delay + jitter
@@ -311,7 +311,7 @@ interface QueueManager {
 
 function createQueueManager(
 	trackFn: (event: string, properties?: Record<string, unknown>) => Promise<void>,
-	journeyStage: UserJourneyStage,
+	journeyStage: UserJourneyStage
 ): QueueManager {
 	const queue: QueuedEvent[] = []
 	let flushTimeout: ReturnType<typeof setTimeout> | null = null
@@ -538,7 +538,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				puzzle_id: event.puzzleId,
 			})
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const trackGameComplete = useCallback(
@@ -570,7 +570,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				})
 			}
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const trackAchievement = useCallback(
@@ -582,7 +582,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				points: event.points,
 			})
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const trackStreak = useCallback(
@@ -601,7 +601,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				})
 			}
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const trackSubscription = useCallback(
@@ -610,7 +610,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				plan_id: planId,
 			})
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const trackFeatureUsed = useCallback(
@@ -620,7 +620,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				...properties,
 			})
 		},
-		[enqueueEvent],
+		[enqueueEvent]
 	)
 
 	const flushEvents = useCallback(async () => {
