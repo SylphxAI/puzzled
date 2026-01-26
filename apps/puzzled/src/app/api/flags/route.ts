@@ -23,11 +23,13 @@ interface FlagRequestBody {
 }
 
 /**
- * Get feature flags
- * Platform REST API integration pending - using defaults for now
+ * Get feature flags for a user
+ *
+ * Currently returns hardcoded defaults. Platform integration will be added
+ * when the flags REST API is available, enabling per-user flag targeting.
  */
 async function getPlatformFlags(_userId?: string): Promise<FeatureFlag[]> {
-	// TODO: Integrate with platform once flags REST API is available
+	// Platform flags API integration pending - return defaults for now
 	return getDefaultFlags()
 }
 

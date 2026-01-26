@@ -15,7 +15,9 @@ const nextConfig: NextConfig = {
 	reactStrictMode: true,
 
 	// Skip type-checking errors from SDK's cross-workspace type resolution
-	// TODO: Fix SDK to generate standalone .d.ts files instead of referencing sylphx source
+	// The SDK currently references platform source types which aren't resolvable
+	// from the puzzled app context. Long-term fix: SDK should generate standalone
+	// .d.ts files bundled with the package rather than cross-workspace references.
 	typescript: {
 		ignoreBuildErrors: true,
 	},

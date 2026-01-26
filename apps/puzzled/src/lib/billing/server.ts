@@ -87,15 +87,14 @@ export function getFreeGameRotation(): readonly string[] {
 /**
  * Check if a user has premium access
  *
- * Platform SDK integration pending - currently returns false (free tier).
- * TODO: Integrate with platform billing API once available.
+ * Currently returns false (free tier) until platform billing API integration.
+ * When integrated, this will check the user's subscription status in real-time.
  *
  * @param _userId - Platform user ID
  * @returns true if user has an active premium subscription
  */
 export async function hasPremiumAccess(_userId: string): Promise<boolean> {
-	// TODO: Integrate with platform billing API
-	// For now, all users are on free tier
+	// Platform billing API integration pending - all users on free tier for now
 	return false
 }
 
