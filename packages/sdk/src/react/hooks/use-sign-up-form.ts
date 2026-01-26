@@ -356,7 +356,15 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 				// Use safeRedirect to prevent XSS via malicious afterSignUpUrl
 				safeRedirect(afterSignUpUrl, { fallback: '/dashboard' })
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Sign up failed'
+				// Distinguish between network errors and auth errors
+				let message: string
+				if (err instanceof TypeError && err.message === 'Failed to fetch') {
+					message = 'Unable to connect. Please check your internet connection and try again.'
+				} else if (err instanceof Error) {
+					message = err.message
+				} else {
+					message = 'Sign up failed'
+				}
 				setError(message)
 				onError?.(message)
 			} finally {
@@ -414,7 +422,15 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 				// Use safeRedirect to prevent XSS via malicious afterSignUpUrl
 				safeRedirect(afterSignUpUrl, { fallback: '/dashboard' })
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Verification failed'
+				// Distinguish between network errors and auth errors
+				let message: string
+				if (err instanceof TypeError && err.message === 'Failed to fetch') {
+					message = 'Unable to connect. Please check your internet connection and try again.'
+				} else if (err instanceof Error) {
+					message = err.message
+				} else {
+					message = 'Verification failed'
+				}
 				setError(message)
 				onError?.(message)
 			} finally {

@@ -140,7 +140,7 @@ function SignUpFormInner({
 		injectGlobalStyles()
 	}, [])
 
-	// Render input with theme
+	// Render input with theme and accessibility
 	const renderInput = (
 		type: string,
 		name: string,
@@ -155,8 +155,11 @@ function SignUpFormInner({
 			autoFocus?: boolean
 		}
 	) => {
+		// Generate unique ID for label association
+		const inputId = `signup-${name}`
 		return (
 			<input
+				id={inputId}
 				type={type}
 				name={name}
 				value={value}
@@ -168,6 +171,7 @@ function SignUpFormInner({
 				required={options?.required !== false}
 				minLength={options?.minLength}
 				autoFocus={options?.autoFocus}
+				aria-describedby={name === 'password' ? 'password-hint' : name === 'verificationCode' ? 'verification-hint' : undefined}
 				style={mergeStyles(
 					styles.input,
 					isLoading || options?.readOnly ? styles.inputDisabled : {}
@@ -258,7 +262,7 @@ function SignUpFormInner({
 
 			{/* Name field */}
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Name</label>
+				<label htmlFor="signup-name" style={styles.label}>Name</label>
 				{renderInput('text', 'name', 'Your name', form.name, setName, {
 					autoComplete: 'name',
 				})}
@@ -266,7 +270,7 @@ function SignUpFormInner({
 
 			{/* Email field */}
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Email</label>
+				<label htmlFor="signup-email" style={styles.label}>Email</label>
 				{renderInput('email', 'email', 'you@example.com', form.email, setEmail, {
 					autoComplete: 'email',
 					readOnly: !!inviteInfo?.email,
@@ -280,12 +284,12 @@ function SignUpFormInner({
 
 			{/* Password field */}
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Password</label>
+				<label htmlFor="signup-password" style={styles.label}>Password</label>
 				{renderInput('password', 'password', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', form.password, setPassword, {
 					autoComplete: 'new-password',
 					minLength: 8,
 				})}
-				<p style={mergeStyles(styles.textXs, styles.textMuted, styles.mt1)}>
+				<p id="password-hint" style={mergeStyles(styles.textXs, styles.textMuted, styles.mt1)}>
 					Must be at least 8 characters
 				</p>
 			</div>
@@ -293,7 +297,7 @@ function SignUpFormInner({
 			{/* Invite code field */}
 			{(showInviteCode || requireInviteCode) && !inviteInfo?.valid && (
 				<div style={styles.formGroup}>
-					<label style={styles.label}>
+					<label htmlFor="signup-inviteCode" style={styles.label}>
 						Invite Code{' '}
 						{requireInviteCode && (
 							<span style={{ color: theme.colorDestructive }}>*</span>
@@ -308,7 +312,7 @@ function SignUpFormInner({
 			{/* Additional fields */}
 			{additionalFields.map((field) => (
 				<div key={field.name} style={styles.formGroup}>
-					<label style={styles.label}>
+					<label htmlFor={`signup-${field.name}`} style={styles.label}>
 						{field.label}
 						{field.required && (
 							<span style={{ color: theme.colorDestructive }}> *</span>
@@ -316,6 +320,7 @@ function SignUpFormInner({
 					</label>
 					{field.type === 'select' ? (
 						<select
+							id={`signup-${field.name}`}
 							name={field.name}
 							value={form[field.name] || ''}
 							onChange={(e) => setField(field.name, e.target.value)}
@@ -385,6 +390,12 @@ function SignUpFormInner({
 
 			<form onSubmit={handleVerifyEmail}>
 				<div style={styles.formGroup}>
+					<label htmlFor="signup-verificationCode" className="sr-only" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
+						Verification code
+					</label>
+					<p id="verification-hint" style={mergeStyles(styles.textMuted, styles.textSm, styles.mb2)}>
+						Enter the 6-digit code from your email
+					</p>
 					{renderInput(
 						'text',
 						'verificationCode',
@@ -438,14 +449,14 @@ function SignUpFormInner({
 	const renderWaitlistForm = () => (
 		<form onSubmit={handleJoinWaitlist}>
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Email</label>
+				<label htmlFor="signup-email" style={styles.label}>Email</label>
 				{renderInput('email', 'email', 'you@example.com', form.email, setEmail, {
 					autoComplete: 'email',
 				})}
 			</div>
 
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Name (optional)</label>
+				<label htmlFor="signup-name" style={styles.label}>Name (optional)</label>
 				{renderInput('text', 'name', 'Your name', form.name, setName, {
 					autoComplete: 'name',
 					required: false,

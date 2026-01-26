@@ -249,7 +249,11 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 
 				// Check if 2FA is required
 				if (result.requiresTwoFactor) {
-					setPendingTwoFactor({ userId: result.userId!, email: form.email })
+					if (!result.userId) {
+						setError('Authentication failed: missing user ID for two-factor verification')
+						return
+					}
+					setPendingTwoFactor({ userId: result.userId, email: form.email })
 					setStep('otp-verify')
 					return
 				}
@@ -259,7 +263,15 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 				// Use safeRedirect to prevent XSS via malicious afterSignInUrl
 				safeRedirect(afterSignInUrl, { fallback: '/dashboard' })
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Sign in failed'
+				// Distinguish between network errors and auth errors
+				let message: string
+				if (err instanceof TypeError && err.message === 'Failed to fetch') {
+					message = 'Unable to connect. Please check your internet connection and try again.'
+				} else if (err instanceof Error) {
+					message = err.message
+				} else {
+					message = 'Sign in failed'
+				}
 				setError(message)
 				onError?.(message)
 

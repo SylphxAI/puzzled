@@ -114,7 +114,7 @@ function SignInFormInner({
 		injectGlobalStyles()
 	}, [])
 
-	// Render input with theme
+	// Render input with theme and accessibility
 	const renderInput = (
 		type: string,
 		name: 'email' | 'password' | 'otp',
@@ -128,8 +128,11 @@ function SignInFormInner({
 			autoFocus?: boolean
 		}
 	) => {
+		// Generate unique ID for label association
+		const inputId = `signin-${name}`
 		return (
 			<input
+				id={inputId}
 				type={type}
 				name={name}
 				value={value}
@@ -140,6 +143,7 @@ function SignInFormInner({
 				required={options?.required !== false}
 				minLength={options?.minLength}
 				autoFocus={options?.autoFocus}
+				aria-describedby={name === 'otp' ? 'otp-hint' : undefined}
 				style={mergeStyles(
 					styles.input,
 					isLoading ? styles.inputDisabled : {}
@@ -234,12 +238,12 @@ function SignInFormInner({
 	const renderPasswordForm = () => (
 		<form onSubmit={handlePasswordSubmit}>
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Email</label>
+				<label htmlFor="signin-email" style={styles.label}>Email</label>
 				{renderInput('email', 'email', 'you@example.com', form.email, setEmail, { autoComplete: 'email' })}
 			</div>
 			<div style={styles.formGroup}>
 				<div style={styles.flexBetween}>
-					<label style={styles.label}>Password</label>
+					<label htmlFor="signin-password" style={styles.label}>Password</label>
 					{!hideForgotPassword && (
 						<a href={forgotPasswordUrl} style={mergeStyles(styles.link, styles.textSm)}>
 							Forgot password?
@@ -260,7 +264,7 @@ function SignInFormInner({
 	const renderMagicLinkForm = () => (
 		<form onSubmit={handleMagicLinkRequest}>
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Email</label>
+				<label htmlFor="signin-email" style={styles.label}>Email</label>
 				{renderInput('email', 'email', 'you@example.com', form.email, setEmail, { autoComplete: 'email' })}
 			</div>
 			{renderError()}
@@ -300,8 +304,8 @@ function SignInFormInner({
 	const renderOTPForm = () => (
 		<form onSubmit={handleOtpVerify}>
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Enter verification code</label>
-				<p style={mergeStyles(styles.textMuted, styles.textSm, styles.mb2)}>Sent to {form.email}</p>
+				<label htmlFor="signin-otp" style={styles.label}>Enter verification code</label>
+				<p id="otp-hint" style={mergeStyles(styles.textMuted, styles.textSm, styles.mb2)}>Sent to {form.email}</p>
 				{renderInput('text', 'otp', '000000', form.otp, setOtp, {
 					autoComplete: 'one-time-code',
 					autoFocus: true,
@@ -332,7 +336,7 @@ function SignInFormInner({
 			}}
 		>
 			<div style={styles.formGroup}>
-				<label style={styles.label}>Email</label>
+				<label htmlFor="signin-email" style={styles.label}>Email</label>
 				{renderInput('email', 'email', 'you@example.com', form.email, setEmail, { autoComplete: 'email' })}
 			</div>
 			{renderError()}
