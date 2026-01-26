@@ -16,6 +16,8 @@ const ToastViewport = forwardRef<
 >(({ className, ...props }, ref) => (
 	<ToastPrimitive.Viewport
 		ref={ref}
+		aria-live="polite"
+		aria-atomic="true"
 		className={cn(
 			'fixed bottom-20 left-1/2 z-toast flex max-h-screen -translate-x-1/2 flex-col gap-2 p-4 sm:bottom-4 sm:left-auto sm:right-4 sm:translate-x-0',
 			'pointer-events-none w-full max-w-sm',
@@ -62,7 +64,10 @@ const ToastAction = forwardRef<
 	<ToastPrimitive.Action
 		ref={ref}
 		className={cn(
-			'inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-muted focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-muted',
+			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+			'disabled:pointer-events-none disabled:opacity-50',
 			className,
 		)}
 		{...props}
@@ -77,14 +82,16 @@ const ToastClose = forwardRef<
 	<ToastPrimitive.Close
 		ref={ref}
 		className={cn(
-			'shrink-0 rounded-md p-1 opacity-60 transition-opacity hover:opacity-100 focus:outline-none focus:ring-1 focus:ring-ring',
+			// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'shrink-0 rounded-md p-2.5 min-h-11 min-w-11 flex items-center justify-center opacity-60 transition-opacity hover:opacity-100',
+			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
 			className,
 		)}
 		toast-close=""
-		aria-label="Close"
+		aria-label="Close notification"
 		{...props}
 	>
-		<X className="h-4 w-4" />
+		<X className="h-4 w-4" aria-hidden="true" />
 	</ToastPrimitive.Close>
 ))
 ToastClose.displayName = ToastPrimitive.Close.displayName

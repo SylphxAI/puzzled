@@ -21,9 +21,10 @@ const SelectTrigger = forwardRef<
 	<SelectPrimitive.Trigger
 		ref={ref}
 		className={cn(
-			'flex h-10 w-full items-center justify-between rounded-lg border border-border/50 bg-card/50 px-3 py-2 text-sm',
+			// h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'flex h-11 w-full items-center justify-between rounded-lg border border-border/50 bg-card/50 px-3 py-2 text-sm',
 			'ring-offset-background transition-colors',
-			'hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-0',
+			'hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2',
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			'[&>span]:line-clamp-1',
 			className,
@@ -123,7 +124,8 @@ const SelectItem = forwardRef<
 	<SelectPrimitive.Item
 		ref={ref}
 		className={cn(
-			'relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-8 pr-2 text-sm outline-none',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'relative flex w-full cursor-default select-none items-center rounded-md min-h-11 py-2 pl-8 pr-2 text-sm outline-none',
 			'focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 			className,
 		)}

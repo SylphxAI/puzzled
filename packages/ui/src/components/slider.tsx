@@ -20,7 +20,13 @@ const Slider = forwardRef<React.ComponentRef<typeof SliderPrimitive.Root>, Slide
 				<SliderPrimitive.Range className="absolute h-full bg-primary" />
 			</SliderPrimitive.Track>
 			<SliderPrimitive.Thumb
-				className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+				className={cn(
+					// h-7 w-7 = 28px visible, with ring offset provides adequate touch area
+					'block h-7 w-7 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors',
+					'hover:border-primary/80 hover:shadow-md',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+					'disabled:pointer-events-none disabled:opacity-50',
+				)}
 				aria-label={ariaLabel ?? 'Slider'}
 			/>
 		</SliderPrimitive.Root>

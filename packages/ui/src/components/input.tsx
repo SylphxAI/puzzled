@@ -95,9 +95,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 						'flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-base transition-colors',
 						'placeholder:text-muted-foreground',
 						'hover:border-primary/50',
-						'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
 						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
-						error && 'border-error hover:border-error focus:ring-error/50 focus:border-error',
+						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
 						className,
 					)}
 					ref={ref}
@@ -179,9 +179,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 						'flex min-h-[80px] w-full rounded-lg border bg-background px-3 py-2 text-base transition-colors',
 						'placeholder:text-muted-foreground',
 						'hover:border-primary/50',
-						'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
 						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
-						error && 'border-error hover:border-error focus:ring-error/50 focus:border-error',
+						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
 						className,
 					)}
 					ref={ref}

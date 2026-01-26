@@ -23,8 +23,9 @@ const RadioGroupItem = forwardRef<
 		<RadioGroupPrimitive.Item
 			ref={ref}
 			className={cn(
-				'aspect-square h-4 w-4 rounded-full border border-primary text-primary',
-				'ring-offset-background transition-colors',
+				// h-6 w-6 = 24px visual size, the label alongside provides additional touch area
+				'aspect-square h-6 w-6 rounded-full border border-primary text-primary',
+				'ring-offset-background transition-colors hover:border-primary/70',
 				'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
 				'disabled:cursor-not-allowed disabled:opacity-50',
 				className,
@@ -32,7 +33,7 @@ const RadioGroupItem = forwardRef<
 			{...props}
 		>
 			<RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-				<Circle className="h-2.5 w-2.5 fill-current text-current" />
+				<Circle className="h-3 w-3 fill-current text-current" />
 			</RadioGroupPrimitive.Indicator>
 		</RadioGroupPrimitive.Item>
 	)
@@ -51,7 +52,8 @@ const RadioCard = forwardRef<React.ComponentRef<typeof RadioGroupPrimitive.Item>
 			<RadioGroupPrimitive.Item
 				ref={ref}
 				className={cn(
-					'flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-4 cursor-pointer',
+					// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+					'flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-4 min-h-11 cursor-pointer',
 					'ring-offset-background transition-all',
 					'hover:bg-muted/50',
 					'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',

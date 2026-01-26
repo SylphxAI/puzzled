@@ -23,7 +23,10 @@ const AccordionTrigger = forwardRef<
 		<AccordionPrimitive.Trigger
 			ref={ref}
 			className={cn(
-				'flex flex-1 items-center justify-between py-4 text-sm font-medium transition-all hover:underline text-left [&[data-state=open]>svg]:rotate-180',
+				// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+				'flex flex-1 items-center justify-between min-h-11 py-4 text-sm font-medium transition-all hover:underline text-left',
+				'rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+				'[&[data-state=open]>svg]:rotate-180',
 				className,
 			)}
 			{...props}

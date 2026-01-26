@@ -26,7 +26,8 @@ const DropdownMenuSubTrigger = forwardRef<
 	<DropdownMenuPrimitive.SubTrigger
 		ref={ref}
 		className={cn(
-			'flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none focus:bg-muted data-[state=open]:bg-muted [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 min-h-11 text-sm outline-none focus:bg-muted data-[state=open]:bg-muted [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
 			inset && 'pl-8',
 			className,
 		)}
@@ -93,7 +94,8 @@ const DropdownMenuItem = forwardRef<
 	<DropdownMenuPrimitive.Item
 		ref={ref}
 		className={cn(
-			'relative flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'relative flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 min-h-11 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
 			inset && 'pl-8',
 			destructive && 'text-destructive focus:text-destructive',
 			className,
@@ -110,7 +112,8 @@ const DropdownMenuCheckboxItem = forwardRef<
 	<DropdownMenuPrimitive.CheckboxItem
 		ref={ref}
 		className={cn(
-			'relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-3 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-3 min-h-11 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 			className,
 		)}
 		checked={checked}
@@ -133,7 +136,8 @@ const DropdownMenuRadioItem = forwardRef<
 	<DropdownMenuPrimitive.RadioItem
 		ref={ref}
 		className={cn(
-			'relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-3 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+			// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
+			'relative flex cursor-default select-none items-center rounded-md py-2 pl-8 pr-3 min-h-11 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
 			className,
 		)}
 		{...props}
