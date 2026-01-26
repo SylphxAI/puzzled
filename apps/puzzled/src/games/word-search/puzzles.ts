@@ -21,6 +21,6 @@ export function getPuzzleFromSeed(seed: number): {
 /**
  * Get count of available themes
  */
-export function getPuzzleCount(): number {
+function getPuzzleCount(): number {
 	return getThemeCount()
 }

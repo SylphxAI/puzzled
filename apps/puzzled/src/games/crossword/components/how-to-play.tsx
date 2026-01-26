@@ -51,7 +51,7 @@ export function CrosswordHowToPlay() {
 	)
 }
 
-export function CrosswordHowToPlayTitle() {
+function CrosswordHowToPlayTitle() {
 	const t = useTranslations('games.crossword')
 	return <>{t('howToPlay')}</>
 }

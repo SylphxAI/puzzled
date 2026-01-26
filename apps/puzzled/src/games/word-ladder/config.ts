@@ -28,7 +28,7 @@ const GameComponent = dynamic(() =>
 )
 
 // Client-side puzzle data
-export type WordLadderPuzzleClientData = WordLadderPuzzleData
+type WordLadderPuzzleClientData = WordLadderPuzzleData
 
 export const wordLadderConfig: GameConfig<
 	WordLadderPuzzleClientData,

@@ -8,7 +8,7 @@ import { trpc } from '@/trpc'
 /**
  * Puzzled-specific notification types
  */
-export type PuzzledNotificationType =
+type PuzzledNotificationType =
 	| 'daily_puzzle' // Daily puzzle available
 	| 'streak_reminder' // Streak at risk
 	| 'streak_milestone' // Streak milestone reached
@@ -19,7 +19,7 @@ export type PuzzledNotificationType =
 /**
  * Puzzled notification payload
  */
-export interface PuzzledNotification {
+interface PuzzledNotification {
 	type: PuzzledNotificationType
 	title: string
 	body: string

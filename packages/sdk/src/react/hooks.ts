@@ -392,7 +392,7 @@ export function useSession(): UseSessionReturn {
 // useSylphx (convenience hook)
 // ============================================
 
-export interface SylphxConfig {
+interface SylphxConfig {
 	appId: string
 	platformUrl: string
 }
@@ -736,11 +736,11 @@ export function useOrganization(): UseOrganizationReturn {
 export {
 	useSdkReady,
 	RequireSdk,
-	type SdkService,
-	type ComponentType,
-	type UseSdkReadyOptions,
-	type UseSdkReadyReturn,
-	type RequireSdkProps,
+	
+	
+	
+	
+	
 } from './hooks/use-sdk-ready'
 
 // OAuth Providers Hook - fetch enabled providers from platform

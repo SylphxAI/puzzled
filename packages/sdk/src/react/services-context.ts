@@ -78,25 +78,20 @@ import type {
 // Re-export commonly used types for convenience
 export type {
 	// Jobs (note: Job/JobsListResult are SDK-specific, defined below)
-	JobStatusEnum,
-	JobTypeEnum,
+	
+	
 	ScheduleJobInput,
 	ScheduleJobResult,
 	CreateCronInput,
 	CreateCronResult,
 	// Webhooks
 	WebhookConfig,
-	WebhookEnvironment,
-	WebhookDelivery,
-	WebhookDeliveryStatus,
-	WebhookStats,
-	WebhookStatsPeriod,
 	// Consent
 	ConsentCategory,
 	ConsentType,
 	UserConsent,
 	// User
-	UserProfile,
+	
 	LoginHistoryEntry,
 	UserSessionInfo,
 	ConnectedAccount,
@@ -107,7 +102,7 @@ export type {
 	SecurityScoreResult,
 	// AI
 	AIUsageStats,
-	AIRateLimitStatus,
+	
 	AIModelsResponse,
 }
 
@@ -529,7 +524,7 @@ export function useWebhooksContext(): WebhooksContextValue {
 // ============================================
 
 /** User shape from SDK auth operations */
-export interface SdkAuthUser {
+interface SdkAuthUser {
 	id: string
 	email: string
 	name: string | null

@@ -174,4 +174,3 @@ export const queensConfig: GameConfig<
 	},
 }
 
-export default queensConfig

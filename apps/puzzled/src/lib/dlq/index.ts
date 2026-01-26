@@ -14,7 +14,7 @@ import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
 import { captureMessage } from '@/lib/monitoring'
 
-export type DLQEntry = {
+type DLQEntry = {
 	workflowName: string
 	workflowRunId?: string | null
 	payload?: Record<string, unknown>
@@ -27,7 +27,7 @@ export type DLQEntry = {
 /**
  * Add a failed workflow execution to the dead letter queue
  */
-export async function addToDLQ(entry: DLQEntry): Promise<string> {
+async function addToDLQ(entry: DLQEntry): Promise<string> {
 	const [inserted] = await db
 		.insert(deadLetterQueue)
 		.values({
@@ -65,7 +65,7 @@ export async function addToDLQ(entry: DLQEntry): Promise<string> {
 /**
  * Get pending items in the DLQ for a specific workflow (or all)
  */
-export async function getDLQItems(workflowName?: string) {
+async function getDLQItems(workflowName?: string) {
 	if (workflowName) {
 		return db.query.deadLetterQueue.findMany({
 			where: and(
@@ -131,7 +131,7 @@ export async function markDLQRetrying(id: string): Promise<void> {
 /**
  * Increment retry count and update last retry time
  */
-export async function incrementDLQRetry(id: string): Promise<number> {
+async function incrementDLQRetry(id: string): Promise<number> {
 	// First get current item to increment retry count
 	const item = await db.query.deadLetterQueue.findFirst({
 		where: eq(deadLetterQueue.id, id),

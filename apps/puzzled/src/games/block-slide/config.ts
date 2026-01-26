@@ -63,7 +63,7 @@ export type BlockSlideClientData = BlockSlidePuzzle
 /**
  * Client's move guess for validation
  */
-export type BlockSlideGuess = {
+type BlockSlideGuess = {
 	blockId: string
 	direction: Direction
 	currentBlocks: Block[] // Current board state
@@ -72,7 +72,7 @@ export type BlockSlideGuess = {
 /**
  * Result of validating a move
  */
-export type BlockSlideGuessResult = {
+type BlockSlideGuessResult = {
 	valid: boolean
 	isCorrect: boolean // Move is legal
 	isWin?: boolean // Has won after this move
@@ -230,4 +230,3 @@ export const blockSlideConfig: GameConfig<
 	},
 }
 
-export default blockSlideConfig

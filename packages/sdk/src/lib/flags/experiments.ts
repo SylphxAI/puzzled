@@ -358,6 +358,6 @@ export function getExperimentManager(
 	return experimentManagerInstance
 }
 
-export function resetExperimentManager(): void {
+function resetExperimentManager(): void {
 	experimentManagerInstance = null
 }

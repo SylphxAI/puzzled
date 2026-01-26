@@ -47,7 +47,7 @@ export function WordLadderHowToPlay() {
 	)
 }
 
-export function WordLadderHowToPlayTitle() {
+function WordLadderHowToPlayTitle() {
 	const t = useTranslations('games.wordLadder')
 	return <>{t('howToPlay')}</>
 }

@@ -428,7 +428,7 @@ export function useFlagOverrides() {
 // useFeatureFlagWithDetail (detailed evaluation)
 // ============================================
 
-export interface UseFeatureFlagDetailOptions {
+interface UseFeatureFlagDetailOptions {
 	/** Default value if flag not found */
 	defaultValue?: boolean
 	/** User context for targeting rules */
@@ -438,7 +438,7 @@ export interface UseFeatureFlagDetailOptions {
 	}
 }
 
-export interface UseFeatureFlagDetailReturn {
+interface UseFeatureFlagDetailReturn {
 	/** Flag value */
 	enabled: boolean
 	/** Whether flags are loading */
@@ -495,7 +495,7 @@ export interface UseFeatureFlagDetailReturn {
  * }
  * ```
  */
-export function useFeatureFlagWithDetail(
+function useFeatureFlagWithDetail(
 	key: string,
 	options: UseFeatureFlagDetailOptions = {}
 ): UseFeatureFlagDetailReturn {
@@ -537,4 +537,4 @@ export function useFeatureFlagWithDetail(
 }
 
 // Re-export types for convenience
-export type { EvaluationReason, FeatureFlagDetailResult }
+

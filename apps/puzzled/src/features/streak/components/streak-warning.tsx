@@ -96,7 +96,7 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 }
 
 // Compact inline version for game cards
-export function StreakBadge({
+function StreakBadge({
 	streak,
 	hasPlayedToday,
 }: {

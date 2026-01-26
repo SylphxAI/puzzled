@@ -42,4 +42,3 @@ export function PatternMatchIcon({ size = 24, className, ...props }: IconProps) 
 	)
 }
 
-export default PatternMatchIcon

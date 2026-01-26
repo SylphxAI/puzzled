@@ -12,7 +12,7 @@ import { SignUpForm, Modal, type OAuthProvider, type ThemeVariables, defaultThem
 import type { OAuthProviderId } from '../../types'
 
 // Re-export for convenience
-export type { OAuthProviderId }
+
 
 export interface SignUpProps {
 	/** URL to redirect to after successful sign up */

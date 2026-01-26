@@ -17,9 +17,9 @@
 
 'use client'
 
-export { useNotifications, PushPrompt, NotificationBell } from '@sylphx/sdk/react'
+
 
 // Re-export with Puzzled-specific types
-export { usePuzzledPush, type PuzzledNotification } from './hooks/use-puzzled-push'
-export { DailyReminderPrompt } from './components/daily-reminder-prompt'
+
+
 export { NotificationPreferences } from './components/notification-preferences'

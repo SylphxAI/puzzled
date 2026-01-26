@@ -74,7 +74,7 @@ export function findAllSets(cards: Card[]): [number, number, number][] {
 /**
  * Generate all 81 possible cards (3^4 combinations)
  */
-export function generateAllCards(): Card[] {
+function generateAllCards(): Card[] {
 	const shapes: Shape[] = ['diamond', 'oval', 'squiggle']
 	const colors: Color[] = ['red', 'green', 'purple']
 	const fills: Fill[] = ['solid', 'striped', 'empty']

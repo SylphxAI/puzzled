@@ -23,7 +23,7 @@ import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 
 /** Final game outcome - what gets saved to database */
-export type GameEndStatus = 'won' | 'lost'
+type GameEndStatus = 'won' | 'lost'
 
 export type GamePhase = 'ready' | 'playing'
 

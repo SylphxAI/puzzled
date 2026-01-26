@@ -29,7 +29,7 @@ import {
 } from './platform-context'
 
 // Re-export types for convenience
-export type { AnalyticsQuery, AnalyticsQueryResult, TrackOptions, ConversionData, DestinationPlatform, ClickIds }
+export type {   TrackOptions, ConversionData, DestinationPlatform, ClickIds }
 export type { InAppMessageWithReadStatus, InAppMessageType, InAppMessagePriority, InboxPreferences }
 
 /** Alias for easier naming */
@@ -558,24 +558,6 @@ export function useMobilePush(): UseMobilePushReturn {
 // useReferral
 // ============================================
 
-/** Leaderboard entry */
-export interface LeaderboardEntry {
-	rank: number
-	userId: string | null
-	displayName: string
-	avatarUrl: string | null
-	completedReferrals: number
-	totalReferrals: number
-	isCurrentUser: boolean
-}
-
-/** Referral leaderboard result */
-export interface ReferralLeaderboardResult {
-	period: 'all' | 'month' | 'week'
-	entries: LeaderboardEntry[]
-	currentUserRank: number | null
-}
-
 export interface UseReferralReturn {
 	/** Referral statistics */
 	stats: ReferralStats | null
@@ -627,7 +609,19 @@ export interface UseReferralReturn {
 	 * @param options.limit - Maximum entries (1-100, default: 10)
 	 * @param options.period - Time period ('all', 'month', 'week')
 	 */
-	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<ReferralLeaderboardResult>
+	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<{
+		period: 'all' | 'month' | 'week'
+		entries: Array<{
+			rank: number
+			userId: string | null
+			displayName: string
+			avatarUrl: string | null
+			completedReferrals: number
+			totalReferrals: number
+			isCurrentUser: boolean
+		}>
+		currentUserRank: number | null
+	}>
 }
 
 /**

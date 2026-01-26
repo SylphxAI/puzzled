@@ -42,4 +42,3 @@ export function WordHiveIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default WordHiveIcon

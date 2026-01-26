@@ -21,6 +21,6 @@ export function getPuzzleFromSeed(seed: number): {
 /**
  * Get count of available quotes
  */
-export function getPuzzleCount(): number {
+function getPuzzleCount(): number {
 	return getQuoteCount()
 }

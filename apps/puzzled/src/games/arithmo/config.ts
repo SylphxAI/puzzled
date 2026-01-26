@@ -22,7 +22,7 @@ const GameComponent = dynamic(() =>
 )
 
 // Client-side puzzle data
-export type ArithmoPuzzleClientData = ArithmoPuzzleData
+type ArithmoPuzzleClientData = ArithmoPuzzleData
 
 export const arithmoConfig: GameConfig<
 	ArithmoPuzzleClientData,

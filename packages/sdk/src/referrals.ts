@@ -73,6 +73,8 @@ export interface LeaderboardEntry {
 	isCurrentUser: boolean
 }
 
+type LeaderboardPeriod = 'all' | 'month' | 'week'
+
 export interface LeaderboardResult {
 	/** Time period for the leaderboard */
 	period?: LeaderboardPeriod
@@ -82,8 +84,6 @@ export interface LeaderboardResult {
 	/** Total participants */
 	totalParticipants: number
 }
-
-export type LeaderboardPeriod = 'all' | 'month' | 'week'
 
 export interface RedeemReferralInput {
 	/** Referral code to redeem */

@@ -25,7 +25,7 @@ import {
 	type SignUpStep,
 } from '../hooks/use-sign-up-form'
 
-export type { AdditionalField, SignUpStep } from '../hooks/use-sign-up-form'
+
 
 export interface SignUpFormProps {
 	/** Theme variables */

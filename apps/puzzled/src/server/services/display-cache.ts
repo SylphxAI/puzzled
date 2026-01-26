@@ -89,7 +89,7 @@ export async function getDisplayData(
  * Get display data for a single user.
  * Convenience wrapper around getDisplayData.
  */
-export async function getDisplayDataSingle(userId: string): Promise<DisplayData | null> {
+async function getDisplayDataSingle(userId: string): Promise<DisplayData | null> {
 	const data = await getDisplayData([userId])
 	return data[userId] ?? null
 }
@@ -101,7 +101,7 @@ export async function getDisplayDataSingle(userId: string): Promise<DisplayData 
  * @param userId - Platform user ID
  * @param data - Display data to cache
  */
-export async function updateDisplayCache(
+async function updateDisplayCache(
 	userId: string,
 	data: {
 		email?: string | null
@@ -135,7 +135,7 @@ export async function updateDisplayCache(
  * Invalidate cache for a specific user.
  * Call this when you know user data has changed.
  */
-export async function invalidateDisplayCache(userId: string): Promise<void> {
+async function invalidateDisplayCache(userId: string): Promise<void> {
 	await db.delete(userDisplayCache).where(eq(userDisplayCache.userId, userId))
 }
 
@@ -145,7 +145,7 @@ export async function invalidateDisplayCache(userId: string): Promise<void> {
  *
  * @param users - Array of user data to cache
  */
-export async function batchUpdateDisplayCache(
+async function batchUpdateDisplayCache(
 	users: Array<{
 		userId: string
 		email?: string | null

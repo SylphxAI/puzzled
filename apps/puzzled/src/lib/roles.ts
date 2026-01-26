@@ -11,7 +11,7 @@
  */
 
 /** User role type from platform */
-export type UserRole = 'user' | 'admin' | 'super_admin'
+type UserRole = 'user' | 'admin' | 'super_admin'
 
 /** Role hierarchy for comparison (higher = more powerful) */
 const ROLE_LEVELS = {
@@ -38,7 +38,7 @@ export function isSuperAdminRole(role: string | null | undefined): boolean {
 /**
  * Check if roleA has at least the same level as roleB
  */
-export function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): boolean {
+function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): boolean {
 	if (!roleA) return false
 	const levelA = ROLE_LEVELS[roleA as UserRole] ?? 0
 	const levelB = ROLE_LEVELS[roleB]
@@ -48,7 +48,7 @@ export function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole
 /**
  * Check if roleA has a higher level than roleB
  */
-export function hasHigherRole(roleA: string | null | undefined, roleB: string | null | undefined): boolean {
+function hasHigherRole(roleA: string | null | undefined, roleB: string | null | undefined): boolean {
 	if (!roleA) return false
 	if (!roleB) return true
 	const levelA = ROLE_LEVELS[roleA as UserRole] ?? 0

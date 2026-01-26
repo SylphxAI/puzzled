@@ -1,1 +1,1 @@
-export { useGuestCompletionStatus, useGuestGameState } from './use-guest-game-state'
+export {  useGuestGameState } from './use-guest-game-state'

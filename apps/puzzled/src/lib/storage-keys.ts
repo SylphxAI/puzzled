@@ -22,7 +22,7 @@ export const CONSENT_TIMESTAMP_KEY = 'puzzled:consent:timestamp'
 // ==========================================
 // Theme & Display
 // ==========================================
-export const THEME_KEY = 'theme' // Standard next-themes key
+const THEME_KEY = 'theme' // Standard next-themes key
 
 // ==========================================
 // Sound & Audio
@@ -33,18 +33,12 @@ export const SOUND_ENABLED_KEY = 'puzzled:sound:enabled'
 // PWA & Prompts
 // ==========================================
 export const PWA_PROMPT_DISMISSED_KEY = 'puzzled:pwa:prompt-dismissed'
-export const PUSH_PROMPT_DISMISSED_KEY = 'puzzled:push:prompt-dismissed'
 
 // ==========================================
 // Guest User Data
 // ==========================================
 export const GUEST_ONBOARDING_KEY = 'puzzled:guest:onboarding'
 export const GUEST_GAMES_KEY = 'puzzled:guest:games'
-
-// ==========================================
-// Gamification
-// ==========================================
-export const SEEN_ACHIEVEMENTS_KEY = 'puzzled:achievements:seen'
 
 // ==========================================
 // Analytics & Session

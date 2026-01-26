@@ -166,7 +166,7 @@ export function selectVariant(variants: VariantWeight[], bucket: number): string
  *
  * Useful for secondary randomization within rules
  */
-export function getConsistentRandom(
+function getConsistentRandom(
 	flagKey: string,
 	userId: string | undefined,
 	seed: string = ''

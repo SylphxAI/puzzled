@@ -148,7 +148,7 @@ export const parseNonogramResponse = (response: string) =>
  * This is a simplified check - true nonogram validation would use line-solving
  * For now, we trust the LLM output since the clues are generated from the solution
  */
-export function hasUniqueSolution(
+function hasUniqueSolution(
 	puzzleData: NonogramPuzzleData,
 	solution: NonogramSolution,
 ): boolean {

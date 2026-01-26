@@ -42,4 +42,3 @@ export function CryptogramIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default CryptogramIcon

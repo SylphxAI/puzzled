@@ -30,7 +30,7 @@ const GameComponent = dynamic(() =>
 /**
  * Puzzle data sent to client (shuffled words only, no category groupings)
  */
-export type ConnectionsPuzzleData = {
+type ConnectionsPuzzleData = {
 	words: string[]
 	maxMistakes: number
 	wordsPerCategory: number
@@ -40,21 +40,21 @@ export type ConnectionsPuzzleData = {
 /**
  * Solution stored server-side only
  */
-export type ConnectionsSolution = {
+type ConnectionsSolution = {
 	categories: Category[]
 }
 
 /**
  * Client's guess for validation
  */
-export type ConnectionsGuess = {
+type ConnectionsGuess = {
 	words: string[] // 4 words guessed as a category
 }
 
 /**
  * Result of validating a guess
  */
-export type ConnectionsGuessResult = {
+type ConnectionsGuessResult = {
 	valid: boolean
 	isCorrect: boolean
 	category?: Category
@@ -324,4 +324,3 @@ export const wordGroupsConfig: GameConfig<
 	},
 }
 
-export default wordGroupsConfig

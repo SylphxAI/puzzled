@@ -56,7 +56,7 @@ export type KillerSudokuGuessResult = {
 /**
  * Check if a value conflicts with row
  */
-export function hasRowConflict(
+function hasRowConflict(
 	cells: KillerCell[][],
 	row: number,
 	col: number,
@@ -73,7 +73,7 @@ export function hasRowConflict(
 /**
  * Check if a value conflicts with column
  */
-export function hasColConflict(
+function hasColConflict(
 	cells: KillerCell[][],
 	row: number,
 	col: number,
@@ -90,7 +90,7 @@ export function hasColConflict(
 /**
  * Check if a value conflicts with 3x3 box
  */
-export function hasBoxConflict(
+function hasBoxConflict(
 	cells: KillerCell[][],
 	row: number,
 	col: number,
@@ -112,7 +112,7 @@ export function hasBoxConflict(
 /**
  * Check if a value conflicts within its cage (duplicate)
  */
-export function hasCageConflict(
+function hasCageConflict(
 	cells: KillerCell[][],
 	cages: Cage[],
 	row: number,
@@ -133,7 +133,7 @@ export function hasCageConflict(
 /**
  * Check if cage sum is violated (when all cells filled)
  */
-export function isCageSumValid(cells: KillerCell[][], cage: Cage): boolean | null {
+function isCageSumValid(cells: KillerCell[][], cage: Cage): boolean | null {
 	let sum = 0
 	let allFilled = true
 

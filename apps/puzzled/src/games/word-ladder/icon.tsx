@@ -42,4 +42,3 @@ export function WordLadderIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default WordLadderIcon

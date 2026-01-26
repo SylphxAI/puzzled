@@ -59,7 +59,7 @@ export function PatternMatchHowToPlay() {
 	)
 }
 
-export function PatternMatchHowToPlayTitle() {
+function PatternMatchHowToPlayTitle() {
 	const t = useTranslations('games.patternMatch')
 	return <>{t('howToPlay')}</>
 }

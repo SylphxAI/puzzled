@@ -329,4 +329,4 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 }
 
 // Export the help handler type for parent components
-export type { Props as WordleGameProps }
+

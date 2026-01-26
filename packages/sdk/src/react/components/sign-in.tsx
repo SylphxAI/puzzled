@@ -12,7 +12,7 @@ import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVar
 import type { OAuthProviderId } from '../../types'
 
 // Re-export for convenience
-export type { OAuthProviderId }
+
 
 export interface SignInProps {
 	/** URL to redirect to after successful sign in */

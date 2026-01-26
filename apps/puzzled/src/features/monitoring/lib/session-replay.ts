@@ -17,7 +17,7 @@ import { MINUTE_MS } from '@/lib/constants/time'
 /**
  * Default session replay configuration for Puzzled app
  */
-export const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
+const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
 	// Only record a percentage of sessions to manage volume
 	sampling: {
 		rate: 15, // 15% of sessions

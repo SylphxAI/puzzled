@@ -33,8 +33,8 @@ const t = initTRPC.context<Context>().create({
  * Create router and procedure helpers
  */
 export const router = t.router
-export const middleware = t.middleware
-export const mergeRouters = t.mergeRouters
+const middleware = t.middleware
+const mergeRouters = t.mergeRouters
 
 /**
  * Public procedure - no authentication required
@@ -217,10 +217,10 @@ const superAdminMiddleware = middleware(async ({ ctx, next }) => {
 })
 
 export const adminProcedure = t.procedure.use(loggerMiddleware).use(adminMiddleware)
-export const superAdminProcedure = t.procedure.use(loggerMiddleware).use(superAdminMiddleware)
+const superAdminProcedure = t.procedure.use(loggerMiddleware).use(superAdminMiddleware)
 
 /**
  * Type exports for use in routers
  */
-export type Router = typeof router
-export type Procedure = typeof t.procedure
+type Router = typeof router
+type Procedure = typeof t.procedure

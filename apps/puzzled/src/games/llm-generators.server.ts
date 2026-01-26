@@ -49,7 +49,7 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 /**
  * Generate Connections puzzle using LLM
  */
-export async function generateConnectionsWithLLM(date: string): Promise<LLMGeneratorResult> {
+async function generateConnectionsWithLLM(date: string): Promise<LLMGeneratorResult> {
 	try {
 		const result = await generateConnectionsPuzzle(date)
 
@@ -91,7 +91,7 @@ export async function generateConnectionsWithLLM(date: string): Promise<LLMGener
 /**
  * Generate Crossword puzzle using LLM
  */
-export async function generateCrosswordWithLLM(_date: string): Promise<LLMGeneratorResult> {
+async function generateCrosswordWithLLM(_date: string): Promise<LLMGeneratorResult> {
 	try {
 		const result = await generateCrosswordPuzzle()
 
@@ -119,7 +119,7 @@ export async function generateCrosswordWithLLM(_date: string): Promise<LLMGenera
 /**
  * Generate Nonogram puzzle using LLM
  */
-export async function generateNonogramWithLLM(_date: string): Promise<LLMGeneratorResult> {
+async function generateNonogramWithLLM(_date: string): Promise<LLMGeneratorResult> {
 	try {
 		const result = await generateNonogramPuzzle()
 
@@ -150,7 +150,7 @@ type LLMGenerator = (date: string) => Promise<LLMGeneratorResult>
  * Map of game slugs to their LLM generators
  * Only games with generationStrategy: 'llm' are included
  */
-export const LLM_GENERATORS: Record<string, LLMGenerator> = {
+const LLM_GENERATORS: Record<string, LLMGenerator> = {
 	connections: generateConnectionsWithLLM,
 	crossword: generateCrosswordWithLLM,
 	nonogram: generateNonogramWithLLM,
@@ -166,6 +166,6 @@ export function getLLMGenerator(slug: string): LLMGenerator | undefined {
 /**
  * Check if a game has LLM generation
  */
-export function hasLLMGenerator(slug: string): boolean {
+function hasLLMGenerator(slug: string): boolean {
 	return slug in LLM_GENERATORS
 }

@@ -392,7 +392,7 @@ export function ConsentGuard({
 // ============================================
 
 // Re-export ConsentPurposeDefaults for convenience
-export type { ConsentPurposeDefaults } from '../consent'
+
 
 export interface UseConsentCheckOptions {
 	/** Consent purpose slug (e.g., 'analytics', 'marketing') */

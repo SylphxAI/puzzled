@@ -64,7 +64,7 @@ export const localeCountryCodes: Record<Locale, string> = {
 // ==========================================
 
 // Fallback chain: if a key is missing, try the parent locale
-export const localeFallbacks: Record<Locale, Locale | null> = {
+const localeFallbacks: Record<Locale, Locale | null> = {
 	'en-US': null, // Base English
 	'en-GB': 'en-US', // Falls back to US English
 	'zh-HK': null, // Base Traditional Chinese
@@ -82,7 +82,7 @@ export const localeGroups = {
 // Formatting Preferences
 // ==========================================
 
-export const localeFormats: Record<
+const localeFormats: Record<
 	Locale,
 	{
 		dateStyle: 'short' | 'medium' | 'long'
@@ -105,20 +105,20 @@ export function isValidLocale(locale: string): locale is Locale {
 	return locales.includes(locale as Locale)
 }
 
-export function getLocaleDirection(locale: Locale): 'ltr' | 'rtl' {
+function getLocaleDirection(locale: Locale): 'ltr' | 'rtl' {
 	// All current locales are LTR
 	// Add RTL locales here if needed (ar, he, fa, etc.)
 	return 'ltr'
 }
 
-export function getLanguageFromLocale(locale: Locale): string {
+function getLanguageFromLocale(locale: Locale): string {
 	return locale.split('-')[0]
 }
 
-export function isChineseLocale(locale: Locale): boolean {
+function isChineseLocale(locale: Locale): boolean {
 	return locale.startsWith('zh-')
 }
 
-export function isEnglishLocale(locale: Locale): boolean {
+function isEnglishLocale(locale: Locale): boolean {
 	return locale.startsWith('en-')
 }

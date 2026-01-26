@@ -421,20 +421,20 @@ export function initAutocapture(
 /**
  * Get autocapture instance
  */
-export function getAutocapture(): Autocapture | null {
+function getAutocapture(): Autocapture | null {
 	return autocaptureInstance
 }
 
 /**
  * Start autocapture
  */
-export function startAutocapture(): void {
+function startAutocapture(): void {
 	autocaptureInstance?.start()
 }
 
 /**
  * Stop autocapture
  */
-export function stopAutocapture(): void {
+function stopAutocapture(): void {
 	autocaptureInstance?.stop()
 }

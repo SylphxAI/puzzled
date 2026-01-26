@@ -8,7 +8,7 @@
  */
 
 // Re-export router type for convenience
-export type { AppRouter } from '@/server/routers'
+
 // Client hooks for use in client components
 export { trpc } from './client'
 // Provider for wrapping the app

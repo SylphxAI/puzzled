@@ -23,7 +23,7 @@ type DifficultySelectorProps = {
  * Used on game pages before starting a puzzle to let users choose their challenge level.
  * Shows completion status for each difficulty level.
  */
-export function DifficultySelector({
+function DifficultySelector({
 	options,
 	selected,
 	onSelect,

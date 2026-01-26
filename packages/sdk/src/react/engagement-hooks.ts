@@ -86,7 +86,7 @@ export interface UseStreakReturn {
 }
 
 /** Options for useStreak hook */
-export interface UseStreakOptions {
+interface UseStreakOptions {
 	/** Optional inline defaults for auto-discovery */
 	defaults?: StreakDefaults
 	/** User's IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight */

@@ -22,12 +22,9 @@ import type {
 	WebhookEnvironment,
 	WebhookDelivery,
 	WebhookDeliveryStatus,
-	WebhookStatsPeriod,
 	WebhookStats,
+	WebhookStatsPeriod,
 } from '../types'
-
-// Re-export types for convenience
-export type { WebhookEnvironment, WebhookDelivery, WebhookDeliveryStatus, WebhookStatsPeriod, WebhookStats }
 
 // ============================================
 // useWebhooks

@@ -496,4 +496,4 @@ export function isWebVitalsInitialized(): boolean {
 }
 
 // Re-export useful types from web-vitals
-export type { Metric, ReportOpts }
+export type {  ReportOpts }

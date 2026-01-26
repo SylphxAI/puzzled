@@ -38,6 +38,6 @@ export function calculateMaxScore(puzzle: SpellingBeePuzzleData): number {
 /**
  * Get count of available puzzle variations
  */
-export function getPuzzleCount(): number {
+function getPuzzleCount(): number {
 	return getGenLetterSetCount()
 }

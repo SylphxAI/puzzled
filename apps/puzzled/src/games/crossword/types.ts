@@ -32,7 +32,7 @@ export type CrosswordGuessResult = {
 	correct: boolean
 }
 
-export type CrosswordCell = {
+type CrosswordCell = {
 	row: number
 	col: number
 	letter: string | null
@@ -68,7 +68,7 @@ export const GRID_SIZE = 5
 /**
  * Check if a clue is fully filled (all cells have letters)
  */
-export function isClueFilledIn(
+function isClueFilledIn(
 	userGrid: (string | null)[][],
 	clue: CrosswordClue,
 	direction: CrosswordDirection,
@@ -84,7 +84,7 @@ export function isClueFilledIn(
 /**
  * Check if a clue is correctly solved
  */
-export function isClueCorrect(
+function isClueCorrect(
 	userGrid: (string | null)[][],
 	solution: string[][],
 	clue: CrosswordClue,

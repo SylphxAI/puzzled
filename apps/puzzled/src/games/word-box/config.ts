@@ -31,7 +31,7 @@ const GameComponent = dynamic(() =>
 	import('./word-box-game').then((m) => ({ default: m.WordBoxGame })),
 )
 
-export type { LetterBoxedPuzzleData, LetterBoxedSolution }
+
 
 export const wordBoxConfig: GameConfig<
 	LetterBoxedPuzzleData,
@@ -177,4 +177,3 @@ export const wordBoxConfig: GameConfig<
 	},
 }
 
-export default wordBoxConfig

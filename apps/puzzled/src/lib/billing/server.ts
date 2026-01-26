@@ -35,7 +35,7 @@ const FREE_GAME_ROTATION = [
 /**
  * Check if a plan slug represents a premium (paid) plan
  */
-export function isPremiumPlan(planSlug: string | null | undefined): boolean {
+function isPremiumPlan(planSlug: string | null | undefined): boolean {
 	if (!planSlug) return false
 	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
 }
@@ -43,7 +43,7 @@ export function isPremiumPlan(planSlug: string | null | undefined): boolean {
 /**
  * Check if a plan slug is the free plan
  */
-export function isFreePlan(planSlug: string | null | undefined): boolean {
+function isFreePlan(planSlug: string | null | undefined): boolean {
 	return !planSlug || planSlug === 'free'
 }
 
@@ -69,7 +69,7 @@ export function getTodaysFreeGame(): string {
 /**
  * Check if a game is free today for free-tier users
  */
-export function isGameFreeToday(gameSlug: string): boolean {
+function isGameFreeToday(gameSlug: string): boolean {
 	return gameSlug === getTodaysFreeGame()
 }
 
@@ -124,4 +124,4 @@ export async function canAccessGame(userId: string | null, gameSlug: string): Pr
 }
 
 // Re-export for convenience (alias)
-export { isPremiumPlan as hasPremiumPlanSlug }
+

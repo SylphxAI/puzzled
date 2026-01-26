@@ -31,7 +31,7 @@ export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
  * Create namespaced storage key
  * Format: sylphx_{appId}_{key}
  */
-export function createStorageKey(appId: string, key: StorageKey): string {
+function createStorageKey(appId: string, key: StorageKey): string {
 	return `sylphx_${appId}_${key}`
 }
 
@@ -129,7 +129,7 @@ export class SylphxStorage {
 /**
  * Generate a unique anonymous ID (UUIDv4)
  */
-export function generateAnonymousId(): string {
+function generateAnonymousId(): string {
 	if (typeof crypto !== 'undefined' && crypto.randomUUID) {
 		return crypto.randomUUID()
 	}
@@ -168,7 +168,7 @@ const CLICK_ID_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000
  *
  * @returns Captured click IDs (may be empty if none present)
  */
-export function captureClickIdsFromUrl(): ClickIds {
+function captureClickIdsFromUrl(): ClickIds {
 	if (typeof window === 'undefined') return {}
 
 	const params = new URLSearchParams(window.location.search)
@@ -208,7 +208,7 @@ export function getStoredClickIds(storage: SylphxStorage): ClickIds | null {
 /**
  * Store click IDs with timestamp
  */
-export function storeClickIds(storage: SylphxStorage, clickIds: ClickIds): void {
+function storeClickIds(storage: SylphxStorage, clickIds: ClickIds): void {
 	if (Object.keys(clickIds).length === 0) return
 
 	// Merge with existing (new values take precedence)

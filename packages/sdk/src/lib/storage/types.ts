@@ -6,7 +6,7 @@
 // Configuration
 // ==========================================
 
-export interface StorageConfig {
+interface StorageConfig {
 	/** App ID */
 	appId: string
 	/** Publishable key for authentication */
@@ -23,7 +23,7 @@ export interface StorageConfig {
 // Upload Types
 // ==========================================
 
-export interface UploadOptions {
+interface UploadOptions {
 	/** Custom path/folder for the file */
 	path?: string
 	/** Progress callback */
@@ -93,7 +93,7 @@ export interface StorageFile {
 // List Types
 // ==========================================
 
-export interface ListFilesOptions {
+interface ListFilesOptions {
 	/** Folder/prefix to list */
 	prefix?: string
 	/** Max results per page */
@@ -102,7 +102,7 @@ export interface ListFilesOptions {
 	cursor?: string
 }
 
-export interface ListFilesResult {
+interface ListFilesResult {
 	/** Files in this page */
 	files: StorageFile[]
 	/** Cursor for next page */
@@ -115,10 +115,10 @@ export interface ListFilesResult {
 // Image Transformation Types
 // ==========================================
 
-export type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png' | 'auto'
-export type ImageFit = 'cover' | 'contain' | 'fill' | 'inside' | 'outside'
+type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png' | 'auto'
+type ImageFit = 'cover' | 'contain' | 'fill' | 'inside' | 'outside'
 
-export interface ImageTransformOptions {
+interface ImageTransformOptions {
 	/** Target width in pixels */
 	width?: number
 	/** Target height in pixels */
@@ -137,7 +137,7 @@ export interface ImageTransformOptions {
 	optimize?: boolean
 }
 
-export interface ImageTransformResult {
+interface ImageTransformResult {
 	/** Transformed image URL */
 	url: string
 	/** Content type of transformed image */

@@ -78,7 +78,7 @@ export function QueensHowToPlay() {
 	)
 }
 
-export function QueensHowToPlayTitle() {
+function QueensHowToPlayTitle() {
 	const t = useTranslations('games.queens')
 	return <>{t('howToPlay')}</>
 }

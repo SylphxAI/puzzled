@@ -256,11 +256,11 @@ export function Protect({
 }
 
 // Convenience components for common patterns
-export function SignedIn({ children }: { children: ReactNode }) {
+function SignedIn({ children }: { children: ReactNode }) {
 	return <Protect signedIn>{children}</Protect>
 }
 
-export function SignedOut({ children }: { children: ReactNode }) {
+function SignedOut({ children }: { children: ReactNode }) {
 	return <Protect signedIn={false}>{children}</Protect>
 }
 

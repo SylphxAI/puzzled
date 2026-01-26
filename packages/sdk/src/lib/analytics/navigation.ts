@@ -474,6 +474,6 @@ export function initNavigationTracker(
 /**
  * Get navigation tracker instance
  */
-export function getNavigationTracker(): NavigationTracker | null {
+function getNavigationTracker(): NavigationTracker | null {
 	return navigationTrackerInstance
 }

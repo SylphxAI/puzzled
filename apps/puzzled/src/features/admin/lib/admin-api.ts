@@ -133,23 +133,23 @@ export function adminCheckResponse(result: AdminCheckResult): NextResponse | nul
 }
 
 /** Return not found response */
-export function notFound(message = 'Not found') {
+function notFound(message = 'Not found') {
 	return NextResponse.json({ error: message }, { status: 404 })
 }
 
 /** Return bad request response */
-export function badRequest(message: string) {
+function badRequest(message: string) {
 	return NextResponse.json({ error: message }, { status: 400 })
 }
 
 /** UUID validation */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-export function isValidUuid(value: string): boolean {
+function isValidUuid(value: string): boolean {
 	return UUID_REGEX.test(value)
 }
 
-export function validateUuidParam(value: string, paramName: string): NextResponse | null {
+function validateUuidParam(value: string, paramName: string): NextResponse | null {
 	if (!isValidUuid(value)) {
 		return badRequest(`Invalid ${paramName}: must be a valid UUID`)
 	}

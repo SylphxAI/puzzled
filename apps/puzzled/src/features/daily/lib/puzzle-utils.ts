@@ -74,7 +74,7 @@ export function getPuzzleDateStringUTC(date: Date = new Date()): string {
 /**
  * Get next UTC midnight (when new puzzle releases)
  */
-export function getNextMidnightUTC(): Date {
+function getNextMidnightUTC(): Date {
 	const tomorrow = getTodayUTC()
 	tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 	return tomorrow
@@ -83,7 +83,7 @@ export function getNextMidnightUTC(): Date {
 /**
  * Get milliseconds until next UTC midnight
  */
-export function getMsUntilNextUTCMidnight(): number {
+function getMsUntilNextUTCMidnight(): number {
 	const now = new Date()
 	const nextMidnight = getNextMidnightUTC()
 	return nextMidnight.getTime() - now.getTime()
@@ -92,7 +92,7 @@ export function getMsUntilNextUTCMidnight(): number {
 /**
  * Get time until next UTC midnight
  */
-export function getTimeUntilNextUTCMidnight(): { hours: number; minutes: number; seconds: number } {
+function getTimeUntilNextUTCMidnight(): { hours: number; minutes: number; seconds: number } {
 	const diff = getMsUntilNextUTCMidnight()
 	return {
 		hours: Math.floor(diff / (1000 * 60 * 60)),
@@ -102,6 +102,6 @@ export function getTimeUntilNextUTCMidnight(): { hours: number; minutes: number;
 }
 
 // Export constants
-export const DAILY_PUZZLE_SYSTEM = {
+const DAILY_PUZZLE_SYSTEM = {
 	DEFAULT_LAUNCH_DATE,
 } as const

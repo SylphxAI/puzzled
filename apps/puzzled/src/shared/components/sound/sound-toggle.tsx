@@ -15,7 +15,7 @@ type SoundToggleProps = {
  * Allows users to enable/disable game sound effects.
  * State is persisted to localStorage.
  */
-export function SoundToggle({ className, showLabel = false }: SoundToggleProps) {
+function SoundToggle({ className, showLabel = false }: SoundToggleProps) {
 	const { isMuted, toggleSound, isSupported } = useSound()
 	const [mounted, setMounted] = useState(false)
 

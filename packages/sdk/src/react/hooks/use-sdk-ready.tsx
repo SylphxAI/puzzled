@@ -51,7 +51,7 @@ export type SdkService =
 	| 'newsletter'
 
 // Re-export for convenience
-export type ComponentType = ConfigurationComponentType
+type ComponentType = ConfigurationComponentType
 
 export interface UseSdkReadyOptions {
 	/** Required services for this component */

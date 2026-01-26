@@ -42,7 +42,7 @@ export function verifyCronAuth(request: Request, logPrefix = '[Cron]'): Response
  * @example
  * triggerWorkflow('/api/workflow/daily-reminder', { type: 'all' }, '[Cron]')
  */
-export function triggerWorkflow(
+function triggerWorkflow(
 	workflowPath: string,
 	body: Record<string, unknown> = {},
 	logPrefix = '[Cron]',
@@ -76,7 +76,7 @@ export function cronSuccess(message: string, extra: Record<string, unknown> = {}
 /**
  * Create a standard cron error response
  */
-export function cronError(message: string, status = 500): Response {
+function cronError(message: string, status = 500): Response {
 	return NextResponse.json(
 		{
 			success: false,

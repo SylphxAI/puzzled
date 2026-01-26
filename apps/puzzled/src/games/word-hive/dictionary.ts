@@ -69,7 +69,7 @@ export const SPELLING_BEE_DICTIONARY = {
 }
 
 // Export word counts for debugging (lazy)
-export const WORD_COUNTS = {
+const WORD_COUNTS = {
 	get raw() {
 		loadDictionary()
 		return _wordCounts?.raw ?? 0
@@ -83,7 +83,7 @@ export const WORD_COUNTS = {
 /**
  * Check if a word is in the dictionary
  */
-export function isValidWord(word: string): boolean {
+function isValidWord(word: string): boolean {
 	return SPELLING_BEE_DICTIONARY.has(word.toUpperCase())
 }
 
@@ -92,7 +92,7 @@ export function isValidWord(word: string): boolean {
  * @param letters - Array of 7 letters (first is center)
  * @returns Array of valid words
  */
-export function getWordsForLetters(letters: string[]): string[] {
+function getWordsForLetters(letters: string[]): string[] {
 	const letterSet = new Set(letters.map((l) => l.toUpperCase()))
 	const centerLetter = letters[0].toUpperCase()
 
@@ -112,7 +112,7 @@ export function getWordsForLetters(letters: string[]): string[] {
 /**
  * Find pangrams (words using all 7 letters)
  */
-export function findPangrams(letters: string[], words: string[]): string[] {
+function findPangrams(letters: string[], words: string[]): string[] {
 	return words.filter((word) => {
 		const wordLetters = new Set(word.split(''))
 		return letters.every((l) => wordLetters.has(l.toUpperCase()))

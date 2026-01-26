@@ -45,4 +45,3 @@ export function ArithmoIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default ArithmoIcon

@@ -28,7 +28,7 @@ const GameComponent = dynamic(() =>
 )
 
 // Client-side puzzle data (solution hidden)
-export type NonogramPuzzleClientData = NonogramPuzzleData
+type NonogramPuzzleClientData = NonogramPuzzleData
 
 /**
  * Difficulty level configurations for Nonogram

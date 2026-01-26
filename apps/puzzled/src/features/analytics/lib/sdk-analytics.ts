@@ -70,11 +70,11 @@ export interface StreakEvent {
 	isNewRecord: boolean
 }
 
-export type UserJourneyStage = 'new' | 'returning' | 'premium'
+type UserJourneyStage = 'new' | 'returning' | 'premium'
 
-export type DeviceType = 'mobile' | 'tablet' | 'desktop'
+type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
-export interface EventDimensions {
+interface EventDimensions {
 	device_type: DeviceType
 	session_id: string
 	session_duration_ms: number
@@ -652,7 +652,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
  * const analytics = useGameAnalytics({ journeyStage })
  * ```
  */
-export function useJourneyStage(params: {
+function useJourneyStage(params: {
 	isAuthenticated: boolean
 	isPremium?: boolean
 	daysSinceFirstVisit?: number

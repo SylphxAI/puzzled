@@ -40,7 +40,7 @@ export type SpellingBeePuzzleClientData = {
  * Solution stored server-side (same as puzzleData for Spelling Bee)
  * The "solution" is the full word list which is known to the player
  */
-export type SpellingBeeSolution = {
+type SpellingBeeSolution = {
 	validWords: string[]
 	pangrams: string[]
 }
@@ -48,14 +48,14 @@ export type SpellingBeeSolution = {
 /**
  * Client's word submission for validation
  */
-export type SpellingBeeGuess = {
+type SpellingBeeGuess = {
 	word: string
 }
 
 /**
  * Result of validating a word
  */
-export type SpellingBeeGuessResult = {
+type SpellingBeeGuessResult = {
 	valid: boolean
 	score?: number
 	isPangram?: boolean
@@ -242,4 +242,3 @@ export const wordHiveConfig: GameConfig<
 	},
 }
 
-export default wordHiveConfig

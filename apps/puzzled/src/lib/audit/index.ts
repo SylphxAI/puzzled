@@ -14,7 +14,7 @@ import type { AuditAction, NewAuditLog } from '@/lib/db/schema'
 /**
  * Log an audit event
  */
-export async function logAuditEvent(
+async function logAuditEvent(
 	params: Omit<NewAuditLog, 'id' | 'createdAt' | 'ipAddress' | 'userAgent'>,
 ): Promise<void> {
 	try {
@@ -60,7 +60,7 @@ export async function logAdminAction(
 /**
  * Log user action (self-initiated)
  */
-export async function logUserAction(
+async function logUserAction(
 	userId: string,
 	action: AuditAction,
 	resourceType: string,
@@ -79,7 +79,7 @@ export async function logUserAction(
 /**
  * Log game completion
  */
-export async function logGameComplete(
+async function logGameComplete(
 	userId: string,
 	gameSlug: string,
 	sessionId: string,
@@ -97,7 +97,7 @@ export async function logGameComplete(
 /**
  * Log streak update
  */
-export async function logStreakUpdate(
+async function logStreakUpdate(
 	userId: string,
 	gameSlug: string,
 	streak: number,
@@ -115,7 +115,7 @@ export async function logStreakUpdate(
 /**
  * Log achievement unlock
  */
-export async function logAchievementUnlock(
+async function logAchievementUnlock(
 	userId: string,
 	achievementSlug: string,
 	metadata?: Record<string, unknown>,

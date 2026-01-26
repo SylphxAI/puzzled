@@ -41,4 +41,3 @@ export function SudokuIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default SudokuIcon

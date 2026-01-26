@@ -1935,13 +1935,13 @@ export function getWordList(): Set<string> {
 /**
  * Check if a word is valid
  */
-export function isValidWord(word: string): boolean {
+function isValidWord(word: string): boolean {
 	return WORD_SET.has(word.toLowerCase())
 }
 
 /**
  * Get word count
  */
-export function getWordCount(): number {
+function getWordCount(): number {
 	return WORD_SET.size
 }

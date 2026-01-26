@@ -28,7 +28,7 @@ const GameComponent = dynamic(() =>
 /**
  * Puzzle data sent to client (NO solution)
  */
-export type WordlePuzzleData = {
+type WordlePuzzleData = {
 	wordLength: number
 	maxAttempts: number
 }
@@ -36,21 +36,21 @@ export type WordlePuzzleData = {
 /**
  * Solution stored server-side only
  */
-export type WordleSolution = {
+type WordleSolution = {
 	word: string
 }
 
 /**
  * Client's guess for validation
  */
-export type WordleGuess = {
+type WordleGuess = {
 	word: string
 }
 
 /**
  * Result of validating a guess
  */
-export type WordleGuessResult = {
+type WordleGuessResult = {
 	valid: boolean
 	evaluation?: LetterStatus[]
 	error?: string
@@ -294,4 +294,3 @@ export const wordGuessConfig: GameConfig<
 	},
 }
 
-export default wordGuessConfig

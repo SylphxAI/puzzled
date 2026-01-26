@@ -52,7 +52,7 @@ export const MAX_CONSECUTIVE = 2
 /**
  * Check if placing a value would cause more than 2 consecutive same symbols
  */
-export function hasConsecutiveViolation(
+function hasConsecutiveViolation(
 	grid: TangoCell[][],
 	row: number,
 	col: number,

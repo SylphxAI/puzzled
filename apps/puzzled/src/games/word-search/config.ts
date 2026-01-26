@@ -26,7 +26,7 @@ const GameComponent = dynamic(() =>
 	import('./word-search-game').then((m) => ({ default: m.WordSearchGame })),
 )
 
-export type { WordSearchPuzzleData, WordSearchSolution }
+
 
 export const wordSearchConfig: GameConfig<
 	WordSearchPuzzleData,
@@ -136,4 +136,3 @@ export const wordSearchConfig: GameConfig<
 	},
 }
 
-export default wordSearchConfig

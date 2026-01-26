@@ -138,7 +138,7 @@ export function generateWordLadderPuzzle(seed: number): {
  * Validate that a path is correct
  * Used for testing and verification
  */
-export function validatePath(path: string[]): boolean {
+function validatePath(path: string[]): boolean {
 	if (path.length < 2) return false
 
 	for (let i = 1; i < path.length; i++) {
@@ -160,4 +160,4 @@ export function getPuzzleCount(): number {
 /**
  * Export BFS for testing
  */
-export { findShortestPath }
+

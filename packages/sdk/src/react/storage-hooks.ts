@@ -17,7 +17,7 @@ import { useStorageContext, type UploadProgressEvent } from './services-context'
 // StorageFile - SSOT: lib/storage/types.ts
 export type { StorageFile } from '../lib/storage/types'
 
-export interface UploadResult {
+interface UploadResult {
 	id: string
 	url: string
 	filename: string

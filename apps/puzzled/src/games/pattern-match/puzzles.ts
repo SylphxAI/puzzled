@@ -20,7 +20,7 @@ const PUZZLE_SEEDS = [
 /**
  * Generate a puzzle from a seed
  */
-export function generatePuzzle(seed: number): PatternMatchPuzzle {
+function generatePuzzle(seed: number): PatternMatchPuzzle {
 	const cards = selectCardsWithSets(seed, 6)
 	const validSets = findAllSets(cards)
 

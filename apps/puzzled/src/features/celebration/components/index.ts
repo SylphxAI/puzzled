@@ -1,2 +1,2 @@
-export { Celebration, StarBurst, WinBurst } from './celebration'
-export { CelebrationManager, triggerCelebration, useCelebration } from './celebration-manager'
+export { Celebration, StarBurst } from './celebration'
+

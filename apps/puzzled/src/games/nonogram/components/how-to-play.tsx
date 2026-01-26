@@ -81,7 +81,7 @@ export function NonogramHowToPlay() {
 	)
 }
 
-export function NonogramHowToPlayTitle() {
+function NonogramHowToPlayTitle() {
 	const t = useTranslations('games.nonogram')
 	return <>{t('howToPlay')}</>
 }

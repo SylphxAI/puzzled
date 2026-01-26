@@ -68,7 +68,7 @@ export function BlockSlideHowToPlay() {
 	)
 }
 
-export function BlockSlideHowToPlayTitle() {
+function BlockSlideHowToPlayTitle() {
 	const t = useTranslations('games.blockSlide')
 	return <>{t('howToPlay')}</>
 }

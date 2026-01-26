@@ -35,7 +35,7 @@ import type { GenerationSummary, PuzzleDifficulty, PuzzleGenerationResult } from
  * - solution: The correct answer(s)
  * - seed: The seed used for generation (YYYYMMDD format for audit trail)
  */
-export async function generatePuzzleWithLLM(
+async function generatePuzzleWithLLM(
 	slug: string,
 	date: string,
 	difficulty?: PuzzleDifficulty,
@@ -147,7 +147,7 @@ export async function generateGamePuzzle(
  * Generate puzzles for ALL registered games
  * Fully automatic - just add game to registry and it's included
  */
-export async function generateAllPuzzles(date: string): Promise<GenerationSummary> {
+async function generateAllPuzzles(date: string): Promise<GenerationSummary> {
 	const allGames = getAllGames()
 	const results: PuzzleGenerationResult[] = []
 

@@ -36,20 +36,16 @@
 // Components
 // ============================================
 
-export { SessionReplayProvider, type SessionReplayProviderProps } from './components'
+export { SessionReplayProvider,  } from './components'
 
 // ============================================
 // Hooks
 // ============================================
 
-export { useSessionReplayError, type UseSessionReplayErrorReturn } from './hooks'
+
 
 // ============================================
 // Configuration
 // ============================================
 
-export {
-	SESSION_REPLAY_CONFIG,
-	getSessionReplayConfig,
-	getAdjustedSampleRate,
-} from './lib'
+

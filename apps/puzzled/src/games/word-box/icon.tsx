@@ -51,4 +51,3 @@ export function WordBoxIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default WordBoxIcon

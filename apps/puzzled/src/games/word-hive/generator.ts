@@ -184,7 +184,7 @@ export function calculateMaxScore(puzzle: SpellingBeePuzzleData): number {
  * Validate that a letter set produces a valid puzzle
  * Used for testing and verification
  */
-export function validateLetterSet(config: ComputedLetterSet): {
+function validateLetterSet(config: ComputedLetterSet): {
 	valid: boolean
 	wordCount: number
 	pangramCount: number
@@ -260,6 +260,6 @@ export function validateLetterSet(config: ComputedLetterSet): {
  * Get count of available puzzles
  * Returns the count of computed valid configurations
  */
-export function getPuzzleCount(): number {
+function getPuzzleCount(): number {
 	return getLetterSetCount()
 }

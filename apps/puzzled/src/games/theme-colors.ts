@@ -53,7 +53,7 @@ export interface GameColorClasses {
  * DO NOT use template literals or string concatenation.
  * This ensures Tailwind can tree-shake unused classes.
  */
-export const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
+const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 	emerald: {
 		gradient: 'from-emerald-500 to-green-600',
 		bg: 'bg-emerald-500',

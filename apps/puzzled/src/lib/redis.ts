@@ -115,7 +115,7 @@ export const keys = {
 }
 
 // Impersonation helpers
-export type ImpersonationState = {
+type ImpersonationState = {
 	targetUserId: string
 	targetEmail: string
 	adminUserId: string
@@ -125,7 +125,7 @@ export type ImpersonationState = {
 
 const IMPERSONATION_TTL = 60 * 60 // 1 hour max impersonation duration
 
-export const impersonation = {
+const impersonation = {
 	async start(adminUserId: string, state: Omit<ImpersonationState, 'startedAt'>): Promise<void> {
 		await cache.set(
 			keys.impersonation(adminUserId),

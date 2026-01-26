@@ -40,4 +40,3 @@ export function CrosswordIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default CrosswordIcon

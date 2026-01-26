@@ -158,7 +158,7 @@ export function useGuestGameState(gameSlug: string) {
  * Hook to check guest completion status for all games
  * Used on home page to show completion indicators
  */
-export function useGuestCompletionStatus() {
+function useGuestCompletionStatus() {
 	const [completions, setCompletions] = useState<Record<string, GuestCompletedGame>>({})
 	const [isLoaded, setIsLoaded] = useState(false)
 

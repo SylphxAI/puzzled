@@ -50,4 +50,3 @@ export function WordSearchIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default WordSearchIcon

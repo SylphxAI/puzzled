@@ -38,4 +38,4 @@ export const createServerCaller = cache(async () => {
 /**
  * Type helper for the server caller
  */
-export type ServerCaller = Awaited<ReturnType<typeof createServerCaller>>
+type ServerCaller = Awaited<ReturnType<typeof createServerCaller>>

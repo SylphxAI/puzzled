@@ -53,7 +53,7 @@ export function SpellingBeeHowToPlay() {
 	)
 }
 
-export function SpellingBeeHowToPlayTitle() {
+function SpellingBeeHowToPlayTitle() {
 	const t = useTranslations('games.wordHive')
 	return <>{t('howToPlay')}</>
 }

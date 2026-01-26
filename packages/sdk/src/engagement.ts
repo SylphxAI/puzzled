@@ -48,7 +48,7 @@ export type {
 	StreakFrequency,
 	RecordActivityInput,
 	RecordActivityResult,
-	StreakDefaults,
+	
 	// Leaderboards
 	LeaderboardDefinition,
 	LeaderboardEntry,
@@ -59,7 +59,7 @@ export type {
 	LeaderboardAggregation,
 	SubmitScoreInput,
 	SubmitScoreResult,
-	LeaderboardDefaults,
+	
 	// Achievements
 	AchievementDefinition,
 	AchievementType,
@@ -70,7 +70,7 @@ export type {
 	CriteriaOperator,
 	UserAchievement,
 	AchievementUnlockEvent,
-	AchievementDefaults,
+	
 } from './lib/engagement/types'
 
 export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'

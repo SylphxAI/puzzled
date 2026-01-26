@@ -213,7 +213,7 @@ export async function generateCrosswordPuzzle(
 /**
  * Get today's date string in YYYY-MM-DD format (UTC)
  */
-export function getTodayDateString(): string {
+function getTodayDateString(): string {
 	const now = new Date()
 	return now.toISOString().split('T')[0]
 }
@@ -221,7 +221,7 @@ export function getTodayDateString(): string {
 /**
  * Get tomorrow's date string in YYYY-MM-DD format (UTC)
  */
-export function getTomorrowDateString(): string {
+function getTomorrowDateString(): string {
 	const tomorrow = new Date()
 	tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 	return tomorrow.toISOString().split('T')[0]
@@ -230,7 +230,7 @@ export function getTomorrowDateString(): string {
 /**
  * Result of daily puzzle generation for all LLM games
  */
-export type DailyPuzzleResults = {
+type DailyPuzzleResults = {
 	connections: ConnectionsValidationResult
 	crossword: CrosswordValidationResult
 	nonogram: NonogramValidationResult
@@ -247,7 +247,7 @@ export type DailyPuzzleResults = {
  * Each puzzle is validated for solvability before being returned.
  * No fallbacks - if any puzzle fails, the error is returned for that game.
  */
-export async function generateDailyPuzzles(date: string): Promise<DailyPuzzleResults> {
+async function generateDailyPuzzles(date: string): Promise<DailyPuzzleResults> {
 	console.log(`[Daily Generator] Generating all LLM puzzles for ${date}`)
 	const startTime = Date.now()
 

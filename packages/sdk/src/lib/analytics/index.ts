@@ -41,20 +41,20 @@ export { AnalyticsTracker, getAnalyticsTracker, initAnalytics, resetAnalyticsTra
 export {
 	Autocapture,
 	initAutocapture,
-	getAutocapture,
-	startAutocapture,
-	stopAutocapture,
-	type AutocaptureEvent,
+	
+	
+	
+	
 } from './autocapture'
 
 // Navigation
 export {
 	NavigationTracker,
 	initNavigationTracker,
-	getNavigationTracker,
+	
 	analyzeReferrer,
-	type PageViewEvent,
-	type PageLeaveEvent,
+	
+	
 } from './navigation'
 
 // Element naming
@@ -62,27 +62,27 @@ export {
 	generateElementName,
 	generateEventName,
 	buildElementData,
-	buildElementChain,
+	
 } from './element-naming'
 
 // Types
 export type {
 	// Core types
-	PropertyValue,
+	
 	EventProperties,
 	UserProperties,
-	GroupProperties,
+	
 	// Events
 	AnalyticsEvent,
-	AutocaptureEvent as AutocaptureEventType,
-	PageViewEvent as PageViewEventType,
-	PageLeaveEvent as PageLeaveEventType,
+	
+	
+	
 	// Element data
 	ElementData,
 	// Identification
-	IdentifyData,
-	AliasData,
-	GroupData,
+	
+	
+	
 	// Configuration
 	AnalyticsConfig,
 	AutocaptureConfig,
@@ -94,8 +94,8 @@ export type {
 	DeviceContext,
 	PageContext,
 	// Queue
-	QueuedEvent,
-	BatchPayload,
+	
+	
 } from './types'
 
 export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'

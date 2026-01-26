@@ -284,7 +284,7 @@ export interface AchievementUnlockEvent {
 // ============================================================================
 
 /** Complete engagement configuration (fetched from platform) */
-export interface EngagementConfig {
+interface EngagementConfig {
 	/** Streak definitions */
 	streaks?: StreakDefinition[]
 	/** Leaderboard definitions */

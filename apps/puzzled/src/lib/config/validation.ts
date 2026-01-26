@@ -11,7 +11,7 @@ import { z } from 'zod'
 // File Upload Limits
 // ==========================================
 
-export const FILE_LIMITS = {
+const FILE_LIMITS = {
 	/** Maximum avatar file size in bytes (5MB) */
 	AVATAR_MAX_SIZE: 5 * 1024 * 1024,
 
@@ -23,7 +23,7 @@ export const FILE_LIMITS = {
 // OTP / Verification Codes
 // ==========================================
 
-export const OTP_CONFIG = {
+const OTP_CONFIG = {
 	/** Length of OTP codes (TOTP and email verification) */
 	CODE_LENGTH: 6,
 
@@ -35,7 +35,7 @@ export const OTP_CONFIG = {
 // Referral Code Rules
 // ==========================================
 
-export const REFERRAL_CONFIG = {
+const REFERRAL_CONFIG = {
 	/** Minimum referral code length */
 	CODE_MIN_LENGTH: 5,
 
@@ -47,7 +47,7 @@ export const REFERRAL_CONFIG = {
 } as const
 
 /** Zod schema for referral code validation - SSOT */
-export const referralCodeSchema = z
+const referralCodeSchema = z
 	.string()
 	.min(REFERRAL_CONFIG.CODE_MIN_LENGTH, 'Referral code too short')
 	.max(REFERRAL_CONFIG.CODE_MAX_LENGTH, 'Referral code too long')
@@ -72,13 +72,13 @@ export const PAGINATION = {
 } as const
 
 /** Zod schema for user-facing pagination */
-export const paginationSchema = z.object({
+const paginationSchema = z.object({
 	limit: z.number().min(1).max(PAGINATION.MAX_LIMIT).default(PAGINATION.DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
 })
 
 /** Zod schema for admin pagination */
-export const adminPaginationSchema = z.object({
+const adminPaginationSchema = z.object({
 	limit: z.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.ADMIN_DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
 })
@@ -87,7 +87,7 @@ export const adminPaginationSchema = z.object({
 // Field Size Limits
 // ==========================================
 
-export const FIELD_LIMITS = {
+const FIELD_LIMITS = {
 	/** Name fields (user name, plan name, etc.) */
 	NAME_MAX: 100,
 
@@ -112,7 +112,7 @@ export const FIELD_LIMITS = {
 // Currency Configuration
 // ==========================================
 
-export const CURRENCY_CONFIG = {
+const CURRENCY_CONFIG = {
 	/** Default currency code */
 	DEFAULT: 'usd' as const,
 
@@ -121,7 +121,7 @@ export const CURRENCY_CONFIG = {
 } as const
 
 /** Zod schema for currency validation */
-export const currencySchema = z
+const currencySchema = z
 	.string()
 	.length(CURRENCY_CONFIG.CODE_LENGTH)
 	.default(CURRENCY_CONFIG.DEFAULT)
@@ -130,7 +130,7 @@ export const currencySchema = z
 // Batch Operation Limits
 // ==========================================
 
-export const BATCH_LIMITS = {
+const BATCH_LIMITS = {
 	/** Maximum items in bulk operations */
 	MAX_BATCH_SIZE: 100,
 } as const
@@ -139,7 +139,7 @@ export const BATCH_LIMITS = {
 // Animation Timing (milliseconds)
 // ==========================================
 
-export const TIMING = {
+const TIMING = {
 	/** Result modal delay after win */
 	RESULT_MODAL_WIN_DELAY: 1500,
 

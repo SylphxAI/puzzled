@@ -25,7 +25,7 @@ const GameComponent = dynamic(() =>
 	import('./quad-words-game').then((m) => ({ default: m.QuadWordsGame })),
 )
 
-export type { QuordlePuzzleData, QuordleSolution }
+
 
 export const quadWordsConfig: GameConfig<
 	QuordlePuzzleData,
@@ -144,4 +144,3 @@ export const quadWordsConfig: GameConfig<
 	},
 }
 
-export default quadWordsConfig

@@ -139,7 +139,7 @@ export function getDirectionVector(direction: Direction): Position {
 /**
  * Check if a position is within grid bounds
  */
-export function isInBounds(pos: Position, size: number): boolean {
+function isInBounds(pos: Position, size: number): boolean {
 	return pos.row >= 0 && pos.row < size && pos.col >= 0 && pos.col < size
 }
 

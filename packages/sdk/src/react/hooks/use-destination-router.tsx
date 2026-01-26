@@ -259,9 +259,4 @@ export function useRouterContext(): DestinationRouter | null {
 }
 
 // Re-export types
-export type {
-	DestinationType,
-	DestinationConfig,
-	DestinationRouterConfig,
-	DestinationRouter,
-} from '../../lib/analytics'
+

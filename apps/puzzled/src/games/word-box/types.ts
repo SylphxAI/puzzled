@@ -9,7 +9,7 @@
  * 4. Use all 12 letters to win
  */
 
-export type BoxSide = 'top' | 'right' | 'bottom' | 'left'
+type BoxSide = 'top' | 'right' | 'bottom' | 'left'
 
 export type LetterBox = {
 	top: [string, string, string]
@@ -49,13 +49,13 @@ export type LetterBoxedGameState = {
 	endTime: number | null
 }
 
-export const LETTERS_PER_SIDE = 3
-export const TOTAL_LETTERS = 12
+const LETTERS_PER_SIDE = 3
+const TOTAL_LETTERS = 12
 
 /**
  * Get the side a letter belongs to
  */
-export function getLetterSide(box: LetterBox, letter: string): BoxSide | null {
+function getLetterSide(box: LetterBox, letter: string): BoxSide | null {
 	const upper = letter.toUpperCase()
 	if (box.top.includes(upper)) return 'top'
 	if (box.right.includes(upper)) return 'right'

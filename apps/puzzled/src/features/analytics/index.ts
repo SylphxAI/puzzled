@@ -9,16 +9,16 @@ export { WebVitalsReporter } from './components'
 // ============================================
 
 export {
-	type ConsentCategory,
-	type ConsentPreferences,
-	type ConsentStatus,
-	canTrackAnalytics,
-	clearConsentData,
-	getConsentPreferences,
-	getConsentStatus,
+	
+	
+	
+	
+	
+	
+	
 	hasAnalyticsConsent,
 	onConsentChange,
-	setConsentStatus,
+	
 } from './lib/consent'
 
 // ============================================
@@ -38,30 +38,25 @@ export {
  */
 export {
 	useGameAnalytics,
-	useJourneyStage,
-	type GameStartEvent,
-	type GameCompleteEvent,
-	type AchievementEvent,
-	type StreakEvent,
-	type UserJourneyStage,
-	type DeviceType,
-	type EventDimensions,
+	
+	
+	
+	
+	
+	
+	
+	
 } from './lib/sdk-analytics'
 
 // ============================================
 // A/B Testing
 // ============================================
 
-export {
-	useExperiment,
-	useExperimentTracking,
-	EXPERIMENTS,
-	type ExperimentKey,
-} from './lib/ab-testing'
+
 
 // ============================================
 // Web Vitals
 // ============================================
 
-export { initWebVitals, setWebVitalsTracker } from './lib/web-vitals'
+
 

@@ -169,7 +169,7 @@ function NextAchievementCard({
 }
 
 // Compact version for showing on home page or profile
-export function AchievementBadges({ stats }: AchievementsProps) {
+function AchievementBadges({ stats }: AchievementsProps) {
 	const unlocked = checkAchievements(stats)
 
 	if (unlocked.length === 0) return null

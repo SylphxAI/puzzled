@@ -14,7 +14,7 @@ import type { EvaluationContext, TargetingCondition, TargetingOperator, Targetin
 /**
  * Evaluate a single targeting condition
  */
-export function evaluateCondition(condition: TargetingCondition, context: EvaluationContext): boolean {
+function evaluateCondition(condition: TargetingCondition, context: EvaluationContext): boolean {
 	const attributeValue = getAttributeValue(condition.attribute, context)
 
 	// Handle null/undefined attribute
@@ -32,7 +32,7 @@ export function evaluateCondition(condition: TargetingCondition, context: Evalua
 /**
  * Evaluate all conditions in a rule (AND logic)
  */
-export function evaluateRule(rule: TargetingRule, context: EvaluationContext): boolean {
+function evaluateRule(rule: TargetingRule, context: EvaluationContext): boolean {
 	if (rule.conditions.length === 0) {
 		return true // No conditions = always match
 	}
@@ -68,7 +68,7 @@ export function findMatchingRule(
  * - "attributes.plan"
  * - "geo.country"
  */
-export function getAttributeValue(path: string, context: EvaluationContext): unknown {
+function getAttributeValue(path: string, context: EvaluationContext): unknown {
 	// Handle top-level attributes first
 	if (path in context && !path.includes('.')) {
 		return context[path]
@@ -98,7 +98,7 @@ export function getAttributeValue(path: string, context: EvaluationContext): unk
 /**
  * Evaluate a comparison operator
  */
-export function evaluateOperator(operator: TargetingOperator, actual: unknown, expected: unknown): boolean {
+function evaluateOperator(operator: TargetingOperator, actual: unknown, expected: unknown): boolean {
 	switch (operator) {
 		case 'eq':
 			return equals(actual, expected)
@@ -343,7 +343,7 @@ export function mergeContext(...contexts: (EvaluationContext | undefined)[]): Ev
 /**
  * Validate that required context fields are present
  */
-export function validateContext(context: EvaluationContext): string[] {
+function validateContext(context: EvaluationContext): string[] {
 	const errors: string[] = []
 
 	// Must have at least one identifier

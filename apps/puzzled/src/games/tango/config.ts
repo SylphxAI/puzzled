@@ -25,7 +25,7 @@ import { isSolved } from './types'
 
 const GameComponent = dynamic(() => import('./tango-game').then((m) => ({ default: m.TangoGame })))
 
-export type { TangoPuzzleData, TangoSolution }
+
 
 export const tangoConfig: GameConfig<
 	TangoPuzzleData,
@@ -137,4 +137,3 @@ export const tangoConfig: GameConfig<
 	},
 }
 
-export default tangoConfig

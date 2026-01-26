@@ -76,46 +76,6 @@ export function Celebration({ show, onComplete }: CelebrationProps) {
 	)
 }
 
-// Simpler burst animation for quick wins
-export function WinBurst({ show }: { show: boolean }) {
-	const [visible, setVisible] = useState(false)
-
-	useEffect(() => {
-		if (show) {
-			setVisible(true)
-			const timeout = setTimeout(() => setVisible(false), 600)
-			return () => clearTimeout(timeout)
-		}
-	}, [show])
-
-	if (!visible) return null
-
-	return (
-		<div className="pointer-events-none fixed inset-0 z-toast flex items-center justify-center">
-			<div className="win-burst" />
-			<style jsx>{`
-				@keyframes burst {
-					0% {
-						transform: scale(0);
-						opacity: 0.8;
-					}
-					100% {
-						transform: scale(3);
-						opacity: 0;
-					}
-				}
-				.win-burst {
-					width: 200px;
-					height: 200px;
-					border-radius: 50%;
-					background: radial-gradient(circle, color-mix(in srgb, var(--celebration-green) 60%, transparent) 0%, transparent 70%);
-					animation: burst 0.6s ease-out forwards;
-				}
-			`}</style>
-		</div>
-	)
-}
-
 // Star burst for perfect games
 export function StarBurst({ show }: { show: boolean }) {
 	const [visible, setVisible] = useState(false)

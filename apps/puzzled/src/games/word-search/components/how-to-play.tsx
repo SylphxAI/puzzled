@@ -50,7 +50,7 @@ export function WordSearchHowToPlay() {
 	)
 }
 
-export function WordSearchHowToPlayTitle() {
+function WordSearchHowToPlayTitle() {
 	return <>How to Play Word Hunt</>
 }
 

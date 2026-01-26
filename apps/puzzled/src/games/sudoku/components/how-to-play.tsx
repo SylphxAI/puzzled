@@ -55,7 +55,7 @@ export function SudokuHowToPlay() {
 	)
 }
 
-export function SudokuHowToPlayTitle() {
+function SudokuHowToPlayTitle() {
 	const t = useTranslations('games.sudoku')
 	return <>{t('howToPlay')}</>
 }

@@ -45,7 +45,7 @@ export interface AnalyticsEvent {
 }
 
 /** Autocaptured event */
-export interface AutocaptureEvent extends AnalyticsEvent {
+interface AutocaptureEvent extends AnalyticsEvent {
 	event: '$autocapture'
 	properties: EventProperties & {
 		$event_type: 'click' | 'submit' | 'change' | 'focus' | 'blur'
@@ -57,7 +57,7 @@ export interface AutocaptureEvent extends AnalyticsEvent {
 }
 
 /** Page view event */
-export interface PageViewEvent extends AnalyticsEvent {
+interface PageViewEvent extends AnalyticsEvent {
 	event: '$pageview'
 	properties: EventProperties & {
 		$current_url: string
@@ -69,7 +69,7 @@ export interface PageViewEvent extends AnalyticsEvent {
 }
 
 /** Page leave event */
-export interface PageLeaveEvent extends AnalyticsEvent {
+interface PageLeaveEvent extends AnalyticsEvent {
 	event: '$pageleave'
 	properties: EventProperties & {
 		$current_url: string
@@ -107,20 +107,20 @@ export interface ElementData {
 // ==========================================
 
 /** Identify call */
-export interface IdentifyData {
+interface IdentifyData {
 	distinct_id: string
 	$set?: UserProperties
 	$set_once?: UserProperties
 }
 
 /** Alias call */
-export interface AliasData {
+interface AliasData {
 	alias: string
 	distinct_id: string
 }
 
 /** Group call */
-export interface GroupData {
+interface GroupData {
 	$group_type: string
 	$group_key: string
 	$group_set?: GroupProperties
@@ -308,7 +308,7 @@ export interface QueuedEvent {
 }
 
 /** Batch payload */
-export interface BatchPayload {
+interface BatchPayload {
 	api_key?: string
 	batch: AnalyticsEvent[]
 }

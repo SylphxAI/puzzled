@@ -14,7 +14,7 @@ import { useCallback, useMemo } from 'react'
 
 // Vibration patterns (in milliseconds)
 // Format: [vibrate, pause, vibrate, pause, ...]
-export const HAPTIC_PATTERNS = {
+const HAPTIC_PATTERNS = {
 	// Simple feedback
 	light: [10],
 	medium: [25],
@@ -43,7 +43,7 @@ export type HapticPattern = keyof typeof HAPTIC_PATTERNS
 
 type HapticIntensity = 'light' | 'medium' | 'heavy'
 
-export function useHaptic() {
+function useHaptic() {
 	// Check if Vibration API is supported
 	const isSupported = useMemo(() => {
 		if (typeof window === 'undefined') return false

@@ -51,7 +51,7 @@ export function shuffleArray<T>(array: T[], random: () => number): T[] {
  * @param seed - Seed for random generator
  * @returns New shuffled array
  */
-export function seededShuffle<T>(array: T[], seed: number): T[] {
+function seededShuffle<T>(array: T[], seed: number): T[] {
 	return shuffleArray(array, seededRandom(seed))
 }
 
@@ -74,6 +74,6 @@ export function pickRandom<T>(array: T[], random: () => number = Math.random): T
  * @param random - Random function returning [0, 1)
  * @returns Array of n random elements
  */
-export function pickRandomN<T>(array: T[], n: number, random: () => number): T[] {
+function pickRandomN<T>(array: T[], n: number, random: () => number): T[] {
 	return shuffleArray(array, random).slice(0, n)
 }

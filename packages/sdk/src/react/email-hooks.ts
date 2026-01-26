@@ -16,7 +16,7 @@ import {
 } from './services-context'
 
 // Re-export types for convenience
-export type { EmailStatus, SimpleEmailOptions, EmailTemplateName }
+
 
 // ============================================
 // useEmail

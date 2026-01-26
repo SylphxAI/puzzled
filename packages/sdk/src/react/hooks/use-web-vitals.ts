@@ -330,5 +330,5 @@ export function useWebVitalsAnalytics(options: UseWebVitalsAnalyticsOptions): Us
 }
 
 // Re-export types from module
-export { WEB_VITALS_THRESHOLDS } from '../../lib/monitoring/web-vitals'
-export type { WebVitalsConfig, WebVitalsReport, WebVitalMetric, WebVitalName, MetricRating } from '../../lib/monitoring/web-vitals'
+
+

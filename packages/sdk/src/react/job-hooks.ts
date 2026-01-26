@@ -273,9 +273,9 @@ export function useJobs(): UseJobsReturn {
 // useJobProgress
 // ============================================
 
-export type JobPhase = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+type JobPhase = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
 
-export interface JobProgress {
+interface JobProgress {
 	/** Current phase of the job */
 	phase: JobPhase
 	/** Progress percentage (0-100), estimated based on phase */
@@ -292,7 +292,7 @@ export interface JobProgress {
 	estimatedRemainingMs: number | null
 }
 
-export interface UseJobProgressOptions {
+interface UseJobProgressOptions {
 	/** Polling interval in ms (default: 2000) */
 	pollInterval?: number
 	/** Stop polling when job completes (default: true) */
@@ -307,7 +307,7 @@ export interface UseJobProgressOptions {
 	onStatusChange?: (job: Job, previousStatus: JobStatus | null) => void
 }
 
-export interface UseJobProgressReturn {
+interface UseJobProgressReturn {
 	/** Current job data (null until first fetch) */
 	job: Job | null
 	/** Progress information */
@@ -389,7 +389,7 @@ export interface UseJobProgressReturn {
  * }
  * ```
  */
-export function useJobProgress(
+function useJobProgress(
 	jobId: string | null | undefined,
 	options: UseJobProgressOptions = {}
 ): UseJobProgressReturn {
@@ -601,12 +601,12 @@ export function useJobProgress(
 // useScheduleWithProgress
 // ============================================
 
-export interface UseScheduleWithProgressOptions extends UseJobProgressOptions {
+interface UseScheduleWithProgressOptions extends UseJobProgressOptions {
 	/** Auto-start tracking after scheduling */
 	autoStart?: boolean
 }
 
-export interface UseScheduleWithProgressReturn {
+interface UseScheduleWithProgressReturn {
 	/** Schedule a job and start tracking */
 	scheduleAndTrack: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
 	/** Current job being tracked */
@@ -681,7 +681,7 @@ export interface UseScheduleWithProgressReturn {
  * }
  * ```
  */
-export function useScheduleWithProgress(
+function useScheduleWithProgress(
 	options: UseScheduleWithProgressOptions = {}
 ): UseScheduleWithProgressReturn {
 	const { autoStart = true, ...progressOptions } = options

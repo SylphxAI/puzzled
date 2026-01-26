@@ -45,31 +45,23 @@ export { FlagStream, createFlagStream, fetchFlags, pollFlags } from './streaming
 export {
 	ExperimentManager,
 	getExperimentManager,
-	resetExperimentManager,
+	
 	createExperiment,
 	calculateSampleSize,
 	calculateExperimentDuration,
 } from './experiments'
 
 // Targeting
-export {
-	evaluateCondition,
-	evaluateRule,
-	findMatchingRule,
-	getAttributeValue,
-	evaluateOperator,
-	mergeContext,
-	validateContext,
-} from './targeting'
+
 
 // Hashing
 export {
 	murmurHash3,
 	getBucket,
-	isInPercentage,
+	
 	getUserBucket,
 	selectVariant,
-	getConsistentRandom,
+	
 } from './hash'
 
 // Types
@@ -85,16 +77,16 @@ export type {
 	EvaluationContext,
 	EvaluationResult,
 	EvaluationReason,
-	EvaluationError,
+	
 	// Experiments
 	Experiment,
 	ExperimentExposure,
 	// Streaming
-	StreamMessageType,
-	StreamMessage,
-	FlagUpdateMessage,
-	FlagDeleteMessage,
-	FlagsMessage,
+	
+	
+	
+	
+	
 	// Configuration
 	FeatureFlagsConfig,
 	// Events

@@ -50,4 +50,3 @@ export function KillerSudokuIcon({ size = 24, className, ...props }: IconProps) 
 	)
 }
 
-export default KillerSudokuIcon

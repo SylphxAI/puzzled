@@ -45,4 +45,4 @@ export async function createContext(_opts?: FetchCreateContextFnOptions): Promis
 /**
  * Helper type for inferring context
  */
-export type CreateContext = typeof createContext
+type CreateContext = typeof createContext

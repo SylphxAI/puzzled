@@ -19,7 +19,7 @@ import {
 import type { NewsletterSubscribeInput, NewsletterSubscribeResult } from '../types'
 
 // Re-export types for convenience
-export type { SubscriberStatus, Subscriber, NewsletterSubscribeInput, NewsletterSubscribeResult }
+export type {   NewsletterSubscribeInput, NewsletterSubscribeResult }
 
 // ============================================
 // useNewsletter

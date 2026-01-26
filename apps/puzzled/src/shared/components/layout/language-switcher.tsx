@@ -287,7 +287,7 @@ function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMe
  * Simple language indicator showing current locale flag
  * Use in mobile headers or tight spaces
  */
-export function LanguageIndicator({ className }: { className?: string }) {
+function LanguageIndicator({ className }: { className?: string }) {
 	const locale = useLocale() as Locale
 
 	return (

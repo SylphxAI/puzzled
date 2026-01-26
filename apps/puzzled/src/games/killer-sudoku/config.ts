@@ -27,7 +27,7 @@ const GameComponent = dynamic(() =>
 	import('./killer-sudoku-game').then((m) => ({ default: m.KillerSudokuGame })),
 )
 
-export type { KillerSudokuPuzzleData, KillerSudokuSolution }
+
 
 /**
  * Difficulty level configurations for Killer Sudoku
@@ -174,4 +174,3 @@ export const killerSudokuConfig: GameConfig<
 	},
 }
 
-export default killerSudokuConfig

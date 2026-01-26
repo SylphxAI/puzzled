@@ -40,23 +40,23 @@ export {
 	addBreadcrumb,
 	getBreadcrumbs,
 	clearBreadcrumbs,
-	setMaxBreadcrumbs,
+	
 	enableAutoCapture,
-	enableClickCapture,
-	enableInputCapture,
-	enableNetworkCapture,
-	enableConsoleCapture,
-	enableNavigationCapture,
-	disableNetworkCapture,
-	disableConsoleCapture,
+	
+	
+	
+	
+	
+	
+	
 	// Types
-	type AutoCaptureOptions,
+	
 	DEFAULT_ERROR_CONFIG,
 } from './error-tracking'
 
 export type {
 	// Core types
-	ErrorLevel,
+	
 	BreadcrumbType,
 	Breadcrumb,
 	StackFrame,
@@ -69,8 +69,8 @@ export type {
 	CaptureExceptionOptions,
 	CaptureMessageOptions,
 	// Callbacks
-	UploadCallback as ErrorUploadCallback,
-	UploadResult as ErrorUploadResult,
+	
+	
 	CaptureResult,
 } from './error-tracking'
 

@@ -186,7 +186,7 @@ export function generateSudokuPuzzle(
 /**
  * Get difficulty based on seed (cycles through difficulties)
  */
-export function getDifficultyFromSeed(seed: number): 'easy' | 'medium' | 'hard' {
+function getDifficultyFromSeed(seed: number): 'easy' | 'medium' | 'hard' {
 	const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard']
 	return difficulties[Math.abs(seed) % 3]
 }
@@ -194,7 +194,7 @@ export function getDifficultyFromSeed(seed: number): 'easy' | 'medium' | 'hard' 
 /**
  * Validate a complete Sudoku grid
  */
-export function validateSudokuGrid(grid: number[][]): boolean {
+function validateSudokuGrid(grid: number[][]): boolean {
 	// Check rows
 	for (let row = 0; row < GRID_SIZE; row++) {
 		const seen = new Set<number>()

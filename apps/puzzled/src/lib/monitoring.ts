@@ -65,7 +65,7 @@ export async function captureMessage(
 /**
  * Capture error in request handler (convenience wrapper)
  */
-export async function captureRequestError(
+async function captureRequestError(
 	error: Error,
 	request: Request,
 	context?: {

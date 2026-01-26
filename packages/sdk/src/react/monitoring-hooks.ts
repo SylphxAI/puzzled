@@ -20,7 +20,7 @@ import {
 import type { MonitoringLevel } from '../types'
 
 // Re-export types for convenience
-export type { MonitoringLevel, Breadcrumb, ExceptionValue, CaptureExceptionOptions, CaptureMessageOptions }
+export type { MonitoringLevel, Breadcrumb,  CaptureExceptionOptions, CaptureMessageOptions }
 
 // ============================================
 // Helper Functions

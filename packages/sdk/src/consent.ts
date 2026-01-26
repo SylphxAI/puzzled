@@ -167,7 +167,7 @@ export async function getConsentTypes(config: SylphxConfig): Promise<ConsentType
  * })
  * ```
  */
-export async function hasConsent(
+async function hasConsent(
 	config: SylphxConfig,
 	purposeSlug: string,
 	input: GetConsentsInput,

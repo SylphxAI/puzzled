@@ -46,4 +46,3 @@ export function NonogramIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default NonogramIcon

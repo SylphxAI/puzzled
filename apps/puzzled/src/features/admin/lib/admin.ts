@@ -28,28 +28,28 @@ export class AdminError extends Error {
 /**
  * Get current session (server-side)
  */
-export async function getSession() {
+async function getSession() {
 	return auth()
 }
 
 /**
  * Check if a role has admin privileges
  */
-export function hasAdminRole(role: string | null | undefined): boolean {
+function hasAdminRole(role: string | null | undefined): boolean {
 	return isAdminRole(role)
 }
 
 /**
  * Check if a role has super_admin privileges
  */
-export function hasSuperAdminRole(role: string | null | undefined): boolean {
+function hasSuperAdminRole(role: string | null | undefined): boolean {
 	return isSuperAdminRole(role)
 }
 
 /**
  * Check if current user is admin (admin or super_admin)
  */
-export async function isAdmin(): Promise<boolean> {
+async function isAdmin(): Promise<boolean> {
 	const { user } = await getSession()
 	return hasAdminRole(user?.role)
 }
@@ -57,7 +57,7 @@ export async function isAdmin(): Promise<boolean> {
 /**
  * Check if current user is super_admin
  */
-export async function isSuperAdmin(): Promise<boolean> {
+async function isSuperAdmin(): Promise<boolean> {
 	const { user } = await getSession()
 	return hasSuperAdminRole(user?.role)
 }
@@ -82,7 +82,7 @@ export async function requireAdmin() {
 /**
  * Require super_admin access - throws AdminError if not super_admin
  */
-export async function requireSuperAdmin() {
+async function requireSuperAdmin() {
 	const { userId, user } = await getSession()
 
 	if (!userId || !user) {
@@ -99,7 +99,7 @@ export async function requireSuperAdmin() {
 /**
  * Get admin user or null
  */
-export async function getAdminUser() {
+async function getAdminUser() {
 	try {
 		const { user } = await requireAdmin()
 		return user

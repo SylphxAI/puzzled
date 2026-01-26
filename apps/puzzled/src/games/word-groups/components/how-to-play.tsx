@@ -64,7 +64,7 @@ export function ConnectionsHowToPlay() {
 	)
 }
 
-export function ConnectionsHowToPlayTitle() {
+function ConnectionsHowToPlayTitle() {
 	const t = useTranslations('games.wordGroups')
 	return <>{t('howToPlay')}</>
 }

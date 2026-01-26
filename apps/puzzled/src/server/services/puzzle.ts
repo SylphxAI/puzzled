@@ -29,7 +29,7 @@ import { dailyPuzzles } from '@/lib/db/schema'
 // Types
 // ==========================================
 
-export type PuzzleResult = {
+type PuzzleResult = {
 	id: string
 	gameSlug: string
 	puzzleDate: Date
@@ -197,7 +197,7 @@ export async function getOrCreatePuzzle(
 /**
  * Get puzzle by ID (for validation endpoints)
  */
-export async function getPuzzleById(puzzleId: string): Promise<PuzzleResult | null> {
+async function getPuzzleById(puzzleId: string): Promise<PuzzleResult | null> {
 	const [puzzle] = await db
 		.select()
 		.from(dailyPuzzles)
@@ -210,7 +210,7 @@ export async function getPuzzleById(puzzleId: string): Promise<PuzzleResult | nu
 /**
  * Check if a puzzle exists for a game and date
  */
-export async function puzzleExists(gameSlug: string, date: Date): Promise<boolean> {
+async function puzzleExists(gameSlug: string, date: Date): Promise<boolean> {
 	if (!isValidGameSlug(gameSlug)) return false
 
 	const [puzzle] = await db

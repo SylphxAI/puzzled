@@ -69,7 +69,7 @@ let clickCaptureEnabled = false
 /**
  * Enable click capture
  */
-export function enableClickCapture(): void {
+function enableClickCapture(): void {
 	if (clickCaptureEnabled || typeof document === 'undefined') return
 	clickCaptureEnabled = true
 
@@ -146,7 +146,7 @@ let inputCaptureEnabled = false
 /**
  * Enable input capture (captures input events without values)
  */
-export function enableInputCapture(): void {
+function enableInputCapture(): void {
 	if (inputCaptureEnabled || typeof document === 'undefined') return
 	inputCaptureEnabled = true
 
@@ -186,7 +186,7 @@ const originalXHRSend = typeof XMLHttpRequest !== 'undefined' ? XMLHttpRequest.p
 /**
  * Enable network request capture
  */
-export function enableNetworkCapture(): void {
+function enableNetworkCapture(): void {
 	if (networkCaptureEnabled || typeof window === 'undefined') return
 	networkCaptureEnabled = true
 
@@ -281,7 +281,7 @@ export function enableNetworkCapture(): void {
 /**
  * Restore original fetch/XHR (for testing)
  */
-export function disableNetworkCapture(): void {
+function disableNetworkCapture(): void {
 	if (!networkCaptureEnabled) return
 	networkCaptureEnabled = false
 
@@ -306,7 +306,7 @@ const originalConsole: Partial<Record<'log' | 'info' | 'warn' | 'error' | 'debug
 /**
  * Enable console log capture
  */
-export function enableConsoleCapture(): void {
+function enableConsoleCapture(): void {
 	if (consoleCaptureEnabled || typeof console === 'undefined') return
 	consoleCaptureEnabled = true
 
@@ -347,7 +347,7 @@ export function enableConsoleCapture(): void {
 /**
  * Restore original console (for testing)
  */
-export function disableConsoleCapture(): void {
+function disableConsoleCapture(): void {
 	if (!consoleCaptureEnabled) return
 	consoleCaptureEnabled = false
 
@@ -376,7 +376,7 @@ let lastUrl: string | null = null
 /**
  * Enable navigation capture
  */
-export function enableNavigationCapture(): void {
+function enableNavigationCapture(): void {
 	if (navigationCaptureEnabled || typeof window === 'undefined') return
 	navigationCaptureEnabled = true
 

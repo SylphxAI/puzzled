@@ -36,4 +36,3 @@ export function WordGuessIcon({ size = 24, className, ...props }: IconProps) {
 	)
 }
 
-export default WordGuessIcon

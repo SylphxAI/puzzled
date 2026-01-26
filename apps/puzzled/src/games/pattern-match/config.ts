@@ -38,14 +38,14 @@ export type PatternMatchClientData = {
 /**
  * Client's guess for validation (3 card IDs)
  */
-export type PatternMatchGuess = {
+type PatternMatchGuess = {
 	cardIds: [number, number, number]
 }
 
 /**
  * Result of validating a guess
  */
-export type PatternMatchGuessResult = {
+type PatternMatchGuessResult = {
 	valid: boolean
 	isCorrect: boolean
 	error?: string
@@ -208,4 +208,3 @@ export const patternMatchConfig: GameConfig<
 	},
 }
 
-export default patternMatchConfig
