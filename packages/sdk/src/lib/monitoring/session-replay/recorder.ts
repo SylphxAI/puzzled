@@ -406,7 +406,7 @@ export class SessionRecorder {
 
 		// Intercept fetch
 		const originalFetch = window.fetch.bind(window) as typeof window.fetch
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- window.fetch type varies by runtime
+		// biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
 		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 			const startTime = Date.now()
 			const url = typeof input === 'string' ? input : (input as Request).url

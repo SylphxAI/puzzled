@@ -383,7 +383,7 @@ export class DeadClickDetector {
 
 		// Intercept fetch
 		const originalFetch = window.fetch.bind(window) as typeof window.fetch
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- window.fetch type varies by runtime
+		// biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
 		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
 			detector.networkActivity = true
 			return originalFetch(input, init)
