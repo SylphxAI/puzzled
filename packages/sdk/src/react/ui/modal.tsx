@@ -72,16 +72,47 @@ export function Modal({
 		}
 	}, [open])
 
-	// Focus trap
+	// Focus trap with cycling and focus restoration
 	useEffect(() => {
 		if (!open || !modalRef.current) return
 
-		const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-		)
+		// Store previously focused element for restoration
+		const previousActiveElement = document.activeElement as HTMLElement | null
 
-		if (focusableElements.length > 0) {
-			focusableElements[0].focus()
+		const focusableSelector =
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+		const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(focusableSelector)
+
+		if (focusableElements.length === 0) return
+
+		const firstElement = focusableElements[0]
+		const lastElement = focusableElements[focusableElements.length - 1]
+
+		// Focus first element
+		firstElement.focus()
+
+		// Handle Tab key for focus cycling
+		function handleKeyDown(e: KeyboardEvent) {
+			if (e.key !== 'Tab') return
+
+			// Shift+Tab on first element -> focus last element
+			if (e.shiftKey && document.activeElement === firstElement) {
+				e.preventDefault()
+				lastElement.focus()
+			}
+			// Tab on last element -> focus first element
+			else if (!e.shiftKey && document.activeElement === lastElement) {
+				e.preventDefault()
+				firstElement.focus()
+			}
+		}
+
+		document.addEventListener('keydown', handleKeyDown)
+
+		return () => {
+			document.removeEventListener('keydown', handleKeyDown)
+			// Restore focus when modal closes
+			previousActiveElement?.focus()
 		}
 	}, [open])
 
