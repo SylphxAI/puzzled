@@ -92,13 +92,17 @@ export function OAuthButton({
 			style={buttonStyle}
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
-			aria-label={`Continue with ${style.name}`}
+			aria-label={isIconOnly ? `Continue with ${style.name}` : undefined}
+			aria-busy={loading}
 		>
 			{loading ? (
-				<Spinner />
+				<Spinner aria-label={`Loading ${style.name}`} />
 			) : (
 				<>
-					<span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem' }}>
+					<span
+						style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '1.25rem', height: '1.25rem' }}
+						aria-hidden="true"
+					>
 						<IconComponent width={20} height={20} />
 					</span>
 					{!isIconOnly && <span>Continue with {style.name}</span>}
@@ -179,7 +183,7 @@ export function OrDivider({ theme = defaultTheme }: { theme?: ThemeVariables }) 
 }
 
 // Loading spinner
-function Spinner() {
+function Spinner({ 'aria-label': ariaLabel }: { 'aria-label'?: string }) {
 	return (
 		<svg
 			style={{
@@ -191,6 +195,8 @@ function Spinner() {
 			fill="none"
 			stroke="currentColor"
 			strokeWidth="2"
+			role="img"
+			aria-label={ariaLabel || 'Loading'}
 		>
 			<circle cx="12" cy="12" r="10" opacity="0.25" />
 			<path d="M12 2a10 10 0 0 1 10 10" opacity="0.75" />

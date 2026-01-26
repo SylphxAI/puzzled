@@ -176,10 +176,20 @@ function SignUpFormInner({
 		)
 	}
 
-	// Render error alert
+	// Render error alert with accessibility
 	const renderError = () => {
-		if (!error) return null
-		return <div style={mergeStyles(styles.alert, styles.alertError)}>{error}</div>
+		return (
+			<div aria-live="assertive" aria-atomic="true">
+				{error && (
+					<div
+						role="alert"
+						style={mergeStyles(styles.alert, styles.alertError)}
+					>
+						{error}
+					</div>
+				)}
+			</div>
+		)
 	}
 
 	// Render submit button
@@ -579,7 +589,7 @@ function SignUpFormInner({
 	return content
 }
 
-// Icons
+// Decorative icons
 function MailIcon({ color }: { color: string }) {
 	return (
 		<svg
@@ -591,6 +601,7 @@ function MailIcon({ color }: { color: string }) {
 			strokeWidth="2"
 			strokeLinecap="round"
 			strokeLinejoin="round"
+			aria-hidden="true"
 		>
 			<rect width="20" height="16" x="2" y="4" rx="2" />
 			<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -609,6 +620,7 @@ function CheckIcon({ color }: { color: string }) {
 			strokeWidth="2"
 			strokeLinecap="round"
 			strokeLinejoin="round"
+			aria-hidden="true"
 		>
 			<path d="M20 6 9 17l-5-5" />
 		</svg>
