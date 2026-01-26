@@ -45,14 +45,17 @@ import { cn } from '../utils'
  *
  * @property label - Label text displayed above the input
  * @property error - Error message displayed below the input (turns input red)
- * @property helperText - Helper text displayed below the input (hidden when error exists)
+ * @property success - Success message displayed below the input (turns input green)
+ * @property helperText - Helper text displayed below the input (hidden when error/success exists)
  */
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 	/** Label text displayed above the input */
 	label?: string
 	/** Error message displayed below the input. Shows error styling when present. */
 	error?: string
-	/** Helper text displayed below the input. Hidden when error is present. */
+	/** Success message displayed below the input. Shows success styling when present. */
+	success?: string
+	/** Helper text displayed below the input. Hidden when error or success is present. */
 	helperText?: string
 }
 
@@ -77,9 +80,18 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
  * ```
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-	({ className, label, error, helperText, type = 'text', id, ...props }, ref) => {
+	({ className, label, error, success, helperText, type = 'text', id, ...props }, ref) => {
 		const generatedId = useId()
 		const inputId = id || generatedId
+
+		// Determine which description to use
+		const descriptionId = error
+			? `${inputId}-error`
+			: success
+				? `${inputId}-success`
+				: helperText
+					? `${inputId}-helper`
+					: undefined
 
 		return (
 			<div className="w-full">
@@ -98,21 +110,25 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
 						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
 						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
+						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
 						className,
 					)}
 					ref={ref}
 					aria-invalid={error ? 'true' : 'false'}
-					aria-describedby={
-						error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
-					}
+					aria-describedby={descriptionId}
 					{...props}
 				/>
 				{error && (
-					<p id={`${inputId}-error`} className="mt-1.5 text-sm text-error">
+					<p id={`${inputId}-error`} className="mt-1.5 text-sm text-error" role="alert">
 						{error}
 					</p>
 				)}
-				{helperText && !error && (
+				{success && !error && (
+					<p id={`${inputId}-success`} className="mt-1.5 text-sm text-success">
+						{success}
+					</p>
+				)}
+				{helperText && !error && !success && (
 					<p id={`${inputId}-helper`} className="mt-1.5 text-sm text-muted-foreground">
 						{helperText}
 					</p>
@@ -130,14 +146,17 @@ Input.displayName = 'Input'
  *
  * @property label - Label text displayed above the textarea
  * @property error - Error message displayed below the textarea (turns textarea red)
- * @property helperText - Helper text displayed below the textarea (hidden when error exists)
+ * @property success - Success message displayed below the textarea (turns textarea green)
+ * @property helperText - Helper text displayed below the textarea (hidden when error/success exists)
  */
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
 	/** Label text displayed above the textarea */
 	label?: string
 	/** Error message displayed below the textarea. Shows error styling when present. */
 	error?: string
-	/** Helper text displayed below the textarea. Hidden when error is present. */
+	/** Success message displayed below the textarea. Shows success styling when present. */
+	success?: string
+	/** Helper text displayed below the textarea. Hidden when error or success is present. */
 	helperText?: string
 }
 
@@ -162,9 +181,18 @@ export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & 
  * ```
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-	({ className, label, error, helperText, id, ...props }, ref) => {
+	({ className, label, error, success, helperText, id, ...props }, ref) => {
 		const generatedId = useId()
 		const textareaId = id || generatedId
+
+		// Determine which description to use
+		const descriptionId = error
+			? `${textareaId}-error`
+			: success
+				? `${textareaId}-success`
+				: helperText
+					? `${textareaId}-helper`
+					: undefined
 
 		return (
 			<div className="w-full">
@@ -182,21 +210,25 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
 						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
 						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
+						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
 						className,
 					)}
 					ref={ref}
 					aria-invalid={error ? 'true' : 'false'}
-					aria-describedby={
-						error ? `${textareaId}-error` : helperText ? `${textareaId}-helper` : undefined
-					}
+					aria-describedby={descriptionId}
 					{...props}
 				/>
 				{error && (
-					<p id={`${textareaId}-error`} className="mt-1.5 text-sm text-error">
+					<p id={`${textareaId}-error`} className="mt-1.5 text-sm text-error" role="alert">
 						{error}
 					</p>
 				)}
-				{helperText && !error && (
+				{success && !error && (
+					<p id={`${textareaId}-success`} className="mt-1.5 text-sm text-success">
+						{success}
+					</p>
+				)}
+				{helperText && !error && !success && (
 					<p id={`${textareaId}-helper`} className="mt-1.5 text-sm text-muted-foreground">
 						{helperText}
 					</p>
