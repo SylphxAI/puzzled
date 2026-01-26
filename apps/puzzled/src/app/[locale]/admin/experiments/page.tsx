@@ -10,7 +10,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { EXPERIMENTS } from '@/features/analytics/lib/ab-testing'
 
 export default async function ExperimentsPage() {
-	const locale = await getLocale()
+	const _locale = await getLocale()
 	const t = await getTranslations('admin.experiments')
 
 	const experimentEntries = Object.entries(EXPERIMENTS)
@@ -124,7 +124,8 @@ export default async function ExperimentsPage() {
 					<div className="mt-4 flex items-center gap-2 text-sm text-[var(--admin-text-muted)]">
 						<Settings className="h-4 w-4" />
 						<span>
-							Manage experiments via <code className="admin-code">features/analytics/lib/ab-testing.ts</code>
+							Manage experiments via{' '}
+							<code className="admin-code">features/analytics/lib/ab-testing.ts</code>
 						</span>
 					</div>
 				</div>

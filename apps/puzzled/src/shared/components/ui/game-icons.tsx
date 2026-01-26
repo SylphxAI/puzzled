@@ -15,29 +15,25 @@ type GameIconProps = {
 	'aria-hidden'?: boolean | 'true' | 'false'
 }
 
-// Re-export individual icons from their game modules
-export { WordGuessIcon } from '@/games/word-guess/icon'
-export { WordGroupsIcon } from '@/games/word-groups/icon'
-export { WordHiveIcon } from '@/games/word-hive/icon'
+export { ArithmoIcon } from '@/games/arithmo/icon'
+export { BlockSlideIcon } from '@/games/block-slide/icon'
 export { CrosswordIcon } from '@/games/crossword/icon'
-export { WordLadderIcon } from '@/games/word-ladder/icon'
-export { WordBoxIcon } from '@/games/word-box/icon'
-export { WordSearchIcon } from '@/games/word-search/icon'
-export { QuadWordsIcon } from '@/games/quad-words/icon'
 export { CryptogramIcon } from '@/games/cryptogram/icon'
-export { SudokuIcon } from '@/games/sudoku/icon'
 export { KillerSudokuIcon } from '@/games/killer-sudoku/icon'
 export { NonogramIcon } from '@/games/nonogram/icon'
-export { QueensIcon } from '@/games/queens/icon'
-export { TangoIcon } from '@/games/tango/icon'
 export { PatternMatchIcon } from '@/games/pattern-match/icon'
-export { BlockSlideIcon } from '@/games/block-slide/icon'
-export { ArithmoIcon } from '@/games/arithmo/icon'
-
+export { QuadWordsIcon } from '@/games/quad-words/icon'
+export { QueensIcon } from '@/games/queens/icon'
+export { SudokuIcon } from '@/games/sudoku/icon'
+export { TangoIcon } from '@/games/tango/icon'
+export { WordBoxIcon } from '@/games/word-box/icon'
+export { WordGroupsIcon, WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
+// Re-export individual icons from their game modules
 // Familiar name aliases (our games are inspired by these popular puzzles)
-export { WordGuessIcon as WordleIcon } from '@/games/word-guess/icon'
-export { WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
-export { WordHiveIcon as SpellingBeeIcon } from '@/games/word-hive/icon'
+export { WordGuessIcon, WordGuessIcon as WordleIcon } from '@/games/word-guess/icon'
+export { WordHiveIcon, WordHiveIcon as SpellingBeeIcon } from '@/games/word-hive/icon'
+export { WordLadderIcon } from '@/games/word-ladder/icon'
+export { WordSearchIcon } from '@/games/word-search/icon'
 
 /**
  * Universal GameIcon component

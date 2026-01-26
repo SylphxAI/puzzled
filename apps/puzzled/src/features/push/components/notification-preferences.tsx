@@ -1,10 +1,7 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import {
-	usePuzzledPush,
-	type PuzzledNotificationPreferences,
-} from '../hooks/use-puzzled-push'
+import { useCallback, useEffect, useState } from 'react'
+import { type PuzzledNotificationPreferences, usePuzzledPush } from '../hooks/use-puzzled-push'
 
 interface NotificationPreferencesProps {
 	/** Callback when preferences are saved */
@@ -41,8 +38,7 @@ export function NotificationPreferences({
 		isLoadingPreferences,
 	} = usePuzzledPush()
 
-	const [localPrefs, setLocalPrefs] =
-		useState<PuzzledNotificationPreferences>(preferences)
+	const [localPrefs, setLocalPrefs] = useState<PuzzledNotificationPreferences>(preferences)
 	const [isSaving, setIsSaving] = useState(false)
 
 	// Sync local state when server preferences load
@@ -50,15 +46,12 @@ export function NotificationPreferences({
 		setLocalPrefs(preferences)
 	}, [preferences])
 
-	const handleToggle = useCallback(
-		(key: keyof PuzzledNotificationPreferences) => {
-			setLocalPrefs((prev) => ({
-				...prev,
-				[key]: typeof prev[key] === 'boolean' ? !prev[key] : prev[key],
-			}))
-		},
-		[],
-	)
+	const handleToggle = useCallback((key: keyof PuzzledNotificationPreferences) => {
+		setLocalPrefs((prev) => ({
+			...prev,
+			[key]: typeof prev[key] === 'boolean' ? !prev[key] : prev[key],
+		}))
+	}, [])
 
 	const handleSave = async () => {
 		setIsSaving(true)

@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useFeatureFlag, useAnalytics } from '@sylphx/sdk/react'
+import { useAnalytics, useFeatureFlag } from '@sylphx/sdk/react'
 import { useCallback, useEffect, useRef } from 'react'
 
 // ==========================================

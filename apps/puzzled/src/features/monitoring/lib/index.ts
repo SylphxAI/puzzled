@@ -5,7 +5,7 @@
  */
 
 export {
-	SESSION_REPLAY_CONFIG,
-	getSessionReplayConfig,
 	getAdjustedSampleRate,
+	getSessionReplayConfig,
+	SESSION_REPLAY_CONFIG,
 } from './session-replay'

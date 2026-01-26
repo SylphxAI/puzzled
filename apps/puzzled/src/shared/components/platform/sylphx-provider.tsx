@@ -12,13 +12,8 @@
  * - App contains business logic only (games, streaks, achievements)
  */
 
-import * as React from 'react'
-import {
-	SylphxProvider,
-	FeatureFlagProvider,
-	useSafeUser,
-	useSafeBilling,
-} from '@sylphx/sdk/react'
+import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
+import type * as React from 'react'
 import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
@@ -59,22 +54,14 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function PlatformProvider({
-	children,
-	appId,
-	publishableKey,
-}: PlatformProviderProps) {
+export function PlatformProvider({ children, appId, publishableKey }: PlatformProviderProps) {
 	// If Sylphx is not configured, just render children
 	if (!appId || !publishableKey) {
 		return <>{children}</>
 	}
 
 	return (
-		<SylphxProvider
-			appId={appId}
-			publishableKey={publishableKey}
-			afterSignOutUrl="/login"
-		>
+		<SylphxProvider appId={appId} publishableKey={publishableKey} afterSignOutUrl="/login">
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)

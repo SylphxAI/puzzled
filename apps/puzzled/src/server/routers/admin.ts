@@ -18,24 +18,22 @@
  */
 
 import { TRPCError } from '@trpc/server'
-import { and, count, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import { daysAgo, hoursAgo, minutesAgo } from '@/lib/constants/time'
 import { getAllGames } from '@/games/registry'
 import { logAdminAction } from '@/lib/audit'
 import { PAGINATION } from '@/lib/config/validation'
+import { daysAgo, hoursAgo, minutesAgo } from '@/lib/constants/time'
 import { db } from '@/lib/db'
-import type { AppSettingKey, AuditAction } from '@/lib/db/schema'
+import type { AppSettingKey } from '@/lib/db/schema'
 import {
 	announcements,
 	appSettings,
 	auditLogs,
-	dailyPuzzles,
 	DLQ_STATUS_VALUES,
 	deadLetterQueue,
 	featureFlags,
 	gameSessions,
-	userStats,
 	userStreaks,
 } from '@/lib/db/schema'
 import {
@@ -62,13 +60,19 @@ export const adminRouter = router({
 
 	dlqList: adminProcedure
 		.input(
-			z.object({
-				workflow: z.string().optional(),
-				status: z.enum(DLQ_STATUS_VALUES).optional(),
-				limit: z.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.ADMIN_DEFAULT_LIMIT),
-				offset: z.number().min(0).default(0),
-				includeStats: z.boolean().default(false),
-			}).optional(),
+			z
+				.object({
+					workflow: z.string().optional(),
+					status: z.enum(DLQ_STATUS_VALUES).optional(),
+					limit: z
+						.number()
+						.min(1)
+						.max(PAGINATION.ADMIN_MAX_LIMIT)
+						.default(PAGINATION.ADMIN_DEFAULT_LIMIT),
+					offset: z.number().min(0).default(0),
+					includeStats: z.boolean().default(false),
+				})
+				.optional(),
 		)
 		.query(async ({ input }) => {
 			const { workflow, status, limit, offset, includeStats } = input ?? {}
@@ -91,7 +95,11 @@ export const adminRouter = router({
 			if (!item) throw new TRPCError({ code: 'NOT_FOUND', message: 'DLQ item not found' })
 
 			const endpoint = JOB_ENDPOINTS[item.workflowName]
-			if (!endpoint) throw new TRPCError({ code: 'BAD_REQUEST', message: `Unknown workflow: ${item.workflowName}` })
+			if (!endpoint)
+				throw new TRPCError({
+					code: 'BAD_REQUEST',
+					message: `Unknown workflow: ${item.workflowName}`,
+				})
 
 			await markDLQRetrying(input.id)
 
@@ -110,7 +118,10 @@ export const adminRouter = router({
 				console.error(`[DLQ Admin] Failed to trigger retry for ${input.id}:`, error)
 			})
 
-			await logAdminAction(ctx.user.id, 'admin_action', 'dlq', input.id, { action: 'retry', workflow: item.workflowName })
+			await logAdminAction(ctx.user.id, 'admin_action', 'dlq', input.id, {
+				action: 'retry',
+				workflow: item.workflowName,
+			})
 			return { success: true }
 		}),
 
@@ -135,16 +146,34 @@ export const adminRouter = router({
 	// ==========================================
 
 	getAuditLogs: adminProcedure
-		.input(z.object({
-			limit: z.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.ADMIN_DEFAULT_LIMIT),
-			offset: z.number().min(0).default(0),
-			action: z.enum(['create', 'update', 'delete', 'game_complete', 'streak_update', 'achievement_unlock', 'admin_action'] as const).optional(),
-			resourceType: z.string().optional(),
-			userId: z.string().uuid().optional(),
-			actorId: z.string().uuid().optional(),
-			dateFrom: z.date().optional(),
-			dateTo: z.date().optional(),
-		}).optional())
+		.input(
+			z
+				.object({
+					limit: z
+						.number()
+						.min(1)
+						.max(PAGINATION.ADMIN_MAX_LIMIT)
+						.default(PAGINATION.ADMIN_DEFAULT_LIMIT),
+					offset: z.number().min(0).default(0),
+					action: z
+						.enum([
+							'create',
+							'update',
+							'delete',
+							'game_complete',
+							'streak_update',
+							'achievement_unlock',
+							'admin_action',
+						] as const)
+						.optional(),
+					resourceType: z.string().optional(),
+					userId: z.string().uuid().optional(),
+					actorId: z.string().uuid().optional(),
+					dateFrom: z.date().optional(),
+					dateTo: z.date().optional(),
+				})
+				.optional(),
+		)
 		.query(async ({ input }) => {
 			const { limit, offset, action, resourceType, userId, actorId, dateFrom, dateTo } = input ?? {}
 			const conditions = []
@@ -156,12 +185,16 @@ export const adminRouter = router({
 			if (dateTo) conditions.push(lte(auditLogs.createdAt, dateTo))
 
 			const [logs, [countResult]] = await Promise.all([
-				db.select().from(auditLogs)
+				db
+					.select()
+					.from(auditLogs)
 					.where(conditions.length > 0 ? and(...conditions) : undefined)
 					.orderBy(desc(auditLogs.createdAt))
 					.limit(limit ?? PAGINATION.ADMIN_DEFAULT_LIMIT)
 					.offset(offset ?? 0),
-				db.select({ count: count() }).from(auditLogs)
+				db
+					.select({ count: count() })
+					.from(auditLogs)
 					.where(conditions.length > 0 ? and(...conditions) : undefined),
 			])
 
@@ -186,18 +219,26 @@ export const adminRouter = router({
 
 	getSettings: adminProcedure.query(async () => {
 		const settings = await db.select().from(appSettings)
-		return settings.reduce((acc, s) => {
-			acc[s.key as AppSettingKey] = s.value as unknown
-			return acc
-		}, {} as Record<AppSettingKey, unknown>)
+		return settings.reduce(
+			(acc, s) => {
+				acc[s.key as AppSettingKey] = s.value as unknown
+				return acc
+			},
+			{} as Record<AppSettingKey, unknown>,
+		)
 	}),
 
 	updateSetting: adminProcedure
 		.input(z.object({ key: z.string(), value: z.string() }))
 		.mutation(async ({ input, ctx }) => {
 			const now = new Date()
-			await db.insert(appSettings).values({ key: input.key, value: input.value, updatedAt: now })
-				.onConflictDoUpdate({ target: appSettings.key, set: { value: input.value, updatedAt: now } })
+			await db
+				.insert(appSettings)
+				.values({ key: input.key, value: input.value, updatedAt: now })
+				.onConflictDoUpdate({
+					target: appSettings.key,
+					set: { value: input.value, updatedAt: now },
+				})
 			await logAdminAction(ctx.user.id, 'update', 'app_setting', input.key, { value: input.value })
 			return { success: true }
 		}),
@@ -211,18 +252,26 @@ export const adminRouter = router({
 	}),
 
 	createAnnouncement: adminProcedure
-		.input(z.object({
-			title: z.string().min(1).max(200),
-			content: z.string().min(1).max(2000),
-			type: z.enum(['info', 'warning', 'success', 'maintenance']).default('info'),
-			isActive: z.boolean().default(true),
-			targetAllUsers: z.boolean().default(true),
-			targetPremiumOnly: z.boolean().default(false),
-			dismissible: z.boolean().default(true),
-			showOnce: z.boolean().default(false),
-			startsAt: z.string().optional().transform(v => v ? new Date(v) : undefined),
-			endsAt: z.string().optional().transform(v => v ? new Date(v) : undefined),
-		}))
+		.input(
+			z.object({
+				title: z.string().min(1).max(200),
+				content: z.string().min(1).max(2000),
+				type: z.enum(['info', 'warning', 'success', 'maintenance']).default('info'),
+				isActive: z.boolean().default(true),
+				targetAllUsers: z.boolean().default(true),
+				targetPremiumOnly: z.boolean().default(false),
+				dismissible: z.boolean().default(true),
+				showOnce: z.boolean().default(false),
+				startsAt: z
+					.string()
+					.optional()
+					.transform((v) => (v ? new Date(v) : undefined)),
+				endsAt: z
+					.string()
+					.optional()
+					.transform((v) => (v ? new Date(v) : undefined)),
+			}),
+		)
 		.mutation(async ({ input, ctx }) => {
 			const [announcement] = await db.insert(announcements).values(input).returning()
 			await logAdminAction(ctx.user.id, 'create', 'announcement', announcement?.id)
@@ -230,23 +279,34 @@ export const adminRouter = router({
 		}),
 
 	updateAnnouncement: adminProcedure
-		.input(z.object({
-			id: z.string().uuid(),
-			title: z.string().min(1).max(200).optional(),
-			content: z.string().min(1).max(2000).optional(),
-			type: z.enum(['info', 'warning', 'success', 'maintenance']).optional(),
-			isActive: z.boolean().optional(),
-			targetAllUsers: z.boolean().optional(),
-			targetPremiumOnly: z.boolean().optional(),
-			dismissible: z.boolean().optional(),
-			showOnce: z.boolean().optional(),
-			startsAt: z.string().optional().transform(v => v ? new Date(v) : undefined),
-			endsAt: z.string().optional().transform(v => v ? new Date(v) : undefined),
-		}))
+		.input(
+			z.object({
+				id: z.string().uuid(),
+				title: z.string().min(1).max(200).optional(),
+				content: z.string().min(1).max(2000).optional(),
+				type: z.enum(['info', 'warning', 'success', 'maintenance']).optional(),
+				isActive: z.boolean().optional(),
+				targetAllUsers: z.boolean().optional(),
+				targetPremiumOnly: z.boolean().optional(),
+				dismissible: z.boolean().optional(),
+				showOnce: z.boolean().optional(),
+				startsAt: z
+					.string()
+					.optional()
+					.transform((v) => (v ? new Date(v) : undefined)),
+				endsAt: z
+					.string()
+					.optional()
+					.transform((v) => (v ? new Date(v) : undefined)),
+			}),
+		)
 		.mutation(async ({ input, ctx }) => {
 			const { id, ...data } = input
-			const [updated] = await db.update(announcements).set({ ...data, updatedAt: new Date() })
-				.where(eq(announcements.id, id)).returning()
+			const [updated] = await db
+				.update(announcements)
+				.set({ ...data, updatedAt: new Date() })
+				.where(eq(announcements.id, id))
+				.returning()
 			if (!updated) throw new TRPCError({ code: 'NOT_FOUND' })
 			await logAdminAction(ctx.user.id, 'update', 'announcement', id)
 			return updated
@@ -269,37 +329,51 @@ export const adminRouter = router({
 	}),
 
 	createFeatureFlag: adminProcedure
-		.input(z.object({
-			key: z.string().min(1).max(100).regex(/^[a-z0-9_-]+$/),
-			name: z.string().min(1).max(200),
-			description: z.string().max(500).optional(),
-			enabled: z.boolean().default(false),
-			rolloutPercentage: z.number().min(0).max(100).default(100),
-			targetPremiumOnly: z.boolean().default(false),
-			targetAdminOnly: z.boolean().default(false),
-		}))
+		.input(
+			z.object({
+				key: z
+					.string()
+					.min(1)
+					.max(100)
+					.regex(/^[a-z0-9_-]+$/),
+				name: z.string().min(1).max(200),
+				description: z.string().max(500).optional(),
+				enabled: z.boolean().default(false),
+				rolloutPercentage: z.number().min(0).max(100).default(100),
+				targetPremiumOnly: z.boolean().default(false),
+				targetAdminOnly: z.boolean().default(false),
+			}),
+		)
 		.mutation(async ({ input, ctx }) => {
-			const existing = await db.query.featureFlags.findFirst({ where: eq(featureFlags.key, input.key) })
-			if (existing) throw new TRPCError({ code: 'CONFLICT', message: 'Feature flag already exists' })
+			const existing = await db.query.featureFlags.findFirst({
+				where: eq(featureFlags.key, input.key),
+			})
+			if (existing)
+				throw new TRPCError({ code: 'CONFLICT', message: 'Feature flag already exists' })
 			const [flag] = await db.insert(featureFlags).values(input).returning()
 			await logAdminAction(ctx.user.id, 'create', 'feature_flag', input.key)
 			return flag
 		}),
 
 	updateFeatureFlag: adminProcedure
-		.input(z.object({
-			key: z.string(),
-			name: z.string().min(1).max(200).optional(),
-			description: z.string().max(500).optional(),
-			enabled: z.boolean().optional(),
-			rolloutPercentage: z.number().min(0).max(100).optional(),
-			targetPremiumOnly: z.boolean().optional(),
-			targetAdminOnly: z.boolean().optional(),
-		}))
+		.input(
+			z.object({
+				key: z.string(),
+				name: z.string().min(1).max(200).optional(),
+				description: z.string().max(500).optional(),
+				enabled: z.boolean().optional(),
+				rolloutPercentage: z.number().min(0).max(100).optional(),
+				targetPremiumOnly: z.boolean().optional(),
+				targetAdminOnly: z.boolean().optional(),
+			}),
+		)
 		.mutation(async ({ input, ctx }) => {
 			const { key, ...data } = input
-			const [updated] = await db.update(featureFlags).set({ ...data, updatedAt: new Date() })
-				.where(eq(featureFlags.key, key)).returning()
+			const [updated] = await db
+				.update(featureFlags)
+				.set({ ...data, updatedAt: new Date() })
+				.where(eq(featureFlags.key, key))
+				.returning()
 			if (!updated) throw new TRPCError({ code: 'NOT_FOUND' })
 			await logAdminAction(ctx.user.id, 'update', 'feature_flag', key)
 			return updated
@@ -322,27 +396,35 @@ export const adminRouter = router({
 		const today = new Date()
 		today.setUTCHours(0, 0, 0, 0)
 
-		const stats = await Promise.all(games.map(async (game) => {
-			const [todayStats, allTimeStats] = await Promise.all([
-				db.select({
-					gamesPlayed: count(),
-					wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
-				}).from(gameSessions).where(and(eq(gameSessions.gameSlug, game.slug), gte(gameSessions.completedAt, today))),
-				db.select({
-					gamesPlayed: count(),
-					wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
-				}).from(gameSessions).where(eq(gameSessions.gameSlug, game.slug)),
-			])
+		const stats = await Promise.all(
+			games.map(async (game) => {
+				const [todayStats, allTimeStats] = await Promise.all([
+					db
+						.select({
+							gamesPlayed: count(),
+							wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
+						})
+						.from(gameSessions)
+						.where(and(eq(gameSessions.gameSlug, game.slug), gte(gameSessions.completedAt, today))),
+					db
+						.select({
+							gamesPlayed: count(),
+							wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
+						})
+						.from(gameSessions)
+						.where(eq(gameSessions.gameSlug, game.slug)),
+				])
 
-			return {
-				slug: game.slug,
-				name: game.name,
-				todayGamesPlayed: todayStats[0]?.gamesPlayed ?? 0,
-				todayWins: todayStats[0]?.wins ?? 0,
-				allTimeGamesPlayed: allTimeStats[0]?.gamesPlayed ?? 0,
-				allTimeWins: allTimeStats[0]?.wins ?? 0,
-			}
-		}))
+				return {
+					slug: game.slug,
+					name: game.name,
+					todayGamesPlayed: todayStats[0]?.gamesPlayed ?? 0,
+					todayWins: todayStats[0]?.wins ?? 0,
+					allTimeGamesPlayed: allTimeStats[0]?.gamesPlayed ?? 0,
+					allTimeWins: allTimeStats[0]?.wins ?? 0,
+				}
+			}),
+		)
 
 		return stats
 	}),
@@ -352,12 +434,14 @@ export const adminRouter = router({
 		.query(async ({ input }) => {
 			const startDate = daysAgo(input.days)
 
-			const dailyStats = await db.select({
-				date: sql<string>`DATE(${gameSessions.completedAt})`,
-				gamesPlayed: count(),
-				wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
-				avgAttempts: sql<number>`AVG(${gameSessions.attempts})`,
-			}).from(gameSessions)
+			const dailyStats = await db
+				.select({
+					date: sql<string>`DATE(${gameSessions.completedAt})`,
+					gamesPlayed: count(),
+					wins: sql<number>`COUNT(*) FILTER (WHERE status = 'won')`,
+					avgAttempts: sql<number>`AVG(${gameSessions.attempts})`,
+				})
+				.from(gameSessions)
 				.where(and(eq(gameSessions.gameSlug, input.slug), gte(gameSessions.completedAt, startDate)))
 				.groupBy(sql`DATE(${gameSessions.completedAt})`)
 				.orderBy(sql`DATE(${gameSessions.completedAt})`)
@@ -394,8 +478,14 @@ export const adminRouter = router({
 		today.setUTCHours(0, 0, 0, 0)
 
 		const [recentGames, hourlyGames, todayGames] = await Promise.all([
-			db.select({ count: count() }).from(gameSessions).where(gte(gameSessions.completedAt, last5Min)),
-			db.select({ count: count() }).from(gameSessions).where(gte(gameSessions.completedAt, last1Hour)),
+			db
+				.select({ count: count() })
+				.from(gameSessions)
+				.where(gte(gameSessions.completedAt, last5Min)),
+			db
+				.select({ count: count() })
+				.from(gameSessions)
+				.where(gte(gameSessions.completedAt, last1Hour)),
 			db.select({ count: count() }).from(gameSessions).where(gte(gameSessions.completedAt, today)),
 		])
 
@@ -411,8 +501,9 @@ export const adminRouter = router({
 	// ==========================================
 
 	getStreakAnalytics: adminProcedure.query(async () => {
-		const streakDistribution = await db.select({
-			range: sql<string>`
+		const streakDistribution = await db
+			.select({
+				range: sql<string>`
 				CASE
 					WHEN current_streak = 0 THEN '0'
 					WHEN current_streak BETWEEN 1 AND 7 THEN '1-7'
@@ -421,15 +512,22 @@ export const adminRouter = router({
 					ELSE '100+'
 				END
 			`,
-			count: count(),
-		}).from(userStreaks).groupBy(sql`range`).orderBy(sql`range`)
+				count: count(),
+			})
+			.from(userStreaks)
+			.groupBy(sql`range`)
+			.orderBy(sql`range`)
 
-		const topStreaks = await db.select({
-			userId: userStreaks.userId,
-			currentStreak: userStreaks.currentStreak,
-			maxStreak: userStreaks.maxStreak,
-			type: userStreaks.type,
-		}).from(userStreaks).orderBy(desc(userStreaks.currentStreak)).limit(10)
+		const topStreaks = await db
+			.select({
+				userId: userStreaks.userId,
+				currentStreak: userStreaks.currentStreak,
+				maxStreak: userStreaks.maxStreak,
+				type: userStreaks.type,
+			})
+			.from(userStreaks)
+			.orderBy(desc(userStreaks.currentStreak))
+			.limit(10)
 
 		return { distribution: streakDistribution, topStreaks }
 	}),

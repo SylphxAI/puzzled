@@ -36,9 +36,15 @@ export function NonogramIcon({ size = 24, className, ...props }: IconProps) {
 			{/* Column hints area */}
 			<rect x="7" y="2" width="15" height="4" rx="0.5" opacity="0.3" />
 			{/* Sample hints */}
-			<text x="4" y="11" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">2</text>
-			<text x="4" y="16" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">1</text>
-			<text x="9.5" y="5" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">3</text>
+			<text x="4" y="11" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">
+				2
+			</text>
+			<text x="4" y="16" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">
+				1
+			</text>
+			<text x="9.5" y="5" textAnchor="middle" fontSize="3" fill="currentColor" stroke="none">
+				3
+			</text>
 			{/* Filled cells */}
 			<rect x="7" y="7" width="5" height="5" fill="currentColor" />
 			<rect x="12" y="12" width="5" height="5" fill="currentColor" />

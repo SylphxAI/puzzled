@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.9/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.12/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -28,11 +28,16 @@
 			},
 			"suspicious": {
 				"noExplicitAny": "warn",
-				"noArrayIndexKey": "off"
+				"noArrayIndexKey": "off",
+				"noDocumentCookie": "off",
+				"noFallthroughSwitchClause": "off"
 			},
 			"a11y": {
 				"noStaticElementInteractions": "off",
-				"useKeyWithClickEvents": "off"
+				"useKeyWithClickEvents": "off",
+				"useSemanticElements": "off",
+				"noSvgWithoutTitle": "off",
+				"noLabelWithoutControl": "off"
 			}
 		}
 	},

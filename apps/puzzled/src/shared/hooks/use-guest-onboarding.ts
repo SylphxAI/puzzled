@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { GUEST_ONBOARDING_KEY } from '@/lib/storage-keys'
+
 const GAMES_BEFORE_PROMPT = 3
 
 interface OnboardingState {
@@ -67,8 +68,7 @@ export function useGuestOnboarding() {
 		})
 	}, [])
 
-	const shouldShowSignupPrompt =
-		!state.promptDismissed && state.gamesPlayed >= GAMES_BEFORE_PROMPT
+	const shouldShowSignupPrompt = !state.promptDismissed && state.gamesPlayed >= GAMES_BEFORE_PROMPT
 
 	return {
 		gamesPlayed: state.gamesPlayed,

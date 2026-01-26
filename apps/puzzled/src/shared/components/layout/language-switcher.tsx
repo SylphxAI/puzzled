@@ -1,18 +1,5 @@
 'use client'
 
-import { Check, ChevronDown, Globe, Languages } from 'lucide-react'
-import { useLocale, useTranslations } from 'next-intl'
-import { useTransition } from 'react'
-import {
-	type Locale,
-	localeCountryCodes,
-	localeGroups,
-	localeNames,
-	localeShortNames,
-	locales,
-} from '@/lib/i18n/config'
-import { usePathname, useRouter } from '@/lib/i18n/routing'
-import { cn } from '@/lib/utils'
 import {
 	Button,
 	DropdownMenu,
@@ -24,6 +11,18 @@ import {
 	DropdownMenuTrigger,
 	Icon,
 } from '@sylphx/ui'
+import { Check, ChevronDown, Languages } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useTransition } from 'react'
+import {
+	type Locale,
+	localeCountryCodes,
+	localeGroups,
+	localeNames,
+	localeShortNames,
+} from '@/lib/i18n/config'
+import { usePathname, useRouter } from '@/lib/i18n/routing'
+import { cn } from '@/lib/utils'
 
 // ==========================================
 // Language Switcher Component
@@ -176,11 +175,7 @@ function LanguageDropdownContent({
 	const t = useTranslations('common')
 
 	return (
-		<DropdownMenuContent
-			align="end"
-			className="w-64 p-2"
-			sideOffset={8}
-		>
+		<DropdownMenuContent align="end" className="w-64 p-2" sideOffset={8}>
 			{/* Header */}
 			<div className="mb-2 flex items-center gap-2 px-2 py-1.5">
 				<Languages className="h-4 w-4 text-muted-foreground" />
@@ -225,9 +220,7 @@ function LanguageDropdownContent({
 
 			{/* Footer note */}
 			<DropdownMenuSeparator className="my-2" />
-			<p className="px-2 py-1.5 text-xs text-muted-foreground">
-				{t('languageChangeNote')}
-			</p>
+			<p className="px-2 py-1.5 text-xs text-muted-foreground">{t('languageChangeNote')}</p>
 		</DropdownMenuContent>
 	)
 }
@@ -260,16 +253,10 @@ function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMe
 				aria-hidden="true"
 			/>
 			<div className="flex flex-1 flex-col gap-0.5">
-				<span className={cn('text-sm', isSelected && 'font-medium')}>
-					{localeNames[locale]}
-				</span>
+				<span className={cn('text-sm', isSelected && 'font-medium')}>{localeNames[locale]}</span>
 				{/* Show region hint for Chinese variants */}
-				{locale === 'zh-HK' && (
-					<span className="text-xs text-muted-foreground">Hong Kong</span>
-				)}
-				{locale === 'zh-TW' && (
-					<span className="text-xs text-muted-foreground">Taiwan</span>
-				)}
+				{locale === 'zh-HK' && <span className="text-xs text-muted-foreground">Hong Kong</span>}
+				{locale === 'zh-TW' && <span className="text-xs text-muted-foreground">Taiwan</span>}
 				{locale === 'zh-CN' && (
 					<span className="text-xs text-muted-foreground">Mainland China</span>
 				)}

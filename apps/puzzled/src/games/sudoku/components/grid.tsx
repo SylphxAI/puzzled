@@ -7,11 +7,11 @@
 
 import { memo, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import type { SudokuCell } from '../types'
+import type { SudokuCell as SudokuCellType } from '../types'
 import { BOX_SIZE } from '../types'
 
 type CellProps = {
-	cell: SudokuCell
+	cell: SudokuCellType
 	row: number
 	col: number
 	isSelected: boolean
@@ -78,7 +78,7 @@ const SudokuCell = memo(function SudokuCell({
 })
 
 type Props = {
-	userGrid: SudokuCell[][]
+	userGrid: SudokuCellType[][]
 	selectedCell: { row: number; col: number } | null
 	conflictingCells: Set<string>
 	onCellClick: (row: number, col: number) => void

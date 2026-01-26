@@ -124,14 +124,12 @@ export function Keyboard({
 	)
 
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: role="group" is appropriate for on-screen keyboard - no native semantic equivalent
 		<div
 			className="flex w-full max-w-[512px] flex-col gap-1.5 px-1 sm:px-0"
 			role="group"
 			aria-label="On-screen keyboard"
 		>
 			{/* Row 1: Q W E R T Y U I O P */}
-			{/* biome-ignore lint/a11y/useSemanticElements: role="group" groups related keyboard keys */}
 			<div className="flex w-full gap-1" role="group" aria-label="Keyboard row 1">
 				{KEYBOARD_ROWS[0].map((key) => (
 					<Key key={key} label={key} status={keyboardState[key]} onClick={() => handleClick(key)} />
@@ -139,7 +137,6 @@ export function Keyboard({
 			</div>
 
 			{/* Row 2: A S D F G H J K L - with padding for centering */}
-			{/* biome-ignore lint/a11y/useSemanticElements: role="group" groups related keyboard keys */}
 			<div className="flex w-full gap-1 px-[5%]" role="group" aria-label="Keyboard row 2">
 				{KEYBOARD_ROWS[1].map((key) => (
 					<Key key={key} label={key} status={keyboardState[key]} onClick={() => handleClick(key)} />
@@ -147,7 +144,6 @@ export function Keyboard({
 			</div>
 
 			{/* Row 3: ENTER Z X C V B N M BACKSPACE */}
-			{/* biome-ignore lint/a11y/useSemanticElements: role="group" groups related keyboard keys */}
 			<div className="flex w-full gap-1" role="group" aria-label="Keyboard row 3">
 				{KEYBOARD_ROWS[2].map((key) => (
 					<Key

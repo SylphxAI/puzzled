@@ -45,7 +45,6 @@ const Tile = memo(function Tile({ letter, status, delay = 0, isCurrentRow, posit
 
 	return (
 		/* biome-ignore lint/a11y/useFocusableInteractive: Grid cell is display-only, user types via keyboard */
-		/* biome-ignore lint/a11y/useSemanticElements: No native HTML element for game tile grid - ARIA grid pattern is WAI-ARIA recommended */
 		<div
 			className={cn(
 				// Responsive tile sizes with playful roundness (12-16px)
@@ -100,7 +99,6 @@ const Row = memo(function Row({ guess, evaluation, isCurrentRow, rowIndex }: Row
 
 	return (
 		/* biome-ignore lint/a11y/useFocusableInteractive: Row container is display-only, not interactive */
-		/* biome-ignore lint/a11y/useSemanticElements: No native HTML element for game row - ARIA grid pattern is WAI-ARIA recommended */
 		<div className="flex gap-1 sm:gap-2" role="row" aria-label={rowLabel}>
 			{tiles.map((tile, i) => (
 				<Tile
@@ -162,7 +160,6 @@ export function GameBoard({
 				: `${MAX_GUESSES - currentRow} guesses remaining`
 
 	return (
-		/* biome-ignore lint/a11y/useSemanticElements: No native HTML element for game board - ARIA grid pattern is WAI-ARIA recommended */
 		<div
 			className="flex w-full max-w-[320px] flex-col items-center gap-1 px-2 sm:max-w-sm sm:gap-2 sm:px-0"
 			role="grid"

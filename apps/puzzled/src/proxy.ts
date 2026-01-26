@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
-import { type Locale, defaultLocale, isValidLocale, locales } from '@/lib/i18n/config'
+import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 
 // Next.js 16: proxy.ts replaces middleware.ts
@@ -29,10 +29,10 @@ function matchesRoute(pathname: string, routes: string[]): boolean {
 
 	return routes.some((route) => {
 		if (route === normalizedPath) return true
-		if (normalizedPath.startsWith(route + '/')) return true
+		if (normalizedPath.startsWith(`${route}/`)) return true
 		if (route.endsWith('/*')) {
 			const base = route.slice(0, -2)
-			return normalizedPath === base || normalizedPath.startsWith(base + '/')
+			return normalizedPath === base || normalizedPath.startsWith(`${base}/`)
 		}
 		return false
 	})

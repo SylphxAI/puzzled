@@ -1,22 +1,15 @@
 'use client'
 
+import { useForgotPasswordForm } from '@sylphx/sdk/react'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
-import { Button, GamepadIcon, Input } from '@sylphx/ui'
-import { useForgotPasswordForm } from '@sylphx/sdk/react'
 
 export default function ForgotPasswordPage() {
 	const t = useTranslations('auth')
 
-	const {
-		form,
-		setEmail,
-		isLoading,
-		error,
-		success,
-		handleSubmit,
-	} = useForgotPasswordForm({
+	const { form, setEmail, isLoading, error, success, handleSubmit } = useForgotPasswordForm({
 		redirectTo: '/reset-password',
 	})
 
@@ -38,9 +31,7 @@ export default function ForgotPasswordPage() {
 					</div>
 					<div>
 						<h1 className="text-2xl font-bold">{t('checkYourEmail')}</h1>
-						<p className="mt-2 text-muted-foreground">
-							{t('resetLinkSent')}
-						</p>
+						<p className="mt-2 text-muted-foreground">{t('resetLinkSent')}</p>
 					</div>
 					<Link href="/login">
 						<Button variant="outline" className="w-full">
@@ -69,12 +60,8 @@ export default function ForgotPasswordPage() {
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
 						<GamepadIcon size={40} className="text-primary" />
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight">
-						{t('forgotPasswordTitle')}
-					</h1>
-					<p className="mt-2 text-muted-foreground">
-						{t('forgotPasswordDescription')}
-					</p>
+					<h1 className="text-2xl font-bold tracking-tight">{t('forgotPasswordTitle')}</h1>
+					<p className="mt-2 text-muted-foreground">{t('forgotPasswordDescription')}</p>
 				</div>
 
 				{/* Form */}
@@ -108,11 +95,7 @@ export default function ForgotPasswordPage() {
 					)}
 
 					{/* Submit Button */}
-					<Button
-						type="submit"
-						className="h-12 w-full text-base font-medium"
-						disabled={isLoading}
-					>
+					<Button type="submit" className="h-12 w-full text-base font-medium" disabled={isLoading}>
 						{isLoading ? (
 							<>
 								<Loader2 className="mr-2 h-5 w-5 animate-spin" />

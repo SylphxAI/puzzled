@@ -1,8 +1,8 @@
 'use client'
 
+import { UserProfile } from '@sylphx/sdk/react'
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { UserProfile } from '@sylphx/sdk/react'
 
 /**
  * Profile Settings Client Component
@@ -28,11 +28,7 @@ export function ProfileSettingsContent() {
 
 			{/* SDK UserProfile Component */}
 			<div className="rounded-2xl border bg-card overflow-hidden">
-				<UserProfile
-					sections={['profile']}
-					showCard={false}
-					header={null}
-				/>
+				<UserProfile sections={['profile']} showCard={false} header={null} />
 			</div>
 		</div>
 	)

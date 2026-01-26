@@ -1,11 +1,11 @@
+import { currentUser } from '@sylphx/sdk/nextjs'
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { BarChart3, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
 import { createServerCaller } from '@/trpc/server'
 
@@ -70,9 +70,7 @@ export default async function StatsPage({ params }: Props) {
 							</div>
 						</div>
 						<h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-						<p className="mb-6 text-muted-foreground">
-							{t('signInToSeeStats')}
-						</p>
+						<p className="mb-6 text-muted-foreground">{t('signInToSeeStats')}</p>
 						<Button asChild>
 							<Link href={`/${locale}/login?callbackUrl=/${locale}/stats`}>
 								<LogIn className="mr-2 h-4 w-4" />
@@ -96,10 +94,7 @@ export default async function StatsPage({ params }: Props) {
 			wordle: userStats.wordle
 				? {
 						...userStats.wordle,
-						guessDistribution: userStats.wordle.guessDistribution as Record<
-							string,
-							number
-						> | null,
+						guessDistribution: userStats.wordle.guessDistribution as Record<string, number> | null,
 					}
 				: emptyStats,
 			connections: userStats.connections
@@ -136,13 +131,9 @@ export default async function StatsPage({ params }: Props) {
 							</div>
 						</div>
 						<h1 className="mb-2 text-2xl font-bold">{t('noStatsYet')}</h1>
-						<p className="mb-6 text-muted-foreground">
-							{t('playFirstGame')}
-						</p>
+						<p className="mb-6 text-muted-foreground">{t('playFirstGame')}</p>
 						<Button asChild>
-							<Link href={`/${locale}`}>
-								{t('startPlaying')}
-							</Link>
+							<Link href={`/${locale}`}>{t('startPlaying')}</Link>
 						</Button>
 					</div>
 				</main>
@@ -284,7 +275,9 @@ export default async function StatsPage({ params }: Props) {
 										<div className="space-y-1">
 											{Object.entries(stats.wordle.guessDistribution).map(([guess, count]) => {
 												const maxCount = Math.max(
-													...Object.values(stats.wordle.guessDistribution as Record<string, number>),
+													...Object.values(
+														stats.wordle.guessDistribution as Record<string, number>,
+													),
 												)
 												const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
 												return (

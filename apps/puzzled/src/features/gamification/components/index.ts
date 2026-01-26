@@ -1,7 +1,7 @@
 export { AchievementChecker } from './achievement-checker'
-export { Achievements } from './achievements'
 export { AchievementToast } from './achievement-toast'
 export { AchievementToastProvider, useAchievementToast } from './achievement-toast-provider'
+export { Achievements } from './achievements'
 export { DailyChallengeProgress } from './daily-challenge-progress'
 export { DailyHero } from './daily-hero'
 export { NextAchievement } from './next-achievement'

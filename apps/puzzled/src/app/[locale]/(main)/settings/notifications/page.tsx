@@ -1,7 +1,7 @@
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { Bell } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { NotificationsClient } from './notifications-client'
 
 type Props = {

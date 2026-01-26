@@ -42,14 +42,14 @@ export { SessionReplayProvider, type SessionReplayProviderProps } from './compon
 // Hooks
 // ============================================
 
-export { useSessionReplayError, type UseSessionReplayErrorReturn } from './hooks'
+export { type UseSessionReplayErrorReturn, useSessionReplayError } from './hooks'
 
 // ============================================
 // Configuration
 // ============================================
 
 export {
-	SESSION_REPLAY_CONFIG,
-	getSessionReplayConfig,
 	getAdjustedSampleRate,
+	getSessionReplayConfig,
+	SESSION_REPLAY_CONFIG,
 } from './lib'

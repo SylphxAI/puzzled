@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { Globe, Palette, Sliders } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { LanguageSwitcher } from '@/shared/components/layout'
 import { ThemeToggle } from '@/shared/components/theme'
 

@@ -1,6 +1,6 @@
+import { Button } from '@sylphx/ui'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { Button } from '@sylphx/ui'
 
 type EmptyStateProps = {
 	icon?: React.ReactNode

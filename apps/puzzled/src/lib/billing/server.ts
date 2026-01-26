@@ -21,11 +21,11 @@ const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
  * NOTE: These must match actual game slugs from the games registry
  */
 const FREE_GAME_ROTATION = [
-	'word-guess',    // Wordle-style word game
-	'word-groups',   // Connections-style grouping
-	'queens',        // N-Queens puzzle
-	'sudoku',        // Classic sudoku
-	'crossword',     // Daily crossword
+	'word-guess', // Wordle-style word game
+	'word-groups', // Connections-style grouping
+	'queens', // N-Queens puzzle
+	'sudoku', // Classic sudoku
+	'crossword', // Daily crossword
 ] as const
 
 // ==========================================

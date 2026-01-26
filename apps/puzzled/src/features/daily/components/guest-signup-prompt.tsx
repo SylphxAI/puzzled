@@ -1,8 +1,5 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
 import {
 	Button,
 	Dialog,
@@ -12,6 +9,9 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@sylphx/ui'
+import { Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 type GuestSignupPromptProps = {
 	open: boolean

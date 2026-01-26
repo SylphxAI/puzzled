@@ -8,9 +8,9 @@
  * - No local users table - platform is source of truth
  */
 
+import { auth } from '@sylphx/sdk/nextjs'
 import { Ratelimit } from '@upstash/ratelimit'
 import { type NextRequest, NextResponse } from 'next/server'
-import { auth } from '@sylphx/sdk/nextjs'
 import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
 

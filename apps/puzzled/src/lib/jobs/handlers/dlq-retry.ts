@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
 import { getItemsReadyForRetry, markDLQFailed, markDLQRetrying } from '@/lib/dlq'
-import type { JobHandler, JobResult } from '../handlers'
+import type { JobHandler } from '../handlers'
 
 /**
  * DLQ retry handler
@@ -26,7 +26,9 @@ export const dlqRetryHandler: JobHandler = async (_payload, context) => {
 		return { success: true, data: { processed: 0, message: 'No items ready for retry' } }
 	}
 
-	console.log(`[DLQ Scheduler] Found ${items.length} items ready for retry (jobId: ${context.jobId})`)
+	console.log(
+		`[DLQ Scheduler] Found ${items.length} items ready for retry (jobId: ${context.jobId})`,
+	)
 
 	const results: Array<{ id: string; status: 'retried' | 'failed' | 'skipped' }> = []
 
@@ -81,7 +83,9 @@ export const dlqRetryHandler: JobHandler = async (_payload, context) => {
 				})
 				.where(eq(deadLetterQueue.id, item.id))
 
-			console.log(`[DLQ Scheduler] Retry ${result.success ? 'succeeded' : 'failed'} for ${item.workflowName} (${item.id})`)
+			console.log(
+				`[DLQ Scheduler] Retry ${result.success ? 'succeeded' : 'failed'} for ${item.workflowName} (${item.id})`,
+			)
 			results.push({ id: item.id, status: 'retried' })
 		} catch (error) {
 			console.error(`[DLQ Scheduler] Failed to process item ${item.id}:`, error)

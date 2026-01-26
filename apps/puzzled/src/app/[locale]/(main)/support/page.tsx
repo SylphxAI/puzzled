@@ -1,9 +1,9 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 import { Clock, FileText, HelpCircle, Mail, MessageSquare } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { APP_NAME, SUPPORT_EMAIL } from '@/lib/config/app'
 import { Link } from '@/lib/i18n/routing'
 import { Footer, Header } from '@/shared/components/layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 
 type Props = {
 	params: Promise<{ locale: string }>

@@ -41,11 +41,7 @@ export function QueensIcon({ size = 24, className, ...props }: IconProps) {
 			<rect x="2" y="17" width="5" height="5" fill="currentColor" opacity="0.1" />
 			<rect x="12" y="17" width="5" height="5" fill="currentColor" opacity="0.1" />
 			{/* Queen - crown shape */}
-			<path
-				d="M9.5 9.5l-1.5-2 2 1 2-2 2 2 2-1-1.5 2v2h-5v-2z"
-				fill="currentColor"
-				stroke="none"
-			/>
+			<path d="M9.5 9.5l-1.5-2 2 1 2-2 2 2 2-1-1.5 2v2h-5v-2z" fill="currentColor" stroke="none" />
 		</svg>
 	)
 }

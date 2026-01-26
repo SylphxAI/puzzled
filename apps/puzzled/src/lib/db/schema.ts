@@ -52,12 +52,7 @@ export const referralRewardTypeEnum = pgEnum('referral_reward_type', [
 export const winBackEmailTypeEnum = pgEnum('win_back_email_type', ['day7', 'day14', 'day30'])
 
 /** Dead letter queue status */
-export const dlqStatusEnum = pgEnum('dlq_status', [
-	'pending',
-	'retrying',
-	'resolved',
-	'failed',
-])
+export const dlqStatusEnum = pgEnum('dlq_status', ['pending', 'retrying', 'resolved', 'failed'])
 
 /** Audit log action types */
 export const auditActionEnum = pgEnum('audit_action', [

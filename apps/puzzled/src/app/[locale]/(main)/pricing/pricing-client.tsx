@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Crown, Sparkles, Snowflake, Calendar, Check, Flame } from 'lucide-react'
-import { useTranslations } from 'next-intl'
 import { useBilling } from '@sylphx/sdk/react'
-import { cn } from '@/lib/utils'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
+import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useState } from 'react'
+import { cn } from '@/lib/utils'
 
 // Static plan configuration matching platform plans
 const PLANS = [
@@ -72,10 +72,7 @@ export function PricingContent({ locale }: { locale: string }) {
 		try {
 			const checkoutUrl = await createCheckout(planSlug, interval)
 			// Show success toast before redirect
-			toast.success(
-				tPricing('redirectingToCheckout'),
-				tPricing('securePaymentMessage')
-			)
+			toast.success(tPricing('redirectingToCheckout'), tPricing('securePaymentMessage'))
 			window.location.href = checkoutUrl
 		} catch (error) {
 			console.error('Checkout error:', error)
@@ -84,20 +81,11 @@ export function PricingContent({ locale }: { locale: string }) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
 			if (errorMessage.includes('not authenticated') || errorMessage.includes('sign in')) {
-				toast.error(
-					tPricing('signInRequired'),
-					tPricing('signInToSubscribe')
-				)
+				toast.error(tPricing('signInRequired'), tPricing('signInToSubscribe'))
 			} else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-				toast.error(
-					tPricing('networkError'),
-					tPricing('checkConnectionRetry')
-				)
+				toast.error(tPricing('networkError'), tPricing('checkConnectionRetry'))
 			} else {
-				toast.error(
-					tPricing('checkoutFailed'),
-					tPricing('tryAgainLater')
-				)
+				toast.error(tPricing('checkoutFailed'), tPricing('tryAgainLater'))
 			}
 		} finally {
 			setCheckoutLoading(null)
@@ -243,9 +231,7 @@ export function PricingContent({ locale }: { locale: string }) {
 					</div>
 					<div className="flex-1">
 						<h3 className="text-lg font-bold">{tPricing('streakProtectionTitle')}</h3>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{tPricing('streakProtectionDesc')}
-						</p>
+						<p className="mt-1 text-sm text-muted-foreground">{tPricing('streakProtectionDesc')}</p>
 					</div>
 					<Button
 						variant="outline"

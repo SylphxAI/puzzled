@@ -1,7 +1,7 @@
 'use client'
 
+import { useSafeAchievements, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useEffect, useRef } from 'react'
-import { useSafeUser, useSafeAchievements, useSafeStreak } from '@sylphx/sdk/react'
 import { trpc } from '@/trpc'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
@@ -31,7 +31,11 @@ export function AchievementChecker() {
 	} = useSafeAchievements()
 
 	// SDK streak hook - Platform-managed streak tracking (SSR-safe)
-	const { longest: maxStreak, isLoading: streakLoading, isConfigured: streakConfigured } = useSafeStreak('daily-play', {
+	const {
+		longest: maxStreak,
+		isLoading: streakLoading,
+		isConfigured: streakConfigured,
+	} = useSafeStreak('daily-play', {
 		defaults: {
 			name: 'Daily Play Streak',
 			description: 'Play at least one game daily to maintain your streak',
@@ -77,7 +81,7 @@ export function AchievementChecker() {
 
 		// Build set of already unlocked achievement IDs
 		const unlockedIds = new Set(
-			sdkAchievements.filter((a) => a.unlocked).map((a) => a.achievementId)
+			sdkAchievements.filter((a) => a.unlocked).map((a) => a.achievementId),
 		)
 
 		// Calculate stats
@@ -104,7 +108,7 @@ export function AchievementChecker() {
 		const checkAndUnlock = async (
 			id: string,
 			condition: boolean,
-			localDef: (typeof ACHIEVEMENTS)[number]
+			localDef: (typeof ACHIEVEMENTS)[number],
 		) => {
 			if (condition && !unlockedIds.has(id)) {
 				await unlock(id, {
@@ -145,27 +149,29 @@ export function AchievementChecker() {
 		const connectionsPerfect = ACHIEVEMENTS.find((a) => a.id === 'connections-perfect')!
 		const allGames = ACHIEVEMENTS.find((a) => a.id === 'all-games')!
 
-		checkAndUnlock(
-			'wordle-perfect',
-			wordleBestAttempts === 1,
-			wordlePerfect
-		)
+		checkAndUnlock('wordle-perfect', wordleBestAttempts === 1, wordlePerfect)
 		checkAndUnlock(
 			'wordle-fast',
 			wordleBestAttempts !== undefined && wordleBestAttempts <= 2,
-			wordleFast
+			wordleFast,
 		)
 		checkAndUnlock(
 			'connections-perfect',
 			connectionsPerfectGames !== undefined && connectionsPerfectGames > 0,
-			connectionsPerfect
+			connectionsPerfect,
 		)
-		checkAndUnlock(
-			'all-games',
-			wordleWins > 0 && connectionsWins > 0,
-			allGames
-		)
-	}, [user, userStats, achievementsLoading, streakLoading, achievementsConfigured, streakConfigured, maxStreak, sdkAchievements, unlock])
+		checkAndUnlock('all-games', wordleWins > 0 && connectionsWins > 0, allGames)
+	}, [
+		user,
+		userStats,
+		achievementsLoading,
+		streakLoading,
+		achievementsConfigured,
+		streakConfigured,
+		maxStreak,
+		sdkAchievements,
+		unlock,
+	])
 
 	return null
 }

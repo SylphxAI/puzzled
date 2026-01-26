@@ -1,10 +1,10 @@
 'use client'
 
+import { BillingSection, useBilling } from '@sylphx/sdk/react'
+import { Button } from '@sylphx/ui'
 import { Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
-import { useBilling, BillingSection } from '@sylphx/sdk/react'
-import { Button } from '@sylphx/ui'
 
 /**
  * Subscription Settings Client Component
@@ -36,9 +36,7 @@ export function SubscriptionSettingsContent() {
 			<div className="rounded-2xl border bg-card p-6">
 				<div className="flex items-center justify-between">
 					<div>
-						<h3 className="font-semibold">
-							{isPremium ? 'Premium' : 'Free Plan'}
-						</h3>
+						<h3 className="font-semibold">{isPremium ? 'Premium' : 'Free Plan'}</h3>
 						<p className="text-sm text-muted-foreground">
 							{isPremium
 								? `Subscribed to ${subscription?.planSlug || 'Premium'}`
@@ -46,11 +44,7 @@ export function SubscriptionSettingsContent() {
 						</p>
 					</div>
 					{isPremium ? (
-						<Button
-							variant="outline"
-							onClick={() => openPortal()}
-							disabled={isLoading}
-						>
+						<Button variant="outline" onClick={() => openPortal()} disabled={isLoading}>
 							Manage Subscription
 						</Button>
 					) : (

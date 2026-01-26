@@ -66,7 +66,7 @@ export function useSessionReplayError(): UseSessionReplayErrorReturn {
 
 			return errorId
 		},
-		[]
+		[],
 	)
 
 	const getSessionId = useCallback((): string | null => {

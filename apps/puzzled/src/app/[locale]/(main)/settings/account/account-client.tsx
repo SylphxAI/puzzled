@@ -1,8 +1,8 @@
 'use client'
 
+import { AccountSection } from '@sylphx/sdk/react'
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { AccountSection } from '@sylphx/sdk/react'
 
 /**
  * Account Settings Client Component

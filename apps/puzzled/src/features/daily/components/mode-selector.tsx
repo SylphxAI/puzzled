@@ -1,11 +1,11 @@
 'use client'
 
+import { Button } from '@sylphx/ui'
 import { Calendar, Lock, Target } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { Button } from '@sylphx/ui'
 
 type ModeSelectorProps = {
 	currentMode: GameMode
@@ -73,7 +73,12 @@ export function ModeSelector({
 						>
 							<Icon className="h-4 w-4" aria-hidden="true" />
 							<span>{mode.label}</span>
-							{mode.locked && <Lock className="absolute -right-1 -top-1 h-3 w-3 text-primary" aria-hidden="true" />}
+							{mode.locked && (
+								<Lock
+									className="absolute -right-1 -top-1 h-3 w-3 text-primary"
+									aria-hidden="true"
+								/>
+							)}
 						</button>
 					)
 				})}
@@ -81,7 +86,10 @@ export function ModeSelector({
 
 			{/* Show upgrade prompt for locked modes */}
 			{currentMode === 'archive' && !hasPremium && (
-				<div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3" role="alert">
+				<div
+					className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-primary/30 bg-primary/5 p-3"
+					role="alert"
+				>
 					<Lock className="h-4 w-4 text-primary" aria-hidden="true" />
 					<span className="text-sm text-muted-foreground">{t('premiumRequired')}</span>
 					<Link href="/pricing">

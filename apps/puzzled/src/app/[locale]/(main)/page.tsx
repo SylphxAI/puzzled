@@ -1,18 +1,14 @@
+import { currentUser } from '@sylphx/sdk/nextjs'
+import { Button } from '@sylphx/ui'
 import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
-import {
-	getFreeGameRotation,
-	getTodaysFreeGame,
-	hasPremiumAccess,
-} from '@/lib/billing/server'
+import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
-import { Button } from '@sylphx/ui'
 import { createServerCaller } from '@/trpc/server'
 
 type Props = {

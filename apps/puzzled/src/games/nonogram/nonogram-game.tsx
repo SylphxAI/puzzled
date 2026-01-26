@@ -5,6 +5,7 @@
 
 'use client'
 
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, MousePointer2, Play, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -15,7 +16,6 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { defaultParsePuzzleData } from '@/games/types'
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { NonogramIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic } from '@/shared/hooks'
 import { NonogramGrid } from './components'
