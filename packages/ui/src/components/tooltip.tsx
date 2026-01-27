@@ -21,7 +21,7 @@ const TooltipContent = forwardRef<
 		<TooltipPrimitive.Content
 			ref={ref}
 			sideOffset={sideOffset}
-			className={cn('z-50 overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md', className)}
+			className={cn('z-tooltip overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md', className)}
 			{...props}
 		>
 			<MotionDiv

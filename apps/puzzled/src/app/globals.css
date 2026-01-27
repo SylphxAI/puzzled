@@ -54,8 +54,11 @@
 	--z-header: 30;
 	--z-bottom-nav: 40;
 	--z-overlay: 50;
+	--z-popover: 50;
 	--z-modal: 60;
+	--z-tooltip: 70;
 	--z-toast: 70;
+	--z-drawer: 80;
 
 	/* -----------------------------------------
 	   Spacing (Layout)

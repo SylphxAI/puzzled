@@ -23,7 +23,7 @@ const PopoverContent = forwardRef<
 			ref={ref}
 			align={align}
 			sideOffset={sideOffset}
-			className={cn('z-50 w-72 rounded-lg border bg-card text-card-foreground shadow-lg outline-none', className)}
+			className={cn('z-popover w-72 rounded-lg border bg-card text-card-foreground shadow-lg outline-none', className)}
 			{...props}
 		>
 			<MotionDiv
