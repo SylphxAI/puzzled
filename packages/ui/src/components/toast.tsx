@@ -217,12 +217,11 @@ function Toaster() {
 							animate={{ opacity: 1, y: 0, scale: 1 }}
 							exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 100, scale: 0.9 }}
 							transition={prefersReducedMotion
-								? { duration: 0.15 }
+								? { duration: duration.normal }
 								: {
 									type: 'spring',
-									stiffness: 500,
-									damping: 35,
-									mass: 1,
+									stiffness: 400,
+									damping: 30,
 								}}
 						>
 							<Toast
