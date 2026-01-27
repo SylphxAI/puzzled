@@ -4,8 +4,11 @@
  * Sheet Component
  *
  * A side panel that slides in from the edge of the screen.
- * Uses CSS transitions for reliable, performant animations.
- * Respects prefers-reduced-motion for accessibility.
+ * Uses native CSS transitions via data-state attributes from Radix UI.
+ * No dependency on animation plugins — transitions defined in globals.css.
+ *
+ * Required CSS: apps must include the sheet animation styles.
+ * See: apps/sylphx/src/app/globals.css (sheet section)
  */
 
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -25,49 +28,25 @@ const SheetOverlay = forwardRef<
 >(({ className, ...props }, ref) => (
 	<DialogPrimitive.Overlay
 		ref={ref}
-		className={cn(
-			'fixed inset-0 z-modal bg-black/50',
-			'data-[state=open]:animate-in data-[state=closed]:animate-out',
-			'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-			className,
-		)}
+		className={cn('sheet-overlay fixed inset-0 z-drawer bg-black/50', className)}
 		{...props}
 	/>
 ))
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-const sheetVariants = cva(
-	cn(
-		'fixed z-modal gap-4 bg-background shadow-lg',
-		'transition-transform duration-300 ease-out',
-		'data-[state=open]:animate-in data-[state=closed]:animate-out',
-	),
-	{
-		variants: {
-			side: {
-				top: cn(
-					'inset-x-0 top-0 border-b',
-					'data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
-				),
-				bottom: cn(
-					'inset-x-0 bottom-0 border-t',
-					'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
-				),
-				left: cn(
-					'inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
-					'data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left',
-				),
-				right: cn(
-					'inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
-					'data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
-				),
-			},
-		},
-		defaultVariants: {
-			side: 'right',
+const sheetVariants = cva('sheet-panel fixed z-drawer bg-background shadow-lg', {
+	variants: {
+		side: {
+			top: 'sheet-panel-top inset-x-0 top-0 border-b',
+			bottom: 'sheet-panel-bottom inset-x-0 bottom-0 border-t',
+			left: 'sheet-panel-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
+			right: 'sheet-panel-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
 		},
 	},
-)
+	defaultVariants: {
+		side: 'right',
+	},
+})
 
 interface SheetContentProps
 	extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
@@ -113,7 +92,12 @@ function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 SheetHeader.displayName = 'SheetHeader'
 
 function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border', className)} {...props} />
+	return (
+		<div
+			className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border', className)}
+			{...props}
+		/>
+	)
 }
 SheetFooter.displayName = 'SheetFooter'
 
