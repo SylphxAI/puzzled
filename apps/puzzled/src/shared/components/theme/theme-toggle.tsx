@@ -27,9 +27,8 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 
 	if (!mounted) {
 		return (
-			<div
-				className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}
-				role="group"
+			<fieldset
+				className={cn('flex gap-1 rounded-lg bg-muted p-1 border-0', className)}
 				aria-label="Theme selection"
 			>
 				{themes.map(({ value, icon: Icon, label }) => (
@@ -43,14 +42,13 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 						<Icon className="h-4 w-4" aria-hidden="true" />
 					</button>
 				))}
-			</div>
+			</fieldset>
 		)
 	}
 
 	return (
-		<div
-			className={cn('flex gap-1 rounded-lg bg-muted p-1', className)}
-			role="group"
+		<fieldset
+			className={cn('flex gap-1 rounded-lg bg-muted p-1 border-0', className)}
 			aria-label="Theme selection"
 		>
 			{themes.map(({ value, icon: Icon, label }) => {
@@ -74,7 +72,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 					</button>
 				)
 			})}
-		</div>
+		</fieldset>
 	)
 }
 

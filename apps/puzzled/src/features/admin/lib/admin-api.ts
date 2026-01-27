@@ -132,11 +132,6 @@ export function adminCheckResponse(result: AdminCheckResult): NextResponse | nul
 	}
 }
 
-/** Return not found response */
-function notFound(message = 'Not found') {
-	return NextResponse.json({ error: message }, { status: 404 })
-}
-
 /** Return bad request response */
 function badRequest(message: string) {
 	return NextResponse.json({ error: message }, { status: 400 })
@@ -149,9 +144,3 @@ function isValidUuid(value: string): boolean {
 	return UUID_REGEX.test(value)
 }
 
-function validateUuidParam(value: string, paramName: string): NextResponse | null {
-	if (!isValidUuid(value)) {
-		return badRequest(`Invalid ${paramName}: must be a valid UUID`)
-	}
-	return null
-}

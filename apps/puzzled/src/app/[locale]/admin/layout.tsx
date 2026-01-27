@@ -51,7 +51,7 @@ export default async function AdminLayout({ children }: Props) {
 		if (error instanceof AdminError) {
 			switch (error.code) {
 				case 'NOT_LOGGED_IN':
-					redirect('/login?callbackUrl=/admin')
+					return redirect('/login?callbackUrl=/admin')
 				case 'NOT_ADMIN':
 				case 'FORBIDDEN':
 					return <AdminAccessDenied message={error.message} />

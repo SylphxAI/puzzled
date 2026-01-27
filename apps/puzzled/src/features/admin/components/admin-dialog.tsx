@@ -6,9 +6,7 @@ import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
 const AdminDialog = DialogPrimitive.Root
-const AdminDialogTrigger = DialogPrimitive.Trigger
 const AdminDialogPortal = DialogPrimitive.Portal
-const AdminDialogClose = DialogPrimitive.Close
 
 const AdminDialogOverlay = forwardRef<
 	React.ComponentRef<typeof DialogPrimitive.Overlay>,

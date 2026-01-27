@@ -47,22 +47,6 @@ function hasSuperAdminRole(role: string | null | undefined): boolean {
 }
 
 /**
- * Check if current user is admin (admin or super_admin)
- */
-async function isAdmin(): Promise<boolean> {
-	const { user } = await getSession()
-	return hasAdminRole(user?.role)
-}
-
-/**
- * Check if current user is super_admin
- */
-async function isSuperAdmin(): Promise<boolean> {
-	const { user } = await getSession()
-	return hasSuperAdminRole(user?.role)
-}
-
-/**
  * Require admin access - throws AdminError if not admin
  */
 export async function requireAdmin() {
@@ -74,23 +58,6 @@ export async function requireAdmin() {
 
 	if (!hasAdminRole(user.role)) {
 		throw new AdminError('NOT_ADMIN', 'You do not have admin privileges.')
-	}
-
-	return { userId, user }
-}
-
-/**
- * Require super_admin access - throws AdminError if not super_admin
- */
-async function requireSuperAdmin() {
-	const { userId, user } = await getSession()
-
-	if (!userId || !user) {
-		throw new AdminError('NOT_LOGGED_IN', 'You must be logged in to access this page.')
-	}
-
-	if (!hasSuperAdminRole(user.role)) {
-		throw new AdminError('NOT_ADMIN', 'You do not have super admin privileges.')
 	}
 
 	return { userId, user }

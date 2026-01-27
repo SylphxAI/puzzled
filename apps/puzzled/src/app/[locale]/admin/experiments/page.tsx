@@ -6,11 +6,10 @@
  */
 
 import { FlaskConical, Settings } from 'lucide-react'
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { EXPERIMENTS } from '@/features/analytics/lib/ab-testing'
 
 export default async function ExperimentsPage() {
-	const locale = await getLocale()
 	const t = await getTranslations('admin.experiments')
 
 	const experimentEntries = Object.entries(EXPERIMENTS)
