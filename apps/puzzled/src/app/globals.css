@@ -48,17 +48,17 @@
 	/* -----------------------------------------
 	   Z-Index System
 	   ----------------------------------------- */
-	--z-base: 0;
-	--z-dropdown: 10;
-	--z-sticky: 20;
-	--z-header: 30;
-	--z-bottom-nav: 40;
-	--z-overlay: 50;
-	--z-popover: 50;
-	--z-modal: 60;
-	--z-tooltip: 70;
-	--z-toast: 70;
-	--z-drawer: 80;
+	--z-index-base: 0;
+	--z-index-dropdown: 10;
+	--z-index-sticky: 20;
+	--z-index-header: 30;
+	--z-index-bottom-nav: 40;
+	--z-index-overlay: 50;
+	--z-index-popover: 50;
+	--z-index-modal: 60;
+	--z-index-tooltip: 70;
+	--z-index-toast: 70;
+	--z-index-drawer: 80;
 
 	/* -----------------------------------------
 	   Spacing (Layout)
