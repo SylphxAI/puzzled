@@ -571,7 +571,8 @@ export function InteractiveCard({
 				e.currentTarget.style.transform = 'translateY(-2px)'
 			}}
 			onMouseLeave={(e) => {
-				e.currentTarget.style.transform = 'none'
+				// Use translateY(0) instead of 'none' to ensure smooth transition back
+				e.currentTarget.style.transform = 'translateY(0)'
 			}}
 			onMouseDown={
 				pressable
