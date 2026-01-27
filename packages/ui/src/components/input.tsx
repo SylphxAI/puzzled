@@ -104,11 +104,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 					type={type}
 					id={inputId}
 					className={cn(
-						'flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-base transition-colors',
+						'flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150',
 						'placeholder:text-muted-foreground',
-						'hover:border-primary/50',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
-						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
+						'hover:border-primary/70 hover:bg-muted/30',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background',
+						'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50',
 						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
 						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
 						className,
@@ -204,11 +204,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 				<textarea
 					id={textareaId}
 					className={cn(
-						'flex min-h-[80px] w-full rounded-lg border bg-background px-3 py-2 text-base transition-colors',
+						'flex min-h-[80px] w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150',
 						'placeholder:text-muted-foreground',
-						'hover:border-primary/50',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
-						'disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border',
+						'hover:border-primary/70 hover:bg-muted/30',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background',
+						'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50',
 						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
 						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
 						className,
