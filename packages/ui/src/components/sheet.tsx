@@ -80,7 +80,7 @@ const sheetVariants = cva('fixed z-modal gap-4 bg-background shadow-lg', {
 	},
 })
 
-// Motion variants for each side
+// Motion variants for each side - applied to the container itself
 const slideVariants = {
 	top: { initial: { y: '-100%' }, animate: { y: 0 }, exit: { y: '-100%' } },
 	bottom: { initial: { y: '100%' }, animate: { y: 0 }, exit: { y: '100%' } },
@@ -88,75 +88,56 @@ const slideVariants = {
 	right: { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '100%' } },
 }
 
-// Create motion-enhanced div for content
-const MotionContent = motion.create('div')
-
 interface SheetContentProps
 	extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>,
 		VariantProps<typeof sheetVariants> {
 	hideCloseButton?: boolean
 }
 
-function ContentAnimation({
-	children,
-	hideCloseButton,
-	side,
-}: {
-	children: React.ReactNode
-	hideCloseButton?: boolean
-	side: 'top' | 'bottom' | 'left' | 'right'
-}) {
-	const prefersReduced = usePrefersReducedMotion()
-	const variants = slideVariants[side]
-
-	return (
-		<MotionContent
-			initial={prefersReduced ? {} : variants.initial}
-			animate={variants.animate}
-			exit={prefersReduced ? {} : variants.exit}
-			transition={
-				prefersReduced
-					? { duration: 0 }
-					: {
-							type: 'spring',
-							stiffness: 400,
-							damping: 40,
-						}
-			}
-			className="h-full"
-		>
-			{children}
-			{!hideCloseButton && (
-				<DialogPrimitive.Close
-					className={cn(
-						// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
-						'absolute right-4 top-4 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
-						'hover:bg-muted hover:opacity-100',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-						'disabled:pointer-events-none',
-					)}
-					aria-label="Close panel"
-				>
-					<X className="h-4 w-4" aria-hidden="true" />
-				</DialogPrimitive.Close>
-			)}
-		</MotionContent>
-	)
-}
-
 const SheetContent = forwardRef<React.ComponentRef<typeof DialogPrimitive.Content>, SheetContentProps>(
 	({ side = 'right', className, children, hideCloseButton, ...props }, ref) => {
+		const prefersReduced = usePrefersReducedMotion()
+		const variants = slideVariants[side || 'right']
+
 		return (
 			<SheetPortal>
 				<SheetOverlay />
 				<DialogPrimitive.Content
 					ref={ref}
 					className={cn(sheetVariants({ side }), 'overflow-hidden', className)}
+					asChild
 					{...props}
 				>
-					<ContentAnimation side={side || 'right'} hideCloseButton={hideCloseButton}>
+					<motion.div
+						initial={prefersReduced ? {} : variants.initial}
+						animate={variants.animate}
+						exit={prefersReduced ? {} : variants.exit}
+						transition={
+							prefersReduced
+								? { duration: 0 }
+								: {
+										type: 'spring',
+										stiffness: 400,
+										damping: 40,
+									}
+						}
+					>
 						{children}
-					</ContentAnimation>
+						{!hideCloseButton && (
+							<DialogPrimitive.Close
+								className={cn(
+									// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
+									'absolute right-4 top-4 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
+									'hover:bg-muted hover:opacity-100',
+									'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+									'disabled:pointer-events-none',
+								)}
+								aria-label="Close panel"
+							>
+								<X className="h-4 w-4" aria-hidden="true" />
+							</DialogPrimitive.Close>
+						)}
+					</motion.div>
 				</DialogPrimitive.Content>
 			</SheetPortal>
 		)
