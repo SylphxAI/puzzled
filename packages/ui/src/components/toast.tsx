@@ -136,22 +136,39 @@ const iconStyles = {
 // Toast context for imperative API
 type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info'
 
+type ToastAction = {
+	label: string
+	onClick: () => void | Promise<void>
+}
+
 type ToastData = {
 	id: string
 	type: ToastType
 	title: string
 	description?: string
 	duration?: number
+	action?: ToastAction
+}
+
+type ToastOptions = {
+	description?: string
+	duration?: number
+	action?: ToastAction
 }
 
 type ToastContextType = {
 	toasts: ToastData[]
-	addToast: (toast: Omit<ToastData, 'id'>) => void
+	addToast: (toast: Omit<ToastData, 'id'>) => string
 	removeToast: (id: string) => void
-	success: (title: string, description?: string) => void
-	error: (title: string, description?: string) => void
-	warning: (title: string, description?: string) => void
-	info: (title: string, description?: string) => void
+	success: (title: string, options?: ToastOptions | string) => string
+	error: (title: string, options?: ToastOptions | string) => string
+	warning: (title: string, options?: ToastOptions | string) => string
+	info: (title: string, options?: ToastOptions | string) => string
+	/** Show toast with undo action - auto-calls undo on click and shows feedback */
+	undoable: (
+		title: string,
+		options: { description?: string; onUndo: () => void | Promise<void>; timeoutMs?: number },
+	) => string
 }
 
 const ToastContext = createContext<ToastContextType | null>(null)
@@ -218,6 +235,17 @@ function Toaster() {
 									<ToastTitle>{toast.title}</ToastTitle>
 									{toast.description && <ToastDescription>{toast.description}</ToastDescription>}
 								</div>
+								{toast.action && (
+									<ToastAction
+										altText={toast.action.label}
+										onClick={async () => {
+											await toast.action?.onClick()
+											removeToast(toast.id)
+										}}
+									>
+										{toast.action.label}
+									</ToastAction>
+								)}
 								<ToastClose />
 							</Toast>
 						</motion.div>
@@ -229,6 +257,14 @@ function Toaster() {
 	)
 }
 
+// Helper to normalize options
+function normalizeOptions(options?: ToastOptions | string): ToastOptions {
+	if (typeof options === 'string') {
+		return { description: options }
+	}
+	return options ?? {}
+}
+
 // Main provider component
 export function ToastProviderWithContext({ children }: { children: React.ReactNode }) {
 	const [toasts, setToasts] = useState<ToastData[]>([])
@@ -237,37 +273,92 @@ export function ToastProviderWithContext({ children }: { children: React.ReactNo
 		setToasts((prev) => prev.filter((t) => t.id !== id))
 	}, [])
 
-	const addToast = useCallback((toast: Omit<ToastData, 'id'>) => {
+	const addToast = useCallback((toast: Omit<ToastData, 'id'>): string => {
 		const id = crypto.randomUUID()
 		setToasts((prev) => [...prev, { ...toast, id }])
+		return id
 	}, [])
 
 	const success = useCallback(
-		(title: string, description?: string) =>
-			addToast({ type: 'success', title, description, duration: 5000 }),
+		(title: string, options?: ToastOptions | string): string => {
+			const opts = normalizeOptions(options)
+			return addToast({
+				type: 'success',
+				title,
+				description: opts.description,
+				duration: opts.duration ?? 5000,
+				action: opts.action,
+			})
+		},
 		[addToast],
 	)
 
 	const error = useCallback(
-		(title: string, description?: string) =>
-			addToast({ type: 'error', title, description, duration: 5000 }),
+		(title: string, options?: ToastOptions | string): string => {
+			const opts = normalizeOptions(options)
+			return addToast({
+				type: 'error',
+				title,
+				description: opts.description,
+				duration: opts.duration ?? 5000,
+				action: opts.action,
+			})
+		},
 		[addToast],
 	)
 
 	const warning = useCallback(
-		(title: string, description?: string) =>
-			addToast({ type: 'warning', title, description, duration: 5000 }),
+		(title: string, options?: ToastOptions | string): string => {
+			const opts = normalizeOptions(options)
+			return addToast({
+				type: 'warning',
+				title,
+				description: opts.description,
+				duration: opts.duration ?? 5000,
+				action: opts.action,
+			})
+		},
 		[addToast],
 	)
 
 	const info = useCallback(
-		(title: string, description?: string) =>
-			addToast({ type: 'info', title, description, duration: 5000 }),
+		(title: string, options?: ToastOptions | string): string => {
+			const opts = normalizeOptions(options)
+			return addToast({
+				type: 'info',
+				title,
+				description: opts.description,
+				duration: opts.duration ?? 5000,
+				action: opts.action,
+			})
+		},
+		[addToast],
+	)
+
+	const undoable = useCallback(
+		(
+			title: string,
+			options: { description?: string; onUndo: () => void | Promise<void>; timeoutMs?: number },
+		): string => {
+			const timeoutMs = options.timeoutMs ?? 5000
+			return addToast({
+				type: 'default',
+				title,
+				description: options.description,
+				duration: timeoutMs,
+				action: {
+					label: 'Undo',
+					onClick: options.onUndo,
+				},
+			})
+		},
 		[addToast],
 	)
 
 	return (
-		<ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, warning, info }}>
+		<ToastContext.Provider
+			value={{ toasts, addToast, removeToast, success, error, warning, info, undoable }}
+		>
 			<ToastProvider swipeDirection="right">
 				{children}
 				<Toaster />
