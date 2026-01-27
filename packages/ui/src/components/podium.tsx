@@ -67,11 +67,10 @@ export function Podium({ entries, metricLabel, locale = 'en', className }: Podiu
 					<div
 						key={positions[i]}
 						className={cn(
-							'flex flex-col items-center',
-							// Animation delay based on position (center first)
-							i === 1 && 'animate-in fade-in slide-in-from-bottom-4 duration-500',
-							i === 0 && 'animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100',
-							i === 2 && 'animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200',
+							'podium-entry flex flex-col items-center',
+							i === 1 && 'podium-entry-1st',
+							i === 0 && 'podium-entry-2nd',
+							i === 2 && 'podium-entry-3rd',
 						)}
 					>
 						{/* Player info above podium */}
@@ -83,7 +82,7 @@ export function Podium({ entries, metricLabel, locale = 'en', className }: Podiu
 						>
 							{/* Crown for 1st place */}
 							{positions[i] === 1 && !isEmpty && (
-								<Crown className="mb-1 h-5 w-5 text-rank-gold animate-in fade-in zoom-in duration-500 delay-300" />
+								<Crown className="podium-crown mb-1 h-5 w-5 text-rank-gold" />
 							)}
 
 							{/* Avatar */}

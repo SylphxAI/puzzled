@@ -744,6 +744,46 @@ html[data-transition-type='fade'] {
 }
 
 /* =============================================
+   Podium — entrance animations (shared UI component)
+============================================= */
+
+@keyframes podium-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes podium-crown-in {
+	from {
+		opacity: 0;
+		transform: scale(0);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.podium-entry {
+	opacity: 0;
+	animation: podium-slide-up 500ms ease-out forwards;
+}
+
+.podium-entry-1st { animation-delay: 0ms; }
+.podium-entry-2nd { animation-delay: 100ms; }
+.podium-entry-3rd { animation-delay: 200ms; }
+
+.podium-crown {
+	opacity: 0;
+	animation: podium-crown-in 500ms ease-out 300ms forwards;
+}
+
+/* =============================================
    Reduced Motion (Accessibility)
 ============================================= */
 
