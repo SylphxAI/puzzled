@@ -103,9 +103,8 @@ export function StreakBar({
 
 	if (variant === 'compact') {
 		return (
-			<div
+			<output
 				className={cn('flex items-center gap-1.5', className)}
-				role="status"
 				aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
 			>
 				<Flame
@@ -133,7 +132,7 @@ export function StreakBar({
 						</span>
 					</div>
 				)}
-			</div>
+			</output>
 		)
 	}
 
@@ -150,9 +149,8 @@ export function StreakBar({
 		const milestoneBadge = getMilestoneBadge()
 
 		return (
-			<div
-				className={cn('rounded-xl p-4', style.bg, className)}
-				role="status"
+			<output
+				className={cn('block rounded-xl p-4', style.bg, className)}
 				aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
 			>
 				<div className="flex items-center justify-between">
@@ -228,15 +226,14 @@ export function StreakBar({
 						</div>
 					</div>
 				)}
-			</div>
+			</output>
 		)
 	}
 
 	// Default variant
 	return (
-		<div
+		<output
 			className={cn('flex items-center gap-3', className)}
-			role="status"
 			aria-label={`${currentStreak} ${t('days')} ${t('currentStreak').toLowerCase()}`}
 		>
 			<div className="flex items-center gap-2">
@@ -275,6 +272,6 @@ export function StreakBar({
 					<span className="text-xs tabular-nums text-muted-foreground">{nextMilestone}</span>
 				</div>
 			)}
-		</div>
+		</output>
 	)
 }

@@ -96,14 +96,13 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 }
 
 // Compact inline version for game cards
-function StreakBadge({ streak, hasPlayedToday }: { streak: number; hasPlayedToday: boolean }) {
-	const t = useTranslations('streak')
+function _StreakBadge({ streak, hasPlayedToday }: { streak: number; hasPlayedToday: boolean }) {
+	const _t = useTranslations('streak')
 
 	if (streak === 0) return null
 
 	return (
-		<div
-			role="status"
+		<output
 			aria-label={`${streak} day streak${!hasPlayedToday ? ' - play today to keep it' : ''}`}
 			className={cn(
 				'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
@@ -117,6 +116,6 @@ function StreakBadge({ streak, hasPlayedToday }: { streak: number; hasPlayedToda
 					!
 				</span>
 			)}
-		</div>
+		</output>
 	)
 }

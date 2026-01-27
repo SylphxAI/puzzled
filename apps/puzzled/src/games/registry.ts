@@ -105,7 +105,7 @@ export function isValidGameSlug(slug: string): slug is GameSlug {
  * Get HowToPlayContent component for a game
  * Returns undefined if game not found or has no HowToPlay
  */
-function getHowToPlayContent(slug: string) {
+function _getHowToPlayContent(slug: string) {
 	const config = GAME_CONFIGS[slug as GameSlug]
 	return config?.HowToPlayContent
 }
@@ -182,7 +182,7 @@ export function getAllGameMetadata(): GameMetadata[] {
 /**
  * Get all games that support difficulty selection
  */
-function getGamesWithDifficulty(): GameMetadata[] {
+function _getGamesWithDifficulty(): GameMetadata[] {
 	return getAllGameMetadata().filter((game) => game.supportsDifficulty)
 }
 
@@ -198,7 +198,7 @@ export function gameSupportsDifficulty(slug: string): boolean {
  * Get difficulty levels for a game
  * Returns undefined if game doesn't support difficulty
  */
-function getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
+function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
 	if (!isValidGameSlug(slug)) return undefined
 	const config = GAME_CONFIGS[slug]
 	if (!config.supportsDifficulty) return undefined

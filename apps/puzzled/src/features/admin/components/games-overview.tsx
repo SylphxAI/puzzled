@@ -49,7 +49,7 @@ export function GamesOverview() {
 	// Calculate summary stats
 	const totalPlaysToday = games.reduce((sum, g) => sum + g.todayGamesPlayed, 0)
 	const totalPlaysAllTime = games.reduce((sum, g) => sum + g.allTimeGamesPlayed, 0)
-	const totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0)
+	const _totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0)
 	const avgWinRate =
 		totalPlaysAllTime > 0
 			? Math.round((games.reduce((sum, g) => sum + g.allTimeWins, 0) / totalPlaysAllTime) * 100)

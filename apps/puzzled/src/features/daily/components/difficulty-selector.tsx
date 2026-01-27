@@ -23,7 +23,7 @@ type DifficultySelectorProps = {
  * Used on game pages before starting a puzzle to let users choose their challenge level.
  * Shows completion status for each difficulty level.
  */
-function DifficultySelector({ options, selected, onSelect, className }: DifficultySelectorProps) {
+function _DifficultySelector({ options, selected, onSelect, className }: DifficultySelectorProps) {
 	const t = useTranslations('common.difficulty')
 
 	const difficultyConfig: Record<
@@ -60,9 +60,8 @@ function DifficultySelector({ options, selected, onSelect, className }: Difficul
 				<span className="font-medium">{t('selectDifficulty')}</span>
 			</div>
 
-			<div
-				className="flex items-center justify-center gap-1.5 rounded-xl bg-muted/50 p-1.5"
-				role="group"
+			<fieldset
+				className="flex items-center justify-center gap-1.5 rounded-xl border-0 bg-muted/50 p-1.5"
 				aria-labelledby="difficulty-label"
 			>
 				{options.map((option) => {
@@ -95,7 +94,7 @@ function DifficultySelector({ options, selected, onSelect, className }: Difficul
 						</button>
 					)
 				})}
-			</div>
+			</fieldset>
 		</div>
 	)
 }
@@ -133,18 +132,17 @@ export function DifficultyBadge({ difficulty, showIcon = false, className }: Dif
 	const c = config[difficulty]
 
 	return (
-		<span
+		<output
 			className={cn(
 				'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
 				c.color,
 				c.bg,
 				className,
 			)}
-			role="status"
 			aria-label={c.label}
 		>
 			{showIcon && <Gauge className="h-3 w-3" aria-hidden="true" />}
 			{c.label}
-		</span>
+		</output>
 	)
 }

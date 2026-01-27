@@ -19,7 +19,7 @@ type PuzzledNotificationType =
 /**
  * Puzzled notification payload
  */
-interface PuzzledNotification {
+export interface PuzzledNotification {
 	type: PuzzledNotificationType
 	title: string
 	body: string

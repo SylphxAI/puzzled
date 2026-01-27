@@ -12,8 +12,6 @@ import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
 export type ConsentStatus = 'pending' | 'accepted' | 'declined'
 
-type ConsentCategory = 'essential' | 'analytics' | 'marketing'
-
 type ConsentPreferences = {
 	essential: boolean // Always true, cannot be disabled
 	analytics: boolean
@@ -36,7 +34,7 @@ function getConsentStatus(): ConsentStatus {
 /**
  * Get detailed consent preferences
  */
-function getConsentPreferences(): ConsentPreferences {
+function _getConsentPreferences(): ConsentPreferences {
 	if (typeof window === 'undefined') {
 		return {
 			essential: true,
@@ -82,7 +80,7 @@ export function canTrackAnalytics(): boolean {
 /**
  * Set consent status with timestamp for audit trail
  */
-function setConsentStatus(status: 'accepted' | 'declined'): void {
+function _setConsentStatus(status: 'accepted' | 'declined'): void {
 	if (typeof window === 'undefined') return
 
 	localStorage.setItem(CONSENT_KEY, status)
@@ -114,7 +112,7 @@ export function onConsentChange(callback: (status: ConsentStatus) => void): () =
 /**
  * Clear all consent data (for testing or user request)
  */
-function clearConsentData(): void {
+function _clearConsentData(): void {
 	if (typeof window === 'undefined') return
 
 	localStorage.removeItem(CONSENT_KEY)

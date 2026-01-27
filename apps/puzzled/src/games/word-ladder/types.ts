@@ -58,6 +58,6 @@ export function isOneLetterChange(word1: string, word2: string): boolean {
 /**
  * Check if a word is valid (exists in word list)
  */
-function isValidWord(word: string, wordList: Set<string>): boolean {
+function _isValidWord(word: string, wordList: Set<string>): boolean {
 	return wordList.has(word.toLowerCase())
 }

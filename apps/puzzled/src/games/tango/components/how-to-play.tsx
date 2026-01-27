@@ -95,7 +95,7 @@ export function TangoHowToPlay() {
 	)
 }
 
-function TangoHowToPlayTitle() {
+function _TangoHowToPlayTitle() {
 	const t = useTranslations('games.tango')
 	return <>{t('howToPlay')}</>
 }

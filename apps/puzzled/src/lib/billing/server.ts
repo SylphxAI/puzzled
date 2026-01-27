@@ -35,7 +35,7 @@ const FREE_GAME_ROTATION = [
 /**
  * Check if a plan slug represents a premium (paid) plan
  */
-function isPremiumPlan(planSlug: string | null | undefined): boolean {
+function _isPremiumPlan(planSlug: string | null | undefined): boolean {
 	if (!planSlug) return false
 	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
 }
@@ -43,7 +43,7 @@ function isPremiumPlan(planSlug: string | null | undefined): boolean {
 /**
  * Check if a plan slug is the free plan
  */
-function isFreePlan(planSlug: string | null | undefined): boolean {
+function _isFreePlan(planSlug: string | null | undefined): boolean {
 	return !planSlug || planSlug === 'free'
 }
 

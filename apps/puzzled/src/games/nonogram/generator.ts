@@ -876,13 +876,13 @@ export function generateNonogramPuzzle(seed: number): {
 /**
  * Get count of available patterns
  */
-function getPatternCount(): number {
+function _getPatternCount(): number {
 	return PATTERNS.length
 }
 
 /**
  * Get count of effective puzzles (patterns × transforms)
  */
-function getEffectivePuzzleCount(): number {
+function _getEffectivePuzzleCount(): number {
 	return PATTERNS.length * 4 // 4 transforms per pattern
 }

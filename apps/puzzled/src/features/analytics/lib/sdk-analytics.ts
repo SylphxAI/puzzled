@@ -264,10 +264,14 @@ function setupFirstInteractionTracking(): void {
 	const handler = () => {
 		recordFirstInteraction()
 		// Remove listeners after first interaction
-		events.forEach((event) => window.removeEventListener(event, handler, { capture: true }))
+		for (const event of events) {
+			window.removeEventListener(event, handler, { capture: true })
+		}
 	}
 
-	events.forEach((event) => window.addEventListener(event, handler, { capture: true, once: true }))
+	for (const event of events) {
+		window.addEventListener(event, handler, { capture: true, once: true })
+	}
 }
 
 function getEventDimensions(journeyStage: UserJourneyStage): EventDimensions {
@@ -648,7 +652,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
  * const analytics = useGameAnalytics({ journeyStage })
  * ```
  */
-function useJourneyStage(params: {
+function _useJourneyStage(params: {
 	isAuthenticated: boolean
 	isPremium?: boolean
 	daysSinceFirstVisit?: number

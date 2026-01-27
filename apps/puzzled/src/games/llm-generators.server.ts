@@ -162,6 +162,6 @@ export function getLLMGenerator(slug: string): LLMGenerator | undefined {
 /**
  * Check if a game has LLM generation
  */
-function hasLLMGenerator(slug: string): boolean {
+function _hasLLMGenerator(slug: string): boolean {
 	return slug in LLM_GENERATORS
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 
 type HexButtonProps = {

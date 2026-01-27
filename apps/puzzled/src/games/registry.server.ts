@@ -148,7 +148,7 @@ export async function generateGamePuzzle(
  * Generate puzzles for ALL registered games
  * Fully automatic - just add game to registry and it's included
  */
-async function generateAllPuzzles(date: string): Promise<GenerationSummary> {
+async function _generateAllPuzzles(date: string): Promise<GenerationSummary> {
 	const allGames = getAllGames()
 	const results: PuzzleGenerationResult[] = []
 

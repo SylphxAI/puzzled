@@ -22,7 +22,7 @@ export const CONSENT_TIMESTAMP_KEY = 'puzzled:consent:timestamp'
 // ==========================================
 // Theme & Display
 // ==========================================
-const THEME_KEY = 'theme' // Standard next-themes key
+const _THEME_KEY = 'theme' // Standard next-themes key
 
 // ==========================================
 // Sound & Audio

@@ -61,7 +61,7 @@ Return ONLY the JSON, no explanation.`
 /**
  * Themed prompt for specific categories
  */
-const NONOGRAM_THEMED_PROMPT = (
+const _NONOGRAM_THEMED_PROMPT = (
 	theme: string,
 ) => `Generate a Nonogram pixel art puzzle with the theme: "${theme}"
 
@@ -78,7 +78,7 @@ Make sure the silhouette is recognizable as something related to "${theme}".`
 /**
  * Exclusion prompt to avoid duplicate themes
  */
-const NONOGRAM_AVOID_THEMES_PROMPT = (
+const _NONOGRAM_AVOID_THEMES_PROMPT = (
 	usedThemes: string[],
 ) => `Generate a Nonogram pixel art puzzle.
 

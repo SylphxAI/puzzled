@@ -25,6 +25,6 @@ export function getPuzzleFromSeed(seed: number): {
 /**
  * Get count of available equations
  */
-function getEquationCount(): number {
+function _getEquationCount(): number {
 	return getEquationPoolCount()
 }

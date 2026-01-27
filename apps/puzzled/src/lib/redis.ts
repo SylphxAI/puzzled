@@ -125,7 +125,7 @@ type ImpersonationState = {
 
 const IMPERSONATION_TTL = 60 * 60 // 1 hour max impersonation duration
 
-const impersonation = {
+const _impersonation = {
 	async start(adminUserId: string, state: Omit<ImpersonationState, 'startedAt'>): Promise<void> {
 		await cache.set(
 			keys.impersonation(adminUserId),

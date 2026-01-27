@@ -72,7 +72,7 @@ export function WordleHowToPlay() {
 	)
 }
 
-function WordleHowToPlayTitle() {
+function _WordleHowToPlayTitle() {
 	const t = useTranslations('games.wordGuess')
 	return <>{t('howToPlay')}</>
 }

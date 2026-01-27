@@ -76,7 +76,7 @@ export function cronSuccess(message: string, extra: Record<string, unknown> = {}
 /**
  * Create a standard cron error response
  */
-function cronError(message: string, status = 500): Response {
+function _cronError(message: string, status = 500): Response {
 	return NextResponse.json(
 		{
 			success: false,

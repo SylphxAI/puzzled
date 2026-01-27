@@ -472,14 +472,14 @@ export const PUZZLES: ConnectionsPuzzle[] = [
 	},
 ]
 
-function getDailyPuzzle(): ConnectionsPuzzle {
+function _getDailyPuzzle(): ConnectionsPuzzle {
 	const today = new Date()
 	const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate()
 	const index = seed % PUZZLES.length
 	return PUZZLES[index]
 }
 
-function getRandomPuzzle(): ConnectionsPuzzle {
+function _getRandomPuzzle(): ConnectionsPuzzle {
 	return PUZZLES[Math.floor(Math.random() * PUZZLES.length)]
 }
 

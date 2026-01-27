@@ -27,7 +27,7 @@ import { useCallback, useEffect, useRef } from 'react'
  * const ctaVariant = useExperiment('pricing_cta_variant')
  * // Returns: 'start_trial' | 'get_premium' | 'upgrade_now' | 'control'
  */
-function useExperiment(experimentKey: string): string {
+function _useExperiment(experimentKey: string): string {
 	const { variant, isLoading } = useFeatureFlag(experimentKey)
 	const { track } = useAnalytics()
 	const hasTrackedRef = useRef(false)
@@ -62,7 +62,7 @@ function useExperiment(experimentKey: string): string {
  * const { trackConversion } = useExperimentTracking()
  * trackConversion('pricing_cta_variant', 'start_trial', { plan: 'premium' })
  */
-function useExperimentTracking() {
+function _useExperimentTracking() {
 	const { track } = useAnalytics()
 
 	const trackConversion = useCallback(
@@ -100,5 +100,8 @@ export const EXPERIMENTS = {
 	},
 } as const
 
-type ExperimentKey = keyof typeof EXPERIMENTS
-type ExperimentVariant<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]['variants'][number]
+/** Experiment key - used for type-safe experiment lookups */
+export type ExperimentKey = keyof typeof EXPERIMENTS
+
+/** Experiment variant for a given key - used for type-safe variant handling */
+export type ExperimentVariant<K extends ExperimentKey> = (typeof EXPERIMENTS)[K]['variants'][number]

@@ -58,7 +58,7 @@ export function CryptogramHowToPlay() {
 	)
 }
 
-function CryptogramHowToPlayTitle() {
+function _CryptogramHowToPlayTitle() {
 	return <>How to Play Cryptogram</>
 }
 

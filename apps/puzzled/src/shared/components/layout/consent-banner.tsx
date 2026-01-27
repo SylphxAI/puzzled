@@ -18,10 +18,9 @@ import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 function ConsentSync() {
 	const { hasConsent, hasConsented, isLoading, isConfigured } = useSafeConsent()
 
-	// Don't sync if SDK is not configured (SSR/prerendering)
-	if (!isConfigured) return null
-
 	useEffect(() => {
+		// Don't sync if SDK is not configured (SSR/prerendering)
+		if (!isConfigured) return
 		if (isLoading || typeof window === 'undefined') return
 
 		// Sync to localStorage when consent state changes
@@ -40,7 +39,7 @@ function ConsentSync() {
 				}),
 			)
 		}
-	}, [hasConsent, hasConsented, isLoading])
+	}, [hasConsent, hasConsented, isLoading, isConfigured])
 
 	return null
 }

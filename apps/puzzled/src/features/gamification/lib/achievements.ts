@@ -318,7 +318,7 @@ export const TIER_BG_COLORS = {
 	diamond: 'bg-violet-500/10',
 } as const
 
-const TIER_BORDER_COLORS = {
+const _TIER_BORDER_COLORS = {
 	bronze: 'border-amber-600/30',
 	silver: 'border-gray-400/30',
 	gold: 'border-yellow-500/30',
@@ -326,7 +326,7 @@ const TIER_BORDER_COLORS = {
 	diamond: 'border-violet-400/30',
 } as const
 
-const CATEGORY_ICONS = {
+const _CATEGORY_ICONS = {
 	streak: 'mdi:fire',
 	wins: 'mdi:trophy',
 	score: 'mdi:star',
@@ -337,7 +337,7 @@ const CATEGORY_ICONS = {
 	secret: 'mdi:lock',
 } as const
 
-const CATEGORY_NAMES = {
+const _CATEGORY_NAMES = {
 	streak: 'Streak',
 	wins: 'Wins',
 	score: 'Score',

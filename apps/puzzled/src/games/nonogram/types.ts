@@ -42,7 +42,7 @@ export type NonogramState = {
 	fillMode: 'fill' | 'mark' // Fill cells or mark as empty
 }
 
-const DEFAULT_SIZE = 10
+const _DEFAULT_SIZE = 10
 
 /**
  * Generate clues from a solution grid

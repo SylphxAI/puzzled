@@ -30,7 +30,7 @@ import type { JobHandler } from '../handlers'
  * Sends daily reminder push notifications to users who have opted in.
  * Runs hourly, sends to users whose reminder time matches current hour.
  */
-export const dailyReminderHandler: JobHandler = async (payload, context) => {
+export const dailyReminderHandler: JobHandler = async (_payload, context) => {
 	const logPrefix = `[DailyReminder] [${context.jobId}]`
 	console.log(`${logPrefix} Starting daily reminder job`)
 

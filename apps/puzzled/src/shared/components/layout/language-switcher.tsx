@@ -11,7 +11,7 @@ import {
 	DropdownMenuTrigger,
 	Icon,
 } from '@sylphx/ui'
-import { Check, ChevronDown, Globe, Languages } from 'lucide-react'
+import { Check, ChevronDown, Languages } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTransition } from 'react'
 import {
@@ -20,7 +20,6 @@ import {
 	localeGroups,
 	localeNames,
 	localeShortNames,
-	locales,
 } from '@/lib/i18n/config'
 import { usePathname, useRouter } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -51,6 +50,7 @@ export function LanguageSwitcher({ variant = 'icon', className }: LanguageSwitch
 			router.replace(pathname, { locale: newLocale })
 
 			// Store preference in cookie for returning visitors
+			// biome-ignore lint/suspicious/noDocumentCookie: locale preference must be set client-side as a simple cookie for the proxy to read before JS hydration
 			document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
 		})
 	}
@@ -275,7 +275,7 @@ function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMe
  * Simple language indicator showing current locale flag
  * Use in mobile headers or tight spaces
  */
-function LanguageIndicator({ className }: { className?: string }) {
+function _LanguageIndicator({ className }: { className?: string }) {
 	const locale = useLocale() as Locale
 
 	return (

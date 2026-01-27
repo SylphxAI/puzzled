@@ -72,7 +72,7 @@ Requirements:
 
 Return ONLY the JSON, no explanation.`
 
-const CONNECTIONS_THEMED_PROMPT = (
+const _CONNECTIONS_THEMED_PROMPT = (
 	theme: string,
 ) => `Generate a Connections puzzle with the theme: "${theme}"
 

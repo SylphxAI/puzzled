@@ -11,7 +11,7 @@ import { z } from 'zod'
 // File Upload Limits
 // ==========================================
 
-const FILE_LIMITS = {
+const _FILE_LIMITS = {
 	/** Maximum avatar file size in bytes (5MB) */
 	AVATAR_MAX_SIZE: 5 * 1024 * 1024,
 
@@ -23,7 +23,7 @@ const FILE_LIMITS = {
 // OTP / Verification Codes
 // ==========================================
 
-const OTP_CONFIG = {
+const _OTP_CONFIG = {
 	/** Length of OTP codes (TOTP and email verification) */
 	CODE_LENGTH: 6,
 
@@ -47,7 +47,7 @@ const REFERRAL_CONFIG = {
 } as const
 
 /** Zod schema for referral code validation - SSOT */
-const referralCodeSchema = z
+const _referralCodeSchema = z
 	.string()
 	.min(REFERRAL_CONFIG.CODE_MIN_LENGTH, 'Referral code too short')
 	.max(REFERRAL_CONFIG.CODE_MAX_LENGTH, 'Referral code too long')
@@ -72,13 +72,13 @@ export const PAGINATION = {
 } as const
 
 /** Zod schema for user-facing pagination */
-const paginationSchema = z.object({
+const _paginationSchema = z.object({
 	limit: z.number().min(1).max(PAGINATION.MAX_LIMIT).default(PAGINATION.DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
 })
 
 /** Zod schema for admin pagination */
-const adminPaginationSchema = z.object({
+const _adminPaginationSchema = z.object({
 	limit: z.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.ADMIN_DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
 })
@@ -87,7 +87,7 @@ const adminPaginationSchema = z.object({
 // Field Size Limits
 // ==========================================
 
-const FIELD_LIMITS = {
+const _FIELD_LIMITS = {
 	/** Name fields (user name, plan name, etc.) */
 	NAME_MAX: 100,
 
@@ -121,7 +121,7 @@ const CURRENCY_CONFIG = {
 } as const
 
 /** Zod schema for currency validation */
-const currencySchema = z
+const _currencySchema = z
 	.string()
 	.length(CURRENCY_CONFIG.CODE_LENGTH)
 	.default(CURRENCY_CONFIG.DEFAULT)
@@ -130,7 +130,7 @@ const currencySchema = z
 // Batch Operation Limits
 // ==========================================
 
-const BATCH_LIMITS = {
+const _BATCH_LIMITS = {
 	/** Maximum items in bulk operations */
 	MAX_BATCH_SIZE: 100,
 } as const
@@ -139,7 +139,7 @@ const BATCH_LIMITS = {
 // Animation Timing (milliseconds)
 // ==========================================
 
-const TIMING = {
+const _TIMING = {
 	/** Result modal delay after win */
 	RESULT_MODAL_WIN_DELAY: 1500,
 

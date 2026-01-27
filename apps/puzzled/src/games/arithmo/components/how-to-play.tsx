@@ -69,7 +69,7 @@ export function ArithmoHowToPlay() {
 	)
 }
 
-function ArithmoHowToPlayTitle() {
+function _ArithmoHowToPlayTitle() {
 	const t = useTranslations('games.arithmo')
 	return <>{t('howToPlay')}</>
 }

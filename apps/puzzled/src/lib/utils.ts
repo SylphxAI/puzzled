@@ -63,7 +63,7 @@ export function getServerBaseUrl(): string {
 /**
  * Escape HTML special characters to prevent XSS in email templates
  */
-function escapeHtml(str: string): string {
+function _escapeHtml(str: string): string {
 	const htmlEntities: Record<string, string> = {
 		'&': '&amp;',
 		'<': '&lt;',

@@ -24,6 +24,7 @@ export function WordHiveIcon({ size = 24, className, ...props }: IconProps) {
 			strokeLinecap="round"
 			strokeLinejoin="round"
 			className={className}
+			aria-hidden="true"
 			{...props}
 		>
 			{/* Center hexagon - filled */}

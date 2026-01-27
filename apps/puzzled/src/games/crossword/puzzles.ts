@@ -19,6 +19,6 @@ export function getPuzzleFromSeed(seed: number): CrosswordPuzzleData {
 /**
  * Get count of available puzzles
  */
-function getPuzzleCount(): number {
+function _getPuzzleCount(): number {
 	return getWordSquareCount()
 }

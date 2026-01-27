@@ -92,7 +92,7 @@ export function isGridComplete(userGrid: SudokuCell[][], solution: number[][]): 
 /**
  * Check if user's current entry at a cell is correct
  */
-function isCellCorrect(
+function _isCellCorrect(
 	userGrid: SudokuCell[][],
 	solution: number[][],
 	row: number,

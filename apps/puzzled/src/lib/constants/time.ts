@@ -16,7 +16,7 @@ export const WEEK_MS = 7 * DAY_MS
 const MINUTE_SECONDS = 60
 const HOUR_SECONDS = 60 * MINUTE_SECONDS
 const DAY_SECONDS = 24 * HOUR_SECONDS
-const WEEK_SECONDS = 7 * DAY_SECONDS
+const _WEEK_SECONDS = 7 * DAY_SECONDS
 
 /**
  * Get a Date representing N days ago from now (or from a reference date)
@@ -28,7 +28,7 @@ export function daysAgo(days: number, from: Date = new Date()): Date {
 /**
  * Get a Date representing N days from now (or from a reference date)
  */
-function daysFromNow(days: number, from: Date = new Date()): Date {
+function _daysFromNow(days: number, from: Date = new Date()): Date {
 	return new Date(from.getTime() + days * DAY_MS)
 }
 
@@ -49,48 +49,48 @@ export function hoursAgo(hours: number, from: Date = new Date()): Date {
 /**
  * Get a Date representing N hours from now (or from a reference date)
  */
-function hoursFromNow(hours: number, from: Date = new Date()): Date {
+function _hoursFromNow(hours: number, from: Date = new Date()): Date {
 	return new Date(from.getTime() + hours * HOUR_MS)
 }
 
 /**
  * Convert days to milliseconds
  */
-function daysToMs(days: number): number {
+function _daysToMs(days: number): number {
 	return days * DAY_MS
 }
 
 /**
  * Convert days to seconds (for TTLs)
  */
-function daysToSeconds(days: number): number {
+function _daysToSeconds(days: number): number {
 	return days * DAY_SECONDS
 }
 
 /**
  * Convert hours to seconds (for TTLs)
  */
-function hoursToSeconds(hours: number): number {
+function _hoursToSeconds(hours: number): number {
 	return hours * HOUR_SECONDS
 }
 
 /**
  * Convert minutes to seconds (for TTLs)
  */
-function minutesToSeconds(minutes: number): number {
+function _minutesToSeconds(minutes: number): number {
 	return minutes * MINUTE_SECONDS
 }
 
 /**
  * Convert hours to milliseconds
  */
-function hoursToMs(hours: number): number {
+function _hoursToMs(hours: number): number {
 	return hours * HOUR_MS
 }
 
 /**
  * Convert minutes to milliseconds
  */
-function minutesToMs(minutes: number): number {
+function _minutesToMs(minutes: number): number {
 	return minutes * MINUTE_MS
 }

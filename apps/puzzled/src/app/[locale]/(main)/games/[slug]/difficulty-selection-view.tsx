@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardContent } from '@sylphx/ui'
+import { Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Gauge } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { DifficultyBadge } from '@/features/daily/components'

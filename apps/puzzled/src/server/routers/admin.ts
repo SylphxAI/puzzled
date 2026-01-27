@@ -18,24 +18,22 @@
  */
 
 import { TRPCError } from '@trpc/server'
-import { and, count, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lte, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { getAllGames } from '@/games/registry'
 import { logAdminAction } from '@/lib/audit'
 import { PAGINATION } from '@/lib/config/validation'
 import { daysAgo, hoursAgo, minutesAgo } from '@/lib/constants/time'
 import { db } from '@/lib/db'
-import type { AppSettingKey, AuditAction } from '@/lib/db/schema'
+import type { AppSettingKey } from '@/lib/db/schema'
 import {
 	announcements,
 	appSettings,
 	auditLogs,
 	DLQ_STATUS_VALUES,
-	dailyPuzzles,
 	deadLetterQueue,
 	featureFlags,
 	gameSessions,
-	userStats,
 	userStreaks,
 } from '@/lib/db/schema'
 import {

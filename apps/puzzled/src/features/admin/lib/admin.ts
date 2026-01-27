@@ -9,7 +9,7 @@
  */
 
 import { auth } from '@sylphx/sdk/nextjs'
-import { isAdminRole, isSuperAdminRole } from '@/lib/roles'
+import { isAdminRole } from '@/lib/roles'
 
 /** Admin error codes */
 export type AdminErrorCode = 'NOT_LOGGED_IN' | 'NOT_ADMIN' | 'FORBIDDEN'
@@ -40,13 +40,6 @@ function hasAdminRole(role: string | null | undefined): boolean {
 }
 
 /**
- * Check if a role has super_admin privileges
- */
-function hasSuperAdminRole(role: string | null | undefined): boolean {
-	return isSuperAdminRole(role)
-}
-
-/**
  * Require admin access - throws AdminError if not admin
  */
 export async function requireAdmin() {
@@ -61,16 +54,4 @@ export async function requireAdmin() {
 	}
 
 	return { userId, user }
-}
-
-/**
- * Get admin user or null
- */
-async function getAdminUser() {
-	try {
-		const { user } = await requireAdmin()
-		return user
-	} catch {
-		return null
-	}
 }

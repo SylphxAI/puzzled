@@ -80,7 +80,7 @@ Return ONLY the JSON, no explanation.`
 /**
  * Prompt to avoid duplicate puzzles
  */
-const CROSSWORD_AVOID_WORDS_PROMPT = (
+const _CROSSWORD_AVOID_WORDS_PROMPT = (
 	usedWords: string[],
 ) => `Generate a 5×5 Crossword Mini word square puzzle.
 

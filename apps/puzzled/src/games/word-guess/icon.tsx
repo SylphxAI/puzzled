@@ -24,6 +24,7 @@ export function WordGuessIcon({ size = 24, className, ...props }: IconProps) {
 			strokeLinecap="round"
 			strokeLinejoin="round"
 			className={className}
+			aria-hidden="true"
 			{...props}
 		>
 			<rect x="2" y="8" width="4" height="4" rx="0.5" />

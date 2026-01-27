@@ -56,7 +56,7 @@ export function GameIcon({
 // Branding Icons (used in auth pages)
 // ==========================================
 
-function GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
+function _GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
 	return <Icon icon="mdi:gamepad-variant" className={className} size={size} {...props} />
 }
 
@@ -74,14 +74,14 @@ const AVATAR_ICONS = [
 	'mdi:school',
 ] as const
 
-function AvatarIcon({ index, className, size = 24, ...props }: GameIconProps & { index: number }) {
+function _AvatarIcon({ index, className, size = 24, ...props }: GameIconProps & { index: number }) {
 	const iconName = AVATAR_ICONS[index % AVATAR_ICONS.length]
 	return <Icon icon={iconName} className={className} size={size} {...props} />
 }
 
 // Category Colors for Word Groups (text representation for share)
 // Using distinctive Puzzled palette instead of NYT colors
-const CATEGORY_COLORS = {
+const _CATEGORY_COLORS = {
 	0: 'rose', // Coral pink (was yellow)
 	1: 'teal', // Cyan (was green)
 	2: 'amber', // Gold (was blue)
@@ -90,7 +90,7 @@ const CATEGORY_COLORS = {
 
 // Share text helpers (text-based for clipboard compatibility)
 // Using purple/orange for Word Guess (distinctive from NYT green/yellow)
-const SHARE_SQUARES = {
+const _SHARE_SQUARES = {
 	correct: '🟪', // Purple - Puzzled brand (was green)
 	partial: '🟧', // Orange - warm, friendly (was yellow)
 	wrong: '⬛',

@@ -60,7 +60,7 @@ export async function logAdminAction(
 /**
  * Log user action (self-initiated)
  */
-async function logUserAction(
+async function _logUserAction(
 	userId: string,
 	action: AuditAction,
 	resourceType: string,
@@ -79,7 +79,7 @@ async function logUserAction(
 /**
  * Log game completion
  */
-async function logGameComplete(
+async function _logGameComplete(
 	userId: string,
 	gameSlug: string,
 	sessionId: string,
@@ -97,7 +97,7 @@ async function logGameComplete(
 /**
  * Log streak update
  */
-async function logStreakUpdate(
+async function _logStreakUpdate(
 	userId: string,
 	gameSlug: string,
 	streak: number,
@@ -115,7 +115,7 @@ async function logStreakUpdate(
 /**
  * Log achievement unlock
  */
-async function logAchievementUnlock(
+async function _logAchievementUnlock(
 	userId: string,
 	achievementSlug: string,
 	metadata?: Record<string, unknown>,

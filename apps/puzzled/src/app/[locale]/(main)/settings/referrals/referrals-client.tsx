@@ -130,7 +130,9 @@ export function ReferralsContent() {
 					{/* Link Display */}
 					{link && (
 						<div className="space-y-2">
-							<label htmlFor="referral-link" className="text-sm font-medium">{t('referralLink')}</label>
+							<label htmlFor="referral-link" className="text-sm font-medium">
+								{t('referralLink')}
+							</label>
 							<div className="flex items-center gap-2">
 								<input
 									id="referral-link"

@@ -9,7 +9,7 @@
  * 4. Queens cannot touch each other (including diagonally)
  */
 
-type QueensCell = {
+export type QueensCell = {
 	hasQueen: boolean
 	region: number // Color region index (0-N)
 }

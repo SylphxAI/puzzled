@@ -138,7 +138,7 @@ export function generateWordLadderPuzzle(seed: number): {
  * Validate that a path is correct
  * Used for testing and verification
  */
-function validatePath(path: string[]): boolean {
+function _validatePath(path: string[]): boolean {
 	if (path.length < 2) return false
 
 	for (let i = 1; i < path.length; i++) {

@@ -43,7 +43,7 @@ export type HapticPattern = keyof typeof HAPTIC_PATTERNS
 
 type HapticIntensity = 'light' | 'medium' | 'heavy'
 
-function useHaptic() {
+function _useHaptic() {
 	// Check if Vibration API is supported
 	const isSupported = useMemo(() => {
 		if (typeof window === 'undefined') return false

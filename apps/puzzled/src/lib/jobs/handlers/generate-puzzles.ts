@@ -13,7 +13,7 @@ import { db } from '@/lib/db'
 import { dailyPuzzles } from '@/lib/db/schema'
 import { handleWorkflowFailure } from '@/lib/dlq'
 import { captureMessage } from '@/lib/monitoring'
-import type { JobHandler, JobResult } from '../handlers'
+import type { JobHandler } from '../handlers'
 
 const DIFFICULTY_LEVELS: PuzzleDifficulty[] = ['easy', 'medium', 'hard']
 

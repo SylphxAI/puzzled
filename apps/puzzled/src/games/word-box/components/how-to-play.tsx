@@ -123,7 +123,7 @@ export function LetterBoxedHowToPlay() {
 	)
 }
 
-function LetterBoxedHowToPlayTitle() {
+function _LetterBoxedHowToPlayTitle() {
 	const t = useTranslations('games.wordBox')
 	return <>{t('howToPlay')}</>
 }

@@ -841,7 +841,7 @@ export type AppSettingKey = 'puzzle_generator_model' | 'maintenance_mode' | 'dai
 // RELATIONS
 // ==========================================
 
-export const userPreferencesRelations = relations(userPreferences, ({ many }) => ({
+export const userPreferencesRelations = relations(userPreferences, ({ many: _many }) => ({
 	// User preferences can be linked to game sessions for queries
 	// but the actual relation is via userId, not FK
 }))

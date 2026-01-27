@@ -38,7 +38,7 @@ export function isSuperAdminRole(role: string | null | undefined): boolean {
 /**
  * Check if roleA has at least the same level as roleB
  */
-function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): boolean {
+function _hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): boolean {
 	if (!roleA) return false
 	const levelA = ROLE_LEVELS[roleA as UserRole] ?? 0
 	const levelB = ROLE_LEVELS[roleB]
@@ -48,7 +48,7 @@ function hasMinimumRole(roleA: string | null | undefined, roleB: UserRole): bool
 /**
  * Check if roleA has a higher level than roleB
  */
-function hasHigherRole(
+function _hasHigherRole(
 	roleA: string | null | undefined,
 	roleB: string | null | undefined,
 ): boolean {

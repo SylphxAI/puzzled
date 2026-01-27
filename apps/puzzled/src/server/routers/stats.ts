@@ -16,13 +16,7 @@ import { getTodayUTC } from '@/features/daily/server'
 import { getAllGames, getGameConfig, isValidGameSlug } from '@/games/registry'
 import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
-import {
-	GAME_RESULT_STATUSES,
-	gameSessions,
-	userDisplayCache,
-	userPreferences,
-	userStats,
-} from '@/lib/db/schema'
+import { GAME_RESULT_STATUSES, gameSessions, userPreferences, userStats } from '@/lib/db/schema'
 import { cache, keys } from '@/lib/redis'
 import { getDisplayData } from '../services/display-cache'
 import { protectedProcedure, publicProcedure, rateLimitedProcedure, router } from '../trpc'

@@ -92,7 +92,7 @@ function getMsUntilNextUTCMidnight(): number {
 /**
  * Get time until next UTC midnight
  */
-function getTimeUntilNextUTCMidnight(): { hours: number; minutes: number; seconds: number } {
+function _getTimeUntilNextUTCMidnight(): { hours: number; minutes: number; seconds: number } {
 	const diff = getMsUntilNextUTCMidnight()
 	return {
 		hours: Math.floor(diff / (1000 * 60 * 60)),
@@ -102,6 +102,6 @@ function getTimeUntilNextUTCMidnight(): { hours: number; minutes: number; second
 }
 
 // Export constants
-const DAILY_PUZZLE_SYSTEM = {
+const _DAILY_PUZZLE_SYSTEM = {
 	DEFAULT_LAUNCH_DATE,
 } as const

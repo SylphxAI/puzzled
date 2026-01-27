@@ -281,7 +281,7 @@ export function generateQueensPuzzle(
  * Thursday-Friday: 7x7
  * Saturday-Sunday: 8x8 (hardest)
  */
-function getSizeFromSeed(seed: number): number {
+function _getSizeFromSeed(seed: number): number {
 	const dayOfWeek = seed % 7
 	if (dayOfWeek === 0) return 5 // Sunday -> easiest (treat as Monday)
 	if (dayOfWeek <= 2) return 5 // Mon-Tue

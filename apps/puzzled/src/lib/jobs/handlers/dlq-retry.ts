@@ -9,7 +9,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
 import { getItemsReadyForRetry, markDLQFailed, markDLQRetrying } from '@/lib/dlq'
-import type { JobHandler, JobResult } from '../handlers'
+import type { JobHandler } from '../handlers'
 
 /**
  * DLQ retry handler

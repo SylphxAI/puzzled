@@ -12,7 +12,7 @@ import type { GameCompletionStats, GameShareStats } from '../types'
  * @param options - Formatting options
  * @returns Formatted time string (e.g., "1m 30s", "45s", "2h 15m")
  */
-function formatTime(
+function _formatTime(
 	ms: number,
 	options?: {
 		/** Include hours if > 60 minutes (default: true) */

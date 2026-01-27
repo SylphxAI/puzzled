@@ -65,7 +65,7 @@ async function addToDLQ(entry: DLQEntry): Promise<string> {
 /**
  * Get pending items in the DLQ for a specific workflow (or all)
  */
-async function getDLQItems(workflowName?: string) {
+async function _getDLQItems(workflowName?: string) {
 	if (workflowName) {
 		return db.query.deadLetterQueue.findMany({
 			where: and(
@@ -131,7 +131,7 @@ export async function markDLQRetrying(id: string): Promise<void> {
 /**
  * Increment retry count and update last retry time
  */
-async function incrementDLQRetry(id: string): Promise<number> {
+async function _incrementDLQRetry(id: string): Promise<number> {
 	// First get current item to increment retry count
 	const item = await db.query.deadLetterQueue.findFirst({
 		where: eq(deadLetterQueue.id, id),

@@ -17198,7 +17198,7 @@ export function isValidWord(word: string): boolean {
 /**
  * Get puzzle number for a given date (days since game launch)
  */
-function getPuzzleNumber(date: Date = new Date()): number {
+function _getPuzzleNumber(date: Date = new Date()): number {
 	const launchDate = new Date('2024-01-01T00:00:00Z')
 	const diffTime = date.getTime() - launchDate.getTime()
 	const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))

@@ -180,7 +180,7 @@ export function getRequiredEnv(name: string): string {
 /**
  * Get optional environment variable with default
  */
-function getOptionalEnv(name: string, defaultValue: string): string {
+function _getOptionalEnv(name: string, defaultValue: string): string {
 	return process.env[name] || defaultValue
 }
 
@@ -188,7 +188,7 @@ function getOptionalEnv(name: string, defaultValue: string): string {
  * Check if a feature is configured (has required env vars)
  * Note: Billing/Stripe is handled by Sylphx Platform SDK
  */
-function isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
+function _isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
 	switch (feature) {
 		case 'email':
 			return !!process.env.RESEND_API_KEY

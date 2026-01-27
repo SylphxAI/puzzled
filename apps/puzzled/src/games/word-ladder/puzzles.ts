@@ -35,6 +35,6 @@ export function getPuzzleFromSeed(seed: number): {
 /**
  * Get count of available puzzles
  */
-function getPuzzleCount(): number {
+function _getPuzzleCount(): number {
 	return getGenPuzzleCount()
 }
