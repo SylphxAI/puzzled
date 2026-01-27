@@ -1,6 +1,8 @@
 'use client'
 
 import { AlertCircle, CheckCircle2, Info, XCircle } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
 
 type FeedbackVariant = 'error' | 'success' | 'warning' | 'info'
@@ -75,25 +77,31 @@ export function FormFeedback({ error, success, warning, info, className }: FormF
 
 	return (
 		<div className={cn('space-y-2', className)}>
-			{messages.map(({ variant, message }) => {
-				const config = variantConfig[variant]
-				const Icon = config.icon
+			<AnimatePresence mode="popLayout">
+				{messages.map(({ variant, message }) => {
+					const config = variantConfig[variant]
+					const Icon = config.icon
 
-				return (
-					<div
-						key={`${variant}-${message}`}
-						className={cn(
-							'flex items-start gap-2 rounded-lg border p-3 text-sm',
-							config.containerClass,
-						)}
-						role={variant === 'error' ? 'alert' : 'status'}
-						aria-live={variant === 'error' ? 'assertive' : 'polite'}
-					>
-						<Icon className={cn('mt-0.5 h-4 w-4 shrink-0', config.textClass)} aria-hidden="true" />
-						<p className={config.textClass}>{message}</p>
-					</div>
-				)
-			})}
+					return (
+						<motion.div
+							key={`${variant}-${message}`}
+							initial={{ opacity: 0, y: -8, height: 0 }}
+							animate={{ opacity: 1, y: 0, height: 'auto' }}
+							exit={{ opacity: 0, y: -8, height: 0 }}
+							transition={{ duration: duration.normal, ease: easing.easeOut }}
+							className={cn(
+								'flex items-start gap-2 rounded-lg border p-3 text-sm overflow-hidden',
+								config.containerClass,
+							)}
+							role={variant === 'error' ? 'alert' : 'status'}
+							aria-live={variant === 'error' ? 'assertive' : 'polite'}
+						>
+							<Icon className={cn('mt-0.5 h-4 w-4 shrink-0', config.textClass)} aria-hidden="true" />
+							<p className={config.textClass}>{message}</p>
+						</motion.div>
+					)
+				})}
+			</AnimatePresence>
 		</div>
 	)
 }
