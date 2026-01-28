@@ -57,7 +57,9 @@ export function GameIcon({
 // ==========================================
 
 function _GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
-	return <Icon icon="mdi:gamepad-variant" className={className} width={size} height={size} {...props} />
+	return (
+		<Icon icon="mdi:gamepad-variant" className={className} width={size} height={size} {...props} />
+	)
 }
 
 // Leaderboard Avatar Icons
