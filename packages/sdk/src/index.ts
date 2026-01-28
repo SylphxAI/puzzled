@@ -421,6 +421,46 @@ export {
 } from './orgs'
 
 // =============================================================================
+// Secrets Functions
+// =============================================================================
+
+export {
+	getSecret,
+	getSecrets,
+	listSecretKeys,
+	hasSecret,
+	getAllSecrets,
+	type GetSecretInput,
+	type GetSecretResult,
+	type GetSecretsInput,
+	type GetSecretsResult,
+	type ListSecretKeysInput,
+	type SecretKeyInfo,
+} from './secrets'
+
+// =============================================================================
+// Vector Search Functions
+// =============================================================================
+
+export {
+	indexDocument,
+	batchIndex,
+	search,
+	deleteDocument,
+	getSearchStats,
+	listDocuments,
+	type IndexDocumentInput,
+	type IndexDocumentResult,
+	type BatchIndexInput,
+	type BatchIndexResult,
+	type SearchInput,
+	type SearchResult,
+	type SearchResponse,
+	type DeleteDocumentInput,
+	type SearchStatsResult,
+} from './search'
+
+// =============================================================================
 // Common Types (re-exported from types.ts)
 // =============================================================================
 
