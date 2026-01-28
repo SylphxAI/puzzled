@@ -156,6 +156,16 @@ type ToastOptions = {
 	action?: ToastAction
 }
 
+type UndoableOptions = {
+	description?: string
+	/** Called when user clicks Undo - should restore the item */
+	onUndo: () => void | Promise<void>
+	/** Called when timeout passes without undo - should perform the actual delete */
+	onConfirm?: () => void | Promise<void>
+	/** Timeout in milliseconds (default: 5000) */
+	timeoutMs?: number
+}
+
 type ToastContextType = {
 	toasts: ToastData[]
 	addToast: (toast: Omit<ToastData, 'id'>) => string
@@ -164,11 +174,16 @@ type ToastContextType = {
 	error: (title: string, options?: ToastOptions | string) => string
 	warning: (title: string, options?: ToastOptions | string) => string
 	info: (title: string, options?: ToastOptions | string) => string
-	/** Show toast with undo action - auto-calls undo on click and shows feedback */
-	undoable: (
-		title: string,
-		options: { description?: string; onUndo: () => void | Promise<void>; timeoutMs?: number },
-	) => string
+	/**
+	 * Show toast with undo action - delays actual deletion until timeout passes
+	 *
+	 * Pattern:
+	 * 1. Optimistically remove item from UI immediately
+	 * 2. Show toast with Undo button
+	 * 3. If user clicks Undo, call onUndo to restore item
+	 * 4. If timeout passes, call onConfirm to actually delete
+	 */
+	undoable: (title: string, options: UndoableOptions) => string
 }
 
 const ToastContext = createContext<ToastContextType | null>(null)
@@ -335,21 +350,40 @@ export function ToastProviderWithContext({ children }: { children: React.ReactNo
 	)
 
 	const undoable = useCallback(
-		(
-			title: string,
-			options: { description?: string; onUndo: () => void | Promise<void>; timeoutMs?: number },
-		): string => {
+		(title: string, options: UndoableOptions): string => {
 			const timeoutMs = options.timeoutMs ?? 5000
-			return addToast({
+			let undoClicked = false
+
+			const id = addToast({
 				type: 'default',
 				title,
 				description: options.description,
 				duration: timeoutMs,
 				action: {
 					label: 'Undo',
-					onClick: options.onUndo,
+					onClick: async () => {
+						undoClicked = true
+						await options.onUndo()
+					},
 				},
 			})
+
+			// Schedule the confirm callback when timeout passes
+			if (options.onConfirm) {
+				setTimeout(async () => {
+					if (!undoClicked) {
+						try {
+							await options.onConfirm?.()
+						} catch (error) {
+							// If confirm fails, we can't easily undo at this point
+							// The toast is already gone, but we log for debugging
+							console.error('Undoable action confirm failed:', error)
+						}
+					}
+				}, timeoutMs)
+			}
+
+			return id
 		},
 		[addToast],
 	)
