@@ -119,18 +119,21 @@ export function Badge({ variant = 'default', size = 'md', children, className }:
 type StatusDotProps = {
 	/** Status type that determines the color */
 	status: 'online' | 'offline' | 'away' | 'busy'
+	/** Whether to show pulse animation for online/busy status */
+	pulse?: boolean
 	/** Additional CSS classes */
 	className?: string
 }
 
 /**
  * Small colored dot for indicating status.
+ * Supports optional pulse animation for active states.
  *
  * Colors:
- * - `online`: Green
+ * - `online`: Green (with optional pulse)
  * - `offline`: Gray
  * - `away`: Yellow
- * - `busy`: Red
+ * - `busy`: Red (with optional pulse)
  *
  * @example
  * ```tsx
@@ -139,19 +142,30 @@ type StatusDotProps = {
  *   <StatusDot status="online" />
  *   <span>John Doe</span>
  * </div>
+ *
+ * // With pulse animation
+ * <StatusDot status="online" pulse />
  * ```
  */
-export function StatusDot({ status, className }: StatusDotProps) {
+export function StatusDot({ status, pulse = false, className }: StatusDotProps) {
 	const statusColors = {
-		online: 'bg-success',
-		offline: 'bg-muted-foreground',
-		away: 'bg-warning',
-		busy: 'bg-error',
+		online: 'bg-success text-success/40',
+		offline: 'bg-muted-foreground text-muted-foreground/40',
+		away: 'bg-warning text-warning/40',
+		busy: 'bg-error text-error/40',
 	}
+
+	// Only pulse for online and busy statuses by default
+	const shouldPulse = pulse && (status === 'online' || status === 'busy')
 
 	return (
 		<span
-			className={cn('inline-block h-2 w-2 rounded-full', statusColors[status], className)}
+			className={cn(
+				'relative inline-block h-2 w-2 rounded-full',
+				statusColors[status],
+				shouldPulse && 'animate-status-pulse motion-reduce:after:hidden',
+				className,
+			)}
 			role="img"
 			aria-label={status}
 		/>

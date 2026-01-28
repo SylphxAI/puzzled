@@ -104,6 +104,12 @@ const DropdownMenuItem = forwardRef<
 ))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
+/**
+ * Animated checkmark for menu checkbox items.
+ * Uses spring animation for a satisfying pop effect.
+ */
+const MotionSpan = motion.create('span')
+
 const DropdownMenuCheckboxItem = forwardRef<
 	React.ComponentRef<typeof DropdownMenuPrimitive.CheckboxItem>,
 	React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
@@ -119,8 +125,14 @@ const DropdownMenuCheckboxItem = forwardRef<
 		{...props}
 	>
 		<span className="absolute left-2 flex h-4 w-4 items-center justify-center">
-			<DropdownMenuPrimitive.ItemIndicator>
-				<Check className="h-4 w-4" />
+			<DropdownMenuPrimitive.ItemIndicator forceMount asChild>
+				<MotionSpan
+					initial={{ opacity: 0, scale: 0 }}
+					animate={checked ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+					transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+				>
+					<Check className="h-4 w-4" />
+				</MotionSpan>
 			</DropdownMenuPrimitive.ItemIndicator>
 		</span>
 		{children}

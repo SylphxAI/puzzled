@@ -1220,6 +1220,95 @@ export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) 
 }
 
 // ============================================================================
+// Interactive List Item — CSS First (Animated Row + Hover States)
+// ============================================================================
+
+interface InteractiveListItemProps extends HTMLAttributes<HTMLDivElement> {
+	/** Children to animate */
+	children: ReactNode
+	/** Index for stagger delay calculation */
+	index?: number
+	/** Base delay before animation starts */
+	baseDelay?: number
+	/** Whether item is selected/active */
+	selected?: boolean
+	/** Disable hover effects */
+	disableHover?: boolean
+}
+
+/**
+ * InteractiveListItem - Animated list item with hover/active states
+ *
+ * Combines AnimatedRow entrance animation with consistent hover states.
+ * Use this for list items that are clickable or interactive.
+ *
+ * @example
+ * {items.map((item, i) => (
+ *   <InteractiveListItem
+ *     key={item.id}
+ *     index={i}
+ *     selected={selectedId === item.id}
+ *     onClick={() => onSelect(item.id)}
+ *   >
+ *     <ListItemContent data={item} />
+ *   </InteractiveListItem>
+ * ))}
+ */
+export function InteractiveListItem({
+	children,
+	index = 0,
+	baseDelay = 0,
+	selected = false,
+	disableHover = false,
+	className,
+	style,
+	...props
+}: InteractiveListItemProps) {
+	const ref = useRef<HTMLDivElement>(null)
+	const inView = useInView(ref, { once: true, margin: '-64px' })
+
+	return (
+		<div
+			ref={ref}
+			className={className}
+			data-selected={selected || undefined}
+			style={{
+				...entranceStyle(inView, {
+					duration: duration.fast,
+					delay: baseDelay + index * stagger.fast,
+					translate: 'translateY(8px)',
+				}),
+				// Hover/active transitions
+				transition: `opacity ${duration.fast}s ${EASE_OUT}, transform ${duration.fast}s ${EASE_OUT}, background-color 0.15s ease-out`,
+				...(selected && { backgroundColor: 'var(--color-muted)' }),
+				...style,
+			}}
+			onMouseEnter={
+				disableHover
+					? undefined
+					: (e) => {
+							if (!selected) {
+								e.currentTarget.style.backgroundColor = 'oklch(from var(--color-muted) l c h / 0.5)'
+							}
+						}
+			}
+			onMouseLeave={
+				disableHover
+					? undefined
+					: (e) => {
+							if (!selected) {
+								e.currentTarget.style.backgroundColor = ''
+							}
+						}
+			}
+			{...props}
+		>
+			{children}
+		</div>
+	)
+}
+
+// ============================================================================
 // Re-export Framer Motion primitives
 // ============================================================================
 

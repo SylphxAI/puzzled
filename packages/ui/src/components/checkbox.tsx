@@ -2,6 +2,7 @@
  * @sylphx/ui - Checkbox Component
  *
  * Accessible checkbox built on Radix UI primitives.
+ * Features animated checkmark for satisfying micro-interaction.
  *
  * @example
  * ```tsx
@@ -30,9 +31,31 @@
 'use client'
 
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
-import { Check } from 'lucide-react'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
+
+/**
+ * Animated checkmark icon component.
+ * Uses SVG stroke-dashoffset animation for draw effect.
+ */
+function AnimatedCheck({ className }: { className?: string }) {
+	return (
+		<svg
+			className={cn('h-4 w-4', className)}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="3"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<path
+				d="M5 12l5 5L19 7"
+				className="animate-checkmark motion-reduce:animate-none motion-reduce:[stroke-dashoffset:0]"
+			/>
+		</svg>
+	)
+}
 
 /**
  * Checkbox component for binary selection in forms.
@@ -40,10 +63,11 @@ import { cn } from '../utils'
  * Features:
  * - Built on Radix UI for accessibility
  * - Keyboard navigable (Space to toggle)
- * - Check icon indicator when selected
+ * - Animated checkmark with draw effect
  * - Focus ring for keyboard navigation
  * - Disabled state styling
  * - Compatible with react-hook-form
+ * - Respects prefers-reduced-motion
  *
  * @example
  * ```tsx
@@ -73,13 +97,14 @@ const Checkbox = forwardRef<
 			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 			'disabled:cursor-not-allowed disabled:opacity-50',
 			'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
-			'transition-colors hover:border-primary/70',
+			'transition-all duration-150 hover:border-primary/70',
+			'active:scale-95 motion-reduce:active:scale-100',
 			className,
 		)}
 		{...props}
 	>
 		<CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-			<Check className="h-4 w-4" />
+			<AnimatedCheck />
 		</CheckboxPrimitive.Indicator>
 	</CheckboxPrimitive.Root>
 ))
