@@ -1,9 +1,9 @@
 /**
  * Iconify Icon Component
  *
- * Uses @iconify-icon/react web component for SSR-friendly, zero-delay icon rendering.
- * Renders immediately without hydration delay - icons appear on first paint.
+ * Uses @iconify/react for native React SVG rendering.
+ * Icons are rendered as inline SVG - no web components, full SSR support.
  *
- * @see https://iconify.design/docs/iconify-icon/
+ * @see https://iconify.design/docs/icon-components/react/
  */
-export { Icon, type IconifyIconProps as IconProps } from '@iconify-icon/react'
+export { Icon, type IconProps } from '@iconify/react'

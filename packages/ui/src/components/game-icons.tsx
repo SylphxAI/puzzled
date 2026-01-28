@@ -18,7 +18,7 @@ type GameIconProps = {
 // ==========================================
 
 export function GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
-	return <Icon icon="mdi:gamepad-variant" className={className} size={size} {...props} />
+	return <Icon icon="mdi:gamepad-variant" className={className} width={size} height={size} {...props} />
 }
 
 // Leaderboard Avatar Icons
@@ -42,7 +42,7 @@ export function AvatarIcon({
 	...props
 }: GameIconProps & { index: number }) {
 	const iconName = AVATAR_ICONS[index % AVATAR_ICONS.length] ?? 'mdi:trophy'
-	return <Icon icon={iconName} className={className} size={size} {...props} />
+	return <Icon icon={iconName} className={className} width={size} height={size} {...props} />
 }
 
 // Category Colors for Word Groups (text representation for share)

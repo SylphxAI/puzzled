@@ -49,7 +49,7 @@ export function GameIcon({
 	}
 
 	// Fallback: generic puzzle icon
-	return <Icon icon="mdi:puzzle" className={className} size={size} {...props} />
+	return <Icon icon="mdi:puzzle" className={className} width={size} height={size} {...props} />
 }
 
 // ==========================================
@@ -57,7 +57,7 @@ export function GameIcon({
 // ==========================================
 
 function _GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
-	return <Icon icon="mdi:gamepad-variant" className={className} size={size} {...props} />
+	return <Icon icon="mdi:gamepad-variant" className={className} width={size} height={size} {...props} />
 }
 
 // Leaderboard Avatar Icons
@@ -76,7 +76,7 @@ const AVATAR_ICONS = [
 
 function _AvatarIcon({ index, className, size = 24, ...props }: GameIconProps & { index: number }) {
 	const iconName = AVATAR_ICONS[index % AVATAR_ICONS.length]
-	return <Icon icon={iconName} className={className} size={size} {...props} />
+	return <Icon icon={iconName} className={className} width={size} height={size} {...props} />
 }
 
 // Category Colors for Word Groups (text representation for share)
