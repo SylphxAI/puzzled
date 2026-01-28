@@ -439,25 +439,33 @@ export {
 } from './secrets'
 
 // =============================================================================
-// Vector Search Functions
+// Search Functions
 // =============================================================================
 
 export {
 	indexDocument,
 	batchIndex,
 	search,
+	getFacets,
 	deleteDocument,
+	upsertDocument,
 	getSearchStats,
-	listDocuments,
+	trackClick,
 	type IndexDocumentInput,
 	type IndexDocumentResult,
 	type BatchIndexInput,
 	type BatchIndexResult,
+	type SearchType,
 	type SearchInput,
-	type SearchResult,
+	type SearchResultItem,
 	type SearchResponse,
+	type GetFacetsInput,
+	type FacetsResponse,
 	type DeleteDocumentInput,
+	type UpsertDocumentInput,
+	type UpsertDocumentResult,
 	type SearchStatsResult,
+	type TrackClickInput,
 } from './search'
 
 // =============================================================================
