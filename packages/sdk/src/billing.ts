@@ -32,15 +32,16 @@ export interface Plan {
 
 export interface Subscription {
 	id: string
+	userId: string
 	planId: string
 	planSlug: string
 	planName: string
 	status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'paused'
 	interval: 'monthly' | 'annual' | 'lifetime'
-	currentPeriodStart: string
-	currentPeriodEnd: string
+	currentPeriodStart: string | null
+	currentPeriodEnd: string | null
 	cancelAtPeriodEnd: boolean
-	trialEnd?: string | null
+	trialEnd: string | null
 }
 
 export interface CheckoutInput {
