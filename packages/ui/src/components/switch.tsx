@@ -2,7 +2,8 @@
  * @sylphx/ui - Switch Component
  *
  * Accessible toggle switch built on Radix UI primitives.
- * Supports optional label and description.
+ * Uses inline styles for checked/unchecked states to avoid
+ * Tailwind v4 tree-shaking issues with data-[state=*] utilities.
  *
  * @example
  * ```tsx
@@ -48,24 +49,9 @@ type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> &
 /**
  * Toggle switch component for binary on/off settings.
  *
- * Features:
- * - Built on Radix UI for accessibility
- * - Keyboard navigable (Space/Enter to toggle)
- * - Optional label and description
- * - Auto-generated IDs for label association
- * - Focus ring for keyboard navigation
- * - Disabled state styling
- *
- * @example
- * ```tsx
- * // Settings toggle
- * <Switch
- *   label="Push notifications"
- *   description="Get notified when someone mentions you"
- *   checked={notifications}
- *   onCheckedChange={setNotifications}
- * />
- * ```
+ * Uses Radix UI for accessibility (keyboard, ARIA, focus management).
+ * Visual states use CSS custom properties + attribute selectors defined
+ * in a <style> tag to avoid Tailwind v4/Turbopack tree-shaking issues.
  */
 const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchProps>(
 	({ className, label, description, id: providedId, ...props }, ref) => {
@@ -76,28 +62,10 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 			<SwitchPrimitive.Root
 				ref={ref}
 				id={id}
-				className={cn(
-					'peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2',
-					'transition-colors duration-200',
-					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-					'disabled:cursor-not-allowed disabled:opacity-50',
-					'data-[state=checked]:bg-primary data-[state=checked]:border-primary',
-					'data-[state=unchecked]:bg-muted-foreground/40 data-[state=unchecked]:border-transparent',
-					'active:scale-[0.98] motion-reduce:active:scale-100',
-					className,
-				)}
+				className={cn('switch-root', className)}
 				{...props}
 			>
-				<SwitchPrimitive.Thumb
-					className={cn(
-						'pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0',
-						// Animate position and color changes
-						'transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
-						'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-						// Checked: white thumb for contrast against primary color
-						'data-[state=checked]:bg-primary-foreground data-[state=unchecked]:bg-foreground/80',
-					)}
-				/>
+				<SwitchPrimitive.Thumb className="switch-thumb" />
 			</SwitchPrimitive.Root>
 		)
 
