@@ -525,7 +525,7 @@ export async function getOAuthProviders(options: {
 
 	try {
 		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			cache: 'force-cache',
+			next: { revalidate: 300 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -568,7 +568,7 @@ export async function getOAuthProvidersWithInfo(options: {
 
 	try {
 		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			cache: 'force-cache',
+			next: { revalidate: 300 },
 		} as RequestInit)
 
 		if (!response.ok) {
