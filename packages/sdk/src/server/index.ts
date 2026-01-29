@@ -116,9 +116,9 @@ export function createServerClient(config: ServerConfig): RestClient {
 	}
 
 	return createRestClient({
-		appId: config.appId,
-		appSecret: config.appSecret,
-		platformUrl: config.platformUrl,
+		appId: config.appId.trim(),
+		appSecret: config.appSecret.trim(),
+		platformUrl: config.platformUrl?.trim(),
 	})
 }
 
@@ -544,6 +544,16 @@ async function cachedFetch<T>(params: {
 	}
 }
 
+/** Trim whitespace/newlines from env-sourced options (Vercel CLI adds trailing \n) */
+function trimOptions<T extends AuthenticatedFetchOptions>(options: T): T {
+	return {
+		...options,
+		appId: options.appId.trim(),
+		appSecret: options.appSecret.trim(),
+		platformUrl: (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
+	}
+}
+
 /** Build authenticated headers for SDK API calls */
 function sdkHeaders(appId: string, appSecret: string): Record<string, string> {
 	return { 'x-app-id': appId, 'x-app-secret': appSecret }
@@ -585,7 +595,8 @@ export async function getOAuthProviders(options: {
 	appId: string
 	platformUrl?: string
 }): Promise<OAuthProvider[]> {
-	const { appId, platformUrl = DEFAULT_PLATFORM_URL } = options
+	const appId = options.appId.trim()
+	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
 
 	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
@@ -603,7 +614,8 @@ export async function getOAuthProvidersWithInfo(options: {
 	appId: string
 	platformUrl?: string
 }): Promise<OAuthProviderInfo[]> {
-	const { appId, platformUrl = DEFAULT_PLATFORM_URL } = options
+	const appId = options.appId.trim()
+	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
 
 	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
@@ -638,7 +650,7 @@ export type { Plan }
  * ```
  */
 export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<Plan[]>({
 		url: `${platformUrl}/api/sdk/billing/plans`,
@@ -672,7 +684,7 @@ export type { ConsentType }
  * ```
  */
 export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<ConsentType[]>({
 		url: `${platformUrl}/api/sdk/consent/types`,
@@ -717,7 +729,7 @@ export interface FeatureFlagDefinition {
  * ```
  */
 export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promise<FeatureFlagDefinition[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<FeatureFlagDefinition[]>({
 		url: `${platformUrl}/api/sdk/flags`,
@@ -769,7 +781,7 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 	limit?: number
 	period?: 'all' | 'month' | 'week'
 }): Promise<ReferralLeaderboardResult> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = options
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = trimOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
 	url.searchParams.set('limit', String(limit))
@@ -826,7 +838,7 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 	leaderboardId: string
 	limit?: number
 }): Promise<EngagementLeaderboardResult> {
-	const { appId, appSecret, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = options
+	const { appId, appSecret, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = trimOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
 	url.searchParams.set('limit', String(limit))
