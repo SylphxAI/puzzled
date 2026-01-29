@@ -20,20 +20,17 @@ import {
 // ============================================================================
 
 describe('createConfig', () => {
-	test('creates config with required fields', () => {
+	test('creates config with secretKey', () => {
 		const config = createConfig({
-			appId: 'my-app',
-			appSecret: 'secret-123',
+			secretKey: 'sk_dev_abc123',
 		})
 
-		expect(config.appId).toBe('my-app')
-		expect(config.appSecret).toBe('secret-123')
+		expect(config.secretKey).toBe('sk_dev_abc123')
 		expect(config.platformUrl).toBe('https://sylphx.com') // Default
 	})
 
 	test('uses custom platformUrl when provided', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			platformUrl: 'https://custom.example.com',
 		})
 
@@ -42,7 +39,6 @@ describe('createConfig', () => {
 
 	test('includes accessToken when provided', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			accessToken: 'token-abc',
 		})
 
@@ -51,7 +47,6 @@ describe('createConfig', () => {
 
 	test('sets platformMode when provided', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			platformMode: true,
 		})
 
@@ -60,8 +55,7 @@ describe('createConfig', () => {
 
 	test('returns frozen object', () => {
 		const config = createConfig({
-			appId: 'my-app',
-			appSecret: 'secret',
+			secretKey: 'sk_dev_abc123',
 		})
 
 		expect(Object.isFrozen(config)).toBe(true)
@@ -74,16 +68,15 @@ describe('createConfig', () => {
 
 describe('createPlatformConfig', () => {
 	test('creates platform-mode config', () => {
-		const config = createPlatformConfig('sylphx-console')
+		const config = createPlatformConfig()
 
-		expect(config.appId).toBe('sylphx-console')
 		expect(config.platformMode).toBe(true)
 		// platformUrl is window.location.origin in browser, empty string in Node
 		expect(config.platformUrl).toBe('')
 	})
 
 	test('returns frozen object', () => {
-		const config = createPlatformConfig('my-app')
+		const config = createPlatformConfig()
 
 		expect(Object.isFrozen(config)).toBe(true)
 	})
@@ -96,21 +89,17 @@ describe('createPlatformConfig', () => {
 describe('withToken', () => {
 	test('creates new config with token', () => {
 		const original = createConfig({
-			appId: 'my-app',
-			appSecret: 'secret',
+			secretKey: 'sk_dev_abc123',
 		})
 
 		const authenticated = withToken(original, 'new-token')
 
 		expect(authenticated.accessToken).toBe('new-token')
-		expect(authenticated.appId).toBe('my-app')
-		expect(authenticated.appSecret).toBe('secret')
+		expect(authenticated.secretKey).toBe('sk_dev_abc123')
 	})
 
 	test('does not modify original config', () => {
-		const original = createConfig({
-			appId: 'my-app',
-		})
+		const original = createConfig({})
 
 		withToken(original, 'token')
 
@@ -118,7 +107,7 @@ describe('withToken', () => {
 	})
 
 	test('returns frozen object', () => {
-		const config = createConfig({ appId: 'my-app' })
+		const config = createConfig({})
 		const authenticated = withToken(config, 'token')
 
 		expect(Object.isFrozen(authenticated)).toBe(true)
@@ -130,27 +119,24 @@ describe('withToken', () => {
 // ============================================================================
 
 describe('buildHeaders', () => {
-	test('includes Content-Type and x-app-id', () => {
-		const config = createConfig({ appId: 'my-app' })
+	test('includes Content-Type', () => {
+		const config = createConfig({})
 		const headers = buildHeaders(config)
 
 		expect(headers['Content-Type']).toBe('application/json')
-		expect(headers['x-app-id']).toBe('my-app')
 	})
 
-	test('includes x-app-secret when provided', () => {
+	test('includes x-app-secret when secretKey provided', () => {
 		const config = createConfig({
-			appId: 'my-app',
-			appSecret: 'secret-123',
+			secretKey: 'sk_dev_abc123',
 		})
 		const headers = buildHeaders(config)
 
-		expect(headers['x-app-secret']).toBe('secret-123')
+		expect(headers['x-app-secret']).toBe('sk_dev_abc123')
 	})
 
 	test('includes Authorization when accessToken provided', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			accessToken: 'token-abc',
 		})
 		const headers = buildHeaders(config)
@@ -160,8 +146,7 @@ describe('buildHeaders', () => {
 
 	test('excludes x-app-secret and Authorization in platform mode', () => {
 		const config = createConfig({
-			appId: 'my-app',
-			appSecret: 'secret',
+			secretKey: 'sk_dev_abc123',
 			accessToken: 'token',
 			platformMode: true,
 		})
@@ -179,7 +164,6 @@ describe('buildHeaders', () => {
 describe('buildApiUrl', () => {
 	test('builds correct URL with leading slash', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			platformUrl: 'https://sylphx.com',
 		})
 
@@ -188,7 +172,6 @@ describe('buildApiUrl', () => {
 
 	test('builds correct URL without leading slash', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			platformUrl: 'https://sylphx.com',
 		})
 
@@ -197,7 +180,6 @@ describe('buildApiUrl', () => {
 
 	test('handles trailing slash in platformUrl', () => {
 		const config = createConfig({
-			appId: 'my-app',
 			platformUrl: 'https://sylphx.com/',
 		})
 
@@ -224,7 +206,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({ data: 'test' }))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		await callApi(config, '/test')
 
 		expect(capturedRequest?.method).toBe('GET')
@@ -238,7 +220,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({ success: true }))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		await callApi(config, '/test', {
 			method: 'POST',
 			body: { email: 'test@example.com' },
@@ -255,7 +237,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({}))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		await callApi(config, '/test', {
 			query: { userId: 'user-123', active: true },
 		})
@@ -272,7 +254,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({}))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		await callApi(config, '/test', {
 			query: { userId: 'user-123', filter: undefined },
 		})
@@ -289,7 +271,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({}))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com', platformMode: true })
+		const config = createConfig({ platformUrl: 'https://example.com', platformMode: true })
 		await callApi(config, '/test')
 
 		expect(capturedCredentials).toBe('include')
@@ -300,7 +282,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({ error: { message: 'Not found' } }), { status: 404 })
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 
 		await expect(callApi(config, '/test')).rejects.toThrow('Not found')
 	})
@@ -310,7 +292,7 @@ describe('callApi', () => {
 			return new Response('', { status: 204 })
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		const result = await callApi(config, '/test')
 
 		expect(result).toEqual({})
@@ -321,7 +303,7 @@ describe('callApi', () => {
 			return new Response(JSON.stringify({ user: { id: '123', name: 'Test' } }))
 		}
 
-		const config = createConfig({ appId: 'my-app', platformUrl: 'https://example.com' })
+		const config = createConfig({ platformUrl: 'https://example.com' })
 		const result = await callApi<{ user: { id: string; name: string } }>(config, '/test')
 
 		expect(result.user.id).toBe('123')

@@ -236,7 +236,7 @@ export interface SylphxProviderProps {
 	 *
 	 * @example
 	 * ```tsx
-	 * const plans = await getPlans({ appId, appSecret })
+	 * const plans = await getPlans({ secretKey: process.env.SYLPHX_SECRET_KEY! })
 	 * return <SylphxProvider initialPlans={plans}>...</SylphxProvider>
 	 * ```
 	 */
@@ -249,7 +249,7 @@ export interface SylphxProviderProps {
 	 *
 	 * @example
 	 * ```tsx
-	 * const consentTypes = await getConsentTypes({ appId, appSecret })
+	 * const consentTypes = await getConsentTypes({ secretKey: process.env.SYLPHX_SECRET_KEY! })
 	 * return <SylphxProvider initialConsentTypes={consentTypes}>...</SylphxProvider>
 	 * ```
 	 */
