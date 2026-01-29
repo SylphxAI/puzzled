@@ -11,9 +11,10 @@ import { revalidateTag } from 'next/cache'
 import { verifyWebhook } from '@sylphx/sdk/server'
 
 export async function POST(request: Request) {
-	const secret = process.env.SYLPHX_WEBHOOK_SECRET
+	// Reuse the app's existing secret key — no separate webhook secret needed
+	const secret = process.env.SYLPHX_SECRET_KEY
 	if (!secret) {
-		return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
+		return new Response(JSON.stringify({ error: 'SYLPHX_SECRET_KEY not configured' }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' },
 		})
