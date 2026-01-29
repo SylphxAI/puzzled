@@ -91,8 +91,8 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 				<SwitchPrimitive.Thumb
 					className={cn(
 						'pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0',
-						// Smooth spring-like transition for the thumb
-						'transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+						// Animate position and color changes
+						'transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
 						'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
 						// Checked: white thumb for contrast against primary color
 						'data-[state=checked]:bg-primary-foreground data-[state=unchecked]:bg-foreground/80',
