@@ -187,21 +187,11 @@ type RestApiClient = ReturnType<typeof createRestApi>
 export interface SylphxProviderProps {
 	children: React.ReactNode
 	/**
-	 * Your app's ID (the app slug registered in Sylphx admin)
-	 * Example: "my-app"
-	 *
-	 * Optional when publishableKey is provided — the key identifies the app.
-	 * @deprecated Use publishableKey alone. The key IS the app identity.
-	 */
-	appId?: string
-	/**
 	 * Your app's publishable key (environment-specific public key)
 	 * Format: pk_dev_xxx, pk_stg_xxx, or pk_prod_xxx
 	 * Get this from Platform Admin → Apps → Your App → Environments
 	 *
-	 * This is the primary app identifier. When provided alone,
-	 * no separate appId is needed.
-	 *
+	 * The key IS the app identity — no separate app ID needed.
 	 * Optional when platformMode is true (uses cookies instead)
 	 */
 	publishableKey?: string
@@ -279,7 +269,6 @@ export interface SylphxProviderProps {
  */
 export function SylphxProvider({
 	children,
-	appId,
 	publishableKey,
 	platformUrl: providedPlatformUrl,
 	afterSignOutUrl = '/',
@@ -308,7 +297,6 @@ export function SylphxProvider({
 	return (
 		<QueryClientProvider client={queryClient}>
 			<SylphxProviderInner
-				appId={appId}
 				publishableKey={publishableKey}
 				platformUrl={providedPlatformUrl}
 				afterSignOutUrl={afterSignOutUrl}
@@ -332,7 +320,6 @@ export function SylphxProvider({
  */
 function SylphxProviderInner({
 	children,
-	appId: rawAppId,
 	publishableKey,
 	platformUrl: providedPlatformUrl,
 	afterSignOutUrl = '/',
@@ -349,9 +336,9 @@ function SylphxProviderInner({
 		? (typeof window !== 'undefined' ? window.location.origin : '')
 		: (providedPlatformUrl || 'https://sylphx.com')
 
-	// Effective app identifier: appId slug (legacy) or publishableKey (preferred)
-	// Used for storage namespacing, query keys, and API calls
-	const appId = rawAppId || publishableKey || ''
+	// Namespace identifier derived from publishable key
+	// Used for storage namespacing, React Query keys, and context
+	const appId = publishableKey || ''
 
 	// ============================================
 	// Storage (namespaced by app identifier)
@@ -944,7 +931,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Failed to resend verification email')
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	const forgotPassword = useCallback(
