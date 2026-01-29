@@ -129,11 +129,7 @@ export function createAuthenticatedServerClient(
 	config: ServerConfig,
 	accessToken: string
 ): RestClient {
-	// For authenticated requests, we need to use createDynamicRestClient
-	// But for simplicity, we'll add the token via headers
-	const baseUrl = config.platformUrl || 'https://sylphx.com'
-
-	// Import dynamically to avoid circular dependency
+	// eslint-disable-next-line @typescript-eslint/no-require-imports -- avoids circular dependency
 	const { createDynamicRestClient } = require('../rest-client')
 
 	return createDynamicRestClient({

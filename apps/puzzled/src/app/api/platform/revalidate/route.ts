@@ -20,7 +20,6 @@ export async function POST(request: Request) {
 	}
 
 	const signature = request.headers.get('x-webhook-signature')
-	const timestamp = request.headers.get('x-webhook-timestamp')
 	const body = await request.text()
 
 	// Extract signature value from "t=...,v1=..." format
