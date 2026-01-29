@@ -45,10 +45,16 @@ export interface RetryConfig {
 /**
  * Configuration for the REST client
  *
- * The secret key identifies the app — no separate app ID needed.
+ * The app key identifies the app — no separate app ID needed.
  */
 export interface RestClientConfig {
-	/** Your secret key (sk_dev_xxx, sk_stg_xxx, or sk_prod_xxx) — identifies the app */
+	/**
+	 * Your app key — identifies the app and environment.
+	 *
+	 * Accepts either:
+	 * - Secret key (sk_dev_, sk_stg_, sk_prod_) — full access, server-side only
+	 * - Publishable key (pk_dev_, pk_stg_, pk_prod_) — limited access, safe for client
+	 */
 	secretKey: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
