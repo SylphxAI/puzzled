@@ -279,55 +279,72 @@ export interface WebhookVerifyOptions {
 /**
  * Verify webhook signature from Sylphx Platform
  *
+ * The platform sends `X-Webhook-Signature` in `t={unix_seconds},v1={hmac_hex}`
+ * format. This function accepts either:
+ * - The raw header value (auto-parsed)
+ * - Pre-extracted `signature` + `timestamp` strings
+ *
  * @example
  * ```typescript
  * import { verifyWebhook } from '@sylphx/sdk/server'
  *
  * export async function POST(request: Request) {
- *   const signature = request.headers.get('x-sylphx-signature')
- *   const timestamp = request.headers.get('x-sylphx-timestamp')
  *   const body = await request.text()
- *
  *   const result = await verifyWebhook({
  *     payload: body,
- *     signature,
- *     timestamp,
- *     secret: process.env.SYLPHX_WEBHOOK_SECRET!,
+ *     signatureHeader: request.headers.get('x-webhook-signature'),
+ *     secret: process.env.SYLPHX_SECRET_KEY!,
  *   })
  *
  *   if (!result.valid) {
  *     return new Response('Invalid signature', { status: 401 })
  *   }
  *
- *   // Process the webhook
  *   console.log('Received webhook:', result.payload)
  * }
  * ```
  */
 export async function verifyWebhook(options: {
 	payload: string
-	signature: string | null
-	timestamp: string | null
+	/** Raw X-Webhook-Signature header value: "t={seconds},v1={hex}" */
+	signatureHeader?: string | null
+	/** Pre-extracted HMAC hex (if parsing header yourself) */
+	signature?: string | null
+	/** Pre-extracted timestamp in unix seconds (if parsing header yourself) */
+	timestamp?: string | null
 	secret: string
 	verifyOptions?: WebhookVerifyOptions
 }): Promise<WebhookVerifyResult> {
-	const { payload, signature, timestamp, secret, verifyOptions = {} } = options
+	const { payload, secret, verifyOptions = {} } = options
 	const { maxAge = 5 * 60 * 1000, clockSkew = 30 * 1000 } = verifyOptions
 
-	if (!signature) {
-		return { valid: false, error: 'Missing signature header' }
-	}
-	if (!timestamp) {
-		return { valid: false, error: 'Missing timestamp header' }
+	// Parse the combined header format: "t={seconds},v1={hex}"
+	let signatureHex = options.signature ?? null
+	let timestampStr = options.timestamp ?? null
+
+	if (options.signatureHeader) {
+		const tMatch = options.signatureHeader.match(/t=(\d+)/)
+		const vMatch = options.signatureHeader.match(/v1=([a-f0-9]+)/)
+		if (tMatch) timestampStr = tMatch[1]
+		if (vMatch) signatureHex = vMatch[1]
 	}
 
-	const webhookTime = parseInt(timestamp, 10)
-	if (isNaN(webhookTime)) {
+	if (!signatureHex) {
+		return { valid: false, error: 'Missing signature' }
+	}
+	if (!timestampStr) {
+		return { valid: false, error: 'Missing timestamp' }
+	}
+
+	const webhookTimeSeconds = parseInt(timestampStr, 10)
+	if (isNaN(webhookTimeSeconds)) {
 		return { valid: false, error: 'Invalid timestamp format' }
 	}
 
+	// Convert seconds → milliseconds for comparison with Date.now()
+	const webhookTimeMs = webhookTimeSeconds * 1000
 	const now = Date.now()
-	const age = now - webhookTime
+	const age = now - webhookTimeMs
 
 	if (age > maxAge) {
 		return { valid: false, error: `Webhook too old: ${age}ms` }
@@ -337,12 +354,13 @@ export async function verifyWebhook(options: {
 		return { valid: false, error: 'Webhook timestamp is in the future' }
 	}
 
-	const signedPayload = `${timestamp}.${payload}`
+	// Reconstruct the signed payload: "{seconds}.{body}"
+	const signedPayload = `${timestampStr}.${payload}`
 
 	try {
 		const expectedSignature = await computeHmacSha256(signedPayload, secret)
 
-		if (!timingSafeEqual(signature, expectedSignature)) {
+		if (!timingSafeEqual(signatureHex, expectedSignature)) {
 			return { valid: false, error: 'Invalid signature' }
 		}
 
@@ -394,7 +412,7 @@ function timingSafeEqual(a: string, b: string): boolean {
  * import { createWebhookHandler } from '@sylphx/sdk/server'
  *
  * const handler = createWebhookHandler({
- *   secret: process.env.SYLPHX_WEBHOOK_SECRET!,
+ *   secret: process.env.SYLPHX_SECRET_KEY!,
  *   handlers: {
  *     'user.created': async (data) => {
  *       console.log('New user:', data)
@@ -414,14 +432,12 @@ export function createWebhookHandler(config: {
 	verifyOptions?: WebhookVerifyOptions
 }): (request: Request) => Promise<Response> {
 	return async (request: Request) => {
-		const signature = request.headers.get('x-sylphx-signature')
-		const timestamp = request.headers.get('x-sylphx-timestamp')
+		const signatureHeader = request.headers.get('x-webhook-signature')
 		const body = await request.text()
 
 		const result = await verifyWebhook({
 			payload: body,
-			signature,
-			timestamp,
+			signatureHeader,
 			secret: config.secret,
 			verifyOptions: config.verifyOptions,
 		})
@@ -468,6 +484,64 @@ export function createWebhookHandler(config: {
 export type { RestClient, RestClientConfig as ServerClientConfig }
 
 // ============================================================================
+// Server-Side Data Fetching — Shared Infrastructure
+// ============================================================================
+
+/** Default platform URL */
+const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
+
+/** Default cache TTL: 1 hour fallback if webhook invalidation fails */
+const CACHE_TTL_SECONDS = 3600
+
+/** Common options for authenticated SDK fetch */
+interface AuthenticatedFetchOptions {
+	appId: string
+	appSecret: string
+	platformUrl?: string
+}
+
+/**
+ * Cached fetch with Next.js cache tags and graceful error handling.
+ *
+ * All server-side data fetching goes through this helper to ensure:
+ * - Consistent Next.js `tags` + `revalidate` for webhook-driven invalidation
+ * - Uniform error handling (warn + return fallback, never throw)
+ * - DRY: auth headers, URL construction, JSON parsing in one place
+ */
+async function cachedFetch<T>(params: {
+	url: string
+	tags: string[]
+	headers?: Record<string, string>
+	fallback: T
+	label: string
+}): Promise<T> {
+	const { url, tags, headers, fallback, label } = params
+
+	try {
+		const response = await fetch(url, {
+			headers,
+			next: { tags, revalidate: CACHE_TTL_SECONDS },
+		} as RequestInit)
+
+		if (!response.ok) {
+			console.warn(`[Sylphx] Failed to fetch ${label}:`, response.status)
+			return fallback
+		}
+
+		const data = await response.json()
+		return (data as T) ?? fallback
+	} catch (error) {
+		console.warn(`[Sylphx] Failed to fetch ${label}:`, error)
+		return fallback
+	}
+}
+
+/** Build authenticated headers for SDK API calls */
+function sdkHeaders(appId: string, appSecret: string): Record<string, string> {
+	return { 'x-app-id': appId, 'x-app-secret': appSecret }
+}
+
+// ============================================================================
 // OAuth Providers (Server-Side)
 // ============================================================================
 
@@ -483,7 +557,6 @@ export interface OAuthProviderInfo {
 /**
  * Get enabled OAuth providers for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
  * Uses Next.js cache tags for near-instant invalidation via webhook.
  * Fallback TTL: 1 hour if webhook invalidation fails.
  *
@@ -491,14 +564,11 @@ export interface OAuthProviderInfo {
  * ```tsx
  * // app/login/page.tsx (Server Component)
  * import { getOAuthProviders } from '@sylphx/sdk/server'
- * import { LoginForm } from './login-form'
  *
  * export default async function LoginPage() {
  *   const providers = await getOAuthProviders({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
  *   })
- *
  *   return <LoginForm providers={providers} />
  * }
  * ```
@@ -507,26 +577,16 @@ export async function getOAuthProviders(options: {
 	appId: string
 	platformUrl?: string
 }): Promise<OAuthProvider[]> {
-	const { appId, platformUrl = 'https://sylphx.com' } = options
+	const { appId, platformUrl = DEFAULT_PLATFORM_URL } = options
 
-	try {
-		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			next: { tags: [`oauth:${appId}`], revalidate: 3600 },
-		} as RequestInit)
+	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
+		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
+		tags: [`oauth:${appId}`],
+		fallback: { providers: [] },
+		label: 'OAuth providers',
+	})
 
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch OAuth providers:', response.status)
-			return []
-		}
-
-		const data = await response.json() as { providers: OAuthProviderInfo[] }
-		const providers = data.providers || []
-
-		return providers.map(p => p.id)
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch OAuth providers:', error)
-		return []
-	}
+	return (data.providers || []).map(p => p.id)
 }
 
 /**
@@ -536,22 +596,16 @@ export async function getOAuthProvidersWithInfo(options: {
 	appId: string
 	platformUrl?: string
 }): Promise<OAuthProviderInfo[]> {
-	const { appId, platformUrl = 'https://sylphx.com' } = options
+	const { appId, platformUrl = DEFAULT_PLATFORM_URL } = options
 
-	try {
-		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			next: { tags: [`oauth:${appId}`], revalidate: 3600 },
-		} as RequestInit)
+	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
+		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
+		tags: [`oauth:${appId}`],
+		fallback: { providers: [] },
+		label: 'OAuth providers',
+	})
 
-		if (!response.ok) {
-			return []
-		}
-
-		const data = await response.json() as { providers: OAuthProviderInfo[] }
-		return data.providers || []
-	} catch {
-		return []
-	}
+	return data.providers || []
 }
 
 // ============================================================================
@@ -561,60 +615,32 @@ export async function getOAuthProvidersWithInfo(options: {
 import type { Plan } from '../billing'
 export type { Plan }
 
-/** Options for fetching plans server-side */
-export interface GetPlansOptions {
-	appId: string
-	appSecret: string
-	platformUrl?: string
-}
-
 /**
  * Get subscription plans for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
- *
  * @example
  * ```tsx
- * // app/pricing/page.tsx (Server Component)
  * import { getPlans } from '@sylphx/sdk/server'
- * import { PricingTable } from './pricing-table'
  *
  * export default async function PricingPage() {
  *   const plans = await getPlans({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_APP_SECRET!,
- *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *     appSecret: process.env.SYLPHX_SECRET_KEY!,
  *   })
- *
  *   return <PricingTable initialPlans={plans} />
  * }
  * ```
  */
-export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
-	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
 
-	try {
-		const response = await fetch(`${platformUrl}/api/sdk/billing/plans`, {
-			headers: {
-				'x-app-id': appId,
-				'x-app-secret': appSecret,
-			},
-			next: { tags: [`plans:${appId}`], revalidate: 3600 },
-		} as RequestInit)
-
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch plans:', response.status)
-			return []
-		}
-
-		const plans = await response.json() as Plan[]
-		return plans || []
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch plans:', error)
-		return []
-	}
+	return cachedFetch<Plan[]>({
+		url: `${platformUrl}/api/sdk/billing/plans`,
+		headers: sdkHeaders(appId, appSecret),
+		tags: [`plans:${appId}`],
+		fallback: [],
+		label: 'plans',
+	})
 }
 
 // ============================================================================
@@ -624,67 +650,32 @@ export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 import type { ConsentType } from '../consent'
 export type { ConsentType }
 
-/** Options for fetching consent types server-side */
-export interface GetConsentTypesOptions {
-	appId: string
-	appSecret: string
-	platformUrl?: string
-}
-
 /**
  * Get consent types for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
- *
  * @example
  * ```tsx
- * // app/layout.tsx (Server Component)
  * import { getConsentTypes } from '@sylphx/sdk/server'
- * import { CookieBanner } from './cookie-banner'
  *
  * export default async function RootLayout({ children }) {
  *   const consentTypes = await getConsentTypes({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_APP_SECRET!,
- *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *     appSecret: process.env.SYLPHX_SECRET_KEY!,
  *   })
- *
- *   return (
- *     <html>
- *       <body>
- *         {children}
- *         <CookieBanner initialConsentTypes={consentTypes} />
- *       </body>
- *     </html>
- *   )
+ *   return <CookieBanner initialConsentTypes={consentTypes} />
  * }
  * ```
  */
-export async function getConsentTypes(options: GetConsentTypesOptions): Promise<ConsentType[]> {
-	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
 
-	try {
-		const response = await fetch(`${platformUrl}/api/sdk/consent/types`, {
-			headers: {
-				'x-app-id': appId,
-				'x-app-secret': appSecret,
-			},
-			next: { tags: [`consent:${appId}`], revalidate: 3600 },
-		} as RequestInit)
-
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch consent types:', response.status)
-			return []
-		}
-
-		const types = await response.json() as ConsentType[]
-		return types || []
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch consent types:', error)
-		return []
-	}
+	return cachedFetch<ConsentType[]>({
+		url: `${platformUrl}/api/sdk/consent/types`,
+		headers: sdkHeaders(appId, appSecret),
+		tags: [`consent:${appId}`],
+		fallback: [],
+		label: 'consent types',
+	})
 }
 
 // ============================================================================
@@ -702,70 +693,35 @@ export interface FeatureFlagDefinition {
 	targetAdminOnly: boolean
 }
 
-/** Options for fetching feature flags server-side */
-export interface GetFeatureFlagsOptions {
-	appId: string
-	appSecret: string
-	platformUrl?: string
-}
-
 /**
  * Get feature flag definitions for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
- *
- * Note: This returns flag definitions. Evaluation (rollout, targeting) happens
+ * Returns flag definitions. Evaluation (rollout, targeting) happens
  * client-side using the LocalEvaluator with user context.
  *
  * @example
  * ```tsx
- * // app/layout.tsx (Server Component)
  * import { getFeatureFlags } from '@sylphx/sdk/server'
  *
  * export default async function RootLayout({ children }) {
  *   const flags = await getFeatureFlags({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_APP_SECRET!,
- *     platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
+ *     appSecret: process.env.SYLPHX_SECRET_KEY!,
  *   })
- *
- *   return (
- *     <html>
- *       <body>
- *         <FeatureFlagsProvider initialFlags={flags}>
- *           {children}
- *         </FeatureFlagsProvider>
- *       </body>
- *     </html>
- *   )
+ *   return <FeatureFlagsProvider initialFlags={flags}>{children}</FeatureFlagsProvider>
  * }
  * ```
  */
-export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<FeatureFlagDefinition[]> {
-	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
+export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promise<FeatureFlagDefinition[]> {
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = options
 
-	try {
-		const response = await fetch(`${platformUrl}/api/sdk/flags`, {
-			headers: {
-				'x-app-id': appId,
-				'x-app-secret': appSecret,
-			},
-			next: { tags: [`flags:${appId}`], revalidate: 3600 },
-		} as RequestInit)
-
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch feature flags:', response.status)
-			return []
-		}
-
-		const flags = await response.json() as FeatureFlagDefinition[]
-		return flags || []
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch feature flags:', error)
-		return []
-	}
+	return cachedFetch<FeatureFlagDefinition[]>({
+		url: `${platformUrl}/api/sdk/flags`,
+		headers: sdkHeaders(appId, appSecret),
+		tags: [`flags:${appId}`],
+		fallback: [],
+		label: 'feature flags',
+	})
 }
 
 // ============================================================================
@@ -788,69 +744,41 @@ export interface ReferralLeaderboardResult {
 	period: 'all' | 'month' | 'week'
 }
 
-/** Options for fetching referral leaderboard server-side */
-export interface GetReferralLeaderboardOptions {
-	appId: string
-	appSecret: string
-	platformUrl?: string
-	/** Number of entries to fetch (default: 10, max: 100) */
-	limit?: number
-	/** Time period for leaderboard (default: 'all') */
-	period?: 'all' | 'month' | 'week'
-}
-
 /**
  * Get referral leaderboard for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
- *
  * @example
  * ```tsx
- * // app/referrals/page.tsx (Server Component)
  * import { getReferralLeaderboard } from '@sylphx/sdk/server'
- * import { ReferralLeaderboard } from './referral-leaderboard'
  *
  * export default async function ReferralsPage() {
  *   const leaderboard = await getReferralLeaderboard({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     appSecret: process.env.SYLPHX_SECRET_KEY!,
  *     limit: 10,
  *     period: 'month',
  *   })
- *
  *   return <ReferralLeaderboard initialData={leaderboard} />
  * }
  * ```
  */
-export async function getReferralLeaderboard(options: GetReferralLeaderboardOptions): Promise<ReferralLeaderboardResult> {
-	const { appId, appSecret, platformUrl = 'https://sylphx.com', limit = 10, period = 'all' } = options
+export async function getReferralLeaderboard(options: AuthenticatedFetchOptions & {
+	limit?: number
+	period?: 'all' | 'month' | 'week'
+}): Promise<ReferralLeaderboardResult> {
+	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = options
 
-	try {
-		const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
-		url.searchParams.set('limit', String(limit))
-		url.searchParams.set('period', period)
+	const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
+	url.searchParams.set('limit', String(limit))
+	url.searchParams.set('period', period)
 
-		const response = await fetch(url.toString(), {
-			headers: {
-				'x-app-id': appId,
-				'x-app-secret': appSecret,
-			},
-			next: { tags: [`referrals:${appId}`], revalidate: 3600 },
-		} as RequestInit)
-
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch referral leaderboard:', response.status)
-			return { entries: [], total: 0, period }
-		}
-
-		const result = await response.json() as ReferralLeaderboardResult
-		return result || { entries: [], total: 0, period }
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch referral leaderboard:', error)
-		return { entries: [], total: 0, period }
-	}
+	return cachedFetch<ReferralLeaderboardResult>({
+		url: url.toString(),
+		headers: sdkHeaders(appId, appSecret),
+		tags: [`referrals:${appId}`],
+		fallback: { entries: [], total: 0, period },
+		label: 'referral leaderboard',
+	})
 }
 
 // ============================================================================
@@ -875,67 +803,39 @@ export interface EngagementLeaderboardResult {
 	userEntry: EngagementLeaderboardEntry | null
 }
 
-/** Options for fetching engagement leaderboard server-side */
-export interface GetEngagementLeaderboardOptions {
-	appId: string
-	appSecret: string
-	leaderboardId: string
-	platformUrl?: string
-	/** Number of entries to fetch (default: 10, max: 100) */
-	limit?: number
-}
-
 /**
  * Get engagement leaderboard for an app (server-side)
  *
- * Use this in Server Components to avoid client-side loading states.
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
- *
  * @example
  * ```tsx
- * // app/leaderboard/page.tsx (Server Component)
  * import { getEngagementLeaderboard } from '@sylphx/sdk/server'
- * import { Leaderboard } from './leaderboard'
  *
  * export default async function LeaderboardPage() {
  *   const leaderboard = await getEngagementLeaderboard({
  *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_APP_SECRET!,
+ *     appSecret: process.env.SYLPHX_SECRET_KEY!,
  *     leaderboardId: 'high-scores',
- *     limit: 20,
  *   })
- *
  *   return <Leaderboard initialData={leaderboard} />
  * }
  * ```
  */
-export async function getEngagementLeaderboard(options: GetEngagementLeaderboardOptions): Promise<EngagementLeaderboardResult> {
-	const { appId, appSecret, leaderboardId, platformUrl = 'https://sylphx.com', limit = 10 } = options
+export async function getEngagementLeaderboard(options: AuthenticatedFetchOptions & {
+	leaderboardId: string
+	limit?: number
+}): Promise<EngagementLeaderboardResult> {
+	const { appId, appSecret, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = options
 
-	try {
-		const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
-		url.searchParams.set('limit', String(limit))
+	const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
+	url.searchParams.set('limit', String(limit))
 
-		const response = await fetch(url.toString(), {
-			headers: {
-				'x-app-id': appId,
-				'x-app-secret': appSecret,
-			},
-			next: { tags: [`engagement:${appId}`], revalidate: 3600 },
-		} as RequestInit)
-
-		if (!response.ok) {
-			console.warn('[Sylphx] Failed to fetch engagement leaderboard:', response.status)
-			return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
-		}
-
-		const result = await response.json() as EngagementLeaderboardResult
-		return result || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
-	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch engagement leaderboard:', error)
-		return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
-	}
+	return cachedFetch<EngagementLeaderboardResult>({
+		url: url.toString(),
+		headers: sdkHeaders(appId, appSecret),
+		tags: [`engagement:${appId}`],
+		fallback: { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null },
+		label: 'engagement leaderboard',
+	})
 }
 
 // AI Client
