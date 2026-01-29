@@ -7,46 +7,122 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
-// Static plan configuration matching platform plans
-const PLANS = [
-	{
+import type { Plan } from '@sylphx/sdk/server'
+
+/** Plan shape returned by the SDK `getPlans()` server function */
+type PlatformPlan = Plan
+
+/** UI plan representation derived from platform plans */
+interface UIPlan {
+	id: string
+	slug: string
+	price: number
+	currency: string
+	period: 'perMonth' | 'perYear' | null
+	interval: 'monthly' | 'annual'
+	highlight: boolean
+	badge: string | null
+	badgeColor: string | null
+	trialDays?: number
+	savings?: string
+	features: string[]
+}
+
+/**
+ * Map platform plans to UI plan cards.
+ *
+ * Generates free + monthly + annual cards from the platform plan data.
+ * Falls back to hardcoded structure if no plans are available.
+ */
+function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
+	const plans: UIPlan[] = []
+
+	// Always show a free tier
+	plans.push({
 		id: 'free',
 		slug: 'free',
 		price: 0,
 		currency: 'usd',
 		period: null,
+		interval: 'monthly',
 		highlight: false,
 		badge: null,
 		badgeColor: null,
 		features: ['dailyPuzzle', 'basicStats'],
-	},
-	{
-		id: 'premium',
-		slug: 'premium',
-		price: 499,
-		currency: 'usd',
-		period: 'perMonth',
-		highlight: true,
-		badge: 'popular',
-		badgeColor: 'bg-primary',
-		trialDays: 7,
-		features: ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive'],
-	},
-	{
-		id: 'annual',
-		slug: 'premium', // Same plan, different interval
-		price: 3999,
-		currency: 'usd',
-		period: 'perYear',
-		interval: 'annual' as const,
-		highlight: false,
-		badge: 'bestValue',
-		badgeColor: 'bg-emerald-500',
-		trialDays: 7,
-		savings: 'savePercent',
-		features: ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive'],
-	},
-] as const
+	})
+
+	// Find the premium plan (first non-free plan with a monthly price)
+	const premiumPlan = platformPlans.find((p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0)
+
+	if (premiumPlan) {
+		const features = premiumPlan.features ?? ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive']
+
+		// Monthly card
+		plans.push({
+			id: 'premium',
+			slug: premiumPlan.slug,
+			price: premiumPlan.monthlyPrice!,
+			currency: 'usd',
+			period: 'perMonth',
+			interval: 'monthly',
+			highlight: true,
+			badge: 'popular',
+			badgeColor: 'bg-primary',
+			trialDays: 7,
+			features,
+		})
+
+		// Annual card (if annual price exists)
+		if (premiumPlan.annualPrice && premiumPlan.annualPrice > 0) {
+			plans.push({
+				id: 'annual',
+				slug: premiumPlan.slug,
+				price: premiumPlan.annualPrice,
+				currency: 'usd',
+				period: 'perYear',
+				interval: 'annual',
+				highlight: false,
+				badge: 'bestValue',
+				badgeColor: 'bg-emerald-500',
+				trialDays: 7,
+				savings: 'savePercent',
+				features,
+			})
+		}
+	} else {
+		// Fallback: hardcoded premium plans if platform returns nothing
+		const defaultFeatures = ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive']
+		plans.push({
+			id: 'premium',
+			slug: 'premium',
+			price: 499,
+			currency: 'usd',
+			period: 'perMonth',
+			interval: 'monthly',
+			highlight: true,
+			badge: 'popular',
+			badgeColor: 'bg-primary',
+			trialDays: 7,
+			features: defaultFeatures,
+		})
+		plans.push({
+			id: 'annual',
+			slug: 'premium',
+			price: 3999,
+			currency: 'usd',
+			period: 'perYear',
+			interval: 'annual',
+			highlight: false,
+			badge: 'bestValue',
+			badgeColor: 'bg-emerald-500',
+			trialDays: 7,
+			savings: 'savePercent',
+			features: defaultFeatures,
+		})
+	}
+
+	return plans
+}
 
 function formatCurrency(amount: number, currency: string, locale: string): string {
 	return new Intl.NumberFormat(locale, {
@@ -57,13 +133,21 @@ function formatCurrency(amount: number, currency: string, locale: string): strin
 	}).format(amount / 100)
 }
 
-export function PricingContent({ locale }: { locale: string }) {
+export function PricingContent({
+	locale,
+	initialPlans,
+}: {
+	locale: string
+	initialPlans: PlatformPlan[]
+}) {
 	const t = useTranslations('subscription')
 	const tPricing = useTranslations('pricing')
 	const toast = useToast()
 	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
 	const { isPremium, subscription, createCheckout, isLoading } = useBilling()
+
+	const PLANS = buildUIPlans(initialPlans)
 
 	const handleCheckout = async (planSlug: string, interval: 'monthly' | 'annual' = 'monthly') => {
 		const planKey = interval === 'annual' ? `${planSlug}-annual` : planSlug
@@ -159,7 +243,7 @@ export function PricingContent({ locale }: { locale: string }) {
 									<h3 className="text-xl font-bold">
 										{t(plan.id as 'free' | 'premium' | 'annual')}
 									</h3>
-									{'savings' in plan && plan.savings && (
+									{plan.savings && (
 										<span className="inline-block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
 											{tPricing(plan.savings)}
 										</span>
@@ -173,11 +257,11 @@ export function PricingContent({ locale }: { locale: string }) {
 										</span>
 										{plan.period && (
 											<span className="text-base text-muted-foreground">
-												{t(plan.period as 'perMonth' | 'perYear')}
+												{t(plan.period)}
 											</span>
 										)}
 									</div>
-									{'trialDays' in plan && plan.trialDays && (
+									{plan.trialDays && (
 										<p className="mt-2 text-sm font-medium text-primary">
 											{tPricing('trialDays', { days: plan.trialDays })}
 										</p>
@@ -202,8 +286,7 @@ export function PricingContent({ locale }: { locale: string }) {
 									disabled={isFree || isCurrentPlan || isLoading || checkoutLoading !== null}
 									onClick={() => {
 										if (!isFree && !isCurrentPlan) {
-											const interval = 'interval' in plan ? plan.interval : 'monthly'
-											handleCheckout(plan.slug, interval)
+											handleCheckout(plan.slug, plan.interval)
 										}
 									}}
 								>

@@ -484,14 +484,12 @@ export interface OAuthProviderInfo {
 	name: string
 }
 
-/** Cache for OAuth providers (per app) */
-const oauthProvidersCache: Map<string, { providers: OAuthProviderInfo[]; expiresAt: number }> = new Map()
-
 /**
  * Get enabled OAuth providers for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 5 minutes.
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * @example
  * ```tsx
@@ -514,18 +512,10 @@ export async function getOAuthProviders(options: {
 	platformUrl?: string
 }): Promise<OAuthProvider[]> {
 	const { appId, platformUrl = 'https://sylphx.com' } = options
-	const cacheKey = `${platformUrl}:${appId}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = oauthProvidersCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.providers.map(p => p.id)
-	}
 
 	try {
 		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			next: { revalidate: 300 },
+			next: { tags: [`oauth:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -535,12 +525,6 @@ export async function getOAuthProviders(options: {
 
 		const data = await response.json() as { providers: OAuthProviderInfo[] }
 		const providers = data.providers || []
-
-		// Cache for 5 minutes
-		oauthProvidersCache.set(cacheKey, {
-			providers,
-			expiresAt: now + 5 * 60 * 1000,
-		})
 
 		return providers.map(p => p.id)
 	} catch (error) {
@@ -557,18 +541,10 @@ export async function getOAuthProvidersWithInfo(options: {
 	platformUrl?: string
 }): Promise<OAuthProviderInfo[]> {
 	const { appId, platformUrl = 'https://sylphx.com' } = options
-	const cacheKey = `${platformUrl}:${appId}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = oauthProvidersCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.providers
-	}
 
 	try {
 		const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`, {
-			next: { revalidate: 300 },
+			next: { tags: [`oauth:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -576,14 +552,7 @@ export async function getOAuthProvidersWithInfo(options: {
 		}
 
 		const data = await response.json() as { providers: OAuthProviderInfo[] }
-		const providers = data.providers || []
-
-		oauthProvidersCache.set(cacheKey, {
-			providers,
-			expiresAt: now + 5 * 60 * 1000,
-		})
-
-		return providers
+		return data.providers || []
 	} catch {
 		return []
 	}
@@ -603,14 +572,12 @@ export interface GetPlansOptions {
 	platformUrl?: string
 }
 
-/** Cache for plans (per app) */
-const plansCache: Map<string, { plans: Plan[]; expiresAt: number }> = new Map()
-
 /**
  * Get subscription plans for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 10 minutes.
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * @example
  * ```tsx
@@ -631,14 +598,6 @@ const plansCache: Map<string, { plans: Plan[]; expiresAt: number }> = new Map()
  */
 export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
-	const cacheKey = `plans:${platformUrl}:${appId}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = plansCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.plans
-	}
 
 	try {
 		const response = await fetch(`${platformUrl}/api/sdk/billing/plans`, {
@@ -646,7 +605,7 @@ export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			next: { revalidate: 600 },
+			next: { tags: [`plans:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -655,15 +614,7 @@ export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 		}
 
 		const data = await response.json() as { data: Plan[] }
-		const plans = data.data || []
-
-		// Cache for 10 minutes
-		plansCache.set(cacheKey, {
-			plans,
-			expiresAt: now + 10 * 60 * 1000,
-		})
-
-		return plans
+		return data.data || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch plans:', error)
 		return []
@@ -684,14 +635,12 @@ export interface GetConsentTypesOptions {
 	platformUrl?: string
 }
 
-/** Cache for consent types (per app) */
-const consentTypesCache: Map<string, { types: ConsentType[]; expiresAt: number }> = new Map()
-
 /**
  * Get consent types for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 5 minutes.
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * @example
  * ```tsx
@@ -719,14 +668,6 @@ const consentTypesCache: Map<string, { types: ConsentType[]; expiresAt: number }
  */
 export async function getConsentTypes(options: GetConsentTypesOptions): Promise<ConsentType[]> {
 	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
-	const cacheKey = `consent:${platformUrl}:${appId}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = consentTypesCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.types
-	}
 
 	try {
 		const response = await fetch(`${platformUrl}/api/sdk/consent/types`, {
@@ -734,7 +675,7 @@ export async function getConsentTypes(options: GetConsentTypesOptions): Promise<
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			next: { revalidate: 300 },
+			next: { tags: [`consent:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -743,15 +684,7 @@ export async function getConsentTypes(options: GetConsentTypesOptions): Promise<
 		}
 
 		const data = await response.json() as { data: ConsentType[] }
-		const types = data.data || []
-
-		// Cache for 5 minutes
-		consentTypesCache.set(cacheKey, {
-			types,
-			expiresAt: now + 5 * 60 * 1000,
-		})
-
-		return types
+		return data.data || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch consent types:', error)
 		return []
@@ -780,14 +713,12 @@ export interface GetFeatureFlagsOptions {
 	platformUrl?: string
 }
 
-/** Cache for feature flags (per app) */
-const featureFlagsCache: Map<string, { flags: FeatureFlagDefinition[]; expiresAt: number }> = new Map()
-
 /**
  * Get feature flag definitions for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 1 minute (flags can change more frequently than config).
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * Note: This returns flag definitions. Evaluation (rollout, targeting) happens
  * client-side using the LocalEvaluator with user context.
@@ -818,14 +749,6 @@ const featureFlagsCache: Map<string, { flags: FeatureFlagDefinition[]; expiresAt
  */
 export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<FeatureFlagDefinition[]> {
 	const { appId, appSecret, platformUrl = 'https://sylphx.com' } = options
-	const cacheKey = `flags:${platformUrl}:${appId}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = featureFlagsCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.flags
-	}
 
 	try {
 		const response = await fetch(`${platformUrl}/api/sdk/flags`, {
@@ -833,7 +756,7 @@ export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			next: { revalidate: 60 },
+			next: { tags: [`flags:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -842,15 +765,7 @@ export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<
 		}
 
 		const data = await response.json() as { data: FeatureFlagDefinition[] }
-		const flags = data.data || []
-
-		// Cache for 1 minute (flags can change more frequently)
-		featureFlagsCache.set(cacheKey, {
-			flags,
-			expiresAt: now + 60 * 1000,
-		})
-
-		return flags
+		return data.data || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch feature flags:', error)
 		return []
@@ -888,14 +803,12 @@ export interface GetReferralLeaderboardOptions {
 	period?: 'all' | 'month' | 'week'
 }
 
-/** Cache for referral leaderboard (per app + period) */
-const referralLeaderboardCache: Map<string, { data: ReferralLeaderboardResult; expiresAt: number }> = new Map()
-
 /**
  * Get referral leaderboard for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 2 minutes.
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * @example
  * ```tsx
@@ -917,14 +830,6 @@ const referralLeaderboardCache: Map<string, { data: ReferralLeaderboardResult; e
  */
 export async function getReferralLeaderboard(options: GetReferralLeaderboardOptions): Promise<ReferralLeaderboardResult> {
 	const { appId, appSecret, platformUrl = 'https://sylphx.com', limit = 10, period = 'all' } = options
-	const cacheKey = `referral-leaderboard:${platformUrl}:${appId}:${period}:${limit}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = referralLeaderboardCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.data
-	}
 
 	try {
 		const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
@@ -936,7 +841,7 @@ export async function getReferralLeaderboard(options: GetReferralLeaderboardOpti
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			next: { revalidate: 120 },
+			next: { tags: [`referrals:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -945,15 +850,7 @@ export async function getReferralLeaderboard(options: GetReferralLeaderboardOpti
 		}
 
 		const data = await response.json() as { data: ReferralLeaderboardResult }
-		const result = data.data || { entries: [], total: 0, period }
-
-		// Cache for 2 minutes
-		referralLeaderboardCache.set(cacheKey, {
-			data: result,
-			expiresAt: now + 2 * 60 * 1000,
-		})
-
-		return result
+		return data.data || { entries: [], total: 0, period }
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch referral leaderboard:', error)
 		return { entries: [], total: 0, period }
@@ -992,14 +889,12 @@ export interface GetEngagementLeaderboardOptions {
 	limit?: number
 }
 
-/** Cache for engagement leaderboards (per app + leaderboard) */
-const engagementLeaderboardCache: Map<string, { data: EngagementLeaderboardResult; expiresAt: number }> = new Map()
-
 /**
  * Get engagement leaderboard for an app (server-side)
  *
  * Use this in Server Components to avoid client-side loading states.
- * Results are cached for 2 minutes.
+ * Uses Next.js cache tags for near-instant invalidation via webhook.
+ * Fallback TTL: 1 hour if webhook invalidation fails.
  *
  * @example
  * ```tsx
@@ -1021,14 +916,6 @@ const engagementLeaderboardCache: Map<string, { data: EngagementLeaderboardResul
  */
 export async function getEngagementLeaderboard(options: GetEngagementLeaderboardOptions): Promise<EngagementLeaderboardResult> {
 	const { appId, appSecret, leaderboardId, platformUrl = 'https://sylphx.com', limit = 10 } = options
-	const cacheKey = `engagement-leaderboard:${platformUrl}:${appId}:${leaderboardId}:${limit}`
-	const now = Date.now()
-
-	// Check cache
-	const cached = engagementLeaderboardCache.get(cacheKey)
-	if (cached && cached.expiresAt > now) {
-		return cached.data
-	}
 
 	try {
 		const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
@@ -1039,7 +926,7 @@ export async function getEngagementLeaderboard(options: GetEngagementLeaderboard
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			next: { revalidate: 120 },
+			next: { tags: [`engagement:${appId}`], revalidate: 3600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -1048,15 +935,7 @@ export async function getEngagementLeaderboard(options: GetEngagementLeaderboard
 		}
 
 		const data = await response.json() as { data: EngagementLeaderboardResult }
-		const result = data.data || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
-
-		// Cache for 2 minutes
-		engagementLeaderboardCache.set(cacheKey, {
-			data: result,
-			expiresAt: now + 2 * 60 * 1000,
-		})
-
-		return result
+		return data.data || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch engagement leaderboard:', error)
 		return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
