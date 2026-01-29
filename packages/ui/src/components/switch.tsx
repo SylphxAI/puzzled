@@ -77,11 +77,12 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 				ref={ref}
 				id={id}
 				className={cn(
-					'peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent',
+					'peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2',
 					'transition-colors duration-200',
 					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
 					'disabled:cursor-not-allowed disabled:opacity-50',
-					'data-[state=checked]:bg-primary data-[state=unchecked]:bg-switch-track',
+					'data-[state=checked]:bg-primary data-[state=checked]:border-primary',
+					'data-[state=unchecked]:bg-switch-track data-[state=unchecked]:border-transparent',
 					'active:scale-[0.98] motion-reduce:active:scale-100',
 					className,
 				)}
@@ -89,12 +90,12 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 			>
 				<SwitchPrimitive.Thumb
 					className={cn(
-						'pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0',
+						'pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0',
 						// Smooth spring-like transition for the thumb
-						'transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+						'transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
 						'data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0',
-						// Subtle scale on active state
-						'data-[state=checked]:scale-100',
+						// Checked: white thumb for contrast against primary color
+						'data-[state=checked]:bg-primary-foreground data-[state=unchecked]:bg-foreground/80',
 					)}
 				/>
 			</SwitchPrimitive.Root>
