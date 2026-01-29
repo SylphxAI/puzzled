@@ -64,7 +64,7 @@ export const localeCountryCodes: Record<Locale, string> = {
 // ==========================================
 
 // Fallback chain: if a key is missing, try the parent locale
-const _localeFallbacks: Record<Locale, Locale | null> = {
+export const localeFallbacks: Record<Locale, Locale | null> = {
 	'en-US': null, // Base English
 	'en-GB': 'en-US', // Falls back to US English
 	'zh-HK': null, // Base Traditional Chinese
