@@ -11,7 +11,15 @@
  * SDK Configuration
  */
 export interface SylphxConfig {
-	/** Your secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx) — identifies the app */
+	/**
+	 * Your app key — identifies the app and environment.
+	 *
+	 * Accepts either:
+	 * - Secret key (sk_dev_, sk_stg_, sk_prod_) — full access, server-side only
+	 * - Publishable key (pk_dev_, pk_stg_, pk_prod_) — limited access, safe for client
+	 *
+	 * Get this from Platform Console → Apps → Your App → Environments
+	 */
 	readonly secretKey?: string
 	/** Platform URL (default: https://sylphx.com) */
 	readonly platformUrl: string
