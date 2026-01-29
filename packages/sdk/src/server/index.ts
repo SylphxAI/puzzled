@@ -646,7 +646,7 @@ export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			cache: 'force-cache',
+			next: { revalidate: 600 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -734,7 +734,7 @@ export async function getConsentTypes(options: GetConsentTypesOptions): Promise<
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			cache: 'force-cache',
+			next: { revalidate: 300 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -833,7 +833,7 @@ export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			cache: 'force-cache',
+			next: { revalidate: 60 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -936,7 +936,7 @@ export async function getReferralLeaderboard(options: GetReferralLeaderboardOpti
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			cache: 'force-cache',
+			next: { revalidate: 120 },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -1039,7 +1039,7 @@ export async function getEngagementLeaderboard(options: GetEngagementLeaderboard
 				'x-app-id': appId,
 				'x-app-secret': appSecret,
 			},
-			cache: 'force-cache',
+			next: { revalidate: 120 },
 		} as RequestInit)
 
 		if (!response.ok) {
