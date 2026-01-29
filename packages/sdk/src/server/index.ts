@@ -613,8 +613,8 @@ export async function getPlans(options: GetPlansOptions): Promise<Plan[]> {
 			return []
 		}
 
-		const data = await response.json() as { data: Plan[] }
-		return data.data || []
+		const plans = await response.json() as Plan[]
+		return plans || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch plans:', error)
 		return []
@@ -683,8 +683,8 @@ export async function getConsentTypes(options: GetConsentTypesOptions): Promise<
 			return []
 		}
 
-		const data = await response.json() as { data: ConsentType[] }
-		return data.data || []
+		const types = await response.json() as ConsentType[]
+		return types || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch consent types:', error)
 		return []
@@ -764,8 +764,8 @@ export async function getFeatureFlags(options: GetFeatureFlagsOptions): Promise<
 			return []
 		}
 
-		const data = await response.json() as { data: FeatureFlagDefinition[] }
-		return data.data || []
+		const flags = await response.json() as FeatureFlagDefinition[]
+		return flags || []
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch feature flags:', error)
 		return []
@@ -849,8 +849,8 @@ export async function getReferralLeaderboard(options: GetReferralLeaderboardOpti
 			return { entries: [], total: 0, period }
 		}
 
-		const data = await response.json() as { data: ReferralLeaderboardResult }
-		return data.data || { entries: [], total: 0, period }
+		const result = await response.json() as ReferralLeaderboardResult
+		return result || { entries: [], total: 0, period }
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch referral leaderboard:', error)
 		return { entries: [], total: 0, period }
@@ -934,8 +934,8 @@ export async function getEngagementLeaderboard(options: GetEngagementLeaderboard
 			return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
 		}
 
-		const data = await response.json() as { data: EngagementLeaderboardResult }
-		return data.data || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
+		const result = await response.json() as EngagementLeaderboardResult
+		return result || { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
 	} catch (error) {
 		console.warn('[Sylphx] Failed to fetch engagement leaderboard:', error)
 		return { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null }
