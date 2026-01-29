@@ -490,8 +490,14 @@ export type { RestClient, RestClientConfig as ServerClientConfig }
 /** Default platform URL */
 const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
 
-/** Default cache TTL: 1 hour fallback if webhook invalidation fails */
-const CACHE_TTL_SECONDS = 3600
+/**
+ * Config cache TTL in seconds.
+ *
+ * Config data (OAuth providers, plans, flags, consent) changes rarely.
+ * A 60-second TTL balances freshness with performance — no webhooks needed.
+ * This matches industry practice (Clerk, Auth0, Firebase Remote Config).
+ */
+const CONFIG_REVALIDATE_SECONDS = 60
 
 /** Common options for authenticated SDK fetch */
 interface AuthenticatedFetchOptions {
@@ -501,26 +507,28 @@ interface AuthenticatedFetchOptions {
 }
 
 /**
- * Cached fetch with Next.js cache tags and graceful error handling.
+ * Cached fetch with short TTL and graceful error handling.
  *
  * All server-side data fetching goes through this helper to ensure:
- * - Consistent Next.js `tags` + `revalidate` for webhook-driven invalidation
+ * - Short TTL revalidation (60s) — config changes propagate within a minute
  * - Uniform error handling (warn + return fallback, never throw)
  * - DRY: auth headers, URL construction, JSON parsing in one place
+ *
+ * No cache tags or webhook invalidation — short TTL is simpler and
+ * works across independent Next.js deployments (unlike revalidateTag).
  */
 async function cachedFetch<T>(params: {
 	url: string
-	tags: string[]
 	headers?: Record<string, string>
 	fallback: T
 	label: string
 }): Promise<T> {
-	const { url, tags, headers, fallback, label } = params
+	const { url, headers, fallback, label } = params
 
 	try {
 		const response = await fetch(url, {
 			headers,
-			next: { tags, revalidate: CACHE_TTL_SECONDS },
+			next: { revalidate: CONFIG_REVALIDATE_SECONDS },
 		} as RequestInit)
 
 		if (!response.ok) {
@@ -581,7 +589,6 @@ export async function getOAuthProviders(options: {
 
 	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
-		tags: [`oauth:${appId}`],
 		fallback: { providers: [] },
 		label: 'OAuth providers',
 	})
@@ -600,7 +607,6 @@ export async function getOAuthProvidersWithInfo(options: {
 
 	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
-		tags: [`oauth:${appId}`],
 		fallback: { providers: [] },
 		label: 'OAuth providers',
 	})
@@ -637,7 +643,6 @@ export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan
 	return cachedFetch<Plan[]>({
 		url: `${platformUrl}/api/sdk/billing/plans`,
 		headers: sdkHeaders(appId, appSecret),
-		tags: [`plans:${appId}`],
 		fallback: [],
 		label: 'plans',
 	})
@@ -672,7 +677,6 @@ export async function getConsentTypes(options: AuthenticatedFetchOptions): Promi
 	return cachedFetch<ConsentType[]>({
 		url: `${platformUrl}/api/sdk/consent/types`,
 		headers: sdkHeaders(appId, appSecret),
-		tags: [`consent:${appId}`],
 		fallback: [],
 		label: 'consent types',
 	})
@@ -718,7 +722,6 @@ export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promi
 	return cachedFetch<FeatureFlagDefinition[]>({
 		url: `${platformUrl}/api/sdk/flags`,
 		headers: sdkHeaders(appId, appSecret),
-		tags: [`flags:${appId}`],
 		fallback: [],
 		label: 'feature flags',
 	})
@@ -775,7 +778,6 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 	return cachedFetch<ReferralLeaderboardResult>({
 		url: url.toString(),
 		headers: sdkHeaders(appId, appSecret),
-		tags: [`referrals:${appId}`],
 		fallback: { entries: [], total: 0, period },
 		label: 'referral leaderboard',
 	})
@@ -832,7 +834,6 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 	return cachedFetch<EngagementLeaderboardResult>({
 		url: url.toString(),
 		headers: sdkHeaders(appId, appSecret),
-		tags: [`engagement:${appId}`],
 		fallback: { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null },
 		label: 'engagement leaderboard',
 	})
