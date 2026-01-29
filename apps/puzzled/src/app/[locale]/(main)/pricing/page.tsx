@@ -22,7 +22,7 @@ export default async function PricingPage({ params }: Props) {
 
 	const plans = await getPlans({
 		appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
-		appSecret: process.env.SYLPHX_APP_SECRET!,
+		appSecret: process.env.SYLPHX_SECRET_KEY!,
 		platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
 	})
 

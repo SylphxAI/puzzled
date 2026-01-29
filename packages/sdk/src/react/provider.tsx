@@ -190,12 +190,18 @@ export interface SylphxProviderProps {
 	/**
 	 * Your app's ID (the app slug registered in Sylphx admin)
 	 * Example: "my-app"
+	 *
+	 * Optional when publishableKey is provided — the key identifies the app.
+	 * @deprecated Use publishableKey alone. The key IS the app identity.
 	 */
-	appId: string
+	appId?: string
 	/**
-	 * Your app's publishable key (environment-specific secret)
-	 * Format: sk_dev_xxx, sk_stg_xxx, or sk_prod_xxx
+	 * Your app's publishable key (environment-specific public key)
+	 * Format: pk_dev_xxx, pk_stg_xxx, or pk_prod_xxx
 	 * Get this from Platform Admin → Apps → Your App → Environments
+	 *
+	 * This is the primary app identifier. When provided alone,
+	 * no separate appId is needed.
 	 *
 	 * Optional when platformMode is true (uses cookies instead)
 	 */
@@ -327,7 +333,7 @@ export function SylphxProvider({
  */
 function SylphxProviderInner({
 	children,
-	appId,
+	appId: rawAppId,
 	publishableKey,
 	platformUrl: providedPlatformUrl,
 	afterSignOutUrl = '/',
@@ -343,8 +349,13 @@ function SylphxProviderInner({
 	const platformUrl = platformMode
 		? (typeof window !== 'undefined' ? window.location.origin : '')
 		: (providedPlatformUrl || 'https://sylphx.com')
+
+	// Effective app identifier: appId slug (legacy) or publishableKey (preferred)
+	// Used for storage namespacing, query keys, and API calls
+	const appId = rawAppId || publishableKey || ''
+
 	// ============================================
-	// Storage (namespaced by appId)
+	// Storage (namespaced by app identifier)
 	// ============================================
 	const storage = useMemo(() => new SylphxStorage(appId), [appId])
 	const [anonymousId] = useState(() => getOrCreateAnonymousId(storage))
@@ -2499,8 +2510,14 @@ function SylphxProviderInner({
 				}
 			},
 			getOAuthProviders: async () => {
-				// Fetch from platform config
-				const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`)
+				// Fetch from platform config — use publishable key header (preferred) or app_id param (legacy)
+				const url = publishableKey
+					? `${platformUrl}/api/auth/providers`
+					: `${platformUrl}/api/auth/providers?app_id=${appId}`
+				const headers: Record<string, string> = publishableKey
+					? { 'X-Publishable-Key': publishableKey }
+					: {}
+				const response = await fetch(url, { headers })
 				if (!response.ok) {
 					return { providers: [] }
 				}

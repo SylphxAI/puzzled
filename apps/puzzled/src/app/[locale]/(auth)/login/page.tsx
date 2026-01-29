@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function LoginPage() {
 	const providers = await getOAuthProviders({
-		appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+		publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
 		platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
 	})
 

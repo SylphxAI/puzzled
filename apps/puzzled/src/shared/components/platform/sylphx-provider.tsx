@@ -55,8 +55,8 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function PlatformProvider({ children, appId, publishableKey }: PlatformProviderProps) {
-	// If Sylphx is not configured, just render children
-	if (!appId || !publishableKey) {
+	// If Sylphx is not configured, just render children — publishableKey is the minimum requirement
+	if (!publishableKey) {
 		return <>{children}</>
 	}
 

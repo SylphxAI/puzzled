@@ -507,6 +507,17 @@ interface AuthenticatedFetchOptions {
 }
 
 /**
+ * Options for public endpoints that only need a publishable key.
+ *
+ * Accepts either:
+ * - `publishableKey` (preferred) — key IS the identity
+ * - `appId` (legacy) — slug-based lookup
+ */
+type PublicFetchOptions =
+	| { publishableKey: string; appId?: string; platformUrl?: string }
+	| { appId: string; publishableKey?: string; platformUrl?: string }
+
+/**
  * Cached fetch with short TTL and graceful error handling.
  *
  * All server-side data fetching goes through this helper to ensure:
@@ -575,55 +586,57 @@ export interface OAuthProviderInfo {
 /**
  * Get enabled OAuth providers for an app (server-side)
  *
- * Uses Next.js cache tags for near-instant invalidation via webhook.
- * Fallback TTL: 1 hour if webhook invalidation fails.
+ * Accepts either a publishable key (preferred) or app slug (legacy).
+ * The publishable key identifies the app directly via `X-Publishable-Key` header.
  *
  * @example
  * ```tsx
- * // app/login/page.tsx (Server Component)
- * import { getOAuthProviders } from '@sylphx/sdk/server'
+ * // Preferred — publishable key IS the identity
+ * const providers = await getOAuthProviders({
+ *   publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ * })
  *
- * export default async function LoginPage() {
- *   const providers = await getOAuthProviders({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *   })
- *   return <LoginForm providers={providers} />
- * }
+ * // Legacy — slug-based lookup
+ * const providers = await getOAuthProviders({
+ *   appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+ * })
  * ```
  */
-export async function getOAuthProviders(options: {
-	appId: string
-	platformUrl?: string
-}): Promise<OAuthProvider[]> {
-	const appId = options.appId.trim()
-	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
-
-	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
-		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
-		fallback: { providers: [] },
-		label: 'OAuth providers',
-	})
-
+export async function getOAuthProviders(options: PublicFetchOptions): Promise<OAuthProvider[]> {
+	const data = await fetchOAuthProviders(options)
 	return (data.providers || []).map(p => p.id)
 }
 
 /**
  * Get enabled OAuth providers with full info (server-side)
  */
-export async function getOAuthProvidersWithInfo(options: {
-	appId: string
-	platformUrl?: string
-}): Promise<OAuthProviderInfo[]> {
-	const appId = options.appId.trim()
-	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
+export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Promise<OAuthProviderInfo[]> {
+	const data = await fetchOAuthProviders(options)
+	return data.providers || []
+}
 
-	const data = await cachedFetch<{ providers: OAuthProviderInfo[] }>({
-		url: `${platformUrl}/api/auth/providers?app_id=${appId}`,
+/** Shared fetch for OAuth providers — routes via publishable key header or app_id query */
+async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
+	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
+	const publishableKey = options.publishableKey?.trim()
+	const appId = options.appId?.trim()
+
+	// Build URL — only add app_id param for legacy slug-based lookups
+	const url = publishableKey
+		? `${platformUrl}/api/auth/providers`
+		: `${platformUrl}/api/auth/providers?app_id=${appId}`
+
+	// Build headers — publishable key identifies the app
+	const headers: Record<string, string> | undefined = publishableKey
+		? { 'X-Publishable-Key': publishableKey }
+		: undefined
+
+	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
+		url,
+		headers,
 		fallback: { providers: [] },
 		label: 'OAuth providers',
 	})
-
-	return data.providers || []
 }
 
 // ============================================================================
