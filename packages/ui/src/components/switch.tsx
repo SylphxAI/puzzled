@@ -82,7 +82,7 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
 					'disabled:cursor-not-allowed disabled:opacity-50',
 					'data-[state=checked]:bg-primary data-[state=checked]:border-primary',
-					'data-[state=unchecked]:bg-switch-track data-[state=unchecked]:border-transparent',
+					'data-[state=unchecked]:bg-muted-foreground/40 data-[state=unchecked]:border-transparent',
 					'active:scale-[0.98] motion-reduce:active:scale-100',
 					className,
 				)}
