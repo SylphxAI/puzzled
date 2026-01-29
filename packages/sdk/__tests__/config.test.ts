@@ -4,15 +4,13 @@
  * Tests for createConfig, buildHeaders, buildApiUrl, and callApi.
  */
 
-import { describe, test, expect, beforeEach, afterEach, spyOn, mock } from 'bun:test'
+import { describe, test, expect, afterEach } from 'bun:test'
 import {
 	createConfig,
-	createPlatformConfig,
 	withToken,
 	buildHeaders,
 	buildApiUrl,
 	callApi,
-	type SylphxConfig,
 } from '../src/config'
 
 // ============================================================================
@@ -45,38 +43,10 @@ describe('createConfig', () => {
 		expect(config.accessToken).toBe('token-abc')
 	})
 
-	test('sets platformMode when provided', () => {
-		const config = createConfig({
-			platformMode: true,
-		})
-
-		expect(config.platformMode).toBe(true)
-	})
-
 	test('returns frozen object', () => {
 		const config = createConfig({
 			secretKey: 'sk_dev_abc123',
 		})
-
-		expect(Object.isFrozen(config)).toBe(true)
-	})
-})
-
-// ============================================================================
-// createPlatformConfig Tests
-// ============================================================================
-
-describe('createPlatformConfig', () => {
-	test('creates platform-mode config', () => {
-		const config = createPlatformConfig()
-
-		expect(config.platformMode).toBe(true)
-		// platformUrl is window.location.origin in browser, empty string in Node
-		expect(config.platformUrl).toBe('')
-	})
-
-	test('returns frozen object', () => {
-		const config = createPlatformConfig()
 
 		expect(Object.isFrozen(config)).toBe(true)
 	})
@@ -144,16 +114,15 @@ describe('buildHeaders', () => {
 		expect(headers['Authorization']).toBe('Bearer token-abc')
 	})
 
-	test('excludes x-app-secret and Authorization in platform mode', () => {
+	test('includes both headers when both provided', () => {
 		const config = createConfig({
 			secretKey: 'sk_dev_abc123',
 			accessToken: 'token',
-			platformMode: true,
 		})
 		const headers = buildHeaders(config)
 
-		expect(headers['x-app-secret']).toBeUndefined()
-		expect(headers['Authorization']).toBeUndefined()
+		expect(headers['x-app-secret']).toBe('sk_dev_abc123')
+		expect(headers['Authorization']).toBe('Bearer token')
 	})
 })
 
@@ -261,20 +230,6 @@ describe('callApi', () => {
 
 		expect(capturedUrl).toContain('userId=user-123')
 		expect(capturedUrl).not.toContain('filter')
-	})
-
-	test('includes credentials in platform mode', async () => {
-		let capturedCredentials: RequestCredentials | undefined
-
-		globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedCredentials = init?.credentials
-			return new Response(JSON.stringify({}))
-		}
-
-		const config = createConfig({ platformUrl: 'https://example.com', platformMode: true })
-		await callApi(config, '/test')
-
-		expect(capturedCredentials).toBe('include')
 	})
 
 	test('throws error on non-OK response', async () => {

@@ -98,7 +98,6 @@ interface RestConfig {
 	/** Publishable key — used as x-app-secret for SDK API calls */
 	publishableKey?: string
 	platformUrl: string
-	platformMode: boolean
 	getAccessToken?: () => string | null | undefined
 }
 
@@ -122,18 +121,15 @@ function createRestApi(config: RestConfig) {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
 		}
-		if (!config.platformMode) {
-			if (config.publishableKey) h['x-app-secret'] = config.publishableKey
-			const token = config.getAccessToken?.()
-			if (token) h['Authorization'] = `Bearer ${token}`
-		}
+		if (config.publishableKey) h['x-app-secret'] = config.publishableKey
+		const token = config.getAccessToken?.()
+		if (token) h['Authorization'] = `Bearer ${token}`
 		return h
 	}
 
 	const fetchOptions = (method: string, body?: unknown) => ({
 		method,
 		headers: headers(),
-		...(config.platformMode && { credentials: 'include' as const }),
 		...(body !== undefined && { body: JSON.stringify(body) }),
 	})
 
@@ -192,7 +188,6 @@ export interface SylphxProviderProps {
 	 * Get this from Platform Admin → Apps → Your App → Environments
 	 *
 	 * The key IS the app identity — no separate app ID needed.
-	 * Optional when platformMode is true (uses cookies instead)
 	 */
 	publishableKey?: string
 	/** Platform URL (default: https://sylphx.com) */
@@ -216,18 +211,6 @@ export interface SylphxProviderProps {
 				logout?: boolean
 				purchase?: boolean
 		  }
-	/**
-	 * Enable platform mode for same-origin requests (dogfooding)
-	 *
-	 * When true:
-	 * - Uses cookies for authentication instead of bearer tokens
-	 * - No publishableKey required
-	 * - Requests use credentials: 'include'
-	 *
-	 * Use this when the SDK is used within the Sylphx Platform Console
-	 * or other same-origin applications.
-	 */
-	platformMode?: boolean
 	/**
 	 * Initial plans data for SSR hydration (optional)
 	 *
@@ -274,7 +257,6 @@ export function SylphxProvider({
 	afterSignOutUrl = '/',
 	vapidPublicKey,
 	autoTracking = true,
-	platformMode = false,
 	initialPlans,
 	initialConsentTypes,
 }: SylphxProviderProps) {
@@ -302,7 +284,6 @@ export function SylphxProvider({
 				afterSignOutUrl={afterSignOutUrl}
 				vapidPublicKey={vapidPublicKey}
 				autoTracking={autoTracking}
-				platformMode={platformMode}
 				queryClient={queryClient}
 				initialPlans={initialPlans}
 				initialConsentTypes={initialConsentTypes}
@@ -325,16 +306,13 @@ function SylphxProviderInner({
 	afterSignOutUrl = '/',
 	vapidPublicKey,
 	autoTracking = true,
-	platformMode = false,
 	queryClient,
 	initialPlans,
 	initialConsentTypes,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
 
-	// In platform mode, derive URL from current origin; otherwise use provided or default
-	const platformUrl = platformMode
-		? (typeof window !== 'undefined' ? window.location.origin : '')
-		: (providedPlatformUrl || 'https://sylphx.com')
+	// Use provided URL or default to production
+	const platformUrl = providedPlatformUrl || 'https://sylphx.com'
 
 	// Namespace identifier derived from publishable key
 	// Used for storage namespacing, React Query keys, and context
@@ -370,12 +348,9 @@ function SylphxProviderInner({
 			createRestApi({
 				publishableKey,
 				platformUrl,
-				platformMode,
-				getAccessToken: platformMode
-					? undefined // Platform mode uses cookies, not tokens
-					: () => storage.get(STORAGE_KEYS.ACCESS_TOKEN) ?? undefined,
+				getAccessToken: () => storage.get(STORAGE_KEYS.ACCESS_TOKEN) ?? undefined,
 			}),
-		[publishableKey, platformUrl, platformMode, storage]
+		[publishableKey, platformUrl, storage]
 	)
 
 	// ============================================

@@ -61,7 +61,6 @@
 
 export {
 	createConfig,
-	createPlatformConfig,
 	withToken,
 	type SylphxConfig,
 	type SylphxConfigInput,

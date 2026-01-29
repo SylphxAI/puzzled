@@ -60,17 +60,12 @@ export interface RestClientConfig {
  * Dynamic configuration that can change at runtime (e.g., access token)
  */
 export interface RestDynamicConfig {
-	/** Your secret key — optional in platformMode */
+	/** Your secret key (sk_* or pk_*) — identifies the app */
 	secretKey?: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
 	/** Get the current access token (called on each request) */
 	getAccessToken?: () => string | null | undefined
-	/**
-	 * Enable platform mode for same-origin requests
-	 * When true: uses cookies, no secretKey required
-	 */
-	platformMode?: boolean
 	/** Retry configuration (default: 3 retries with exponential backoff) */
 	retry?: RetryConfig | false
 }
@@ -81,18 +76,15 @@ export interface RestDynamicConfig {
 function createAuthMiddleware(config: RestDynamicConfig): Middleware {
 	return {
 		async onRequest({ request }) {
-			// In platform mode, rely on cookies
-			if (!config.platformMode) {
-				// Add secret key if provided — identifies the app
-				if (config.secretKey) {
-					request.headers.set('x-app-secret', config.secretKey)
-				}
+			// Add secret key if provided — identifies the app
+			if (config.secretKey) {
+				request.headers.set('x-app-secret', config.secretKey)
+			}
 
-				// Add access token if available
-				const token = config.getAccessToken?.()
-				if (token) {
-					request.headers.set('Authorization', `Bearer ${token}`)
-				}
+			// Add access token if available
+			const token = config.getAccessToken?.()
+			if (token) {
+				request.headers.set('Authorization', `Bearer ${token}`)
 			}
 
 			return request

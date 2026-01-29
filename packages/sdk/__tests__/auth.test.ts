@@ -28,8 +28,7 @@ import {
 
 const createTestConfig = () =>
 	createConfig({
-		appId: 'test-app',
-		appSecret: 'test-secret',
+		secretKey: 'sk_dev_test-secret',
 		platformUrl: 'https://test.sylphx.com',
 	})
 
@@ -411,7 +410,7 @@ describe('getSession', () => {
 		})
 
 		const config = createConfig({
-			appId: 'test-app',
+			secretKey: 'sk_dev_test-secret',
 			platformUrl: 'https://test.sylphx.com',
 			accessToken: 'valid-token',
 		})
@@ -425,7 +424,7 @@ describe('getSession', () => {
 
 	test('returns null user when not authenticated', async () => {
 		const config = createConfig({
-			appId: 'test-app',
+			secretKey: 'sk_dev_test-secret',
 			platformUrl: 'https://test.sylphx.com',
 			// No accessToken
 		})
@@ -439,7 +438,7 @@ describe('getSession', () => {
 		mockFetchError('Unauthorized', 401)
 
 		const config = createConfig({
-			appId: 'test-app',
+			secretKey: 'sk_dev_test-secret',
 			platformUrl: 'https://test.sylphx.com',
 			accessToken: 'invalid-token',
 		})
@@ -447,26 +446,6 @@ describe('getSession', () => {
 		const result = await getSession(config)
 
 		expect(result.user).toBeNull()
-	})
-
-	test('works in platform mode without accessToken', async () => {
-		mockFetch({
-			id: 'user-123',
-			email: 'test@example.com',
-			name: 'Test',
-			image: null,
-			emailVerified: true,
-		})
-
-		const config = createConfig({
-			appId: 'test-app',
-			platformUrl: 'https://test.sylphx.com',
-			platformMode: true, // Uses cookies instead
-		})
-
-		const result = await getSession(config)
-
-		expect(result.user).not.toBeNull()
 	})
 })
 

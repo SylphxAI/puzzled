@@ -275,7 +275,7 @@ export async function resetPassword(
  * ```
  */
 export async function getSession(config: SylphxConfig): Promise<SessionResult> {
-	if (!config.accessToken && !config.platformMode) {
+	if (!config.accessToken) {
 		return { user: null }
 	}
 

@@ -448,7 +448,7 @@ import type {
 	OrganizationInvitation,
 	OrgRole,
 } from '../orgs'
-import { createPlatformConfig } from '../config'
+import { createConfig } from '../config'
 
 export type { Organization, OrganizationMember, OrganizationInvitation, OrgRole }
 
@@ -527,9 +527,12 @@ export function useOrganization(): UseOrganizationReturn {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<Error | null>(null)
 
-	// Create config for API calls
+	// Create config for API calls using platform context
 	const config = platform
-		? createPlatformConfig()
+		? createConfig({
+				secretKey: platform.appId, // appId is the publishableKey
+				platformUrl: platform.platformUrl,
+		  })
 		: null
 
 	// Load organizations on mount

@@ -4,9 +4,7 @@
  * Create a config object that can be passed to SDK functions.
  * This is the foundation for the function-based API.
  *
- * Supports two modes:
- * 1. Standard mode: Uses secretKey for customer apps (key IS the identity)
- * 2. Platform mode: Uses cookies for same-origin requests (dogfooding)
+ * Uses publishableKey or secretKey for authentication via x-app-secret header.
  */
 
 /**
@@ -19,8 +17,6 @@ export interface SylphxConfig {
 	readonly platformUrl: string
 	/** Optional: Current access token for authenticated requests */
 	readonly accessToken?: string
-	/** Platform mode: Uses cookies instead of bearer tokens (for dogfooding) */
-	readonly platformMode?: boolean
 }
 
 /**
@@ -30,7 +26,6 @@ export interface SylphxConfigInput {
 	secretKey?: string
 	platformUrl?: string
 	accessToken?: string
-	platformMode?: boolean
 }
 
 /**
@@ -48,25 +43,6 @@ export function createConfig(input: SylphxConfigInput): SylphxConfig {
 		secretKey: input.secretKey,
 		platformUrl: input.platformUrl ?? 'https://sylphx.com',
 		accessToken: input.accessToken,
-		platformMode: input.platformMode,
-	})
-}
-
-/**
- * Create a platform-mode configuration for dogfooding
- *
- * Uses cookies for authentication instead of bearer tokens.
- * Only works on the same origin as the platform.
- *
- * @example
- * ```typescript
- * const config = createPlatformConfig()
- * ```
- */
-export function createPlatformConfig(): SylphxConfig {
-	return Object.freeze({
-		platformUrl: typeof window !== 'undefined' ? window.location.origin : '',
-		platformMode: true,
 	})
 }
 
@@ -93,14 +69,11 @@ export function buildHeaders(config: SylphxConfig): Record<string, string> {
 		'Content-Type': 'application/json',
 	}
 
-	// In platform mode, we rely on cookies — no keys or bearer token needed
-	if (!config.platformMode) {
-		if (config.secretKey) {
-			headers['x-app-secret'] = config.secretKey
-		}
-		if (config.accessToken) {
-			headers['Authorization'] = `Bearer ${config.accessToken}`
-		}
+	if (config.secretKey) {
+		headers['x-app-secret'] = config.secretKey
+	}
+	if (config.accessToken) {
+		headers['Authorization'] = `Bearer ${config.accessToken}`
 	}
 
 	return headers
@@ -148,11 +121,6 @@ export async function callApi<TOutput>(
 	const fetchOptions: RequestInit = {
 		method,
 		headers: buildHeaders(config),
-	}
-
-	// In platform mode, include cookies for same-origin auth
-	if (config.platformMode) {
-		fetchOptions.credentials = 'include'
 	}
 
 	if (body) {
