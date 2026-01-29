@@ -25,8 +25,7 @@ let cachedConfig: SylphxConfig | null = null
 export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
-			appId: env.SYLPHX_APP_ID,
-			appSecret: env.SYLPHX_SECRET_KEY,
+			secretKey: env.SYLPHX_SECRET_KEY,
 			platformUrl: process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://sylphx.com',
 		})
 	}

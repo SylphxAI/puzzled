@@ -21,8 +21,7 @@ export default async function PricingPage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const plans = await getPlans({
-		appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
-		appSecret: process.env.SYLPHX_SECRET_KEY!,
+		secretKey: process.env.SYLPHX_SECRET_KEY!,
 		platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
 	})
 

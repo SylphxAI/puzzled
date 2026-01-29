@@ -27,8 +27,7 @@
  * import { createConfig, track, signIn, getPlans } from '@sylphx/sdk'
  *
  * const config = createConfig({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Analytics
@@ -47,8 +46,7 @@
  * import { createRestClient } from '@sylphx/sdk'
  *
  * const client = createRestClient({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Type-safe REST calls

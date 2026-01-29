@@ -197,7 +197,7 @@ export async function refreshToken(
 		body: JSON.stringify({
 			grant_type: 'refresh_token',
 			refresh_token: token,
-			app_id: config.appId,
+			client_secret: config.secretKey,
 		}),
 	})
 
@@ -221,7 +221,7 @@ export async function verifyEmail(config: SylphxConfig, token: string): Promise<
 	const response = await fetch(`${config.platformUrl}/api/auth/verify-email`, {
 		method: 'POST',
 		headers: buildHeaders(config),
-		body: JSON.stringify({ token, app_id: config.appId }),
+		body: JSON.stringify({ token }),
 	})
 
 	if (!response.ok) {
@@ -337,8 +337,7 @@ export async function introspectToken(
 		body: JSON.stringify({
 			token,
 			token_type_hint: tokenTypeHint,
-			app_id: config.appId,
-			app_secret: config.appSecret,
+			client_secret: config.secretKey,
 		}),
 	})
 
@@ -377,8 +376,7 @@ export async function revokeToken(
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
 			token: options?.revokeAll ? undefined : token,
-			app_id: config.appId,
-			app_secret: config.appSecret,
+			client_secret: config.secretKey,
 			user_id: options?.userId,
 			revoke_all: options?.revokeAll,
 		}),

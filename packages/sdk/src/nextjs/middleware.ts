@@ -41,8 +41,8 @@ function isTokenExpired(token: string): boolean {
 }
 
 export interface AuthMiddlewareConfig {
-	/** App ID for cookie namespacing (required) */
-	appId: string
+	/** Secret key for cookie namespace derivation */
+	secretKey: string
 	/** Routes that don't require authentication */
 	publicRoutes?: string[]
 	/** Routes that should be completely ignored by middleware */
@@ -98,7 +98,7 @@ function matchesPattern(path: string, patterns: string[]): boolean {
  */
 export function authMiddleware(config: AuthMiddlewareConfig) {
 	const {
-		appId,
+		secretKey,
 		publicRoutes = ['/'],
 		ignoredRoutes = [],
 		signInUrl = '/login',
@@ -106,8 +106,10 @@ export function authMiddleware(config: AuthMiddlewareConfig) {
 		debug = false,
 	} = config
 
-	// Get namespaced cookie names
-	const cookieNames = getCookieNames(appId)
+	// Derive cookie namespace from secret key prefix (e.g., "sk_prod" → "sylphx_sk_prod")
+	const parts = secretKey.split('_')
+	const namespace = parts.length >= 3 ? `sylphx_${parts[0]}_${parts[1]}` : 'sylphx'
+	const cookieNames = getCookieNames(namespace)
 
 	// Add auth pages to public routes
 	const allPublicRoutes = [

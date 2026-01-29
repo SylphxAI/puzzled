@@ -9,8 +9,7 @@
  * import { createConfig, getSecret, getSecrets, listSecretKeys } from '@sylphx/sdk'
  *
  * const config = createConfig({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Get a single secret

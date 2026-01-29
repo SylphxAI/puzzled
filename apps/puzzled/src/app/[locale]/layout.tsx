@@ -205,7 +205,6 @@ export default async function LocaleLayout({ children, params }: Props) {
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
 					<PlatformProvider
-						appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID}
 						publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
 					>
 						<SessionReplayProvider>

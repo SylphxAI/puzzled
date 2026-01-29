@@ -38,15 +38,15 @@ interface PlatformJobPayload {
 }
 
 function verifyPlatformRequest(req: NextRequest): { valid: boolean; error?: string } {
-	const appId = req.headers.get('x-sylphx-app-id')
+	const secretKey = req.headers.get('x-app-secret')
 
-	// Verify app ID matches our app
-	if (!appId) {
-		return { valid: false, error: 'Missing X-Sylphx-App-Id header' }
+	// Verify secret key matches our app
+	if (!secretKey) {
+		return { valid: false, error: 'Missing x-app-secret header' }
 	}
 
-	if (appId !== env.SYLPHX_APP_ID) {
-		return { valid: false, error: 'Invalid app ID' }
+	if (secretKey !== env.SYLPHX_SECRET_KEY) {
+		return { valid: false, error: 'Invalid secret key' }
 	}
 
 	return { valid: true }

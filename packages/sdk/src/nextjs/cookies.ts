@@ -2,19 +2,19 @@
  * Cookie Management for Next.js
  *
  * Secure cookie helpers for storing auth tokens.
- * Cookie names are namespaced by appId to prevent collisions.
+ * Cookie names are namespaced by environment prefix to prevent collisions.
  */
 
 import { cookies } from 'next/headers'
 import type { TokenResponse, User } from '../types'
 
-// Cookie name generator (namespaced by appId)
-export function getCookieNames(appId: string) {
+// Cookie name generator (namespaced by environment prefix)
+export function getCookieNames(namespace: string) {
 	return {
-		ACCESS_TOKEN: `sylphx_${appId}_access_token`,
-		REFRESH_TOKEN: `sylphx_${appId}_refresh_token`,
-		USER: `sylphx_${appId}_user`,
-		EXPIRES_AT: `sylphx_${appId}_expires_at`,
+		ACCESS_TOKEN: `${namespace}_access_token`,
+		REFRESH_TOKEN: `${namespace}_refresh_token`,
+		USER: `${namespace}_user`,
+		EXPIRES_AT: `${namespace}_expires_at`,
 	}
 }
 

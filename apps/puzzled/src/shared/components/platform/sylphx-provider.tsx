@@ -3,7 +3,7 @@
 /**
  * Sylphx Platform Provider Wrapper
  *
- * Wraps the app with SylphxProvider when SYLPHX_APP_ID is configured.
+ * Wraps the app with SylphxProvider when publishable key is configured.
  *
  * Architecture:
  * - Sylphx Platform handles ALL auth (email, OAuth, 2FA, sessions)
@@ -18,8 +18,6 @@ import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
-	/** Sylphx App ID (from NEXT_PUBLIC_SYLPHX_APP_ID env var) */
-	appId?: string
 	/** Sylphx Publishable Key (from NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY env var) */
 	publishableKey?: string
 }
@@ -54,14 +52,14 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function PlatformProvider({ children, appId, publishableKey }: PlatformProviderProps) {
-	// If Sylphx is not configured, just render children — publishableKey is the minimum requirement
+export function PlatformProvider({ children, publishableKey }: PlatformProviderProps) {
+	// If Sylphx is not configured, just render children
 	if (!publishableKey) {
 		return <>{children}</>
 	}
 
 	return (
-		<SylphxProvider appId={appId} publishableKey={publishableKey} afterSignOutUrl="/login">
+		<SylphxProvider publishableKey={publishableKey} afterSignOutUrl="/login">
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)

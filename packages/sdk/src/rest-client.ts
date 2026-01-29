@@ -9,8 +9,7 @@
  * import { createRestClient } from '@sylphx/sdk'
  *
  * const client = createRestClient({
- *   appId: 'your-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Full type inference from OpenAPI
@@ -45,12 +44,12 @@ export interface RetryConfig {
 
 /**
  * Configuration for the REST client
+ *
+ * The secret key identifies the app — no separate app ID needed.
  */
 export interface RestClientConfig {
-	/** Your app's ID (slug) */
-	appId: string
-	/** Your app's secret key (sk_dev_xxx, sk_stg_xxx, or sk_prod_xxx) */
-	appSecret: string
+	/** Your secret key (sk_dev_xxx, sk_stg_xxx, or sk_prod_xxx) — identifies the app */
+	secretKey: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
 	/** Retry configuration (default: 3 retries with exponential backoff) */
@@ -61,17 +60,15 @@ export interface RestClientConfig {
  * Dynamic configuration that can change at runtime (e.g., access token)
  */
 export interface RestDynamicConfig {
-	/** Your app's ID (slug) */
-	appId: string
-	/** Your app's secret key - optional in platformMode */
-	appSecret?: string
+	/** Your secret key — optional in platformMode */
+	secretKey?: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
 	/** Get the current access token (called on each request) */
 	getAccessToken?: () => string | null | undefined
 	/**
 	 * Enable platform mode for same-origin requests
-	 * When true: uses cookies, no appSecret required
+	 * When true: uses cookies, no secretKey required
 	 */
 	platformMode?: boolean
 	/** Retry configuration (default: 3 retries with exponential backoff) */
@@ -84,14 +81,11 @@ export interface RestDynamicConfig {
 function createAuthMiddleware(config: RestDynamicConfig): Middleware {
 	return {
 		async onRequest({ request }) {
-			// Add app ID
-			request.headers.set('x-app-id', config.appId)
-
 			// In platform mode, rely on cookies
 			if (!config.platformMode) {
-				// Add app secret if provided
-				if (config.appSecret) {
-					request.headers.set('x-app-secret', config.appSecret)
+				// Add secret key if provided — identifies the app
+				if (config.secretKey) {
+					request.headers.set('x-app-secret', config.secretKey)
 				}
 
 				// Add access token if available
@@ -165,8 +159,7 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
  * @example
  * ```typescript
  * const client = createRestClient({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // GET requests
@@ -186,8 +179,7 @@ export function createRestClient(config: RestClientConfig) {
 		baseUrl: `${baseUrl}/api/sdk`,
 		headers: {
 			'Content-Type': 'application/json',
-			'x-app-id': config.appId,
-			'x-app-secret': config.appSecret,
+			'x-app-secret': config.secretKey,
 		},
 	})
 
@@ -207,8 +199,7 @@ export function createRestClient(config: RestClientConfig) {
  * @example
  * ```typescript
  * const client = createDynamicRestClient({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  *   getAccessToken: () => localStorage.getItem('sylphx_token'),
  * })
  * ```

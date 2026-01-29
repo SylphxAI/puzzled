@@ -2,6 +2,7 @@
  * Server-side Auth Helpers for Next.js
  *
  * Use in Server Components and API Routes.
+ * Secret key is the sole app identifier — no separate app ID needed.
  */
 
 import { cache } from 'react'
@@ -23,7 +24,7 @@ function isTokenResponse(data: unknown): data is TokenResponse {
 }
 
 // Configuration for server helpers (must be set before use)
-let serverConfig: { appId: string; appSecret: string; platformUrl: string } | null = null
+let serverConfig: { secretKey: string; platformUrl: string } | null = null
 
 /**
  * Configure the SDK for server-side usage
@@ -32,24 +33,19 @@ let serverConfig: { appId: string; appSecret: string; platformUrl: string } | nu
  *
  * @example
  * ```ts
- * // lib/sylphx.ts
  * import { configureServer } from '@sylphx/platform-sdk/nextjs'
  *
  * configureServer({
- *   appId: process.env.SYLPHX_APP_ID!,
- *   appSecret: process.env.SYLPHX_APP_SECRET!,
- *   platformUrl: process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com',
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  * ```
  */
 export function configureServer(config: {
-	appId: string
-	appSecret: string
+	secretKey: string
 	platformUrl?: string
 }) {
 	serverConfig = {
-		appId: config.appId,
-		appSecret: config.appSecret,
+		secretKey: config.secretKey,
 		platformUrl: config.platformUrl || 'https://sylphx.com',
 	}
 }
@@ -57,21 +53,36 @@ export function configureServer(config: {
 /**
  * Get server configuration (returns null if not configured)
  */
-function getConfig(): { appId: string; appSecret: string; platformUrl: string } | null {
+function getConfig(): { secretKey: string; platformUrl: string } | null {
 	if (!serverConfig) {
 		// Try to get from environment variables
-		const appId = process.env.SYLPHX_APP_ID
-		const appSecret = process.env.SYLPHX_APP_SECRET
+		const secretKey = process.env.SYLPHX_SECRET_KEY
 		const platformUrl = process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com'
 
-		if (appId && appSecret) {
-			serverConfig = { appId, appSecret, platformUrl }
+		if (secretKey) {
+			serverConfig = { secretKey, platformUrl }
 		} else {
 			// Return null instead of throwing - allows graceful degradation
 			return null
 		}
 	}
 	return serverConfig
+}
+
+/**
+ * Derive a stable cookie namespace from the secret key prefix.
+ * Uses the environment prefix (e.g., "sk_prod", "sk_dev") to avoid
+ * collisions between environments while keeping cookies deterministic.
+ */
+function getCookieNamespace(): string {
+	const config = getConfig()
+	if (!config) return 'sylphx'
+	// Extract prefix like "sk_prod" from "sk_prod_xxxxx"
+	const parts = config.secretKey.split('_')
+	if (parts.length >= 3) {
+		return `sylphx_${parts[0]}_${parts[1]}`
+	}
+	return 'sylphx'
 }
 
 /**
@@ -110,7 +121,8 @@ export const auth = cache(async (): Promise<AuthResult> => {
 		return { userId: null, user: null, accessToken: null }
 	}
 
-	const { accessToken, refreshToken, user, expiresAt } = await getAuthCookies(config.appId)
+	const namespace = getCookieNamespace()
+	const { accessToken, refreshToken, user, expiresAt } = await getAuthCookies(namespace)
 
 	// No tokens at all
 	if (!accessToken && !refreshToken) {
@@ -147,8 +159,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 				body: JSON.stringify({
 					grant_type: 'refresh_token',
 					refresh_token: refreshToken,
-					app_id: config.appId,
-					app_secret: config.appSecret,
+					client_secret: config.secretKey,
 				}),
 			})
 
@@ -157,7 +168,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 				if (!isTokenResponse(data)) {
 					throw new Error('Invalid token response format')
 				}
-				await setAuthCookies(config.appId, data)
+				await setAuthCookies(namespace, data)
 
 				return {
 					userId: data.user.id,
@@ -171,7 +182,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 	}
 
 	// Clear invalid tokens
-	await clearAuthCookies(config.appId)
+	await clearAuthCookies(namespace)
 
 	return { userId: null, user: null, accessToken: null }
 })
@@ -181,16 +192,11 @@ export const auth = cache(async (): Promise<AuthResult> => {
  *
  * @example
  * ```ts
- * // In a Server Component
  * import { currentUser } from '@sylphx/platform-sdk/nextjs'
  *
  * export default async function Header() {
  *   const user = await currentUser()
- *
- *   if (!user) {
- *     return <SignIn />
- *   }
- *
+ *   if (!user) return <SignIn />
  *   return <span>Hello, {user.name}</span>
  * }
  * ```
@@ -220,12 +226,7 @@ export async function currentUserId(): Promise<string | null> {
  * export async function GET(request: Request) {
  *   const { searchParams } = new URL(request.url)
  *   const code = searchParams.get('code')
- *   const state = searchParams.get('state')
- *
- *   if (!code) {
- *     redirect('/login?error=missing_code')
- *   }
- *
+ *   if (!code) redirect('/login?error=missing_code')
  *   await handleCallback(code)
  *   redirect('/dashboard')
  * }
@@ -234,7 +235,7 @@ export async function currentUserId(): Promise<string | null> {
 export async function handleCallback(code: string): Promise<User> {
 	const config = getConfig()
 	if (!config) {
-		throw new Error('Sylphx SDK not configured. Set SYLPHX_APP_ID and SYLPHX_APP_SECRET environment variables.')
+		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
 	}
 
 	const response = await fetch(`${config.platformUrl}/api/auth/token`, {
@@ -243,8 +244,7 @@ export async function handleCallback(code: string): Promise<User> {
 		body: JSON.stringify({
 			grant_type: 'authorization_code',
 			code,
-			app_id: config.appId,
-			app_secret: config.appSecret,
+			client_secret: config.secretKey,
 		}),
 	})
 
@@ -257,7 +257,8 @@ export async function handleCallback(code: string): Promise<User> {
 	if (!isTokenResponse(data)) {
 		throw new Error('Invalid token response format')
 	}
-	await setAuthCookies(config.appId, data)
+	const namespace = getCookieNamespace()
+	await setAuthCookies(namespace, data)
 
 	return data.user
 }
@@ -285,7 +286,8 @@ export async function signOut(): Promise<void> {
 		return
 	}
 
-	const { refreshToken } = await getAuthCookies(config.appId)
+	const namespace = getCookieNamespace()
+	const { refreshToken } = await getAuthCookies(namespace)
 
 	// Revoke token on platform
 	if (refreshToken) {
@@ -294,9 +296,8 @@ export async function signOut(): Promise<void> {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					refresh_token: refreshToken,
-					app_id: config.appId,
-					app_secret: config.appSecret,
+					token: refreshToken,
+					client_secret: config.secretKey,
 				}),
 			})
 		} catch {
@@ -305,7 +306,7 @@ export async function signOut(): Promise<void> {
 	}
 
 	// Clear cookies
-	await clearAuthCookies(config.appId)
+	await clearAuthCookies(namespace)
 }
 
 /**
@@ -315,13 +316,20 @@ export function getAuthorizationUrl(options?: {
 	redirectUri?: string
 	mode?: 'login' | 'signup'
 	state?: string
+	publishableKey?: string
 }): string {
 	const config = getConfig()
 	if (!config) {
-		throw new Error('Sylphx SDK not configured. Set SYLPHX_APP_ID and SYLPHX_APP_SECRET environment variables.')
+		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
 	}
+
+	const clientId = options?.publishableKey || process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
+	if (!clientId) {
+		throw new Error('Publishable key is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY.')
+	}
+
 	const params = new URLSearchParams({
-		app_id: config.appId,
+		client_id: clientId,
 		redirect_uri: options?.redirectUri || '/',
 		response_type: 'code',
 	})

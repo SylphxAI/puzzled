@@ -144,7 +144,7 @@ export async function chat(config: SylphxConfig, input: ChatInput): Promise<Chat
 		method: 'POST',
 		headers: {
 			...buildHeaders(config),
-			Authorization: `Bearer ${config.appSecret}`,
+			Authorization: `Bearer ${config.secretKey}`,
 		},
 		body: JSON.stringify({
 			model: input.model,
@@ -212,7 +212,7 @@ export function chatStream(
 				method: 'POST',
 				headers: {
 					...buildHeaders(config),
-					Authorization: `Bearer ${config.appSecret}`,
+					Authorization: `Bearer ${config.secretKey}`,
 				},
 				body: JSON.stringify({
 					model: input.model,
@@ -302,7 +302,7 @@ export async function embed(config: SylphxConfig, input: EmbedInput): Promise<Em
 		method: 'POST',
 		headers: {
 			...buildHeaders(config),
-			Authorization: `Bearer ${config.appSecret}`,
+			Authorization: `Bearer ${config.secretKey}`,
 		},
 		body: JSON.stringify({
 			model: input.model,

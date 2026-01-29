@@ -11,7 +11,7 @@
  * import { authMiddleware } from '@sylphx/platform-sdk/nextjs'
  *
  * export default authMiddleware({
- *   appId: process.env.SYLPHX_APP_ID!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  *   publicRoutes: ['/', '/about'],
  * })
  *

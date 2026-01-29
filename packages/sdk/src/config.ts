@@ -5,7 +5,7 @@
  * This is the foundation for the function-based API.
  *
  * Supports two modes:
- * 1. Standard mode: Uses appId + appSecret for customer apps
+ * 1. Standard mode: Uses secretKey for customer apps (key IS the identity)
  * 2. Platform mode: Uses cookies for same-origin requests (dogfooding)
  */
 
@@ -13,10 +13,8 @@
  * SDK Configuration
  */
 export interface SylphxConfig {
-	/** Your app's ID (slug) */
-	readonly appId: string
-	/** Your app's secret key (optional in platform mode) */
-	readonly appSecret?: string
+	/** Your secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx) — identifies the app */
+	readonly secretKey?: string
 	/** Platform URL (default: https://sylphx.com) */
 	readonly platformUrl: string
 	/** Optional: Current access token for authenticated requests */
@@ -29,8 +27,7 @@ export interface SylphxConfig {
  * Configuration input (some fields are optional)
  */
 export interface SylphxConfigInput {
-	appId: string
-	appSecret?: string
+	secretKey?: string
 	platformUrl?: string
 	accessToken?: string
 	platformMode?: boolean
@@ -42,15 +39,13 @@ export interface SylphxConfigInput {
  * @example
  * ```typescript
  * const config = createConfig({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  * ```
  */
 export function createConfig(input: SylphxConfigInput): SylphxConfig {
 	return Object.freeze({
-		appId: input.appId,
-		appSecret: input.appSecret,
+		secretKey: input.secretKey,
 		platformUrl: input.platformUrl ?? 'https://sylphx.com',
 		accessToken: input.accessToken,
 		platformMode: input.platformMode,
@@ -65,12 +60,11 @@ export function createConfig(input: SylphxConfigInput): SylphxConfig {
  *
  * @example
  * ```typescript
- * const config = createPlatformConfig('sylphx-console')
+ * const config = createPlatformConfig()
  * ```
  */
-export function createPlatformConfig(appId: string): SylphxConfig {
+export function createPlatformConfig(): SylphxConfig {
 	return Object.freeze({
-		appId,
 		platformUrl: typeof window !== 'undefined' ? window.location.origin : '',
 		platformMode: true,
 	})
@@ -97,13 +91,12 @@ export function withToken(config: SylphxConfig, accessToken: string): SylphxConf
 export function buildHeaders(config: SylphxConfig): Record<string, string> {
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
-		'x-app-id': config.appId,
 	}
 
-	// In platform mode, we rely on cookies - no need for app secret or bearer token
+	// In platform mode, we rely on cookies — no keys or bearer token needed
 	if (!config.platformMode) {
-		if (config.appSecret) {
-			headers['x-app-secret'] = config.appSecret
+		if (config.secretKey) {
+			headers['x-app-secret'] = config.secretKey
 		}
 		if (config.accessToken) {
 			headers['Authorization'] = `Bearer ${config.accessToken}`

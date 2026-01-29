@@ -9,8 +9,7 @@
  * import { createConfig, indexDocument, search, batchIndex } from '@sylphx/sdk'
  *
  * const config = createConfig({
- *   appId: 'my-app',
- *   appSecret: process.env.SYLPHX_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Index a document

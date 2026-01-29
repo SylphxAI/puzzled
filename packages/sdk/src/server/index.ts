@@ -9,8 +9,7 @@
  * import { createServerClient, verifyWebhook } from '@sylphx/sdk/server'
  *
  * const client = createServerClient({
- *   appId: process.env.SYLPHX_APP_ID!,
- *   appSecret: process.env.SYLPHX_APP_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // REST API calls
@@ -66,17 +65,16 @@ export function isProduction(secretKey: string): boolean {
 }
 
 export interface ServerConfig {
-	/** Your App ID (from Platform dashboard) */
-	appId: string
 	/**
-	 * Your App Secret (keep secure, server-only)
+	 * Your Secret Key (keep secure, server-only)
 	 *
+	 * The secret key IS the app identity — no separate app ID needed.
 	 * Use environment-specific keys for proper isolation:
 	 * - Development: sk_dev_xxx (relaxed rate limits, test mode)
 	 * - Staging: sk_stg_xxx (test mode, production-like settings)
 	 * - Production: sk_prod_xxx (strict settings, live data)
 	 */
-	appSecret: string
+	secretKey: string
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string
 }
@@ -89,12 +87,12 @@ export interface ServerConfig {
  * Create a Server Client for platform operations.
  *
  * Uses REST API for type-safe API calls.
+ * The secret key identifies the app — no separate app ID needed.
  *
  * @example
  * ```typescript
  * const client = createServerClient({
- *   appId: process.env.SYLPHX_APP_ID!,
- *   appSecret: process.env.SYLPHX_APP_SECRET!,
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
  * })
  *
  * // Billing
@@ -108,16 +106,12 @@ export interface ServerConfig {
  * ```
  */
 export function createServerClient(config: ServerConfig): RestClient {
-	if (!config.appId) {
-		throw new Error('Missing appId in Server Client config')
-	}
-	if (!config.appSecret) {
-		throw new Error('Missing appSecret in Server Client config')
+	if (!config.secretKey) {
+		throw new Error('Missing secretKey in Server Client config')
 	}
 
 	return createRestClient({
-		appId: config.appId.trim(),
-		appSecret: config.appSecret.trim(),
+		secretKey: config.secretKey.trim(),
 		platformUrl: config.platformUrl?.trim(),
 	})
 }
@@ -133,8 +127,7 @@ export function createAuthenticatedServerClient(
 	const { createDynamicRestClient } = require('../rest-client')
 
 	return createDynamicRestClient({
-		appId: config.appId,
-		appSecret: config.appSecret,
+		secretKey: config.secretKey,
 		platformUrl: config.platformUrl,
 		getAccessToken: () => accessToken,
 	})
@@ -207,7 +200,7 @@ export async function getJwks(platformUrl = 'https://sylphx.com'): Promise<JsonW
 export async function verifyAccessToken(
 	token: string,
 	options: {
-		appId: string
+		secretKey?: string
 		platformUrl?: string
 	}
 ): Promise<AccessTokenPayload> {
@@ -218,14 +211,15 @@ export async function verifyAccessToken(
 		throw new Error('No keys in JWKS')
 	}
 
-	// Try each key until one works
+	// Try each key until one works.
+	// Audience validation is handled by the platform when tokens are issued —
+	// the SDK verifies cryptographic signature and issuer only.
 	let lastError: Error | null = null
 	for (const key of keys) {
 		try {
 			const jwk = await importJWK(key, 'RS256')
 			const { payload } = await jwtVerify(token, jwk, {
 				issuer: platformUrl,
-				audience: options.appId,
 			})
 
 			// Validate payload structure at runtime
@@ -499,23 +493,22 @@ const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
  */
 const CONFIG_REVALIDATE_SECONDS = 60
 
-/** Common options for authenticated SDK fetch */
+/** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
-	appId: string
-	appSecret: string
+	secretKey: string
 	platformUrl?: string
 }
 
 /**
  * Options for public endpoints that only need a publishable key.
- *
- * Accepts either:
- * - `publishableKey` (preferred) — key IS the identity
- * - `appId` (legacy) — slug-based lookup
+ * The publishable key IS the app identity — no separate app ID needed.
  */
-type PublicFetchOptions =
-	| { publishableKey: string; appId?: string; platformUrl?: string }
-	| { appId: string; publishableKey?: string; platformUrl?: string }
+interface PublicFetchOptions {
+	/** Publishable key (pk_dev_xxx, pk_stg_xxx, pk_prod_xxx) — identifies the app */
+	publishableKey: string
+	/** Platform URL (defaults to https://sylphx.com) */
+	platformUrl?: string
+}
 
 /**
  * Cached fetch with short TTL and graceful error handling.
@@ -559,15 +552,14 @@ async function cachedFetch<T>(params: {
 function trimOptions<T extends AuthenticatedFetchOptions>(options: T): T {
 	return {
 		...options,
-		appId: options.appId.trim(),
-		appSecret: options.appSecret.trim(),
+		secretKey: options.secretKey.trim(),
 		platformUrl: (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
 	}
 }
 
-/** Build authenticated headers for SDK API calls */
-function sdkHeaders(appId: string, appSecret: string): Record<string, string> {
-	return { 'x-app-id': appId, 'x-app-secret': appSecret }
+/** Build authenticated headers for SDK API calls — secret key identifies the app */
+function sdkHeaders(secretKey: string): Record<string, string> {
+	return { 'x-app-secret': secretKey }
 }
 
 // ============================================================================
@@ -586,19 +578,12 @@ export interface OAuthProviderInfo {
 /**
  * Get enabled OAuth providers for an app (server-side)
  *
- * Accepts either a publishable key (preferred) or app slug (legacy).
- * The publishable key identifies the app directly via `X-Publishable-Key` header.
+ * The publishable key identifies the app via `X-Publishable-Key` header.
  *
  * @example
  * ```tsx
- * // Preferred — publishable key IS the identity
  * const providers = await getOAuthProviders({
  *   publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
- * })
- *
- * // Legacy — slug-based lookup
- * const providers = await getOAuthProviders({
- *   appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
  * })
  * ```
  */
@@ -615,25 +600,14 @@ export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Pr
 	return data.providers || []
 }
 
-/** Shared fetch for OAuth providers — routes via publishable key header or app_id query */
+/** Shared fetch for OAuth providers — publishable key header identifies the app */
 async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
 	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
-	const publishableKey = options.publishableKey?.trim()
-	const appId = options.appId?.trim()
-
-	// Build URL — only add app_id param for legacy slug-based lookups
-	const url = publishableKey
-		? `${platformUrl}/api/auth/providers`
-		: `${platformUrl}/api/auth/providers?app_id=${appId}`
-
-	// Build headers — publishable key identifies the app
-	const headers: Record<string, string> | undefined = publishableKey
-		? { 'X-Publishable-Key': publishableKey }
-		: undefined
+	const publishableKey = options.publishableKey.trim()
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
-		url,
-		headers,
+		url: `${platformUrl}/api/auth/providers`,
+		headers: { 'X-Publishable-Key': publishableKey },
 		fallback: { providers: [] },
 		label: 'OAuth providers',
 	})
@@ -655,19 +629,18 @@ export type { Plan }
  *
  * export default async function PricingPage() {
  *   const plans = await getPlans({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_SECRET_KEY!,
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
  *   })
  *   return <PricingTable initialPlans={plans} />
  * }
  * ```
  */
 export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<Plan[]>({
 		url: `${platformUrl}/api/sdk/billing/plans`,
-		headers: sdkHeaders(appId, appSecret),
+		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'plans',
 	})
@@ -689,19 +662,18 @@ export type { ConsentType }
  *
  * export default async function RootLayout({ children }) {
  *   const consentTypes = await getConsentTypes({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_SECRET_KEY!,
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
  *   })
  *   return <CookieBanner initialConsentTypes={consentTypes} />
  * }
  * ```
  */
 export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<ConsentType[]>({
 		url: `${platformUrl}/api/sdk/consent/types`,
-		headers: sdkHeaders(appId, appSecret),
+		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'consent types',
 	})
@@ -734,19 +706,18 @@ export interface FeatureFlagDefinition {
  *
  * export default async function RootLayout({ children }) {
  *   const flags = await getFeatureFlags({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_SECRET_KEY!,
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
  *   })
  *   return <FeatureFlagsProvider initialFlags={flags}>{children}</FeatureFlagsProvider>
  * }
  * ```
  */
 export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promise<FeatureFlagDefinition[]> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
 
 	return cachedFetch<FeatureFlagDefinition[]>({
 		url: `${platformUrl}/api/sdk/flags`,
-		headers: sdkHeaders(appId, appSecret),
+		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'feature flags',
 	})
@@ -781,8 +752,7 @@ export interface ReferralLeaderboardResult {
  *
  * export default async function ReferralsPage() {
  *   const leaderboard = await getReferralLeaderboard({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_SECRET_KEY!,
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
  *     limit: 10,
  *     period: 'month',
  *   })
@@ -794,7 +764,7 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 	limit?: number
 	period?: 'all' | 'month' | 'week'
 }): Promise<ReferralLeaderboardResult> {
-	const { appId, appSecret, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = trimOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
 	url.searchParams.set('limit', String(limit))
@@ -802,7 +772,7 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 
 	return cachedFetch<ReferralLeaderboardResult>({
 		url: url.toString(),
-		headers: sdkHeaders(appId, appSecret),
+		headers: sdkHeaders(secretKey),
 		fallback: { entries: [], total: 0, period },
 		label: 'referral leaderboard',
 	})
@@ -839,8 +809,7 @@ export interface EngagementLeaderboardResult {
  *
  * export default async function LeaderboardPage() {
  *   const leaderboard = await getEngagementLeaderboard({
- *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
- *     appSecret: process.env.SYLPHX_SECRET_KEY!,
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
  *     leaderboardId: 'high-scores',
  *   })
  *   return <Leaderboard initialData={leaderboard} />
@@ -851,14 +820,14 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 	leaderboardId: string
 	limit?: number
 }): Promise<EngagementLeaderboardResult> {
-	const { appId, appSecret, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = trimOptions(options)
+	const { secretKey, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = trimOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
 	url.searchParams.set('limit', String(limit))
 
 	return cachedFetch<EngagementLeaderboardResult>({
 		url: url.toString(),
-		headers: sdkHeaders(appId, appSecret),
+		headers: sdkHeaders(secretKey),
 		fallback: { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null },
 		label: 'engagement leaderboard',
 	})

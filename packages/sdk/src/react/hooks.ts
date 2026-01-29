@@ -529,7 +529,7 @@ export function useOrganization(): UseOrganizationReturn {
 
 	// Create config for API calls
 	const config = platform
-		? createPlatformConfig(platform.appId)
+		? createPlatformConfig()
 		: null
 
 	// Load organizations on mount
@@ -562,7 +562,7 @@ export function useOrganization(): UseOrganizationReturn {
 
 		loadOrgs()
 		return () => { mounted = false }
-	}, [config?.appId])
+	}, [config?.platformUrl])
 
 	// Select an organization by ID or slug
 	const selectOrganization = useCallback(async (orgIdOrSlug: string | null) => {

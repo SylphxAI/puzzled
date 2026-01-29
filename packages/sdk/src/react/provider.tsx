@@ -95,8 +95,8 @@ async function getBlobUpload() {
 // REST API Helper
 // ============================================
 interface RestConfig {
-	appId: string
-	appSecret?: string
+	/** Publishable key — used as x-app-secret for SDK API calls */
+	publishableKey?: string
 	platformUrl: string
 	platformMode: boolean
 	getAccessToken?: () => string | null | undefined
@@ -121,10 +121,9 @@ function createRestApi(config: RestConfig) {
 	const headers = () => {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
-			'x-app-id': config.appId,
 		}
 		if (!config.platformMode) {
-			if (config.appSecret) h['x-app-secret'] = config.appSecret
+			if (config.publishableKey) h['x-app-secret'] = config.publishableKey
 			const token = config.getAccessToken?.()
 			if (token) h['Authorization'] = `Bearer ${token}`
 		}
@@ -382,15 +381,14 @@ function SylphxProviderInner({
 	const api = useMemo(
 		() =>
 			createRestApi({
-				appId,
-				appSecret: publishableKey,
+				publishableKey,
 				platformUrl,
 				platformMode,
 				getAccessToken: platformMode
 					? undefined // Platform mode uses cookies, not tokens
 					: () => storage.get(STORAGE_KEYS.ACCESS_TOKEN) ?? undefined,
 			}),
-		[appId, publishableKey, platformUrl, platformMode, storage]
+		[publishableKey, platformUrl, platformMode, storage]
 	)
 
 	// ============================================
@@ -595,7 +593,7 @@ function SylphxProviderInner({
 						body: JSON.stringify({
 							grant_type: 'refresh_token',
 							refresh_token: token,
-							app_id: appId,
+							client_id: publishableKey || '',
 						}),
 						signal: controller.signal,
 					})
@@ -661,7 +659,7 @@ function SylphxProviderInner({
 
 			return refreshingRef.current
 		},
-		[appId, platformUrl, saveTokens, clearTokens]
+		[publishableKey, platformUrl, saveTokens, clearTokens]
 	)
 
 	// ============================================
@@ -779,7 +777,7 @@ function SylphxProviderInner({
 				? options.redirectUrl
 				: currentHref
 			const params = new URLSearchParams({
-				app_id: appId,
+				client_id: publishableKey || '',
 				redirect_uri: redirectUri,
 				response_type: 'code',
 			})
@@ -791,7 +789,7 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	const signUp = useCallback(
@@ -802,7 +800,7 @@ function SylphxProviderInner({
 				? options.redirectUrl
 				: currentHref
 			const params = new URLSearchParams({
-				app_id: appId,
+				client_id: publishableKey || '',
 				redirect_uri: redirectUri,
 				response_type: 'code',
 				mode: 'signup',
@@ -815,7 +813,7 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	const signOut = useCallback(
@@ -830,7 +828,7 @@ function SylphxProviderInner({
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							refresh_token: refreshToken,
-							app_id: appId,
+							client_id: publishableKey || '',
 						}),
 					})
 				} catch {
@@ -844,7 +842,7 @@ function SylphxProviderInner({
 			const redirectUrl = options?.redirectUrl || afterSignOutUrl
 			safeRedirect(redirectUrl, { fallback: afterSignOutUrl || '/' })
 		},
-		[appId, platformUrl, authState, clearTokens, afterSignOutUrl]
+		[publishableKey, platformUrl, authState, clearTokens, afterSignOutUrl]
 	)
 
 	const getToken = useCallback(async (): Promise<string | null> => {
@@ -874,7 +872,7 @@ function SylphxProviderInner({
 					body: JSON.stringify({
 						grant_type: 'authorization_code',
 						code,
-						app_id: appId,
+						client_id: publishableKey || '',
 					}),
 				})
 
@@ -888,7 +886,7 @@ function SylphxProviderInner({
 				throw error
 			}
 		},
-		[appId, platformUrl, saveTokens]
+		[publishableKey, platformUrl, saveTokens]
 	)
 
 	const resetPassword = useCallback(
@@ -899,7 +897,7 @@ function SylphxProviderInner({
 				body: JSON.stringify({
 					token: options.token,
 					new_password: options.newPassword,
-					app_id: appId,
+					client_id: publishableKey || '',
 				}),
 			})
 
@@ -908,7 +906,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Password reset failed')
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	const verifyEmail = useCallback(
@@ -918,7 +916,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					token: options.token,
-					app_id: appId,
+					client_id: publishableKey || '',
 				}),
 			})
 
@@ -927,7 +925,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Email verification failed')
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	const resendVerificationEmail = useCallback(
@@ -937,7 +935,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					email: options.email,
-					app_id: appId,
+					client_id: publishableKey || '',
 				}),
 			})
 
@@ -956,7 +954,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					email: options.email,
-					app_id: appId,
+					client_id: publishableKey || '',
 				}),
 			})
 
@@ -965,7 +963,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Failed to send password reset email')
 			}
 		},
-		[appId, platformUrl]
+		[publishableKey, platformUrl]
 	)
 
 	// ============================================
@@ -2257,7 +2255,7 @@ function SylphxProviderInner({
 				return data.url
 			},
 		}),
-		[api, platformUrl, appId, authState.user?.id]
+		[api, platformUrl, publishableKey, authState.user?.id]
 	)
 
 	// ============================================
@@ -2476,7 +2474,7 @@ function SylphxProviderInner({
 				const response = await fetch(`${platformUrl}/api/auth/verify-email`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ token, app_id: appId }),
+					body: JSON.stringify({ token, client_id: publishableKey || '' }),
 				})
 				if (!response.ok) {
 					const error = await response.json().catch(() => ({ message: 'Email verification failed' }))
@@ -2510,14 +2508,10 @@ function SylphxProviderInner({
 				}
 			},
 			getOAuthProviders: async () => {
-				// Fetch from platform config — use publishable key header (preferred) or app_id param (legacy)
-				const url = publishableKey
-					? `${platformUrl}/api/auth/providers`
-					: `${platformUrl}/api/auth/providers?app_id=${appId}`
-				const headers: Record<string, string> = publishableKey
-					? { 'X-Publishable-Key': publishableKey }
-					: {}
-				const response = await fetch(url, { headers })
+				if (!publishableKey) return { providers: [] }
+				const response = await fetch(`${platformUrl}/api/auth/providers`, {
+					headers: { 'X-Publishable-Key': publishableKey },
+				})
 				if (!response.ok) {
 					return { providers: [] }
 				}
@@ -2525,7 +2519,7 @@ function SylphxProviderInner({
 				return { providers: data.providers || [] }
 			},
 		}),
-		[api, platformUrl, appId, saveTokens, clearTokens]
+		[api, platformUrl, publishableKey, saveTokens, clearTokens]
 	)
 
 	// ============================================
@@ -2758,7 +2752,7 @@ function SylphxProviderInner({
 			oauthConnect: async (provider) => {
 				const redirectUri = window.location.href
 				return {
-					redirectUrl: `${platformUrl}/auth/connect/${provider}?app_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+					redirectUrl: `${platformUrl}/auth/connect/${provider}?client_id=${publishableKey || ''}&redirect_uri=${encodeURIComponent(redirectUri)}`,
 				}
 			},
 			oauthDisconnect: async (provider) => {
@@ -2768,7 +2762,7 @@ function SylphxProviderInner({
 				return await api.get('/security/score')
 			},
 		}),
-		[api, platformUrl, appId]
+		[api, platformUrl, publishableKey]
 	)
 
 	// ============================================

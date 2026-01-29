@@ -27,14 +27,9 @@ const SERVER_REQUIRED: EnvVar[] = [
 		runtimes: ['nodejs'],
 	},
 	{
-		name: 'SYLPHX_APP_ID',
-		required: true,
-		description: 'Sylphx Platform App ID',
-	},
-	{
 		name: 'SYLPHX_SECRET_KEY',
 		required: true,
-		description: 'Sylphx Platform Secret Key',
+		description: 'Sylphx Platform Secret Key (identifies the app)',
 		runtimes: ['nodejs'],
 	},
 	{
@@ -206,11 +201,7 @@ function _isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
  * Typed environment object for platform SDK and common config
  */
 export const env = {
-	/** Platform SDK App ID */
-	get SYLPHX_APP_ID() {
-		return getRequiredEnv('SYLPHX_APP_ID')
-	},
-	/** Platform SDK Secret Key (server-side only) */
+	/** Platform SDK Secret Key — identifies the app (server-side only) */
 	get SYLPHX_SECRET_KEY() {
 		return getRequiredEnv('SYLPHX_SECRET_KEY')
 	},

@@ -62,17 +62,19 @@ export function useOAuthProviders(): UseOAuthProvidersReturn {
 	const platformContext = useContext(PlatformContext)
 
 	const platformUrl = platformContext?.platformUrl ?? ''
-	const appId = platformContext?.appId ?? ''
-	const isConfigured = Boolean(platformUrl && appId)
+	const publishableKey = platformContext?.publishableKey ?? ''
+	const isConfigured = Boolean(platformUrl && publishableKey)
 
 	const { data, isLoading, error, refetch } = useQuery<{ providers: EnabledProvider[] }>({
-		queryKey: ['oauth-providers', appId],
+		queryKey: ['oauth-providers', publishableKey],
 		queryFn: async () => {
 			if (!isConfigured) {
 				return { providers: [] }
 			}
 
-			const response = await fetch(`${platformUrl}/api/auth/providers?app_id=${appId}`)
+			const response = await fetch(`${platformUrl}/api/auth/providers`, {
+				headers: { 'X-Publishable-Key': publishableKey },
+			})
 
 			if (!response.ok) {
 				throw new Error('Failed to fetch OAuth providers')
