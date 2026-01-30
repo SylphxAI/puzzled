@@ -482,7 +482,8 @@ export class JobsClient {
 	// Internal
 	// =========================================================================
 
-	private async fetch(path: string, options?: RequestInit): Promise<any> {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Internal method, type safety enforced at public API level
+	private async fetch(path: string, options?: RequestInit): Promise<Record<string, any>> {
 		const url = `${this.config.apiEndpoint}${path}`
 		const response = await fetch(url, {
 			...options,

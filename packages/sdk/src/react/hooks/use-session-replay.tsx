@@ -408,10 +408,9 @@ export interface WithSessionReplayProps {
 export function withSessionReplay<P extends object>(
 	Component: React.ComponentType<P & WithSessionReplayProps>,
 	options?: UseSessionReplayOptions
-): React.FC<P> {
-	const WithSessionReplayWrapper: React.FC<P> = (props: P) => {
+): (props: P) => React.ReactElement {
+	function WithSessionReplayWrapper(props: P): React.ReactElement {
 		const sessionReplay = useSessionReplay(options)
-
 		return <Component {...props} sessionReplay={sessionReplay} />
 	}
 

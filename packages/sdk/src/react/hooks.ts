@@ -730,21 +730,8 @@ export function useOrganization(): UseOrganizationReturn {
 	}
 }
 
-// Note: useStorage has been moved to storage-hooks.ts
-// Import it from there instead:
-// import { useStorage } from '@sylphx/platform-sdk/react'
-// The storage-hooks.ts version uses proper React Context (StorageContext)
-
 // SDK Ready Hook - SSOT for configuration checking
-export {
-	useSdkReady,
-	RequireSdk,
-	
-	
-	
-	
-	
-} from './hooks/use-sdk-ready'
+export { useSdkReady, RequireSdk } from './hooks/use-sdk-ready'
 
 // OAuth Providers Hook - fetch enabled providers from platform
 export {
