@@ -15,5 +15,30 @@ import { getAI } from '@sylphx/sdk/server'
 /**
  * AI client singleton for server-side usage
  * Uses SYLPHX_SECRET_KEY from environment
+ *
+ * LAZY INITIALIZATION: Client is created on first access to avoid
+ * validation errors during build-time static page generation.
  */
-export const ai = getAI()
+let _aiClient: ReturnType<typeof getAI> | null = null
+
+/**
+ * Get the AI client (lazy-initialized)
+ * Creates the client on first call to defer secret key validation.
+ */
+export function getAIClient() {
+	if (!_aiClient) {
+		_aiClient = getAI()
+	}
+	return _aiClient
+}
+
+// Backwards-compatible export (use getAIClient() for new code)
+// Getters defer client initialization until method is actually accessed
+export const ai = {
+	get chat() {
+		return getAIClient().chat
+	},
+	get listModels() {
+		return getAIClient().listModels
+	},
+}
