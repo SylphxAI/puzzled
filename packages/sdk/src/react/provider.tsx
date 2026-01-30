@@ -1171,6 +1171,43 @@ function SylphxProviderInner({
 	)
 
 	// ============================================
+	// Magic Link (Passwordless) Methods
+	// ============================================
+
+	/**
+	 * Sign in with magic link (passwordless).
+	 * Sends an email with a one-time login link.
+	 * The user clicks the link to authenticate without a password.
+	 */
+	const signInWithMagicLink = useCallback(
+		async (options: { email: string; redirectUrl?: string }) => {
+			const { email, redirectUrl } = options
+			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
+
+			const response = await fetch(`${platformUrl}/api/sdk/auth/magic-link`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-app-secret': publishableKey || '',
+				},
+				body: JSON.stringify({
+					email,
+					redirectUrl: resolvedRedirect,
+				}),
+			})
+
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({ message: 'Failed to send magic link' }))
+				throw new Error(error.message || 'Failed to send magic link')
+			}
+
+			// Magic link sent successfully - no further action needed
+			// User will click the link in their email to complete sign-in
+		},
+		[platformUrl, publishableKey, resolveRedirectUrl]
+	)
+
+	// ============================================
 	// Billing Actions
 	// ============================================
 	const createCheckout = useCallback(
@@ -2996,6 +3033,8 @@ function SylphxProviderInner({
 			signInWithDiscord,
 			signInWithTwitter,
 			signInWithMicrosoft,
+			// Magic Link (passwordless)
+			signInWithMagicLink,
 		}),
 		[
 			authState,
@@ -3016,6 +3055,7 @@ function SylphxProviderInner({
 			signInWithDiscord,
 			signInWithTwitter,
 			signInWithMicrosoft,
+			signInWithMagicLink,
 		]
 	)
 

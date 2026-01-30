@@ -64,6 +64,16 @@ export interface ForgotPasswordOptions {
 }
 
 /**
+ * Options for magic link (passwordless) sign-in.
+ */
+export interface SignInWithMagicLinkOptions {
+	/** Email address to send magic link to */
+	email: string
+	/** URL to redirect back to after magic link verification. Defaults to current URL. */
+	redirectUrl?: string
+}
+
+/**
  * Options for direct OAuth sign-in (Firebase/Supabase pattern).
  * User goes directly to OAuth provider, bypassing platform UI.
  */
@@ -162,6 +172,31 @@ export interface AuthContextValue extends AuthState {
 
 	/** Convenience: Sign in with Microsoft directly */
 	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>
+
+	// ==========================================
+	// Magic Link (Passwordless) Methods
+	// ==========================================
+
+	/**
+	 * Sign in with magic link (passwordless).
+	 * Sends an email with a one-time login link.
+	 * User clicks the link and is automatically signed in.
+	 *
+	 * @example
+	 * ```tsx
+	 * const { signInWithMagicLink } = useAuth()
+	 *
+	 * // Request magic link email
+	 * await signInWithMagicLink({ email: 'user@example.com' })
+	 *
+	 * // With custom redirect after verification
+	 * await signInWithMagicLink({
+	 *   email: 'user@example.com',
+	 *   redirectUrl: '/dashboard'
+	 * })
+	 * ```
+	 */
+	signInWithMagicLink: (options: SignInWithMagicLinkOptions) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
