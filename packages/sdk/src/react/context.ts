@@ -23,6 +23,10 @@ export interface AuthState {
 	refreshToken: string | null
 	/** Auth error (e.g., token refresh failed) */
 	error: Error | null
+	/** Whether an OAuth flow is in progress (loading authorization URL or exchanging code) */
+	isOAuthLoading: boolean
+	/** OAuth-specific error (e.g., user denied, provider error) */
+	oauthError: Error | null
 }
 
 export interface SignInOptions {
@@ -68,11 +72,37 @@ export interface SignInWithOAuthOptions {
 	provider: OAuthProviderId
 	/** URL to redirect back to after OAuth completes. Defaults to current URL. */
 	redirectUrl?: string
+	/**
+	 * Additional OAuth scopes to request from the provider.
+	 * Default scopes (email, profile) are always included.
+	 *
+	 * @example
+	 * ```tsx
+	 * // Request Google Calendar access
+	 * signInWithOAuth({
+	 *   provider: 'google',
+	 *   scopes: ['https://www.googleapis.com/auth/calendar.readonly']
+	 * })
+	 *
+	 * // Request GitHub private repo access
+	 * signInWithOAuth({
+	 *   provider: 'github',
+	 *   scopes: ['repo']
+	 * })
+	 * ```
+	 */
+	scopes?: string[]
 }
 
 export interface AuthContextValue extends AuthState {
 	/** Auth error (e.g., token refresh failed) */
 	error: Error | null
+	/** Whether an OAuth flow is in progress */
+	isOAuthLoading: boolean
+	/** OAuth-specific error */
+	oauthError: Error | null
+	/** Clear OAuth error state */
+	clearOAuthError: () => void
 	/** Redirect to Sylphx login page (shows platform UI) */
 	signIn: (options?: SignInOptions) => void
 	/** Redirect to Sylphx signup page (shows platform UI) */

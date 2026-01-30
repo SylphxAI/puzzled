@@ -371,6 +371,8 @@ function SylphxProviderInner({
 		accessToken: null,
 		refreshToken: null,
 		error: null,
+		isOAuthLoading: false,
+		oauthError: null,
 	})
 
 	// ============================================
@@ -509,6 +511,8 @@ function SylphxProviderInner({
 				accessToken: response.accessToken,
 				refreshToken: response.refreshToken,
 				error: null,
+				isOAuthLoading: false,
+				oauthError: null,
 			})
 		},
 		[storage]
@@ -528,6 +532,8 @@ function SylphxProviderInner({
 				accessToken: null,
 				refreshToken: null,
 				error: error || null,
+				isOAuthLoading: false,
+				oauthError: null,
 			})
 		},
 		[storage]
@@ -626,11 +632,106 @@ function SylphxProviderInner({
 	)
 
 	// ============================================
-	// Load Auth State
+	// Load Auth State & Auto-detect OAuth Callbacks
 	// ============================================
+
+	// Track if we've already handled the OAuth callback to prevent double-processing
+	const oauthCallbackHandledRef = useRef(false)
+
 	useEffect(() => {
-		const loadState = () => {
+		const loadState = async () => {
 			try {
+				// Auto-detect OAuth callback (Firebase/Supabase pattern)
+				// Check if URL contains OAuth callback parameters
+				if (typeof window !== 'undefined' && !oauthCallbackHandledRef.current) {
+					const params = new URLSearchParams(window.location.search)
+					const code = params.get('code')
+					const error = params.get('error')
+					const errorDescription = params.get('error_description')
+
+					// Handle OAuth error from provider
+					if (error) {
+						oauthCallbackHandledRef.current = true
+						const oauthError = new Error(errorDescription || error)
+						setAuthState({
+							isLoaded: true,
+							isSignedIn: false,
+							user: null,
+							accessToken: null,
+							refreshToken: null,
+							error: null,
+							isOAuthLoading: false,
+							oauthError,
+						})
+
+						// Clean up URL params
+						const cleanUrl = new URL(window.location.href)
+						cleanUrl.searchParams.delete('error')
+						cleanUrl.searchParams.delete('error_description')
+						window.history.replaceState({}, '', cleanUrl.toString())
+						return
+					}
+
+					// Handle OAuth success (authorization code received)
+					if (code) {
+						oauthCallbackHandledRef.current = true
+						setAuthState((prev) => ({ ...prev, isOAuthLoading: true, oauthError: null }))
+
+						try {
+							// Retrieve PKCE code_verifier
+							const { retrievePKCEVerifier } = await import('../lib/pkce')
+							const codeVerifier = retrievePKCEVerifier(appId)
+
+							// Exchange code for tokens
+							const response = await fetch(`${platformUrl}/api/auth/token`, {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									grant_type: 'authorization_code',
+									code,
+									client_id: publishableKey || '',
+									...(codeVerifier && { code_verifier: codeVerifier }),
+								}),
+							})
+
+							if (!response.ok) {
+								const errorData = await response.json().catch(() => ({}))
+								throw new Error(errorData.error_description || errorData.message || 'Token exchange failed')
+							}
+
+							const data: TokenResponse = await response.json()
+							saveTokens(data)
+
+							// Clean up URL params after successful auth
+							const cleanUrl = new URL(window.location.href)
+							cleanUrl.searchParams.delete('code')
+							cleanUrl.searchParams.delete('state')
+							window.history.replaceState({}, '', cleanUrl.toString())
+							return
+						} catch (err) {
+							const oauthError = err instanceof Error ? err : new Error('OAuth callback failed')
+							setAuthState({
+								isLoaded: true,
+								isSignedIn: false,
+								user: null,
+								accessToken: null,
+								refreshToken: null,
+								error: null,
+								isOAuthLoading: false,
+								oauthError,
+							})
+
+							// Still clean up URL even on error
+							const cleanUrl = new URL(window.location.href)
+							cleanUrl.searchParams.delete('code')
+							cleanUrl.searchParams.delete('state')
+							window.history.replaceState({}, '', cleanUrl.toString())
+							return
+						}
+					}
+				}
+
+				// Normal auth state restoration from storage
 				const accessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN)
 				const refreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN)
 				const user = storage.getJSON<User>(STORAGE_KEYS.USER)
@@ -647,6 +748,8 @@ function SylphxProviderInner({
 							accessToken,
 							refreshToken,
 							error: null,
+							isOAuthLoading: false,
+							oauthError: null,
 						})
 						return
 					}
@@ -664,6 +767,8 @@ function SylphxProviderInner({
 					accessToken: null,
 					refreshToken: null,
 					error: null,
+					isOAuthLoading: false,
+					oauthError: null,
 				})
 			} catch (error) {
 				setAuthState({
@@ -673,6 +778,8 @@ function SylphxProviderInner({
 					accessToken: null,
 					refreshToken: null,
 					error: error instanceof Error ? error : new Error('Failed to load auth state'),
+					isOAuthLoading: false,
+					oauthError: null,
 				})
 			}
 		}
@@ -688,7 +795,7 @@ function SylphxProviderInner({
 
 		window.addEventListener('storage', handleStorageChange)
 		return () => window.removeEventListener('storage', handleStorageChange)
-	}, [refreshTokens, storage, appId])
+	}, [refreshTokens, storage, appId, platformUrl, publishableKey, saveTokens])
 
 	// ============================================
 	// Smart Token Refresh (based on expiry, not interval)
@@ -959,6 +1066,14 @@ function SylphxProviderInner({
 	// ============================================
 
 	/**
+	 * Clear OAuth error state.
+	 * Call this to reset error state before a retry.
+	 */
+	const clearOAuthError = useCallback(() => {
+		setAuthState((prev) => ({ ...prev, oauthError: null }))
+	}, [])
+
+	/**
 	 * Sign in with OAuth provider directly.
 	 * Fetches authorization URL from platform, then redirects user to OAuth provider.
 	 * No platform login UI is shown - user goes straight to Google/GitHub/etc.
@@ -966,46 +1081,59 @@ function SylphxProviderInner({
 	 * Uses PKCE (RFC 7636) for security - required for public clients per OAuth 2.1.
 	 */
 	const signInWithOAuth = useCallback(
-		async (options: { provider: string; redirectUrl?: string }) => {
-			const { provider, redirectUrl } = options
+		async (options: { provider: string; redirectUrl?: string; scopes?: string[] }) => {
+			const { provider, redirectUrl, scopes } = options
 			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
 
-			// Generate PKCE codes (RFC 7636) - required for public clients
-			const { generatePKCE, storePKCEVerifier } = await import('../lib/pkce')
-			const pkce = await generatePKCE()
+			// Set loading state and clear any previous OAuth error
+			setAuthState((prev) => ({ ...prev, isOAuthLoading: true, oauthError: null }))
 
-			// Store code_verifier for later use in token exchange
-			storePKCEVerifier(pkce.codeVerifier, appId)
+			try {
+				// Generate PKCE codes (RFC 7636) - required for public clients
+				const { generatePKCE, storePKCEVerifier } = await import('../lib/pkce')
+				const pkce = await generatePKCE()
 
-			// Fetch OAuth authorization URL from platform
-			const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-app-secret': publishableKey || '',
-				},
-				body: JSON.stringify({
-					provider,
-					redirect_uri: resolvedRedirect,
-					code_challenge: pkce.codeChallenge,
-					code_challenge_method: pkce.codeChallengeMethod,
-				}),
-			})
+				// Store code_verifier for later use in token exchange
+				storePKCEVerifier(pkce.codeVerifier, appId)
 
-			if (!response.ok) {
-				// Clear stored verifier on error
-				const { clearPKCEVerifier } = await import('../lib/pkce')
-				clearPKCEVerifier(appId)
+				// Fetch OAuth authorization URL from platform
+				const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'x-app-secret': publishableKey || '',
+					},
+					body: JSON.stringify({
+						provider,
+						redirect_uri: resolvedRedirect,
+						code_challenge: pkce.codeChallenge,
+						code_challenge_method: pkce.codeChallengeMethod,
+						// Custom scopes support (optional)
+						...(scopes && scopes.length > 0 && { scopes }),
+					}),
+				})
 
-				const error = await response.json().catch(() => ({ message: 'Failed to initiate OAuth' }))
-				throw new Error(error.message || `Failed to initiate ${provider} sign-in`)
-			}
+				if (!response.ok) {
+					// Clear stored verifier on error
+					const { clearPKCEVerifier } = await import('../lib/pkce')
+					clearPKCEVerifier(appId)
 
-			const { authorization_url } = await response.json()
+					const error = await response.json().catch(() => ({ message: 'Failed to initiate OAuth' }))
+					throw new Error(error.message || `Failed to initiate ${provider} sign-in`)
+				}
 
-			// Redirect directly to OAuth provider (no platform UI)
-			if (typeof window !== 'undefined') {
-				window.location.href = authorization_url
+				const { authorization_url } = await response.json()
+
+				// Redirect directly to OAuth provider (no platform UI)
+				// Note: isOAuthLoading stays true until page unloads (redirect)
+				if (typeof window !== 'undefined') {
+					window.location.href = authorization_url
+				}
+			} catch (error) {
+				// Set error state and clear loading
+				const oauthError = error instanceof Error ? error : new Error('OAuth sign-in failed')
+				setAuthState((prev) => ({ ...prev, isOAuthLoading: false, oauthError }))
+				throw error
 			}
 		},
 		[platformUrl, publishableKey, resolveRedirectUrl, appId]
@@ -2858,6 +2986,8 @@ function SylphxProviderInner({
 			verifyEmail,
 			resendVerificationEmail,
 			forgotPassword,
+			// OAuth state management
+			clearOAuthError,
 			// Direct OAuth methods (Firebase/Supabase pattern)
 			signInWithOAuth,
 			signInWithGoogle,
@@ -2878,6 +3008,7 @@ function SylphxProviderInner({
 			verifyEmail,
 			resendVerificationEmail,
 			forgotPassword,
+			clearOAuthError,
 			signInWithOAuth,
 			signInWithGoogle,
 			signInWithGithub,
