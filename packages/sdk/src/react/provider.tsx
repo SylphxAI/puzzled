@@ -67,7 +67,8 @@ import {
 	type ClickIds,
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
-import type { User, TokenResponse, AIProvider } from '../types'
+import type { User, TokenResponse, AIProvider, AppConfig } from '../types'
+import { ConfigContext } from './hooks/use-config'
 import type {
 	StreakState,
 	RecordActivityResult,
@@ -212,29 +213,42 @@ export interface SylphxProviderProps {
 				purchase?: boolean
 		  }
 	/**
-	 * Initial plans data for SSR hydration (optional)
+	 * App configuration fetched server-side via getAppConfig()
 	 *
-	 * Use `getPlans()` from '@sylphx/sdk/server' in Server Components
-	 * to fetch plans and pass them here to avoid loading states.
+	 * **Recommended:** Use `getAppConfig()` from '@sylphx/sdk/server' in Server Components
+	 * to fetch all config data and pass it here. This eliminates client-side config
+	 * fetching and ensures instant, fresh data on every page load.
 	 *
 	 * @example
 	 * ```tsx
-	 * const plans = await getPlans({ secretKey: process.env.SYLPHX_SECRET_KEY! })
-	 * return <SylphxProvider initialPlans={plans}>...</SylphxProvider>
+	 * // layout.tsx (Server Component)
+	 * import { getAppConfig } from '@sylphx/sdk/server'
+	 *
+	 * export default async function RootLayout({ children }) {
+	 *   const config = await getAppConfig({
+	 *     secretKey: process.env.SYLPHX_SECRET_KEY!,
+	 *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+	 *   })
+	 *
+	 *   return (
+	 *     <SylphxProvider config={config} publishableKey={...}>
+	 *       {children}
+	 *     </SylphxProvider>
+	 *   )
+	 * }
 	 * ```
+	 */
+	config?: AppConfig
+	/**
+	 * @deprecated Use `config` prop instead. Will be removed in next major version.
+	 *
+	 * Initial plans data for SSR hydration (optional)
 	 */
 	initialPlans?: Plan[]
 	/**
+	 * @deprecated Use `config` prop instead. Will be removed in next major version.
+	 *
 	 * Initial consent types data for SSR hydration (optional)
-	 *
-	 * Use `getConsentTypes()` from '@sylphx/sdk/server' in Server Components
-	 * to fetch consent types and pass them here to avoid loading states.
-	 *
-	 * @example
-	 * ```tsx
-	 * const consentTypes = await getConsentTypes({ secretKey: process.env.SYLPHX_SECRET_KEY! })
-	 * return <SylphxProvider initialConsentTypes={consentTypes}>...</SylphxProvider>
-	 * ```
 	 */
 	initialConsentTypes?: ConsentType[]
 }
@@ -257,6 +271,7 @@ export function SylphxProvider({
 	afterSignOutUrl = '/',
 	vapidPublicKey,
 	autoTracking = true,
+	config,
 	initialPlans,
 	initialConsentTypes,
 }: SylphxProviderProps) {
@@ -266,8 +281,8 @@ export function SylphxProvider({
 			new QueryClient({
 				defaultOptions: {
 					queries: {
-						// SDK default: 30s stale time for responsive config updates
-						staleTime: 30 * 1000,
+						// SDK default: 5 min stale time, no refetch on window focus
+						staleTime: 5 * 60 * 1000,
 						refetchOnWindowFocus: false,
 						retry: 1,
 					},
@@ -276,21 +291,25 @@ export function SylphxProvider({
 	)
 
 	// Wrap with QueryClientProvider FIRST, then render inner provider
+	// ConfigContext wraps everything to provide server-fetched config
 	return (
-		<QueryClientProvider client={queryClient}>
-			<SylphxProviderInner
-				publishableKey={publishableKey}
-				platformUrl={providedPlatformUrl}
-				afterSignOutUrl={afterSignOutUrl}
-				vapidPublicKey={vapidPublicKey}
-				autoTracking={autoTracking}
-				queryClient={queryClient}
-				initialPlans={initialPlans}
-				initialConsentTypes={initialConsentTypes}
-			>
-				{children}
-			</SylphxProviderInner>
-		</QueryClientProvider>
+		<ConfigContext.Provider value={config ?? null}>
+			<QueryClientProvider client={queryClient}>
+				<SylphxProviderInner
+					publishableKey={publishableKey}
+					platformUrl={providedPlatformUrl}
+					afterSignOutUrl={afterSignOutUrl}
+					vapidPublicKey={vapidPublicKey}
+					autoTracking={autoTracking}
+					queryClient={queryClient}
+					config={config}
+					initialPlans={initialPlans}
+					initialConsentTypes={initialConsentTypes}
+				>
+					{children}
+				</SylphxProviderInner>
+			</QueryClientProvider>
+		</ConfigContext.Provider>
 	)
 }
 
@@ -307,6 +326,7 @@ function SylphxProviderInner({
 	vapidPublicKey,
 	autoTracking = true,
 	queryClient,
+	config,
 	initialPlans,
 	initialConsentTypes,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
@@ -369,24 +389,25 @@ function SylphxProviderInner({
 	// Platform State - React Query for server data
 	// ============================================
 
-	// Plans - React Query (public, cached)
-	// Use initialData for SSR hydration to avoid loading states
+	// Plans: Use config (server-fetched) if available, otherwise fall back to React Query
+	// When config is provided, plans are already available - no loading state needed
 	const plansQuery = useQuery({
 		queryKey: ['sylphx', appId, 'plans'],
 		queryFn: () => api.get<Plan[]>('/billing/plans'),
-		staleTime: 60 * 1000, // 1 min - admin can change plans
-		initialData: initialPlans,
+		staleTime: 10 * 60 * 1000, // 10 min - plans rarely change
+		initialData: config?.plans ?? initialPlans,
+		enabled: !config, // Skip fetch when config is provided
 	})
-	const plans = plansQuery.data ?? []
-	const plansLoading = plansQuery.isLoading && !initialPlans
-	const plansError = plansQuery.error as Error | null
+	const plans = config?.plans ?? plansQuery.data ?? []
+	const plansLoading = !config && plansQuery.isLoading && !initialPlans
+	const plansError = !config ? (plansQuery.error as Error | null) : null
 
 	// Subscription - React Query (enabled when signed in)
 	const subscriptionQuery = useQuery({
 		queryKey: ['sylphx', appId, 'subscription', authState.user?.id],
 		queryFn: () => api.get<Subscription | null>('/billing/subscription', { userId: authState.user!.id }),
 		enabled: authState.isSignedIn && !!authState.user?.id,
-		staleTime: 60 * 1000, // 1 min - subscription can change after payment
+		staleTime: 2 * 60 * 1000, // 2 min - subscription can change after payment
 	})
 	const subscription = subscriptionQuery.data ?? null
 	const subscriptionLoading = subscriptionQuery.isLoading
@@ -403,7 +424,7 @@ function SylphxProviderInner({
 			return { stats, code: codeData.code }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 60 * 1000, // 1 min - admin can configure referrals
+		staleTime: 5 * 60 * 1000, // 5 min
 	})
 	const referralStats = referralsQuery.data?.stats ?? null
 	const referralCode = referralsQuery.data?.code ?? null
@@ -415,7 +436,7 @@ function SylphxProviderInner({
 		queryKey: ['sylphx', appId, 'pushPreferences'],
 		queryFn: () => api.get<PushPreferences>('/notifications/preferences'),
 		enabled: authState.isSignedIn,
-		staleTime: 60 * 1000, // 1 min - admin can configure push
+		staleTime: 5 * 60 * 1000, // 5 min
 	})
 	const pushPreferences = pushPreferencesQuery.data ?? null
 	const pushError = pushPreferencesQuery.error as Error | null
@@ -433,7 +454,7 @@ function SylphxProviderInner({
 			return { config, preferences }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 60 * 1000, // 1 min - admin can configure mobile push
+		staleTime: 5 * 60 * 1000, // 5 min
 	})
 	const mobilePushConfig = mobilePushQuery.data?.config ?? null
 	const mobilePushPreferences = mobilePushQuery.data?.preferences ?? null
@@ -2066,8 +2087,13 @@ function SylphxProviderInner({
 		() => ({
 			anonymousId,
 			userId: authState.user?.id ?? null,
-			initialConsentTypes,
+			// Use config.consentTypes when available (server-first pattern)
+			initialConsentTypes: config?.consentTypes ?? initialConsentTypes,
 			getConsentTypes: async () => {
+				// When config is provided, return cached types (no fetch needed)
+				if (config?.consentTypes) {
+					return config.consentTypes
+				}
 				return await api.get('/consent/types')
 			},
 			getUserConsents: async () => {
@@ -2123,7 +2149,7 @@ function SylphxProviderInner({
 				}
 			},
 		}),
-		[api, anonymousId, authState.user?.id, initialConsentTypes]
+		[api, anonymousId, authState.user?.id, config, initialConsentTypes]
 	)
 
 	// ============================================

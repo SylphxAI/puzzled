@@ -1,4 +1,3 @@
-import { getPlans } from '@sylphx/sdk/server'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Header } from '@/shared/components/layout'
 import { PricingContent } from './pricing-client'
@@ -20,16 +19,14 @@ export default async function PricingPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const plans = await getPlans({
-		secretKey: process.env.SYLPHX_SECRET_KEY!,
-		platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL,
-	})
+	// Plans are now fetched server-side in layout.tsx via getAppConfig()
+	// and available via usePlans() hook - no need to fetch here
 
 	return (
 		<>
 			<Header />
 			<main className="flex flex-1 flex-col px-4 py-8 pb-nav">
-				<PricingContent locale={locale} initialPlans={plans} />
+				<PricingContent locale={locale} />
 			</main>
 		</>
 	)

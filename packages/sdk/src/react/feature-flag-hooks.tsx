@@ -515,7 +515,7 @@ function useFeatureFlagWithDetail(
 
 			return response.json() as Promise<FeatureFlagDetailResult>
 		},
-		staleTime: 30 * 1000, // 30s - admin changes should reflect quickly
+		staleTime: 5 * 60 * 1000, // 5 min - flag details don't change frequently
 	})
 
 	const detail = detailQuery.data ?? null

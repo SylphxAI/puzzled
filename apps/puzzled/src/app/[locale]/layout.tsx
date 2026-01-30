@@ -1,3 +1,4 @@
+import { getAppConfig } from '@sylphx/sdk/server'
 import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
@@ -158,8 +159,18 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// Enable static rendering
 	setRequestLocale(locale)
 
-	// Load messages for the locale
-	const messages = await getMessages()
+	// Fetch platform config and messages in parallel
+	const publishableKey = process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
+	const secretKey = process.env.SYLPHX_SECRET_KEY
+	const platformUrl = process.env.NEXT_PUBLIC_SYLPHX_URL
+
+	const [messages, config] = await Promise.all([
+		getMessages(),
+		// Only fetch config if credentials are configured
+		publishableKey && secretKey
+			? getAppConfig({ secretKey, publishableKey, platformUrl })
+			: Promise.resolve(undefined),
+	])
 
 	return (
 		<html lang={locale} suppressHydrationWarning>
@@ -204,9 +215,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
-					<PlatformProvider
-						publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY}
-					>
+					<PlatformProvider publishableKey={publishableKey} config={config}>
 						<SessionReplayProvider>
 							<WebVitalsReporter />
 							<TRPCProvider>

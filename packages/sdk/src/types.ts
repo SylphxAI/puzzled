@@ -63,6 +63,90 @@ export type { Plan, Subscription,  } from './billing'
 export type { EvaluationReason } from './lib/flags/types'
 
 // ==========================================
+// AppConfig — Server-First SDK Configuration
+// ==========================================
+// Fetched once in Server Components via getAppConfig(), passed to SylphxProvider.
+// This eliminates client-side config fetching and ensures instant, fresh data.
+
+import type { Plan } from './billing'
+import type { ConsentType } from './consent'
+
+// Note: OAuthProviderId is defined below in OAuth Provider Types section
+
+/**
+ * OAuth provider with display info
+ */
+export interface OAuthProviderInfo {
+	id: OAuthProviderId
+	name: string
+}
+
+/**
+ * Feature flag definition for client-side evaluation
+ */
+export interface FeatureFlagDefinition {
+	key: string
+	name: string
+	description: string | null
+	enabled: boolean
+	rolloutPercentage: number
+	targetPremiumOnly: boolean
+	targetAdminOnly: boolean
+}
+
+/**
+ * App metadata
+ */
+export interface AppMetadata {
+	id: string
+	name: string
+	slug: string
+}
+
+/**
+ * Complete app configuration — fetched server-side and passed to SylphxProvider.
+ *
+ * This is the Single Source of Truth for all SDK configuration data.
+ * By fetching in Server Components, we get:
+ * - Instant data on page load (no client-side loading states)
+ * - Fresh data on every request (no staleTime tuning)
+ * - Simpler architecture (no React Query for config)
+ *
+ * @example
+ * ```tsx
+ * // layout.tsx (Server Component)
+ * import { getAppConfig } from '@sylphx/sdk/server'
+ *
+ * export default async function RootLayout({ children }) {
+ *   const config = await getAppConfig({
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
+ *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ *   })
+ *
+ *   return (
+ *     <SylphxProvider config={config} publishableKey={...}>
+ *       {children}
+ *     </SylphxProvider>
+ *   )
+ * }
+ * ```
+ */
+export interface AppConfig {
+	/** Available subscription plans */
+	plans: Plan[]
+	/** Consent types for GDPR/CCPA compliance */
+	consentTypes: ConsentType[]
+	/** Enabled OAuth providers */
+	oauthProviders: OAuthProviderInfo[]
+	/** Feature flag definitions for client-side evaluation */
+	featureFlags: FeatureFlagDefinition[]
+	/** App metadata */
+	app: AppMetadata
+	/** ISO timestamp when config was fetched */
+	fetchedAt: string
+}
+
+// ==========================================
 // OAuth Provider Types
 // ==========================================
 

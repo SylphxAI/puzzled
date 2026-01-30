@@ -801,7 +801,7 @@ export function useModels(options: UseModelsOptions = {}): UseModelsReturn {
 			return allPages.length * pageSize
 		},
 		enabled: options.fetchOnMount !== false,
-		staleTime: 60 * 1000, // 1 min - admin can change model availability
+		staleTime: 5 * 60 * 1000, // 5 min - model list is stable
 	})
 
 	// Flatten all pages into single models array

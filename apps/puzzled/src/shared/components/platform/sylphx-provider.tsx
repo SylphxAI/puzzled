@@ -6,12 +6,14 @@
  * Wraps the app with SylphxProvider when publishable key is configured.
  *
  * Architecture:
+ * - Server-first config: getAppConfig() fetches all config in Server Components
  * - Sylphx Platform handles ALL auth (email, OAuth, 2FA, sessions)
  * - Sylphx Platform handles ALL billing (subscriptions, checkout, portal)
  * - Sylphx Platform handles feature flags (gradual rollouts, A/B testing)
  * - App contains business logic only (games, streaks, achievements)
  */
 
+import type { AppConfig } from '@sylphx/sdk/react'
 import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
 import type * as React from 'react'
 import { MINUTE_MS } from '@/lib/constants/time'
@@ -20,6 +22,8 @@ interface PlatformProviderProps {
 	children: React.ReactNode
 	/** Sylphx Publishable Key (from NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY env var) */
 	publishableKey?: string
+	/** Server-fetched config via getAppConfig() - eliminates client-side config fetching */
+	config?: AppConfig
 }
 
 /**
@@ -52,14 +56,14 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function PlatformProvider({ children, publishableKey }: PlatformProviderProps) {
+export function PlatformProvider({ children, publishableKey, config }: PlatformProviderProps) {
 	// If Sylphx is not configured, just render children
 	if (!publishableKey) {
 		return <>{children}</>
 	}
 
 	return (
-		<SylphxProvider publishableKey={publishableKey} afterSignOutUrl="/login">
+		<SylphxProvider publishableKey={publishableKey} config={config} afterSignOutUrl="/login">
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)

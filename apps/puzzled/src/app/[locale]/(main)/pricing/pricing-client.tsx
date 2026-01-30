@@ -1,15 +1,14 @@
 'use client'
 
-import { useBilling } from '@sylphx/sdk/react'
+import type { Plan } from '@sylphx/sdk/react'
+import { useBilling, usePlans } from '@sylphx/sdk/react'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
 import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
-import type { Plan } from '@sylphx/sdk/server'
-
-/** Plan shape returned by the SDK `getPlans()` server function */
+/** Plan shape returned by the SDK config */
 type PlatformPlan = Plan
 
 /** UI plan representation derived from platform plans */
@@ -52,10 +51,18 @@ function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
 	})
 
 	// Find the premium plan (first non-free plan with a monthly price)
-	const premiumPlan = platformPlans.find((p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0)
+	const premiumPlan = platformPlans.find(
+		(p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0,
+	)
 
 	if (premiumPlan) {
-		const features = premiumPlan.features ?? ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive']
+		const features = premiumPlan.features ?? [
+			'allGames',
+			'streakFreeze',
+			'advancedStats',
+			'noAds',
+			'archive',
+		]
 
 		// Monthly card
 		plans.push({
@@ -133,21 +140,17 @@ function formatCurrency(amount: number, currency: string, locale: string): strin
 	}).format(amount / 100)
 }
 
-export function PricingContent({
-	locale,
-	initialPlans,
-}: {
-	locale: string
-	initialPlans: PlatformPlan[]
-}) {
+export function PricingContent({ locale }: { locale: string }) {
 	const t = useTranslations('subscription')
 	const tPricing = useTranslations('pricing')
 	const toast = useToast()
 	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
+	// Plans are now fetched server-side via getAppConfig() and available via usePlans()
+	const configPlans = usePlans()
 	const { isPremium, subscription, createCheckout, isLoading } = useBilling()
 
-	const PLANS = buildUIPlans(initialPlans)
+	const PLANS = buildUIPlans(configPlans)
 
 	const handleCheckout = async (planSlug: string, interval: 'monthly' | 'annual' = 'monthly') => {
 		const planKey = interval === 'annual' ? `${planSlug}-annual` : planSlug
@@ -256,9 +259,7 @@ export function PricingContent({
 											{formatCurrency(plan.price, plan.currency, locale)}
 										</span>
 										{plan.period && (
-											<span className="text-base text-muted-foreground">
-												{t(plan.period)}
-											</span>
+											<span className="text-base text-muted-foreground">{t(plan.period)}</span>
 										)}
 									</div>
 									{plan.trialDays && (

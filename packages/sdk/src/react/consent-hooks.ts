@@ -14,7 +14,7 @@
  * ## React Query Integration
  *
  * All hooks use React Query for:
- * - Automatic caching (30s staleTime - admin changes reflect quickly)
+ * - Automatic caching (5 min staleTime for consent data)
  * - Deduplication of concurrent requests
  * - Background refetching
  * - Optimistic updates via useMutation
@@ -132,7 +132,7 @@ export function useConsent(): UseConsentReturn {
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
-		staleTime: 30 * 1000, // 30s - admin configures consent types
+		staleTime: 5 * 60 * 1000, // 5 min
 		initialData: ctx.initialConsentTypes,
 	})
 
@@ -152,7 +152,7 @@ export function useConsent(): UseConsentReturn {
 				return {} as Record<string, boolean>
 			}
 		},
-		staleTime: 30 * 1000, // 30s - admin configures consent types
+		staleTime: 5 * 60 * 1000, // 5 min
 	})
 
 	// Initialize local state and banner visibility when data loads
@@ -452,7 +452,7 @@ export function useConsentCheck(options: UseConsentCheckOptions): UseConsentChec
 	const consentQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'check', options.purposeSlug, options.defaults],
 		queryFn: () => ctx.checkConsent(options.purposeSlug, options.defaults),
-		staleTime: 30 * 1000, // 30s - admin configures consent types
+		staleTime: 5 * 60 * 1000, // 5 min
 	})
 
 	// Refresh via React Query
@@ -539,7 +539,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
-		staleTime: 30 * 1000, // 30s - admin configures consent types
+		staleTime: 5 * 60 * 1000,
 		initialData: ctx.initialConsentTypes,
 	})
 
@@ -558,7 +558,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 				return {} as Record<string, boolean>
 			}
 		},
-		staleTime: 30 * 1000, // 30s - admin configures consent types
+		staleTime: 5 * 60 * 1000,
 	})
 
 	// Initialize local state and banner visibility when data loads

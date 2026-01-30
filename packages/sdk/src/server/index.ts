@@ -716,6 +716,117 @@ export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promi
 }
 
 // ============================================================================
+// App Metadata (Server-Side)
+// ============================================================================
+
+/** App metadata returned by /api/sdk/app */
+export interface AppMetadata {
+	id: string
+	name: string
+	slug: string
+}
+
+/**
+ * Get app metadata (server-side)
+ *
+ * @internal Used by getAppConfig() - rarely called directly
+ */
+export async function getAppMetadata(options: AuthenticatedFetchOptions): Promise<AppMetadata> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+
+	return cachedFetch<AppMetadata>({
+		url: `${platformUrl}/api/sdk/app`,
+		headers: sdkHeaders(secretKey),
+		fallback: { id: '', name: '', slug: '' },
+		label: 'app metadata',
+	})
+}
+
+// ============================================================================
+// AppConfig — Server-First Configuration
+// ============================================================================
+// The recommended way to initialize the SDK. Fetches all config data in parallel
+// from Server Components, then passes it to SylphxProvider as a required prop.
+
+import type { AppConfig, OAuthProviderInfo as OAuthProviderInfoType } from '../types'
+export type { AppConfig }
+
+/**
+ * Options for getAppConfig()
+ */
+export interface GetAppConfigOptions {
+	/** Secret key for authenticated endpoints (plans, flags, consent types) */
+	secretKey: string
+	/** Publishable key for public endpoints (OAuth providers) */
+	publishableKey: string
+	/** Platform URL (defaults to https://sylphx.com) */
+	platformUrl?: string
+}
+
+/**
+ * Get complete app configuration for the SDK (server-side)
+ *
+ * This is the **recommended** way to initialize the Sylphx SDK. It fetches all
+ * configuration data in a single call from a Server Component, eliminating the
+ * need for client-side config fetching and the associated loading states.
+ *
+ * Returns:
+ * - plans: Subscription plans for billing
+ * - consentTypes: GDPR/CCPA consent configuration
+ * - oauthProviders: Enabled OAuth providers for auth
+ * - featureFlags: Feature flag definitions for client-side evaluation
+ * - app: App metadata (id, name, slug)
+ * - fetchedAt: ISO timestamp for cache debugging
+ *
+ * @example
+ * ```tsx
+ * // app/layout.tsx (Server Component)
+ * import { getAppConfig } from '@sylphx/sdk/server'
+ *
+ * export default async function RootLayout({ children }) {
+ *   const config = await getAppConfig({
+ *     secretKey: process.env.SYLPHX_SECRET_KEY!,
+ *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ *   })
+ *
+ *   return (
+ *     <html>
+ *       <body>
+ *         <SylphxProvider
+ *           config={config}
+ *           publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!}
+ *         >
+ *           {children}
+ *         </SylphxProvider>
+ *       </body>
+ *     </html>
+ *   )
+ * }
+ * ```
+ */
+export async function getAppConfig(options: GetAppConfigOptions): Promise<AppConfig> {
+	const { secretKey, publishableKey, platformUrl } = options
+
+	// Fetch all config data in parallel for optimal performance
+	const [plans, consentTypes, oauthProviders, featureFlags, app] = await Promise.all([
+		getPlans({ secretKey, platformUrl }),
+		getConsentTypes({ secretKey, platformUrl }),
+		getOAuthProvidersWithInfo({ publishableKey, platformUrl }),
+		getFeatureFlags({ secretKey, platformUrl }),
+		getAppMetadata({ secretKey, platformUrl }),
+	])
+
+	return {
+		plans,
+		consentTypes,
+		oauthProviders: oauthProviders as OAuthProviderInfoType[],
+		featureFlags,
+		app,
+		fetchedAt: new Date().toISOString(),
+	}
+}
+
+// ============================================================================
 // Referral Leaderboard (Server-Side)
 // ============================================================================
 
