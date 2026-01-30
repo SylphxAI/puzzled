@@ -266,8 +266,8 @@ export function SylphxProvider({
 			new QueryClient({
 				defaultOptions: {
 					queries: {
-						// SDK default: 5 min stale time, no refetch on window focus
-						staleTime: 5 * 60 * 1000,
+						// SDK default: 30s stale time for responsive config updates
+						staleTime: 30 * 1000,
 						refetchOnWindowFocus: false,
 						retry: 1,
 					},
@@ -374,7 +374,7 @@ function SylphxProviderInner({
 	const plansQuery = useQuery({
 		queryKey: ['sylphx', appId, 'plans'],
 		queryFn: () => api.get<Plan[]>('/billing/plans'),
-		staleTime: 10 * 60 * 1000, // 10 min - plans rarely change
+		staleTime: 60 * 1000, // 1 min - admin can change plans
 		initialData: initialPlans,
 	})
 	const plans = plansQuery.data ?? []
@@ -386,7 +386,7 @@ function SylphxProviderInner({
 		queryKey: ['sylphx', appId, 'subscription', authState.user?.id],
 		queryFn: () => api.get<Subscription | null>('/billing/subscription', { userId: authState.user!.id }),
 		enabled: authState.isSignedIn && !!authState.user?.id,
-		staleTime: 2 * 60 * 1000, // 2 min - subscription can change after payment
+		staleTime: 60 * 1000, // 1 min - subscription can change after payment
 	})
 	const subscription = subscriptionQuery.data ?? null
 	const subscriptionLoading = subscriptionQuery.isLoading
@@ -403,7 +403,7 @@ function SylphxProviderInner({
 			return { stats, code: codeData.code }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: 60 * 1000, // 1 min - admin can configure referrals
 	})
 	const referralStats = referralsQuery.data?.stats ?? null
 	const referralCode = referralsQuery.data?.code ?? null
@@ -415,7 +415,7 @@ function SylphxProviderInner({
 		queryKey: ['sylphx', appId, 'pushPreferences'],
 		queryFn: () => api.get<PushPreferences>('/notifications/preferences'),
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: 60 * 1000, // 1 min - admin can configure push
 	})
 	const pushPreferences = pushPreferencesQuery.data ?? null
 	const pushError = pushPreferencesQuery.error as Error | null
@@ -433,7 +433,7 @@ function SylphxProviderInner({
 			return { config, preferences }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: 60 * 1000, // 1 min - admin can configure mobile push
 	})
 	const mobilePushConfig = mobilePushQuery.data?.config ?? null
 	const mobilePushPreferences = mobilePushQuery.data?.preferences ?? null

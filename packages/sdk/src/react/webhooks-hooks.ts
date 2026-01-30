@@ -102,7 +102,7 @@ export function useWebhooks(): UseWebhooksReturn {
 	const configQuery = useQuery({
 		queryKey: ['sylphx', 'webhooks', 'config'],
 		queryFn: () => ctx.getConfig(),
-		staleTime: 5 * 60 * 1000, // 5 min - config rarely changes
+		staleTime: 30 * 1000, // 30s - admin configures webhooks
 	})
 
 	const config = configQuery.data
@@ -339,7 +339,7 @@ export function useWebhookStats(period: WebhookStatsPeriod = 'week'): UseWebhook
 	const statsQuery = useQuery({
 		queryKey: ['sylphx', 'webhooks', 'stats', period],
 		queryFn: () => ctx.getStats(period),
-		staleTime: 2 * 60 * 1000, // 2 min - stats aggregate data
+		staleTime: 60 * 1000, // 1 min - stats aggregate data
 	})
 
 	// Refresh via React Query invalidation

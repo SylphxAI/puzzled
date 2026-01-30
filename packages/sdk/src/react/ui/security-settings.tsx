@@ -122,7 +122,7 @@ export function SecuritySettings({
 			}
 		},
 		enabled: show2FA,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: 30 * 1000, // 30s - admin can configure 2FA settings
 	})
 
 	// React Query for sessions

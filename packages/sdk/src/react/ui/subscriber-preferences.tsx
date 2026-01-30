@@ -110,7 +110,7 @@ export function SubscriberPreferences({
 				.filter(([, enabled]) => enabled)
 				.map(([key]) => key)
 		},
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: 30 * 1000, // 30s - admin can configure newsletter options
 	})
 
 	// Sync selectedPreferences with query data when it loads

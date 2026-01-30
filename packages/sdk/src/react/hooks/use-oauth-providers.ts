@@ -83,8 +83,8 @@ export function useOAuthProviders(): UseOAuthProvidersReturn {
 			return response.json()
 		},
 		enabled: isConfigured,
-		staleTime: 5 * 60 * 1000, // 5 minutes - providers don't change often
-		gcTime: 30 * 60 * 1000, // 30 minutes cache
+		staleTime: 30 * 1000, // 30s - admin changes should reflect quickly
+		gcTime: 5 * 60 * 1000, // 5 min cache
 		retry: 2,
 	})
 

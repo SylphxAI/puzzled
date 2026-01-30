@@ -288,7 +288,7 @@ export function useLeaderboard(
 	const leaderboardQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
-		staleTime: 2 * 60 * 1000, // 2 min - leaderboards change moderately
+		staleTime: 60 * 1000, // 1 min - admin can configure leaderboards
 	})
 
 	const data = leaderboardQuery.data ?? null
@@ -436,7 +436,7 @@ export function useAchievements(): UseAchievementsReturn {
 		queryKey: ['sylphx', ctx.appId, 'achievements'],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
-		staleTime: 5 * 60 * 1000, // 5 min - achievements don't change often
+		staleTime: 60 * 1000, // 1 min - admin can configure achievements
 	})
 
 	const achievements = achievementsQuery.data ?? []
@@ -662,7 +662,7 @@ export function useSafeLeaderboard(
 	const leaderboardQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
-		staleTime: 2 * 60 * 1000,
+		staleTime: 60 * 1000, // 1 min - admin can configure leaderboards
 	})
 
 	const data = leaderboardQuery.data ?? null
@@ -749,7 +749,7 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 		queryKey: ['sylphx', ctx.appId, 'achievements'],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
-		staleTime: 5 * 60 * 1000,
+		staleTime: 60 * 1000, // 1 min - admin can configure achievements
 	})
 
 	const achievements = achievementsQuery.data ?? []
