@@ -7,6 +7,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getCookieNames } from './cookies'
+import {
+	validateAndSanitizeSecretKey,
+	getCookieNamespace as getCookieNamespaceFromKey,
+} from '../key-validation'
 
 /**
  * Decode JWT payload without verification (for checking expiry)
@@ -98,7 +102,7 @@ function matchesPattern(path: string, patterns: string[]): boolean {
  */
 export function authMiddleware(config: AuthMiddlewareConfig) {
 	const {
-		secretKey,
+		secretKey: rawSecretKey,
 		publicRoutes = ['/'],
 		ignoredRoutes = [],
 		signInUrl = '/login',
@@ -106,9 +110,11 @@ export function authMiddleware(config: AuthMiddlewareConfig) {
 		debug = false,
 	} = config
 
-	// Derive cookie namespace from secret key prefix (e.g., "sk_prod" → "sylphx_sk_prod")
-	const parts = secretKey.split('_')
-	const namespace = parts.length >= 3 ? `sylphx_${parts[0]}_${parts[1]}` : 'sylphx'
+	// Validate and sanitize secret key using SSOT
+	const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
+
+	// Use SSOT namespace derivation
+	const namespace = getCookieNamespaceFromKey(secretKey)
 	const cookieNames = getCookieNames(namespace)
 
 	// Add auth pages to public routes

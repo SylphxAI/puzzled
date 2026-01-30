@@ -21,48 +21,51 @@
 import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
-import { validateAndSanitizePublishableKey } from '../key-validation'
+
+// Re-export key validation utilities from SSOT
+export {
+	validatePublishableKey,
+	validateAndSanitizePublishableKey,
+	validateSecretKey,
+	validateAndSanitizeSecretKey,
+	detectEnvironment,
+	isDevelopmentKey,
+	isProductionKey,
+	getCookieNamespace,
+	detectKeyType,
+	isPublishableKey,
+	isSecretKey,
+	isDevelopmentRuntime,
+	type EnvironmentType,
+	type KeyType,
+	type KeyValidationResult,
+} from '../key-validation'
+
+import {
+	validateAndSanitizeSecretKey,
+	validateAndSanitizePublishableKey,
+	detectEnvironment as _detectEnvironment,
+} from '../key-validation'
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-/**
- * Environment type detected from secret key prefix
- */
-export type EnvironmentType = 'development' | 'staging' | 'production'
+// Note: EnvironmentType, detectEnvironment, isDevelopmentKey, isProductionKey
+// are re-exported from '../key-validation' (SSOT)
 
 /**
- * Detect environment type from secret key prefix
- *
- * @example
- * ```typescript
- * detectEnvironment('sk_dev_abc123')  // 'development'
- * detectEnvironment('sk_prod_xyz789') // 'production'
- * detectEnvironment('sk_stg_qwe456')  // 'staging'
- * ```
- *
- * @throws Error if key format is invalid
- */
-export function detectEnvironment(secretKey: string): EnvironmentType {
-	if (secretKey.startsWith('sk_dev_')) return 'development'
-	if (secretKey.startsWith('sk_stg_')) return 'staging'
-	if (secretKey.startsWith('sk_prod_')) return 'production'
-	throw new Error('Invalid secret key format. Expected sk_dev_*, sk_stg_*, or sk_prod_*')
-}
-
-/**
- * Check if running in development environment
+ * @deprecated Use isDevelopmentKey from key-validation instead
  */
 export function isDevelopment(secretKey: string): boolean {
-	return detectEnvironment(secretKey) === 'development'
+	return _detectEnvironment(secretKey) === 'development'
 }
 
 /**
- * Check if running in production environment
+ * @deprecated Use isProductionKey from key-validation instead
  */
 export function isProduction(secretKey: string): boolean {
-	return detectEnvironment(secretKey) === 'production'
+	return _detectEnvironment(secretKey) === 'production'
 }
 
 export interface ServerConfig {
@@ -107,12 +110,11 @@ export interface ServerConfig {
  * ```
  */
 export function createServerClient(config: ServerConfig): RestClient {
-	if (!config.secretKey) {
-		throw new Error('Missing secretKey in Server Client config')
-	}
+	// Validate and sanitize secret key using SSOT
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
 
 	return createRestClient({
-		secretKey: config.secretKey.trim(),
+		secretKey,
 		platformUrl: config.platformUrl?.trim(),
 	})
 }

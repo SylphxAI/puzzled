@@ -24,6 +24,7 @@
 import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './generated/api'
 import { exponentialBackoff, isRetryableError } from './errors'
+import { validateAndSanitizeSecretKey } from './key-validation'
 
 // Re-export types for consumers
 export type { paths }
@@ -239,13 +240,15 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
  * ```
  */
 export function createRestClient(config: RestClientConfig) {
-	const baseUrl = config.platformUrl || 'https://sylphx.com'
+	// Validate and sanitize secret key using SSOT
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
+	const baseUrl = (config.platformUrl || 'https://sylphx.com').trim()
 
 	const client = createClient<paths>({
 		baseUrl: `${baseUrl}/api/sdk`,
 		headers: {
 			'Content-Type': 'application/json',
-			'x-app-secret': config.secretKey,
+			'x-app-secret': secretKey,
 		},
 	})
 
@@ -271,7 +274,16 @@ export function createRestClient(config: RestClientConfig) {
  * ```
  */
 export function createDynamicRestClient(config: RestDynamicConfig) {
-	const baseUrl = config.platformUrl || 'https://sylphx.com'
+	// Validate and sanitize secret key using SSOT
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
+	const baseUrl = (config.platformUrl || 'https://sylphx.com').trim()
+
+	// Create validated config for middleware
+	const validatedConfig: RestDynamicConfig = {
+		...config,
+		secretKey,
+		platformUrl: baseUrl,
+	}
 
 	const client = createClient<paths>({
 		baseUrl: `${baseUrl}/api/sdk`,
@@ -281,7 +293,7 @@ export function createDynamicRestClient(config: RestDynamicConfig) {
 	})
 
 	// Add auth middleware (runs on each request)
-	client.use(createAuthMiddleware(config))
+	client.use(createAuthMiddleware(validatedConfig))
 
 	// Add retry middleware
 	client.use(createRetryMiddleware(config.retry))

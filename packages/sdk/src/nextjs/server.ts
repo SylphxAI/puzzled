@@ -9,6 +9,11 @@ import { cache } from 'react'
 import type { User, TokenResponse } from '../types'
 import { getAuthCookies, setAuthCookies, clearAuthCookies } from './cookies'
 import { verifyAccessToken } from '../server'
+import {
+	validateAndSanitizeSecretKey,
+	validateAndSanitizePublishableKey,
+	getCookieNamespace as getCookieNamespaceFromKey,
+} from '../key-validation'
 
 /** Type guard for token response */
 function isTokenResponse(data: unknown): data is TokenResponse {
@@ -44,9 +49,11 @@ export function configureServer(config: {
 	secretKey: string
 	platformUrl?: string
 }) {
+	// Validate and sanitize secret key using SSOT
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
 	serverConfig = {
-		secretKey: config.secretKey,
-		platformUrl: config.platformUrl || 'https://sylphx.com',
+		secretKey,
+		platformUrl: (config.platformUrl || 'https://sylphx.com').trim(),
 	}
 }
 
@@ -56,10 +63,12 @@ export function configureServer(config: {
 function getConfig(): { secretKey: string; platformUrl: string } | null {
 	if (!serverConfig) {
 		// Try to get from environment variables
-		const secretKey = process.env.SYLPHX_SECRET_KEY
-		const platformUrl = process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com'
+		const rawSecretKey = process.env.SYLPHX_SECRET_KEY
+		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com').trim()
 
-		if (secretKey) {
+		if (rawSecretKey) {
+			// Validate and sanitize secret key using SSOT
+			const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
 			serverConfig = { secretKey, platformUrl }
 		} else {
 			// Return null instead of throwing - allows graceful degradation
@@ -71,18 +80,12 @@ function getConfig(): { secretKey: string; platformUrl: string } | null {
 
 /**
  * Derive a stable cookie namespace from the secret key prefix.
- * Uses the environment prefix (e.g., "sk_prod", "sk_dev") to avoid
- * collisions between environments while keeping cookies deterministic.
+ * Uses the SSOT getCookieNamespace function from key-validation.
  */
 function getCookieNamespace(): string {
 	const config = getConfig()
 	if (!config) return 'sylphx'
-	// Extract prefix like "sk_prod" from "sk_prod_xxxxx"
-	const parts = config.secretKey.split('_')
-	if (parts.length >= 3) {
-		return `sylphx_${parts[0]}_${parts[1]}`
-	}
-	return 'sylphx'
+	return getCookieNamespaceFromKey(config.secretKey)
 }
 
 /**
@@ -323,10 +326,13 @@ export function getAuthorizationUrl(options?: {
 		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
 	}
 
-	const clientId = options?.publishableKey || process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
-	if (!clientId) {
+	const rawClientId = options?.publishableKey || process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
+	if (!rawClientId) {
 		throw new Error('Publishable key is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY.')
 	}
+
+	// Validate and sanitize publishable key using SSOT
+	const clientId = validateAndSanitizePublishableKey(rawClientId)
 
 	const params = new URLSearchParams({
 		client_id: clientId,

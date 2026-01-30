@@ -705,15 +705,34 @@ export {
 export { safeRedirect, isValidRedirectUrl, sanitizeUrl } from './security-utils'
 
 // ============================================================================
-// Key Validation
+// Key Validation — Single Source of Truth
 // ============================================================================
 // Industry-standard API key validation following Stripe, Clerk, Firebase patterns.
 // Validates format, provides clear errors, and warns about common issues.
+// ALL key validation logic lives in ../key-validation.ts
 
 export {
+	// Publishable key validation
 	validatePublishableKey,
 	validateAndSanitizePublishableKey,
+	// Secret key validation
+	validateSecretKey,
+	validateAndSanitizeSecretKey,
+	// Environment detection
+	detectEnvironment,
+	isDevelopmentKey,
+	isProductionKey,
+	isDevelopmentRuntime,
+	// Cookie namespace
+	getCookieNamespace,
+	// Key type detection
+	detectKeyType,
+	isPublishableKey,
+	isSecretKey,
+	// Types
 	type KeyValidationResult,
+	type EnvironmentType,
+	type KeyType,
 } from '../key-validation'
 
 // ============================================================================

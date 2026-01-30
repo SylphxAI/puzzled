@@ -1,32 +1,41 @@
 /**
- * API Key Validation
+ * API Key Validation — Single Source of Truth
  *
  * Industry-standard key validation following Stripe, Clerk, and Firebase patterns.
- * Validates key format at initialization and provides clear error messages.
+ * ALL key validation, sanitization, and environment detection logic lives here.
  *
  * Principles:
  * 1. Fail fast - Invalid input rejected immediately with clear errors
  * 2. Helpful errors - Tell users exactly what's wrong and how to fix it
  * 3. Development warnings - Warn about issues that would fail in production
- * 4. No silent fixes in production - Transparency over convenience
+ * 4. No silent fixes - Transparency over convenience (but warn + continue)
+ * 5. Single Source of Truth - All key logic in one place
+ *
+ * Key Formats:
+ * - Publishable: pk_(dev|stg|prod)_[32 hex chars] — Safe for client-side
+ * - Secret: sk_(dev|stg|prod)_[48 hex chars] — Server-side only, NEVER expose
  */
 
-/**
- * Expected publishable key format:
- * - pk_dev_[32 hex chars] - Development environment
- * - pk_stg_[32 hex chars] - Staging environment
- * - pk_prod_[32 hex chars] - Production environment
- */
-const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod|deve|stge|prde)_[a-f0-9]+$/
+// =============================================================================
+// Types
+// =============================================================================
 
-/**
- * Validation result with clear error information
- */
+/** Environment type derived from key prefix */
+export type EnvironmentType = 'development' | 'staging' | 'production'
+
+/** Key type - publishable (client) or secret (server) */
+export type KeyType = 'publishable' | 'secret'
+
+/** Validation result with clear error information */
 export interface KeyValidationResult {
 	/** Whether the key is valid (possibly after sanitization) */
 	valid: boolean
 	/** The sanitized key to use (only if valid) */
 	sanitizedKey: string
+	/** Detected key type */
+	keyType?: KeyType
+	/** Detected environment */
+	environment?: EnvironmentType
 	/** Error message if invalid */
 	error?: string
 	/** Warning message if key was auto-fixed */
@@ -35,14 +44,169 @@ export interface KeyValidationResult {
 	issues?: string[]
 }
 
+// =============================================================================
+// Patterns — Strict Format Validation
+// =============================================================================
+
+/**
+ * Publishable key pattern: pk_(dev|stg|prod)_[hex]
+ * - Prefix: pk_ (publishable key)
+ * - Environment: dev, stg, or prod (NO typos allowed)
+ * - Suffix: lowercase hex characters
+ */
+const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod)_[a-f0-9]+$/
+
+/**
+ * Secret key pattern: sk_(dev|stg|prod)_[hex]
+ * - Prefix: sk_ (secret key)
+ * - Environment: dev, stg, or prod (NO typos allowed)
+ * - Suffix: lowercase hex characters
+ */
+const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-f0-9]+$/
+
+/** Environment prefix to type mapping */
+const ENV_PREFIX_MAP: Record<string, EnvironmentType> = {
+	dev: 'development',
+	stg: 'staging',
+	prod: 'production',
+}
+
+// =============================================================================
+// Core Validation Functions
+// =============================================================================
+
+/**
+ * Detect common issues with a key (whitespace, newlines, etc.)
+ */
+function detectKeyIssues(key: string): string[] {
+	const issues: string[] = []
+	if (key !== key.trim()) issues.push('whitespace')
+	if (key.includes('\n')) issues.push('newline')
+	if (key.includes('\r')) issues.push('carriage-return')
+	if (key.includes(' ')) issues.push('space')
+	if (key !== key.toLowerCase()) issues.push('uppercase-chars')
+	return issues
+}
+
+/**
+ * Create a helpful warning message for keys that needed sanitization
+ */
+function createSanitizationWarning(
+	keyType: KeyType,
+	issues: string[],
+	envVarName: string,
+): string {
+	return (
+		`[Sylphx] ${keyType === 'publishable' ? 'Publishable' : 'Secret'} key contains ${issues.join(', ')}. ` +
+		`This is commonly caused by Vercel CLI's 'env pull' command.\n\n` +
+		`To fix permanently:\n` +
+		`1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n` +
+		`2. Edit ${envVarName}\n` +
+		`3. Remove any trailing whitespace or newline characters\n` +
+		`4. Redeploy your application\n\n` +
+		`The SDK will automatically sanitize the key, but fixing the source is recommended.`
+	)
+}
+
+/**
+ * Create a helpful error message for invalid keys
+ */
+function createInvalidKeyError(
+	keyType: KeyType,
+	key: string,
+	envVarName: string,
+): string {
+	const prefix = keyType === 'publishable' ? 'pk' : 'sk'
+	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
+
+	return (
+		`[Sylphx] Invalid ${keyType} key format.\n\n` +
+		`Expected format: ${prefix}_(dev|stg|prod)_[hex]\n` +
+		`Received: "${maskedKey}"\n\n` +
+		`Please check your ${envVarName} environment variable.\n` +
+		`You can find your keys in the Sylphx Console → API Keys.\n\n` +
+		`Common issues:\n` +
+		`• Key has uppercase characters (must be lowercase)\n` +
+		`• Key has wrong prefix (publishable: pk_, secret: sk_)\n` +
+		`• Key has invalid environment (must be dev, stg, or prod)\n` +
+		`• Key was copied with extra whitespace`
+	)
+}
+
+/**
+ * Extract environment from a validated key
+ */
+function extractEnvironment(key: string): EnvironmentType | undefined {
+	const match = key.match(/^[ps]k_(dev|stg|prod)_/)
+	if (!match) return undefined
+	return ENV_PREFIX_MAP[match[1]]
+}
+
+/**
+ * Generic key validation logic
+ */
+function validateKey(
+	key: string | undefined | null,
+	keyType: KeyType,
+	pattern: RegExp,
+	envVarName: string,
+): KeyValidationResult {
+	// Check if key is provided
+	if (!key) {
+		return {
+			valid: false,
+			sanitizedKey: '',
+			error:
+				`[Sylphx] ${keyType === 'publishable' ? 'Publishable' : 'Secret'} key is required. ` +
+				`Set ${envVarName} in your environment variables.`,
+			issues: ['missing'],
+		}
+	}
+
+	// Detect issues before validation
+	const issues = detectKeyIssues(key)
+
+	// Check if key matches expected format exactly
+	if (pattern.test(key)) {
+		return {
+			valid: true,
+			sanitizedKey: key,
+			keyType,
+			environment: extractEnvironment(key),
+			issues: [],
+		}
+	}
+
+	// Key doesn't match - try sanitization (trim + lowercase)
+	const sanitized = key.trim().toLowerCase()
+
+	if (pattern.test(sanitized)) {
+		// Sanitization fixes the issue
+		return {
+			valid: true,
+			sanitizedKey: sanitized,
+			keyType,
+			environment: extractEnvironment(sanitized),
+			warning: createSanitizationWarning(keyType, issues, envVarName),
+			issues,
+		}
+	}
+
+	// Sanitization doesn't fix it - key format is genuinely wrong
+	return {
+		valid: false,
+		sanitizedKey: '',
+		error: createInvalidKeyError(keyType, key, envVarName),
+		issues: [...issues, 'invalid-format'],
+	}
+}
+
+// =============================================================================
+// Public API — Publishable Keys
+// =============================================================================
+
 /**
  * Validate a publishable key and return detailed results
- *
- * This follows the industry-standard "fail fast" pattern:
- * 1. Check if key exists
- * 2. Validate against expected format
- * 3. If format fails, check if sanitization would fix it
- * 4. Return appropriate error/warning
  *
  * @example
  * ```typescript
@@ -55,118 +219,205 @@ export interface KeyValidationResult {
  * }
  * ```
  */
-export function validatePublishableKey(key: string | undefined | null): KeyValidationResult {
-	const issues: string[] = []
-
-	// Check if key is provided
-	if (!key) {
-		return {
-			valid: false,
-			sanitizedKey: '',
-			error:
-				'[Sylphx] Publishable key is required. ' +
-				'Set NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY in your environment variables.',
-			issues: ['missing'],
-		}
-	}
-
-	// Check for common issues before validation
-	if (key !== key.trim()) {
-		issues.push('whitespace')
-	}
-	if (key.includes('\n')) {
-		issues.push('newline')
-	}
-	if (key.includes('\r')) {
-		issues.push('carriage-return')
-	}
-
-	// First, check if the key matches the expected format exactly
-	if (PUBLISHABLE_KEY_PATTERN.test(key)) {
-		return {
-			valid: true,
-			sanitizedKey: key,
-			issues: [],
-		}
-	}
-
-	// Key doesn't match - check if sanitization would fix it
-	const sanitized = key.trim()
-
-	if (PUBLISHABLE_KEY_PATTERN.test(sanitized)) {
-		// Sanitization fixes the issue - this is the Vercel CLI bug case
-		const warningMessage =
-			`[Sylphx] Publishable key contains ${issues.join(', ')}. ` +
-			`This is commonly caused by Vercel CLI's 'env pull' command.\n\n` +
-			`To fix permanently:\n` +
-			`1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n` +
-			`2. Edit NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY\n` +
-			`3. Remove any trailing whitespace or newline characters\n` +
-			`4. Redeploy your application\n\n` +
-			`The SDK will automatically sanitize the key, but fixing the source is recommended.`
-
-		return {
-			valid: true,
-			sanitizedKey: sanitized,
-			warning: warningMessage,
-			issues,
-		}
-	}
-
-	// Sanitization doesn't fix it - the key format is genuinely wrong
-	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
-	return {
-		valid: false,
-		sanitizedKey: '',
-		error:
-			`[Sylphx] Invalid publishable key format.\n\n` +
-			`Expected format: pk_(dev|stg|prod)_[hex]\n` +
-			`Received: "${maskedKey}"\n\n` +
-			`Please check your NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY environment variable.\n` +
-			`You can find your publishable key in the Sylphx Console under API Keys.`,
-		issues: [...issues, 'invalid-format'],
-	}
+export function validatePublishableKey(
+	key: string | undefined | null,
+): KeyValidationResult {
+	return validateKey(
+		key,
+		'publishable',
+		PUBLISHABLE_KEY_PATTERN,
+		'NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY',
+	)
 }
 
 /**
- * Validate and sanitize publishable key, logging warnings in development
- *
- * This is the main entry point for key validation in the SDK.
- * It validates the key, logs appropriate warnings/errors, and returns
- * the sanitized key to use.
+ * Validate and sanitize publishable key, logging warnings
  *
  * @throws Error if the key is invalid and cannot be sanitized
  * @returns The sanitized publishable key
  */
-export function validateAndSanitizePublishableKey(key: string | undefined | null): string {
+export function validateAndSanitizePublishableKey(
+	key: string | undefined | null,
+): string {
 	const result = validatePublishableKey(key)
 
 	if (!result.valid) {
-		// Always throw for invalid keys - fail fast
 		throw new Error(result.error)
 	}
 
 	if (result.warning) {
-		// Log warning in development, but don't throw
-		// This helps users discover and fix the issue without breaking their app
 		console.warn(result.warning)
 	}
 
 	return result.sanitizedKey
 }
 
+// =============================================================================
+// Public API — Secret Keys
+// =============================================================================
+
 /**
- * Check if we're in development mode
- * Used to adjust strictness of validation
+ * Validate a secret key and return detailed results
+ *
+ * @example
+ * ```typescript
+ * const result = validateSecretKey(process.env.SYLPHX_SECRET_KEY)
+ * if (!result.valid) {
+ *   throw new Error(result.error)
+ * }
+ * ```
  */
-export function isDevelopment(): boolean {
+export function validateSecretKey(
+	key: string | undefined | null,
+): KeyValidationResult {
+	return validateKey(key, 'secret', SECRET_KEY_PATTERN, 'SYLPHX_SECRET_KEY')
+}
+
+/**
+ * Validate and sanitize secret key, logging warnings
+ *
+ * @throws Error if the key is invalid and cannot be sanitized
+ * @returns The sanitized secret key
+ */
+export function validateAndSanitizeSecretKey(
+	key: string | undefined | null,
+): string {
+	const result = validateSecretKey(key)
+
+	if (!result.valid) {
+		throw new Error(result.error)
+	}
+
+	if (result.warning) {
+		console.warn(result.warning)
+	}
+
+	return result.sanitizedKey
+}
+
+// =============================================================================
+// Public API — Environment Detection (SSOT)
+// =============================================================================
+
+/**
+ * Detect environment type from any key (publishable or secret)
+ *
+ * @example
+ * ```typescript
+ * detectEnvironment('sk_dev_abc123')  // 'development'
+ * detectEnvironment('pk_prod_xyz789') // 'production'
+ * detectEnvironment('sk_stg_qwe456')  // 'staging'
+ * ```
+ *
+ * @throws Error if key format is invalid
+ */
+export function detectEnvironment(key: string): EnvironmentType {
+	// Validate and sanitize first
+	const sanitized = key.trim().toLowerCase()
+
+	// Check both key types
+	if (sanitized.startsWith('sk_')) {
+		const result = validateSecretKey(sanitized)
+		if (!result.valid) {
+			throw new Error(result.error)
+		}
+		return result.environment!
+	}
+
+	if (sanitized.startsWith('pk_')) {
+		const result = validatePublishableKey(sanitized)
+		if (!result.valid) {
+			throw new Error(result.error)
+		}
+		return result.environment!
+	}
+
+	throw new Error(
+		`[Sylphx] Invalid key format. Key must start with 'sk_' (secret) or 'pk_' (publishable).`,
+	)
+}
+
+/**
+ * Check if running in development environment based on key
+ */
+export function isDevelopmentKey(key: string): boolean {
+	return detectEnvironment(key) === 'development'
+}
+
+/**
+ * Check if running in production environment based on key
+ */
+export function isProductionKey(key: string): boolean {
+	return detectEnvironment(key) === 'production'
+}
+
+// =============================================================================
+// Public API — Cookie Namespace (SSOT)
+// =============================================================================
+
+/**
+ * Get the cookie namespace for a given secret key
+ *
+ * Used by auth middleware to namespace cookies per environment.
+ * This prevents dev/staging/prod cookies from conflicting.
+ *
+ * @example
+ * ```typescript
+ * getCookieNamespace('sk_dev_abc123')  // 'sylphx_dev'
+ * getCookieNamespace('sk_prod_xyz789') // 'sylphx_prod'
+ * ```
+ */
+export function getCookieNamespace(secretKey: string): string {
+	const env = detectEnvironment(secretKey)
+	const shortEnv = env === 'development' ? 'dev' : env === 'staging' ? 'stg' : 'prod'
+	return `sylphx_${shortEnv}`
+}
+
+// =============================================================================
+// Public API — Key Type Detection
+// =============================================================================
+
+/**
+ * Detect the type of key (publishable or secret)
+ *
+ * @returns 'publishable', 'secret', or null if unknown
+ */
+export function detectKeyType(key: string): KeyType | null {
+	const sanitized = key.trim().toLowerCase()
+	if (sanitized.startsWith('pk_')) return 'publishable'
+	if (sanitized.startsWith('sk_')) return 'secret'
+	return null
+}
+
+/**
+ * Check if a key is a publishable key
+ */
+export function isPublishableKey(key: string): boolean {
+	return detectKeyType(key) === 'publishable'
+}
+
+/**
+ * Check if a key is a secret key
+ */
+export function isSecretKey(key: string): boolean {
+	return detectKeyType(key) === 'secret'
+}
+
+// =============================================================================
+// Public API — Runtime Environment Detection
+// =============================================================================
+
+/**
+ * Check if we're in development mode (based on NODE_ENV or hostname)
+ */
+export function isDevelopmentRuntime(): boolean {
 	if (typeof process !== 'undefined' && process.env) {
 		return process.env.NODE_ENV === 'development'
 	}
-	// In browser without process.env, check for localhost
 	if (typeof window !== 'undefined') {
 		return (
-			window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+			window.location.hostname === 'localhost' ||
+			window.location.hostname === '127.0.0.1'
 		)
 	}
 	return false
