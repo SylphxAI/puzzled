@@ -9,9 +9,7 @@
 
 import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
 import { validateKey } from './key-validation'
-
-/** Default request timeout in milliseconds (30 seconds) */
-const DEFAULT_TIMEOUT_MS = 30_000
+import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL } from './constants'
 
 /**
  * Map HTTP status code to SylphxErrorCode
@@ -111,7 +109,7 @@ export function createConfig(input: SylphxConfigInput): SylphxConfig {
 
 	return Object.freeze({
 		secretKey,
-		platformUrl: (input.platformUrl ?? 'https://sylphx.com').trim(),
+		platformUrl: (input.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
 		accessToken: input.accessToken,
 	})
 }

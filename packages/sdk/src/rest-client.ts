@@ -25,12 +25,10 @@ import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './generated/api'
 import { exponentialBackoff, isRetryableError } from './errors'
 import { validateAndSanitizeSecretKey } from './key-validation'
+import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL } from './constants'
 
 // Re-export types for consumers
 export type { paths }
-
-/** Default request timeout in milliseconds (30 seconds) */
-const DEFAULT_TIMEOUT_MS = 30_000
 
 /**
  * Retry configuration for automatic request retries
@@ -239,10 +237,18 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
  * })
  * ```
  */
+/**
+ * Validate and sanitize REST client configuration (SSOT helper)
+ */
+function validateClientConfig(config: { secretKey?: string; platformUrl?: string }) {
+	return {
+		secretKey: validateAndSanitizeSecretKey(config.secretKey),
+		baseUrl: (config.platformUrl || DEFAULT_PLATFORM_URL).trim(),
+	}
+}
+
 export function createRestClient(config: RestClientConfig) {
-	// Validate and sanitize secret key using SSOT
-	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
-	const baseUrl = (config.platformUrl || 'https://sylphx.com').trim()
+	const { secretKey, baseUrl } = validateClientConfig(config)
 
 	const client = createClient<paths>({
 		baseUrl: `${baseUrl}/api/sdk`,
@@ -274,9 +280,7 @@ export function createRestClient(config: RestClientConfig) {
  * ```
  */
 export function createDynamicRestClient(config: RestDynamicConfig) {
-	// Validate and sanitize secret key using SSOT
-	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
-	const baseUrl = (config.platformUrl || 'https://sylphx.com').trim()
+	const { secretKey, baseUrl } = validateClientConfig(config)
 
 	// Create validated config for middleware
 	const validatedConfig: RestDynamicConfig = {

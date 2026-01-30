@@ -25,10 +25,10 @@ export type {
 	ConsentTypeBase as ConsentType,
 	UserConsentBase as UserConsent,
 	ConsentCategory,
-	
-	
-	
-	
+	SetConsentsInput,
+	GetConsentsInput,
+	LinkAnonymousConsentsInput,
+	ConsentPurposeDefaults,
 }
 
 // Webhook types - SSOT: webhooks.ts
@@ -49,12 +49,12 @@ export type {
 	WebhookDeliveryBase as WebhookDelivery,
 	WebhookDeliveriesResult,
 	WebhookStatsBase as WebhookStats,
-	
-	
+	WebhookConfigUpdate,
+	ListDeliveriesOptions,
 }
 
 // Billing types - SSOT: billing.ts
-export type { Plan, Subscription,  } from './billing'
+export type { Plan, Subscription, CheckoutInput } from './billing'
 
 // Storage types - SSOT: lib/storage/types.ts
 
