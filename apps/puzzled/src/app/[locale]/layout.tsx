@@ -100,6 +100,17 @@ export function generateStaticParams() {
 	return routing.locales.map((locale) => ({ locale }))
 }
 
+/**
+ * Force dynamic rendering for the root layout.
+ *
+ * This ensures getAppConfig() is called on every request (not cached from build time).
+ * Critical for auth config that can change via admin console (OAuth providers, plans, etc.)
+ *
+ * Without this, generateStaticParams causes static generation where config is baked
+ * into the HTML at build time and never refreshes.
+ */
+export const dynamic = 'force-dynamic'
+
 type Props = {
 	children: React.ReactNode
 	params: Promise<{ locale: string }>
