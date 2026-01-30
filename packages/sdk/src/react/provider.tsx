@@ -847,6 +847,10 @@ function SylphxProviderInner({
 	const handleCallback = useCallback(
 		async (code: string, state?: string) => {
 			try {
+				// Retrieve PKCE code_verifier if stored (for OAuth flows)
+				const { retrievePKCEVerifier } = await import('../lib/pkce')
+				const codeVerifier = retrievePKCEVerifier(appId)
+
 				const response = await fetch(`${platformUrl}/api/auth/token`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -854,6 +858,8 @@ function SylphxProviderInner({
 						grant_type: 'authorization_code',
 						code,
 						client_id: publishableKey || '',
+						// Include PKCE verifier if available (required for SDK OAuth flow)
+						...(codeVerifier && { code_verifier: codeVerifier }),
 					}),
 				})
 
@@ -867,7 +873,7 @@ function SylphxProviderInner({
 				throw error
 			}
 		},
-		[publishableKey, platformUrl, saveTokens]
+		[publishableKey, platformUrl, saveTokens, appId]
 	)
 
 	const resetPassword = useCallback(
@@ -956,11 +962,20 @@ function SylphxProviderInner({
 	 * Sign in with OAuth provider directly.
 	 * Fetches authorization URL from platform, then redirects user to OAuth provider.
 	 * No platform login UI is shown - user goes straight to Google/GitHub/etc.
+	 *
+	 * Uses PKCE (RFC 7636) for security - required for public clients per OAuth 2.1.
 	 */
 	const signInWithOAuth = useCallback(
 		async (options: { provider: string; redirectUrl?: string }) => {
 			const { provider, redirectUrl } = options
 			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
+
+			// Generate PKCE codes (RFC 7636) - required for public clients
+			const { generatePKCE, storePKCEVerifier } = await import('../lib/pkce')
+			const pkce = await generatePKCE()
+
+			// Store code_verifier for later use in token exchange
+			storePKCEVerifier(pkce.codeVerifier, appId)
 
 			// Fetch OAuth authorization URL from platform
 			const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
@@ -972,10 +987,16 @@ function SylphxProviderInner({
 				body: JSON.stringify({
 					provider,
 					redirect_uri: resolvedRedirect,
+					code_challenge: pkce.codeChallenge,
+					code_challenge_method: pkce.codeChallengeMethod,
 				}),
 			})
 
 			if (!response.ok) {
+				// Clear stored verifier on error
+				const { clearPKCEVerifier } = await import('../lib/pkce')
+				clearPKCEVerifier(appId)
+
 				const error = await response.json().catch(() => ({ message: 'Failed to initiate OAuth' }))
 				throw new Error(error.message || `Failed to initiate ${provider} sign-in`)
 			}
@@ -987,7 +1008,7 @@ function SylphxProviderInner({
 				window.location.href = authorization_url
 			}
 		},
-		[platformUrl, publishableKey, resolveRedirectUrl]
+		[platformUrl, publishableKey, resolveRedirectUrl, appId]
 	)
 
 	// Convenience methods for common OAuth providers
