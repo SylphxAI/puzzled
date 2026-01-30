@@ -12,8 +12,12 @@
  * 5. Single Source of Truth - All key logic in one place
  *
  * Key Formats:
- * - Publishable: pk_(dev|stg|prod)_[32 hex chars] — Safe for client-side
- * - Secret: sk_(dev|stg|prod)_[48 hex chars] — Server-side only, NEVER expose
+ * - Publishable: pk_(dev|stg|prod)_[identifier] — Safe for client-side
+ * - Secret: sk_(dev|stg|prod)_[identifier] — Server-side only, NEVER expose
+ *
+ * Identifier Types:
+ * - Customer apps: 24 hex chars (publishable) or 64 hex chars (secret)
+ * - Platform apps: platform_{app-slug} (e.g., platform_sylphx-console)
  */
 
 // =============================================================================
@@ -118,9 +122,7 @@ function createInvalidKeyError(
 ): string {
 	const prefix = keyType === 'publishable' ? 'pk' : 'sk'
 	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
-	const formatHint = keyType === 'publishable'
-		? `${prefix}_(dev|stg|prod)_[hex]`
-		: `${prefix}_(dev|stg|prod)_[alphanumeric]`
+	const formatHint = `${prefix}_(dev|stg|prod)_[identifier]`
 
 	return (
 		`[Sylphx] Invalid ${keyType} key format.\n\n` +
