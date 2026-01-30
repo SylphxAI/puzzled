@@ -28,6 +28,9 @@ import { exponentialBackoff, isRetryableError } from './errors'
 // Re-export types for consumers
 export type { paths }
 
+/** Default request timeout in milliseconds (30 seconds) */
+const DEFAULT_TIMEOUT_MS = 30_000
+
 /**
  * Retry configuration for automatic request retries
  */
@@ -39,7 +42,9 @@ export interface RetryConfig {
 	/** Maximum delay in milliseconds (default: 30000) */
 	maxDelay?: number
 	/** Custom function to determine if error is retryable */
-	shouldRetry?: (error: unknown, attempt: number) => boolean
+	shouldRetry?: (status: number, attempt: number) => boolean
+	/** Request timeout in milliseconds (default: 30000) */
+	timeout?: number
 }
 
 /**
@@ -99,7 +104,20 @@ function createAuthMiddleware(config: RestDynamicConfig): Middleware {
 }
 
 /**
- * Create retry middleware with exponential backoff
+ * Check if a status code is retryable
+ */
+function isRetryableStatus(status: number): boolean {
+	return status >= 500 || status === 429
+}
+
+/**
+ * Create retry middleware with exponential backoff and timeout
+ *
+ * Features:
+ * - Request timeout (default 30s) prevents infinite hangs
+ * - Exponential backoff with jitter for retries
+ * - Respects Retry-After header for rate limiting
+ * - Stores original body for proper request reconstruction on retry
  */
 function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Middleware {
 	if (retryConfig === false) {
@@ -115,19 +133,45 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
 		maxRetries = 3,
 		baseDelay = 1000,
 		maxDelay = 30000,
-		shouldRetry = isRetryableError,
+		shouldRetry = isRetryableStatus,
+		timeout = DEFAULT_TIMEOUT_MS,
 	} = retryConfig ?? {}
 
+	// Store original body for retries (body can only be read once from Request)
+	let originalBody: string | null = null
+
 	return {
+		async onRequest({ request }) {
+			// Store body for potential retries before it gets consumed
+			if (request.body) {
+				originalBody = await request.clone().text()
+			} else {
+				originalBody = null
+			}
+
+			// Add timeout if not already set
+			if (!request.signal) {
+				const controller = new AbortController()
+				setTimeout(() => controller.abort(), timeout)
+				return new Request(request.url, {
+					method: request.method,
+					headers: request.headers,
+					body: originalBody,
+					signal: controller.signal,
+				})
+			}
+			return request
+		},
 		async onResponse({ response, request }) {
 			let attempt = 0
+			let currentResponse = response
 
-			// Check if we need to retry
+			// Check if we need to retry using the shouldRetry callback
 			while (
 				attempt < maxRetries &&
-				(response.status >= 500 || response.status === 429)
+				shouldRetry(currentResponse.status, attempt)
 			) {
-				const retryAfter = response.headers.get('Retry-After')
+				const retryAfter = currentResponse.headers.get('Retry-After')
 				const delay = retryAfter
 					? parseInt(retryAfter, 10) * 1000
 					: exponentialBackoff(attempt, baseDelay, maxDelay)
@@ -135,14 +179,38 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
 				await new Promise((resolve) => setTimeout(resolve, delay))
 				attempt++
 
-				// Re-fetch
-				const newResponse = await fetch(request)
-				if (newResponse.ok || (newResponse.status >= 400 && newResponse.status < 500 && newResponse.status !== 429)) {
-					return newResponse
+				// Create timeout for retry
+				const controller = new AbortController()
+				const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+				try {
+					// Reconstruct request with stored body and new signal
+					const retryRequest = new Request(request.url, {
+						method: request.method,
+						headers: request.headers,
+						body: originalBody,
+						signal: controller.signal,
+					})
+
+					const newResponse = await fetch(retryRequest)
+					clearTimeout(timeoutId)
+
+					// If successful or non-retryable client error, return
+					if (newResponse.ok || !shouldRetry(newResponse.status, attempt)) {
+						return newResponse
+					}
+
+					currentResponse = newResponse
+				} catch (error) {
+					clearTimeout(timeoutId)
+					// On network/timeout error during retry, continue to next attempt
+					if (attempt >= maxRetries) {
+						throw error
+					}
 				}
 			}
 
-			return response
+			return currentResponse
 		},
 	}
 }

@@ -7,7 +7,46 @@
  * Uses publishableKey or secretKey for authentication via x-app-secret header.
  */
 
-import { SylphxError } from './errors'
+import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
+
+/** Default request timeout in milliseconds (30 seconds) */
+const DEFAULT_TIMEOUT_MS = 30_000
+
+/**
+ * Map HTTP status code to SylphxErrorCode
+ */
+function httpStatusToErrorCode(status: number): SylphxErrorCode {
+	switch (status) {
+		case 400:
+			return 'BAD_REQUEST'
+		case 401:
+			return 'UNAUTHORIZED'
+		case 403:
+			return 'FORBIDDEN'
+		case 404:
+			return 'NOT_FOUND'
+		case 409:
+			return 'CONFLICT'
+		case 413:
+			return 'PAYLOAD_TOO_LARGE'
+		case 422:
+			return 'UNPROCESSABLE_ENTITY'
+		case 429:
+			return 'TOO_MANY_REQUESTS'
+		case 500:
+			return 'INTERNAL_SERVER_ERROR'
+		case 501:
+			return 'NOT_IMPLEMENTED'
+		case 502:
+			return 'BAD_GATEWAY'
+		case 503:
+			return 'SERVICE_UNAVAILABLE'
+		case 504:
+			return 'GATEWAY_TIMEOUT'
+		default:
+			return status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST'
+	}
+}
 
 /**
  * SDK Configuration
@@ -100,6 +139,11 @@ export function buildApiUrl(config: SylphxConfig, path: string): string {
 
 /**
  * Internal: Call REST API endpoint
+ *
+ * Features:
+ * - Request timeout (default 30s) prevents infinite hangs
+ * - Proper HTTP status code mapping to error codes
+ * - Safe JSON parsing with error handling
  */
 export async function callApi<TOutput>(
 	config: SylphxConfig,
@@ -108,9 +152,13 @@ export async function callApi<TOutput>(
 		method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 		body?: unknown
 		query?: Record<string, string | number | boolean | undefined>
+		/** Request timeout in milliseconds (default: 30000) */
+		timeout?: number
+		/** AbortSignal for manual cancellation */
+		signal?: AbortSignal
 	} = {}
 ): Promise<TOutput> {
-	const { method = 'GET', body, query } = options
+	const { method = 'GET', body, query, timeout = DEFAULT_TIMEOUT_MS, signal } = options
 
 	let url = buildApiUrl(config, path)
 
@@ -128,22 +176,73 @@ export async function callApi<TOutput>(
 		}
 	}
 
+	// Create AbortController for timeout
+	const controller = new AbortController()
+	const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+	// Combine user signal with timeout signal
+	const combinedSignal = signal
+		? AbortSignal.any([signal, controller.signal])
+		: controller.signal
+
 	const fetchOptions: RequestInit = {
 		method,
 		headers: buildHeaders(config),
+		signal: combinedSignal,
 	}
 
 	if (body) {
 		fetchOptions.body = JSON.stringify(body)
 	}
 
-	const response = await fetch(url, fetchOptions)
+	let response: Response
+	try {
+		response = await fetch(url, fetchOptions)
+	} catch (error) {
+		clearTimeout(timeoutId)
+
+		// Handle abort/timeout
+		if (error instanceof Error) {
+			if (error.name === 'AbortError') {
+				// Check if it was our timeout or user cancellation
+				if (controller.signal.aborted && !signal?.aborted) {
+					throw new TimeoutError(timeout)
+				}
+				throw new SylphxError('Request aborted', { code: 'ABORTED', cause: error })
+			}
+			// Network errors
+			throw new NetworkError(error.message, { cause: error })
+		}
+		throw new NetworkError('Network request failed')
+	} finally {
+		clearTimeout(timeoutId)
+	}
 
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
-		throw new SylphxError(error.error?.message ?? error.message ?? 'Request failed', {
-			code: response.status === 401 ? 'UNAUTHORIZED' : response.status === 403 ? 'FORBIDDEN' : 'BAD_REQUEST',
+		const errorBody = await response.text().catch(() => '')
+		let errorMessage = 'Request failed'
+		let errorData: Record<string, unknown> | undefined
+
+		// Safe JSON parsing
+		if (errorBody) {
+			try {
+				const parsed = JSON.parse(errorBody) as { error?: { message?: string }; message?: string }
+				errorMessage = parsed.error?.message ?? parsed.message ?? errorMessage
+				errorData = parsed.error as Record<string, unknown> | undefined
+			} catch {
+				// Not JSON, use status text
+				errorMessage = response.statusText || errorMessage
+			}
+		}
+
+		const errorCode = httpStatusToErrorCode(response.status)
+		const retryAfter = response.headers.get('Retry-After')
+
+		throw new SylphxError(errorMessage, {
+			code: errorCode,
 			status: response.status,
+			data: errorData,
+			retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
 		})
 	}
 
@@ -153,5 +252,14 @@ export async function callApi<TOutput>(
 		return {} as TOutput
 	}
 
-	return JSON.parse(text) as TOutput
+	// Safe JSON parsing for response body
+	try {
+		return JSON.parse(text) as TOutput
+	} catch (error) {
+		throw new SylphxError('Failed to parse response', {
+			code: 'PARSE_ERROR',
+			cause: error instanceof Error ? error : undefined,
+			data: { body: text.slice(0, 200) }, // Include snippet for debugging
+		})
+	}
 }
