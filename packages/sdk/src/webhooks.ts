@@ -98,7 +98,7 @@ export interface ListDeliveriesOptions {
  * console.log(config.environments)
  * ```
  */
-async function getWebhookConfig(config: SylphxConfig): Promise<WebhookConfig> {
+export async function getWebhookConfig(config: SylphxConfig): Promise<WebhookConfig> {
 	return callApi(config, '/webhooks/config', { method: 'GET' })
 }
 
@@ -113,7 +113,7 @@ async function getWebhookConfig(config: SylphxConfig): Promise<WebhookConfig> {
  * })
  * ```
  */
-async function updateWebhookConfig(
+export async function updateWebhookConfig(
 	config: SylphxConfig,
 	data: WebhookConfigUpdate
 ): Promise<void> {
@@ -165,7 +165,7 @@ export async function getWebhookDelivery(
  * await replayWebhookDelivery(config, 'del-123')
  * ```
  */
-async function replayWebhookDelivery(
+export async function replayWebhookDelivery(
 	config: SylphxConfig,
 	deliveryId: string
 ): Promise<void> {
@@ -181,7 +181,7 @@ async function replayWebhookDelivery(
  * console.log(`Delivery rate: ${stats.deliveryRate}%`)
  * ```
  */
-async function getWebhookStats(
+export async function getWebhookStats(
 	config: SylphxConfig,
 	environmentId?: string
 ): Promise<WebhookStats> {

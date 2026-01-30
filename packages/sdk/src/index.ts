@@ -261,10 +261,17 @@ export {
 // =============================================================================
 
 export {
+	getWebhookConfig,
+	updateWebhookConfig,
 	getWebhookDeliveries,
 	getWebhookDelivery,
+	replayWebhookDelivery,
+	getWebhookStats,
+	type WebhookConfig,
+	type WebhookConfigUpdate,
 	type WebhookDelivery,
 	type WebhookDeliveriesResult,
+	type WebhookStats,
 } from './webhooks'
 
 // =============================================================================
@@ -300,6 +307,7 @@ export {
 export {
 	// Runtime functions
 	getConsentTypes,
+	hasConsent,
 	getUserConsents,
 	setConsents,
 	acceptAllConsents,
@@ -307,6 +315,8 @@ export {
 	linkAnonymousConsents,
 	// Types
 	type ConsentType,
+	type ConsentCategory,
+	type ConsentPurposeDefaults,
 	type UserConsent,
 	type SetConsentsInput,
 	type GetConsentsInput,
