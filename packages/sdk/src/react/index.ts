@@ -705,6 +705,18 @@ export {
 export { safeRedirect, isValidRedirectUrl, sanitizeUrl } from './security-utils'
 
 // ============================================================================
+// Key Validation
+// ============================================================================
+// Industry-standard API key validation following Stripe, Clerk, Firebase patterns.
+// Validates format, provides clear errors, and warns about common issues.
+
+export {
+	validatePublishableKey,
+	validateAndSanitizePublishableKey,
+	type KeyValidationResult,
+} from '../key-validation'
+
+// ============================================================================
 // Session Replay (SOTA - built on rrweb)
 // ============================================================================
 // State-of-the-art session replay with automatic PII detection,

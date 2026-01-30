@@ -21,6 +21,7 @@
 import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
+import { validateAndSanitizePublishableKey } from '../key-validation'
 
 // ============================================================================
 // Configuration
@@ -595,7 +596,8 @@ export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Pr
 /** Shared fetch for OAuth providers — publishable key header identifies the app */
 async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
 	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
-	const publishableKey = options.publishableKey.trim()
+	// Validate and sanitize publishable key - logs warning if key contains whitespace
+	const publishableKey = validateAndSanitizePublishableKey(options.publishableKey)
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers`,

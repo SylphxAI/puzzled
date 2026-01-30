@@ -16,6 +16,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
+import { validateAndSanitizePublishableKey } from '../key-validation'
 import {
 	PlatformContext,
 	type Subscription,
@@ -311,11 +312,13 @@ function SylphxProviderInner({
 	queryClient,
 	config,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
-	// Sanitize inputs at boundary - strip whitespace/newlines that may come from env vars
-	// This prevents issues like `pk_prod_xxx\n` causing auth failures
-	// Reassign to shadow the original parameter - all downstream usages are now sanitized
-	// biome-ignore lint/style/noParameterAssign: intentional sanitization at boundary
-	publishableKey = publishableKey?.trim() || ''
+	// Validate and sanitize publishable key at initialization
+	// Following industry-standard "fail fast" pattern (Stripe, Clerk, Firebase)
+	// - Validates key format against expected pattern
+	// - Logs warning if key contains whitespace (common Vercel CLI bug)
+	// - Throws error if key is completely invalid
+	// biome-ignore lint/style/noParameterAssign: intentional validation at boundary
+	publishableKey = validateAndSanitizePublishableKey(publishableKey)
 	const platformUrl = providedPlatformUrl?.trim() || 'https://sylphx.com'
 
 	// Namespace identifier derived from publishable key
