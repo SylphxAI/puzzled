@@ -16,6 +16,7 @@ import { createContext, useContext } from 'react'
 import type { AppConfig, OAuthProviderInfo, FeatureFlagDefinition, AppMetadata } from '../../types'
 import type { Plan } from '../../billing'
 import type { ConsentType } from '../../consent'
+import { PlatformContext } from '../platform-context'
 
 // ============================================
 // Config Context
@@ -60,7 +61,11 @@ export function useSafeConfig(): AppConfig | null {
 // ============================================
 
 /**
- * Get subscription plans from config
+ * Get subscription plans
+ *
+ * Reads from:
+ * 1. ConfigContext (if config was provided to SylphxProvider)
+ * 2. PlatformContext (fallback to React Query data)
  *
  * @example
  * ```tsx
@@ -71,8 +76,14 @@ export function useSafeConfig(): AppConfig | null {
  * ```
  */
 export function usePlans(): Plan[] {
-	const config = useConfig()
-	return config.plans
+	const config = useSafeConfig()
+	const platform = useContext(PlatformContext)
+
+	// Prefer config (server-fetched), fall back to platform context (React Query)
+	if (config?.plans) {
+		return config.plans
+	}
+	return platform?.plans ?? []
 }
 
 /**
@@ -80,23 +91,27 @@ export function usePlans(): Plan[] {
  */
 export function useSafePlans(): Plan[] {
 	const config = useSafeConfig()
-	return config?.plans ?? []
+	const platform = useContext(PlatformContext)
+	return config?.plans ?? platform?.plans ?? []
 }
 
 /**
  * Get enabled OAuth providers from config
  *
+ * Note: For most use cases, prefer the `useOAuthProviders` hook from the
+ * main SDK exports which also handles the fallback to React Query.
+ *
  * @example
  * ```tsx
  * function OAuthButtons() {
- *   const providers = useOAuthProviders()
+ *   const providers = useConfigOAuthProviders()
  *   return providers.map(p => <OAuthButton key={p.id} provider={p.id} />)
  * }
  * ```
  */
 export function useOAuthProviders(): OAuthProviderInfo[] {
-	const config = useConfig()
-	return config.oauthProviders
+	const config = useSafeConfig()
+	return config?.oauthProviders ?? []
 }
 
 /**
@@ -119,8 +134,8 @@ export function useSafeOAuthProviders(): OAuthProviderInfo[] {
  * ```
  */
 export function useConsentTypes(): ConsentType[] {
-	const config = useConfig()
-	return config.consentTypes
+	const config = useSafeConfig()
+	return config?.consentTypes ?? []
 }
 
 /**
@@ -146,8 +161,8 @@ export function useSafeConsentTypes(): ConsentType[] {
  * ```
  */
 export function useFeatureFlagDefinitions(): FeatureFlagDefinition[] {
-	const config = useConfig()
-	return config.featureFlags
+	const config = useSafeConfig()
+	return config?.featureFlags ?? []
 }
 
 /**
@@ -161,6 +176,8 @@ export function useSafeFeatureFlagDefinitions(): FeatureFlagDefinition[] {
 /**
  * Get app metadata from config
  *
+ * @throws Error if config is not provided (use useSafeAppMetadata for safe version)
+ *
  * @example
  * ```tsx
  * function AppInfo() {
@@ -170,7 +187,10 @@ export function useSafeFeatureFlagDefinitions(): FeatureFlagDefinition[] {
  * ```
  */
 export function useAppMetadata(): AppMetadata {
-	const config = useConfig()
+	const config = useSafeConfig()
+	if (!config?.app) {
+		throw new Error('useAppMetadata requires config to be provided to SylphxProvider')
+	}
 	return config.app
 }
 
