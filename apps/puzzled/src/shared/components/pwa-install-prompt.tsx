@@ -80,7 +80,7 @@ export function PWAInstallPrompt() {
 	return (
 		<div
 			className={cn(
-				'fixed bottom-20 left-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300',
+				'fixed bottom-20 left-4 right-4 z-toast animate-in fade-in slide-in-from-bottom-4 duration-300',
 				'mx-auto max-w-md rounded-2xl border bg-card p-4 shadow-xl',
 			)}
 		>

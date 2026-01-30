@@ -47,18 +47,19 @@
 
 	/* -----------------------------------------
 	   Z-Index System
+	   Unified with sylphx canonical values (see CLAUDE.md)
 	   ----------------------------------------- */
 	--z-index-base: 0;
 	--z-index-dropdown: 10;
 	--z-index-sticky: 20;
-	--z-index-header: 30;
-	--z-index-bottom-nav: 40;
-	--z-index-overlay: 50;
-	--z-index-popover: 50;
-	--z-index-modal: 60;
-	--z-index-tooltip: 70;
-	--z-index-toast: 70;
-	--z-index-drawer: 80;
+	--z-index-header: 40; /* sticky headers */
+	--z-index-bottom-nav: 45; /* mobile bottom nav (above header, below popover) */
+	--z-index-popover: 50; /* Select, DropdownMenu, Popover */
+	--z-index-modal: 60; /* Dialog, AlertDialog */
+	--z-index-tooltip: 70; /* Tooltip */
+	--z-index-drawer: 80; /* Sheet, MobileSidebar */
+	--z-index-toast: 90; /* Toast notifications */
+	--z-index-overlay: 100; /* KeyboardHint, fullscreen overlays */
 
 	/* -----------------------------------------
 	   Spacing (Layout)

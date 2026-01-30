@@ -15,7 +15,7 @@ const AdminDialogOverlay = forwardRef<
 	<DialogPrimitive.Overlay
 		ref={ref}
 		className={cn(
-			'fixed inset-0 z-50 bg-black/70 backdrop-blur-sm',
+			'fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
 			'data-[state=open]:animate-in data-[state=closed]:animate-out',
 			'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 			className,
@@ -36,7 +36,7 @@ const AdminDialogContent = forwardRef<
 		<DialogPrimitive.Content
 			ref={ref}
 			className={cn(
-				'fixed inset-4 z-50 mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8',
+				'fixed inset-4 z-modal mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8',
 				'data-[state=open]:animate-in data-[state=closed]:animate-out',
 				'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
 				'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',

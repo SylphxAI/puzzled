@@ -66,7 +66,7 @@ export default async function AdminLayout({ children }: Props) {
 			<AdminSidebar />
 			<main className="flex-1 overflow-auto bg-[var(--admin-bg-base)]">
 				{/* Command Palette Header */}
-				<div className="sticky top-0 z-40 flex h-14 items-center justify-end gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-base)]/80 px-8 backdrop-blur-sm">
+				<div className="sticky top-0 z-header flex h-14 items-center justify-end gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-base)]/80 px-8 backdrop-blur-sm">
 					<AdminThemeToggle />
 					<AdminCommandPalette />
 				</div>
