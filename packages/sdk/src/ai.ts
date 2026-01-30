@@ -6,6 +6,7 @@
  */
 
 import { type SylphxConfig, buildHeaders } from './config'
+import { SylphxError } from './errors'
 
 // ============================================================================
 // Types
@@ -162,7 +163,7 @@ export async function chat(config: SylphxConfig, input: ChatInput): Promise<Chat
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ error: { message: 'Chat request failed' } }))
-		throw new Error(error.error?.message ?? 'Chat request failed')
+		throw new SylphxError(error.error?.message ?? 'Chat request failed', { code: 'BAD_REQUEST' })
 	}
 
 	const data = await response.json()
@@ -231,12 +232,12 @@ export function chatStream(
 
 			if (!response.ok) {
 				const error = await response.json().catch(() => ({ error: { message: 'Stream request failed' } }))
-				throw new Error(error.error?.message ?? 'Stream request failed')
+				throw new SylphxError(error.error?.message ?? 'Stream request failed', { code: 'BAD_REQUEST' })
 			}
 
 			const reader = response.body?.getReader()
 			if (!reader) {
-				throw new Error('No response body')
+				throw new SylphxError('No response body', { code: 'INTERNAL_SERVER_ERROR' })
 			}
 
 			const decoder = new TextDecoder()
@@ -313,7 +314,7 @@ export async function embed(config: SylphxConfig, input: EmbedInput): Promise<Em
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ error: { message: 'Embedding request failed' } }))
-		throw new Error(error.error?.message ?? 'Embedding request failed')
+		throw new SylphxError(error.error?.message ?? 'Embedding request failed', { code: 'BAD_REQUEST' })
 	}
 
 	const data = await response.json()

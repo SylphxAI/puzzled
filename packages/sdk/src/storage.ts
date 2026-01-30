@@ -5,6 +5,7 @@
  */
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
+import { SylphxError } from './errors'
 
 // Re-export types from SSOT
 export type { UploadProgressEvent, UploadResult } from './lib/storage/types'
@@ -128,7 +129,7 @@ export async function uploadFile(
 
 	if (!tokenResponse.ok) {
 		const error = await tokenResponse.json().catch(() => ({ message: 'Failed to get upload token' }))
-		throw new Error(error.message ?? 'Failed to get upload token')
+		throw new SylphxError(error.message ?? 'Failed to get upload token', { code: 'BAD_REQUEST' })
 	}
 
 	const { uploadUrl, publicUrl } = await tokenResponse.json()

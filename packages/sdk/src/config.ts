@@ -7,6 +7,8 @@
  * Uses publishableKey or secretKey for authentication via x-app-secret header.
  */
 
+import { SylphxError } from './errors'
+
 /**
  * SDK Configuration
  */
@@ -139,7 +141,10 @@ export async function callApi<TOutput>(
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
-		throw new Error(error.error?.message ?? error.message ?? 'Request failed')
+		throw new SylphxError(error.error?.message ?? error.message ?? 'Request failed', {
+			code: response.status === 401 ? 'UNAUTHORIZED' : response.status === 403 ? 'FORBIDDEN' : 'BAD_REQUEST',
+			status: response.status,
+		})
 	}
 
 	// Handle empty responses (204 No Content)

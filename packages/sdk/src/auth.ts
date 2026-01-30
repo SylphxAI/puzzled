@@ -8,6 +8,7 @@
  */
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
+import { SylphxError } from './errors'
 
 // ============================================================================
 // Types
@@ -203,7 +204,7 @@ export async function refreshToken(
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ message: 'Token refresh failed' }))
-		throw new Error(error.message ?? 'Token refresh failed')
+		throw new SylphxError(error.message ?? 'Token refresh failed', { code: 'UNAUTHORIZED' })
 	}
 
 	return response.json()
@@ -226,7 +227,7 @@ export async function verifyEmail(config: SylphxConfig, token: string): Promise<
 
 	if (!response.ok) {
 		const error = await response.json().catch(() => ({ message: 'Email verification failed' }))
-		throw new Error(error.message ?? 'Email verification failed')
+		throw new SylphxError(error.message ?? 'Email verification failed', { code: 'BAD_REQUEST' })
 	}
 }
 
