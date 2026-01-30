@@ -732,13 +732,31 @@ function SylphxProviderInner({
 	// ============================================
 	// Auth Actions
 	// ============================================
+
+	/**
+	 * Resolve a redirect URL to an absolute URL.
+	 * Platform requires absolute URLs for redirect_uri validation.
+	 */
+	const resolveRedirectUrl = useCallback((url: string | undefined): string => {
+		if (typeof window === 'undefined') return ''
+		if (!url) return window.location.href
+
+		// Relative URL starting with / - resolve against current origin
+		if (url.startsWith('/') && !url.startsWith('//')) {
+			return `${window.location.origin}${url}`
+		}
+
+		// Already absolute URL
+		return url
+	}, [])
+
 	const signIn = useCallback(
 		(options?: { redirectUrl?: string; providers?: string[] | null }) => {
-			// Validate redirectUrl to prevent open redirect attacks
-			const currentHref = typeof window !== 'undefined' ? window.location.href : ''
-			const redirectUri = options?.redirectUrl && isValidRedirectUrl(options.redirectUrl, { allowedOrigins: [platformUrl] })
-				? options.redirectUrl
-				: currentHref
+			// Resolve and validate redirectUrl to prevent open redirect attacks
+			const resolvedUrl = resolveRedirectUrl(options?.redirectUrl)
+			const redirectUri = isValidRedirectUrl(resolvedUrl, { allowedOrigins: [platformUrl] })
+				? resolvedUrl
+				: (typeof window !== 'undefined' ? window.location.href : '')
 			const params = new URLSearchParams({
 				client_id: publishableKey || '',
 				redirect_uri: redirectUri,
@@ -752,16 +770,16 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[publishableKey, platformUrl]
+		[publishableKey, platformUrl, resolveRedirectUrl]
 	)
 
 	const signUp = useCallback(
 		(options?: { redirectUrl?: string; providers?: string[] | null }) => {
-			// Validate redirectUrl to prevent open redirect attacks
-			const currentHref = typeof window !== 'undefined' ? window.location.href : ''
-			const redirectUri = options?.redirectUrl && isValidRedirectUrl(options.redirectUrl, { allowedOrigins: [platformUrl] })
-				? options.redirectUrl
-				: currentHref
+			// Resolve and validate redirectUrl to prevent open redirect attacks
+			const resolvedUrl = resolveRedirectUrl(options?.redirectUrl)
+			const redirectUri = isValidRedirectUrl(resolvedUrl, { allowedOrigins: [platformUrl] })
+				? resolvedUrl
+				: (typeof window !== 'undefined' ? window.location.href : '')
 			const params = new URLSearchParams({
 				client_id: publishableKey || '',
 				redirect_uri: redirectUri,
@@ -776,7 +794,7 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[publishableKey, platformUrl]
+		[publishableKey, platformUrl, resolveRedirectUrl]
 	)
 
 	const signOut = useCallback(
