@@ -712,6 +712,9 @@ export { safeRedirect, isValidRedirectUrl, sanitizeUrl } from './security-utils'
 // ALL key validation logic lives in ../key-validation.ts
 
 export {
+	// Generic key validation (auto-detects type)
+	validateKey,
+	validateAndSanitizeKey,
 	// Publishable key validation
 	validatePublishableKey,
 	validateAndSanitizePublishableKey,

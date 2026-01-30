@@ -143,9 +143,9 @@ function extractEnvironment(key: string): EnvironmentType | undefined {
 }
 
 /**
- * Generic key validation logic
+ * Internal: Generic key validation logic for specific key types
  */
-function validateKey(
+function validateKeyForType(
 	key: string | undefined | null,
 	keyType: KeyType,
 	pattern: RegExp,
@@ -222,7 +222,7 @@ function validateKey(
 export function validatePublishableKey(
 	key: string | undefined | null,
 ): KeyValidationResult {
-	return validateKey(
+	return validateKeyForType(
 		key,
 		'publishable',
 		PUBLISHABLE_KEY_PATTERN,
@@ -270,7 +270,7 @@ export function validateAndSanitizePublishableKey(
 export function validateSecretKey(
 	key: string | undefined | null,
 ): KeyValidationResult {
-	return validateKey(key, 'secret', SECRET_KEY_PATTERN, 'SYLPHX_SECRET_KEY')
+	return validateKeyForType(key, 'secret', SECRET_KEY_PATTERN, 'SYLPHX_SECRET_KEY')
 }
 
 /**
@@ -401,6 +401,58 @@ export function isPublishableKey(key: string): boolean {
  */
 export function isSecretKey(key: string): boolean {
 	return detectKeyType(key) === 'secret'
+}
+
+/**
+ * Validate any key (auto-detects type)
+ *
+ * Use this when you accept either publishable or secret keys.
+ * The function auto-detects the key type and validates accordingly.
+ *
+ * @example
+ * ```typescript
+ * const result = validateKey(process.env.SYLPHX_SECRET_KEY)
+ * if (!result.valid) {
+ *   throw new Error(result.error)
+ * }
+ * const sanitizedKey = result.sanitizedKey
+ * ```
+ */
+export function validateKey(key: string | undefined | null): KeyValidationResult {
+	const keyType = key ? detectKeyType(key) : null
+
+	if (keyType === 'publishable') {
+		return validatePublishableKey(key)
+	}
+	if (keyType === 'secret') {
+		return validateSecretKey(key)
+	}
+
+	// Unknown key type - return detailed error
+	return {
+		valid: false,
+		sanitizedKey: '',
+		error: key
+			? `Invalid key format. Keys must start with 'pk_' (publishable) or 'sk_' (secret), followed by environment (dev/stg/prod) and hex characters. Got: ${key.slice(0, 20)}...`
+			: 'API key is required but was not provided.',
+		issues: key ? ['invalid_format'] : ['missing'],
+	}
+}
+
+/**
+ * Validate any key and return sanitized version (throws on error)
+ *
+ * Use this when you need the key value and want to throw on invalid input.
+ */
+export function validateAndSanitizeKey(key: string | undefined | null): string {
+	const result = validateKey(key)
+	if (!result.valid) {
+		throw new Error(result.error)
+	}
+	if (result.warning) {
+		console.warn(`[Sylphx] ${result.warning}`)
+	}
+	return result.sanitizedKey
 }
 
 // =============================================================================

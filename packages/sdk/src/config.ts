@@ -8,6 +8,7 @@
  */
 
 import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
+import { validateKey } from './key-validation'
 
 /** Default request timeout in milliseconds (30 seconds) */
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -80,6 +81,10 @@ export interface SylphxConfigInput {
 /**
  * Create a Sylphx configuration object
  *
+ * Validates the secretKey (if provided) using the SSOT key-validation module.
+ * Sanitizes keys with common issues (whitespace, newlines) and logs warnings.
+ * Throws if key format is invalid.
+ *
  * @example
  * ```typescript
  * const config = createConfig({
@@ -88,9 +93,25 @@ export interface SylphxConfigInput {
  * ```
  */
 export function createConfig(input: SylphxConfigInput): SylphxConfig {
+	// Validate and sanitize secretKey using SSOT if provided
+	let secretKey: string | undefined
+	if (input.secretKey) {
+		const result = validateKey(input.secretKey)
+		if (!result.valid) {
+			throw new SylphxError(result.error || 'Invalid API key', {
+				code: 'BAD_REQUEST',
+				data: { issues: result.issues },
+			})
+		}
+		if (result.warning) {
+			console.warn(`[Sylphx] ${result.warning}`)
+		}
+		secretKey = result.sanitizedKey
+	}
+
 	return Object.freeze({
-		secretKey: input.secretKey,
-		platformUrl: input.platformUrl ?? 'https://sylphx.com',
+		secretKey,
+		platformUrl: (input.platformUrl ?? 'https://sylphx.com').trim(),
 		accessToken: input.accessToken,
 	})
 }

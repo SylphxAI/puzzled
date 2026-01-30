@@ -24,23 +24,34 @@ import type { AccessTokenPayload } from '../types'
 
 // Re-export key validation utilities from SSOT
 export {
+	// Generic key validation (auto-detects type)
+	validateKey,
+	validateAndSanitizeKey,
+	// Publishable key validation
 	validatePublishableKey,
 	validateAndSanitizePublishableKey,
+	// Secret key validation
 	validateSecretKey,
 	validateAndSanitizeSecretKey,
+	// Environment detection
 	detectEnvironment,
 	isDevelopmentKey,
 	isProductionKey,
+	// Cookie namespace
 	getCookieNamespace,
+	// Key type detection
 	detectKeyType,
 	isPublishableKey,
 	isSecretKey,
+	// Runtime detection
 	isDevelopmentRuntime,
+	// Types
 	type EnvironmentType,
 	type KeyType,
 	type KeyValidationResult,
 } from '../key-validation'
 
+// Internal import for local use (import separately to avoid hoisting issues)
 import {
 	validateAndSanitizeSecretKey,
 	validateAndSanitizePublishableKey,
