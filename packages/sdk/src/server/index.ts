@@ -484,15 +484,6 @@ export type { RestClient, RestClientConfig as ServerClientConfig }
 /** Default platform URL */
 const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
 
-/**
- * Config cache TTL in seconds.
- *
- * Config data (OAuth providers, plans, flags, consent) changes rarely.
- * A 60-second TTL balances freshness with performance — no webhooks needed.
- * This matches industry practice (Clerk, Auth0, Firebase Remote Config).
- */
-const CONFIG_REVALIDATE_SECONDS = 60
-
 /** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
 	secretKey: string
@@ -511,15 +502,16 @@ interface PublicFetchOptions {
 }
 
 /**
- * Cached fetch with short TTL and graceful error handling.
+ * Fetch config data with NO CACHE.
  *
- * All server-side data fetching goes through this helper to ensure:
- * - Short TTL revalidation (60s) — config changes propagate within a minute
- * - Uniform error handling (warn + return fallback, never throw)
- * - DRY: auth headers, URL construction, JSON parsing in one place
+ * Config data (OAuth providers, plans, flags) must reflect admin changes immediately.
+ * Using `cache: 'no-store'` ensures every request hits the origin.
  *
- * No cache tags or webhook invalidation — short TTL is simpler and
- * works across independent Next.js deployments (unlike revalidateTag).
+ * The API endpoint itself returns Cache-Control headers for CDN caching (60s),
+ * but the Next.js Data Cache is bypassed to ensure fresh data on each SSR.
+ *
+ * Trade-off: Slightly higher latency per request, but config is always fresh.
+ * This is the industry standard (Clerk, Auth0, Firebase) for auth config.
  */
 async function cachedFetch<T>(params: {
 	url: string
@@ -532,8 +524,8 @@ async function cachedFetch<T>(params: {
 	try {
 		const response = await fetch(url, {
 			headers,
-			next: { revalidate: CONFIG_REVALIDATE_SECONDS },
-		} as RequestInit)
+			cache: 'no-store', // Bypass Next.js Data Cache - always fresh
+		})
 
 		if (!response.ok) {
 			console.warn(`[Sylphx] Failed to fetch ${label}:`, response.status)
