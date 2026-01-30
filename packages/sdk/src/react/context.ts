@@ -59,12 +59,23 @@ export interface ForgotPasswordOptions {
 	email: string
 }
 
+/**
+ * Options for direct OAuth sign-in (Firebase/Supabase pattern).
+ * User goes directly to OAuth provider, bypassing platform UI.
+ */
+export interface SignInWithOAuthOptions {
+	/** OAuth provider to use */
+	provider: OAuthProviderId
+	/** URL to redirect back to after OAuth completes. Defaults to current URL. */
+	redirectUrl?: string
+}
+
 export interface AuthContextValue extends AuthState {
 	/** Auth error (e.g., token refresh failed) */
 	error: Error | null
-	/** Redirect to Sylphx login page */
+	/** Redirect to Sylphx login page (shows platform UI) */
 	signIn: (options?: SignInOptions) => void
-	/** Redirect to Sylphx signup page */
+	/** Redirect to Sylphx signup page (shows platform UI) */
 	signUp: (options?: SignInOptions) => void
 	/** Sign out and clear tokens */
 	signOut: (options?: { redirectUrl?: string }) => Promise<void>
@@ -80,6 +91,47 @@ export interface AuthContextValue extends AuthState {
 	resendVerificationEmail: (options: ResendVerificationEmailOptions) => Promise<void>
 	/** Request password reset email */
 	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>
+
+	// ==========================================
+	// Direct OAuth Methods (Firebase/Supabase pattern)
+	// User goes directly to OAuth provider - no platform UI
+	// ==========================================
+
+	/**
+	 * Sign in with OAuth provider directly.
+	 * Redirects user straight to the OAuth provider (Google, GitHub, etc.)
+	 * without showing the platform login UI.
+	 *
+	 * @example
+	 * ```tsx
+	 * const { signInWithOAuth } = useAuth()
+	 *
+	 * // Direct to Google consent screen
+	 * await signInWithOAuth({ provider: 'google' })
+	 *
+	 * // With custom redirect
+	 * await signInWithOAuth({ provider: 'github', redirectUrl: '/dashboard' })
+	 * ```
+	 */
+	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>
+
+	/** Convenience: Sign in with Google directly */
+	signInWithGoogle: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with GitHub directly */
+	signInWithGithub: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Apple directly */
+	signInWithApple: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Discord directly */
+	signInWithDiscord: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Twitter directly */
+	signInWithTwitter: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Microsoft directly */
+	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)

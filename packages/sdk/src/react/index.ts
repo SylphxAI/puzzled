@@ -66,6 +66,7 @@ export {
 	type AuthContextValue,
 	type AuthState,
 	type SignInOptions,
+	type SignInWithOAuthOptions,
 } from './context'
 
 // OAuth Types (from @sylphx/ui - SSOT)

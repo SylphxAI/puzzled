@@ -948,6 +948,80 @@ function SylphxProviderInner({
 	)
 
 	// ============================================
+	// Direct OAuth Methods (Firebase/Supabase pattern)
+	// User goes directly to OAuth provider - no platform UI
+	// ============================================
+
+	/**
+	 * Sign in with OAuth provider directly.
+	 * Fetches authorization URL from platform, then redirects user to OAuth provider.
+	 * No platform login UI is shown - user goes straight to Google/GitHub/etc.
+	 */
+	const signInWithOAuth = useCallback(
+		async (options: { provider: string; redirectUrl?: string }) => {
+			const { provider, redirectUrl } = options
+			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
+
+			// Fetch OAuth authorization URL from platform
+			const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-app-secret': publishableKey || '',
+				},
+				body: JSON.stringify({
+					provider,
+					redirect_uri: resolvedRedirect,
+				}),
+			})
+
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({ message: 'Failed to initiate OAuth' }))
+				throw new Error(error.message || `Failed to initiate ${provider} sign-in`)
+			}
+
+			const { authorization_url } = await response.json()
+
+			// Redirect directly to OAuth provider (no platform UI)
+			if (typeof window !== 'undefined') {
+				window.location.href = authorization_url
+			}
+		},
+		[platformUrl, publishableKey, resolveRedirectUrl]
+	)
+
+	// Convenience methods for common OAuth providers
+	const signInWithGoogle = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'google', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	const signInWithGithub = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'github', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	const signInWithApple = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'apple', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	const signInWithDiscord = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'discord', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	const signInWithTwitter = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'twitter', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	const signInWithMicrosoft = useCallback(
+		(redirectUrl?: string) => signInWithOAuth({ provider: 'microsoft', redirectUrl }),
+		[signInWithOAuth]
+	)
+
+	// ============================================
 	// Billing Actions
 	// ============================================
 	const createCheckout = useCallback(
@@ -2763,6 +2837,14 @@ function SylphxProviderInner({
 			verifyEmail,
 			resendVerificationEmail,
 			forgotPassword,
+			// Direct OAuth methods (Firebase/Supabase pattern)
+			signInWithOAuth,
+			signInWithGoogle,
+			signInWithGithub,
+			signInWithApple,
+			signInWithDiscord,
+			signInWithTwitter,
+			signInWithMicrosoft,
 		}),
 		[
 			authState,
@@ -2775,6 +2857,13 @@ function SylphxProviderInner({
 			verifyEmail,
 			resendVerificationEmail,
 			forgotPassword,
+			signInWithOAuth,
+			signInWithGoogle,
+			signInWithGithub,
+			signInWithApple,
+			signInWithDiscord,
+			signInWithTwitter,
+			signInWithMicrosoft,
 		]
 	)
 
