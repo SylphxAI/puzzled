@@ -9,10 +9,11 @@
  * 2. Find words that can be formed (no consecutive letters on same side)
  * 3. Find a valid word chain that uses all letters
  *
- * LAZY LOADING: Dictionary is loaded on first access to avoid bundling node:fs
- * into client bundles. The dictionary is only used server-side for puzzle generation.
+ * Server-only module - dictionary is loaded on first access.
  */
 
+import { readFileSync } from 'node:fs'
+import wordListPath from 'word-list'
 import { seededRandom, shuffleArray } from '@/games/shared/random'
 import type { LetterBox, LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
 
@@ -24,12 +25,6 @@ let _dictionary: Set<string> | null = null
  */
 function getDictionary(): Set<string> {
 	if (_dictionary) return _dictionary
-
-	// Dynamic require to avoid bundling in client
-	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const { readFileSync } = require('node:fs') as typeof import('node:fs')
-	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const wordListPath = require('word-list') as string
 
 	const rawWords = readFileSync(wordListPath, 'utf8').split('\n')
 	_dictionary = new Set(

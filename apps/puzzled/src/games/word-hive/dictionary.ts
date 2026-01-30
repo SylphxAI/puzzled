@@ -9,9 +9,11 @@
  * - Common bad words filtered out
  * - From Letterpress game word list
  *
- * LAZY LOADING: Dictionary is loaded on first access to avoid bundling node:fs
- * into client bundles. The dictionary is only used server-side for puzzle generation.
+ * Server-only module - dictionary is loaded on first access.
  */
+
+import { readFileSync } from 'node:fs'
+import wordListPath from 'word-list'
 
 // Filter criteria for Spelling Bee:
 // - 4+ letters (Spelling Bee minimum)
@@ -28,12 +30,6 @@ let _wordCounts: { raw: number; filtered: number } | null = null
  */
 function loadDictionary(): Set<string> {
 	if (_dictionary) return _dictionary
-
-	// Dynamic require to avoid bundling in client
-	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const { readFileSync } = require('node:fs') as typeof import('node:fs')
-	// eslint-disable-next-line @typescript-eslint/no-require-imports
-	const wordListPath = require('word-list') as string
 
 	const rawWords = readFileSync(wordListPath, 'utf8').split('\n')
 	const filteredWords = rawWords
