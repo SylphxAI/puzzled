@@ -17,6 +17,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
 import { validateAndSanitizePublishableKey } from '../key-validation'
+import { DEFAULT_PLATFORM_URL } from '../constants'
 import {
 	PlatformContext,
 	type Subscription,
@@ -319,7 +320,7 @@ function SylphxProviderInner({
 	// - Throws error if key is completely invalid
 	// biome-ignore lint/style/noParameterAssign: intentional validation at boundary
 	publishableKey = validateAndSanitizePublishableKey(publishableKey)
-	const platformUrl = providedPlatformUrl?.trim() || 'https://sylphx.com'
+	const platformUrl = providedPlatformUrl?.trim() || DEFAULT_PLATFORM_URL
 
 	// Namespace identifier derived from publishable key
 	// Used for storage namespacing, React Query keys, and context

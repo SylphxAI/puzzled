@@ -14,6 +14,7 @@ import {
 	validateAndSanitizePublishableKey,
 	getCookieNamespace as getCookieNamespaceFromKey,
 } from '../key-validation'
+import { DEFAULT_PLATFORM_URL } from '../constants'
 
 /** Type guard for token response */
 function isTokenResponse(data: unknown): data is TokenResponse {
@@ -53,7 +54,7 @@ export function configureServer(config: {
 	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
 	serverConfig = {
 		secretKey,
-		platformUrl: (config.platformUrl || 'https://sylphx.com').trim(),
+		platformUrl: (config.platformUrl || DEFAULT_PLATFORM_URL).trim(),
 	}
 }
 
@@ -64,7 +65,7 @@ function getConfig(): { secretKey: string; platformUrl: string } | null {
 	if (!serverConfig) {
 		// Try to get from environment variables
 		const rawSecretKey = process.env.SYLPHX_SECRET_KEY
-		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com').trim()
+		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
 
 		if (rawSecretKey) {
 			// Validate and sanitize secret key using SSOT

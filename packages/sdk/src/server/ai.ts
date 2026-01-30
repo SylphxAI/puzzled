@@ -50,6 +50,7 @@ export interface AIClientOptions {
 export type { ChatMessage } from '../ai'
 import type { ChatMessage } from '../ai'
 import { validateAndSanitizeSecretKey } from '../key-validation'
+import { DEFAULT_PLATFORM_URL } from '../constants'
 
 export interface ChatCompletionOptions {
 	model: string
@@ -163,7 +164,7 @@ export interface AIClient {
  * - SYLPHX_SECRET_KEY: Your app's secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx)
  */
 export function createAI(options: AIClientOptions = {}): AIClient {
-	const baseURL = (options.baseURL || process.env.SYLPHX_URL || 'https://sylphx.com').trim()
+	const baseURL = (options.baseURL || process.env.SYLPHX_URL || DEFAULT_PLATFORM_URL).trim()
 	const rawApiKey = options.apiKey || process.env.SYLPHX_SECRET_KEY
 
 	// Validate and sanitize API key using SSOT

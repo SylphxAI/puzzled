@@ -183,7 +183,7 @@ let jwksCache: { keys: JsonWebKey[]; expiresAt: number } | null = null
 /**
  * Fetch JWKS from the platform
  */
-export async function getJwks(platformUrl = 'https://sylphx.com'): Promise<JsonWebKey[]> {
+export async function getJwks(platformUrl = DEFAULT_PLATFORM_URL): Promise<JsonWebKey[]> {
 	const now = Date.now()
 
 	if (jwksCache && jwksCache.expiresAt > now) {
@@ -218,7 +218,7 @@ export async function verifyAccessToken(
 		platformUrl?: string
 	}
 ): Promise<AccessTokenPayload> {
-	const platformUrl = options.platformUrl || 'https://sylphx.com'
+	const platformUrl = options.platformUrl || DEFAULT_PLATFORM_URL
 	const keys = await getJwks(platformUrl)
 
 	if (!keys.length) {
@@ -495,8 +495,7 @@ export type { RestClient, RestClientConfig as ServerClientConfig }
 // Server-Side Data Fetching — Shared Infrastructure
 // ============================================================================
 
-/** Default platform URL */
-const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
+import { DEFAULT_PLATFORM_URL } from '../constants'
 
 /** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
