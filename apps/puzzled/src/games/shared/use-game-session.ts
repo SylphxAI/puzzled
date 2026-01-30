@@ -16,7 +16,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useGuestGameState } from '@/features/daily'
+import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { getGameSessionKey } from '@/lib/storage-keys'

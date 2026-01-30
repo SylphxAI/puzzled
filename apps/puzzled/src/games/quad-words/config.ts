@@ -3,7 +3,6 @@
  * 4 Wordle games played simultaneously
  */
 
-import dynamic from 'next/dynamic'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -21,10 +20,6 @@ import type {
 } from './types'
 import { evaluateGuess, MAX_GUESSES } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./quad-words-game').then((m) => ({ default: m.QuadWordsGame })),
-)
-
 export const quadWordsConfig: GameConfig<
 	QuordlePuzzleData,
 	QuordleSolution,
@@ -40,7 +35,6 @@ export const quadWordsConfig: GameConfig<
 	skills: ['vocabulary', 'logic', 'memory'],
 	difficulty: 'hard',
 	HowToPlayContent: QuordleHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.quadWords.tagline',
 		highlightKey: 'games.quadWords.highlight',

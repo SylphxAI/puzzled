@@ -3,7 +3,6 @@
  * Find hidden words in a letter grid
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore } from '@/games/shared'
 import { MINUTE_MS } from '@/lib/constants/time'
 import {
@@ -22,10 +21,6 @@ import type {
 	WordSearchSolution,
 } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./word-search-game').then((m) => ({ default: m.WordSearchGame })),
-)
-
 export const wordSearchConfig: GameConfig<
 	WordSearchPuzzleData,
 	WordSearchSolution,
@@ -41,7 +36,6 @@ export const wordSearchConfig: GameConfig<
 	skills: ['vocabulary', 'pattern'],
 	difficulty: 'easy',
 	HowToPlayContent: WordSearchHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordSearch.tagline',
 		highlightKey: 'games.wordSearch.highlight',

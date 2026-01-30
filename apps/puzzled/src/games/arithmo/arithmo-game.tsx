@@ -9,16 +9,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { ArithmoIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { ArithmoGrid, ArithmoKeyboard } from './components'
-import { arithmoConfig } from './config'
+import type { ArithmoPuzzleData, ArithmoSolution } from './types'
 import { MAX_ATTEMPTS } from './types'
 import { useArithmo } from './use-arithmo'
 
@@ -31,8 +31,8 @@ type Props = {
 export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.arithmo')
 
-	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() => defaultParsePuzzleData(arithmoConfig, puzzleData, puzzleId))
+	// Get puzzle from server data
+	const [puzzle] = useState(() => parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData))
 
 	const {
 		isReady,

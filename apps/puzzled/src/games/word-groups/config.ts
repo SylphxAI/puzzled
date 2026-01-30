@@ -3,7 +3,6 @@
  * Implements GameConfig interface for modular game system
  */
 
-import dynamic from 'next/dynamic'
 import { pickRandom } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -19,10 +18,6 @@ import { PUZZLES } from './puzzles'
 import type { Category, ConnectionsPuzzle } from './types'
 import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./word-groups-game').then((m) => ({ default: m.WordGroupsGame })),
-)
-
 // ==========================================
 // Types
 // ==========================================
@@ -30,7 +25,7 @@ const GameComponent = dynamic(() =>
 /**
  * Puzzle data sent to client (shuffled words only, no category groupings)
  */
-type ConnectionsPuzzleData = {
+export type ConnectionsPuzzleData = {
 	words: string[]
 	maxMistakes: number
 	wordsPerCategory: number
@@ -40,7 +35,7 @@ type ConnectionsPuzzleData = {
 /**
  * Solution stored server-side only
  */
-type ConnectionsSolution = {
+export type ConnectionsSolution = {
 	categories: Category[]
 }
 
@@ -134,7 +129,6 @@ export const wordGroupsConfig: GameConfig<
 	skills: ['vocabulary', 'association', 'logic'],
 	difficulty: 'medium',
 	HowToPlayContent: ConnectionsHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordGroups.tagline',
 		highlightKey: 'games.wordGroups.highlight',

@@ -3,7 +3,6 @@
  * Classic 9x9 Sudoku puzzle with difficulty levels
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -18,10 +17,6 @@ import { generateSudokuPuzzle } from './generator'
 import { SudokuIcon } from './icon'
 import type { SudokuGuess, SudokuGuessResult } from './types'
 import { GRID_SIZE } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./sudoku-game').then((m) => ({ default: m.SudokuGame })),
-)
 
 // Client-side puzzle data (solution hidden)
 export type SudokuPuzzleClientData = {
@@ -74,7 +69,6 @@ export const sudokuConfig: GameConfig<
 	skills: ['logic', 'pattern'],
 	difficulty: 'medium',
 	HowToPlayContent: SudokuHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.sudoku.tagline',
 		highlightKey: 'games.sudoku.highlight',

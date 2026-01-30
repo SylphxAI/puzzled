@@ -9,17 +9,18 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { Flag, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { PatternMatchIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { PatternBoard } from './components/board'
-import type { PatternMatchClientData } from './config'
-import { getPuzzleByIndex } from './puzzles'
+import type { PatternMatchClientData } from './types'
+import type { PatternMatchSolution } from './types'
 import { usePatternMatch } from './use-pattern-match'
 
 type Props = {
@@ -31,18 +32,10 @@ type Props = {
 export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.patternMatch')
 
-	// Get puzzle from server data or generate from seed (deterministic)
+	// Parse puzzle data from server (no client-side fallback)
 	const [puzzle] = useState(() => {
-		if (puzzleData && typeof puzzleData === 'object' && 'cards' in puzzleData) {
-			return puzzleData as PatternMatchClientData
-		}
-
-		const seed = parseInt(puzzleId || String(Date.now()), 10)
-		const generated = getPuzzleByIndex(seed % 30)
-		return {
-			cards: generated.cards,
-			totalSets: generated.validSets.length,
-		}
+		const parsed = parsePuzzleDataClient<PatternMatchClientData, PatternMatchSolution>(puzzleData)
+		return parsed.puzzleData
 	})
 
 	// useGameSession: Consolidates session, save, and celebration logic

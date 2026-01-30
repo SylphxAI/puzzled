@@ -4,7 +4,7 @@ import { Button } from '@sylphx/ui'
 import { BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
-import { type GameSlug, getGameConfig } from '@/games/registry'
+import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
@@ -71,8 +71,8 @@ export function GameResultCard({
 		},
 	)
 
-	// Check if this is a perfect game - config-driven
-	const config = getGameConfig(gameType)
+	// Check if this is a perfect game - config-driven (using client-safe registry)
+	const config = getHowToPlayConfig(gameType)
 	const isPerfect = isWin && config?.isPerfectGame?.(stats)
 
 	// Format time spent

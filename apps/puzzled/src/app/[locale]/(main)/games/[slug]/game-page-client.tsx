@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { HowToPlayModal, MinimalHeader } from '@/features/daily/components'
-import type { GameSlug } from '@/games/registry'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { MinimalHeader } from '@/features/daily/components/minimal-header'
+import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { GameRenderer } from './game-renderer'

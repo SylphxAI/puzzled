@@ -16,6 +16,17 @@ export type SpellingBeePuzzleData = {
 	validWords: string[]
 }
 
+/**
+ * Puzzle data sent to client (includes maxScore for rank display)
+ */
+export type SpellingBeePuzzleClientData = {
+	centerLetter: string
+	outerLetters: string[]
+	maxScore: number
+	validWords: string[]
+	pangrams: string[]
+}
+
 export type SpellingBeeState = {
 	centerLetter: string
 	outerLetters: string[]

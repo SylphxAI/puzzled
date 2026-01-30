@@ -3,7 +3,6 @@
  * Implements GameConfig interface for modular game system
  */
 
-import dynamic from 'next/dynamic'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -14,10 +13,6 @@ import { SpellingBeeHowToPlay } from './components/how-to-play'
 import { WordHiveIcon } from './icon'
 import { calculateMaxScore, getPuzzleFromSeed } from './puzzles'
 import { calculateWordScore, MIN_WORD_LENGTH } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./word-hive-game').then((m) => ({ default: m.WordHiveGame })),
-)
 
 // ==========================================
 // Types
@@ -106,7 +101,6 @@ export const wordHiveConfig: GameConfig<
 	skills: ['vocabulary', 'spelling'],
 	difficulty: 'medium',
 	HowToPlayContent: SpellingBeeHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordHive.tagline',
 		highlightKey: 'games.wordHive.highlight',

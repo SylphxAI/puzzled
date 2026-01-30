@@ -3,10 +3,30 @@
  *
  * Custom SVG icons for all games.
  * Each game has its own icon in its folder (games/[slug]/icon.tsx).
- * This file provides a unified GameIcon component that pulls from the registry.
+ * This file provides a unified GameIcon component.
+ *
+ * NOTE: This file must NOT import from @/games/registry to avoid pulling in
+ * server-only code (node:fs via puzzle generators). Icons are client-safe.
  */
 
-import { getGameIconComponent } from '@/games/registry'
+import type { ComponentType } from 'react'
+import { ArithmoIcon } from '@/games/arithmo/icon'
+import { BlockSlideIcon } from '@/games/block-slide/icon'
+import { CrosswordIcon } from '@/games/crossword/icon'
+import { CryptogramIcon } from '@/games/cryptogram/icon'
+import { KillerSudokuIcon } from '@/games/killer-sudoku/icon'
+import { NonogramIcon } from '@/games/nonogram/icon'
+import { PatternMatchIcon } from '@/games/pattern-match/icon'
+import { QuadWordsIcon } from '@/games/quad-words/icon'
+import { QueensIcon } from '@/games/queens/icon'
+import { SudokuIcon } from '@/games/sudoku/icon'
+import { TangoIcon } from '@/games/tango/icon'
+import { WordBoxIcon } from '@/games/word-box/icon'
+import { WordGroupsIcon } from '@/games/word-groups/icon'
+import { WordGuessIcon } from '@/games/word-guess/icon'
+import { WordHiveIcon } from '@/games/word-hive/icon'
+import { WordLadderIcon } from '@/games/word-ladder/icon'
+import { WordSearchIcon } from '@/games/word-search/icon'
 import { Icon } from './icon'
 
 type GameIconProps = {
@@ -15,26 +35,61 @@ type GameIconProps = {
 	'aria-hidden'?: boolean | 'true' | 'false'
 }
 
+type IconComponent = ComponentType<{ size?: number; className?: string }>
+
+/**
+ * Client-safe icon registry
+ * Maps game slugs to their icon components without importing full game configs
+ */
+const GAME_ICONS: Record<string, IconComponent> = {
+	arithmo: ArithmoIcon,
+	'block-slide': BlockSlideIcon,
+	crossword: CrosswordIcon,
+	cryptogram: CryptogramIcon,
+	'killer-sudoku': KillerSudokuIcon,
+	nonogram: NonogramIcon,
+	'pattern-match': PatternMatchIcon,
+	'quad-words': QuadWordsIcon,
+	queens: QueensIcon,
+	sudoku: SudokuIcon,
+	tango: TangoIcon,
+	'word-box': WordBoxIcon,
+	'word-groups': WordGroupsIcon,
+	'word-guess': WordGuessIcon,
+	'word-hive': WordHiveIcon,
+	'word-ladder': WordLadderIcon,
+	'word-search': WordSearchIcon,
+}
+
 // Re-export individual icons from their game modules
-
-export { ArithmoIcon } from '@/games/arithmo/icon'
-export { BlockSlideIcon } from '@/games/block-slide/icon'
-export { CrosswordIcon } from '@/games/crossword/icon'
-
-export { NonogramIcon } from '@/games/nonogram/icon'
-
-export { PatternMatchIcon } from '@/games/pattern-match/icon'
-export { SudokuIcon } from '@/games/sudoku/icon'
-export { WordGroupsIcon as ConnectionsIcon } from '@/games/word-groups/icon'
+export {
+	ArithmoIcon,
+	BlockSlideIcon,
+	CrosswordIcon,
+	CryptogramIcon,
+	KillerSudokuIcon,
+	NonogramIcon,
+	PatternMatchIcon,
+	QuadWordsIcon,
+	QueensIcon,
+	SudokuIcon,
+	TangoIcon,
+	WordBoxIcon,
+	WordGroupsIcon,
+	WordGuessIcon,
+	WordHiveIcon,
+	WordLadderIcon,
+	WordSearchIcon,
+}
 
 // Familiar name aliases (our games are inspired by these popular puzzles)
-export { WordGuessIcon as WordleIcon } from '@/games/word-guess/icon'
-export { WordHiveIcon as SpellingBeeIcon } from '@/games/word-hive/icon'
-export { WordLadderIcon } from '@/games/word-ladder/icon'
+export { WordGroupsIcon as ConnectionsIcon }
+export { WordGuessIcon as WordleIcon }
+export { WordHiveIcon as SpellingBeeIcon }
 
 /**
  * Universal GameIcon component
- * Pulls icon from the game registry - each game owns its own icon
+ * Uses local icon map - does NOT import from registry (server-only code)
  */
 export function GameIcon({
 	slug,
@@ -42,7 +97,7 @@ export function GameIcon({
 	size = 24,
 	...props
 }: GameIconProps & { slug: string }) {
-	const IconComponent = getGameIconComponent(slug)
+	const IconComponent = GAME_ICONS[slug]
 
 	if (IconComponent) {
 		return <IconComponent size={size} className={className} {...props} />

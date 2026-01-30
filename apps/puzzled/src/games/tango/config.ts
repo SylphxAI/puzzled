@@ -3,7 +3,6 @@
  * Binary puzzle game (Sun/Moon balance)
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -23,8 +22,6 @@ import type {
 } from './types'
 import { isSolved } from './types'
 
-const GameComponent = dynamic(() => import('./tango-game').then((m) => ({ default: m.TangoGame })))
-
 export const tangoConfig: GameConfig<
 	TangoPuzzleData,
 	TangoSolution,
@@ -40,7 +37,6 @@ export const tangoConfig: GameConfig<
 	skills: ['logic', 'pattern'],
 	difficulty: 'medium',
 	HowToPlayContent: TangoHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.tango.tagline',
 		highlightKey: 'games.tango.highlight',

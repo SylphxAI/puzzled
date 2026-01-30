@@ -1,3 +1,26 @@
+// ==========================================
+// Puzzle Types (for client-side parsing)
+// ==========================================
+
+/**
+ * Puzzle data sent to client (NO solution)
+ */
+export type WordlePuzzleData = {
+	wordLength: number
+	maxAttempts: number
+}
+
+/**
+ * Solution stored server-side only
+ */
+export type WordleSolution = {
+	word: string
+}
+
+// ==========================================
+// Game State Types
+// ==========================================
+
 export type LetterStatus = 'correct' | 'present' | 'absent' | 'empty' | 'pending'
 
 export type TileState = {

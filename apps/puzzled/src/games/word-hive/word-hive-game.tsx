@@ -4,15 +4,16 @@ import { Button } from '@sylphx/ui'
 import { Delete, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useRef, useState } from 'react'
-import { Celebration, StarBurst } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { CurrentWord, Honeycomb, RankDisplay, WordList } from './components'
-import type { SpellingBeePuzzleClientData } from './config'
+import type { SpellingBeePuzzleClientData } from './types'
 import { type SubmitResult, useWordHive } from './use-word-hive'
 
 type Props = {
@@ -26,26 +27,10 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	// Use puzzle data from server (includes validWords and pangrams)
+	// Parse puzzle data from server using client-safe parser
 	const [initialPuzzle] = useState(() => {
-		if (
-			puzzleData &&
-			typeof puzzleData === 'object' &&
-			'centerLetter' in puzzleData &&
-			'validWords' in puzzleData
-		) {
-			return puzzleData as SpellingBeePuzzleClientData
-		}
-
-		// Should not happen - puzzleData should always be provided
-		console.error('[SpellingBee] No puzzle data provided')
-		return {
-			centerLetter: 'A',
-			outerLetters: ['B', 'C', 'D', 'E', 'F', 'G'],
-			maxScore: 0,
-			validWords: [] as string[],
-			pangrams: [] as string[],
-		}
+		const parsed = parsePuzzleDataClient<SpellingBeePuzzleClientData, unknown>(puzzleData)
+		return parsed.puzzleData
 	})
 
 	const {

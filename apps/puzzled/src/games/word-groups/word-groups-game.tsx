@@ -4,16 +4,16 @@ import { Button } from '@sylphx/ui'
 import { HelpCircle, Play, Shuffle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration, StarBurst } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
-import { wordGroupsConfig } from './config'
+import type { ConnectionsPuzzleData, ConnectionsSolution } from './types'
 import { useWordGroups } from './use-word-groups'
 
 type Props = {
@@ -29,7 +29,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 
 	// Type-safe puzzle parsing via config - no type assertions needed
 	const [initialPuzzle] = useState(() => {
-		const parsed = defaultParsePuzzleData(wordGroupsConfig, puzzleData, puzzleId)
+		const parsed = parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData)
 		// Convert to ConnectionsPuzzle format for useWordGroups hook
 		return {
 			id: puzzleId || `daily-${new Date().toISOString().split('T')[0]}`,

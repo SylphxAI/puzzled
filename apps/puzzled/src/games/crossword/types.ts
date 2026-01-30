@@ -20,7 +20,20 @@ export type CrosswordPuzzleData = {
 	}
 }
 
-// CrosswordSolution is exported from config.ts to avoid circular imports
+/**
+ * Client-side puzzle data (no solution exposed)
+ */
+export type CrosswordPuzzleClientData = {
+	grid: (string | null)[][] // Grid structure with black squares, letters hidden
+	clues: CrosswordPuzzleData['clues']
+}
+
+/**
+ * Solution type
+ */
+export type CrosswordSolution = {
+	grid: string[][] // Complete grid with all answers
+}
 
 export type CrosswordGuess = {
 	row: number

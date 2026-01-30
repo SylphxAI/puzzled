@@ -9,16 +9,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { CrosswordIcon } from '@/shared/components/ui/game-icons'
 import { ClueList, CrosswordGrid, CrosswordKeyboard, CurrentClueDisplay } from './components'
-import { crosswordConfig } from './config'
+import type { CrosswordPuzzleClientData, CrosswordSolution } from './types'
 import type { CrosswordDirection } from './types'
 import { useCrossword } from './use-crossword'
 
@@ -31,8 +31,10 @@ type Props = {
 export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.crossword')
 
-	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() => defaultParsePuzzleData(crosswordConfig, puzzleData, puzzleId))
+	// Get puzzle from server data
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<CrosswordPuzzleClientData, CrosswordSolution>(puzzleData),
+	)
 
 	const {
 		isReady,

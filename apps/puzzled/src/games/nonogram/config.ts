@@ -3,7 +3,6 @@
  * Fill cells to reveal a hidden picture
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -22,10 +21,6 @@ import type {
 	NonogramPuzzleData,
 	NonogramSolution,
 } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./nonogram-game').then((m) => ({ default: m.NonogramGame })),
-)
 
 // Client-side puzzle data (solution hidden)
 type NonogramPuzzleClientData = NonogramPuzzleData
@@ -74,7 +69,6 @@ export const nonogramConfig: GameConfig<
 	skills: ['logic', 'pattern', 'spatial'],
 	difficulty: 'medium',
 	HowToPlayContent: NonogramHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.nonogram.tagline',
 		highlightKey: 'games.nonogram.highlight',

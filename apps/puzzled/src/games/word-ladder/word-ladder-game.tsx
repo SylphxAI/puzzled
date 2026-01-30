@@ -9,17 +9,17 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@sylphx
 import { HelpCircle, Play, Undo2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { WordLadderIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { WordLadderDisplay } from './components'
-import { wordLadderConfig } from './config'
+import type { WordLadderPuzzleData, WordLadderSolution } from './types'
 import { useWordLadder } from './use-word-ladder'
 
 type Props = {
@@ -32,7 +32,9 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 	const t = useTranslations('games.wordLadder')
 
 	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() => defaultParsePuzzleData(wordLadderConfig, puzzleData, puzzleId))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<WordLadderPuzzleData, WordLadderSolution>(puzzleData),
+	)
 
 	const {
 		isReady,

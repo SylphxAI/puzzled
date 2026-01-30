@@ -2,7 +2,7 @@
 
 import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from '@sylphx/ui'
 import { useTranslations } from 'next-intl'
-import { type GameSlug, getGameConfig } from '@/games/registry'
+import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -14,19 +14,22 @@ type HowToPlayModalProps = {
 }
 
 /**
- * HowToPlayModal - Dynamic game instructions from registry
+ * HowToPlayModal - Dynamic game instructions from client registry
  *
- * Each game provides its own HowToPlayContent component via GameConfig.
+ * Each game provides its own HowToPlayContent component via client-registry.
  * This modal simply renders that component - no game-specific code here.
+ *
+ * NOTE: Uses client-registry.ts (not registry.ts) to avoid pulling in
+ * server-only code (node:fs via puzzle generators).
  *
  * To add instructions for a new game:
  * 1. Create /src/games/[slug]/components/how-to-play.tsx
- * 2. Add HowToPlayContent to the game's config.ts
+ * 2. Add HowToPlayContent to client-registry.ts
  * That's it - the modal will automatically render it.
  */
 export function HowToPlayModal({ open, onClose, gameSlug }: HowToPlayModalProps) {
 	const t = useTranslations()
-	const config = getGameConfig(gameSlug)
+	const config = getHowToPlayConfig(gameSlug)
 	const HowToPlayContent = config?.HowToPlayContent
 	const colors = config?.display?.theme ? getGameColors(config.display.theme) : DEFAULT_GAME_COLORS
 

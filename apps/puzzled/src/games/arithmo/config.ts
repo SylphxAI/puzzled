@@ -3,7 +3,6 @@
  * Guess the equation in 6 tries (Nerdle-style)
  */
 
-import dynamic from 'next/dynamic'
 import { calculateWordleScore } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -16,10 +15,6 @@ import { getPuzzleFromSeed } from './equations'
 import { ArithmoIcon } from './icon'
 import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
 import { getGuessResult, isValidEquation } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./arithmo-game').then((m) => ({ default: m.ArithmoGame })),
-)
 
 // Client-side puzzle data
 type ArithmoPuzzleClientData = ArithmoPuzzleData
@@ -39,7 +34,6 @@ export const arithmoConfig: GameConfig<
 	skills: ['arithmetic', 'logic'],
 	difficulty: 'medium',
 	HowToPlayContent: ArithmoHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.arithmo.tagline',
 		highlightKey: 'games.arithmo.highlight',

@@ -3,7 +3,6 @@
  * N-Queens puzzle with colored regions
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -18,10 +17,6 @@ import { generateQueensPuzzle } from './generator'
 import { QueensIcon } from './icon'
 import type { QueensGuess, QueensGuessResult, QueensPuzzleData, QueensSolution } from './types'
 import { getConflicts, isSolved } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./queens-game').then((m) => ({ default: m.QueensGame })),
-)
 
 export type { QueensPuzzleData, QueensSolution }
 
@@ -65,7 +60,6 @@ export const queensConfig: GameConfig<
 	skills: ['logic', 'spatial'],
 	difficulty: 'medium',
 	HowToPlayContent: QueensHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.queens.tagline',
 		highlightKey: 'games.queens.highlight',

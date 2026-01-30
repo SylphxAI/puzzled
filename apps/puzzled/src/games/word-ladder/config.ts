@@ -3,7 +3,6 @@
  * Transform one word into another, one letter at a time
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, isPerfectGame } from '@/games/shared'
 import { formatTimer } from '@/games/shared/format'
 import {
@@ -23,10 +22,6 @@ import type {
 } from './types'
 import { isOneLetterChange } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./word-ladder-game').then((m) => ({ default: m.WordLadderGame })),
-)
-
 // Client-side puzzle data
 type WordLadderPuzzleClientData = WordLadderPuzzleData
 
@@ -45,7 +40,6 @@ export const wordLadderConfig: GameConfig<
 	skills: ['vocabulary'],
 	difficulty: 'medium',
 	HowToPlayContent: WordLadderHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordLadder.tagline',
 		highlightKey: 'games.wordLadder.highlight',

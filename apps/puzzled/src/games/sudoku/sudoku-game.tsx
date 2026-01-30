@@ -9,16 +9,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { SudokuIcon } from '@/shared/components/ui/game-icons'
 import { SudokuGrid, SudokuNumberPad } from './components'
-import { sudokuConfig } from './config'
+import type { SudokuPuzzleClientData, SudokuSolution } from './types'
 import { useSudoku } from './use-sudoku'
 
 type Props = {
@@ -30,8 +30,10 @@ type Props = {
 export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.sudoku')
 
-	// Type-safe puzzle parsing via config - no type assertions needed
-	const [puzzle] = useState(() => defaultParsePuzzleData(sudokuConfig, puzzleData, puzzleId))
+	// Type-safe puzzle parsing - no config import needed
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<SudokuPuzzleClientData, SudokuSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate

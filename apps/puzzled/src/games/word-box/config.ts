@@ -3,7 +3,6 @@
  * Word game with letters arranged on box sides
  */
 
-import dynamic from 'next/dynamic'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
@@ -27,10 +26,6 @@ import {
 	usesValidLetters,
 } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./word-box-game').then((m) => ({ default: m.WordBoxGame })),
-)
-
 export const wordBoxConfig: GameConfig<
 	LetterBoxedPuzzleData,
 	LetterBoxedSolution,
@@ -46,7 +41,6 @@ export const wordBoxConfig: GameConfig<
 	skills: ['vocabulary', 'spatial'],
 	difficulty: 'hard',
 	HowToPlayContent: LetterBoxedHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordBox.tagline',
 		highlightKey: 'games.wordBox.highlight',

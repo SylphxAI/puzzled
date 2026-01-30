@@ -9,16 +9,16 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { HelpCircle, Lightbulb, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
-import { cryptogramConfig } from './config'
+import type { CryptogramPuzzleData, CryptogramSolution } from './types'
 import { ALPHABET, MAX_HINTS } from './types'
 import { useCryptogram } from './use-cryptogram'
 
@@ -31,7 +31,7 @@ type Props = {
 export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => defaultParsePuzzleData(cryptogramConfig, puzzleData, puzzleId))
+	const [puzzle] = useState(() => parsePuzzleDataClient<CryptogramPuzzleData, CryptogramSolution>(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {

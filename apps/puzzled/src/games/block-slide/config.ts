@@ -5,7 +5,6 @@
  * This config binds the frozen algorithms to the game system.
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import { MINUTE_MS } from '@/lib/constants/time'
 import {
@@ -21,10 +20,6 @@ import { generateBlockSlidePuzzle } from './generator'
 import { BlockSlideIcon } from './icon'
 import type { Block, BlockSlidePuzzle, BlockSlideSolution, Direction } from './types'
 import { canMove, isWin, moveBlock } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./block-slide-game').then((m) => ({ default: m.BlockSlideGame })),
-)
 
 /**
  * Difficulty level configurations for Block Slide
@@ -99,7 +94,6 @@ export const blockSlideConfig: GameConfig<
 	skills: ['spatial', 'logic'],
 	difficulty: 'hard',
 	HowToPlayContent: BlockSlideHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.blockSlide.tagline',
 		highlightKey: 'games.blockSlide.highlight',

@@ -3,7 +3,6 @@
  * Implements GameConfig interface for modular game system
  */
 
-import dynamic from 'next/dynamic'
 import { calculateWordleScore, pickRandom } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -14,31 +13,18 @@ import {
 } from '../types'
 import { WordleHowToPlay } from './components/how-to-play'
 import { WordGuessIcon } from './icon'
-import { type LetterStatus, MAX_GUESSES, WORD_LENGTH } from './types'
+import {
+	type LetterStatus,
+	MAX_GUESSES,
+	type WordlePuzzleData,
+	type WordleSolution,
+	WORD_LENGTH,
+} from './types'
 import { isValidWord, SOLUTION_WORDS } from './words'
-
-const GameComponent = dynamic(() =>
-	import('./word-guess-game').then((m) => ({ default: m.WordGuessGame })),
-)
 
 // ==========================================
 // Types
 // ==========================================
-
-/**
- * Puzzle data sent to client (NO solution)
- */
-type WordlePuzzleData = {
-	wordLength: number
-	maxAttempts: number
-}
-
-/**
- * Solution stored server-side only
- */
-type WordleSolution = {
-	word: string
-}
 
 /**
  * Client's guess for validation
@@ -116,7 +102,6 @@ export const wordGuessConfig: GameConfig<
 	skills: ['vocabulary', 'logic'],
 	difficulty: 'medium',
 	HowToPlayContent: WordleHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.wordGuess.tagline',
 		highlightKey: 'games.wordGuess.highlight',

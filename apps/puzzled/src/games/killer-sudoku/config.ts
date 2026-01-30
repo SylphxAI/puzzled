@@ -3,7 +3,6 @@
  * Sudoku with cage sum constraints
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -22,10 +21,6 @@ import type {
 	KillerSudokuPuzzleData,
 	KillerSudokuSolution,
 } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./killer-sudoku-game').then((m) => ({ default: m.KillerSudokuGame })),
-)
 
 /**
  * Difficulty level configurations for Killer Sudoku
@@ -67,7 +62,6 @@ export const killerSudokuConfig: GameConfig<
 	skills: ['arithmetic', 'logic'],
 	difficulty: 'hard',
 	HowToPlayContent: KillerSudokuHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.killerSudoku.tagline',
 		highlightKey: 'games.killerSudoku.highlight',

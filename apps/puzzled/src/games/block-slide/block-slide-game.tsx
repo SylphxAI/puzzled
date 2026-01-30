@@ -9,17 +9,18 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { Flag, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
+import { parsePuzzleDataClient } from '@/games/types'
 import { Board } from './components/board'
-import type { BlockSlideClientData } from './config'
-import { getPuzzleFromSeed } from './puzzles'
+import type { BlockSlidePuzzle as BlockSlideClientData } from './types'
+import type { BlockSlideSolution } from './types'
 import { useBlockSlide } from './use-block-slide'
 
 type Props = {
@@ -31,15 +32,10 @@ type Props = {
 export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.blockSlide')
 
-	// Get puzzle from server data or generate from seed (deterministic)
+	// Get puzzle from server data
 	const [puzzle] = useState(() => {
-		if (puzzleData && typeof puzzleData === 'object' && 'blocks' in puzzleData) {
-			return puzzleData as BlockSlideClientData
-		}
-
-		const seed = parseInt(puzzleId || String(Date.now()), 10)
-		const generated = getPuzzleFromSeed(seed)
-		return generated.puzzleData
+		const parsed = parsePuzzleDataClient<BlockSlideClientData, BlockSlideSolution>(puzzleData)
+		return parsed.puzzleData
 	})
 
 	// useGameSession: Consolidates session, save, and celebration logic

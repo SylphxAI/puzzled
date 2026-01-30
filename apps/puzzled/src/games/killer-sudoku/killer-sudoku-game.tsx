@@ -9,15 +9,15 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { Delete, HelpCircle, Pencil, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
-import { killerSudokuConfig } from './config'
+import type { KillerSudokuPuzzleData, KillerSudokuSolution } from './types'
 import { useKillerSudoku } from './use-killer-sudoku'
 
 type Props = {
@@ -30,7 +30,9 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => defaultParsePuzzleData(killerSudokuConfig, puzzleData, puzzleId))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<KillerSudokuPuzzleData, KillerSudokuSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate

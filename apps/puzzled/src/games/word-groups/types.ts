@@ -38,6 +38,23 @@ export const MAX_MISTAKES = 4
 export const WORDS_PER_CATEGORY = 4
 export const TOTAL_CATEGORIES = 4
 
+/**
+ * Puzzle data sent to client (shuffled words only, no category groupings)
+ */
+export type ConnectionsPuzzleData = {
+	words: string[]
+	maxMistakes: number
+	wordsPerCategory: number
+	totalCategories: number
+}
+
+/**
+ * Solution stored server-side only
+ */
+export type ConnectionsSolution = {
+	categories: Category[]
+}
+
 // Distinctive Puzzled category colors - refined, modern palette
 export const CATEGORY_COLORS: Record<
 	CategoryLevel,

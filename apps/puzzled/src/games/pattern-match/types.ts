@@ -32,6 +32,14 @@ export type PatternMatchSolution = {
 }
 
 /**
+ * Puzzle data sent to client
+ */
+export type PatternMatchClientData = {
+	cards: Card[]
+	totalSets: number
+}
+
+/**
  * Check if 3 values are all same or all different
  */
 function isValidProperty<T>(a: T, b: T, c: T): boolean {

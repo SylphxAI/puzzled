@@ -5,7 +5,6 @@
  * This config binds the frozen algorithms to the game system.
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -18,10 +17,6 @@ import { PatternMatchIcon } from './icon'
 import { getPuzzleForDate } from './puzzles'
 import type { Card, PatternMatchSolution } from './types'
 import { isValidSet } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./pattern-match-game').then((m) => ({ default: m.PatternMatchGame })),
-)
 
 // ==========================================
 // Types
@@ -70,7 +65,6 @@ export const patternMatchConfig: GameConfig<
 	skills: ['pattern', 'logic'],
 	difficulty: 'medium',
 	HowToPlayContent: PatternMatchHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.patternMatch.tagline',
 		highlightKey: 'games.patternMatch.highlight',

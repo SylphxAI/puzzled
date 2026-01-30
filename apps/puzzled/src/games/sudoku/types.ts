@@ -14,6 +14,18 @@ export type SudokuPuzzleData = {
 	difficulty: 'easy' | 'medium' | 'hard'
 }
 
+/**
+ * Client-side puzzle data (solution hidden)
+ */
+export type SudokuPuzzleClientData = SudokuPuzzleData
+
+/**
+ * Solution type
+ */
+export type SudokuSolution = {
+	grid: number[][] // Complete 9x9 solution
+}
+
 export type SudokuGuess = {
 	row: number
 	col: number

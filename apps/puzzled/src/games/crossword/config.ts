@@ -3,7 +3,6 @@
  * 5x5 mini crossword puzzle (word square)
  */
 
-import dynamic from 'next/dynamic'
 import { compareByTime, formatTimeScore, isPerfectGame } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -16,10 +15,6 @@ import { CrosswordIcon } from './icon'
 import { getPuzzleFromSeed } from './puzzles'
 import type { CrosswordGuess, CrosswordGuessResult, CrosswordPuzzleData } from './types'
 import { GRID_SIZE, isGridComplete } from './types'
-
-const GameComponent = dynamic(() =>
-	import('./crossword-game').then((m) => ({ default: m.CrosswordGame })),
-)
 
 // Client-side puzzle data (no solution exposed)
 export type CrosswordPuzzleClientData = {
@@ -47,7 +42,6 @@ export const crosswordConfig: GameConfig<
 	skills: ['vocabulary', 'association'],
 	difficulty: 'medium',
 	HowToPlayContent: CrosswordHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.crossword.tagline',
 		highlightKey: 'games.crossword.highlight',

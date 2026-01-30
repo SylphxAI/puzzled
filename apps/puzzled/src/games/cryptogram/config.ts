@@ -3,7 +3,6 @@
  * Decrypt famous quotes by substituting letters
  */
 
-import dynamic from 'next/dynamic'
 import { MINUTE_MS } from '@/lib/constants/time'
 import {
 	DEFAULT_LAUNCH_DATE,
@@ -23,10 +22,6 @@ import type {
 } from './types'
 import { getUniqueLetters } from './types'
 
-const GameComponent = dynamic(() =>
-	import('./cryptogram-game').then((m) => ({ default: m.CryptogramGame })),
-)
-
 export const cryptogramConfig: GameConfig<
 	CryptogramPuzzleData,
 	CryptogramSolution,
@@ -42,7 +37,6 @@ export const cryptogramConfig: GameConfig<
 	skills: ['pattern', 'logic'],
 	difficulty: 'hard',
 	HowToPlayContent: CryptogramHowToPlay,
-	GameComponent,
 	display: {
 		taglineKey: 'games.cryptogram.tagline',
 		highlightKey: 'games.cryptogram.highlight',

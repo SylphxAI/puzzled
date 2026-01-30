@@ -168,6 +168,28 @@ export function defaultParsePuzzleData<TPuzzleData, TSolution>(
 	return config.generatePuzzle(seed, difficulty)
 }
 
+/**
+ * Client-only puzzle data parser
+ *
+ * Use this in client components instead of defaultParsePuzzleData.
+ * Does NOT require the config (which imports server-only code).
+ *
+ * IMPORTANT: This throws an error if the data format is invalid.
+ * In production, the server always provides valid { puzzleData, solution } format.
+ *
+ * @param data - Raw puzzle data from server
+ * @returns Parsed puzzle with puzzleData and solution
+ * @throws Error if data format is invalid
+ */
+export function parsePuzzleDataClient<TPuzzleData, TSolution>(
+	data: unknown,
+): ParsedPuzzle<TPuzzleData, TSolution> {
+	if (!data || typeof data !== 'object' || !('puzzleData' in data) || !('solution' in data)) {
+		throw new Error('[Game] Invalid puzzle data format - expected {puzzleData, solution}')
+	}
+	return data as ParsedPuzzle<TPuzzleData, TSolution>
+}
+
 // ==========================================
 // Stats Types
 // ==========================================
@@ -359,10 +381,13 @@ export interface GameConfig<
 
 	/**
 	 * Main game component (lazy-loaded)
-	 * Dynamically imported using next/dynamic for optimal code splitting
-	 * Each game defines this in its config.ts using dynamic()
+	 *
+	 * DEPRECATED: Use client-registry.ts instead.
+	 * This field is optional because GameComponent causes Turbopack to trace
+	 * client-side imports (like Celebration) into the server bundle.
+	 * Client components should get GameComponent from client-registry.ts.
 	 */
-	GameComponent: ComponentType<GameProps>
+	GameComponent?: ComponentType<GameProps>
 
 	/**
 	 * How-to-play content component

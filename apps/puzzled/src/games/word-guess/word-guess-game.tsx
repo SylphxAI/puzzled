@@ -4,16 +4,16 @@ import { Button } from '@sylphx/ui'
 import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration, StarBurst } from '@/features/celebration/components'
-import { HowToPlayModal } from '@/features/daily/components'
+import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { defaultParsePuzzleData } from '@/games/types'
+import { parsePuzzleDataClient } from '@/games/types'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
-import { wordGuessConfig } from './config'
+import type { WordlePuzzleData, WordleSolution } from './types'
 import { WORD_LENGTH } from './types'
 import { type SubmitResult, useWordGuess } from './use-word-guess'
 
@@ -28,8 +28,8 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	// Type-safe puzzle parsing via default helper
-	const [puzzle] = useState(() => defaultParsePuzzleData(wordGuessConfig, puzzleData, puzzleId))
+	// Get puzzle from server data (client-safe - no config import)
+	const [puzzle] = useState(() => parsePuzzleDataClient<WordlePuzzleData, WordleSolution>(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
