@@ -57,12 +57,12 @@ export interface KeyValidationResult {
 const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod)_[a-f0-9]+$/
 
 /**
- * Secret key pattern: sk_(dev|stg|prod)_[hex]
+ * Secret key pattern: sk_(dev|stg|prod)_[identifier]
  * - Prefix: sk_ (secret key)
  * - Environment: dev, stg, or prod (NO typos allowed)
- * - Suffix: lowercase hex characters
+ * - Suffix: alphanumeric with underscores (hex for apps, or internal identifiers like platform_xxx)
  */
-const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-f0-9]+$/
+const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_]+$/
 
 /** Environment prefix to type mapping */
 const ENV_PREFIX_MAP: Record<string, EnvironmentType> = {
@@ -118,10 +118,13 @@ function createInvalidKeyError(
 ): string {
 	const prefix = keyType === 'publishable' ? 'pk' : 'sk'
 	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
+	const formatHint = keyType === 'publishable'
+		? `${prefix}_(dev|stg|prod)_[hex]`
+		: `${prefix}_(dev|stg|prod)_[alphanumeric]`
 
 	return (
 		`[Sylphx] Invalid ${keyType} key format.\n\n` +
-		`Expected format: ${prefix}_(dev|stg|prod)_[hex]\n` +
+		`Expected format: ${formatHint}\n` +
 		`Received: "${maskedKey}"\n\n` +
 		`Please check your ${envVarName} environment variable.\n` +
 		`You can find your keys in the Sylphx Console → API Keys.\n\n` +
