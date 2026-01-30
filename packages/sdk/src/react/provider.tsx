@@ -311,13 +311,16 @@ function SylphxProviderInner({
 	queryClient,
 	config,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
-
-	// Use provided URL or default to production
-	const platformUrl = providedPlatformUrl || 'https://sylphx.com'
+	// Sanitize inputs at boundary - strip whitespace/newlines that may come from env vars
+	// This prevents issues like `pk_prod_xxx\n` causing auth failures
+	// Reassign to shadow the original parameter - all downstream usages are now sanitized
+	// biome-ignore lint/style/noParameterAssign: intentional sanitization at boundary
+	publishableKey = publishableKey?.trim() || ''
+	const platformUrl = providedPlatformUrl?.trim() || 'https://sylphx.com'
 
 	// Namespace identifier derived from publishable key
 	// Used for storage namespacing, React Query keys, and context
-	const appId = publishableKey || ''
+	const appId = publishableKey
 
 	// ============================================
 	// Storage (namespaced by app identifier)
