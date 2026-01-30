@@ -49,20 +49,20 @@ export interface KeyValidationResult {
 // =============================================================================
 
 /**
- * Publishable key pattern: pk_(dev|stg|prod)_[hex]
+ * Publishable key pattern: pk_(dev|stg|prod)_[identifier]
  * - Prefix: pk_ (publishable key)
  * - Environment: dev, stg, or prod (NO typos allowed)
- * - Suffix: lowercase hex characters
+ * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers like platform_app-slug)
  */
-const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod)_[a-f0-9]+$/
+const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod)_[a-z0-9_-]+$/
 
 /**
  * Secret key pattern: sk_(dev|stg|prod)_[identifier]
  * - Prefix: sk_ (secret key)
  * - Environment: dev, stg, or prod (NO typos allowed)
- * - Suffix: alphanumeric with underscores (hex for apps, or internal identifiers like platform_xxx)
+ * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers like platform_app-slug)
  */
-const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_]+$/
+const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_-]+$/
 
 /** Environment prefix to type mapping */
 const ENV_PREFIX_MAP: Record<string, EnvironmentType> = {
