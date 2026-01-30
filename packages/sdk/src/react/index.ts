@@ -45,21 +45,15 @@
 // Provider
 export { SylphxProvider, type SylphxProviderProps } from './provider'
 
-// Config Hooks (Server-First Pattern)
+// Config Hooks (Server-First Pattern - config is required)
 export {
 	ConfigContext,
 	useConfig,
-	useSafeConfig,
 	usePlans,
-	useSafePlans,
 	useOAuthProviders as useConfigOAuthProviders,
-	useSafeOAuthProviders,
 	useConsentTypes,
-	useSafeConsentTypes,
 	useFeatureFlagDefinitions,
-	useSafeFeatureFlagDefinitions,
 	useAppMetadata,
-	useSafeAppMetadata,
 	type AppConfig,
 	type OAuthProviderInfo,
 	type FeatureFlagDefinition,

@@ -20,10 +20,10 @@ import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
-	/** Sylphx Publishable Key (from NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY env var) */
-	publishableKey?: string
-	/** Server-fetched config via getAppConfig() - eliminates client-side config fetching */
-	config?: AppConfig
+	/** Sylphx Publishable Key (required when using Sylphx) */
+	publishableKey: string
+	/** Server-fetched config via getAppConfig() (required) */
+	config: AppConfig
 }
 
 /**
@@ -57,11 +57,6 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export function PlatformProvider({ children, publishableKey, config }: PlatformProviderProps) {
-	// If Sylphx is not configured, just render children
-	if (!publishableKey) {
-		return <>{children}</>
-	}
-
 	return (
 		<SylphxProvider publishableKey={publishableKey} config={config} afterSignOutUrl="/login">
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>

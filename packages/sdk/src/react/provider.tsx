@@ -215,9 +215,8 @@ export interface SylphxProviderProps {
 	/**
 	 * App configuration fetched server-side via getAppConfig()
 	 *
-	 * **Recommended:** Use `getAppConfig()` from '@sylphx/sdk/server' in Server Components
-	 * to fetch all config data and pass it here. This eliminates client-side config
-	 * fetching and ensures instant, fresh data on every page load.
+	 * **Required:** Use `getAppConfig()` from '@sylphx/sdk/server' in Server Components
+	 * to fetch all config data and pass it here.
 	 *
 	 * @example
 	 * ```tsx
@@ -238,19 +237,7 @@ export interface SylphxProviderProps {
 	 * }
 	 * ```
 	 */
-	config?: AppConfig
-	/**
-	 * @deprecated Use `config` prop instead. Will be removed in next major version.
-	 *
-	 * Initial plans data for SSR hydration (optional)
-	 */
-	initialPlans?: Plan[]
-	/**
-	 * @deprecated Use `config` prop instead. Will be removed in next major version.
-	 *
-	 * Initial consent types data for SSR hydration (optional)
-	 */
-	initialConsentTypes?: ConsentType[]
+	config: AppConfig
 }
 
 // ============================================
@@ -272,8 +259,6 @@ export function SylphxProvider({
 	vapidPublicKey,
 	autoTracking = true,
 	config,
-	initialPlans,
-	initialConsentTypes,
 }: SylphxProviderProps) {
 	// Create QueryClient at the outer level
 	const [queryClient] = useState(
@@ -293,7 +278,7 @@ export function SylphxProvider({
 	// Wrap with QueryClientProvider FIRST, then render inner provider
 	// ConfigContext wraps everything to provide server-fetched config
 	return (
-		<ConfigContext.Provider value={config ?? null}>
+		<ConfigContext.Provider value={config}>
 			<QueryClientProvider client={queryClient}>
 				<SylphxProviderInner
 					publishableKey={publishableKey}
@@ -303,8 +288,6 @@ export function SylphxProvider({
 					autoTracking={autoTracking}
 					queryClient={queryClient}
 					config={config}
-					initialPlans={initialPlans}
-					initialConsentTypes={initialConsentTypes}
 				>
 					{children}
 				</SylphxProviderInner>
@@ -327,8 +310,6 @@ function SylphxProviderInner({
 	autoTracking = true,
 	queryClient,
 	config,
-	initialPlans,
-	initialConsentTypes,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
 
 	// Use provided URL or default to production
@@ -389,18 +370,10 @@ function SylphxProviderInner({
 	// Platform State - React Query for server data
 	// ============================================
 
-	// Plans: Use config (server-fetched) if available, otherwise fall back to React Query
-	// When config is provided, plans are already available - no loading state needed
-	const plansQuery = useQuery({
-		queryKey: ['sylphx', appId, 'plans'],
-		queryFn: () => api.get<Plan[]>('/billing/plans'),
-		staleTime: 10 * 60 * 1000, // 10 min - plans rarely change
-		initialData: config?.plans ?? initialPlans,
-		enabled: !config, // Skip fetch when config is provided
-	})
-	const plans = config?.plans ?? plansQuery.data ?? []
-	const plansLoading = !config && plansQuery.isLoading && !initialPlans
-	const plansError = !config ? (plansQuery.error as Error | null) : null
+	// Plans: Always from server-fetched config (no client-side fetching)
+	const plans = config.plans
+	const plansLoading = false
+	const plansError: Error | null = null
 
 	// Subscription - React Query (enabled when signed in)
 	const subscriptionQuery = useQuery({
@@ -2087,14 +2060,11 @@ function SylphxProviderInner({
 		() => ({
 			anonymousId,
 			userId: authState.user?.id ?? null,
-			// Use config.consentTypes when available (server-first pattern)
-			initialConsentTypes: config?.consentTypes ?? initialConsentTypes,
+			// Consent types from server-fetched config
+			initialConsentTypes: config.consentTypes,
 			getConsentTypes: async () => {
-				// When config is provided, return cached types (no fetch needed)
-				if (config?.consentTypes) {
-					return config.consentTypes
-				}
-				return await api.get('/consent/types')
+				// Return types from server-fetched config (no client fetch needed)
+				return config.consentTypes
 			},
 			getUserConsents: async () => {
 				const consents = await api.get<Array<{ slug: string; enabled: boolean; consentTypeId?: string; updatedAt?: string }>>('/consent', {
@@ -2149,7 +2119,7 @@ function SylphxProviderInner({
 				}
 			},
 		}),
-		[api, anonymousId, authState.user?.id, config, initialConsentTypes]
+		[api, anonymousId, authState.user?.id, config]
 	)
 
 	// ============================================

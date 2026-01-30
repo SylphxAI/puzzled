@@ -615,17 +615,8 @@ export type { Plan }
 /**
  * Get subscription plans for an app (server-side)
  *
- * @example
- * ```tsx
- * import { getPlans } from '@sylphx/sdk/server'
- *
- * export default async function PricingPage() {
- *   const plans = await getPlans({
- *     secretKey: process.env.SYLPHX_SECRET_KEY!,
- *   })
- *   return <PricingTable initialPlans={plans} />
- * }
- * ```
+ * Note: Prefer using `getAppConfig()` which fetches all config in parallel.
+ * This function is used internally by `getAppConfig()`.
  */
 export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
@@ -648,17 +639,8 @@ export type { ConsentType }
 /**
  * Get consent types for an app (server-side)
  *
- * @example
- * ```tsx
- * import { getConsentTypes } from '@sylphx/sdk/server'
- *
- * export default async function RootLayout({ children }) {
- *   const consentTypes = await getConsentTypes({
- *     secretKey: process.env.SYLPHX_SECRET_KEY!,
- *   })
- *   return <CookieBanner initialConsentTypes={consentTypes} />
- * }
- * ```
+ * Note: Prefer using `getAppConfig()` which fetches all config in parallel.
+ * This function is used internally by `getAppConfig()`.
  */
 export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)

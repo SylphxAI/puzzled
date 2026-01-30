@@ -215,16 +215,24 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
-					<PlatformProvider publishableKey={publishableKey} config={config}>
-						<SessionReplayProvider>
-							<WebVitalsReporter />
-							<TRPCProvider>
-								<NextIntlClientProvider messages={messages}>
-									<ToastProvider>{children}</ToastProvider>
-								</NextIntlClientProvider>
-							</TRPCProvider>
-						</SessionReplayProvider>
-					</PlatformProvider>
+					{publishableKey && config ? (
+						<PlatformProvider publishableKey={publishableKey} config={config}>
+							<SessionReplayProvider>
+								<WebVitalsReporter />
+								<TRPCProvider>
+									<NextIntlClientProvider messages={messages}>
+										<ToastProvider>{children}</ToastProvider>
+									</NextIntlClientProvider>
+								</TRPCProvider>
+							</SessionReplayProvider>
+						</PlatformProvider>
+					) : (
+						<TRPCProvider>
+							<NextIntlClientProvider messages={messages}>
+								<ToastProvider>{children}</ToastProvider>
+							</NextIntlClientProvider>
+						</TRPCProvider>
+					)}
 				</ThemeProvider>
 			</body>
 		</html>
