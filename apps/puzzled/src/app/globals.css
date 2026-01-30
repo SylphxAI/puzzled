@@ -62,6 +62,18 @@
 	--z-index-overlay: 100; /* KeyboardHint, fullscreen overlays */
 
 	/* -----------------------------------------
+	   Duration Scale (aligned with ui/motion/config.ts)
+	   Use semantic tokens: duration-fast, duration-normal, etc.
+	   ----------------------------------------- */
+	--duration-instant: 0ms;
+	--duration-fast: 100ms; /* micro-interactions: hover, focus */
+	--duration-normal: 150ms; /* standard transitions */
+	--duration-medium: 200ms; /* slightly longer transitions */
+	--duration-slow: 300ms; /* modals, page transitions */
+	--duration-slower: 400ms; /* complex choreography */
+	--duration-slowest: 500ms; /* dramatic reveals */
+
+	/* -----------------------------------------
 	   Spacing (Layout)
 	   ----------------------------------------- */
 	--spacing-header-height: 56px;

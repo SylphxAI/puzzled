@@ -3,9 +3,15 @@
  *
  * Centralized timing and easing values for consistent animations
  * throughout the application.
+ *
+ * For Framer Motion: import { duration, easing, spring } from '@sylphx/ui/motion'
+ * For CSS/Tailwind: use duration-fast, duration-normal, duration-slow, etc.
+ * (CSS custom properties defined in globals.css)
+ *
+ * @see globals.css for --duration-* CSS custom properties
  */
 
-/** Duration values in seconds */
+/** Duration values in seconds (multiply by 1000 for milliseconds) */
 export const duration = {
 	/** Instant - no animation (0ms) */
 	instant: 0,
