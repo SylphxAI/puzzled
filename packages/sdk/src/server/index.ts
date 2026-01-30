@@ -554,11 +554,14 @@ async function cachedFetch<T>(params: {
 	}
 }
 
-/** Trim whitespace/newlines from env-sourced options (Vercel CLI adds trailing \n) */
-function trimOptions<T extends AuthenticatedFetchOptions>(options: T): T {
+/**
+ * Sanitize options using SSOT key validation
+ * Validates secretKey format and trims platformUrl
+ */
+function sanitizeOptions<T extends AuthenticatedFetchOptions>(options: T): T {
 	return {
 		...options,
-		secretKey: options.secretKey.trim(),
+		secretKey: validateAndSanitizeSecretKey(options.secretKey),
 		platformUrl: (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
 	}
 }
@@ -634,7 +637,7 @@ export type { Plan }
  * This function is used internally by `getAppConfig()`.
  */
 export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<Plan[]>({
 		url: `${platformUrl}/api/sdk/billing/plans`,
@@ -658,7 +661,7 @@ export type { ConsentType }
  * This function is used internally by `getAppConfig()`.
  */
 export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<ConsentType[]>({
 		url: `${platformUrl}/api/sdk/consent/types`,
@@ -702,7 +705,7 @@ export interface FeatureFlagDefinition {
  * ```
  */
 export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promise<FeatureFlagDefinition[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<FeatureFlagDefinition[]>({
 		url: `${platformUrl}/api/sdk/flags`,
@@ -729,7 +732,7 @@ export interface AppMetadata {
  * @internal Used by getAppConfig() - rarely called directly
  */
 export async function getAppMetadata(options: AuthenticatedFetchOptions): Promise<AppMetadata> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<AppMetadata>({
 		url: `${platformUrl}/api/sdk/app`,
@@ -864,7 +867,7 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 	limit?: number
 	period?: 'all' | 'month' | 'week'
 }): Promise<ReferralLeaderboardResult> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = trimOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = sanitizeOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/referrals/leaderboard`)
 	url.searchParams.set('limit', String(limit))
@@ -920,7 +923,7 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 	leaderboardId: string
 	limit?: number
 }): Promise<EngagementLeaderboardResult> {
-	const { secretKey, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = trimOptions(options)
+	const { secretKey, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = sanitizeOptions(options)
 
 	const url = new URL(`${platformUrl}/api/sdk/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
 	url.searchParams.set('limit', String(limit))
