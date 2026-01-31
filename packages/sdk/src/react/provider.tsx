@@ -66,6 +66,7 @@ import {
 	autoCaptureClickIds,
 	getStoredClickIds,
 	getPrimaryClickId,
+	clearSessionCookie,
 	type ClickIds,
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
@@ -520,6 +521,9 @@ function SylphxProviderInner({
 			storage.remove(STORAGE_KEYS.USER)
 			storage.remove(STORAGE_KEYS.EXPIRES_AT)
 
+			// Also clear the session cookie (set by server-side OAuth)
+			clearSessionCookie(appId)
+
 			setAuthState({
 				isLoaded: true,
 				isSignedIn: false,
@@ -531,7 +535,7 @@ function SylphxProviderInner({
 				oauthError: null,
 			})
 		},
-		[storage]
+		[storage, appId]
 	)
 
 	// Track ongoing refresh to prevent race conditions
@@ -726,7 +730,33 @@ function SylphxProviderInner({
 					}
 				}
 
-				// Normal auth state restoration from storage
+				// ============================================
+				// SSR Hydration: Check session cookie first
+				// ============================================
+				// After server-side OAuth callback, a session cookie is set.
+				// Check for it first to enable immediate hydration.
+				const { getSessionFromCookie } = await import('./storage-utils')
+				const sessionCookie = getSessionFromCookie(appId)
+
+				if (sessionCookie && sessionCookie.expiresAt > Date.now()) {
+					// Found valid session from server-side OAuth
+					// Set auth state immediately for hydration
+					setAuthState({
+						isLoaded: true,
+						isSignedIn: true,
+						user: sessionCookie.user,
+						// Note: tokens are in HTTP-only cookies, not accessible from JS
+						// Client-side API calls will include cookies automatically
+						accessToken: null, // Not available from JS (HTTP-only)
+						refreshToken: null, // Not available from JS (HTTP-only)
+						error: null,
+						isOAuthLoading: false,
+						oauthError: null,
+					})
+					return
+				}
+
+				// Normal auth state restoration from localStorage
 				const accessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN)
 				const refreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN)
 				const user = storage.getJSON<User>(STORAGE_KEYS.USER)

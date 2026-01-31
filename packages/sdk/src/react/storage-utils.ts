@@ -3,12 +3,23 @@
  *
  * Namespaced localStorage utilities to prevent key collisions
  * when multiple Sylphx apps run on the same domain.
+ *
+ * Also includes session cookie reading for SSR hydration.
  */
 
 import type { ClickIds } from './platform-context'
+import type { User } from '../types'
 
 // Re-export for convenience
 export type { ClickIds }
+
+/**
+ * Session data from server-set cookie (for SSR hydration)
+ */
+export interface SessionCookie {
+	user: User
+	expiresAt: number
+}
 
 // Storage key constants - all prefixed with appId
 export const STORAGE_KEYS = {
@@ -249,4 +260,69 @@ export function autoCaptureClickIds(storage: SylphxStorage): ClickIds {
 export function getPrimaryClickId(clickIds: ClickIds | null): string | undefined {
 	if (!clickIds) return undefined
 	return clickIds.gclid || clickIds.fbclid || clickIds.ttclid
+}
+
+// ==========================================
+// Session Cookie for SSR Hydration
+// ==========================================
+
+/**
+ * Get session data from JS-readable cookie (set by server after OAuth)
+ *
+ * This enables client-side hydration after server-side OAuth callback:
+ * 1. Server callback exchanges OAuth code for tokens
+ * 2. Server sets HTTP-only token cookies + JS-readable session cookie
+ * 3. Client reads session cookie on mount for immediate auth state
+ *
+ * @param appId - App ID used to namespace the cookie
+ * @returns Session data or null if not found/expired
+ */
+export function getSessionFromCookie(appId: string): SessionCookie | null {
+	if (typeof document === 'undefined') return null
+
+	try {
+		// Cookie name format: {namespace}_session (namespace derived from appId)
+		// The namespace is the first part of the appId (e.g., 'app_prod' from 'app_prod_xxx')
+		const namespace = appId.split('_').slice(0, 2).join('_')
+		const cookieName = `${namespace}_session`
+
+		// Parse cookies
+		const cookies = document.cookie.split(';')
+		for (const cookie of cookies) {
+			const [name, ...valueParts] = cookie.trim().split('=')
+			if (name === cookieName) {
+				const value = valueParts.join('=') // Handle values with = in them
+				const decoded = decodeURIComponent(value)
+				const session: SessionCookie = JSON.parse(decoded)
+
+				// Check if session is expired
+				if (session.expiresAt && session.expiresAt < Date.now()) {
+					return null
+				}
+
+				return session
+			}
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Clear the session cookie (client-side)
+ *
+ * Call this on sign out to remove the session cookie.
+ */
+export function clearSessionCookie(appId: string): void {
+	if (typeof document === 'undefined') return
+
+	try {
+		const namespace = appId.split('_').slice(0, 2).join('_')
+		const cookieName = `${namespace}_session`
+		// Set cookie with expired date to delete it
+		document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+	} catch {
+		// Ignore errors
+	}
 }
