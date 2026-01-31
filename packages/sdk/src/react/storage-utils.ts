@@ -1,10 +1,16 @@
 /**
- * Storage Utilities
+ * Storage Utilities — Non-Auth Data Only
  *
- * Namespaced localStorage utilities to prevent key collisions
- * when multiple Sylphx apps run on the same domain.
+ * Namespaced localStorage utilities for client-side data.
  *
- * Also includes session cookie reading for SSR hydration.
+ * IMPORTANT: Auth tokens are NOT stored in localStorage.
+ * All auth state lives in HttpOnly cookies (see nextjs/cookies.ts).
+ *
+ * This module handles:
+ * - Anonymous ID (for analytics before sign-in)
+ * - Click IDs (for ad conversion attribution)
+ * - Consent preferences
+ * - Organization selection
  */
 
 import type { ClickIds } from './platform-context'
@@ -13,30 +19,52 @@ import type { User } from '../types'
 // Re-export for convenience
 export type { ClickIds }
 
+// =============================================================================
+// User Cookie Type (from server-set cookies)
+// =============================================================================
+
 /**
- * Session data from server-set cookie (for SSR hydration)
+ * User data from server-set cookie (for client hydration)
+ *
+ * This is read from the __sylphx_{namespace}_user cookie.
+ * The cookie is set by the server after OAuth callback.
  */
-export interface SessionCookie {
+export interface UserCookieData {
 	user: User
 	expiresAt: number
 }
 
-// Storage key constants - all prefixed with appId
+// =============================================================================
+// Storage Keys (Non-Auth Only)
+// =============================================================================
+
+/**
+ * Storage key constants - all prefixed with appId
+ *
+ * NOTE: Auth tokens are NOT in localStorage.
+ * They are stored in HttpOnly cookies for security.
+ */
 export const STORAGE_KEYS = {
-	ACCESS_TOKEN: 'access_token',
-	REFRESH_TOKEN: 'refresh_token',
-	USER: 'user',
-	EXPIRES_AT: 'expires_at',
+	// Analytics
 	ANONYMOUS_ID: 'anonymous_id',
+
+	// Organization selection
 	CURRENT_ORG: 'current_org',
+
+	// Consent management
 	CONSENT: 'consent',
 	CONSENT_TIMESTAMP: 'consent_at',
+
 	// Click IDs for conversion attribution (gclid, fbclid, ttclid)
 	CLICK_IDS: 'click_ids',
 	CLICK_IDS_CAPTURED_AT: 'click_ids_at',
 } as const
 
 export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
+
+// =============================================================================
+// Storage Manager
+// =============================================================================
 
 /**
  * Create namespaced storage key
@@ -137,6 +165,10 @@ export class SylphxStorage {
 	}
 }
 
+// =============================================================================
+// Anonymous ID
+// =============================================================================
+
 /**
  * Generate a unique anonymous ID (UUIDv4)
  */
@@ -164,9 +196,9 @@ export function getOrCreateAnonymousId(storage: SylphxStorage): string {
 	return anonymousId
 }
 
-// ==========================================
+// =============================================================================
 // Click ID Utilities for Conversion Attribution
-// ==========================================
+// =============================================================================
 
 /** Click ID expiry (90 days - standard attribution window) */
 const CLICK_ID_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000
@@ -262,9 +294,9 @@ export function getPrimaryClickId(clickIds: ClickIds | null): string | undefined
 	return clickIds.gclid || clickIds.fbclid || clickIds.ttclid
 }
 
-// ==========================================
-// Session Cookie for SSR Hydration
-// ==========================================
+// =============================================================================
+// User Cookie Reading (Client-Side)
+// =============================================================================
 
 /**
  * Derive cookie namespace from app ID (matching server-side logic)
@@ -285,24 +317,24 @@ function getCookieNamespaceFromAppId(appId: string): string {
 }
 
 /**
- * Get session data from JS-readable cookie (set by server after OAuth)
+ * Get user data from JS-readable cookie (set by server after OAuth)
  *
  * This enables client-side hydration after server-side OAuth callback:
  * 1. Server callback exchanges OAuth code for tokens
- * 2. Server sets HTTP-only token cookies + JS-readable session cookie
- * 3. Client reads session cookie on mount for immediate auth state
+ * 2. Server sets HttpOnly token cookies + JS-readable user cookie
+ * 3. Client reads user cookie on mount for immediate auth state
  *
  * @param appId - App ID used to namespace the cookie
- * @returns Session data or null if not found/expired
+ * @returns User data or null if not found/expired
  */
-export function getSessionFromCookie(appId: string): SessionCookie | null {
+export function getUserFromCookie(appId: string): UserCookieData | null {
 	if (typeof document === 'undefined') return null
 
 	try {
-		// Cookie name format: {namespace}_session
+		// Cookie name format: __{namespace}_user
 		// Namespace derived from appId to match server-side logic
 		const namespace = getCookieNamespaceFromAppId(appId)
-		const cookieName = `${namespace}_session`
+		const cookieName = `__${namespace}_user`
 
 		// Parse cookies
 		const cookies = document.cookie.split(';')
@@ -311,14 +343,14 @@ export function getSessionFromCookie(appId: string): SessionCookie | null {
 			if (name === cookieName) {
 				const value = valueParts.join('=') // Handle values with = in them
 				const decoded = decodeURIComponent(value)
-				const session: SessionCookie = JSON.parse(decoded)
+				const userData: UserCookieData = JSON.parse(decoded)
 
 				// Check if session is expired
-				if (session.expiresAt && session.expiresAt < Date.now()) {
+				if (userData.expiresAt && userData.expiresAt < Date.now()) {
 					return null
 				}
 
-				return session
+				return userData
 			}
 		}
 		return null
@@ -328,19 +360,40 @@ export function getSessionFromCookie(appId: string): SessionCookie | null {
 }
 
 /**
- * Clear the session cookie (client-side)
+ * Clear the user cookie (client-side)
  *
- * Call this on sign out to remove the session cookie.
+ * Call this on sign out to remove the user cookie.
+ * Note: This only clears the JS-readable cookie.
+ * The HttpOnly session/refresh cookies can only be cleared server-side.
  */
-export function clearSessionCookie(appId: string): void {
+export function clearUserCookie(appId: string): void {
 	if (typeof document === 'undefined') return
 
 	try {
 		const namespace = getCookieNamespaceFromAppId(appId)
-		const cookieName = `${namespace}_session`
+		const cookieName = `__${namespace}_user`
 		// Set cookie with expired date to delete it
 		document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
 	} catch {
 		// Ignore errors
 	}
 }
+
+// =============================================================================
+// Backward Compatibility Aliases
+// =============================================================================
+
+/**
+ * @deprecated Use getUserFromCookie instead
+ */
+export const getSessionFromCookie = getUserFromCookie
+
+/**
+ * @deprecated Use clearUserCookie instead
+ */
+export const clearSessionCookie = clearUserCookie
+
+/**
+ * @deprecated - Renamed to UserCookieData
+ */
+export type SessionCookie = UserCookieData

@@ -66,7 +66,8 @@ import {
 	autoCaptureClickIds,
 	getStoredClickIds,
 	getPrimaryClickId,
-	clearSessionCookie,
+	getUserFromCookie,
+	clearUserCookie,
 	type ClickIds,
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
@@ -347,28 +348,52 @@ function SylphxProviderInner({
 	// ============================================
 	// REST API Client
 	// ============================================
+	// Note: For same-origin API calls, cookies are sent automatically.
+	// The API client doesn't need to explicitly provide the access token
+	// because it's in an HttpOnly cookie sent with each request.
 	const api = useMemo(
 		() =>
 			createRestApi({
 				appId,
 				platformUrl,
-				getAccessToken: () => storage.get(STORAGE_KEYS.ACCESS_TOKEN) ?? undefined,
+				// Tokens are now in HttpOnly cookies, sent automatically by browser
+				getAccessToken: () => undefined,
 			}),
-		[appId, platformUrl, storage]
+		[appId, platformUrl]
 	)
 
 	// ============================================
-	// Auth State
+	// Auth State — Cookie-Centric (Single Source of Truth)
 	// ============================================
-	const [authState, setAuthState] = useState<AuthState>({
-		isLoaded: false,
-		isSignedIn: false,
-		user: null,
-		accessToken: null,
-		refreshToken: null,
-		error: null,
-		isOAuthLoading: false,
-		oauthError: null,
+	// Initial state is hydrated from the user cookie (set by server).
+	// This enables instant auth state without loading flicker.
+	const [authState, setAuthState] = useState<AuthState>(() => {
+		// Try to read user from cookie (set by server after OAuth callback)
+		const userCookieData = getUserFromCookie(appId)
+		if (userCookieData && userCookieData.expiresAt > Date.now()) {
+			return {
+				isLoaded: true,
+				isSignedIn: true,
+				user: userCookieData.user,
+				// Tokens are in HttpOnly cookies — not exposed to JavaScript (XSS protection)
+				accessToken: null,
+				refreshToken: null,
+				error: null,
+				isOAuthLoading: false,
+				oauthError: null,
+			}
+		}
+		// No valid session — unauthenticated
+		return {
+			isLoaded: true, // We've checked, just no session
+			isSignedIn: false,
+			user: null,
+			accessToken: null,
+			refreshToken: null,
+			error: null,
+			isOAuthLoading: false,
+			oauthError: null,
+		}
 	})
 
 	// ============================================
@@ -489,40 +514,57 @@ function SylphxProviderInner({
 	}, [autoTracking])
 
 	// ============================================
-	// Token Management
+	// Auth State Updates
 	// ============================================
+	// Note: Tokens are stored in HttpOnly cookies (server-side).
+	// These functions only update React state for UI reactivity.
+	// Cookies are managed by middleware and server-side handlers.
+
+	/**
+	 * Update auth state after successful authentication.
+	 *
+	 * Note: This does NOT store tokens in localStorage (XSS protection).
+	 * Tokens are in HttpOnly cookies, managed server-side.
+	 */
 	const saveTokens = useCallback(
 		(response: TokenResponse) => {
-			const expiresAt = Date.now() + response.expiresIn * 1000
-
-			storage.set(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken)
-			storage.set(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken)
-			storage.setJSON(STORAGE_KEYS.USER, response.user)
-			storage.set(STORAGE_KEYS.EXPIRES_AT, expiresAt.toString())
-
+			// Update auth state (tokens are in HttpOnly cookies, not accessible to JS)
 			setAuthState({
 				isLoaded: true,
 				isSignedIn: true,
 				user: response.user,
-				accessToken: response.accessToken,
-				refreshToken: response.refreshToken,
+				// Tokens not exposed to JavaScript — they're in HttpOnly cookies
+				accessToken: null,
+				refreshToken: null,
 				error: null,
 				isOAuthLoading: false,
 				oauthError: null,
 			})
+
+			// Broadcast auth change to other tabs
+			if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+				try {
+					const channel = new BroadcastChannel(`sylphx-auth-${appId}`)
+					channel.postMessage({ type: 'auth-change', isSignedIn: true, user: response.user })
+					channel.close()
+				} catch {
+					// BroadcastChannel not supported
+				}
+			}
 		},
-		[storage]
+		[appId]
 	)
 
+	/**
+	 * Clear auth state on sign out.
+	 *
+	 * Note: Actual cookie clearing happens server-side via signOut().
+	 * This function clears the JS-readable user cookie for immediate UI update.
+	 */
 	const clearTokens = useCallback(
 		(error?: Error) => {
-			storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
-			storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
-			storage.remove(STORAGE_KEYS.USER)
-			storage.remove(STORAGE_KEYS.EXPIRES_AT)
-
-			// Also clear the session cookie (set by server-side OAuth)
-			clearSessionCookie(appId)
+			// Clear the JS-readable user cookie (for immediate UI update)
+			clearUserCookie(appId)
 
 			setAuthState({
 				isLoaded: true,
@@ -534,322 +576,129 @@ function SylphxProviderInner({
 				isOAuthLoading: false,
 				oauthError: null,
 			})
-		},
-		[storage, appId]
-	)
 
-	// Track ongoing refresh to prevent race conditions
-	const refreshingRef = useRef<Promise<boolean> | null>(null)
-	const refreshRetryCountRef = useRef(0)
-	const MAX_REFRESH_RETRIES = 2
-
-	const refreshTokens = useCallback(
-		async (token: string, options?: { isProactive?: boolean }): Promise<boolean> => {
-			// If already refreshing, return the existing promise (prevent race condition)
-			if (refreshingRef.current) {
-				return refreshingRef.current
-			}
-
-			const doRefresh = async (): Promise<boolean> => {
+			// Broadcast sign-out to other tabs
+			if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
 				try {
-					const controller = new AbortController()
-					const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
-
-					const response = await fetch(`${platformUrl}/api/auth/token`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							grant_type: 'refresh_token',
-							refresh_token: token,
-							client_id: appId || '',
-						}),
-						signal: controller.signal,
-					})
-
-					clearTimeout(timeoutId)
-
-					if (!response.ok) {
-						const errorData = await response.json().catch(() => ({ message: 'Token refresh failed' }))
-
-						// Don't clear tokens for transient errors on proactive refresh
-						// These include: 429 (rate limited), 5xx (server errors), network errors
-						const isTransientError = response.status === 429 || response.status >= 500
-						if (isTransientError && options?.isProactive) {
-							// Retry for transient errors (up to MAX_REFRESH_RETRIES)
-							if (refreshRetryCountRef.current < MAX_REFRESH_RETRIES) {
-								refreshRetryCountRef.current++
-								// Exponential backoff: 1s, 2s
-								await new Promise((resolve) =>
-									setTimeout(resolve, 1000 * refreshRetryCountRef.current)
-								)
-								return doRefresh()
-							}
-						}
-
-						// Clear tokens for auth errors (401, 403) or after max retries
-						const refreshError = new Error(errorData.message || 'Token refresh failed')
-						clearTokens(refreshError)
-						refreshRetryCountRef.current = 0
-						return false
-					}
-
-					const data: TokenResponse = await response.json()
-					saveTokens(data)
-					refreshRetryCountRef.current = 0
-					return true
-				} catch (error) {
-					// Handle abort/timeout and network errors
-					const isAbortError = error instanceof Error && error.name === 'AbortError'
-					const isNetworkError = error instanceof TypeError // Fetch network errors are TypeErrors
-
-					// Retry for transient errors on proactive refresh
-					if ((isAbortError || isNetworkError) && options?.isProactive) {
-						if (refreshRetryCountRef.current < MAX_REFRESH_RETRIES) {
-							refreshRetryCountRef.current++
-							await new Promise((resolve) =>
-								setTimeout(resolve, 1000 * refreshRetryCountRef.current)
-							)
-							return doRefresh()
-						}
-					}
-
-					const refreshError = error instanceof Error ? error : new Error('Token refresh failed')
-					clearTokens(refreshError)
-					refreshRetryCountRef.current = 0
-					return false
+					const channel = new BroadcastChannel(`sylphx-auth-${appId}`)
+					channel.postMessage({ type: 'auth-change', isSignedIn: false, user: null })
+					channel.close()
+				} catch {
+					// BroadcastChannel not supported
 				}
 			}
-
-			// Set the promise so concurrent calls wait on this one
-			refreshingRef.current = doRefresh().finally(() => {
-				refreshingRef.current = null
-			})
-
-			return refreshingRef.current
 		},
-		[appId, platformUrl, saveTokens, clearTokens]
+		[appId]
 	)
 
 	// ============================================
-	// Load Auth State & Auto-detect OAuth Callbacks
+	// Token Refresh (Now handled server-side by middleware)
 	// ============================================
+	// With cookie-centric architecture, token refresh happens in middleware.
+	// The client doesn't need to manage refresh tokens directly.
+	// This is a no-op stub for backward compatibility.
+	const refreshTokens = useCallback(
+		async (_token: string, _options?: { isProactive?: boolean }): Promise<boolean> => {
+			// Token refresh is handled by middleware server-side.
+			// This function is kept for backward compatibility but does nothing.
+			// The middleware will refresh tokens automatically when they expire.
+			return true
+		},
+		[]
+	)
 
-	// Track if we've already handled the OAuth callback to prevent double-processing
-	const oauthCallbackHandledRef = useRef(false)
-
+	// ============================================
+	// Cross-Tab Auth Sync (BroadcastChannel)
+	// ============================================
+	// With cookie-centric auth, cookies sync automatically across tabs.
+	// We use BroadcastChannel to sync React state across tabs for immediate UI updates.
 	useEffect(() => {
-		const loadState = async () => {
-			try {
-				// Auto-detect OAuth callback (Firebase/Supabase pattern)
-				// Check if URL contains OAuth callback parameters
-				if (typeof window !== 'undefined' && !oauthCallbackHandledRef.current) {
-					const params = new URLSearchParams(window.location.search)
-					const code = params.get('code')
-					const error = params.get('error')
-					const errorDescription = params.get('error_description')
+		if (typeof BroadcastChannel === 'undefined') return
 
-					// Handle OAuth error from provider
-					if (error) {
-						oauthCallbackHandledRef.current = true
-						const oauthError = new Error(errorDescription || error)
-						setAuthState({
+		const channel = new BroadcastChannel(`sylphx-auth-${appId}`)
+
+		const handleMessage = (event: MessageEvent) => {
+			if (event.data?.type === 'auth-change') {
+				setAuthState((prev) => ({
+					...prev,
+					isLoaded: true,
+					isSignedIn: event.data.isSignedIn,
+					user: event.data.user,
+					error: null,
+				}))
+			}
+		}
+
+		channel.addEventListener('message', handleMessage)
+
+		return () => {
+			channel.removeEventListener('message', handleMessage)
+			channel.close()
+		}
+	}, [appId])
+
+	// ============================================
+	// Tab Focus Sync (re-read cookie on visibility change)
+	// ============================================
+	// When user switches tabs, re-read cookie to catch any auth changes
+	useEffect(() => {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				const userCookieData = getUserFromCookie(appId)
+				const isSignedIn = !!(userCookieData && userCookieData.expiresAt > Date.now())
+
+				setAuthState((prev) => {
+					// Only update if auth state actually changed
+					if (prev.isSignedIn !== isSignedIn || prev.user?.id !== userCookieData?.user?.id) {
+						return {
+							...prev,
 							isLoaded: true,
-							isSignedIn: false,
-							user: null,
-							accessToken: null,
-							refreshToken: null,
-							error: null,
-							isOAuthLoading: false,
-							oauthError,
-						})
-
-						// Clean up URL params
-						const cleanUrl = new URL(window.location.href)
-						cleanUrl.searchParams.delete('error')
-						cleanUrl.searchParams.delete('error_description')
-						window.history.replaceState({}, '', cleanUrl.toString())
-						return
-					}
-
-					// Handle OAuth success (authorization code received)
-					if (code) {
-						oauthCallbackHandledRef.current = true
-						setAuthState((prev) => ({ ...prev, isOAuthLoading: true, oauthError: null }))
-
-						try {
-							// Retrieve PKCE code_verifier
-							const { retrievePKCEVerifier } = await import('../lib/pkce')
-							const codeVerifier = retrievePKCEVerifier(appId)
-
-							// Exchange code for tokens
-							const response = await fetch(`${platformUrl}/api/auth/token`, {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/json' },
-								body: JSON.stringify({
-									grant_type: 'authorization_code',
-									code,
-									client_id: appId || '',
-									...(codeVerifier && { code_verifier: codeVerifier }),
-								}),
-							})
-
-							if (!response.ok) {
-								const errorData = await response.json().catch(() => ({}))
-								throw new Error(errorData.error_description || errorData.message || 'Token exchange failed')
-							}
-
-							const data: TokenResponse = await response.json()
-							saveTokens(data)
-
-							// Clean up URL params after successful auth
-							const cleanUrl = new URL(window.location.href)
-							cleanUrl.searchParams.delete('code')
-							cleanUrl.searchParams.delete('state')
-							window.history.replaceState({}, '', cleanUrl.toString())
-							return
-						} catch (err) {
-							const oauthError = err instanceof Error ? err : new Error('OAuth callback failed')
-							setAuthState({
-								isLoaded: true,
-								isSignedIn: false,
-								user: null,
-								accessToken: null,
-								refreshToken: null,
-								error: null,
-								isOAuthLoading: false,
-								oauthError,
-							})
-
-							// Still clean up URL even on error
-							const cleanUrl = new URL(window.location.href)
-							cleanUrl.searchParams.delete('code')
-							cleanUrl.searchParams.delete('state')
-							window.history.replaceState({}, '', cleanUrl.toString())
-							return
+							isSignedIn,
+							user: userCookieData?.user ?? null,
 						}
 					}
-				}
-
-				// ============================================
-				// SSR Hydration: Check session cookie first
-				// ============================================
-				// After server-side OAuth callback, a session cookie is set.
-				// Check for it first to enable immediate hydration.
-				const { getSessionFromCookie } = await import('./storage-utils')
-				const sessionCookie = getSessionFromCookie(appId)
-
-				if (sessionCookie && sessionCookie.expiresAt > Date.now()) {
-					// Found valid session from server-side OAuth
-					// Set auth state immediately for hydration
-					setAuthState({
-						isLoaded: true,
-						isSignedIn: true,
-						user: sessionCookie.user,
-						// Note: tokens are in HTTP-only cookies, not accessible from JS
-						// Client-side API calls will include cookies automatically
-						accessToken: null, // Not available from JS (HTTP-only)
-						refreshToken: null, // Not available from JS (HTTP-only)
-						error: null,
-						isOAuthLoading: false,
-						oauthError: null,
-					})
-					return
-				}
-
-				// Normal auth state restoration from localStorage
-				const accessToken = storage.get(STORAGE_KEYS.ACCESS_TOKEN)
-				const refreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN)
-				const user = storage.getJSON<User>(STORAGE_KEYS.USER)
-				const expiresAtStr = storage.get(STORAGE_KEYS.EXPIRES_AT)
-
-				if (accessToken && refreshToken && user) {
-					const expiresAt = expiresAtStr ? parseInt(expiresAtStr, 10) : 0
-
-					if (expiresAt > Date.now()) {
-						setAuthState({
-							isLoaded: true,
-							isSignedIn: true,
-							user,
-							accessToken,
-							refreshToken,
-							error: null,
-							isOAuthLoading: false,
-							oauthError: null,
-						})
-						return
-					}
-
-					if (refreshToken) {
-						refreshTokens(refreshToken)
-						return
-					}
-				}
-
-				setAuthState({
-					isLoaded: true,
-					isSignedIn: false,
-					user: null,
-					accessToken: null,
-					refreshToken: null,
-					error: null,
-					isOAuthLoading: false,
-					oauthError: null,
-				})
-			} catch (error) {
-				setAuthState({
-					isLoaded: true,
-					isSignedIn: false,
-					user: null,
-					accessToken: null,
-					refreshToken: null,
-					error: error instanceof Error ? error : new Error('Failed to load auth state'),
-					isOAuthLoading: false,
-					oauthError: null,
+					return prev
 				})
 			}
 		}
 
-		loadState()
-
-		// Listen for storage changes from other tabs
-		const handleStorageChange = (e: StorageEvent) => {
-			if (e.key?.startsWith(`sylphx_${appId}_`)) {
-				loadState()
-			}
-		}
-
-		window.addEventListener('storage', handleStorageChange)
-		return () => window.removeEventListener('storage', handleStorageChange)
-	}, [refreshTokens, storage, appId, platformUrl, saveTokens])
+		document.addEventListener('visibilitychange', handleVisibilityChange)
+		return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+	}, [appId])
 
 	// ============================================
-	// Smart Token Refresh (based on expiry, not interval)
+	// Handle OAuth Error in URL (error from provider)
 	// ============================================
 	useEffect(() => {
-		if (!authState.isSignedIn || !authState.refreshToken) return
+		if (typeof window === 'undefined') return
 
-		const checkAndRefresh = () => {
-			const expiresAtStr = storage.get(STORAGE_KEYS.EXPIRES_AT)
-			const expiresAt = expiresAtStr ? parseInt(expiresAtStr, 10) : 0
+		const params = new URLSearchParams(window.location.search)
+		const error = params.get('error')
+		const errorDescription = params.get('error_description')
 
-			// Refresh if token expires within 2 minutes
-			const twoMinutesFromNow = Date.now() + 2 * 60 * 1000
-			if (expiresAt > 0 && expiresAt < twoMinutesFromNow) {
-				const refreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN)
-				if (refreshToken) {
-					// Proactive refresh with retry for transient errors
-					// isProactive: true enables retry logic for network/server errors
-					refreshTokens(refreshToken, { isProactive: true })
-				}
-			}
+		if (error) {
+			const oauthError = new Error(errorDescription || error)
+			setAuthState((prev) => ({
+				...prev,
+				isLoaded: true,
+				isSignedIn: false,
+				oauthError,
+			}))
+
+			// Clean up URL params
+			const cleanUrl = new URL(window.location.href)
+			cleanUrl.searchParams.delete('error')
+			cleanUrl.searchParams.delete('error_description')
+			window.history.replaceState({}, '', cleanUrl.toString())
 		}
+	}, [])
 
-		// Check immediately and then every 30 seconds
-		checkAndRefresh()
-		const intervalId = setInterval(checkAndRefresh, 30 * 1000)
-
-		return () => clearInterval(intervalId)
-	}, [authState.isSignedIn, authState.refreshToken, refreshTokens, storage])
+	// ============================================
+	// Token Refresh — Handled by Middleware (Server-Side)
+	// ============================================
+	// With the new cookie-centric architecture, token refresh happens
+	// server-side in the middleware. No client-side refresh needed.
+	// The middleware checks session expiry and refreshes automatically.
 
 	// ============================================
 	// All server data is now handled by React Query:
@@ -931,81 +780,113 @@ function SylphxProviderInner({
 
 	const signOut = useCallback(
 		async (options?: { redirectUrl?: string }) => {
-			const { refreshToken } = authState
-
-			if (refreshToken) {
-				// Best-effort token revocation - continue with sign out even if this fails
-				try {
-					await fetch(`${platformUrl}/api/auth/revoke`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							refresh_token: refreshToken,
-							client_id: appId || '',
-						}),
-					})
-				} catch {
-					// Token revocation is best-effort, continue with sign out
-				}
+			// Call server-side signout to clear HttpOnly cookies and revoke tokens
+			try {
+				await fetch('/api/auth/signout', {
+					method: 'POST',
+					credentials: 'include', // Send cookies
+				})
+			} catch {
+				// Best-effort signout - continue even if server call fails
 			}
 
+			// Clear client-side state
 			clearTokens()
 
 			// Use safe redirect with validation to prevent XSS
 			const redirectUrl = options?.redirectUrl || afterSignOutUrl
 			safeRedirect(redirectUrl, { fallback: afterSignOutUrl || '/' })
 		},
-		[appId, platformUrl, authState, clearTokens, afterSignOutUrl]
+		[clearTokens, afterSignOutUrl]
 	)
 
+	/**
+	 * Get an access token for third-party API calls (BFF pattern).
+	 *
+	 * For same-origin requests, cookies are sent automatically — no token needed.
+	 * This is only for when you need to call third-party APIs that require a Bearer token.
+	 *
+	 * Implementation: Calls /api/auth/token server endpoint which reads the
+	 * HttpOnly session cookie and returns the token. This keeps tokens secure
+	 * while allowing controlled access for third-party API calls.
+	 *
+	 * @example
+	 * ```ts
+	 * // For third-party APIs
+	 * const token = await getToken()
+	 * await fetch('https://api.thirdparty.com/data', {
+	 *   headers: { Authorization: `Bearer ${token}` }
+	 * })
+	 *
+	 * // For same-origin APIs - NO TOKEN NEEDED, cookies sent automatically
+	 * await fetch('/api/data')
+	 * ```
+	 */
 	const getToken = useCallback(async (): Promise<string | null> => {
-		const expiresAtStr = storage.get(STORAGE_KEYS.EXPIRES_AT)
-		const expiresAt = expiresAtStr ? parseInt(expiresAtStr, 10) : 0
-
-		if (authState.accessToken && expiresAt > Date.now() + 60000) {
-			return authState.accessToken
+		if (!authState.isSignedIn) {
+			return null
 		}
 
-		if (authState.refreshToken) {
-			const success = await refreshTokens(authState.refreshToken)
-			if (success) {
-				return storage.get(STORAGE_KEYS.ACCESS_TOKEN)
+		try {
+			// Call BFF endpoint to get token from HttpOnly cookie
+			const response = await fetch('/api/auth/token', {
+				method: 'GET',
+				credentials: 'include', // Send cookies
+			})
+
+			if (!response.ok) {
+				return null
 			}
+
+			const data = await response.json()
+			return data.accessToken ?? null
+		} catch {
+			return null
 		}
+	}, [authState.isSignedIn])
 
-		return null
-	}, [authState.accessToken, authState.refreshToken, refreshTokens, storage])
-
+	/**
+	 * Handle OAuth callback manually (for apps that don't use /api/auth/callback).
+	 *
+	 * NOTE: With cookie-centric auth, OAuth callbacks should go through
+	 * /api/auth/callback which sets HttpOnly cookies server-side.
+	 * This function is kept for backward compatibility but may not work
+	 * correctly because tokens need to be set via cookies, not localStorage.
+	 */
 	const handleCallback = useCallback(
-		async (code: string, state?: string) => {
+		async (code: string, _state?: string) => {
 			try {
-				// Retrieve PKCE code_verifier if stored (for OAuth flows)
-				const { retrievePKCEVerifier } = await import('../lib/pkce')
-				const codeVerifier = retrievePKCEVerifier(appId)
-
-				const response = await fetch(`${platformUrl}/api/auth/token`, {
+				// Call server endpoint to exchange code and set cookies
+				const response = await fetch('/api/auth/callback', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						grant_type: 'authorization_code',
-						code,
-						client_id: appId || '',
-						// Include PKCE verifier if available (required for SDK OAuth flow)
-						...(codeVerifier && { code_verifier: codeVerifier }),
-					}),
+					credentials: 'include',
+					body: JSON.stringify({ code }),
 				})
 
 				if (!response.ok) {
 					throw new Error('Token exchange failed')
 				}
 
-				const data: TokenResponse = await response.json()
-				saveTokens(data)
+				// Re-read user from cookie (server set it)
+				const userCookieData = getUserFromCookie(appId)
+				if (userCookieData) {
+					setAuthState({
+						isLoaded: true,
+						isSignedIn: true,
+						user: userCookieData.user,
+						accessToken: null,
+						refreshToken: null,
+						error: null,
+						isOAuthLoading: false,
+						oauthError: null,
+					})
+				}
 			} catch (error) {
 				throw error
 			}
 		},
-		[appId, platformUrl, saveTokens]
+		[appId]
 	)
 
 	const resetPassword = useCallback(

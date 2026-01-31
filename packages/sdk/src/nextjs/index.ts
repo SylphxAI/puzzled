@@ -48,6 +48,7 @@ export {
 	signOut,
 	syncAuthToCookies,
 	getAuthorizationUrl,
+	getSessionToken,
 	type AuthResult,
 } from './server'
 
@@ -57,12 +58,27 @@ export {
 	getAuthCookies,
 	setAuthCookies,
 	clearAuthCookies,
-	isAuthExpired,
+	isSessionExpired,
+	hasRefreshToken,
+	SESSION_TOKEN_LIFETIME,
+	REFRESH_TOKEN_LIFETIME,
+	SECURE_COOKIE_OPTIONS,
+	USER_COOKIE_OPTIONS,
+	type UserCookieData,
+	type AuthCookiesData,
 } from './cookies'
 
 // Middleware
 export {
 	authMiddleware,
 	createMatcher,
+	getMiddlewareNamespace,
 	type AuthMiddlewareConfig,
 } from './middleware'
+
+// API Route Helpers (BFF Pattern)
+export {
+	createCallbackHandler,
+	handleCallbackPost,
+	type CallbackHandlerOptions,
+} from './api-routes'

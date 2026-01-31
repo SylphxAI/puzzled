@@ -1,153 +1,266 @@
 /**
- * Cookie Management for Next.js
+ * Cookie Management for Next.js — Single Source of Truth
  *
- * Secure cookie helpers for storing auth tokens.
- * Cookie names are namespaced by environment prefix to prevent collisions.
+ * Architecture: Cookie-Centric Auth (Clerk Pattern)
+ * ================================================
  *
- * Architecture:
- * - HTTP-only cookies store sensitive tokens (access_token, refresh_token)
- * - A JS-readable session cookie stores user info for client hydration
- * - This allows SSR auth via cookies AND client-side state sync
+ * ALL auth state lives in cookies. Zero localStorage for auth.
+ *
+ * Cookie Structure:
+ * - __sylphx_{namespace}_session  — HttpOnly JWT, 5 min (access token)
+ * - __sylphx_{namespace}_refresh  — HttpOnly, 30 days (refresh token)
+ * - __sylphx_{namespace}_user     — JS-readable, 5 min (user data for client hydration)
+ *
+ * Benefits:
+ * 1. Single Source of Truth — no server/client state divergence
+ * 2. XSS-safe — tokens never accessible to JavaScript
+ * 3. Cross-tab sync — cookies shared across tabs automatically
+ * 4. SSR works — auth() in Server Components reads cookies directly
+ *
+ * Security:
+ * - Short token lifetime (5 min) like Clerk
+ * - Server-side refresh in middleware
+ * - SameSite=Lax for CSRF protection
  */
 
 import { cookies } from 'next/headers'
 import type { TokenResponse, User } from '../types'
 
-// Cookie name generator (namespaced by environment prefix)
+// =============================================================================
+// Cookie Name Generator
+// =============================================================================
+
+/**
+ * Get cookie names for a given namespace
+ *
+ * Namespace is derived from the secret key environment (dev/stg/prod).
+ * This prevents cookies from different environments colliding.
+ *
+ * @example
+ * getCookieNames('sylphx_prod')
+ * // Returns:
+ * // {
+ * //   SESSION: '__sylphx_prod_session',
+ * //   REFRESH: '__sylphx_prod_refresh',
+ * //   USER: '__sylphx_prod_user',
+ * // }
+ */
 export function getCookieNames(namespace: string) {
 	return {
-		ACCESS_TOKEN: `${namespace}_access_token`,
-		REFRESH_TOKEN: `${namespace}_refresh_token`,
-		USER: `${namespace}_user`,
-		EXPIRES_AT: `${namespace}_expires_at`,
-		// JS-readable session cookie for client hydration
-		SESSION: `${namespace}_session`,
+		/** HttpOnly JWT access token (5 min) */
+		SESSION: `__${namespace}_session`,
+		/** HttpOnly refresh token (30 days) */
+		REFRESH: `__${namespace}_refresh`,
+		/** JS-readable user data for client hydration (5 min) */
+		USER: `__${namespace}_user`,
 	}
 }
 
-// Cookie options for HTTP-only tokens
-const SECURE_COOKIE_OPTIONS = {
+// =============================================================================
+// Cookie Options
+// =============================================================================
+
+/** Session token lifetime (5 minutes like Clerk) */
+export const SESSION_TOKEN_LIFETIME = 5 * 60
+
+/** Refresh token lifetime (30 days) */
+export const REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60
+
+/**
+ * Cookie options for HttpOnly tokens (session, refresh)
+ *
+ * Security features:
+ * - httpOnly: true — Not accessible via JavaScript (XSS protection)
+ * - secure: true in production — Only sent over HTTPS
+ * - sameSite: 'lax' — CSRF protection while allowing navigation
+ */
+export const SECURE_COOKIE_OPTIONS = {
 	httpOnly: true,
 	secure: process.env.NODE_ENV === 'production',
 	sameSite: 'lax' as const,
 	path: '/',
 }
 
-// Cookie options for JS-readable session (for client hydration)
-const SESSION_COOKIE_OPTIONS = {
-	httpOnly: false, // Readable by client JS
+/**
+ * Cookie options for JS-readable user cookie
+ *
+ * This cookie contains only user info (no tokens) and enables:
+ * - Client-side hydration without loading states
+ * - Cross-tab sync via cookie visibility
+ */
+export const USER_COOKIE_OPTIONS = {
+	httpOnly: false, // Readable by client JS for hydration
 	secure: process.env.NODE_ENV === 'production',
 	sameSite: 'lax' as const,
 	path: '/',
 }
 
+// =============================================================================
+// Types
+// =============================================================================
+
 /**
- * Get auth tokens from cookies
+ * User cookie data (JS-readable for client hydration)
+ *
+ * Note: This contains NO sensitive data.
+ * Tokens are stored separately in HttpOnly cookies.
  */
-export async function getAuthCookies(appId: string): Promise<{
-	accessToken: string | null
-	refreshToken: string | null
-	user: User | null
-	expiresAt: number | null
-}> {
-	const cookieStore = await cookies()
-	const names = getCookieNames(appId)
-
-	const accessToken = cookieStore.get(names.ACCESS_TOKEN)?.value || null
-	const refreshToken = cookieStore.get(names.REFRESH_TOKEN)?.value || null
-	const userJson = cookieStore.get(names.USER)?.value || null
-	const expiresAtStr = cookieStore.get(names.EXPIRES_AT)?.value || null
-
-	let user: User | null = null
-	if (userJson) {
-		try {
-			user = JSON.parse(userJson)
-		} catch {
-			user = null
-		}
-	}
-
-	const expiresAt = expiresAtStr ? parseInt(expiresAtStr, 10) : null
-
-	return { accessToken, refreshToken, user, expiresAt }
+export interface UserCookieData {
+	user: User
+	/** Timestamp when session expires (for client-side expiry check) */
+	expiresAt: number
 }
 
 /**
- * Session data stored in JS-readable cookie for client hydration
+ * Auth cookies data returned by getAuthCookies
  */
-interface SessionCookie {
-	user: User
-	expiresAt: number
-	// Note: tokens are NOT included - stored separately in HTTP-only cookies
+export interface AuthCookiesData {
+	/** Access token from SESSION cookie (HttpOnly) */
+	sessionToken: string | null
+	/** Refresh token from REFRESH cookie (HttpOnly) */
+	refreshToken: string | null
+	/** User data from USER cookie (JS-readable) */
+	user: User | null
+	/** Expiry timestamp from USER cookie */
+	expiresAt: number | null
+}
+
+// =============================================================================
+// Cookie Operations
+// =============================================================================
+
+/**
+ * Get auth cookies from the request
+ *
+ * Used by auth() to read current auth state.
+ */
+export async function getAuthCookies(namespace: string): Promise<AuthCookiesData> {
+	const cookieStore = await cookies()
+	const names = getCookieNames(namespace)
+
+	const sessionToken = cookieStore.get(names.SESSION)?.value || null
+	const refreshToken = cookieStore.get(names.REFRESH)?.value || null
+	const userCookieValue = cookieStore.get(names.USER)?.value || null
+
+	let user: User | null = null
+	let expiresAt: number | null = null
+
+	if (userCookieValue) {
+		try {
+			const parsed: UserCookieData = JSON.parse(userCookieValue)
+			user = parsed.user
+			expiresAt = parsed.expiresAt
+		} catch {
+			// Invalid JSON, treat as no user
+			user = null
+			expiresAt = null
+		}
+	}
+
+	return { sessionToken, refreshToken, user, expiresAt }
 }
 
 /**
  * Set auth cookies from token response
  *
- * Sets both:
- * - HTTP-only cookies for tokens (secure, server-only access)
- * - JS-readable session cookie for client hydration
+ * Sets all three cookies:
+ * - SESSION: HttpOnly access token (5 min)
+ * - REFRESH: HttpOnly refresh token (30 days)
+ * - USER: JS-readable user data (5 min)
+ *
+ * @param namespace - Cookie namespace (e.g., 'sylphx_prod')
+ * @param response - Token response from auth endpoint
+ * @param options - Optional: custom expiresIn override
  */
-export async function setAuthCookies(appId: string, response: TokenResponse): Promise<void> {
+export async function setAuthCookies(
+	namespace: string,
+	response: TokenResponse,
+	options?: { sessionLifetime?: number }
+): Promise<void> {
 	const cookieStore = await cookies()
-	const names = getCookieNames(appId)
-	const expiresAt = Date.now() + response.expiresIn * 1000
+	const names = getCookieNames(namespace)
 
-	// Access token - shorter expiry (HTTP-only)
-	cookieStore.set(names.ACCESS_TOKEN, response.accessToken, {
+	// Use custom session lifetime or default (5 min)
+	const sessionLifetime = options?.sessionLifetime ?? SESSION_TOKEN_LIFETIME
+	const expiresAt = Date.now() + sessionLifetime * 1000
+
+	// SESSION cookie - HttpOnly access token
+	cookieStore.set(names.SESSION, response.accessToken, {
 		...SECURE_COOKIE_OPTIONS,
-		maxAge: response.expiresIn,
+		maxAge: sessionLifetime,
 	})
 
-	// Refresh token - longer expiry (HTTP-only)
-	cookieStore.set(names.REFRESH_TOKEN, response.refreshToken, {
+	// REFRESH cookie - HttpOnly refresh token (30 days)
+	cookieStore.set(names.REFRESH, response.refreshToken, {
 		...SECURE_COOKIE_OPTIONS,
-		maxAge: 30 * 24 * 60 * 60, // 30 days
+		maxAge: REFRESH_TOKEN_LIFETIME,
 	})
 
-	// User data (HTTP-only for server-side use)
-	cookieStore.set(names.USER, JSON.stringify(response.user), {
-		...SECURE_COOKIE_OPTIONS,
-		maxAge: 30 * 24 * 60 * 60,
-	})
-
-	// Expiry timestamp (HTTP-only)
-	cookieStore.set(names.EXPIRES_AT, expiresAt.toString(), {
-		...SECURE_COOKIE_OPTIONS,
-		maxAge: response.expiresIn,
-	})
-
-	// Session cookie - JS-readable for client hydration
-	// Contains user info but NOT tokens (those stay HTTP-only)
-	const sessionData: SessionCookie = {
+	// USER cookie - JS-readable for client hydration
+	const userData: UserCookieData = {
 		user: response.user,
 		expiresAt,
 	}
-	cookieStore.set(names.SESSION, JSON.stringify(sessionData), {
-		...SESSION_COOKIE_OPTIONS,
-		maxAge: response.expiresIn,
+	cookieStore.set(names.USER, JSON.stringify(userData), {
+		...USER_COOKIE_OPTIONS,
+		maxAge: sessionLifetime,
 	})
 }
 
 /**
- * Clear all auth cookies (including session cookie)
+ * Clear all auth cookies
+ *
+ * Call on sign out to remove all auth state.
  */
-export async function clearAuthCookies(appId: string): Promise<void> {
+export async function clearAuthCookies(namespace: string): Promise<void> {
 	const cookieStore = await cookies()
-	const names = getCookieNames(appId)
+	const names = getCookieNames(namespace)
 
-	cookieStore.delete(names.ACCESS_TOKEN)
-	cookieStore.delete(names.REFRESH_TOKEN)
-	cookieStore.delete(names.USER)
-	cookieStore.delete(names.EXPIRES_AT)
 	cookieStore.delete(names.SESSION)
+	cookieStore.delete(names.REFRESH)
+	cookieStore.delete(names.USER)
 }
 
 /**
- * Check if auth cookies are expired
+ * Check if session is expired
+ *
+ * Uses a 30 second buffer to account for network latency.
  */
-export async function isAuthExpired(appId: string): Promise<boolean> {
-	const { expiresAt } = await getAuthCookies(appId)
+export async function isSessionExpired(namespace: string): Promise<boolean> {
+	const { expiresAt } = await getAuthCookies(namespace)
 	if (!expiresAt) return true
-	return expiresAt < Date.now()
+	// 30 second buffer
+	return expiresAt < Date.now() + 30000
+}
+
+/**
+ * Check if we have a refresh token (can potentially refresh)
+ */
+export async function hasRefreshToken(namespace: string): Promise<boolean> {
+	const { refreshToken } = await getAuthCookies(namespace)
+	return !!refreshToken
+}
+
+// =============================================================================
+// Middleware Cookie Helpers
+// =============================================================================
+
+/**
+ * Get cookie names for middleware (doesn't require async cookies())
+ *
+ * Use this in middleware where you're working with NextRequest directly.
+ */
+export function getCookieNamesSync(namespace: string) {
+	return getCookieNames(namespace)
+}
+
+/**
+ * Parse user cookie value (for client-side use)
+ */
+export function parseUserCookie(value: string): UserCookieData | null {
+	try {
+		return JSON.parse(value) as UserCookieData
+	} catch {
+		return null
+	}
 }

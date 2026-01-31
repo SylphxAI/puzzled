@@ -2,12 +2,27 @@
  * Server-side Auth Helpers for Next.js
  *
  * Use in Server Components and API Routes.
- * Secret key is the sole app identifier — no separate app ID needed.
+ *
+ * Architecture: Cookie-Centric Single Source of Truth
+ * ===================================================
+ *
+ * All auth state lives in cookies. The auth() function reads
+ * from HttpOnly cookies and refreshes if needed.
+ *
+ * Cookie Structure:
+ * - __sylphx_{namespace}_session  — HttpOnly JWT (5 min)
+ * - __sylphx_{namespace}_refresh  — HttpOnly refresh token (30 days)
+ * - __sylphx_{namespace}_user     — JS-readable user data (5 min)
  */
 
 import { cache } from 'react'
 import type { User, TokenResponse } from '../types'
-import { getAuthCookies, setAuthCookies, clearAuthCookies } from './cookies'
+import {
+	getAuthCookies,
+	setAuthCookies,
+	clearAuthCookies,
+	SESSION_TOKEN_LIFETIME,
+} from './cookies'
 import { verifyAccessToken } from '../server'
 import {
 	validateAndSanitizeSecretKey,
@@ -15,6 +30,10 @@ import {
 	getCookieNamespace as getCookieNamespaceFromKey,
 } from '../key-validation'
 import { DEFAULT_PLATFORM_URL } from '../constants'
+
+// =============================================================================
+// Type Guards
+// =============================================================================
 
 /** Type guard for token response */
 function isTokenResponse(data: unknown): data is TokenResponse {
@@ -28,6 +47,10 @@ function isTokenResponse(data: unknown): data is TokenResponse {
 		typeof (data as TokenResponse).refreshToken === 'string'
 	)
 }
+
+// =============================================================================
+// Configuration
+// =============================================================================
 
 // Configuration for server helpers (must be set before use)
 let serverConfig: { secretKey: string; platformUrl: string } | null = null
@@ -89,17 +112,29 @@ function getCookieNamespace(): string {
 	return getCookieNamespaceFromKey(config.secretKey)
 }
 
+// =============================================================================
+// Auth Types
+// =============================================================================
+
 /**
  * Auth state returned by auth()
  */
 export interface AuthResult {
 	userId: string | null
 	user: User | null
-	accessToken: string | null
+	/** Session token (for internal use only - not exposed to client) */
+	sessionToken: string | null
 }
+
+// =============================================================================
+// Core Auth Function
+// =============================================================================
 
 /**
  * Get the current auth state (memoized per request)
+ *
+ * This is the primary way to check authentication in Server Components.
+ * It reads from HttpOnly cookies and refreshes if needed.
  *
  * @example
  * ```ts
@@ -122,22 +157,22 @@ export const auth = cache(async (): Promise<AuthResult> => {
 
 	// SDK not configured - return unauthenticated state
 	if (!config) {
-		return { userId: null, user: null, accessToken: null }
+		return { userId: null, user: null, sessionToken: null }
 	}
 
 	const namespace = getCookieNamespace()
-	const { accessToken, refreshToken, user, expiresAt } = await getAuthCookies(namespace)
+	const { sessionToken, refreshToken, user, expiresAt } = await getAuthCookies(namespace)
 
 	// No tokens at all
-	if (!accessToken && !refreshToken) {
-		return { userId: null, user: null, accessToken: null }
+	if (!sessionToken && !refreshToken) {
+		return { userId: null, user: null, sessionToken: null }
 	}
 
-	// Token not expired (with 60 second buffer)
-	if (accessToken && expiresAt && expiresAt > Date.now() + 60000) {
+	// Session token not expired (with 30 second buffer)
+	if (sessionToken && expiresAt && expiresAt > Date.now() + 30000) {
 		// Verify token is valid
 		try {
-			const payload = await verifyAccessToken(accessToken, config)
+			const payload = await verifyAccessToken(sessionToken, config)
 			return {
 				userId: payload.sub,
 				user: user || {
@@ -147,7 +182,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 					image: payload.picture || null,
 					emailVerified: payload.email_verified,
 				},
-				accessToken,
+				sessionToken,
 			}
 		} catch {
 			// Token invalid, try to refresh
@@ -177,7 +212,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 				return {
 					userId: data.user.id,
 					user: data.user,
-					accessToken: data.accessToken,
+					sessionToken: data.accessToken,
 				}
 			}
 		} catch (error) {
@@ -188,8 +223,12 @@ export const auth = cache(async (): Promise<AuthResult> => {
 	// Clear invalid tokens
 	await clearAuthCookies(namespace)
 
-	return { userId: null, user: null, accessToken: null }
+	return { userId: null, user: null, sessionToken: null }
 })
+
+// =============================================================================
+// Convenience Functions
+// =============================================================================
 
 /**
  * Get the current user (null if not logged in)
@@ -218,21 +257,31 @@ export async function currentUserId(): Promise<string | null> {
 	return userId
 }
 
+// =============================================================================
+// OAuth Callback Handler
+// =============================================================================
+
 /**
- * Handle OAuth callback - exchange code for tokens
+ * Handle OAuth callback - exchange code for tokens and set cookies
+ *
+ * This should be called from your `/api/auth/callback` route.
+ * It exchanges the authorization code for tokens and sets all auth cookies.
  *
  * @example
  * ```ts
- * // app/auth/callback/route.ts
+ * // app/api/auth/callback/route.ts
  * import { handleCallback } from '@sylphx/platform-sdk/nextjs'
  * import { redirect } from 'next/navigation'
  *
  * export async function GET(request: Request) {
  *   const { searchParams } = new URL(request.url)
  *   const code = searchParams.get('code')
+ *   const redirectTo = searchParams.get('redirect_to') || '/dashboard'
+ *
  *   if (!code) redirect('/login?error=missing_code')
+ *
  *   await handleCallback(code)
- *   redirect('/dashboard')
+ *   redirect(redirectTo)
  * }
  * ```
  */
@@ -261,11 +310,16 @@ export async function handleCallback(code: string): Promise<User> {
 	if (!isTokenResponse(data)) {
 		throw new Error('Invalid token response format')
 	}
+
 	const namespace = getCookieNamespace()
 	await setAuthCookies(namespace, data)
 
 	return data.user
 }
+
+// =============================================================================
+// Sign Out
+// =============================================================================
 
 /**
  * Sign out - clear cookies and optionally revoke token
@@ -309,9 +363,13 @@ export async function signOut(): Promise<void> {
 		}
 	}
 
-	// Clear cookies
+	// Clear all auth cookies
 	await clearAuthCookies(namespace)
 }
+
+// =============================================================================
+// Token Sync (Server Action)
+// =============================================================================
 
 /**
  * Sync tokens to cookies (server action for client-side OAuth)
@@ -319,16 +377,18 @@ export async function signOut(): Promise<void> {
  * After client-side OAuth token exchange, call this to set cookies
  * so that server-side auth (SSR) can access the session.
  *
+ * Note: With the new cookie-centric architecture, OAuth callbacks
+ * should go through /api/auth/callback which sets cookies server-side.
+ * This function is kept for backward compatibility.
+ *
  * @example
  * ```tsx
- * // In your OAuth callback handler or after signInWithOAuth
+ * // In your OAuth callback handler
  * 'use client'
  *
  * import { syncAuthToCookies } from '@sylphx/sdk/nextjs'
  *
  * async function handleOAuthSuccess(tokens: TokenResponse) {
- *   // Tokens already saved to localStorage by SDK
- *   // Now sync to cookies for SSR
  *   await syncAuthToCookies(tokens)
  * }
  * ```
@@ -338,6 +398,10 @@ export async function syncAuthToCookies(tokens: TokenResponse): Promise<void> {
 	const namespace = getCookieNamespace()
 	await setAuthCookies(namespace, tokens)
 }
+
+// =============================================================================
+// Authorization URL
+// =============================================================================
 
 /**
  * Get authorization URL for OAuth redirect
@@ -355,10 +419,10 @@ export function getAuthorizationUrl(options?: {
 
 	const rawClientId = options?.appId || process.env.NEXT_PUBLIC_SYLPHX_APP_ID
 	if (!rawClientId) {
-		throw new Error('Publishable key is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_APP_ID.')
+		throw new Error('App ID is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_APP_ID.')
 	}
 
-	// Validate and sanitize publishable key using SSOT
+	// Validate and sanitize app ID using SSOT
 	const clientId = validateAndSanitizePublishableKey(rawClientId)
 
 	const params = new URLSearchParams({
@@ -376,4 +440,38 @@ export function getAuthorizationUrl(options?: {
 	}
 
 	return `${config.platformUrl}/auth/authorize?${params}`
+}
+
+// =============================================================================
+// Session Token Access (BFF Pattern)
+// =============================================================================
+
+/**
+ * Get the current session token for API calls
+ *
+ * This is for apps that need to call third-party APIs with the session token.
+ * For same-origin API calls, cookies are sent automatically.
+ *
+ * @example
+ * ```ts
+ * // In an API route that needs to call external APIs
+ * import { getSessionToken } from '@sylphx/platform-sdk/nextjs'
+ *
+ * export async function GET() {
+ *   const token = await getSessionToken()
+ *   if (!token) {
+ *     return new Response('Unauthorized', { status: 401 })
+ *   }
+ *
+ *   // Call third-party API
+ *   const response = await fetch('https://api.example.com/data', {
+ *     headers: { Authorization: `Bearer ${token}` }
+ *   })
+ *   // ...
+ * }
+ * ```
+ */
+export async function getSessionToken(): Promise<string | null> {
+	const { sessionToken } = await auth()
+	return sessionToken
 }
