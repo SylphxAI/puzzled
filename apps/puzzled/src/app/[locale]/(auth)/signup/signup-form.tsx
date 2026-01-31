@@ -44,7 +44,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
-	const { signInWithOAuth } = useSafeAuth()
+	const { signInWithOAuth, oauthError } = useSafeAuth()
 
 	const {
 		form,
@@ -264,10 +264,10 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 						)}
 					</div>
 
-					{/* Error Message */}
-					{error && (
+					{/* Error Message (form error or OAuth error) */}
+					{(error || oauthError) && (
 						<div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-							{error}
+							{error || oauthError?.message}
 						</div>
 					)}
 

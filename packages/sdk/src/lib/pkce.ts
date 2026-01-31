@@ -34,8 +34,13 @@ const VERIFIER_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 const PKCE_TTL_MS = 10 * 60 * 1000
 
 // ==========================================
-// In-Memory Storage (XSS-resistant)
+// Storage (sessionStorage with fallback)
 // ==========================================
+
+/**
+ * Storage key prefix for PKCE verifiers
+ */
+const PKCE_STORAGE_PREFIX = 'sylphx_pkce_'
 
 interface PKCEEntry {
 	verifier: string
@@ -43,27 +48,109 @@ interface PKCEEntry {
 }
 
 /**
- * In-memory storage for PKCE verifiers.
- * Not accessible to XSS attacks (unlike sessionStorage).
- * Cleared on page refresh, but that's acceptable for OAuth flow.
- */
-const pkceStore = new Map<string, PKCEEntry>()
-
-/**
- * Build storage key from appId and optional nonce for correlation
+ * Build storage key from appId and optional nonce
  */
 function buildKey(appId: string, nonce?: string): string {
-	return nonce ? `${appId}:${nonce}` : appId
+	return `${PKCE_STORAGE_PREFIX}${nonce ? `${appId}:${nonce}` : appId}`
 }
 
 /**
- * Clean up expired entries (called periodically)
+ * In-memory fallback storage (used when sessionStorage is unavailable)
+ * Note: This loses verifier on page navigation, so sessionStorage is preferred
+ */
+const pkceMemoryFallback = new Map<string, PKCEEntry>()
+
+/**
+ * Check if sessionStorage is available
+ */
+function isSessionStorageAvailable(): boolean {
+	if (typeof window === 'undefined') return false
+	try {
+		const testKey = '__sylphx_test__'
+		sessionStorage.setItem(testKey, 'test')
+		sessionStorage.removeItem(testKey)
+		return true
+	} catch {
+		return false
+	}
+}
+
+/**
+ * Get PKCE entry from storage
+ */
+function getEntry(key: string): PKCEEntry | null {
+	if (typeof window === 'undefined') return null
+
+	if (isSessionStorageAvailable()) {
+		const stored = sessionStorage.getItem(key)
+		if (!stored) return null
+		try {
+			return JSON.parse(stored) as PKCEEntry
+		} catch {
+			return null
+		}
+	}
+
+	// Fallback to in-memory (less secure, loses on navigation)
+	return pkceMemoryFallback.get(key) || null
+}
+
+/**
+ * Set PKCE entry in storage
+ */
+function setEntry(key: string, entry: PKCEEntry): void {
+	if (typeof window === 'undefined') return
+
+	if (isSessionStorageAvailable()) {
+		sessionStorage.setItem(key, JSON.stringify(entry))
+	} else {
+		// Fallback to in-memory
+		pkceMemoryFallback.set(key, entry)
+	}
+}
+
+/**
+ * Delete PKCE entry from storage
+ */
+function deleteEntry(key: string): void {
+	if (typeof window === 'undefined') return
+
+	if (isSessionStorageAvailable()) {
+		sessionStorage.removeItem(key)
+	} else {
+		pkceMemoryFallback.delete(key)
+	}
+}
+
+/**
+ * Clean up expired entries from sessionStorage
  */
 function cleanupExpiredEntries(): void {
+	if (typeof window === 'undefined') return
+
 	const now = Date.now()
-	for (const [key, entry] of pkceStore.entries()) {
-		if (now - entry.createdAt > PKCE_TTL_MS) {
-			pkceStore.delete(key)
+
+	if (isSessionStorageAvailable()) {
+		// Clean sessionStorage
+		const keysToRemove: string[] = []
+		for (let i = 0; i < sessionStorage.length; i++) {
+			const key = sessionStorage.key(i)
+			if (key?.startsWith(PKCE_STORAGE_PREFIX)) {
+				const entry = getEntry(key)
+				if (entry && now - entry.createdAt > PKCE_TTL_MS) {
+					keysToRemove.push(key)
+				}
+			}
+		}
+		for (const key of keysToRemove) {
+			sessionStorage.removeItem(key)
+		}
+	} else {
+		// Clean in-memory fallback
+		for (const [key, entry] of pkceMemoryFallback.entries()) {
+			if (now - entry.createdAt > PKCE_TTL_MS) {
+				pkceMemoryFallback.delete(key)
+			}
 		}
 	}
 }
@@ -128,8 +215,14 @@ export async function generatePKCE(): Promise<{
 /**
  * Store code_verifier for later use in token exchange.
  *
- * Uses in-memory storage instead of sessionStorage for XSS protection.
- * The verifier is stored with a timestamp and auto-expires after 10 minutes.
+ * Uses sessionStorage to persist across OAuth redirects (page navigations).
+ * Falls back to in-memory storage if sessionStorage is unavailable.
+ *
+ * Security notes:
+ * - sessionStorage is scoped to tab/window and cleared on close
+ * - Auto-expires after 10 minutes
+ * - XSS can access sessionStorage, but code_verifier alone is useless
+ *   without the authorization code (attacker would need both)
  *
  * @param verifier - The code_verifier to store
  * @param appId - The app ID for namespacing
@@ -142,7 +235,7 @@ export function storePKCEVerifier(verifier: string, appId: string, nonce?: strin
 	cleanupExpiredEntries()
 
 	const key = buildKey(appId, nonce)
-	pkceStore.set(key, {
+	setEntry(key, {
 		verifier,
 		createdAt: Date.now(),
 	})
@@ -160,13 +253,14 @@ export function retrievePKCEVerifier(appId: string, nonce?: string): string | nu
 	if (typeof window === 'undefined') return null
 
 	const key = buildKey(appId, nonce)
-	const entry = pkceStore.get(key)
+	const entry = getEntry(key)
 
 	if (!entry) {
 		// Try without nonce for backwards compatibility
-		const fallbackEntry = pkceStore.get(appId)
+		const fallbackKey = buildKey(appId)
+		const fallbackEntry = getEntry(fallbackKey)
 		if (fallbackEntry) {
-			pkceStore.delete(appId)
+			deleteEntry(fallbackKey)
 			// Check if expired
 			if (Date.now() - fallbackEntry.createdAt > PKCE_TTL_MS) {
 				return null
@@ -177,7 +271,7 @@ export function retrievePKCEVerifier(appId: string, nonce?: string): string | nu
 	}
 
 	// Always delete after retrieval (one-time use)
-	pkceStore.delete(key)
+	deleteEntry(key)
 
 	// Check if expired
 	if (Date.now() - entry.createdAt > PKCE_TTL_MS) {
@@ -197,7 +291,7 @@ export function clearPKCEVerifier(appId: string, nonce?: string): void {
 	if (typeof window === 'undefined') return
 
 	const key = buildKey(appId, nonce)
-	pkceStore.delete(key)
+	deleteEntry(key)
 }
 
 /**
@@ -208,9 +302,24 @@ export function clearPKCEVerifier(appId: string, nonce?: string): void {
 export function clearAllPKCEVerifiers(appId: string): void {
 	if (typeof window === 'undefined') return
 
-	for (const key of pkceStore.keys()) {
-		if (key === appId || key.startsWith(`${appId}:`)) {
-			pkceStore.delete(key)
+	const prefix = PKCE_STORAGE_PREFIX + appId
+
+	if (isSessionStorageAvailable()) {
+		const keysToRemove: string[] = []
+		for (let i = 0; i < sessionStorage.length; i++) {
+			const key = sessionStorage.key(i)
+			if (key?.startsWith(prefix)) {
+				keysToRemove.push(key)
+			}
+		}
+		for (const key of keysToRemove) {
+			sessionStorage.removeItem(key)
+		}
+	} else {
+		for (const key of pkceMemoryFallback.keys()) {
+			if (key.startsWith(prefix)) {
+				pkceMemoryFallback.delete(key)
+			}
 		}
 	}
 }
