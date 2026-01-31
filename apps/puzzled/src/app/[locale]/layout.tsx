@@ -167,15 +167,15 @@ export default async function LocaleLayout({ children, params }: Props) {
 	setRequestLocale(locale)
 
 	// Fetch platform config and messages in parallel
-	const publishableKey = process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
+	const appId = process.env.NEXT_PUBLIC_SYLPHX_APP_ID
 	const secretKey = process.env.SYLPHX_SECRET_KEY
 	const platformUrl = process.env.NEXT_PUBLIC_SYLPHX_URL
 
 	const [messages, config] = await Promise.all([
 		getMessages(),
 		// Only fetch config if credentials are configured
-		publishableKey && secretKey
-			? getAppConfig({ secretKey, publishableKey, platformUrl })
+		appId && secretKey
+			? getAppConfig({ secretKey, appId, platformUrl })
 			: Promise.resolve(undefined),
 	])
 
@@ -222,8 +222,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
-					{publishableKey && config ? (
-						<PlatformProvider publishableKey={publishableKey} config={config}>
+					{appId && config ? (
+						<PlatformProvider appId={appId} config={config}>
 							<SessionReplayProvider>
 								<WebVitalsReporter />
 								<TRPCProvider>
