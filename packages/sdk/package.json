@@ -20,10 +20,6 @@
 		"./nextjs": {
 			"types": "./src/nextjs/index.ts",
 			"import": "./dist/nextjs/index.js"
-		},
-		"./nextjs/api-routes": {
-			"types": "./src/nextjs/api-routes.ts",
-			"import": "./dist/nextjs/api-routes.js"
 		}
 	},
 	"main": "./dist/index.js",

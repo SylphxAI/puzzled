@@ -90,20 +90,6 @@ export default defineConfig([
 	},
 
 	// ==========================================================================
-	// Next.js API Routes Entry Point - BFF Pattern Handlers
-	// ==========================================================================
-	// Re-exportable route handlers for /api/auth/* endpoints.
-	{
-		entry: { 'nextjs/api-routes': 'src/nextjs/api-routes.ts' },
-		format: ['esm'],
-		dts: false,
-		splitting: false,
-		sourcemap: true,
-		external: PEER_EXTERNALS,
-		noExternal: ['jose'],
-	},
-
-	// ==========================================================================
 	// React Entry Point - React Hooks & Components
 	// ==========================================================================
 	// Requires react, react-dom. Has 'use client' directive at top.

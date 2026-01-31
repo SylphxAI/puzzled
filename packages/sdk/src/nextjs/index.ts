@@ -1,29 +1,34 @@
 /**
- * @sylphx/platform-sdk/nextjs
+ * @sylphx/sdk/nextjs — State of the Art
  *
  * Next.js integration for Sylphx Platform SDK.
  *
- * Provides server-side auth helpers and middleware for Next.js apps.
+ * ONE middleware handles everything:
+ * - Auth routes (mounted automatically)
+ * - Token refresh (automatic, every request)
+ * - Route protection
+ * - Cookie management
  *
  * @example
  * ```ts
- * // middleware.ts
- * import { authMiddleware } from '@sylphx/platform-sdk/nextjs'
+ * // middleware.ts (or proxy.ts for Next.js 16)
+ * import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
  *
- * export default authMiddleware({
- *   secretKey: process.env.SYLPHX_SECRET_KEY!,
- *   publicRoutes: ['/', '/about'],
+ * export default createSylphxMiddleware({
+ *   publicRoutes: ['/', '/about', '/pricing'],
  * })
  *
  * export const config = {
- *   matcher: ['/((?!.*\\..*|_next).*)', '/'],
+ *   matcher: ['/((?!_next|.*\\..*).*)', '/'],
  * }
  * ```
+ *
+ * That's it. No /api/auth/* routes needed.
  *
  * @example
  * ```ts
  * // In a Server Component
- * import { auth, currentUser } from '@sylphx/platform-sdk/nextjs'
+ * import { auth, currentUser } from '@sylphx/sdk/nextjs'
  *
  * export default async function Page() {
  *   const { userId } = await auth()
@@ -38,7 +43,24 @@
  * ```
  */
 
-// Server-side auth
+// =============================================================================
+// Middleware — State of the Art (Auth0 v4 / Clerk / Supabase pattern)
+// =============================================================================
+// ONE middleware handles everything. No manual API routes needed.
+
+export {
+	createSylphxMiddleware,
+	createMatcher,
+	getNamespace,
+	type SylphxMiddlewareConfig,
+	// Legacy
+	authMiddleware,
+} from './middleware'
+
+// =============================================================================
+// Server-side Auth (for Server Components)
+// =============================================================================
+
 export {
 	configureServer,
 	auth,
@@ -52,12 +74,17 @@ export {
 	type AuthResult,
 } from './server'
 
-// Cookie helpers
+// =============================================================================
+// Cookie Helpers (advanced use only)
+// =============================================================================
+
 export {
 	getCookieNames,
 	getAuthCookies,
 	setAuthCookies,
 	clearAuthCookies,
+	setAuthCookiesMiddleware,
+	clearAuthCookiesMiddleware,
 	isSessionExpired,
 	hasRefreshToken,
 	SESSION_TOKEN_LIFETIME,
@@ -67,18 +94,3 @@ export {
 	type UserCookieData,
 	type AuthCookiesData,
 } from './cookies'
-
-// Middleware
-export {
-	authMiddleware,
-	createMatcher,
-	getMiddlewareNamespace,
-	type AuthMiddlewareConfig,
-} from './middleware'
-
-// API Route Helpers (BFF Pattern)
-export {
-	createCallbackHandler,
-	handleCallbackPost,
-	type CallbackHandlerOptions,
-} from './api-routes'

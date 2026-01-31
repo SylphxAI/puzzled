@@ -242,16 +242,60 @@ export async function hasRefreshToken(namespace: string): Promise<boolean> {
 }
 
 // =============================================================================
-// Middleware Cookie Helpers
+// Middleware Cookie Helpers (for NextResponse)
 // =============================================================================
+// Middleware uses NextResponse.cookies, not next/headers cookies()
+
+import type { NextResponse } from 'next/server'
 
 /**
- * Get cookie names for middleware (doesn't require async cookies())
+ * Set auth cookies on a NextResponse (for middleware use)
  *
- * Use this in middleware where you're working with NextRequest directly.
+ * Unlike setAuthCookies() which uses next/headers, this works with NextResponse.
+ * Use this in middleware where you need to modify cookies on the response.
  */
-export function getCookieNamesSync(namespace: string) {
-	return getCookieNames(namespace)
+export function setAuthCookiesMiddleware(
+	response: NextResponse,
+	namespace: string,
+	tokens: TokenResponse,
+): void {
+	const names = getCookieNames(namespace)
+	const expiresAt = Date.now() + SESSION_TOKEN_LIFETIME * 1000
+
+	// SESSION cookie - HttpOnly access token
+	response.cookies.set(names.SESSION, tokens.accessToken, {
+		...SECURE_COOKIE_OPTIONS,
+		maxAge: SESSION_TOKEN_LIFETIME,
+	})
+
+	// REFRESH cookie - HttpOnly refresh token
+	response.cookies.set(names.REFRESH, tokens.refreshToken, {
+		...SECURE_COOKIE_OPTIONS,
+		maxAge: REFRESH_TOKEN_LIFETIME,
+	})
+
+	// USER cookie - JS-readable for client hydration
+	const userData: UserCookieData = {
+		user: tokens.user,
+		expiresAt,
+	}
+	response.cookies.set(names.USER, JSON.stringify(userData), {
+		...USER_COOKIE_OPTIONS,
+		maxAge: SESSION_TOKEN_LIFETIME,
+	})
+}
+
+/**
+ * Clear auth cookies on a NextResponse (for middleware use)
+ */
+export function clearAuthCookiesMiddleware(
+	response: NextResponse,
+	namespace: string,
+): void {
+	const names = getCookieNames(namespace)
+	response.cookies.delete(names.SESSION)
+	response.cookies.delete(names.REFRESH)
+	response.cookies.delete(names.USER)
 }
 
 /**

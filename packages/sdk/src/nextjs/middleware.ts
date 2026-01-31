@@ -1,29 +1,38 @@
 /**
- * Next.js Middleware for Sylphx Auth
+ * Sylphx Unified Middleware — State of the Art
  *
- * Server-Side Token Refresh Architecture
- * ======================================
+ * ONE middleware function handles EVERYTHING:
+ * - Auth routes (mounted automatically, zero manual API routes)
+ * - Token refresh (automatic, every request)
+ * - Route protection
+ * - Cookie management
  *
- * Unlike client-side refresh (which exposes tokens to JavaScript),
- * this middleware handles token refresh server-side:
+ * This follows Auth0 v4 / Clerk / Supabase patterns where middleware
+ * handles all auth concerns. Apps don't need to create any /api/auth/* routes.
  *
- * 1. Request comes in with expired session token
- * 2. Middleware detects expiry, has refresh token
- * 3. Middleware calls platform refresh endpoint
- * 4. Middleware sets new cookies on response
- * 5. Request continues with fresh tokens
+ * @example
+ * ```typescript
+ * // middleware.ts (or proxy.ts for Next.js 16)
+ * import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
  *
- * Benefits:
- * - Tokens never exposed to client JavaScript (XSS-safe)
- * - No client-side refresh logic needed
- * - Works for both SSR and CSR requests
- * - User never sees "session expired" flash
+ * export default createSylphxMiddleware({
+ *   publicRoutes: ['/', '/about', '/pricing'],
+ * })
+ *
+ * export const config = {
+ *   matcher: ['/((?!_next|.*\\..*).*)', '/'],
+ * }
+ * ```
+ *
+ * That's it. No /api/auth/* routes needed.
  */
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import {
 	getCookieNames,
+	setAuthCookiesMiddleware,
+	clearAuthCookiesMiddleware,
 	SESSION_TOKEN_LIFETIME,
 	REFRESH_TOKEN_LIFETIME,
 	SECURE_COOKIE_OPTIONS,
@@ -32,96 +41,69 @@ import {
 } from './cookies'
 import {
 	validateAndSanitizeSecretKey,
-	getCookieNamespace as getCookieNamespaceFromKey,
+	getCookieNamespace,
 } from '../key-validation'
 import { DEFAULT_PLATFORM_URL } from '../constants'
 import type { TokenResponse } from '../types'
 
 // =============================================================================
-// JWT Helpers
+// Types
 // =============================================================================
 
-/**
- * Decode JWT payload without verification (for checking expiry)
- * Note: This does NOT verify the signature - that should be done server-side
- */
-function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
-	try {
-		const parts = token.split('.')
-		if (parts.length !== 3) return null
-		const payload = parts[1]
-		// Handle URL-safe base64
-		const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-		const jsonPayload = atob(base64)
-		return JSON.parse(jsonPayload)
-	} catch {
-		return null
-	}
-}
-
-/**
- * Check if a JWT token is expired
- * Uses a 30 second buffer to allow for clock skew
- */
-function isTokenExpired(token: string): boolean {
-	const payload = decodeJwtPayload(token)
-	if (!payload || !payload.exp) {
-		return true // Can't decode = treat as expired
-	}
-	// exp is in seconds, Date.now() is in milliseconds
-	return payload.exp * 1000 < Date.now() + 30000
-}
-
-// =============================================================================
-// Configuration
-// =============================================================================
-
-export interface AuthMiddlewareConfig {
-	/** Secret key for cookie namespace derivation and API calls */
-	secretKey: string
-	/** Platform URL (default: https://sylphx.com) */
-	platformUrl?: string
-	/** Routes that don't require authentication */
+export interface SylphxMiddlewareConfig {
+	/**
+	 * Routes that don't require authentication.
+	 * Supports exact paths and wildcards.
+	 *
+	 * @example ['/', '/about', '/pricing', '/blog/*']
+	 * @default ['/']
+	 */
 	publicRoutes?: string[]
-	/** Routes that should be completely ignored by middleware */
+
+	/**
+	 * Routes that middleware should completely ignore.
+	 * Use for webhooks, static assets, or third-party integrations.
+	 *
+	 * @default []
+	 */
 	ignoredRoutes?: string[]
-	/** Where to redirect unauthenticated users (default: /login) */
+
+	/**
+	 * URL to redirect unauthenticated users.
+	 * @default '/login'
+	 */
 	signInUrl?: string
-	/** Where to redirect authenticated users from auth pages (default: /dashboard) */
+
+	/**
+	 * URL to redirect after sign out.
+	 * @default '/'
+	 */
+	afterSignOutUrl?: string
+
+	/**
+	 * URL to redirect after successful sign in.
+	 * @default '/dashboard'
+	 */
 	afterSignInUrl?: string
-	/** Debug mode - logs middleware decisions */
+
+	/**
+	 * Auth routes prefix. Routes are mounted at:
+	 * - {prefix}/callback — OAuth callback handler
+	 * - {prefix}/signout — Sign out handler
+	 *
+	 * @default '/auth'
+	 */
+	authPrefix?: string
+
+	/**
+	 * Enable debug logging.
+	 * @default false
+	 */
 	debug?: boolean
 }
 
 // =============================================================================
-// Route Matching
-// =============================================================================
-
-/**
- * Check if a path matches any of the patterns
- */
-function matchesPattern(path: string, patterns: string[]): boolean {
-	return patterns.some((pattern) => {
-		// Exact match
-		if (pattern === path) return true
-
-		// Wildcard match (e.g., '/admin/*' matches '/admin/users')
-		if (pattern.endsWith('/*')) {
-			const base = pattern.slice(0, -2)
-			return path === base || path.startsWith(base + '/')
-		}
-
-		// Prefix match (e.g., '/api' matches '/api/anything')
-		if (pattern.endsWith('/')) {
-			return path.startsWith(pattern)
-		}
-
-		return false
-	})
-}
-
-// =============================================================================
-// Token Refresh (Server-Side)
+// Helpers
 // =============================================================================
 
 /**
@@ -140,308 +122,398 @@ function isTokenResponse(data: unknown): data is TokenResponse {
 }
 
 /**
- * Refresh tokens server-side
- *
- * Called by middleware when session is expired but refresh token exists.
+ * Decode JWT payload without verification (for expiry check)
  */
-async function refreshTokensServerSide(
-	refreshToken: string,
-	config: { secretKey: string; platformUrl: string },
-	debug: boolean,
-): Promise<TokenResponse | null> {
+function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
 	try {
-		const response = await fetch(`${config.platformUrl}/api/auth/token`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				grant_type: 'refresh_token',
-				refresh_token: refreshToken,
-				client_secret: config.secretKey,
-			}),
-		})
-
-		if (!response.ok) {
-			if (debug) {
-				console.log('[Sylphx Middleware] Token refresh failed:', response.status)
-			}
-			return null
-		}
-
-		const data: unknown = await response.json()
-		if (!isTokenResponse(data)) {
-			if (debug) {
-				console.log('[Sylphx Middleware] Invalid token response format')
-			}
-			return null
-		}
-
-		return data
-	} catch (error) {
-		if (debug) {
-			console.log('[Sylphx Middleware] Token refresh error:', error)
-		}
+		const parts = token.split('.')
+		if (parts.length !== 3) return null
+		const payload = parts[1]
+		const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+		const jsonPayload = atob(base64)
+		return JSON.parse(jsonPayload)
+	} catch {
 		return null
 	}
 }
 
 /**
- * Set auth cookies on a NextResponse
+ * Check if token is expired (with 30s buffer)
  */
-function setAuthCookiesOnResponse(
-	response: NextResponse,
-	namespace: string,
-	tokens: TokenResponse,
-): void {
-	const names = getCookieNames(namespace)
-	const expiresAt = Date.now() + SESSION_TOKEN_LIFETIME * 1000
+function isTokenExpired(token: string): boolean {
+	const payload = decodeJwtPayload(token)
+	if (!payload?.exp) return true
+	return payload.exp * 1000 < Date.now() + 30000
+}
 
-	// SESSION cookie - HttpOnly access token
-	response.cookies.set(names.SESSION, tokens.accessToken, {
-		...SECURE_COOKIE_OPTIONS,
-		maxAge: SESSION_TOKEN_LIFETIME,
-	})
-
-	// REFRESH cookie - HttpOnly refresh token
-	response.cookies.set(names.REFRESH, tokens.refreshToken, {
-		...SECURE_COOKIE_OPTIONS,
-		maxAge: REFRESH_TOKEN_LIFETIME,
-	})
-
-	// USER cookie - JS-readable for client hydration
-	const userData: UserCookieData = {
-		user: tokens.user,
-		expiresAt,
+/**
+ * Check if path matches pattern
+ */
+function matchesPattern(pathname: string, pattern: string): boolean {
+	if (pattern === pathname) return true
+	if (pattern.endsWith('/*')) {
+		const base = pattern.slice(0, -2)
+		return pathname === base || pathname.startsWith(`${base}/`)
 	}
-	response.cookies.set(names.USER, JSON.stringify(userData), {
-		...USER_COOKIE_OPTIONS,
-		maxAge: SESSION_TOKEN_LIFETIME,
-	})
+	if (pattern.endsWith('/**')) {
+		const base = pattern.slice(0, -3)
+		return pathname === base || pathname.startsWith(`${base}/`)
+	}
+	return false
 }
 
 /**
- * Clear auth cookies on a NextResponse
+ * Check if pathname matches any patterns
  */
-function clearAuthCookiesOnResponse(
-	response: NextResponse,
-	namespace: string,
-): void {
-	const names = getCookieNames(namespace)
-	response.cookies.delete(names.SESSION)
-	response.cookies.delete(names.REFRESH)
-	response.cookies.delete(names.USER)
+function matchesAny(pathname: string, patterns: string[]): boolean {
+	return patterns.some((p) => matchesPattern(pathname, p))
 }
 
 // =============================================================================
-// Main Middleware
+// Auth Route Handlers (Mounted in Middleware)
+// =============================================================================
+
+interface MiddlewareContext {
+	secretKey: string
+	platformUrl: string
+	namespace: string
+	cookieNames: ReturnType<typeof getCookieNames>
+	config: Required<Omit<SylphxMiddlewareConfig, 'debug'>> & { debug: boolean }
+	log: (msg: string, data?: unknown) => void
+}
+
+/**
+ * Handle OAuth callback
+ * GET {authPrefix}/callback?code=xxx
+ */
+async function handleCallback(
+	request: NextRequest,
+	ctx: MiddlewareContext
+): Promise<NextResponse> {
+	const { searchParams } = request.nextUrl
+	const code = searchParams.get('code')
+	const error = searchParams.get('error')
+	const errorDescription = searchParams.get('error_description')
+	const redirectTo = searchParams.get('redirect_to') || ctx.config.afterSignInUrl
+
+	ctx.log('Callback', { hasCode: !!code, error })
+
+	// Handle OAuth errors
+	if (error) {
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', error)
+		if (errorDescription) url.searchParams.set('error_description', errorDescription)
+		return NextResponse.redirect(url)
+	}
+
+	if (!code) {
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', 'missing_code')
+		return NextResponse.redirect(url)
+	}
+
+	try {
+		// Exchange code for tokens
+		const res = await fetch(`${ctx.platformUrl}/api/auth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				grant_type: 'authorization_code',
+				code,
+				client_secret: ctx.secretKey,
+			}),
+		})
+
+		if (!res.ok) {
+			const data = (await res.json().catch(() => ({}))) as { error?: string }
+			const url = new URL(ctx.config.signInUrl, request.url)
+			url.searchParams.set('error', data.error || 'token_exchange_failed')
+			return NextResponse.redirect(url)
+		}
+
+		const data: unknown = await res.json()
+		if (!isTokenResponse(data)) {
+			const url = new URL(ctx.config.signInUrl, request.url)
+			url.searchParams.set('error', 'invalid_response')
+			return NextResponse.redirect(url)
+		}
+
+		// Success: set cookies and redirect
+		const successUrl = new URL(redirectTo, request.url)
+		const response = NextResponse.redirect(successUrl)
+		setAuthCookiesMiddleware(response, ctx.namespace, data)
+
+		ctx.log('Callback success', { redirectTo })
+		return response
+	} catch (err) {
+		console.error('[Sylphx] Callback error:', err)
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', 'internal_error')
+		return NextResponse.redirect(url)
+	}
+}
+
+/**
+ * Handle sign out
+ * GET/POST {authPrefix}/signout
+ */
+async function handleSignOut(
+	request: NextRequest,
+	ctx: MiddlewareContext
+): Promise<NextResponse> {
+	ctx.log('Signout')
+
+	const refreshToken = request.cookies.get(ctx.cookieNames.REFRESH)?.value
+
+	// Revoke token on platform (best-effort)
+	if (refreshToken) {
+		try {
+			await fetch(`${ctx.platformUrl}/api/auth/revoke`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					token: refreshToken,
+					client_secret: ctx.secretKey,
+				}),
+			})
+		} catch {
+			// Ignore
+		}
+	}
+
+	// Clear cookies and redirect
+	const url = new URL(ctx.config.afterSignOutUrl, request.url)
+	const response = NextResponse.redirect(url)
+	clearAuthCookiesMiddleware(response, ctx.namespace)
+
+	ctx.log('Signout complete')
+	return response
+}
+
+/**
+ * Refresh tokens server-side
+ */
+async function refreshTokens(
+	refreshToken: string,
+	ctx: MiddlewareContext
+): Promise<TokenResponse | null> {
+	ctx.log('Refreshing tokens')
+
+	try {
+		const res = await fetch(`${ctx.platformUrl}/api/auth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				grant_type: 'refresh_token',
+				refresh_token: refreshToken,
+				client_secret: ctx.secretKey,
+			}),
+		})
+
+		if (!res.ok) {
+			ctx.log('Refresh failed', res.status)
+			return null
+		}
+
+		const data: unknown = await res.json()
+		if (!isTokenResponse(data)) {
+			ctx.log('Invalid refresh response')
+			return null
+		}
+
+		ctx.log('Refresh success')
+		return data
+	} catch (err) {
+		ctx.log('Refresh error', err)
+		return null
+	}
+}
+
+// =============================================================================
+// Main Middleware Factory
 // =============================================================================
 
 /**
- * Create auth middleware for Next.js
+ * Create Sylphx middleware — State of the Art
  *
- * This middleware:
- * 1. Protects routes that require authentication
- * 2. Refreshes expired tokens server-side (no client JS involved)
- * 3. Redirects unauthenticated users to sign-in
- * 4. Redirects authenticated users away from auth pages
+ * ONE function handles everything:
+ * - Auth routes ({authPrefix}/callback, {authPrefix}/signout)
+ * - Token refresh (automatic, every request)
+ * - Route protection
+ * - Cookie management
  *
  * @example
- * ```ts
- * // middleware.ts
- * import { authMiddleware } from '@sylphx/platform-sdk/nextjs'
+ * ```typescript
+ * // middleware.ts (or proxy.ts for Next.js 16)
+ * import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
  *
- * export default authMiddleware({
- *   secretKey: process.env.SYLPHX_SECRET_KEY!,
+ * export default createSylphxMiddleware({
  *   publicRoutes: ['/', '/about', '/pricing'],
- *   ignoredRoutes: ['/api/webhooks/*'],
  * })
  *
  * export const config = {
- *   matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+ *   matcher: ['/((?!_next|.*\\..*).*)', '/'],
  * }
  * ```
  */
-export function authMiddleware(config: AuthMiddlewareConfig) {
-	const {
-		secretKey: rawSecretKey,
-		platformUrl: rawPlatformUrl,
-		publicRoutes = ['/'],
-		ignoredRoutes = [],
-		signInUrl = '/login',
-		afterSignInUrl = '/dashboard',
-		debug = false,
-	} = config
+export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) {
+	// ==========================================================================
+	// Configuration (validated at startup, not per-request)
+	// ==========================================================================
 
-	// Validate and sanitize secret key using SSOT
+	const rawSecretKey = process.env.SYLPHX_SECRET_KEY
+	if (!rawSecretKey) {
+		throw new Error(
+			'[Sylphx] SYLPHX_SECRET_KEY is required.\n' +
+				'Get your key from Sylphx Console → API Keys.'
+		)
+	}
+
 	const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
-	const platformUrl = rawPlatformUrl?.trim() || DEFAULT_PLATFORM_URL
-
-	// Use SSOT namespace derivation
-	const namespace = getCookieNamespaceFromKey(secretKey)
+	const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
+	const namespace = getCookieNamespace(secretKey)
 	const cookieNames = getCookieNames(namespace)
 
-	// Add auth pages to public routes
-	const allPublicRoutes = [
-		...publicRoutes,
-		signInUrl,
+	const config = {
+		publicRoutes: userConfig.publicRoutes ?? ['/'],
+		ignoredRoutes: userConfig.ignoredRoutes ?? [],
+		signInUrl: userConfig.signInUrl ?? '/login',
+		afterSignOutUrl: userConfig.afterSignOutUrl ?? '/',
+		afterSignInUrl: userConfig.afterSignInUrl ?? '/dashboard',
+		authPrefix: userConfig.authPrefix ?? '/auth',
+		debug: userConfig.debug ?? false,
+	}
+
+	// Auth routes and sign-in URL are always public
+	const publicRoutes = [
+		...config.publicRoutes,
+		config.signInUrl,
 		'/signup',
-		'/auth/*', // OAuth callback routes
-		'/api/auth/*', // Auth API routes
+		`${config.authPrefix}/*`,
 	]
 
-	return async function middleware(request: NextRequest) {
+	const log = (msg: string, data?: unknown) => {
+		if (config.debug) {
+			console.log(`[Sylphx] ${msg}`, data ?? '')
+		}
+	}
+
+	const ctx: MiddlewareContext = {
+		secretKey,
+		platformUrl,
+		namespace,
+		cookieNames,
+		config,
+		log,
+	}
+
+	// ==========================================================================
+	// Middleware Function
+	// ==========================================================================
+
+	return async function middleware(request: NextRequest): Promise<NextResponse> {
 		const { pathname } = request.nextUrl
 
-		// Skip ignored routes
-		if (matchesPattern(pathname, ignoredRoutes)) {
-			if (debug) console.log(`[Sylphx Middleware] Ignoring: ${pathname}`)
+		log(`${request.method} ${pathname}`)
+
+		// ======================================================================
+		// Skip: Ignored routes, static files
+		// ======================================================================
+
+		if (matchesAny(pathname, config.ignoredRoutes)) {
+			log('Ignored route')
 			return NextResponse.next()
 		}
 
-		// Skip static files
-		if (
-			pathname.includes('.') ||
-			pathname.startsWith('/_next') ||
-			pathname.startsWith('/favicon')
-		) {
+		// Skip files with extensions and Next.js internals
+		if (pathname.includes('.') || pathname.startsWith('/_next')) {
 			return NextResponse.next()
 		}
 
-		// Read current auth cookies
+		// ======================================================================
+		// Auth Routes (Mounted Automatically)
+		// ======================================================================
+
+		if (pathname === `${config.authPrefix}/callback`) {
+			return handleCallback(request, ctx)
+		}
+
+		if (pathname === `${config.authPrefix}/signout`) {
+			return handleSignOut(request, ctx)
+		}
+
+		// ======================================================================
+		// Token Refresh (Every Request)
+		// ======================================================================
+
 		const sessionToken = request.cookies.get(cookieNames.SESSION)?.value
 		const refreshToken = request.cookies.get(cookieNames.REFRESH)?.value
+		const hasValidSession = sessionToken && !isTokenExpired(sessionToken)
 
-		// Determine auth state
-		const hasValidSession = sessionToken ? !isTokenExpired(sessionToken) : false
-		const hasRefreshToken = !!refreshToken
+		let response = NextResponse.next()
+		let isAuthenticated = hasValidSession
 
-		if (debug) {
-			console.log(`[Sylphx Middleware] ${pathname}`, {
-				hasValidSession,
-				hasRefreshToken,
-				sessionExpired: sessionToken ? isTokenExpired(sessionToken) : null,
-			})
-		}
+		// Session expired + refresh token exists → refresh server-side
+		if (!hasValidSession && refreshToken) {
+			log('Session expired, refreshing')
 
-		// =========================================================================
-		// Server-Side Token Refresh
-		// =========================================================================
-		// If session is expired but we have refresh token, refresh server-side
-		if (!hasValidSession && hasRefreshToken) {
-			if (debug) {
-				console.log('[Sylphx Middleware] Session expired, attempting server-side refresh')
-			}
-
-			const tokens = await refreshTokensServerSide(
-				refreshToken,
-				{ secretKey, platformUrl },
-				debug,
-			)
+			const tokens = await refreshTokens(refreshToken, ctx)
 
 			if (tokens) {
-				// Refresh succeeded - set new cookies and continue
-				if (debug) {
-					console.log('[Sylphx Middleware] Token refresh succeeded')
-				}
-
-				const response = NextResponse.next()
-				setAuthCookiesOnResponse(response, namespace, tokens)
-				return response
+				// Success: update cookies
+				setAuthCookiesMiddleware(response, namespace, tokens)
+				isAuthenticated = true
+			} else {
+				// Failed: clear cookies
+				clearAuthCookiesMiddleware(response, namespace)
+				isAuthenticated = false
 			}
-
-			// Refresh failed - clear cookies and treat as unauthenticated
-			if (debug) {
-				console.log('[Sylphx Middleware] Token refresh failed, clearing cookies')
-			}
-
-			// For public routes, just clear cookies and continue
-			if (matchesPattern(pathname, allPublicRoutes)) {
-				const response = NextResponse.next()
-				clearAuthCookiesOnResponse(response, namespace)
-				return response
-			}
-
-			// For protected routes, redirect to sign-in
-			const signInUrlWithRedirect = new URL(signInUrl, request.url)
-			signInUrlWithRedirect.searchParams.set('callbackUrl', pathname)
-			const response = NextResponse.redirect(signInUrlWithRedirect)
-			clearAuthCookiesOnResponse(response, namespace)
-			return response
 		}
 
-		// =========================================================================
+		// ======================================================================
 		// Route Protection
-		// =========================================================================
+		// ======================================================================
 
-		// Public route - allow access
-		if (matchesPattern(pathname, allPublicRoutes)) {
-			// Redirect authenticated users away from auth pages
-			if (hasValidSession && (pathname === signInUrl || pathname === '/signup')) {
-				if (debug) {
-					console.log(`[Sylphx Middleware] Redirecting from auth page to ${afterSignInUrl}`)
-				}
-				return NextResponse.redirect(new URL(afterSignInUrl, request.url))
-			}
-			return NextResponse.next()
+		const isPublic = matchesAny(pathname, publicRoutes)
+
+		// Protected route + not authenticated → redirect to sign-in
+		if (!isPublic && !isAuthenticated) {
+			log('Redirecting to sign-in')
+			const url = new URL(config.signInUrl, request.url)
+			url.searchParams.set('redirect_to', pathname)
+			return NextResponse.redirect(url)
 		}
 
-		// Protected route - require authentication
-		const isAuthenticated = hasValidSession || hasRefreshToken
-
-		if (!isAuthenticated) {
-			if (debug) {
-				console.log(`[Sylphx Middleware] Redirecting to ${signInUrl} (no auth)`)
-			}
-			const signInUrlWithRedirect = new URL(signInUrl, request.url)
-			signInUrlWithRedirect.searchParams.set('callbackUrl', pathname)
-			return NextResponse.redirect(signInUrlWithRedirect)
+		// Authenticated + on sign-in page → redirect to dashboard
+		if (isAuthenticated && pathname === config.signInUrl) {
+			log('Redirecting from sign-in to dashboard')
+			return NextResponse.redirect(new URL(config.afterSignInUrl, request.url))
 		}
 
-		// User is authenticated, allow access
-		return NextResponse.next()
+		return response
 	}
 }
 
 // =============================================================================
-// Utilities
+// Exports
 // =============================================================================
 
 /**
- * Convenience function to create matcher config
- *
- * @example
- * ```ts
- * export const config = {
- *   matcher: createMatcher()
- * }
- * ```
+ * Create recommended matcher config
  */
-export function createMatcher(options?: {
-	/** Additional paths to include */
-	include?: string[]
-	/** Paths to exclude */
-	exclude?: string[]
-}) {
-	const matchers = ['/((?!.*\\..*|_next).*)', '/']
-
-	if (options?.include) {
-		matchers.push(...options.include)
+export function createMatcher(): { matcher: string[] } {
+	return {
+		matcher: ['/((?!_next|monitoring|.*\\..*).*)', '/'],
 	}
-
-	return matchers
 }
 
 /**
- * Get the cookie namespace for a given secret key
- *
- * Useful for apps that need to read cookies directly.
- *
- * @example
- * ```ts
- * const namespace = getMiddlewareNamespace(process.env.SYLPHX_SECRET_KEY!)
- * const cookieNames = getCookieNames(namespace)
- * ```
+ * Get cookie namespace from secret key (for advanced use)
  */
-export function getMiddlewareNamespace(secretKey: string): string {
-	const sanitizedKey = validateAndSanitizeSecretKey(secretKey)
-	return getCookieNamespaceFromKey(sanitizedKey)
+export function getNamespace(secretKey: string): string {
+	return getCookieNamespace(validateAndSanitizeSecretKey(secretKey))
 }
+
+// Legacy export for backward compatibility during transition
+/** @deprecated Use createSylphxMiddleware */
+export const authMiddleware = createSylphxMiddleware
