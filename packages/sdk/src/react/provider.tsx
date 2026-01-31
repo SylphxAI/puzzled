@@ -98,8 +98,8 @@ async function getBlobUpload() {
 // REST API Helper
 // ============================================
 interface RestConfig {
-	/** Publishable key — used as x-app-secret for SDK API calls */
-	publishableKey?: string
+	/** App ID — used as x-app-secret for SDK API calls */
+	appId?: string
 	platformUrl: string
 	getAccessToken?: () => string | null | undefined
 }
@@ -124,7 +124,7 @@ function createRestApi(config: RestConfig) {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
 		}
-		if (config.publishableKey) h['x-app-secret'] = config.publishableKey
+		if (config.appId) h['x-app-secret'] = config.appId
 		const token = config.getAccessToken?.()
 		if (token) h['Authorization'] = `Bearer ${token}`
 		return h
@@ -186,13 +186,13 @@ type RestApiClient = ReturnType<typeof createRestApi>
 export interface SylphxProviderProps {
 	children: React.ReactNode
 	/**
-	 * Your app's publishable key (environment-specific public key)
-	 * Format: pk_dev_xxx, pk_stg_xxx, or pk_prod_xxx
+	 * Your app's ID (environment-specific identifier)
+	 * Format: app_dev_xxx, app_stg_xxx, or app_prod_xxx
 	 * Get this from Platform Admin → Apps → Your App → Environments
 	 *
-	 * The key IS the app identity — no separate app ID needed.
+	 * The App ID IS the app identity — no separate key needed.
 	 */
-	publishableKey?: string
+	appId?: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
 	/** After sign out, redirect to this URL */
@@ -228,11 +228,11 @@ export interface SylphxProviderProps {
 	 * export default async function RootLayout({ children }) {
 	 *   const config = await getAppConfig({
 	 *     secretKey: process.env.SYLPHX_SECRET_KEY!,
-	 *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+	 *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
 	 *   })
 	 *
 	 *   return (
-	 *     <SylphxProvider config={config} publishableKey={...}>
+	 *     <SylphxProvider config={config} appId={...}>
 	 *       {children}
 	 *     </SylphxProvider>
 	 *   )
@@ -255,7 +255,7 @@ export interface SylphxProviderProps {
  */
 export function SylphxProvider({
 	children,
-	publishableKey,
+	appId,
 	platformUrl: providedPlatformUrl,
 	afterSignOutUrl = '/',
 	vapidPublicKey,
@@ -283,7 +283,7 @@ export function SylphxProvider({
 		<ConfigContext.Provider value={config}>
 			<QueryClientProvider client={queryClient}>
 				<SylphxProviderInner
-					publishableKey={publishableKey}
+					appId={appId}
 					platformUrl={providedPlatformUrl}
 					afterSignOutUrl={afterSignOutUrl}
 					vapidPublicKey={vapidPublicKey}
@@ -305,7 +305,7 @@ export function SylphxProvider({
  */
 function SylphxProviderInner({
 	children,
-	publishableKey,
+	appId: appIdProp,
 	platformUrl: providedPlatformUrl,
 	afterSignOutUrl = '/',
 	vapidPublicKey,
@@ -313,18 +313,13 @@ function SylphxProviderInner({
 	queryClient,
 	config,
 }: SylphxProviderProps & { queryClient: QueryClient }) {
-	// Validate and sanitize publishable key at initialization
+	// Validate and sanitize app ID at initialization
 	// Following industry-standard "fail fast" pattern (Stripe, Clerk, Firebase)
 	// - Validates key format against expected pattern
 	// - Logs warning if key contains whitespace (common Vercel CLI bug)
 	// - Throws error if key is completely invalid
-	// biome-ignore lint/style/noParameterAssign: intentional validation at boundary
-	publishableKey = validateAndSanitizePublishableKey(publishableKey)
+	const appId = validateAndSanitizePublishableKey(appIdProp)
 	const platformUrl = providedPlatformUrl?.trim() || DEFAULT_PLATFORM_URL
-
-	// Namespace identifier derived from publishable key
-	// Used for storage namespacing, React Query keys, and context
-	const appId = publishableKey
 
 	// ============================================
 	// Storage (namespaced by app identifier)
@@ -354,11 +349,11 @@ function SylphxProviderInner({
 	const api = useMemo(
 		() =>
 			createRestApi({
-				publishableKey,
+				appId,
 				platformUrl,
 				getAccessToken: () => storage.get(STORAGE_KEYS.ACCESS_TOKEN) ?? undefined,
 			}),
-		[publishableKey, platformUrl, storage]
+		[appId, platformUrl, storage]
 	)
 
 	// ============================================
@@ -562,7 +557,7 @@ function SylphxProviderInner({
 						body: JSON.stringify({
 							grant_type: 'refresh_token',
 							refresh_token: token,
-							client_id: publishableKey || '',
+							client_id: appId || '',
 						}),
 						signal: controller.signal,
 					})
@@ -628,7 +623,7 @@ function SylphxProviderInner({
 
 			return refreshingRef.current
 		},
-		[publishableKey, platformUrl, saveTokens, clearTokens]
+		[appId, platformUrl, saveTokens, clearTokens]
 	)
 
 	// ============================================
@@ -689,7 +684,7 @@ function SylphxProviderInner({
 								body: JSON.stringify({
 									grant_type: 'authorization_code',
 									code,
-									client_id: publishableKey || '',
+									client_id: appId || '',
 									...(codeVerifier && { code_verifier: codeVerifier }),
 								}),
 							})
@@ -795,7 +790,7 @@ function SylphxProviderInner({
 
 		window.addEventListener('storage', handleStorageChange)
 		return () => window.removeEventListener('storage', handleStorageChange)
-	}, [refreshTokens, storage, appId, platformUrl, publishableKey, saveTokens])
+	}, [refreshTokens, storage, appId, platformUrl, saveTokens])
 
 	// ============================================
 	// Smart Token Refresh (based on expiry, not interval)
@@ -865,7 +860,7 @@ function SylphxProviderInner({
 				? resolvedUrl
 				: (typeof window !== 'undefined' ? window.location.href : '')
 			const params = new URLSearchParams({
-				client_id: publishableKey || '',
+				client_id: appId || '',
 				redirect_uri: redirectUri,
 				response_type: 'code',
 			})
@@ -877,7 +872,7 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[publishableKey, platformUrl, resolveRedirectUrl]
+		[appId, platformUrl, resolveRedirectUrl]
 	)
 
 	const signUp = useCallback(
@@ -888,7 +883,7 @@ function SylphxProviderInner({
 				? resolvedUrl
 				: (typeof window !== 'undefined' ? window.location.href : '')
 			const params = new URLSearchParams({
-				client_id: publishableKey || '',
+				client_id: appId || '',
 				redirect_uri: redirectUri,
 				response_type: 'code',
 				mode: 'signup',
@@ -901,7 +896,7 @@ function SylphxProviderInner({
 				window.location.href = `${platformUrl}/auth/authorize?${params}`
 			}
 		},
-		[publishableKey, platformUrl, resolveRedirectUrl]
+		[appId, platformUrl, resolveRedirectUrl]
 	)
 
 	const signOut = useCallback(
@@ -916,7 +911,7 @@ function SylphxProviderInner({
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({
 							refresh_token: refreshToken,
-							client_id: publishableKey || '',
+							client_id: appId || '',
 						}),
 					})
 				} catch {
@@ -930,7 +925,7 @@ function SylphxProviderInner({
 			const redirectUrl = options?.redirectUrl || afterSignOutUrl
 			safeRedirect(redirectUrl, { fallback: afterSignOutUrl || '/' })
 		},
-		[publishableKey, platformUrl, authState, clearTokens, afterSignOutUrl]
+		[appId, platformUrl, authState, clearTokens, afterSignOutUrl]
 	)
 
 	const getToken = useCallback(async (): Promise<string | null> => {
@@ -964,7 +959,7 @@ function SylphxProviderInner({
 					body: JSON.stringify({
 						grant_type: 'authorization_code',
 						code,
-						client_id: publishableKey || '',
+						client_id: appId || '',
 						// Include PKCE verifier if available (required for SDK OAuth flow)
 						...(codeVerifier && { code_verifier: codeVerifier }),
 					}),
@@ -980,7 +975,7 @@ function SylphxProviderInner({
 				throw error
 			}
 		},
-		[publishableKey, platformUrl, saveTokens, appId]
+		[appId, platformUrl, saveTokens]
 	)
 
 	const resetPassword = useCallback(
@@ -991,7 +986,7 @@ function SylphxProviderInner({
 				body: JSON.stringify({
 					token: options.token,
 					new_password: options.newPassword,
-					client_id: publishableKey || '',
+					client_id: appId || '',
 				}),
 			})
 
@@ -1000,7 +995,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Password reset failed')
 			}
 		},
-		[publishableKey, platformUrl]
+		[appId, platformUrl]
 	)
 
 	const verifyEmail = useCallback(
@@ -1010,7 +1005,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					token: options.token,
-					client_id: publishableKey || '',
+					client_id: appId || '',
 				}),
 			})
 
@@ -1019,7 +1014,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Email verification failed')
 			}
 		},
-		[publishableKey, platformUrl]
+		[appId, platformUrl]
 	)
 
 	const resendVerificationEmail = useCallback(
@@ -1029,7 +1024,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					email: options.email,
-					client_id: publishableKey || '',
+					client_id: appId || '',
 				}),
 			})
 
@@ -1038,7 +1033,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Failed to resend verification email')
 			}
 		},
-		[publishableKey, platformUrl]
+		[appId, platformUrl]
 	)
 
 	const forgotPassword = useCallback(
@@ -1048,7 +1043,7 @@ function SylphxProviderInner({
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					email: options.email,
-					client_id: publishableKey || '',
+					client_id: appId || '',
 				}),
 			})
 
@@ -1057,7 +1052,7 @@ function SylphxProviderInner({
 				throw new Error(error.message || 'Failed to send password reset email')
 			}
 		},
-		[publishableKey, platformUrl]
+		[appId, platformUrl]
 	)
 
 	// ============================================
@@ -1114,7 +1109,7 @@ function SylphxProviderInner({
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
-						'x-app-secret': publishableKey || '',
+						'x-app-secret': appId || '',
 					},
 					body: JSON.stringify({
 						provider,
@@ -1149,7 +1144,7 @@ function SylphxProviderInner({
 				throw error
 			}
 		},
-		[platformUrl, publishableKey, resolveRedirectUrl, appId]
+		[platformUrl, appId, resolveRedirectUrl]
 	)
 
 	// Convenience methods for common OAuth providers
@@ -1201,7 +1196,7 @@ function SylphxProviderInner({
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'x-app-secret': publishableKey || '',
+					'x-app-secret': appId || '',
 				},
 				body: JSON.stringify({
 					email,
@@ -1217,7 +1212,7 @@ function SylphxProviderInner({
 			// Magic link sent successfully - no further action needed
 			// User will click the link in their email to complete sign-in
 		},
-		[platformUrl, publishableKey, resolveRedirectUrl]
+		[platformUrl, appId, resolveRedirectUrl]
 	)
 
 	// ============================================
@@ -1959,12 +1954,12 @@ function SylphxProviderInner({
 	// ============================================
 	const aiApiCall = useCallback(
 		async <T,>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-			// AI endpoints use publishableKey as Bearer token directly
+			// AI endpoints use appId as Bearer token directly
 			const response = await fetch(`${platformUrl}${endpoint}`, {
 				...options,
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${publishableKey}`,
+					Authorization: `Bearer ${appId}`,
 					...options.headers,
 				},
 			})
@@ -1976,7 +1971,7 @@ function SylphxProviderInner({
 
 			return response.json()
 		},
-		[platformUrl, publishableKey]
+		[platformUrl, appId]
 	)
 
 	// ============================================
@@ -2039,7 +2034,7 @@ function SylphxProviderInner({
 							method: 'POST',
 							headers: {
 								'Content-Type': 'application/json',
-								Authorization: `Bearer ${publishableKey}`,
+								Authorization: `Bearer ${appId}`,
 							},
 							body: JSON.stringify({
 								model: input.model,
@@ -2256,7 +2251,7 @@ function SylphxProviderInner({
 				}
 			},
 		}),
-		[aiApiCall, api, platformUrl, publishableKey]
+		[aiApiCall, api, platformUrl, appId]
 	)
 
 	// ============================================
@@ -2511,7 +2506,7 @@ function SylphxProviderInner({
 				return data.url
 			},
 		}),
-		[api, platformUrl, publishableKey, authState.user?.id]
+		[api, platformUrl, appId, authState.user?.id]
 	)
 
 	// ============================================
@@ -2730,7 +2725,7 @@ function SylphxProviderInner({
 				const response = await fetch(`${platformUrl}/api/auth/verify-email`, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ token, client_id: publishableKey || '' }),
+					body: JSON.stringify({ token, client_id: appId || '' }),
 				})
 				if (!response.ok) {
 					const error = await response.json().catch(() => ({ message: 'Email verification failed' }))
@@ -2764,9 +2759,9 @@ function SylphxProviderInner({
 				}
 			},
 			getOAuthProviders: async () => {
-				if (!publishableKey) return { providers: [] }
+				if (!appId) return { providers: [] }
 				const response = await fetch(`${platformUrl}/api/auth/providers`, {
-					headers: { 'X-Publishable-Key': publishableKey },
+					headers: { 'X-App-Id': appId },
 				})
 				if (!response.ok) {
 					return { providers: [] }
@@ -2775,7 +2770,7 @@ function SylphxProviderInner({
 				return { providers: data.providers || [] }
 			},
 		}),
-		[api, platformUrl, publishableKey, saveTokens, clearTokens]
+		[api, platformUrl, appId, saveTokens, clearTokens]
 	)
 
 	// ============================================
@@ -3008,7 +3003,7 @@ function SylphxProviderInner({
 			oauthConnect: async (provider) => {
 				const redirectUri = window.location.href
 				return {
-					redirectUrl: `${platformUrl}/auth/connect/${provider}?client_id=${publishableKey || ''}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+					redirectUrl: `${platformUrl}/auth/connect/${provider}?client_id=${appId || ''}&redirect_uri=${encodeURIComponent(redirectUri)}`,
 				}
 			},
 			oauthDisconnect: async (provider) => {
@@ -3018,7 +3013,7 @@ function SylphxProviderInner({
 				return await api.get('/security/score')
 			},
 		}),
-		[api, platformUrl, publishableKey]
+		[api, platformUrl, appId]
 	)
 
 	// ============================================
@@ -3075,7 +3070,6 @@ function SylphxProviderInner({
 	const platformValue = useMemo(
 		() => ({
 			appId,
-			publishableKey,
 			platformUrl,
 			anonymousId,
 			queryClient,
@@ -3176,7 +3170,6 @@ function SylphxProviderInner({
 		[
 			api,
 			appId,
-			publishableKey,
 			platformUrl,
 			anonymousId,
 			queryClient,

@@ -504,12 +504,12 @@ interface AuthenticatedFetchOptions {
 }
 
 /**
- * Options for public endpoints that only need a publishable key.
- * The publishable key IS the app identity — no separate app ID needed.
+ * Options for public endpoints that only need an App ID (public key).
+ * The App ID IS the app identity — no separate key needed.
  */
 interface PublicFetchOptions {
-	/** Publishable key (pk_dev_xxx, pk_stg_xxx, pk_prod_xxx) — identifies the app */
-	publishableKey: string
+	/** App ID (app_dev_xxx, app_stg_xxx, app_prod_xxx) — identifies the app */
+	appId: string
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string
 }
@@ -586,12 +586,12 @@ export interface OAuthProviderInfo {
 /**
  * Get enabled OAuth providers for an app (server-side)
  *
- * The publishable key identifies the app via `X-Publishable-Key` header.
+ * The App ID identifies the app via `X-App-Id` header.
  *
  * @example
  * ```tsx
  * const providers = await getOAuthProviders({
- *   publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ *   appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
  * })
  * ```
  */
@@ -608,15 +608,15 @@ export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Pr
 	return data.providers || []
 }
 
-/** Shared fetch for OAuth providers — publishable key header identifies the app */
+/** Shared fetch for OAuth providers — App ID header identifies the app */
 async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
 	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
-	// Validate and sanitize publishable key - logs warning if key contains whitespace
-	const publishableKey = validateAndSanitizePublishableKey(options.publishableKey)
+	// Validate and sanitize App ID - logs warning if key contains whitespace
+	const appId = validateAndSanitizePublishableKey(options.appId)
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers`,
-		headers: { 'X-Publishable-Key': publishableKey },
+		headers: { 'X-App-Id': appId },
 		fallback: { providers: [] },
 		label: 'OAuth providers',
 	})
@@ -756,8 +756,8 @@ export type { AppConfig }
 export interface GetAppConfigOptions {
 	/** Secret key for authenticated endpoints (plans, flags, consent types) */
 	secretKey: string
-	/** Publishable key for public endpoints (OAuth providers) */
-	publishableKey: string
+	/** App ID for public endpoints (OAuth providers) - identifies your app */
+	appId: string
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string
 }
@@ -785,7 +785,7 @@ export interface GetAppConfigOptions {
  * export default async function RootLayout({ children }) {
  *   const config = await getAppConfig({
  *     secretKey: process.env.SYLPHX_SECRET_KEY!,
- *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
  *   })
  *
  *   return (
@@ -793,7 +793,7 @@ export interface GetAppConfigOptions {
  *       <body>
  *         <SylphxProvider
  *           config={config}
- *           publishableKey={process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!}
+ *           appId={process.env.NEXT_PUBLIC_SYLPHX_APP_ID!}
  *         >
  *           {children}
  *         </SylphxProvider>
@@ -804,13 +804,13 @@ export interface GetAppConfigOptions {
  * ```
  */
 export async function getAppConfig(options: GetAppConfigOptions): Promise<AppConfig> {
-	const { secretKey, publishableKey, platformUrl } = options
+	const { secretKey, appId, platformUrl } = options
 
 	// Fetch all config data in parallel for optimal performance
 	const [plans, consentTypes, oauthProviders, featureFlags, app] = await Promise.all([
 		getPlans({ secretKey, platformUrl }),
 		getConsentTypes({ secretKey, platformUrl }),
-		getOAuthProvidersWithInfo({ publishableKey, platformUrl }),
+		getOAuthProvidersWithInfo({ appId, platformUrl }),
 		getFeatureFlags({ secretKey, platformUrl }),
 		getAppMetadata({ secretKey, platformUrl }),
 	])

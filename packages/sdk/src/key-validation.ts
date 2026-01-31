@@ -1,7 +1,7 @@
 /**
  * API Key Validation — Single Source of Truth
  *
- * Industry-standard key validation following Stripe, Clerk, and Firebase patterns.
+ * OAuth 2.0 standard key validation for Sylphx Platform.
  * ALL key validation, sanitization, and environment detection logic lives here.
  *
  * Principles:
@@ -11,12 +11,12 @@
  * 4. No silent fixes - Transparency over convenience (but warn + continue)
  * 5. Single Source of Truth - All key logic in one place
  *
- * Key Formats:
- * - Publishable: pk_(dev|stg|prod)_[identifier] — Safe for client-side
- * - Secret: sk_(dev|stg|prod)_[identifier] — Server-side only, NEVER expose
+ * Key Formats (OAuth 2.0 Standard):
+ * - App ID: app_(dev|stg|prod)_[identifier] — Public identifier (like OAuth client_id)
+ * - Secret Key: sk_(dev|stg|prod)_[identifier] — Server-side only (like OAuth client_secret)
  *
  * Identifier Types:
- * - Customer apps: 24 hex chars (publishable) or 64 hex chars (secret)
+ * - Customer apps: 32 hex chars
  * - Platform apps: platform_{app-slug} (e.g., platform_sylphx-console)
  */
 
@@ -27,8 +27,8 @@
 /** Environment type derived from key prefix */
 export type EnvironmentType = 'development' | 'staging' | 'production'
 
-/** Key type - publishable (client) or secret (server) */
-export type KeyType = 'publishable' | 'secret'
+/** Key type - appId (public) or secret (server) */
+export type KeyType = 'appId' | 'secret'
 
 /** Validation result with clear error information */
 export interface KeyValidationResult {
@@ -53,18 +53,18 @@ export interface KeyValidationResult {
 // =============================================================================
 
 /**
- * Publishable key pattern: pk_(dev|stg|prod)_[identifier]
- * - Prefix: pk_ (publishable key)
+ * App ID pattern: app_(dev|stg|prod)_[identifier]
+ * - Prefix: app_ (application identifier, public)
  * - Environment: dev, stg, or prod (NO typos allowed)
- * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers like platform_app-slug)
+ * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers)
  */
-const PUBLISHABLE_KEY_PATTERN = /^pk_(dev|stg|prod)_[a-z0-9_-]+$/
+const APP_ID_PATTERN = /^app_(dev|stg|prod)_[a-z0-9_-]+$/
 
 /**
  * Secret key pattern: sk_(dev|stg|prod)_[identifier]
  * - Prefix: sk_ (secret key)
  * - Environment: dev, stg, or prod (NO typos allowed)
- * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers like platform_app-slug)
+ * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers)
  */
 const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_-]+$/
 
@@ -100,8 +100,9 @@ function createSanitizationWarning(
 	issues: string[],
 	envVarName: string,
 ): string {
+	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
 	return (
-		`[Sylphx] ${keyType === 'publishable' ? 'Publishable' : 'Secret'} key contains ${issues.join(', ')}. ` +
+		`[Sylphx] ${keyTypeName} contains ${issues.join(', ')}. ` +
 		`This is commonly caused by Vercel CLI's 'env pull' command.\n\n` +
 		`To fix permanently:\n` +
 		`1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n` +
@@ -120,19 +121,20 @@ function createInvalidKeyError(
 	key: string,
 	envVarName: string,
 ): string {
-	const prefix = keyType === 'publishable' ? 'pk' : 'sk'
+	const prefix = keyType === 'appId' ? 'app' : 'sk'
 	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
 	const formatHint = `${prefix}_(dev|stg|prod)_[identifier]`
+	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
 
 	return (
-		`[Sylphx] Invalid ${keyType} key format.\n\n` +
+		`[Sylphx] Invalid ${keyTypeName} format.\n\n` +
 		`Expected format: ${formatHint}\n` +
 		`Received: "${maskedKey}"\n\n` +
 		`Please check your ${envVarName} environment variable.\n` +
 		`You can find your keys in the Sylphx Console → API Keys.\n\n` +
 		`Common issues:\n` +
 		`• Key has uppercase characters (must be lowercase)\n` +
-		`• Key has wrong prefix (publishable: pk_, secret: sk_)\n` +
+		`• Key has wrong prefix (App ID: app_, Secret Key: sk_)\n` +
 		`• Key has invalid environment (must be dev, stg, or prod)\n` +
 		`• Key was copied with extra whitespace`
 	)
@@ -142,7 +144,8 @@ function createInvalidKeyError(
  * Extract environment from a validated key
  */
 function extractEnvironment(key: string): EnvironmentType | undefined {
-	const match = key.match(/^[ps]k_(dev|stg|prod)_/)
+	// Match app_ or sk_ prefix followed by environment
+	const match = key.match(/^(?:app|sk)_(dev|stg|prod)_/)
 	if (!match) return undefined
 	return ENV_PREFIX_MAP[match[1]]
 }
@@ -156,13 +159,15 @@ function validateKeyForType(
 	pattern: RegExp,
 	envVarName: string,
 ): KeyValidationResult {
+	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
+
 	// Check if key is provided
 	if (!key) {
 		return {
 			valid: false,
 			sanitizedKey: '',
 			error:
-				`[Sylphx] ${keyType === 'publishable' ? 'Publishable' : 'Secret'} key is required. ` +
+				`[Sylphx] ${keyTypeName} is required. ` +
 				`Set ${envVarName} in your environment variables.`,
 			issues: ['missing'],
 		}
@@ -207,15 +212,15 @@ function validateKeyForType(
 }
 
 // =============================================================================
-// Public API — Publishable Keys
+// Public API — App ID (formerly Publishable Key)
 // =============================================================================
 
 /**
- * Validate a publishable key and return detailed results
+ * Validate an App ID and return detailed results
  *
  * @example
  * ```typescript
- * const result = validatePublishableKey(process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY)
+ * const result = validateAppId(process.env.NEXT_PUBLIC_SYLPHX_APP_ID)
  * if (!result.valid) {
  *   throw new Error(result.error)
  * }
@@ -224,27 +229,18 @@ function validateKeyForType(
  * }
  * ```
  */
-export function validatePublishableKey(
-	key: string | undefined | null,
-): KeyValidationResult {
-	return validateKeyForType(
-		key,
-		'publishable',
-		PUBLISHABLE_KEY_PATTERN,
-		'NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY',
-	)
+export function validateAppId(key: string | undefined | null): KeyValidationResult {
+	return validateKeyForType(key, 'appId', APP_ID_PATTERN, 'NEXT_PUBLIC_SYLPHX_APP_ID')
 }
 
 /**
- * Validate and sanitize publishable key, logging warnings
+ * Validate and sanitize App ID, logging warnings
  *
  * @throws Error if the key is invalid and cannot be sanitized
- * @returns The sanitized publishable key
+ * @returns The sanitized App ID
  */
-export function validateAndSanitizePublishableKey(
-	key: string | undefined | null,
-): string {
-	const result = validatePublishableKey(key)
+export function validateAndSanitizeAppId(key: string | undefined | null): string {
+	const result = validateAppId(key)
 
 	if (!result.valid) {
 		throw new Error(result.error)
@@ -256,6 +252,12 @@ export function validateAndSanitizePublishableKey(
 
 	return result.sanitizedKey
 }
+
+// Legacy aliases for backward compatibility during migration
+/** @deprecated Use validateAppId instead */
+export const validatePublishableKey = validateAppId
+/** @deprecated Use validateAndSanitizeAppId instead */
+export const validateAndSanitizePublishableKey = validateAndSanitizeAppId
 
 // =============================================================================
 // Public API — Secret Keys
@@ -272,9 +274,7 @@ export function validateAndSanitizePublishableKey(
  * }
  * ```
  */
-export function validateSecretKey(
-	key: string | undefined | null,
-): KeyValidationResult {
+export function validateSecretKey(key: string | undefined | null): KeyValidationResult {
 	return validateKeyForType(key, 'secret', SECRET_KEY_PATTERN, 'SYLPHX_SECRET_KEY')
 }
 
@@ -284,9 +284,7 @@ export function validateSecretKey(
  * @throws Error if the key is invalid and cannot be sanitized
  * @returns The sanitized secret key
  */
-export function validateAndSanitizeSecretKey(
-	key: string | undefined | null,
-): string {
+export function validateAndSanitizeSecretKey(key: string | undefined | null): string {
 	const result = validateSecretKey(key)
 
 	if (!result.valid) {
@@ -305,13 +303,13 @@ export function validateAndSanitizeSecretKey(
 // =============================================================================
 
 /**
- * Detect environment type from any key (publishable or secret)
+ * Detect environment type from any key (App ID or Secret Key)
  *
  * @example
  * ```typescript
- * detectEnvironment('sk_dev_abc123')  // 'development'
- * detectEnvironment('pk_prod_xyz789') // 'production'
- * detectEnvironment('sk_stg_qwe456')  // 'staging'
+ * detectEnvironment('sk_dev_abc123')   // 'development'
+ * detectEnvironment('app_prod_xyz789') // 'production'
+ * detectEnvironment('sk_stg_qwe456')   // 'staging'
  * ```
  *
  * @throws Error if key format is invalid
@@ -329,8 +327,8 @@ export function detectEnvironment(key: string): EnvironmentType {
 		return result.environment!
 	}
 
-	if (sanitized.startsWith('pk_')) {
-		const result = validatePublishableKey(sanitized)
+	if (sanitized.startsWith('app_')) {
+		const result = validateAppId(sanitized)
 		if (!result.valid) {
 			throw new Error(result.error)
 		}
@@ -338,7 +336,7 @@ export function detectEnvironment(key: string): EnvironmentType {
 	}
 
 	throw new Error(
-		`[Sylphx] Invalid key format. Key must start with 'sk_' (secret) or 'pk_' (publishable).`,
+		`[Sylphx] Invalid key format. Key must start with 'sk_' (secret) or 'app_' (App ID).`,
 	)
 }
 
@@ -383,23 +381,26 @@ export function getCookieNamespace(secretKey: string): string {
 // =============================================================================
 
 /**
- * Detect the type of key (publishable or secret)
+ * Detect the type of key (App ID or Secret Key)
  *
- * @returns 'publishable', 'secret', or null if unknown
+ * @returns 'appId', 'secret', or null if unknown
  */
 export function detectKeyType(key: string): KeyType | null {
 	const sanitized = key.trim().toLowerCase()
-	if (sanitized.startsWith('pk_')) return 'publishable'
+	if (sanitized.startsWith('app_')) return 'appId'
 	if (sanitized.startsWith('sk_')) return 'secret'
 	return null
 }
 
 /**
- * Check if a key is a publishable key
+ * Check if a key is an App ID
  */
-export function isPublishableKey(key: string): boolean {
-	return detectKeyType(key) === 'publishable'
+export function isAppId(key: string): boolean {
+	return detectKeyType(key) === 'appId'
 }
+
+/** @deprecated Use isAppId instead */
+export const isPublishableKey = isAppId
 
 /**
  * Check if a key is a secret key
@@ -411,7 +412,7 @@ export function isSecretKey(key: string): boolean {
 /**
  * Validate any key (auto-detects type)
  *
- * Use this when you accept either publishable or secret keys.
+ * Use this when you accept either App ID or Secret Key.
  * The function auto-detects the key type and validates accordingly.
  *
  * @example
@@ -426,8 +427,8 @@ export function isSecretKey(key: string): boolean {
 export function validateKey(key: string | undefined | null): KeyValidationResult {
 	const keyType = key ? detectKeyType(key) : null
 
-	if (keyType === 'publishable') {
-		return validatePublishableKey(key)
+	if (keyType === 'appId') {
+		return validateAppId(key)
 	}
 	if (keyType === 'secret') {
 		return validateSecretKey(key)
@@ -438,7 +439,7 @@ export function validateKey(key: string | undefined | null): KeyValidationResult
 		valid: false,
 		sanitizedKey: '',
 		error: key
-			? `Invalid key format. Keys must start with 'pk_' (publishable) or 'sk_' (secret), followed by environment (dev/stg/prod) and hex characters. Got: ${key.slice(0, 20)}...`
+			? `Invalid key format. Keys must start with 'app_' (App ID) or 'sk_' (Secret Key), followed by environment (dev/stg/prod) and identifier. Got: ${key.slice(0, 20)}...`
 			: 'API key is required but was not provided.',
 		issues: key ? ['invalid_format'] : ['missing'],
 	}

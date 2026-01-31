@@ -115,8 +115,8 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 	// Check if we're in SSR
 	const isSSR = typeof window === 'undefined'
 
-	// Check if SDK is configured (has publishableKey)
-	const isConfigured = Boolean(platformContext?.publishableKey)
+	// Check if SDK is configured (has appId)
+	const isConfigured = Boolean(platformContext?.appId)
 
 	// Check individual service availability
 	const serviceAvailability = useMemo<Record<SdkService, boolean>>(() => {

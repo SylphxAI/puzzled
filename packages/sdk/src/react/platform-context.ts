@@ -187,10 +187,8 @@ export interface ClickIds {
 }
 
 export interface PlatformContextValue {
-	/** App configuration */
+	/** App ID (environment-specific: app_dev_xxx, app_stg_xxx, app_prod_xxx) */
 	appId: string
-	/** Environment secret key (sk_dev_, sk_stg_, sk_prod_) - optional in platform mode */
-	publishableKey?: string
 	/** Platform API URL */
 	platformUrl: string
 	/** Anonymous ID for tracking (persisted in localStorage) */

@@ -120,11 +120,11 @@ export interface AppMetadata {
  * export default async function RootLayout({ children }) {
  *   const config = await getAppConfig({
  *     secretKey: process.env.SYLPHX_SECRET_KEY!,
- *     publishableKey: process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY!,
+ *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
  *   })
  *
  *   return (
- *     <SylphxProvider config={config} publishableKey={...}>
+ *     <SylphxProvider config={config} appId={...}>
  *       {children}
  *     </SylphxProvider>
  *   )
