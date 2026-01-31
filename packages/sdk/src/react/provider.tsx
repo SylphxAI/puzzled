@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
 import { validateAndSanitizePublishableKey } from '../key-validation'
-import { DEFAULT_PLATFORM_URL } from '../constants'
+import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
 import {
 	PlatformContext,
 	type Subscription,
@@ -120,7 +120,7 @@ function inferProviderFromModelId(modelId: string): AIProvider {
 }
 
 function createRestApi(config: RestConfig) {
-	const baseUrl = `${config.platformUrl}/api/sdk/v1`
+	const baseUrl = `${config.platformUrl}${SDK_API_PATH}`
 
 	const headers = () => {
 		const h: Record<string, string> = {
@@ -1016,7 +1016,7 @@ function SylphxProviderInner({
 				const serverCallbackUri = callbackUrl.toString()
 
 				// Fetch OAuth authorization URL from platform
-				const response = await fetch(`${platformUrl}/api/sdk/v1/oauth/authorize`, {
+				const response = await fetch(`${platformUrl}${SDK_API_PATH}/oauth/authorize`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -1103,7 +1103,7 @@ function SylphxProviderInner({
 			const { email, redirectUrl } = options
 			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
 
-			const response = await fetch(`${platformUrl}/api/sdk/v1/auth/magic-link`, {
+			const response = await fetch(`${platformUrl}${SDK_API_PATH}/auth/magic-link`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

@@ -5,6 +5,8 @@
  * PostHog-compatible event format with smart autocapture.
  */
 
+import { SDK_API_PATH } from '../../constants'
+
 // ==========================================
 // Core Types
 // ==========================================
@@ -198,7 +200,7 @@ export interface AutocaptureConfig {
 
 /** Default configuration */
 export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
-	apiEndpoint: '/api/sdk/v1/analytics/track',
+	apiEndpoint: `${SDK_API_PATH}/analytics/track`,
 	autocapture: true,
 	capturePageviews: true,
 	captureSpaNavigation: true,

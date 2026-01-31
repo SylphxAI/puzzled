@@ -24,6 +24,7 @@ import type {
 	PropertyValue,
 } from './types'
 import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
+import { SDK_API_PATH } from '../../constants'
 import { Autocapture, type AutocaptureEvent } from './autocapture'
 import { NavigationTracker, type PageViewEvent, type PageLeaveEvent, analyzeReferrer } from './navigation'
 
@@ -409,7 +410,7 @@ export class AnalyticsTracker {
 	}
 
 	private async sendBatch(events: AnalyticsEvent[]): Promise<void> {
-		const endpoint = this.config.apiEndpoint ?? '/api/sdk/v1/analytics/track'
+		const endpoint = this.config.apiEndpoint ?? `${SDK_API_PATH}/analytics/track`
 
 		const payload = {
 			events: events,

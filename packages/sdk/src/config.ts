@@ -9,7 +9,7 @@
 
 import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
 import { validateKey } from './key-validation'
-import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL } from './constants'
+import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './constants'
 
 /**
  * Map HTTP status code to SylphxErrorCode
@@ -153,7 +153,7 @@ export function buildHeaders(config: SylphxConfig): Record<string, string> {
 export function buildApiUrl(config: SylphxConfig, path: string): string {
 	const base = config.platformUrl.replace(/\/$/, '')
 	const cleanPath = path.startsWith('/') ? path : `/${path}`
-	return `${base}/api/sdk/v1${cleanPath}`
+	return `${base}${SDK_API_PATH}${cleanPath}`
 }
 
 /**

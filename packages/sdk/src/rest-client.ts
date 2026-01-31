@@ -25,7 +25,7 @@ import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './generated/api'
 import { exponentialBackoff, isRetryableError } from './errors'
 import { validateAndSanitizeSecretKey } from './key-validation'
-import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL } from './constants'
+import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './constants'
 
 // Re-export types for consumers
 export type { paths }
@@ -251,7 +251,7 @@ export function createRestClient(config: RestClientConfig) {
 	const { secretKey, baseUrl } = validateClientConfig(config)
 
 	const client = createClient<paths>({
-		baseUrl: `${baseUrl}/api/sdk/v1`,
+		baseUrl: `${baseUrl}${SDK_API_PATH}`,
 		headers: {
 			'Content-Type': 'application/json',
 			'x-app-secret': secretKey,
@@ -290,7 +290,7 @@ export function createDynamicRestClient(config: RestDynamicConfig) {
 	}
 
 	const client = createClient<paths>({
-		baseUrl: `${baseUrl}/api/sdk/v1`,
+		baseUrl: `${baseUrl}${SDK_API_PATH}`,
 		headers: {
 			'Content-Type': 'application/json',
 		},

@@ -495,7 +495,7 @@ export type { RestClient, RestClientConfig as ServerClientConfig }
 // Server-Side Data Fetching — Shared Infrastructure
 // ============================================================================
 
-import { DEFAULT_PLATFORM_URL } from '../constants'
+import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
 
 /** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
@@ -639,7 +639,7 @@ export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<Plan[]>({
-		url: `${platformUrl}/api/sdk/v1/billing/plans`,
+		url: `${platformUrl}${SDK_API_PATH}/billing/plans`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'plans',
@@ -663,7 +663,7 @@ export async function getConsentTypes(options: AuthenticatedFetchOptions): Promi
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<ConsentType[]>({
-		url: `${platformUrl}/api/sdk/v1/consent/types`,
+		url: `${platformUrl}${SDK_API_PATH}/consent/types`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'consent types',
@@ -707,7 +707,7 @@ export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promi
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<FeatureFlagDefinition[]>({
-		url: `${platformUrl}/api/sdk/v1/flags`,
+		url: `${platformUrl}${SDK_API_PATH}/flags`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
 		label: 'feature flags',
@@ -734,7 +734,7 @@ export async function getAppMetadata(options: AuthenticatedFetchOptions): Promis
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
 
 	return cachedFetch<AppMetadata>({
-		url: `${platformUrl}/api/sdk/v1/app`,
+		url: `${platformUrl}${SDK_API_PATH}/app`,
 		headers: sdkHeaders(secretKey),
 		fallback: { id: '', name: '', slug: '' },
 		label: 'app metadata',
@@ -868,7 +868,7 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 }): Promise<ReferralLeaderboardResult> {
 	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = sanitizeOptions(options)
 
-	const url = new URL(`${platformUrl}/api/sdk/v1/referrals/leaderboard`)
+	const url = new URL(`${platformUrl}${SDK_API_PATH}/referrals/leaderboard`)
 	url.searchParams.set('limit', String(limit))
 	url.searchParams.set('period', period)
 
@@ -924,7 +924,7 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 }): Promise<EngagementLeaderboardResult> {
 	const { secretKey, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = sanitizeOptions(options)
 
-	const url = new URL(`${platformUrl}/api/sdk/v1/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
+	const url = new URL(`${platformUrl}${SDK_API_PATH}/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
 	url.searchParams.set('limit', String(limit))
 
 	return cachedFetch<EngagementLeaderboardResult>({
