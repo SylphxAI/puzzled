@@ -11,6 +11,7 @@ import {
 	AuthContext,
 	type AuthContextValue,
 	type SignInOptions,
+	type SignInWithOAuthOptions,
 	type ResetPasswordOptions,
 	type VerifyEmailOptions,
 	type ResendVerificationEmailOptions,
@@ -258,6 +259,12 @@ export interface UseSafeAuthReturn {
 	error: Error | null
 	/** Whether there was an auth error */
 	isError: boolean
+	/** Whether an OAuth flow is in progress */
+	isOAuthLoading: boolean
+	/** OAuth-specific error */
+	oauthError: Error | null
+	/** Clear OAuth error state */
+	clearOAuthError: () => void
 	/** Redirect to sign in page (no-op if not configured) */
 	signIn: (options?: SignInOptions) => void
 	/** Redirect to sign up page (no-op if not configured) */
@@ -274,6 +281,43 @@ export interface UseSafeAuthReturn {
 	resendVerificationEmail: ((options: ResendVerificationEmailOptions) => Promise<void>) | null
 	/** Request password reset email (throws if not configured) */
 	forgotPassword: ((options: ForgotPasswordOptions) => Promise<void>) | null
+
+	// ==========================================
+	// Direct OAuth Methods (Firebase/Supabase pattern)
+	// User goes directly to OAuth provider - no platform UI
+	// ==========================================
+
+	/**
+	 * Sign in with OAuth provider directly (Firebase/Supabase pattern).
+	 * Redirects user straight to OAuth provider - no platform login UI.
+	 *
+	 * @example
+	 * ```tsx
+	 * const { signInWithOAuth } = useSafeAuth()
+	 *
+	 * // Direct to Google consent screen
+	 * await signInWithOAuth({ provider: 'google' })
+	 * ```
+	 */
+	signInWithOAuth: ((options: SignInWithOAuthOptions) => Promise<void>) | null
+
+	/** Convenience: Sign in with Google directly */
+	signInWithGoogle: ((redirectUrl?: string) => Promise<void>) | null
+
+	/** Convenience: Sign in with GitHub directly */
+	signInWithGithub: ((redirectUrl?: string) => Promise<void>) | null
+
+	/** Convenience: Sign in with Apple directly */
+	signInWithApple: ((redirectUrl?: string) => Promise<void>) | null
+
+	/** Convenience: Sign in with Discord directly */
+	signInWithDiscord: ((redirectUrl?: string) => Promise<void>) | null
+
+	/** Convenience: Sign in with Twitter directly */
+	signInWithTwitter: ((redirectUrl?: string) => Promise<void>) | null
+
+	/** Convenience: Sign in with Microsoft directly */
+	signInWithMicrosoft: ((redirectUrl?: string) => Promise<void>) | null
 }
 
 /**
@@ -300,6 +344,9 @@ export function useSafeAuth(): UseSafeAuthReturn {
 			isSignedIn: false,
 			error: null,
 			isError: false,
+			isOAuthLoading: false,
+			oauthError: null,
+			clearOAuthError: () => {},
 			signIn: () => {},
 			signUp: () => {},
 			signOut: async () => {},
@@ -308,6 +355,14 @@ export function useSafeAuth(): UseSafeAuthReturn {
 			verifyEmail: null,
 			resendVerificationEmail: null,
 			forgotPassword: null,
+			// Direct OAuth methods (not configured)
+			signInWithOAuth: null,
+			signInWithGoogle: null,
+			signInWithGithub: null,
+			signInWithApple: null,
+			signInWithDiscord: null,
+			signInWithTwitter: null,
+			signInWithMicrosoft: null,
 		}
 	}
 
@@ -316,6 +371,9 @@ export function useSafeAuth(): UseSafeAuthReturn {
 		isSignedIn: context.isSignedIn,
 		error: context.error,
 		isError: context.error !== null,
+		isOAuthLoading: context.isOAuthLoading,
+		oauthError: context.oauthError,
+		clearOAuthError: context.clearOAuthError,
 		signIn: context.signIn,
 		signUp: context.signUp,
 		signOut: context.signOut,
@@ -324,6 +382,14 @@ export function useSafeAuth(): UseSafeAuthReturn {
 		verifyEmail: context.verifyEmail,
 		resendVerificationEmail: context.resendVerificationEmail,
 		forgotPassword: context.forgotPassword,
+		// Direct OAuth methods (Firebase/Supabase pattern)
+		signInWithOAuth: context.signInWithOAuth,
+		signInWithGoogle: context.signInWithGoogle,
+		signInWithGithub: context.signInWithGithub,
+		signInWithApple: context.signInWithApple,
+		signInWithDiscord: context.signInWithDiscord,
+		signInWithTwitter: context.signInWithTwitter,
+		signInWithMicrosoft: context.signInWithMicrosoft,
 	}
 }
 

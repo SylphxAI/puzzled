@@ -15,7 +15,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
-	const { signIn } = useSafeAuth()
+	const { signInWithOAuth, isOAuthLoading, oauthError } = useSafeAuth()
 
 	const {
 		form,
@@ -30,12 +30,10 @@ export function LoginForm({ providers }: LoginFormProps) {
 		methods: ['password'],
 		providers,
 		afterSignInUrl: '/',
-		// OAuth handler: redirect to platform OAuth flow
+		// OAuth handler: direct OAuth flow (Firebase/Supabase pattern)
+		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		oauthHandler: async (provider) => {
-			signIn({
-				redirectUrl: '/',
-				providers: [provider],
-			})
+			await signInWithOAuth?.({ provider, redirectUrl: '/' })
 		},
 	})
 

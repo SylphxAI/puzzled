@@ -44,7 +44,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
-	const { signUp } = useSafeAuth()
+	const { signInWithOAuth } = useSafeAuth()
 
 	const {
 		form,
@@ -62,12 +62,11 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		providers,
 		afterSignUpUrl: '/',
 		minPasswordLength: 8,
-		// OAuth handler: redirect to platform OAuth flow
+		// OAuth handler: direct OAuth flow (Firebase/Supabase pattern)
+		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
+		// Note: OAuth signup and login use the same flow - provider creates account if needed
 		oauthHandler: async (provider) => {
-			signUp({
-				redirectUrl: '/',
-				providers: [provider],
-			})
+			await signInWithOAuth?.({ provider, redirectUrl: '/' })
 		},
 	})
 
