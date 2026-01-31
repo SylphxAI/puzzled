@@ -20,7 +20,8 @@ type User = NonNullable<AuthResult['user']>
 export type Context = {
 	user: User | null
 	userId: string | null
-	accessToken: string | null
+	/** Session token for SDK API calls (internal use) */
+	sessionToken: string | null
 	headers: Headers
 }
 
@@ -32,12 +33,12 @@ export async function createContext(_opts?: FetchCreateContextFnOptions): Promis
 	const headersList = await headers()
 
 	// Get auth from Sylphx Platform SDK
-	const { userId, user, accessToken } = await auth()
+	const { userId, user, sessionToken } = await auth()
 
 	return {
 		user,
 		userId,
-		accessToken,
+		sessionToken,
 		headers: headersList,
 	}
 }

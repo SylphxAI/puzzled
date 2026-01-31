@@ -7,10 +7,32 @@ import { routing } from '@/lib/i18n/routing'
 // See: https://nextjs.org/docs/messages/middleware-to-proxy
 const intlMiddleware = createMiddleware(routing)
 
-// Cookie names for Sylphx Platform SDK
-const SYLPHX_COOKIE_NAMES = {
-	ACCESS_TOKEN: 'sylphx_access_token',
-	REFRESH_TOKEN: 'sylphx_refresh_token',
+/**
+ * Get cookie names for Sylphx Platform SDK.
+ *
+ * Cookie naming convention: __sylphx_{env}_{type}
+ * - SESSION: HttpOnly JWT access token (5 min)
+ * - REFRESH: HttpOnly refresh token (30 days)
+ * - USER: JS-readable user data for client hydration
+ *
+ * Environment is derived from SYLPHX_SECRET_KEY prefix (sk_dev_, sk_stg_, sk_prod_).
+ */
+function getSylphxCookieNames() {
+	const secretKey = process.env.SYLPHX_SECRET_KEY || ''
+	let envSuffix = 'prod' // Default to prod for safety
+
+	if (secretKey.startsWith('sk_dev_') || secretKey.includes('_dev_')) {
+		envSuffix = 'dev'
+	} else if (secretKey.startsWith('sk_stg_') || secretKey.includes('_stg_')) {
+		envSuffix = 'stg'
+	}
+
+	const namespace = `sylphx_${envSuffix}`
+	return {
+		SESSION: `__${namespace}_session`,
+		REFRESH: `__${namespace}_refresh`,
+		USER: `__${namespace}_user`,
+	}
 }
 
 // Routes that require authentication (without locale prefix)
@@ -87,18 +109,19 @@ function isTokenExpired(token: string): boolean {
  * Check if user is authenticated via Sylphx Platform
  *
  * Validates:
- * 1. Access token exists AND is not expired, OR
- * 2. Refresh token exists (client will handle refresh)
+ * 1. Session token exists AND is not expired, OR
+ * 2. Refresh token exists (middleware will handle refresh)
  */
 function isAuthenticated(request: NextRequest): boolean {
-	const accessToken = request.cookies.get(SYLPHX_COOKIE_NAMES.ACCESS_TOKEN)?.value
-	const hasRefreshToken = request.cookies.has(SYLPHX_COOKIE_NAMES.REFRESH_TOKEN)
+	const cookieNames = getSylphxCookieNames()
+	const sessionToken = request.cookies.get(cookieNames.SESSION)?.value
+	const hasRefreshToken = request.cookies.has(cookieNames.REFRESH)
 
 	// Token is valid only if it exists AND is not expired
-	const hasValidToken = accessToken ? !isTokenExpired(accessToken) : false
+	const hasValidToken = sessionToken ? !isTokenExpired(sessionToken) : false
 
 	// User can still authenticate if they have a refresh token
-	// (will be handled by client-side SDK)
+	// (will be handled by SDK middleware)
 	return hasValidToken || hasRefreshToken
 }
 

@@ -346,18 +346,27 @@ function SylphxProviderInner({
 	}, [storage])
 
 	// ============================================
+	// Token Cache for Cross-Origin API Calls
+	// ============================================
+	// Cookies are on the client app's domain, not the platform domain.
+	// For SDK API calls to sylphx.com (cross-origin), we need Bearer tokens.
+	// This ref caches the token fetched via BFF endpoint (/api/auth/token).
+	const cachedTokenRef = useRef<string | null>(null)
+
+	// ============================================
 	// REST API Client
 	// ============================================
-	// Note: For same-origin API calls, cookies are sent automatically.
-	// The API client doesn't need to explicitly provide the access token
-	// because it's in an HttpOnly cookie sent with each request.
+	// REST API Client
+	// For SDK API calls to sylphx.com (cross-origin), Bearer tokens are required.
+	// Cookies are on the client app's domain, not the platform domain.
+	// We fetch the token via BFF endpoint (/api/auth/token) and cache it.
 	const api = useMemo(
 		() =>
 			createRestApi({
 				appId,
 				platformUrl,
-				// Tokens are now in HttpOnly cookies, sent automatically by browser
-				getAccessToken: () => undefined,
+				// Return cached token for cross-origin API calls
+				getAccessToken: () => cachedTokenRef.current,
 			}),
 		[appId, platformUrl]
 	)
@@ -395,6 +404,44 @@ function SylphxProviderInner({
 			oauthError: null,
 		}
 	})
+
+	// ============================================
+	// Token Fetch for Cross-Origin API Calls
+	// ============================================
+	// When user signs in, fetch token via BFF endpoint and cache it.
+	// This enables authenticated SDK API calls to sylphx.com.
+	useEffect(() => {
+		// Skip if not signed in
+		if (!authState.isSignedIn) {
+			cachedTokenRef.current = null
+			return
+		}
+
+		// Fetch token from BFF endpoint
+		const fetchToken = async () => {
+			try {
+				const response = await fetch('/api/auth/token', {
+					method: 'GET',
+					credentials: 'include', // Send cookies to same-origin endpoint
+				})
+
+				if (response.ok) {
+					const data = await response.json()
+					cachedTokenRef.current = data.accessToken ?? null
+				} else {
+					// BFF endpoint not available or returned error
+					// This is OK - some apps may not have set up the endpoint
+					cachedTokenRef.current = null
+				}
+			} catch {
+				// Fetch failed (network error, CORS, etc.)
+				// This is expected if app hasn't set up /api/auth/token
+				cachedTokenRef.current = null
+			}
+		}
+
+		fetchToken()
+	}, [authState.isSignedIn, authState.user?.id])
 
 	// ============================================
 	// Platform State - React Query for server data
