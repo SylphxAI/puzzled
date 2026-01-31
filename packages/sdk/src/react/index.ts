@@ -14,7 +14,7 @@
  *
  * export default function Layout({ children }) {
  *   return (
- *     <SylphxProvider publishableKey="pk_prod_xxx">
+ *     <SylphxProvider appId="app_prod_xxx">
  *       {children}
  *     </SylphxProvider>
  *   )

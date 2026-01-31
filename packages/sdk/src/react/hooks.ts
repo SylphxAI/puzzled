@@ -596,7 +596,7 @@ export function useOrganization(): UseOrganizationReturn {
 	// Create config for API calls using platform context
 	const config = platform
 		? createConfig({
-				secretKey: platform.appId, // appId is the publishableKey
+				secretKey: platform.appId, // appId is the appId
 				platformUrl: platform.platformUrl,
 		  })
 		: null

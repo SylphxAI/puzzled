@@ -4,7 +4,7 @@
  * Create a config object that can be passed to SDK functions.
  * This is the foundation for the function-based API.
  *
- * Uses publishableKey or secretKey for authentication via x-app-secret header.
+ * Uses appId or secretKey for authentication via x-app-secret header.
  */
 
 import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
@@ -56,7 +56,7 @@ export interface SylphxConfig {
 	 *
 	 * Accepts either:
 	 * - Secret key (sk_dev_, sk_stg_, sk_prod_) — full access, server-side only
-	 * - Publishable key (pk_dev_, pk_stg_, pk_prod_) — limited access, safe for client
+	 * - Publishable key (app_dev_, app_stg_, app_prod_) — limited access, safe for client
 	 *
 	 * Get this from Platform Console → Apps → Your App → Environments
 	 */

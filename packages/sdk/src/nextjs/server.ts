@@ -346,16 +346,16 @@ export function getAuthorizationUrl(options?: {
 	redirectUri?: string
 	mode?: 'login' | 'signup'
 	state?: string
-	publishableKey?: string
+	appId?: string
 }): string {
 	const config = getConfig()
 	if (!config) {
 		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
 	}
 
-	const rawClientId = options?.publishableKey || process.env.NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY
+	const rawClientId = options?.appId || process.env.NEXT_PUBLIC_SYLPHX_APP_ID
 	if (!rawClientId) {
-		throw new Error('Publishable key is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY.')
+		throw new Error('Publishable key is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_APP_ID.')
 	}
 
 	// Validate and sanitize publishable key using SSOT

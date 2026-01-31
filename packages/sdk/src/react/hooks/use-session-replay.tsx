@@ -12,7 +12,7 @@
  * // With SylphxProvider (automatic backend integration)
  * function App() {
  *   return (
- *     <SylphxProvider publishableKey="...">
+ *     <SylphxProvider appId="...">
  *       <SessionReplayRecorder />
  *       <YourApp />
  *     </SylphxProvider>

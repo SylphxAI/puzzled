@@ -57,7 +57,7 @@ export interface RestClientConfig {
 	 *
 	 * Accepts either:
 	 * - Secret key (sk_dev_, sk_stg_, sk_prod_) — full access, server-side only
-	 * - Publishable key (pk_dev_, pk_stg_, pk_prod_) — limited access, safe for client
+	 * - Publishable key (app_dev_, app_stg_, app_prod_) — limited access, safe for client
 	 */
 	secretKey: string
 	/** Platform URL (default: https://sylphx.com) */
@@ -70,7 +70,7 @@ export interface RestClientConfig {
  * Dynamic configuration that can change at runtime (e.g., access token)
  */
 export interface RestDynamicConfig {
-	/** Your secret key (sk_* or pk_*) — identifies the app */
+	/** Your secret key (sk_* or app_*) — identifies the app */
 	secretKey?: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string

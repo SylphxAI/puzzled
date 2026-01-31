@@ -8,7 +8,7 @@
 
 interface StorageConfig {
 	/** Publishable key — identifies the app */
-	publishableKey: string
+	appId: string
 	/** Platform URL (default: https://sylphx.com) */
 	platformUrl?: string
 	/** User ID for authenticated uploads */

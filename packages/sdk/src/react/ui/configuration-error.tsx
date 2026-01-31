@@ -54,7 +54,7 @@ function isDevelopment(): boolean {
 	return false
 }
 
-const ENV_VARS_CODE = `NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY="pk_xxx"`
+const ENV_VARS_CODE = `NEXT_PUBLIC_SYLPHX_APP_ID="app_xxx"`
 
 /**
  * Development-only setup card with helpful instructions
@@ -265,7 +265,7 @@ export function ConfigurationError({
 	// Log error for debugging (always)
 	if (typeof console !== 'undefined') {
 		console.error(
-			'[Sylphx SDK] Configuration missing. Please set NEXT_PUBLIC_SYLPHX_PUBLISHABLE_KEY environment variable.'
+			'[Sylphx SDK] Configuration missing. Please set NEXT_PUBLIC_SYLPHX_APP_ID environment variable.'
 		)
 	}
 
