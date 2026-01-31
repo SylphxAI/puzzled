@@ -247,25 +247,19 @@ export async function currentUserId(): Promise<string | null> {
 /**
  * Handle OAuth callback - exchange code for tokens and set cookies
  *
- * This should be called from your `/api/auth/callback` route.
- * It exchanges the authorization code for tokens and sets all auth cookies.
+ * NOTE: With createSylphxMiddleware(), this is handled automatically.
+ * You don't need to create manual /api/auth/* routes.
+ *
+ * This function is exported for advanced use cases where you need
+ * custom callback handling outside of the middleware flow.
  *
  * @example
  * ```ts
- * // app/api/auth/callback/route.ts
- * import { handleCallback } from '@sylphx/platform-sdk/nextjs'
- * import { redirect } from 'next/navigation'
+ * // Using middleware (recommended - zero manual routes)
+ * import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
+ * export default createSylphxMiddleware({ publicRoutes: ['/', '/about'] })
  *
- * export async function GET(request: Request) {
- *   const { searchParams } = new URL(request.url)
- *   const code = searchParams.get('code')
- *   const redirectTo = searchParams.get('redirect_to') || '/dashboard'
- *
- *   if (!code) redirect('/login?error=missing_code')
- *
- *   await handleCallback(code)
- *   redirect(redirectTo)
- * }
+ * // Middleware automatically handles /auth/callback
  * ```
  */
 export async function handleCallback(code: string): Promise<User> {
@@ -307,16 +301,16 @@ export async function handleCallback(code: string): Promise<User> {
 /**
  * Sign out - clear cookies and optionally revoke token
  *
+ * NOTE: With createSylphxMiddleware(), signout is handled automatically
+ * at /auth/signout. No manual route needed.
+ *
+ * This function is exported for advanced use cases.
+ *
  * @example
  * ```ts
- * // app/api/auth/signout/route.ts
- * import { signOut } from '@sylphx/platform-sdk/nextjs'
- * import { redirect } from 'next/navigation'
- *
- * export async function POST() {
- *   await signOut()
- *   redirect('/')
- * }
+ * // Using middleware (recommended)
+ * // Navigate users to /auth/signout - middleware handles everything
+ * <a href="/auth/signout">Sign Out</a>
  * ```
  */
 export async function signOut(): Promise<void> {
@@ -355,26 +349,13 @@ export async function signOut(): Promise<void> {
 // =============================================================================
 
 /**
- * Sync tokens to cookies (server action for client-side OAuth)
+ * Sync tokens to cookies (server action)
  *
- * After client-side OAuth token exchange, call this to set cookies
- * so that server-side auth (SSR) can access the session.
+ * NOTE: With createSylphxMiddleware(), OAuth callbacks are handled
+ * automatically at /auth/callback. This function is rarely needed.
  *
- * Note: With the new cookie-centric architecture, OAuth callbacks
- * should go through /api/auth/callback which sets cookies server-side.
- * This function is kept for backward compatibility.
- *
- * @example
- * ```tsx
- * // In your OAuth callback handler
- * 'use client'
- *
- * import { syncAuthToCookies } from '@sylphx/sdk/nextjs'
- *
- * async function handleOAuthSuccess(tokens: TokenResponse) {
- *   await syncAuthToCookies(tokens)
- * }
- * ```
+ * Use only for edge cases like custom OAuth providers not going
+ * through the standard flow.
  */
 export async function syncAuthToCookies(tokens: TokenResponse): Promise<void> {
 	'use server'
