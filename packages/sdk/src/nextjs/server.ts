@@ -314,6 +314,32 @@ export async function signOut(): Promise<void> {
 }
 
 /**
+ * Sync tokens to cookies (server action for client-side OAuth)
+ *
+ * After client-side OAuth token exchange, call this to set cookies
+ * so that server-side auth (SSR) can access the session.
+ *
+ * @example
+ * ```tsx
+ * // In your OAuth callback handler or after signInWithOAuth
+ * 'use client'
+ *
+ * import { syncAuthToCookies } from '@sylphx/sdk/nextjs'
+ *
+ * async function handleOAuthSuccess(tokens: TokenResponse) {
+ *   // Tokens already saved to localStorage by SDK
+ *   // Now sync to cookies for SSR
+ *   await syncAuthToCookies(tokens)
+ * }
+ * ```
+ */
+export async function syncAuthToCookies(tokens: TokenResponse): Promise<void> {
+	'use server'
+	const namespace = getCookieNamespace()
+	await setAuthCookies(namespace, tokens)
+}
+
+/**
  * Get authorization URL for OAuth redirect
  */
 export function getAuthorizationUrl(options?: {

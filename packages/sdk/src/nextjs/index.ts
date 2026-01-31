@@ -46,6 +46,7 @@ export {
 	currentUserId,
 	handleCallback,
 	signOut,
+	syncAuthToCookies,
 	getAuthorizationUrl,
 	type AuthResult,
 } from './server'

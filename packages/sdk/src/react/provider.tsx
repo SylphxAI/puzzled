@@ -1079,11 +1079,17 @@ function SylphxProviderInner({
 	 * No platform login UI is shown - user goes straight to Google/GitHub/etc.
 	 *
 	 * Uses PKCE (RFC 7636) for security - required for public clients per OAuth 2.1.
+	 *
+	 * SSR AUTHENTICATION:
+	 * For server-side rendering auth to work, the OAuth callback must be processed
+	 * by a server-side route that sets HTTP-only cookies. The SDK routes through
+	 * `/api/auth/callback` which calls `handleCallback()` to exchange the code
+	 * and set cookies. This ensures `auth()` works in Server Components.
 	 */
 	const signInWithOAuth = useCallback(
 		async (options: { provider: string; redirectUrl?: string; scopes?: string[] }) => {
 			const { provider, redirectUrl, scopes } = options
-			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
+			const finalDestination = resolveRedirectUrl(redirectUrl)
 
 			// Set loading state and clear any previous OAuth error
 			setAuthState((prev) => ({ ...prev, isOAuthLoading: true, oauthError: null }))
@@ -1096,6 +1102,13 @@ function SylphxProviderInner({
 				// Store code_verifier for later use in token exchange
 				storePKCEVerifier(pkce.codeVerifier, appId)
 
+				// Build the server-side callback URL that will handle code exchange
+				// This ensures cookies are set for SSR authentication
+				// Format: /api/auth/callback?redirect_to=<finalDestination>
+				const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+				callbackUrl.searchParams.set('redirect_to', finalDestination)
+				const serverCallbackUri = callbackUrl.toString()
+
 				// Fetch OAuth authorization URL from platform
 				const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
 					method: 'POST',
@@ -1105,7 +1118,7 @@ function SylphxProviderInner({
 					},
 					body: JSON.stringify({
 						provider,
-						redirect_uri: resolvedRedirect,
+						redirect_uri: serverCallbackUri,
 						code_challenge: pkce.codeChallenge,
 						code_challenge_method: pkce.codeChallengeMethod,
 						// Custom scopes support (optional)
