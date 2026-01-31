@@ -378,22 +378,3 @@ export function clearUserCookie(appId: string): void {
 		// Ignore errors
 	}
 }
-
-// =============================================================================
-// Backward Compatibility Aliases
-// =============================================================================
-
-/**
- * @deprecated Use getUserFromCookie instead
- */
-export const getSessionFromCookie = getUserFromCookie
-
-/**
- * @deprecated Use clearUserCookie instead
- */
-export const clearSessionCookie = clearUserCookie
-
-/**
- * @deprecated - Renamed to UserCookieData
- */
-export type SessionCookie = UserCookieData

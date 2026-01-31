@@ -53,8 +53,6 @@ export {
 	createMatcher,
 	getNamespace,
 	type SylphxMiddlewareConfig,
-	// Legacy
-	authMiddleware,
 } from './middleware'
 
 // =============================================================================

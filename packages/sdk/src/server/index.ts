@@ -27,9 +27,9 @@ export {
 	// Generic key validation (auto-detects type)
 	validateKey,
 	validateAndSanitizeKey,
-	// Publishable key validation
-	validatePublishableKey,
-	validateAndSanitizePublishableKey,
+	// App ID validation
+	validateAppId,
+	validateAndSanitizeAppId,
 	// Secret key validation
 	validateSecretKey,
 	validateAndSanitizeSecretKey,
@@ -41,7 +41,7 @@ export {
 	getCookieNamespace,
 	// Key type detection
 	detectKeyType,
-	isPublishableKey,
+	isAppId,
 	isSecretKey,
 	// Runtime detection
 	isDevelopmentRuntime,
@@ -54,7 +54,7 @@ export {
 // Internal import for local use (import separately to avoid hoisting issues)
 import {
 	validateAndSanitizeSecretKey,
-	validateAndSanitizePublishableKey,
+	validateAndSanitizeAppId,
 	detectEnvironment as _detectEnvironment,
 } from '../key-validation'
 
@@ -64,20 +64,6 @@ import {
 
 // Note: EnvironmentType, detectEnvironment, isDevelopmentKey, isProductionKey
 // are re-exported from '../key-validation' (SSOT)
-
-/**
- * @deprecated Use isDevelopmentKey from key-validation instead
- */
-export function isDevelopment(secretKey: string): boolean {
-	return _detectEnvironment(secretKey) === 'development'
-}
-
-/**
- * @deprecated Use isProductionKey from key-validation instead
- */
-export function isProduction(secretKey: string): boolean {
-	return _detectEnvironment(secretKey) === 'production'
-}
 
 export interface ServerConfig {
 	/**
@@ -612,7 +598,7 @@ export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Pr
 async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
 	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
 	// Validate and sanitize App ID - logs warning if key contains whitespace
-	const appId = validateAndSanitizePublishableKey(options.appId)
+	const appId = validateAndSanitizeAppId(options.appId)
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${platformUrl}/api/auth/providers`,

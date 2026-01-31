@@ -253,12 +253,6 @@ export function validateAndSanitizeAppId(key: string | undefined | null): string
 	return result.sanitizedKey
 }
 
-// Legacy aliases for backward compatibility during migration
-/** @deprecated Use validateAppId instead */
-export const validatePublishableKey = validateAppId
-/** @deprecated Use validateAndSanitizeAppId instead */
-export const validateAndSanitizePublishableKey = validateAndSanitizeAppId
-
 // =============================================================================
 // Public API — Secret Keys
 // =============================================================================
@@ -398,9 +392,6 @@ export function detectKeyType(key: string): KeyType | null {
 export function isAppId(key: string): boolean {
 	return detectKeyType(key) === 'appId'
 }
-
-/** @deprecated Use isAppId instead */
-export const isPublishableKey = isAppId
 
 /**
  * Check if a key is a secret key

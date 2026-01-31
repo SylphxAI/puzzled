@@ -716,9 +716,9 @@ export {
 	// Generic key validation (auto-detects type)
 	validateKey,
 	validateAndSanitizeKey,
-	// Publishable key validation
-	validatePublishableKey,
-	validateAndSanitizePublishableKey,
+	// App ID validation
+	validateAppId,
+	validateAndSanitizeAppId,
 	// Secret key validation
 	validateSecretKey,
 	validateAndSanitizeSecretKey,
@@ -731,7 +731,7 @@ export {
 	getCookieNamespace,
 	// Key type detection
 	detectKeyType,
-	isPublishableKey,
+	isAppId,
 	isSecretKey,
 	// Types
 	type KeyValidationResult,

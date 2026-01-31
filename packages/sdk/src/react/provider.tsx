@@ -16,7 +16,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
-import { validateAndSanitizePublishableKey } from '../key-validation'
+import { validateAndSanitizeAppId } from '../key-validation'
 import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
 import {
 	PlatformContext,
@@ -508,7 +508,7 @@ function SylphxProviderInner({
 	// - Validates key format against expected pattern
 	// - Logs warning if key contains whitespace (common Vercel CLI bug)
 	// - Throws error if key is completely invalid
-	const appId = validateAndSanitizePublishableKey(appIdProp)
+	const appId = validateAndSanitizeAppId(appIdProp)
 	const platformUrl = providedPlatformUrl?.trim() || DEFAULT_PLATFORM_URL
 
 	// ============================================

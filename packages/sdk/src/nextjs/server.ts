@@ -25,7 +25,7 @@ import {
 import { verifyAccessToken } from '../server'
 import {
 	validateAndSanitizeSecretKey,
-	validateAndSanitizePublishableKey,
+	validateAndSanitizeAppId,
 	getCookieNamespace as getCookieNamespaceFromKey,
 } from '../key-validation'
 import { DEFAULT_PLATFORM_URL } from '../constants'
@@ -387,7 +387,7 @@ export function getAuthorizationUrl(options?: {
 	}
 
 	// Validate and sanitize app ID using SSOT
-	const clientId = validateAndSanitizePublishableKey(rawClientId)
+	const clientId = validateAndSanitizeAppId(rawClientId)
 
 	const params = new URLSearchParams({
 		client_id: clientId,

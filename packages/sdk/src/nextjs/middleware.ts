@@ -513,7 +513,3 @@ export function createMatcher(): { matcher: string[] } {
 export function getNamespace(secretKey: string): string {
 	return getCookieNamespace(validateAndSanitizeSecretKey(secretKey))
 }
-
-// Legacy export for backward compatibility during transition
-/** @deprecated Use createSylphxMiddleware */
-export const authMiddleware = createSylphxMiddleware
