@@ -228,7 +228,7 @@ const nextConfig: NextConfig = {
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: https: blob: https://www.googletagmanager.com https://www.google-analytics.com",
 							"font-src 'self' data:",
-							"connect-src 'self' https://*.posthog.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
+							"connect-src 'self' https://*.posthog.com https://sylphx.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
 							"frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
 							"object-src 'none'",
 							"base-uri 'self'",
