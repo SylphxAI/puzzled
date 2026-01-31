@@ -21,7 +21,6 @@ import {
 	getAuthCookies,
 	setAuthCookies,
 	clearAuthCookies,
-	SESSION_TOKEN_LIFETIME,
 } from './cookies'
 import { verifyAccessToken } from '../server'
 import {
@@ -168,7 +167,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 		return { userId: null, user: null, sessionToken: null }
 	}
 
-	// Session token not expired (with 30 second buffer)
+	// Session token exists and not expired (with 30 second buffer)
 	if (sessionToken && expiresAt && expiresAt > Date.now() + 30000) {
 		// Verify token is valid
 		try {
@@ -185,44 +184,28 @@ export const auth = cache(async (): Promise<AuthResult> => {
 				sessionToken,
 			}
 		} catch {
-			// Token invalid, try to refresh
+			// Token verification failed - treat as expired
 		}
 	}
 
-	// Try to refresh
-	if (refreshToken) {
-		try {
-			const response = await fetch(`${config.platformUrl}/api/auth/token`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					grant_type: 'refresh_token',
-					refresh_token: refreshToken,
-					client_secret: config.secretKey,
-				}),
-			})
-
-			if (response.ok) {
-				const data: unknown = await response.json()
-				if (!isTokenResponse(data)) {
-					throw new Error('Invalid token response format')
-				}
-				await setAuthCookies(namespace, data)
-
-				return {
-					userId: data.user.id,
-					user: data.user,
-					sessionToken: data.accessToken,
-				}
+	// Session expired but have refresh token + user data from cookie
+	// NOTE: We don't refresh here because cookies can only be modified in Route Handlers.
+	// The middleware handles token refresh. If we get here during SSR with expired session
+	// but valid user cookie, we trust the user cookie (it was set when tokens were valid).
+	if (refreshToken && user && expiresAt) {
+		// User cookie hasn't expired yet (same lifetime as session)
+		if (expiresAt > Date.now()) {
+			return {
+				userId: user.id,
+				user,
+				sessionToken: sessionToken || null, // May be expired, but user data is valid
 			}
-		} catch (error) {
-			console.error('[Sylphx] Token refresh failed:', error)
 		}
 	}
 
-	// Clear invalid tokens
-	await clearAuthCookies(namespace)
-
+	// No valid session - return unauthenticated
+	// NOTE: We don't clear cookies here because cookies can only be modified in Route Handlers.
+	// The middleware will clear invalid cookies on next request.
 	return { userId: null, user: null, sessionToken: null }
 })
 
