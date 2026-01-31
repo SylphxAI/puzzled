@@ -97,13 +97,188 @@ async function getBlobUpload() {
 }
 
 // ============================================
-// REST API Helper
+// Token Manager — State of the Art
+// ============================================
+// Implements: Lazy fetch, request queuing, auto-refresh, retry with backoff, 401 recovery
+//
+// Architecture:
+// ┌─────────────────────────────────────────────────────────────────┐
+// │                     Token Manager                               │
+// │  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐    │
+// │  │  Lazy    │ → │  Queue   │ → │  Auto    │ → │  Retry   │    │
+// │  │  Fetch   │   │ Requests │   │  Refresh │   │  + 401   │    │
+// │  └──────────┘   └──────────┘   └──────────┘   └──────────┘    │
+// └─────────────────────────────────────────────────────────────────┘
+
+interface TokenManagerConfig {
+	/** Check if user is signed in */
+	isSignedIn: () => boolean
+	/** Called when token refresh fails (e.g., session expired) */
+	onSessionExpired?: () => void
+}
+
+class TokenManager {
+	private token: string | null = null
+	private tokenExpiry: number | null = null
+	private fetchPromise: Promise<string | null> | null = null
+	private refreshTimer: ReturnType<typeof setTimeout> | null = null
+	private config: TokenManagerConfig
+
+	constructor(config: TokenManagerConfig) {
+		this.config = config
+	}
+
+	/**
+	 * Get a valid access token.
+	 * - Returns cached token if valid
+	 * - Fetches new token if expired or missing
+	 * - Queues concurrent requests (only one fetch at a time)
+	 */
+	async getToken(): Promise<string | null> {
+		// Not signed in — no token needed
+		if (!this.config.isSignedIn()) {
+			return null
+		}
+
+		// Token exists and not expired (with 30s buffer)
+		if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry - 30000) {
+			return this.token
+		}
+
+		// Already fetching — wait for that promise (request queuing)
+		if (this.fetchPromise) {
+			return this.fetchPromise
+		}
+
+		// Fetch new token
+		this.fetchPromise = this.fetchTokenWithRetry()
+		try {
+			const token = await this.fetchPromise
+			return token
+		} finally {
+			this.fetchPromise = null
+		}
+	}
+
+	/**
+	 * Invalidate cached token (call on 401)
+	 */
+	invalidate(): void {
+		this.token = null
+		this.tokenExpiry = null
+		if (this.refreshTimer) {
+			clearTimeout(this.refreshTimer)
+			this.refreshTimer = null
+		}
+	}
+
+	/**
+	 * Clear everything (call on sign out)
+	 */
+	clear(): void {
+		this.invalidate()
+		this.fetchPromise = null
+	}
+
+	/**
+	 * Fetch token with exponential backoff retry
+	 */
+	private async fetchTokenWithRetry(): Promise<string | null> {
+		const maxRetries = 3
+		const baseDelay = 1000
+
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			try {
+				const response = await fetch('/api/auth/token', {
+					method: 'GET',
+					credentials: 'include',
+				})
+
+				if (response.ok) {
+					const data = await response.json()
+					const accessToken = data.accessToken as string | null
+
+					if (accessToken) {
+						this.token = accessToken
+						this.tokenExpiry = this.decodeTokenExpiry(accessToken)
+						this.scheduleRefresh()
+						return accessToken
+					}
+				}
+
+				// 401 = session expired, don't retry
+				if (response.status === 401) {
+					this.config.onSessionExpired?.()
+					return null
+				}
+
+				// Other errors — retry with backoff
+			} catch {
+				// Network error — retry with backoff
+			}
+
+			// Exponential backoff: 1s, 2s, 4s
+			if (attempt < maxRetries - 1) {
+				await new Promise((r) => setTimeout(r, baseDelay * 2 ** attempt))
+			}
+		}
+
+		// All retries failed
+		return null
+	}
+
+	/**
+	 * Decode JWT expiry without verification
+	 * (Verification happens server-side)
+	 */
+	private decodeTokenExpiry(token: string): number | null {
+		try {
+			const parts = token.split('.')
+			if (parts.length !== 3) return null
+			const payload = parts[1]
+			const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+			const jsonPayload = atob(base64)
+			const parsed = JSON.parse(jsonPayload) as { exp?: number }
+			// exp is in seconds, convert to milliseconds
+			return parsed.exp ? parsed.exp * 1000 : null
+		} catch {
+			return null
+		}
+	}
+
+	/**
+	 * Schedule token refresh before expiry
+	 */
+	private scheduleRefresh(): void {
+		if (this.refreshTimer) {
+			clearTimeout(this.refreshTimer)
+		}
+
+		if (!this.tokenExpiry) return
+
+		// Refresh 60 seconds before expiry
+		const refreshIn = this.tokenExpiry - Date.now() - 60000
+
+		if (refreshIn > 0) {
+			this.refreshTimer = setTimeout(() => {
+				// Only refresh if still signed in
+				if (this.config.isSignedIn()) {
+					this.fetchTokenWithRetry()
+				}
+			}, refreshIn)
+		}
+	}
+}
+
+// ============================================
+// REST API Helper — With Token Management
 // ============================================
 interface RestConfig {
 	/** App ID — used as x-app-secret for SDK API calls */
 	appId?: string
 	platformUrl: string
-	getAccessToken?: () => string | null | undefined
+	/** Token manager for authenticated requests */
+	tokenManager: TokenManager
 }
 
 /**
@@ -122,58 +297,71 @@ function inferProviderFromModelId(modelId: string): AIProvider {
 function createRestApi(config: RestConfig) {
 	const baseUrl = `${config.platformUrl}${SDK_API_PATH}`
 
-	const headers = () => {
+	const buildHeaders = async (): Promise<Record<string, string>> => {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
 		}
 		if (config.appId) h['x-app-secret'] = config.appId
-		const token = config.getAccessToken?.()
+
+		// Get token (lazy fetch, auto-refresh, request queuing)
+		const token = await config.tokenManager.getToken()
 		if (token) h['Authorization'] = `Bearer ${token}`
+
 		return h
 	}
 
-	const fetchOptions = (method: string, body?: unknown) => ({
-		method,
-		headers: headers(),
-		...(body !== undefined && { body: JSON.stringify(body) }),
-	})
+	const fetchWithAuth = async (
+		url: string,
+		method: string,
+		body?: unknown,
+		retryOn401 = true
+	): Promise<Response> => {
+		const headers = await buildHeaders()
+		const options: RequestInit = {
+			method,
+			headers,
+			...(body !== undefined && { body: JSON.stringify(body) }),
+		}
+
+		const res = await fetch(url, options)
+
+		// Handle 401 — invalidate token and retry once
+		if (res.status === 401 && retryOn401) {
+			config.tokenManager.invalidate()
+			return fetchWithAuth(url, method, body, false) // Retry without recursion risk
+		}
+
+		return res
+	}
+
+	async function handleResponse<T>(res: Response): Promise<T> {
+		if (!res.ok) {
+			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
+			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
+		}
+		return res.json()
+	}
 
 	async function get<T>(path: string, query?: Record<string, string | undefined>): Promise<T> {
 		const url = new URL(`${baseUrl}${path}`)
 		if (query) Object.entries(query).forEach(([k, v]) => v && url.searchParams.set(k, v))
-		const res = await fetch(url.toString(), fetchOptions('GET'))
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
-			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
-		}
-		return res.json()
+		const res = await fetchWithAuth(url.toString(), 'GET')
+		return handleResponse<T>(res)
 	}
 
 	async function post<T>(path: string, body?: unknown): Promise<T> {
-		const res = await fetch(`${baseUrl}${path}`, fetchOptions('POST', body))
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
-			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
-		}
-		return res.json()
+		const res = await fetchWithAuth(`${baseUrl}${path}`, 'POST', body)
+		return handleResponse<T>(res)
 	}
 
 	async function put<T>(path: string, body?: unknown): Promise<T> {
-		const res = await fetch(`${baseUrl}${path}`, fetchOptions('PUT', body))
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
-			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
-		}
-		return res.json()
+		const res = await fetchWithAuth(`${baseUrl}${path}`, 'PUT', body)
+		return handleResponse<T>(res)
 	}
 
 	async function del<T>(path: string): Promise<T> {
-		const res = await fetch(`${baseUrl}${path}`, fetchOptions('DELETE'))
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
-			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
-		}
-		return res.json()
+		const res = await fetchWithAuth(`${baseUrl}${path}`, 'DELETE')
+		return handleResponse<T>(res)
 	}
 
 	return { get, post, put, del }
@@ -346,36 +534,12 @@ function SylphxProviderInner({
 	}, [storage])
 
 	// ============================================
-	// Token Cache for Cross-Origin API Calls
-	// ============================================
-	// Cookies are on the client app's domain, not the platform domain.
-	// For SDK API calls to sylphx.com (cross-origin), we need Bearer tokens.
-	// This ref caches the token fetched via BFF endpoint (/api/auth/token).
-	const cachedTokenRef = useRef<string | null>(null)
-
-	// ============================================
-	// REST API Client
-	// ============================================
-	// REST API Client
-	// For SDK API calls to sylphx.com (cross-origin), Bearer tokens are required.
-	// Cookies are on the client app's domain, not the platform domain.
-	// We fetch the token via BFF endpoint (/api/auth/token) and cache it.
-	const api = useMemo(
-		() =>
-			createRestApi({
-				appId,
-				platformUrl,
-				// Return cached token for cross-origin API calls
-				getAccessToken: () => cachedTokenRef.current,
-			}),
-		[appId, platformUrl]
-	)
-
-	// ============================================
 	// Auth State — Cookie-Centric (Single Source of Truth)
 	// ============================================
 	// Initial state is hydrated from the user cookie (set by server).
 	// This enables instant auth state without loading flicker.
+	//
+	// Note: Declared early because TokenManager needs isSignedIn check
 	const [authState, setAuthState] = useState<AuthState>(() => {
 		// Try to read user from cookie (set by server after OAuth callback)
 		const userCookieData = getUserFromCookie(appId)
@@ -405,43 +569,54 @@ function SylphxProviderInner({
 		}
 	})
 
-	// ============================================
-	// Token Fetch for Cross-Origin API Calls
-	// ============================================
-	// When user signs in, fetch token via BFF endpoint and cache it.
-	// This enables authenticated SDK API calls to sylphx.com.
+	// Ref to track current auth state for TokenManager (avoids stale closure)
+	const authStateRef = useRef(authState)
 	useEffect(() => {
-		// Skip if not signed in
+		authStateRef.current = authState
+	}, [authState])
+
+	// ============================================
+	// Token Manager — State of the Art
+	// ============================================
+	// Handles: Lazy fetch, request queuing, auto-refresh, retry with backoff, 401 recovery
+	const tokenManager = useMemo(
+		() =>
+			new TokenManager({
+				isSignedIn: () => authStateRef.current.isSignedIn,
+				onSessionExpired: () => {
+					// Session expired — clear auth state
+					setAuthState((prev) => ({
+						...prev,
+						isSignedIn: false,
+						user: null,
+						error: new Error('Session expired'),
+					}))
+					// Clear user cookie
+					clearUserCookie(appId)
+				},
+			}),
+		[appId]
+	)
+
+	// Clear token manager when auth state changes to signed out
+	useEffect(() => {
 		if (!authState.isSignedIn) {
-			cachedTokenRef.current = null
-			return
+			tokenManager.clear()
 		}
+	}, [authState.isSignedIn, tokenManager])
 
-		// Fetch token from BFF endpoint
-		const fetchToken = async () => {
-			try {
-				const response = await fetch('/api/auth/token', {
-					method: 'GET',
-					credentials: 'include', // Send cookies to same-origin endpoint
-				})
-
-				if (response.ok) {
-					const data = await response.json()
-					cachedTokenRef.current = data.accessToken ?? null
-				} else {
-					// BFF endpoint not available or returned error
-					// This is OK - some apps may not have set up the endpoint
-					cachedTokenRef.current = null
-				}
-			} catch {
-				// Fetch failed (network error, CORS, etc.)
-				// This is expected if app hasn't set up /api/auth/token
-				cachedTokenRef.current = null
-			}
-		}
-
-		fetchToken()
-	}, [authState.isSignedIn, authState.user?.id])
+	// ============================================
+	// REST API Client — With Token Management
+	// ============================================
+	const api = useMemo(
+		() =>
+			createRestApi({
+				appId,
+				platformUrl,
+				tokenManager,
+			}),
+		[appId, platformUrl, tokenManager]
+	)
 
 	// ============================================
 	// Platform State - React Query for server data
