@@ -267,6 +267,24 @@ export function getPrimaryClickId(clickIds: ClickIds | null): string | undefined
 // ==========================================
 
 /**
+ * Derive cookie namespace from app ID (matching server-side logic)
+ *
+ * Server uses getCookieNamespace(secretKey) which returns sylphx_{env}
+ * Both sk_prod_xxx and app_prod_xxx should map to sylphx_prod
+ */
+function getCookieNamespaceFromAppId(appId: string): string {
+	// Extract environment from appId (e.g., 'app_prod_xxx' → 'prod')
+	const parts = appId.split('_')
+	if (parts.length < 2) return 'sylphx'
+
+	const envPart = parts[1] // 'dev', 'stg', or 'prod'
+	const shortEnv = envPart === 'development' ? 'dev' : envPart === 'staging' ? 'stg' : envPart
+
+	// Match server-side format: sylphx_{shortEnv}
+	return `sylphx_${shortEnv}`
+}
+
+/**
  * Get session data from JS-readable cookie (set by server after OAuth)
  *
  * This enables client-side hydration after server-side OAuth callback:
@@ -281,9 +299,9 @@ export function getSessionFromCookie(appId: string): SessionCookie | null {
 	if (typeof document === 'undefined') return null
 
 	try {
-		// Cookie name format: {namespace}_session (namespace derived from appId)
-		// The namespace is the first part of the appId (e.g., 'app_prod' from 'app_prod_xxx')
-		const namespace = appId.split('_').slice(0, 2).join('_')
+		// Cookie name format: {namespace}_session
+		// Namespace derived from appId to match server-side logic
+		const namespace = getCookieNamespaceFromAppId(appId)
 		const cookieName = `${namespace}_session`
 
 		// Parse cookies
@@ -318,7 +336,7 @@ export function clearSessionCookie(appId: string): void {
 	if (typeof document === 'undefined') return
 
 	try {
-		const namespace = appId.split('_').slice(0, 2).join('_')
+		const namespace = getCookieNamespaceFromAppId(appId)
 		const cookieName = `${namespace}_session`
 		// Set cookie with expired date to delete it
 		document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
