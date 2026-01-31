@@ -52,8 +52,10 @@ function getServerConfig(): { secretKey: string; platformUrl: string; namespace:
 }
 
 // =============================================================================
-// Token Endpoint (/api/auth/token)
+// Token Endpoint (/api/auth/token) — State of the Art BFF Pattern
 // =============================================================================
+// Industry standard: Clerk, Auth0, and Supabase all implement server-side refresh.
+// This endpoint handles seamless token refresh when session expires.
 
 /**
  * GET /api/auth/token
@@ -61,23 +63,62 @@ function getServerConfig(): { secretKey: string; platformUrl: string; namespace:
  * Returns the current session token for apps that need to call third-party APIs.
  * For same-origin API calls, cookies are sent automatically — no need for this endpoint.
  *
+ * **Seamless Refresh Logic:**
+ * 1. If session token exists and valid → return it
+ * 2. If session token missing but refresh token exists → refresh server-side
+ * 3. If neither exists → return 401
+ *
+ * This ensures clients never see 401 as long as refresh token is valid.
+ *
  * Response:
  * - 200: { accessToken: string }
  * - 401: { error: 'Not authenticated' }
  */
 export async function GET(): Promise<NextResponse> {
 	try {
-		const { namespace } = getServerConfig()
+		const { secretKey, platformUrl, namespace } = getServerConfig()
 		const cookieStore = await cookies()
 		const cookieNames = getCookieNames(namespace)
 
 		const sessionToken = cookieStore.get(cookieNames.SESSION)?.value
+		const refreshToken = cookieStore.get(cookieNames.REFRESH)?.value
 
-		if (!sessionToken) {
-			return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+		// Case 1: Session token exists → return it
+		if (sessionToken) {
+			return NextResponse.json({ accessToken: sessionToken })
 		}
 
-		return NextResponse.json({ accessToken: sessionToken })
+		// Case 2: No session but have refresh → refresh server-side (Clerk pattern)
+		if (refreshToken) {
+			try {
+				const response = await fetch(`${platformUrl}/api/auth/token`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						grant_type: 'refresh_token',
+						refresh_token: refreshToken,
+						client_secret: secretKey,
+					}),
+				})
+
+				if (response.ok) {
+					const data: unknown = await response.json()
+					if (isTokenResponse(data)) {
+						// Update cookies with new tokens
+						await setAuthCookies(namespace, data)
+						return NextResponse.json({ accessToken: data.accessToken })
+					}
+				}
+
+				// Refresh failed (token revoked/expired) — clear cookies and return 401
+				await clearAuthCookies(namespace)
+			} catch {
+				// Network error — don't clear cookies, might be temporary
+			}
+		}
+
+		// Case 3: No valid tokens → 401
+		return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 	} catch (error) {
 		console.error('[Sylphx] Token endpoint error:', error)
 		return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
