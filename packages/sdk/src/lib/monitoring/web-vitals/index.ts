@@ -23,7 +23,7 @@
  *
  * // Initialize with automatic reporting
  * initWebVitals({
- *   reportUrl: '/api/analytics/vitals',
+ *   reportUrl: '/api/sdk/monitoring/vitals',
  *   onReport: (metric) => console.log(metric),
  *   debug: process.env.NODE_ENV === 'development',
  * })
@@ -373,7 +373,7 @@ async function reportAllMetrics(): Promise<void> {
  * @example
  * ```typescript
  * initWebVitals({
- *   reportUrl: '/api/analytics/vitals',
+ *   reportUrl: '/api/sdk/monitoring/vitals',
  *   debug: process.env.NODE_ENV === 'development',
  *   attribution: 'detailed',
  *   onReport: (metric) => {

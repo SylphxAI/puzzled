@@ -409,18 +409,22 @@ export class AnalyticsTracker {
 	}
 
 	private async sendBatch(events: AnalyticsEvent[]): Promise<void> {
-		const endpoint = this.config.apiEndpoint ?? '/api/analytics/track'
+		const endpoint = this.config.apiEndpoint ?? '/api/sdk/analytics/track'
 
 		const payload = {
-			api_key: this.config.apiKey,
-			batch: events,
+			events: events,
+		}
+
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json',
+		}
+		if (this.config.apiKey) {
+			headers['x-app-secret'] = this.config.apiKey
 		}
 
 		const response = await fetch(endpoint, {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
+			headers,
 			body: JSON.stringify(payload),
 			keepalive: true, // Allow request to complete on page unload
 		})
