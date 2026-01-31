@@ -22,7 +22,7 @@
  * const router = createDestinationRouter({
  *   destinations: [
  *     // Native Sylphx (always enabled)
- *     { type: 'sylphx', config: { apiEndpoint: '/api/analytics' } },
+ *     { type: 'sylphx', config: { apiEndpoint: '/api/sdk/v1/analytics/track' } },
  *     // Google Analytics 4
  *     { type: 'ga4', config: { measurementId: 'G-XXXXXX' }, consentRequired: 'analytics' },
  *     // Mixpanel
@@ -601,7 +601,7 @@ const handlers: Record<DestinationType, DestinationHandler> = {
  * ```typescript
  * const router = createDestinationRouter({
  *   destinations: [
- *     { type: 'sylphx', config: { apiEndpoint: '/api/analytics' } },
+ *     { type: 'sylphx', config: { apiEndpoint: '/api/sdk/v1/analytics/track' } },
  *     { type: 'ga4', config: { measurementId: 'G-XXXXXX' }, consentRequired: 'analytics' },
  *   ],
  *   checkConsent: (category) => hasConsent(category),

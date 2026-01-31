@@ -9,7 +9,7 @@
  * function App() {
  *   const router = useDestinationRouter({
  *     destinations: [
- *       { type: 'sylphx', config: { apiEndpoint: '/api/analytics' } },
+ *       { type: 'sylphx', config: { apiEndpoint: '/api/sdk/v1/analytics/track' } },
  *       { type: 'ga4', config: { measurementId: 'G-XXXXXX' }, consentRequired: 'analytics' },
  *     ],
  *   })
@@ -75,7 +75,7 @@ export interface UseDestinationRouterReturn extends DestinationRouter {
  * function Analytics() {
  *   const router = useDestinationRouter({
  *     destinations: [
- *       { type: 'sylphx', config: { apiEndpoint: '/api/analytics' } },
+ *       { type: 'sylphx', config: { apiEndpoint: '/api/sdk/v1/analytics/track' } },
  *       { type: 'ga4', config: { measurementId: 'G-XXXXXX' }, consentRequired: 'analytics' },
  *       { type: 'mixpanel', config: { token: 'xxx' }, consentRequired: 'analytics' },
  *     ],
@@ -229,7 +229,7 @@ export interface DestinationRouterProviderProps extends UseDestinationRouterOpti
  * ```tsx
  * <DestinationRouterProvider
  *   destinations={[
- *     { type: 'sylphx', config: { apiEndpoint: '/api/analytics' } },
+ *     { type: 'sylphx', config: { apiEndpoint: '/api/sdk/v1/analytics/track' } },
  *     { type: 'ga4', config: { measurementId: 'G-XXXXXX' } },
  *   ]}
  * >
