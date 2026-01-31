@@ -120,8 +120,6 @@ export interface UseSignUpFormOptions {
 	 * Custom OAuth handler. If provided, replaces default redirect.
 	 */
 	oauthHandler?: (provider: OAuthProvider) => Promise<void>
-	/** Token setter (for SDK mode) */
-	setTokens?: (accessToken: string, refreshToken: string) => void
 	/** Callback on successful sign up */
 	onSuccess?: () => void
 	/** Callback on error */
@@ -192,7 +190,6 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 		verifyInviteHandler,
 		waitlistHandler,
 		oauthHandler,
-		setTokens,
 		onSuccess,
 		onError,
 	} = options
@@ -345,10 +342,8 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 					return
 				}
 
-				// Set tokens if provided
-				if (result?.accessToken && result?.refreshToken && setTokens) {
-					setTokens(result.accessToken, result.refreshToken)
-				}
+				// Auth cookies are set server-side by the API
+				// Just complete and redirect
 
 				setStep('complete')
 				onSuccess?.()
@@ -379,7 +374,6 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 			inviteInfo,
 			submitHandler,
 			authContext,
-			setTokens,
 			afterSignUpUrl,
 			onSuccess,
 			onError,
@@ -411,10 +405,8 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 					result = {}
 				}
 
-				// Set tokens if provided
-				if (result?.accessToken && result?.refreshToken && setTokens) {
-					setTokens(result.accessToken, result.refreshToken)
-				}
+				// Auth cookies are set server-side by the API
+				// Just complete and redirect
 
 				setStep('complete')
 				onSuccess?.()
@@ -437,7 +429,7 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 				setIsLoading(false)
 			}
 		},
-		[form.email, form.verificationCode, verifyEmailHandler, authContext, setTokens, afterSignUpUrl, onSuccess, onError]
+		[form.email, form.verificationCode, verifyEmailHandler, authContext, afterSignUpUrl, onSuccess, onError]
 	)
 
 	// Handle waitlist join

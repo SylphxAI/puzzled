@@ -267,15 +267,16 @@ export function createRestClient(config: RestClientConfig) {
 /**
  * Create a dynamic REST client with runtime token injection
  *
- * Use this when you need to inject an access token that may change,
- * such as when the user logs in/out. Includes automatic retry with
- * exponential backoff for transient failures.
+ * Use this when you need to inject an access token that may change.
+ * Tokens should be read from HttpOnly cookies via a server endpoint,
+ * never from localStorage (XSS vulnerability).
  *
  * @example
  * ```typescript
+ * // Server-side usage
  * const client = createDynamicRestClient({
  *   secretKey: process.env.SYLPHX_SECRET_KEY!,
- *   getAccessToken: () => localStorage.getItem('sylphx_token'),
+ *   getAccessToken: async () => (await cookies()).get('session')?.value,
  * })
  * ```
  */

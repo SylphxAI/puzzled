@@ -18,7 +18,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { OAuthButtons, OrDivider, type OAuthProvider } from './oauth-buttons'
-import { useSylphx, RequireSdk } from '../hooks'
+import { RequireSdk } from '../hooks'
 import {
 	useSignUpForm,
 	type AdditionalField,
@@ -98,7 +98,6 @@ function SignUpFormInner({
 	requireInviteCode = false,
 	additionalFields = [],
 }: SignUpFormProps) {
-	const { setTokens } = useSylphx()
 	const styles = baseStyles(theme)
 
 	// Use the headless hook (dogfooding!)
@@ -130,7 +129,6 @@ function SignUpFormInner({
 		requireInviteCode,
 		additionalFields,
 		waitlistUrl,
-		setTokens,
 		onSuccess,
 		onError,
 	})

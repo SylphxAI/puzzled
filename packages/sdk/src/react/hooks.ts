@@ -466,8 +466,6 @@ interface SylphxConfig {
 export interface UseSylphxReturn extends AuthContextValue {
 	/** SDK configuration */
 	config: SylphxConfig
-	/** Save tokens after SDK-based authentication */
-	setTokens: (accessToken: string, refreshToken: string) => void
 }
 
 /**
@@ -479,25 +477,12 @@ export function useSylphx(): UseSylphxReturn {
 	const auth = useAuthContext()
 	const platform = usePlatformContextInternal()
 
-	const setTokens = useCallback((accessToken: string, refreshToken: string) => {
-		// Store tokens in localStorage using namespaced keys
-		const appId = platform.appId
-		localStorage.setItem(`sylphx_${appId}_access_token`, accessToken)
-		localStorage.setItem(`sylphx_${appId}_refresh_token`, refreshToken)
-		// The provider's storage listener will pick this up and update state
-		window.dispatchEvent(new StorageEvent('storage', {
-			key: `sylphx_${appId}_access_token`,
-			newValue: accessToken,
-		}))
-	}, [platform.appId])
-
 	return {
 		...auth,
 		config: {
 			appId: platform.appId,
 			platformUrl: platform.platformUrl,
 		},
-		setTokens,
 	}
 }
 
