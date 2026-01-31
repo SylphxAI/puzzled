@@ -121,8 +121,6 @@ export interface AuthContextValue extends AuthState {
 	signOut: (options?: { redirectUrl?: string }) => Promise<void>
 	/** Get current access token (refreshes if expired) */
 	getToken: () => Promise<string | null>
-	/** Handle OAuth callback (code exchange) */
-	handleCallback: (code: string, state?: string) => Promise<void>
 	/** Reset password with token */
 	resetPassword: (options: ResetPasswordOptions) => Promise<void>
 	/** Verify email with token */

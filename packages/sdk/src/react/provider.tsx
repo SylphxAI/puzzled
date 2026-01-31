@@ -814,22 +814,6 @@ function SylphxProviderInner({
 	)
 
 	// ============================================
-	// Token Refresh (Now handled server-side by middleware)
-	// ============================================
-	// With cookie-centric architecture, token refresh happens in middleware.
-	// The client doesn't need to manage refresh tokens directly.
-	// This is a no-op stub for backward compatibility.
-	const refreshTokens = useCallback(
-		async (_token: string, _options?: { isProactive?: boolean }): Promise<boolean> => {
-			// Token refresh is handled by middleware server-side.
-			// This function is kept for backward compatibility but does nothing.
-			// The middleware will refresh tokens automatically when they expire.
-			return true
-		},
-		[]
-	)
-
-	// ============================================
 	// Cross-Tab Auth Sync (BroadcastChannel)
 	// ============================================
 	// With cookie-centric auth, cookies sync automatically across tabs.
@@ -1067,50 +1051,6 @@ function SylphxProviderInner({
 		}
 	}, [authState.isSignedIn])
 
-	/**
-	 * Handle OAuth callback manually (for apps that don't use /api/auth/callback).
-	 *
-	 * NOTE: With cookie-centric auth, OAuth callbacks should go through
-	 * /api/auth/callback which sets HttpOnly cookies server-side.
-	 * This function is kept for backward compatibility but may not work
-	 * correctly because tokens need to be set via cookies, not localStorage.
-	 */
-	const handleCallback = useCallback(
-		async (code: string, _state?: string) => {
-			try {
-				// Call server endpoint to exchange code and set cookies
-				const response = await fetch('/api/auth/callback', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					credentials: 'include',
-					body: JSON.stringify({ code }),
-				})
-
-				if (!response.ok) {
-					throw new Error('Token exchange failed')
-				}
-
-				// Re-read user from cookie (server set it)
-				const userCookieData = getUserFromCookie(appId)
-				if (userCookieData) {
-					setAuthState({
-						isLoaded: true,
-						isSignedIn: true,
-						user: userCookieData.user,
-						accessToken: null,
-						refreshToken: null,
-						error: null,
-						isOAuthLoading: false,
-						oauthError: null,
-					})
-				}
-			} catch (error) {
-				throw error
-			}
-		},
-		[appId]
-	)
-
 	const resetPassword = useCallback(
 		async (options: { token: string; newPassword: string }) => {
 			const response = await fetch(`${platformUrl}/api/auth/reset-password`, {
@@ -1209,10 +1149,9 @@ function SylphxProviderInner({
 	 * Uses PKCE (RFC 7636) for security - required for public clients per OAuth 2.1.
 	 *
 	 * SSR AUTHENTICATION:
-	 * For server-side rendering auth to work, the OAuth callback must be processed
-	 * by a server-side route that sets HTTP-only cookies. The SDK routes through
-	 * `/api/auth/callback` which calls `handleCallback()` to exchange the code
-	 * and set cookies. This ensures `auth()` works in Server Components.
+	 * OAuth callback is handled by middleware at /auth/callback.
+	 * Middleware exchanges the code and sets HTTP-only cookies server-side.
+	 * This ensures `auth()` works in Server Components.
 	 */
 	const signInWithOAuth = useCallback(
 		async (options: { provider: string; redirectUrl?: string; scopes?: string[] }) => {
@@ -3159,7 +3098,6 @@ function SylphxProviderInner({
 			signUp,
 			signOut,
 			getToken,
-			handleCallback,
 			resetPassword,
 			verifyEmail,
 			resendVerificationEmail,
@@ -3183,7 +3121,6 @@ function SylphxProviderInner({
 			signUp,
 			signOut,
 			getToken,
-			handleCallback,
 			resetPassword,
 			verifyEmail,
 			resendVerificationEmail,
