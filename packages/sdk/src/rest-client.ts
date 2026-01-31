@@ -251,7 +251,7 @@ export function createRestClient(config: RestClientConfig) {
 	const { secretKey, baseUrl } = validateClientConfig(config)
 
 	const client = createClient<paths>({
-		baseUrl: `${baseUrl}/api/sdk`,
+		baseUrl: `${baseUrl}/api/sdk/v1`,
 		headers: {
 			'Content-Type': 'application/json',
 			'x-app-secret': secretKey,
@@ -290,7 +290,7 @@ export function createDynamicRestClient(config: RestDynamicConfig) {
 	}
 
 	const client = createClient<paths>({
-		baseUrl: `${baseUrl}/api/sdk`,
+		baseUrl: `${baseUrl}/api/sdk/v1`,
 		headers: {
 			'Content-Type': 'application/json',
 		},

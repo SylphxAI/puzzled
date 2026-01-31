@@ -120,7 +120,7 @@ function inferProviderFromModelId(modelId: string): AIProvider {
 }
 
 function createRestApi(config: RestConfig) {
-	const baseUrl = `${config.platformUrl}/api/sdk`
+	const baseUrl = `${config.platformUrl}/api/sdk/v1`
 
 	const headers = () => {
 		const h: Record<string, string> = {
@@ -1016,7 +1016,7 @@ function SylphxProviderInner({
 				const serverCallbackUri = callbackUrl.toString()
 
 				// Fetch OAuth authorization URL from platform
-				const response = await fetch(`${platformUrl}/api/sdk/oauth/authorize`, {
+				const response = await fetch(`${platformUrl}/api/sdk/v1/oauth/authorize`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',
@@ -1103,7 +1103,7 @@ function SylphxProviderInner({
 			const { email, redirectUrl } = options
 			const resolvedRedirect = resolveRedirectUrl(redirectUrl)
 
-			const response = await fetch(`${platformUrl}/api/sdk/auth/magic-link`, {
+			const response = await fetch(`${platformUrl}/api/sdk/v1/auth/magic-link`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

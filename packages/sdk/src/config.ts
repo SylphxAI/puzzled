@@ -153,7 +153,7 @@ export function buildHeaders(config: SylphxConfig): Record<string, string> {
 export function buildApiUrl(config: SylphxConfig, path: string): string {
 	const base = config.platformUrl.replace(/\/$/, '')
 	const cleanPath = path.startsWith('/') ? path : `/${path}`
-	return `${base}/api/sdk${cleanPath}`
+	return `${base}/api/sdk/v1${cleanPath}`
 }
 
 /**

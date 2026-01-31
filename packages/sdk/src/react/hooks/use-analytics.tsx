@@ -14,7 +14,7 @@
  *   return (
  *     <AnalyticsProvider
  *       config={{
- *         apiEndpoint: '/api/sdk/analytics/track',
+ *         apiEndpoint: '/api/sdk/v1/analytics/track',
  *         autocapture: true,
  *       }}
  *     >

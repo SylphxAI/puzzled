@@ -409,7 +409,7 @@ export class AnalyticsTracker {
 	}
 
 	private async sendBatch(events: AnalyticsEvent[]): Promise<void> {
-		const endpoint = this.config.apiEndpoint ?? '/api/sdk/analytics/track'
+		const endpoint = this.config.apiEndpoint ?? '/api/sdk/v1/analytics/track'
 
 		const payload = {
 			events: events,

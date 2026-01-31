@@ -198,7 +198,7 @@ export interface AutocaptureConfig {
 
 /** Default configuration */
 export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
-	apiEndpoint: '/api/sdk/analytics/track',
+	apiEndpoint: '/api/sdk/v1/analytics/track',
 	autocapture: true,
 	capturePageviews: true,
 	captureSpaNavigation: true,
