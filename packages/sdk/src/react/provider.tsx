@@ -21,11 +21,10 @@ import {
 	DEFAULT_PLATFORM_URL,
 	SDK_API_PATH,
 	DEFAULT_AUTH_PREFIX,
-	TOKEN_EXPIRY_BUFFER_MS,
 	SESSION_TOKEN_LIFETIME_MS,
-	MAX_RETRIES,
-	BASE_RETRY_DELAY_MS,
 } from '../constants'
+import { TokenManager } from './token-manager'
+import { createRestApi, type RestApiClient } from './rest-client'
 import {
 	PlatformContext,
 	type Subscription,
@@ -58,7 +57,6 @@ import {
 	type MonitoringContextValue,
 	type NewsletterContextValue,
 	type ConsentContextValue,
-	type ConsentType,
 	type StorageContextValue,
 	type UploadOptions,
 	type UploadProgressEvent,
@@ -67,6 +65,7 @@ import {
 	type UserContextValue,
 	type SecurityContextValue,
 } from './services-context'
+import { inferProviderFromModelId } from './context-values'
 import {
 	SylphxStorage,
 	STORAGE_KEYS,
@@ -94,6 +93,10 @@ import type {
 	AchievementDefaults,
 } from '../lib/engagement/types'
 
+// TokenManager extracted to ./token-manager.ts for maintainability
+// REST API Client extracted to ./rest-client.ts for maintainability
+// Service context value factories extracted to ./context-values/ for maintainability
+
 // Dynamic import for @vercel/blob/client to avoid SSR issues with undici
 let blobUploadCache: typeof import('@vercel/blob/client').upload | null = null
 async function getBlobUpload() {
@@ -103,279 +106,6 @@ async function getBlobUpload() {
 	}
 	return blobUploadCache
 }
-
-// ============================================
-// Token Manager — State of the Art
-// ============================================
-// Implements: Lazy fetch, request queuing, auto-refresh, retry with backoff, 401 recovery
-//
-// Architecture:
-// ┌─────────────────────────────────────────────────────────────────┐
-// │                     Token Manager                               │
-// │  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐    │
-// │  │  Lazy    │ → │  Queue   │ → │  Auto    │ → │  Retry   │    │
-// │  │  Fetch   │   │ Requests │   │  Refresh │   │  + 401   │    │
-// │  └──────────┘   └──────────┘   └──────────┘   └──────────┘    │
-// └─────────────────────────────────────────────────────────────────┘
-
-interface TokenManagerConfig {
-	/** Check if user is signed in */
-	isSignedIn: () => boolean
-	/** Called when token refresh fails (e.g., session expired) */
-	onSessionExpired?: () => void
-	/** Auth route prefix (e.g., '/auth') */
-	authPrefix: string
-}
-
-class TokenManager {
-	private token: string | null = null
-	private tokenExpiry: number | null = null
-	private fetchPromise: Promise<string | null> | null = null
-	private refreshTimer: ReturnType<typeof setTimeout> | null = null
-	private config: TokenManagerConfig
-
-	constructor(config: TokenManagerConfig) {
-		this.config = config
-	}
-
-	/**
-	 * Get a valid access token.
-	 * - Returns cached token if valid
-	 * - Fetches new token if expired or missing
-	 * - Queues concurrent requests (only one fetch at a time)
-	 */
-	async getToken(): Promise<string | null> {
-		// Not signed in — no token needed
-		if (!this.config.isSignedIn()) {
-			return null
-		}
-
-		// Token exists and not expired (with 30s buffer for network latency)
-		if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry - TOKEN_EXPIRY_BUFFER_MS) {
-			return this.token
-		}
-
-		// Already fetching — wait for that promise (request queuing)
-		if (this.fetchPromise) {
-			return this.fetchPromise
-		}
-
-		// Fetch new token
-		this.fetchPromise = this.fetchTokenWithRetry()
-		try {
-			const token = await this.fetchPromise
-			return token
-		} finally {
-			this.fetchPromise = null
-		}
-	}
-
-	/**
-	 * Invalidate cached token (call on 401)
-	 */
-	invalidate(): void {
-		this.token = null
-		this.tokenExpiry = null
-		if (this.refreshTimer) {
-			clearTimeout(this.refreshTimer)
-			this.refreshTimer = null
-		}
-	}
-
-	/**
-	 * Clear everything (call on sign out)
-	 */
-	clear(): void {
-		this.invalidate()
-		this.fetchPromise = null
-	}
-
-	/**
-	 * Fetch token with exponential backoff retry
-	 */
-	private async fetchTokenWithRetry(): Promise<string | null> {
-		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-			try {
-				// Use configurable authPrefix for token endpoint
-				const response = await fetch(`${this.config.authPrefix}/token`, {
-					method: 'GET',
-					credentials: 'include',
-				})
-
-				if (response.ok) {
-					const data = await response.json()
-					const accessToken = data.accessToken as string | null
-
-					if (accessToken) {
-						this.token = accessToken
-						this.tokenExpiry = this.decodeTokenExpiry(accessToken)
-						this.scheduleRefresh()
-						return accessToken
-					}
-				}
-
-				// 401 = session expired, don't retry
-				if (response.status === 401) {
-					this.config.onSessionExpired?.()
-					return null
-				}
-
-				// Other errors — retry with backoff
-			} catch {
-				// Network error — retry with backoff
-			}
-
-			// Exponential backoff: 1s, 2s, 4s
-			if (attempt < MAX_RETRIES - 1) {
-				await new Promise((r) => setTimeout(r, BASE_RETRY_DELAY_MS * 2 ** attempt))
-			}
-		}
-
-		// All retries failed
-		return null
-	}
-
-	/**
-	 * Decode JWT expiry without verification
-	 * (Verification happens server-side)
-	 */
-	private decodeTokenExpiry(token: string): number | null {
-		try {
-			const parts = token.split('.')
-			if (parts.length !== 3) return null
-			const payload = parts[1]
-			const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-			const jsonPayload = atob(base64)
-			const parsed = JSON.parse(jsonPayload) as { exp?: number }
-			// exp is in seconds, convert to milliseconds
-			return parsed.exp ? parsed.exp * 1000 : null
-		} catch {
-			return null
-		}
-	}
-
-	/**
-	 * Schedule token refresh before expiry
-	 */
-	private scheduleRefresh(): void {
-		if (this.refreshTimer) {
-			clearTimeout(this.refreshTimer)
-		}
-
-		if (!this.tokenExpiry) return
-
-		// Refresh 60 seconds before expiry
-		const refreshIn = this.tokenExpiry - Date.now() - 60000
-
-		if (refreshIn > 0) {
-			this.refreshTimer = setTimeout(() => {
-				// Only refresh if still signed in
-				if (this.config.isSignedIn()) {
-					this.fetchTokenWithRetry()
-				}
-			}, refreshIn)
-		}
-	}
-}
-
-// ============================================
-// REST API Helper — With Token Management
-// ============================================
-interface RestConfig {
-	/** App ID — used as x-app-secret for SDK API calls */
-	appId?: string
-	platformUrl: string
-	/** Token manager for authenticated requests */
-	tokenManager: TokenManager
-}
-
-/**
- * Infer AI provider from model ID
- */
-function inferProviderFromModelId(modelId: string): AIProvider {
-	if (modelId.startsWith('gpt-') || modelId.includes('openai')) return 'openai'
-	if (modelId.startsWith('claude-') || modelId.includes('anthropic')) return 'anthropic'
-	if (modelId.startsWith('gemini-') || modelId.includes('google')) return 'google'
-	if (modelId.startsWith('mistral-') || modelId.includes('mistral')) return 'mistral'
-	if (modelId.includes('groq')) return 'groq'
-	if (modelId.includes('together')) return 'together'
-	return 'openai' // Default
-}
-
-function createRestApi(config: RestConfig) {
-	const baseUrl = `${config.platformUrl}${SDK_API_PATH}`
-
-	const buildHeaders = async (): Promise<Record<string, string>> => {
-		const h: Record<string, string> = {
-			'Content-Type': 'application/json',
-		}
-		if (config.appId) h['x-app-secret'] = config.appId
-
-		// Get token (lazy fetch, auto-refresh, request queuing)
-		const token = await config.tokenManager.getToken()
-		if (token) h['Authorization'] = `Bearer ${token}`
-
-		return h
-	}
-
-	const fetchWithAuth = async (
-		url: string,
-		method: string,
-		body?: unknown,
-		retryOn401 = true
-	): Promise<Response> => {
-		const headers = await buildHeaders()
-		const options: RequestInit = {
-			method,
-			headers,
-			...(body !== undefined && { body: JSON.stringify(body) }),
-		}
-
-		const res = await fetch(url, options)
-
-		// Handle 401 — invalidate token and retry once
-		if (res.status === 401 && retryOn401) {
-			config.tokenManager.invalidate()
-			return fetchWithAuth(url, method, body, false) // Retry without recursion risk
-		}
-
-		return res
-	}
-
-	async function handleResponse<T>(res: Response): Promise<T> {
-		if (!res.ok) {
-			const err = await res.json().catch(() => ({ error: { message: 'Request failed' } }))
-			throw new Error(err.error?.message ?? err.message ?? 'Request failed')
-		}
-		return res.json()
-	}
-
-	async function get<T>(path: string, query?: Record<string, string | undefined>): Promise<T> {
-		const url = new URL(`${baseUrl}${path}`)
-		if (query) Object.entries(query).forEach(([k, v]) => v && url.searchParams.set(k, v))
-		const res = await fetchWithAuth(url.toString(), 'GET')
-		return handleResponse<T>(res)
-	}
-
-	async function post<T>(path: string, body?: unknown): Promise<T> {
-		const res = await fetchWithAuth(`${baseUrl}${path}`, 'POST', body)
-		return handleResponse<T>(res)
-	}
-
-	async function put<T>(path: string, body?: unknown): Promise<T> {
-		const res = await fetchWithAuth(`${baseUrl}${path}`, 'PUT', body)
-		return handleResponse<T>(res)
-	}
-
-	async function del<T>(path: string): Promise<T> {
-		const res = await fetchWithAuth(`${baseUrl}${path}`, 'DELETE')
-		return handleResponse<T>(res)
-	}
-
-	return { get, post, put, del }
-}
-
-type RestApiClient = ReturnType<typeof createRestApi>
 
 // ============================================
 // Types
