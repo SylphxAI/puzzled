@@ -25,6 +25,11 @@
 
 import { cookies } from 'next/headers'
 import type { TokenResponse, User } from '../types'
+import {
+	SESSION_TOKEN_LIFETIME_SECONDS,
+	REFRESH_TOKEN_LIFETIME_SECONDS,
+	TOKEN_EXPIRY_BUFFER_MS,
+} from '../constants'
 
 // =============================================================================
 // Cookie Name Generator
@@ -60,11 +65,17 @@ export function getCookieNames(namespace: string) {
 // Cookie Options
 // =============================================================================
 
-/** Session token lifetime (5 minutes like Clerk) */
-export const SESSION_TOKEN_LIFETIME = 5 * 60
+/**
+ * Session token lifetime (5 minutes like Clerk)
+ * Re-exported from constants.ts for backward compatibility.
+ */
+export const SESSION_TOKEN_LIFETIME = SESSION_TOKEN_LIFETIME_SECONDS
 
-/** Refresh token lifetime (30 days) */
-export const REFRESH_TOKEN_LIFETIME = 30 * 24 * 60 * 60
+/**
+ * Refresh token lifetime (30 days)
+ * Re-exported from constants.ts for backward compatibility.
+ */
+export const REFRESH_TOKEN_LIFETIME = REFRESH_TOKEN_LIFETIME_SECONDS
 
 /**
  * Cookie options for HttpOnly tokens (session, refresh)
@@ -230,7 +241,7 @@ export async function isSessionExpired(namespace: string): Promise<boolean> {
 	const { expiresAt } = await getAuthCookies(namespace)
 	if (!expiresAt) return true
 	// 30 second buffer
-	return expiresAt < Date.now() + 30000
+	return expiresAt < Date.now() + TOKEN_EXPIRY_BUFFER_MS
 }
 
 /**

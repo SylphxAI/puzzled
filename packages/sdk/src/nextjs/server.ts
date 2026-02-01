@@ -28,7 +28,7 @@ import {
 	validateAndSanitizeAppId,
 	getCookieNamespace as getCookieNamespaceFromKey,
 } from '../key-validation'
-import { DEFAULT_PLATFORM_URL } from '../constants'
+import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from '../constants'
 
 // =============================================================================
 // Type Guards
@@ -168,7 +168,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 	}
 
 	// Session token exists and not expired (with 30 second buffer)
-	if (sessionToken && expiresAt && expiresAt > Date.now() + 30000) {
+	if (sessionToken && expiresAt && expiresAt > Date.now() + TOKEN_EXPIRY_BUFFER_MS) {
 		// Verify token is valid
 		try {
 			const payload = await verifyAccessToken(sessionToken, config)

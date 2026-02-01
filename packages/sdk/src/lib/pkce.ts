@@ -20,6 +20,8 @@
  * @see https://datatracker.ietf.org/doc/html/rfc7636
  */
 
+import { PKCE_CODE_TTL_MS } from '../constants'
+
 // ==========================================
 // Constants
 // ==========================================
@@ -30,8 +32,8 @@ const VERIFIER_LENGTH = 64
 /** Characters allowed in code_verifier (unreserved URI chars) */
 const VERIFIER_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
 
-/** PKCE entry TTL in milliseconds (10 minutes, matches OAuth state) */
-const PKCE_TTL_MS = 10 * 60 * 1000
+/** PKCE entry TTL from constants (10 minutes, matches OAuth state) */
+const PKCE_TTL_MS = PKCE_CODE_TTL_MS
 
 // ==========================================
 // Storage (sessionStorage with fallback)

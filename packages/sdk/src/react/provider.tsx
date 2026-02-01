@@ -17,7 +17,15 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { AuthContext, type AuthState } from './context'
 import { validateAndSanitizeAppId } from '../key-validation'
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
+import {
+	DEFAULT_PLATFORM_URL,
+	SDK_API_PATH,
+	DEFAULT_AUTH_PREFIX,
+	TOKEN_EXPIRY_BUFFER_MS,
+	SESSION_TOKEN_LIFETIME_MS,
+	MAX_RETRIES,
+	BASE_RETRY_DELAY_MS,
+} from '../constants'
 import {
 	PlatformContext,
 	type Subscription,
@@ -115,6 +123,8 @@ interface TokenManagerConfig {
 	isSignedIn: () => boolean
 	/** Called when token refresh fails (e.g., session expired) */
 	onSessionExpired?: () => void
+	/** Auth route prefix (e.g., '/auth') */
+	authPrefix: string
 }
 
 class TokenManager {
@@ -140,8 +150,8 @@ class TokenManager {
 			return null
 		}
 
-		// Token exists and not expired (with 30s buffer)
-		if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry - 30000) {
+		// Token exists and not expired (with 30s buffer for network latency)
+		if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry - TOKEN_EXPIRY_BUFFER_MS) {
 			return this.token
 		}
 
@@ -184,12 +194,10 @@ class TokenManager {
 	 * Fetch token with exponential backoff retry
 	 */
 	private async fetchTokenWithRetry(): Promise<string | null> {
-		const maxRetries = 3
-		const baseDelay = 1000
-
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
+		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 			try {
-				const response = await fetch('/api/auth/token', {
+				// Use configurable authPrefix for token endpoint
+				const response = await fetch(`${this.config.authPrefix}/token`, {
 					method: 'GET',
 					credentials: 'include',
 				})
@@ -218,8 +226,8 @@ class TokenManager {
 			}
 
 			// Exponential backoff: 1s, 2s, 4s
-			if (attempt < maxRetries - 1) {
-				await new Promise((r) => setTimeout(r, baseDelay * 2 ** attempt))
+			if (attempt < MAX_RETRIES - 1) {
+				await new Promise((r) => setTimeout(r, BASE_RETRY_DELAY_MS * 2 ** attempt))
 			}
 		}
 
@@ -606,8 +614,9 @@ function SylphxProviderInner({
 					// Clear user cookie
 					clearUserCookie(appId)
 				},
+				authPrefix,
 			}),
-		[appId]
+		[appId, authPrefix]
 	)
 
 	// Clear token manager when auth state changes to signed out
@@ -1025,7 +1034,7 @@ function SylphxProviderInner({
 	 * For same-origin requests, cookies are sent automatically — no token needed.
 	 * This is only for when you need to call third-party APIs that require a Bearer token.
 	 *
-	 * Implementation: Calls /api/auth/token server endpoint which reads the
+	 * Implementation: Calls {authPrefix}/token endpoint which reads the
 	 * HttpOnly session cookie and returns the token. This keeps tokens secure
 	 * while allowing controlled access for third-party API calls.
 	 *
@@ -1048,7 +1057,7 @@ function SylphxProviderInner({
 
 		try {
 			// Call BFF endpoint to get token from HttpOnly cookie
-			const response = await fetch('/api/auth/token', {
+			const response = await fetch(`${authPrefix}/token`, {
 				method: 'GET',
 				credentials: 'include', // Send cookies
 			})
@@ -1062,7 +1071,7 @@ function SylphxProviderInner({
 		} catch {
 			return null
 		}
-	}, [authState.isSignedIn])
+	}, [authState.isSignedIn, authPrefix])
 
 	const resetPassword = useCallback(
 		async (options: { token: string; newPassword: string }) => {

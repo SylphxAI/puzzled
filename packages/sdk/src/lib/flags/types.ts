@@ -5,6 +5,8 @@
  * Supports percentage rollouts, user targeting, and A/B testing.
  */
 
+import { FLAGS_CACHE_TTL_MS, FLAGS_STALE_WHILE_REVALIDATE_MS } from '../../constants'
+
 // ==========================================
 // Core Types
 // ==========================================
@@ -262,8 +264,8 @@ export interface FeatureFlagsConfig {
 export const DEFAULT_FLAGS_CONFIG: Required<
 	Pick<FeatureFlagsConfig, 'cacheTtl' | 'staleWhileRevalidate' | 'offlineSupport' | 'storageKey' | 'debug'>
 > = {
-	cacheTtl: 5 * 60 * 1000, // 5 minutes
-	staleWhileRevalidate: 60 * 1000, // 1 minute
+	cacheTtl: FLAGS_CACHE_TTL_MS,
+	staleWhileRevalidate: FLAGS_STALE_WHILE_REVALIDATE_MS,
 	offlineSupport: true,
 	storageKey: 'sylphx_flags',
 	debug: false,

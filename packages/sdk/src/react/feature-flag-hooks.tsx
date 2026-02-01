@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { EvaluationReason, FeatureFlagDetailResult } from '../types'
+import { FLAGS_CACHE_TTL_MS } from '../constants'
 
 // ============================================
 // Types
@@ -85,8 +86,8 @@ export interface FeatureFlagProviderProps {
 
 const CACHE_KEY = 'sylphx_feature_flags'
 const CACHE_TIMESTAMP_KEY = 'sylphx_feature_flags_ts'
-/** Cache TTL in milliseconds (5 minutes - LaunchDarkly pattern) */
-const CACHE_TTL_MS = 5 * 60 * 1000
+/** Cache TTL from constants (5 minutes - LaunchDarkly pattern) */
+const CACHE_TTL_MS = FLAGS_CACHE_TTL_MS
 
 /**
  * Feature Flag Provider

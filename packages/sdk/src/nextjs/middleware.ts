@@ -43,7 +43,7 @@ import {
 	validateAndSanitizeSecretKey,
 	getCookieNamespace,
 } from '../key-validation'
-import { DEFAULT_PLATFORM_URL } from '../constants'
+import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from '../constants'
 import type { TokenResponse } from '../types'
 
 // =============================================================================
@@ -143,7 +143,7 @@ function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null 
 function isTokenExpired(token: string): boolean {
 	const payload = decodeJwtPayload(token)
 	if (!payload?.exp) return true
-	return payload.exp * 1000 < Date.now() + 30000
+	return payload.exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS
 }
 
 /**
@@ -288,6 +288,43 @@ async function handleSignOut(
 
 	ctx.log('Signout complete')
 	return response
+}
+
+/**
+ * Handle token request (BFF pattern)
+ * GET {authPrefix}/token
+ *
+ * Returns the session token from HttpOnly cookie for use with third-party APIs.
+ * This enables the BFF (Backend-for-Frontend) pattern where clients need
+ * bearer tokens for external API calls but tokens are stored in HttpOnly cookies.
+ */
+function handleToken(
+	request: NextRequest,
+	ctx: MiddlewareContext
+): NextResponse {
+	ctx.log('Token request')
+
+	const sessionToken = request.cookies.get(ctx.cookieNames.SESSION)?.value
+
+	if (!sessionToken) {
+		ctx.log('No session token')
+		return NextResponse.json(
+			{ error: 'Not authenticated', accessToken: null },
+			{ status: 401 }
+		)
+	}
+
+	// Check if token is expired
+	if (isTokenExpired(sessionToken)) {
+		ctx.log('Session token expired')
+		return NextResponse.json(
+			{ error: 'Session expired', accessToken: null },
+			{ status: 401 }
+		)
+	}
+
+	ctx.log('Token returned')
+	return NextResponse.json({ accessToken: sessionToken })
 }
 
 /**
@@ -440,6 +477,10 @@ export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) 
 
 		if (pathname === `${config.authPrefix}/signout`) {
 			return handleSignOut(request, ctx)
+		}
+
+		if (pathname === `${config.authPrefix}/token`) {
+			return handleToken(request, ctx)
 		}
 
 		// ======================================================================
