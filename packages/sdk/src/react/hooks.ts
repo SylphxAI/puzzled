@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useContext, useCallback, useState, useEffect } from 'react'
+import { useContext, useCallback, useState, useEffect, useRef } from 'react'
 import {
 	AuthContext,
 	type AuthContextValue,
@@ -545,11 +545,20 @@ export interface UseOrganizationReturn {
 	refresh: () => Promise<void>
 }
 
+// Cross-tab sync constants for organizations (Clerk pattern)
+const ORG_STORAGE_KEY = 'sylphx_active_org'
+const ORG_BROADCAST_CHANNEL = 'sylphx_org_sync'
+
 /**
  * Hook to manage organizations and RBAC
  *
  * Provides full organization management including CRUD operations,
  * member management, and invitation handling.
+ *
+ * ## Cross-Tab Sync (Clerk Pattern)
+ * Organization context automatically syncs across browser tabs via:
+ * - BroadcastChannel API for instant sync between tabs
+ * - localStorage fallback for persistence
  *
  * @example
  * ```tsx
@@ -570,6 +579,8 @@ export interface UseOrganizationReturn {
  */
 export function useOrganization(): UseOrganizationReturn {
 	const platform = useContext(PlatformContext)
+
+	// Initialize from localStorage for SSR safety
 	const [organizations, setOrganizations] = useState<Organization[]>([])
 	const [organization, setOrganization] = useState<Organization | null>(null)
 	const [members, setMembers] = useState<OrganizationMember[]>([])
@@ -577,6 +588,9 @@ export function useOrganization(): UseOrganizationReturn {
 	const [role, setRole] = useState<OrgRole | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<Error | null>(null)
+
+	// BroadcastChannel ref for cross-tab sync (Clerk pattern)
+	const channelRef = useRef<BroadcastChannel | null>(null)
 
 	// Create config for API calls using platform context
 	const config = platform
@@ -586,7 +600,71 @@ export function useOrganization(): UseOrganizationReturn {
 		  })
 		: null
 
-	// Load organizations on mount
+	// Get stored org slug from localStorage
+	const getStoredOrgSlug = useCallback((): string | null => {
+		if (typeof window === 'undefined') return null
+		try {
+			const key = platform?.appId ? `${ORG_STORAGE_KEY}_${platform.appId}` : ORG_STORAGE_KEY
+			return localStorage.getItem(key)
+		} catch {
+			return null
+		}
+	}, [platform?.appId])
+
+	// Store org slug to localStorage
+	const storeOrgSlug = useCallback((slug: string | null) => {
+		if (typeof window === 'undefined') return
+		try {
+			const key = platform?.appId ? `${ORG_STORAGE_KEY}_${platform.appId}` : ORG_STORAGE_KEY
+			if (slug) {
+				localStorage.setItem(key, slug)
+			} else {
+				localStorage.removeItem(key)
+			}
+		} catch {
+			// Ignore storage errors
+		}
+	}, [platform?.appId])
+
+	// Broadcast org change to other tabs (Clerk pattern)
+	const broadcastOrgChange = useCallback((org: Organization | null) => {
+		if (channelRef.current) {
+			channelRef.current.postMessage({
+				type: 'org_change',
+				organization: org,
+				timestamp: Date.now(),
+			})
+		}
+	}, [])
+
+	// Set up cross-tab sync via BroadcastChannel (Clerk pattern)
+	useEffect(() => {
+		if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return
+
+		const channelName = platform?.appId
+			? `${ORG_BROADCAST_CHANNEL}_${platform.appId}`
+			: ORG_BROADCAST_CHANNEL
+
+		const channel = new BroadcastChannel(channelName)
+		channelRef.current = channel
+
+		channel.onmessage = (event) => {
+			if (event.data.type === 'org_change') {
+				const newOrg = event.data.organization as Organization | null
+				setOrganization(newOrg)
+				setRole(null) // Role will be refreshed on next load
+				// Store the change locally too
+				storeOrgSlug(newOrg?.slug ?? null)
+			}
+		}
+
+		return () => {
+			channel.close()
+			channelRef.current = null
+		}
+	}, [platform?.appId, storeOrgSlug])
+
+	// Load organizations on mount (with localStorage restore)
 	useEffect(() => {
 		if (!config) {
 			setIsLoading(false)
@@ -600,9 +678,15 @@ export function useOrganization(): UseOrganizationReturn {
 				const result = await OrgFunctions.getOrganizations(config!)
 				if (mounted) {
 					setOrganizations(result.organizations)
-					// Auto-select first org if none selected
-					if (result.organizations.length > 0 && !organization) {
-						await selectOrganization(result.organizations[0].slug)
+
+					// Restore from localStorage first, then fallback to first org
+					const storedSlug = getStoredOrgSlug()
+					const orgToSelect = storedSlug
+						? result.organizations.find(o => o.slug === storedSlug)
+						: result.organizations[0]
+
+					if (orgToSelect && !organization) {
+						await selectOrganization(orgToSelect.slug)
 					}
 					setIsLoading(false)
 				}
@@ -616,15 +700,17 @@ export function useOrganization(): UseOrganizationReturn {
 
 		loadOrgs()
 		return () => { mounted = false }
-	}, [config?.platformUrl])
+	}, [config?.platformUrl, getStoredOrgSlug])
 
-	// Select an organization by ID or slug
+	// Select an organization by ID or slug (with cross-tab sync)
 	const selectOrganization = useCallback(async (orgIdOrSlug: string | null) => {
 		if (!config || !orgIdOrSlug) {
 			setOrganization(null)
 			setMembers([])
 			setInvitations([])
 			setRole(null)
+			storeOrgSlug(null)
+			broadcastOrgChange(null)
 			return
 		}
 
@@ -632,6 +718,10 @@ export function useOrganization(): UseOrganizationReturn {
 			const result = await OrgFunctions.getOrganization(config, orgIdOrSlug)
 			setOrganization(result.organization)
 			setRole(result.membership?.role ?? null)
+
+			// Persist selection to localStorage and broadcast to other tabs
+			storeOrgSlug(result.organization.slug)
+			broadcastOrgChange(result.organization)
 
 			// Load members
 			const membersResult = await OrgFunctions.getOrganizationMembers(config, orgIdOrSlug)
@@ -652,7 +742,7 @@ export function useOrganization(): UseOrganizationReturn {
 		} catch (err) {
 			setError(err instanceof Error ? err : new Error('Failed to load organization'))
 		}
-	}, [config])
+	}, [config, storeOrgSlug, broadcastOrgChange])
 
 	// Permission checking
 	const hasPermission = useCallback((permission: string): boolean => {

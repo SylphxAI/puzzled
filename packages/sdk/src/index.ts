@@ -222,6 +222,15 @@ export {
 	type PushNotification,
 } from './notifications'
 
+// Service Worker utilities for push notifications (OneSignal/FCM pattern)
+export {
+	initPushServiceWorker,
+	createServiceWorkerScript,
+	registerPushServiceWorker,
+	type PushNotificationPayload,
+	type PushServiceWorkerConfig,
+} from './lib/notifications/service-worker'
+
 // =============================================================================
 // Jobs Functions
 // =============================================================================
