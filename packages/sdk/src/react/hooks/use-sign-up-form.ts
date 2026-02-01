@@ -179,7 +179,7 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 	const {
 		providers = [],
 		afterSignUpUrl = '/dashboard',
-		minPasswordLength = 8,
+		minPasswordLength = 12, // NIST SP 800-63B (2023) recommends 12+ chars
 		inviteCode: initialInviteCode = '',
 		showInviteCode = false,
 		requireInviteCode = false,

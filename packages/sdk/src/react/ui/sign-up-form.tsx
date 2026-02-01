@@ -285,10 +285,10 @@ function SignUpFormInner({
 				<label htmlFor="signup-password" style={styles.label}>Password</label>
 				{renderInput('password', 'password', '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022', form.password, setPassword, {
 					autoComplete: 'new-password',
-					minLength: 8,
+					minLength: 12,
 				})}
 				<p id="password-hint" style={mergeStyles(styles.textXs, styles.textMuted, styles.mt1)}>
-					Must be at least 8 characters
+					Must be at least 12 characters
 				</p>
 			</div>
 

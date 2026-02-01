@@ -252,7 +252,7 @@ function SignInFormInner({
 				</div>
 				{renderInput('password', 'password', '••••••••', form.password, setPassword, {
 					autoComplete: 'current-password',
-					minLength: 8,
+					minLength: 12,
 				})}
 			</div>
 			{renderError()}

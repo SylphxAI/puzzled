@@ -99,7 +99,7 @@ export interface UseResetPasswordFormReturn {
 export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseResetPasswordFormReturn {
 	const {
 		token,
-		minPasswordLength = 8,
+		minPasswordLength = 12, // NIST SP 800-63B (2023) recommends 12+ chars
 		afterResetUrl = '/login',
 		submitHandler,
 		onSuccess,

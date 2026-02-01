@@ -326,8 +326,8 @@ export function SecuritySettings({
 				return
 			}
 
-			if (newPassword.length < 8) {
-				setError('Password must be at least 8 characters')
+			if (newPassword.length < 12) {
+				setError('Password must be at least 12 characters')
 				return
 			}
 
@@ -558,7 +558,7 @@ export function SecuritySettings({
 									type="password"
 									value={newPassword}
 									onChange={(e) => setNewPassword(e.target.value)}
-									minLength={8}
+									minLength={12}
 									required
 									style={styles.input}
 								/>
@@ -569,7 +569,7 @@ export function SecuritySettings({
 									type="password"
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
-									minLength={8}
+									minLength={12}
 									required
 									style={styles.input}
 								/>

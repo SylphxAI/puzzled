@@ -133,9 +133,9 @@ export function ResetPassword({
 				return
 			}
 
-			// Validate password length
-			if (password.length < 8) {
-				setError('Password must be at least 8 characters')
+			// Validate password length (NIST SP 800-63B recommends 12+ chars)
+			if (password.length < 12) {
+				setError('Password must be at least 12 characters')
 				return
 			}
 
@@ -206,7 +206,7 @@ export function ResetPassword({
 						disabled={isLoading}
 						autoComplete="new-password"
 						required
-						minLength={8}
+						minLength={12}
 						style={mergeStyles(
 							styles.input,
 							focusedField === 'password' ? styles.inputFocus : {},
@@ -214,7 +214,7 @@ export function ResetPassword({
 						)}
 					/>
 					<p style={mergeStyles(styles.textXs, styles.textMuted, styles.mt1)}>
-						Must be at least 8 characters
+						Must be at least 12 characters
 					</p>
 				</div>
 
