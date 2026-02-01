@@ -32,6 +32,7 @@ import {
 	ANALYTICS_MAX_TRACKED_EVENT_IDS,
 	ANALYTICS_TRACKED_IDS_KEEP,
 	STORAGE_MULTIPART_THRESHOLD_BYTES,
+	DEFAULT_CONTEXT_WINDOW,
 } from '../constants'
 import { TokenManager } from './token-manager'
 import { createRestApi, type RestApiClient } from './rest-client'
@@ -2075,7 +2076,7 @@ function SylphxProviderInner({
 						name: m.name || m.id,
 						provider: inferProviderFromModelId(m.id),
 						contextWindow: m.contextWindow || 0,
-						maxOutputTokens: Math.floor((m.contextWindow || 4096) / 4),
+						maxOutputTokens: Math.floor((m.contextWindow || DEFAULT_CONTEXT_WINDOW) / 4),
 						capabilities: m.capabilities || ['chat'],
 						inputCostPer1M: m.inputCostPer1M ?? 0,
 						outputCostPer1M: m.outputCostPer1M ?? 0,

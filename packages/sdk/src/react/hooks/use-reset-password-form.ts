@@ -33,7 +33,7 @@
 
 import { useState, useCallback, useMemo, useContext } from 'react'
 import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
-import { UI_COPY_FEEDBACK_MS } from '../../constants'
+import { UI_COPY_FEEDBACK_MS, MIN_PASSWORD_LENGTH } from '../../constants'
 
 // ============================================
 // Types
@@ -100,7 +100,7 @@ export interface UseResetPasswordFormReturn {
 export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseResetPasswordFormReturn {
 	const {
 		token,
-		minPasswordLength = 12, // NIST SP 800-63B (2023) recommends 12+ chars
+		minPasswordLength = MIN_PASSWORD_LENGTH, // NIST SP 800-63B (2023) recommends 12+ chars
 		afterResetUrl = '/login',
 		submitHandler,
 		onSuccess,

@@ -527,3 +527,87 @@ export const STACK_TRACE_MAX_LENGTH = 500
  * Google Consent Mode wait for update timeout (500 ms)
  */
 export const CONSENT_WAIT_FOR_UPDATE_MS = 500
+
+// =============================================================================
+// Time Unit Conversions
+// =============================================================================
+
+/** Milliseconds per minute (60,000) */
+export const MS_PER_MINUTE = 60_000
+
+/** Milliseconds per hour (3,600,000) */
+export const MS_PER_HOUR = 3_600_000
+
+/** Milliseconds per day (86,400,000) */
+export const MS_PER_DAY = 86_400_000
+
+/** Seconds per minute (60) */
+export const SECONDS_PER_MINUTE = 60
+
+/** Seconds per hour (3,600) */
+export const SECONDS_PER_HOUR = 3_600
+
+// =============================================================================
+// Z-Index Values
+// =============================================================================
+
+/** Z-index for modal overlays (9999) */
+export const Z_INDEX_OVERLAY = 9999
+
+/** Z-index for critical overlays like feature gates (99999) */
+export const Z_INDEX_CRITICAL_OVERLAY = 99999
+
+// =============================================================================
+// API Key Expiry (seconds)
+// =============================================================================
+
+/** API key expiry: 1 day (86,400 seconds) */
+export const API_KEY_EXPIRY_1_DAY = 86_400
+
+/** API key expiry: 7 days (604,800 seconds) */
+export const API_KEY_EXPIRY_7_DAYS = 604_800
+
+/** API key expiry: 30 days (2,592,000 seconds) */
+export const API_KEY_EXPIRY_30_DAYS = 2_592_000
+
+/** API key expiry: 90 days (7,776,000 seconds) */
+export const API_KEY_EXPIRY_90_DAYS = 7_776_000
+
+/** API key expiry: 1 year (31,536,000 seconds) */
+export const API_KEY_EXPIRY_1_YEAR = 31_536_000
+
+// =============================================================================
+// Web Vitals Thresholds (Google standards)
+// =============================================================================
+
+/** LCP (Largest Contentful Paint) "good" threshold (2500 ms) */
+export const WEB_VITALS_LCP_GOOD_MS = 2_500
+
+/** LCP (Largest Contentful Paint) "poor" threshold (4000 ms) */
+export const WEB_VITALS_LCP_POOR_MS = 4_000
+
+/** INP (Interaction to Next Paint) "good" threshold (200 ms) */
+export const WEB_VITALS_INP_GOOD_MS = 200
+
+/** INP (Interaction to Next Paint) "poor" threshold (500 ms) */
+export const WEB_VITALS_INP_POOR_MS = 500
+
+/** TTFB (Time to First Byte) "good" threshold (800 ms) */
+export const WEB_VITALS_TTFB_GOOD_MS = 800
+
+/** TTFB (Time to First Byte) "poor" threshold (1800 ms) */
+export const WEB_VITALS_TTFB_POOR_MS = 1_800
+
+// =============================================================================
+// Security
+// =============================================================================
+
+/** Minimum password length (NIST SP 800-63B recommends 12+) */
+export const MIN_PASSWORD_LENGTH = 12
+
+// =============================================================================
+// AI
+// =============================================================================
+
+/** Default context window for AI models (4096 tokens) */
+export const DEFAULT_CONTEXT_WINDOW = 4_096

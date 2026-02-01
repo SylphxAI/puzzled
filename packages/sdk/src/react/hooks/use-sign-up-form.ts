@@ -41,6 +41,7 @@ import { useState, useCallback, useMemo, useEffect, useContext } from 'react'
 import type { OAuthProvider } from '@sylphx/ui'
 import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
 import { safeRedirect } from '../security-utils'
+import { MIN_PASSWORD_LENGTH } from '../../constants'
 
 // Re-export for convenience
 export type { OAuthProvider } from '@sylphx/ui'
@@ -179,7 +180,7 @@ export function useSignUpForm(options: UseSignUpFormOptions = {}): UseSignUpForm
 	const {
 		providers = [],
 		afterSignUpUrl = '/dashboard',
-		minPasswordLength = 12, // NIST SP 800-63B (2023) recommends 12+ chars
+		minPasswordLength = MIN_PASSWORD_LENGTH, // NIST SP 800-63B (2023) recommends 12+ chars
 		inviteCode: initialInviteCode = '',
 		showInviteCode = false,
 		requireInviteCode = false,

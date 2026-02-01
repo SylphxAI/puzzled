@@ -18,6 +18,7 @@ import {
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useErrorTracking, useErrorBoundary as useErrorBoundaryHook } from '../monitoring-hooks'
+import { Z_INDEX_OVERLAY } from '../../constants'
 import { UI_FORM_SUCCESS_MS } from '../../constants'
 
 // ============================================
@@ -442,7 +443,7 @@ export function FeedbackWidget({
 
 	const containerStyle: CSSProperties = {
 		position: 'fixed',
-		zIndex: 9999,
+		zIndex: Z_INDEX_OVERLAY,
 		fontFamily: theme.fontFamily,
 		...positionStyles[position],
 	}

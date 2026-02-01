@@ -11,6 +11,7 @@ import { type ReactNode, type CSSProperties } from 'react'
 import { useFeatureFlag, type FlagValue, type FeatureFlag } from '../feature-flag-hooks'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles } from './styles'
+import { Z_INDEX_CRITICAL_OVERLAY } from '../../constants'
 
 // ============================================
 // FeatureGate
@@ -269,7 +270,7 @@ export function FlagDevTools({
 	const containerStyle: CSSProperties = mergeStyles(
 		{
 			position: 'fixed',
-			zIndex: 99999,
+			zIndex: Z_INDEX_CRITICAL_OVERLAY,
 			fontFamily: theme.fontFamily,
 			fontSize: theme.fontSizeSm,
 		},

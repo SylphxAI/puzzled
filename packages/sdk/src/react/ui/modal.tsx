@@ -9,6 +9,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, mergeStyles, injectGlobalStyles } from './styles'
+import { Z_INDEX_OVERLAY } from '../../constants'
 
 export interface ModalProps {
 	/** Whether the modal is open */
@@ -130,7 +131,7 @@ export function Modal({
 	const backdropStyle: React.CSSProperties = {
 		position: 'fixed',
 		inset: 0,
-		zIndex: 9999,
+		zIndex: Z_INDEX_OVERLAY,
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',

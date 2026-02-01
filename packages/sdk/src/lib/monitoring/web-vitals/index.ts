@@ -49,6 +49,16 @@ import {
 	type TTFBMetric,
 	type ReportOpts,
 } from 'web-vitals'
+import {
+	WEB_VITALS_LCP_GOOD_MS,
+	WEB_VITALS_LCP_POOR_MS,
+	WEB_VITALS_INP_GOOD_MS,
+	WEB_VITALS_INP_POOR_MS,
+	WEB_VITALS_FCP_GOOD_MS,
+	WEB_VITALS_FCP_POOR_MS,
+	WEB_VITALS_TTFB_GOOD_MS,
+	WEB_VITALS_TTFB_POOR_MS,
+} from '../../../constants'
 
 // ============================================
 // Types
@@ -154,13 +164,13 @@ export interface WebVitalsConfig {
  */
 export const WEB_VITALS_THRESHOLDS = {
 	// Core Web Vitals
-	LCP: { good: 2500, poor: 4000 }, // ms
-	INP: { good: 200, poor: 500 }, // ms
-	CLS: { good: 0.1, poor: 0.25 }, // score
+	LCP: { good: WEB_VITALS_LCP_GOOD_MS, poor: WEB_VITALS_LCP_POOR_MS }, // ms
+	INP: { good: WEB_VITALS_INP_GOOD_MS, poor: WEB_VITALS_INP_POOR_MS }, // ms
+	CLS: { good: 0.1, poor: 0.25 }, // score (not time-based)
 
 	// Additional metrics
-	FCP: { good: 1800, poor: 3000 }, // ms
-	TTFB: { good: 800, poor: 1800 }, // ms
+	FCP: { good: WEB_VITALS_FCP_GOOD_MS, poor: WEB_VITALS_FCP_POOR_MS }, // ms
+	TTFB: { good: WEB_VITALS_TTFB_GOOD_MS, poor: WEB_VITALS_TTFB_POOR_MS }, // ms
 } as const
 
 /** Default configuration */

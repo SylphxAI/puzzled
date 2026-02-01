@@ -8,6 +8,7 @@
 import type { AIProvider } from '../../types'
 import type { AIContextValue } from '../services-context'
 import type { RestApiClient } from '../rest-client'
+import { DEFAULT_CONTEXT_WINDOW } from '../../constants'
 
 // =============================================================================
 // Types
@@ -342,7 +343,7 @@ export function createAIValue(config: CreateAIValueConfig): AIContextValue {
 					name: m.name || m.id,
 					provider: inferProviderFromModelId(m.id),
 					contextWindow: m.contextWindow || 0,
-					maxOutputTokens: Math.floor((m.contextWindow || 4096) / 4),
+					maxOutputTokens: Math.floor((m.contextWindow || DEFAULT_CONTEXT_WINDOW) / 4),
 					capabilities: m.capabilities || ['chat'],
 					inputCostPer1M: m.inputCostPer1M ?? 0,
 					outputCostPer1M: m.outputCostPer1M ?? 0,

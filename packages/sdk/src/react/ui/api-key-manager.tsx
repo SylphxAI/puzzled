@@ -9,7 +9,14 @@
 import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
-import { UI_COPY_FEEDBACK_MS } from '../../constants'
+import {
+	UI_COPY_FEEDBACK_MS,
+	API_KEY_EXPIRY_1_DAY,
+	API_KEY_EXPIRY_7_DAYS,
+	API_KEY_EXPIRY_30_DAYS,
+	API_KEY_EXPIRY_90_DAYS,
+	API_KEY_EXPIRY_1_YEAR,
+} from '../../constants'
 
 // ============================================
 // Types
@@ -342,11 +349,11 @@ export function APIKeyManager({
 								style={inputStyle}
 							>
 								<option value="">Never expires</option>
-								<option value="86400">1 day</option>
-								<option value="604800">7 days</option>
-								<option value="2592000">30 days</option>
-								<option value="7776000">90 days</option>
-								<option value="31536000">1 year</option>
+								<option value={API_KEY_EXPIRY_1_DAY}>1 day</option>
+								<option value={API_KEY_EXPIRY_7_DAYS}>7 days</option>
+								<option value={API_KEY_EXPIRY_30_DAYS}>30 days</option>
+								<option value={API_KEY_EXPIRY_90_DAYS}>90 days</option>
+								<option value={API_KEY_EXPIRY_1_YEAR}>1 year</option>
 							</select>
 						</div>
 

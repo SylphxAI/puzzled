@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, type CSSProperties } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useNotifications } from '../platform-hooks'
-import { UI_PROMPT_DELAY_MS } from '../../constants'
+import { UI_PROMPT_DELAY_MS, Z_INDEX_OVERLAY, MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '../../constants'
 
 // ============================================
 // PushPrompt
@@ -132,7 +132,7 @@ export function PushPrompt({
 	const containerStyle: CSSProperties = mergeStyles(
 		{
 			position: 'fixed',
-			zIndex: 9999,
+			zIndex: Z_INDEX_OVERLAY,
 			fontFamily: theme.fontFamily,
 			animation: isAnimatingOut ? 'sylphx-fade-out 0.2s ease' : 'sylphx-slide-up 0.3s ease',
 		},
@@ -533,9 +533,9 @@ function NotificationItem({ notification, theme, onClick, onMarkAsRead, onDelete
 		const d = new Date(date)
 		const now = new Date()
 		const diff = now.getTime() - d.getTime()
-		const minutes = Math.floor(diff / 60000)
-		const hours = Math.floor(diff / 3600000)
-		const days = Math.floor(diff / 86400000)
+		const minutes = Math.floor(diff / MS_PER_MINUTE)
+		const hours = Math.floor(diff / MS_PER_HOUR)
+		const days = Math.floor(diff / MS_PER_DAY)
 
 		if (minutes < 1) return 'Just now'
 		if (minutes < 60) return `${minutes}m ago`

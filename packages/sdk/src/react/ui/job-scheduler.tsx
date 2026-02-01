@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, type CSSProperties, type FormEvent } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { STALE_TIME_STATS_MS, UI_FORM_SUCCESS_MS } from '../../constants'
+import { STALE_TIME_STATS_MS, UI_FORM_SUCCESS_MS, SECONDS_PER_MINUTE, SECONDS_PER_HOUR } from '../../constants'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useJobs, type Job, type JobStatus, type JobStatusFilter } from '../job-hooks'
@@ -117,7 +117,7 @@ export function JobScheduler({
 			// Keep empty object
 		}
 
-		const delaySeconds = delay * (delayUnit === 'minutes' ? 60 : delayUnit === 'hours' ? 3600 : 1)
+		const delaySeconds = delay * (delayUnit === 'minutes' ? SECONDS_PER_MINUTE : delayUnit === 'hours' ? SECONDS_PER_HOUR : 1)
 
 		const result = await schedule({
 			callbackUrl,

@@ -16,6 +16,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useConsent } from '../consent-hooks'
+import { Z_INDEX_OVERLAY } from '../../constants'
 
 export interface CookieBannerProps {
 	/** Theme variables */
@@ -141,27 +142,27 @@ export function CookieBanner({
 			bottom: 0,
 			left: 0,
 			right: 0,
-			zIndex: 9999,
+			zIndex: Z_INDEX_OVERLAY,
 		},
 		top: {
 			position: 'fixed',
 			top: 0,
 			left: 0,
 			right: 0,
-			zIndex: 9999,
+			zIndex: Z_INDEX_OVERLAY,
 		},
 		'bottom-left': {
 			position: 'fixed',
 			bottom: '1rem',
 			left: '1rem',
-			zIndex: 9999,
+			zIndex: Z_INDEX_OVERLAY,
 			maxWidth: '400px',
 		},
 		'bottom-right': {
 			position: 'fixed',
 			bottom: '1rem',
 			right: '1rem',
-			zIndex: 9999,
+			zIndex: Z_INDEX_OVERLAY,
 			maxWidth: '400px',
 		},
 	}

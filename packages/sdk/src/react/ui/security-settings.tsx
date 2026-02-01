@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { STALE_TIME_FREQUENT_MS, STALE_TIME_STABLE_MS, UI_NOTIFICATION_MS } from '../../constants'
+import { STALE_TIME_FREQUENT_MS, STALE_TIME_STABLE_MS, UI_NOTIFICATION_MS, MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '../../constants'
 import type { ThemeVariables } from './styles'
 import {
 	defaultTheme,
@@ -732,9 +732,9 @@ function formatTimeAgo(dateString: string): string {
 	const date = new Date(dateString)
 	const now = new Date()
 	const diffMs = now.getTime() - date.getTime()
-	const diffMins = Math.floor(diffMs / 60000)
-	const diffHours = Math.floor(diffMs / 3600000)
-	const diffDays = Math.floor(diffMs / 86400000)
+	const diffMins = Math.floor(diffMs / MS_PER_MINUTE)
+	const diffHours = Math.floor(diffMs / MS_PER_HOUR)
+	const diffDays = Math.floor(diffMs / MS_PER_DAY)
 
 	if (diffMins < 1) return 'just now'
 	if (diffMins < 60) return `${diffMins}m ago`
