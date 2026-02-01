@@ -223,7 +223,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
 					{appId && config ? (
-						<PlatformProvider appId={appId} config={config}>
+						<PlatformProvider appId={appId} config={config} platformUrl={platformUrl}>
 							<SessionReplayProvider>
 								<WebVitalsReporter />
 								<TRPCProvider>

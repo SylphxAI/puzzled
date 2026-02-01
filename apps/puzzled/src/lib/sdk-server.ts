@@ -26,7 +26,7 @@ export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
 			secretKey: env.SYLPHX_SECRET_KEY,
-			platformUrl: process.env.NEXT_PUBLIC_PLATFORM_URL || 'https://sylphx.com',
+			platformUrl: process.env.NEXT_PUBLIC_SYLPHX_URL || 'https://sylphx.com',
 		})
 	}
 	return cachedConfig

@@ -24,6 +24,8 @@ interface PlatformProviderProps {
 	appId: string
 	/** Server-fetched config via getAppConfig() (required) */
 	config: AppConfig
+	/** Platform URL (optional, defaults to https://sylphx.com) */
+	platformUrl?: string
 }
 
 /**
@@ -56,9 +58,9 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 	)
 }
 
-export function PlatformProvider({ children, appId, config }: PlatformProviderProps) {
+export function PlatformProvider({ children, appId, config, platformUrl }: PlatformProviderProps) {
 	return (
-		<SylphxProvider appId={appId} config={config} afterSignOutUrl="/login">
+		<SylphxProvider appId={appId} config={config} platformUrl={platformUrl} afterSignOutUrl="/login">
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)
