@@ -3,11 +3,16 @@
  *
  * React hooks for file storage operations.
  * Separated from auth hooks for clean responsibility separation.
+ *
+ * ## Industry-Standard Features
+ * - **Cancellation**: AbortController support (Vercel Blob pattern)
+ * - **Retry**: Exponential backoff with jitter (handled internally)
+ * - **Progress**: Real-time upload progress tracking
  */
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useStorageContext, type UploadProgressEvent } from './services-context'
 
 // ============================================
@@ -27,13 +32,15 @@ interface UploadResult {
 
 export interface UseStorageReturn {
 	/** Upload a file and get back the public URL */
-	upload: (file: File, options?: { path?: string }) => Promise<string>
+	upload: (file: File, options?: { path?: string; signal?: AbortSignal }) => Promise<string>
 	/** Upload an avatar (shortcut for profile pictures) */
 	uploadAvatar: (file: File) => Promise<string>
 	/** Delete a file by ID */
 	deleteFile: (fileId: string) => Promise<void>
 	/** Get a signed URL for a file (returns null if not found) */
 	getUrl: (fileId: string) => Promise<string | null>
+	/** Cancel the current upload (Vercel Blob pattern) */
+	cancel: () => void
 	/** Whether an upload is in progress */
 	isUploading: boolean
 	/** Upload progress (0-100, real-time) */
@@ -44,6 +51,8 @@ export interface UseStorageReturn {
 	bytesTotal: number
 	/** Last upload error */
 	uploadError: Error | null
+	/** Whether the last upload was cancelled */
+	wasCancelled: boolean
 }
 
 // ============================================
@@ -53,7 +62,12 @@ export interface UseStorageReturn {
 /**
  * Hook to handle file uploads to platform storage with real-time progress
  *
- * @example
+ * ## Industry-Standard Features
+ * - **Cancellation**: `cancel()` method to abort in-progress uploads (Vercel Blob pattern)
+ * - **AbortSignal**: Pass custom signal via upload options
+ * - **Progress**: Real-time byte-level progress tracking
+ *
+ * @example Basic usage
  * ```tsx
  * function AvatarUpload() {
  *   const { uploadAvatar, isUploading, progress, bytesUploaded, bytesTotal, uploadError } = useStorage()
@@ -86,6 +100,26 @@ export interface UseStorageReturn {
  *   )
  * }
  * ```
+ *
+ * @example With cancellation
+ * ```tsx
+ * function CancellableUpload() {
+ *   const { upload, cancel, isUploading, progress, wasCancelled } = useStorage()
+ *
+ *   return (
+ *     <div>
+ *       <input type="file" onChange={(e) => {
+ *         const file = e.target.files?.[0]
+ *         if (file) upload(file)
+ *       }} />
+ *       {isUploading && (
+ *         <button onClick={cancel}>Cancel Upload</button>
+ *       )}
+ *       {wasCancelled && <p>Upload was cancelled</p>}
+ *     </div>
+ *   )
+ * }
+ * ```
  */
 export function useStorage(): UseStorageReturn {
 	const ctx = useStorageContext()
@@ -94,6 +128,10 @@ export function useStorage(): UseStorageReturn {
 	const [bytesUploaded, setBytesUploaded] = useState(0)
 	const [bytesTotal, setBytesTotal] = useState(0)
 	const [uploadError, setUploadError] = useState<Error | null>(null)
+	const [wasCancelled, setWasCancelled] = useState(false)
+
+	// AbortController ref for cancellation (Vercel Blob pattern)
+	const abortControllerRef = useRef<AbortController | null>(null)
 
 	const handleProgress = useCallback((event: UploadProgressEvent) => {
 		setProgress(event.progress)
@@ -101,26 +139,51 @@ export function useStorage(): UseStorageReturn {
 		setBytesTotal(event.total)
 	}, [])
 
+	const cancel = useCallback(() => {
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort()
+			abortControllerRef.current = null
+			setWasCancelled(true)
+			setIsUploading(false)
+		}
+	}, [])
+
 	const upload = useCallback(
-		async (file: File, options?: { path?: string }): Promise<string> => {
+		async (file: File, options?: { path?: string; signal?: AbortSignal }): Promise<string> => {
+			// Create new AbortController if no external signal provided
+			const controller = new AbortController()
+			abortControllerRef.current = controller
+
+			// Use external signal if provided, otherwise use internal controller
+			const signal = options?.signal ?? controller.signal
+
 			setIsUploading(true)
 			setProgress(0)
 			setBytesUploaded(0)
 			setBytesTotal(file.size)
 			setUploadError(null)
+			setWasCancelled(false)
 
 			try {
 				const url = await ctx.upload(file, {
 					...options,
+					signal,
 					onProgress: handleProgress,
 				})
 				setProgress(100)
 				return url
 			} catch (err) {
+				// Check if this was a cancellation
+				if (err instanceof DOMException && err.name === 'AbortError') {
+					setWasCancelled(true)
+					throw err
+				}
+
 				const error = err instanceof Error ? err : new Error('Upload failed')
 				setUploadError(error)
 				throw error
 			} finally {
+				abortControllerRef.current = null
 				setIsUploading(false)
 			}
 		},
@@ -129,11 +192,16 @@ export function useStorage(): UseStorageReturn {
 
 	const uploadAvatar = useCallback(
 		async (file: File): Promise<string> => {
+			// Create new AbortController for avatar uploads
+			const controller = new AbortController()
+			abortControllerRef.current = controller
+
 			setIsUploading(true)
 			setProgress(0)
 			setBytesUploaded(0)
 			setBytesTotal(file.size)
 			setUploadError(null)
+			setWasCancelled(false)
 
 			try {
 				const url = await ctx.uploadAvatar(file, {
@@ -142,10 +210,17 @@ export function useStorage(): UseStorageReturn {
 				setProgress(100)
 				return url
 			} catch (err) {
+				// Check if this was a cancellation
+				if (err instanceof DOMException && err.name === 'AbortError') {
+					setWasCancelled(true)
+					throw err
+				}
+
 				const error = err instanceof Error ? err : new Error('Avatar upload failed')
 				setUploadError(error)
 				throw error
 			} finally {
+				abortControllerRef.current = null
 				setIsUploading(false)
 			}
 		},
@@ -171,11 +246,13 @@ export function useStorage(): UseStorageReturn {
 		uploadAvatar,
 		deleteFile,
 		getUrl,
+		cancel,
 		isUploading,
 		progress,
 		bytesUploaded,
 		bytesTotal,
 		uploadError,
+		wasCancelled,
 	}
 }
 
@@ -194,11 +271,15 @@ export interface UseFileUploadOptions {
 	onSuccess?: (url: string) => void
 	/** Called when upload fails */
 	onError?: (error: Error) => void
+	/** Called when upload is cancelled */
+	onCancel?: () => void
 }
 
 export interface UseFileUploadReturn {
 	/** Upload a file */
 	upload: (file: File) => Promise<string>
+	/** Cancel the current upload (Vercel Blob pattern) */
+	cancel: () => void
 	/** Whether an upload is in progress */
 	isUploading: boolean
 	/** Upload progress (0-100, real-time) */
@@ -211,6 +292,8 @@ export interface UseFileUploadReturn {
 	error: Error | null
 	/** Whether there was an error */
 	isError: boolean
+	/** Whether the last upload was cancelled */
+	wasCancelled: boolean
 	/** Last uploaded URL */
 	url: string | null
 	/** Reset state */
@@ -220,7 +303,12 @@ export interface UseFileUploadReturn {
 /**
  * Simplified hook for single file upload with validation
  *
- * @example
+ * ## Industry-Standard Features
+ * - **Cancellation**: `cancel()` method to abort in-progress uploads (Vercel Blob pattern)
+ * - **Validation**: File type and size validation before upload
+ * - **Callbacks**: onSuccess, onError, onCancel hooks
+ *
+ * @example Basic usage
  * ```tsx
  * function FileUpload() {
  *   const { upload, isUploading, url, error } = useFileUpload({
@@ -241,6 +329,26 @@ export interface UseFileUploadReturn {
  *   )
  * }
  * ```
+ *
+ * @example With cancellation
+ * ```tsx
+ * function CancellableUpload() {
+ *   const { upload, cancel, isUploading, wasCancelled } = useFileUpload({
+ *     onCancel: () => console.log('Upload cancelled'),
+ *   })
+ *
+ *   return (
+ *     <div>
+ *       <input type="file" onChange={(e) => {
+ *         const file = e.target.files?.[0]
+ *         if (file) upload(file)
+ *       }} />
+ *       {isUploading && <button onClick={cancel}>Cancel</button>}
+ *       {wasCancelled && <p>Upload cancelled</p>}
+ *     </div>
+ *   )
+ * }
+ * ```
  */
 export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUploadReturn {
 	const ctx = useStorageContext()
@@ -249,13 +357,27 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
 	const [bytesUploaded, setBytesUploaded] = useState(0)
 	const [bytesTotal, setBytesTotal] = useState(0)
 	const [error, setError] = useState<Error | null>(null)
+	const [wasCancelled, setWasCancelled] = useState(false)
 	const [url, setUrl] = useState<string | null>(null)
+
+	// AbortController ref for cancellation (Vercel Blob pattern)
+	const abortControllerRef = useRef<AbortController | null>(null)
 
 	const handleProgress = useCallback((event: UploadProgressEvent) => {
 		setProgress(event.progress)
 		setBytesUploaded(event.loaded)
 		setBytesTotal(event.total)
 	}, [])
+
+	const cancel = useCallback(() => {
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort()
+			abortControllerRef.current = null
+			setWasCancelled(true)
+			setIsUploading(false)
+			options.onCancel?.()
+		}
+	}, [options])
 
 	const upload = useCallback(
 		async (file: File): Promise<string> => {
@@ -285,16 +407,22 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
 				throw err
 			}
 
+			// Create new AbortController
+			const controller = new AbortController()
+			abortControllerRef.current = controller
+
 			setIsUploading(true)
 			setProgress(0)
 			setBytesUploaded(0)
 			setBytesTotal(file.size)
 			setError(null)
+			setWasCancelled(false)
 			setUrl(null)
 
 			try {
 				const uploadedUrl = await ctx.upload(file, {
 					path: options.path,
+					signal: controller.signal,
 					onProgress: handleProgress,
 				})
 				setProgress(100)
@@ -302,11 +430,19 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
 				options.onSuccess?.(uploadedUrl)
 				return uploadedUrl
 			} catch (err) {
+				// Check if this was a cancellation
+				if (err instanceof DOMException && err.name === 'AbortError') {
+					setWasCancelled(true)
+					options.onCancel?.()
+					throw err
+				}
+
 				const uploadError = err instanceof Error ? err : new Error('Upload failed')
 				setError(uploadError)
 				options.onError?.(uploadError)
 				throw uploadError
 			} finally {
+				abortControllerRef.current = null
 				setIsUploading(false)
 			}
 		},
@@ -319,17 +455,20 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
 		setBytesUploaded(0)
 		setBytesTotal(0)
 		setError(null)
+		setWasCancelled(false)
 		setUrl(null)
 	}, [])
 
 	return {
 		upload,
+		cancel,
 		isUploading,
 		progress,
 		bytesUploaded,
 		bytesTotal,
 		error,
 		isError: error !== null,
+		wasCancelled,
 		url,
 		reset,
 	}

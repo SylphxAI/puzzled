@@ -758,12 +758,24 @@ export interface ScheduleJobInput {
 	scheduledFor?: string
 	delay?: number
 	maxRetries?: number
+	/**
+	 * Idempotency key for safe retries (Stripe/Inngest pattern).
+	 *
+	 * When provided, prevents duplicate job execution if the same
+	 * key is used within a 24-hour window. Useful for:
+	 * - Network retry safety
+	 * - At-most-once delivery guarantee
+	 * - Webhook deduplication
+	 */
+	idempotencyKey?: string
 }
 
 export interface ScheduleJobResult {
 	id: string
 	jobId: string
 	scheduledFor: string
+	/** Whether this was a duplicate (idempotency key matched existing job) */
+	duplicate?: boolean
 }
 
 export interface CreateCronInput {
@@ -773,6 +785,14 @@ export interface CreateCronInput {
 	cron?: string      // Either schedule or cron
 	payload?: unknown
 	timezone?: string
+	/**
+	 * Idempotency key for safe cron creation (Stripe/Inngest pattern).
+	 *
+	 * When provided, prevents duplicate cron schedule creation if
+	 * the same key is used. Useful for deployment scripts that
+	 * may run multiple times.
+	 */
+	idempotencyKey?: string
 }
 
 export interface CreateCronResult {
@@ -780,6 +800,8 @@ export interface CreateCronResult {
 	scheduleId: string
 	schedule: string
 	nextRunAt: string
+	/** Whether this was a duplicate (idempotency key matched existing cron) */
+	duplicate?: boolean
 }
 
 export interface JobsStatusResult {

@@ -2,6 +2,11 @@
  * Jobs Functions
  *
  * Pure functions for background job scheduling.
+ *
+ * ## Industry-Standard Features
+ * - **Idempotency Keys**: Stripe/Inngest pattern for safe retries
+ * - **Automatic Retries**: Configurable retry count with exponential backoff
+ * - **Cron Scheduling**: Recurring jobs with pause/resume support
  */
 
 import { type SylphxConfig, callApi } from './config'
@@ -31,6 +36,26 @@ export interface JobInput {
 	retries?: number
 	/** Request timeout in seconds (1-300, default: 30) */
 	timeout?: number
+	/**
+	 * Idempotency key for safe retries (Stripe/Inngest pattern).
+	 *
+	 * When provided, prevents duplicate job execution if the same
+	 * key is used within a 24-hour window. Useful for:
+	 * - Network retry safety
+	 * - At-most-once delivery guarantee
+	 * - Webhook deduplication
+	 *
+	 * @example
+	 * ```typescript
+	 * // Use a unique key derived from the operation
+	 * await scheduleJob(config, {
+	 *   callbackUrl: 'https://myapp.com/api/jobs/send-email',
+	 *   payload: { userId: 'user-123', template: 'welcome' },
+	 *   idempotencyKey: `welcome-email-user-123-${Date.now()}`,
+	 * })
+	 * ```
+	 */
+	idempotencyKey?: string
 }
 
 export interface JobResult {
@@ -74,6 +99,24 @@ export interface CronInput {
 	retries?: number
 	/** Start in paused state */
 	paused?: boolean
+	/**
+	 * Idempotency key for safe cron creation (Stripe/Inngest pattern).
+	 *
+	 * When provided, prevents duplicate cron schedule creation if
+	 * the same key is used. Useful for deployment scripts that
+	 * may run multiple times.
+	 *
+	 * @example
+	 * ```typescript
+	 * await createCron(config, {
+	 *   callbackUrl: 'https://myapp.com/api/jobs/daily-report',
+	 *   cron: '0 9 * * *',
+	 *   name: 'daily-report',
+	 *   idempotencyKey: 'daily-report-cron-v1', // Same key = same cron
+	 * })
+	 * ```
+	 */
+	idempotencyKey?: string
 }
 
 export interface CronSchedule {

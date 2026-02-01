@@ -21,7 +21,7 @@ interface StorageConfig {
 // Upload Types
 // ==========================================
 
-interface UploadOptions {
+export interface UploadOptions {
 	/** Custom path/folder for the file */
 	path?: string
 	/** Progress callback */
@@ -42,6 +42,19 @@ interface UploadOptions {
 	 * better reliability for large files with resumable uploads.
 	 */
 	multipart?: boolean | 'auto'
+	/**
+	 * AbortSignal to cancel the upload.
+	 * Vercel Blob pattern - enables cancellation of in-progress uploads.
+	 *
+	 * @example
+	 * ```typescript
+	 * const controller = new AbortController()
+	 * // Cancel after 30 seconds
+	 * setTimeout(() => controller.abort(), 30000)
+	 * await upload(file, { signal: controller.signal })
+	 * ```
+	 */
+	signal?: AbortSignal
 }
 
 export interface UploadProgressEvent {

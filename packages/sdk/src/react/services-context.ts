@@ -428,6 +428,18 @@ export interface UploadOptions {
 	 * reliability for large files.
 	 */
 	multipart?: boolean | 'auto'
+	/**
+	 * AbortSignal to cancel the upload.
+	 * Vercel Blob pattern - enables cancellation of in-progress uploads.
+	 *
+	 * @example
+	 * ```typescript
+	 * const controller = new AbortController()
+	 * setTimeout(() => controller.abort(), 30000) // Cancel after 30s
+	 * await upload(file, { signal: controller.signal })
+	 * ```
+	 */
+	signal?: AbortSignal
 }
 
 export interface StorageContextValue {
