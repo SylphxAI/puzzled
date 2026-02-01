@@ -209,6 +209,33 @@ export interface ErrorEvent {
 // ==========================================
 
 /**
+ * Source map configuration for server-side processing
+ * Follows Sentry's source map artifact pattern
+ */
+export interface SourceMapConfig {
+	/**
+	 * URL prefix for matching stack trace URLs to source maps
+	 * @example '~/' for relative paths, 'https://example.com/static/' for absolute
+	 */
+	urlPrefix?: string
+	/**
+	 * Include source map references in error events
+	 * Server will use these to resolve original source locations
+	 */
+	includeSourceMapReferences?: boolean
+	/**
+	 * Artifact bundle ID (set automatically when source maps are uploaded)
+	 * Links error events to the correct source map version
+	 */
+	artifactBundleId?: string
+	/**
+	 * Debug IDs mapping for specific files
+	 * Used for more precise source map matching
+	 */
+	debugIds?: Record<string, string>
+}
+
+/**
  * Error tracking configuration
  */
 export interface ErrorTrackingConfig {
@@ -218,6 +245,11 @@ export interface ErrorTrackingConfig {
 	environment?: string
 	/** App release version */
 	release?: string
+	/**
+	 * Distribution identifier (e.g., build number)
+	 * Used with release for precise source map matching
+	 */
+	dist?: string
 	/** DSN for uploading (if using external Sentry) */
 	dsn?: string
 	/** Sample rate (0-1) */
@@ -242,6 +274,11 @@ export interface ErrorTrackingConfig {
 	beforeSend?: (event: ErrorEvent) => ErrorEvent | null
 	/** Tags to add to all events */
 	tags?: Record<string, string>
+	/**
+	 * Source map configuration for server-side stack trace processing
+	 * Server uses source maps to show original file names, line numbers, and code context
+	 */
+	sourceMap?: SourceMapConfig
 }
 
 /**
@@ -258,6 +295,9 @@ export const DEFAULT_ERROR_CONFIG: ErrorTrackingConfig = {
 	autoCaptureNetwork: true,
 	autoCaptureConsole: true,
 	autoCaptureNavigation: true,
+	sourceMap: {
+		includeSourceMapReferences: true,
+	},
 }
 
 // ==========================================

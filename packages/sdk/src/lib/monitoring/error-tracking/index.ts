@@ -58,7 +58,6 @@ export {
 // Types
 export type {
 	// Core types
-	
 	BreadcrumbType,
 	Breadcrumb,
 	StackFrame,
@@ -67,12 +66,13 @@ export type {
 	ErrorEvent,
 	// Configuration
 	ErrorTrackingConfig,
+	SourceMapConfig,
 	// Options
 	CaptureExceptionOptions,
 	CaptureMessageOptions,
 	// Callbacks
-	
-	
+	UploadCallback,
+	UploadResult,
 	CaptureResult,
 } from './types'
 

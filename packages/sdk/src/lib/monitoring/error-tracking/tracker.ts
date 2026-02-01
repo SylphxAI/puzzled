@@ -222,14 +222,28 @@ export class ErrorTracker {
 			level: options.level ?? 'error',
 			environment: this.config.environment,
 			release: this.config.release,
+			dist: this.config.dist, // Distribution for source map matching
 			exception: {
 				values: [this.parseException(error)],
 			},
 			tags: {
 				...this.config.tags,
 				...options.tags,
+				// Include source map metadata for server-side processing
+				...(this.config.sourceMap?.artifactBundleId
+					? { artifact_bundle_id: this.config.sourceMap.artifactBundleId }
+					: {}),
 			},
-			extra: options.extra,
+			extra: {
+				...options.extra,
+				// Include source map config for server-side processing
+				...(this.config.sourceMap?.urlPrefix
+					? { _sourcemap_url_prefix: this.config.sourceMap.urlPrefix }
+					: {}),
+				...(this.config.sourceMap?.debugIds
+					? { _sourcemap_debug_ids: this.config.sourceMap.debugIds }
+					: {}),
+			},
 			fingerprint: options.fingerprint,
 			contexts: {
 				...this.getDeviceContext(),
@@ -358,6 +372,8 @@ export class ErrorTracker {
 
 	private parseException(error: Error): ExceptionValue {
 		const frames: StackFrame[] = []
+		const urlPrefix = this.config.sourceMap?.urlPrefix
+		const debugIds = this.config.sourceMap?.debugIds
 
 		if (error.stack) {
 			const lines = error.stack.split('\n').slice(1) // Skip first line (error message)
@@ -371,12 +387,27 @@ export class ErrorTracker {
 				const match = chromeMatch || firefoxMatch
 				if (match) {
 					const [, fn, filename, lineno, colno] = match
+					const isInApp = !filename?.includes('node_modules') && !filename?.includes('vendor')
+
+					// Build abs_path for source map resolution
+					// If urlPrefix is set, prepend it to relative paths for matching
+					let absPath = filename
+					if (urlPrefix && filename && !filename.startsWith('http')) {
+						absPath = urlPrefix.replace(/\/$/, '') + '/' + filename.replace(/^\.?\//, '')
+					}
+
+					// Look up debug ID for this file (Sentry debug ID pattern)
+					const debugId = debugIds?.[filename ?? '']
+
 					frames.push({
 						function: fn || '<anonymous>',
 						filename,
+						abs_path: absPath, // Full path for source map lookup
 						lineno: parseInt(lineno ?? '0', 10),
 						colno: parseInt(colno ?? '0', 10),
-						in_app: !filename?.includes('node_modules') && !filename?.includes('vendor'),
+						in_app: isInApp,
+						// Include debug ID if available (used for precise source map matching)
+						...(debugId ? { vars: { debug_id: debugId } } : {}),
 					})
 				}
 			}
