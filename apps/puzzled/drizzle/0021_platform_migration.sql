@@ -262,6 +262,8 @@ CREATE INDEX IF NOT EXISTS "dlq_status_idx" ON "dead_letter_queue" ("status");
 CREATE INDEX IF NOT EXISTS "dlq_created_at_idx" ON "dead_letter_queue" ("created_at");
 
 -- Webhook Events (Idempotency)
+-- Drop old webhook_events table (had different schema: stripe_event_id instead of event_id)
+DROP TABLE IF EXISTS "webhook_events" CASCADE;
 CREATE TABLE IF NOT EXISTS "webhook_events" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   "event_id" text NOT NULL UNIQUE,
