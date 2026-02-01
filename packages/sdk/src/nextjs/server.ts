@@ -81,22 +81,16 @@ export function configureServer(config: {
 }
 
 /**
- * Get server configuration (returns null if not configured)
+ * Get server configuration
+ *
+ * Pre-launch: Fail fast if not configured. Apps MUST explicitly configure the SDK.
+ * This prevents silent failures in production.
  */
 function getConfig(): { secretKey: string; platformUrl: string } | null {
 	if (!serverConfig) {
-		// Try to get from environment variables
-		const rawSecretKey = process.env.SYLPHX_SECRET_KEY
-		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
-
-		if (rawSecretKey) {
-			// Validate and sanitize secret key using SSOT
-			const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
-			serverConfig = { secretKey, platformUrl }
-		} else {
-			// Return null instead of throwing - allows graceful degradation
-			return null
-		}
+		// Fail fast: require explicit configuration via configureServer()
+		// No graceful degradation - silent failures are dangerous in production
+		return null
 	}
 	return serverConfig
 }
