@@ -18,6 +18,7 @@ import {
 	injectGlobalStyles,
 } from '../ui/styles'
 import { Modal } from '../ui/modal'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 export interface ForgotPasswordProps {
 	/** URL to redirect after password reset email is sent */
@@ -119,7 +120,7 @@ export function ForgotPassword({
 				if (afterSubmitUrl && typeof window !== 'undefined') {
 					setTimeout(() => {
 						safeRedirect(afterSubmitUrl, { fallback: '/sign-in' })
-					}, 2000)
+					}, UI_COPY_FEEDBACK_MS)
 				}
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to send reset email'

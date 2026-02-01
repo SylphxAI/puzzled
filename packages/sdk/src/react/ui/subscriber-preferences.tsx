@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { STALE_TIME_STABLE_MS } from '../../constants'
 import type { ThemeVariables } from './styles'
 import {
 	defaultTheme,
@@ -110,7 +111,7 @@ export function SubscriberPreferences({
 				.filter(([, enabled]) => enabled)
 				.map(([key]) => key)
 		},
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 
 	// Sync selectedPreferences with query data when it loads

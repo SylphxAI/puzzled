@@ -21,6 +21,7 @@ import type {
 	SessionReplayConfig,
 	UploadCallback,
 } from './types'
+import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS } from '../../../constants'
 
 // ==========================================
 // Types
@@ -83,7 +84,7 @@ export class SessionRecorder {
 		return {
 			enabled: true,
 			sampling: { rate: 100, alwaysRecordErrors: true },
-			maxDuration: 60 * 60 * 1000,
+			maxDuration: SESSION_REPLAY_MAX_DURATION_MS,
 			privacyMode: 'balanced',
 			maskSelectors: [],
 			blockSelectors: [],
@@ -97,7 +98,7 @@ export class SessionRecorder {
 			consoleCapture: true,
 			compress: true,
 			batchSize: 50,
-			uploadInterval: 5000,
+			uploadInterval: SESSION_REPLAY_UPLOAD_INTERVAL_MS,
 		}
 	}
 

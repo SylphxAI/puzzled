@@ -17,7 +17,13 @@
 import { useState, useEffect, useCallback, createContext, useContext, useMemo, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { EvaluationReason, FeatureFlagDetailResult } from '../types'
-import { FLAGS_CACHE_TTL_MS } from '../constants'
+import {
+	FLAGS_CACHE_TTL_MS,
+	FLAGS_CACHE_KEY,
+	FLAGS_CACHE_TIMESTAMP_KEY,
+	STALE_TIME_FREQUENT_MS,
+	STALE_TIME_STABLE_MS,
+} from '../constants'
 
 // ============================================
 // Types
@@ -84,8 +90,6 @@ export interface FeatureFlagProviderProps {
 	enableCache?: boolean
 }
 
-const CACHE_KEY = 'sylphx_feature_flags'
-const CACHE_TIMESTAMP_KEY = 'sylphx_feature_flags_ts'
 /** Cache TTL from constants (5 minutes - LaunchDarkly pattern) */
 const CACHE_TTL_MS = FLAGS_CACHE_TTL_MS
 
@@ -119,8 +123,8 @@ export function FeatureFlagProvider({
 	const [cachedInitialFlags] = useState<FeatureFlag[]>(() => {
 		if (!enableCache || typeof window === 'undefined') return initialFlags
 		try {
-			const cached = localStorage.getItem(CACHE_KEY)
-			const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+			const cached = localStorage.getItem(FLAGS_CACHE_KEY)
+			const timestamp = localStorage.getItem(FLAGS_CACHE_TIMESTAMP_KEY)
 
 			// Validate TTL before using cached data
 			if (cached && timestamp && !initialFlags.length) {
@@ -129,8 +133,8 @@ export function FeatureFlagProvider({
 					return JSON.parse(cached) as FeatureFlag[]
 				}
 				// Cache expired - clear it
-				localStorage.removeItem(CACHE_KEY)
-				localStorage.removeItem(CACHE_TIMESTAMP_KEY)
+				localStorage.removeItem(FLAGS_CACHE_KEY)
+				localStorage.removeItem(FLAGS_CACHE_TIMESTAMP_KEY)
 			}
 		} catch {
 			// Ignore cache errors
@@ -142,7 +146,7 @@ export function FeatureFlagProvider({
 	const [overrides, setOverrides] = useState<FlagOverrides>(() => {
 		if (typeof window === 'undefined') return {}
 		try {
-			const stored = localStorage.getItem(`${CACHE_KEY}_overrides`)
+			const stored = localStorage.getItem(`${FLAGS_CACHE_KEY}_overrides`)
 			return stored ? JSON.parse(stored) : {}
 		} catch {
 			return {}
@@ -168,14 +172,14 @@ export function FeatureFlagProvider({
 
 			// Cache flags to localStorage with timestamp for TTL validation
 			if (enableCache && typeof window !== 'undefined') {
-				localStorage.setItem(CACHE_KEY, JSON.stringify(flagList))
-				localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
+				localStorage.setItem(FLAGS_CACHE_KEY, JSON.stringify(flagList))
+				localStorage.setItem(FLAGS_CACHE_TIMESTAMP_KEY, Date.now().toString())
 			}
 
 			return flagList
 		},
 		initialData: cachedInitialFlags.length > 0 ? cachedInitialFlags : undefined,
-		staleTime: 60 * 1000, // 1 minute - flags change occasionally
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 minute - flags change occasionally
 		refetchInterval: refreshInterval > 0 ? refreshInterval : undefined,
 		enabled: cachedInitialFlags.length === 0 || refreshInterval > 0,
 	})
@@ -226,7 +230,7 @@ export function FeatureFlagProvider({
 		setOverrides(prev => {
 			const next = { ...prev, [key]: value }
 			if (typeof window !== 'undefined') {
-				localStorage.setItem(`${CACHE_KEY}_overrides`, JSON.stringify(next))
+				localStorage.setItem(`${FLAGS_CACHE_KEY}_overrides`, JSON.stringify(next))
 			}
 			return next
 		})
@@ -235,7 +239,7 @@ export function FeatureFlagProvider({
 	const clearOverrides = useCallback(() => {
 		setOverrides({})
 		if (typeof window !== 'undefined') {
-			localStorage.removeItem(`${CACHE_KEY}_overrides`)
+			localStorage.removeItem(`${FLAGS_CACHE_KEY}_overrides`)
 		}
 	}, [])
 
@@ -529,7 +533,7 @@ function useFeatureFlagWithDetail(
 
 			return response.json() as Promise<FeatureFlagDetailResult>
 		},
-		staleTime: 5 * 60 * 1000, // 5 min - flag details don't change frequently
+		staleTime: STALE_TIME_STABLE_MS, // 5 min - flag details don't change frequently
 	})
 
 	const detail = detailQuery.data ?? null

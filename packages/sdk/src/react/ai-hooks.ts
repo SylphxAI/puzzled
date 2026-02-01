@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { STALE_TIME_STABLE_MS } from '../constants'
 import { useAIContext } from './services-context'
 import type {
 	AIMessage,
@@ -801,7 +802,7 @@ export function useModels(options: UseModelsOptions = {}): UseModelsReturn {
 			return allPages.length * pageSize
 		},
 		enabled: options.fetchOnMount !== false,
-		staleTime: 5 * 60 * 1000, // 5 min - model list is stable
+		staleTime: STALE_TIME_STABLE_MS, // 5 min - model list is stable
 	})
 
 	// Flatten all pages into single models array

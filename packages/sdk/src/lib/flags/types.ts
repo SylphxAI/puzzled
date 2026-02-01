@@ -5,7 +5,7 @@
  * Supports percentage rollouts, user targeting, and A/B testing.
  */
 
-import { FLAGS_CACHE_TTL_MS, FLAGS_STALE_WHILE_REVALIDATE_MS } from '../../constants'
+import { FLAGS_CACHE_TTL_MS, FLAGS_STALE_WHILE_REVALIDATE_MS, FLAGS_STORAGE_KEY } from '../../constants'
 
 // ==========================================
 // Core Types
@@ -267,7 +267,7 @@ export const DEFAULT_FLAGS_CONFIG: Required<
 	cacheTtl: FLAGS_CACHE_TTL_MS,
 	staleWhileRevalidate: FLAGS_STALE_WHILE_REVALIDATE_MS,
 	offlineSupport: true,
-	storageKey: 'sylphx_flags',
+	storageKey: FLAGS_STORAGE_KEY,
 	debug: false,
 }
 

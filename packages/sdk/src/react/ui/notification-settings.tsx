@@ -16,6 +16,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useNotifications } from '../platform-hooks'
+import { UI_NOTIFICATION_MS } from '../../constants'
 
 export interface NotificationSettingsProps {
 	/** Theme variables */
@@ -87,7 +88,7 @@ export function NotificationSettings({
 			const timer = setTimeout(() => {
 				setSuccess(null)
 				setError(null)
-			}, 5000)
+			}, UI_NOTIFICATION_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [success, error])

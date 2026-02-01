@@ -16,6 +16,12 @@ import type {
 	FlagClientEvent,
 } from './types'
 import { LocalEvaluator } from './evaluator'
+import {
+	FLAGS_STREAM_INITIAL_RECONNECT_MS,
+	FLAGS_STREAM_MAX_RECONNECT_MS,
+	FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
+	FLAGS_HTTP_POLLING_INTERVAL_MS,
+} from '../../constants'
 
 // ==========================================
 // Types
@@ -41,10 +47,10 @@ interface StreamingOptions {
 }
 
 const DEFAULT_STREAMING_OPTIONS: Required<Omit<StreamingOptions, 'endpoint' | 'environmentKey'>> = {
-	initialReconnectDelay: 1000,
-	maxReconnectDelay: 30000,
+	initialReconnectDelay: FLAGS_STREAM_INITIAL_RECONNECT_MS,
+	maxReconnectDelay: FLAGS_STREAM_MAX_RECONNECT_MS,
 	maxReconnectAttempts: 0, // Infinite
-	heartbeatTimeout: 45000, // 45 seconds
+	heartbeatTimeout: FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
 	debug: false,
 }
 
@@ -422,7 +428,7 @@ export function pollFlags(
 		onError?: (error: Error) => void
 	} = {}
 ): () => void {
-	const { environmentKey, interval = 60000, onError } = options
+	const { environmentKey, interval = FLAGS_HTTP_POLLING_INTERVAL_MS, onError } = options
 
 	const poll = async () => {
 		try {

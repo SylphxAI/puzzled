@@ -22,6 +22,12 @@ import {
 	SDK_API_PATH,
 	DEFAULT_AUTH_PREFIX,
 	SESSION_TOKEN_LIFETIME_MS,
+	STALE_TIME_FREQUENT_MS,
+	STALE_TIME_MODERATE_MS,
+	STALE_TIME_STABLE_MS,
+	ANALYTICS_FLUSH_TIMEOUT_MS,
+	ANALYTICS_INTERVAL_CHECK_MS,
+	NEW_USER_THRESHOLD_MS,
 } from '../constants'
 import { TokenManager } from './token-manager'
 import { createRestApi, type RestApiClient } from './rest-client'
@@ -207,7 +213,7 @@ export function SylphxProvider({
 				defaultOptions: {
 					queries: {
 						// SDK default: 5 min stale time, no refetch on window focus
-						staleTime: 5 * 60 * 1000,
+						staleTime: STALE_TIME_STABLE_MS,
 						refetchOnWindowFocus: false,
 						retry: 1,
 					},
@@ -383,7 +389,7 @@ function SylphxProviderInner({
 		queryKey: ['sylphx', appId, 'subscription', authState.user?.id],
 		queryFn: () => api.get<Subscription | null>('/billing/subscription', { userId: authState.user!.id }),
 		enabled: authState.isSignedIn && !!authState.user?.id,
-		staleTime: 2 * 60 * 1000, // 2 min - subscription can change after payment
+		staleTime: STALE_TIME_MODERATE_MS, // 2 min - subscription can change after payment
 	})
 	const subscription = subscriptionQuery.data ?? null
 	const subscriptionLoading = subscriptionQuery.isLoading
@@ -400,7 +406,7 @@ function SylphxProviderInner({
 			return { stats, code: codeData.code }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 	const referralStats = referralsQuery.data?.stats ?? null
 	const referralCode = referralsQuery.data?.code ?? null
@@ -412,7 +418,7 @@ function SylphxProviderInner({
 		queryKey: ['sylphx', appId, 'pushPreferences'],
 		queryFn: () => api.get<PushPreferences>('/notifications/preferences'),
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 	const pushPreferences = pushPreferencesQuery.data ?? null
 	const pushError = pushPreferencesQuery.error as Error | null
@@ -430,7 +436,7 @@ function SylphxProviderInner({
 			return { config, preferences }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 	const mobilePushConfig = mobilePushQuery.data?.config ?? null
 	const mobilePushPreferences = mobilePushQuery.data?.preferences ?? null
@@ -450,7 +456,7 @@ function SylphxProviderInner({
 			return { messages, unreadCount: unreadCountResult.count, preferences }
 		},
 		enabled: authState.isSignedIn,
-		staleTime: 1 * 60 * 1000, // 1 min - inbox changes frequently
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - inbox changes frequently
 	})
 	const inboxMessages = inboxQuery.data?.messages ?? []
 	const inboxUnreadCount = inboxQuery.data?.unreadCount ?? 0
@@ -1140,7 +1146,7 @@ function SylphxProviderInner({
 				if (flushTimeoutRef.current) {
 					clearTimeout(flushTimeoutRef.current)
 				}
-				flushTimeoutRef.current = setTimeout(flushAnalytics, 1000)
+				flushTimeoutRef.current = setTimeout(flushAnalytics, ANALYTICS_FLUSH_TIMEOUT_MS)
 			}
 		},
 		[authState.user?.id, anonymousId, flushAnalytics]
@@ -1282,7 +1288,7 @@ function SylphxProviderInner({
 			const userCreatedAt = currentState.user.createdAt
 				? new Date(currentState.user.createdAt).getTime()
 				: 0
-			const isNewUser = Date.now() - userCreatedAt < 60 * 1000
+			const isNewUser = Date.now() - userCreatedAt < NEW_USER_THRESHOLD_MS
 
 			const eventId = `auth_${currentState.user.id}_${isNewUser ? 'signup' : 'login'}_${Date.now()}`
 

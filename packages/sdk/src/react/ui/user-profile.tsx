@@ -23,6 +23,7 @@ import { BillingSection } from './billing-section'
 import { AccountSection } from './account-section'
 import { NotificationSettings } from './notification-settings'
 import { ReferralCard } from './referral-card'
+import { UI_NOTIFICATION_MS } from '../../constants'
 
 export type ProfileSection = 'profile' | 'security' | 'billing' | 'notifications' | 'account' | 'referrals' | 'connected-accounts'
 
@@ -108,7 +109,7 @@ function UserProfileInner({
 			const timer = setTimeout(() => {
 				setSuccess(null)
 				setError(null)
-			}, 5000)
+			}, UI_NOTIFICATION_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [success, error])

@@ -14,6 +14,7 @@ import type {
 	FeatureFlagsConfig,
 } from './types'
 import { LocalEvaluator } from './evaluator'
+import { FLAGS_EXPOSURE_DEDUPE_WINDOW_MS } from '../../constants'
 
 // ==========================================
 // Types
@@ -60,7 +61,7 @@ export class ExperimentManager {
 	constructor(evaluator: LocalEvaluator, config: ExperimentConfig = {}) {
 		this.evaluator = evaluator
 		this.config = {
-			exposureDedupeWindow: 60 * 60 * 1000, // 1 hour
+			exposureDedupeWindow: FLAGS_EXPOSURE_DEDUPE_WINDOW_MS,
 			...config,
 		}
 	}
@@ -195,7 +196,7 @@ export class ExperimentManager {
 		const lastExposure = this.exposureCache.get(cacheKey)
 		const now = Date.now()
 
-		if (lastExposure && now - lastExposure < (this.config.exposureDedupeWindow ?? 3600000)) {
+		if (lastExposure && now - lastExposure < (this.config.exposureDedupeWindow ?? FLAGS_EXPOSURE_DEDUPE_WINDOW_MS)) {
 			this.debug('Exposure deduplicated', { experimentKey: experiment.key, variant })
 			return
 		}

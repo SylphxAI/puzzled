@@ -25,6 +25,7 @@ import type {
 	WebhookStats,
 	WebhookStatsPeriod,
 } from '../types'
+import { STALE_TIME_STABLE_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STATS_MS } from '../constants'
 
 // ============================================
 // useWebhooks
@@ -102,7 +103,7 @@ export function useWebhooks(): UseWebhooksReturn {
 	const configQuery = useQuery({
 		queryKey: ['sylphx', 'webhooks', 'config'],
 		queryFn: () => ctx.getConfig(),
-		staleTime: 5 * 60 * 1000, // 5 min - config rarely changes
+		staleTime: STALE_TIME_STABLE_MS, // 5 min - config rarely changes
 	})
 
 	const config = configQuery.data
@@ -248,7 +249,7 @@ export function useWebhookDeliveries(
 			return loadedCount // Next offset
 		},
 		enabled: !skip,
-		staleTime: 30 * 1000, // 30 sec - deliveries change moderately
+		staleTime: STALE_TIME_STATS_MS, // 30 sec - deliveries change moderately
 		refetchInterval: refetchInterval ?? false,
 	})
 
@@ -339,7 +340,7 @@ export function useWebhookStats(period: WebhookStatsPeriod = 'week'): UseWebhook
 	const statsQuery = useQuery({
 		queryKey: ['sylphx', 'webhooks', 'stats', period],
 		queryFn: () => ctx.getStats(period),
-		staleTime: 2 * 60 * 1000, // 2 min - stats aggregate data
+		staleTime: STALE_TIME_MODERATE_MS, // 2 min - stats aggregate data
 	})
 
 	// Refresh via React Query invalidation

@@ -17,6 +17,7 @@ import {
 } from './styles'
 import { RequireSdk } from '../hooks'
 import { useReferral } from '../platform-hooks'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 export interface ReferralCardProps {
 	/** Theme variables */
@@ -86,7 +87,7 @@ function ReferralCardInner({
 	// Clear copied state
 	useEffect(() => {
 		if (copied) {
-			const timer = setTimeout(() => setCopied(null), 2000)
+			const timer = setTimeout(() => setCopied(null), UI_COPY_FEEDBACK_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [copied])

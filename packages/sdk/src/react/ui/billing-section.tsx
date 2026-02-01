@@ -18,6 +18,7 @@ import {
 import { RequireSdk } from '../hooks'
 import { useBilling } from '../platform-hooks'
 import type { Subscription, Plan } from '../platform-context'
+import { UI_NOTIFICATION_MS } from '../../constants'
 
 export interface BillingSectionProps {
 	/** Theme variables */
@@ -97,7 +98,7 @@ function BillingSectionInner({
 			const timer = setTimeout(() => {
 				setSuccess(null)
 				setError(null)
-			}, 5000)
+			}, UI_NOTIFICATION_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [success, error])

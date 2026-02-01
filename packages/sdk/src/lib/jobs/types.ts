@@ -5,6 +5,14 @@
  * Supports durable execution, retries, and workflow composition.
  */
 
+import {
+	BASE_RETRY_DELAY_MS,
+	JOB_DEFAULT_TIMEOUT_MS,
+	MAX_RETRY_DELAY_MS,
+	JOBS_DLQ_MAX_AGE_MS,
+	DEFAULT_RETRY_DELAYS_MS,
+} from '../../constants'
+
 // ==========================================
 // Core Types
 // ==========================================
@@ -413,15 +421,15 @@ export const DEFAULT_JOBS_CONFIG: Required<
 	defaultOptions: {
 		priority: 'normal',
 		maxRetries: 3,
-		retryDelay: { type: 'exponential', base: 1000, maxDelay: 60000 },
-		timeout: 30000,
+		retryDelay: { type: 'exponential', base: BASE_RETRY_DELAY_MS, maxDelay: MAX_RETRY_DELAY_MS },
+		timeout: JOB_DEFAULT_TIMEOUT_MS,
 		dlq: {
 			enabled: true,
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+			maxAge: JOBS_DLQ_MAX_AGE_MS, // 7 days
 		},
 	},
 	debug: false,
 }
 
 /** Default retry delays (ms) */
-export const DEFAULT_RETRY_DELAYS = [1000, 5000, 15000, 30000, 60000]
+export const DEFAULT_RETRY_DELAYS = DEFAULT_RETRY_DELAYS_MS

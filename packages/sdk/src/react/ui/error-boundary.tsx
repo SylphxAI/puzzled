@@ -18,6 +18,7 @@ import {
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useErrorTracking, useErrorBoundary as useErrorBoundaryHook } from '../monitoring-hooks'
+import { UI_FORM_SUCCESS_MS } from '../../constants'
 
 // ============================================
 // SylphxErrorBoundary (Class Component)
@@ -426,7 +427,7 @@ export function FeedbackWidget({
 			setTimeout(() => {
 				setIsOpen(false)
 				setIsSuccess(false)
-			}, 3000)
+			}, UI_FORM_SUCCESS_MS)
 		} catch (err) {
 			setError('Failed to submit feedback. Please try again.')
 		} finally {

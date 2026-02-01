@@ -5,7 +5,12 @@
  * PostHog-compatible event format with smart autocapture.
  */
 
-import { SDK_API_PATH } from '../../constants'
+import {
+	SDK_API_PATH,
+	ANALYTICS_SESSION_TIMEOUT_MS,
+	ANALYTICS_FLUSH_INTERVAL_MS,
+	ANALYTICS_SESSION_KEY,
+} from '../../constants'
 
 // ==========================================
 // Core Types
@@ -216,11 +221,11 @@ export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
 	captureUtm: true,
 	captureReferrer: true,
 	captureDevice: true,
-	sessionCookieName: 'sylphx_session',
-	sessionTimeout: 30 * 60 * 1000, // 30 minutes
+	sessionCookieName: ANALYTICS_SESSION_KEY,
+	sessionTimeout: ANALYTICS_SESSION_TIMEOUT_MS, // 30 minutes
 	debug: false,
 	batchSize: 10,
-	flushInterval: 5000,
+	flushInterval: ANALYTICS_FLUSH_INTERVAL_MS,
 	persistence: 'localStorage',
 }
 

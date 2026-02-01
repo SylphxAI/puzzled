@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, type CSSProperties } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useNotifications } from '../platform-hooks'
+import { UI_PROMPT_DELAY_MS } from '../../constants'
 
 // ============================================
 // PushPrompt
@@ -75,7 +76,7 @@ export function PushPrompt({
 	position = 'bottom',
 	variant = 'banner',
 	autoShow = true,
-	showDelay = 3000,
+	showDelay = UI_PROMPT_DELAY_MS,
 }: PushPromptProps) {
 	const [isVisible, setIsVisible] = useState(false)
 	const [isAnimatingOut, setIsAnimatingOut] = useState(false)

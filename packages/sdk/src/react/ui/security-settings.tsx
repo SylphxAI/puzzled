@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { STALE_TIME_FREQUENT_MS, STALE_TIME_STABLE_MS, UI_NOTIFICATION_MS } from '../../constants'
 import type { ThemeVariables } from './styles'
 import {
 	defaultTheme,
@@ -122,7 +123,7 @@ export function SecuritySettings({
 			}
 		},
 		enabled: show2FA,
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 
 	// React Query for sessions
@@ -142,7 +143,7 @@ export function SecuritySettings({
 			}))
 		},
 		enabled: showSessions,
-		staleTime: 60 * 1000, // 1 min - sessions can change
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - sessions can change
 	})
 
 	// React Query for login history
@@ -161,7 +162,7 @@ export function SecuritySettings({
 			}))
 		},
 		enabled: showLoginHistory,
-		staleTime: 60 * 1000, // 1 min
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min
 	})
 
 	// Derived state from queries
@@ -186,7 +187,7 @@ export function SecuritySettings({
 			const timer = setTimeout(() => {
 				setSuccess(null)
 				setError(null)
-			}, 5000)
+			}, UI_NOTIFICATION_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [success, error])

@@ -40,6 +40,7 @@ import {
 	// Session replay
 	getRecorder,
 } from '../../lib/monitoring'
+import { SESSION_REPLAY_STATUS_CHECK_MS } from '../../constants'
 
 // ==========================================
 // Types
@@ -173,7 +174,7 @@ export function useEnhancedErrorTracking(
 			}
 		}
 
-		const interval = setInterval(checkReplaySession, 5000)
+		const interval = setInterval(checkReplaySession, SESSION_REPLAY_STATUS_CHECK_MS)
 		return () => clearInterval(interval)
 	}, [attachReplay])
 

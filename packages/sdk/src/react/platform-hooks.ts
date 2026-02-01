@@ -8,6 +8,7 @@
 
 import { useContext, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { STALE_TIME_FREQUENT_MS } from '../constants'
 import {
 	PlatformContext,
 	type Subscription,
@@ -747,7 +748,7 @@ export function useAnalyticsQuery(options: UseAnalyticsQueryOptions): UseAnalyti
 		queryKey,
 		queryFn: () => ctx.queryAnalytics(options.query),
 		enabled: !options.skip,
-		staleTime: 60 * 1000, // 1 min - analytics data is often time-sensitive
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - analytics data is often time-sensitive
 		refetchInterval: options.refetchInterval ?? false,
 	})
 

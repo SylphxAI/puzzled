@@ -6,6 +6,7 @@
  */
 
 import type { eventWithTime, recordOptions } from 'rrweb'
+import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS } from '../../../constants'
 
 // ==========================================
 // Configuration Types
@@ -85,7 +86,7 @@ export const DEFAULT_CONFIG: SessionReplayConfig = {
 		rate: 100,
 		alwaysRecordErrors: true,
 	},
-	maxDuration: 60 * 60 * 1000, // 60 minutes
+	maxDuration: SESSION_REPLAY_MAX_DURATION_MS, // 60 minutes
 	privacyMode: 'balanced',
 	maskSelectors: [],
 	blockSelectors: [],
@@ -99,7 +100,7 @@ export const DEFAULT_CONFIG: SessionReplayConfig = {
 	consoleCapture: true,
 	compress: true,
 	batchSize: 50,
-	uploadInterval: 5000,
+	uploadInterval: SESSION_REPLAY_UPLOAD_INTERVAL_MS,
 }
 
 // ==========================================

@@ -17,6 +17,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
+import { EMAIL_RESEND_COOLDOWN_TICK_MS, UI_COPY_FEEDBACK_MS } from '../../constants'
 
 export interface VerifyEmailProps {
 	/** Verification token (if using link-based verification) */
@@ -102,7 +103,7 @@ export function VerifyEmail({
 	// Resend cooldown timer
 	useEffect(() => {
 		if (resendCooldown > 0) {
-			const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000)
+			const timer = setTimeout(() => setResendCooldown((c) => c - 1), EMAIL_RESEND_COOLDOWN_TICK_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [resendCooldown])
@@ -125,7 +126,7 @@ export function VerifyEmail({
 			if (typeof window !== 'undefined') {
 				setTimeout(() => {
 					safeRedirect(afterVerifyUrl, { fallback: '/dashboard' })
-				}, 2000)
+				}, UI_COPY_FEEDBACK_MS)
 			}
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Verification failed'
@@ -157,7 +158,7 @@ export function VerifyEmail({
 				if (typeof window !== 'undefined') {
 					setTimeout(() => {
 						safeRedirect(afterVerifyUrl, { fallback: '/dashboard' })
-					}, 2000)
+					}, UI_COPY_FEEDBACK_MS)
 				}
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Invalid verification code'

@@ -9,6 +9,7 @@
  */
 
 import type { DeadClick, RageClick } from './types'
+import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS } from '../../../constants'
 
 // ==========================================
 // Types
@@ -47,7 +48,7 @@ export class RageClickDetector {
 
 	constructor(options: { threshold?: number; windowMs?: number; proximityPx?: number } = {}) {
 		this.threshold = options.threshold ?? 3
-		this.windowMs = options.windowMs ?? 1000
+		this.windowMs = options.windowMs ?? SESSION_REPLAY_RAGE_CLICK_WINDOW_MS
 		this.proximityPx = options.proximityPx ?? 30
 	}
 
@@ -466,7 +467,7 @@ export class ScrollThrashingDetector {
 
 	constructor(options: { threshold?: number; windowMs?: number } = {}) {
 		this.threshold = options.threshold ?? 4
-		this.windowMs = options.windowMs ?? 2000
+		this.windowMs = options.windowMs ?? SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS
 	}
 
 	onThrashing(callback: (event: { timestamp: number; reversals: number }) => void): void {

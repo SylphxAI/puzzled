@@ -24,7 +24,7 @@ import type {
 	PropertyValue,
 } from './types'
 import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
-import { SDK_API_PATH } from '../../constants'
+import { SDK_API_PATH, ANALYTICS_FLUSH_INTERVAL_MS, ANALYTICS_SESSION_TIMEOUT_MS } from '../../constants'
 import { Autocapture, type AutocaptureEvent } from './autocapture'
 import { NavigationTracker, type PageViewEvent, type PageLeaveEvent, analyzeReferrer } from './navigation'
 
@@ -444,7 +444,7 @@ export class AnalyticsTracker {
 	private startFlushInterval(): void {
 		if (this.flushTimeout) return
 
-		const interval = this.config.flushInterval ?? 5000
+		const interval = this.config.flushInterval ?? ANALYTICS_FLUSH_INTERVAL_MS
 
 		const scheduleFlush = () => {
 			this.flushTimeout = setTimeout(() => {
@@ -609,7 +609,7 @@ export class AnalyticsTracker {
 
 			if (stored && timestamp) {
 				const lastActivity = parseInt(timestamp, 10)
-				const timeout = this.config.sessionTimeout ?? 30 * 60 * 1000
+				const timeout = this.config.sessionTimeout ?? ANALYTICS_SESSION_TIMEOUT_MS
 
 				if (Date.now() - lastActivity < timeout) {
 					// Update timestamp

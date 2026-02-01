@@ -66,6 +66,7 @@ import type {
 	UserProperties,
 	GroupProperties,
 } from '../../lib/analytics/types'
+import { ANALYTICS_INTERVAL_CHECK_MS } from '../../constants'
 
 // ==========================================
 // Context Types
@@ -487,7 +488,7 @@ export function useTimeTracking(
 			}
 		}
 
-		const intervalId = setInterval(checkIntervals, 1000)
+		const intervalId = setInterval(checkIntervals, ANALYTICS_INTERVAL_CHECK_MS)
 		return () => clearInterval(intervalId)
 	}, [track, name, getTimeSpent, options?.trackIntervals])
 

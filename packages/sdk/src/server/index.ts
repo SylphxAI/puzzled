@@ -19,6 +19,7 @@
  */
 
 import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
+import { WEBHOOK_MAX_AGE_MS, WEBHOOK_CLOCK_SKEW_MS } from '../constants'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
 
@@ -310,7 +311,7 @@ export async function verifyWebhook(options: {
 	verifyOptions?: WebhookVerifyOptions
 }): Promise<WebhookVerifyResult> {
 	const { payload, secret, verifyOptions = {} } = options
-	const { maxAge = 5 * 60 * 1000, clockSkew = 30 * 1000 } = verifyOptions
+	const { maxAge = WEBHOOK_MAX_AGE_MS, clockSkew = WEBHOOK_CLOCK_SKEW_MS } = verifyOptions
 
 	// Parse the combined header format: "t={seconds},v1={hex}"
 	let signatureHex = options.signature ?? null

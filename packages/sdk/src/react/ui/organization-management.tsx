@@ -9,6 +9,7 @@
 import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
+import { UI_FORM_SUCCESS_MS } from '../../constants'
 import { useOrganization, RequireSdk, type Organization, type OrganizationMember, type OrgRole } from '../hooks'
 
 // ============================================
@@ -90,7 +91,7 @@ function OrganizationProfileInner({
 
 	useEffect(() => {
 		if (saveSuccess) {
-			const timer = setTimeout(() => setSaveSuccess(false), 3000)
+			const timer = setTimeout(() => setSaveSuccess(false), UI_FORM_SUCCESS_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [saveSuccess])

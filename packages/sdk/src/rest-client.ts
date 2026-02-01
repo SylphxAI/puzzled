@@ -25,7 +25,7 @@ import createClient, { type Middleware } from 'openapi-fetch'
 import type { paths } from './generated/api'
 import { exponentialBackoff, isRetryableError } from './errors'
 import { validateAndSanitizeSecretKey } from './key-validation'
-import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './constants'
+import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH, BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS } from './constants'
 
 // Re-export types for consumers
 export type { paths }
@@ -130,8 +130,8 @@ function createRetryMiddleware(retryConfig: RetryConfig | false | undefined): Mi
 
 	const {
 		maxRetries = 3,
-		baseDelay = 1000,
-		maxDelay = 30000,
+		baseDelay = BASE_RETRY_DELAY_MS,
+		maxDelay = MAX_RETRY_DELAY_MS,
 		shouldRetry = isRetryableStatus,
 		timeout = DEFAULT_TIMEOUT_MS,
 	} = retryConfig ?? {}

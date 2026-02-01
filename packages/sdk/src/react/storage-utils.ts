@@ -15,6 +15,7 @@
 
 import type { ClickIds } from './platform-context'
 import type { User } from '../types'
+import { CLICK_ID_EXPIRY_MS, STORAGE_KEY_PREFIX } from '../constants'
 
 // Re-export for convenience
 export type { ClickIds }
@@ -71,7 +72,7 @@ export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
  * Format: sylphx_{appId}_{key}
  */
 function createStorageKey(appId: string, key: StorageKey): string {
-	return `sylphx_${appId}_${key}`
+	return `${STORAGE_KEY_PREFIX}${appId}_${key}`
 }
 
 /**
@@ -146,7 +147,7 @@ export class SylphxStorage {
 	clear(): void {
 		if (typeof window === 'undefined') return
 		try {
-			const prefix = `sylphx_${this.appId}_`
+			const prefix = `${STORAGE_KEY_PREFIX}${this.appId}_`
 			const keysToRemove: string[] = []
 
 			for (let i = 0; i < localStorage.length; i++) {
@@ -200,8 +201,7 @@ export function getOrCreateAnonymousId(storage: SylphxStorage): string {
 // Click ID Utilities for Conversion Attribution
 // =============================================================================
 
-/** Click ID expiry (90 days - standard attribution window) */
-const CLICK_ID_EXPIRY_MS = 90 * 24 * 60 * 60 * 1000
+/** Click ID expiry from constants (90 days - standard attribution window) */
 
 /**
  * Capture click IDs from URL parameters

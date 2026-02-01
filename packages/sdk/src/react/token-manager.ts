@@ -185,8 +185,8 @@ export class TokenManager {
 
 		if (!this.tokenExpiry) return
 
-		// Refresh 60 seconds before expiry
-		const refreshIn = this.tokenExpiry - Date.now() - 60000
+		// Refresh before expiry (buffer accounts for network latency)
+		const refreshIn = this.tokenExpiry - Date.now() - TOKEN_EXPIRY_BUFFER_MS
 
 		if (refreshIn > 0) {
 			this.refreshTimer = setTimeout(() => {

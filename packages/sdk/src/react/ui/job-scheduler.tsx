@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, type CSSProperties, type FormEvent } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { STALE_TIME_STATS_MS, UI_FORM_SUCCESS_MS } from '../../constants'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useJobs, type Job, type JobStatus, type JobStatusFilter } from '../job-hooks'
@@ -100,7 +101,7 @@ export function JobScheduler({
 
 	useEffect(() => {
 		if (scheduleSuccess) {
-			const timer = setTimeout(() => setScheduleSuccess(false), 3000)
+			const timer = setTimeout(() => setScheduleSuccess(false), UI_FORM_SUCCESS_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [scheduleSuccess])
@@ -377,7 +378,7 @@ export function JobList({
 			return result.jobs
 		},
 		enabled: !propJobs, // Only fetch if jobs not provided as prop
-		staleTime: 30 * 1000, // 30 seconds
+		staleTime: STALE_TIME_STATS_MS, // 30 seconds
 		refetchInterval: !propJobs && refreshInterval > 0 ? refreshInterval : undefined,
 	})
 

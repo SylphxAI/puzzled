@@ -16,6 +16,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useConsent, type ConsentCategory, type ConsentType } from '../consent-hooks'
+import { UI_FORM_SUCCESS_MS } from '../../constants'
 import { Modal } from './modal'
 
 export interface ConsentPreferencesProps {
@@ -127,7 +128,7 @@ export function ConsentPreferences({
 	// Clear success message
 	useEffect(() => {
 		if (saveSuccess) {
-			const timer = setTimeout(() => setSaveSuccess(false), 3000)
+			const timer = setTimeout(() => setSaveSuccess(false), UI_FORM_SUCCESS_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [saveSuccess])

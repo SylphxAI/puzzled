@@ -17,6 +17,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useNewsletter } from '../newsletter-hooks'
+import { UI_REDIRECT_DELAY_MS } from '../../constants'
 
 export interface UnsubscribeConfirmProps {
 	/** Theme variables */
@@ -88,7 +89,7 @@ export function UnsubscribeConfirm({
 	showReasonSelector = false,
 	reasons = DEFAULT_REASONS,
 	redirectUrl,
-	redirectDelay = 3000,
+	redirectDelay = UI_REDIRECT_DELAY_MS,
 }: UnsubscribeConfirmProps) {
 	const { unsubscribe, subscribe } = useNewsletter()
 	const styles = baseStyles(theme)

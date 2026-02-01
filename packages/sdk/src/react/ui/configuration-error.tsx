@@ -12,6 +12,7 @@
 
 import { useState, type CSSProperties } from 'react'
 import { type ThemeVariables, defaultTheme } from './styles'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 export type ConfigurationComponentType =
 	| 'sign-in'
@@ -66,7 +67,7 @@ function DeveloperSetupCard({ theme }: { theme: ThemeVariables }) {
 		try {
 			await navigator.clipboard.writeText(ENV_VARS_CODE)
 			setCopied(true)
-			setTimeout(() => setCopied(false), 2000)
+			setTimeout(() => setCopied(false), UI_COPY_FEEDBACK_MS)
 		} catch {
 			// Fallback for older browsers
 			const textarea = document.createElement('textarea')
@@ -76,7 +77,7 @@ function DeveloperSetupCard({ theme }: { theme: ThemeVariables }) {
 			document.execCommand('copy')
 			document.body.removeChild(textarea)
 			setCopied(true)
-			setTimeout(() => setCopied(false), 2000)
+			setTimeout(() => setCopied(false), UI_COPY_FEEDBACK_MS)
 		}
 	}
 

@@ -19,6 +19,7 @@ import type {
 	FeatureFlagsConfig,
 	DEFAULT_FLAGS_CONFIG,
 } from './types'
+import { FLAGS_CACHE_TTL_MS, FLAGS_STALE_WHILE_REVALIDATE_MS } from '../../constants'
 
 // ==========================================
 // Cache Types
@@ -229,7 +230,7 @@ export class LocalEvaluator {
 		const cacheKey = this.getCacheKey(flagKey, context)
 		const cached = this.evaluationCache.get(cacheKey)
 
-		if (cached && Date.now() - cached.timestamp < (this.config.cacheTtl ?? 300000)) {
+		if (cached && Date.now() - cached.timestamp < (this.config.cacheTtl ?? FLAGS_CACHE_TTL_MS)) {
 			this.debug('Cache hit', { flagKey })
 			return cached.result as EvaluationResult<T>
 		}
@@ -444,7 +445,7 @@ export class LocalEvaluator {
 		version: number
 		isStale: boolean
 	} {
-		const staleThreshold = (this.config.cacheTtl ?? 300000) + (this.config.staleWhileRevalidate ?? 60000)
+		const staleThreshold = (this.config.cacheTtl ?? FLAGS_CACHE_TTL_MS) + (this.config.staleWhileRevalidate ?? FLAGS_STALE_WHILE_REVALIDATE_MS)
 		const isStale = Date.now() - this.state.fetchedAt > staleThreshold
 
 		return {

@@ -22,6 +22,8 @@
  * ```
  */
 
+import { BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS, DEFAULT_TIMEOUT_MS } from './constants'
+
 // ============================================================================
 // Error Codes (aligned with tRPC and HTTP semantics)
 // ============================================================================
@@ -377,7 +379,7 @@ export function toSylphxError(error: unknown): SylphxError {
 
 		// Timeout
 		if (message.includes('timeout')) {
-			return new TimeoutError(30000, { cause: error })
+			return new TimeoutError(DEFAULT_TIMEOUT_MS, { cause: error })
 		}
 
 		// HTTP status codes in message
@@ -408,7 +410,7 @@ export function toSylphxError(error: unknown): SylphxError {
  * @param maxDelay - Maximum delay in milliseconds (default: 30000)
  * @returns Delay in milliseconds with jitter
  */
-export function exponentialBackoff(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
+export function exponentialBackoff(attempt: number, baseDelay = BASE_RETRY_DELAY_MS, maxDelay = MAX_RETRY_DELAY_MS): number {
 	// Calculate exponential delay: baseDelay * 2^attempt
 	const exponentialDelay = baseDelay * Math.pow(2, attempt)
 

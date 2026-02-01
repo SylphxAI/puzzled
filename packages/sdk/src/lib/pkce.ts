@@ -20,7 +20,7 @@
  * @see https://datatracker.ietf.org/doc/html/rfc7636
  */
 
-import { PKCE_CODE_TTL_MS } from '../constants'
+import { PKCE_CODE_TTL_MS, PKCE_STORAGE_PREFIX, STORAGE_TEST_KEY } from '../constants'
 
 // ==========================================
 // Constants
@@ -34,15 +34,6 @@ const VERIFIER_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 
 /** PKCE entry TTL from constants (10 minutes, matches OAuth state) */
 const PKCE_TTL_MS = PKCE_CODE_TTL_MS
-
-// ==========================================
-// Storage (sessionStorage with fallback)
-// ==========================================
-
-/**
- * Storage key prefix for PKCE verifiers
- */
-const PKCE_STORAGE_PREFIX = 'sylphx_pkce_'
 
 interface PKCEEntry {
 	verifier: string
@@ -68,9 +59,8 @@ const pkceMemoryFallback = new Map<string, PKCEEntry>()
 function isSessionStorageAvailable(): boolean {
 	if (typeof window === 'undefined') return false
 	try {
-		const testKey = '__sylphx_test__'
-		sessionStorage.setItem(testKey, 'test')
-		sessionStorage.removeItem(testKey)
+		sessionStorage.setItem(STORAGE_TEST_KEY, 'test')
+		sessionStorage.removeItem(STORAGE_TEST_KEY)
 		return true
 	} catch {
 		return false

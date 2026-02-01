@@ -16,6 +16,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useUser, useAuth, RequireSdk } from '../hooks'
+import { UI_NOTIFICATION_MS } from '../../constants'
 import { useUserContext, useSecurityContext } from '../services-context'
 
 export interface AccountSectionProps {
@@ -108,7 +109,7 @@ function AccountSectionInner({
 			const timer = setTimeout(() => {
 				setSuccess(null)
 				setError(null)
-			}, 5000)
+			}, UI_NOTIFICATION_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [success, error])

@@ -9,6 +9,7 @@
 import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 // ============================================
 // Types
@@ -108,7 +109,7 @@ export function APIKeyManager({
 
 	useEffect(() => {
 		if (copied) {
-			const timer = setTimeout(() => setCopied(false), 2000)
+			const timer = setTimeout(() => setCopied(false), UI_COPY_FEEDBACK_MS)
 			return () => clearTimeout(timer)
 		}
 	}, [copied])

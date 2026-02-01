@@ -17,6 +17,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 export interface ResetPasswordProps {
 	/** Password reset token (usually from URL) */
@@ -153,7 +154,7 @@ export function ResetPassword({
 				if (typeof window !== 'undefined') {
 					setTimeout(() => {
 						safeRedirect(afterResetUrl, { fallback: '/sign-in' })
-					}, 2000)
+					}, UI_COPY_FEEDBACK_MS)
 				}
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to reset password'

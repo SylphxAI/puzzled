@@ -24,6 +24,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { STALE_TIME_STABLE_MS } from '../constants'
 import { useContext } from 'react'
 import {
 	useConsentContext,
@@ -132,7 +133,7 @@ export function useConsent(): UseConsentReturn {
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 		initialData: ctx.initialConsentTypes,
 	})
 
@@ -148,7 +149,7 @@ export function useConsent(): UseConsentReturn {
 			}
 			return consentsMap
 		},
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 		// Return empty object for unauthenticated users (explicit retry: false)
 		retry: false,
 	})
@@ -450,7 +451,7 @@ export function useConsentCheck(options: UseConsentCheckOptions): UseConsentChec
 	const consentQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'check', options.purposeSlug, options.defaults],
 		queryFn: () => ctx.checkConsent(options.purposeSlug, options.defaults),
-		staleTime: 5 * 60 * 1000, // 5 min
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
 	})
 
 	// Refresh via React Query
@@ -537,7 +538,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 	const typesQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'types'],
 		queryFn: () => ctx.getConsentTypes(),
-		staleTime: 5 * 60 * 1000,
+		staleTime: STALE_TIME_STABLE_MS,
 		initialData: ctx.initialConsentTypes,
 	})
 
@@ -553,7 +554,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			}
 			return consentsMap
 		},
-		staleTime: 5 * 60 * 1000,
+		staleTime: STALE_TIME_STABLE_MS,
 		// Return empty object for unauthenticated users (explicit retry: false)
 		retry: false,
 	})

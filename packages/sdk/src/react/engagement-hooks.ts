@@ -22,6 +22,7 @@
 
 import { useCallback, useContext, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { STALE_TIME_FREQUENT_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STABLE_MS } from '../constants'
 import type {
 	AchievementUnlockEvent,
 	LeaderboardEntry,
@@ -153,7 +154,7 @@ export function useStreak(streakId: string, options?: UseStreakOptions): UseStre
 		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
 		queryFn: () => ctx.getStreak(streakId, userTimezone),
 		enabled: !!ctx.user,
-		staleTime: 60 * 1000, // 1 min - streaks can change frequently
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - streaks can change frequently
 	})
 
 	const state = streakQuery.data ?? null
@@ -288,7 +289,7 @@ export function useLeaderboard(
 	const leaderboardQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
-		staleTime: 2 * 60 * 1000, // 2 min - leaderboards change moderately
+		staleTime: STALE_TIME_MODERATE_MS, // 2 min - leaderboards change moderately
 	})
 
 	const data = leaderboardQuery.data ?? null
@@ -436,7 +437,7 @@ export function useAchievements(): UseAchievementsReturn {
 		queryKey: ['sylphx', ctx.appId, 'achievements'],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
-		staleTime: 5 * 60 * 1000, // 5 min - achievements don't change often
+		staleTime: STALE_TIME_STABLE_MS, // 5 min - achievements don't change often
 	})
 
 	const achievements = achievementsQuery.data ?? []
@@ -566,7 +567,7 @@ export function useSafeStreak(streakId: string, options?: UseStreakOptions): Use
 		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
 		queryFn: () => ctx.getStreak(streakId, userTimezone),
 		enabled: !!ctx.user,
-		staleTime: 60 * 1000,
+		staleTime: STALE_TIME_FREQUENT_MS,
 	})
 
 	const state = streakQuery.data ?? null
@@ -662,7 +663,7 @@ export function useSafeLeaderboard(
 	const leaderboardQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
-		staleTime: 2 * 60 * 1000,
+		staleTime: STALE_TIME_MODERATE_MS,
 	})
 
 	const data = leaderboardQuery.data ?? null
@@ -749,7 +750,7 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 		queryKey: ['sylphx', ctx.appId, 'achievements'],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
-		staleTime: 5 * 60 * 1000,
+		staleTime: STALE_TIME_STABLE_MS,
 	})
 
 	const achievements = achievementsQuery.data ?? []

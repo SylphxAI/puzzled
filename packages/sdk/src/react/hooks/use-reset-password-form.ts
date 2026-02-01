@@ -33,6 +33,7 @@
 
 import { useState, useCallback, useMemo, useContext } from 'react'
 import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
+import { UI_COPY_FEEDBACK_MS } from '../../constants'
 
 // ============================================
 // Types
@@ -193,7 +194,7 @@ export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseR
 				if (typeof window !== 'undefined') {
 					setTimeout(() => {
 						window.location.href = afterResetUrl
-					}, 2000)
+					}, UI_COPY_FEEDBACK_MS)
 				}
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to reset password'

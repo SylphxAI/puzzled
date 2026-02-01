@@ -18,6 +18,7 @@ import {
 	type Job,
 } from './services-context'
 import type { ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult } from '../types'
+import { JOB_POLL_INTERVAL_MS } from '../constants'
 
 // Re-export types for convenience
 export type { JobStatus, JobStatusFilter, Job, ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult }
@@ -394,7 +395,7 @@ function useJobProgress(
 	options: UseJobProgressOptions = {}
 ): UseJobProgressReturn {
 	const {
-		pollInterval = 2000,
+		pollInterval = JOB_POLL_INTERVAL_MS,
 		stopOnComplete = true,
 		maxPolls = 100,
 		onComplete,
