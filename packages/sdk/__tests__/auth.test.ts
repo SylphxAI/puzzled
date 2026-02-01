@@ -228,7 +228,8 @@ describe('signOut', () => {
 		const config = createTestConfig()
 		await signOut(config)
 
-		expect(capturedUrl).toContain('/api/sdk/auth/logout')
+		// Uses versioned SDK API path
+		expect(capturedUrl).toContain('/api/sdk/v1/auth/logout')
 	})
 })
 
@@ -289,7 +290,8 @@ describe('refreshToken', () => {
 		const body = JSON.parse(capturedBody!)
 		expect(body.grant_type).toBe('refresh_token')
 		expect(body.refresh_token).toBe('refresh-token-xyz')
-		expect(body.app_id).toBe('test-app')
+		// Uses client_secret for OAuth token refresh (not app_id)
+		expect(body.client_secret).toBe('sk_dev_test-secret')
 	})
 })
 
