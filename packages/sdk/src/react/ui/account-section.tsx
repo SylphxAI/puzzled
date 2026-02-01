@@ -90,7 +90,12 @@ function AccountSectionInner({
 	// Delete account state
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 	const [deleteConfirmText, setDeleteConfirmText] = useState('')
+	const [deletePassword, setDeletePassword] = useState('')
+	const [delete2FACode, setDelete2FACode] = useState('')
 	const [isDeleting, setIsDeleting] = useState(false)
+	const [deleteStep, setDeleteStep] = useState<'confirm' | 'password' | '2fa'>('confirm')
+	const [has2FAEnabled, setHas2FAEnabled] = useState(false)
+	const [isChecking2FA, setIsChecking2FA] = useState(false)
 
 	// Inject global styles
 	useEffect(() => {
@@ -155,18 +160,72 @@ function AccountSectionInner({
 		}
 	}
 
-	// Handle account deletion
-	const handleDeleteAccount = async () => {
+	// Check 2FA status when delete confirmation is shown (industry best practice)
+	const checkSecurityStatus = useCallback(async () => {
+		setIsChecking2FA(true)
+		try {
+			const status = await securityContext.getTwoFactorStatus()
+			setHas2FAEnabled(status.enabled)
+		} catch {
+			// If we can't check 2FA, assume it's not enabled
+			setHas2FAEnabled(false)
+		} finally {
+			setIsChecking2FA(false)
+		}
+	}, [securityContext])
+
+	// Handle delete confirmation step
+	const handleDeleteConfirmStep = async () => {
 		if (deleteConfirmText !== 'DELETE') {
 			setError('Please type DELETE to confirm')
 			return
 		}
 
+		// Check 2FA status before proceeding
+		await checkSecurityStatus()
+
+		// Move to password step
+		setDeleteStep('password')
+	}
+
+	// Handle password verification step
+	const handlePasswordStep = () => {
+		if (!deletePassword) {
+			setError('Please enter your password')
+			return
+		}
+
+		if (has2FAEnabled) {
+			// Move to 2FA step
+			setDeleteStep('2fa')
+		} else {
+			// No 2FA, proceed with deletion
+			handleDeleteAccount()
+		}
+	}
+
+	// Handle 2FA verification step (industry standard: verify 2FA before destructive actions)
+	const handle2FAStep = () => {
+		if (!delete2FACode || delete2FACode.length !== 6) {
+			setError('Please enter a valid 6-digit code')
+			return
+		}
+		handleDeleteAccount()
+	}
+
+	// Handle account deletion with password and optional 2FA
+	const handleDeleteAccount = async () => {
 		setIsDeleting(true)
 		setError(null)
 
 		try {
-			await userContext.deleteAccount()
+			// If 2FA is enabled, verify the code first
+			if (has2FAEnabled && delete2FACode) {
+				await securityContext.twoFactorVerify(delete2FACode)
+			}
+
+			// Proceed with deletion (pass password for re-authentication)
+			await userContext.deleteAccount(deletePassword)
 			setSuccess('Account deleted. Redirecting...')
 			onSuccess?.('Account deleted')
 
@@ -180,6 +239,16 @@ function AccountSectionInner({
 			onError?.(message)
 			setIsDeleting(false)
 		}
+	}
+
+	// Reset delete state
+	const resetDeleteState = () => {
+		setShowDeleteConfirm(false)
+		setDeleteConfirmText('')
+		setDeletePassword('')
+		setDelete2FACode('')
+		setDeleteStep('confirm')
+		setHas2FAEnabled(false)
 	}
 
 	const cardStyles: React.CSSProperties = mergeStyles(styles.card, {
@@ -369,57 +438,165 @@ function AccountSectionInner({
 								borderTop: `1px solid ${theme.colorDestructive}30`,
 							}}
 						>
-							<div
-								style={mergeStyles(styles.alert, styles.alertError, {
-									backgroundColor: `${theme.colorDestructive}10`,
-								})}
-							>
-								<strong>Warning:</strong> This action cannot be undone. All your data will be permanently
-								deleted.
+							{/* Step indicator */}
+							<div style={mergeStyles(styles.textXs, styles.textMuted, { marginBottom: '1rem' })}>
+								Step {deleteStep === 'confirm' ? '1' : deleteStep === 'password' ? '2' : '3'} of {has2FAEnabled ? '3' : '2'}
 							</div>
 
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '1rem 0 0.5rem' })}>
-								Type <strong>DELETE</strong> to confirm:
-							</p>
-							<input
-								type="text"
-								value={deleteConfirmText}
-								onChange={(e) => setDeleteConfirmText(e.target.value)}
-								placeholder="DELETE"
-								style={mergeStyles(styles.input, { marginBottom: '1rem' })}
-							/>
+							{/* Step 1: Confirm with DELETE text */}
+							{deleteStep === 'confirm' && (
+								<>
+									<div
+										style={mergeStyles(styles.alert, styles.alertError, {
+											backgroundColor: `${theme.colorDestructive}10`,
+										})}
+									>
+										<strong>Warning:</strong> This action cannot be undone. All your data will be permanently
+										deleted.
+									</div>
 
-							<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
-								<button
-									type="button"
-									onClick={handleDeleteAccount}
-									disabled={isDeleting || deleteConfirmText !== 'DELETE'}
-									style={mergeStyles(
-										styles.button,
-										styles.buttonDestructive,
-										(isDeleting || deleteConfirmText !== 'DELETE') ? styles.buttonDisabled : {}
-									)}
-								>
-									{isDeleting ? (
-										<>
-											<span style={styles.spinner} />
-											Deleting...
-										</>
-									) : (
-										'Permanently Delete'
-									)}
-								</button>
-								<button
-									type="button"
-									onClick={() => {
-										setShowDeleteConfirm(false)
-										setDeleteConfirmText('')
-									}}
-									style={mergeStyles(styles.button, styles.buttonOutline)}
-								>
-									Cancel
-								</button>
-							</div>
+									<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '1rem 0 0.5rem' })}>
+										Type <strong>DELETE</strong> to confirm:
+									</p>
+									<input
+										type="text"
+										value={deleteConfirmText}
+										onChange={(e) => setDeleteConfirmText(e.target.value)}
+										placeholder="DELETE"
+										style={mergeStyles(styles.input, { marginBottom: '1rem' })}
+									/>
+
+									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
+										<button
+											type="button"
+											onClick={handleDeleteConfirmStep}
+											disabled={isChecking2FA || deleteConfirmText !== 'DELETE'}
+											style={mergeStyles(
+												styles.button,
+												styles.buttonDestructive,
+												(isChecking2FA || deleteConfirmText !== 'DELETE') ? styles.buttonDisabled : {}
+											)}
+										>
+											{isChecking2FA ? (
+												<>
+													<span style={styles.spinner} />
+													Checking...
+												</>
+											) : (
+												'Continue'
+											)}
+										</button>
+										<button
+											type="button"
+											onClick={resetDeleteState}
+											style={mergeStyles(styles.button, styles.buttonOutline)}
+										>
+											Cancel
+										</button>
+									</div>
+								</>
+							)}
+
+							{/* Step 2: Password verification */}
+							{deleteStep === 'password' && (
+								<>
+									<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0 0 0.5rem' })}>
+										Enter your password to verify your identity:
+									</p>
+									<input
+										type="password"
+										value={deletePassword}
+										onChange={(e) => setDeletePassword(e.target.value)}
+										placeholder="Enter your password"
+										autoComplete="current-password"
+										style={mergeStyles(styles.input, { marginBottom: '1rem' })}
+									/>
+
+									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
+										<button
+											type="button"
+											onClick={handlePasswordStep}
+											disabled={!deletePassword}
+											style={mergeStyles(
+												styles.button,
+												styles.buttonDestructive,
+												!deletePassword ? styles.buttonDisabled : {}
+											)}
+										>
+											{has2FAEnabled ? 'Continue' : 'Delete Account'}
+										</button>
+										<button
+											type="button"
+											onClick={() => setDeleteStep('confirm')}
+											style={mergeStyles(styles.button, styles.buttonOutline)}
+										>
+											Back
+										</button>
+									</div>
+								</>
+							)}
+
+							{/* Step 3: 2FA verification (only if 2FA is enabled) */}
+							{deleteStep === '2fa' && (
+								<>
+									<div
+										style={mergeStyles(styles.flexCenter, {
+											width: '3rem',
+											height: '3rem',
+											borderRadius: '50%',
+											backgroundColor: `${theme.colorDestructive}15`,
+											margin: '0 auto 1rem',
+										})}
+									>
+										<ShieldIcon size={24} color={theme.colorDestructive} />
+									</div>
+									<p style={mergeStyles(styles.textSm, styles.textMuted, styles.textCenter, { margin: '0 0 1rem' })}>
+										Enter your two-factor authentication code to confirm:
+									</p>
+									<input
+										type="text"
+										value={delete2FACode}
+										onChange={(e) => setDelete2FACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+										placeholder="000000"
+										maxLength={6}
+										style={mergeStyles(styles.input, {
+											marginBottom: '1rem',
+											textAlign: 'center',
+											letterSpacing: '0.5em',
+											fontSize: theme.fontSizeLg
+										})}
+									/>
+
+									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', justifyContent: 'center' })}>
+										<button
+											type="button"
+											onClick={handle2FAStep}
+											disabled={isDeleting || delete2FACode.length !== 6}
+											style={mergeStyles(
+												styles.button,
+												styles.buttonDestructive,
+												(isDeleting || delete2FACode.length !== 6) ? styles.buttonDisabled : {}
+											)}
+										>
+											{isDeleting ? (
+												<>
+													<span style={styles.spinner} />
+													Deleting...
+												</>
+											) : (
+												'Permanently Delete'
+											)}
+										</button>
+										<button
+											type="button"
+											onClick={() => setDeleteStep('password')}
+											style={mergeStyles(styles.button, styles.buttonOutline)}
+										>
+											Back
+										</button>
+									</div>
+								</>
+							)}
 						</div>
 					)}
 				</div>
@@ -462,6 +639,23 @@ function TrashIcon({ size = 24 }: { size?: number }) {
 		>
 			<polyline points="3 6 5 6 21 6" />
 			<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+		</svg>
+	)
+}
+
+function ShieldIcon({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) {
+	return (
+		<svg
+			width={size}
+			height={size}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke={color}
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
+			<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
 		</svg>
 	)
 }
