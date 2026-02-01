@@ -16,9 +16,9 @@ import { WordGuessIcon } from './icon'
 import {
 	type LetterStatus,
 	MAX_GUESSES,
+	WORD_LENGTH,
 	type WordlePuzzleData,
 	type WordleSolution,
-	WORD_LENGTH,
 } from './types'
 import { isValidWord, SOLUTION_WORDS } from './words'
 

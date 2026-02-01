@@ -60,7 +60,12 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 
 export function PlatformProvider({ children, appId, config, platformUrl }: PlatformProviderProps) {
 	return (
-		<SylphxProvider appId={appId} config={config} platformUrl={platformUrl} afterSignOutUrl="/login">
+		<SylphxProvider
+			appId={appId}
+			config={config}
+			platformUrl={platformUrl}
+			afterSignOutUrl="/login"
+		>
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)

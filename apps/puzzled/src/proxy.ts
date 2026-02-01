@@ -12,9 +12,9 @@
  * No manual /api/auth/* routes needed.
  */
 
+import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
-import { createSylphxMiddleware, getCookieNames, getNamespace } from '@sylphx/sdk/nextjs'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 
@@ -56,10 +56,7 @@ const sylphxMiddleware = createSylphxMiddleware({
 			`/${locale}/games/*`,
 		]),
 	],
-	ignoredRoutes: [
-		'/api/*',
-		'/monitoring',
-	],
+	ignoredRoutes: ['/api/*', '/monitoring'],
 	signInUrl: '/login',
 	afterSignInUrl: '/dashboard',
 	afterSignOutUrl: '/',

@@ -10,9 +10,9 @@ import { HelpCircle, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
-import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
 import { ArithmoIcon } from '@/shared/components/ui/game-icons'
@@ -32,7 +32,9 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.arithmo')
 
 	// Get puzzle from server data
-	const [puzzle] = useState(() => parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData),
+	)
 
 	const {
 		isReady,

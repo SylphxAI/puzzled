@@ -15,7 +15,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 	const t = useTranslations('auth')
 	const tCommon = useTranslations('common')
 	const [showPassword, setShowPassword] = useState(false)
-	const { signInWithOAuth, isOAuthLoading, oauthError } = useSafeAuth()
+	const { signInWithOAuth, oauthError } = useSafeAuth()
 
 	const {
 		form,

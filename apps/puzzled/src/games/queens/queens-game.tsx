@@ -10,9 +10,9 @@ import { Crown, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
-import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
@@ -31,7 +31,9 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parsePuzzleDataClient<QueensPuzzleData, QueensSolution>(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<QueensPuzzleData, QueensSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate

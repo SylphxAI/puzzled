@@ -11,75 +11,124 @@
  * Client components should import from this file, NOT from registry.ts
  */
 
-import type { ComponentType } from 'react'
 import dynamic from 'next/dynamic'
-import type { GameProps } from './types'
-import type { GameColorTheme } from './theme-colors'
-
-// ==========================================
-// Icons (client-safe - just SVG components)
-// ==========================================
-import { ArithmoIcon } from './arithmo/icon'
-import { BlockSlideIcon } from './block-slide/icon'
-import { CrosswordIcon } from './crossword/icon'
-import { CryptogramIcon } from './cryptogram/icon'
-import { KillerSudokuIcon } from './killer-sudoku/icon'
-import { NonogramIcon } from './nonogram/icon'
-import { PatternMatchIcon } from './pattern-match/icon'
-import { QuadWordsIcon } from './quad-words/icon'
-import { QueensIcon } from './queens/icon'
-import { SudokuIcon } from './sudoku/icon'
-import { TangoIcon } from './tango/icon'
-import { WordBoxIcon } from './word-box/icon'
-import { WordGroupsIcon } from './word-groups/icon'
-import { WordGuessIcon } from './word-guess/icon'
-import { WordHiveIcon } from './word-hive/icon'
-import { WordLadderIcon } from './word-ladder/icon'
-import { WordSearchIcon } from './word-search/icon'
-
+import type { ComponentType } from 'react'
 // ==========================================
 // HowToPlay components (client-safe - just UI)
 // ==========================================
 import { ArithmoHowToPlay } from './arithmo/components/how-to-play'
+// ==========================================
+// Icons (client-safe - just SVG components)
+// ==========================================
+import { ArithmoIcon } from './arithmo/icon'
 import { BlockSlideHowToPlay } from './block-slide/components/how-to-play'
+import { BlockSlideIcon } from './block-slide/icon'
 import { CrosswordHowToPlay } from './crossword/components/how-to-play'
+import { CrosswordIcon } from './crossword/icon'
 import { CryptogramHowToPlay } from './cryptogram/components/how-to-play'
+import { CryptogramIcon } from './cryptogram/icon'
 import { KillerSudokuHowToPlay } from './killer-sudoku/components/how-to-play'
+import { KillerSudokuIcon } from './killer-sudoku/icon'
 import { NonogramHowToPlay } from './nonogram/components/how-to-play'
+import { NonogramIcon } from './nonogram/icon'
 import { PatternMatchHowToPlay } from './pattern-match/components/how-to-play'
+import { PatternMatchIcon } from './pattern-match/icon'
 import { QuordleHowToPlay } from './quad-words/components/how-to-play'
+import { QuadWordsIcon } from './quad-words/icon'
 import { QueensHowToPlay } from './queens/components/how-to-play'
+import { QueensIcon } from './queens/icon'
 import { SudokuHowToPlay } from './sudoku/components/how-to-play'
+import { SudokuIcon } from './sudoku/icon'
 import { TangoHowToPlay } from './tango/components/how-to-play'
+import { TangoIcon } from './tango/icon'
+import type { GameColorTheme } from './theme-colors'
+import type { GameProps } from './types'
 import { LetterBoxedHowToPlay } from './word-box/components/how-to-play'
+import { WordBoxIcon } from './word-box/icon'
 import { ConnectionsHowToPlay } from './word-groups/components/how-to-play'
+import { WordGroupsIcon } from './word-groups/icon'
 import { WordleHowToPlay } from './word-guess/components/how-to-play'
+import { WordGuessIcon } from './word-guess/icon'
 import { SpellingBeeHowToPlay } from './word-hive/components/how-to-play'
+import { WordHiveIcon } from './word-hive/icon'
 import { WordLadderHowToPlay } from './word-ladder/components/how-to-play'
+import { WordLadderIcon } from './word-ladder/icon'
 import { WordSearchHowToPlay } from './word-search/components/how-to-play'
+import { WordSearchIcon } from './word-search/icon'
 
 // ==========================================
 // Game Components (lazy-loaded, client-only)
 // Using { ssr: false } to prevent server-side tracing of game component dependencies
 // This is required because game components import HowToPlayModal which would create circular deps
 // ==========================================
-const ArithmoGame = dynamic(() => import('./arithmo/arithmo-game').then((m) => ({ default: m.ArithmoGame })), { ssr: false })
-const BlockSlideGame = dynamic(() => import('./block-slide/block-slide-game').then((m) => ({ default: m.BlockSlideGame })), { ssr: false })
-const CrosswordGame = dynamic(() => import('./crossword/crossword-game').then((m) => ({ default: m.CrosswordGame })), { ssr: false })
-const CryptogramGame = dynamic(() => import('./cryptogram/cryptogram-game').then((m) => ({ default: m.CryptogramGame })), { ssr: false })
-const KillerSudokuGame = dynamic(() => import('./killer-sudoku/killer-sudoku-game').then((m) => ({ default: m.KillerSudokuGame })), { ssr: false })
-const NonogramGame = dynamic(() => import('./nonogram/nonogram-game').then((m) => ({ default: m.NonogramGame })), { ssr: false })
-const PatternMatchGame = dynamic(() => import('./pattern-match/pattern-match-game').then((m) => ({ default: m.PatternMatchGame })), { ssr: false })
-const QuadWordsGame = dynamic(() => import('./quad-words/quad-words-game').then((m) => ({ default: m.QuadWordsGame })), { ssr: false })
-const QueensGame = dynamic(() => import('./queens/queens-game').then((m) => ({ default: m.QueensGame })), { ssr: false })
-const SudokuGame = dynamic(() => import('./sudoku/sudoku-game').then((m) => ({ default: m.SudokuGame })), { ssr: false })
-const TangoGame = dynamic(() => import('./tango/tango-game').then((m) => ({ default: m.TangoGame })), { ssr: false })
-const WordBoxGame = dynamic(() => import('./word-box/word-box-game').then((m) => ({ default: m.WordBoxGame })), { ssr: false })
-const WordGroupsGame = dynamic(() => import('./word-groups/word-groups-game').then((m) => ({ default: m.WordGroupsGame })), { ssr: false })
-const WordGuessGame = dynamic(() => import('./word-guess/word-guess-game').then((m) => ({ default: m.WordGuessGame })), { ssr: false })
-const WordHiveGame = dynamic(() => import('./word-hive/word-hive-game').then((m) => ({ default: m.WordHiveGame })), { ssr: false })
-const WordLadderGame = dynamic(() => import('./word-ladder/word-ladder-game').then((m) => ({ default: m.WordLadderGame })), { ssr: false })
-const WordSearchGame = dynamic(() => import('./word-search/word-search-game').then((m) => ({ default: m.WordSearchGame })), { ssr: false })
+const ArithmoGame = dynamic(
+	() => import('./arithmo/arithmo-game').then((m) => ({ default: m.ArithmoGame })),
+	{ ssr: false },
+)
+const BlockSlideGame = dynamic(
+	() => import('./block-slide/block-slide-game').then((m) => ({ default: m.BlockSlideGame })),
+	{ ssr: false },
+)
+const CrosswordGame = dynamic(
+	() => import('./crossword/crossword-game').then((m) => ({ default: m.CrosswordGame })),
+	{ ssr: false },
+)
+const CryptogramGame = dynamic(
+	() => import('./cryptogram/cryptogram-game').then((m) => ({ default: m.CryptogramGame })),
+	{ ssr: false },
+)
+const KillerSudokuGame = dynamic(
+	() => import('./killer-sudoku/killer-sudoku-game').then((m) => ({ default: m.KillerSudokuGame })),
+	{ ssr: false },
+)
+const NonogramGame = dynamic(
+	() => import('./nonogram/nonogram-game').then((m) => ({ default: m.NonogramGame })),
+	{ ssr: false },
+)
+const PatternMatchGame = dynamic(
+	() => import('./pattern-match/pattern-match-game').then((m) => ({ default: m.PatternMatchGame })),
+	{ ssr: false },
+)
+const QuadWordsGame = dynamic(
+	() => import('./quad-words/quad-words-game').then((m) => ({ default: m.QuadWordsGame })),
+	{ ssr: false },
+)
+const QueensGame = dynamic(
+	() => import('./queens/queens-game').then((m) => ({ default: m.QueensGame })),
+	{ ssr: false },
+)
+const SudokuGame = dynamic(
+	() => import('./sudoku/sudoku-game').then((m) => ({ default: m.SudokuGame })),
+	{ ssr: false },
+)
+const TangoGame = dynamic(
+	() => import('./tango/tango-game').then((m) => ({ default: m.TangoGame })),
+	{ ssr: false },
+)
+const WordBoxGame = dynamic(
+	() => import('./word-box/word-box-game').then((m) => ({ default: m.WordBoxGame })),
+	{ ssr: false },
+)
+const WordGroupsGame = dynamic(
+	() => import('./word-groups/word-groups-game').then((m) => ({ default: m.WordGroupsGame })),
+	{ ssr: false },
+)
+const WordGuessGame = dynamic(
+	() => import('./word-guess/word-guess-game').then((m) => ({ default: m.WordGuessGame })),
+	{ ssr: false },
+)
+const WordHiveGame = dynamic(
+	() => import('./word-hive/word-hive-game').then((m) => ({ default: m.WordHiveGame })),
+	{ ssr: false },
+)
+const WordLadderGame = dynamic(
+	() => import('./word-ladder/word-ladder-game').then((m) => ({ default: m.WordLadderGame })),
+	{ ssr: false },
+)
+const WordSearchGame = dynamic(
+	() => import('./word-search/word-search-game').then((m) => ({ default: m.WordSearchGame })),
+	{ ssr: false },
+)
 
 // ==========================================
 // Types
