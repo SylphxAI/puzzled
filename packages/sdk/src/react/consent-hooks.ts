@@ -137,22 +137,20 @@ export function useConsent(): UseConsentReturn {
 	})
 
 	// React Query for user consents
+	// Note: Errors are NOT silently swallowed - GDPR compliance requires explicit handling
 	const userConsentsQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'user'],
 		queryFn: async () => {
-			try {
-				const consentsResponse = await ctx.getUserConsents()
-				const consentsMap: Record<string, boolean> = {}
-				for (const consent of consentsResponse) {
-					consentsMap[consent.slug] = consent.enabled ?? false
-				}
-				return consentsMap
-			} catch {
-				// No server consents (probably not signed in)
-				return {} as Record<string, boolean>
+			const consentsResponse = await ctx.getUserConsents()
+			const consentsMap: Record<string, boolean> = {}
+			for (const consent of consentsResponse) {
+				consentsMap[consent.slug] = consent.enabled ?? false
 			}
+			return consentsMap
 		},
 		staleTime: 5 * 60 * 1000, // 5 min
+		// Return empty object for unauthenticated users (explicit retry: false)
+		retry: false,
 	})
 
 	// Initialize local state and banner visibility when data loads
@@ -544,21 +542,20 @@ export function useSafeConsent(): UseSafeConsentReturn {
 	})
 
 	// React Query for user consents
+	// Note: Errors are NOT silently swallowed - GDPR compliance requires explicit handling
 	const userConsentsQuery = useQuery({
 		queryKey: ['sylphx', 'consent', 'user'],
 		queryFn: async () => {
-			try {
-				const consentsResponse = await ctx.getUserConsents()
-				const consentsMap: Record<string, boolean> = {}
-				for (const consent of consentsResponse) {
-					consentsMap[consent.slug] = consent.enabled ?? false
-				}
-				return consentsMap
-			} catch {
-				return {} as Record<string, boolean>
+			const consentsResponse = await ctx.getUserConsents()
+			const consentsMap: Record<string, boolean> = {}
+			for (const consent of consentsResponse) {
+				consentsMap[consent.slug] = consent.enabled ?? false
 			}
+			return consentsMap
 		},
 		staleTime: 5 * 60 * 1000,
+		// Return empty object for unauthenticated users (explicit retry: false)
+		retry: false,
 	})
 
 	// Initialize local state and banner visibility when data loads

@@ -312,7 +312,7 @@ function ReferralCardInner({
 						</div>
 						<div style={styles.textCenter}>
 							<div style={{ fontSize: '1.5rem', fontWeight: 700, color: theme.colorSuccess }}>
-								{stats.completedReferrals || 0}
+								{stats.successfulReferrals || 0}
 							</div>
 							<div style={mergeStyles(styles.textXs, styles.textMuted)}>Successful</div>
 						</div>

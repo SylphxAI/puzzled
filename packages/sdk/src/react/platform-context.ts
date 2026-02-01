@@ -289,9 +289,11 @@ export interface PlatformContextValue {
 		entries: Array<{
 			rank: number
 			userId: string | null
-			displayName: string
+			/** Masked username for privacy */
+			name: string
 			avatarUrl: string | null
-			completedReferrals: number
+			/** Number of successful referrals */
+			referrals: number
 			totalReferrals: number
 			isCurrentUser: boolean
 		}>

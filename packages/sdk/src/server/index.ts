@@ -819,8 +819,10 @@ export async function getAppConfig(options: GetAppConfigOptions): Promise<AppCon
 export interface ReferralLeaderboardEntry {
 	rank: number
 	userId: string
+	/** Masked username for privacy */
 	name: string
-	completedReferrals: number
+	/** Number of successful referrals */
+	referrals: number
 	isCurrentUser: boolean
 }
 

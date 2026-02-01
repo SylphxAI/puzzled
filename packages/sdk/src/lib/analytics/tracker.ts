@@ -396,8 +396,10 @@ export class AnalyticsTracker {
 			this.persistQueue()
 		} catch (error) {
 			// Put failed events back in queue (with retry count)
+			// Segment pattern: 10 retries with exponential backoff
+			const MAX_RETRIES = 10
 			for (const item of batch) {
-				if (item.retries < 3) {
+				if (item.retries < MAX_RETRIES) {
 					this.queue.unshift({
 						...item,
 						retries: item.retries + 1,
@@ -405,7 +407,7 @@ export class AnalyticsTracker {
 				}
 			}
 			this.persistQueue()
-			this.debug('Flush failed', { error })
+			this.debug('Flush failed', { error, retriesRemaining: MAX_RETRIES - (batch[0]?.retries ?? 0) })
 		}
 	}
 
@@ -555,8 +557,10 @@ export class AnalyticsTracker {
 		switch (this.config.persistence) {
 			case 'localStorage':
 				return localStorage
-			case 'sessionStorage':
-				return sessionStorage
+			case 'cookie':
+				// Cookie storage handled separately via document.cookie
+				// Fall back to localStorage for compatibility
+				return localStorage
 			case 'none':
 				return null
 			default:

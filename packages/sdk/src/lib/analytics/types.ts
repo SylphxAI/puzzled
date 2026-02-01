@@ -176,8 +176,13 @@ export interface AnalyticsConfig {
 	batchSize?: number
 	/** Batch flush interval in ms */
 	flushInterval?: number
-	/** Enable persistence */
-	persistence?: 'localStorage' | 'sessionStorage' | 'cookie' | 'none'
+	/**
+	 * Enable persistence
+	 *
+	 * Note: sessionStorage is NOT supported (data lost on tab close = lost analytics).
+	 * Use localStorage for persistent identity or 'none' for ephemeral sessions.
+	 */
+	persistence?: 'localStorage' | 'cookie' | 'none'
 }
 
 /** Autocapture configuration */

@@ -43,30 +43,22 @@ export interface ReferralStats {
 	totalReferrals: number
 	/** Successful (redeemed) referrals */
 	successfulReferrals: number
-	/** Alias for successfulReferrals */
-	completedReferrals?: number
 	/** Pending referrals */
 	pendingReferrals: number
 	/** Total rewards earned */
 	totalRewards: number
-	/** Alias for totalRewards */
-	rewardsEarned?: number
 }
 
 export interface LeaderboardEntry {
 	rank: number
 	/** Masked username for privacy */
 	name: string
-	/** Alias for name */
-	displayName?: string
 	/** User ID (nullable for privacy) */
 	userId?: string | null
 	/** Avatar URL (nullable) */
 	avatarUrl?: string | null
 	/** Number of successful referrals */
 	referrals: number
-	/** Alias for referrals */
-	completedReferrals?: number
 	/** Total referrals including pending */
 	totalReferrals?: number
 	/** Is this the current user */
