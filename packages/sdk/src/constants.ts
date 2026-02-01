@@ -517,3 +517,13 @@ export const LOG_MESSAGE_MAX_LENGTH = 1_000
  * Max DOM snapshot length for debugging (1000 chars)
  */
 export const DOM_SNAPSHOT_MAX_LENGTH = 1_000
+
+/**
+ * Max stack trace length for error tracking (500 chars)
+ */
+export const STACK_TRACE_MAX_LENGTH = 500
+
+/**
+ * Google Consent Mode wait for update timeout (500 ms)
+ */
+export const CONSENT_WAIT_FOR_UPDATE_MS = 500

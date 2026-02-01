@@ -9,7 +9,7 @@
  */
 
 import type { DeadClick, RageClick } from './types'
-import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS, DOM_SNAPSHOT_MAX_LENGTH } from '../../../constants'
+import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS, DOM_SNAPSHOT_MAX_LENGTH, SESSION_REPLAY_DEAD_CLICK_TIMEOUT_MS } from '../../../constants'
 
 // ==========================================
 // Types
@@ -199,7 +199,7 @@ export class DeadClickDetector {
 	private callback: ((deadClick: DeadClick) => void) | null = null
 
 	constructor(options: { timeout?: number } = {}) {
-		this.timeout = options.timeout ?? 500
+		this.timeout = options.timeout ?? SESSION_REPLAY_DEAD_CLICK_TIMEOUT_MS
 		this.setupNetworkMonitor()
 	}
 

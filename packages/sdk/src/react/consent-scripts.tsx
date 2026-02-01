@@ -39,6 +39,7 @@
 
 import { useEffect, useRef, useCallback, createContext, useContext, useState, type ReactNode } from 'react'
 import { useConsent, useConsentGate, type ConsentCategory } from './consent-hooks'
+import { CONSENT_WAIT_FOR_UPDATE_MS } from '../constants'
 
 // ============================================
 // Types
@@ -716,7 +717,7 @@ export type GoogleConsentState = 'granted' | 'denied'
 export interface GoogleConsentModeConfig {
 	/** Default consent states (before user interaction) */
 	defaults?: Partial<Record<GoogleConsentType, GoogleConsentState>>
-	/** Wait for update timeout in ms (default: 500) */
+	/** Wait for update timeout in ms (default: CONSENT_WAIT_FOR_UPDATE_MS) */
 	waitForUpdate?: number
 	/** Regions to apply defaults (e.g., ['EU', 'US-CA']) */
 	regions?: string[]
@@ -785,7 +786,7 @@ export function GoogleConsentMode({
 		personalization_storage: 'denied',
 		security_storage: 'granted',
 	},
-	waitForUpdate = 500,
+	waitForUpdate = CONSENT_WAIT_FOR_UPDATE_MS,
 	regions,
 	urlPassthrough = true,
 	adsDataRedaction = true,

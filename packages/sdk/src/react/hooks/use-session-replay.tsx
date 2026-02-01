@@ -40,7 +40,7 @@ import {
 	type SessionReplayConfig,
 	type SessionData,
 } from '../../lib/monitoring'
-import { SESSION_REPLAY_CHECK_INTERVAL_MS } from '../../constants'
+import { SESSION_REPLAY_CHECK_INTERVAL_MS, STACK_TRACE_MAX_LENGTH } from '../../constants'
 
 /** REST API client interface for session replay */
 interface SessionReplayAPI {
@@ -384,7 +384,7 @@ export function useSessionReplayErrorMarker(): {
 			const errorId = `err_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
 			recorderRef.current?.markError(errorId, error, {
-				componentStack: errorInfo?.componentStack?.slice(0, 500),
+				componentStack: errorInfo?.componentStack?.slice(0, STACK_TRACE_MAX_LENGTH),
 			})
 
 			return errorId
