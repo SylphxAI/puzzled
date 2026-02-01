@@ -9,7 +9,7 @@
  */
 
 import type { DeadClick, RageClick } from './types'
-import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS } from '../../../constants'
+import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS, DOM_SNAPSHOT_MAX_LENGTH } from '../../../constants'
 
 // ==========================================
 // Types
@@ -223,7 +223,7 @@ export class DeadClickDetector {
 		this.pendingClick = {
 			event,
 			timestamp: Date.now(),
-			domSnapshot: document.body.innerHTML.slice(0, 1000),
+			domSnapshot: document.body.innerHTML.slice(0, DOM_SNAPSHOT_MAX_LENGTH),
 			url: window.location.href,
 		}
 
@@ -250,7 +250,7 @@ export class DeadClickDetector {
 		}
 
 		// Check for DOM changes
-		const currentSnapshot = document.body.innerHTML.slice(0, 1000)
+		const currentSnapshot = document.body.innerHTML.slice(0, DOM_SNAPSHOT_MAX_LENGTH)
 		if (currentSnapshot !== click.domSnapshot) {
 			this.pendingClick = null
 			return

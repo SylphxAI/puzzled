@@ -21,7 +21,7 @@ import type {
 	SessionReplayConfig,
 	UploadCallback,
 } from './types'
-import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS } from '../../../constants'
+import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS, LOG_MESSAGE_MAX_LENGTH } from '../../../constants'
 
 // ==========================================
 // Types
@@ -493,7 +493,7 @@ export class SessionRecorder {
 				recorder.consoleLogs.push({
 					timestamp: Date.now(),
 					level,
-					message: sanitizeForLogging(message).slice(0, 1000),
+					message: sanitizeForLogging(message).slice(0, LOG_MESSAGE_MAX_LENGTH),
 					stack: level === 'error' ? new Error().stack?.slice(0, 500) : undefined,
 				})
 

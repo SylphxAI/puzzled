@@ -11,6 +11,7 @@
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
 import { SylphxError } from './errors'
+import { BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS } from './constants'
 
 // Re-export types from SSOT
 export type { UploadProgressEvent, UploadResult, UploadOptions } from './lib/storage/types'
@@ -24,9 +25,9 @@ const UPLOAD_RETRY_CONFIG = {
 	/** Maximum number of retry attempts (AWS S3 pattern) */
 	maxRetries: 5,
 	/** Base delay in milliseconds */
-	baseDelayMs: 1000,
+	baseDelayMs: BASE_RETRY_DELAY_MS,
 	/** Maximum delay cap in milliseconds */
-	maxDelayMs: 30000,
+	maxDelayMs: MAX_RETRY_DELAY_MS,
 	/** Jitter type: 'full' for full jitter (AWS recommended) */
 	jitter: 'full' as const,
 }

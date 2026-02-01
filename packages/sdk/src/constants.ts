@@ -435,3 +435,85 @@ export const WEB_VITALS_FCP_GOOD_MS = 1_800
  * FCP (First Contentful Paint) "poor" threshold (3000 ms)
  */
 export const WEB_VITALS_FCP_POOR_MS = 3_000
+
+// =============================================================================
+// Storage Sizes
+// =============================================================================
+
+/**
+ * Multipart upload threshold (5 MB)
+ *
+ * Files larger than this use multipart upload for better reliability.
+ */
+export const STORAGE_MULTIPART_THRESHOLD_BYTES = 5 * 1024 * 1024
+
+/**
+ * Default max file size for uploads (5 MB)
+ */
+export const STORAGE_DEFAULT_MAX_SIZE_BYTES = 5 * 1024 * 1024
+
+/**
+ * Avatar max file size (2 MB)
+ */
+export const STORAGE_AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024
+
+/**
+ * Large file max size for file uploads (10 MB)
+ */
+export const STORAGE_LARGE_MAX_SIZE_BYTES = 10 * 1024 * 1024
+
+// =============================================================================
+// Cache TTLs
+// =============================================================================
+
+/**
+ * JWK cache TTL (1 hour)
+ */
+export const JWK_CACHE_TTL_MS = 60 * 60 * 1000
+
+// =============================================================================
+// Analytics Event Tracking
+// =============================================================================
+
+/**
+ * Max tracked event IDs to keep in memory
+ */
+export const ANALYTICS_MAX_TRACKED_EVENT_IDS = 1000
+
+/**
+ * Number of event IDs to keep after cleanup
+ */
+export const ANALYTICS_TRACKED_IDS_KEEP = 500
+
+/**
+ * Analytics queue limit before force flush
+ */
+export const ANALYTICS_QUEUE_LIMIT = 100
+
+// =============================================================================
+// Session Replay (Extended)
+// =============================================================================
+
+/**
+ * Session replay check interval (1 second)
+ */
+export const SESSION_REPLAY_CHECK_INTERVAL_MS = 1_000
+
+/**
+ * Success feedback delay for invite/account actions (1.5 seconds)
+ */
+export const UI_SUCCESS_REDIRECT_MS = 1_500
+
+// =============================================================================
+// String Truncation Limits
+// =============================================================================
+
+/**
+ * Max message length for logging (1000 chars)
+ */
+export const LOG_MESSAGE_MAX_LENGTH = 1_000
+
+/**
+ * Max DOM snapshot length for debugging (1000 chars)
+ */
+export const DOM_SNAPSHOT_MAX_LENGTH = 1_000

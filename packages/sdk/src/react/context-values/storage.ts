@@ -7,6 +7,7 @@
 
 import type { StorageContextValue, UploadOptions, UploadProgressEvent } from '../services-context'
 import type { RestApiClient } from '../rest-client'
+import { STORAGE_MULTIPART_THRESHOLD_BYTES } from '../../constants'
 
 // =============================================================================
 // Types
@@ -22,13 +23,6 @@ export interface CreateStorageValueConfig {
 	/** User ID (if authenticated) */
 	userId: string | null
 }
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-/** Multipart threshold: files > 5MB should use multipart upload */
-const MULTIPART_THRESHOLD = 5 * 1024 * 1024
 
 // =============================================================================
 // Dynamic Import
@@ -71,7 +65,7 @@ export function createStorageValue(config: CreateStorageValueConfig): StorageCon
 			// Determine if multipart should be used
 			// Default is 'auto' which enables multipart for files > 5MB
 			const shouldUseMultipart =
-				options?.multipart === true || (options?.multipart !== false && file.size > MULTIPART_THRESHOLD)
+				options?.multipart === true || (options?.multipart !== false && file.size > STORAGE_MULTIPART_THRESHOLD_BYTES)
 
 			const blob = await blobUpload(file.name, file, {
 				access: 'public',

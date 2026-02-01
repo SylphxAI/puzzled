@@ -19,7 +19,7 @@
  */
 
 import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
-import { WEBHOOK_MAX_AGE_MS, WEBHOOK_CLOCK_SKEW_MS } from '../constants'
+import { WEBHOOK_MAX_AGE_MS, WEBHOOK_CLOCK_SKEW_MS, JWK_CACHE_TTL_MS } from '../constants'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
 
@@ -189,7 +189,7 @@ export async function getJwks(platformUrl = DEFAULT_PLATFORM_URL): Promise<JsonW
 
 	jwksCache = {
 		keys: data.keys,
-		expiresAt: now + 60 * 60 * 1000, // Cache for 1 hour
+		expiresAt: now + JWK_CACHE_TTL_MS, // Cache for 1 hour
 	}
 
 	return data.keys

@@ -12,6 +12,11 @@ import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
 import { useFileUpload, useStorage } from '../storage-hooks'
 import { RequireSdk } from '../hooks'
+import {
+	STORAGE_DEFAULT_MAX_SIZE_BYTES,
+	STORAGE_AVATAR_MAX_SIZE_BYTES,
+	STORAGE_LARGE_MAX_SIZE_BYTES,
+} from '../../constants'
 
 // ============================================
 // FileUpload
@@ -295,7 +300,7 @@ export function ImageUploader(props: ImageUploaderProps) {
 /** Inner component that safely uses storage hooks */
 function ImageUploaderInner({
 	theme = defaultTheme,
-	maxSize = 5 * 1024 * 1024,
+	maxSize = STORAGE_DEFAULT_MAX_SIZE_BYTES,
 	value,
 	onChange,
 	onError,
@@ -511,7 +516,7 @@ export function AvatarUpload(props: AvatarUploadProps) {
 /** Inner component that safely uses storage hooks */
 function AvatarUploadInner({
 	theme = defaultTheme,
-	maxSize = 2 * 1024 * 1024,
+	maxSize = STORAGE_AVATAR_MAX_SIZE_BYTES,
 	value,
 	onChange,
 	onError,

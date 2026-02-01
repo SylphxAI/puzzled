@@ -23,7 +23,7 @@ import { BillingSection } from './billing-section'
 import { AccountSection } from './account-section'
 import { NotificationSettings } from './notification-settings'
 import { ReferralCard } from './referral-card'
-import { UI_NOTIFICATION_MS } from '../../constants'
+import { UI_NOTIFICATION_MS, STORAGE_DEFAULT_MAX_SIZE_BYTES } from '../../constants'
 
 export type ProfileSection = 'profile' | 'security' | 'billing' | 'notifications' | 'account' | 'referrals' | 'connected-accounts'
 
@@ -164,7 +164,7 @@ function UserProfileInner({
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0]
 		if (file) {
-			if (file.size > 5 * 1024 * 1024) {
+			if (file.size > STORAGE_DEFAULT_MAX_SIZE_BYTES) {
 				setError('File size must be less than 5MB')
 				return
 			}

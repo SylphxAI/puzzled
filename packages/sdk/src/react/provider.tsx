@@ -28,6 +28,10 @@ import {
 	ANALYTICS_FLUSH_TIMEOUT_MS,
 	ANALYTICS_INTERVAL_CHECK_MS,
 	NEW_USER_THRESHOLD_MS,
+	ANALYTICS_QUEUE_LIMIT,
+	ANALYTICS_MAX_TRACKED_EVENT_IDS,
+	ANALYTICS_TRACKED_IDS_KEEP,
+	STORAGE_MULTIPART_THRESHOLD_BYTES,
 } from '../constants'
 import { TokenManager } from './token-manager'
 import { createRestApi, type RestApiClient } from './rest-client'
@@ -1081,7 +1085,6 @@ function SylphxProviderInner({
 	// ============================================
 	// Analytics Actions (with deduplication)
 	// ============================================
-	const ANALYTICS_QUEUE_LIMIT = 100
 
 	const flushAnalytics = useCallback(async () => {
 		if (analyticsQueue.current.length === 0) return
@@ -1119,10 +1122,10 @@ function SylphxProviderInner({
 			}
 			trackedEventIds.current.add(id)
 
-			// Clean up old event IDs (keep last 1000)
-			if (trackedEventIds.current.size > 1000) {
+			// Clean up old event IDs
+			if (trackedEventIds.current.size > ANALYTICS_MAX_TRACKED_EVENT_IDS) {
 				const ids = Array.from(trackedEventIds.current)
-				trackedEventIds.current = new Set(ids.slice(-500))
+				trackedEventIds.current = new Set(ids.slice(-ANALYTICS_TRACKED_IDS_KEEP))
 			}
 
 			if (analyticsQueue.current.length >= ANALYTICS_QUEUE_LIMIT) {
@@ -2266,9 +2269,6 @@ function SylphxProviderInner({
 	 * - Real progress tracking
 	 * - Edge compatible
 	 */
-	// Multipart threshold: files > 5MB should use multipart upload
-	const MULTIPART_THRESHOLD = 5 * 1024 * 1024
-
 	const storageValue: StorageContextValue = useMemo(
 		() => ({
 			upload: async (file: File, options?: UploadOptions) => {
@@ -2278,7 +2278,7 @@ function SylphxProviderInner({
 				// Default is 'auto' which enables multipart for files > 5MB
 				const shouldUseMultipart =
 					options?.multipart === true ||
-					(options?.multipart !== false && file.size > MULTIPART_THRESHOLD)
+					(options?.multipart !== false && file.size > STORAGE_MULTIPART_THRESHOLD_BYTES)
 
 				const blob = await blobUpload(file.name, file, {
 					access: 'public',

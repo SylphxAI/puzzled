@@ -15,6 +15,7 @@ import {
 	mergeStyles,
 	injectGlobalStyles,
 } from '../ui/styles'
+import { UI_SUCCESS_REDIRECT_MS } from '../../constants'
 
 export interface InviteMemberProps {
 	/** Theme variables */
@@ -135,7 +136,7 @@ function InviteMemberInner({
 					if (asModal) {
 						onClose?.()
 					}
-				}, 1500)
+				}, UI_SUCCESS_REDIRECT_MS)
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to send invite'
 				setError(message)

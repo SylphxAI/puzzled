@@ -10,6 +10,7 @@
 
 import type { Breadcrumb, ErrorLevel } from './types'
 import { sanitizeUrl, sanitizeForLogging } from '../session-replay/privacy'
+import { LOG_MESSAGE_MAX_LENGTH } from '../../../constants'
 
 // ==========================================
 // Breadcrumb Store
@@ -335,7 +336,7 @@ function enableConsoleCapture(): void {
 			addBreadcrumb({
 				type: 'debug',
 				category: `console.${level}`,
-				message: sanitizeForLogging(message).slice(0, 1000),
+				message: sanitizeForLogging(message).slice(0, LOG_MESSAGE_MAX_LENGTH),
 				level: levelMap[level],
 			})
 

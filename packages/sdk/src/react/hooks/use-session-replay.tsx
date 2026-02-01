@@ -40,6 +40,7 @@ import {
 	type SessionReplayConfig,
 	type SessionData,
 } from '../../lib/monitoring'
+import { SESSION_REPLAY_CHECK_INTERVAL_MS } from '../../constants'
 
 /** REST API client interface for session replay */
 interface SessionReplayAPI {
@@ -220,7 +221,7 @@ export function useSessionReplay(options: UseSessionReplayOptions = {}): UseSess
 			if (recorderRef.current) {
 				setStatus(recorderRef.current.getStatus())
 			}
-		}, 1000)
+		}, SESSION_REPLAY_CHECK_INTERVAL_MS)
 
 		// Cleanup
 		return () => {

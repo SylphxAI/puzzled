@@ -16,7 +16,7 @@ import {
 	injectGlobalStyles,
 } from './styles'
 import { useUser, useAuth, RequireSdk } from '../hooks'
-import { UI_NOTIFICATION_MS } from '../../constants'
+import { UI_NOTIFICATION_MS, UI_SUCCESS_REDIRECT_MS } from '../../constants'
 import { useUserContext, useSecurityContext } from '../services-context'
 
 export interface AccountSectionProps {
@@ -233,7 +233,7 @@ function AccountSectionInner({
 			// Sign out and redirect
 			setTimeout(async () => {
 				await signOut({ redirectUrl: afterDeleteUrl })
-			}, 1500)
+			}, UI_SUCCESS_REDIRECT_MS)
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Failed to delete account'
 			setError(message)
