@@ -1,0 +1,3 @@
+[test]
+# Preload test setup to mock server-only module
+preload = ["./tests/setup.ts"]
