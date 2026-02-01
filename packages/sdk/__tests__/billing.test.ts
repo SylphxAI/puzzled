@@ -134,7 +134,7 @@ describe('getPlans', () => {
 		const config = createTestConfig()
 		await getPlans(config)
 
-		expect(capturedUrl).toContain('/api/sdk/billing/plans')
+		expect(capturedUrl).toContain('/api/sdk/v1/billing/plans')
 	})
 })
 
@@ -376,7 +376,7 @@ describe('getBillingBalance', () => {
 		const config = createTestConfig()
 		await getBillingBalance(config)
 
-		expect(capturedUrl).toContain('/api/sdk/billing/balance')
+		expect(capturedUrl).toContain('/api/sdk/v1/billing/balance')
 	})
 })
 

@@ -14,8 +14,7 @@ import { deleteFile, getFileUrl, getFileInfo, type FileInfo } from '../src/stora
 
 const createTestConfig = () =>
 	createConfig({
-		appId: 'test-app',
-		appSecret: 'test-secret',
+		secretKey: 'sk_dev_test-secret',
 		platformUrl: 'https://test.sylphx.com',
 	})
 
@@ -75,7 +74,7 @@ describe('deleteFile', () => {
 		const config = createTestConfig()
 		await deleteFile(config, 'file-xyz-456')
 
-		expect(capturedUrl).toContain('/api/sdk/storage/files/file-xyz-456')
+		expect(capturedUrl).toContain('/api/sdk/v1/storage/files/file-xyz-456')
 		expect(capturedMethod).toBe('DELETE')
 	})
 
@@ -121,7 +120,7 @@ describe('getFileUrl', () => {
 		const config = createTestConfig()
 		await getFileUrl(config, 'file-abc')
 
-		expect(capturedUrl).toContain('/api/sdk/storage/files/file-abc')
+		expect(capturedUrl).toContain('/api/sdk/v1/storage/files/file-abc')
 	})
 
 	test('throws on file not found', async () => {
@@ -162,7 +161,7 @@ describe('getFileInfo', () => {
 		const config = createTestConfig()
 		await getFileInfo(config, 'file-xyz')
 
-		expect(capturedUrl).toContain('/api/sdk/storage/files/file-xyz')
+		expect(capturedUrl).toContain('/api/sdk/v1/storage/files/file-xyz')
 	})
 
 	test('throws on file not found', async () => {
@@ -201,10 +200,10 @@ describe('getFileInfo', () => {
 
 describe('uploadFile flow', () => {
 	test('upload token request includes correct headers', async () => {
-		let capturedHeaders: HeadersInit | undefined
+		let _capturedHeaders: HeadersInit | undefined
 
 		globalThis.fetch = async (_url, init) => {
-			capturedHeaders = init?.headers as HeadersInit
+			_capturedHeaders = init?.headers as HeadersInit
 			return new Response(
 				JSON.stringify({
 					uploadUrl: 'https://upload.vercel-blob.com/token',
@@ -217,8 +216,8 @@ describe('uploadFile flow', () => {
 
 		// We can't fully test uploadFile because it uses XMLHttpRequest
 		// But we can verify the config structure is correct
-		expect(config.appId).toBe('test-app')
-		expect(config.appSecret).toBe('test-secret')
+		expect(config.secretKey).toBe('sk_dev_test-secret')
+		expect(config.platformUrl).toBe('https://test.sylphx.com')
 	})
 })
 
@@ -232,6 +231,6 @@ describe('uploadAvatar', () => {
 		// Full integration test would require XHR mocking
 		const config = createTestConfig()
 
-		expect(config.appId).toBe('test-app')
+		expect(config.secretKey).toBe('sk_dev_test-secret')
 	})
 })

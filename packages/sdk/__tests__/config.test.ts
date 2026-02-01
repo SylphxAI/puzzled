@@ -136,7 +136,7 @@ describe('buildApiUrl', () => {
 			platformUrl: 'https://sylphx.com',
 		})
 
-		expect(buildApiUrl(config, '/auth/login')).toBe('https://sylphx.com/api/sdk/auth/login')
+		expect(buildApiUrl(config, '/auth/login')).toBe('https://sylphx.com/api/sdk/v1/auth/login')
 	})
 
 	test('builds correct URL without leading slash', () => {
@@ -144,7 +144,7 @@ describe('buildApiUrl', () => {
 			platformUrl: 'https://sylphx.com',
 		})
 
-		expect(buildApiUrl(config, 'auth/login')).toBe('https://sylphx.com/api/sdk/auth/login')
+		expect(buildApiUrl(config, 'auth/login')).toBe('https://sylphx.com/api/sdk/v1/auth/login')
 	})
 
 	test('handles trailing slash in platformUrl', () => {
@@ -152,7 +152,7 @@ describe('buildApiUrl', () => {
 			platformUrl: 'https://sylphx.com/',
 		})
 
-		expect(buildApiUrl(config, '/auth/login')).toBe('https://sylphx.com/api/sdk/auth/login')
+		expect(buildApiUrl(config, '/auth/login')).toBe('https://sylphx.com/api/sdk/v1/auth/login')
 	})
 })
 
