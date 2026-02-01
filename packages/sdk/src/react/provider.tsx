@@ -430,6 +430,15 @@ export interface SylphxProviderProps {
 	 * ```
 	 */
 	config: AppConfig
+	/**
+	 * Auth route prefix. Must match the `authPrefix` in your middleware config.
+	 * Default: '/auth' (matches middleware default)
+	 *
+	 * This determines where OAuth callbacks are routed:
+	 * - '/auth' → callback at /auth/callback
+	 * - '/api/auth' → callback at /api/auth/callback
+	 */
+	authPrefix?: string
 }
 
 // ============================================
@@ -451,6 +460,7 @@ export function SylphxProvider({
 	vapidPublicKey,
 	autoTracking = true,
 	config,
+	authPrefix = '/auth',
 }: SylphxProviderProps) {
 	// Create QueryClient at the outer level
 	const [queryClient] = useState(
@@ -480,6 +490,7 @@ export function SylphxProvider({
 					autoTracking={autoTracking}
 					queryClient={queryClient}
 					config={config}
+					authPrefix={authPrefix}
 				>
 					{children}
 				</SylphxProviderInner>
@@ -502,6 +513,7 @@ function SylphxProviderInner({
 	autoTracking = true,
 	queryClient,
 	config,
+	authPrefix = '/auth',
 }: SylphxProviderProps & { queryClient: QueryClient }) {
 	// Validate and sanitize app ID at initialization
 	// Following industry-standard "fail fast" pattern (Stripe, Clerk, Firebase)
@@ -987,8 +999,9 @@ function SylphxProviderInner({
 	const signOut = useCallback(
 		async (options?: { redirectUrl?: string }) => {
 			// Call server-side signout to clear HttpOnly cookies and revoke tokens
+			// Uses authPrefix to match middleware route (default: /auth/signout)
 			try {
-				await fetch('/api/auth/signout', {
+				await fetch(`${authPrefix}/signout`, {
 					method: 'POST',
 					credentials: 'include', // Send cookies
 				})
@@ -1003,7 +1016,7 @@ function SylphxProviderInner({
 			const redirectUrl = options?.redirectUrl || afterSignOutUrl
 			safeRedirect(redirectUrl, { fallback: afterSignOutUrl || '/' })
 		},
-		[clearTokens, afterSignOutUrl]
+		[clearTokens, afterSignOutUrl, authPrefix]
 	)
 
 	/**
@@ -1171,8 +1184,8 @@ function SylphxProviderInner({
 
 				// Build the server-side callback URL that will handle code exchange
 				// This ensures cookies are set for SSR authentication
-				// Format: /api/auth/callback?redirect_to=<finalDestination>
-				const callbackUrl = new URL('/api/auth/callback', window.location.origin)
+				// Format: {authPrefix}/callback?redirect_to=<finalDestination>
+				const callbackUrl = new URL(`${authPrefix}/callback`, window.location.origin)
 				callbackUrl.searchParams.set('redirect_to', finalDestination)
 				const serverCallbackUri = callbackUrl.toString()
 
@@ -1216,7 +1229,7 @@ function SylphxProviderInner({
 				throw error
 			}
 		},
-		[platformUrl, appId, resolveRedirectUrl]
+		[platformUrl, appId, resolveRedirectUrl, authPrefix]
 	)
 
 	// Convenience methods for common OAuth providers
