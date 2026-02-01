@@ -248,17 +248,6 @@ export function retrievePKCEVerifier(appId: string, nonce?: string): string | nu
 	const entry = getEntry(key)
 
 	if (!entry) {
-		// Try without nonce for backwards compatibility
-		const fallbackKey = buildKey(appId)
-		const fallbackEntry = getEntry(fallbackKey)
-		if (fallbackEntry) {
-			deleteEntry(fallbackKey)
-			// Check if expired
-			if (Date.now() - fallbackEntry.createdAt > PKCE_TTL_MS) {
-				return null
-			}
-			return fallbackEntry.verifier
-		}
 		return null
 	}
 

@@ -67,13 +67,11 @@ export function getCookieNames(namespace: string) {
 
 /**
  * Session token lifetime (5 minutes like Clerk)
- * Re-exported from constants.ts for backward compatibility.
  */
 export const SESSION_TOKEN_LIFETIME = SESSION_TOKEN_LIFETIME_SECONDS
 
 /**
  * Refresh token lifetime (30 days)
- * Re-exported from constants.ts for backward compatibility.
  */
 export const REFRESH_TOKEN_LIFETIME = REFRESH_TOKEN_LIFETIME_SECONDS
 
