@@ -84,6 +84,9 @@ export interface FeatureFlagProviderProps {
 }
 
 const CACHE_KEY = 'sylphx_feature_flags'
+const CACHE_TIMESTAMP_KEY = 'sylphx_feature_flags_ts'
+/** Cache TTL in milliseconds (5 minutes - LaunchDarkly pattern) */
+const CACHE_TTL_MS = 5 * 60 * 1000
 
 /**
  * Feature Flag Provider
@@ -111,13 +114,22 @@ export function FeatureFlagProvider({
 }: FeatureFlagProviderProps) {
 	const queryClient = useQueryClient()
 
-	// Initialize from localStorage cache
+	// Initialize from localStorage cache with TTL validation (LaunchDarkly pattern)
 	const [cachedInitialFlags] = useState<FeatureFlag[]>(() => {
 		if (!enableCache || typeof window === 'undefined') return initialFlags
 		try {
 			const cached = localStorage.getItem(CACHE_KEY)
-			if (cached && !initialFlags.length) {
-				return JSON.parse(cached) as FeatureFlag[]
+			const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY)
+
+			// Validate TTL before using cached data
+			if (cached && timestamp && !initialFlags.length) {
+				const cacheAge = Date.now() - parseInt(timestamp, 10)
+				if (cacheAge < CACHE_TTL_MS) {
+					return JSON.parse(cached) as FeatureFlag[]
+				}
+				// Cache expired - clear it
+				localStorage.removeItem(CACHE_KEY)
+				localStorage.removeItem(CACHE_TIMESTAMP_KEY)
 			}
 		} catch {
 			// Ignore cache errors
@@ -153,9 +165,10 @@ export function FeatureFlagProvider({
 			const data = await response.json()
 			const flagList = data.flags as FeatureFlag[]
 
-			// Cache flags to localStorage
+			// Cache flags to localStorage with timestamp for TTL validation
 			if (enableCache && typeof window !== 'undefined') {
 				localStorage.setItem(CACHE_KEY, JSON.stringify(flagList))
+				localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString())
 			}
 
 			return flagList
