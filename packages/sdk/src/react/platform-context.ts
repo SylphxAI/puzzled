@@ -349,11 +349,12 @@ export interface PlatformContextValue {
 	/** Current authenticated user (needed for engagement features) */
 	user: User | null
 	/**
-	 * Get streak state for a user
+	 * Get streak state for a user (with optional inline defaults for auto-discovery)
 	 * @param streakId - Streak identifier
+	 * @param defaults - Optional inline defaults for auto-discovery when streak not pre-configured
 	 * @param userTimezone - Optional IANA timezone (e.g., 'America/New_York') for expiry display
 	 */
-	getStreak: (streakId: string, userTimezone?: string) => Promise<StreakState>
+	getStreak: (streakId: string, defaults?: StreakDefaults, userTimezone?: string) => Promise<StreakState>
 	/**
 	 * Record activity to extend streak (with optional inline defaults for auto-discovery)
 	 * @param streakId - Streak identifier

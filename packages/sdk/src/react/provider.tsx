@@ -1569,11 +1569,15 @@ function SylphxProviderInner({
 	// Engagement Actions (Streaks, Leaderboards, Achievements)
 	// ============================================
 	const getStreak = useCallback(
-		async (streakId: string): Promise<StreakState> => {
+		async (streakId: string, defaults?: StreakDefaults, userTimezone?: string): Promise<StreakState> => {
 			if (!authState.user?.id) {
 				throw new Error('User must be authenticated to get streak')
 			}
-			return api.get<StreakState>(`/engagement/streaks/${streakId}`, { userId: authState.user.id })
+			return api.get<StreakState>(`/engagement/streaks/${streakId}`, {
+				userId: authState.user.id,
+				defaults: defaults ? JSON.stringify(defaults) : undefined,
+				userTimezone,
+			})
 		},
 		[api, authState.user?.id]
 	)
@@ -2222,18 +2226,21 @@ function SylphxProviderInner({
 					userId: authState.user?.id,
 					anonymousId,
 					consents,
+					source: 'banner',
 				})
 			},
 			acceptAll: async () => {
 				return await api.post('/consent/accept-all', {
 					userId: authState.user?.id,
 					anonymousId,
+					source: 'banner',
 				})
 			},
 			declineOptional: async () => {
 				return await api.post('/consent/decline-optional', {
 					userId: authState.user?.id,
 					anonymousId,
+					source: 'banner',
 				})
 			},
 			checkConsent: async (purposeSlug, defaults) => {

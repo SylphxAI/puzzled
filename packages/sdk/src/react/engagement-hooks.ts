@@ -153,7 +153,7 @@ export function useStreak(streakId: string, options?: UseStreakOptions): UseStre
 	// React Query for streak data
 	const streakQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-		queryFn: () => ctx.getStreak(streakId, userTimezone),
+		queryFn: () => ctx.getStreak(streakId, defaults, userTimezone),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - streaks can change frequently
 	})
@@ -632,7 +632,7 @@ export function useSafeStreak(streakId: string, options?: UseStreakOptions): Use
 	// React Query for streak data
 	const streakQuery = useQuery({
 		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-		queryFn: () => ctx.getStreak(streakId, userTimezone),
+		queryFn: () => ctx.getStreak(streakId, defaults, userTimezone),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_FREQUENT_MS,
 	})
