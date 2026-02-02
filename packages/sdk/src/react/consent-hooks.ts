@@ -148,7 +148,7 @@ export function useConsent(): UseConsentReturn {
 			// If grantedAt is set, user has made an explicit choice
 			let hasExplicitChoice = false
 			for (const consent of consentsResponse) {
-				consentsMap[consent.slug] = consent.enabled ?? false
+				consentsMap[consent.slug] = consent.granted ?? false
 				if (consent.grantedAt) {
 					hasExplicitChoice = true
 				}
@@ -561,7 +561,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			// Check if user has explicitly made any consent choices
 			let hasExplicitChoice = false
 			for (const consent of consentsResponse) {
-				consentsMap[consent.slug] = consent.enabled ?? false
+				consentsMap[consent.slug] = consent.granted ?? false
 				if (consent.grantedAt) {
 					hasExplicitChoice = true
 				}

@@ -248,7 +248,8 @@ export interface LoginHistoryEntry {
 	browser: string | null
 	os: string | null
 	loginAt: string
-	successful: boolean
+	/** Whether login was successful (matches API field) */
+	success: boolean
 }
 
 export interface DeviceSession {
@@ -636,7 +637,7 @@ export interface InAppMessageWithReadStatus {
 	topic: string | null
 	expiresAt: string | null
 	createdAt: string
-	read: boolean
+	/** Whether the message has been read (matches API field) */
 	isRead: boolean
 	readAt: string | null
 	isDismissed?: boolean

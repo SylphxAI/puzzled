@@ -2196,7 +2196,15 @@ function SylphxProviderInner({
 				return config.consentTypes
 			},
 			getUserConsents: async () => {
-				const consents = await api.get<Array<{ slug: string; enabled: boolean; consentTypeId?: string; updatedAt?: string }>>('/consent', {
+				const consents = await api.get<
+					Array<{
+						slug: string
+						granted: boolean
+						grantedAt: string | null
+						consentTypeId?: string
+						updatedAt?: string
+					}>
+				>('/consent', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
@@ -2204,9 +2212,9 @@ function SylphxProviderInner({
 				return consents.map((c) => ({
 					consentTypeId: c.consentTypeId ?? '',
 					slug: c.slug,
-					enabled: c.enabled,
-					granted: c.enabled, // Alias
-					updatedAt: c.updatedAt ?? new Date().toISOString(),
+					granted: c.granted,
+					grantedAt: c.grantedAt,
+					updatedAt: c.updatedAt ?? c.grantedAt ?? new Date().toISOString(),
 				}))
 			},
 			setConsents: async (consents) => {
@@ -2692,18 +2700,29 @@ function SylphxProviderInner({
 				return await api.post('/user/profile', { password: newPassword })
 			},
 			getLoginHistory: async (options) => {
-				const history = await api.get<LoginHistoryEntry[]>('/user/sessions')
+				const history = await api.get<
+					Array<{
+						id: string
+						ipAddress: string | null
+						userAgent: string | null
+						country: string | null
+						city: string | null
+						device: string | null
+						success: boolean
+						createdAt: string
+					}>
+				>('/user/login-history')
 				const items = options?.limit ? history.slice(0, options.limit) : history
 				return items.map((h) => ({
-					id: h.id ?? '',
-					ipAddress: h.ipAddress ?? null,
-					userAgent: h.userAgent ?? null,
+					id: h.id,
+					ipAddress: h.ipAddress,
+					userAgent: h.userAgent,
 					location: h.city && h.country ? `${h.city}, ${h.country}` : h.country ?? null,
-					device: h.device ?? null,
-					browser: null, // Not available in LoginHistoryEntry
-					os: null, // Not available in LoginHistoryEntry
-					loginAt: h.createdAt ? new Date(h.createdAt) : new Date(),
-					successful: h.success ?? true,
+					device: h.device,
+					browser: null, // Not available from API
+					os: null, // Not available from API
+					loginAt: new Date(h.createdAt),
+					success: h.success,
 				}))
 			},
 			getSessions: async () => {
@@ -2765,9 +2784,10 @@ function SylphxProviderInner({
 	// Type definitions for security API responses
 	type PasskeyResponse = {
 		id: string
-		deviceName?: string | null
+		/** Passkey name (user-assigned label) */
+		name: string | null
 		createdAt: string
-		lastUsedAt?: string | null
+		lastUsedAt: string | null
 	}
 
 	const securityValue: SecurityContextValue = useMemo(
@@ -2812,10 +2832,10 @@ function SylphxProviderInner({
 				return await api.post('/security/email/confirm', { token })
 			},
 			passkeyList: async () => {
-				const response = await api.get<PasskeyResponse[]>('/security/passkeys')
-				return response.map((p) => ({
+				const response = await api.get<{ passkeys: PasskeyResponse[] }>('/security/passkeys')
+				return response.passkeys.map((p) => ({
 					id: p.id,
-					name: p.deviceName ?? undefined, // API returns deviceName (null -> undefined)
+					name: p.name ?? undefined,
 					deviceType: undefined, // Not returned by API
 					createdAt: new Date(p.createdAt),
 					lastUsedAt: p.lastUsedAt ? new Date(p.lastUsedAt) : null,

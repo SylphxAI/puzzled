@@ -157,7 +157,7 @@ export function SecuritySettings({
 				device: h.device || 'Unknown',
 				browser: h.browser || 'Unknown',
 				location: h.location ?? undefined,
-				success: h.successful,
+				success: h.success,
 				createdAt: h.loginAt.toISOString(),
 			}))
 		},

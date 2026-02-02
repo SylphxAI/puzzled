@@ -66,7 +66,6 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 			return consents.map((c) => ({
 				consentTypeId: '', // Not returned by this endpoint
 				slug: c.slug,
-				enabled: c.granted,
 				granted: c.granted,
 				grantedAt: c.grantedAt,
 				updatedAt: c.grantedAt ?? new Date().toISOString(),

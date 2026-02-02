@@ -58,7 +58,8 @@ export interface ConsentType {
 export interface UserConsent {
 	consentTypeId: string
 	slug: string
-	enabled: boolean
+	/** Whether consent is granted (matches API schema) */
+	granted: boolean
 	updatedAt: string
 	grantedAt?: string | null
 	revokedAt?: string | null

@@ -624,7 +624,8 @@ export interface SdkLoginHistoryEntry {
 	browser: string | null
 	os: string | null
 	loginAt: Date
-	successful: boolean
+	/** Whether login was successful (matches API field name) */
+	success: boolean
 }
 
 /** SDK Connected Account (transformed from API) */
