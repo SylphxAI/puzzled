@@ -323,6 +323,9 @@ export class AnalyticsTracker {
 	private handleAutocaptureEvent(event: AutocaptureEvent): void {
 		this.track('$autocapture', {
 			$event_type: event.eventType,
+			// ElementData[] is semantically compatible with PropertyValue (array of objects)
+			// but TypeScript requires explicit cast due to index signature differences
+			// between ElementData's `attr__*` keys and PropertyValue's `[key: string]`
 			$elements: event.elements as unknown as PropertyValue,
 			$element_name: event.elementName,
 			...event.properties,

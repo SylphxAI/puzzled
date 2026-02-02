@@ -24,6 +24,7 @@ import { useCallback, useContext, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { STALE_TIME_FREQUENT_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STABLE_MS } from '../constants'
 import type {
+	AchievementDefinition,
 	AchievementUnlockEvent,
 	LeaderboardEntry,
 	LeaderboardQueryOptions,
@@ -514,8 +515,74 @@ export function useAchievements(): UseAchievementsReturn {
 // Safe Versions (for SSR/prerendering)
 // ============================================================================
 
-// No-op async function for safe hooks
-const noopAsync = async () => {}
+// Type-safe stub functions for safe hooks when context is unavailable
+// These return sensible defaults instead of using unsafe type assertions
+
+const noopAsyncVoid = async (): Promise<void> => {}
+
+/** Default streak state for stubs */
+const defaultStreakState: StreakState = {
+	streakId: '',
+	current: 0,
+	longest: 0,
+	lastActivityAt: null,
+	expiresAt: null,
+	canRecover: false,
+	timeRemainingMs: null,
+	userTimezone: null,
+}
+
+/** Stub for recordActivity when no context */
+const stubRecordActivity = async (): Promise<RecordActivityResult> => ({
+	streak: defaultStreakState,
+	extended: false,
+	newPersonalBest: false,
+	previousValue: 0,
+})
+
+/** Stub for recover when no context */
+const stubRecover = async (): Promise<{ success: boolean; streak: StreakState }> => ({
+	success: false,
+	streak: defaultStreakState,
+})
+
+/** Stub for submitScore when no context */
+const stubSubmitScore = async (): Promise<SubmitScoreResult> => ({
+	accepted: false,
+	rank: null,
+	previousBest: null,
+	newPersonalBest: false,
+	rankChange: null,
+})
+
+/** Default user achievement for stubs */
+const defaultUserAchievement: UserAchievement = {
+	achievementId: '',
+	unlocked: false,
+	unlockedAt: null,
+	progress: 0,
+	target: null,
+	progressPercent: 0,
+}
+
+/** Stub for achievement unlock when no context */
+const stubUnlockAchievement = async (): Promise<AchievementUnlockEvent> => ({
+	achievement: {
+		id: '',
+		name: '',
+		description: '',
+		type: 'standard',
+		tier: 'bronze',
+		category: '',
+		icon: '',
+		criteria: {},
+	},
+	userAchievement: defaultUserAchievement,
+	isNew: false,
+})
+
+/** Stub for achievement progress when no context */
+const stubIncrementProgress = async (): Promise<UserAchievement> => defaultUserAchievement
 
 /** Safe return type for useStreak when outside provider */
 export interface UseSafeStreakReturn {
@@ -542,7 +609,7 @@ export interface UseSafeStreakReturn {
 export function useSafeStreak(streakId: string, options?: UseStreakOptions): UseSafeStreakReturn {
 	const ctx = useEngagementContextSafe()
 
-	// If no context, return safe defaults
+	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
 		return {
 			state: null,
@@ -553,9 +620,9 @@ export function useSafeStreak(streakId: string, options?: UseStreakOptions): Use
 			canRecover: false,
 			timeRemainingMs: null,
 			userTimezone: null,
-			recordActivity: noopAsync as unknown as UseSafeStreakReturn['recordActivity'],
-			recover: noopAsync as unknown as UseSafeStreakReturn['recover'],
-			refresh: noopAsync,
+			recordActivity: stubRecordActivity,
+			recover: stubRecover,
+			refresh: noopAsyncVoid,
 			isConfigured: false,
 		}
 	}
@@ -643,7 +710,7 @@ export function useSafeLeaderboard(
 ): UseSafeLeaderboardReturn {
 	const ctx = useEngagementContextSafe()
 
-	// If no context, return safe defaults
+	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
 		return {
 			data: null,
@@ -652,8 +719,8 @@ export function useSafeLeaderboard(
 			entries: [],
 			currentUserEntry: null,
 			totalParticipants: 0,
-			submitScore: noopAsync as unknown as UseSafeLeaderboardReturn['submitScore'],
-			refresh: noopAsync,
+			submitScore: stubSubmitScore,
+			refresh: noopAsyncVoid,
 			isConfigured: false,
 		}
 	}
@@ -728,7 +795,7 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 	const ctx = useEngagementContextSafe()
 	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
 
-	// If no context, return safe defaults
+	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
 		return {
 			achievements: [],
@@ -737,9 +804,9 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 			unlocked: [],
 			locked: [],
 			getAchievement: () => null,
-			unlock: noopAsync as unknown as UseSafeAchievementsReturn['unlock'],
-			incrementProgress: noopAsync as unknown as UseSafeAchievementsReturn['incrementProgress'],
-			refresh: noopAsync,
+			unlock: stubUnlockAchievement,
+			incrementProgress: stubIncrementProgress,
+			refresh: noopAsyncVoid,
 			recentUnlock: null,
 			dismissRecentUnlock: () => {},
 			isConfigured: false,

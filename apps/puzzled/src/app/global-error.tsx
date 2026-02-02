@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
-import { captureError } from '@/lib/monitoring'
+import { useEffect, useRef } from 'react'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -10,14 +9,26 @@ type Props = {
 
 /**
  * Global error boundary for the entire application
- * This catches errors in the root layout and other critical failures
+ * This catches errors in the root layout and other critical failures.
+ *
+ * Note: Cannot use SDK hooks here because SylphxProvider may not be mounted
+ * when global errors occur. Falls back to console logging.
+ * The GlobalErrorHandler component handles runtime errors within the app.
  */
 export default function GlobalError({ error, reset }: Props) {
+	const reported = useRef(false)
+
 	useEffect(() => {
-		// Report error to platform monitoring with high priority
-		captureError(error, {
-			level: 'fatal',
-			tags: { errorBoundary: 'global' },
+		// Only report once
+		if (reported.current) return
+		reported.current = true
+
+		// Log to console - SDK context may not be available for global errors
+		console.error('[Global Error]', {
+			name: error.name,
+			message: error.message,
+			digest: error.digest,
+			stack: error.stack,
 		})
 	}, [error])
 

@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics'
-import { SessionReplayProvider } from '@/features/monitoring'
+import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { PlatformProvider } from '@/shared/components/platform'
@@ -224,14 +224,16 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<ThemeProvider>
 					{appId && config ? (
 						<PlatformProvider appId={appId} config={config} platformUrl={platformUrl}>
-							<SessionReplayProvider>
-								<WebVitalsReporter />
-								<TRPCProvider>
-									<NextIntlClientProvider messages={messages}>
-										<ToastProvider>{children}</ToastProvider>
-									</NextIntlClientProvider>
-								</TRPCProvider>
-							</SessionReplayProvider>
+							<GlobalErrorHandler>
+								<SessionReplayProvider>
+									<WebVitalsReporter />
+									<TRPCProvider>
+										<NextIntlClientProvider messages={messages}>
+											<ToastProvider>{children}</ToastProvider>
+										</NextIntlClientProvider>
+									</TRPCProvider>
+								</SessionReplayProvider>
+							</GlobalErrorHandler>
 						</PlatformProvider>
 					) : (
 						<TRPCProvider>

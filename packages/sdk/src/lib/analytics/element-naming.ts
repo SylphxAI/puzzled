@@ -443,8 +443,8 @@ export function buildElementData(element: Element): ElementData {
 	for (const attr of attrs) {
 		const value = element.getAttribute(attr)
 		if (value) {
-			const key = `attr__${attr.replace(/-/g, '_')}`
-			;(data as unknown as Record<string, unknown>)[key] = value.slice(0, 200) // Limit attribute length
+			const key = `attr__${attr.replace(/-/g, '_')}` as `attr__${string}`
+			data[key] = value.slice(0, 200) // Limit attribute length
 		}
 	}
 

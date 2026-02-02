@@ -1,11 +1,15 @@
 /**
- * Server-side Error Tracking
- *
- * Logs errors to console for now. Platform monitoring endpoint not yet available.
+ * @deprecated Use SDK hooks instead for client-side error tracking.
  *
  * For client-side React components, use:
  * - useErrorTracking from '@sylphx/sdk/react'
+ * - useGlobalErrorHandler from '@sylphx/sdk/react'
  * - ErrorBoundary from '@sylphx/sdk/react'
+ *
+ * This file is kept for server-side error logging only (Route Handlers, Server Actions).
+ * Consider using SDK's server-side error tracking when available.
+ *
+ * @see apps/puzzled/src/features/monitoring/components/global-error-handler.tsx
  */
 
 /**

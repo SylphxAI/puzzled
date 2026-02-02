@@ -541,6 +541,11 @@ export function useMobilePush(): UseMobilePushReturn {
 	const config = ctx.mobilePushConfig
 	const prefs = ctx.mobilePushPreferences
 
+	// Wrap refresh to return void (the data is already in context)
+	const refresh = useCallback(async (): Promise<void> => {
+		await ctx.getMobilePushPreferences()
+	}, [ctx])
+
 	return {
 		iosConfigured: config?.ios ?? false,
 		androidConfigured: config?.android ?? false,
@@ -551,7 +556,7 @@ export function useMobilePush(): UseMobilePushReturn {
 		isError: ctx.mobilePushError !== null,
 		registerDevice: ctx.registerMobileDevice,
 		unregisterDevice: ctx.unregisterMobileDevice,
-		refresh: ctx.getMobilePushPreferences as unknown as () => Promise<void>,
+		refresh,
 	}
 }
 

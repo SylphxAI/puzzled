@@ -4,12 +4,13 @@
  * Error Boundary for Auth Routes
  *
  * Catches errors in login, signup, password reset pages.
+ * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
  */
 
+import { useErrorTracking } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
-import { useEffect } from 'react'
-import { captureError } from '@/lib/monitoring'
+import { useEffect, useRef } from 'react'
 
 interface ErrorProps {
 	error: Error & { digest?: string }
@@ -17,12 +18,18 @@ interface ErrorProps {
 }
 
 export default function AuthError({ error, reset }: ErrorProps) {
+	const { captureException } = useErrorTracking()
+	const reported = useRef(false)
+
 	useEffect(() => {
-		captureError(error, {
+		if (reported.current) return
+		reported.current = true
+
+		captureException(error, {
 			tags: { boundary: 'auth' },
 			extra: { digest: error.digest },
 		})
-	}, [error])
+	}, [error, captureException])
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">

@@ -5,12 +5,13 @@
  *
  * Catches errors in all pages under [locale] and provides recovery UI.
  * This is a Client Component as required by Next.js error boundaries.
+ * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
  */
 
+import { useErrorTracking } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
-import { useEffect } from 'react'
-import { captureError } from '@/lib/monitoring'
+import { useEffect, useRef } from 'react'
 
 interface ErrorProps {
 	error: Error & { digest?: string }
@@ -18,13 +19,19 @@ interface ErrorProps {
 }
 
 export default function LocaleError({ error, reset }: ErrorProps) {
+	const { captureException } = useErrorTracking()
+	const reported = useRef(false)
+
 	useEffect(() => {
-		// Log error to monitoring service
-		captureError(error, {
+		if (reported.current) return
+		reported.current = true
+
+		// DOGFOODING: Report error to Sylphx Platform via SDK
+		captureException(error, {
 			tags: { boundary: 'locale' },
 			extra: { digest: error.digest },
 		})
-	}, [error])
+	}, [error, captureException])
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
