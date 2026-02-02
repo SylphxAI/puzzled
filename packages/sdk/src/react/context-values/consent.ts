@@ -46,19 +46,30 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 		},
 
 		getUserConsents: async () => {
+			// API returns: slug, category, name, required, granted, grantedAt, version
 			const consents = await api.get<
-				Array<{ slug: string; enabled: boolean; consentTypeId?: string; updatedAt?: string }>
+				Array<{
+					slug: string
+					granted: boolean
+					grantedAt: string | null
+					category?: string
+					name?: string
+					required?: boolean
+					version?: number | null
+				}>
 			>('/consent', {
 				userId: userId ?? undefined,
 				anonymousId,
 			})
 			// Map API response to UserConsent shape
+			// grantedAt being null means user hasn't explicitly made a choice
 			return consents.map((c) => ({
-				consentTypeId: c.consentTypeId ?? '',
+				consentTypeId: '', // Not returned by this endpoint
 				slug: c.slug,
-				enabled: c.enabled,
-				granted: c.enabled, // Alias
-				updatedAt: c.updatedAt ?? new Date().toISOString(),
+				enabled: c.granted,
+				granted: c.granted,
+				grantedAt: c.grantedAt,
+				updatedAt: c.grantedAt ?? new Date().toISOString(),
 			}))
 		},
 

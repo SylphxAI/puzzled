@@ -144,10 +144,16 @@ export function useConsent(): UseConsentReturn {
 		queryFn: async () => {
 			const consentsResponse = await ctx.getUserConsents()
 			const consentsMap: Record<string, boolean> = {}
+			// Check if user has explicitly made any consent choices
+			// If grantedAt is set, user has made an explicit choice
+			let hasExplicitChoice = false
 			for (const consent of consentsResponse) {
 				consentsMap[consent.slug] = consent.enabled ?? false
+				if (consent.grantedAt) {
+					hasExplicitChoice = true
+				}
 			}
-			return consentsMap
+			return { consents: consentsMap, hasExplicitChoice }
 		},
 		staleTime: STALE_TIME_STABLE_MS, // 5 min
 		// Return empty object for unauthenticated users (explicit retry: false)
@@ -157,9 +163,12 @@ export function useConsent(): UseConsentReturn {
 	// Initialize local state and banner visibility when data loads
 	useEffect(() => {
 		if (!typesQuery.isLoading && !userConsentsQuery.isLoading && !initialized) {
-			const serverConsents = userConsentsQuery.data ?? {}
+			const data = userConsentsQuery.data
+			const serverConsents = data?.consents ?? {}
+			const hasExplicitChoice = data?.hasExplicitChoice ?? false
 			setLocalConsentsState(serverConsents)
-			setShowBanner(Object.keys(serverConsents).length === 0)
+			// Show banner if user has NOT made any explicit consent choices
+			setShowBanner(!hasExplicitChoice)
 			setInitialized(true)
 		}
 	}, [typesQuery.isLoading, userConsentsQuery.isLoading, userConsentsQuery.data, initialized])
@@ -176,7 +185,7 @@ export function useConsent(): UseConsentReturn {
 			for (const consent of consentList) {
 				consentsMap[consent.slug] = consent.granted
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], consentsMap)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: consentsMap, hasExplicitChoice: true })
 			setLocalConsentsState(consentsMap)
 			setShowBanner(false)
 		},
@@ -193,7 +202,7 @@ export function useConsent(): UseConsentReturn {
 			for (const type of types) {
 				allConsents[type.slug] = true
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], allConsents)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: allConsents, hasExplicitChoice: true })
 			setLocalConsentsState(allConsents)
 			setShowBanner(false)
 		},
@@ -210,7 +219,7 @@ export function useConsent(): UseConsentReturn {
 			for (const type of types) {
 				requiredConsents[type.slug] = type.required
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], requiredConsents)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: requiredConsents, hasExplicitChoice: true })
 			setLocalConsentsState(requiredConsents)
 			setShowBanner(false)
 		},
@@ -218,7 +227,7 @@ export function useConsent(): UseConsentReturn {
 
 	const types = typesQuery.data ?? []
 	const consents = localConsents
-	const hasConsented = Object.keys(userConsentsQuery.data ?? {}).length > 0
+	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false
 	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading
 	const error = (typesQuery.error ?? userConsentsQuery.error ?? saveConsentsMutation.error ?? acceptAllMutation.error ?? declineOptionalMutation.error) as Error | null
 
@@ -549,10 +558,15 @@ export function useSafeConsent(): UseSafeConsentReturn {
 		queryFn: async () => {
 			const consentsResponse = await ctx.getUserConsents()
 			const consentsMap: Record<string, boolean> = {}
+			// Check if user has explicitly made any consent choices
+			let hasExplicitChoice = false
 			for (const consent of consentsResponse) {
 				consentsMap[consent.slug] = consent.enabled ?? false
+				if (consent.grantedAt) {
+					hasExplicitChoice = true
+				}
 			}
-			return consentsMap
+			return { consents: consentsMap, hasExplicitChoice }
 		},
 		staleTime: STALE_TIME_STABLE_MS,
 		// Return empty object for unauthenticated users (explicit retry: false)
@@ -562,9 +576,12 @@ export function useSafeConsent(): UseSafeConsentReturn {
 	// Initialize local state and banner visibility when data loads
 	useEffect(() => {
 		if (!typesQuery.isLoading && !userConsentsQuery.isLoading && !initialized) {
-			const serverConsents = userConsentsQuery.data ?? {}
+			const data = userConsentsQuery.data
+			const serverConsents = data?.consents ?? {}
+			const hasExplicitChoice = data?.hasExplicitChoice ?? false
 			setLocalConsentsState(serverConsents)
-			setShowBanner(Object.keys(serverConsents).length === 0)
+			// Show banner if user has NOT made any explicit consent choices
+			setShowBanner(!hasExplicitChoice)
 			setInitialized(true)
 		}
 	}, [typesQuery.isLoading, userConsentsQuery.isLoading, userConsentsQuery.data, initialized])
@@ -580,7 +597,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			for (const consent of consentList) {
 				consentsMap[consent.slug] = consent.granted
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], consentsMap)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: consentsMap, hasExplicitChoice: true })
 			setLocalConsentsState(consentsMap)
 			setShowBanner(false)
 		},
@@ -596,7 +613,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			for (const type of types) {
 				allConsents[type.slug] = true
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], allConsents)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: allConsents, hasExplicitChoice: true })
 			setLocalConsentsState(allConsents)
 			setShowBanner(false)
 		},
@@ -612,7 +629,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			for (const type of types) {
 				requiredConsents[type.slug] = type.required
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], requiredConsents)
+			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: requiredConsents, hasExplicitChoice: true })
 			setLocalConsentsState(requiredConsents)
 			setShowBanner(false)
 		},
@@ -620,7 +637,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 
 	const types = typesQuery.data ?? []
 	const consents = localConsents
-	const hasConsented = Object.keys(userConsentsQuery.data ?? {}).length > 0
+	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false
 	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading
 	const error = (typesQuery.error ?? userConsentsQuery.error ?? saveConsentsMutation.error ?? acceptAllMutation.error ?? declineOptionalMutation.error) as Error | null
 
