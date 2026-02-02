@@ -85,6 +85,7 @@ export {
 	clearAuthCookiesMiddleware,
 	isSessionExpired,
 	hasRefreshToken,
+	parseUserCookie,
 	SESSION_TOKEN_LIFETIME,
 	REFRESH_TOKEN_LIFETIME,
 	SECURE_COOKIE_OPTIONS,
@@ -92,3 +93,9 @@ export {
 	type UserCookieData,
 	type AuthCookiesData,
 } from './cookies'
+
+// Re-export constants needed for token expiry calculations
+export {
+	TOKEN_EXPIRY_BUFFER_MS,
+	SESSION_TOKEN_LIFETIME_MS,
+} from '../constants'
