@@ -30,7 +30,7 @@
  * | Billing | `getPlans`, `createCheckout` | Subscriptions |
  * | Storage | `uploadFile`, `getFileUrl` | File storage |
  * | Jobs | `scheduleJob`, `createCron` | Background jobs |
- * | Flags | `checkFlag`, `getFlags` | Feature flags |
+ * | Flags | `checkFlag`, `getFlags`, `getAllFlags` | Feature flags |
  * | Consent | `hasConsent`, `setConsents` | GDPR/CCPA |
  * | Referrals | `getReferralStats`, `redeemReferralCode` | Referral system |
  * | Webhooks | `getWebhookConfig`, `replayWebhookDelivery` | Webhook management |
@@ -294,6 +294,7 @@ export {
 export {
 	checkFlag,
 	getFlags,
+	getAllFlags,
 	isEnabled,
 	getVariant,
 	getFlagPayload,

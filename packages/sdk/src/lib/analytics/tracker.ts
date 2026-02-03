@@ -23,7 +23,7 @@ import type {
 	PageContext,
 	PropertyValue,
 } from './types'
-import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
+import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG, type NavigatorWithUAData } from './types'
 import {
 	SDK_API_PATH,
 	ANALYTICS_FLUSH_INTERVAL_MS,
@@ -559,10 +559,18 @@ export class AnalyticsTracker {
 	// Context Helpers
 	// ==========================================
 
+	/**
+	 * Get device context with User-Agent Client Hints API support
+	 *
+	 * Uses the modern Client Hints API when available, falls back to
+	 * basic detection for older browsers.
+	 *
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/User-Agent_Client_Hints_API
+	 */
 	private getDeviceContext(): DeviceContext {
 		if (typeof window === 'undefined') return {}
 
-		return {
+		const context: DeviceContext = {
 			$screen_height: window.screen.height,
 			$screen_width: window.screen.width,
 			$viewport_height: window.innerHeight,
@@ -571,6 +579,93 @@ export class AnalyticsTracker {
 			$browser_language: navigator.language,
 			$timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		}
+
+		// Use User-Agent Client Hints API if available (Chromium browsers)
+		// @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData
+		const uaData = (navigator as NavigatorWithUAData).userAgentData
+		if (uaData) {
+			// Sync properties (low entropy, always available)
+			context.$device_type = uaData.mobile ? 'Mobile' : 'Desktop'
+			context.$os = uaData.platform
+
+			// Get browser from brands (use first significant brand)
+			const brand = uaData.brands?.find(
+				(b) => !b.brand.includes('Not') && b.brand !== 'Chromium'
+			)
+			if (brand) {
+				context.$browser = brand.brand
+				context.$browser_version = brand.version
+			}
+		} else {
+			// Fallback: Basic detection from user agent string
+			context.$device_type = this.detectDeviceType()
+			const browserInfo = this.detectBrowser()
+			context.$browser = browserInfo.name
+			context.$browser_version = browserInfo.version
+			context.$os = this.detectOS()
+		}
+
+		return context
+	}
+
+	/**
+	 * Detect device type from screen size (fallback when Client Hints unavailable)
+	 */
+	private detectDeviceType(): DeviceContext['$device_type'] {
+		if (typeof window === 'undefined') return undefined
+
+		const width = window.screen.width
+		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+		if (!isTouchDevice) return 'Desktop'
+		if (width < 768) return 'Mobile'
+		if (width < 1024) return 'Tablet'
+		return 'Desktop'
+	}
+
+	/**
+	 * Detect browser from user agent (fallback when Client Hints unavailable)
+	 */
+	private detectBrowser(): { name?: string; version?: string } {
+		if (typeof navigator === 'undefined') return {}
+
+		const ua = navigator.userAgent
+		let name: string | undefined
+		let version: string | undefined
+
+		// Order matters - check specific browsers first
+		if (ua.includes('Firefox/')) {
+			name = 'Firefox'
+			version = ua.match(/Firefox\/(\d+\.\d+)/)?.[1]
+		} else if (ua.includes('Edg/')) {
+			name = 'Edge'
+			version = ua.match(/Edg\/(\d+\.\d+)/)?.[1]
+		} else if (ua.includes('Chrome/')) {
+			name = 'Chrome'
+			version = ua.match(/Chrome\/(\d+\.\d+)/)?.[1]
+		} else if (ua.includes('Safari/') && !ua.includes('Chrome')) {
+			name = 'Safari'
+			version = ua.match(/Version\/(\d+\.\d+)/)?.[1]
+		}
+
+		return { name, version }
+	}
+
+	/**
+	 * Detect OS from user agent (fallback when Client Hints unavailable)
+	 */
+	private detectOS(): string | undefined {
+		if (typeof navigator === 'undefined') return undefined
+
+		const ua = navigator.userAgent
+
+		if (ua.includes('Windows')) return 'Windows'
+		if (ua.includes('Mac OS X')) return 'macOS'
+		if (ua.includes('Linux')) return 'Linux'
+		if (ua.includes('Android')) return 'Android'
+		if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS'
+
+		return undefined
 	}
 
 	private getPageContext(): PageContext {

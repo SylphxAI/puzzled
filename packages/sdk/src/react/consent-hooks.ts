@@ -71,6 +71,30 @@ export interface UseConsentReturn {
 	openPreferences: () => void
 	/** Close consent banner */
 	closeBanner: () => void
+	/**
+	 * Grant consent for a category and save immediately (Google Consent Mode v2 pattern)
+	 *
+	 * Equivalent to: `gtag('consent', 'update', { analytics_storage: 'granted' })`
+	 *
+	 * @example
+	 * ```typescript
+	 * // Grant analytics consent when user clicks "Accept Analytics"
+	 * await grantConsent('analytics')
+	 * ```
+	 */
+	grantConsent: (category: ConsentCategory) => Promise<void>
+	/**
+	 * Revoke consent for a category and save immediately (Google Consent Mode v2 pattern)
+	 *
+	 * Equivalent to: `gtag('consent', 'update', { analytics_storage: 'denied' })`
+	 *
+	 * @example
+	 * ```typescript
+	 * // Revoke marketing consent
+	 * await revokeConsent('marketing')
+	 * ```
+	 */
+	revokeConsent: (category: ConsentCategory) => Promise<void>
 }
 
 /**
@@ -275,6 +299,63 @@ export function useConsent(): UseConsentReturn {
 		setShowBanner(false)
 	}, [])
 
+	/**
+	 * Grant consent for a specific category and save immediately
+	 * (Google Consent Mode v2 pattern: single call to grant and persist)
+	 */
+	const grantConsent = useCallback(
+		async (category: ConsentCategory) => {
+			// Find all types in this category
+			const categoryTypes = types.filter((t) => t.category === category)
+			if (categoryTypes.length === 0) return
+
+			// Build updated consents
+			const updatedConsents: Record<string, boolean> = { ...consents }
+			for (const type of categoryTypes) {
+				updatedConsents[type.slug] = true
+			}
+			setLocalConsentsState(updatedConsents)
+
+			// Save immediately
+			const consentList = types.map((type) => ({
+				slug: type.slug,
+				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
+			}))
+			await saveConsentsMutation.mutateAsync(consentList)
+		},
+		[types, consents, saveConsentsMutation]
+	)
+
+	/**
+	 * Revoke consent for a specific category and save immediately
+	 * (Google Consent Mode v2 pattern: single call to revoke and persist)
+	 */
+	const revokeConsent = useCallback(
+		async (category: ConsentCategory) => {
+			// Find all types in this category
+			const categoryTypes = types.filter((t) => t.category === category)
+			if (categoryTypes.length === 0) return
+
+			// Build updated consents (only revoke non-required types)
+			const updatedConsents: Record<string, boolean> = { ...consents }
+			for (const type of categoryTypes) {
+				// Required consents cannot be revoked
+				if (!type.required) {
+					updatedConsents[type.slug] = false
+				}
+			}
+			setLocalConsentsState(updatedConsents)
+
+			// Save immediately
+			const consentList = types.map((type) => ({
+				slug: type.slug,
+				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
+			}))
+			await saveConsentsMutation.mutateAsync(consentList)
+		},
+		[types, consents, saveConsentsMutation]
+	)
+
 	return {
 		types,
 		consents,
@@ -290,6 +371,8 @@ export function useConsent(): UseConsentReturn {
 		saveConsents,
 		openPreferences,
 		closeBanner,
+		grantConsent,
+		revokeConsent,
 	}
 }
 
@@ -501,6 +584,8 @@ export interface UseSafeConsentReturn {
 	saveConsents: () => Promise<void>
 	openPreferences: () => void
 	closeBanner: () => void
+	grantConsent: (category: ConsentCategory) => Promise<void>
+	revokeConsent: (category: ConsentCategory) => Promise<void>
 	isConfigured: boolean
 }
 
@@ -530,6 +615,8 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			saveConsents: noopAsync,
 			openPreferences: () => {},
 			closeBanner: () => {},
+			grantConsent: noopAsync,
+			revokeConsent: noopAsync,
 			isConfigured: false,
 		}
 	}
@@ -682,6 +769,54 @@ export function useSafeConsent(): UseSafeConsentReturn {
 		setShowBanner(false)
 	}, [])
 
+	/**
+	 * Grant consent for a specific category and save immediately
+	 */
+	const grantConsent = useCallback(
+		async (category: ConsentCategory) => {
+			const categoryTypes = types.filter((t) => t.category === category)
+			if (categoryTypes.length === 0) return
+
+			const updatedConsents: Record<string, boolean> = { ...consents }
+			for (const type of categoryTypes) {
+				updatedConsents[type.slug] = true
+			}
+			setLocalConsentsState(updatedConsents)
+
+			const consentList = types.map((type) => ({
+				slug: type.slug,
+				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
+			}))
+			await saveConsentsMutation.mutateAsync(consentList)
+		},
+		[types, consents, saveConsentsMutation]
+	)
+
+	/**
+	 * Revoke consent for a specific category and save immediately
+	 */
+	const revokeConsent = useCallback(
+		async (category: ConsentCategory) => {
+			const categoryTypes = types.filter((t) => t.category === category)
+			if (categoryTypes.length === 0) return
+
+			const updatedConsents: Record<string, boolean> = { ...consents }
+			for (const type of categoryTypes) {
+				if (!type.required) {
+					updatedConsents[type.slug] = false
+				}
+			}
+			setLocalConsentsState(updatedConsents)
+
+			const consentList = types.map((type) => ({
+				slug: type.slug,
+				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
+			}))
+			await saveConsentsMutation.mutateAsync(consentList)
+		},
+		[types, consents, saveConsentsMutation]
+	)
+
 	return {
 		types,
 		consents,
@@ -697,6 +832,8 @@ export function useSafeConsent(): UseSafeConsentReturn {
 		saveConsents,
 		openPreferences,
 		closeBanner,
+		grantConsent,
+		revokeConsent,
 		isConfigured: true,
 	}
 }

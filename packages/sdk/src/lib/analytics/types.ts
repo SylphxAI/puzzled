@@ -326,3 +326,59 @@ interface BatchPayload {
 	api_key?: string
 	batch: AnalyticsEvent[]
 }
+
+// ==========================================
+// User-Agent Client Hints API Types
+// ==========================================
+
+/**
+ * Brand info from User-Agent Client Hints API
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands
+ */
+export interface UABrand {
+	brand: string
+	version: string
+}
+
+/**
+ * Low-entropy hints from User-Agent Client Hints API
+ * Available synchronously without permission
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData
+ */
+export interface NavigatorUAData {
+	/** Array of brand/version objects */
+	brands: UABrand[]
+	/** Whether device is mobile */
+	mobile: boolean
+	/** Operating system name */
+	platform: string
+	/**
+	 * Get high-entropy values (requires permission on some platforms)
+	 * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/getHighEntropyValues
+	 */
+	getHighEntropyValues?: (hints: string[]) => Promise<UAHighEntropyValues>
+}
+
+/**
+ * High-entropy hints from User-Agent Client Hints API
+ * Requires explicit permission or Permissions-Policy header
+ */
+export interface UAHighEntropyValues {
+	architecture?: string
+	bitness?: string
+	brands?: UABrand[]
+	fullVersionList?: UABrand[]
+	mobile?: boolean
+	model?: string
+	platform?: string
+	platformVersion?: string
+	uaFullVersion?: string
+}
+
+/**
+ * Navigator with User-Agent Client Hints API
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
+ */
+export interface NavigatorWithUAData extends Navigator {
+	userAgentData?: NavigatorUAData
+}

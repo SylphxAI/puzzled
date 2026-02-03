@@ -3,6 +3,10 @@
  *
  * Pure functions for feature flag evaluation.
  *
+ * Pattern: LaunchDarkly/Statsig server-side evaluation
+ * - Server-side: POST /flags/evaluate with context
+ * - Returns evaluated results (enabled/disabled for this context)
+ *
  * Types are derived from the OpenAPI spec (generated/api.d.ts).
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
@@ -16,21 +20,28 @@ import { type SylphxConfig, callApi } from './config'
 export interface FlagResult {
 	/** Flag key */
 	key: string
-	/** Whether the flag is enabled */
+	/** Whether the flag is enabled for this context */
 	enabled: boolean
 	/** Variant value (for multivariate flags) */
 	variant?: string
+	/** Reason for the evaluation result */
+	reason?: string
 	/** Additional payload data */
 	payload?: Record<string, unknown>
 }
 
 export interface FlagContext {
-	/** User ID */
+	/** User ID for consistent targeting */
 	userId?: string
-	/** Anonymous ID */
+	/** Anonymous ID for pre-auth targeting */
 	anonymousId?: string
-	/** User properties for targeting */
+	/** User properties for targeting rules (plan, isAdmin, etc.) */
 	properties?: Record<string, unknown>
+}
+
+/** Response from the evaluate endpoint */
+interface EvaluateFlagsResponse {
+	data: Record<string, FlagResult>
 }
 
 // ============================================================================
@@ -38,7 +49,10 @@ export interface FlagContext {
 // ============================================================================
 
 /**
- * Check a single feature flag
+ * Check a single feature flag (server-side evaluation)
+ *
+ * Uses POST /flags/evaluate for consistent, server-side targeting.
+ * The server evaluates rollout percentage, premium targeting, etc.
  *
  * @example
  * ```typescript
@@ -57,19 +71,33 @@ export async function checkFlag(
 	flagKey: string,
 	context?: FlagContext
 ): Promise<FlagResult> {
-	return callApi<FlagResult>(config, '/flags/check', {
-		method: 'GET',
-		query: {
-			key: flagKey,
-			userId: context?.userId,
-			anonymousId: context?.anonymousId,
-			properties: context?.properties ? JSON.stringify(context.properties) : undefined,
+	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
+		method: 'POST',
+		body: {
+			context: {
+				userId: context?.userId,
+				anonymousId: context?.anonymousId,
+				properties: context?.properties,
+			},
+			keys: [flagKey],
 		},
 	})
+
+	// Return the evaluated flag, or a disabled default if not found
+	return (
+		response.data[flagKey] ?? {
+			key: flagKey,
+			enabled: false,
+			reason: 'flag_not_found',
+		}
+	)
 }
 
 /**
- * Get multiple feature flags at once
+ * Get multiple feature flags at once (batch evaluation)
+ *
+ * Evaluates all requested flags in a single API call.
+ * More efficient than calling checkFlag() multiple times.
  *
  * @example
  * ```typescript
@@ -87,11 +115,55 @@ export async function getFlags(
 	flagKeys: string[],
 	context?: FlagContext
 ): Promise<Record<string, FlagResult>> {
-	const results = await Promise.all(
-		flagKeys.map((key) => checkFlag(config, key, context))
-	)
+	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
+		method: 'POST',
+		body: {
+			context: {
+				userId: context?.userId,
+				anonymousId: context?.anonymousId,
+				properties: context?.properties,
+			},
+			keys: flagKeys,
+		},
+	})
 
-	return Object.fromEntries(results.map((r) => [r.key, r]))
+	return response.data
+}
+
+/**
+ * Get all feature flags for a context (bootstrap)
+ *
+ * Evaluates ALL flags for the app in a single API call.
+ * Useful for bootstrapping the flag state on app load.
+ *
+ * @example
+ * ```typescript
+ * // Bootstrap all flags on app load
+ * const allFlags = await getAllFlags(config, { userId: 'user-123' })
+ *
+ * // Use throughout the app
+ * if (allFlags['new-checkout']?.enabled) {
+ *   // Show new checkout
+ * }
+ * ```
+ */
+export async function getAllFlags(
+	config: SylphxConfig,
+	context?: FlagContext
+): Promise<Record<string, FlagResult>> {
+	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
+		method: 'POST',
+		body: {
+			context: {
+				userId: context?.userId,
+				anonymousId: context?.anonymousId,
+				properties: context?.properties,
+			},
+			// Omit keys to get all flags
+		},
+	})
+
+	return response.data
 }
 
 /**
