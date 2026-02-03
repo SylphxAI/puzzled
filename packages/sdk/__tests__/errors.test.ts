@@ -523,3 +523,316 @@ describe('RETRYABLE_CODES', () => {
 		expect(RETRYABLE_CODES.has('NOT_FOUND')).toBe(false)
 	})
 })
+
+// ============================================================================
+// Edge Cases and Additional Coverage
+// ============================================================================
+
+describe('SylphxError Edge Cases', () => {
+	test('allows custom status override', () => {
+		const error = new SylphxError('Custom error', {
+			code: 'BAD_REQUEST',
+			status: 422, // Override default 400
+		})
+
+		expect(error.code).toBe('BAD_REQUEST')
+		expect(error.status).toBe(422)
+	})
+
+	test('handles all error codes', () => {
+		const codes: Array<keyof typeof ERROR_CODE_STATUS> = [
+			'BAD_REQUEST',
+			'UNAUTHORIZED',
+			'FORBIDDEN',
+			'NOT_FOUND',
+			'CONFLICT',
+			'PAYLOAD_TOO_LARGE',
+			'UNPROCESSABLE_ENTITY',
+			'TOO_MANY_REQUESTS',
+			'INTERNAL_SERVER_ERROR',
+			'NOT_IMPLEMENTED',
+			'BAD_GATEWAY',
+			'SERVICE_UNAVAILABLE',
+			'GATEWAY_TIMEOUT',
+			'NETWORK_ERROR',
+			'TIMEOUT',
+			'ABORTED',
+			'PARSE_ERROR',
+			'UNKNOWN',
+		]
+
+		for (const code of codes) {
+			const error = new SylphxError(`Error with code ${code}`, { code })
+			expect(error.code).toBe(code)
+			expect(error.status).toBe(ERROR_CODE_STATUS[code])
+		}
+	})
+
+	test('toJSON excludes undefined cause', () => {
+		const error = new SylphxError('No cause')
+		const json = error.toJSON()
+
+		expect(json.name).toBe('SylphxError')
+		expect(json.message).toBe('No cause')
+		// cause not explicitly in toJSON, but Error.prototype handles it
+	})
+
+	test('preserves stack trace', () => {
+		const error = new SylphxError('Stack test')
+		expect(error.stack).toBeDefined()
+		expect(error.stack).toContain('Stack test')
+	})
+})
+
+describe('ValidationError Edge Cases', () => {
+	test('getFieldError returns undefined for missing field', () => {
+		const error = new ValidationError('Validation failed', {
+			fieldErrors: {
+				email: ['Required'],
+			},
+		})
+
+		expect(error.getFieldError('password')).toBeUndefined()
+	})
+
+	test('getFieldError returns undefined when no fieldErrors', () => {
+		const error = new ValidationError('Validation failed')
+
+		expect(error.getFieldError('email')).toBeUndefined()
+	})
+
+	test('getFieldError returns undefined for empty field errors array', () => {
+		const error = new ValidationError('Validation failed', {
+			fieldErrors: {
+				email: [],
+			},
+		})
+
+		expect(error.getFieldError('email')).toBeUndefined()
+	})
+
+	test('handles multiple field errors', () => {
+		const error = new ValidationError('Multiple errors', {
+			fieldErrors: {
+				password: ['Too short', 'Missing number', 'Missing special char'],
+			},
+		})
+
+		// getFieldError returns first error only
+		expect(error.getFieldError('password')).toBe('Too short')
+		// But all errors are accessible
+		expect(error.fieldErrors?.password).toHaveLength(3)
+	})
+})
+
+describe('isRetryableError Edge Cases', () => {
+	test('handles NetworkError with custom name', () => {
+		const error = new Error('Network issue')
+		error.name = 'NetworkError'
+		expect(isRetryableError(error)).toBe(true)
+	})
+
+	test('handles various timeout message formats', () => {
+		expect(isRetryableError(new Error('Connection timed out'))).toBe(true)
+		expect(isRetryableError(new Error('Read timeout'))).toBe(true)
+		expect(isRetryableError(new Error('TIMEOUT exceeded'))).toBe(true)
+	})
+
+	test('does not retry on client errors', () => {
+		expect(isRetryableError(new Error('400 Bad Request'))).toBe(false)
+		expect(isRetryableError(new Error('401 Unauthorized'))).toBe(false)
+		expect(isRetryableError(new Error('403 Forbidden'))).toBe(false)
+		expect(isRetryableError(new Error('404 Not Found'))).toBe(false)
+	})
+
+	test('handles object without message property', () => {
+		expect(isRetryableError({})).toBe(false)
+		expect(isRetryableError({ code: 'ERROR' })).toBe(false)
+	})
+})
+
+describe('toSylphxError Edge Cases', () => {
+	test('handles error with "aborted" in message', () => {
+		const error = new Error('Request was aborted by user')
+		const converted = toSylphxError(error)
+
+		expect(converted.code).toBe('ABORTED')
+	})
+
+	test('handles "unauthorized" text in message', () => {
+		const error = new Error('User is unauthorized to access this resource')
+		const converted = toSylphxError(error)
+
+		expect(converted).toBeInstanceOf(AuthenticationError)
+	})
+
+	test('handles "forbidden" text in message', () => {
+		const error = new Error('Access to this resource is forbidden')
+		const converted = toSylphxError(error)
+
+		expect(converted).toBeInstanceOf(AuthorizationError)
+	})
+
+	test('handles "not found" text in message', () => {
+		const error = new Error('The requested resource was not found')
+		const converted = toSylphxError(error)
+
+		expect(converted).toBeInstanceOf(NotFoundError)
+	})
+
+	test('handles "rate limit" text in message', () => {
+		const error = new Error('Rate limit exceeded. Please try again later.')
+		const converted = toSylphxError(error)
+
+		expect(converted).toBeInstanceOf(RateLimitError)
+	})
+
+	test('converts null to SylphxError with default message', () => {
+		const converted = toSylphxError(null)
+
+		expect(converted).toBeInstanceOf(SylphxError)
+		expect(converted.message).toBe('An unknown error occurred')
+	})
+
+	test('converts undefined to SylphxError with default message', () => {
+		const converted = toSylphxError(undefined)
+
+		expect(converted).toBeInstanceOf(SylphxError)
+		expect(converted.message).toBe('An unknown error occurred')
+	})
+
+	test('converts number to SylphxError', () => {
+		const converted = toSylphxError(500)
+
+		expect(converted).toBeInstanceOf(SylphxError)
+		expect(converted.message).toBe('An unknown error occurred')
+	})
+
+	test('converts object with message to SylphxError', () => {
+		const converted = toSylphxError({ message: 'Object error' })
+
+		expect(converted).toBeInstanceOf(SylphxError)
+		// getErrorMessage handles objects with message property
+	})
+})
+
+describe('exponentialBackoff Edge Cases', () => {
+	test('handles zero base delay', () => {
+		const delay = exponentialBackoff(0, 0)
+		// 0 * 2^0 = 0, with jitter it's still 0
+		expect(delay).toBe(0)
+	})
+
+	test('handles negative attempt number', () => {
+		// 2^-1 = 0.5, so delay would be 500 ± jitter for base 1000
+		const delay = exponentialBackoff(-1, 1000)
+		expect(delay).toBeGreaterThanOrEqual(375) // 500 - 25%
+		expect(delay).toBeLessThanOrEqual(625) // 500 + 25%
+	})
+
+	test('handles very large attempt numbers', () => {
+		// Should not overflow, just cap at maxDelay
+		const delay = exponentialBackoff(100, 1000, 30000)
+		expect(delay).toBeGreaterThanOrEqual(22500) // 30000 - 25%
+		expect(delay).toBeLessThanOrEqual(37500) // 30000 + 25%
+	})
+
+	test('handles Infinity base delay', () => {
+		const delay = exponentialBackoff(0, Number.POSITIVE_INFINITY, 30000)
+		// Should be capped at maxDelay
+		expect(delay).toBeGreaterThanOrEqual(22500)
+		expect(delay).toBeLessThanOrEqual(37500)
+	})
+})
+
+describe('NotFoundError Edge Cases', () => {
+	test('includes resource details in data', () => {
+		const error = new NotFoundError('User not found', {
+			resourceType: 'User',
+			resourceId: 'usr_123',
+			data: { additionalInfo: 'searched by email' },
+		})
+
+		expect(error.resourceType).toBe('User')
+		expect(error.resourceId).toBe('usr_123')
+		expect(error.data).toEqual({ additionalInfo: 'searched by email' })
+	})
+})
+
+describe('RateLimitError Edge Cases', () => {
+	test('includes rate limit details', () => {
+		const error = new RateLimitError('Too many requests', {
+			limit: 100,
+			current: 150,
+			retryAfter: 60,
+			data: { windowMs: 60000 },
+		})
+
+		expect(error.limit).toBe(100)
+		expect(error.current).toBe(150)
+		expect(error.retryAfter).toBe(60)
+		expect(error.data).toEqual({ windowMs: 60000 })
+	})
+
+	test('is retryable', () => {
+		const error = new RateLimitError()
+		expect(error.isRetryable).toBe(true)
+	})
+})
+
+describe('getErrorMessage Edge Cases', () => {
+	test('handles Error with empty message', () => {
+		const error = new Error('')
+		expect(getErrorMessage(error)).toBe('')
+	})
+
+	test('handles object', () => {
+		expect(getErrorMessage({ key: 'value' })).toBe('An unknown error occurred')
+	})
+
+	test('handles array', () => {
+		expect(getErrorMessage(['error1', 'error2'])).toBe('An unknown error occurred')
+	})
+
+	test('handles symbol', () => {
+		expect(getErrorMessage(Symbol('test'))).toBe('An unknown error occurred')
+	})
+
+	test('handles BigInt', () => {
+		expect(getErrorMessage(BigInt(123))).toBe('An unknown error occurred')
+	})
+})
+
+describe('Error class inheritance', () => {
+	test('all specialized errors extend SylphxError', () => {
+		expect(new NetworkError()).toBeInstanceOf(SylphxError)
+		expect(new TimeoutError(1000)).toBeInstanceOf(SylphxError)
+		expect(new AuthenticationError()).toBeInstanceOf(SylphxError)
+		expect(new AuthorizationError()).toBeInstanceOf(SylphxError)
+		expect(new ValidationError('test')).toBeInstanceOf(SylphxError)
+		expect(new RateLimitError()).toBeInstanceOf(SylphxError)
+		expect(new NotFoundError()).toBeInstanceOf(SylphxError)
+	})
+
+	test('all errors extend Error', () => {
+		expect(new SylphxError('test')).toBeInstanceOf(Error)
+		expect(new NetworkError()).toBeInstanceOf(Error)
+		expect(new TimeoutError(1000)).toBeInstanceOf(Error)
+		expect(new AuthenticationError()).toBeInstanceOf(Error)
+		expect(new AuthorizationError()).toBeInstanceOf(Error)
+		expect(new ValidationError('test')).toBeInstanceOf(Error)
+		expect(new RateLimitError()).toBeInstanceOf(Error)
+		expect(new NotFoundError()).toBeInstanceOf(Error)
+	})
+
+	test('isSylphxError works with all error types', () => {
+		expect(isSylphxError(new SylphxError('test'))).toBe(true)
+		expect(isSylphxError(new NetworkError())).toBe(true)
+		expect(isSylphxError(new TimeoutError(1000))).toBe(true)
+		expect(isSylphxError(new AuthenticationError())).toBe(true)
+		expect(isSylphxError(new AuthorizationError())).toBe(true)
+		expect(isSylphxError(new ValidationError('test'))).toBe(true)
+		expect(isSylphxError(new RateLimitError())).toBe(true)
+		expect(isSylphxError(new NotFoundError())).toBe(true)
+	})
+})

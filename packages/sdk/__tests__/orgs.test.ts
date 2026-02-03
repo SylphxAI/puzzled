@@ -474,3 +474,189 @@ describe('canDeleteOrganization', () => {
 		expect(canDeleteOrganization({ role: 'super_admin' } as OrganizationMembership)).toBe(true)
 	})
 })
+
+// ============================================================================
+// Edge Cases and Additional Coverage
+// ============================================================================
+
+describe('hasRole edge cases', () => {
+	test('returns false for undefined membership', () => {
+		expect(hasRole(undefined as unknown as OrganizationMembership | null, 'viewer')).toBe(false)
+	})
+
+	test('handles membership with extra properties', () => {
+		const membership = {
+			role: 'admin',
+			userId: 'user-123',
+			orgId: 'org-456',
+			joinedAt: new Date(),
+		} as OrganizationMembership
+		expect(hasRole(membership, 'developer')).toBe(true)
+	})
+
+	test('returns false for invalid role in membership', () => {
+		// TypeScript would catch this, but runtime might have invalid data
+		const membership = { role: 'invalid_role' } as OrganizationMembership
+		// indexOf returns -1 for unknown role, which is < any valid role index
+		expect(hasRole(membership, 'viewer')).toBe(false)
+	})
+
+	test('returns true for invalid minimumRole (negative index)', () => {
+		const membership = { role: 'admin' } as OrganizationMembership
+		// indexOf returns -1 for invalid role, any valid role index >= -1
+		// This is a defensive consideration - TypeScript prevents this at compile time
+		expect(hasRole(membership, 'invalid' as OrgRole)).toBe(true)
+	})
+
+	test('handles empty object membership', () => {
+		const membership = {} as OrganizationMembership
+		expect(hasRole(membership, 'viewer')).toBe(false)
+	})
+})
+
+describe('Role boundary conditions', () => {
+	test('billing can access analytics', () => {
+		const membership = { role: 'billing' } as OrganizationMembership
+		expect(hasRole(membership, 'analytics')).toBe(true)
+	})
+
+	test('analytics cannot access developer', () => {
+		const membership = { role: 'analytics' } as OrganizationMembership
+		expect(hasRole(membership, 'developer')).toBe(false)
+	})
+
+	test('all roles can access viewer', () => {
+		const roles: OrgRole[] = ['viewer', 'analytics', 'developer', 'billing', 'admin', 'super_admin']
+		for (const role of roles) {
+			const membership = { role } as OrganizationMembership
+			expect(hasRole(membership, 'viewer')).toBe(true)
+		}
+	})
+
+	test('only super_admin can access super_admin', () => {
+		const roles: OrgRole[] = ['viewer', 'analytics', 'developer', 'billing', 'admin']
+		for (const role of roles) {
+			const membership = { role } as OrganizationMembership
+			expect(hasRole(membership, 'super_admin')).toBe(false)
+		}
+		expect(hasRole({ role: 'super_admin' } as OrganizationMembership, 'super_admin')).toBe(true)
+	})
+})
+
+describe('Permission helper consistency', () => {
+	test('canManageMembers and canManageSettings require same role', () => {
+		const roles: OrgRole[] = ['viewer', 'analytics', 'developer', 'billing', 'admin', 'super_admin']
+		for (const role of roles) {
+			const membership = { role } as OrganizationMembership
+			expect(canManageMembers(membership)).toBe(canManageSettings(membership))
+		}
+	})
+
+	test('canDeleteOrganization is more restrictive than canManageSettings', () => {
+		const adminMembership = { role: 'admin' } as OrganizationMembership
+		expect(canManageSettings(adminMembership)).toBe(true)
+		expect(canDeleteOrganization(adminMembership)).toBe(false)
+	})
+
+	test('super_admin has all permissions', () => {
+		const membership = { role: 'super_admin' } as OrganizationMembership
+		expect(canManageMembers(membership)).toBe(true)
+		expect(canManageSettings(membership)).toBe(true)
+		expect(canDeleteOrganization(membership)).toBe(true)
+	})
+})
+
+describe('API error handling', () => {
+	test('handles network error', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.reject(new Error('Network error'))
+		}) as typeof fetch
+
+		await expect(getOrganizations(mockConfig)).rejects.toThrow('Network error')
+	})
+
+	test('handles 404 response', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(
+				new Response(JSON.stringify({ error: 'Organization not found' }), {
+					status: 404,
+					headers: { 'Content-Type': 'application/json' },
+				})
+			)
+		}) as typeof fetch
+
+		await expect(getOrganization(mockConfig, 'nonexistent')).rejects.toThrow()
+	})
+
+	test('handles 403 forbidden response', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(
+				new Response(JSON.stringify({ error: 'Access denied' }), {
+					status: 403,
+					headers: { 'Content-Type': 'application/json' },
+				})
+			)
+		}) as typeof fetch
+
+		await expect(updateOrganization(mockConfig, 'org-123', { name: 'New' })).rejects.toThrow()
+	})
+
+	test('handles malformed JSON response', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(
+				new Response('Not JSON', {
+					status: 200,
+					headers: { 'Content-Type': 'text/plain' },
+				})
+			)
+		}) as typeof fetch
+
+		await expect(getOrganizations(mockConfig)).rejects.toThrow()
+	})
+
+	test('handles empty response body gracefully', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(
+				new Response('', {
+					status: 200,
+					headers: { 'Content-Type': 'application/json' },
+				})
+			)
+		}) as typeof fetch
+
+		// Empty body returns empty object (204 No Content pattern)
+		const result = await getOrganizations(mockConfig)
+		expect(result).toEqual({})
+	})
+})
+
+describe('Request headers', () => {
+	test('includes secret key in headers', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(createMockResponse({ organizations: [] }))
+		}) as typeof fetch
+
+		await getOrganizations(mockConfig)
+
+		const headers = getLastCall()?.options.headers as Record<string, string>
+		expect(headers['x-app-secret']).toBe('sk_dev_test123')
+	})
+
+	test('includes content-type for POST requests', async () => {
+		globalThis.fetch = mock((url: string, options: RequestInit) => {
+			fetchCalls.push({ url, options })
+			return Promise.resolve(createMockResponse({ organization: {} }))
+		}) as typeof fetch
+
+		await createOrganization(mockConfig, { name: 'Test', slug: 'test' })
+
+		const headers = getLastCall()?.options.headers as Record<string, string>
+		expect(headers['Content-Type']).toBe('application/json')
+	})
+})

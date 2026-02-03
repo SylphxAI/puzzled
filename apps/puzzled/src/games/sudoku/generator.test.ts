@@ -278,14 +278,14 @@ describe('sudoku integration', () => {
 
 	test('difficulty progression', () => {
 		// Generate puzzles at each difficulty and verify order
-		const easyClues = generateSudokuPuzzle(42, 'easy').puzzleData.grid
-			.flat()
+		const easyClues = generateSudokuPuzzle(42, 'easy')
+			.puzzleData.grid.flat()
 			.filter((c) => c !== null).length
-		const mediumClues = generateSudokuPuzzle(42, 'medium').puzzleData.grid
-			.flat()
+		const mediumClues = generateSudokuPuzzle(42, 'medium')
+			.puzzleData.grid.flat()
 			.filter((c) => c !== null).length
-		const hardClues = generateSudokuPuzzle(42, 'hard').puzzleData.grid
-			.flat()
+		const hardClues = generateSudokuPuzzle(42, 'hard')
+			.puzzleData.grid.flat()
 			.filter((c) => c !== null).length
 
 		expect(easyClues).toBeGreaterThan(mediumClues)

@@ -32,7 +32,8 @@ describe('generateKillerSudokuPuzzle', () => {
 			const puzzle2 = generateKillerSudokuPuzzle(WORKING_SEEDS[1])
 
 			// Solution grids should differ
-			const sameGrid = JSON.stringify(puzzle1.solution.grid) === JSON.stringify(puzzle2.solution.grid)
+			const sameGrid =
+				JSON.stringify(puzzle1.solution.grid) === JSON.stringify(puzzle2.solution.grid)
 			expect(sameGrid).toBe(false)
 		})
 	})
@@ -218,10 +219,7 @@ describe('generateKillerSudokuPuzzle', () => {
 				const puzzle = generateKillerSudokuPuzzle(seed)
 
 				for (const cage of puzzle.puzzleData.cages) {
-					const actualSum = cage.cells.reduce(
-						(sum, [r, c]) => sum + puzzle.solution.grid[r][c],
-						0,
-					)
+					const actualSum = cage.cells.reduce((sum, [r, c]) => sum + puzzle.solution.grid[r][c], 0)
 					expect(cage.sum).toBe(actualSum)
 				}
 			}

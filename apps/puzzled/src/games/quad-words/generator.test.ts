@@ -27,7 +27,8 @@ describe('generateQuordlePuzzle', () => {
 			const puzzle2 = generateQuordlePuzzle(200)
 
 			// At least one word should differ
-			const same = JSON.stringify(puzzle1.puzzleData.words) === JSON.stringify(puzzle2.puzzleData.words)
+			const same =
+				JSON.stringify(puzzle1.puzzleData.words) === JSON.stringify(puzzle2.puzzleData.words)
 			expect(same).toBe(false)
 		})
 	})

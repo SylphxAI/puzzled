@@ -269,10 +269,12 @@ export class ErrorTracker {
 			},
 		}
 
-		// Before send hook
-		const processedEvent = this.config.beforeSend?.(event) ?? event
+		// Before send hook - explicitly check for null to allow suppression
+		const processedEvent = this.config.beforeSend
+			? this.config.beforeSend(event)
+			: event
 
-		if (!processedEvent) {
+		if (processedEvent === null) {
 			return { eventId: '' }
 		}
 
@@ -341,9 +343,12 @@ export class ErrorTracker {
 			},
 		}
 
-		const processedEvent = this.config.beforeSend?.(event) ?? event
+		// Before send hook - explicitly check for null to allow suppression
+		const processedEvent = this.config.beforeSend
+			? this.config.beforeSend(event)
+			: event
 
-		if (!processedEvent) {
+		if (processedEvent === null) {
 			return { eventId: '' }
 		}
 

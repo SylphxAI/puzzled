@@ -143,7 +143,10 @@ describe('generateArithmoPuzzle', () => {
 
 describe('equation patterns', () => {
 	// Collect sample of equations
-	const sampleEquations = Array.from({ length: 500 }, (_, i) => generateArithmoPuzzle(i).solution.equation)
+	const sampleEquations = Array.from(
+		{ length: 500 },
+		(_, i) => generateArithmoPuzzle(i).solution.equation,
+	)
 
 	test('includes addition equations (NN+NN=NN)', () => {
 		const additionEquations = sampleEquations.filter((eq) => eq.includes('+') && !eq.includes('*'))
@@ -151,7 +154,9 @@ describe('equation patterns', () => {
 	})
 
 	test('includes subtraction equations (NN-NN=NN)', () => {
-		const subtractionEquations = sampleEquations.filter((eq) => eq.includes('-') && !eq.includes('*'))
+		const subtractionEquations = sampleEquations.filter(
+			(eq) => eq.includes('-') && !eq.includes('*'),
+		)
 		expect(subtractionEquations.length).toBeGreaterThan(0)
 	})
 
@@ -167,7 +172,7 @@ describe('equation patterns', () => {
 
 	test('includes order of operations equations', () => {
 		const orderOfOpsEquations = sampleEquations.filter(
-			(eq) => (eq.includes('+') && eq.includes('*')) || (eq.includes('-') && eq.includes('*'))
+			(eq) => (eq.includes('+') && eq.includes('*')) || (eq.includes('-') && eq.includes('*')),
 		)
 		expect(orderOfOpsEquations.length).toBeGreaterThan(0)
 	})

@@ -5,14 +5,14 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import {
-	formatTimer,
-	isPerfectGame,
-	formatTimeScore,
-	compareByTime,
-	calculateWordleScore,
-} from './format'
 import type { GameCompletionStats, GameShareStats } from '../types'
+import {
+	calculateWordleScore,
+	compareByTime,
+	formatTimer,
+	formatTimeScore,
+	isPerfectGame,
+} from './format'
 
 // ============================================================================
 // formatTimer Tests

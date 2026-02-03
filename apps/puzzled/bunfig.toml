@@ -1,3 +1,5 @@
 [test]
 # Preload test setup to mock server-only module
 preload = ["./tests/setup.ts"]
+# Only run .test.ts files, exclude Playwright E2E .spec.ts files
+include = ["**/*.test.ts"]

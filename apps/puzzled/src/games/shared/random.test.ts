@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { seededRandom, shuffleArray, pickRandom } from './random'
+import { pickRandom, seededRandom, shuffleArray } from './random'
 
 // ============================================================================
 // seededRandom Tests
