@@ -208,18 +208,7 @@ export interface TokenResponse {
 	user: User
 }
 
-interface TokenResponseOAuth {
-	access_token: string
-	refresh_token: string
-	token_type: 'Bearer'
-	expires_in: number
-	user: {
-		id: string
-		email: string
-		name: string | null
-		image: string | null
-	}
-}
+// Note: OAuth token response uses platform-specific shape, not SDK types
 
 export interface AccessTokenPayload {
 	sub: string
@@ -281,32 +270,8 @@ export interface DeviceSession {
 // ==========================================
 // Billing Types
 // Note: Plan, Subscription, CheckoutInput are exported from billing.ts (SSOT)
+// Note: getBillingBalance/getBillingUsage return inline types from billing.ts
 // ==========================================
-
-interface BillingBalance {
-	current: number
-	currentFormatted: string
-}
-
-interface BillingUsage {
-	period: { type: string; start: string; end: string }
-	metrics: {
-		aiCostMicrodollars: number
-		storageBytesUsed: number
-		storageEgressBytes: number
-		storageUploads: number
-		dbStorageBytes: number
-		dbComputeSeconds: number
-		emailSentCount: number
-		jobInvocationCount: number
-		cronActiveCount: number
-		pushSentCount?: number
-		analyticsEventCount: number
-		webhookDeliveryCount: number
-		errorEventCount: number
-		authMau: number
-	} | null
-}
 
 // ==========================================
 // Referrals Types - SSOT: referrals.ts
@@ -320,11 +285,6 @@ export type {
 // Feature Flags Types
 // Note: EvaluationReason is re-exported from lib/flags/types.ts at top of file
 // ==========================================
-
-interface FeatureFlagResult {
-	enabled: boolean
-	value: unknown
-}
 
 // Import for local use in FeatureFlagDetailResult
 import type { EvaluationReason } from './lib/flags/types'
@@ -579,46 +539,16 @@ export type AIListModelsResponse = AIModelsResponse
 
 // ==========================================
 // Jobs Types
+// Note: Job/JobsListResult are defined in services-context.ts for React layer
 // ==========================================
 
 export type JobStatusEnum = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
 export type JobTypeEnum = 'one-time' | 'cron'
 
-interface Job {
-	id: string
-	name: string | null
-	type: JobTypeEnum
-	status: JobStatusEnum
-	callbackUrl: string
-	payload?: unknown
-	scheduledFor: string | null
-	startedAt?: string | null
-	completedAt?: string | null
-	failedAt?: string | null
-	errorMessage?: string | null
-	retries: number
-	maxRetries: number
-	createdAt: string
-}
-
-interface JobsListResult {
-	jobs: Job[]
-	total: number
-	limit?: number
-	offset?: number
-	hasMore?: boolean
-}
-
 // ==========================================
 // Storage Types (Additional)
-// Note: StorageFile and other core types are re-exported from lib/storage/types.ts above
+// Note: StorageFile and other core types are re-exported from lib/storage/types.ts
 // ==========================================
-
-interface StorageUsage {
-	bytesUsed: number
-	bytesLimit: number
-	fileCount: number
-}
 
 // ==========================================
 // Webhooks Types
@@ -660,13 +590,8 @@ export interface InAppMessageWithReadStatus {
 
 // ==========================================
 // Challenge / Step-up Auth Types
+// Note: Challenge types are defined in auth service when needed
 // ==========================================
-
-type ChallengeLevel = 'low' | 'medium' | 'high' | 'critical'
-type ChallengeRequirement = 'password' | 'totp' | 'passkey' | 'email_code'
-type ChallengeStatus = 'pending' | 'verified' | 'expired' | 'failed'
-type IdentityMethod = 'password' | 'totp' | 'passkey' | 'email_code' | 'oauth'
-type MfaMethod = 'totp' | 'passkey' | 'email_code'
 
 // ==========================================
 // Organizations Types - SSOT: orgs.ts
@@ -675,62 +600,13 @@ type MfaMethod = 'totp' | 'passkey' | 'email_code'
 
 // ==========================================
 // Input Types
+// Note: Most input types are defined and exported from their respective modules:
+// - TrackInput, PageInput, IdentifyInput from analytics.ts
+// - CheckoutInput from billing.ts
+// - PushSubscription from notifications.ts
+// - FlagContext from flags.ts
+// - FileUploadOptions from storage.ts
 // ==========================================
-
-interface TrackEventInput {
-	event: string
-	properties?: Record<string, unknown>
-	timestamp?: string
-	userId?: string
-	anonymousId?: string
-}
-
-interface BatchEventsInput {
-	events: TrackEventInput[]
-}
-
-interface IdentifyInput {
-	userId: string
-	traits?: Record<string, unknown>
-	anonymousId?: string
-}
-
-interface UpdateProfileInput {
-	name?: string
-	image?: string
-}
-
-interface ChangePasswordInput {
-	currentPassword: string
-	newPassword: string
-}
-
-// CheckoutInput re-exported from billing.ts above
-
-interface RegisterPushInput {
-	subscription: PushSubscriptionJSON
-}
-
-// RedeemReferralInput re-exported from referrals.ts above
-
-interface CheckFeatureFlagInput {
-	key: string
-	context?: Record<string, unknown>
-}
-
-interface UploadFileInput {
-	file: File
-	path?: string
-}
-
-interface RegisterMobileDeviceInput {
-	platform: 'ios' | 'android'
-	token: string
-	deviceId?: string
-	deviceName?: string
-	appVersion?: string
-	osVersion?: string
-}
 
 // ==========================================
 // Pagination Types
@@ -829,7 +705,6 @@ export interface JobsStatusResult {
 
 // Webhooks additional types (React layer)
 // Note: Core types re-exported from webhooks.ts above
-type WebhookEnvironmentType = 'development' | 'staging' | 'production'
 export type WebhookDeliveryStatus = 'pending' | 'success' | 'failed' | 'delivered'
 export type WebhookStatsPeriod = 'day' | 'week' | 'month'
 
