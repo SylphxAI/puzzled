@@ -169,9 +169,32 @@ export const OAUTH_PROVIDERS = [
 export type OAuthProviderId = (typeof OAUTH_PROVIDERS)[number]
 
 // ==========================================
-// Core User Type
+// User Type Hierarchy
+// ==========================================
+//
+// User Types at a Glance:
+// - User           → Base type (cookie data, token responses)
+// - AuthUser       → From auth.me() (adds twoFactorEnabled) — see services-context.ts
+// - UserProfile    → Full profile (adds twoFactorEnabled, createdAt)
+// - UserCookieData → Cookie wrapper (User + expiresAt)
+//
+// When to Use Which:
+// - User: Client-side state, cookie hydration, token responses
+// - AuthUser: After authentication, when you need 2FA status
+// - UserProfile: Full account settings page
 // ==========================================
 
+/**
+ * Base user type for SDK operations.
+ *
+ * Used in:
+ * - Token responses (login, refresh)
+ * - Cookie data for client hydration
+ * - Basic user state in React context
+ *
+ * For authenticated user with security fields (twoFactorEnabled),
+ * see AuthUser in services-context.ts.
+ */
 export interface User {
 	id: string
 	email: string
@@ -226,6 +249,15 @@ export interface AccessTokenPayload {
 // User Profile Types
 // ==========================================
 
+/**
+ * Full user profile from /user/profile endpoint.
+ *
+ * Includes all User fields plus:
+ * - twoFactorEnabled: Security status for account settings
+ * - createdAt: Required (vs optional in User)
+ *
+ * Use for account settings pages where full profile is needed.
+ */
 export interface UserProfile {
 	id: string
 	email: string

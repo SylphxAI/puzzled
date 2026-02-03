@@ -535,8 +535,13 @@ export function useWebhooksContext(): WebhooksContextValue {
 // Auth Context (SDK Auth for direct API calls)
 // ============================================
 
-/** User shape from SDK auth operations */
-interface SdkAuthUser {
+/**
+ * Authenticated user from SDK auth operations (login, 2FA, me())
+ *
+ * Includes security-related fields like twoFactorEnabled.
+ * For basic user data without auth fields, use User from types.ts.
+ */
+export interface AuthUser {
 	id: string
 	email: string
 	name: string | null
@@ -549,7 +554,7 @@ interface SdkAuthUser {
 export interface SdkLoginResult {
 	requiresTwoFactor: boolean
 	userId?: string
-	user?: SdkAuthUser
+	user?: AuthUser
 }
 
 /** 2FA verification result shape from SDK */
@@ -557,10 +562,10 @@ export interface SdkVerify2FAResult {
 	accessToken: string
 	refreshToken: string
 	expiresIn: number
-	user: SdkAuthUser
+	user: AuthUser
 }
 
-/** Registration result shape from SDK */
+/** Registration result shape from SDK (minimal user data before setup) */
 export interface SdkRegisterResult {
 	requiresVerification: boolean
 	message: string
@@ -569,16 +574,6 @@ export interface SdkRegisterResult {
 		email: string
 		name: string | null
 	}
-}
-
-/** User shape from auth.me() */
-export interface AuthUser {
-	id: string
-	email: string
-	name: string | null
-	image: string | null
-	emailVerified: boolean
-	twoFactorEnabled: boolean
 }
 
 export interface SdkAuthContextValue {
