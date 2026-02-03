@@ -3,6 +3,27 @@
  *
  * Type definitions for the SDK. Domain-specific types are re-exported from
  * their respective modules (SSOT). Additional UI/React types are defined here.
+ *
+ * ## Naming Conventions
+ *
+ * | Suffix | Purpose | Example |
+ * |--------|---------|---------|
+ * | `Input` | Function parameters | `SignInInput`, `TrackInput` |
+ * | `Result` | SDK function return values | `SignInResult`, `TokenResult` |
+ * | `Response` | API response payloads | `TokenResponse`, `ChatCompletionResponse` |
+ * | `Options` | Optional function parameters | `FileUploadOptions`, `RevokeTokenOptions` |
+ * | `Config` | Runtime configuration objects | `SylphxConfig`, `AnalyticsConfig` |
+ *
+ * ## Type Location Guidelines
+ *
+ * - **Domain types**: Defined in their module (auth.ts, analytics.ts, etc.)
+ * - **Shared types**: Defined here in types.ts
+ * - **React-specific**: Defined in react/services-context.ts or react/hooks.ts
+ *
+ * ## Sdk* Prefix (services-context.ts)
+ *
+ * Types prefixed with `Sdk` (e.g., `SdkUserProfile`) are SDK internal representations
+ * with Date objects instead of ISO strings. API types use strings, SDK transforms to Date.
  */
 
 // ==========================================

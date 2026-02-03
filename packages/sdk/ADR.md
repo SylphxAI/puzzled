@@ -461,6 +461,58 @@ Clear naming prevents:
 
 ---
 
+## ADR-006: Type Naming Conventions
+
+**Date:** 2026-02-03
+
+**Status:** Accepted
+
+### Context
+
+The SDK has many types across different modules. Consistent naming helps developers understand what a type represents without reading documentation.
+
+### Decision
+
+Establish standard naming conventions for type suffixes:
+
+| Suffix | Purpose | Example |
+|--------|---------|---------|
+| `Input` | Function parameters (required fields) | `SignInInput`, `TrackInput` |
+| `Result` | SDK function return values | `SignInResult`, `TokenResult` |
+| `Response` | Raw API response payloads | `TokenResponse`, `ChatCompletionResponse` |
+| `Options` | Optional function parameters | `FileUploadOptions`, `SignedUrlOptions` |
+| `Config` | Runtime configuration objects | `SylphxConfig`, `AnalyticsConfig` |
+| `Props` | React component props | `SylphxProviderProps`, `SignInProps` |
+
+### Additional Conventions
+
+**Sdk* Prefix (internal types):**
+Types prefixed with `Sdk` (e.g., `SdkUserProfile`) are SDK internal representations with JavaScript `Date` objects. API types use ISO strings, SDK transforms to `Date` for convenience.
+
+**Type Location:**
+- Domain types → their module (auth.ts, analytics.ts)
+- Shared types → types.ts
+- React-specific → react/services-context.ts or react/hooks.ts
+
+### Rationale
+
+- Consistent naming reduces cognitive load
+- Suffix indicates how the type is used
+- Matches patterns in industry SDKs (Stripe, Clerk, Firebase)
+
+### Consequences
+
+**Positive:**
+- Self-documenting type names
+- Easier to find the right type
+- Clear distinction between API types and SDK types
+
+**Negative:**
+- Need to maintain consistency as SDK grows
+- Some existing types may not follow convention exactly
+
+---
+
 ## Summary
 
 The SDK follows these principles:
@@ -470,5 +522,6 @@ The SDK follows these principles:
 3. **React as convenience** - hooks wrap pure functions
 4. **Tree-shaking by design** - `sideEffects: false`, pure functions
 5. **Inline defaults + auto-discovery** - no config files, Console override
+6. **Consistent naming** - Input/Result/Options/Config suffixes
 
 This matches Firebase's architecture pattern, which is considered industry best practice for SDK design.
