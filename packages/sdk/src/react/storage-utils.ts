@@ -14,26 +14,11 @@
  */
 
 import type { ClickIds } from './platform-context'
-import type { User } from '../types'
+import type { UserCookieData } from '../types'
 import { CLICK_ID_EXPIRY_MS, STORAGE_KEY_PREFIX } from '../constants'
 
 // Re-export for convenience
-export type { ClickIds }
-
-// =============================================================================
-// User Cookie Type (from server-set cookies)
-// =============================================================================
-
-/**
- * User data from server-set cookie (for client hydration)
- *
- * This is read from the __sylphx_{namespace}_user cookie.
- * The cookie is set by the server after OAuth callback.
- */
-export interface UserCookieData {
-	user: User
-	expiresAt: number
-}
+export type { ClickIds, UserCookieData }
 
 // =============================================================================
 // Storage Keys (Non-Auth Only)

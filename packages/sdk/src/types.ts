@@ -182,6 +182,21 @@ export interface User {
 	createdAt?: string
 }
 
+/**
+ * User cookie data (JS-readable for client hydration)
+ *
+ * Single Source of Truth for the user cookie shape.
+ * Used by both server-side (nextjs/cookies.ts) and client-side (react/storage-utils.ts).
+ *
+ * Note: This contains NO sensitive data.
+ * Tokens are stored separately in HttpOnly cookies.
+ */
+export interface UserCookieData {
+	user: User
+	/** Timestamp when session expires (for client-side expiry check) */
+	expiresAt: number
+}
+
 // ==========================================
 // Token Types
 // ==========================================

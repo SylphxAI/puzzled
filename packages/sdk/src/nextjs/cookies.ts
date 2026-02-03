@@ -24,12 +24,15 @@
  */
 
 import { cookies } from 'next/headers'
-import type { TokenResponse, User } from '../types'
+import type { TokenResponse, User, UserCookieData } from '../types'
 import {
 	SESSION_TOKEN_LIFETIME_SECONDS,
 	REFRESH_TOKEN_LIFETIME_SECONDS,
 	TOKEN_EXPIRY_BUFFER_MS,
 } from '../constants'
+
+// Re-export UserCookieData for consumers of this module
+export type { UserCookieData }
 
 // =============================================================================
 // Cookie Name Generator
@@ -107,18 +110,6 @@ export const USER_COOKIE_OPTIONS = {
 // =============================================================================
 // Types
 // =============================================================================
-
-/**
- * User cookie data (JS-readable for client hydration)
- *
- * Note: This contains NO sensitive data.
- * Tokens are stored separately in HttpOnly cookies.
- */
-export interface UserCookieData {
-	user: User
-	/** Timestamp when session expires (for client-side expiry check) */
-	expiresAt: number
-}
 
 /**
  * Auth cookies data returned by getAuthCookies
