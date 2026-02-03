@@ -118,7 +118,111 @@ function generateSolution(random: () => number, size: number): ('sun' | 'moon')[
 }
 
 /**
- * Remove cells to create puzzle with unique solution
+ * Count solutions for a Tango puzzle using constraint propagation + backtracking
+ * Returns early if more than maxSolutions found (for efficiency)
+ */
+function countSolutions(puzzle: CellValue[][], maxSolutions: number = 2): number {
+	const size = puzzle.length
+	const grid: CellValue[][] = puzzle.map((row) => [...row])
+	let solutions = 0
+
+	function isValidAtPosition(row: number, col: number, value: 'sun' | 'moon'): boolean {
+		const halfSize = size / 2
+
+		// Temporarily place the value
+		grid[row][col] = value
+
+		// Check consecutive constraint - horizontal
+		let hCount = 1
+		for (let c = col - 1; c >= 0 && grid[row][c] === value; c--) hCount++
+		for (let c = col + 1; c < size && grid[row][c] === value; c++) hCount++
+		if (hCount > MAX_CONSECUTIVE) {
+			grid[row][col] = null
+			return false
+		}
+
+		// Check consecutive constraint - vertical
+		let vCount = 1
+		for (let r = row - 1; r >= 0 && grid[r][col] === value; r--) vCount++
+		for (let r = row + 1; r < size && grid[r][col] === value; r++) vCount++
+		if (vCount > MAX_CONSECUTIVE) {
+			grid[row][col] = null
+			return false
+		}
+
+		// Check row count constraint
+		const rowSuns = grid[row].filter((v) => v === 'sun').length
+		const rowMoons = grid[row].filter((v) => v === 'moon').length
+		if (rowSuns > halfSize || rowMoons > halfSize) {
+			grid[row][col] = null
+			return false
+		}
+
+		// Check column count constraint
+		const colSuns = grid.filter((r) => r[col] === 'sun').length
+		const colMoons = grid.filter((r) => r[col] === 'moon').length
+		if (colSuns > halfSize || colMoons > halfSize) {
+			grid[row][col] = null
+			return false
+		}
+
+		grid[row][col] = null
+		return true
+	}
+
+	function solve(pos: number): void {
+		if (solutions >= maxSolutions) return // Early termination
+
+		if (pos === size * size) {
+			// Verify uniqueness constraints
+			const rowStrings = new Set<string>()
+			for (let r = 0; r < size; r++) {
+				const str = grid[r].join('')
+				if (rowStrings.has(str)) return
+				rowStrings.add(str)
+			}
+
+			const colStrings = new Set<string>()
+			for (let c = 0; c < size; c++) {
+				const str = grid.map((row) => row[c]).join('')
+				if (colStrings.has(str)) return
+				colStrings.add(str)
+			}
+
+			solutions++
+			return
+		}
+
+		const row = Math.floor(pos / size)
+		const col = pos % size
+
+		if (grid[row][col] !== null) {
+			// Cell already filled (clue)
+			solve(pos + 1)
+			return
+		}
+
+		// Try both values
+		for (const value of ['sun', 'moon'] as const) {
+			if (isValidAtPosition(row, col, value)) {
+				grid[row][col] = value
+				solve(pos + 1)
+				grid[row][col] = null
+				if (solutions >= maxSolutions) return
+			}
+		}
+	}
+
+	solve(0)
+	return solutions
+}
+
+/**
+ * Remove cells to create puzzle with VERIFIED unique solution
+ *
+ * ⚠️ STATE-OF-THE-ART: Unlike naive removal, this function verifies
+ * that the puzzle maintains exactly one solution after each cell removal.
+ * This prevents creating puzzles with multiple solutions or no solution.
  */
 function createPuzzle(
 	solution: ('sun' | 'moon')[][],
@@ -142,13 +246,25 @@ function createPuzzle(
 		;[positions[i], positions[j]] = [positions[j], positions[i]]
 	}
 
-	// Remove cells while maintaining solvability
+	// Remove cells while maintaining UNIQUE solvability
 	let cluesRemaining = size * size
 	for (const [r, c] of positions) {
 		if (cluesRemaining <= targetClues) break
 
+		// Save the current value
+		const savedValue = puzzle[r][c]
 		puzzle[r][c] = null
-		cluesRemaining--
+
+		// Check if puzzle still has exactly one solution
+		const solutionCount = countSolutions(puzzle, 2)
+
+		if (solutionCount === 1) {
+			// Safe to remove - puzzle is still uniquely solvable
+			cluesRemaining--
+		} else {
+			// Multiple solutions or no solution - restore the cell
+			puzzle[r][c] = savedValue
+		}
 	}
 
 	return puzzle

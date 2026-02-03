@@ -306,15 +306,45 @@ export function clearAllPKCEVerifiers(appId: string): void {
 }
 
 // ==========================================
-// PKCE Verification (server-side)
+// PKCE Verification (for testing/reference)
 // ==========================================
 
 /**
- * Verify code_verifier against stored code_challenge.
- * Used on server during token exchange.
+ * Constant-time string comparison to prevent timing attacks.
  *
- * Note: Server should use timing-safe comparison.
- * This function is primarily for testing/reference.
+ * Even though this is primarily for testing, we use timing-safe comparison
+ * to establish correct patterns and prevent copy-paste vulnerabilities.
+ *
+ * @see OWASP: https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+	if (a.length !== b.length) {
+		// Still do comparison to maintain constant time
+		// but we know it will fail
+		let _result = 1
+		for (let i = 0; i < a.length; i++) {
+			_result |= a.charCodeAt(i) ^ (b.charCodeAt(i % b.length) || 0)
+		}
+		return false
+	}
+
+	let result = 0
+	for (let i = 0; i < a.length; i++) {
+		result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+	}
+	return result === 0
+}
+
+/**
+ * Verify code_verifier against stored code_challenge.
+ *
+ * ⚠️ This is a reference implementation for testing.
+ * The actual server-side verification lives in apps/sylphx/src/lib/auth/service.ts
+ * which has the same timing-safe comparison implementation.
+ *
+ * Uses constant-time comparison to prevent timing attacks (OWASP A02:2021).
+ *
+ * @see RFC 7636 - Proof Key for Code Exchange
  */
 export async function verifyPKCE(
 	codeVerifier: string,
@@ -322,11 +352,13 @@ export async function verifyPKCE(
 	method: 'S256' | 'plain' = 'S256',
 ): Promise<boolean> {
 	if (method === 'plain') {
-		// Plain method: direct comparison (not recommended, timing-unsafe)
-		return codeVerifier === codeChallenge
+		// Plain method: code_verifier === code_challenge (timing-safe)
+		return timingSafeEqual(codeVerifier, codeChallenge)
 	}
 
-	// S256 method: hash and compare
+	// S256 method: BASE64URL(SHA256(code_verifier)) === code_challenge
 	const computedChallenge = await generateCodeChallenge(codeVerifier)
-	return computedChallenge === codeChallenge
+
+	// Timing-safe comparison
+	return timingSafeEqual(computedChallenge, codeChallenge)
 }

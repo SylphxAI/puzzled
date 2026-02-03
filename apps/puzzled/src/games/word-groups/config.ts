@@ -3,7 +3,7 @@
  * Implements GameConfig interface for modular game system
  */
 
-import { pickRandom } from '@/games/shared'
+import { pickRandom, seededRandom, shuffleArray } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameCompletionStats,
@@ -70,32 +70,15 @@ function getPuzzleFromSeed(seed: number): ConnectionsPuzzle {
 
 /**
  * Get all words from puzzle and shuffle them
+ *
+ * ⚠️ FROZEN: Uses shared seededRandom + shuffleArray for deterministic results
+ * DO NOT change the algorithm - it will break historical puzzles
  */
 function getShuffledWords(puzzle: ConnectionsPuzzle, seed: number): string[] {
 	const allWords = puzzle.categories.flatMap((cat) => cat.words)
-	// Use seeded shuffle for deterministic results
-	return seededShuffle(allWords, seed)
-}
-
-/**
- * Deterministic shuffle based on seed
- */
-function seededShuffle<T>(array: T[], seed: number): T[] {
-	const shuffled = [...array]
-	let currentSeed = seed
-
-	// Simple seeded random
-	const random = () => {
-		const x = Math.sin(currentSeed++) * 10000
-		return x - Math.floor(x)
-	}
-
-	for (let i = shuffled.length - 1; i > 0; i--) {
-		const j = Math.floor(random() * (i + 1))
-		;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-	}
-
-	return shuffled
+	// Use the FROZEN shared LCG algorithm for deterministic shuffle
+	// Previous implementation used Math.sin() which varies across JS engines
+	return shuffleArray(allWords, seededRandom(seed))
 }
 
 /**

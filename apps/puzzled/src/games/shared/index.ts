@@ -17,6 +17,6 @@ export {
 	isPerfectGame,
 } from './format'
 // Random utilities (FROZEN - do not modify algorithms)
-export { pickRandom } from './random'
+export { pickRandom, seededRandom, shuffleArray } from './random'
 
 // Types only (no runtime code) - safe for server

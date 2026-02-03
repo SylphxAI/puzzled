@@ -104,16 +104,21 @@ export class LocalEvaluator {
 		this.state.version++
 
 		// Clear cache for this flag
-		for (const key of this.evaluationCache.keys()) {
-			if (key.startsWith(flag.key + ':')) {
-				this.evaluationCache.delete(key)
-			}
+		// Use Array.from to avoid iterator invalidation when deleting during iteration
+		// Use exact prefix match with delimiter to avoid matching similar flag keys
+		// (e.g., "flag" vs "flag-v2" - we use "flag:" as prefix so "flag-v2:" won't match)
+		const cachePrefix = flag.key + ':'
+		const keysToDelete = Array.from(this.evaluationCache.keys()).filter((key) =>
+			key.startsWith(cachePrefix),
+		)
+		for (const key of keysToDelete) {
+			this.evaluationCache.delete(key)
 		}
 
 		this.saveToStorage()
 		this.config.onFlagsUpdated?.(Array.from(this.state.flags.values()))
 
-		this.debug('Flag updated', { key: flag.key })
+		this.debug('Flag updated', { key: flag.key, cacheEntriesCleared: keysToDelete.length })
 	}
 
 	/**
@@ -124,16 +129,19 @@ export class LocalEvaluator {
 		this.state.version++
 
 		// Clear cache for this flag
-		for (const cacheKey of this.evaluationCache.keys()) {
-			if (cacheKey.startsWith(key + ':')) {
-				this.evaluationCache.delete(cacheKey)
-			}
+		// Use Array.from to avoid iterator invalidation when deleting during iteration
+		const cachePrefix = key + ':'
+		const keysToDelete = Array.from(this.evaluationCache.keys()).filter((cacheKey) =>
+			cacheKey.startsWith(cachePrefix),
+		)
+		for (const cacheKey of keysToDelete) {
+			this.evaluationCache.delete(cacheKey)
 		}
 
 		this.saveToStorage()
 		this.config.onFlagsUpdated?.(Array.from(this.state.flags.values()))
 
-		this.debug('Flag removed', { key })
+		this.debug('Flag removed', { key, cacheEntriesCleared: keysToDelete.length })
 	}
 
 	/**
