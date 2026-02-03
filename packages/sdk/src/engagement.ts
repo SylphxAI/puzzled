@@ -160,9 +160,11 @@ export async function recordStreakActivity(
 	userId: string,
 	defaults?: StreakDefaults
 ): Promise<RecordActivityResult> {
+	const { idempotencyKey, ...inputBody } = input
 	return callApi(config, '/engagement/streaks/record', {
 		method: 'POST',
-		body: { ...input, userId, defaults },
+		body: { ...inputBody, userId, defaults },
+		idempotencyKey,
 	})
 }
 

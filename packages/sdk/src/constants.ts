@@ -633,3 +633,46 @@ export const MIN_PASSWORD_LENGTH = 12
 
 /** Default context window for AI models (4096 tokens) */
 export const DEFAULT_CONTEXT_WINDOW = 4_096
+
+// =============================================================================
+// Circuit Breaker (AWS/Resilience4j pattern)
+// =============================================================================
+
+/**
+ * Circuit breaker failure threshold
+ *
+ * Number of failures in the window before circuit opens.
+ */
+export const CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
+
+/**
+ * Circuit breaker failure window in milliseconds (10 seconds)
+ *
+ * Time window for counting failures.
+ */
+export const CIRCUIT_BREAKER_WINDOW_MS = 10_000
+
+/**
+ * Circuit breaker open duration in milliseconds (30 seconds)
+ *
+ * How long the circuit stays open before allowing a test request.
+ */
+export const CIRCUIT_BREAKER_OPEN_DURATION_MS = 30_000
+
+// =============================================================================
+// ETag Cache (HTTP conditional requests)
+// =============================================================================
+
+/**
+ * Maximum ETag cache entries
+ *
+ * LRU eviction when exceeded.
+ */
+export const ETAG_CACHE_MAX_ENTRIES = 100
+
+/**
+ * ETag cache TTL in milliseconds (5 minutes)
+ *
+ * How long cached responses are valid.
+ */
+export const ETAG_CACHE_TTL_MS = 5 * 60 * 1000

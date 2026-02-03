@@ -66,6 +66,13 @@ export interface RecordActivityInput {
 	userTimezone?: string
 	/** Optional metadata */
 	metadata?: Record<string, unknown>
+	/**
+	 * Idempotency key for safe retries (Stripe pattern)
+	 *
+	 * Prevents duplicate streak recordings if the same request is retried.
+	 * Use a unique key per logical activity (e.g., `streak-${userId}-${date}`).
+	 */
+	idempotencyKey?: string
 }
 
 /** Activity recording result */

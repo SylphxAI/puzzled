@@ -128,6 +128,15 @@ export interface FileUploadOptions {
 	 * ```
 	 */
 	signal?: AbortSignal
+	/**
+	 * Idempotency key for safe retries (Stripe pattern)
+	 *
+	 * Prevents duplicate uploads if the same request is retried.
+	 * Use a unique key per logical upload operation.
+	 *
+	 * @example `upload-${userId}-${fileName}-${fileHash}`
+	 */
+	idempotencyKey?: string
 }
 
 

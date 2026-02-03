@@ -226,14 +226,20 @@ describe('RateLimitError', () => {
 		expect(error.isRetryable).toBe(true)
 	})
 
-	test('includes limit and current when provided', () => {
+	test('includes limit and remaining when provided', () => {
 		const error = new RateLimitError('Rate limit exceeded', {
 			limit: 100,
-			current: 150,
+			remaining: 0,
+			resetAt: 1700000000,
+			retryAfter: 60,
 		})
 
 		expect(error.limit).toBe(100)
-		expect(error.current).toBe(150)
+		expect(error.remaining).toBe(0)
+		expect(error.resetAt).toBe(1700000000)
+		expect(error.retryAfter).toBe(60)
+		expect(error.getResetDate()).toEqual(new Date(1700000000 * 1000))
+		expect(error.getRetryMessage()).toBe('Please retry after 60 seconds')
 	})
 })
 
@@ -763,13 +769,15 @@ describe('RateLimitError Edge Cases', () => {
 	test('includes rate limit details', () => {
 		const error = new RateLimitError('Too many requests', {
 			limit: 100,
-			current: 150,
+			remaining: 0,
+			resetAt: 1700000000,
 			retryAfter: 60,
 			data: { windowMs: 60000 },
 		})
 
 		expect(error.limit).toBe(100)
-		expect(error.current).toBe(150)
+		expect(error.remaining).toBe(0)
+		expect(error.resetAt).toBe(1700000000)
 		expect(error.retryAfter).toBe(60)
 		expect(error.data).toEqual({ windowMs: 60000 })
 	})

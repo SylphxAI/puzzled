@@ -35,6 +35,15 @@ export interface SendEmailOptions {
 	text?: string
 	/** Reply-to address */
 	replyTo?: string
+	/**
+	 * Idempotency key for safe retries (Stripe pattern)
+	 *
+	 * When provided, prevents duplicate email sends if the same request
+	 * is retried within 24 hours. Use a unique key per logical operation.
+	 *
+	 * @example `welcome-email-${userId}`
+	 */
+	idempotencyKey?: string
 }
 
 export interface SendTemplatedEmailOptions {
@@ -44,6 +53,12 @@ export interface SendTemplatedEmailOptions {
 	to: string
 	/** Template variables */
 	data?: Record<string, unknown>
+	/**
+	 * Idempotency key for safe retries (Stripe pattern)
+	 *
+	 * @example `verification-email-${userId}`
+	 */
+	idempotencyKey?: string
 }
 
 export interface SendToUserOptions {
@@ -55,6 +70,12 @@ export interface SendToUserOptions {
 	html: string
 	/** Plain text content (optional fallback) */
 	text?: string
+	/**
+	 * Idempotency key for safe retries (Stripe pattern)
+	 *
+	 * @example `notification-${userId}-${Date.now()}`
+	 */
+	idempotencyKey?: string
 }
 
 export interface ScheduleEmailOptions {
@@ -149,6 +170,7 @@ export async function isEmailConfigured(config: SylphxConfig): Promise<boolean> 
  *   to: 'user@example.com',
  *   subject: 'Hello!',
  *   html: '<p>Welcome to our app!</p>',
+ *   idempotencyKey: `welcome-${userId}`, // Safe retry
  * })
  * ```
  */
@@ -156,7 +178,12 @@ export async function sendEmail(
 	config: SylphxConfig,
 	options: SendEmailOptions
 ): Promise<SendResult> {
-	return callApi(config, '/email/send', { method: 'POST', body: options })
+	const { idempotencyKey, ...body } = options
+	return callApi(config, '/email/send', {
+		method: 'POST',
+		body,
+		idempotencyKey,
+	})
 }
 
 /**
@@ -168,6 +195,7 @@ export async function sendEmail(
  *   template: 'welcome',
  *   to: 'user@example.com',
  *   data: { name: 'John' },
+ *   idempotencyKey: `welcome-${userId}`, // Safe retry
  * })
  * ```
  */
@@ -175,7 +203,12 @@ export async function sendTemplatedEmail(
 	config: SylphxConfig,
 	options: SendTemplatedEmailOptions
 ): Promise<SendResult> {
-	return callApi(config, '/email/send-templated', { method: 'POST', body: options })
+	const { idempotencyKey, ...body } = options
+	return callApi(config, '/email/send-templated', {
+		method: 'POST',
+		body,
+		idempotencyKey,
+	})
 }
 
 /**
@@ -187,6 +220,7 @@ export async function sendTemplatedEmail(
  *   userId: 'user-123',
  *   subject: 'Account Update',
  *   html: '<p>Your account has been updated.</p>',
+ *   idempotencyKey: `update-${userId}-${timestamp}`, // Safe retry
  * })
  * ```
  */
@@ -194,7 +228,12 @@ export async function sendEmailToUser(
 	config: SylphxConfig,
 	options: SendToUserOptions
 ): Promise<SendResult> {
-	return callApi(config, '/email/send-to-user', { method: 'POST', body: options })
+	const { idempotencyKey, ...body } = options
+	return callApi(config, '/email/send-to-user', {
+		method: 'POST',
+		body,
+		idempotencyKey,
+	})
 }
 
 /**

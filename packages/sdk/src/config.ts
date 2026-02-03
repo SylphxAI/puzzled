@@ -7,7 +7,7 @@
  * Uses appId or secretKey for authentication via x-app-secret header.
  */
 
-import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError } from './errors'
+import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError, RateLimitError } from './errors'
 import { validateKey } from './key-validation'
 import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './constants'
 
@@ -181,6 +181,7 @@ export function buildApiUrl(config: SylphxConfig, path: string): string {
  * - Request timeout (default 30s) prevents infinite hangs
  * - Proper HTTP status code mapping to error codes
  * - Safe JSON parsing with error handling
+ * - Idempotency key support (Stripe pattern)
  */
 export async function callApi<TOutput>(
 	config: SylphxConfig,
@@ -193,9 +194,26 @@ export async function callApi<TOutput>(
 		timeout?: number
 		/** AbortSignal for manual cancellation */
 		signal?: AbortSignal
+		/**
+		 * Idempotency key for safe retries (Stripe pattern)
+		 *
+		 * When provided, the server will deduplicate requests with the same key
+		 * within a 24-hour window. Use for POST/PUT/DELETE operations that
+		 * should not be repeated (e.g., email sending, payment processing).
+		 *
+		 * @example
+		 * ```typescript
+		 * await sendEmail(config, {
+		 *   to: 'user@example.com',
+		 *   subject: 'Welcome!',
+		 *   idempotencyKey: `welcome-email-${userId}`,
+		 * })
+		 * ```
+		 */
+		idempotencyKey?: string
 	} = {}
 ): Promise<TOutput> {
-	const { method = 'GET', body, query, timeout = DEFAULT_TIMEOUT_MS, signal } = options
+	const { method = 'GET', body, query, timeout = DEFAULT_TIMEOUT_MS, signal, idempotencyKey } = options
 
 	let url = buildApiUrl(config, path)
 
@@ -222,9 +240,16 @@ export async function callApi<TOutput>(
 		? AbortSignal.any([signal, controller.signal])
 		: controller.signal
 
+	const headers = buildHeaders(config)
+
+	// Add idempotency key header for safe retries (Stripe pattern)
+	if (idempotencyKey) {
+		headers['Idempotency-Key'] = idempotencyKey
+	}
+
 	const fetchOptions: RequestInit = {
 		method,
-		headers: buildHeaders(config),
+		headers,
 		signal: combinedSignal,
 	}
 
@@ -273,13 +298,32 @@ export async function callApi<TOutput>(
 		}
 
 		const errorCode = httpStatusToErrorCode(response.status)
-		const retryAfter = response.headers.get('Retry-After')
+
+		// Extract rate limit headers (Stripe SDK pattern)
+		const retryAfterHeader = response.headers.get('Retry-After')
+		const rateLimitLimit = response.headers.get('X-RateLimit-Limit')
+		const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining')
+		const rateLimitReset = response.headers.get('X-RateLimit-Reset')
+
+		const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined
+
+		// Use specialized RateLimitError for 429 responses
+		if (response.status === 429) {
+			throw new RateLimitError(errorMessage || 'Too many requests', {
+				status: response.status,
+				data: errorData,
+				retryAfter,
+				limit: rateLimitLimit ? parseInt(rateLimitLimit, 10) : undefined,
+				remaining: rateLimitRemaining ? parseInt(rateLimitRemaining, 10) : undefined,
+				resetAt: rateLimitReset ? parseInt(rateLimitReset, 10) : undefined,
+			})
+		}
 
 		throw new SylphxError(errorMessage, {
 			code: errorCode,
 			status: response.status,
 			data: errorData,
-			retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
+			retryAfter,
 		})
 	}
 

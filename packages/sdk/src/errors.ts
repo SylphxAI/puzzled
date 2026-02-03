@@ -240,26 +240,79 @@ export class ValidationError extends SylphxError {
 }
 
 /**
+ * Rate limit metadata (Stripe SDK pattern)
+ */
+export interface RateLimitInfo {
+	/** Maximum requests allowed in window */
+	limit?: number
+	/** Remaining requests in current window */
+	remaining?: number
+	/** Unix timestamp (seconds) when limit resets */
+	resetAt?: number
+	/** Seconds until limit resets (Retry-After header) */
+	retryAfter?: number
+}
+
+/**
  * Rate limit errors (429)
+ *
+ * Provides full rate limit metadata for consumer apps to implement
+ * proper backoff UI (countdown timers, retry buttons, etc.)
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await sendEmail(config, options)
+ * } catch (error) {
+ *   if (error instanceof RateLimitError) {
+ *     const waitSeconds = error.retryAfter ?? 60
+ *     console.log(`Rate limited. Retry after ${waitSeconds}s`)
+ *     console.log(`Remaining: ${error.remaining}/${error.limit}`)
+ *     console.log(`Resets at: ${new Date(error.resetAt! * 1000)}`)
+ *   }
+ * }
+ * ```
  */
 export class RateLimitError extends SylphxError {
-	/** Limit that was exceeded */
+	/** Maximum requests allowed in window */
 	readonly limit?: number
 
-	/** Current usage count */
-	readonly current?: number
+	/** Remaining requests in current window */
+	readonly remaining?: number
+
+	/** Unix timestamp (seconds) when limit resets */
+	readonly resetAt?: number
 
 	constructor(
 		message = 'Too many requests',
-		options?: Omit<SylphxErrorOptions, 'code'> & {
-			limit?: number
-			current?: number
-		}
+		options?: Omit<SylphxErrorOptions, 'code'> & RateLimitInfo
 	) {
 		super(message, { ...options, code: 'TOO_MANY_REQUESTS' })
 		this.name = 'RateLimitError'
 		this.limit = options?.limit
-		this.current = options?.current
+		this.remaining = options?.remaining
+		this.resetAt = options?.resetAt
+	}
+
+	/**
+	 * Get Date when rate limit resets
+	 */
+	getResetDate(): Date | undefined {
+		return this.resetAt ? new Date(this.resetAt * 1000) : undefined
+	}
+
+	/**
+	 * Get human-readable retry message
+	 */
+	getRetryMessage(): string {
+		if (this.retryAfter) {
+			return `Please retry after ${this.retryAfter} seconds`
+		}
+		if (this.resetAt) {
+			const seconds = Math.max(0, this.resetAt - Math.floor(Date.now() / 1000))
+			return `Rate limit resets in ${seconds} seconds`
+		}
+		return 'Please wait before retrying'
 	}
 }
 
