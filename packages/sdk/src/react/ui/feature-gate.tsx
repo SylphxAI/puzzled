@@ -7,8 +7,8 @@
 
 'use client'
 
-import { type ReactNode, type CSSProperties } from 'react'
-import { useFeatureFlag, type FlagValue, type FeatureFlag } from '../feature-flag-hooks'
+import { type ReactNode, type CSSProperties, useState, useContext } from 'react'
+import { useFeatureFlag, FeatureFlagContext, type FlagValue, type FeatureFlag } from '../feature-flag-hooks'
 import type { ThemeVariables } from './styles'
 import { defaultTheme, baseStyles, mergeStyles } from './styles'
 import { Z_INDEX_CRITICAL_OVERLAY } from '../../constants'
@@ -245,11 +245,6 @@ export function FlagDevTools({
 	defaultCollapsed = true,
 	className,
 }: FlagDevToolsProps) {
-	// Import hooks here to avoid circular deps
-	const { useFeatureFlag } = require('../feature-flag-hooks')
-	const { useState, useContext } = require('react')
-	const { FeatureFlagContext } = require('../feature-flag-hooks')
-
 	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
 	const context = useContext(FeatureFlagContext)
 	const styles = baseStyles(theme)

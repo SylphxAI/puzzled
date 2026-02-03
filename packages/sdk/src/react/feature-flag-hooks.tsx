@@ -70,7 +70,8 @@ export interface FeatureFlagContextValue {
 // Context
 // ============================================
 
-const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(null)
+/** Feature Flag Context - internal use for FlagDevTools */
+export const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(null)
 
 export interface FeatureFlagProviderProps {
 	children: ReactNode

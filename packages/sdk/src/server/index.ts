@@ -18,7 +18,7 @@
  * ```
  */
 
-import { createRestClient, type RestClient, type RestClientConfig } from '../rest-client'
+import { createRestClient, createDynamicRestClient, type RestClient, type RestClientConfig } from '../rest-client'
 import { WEBHOOK_MAX_AGE_MS, WEBHOOK_CLOCK_SKEW_MS, JWK_CACHE_TTL_MS } from '../constants'
 import { importJWK, jwtVerify, type JWTPayload } from 'jose'
 import type { AccessTokenPayload } from '../types'
@@ -124,9 +124,6 @@ export function createAuthenticatedServerClient(
 	config: ServerConfig,
 	accessToken: string
 ): RestClient {
-	// eslint-disable-next-line @typescript-eslint/no-require-imports -- avoids circular dependency
-	const { createDynamicRestClient } = require('../rest-client')
-
 	return createDynamicRestClient({
 		secretKey: config.secretKey,
 		platformUrl: config.platformUrl,
