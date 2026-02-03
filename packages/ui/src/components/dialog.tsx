@@ -3,27 +3,10 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { motion } from 'motion/react'
 import { X } from 'lucide-react'
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'
+import { useReducedMotion } from '../motion/use-reduced-motion'
 import { cn } from '../utils'
-
-/**
- * Hook to detect reduced motion preference
- */
-function usePrefersReducedMotion(): boolean {
-	const [prefersReduced, setPrefersReduced] = useState(false)
-
-	useEffect(() => {
-		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-		setPrefersReduced(mq.matches)
-
-		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
-		mq.addEventListener('change', handler)
-		return () => mq.removeEventListener('change', handler)
-	}, [])
-
-	return prefersReduced
-}
 
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -34,7 +17,7 @@ const DialogClose = DialogPrimitive.Close
 const MotionOverlay = motion.create('div')
 
 function OverlayAnimation() {
-	const prefersReduced = usePrefersReducedMotion()
+	const prefersReduced = useReducedMotion()
 
 	return (
 		<MotionOverlay
@@ -67,7 +50,7 @@ function ContentAnimation({
 	children: React.ReactNode
 	hideCloseButton?: boolean
 }) {
-	const prefersReduced = usePrefersReducedMotion()
+	const prefersReduced = useReducedMotion()
 
 	return (
 		<MotionContent

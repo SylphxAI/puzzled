@@ -4,8 +4,9 @@ import * as ToastPrimitive from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertCircle, CheckCircle, Info, X, XCircle } from 'lucide-react'
-import { createContext, forwardRef, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, forwardRef, useCallback, useContext, useState } from 'react'
 import { duration, easing } from '../motion/config'
+import { useReducedMotion } from '../motion/use-reduced-motion'
 import { cn } from '../utils'
 
 const ToastProvider = ToastPrimitive.Provider
@@ -196,28 +197,11 @@ export function useToast() {
 	return context
 }
 
-/**
- * Hook to detect reduced motion preference
- */
-function usePrefersReducedMotion(): boolean {
-	const [prefersReduced, setPrefersReduced] = useState(false)
-
-	useEffect(() => {
-		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-		setPrefersReduced(mq.matches)
-
-		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
-		mq.addEventListener('change', handler)
-		return () => mq.removeEventListener('change', handler)
-	}, [])
-
-	return prefersReduced
-}
 
 // Toaster component that renders all toasts with smooth animations
 function Toaster() {
 	const { toasts, removeToast } = useToast()
-	const prefersReducedMotion = usePrefersReducedMotion()
+	const prefersReducedMotion = useReducedMotion()
 
 	return (
 		<>

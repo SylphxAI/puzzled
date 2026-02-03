@@ -18,6 +18,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { duration, easing } from './config'
+import { useReducedMotion } from './use-reduced-motion'
 
 interface PageTransitionProps {
 	/** Children to animate */
@@ -36,30 +37,6 @@ const initialTransforms: Record<PageTransitionProps['variant'] & string, string>
 	fade: 'none',
 	fadeUp: 'translateY(16px)',
 	fadeScale: 'scale(0.98)',
-}
-
-/**
- * Hook to detect reduced motion preference
- *
- * @example
- * const prefersReduced = usePrefersReducedMotion()
- * if (prefersReduced) {
- *   // Skip or simplify animation
- * }
- */
-export function usePrefersReducedMotion(): boolean {
-	const [prefersReduced, setPrefersReduced] = useState(false)
-
-	useEffect(() => {
-		const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-		setPrefersReduced(mq.matches)
-
-		const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
-		mq.addEventListener('change', handler)
-		return () => mq.removeEventListener('change', handler)
-	}, [])
-
-	return prefersReduced
 }
 
 /**
@@ -82,7 +59,7 @@ export function PageTransition({
 }: PageTransitionProps) {
 	const [mounted, setMounted] = useState(false)
 	const contentRef = useRef<HTMLDivElement>(null)
-	const prefersReducedMotion = usePrefersReducedMotion()
+	const prefersReducedMotion = useReducedMotion()
 
 	useEffect(() => {
 		const raf = requestAnimationFrame(() => {
