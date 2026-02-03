@@ -31,9 +31,65 @@
  * ```
  */
 
-// Service Worker global scope type (for apps using this in service workers)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const self: any
+/**
+ * Service Worker type definitions
+ * These are minimal type definitions for Service Worker APIs.
+ * Full types available with `lib: ["WebWorker"]` in tsconfig.
+ */
+interface PushEventData {
+	json(): unknown
+	text(): string
+}
+
+interface PushEvent extends ExtendableEvent {
+	data: PushEventData | null
+}
+
+interface NotificationEvent extends ExtendableEvent {
+	notification: Notification & {
+		data?: Record<string, unknown>
+		close(): void
+	}
+	action?: string
+}
+
+interface WindowClient {
+	url: string
+	focus(): Promise<WindowClient>
+}
+
+interface Clients {
+	matchAll(options: { type: 'window'; includeUncontrolled: boolean }): Promise<WindowClient[]>
+	openWindow(url: string): Promise<WindowClient | null>
+	claim(): Promise<void>
+}
+
+interface ExtendableEvent extends Event {
+	waitUntil(promise: Promise<unknown>): void
+}
+
+interface ServiceWorkerRegistration {
+	showNotification(title: string, options?: NotificationOptions): Promise<void>
+}
+
+interface ServiceWorkerGlobalScopeSubset {
+	readonly registration: ServiceWorkerRegistration
+	readonly clients: Clients
+	addEventListener(
+		type: 'push',
+		listener: (event: PushEvent) => void,
+	): void
+	addEventListener(
+		type: 'notificationclick' | 'notificationclose',
+		listener: (event: NotificationEvent) => void,
+	): void
+	addEventListener(
+		type: 'activate',
+		listener: (event: ExtendableEvent) => void,
+	): void
+}
+
+declare const self: ServiceWorkerGlobalScopeSubset
 
 /**
  * Notification payload from Sylphx platform
@@ -108,8 +164,7 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 	const { defaultIcon, defaultBadge, onNotificationClick, onNotificationClose } = config
 
 	// Handle push events (when notification arrives)
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	self.addEventListener('push', (event: any) => {
+	self.addEventListener('push', (event) => {
 		if (!event.data) {
 			console.warn('[Sylphx SW] Push event received without data')
 			return
@@ -150,8 +205,7 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 	})
 
 	// Handle notification click events
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	self.addEventListener('notificationclick', (event: any) => {
+	self.addEventListener('notificationclick', (event) => {
 		event.notification.close()
 
 		const data = event.notification.data
@@ -172,8 +226,7 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 		// Navigate to URL if provided
 		if (url) {
 			event.waitUntil(
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList: any[]) => {
+				self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
 					// Try to focus an existing window with this URL
 					for (const client of clientList) {
 						if (client.url === url && 'focus' in client) {
@@ -181,17 +234,14 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 						}
 					}
 					// Open a new window if no existing window found
-					if (self.clients.openWindow) {
-						return self.clients.openWindow(url)
-					}
+					return self.clients.openWindow(url)
 				})
 			)
 		}
 	})
 
 	// Handle notification close events (for analytics)
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	self.addEventListener('notificationclose', (event: any) => {
+	self.addEventListener('notificationclose', (event) => {
 		const data = event.notification.data
 		const payload = data?._sylphxPayload as PushNotificationPayload | undefined
 
@@ -201,8 +251,7 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 	})
 
 	// Handle service worker activation
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	self.addEventListener('activate', (event: any) => {
+	self.addEventListener('activate', (event) => {
 		event.waitUntil(
 			// Claim all clients immediately
 			self.clients.claim()
