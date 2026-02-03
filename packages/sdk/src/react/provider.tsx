@@ -90,6 +90,7 @@ import {
 } from './storage-utils'
 import { safeRedirect, isValidRedirectUrl } from './security-utils'
 import type { User, TokenResponse, AIProvider, AppConfig } from '../types'
+import { linkAnonymousConsents } from '../consent'
 import { ConfigContext } from './hooks/use-config'
 import type {
 	StreakState,
@@ -366,6 +367,37 @@ function SylphxProviderInner({
 			tokenManager.clear()
 		}
 	}, [authState.isSignedIn, tokenManager])
+
+	// ============================================
+	// Identity Link on Login (Segment/Mixpanel Pattern)
+	// ============================================
+	// When user transitions from anonymous to authenticated,
+	// link their anonymous consent records to their user account.
+	// This ensures consent history is preserved across the identity merge.
+	const prevIsSignedIn = useRef(authState.isSignedIn)
+	useEffect(() => {
+		const wasAnonymous = !prevIsSignedIn.current
+		const isNowAuthenticated = authState.isSignedIn && authState.user?.id
+
+		if (wasAnonymous && isNowAuthenticated && authState.user) {
+			// User just logged in — link anonymous consents
+			const config = {
+				appId,
+				platformUrl,
+				accessToken: undefined, // Will use cookie auth via middleware
+			}
+
+			linkAnonymousConsents(config, {
+				userId: authState.user.id,
+				anonymousId,
+			}).catch((err) => {
+				// Non-fatal: log but don't break the app
+				console.warn('[Sylphx] Failed to link anonymous consents:', err)
+			})
+		}
+
+		prevIsSignedIn.current = authState.isSignedIn
+	}, [authState.isSignedIn, authState.user?.id, anonymousId, appId, platformUrl])
 
 	// ============================================
 	// REST API Client — With Token Management
