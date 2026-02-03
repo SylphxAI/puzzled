@@ -48,7 +48,25 @@ function httpStatusToErrorCode(status: number): SylphxErrorCode {
 }
 
 /**
- * SDK Configuration
+ * SDK Configuration for Pure Functions
+ *
+ * This is the configuration object passed to pure SDK functions like
+ * `track()`, `signIn()`, `getPlans()`, etc.
+ *
+ * ## Config Type Hierarchy
+ *
+ * - `SylphxConfig` (this) — Pure functions, server or client
+ * - `SylphxClientConfig` — React hooks return value (appId, platformUrl only)
+ * - `SylphxProviderProps` — React provider component props
+ * - `SylphxMiddlewareConfig` — Next.js middleware options
+ *
+ * @example Server-side usage
+ * ```ts
+ * import { createConfig, track } from '@sylphx/sdk'
+ *
+ * const config = createConfig({ secretKey: process.env.SYLPHX_SECRET_KEY! })
+ * await track(config, { event: 'purchase', properties: { amount: 99 } })
+ * ```
  */
 export interface SylphxConfig {
 	/**

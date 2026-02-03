@@ -164,6 +164,8 @@ export {
 	type UseUserReturn,
 	type UseAuthReturn,
 	type UseSessionReturn,
+	type UseSylphxReturn,
+	type SylphxClientConfig,
 	type UseOrganizationReturn,
 	type UseSafeUserReturn,
 	type UseSafeAuthReturn,

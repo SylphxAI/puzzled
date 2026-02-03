@@ -15,7 +15,14 @@ import type { TokenManager } from './token-manager'
 // Types
 // =============================================================================
 
-export interface RestClientConfig {
+/**
+ * Configuration for the authenticated REST client (client-side)
+ *
+ * Note: This is different from RestClientConfig in /rest-client.ts which is
+ * for server-side usage with secret keys. This one uses token management
+ * for authenticated browser requests.
+ */
+export interface AuthenticatedRestClientConfig {
 	/** App ID — used as x-app-secret for SDK API calls */
 	appId?: string
 	/** Platform URL (e.g., https://sylphx.com) */
@@ -50,7 +57,7 @@ export interface RestApiClient {
  * await api.post('/analytics/track', { event: 'click' })
  * ```
  */
-export function createRestApi(config: RestClientConfig): RestApiClient {
+export function createRestApi(config: AuthenticatedRestClientConfig): RestApiClient {
 	const baseUrl = `${config.platformUrl}${SDK_API_PATH}`
 
 	const buildHeaders = async (): Promise<Record<string, string>> => {

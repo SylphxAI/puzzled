@@ -458,14 +458,22 @@ export function useSession(): UseSessionReturn {
 // useSylphx (convenience hook)
 // ============================================
 
-interface SylphxConfig {
+/**
+ * Client-side SDK configuration (subset of PlatformContextValue)
+ *
+ * This is different from SylphxConfig in config.ts which is for pure functions.
+ * Use this type for client-side context access.
+ */
+export interface SylphxClientConfig {
+	/** App ID (environment-specific: app_dev_xxx, app_stg_xxx, app_prod_xxx) */
 	appId: string
+	/** Platform API URL */
 	platformUrl: string
 }
 
 export interface UseSylphxReturn extends AuthContextValue {
 	/** SDK configuration */
-	config: SylphxConfig
+	config: SylphxClientConfig
 }
 
 /**

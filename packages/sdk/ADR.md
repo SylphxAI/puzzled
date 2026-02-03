@@ -407,6 +407,60 @@ await unlockAchievement(sylphxConfig, userId, 'first-win', {
 
 ---
 
+## ADR-005: Config Type Naming Convention
+
+**Date:** 2026-02-03
+
+**Status:** Accepted
+
+### Context
+
+The SDK had multiple config types with overlapping names causing confusion:
+- `SylphxConfig` defined in both `/config.ts` and `/react/hooks.ts` (different shapes)
+- `RestClientConfig` defined in both `/rest-client.ts` and `/react/rest-client.ts` (different purposes)
+
+### Decision
+
+Establish clear naming conventions for configuration types:
+
+| Type | Purpose | Location |
+|------|---------|----------|
+| `SylphxConfig` | Pure functions (secretKey, platformUrl, accessToken) | `config.ts` |
+| `SylphxConfigInput` | Input to `createConfig()` (optional fields) | `config.ts` |
+| `SylphxClientConfig` | React hook return value (appId, platformUrl) | `react/hooks.ts` |
+| `SylphxProviderProps` | React provider component props | `react/provider.tsx` |
+| `SylphxMiddlewareConfig` | Next.js middleware options | `nextjs/middleware.ts` |
+| `RestClientConfig` | Server-side REST client (secretKey) | `rest-client.ts` |
+| `AuthenticatedRestClientConfig` | Client-side REST client (tokenManager) | `react/rest-client.ts` |
+
+### Naming Conventions
+
+1. **`XConfig`** — Service or feature configuration (readonly, frozen)
+2. **`XConfigInput`** — Input with optional fields (before validation)
+3. **`XClientConfig`** — Client-side specific config (subset of full config)
+4. **`XProviderProps`** — React provider component props
+5. **`XMiddlewareConfig`** — Middleware/edge configuration
+
+### Rationale
+
+Clear naming prevents:
+- Type shadowing (same name, different interface)
+- Import confusion (which file to import from)
+- Runtime errors from using wrong config type
+
+### Consequences
+
+**Positive:**
+- Clear import paths for each config type
+- TypeScript catches wrong config usage
+- Self-documenting code
+
+**Negative:**
+- More types to learn
+- Migration needed for existing code using old names
+
+---
+
 ## Summary
 
 The SDK follows these principles:
