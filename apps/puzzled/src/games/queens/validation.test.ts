@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { queensConfig, type QueensPuzzleData, type QueensSolution } from './config'
 import type { GameSubmission } from '../types'
+import { type QueensPuzzleData, type QueensSolution, queensConfig } from './config'
 
 // Generate a puzzle for testing (6x6 medium difficulty)
 const { puzzleData, solution } = queensConfig.generatePuzzle(12345, 'medium')

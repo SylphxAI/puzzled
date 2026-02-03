@@ -14,16 +14,14 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { patternMatchConfig, type PatternMatchClientData } from './config'
-import type { PatternMatchSolution } from './types'
 import type { GameSubmission } from '../types'
+import { patternMatchConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = patternMatchConfig.generatePuzzle(12345)
 
 // Valid sets from solution
 const validSets = solution.validSets
-const totalSets = solution.totalSets
 
 // Helper to create submission
 function createSubmission(

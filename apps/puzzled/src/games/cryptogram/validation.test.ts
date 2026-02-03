@@ -14,9 +14,9 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import type { GameSubmission } from '../types'
 import { cryptogramConfig } from './config'
 import type { PlayerGuesses } from './types'
-import type { GameSubmission } from '../types'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = cryptogramConfig.generatePuzzle(12345)

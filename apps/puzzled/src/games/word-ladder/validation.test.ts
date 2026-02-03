@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { wordLadderConfig } from './config'
 import type { GameSubmission } from '../types'
+import { wordLadderConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = wordLadderConfig.generatePuzzle(12345)
@@ -118,11 +118,7 @@ describe('word-ladder validateAndScore', () => {
 		test('rejects invalid word in path', () => {
 			// Replace middle word with non-word
 			if (optimalPath.length > 2) {
-				const badPath = [
-					optimalPath[0],
-					'ZZZZZ',
-					...optimalPath.slice(2),
-				]
+				const badPath = [optimalPath[0], 'ZZZZZ', ...optimalPath.slice(2)]
 				const submission = createSubmission('won', badPath)
 				const result = wordLadderConfig.validateAndScore(solution, puzzleData, submission)
 

@@ -14,9 +14,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { sudokuConfig, type SudokuPuzzleClientData, type SudokuSolution } from './config'
 import type { GameSubmission } from '../types'
-import { GRID_SIZE } from './types'
+import { sudokuConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = sudokuConfig.generatePuzzle(12345, 'medium')

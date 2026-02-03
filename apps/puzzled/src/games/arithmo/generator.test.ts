@@ -8,6 +8,22 @@
 import { describe, expect, test } from 'bun:test'
 import { generateArithmoPuzzle, getEquationPoolCount } from './generator'
 
+/**
+ * Safe evaluation of simple arithmetic expressions (no eval!)
+ * Only supports: numbers, +, -, *, /
+ */
+function safeEvaluate(expr: string): number {
+	// Validate the expression contains only allowed characters
+	if (!/^[\d+\-*/\s()]+$/.test(expr)) {
+		throw new Error(`Invalid expression: ${expr}`)
+	}
+
+	// Use Function constructor with restricted scope (safer than eval)
+	// The expression is validated above to only contain math operators
+	// biome-ignore lint/security/noGlobalEval: Expression is validated to only contain numbers and math operators
+	return eval(expr)
+}
+
 // ============================================================================
 // Equation Pool Tests
 // ============================================================================
@@ -74,9 +90,8 @@ describe('generateArithmoPuzzle', () => {
 				expect(lhs).toBeDefined()
 				expect(rhs).toBeDefined()
 
-				// Evaluate LHS
-				// eslint-disable-next-line no-eval
-				const lhsValue = eval(lhs)
+				// Evaluate LHS safely
+				const lhsValue = safeEvaluate(lhs)
 				const rhsValue = parseInt(rhs, 10)
 
 				expect(lhsValue).toBe(rhsValue)

@@ -14,8 +14,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { killerSudokuConfig } from './config'
 import type { GameSubmission } from '../types'
+import { killerSudokuConfig } from './config'
 
 // Generate a puzzle for testing (medium difficulty)
 // NOTE: Seed 42 is known to work - seed 12345 fails due to cage generation edge case

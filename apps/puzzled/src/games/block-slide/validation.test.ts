@@ -14,9 +14,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { blockSlideConfig } from './config'
-import type { BlockSlideSolution } from './types'
 import type { GameSubmission } from '../types'
+import { blockSlideConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = blockSlideConfig.generatePuzzle(12345)

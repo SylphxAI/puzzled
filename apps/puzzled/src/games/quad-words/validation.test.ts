@@ -16,9 +16,9 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import type { GameSubmission } from '../types'
 import { quadWordsConfig } from './config'
 import { MAX_GUESSES } from './types'
-import type { GameSubmission } from '../types'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = quadWordsConfig.generatePuzzle(12345)

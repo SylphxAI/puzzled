@@ -17,9 +17,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { arithmoConfig } from './config'
 import type { GameSubmission } from '../types'
-import { EQUATION_LENGTH } from './types'
+import { arithmoConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = arithmoConfig.generatePuzzle(12345)
@@ -74,7 +73,11 @@ describe('arithmo validateAndScore', () => {
 		})
 
 		test('win on third attempt scores 70 points', () => {
-			const submission = createSubmission('won', [validGuesses[0], validGuesses[1], correctEquation])
+			const submission = createSubmission('won', [
+				validGuesses[0],
+				validGuesses[1],
+				correctEquation,
+			])
 			const result = arithmoConfig.validateAndScore(solution, puzzleData, submission)
 
 			expect(result.valid).toBe(true)

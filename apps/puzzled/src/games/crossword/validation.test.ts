@@ -13,9 +13,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { crosswordConfig, type CrosswordPuzzleClientData, type CrosswordSolution } from './config'
 import type { GameSubmission } from '../types'
-import { GRID_SIZE } from './types'
+import { crosswordConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = crosswordConfig.generatePuzzle(12345)

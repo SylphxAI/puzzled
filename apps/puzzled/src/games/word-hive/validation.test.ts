@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { wordHiveConfig } from './config'
 import type { GameSubmission } from '../types'
+import { wordHiveConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = wordHiveConfig.generatePuzzle(12345)

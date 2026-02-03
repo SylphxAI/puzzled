@@ -15,8 +15,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { wordGroupsConfig, type ConnectionsPuzzleData, type ConnectionsSolution } from './config'
 import type { GameSubmission } from '../types'
+import { type ConnectionsPuzzleData, type ConnectionsSolution, wordGroupsConfig } from './config'
 import type { Category } from './types'
 
 // Create test data

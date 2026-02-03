@@ -14,8 +14,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { nonogramConfig } from './config'
 import type { GameSubmission } from '../types'
+import { nonogramConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = nonogramConfig.generatePuzzle(12345)

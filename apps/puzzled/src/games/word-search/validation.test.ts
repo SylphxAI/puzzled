@@ -13,8 +13,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { wordSearchConfig } from './config'
 import type { GameSubmission } from '../types'
+import { wordSearchConfig } from './config'
 
 // Generate a puzzle for testing
 const { puzzleData, solution } = wordSearchConfig.generatePuzzle(12345)

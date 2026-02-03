@@ -12,8 +12,8 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { wordGuessConfig } from './config'
 import type { GameSubmission } from '../types'
+import { wordGuessConfig } from './config'
 
 // Helper to create a submission
 function createSubmission(
@@ -80,13 +80,7 @@ describe('word-guess validateAndScore', () => {
 		})
 
 		test('win on fifth attempt scores 40 points', () => {
-			const submission = createSubmission('won', [
-				'CRANE',
-				'SLATE',
-				'AUDIO',
-				'PLUMB',
-				solutionWord,
-			])
+			const submission = createSubmission('won', ['CRANE', 'SLATE', 'AUDIO', 'PLUMB', solutionWord])
 			const result = wordGuessConfig.validateAndScore(solution, puzzleData, submission)
 
 			expect(result.valid).toBe(true)
