@@ -1,11 +1,26 @@
 /**
- * Feature Flags React Hooks
+ * Feature Flags React Hooks (SOTA - State of the Art)
  *
- * React hooks for feature flags with:
- * - Context provider for app-wide configuration
- * - Automatic re-renders on flag updates
- * - TypeScript-safe flag access
- * - SSR support
+ * Production-grade feature flags with:
+ * - SSE streaming for real-time updates
+ * - Local evaluation with complex targeting rules
+ * - Consistent bucketing for A/B tests
+ * - ExperimentManager for experiment tracking
+ *
+ * ## When to Use This vs Simple Flags
+ *
+ * USE THIS (SOTA):
+ * - Real-time flag updates via SSE streaming
+ * - Complex targeting rules and segments
+ * - A/B testing with ExperimentManager
+ * - Local evaluation with consistent bucketing
+ *
+ * USE SIMPLE FLAGS (feature-flag-hooks.tsx):
+ * - Simple flag checks without complex targeting
+ * - Apps that prefer polling over streaming
+ * - When React Query is already your data layer
+ *
+ * @see feature-flag-hooks.tsx for simple polling implementation
  *
  * @example
  * ```tsx

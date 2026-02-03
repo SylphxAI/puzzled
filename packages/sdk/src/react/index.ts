@@ -324,7 +324,9 @@ export {
 	type GoogleConsentModeProps,
 } from './consent-scripts'
 
-// Feature Flag Hooks
+// Feature Flag Hooks (Simple/Polling - React Query based)
+// Use for: Basic flag checks, polling refresh, React Query integration
+// For SOTA streaming + targeting + A/B tests, see FeatureFlagsProvider below
 export {
 	FeatureFlagProvider,
 	useFeatureFlag,

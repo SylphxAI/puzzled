@@ -1,8 +1,23 @@
 /**
- * Feature Flag Hooks
+ * Feature Flag Hooks (React Query Version)
  *
- * React hooks for feature flag management.
- * Enables gradual rollouts, A/B testing, and feature gating.
+ * Simple polling-based feature flag hooks using React Query.
+ * Good for basic use cases without SSE streaming requirements.
+ *
+ * ## When to Use This vs SOTA Flags
+ *
+ * USE THIS (feature-flag-hooks.tsx):
+ * - Simple flag checks without complex targeting
+ * - Apps that prefer polling over streaming
+ * - When React Query is already your data layer
+ *
+ * USE SOTA FLAGS (hooks/use-flags.tsx):
+ * - Real-time flag updates via SSE streaming
+ * - Complex targeting rules and segments
+ * - A/B testing with ExperimentManager
+ * - Local evaluation with consistent bucketing
+ *
+ * @see hooks/use-flags.tsx for SOTA implementation
  *
  * ## React Query Integration
  *
