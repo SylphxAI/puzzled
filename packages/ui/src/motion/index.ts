@@ -77,9 +77,7 @@ export {
 	AnimatedListItem,
 	AnimatedRow,
 	AnimatedTableRow,
-	InteractiveListItem,
 	// Interactive elements
-	InteractiveCard,
 	Collapse,
 	// Page-level wrappers (for server component content)
 	AnimatedPage,
@@ -90,7 +88,6 @@ export {
 	AnimatedButtonContent,
 	SuccessCheck,
 	Shake,
-	Pulse,
 	// Framer Motion re-exports
 	AnimatePresence,
 	motion,
