@@ -38,6 +38,15 @@
 // Core tracker
 export { ErrorTracker, getTracker, initErrorTracking, resetTracker } from './tracker'
 
+// PII Scrubbing (GDPR compliance)
+export {
+	scrubString,
+	scrubObject,
+	scrubErrorEvent,
+	createScrubber,
+	type PIIScrubberConfig,
+} from './pii-scrubber'
+
 // Breadcrumbs
 export {
 	addBreadcrumb,

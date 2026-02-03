@@ -70,6 +70,46 @@ export interface LinkAnonymousConsentsInput {
 	anonymousId: string
 }
 
+export interface GetConsentHistoryInput {
+	/** User ID (for authenticated users) */
+	userId?: string
+	/** Anonymous ID (for anonymous users) */
+	anonymousId?: string
+	/** Maximum records to return (default: 50) */
+	limit?: number
+	/** Offset for pagination (default: 0) */
+	offset?: number
+}
+
+/** A single consent change history entry */
+export interface ConsentHistoryEntry {
+	/** Unique entry ID */
+	id: string
+	/** Consent type slug (e.g., 'analytics') */
+	consentType: string
+	/** Display name of the consent type */
+	consentTypeName: string
+	/** Previous consent state (null = initial consent) */
+	previousGranted: boolean | null
+	/** New consent state */
+	newGranted: boolean
+	/** Source of the change (banner, settings, api) */
+	source: string
+	/** Reason for change (user_action, policy_update, etc.) */
+	reason: string | null
+	/** ISO timestamp when change occurred */
+	createdAt: string
+}
+
+export interface ConsentHistoryResult {
+	/** List of consent change entries */
+	entries: ConsentHistoryEntry[]
+	/** Total number of entries */
+	total: number
+	/** Whether there are more entries */
+	hasMore: boolean
+}
+
 export interface GetConsentsInput {
 	/** User ID (optional for anonymous users) */
 	userId?: string
@@ -260,4 +300,42 @@ export async function linkAnonymousConsents(
 	input: LinkAnonymousConsentsInput
 ): Promise<void> {
 	return callApi(config, '/consent/link-anonymous', { method: 'POST', body: input })
+}
+
+/**
+ * Get consent change history for GDPR audit trail
+ *
+ * Returns a paginated list of all consent state changes for a user.
+ * Required for GDPR compliance - provides complete audit trail of consent decisions.
+ *
+ * @example
+ * ```typescript
+ * // Get consent history for authenticated user
+ * const history = await getConsentHistory(config, { userId: 'user-123' })
+ * console.log(`Total changes: ${history.total}`)
+ * history.entries.forEach(entry => {
+ *   console.log(`${entry.consentType}: ${entry.previousGranted} → ${entry.newGranted}`)
+ * })
+ *
+ * // Paginated retrieval
+ * const page2 = await getConsentHistory(config, {
+ *   userId: 'user-123',
+ *   limit: 20,
+ *   offset: 20,
+ * })
+ * ```
+ */
+export async function getConsentHistory(
+	config: SylphxConfig,
+	input: GetConsentHistoryInput
+): Promise<ConsentHistoryResult> {
+	return callApi(config, '/consent/history', {
+		method: 'GET',
+		query: {
+			userId: input.userId,
+			anonymousId: input.anonymousId,
+			limit: input.limit?.toString(),
+			offset: input.offset?.toString(),
+		},
+	})
 }

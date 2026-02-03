@@ -279,6 +279,22 @@ export interface ErrorTrackingConfig {
 	 * Server uses source maps to show original file names, line numbers, and code context
 	 */
 	sourceMap?: SourceMapConfig
+	/**
+	 * Enable automatic PII scrubbing (default: true)
+	 *
+	 * Automatically detects and redacts:
+	 * - Email addresses
+	 * - Credit card numbers
+	 * - Social Security Numbers
+	 * - Phone numbers
+	 * - IP addresses
+	 * - API keys and tokens
+	 * - Passwords
+	 * - JWT tokens
+	 *
+	 * Set to false to disable (not recommended for GDPR compliance)
+	 */
+	scrubPII?: boolean
 }
 
 /**

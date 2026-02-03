@@ -358,6 +358,7 @@ export {
 	acceptAllConsents,
 	declineOptionalConsents,
 	linkAnonymousConsents,
+	getConsentHistory,
 	// Types
 	type ConsentType,
 	type ConsentCategory,
@@ -366,6 +367,9 @@ export {
 	type SetConsentsInput,
 	type GetConsentsInput,
 	type LinkAnonymousConsentsInput,
+	type GetConsentHistoryInput,
+	type ConsentHistoryEntry,
+	type ConsentHistoryResult,
 } from './consent'
 
 // =============================================================================

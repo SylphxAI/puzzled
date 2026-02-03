@@ -33,6 +33,8 @@ export type { ClickIds, UserCookieData }
 export const STORAGE_KEYS = {
 	// Analytics
 	ANONYMOUS_ID: 'anonymous_id',
+	/** Offline analytics queue (Segment pattern) - events queued when offline */
+	OFFLINE_ANALYTICS_QUEUE: 'offline_queue',
 
 	// Organization selection
 	CURRENT_ORG: 'current_org',

@@ -511,6 +511,62 @@ function SylphxProviderInner({
 	const trackedEventIds = useRef<Set<string>>(new Set())
 
 	// ============================================
+	// sendBeacon Fallback for Analytics (Segment/Amplitude Pattern)
+	// ============================================
+	// Ensures analytics events are not lost when user closes the tab
+	// sendBeacon is designed to work during page unload when fetch would be cancelled
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const handleBeforeUnload = () => {
+			const events = analyticsQueue.current
+			if (events.length === 0) return
+
+			try {
+				// Build payload for sendBeacon
+				const payload = JSON.stringify({
+					events: events.map(({ type, data }) => ({
+						event: type,
+						properties: data,
+						timestamp: data.timestamp as string | undefined,
+					})),
+				})
+
+				// sendBeacon returns true if the request is successfully queued
+				// It works even during page unload when fetch would be cancelled
+				const beaconUrl = `${platformUrl}${SDK_API_PATH}/analytics/track`
+				const blob = new Blob([payload], { type: 'application/json' })
+
+				// Note: sendBeacon doesn't support custom headers, so we include appId in URL
+				// Server should accept this for beacon requests
+				const beaconSent = navigator.sendBeacon(`${beaconUrl}?appId=${encodeURIComponent(appId)}`, blob)
+
+				if (beaconSent) {
+					// Clear the queue since beacon was queued successfully
+					analyticsQueue.current = []
+				}
+			} catch {
+				// Best effort - if sendBeacon fails, events are lost
+				// This is acceptable as it's a rare edge case
+			}
+		}
+
+		window.addEventListener('beforeunload', handleBeforeUnload)
+		// Also handle visibilitychange for mobile (tab switch = potential app close)
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'hidden') {
+				handleBeforeUnload()
+			}
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange)
+
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload)
+			document.removeEventListener('visibilitychange', handleVisibilityChange)
+		}
+	}, [appId, platformUrl])
+
+	// ============================================
 	// Auto-tracking configuration
 	// ============================================
 	const autoTrackConfig = useMemo(() => {
@@ -1116,18 +1172,91 @@ function SylphxProviderInner({
 	}, [queryClient, appId])
 
 	// ============================================
+	// Offline Analytics Queue (Segment Pattern)
+	// ============================================
+	// Track online status for offline queuing
+	const [isOnline, setIsOnline] = useState(() =>
+		typeof navigator !== 'undefined' ? navigator.onLine : true
+	)
+
+	// Listen for online/offline events
+	useEffect(() => {
+		if (typeof window === 'undefined') return
+
+		const handleOnline = () => setIsOnline(true)
+		const handleOffline = () => setIsOnline(false)
+
+		window.addEventListener('online', handleOnline)
+		window.addEventListener('offline', handleOffline)
+
+		return () => {
+			window.removeEventListener('online', handleOnline)
+			window.removeEventListener('offline', handleOffline)
+		}
+	}, [])
+
+	// Queue events to localStorage when offline
+	const queueToOfflineStorage = useCallback(
+		(events: Array<{ type: string; data: Record<string, unknown>; eventId: string }>) => {
+			try {
+				const existingQueue = storage.getJSON<typeof events>(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE) || []
+				const merged = [...existingQueue, ...events]
+				// Keep only the most recent events to prevent storage bloat
+				const trimmed = merged.length > ANALYTICS_QUEUE_LIMIT ? merged.slice(-ANALYTICS_QUEUE_LIMIT) : merged
+				storage.setJSON(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE, trimmed)
+			} catch {
+				// localStorage might be full or unavailable - best effort
+			}
+		},
+		[storage]
+	)
+
+	// Get offline queue from localStorage
+	const getOfflineQueue = useCallback(() => {
+		try {
+			return storage.getJSON<Array<{ type: string; data: Record<string, unknown>; eventId: string }>>(
+				STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE
+			) || []
+		} catch {
+			return []
+		}
+	}, [storage])
+
+	// Clear offline queue
+	const clearOfflineQueue = useCallback(() => {
+		try {
+			storage.remove(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE)
+		} catch {
+			// Best effort
+		}
+	}, [storage])
+
+	// ============================================
 	// Analytics Actions (with deduplication)
 	// ============================================
 
 	const flushAnalytics = useCallback(async () => {
-		if (analyticsQueue.current.length === 0) return
+		// Include offline queue in flush
+		const offlineEvents = getOfflineQueue()
+		const memoryEvents = analyticsQueue.current
+		const allEvents = [...offlineEvents, ...memoryEvents]
 
-		const events = analyticsQueue.current
+		if (allEvents.length === 0) return
+
+		// If offline, queue everything to localStorage and return
+		if (!isOnline) {
+			queueToOfflineStorage(memoryEvents)
+			analyticsQueue.current = []
+			return
+		}
+
+		// Clear both queues optimistically
 		analyticsQueue.current = []
+		clearOfflineQueue()
 
 		try {
 			await api.post('/analytics/track', {
-				events: events.map(({ type, data }) => ({
+				events: allEvents.map(({ type, data }) => ({
 					event: type,
 					properties: data,
 					timestamp: data.timestamp as string | undefined,
@@ -1136,15 +1265,30 @@ function SylphxProviderInner({
 			setAnalyticsError(null)
 		} catch (error) {
 			setAnalyticsError(error instanceof Error ? error : new Error('Failed to send analytics'))
-			// Re-queue on failure
-			const requeued = [...events, ...analyticsQueue.current]
-			if (requeued.length > ANALYTICS_QUEUE_LIMIT) {
-				analyticsQueue.current = requeued.slice(-ANALYTICS_QUEUE_LIMIT)
+			// Re-queue on failure - to offline storage if we're now offline, otherwise memory
+			if (!navigator.onLine) {
+				queueToOfflineStorage(allEvents)
 			} else {
-				analyticsQueue.current = requeued
+				const requeued = [...allEvents, ...analyticsQueue.current]
+				if (requeued.length > ANALYTICS_QUEUE_LIMIT) {
+					analyticsQueue.current = requeued.slice(-ANALYTICS_QUEUE_LIMIT)
+				} else {
+					analyticsQueue.current = requeued
+				}
 			}
 		}
-	}, [api])
+	}, [api, isOnline, getOfflineQueue, clearOfflineQueue, queueToOfflineStorage])
+
+	// Flush when coming back online
+	useEffect(() => {
+		if (isOnline) {
+			// Small delay to ensure network is stable
+			const timeout = setTimeout(() => {
+				flushAnalytics()
+			}, 1000)
+			return () => clearTimeout(timeout)
+		}
+	}, [isOnline, flushAnalytics])
 
 	const enqueueAnalytics = useCallback(
 		(type: string, data: Record<string, unknown>, eventId?: string) => {
@@ -2293,6 +2437,15 @@ function SylphxProviderInner({
 					// On error, use default if provided
 					return defaults?.defaultEnabled ?? false
 				}
+			},
+			getHistory: async (options) => {
+				return await api.get('/consent/history', {
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
+					anonymousId,
+					limit: options?.limit?.toString(),
+					offset: options?.offset?.toString(),
+				})
 			},
 		}),
 		[api, anonymousId, authState.user?.id, config]

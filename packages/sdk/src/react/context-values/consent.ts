@@ -113,5 +113,15 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 				return defaults?.defaultEnabled ?? false
 			}
 		},
+
+		getHistory: async (options) => {
+			return await api.get('/consent/history', {
+				// Only include userId if truthy (Zod optional doesn't accept null)
+				...(userId && { userId }),
+				anonymousId,
+				limit: options?.limit?.toString(),
+				offset: options?.offset?.toString(),
+			})
+		},
 	}
 }

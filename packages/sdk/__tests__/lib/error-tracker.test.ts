@@ -264,7 +264,8 @@ describe('captureException', () => {
 		await tracker.captureException(new Error('Test'))
 
 		expect(uploadedEvent?.user?.id).toBe('user-123')
-		expect(uploadedEvent?.user?.email).toBe('test@example.com')
+		// Email is automatically scrubbed for PII protection (GDPR compliance)
+		expect(uploadedEvent?.user?.email).toBe('[EMAIL]')
 	})
 
 	test('includes breadcrumbs in captured event', async () => {

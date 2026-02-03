@@ -15,6 +15,7 @@ import {
 	enableAutoCapture,
 	setMaxBreadcrumbs,
 } from './breadcrumbs'
+import { scrubErrorEvent, scrubString } from './pii-scrubber'
 import type {
 	ErrorEvent,
 	ErrorTrackingConfig,
@@ -278,10 +279,16 @@ export class ErrorTracker {
 			return { eventId: '' }
 		}
 
+		// PII Scrubbing - automatically redact sensitive data (GDPR/privacy compliance)
+		// This runs AFTER beforeSend to ensure user transformations are also scrubbed
+		const scrubbedEvent = this.config.scrubPII !== false
+			? scrubErrorEvent(processedEvent)
+			: processedEvent
+
 		// Upload
 		try {
 			if (this.uploadCallback) {
-				const uploadResult = await this.uploadCallback(processedEvent)
+				const uploadResult = await this.uploadCallback(scrubbedEvent)
 
 				// Update adaptive sampling based on server feedback
 				if (uploadResult.recommendedSampleRate !== undefined) {
@@ -352,9 +359,14 @@ export class ErrorTracker {
 			return { eventId: '' }
 		}
 
+		// PII Scrubbing - automatically redact sensitive data (GDPR/privacy compliance)
+		const scrubbedEvent = this.config.scrubPII !== false
+			? scrubErrorEvent(processedEvent)
+			: processedEvent
+
 		try {
 			if (this.uploadCallback) {
-				await this.uploadCallback(processedEvent)
+				await this.uploadCallback(scrubbedEvent)
 			}
 
 			return { eventId }

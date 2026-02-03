@@ -141,8 +141,8 @@ export type EmailTemplateName = string
 // Consent Types
 // ============================================================================
 
-import type { ConsentPurposeDefaults } from '../consent'
-export type { ConsentPurposeDefaults }
+import type { ConsentPurposeDefaults, ConsentHistoryResult, GetConsentHistoryInput } from '../consent'
+export type { ConsentPurposeDefaults, ConsentHistoryResult, GetConsentHistoryInput }
 
 // ============================================================================
 // SDK-Specific Types for Monitoring (Sentry-compatible)
@@ -393,6 +393,8 @@ export interface ConsentContextValue {
 	declineOptional: () => Promise<SetConsentsResult>
 	/** Check consent for a purpose with optional inline defaults for auto-discovery */
 	checkConsent: (purposeSlug: string, defaults?: ConsentPurposeDefaults) => Promise<boolean>
+	/** Get consent change history for GDPR audit trail */
+	getHistory: (options?: Pick<GetConsentHistoryInput, 'limit' | 'offset'>) => Promise<ConsentHistoryResult>
 	/** Consent types from server-fetched config */
 	initialConsentTypes: ConsentType[]
 }
