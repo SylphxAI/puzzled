@@ -222,6 +222,28 @@ export const ANALYTICS_FLUSH_TIMEOUT_MS = 1_000
  */
 export const ANALYTICS_INTERVAL_CHECK_MS = 1_000
 
+/**
+ * Analytics retry base delay in milliseconds (1 second)
+ * Exponential backoff: delay = base * 2^retries (with jitter)
+ */
+export const ANALYTICS_RETRY_BASE_DELAY_MS = 1_000
+
+/**
+ * Analytics retry max delay in milliseconds (30 seconds)
+ */
+export const ANALYTICS_RETRY_MAX_DELAY_MS = 30_000
+
+/**
+ * Analytics retry jitter factor (±20%)
+ * Prevents thundering herd when multiple clients retry simultaneously
+ */
+export const ANALYTICS_RETRY_JITTER = 0.2
+
+/**
+ * Analytics maximum retries before dropping event (Segment pattern: 10)
+ */
+export const ANALYTICS_MAX_RETRIES = 10
+
 // =============================================================================
 // Feature Flags (Extended)
 // =============================================================================

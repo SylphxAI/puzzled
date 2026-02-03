@@ -463,46 +463,34 @@ describe('trackBatch', () => {
 // ============================================================================
 
 describe('generateAnonymousId', () => {
-	test('returns string starting with anon_', () => {
+	test('returns valid UUID v4 format (Segment pattern)', () => {
 		const id = generateAnonymousId()
-		expect(id.startsWith('anon_')).toBe(true)
+		// UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+		// where y is 8, 9, a, or b
+		expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 	})
 
-	test('includes timestamp', () => {
-		const before = Date.now()
-		const id = generateAnonymousId()
-		const after = Date.now()
-
-		// Extract timestamp from ID (format: anon_{timestamp}_{random})
-		const parts = id.split('_')
-		const timestamp = parseInt(parts[1], 10)
-
-		expect(timestamp).toBeGreaterThanOrEqual(before)
-		expect(timestamp).toBeLessThanOrEqual(after)
-	})
-
-	test('includes random component', () => {
-		const id = generateAnonymousId()
-		const parts = id.split('_')
-
-		// Should have 3 parts: anon, timestamp, random
-		expect(parts.length).toBe(3)
-		expect(parts[2].length).toBeGreaterThan(0)
-	})
-
-	test('generates unique IDs', () => {
+	test('generates unique IDs (no collision risk)', () => {
 		const ids = new Set<string>()
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 1000; i++) {
 			ids.add(generateAnonymousId())
 		}
-		// All IDs should be unique
-		expect(ids.size).toBe(100)
+		// All IDs should be unique - UUID v4 has ~2^122 possible values
+		expect(ids.size).toBe(1000)
 	})
 
-	test('ID format is consistent', () => {
+	test('ID is proper length (36 characters)', () => {
 		const id = generateAnonymousId()
-		// Format: anon_{timestamp}_{random}
-		expect(id).toMatch(/^anon_\d+_[a-z0-9]+$/)
+		// UUID format: 8-4-4-4-12 = 32 hex chars + 4 hyphens = 36
+		expect(id.length).toBe(36)
+	})
+
+	test('does not include timestamp (privacy + collision safety)', () => {
+		const id = generateAnonymousId()
+		// Should NOT include Date.now() or any timestamp
+		// Old format was anon_{timestamp}_{random} - this should fail
+		expect(id.startsWith('anon_')).toBe(false)
+		expect(id).not.toMatch(/\d{13}/) // No 13-digit timestamp
 	})
 })
 
@@ -511,12 +499,13 @@ describe('generateAnonymousId', () => {
 // ============================================================================
 
 describe('createTracker', () => {
-	test('creates tracker with generated anonymousId', () => {
+	test('creates tracker with generated anonymousId (UUID v4)', () => {
 		const tracker = createTracker(testConfig)
 		const anonId = tracker.getAnonymousId()
 
 		expect(anonId).toBeDefined()
-		expect(anonId.startsWith('anon_')).toBe(true)
+		// UUID v4 format (Segment pattern)
+		expect(anonId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 	})
 
 	test('uses provided anonymousId', () => {

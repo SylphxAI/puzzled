@@ -177,7 +177,11 @@ export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Pr
 // ============================================================================
 
 /**
- * Generate a random anonymous ID
+ * Generate a random anonymous ID (Segment pattern: pure UUID)
+ *
+ * Uses UUID v4 format without timestamp component to prevent collision risk
+ * in high-traffic applications where multiple users might generate IDs at
+ * the same millisecond.
  *
  * @example
  * ```typescript
@@ -186,12 +190,16 @@ export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Pr
  * ```
  */
 export function generateAnonymousId(): string {
-	// Use crypto.randomUUID if available, otherwise fallback
-	const randomPart =
-		typeof crypto !== 'undefined' && crypto.randomUUID
-			? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-			: Math.random().toString(36).slice(2, 11)
-	return `anon_${Date.now()}_${randomPart}`
+	// Use crypto.randomUUID if available (standard UUID v4)
+	if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+		return crypto.randomUUID()
+	}
+	// Fallback for older browsers: generate UUID v4 manually
+	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+		const r = (Math.random() * 16) | 0
+		const v = c === 'x' ? r : (r & 0x3) | 0x8
+		return v.toString(16)
+	})
 }
 
 /**

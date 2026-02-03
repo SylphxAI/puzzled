@@ -24,7 +24,15 @@ import type {
 	PropertyValue,
 } from './types'
 import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
-import { SDK_API_PATH, ANALYTICS_FLUSH_INTERVAL_MS, ANALYTICS_SESSION_TIMEOUT_MS } from '../../constants'
+import {
+	SDK_API_PATH,
+	ANALYTICS_FLUSH_INTERVAL_MS,
+	ANALYTICS_SESSION_TIMEOUT_MS,
+	ANALYTICS_RETRY_BASE_DELAY_MS,
+	ANALYTICS_RETRY_MAX_DELAY_MS,
+	ANALYTICS_RETRY_JITTER,
+	ANALYTICS_MAX_RETRIES,
+} from '../../constants'
 import { Autocapture, type AutocaptureEvent } from './autocapture'
 import { NavigationTracker, type PageViewEvent, type PageLeaveEvent, analyzeReferrer } from './navigation'
 
@@ -129,9 +137,14 @@ export class AnalyticsTracker {
 
 	/**
 	 * Identify a user
+	 *
+	 * Automatically aliases the previous anonymous ID to the new user ID
+	 * following the Segment/Mixpanel identity merge pattern.
+	 * This ensures anonymous activity is linked to the authenticated user.
 	 */
 	identify(userId: string, properties?: UserProperties): void {
 		const previousId = this.distinctId || this.anonymousId
+		const wasAnonymous = !this.distinctId && this.anonymousId !== userId
 
 		this.distinctId = userId
 
@@ -141,6 +154,19 @@ export class AnalyticsTracker {
 			$anon_distinct_id: previousId,
 			...(properties && { $set: properties }),
 		})
+
+		// Auto-alias: Link anonymous ID to authenticated user (Segment/Mixpanel pattern)
+		// This ensures all anonymous activity is associated with the user
+		if (wasAnonymous && previousId !== userId) {
+			this.track('$create_alias', {
+				alias: userId,
+				distinct_id: previousId,
+			})
+			this.debug('Auto-aliased anonymous ID to user', {
+				anonymousId: previousId,
+				userId,
+			})
+		}
 
 		// Persist distinct ID
 		this.persistDistinctId(userId)
@@ -388,30 +414,93 @@ export class AnalyticsTracker {
 
 	/**
 	 * Flush queued events to the server
+	 *
+	 * Implements exponential backoff with jitter (Segment pattern):
+	 * - Base delay: 1 second
+	 * - Max delay: 30 seconds
+	 * - Jitter: ±20% to prevent thundering herd
+	 * - Max retries: 10
 	 */
 	async flush(): Promise<void> {
 		if (this.queue.length === 0) return
 
-		const batch = this.queue.splice(0, this.config.batchSize ?? 10)
+		const now = Date.now()
+
+		// Filter to only events ready for retry (backoff elapsed)
+		const readyEvents: QueuedEvent[] = []
+		const pendingEvents: QueuedEvent[] = []
+
+		for (const item of this.queue) {
+			if (!item.nextRetryAt || item.nextRetryAt <= now) {
+				readyEvents.push(item)
+			} else {
+				pendingEvents.push(item)
+			}
+		}
+
+		if (readyEvents.length === 0) {
+			this.debug('No events ready for flush (backoff pending)', {
+				pendingCount: pendingEvents.length,
+			})
+			return
+		}
+
+		// Take batch from ready events
+		const batchSize = this.config.batchSize ?? 10
+		const batch = readyEvents.splice(0, batchSize)
+
+		// Update queue: remaining ready events + pending events
+		this.queue = [...readyEvents, ...pendingEvents]
 
 		try {
 			await this.sendBatch(batch.map((q) => q.event))
 			this.persistQueue()
 		} catch (error) {
-			// Put failed events back in queue (with retry count)
-			// Segment pattern: 10 retries with exponential backoff
-			const MAX_RETRIES = 10
+			// Put failed events back with exponential backoff
 			for (const item of batch) {
-				if (item.retries < MAX_RETRIES) {
+				if (item.retries < ANALYTICS_MAX_RETRIES) {
+					const nextRetry = item.retries + 1
+					const delay = this.calculateBackoffDelay(nextRetry)
 					this.queue.unshift({
 						...item,
-						retries: item.retries + 1,
+						retries: nextRetry,
+						nextRetryAt: now + delay,
+					})
+				} else {
+					// Max retries exceeded - drop event
+					this.debug('Event dropped after max retries', {
+						event: item.event.event,
+						retries: item.retries,
 					})
 				}
 			}
 			this.persistQueue()
-			this.debug('Flush failed', { error, retriesRemaining: MAX_RETRIES - (batch[0]?.retries ?? 0) })
+			this.debug('Flush failed, scheduling retry with backoff', {
+				error,
+				retriesRemaining: ANALYTICS_MAX_RETRIES - (batch[0]?.retries ?? 0),
+				nextRetryIn: this.calculateBackoffDelay((batch[0]?.retries ?? 0) + 1),
+			})
 		}
+	}
+
+	/**
+	 * Calculate exponential backoff delay with jitter
+	 *
+	 * Formula: min(base * 2^retries, maxDelay) * (1 ± jitter)
+	 * This prevents thundering herd when multiple clients fail simultaneously.
+	 */
+	private calculateBackoffDelay(retryCount: number): number {
+		// Exponential: base * 2^retries
+		const exponentialDelay = ANALYTICS_RETRY_BASE_DELAY_MS * Math.pow(2, retryCount - 1)
+
+		// Cap at max delay
+		const cappedDelay = Math.min(exponentialDelay, ANALYTICS_RETRY_MAX_DELAY_MS)
+
+		// Add jitter: ±JITTER%
+		const jitterRange = cappedDelay * ANALYTICS_RETRY_JITTER
+		const jitter = (Math.random() * 2 - 1) * jitterRange
+
+		return Math.round(cappedDelay + jitter)
 	}
 
 	private async sendBatch(events: AnalyticsEvent[]): Promise<void> {

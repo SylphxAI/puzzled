@@ -317,6 +317,8 @@ export interface QueuedEvent {
 	event: AnalyticsEvent
 	timestamp: number
 	retries: number
+	/** Unix timestamp when this event can be retried (exponential backoff) */
+	nextRetryAt?: number
 }
 
 /** Batch payload */
