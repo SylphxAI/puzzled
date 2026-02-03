@@ -2,12 +2,15 @@
  * Feature Flags Functions
  *
  * Pure functions for feature flag evaluation.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
 
 // ============================================================================
-// Types
+// Types (SDK-specific - no direct API schema for flag results)
 // ============================================================================
 
 export interface FlagResult {

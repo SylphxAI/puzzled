@@ -3,59 +3,29 @@
  *
  * Pure functions for billing and subscriptions.
  * Uses REST API at /api/sdk/billing/* for all operations.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export interface Plan {
-	id: string
-	slug: string
-	name: string
-	description: string | null
-	features: string[]
-	// Price fields
-	monthlyPrice: number
-	annualPrice: number
-	lifetimePrice: number | null
-	// Display flags
-	isPopular: boolean
-	isActive: boolean
-	isDefault?: boolean
-	// Additional metadata
-	limits?: Record<string, number>
-	sortOrder?: number
-}
+export type Plan = components['schemas']['Plan']
+export type Subscription = components['schemas']['Subscription']
+export type CheckoutRequest = components['schemas']['CheckoutRequest']
+export type CheckoutResponse = components['schemas']['CheckoutResponse']
+export type PortalRequest = components['schemas']['PortalRequest']
+export type PortalResponse = components['schemas']['PortalResponse']
+export type BalanceResponse = components['schemas']['BalanceResponse']
+export type UsageResponse = components['schemas']['UsageResponse']
 
-export interface Subscription {
-	id: string
-	userId: string
-	planId: string
-	planSlug: string
-	planName: string
-	status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'paused'
-	interval: 'monthly' | 'annual' | 'lifetime'
-	currentPeriodStart: string | null
-	currentPeriodEnd: string | null
-	cancelAtPeriodEnd: boolean
-	trialEnd: string | null
-}
-
-export interface CheckoutInput {
-	/** User ID */
-	userId: string
-	/** Plan slug */
-	planSlug: string
-	/** Billing interval */
-	interval: 'monthly' | 'annual' | 'lifetime'
-	/** URL to redirect after successful checkout */
-	successUrl: string
-	/** URL to redirect if user cancels */
-	cancelUrl: string
-}
+// Legacy type alias for backward compatibility
+export type CheckoutInput = CheckoutRequest
 
 // ============================================================================
 // Functions
@@ -67,7 +37,7 @@ export interface CheckoutInput {
  * @example
  * ```typescript
  * const plans = await getPlans(config)
- * plans.forEach(plan => console.log(plan.name, plan.monthlyPrice))
+ * plans.forEach(plan => console.log(plan.name, plan.priceMonthly))
  * ```
  */
 export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
@@ -81,7 +51,7 @@ export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
  * ```typescript
  * const sub = await getSubscription(config, 'user-123')
  * if (sub?.status === 'active') {
- *   console.log(`Active plan: ${sub.planName}`)
+ *   console.log(`Active plan: ${sub.planSlug}`)
  * }
  * ```
  */
@@ -112,9 +82,9 @@ export async function getSubscription(
  */
 export async function createCheckout(
 	config: SylphxConfig,
-	input: CheckoutInput
-): Promise<{ checkoutUrl: string }> {
-	return callApi<{ checkoutUrl: string }>(config, '/billing/checkout', {
+	input: CheckoutRequest
+): Promise<CheckoutResponse> {
+	return callApi<CheckoutResponse>(config, '/billing/checkout', {
 		method: 'POST',
 		body: input,
 	})
@@ -135,9 +105,9 @@ export async function createCheckout(
  */
 export async function createPortalSession(
 	config: SylphxConfig,
-	input: { userId: string; returnUrl: string }
-): Promise<{ portalUrl: string }> {
-	return callApi<{ portalUrl: string }>(config, '/billing/portal', {
+	input: PortalRequest
+): Promise<PortalResponse> {
+	return callApi<PortalResponse>(config, '/billing/portal', {
 		method: 'POST',
 		body: input,
 	})
@@ -149,13 +119,11 @@ export async function createPortalSession(
  * @example
  * ```typescript
  * const balance = await getBillingBalance(config)
- * console.log(`Credits: ${balance.credits}`)
+ * console.log(`Balance: ${balance.balance.currentFormatted}`)
  * ```
  */
-export async function getBillingBalance(
-	config: SylphxConfig
-): Promise<{ credits: number; currency: string }> {
-	return callApi<{ credits: number; currency: string }>(config, '/billing/balance')
+export async function getBillingBalance(config: SylphxConfig): Promise<BalanceResponse> {
+	return callApi<BalanceResponse>(config, '/billing/balance')
 }
 
 /**
@@ -169,8 +137,8 @@ export async function getBillingBalance(
 export async function getBillingUsage(
 	config: SylphxConfig,
 	options?: { month?: string }
-): Promise<Record<string, unknown>> {
-	return callApi<Record<string, unknown>>(config, '/billing/usage', {
+): Promise<UsageResponse> {
+	return callApi<UsageResponse>(config, '/billing/usage', {
 		query: options?.month ? { month: options.month } : undefined,
 	})
 }

@@ -145,6 +145,7 @@ export {
 	introspectToken,
 	revokeToken,
 	revokeAllTokens,
+	// SDK convenience types (aliases)
 	type SignInInput,
 	type SignInResult,
 	type SignUpInput,
@@ -153,6 +154,14 @@ export {
 	type SessionResult,
 	type TokenIntrospectionResult,
 	type RevokeTokenOptions,
+	// Generated API types (from OpenAPI spec)
+	type LoginRequest,
+	type LoginResponse,
+	type RegisterRequest,
+	type RegisterResponse,
+	type TokenResponse as AuthTokenResponse,
+	type TwoFactorVerifyRequest,
+	type MeResponse,
 } from './auth'
 
 // =============================================================================
@@ -182,6 +191,7 @@ export {
 	embed,
 	complete,
 	streamToString,
+	// SDK-specific types (OpenAI-compatible chat format)
 	type ChatMessage,
 	type ContentPart,
 	type ToolCall,
@@ -191,6 +201,11 @@ export {
 	type ChatStreamChunk,
 	type EmbedInput,
 	type EmbedResult,
+	// Generated API types (from OpenAPI spec)
+	type AIUsageResponse,
+	type AIRateLimitResponse,
+	type AIModelsResponse,
+	type AIModel,
 } from './ai'
 
 // =============================================================================
@@ -516,7 +531,7 @@ export type {
 	LoginHistoryEntry,
 	AccessTokenPayload,
 	TokenResponse,
-	// AI Types
+	// AI Types (React layer types - different from pure function types in ai.ts)
 	AIProvider,
 	AIRequestType,
 	AIMessage,
@@ -529,17 +544,13 @@ export type {
 	TextCompletionResponse,
 	EmbeddingInput,
 	EmbeddingResponse,
-	ImageGenerationInput,
-	ImageGenerationResponse,
 	VisionInput,
-	AudioTranscriptionInput,
-	AudioTranscriptionResponse,
-	TextToSpeechInput,
 	AIUsageStats,
 	AIStreamChunk,
 	AIModelInfo,
-	AIAppConfig,
 	AIRateLimitInfo,
+	AIListModelsOptions,
+	AIListModelsResponse,
 	// Common
 	PaginationInput,
 	PaginatedResponse,

@@ -2200,26 +2200,22 @@ function SylphxProviderInner({
 				return config.consentTypes
 			},
 			getUserConsents: async () => {
+				// API returns UserConsent shape matching generated/api.d.ts
 				const consents = await api.get<
 					Array<{
 						slug: string
+						category: 'necessary' | 'analytics' | 'marketing' | 'preferences' | 'functional'
+						name: string
+						required: boolean
 						granted: boolean
 						grantedAt: string | null
-						consentTypeId?: string
-						updatedAt?: string
+						version: number | null
 					}>
 				>('/consent', {
 					userId: authState.user?.id,
 					anonymousId,
 				})
-				// Map API response to UserConsent shape
-				return consents.map((c) => ({
-					consentTypeId: c.consentTypeId ?? '',
-					slug: c.slug,
-					granted: c.granted,
-					grantedAt: c.grantedAt,
-					updatedAt: c.updatedAt ?? c.grantedAt ?? new Date().toISOString(),
-				}))
+				return consents
 			},
 			setConsents: async (consents) => {
 				return await api.post('/consent', {

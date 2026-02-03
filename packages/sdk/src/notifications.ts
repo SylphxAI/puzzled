@@ -2,14 +2,28 @@
  * Notifications Functions
  *
  * Pure functions for push notifications.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type RegisterPushRequest = components['schemas']['RegisterPushRequest']
+export type RegisterPushResponse = components['schemas']['RegisterPushResponse']
+export type UnregisterPushRequest = components['schemas']['UnregisterPushRequest']
+export type PushPreferencesResponse = components['schemas']['PushPreferencesResponse']
+export type InAppMessage = components['schemas']['InAppMessage']
+export type InAppMessagesResponse = components['schemas']['InAppMessagesResponse']
+export type MobileConfigResponse = components['schemas']['MobileConfigResponse']
+export type MobileDevice = components['schemas']['MobileDevice']
+
+// SDK-specific types for convenience
 export interface PushSubscription {
 	endpoint: string
 	keys: {

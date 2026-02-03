@@ -2,14 +2,28 @@
  * Webhooks Functions
  *
  * Pure functions for webhook configuration and delivery management.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type WebhookConfigResponse = components['schemas']['WebhookConfigResponse']
+export type WebhookEnvironmentConfig = components['schemas']['WebhookEnvironmentConfig']
+export type UpdateWebhookConfigRequest = components['schemas']['UpdateWebhookConfigRequest']
+export type UpdateWebhookConfigResponse = components['schemas']['UpdateWebhookConfigResponse']
+export type ListWebhookDeliveriesResponse = components['schemas']['ListWebhookDeliveriesResponse']
+export type WebhookDelivery = components['schemas']['WebhookDelivery']
+export type ReplayDeliveryResponse = components['schemas']['ReplayDeliveryResponse']
+export type WebhookStatsResponse = components['schemas']['WebhookStatsResponse']
+
+// SDK-specific types for convenience
 export interface WebhookEnvironment {
 	id: string
 	name: string
@@ -33,22 +47,6 @@ export interface WebhookConfig {
 export interface WebhookConfigUpdate {
 	environmentId: string
 	webhookUrl: string | null
-}
-
-export interface WebhookDelivery {
-	id: string
-	eventType: string
-	status: 'pending' | 'queued' | 'delivered' | 'failed' | 'success'
-	statusCode: number | null
-	attempts: number
-	retryCount?: number
-	payload: Record<string, unknown>
-	response: string | null
-	error?: string | null
-	url?: string
-	lastAttemptAt?: string | null
-	createdAt: string
-	deliveredAt: string | null
 }
 
 export interface WebhookDeliveriesResult {

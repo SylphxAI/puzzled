@@ -46,31 +46,24 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 		},
 
 		getUserConsents: async () => {
-			// API returns: slug, category, name, required, granted, grantedAt, version
+			// API returns UserConsent shape: slug, category, name, required, granted, grantedAt, version
 			const consents = await api.get<
 				Array<{
 					slug: string
+					category: 'necessary' | 'analytics' | 'marketing' | 'preferences' | 'functional'
+					name: string
+					required: boolean
 					granted: boolean
 					grantedAt: string | null
-					category?: string
-					name?: string
-					required?: boolean
-					version?: number | null
+					version: number | null
 				}>
 			>('/consent', {
 				// Only include userId if truthy (Zod optional doesn't accept null)
 				...(userId && { userId }),
 				anonymousId,
 			})
-			// Map API response to UserConsent shape
-			// grantedAt being null means user hasn't explicitly made a choice
-			return consents.map((c) => ({
-				consentTypeId: '', // Not returned by this endpoint
-				slug: c.slug,
-				granted: c.granted,
-				grantedAt: c.grantedAt,
-				updatedAt: c.grantedAt ?? new Date().toISOString(),
-			}))
+			// Return consents as-is (matches UserConsent type from generated/api.d.ts)
+			return consents
 		},
 
 		setConsents: async (consents) => {

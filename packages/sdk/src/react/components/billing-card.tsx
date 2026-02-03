@@ -207,7 +207,7 @@ function BillingCardInner({
 	// Free user - show upgrade CTA
 	if (!isPremium && showUpgradeCta) {
 		// Find the best plan to highlight (first paid plan or 'pro')
-		const highlightPlan = plans.find((p) => p.slug === 'pro') || plans.find((p) => p.monthlyPrice > 0)
+		const highlightPlan = plans.find((p) => p.slug === 'pro') || plans.find((p) => (p.priceMonthly ?? 0) > 0)
 
 		return (
 			<div style={styles.card} className={className}>

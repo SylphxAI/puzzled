@@ -2,14 +2,28 @@
  * Email Functions
  *
  * Pure functions for transactional email operations.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type SendEmailRequest = components['schemas']['SendEmailRequest']
+export type SendEmailResponse = components['schemas']['SendEmailResponse']
+export type SendTemplatedEmailRequest = components['schemas']['SendTemplatedEmailRequest']
+export type SendTemplatedEmailResponse = components['schemas']['SendTemplatedEmailResponse']
+export type SendToUserRequest = components['schemas']['SendToUserRequest']
+export type SendToUserResponse = components['schemas']['SendToUserResponse']
+export type NewsletterSubscribeRequest = components['schemas']['NewsletterSubscribeRequest']
+export type NewsletterSubscribeResponse = components['schemas']['NewsletterSubscribeResponse']
+
+// SDK-specific types for convenience
 export interface SendEmailOptions {
 	/** Recipient email address */
 	to: string

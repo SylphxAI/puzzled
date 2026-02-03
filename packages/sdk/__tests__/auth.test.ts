@@ -147,6 +147,7 @@ describe('signIn', () => {
 describe('signUp', () => {
 	test('returns user info on successful registration', async () => {
 		mockFetch({
+			requiresVerification: true,
 			user: {
 				id: 'user-new',
 				email: 'new@example.com',

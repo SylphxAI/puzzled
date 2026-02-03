@@ -3,13 +3,26 @@
  *
  * Pure functions for AI completions - Vercel AI SDK style.
  * Direct API calls with natural tree-shaking.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, buildHeaders } from './config'
 import { SylphxError } from './errors'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
+// ============================================================================
+
+export type AIUsageResponse = components['schemas']['AIUsageResponse']
+export type AIRateLimitResponse = components['schemas']['AIRateLimitResponse']
+export type AIModelsResponse = components['schemas']['AIModelsResponse']
+export type AIModel = components['schemas']['AIModel']
+
+// ============================================================================
+// SDK-specific Types (OpenAI-compatible chat format)
 // ============================================================================
 
 export interface ChatMessage {

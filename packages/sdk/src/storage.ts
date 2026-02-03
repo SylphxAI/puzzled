@@ -7,15 +7,27 @@
  * - AbortController cancellation (Vercel Blob pattern)
  * - Exponential backoff with jitter (AWS S3 pattern: 5 retries, 1s base)
  * - Concurrent chunk uploads (Vercel pattern: 3 concurrent)
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
 import { SylphxError } from './errors'
 import { BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS } from './constants'
+import type { components } from './generated/api'
 
 // Re-export types from SSOT
 export type { UploadProgressEvent, UploadResult, UploadOptions } from './lib/storage/types'
 import type { UploadProgressEvent, UploadResult } from './lib/storage/types'
+
+// ============================================================================
+// Types (re-exported from generated OpenAPI spec)
+// ============================================================================
+
+export type StorageFile = components['schemas']['StorageFile']
+export type UploadUrlRequest = components['schemas']['UploadUrlRequest']
+export type UploadUrlResponse = components['schemas']['UploadUrlResponse']
 
 // ============================================================================
 // Upload Retry Configuration (AWS S3 Pattern)
@@ -81,7 +93,7 @@ function isRetryableError(error: unknown): boolean {
 }
 
 // ============================================================================
-// Types (Function-specific)
+// Types (SDK-specific)
 // ============================================================================
 
 export interface FileUploadOptions {

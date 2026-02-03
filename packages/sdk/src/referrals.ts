@@ -10,6 +10,9 @@
  * - Platform uses defaults if no Console override exists
  * - Console can override reward values without deployment
  *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
+ *
  * @example
  * ```typescript
  * import { redeemReferralCode } from '@sylphx/sdk'
@@ -26,11 +29,23 @@
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type ReferralCodeResponse = components['schemas']['ReferralCodeResponse']
+export type RegenerateCodeResponse = components['schemas']['RegenerateCodeResponse']
+export type ReferralStatsResponse = components['schemas']['ReferralStatsResponse']
+export type RedeemReferralRequest = components['schemas']['RedeemReferralRequest']
+export type RedeemReferralResponse = components['schemas']['RedeemReferralResponse']
+export type ReferralRewardDefaults = components['schemas']['ReferralRewardDefaults']
+export type ReferralRewardConfig = components['schemas']['ReferralRewardConfig']
+export type LeaderboardResponse = components['schemas']['LeaderboardResponse']
+export type LeaderboardEntry = components['schemas']['LeaderboardEntry']
+
+// SDK-specific types for convenience
 export interface ReferralCode {
 	code: string
 	createdAt: string
@@ -47,22 +62,6 @@ export interface ReferralStats {
 	pendingReferrals: number
 	/** Total rewards earned */
 	totalRewards: number
-}
-
-export interface LeaderboardEntry {
-	rank: number
-	/** Masked username for privacy */
-	name: string
-	/** User ID (nullable for privacy) */
-	userId?: string | null
-	/** Avatar URL (nullable) */
-	avatarUrl?: string | null
-	/** Number of successful referrals */
-	referrals: number
-	/** Total referrals including pending */
-	totalReferrals?: number
-	/** Is this the current user */
-	isCurrentUser: boolean
 }
 
 type LeaderboardPeriod = 'all' | 'month' | 'week'
@@ -95,47 +94,6 @@ export interface RedeemResult {
 export interface LeaderboardOptions {
 	/** Number of entries to return (default: 10) */
 	limit?: number
-}
-
-/**
- * Reward configuration for inline defaults
- */
-export interface ReferralRewardConfig {
-	/** Reward type */
-	type: 'points' | 'premium_trial' | 'discount' | 'credit'
-	/** Points to award (for type: 'points') */
-	points?: number
-	/** Trial days to grant (for type: 'premium_trial') */
-	days?: number
-	/** Discount percentage (for type: 'discount') */
-	discountPercent?: number
-	/** Credit amount in cents (for type: 'credit') */
-	creditCents?: number
-}
-
-/**
- * Inline defaults for referral program auto-discovery
- *
- * @example
- * ```typescript
- * await redeemReferralCode(config, {
- *   code: 'ABC123',
- *   userId: 'new-user-456',
- * }, {
- *   referrerReward: { type: 'premium_trial', days: 7 },
- *   refereeReward: { type: 'premium_trial', days: 7 },
- * })
- * ```
- */
-export interface ReferralRewardDefaults {
-	/** Reward for the person who shared the code */
-	referrerReward?: ReferralRewardConfig
-	/** Reward for the person using the code */
-	refereeReward?: ReferralRewardConfig
-	/** Whether both parties get rewarded (default: true) */
-	doubleReward?: boolean
-	/** Minimum days before rewards are granted (anti-fraud) */
-	minimumDaysBeforeReward?: number
 }
 
 // ============================================================================
@@ -233,7 +191,7 @@ export async function redeemReferralCode(
  * const { entries, currentUserRank } = await getReferralLeaderboard(config, 'user-123')
  *
  * entries.forEach(e => {
- *   console.log(`#${e.rank} ${e.name}: ${e.referrals} referrals`)
+ *   console.log(`#${e.rank} ${e.displayName}: ${e.completedReferrals} referrals`)
  * })
  * ```
  */

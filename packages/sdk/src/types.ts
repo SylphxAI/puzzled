@@ -351,11 +351,34 @@ export interface FeatureFlagDetailResult {
 // ==========================================
 // AI Types
 // ==========================================
+//
+// Type Architecture:
+// - Generated API types: AIUsageResponse, AIRateLimitResponse, AIModelsResponse, AIModel
+//   → Re-exported from ai.ts (SSOT: generated/api.d.ts)
+// - SDK pure function types: ChatInput, ChatResult, EmbedInput, EmbedResult, etc.
+//   → Defined in ai.ts for the pure functions (chat, embed, chatStream, etc.)
+// - React layer types: AIMessage, AITool, ChatCompletionResponse, AIModelInfo, etc.
+//   → Defined here for services-context.ts and hooks (different shape for React)
+//
+// The React layer uses a different interface than the pure functions because
+// it wraps the REST client (tRPC-like pattern) vs direct API calls.
+// ==========================================
 
+// Re-export generated types from ai.ts (SSOT)
+// Note: AIModelsResponse is NOT re-exported here because the React layer uses AIListModelsResponse
+// which has AIModelInfo[] (SDK type) instead of AIModel[] (generated type)
+export type {
+	AIUsageResponse,
+	AIRateLimitResponse,
+	AIModel,
+} from './ai'
+
+// SDK convenience types
 export type AIProvider = 'openai' | 'anthropic' | 'google' | 'mistral' | 'groq' | 'together'
 export type AIRequestType = 'chat' | 'completion' | 'embedding' | 'image' | 'vision' | 'audio' | 'tts'
 export type AIMessageRole = 'system' | 'user' | 'assistant' | 'tool'
 
+// React layer AI types (used by services-context.ts and ai-hooks.ts)
 export interface AIMessage {
 	role: AIMessageRole
 	content: string
@@ -454,24 +477,6 @@ export interface EmbeddingResponse {
 	}
 }
 
-export interface ImageGenerationInput {
-	model?: string
-	prompt: string
-	n?: number
-	size?: string
-	quality?: string
-	style?: string
-}
-
-export interface ImageGenerationResponse {
-	created: number
-	data: Array<{
-		url?: string
-		b64_json?: string
-		revised_prompt?: string
-	}>
-}
-
 export interface VisionInput {
 	model?: string
 	messages: Array<{
@@ -481,43 +486,14 @@ export interface VisionInput {
 	maxTokens?: number
 }
 
-export interface AudioTranscriptionInput {
-	model?: string
-	file: Blob
-	language?: string
-	prompt?: string
-	responseFormat?: string
-}
-
-export interface AudioTranscriptionResponse {
-	text: string
-	language?: string
-	duration?: number
-	words?: Array<{
-		word: string
-		start: number
-		end: number
-	}>
-}
-
-export interface TextToSpeechInput {
-	model?: string
-	input: string
-	voice?: string
-	speed?: number
-	responseFormat?: string
-}
-
 export interface AIStreamChunk {
 	id: string
 	model: string
-	// Direct delta (OpenAI format)
 	delta?: {
 		content?: string
 		tool_calls?: AIToolCall[]
 	}
 	finishReason?: string | null
-	// Choices array format (also OpenAI compatible)
 	choices?: Array<{
 		index: number
 		delta: {
@@ -528,6 +504,7 @@ export interface AIStreamChunk {
 	}>
 }
 
+// React layer model info (different from generated AIModel - includes SDK-specific fields)
 export interface AIModelInfo {
 	id: string
 	name: string
@@ -540,14 +517,12 @@ export interface AIModelInfo {
 	outputCostPer1M?: number
 }
 
-export interface AIAppConfig {
-	enabled: boolean
-	providers: AIProvider[]
-	defaultModel: string
-	rateLimits: {
-		requestsPerMinute: number
-		tokensPerMinute: number
-	}
+export interface AIUsageStats {
+	period: { start: string; end: string }
+	totalRequests: number
+	totalTokens: number
+	totalCostMicrodollars: number
+	byModel: Record<string, { requests: number; tokens: number; cost: number }>
 }
 
 export interface AIRateLimitInfo {
@@ -558,28 +533,6 @@ export interface AIRateLimitInfo {
 	resetAt: string
 }
 
-export interface AIUsageStats {
-	period: { start: string; end: string }
-	totalRequests: number
-	totalTokens: number
-	totalCostMicrodollars: number
-	byModel: Record<string, { requests: number; tokens: number; cost: number }>
-}
-
-export interface AIRateLimitStatus {
-	requestsRemaining: number
-	requestsLimit: number
-	tokensRemaining: number
-	tokensLimit: number
-	resetAt: string
-}
-
-export interface AIModelsResponse {
-	models: AIModelInfo[]
-	total: number
-	hasMore: boolean
-}
-
 export interface AIListModelsOptions {
 	provider?: AIProvider
 	capability?: string
@@ -588,7 +541,11 @@ export interface AIListModelsOptions {
 	offset?: number
 }
 
-export type AIListModelsResponse = AIModelsResponse
+export interface AIListModelsResponse {
+	models: AIModelInfo[]
+	total: number
+	hasMore: boolean
+}
 
 // ==========================================
 // Jobs Types

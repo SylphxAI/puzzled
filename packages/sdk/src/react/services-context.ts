@@ -60,8 +60,8 @@ import type {
 	PasswordStatus,
 	// AI
 	AIUsageStats,
-	AIRateLimitStatus,
-	AIModelsResponse,
+	AIRateLimitInfo,
+	AIListModelsResponse,
 	AIUsagePeriod,
 	// Newsletter
 	NewsletterSubscribeInput,
@@ -102,8 +102,7 @@ export type {
 	SecurityScoreResult,
 	// AI
 	AIUsageStats,
-	
-	AIModelsResponse,
+	AIListModelsResponse,
 }
 
 // ============================================================================
@@ -229,7 +228,6 @@ import type {
 	AIModelInfo,
 	AIListModelsOptions,
 	AIStreamChunk,
-	AIRateLimitInfo,
 } from '../types'
 
 // ============================================
@@ -284,7 +282,7 @@ export interface AIContextValue {
 	vision: (input: VisionInput) => Promise<ChatCompletionResponse>
 	getUsage: (period: AIUsagePeriod) => Promise<AIUsageStats>
 	getRateLimitStatus: () => Promise<AIRateLimitInfo>
-	listModels: (options?: AIListModelsOptions) => Promise<AIModelsResponse>
+	listModels: (options?: AIListModelsOptions) => Promise<AIListModelsResponse>
 }
 
 export const AIContext = createContext<AIContextValue | null>(null)

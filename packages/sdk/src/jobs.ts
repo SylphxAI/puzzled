@@ -7,14 +7,26 @@
  * - **Idempotency Keys**: Stripe/Inngest pattern for safe retries
  * - **Automatic Retries**: Configurable retry count with exponential backoff
  * - **Cron Scheduling**: Recurring jobs with pause/resume support
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type ScheduleJobRequest = components['schemas']['ScheduleJobRequest']
+export type ScheduleJobResponse = components['schemas']['ScheduleJobResponse']
+export type ScheduleCronRequest = components['schemas']['ScheduleCronRequest']
+export type ScheduleCronResponse = components['schemas']['ScheduleCronResponse']
+export type Job = components['schemas']['Job']
+export type ListJobsResponse = components['schemas']['ListJobsResponse']
+
+// SDK-specific types for convenience
 export interface JobInput {
 	/** Callback URL to call when job executes */
 	callbackUrl: string

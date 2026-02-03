@@ -3,14 +3,24 @@
  *
  * Pure functions for event tracking - no hidden state.
  * Events are sent directly to the platform.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type TrackEventItem = components['schemas']['TrackEventItem']
+export type BatchTrackRequest = components['schemas']['BatchTrackRequest']
+export type BatchTrackResponse = components['schemas']['BatchTrackResponse']
+export type ConversionData = components['schemas']['ConversionData']
+
+// SDK-specific types for convenience
 export interface TrackInput {
 	/** Event name */
 	event: string

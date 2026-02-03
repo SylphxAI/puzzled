@@ -10,6 +10,9 @@
  * - Platform auto-discovers/creates consent types when first referenced
  * - Console can override names, descriptions, requirements without deployment
  *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
+ *
  * @example
  * ```typescript
  * import { hasConsent, getUserConsents, setConsents } from '@sylphx/sdk'
@@ -36,34 +39,20 @@
  */
 
 import { type SylphxConfig, callApi } from './config'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
+export type ConsentType = components['schemas']['ConsentType']
+export type UserConsent = components['schemas']['UserConsent']
+export type SetConsentRequest = components['schemas']['SetConsentRequest']
+export type SetConsentResponse = components['schemas']['SetConsentResponse']
+
+// SDK-specific types (not directly from API schema)
 /** Consent category for grouping */
 export type ConsentCategory = 'necessary' | 'analytics' | 'marketing' | 'functional' | 'preferences'
-
-export interface ConsentType {
-	id: string
-	slug: string
-	name: string
-	description: string
-	category: ConsentCategory
-	required: boolean
-	defaultEnabled: boolean
-	sortOrder: number
-}
-
-export interface UserConsent {
-	consentTypeId: string
-	slug: string
-	/** Whether consent is granted (matches API schema) */
-	granted: boolean
-	updatedAt: string
-	grantedAt?: string | null
-	revokedAt?: string | null
-}
 
 export interface SetConsentsInput {
 	/** User ID (optional for anonymous users) */

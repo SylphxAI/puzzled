@@ -5,79 +5,28 @@
  * Each function takes config as the first parameter.
  *
  * Uses REST API at /api/sdk/auth/* for all operations.
+ *
+ * Types are derived from the OpenAPI spec (generated/api.d.ts).
+ * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
 import { type SylphxConfig, buildHeaders, callApi } from './config'
 import { SylphxError } from './errors'
+import type { components } from './generated/api'
 
 // ============================================================================
-// Types
+// Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export interface SignInInput {
-	email: string
-	password: string
-}
+export type LoginRequest = components['schemas']['LoginRequest']
+export type LoginResponse = components['schemas']['LoginResponse']
+export type RegisterRequest = components['schemas']['RegisterRequest']
+export type RegisterResponse = components['schemas']['RegisterResponse']
+export type TokenResponse = components['schemas']['TokenResponse']
+export type TwoFactorVerifyRequest = components['schemas']['TwoFactorVerifyRequest']
+export type MeResponse = components['schemas']['MeResponse']
 
-export interface SignInResult {
-	/** Whether 2FA is required before completing sign-in */
-	requiresTwoFactor: boolean
-	/** User ID (available even if 2FA required) */
-	userId?: string
-	/** Access token (only if 2FA not required) */
-	accessToken?: string
-	/** Refresh token (only if 2FA not required) */
-	refreshToken?: string
-	/** Token expiry in seconds (only if 2FA not required) */
-	expiresIn?: number
-	/** User info (only if 2FA not required) */
-	user?: {
-		id: string
-		email: string
-		name: string | null
-		image: string | null
-	}
-}
-
-export interface SignUpInput {
-	email: string
-	password: string
-	name?: string
-}
-
-export interface SignUpResult {
-	/** Whether email verification is required */
-	requiresVerification: boolean
-	/** User info */
-	user: {
-		id: string
-		email: string
-		name: string | null
-	}
-}
-
-export interface TokenResult {
-	accessToken: string
-	refreshToken: string
-	expiresIn: number
-	user: {
-		id: string
-		email: string
-		name: string | null
-		image: string | null
-	}
-}
-
-export interface SessionResult {
-	user: {
-		id: string
-		email: string
-		name: string | null
-		image: string | null
-		emailVerified: boolean
-	} | null
-}
-
+// SDK-specific types (not directly from API schema)
 /**
  * Token introspection result (RFC 7662)
  */
@@ -118,6 +67,23 @@ export interface RevokeTokenOptions {
 	userId?: string
 }
 
+// Legacy type aliases for backward compatibility during migration
+// TODO: Remove after all consumers are updated
+export type SignInInput = LoginRequest
+export type SignInResult = LoginResponse
+export type SignUpInput = RegisterRequest
+export type SignUpResult = RegisterResponse
+export type TokenResult = TokenResponse
+export interface SessionResult {
+	user: {
+		id: string
+		email: string
+		name: string | null
+		image: string | null
+		emailVerified: boolean
+	} | null
+}
+
 // ============================================================================
 // Functions
 // ============================================================================
@@ -136,8 +102,8 @@ export interface RevokeTokenOptions {
  * }
  * ```
  */
-export async function signIn(config: SylphxConfig, input: SignInInput): Promise<SignInResult> {
-	return callApi<SignInResult>(config, '/auth/login', {
+export async function signIn(config: SylphxConfig, input: LoginRequest): Promise<LoginResponse> {
+	return callApi<LoginResponse>(config, '/auth/login', {
 		method: 'POST',
 		body: input,
 	})
@@ -156,15 +122,11 @@ export async function signIn(config: SylphxConfig, input: SignInInput): Promise<
  * // User needs to verify email
  * ```
  */
-export async function signUp(config: SylphxConfig, input: SignUpInput): Promise<SignUpResult> {
-	const result = await callApi<{ user: SignUpResult['user'] }>(config, '/auth/register', {
+export async function signUp(config: SylphxConfig, input: RegisterRequest): Promise<RegisterResponse> {
+	return callApi<RegisterResponse>(config, '/auth/register', {
 		method: 'POST',
 		body: input,
 	})
-	return {
-		requiresVerification: true,
-		user: result.user,
-	}
 }
 
 /**
@@ -191,7 +153,7 @@ export async function signOut(config: SylphxConfig): Promise<void> {
 export async function refreshToken(
 	config: SylphxConfig,
 	token: string
-): Promise<TokenResult> {
+): Promise<TokenResponse> {
 	const response = await fetch(`${config.platformUrl}/api/auth/token`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -303,8 +265,8 @@ export async function verifyTwoFactor(
 	config: SylphxConfig,
 	userId: string,
 	code: string
-): Promise<TokenResult> {
-	return callApi<TokenResult>(config, '/auth/verify-2fa', {
+): Promise<TokenResponse> {
+	return callApi<TokenResponse>(config, '/auth/verify-2fa', {
 		method: 'POST',
 		body: { userId, code },
 	})
