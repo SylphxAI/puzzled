@@ -16,9 +16,9 @@ import {
 	resetPassword,
 	getSession,
 	verifyTwoFactor,
-	type SignInResult,
-	type SignUpResult,
-	type TokenResult,
+	type LoginResponse,
+	type RegisterResponse,
+	type TokenResponse,
 	type SessionResult,
 } from '../src/auth'
 
@@ -57,7 +57,7 @@ const mockFetchError = (message: string, status: number) => {
 
 describe('signIn', () => {
 	test('returns tokens on successful login', async () => {
-		const mockResponse: SignInResult = {
+		const mockResponse: LoginResponse = {
 			requiresTwoFactor: false,
 			accessToken: 'access-token-123',
 			refreshToken: 'refresh-token-456',
@@ -84,7 +84,7 @@ describe('signIn', () => {
 	})
 
 	test('returns requiresTwoFactor when 2FA enabled', async () => {
-		const mockResponse: SignInResult = {
+		const mockResponse: LoginResponse = {
 			requiresTwoFactor: true,
 			userId: 'user-123',
 		}
@@ -240,7 +240,7 @@ describe('signOut', () => {
 
 describe('refreshToken', () => {
 	test('returns new tokens', async () => {
-		const mockResponse: TokenResult = {
+		const mockResponse: TokenResponse = {
 			accessToken: 'new-access-token',
 			refreshToken: 'new-refresh-token',
 			expiresIn: 900,
@@ -458,7 +458,7 @@ describe('getSession', () => {
 
 describe('verifyTwoFactor', () => {
 	test('returns tokens on successful verification', async () => {
-		const mockResponse: TokenResult = {
+		const mockResponse: TokenResponse = {
 			accessToken: 'access-token-2fa',
 			refreshToken: 'refresh-token-2fa',
 			expiresIn: 900,

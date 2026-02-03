@@ -24,8 +24,6 @@ export type PortalResponse = components['schemas']['PortalResponse']
 export type BalanceResponse = components['schemas']['BalanceResponse']
 export type UsageResponse = components['schemas']['UsageResponse']
 
-// Legacy type alias for backward compatibility
-export type CheckoutInput = CheckoutRequest
 
 // ============================================================================
 // Functions

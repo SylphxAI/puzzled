@@ -1,24 +1,32 @@
 /**
  * Platform SDK Types
  *
- * Type definitions for the SDK. Domain-specific types are re-exported from
- * their respective modules (SSOT). Additional UI/React types are defined here.
+ * Type definitions for the SDK. API types are generated from OpenAPI spec (ADR-007).
+ * SDK-specific types for React layer and internal use are defined here.
  *
- * ## Naming Conventions
+ * ## Type Sources (ADR-007)
+ *
+ * | Source | Example | When to Use |
+ * |--------|---------|-------------|
+ * | `generated/api.d.ts` | `LoginRequest`, `Plan` | All API request/response types |
+ * | SDK modules | `SessionResult`, `FlagContext` | SDK-specific types |
+ * | `types.ts` | `AppConfig`, `AIMessage` | Shared/React layer types |
+ *
+ * ## Naming Conventions (Generated Types)
  *
  * | Suffix | Purpose | Example |
  * |--------|---------|---------|
- * | `Input` | Function parameters | `SignInInput`, `TrackInput` |
- * | `Result` | SDK function return values | `SignInResult`, `TokenResult` |
- * | `Response` | API response payloads | `TokenResponse`, `ChatCompletionResponse` |
+ * | `Request` | API request payloads | `LoginRequest`, `CheckoutRequest` |
+ * | `Response` | API response payloads | `LoginResponse`, `TokenResponse` |
+ * | (none) | Domain objects | `Plan`, `Subscription`, `User` |
+ *
+ * ## Naming Conventions (SDK Types)
+ *
+ * | Suffix | Purpose | Example |
+ * |--------|---------|---------|
+ * | `Result` | SDK function return (non-API) | `SessionResult` |
  * | `Options` | Optional function parameters | `FileUploadOptions`, `RevokeTokenOptions` |
- * | `Config` | Runtime configuration objects | `SylphxConfig`, `AnalyticsConfig` |
- *
- * ## Type Location Guidelines
- *
- * - **Domain types**: Defined in their module (auth.ts, analytics.ts, etc.)
- * - **Shared types**: Defined here in types.ts
- * - **React-specific**: Defined in react/services-context.ts or react/hooks.ts
+ * | `Config` | Runtime configuration | `SylphxConfig`, `AppConfig` |
  *
  * ## Sdk* Prefix (services-context.ts)
  *
@@ -75,7 +83,7 @@ export type {
 }
 
 // Billing types - SSOT: billing.ts
-export type { Plan, Subscription, CheckoutInput } from './billing'
+export type { Plan, Subscription, CheckoutRequest } from './billing'
 
 // Storage types - SSOT: lib/storage/types.ts
 
@@ -216,11 +224,17 @@ export type OAuthProviderId = (typeof OAUTH_PROVIDERS)[number]
  * For authenticated user with security fields (twoFactorEnabled),
  * see AuthUser in services-context.ts.
  */
+/**
+ * User type - compatible with generated User from API
+ *
+ * Note: `image` is optional to match generated type.
+ * Extra fields (role, createdAt) are SDK extensions for internal use.
+ */
 export interface User {
 	id: string
 	email: string
 	name: string | null
-	image: string | null
+	image?: string | null
 	emailVerified: boolean
 	role?: string
 	createdAt?: string
@@ -245,14 +259,8 @@ export interface UserCookieData {
 // Token Types
 // ==========================================
 
-export interface TokenResponse {
-	accessToken: string
-	refreshToken: string
-	expiresIn: number
-	user: User
-}
-
-// Note: OAuth token response uses platform-specific shape, not SDK types
+// Re-export TokenResponse from auth.ts (generated from OpenAPI spec)
+export type { TokenResponse } from './auth'
 
 export interface AccessTokenPayload {
 	sub: string
@@ -322,7 +330,7 @@ export interface DeviceSession {
 
 // ==========================================
 // Billing Types
-// Note: Plan, Subscription, CheckoutInput are exported from billing.ts (SSOT)
+// Note: Plan, Subscription, CheckoutRequest are exported from billing.ts (SSOT)
 // Note: getBillingBalance/getBillingUsage return inline types from billing.ts
 // ==========================================
 
@@ -612,7 +620,7 @@ export interface InAppMessageWithReadStatus {
 // Input Types
 // Note: Most input types are defined and exported from their respective modules:
 // - TrackInput, PageInput, IdentifyInput from analytics.ts
-// - CheckoutInput from billing.ts
+// - CheckoutRequest from billing.ts
 // - PushSubscription from notifications.ts
 // - FlagContext from flags.ts
 // - FileUploadOptions from storage.ts

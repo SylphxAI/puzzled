@@ -473,16 +473,24 @@ The SDK has many types across different modules. Consistent naming helps develop
 
 ### Decision
 
-Establish standard naming conventions for type suffixes:
+Standard naming conventions for type suffixes (updated for ADR-007 schema-first approach):
+
+### Generated API Types (from OpenAPI spec)
 
 | Suffix | Purpose | Example |
 |--------|---------|---------|
-| `Input` | Function parameters (required fields) | `SignInInput`, `TrackInput` |
-| `Result` | SDK function return values | `SignInResult`, `TokenResult` |
-| `Response` | Raw API response payloads | `TokenResponse`, `ChatCompletionResponse` |
+| `Request` | API request payloads | `LoginRequest`, `CheckoutRequest` |
+| `Response` | API response payloads | `LoginResponse`, `TokenResponse` |
+| (none) | Domain objects | `Plan`, `Subscription`, `User` |
+
+### SDK-Specific Types
+
+| Suffix | Purpose | Example |
+|--------|---------|---------|
+| `Result` | SDK function return (non-API) | `SessionResult` |
 | `Options` | Optional function parameters | `FileUploadOptions`, `SignedUrlOptions` |
 | `Config` | Runtime configuration objects | `SylphxConfig`, `AnalyticsConfig` |
-| `Props` | React component props | `SylphxProviderProps`, `SignInProps` |
+| `Props` | React component props | `SylphxProviderProps` |
 
 ### Additional Conventions
 
@@ -490,15 +498,16 @@ Establish standard naming conventions for type suffixes:
 Types prefixed with `Sdk` (e.g., `SdkUserProfile`) are SDK internal representations with JavaScript `Date` objects. API types use ISO strings, SDK transforms to `Date` for convenience.
 
 **Type Location:**
-- Domain types → their module (auth.ts, analytics.ts)
+- Generated API types → imported from `generated/api.d.ts` via module re-exports
+- SDK-specific types → their module (auth.ts, analytics.ts)
 - Shared types → types.ts
 - React-specific → react/services-context.ts or react/hooks.ts
 
 ### Rationale
 
-- Consistent naming reduces cognitive load
-- Suffix indicates how the type is used
-- Matches patterns in industry SDKs (Stripe, Clerk, Firebase)
+- Schema-first approach ensures type safety with Platform API
+- Generated types match API documentation exactly
+- SDK-specific types only for non-API concerns
 
 ### Consequences
 

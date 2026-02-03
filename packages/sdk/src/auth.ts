@@ -67,13 +67,7 @@ export interface RevokeTokenOptions {
 	userId?: string
 }
 
-// Legacy type aliases for backward compatibility during migration
-// TODO: Remove after all consumers are updated
-export type SignInInput = LoginRequest
-export type SignInResult = LoginResponse
-export type SignUpInput = RegisterRequest
-export type SignUpResult = RegisterResponse
-export type TokenResult = TokenResponse
+// SDK-specific types (not in generated API)
 export interface SessionResult {
 	user: {
 		id: string

@@ -145,23 +145,18 @@ export {
 	introspectToken,
 	revokeToken,
 	revokeAllTokens,
-	// SDK convenience types (aliases)
-	type SignInInput,
-	type SignInResult,
-	type SignUpInput,
-	type SignUpResult,
-	type TokenResult,
-	type SessionResult,
-	type TokenIntrospectionResult,
-	type RevokeTokenOptions,
 	// Generated API types (from OpenAPI spec)
 	type LoginRequest,
 	type LoginResponse,
 	type RegisterRequest,
 	type RegisterResponse,
-	type TokenResponse as AuthTokenResponse,
+	type TokenResponse,
 	type TwoFactorVerifyRequest,
 	type MeResponse,
+	// SDK-specific types
+	type SessionResult,
+	type TokenIntrospectionResult,
+	type RevokeTokenOptions,
 } from './auth'
 
 // =============================================================================
@@ -219,9 +214,15 @@ export {
 	createPortalSession,
 	getBillingBalance,
 	getBillingUsage,
+	// Generated API types
 	type Plan,
 	type Subscription,
-	type CheckoutInput,
+	type CheckoutRequest,
+	type CheckoutResponse,
+	type PortalRequest,
+	type PortalResponse,
+	type BalanceResponse,
+	type UsageResponse,
 } from './billing'
 
 // =============================================================================
@@ -530,7 +531,7 @@ export type {
 	SecuritySettings,
 	LoginHistoryEntry,
 	AccessTokenPayload,
-	TokenResponse,
+	// Note: TokenResponse is exported from auth.ts (generated type)
 	// AI Types (React layer types - different from pure function types in ai.ts)
 	AIProvider,
 	AIRequestType,
