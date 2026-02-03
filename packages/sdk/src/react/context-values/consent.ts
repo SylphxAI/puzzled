@@ -58,7 +58,8 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 					version?: number | null
 				}>
 			>('/consent', {
-				userId: userId ?? undefined,
+				// Only include userId if truthy (Zod optional doesn't accept null)
+				...(userId && { userId }),
 				anonymousId,
 			})
 			// Map API response to UserConsent shape
@@ -74,30 +75,37 @@ export function createConsentValue(config: CreateConsentValueConfig): ConsentCon
 
 		setConsents: async (consents) => {
 			return await api.post('/consent', {
-				userId,
+				// Only include userId if it's truthy (Zod optional doesn't accept null)
+				...(userId && { userId }),
 				anonymousId,
 				consents,
+				source: 'banner',
 			})
 		},
 
 		acceptAll: async () => {
 			return await api.post('/consent/accept-all', {
-				userId,
+				// Only include userId if it's truthy (Zod optional doesn't accept null)
+				...(userId && { userId }),
 				anonymousId,
+				source: 'banner',
 			})
 		},
 
 		declineOptional: async () => {
 			return await api.post('/consent/decline-optional', {
-				userId,
+				// Only include userId if it's truthy (Zod optional doesn't accept null)
+				...(userId && { userId }),
 				anonymousId,
+				source: 'banner',
 			})
 		},
 
 		checkConsent: async (purposeSlug, defaults) => {
 			try {
 				const consents = await api.get<Array<{ slug: string; granted: boolean }>>('/consent', {
-					userId: userId ?? undefined,
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(userId && { userId }),
 					anonymousId,
 				})
 				// Find consent for this purpose

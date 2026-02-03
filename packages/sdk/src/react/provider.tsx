@@ -2223,7 +2223,8 @@ function SylphxProviderInner({
 			},
 			setConsents: async (consents) => {
 				return await api.post('/consent', {
-					userId: authState.user?.id,
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
 					anonymousId,
 					consents,
 					source: 'banner',
@@ -2231,14 +2232,16 @@ function SylphxProviderInner({
 			},
 			acceptAll: async () => {
 				return await api.post('/consent/accept-all', {
-					userId: authState.user?.id,
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
 					anonymousId,
 					source: 'banner',
 				})
 			},
 			declineOptional: async () => {
 				return await api.post('/consent/decline-optional', {
-					userId: authState.user?.id,
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
 					anonymousId,
 					source: 'banner',
 				})
@@ -2247,7 +2250,8 @@ function SylphxProviderInner({
 				// Get user's current consents
 				try {
 					const consents = await api.get<Array<{ slug: string; granted: boolean }>>('/consent', {
-						userId: authState.user?.id,
+						// Only include userId if truthy (Zod optional doesn't accept null)
+						...(authState.user?.id && { userId: authState.user.id }),
 						anonymousId,
 					})
 					// Find consent for this purpose

@@ -51,20 +51,26 @@ function isTokenResponse(data: unknown): data is TokenResponse {
 // Configuration
 // =============================================================================
 
-// Configuration for server helpers (must be set before use)
+// Configuration for server helpers (auto-configured from env vars)
 let serverConfig: { secretKey: string; platformUrl: string } | null = null
 
 /**
  * Configure the SDK for server-side usage
  *
- * Call this once in your app, e.g., in a server-side layout.
+ * NOTE: This is optional! The SDK auto-configures from environment variables:
+ * - SYLPHX_SECRET_KEY (required)
+ * - SYLPHX_PLATFORM_URL (optional, defaults to https://sylphx.com)
+ *
+ * Use this only if you need to override the default configuration.
  *
  * @example
  * ```ts
- * import { configureServer } from '@sylphx/platform-sdk/nextjs'
+ * // Optional: Override default configuration
+ * import { configureServer } from '@sylphx/sdk/nextjs'
  *
  * configureServer({
  *   secretKey: process.env.SYLPHX_SECRET_KEY!,
+ *   platformUrl: 'https://custom.sylphx.com',
  * })
  * ```
  */
@@ -83,16 +89,35 @@ export function configureServer(config: {
 /**
  * Get server configuration
  *
- * Pre-launch: Fail fast if not configured. Apps MUST explicitly configure the SDK.
- * This prevents silent failures in production.
+ * Auto-configures from environment variables if not explicitly configured.
+ * This follows the Clerk/Auth0 pattern where SDK auto-initializes from env vars.
  */
 function getConfig(): { secretKey: string; platformUrl: string } | null {
-	if (!serverConfig) {
-		// Fail fast: require explicit configuration via configureServer()
-		// No graceful degradation - silent failures are dangerous in production
+	// Return cached config if already set
+	if (serverConfig) {
+		return serverConfig
+	}
+
+	// Auto-configure from environment variables (Clerk/Auth0 pattern)
+	const rawSecretKey = process.env.SYLPHX_SECRET_KEY
+	if (!rawSecretKey) {
+		// No secret key configured - cannot authenticate
+		// This is expected for public pages that don't need auth
 		return null
 	}
-	return serverConfig
+
+	try {
+		const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
+		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
+
+		// Cache the auto-configured settings
+		serverConfig = { secretKey, platformUrl }
+		return serverConfig
+	} catch (error) {
+		// Invalid secret key format - log warning and return null
+		console.warn('[Sylphx] Invalid SYLPHX_SECRET_KEY format:', error)
+		return null
+	}
 }
 
 /**
