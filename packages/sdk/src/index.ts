@@ -19,6 +19,26 @@
  * | `@sylphx/sdk/server` | Server utilities (JWT, webhooks) | jose |
  * | `@sylphx/sdk/nextjs` | Next.js integration | next |
  *
+ * ## Service Quick Reference
+ *
+ * | Service | Key Functions | Description |
+ * |---------|---------------|-------------|
+ * | Config | `createConfig`, `withToken` | SDK configuration |
+ * | Auth | `signIn`, `signUp`, `signOut` | Authentication |
+ * | Analytics | `track`, `page`, `identify` | Event tracking |
+ * | AI | `chat`, `embed`, `complete` | AI/LLM operations |
+ * | Billing | `getPlans`, `createCheckout` | Subscriptions |
+ * | Storage | `uploadFile`, `getFileUrl` | File storage |
+ * | Jobs | `scheduleJob`, `createCron` | Background jobs |
+ * | Flags | `checkFlag`, `getFlags` | Feature flags |
+ * | Consent | `hasConsent`, `setConsents` | GDPR/CCPA |
+ * | Referrals | `getReferralStats`, `redeemReferralCode` | Referral system |
+ * | Webhooks | `getWebhookConfig`, `replayWebhookDelivery` | Webhook management |
+ * | Email | `sendEmail`, `sendTemplatedEmail` | Email sending |
+ * | Notifications | `registerPush`, `sendPush` | Push notifications |
+ * | Engagement | `getStreak`, `unlockAchievement` | Gamification |
+ * | Orgs | `createOrganization`, `inviteOrganizationMember` | Multi-tenancy |
+ *
  * ## Usage
  *
  * @example
