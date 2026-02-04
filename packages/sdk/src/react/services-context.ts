@@ -57,6 +57,10 @@ import type {
 	TwoFactorVerifyResult,
 	PasskeyInfo,
 	SecurityScoreResult,
+	SecurityFactor,
+	SecurityRecommendation,
+	SecurityPriority,
+	SecurityGrade,
 	PasswordStatus,
 	// AI
 	AIUsageStats,
@@ -100,6 +104,10 @@ export type {
 	TwoFactorSetupResult,
 	PasskeyInfo,
 	SecurityScoreResult,
+	SecurityFactor,
+	SecurityRecommendation,
+	SecurityPriority,
+	SecurityGrade,
 	// AI
 	AIUsageStats,
 	AIListModelsResponse,
@@ -690,6 +698,8 @@ export interface SecurityContextValue {
 	passkeyList: () => Promise<SdkPasskeyInfo[]>
 	passkeyRegisterStart: () => Promise<unknown>
 	passkeyRegisterVerify: (credential: unknown, name?: string) => Promise<SdkPasskeyInfo>
+	passkeyRename: (passkeyId: string, name: string) => Promise<{ success: boolean }>
+	passkeyDelete: (passkeyId: string) => Promise<{ success: boolean }>
 	oauthConnect: (provider: string) => Promise<{ redirectUrl: string }>
 	oauthDisconnect: (provider: string) => Promise<{ success: boolean }>
 	getSecurityScore: () => Promise<SecurityScoreResult>

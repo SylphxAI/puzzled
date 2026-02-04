@@ -846,7 +846,8 @@ export interface TwoFactorStatus {
 
 export interface TwoFactorSetupResult {
 	secret: string
-	qrCode: string
+	uri: string
+	backupCodes: string[]
 }
 
 export interface TwoFactorVerifyResult {
@@ -862,15 +863,41 @@ export interface PasskeyInfo {
 	lastUsedAt: string | null
 }
 
+/** Security factor priority levels */
+export type SecurityPriority = 'critical' | 'high' | 'medium' | 'low'
+
+/** Security grade based on score */
+export type SecurityGrade = 'A' | 'B' | 'C' | 'D' | 'F'
+
+/** Individual security factor */
+export interface SecurityFactor {
+	key: string
+	name: string
+	description: string
+	weight: number
+	priority: SecurityPriority
+	enabled: boolean
+	value: number // Points earned (0 to weight)
+}
+
+/** Recommendation for improving security */
+export interface SecurityRecommendation {
+	key: string
+	title: string
+	description: string
+	action: string
+	priority: SecurityPriority
+	impact: number // Potential score increase
+}
+
+/** Complete security score result */
 export interface SecurityScoreResult {
-	score: number
-	maxScore: number
-	factors: Array<{
-		name: string
-		score: number
-		maxScore: number
-		recommendation?: string
-	}>
+	score: number // 0-100
+	maxScore: number // Always 100
+	grade: SecurityGrade
+	factors: SecurityFactor[]
+	recommendations: SecurityRecommendation[]
+	lastCalculated: string // ISO date string
 }
 
 export interface PasswordStatus {

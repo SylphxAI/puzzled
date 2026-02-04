@@ -144,6 +144,10 @@ export {
 	type TwoFactorSetupResult,
 	type PasskeyInfo,
 	type SecurityScoreResult,
+	type SecurityFactor,
+	type SecurityRecommendation,
+	type SecurityPriority,
+	type SecurityGrade,
 } from './services-context'
 
 // Re-export auth types from types.ts
