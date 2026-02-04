@@ -179,6 +179,7 @@ export {
 	// Organization types (re-exported from types.ts - SSOT)
 	type Organization,
 	type OrganizationMember,
+	type OrganizationInvitation,
 	type OrgRole,
 } from './hooks'
 
