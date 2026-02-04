@@ -140,6 +140,13 @@ export {
 	// Import from '@sylphx/platform-sdk' or '../types' directly
 	type LoginHistoryEntry,
 	type ConnectedAccount,
+	// SDK-specific types with Date objects (transformed from API ISO strings)
+	type SdkUserProfile,
+	type SdkLoginHistoryEntry,
+	type SdkConnectedAccount,
+	type SdkPasskeyInfo,
+	type SdkTwoFactorStatus,
+	type SdkPasswordStatus,
 	type TwoFactorStatus,
 	type TwoFactorSetupResult,
 	type PasskeyInfo,
