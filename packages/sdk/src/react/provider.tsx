@@ -2936,6 +2936,9 @@ function SylphxProviderInner({
 			revokeSession: async (sessionId) => {
 				return await api.del(`/user/sessions/${sessionId}`)
 			},
+			renameSession: async (sessionId, name) => {
+				return await api.put(`/user/sessions/${sessionId}`, { name })
+			},
 			revokeAllSessions: async () => {
 				return await api.post('/user/sessions/revoke-all')
 			},
@@ -2980,6 +2983,16 @@ function SylphxProviderInner({
 		name: string | null
 		createdAt: string
 		lastUsedAt: string | null
+	}
+
+	type SecurityAlertResponse = {
+		id: string
+		type: string
+		title: string
+		description: string | null
+		metadata: Record<string, unknown> | null
+		read: boolean
+		createdAt: string
 	}
 
 	const securityValue: SecurityContextValue = useMemo(
@@ -3056,6 +3069,34 @@ function SylphxProviderInner({
 			},
 			getSecurityScore: async () => {
 				return await api.get('/security/score')
+			},
+			// Security Alerts
+			getSecurityAlerts: async (options) => {
+				const params = new URLSearchParams()
+				if (options?.limit) params.set('limit', String(options.limit))
+				if (options?.unreadOnly) params.set('unreadOnly', 'true')
+				const query = params.toString()
+				const response = await api.get<{ alerts: SecurityAlertResponse[]; total: number }>(
+					`/security/alerts${query ? `?${query}` : ''}`
+				)
+				return {
+					alerts: response.alerts.map((a) => ({
+						id: a.id,
+						type: a.type,
+						title: a.title,
+						description: a.description,
+						metadata: a.metadata,
+						read: a.read,
+						createdAt: new Date(a.createdAt),
+					})),
+					total: response.total,
+				}
+			},
+			markAlertRead: async (alertId: string) => {
+				return await api.post(`/security/alerts/${alertId}/read`)
+			},
+			markAllAlertsRead: async () => {
+				return await api.post('/security/alerts/read-all')
 			},
 		}),
 		[api, platformUrl, appId]

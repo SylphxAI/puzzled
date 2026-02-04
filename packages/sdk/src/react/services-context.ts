@@ -648,6 +648,7 @@ export interface UserContextValue {
 	getLoginHistory: (options?: { limit?: number }) => Promise<SdkLoginHistoryEntry[]>
 	getSessions: () => Promise<UserSessionInfo[]>
 	revokeSession: (sessionId: string) => Promise<{ success: boolean }>
+	renameSession: (sessionId: string, name: string) => Promise<{ success: boolean }>
 	revokeAllSessions: () => Promise<{ success: boolean; count: number }>
 	getConnectedAccounts: () => Promise<SdkConnectedAccount[]>
 	deleteAccount: (password?: string) => Promise<{ success: boolean }>
@@ -684,6 +685,23 @@ export interface SdkPasskeyInfo {
 	lastUsedAt: Date | null
 }
 
+/** SDK Security Alert (transformed from API) */
+export interface SdkSecurityAlert {
+	id: string
+	type: string
+	title: string
+	description: string | null
+	metadata: Record<string, unknown> | null
+	read: boolean
+	createdAt: Date
+}
+
+/** SDK Security Alerts Result */
+export interface SdkSecurityAlertsResult {
+	alerts: SdkSecurityAlert[]
+	total: number
+}
+
 export interface SecurityContextValue {
 	getTwoFactorStatus: () => Promise<SdkTwoFactorStatus>
 	twoFactorSetup: () => Promise<TwoFactorSetupResult>
@@ -703,6 +721,10 @@ export interface SecurityContextValue {
 	oauthConnect: (provider: string) => Promise<{ redirectUrl: string }>
 	oauthDisconnect: (provider: string) => Promise<{ success: boolean }>
 	getSecurityScore: () => Promise<SecurityScoreResult>
+	// Security Alerts
+	getSecurityAlerts: (options?: { limit?: number; unreadOnly?: boolean }) => Promise<SdkSecurityAlertsResult>
+	markAlertRead: (alertId: string) => Promise<{ success: boolean }>
+	markAllAlertsRead: () => Promise<{ success: boolean }>
 }
 
 export const SecurityContext = createContext<SecurityContextValue | null>(null)

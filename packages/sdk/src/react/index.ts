@@ -147,6 +147,8 @@ export {
 	type SdkPasskeyInfo,
 	type SdkTwoFactorStatus,
 	type SdkPasswordStatus,
+	type SdkSecurityAlert,
+	type SdkSecurityAlertsResult,
 	type TwoFactorStatus,
 	type TwoFactorSetupResult,
 	type PasskeyInfo,
