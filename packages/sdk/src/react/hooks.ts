@@ -126,6 +126,12 @@ export interface UseAuthReturn {
 	error: Error | null
 	/** Whether there was an auth error */
 	isError: boolean
+	/** Whether an OAuth flow is in progress */
+	isOAuthLoading: boolean
+	/** OAuth-specific error */
+	oauthError: Error | null
+	/** Clear OAuth error state */
+	clearOAuthError: () => void
 	/** Redirect to sign in page */
 	signIn: (options?: SignInOptions) => void
 	/** Redirect to sign up page */
@@ -142,6 +148,41 @@ export interface UseAuthReturn {
 	resendVerificationEmail: (options: ResendVerificationEmailOptions) => Promise<void>
 	/** Request password reset email */
 	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>
+
+	// ==========================================
+	// Direct OAuth Methods (Firebase/Supabase pattern)
+	// User goes directly to OAuth provider - no platform UI
+	// ==========================================
+
+	/**
+	 * Sign in with OAuth provider directly (Firebase/Supabase pattern).
+	 * Redirects user straight to OAuth provider - no platform login UI.
+	 *
+	 * @example
+	 * ```tsx
+	 * const { signInWithOAuth } = useAuth()
+	 * await signInWithOAuth({ provider: 'google', redirectUrl: '/dashboard' })
+	 * ```
+	 */
+	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>
+
+	/** Convenience: Sign in with Google directly */
+	signInWithGoogle: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with GitHub directly */
+	signInWithGithub: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Apple directly */
+	signInWithApple: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Discord directly */
+	signInWithDiscord: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Twitter directly */
+	signInWithTwitter: (redirectUrl?: string) => Promise<void>
+
+	/** Convenience: Sign in with Microsoft directly */
+	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>
 }
 
 /**
@@ -170,16 +211,30 @@ export function useAuth(): UseAuthReturn {
 		signOut,
 		getToken,
 		error,
+		isOAuthLoading,
+		oauthError,
+		clearOAuthError,
 		resetPassword,
 		verifyEmail,
 		resendVerificationEmail,
 		forgotPassword,
+		// Direct OAuth methods
+		signInWithOAuth,
+		signInWithGoogle,
+		signInWithGithub,
+		signInWithApple,
+		signInWithDiscord,
+		signInWithTwitter,
+		signInWithMicrosoft,
 	} = useAuthContext()
 
 	return {
 		isSignedIn,
 		error,
 		isError: error !== null,
+		isOAuthLoading,
+		oauthError,
+		clearOAuthError,
 		signIn,
 		signUp,
 		signOut,
@@ -188,6 +243,14 @@ export function useAuth(): UseAuthReturn {
 		verifyEmail,
 		resendVerificationEmail,
 		forgotPassword,
+		// Direct OAuth methods (Firebase/Supabase pattern)
+		signInWithOAuth,
+		signInWithGoogle,
+		signInWithGithub,
+		signInWithApple,
+		signInWithDiscord,
+		signInWithTwitter,
+		signInWithMicrosoft,
 	}
 }
 
