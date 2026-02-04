@@ -100,6 +100,39 @@ export interface SylphxMiddlewareConfig {
 	 * @default false
 	 */
 	debug?: boolean
+
+	/**
+	 * Secret key for authentication.
+	 * Override to use a programmatic key instead of SYLPHX_SECRET_KEY env var.
+	 *
+	 * Use case: Platform Console uses dynamically generated keys.
+	 *
+	 * @default process.env.SYLPHX_SECRET_KEY
+	 */
+	secretKey?: string
+
+	/**
+	 * Platform URL for API calls.
+	 * Override for self-hosted or same-origin deployments.
+	 *
+	 * @default process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com'
+	 */
+	platformUrl?: string
+
+	/**
+	 * Callback to add custom headers/logic to responses.
+	 * Called for every non-auth-route request after SDK processing.
+	 *
+	 * Use case: Add security headers, tracking cookies, etc.
+	 *
+	 * @example
+	 * ```typescript
+	 * onResponse: (response, request) => {
+	 *   response.headers.set('X-Custom-Header', 'value')
+	 * }
+	 * ```
+	 */
+	onResponse?: (response: NextResponse, request: NextRequest) => void | Promise<void>
 }
 
 // =============================================================================
@@ -178,7 +211,16 @@ interface MiddlewareContext {
 	platformUrl: string
 	namespace: string
 	cookieNames: ReturnType<typeof getCookieNames>
-	config: Required<Omit<SylphxMiddlewareConfig, 'debug'>> & { debug: boolean }
+	config: {
+		publicRoutes: string[]
+		ignoredRoutes: string[]
+		signInUrl: string
+		afterSignOutUrl: string
+		afterSignInUrl: string
+		authPrefix: string
+		debug: boolean
+		onResponse?: (response: NextResponse, request: NextRequest) => void | Promise<void>
+	}
 	log: (msg: string, data?: unknown) => void
 }
 
@@ -398,16 +440,25 @@ export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) 
 	// Configuration (validated at startup, not per-request)
 	// ==========================================================================
 
-	const rawSecretKey = process.env.SYLPHX_SECRET_KEY
+	// Secret key: prefer config, fallback to env var
+	const rawSecretKey = userConfig.secretKey || process.env.SYLPHX_SECRET_KEY
 	if (!rawSecretKey) {
 		throw new Error(
-			'[Sylphx] SYLPHX_SECRET_KEY is required.\n' +
+			'[Sylphx] Secret key is required.\n' +
+				'Either pass secretKey in config or set SYLPHX_SECRET_KEY env var.\n' +
 				'Get your key from Sylphx Console → API Keys.'
 		)
 	}
 
 	const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
-	const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
+
+	// Platform URL: prefer config, then env var, then default
+	const platformUrl = (
+		userConfig.platformUrl ||
+		process.env.SYLPHX_PLATFORM_URL ||
+		DEFAULT_PLATFORM_URL
+	).trim()
+
 	const namespace = getCookieNamespace(secretKey)
 	const cookieNames = getCookieNames(namespace)
 
@@ -419,6 +470,7 @@ export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) 
 		afterSignInUrl: userConfig.afterSignInUrl ?? '/dashboard',
 		authPrefix: userConfig.authPrefix ?? '/auth',
 		debug: userConfig.debug ?? false,
+		onResponse: userConfig.onResponse,
 	}
 
 	// Auth routes and sign-in URL are always public
@@ -529,6 +581,14 @@ export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) 
 		if (isAuthenticated && pathname === config.signInUrl) {
 			log('Redirecting from sign-in to dashboard')
 			return NextResponse.redirect(new URL(config.afterSignInUrl, request.url))
+		}
+
+		// ======================================================================
+		// Custom Response Hook
+		// ======================================================================
+
+		if (config.onResponse) {
+			await config.onResponse(response, request)
 		}
 
 		return response
