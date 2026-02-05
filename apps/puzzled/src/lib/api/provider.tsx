@@ -4,7 +4,7 @@
  * API Provider
  *
  * Wraps the app with React Query provider.
- * Replaces TRPCProvider with a simpler implementation.
+ * React Query provider for the Hono API client.
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -71,8 +71,3 @@ export function ApiProvider({ children }: Props) {
 	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
-/**
- * Re-export for convenience (backwards compatibility)
- * @deprecated Use ApiProvider instead
- */
-export { ApiProvider as TRPCProvider }

@@ -13,4 +13,4 @@ export * from './hooks'
 export { queryKeys } from './hooks'
 
 // Provider
-export { ApiProvider, TRPCProvider } from './provider'
+export { ApiProvider } from './provider'

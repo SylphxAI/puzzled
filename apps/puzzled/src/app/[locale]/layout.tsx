@@ -11,7 +11,7 @@ import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
-import { TRPCProvider } from '@/trpc'
+import { ApiProvider } from '@/lib/api/provider'
 import '../globals.css'
 
 const inter = Inter({
@@ -227,20 +227,20 @@ export default async function LocaleLayout({ children, params }: Props) {
 							<GlobalErrorHandler>
 								<SessionReplayProvider>
 									<WebVitalsReporter />
-									<TRPCProvider>
+									<ApiProvider>
 										<NextIntlClientProvider messages={messages}>
 											<ToastProvider>{children}</ToastProvider>
 										</NextIntlClientProvider>
-									</TRPCProvider>
+									</ApiProvider>
 								</SessionReplayProvider>
 							</GlobalErrorHandler>
 						</PlatformProvider>
 					) : (
-						<TRPCProvider>
+						<ApiProvider>
 							<NextIntlClientProvider messages={messages}>
 								<ToastProvider>{children}</ToastProvider>
 							</NextIntlClientProvider>
-						</TRPCProvider>
+						</ApiProvider>
 					)}
 				</ThemeProvider>
 			</body>
