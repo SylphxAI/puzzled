@@ -4,6 +4,8 @@
  * Handles push notification preferences and settings.
  * Push subscriptions are managed by the Platform SDK.
  * This router manages app-specific notification preferences.
+ *
+ * NOTE: Uses method chaining for proper hc type inference.
  */
 
 import { OpenAPIHono, z } from '@hono/zod-openapi'
@@ -36,136 +38,135 @@ const UpdateEmailPreferencesBodySchema = z.object({
 })
 
 // ==========================================
-// Router
+// Router (Method Chaining for hc type inference)
 // ==========================================
 
 const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
+	// GET /preferences - authenticated
+	.get('/preferences', authMiddleware, async (c) => {
+		const user = c.get('user')
 
-// GET /preferences - authenticated
-notificationsRoutes.get('/preferences', authMiddleware, async (c) => {
-	const user = c.get('user')
+		const [prefs] = await db
+			.select()
+			.from(notificationPreferences)
+			.where(eq(notificationPreferences.userId, user.id))
+			.limit(1)
 
-	const [prefs] = await db
-		.select()
-		.from(notificationPreferences)
-		.where(eq(notificationPreferences.userId, user.id))
-		.limit(1)
+		if (!prefs) {
+			return c.json({
+				pushEnabled: true,
+				pushDailyReminder: true,
+				pushStreakAlert: true,
+				pushNewGames: true,
+				dailyReminderTime: '09:00',
+				emailEnabled: true,
+				emailWeeklyDigest: true,
+				emailMarketing: true,
+			})
+		}
 
-	if (!prefs) {
 		return c.json({
-			pushEnabled: true,
-			pushDailyReminder: true,
-			pushStreakAlert: true,
-			pushNewGames: true,
-			dailyReminderTime: '09:00',
-			emailEnabled: true,
-			emailWeeklyDigest: true,
-			emailMarketing: true,
+			pushEnabled: prefs.pushEnabled,
+			pushDailyReminder: prefs.pushDailyReminder,
+			pushStreakAlert: prefs.pushStreakAlert,
+			pushNewGames: prefs.pushNewGames,
+			dailyReminderTime: prefs.dailyReminderTime ?? '09:00',
+			emailEnabled: prefs.emailEnabled,
+			emailWeeklyDigest: prefs.emailWeeklyDigest,
+			emailMarketing: prefs.emailMarketing,
 		})
-	}
-
-	return c.json({
-		pushEnabled: prefs.pushEnabled,
-		pushDailyReminder: prefs.pushDailyReminder,
-		pushStreakAlert: prefs.pushStreakAlert,
-		pushNewGames: prefs.pushNewGames,
-		dailyReminderTime: prefs.dailyReminderTime ?? '09:00',
-		emailEnabled: prefs.emailEnabled,
-		emailWeeklyDigest: prefs.emailWeeklyDigest,
-		emailMarketing: prefs.emailMarketing,
 	})
-})
 
-// PUT /push-preferences - authenticated + rate limited
-notificationsRoutes.put('/push-preferences', authRateLimitMiddleware, async (c) => {
-	const body = await c.req.json()
-	const parsed = UpdatePushPreferencesBodySchema.safeParse(body)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid request body' })
-	}
-	const input = parsed.data
-	const user = c.get('user')
+	// PUT /push-preferences - authenticated + rate limited
+	.put('/push-preferences', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = UpdatePushPreferencesBodySchema.safeParse(body)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid request body' })
+		}
+		const input = parsed.data
+		const user = c.get('user')
 
-	const [updated] = await db
-		.insert(notificationPreferences)
-		.values({
-			userId: user.id,
-			pushEnabled: input.pushEnabled ?? true,
-			pushDailyReminder: input.pushDailyReminder ?? true,
-			pushStreakAlert: input.pushStreakAlert ?? true,
-			pushNewGames: input.pushNewGames ?? true,
-			dailyReminderTime: input.dailyReminderTime ?? '09:00',
-			updatedAt: new Date(),
-		})
-		.onConflictDoUpdate({
-			target: notificationPreferences.userId,
-			set: {
-				...(input.pushEnabled !== undefined && { pushEnabled: input.pushEnabled }),
-				...(input.pushDailyReminder !== undefined && {
-					pushDailyReminder: input.pushDailyReminder,
-				}),
-				...(input.pushStreakAlert !== undefined && { pushStreakAlert: input.pushStreakAlert }),
-				...(input.pushNewGames !== undefined && { pushNewGames: input.pushNewGames }),
-				...(input.dailyReminderTime !== undefined && {
-					dailyReminderTime: input.dailyReminderTime,
-				}),
+		const [updated] = await db
+			.insert(notificationPreferences)
+			.values({
+				userId: user.id,
+				pushEnabled: input.pushEnabled ?? true,
+				pushDailyReminder: input.pushDailyReminder ?? true,
+				pushStreakAlert: input.pushStreakAlert ?? true,
+				pushNewGames: input.pushNewGames ?? true,
+				dailyReminderTime: input.dailyReminderTime ?? '09:00',
 				updatedAt: new Date(),
+			})
+			.onConflictDoUpdate({
+				target: notificationPreferences.userId,
+				set: {
+					...(input.pushEnabled !== undefined && { pushEnabled: input.pushEnabled }),
+					...(input.pushDailyReminder !== undefined && {
+						pushDailyReminder: input.pushDailyReminder,
+					}),
+					...(input.pushStreakAlert !== undefined && { pushStreakAlert: input.pushStreakAlert }),
+					...(input.pushNewGames !== undefined && { pushNewGames: input.pushNewGames }),
+					...(input.dailyReminderTime !== undefined && {
+						dailyReminderTime: input.dailyReminderTime,
+					}),
+					updatedAt: new Date(),
+				},
+			})
+			.returning()
+
+		return c.json({
+			success: true,
+			preferences: {
+				pushEnabled: updated.pushEnabled,
+				pushDailyReminder: updated.pushDailyReminder,
+				pushStreakAlert: updated.pushStreakAlert,
+				pushNewGames: updated.pushNewGames,
+				dailyReminderTime: updated.dailyReminderTime,
 			},
 		})
-		.returning()
-
-	return c.json({
-		success: true,
-		preferences: {
-			pushEnabled: updated.pushEnabled,
-			pushDailyReminder: updated.pushDailyReminder,
-			pushStreakAlert: updated.pushStreakAlert,
-			pushNewGames: updated.pushNewGames,
-			dailyReminderTime: updated.dailyReminderTime,
-		},
 	})
-})
 
-// PUT /email-preferences - authenticated + rate limited
-notificationsRoutes.put('/email-preferences', authRateLimitMiddleware, async (c) => {
-	const body = await c.req.json()
-	const parsed = UpdateEmailPreferencesBodySchema.safeParse(body)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid request body' })
-	}
-	const input = parsed.data
-	const user = c.get('user')
+	// PUT /email-preferences - authenticated + rate limited
+	.put('/email-preferences', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = UpdateEmailPreferencesBodySchema.safeParse(body)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid request body' })
+		}
+		const input = parsed.data
+		const user = c.get('user')
 
-	const [updated] = await db
-		.insert(notificationPreferences)
-		.values({
-			userId: user.id,
-			emailEnabled: input.emailEnabled ?? true,
-			emailWeeklyDigest: input.emailWeeklyDigest ?? true,
-			emailMarketing: input.emailMarketing ?? true,
-			updatedAt: new Date(),
-		})
-		.onConflictDoUpdate({
-			target: notificationPreferences.userId,
-			set: {
-				...(input.emailEnabled !== undefined && { emailEnabled: input.emailEnabled }),
-				...(input.emailWeeklyDigest !== undefined && {
-					emailWeeklyDigest: input.emailWeeklyDigest,
-				}),
-				...(input.emailMarketing !== undefined && { emailMarketing: input.emailMarketing }),
+		const [updated] = await db
+			.insert(notificationPreferences)
+			.values({
+				userId: user.id,
+				emailEnabled: input.emailEnabled ?? true,
+				emailWeeklyDigest: input.emailWeeklyDigest ?? true,
+				emailMarketing: input.emailMarketing ?? true,
 				updatedAt: new Date(),
+			})
+			.onConflictDoUpdate({
+				target: notificationPreferences.userId,
+				set: {
+					...(input.emailEnabled !== undefined && { emailEnabled: input.emailEnabled }),
+					...(input.emailWeeklyDigest !== undefined && {
+						emailWeeklyDigest: input.emailWeeklyDigest,
+					}),
+					...(input.emailMarketing !== undefined && { emailMarketing: input.emailMarketing }),
+					updatedAt: new Date(),
+				},
+			})
+			.returning()
+
+		return c.json({
+			success: true,
+			preferences: {
+				emailEnabled: updated.emailEnabled,
+				emailWeeklyDigest: updated.emailWeeklyDigest,
+				emailMarketing: updated.emailMarketing,
 			},
 		})
-		.returning()
-
-	return c.json({
-		success: true,
-		preferences: {
-			emailEnabled: updated.emailEnabled,
-			emailWeeklyDigest: updated.emailWeeklyDigest,
-			emailMarketing: updated.emailMarketing,
-		},
 	})
-})
 
 export { notificationsRoutes }

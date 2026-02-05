@@ -1,11 +1,11 @@
 'use client'
 
 import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
-import { api, queryKeys } from '@/lib/api'
+import { queryKeys, useSaveResult } from '@/lib/api'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -67,16 +67,11 @@ export function useSaveGameResult(gameSlug: string) {
 	// Query client for cache invalidation
 	const queryClient = useQueryClient()
 
-	// Save result mutation
-	const mutation = useMutation({
-		mutationFn: api.games.saveResult,
+	// Save result mutation (uses the hook which handles invalidation)
+	const mutation = useSaveResult({
 		onSuccess: () => {
 			// savedRef.current already set before mutation started (prevents race condition)
 			setStatus('saved')
-			// Invalidate related queries so UI reflects updated stats/streaks
-			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
-			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
-			queryClient.invalidateQueries({ queryKey: queryKeys.todayCompletions() })
 		},
 		onError: (err) => {
 			// savedRef.current reset in catch block to allow retry

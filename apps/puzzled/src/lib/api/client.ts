@@ -61,6 +61,10 @@ export class ApiError extends Error {
 	get isRateLimited(): boolean {
 		return this.status === 429
 	}
+
+	get isConflict(): boolean {
+		return this.status === 409
+	}
 }
 
 /**
@@ -342,4 +346,3 @@ export const api = {
 		getSystemHealth: () => fetchJson<unknown>('/admin/system/health'),
 	},
 }
-

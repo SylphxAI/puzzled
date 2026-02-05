@@ -5,6 +5,11 @@
  * Uses Hono with zod-openapi for type-safe, self-documenting APIs.
  *
  * Authentication uses Sylphx Platform SDK (100% dogfooding).
+ *
+ * ARCHITECTURE:
+ * - Each route module uses method chaining for proper hc type inference
+ * - Routes are chained on a separate appWithRoutes for type inference
+ * - OpenAPI documentation is added after routes are mounted
  */
 
 import { OpenAPIHono } from '@hono/zod-openapi'
@@ -24,30 +29,52 @@ import type { PuzzledEnv } from './types'
 export const API_VERSION = '1'
 export const API_BASE_PATH = `/api/v${API_VERSION}`
 
-// Create main Puzzled app with basePath
+// Create base app with global middleware
+const baseApp = new OpenAPIHono<PuzzledEnv>()
+	.basePath(API_BASE_PATH)
+	// Set headers context for all requests
+	.use('*', async (c, next) => {
+		const headersList = await headers()
+		c.set('headers', headersList)
+		await next()
+	})
+	// Logging (dev only)
+	.use('*', loggerMiddleware)
+	// Error handling
+	.use('*', errorHandler)
+	// Health Check (no auth required)
+	.get('/health', (c) => {
+		return c.json({
+			status: 'ok',
+			timestamp: new Date().toISOString(),
+			version: API_VERSION,
+		})
+	})
+
+// Mount route modules (chained for type inference)
+const appWithRoutes = baseApp
+	.route('/games', gamesRoutes)
+	.route('/stats', statsRoutes)
+	.route('/gamification', gamificationRoutes)
+	.route('/user', userRoutes)
+	.route('/notifications', notificationsRoutes)
+	.route('/admin', adminRoutes)
+
+// Export type for hc client inference (must be from the chained app)
+export type AppType = typeof appWithRoutes
+
+// Create the final app with OpenAPI documentation
+// Note: We use a separate OpenAPIHono instance because .route() returns Hono, not OpenAPIHono
 const app = new OpenAPIHono<PuzzledEnv>().basePath(API_BASE_PATH)
 
-// ==========================================
-// Global Middleware
-// ==========================================
-
-// Set headers context for all requests
+// Re-mount all middleware and routes on the OpenAPI app
 app.use('*', async (c, next) => {
 	const headersList = await headers()
 	c.set('headers', headersList)
 	await next()
 })
-
-// Logging (dev only)
 app.use('*', loggerMiddleware)
-
-// Error handling
 app.use('*', errorHandler)
-
-// ==========================================
-// Health Check (no auth required)
-// ==========================================
-
 app.get('/health', (c) => {
 	return c.json({
 		status: 'ok',
@@ -55,11 +82,6 @@ app.get('/health', (c) => {
 		version: API_VERSION,
 	})
 })
-
-// ==========================================
-// Route Modules
-// ==========================================
-
 app.route('/games', gamesRoutes)
 app.route('/stats', statsRoutes)
 app.route('/gamification', gamificationRoutes)
@@ -67,10 +89,7 @@ app.route('/user', userRoutes)
 app.route('/notifications', notificationsRoutes)
 app.route('/admin', adminRoutes)
 
-// ==========================================
 // OpenAPI Documentation
-// ==========================================
-
 app.doc('/openapi.json', {
 	openapi: '3.0.0',
 	info: {
@@ -83,20 +102,6 @@ app.doc('/openapi.json', {
 		{ url: `http://localhost:3001${API_BASE_PATH}`, description: 'Local Development' },
 	],
 	security: [{ cookieAuth: [] }],
-	// @ts-expect-error - openapi-types doesn't include components in DocumentBuilder
-	components: {
-		securitySchemes: {
-			cookieAuth: {
-				type: 'apiKey',
-				in: 'cookie',
-				name: '__sylphx_{env}_session',
-				description: 'Platform authentication via SDK session cookie.',
-			},
-		},
-	},
 })
-
-// Export for type inference with Hono Client
-export type AppType = typeof app
 
 export { app }

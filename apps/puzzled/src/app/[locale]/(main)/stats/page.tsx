@@ -4,10 +4,10 @@ import { BarChart3, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Achievements } from '@/features/gamification/components/achievements'
+import { createServerApi, type UserStats } from '@/lib/api/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
 import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
-import { createServerCaller } from '@/trpc/server'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -83,27 +83,40 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	const trpc = await createServerCaller()
+	const api = await createServerApi()
 
 	// Get user's real stats
 	let stats: StatsData = { wordle: emptyStats, connections: emptyStats }
 
 	try {
-		const userStats = await trpc.stats.getUserStats()
+		const userStatsRes = await api.api.v1.stats['user-stats'].$get()
+		const userStats = (await userStatsRes.json()) as UserStats
 		stats = {
 			wordle: userStats.wordle
 				? {
-						...userStats.wordle,
+						gamesPlayed: userStats.wordle.gamesPlayed,
+						gamesWon: userStats.wordle.gamesWon,
+						currentStreak: userStats.wordle.currentStreak,
+						maxStreak: userStats.wordle.maxStreak,
+						totalScore: userStats.wordle.totalScore,
+						averageAttempts: userStats.wordle.averageAttempts,
 						guessDistribution: userStats.wordle.guessDistribution as Record<string, number> | null,
+						perfectGames: userStats.wordle.perfectGames,
 					}
 				: emptyStats,
 			connections: userStats.connections
 				? {
-						...userStats.connections,
+						gamesPlayed: userStats.connections.gamesPlayed,
+						gamesWon: userStats.connections.gamesWon,
+						currentStreak: userStats.connections.currentStreak,
+						maxStreak: userStats.connections.maxStreak,
+						totalScore: userStats.connections.totalScore,
+						averageAttempts: userStats.connections.averageAttempts,
 						guessDistribution: userStats.connections.guessDistribution as Record<
 							string,
 							number
 						> | null,
+						perfectGames: userStats.connections.perfectGames,
 					}
 				: emptyStats,
 		}

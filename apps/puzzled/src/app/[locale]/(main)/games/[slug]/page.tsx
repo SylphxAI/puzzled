@@ -7,10 +7,15 @@ import { AlreadyCompletedView } from '@/features/daily/components/already-comple
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
+import {
+	createServerApi,
+	type DailyStatus,
+	type StreakInfo,
+	type TodaysPuzzle,
+} from '@/lib/api/server'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
-import { createServerCaller } from '@/trpc/server'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GamePageClient } from './game-page-client'
 
@@ -83,9 +88,9 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 	const t = await getTranslations('games')
 
-	// Get user and tRPC caller
+	// Get user and API client
 	const user = await currentUser()
-	const trpc = await createServerCaller()
+	const api = await createServerApi()
 
 	// Get game name from translations using SSOT pattern
 	const translationKey = slugToCamelCase(slug)
@@ -165,10 +170,15 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 		if (user) {
 			// Check completion status for each difficulty in parallel
+			const [easyRes, mediumRes, hardRes] = await Promise.all([
+				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'easy' } }),
+				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'medium' } }),
+				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'hard' } }),
+			])
 			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
-				trpc.games.getDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
-				trpc.games.getDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
-				trpc.games.getDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
+				easyRes.json() as Promise<DailyStatus>,
+				mediumRes.json() as Promise<DailyStatus>,
+				hardRes.json() as Promise<DailyStatus>,
 			])
 			completionStatus.easy = easyStatus?.hasCompleted ?? false
 			completionStatus.medium = mediumStatus?.hasCompleted ?? false
@@ -186,17 +196,17 @@ export default async function GamePage({ params, searchParams }: Props) {
 	}
 
 	// Fetch puzzle data based on mode
-	let puzzleStatus: Awaited<ReturnType<typeof trpc.games.getDailyStatus>> | null = null
+	let puzzleStatus: DailyStatus | null = null
 	let puzzle: { puzzleId: string; puzzleData: unknown; puzzleDate?: string } | null = null
-	let streakInfo: Awaited<ReturnType<typeof trpc.gamification.getStreakInfo>> | null = null
+	let streakInfo: StreakInfo | null = null
 
 	try {
 		if (mode === 'archive' && user && dateParam) {
 			// Archive mode - get specific date's puzzle (premium only)
-			const archivePuzzle = await trpc.games.getArchivePuzzle({
-				gameSlug: slug,
-				date: dateParam,
+			const archiveRes = await api.api.v1.games['archive-puzzle'].$get({
+				query: { gameSlug: slug, date: dateParam },
 			})
+			const archivePuzzle = (await archiveRes.json()) as { id: string; puzzleData: unknown }
 			puzzle = {
 				puzzleId: archivePuzzle.id, // Archive returns 'id', not 'puzzleId'
 				puzzleData: archivePuzzle.puzzleData,
@@ -204,14 +214,16 @@ export default async function GamePage({ params, searchParams }: Props) {
 			}
 		} else {
 			// Daily mode (default) - pass difficulty for games that support it
-			const results = await Promise.all([
-				user ? trpc.games.getDailyStatus({ gameSlug: slug, difficulty }) : null,
-				trpc.games.getTodaysPuzzle({ gameSlug: slug, difficulty }),
-				user ? trpc.gamification.getStreakInfo() : null,
+			const [statusRes, puzzleRes, streakRes] = await Promise.all([
+				user
+					? api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty } })
+					: null,
+				api.api.v1.games['todays-puzzle'].$get({ query: { gameSlug: slug, difficulty } }),
+				user ? api.api.v1.gamification['streak-info'].$get() : null,
 			])
-			puzzleStatus = results[0]
-			puzzle = results[1]
-			streakInfo = results[2]
+			puzzleStatus = statusRes ? ((await statusRes.json()) as DailyStatus) : null
+			puzzle = (await puzzleRes.json()) as TodaysPuzzle
+			streakInfo = streakRes ? ((await streakRes.json()) as StreakInfo) : null
 		}
 	} catch (error) {
 		console.error('[GamePage] Failed to load puzzle data:', error)
@@ -256,7 +268,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 				session={{
 					status: completedSession.status as 'won' | 'lost',
 					score: completedSession.score,
-					attempts: completedSession.attempts,
+					attempts: completedSession.attempts ?? 0,
 					completedAt: completedSession.completedAt,
 				}}
 				currentStreak={currentStreak}

@@ -2,6 +2,8 @@
  * Games Routes
  *
  * All game-related endpoints: puzzles, validation, saving results.
+ *
+ * NOTE: Uses method chaining for proper hc type inference.
  */
 
 import { OpenAPIHono, z } from '@hono/zod-openapi'
@@ -28,7 +30,7 @@ import {
 	authRateLimitMiddleware,
 	optionalAuthMiddleware,
 } from '../middleware'
-import type { PuzzledAuthEnv, PuzzledEnv } from '../types'
+import type { PuzzledAuthEnv } from '../types'
 
 // ==========================================
 // Schemas
@@ -71,405 +73,6 @@ const ArchiveDatesQuerySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
 	startDate: z.string(),
 	endDate: z.string(),
-})
-
-// ==========================================
-// Router
-// ==========================================
-
-const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
-
-// GET /daily-status - optional auth (shows completion for authenticated users)
-gamesRoutes.get('/daily-status', optionalAuthMiddleware, async (c) => {
-	const query = c.req.query()
-	const parsed = DailyStatusQuerySchema.safeParse(query)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid query parameters' })
-	}
-	const { gameSlug, difficulty } = parsed.data
-	const user = c.get('user')
-
-	const today = getTodayUTC()
-	const puzzleDateString = getPuzzleDateStringUTC(today)
-
-	if (!isValidGameSlug(gameSlug)) {
-		throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
-	}
-
-	const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
-
-	let completedSession = null
-	if (user) {
-		const conditions: ReturnType<typeof eq>[] = [
-			eq(gameSessions.userId, user.id),
-			eq(gameSessions.gameSlug, gameSlug),
-			eq(gameSessions.puzzleDate, today),
-			eq(gameSessions.mode, 'daily'),
-			inArray(gameSessions.status, ['won', 'lost']),
-		]
-
-		if (difficulty && difficulty !== 'expert') {
-			conditions.push(eq(gameSessions.difficulty, difficulty as 'easy' | 'medium' | 'hard'))
-		} else if (!difficulty) {
-			conditions.push(isNull(gameSessions.difficulty))
-		}
-
-		const [session] = await db
-			.select()
-			.from(gameSessions)
-			.where(and(...conditions))
-			.limit(1)
-
-		if (session) completedSession = session
-	}
-
-	const puzzleNumber = getPuzzleNumber(gameSlug, today)
-
-	return c.json({
-		hasCompleted: !!completedSession,
-		completedSession,
-		puzzle: {
-			id: puzzle.id,
-			puzzleNumber,
-			puzzleDate: puzzleDateString,
-			puzzleData: puzzle.puzzleData,
-			difficulty: difficulty ?? null,
-		},
-		canPlay: !completedSession,
-		mode: 'daily' as const,
-	})
-})
-
-// GET /todays-puzzle - public
-gamesRoutes.get('/todays-puzzle', async (c) => {
-	const query = c.req.query()
-	const parsed = DailyStatusQuerySchema.safeParse(query)
-	if (!parsed.success) {
-		return c.json(null)
-	}
-	const { gameSlug, difficulty } = parsed.data
-
-	const today = getTodayUTC()
-
-	if (!isValidGameSlug(gameSlug)) {
-		return c.json(null)
-	}
-
-	const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
-
-	return c.json({
-		puzzleId: puzzle.id,
-		puzzleNumber: getPuzzleNumber(gameSlug, today),
-		puzzleDate: getPuzzleDateStringUTC(today),
-		puzzleData: puzzle.puzzleData,
-		difficulty: difficulty ?? null,
-	})
-})
-
-// GET /archive-puzzle - authenticated
-gamesRoutes.get('/archive-puzzle', authMiddleware, async (c) => {
-	const query = c.req.query()
-	const parsed = ArchivePuzzleQuerySchema.safeParse(query)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid query parameters' })
-	}
-	const { gameSlug, date } = parsed.data
-	const user = c.get('user')
-
-	const isPremium = await hasPremiumAccess(user.id)
-	if (!isPremium) {
-		throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
-	}
-
-	if (!isValidGameSlug(gameSlug)) {
-		throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
-	}
-
-	const archiveDate = new Date(date)
-	archiveDate.setUTCHours(0, 0, 0, 0)
-
-	const today = getTodayUTC()
-	if (archiveDate >= today) {
-		throw new HTTPException(400, { message: 'Cannot access future puzzles' })
-	}
-
-	const [existingSession] = await db
-		.select()
-		.from(gameSessions)
-		.where(
-			and(
-				eq(gameSessions.userId, user.id),
-				eq(gameSessions.gameSlug, gameSlug),
-				eq(gameSessions.mode, 'archive'),
-				eq(gameSessions.archiveDate, archiveDate),
-				inArray(gameSessions.status, ['won', 'lost']),
-			),
-		)
-		.limit(1)
-
-	if (existingSession) {
-		throw new HTTPException(409, { message: 'Already played this archive puzzle' })
-	}
-
-	const { puzzle } = await getOrCreatePuzzle(gameSlug, archiveDate)
-
-	return c.json({
-		...puzzle,
-		solution: null,
-	})
-})
-
-// POST /validate-guess - authenticated + rate limited
-gamesRoutes.post('/validate-guess', authRateLimitMiddleware, async (c) => {
-	const body = await c.req.json()
-	const parsed = ValidateGuessBodySchema.safeParse(body)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid request body' })
-	}
-	const { puzzleId, gameSlug, guess } = parsed.data
-
-	const config = getGameConfig(gameSlug)
-
-	if (!config?.validateGuess) {
-		throw new HTTPException(400, { message: `Game ${gameSlug} does not support guess validation` })
-	}
-
-	const [puzzle] = await db
-		.select()
-		.from(dailyPuzzles)
-		.where(eq(dailyPuzzles.id, puzzleId))
-		.limit(1)
-
-	if (!puzzle?.solution) {
-		throw new HTTPException(404, { message: 'Puzzle not found' })
-	}
-
-	return c.json(config.validateGuess(puzzle.solution, guess))
-})
-
-// POST /save-result - authenticated + rate limited
-gamesRoutes.post('/save-result', authRateLimitMiddleware, async (c) => {
-	const body = await c.req.json()
-	const parsed = SaveResultBodySchema.safeParse(body)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid request body' })
-	}
-	const input = parsed.data
-	const user = c.get('user')
-
-	const mode = input.mode
-
-	if (!isValidGameSlug(input.gameSlug)) {
-		throw new HTTPException(404, { message: `Game not found: ${input.gameSlug}` })
-	}
-
-	const validationResult = await validateAndScoreSubmission(input)
-	if (!validationResult.valid) {
-		throw new HTTPException(400, { message: validationResult.error || 'Invalid game result' })
-	}
-
-	const validatedStatus = validationResult.status
-	const serverScore = validationResult.score
-
-	let puzzleDate: Date
-	let archiveDate: Date | null = null
-
-	if (mode === 'archive' && input.archiveDate) {
-		puzzleDate = new Date(`${input.archiveDate}T00:00:00Z`)
-		archiveDate = puzzleDate
-	} else {
-		puzzleDate = getTodayUTC()
-	}
-
-	// Map difficulty - 'expert' is treated as null for DB
-	const difficulty = input.difficulty && input.difficulty !== 'expert'
-		? (input.difficulty as 'easy' | 'medium' | 'hard')
-		: undefined
-
-	if (mode === 'daily' || mode === 'archive') {
-		const conditions: ReturnType<typeof eq>[] = [
-			eq(gameSessions.userId, user.id),
-			eq(gameSessions.gameSlug, input.gameSlug),
-			eq(gameSessions.mode, mode),
-		]
-
-		if (mode === 'archive' && archiveDate) {
-			conditions.push(eq(gameSessions.archiveDate, archiveDate))
-		} else {
-			conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
-		}
-
-		if (difficulty) {
-			conditions.push(eq(gameSessions.difficulty, difficulty))
-		} else {
-			conditions.push(isNull(gameSessions.difficulty))
-		}
-
-		const [existingSession] = await db
-			.select()
-			.from(gameSessions)
-			.where(and(...conditions))
-			.limit(1)
-
-		if (existingSession) {
-			throw new HTTPException(409, {
-				message: mode === 'daily' ? 'Already played today' : 'Already played this archive puzzle',
-			})
-		}
-	}
-
-	const session = await db.transaction(async (tx) => {
-		if (mode === 'daily' || mode === 'archive') {
-			const conditions: ReturnType<typeof eq>[] = [
-				eq(gameSessions.userId, user.id),
-				eq(gameSessions.gameSlug, input.gameSlug),
-				eq(gameSessions.mode, mode),
-			]
-
-			if (mode === 'archive' && archiveDate) {
-				conditions.push(eq(gameSessions.archiveDate, archiveDate))
-			} else {
-				conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
-			}
-
-			if (difficulty) {
-				conditions.push(eq(gameSessions.difficulty, difficulty))
-			} else {
-				conditions.push(isNull(gameSessions.difficulty))
-			}
-
-			const [existingInTx] = await tx
-				.select()
-				.from(gameSessions)
-				.where(and(...conditions))
-				.limit(1)
-
-			if (existingInTx) {
-				throw new HTTPException(409, {
-					message:
-						mode === 'daily'
-							? difficulty
-								? `Already played ${difficulty} difficulty today`
-								: 'Already played today'
-							: 'Already played this archive puzzle',
-				})
-			}
-		}
-
-		const newSession: NewGameSession = {
-			userId: user.id,
-			gameSlug: input.gameSlug,
-			puzzleId: input.puzzleId,
-			puzzleDate,
-			difficulty,
-			mode,
-			archiveDate,
-			status: validatedStatus,
-			score: serverScore,
-			attempts: input.attempts,
-			timeSpentMs: input.timeSpentMs,
-			state: null,
-			completedAt: new Date(),
-		}
-
-		const [newSessionResult] = await tx.insert(gameSessions).values(newSession).returning()
-
-		return newSessionResult
-	})
-
-	if (mode === 'daily') {
-		await updateUserStats(user.id, input.gameSlug, {
-			status: validatedStatus,
-			score: serverScore,
-			attempts: input.attempts,
-		})
-	}
-
-	return c.json({ success: true, session, mode, score: serverScore })
-})
-
-// GET /history - authenticated
-gamesRoutes.get('/history', authMiddleware, async (c) => {
-	const query = c.req.query()
-	const parsed = HistoryQuerySchema.safeParse(query)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid query parameters' })
-	}
-	const { gameSlug, limit } = parsed.data
-	const user = c.get('user')
-
-	const history = await db
-		.select({
-			id: gameSessions.id,
-			status: gameSessions.status,
-			score: gameSessions.score,
-			attempts: gameSessions.attempts,
-			puzzleDate: gameSessions.puzzleDate,
-			completedAt: gameSessions.completedAt,
-			mode: gameSessions.mode,
-		})
-		.from(gameSessions)
-		.where(and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, gameSlug)))
-		.orderBy(desc(gameSessions.completedAt))
-		.limit(limit)
-
-	return c.json(history)
-})
-
-// GET /archive-dates - authenticated
-gamesRoutes.get('/archive-dates', authMiddleware, async (c) => {
-	const query = c.req.query()
-	const parsed = ArchiveDatesQuerySchema.safeParse(query)
-	if (!parsed.success) {
-		throw new HTTPException(400, { message: 'Invalid query parameters' })
-	}
-	const { gameSlug, startDate, endDate } = parsed.data
-	const user = c.get('user')
-
-	const isPremium = await hasPremiumAccess(user.id)
-	if (!isPremium) {
-		throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
-	}
-
-	if (!isValidGameSlug(gameSlug)) {
-		throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
-	}
-
-	const start = new Date(startDate)
-	const end = new Date(endDate)
-	const today = getTodayUTC()
-
-	const playedSessions = await db
-		.select({ archiveDate: gameSessions.archiveDate })
-		.from(gameSessions)
-		.where(
-			and(
-				eq(gameSessions.userId, user.id),
-				eq(gameSessions.gameSlug, gameSlug),
-				eq(gameSessions.mode, 'archive'),
-				inArray(gameSessions.status, ['won', 'lost']),
-				gte(gameSessions.archiveDate, start),
-			),
-		)
-
-	const playedDates = new Set(
-		playedSessions
-			.filter((s) => s.archiveDate)
-			.map((s) => s.archiveDate!.toISOString().split('T')[0]),
-	)
-
-	const result: { date: string; played: boolean }[] = []
-	const current = new Date(start)
-	while (current <= end && current < today) {
-		const dateStr = current.toISOString().split('T')[0]
-		result.push({
-			date: dateStr,
-			played: playedDates.has(dateStr),
-		})
-		current.setDate(current.getDate() + 1)
-	}
-
-	return c.json(result)
 })
 
 // ==========================================
@@ -624,5 +227,403 @@ async function updateUserStats(
 		}
 	})
 }
+
+// ==========================================
+// Router (Method Chaining for hc type inference)
+// ==========================================
+
+const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
+	// GET /daily-status - optional auth (shows completion for authenticated users)
+	.get('/daily-status', optionalAuthMiddleware, async (c) => {
+		const query = c.req.query()
+		const parsed = DailyStatusQuerySchema.safeParse(query)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid query parameters' })
+		}
+		const { gameSlug, difficulty } = parsed.data
+		const user = c.get('user')
+
+		const today = getTodayUTC()
+		const puzzleDateString = getPuzzleDateStringUTC(today)
+
+		if (!isValidGameSlug(gameSlug)) {
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+		}
+
+		const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
+
+		let completedSession = null
+		if (user) {
+			const conditions: ReturnType<typeof eq>[] = [
+				eq(gameSessions.userId, user.id),
+				eq(gameSessions.gameSlug, gameSlug),
+				eq(gameSessions.puzzleDate, today),
+				eq(gameSessions.mode, 'daily'),
+				inArray(gameSessions.status, ['won', 'lost']),
+			]
+
+			if (difficulty && difficulty !== 'expert') {
+				conditions.push(eq(gameSessions.difficulty, difficulty as 'easy' | 'medium' | 'hard'))
+			} else if (!difficulty) {
+				conditions.push(isNull(gameSessions.difficulty))
+			}
+
+			const [session] = await db
+				.select()
+				.from(gameSessions)
+				.where(and(...conditions))
+				.limit(1)
+
+			if (session) completedSession = session
+		}
+
+		const puzzleNumber = getPuzzleNumber(gameSlug, today)
+
+		return c.json({
+			hasCompleted: !!completedSession,
+			completedSession,
+			puzzle: {
+				id: puzzle.id,
+				puzzleNumber,
+				puzzleDate: puzzleDateString,
+				puzzleData: puzzle.puzzleData,
+				difficulty: difficulty ?? null,
+			},
+			canPlay: !completedSession,
+			mode: 'daily' as const,
+		})
+	})
+
+	// GET /todays-puzzle - public
+	.get('/todays-puzzle', async (c) => {
+		const query = c.req.query()
+		const parsed = DailyStatusQuerySchema.safeParse(query)
+		if (!parsed.success) {
+			return c.json(null)
+		}
+		const { gameSlug, difficulty } = parsed.data
+
+		const today = getTodayUTC()
+
+		if (!isValidGameSlug(gameSlug)) {
+			return c.json(null)
+		}
+
+		const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
+
+		return c.json({
+			puzzleId: puzzle.id,
+			puzzleNumber: getPuzzleNumber(gameSlug, today),
+			puzzleDate: getPuzzleDateStringUTC(today),
+			puzzleData: puzzle.puzzleData,
+			difficulty: difficulty ?? null,
+		})
+	})
+
+	// GET /archive-puzzle - authenticated
+	.get('/archive-puzzle', authMiddleware, async (c) => {
+		const query = c.req.query()
+		const parsed = ArchivePuzzleQuerySchema.safeParse(query)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid query parameters' })
+		}
+		const { gameSlug, date } = parsed.data
+		const user = c.get('user')
+
+		const isPremium = await hasPremiumAccess(user.id)
+		if (!isPremium) {
+			throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
+		}
+
+		if (!isValidGameSlug(gameSlug)) {
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+		}
+
+		const archiveDate = new Date(date)
+		archiveDate.setUTCHours(0, 0, 0, 0)
+
+		const today = getTodayUTC()
+		if (archiveDate >= today) {
+			throw new HTTPException(400, { message: 'Cannot access future puzzles' })
+		}
+
+		const [existingSession] = await db
+			.select()
+			.from(gameSessions)
+			.where(
+				and(
+					eq(gameSessions.userId, user.id),
+					eq(gameSessions.gameSlug, gameSlug),
+					eq(gameSessions.mode, 'archive'),
+					eq(gameSessions.archiveDate, archiveDate),
+					inArray(gameSessions.status, ['won', 'lost']),
+				),
+			)
+			.limit(1)
+
+		if (existingSession) {
+			throw new HTTPException(409, { message: 'Already played this archive puzzle' })
+		}
+
+		const { puzzle } = await getOrCreatePuzzle(gameSlug, archiveDate)
+
+		return c.json({
+			...puzzle,
+			solution: null,
+		})
+	})
+
+	// POST /validate-guess - authenticated + rate limited
+	.post('/validate-guess', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = ValidateGuessBodySchema.safeParse(body)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid request body' })
+		}
+		const { puzzleId, gameSlug, guess } = parsed.data
+
+		const config = getGameConfig(gameSlug)
+
+		if (!config?.validateGuess) {
+			throw new HTTPException(400, { message: `Game ${gameSlug} does not support guess validation` })
+		}
+
+		const [puzzle] = await db
+			.select()
+			.from(dailyPuzzles)
+			.where(eq(dailyPuzzles.id, puzzleId))
+			.limit(1)
+
+		if (!puzzle?.solution) {
+			throw new HTTPException(404, { message: 'Puzzle not found' })
+		}
+
+		return c.json(config.validateGuess(puzzle.solution, guess))
+	})
+
+	// POST /save-result - authenticated + rate limited
+	.post('/save-result', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = SaveResultBodySchema.safeParse(body)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid request body' })
+		}
+		const input = parsed.data
+		const user = c.get('user')
+
+		const mode = input.mode
+
+		if (!isValidGameSlug(input.gameSlug)) {
+			throw new HTTPException(404, { message: `Game not found: ${input.gameSlug}` })
+		}
+
+		const validationResult = await validateAndScoreSubmission(input)
+		if (!validationResult.valid) {
+			throw new HTTPException(400, { message: validationResult.error || 'Invalid game result' })
+		}
+
+		const validatedStatus = validationResult.status
+		const serverScore = validationResult.score
+
+		let puzzleDate: Date
+		let archiveDate: Date | null = null
+
+		if (mode === 'archive' && input.archiveDate) {
+			puzzleDate = new Date(`${input.archiveDate}T00:00:00Z`)
+			archiveDate = puzzleDate
+		} else {
+			puzzleDate = getTodayUTC()
+		}
+
+		// Map difficulty - 'expert' is treated as null for DB
+		const difficulty = input.difficulty && input.difficulty !== 'expert'
+			? (input.difficulty as 'easy' | 'medium' | 'hard')
+			: undefined
+
+		if (mode === 'daily' || mode === 'archive') {
+			const conditions: ReturnType<typeof eq>[] = [
+				eq(gameSessions.userId, user.id),
+				eq(gameSessions.gameSlug, input.gameSlug),
+				eq(gameSessions.mode, mode),
+			]
+
+			if (mode === 'archive' && archiveDate) {
+				conditions.push(eq(gameSessions.archiveDate, archiveDate))
+			} else {
+				conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
+			}
+
+			if (difficulty) {
+				conditions.push(eq(gameSessions.difficulty, difficulty))
+			} else {
+				conditions.push(isNull(gameSessions.difficulty))
+			}
+
+			const [existingSession] = await db
+				.select()
+				.from(gameSessions)
+				.where(and(...conditions))
+				.limit(1)
+
+			if (existingSession) {
+				throw new HTTPException(409, {
+					message: mode === 'daily' ? 'Already played today' : 'Already played this archive puzzle',
+				})
+			}
+		}
+
+		const session = await db.transaction(async (tx) => {
+			if (mode === 'daily' || mode === 'archive') {
+				const conditions: ReturnType<typeof eq>[] = [
+					eq(gameSessions.userId, user.id),
+					eq(gameSessions.gameSlug, input.gameSlug),
+					eq(gameSessions.mode, mode),
+				]
+
+				if (mode === 'archive' && archiveDate) {
+					conditions.push(eq(gameSessions.archiveDate, archiveDate))
+				} else {
+					conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
+				}
+
+				if (difficulty) {
+					conditions.push(eq(gameSessions.difficulty, difficulty))
+				} else {
+					conditions.push(isNull(gameSessions.difficulty))
+				}
+
+				const [existingInTx] = await tx
+					.select()
+					.from(gameSessions)
+					.where(and(...conditions))
+					.limit(1)
+
+				if (existingInTx) {
+					throw new HTTPException(409, {
+						message:
+							mode === 'daily'
+								? difficulty
+									? `Already played ${difficulty} difficulty today`
+									: 'Already played today'
+								: 'Already played this archive puzzle',
+					})
+				}
+			}
+
+			const newSession: NewGameSession = {
+				userId: user.id,
+				gameSlug: input.gameSlug,
+				puzzleId: input.puzzleId,
+				puzzleDate,
+				difficulty,
+				mode,
+				archiveDate,
+				status: validatedStatus,
+				score: serverScore,
+				attempts: input.attempts,
+				timeSpentMs: input.timeSpentMs,
+				state: null,
+				completedAt: new Date(),
+			}
+
+			const [newSessionResult] = await tx.insert(gameSessions).values(newSession).returning()
+
+			return newSessionResult
+		})
+
+		if (mode === 'daily') {
+			await updateUserStats(user.id, input.gameSlug, {
+				status: validatedStatus,
+				score: serverScore,
+				attempts: input.attempts,
+			})
+		}
+
+		return c.json({ success: true, session, mode, score: serverScore })
+	})
+
+	// GET /history - authenticated
+	.get('/history', authMiddleware, async (c) => {
+		const query = c.req.query()
+		const parsed = HistoryQuerySchema.safeParse(query)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid query parameters' })
+		}
+		const { gameSlug, limit } = parsed.data
+		const user = c.get('user')
+
+		const history = await db
+			.select({
+				id: gameSessions.id,
+				status: gameSessions.status,
+				score: gameSessions.score,
+				attempts: gameSessions.attempts,
+				puzzleDate: gameSessions.puzzleDate,
+				completedAt: gameSessions.completedAt,
+				mode: gameSessions.mode,
+			})
+			.from(gameSessions)
+			.where(and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, gameSlug)))
+			.orderBy(desc(gameSessions.completedAt))
+			.limit(limit)
+
+		return c.json(history)
+	})
+
+	// GET /archive-dates - authenticated
+	.get('/archive-dates', authMiddleware, async (c) => {
+		const query = c.req.query()
+		const parsed = ArchiveDatesQuerySchema.safeParse(query)
+		if (!parsed.success) {
+			throw new HTTPException(400, { message: 'Invalid query parameters' })
+		}
+		const { gameSlug, startDate, endDate } = parsed.data
+		const user = c.get('user')
+
+		const isPremium = await hasPremiumAccess(user.id)
+		if (!isPremium) {
+			throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
+		}
+
+		if (!isValidGameSlug(gameSlug)) {
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+		}
+
+		const start = new Date(startDate)
+		const end = new Date(endDate)
+		const today = getTodayUTC()
+
+		const playedSessions = await db
+			.select({ archiveDate: gameSessions.archiveDate })
+			.from(gameSessions)
+			.where(
+				and(
+					eq(gameSessions.userId, user.id),
+					eq(gameSessions.gameSlug, gameSlug),
+					eq(gameSessions.mode, 'archive'),
+					inArray(gameSessions.status, ['won', 'lost']),
+					gte(gameSessions.archiveDate, start),
+				),
+			)
+
+		const playedDates = new Set(
+			playedSessions
+				.filter((s) => s.archiveDate)
+				.map((s) => s.archiveDate!.toISOString().split('T')[0]),
+		)
+
+		const result: { date: string; played: boolean }[] = []
+		const current = new Date(start)
+		while (current <= end && current < today) {
+			const dateStr = current.toISOString().split('T')[0]
+			result.push({
+				date: dateStr,
+				played: playedDates.has(dateStr),
+			})
+			current.setDate(current.getDate() + 1)
+		}
+
+		return c.json(result)
+	})
 
 export { gamesRoutes }

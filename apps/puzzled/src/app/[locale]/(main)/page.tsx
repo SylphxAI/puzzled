@@ -9,7 +9,12 @@ import { getAllGameMetadata } from '@/games/registry'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
-import { createServerCaller } from '@/trpc/server'
+import {
+	createServerApi,
+	type StreakInfo,
+	type TodayCompletion,
+	type TodayPlayerCount,
+} from '@/lib/api/server'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -29,19 +34,12 @@ export async function generateMetadata({ params }: Props) {
 	}
 }
 
-type StreakInfo = {
-	currentStreak: number
-	maxStreak: number
-	hasPlayedToday: boolean
-	totalGamesPlayed: number
-}
-
 export default async function HomePage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
 	const user = await currentUser()
-	const trpc = await createServerCaller()
+	const api = await createServerApi()
 
 	// Get user's premium status from platform
 	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
@@ -69,22 +67,23 @@ export default async function HomePage({ params }: Props) {
 
 	// Fetch user's streak info, today's completions, and player count
 	let streakInfo: StreakInfo | null = null
-	let todayCompletions: { slug: string; name: string; completed: boolean; score?: string }[] = []
+	let todayCompletions: TodayCompletion[] = []
 	let todayPlayerCount = 0
 
 	try {
 		// Always fetch player count (public data)
-		const playerCountResult = await trpc.gamification.getTodayPlayerCount()
-		todayPlayerCount = playerCountResult.count
+		const playerCountRes = await api.api.v1.gamification['today-player-count'].$get()
+		const playerCountData = (await playerCountRes.json()) as TodayPlayerCount
+		todayPlayerCount = playerCountData.count
 
 		// Fetch user-specific data if logged in
 		if (user) {
-			const [streak, completions] = await Promise.all([
-				trpc.gamification.getStreakInfo(),
-				trpc.gamification.getTodayCompletions(),
+			const [streakRes, completionsRes] = await Promise.all([
+				api.api.v1.gamification['streak-info'].$get(),
+				api.api.v1.gamification['today-completions'].$get(),
 			])
-			streakInfo = streak
-			todayCompletions = completions
+			streakInfo = (await streakRes.json()) as StreakInfo
+			todayCompletions = (await completionsRes.json()) as TodayCompletion[]
 		}
 	} catch (error) {
 		// Log error for debugging but continue with defaults
