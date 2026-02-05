@@ -1,10 +1,11 @@
 'use client'
 
 import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
-import { trpc } from '@/trpc'
+import { api, queryKeys } from '@/lib/api'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -63,23 +64,24 @@ export function useSaveGameResult(gameSlug: string) {
 		},
 	})
 
-	// tRPC utils for cache invalidation
-	const utils = trpc.useUtils()
+	// Query client for cache invalidation
+	const queryClient = useQueryClient()
 
-	// tRPC mutation
-	const mutation = trpc.games.saveResult.useMutation({
+	// Save result mutation
+	const mutation = useMutation({
+		mutationFn: api.games.saveResult,
 		onSuccess: () => {
 			// savedRef.current already set before mutation started (prevents race condition)
 			setStatus('saved')
 			// Invalidate related queries so UI reflects updated stats/streaks
-			utils.stats.getUserStats.invalidate()
-			utils.gamification.getStreakInfo.invalidate()
-			utils.gamification.getTodayCompletions.invalidate()
+			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
+			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
+			queryClient.invalidateQueries({ queryKey: queryKeys.todayCompletions() })
 		},
 		onError: (err) => {
 			// savedRef.current reset in catch block to allow retry
 			setStatus('error')
-			setError(err.message)
+			setError(err instanceof Error ? err.message : 'Failed to save result')
 		},
 	})
 

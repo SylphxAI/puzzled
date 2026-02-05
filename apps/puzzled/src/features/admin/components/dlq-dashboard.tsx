@@ -5,9 +5,9 @@ import { AlertTriangle, CheckCircle, Clock, Loader2, Play, RefreshCw, XCircle } 
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { useDlqList, useDlqMarkFailed, useDlqResolve, useDlqRetry } from '@/lib/api'
 import { PAGINATION } from '@/lib/config/validation'
 import type { deadLetterQueue } from '@/lib/db/schema'
-import { trpc } from '@/trpc/client'
 
 type DLQItem = typeof deadLetterQueue.$inferSelect
 type DLQStats = {
@@ -31,14 +31,12 @@ export function DLQDashboard({ initialStats, initialItems }: DLQDashboardProps) 
 	const [filter, setFilter] = useState<string | undefined>(undefined)
 
 	// Use dlqList with includeStats
-	const { data, refetch } = trpc.admin.dlqList.useQuery(
+	const { data, refetch } = useDlqList(
 		{
 			status: filter as 'pending' | 'retrying' | 'resolved' | 'failed' | undefined,
 			limit: PAGINATION.ADMIN_MAX_LIMIT,
-			includeStats: true,
 		},
 		{
-			initialData: { items: initialItems, stats: initialStats },
 			refetchInterval: 30000,
 		},
 	)
@@ -187,26 +185,9 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 	const [loading, setLoading] = useState<string | null>(null)
 	const [retryDialogOpen, setRetryDialogOpen] = useState(false)
 
-	const retryMutation = trpc.admin.dlqRetry.useMutation({
-		onSuccess: () => {
-			onUpdate()
-		},
-		onSettled: () => setLoading(null),
-	})
-
-	const resolveMutation = trpc.admin.dlqResolve.useMutation({
-		onSuccess: () => {
-			onUpdate()
-		},
-		onSettled: () => setLoading(null),
-	})
-
-	const markFailedMutation = trpc.admin.dlqMarkFailed.useMutation({
-		onSuccess: () => {
-			onUpdate()
-		},
-		onSettled: () => setLoading(null),
-	})
+	const retryMutation = useDlqRetry()
+	const resolveMutation = useDlqResolve()
+	const markFailedMutation = useDlqMarkFailed()
 
 	const handleRetryClick = () => {
 		setRetryDialogOpen(true)
@@ -214,17 +195,35 @@ function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void })
 
 	const handleRetryConfirm = () => {
 		setLoading('retry')
-		retryMutation.mutate({ id: item.id })
+		retryMutation.mutate(
+			{ id: item.id },
+			{
+				onSuccess: () => onUpdate(),
+				onSettled: () => setLoading(null),
+			},
+		)
 	}
 
 	const handleResolve = () => {
 		setLoading('resolve')
-		resolveMutation.mutate({ id: item.id })
+		resolveMutation.mutate(
+			{ id: item.id },
+			{
+				onSuccess: () => onUpdate(),
+				onSettled: () => setLoading(null),
+			},
+		)
 	}
 
 	const handleFail = () => {
 		setLoading('fail')
-		markFailedMutation.mutate({ id: item.id })
+		markFailedMutation.mutate(
+			{ id: item.id },
+			{
+				onSuccess: () => onUpdate(),
+				onSettled: () => setLoading(null),
+			},
+		)
 	}
 
 	const statusBadgeClass: Record<string, string> = {

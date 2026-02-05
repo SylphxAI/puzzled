@@ -9,8 +9,8 @@ import {
 	type AuditLogFiltersType,
 } from '@/features/admin/components/audit-log-filters'
 import { AuditLogTable } from '@/features/admin/components/audit-log-table'
+import { useAuditLogs } from '@/lib/api'
 import { PAGINATION } from '@/lib/config/validation'
-import { trpc } from '@/trpc/client'
 
 export default function AdminAuditLogsPage() {
 	const t = useTranslations('admin.auditLogs')
@@ -21,27 +21,19 @@ export default function AdminAuditLogsPage() {
 	const limit = PAGINATION.ADMIN_DEFAULT_LIMIT
 	const offset = (page - 1) * limit
 
-	// Convert date filters to Date objects for tRPC
+	// Convert date filters to Date objects
 	const dateFrom = filters.startDate ? new Date(filters.startDate) : undefined
 	const dateTo = filters.endDate
 		? new Date(new Date(filters.endDate).setHours(23, 59, 59, 999))
 		: undefined
 
-	const { data, isLoading, refetch } = trpc.admin.getAuditLogs.useQuery({
+	const { data, isLoading, refetch } = useAuditLogs({
 		limit,
 		offset,
-		action: filters.action as
-			| 'create'
-			| 'update'
-			| 'delete'
-			| 'game_complete'
-			| 'streak_update'
-			| 'achievement_unlock'
-			| 'admin_action'
-			| undefined,
+		action: filters.action,
 		resourceType: filters.resourceType,
-		dateFrom,
-		dateTo,
+		dateFrom: dateFrom?.toISOString(),
+		dateTo: dateTo?.toISOString(),
 	})
 
 	const handleFiltersChange = (newFilters: AuditLogFiltersType) => {

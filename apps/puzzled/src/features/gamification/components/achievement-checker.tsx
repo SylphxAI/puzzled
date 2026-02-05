@@ -2,7 +2,7 @@
 
 import { useSafeAchievements, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useEffect, useRef } from 'react'
-import { trpc } from '@/trpc'
+import { useUserStats } from '@/lib/api'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
 
@@ -44,8 +44,8 @@ export function AchievementChecker() {
 		},
 	})
 
-	// Fetch per-game stats (still from local tRPC - game stats are Puzzled-specific)
-	const { data: userStats } = trpc.stats.getUserStats.useQuery(undefined, {
+	// Fetch per-game stats (game stats are Puzzled-specific)
+	const { data: userStats } = useUserStats({
 		enabled: !!user,
 		staleTime: 10000,
 	})

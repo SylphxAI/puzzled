@@ -5,9 +5,9 @@ import { BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
+import { useTodayPercentile } from '@/lib/api'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
-import { trpc } from '@/trpc/client'
 
 type MissedCategory = {
 	name: string
@@ -57,7 +57,7 @@ export function GameResultCard({
 	const isWin = status === 'won'
 
 	// Fetch percentile for daily mode wins
-	const { data: percentileData } = trpc.stats.getTodayPercentile.useQuery(
+	const { data: percentileData } = useTodayPercentile(
 		{
 			gameSlug: gameType,
 			status,

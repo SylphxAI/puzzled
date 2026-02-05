@@ -4,8 +4,12 @@ import { Plus, Save, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
+import {
+	useCreateAnnouncement,
+	useDeleteAnnouncement,
+	useUpdateAnnouncement,
+} from '@/lib/api'
 import type { Announcement, AnnouncementType } from '@/lib/db/schema'
-import { trpc } from '@/trpc/client'
 import {
 	AdminDialog,
 	AdminDialogBody,
@@ -104,26 +108,9 @@ function AnnouncementEditorModal({
 
 	const [confirmDelete, setConfirmDelete] = useState(false)
 
-	const createMutation = trpc.admin.createAnnouncement.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
-
-	const updateMutation = trpc.admin.updateAnnouncement.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
-
-	const deleteMutation = trpc.admin.deleteAnnouncement.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
+	const createMutation = useCreateAnnouncement()
+	const updateMutation = useUpdateAnnouncement()
+	const deleteMutation = useDeleteAnnouncement()
 
 	const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
@@ -137,20 +124,33 @@ function AnnouncementEditorModal({
 				endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : undefined,
 			}
 
+			const onSuccess = () => {
+				router.refresh()
+				onClose()
+			}
+
 			if (isEditing && announcement) {
-				updateMutation.mutate({ id: announcement.id, ...data })
+				updateMutation.mutate({ id: announcement.id, ...data }, { onSuccess })
 			} else {
-				createMutation.mutate(data)
+				createMutation.mutate(data, { onSuccess })
 			}
 		},
-		[formData, isEditing, announcement, createMutation, updateMutation],
+		[formData, isEditing, announcement, createMutation, updateMutation, router, onClose],
 	)
 
 	const handleDelete = useCallback(() => {
 		if (announcement) {
-			deleteMutation.mutate({ id: announcement.id })
+			deleteMutation.mutate(
+				{ id: announcement.id },
+				{
+					onSuccess: () => {
+						router.refresh()
+						onClose()
+					},
+				},
+			)
 		}
-	}, [announcement, deleteMutation])
+	}, [announcement, deleteMutation, router, onClose])
 
 	const updateField = <K extends keyof AnnouncementFormData>(
 		field: K,

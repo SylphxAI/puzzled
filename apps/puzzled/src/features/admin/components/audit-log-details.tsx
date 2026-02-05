@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
-import { trpc } from '@/trpc/client'
+import { useAuditLogDetails } from '@/lib/api'
 
 type AuditLogDetailsProps = {
 	logId: string
@@ -21,7 +21,7 @@ type AuditLogDetailsProps = {
 export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 	const t = useTranslations('admin.auditLogs')
 	const locale = useLocale()
-	const { data: log, isLoading } = trpc.admin.getAuditLogDetails.useQuery({ id: logId })
+	const { data: log, isLoading } = useAuditLogDetails(logId)
 
 	if (isLoading) {
 		return (

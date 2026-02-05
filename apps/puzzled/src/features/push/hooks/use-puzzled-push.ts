@@ -2,8 +2,8 @@
 
 import { useAnalytics, useNotifications } from '@sylphx/sdk/react'
 import { useCallback } from 'react'
+import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
-import { trpc } from '@/trpc'
 
 /**
  * Puzzled-specific notification types
@@ -78,18 +78,13 @@ export function usePuzzledPush() {
 	} = useNotifications()
 
 	// Fetch preferences from server
-	const { data: serverPreferences, refetch: refetchPreferences } =
-		trpc.notifications.getPreferences.useQuery(undefined, {
-			// Don't refetch too aggressively
-			staleTime: 5 * MINUTE_MS,
-		})
+	const { data: serverPreferences, refetch: refetchPreferences } = useNotificationPreferences({
+		// Don't refetch too aggressively
+		staleTime: 5 * MINUTE_MS,
+	})
 
 	// Mutation to update preferences
-	const updateMutation = trpc.notifications.updatePushPreferences.useMutation({
-		onSuccess: () => {
-			refetchPreferences()
-		},
-	})
+	const updateMutation = useUpdatePushPreferences()
 
 	/**
 	 * Request push notification permission
@@ -133,13 +128,17 @@ export function usePuzzledPush() {
 	 */
 	const updatePreferences = useCallback(
 		async (updates: Partial<PuzzledNotificationPreferences>) => {
-			await updateMutation.mutateAsync(updates)
+			await updateMutation.mutateAsync(updates, {
+				onSuccess: () => {
+					refetchPreferences()
+				},
+			})
 			track('push_preferences_updated', {
 				...updates,
 			})
 			return true
 		},
-		[updateMutation, track],
+		[updateMutation, track, refetchPreferences],
 	)
 
 	return {

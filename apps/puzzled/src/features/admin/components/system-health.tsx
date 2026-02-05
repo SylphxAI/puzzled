@@ -2,7 +2,7 @@
 
 import { CheckCircle, Database, HardDrive, RefreshCw, XCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { trpc } from '@/trpc/client'
+import { useSystemHealth } from '@/lib/api'
 
 /**
  * System Health Dashboard
@@ -19,7 +19,7 @@ export function SystemHealthDashboard() {
 		isLoading,
 		refetch,
 		isFetching,
-	} = trpc.admin.getSystemHealth.useQuery(undefined, { refetchInterval: 30000 })
+	} = useSystemHealth()
 
 	if (isLoading) {
 		return (

@@ -4,8 +4,12 @@ import { Plus, Save, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
+import {
+	useCreateFeatureFlag,
+	useDeleteFeatureFlag,
+	useUpdateFeatureFlag,
+} from '@/lib/api'
 import type { FeatureFlag } from '@/lib/db/schema'
-import { trpc } from '@/trpc/client'
 import {
 	AdminDialog,
 	AdminDialogBody,
@@ -89,26 +93,9 @@ function FeatureFlagEditorModal({ flag, onClose }: { flag?: FeatureFlag; onClose
 
 	const [confirmDelete, setConfirmDelete] = useState(false)
 
-	const createMutation = trpc.admin.createFeatureFlag.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
-
-	const updateMutation = trpc.admin.updateFeatureFlag.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
-
-	const deleteMutation = trpc.admin.deleteFeatureFlag.useMutation({
-		onSuccess: () => {
-			router.refresh()
-			onClose()
-		},
-	})
+	const createMutation = useCreateFeatureFlag()
+	const updateMutation = useUpdateFeatureFlag()
+	const deleteMutation = useDeleteFeatureFlag()
 
 	const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending
 
@@ -116,22 +103,35 @@ function FeatureFlagEditorModal({ flag, onClose }: { flag?: FeatureFlag; onClose
 		(e: React.FormEvent) => {
 			e.preventDefault()
 
+			const onSuccess = () => {
+				router.refresh()
+				onClose()
+			}
+
 			if (isEditing && flag) {
 				// Extract key from formData to avoid duplicate key error
 				const { key: _, ...updateData } = formData
-				updateMutation.mutate({ key: flag.key, ...updateData })
+				updateMutation.mutate({ key: flag.key, ...updateData }, { onSuccess })
 			} else {
-				createMutation.mutate(formData)
+				createMutation.mutate(formData, { onSuccess })
 			}
 		},
-		[formData, isEditing, flag, createMutation, updateMutation],
+		[formData, isEditing, flag, createMutation, updateMutation, router, onClose],
 	)
 
 	const handleDelete = useCallback(() => {
 		if (flag) {
-			deleteMutation.mutate({ key: flag.key })
+			deleteMutation.mutate(
+				{ key: flag.key },
+				{
+					onSuccess: () => {
+						router.refresh()
+						onClose()
+					},
+				},
+			)
 		}
-	}, [flag, deleteMutation])
+	}, [flag, deleteMutation, router, onClose])
 
 	const updateField = <K extends keyof FeatureFlagFormData>(
 		field: K,

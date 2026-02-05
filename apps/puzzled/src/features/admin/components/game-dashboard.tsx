@@ -2,9 +2,9 @@
 
 import { AlertCircle, BarChart3, Gamepad2, RefreshCw, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
+import { useGameAnalytics } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
 import { GameIcon } from '@/shared/components/ui/game-icons'
-import { trpc } from '@/trpc/client'
 
 type DateRange = '7d' | '14d' | '30d' | '90d'
 
@@ -23,7 +23,7 @@ export function GameDashboard({ slug }: { slug: string }) {
 		isLoading,
 		refetch,
 		isRefetching,
-	} = trpc.admin.getSingleGameAnalytics.useQuery({ slug, days }, { refetchInterval: MINUTE_MS })
+	} = useGameAnalytics(slug, days, { refetchInterval: MINUTE_MS })
 
 	if (isLoading) {
 		return <GameDashboardSkeleton />
