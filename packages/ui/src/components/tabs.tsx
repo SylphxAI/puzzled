@@ -76,14 +76,17 @@ interface TabsTriggerProps {
 	children?: React.ReactNode
 	/** Additional CSS classes */
 	className?: string
+	/** Whether to render as child element */
+	asChild?: boolean
 }
 
 const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
-	({ className, value, disabled, children }, ref) => (
+	({ className, value, disabled, children, asChild }, ref) => (
 		<BaseTabs.Tab
 			ref={ref}
 			value={value}
 			disabled={disabled}
+			render={asChild ? (children as React.ReactElement) : undefined}
 			className={cn(
 				// min-h-9 within h-11 TabsList = adequate touch target
 				'inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 min-h-9 text-sm font-medium ring-offset-background transition-all',
@@ -94,7 +97,7 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(
 				className,
 			)}
 		>
-			{children}
+			{asChild ? undefined : children}
 		</BaseTabs.Tab>
 	),
 )

@@ -5,10 +5,10 @@ import { forwardRef } from 'react'
 import { cn } from '../utils'
 
 interface SliderProps {
-	/** Current value (controlled) */
-	value?: number | number[]
+	/** Current value (controlled) - always an array for consistency with multi-thumb support */
+	value?: number[]
 	/** Default value (uncontrolled) */
-	defaultValue?: number | number[]
+	defaultValue?: number[]
 	/** Minimum value */
 	min?: number
 	/** Maximum value */
@@ -21,10 +21,10 @@ interface SliderProps {
 	orientation?: 'horizontal' | 'vertical'
 	/** Accessible label for the slider */
 	'aria-label'?: string
-	/** Handler fired when value changes */
-	onValueChange?: (value: number | number[]) => void
-	/** Handler fired when value is committed (on drag end) */
-	onValueCommitted?: (value: number | number[]) => void
+	/** Handler fired when value changes - always receives an array */
+	onValueChange?: (value: number[]) => void
+	/** Handler fired when value is committed (on drag end) - always receives an array */
+	onValueCommitted?: (value: number[]) => void
 	/** Additional CSS classes */
 	className?: string
 }

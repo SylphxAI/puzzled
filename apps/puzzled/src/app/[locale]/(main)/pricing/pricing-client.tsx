@@ -52,7 +52,7 @@ function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
 
 	// Find the premium plan (first non-free plan with a monthly price)
 	const premiumPlan = platformPlans.find(
-		(p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0,
+		(p) => p.slug !== 'free' && p.priceMonthly && p.priceMonthly > 0,
 	)
 
 	if (premiumPlan) {
@@ -68,7 +68,7 @@ function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
 		plans.push({
 			id: 'premium',
 			slug: premiumPlan.slug,
-			price: premiumPlan.monthlyPrice!,
+			price: premiumPlan.priceMonthly!,
 			currency: 'usd',
 			period: 'perMonth',
 			interval: 'monthly',
@@ -80,11 +80,11 @@ function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
 		})
 
 		// Annual card (if annual price exists)
-		if (premiumPlan.annualPrice && premiumPlan.annualPrice > 0) {
+		if (premiumPlan.priceAnnual && premiumPlan.priceAnnual > 0) {
 			plans.push({
 				id: 'annual',
 				slug: premiumPlan.slug,
-				price: premiumPlan.annualPrice,
+				price: premiumPlan.priceAnnual,
 				currency: 'usd',
 				period: 'perYear',
 				interval: 'annual',

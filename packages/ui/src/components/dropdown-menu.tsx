@@ -255,15 +255,20 @@ interface DropdownMenuItemProps {
 	/** Whether the item is disabled */
 	disabled?: boolean
 	/** Click handler */
-	onClick?: () => void
+	onClick?: (e?: React.MouseEvent) => void
+	/** Select handler (alias for onClick, for Radix compatibility) */
+	onSelect?: (e?: React.MouseEvent) => void
+	/** Whether to render as child element */
+	asChild?: boolean
 }
 
 const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
-	({ className, inset, destructive, disabled, onClick, children }, ref) => (
+	({ className, inset, destructive, disabled, onClick, onSelect, asChild, children }, ref) => (
 		<BaseMenu.Item
 			ref={ref}
 			disabled={disabled}
-			onClick={onClick}
+			onClick={onClick ?? onSelect}
+			render={asChild ? (children as React.ReactElement) : undefined}
 			className={cn(
 				// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
 				'relative flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 min-h-11 text-sm outline-none transition-colors focus:bg-muted data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0',
@@ -272,7 +277,7 @@ const DropdownMenuItem = forwardRef<HTMLDivElement, DropdownMenuItemProps>(
 				className,
 			)}
 		>
-			{children}
+			{asChild ? undefined : children}
 		</BaseMenu.Item>
 	),
 )

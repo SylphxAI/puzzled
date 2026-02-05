@@ -102,12 +102,15 @@ interface SelectTriggerProps {
 	children?: React.ReactNode
 	/** Additional CSS classes */
 	className?: string
+	/** ID for label association */
+	id?: string
 }
 
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-	({ className, children }, ref) => (
+	({ className, children, id }, ref) => (
 		<BaseSelect.Trigger
 			ref={ref}
+			id={id}
 			className={cn(
 				// h-11 = 44px minimum touch target (WCAG 2.1 AA)
 				'flex h-11 w-full items-center justify-between rounded-lg border border-border/50 bg-card/50 px-3 py-2 text-sm',

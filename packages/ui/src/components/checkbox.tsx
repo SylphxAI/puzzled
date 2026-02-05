@@ -61,8 +61,8 @@ function AnimatedCheck({ className }: { className?: string }) {
  * Props for the Checkbox component
  */
 interface CheckboxProps {
-	/** Whether the checkbox is checked (controlled) */
-	checked?: boolean
+	/** Whether the checkbox is checked (controlled). Can be boolean or 'indeterminate' */
+	checked?: boolean | 'indeterminate'
 	/** Default checked state (uncontrolled) */
 	defaultChecked?: boolean
 	/** Handler fired when the checkbox is toggled */
@@ -79,6 +79,10 @@ interface CheckboxProps {
 	id?: string
 	/** Additional CSS classes */
 	className?: string
+	/** Click handler */
+	onClick?: (e: React.MouseEvent) => void
+	/** Aria label */
+	'aria-label'?: string
 }
 
 /**
@@ -109,37 +113,66 @@ interface CheckboxProps {
  * ```
  */
 const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
-	({ className, checked, defaultChecked, onCheckedChange, disabled, required, name, value, id }, ref) => (
-		<BaseCheckbox.Root
-			ref={ref}
-			id={id}
-			name={name}
-			value={value}
-			checked={checked}
-			defaultChecked={defaultChecked}
-			onCheckedChange={onCheckedChange}
-			disabled={disabled}
-			required={required}
-			className={cn(
-				// h-6 w-6 with min-h-11 min-w-11 touch area wrapper effect via padding
-				// Actual checkbox is 24px but clickable area extends via focus ring offset
-				'peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background',
-				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-				'disabled:cursor-not-allowed disabled:opacity-50',
-				// Base UI uses data-checked instead of data-[state=checked]
-				'data-[checked]:bg-primary data-[checked]:text-primary-foreground',
-				'transition-all duration-150 hover:border-primary/70',
-				'active:scale-95 motion-reduce:active:scale-100',
-				className,
-			)}
-		>
-			<BaseCheckbox.Indicator className={cn('flex items-center justify-center text-current')}>
-				<AnimatedCheck />
-			</BaseCheckbox.Indicator>
-		</BaseCheckbox.Root>
-	),
+	({ className, checked, defaultChecked, onCheckedChange, disabled, required, name, value, id, onClick, 'aria-label': ariaLabel }, ref) => {
+		// Base UI doesn't support 'indeterminate' string, only boolean
+		// Convert 'indeterminate' to true for visual purposes
+		const normalizedChecked = checked === 'indeterminate' ? true : checked
+		const isIndeterminate = checked === 'indeterminate'
+
+		return (
+			<BaseCheckbox.Root
+				ref={ref}
+				id={id}
+				name={name}
+				value={value}
+				checked={normalizedChecked}
+				defaultChecked={defaultChecked}
+				onCheckedChange={onCheckedChange}
+				disabled={disabled}
+				required={required}
+				indeterminate={isIndeterminate}
+				onClick={onClick}
+				aria-label={ariaLabel}
+				className={cn(
+					// h-6 w-6 with min-h-11 min-w-11 touch area wrapper effect via padding
+					// Actual checkbox is 24px but clickable area extends via focus ring offset
+					'peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background',
+					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+					'disabled:cursor-not-allowed disabled:opacity-50',
+					// Base UI uses data-checked instead of data-[state=checked]
+					'data-[checked]:bg-primary data-[checked]:text-primary-foreground',
+					'data-[indeterminate]:bg-primary data-[indeterminate]:text-primary-foreground',
+					'transition-all duration-150 hover:border-primary/70',
+					'active:scale-95 motion-reduce:active:scale-100',
+					className,
+				)}
+			>
+				<BaseCheckbox.Indicator className={cn('flex items-center justify-center text-current')}>
+					{isIndeterminate ? <MinusIcon /> : <AnimatedCheck />}
+				</BaseCheckbox.Indicator>
+			</BaseCheckbox.Root>
+		)
+	},
 )
 Checkbox.displayName = 'Checkbox'
+
+/**
+ * Minus icon for indeterminate state
+ */
+function MinusIcon({ className }: { className?: string }) {
+	return (
+		<svg
+			className={cn('h-4 w-4', className)}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="3"
+			strokeLinecap="round"
+		>
+			<path d="M5 12h14" />
+		</svg>
+	)
+}
 
 export { Checkbox }
 export type { CheckboxProps }

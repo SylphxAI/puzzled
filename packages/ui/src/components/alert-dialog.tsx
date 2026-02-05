@@ -36,12 +36,18 @@ interface AlertDialogTriggerProps {
 	children?: React.ReactNode
 	/** Additional CSS classes */
 	className?: string
+	/** Whether to render as child element */
+	asChild?: boolean
 }
 
 const AlertDialogTrigger = forwardRef<HTMLButtonElement, AlertDialogTriggerProps>(
-	({ className, children }, ref) => (
-		<BaseAlertDialog.Trigger ref={ref} className={className}>
-			{children}
+	({ className, children, asChild }, ref) => (
+		<BaseAlertDialog.Trigger
+			ref={ref}
+			className={className}
+			render={asChild ? (children as React.ReactElement) : undefined}
+		>
+			{asChild ? undefined : children}
 		</BaseAlertDialog.Trigger>
 	),
 )
@@ -186,11 +192,20 @@ interface AlertDialogCancelProps {
 	children?: React.ReactNode
 	/** Additional CSS classes */
 	className?: string
+	/** Whether the cancel button is disabled */
+	disabled?: boolean
+	/** Click handler */
+	onClick?: () => void
 }
 
 const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>(
-	({ className, children }, ref) => (
-		<BaseAlertDialog.Close ref={ref} className={cn(buttonVariants({ variant: 'outline' }), className)}>
+	({ className, children, disabled, onClick }, ref) => (
+		<BaseAlertDialog.Close
+			ref={ref}
+			disabled={disabled}
+			onClick={onClick}
+			className={cn(buttonVariants({ variant: 'outline' }), disabled && 'opacity-50 cursor-not-allowed', className)}
+		>
 			{children}
 		</BaseAlertDialog.Close>
 	),

@@ -38,12 +38,18 @@ interface PopoverTriggerProps {
 	children?: React.ReactNode
 	/** Additional CSS classes */
 	className?: string
+	/** Whether to render as child element */
+	asChild?: boolean
 }
 
 const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>(
-	({ className, children }, ref) => (
-		<BasePopover.Trigger ref={ref} className={className}>
-			{children}
+	({ className, children, asChild }, ref) => (
+		<BasePopover.Trigger
+			ref={ref}
+			className={className}
+			render={asChild ? (children as React.ReactElement) : undefined}
+		>
+			{asChild ? undefined : children}
 		</BasePopover.Trigger>
 	),
 )
@@ -106,14 +112,21 @@ interface PopoverContentProps {
 	sideOffset?: number
 	/** Side */
 	side?: 'top' | 'right' | 'bottom' | 'left'
+	/** Whether to render as child element (ignored, kept for API compat) */
+	asChild?: boolean
+	/** Force mount the content (ignored, kept for API compat) */
+	forceMount?: boolean
+	/** Click handler */
+	onClick?: (e: React.MouseEvent) => void
 }
 
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
-	({ className, align = 'center', sideOffset = 4, side = 'bottom', children }, ref) => (
+	({ className, align = 'center', sideOffset = 4, side = 'bottom', onClick, children }, ref) => (
 		<BasePopover.Portal>
 			<BasePopover.Positioner sideOffset={sideOffset} side={side} align={align}>
 				<BasePopover.Popup
 					ref={ref}
+					onClick={onClick}
 					className={cn('z-popover w-72 rounded-lg border bg-card text-card-foreground shadow-lg outline-none', className)}
 				>
 					<MotionDiv
