@@ -209,10 +209,48 @@ export const queryKeys = {
 
 async function parseResponse<T>(response: Response): Promise<T> {
 	if (!response.ok) {
-		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
-		throw new ApiError(response.status, error.error?.message ?? 'Request failed', error.error)
+		// Try to parse error response as JSON
+		let errorPayload: { error?: { message?: string; code?: string } } = {
+			error: { message: 'Request failed' },
+		}
+
+		try {
+			const text = await response.text()
+			if (text) {
+				errorPayload = JSON.parse(text)
+			}
+		} catch (parseError) {
+			// JSON parsing failed — log for debugging and include status context
+			console.error(
+				`[Puzzled API] Failed to parse error response (${response.status}):`,
+				parseError,
+			)
+			errorPayload = {
+				error: {
+					message: `Request failed with status ${response.status}`,
+					code: 'PARSE_ERROR',
+				},
+			}
+		}
+
+		throw new ApiError(
+			response.status,
+			errorPayload.error?.message ?? 'Request failed',
+			errorPayload.error,
+		)
 	}
-	return response.json()
+
+	// Parse successful response
+	try {
+		return await response.json()
+	} catch (parseError) {
+		// Success response JSON parsing failed — this is unexpected
+		console.error('[Puzzled API] Failed to parse success response:', parseError)
+		throw new ApiError(500, 'Invalid response format', {
+			code: 'PARSE_ERROR',
+			message: 'Server returned invalid JSON',
+		})
+	}
 }
 
 // ==========================================
