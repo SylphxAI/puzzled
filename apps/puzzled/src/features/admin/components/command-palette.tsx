@@ -1,6 +1,6 @@
 'use client'
 
-import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { Dialog } from '@base-ui/react/dialog'
 import { Command } from 'cmdk'
 import {
 	Activity,
@@ -224,31 +224,23 @@ export function AdminCommandPalette() {
 	const actionItems = commands.filter((c) => c.group === 'actions')
 
 	return (
-		<DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-			<DialogPrimitive.Trigger asChild>
-				<button
-					type="button"
-					className="admin-command-trigger"
-					aria-label={t('commandPalette.open')}
-				>
-					<Search className="h-4 w-4" />
-					<span>{t('commandPalette.search')}</span>
-					<kbd className="admin-kbd">⌘K</kbd>
-				</button>
-			</DialogPrimitive.Trigger>
+		<Dialog.Root open={open} onOpenChange={setOpen}>
+			<Dialog.Trigger className="admin-command-trigger" aria-label={t('commandPalette.open')}>
+				<Search className="h-4 w-4" />
+				<span>{t('commandPalette.search')}</span>
+				<kbd className="admin-kbd">⌘K</kbd>
+			</Dialog.Trigger>
 
-			<DialogPrimitive.Portal>
-				{/* Radix Dialog handles escape key and outside click automatically */}
-				<DialogPrimitive.Overlay className="admin-command-backdrop" />
+			<Dialog.Portal>
+				{/* Base UI Dialog handles escape key and outside click automatically */}
+				<Dialog.Backdrop className="admin-command-backdrop" />
 
-				<DialogPrimitive.Content className="admin-command-dialog">
+				<Dialog.Popup className="admin-command-dialog">
 					{/* Hidden title for accessibility */}
-					<DialogPrimitive.Title className="sr-only">
-						{t('commandPalette.title')}
-					</DialogPrimitive.Title>
-					<DialogPrimitive.Description className="sr-only">
+					<Dialog.Title className="sr-only">{t('commandPalette.title')}</Dialog.Title>
+					<Dialog.Description className="sr-only">
 						{t('commandPalette.description')}
-					</DialogPrimitive.Description>
+					</Dialog.Description>
 
 					<Command shouldFilter={true} loop>
 						{/* Search Input */}
@@ -271,12 +263,12 @@ export function AdminCommandPalette() {
 									<X className="h-4 w-4" />
 								</button>
 							)}
-							<DialogPrimitive.Close
+							<Dialog.Close
 								className="admin-command-close"
 								aria-label={t('commandPalette.close')}
 							>
 								<kbd className="admin-kbd text-xs">esc</kbd>
-							</DialogPrimitive.Close>
+							</Dialog.Close>
 						</div>
 
 						{/* Command List */}
@@ -337,8 +329,8 @@ export function AdminCommandPalette() {
 							</div>
 						</div>
 					</Command>
-				</DialogPrimitive.Content>
-			</DialogPrimitive.Portal>
-		</DialogPrimitive.Root>
+				</Dialog.Popup>
+			</Dialog.Portal>
+		</Dialog.Root>
 	)
 }

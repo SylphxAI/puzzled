@@ -1,23 +1,20 @@
 'use client'
 
-import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { Dialog } from '@base-ui/react/dialog'
 import { X } from 'lucide-react'
 import { forwardRef } from 'react'
 import { cn } from '@/lib/utils'
 
-const AdminDialog = DialogPrimitive.Root
-const AdminDialogPortal = DialogPrimitive.Portal
+const AdminDialog = Dialog.Root
 
 const AdminDialogOverlay = forwardRef<
-	React.ComponentRef<typeof DialogPrimitive.Overlay>,
-	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+	HTMLDivElement,
+	React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-	<DialogPrimitive.Overlay
+	<Dialog.Backdrop
 		ref={ref}
 		className={cn(
-			'fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
-			'data-[state=open]:animate-in data-[state=closed]:animate-out',
-			'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+			'admin-dialog-overlay fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
 			className,
 		)}
 		{...props}
@@ -25,37 +22,35 @@ const AdminDialogOverlay = forwardRef<
 ))
 AdminDialogOverlay.displayName = 'AdminDialogOverlay'
 
-const AdminDialogContent = forwardRef<
-	React.ComponentRef<typeof DialogPrimitive.Content>,
-	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
-		hideCloseButton?: boolean
-	}
->(({ className, children, hideCloseButton, ...props }, ref) => (
-	<AdminDialogPortal>
-		<AdminDialogOverlay />
-		<DialogPrimitive.Content
-			ref={ref}
-			className={cn(
-				'fixed inset-4 z-modal mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8',
-				'data-[state=open]:animate-in data-[state=closed]:animate-out',
-				'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-				'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-				className,
-			)}
-			{...props}
-		>
-			<div className="admin-card w-full max-w-2xl">
-				{children}
-				{!hideCloseButton && (
-					<DialogPrimitive.Close className="absolute right-4 top-4 admin-btn admin-btn-ghost p-2">
-						<X className="h-5 w-5" />
-						<span className="sr-only">Close</span>
-					</DialogPrimitive.Close>
+interface AdminDialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
+	hideCloseButton?: boolean
+}
+
+const AdminDialogContent = forwardRef<HTMLDivElement, AdminDialogContentProps>(
+	({ className, children, hideCloseButton, ...props }, ref) => (
+		<Dialog.Portal>
+			<AdminDialogOverlay />
+			<Dialog.Popup
+				ref={ref}
+				className={cn(
+					'admin-dialog-content fixed inset-4 z-modal mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8',
+					className,
 				)}
-			</div>
-		</DialogPrimitive.Content>
-	</AdminDialogPortal>
-))
+				{...props}
+			>
+				<div className="admin-card w-full max-w-2xl">
+					{children}
+					{!hideCloseButton && (
+						<Dialog.Close className="absolute right-4 top-4 admin-btn admin-btn-ghost p-2">
+							<X className="h-5 w-5" />
+							<span className="sr-only">Close</span>
+						</Dialog.Close>
+					)}
+				</div>
+			</Dialog.Popup>
+		</Dialog.Portal>
+	),
+)
 AdminDialogContent.displayName = 'AdminDialogContent'
 
 function AdminDialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
@@ -71,23 +66,22 @@ function AdminDialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
 }
 AdminDialogHeader.displayName = 'AdminDialogHeader'
 
-const AdminDialogTitle = forwardRef<
-	React.ComponentRef<typeof DialogPrimitive.Title>,
-	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-	<DialogPrimitive.Title
-		ref={ref}
-		className={cn('text-lg font-semibold text-[var(--admin-text-primary)]', className)}
-		{...props}
-	/>
-))
+const AdminDialogTitle = forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+	({ className, ...props }, ref) => (
+		<Dialog.Title
+			ref={ref}
+			className={cn('text-lg font-semibold text-[var(--admin-text-primary)]', className)}
+			{...props}
+		/>
+	),
+)
 AdminDialogTitle.displayName = 'AdminDialogTitle'
 
 const AdminDialogDescription = forwardRef<
-	React.ComponentRef<typeof DialogPrimitive.Description>,
-	React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+	HTMLParagraphElement,
+	React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-	<DialogPrimitive.Description
+	<Dialog.Description
 		ref={ref}
 		className={cn('text-sm text-[var(--admin-text-muted)]', className)}
 		{...props}
