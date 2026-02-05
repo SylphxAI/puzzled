@@ -921,6 +921,112 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 	})
 }
 
+// ============================================================================
+// Database Connection (Server-Side)
+// ============================================================================
+
+/** Database connection info returned by Platform */
+export interface DatabaseConnectionInfo {
+	connectionString: string
+	databaseName: string
+	roleName: string | null
+	status: 'provisioning' | 'ready' | 'suspended' | 'failed' | 'deleted'
+}
+
+/** Database status info */
+export interface DatabaseStatusInfo {
+	status: 'provisioning' | 'ready' | 'suspended' | 'failed' | 'deleted' | 'not_provisioned'
+	region: string | null
+	pgVersion: number | null
+	databaseName: string | null
+}
+
+/**
+ * Get database connection string from Platform (server-side)
+ *
+ * Use this when your app's database is provisioned by the Sylphx Platform.
+ * The connection string is securely stored on Platform and retrieved at startup.
+ *
+ * **Note:** This requires NEON_API_KEY and PLATFORM_ENCRYPTION_KEY to be
+ * configured on the Platform, and your app's database to be provisioned.
+ *
+ * @example
+ * ```typescript
+ * import { getDatabaseConnection } from '@sylphx/sdk/server'
+ *
+ * // In your database initialization
+ * const dbInfo = await getDatabaseConnection({
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
+ * })
+ *
+ * if (dbInfo) {
+ *   const pool = new Pool({ connectionString: dbInfo.connectionString })
+ * }
+ * ```
+ */
+export async function getDatabaseConnection(
+	options: AuthenticatedFetchOptions,
+): Promise<DatabaseConnectionInfo | null> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+
+	try {
+		const response = await fetch(`${platformUrl}${SDK_API_PATH}/database/connection-string`, {
+			headers: sdkHeaders(secretKey),
+			cache: 'no-store', // Always fetch fresh connection string
+		})
+
+		if (!response.ok) {
+			// 404 means database not provisioned - return null
+			if (response.status === 404) {
+				return null
+			}
+			// 412 means database not ready (provisioning, suspended, failed)
+			if (response.status === 412) {
+				console.warn('[Sylphx] Database not ready:', await response.text())
+				return null
+			}
+			console.warn('[Sylphx] Failed to fetch database connection:', response.status)
+			return null
+		}
+
+		return (await response.json()) as DatabaseConnectionInfo
+	} catch (error) {
+		console.warn('[Sylphx] Failed to fetch database connection:', error)
+		return null
+	}
+}
+
+/**
+ * Get database status from Platform (server-side)
+ *
+ * Use this to check if your app's database is provisioned and ready.
+ *
+ * @example
+ * ```typescript
+ * import { getDatabaseStatus } from '@sylphx/sdk/server'
+ *
+ * const status = await getDatabaseStatus({
+ *   secretKey: process.env.SYLPHX_SECRET_KEY!,
+ * })
+ *
+ * if (status?.status === 'ready') {
+ *   // Database is ready to use
+ * }
+ * ```
+ */
+export async function getDatabaseStatus(
+	options: AuthenticatedFetchOptions,
+): Promise<DatabaseStatusInfo> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+
+	return cachedFetch<DatabaseStatusInfo>({
+		url: `${platformUrl}${SDK_API_PATH}/database/status`,
+		headers: sdkHeaders(secretKey),
+		fallback: { status: 'not_provisioned', region: null, pgVersion: null, databaseName: null },
+		label: 'database status',
+	})
+}
+
 // AI Client
 export { createAI, getAI } from './ai'
 export type {
