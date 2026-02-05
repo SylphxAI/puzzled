@@ -1,19 +1,40 @@
 /**
  * Server-side API Client for Puzzled
  *
- * Creates a Hono client (hc) for use in:
+ * Domain-specific hc (Hono client) instances for use in:
  * - React Server Components (RSC)
  * - Server Actions
  *
- * This calls the API over HTTP (same process in dev, separate in prod).
+ * Each domain has its own client for better code splitting and type inference.
  * Uses React's cache() to dedupe calls within the same request.
+ *
+ * @example
+ * // In a Server Component
+ * const { gamification } = await createServerApi()
+ * const res = await gamification['streak-info'].$get()
+ * const streakInfo = await res.json()
+ *
+ * @example
+ * // In a Server Action
+ * const { games } = await createServerApi()
+ * const res = await games['save-result'].$post({ json: { ... } })
  */
 
 import 'server-only'
 import { hc } from 'hono/client'
-import { headers, cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
-import type { AppType } from '@/server/api/app'
+import type {
+	AdminRoutes,
+	GamificationRoutes,
+	GamesRoutes,
+	NotificationsRoutes,
+	StatsRoutes,
+	UserRoutes,
+} from '@/server/api/app'
+
+// API base path
+const API_BASE = '/api/v1'
 
 /**
  * Get the base URL for server-side API calls
@@ -26,42 +47,45 @@ function getServerBaseUrl(): string {
 }
 
 /**
- * Create a cached server-side Hono client
- *
- * Uses React's cache() to dedupe calls within the same request.
- * Each request gets its own client with proper headers/cookies.
- *
- * @example
- * // In a Server Component
- * const api = await createServerApi()
- * const res = await api.api.v1.gamification['streak-info'].$get()
- * const streakInfo = await res.json()
- *
- * @example
- * // In a Server Action
- * const api = await createServerApi()
- * const res = await api.api.v1.games['save-result'].$post({ json: { ... } })
+ * Create a custom fetch with forwarded headers/cookies for auth
  */
-export const createServerApi = cache(async () => {
+async function createAuthFetch() {
 	const headersList = await headers()
 	const cookieStore = await cookies()
 
-	const baseUrl = getServerBaseUrl()
+	return (input: RequestInfo | URL, init?: RequestInit) =>
+		fetch(input, {
+			...init,
+			headers: {
+				...init?.headers,
+				cookie: cookieStore.toString(),
+				// Forward relevant headers for auth context
+				'x-forwarded-for': headersList.get('x-forwarded-for') ?? '',
+				'user-agent': headersList.get('user-agent') ?? '',
+			},
+		})
+}
 
-	// Create hc client with forwarded headers/cookies for auth
-	return hc<AppType>(baseUrl, {
-		fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-			fetch(input, {
-				...init,
-				headers: {
-					...init?.headers,
-					cookie: cookieStore.toString(),
-					// Forward relevant headers for auth context
-					'x-forwarded-for': headersList.get('x-forwarded-for') ?? '',
-					'user-agent': headersList.get('user-agent') ?? '',
-				},
-			}),
-	})
+/**
+ * Create cached server-side Hono clients
+ *
+ * Uses React's cache() to dedupe calls within the same request.
+ * Each request gets its own clients with proper headers/cookies.
+ *
+ * @returns Domain-specific API clients
+ */
+export const createServerApi = cache(async () => {
+	const baseUrl = getServerBaseUrl()
+	const authFetch = await createAuthFetch()
+
+	return {
+		games: hc<GamesRoutes>(`${baseUrl}${API_BASE}/games`, { fetch: authFetch }),
+		stats: hc<StatsRoutes>(`${baseUrl}${API_BASE}/stats`, { fetch: authFetch }),
+		gamification: hc<GamificationRoutes>(`${baseUrl}${API_BASE}/gamification`, { fetch: authFetch }),
+		user: hc<UserRoutes>(`${baseUrl}${API_BASE}/user`, { fetch: authFetch }),
+		notifications: hc<NotificationsRoutes>(`${baseUrl}${API_BASE}/notifications`, { fetch: authFetch }),
+		admin: hc<AdminRoutes>(`${baseUrl}${API_BASE}/admin`, { fetch: authFetch }),
+	}
 })
 
 /**

@@ -607,3 +607,4 @@ const adminRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 export { adminRoutes }
+export type AdminRoutes = typeof adminRoutes

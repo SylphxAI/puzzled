@@ -22,6 +22,12 @@ import {
 	notificationsRoutes,
 	statsRoutes,
 	userRoutes,
+	type AdminRoutes,
+	type GamificationRoutes,
+	type GamesRoutes,
+	type NotificationsRoutes,
+	type StatsRoutes,
+	type UserRoutes,
 } from './routes'
 import type { PuzzledEnv } from './types'
 
@@ -62,6 +68,9 @@ const appWithRoutes = baseApp
 
 // Export type for hc client inference (must be from the chained app)
 export type AppType = typeof appWithRoutes
+
+// Export domain-specific route types for hc clients
+export type { AdminRoutes, GamificationRoutes, GamesRoutes, NotificationsRoutes, StatsRoutes, UserRoutes }
 
 // Create the final app with OpenAPI documentation
 // Note: We use a separate OpenAPIHono instance because .route() returns Hono, not OpenAPIHono

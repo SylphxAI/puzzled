@@ -170,3 +170,4 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 export { notificationsRoutes }
+export type NotificationsRoutes = typeof notificationsRoutes

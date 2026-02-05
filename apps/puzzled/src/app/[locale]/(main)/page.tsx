@@ -39,7 +39,7 @@ export default async function HomePage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const user = await currentUser()
-	const api = await createServerApi()
+	const { gamification } = await createServerApi()
 
 	// Get user's premium status from platform
 	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
@@ -72,15 +72,15 @@ export default async function HomePage({ params }: Props) {
 
 	try {
 		// Always fetch player count (public data)
-		const playerCountRes = await api.api.v1.gamification['today-player-count'].$get()
+		const playerCountRes = await gamification['today-player-count'].$get()
 		const playerCountData = (await playerCountRes.json()) as TodayPlayerCount
 		todayPlayerCount = playerCountData.count
 
 		// Fetch user-specific data if logged in
 		if (user) {
 			const [streakRes, completionsRes] = await Promise.all([
-				api.api.v1.gamification['streak-info'].$get(),
-				api.api.v1.gamification['today-completions'].$get(),
+				gamification['streak-info'].$get(),
+				gamification['today-completions'].$get(),
 			])
 			streakInfo = (await streakRes.json()) as StreakInfo
 			todayCompletions = (await completionsRes.json()) as TodayCompletion[]

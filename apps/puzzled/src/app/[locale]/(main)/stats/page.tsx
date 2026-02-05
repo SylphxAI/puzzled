@@ -83,13 +83,13 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	const api = await createServerApi()
+	const { stats: statsApi } = await createServerApi()
 
 	// Get user's real stats
 	let stats: StatsData = { wordle: emptyStats, connections: emptyStats }
 
 	try {
-		const userStatsRes = await api.api.v1.stats['user-stats'].$get()
+		const userStatsRes = await statsApi['user-stats'].$get()
 		const userStats = (await userStatsRes.json()) as UserStats
 		stats = {
 			wordle: userStats.wordle

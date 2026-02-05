@@ -90,7 +90,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 	// Get user and API client
 	const user = await currentUser()
-	const api = await createServerApi()
+	const { games, gamification } = await createServerApi()
 
 	// Get game name from translations using SSOT pattern
 	const translationKey = slugToCamelCase(slug)
@@ -171,9 +171,9 @@ export default async function GamePage({ params, searchParams }: Props) {
 		if (user) {
 			// Check completion status for each difficulty in parallel
 			const [easyRes, mediumRes, hardRes] = await Promise.all([
-				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'easy' } }),
-				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'medium' } }),
-				api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'hard' } }),
+				games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'easy' } }),
+				games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'medium' } }),
+				games['daily-status'].$get({ query: { gameSlug: slug, difficulty: 'hard' } }),
 			])
 			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
 				easyRes.json() as Promise<DailyStatus>,
@@ -203,7 +203,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 	try {
 		if (mode === 'archive' && user && dateParam) {
 			// Archive mode - get specific date's puzzle (premium only)
-			const archiveRes = await api.api.v1.games['archive-puzzle'].$get({
+			const archiveRes = await games['archive-puzzle'].$get({
 				query: { gameSlug: slug, date: dateParam },
 			})
 			const archivePuzzle = (await archiveRes.json()) as { id: string; puzzleData: unknown }
@@ -215,11 +215,9 @@ export default async function GamePage({ params, searchParams }: Props) {
 		} else {
 			// Daily mode (default) - pass difficulty for games that support it
 			const [statusRes, puzzleRes, streakRes] = await Promise.all([
-				user
-					? api.api.v1.games['daily-status'].$get({ query: { gameSlug: slug, difficulty } })
-					: null,
-				api.api.v1.games['todays-puzzle'].$get({ query: { gameSlug: slug, difficulty } }),
-				user ? api.api.v1.gamification['streak-info'].$get() : null,
+				user ? games['daily-status'].$get({ query: { gameSlug: slug, difficulty } }) : null,
+				games['todays-puzzle'].$get({ query: { gameSlug: slug, difficulty } }),
+				user ? gamification['streak-info'].$get() : null,
 			])
 			puzzleStatus = statusRes ? ((await statusRes.json()) as DailyStatus) : null
 			puzzle = (await puzzleRes.json()) as TodaysPuzzle

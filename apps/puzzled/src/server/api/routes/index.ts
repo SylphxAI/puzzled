@@ -1,12 +1,12 @@
 /**
  * Routes Index
  *
- * Re-exports all route modules for easy importing.
+ * Re-exports all route modules and their types for easy importing.
  */
 
-export { adminRoutes } from './admin'
-export { gamificationRoutes } from './gamification'
-export { gamesRoutes } from './games'
-export { notificationsRoutes } from './notifications'
-export { statsRoutes } from './stats'
-export { userRoutes } from './user'
+export { adminRoutes, type AdminRoutes } from './admin'
+export { gamificationRoutes, type GamificationRoutes } from './gamification'
+export { gamesRoutes, type GamesRoutes } from './games'
+export { notificationsRoutes, type NotificationsRoutes } from './notifications'
+export { statsRoutes, type StatsRoutes } from './stats'
+export { userRoutes, type UserRoutes } from './user'

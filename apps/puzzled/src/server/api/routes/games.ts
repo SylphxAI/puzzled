@@ -627,3 +627,4 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 export { gamesRoutes }
+export type GamesRoutes = typeof gamesRoutes

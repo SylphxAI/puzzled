@@ -3,8 +3,8 @@
 /**
  * React Query Hooks for Puzzled API
  *
- * Replaces tRPC hooks with standard React Query patterns.
- * Uses the type-safe API client for API calls.
+ * Uses domain-specific hc clients for type-safe API calls.
+ * Each hook fetches via hc then parses JSON response.
  */
 
 import {
@@ -14,7 +14,15 @@ import {
 	type UseMutationOptions,
 	type UseQueryOptions,
 } from '@tanstack/react-query'
-import { api, ApiError } from './client'
+import {
+	adminApi,
+	ApiError,
+	gamificationApi,
+	gamesApi,
+	notificationsApi,
+	statsApi,
+	userApi,
+} from './client'
 
 // ==========================================
 // Response Types
@@ -196,6 +204,18 @@ export const queryKeys = {
 } as const
 
 // ==========================================
+// Helper: Parse hc response with error handling
+// ==========================================
+
+async function parseResponse<T>(response: Response): Promise<T> {
+	if (!response.ok) {
+		const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }))
+		throw new ApiError(response.status, error.error?.message ?? 'Request failed', error.error)
+	}
+	return response.json()
+}
+
+// ==========================================
 // Games Hooks
 // ==========================================
 
@@ -206,7 +226,10 @@ export function useDailyStatus(
 ) {
 	return useQuery({
 		queryKey: queryKeys.dailyStatus(gameSlug, difficulty),
-		queryFn: () => api.games.getDailyStatus({ gameSlug, difficulty }),
+		queryFn: async () => {
+			const res = await gamesApi['daily-status'].$get({ query: { gameSlug, difficulty } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -218,7 +241,10 @@ export function useTodaysPuzzle(
 ) {
 	return useQuery({
 		queryKey: queryKeys.todaysPuzzle(gameSlug, difficulty),
-		queryFn: () => api.games.getTodaysPuzzle({ gameSlug, difficulty }),
+		queryFn: async () => {
+			const res = await gamesApi['todays-puzzle'].$get({ query: { gameSlug, difficulty } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -230,7 +256,10 @@ export function useArchivePuzzle(
 ) {
 	return useQuery({
 		queryKey: queryKeys.archivePuzzle(gameSlug, date),
-		queryFn: () => api.games.getArchivePuzzle({ gameSlug, date }),
+		queryFn: async () => {
+			const res = await gamesApi['archive-puzzle'].$get({ query: { gameSlug, date } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -242,7 +271,10 @@ export function useGameHistory(
 ) {
 	return useQuery({
 		queryKey: queryKeys.history(gameSlug),
-		queryFn: () => api.games.getHistory({ gameSlug, limit }),
+		queryFn: async () => {
+			const res = await gamesApi.history.$get({ query: { gameSlug, limit } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -255,14 +287,20 @@ export function useArchiveDates(
 ) {
 	return useQuery({
 		queryKey: queryKeys.archiveDates(gameSlug, startDate, endDate),
-		queryFn: () => api.games.getArchiveDates({ gameSlug, startDate, endDate }),
+		queryFn: async () => {
+			const res = await gamesApi['archive-dates'].$get({ query: { gameSlug, startDate, endDate } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
 
 export function useValidateGuess() {
 	return useMutation({
-		mutationFn: api.games.validateGuess,
+		mutationFn: async (input: { puzzleId: string; gameSlug: string; guess: unknown }) => {
+			const res = await gamesApi['validate-guess'].$post({ json: input })
+			return parseResponse(res)
+		},
 	})
 }
 
@@ -296,7 +334,10 @@ export function useSaveResult(
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.games.saveResult,
+		mutationFn: async (input: SaveResultInput) => {
+			const res = await gamesApi['save-result'].$post({ json: input })
+			return parseResponse<SaveResultOutput>(res)
+		},
 		onSuccess: (data, variables) => {
 			// Invalidate related queries
 			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
@@ -320,7 +361,10 @@ export function useUserStats(
 ) {
 	return useQuery({
 		queryKey: queryKeys.userStats(),
-		queryFn: () => api.stats.getUserStats() as Promise<UserStatsResponse>,
+		queryFn: async () => {
+			const res = await statsApi['user-stats'].$get()
+			return parseResponse<UserStatsResponse>(res)
+		},
 		...options,
 	})
 }
@@ -333,7 +377,10 @@ export function useUserRank(
 ) {
 	return useQuery({
 		queryKey: queryKeys.userRank(gameSlug, type, period),
-		queryFn: () => api.stats.getUserRank({ gameSlug, type, period }),
+		queryFn: async () => {
+			const res = await statsApi['user-rank'].$get({ query: { gameSlug, type, period } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -347,7 +394,10 @@ export function useLeaderboard(
 ) {
 	return useQuery({
 		queryKey: queryKeys.leaderboard(gameSlug, type, period),
-		queryFn: () => api.stats.getLeaderboard({ gameSlug, type, period, limit }),
+		queryFn: async () => {
+			const res = await statsApi.leaderboard.$get({ query: { gameSlug, type, period, limit } })
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -365,7 +415,10 @@ export function useTodayPercentile(
 ) {
 	return useQuery({
 		queryKey: queryKeys.todayPercentile(params),
-		queryFn: () => api.stats.getTodayPercentile(params) as Promise<TodayPercentileResponse>,
+		queryFn: async () => {
+			const res = await statsApi['today-percentile'].$get({ query: params })
+			return parseResponse<TodayPercentileResponse>(res)
+		},
 		enabled: !!params.gameSlug && !!params.status,
 		...options,
 	})
@@ -380,7 +433,10 @@ export function useStreakInfo(
 ) {
 	return useQuery({
 		queryKey: queryKeys.streakInfo(),
-		queryFn: api.gamification.getStreakInfo,
+		queryFn: async () => {
+			const res = await gamificationApi['streak-info'].$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -390,7 +446,10 @@ export function useTodayPlayerCount(
 ) {
 	return useQuery({
 		queryKey: queryKeys.todayPlayerCount(),
-		queryFn: api.gamification.getTodayPlayerCount,
+		queryFn: async () => {
+			const res = await gamificationApi['today-player-count'].$get()
+			return parseResponse(res)
+		},
 		staleTime: 30 * 1000, // 30 seconds
 		...options,
 	})
@@ -401,7 +460,10 @@ export function useTodayCompletions(
 ) {
 	return useQuery({
 		queryKey: queryKeys.todayCompletions(),
-		queryFn: api.gamification.getTodayCompletions,
+		queryFn: async () => {
+			const res = await gamificationApi['today-completions'].$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -410,7 +472,10 @@ export function useToggleAutoFreeze() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.gamification.toggleAutoFreeze,
+		mutationFn: async (input: { enabled: boolean }) => {
+			const res = await gamificationApi['toggle-auto-freeze'].$post({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
 		},
@@ -426,7 +491,10 @@ export function useProfile(
 ) {
 	return useQuery({
 		queryKey: queryKeys.profile(),
-		queryFn: api.user.getProfile,
+		queryFn: async () => {
+			const res = await userApi.profile.$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -437,7 +505,10 @@ export function useCheckUsername(
 ) {
 	return useQuery({
 		queryKey: queryKeys.checkUsername(username),
-		queryFn: () => api.user.checkUsername({ username }),
+		queryFn: async () => {
+			const res = await userApi['check-username'].$get({ query: { username } })
+			return parseResponse(res)
+		},
 		enabled: username.length >= 3,
 		...options,
 	})
@@ -447,7 +518,10 @@ export function useUpdateProfile() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.user.updateProfile,
+		mutationFn: async (input: { username?: string; bio?: string; isPublicProfile?: boolean }) => {
+			const res = await userApi.profile.$put({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
 		},
@@ -458,7 +532,10 @@ export function useUpdatePreferences() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.user.updatePreferences,
+		mutationFn: async (input: { compactMode?: boolean; leaderboardVisible?: boolean }) => {
+			const res = await userApi.preferences.$put({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
 		},
@@ -474,7 +551,10 @@ export function useNotificationPreferences(
 ) {
 	return useQuery({
 		queryKey: queryKeys.notificationPreferences(),
-		queryFn: () => api.notifications.getPreferences() as Promise<NotificationPreferencesResponse>,
+		queryFn: async () => {
+			const res = await notificationsApi.preferences.$get()
+			return parseResponse<NotificationPreferencesResponse>(res)
+		},
 		...options,
 	})
 }
@@ -483,7 +563,10 @@ export function useUpdatePushPreferences() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.notifications.updatePushPreferences,
+		mutationFn: async (input: Record<string, unknown>) => {
+			const res = await notificationsApi['push-preferences'].$put({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
 		},
@@ -494,7 +577,10 @@ export function useUpdateEmailPreferences() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.notifications.updateEmailPreferences,
+		mutationFn: async (input: Record<string, unknown>) => {
+			const res = await notificationsApi['email-preferences'].$put({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
 		},
@@ -511,7 +597,10 @@ export function useDlqList(
 ) {
 	return useQuery({
 		queryKey: queryKeys.dlq(params),
-		queryFn: () => api.admin.getDlqList(params) as Promise<DLQListResponse>,
+		queryFn: async () => {
+			const res = await adminApi.dlq.$get({ query: params ?? {} })
+			return parseResponse<DLQListResponse>(res)
+		},
 		...options,
 	})
 }
@@ -520,7 +609,10 @@ export function useDlqRetry() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.retryDlq,
+		mutationFn: async (input: { id: string }) => {
+			const res = await adminApi.dlq[':id'].retry.$post({ param: { id: input.id } })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
 		},
@@ -531,7 +623,10 @@ export function useDlqResolve() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.resolveDlq,
+		mutationFn: async (input: { id: string }) => {
+			const res = await adminApi.dlq[':id'].resolve.$post({ param: { id: input.id } })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
 		},
@@ -542,7 +637,10 @@ export function useDlqMarkFailed() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.markDlqFailed,
+		mutationFn: async (input: { id: string }) => {
+			const res = await adminApi.dlq[':id']['mark-failed'].$post({ param: { id: input.id } })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
 		},
@@ -555,7 +653,10 @@ export function useAuditLogs(
 ) {
 	return useQuery({
 		queryKey: queryKeys.auditLogs(params),
-		queryFn: () => api.admin.getAuditLogs(params) as Promise<AuditLogsResponse>,
+		queryFn: async () => {
+			const res = await adminApi['audit-logs'].$get({ query: params ?? {} })
+			return parseResponse<AuditLogsResponse>(res)
+		},
 		...options,
 	})
 }
@@ -566,7 +667,10 @@ export function useAuditLogDetails(
 ) {
 	return useQuery({
 		queryKey: queryKeys.auditLogDetails(id),
-		queryFn: () => api.admin.getAuditLogDetails({ id }) as Promise<AuditLogItem>,
+		queryFn: async () => {
+			const res = await adminApi['audit-logs'][':id'].$get({ param: { id } })
+			return parseResponse<AuditLogItem>(res)
+		},
 		enabled: !!id,
 		...options,
 	})
@@ -577,7 +681,10 @@ export function useSettings(
 ) {
 	return useQuery({
 		queryKey: queryKeys.settings(),
-		queryFn: api.admin.getSettings,
+		queryFn: async () => {
+			const res = await adminApi.settings.$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -586,7 +693,10 @@ export function useUpdateSetting() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.updateSetting,
+		mutationFn: async (input: { key: string; value: string }) => {
+			const res = await adminApi.settings.$put({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.settings() })
 		},
@@ -598,7 +708,10 @@ export function useAnnouncements(
 ) {
 	return useQuery({
 		queryKey: queryKeys.announcements(),
-		queryFn: api.admin.getAnnouncements,
+		queryFn: async () => {
+			const res = await adminApi.announcements.$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -607,7 +720,10 @@ export function useCreateAnnouncement() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.createAnnouncement,
+		mutationFn: async (input: Record<string, unknown>) => {
+			const res = await adminApi.announcements.$post({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
 		},
@@ -618,7 +734,17 @@ export function useUpdateAnnouncement() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.updateAnnouncement,
+		mutationFn: async (input: { id: string } & Record<string, unknown>) => {
+			const { id, ...data } = input
+			// Route accepts body but hc doesn't infer it - use fetch directly
+			const res = await fetch(`/api/v1/admin/announcements/${id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+				credentials: 'include',
+			})
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
 		},
@@ -629,7 +755,10 @@ export function useDeleteAnnouncement() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.deleteAnnouncement,
+		mutationFn: async (input: { id: string }) => {
+			const res = await adminApi.announcements[':id'].$delete({ param: { id: input.id } })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
 		},
@@ -641,7 +770,10 @@ export function useFeatureFlags(
 ) {
 	return useQuery({
 		queryKey: queryKeys.featureFlags(),
-		queryFn: api.admin.getFeatureFlags,
+		queryFn: async () => {
+			const res = await adminApi['feature-flags'].$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
@@ -650,7 +782,10 @@ export function useCreateFeatureFlag() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.createFeatureFlag,
+		mutationFn: async (input: Record<string, unknown>) => {
+			const res = await adminApi['feature-flags'].$post({ json: input })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
 		},
@@ -661,7 +796,17 @@ export function useUpdateFeatureFlag() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.updateFeatureFlag,
+		mutationFn: async (input: { key: string } & Record<string, unknown>) => {
+			const { key, ...data } = input
+			// Route accepts body but hc doesn't infer it - use fetch directly
+			const res = await fetch(`/api/v1/admin/feature-flags/${key}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+				credentials: 'include',
+			})
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
 		},
@@ -672,7 +817,10 @@ export function useDeleteFeatureFlag() {
 	const queryClient = useQueryClient()
 
 	return useMutation({
-		mutationFn: api.admin.deleteFeatureFlag,
+		mutationFn: async (input: { key: string }) => {
+			const res = await adminApi['feature-flags'][':key'].$delete({ param: { key: input.key } })
+			return parseResponse(res)
+		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
 		},
@@ -684,7 +832,10 @@ export function useGamesOverview(
 ) {
 	return useQuery({
 		queryKey: queryKeys.gamesOverview(),
-		queryFn: () => api.admin.getGamesOverview() as Promise<GameOverviewItem[]>,
+		queryFn: async () => {
+			const res = await adminApi.analytics['games-overview'].$get()
+			return parseResponse<GameOverviewItem[]>(res)
+		},
 		...options,
 	})
 }
@@ -696,7 +847,13 @@ export function useGameAnalytics(
 ) {
 	return useQuery({
 		queryKey: queryKeys.gameAnalytics(slug, days),
-		queryFn: () => api.admin.getGameAnalytics({ slug, days }) as Promise<GameAnalyticsResponse>,
+		queryFn: async () => {
+			// Route accepts query params but hc doesn't infer it - use fetch directly
+			const res = await fetch(`/api/v1/admin/analytics/game/${slug}?days=${days}`, {
+				credentials: 'include',
+			})
+			return parseResponse<GameAnalyticsResponse>(res)
+		},
 		enabled: !!slug,
 		...options,
 	})
@@ -707,7 +864,10 @@ export function useSystemHealth(
 ) {
 	return useQuery({
 		queryKey: queryKeys.systemHealth(),
-		queryFn: () => api.admin.getSystemHealth() as Promise<SystemHealthResponse>,
+		queryFn: async () => {
+			const res = await adminApi.system.health.$get()
+			return parseResponse<SystemHealthResponse>(res)
+		},
 		refetchInterval: 30 * 1000, // 30 seconds
 		...options,
 	})
@@ -718,7 +878,10 @@ export function useRealTimeStats(
 ) {
 	return useQuery({
 		queryKey: queryKeys.realTimeStats(),
-		queryFn: api.admin.getRealTimeStats,
+		queryFn: async () => {
+			const res = await adminApi.analytics['real-time'].$get()
+			return parseResponse(res)
+		},
 		refetchInterval: 10 * 1000, // 10 seconds
 		...options,
 	})
@@ -729,7 +892,10 @@ export function useStreakAnalytics(
 ) {
 	return useQuery({
 		queryKey: queryKeys.streakAnalytics(),
-		queryFn: api.admin.getStreakAnalytics,
+		queryFn: async () => {
+			const res = await adminApi.analytics.streaks.$get()
+			return parseResponse(res)
+		},
 		...options,
 	})
 }
