@@ -87,6 +87,23 @@ export {
 } from './config'
 
 // =============================================================================
+// Debug Utilities
+// =============================================================================
+
+export {
+	getDebugMode,
+	resetDebugModeCache,
+	debugLog,
+	debugWarn,
+	debugError,
+	debugTimer,
+	enableDebug,
+	disableDebug,
+	installGlobalDebugHelpers,
+	type DebugCategory,
+} from './debug'
+
+// =============================================================================
 // REST Client
 // =============================================================================
 
@@ -95,11 +112,17 @@ export {
 	createDynamicRestClient,
 	hasError,
 	getRestErrorMessage,
+	getCircuitBreakerState,
+	resetCircuitBreaker,
+	CircuitBreakerOpenError,
 	type RestClient,
 	type DynamicRestClient,
 	type RestClientConfig,
 	type RestDynamicConfig,
 	type RetryConfig,
+	type CircuitState,
+	type CircuitBreakerConfig,
+	type DeduplicationConfig,
 	type paths as RestPaths,
 } from './rest-client'
 
