@@ -94,9 +94,7 @@ export const errorHandler = createMiddleware<PuzzledEnv>(async (c, next) => {
 			error: {
 				code: 'INTERNAL_SERVER_ERROR',
 				message:
-					process.env.NODE_ENV === 'development'
-						? errorMessage
-						: 'An unexpected error occurred',
+					process.env.NODE_ENV === 'development' ? errorMessage : 'An unexpected error occurred',
 			},
 		}
 

@@ -4,8 +4,8 @@
  * Re-exports all middleware for easy importing.
  */
 
-export { authMiddleware, optionalAuthMiddleware } from './auth'
 export { adminMiddleware, superAdminMiddleware } from './admin'
-export { authRateLimitMiddleware, rateLimitMiddleware } from './rate-limit'
+export { authMiddleware, optionalAuthMiddleware } from './auth'
 export { errorHandler } from './error'
 export { loggerMiddleware } from './logger'
+export { authRateLimitMiddleware, rateLimitMiddleware } from './rate-limit'

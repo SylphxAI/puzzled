@@ -9,8 +9,8 @@
  */
 
 import { OpenAPIHono, z } from '@hono/zod-openapi'
-import { HTTPException } from 'hono/http-exception'
 import { eq } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
 import { db } from '@/lib/db'
 import { notificationPreferences } from '@/lib/db/schema'
 import { authMiddleware, authRateLimitMiddleware } from '../middleware'

@@ -52,7 +52,9 @@ export const GameSlugSchema = z.string().min(1).max(50)
 /**
  * Date string schema (YYYY-MM-DD format)
  */
-export const DateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
+export const DateStringSchema = z
+	.string()
+	.regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (YYYY-MM-DD)')
 
 /**
  * Puzzle difficulty values

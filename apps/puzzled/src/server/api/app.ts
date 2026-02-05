@@ -16,18 +16,18 @@ import { OpenAPIHono } from '@hono/zod-openapi'
 import { headers } from 'next/headers'
 import { errorHandler, loggerMiddleware } from './middleware'
 import {
-	adminRoutes,
-	gamificationRoutes,
-	gamesRoutes,
-	notificationsRoutes,
-	statsRoutes,
-	userRoutes,
 	type AdminRoutes,
-	type GamificationRoutes,
+	adminRoutes,
 	type GamesRoutes,
+	type GamificationRoutes,
+	gamesRoutes,
+	gamificationRoutes,
 	type NotificationsRoutes,
+	notificationsRoutes,
 	type StatsRoutes,
+	statsRoutes,
 	type UserRoutes,
+	userRoutes,
 } from './routes'
 import type { PuzzledEnv } from './types'
 
@@ -70,7 +70,14 @@ const appWithRoutes = baseApp
 export type AppType = typeof appWithRoutes
 
 // Export domain-specific route types for hc clients
-export type { AdminRoutes, GamificationRoutes, GamesRoutes, NotificationsRoutes, StatsRoutes, UserRoutes }
+export type {
+	AdminRoutes,
+	GamificationRoutes,
+	GamesRoutes,
+	NotificationsRoutes,
+	StatsRoutes,
+	UserRoutes,
+}
 
 // Create the final app with OpenAPI documentation
 // Note: We use a separate OpenAPIHono instance because .route() returns Hono, not OpenAPIHono

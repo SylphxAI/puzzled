@@ -26,8 +26,8 @@ import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
 import type {
 	AdminRoutes,
-	GamificationRoutes,
 	GamesRoutes,
+	GamificationRoutes,
 	NotificationsRoutes,
 	StatsRoutes,
 	UserRoutes,
@@ -81,9 +81,13 @@ export const createServerApi = cache(async () => {
 	return {
 		games: hc<GamesRoutes>(`${baseUrl}${API_BASE}/games`, { fetch: authFetch }),
 		stats: hc<StatsRoutes>(`${baseUrl}${API_BASE}/stats`, { fetch: authFetch }),
-		gamification: hc<GamificationRoutes>(`${baseUrl}${API_BASE}/gamification`, { fetch: authFetch }),
+		gamification: hc<GamificationRoutes>(`${baseUrl}${API_BASE}/gamification`, {
+			fetch: authFetch,
+		}),
 		user: hc<UserRoutes>(`${baseUrl}${API_BASE}/user`, { fetch: authFetch }),
-		notifications: hc<NotificationsRoutes>(`${baseUrl}${API_BASE}/notifications`, { fetch: authFetch }),
+		notifications: hc<NotificationsRoutes>(`${baseUrl}${API_BASE}/notifications`, {
+			fetch: authFetch,
+		}),
 		admin: hc<AdminRoutes>(`${baseUrl}${API_BASE}/admin`, { fetch: authFetch }),
 	}
 })

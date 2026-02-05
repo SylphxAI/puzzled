@@ -7,11 +7,11 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics'
 import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
+import { ApiProvider } from '@/lib/api/provider'
 import { routing } from '@/lib/i18n/routing'
 import { getServerBaseUrl } from '@/lib/utils'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
-import { ApiProvider } from '@/lib/api/provider'
 import '../globals.css'
 
 const inter = Inter({

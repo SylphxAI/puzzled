@@ -1,7 +1,6 @@
 'use client'
 
 import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
-import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -63,9 +62,6 @@ export function useSaveGameResult(gameSlug: string) {
 			gracePeriodHours: 12,
 		},
 	})
-
-	// Query client for cache invalidation
-	const queryClient = useQueryClient()
 
 	// Save result mutation (uses the hook which handles invalidation)
 	const mutation = useSaveResult({

@@ -263,10 +263,7 @@ export function AdminCommandPalette() {
 									<X className="h-4 w-4" />
 								</button>
 							)}
-							<Dialog.Close
-								className="admin-command-close"
-								aria-label={t('commandPalette.close')}
-							>
+							<Dialog.Close className="admin-command-close" aria-label={t('commandPalette.close')}>
 								<kbd className="admin-kbd text-xs">esc</kbd>
 							</Dialog.Close>
 						</div>

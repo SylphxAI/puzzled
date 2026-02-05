@@ -6,15 +6,15 @@ import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
-import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
-import { Link } from '@/lib/i18n/routing'
-import { Logo } from '@/shared/components/layout'
 import {
 	createServerApi,
 	type StreakInfo,
 	type TodayCompletion,
 	type TodayPlayerCount,
 } from '@/lib/api/server'
+import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { Link } from '@/lib/i18n/routing'
+import { Logo } from '@/shared/components/layout'
 
 type Props = {
 	params: Promise<{ locale: string }>

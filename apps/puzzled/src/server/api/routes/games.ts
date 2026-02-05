@@ -7,8 +7,8 @@
  */
 
 import { OpenAPIHono, z } from '@hono/zod-openapi'
-import { HTTPException } from 'hono/http-exception'
 import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
 import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
 import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
 import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
@@ -25,11 +25,7 @@ import {
 	userStreaks,
 } from '@/lib/db/schema'
 import { getOrCreatePuzzle } from '../../services/puzzle'
-import {
-	authMiddleware,
-	authRateLimitMiddleware,
-	optionalAuthMiddleware,
-} from '../middleware'
+import { authMiddleware, authRateLimitMiddleware, optionalAuthMiddleware } from '../middleware'
 import type { PuzzledAuthEnv } from '../types'
 
 // ==========================================
@@ -385,7 +381,9 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		const config = getGameConfig(gameSlug)
 
 		if (!config?.validateGuess) {
-			throw new HTTPException(400, { message: `Game ${gameSlug} does not support guess validation` })
+			throw new HTTPException(400, {
+				message: `Game ${gameSlug} does not support guess validation`,
+			})
 		}
 
 		const [puzzle] = await db
@@ -436,9 +434,10 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		}
 
 		// Map difficulty - 'expert' is treated as null for DB
-		const difficulty = input.difficulty && input.difficulty !== 'expert'
-			? (input.difficulty as 'easy' | 'medium' | 'hard')
-			: undefined
+		const difficulty =
+			input.difficulty && input.difficulty !== 'expert'
+				? (input.difficulty as 'easy' | 'medium' | 'hard')
+				: undefined
 
 		if (mode === 'daily' || mode === 'archive') {
 			const conditions: ReturnType<typeof eq>[] = [

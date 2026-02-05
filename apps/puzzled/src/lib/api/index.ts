@@ -4,9 +4,9 @@
  * Exports API client, hooks, and provider for use throughout the app.
  */
 
-// Client
-export { api, ApiError } from './client'
 export type { ApiError as ApiErrorType } from './client'
+// Client
+export { ApiError, api } from './client'
 
 // Hooks
 export * from './hooks'

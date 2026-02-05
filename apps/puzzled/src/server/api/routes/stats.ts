@@ -277,9 +277,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		if (!userPeriodStats) return c.json(null)
 
 		const userValue =
-			input.type === 'score'
-				? Number(userPeriodStats.totalScore)
-				: Number(userPeriodStats.gamesWon)
+			input.type === 'score' ? Number(userPeriodStats.totalScore) : Number(userPeriodStats.gamesWon)
 
 		if (userValue === 0) return c.json(null)
 
@@ -296,10 +294,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				})
 				.from(gameSessions)
 				.where(
-					and(
-						eq(gameSessions.gameSlug, input.gameSlug),
-						gte(gameSessions.completedAt, startDate),
-					),
+					and(eq(gameSessions.gameSlug, input.gameSlug), gte(gameSessions.completedAt, startDate)),
 				)
 				.groupBy(gameSessions.userId)
 				.having(sql`${valueColumn} > ${userValue}`)
@@ -344,10 +339,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				.from(userStats)
 				.innerJoin(userPreferences, eq(userStats.userId, userPreferences.userId))
 				.where(
-					and(
-						eq(userStats.gameSlug, input.gameSlug),
-						eq(userPreferences.leaderboardVisible, true),
-					),
+					and(eq(userStats.gameSlug, input.gameSlug), eq(userPreferences.leaderboardVisible, true)),
 				)
 				.orderBy(desc(orderColumn))
 				.limit(input.limit)

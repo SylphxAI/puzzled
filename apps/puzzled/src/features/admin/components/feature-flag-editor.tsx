@@ -4,11 +4,7 @@ import { Plus, Save, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
-import {
-	useCreateFeatureFlag,
-	useDeleteFeatureFlag,
-	useUpdateFeatureFlag,
-} from '@/lib/api'
+import { useCreateFeatureFlag, useDeleteFeatureFlag, useUpdateFeatureFlag } from '@/lib/api'
 import type { FeatureFlag } from '@/lib/db/schema'
 import {
 	AdminDialog,

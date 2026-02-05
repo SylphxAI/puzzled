@@ -7,19 +7,18 @@ import { cn } from '@/lib/utils'
 
 const AdminDialog = Dialog.Root
 
-const AdminDialogOverlay = forwardRef<
-	HTMLDivElement,
-	React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-	<Dialog.Backdrop
-		ref={ref}
-		className={cn(
-			'admin-dialog-overlay fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
-			className,
-		)}
-		{...props}
-	/>
-))
+const AdminDialogOverlay = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+	({ className, ...props }, ref) => (
+		<Dialog.Backdrop
+			ref={ref}
+			className={cn(
+				'admin-dialog-overlay fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
+				className,
+			)}
+			{...props}
+		/>
+	),
+)
 AdminDialogOverlay.displayName = 'AdminDialogOverlay'
 
 interface AdminDialogContentProps extends React.HTMLAttributes<HTMLDivElement> {

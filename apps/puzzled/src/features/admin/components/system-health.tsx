@@ -14,12 +14,7 @@ import { useSystemHealth } from '@/lib/api'
 export function SystemHealthDashboard() {
 	const t = useTranslations('admin.system')
 
-	const {
-		data: health,
-		isLoading,
-		refetch,
-		isFetching,
-	} = useSystemHealth()
+	const { data: health, isLoading, refetch, isFetching } = useSystemHealth()
 
 	if (isLoading) {
 		return (

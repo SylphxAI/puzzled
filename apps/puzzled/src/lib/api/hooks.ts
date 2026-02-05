@@ -8,17 +8,17 @@
  */
 
 import {
+	type UseMutationOptions,
+	type UseQueryOptions,
 	useMutation,
 	useQuery,
 	useQueryClient,
-	type UseMutationOptions,
-	type UseQueryOptions,
 } from '@tanstack/react-query'
 import {
-	adminApi,
 	ApiError,
-	gamificationApi,
+	adminApi,
 	gamesApi,
+	gamificationApi,
 	notificationsApi,
 	statsApi,
 	userApi,
@@ -585,7 +585,10 @@ export function useUpdatePreferences() {
 // ==========================================
 
 export function useNotificationPreferences(
-	options?: Omit<UseQueryOptions<NotificationPreferencesResponse, ApiError>, 'queryKey' | 'queryFn'>,
+	options?: Omit<
+		UseQueryOptions<NotificationPreferencesResponse, ApiError>,
+		'queryKey' | 'queryFn'
+	>,
 ) {
 	return useQuery({
 		queryKey: queryKeys.notificationPreferences(),

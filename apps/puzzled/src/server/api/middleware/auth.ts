@@ -8,7 +8,7 @@
 import { auth } from '@sylphx/sdk/nextjs'
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
-import type { PuzzledAuthEnv, PuzzledEnv } from '../types'
+import type { PuzzledAuthEnv } from '../types'
 
 /**
  * Authentication middleware

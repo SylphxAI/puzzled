@@ -70,4 +70,3 @@ export function ApiProvider({ children }: Props) {
 
 	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
-

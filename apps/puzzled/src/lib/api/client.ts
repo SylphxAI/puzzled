@@ -18,8 +18,8 @@
 import { hc } from 'hono/client'
 import type {
 	AdminRoutes,
-	GamificationRoutes,
 	GamesRoutes,
+	GamificationRoutes,
 	NotificationsRoutes,
 	StatsRoutes,
 	UserRoutes,
