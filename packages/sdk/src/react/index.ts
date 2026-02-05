@@ -1092,3 +1092,19 @@ export {
 	type WorkflowEvent,
 	type JobsConfig,
 } from '../lib/jobs'
+
+// ============================================================================
+// Real-time Streaming (Redis Streams via SSE)
+// ============================================================================
+// SSE-based real-time pub/sub with automatic reconnection, message history,
+// and optimistic updates.
+
+export {
+	useRealtime,
+	useRealtimeChannels,
+	type StreamMessage,
+	type RealtimeStatus,
+	type UseRealtimeOptions,
+	type UseRealtimeReturn,
+	type UseRealtimeChannelsOptions,
+} from './hooks/use-realtime'

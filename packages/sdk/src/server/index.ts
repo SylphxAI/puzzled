@@ -1042,3 +1042,13 @@ export type {
 	ModelInfo,
 	ModelsResponse,
 } from './ai'
+
+// Streams (Real-time Pub/Sub)
+export { createStreams, getStreams } from './streams'
+export type {
+	StreamsClient,
+	StreamsClientOptions,
+	StreamMessage,
+	StreamHistoryOptions,
+	ChannelHelper,
+} from './streams'
