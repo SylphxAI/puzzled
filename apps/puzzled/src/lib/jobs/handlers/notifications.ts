@@ -13,7 +13,6 @@ import {
 	gameSessions,
 	notificationPreferences,
 	userDisplayCache,
-	userStats,
 	type WinBackEmailType,
 	winBackEmails,
 } from '@/lib/db/schema'
@@ -124,6 +123,10 @@ export const dailyReminderHandler: JobHandler = async (_payload, context) => {
  *
  * Sends notifications to users whose streaks are about to expire.
  * Runs in the evening (e.g., 21:00 UTC) to remind users who haven't played.
+ *
+ * NOTE: Streak data is now managed by Platform SDK. This handler identifies
+ * users who played yesterday but not today (potential streak at risk).
+ * Actual streak values come from Platform SDK engagement service.
  */
 export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 	const logPrefix = `[StreakAtRisk] [${context.jobId}]`
@@ -133,70 +136,95 @@ export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 	const todayUTC = getTodayUTC()
 	const yesterdayUTC = getYesterdayUTC()
 
-	// Find users with:
-	// 1. Active streak (currentStreak > 0)
-	// 2. Last played yesterday (not today)
-	// 3. Push notifications enabled
-	// 4. Streak alerts enabled
-	const usersAtRisk = await db
+	// Find users who:
+	// 1. Played yesterday (between yesterdayUTC and todayUTC)
+	// 2. Haven't played today yet
+	// 3. Have push notifications enabled
+	// 4. Have streak alerts enabled
+	// NOTE: Streak values come from Platform SDK, but we identify at-risk users via game sessions
+
+	// Get users who played yesterday
+	const playedYesterday = await db
 		.select({
-			userId: userStats.userId,
-			currentStreak: userStats.currentStreak,
-			gameSlug: userStats.gameSlug,
+			userId: gameSessions.userId,
 		})
-		.from(userStats)
-		.innerJoin(notificationPreferences, eq(userStats.userId, notificationPreferences.userId))
+		.from(gameSessions)
 		.where(
 			and(
-				gt(userStats.currentStreak, 0),
-				lt(userStats.lastPlayedAt, todayUTC),
-				gt(userStats.lastPlayedAt, yesterdayUTC),
+				gt(gameSessions.completedAt, yesterdayUTC),
+				lt(gameSessions.completedAt, todayUTC),
+			),
+		)
+		.groupBy(gameSessions.userId)
+
+	if (playedYesterday.length === 0) {
+		console.log(`${logPrefix} No users played yesterday`)
+		return { success: true, data: { sent: 0 } }
+	}
+
+	const yesterdayUserIds = playedYesterday.map((u) => u.userId)
+
+	// Get users who played today
+	const playedToday = await db
+		.select({ userId: gameSessions.userId })
+		.from(gameSessions)
+		.where(
+			and(
+				inArray(gameSessions.userId, yesterdayUserIds),
+				gt(gameSessions.completedAt, todayUTC),
+			),
+		)
+		.groupBy(gameSessions.userId)
+
+	const playedTodaySet = new Set(playedToday.map((u) => u.userId))
+
+	// Users at risk = played yesterday but not today
+	const atRiskUserIds = yesterdayUserIds.filter((id) => !playedTodaySet.has(id))
+
+	if (atRiskUserIds.length === 0) {
+		console.log(`${logPrefix} All users who played yesterday have already played today`)
+		return { success: true, data: { sent: 0 } }
+	}
+
+	// Check notification preferences
+	const eligibleUsers = await db
+		.select({ userId: notificationPreferences.userId })
+		.from(notificationPreferences)
+		.where(
+			and(
+				inArray(notificationPreferences.userId, atRiskUserIds),
 				eq(notificationPreferences.pushEnabled, true),
 				eq(notificationPreferences.pushStreakAlert, true),
 			),
 		)
 
-	if (usersAtRisk.length === 0) {
-		console.log(`${logPrefix} No users with at-risk streaks`)
-		return { success: true, data: { sent: 0 } }
+	if (eligibleUsers.length === 0) {
+		console.log(`${logPrefix} No users with push notifications enabled for streak alerts`)
+		return { success: true, data: { sent: 0, atRiskWithoutPrefs: atRiskUserIds.length } }
 	}
 
-	// Group by user to get their highest streak at risk
-	const userStreakMap = new Map<string, { maxStreak: number; games: string[] }>()
-	for (const row of usersAtRisk) {
-		const existing = userStreakMap.get(row.userId)
-		if (!existing) {
-			userStreakMap.set(row.userId, {
-				maxStreak: row.currentStreak,
-				games: [row.gameSlug],
-			})
-		} else {
-			existing.maxStreak = Math.max(existing.maxStreak, row.currentStreak)
-			existing.games.push(row.gameSlug)
-		}
-	}
-
-	console.log(`${logPrefix} Found ${userStreakMap.size} users with at-risk streaks`)
+	console.log(`${logPrefix} Found ${eligibleUsers.length} users with at-risk streaks`)
 
 	let sent = 0
 	let failed = 0
 
-	for (const [userId, data] of userStreakMap) {
+	for (const user of eligibleUsers) {
 		try {
-			const streakText = data.maxStreak === 1 ? '1 day' : `${data.maxStreak} days`
-			await sendPush(config, userId, {
+			// NOTE: Actual streak value comes from Platform SDK
+			// We just send a generic "streak at risk" message
+			await sendPush(config, user.userId, {
 				title: '🔥 Streak at risk!',
-				body: `Your ${streakText} streak is about to end! Play now to keep it alive.`,
+				body: 'Your streak is about to end! Play now to keep it alive.',
 				url: '/',
 			})
 			sent++
 		} catch (error) {
-			console.error(`${logPrefix} Failed to send to ${userId}:`, error)
+			console.error(`${logPrefix} Failed to send to ${user.userId}:`, error)
 			failed++
 		}
 	}
 
-	const result = { sent, failed, totalAtRisk: userStreakMap.size }
+	const result = { sent, failed, totalAtRisk: eligibleUsers.length }
 	console.log(`${logPrefix} Completed:`, result)
 	return { success: true, data: result }
 }
@@ -294,23 +322,24 @@ export const winBackEmailsHandler: JobHandler = async (_payload, context) => {
 
 		// Find users who:
 		// 1. Have email enabled and marketing enabled
-		// 2. Last played on exactly the target date (X days ago)
+		// 2. Last played on exactly the target date (X days ago) - computed from gameSessions
 		// 3. Haven't received this email type yet
 		// 4. Have cached email (from userDisplayCache)
+		// NOTE: Stats now computed from gameSessions (no userStats table)
 		const eligibleUsers = await db
 			.select({
-				userId: userStats.userId,
+				userId: gameSessions.userId,
 				email: userDisplayCache.email,
 				displayName: userDisplayCache.displayName,
-				lastPlayedAt: userStats.lastPlayedAt,
+				lastPlayedAt: sql<Date>`MAX(${gameSessions.completedAt})`,
 			})
-			.from(userStats)
-			.innerJoin(notificationPreferences, eq(userStats.userId, notificationPreferences.userId))
-			.innerJoin(userDisplayCache, eq(userStats.userId, userDisplayCache.userId))
+			.from(gameSessions)
+			.innerJoin(notificationPreferences, eq(gameSessions.userId, notificationPreferences.userId))
+			.innerJoin(userDisplayCache, eq(gameSessions.userId, userDisplayCache.userId))
 			.leftJoin(
 				winBackEmails,
 				and(
-					eq(userStats.userId, winBackEmails.userId),
+					eq(gameSessions.userId, winBackEmails.userId),
 					eq(winBackEmails.emailType, emailConfig.type),
 				),
 			)
@@ -318,16 +347,22 @@ export const winBackEmailsHandler: JobHandler = async (_payload, context) => {
 				and(
 					eq(notificationPreferences.emailEnabled, true),
 					eq(notificationPreferences.emailMarketing, true),
-					gt(userStats.lastPlayedAt, targetDateStart),
-					lt(userStats.lastPlayedAt, targetDateEnd),
 					isNull(winBackEmails.id), // Not yet sent this email type
 				),
 			)
 			.groupBy(
-				userStats.userId,
+				gameSessions.userId,
 				userDisplayCache.email,
 				userDisplayCache.displayName,
-				userStats.lastPlayedAt,
+				notificationPreferences.emailEnabled,
+				notificationPreferences.emailMarketing,
+				winBackEmails.id,
+			)
+			.having(
+				and(
+					gt(sql`MAX(${gameSessions.completedAt})`, targetDateStart),
+					lt(sql`MAX(${gameSessions.completedAt})`, targetDateEnd),
+				),
 			)
 
 		// Filter to users with valid emails

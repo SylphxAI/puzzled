@@ -2,8 +2,11 @@
  * Server-side Billing Utilities
  *
  * Single source of truth for all billing logic.
- * Platform SDK integration pending - using defaults for now.
+ * Uses Platform SDK for subscription checks.
  */
+
+import { getSubscription } from '@sylphx/sdk'
+import { getSdkConfig } from '@/lib/sdk-server'
 
 // ==========================================
 // Plan Constants
@@ -87,15 +90,28 @@ export function getFreeGameRotation(): readonly string[] {
 /**
  * Check if a user has premium access
  *
- * Currently returns false (free tier) until platform billing API integration.
- * When integrated, this will check the user's subscription status in real-time.
+ * Uses Platform SDK to check the user's subscription status.
  *
- * @param _userId - Platform user ID
+ * @param userId - Platform user ID
  * @returns true if user has an active premium subscription
  */
-export async function hasPremiumAccess(_userId: string): Promise<boolean> {
-	// Platform billing API integration pending - all users on free tier for now
-	return false
+export async function hasPremiumAccess(userId: string): Promise<boolean> {
+	try {
+		const config = getSdkConfig()
+		const subscription = await getSubscription(config, userId)
+
+		if (!subscription) return false
+
+		// Check if subscription is active and on a premium plan
+		const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+		const isPremium = PREMIUM_PLANS.includes(subscription.planSlug as (typeof PREMIUM_PLANS)[number])
+
+		return isActive && isPremium
+	} catch (error) {
+		// Log error but don't block - default to free tier
+		console.error('[Billing] Failed to check premium access:', error)
+		return false
+	}
 }
 
 /**

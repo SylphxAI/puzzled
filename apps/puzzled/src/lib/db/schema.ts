@@ -29,24 +29,11 @@ import {
 /** Game completion status */
 export const gameStatusEnum = pgEnum('game_status', ['in_progress', 'won', 'lost', 'abandoned'])
 
-/** Streak types: game-specific, play streak, or super streak */
-export const streakTypeEnum = pgEnum('streak_type', ['game', 'play', 'super'])
-
 /** Game mode: daily puzzle or archive */
 export const gameModeEnum = pgEnum('game_mode', ['daily', 'archive'])
 
 /** Puzzle difficulty levels */
 export const puzzleDifficultyEnum = pgEnum('puzzle_difficulty', ['easy', 'medium', 'hard'])
-
-/** Referral tracking status */
-export const referralStatusEnum = pgEnum('referral_status', ['pending', 'completed', 'expired'])
-
-/** Referral reward types */
-export const referralRewardTypeEnum = pgEnum('referral_reward_type', [
-	'streak_freeze',
-	'premium_trial',
-	'points',
-])
 
 /** Win-back email sequence types */
 export const winBackEmailTypeEnum = pgEnum('win_back_email_type', ['day7', 'day14', 'day30'])
@@ -80,20 +67,11 @@ export const announcementTypeEnum = pgEnum('announcement_type', [
 /** Game status type */
 export type GameStatus = (typeof gameStatusEnum.enumValues)[number]
 
-/** Streak type */
-export type StreakType = (typeof streakTypeEnum.enumValues)[number]
-
 /** Game mode type */
 export type GameMode = (typeof gameModeEnum.enumValues)[number]
 
 /** Puzzle difficulty type */
 export type PuzzleDifficulty = (typeof puzzleDifficultyEnum.enumValues)[number]
-
-/** Referral status type */
-export type ReferralStatus = (typeof referralStatusEnum.enumValues)[number]
-
-/** Referral reward type */
-export type ReferralRewardType = (typeof referralRewardTypeEnum.enumValues)[number]
 
 /** Win-back email type */
 export type WinBackEmailType = (typeof winBackEmailTypeEnum.enumValues)[number]
@@ -315,91 +293,23 @@ export const gameSessions = pgTable(
 )
 
 // ==========================================
-// USER STATS (Per Game Aggregates)
+// USER FREEZE DATA (Premium Feature)
 // ==========================================
 
 /**
- * Aggregated statistics per user per game.
- * Updated after each game completion.
+ * Premium streak freeze feature.
+ * Allows users to "freeze" their streak when they miss a day.
+ *
+ * NOTE: Streak tracking itself is handled by Platform SDK useStreak().
+ * This table ONLY stores the app-specific freeze feature (premium perk).
  */
-export const userStats = pgTable(
-	'user_stats',
+export const userFreezeData = pgTable(
+	'user_freeze_data',
 	{
 		id: uuid('id').primaryKey().defaultRandom(),
 
 		/** Platform user ID (no FK) */
-		userId: uuid('user_id').notNull(),
-
-		/** Game identifier */
-		gameSlug: text('game_slug').notNull(),
-
-		/** Total games played */
-		gamesPlayed: integer('games_played').default(0).notNull(),
-
-		/** Total games won */
-		gamesWon: integer('games_won').default(0).notNull(),
-
-		/** Current win streak */
-		currentStreak: integer('current_streak').default(0).notNull(),
-
-		/** Maximum win streak achieved */
-		maxStreak: integer('max_streak').default(0).notNull(),
-
-		/** Total accumulated score */
-		totalScore: integer('total_score').default(0).notNull(),
-
-		/** Average attempts per game */
-		averageAttempts: integer('average_attempts'),
-
-		/** Guess distribution histogram (JSON) */
-		guessDistribution: jsonb('guess_distribution'),
-
-		/** Last time this user played this game */
-		lastPlayedAt: timestamp('last_played_at'),
-
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
-	},
-	(table) => [
-		uniqueIndex('user_stats_user_game_slug_idx').on(table.userId, table.gameSlug),
-		index('user_stats_streak_idx').on(table.currentStreak),
-		index('user_stats_game_slug_idx').on(table.gameSlug),
-		// For leaderboard queries
-		index('user_stats_total_score_idx').on(table.totalScore),
-	],
-)
-
-// ==========================================
-// USER STREAKS (Enhanced Streak System)
-// ==========================================
-
-/**
- * Multi-type streak tracking.
- * - game: Per-game win streaks
- * - play: Daily play streaks (any game)
- * - super: Win all games in a day
- */
-export const userStreaks = pgTable(
-	'user_streaks',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-
-		/** Platform user ID (no FK) */
-		userId: uuid('user_id').notNull(),
-
-		/** Streak type */
-		type: streakTypeEnum('type').notNull(),
-
-		/** Game slug (null for play/super streaks) */
-		gameSlug: text('game_slug'),
-
-		/** Current streak count */
-		currentStreak: integer('current_streak').default(0).notNull(),
-
-		/** Maximum streak achieved */
-		maxStreak: integer('max_streak').default(0).notNull(),
-
-		/** Last played date for streak calculation */
-		lastPlayedDate: timestamp('last_played_date'),
+		userId: uuid('user_id').notNull().unique(),
 
 		/** Available streak freezes */
 		freezesAvailable: integer('freezes_available').default(0).notNull(),
@@ -413,16 +323,7 @@ export const userStreaks = pgTable(
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
 	},
-	(table) => [
-		// Partial unique indexes for NULL gameSlug handling
-		uniqueIndex('user_streaks_user_type_game_slug_idx')
-			.on(table.userId, table.type, table.gameSlug)
-			.where(sql`${table.gameSlug} IS NOT NULL`),
-		uniqueIndex('user_streaks_user_type_global_idx')
-			.on(table.userId, table.type)
-			.where(sql`${table.gameSlug} IS NULL`),
-		index('user_streaks_user_idx').on(table.userId),
-	],
+	(table) => [index('user_freeze_data_user_id_idx').on(table.userId)],
 )
 
 // ==========================================
@@ -491,48 +392,8 @@ export const pushSubscriptions = pgTable(
 	(table) => [index('push_subscriptions_user_idx').on(table.userId)],
 )
 
-// ==========================================
-// REFERRALS
-// ==========================================
-
-/**
- * Referral tracking for this app.
- */
-export const referrals = pgTable(
-	'referrals',
-	{
-		id: uuid('id').primaryKey().defaultRandom(),
-
-		/** User who made the referral (no FK) */
-		referrerId: uuid('referrer_id').notNull(),
-
-		/** User who was referred (no FK, nullable if not yet signed up) */
-		referredUserId: uuid('referred_user_id'),
-
-		/** Referral code used */
-		referralCode: text('referral_code').notNull(),
-
-		/** Referral status */
-		status: referralStatusEnum('status').default('pending').notNull(),
-
-		/** Reward type for completion */
-		rewardType: referralRewardTypeEnum('reward_type').default('streak_freeze').notNull(),
-
-		/** Additional referral metadata */
-		metadata: jsonb('metadata').$type<Record<string, unknown>>(),
-
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		completedAt: timestamp('completed_at'),
-	},
-	(table) => [
-		index('referrals_referrer_idx').on(table.referrerId),
-		index('referrals_referred_user_idx').on(table.referredUserId),
-		index('referrals_code_idx').on(table.referralCode),
-		index('referrals_status_idx').on(table.status),
-		// One referral per referred user
-		uniqueIndex('referrals_referred_user_unique_idx').on(table.referredUserId),
-	],
-)
+// NOTE: Referrals table REMOVED - Platform SDK useReferral() is used instead
+// See: apps/puzzled/src/app/[locale]/(app)/referrals/_components/referrals-client.tsx
 
 // ==========================================
 // WIN-BACK EMAIL TRACKING
@@ -772,44 +633,8 @@ export const announcementDismissals = pgTable(
 	],
 )
 
-// ==========================================
-// FEATURE FLAGS
-// ==========================================
-
-/**
- * App-specific feature flags.
- * Note: Some feature flags may also exist at platform level.
- */
-export const featureFlags = pgTable('feature_flags', {
-	id: uuid('id').primaryKey().defaultRandom(),
-
-	/** Unique key (e.g., 'new_game_mode', 'beta_feature') */
-	key: text('key').notNull().unique(),
-
-	/** Human-readable name */
-	name: text('name').notNull(),
-
-	/** Description */
-	description: text('description'),
-
-	/** Master enable toggle */
-	enabled: boolean('enabled').default(false).notNull(),
-
-	/** Gradual rollout percentage (0-100) */
-	rolloutPercentage: integer('rollout_percentage').default(0).notNull(),
-
-	// Targeting
-	/** Premium users only (determined via platform SDK) */
-	targetPremiumOnly: boolean('target_premium_only').default(false).notNull(),
-	/** Admin users only */
-	targetAdminOnly: boolean('target_admin_only').default(false).notNull(),
-
-	/** Admin who created (no FK - platform user ID) */
-	createdBy: uuid('created_by'),
-
-	createdAt: timestamp('created_at').defaultNow().notNull(),
-	updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
+// NOTE: Feature flags table REMOVED - Platform SDK useFeatureFlags() is used instead
+// See: packages/sdk/src/react/flags-hooks.ts
 
 // ==========================================
 // APP SETTINGS (Key-Value Store)
@@ -888,13 +713,9 @@ export type NewDailyPuzzle = typeof dailyPuzzles.$inferInsert
 export type GameSession = typeof gameSessions.$inferSelect
 export type NewGameSession = typeof gameSessions.$inferInsert
 
-// User Stats
-export type UserStat = typeof userStats.$inferSelect
-export type NewUserStat = typeof userStats.$inferInsert
-
-// User Streaks
-export type UserStreak = typeof userStreaks.$inferSelect
-export type NewUserStreak = typeof userStreaks.$inferInsert
+// User Freeze Data (premium streak freeze feature)
+export type UserFreezeData = typeof userFreezeData.$inferSelect
+export type NewUserFreezeData = typeof userFreezeData.$inferInsert
 
 // Notification Preferences
 export type NotificationPreference = typeof notificationPreferences.$inferSelect
@@ -904,9 +725,7 @@ export type NewNotificationPreference = typeof notificationPreferences.$inferIns
 export type PushSubscription = typeof pushSubscriptions.$inferSelect
 export type NewPushSubscription = typeof pushSubscriptions.$inferInsert
 
-// Referrals
-export type Referral = typeof referrals.$inferSelect
-export type NewReferral = typeof referrals.$inferInsert
+// NOTE: Referral types removed - use Platform SDK useReferral() instead
 
 // Win-Back Emails
 export type WinBackEmail = typeof winBackEmails.$inferSelect
@@ -932,9 +751,7 @@ export type NewAnnouncement = typeof announcements.$inferInsert
 export type AnnouncementDismissal = typeof announcementDismissals.$inferSelect
 export type NewAnnouncementDismissal = typeof announcementDismissals.$inferInsert
 
-// Feature Flags
-export type FeatureFlag = typeof featureFlags.$inferSelect
-export type NewFeatureFlag = typeof featureFlags.$inferInsert
+// NOTE: Feature flag types removed - use Platform SDK useFeatureFlags() instead
 
 // App Settings
 export type AppSetting = typeof appSettings.$inferSelect

@@ -194,13 +194,12 @@ export const queryKeys = {
 	auditLogDetails: (id: string) => ['admin', 'auditLogDetails', id] as const,
 	settings: () => ['admin', 'settings'] as const,
 	announcements: () => ['admin', 'announcements'] as const,
-	featureFlags: () => ['admin', 'featureFlags'] as const,
 	gamesOverview: () => ['admin', 'analytics', 'gamesOverview'] as const,
 	gameAnalytics: (slug: string, days: number) =>
 		['admin', 'analytics', 'game', slug, days] as const,
 	systemHealth: () => ['admin', 'system', 'health'] as const,
 	realTimeStats: () => ['admin', 'analytics', 'realTime'] as const,
-	streakAnalytics: () => ['admin', 'analytics', 'streaks'] as const,
+	freezeAnalytics: () => ['admin', 'analytics', 'freezes'] as const,
 } as const
 
 // ==========================================
@@ -806,67 +805,8 @@ export function useDeleteAnnouncement() {
 	})
 }
 
-export function useFeatureFlags(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.featureFlags(),
-		queryFn: async () => {
-			const res = await adminApi['feature-flags'].$get()
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useCreateFeatureFlag() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: Record<string, unknown>) => {
-			const res = await adminApi['feature-flags'].$post({ json: input })
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
-		},
-	})
-}
-
-export function useUpdateFeatureFlag() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { key: string } & Record<string, unknown>) => {
-			const { key, ...data } = input
-			// Route accepts body but hc doesn't infer it - use fetch directly
-			const res = await fetch(`/api/v1/admin/feature-flags/${key}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-				credentials: 'include',
-			})
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
-		},
-	})
-}
-
-export function useDeleteFeatureFlag() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { key: string }) => {
-			const res = await adminApi['feature-flags'][':key'].$delete({ param: { key: input.key } })
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.featureFlags() })
-		},
-	})
-}
+// NOTE: Feature flags now managed via Platform Console (Sylphx Platform)
+// Use Platform SDK useFeatureFlags() hook instead of local admin hooks
 
 export function useGamesOverview(
 	options?: Omit<UseQueryOptions<GameOverviewItem[], ApiError>, 'queryKey' | 'queryFn'>,
@@ -928,13 +868,13 @@ export function useRealTimeStats(
 	})
 }
 
-export function useStreakAnalytics(
+export function useFreezeAnalytics(
 	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
-		queryKey: queryKeys.streakAnalytics(),
+		queryKey: queryKeys.freezeAnalytics(),
 		queryFn: async () => {
-			const res = await adminApi.analytics.streaks.$get()
+			const res = await adminApi.analytics.freezes.$get()
 			return parseResponse(res)
 		},
 		...options,

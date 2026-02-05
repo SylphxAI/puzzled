@@ -10,7 +10,6 @@ import {
 	Bell,
 	CreditCard,
 	FileText,
-	Flag,
 	FlaskConical,
 	Gamepad2,
 	LayoutDashboard,
@@ -154,15 +153,7 @@ export function AdminCommandPalette() {
 			shortcut: 'G N',
 			group: 'navigation',
 		},
-		{
-			id: 'nav-feature-flags',
-			label: t('sidebar.featureFlags'),
-			icon: Flag,
-			action: () => navigate('/admin/feature-flags'),
-			keywords: ['flags', 'toggles', 'features', 'rollout'],
-			shortcut: 'G F',
-			group: 'navigation',
-		},
+		// NOTE: Feature flags now managed via Platform Console (Sylphx Platform)
 		{
 			id: 'nav-system',
 			label: t('sidebar.system'),

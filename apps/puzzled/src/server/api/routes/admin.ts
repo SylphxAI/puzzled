@@ -6,11 +6,9 @@
  * - Audit logs
  * - App settings
  * - Announcements
- * - Feature flags
  * - Game analytics
  *
- * All endpoints require admin role.
- *
+ * NOTE: Feature flags are handled by Platform SDK - use Console instead.
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
@@ -29,9 +27,8 @@ import {
 	auditLogs,
 	DLQ_STATUS_VALUES,
 	deadLetterQueue,
-	featureFlags,
 	gameSessions,
-	userStreaks,
+	userFreezeData,
 } from '@/lib/db/schema'
 import {
 	getAllDLQItems,
@@ -124,29 +121,6 @@ const UpdateAnnouncementBodySchema = z.object({
 	showOnce: z.boolean().optional(),
 	startsAt: z.string().optional(),
 	endsAt: z.string().optional(),
-})
-
-const CreateFeatureFlagBodySchema = z.object({
-	key: z
-		.string()
-		.min(1)
-		.max(100)
-		.regex(/^[a-z0-9_-]+$/),
-	name: z.string().min(1).max(200),
-	description: z.string().max(500).optional(),
-	enabled: z.boolean().default(false),
-	rolloutPercentage: z.number().min(0).max(100).default(100),
-	targetPremiumOnly: z.boolean().default(false),
-	targetAdminOnly: z.boolean().default(false),
-})
-
-const UpdateFeatureFlagBodySchema = z.object({
-	name: z.string().min(1).max(200).optional(),
-	description: z.string().max(500).optional(),
-	enabled: z.boolean().optional(),
-	rolloutPercentage: z.number().min(0).max(100).optional(),
-	targetPremiumOnly: z.boolean().optional(),
-	targetAdminOnly: z.boolean().optional(),
 })
 
 // ==========================================
@@ -397,73 +371,8 @@ const adminRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		return c.json({ success: true })
 	})
 
-	// ==========================================
-	// Feature Flags Routes
-	// ==========================================
-
-	.get('/feature-flags', async (c) => {
-		const result = await db.query.featureFlags.findMany({
-			orderBy: [desc(featureFlags.createdAt)],
-		})
-		return c.json(result)
-	})
-
-	.post('/feature-flags', async (c) => {
-		const body = await c.req.json()
-		const parsed = CreateFeatureFlagBodySchema.safeParse(body)
-		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
-		}
-		const input = parsed.data
-		const user = c.get('user')
-
-		const existing = await db.query.featureFlags.findFirst({
-			where: eq(featureFlags.key, input.key),
-		})
-		if (existing) {
-			throw new HTTPException(409, { message: 'Feature flag already exists' })
-		}
-
-		const [flag] = await db.insert(featureFlags).values(input).returning()
-		await logAdminAction(user.id, 'create', 'feature_flag', input.key)
-		return c.json(flag)
-	})
-
-	.put('/feature-flags/:key', async (c) => {
-		const key = c.req.param('key')
-		if (!key) {
-			throw new HTTPException(400, { message: 'Invalid key' })
-		}
-		const body = await c.req.json()
-		const parsed = UpdateFeatureFlagBodySchema.safeParse(body)
-		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
-		}
-		const data = parsed.data
-		const user = c.get('user')
-
-		const [updated] = await db
-			.update(featureFlags)
-			.set({ ...data, updatedAt: new Date() })
-			.where(eq(featureFlags.key, key))
-			.returning()
-		if (!updated) throw new HTTPException(404, { message: 'Feature flag not found' })
-
-		await logAdminAction(user.id, 'update', 'feature_flag', key)
-		return c.json(updated)
-	})
-
-	.delete('/feature-flags/:key', async (c) => {
-		const key = c.req.param('key')
-		if (!key) {
-			throw new HTTPException(400, { message: 'Invalid key' })
-		}
-		const user = c.get('user')
-
-		await db.delete(featureFlags).where(eq(featureFlags.key, key))
-		await logAdminAction(user.id, 'delete', 'feature_flag', key)
-		return c.json({ success: true })
-	})
+	// NOTE: Feature flags routes REMOVED - use Platform SDK useFeatureFlags() and Platform Console
+	// Feature flags should be managed centrally in the Platform, not per-app.
 
 	// ==========================================
 	// Analytics Routes
@@ -574,36 +483,37 @@ const adminRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		})
 	})
 
-	.get('/analytics/streaks', async (c) => {
-		const streakDistribution = await db
+	// Freeze analytics (premium feature)
+	.get('/analytics/freezes', async (c) => {
+		// Get freeze usage distribution
+		const freezeDistribution = await db
 			.select({
 				range: sql<string>`
 					CASE
-						WHEN current_streak = 0 THEN '0'
-						WHEN current_streak BETWEEN 1 AND 7 THEN '1-7'
-						WHEN current_streak BETWEEN 8 AND 30 THEN '8-30'
-						WHEN current_streak BETWEEN 31 AND 100 THEN '31-100'
-						ELSE '100+'
+						WHEN freezes_available = 0 THEN '0'
+						WHEN freezes_available BETWEEN 1 AND 3 THEN '1-3'
+						WHEN freezes_available BETWEEN 4 AND 7 THEN '4-7'
+						ELSE '8+'
 					END
 				`,
 				count: count(),
 			})
-			.from(userStreaks)
+			.from(userFreezeData)
 			.groupBy(sql`range`)
 			.orderBy(sql`range`)
 
-		const topStreaks = await db
+		const topFreezeUsers = await db
 			.select({
-				userId: userStreaks.userId,
-				currentStreak: userStreaks.currentStreak,
-				maxStreak: userStreaks.maxStreak,
-				type: userStreaks.type,
+				userId: userFreezeData.userId,
+				freezesAvailable: userFreezeData.freezesAvailable,
+				freezesUsed: userFreezeData.freezesUsed,
+				autoFreezeEnabled: userFreezeData.autoFreezeEnabled,
 			})
-			.from(userStreaks)
-			.orderBy(desc(userStreaks.currentStreak))
+			.from(userFreezeData)
+			.orderBy(desc(userFreezeData.freezesUsed))
 			.limit(10)
 
-		return c.json({ distribution: streakDistribution, topStreaks })
+		return c.json({ distribution: freezeDistribution, topUsers: topFreezeUsers })
 	})
 
 export { adminRoutes }

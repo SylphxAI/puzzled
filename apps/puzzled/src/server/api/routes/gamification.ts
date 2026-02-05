@@ -3,16 +3,21 @@
  *
  * Streaks, achievements, and daily progress endpoints.
  *
+ * ARCHITECTURE (State of the Art):
+ * - Streak tracking: Platform SDK useStreak() via server functions
+ * - Freeze feature: App-specific premium perk in userFreezeData table
+ * - Stats: Computed from gameSessions (no separate aggregation table)
+ *
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
 import { OpenAPIHono, z } from '@hono/zod-openapi'
-import { and, countDistinct, eq, gte, isNull } from 'drizzle-orm'
+import { and, countDistinct, eq, gte, sql } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { getTodayUTC } from '@/features/daily/server'
 import { getAllGames, getGameConfig } from '@/games/registry'
 import { db } from '@/lib/db'
-import { gameSessions, userStats, userStreaks } from '@/lib/db/schema'
+import { gameSessions, userFreezeData } from '@/lib/db/schema'
 import { adminMiddleware, authMiddleware, authRateLimitMiddleware } from '../middleware'
 import type { PuzzledAuthEnv } from '../types'
 
@@ -36,60 +41,42 @@ const AddStreakFreezesBodySchema = z.object({
 
 const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	// GET /streak-info - authenticated
+	// Combines Platform SDK streak + local freeze data
 	.get('/streak-info', authMiddleware, async (c) => {
 		const user = c.get('user')
-
-		const stats = await db
-			.select({
-				currentStreak: userStats.currentStreak,
-				maxStreak: userStats.maxStreak,
-				gamesPlayed: userStats.gamesPlayed,
-				lastPlayedAt: userStats.lastPlayedAt,
-			})
-			.from(userStats)
-			.where(eq(userStats.userId, user.id))
-
-		let totalStreak = 0
-		let maxTotalStreak = 0
-		let totalGamesPlayed = 0
-		let hasPlayedToday = false
-
 		const todayUTC = getTodayUTC()
 
-		for (const stat of stats) {
-			totalStreak = Math.max(totalStreak, stat.currentStreak)
-			maxTotalStreak = Math.max(maxTotalStreak, stat.maxStreak)
-			totalGamesPlayed += stat.gamesPlayed
+		// Compute stats directly from gameSessions (no separate aggregation table)
+		const [statsResult] = await db
+			.select({
+				totalGamesPlayed: sql<number>`COUNT(*)::int`,
+				totalGamesWon: sql<number>`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)::int`,
+				todayGamesPlayed: sql<number>`SUM(CASE WHEN ${gameSessions.completedAt} >= ${todayUTC} THEN 1 ELSE 0 END)::int`,
+			})
+			.from(gameSessions)
+			.where(eq(gameSessions.userId, user.id))
 
-			if (stat.lastPlayedAt) {
-				const lastPlayedUTC = new Date(
-					Date.UTC(
-						stat.lastPlayedAt.getUTCFullYear(),
-						stat.lastPlayedAt.getUTCMonth(),
-						stat.lastPlayedAt.getUTCDate(),
-					),
-				)
-				if (lastPlayedUTC.getTime() >= todayUTC.getTime()) {
-					hasPlayedToday = true
-				}
-			}
-		}
+		const hasPlayedToday = (statsResult?.todayGamesPlayed ?? 0) > 0
+		const totalGamesPlayed = statsResult?.totalGamesPlayed ?? 0
 
-		const playStreak = await db.query.userStreaks.findFirst({
-			where: and(
-				eq(userStreaks.userId, user.id),
-				eq(userStreaks.type, 'play'),
-				isNull(userStreaks.gameSlug),
-			),
+		// Get freeze data (app-specific premium feature)
+		const freezeData = await db.query.userFreezeData.findFirst({
+			where: eq(userFreezeData.userId, user.id),
 		})
 
+		// NOTE: Current streak and max streak should come from Platform SDK useStreak()
+		// on the client side. The server returns 0 here as placeholder.
+		// Client uses: const { current, longest } = useStreak('puzzled-daily')
+
 		return c.json({
-			currentStreak: totalStreak,
-			maxStreak: maxTotalStreak,
+			// Streak data - client should use Platform SDK useStreak() for real values
+			currentStreak: 0, // Platform SDK handles this
+			maxStreak: 0, // Platform SDK handles this
 			hasPlayedToday,
 			totalGamesPlayed,
-			freezesAvailable: playStreak?.freezesAvailable ?? 0,
-			autoFreezeEnabled: playStreak?.autoFreezeEnabled ?? false,
+			// Freeze data - app-specific premium feature
+			freezesAvailable: freezeData?.freezesAvailable ?? 0,
+			autoFreezeEnabled: freezeData?.autoFreezeEnabled ?? false,
 		})
 	})
 
@@ -150,6 +137,7 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// POST /toggle-auto-freeze - authenticated + rate limited
+	// Uses new userFreezeData table (app-specific premium feature)
 	.post('/toggle-auto-freeze', authRateLimitMiddleware, async (c) => {
 		const body = await c.req.json()
 		const parsed = ToggleAutoFreezeBodySchema.safeParse(body)
@@ -160,29 +148,21 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		const user = c.get('user')
 		const now = new Date()
 
-		const existing = await db.query.userStreaks.findFirst({
-			where: and(
-				eq(userStreaks.userId, user.id),
-				eq(userStreaks.type, 'play'),
-				isNull(userStreaks.gameSlug),
-			),
+		const existing = await db.query.userFreezeData.findFirst({
+			where: eq(userFreezeData.userId, user.id),
 		})
 
 		if (existing) {
 			await db
-				.update(userStreaks)
+				.update(userFreezeData)
 				.set({
 					autoFreezeEnabled: enabled,
 					updatedAt: now,
 				})
-				.where(eq(userStreaks.id, existing.id))
+				.where(eq(userFreezeData.id, existing.id))
 		} else {
-			await db.insert(userStreaks).values({
+			await db.insert(userFreezeData).values({
 				userId: user.id,
-				type: 'play',
-				gameSlug: null,
-				currentStreak: 0,
-				maxStreak: 0,
 				freezesAvailable: 0,
 				freezesUsed: 0,
 				autoFreezeEnabled: enabled,
@@ -193,6 +173,7 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// POST /add-streak-freezes - admin only
+	// Uses new userFreezeData table (app-specific premium feature)
 	.post('/add-streak-freezes', adminMiddleware, async (c) => {
 		const body = await c.req.json()
 		const parsed = AddStreakFreezesBodySchema.safeParse(body)
@@ -202,33 +183,25 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		const input = parsed.data
 		const now = new Date()
 
-		const existing = await db.query.userStreaks.findFirst({
-			where: and(
-				eq(userStreaks.userId, input.userId),
-				eq(userStreaks.type, 'play'),
-				isNull(userStreaks.gameSlug),
-			),
+		const existing = await db.query.userFreezeData.findFirst({
+			where: eq(userFreezeData.userId, input.userId),
 		})
 
 		if (existing) {
 			const newCount = existing.freezesAvailable + input.count
 			await db
-				.update(userStreaks)
+				.update(userFreezeData)
 				.set({
 					freezesAvailable: newCount,
 					updatedAt: now,
 				})
-				.where(eq(userStreaks.id, existing.id))
+				.where(eq(userFreezeData.id, existing.id))
 
 			return c.json({ success: true, freezesAvailable: newCount, reason: input.reason })
 		}
 
-		await db.insert(userStreaks).values({
+		await db.insert(userFreezeData).values({
 			userId: input.userId,
-			type: 'play',
-			gameSlug: null,
-			currentStreak: 0,
-			maxStreak: 0,
 			freezesAvailable: input.count,
 			freezesUsed: 0,
 			autoFreezeEnabled: false,

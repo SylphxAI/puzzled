@@ -2,7 +2,11 @@
  * Stats Routes
  *
  * User statistics and leaderboard endpoints.
- * Leaderboards are cached in Redis for performance.
+ *
+ * ARCHITECTURE (State of the Art):
+ * - Stats: Computed from gameSessions (no separate aggregation table)
+ * - Leaderboards: Platform SDK useLeaderboard() for global rankings
+ * - Caching: Redis for expensive computations
  *
  * NOTE: Uses method chaining for proper hc type inference.
  */
@@ -13,7 +17,7 @@ import { getTodayUTC } from '@/features/daily/server'
 import { getAllGames, getGameConfig, isValidGameSlug } from '@/games/registry'
 import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
-import { GAME_RESULT_STATUSES, gameSessions, userPreferences, userStats } from '@/lib/db/schema'
+import { GAME_RESULT_STATUSES, gameSessions, userPreferences } from '@/lib/db/schema'
 import { cache, keys } from '@/lib/redis'
 import { getDisplayData } from '../../services/display-cache'
 import { authMiddleware, rateLimitMiddleware } from '../middleware'
@@ -133,26 +137,27 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// GET /user-stats - authenticated
+	// Computes stats from gameSessions (no aggregation table)
 	.get('/user-stats', authMiddleware, async (c) => {
 		const user = c.get('user')
-
 		const activeGameSlugs = getAllGames().map((g) => g.slug)
 
-		const stats = await db
+		// Compute stats directly from game sessions
+		const statsQuery = await db
 			.select({
-				gameSlug: userStats.gameSlug,
-				gamesPlayed: userStats.gamesPlayed,
-				gamesWon: userStats.gamesWon,
-				currentStreak: userStats.currentStreak,
-				maxStreak: userStats.maxStreak,
-				totalScore: userStats.totalScore,
-				averageAttempts: userStats.averageAttempts,
-				guessDistribution: userStats.guessDistribution,
+				gameSlug: gameSessions.gameSlug,
+				gamesPlayed: sql<number>`COUNT(*)::int`,
+				gamesWon: sql<number>`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)::int`,
+				totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)::int`,
+				avgAttempts: sql<number>`AVG(${gameSessions.attempts})::int`,
+				lastPlayedAt: sql<Date>`MAX(${gameSessions.completedAt})`,
 			})
-			.from(userStats)
-			.where(and(eq(userStats.userId, user.id), inArray(userStats.gameSlug, activeGameSlugs)))
+			.from(gameSessions)
+			.where(and(eq(gameSessions.userId, user.id), inArray(gameSessions.gameSlug, activeGameSlugs)))
+			.groupBy(gameSessions.gameSlug)
 
-		const gameSlugs = stats.map((s) => s.gameSlug)
+		// Get won sessions for perfect game calculation
+		const gameSlugs = statsQuery.map((s) => s.gameSlug)
 		const allWonSessions =
 			gameSlugs.length > 0
 				? await db
@@ -179,6 +184,32 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			wonSessionsByGame.set(session.gameSlug, existing)
 		}
 
+		// Build guess distribution from sessions
+		const guessDistributionQuery = await db
+			.select({
+				gameSlug: gameSessions.gameSlug,
+				attempts: gameSessions.attempts,
+				count: sql<number>`COUNT(*)::int`,
+			})
+			.from(gameSessions)
+			.where(
+				and(
+					eq(gameSessions.userId, user.id),
+					eq(gameSessions.status, 'won'),
+					inArray(gameSessions.gameSlug, gameSlugs),
+				),
+			)
+			.groupBy(gameSessions.gameSlug, gameSessions.attempts)
+
+		const guessDistByGame = new Map<string, Record<string, number>>()
+		for (const row of guessDistributionQuery) {
+			const dist = guessDistByGame.get(row.gameSlug) ?? {}
+			if (row.attempts !== null) {
+				dist[String(row.attempts)] = row.count
+			}
+			guessDistByGame.set(row.gameSlug, dist)
+		}
+
 		const result: Record<
 			string,
 			{
@@ -194,7 +225,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			}
 		> = {}
 
-		for (const stat of stats) {
+		for (const stat of statsQuery) {
 			const config = getGameConfig(stat.gameSlug)
 
 			let perfectGames = 0
@@ -210,7 +241,16 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			}
 
 			result[stat.gameSlug] = {
-				...stat,
+				gameSlug: stat.gameSlug,
+				gamesPlayed: stat.gamesPlayed,
+				gamesWon: stat.gamesWon,
+				// NOTE: Streak data should come from Platform SDK useStreak()
+				// These are placeholder values - client uses SDK for real streak data
+				currentStreak: 0,
+				maxStreak: 0,
+				totalScore: stat.totalScore,
+				averageAttempts: stat.avgAttempts,
+				guessDistribution: guessDistByGame.get(stat.gameSlug) ?? {},
 				perfectGames,
 			}
 		}
@@ -219,6 +259,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// GET /user-rank - authenticated
+	// NOTE: For streak rankings, client should use Platform SDK useLeaderboard()
 	.get('/user-rank', authMiddleware, async (c) => {
 		const query = c.req.query()
 		const parsed = UserRankQuerySchema.safeParse(query)
@@ -228,86 +269,76 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 
 		if (!isValidGameSlug(input.gameSlug)) return c.json(null)
 
-		if (input.period === 'all') {
-			const orderColumn = input.type === 'streak' ? userStats.maxStreak : userStats.totalScore
-
-			const [userStat] = await db
-				.select()
-				.from(userStats)
-				.where(and(eq(userStats.userId, user.id), eq(userStats.gameSlug, input.gameSlug)))
-				.limit(1)
-
-			if (!userStat) return c.json(null)
-
-			const userValue = input.type === 'streak' ? userStat.maxStreak : userStat.totalScore
-
-			const [result] = await db
-				.select({ count: sql<number>`COUNT(*)::int` })
-				.from(userStats)
-				.where(and(eq(userStats.gameSlug, input.gameSlug), sql`${orderColumn} > ${userValue}`))
-
-			return c.json({
-				rank: (result?.count ?? 0) + 1,
-				value: userValue,
-			})
+		// For streak rankings, return null - client should use Platform SDK
+		if (input.type === 'streak') {
+			return c.json(null) // Use Platform SDK useLeaderboard() for streak rankings
 		}
 
-		let startDate: Date
+		// Score rankings computed from gameSessions
+		let startDate: Date | null = null
 		if (input.period === 'today') {
 			startDate = getTodayUTC()
-		} else {
+		} else if (input.period === 'week') {
 			startDate = getTodayUTC()
 			startDate.setUTCDate(startDate.getUTCDate() - 7)
 		}
 
-		const [userPeriodStats] = await db
-			.select({
-				totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
-				gamesWon: sql<number>`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)`,
-			})
-			.from(gameSessions)
-			.where(
-				and(
-					eq(gameSessions.userId, user.id),
-					eq(gameSessions.gameSlug, input.gameSlug),
-					gte(gameSessions.completedAt, startDate),
-				),
-			)
+		// Get user's score
+		const userScoreQuery = startDate
+			? db
+					.select({
+						totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
+					})
+					.from(gameSessions)
+					.where(
+						and(
+							eq(gameSessions.userId, user.id),
+							eq(gameSessions.gameSlug, input.gameSlug),
+							gte(gameSessions.completedAt, startDate),
+						),
+					)
+			: db
+					.select({
+						totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
+					})
+					.from(gameSessions)
+					.where(
+						and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, input.gameSlug)),
+					)
 
-		if (!userPeriodStats) return c.json(null)
+		const [userScoreResult] = await userScoreQuery
+		const userScore = Number(userScoreResult?.totalScore ?? 0)
 
-		const userValue =
-			input.type === 'score' ? Number(userPeriodStats.totalScore) : Number(userPeriodStats.gamesWon)
+		if (userScore === 0) return c.json(null)
 
-		if (userValue === 0) return c.json(null)
+		// Count users with higher scores
+		const rankQuery = startDate
+			? db
+					.select({ count: sql<number>`COUNT(DISTINCT ${gameSessions.userId})::int` })
+					.from(gameSessions)
+					.where(
+						and(
+							eq(gameSessions.gameSlug, input.gameSlug),
+							gte(gameSessions.completedAt, startDate),
+						),
+					)
+					.groupBy(gameSessions.userId)
+					.having(sql`COALESCE(SUM(${gameSessions.score}), 0) > ${userScore}`)
+			: db
+					.select({ count: sql<number>`COUNT(DISTINCT ${gameSessions.userId})::int` })
+					.from(gameSessions)
+					.where(eq(gameSessions.gameSlug, input.gameSlug))
+					.groupBy(gameSessions.userId)
+					.having(sql`COALESCE(SUM(${gameSessions.score}), 0) > ${userScore}`)
 
-		const valueColumn =
-			input.type === 'score'
-				? sql`COALESCE(SUM(${gameSessions.score}), 0)`
-				: sql`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)`
+		const betterUsers = await rankQuery
+		const rank = betterUsers.length + 1
 
-		const [result] = await db.select({ count: sql<number>`COUNT(*)::int` }).from(
-			db
-				.select({
-					userId: gameSessions.userId,
-					value: valueColumn.as('value'),
-				})
-				.from(gameSessions)
-				.where(
-					and(eq(gameSessions.gameSlug, input.gameSlug), gte(gameSessions.completedAt, startDate)),
-				)
-				.groupBy(gameSessions.userId)
-				.having(sql`${valueColumn} > ${userValue}`)
-				.as('ranked'),
-		)
-
-		return c.json({
-			rank: (result?.count ?? 0) + 1,
-			value: userValue,
-		})
+		return c.json({ rank, value: userScore })
 	})
 
 	// GET /leaderboard - public
+	// NOTE: For streak leaderboards, client should use Platform SDK useLeaderboard()
 	.get('/leaderboard', async (c) => {
 		const query = c.req.query()
 		const parsed = LeaderboardQuerySchema.safeParse(query)
@@ -315,6 +346,11 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		const input = parsed.data
 
 		if (!isValidGameSlug(input.gameSlug)) return c.json([])
+
+		// For streak leaderboards, return empty - client should use Platform SDK
+		if (input.type === 'streak') {
+			return c.json([]) // Use Platform SDK useLeaderboard() for streak rankings
+		}
 
 		const cachePeriod =
 			input.period === 'today' ? 'daily' : input.period === 'week' ? 'weekly' : 'all'
@@ -325,68 +361,36 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			return c.json(cached)
 		}
 
-		let rankings: { userId: string; value: number }[]
-
-		if (input.period === 'all') {
-			const orderColumn = input.type === 'streak' ? userStats.maxStreak : userStats.totalScore
-
-			const dbResults = await db
-				.select({
-					userId: userStats.userId,
-					maxStreak: userStats.maxStreak,
-					totalScore: userStats.totalScore,
-				})
-				.from(userStats)
-				.innerJoin(userPreferences, eq(userStats.userId, userPreferences.userId))
-				.where(
-					and(eq(userStats.gameSlug, input.gameSlug), eq(userPreferences.leaderboardVisible, true)),
-				)
-				.orderBy(desc(orderColumn))
-				.limit(input.limit)
-
-			rankings = dbResults.map((r) => ({
-				userId: r.userId,
-				value: input.type === 'streak' ? r.maxStreak : r.totalScore,
-			}))
-		} else {
-			let startDate: Date
-			if (input.period === 'today') {
-				startDate = getTodayUTC()
-			} else {
-				startDate = getTodayUTC()
-				startDate.setUTCDate(startDate.getUTCDate() - 7)
-			}
-
-			const dbResults = await db
-				.select({
-					userId: gameSessions.userId,
-					totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
-					gamesWon: sql<number>`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)`,
-				})
-				.from(gameSessions)
-				.innerJoin(userPreferences, eq(gameSessions.userId, userPreferences.userId))
-				.where(
-					and(
-						eq(gameSessions.gameSlug, input.gameSlug),
-						gte(gameSessions.completedAt, startDate),
-						eq(userPreferences.leaderboardVisible, true),
-					),
-				)
-				.groupBy(gameSessions.userId)
-				.orderBy(
-					desc(
-						input.type === 'score'
-							? sql`COALESCE(SUM(${gameSessions.score}), 0)`
-							: sql`SUM(CASE WHEN ${gameSessions.status} = 'won' THEN 1 ELSE 0 END)`,
-					),
-				)
-				.limit(input.limit)
-
-			rankings = dbResults.map((r) => ({
-				userId: r.userId,
-				value: input.type === 'score' ? Number(r.totalScore) : Number(r.gamesWon),
-			}))
+		let startDate: Date | null = null
+		if (input.period === 'today') {
+			startDate = getTodayUTC()
+		} else if (input.period === 'week') {
+			startDate = getTodayUTC()
+			startDate.setUTCDate(startDate.getUTCDate() - 7)
 		}
+
+		// Score leaderboard computed from gameSessions
+		const baseConditions = [eq(gameSessions.gameSlug, input.gameSlug)]
+		if (startDate) {
+			baseConditions.push(gte(gameSessions.completedAt, startDate))
+		}
+
+		const dbResults = await db
+			.select({
+				userId: gameSessions.userId,
+				totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)::int`,
+			})
+			.from(gameSessions)
+			.innerJoin(userPreferences, eq(gameSessions.userId, userPreferences.userId))
+			.where(and(...baseConditions, eq(userPreferences.leaderboardVisible, true)))
+			.groupBy(gameSessions.userId)
+			.orderBy(desc(sql`COALESCE(SUM(${gameSessions.score}), 0)`))
+			.limit(input.limit)
+
+		const rankings = dbResults.map((r) => ({
+			userId: r.userId,
+			value: r.totalScore,
+		}))
 
 		const userIds = rankings.map((r) => r.userId)
 		const displayData = await getDisplayData(userIds)

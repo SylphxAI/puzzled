@@ -8,7 +8,6 @@ import {
 	Bell,
 	CreditCard,
 	FileText,
-	Flag,
 	FlaskConical,
 	Gamepad2,
 	LayoutDashboard,
@@ -27,13 +26,13 @@ type NavItemKey =
 	| 'users'
 	| 'games'
 	| 'announcements'
-	| 'featureFlags'
 	| 'system'
 	| 'dlq'
 	| 'auditLogs'
 	| 'experiments'
 	| 'settings'
 
+// NOTE: Feature flags now managed via Platform Console (Sylphx Platform)
 const navItems: Array<{ href: string; labelKey: NavItemKey; icon: typeof LayoutDashboard }> = [
 	{ href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
 	{ href: '/admin/analytics', labelKey: 'analytics', icon: BarChart3 },
@@ -41,7 +40,6 @@ const navItems: Array<{ href: string; labelKey: NavItemKey; icon: typeof LayoutD
 	{ href: '/admin/users', labelKey: 'users', icon: Users },
 	{ href: '/admin/games', labelKey: 'games', icon: Gamepad2 },
 	{ href: '/admin/announcements', labelKey: 'announcements', icon: Bell },
-	{ href: '/admin/feature-flags', labelKey: 'featureFlags', icon: Flag },
 	{ href: '/admin/system', labelKey: 'system', icon: Activity },
 	{ href: '/admin/dlq', labelKey: 'dlq', icon: AlertTriangle },
 	{ href: '/admin/audit-logs', labelKey: 'auditLogs', icon: FileText },

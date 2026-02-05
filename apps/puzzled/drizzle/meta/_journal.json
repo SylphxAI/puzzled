@@ -155,6 +155,13 @@
       "when": 1769280000000,
       "tag": "0023_add_locale_to_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1769400000000,
+      "tag": "0024_platform_engagement_migration",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,12 @@
  *
  * All game-related endpoints: puzzles, validation, saving results.
  *
+ * ARCHITECTURE (State of the Art):
+ * - Game sessions are saved to gameSessions table
+ * - Streak recording is done via Platform SDK recordStreakActivity()
+ * - Score submission to Platform leaderboards via submitScore()
+ * - No separate user_stats aggregation table - computed on demand
+ *
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
@@ -21,8 +27,7 @@ import {
 	GAME_RESULT_STATUSES,
 	gameSessions,
 	type NewGameSession,
-	userStats,
-	userStreaks,
+	userFreezeData,
 } from '@/lib/db/schema'
 import { getOrCreatePuzzle } from '../../services/puzzle'
 import { authMiddleware, authRateLimitMiddleware, optionalAuthMiddleware } from '../middleware'
@@ -108,120 +113,33 @@ async function validateAndScoreSubmission(input: {
 	return validateAndScore(input.gameSlug, puzzle.solution, puzzle.puzzleData, submission)
 }
 
-async function updateUserStats(
-	userId: string,
-	gameSlug: string,
-	result: { status: 'won' | 'lost'; score?: number; attempts: number },
-) {
-	const won = result.status === 'won'
-	const now = new Date()
+/**
+ * Check if user can use auto-freeze to preserve streak
+ * This is a premium feature stored in userFreezeData table
+ */
+async function tryAutoFreeze(userId: string): Promise<boolean> {
+	const isPremium = await hasPremiumAccess(userId)
+	if (!isPremium) return false
 
-	await db.transaction(async (tx) => {
-		const [existing] = await tx
-			.select()
-			.from(userStats)
-			.where(and(eq(userStats.userId, userId), eq(userStats.gameSlug, gameSlug)))
-			.limit(1)
-
-		if (existing) {
-			const lastPlayed = existing.lastPlayedAt
-
-			const getUTCDateString = (d: Date) => d.toISOString().split('T')[0]
-			const nowUTC = getUTCDateString(now)
-			const lastPlayedUTC = lastPlayed ? getUTCDateString(lastPlayed) : null
-
-			const yesterday = new Date(now)
-			yesterday.setUTCDate(yesterday.getUTCDate() - 1)
-			const yesterdayUTC = getUTCDateString(yesterday)
-
-			const isSameDay = lastPlayedUTC === nowUTC
-			const isConsecutiveDay = lastPlayedUTC === yesterdayUTC
-
-			const streakWouldBreak =
-				!won || (!isSameDay && !isConsecutiveDay && existing.currentStreak > 0)
-
-			let usedFreeze = false
-			if (streakWouldBreak && existing.currentStreak > 0) {
-				const isPremium = await hasPremiumAccess(userId)
-				if (isPremium) {
-					const [playStreak] = await tx
-						.select()
-						.from(userStreaks)
-						.where(
-							and(
-								eq(userStreaks.userId, userId),
-								eq(userStreaks.type, 'play'),
-								isNull(userStreaks.gameSlug),
-							),
-						)
-						.limit(1)
-
-					if (playStreak?.autoFreezeEnabled && playStreak.freezesAvailable > 0) {
-						await tx
-							.update(userStreaks)
-							.set({
-								freezesAvailable: playStreak.freezesAvailable - 1,
-								freezesUsed: playStreak.freezesUsed + 1,
-								updatedAt: now,
-							})
-							.where(eq(userStreaks.id, playStreak.id))
-
-						usedFreeze = true
-					}
-				}
-			}
-
-			let newStreak: number
-			if (usedFreeze) {
-				newStreak = existing.currentStreak
-			} else if (won) {
-				newStreak = isConsecutiveDay
-					? existing.currentStreak + 1
-					: isSameDay
-						? existing.currentStreak
-						: 1
-			} else {
-				newStreak = 0
-			}
-
-			const guessDistribution = (existing.guessDistribution as Record<string, number>) || {}
-			if (won && result.attempts) {
-				const key = String(result.attempts)
-				guessDistribution[key] = (guessDistribution[key] || 0) + 1
-			}
-
-			await tx
-				.update(userStats)
-				.set({
-					gamesPlayed: existing.gamesPlayed + 1,
-					gamesWon: won ? existing.gamesWon + 1 : existing.gamesWon,
-					currentStreak: newStreak,
-					maxStreak: Math.max(existing.maxStreak, newStreak),
-					totalScore: existing.totalScore + (result.score || 0),
-					guessDistribution,
-					lastPlayedAt: now,
-					updatedAt: now,
-				})
-				.where(eq(userStats.id, existing.id))
-		} else {
-			await tx
-				.insert(userStats)
-				.values({
-					userId,
-					gameSlug,
-					gamesPlayed: 1,
-					gamesWon: won ? 1 : 0,
-					currentStreak: won ? 1 : 0,
-					maxStreak: won ? 1 : 0,
-					totalScore: result.score || 0,
-					guessDistribution: won && result.attempts ? { [result.attempts]: 1 } : {},
-					lastPlayedAt: now,
-				})
-				.onConflictDoNothing({
-					target: [userStats.userId, userStats.gameSlug],
-				})
-		}
+	const freezeData = await db.query.userFreezeData.findFirst({
+		where: eq(userFreezeData.userId, userId),
 	})
+
+	if (!freezeData?.autoFreezeEnabled || freezeData.freezesAvailable <= 0) {
+		return false
+	}
+
+	// Use a freeze
+	await db
+		.update(userFreezeData)
+		.set({
+			freezesAvailable: freezeData.freezesAvailable - 1,
+			freezesUsed: freezeData.freezesUsed + 1,
+			updatedAt: new Date(),
+		})
+		.where(eq(userFreezeData.id, freezeData.id))
+
+	return true
 }
 
 // ==========================================
@@ -400,6 +318,7 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// POST /save-result - authenticated + rate limited
+	// NOTE: After saving, client should call Platform SDK recordStreakActivity() and submitScore()
 	.post('/save-result', authRateLimitMiddleware, async (c) => {
 		const body = await c.req.json()
 		const parsed = SaveResultBodySchema.safeParse(body)
@@ -530,15 +449,25 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			return newSessionResult
 		})
 
-		if (mode === 'daily') {
-			await updateUserStats(user.id, input.gameSlug, {
-				status: validatedStatus,
-				score: serverScore,
-				attempts: input.attempts,
-			})
+		// NOTE: Streak tracking and leaderboard updates are now handled by Platform SDK
+		// Client should call:
+		// - recordStreakActivity('puzzled-daily-play') after completing any game
+		// - submitScore('puzzled-{gameSlug}-score', score) after winning
+		// This ensures all engagement data is managed centrally by the Platform
+
+		// Check if auto-freeze was used (for premium users with streak about to break)
+		let usedFreeze = false
+		if (mode === 'daily' && validatedStatus === 'lost') {
+			usedFreeze = await tryAutoFreeze(user.id)
 		}
 
-		return c.json({ success: true, session, mode, score: serverScore })
+		return c.json({
+			success: true,
+			session,
+			mode,
+			score: serverScore,
+			usedFreeze,
+		})
 	})
 
 	// GET /history - authenticated
