@@ -1,22 +1,36 @@
 'use client'
 
-import * as LabelPrimitive from '@radix-ui/react-label'
+import { Field as BaseField } from '@base-ui/react/field'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
 
-const Label = forwardRef<
-	React.ComponentRef<typeof LabelPrimitive.Root>,
-	React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => (
-	<LabelPrimitive.Root
-		ref={ref}
-		className={cn(
-			'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
-			className,
-		)}
-		{...props}
-	/>
-))
-Label.displayName = LabelPrimitive.Root.displayName
+// ==================
+// Label
+// ==================
+
+interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+	/** Additional CSS classes */
+	className?: string
+	/** Children */
+	children?: React.ReactNode
+}
+
+const Label = forwardRef<HTMLLabelElement, LabelProps>(
+	({ className, children, ...props }, ref) => (
+		<BaseField.Label
+			ref={ref}
+			className={cn(
+				'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+				className,
+			)}
+			{...props}
+		>
+			{children}
+		</BaseField.Label>
+	),
+)
+Label.displayName = 'Label'
 
 export { Label }
+
+export type { LabelProps }

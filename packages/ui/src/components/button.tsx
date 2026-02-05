@@ -31,9 +31,9 @@
  * @module @sylphx/ui/button
  */
 
-import { Slot } from '@radix-ui/react-slot'
 import { type ButtonHTMLAttributes, forwardRef } from 'react'
 import { cn } from '../utils'
+import { Slot } from './slot'
 
 /**
  * Props for the Button component.
@@ -61,7 +61,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	 */
 	size?: 'default' | 'sm' | 'lg' | 'icon'
 	/**
-	 * If true, the button will render as the child element (using Radix Slot).
+	 * If true, the button will render as the child element (using Slot).
 	 * Useful for rendering as a link with proper button styling.
 	 */
 	asChild?: boolean

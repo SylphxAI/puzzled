@@ -1,44 +1,129 @@
 'use client'
 
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
 import { motion } from 'motion/react'
 import { forwardRef } from 'react'
 import { duration, easing } from '../motion/config'
 import { cn } from '../utils'
 
-const TooltipProvider = TooltipPrimitive.Provider
-const Tooltip = TooltipPrimitive.Root
-const TooltipTrigger = TooltipPrimitive.Trigger
+// ==================
+// Tooltip Provider
+// ==================
 
-// Create motion-enhanced div
+interface TooltipProviderProps {
+	/** Delay in ms before showing tooltips */
+	delayDuration?: number
+	/** Children */
+	children?: React.ReactNode
+}
+
+function TooltipProvider({ delayDuration = 200, children }: TooltipProviderProps) {
+	return (
+		<BaseTooltip.Provider delay={delayDuration}>
+			{children}
+		</BaseTooltip.Provider>
+	)
+}
+
+// ==================
+// Tooltip Root
+// ==================
+
+interface TooltipProps {
+	/** Whether the tooltip is open (controlled) */
+	open?: boolean
+	/** Default open state (uncontrolled) */
+	defaultOpen?: boolean
+	/** Handler fired when open state changes */
+	onOpenChange?: (open: boolean) => void
+	/** Delay in ms before showing (only works without Provider) */
+	delayDuration?: number
+	/** Children */
+	children?: React.ReactNode
+}
+
+function Tooltip({ open, defaultOpen, onOpenChange, children }: TooltipProps) {
+	return (
+		<BaseTooltip.Root
+			open={open}
+			defaultOpen={defaultOpen}
+			onOpenChange={onOpenChange}
+		>
+			{children}
+		</BaseTooltip.Root>
+	)
+}
+
+// ==================
+// Tooltip Trigger
+// ==================
+
+interface TooltipTriggerProps {
+	/** Children */
+	children?: React.ReactNode
+	/** Additional CSS classes */
+	className?: string
+	/** Whether to render as child */
+	asChild?: boolean
+}
+
+const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
+	({ className, children, asChild }, ref) => (
+		<BaseTooltip.Trigger
+			ref={ref}
+			className={className}
+			render={asChild ? (children as React.ReactElement) : undefined}
+		>
+			{asChild ? undefined : children}
+		</BaseTooltip.Trigger>
+	),
+)
+TooltipTrigger.displayName = 'TooltipTrigger'
+
+// ==================
+// Tooltip Content
+// ==================
+
 const MotionDiv = motion.create('div')
 
-const TooltipContent = forwardRef<
-	React.ComponentRef<typeof TooltipPrimitive.Content>,
-	React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
->(({ className, sideOffset = 4, children, ...props }, ref) => (
-	<TooltipPrimitive.Portal>
-		<TooltipPrimitive.Content
-			ref={ref}
-			sideOffset={sideOffset}
-			className={cn('z-tooltip overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md', className)}
-			{...props}
-		>
-			<MotionDiv
-				initial={{ opacity: 0, scale: 0.96 }}
-				animate={{ opacity: 1, scale: 1 }}
-				transition={{ duration: duration.fast, ease: easing.easeOut }}
-				className="px-3 py-1.5"
-			>
-				{children}
-			</MotionDiv>
-		</TooltipPrimitive.Content>
-	</TooltipPrimitive.Portal>
-))
-TooltipContent.displayName = TooltipPrimitive.Content.displayName
+interface TooltipContentProps {
+	/** Children */
+	children?: React.ReactNode
+	/** Additional CSS classes */
+	className?: string
+	/** Side offset */
+	sideOffset?: number
+	/** Side */
+	side?: 'top' | 'right' | 'bottom' | 'left'
+}
 
-// Simple tooltip wrapper for common use case
-// Self-contained - includes its own TooltipProvider for ease of use
+const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
+	({ className, sideOffset = 4, side = 'top', children }, ref) => (
+		<BaseTooltip.Portal>
+			<BaseTooltip.Positioner sideOffset={sideOffset} side={side}>
+				<BaseTooltip.Popup
+					ref={ref}
+					className={cn('z-tooltip overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md', className)}
+				>
+					<MotionDiv
+						initial={{ opacity: 0, scale: 0.96 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{ duration: duration.fast, ease: easing.easeOut }}
+						className="px-3 py-1.5"
+					>
+						{children}
+					</MotionDiv>
+				</BaseTooltip.Popup>
+			</BaseTooltip.Positioner>
+		</BaseTooltip.Portal>
+	),
+)
+TooltipContent.displayName = 'TooltipContent'
+
+// ==================
+// Simple Tooltip (Convenience Component)
+// ==================
+
 type SimpleTooltipProps = {
 	content: React.ReactNode
 	children: React.ReactNode
@@ -63,3 +148,11 @@ function SimpleTooltip({
 }
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, SimpleTooltip }
+
+export type {
+	TooltipProps,
+	TooltipProviderProps,
+	TooltipTriggerProps,
+	TooltipContentProps,
+	SimpleTooltipProps,
+}

@@ -23,10 +23,10 @@
  * @module @sylphx/ui/breadcrumb
  */
 
-import { Slot } from '@radix-ui/react-slot'
 import { ChevronRight } from 'lucide-react'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
+import { Slot } from './slot'
 
 /**
  * Breadcrumb root container.
