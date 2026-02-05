@@ -1,7 +1,7 @@
 /**
  * @sylphx/ui - Checkbox Component
  *
- * Accessible checkbox built on Radix UI primitives.
+ * Accessible checkbox built on Base UI primitives.
  * Features animated checkmark for satisfying micro-interaction.
  *
  * @example
@@ -30,7 +30,7 @@
 
 'use client'
 
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
+import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
 
@@ -58,10 +58,34 @@ function AnimatedCheck({ className }: { className?: string }) {
 }
 
 /**
+ * Props for the Checkbox component
+ */
+interface CheckboxProps {
+	/** Whether the checkbox is checked (controlled) */
+	checked?: boolean
+	/** Default checked state (uncontrolled) */
+	defaultChecked?: boolean
+	/** Handler fired when the checkbox is toggled */
+	onCheckedChange?: (checked: boolean) => void
+	/** Whether the checkbox is disabled */
+	disabled?: boolean
+	/** Whether the checkbox is required */
+	required?: boolean
+	/** Name for form submission */
+	name?: string
+	/** Value for form submission */
+	value?: string
+	/** ID for label association */
+	id?: string
+	/** Additional CSS classes */
+	className?: string
+}
+
+/**
  * Checkbox component for binary selection in forms.
  *
  * Features:
- * - Built on Radix UI for accessibility
+ * - Built on Base UI for accessibility
  * - Keyboard navigable (Space to toggle)
  * - Animated checkmark with draw effect
  * - Focus ring for keyboard navigation
@@ -84,30 +108,38 @@ function AnimatedCheck({ className }: { className?: string }) {
  * </form>
  * ```
  */
-const Checkbox = forwardRef<
-	React.ComponentRef<typeof CheckboxPrimitive.Root>,
-	React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
->(({ className, ...props }, ref) => (
-	<CheckboxPrimitive.Root
-		ref={ref}
-		className={cn(
-			// h-6 w-6 with min-h-11 min-w-11 touch area wrapper effect via padding
-			// Actual checkbox is 24px but clickable area extends via focus ring offset
-			'peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background',
-			'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-			'disabled:cursor-not-allowed disabled:opacity-50',
-			'data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground',
-			'transition-all duration-150 hover:border-primary/70',
-			'active:scale-95 motion-reduce:active:scale-100',
-			className,
-		)}
-		{...props}
-	>
-		<CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-			<AnimatedCheck />
-		</CheckboxPrimitive.Indicator>
-	</CheckboxPrimitive.Root>
-))
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
+const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
+	({ className, checked, defaultChecked, onCheckedChange, disabled, required, name, value, id }, ref) => (
+		<BaseCheckbox.Root
+			ref={ref}
+			id={id}
+			name={name}
+			value={value}
+			checked={checked}
+			defaultChecked={defaultChecked}
+			onCheckedChange={onCheckedChange}
+			disabled={disabled}
+			required={required}
+			className={cn(
+				// h-6 w-6 with min-h-11 min-w-11 touch area wrapper effect via padding
+				// Actual checkbox is 24px but clickable area extends via focus ring offset
+				'peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background',
+				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+				'disabled:cursor-not-allowed disabled:opacity-50',
+				// Base UI uses data-checked instead of data-[state=checked]
+				'data-[checked]:bg-primary data-[checked]:text-primary-foreground',
+				'transition-all duration-150 hover:border-primary/70',
+				'active:scale-95 motion-reduce:active:scale-100',
+				className,
+			)}
+		>
+			<BaseCheckbox.Indicator className={cn('flex items-center justify-center text-current')}>
+				<AnimatedCheck />
+			</BaseCheckbox.Indicator>
+		</BaseCheckbox.Root>
+	),
+)
+Checkbox.displayName = 'Checkbox'
 
 export { Checkbox }
+export type { CheckboxProps }

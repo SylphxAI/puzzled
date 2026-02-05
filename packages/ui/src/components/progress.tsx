@@ -1,19 +1,28 @@
 'use client'
 
-import * as ProgressPrimitive from '@radix-ui/react-progress'
+import { Progress as BaseProgress } from '@base-ui/react/progress'
 import { forwardRef } from 'react'
 import { cn } from '../utils'
 
 // ==================
-// Linear Progress (Radix-based)
+// Linear Progress (Base UI)
 // ==================
 
-type ProgressProps = React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
-	value: number // 0-100
+interface ProgressProps {
+	/** Progress value (0-100). null for indeterminate */
+	value: number | null
+	/** Maximum value */
 	max?: number
+	/** Minimum value */
+	min?: number
+	/** Size variant */
 	size?: 'sm' | 'md' | 'lg'
+	/** Color variant */
 	variant?: 'default' | 'success' | 'warning' | 'error'
+	/** Whether to show the percentage label */
 	showLabel?: boolean
+	/** Additional CSS classes */
+	className?: string
 }
 
 const sizeStyles = {
@@ -29,44 +38,57 @@ const variantStyles = {
 	error: 'bg-error',
 }
 
-const Progress = forwardRef<React.ElementRef<typeof ProgressPrimitive.Root>, ProgressProps>(
-	({ className, value, max = 100, size = 'md', variant = 'default', showLabel = false, ...props }, ref) => {
-		const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
+const Progress = forwardRef<HTMLDivElement, ProgressProps>(
+	({ className, value, max = 100, min = 0, size = 'md', variant = 'default', showLabel = false }, ref) => {
+		const percentage = value !== null ? Math.min(Math.max(((value - min) / (max - min)) * 100, 0), 100) : null
 
 		return (
-			<div className={className}>
+			<BaseProgress.Root
+				ref={ref}
+				value={value}
+				max={max}
+				min={min}
+				className={className}
+			>
 				{showLabel && (
 					<div className="mb-1 flex justify-between text-sm">
-						<span className="text-muted-foreground">Progress</span>
-						<span className="font-medium">{Math.round(percentage)}%</span>
+						<BaseProgress.Label className="text-muted-foreground">Progress</BaseProgress.Label>
+						<BaseProgress.Value className="font-medium">
+							{(formattedValue) => `${formattedValue}%`}
+						</BaseProgress.Value>
 					</div>
 				)}
-				<ProgressPrimitive.Root
-					ref={ref}
+				<BaseProgress.Track
 					className={cn('relative w-full overflow-hidden rounded-full bg-muted', sizeStyles[size])}
-					value={value}
-					max={max}
-					{...props}
 				>
-					<ProgressPrimitive.Indicator
-						className={cn('h-full rounded-full transition-all duration-500', variantStyles[variant])}
-						style={{ width: `${percentage}%` }}
+					<BaseProgress.Indicator
+						className={cn(
+							'h-full rounded-full transition-all duration-500',
+							variantStyles[variant],
+							// Indeterminate animation
+							'data-[indeterminate]:animate-progress-indeterminate',
+						)}
+						style={percentage !== null ? { width: `${percentage}%` } : undefined}
 					/>
-				</ProgressPrimitive.Root>
-			</div>
+				</BaseProgress.Track>
+			</BaseProgress.Root>
 		)
 	},
 )
-Progress.displayName = ProgressPrimitive.Root.displayName
+Progress.displayName = 'Progress'
 
 // ==================
-// Circular Progress (custom - Radix doesn't have this)
+// Circular Progress (custom - Base UI doesn't have this)
 // ==================
 
-type CircularProgressProps = {
-	value?: number // undefined = indeterminate
+interface CircularProgressProps {
+	/** Progress value (0-100). undefined for indeterminate */
+	value?: number
+	/** Size in pixels */
 	size?: number
+	/** Stroke width in pixels */
 	strokeWidth?: number
+	/** Additional CSS classes */
 	className?: string
 }
 
@@ -126,3 +148,4 @@ function CircularProgress({ value, size = 40, strokeWidth = 4, className }: Circ
 }
 
 export { Progress, CircularProgress }
+export type { ProgressProps, CircularProgressProps }

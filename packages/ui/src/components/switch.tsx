@@ -1,7 +1,7 @@
 /**
  * @sylphx/ui - Switch Component
  *
- * Accessible toggle switch built on Radix UI primitives.
+ * Accessible toggle switch built on Base UI primitives.
  * Uses inline styles for checked/unchecked states to avoid
  * Tailwind v4 tree-shaking issues with data-[state=*] utilities.
  *
@@ -31,42 +31,65 @@
 
 'use client'
 
-import * as SwitchPrimitive from '@radix-ui/react-switch'
+import { Switch as BaseSwitch } from '@base-ui/react/switch'
 import { forwardRef, useId } from 'react'
 import { cn } from '../utils'
 
 /**
  * Props for the Switch component.
- * Extends Radix UI Switch props with optional label and description.
  */
-type SwitchProps = React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> & {
+interface SwitchProps {
+	/** Whether the switch is checked (controlled) */
+	checked?: boolean
+	/** Default checked state (uncontrolled) */
+	defaultChecked?: boolean
+	/** Handler fired when the switch is toggled */
+	onCheckedChange?: (checked: boolean) => void
+	/** Whether the switch is disabled */
+	disabled?: boolean
+	/** Whether the switch is required */
+	required?: boolean
+	/** Name for form submission */
+	name?: string
+	/** Value for form submission */
+	value?: string
+	/** ID for label association */
+	id?: string
 	/** Label text displayed next to the switch */
 	label?: string
 	/** Description text displayed below the label */
 	description?: string
+	/** Additional CSS classes */
+	className?: string
 }
 
 /**
  * Toggle switch component for binary on/off settings.
  *
- * Uses Radix UI for accessibility (keyboard, ARIA, focus management).
+ * Uses Base UI for accessibility (keyboard, ARIA, focus management).
  * Visual states use CSS custom properties + attribute selectors defined
  * in a <style> tag to avoid Tailwind v4/Turbopack tree-shaking issues.
  */
-const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchProps>(
-	({ className, label, description, id: providedId, ...props }, ref) => {
+const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
+	({ className, label, description, id: providedId, checked, defaultChecked, onCheckedChange, disabled, required, name, value }, ref) => {
 		const generatedId = useId()
 		const id = providedId || generatedId
 
 		const switchElement = (
-			<SwitchPrimitive.Root
+			<BaseSwitch.Root
 				ref={ref}
 				id={id}
+				name={name}
+				value={value}
+				checked={checked}
+				defaultChecked={defaultChecked}
+				onCheckedChange={onCheckedChange}
+				disabled={disabled}
+				required={required}
 				className={cn('switch-root', className)}
-				{...props}
 			>
-				<SwitchPrimitive.Thumb className="switch-thumb" />
-			</SwitchPrimitive.Root>
+				<BaseSwitch.Thumb className="switch-thumb" />
+			</BaseSwitch.Root>
 		)
 
 		if (!label && !description) {
@@ -85,6 +108,7 @@ const Switch = forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, Switc
 	},
 )
 
-Switch.displayName = SwitchPrimitive.Root.displayName
+Switch.displayName = 'Switch'
 
 export { Switch }
+export type { SwitchProps }
