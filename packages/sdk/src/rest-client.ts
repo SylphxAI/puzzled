@@ -29,6 +29,8 @@ import {
 	DEFAULT_TIMEOUT_MS,
 	DEFAULT_PLATFORM_URL,
 	SDK_API_PATH,
+	SDK_VERSION,
+	SDK_PLATFORM,
 	BASE_RETRY_DELAY_MS,
 	MAX_RETRY_DELAY_MS,
 	CIRCUIT_BREAKER_FAILURE_THRESHOLD,
@@ -164,11 +166,15 @@ export interface RestDynamicConfig {
 }
 
 /**
- * Create auth middleware that adds app credentials and access token
+ * Create auth middleware that adds app credentials, access token, and SDK headers
  */
 function createAuthMiddleware(config: RestDynamicConfig): Middleware {
 	return {
 		async onRequest({ request }) {
+			// Add SDK identification headers for debugging and analytics
+			request.headers.set('X-SDK-Version', SDK_VERSION)
+			request.headers.set('X-SDK-Platform', SDK_PLATFORM)
+
 			// Add secret key if provided — identifies the app
 			if (config.secretKey) {
 				request.headers.set('x-app-secret', config.secretKey)
@@ -297,7 +303,7 @@ function createDeduplicationMiddleware(
  * OPEN: Service unhealthy, all requests fast-fail
  * HALF_OPEN: Testing recovery, allows one request
  */
-type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN'
 
 /**
  * Error thrown when circuit is open

@@ -40,6 +40,26 @@ export const SDK_API_PATH = `/api/sdk/${SDK_API_VERSION}`
  */
 export const DEFAULT_AUTH_PREFIX = '/auth'
 
+/**
+ * SDK package version
+ *
+ * Sent in X-SDK-Version header for debugging and analytics.
+ * Update this when releasing new SDK versions.
+ */
+export const SDK_VERSION = '0.1.0'
+
+/**
+ * SDK platform identifier
+ *
+ * Sent in X-SDK-Platform header to identify the runtime environment.
+ */
+export const SDK_PLATFORM =
+	typeof window !== 'undefined'
+		? 'browser'
+		: typeof process !== 'undefined' && process.versions?.node
+			? 'node'
+			: 'unknown'
+
 // =============================================================================
 // Timeouts & Durations
 // =============================================================================

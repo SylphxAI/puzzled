@@ -8,7 +8,7 @@
  * - Type-safe request/response handling
  */
 
-import { SDK_API_PATH } from '../constants'
+import { SDK_API_PATH, SDK_PLATFORM, SDK_VERSION } from '../constants'
 import type { TokenManager } from './token-manager'
 
 // =============================================================================
@@ -63,6 +63,9 @@ export function createRestApi(config: AuthenticatedRestClientConfig): RestApiCli
 	const buildHeaders = async (): Promise<Record<string, string>> => {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
+			// SDK identification headers for debugging and analytics
+			'X-SDK-Version': SDK_VERSION,
+			'X-SDK-Platform': SDK_PLATFORM,
 		}
 		if (config.appId) h['x-app-secret'] = config.appId
 
