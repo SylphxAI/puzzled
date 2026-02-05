@@ -4,7 +4,7 @@ import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
-import { queryKeys, useSaveResult } from '@/lib/api'
+import { useSaveResult } from '@/lib/api'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
