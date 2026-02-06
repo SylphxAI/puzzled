@@ -26,7 +26,9 @@
  */
 
 import { validateAndSanitizeSecretKey } from '../key-validation'
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
+import { DEFAULT_PLATFORM_URL, SDK_API_PATH, SDK_VERSION, SDK_PLATFORM, MAX_RETRIES } from '../constants'
+import { SylphxError, RateLimitError, exponentialBackoff } from '../errors'
+import type { SylphxErrorCode } from '../errors'
 import type { KvSetOptions, KvRateLimitResult, KvZMember } from '../kv-types'
 
 // Re-export shared types for consumer convenience
@@ -254,22 +256,70 @@ export function createKv(options: KvClientOptions = {}): KvClient {
 	const headers = {
 		'Content-Type': 'application/json',
 		'x-app-secret': apiKey,
+		'X-SDK-Version': SDK_VERSION,
+		'X-SDK-Platform': SDK_PLATFORM,
 	}
 
-	// Helper for API calls
+	// Helper for API calls with retry logic and SylphxError wrapping
 	async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-		const response = await fetch(`${baseURL}${SDK_API_PATH}/kv${path}`, {
-			method,
-			headers,
-			body: body ? JSON.stringify(body) : undefined,
-		})
+		let lastError: Error | undefined
 
-		if (!response.ok) {
-			const error = await response.json().catch(() => ({ error: 'Request failed' }))
-			throw new Error(typeof error.error === 'string' ? error.error : 'Request failed')
+		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+			try {
+				const response = await fetch(`${baseURL}${SDK_API_PATH}/kv${path}`, {
+					method,
+					headers,
+					body: body ? JSON.stringify(body) : undefined,
+				})
+
+				if (!response.ok) {
+					const errorBody = await response.json().catch(() => ({ error: 'Request failed' }))
+					const message = typeof errorBody.error === 'string' ? errorBody.error : errorBody.error?.message ?? 'Request failed'
+
+					if (response.status === 429) {
+						const retryAfter = Number(response.headers.get('Retry-After')) || undefined
+						throw new RateLimitError(message, {
+							retryAfter,
+							limit: Number(response.headers.get('X-RateLimit-Limit')) || undefined,
+							remaining: Number(response.headers.get('X-RateLimit-Remaining')) || undefined,
+						})
+					}
+
+					const codeMap: Record<number, SylphxErrorCode> = {
+						400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN',
+						404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'UNPROCESSABLE_ENTITY',
+						500: 'INTERNAL_SERVER_ERROR', 502: 'BAD_GATEWAY',
+						503: 'SERVICE_UNAVAILABLE', 504: 'GATEWAY_TIMEOUT',
+					}
+					throw new SylphxError(message, {
+						code: codeMap[response.status] ?? 'UNKNOWN',
+						status: response.status,
+						data: errorBody.data,
+					})
+				}
+
+				return response.json() as Promise<T>
+			} catch (error) {
+				lastError = error instanceof Error ? error : new Error(String(error))
+
+				// Only auto-retry on server errors (5xx) and network failures.
+				// Never auto-retry client errors (4xx) including 429 — callers should
+				// handle rate limits using the RateLimitError.retryAfter value.
+				const isServerOrNetworkError = error instanceof SylphxError
+					? error.isRetryable && error.code !== 'TOO_MANY_REQUESTS'
+					: error instanceof TypeError // fetch network errors
+				if (!isServerOrNetworkError || attempt >= MAX_RETRIES) {
+					throw error instanceof SylphxError ? error : new SylphxError(lastError.message, {
+						code: 'NETWORK_ERROR',
+						cause: lastError,
+					})
+				}
+
+				await new Promise((resolve) => setTimeout(resolve, exponentialBackoff(attempt)))
+			}
 		}
 
-		return response.json() as Promise<T>
+		throw lastError ?? new SylphxError('Request failed', { code: 'UNKNOWN' })
 	}
 
 	// ==========================================

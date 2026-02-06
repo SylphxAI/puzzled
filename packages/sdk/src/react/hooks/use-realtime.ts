@@ -28,8 +28,10 @@
 
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useContext } from 'react'
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../../constants'
+import { useState, useEffect, useCallback, useRef, useContext, useMemo } from 'react'
+import { DEFAULT_PLATFORM_URL, SDK_API_PATH, SDK_VERSION, SDK_PLATFORM } from '../../constants'
+import { SylphxError, RateLimitError } from '../../errors'
+import type { SylphxErrorCode } from '../../errors'
 import type { StreamMessage } from '../../realtime-types'
 import { PlatformContext } from '../platform-context'
 
@@ -158,6 +160,14 @@ export function useRealtime<T = unknown>(
 		return url.toString()
 	}, [platformUrl, channel])
 
+	// SDK headers for fetch calls
+	const sdkHeaders = useMemo(() => ({
+		'Content-Type': 'application/json',
+		'x-app-secret': appId,
+		'X-SDK-Version': SDK_VERSION,
+		'X-SDK-Platform': SDK_PLATFORM,
+	}), [appId])
+
 	// Fetch history
 	const fetchHistory = useCallback(async () => {
 		if (!history) return
@@ -168,10 +178,7 @@ export function useRealtime<T = unknown>(
 		try {
 			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/history`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-app-secret': appId,
-				},
+				headers: sdkHeaders,
 				body: JSON.stringify({
 					channel,
 					start: historyStart,
@@ -192,7 +199,7 @@ export function useRealtime<T = unknown>(
 		} catch {
 			// History fetch is best-effort, don't fail the connection
 		}
-	}, [platformUrl, appId, channel, history])
+	}, [platformUrl, sdkHeaders, channel, history])
 
 	// Connect to SSE stream
 	const connect = useCallback(() => {
@@ -294,27 +301,39 @@ export function useRealtime<T = unknown>(
 		setStatus('disconnected')
 	}, [])
 
-	// Emit message
+	// Emit message with SylphxError wrapping
 	const emit = useCallback(
 		async (event: string, data: T): Promise<string> => {
 			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-app-secret': appId,
-				},
+				headers: sdkHeaders,
 				body: JSON.stringify({ channel, event, data }),
 			})
 
 			if (!response.ok) {
-				const error = await response.json().catch(() => ({ error: 'Emit failed' }))
-				throw new Error(typeof error.error === 'string' ? error.error : 'Emit failed')
+				const errorBody = await response.json().catch(() => ({ error: 'Emit failed' }))
+				const message = typeof errorBody.error === 'string' ? errorBody.error : 'Emit failed'
+
+				if (response.status === 429) {
+					throw new RateLimitError(message, {
+						retryAfter: Number(response.headers.get('Retry-After')) || undefined,
+					})
+				}
+
+				const codeMap: Record<number, SylphxErrorCode> = {
+					400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN',
+					404: 'NOT_FOUND', 500: 'INTERNAL_SERVER_ERROR',
+				}
+				throw new SylphxError(message, {
+					code: codeMap[response.status] ?? 'UNKNOWN',
+					status: response.status,
+				})
 			}
 
 			const result = (await response.json()) as { id: string }
 			return result.id
 		},
-		[platformUrl, appId, channel]
+		[platformUrl, sdkHeaders, channel]
 	)
 
 	// Clear messages
@@ -492,30 +511,46 @@ export function useRealtimeChannels<T = unknown>(
 		setStatuses({})
 	}, [])
 
-	// Emit to a specific channel
+	// SDK headers for multi-channel emit
+	const sdkHeaders = useMemo(() => ({
+		'Content-Type': 'application/json',
+		'x-app-secret': appId,
+		'X-SDK-Version': SDK_VERSION,
+		'X-SDK-Platform': SDK_PLATFORM,
+	}), [appId])
+
+	// Emit to a specific channel with SylphxError wrapping
 	const emit = useCallback(
 		async (event: string, data: T, targetChannel?: string): Promise<string> => {
 			const channel = targetChannel || channels[0]
-			if (!channel) throw new Error('No channel specified')
+			if (!channel) throw new SylphxError('No channel specified', { code: 'BAD_REQUEST' })
 
 			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-app-secret': appId,
-				},
+				headers: sdkHeaders,
 				body: JSON.stringify({ channel, event, data }),
 			})
 
 			if (!response.ok) {
-				const error = await response.json().catch(() => ({ error: 'Emit failed' }))
-				throw new Error(typeof error.error === 'string' ? error.error : 'Emit failed')
+				const errorBody = await response.json().catch(() => ({ error: 'Emit failed' }))
+				const message = typeof errorBody.error === 'string' ? errorBody.error : 'Emit failed'
+
+				if (response.status === 429) {
+					throw new RateLimitError(message, {
+						retryAfter: Number(response.headers.get('Retry-After')) || undefined,
+					})
+				}
+
+				throw new SylphxError(message, {
+					code: response.status === 401 ? 'UNAUTHORIZED' : response.status === 403 ? 'FORBIDDEN' : 'UNKNOWN',
+					status: response.status,
+				})
 			}
 
 			const result = (await response.json()) as { id: string }
 			return result.id
 		},
-		[channels, platformUrl, appId]
+		[channels, platformUrl, sdkHeaders]
 	)
 
 	// Clear all messages

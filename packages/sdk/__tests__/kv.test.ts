@@ -535,7 +535,7 @@ describe('zrange', () => {
 // ============================================================================
 
 describe('error handling', () => {
-	test('throws on non-200 response', async () => {
+	test('throws SylphxError on non-200 response', async () => {
 		setupMockFetch({ error: 'Key not found' }, 404)
 
 		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
@@ -543,11 +543,54 @@ describe('error handling', () => {
 		await expect(kv.get('test')).rejects.toThrow('Key not found')
 	})
 
-	test('throws generic error on parse failure', async () => {
+	test('throws SylphxError with correct error code on 404', async () => {
+		setupMockFetch({ error: 'Key not found' }, 404)
+
+		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+
+		try {
+			await kv.get('test')
+			expect.unreachable('Should have thrown')
+		} catch (error) {
+			expect(error).toBeInstanceOf(Error)
+			expect((error as Error).message).toBe('Key not found')
+			// SylphxError has .code property
+			expect((error as { code?: string }).code).toBe('NOT_FOUND')
+		}
+	})
+
+	test('throws RateLimitError on 429 response', async () => {
+		globalThis.fetch = mock(() => {
+			return Promise.resolve(
+				new Response(JSON.stringify({ error: 'Too many requests' }), {
+					status: 429,
+					headers: {
+						'Content-Type': 'application/json',
+						'Retry-After': '30',
+						'X-RateLimit-Limit': '100',
+						'X-RateLimit-Remaining': '0',
+					},
+				})
+			)
+		}) as typeof fetch
+
+		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+
+		try {
+			await kv.get('test')
+			expect.unreachable('Should have thrown')
+		} catch (error) {
+			expect(error).toBeInstanceOf(Error)
+			expect((error as { code?: string }).code).toBe('TOO_MANY_REQUESTS')
+			expect((error as { retryAfter?: number }).retryAfter).toBe(30)
+		}
+	})
+
+	test('throws generic SylphxError on parse failure (non-retryable status)', async () => {
 		globalThis.fetch = mock(() => {
 			return Promise.resolve(
 				new Response('not json', {
-					status: 500,
+					status: 400,
 					headers: { 'Content-Type': 'text/plain' },
 				})
 			)
@@ -556,6 +599,18 @@ describe('error handling', () => {
 		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
 
 		await expect(kv.get('test')).rejects.toThrow('Request failed')
+	})
+
+	test('includes SDK headers in requests', async () => {
+		setupMockFetch({ value: 'test', ttl: null })
+
+		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		await kv.get('test')
+
+		const headers = fetchCalls[0]?.options?.headers as Record<string, string>
+		expect(headers['X-SDK-Version']).toBeDefined()
+		expect(headers['X-SDK-Platform']).toBeDefined()
+		expect(headers['x-app-secret']).toBe('sk_dev_test')
 	})
 })
 
