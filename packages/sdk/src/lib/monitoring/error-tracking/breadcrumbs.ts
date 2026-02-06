@@ -11,6 +11,7 @@
 import type { Breadcrumb, ErrorLevel } from './types'
 import { sanitizeUrl, sanitizeForLogging } from '../session-replay/privacy'
 import { LOG_MESSAGE_MAX_LENGTH } from '../../../constants'
+import { onFetchEnd, onXHREnd, type UnsubscribeFn } from '../network-interceptor'
 
 // ==========================================
 // Breadcrumb Store
@@ -180,121 +181,67 @@ function enableInputCapture(): void {
 // ==========================================
 
 let networkCaptureEnabled = false
-const originalFetch = typeof window !== 'undefined' ? window.fetch : undefined
-const originalXHROpen = typeof XMLHttpRequest !== 'undefined' ? XMLHttpRequest.prototype.open : undefined
-const originalXHRSend = typeof XMLHttpRequest !== 'undefined' ? XMLHttpRequest.prototype.send : undefined
+let networkUnsubscribers: UnsubscribeFn[] = []
 
 /**
- * Enable network request capture
+ * Enable network request capture via shared interceptor.
+ *
+ * Uses the centralized network interceptor instead of independently
+ * monkey-patching fetch/XHR. This prevents the fragile chain problem
+ * where multiple modules each wrap the previous patch.
  */
 function enableNetworkCapture(): void {
 	if (networkCaptureEnabled || typeof window === 'undefined') return
 	networkCaptureEnabled = true
 
-	// Intercept fetch
-	if (originalFetch) {
-		// biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
-		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-			const startTime = Date.now()
-			const url = typeof input === 'string' ? input : (input as Request).url
-			const method = init?.method || (input instanceof Request ? input.method : 'GET')
-
-			try {
-				const response = await originalFetch.call(window, input, init)
-				const duration = Date.now() - startTime
-
-				addBreadcrumb({
-					type: 'http',
-					category: 'fetch',
-					message: `${method} ${sanitizeUrl(url)}`,
-					data: {
-						method,
-						url: sanitizeUrl(url),
-						status_code: response.status,
-						duration_ms: duration,
-					},
-					level: response.ok ? 'info' : 'error',
-				})
-
-				return response
-			} catch (error) {
-				const duration = Date.now() - startTime
-
-				addBreadcrumb({
-					type: 'http',
-					category: 'fetch',
-					message: `${method} ${sanitizeUrl(url)} (failed)`,
-					data: {
-						method,
-						url: sanitizeUrl(url),
-						duration_ms: duration,
-						error: error instanceof Error ? error.message : String(error),
-					},
-					level: 'error',
-				})
-
-				throw error
-			}
-		}
-	}
-
-	// Intercept XHR
-	if (originalXHROpen && originalXHRSend) {
-		XMLHttpRequest.prototype.open = function (
-			method: string,
-			url: string | URL,
-			async?: boolean,
-			username?: string | null,
-			password?: string | null
-		) {
-			const xhr = this as XMLHttpRequest & { _bcMethod: string; _bcUrl: string }
-			xhr._bcMethod = method
-			xhr._bcUrl = String(url)
-			return originalXHROpen.call(this, method, url, async ?? true, username, password)
-		}
-
-		XMLHttpRequest.prototype.send = function (body?: XMLHttpRequestBodyInit | null) {
-			const xhr = this as XMLHttpRequest & { _bcMethod: string; _bcUrl: string; _bcStart: number }
-			xhr._bcStart = Date.now()
-
-			this.addEventListener('loadend', () => {
-				const duration = Date.now() - xhr._bcStart
-
-				addBreadcrumb({
-					type: 'http',
-					category: 'xhr',
-					message: `${xhr._bcMethod} ${sanitizeUrl(xhr._bcUrl)}`,
-					data: {
-						method: xhr._bcMethod,
-						url: sanitizeUrl(xhr._bcUrl),
-						status_code: this.status,
-						duration_ms: duration,
-					},
-					level: this.status >= 400 ? 'error' : 'info',
-				})
+	networkUnsubscribers.push(
+		onFetchEnd((event) => {
+			const failed = event.status === 0 && event.error
+			addBreadcrumb({
+				type: 'http',
+				category: 'fetch',
+				message: `${event.method} ${sanitizeUrl(event.url)}${failed ? ' (failed)' : ''}`,
+				data: {
+					method: event.method,
+					url: sanitizeUrl(event.url),
+					status_code: event.status,
+					duration_ms: event.duration,
+					...(event.error ? { error: event.error } : {}),
+				},
+				level: event.ok ? 'info' : 'error',
 			})
+		}),
+	)
 
-			return originalXHRSend.call(this, body)
-		}
-	}
+	networkUnsubscribers.push(
+		onXHREnd((event) => {
+			addBreadcrumb({
+				type: 'http',
+				category: 'xhr',
+				message: `${event.method} ${sanitizeUrl(event.url)}`,
+				data: {
+					method: event.method,
+					url: sanitizeUrl(event.url),
+					status_code: event.status,
+					duration_ms: event.duration,
+				},
+				level: event.status >= 400 ? 'error' : 'info',
+			})
+		}),
+	)
 }
 
 /**
- * Restore original fetch/XHR (for testing)
+ * Unregister network capture listeners (for testing)
  */
 function disableNetworkCapture(): void {
 	if (!networkCaptureEnabled) return
 	networkCaptureEnabled = false
 
-	if (originalFetch) {
-		window.fetch = originalFetch
+	for (const unsub of networkUnsubscribers) {
+		unsub()
 	}
-	if (originalXHROpen) {
-		XMLHttpRequest.prototype.open = originalXHROpen
-	}
-	if (originalXHRSend) {
-		XMLHttpRequest.prototype.send = originalXHRSend
-	}
+	networkUnsubscribers = []
 }
 
 // ==========================================

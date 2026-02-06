@@ -123,6 +123,26 @@ export type {
 } from './session-replay'
 
 // ==========================================
+// Network Interceptor
+// ==========================================
+
+export {
+	onFetchStart,
+	onFetchEnd,
+	onXHRStart,
+	onXHREnd,
+	resetNetworkInterceptor,
+} from './network-interceptor'
+
+export type {
+	FetchStartEvent,
+	FetchEndEvent,
+	XHRStartEvent,
+	XHREndEvent,
+	UnsubscribeFn as NetworkUnsubscribeFn,
+} from './network-interceptor'
+
+// ==========================================
 // Web Vitals
 // ==========================================
 

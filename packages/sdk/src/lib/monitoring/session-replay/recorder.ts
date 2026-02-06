@@ -22,6 +22,7 @@ import type {
 	UploadCallback,
 } from './types'
 import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS, LOG_MESSAGE_MAX_LENGTH, STACK_TRACE_MAX_LENGTH } from '../../../constants'
+import { onFetchEnd, onXHREnd, type UnsubscribeFn } from '../network-interceptor'
 
 // ==========================================
 // Types
@@ -72,6 +73,9 @@ export class SessionRecorder {
 	// Timers
 	private uploadTimer: ReturnType<typeof setInterval> | null = null
 	private durationTimer: ReturnType<typeof setTimeout> | null = null
+
+	// Network interceptor cleanup
+	private networkUnsubscribers: UnsubscribeFn[] = []
 
 	// Stats
 	private bytesRecorded = 0
@@ -214,6 +218,12 @@ export class SessionRecorder {
 		this.deadClickDetector?.destroy()
 		this.rageClickDetector?.reset()
 		this.scrollThrashingDetector?.reset()
+
+		// Cleanup network interceptor listeners
+		for (const unsub of this.networkUnsubscribers) {
+			unsub()
+		}
+		this.networkUnsubscribers = []
 
 		// Final upload
 		await this.upload()
@@ -402,80 +412,36 @@ export class SessionRecorder {
 		})
 	}
 
+	/**
+	 * Capture network requests via shared interceptor.
+	 *
+	 * Uses the centralized network interceptor instead of independently
+	 * monkey-patching fetch/XHR. Records request metadata for session replay.
+	 */
 	private setupNetworkCapture(): void {
-		const recorder = this
-
-		// Intercept fetch
-		const originalFetch = window.fetch.bind(window) as typeof window.fetch
-		// biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
-		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-			const startTime = Date.now()
-			const url = typeof input === 'string' ? input : (input as Request).url
-			const method = init?.method || (input instanceof Request ? input.method : 'GET')
-
-			try {
-				const response = await originalFetch(input, init)
-				const duration = Date.now() - startTime
-
-				recorder.networkRequests.push({
-					timestamp: startTime,
-					method,
-					url: sanitizeUrl(url),
-					status: response.status,
-					duration,
+		this.networkUnsubscribers.push(
+			onFetchEnd((event) => {
+				this.networkRequests.push({
+					timestamp: event.startTime,
+					method: event.method,
+					url: sanitizeUrl(event.url),
+					status: event.status,
+					duration: event.duration,
 				})
+			}),
+		)
 
-				return response
-			} catch (error) {
-				const duration = Date.now() - startTime
-
-				recorder.networkRequests.push({
-					timestamp: startTime,
-					method,
-					url: sanitizeUrl(url),
-					status: 0,
-					duration,
+		this.networkUnsubscribers.push(
+			onXHREnd((event) => {
+				this.networkRequests.push({
+					timestamp: event.startTime,
+					method: event.method,
+					url: sanitizeUrl(event.url),
+					status: event.status,
+					duration: event.duration,
 				})
-
-				throw error
-			}
-		}
-
-		// Intercept XHR
-		const originalOpen = XMLHttpRequest.prototype.open
-		const originalSend = XMLHttpRequest.prototype.send
-
-		XMLHttpRequest.prototype.open = function (
-			method: string,
-			url: string | URL,
-			async?: boolean,
-			username?: string | null,
-			password?: string | null
-		) {
-			const xhr = this as XMLHttpRequest & { _srMethod: string; _srUrl: string }
-			xhr._srMethod = method
-			xhr._srUrl = String(url)
-			return originalOpen.call(this, method, url, async ?? true, username, password)
-		}
-
-		XMLHttpRequest.prototype.send = function (body?: XMLHttpRequestBodyInit | null) {
-			const xhr = this as XMLHttpRequest & { _srMethod: string; _srUrl: string; _srStart: number }
-			xhr._srStart = Date.now()
-
-			this.addEventListener('loadend', () => {
-				const duration = Date.now() - xhr._srStart
-
-				recorder.networkRequests.push({
-					timestamp: xhr._srStart,
-					method: xhr._srMethod,
-					url: sanitizeUrl(xhr._srUrl),
-					status: this.status,
-					duration,
-				})
-			})
-
-			return originalSend.call(this, body)
-		}
+			}),
+		)
 	}
 
 	private setupConsoleCapture(): void {

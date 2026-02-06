@@ -10,6 +10,7 @@
 
 import type { DeadClick, RageClick } from './types'
 import { SESSION_REPLAY_RAGE_CLICK_WINDOW_MS, SESSION_REPLAY_SCROLL_HEAT_WINDOW_MS, DOM_SNAPSHOT_MAX_LENGTH, SESSION_REPLAY_DEAD_CLICK_TIMEOUT_MS } from '../../../constants'
+import { onFetchStart, onXHRStart, type UnsubscribeFn } from '../network-interceptor'
 
 // ==========================================
 // Types
@@ -197,6 +198,7 @@ export class DeadClickDetector {
 	private networkActivity = false
 	private readonly timeout: number
 	private callback: ((deadClick: DeadClick) => void) | null = null
+	private networkUnsubscribers: UnsubscribeFn[] = []
 
 	constructor(options: { timeout?: number } = {}) {
 		this.timeout = options.timeout ?? SESSION_REPLAY_DEAD_CLICK_TIMEOUT_MS
@@ -377,40 +379,24 @@ export class DeadClickDetector {
 	}
 
 	/**
-	 * Monitor network activity
+	 * Monitor network activity via shared interceptor.
+	 *
+	 * Uses the centralized network interceptor instead of independently
+	 * monkey-patching fetch/XHR. Only needs to know that a request started
+	 * (not the details), so listens to start events only.
 	 */
 	private setupNetworkMonitor(): void {
-		const detector = this
+		this.networkUnsubscribers.push(
+			onFetchStart(() => {
+				this.networkActivity = true
+			}),
+		)
 
-		// Intercept fetch
-		const originalFetch = window.fetch.bind(window) as typeof window.fetch
-		// biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
-		;(window as any).fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-			detector.networkActivity = true
-			return originalFetch(input, init)
-		}
-
-		// Intercept XHR
-		const originalOpen = XMLHttpRequest.prototype.open
-		XMLHttpRequest.prototype.open = function (
-			method: string,
-			url: string | URL,
-			async?: boolean,
-			username?: string | null,
-			password?: string | null
-		) {
-			;(this as XMLHttpRequest & { _deadClickActive?: boolean })._deadClickActive = true
-			return originalOpen.call(this, method, url, async ?? true, username, password)
-		}
-
-		const originalSend = XMLHttpRequest.prototype.send
-		XMLHttpRequest.prototype.send = function (body?: XMLHttpRequestBodyInit | null) {
-			const xhr = this as XMLHttpRequest & { _deadClickActive?: boolean }
-			if (xhr._deadClickActive) {
-				detector.networkActivity = true
-			}
-			return originalSend.call(this, body)
-		}
+		this.networkUnsubscribers.push(
+			onXHRStart(() => {
+				this.networkActivity = true
+			}),
+		)
 	}
 
 	private buildSelector(element: Element | null): string {
@@ -446,6 +432,10 @@ export class DeadClickDetector {
 	 */
 	destroy(): void {
 		this.stopMutationObserver()
+		for (const unsub of this.networkUnsubscribers) {
+			unsub()
+		}
+		this.networkUnsubscribers = []
 	}
 }
 
