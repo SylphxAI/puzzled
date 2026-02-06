@@ -384,15 +384,15 @@ async function computeHmacSha256(message: string, secret: string): Promise<strin
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
-	if (a.length !== b.length) {
-		return false
-	}
-
-	let result = 0
+	// Compare against b if lengths match, otherwise compare a against itself.
+	// This prevents timing side-channel leaks: the loop always runs a.length
+	// iterations regardless of whether lengths match, so an attacker cannot
+	// infer b's length from response time.
+	const target = a.length === b.length ? b : a
+	let result = a.length ^ b.length // Non-zero if lengths differ
 	for (let i = 0; i < a.length; i++) {
-		result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+		result |= a.charCodeAt(i) ^ target.charCodeAt(i)
 	}
-
 	return result === 0
 }
 

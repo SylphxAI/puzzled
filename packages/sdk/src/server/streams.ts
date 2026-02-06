@@ -28,6 +28,10 @@
 
 import { validateAndSanitizeSecretKey } from '../key-validation'
 import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
+import type { StreamMessage } from '../realtime-types'
+
+// Re-export shared type for consumers who import from server
+export type { StreamMessage }
 
 // ============================================
 // Types
@@ -38,20 +42,6 @@ export interface StreamsClientOptions {
 	baseURL?: string
 	/** API key (default: SYLPHX_SECRET_KEY env var) */
 	apiKey?: string
-}
-
-/** A message from a stream */
-export interface StreamMessage<T = unknown> {
-	/** Stream entry ID (e.g., "1234567890-0") */
-	id: string
-	/** Event type */
-	event: string
-	/** Channel the message was sent to */
-	channel: string
-	/** Event data */
-	data: T
-	/** Unix timestamp in milliseconds */
-	timestamp?: number
 }
 
 /** Options for fetching stream history */

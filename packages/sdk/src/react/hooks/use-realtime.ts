@@ -30,25 +30,11 @@
 
 import { useState, useEffect, useCallback, useRef, useContext } from 'react'
 import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../../constants'
+import type { StreamMessage } from '../../realtime-types'
 import { PlatformContext } from '../platform-context'
 
-// ============================================
-// Types
-// ============================================
-
-/** A message from a stream */
-export interface StreamMessage<T = unknown> {
-	/** Stream entry ID (e.g., "1234567890-0") */
-	id: string
-	/** Event type */
-	event: string
-	/** Channel the message was sent to */
-	channel: string
-	/** Event data */
-	data: T
-	/** Unix timestamp in milliseconds */
-	timestamp?: number
-}
+// Re-export shared type for consumers who import from react
+export type { StreamMessage }
 
 /** Connection status */
 export type RealtimeStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
@@ -153,6 +139,7 @@ export function useRealtime<T = unknown>(
 	const lastAckRef = useRef<string>('0')
 	const eventSourceRef = useRef<EventSource | null>(null)
 	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const reconnectAttemptRef = useRef(0)
 	const mountedRef = useRef(true)
 
 	// Determine platform URL
@@ -227,6 +214,7 @@ export function useRealtime<T = unknown>(
 
 		es.onopen = () => {
 			if (!mountedRef.current) return
+			reconnectAttemptRef.current = 0 // Reset backoff on successful connect
 			setStatus('connected')
 			fetchHistory()
 			onConnect?.(channel)
@@ -281,8 +269,10 @@ export function useRealtime<T = unknown>(
 			setStatus('reconnecting')
 			es.close()
 
-			// Reconnect with exponential backoff
-			const delay = Math.min(1000 * Math.pow(2, 0), 30000) // Start with 1s
+			// Reconnect with exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
+			const attempt = reconnectAttemptRef.current
+			reconnectAttemptRef.current = attempt + 1
+			const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
 			reconnectTimeoutRef.current = setTimeout(() => {
 				if (mountedRef.current && enabled) connect()
 			}, delay)
@@ -345,7 +335,7 @@ export function useRealtime<T = unknown>(
 			mountedRef.current = false
 			disconnect()
 		}
-	}, [enabled, appId, channel]) // Reconnect when channel changes
+	}, [enabled, appId, channel, connect, disconnect]) // Reconnect when channel changes
 
 	return {
 		messages,
