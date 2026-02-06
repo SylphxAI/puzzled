@@ -8,7 +8,7 @@
  * Platform is source of truth for user data.
  */
 
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import {
 	boolean,
 	index,

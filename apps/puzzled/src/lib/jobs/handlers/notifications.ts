@@ -149,12 +149,7 @@ export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 			userId: gameSessions.userId,
 		})
 		.from(gameSessions)
-		.where(
-			and(
-				gt(gameSessions.completedAt, yesterdayUTC),
-				lt(gameSessions.completedAt, todayUTC),
-			),
-		)
+		.where(and(gt(gameSessions.completedAt, yesterdayUTC), lt(gameSessions.completedAt, todayUTC)))
 		.groupBy(gameSessions.userId)
 
 	if (playedYesterday.length === 0) {
@@ -169,10 +164,7 @@ export const streakAtRiskHandler: JobHandler = async (_payload, context) => {
 		.select({ userId: gameSessions.userId })
 		.from(gameSessions)
 		.where(
-			and(
-				inArray(gameSessions.userId, yesterdayUserIds),
-				gt(gameSessions.completedAt, todayUTC),
-			),
+			and(inArray(gameSessions.userId, yesterdayUserIds), gt(gameSessions.completedAt, todayUTC)),
 		)
 		.groupBy(gameSessions.userId)
 

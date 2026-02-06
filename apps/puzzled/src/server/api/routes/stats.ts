@@ -302,9 +302,7 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 						totalScore: sql<number>`COALESCE(SUM(${gameSessions.score}), 0)`,
 					})
 					.from(gameSessions)
-					.where(
-						and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, input.gameSlug)),
-					)
+					.where(and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, input.gameSlug)))
 
 		const [userScoreResult] = await userScoreQuery
 		const userScore = Number(userScoreResult?.totalScore ?? 0)

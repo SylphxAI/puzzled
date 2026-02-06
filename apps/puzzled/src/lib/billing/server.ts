@@ -104,7 +104,9 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
 
 		// Check if subscription is active and on a premium plan
 		const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-		const isPremium = PREMIUM_PLANS.includes(subscription.planSlug as (typeof PREMIUM_PLANS)[number])
+		const isPremium = PREMIUM_PLANS.includes(
+			subscription.planSlug as (typeof PREMIUM_PLANS)[number],
+		)
 
 		return isActive && isPremium
 	} catch (error) {
