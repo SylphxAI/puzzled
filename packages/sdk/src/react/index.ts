@@ -4,8 +4,9 @@
  * @sylphx/platform-sdk/react
  *
  * React integration for Sylphx Platform SDK.
- * 13 billable services: AI, Storage, Database, Email, Jobs, Notifications,
- * Analytics, Webhooks, Monitoring, Auth, Flags, Consent, Referrals.
+ * 18 billable services: AI, Storage, Database, Email, Jobs, Notifications,
+ * Analytics, Webhooks, Monitoring, Auth, Flags, Consent, Referrals,
+ * Engagement, Billing, Search, KV, Realtime.
  *
  * @example
  * ```tsx
@@ -1108,3 +1109,18 @@ export {
 	type UseRealtimeReturn,
 	type UseRealtimeChannelsOptions,
 } from './hooks/use-realtime'
+
+// ============================================================================
+// KV (Key-Value Store)
+// ============================================================================
+// Client-side key-value operations with Redis semantics.
+// Supports strings, hashes, lists, sorted sets, and rate limiting.
+
+export {
+	useKv,
+	type KvSetOptions,
+	type KvRateLimitResult,
+	type KvZMember,
+	type UseKvOptions,
+	type UseKvReturn,
+} from './hooks/use-kv'
