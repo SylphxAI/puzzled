@@ -125,7 +125,7 @@ export function createStreams(options: StreamsClientOptions = {}): StreamsClient
 	}
 
 	async function emit<T>(channel: string, event: string, data: T): Promise<string> {
-		const response = await fetch(`${baseURL}${SDK_API_PATH}/cache/streams/emit`, {
+		const response = await fetch(`${baseURL}${SDK_API_PATH}/realtime/emit`, {
 			method: 'POST',
 			headers,
 			body: JSON.stringify({ channel, event, data }),
@@ -144,7 +144,7 @@ export function createStreams(options: StreamsClientOptions = {}): StreamsClient
 		channel: string,
 		options?: StreamHistoryOptions
 	): Promise<StreamMessage<T>[]> {
-		const response = await fetch(`${baseURL}${SDK_API_PATH}/cache/streams/history`, {
+		const response = await fetch(`${baseURL}${SDK_API_PATH}/realtime/history`, {
 			method: 'POST',
 			headers,
 			body: JSON.stringify({

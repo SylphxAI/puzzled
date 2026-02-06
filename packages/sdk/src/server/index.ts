@@ -1052,3 +1052,13 @@ export type {
 	StreamHistoryOptions,
 	ChannelHelper,
 } from './streams'
+
+// KV (Key-Value Store)
+export { createKv, getKv } from './kv'
+export type {
+	KvClient,
+	KvClientOptions,
+	KvSetOptions,
+	KvRateLimitResult,
+	KvZMember,
+} from './kv'

@@ -160,7 +160,7 @@ export function useRealtime<T = unknown>(
 
 	// Build subscription URL
 	const buildUrl = useCallback(() => {
-		const url = new URL(`${platformUrl}${SDK_API_PATH}/cache/streams/subscribe`)
+		const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`)
 		url.searchParams.set('channel', channel)
 
 		// Add last acknowledged ID for resumption
@@ -179,11 +179,11 @@ export function useRealtime<T = unknown>(
 		const historyStart = typeof history === 'object' ? history.start : undefined
 
 		try {
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/cache/streams/history`, {
+			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/history`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'X-App-Id': appId,
+					'x-app-secret': appId,
 				},
 				body: JSON.stringify({
 					channel,
@@ -307,11 +307,11 @@ export function useRealtime<T = unknown>(
 	// Emit message
 	const emit = useCallback(
 		async (event: string, data: T): Promise<string> => {
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/cache/streams/emit`, {
+			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'X-App-Id': appId,
+					'x-app-secret': appId,
 				},
 				body: JSON.stringify({ channel, event, data }),
 			})
@@ -436,7 +436,7 @@ export function useRealtimeChannels<T = unknown>(
 
 			setStatuses((prev) => ({ ...prev, [channel]: 'connecting' }))
 
-			const url = new URL(`${platformUrl}${SDK_API_PATH}/cache/streams/subscribe`)
+			const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`)
 			url.searchParams.set('channel', channel)
 			url.searchParams.set('app_id', appId)
 
@@ -508,11 +508,11 @@ export function useRealtimeChannels<T = unknown>(
 			const channel = targetChannel || channels[0]
 			if (!channel) throw new Error('No channel specified')
 
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/cache/streams/emit`, {
+			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'X-App-Id': appId,
+					'x-app-secret': appId,
 				},
 				body: JSON.stringify({ channel, event, data }),
 			})
