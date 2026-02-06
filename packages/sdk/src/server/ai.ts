@@ -40,10 +40,10 @@
 // ============================================
 
 export interface AIClientOptions {
-	/** Platform URL (default: SYLPHX_URL env var or https://sylphx.com) */
-	baseURL?: string
-	/** API key (default: SYLPHX_SECRET_KEY env var) */
-	apiKey?: string
+	/** Secret key for authentication (default: SYLPHX_SECRET_KEY env var) */
+	secretKey?: string
+	/** Platform URL (default: SYLPHX_PLATFORM_URL env var or https://sylphx.com) */
+	platformUrl?: string
 }
 
 // ChatMessage re-exported from ai.ts (SSOT)
@@ -160,12 +160,12 @@ export interface AIClient {
  * Create a server-side AI client
  *
  * Uses environment variables by default:
- * - SYLPHX_URL: Platform URL (default: https://sylphx.com)
+ * - SYLPHX_PLATFORM_URL: Platform URL (default: https://sylphx.com)
  * - SYLPHX_SECRET_KEY: Your app's secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx)
  */
 export function createAI(options: AIClientOptions = {}): AIClient {
-	const baseURL = (options.baseURL || process.env.SYLPHX_URL || DEFAULT_PLATFORM_URL).trim()
-	const rawApiKey = options.apiKey || process.env.SYLPHX_SECRET_KEY
+	const baseURL = (options.platformUrl || process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
+	const rawApiKey = options.secretKey || process.env.SYLPHX_SECRET_KEY
 
 	// Validate and sanitize API key using SSOT
 	const apiKey = validateAndSanitizeSecretKey(rawApiKey)

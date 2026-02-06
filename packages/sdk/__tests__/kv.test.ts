@@ -64,8 +64,8 @@ afterEach(() => {
 describe('createKv', () => {
 	test('creates client with custom options', () => {
 		const kv = createKv({
-			baseURL: 'https://custom.api.com',
-			apiKey: 'sk_dev_custom123',
+			platformUrl: 'https://custom.api.com',
+			secretKey: 'sk_dev_custom123',
 		})
 		expect(kv).toBeDefined()
 		expect(typeof kv.get).toBe('function')
@@ -76,8 +76,8 @@ describe('createKv', () => {
 		setupMockFetch({ value: 'test', ttl: null })
 
 		const kv = createKv({
-			baseURL: 'https://api.test.com',
-			apiKey: 'sk_dev_test123',
+			platformUrl: 'https://api.test.com',
+			secretKey: 'sk_dev_test123',
 		})
 
 		await kv.get('mykey')
@@ -96,7 +96,7 @@ describe('get', () => {
 	test('fetches value by key', async () => {
 		setupMockFetch({ value: { name: 'John' }, ttl: 3600 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.get<{ name: string }>('user:123')
 
 		expect(result.value).toEqual({ name: 'John' })
@@ -108,7 +108,7 @@ describe('get', () => {
 	test('returns null for missing key', async () => {
 		setupMockFetch({ value: null, ttl: null })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.get('nonexistent')
 
 		expect(result.value).toBeNull()
@@ -118,7 +118,7 @@ describe('get', () => {
 	test('encodes special characters in key', async () => {
 		setupMockFetch({ value: 'test', ttl: null })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		await kv.get('user:123:profile')
 
 		expect(getLastCall()?.url).toContain('/kv/user%3A123%3Aprofile')
@@ -129,7 +129,7 @@ describe('set', () => {
 	test('sets value with options', async () => {
 		setupMockFetch({ success: true })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.set('user:123', { name: 'John' }, { ex: 3600, nx: true })
 
 		expect(result).toBe(true)
@@ -145,7 +145,7 @@ describe('set', () => {
 	test('sets value without options', async () => {
 		setupMockFetch({ success: true })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		await kv.set('key', 'value')
 
 		const body = getRequestBody()
@@ -158,7 +158,7 @@ describe('del', () => {
 	test('deletes key and returns count', async () => {
 		setupMockFetch({ deleted: 1 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.del('user:123')
 
 		expect(result).toBe(1)
@@ -168,7 +168,7 @@ describe('del', () => {
 	test('returns 0 for nonexistent key', async () => {
 		setupMockFetch({ deleted: 0 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.del('nonexistent')
 
 		expect(result).toBe(0)
@@ -179,7 +179,7 @@ describe('exists', () => {
 	test('returns true for existing key', async () => {
 		setupMockFetch({ exists: true })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.exists('user:123')
 
 		expect(result).toBe(true)
@@ -189,7 +189,7 @@ describe('exists', () => {
 	test('returns false for missing key', async () => {
 		setupMockFetch({ exists: false })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.exists('nonexistent')
 
 		expect(result).toBe(false)
@@ -210,7 +210,7 @@ describe('mget', () => {
 			},
 		})
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.mget(['key1', 'key2', 'key3'])
 
 		expect(result.key1).toBe('value1')
@@ -226,7 +226,7 @@ describe('mset', () => {
 	test('sets multiple values with TTL', async () => {
 		setupMockFetch({ success: true })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		await kv.mset(
 			[
 				{ key: 'key1', value: 'value1' },
@@ -252,7 +252,7 @@ describe('incr', () => {
 	test('increments by 1 by default', async () => {
 		setupMockFetch({ value: 42 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.incr('counter')
 
 		expect(result).toBe(42)
@@ -265,7 +265,7 @@ describe('incr', () => {
 	test('increments by custom amount', async () => {
 		setupMockFetch({ value: 50 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.incr('counter', 10)
 
 		expect(result).toBe(50)
@@ -277,7 +277,7 @@ describe('incr', () => {
 	test('decrements with negative value', async () => {
 		setupMockFetch({ value: 5 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.incr('counter', -5)
 
 		expect(result).toBe(5)
@@ -295,7 +295,7 @@ describe('expire', () => {
 	test('sets TTL on existing key', async () => {
 		setupMockFetch({ success: true })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.expire('user:123', 3600)
 
 		expect(result).toBe(true)
@@ -308,7 +308,7 @@ describe('expire', () => {
 	test('returns false for missing key', async () => {
 		setupMockFetch({ success: false })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.expire('nonexistent', 3600)
 
 		expect(result).toBe(false)
@@ -328,7 +328,7 @@ describe('ratelimit', () => {
 			reset: 1704067200000,
 		})
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.ratelimit('api:user123', { limit: 100, window: '1h' })
 
 		expect(result.success).toBe(true)
@@ -350,7 +350,7 @@ describe('ratelimit', () => {
 			reset: 1704067200000,
 		})
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.ratelimit('api:user123', { limit: 100, window: '1h' })
 
 		expect(result.success).toBe(false)
@@ -366,7 +366,7 @@ describe('hset', () => {
 	test('sets hash fields', async () => {
 		setupMockFetch({ created: 2 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.hset('user:123', { name: 'John', age: 30 })
 
 		expect(result).toBe(2)
@@ -381,7 +381,7 @@ describe('hget', () => {
 	test('gets hash field', async () => {
 		setupMockFetch({ value: 'John' })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.hget('user:123', 'name')
 
 		expect(result).toBe('John')
@@ -394,7 +394,7 @@ describe('hget', () => {
 	test('returns null for missing field', async () => {
 		setupMockFetch({ value: null })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.hget('user:123', 'nonexistent')
 
 		expect(result).toBeNull()
@@ -405,7 +405,7 @@ describe('hgetall', () => {
 	test('gets all hash fields', async () => {
 		setupMockFetch({ fields: { name: 'John', age: 30 } })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.hgetall('user:123')
 
 		expect(result).toEqual({ name: 'John', age: 30 })
@@ -414,7 +414,7 @@ describe('hgetall', () => {
 	test('returns null for missing hash', async () => {
 		setupMockFetch({ fields: null })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.hgetall('nonexistent')
 
 		expect(result).toBeNull()
@@ -429,7 +429,7 @@ describe('lpush', () => {
 	test('pushes values to list', async () => {
 		setupMockFetch({ length: 3 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.lpush('notifications', 'msg1', 'msg2')
 
 		expect(result).toBe(3)
@@ -444,7 +444,7 @@ describe('lrange', () => {
 	test('gets list range with defaults', async () => {
 		setupMockFetch({ values: ['a', 'b', 'c'] })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.lrange('list')
 
 		expect(result).toEqual(['a', 'b', 'c'])
@@ -457,7 +457,7 @@ describe('lrange', () => {
 	test('gets list range with custom bounds', async () => {
 		setupMockFetch({ values: ['b', 'c'] })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.lrange('list', 1, 2)
 
 		expect(result).toEqual(['b', 'c'])
@@ -476,7 +476,7 @@ describe('zadd', () => {
 	test('adds members with scores', async () => {
 		setupMockFetch({ added: 2 })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.zadd(
 			'leaderboard',
 			{ score: 100, member: 'player1' },
@@ -503,7 +503,7 @@ describe('zrange', () => {
 			],
 		})
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.zrange('leaderboard')
 
 		expect(result).toHaveLength(2)
@@ -518,7 +518,7 @@ describe('zrange', () => {
 			],
 		})
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		const result = await kv.zrange('leaderboard', 0, 9, { withScores: true, rev: true })
 
 		expect(result[0].member).toBe('player2')
@@ -538,7 +538,7 @@ describe('error handling', () => {
 	test('throws SylphxError on non-200 response', async () => {
 		setupMockFetch({ error: 'Key not found' }, 404)
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 
 		await expect(kv.get('test')).rejects.toThrow('Key not found')
 	})
@@ -546,7 +546,7 @@ describe('error handling', () => {
 	test('throws SylphxError with correct error code on 404', async () => {
 		setupMockFetch({ error: 'Key not found' }, 404)
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 
 		try {
 			await kv.get('test')
@@ -574,7 +574,7 @@ describe('error handling', () => {
 			)
 		}) as typeof fetch
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 
 		try {
 			await kv.get('test')
@@ -596,7 +596,7 @@ describe('error handling', () => {
 			)
 		}) as typeof fetch
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 
 		await expect(kv.get('test')).rejects.toThrow('Request failed')
 	})
@@ -604,7 +604,7 @@ describe('error handling', () => {
 	test('includes SDK headers in requests', async () => {
 		setupMockFetch({ value: 'test', ttl: null })
 
-		const kv = createKv({ baseURL: 'https://api.test.com', apiKey: 'sk_dev_test' })
+		const kv = createKv({ platformUrl: 'https://api.test.com', secretKey: 'sk_dev_test' })
 		await kv.get('test')
 
 		const headers = fetchCalls[0]?.options?.headers as Record<string, string>
@@ -652,8 +652,8 @@ describe('getKv', () => {
 		// if run before any other getKv() call or after module reload
 
 		try {
-			// createKv without apiKey should throw
-			expect(() => createKv({ baseURL: 'https://test.com' })).toThrow(/Secret Key is required/)
+			// createKv without secretKey should throw
+			expect(() => createKv({ platformUrl: 'https://test.com' })).toThrow(/Secret Key is required/)
 		} finally {
 			// Restore
 			if (originalSecretKey !== undefined) {

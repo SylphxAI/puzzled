@@ -26,7 +26,7 @@
  */
 
 import { validateAndSanitizeSecretKey } from '../key-validation'
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH, SDK_VERSION, SDK_PLATFORM, MAX_RETRIES } from '../constants'
+import { SDK_API_PATH, SDK_VERSION, SDK_PLATFORM, MAX_RETRIES, resolvePlatformUrl, resolveSecretKey } from '../constants'
 import { SylphxError, RateLimitError, exponentialBackoff } from '../errors'
 import type { SylphxErrorCode } from '../errors'
 import type { KvSetOptions, KvRateLimitResult, KvZMember } from '../kv-types'
@@ -39,10 +39,10 @@ export type { KvSetOptions, KvRateLimitResult, KvZMember } from '../kv-types'
 // ============================================
 
 export interface KvClientOptions {
-	/** Platform URL (default: SYLPHX_URL env var or https://sylphx.com) */
-	baseURL?: string
-	/** API key (default: SYLPHX_SECRET_KEY env var) */
-	apiKey?: string
+	/** Secret key for authentication (default: SYLPHX_SECRET_KEY env var) */
+	secretKey?: string
+	/** Platform URL (default: SYLPHX_PLATFORM_URL env var or https://sylphx.com) */
+	platformUrl?: string
 }
 
 // ============================================
@@ -243,19 +243,16 @@ export interface KvClient {
  * Create a server-side KV client
  *
  * Uses environment variables by default:
- * - SYLPHX_URL: Platform URL (default: https://sylphx.com)
+ * - SYLPHX_PLATFORM_URL: Platform URL (default: https://sylphx.com)
  * - SYLPHX_SECRET_KEY: Your app's secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx)
  */
 export function createKv(options: KvClientOptions = {}): KvClient {
-	const baseURL = (options.baseURL || process.env.SYLPHX_URL || DEFAULT_PLATFORM_URL).trim()
-	const rawApiKey = options.apiKey || process.env.SYLPHX_SECRET_KEY
-
-	// Validate and sanitize API key using SSOT
-	const apiKey = validateAndSanitizeSecretKey(rawApiKey)
+	const platformUrl = resolvePlatformUrl(options.platformUrl)
+	const secretKey = validateAndSanitizeSecretKey(resolveSecretKey(options.secretKey))
 
 	const headers = {
 		'Content-Type': 'application/json',
-		'x-app-secret': apiKey,
+		'x-app-secret': secretKey,
 		'X-SDK-Version': SDK_VERSION,
 		'X-SDK-Platform': SDK_PLATFORM,
 	}
@@ -266,7 +263,7 @@ export function createKv(options: KvClientOptions = {}): KvClient {
 
 		for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
 			try {
-				const response = await fetch(`${baseURL}${SDK_API_PATH}/kv${path}`, {
+				const response = await fetch(`${platformUrl}${SDK_API_PATH}/kv${path}`, {
 					method,
 					headers,
 					body: body ? JSON.stringify(body) : undefined,

@@ -16,6 +16,54 @@
 export const DEFAULT_PLATFORM_URL = 'https://sylphx.com'
 
 /**
+ * Canonical environment variable name for the platform URL.
+ *
+ * SDK modules MUST read from this env var (with SYLPHX_URL as legacy fallback).
+ * Centralizing the name prevents the same env var being spelled differently
+ * across kv.ts, streams.ts, ai.ts, middleware.ts, and server.ts.
+ */
+export const ENV_PLATFORM_URL = 'SYLPHX_PLATFORM_URL'
+
+/**
+ * Legacy environment variable name for the platform URL.
+ *
+ * Supported as a fallback for older deployments that set SYLPHX_URL.
+ * New projects should use SYLPHX_PLATFORM_URL.
+ */
+export const ENV_PLATFORM_URL_LEGACY = 'SYLPHX_URL'
+
+/**
+ * Canonical environment variable name for the secret key.
+ *
+ * All server-side SDK modules read from this env var by default.
+ */
+export const ENV_SECRET_KEY = 'SYLPHX_SECRET_KEY'
+
+/**
+ * Resolve the platform URL from environment variables.
+ *
+ * Priority: explicit value > SYLPHX_PLATFORM_URL > SYLPHX_URL (legacy) > default
+ */
+export function resolvePlatformUrl(explicit?: string): string {
+	return (
+		explicit ||
+		process.env[ENV_PLATFORM_URL] ||
+		process.env[ENV_PLATFORM_URL_LEGACY] ||
+		DEFAULT_PLATFORM_URL
+	).trim()
+}
+
+/**
+ * Resolve the secret key from environment variables.
+ *
+ * Returns the raw value before validation. Callers should pass the result
+ * through `validateAndSanitizeSecretKey()`.
+ */
+export function resolveSecretKey(explicit?: string): string | undefined {
+	return explicit || process.env[ENV_SECRET_KEY]
+}
+
+/**
  * SDK API major version
  *
  * Update this when the server releases a new major API version.

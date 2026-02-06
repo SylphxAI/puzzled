@@ -483,7 +483,9 @@ import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
 
 /** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
+	/** Secret key for authentication (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx) */
 	secretKey: string
+	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string
 }
 
@@ -594,12 +596,12 @@ export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Pr
 
 /** Shared fetch for OAuth providers — App ID header identifies the app */
 async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
-	const platformUrl = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
+	const baseURL = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
 	// Validate and sanitize App ID - logs warning if key contains whitespace
 	const appId = validateAndSanitizeAppId(options.appId)
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
-		url: `${platformUrl}/api/auth/providers`,
+		url: `${baseURL}/api/auth/providers`,
 		headers: { 'X-App-Id': appId },
 		fallback: { providers: [] },
 		label: 'OAuth providers',
