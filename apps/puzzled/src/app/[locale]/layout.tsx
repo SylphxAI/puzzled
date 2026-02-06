@@ -169,7 +169,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// Fetch platform config and messages in parallel
 	const appId = process.env.NEXT_PUBLIC_SYLPHX_APP_ID
 	const secretKey = process.env.SYLPHX_SECRET_KEY
-	const platformUrl = process.env.NEXT_PUBLIC_SYLPHX_URL
+	const platformUrl = process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL
 
 	const [messages, config] = await Promise.all([
 		getMessages(),
