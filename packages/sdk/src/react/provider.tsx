@@ -501,9 +501,11 @@ function SylphxProviderInner({
 	const inboxLoading = inboxQuery.isLoading
 	const inboxError = inboxQuery.error as Error | null
 
-	// Check if push is supported
-	const pushSupported =
-		typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
+	// Check if push is supported (deferred to useEffect to avoid hydration mismatch)
+	const [pushSupported, setPushSupported] = useState(false)
+	useEffect(() => {
+		setPushSupported('serviceWorker' in navigator && 'PushManager' in window)
+	}, [])
 
 	// Analytics queue for batching
 	const analyticsQueue = useRef<Array<{ type: string; data: Record<string, unknown>; eventId: string }>>([])
