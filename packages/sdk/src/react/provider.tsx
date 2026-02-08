@@ -277,7 +277,13 @@ function SylphxProviderInner({
 	// Storage (namespaced by app identifier)
 	// ============================================
 	const storage = useMemo(() => new SylphxStorage(appId), [appId])
-	const [anonymousId] = useState(() => getOrCreateAnonymousId(storage))
+
+	// Hydration-safe: start with empty string, populate from localStorage in useEffect
+	// Server and client initial render both produce '' — no mismatch
+	const [anonymousId, setAnonymousId] = useState('')
+	useEffect(() => {
+		setAnonymousId(getOrCreateAnonymousId(storage))
+	}, [storage])
 
 	// ============================================
 	// Click ID Auto-Capture (for conversion attribution)
@@ -298,38 +304,40 @@ function SylphxProviderInner({
 	// ============================================
 	// Auth State — Cookie-Centric (Single Source of Truth)
 	// ============================================
-	// Initial state is hydrated from the user cookie (set by server).
-	// This enables instant auth state without loading flicker.
+	// Hydration-safe: start with isLoaded: false (loading state).
+	// Both server and client initial render produce the same output.
+	// Cookie is read in useEffect below to populate the real auth state.
 	//
 	// Note: Declared early because TokenManager needs isSignedIn check
-	const [authState, setAuthState] = useState<AuthState>(() => {
-		// Try to read user from cookie (set by server after OAuth callback)
+	const [authState, setAuthState] = useState<AuthState>({
+		isLoaded: false,
+		isSignedIn: false,
+		user: null,
+		accessToken: null,
+		refreshToken: null,
+		error: null,
+		isOAuthLoading: false,
+		oauthError: null,
+	})
+
+	// Hydrate auth state from cookie after mount (avoids server/client mismatch)
+	useEffect(() => {
 		const userCookieData = getUserFromCookie(appId)
 		if (userCookieData && userCookieData.expiresAt > Date.now()) {
-			return {
+			setAuthState({
 				isLoaded: true,
 				isSignedIn: true,
 				user: userCookieData.user,
-				// Tokens are in HttpOnly cookies — not exposed to JavaScript (XSS protection)
 				accessToken: null,
 				refreshToken: null,
 				error: null,
 				isOAuthLoading: false,
 				oauthError: null,
-			}
+			})
+		} else {
+			setAuthState((prev) => ({ ...prev, isLoaded: true }))
 		}
-		// No valid session — unauthenticated
-		return {
-			isLoaded: true, // We've checked, just no session
-			isSignedIn: false,
-			user: null,
-			accessToken: null,
-			refreshToken: null,
-			error: null,
-			isOAuthLoading: false,
-			oauthError: null,
-		}
-	})
+	}, [appId])
 
 	// Ref to track current auth state for TokenManager (avoids stale closure)
 	const authStateRef = useRef(authState)
@@ -1177,13 +1185,12 @@ function SylphxProviderInner({
 	// Offline Analytics Queue (Segment Pattern)
 	// ============================================
 	// Track online status for offline queuing
-	const [isOnline, setIsOnline] = useState(() =>
-		typeof navigator !== 'undefined' ? navigator.onLine : true
-	)
+	// Hydration-safe: assume online initially (matches server rendering)
+	const [isOnline, setIsOnline] = useState(true)
 
-	// Listen for online/offline events
+	// Sync with actual navigator.onLine after mount
 	useEffect(() => {
-		if (typeof window === 'undefined') return
+		setIsOnline(navigator.onLine)
 
 		const handleOnline = () => setIsOnline(true)
 		const handleOffline = () => setIsOnline(false)
