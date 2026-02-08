@@ -382,12 +382,26 @@ function SylphxProviderInner({
 	// When user transitions from anonymous to authenticated,
 	// link their anonymous consent records to their user account.
 	// This ensures consent history is preserved across the identity merge.
-	const prevIsSignedIn = useRef(authState.isSignedIn)
+	//
+	// Uses null sentinel to distinguish "not yet initialized" from "signed out".
+	// Only tracks transitions AFTER isLoaded is true, preventing the false
+	// anonymous→authenticated transition that occurs during initial hydration
+	// (authState starts at isSignedIn:false then becomes true from cookie read).
+	const prevIsSignedIn = useRef<boolean | null>(null)
 	useEffect(() => {
+		// Wait until auth state is loaded before tracking transitions
+		if (!authState.isLoaded) return
+
+		// First time isLoaded becomes true — establish baseline, don't trigger link
+		if (prevIsSignedIn.current === null) {
+			prevIsSignedIn.current = authState.isSignedIn
+			return
+		}
+
 		const wasAnonymous = !prevIsSignedIn.current
 		const isNowAuthenticated = authState.isSignedIn && authState.user?.id
 
-		if (wasAnonymous && isNowAuthenticated && authState.user) {
+		if (wasAnonymous && isNowAuthenticated && authState.user && anonymousId) {
 			// User just logged in — link anonymous consents
 			const config = {
 				appId,
@@ -405,7 +419,7 @@ function SylphxProviderInner({
 		}
 
 		prevIsSignedIn.current = authState.isSignedIn
-	}, [authState.isSignedIn, authState.user?.id, anonymousId, appId, platformUrl])
+	}, [authState.isLoaded, authState.isSignedIn, authState.user?.id, anonymousId, appId, platformUrl])
 
 	// ============================================
 	// REST API Client — With Token Management

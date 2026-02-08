@@ -135,39 +135,44 @@ export function FeatureFlagProvider({
 }: FeatureFlagProviderProps) {
 	const queryClient = useQueryClient()
 
-	// Initialize from localStorage cache with TTL validation (LaunchDarkly pattern)
-	const [cachedInitialFlags] = useState<FeatureFlag[]>(() => {
-		if (!enableCache || typeof window === 'undefined') return initialFlags
+	// Hydration-safe: start with server-safe defaults, populate from localStorage in useEffect.
+	// Both server and client initial render produce the same value — no mismatch.
+	const [cachedInitialFlags, setCachedInitialFlags] = useState<FeatureFlag[]>(initialFlags)
+
+	useEffect(() => {
+		if (!enableCache) return
 		try {
 			const cached = localStorage.getItem(FLAGS_CACHE_KEY)
 			const timestamp = localStorage.getItem(FLAGS_CACHE_TIMESTAMP_KEY)
 
-			// Validate TTL before using cached data
 			if (cached && timestamp && !initialFlags.length) {
-				const cacheAge = Date.now() - parseInt(timestamp, 10)
+				const cacheAge = Date.now() - Number.parseInt(timestamp, 10)
 				if (cacheAge < CACHE_TTL_MS) {
-					return JSON.parse(cached) as FeatureFlag[]
+					setCachedInitialFlags(JSON.parse(cached) as FeatureFlag[])
+					return
 				}
-				// Cache expired - clear it
+				// Cache expired — clear it
 				localStorage.removeItem(FLAGS_CACHE_KEY)
 				localStorage.removeItem(FLAGS_CACHE_TIMESTAMP_KEY)
 			}
 		} catch {
 			// Ignore cache errors
 		}
-		return initialFlags
-	})
+	}, [enableCache, initialFlags])
 
-	// Overrides state with localStorage persistence
-	const [overrides, setOverrides] = useState<FlagOverrides>(() => {
-		if (typeof window === 'undefined') return {}
+	// Overrides state — hydration-safe with localStorage sync in useEffect
+	const [overrides, setOverrides] = useState<FlagOverrides>({})
+
+	useEffect(() => {
 		try {
 			const stored = localStorage.getItem(`${FLAGS_CACHE_KEY}_overrides`)
-			return stored ? JSON.parse(stored) : {}
+			if (stored) {
+				setOverrides(JSON.parse(stored))
+			}
 		} catch {
-			return {}
+			// Ignore cache errors
 		}
-	})
+	}, [])
 
 	// React Query for flag fetching with automatic refetch
 	const flagsQuery = useQuery({
