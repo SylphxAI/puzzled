@@ -1301,6 +1301,10 @@ function SylphxProviderInner({
 
 	const enqueueAnalytics = useCallback(
 		(type: string, data: Record<string, unknown>, eventId?: string) => {
+			// Skip events with no user identifier — prevents empty-anonymousId
+			// events during hydration before useEffect populates the real ID
+			if (!anonymousId && !authState.user?.id) return
+
 			// Deduplicate by eventId if provided
 			const id = eventId || `${type}_${Date.now()}_${Math.random().toString(36).slice(2)}`
 			if (trackedEventIds.current.has(id)) {
@@ -1422,8 +1426,11 @@ function SylphxProviderInner({
 	const hasTrackedInitialPageview = useRef(false)
 
 	// Auto-track $pageview
+	// Deferred until anonymousId or userId is available (avoids empty-identifier events)
 	useEffect(() => {
 		if (!autoTrackConfig.pageview || hasTrackedInitialPageview.current) return
+		// Wait for a stable user identifier before tracking
+		if (!anonymousId && !authState.user?.id) return
 
 		hasTrackedInitialPageview.current = true
 		const pageviewId = `pageview_${window.location.pathname}_${Date.now()}`
@@ -1440,7 +1447,7 @@ function SylphxProviderInner({
 			},
 			pageviewId
 		)
-	}, [autoTrackConfig.pageview, enqueueAnalytics])
+	}, [autoTrackConfig.pageview, enqueueAnalytics, anonymousId, authState.user?.id])
 
 	// Auto-track route changes
 	useEffect(() => {
