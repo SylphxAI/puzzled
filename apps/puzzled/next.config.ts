@@ -11,6 +11,7 @@ const withSerwist = withSerwistInit({
 })
 
 const nextConfig: NextConfig = {
+	output: "standalone",
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 
