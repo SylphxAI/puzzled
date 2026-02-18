@@ -19,23 +19,23 @@
  * See ADR.md for full rationale.
  */
 
-import { defineConfig } from 'tsup'
+import { defineConfig } from "tsup";
 
 // Shared externals: peer dependencies that consumers must provide
 const PEER_EXTERNALS = [
 	// React (peer dependency)
-	'react',
-	'react-dom',
-	'react/jsx-runtime',
-	'react/jsx-dev-runtime',
+	"react",
+	"react-dom",
+	"react/jsx-runtime",
+	"react/jsx-dev-runtime",
 	// Next.js (peer dependency)
-	'next',
-	'next/server',
-	'next/headers',
-	'next/navigation',
-	'next/link',
-	'next/image',
-]
+	"next",
+	"next/server",
+	"next/headers",
+	"next/navigation",
+	"next/link",
+	"next/image",
+];
 
 export default defineConfig([
 	// ==========================================================================
@@ -44,8 +44,8 @@ export default defineConfig([
 	// No React, no Node.js-specific APIs. Works in browser, Node, edge.
 	// Tree-shaking handled by consumer's bundler, not by separate entry points.
 	{
-		entry: ['src/index.ts'],
-		format: ['esm'],
+		entry: ["src/index.ts"],
+		format: ["esm"],
 		// dts: false - We use "source types" pattern instead of .d.ts generation
 		// TypeScript consumers get types from source files via package.json "types" field
 		// This provides perfect type fidelity without dts generation issues
@@ -55,10 +55,7 @@ export default defineConfig([
 		clean: true,
 		external: PEER_EXTERNALS,
 		// Bundle all dependencies into the SDK
-		noExternal: [
-			'jose',
-			'@sylphx/ui',
-		],
+		noExternal: ["jose", "@sylphx/ui"],
 	},
 
 	// ==========================================================================
@@ -66,13 +63,13 @@ export default defineConfig([
 	// ==========================================================================
 	// Requires jose for JWT verification. Server-only, never expose to browser.
 	{
-		entry: { 'server/index': 'src/server/index.ts' },
-		format: ['esm'],
+		entry: { "server/index": "src/server/index.ts" },
+		format: ["esm"],
 		dts: false,
 		splitting: false,
 		sourcemap: true,
 		external: PEER_EXTERNALS,
-		noExternal: ['jose'],
+		noExternal: ["jose"],
 	},
 
 	// ==========================================================================
@@ -80,13 +77,13 @@ export default defineConfig([
 	// ==========================================================================
 	// Requires next for middleware, cookies, server components.
 	{
-		entry: { 'nextjs/index': 'src/nextjs/index.ts' },
-		format: ['esm'],
+		entry: { "nextjs/index": "src/nextjs/index.ts" },
+		format: ["esm"],
 		dts: false,
 		splitting: false,
 		sourcemap: true,
 		external: PEER_EXTERNALS,
-		noExternal: ['jose'],
+		noExternal: ["jose"],
 	},
 
 	// ==========================================================================
@@ -95,24 +92,18 @@ export default defineConfig([
 	// Requires react, react-dom. Has 'use client' directive at top.
 	// This is the largest entry point due to UI components.
 	{
-		entry: { 'react/index': 'src/react/index.ts' },
-		format: ['esm'],
+		entry: { "react/index": "src/react/index.ts" },
+		format: ["esm"],
 		dts: false,
 		splitting: false,
 		sourcemap: true,
 		external: [
 			...PEER_EXTERNALS,
-			// Don't bundle - CJS shim uses dynamic require which breaks Turbopack SSR
-			// React 18+ has native useSyncExternalStore, so shim isn't needed
-			'use-sync-external-store',
-			'use-sync-external-store/shim',
-			'use-sync-external-store/shim/index.js',
+			// use-sync-external-store is bundled (not external) so consumers don't
+			// need it installed separately. React 19 has native useSyncExternalStore
+			// but some deps (@base-ui/utils) still reference the shim.
 		],
 		// Bundle all SDK dependencies
-		noExternal: [
-			'rrweb',
-			'@sylphx/ui',
-			'@vercel/blob',
-		],
+		noExternal: ["rrweb", "@sylphx/ui", "@vercel/blob"],
 	},
-])
+]);
