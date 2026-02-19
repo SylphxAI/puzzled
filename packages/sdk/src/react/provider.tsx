@@ -109,15 +109,7 @@ import type {
 // REST API Client extracted to ./rest-client.ts for maintainability
 // Service context value factories extracted to ./context-values/ for maintainability
 
-// Dynamic import for @vercel/blob/client to avoid SSR issues with undici
-let blobUploadCache: typeof import('@vercel/blob/client').upload | null = null
-async function getBlobUpload() {
-	if (!blobUploadCache) {
-		const { upload } = await import('@vercel/blob/client')
-		blobUploadCache = upload
-	}
-	return blobUploadCache
-}
+// Storage upload is now handled via presigned URLs in context-values/storage.ts
 
 // ============================================
 // Types
@@ -2490,76 +2482,107 @@ function SylphxProviderInner({
 	 *
 	 * Architecture:
 	 * 1. Client calls our /api/storage/upload to get a client token
-	 * 2. @vercel/blob/client uploads directly to Vercel Blob (zero server bandwidth)
-	 * 3. Vercel calls our onUploadCompleted callback
-	 * 4. Platform records file in DB and consumes quota
+	 * 2. Client uploads directly to MinIO via presigned URL (zero server bandwidth)
+	 * 3. Platform records file in DB and consumes quota
 	 *
 	 * Benefits:
 	 * - Zero server bandwidth (direct to storage)
-	 * - Up to 5TB file size (vs 4.5MB server limit)
-	 * - Real progress tracking
-	 * - Edge compatible
+	 * - Real progress tracking via XHR
+	 * - Works with any S3-compatible storage
 	 */
 	const storageValue: StorageContextValue = useMemo(
 		() => ({
 			upload: async (file: File, options?: UploadOptions) => {
-				const blobUpload = await getBlobUpload()
-
-				// Determine if multipart should be used
-				// Default is 'auto' which enables multipart for files > 5MB
-				const shouldUseMultipart =
-					options?.multipart === true ||
-					(options?.multipart !== false && file.size > STORAGE_MULTIPART_THRESHOLD_BYTES)
-
-				const blob = await blobUpload(file.name, file, {
-					access: 'public',
-					handleUploadUrl: `${platformUrl}/api/storage/upload`,
-					multipart: shouldUseMultipart,
-					clientPayload: JSON.stringify({
-						appId,
-						userId: authState.user?.id,
-						type: 'file',
-						folder: options?.path,
-					}),
-					onUploadProgress: options?.onProgress
-						? (progress) => {
-								options.onProgress!({
-									loaded: progress.loaded,
-									total: progress.total,
-									progress: progress.percentage,
-								} satisfies UploadProgressEvent)
-							}
-						: undefined,
+				// Step 1: Request presigned URL
+				const clientPayload = JSON.stringify({
+					appId,
+					userId: authState.user?.id,
+					type: 'file',
+					folder: options?.path,
 				})
 
-				return blob.url
-			},
-			uploadAvatar: async (file: File, options?: { onProgress?: (event: UploadProgressEvent) => void }) => {
-				if (!authState.user?.id) {
-					throw new Error('Must be logged in to upload avatar')
+				const tokenRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type: 'generate-token', pathname: file.name, clientPayload }),
+				})
+
+				if (!tokenRes.ok) {
+					const err = await tokenRes.json().catch(() => ({ error: 'Unknown error' })) as { error?: string }
+					throw new Error(err.error ?? 'Failed to get upload token')
 				}
 
-				const blobUpload = await getBlobUpload()
-				const blob = await blobUpload(file.name, file, {
-					access: 'public',
-					handleUploadUrl: `${platformUrl}/api/storage/upload`,
-					clientPayload: JSON.stringify({
-						appId,
-						userId: authState.user.id,
-						type: 'avatar',
-					}),
-					onUploadProgress: options?.onProgress
-						? (progress) => {
-								options.onProgress!({
-									loaded: progress.loaded,
-									total: progress.total,
-									progress: progress.percentage,
-								} satisfies UploadProgressEvent)
+				const { presignedUrl, url, storageKey, tokenPayload } = await tokenRes.json() as {
+					presignedUrl: string; url: string; storageKey: string; tokenPayload: string
+				}
+
+				// Step 2: Upload directly with XHR for progress tracking
+				await new Promise<void>((resolve, reject) => {
+					const xhr = new XMLHttpRequest()
+					if (options?.onProgress) {
+						xhr.upload.addEventListener('progress', (e) => {
+							if (e.lengthComputable) {
+								options.onProgress!({ loaded: e.loaded, total: e.total, progress: Math.round((e.loaded / e.total) * 100) } satisfies UploadProgressEvent)
 							}
-						: undefined,
+						})
+					}
+					xhr.addEventListener('load', () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`)))
+					xhr.addEventListener('error', () => reject(new Error('Upload network error')))
+					xhr.open('PUT', presignedUrl)
+					xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+					xhr.send(file)
 				})
 
-				return blob.url
+				// Step 3: Notify platform of completed upload
+				const completeRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type: 'upload-complete', url, pathname: storageKey, tokenPayload }),
+				})
+
+				if (!completeRes.ok) throw new Error('Failed to complete upload')
+				const result = await completeRes.json() as { url: string }
+				return result.url
+			},
+			uploadAvatar: async (file: File, options?: { onProgress?: (event: UploadProgressEvent) => void }) => {
+				if (!authState.user?.id) throw new Error('Must be logged in to upload avatar')
+
+				const clientPayload = JSON.stringify({ appId, userId: authState.user.id, type: 'avatar' })
+				const tokenRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type: 'generate-token', pathname: file.name, clientPayload }),
+				})
+				if (!tokenRes.ok) throw new Error('Failed to get upload token')
+
+				const { presignedUrl, url, storageKey, tokenPayload } = await tokenRes.json() as {
+					presignedUrl: string; url: string; storageKey: string; tokenPayload: string
+				}
+
+				await new Promise<void>((resolve, reject) => {
+					const xhr = new XMLHttpRequest()
+					if (options?.onProgress) {
+						xhr.upload.addEventListener('progress', (e) => {
+							if (e.lengthComputable) {
+								options.onProgress!({ loaded: e.loaded, total: e.total, progress: Math.round((e.loaded / e.total) * 100) } satisfies UploadProgressEvent)
+							}
+						})
+					}
+					xhr.addEventListener('load', () => xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload failed: ${xhr.status}`)))
+					xhr.addEventListener('error', () => reject(new Error('Upload network error')))
+					xhr.open('PUT', presignedUrl)
+					xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream')
+					xhr.send(file)
+				})
+
+				const completeRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type: 'upload-complete', url, pathname: storageKey, tokenPayload }),
+				})
+				if (!completeRes.ok) throw new Error('Failed to complete avatar upload')
+				const result = await completeRes.json() as { url: string }
+				return result.url
 			},
 			deleteFile: async (fileId: string) => {
 				await api.del(`/storage/files/${fileId}`)

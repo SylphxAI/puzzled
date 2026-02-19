@@ -9,7 +9,7 @@
  */
 
 import { auth } from '@sylphx/sdk/nextjs'
-import { Ratelimit } from '@upstash/ratelimit'
+import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { type NextRequest, NextResponse } from 'next/server'
 import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
@@ -38,13 +38,24 @@ function secureCompare(a: string, b: string): boolean {
 	return result === 0
 }
 
-// Strict rate limiting for admin secret attempts
-const adminSecretRatelimit = new Ratelimit({
-	redis,
-	limiter: Ratelimit.slidingWindow(3, '1 h'),
-	analytics: true,
-	prefix: 'puzzled:admin-secret',
+// Strict rate limiting for admin secret attempts (3 per hour per IP)
+const _adminSecretLimiter = new RateLimiterRedis({
+	storeClient: redis,
+	keyPrefix: 'puzzled:admin-secret',
+	points: 3,
+	duration: 3600, // 1 hour
 })
+
+const adminSecretRatelimit = {
+	async limit(identifier: string): Promise<{ success: boolean }> {
+		try {
+			await _adminSecretLimiter.consume(identifier)
+			return { success: true }
+		} catch {
+			return { success: false }
+		}
+	},
+}
 
 /**
  * Log admin access attempts for security auditing

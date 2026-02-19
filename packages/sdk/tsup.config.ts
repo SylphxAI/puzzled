@@ -104,6 +104,6 @@ export default defineConfig([
 			// but some deps (@base-ui/utils) still reference the shim.
 		],
 		// Bundle all SDK dependencies
-		noExternal: ["rrweb", "@sylphx/ui", "@vercel/blob"],
+		noExternal: ["rrweb", "@sylphx/ui"],
 	},
 ]);
