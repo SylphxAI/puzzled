@@ -12,6 +12,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
 	output: "standalone",
+	transpilePackages: ['@sylphx/sdk'],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 
