@@ -99,9 +99,10 @@ export default defineConfig([
 		sourcemap: true,
 		external: [
 			...PEER_EXTERNALS,
-			// use-sync-external-store is bundled (not external) so consumers don't
-			// need it installed separately. React 19 has native useSyncExternalStore
-			// but some deps (@base-ui/utils) still reference the shim.
+			// Make use-sync-external-store external so the CJS require() is not bundled
+			// into the SDK dist. Next.js will handle it via serverExternalPackages.
+			'use-sync-external-store',
+			'use-sync-external-store/shim',
 		],
 		// Bundle all SDK dependencies
 		noExternal: ["rrweb", "@sylphx/ui"],
