@@ -109,13 +109,11 @@ export function validateEnv(): void {
 	}
 
 	// Check Redis - needs either KV_* or UPSTASH_* vars
-	const hasRedis =
-		(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL) &&
-		(process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN)
+	const hasRedis = !!process.env.REDIS_URL
 
 	if (!hasRedis && runtime === 'nodejs') {
 		missing.push(
-			'Redis connection - Set KV_REST_API_URL + KV_REST_API_TOKEN or UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN',
+			'REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)',
 		)
 	}
 
