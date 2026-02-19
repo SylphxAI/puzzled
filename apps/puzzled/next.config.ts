@@ -13,6 +13,7 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
 	output: "standalone",
 	transpilePackages: ['@sylphx/sdk'],
+	serverExternalPackages: ['use-sync-external-store'],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 
