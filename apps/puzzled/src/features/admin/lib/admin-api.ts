@@ -9,8 +9,8 @@
  */
 
 import { auth } from '@sylphx/sdk/nextjs'
-import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { type NextRequest, NextResponse } from 'next/server'
+import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
 

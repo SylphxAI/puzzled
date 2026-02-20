@@ -112,9 +112,7 @@ export function validateEnv(): void {
 	const hasRedis = !!process.env.REDIS_URL
 
 	if (!hasRedis && runtime === 'nodejs') {
-		missing.push(
-			'REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)',
-		)
+		missing.push('REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)')
 	}
 
 	// Warn about missing feature variables (don't fail)
