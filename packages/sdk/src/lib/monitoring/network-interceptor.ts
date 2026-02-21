@@ -131,8 +131,7 @@ function notify<T>(set: Set<(event: T) => void>, event: T): void {
 }
 
 function patchFetch(): void {
-	if (!originalFetch)
-		return; // biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
+	if (!originalFetch) return; // biome-ignore lint/suspicious/noExplicitAny: window.fetch type is read-only in TypeScript, cast required for patching
 	(window as any).fetch = async (
 		input: RequestInfo | URL,
 		init?: RequestInit,
