@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { WifiOff } from 'lucide-react'
+import { WifiOff } from "lucide-react";
 
 export default function OfflinePage() {
 	return (
@@ -10,8 +10,8 @@ export default function OfflinePage() {
 			</div>
 			<h1 className="mt-6 text-2xl font-bold">You're Offline</h1>
 			<p className="mt-2 max-w-sm text-muted-foreground">
-				It looks like you've lost your internet connection. Please check your connection and try
-				again.
+				It looks like you've lost your internet connection. Please check your
+				connection and try again.
 			</p>
 			<button
 				type="button"
@@ -21,5 +21,5 @@ export default function OfflinePage() {
 				Try Again
 			</button>
 		</div>
-	)
+	);
 }

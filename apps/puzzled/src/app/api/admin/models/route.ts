@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server'
-import { adminCheckResponse, checkAdminWithMfa } from '@/features/admin'
-import { ai } from '@/features/puzzle-generator/server'
+import { adminCheckResponse, checkAdminWithMfa } from "@/features/admin";
+import { ai } from "@/features/puzzle-generator/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs' // Required for auth
+export const runtime = "nodejs"; // Required for auth
 
 /**
  * GET /api/admin/models
@@ -11,63 +11,71 @@ export const runtime = 'nodejs' // Required for auth
  */
 export async function GET(request: NextRequest) {
 	// Require admin authentication with MFA
-	const authResult = await checkAdminWithMfa(request)
-	const errorResponse = adminCheckResponse(authResult)
-	if (errorResponse) return errorResponse
+	const authResult = await checkAdminWithMfa(request);
+	const errorResponse = adminCheckResponse(authResult);
+	if (errorResponse) return errorResponse;
 
-	const { searchParams } = new URL(request.url)
-	const search = searchParams.get('search')?.toLowerCase()
+	const { searchParams } = new URL(request.url);
+	const search = searchParams.get("search")?.toLowerCase();
 
 	try {
 		// Use SDK's listModels which goes through Platform
-		const response = await ai.listModels({ search: search ?? undefined })
+		const response = await ai.listModels({ search: search ?? undefined });
 
 		// Filter and transform models
 		let models = response.data
 			.filter((model) => {
 				// Filter out deprecated or test models
-				if (model.id.includes('test') || model.id.includes('deprecated')) {
-					return false
+				if (model.id.includes("test") || model.id.includes("deprecated")) {
+					return false;
 				}
-				return true
+				return true;
 			})
 			.map((model) => ({
 				id: model.id,
 				name: model.name,
 				contextLength: model.context_length,
 				pricing: {
-					prompt: parseFloat(model.pricing.prompt) * 1000000, // Convert to per 1M tokens
-					completion: parseFloat(model.pricing.completion) * 1000000,
+					prompt: Number.parseFloat(model.pricing.prompt) * 1000000, // Convert to per 1M tokens
+					completion: Number.parseFloat(model.pricing.completion) * 1000000,
 				},
 				capabilities: model.capabilities,
 			}))
 			.sort((a, b) => {
 				// Sort by provider (anthropic, openai, google first)
-				const priorityProviders = ['anthropic', 'openai', 'google', 'meta-llama']
-				const aProvider = a.id.split('/')[0]
-				const bProvider = b.id.split('/')[0]
-				const aPriority = priorityProviders.indexOf(aProvider)
-				const bPriority = priorityProviders.indexOf(bProvider)
+				const priorityProviders = [
+					"anthropic",
+					"openai",
+					"google",
+					"meta-llama",
+				];
+				const aProvider = a.id.split("/")[0];
+				const bProvider = b.id.split("/")[0];
+				const aPriority = priorityProviders.indexOf(aProvider);
+				const bPriority = priorityProviders.indexOf(bProvider);
 
 				if (aPriority !== -1 && bPriority !== -1) {
-					return aPriority - bPriority
+					return aPriority - bPriority;
 				}
-				if (aPriority !== -1) return -1
-				if (bPriority !== -1) return 1
-				return a.name.localeCompare(b.name)
-			})
+				if (aPriority !== -1) return -1;
+				if (bPriority !== -1) return 1;
+				return a.name.localeCompare(b.name);
+			});
 
 		// Limit results for autocomplete
 		if (search) {
-			models = models.slice(0, 20)
+			models = models.slice(0, 20);
 		}
 
 		return NextResponse.json({
 			models,
 			count: models.length,
-		})
+		});
 	} catch (error) {
-		console.error('[Models API] Error fetching models:', error)
-		return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500 })
+		console.error("[Models API] Error fetching models:", error);
+		return NextResponse.json(
+			{ error: "Failed to fetch models" },
+			{ status: 500 },
+		);
 	}
 }

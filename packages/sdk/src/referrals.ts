@@ -28,72 +28,84 @@
  * ```
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type ReferralCodeResponse = components['schemas']['ReferralCodeResponse']
-export type RegenerateCodeResponse = components['schemas']['RegenerateCodeResponse']
-export type ReferralStatsResponse = components['schemas']['ReferralStatsResponse']
-export type RedeemReferralRequest = components['schemas']['RedeemReferralRequest']
-export type RedeemReferralResponse = components['schemas']['RedeemReferralResponse']
-export type ReferralRewardDefaults = components['schemas']['ReferralRewardDefaults']
-export type ReferralRewardConfig = components['schemas']['ReferralRewardConfig']
-export type LeaderboardResponse = components['schemas']['LeaderboardResponse']
-export type LeaderboardEntry = components['schemas']['LeaderboardEntry']
+export type ReferralCodeResponse =
+	components["schemas"]["ReferralCodeResponse"];
+export type RegenerateCodeResponse =
+	components["schemas"]["RegenerateCodeResponse"];
+export type ReferralStatsResponse =
+	components["schemas"]["ReferralStatsResponse"];
+export type RedeemReferralRequest =
+	components["schemas"]["RedeemReferralRequest"];
+export type RedeemReferralResponse =
+	components["schemas"]["RedeemReferralResponse"];
+export type ReferralRewardDefaults =
+	components["schemas"]["ReferralRewardDefaults"];
+export type ReferralRewardConfig =
+	components["schemas"]["ReferralRewardConfig"];
+export type LeaderboardResponse = components["schemas"]["LeaderboardResponse"];
+export type LeaderboardEntry = components["schemas"]["LeaderboardEntry"];
 
 // SDK-specific types for convenience
 export interface ReferralCode {
-	code: string
-	createdAt: string
+	code: string;
+	createdAt: string;
 }
 
 export interface ReferralStats {
 	/** User's referral code */
-	code: string
+	code: string;
 	/** Total referrals made */
-	totalReferrals: number
+	totalReferrals: number;
 	/** Successful (redeemed) referrals */
-	successfulReferrals: number
+	successfulReferrals: number;
 	/** Pending referrals */
-	pendingReferrals: number
+	pendingReferrals: number;
 	/** Total rewards earned */
-	totalRewards: number
+	totalRewards: number;
 }
 
-type LeaderboardPeriod = 'all' | 'month' | 'week'
+type LeaderboardPeriod = "all" | "month" | "week";
 
 export interface LeaderboardResult {
 	/** Time period for the leaderboard */
-	period?: LeaderboardPeriod
-	entries: LeaderboardEntry[]
+	period?: LeaderboardPeriod;
+	entries: LeaderboardEntry[];
 	/** Current user's position (may not be in top entries) */
-	currentUserRank: number | null
+	currentUserRank: number | null;
 	/** Total participants */
-	totalParticipants: number
+	totalParticipants: number;
 }
 
 export interface RedeemReferralInput {
 	/** Referral code to redeem */
-	code: string
+	code: string;
 	/** User ID of the person redeeming (optional for anonymous) */
-	userId?: string
+	userId?: string;
 }
 
 export interface RedeemResult {
-	success: boolean
+	success: boolean;
 	/** Reward type - platform types or app-specific types */
-	rewardType: 'points' | 'premium_trial' | 'discount' | 'credit' | (string & {})
-	referredReward?: Record<string, unknown>
-	referrerReward?: Record<string, unknown>
+	rewardType:
+		| "points"
+		| "premium_trial"
+		| "discount"
+		| "credit"
+		| (string & {});
+	referredReward?: Record<string, unknown>;
+	referrerReward?: Record<string, unknown>;
 }
 
 export interface LeaderboardOptions {
 	/** Number of entries to return (default: 10) */
-	limit?: number
+	limit?: number;
 }
 
 // ============================================================================
@@ -113,12 +125,12 @@ export interface LeaderboardOptions {
  */
 export async function getMyReferralCode(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<ReferralCode> {
-	return callApi(config, '/referrals/code', {
-		method: 'GET',
+	return callApi(config, "/referrals/code", {
+		method: "GET",
 		query: { userId },
-	})
+	});
 }
 
 /**
@@ -132,12 +144,12 @@ export async function getMyReferralCode(
  */
 export async function getReferralStats(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<ReferralStats> {
-	return callApi(config, '/referrals/stats', {
-		method: 'GET',
+	return callApi(config, "/referrals/stats", {
+		method: "GET",
 		query: { userId },
-	})
+	});
 }
 
 /**
@@ -175,12 +187,12 @@ export async function getReferralStats(
 export async function redeemReferralCode(
 	config: SylphxConfig,
 	input: RedeemReferralInput,
-	defaults?: ReferralRewardDefaults
+	defaults?: ReferralRewardDefaults,
 ): Promise<RedeemResult> {
-	return callApi(config, '/referrals/redeem', {
-		method: 'POST',
+	return callApi(config, "/referrals/redeem", {
+		method: "POST",
 		body: { ...input, defaults },
-	})
+	});
 }
 
 /**
@@ -198,12 +210,15 @@ export async function redeemReferralCode(
 export async function getReferralLeaderboard(
 	config: SylphxConfig,
 	userId: string,
-	options?: LeaderboardOptions
+	options?: LeaderboardOptions,
 ): Promise<LeaderboardResult> {
-	return callApi(config, '/referrals/leaderboard', {
-		method: 'GET',
-		query: { userId, ...options } as Record<string, string | number | undefined>,
-	})
+	return callApi(config, "/referrals/leaderboard", {
+		method: "GET",
+		query: { userId, ...options } as Record<
+			string,
+			string | number | undefined
+		>,
+	});
 }
 
 /**
@@ -219,10 +234,10 @@ export async function getReferralLeaderboard(
  */
 export async function regenerateReferralCode(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<ReferralCode> {
-	return callApi(config, '/referrals/code/regenerate', {
-		method: 'POST',
+	return callApi(config, "/referrals/code/regenerate", {
+		method: "POST",
 		body: { userId },
-	})
+	});
 }

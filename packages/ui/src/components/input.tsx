@@ -36,8 +36,8 @@
  * @module @sylphx/ui/input
  */
 
-import { forwardRef, useId } from 'react'
-import { cn } from '../utils'
+import { forwardRef, useId } from "react";
+import { cn } from "../utils";
 
 /**
  * Props for the Input component.
@@ -50,14 +50,14 @@ import { cn } from '../utils'
  */
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 	/** Label text displayed above the input */
-	label?: string
+	label?: string;
 	/** Error message displayed below the input. Shows error styling when present. */
-	error?: string
+	error?: string;
 	/** Success message displayed below the input. Shows success styling when present. */
-	success?: string
+	success?: string;
 	/** Helper text displayed below the input. Hidden when error or success is present. */
-	helperText?: string
-}
+	helperText?: string;
+};
 
 /**
  * Input component with built-in label, error, and helper text support.
@@ -80,9 +80,21 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
  * ```
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-	({ className, label, error, success, helperText, type = 'text', id, ...props }, ref) => {
-		const generatedId = useId()
-		const inputId = id || generatedId
+	(
+		{
+			className,
+			label,
+			error,
+			success,
+			helperText,
+			type = "text",
+			id,
+			...props
+		},
+		ref,
+	) => {
+		const generatedId = useId();
+		const inputId = id || generatedId;
 
 		// Determine which description to use
 		const descriptionId = error
@@ -91,7 +103,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 				? `${inputId}-success`
 				: helperText
 					? `${inputId}-helper`
-					: undefined
+					: undefined;
 
 		return (
 			<div className="w-full">
@@ -104,22 +116,29 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 					type={type}
 					id={inputId}
 					className={cn(
-						'flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150',
-						'placeholder:text-muted-foreground',
-						'hover:border-primary/70 hover:bg-muted/30',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background',
-						'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50',
-						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
-						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
+						"flex h-11 w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150",
+						"placeholder:text-muted-foreground",
+						"hover:border-primary/70 hover:bg-muted/30",
+						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background",
+						"disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50",
+						error &&
+							"border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error",
+						success &&
+							!error &&
+							"border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success",
 						className,
 					)}
 					ref={ref}
-					aria-invalid={error ? 'true' : 'false'}
+					aria-invalid={error ? "true" : "false"}
 					aria-describedby={descriptionId}
 					{...props}
 				/>
 				{error && (
-					<p id={`${inputId}-error`} className="mt-1.5 text-sm text-error" role="alert">
+					<p
+						id={`${inputId}-error`}
+						className="mt-1.5 text-sm text-error"
+						role="alert"
+					>
 						{error}
 					</p>
 				)}
@@ -129,16 +148,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 					</p>
 				)}
 				{helperText && !error && !success && (
-					<p id={`${inputId}-helper`} className="mt-1.5 text-sm text-muted-foreground">
+					<p
+						id={`${inputId}-helper`}
+						className="mt-1.5 text-sm text-muted-foreground"
+					>
 						{helperText}
 					</p>
 				)}
 			</div>
-		)
+		);
 	},
-)
+);
 
-Input.displayName = 'Input'
+Input.displayName = "Input";
 
 /**
  * Props for the Textarea component.
@@ -149,16 +171,17 @@ Input.displayName = 'Input'
  * @property success - Success message displayed below the textarea (turns textarea green)
  * @property helperText - Helper text displayed below the textarea (hidden when error/success exists)
  */
-export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
-	/** Label text displayed above the textarea */
-	label?: string
-	/** Error message displayed below the textarea. Shows error styling when present. */
-	error?: string
-	/** Success message displayed below the textarea. Shows success styling when present. */
-	success?: string
-	/** Helper text displayed below the textarea. Hidden when error or success is present. */
-	helperText?: string
-}
+export type TextareaProps =
+	React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+		/** Label text displayed above the textarea */
+		label?: string;
+		/** Error message displayed below the textarea. Shows error styling when present. */
+		error?: string;
+		/** Success message displayed below the textarea. Shows success styling when present. */
+		success?: string;
+		/** Helper text displayed below the textarea. Hidden when error or success is present. */
+		helperText?: string;
+	};
 
 /**
  * Textarea component with built-in label, error, and helper text support.
@@ -182,8 +205,8 @@ export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & 
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 	({ className, label, error, success, helperText, id, ...props }, ref) => {
-		const generatedId = useId()
-		const textareaId = id || generatedId
+		const generatedId = useId();
+		const textareaId = id || generatedId;
 
 		// Determine which description to use
 		const descriptionId = error
@@ -192,50 +215,66 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 				? `${textareaId}-success`
 				: helperText
 					? `${textareaId}-helper`
-					: undefined
+					: undefined;
 
 		return (
 			<div className="w-full">
 				{label && (
-					<label htmlFor={textareaId} className="mb-1.5 block text-sm font-medium">
+					<label
+						htmlFor={textareaId}
+						className="mb-1.5 block text-sm font-medium"
+					>
 						{label}
 					</label>
 				)}
 				<textarea
 					id={textareaId}
 					className={cn(
-						'flex min-h-[80px] w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150',
-						'placeholder:text-muted-foreground',
-						'hover:border-primary/70 hover:bg-muted/30',
-						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background',
-						'disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50',
-						error && 'border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error',
-						success && !error && 'border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success',
+						"flex min-h-[80px] w-full rounded-lg border bg-background px-3 py-2 text-base transition-all duration-150",
+						"placeholder:text-muted-foreground",
+						"hover:border-primary/70 hover:bg-muted/30",
+						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary focus-visible:bg-background",
+						"disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-muted/50 disabled:text-muted-foreground disabled:hover:border-border disabled:hover:bg-muted/50",
+						error &&
+							"border-error hover:border-error focus-visible:ring-error/50 focus-visible:border-error",
+						success &&
+							!error &&
+							"border-success hover:border-success focus-visible:ring-success/50 focus-visible:border-success",
 						className,
 					)}
 					ref={ref}
-					aria-invalid={error ? 'true' : 'false'}
+					aria-invalid={error ? "true" : "false"}
 					aria-describedby={descriptionId}
 					{...props}
 				/>
 				{error && (
-					<p id={`${textareaId}-error`} className="mt-1.5 text-sm text-error" role="alert">
+					<p
+						id={`${textareaId}-error`}
+						className="mt-1.5 text-sm text-error"
+						role="alert"
+					>
 						{error}
 					</p>
 				)}
 				{success && !error && (
-					<p id={`${textareaId}-success`} className="mt-1.5 text-sm text-success">
+					<p
+						id={`${textareaId}-success`}
+						className="mt-1.5 text-sm text-success"
+					>
 						{success}
 					</p>
 				)}
 				{helperText && !error && !success && (
-					<p id={`${textareaId}-helper`} className="mt-1.5 text-sm text-muted-foreground">
+					<p
+						id={`${textareaId}-helper`}
+						className="mt-1.5 text-sm text-muted-foreground"
+					>
 						{helperText}
 					</p>
 				)}
 			</div>
-		)
+		);
 	},
-)
+);
 
-Textarea.displayName = 'Textarea'
+Textarea.displayName = "Textarea";

@@ -1,7 +1,7 @@
 {
-  "title": "分享你的成績",
-  "copied": "已複製到剪貼簿！",
-  "text": "Puzzled - {game}\n{result}\n\n來 puzzled.gg 一起玩",
-  "share": "分享",
-  "copy": "複製"
+	"title": "分享你的成績",
+	"copied": "已複製到剪貼簿！",
+	"text": "Puzzled - {game}\n{result}\n\n來 puzzled.gg 一起玩",
+	"share": "分享",
+	"copy": "複製"
 }

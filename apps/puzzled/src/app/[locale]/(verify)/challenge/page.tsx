@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { ArrowLeft, Shield } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useMemo } from 'react'
+import { ArrowLeft, Shield } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo } from "react";
 // Import admin theme CSS (scoped to .admin-theme class, safe to always include)
-import '@/features/admin/admin.css'
+import "@/features/admin/admin.css";
 
 // ==================
 // Loading Fallback
@@ -26,7 +26,7 @@ function ChallengePageSkeleton() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 // ==================
@@ -34,26 +34,26 @@ function ChallengePageSkeleton() {
 // ==================
 
 function ChallengePageContent() {
-	const router = useRouter()
-	const searchParams = useSearchParams()
+	const router = useRouter();
+	const searchParams = useSearchParams();
 
-	const redirectUrl = searchParams.get('redirect') || '/'
-	const theme = searchParams.get('theme')
-	const isAdminTheme = theme === 'admin'
+	const redirectUrl = searchParams.get("redirect") || "/";
+	const theme = searchParams.get("theme");
+	const isAdminTheme = theme === "admin";
 
 	// Authentication challenges are handled by the Sylphx Platform.
 	// This page redirects to the target URL since the platform handles MFA verification.
 	useEffect(() => {
-		router.replace(redirectUrl)
-	}, [router, redirectUrl])
+		router.replace(redirectUrl);
+	}, [router, redirectUrl]);
 
 	const { title, description } = useMemo(
 		() => ({
-			title: 'Redirecting...',
-			description: 'Authentication is being handled by the platform.',
+			title: "Redirecting...",
+			description: "Authentication is being handled by the platform.",
 		}),
 		[],
-	)
+	);
 
 	// ==================
 	// Render (shown briefly while redirecting)
@@ -68,8 +68,12 @@ function ChallengePageContent() {
 						<div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--admin-primary)]/10">
 							<Shield className="h-7 w-7 text-[var(--admin-primary)]" />
 						</div>
-						<h1 className="text-xl font-semibold text-[var(--admin-text-primary)]">{title}</h1>
-						<p className="mt-2 text-sm text-[var(--admin-text-secondary)]">{description}</p>
+						<h1 className="text-xl font-semibold text-[var(--admin-text-primary)]">
+							{title}
+						</h1>
+						<p className="mt-2 text-sm text-[var(--admin-text-secondary)]">
+							{description}
+						</p>
 					</div>
 
 					{/* Loading indicator */}
@@ -89,7 +93,7 @@ function ChallengePageContent() {
 					</div>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	// Default theme
@@ -122,7 +126,7 @@ function ChallengePageContent() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 // ==================
@@ -147,5 +151,5 @@ export default function ChallengePage() {
 		<Suspense fallback={<ChallengePageSkeleton />}>
 			<ChallengePageContent />
 		</Suspense>
-	)
+	);
 }

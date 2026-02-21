@@ -4,13 +4,13 @@
  * Conditionally render content based on auth state.
  */
 
-'use client'
+"use client";
 
-import { useSafeUser } from './hooks'
-import { safeRedirect } from './security-utils'
+import { useSafeUser } from "./hooks";
+import { safeRedirect } from "./security-utils";
 
 interface ChildrenProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 /**
@@ -25,14 +25,14 @@ interface ChildrenProps {
  * ```
  */
 export function SignedIn({ children }: ChildrenProps) {
-	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser();
 
 	// Gracefully handle unconfigured SDK
 	if (!isConfigured || !isLoaded || !isSignedIn) {
-		return null
+		return null;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }
 
 /**
@@ -47,25 +47,25 @@ export function SignedIn({ children }: ChildrenProps) {
  * ```
  */
 export function SignedOut({ children }: ChildrenProps) {
-	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser();
 
 	// Gracefully handle unconfigured SDK - show SignedOut content
 	if (!isConfigured) {
-		return <>{children}</>
+		return <>{children}</>;
 	}
 
 	if (!isLoaded || isSignedIn) {
-		return null
+		return null;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }
 
 interface ProtectedRouteProps extends ChildrenProps {
 	/** URL to redirect to if not authenticated */
-	redirectTo?: string
+	redirectTo?: string;
 	/** Content to show while loading auth state */
-	fallback?: React.ReactNode
+	fallback?: React.ReactNode;
 }
 
 /**
@@ -80,32 +80,32 @@ interface ProtectedRouteProps extends ChildrenProps {
  */
 export function ProtectedRoute({
 	children,
-	redirectTo = '/login',
+	redirectTo = "/login",
 	fallback = null,
 }: ProtectedRouteProps) {
-	const { isConfigured, isLoaded, isSignedIn } = useSafeUser()
+	const { isConfigured, isLoaded, isSignedIn } = useSafeUser();
 
 	// Gracefully handle unconfigured SDK - render children (dev experience)
 	if (!isConfigured) {
-		return <>{children}</>
+		return <>{children}</>;
 	}
 
 	if (!isLoaded) {
-		return <>{fallback}</>
+		return <>{fallback}</>;
 	}
 
 	if (!isSignedIn) {
 		// Client-side redirect (use safeRedirect to prevent XSS)
-		safeRedirect(redirectTo, { fallback: '/login' })
-		return <>{fallback}</>
+		safeRedirect(redirectTo, { fallback: "/login" });
+		return <>{fallback}</>;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }
 
 interface AuthLoadingProps extends ChildrenProps {
 	/** Content to show when auth is loading */
-	loading?: React.ReactNode
+	loading?: React.ReactNode;
 }
 
 /**
@@ -119,16 +119,16 @@ interface AuthLoadingProps extends ChildrenProps {
  * ```
  */
 export function AuthLoading({ children, loading = null }: AuthLoadingProps) {
-	const { isConfigured, isLoaded } = useSafeUser()
+	const { isConfigured, isLoaded } = useSafeUser();
 
 	// Gracefully handle unconfigured SDK - render children
 	if (!isConfigured) {
-		return <>{children}</>
+		return <>{children}</>;
 	}
 
 	if (!isLoaded) {
-		return <>{loading}</>
+		return <>{loading}</>;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }

@@ -1,30 +1,30 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { ProfileSettingsContent } from './profile-client'
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
+import { ProfileSettingsContent } from "./profile-client";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings" });
 
 	return {
-		title: t('profile.title'),
-	}
+		title: t("profile.title"),
+	};
 }
 
 export default async function ProfileSettingsPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/profile`)
+		redirect(`/${locale}/login?callbackUrl=/settings/profile`);
 	}
 
-	return <ProfileSettingsContent />
+	return <ProfileSettingsContent />;
 }

@@ -4,63 +4,63 @@
  * React context for managing authentication state.
  */
 
-import { createContext } from 'react'
-import type { User, OAuthProviderId } from '../types'
+import { createContext } from "react";
+import type { OAuthProviderId, User } from "../types";
 
 // Re-export for convenience
-export type { OAuthProviderId }
+export type { OAuthProviderId };
 
 export interface AuthState {
 	/** Whether auth state has been loaded from storage */
-	isLoaded: boolean
+	isLoaded: boolean;
 	/** Whether user is currently signed in */
-	isSignedIn: boolean
+	isSignedIn: boolean;
 	/** Current user data */
-	user: User | null
+	user: User | null;
 	/** Access token for API calls */
-	accessToken: string | null
+	accessToken: string | null;
 	/** Refresh token for getting new access tokens */
-	refreshToken: string | null
+	refreshToken: string | null;
 	/** Auth error (e.g., token refresh failed) */
-	error: Error | null
+	error: Error | null;
 	/** Whether an OAuth flow is in progress (loading authorization URL or exchanging code) */
-	isOAuthLoading: boolean
+	isOAuthLoading: boolean;
 	/** OAuth-specific error (e.g., user denied, provider error) */
-	oauthError: Error | null
+	oauthError: Error | null;
 }
 
 export interface SignInOptions {
 	/** URL to redirect back to after sign in */
-	redirectUrl?: string
+	redirectUrl?: string;
 	/**
 	 * OAuth providers to show (SDK-level filtering)
 	 * - undefined/null = show all app-enabled providers
 	 * - [] = hide OAuth (email only)
 	 * - ['google'] = only show these
 	 */
-	providers?: OAuthProviderId[] | null
+	providers?: OAuthProviderId[] | null;
 }
 
 export interface ResetPasswordOptions {
 	/** Reset password token from email */
-	token: string
+	token: string;
 	/** New password */
-	newPassword: string
+	newPassword: string;
 }
 
 export interface VerifyEmailOptions {
 	/** Verification token from email */
-	token: string
+	token: string;
 }
 
 export interface ResendVerificationEmailOptions {
 	/** Email address to resend verification to */
-	email: string
+	email: string;
 }
 
 export interface ForgotPasswordOptions {
 	/** Email address to send reset link to */
-	email: string
+	email: string;
 }
 
 /**
@@ -68,9 +68,9 @@ export interface ForgotPasswordOptions {
  */
 export interface SignInWithMagicLinkOptions {
 	/** Email address to send magic link to */
-	email: string
+	email: string;
 	/** URL to redirect back to after magic link verification. Defaults to current URL. */
-	redirectUrl?: string
+	redirectUrl?: string;
 }
 
 /**
@@ -79,9 +79,9 @@ export interface SignInWithMagicLinkOptions {
  */
 export interface SignInWithOAuthOptions {
 	/** OAuth provider to use */
-	provider: OAuthProviderId
+	provider: OAuthProviderId;
 	/** URL to redirect back to after OAuth completes. Defaults to current URL. */
-	redirectUrl?: string
+	redirectUrl?: string;
 	/**
 	 * Additional OAuth scopes to request from the provider.
 	 * Default scopes (email, profile) are always included.
@@ -101,34 +101,36 @@ export interface SignInWithOAuthOptions {
 	 * })
 	 * ```
 	 */
-	scopes?: string[]
+	scopes?: string[];
 }
 
 export interface AuthContextValue extends AuthState {
 	/** Auth error (e.g., token refresh failed) */
-	error: Error | null
+	error: Error | null;
 	/** Whether an OAuth flow is in progress */
-	isOAuthLoading: boolean
+	isOAuthLoading: boolean;
 	/** OAuth-specific error */
-	oauthError: Error | null
+	oauthError: Error | null;
 	/** Clear OAuth error state */
-	clearOAuthError: () => void
+	clearOAuthError: () => void;
 	/** Redirect to Sylphx login page (shows platform UI) */
-	signIn: (options?: SignInOptions) => void
+	signIn: (options?: SignInOptions) => void;
 	/** Redirect to Sylphx signup page (shows platform UI) */
-	signUp: (options?: SignInOptions) => void
+	signUp: (options?: SignInOptions) => void;
 	/** Sign out and clear tokens */
-	signOut: (options?: { redirectUrl?: string }) => Promise<void>
+	signOut: (options?: { redirectUrl?: string }) => Promise<void>;
 	/** Get current access token (refreshes if expired) */
-	getToken: () => Promise<string | null>
+	getToken: () => Promise<string | null>;
 	/** Reset password with token */
-	resetPassword: (options: ResetPasswordOptions) => Promise<void>
+	resetPassword: (options: ResetPasswordOptions) => Promise<void>;
 	/** Verify email with token */
-	verifyEmail: (options: VerifyEmailOptions) => Promise<void>
+	verifyEmail: (options: VerifyEmailOptions) => Promise<void>;
 	/** Resend verification email */
-	resendVerificationEmail: (options: ResendVerificationEmailOptions) => Promise<void>
+	resendVerificationEmail: (
+		options: ResendVerificationEmailOptions,
+	) => Promise<void>;
 	/** Request password reset email */
-	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>
+	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>;
 
 	// ==========================================
 	// Direct OAuth Methods (Firebase/Supabase pattern)
@@ -151,25 +153,25 @@ export interface AuthContextValue extends AuthState {
 	 * await signInWithOAuth({ provider: 'github', redirectUrl: '/dashboard' })
 	 * ```
 	 */
-	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>
+	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>;
 
 	/** Convenience: Sign in with Google directly */
-	signInWithGoogle: (redirectUrl?: string) => Promise<void>
+	signInWithGoogle: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with GitHub directly */
-	signInWithGithub: (redirectUrl?: string) => Promise<void>
+	signInWithGithub: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Apple directly */
-	signInWithApple: (redirectUrl?: string) => Promise<void>
+	signInWithApple: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Discord directly */
-	signInWithDiscord: (redirectUrl?: string) => Promise<void>
+	signInWithDiscord: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Twitter directly */
-	signInWithTwitter: (redirectUrl?: string) => Promise<void>
+	signInWithTwitter: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Microsoft directly */
-	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>
+	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>;
 
 	// ==========================================
 	// Magic Link (Passwordless) Methods
@@ -194,7 +196,7 @@ export interface AuthContextValue extends AuthState {
 	 * })
 	 * ```
 	 */
-	signInWithMagicLink: (options: SignInWithMagicLinkOptions) => Promise<void>
+	signInWithMagicLink: (options: SignInWithMagicLinkOptions) => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null);

@@ -7,36 +7,41 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type RegisterPushRequest = components['schemas']['RegisterPushRequest']
-export type RegisterPushResponse = components['schemas']['RegisterPushResponse']
-export type UnregisterPushRequest = components['schemas']['UnregisterPushRequest']
-export type PushPreferencesResponse = components['schemas']['PushPreferencesResponse']
-export type InAppMessage = components['schemas']['InAppMessage']
-export type InAppMessagesResponse = components['schemas']['InAppMessagesResponse']
-export type MobileConfigResponse = components['schemas']['MobileConfigResponse']
-export type MobileDevice = components['schemas']['MobileDevice']
+export type RegisterPushRequest = components["schemas"]["RegisterPushRequest"];
+export type RegisterPushResponse =
+	components["schemas"]["RegisterPushResponse"];
+export type UnregisterPushRequest =
+	components["schemas"]["UnregisterPushRequest"];
+export type PushPreferencesResponse =
+	components["schemas"]["PushPreferencesResponse"];
+export type InAppMessage = components["schemas"]["InAppMessage"];
+export type InAppMessagesResponse =
+	components["schemas"]["InAppMessagesResponse"];
+export type MobileConfigResponse =
+	components["schemas"]["MobileConfigResponse"];
+export type MobileDevice = components["schemas"]["MobileDevice"];
 
 // SDK-specific types for convenience
 export interface PushSubscription {
-	endpoint: string
+	endpoint: string;
 	keys: {
-		p256dh: string
-		auth: string
-	}
+		p256dh: string;
+		auth: string;
+	};
 }
 
 export interface PushNotification {
-	title: string
-	body: string
-	icon?: string
-	url?: string
+	title: string;
+	body: string;
+	icon?: string;
+	url?: string;
 }
 
 // ============================================================================
@@ -67,12 +72,12 @@ export interface PushNotification {
  */
 export async function registerPush(
 	config: SylphxConfig,
-	subscription: PushSubscription
+	subscription: PushSubscription,
 ): Promise<void> {
-	await callApi(config, '/notifications/register', {
-		method: 'POST',
+	await callApi(config, "/notifications/register", {
+		method: "POST",
 		body: { subscription },
-	})
+	});
 }
 
 /**
@@ -83,11 +88,14 @@ export async function registerPush(
  * await unregisterPush(config, subscription.endpoint)
  * ```
  */
-export async function unregisterPush(config: SylphxConfig, endpoint: string): Promise<void> {
-	await callApi(config, '/notifications/unregister', {
-		method: 'POST',
+export async function unregisterPush(
+	config: SylphxConfig,
+	endpoint: string,
+): Promise<void> {
+	await callApi(config, "/notifications/unregister", {
+		method: "POST",
 		body: { endpoint },
-	})
+	});
 }
 
 /**
@@ -105,12 +113,12 @@ export async function unregisterPush(config: SylphxConfig, endpoint: string): Pr
 export async function sendPush(
 	config: SylphxConfig,
 	userId: string,
-	notification: PushNotification
+	notification: PushNotification,
 ): Promise<{ sentTo: number; expired: number }> {
-	return callApi(config, '/notifications/send', {
-		method: 'POST',
+	return callApi(config, "/notifications/send", {
+		method: "POST",
 		body: { userId, ...notification },
-	})
+	});
 }
 
 /**
@@ -122,9 +130,9 @@ export async function sendPush(
  * ```
  */
 export async function getPushPreferences(
-	config: SylphxConfig
+	config: SylphxConfig,
 ): Promise<{ enabled: boolean; categories: Record<string, boolean> }> {
-	return callApi(config, '/notifications/preferences', { method: 'GET' })
+	return callApi(config, "/notifications/preferences", { method: "GET" });
 }
 
 /**
@@ -140,10 +148,10 @@ export async function getPushPreferences(
  */
 export async function updatePushPreferences(
 	config: SylphxConfig,
-	preferences: { enabled?: boolean; categories?: Record<string, boolean> }
+	preferences: { enabled?: boolean; categories?: Record<string, boolean> },
 ): Promise<void> {
-	await callApi(config, '/notifications/preferences', {
-		method: 'PUT',
+	await callApi(config, "/notifications/preferences", {
+		method: "PUT",
 		body: preferences,
-	})
+	});
 }

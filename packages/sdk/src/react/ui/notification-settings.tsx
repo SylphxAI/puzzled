@@ -5,32 +5,32 @@
  * Self-contained with CSS-in-JS styles.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import type { ThemeVariables } from './styles'
+import { useEffect, useState } from "react";
+import { UI_NOTIFICATION_MS } from "../../constants";
+import { useNotifications } from "../platform-hooks";
+import type { ThemeVariables } from "./styles";
 import {
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from './styles'
-import { useNotifications } from '../platform-hooks'
-import { UI_NOTIFICATION_MS } from '../../constants'
+	mergeStyles,
+} from "./styles";
 
 export interface NotificationSettingsProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called on successful update */
-	onSuccess?: (message: string) => void
+	onSuccess?: (message: string) => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Show push notification settings */
-	showPush?: boolean
+	showPush?: boolean;
 	/** Show email notification settings */
-	showEmail?: boolean
+	showEmail?: boolean;
 }
 
 /**
@@ -60,90 +60,96 @@ export function NotificationSettings({
 		subscribe,
 		unsubscribe,
 		updatePreferences,
-	} = useNotifications()
-	const styles = baseStyles(theme)
+	} = useNotifications();
+	const styles = baseStyles(theme);
 
-	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState<string | null>(null)
-	const [isTogglingPush, setIsTogglingPush] = useState(false)
-	const [localPrefs, setLocalPrefs] = useState<Record<string, boolean>>(() =>
-		preferences?.categories ?? {}
-	)
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState<string | null>(null);
+	const [isTogglingPush, setIsTogglingPush] = useState(false);
+	const [localPrefs, setLocalPrefs] = useState<Record<string, boolean>>(
+		() => preferences?.categories ?? {},
+	);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Sync preferences
 	useEffect(() => {
 		if (preferences?.categories) {
-			setLocalPrefs(preferences.categories)
+			setLocalPrefs(preferences.categories);
 		}
-	}, [preferences])
+	}, [preferences]);
 
 	// Clear messages after timeout
 	useEffect(() => {
 		if (success || error) {
 			const timer = setTimeout(() => {
-				setSuccess(null)
-				setError(null)
-			}, UI_NOTIFICATION_MS)
-			return () => clearTimeout(timer)
+				setSuccess(null);
+				setError(null);
+			}, UI_NOTIFICATION_MS);
+			return () => clearTimeout(timer);
 		}
-	}, [success, error])
+	}, [success, error]);
 
 	// Toggle push notifications
 	const handleTogglePush = async () => {
-		setIsTogglingPush(true)
-		setError(null)
+		setIsTogglingPush(true);
+		setError(null);
 
 		try {
 			if (isSubscribed) {
-				await unsubscribe()
-				setSuccess('Push notifications disabled')
-				onSuccess?.('Push notifications disabled')
+				await unsubscribe();
+				setSuccess("Push notifications disabled");
+				onSuccess?.("Push notifications disabled");
 			} else {
-				const result = await subscribe()
+				const result = await subscribe();
 				if (result) {
-					setSuccess('Push notifications enabled')
-					onSuccess?.('Push notifications enabled')
+					setSuccess("Push notifications enabled");
+					onSuccess?.("Push notifications enabled");
 				} else {
-					setError('Failed to enable push notifications. Please check your browser permissions.')
-					onError?.('Failed to enable push notifications')
+					setError(
+						"Failed to enable push notifications. Please check your browser permissions.",
+					);
+					onError?.("Failed to enable push notifications");
 				}
 			}
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to toggle push notifications'
-			setError(message)
-			onError?.(message)
+			const message =
+				err instanceof Error
+					? err.message
+					: "Failed to toggle push notifications";
+			setError(message);
+			onError?.(message);
 		} finally {
-			setIsTogglingPush(false)
+			setIsTogglingPush(false);
 		}
-	}
+	};
 
 	// Update email preferences
 	const handlePreferenceChange = async (key: string, value: boolean) => {
-		const newPrefs = { ...localPrefs, [key]: value }
-		setLocalPrefs(newPrefs)
+		const newPrefs = { ...localPrefs, [key]: value };
+		setLocalPrefs(newPrefs);
 
 		try {
-			await updatePreferences({ categories: newPrefs })
-			setSuccess('Preferences updated')
-			onSuccess?.('Preferences updated')
+			await updatePreferences({ categories: newPrefs });
+			setSuccess("Preferences updated");
+			onSuccess?.("Preferences updated");
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to update preferences'
-			setError(message)
-			onError?.(message)
+			const message =
+				err instanceof Error ? err.message : "Failed to update preferences";
+			setError(message);
+			onError?.(message);
 			// Revert on error
-			setLocalPrefs(localPrefs)
+			setLocalPrefs(localPrefs);
 		}
-	}
+	};
 
 	const cardStyles: React.CSSProperties = mergeStyles(styles.card, {
-		padding: '1rem',
-		marginBottom: '1rem',
-	})
+		padding: "1rem",
+		marginBottom: "1rem",
+	});
 
 	return (
 		<div className={className}>
@@ -165,12 +171,16 @@ export function NotificationSettings({
 					<div style={styles.flexBetween}>
 						<div>
 							<h4 style={{ margin: 0, fontWeight: 500 }}>Push Notifications</h4>
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0.25rem 0 0' })}>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: "0.25rem 0 0",
+								})}
+							>
 								{isSupported
 									? isSubscribed
-										? 'Receive instant notifications in your browser'
-										: 'Enable browser push notifications'
-									: 'Push notifications are not supported in this browser'}
+										? "Receive instant notifications in your browser"
+										: "Enable browser push notifications"
+									: "Push notifications are not supported in this browser"}
 							</p>
 						</div>
 						<ToggleSwitch
@@ -184,12 +194,12 @@ export function NotificationSettings({
 					{!isSupported && (
 						<div
 							style={mergeStyles(styles.alert, styles.alertWarning, {
-								marginTop: '1rem',
+								marginTop: "1rem",
 								marginBottom: 0,
 							})}
 						>
 							<BellOffIcon size={16} />
-							<span style={{ marginLeft: '0.5rem' }}>
+							<span style={{ marginLeft: "0.5rem" }}>
 								Your browser doesn't support push notifications
 							</span>
 						</div>
@@ -200,24 +210,30 @@ export function NotificationSettings({
 			{/* Email Notifications */}
 			{showEmail && (
 				<div style={cardStyles}>
-					<h4 style={{ margin: '0 0 1rem', fontWeight: 500 }}>Email Notifications</h4>
+					<h4 style={{ margin: "0 0 1rem", fontWeight: 500 }}>
+						Email Notifications
+					</h4>
 
 					{/* Marketing emails */}
 					<div
 						style={mergeStyles(styles.flexBetween, {
-							padding: '0.75rem 0',
+							padding: "0.75rem 0",
 							borderBottom: `1px solid ${theme.colorBorder}`,
 						})}
 					>
 						<div>
-							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>Marketing & Promotions</div>
+							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>
+								Marketing & Promotions
+							</div>
 							<div style={mergeStyles(styles.textXs, styles.textMuted)}>
 								New features, tips, and special offers
 							</div>
 						</div>
 						<ToggleSwitch
 							checked={localPrefs.emailMarketing ?? true}
-							onChange={(checked) => handlePreferenceChange('emailMarketing', checked)}
+							onChange={(checked) =>
+								handlePreferenceChange("emailMarketing", checked)
+							}
 							theme={theme}
 						/>
 					</div>
@@ -225,19 +241,23 @@ export function NotificationSettings({
 					{/* Weekly summary */}
 					<div
 						style={mergeStyles(styles.flexBetween, {
-							padding: '0.75rem 0',
+							padding: "0.75rem 0",
 							borderBottom: `1px solid ${theme.colorBorder}`,
 						})}
 					>
 						<div>
-							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>Weekly Summary</div>
+							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>
+								Weekly Summary
+							</div>
 							<div style={mergeStyles(styles.textXs, styles.textMuted)}>
 								Weekly digest of your activity
 							</div>
 						</div>
 						<ToggleSwitch
 							checked={localPrefs.emailWeeklySummary ?? true}
-							onChange={(checked) => handlePreferenceChange('emailWeeklySummary', checked)}
+							onChange={(checked) =>
+								handlePreferenceChange("emailWeeklySummary", checked)
+							}
 							theme={theme}
 						/>
 					</div>
@@ -245,18 +265,22 @@ export function NotificationSettings({
 					{/* Daily reminder */}
 					<div
 						style={mergeStyles(styles.flexBetween, {
-							padding: '0.75rem 0',
+							padding: "0.75rem 0",
 						})}
 					>
 						<div>
-							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>Daily Reminders</div>
+							<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>
+								Daily Reminders
+							</div>
 							<div style={mergeStyles(styles.textXs, styles.textMuted)}>
 								Push notifications for daily reminders
 							</div>
 						</div>
 						<ToggleSwitch
 							checked={localPrefs.pushDailyReminder ?? true}
-							onChange={(checked) => handlePreferenceChange('pushDailyReminder', checked)}
+							onChange={(checked) =>
+								handlePreferenceChange("pushDailyReminder", checked)
+							}
 							theme={theme}
 						/>
 					</div>
@@ -264,13 +288,16 @@ export function NotificationSettings({
 			)}
 
 			{/* Notification Types Legend */}
-			<div style={mergeStyles(styles.textXs, styles.textMuted, styles.textCenter)}>
+			<div
+				style={mergeStyles(styles.textXs, styles.textMuted, styles.textCenter)}
+			>
 				<p style={{ margin: 0 }}>
-					Security notifications cannot be fully disabled to keep your account safe.
+					Security notifications cannot be fully disabled to keep your account
+					safe.
 				</p>
 			</div>
 		</div>
-	)
+	);
 }
 
 // Toggle switch component
@@ -280,32 +307,32 @@ function ToggleSwitch({
 	disabled = false,
 	theme,
 }: {
-	checked: boolean
-	onChange: (checked: boolean) => void
-	disabled?: boolean
-	theme: ThemeVariables
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+	disabled?: boolean;
+	theme: ThemeVariables;
 }) {
 	const trackStyle: React.CSSProperties = {
-		width: '2.75rem',
-		height: '1.5rem',
-		borderRadius: '9999px',
+		width: "2.75rem",
+		height: "1.5rem",
+		borderRadius: "9999px",
 		backgroundColor: checked ? theme.colorPrimary : theme.colorMuted,
-		padding: '0.125rem',
-		cursor: disabled ? 'not-allowed' : 'pointer',
-		transition: 'background-color 0.15s ease-in-out',
+		padding: "0.125rem",
+		cursor: disabled ? "not-allowed" : "pointer",
+		transition: "background-color 0.15s ease-in-out",
 		opacity: disabled ? 0.5 : 1,
-		border: checked ? 'none' : `1px solid ${theme.colorBorder}`,
-	}
+		border: checked ? "none" : `1px solid ${theme.colorBorder}`,
+	};
 
 	const thumbStyle: React.CSSProperties = {
-		width: '1.25rem',
-		height: '1.25rem',
-		borderRadius: '50%',
-		backgroundColor: '#fff',
-		boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-		transform: checked ? 'translateX(1.25rem)' : 'translateX(0)',
-		transition: 'transform 0.15s ease-in-out',
-	}
+		width: "1.25rem",
+		height: "1.25rem",
+		borderRadius: "50%",
+		backgroundColor: "#fff",
+		boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+		transform: checked ? "translateX(1.25rem)" : "translateX(0)",
+		transition: "transform 0.15s ease-in-out",
+	};
 
 	return (
 		<button
@@ -318,7 +345,7 @@ function ToggleSwitch({
 		>
 			<div style={thumbStyle} />
 		</button>
-	)
+	);
 }
 
 // Icons
@@ -341,5 +368,5 @@ function BellOffIcon({ size = 24 }: { size?: number }) {
 			<path d="M18 8a6 6 0 0 0-9.33-5" />
 			<line x1="1" y1="1" x2="23" y2="23" />
 		</svg>
-	)
+	);
 }

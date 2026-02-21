@@ -12,26 +12,42 @@
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
-import { OpenAPIHono, z } from '@hono/zod-openapi'
-import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
-import { HTTPException } from 'hono/http-exception'
-import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
-import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
-import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
-import { hasPremiumAccess } from '@/lib/billing/server'
-import { PAGINATION } from '@/lib/config/validation'
-import { db } from '@/lib/db'
 import {
-	dailyPuzzles,
+	getPuzzleDateStringUTC,
+	getPuzzleNumber,
+	getTodayUTC,
+} from "@/features/daily/server";
+import {
+	getGameConfig,
+	isValidGameSlug,
+	validateAndScore,
+} from "@/games/registry";
+import type {
+	GameResult,
+	GameSubmission,
+	PuzzleDifficulty,
+} from "@/games/types";
+import { hasPremiumAccess } from "@/lib/billing/server";
+import { PAGINATION } from "@/lib/config/validation";
+import { db } from "@/lib/db";
+import {
 	GAME_MODE_VALUES,
 	GAME_RESULT_STATUSES,
-	gameSessions,
 	type NewGameSession,
+	dailyPuzzles,
+	gameSessions,
 	userFreezeData,
-} from '@/lib/db/schema'
-import { getOrCreatePuzzle } from '../../services/puzzle'
-import { authMiddleware, authRateLimitMiddleware, optionalAuthMiddleware } from '../middleware'
-import type { PuzzledAuthEnv } from '../types'
+} from "@/lib/db/schema";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
+import { and, desc, eq, gte, inArray, isNull } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
+import { getOrCreatePuzzle } from "../../services/puzzle";
+import {
+	authMiddleware,
+	authRateLimitMiddleware,
+	optionalAuthMiddleware,
+} from "../middleware";
+import type { PuzzledAuthEnv } from "../types";
 
 // ==========================================
 // Schemas
@@ -39,68 +55,72 @@ import type { PuzzledAuthEnv } from '../types'
 
 const DailyStatusQuerySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
-	difficulty: z.enum(['easy', 'medium', 'hard', 'expert']).optional(),
-})
+	difficulty: z.enum(["easy", "medium", "hard", "expert"]).optional(),
+});
 
 const ArchivePuzzleQuerySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
 	date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-})
+});
 
 const ValidateGuessBodySchema = z.object({
 	puzzleId: z.string().uuid(),
 	gameSlug: z.string().min(1).max(50),
 	guess: z.unknown(),
-})
+});
 
 const SaveResultBodySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
 	status: z.enum(GAME_RESULT_STATUSES),
 	attempts: z.number(),
 	timeSpentMs: z.number(),
-	mode: z.enum(GAME_MODE_VALUES).default('daily'),
+	mode: z.enum(GAME_MODE_VALUES).default("daily"),
 	archiveDate: z.string().optional(),
 	puzzleId: z.string().uuid(),
-	difficulty: z.enum(['easy', 'medium', 'hard', 'expert']).optional(),
+	difficulty: z.enum(["easy", "medium", "hard", "expert"]).optional(),
 	data: z.unknown(),
-})
+});
 
 const HistoryQuerySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
-	limit: z.coerce.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.DEFAULT_LIMIT),
-})
+	limit: z.coerce
+		.number()
+		.min(1)
+		.max(PAGINATION.ADMIN_MAX_LIMIT)
+		.default(PAGINATION.DEFAULT_LIMIT),
+});
 
 const ArchiveDatesQuerySchema = z.object({
 	gameSlug: z.string().min(1).max(50),
 	startDate: z.string(),
 	endDate: z.string(),
-})
+});
 
 // ==========================================
 // Internal Functions
 // ==========================================
 
 async function validateAndScoreSubmission(input: {
-	gameSlug: string
-	status: 'won' | 'lost' | 'abandoned'
-	attempts: number
-	timeSpentMs: number
-	puzzleId: string
-	data: unknown
+	gameSlug: string;
+	status: "won" | "lost" | "abandoned";
+	attempts: number;
+	timeSpentMs: number;
+	puzzleId: string;
+	data: unknown;
 }): Promise<GameResult> {
 	// 'abandoned' status cannot be validated - only 'won' or 'lost' are valid submissions
-	if (input.status === 'abandoned') {
-		return { valid: false, error: 'Cannot validate abandoned game' }
+	if (input.status === "abandoned") {
+		return { valid: false, error: "Cannot validate abandoned game" };
 	}
 
 	const [puzzle] = await db
 		.select()
 		.from(dailyPuzzles)
 		.where(eq(dailyPuzzles.id, input.puzzleId))
-		.limit(1)
+		.limit(1);
 
 	if (!puzzle?.solution || !puzzle?.puzzleData) {
-		return { valid: false, error: 'Puzzle not found' }
+		return { valid: false, error: "Puzzle not found" };
 	}
 
 	const submission: GameSubmission = {
@@ -108,9 +128,14 @@ async function validateAndScoreSubmission(input: {
 		attempts: input.attempts,
 		timeSpentMs: input.timeSpentMs,
 		data: input.data,
-	}
+	};
 
-	return validateAndScore(input.gameSlug, puzzle.solution, puzzle.puzzleData, submission)
+	return validateAndScore(
+		input.gameSlug,
+		puzzle.solution,
+		puzzle.puzzleData,
+		submission,
+	);
 }
 
 /**
@@ -118,15 +143,15 @@ async function validateAndScoreSubmission(input: {
  * This is a premium feature stored in userFreezeData table
  */
 async function tryAutoFreeze(userId: string): Promise<boolean> {
-	const isPremium = await hasPremiumAccess(userId)
-	if (!isPremium) return false
+	const isPremium = await hasPremiumAccess(userId);
+	if (!isPremium) return false;
 
 	const freezeData = await db.query.userFreezeData.findFirst({
 		where: eq(userFreezeData.userId, userId),
-	})
+	});
 
 	if (!freezeData?.autoFreezeEnabled || freezeData.freezesAvailable <= 0) {
-		return false
+		return false;
 	}
 
 	// Use a freeze
@@ -137,9 +162,9 @@ async function tryAutoFreeze(userId: string): Promise<boolean> {
 			freezesUsed: freezeData.freezesUsed + 1,
 			updatedAt: new Date(),
 		})
-		.where(eq(userFreezeData.id, freezeData.id))
+		.where(eq(userFreezeData.id, freezeData.id));
 
-	return true
+	return true;
 }
 
 // ==========================================
@@ -148,50 +173,56 @@ async function tryAutoFreeze(userId: string): Promise<boolean> {
 
 const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	// GET /daily-status - optional auth (shows completion for authenticated users)
-	.get('/daily-status', optionalAuthMiddleware, async (c) => {
-		const query = c.req.query()
-		const parsed = DailyStatusQuerySchema.safeParse(query)
+	.get("/daily-status", optionalAuthMiddleware, async (c) => {
+		const query = c.req.query();
+		const parsed = DailyStatusQuerySchema.safeParse(query);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid query parameters' })
+			throw new HTTPException(400, { message: "Invalid query parameters" });
 		}
-		const { gameSlug, difficulty } = parsed.data
-		const user = c.get('user')
+		const { gameSlug, difficulty } = parsed.data;
+		const user = c.get("user");
 
-		const today = getTodayUTC()
-		const puzzleDateString = getPuzzleDateStringUTC(today)
+		const today = getTodayUTC();
+		const puzzleDateString = getPuzzleDateStringUTC(today);
 
 		if (!isValidGameSlug(gameSlug)) {
-			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` });
 		}
 
-		const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
+		const { puzzle } = await getOrCreatePuzzle(
+			gameSlug,
+			today,
+			difficulty as PuzzleDifficulty,
+		);
 
-		let completedSession = null
+		let completedSession = null;
 		if (user) {
 			const conditions: ReturnType<typeof eq>[] = [
 				eq(gameSessions.userId, user.id),
 				eq(gameSessions.gameSlug, gameSlug),
 				eq(gameSessions.puzzleDate, today),
-				eq(gameSessions.mode, 'daily'),
-				inArray(gameSessions.status, ['won', 'lost']),
-			]
+				eq(gameSessions.mode, "daily"),
+				inArray(gameSessions.status, ["won", "lost"]),
+			];
 
-			if (difficulty && difficulty !== 'expert') {
-				conditions.push(eq(gameSessions.difficulty, difficulty as 'easy' | 'medium' | 'hard'))
+			if (difficulty && difficulty !== "expert") {
+				conditions.push(
+					eq(gameSessions.difficulty, difficulty as "easy" | "medium" | "hard"),
+				);
 			} else if (!difficulty) {
-				conditions.push(isNull(gameSessions.difficulty))
+				conditions.push(isNull(gameSessions.difficulty));
 			}
 
 			const [session] = await db
 				.select()
 				.from(gameSessions)
 				.where(and(...conditions))
-				.limit(1)
+				.limit(1);
 
-			if (session) completedSession = session
+			if (session) completedSession = session;
 		}
 
-		const puzzleNumber = getPuzzleNumber(gameSlug, today)
+		const puzzleNumber = getPuzzleNumber(gameSlug, today);
 
 		return c.json({
 			hasCompleted: !!completedSession,
@@ -204,26 +235,30 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				difficulty: difficulty ?? null,
 			},
 			canPlay: !completedSession,
-			mode: 'daily' as const,
-		})
+			mode: "daily" as const,
+		});
 	})
 
 	// GET /todays-puzzle - public
-	.get('/todays-puzzle', async (c) => {
-		const query = c.req.query()
-		const parsed = DailyStatusQuerySchema.safeParse(query)
+	.get("/todays-puzzle", async (c) => {
+		const query = c.req.query();
+		const parsed = DailyStatusQuerySchema.safeParse(query);
 		if (!parsed.success) {
-			return c.json(null)
+			return c.json(null);
 		}
-		const { gameSlug, difficulty } = parsed.data
+		const { gameSlug, difficulty } = parsed.data;
 
-		const today = getTodayUTC()
+		const today = getTodayUTC();
 
 		if (!isValidGameSlug(gameSlug)) {
-			return c.json(null)
+			return c.json(null);
 		}
 
-		const { puzzle } = await getOrCreatePuzzle(gameSlug, today, difficulty as PuzzleDifficulty)
+		const { puzzle } = await getOrCreatePuzzle(
+			gameSlug,
+			today,
+			difficulty as PuzzleDifficulty,
+		);
 
 		return c.json({
 			puzzleId: puzzle.id,
@@ -231,34 +266,36 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			puzzleDate: getPuzzleDateStringUTC(today),
 			puzzleData: puzzle.puzzleData,
 			difficulty: difficulty ?? null,
-		})
+		});
 	})
 
 	// GET /archive-puzzle - authenticated
-	.get('/archive-puzzle', authMiddleware, async (c) => {
-		const query = c.req.query()
-		const parsed = ArchivePuzzleQuerySchema.safeParse(query)
+	.get("/archive-puzzle", authMiddleware, async (c) => {
+		const query = c.req.query();
+		const parsed = ArchivePuzzleQuerySchema.safeParse(query);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid query parameters' })
+			throw new HTTPException(400, { message: "Invalid query parameters" });
 		}
-		const { gameSlug, date } = parsed.data
-		const user = c.get('user')
+		const { gameSlug, date } = parsed.data;
+		const user = c.get("user");
 
-		const isPremium = await hasPremiumAccess(user.id)
+		const isPremium = await hasPremiumAccess(user.id);
 		if (!isPremium) {
-			throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
+			throw new HTTPException(403, {
+				message: "Archive access requires premium subscription",
+			});
 		}
 
 		if (!isValidGameSlug(gameSlug)) {
-			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` });
 		}
 
-		const archiveDate = new Date(date)
-		archiveDate.setUTCHours(0, 0, 0, 0)
+		const archiveDate = new Date(date);
+		archiveDate.setUTCHours(0, 0, 0, 0);
 
-		const today = getTodayUTC()
+		const today = getTodayUTC();
 		if (archiveDate >= today) {
-			throw new HTTPException(400, { message: 'Cannot access future puzzles' })
+			throw new HTTPException(400, { message: "Cannot access future puzzles" });
 		}
 
 		const [existingSession] = await db
@@ -268,163 +305,172 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				and(
 					eq(gameSessions.userId, user.id),
 					eq(gameSessions.gameSlug, gameSlug),
-					eq(gameSessions.mode, 'archive'),
+					eq(gameSessions.mode, "archive"),
 					eq(gameSessions.archiveDate, archiveDate),
-					inArray(gameSessions.status, ['won', 'lost']),
+					inArray(gameSessions.status, ["won", "lost"]),
 				),
 			)
-			.limit(1)
+			.limit(1);
 
 		if (existingSession) {
-			throw new HTTPException(409, { message: 'Already played this archive puzzle' })
+			throw new HTTPException(409, {
+				message: "Already played this archive puzzle",
+			});
 		}
 
-		const { puzzle } = await getOrCreatePuzzle(gameSlug, archiveDate)
+		const { puzzle } = await getOrCreatePuzzle(gameSlug, archiveDate);
 
 		return c.json({
 			...puzzle,
 			solution: null,
-		})
+		});
 	})
 
 	// POST /validate-guess - authenticated + rate limited
-	.post('/validate-guess', authRateLimitMiddleware, async (c) => {
-		const body = await c.req.json()
-		const parsed = ValidateGuessBodySchema.safeParse(body)
+	.post("/validate-guess", authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json();
+		const parsed = ValidateGuessBodySchema.safeParse(body);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
+			throw new HTTPException(400, { message: "Invalid request body" });
 		}
-		const { puzzleId, gameSlug, guess } = parsed.data
+		const { puzzleId, gameSlug, guess } = parsed.data;
 
-		const config = getGameConfig(gameSlug)
+		const config = getGameConfig(gameSlug);
 
 		if (!config?.validateGuess) {
 			throw new HTTPException(400, {
 				message: `Game ${gameSlug} does not support guess validation`,
-			})
+			});
 		}
 
 		const [puzzle] = await db
 			.select()
 			.from(dailyPuzzles)
 			.where(eq(dailyPuzzles.id, puzzleId))
-			.limit(1)
+			.limit(1);
 
 		if (!puzzle?.solution) {
-			throw new HTTPException(404, { message: 'Puzzle not found' })
+			throw new HTTPException(404, { message: "Puzzle not found" });
 		}
 
-		return c.json(config.validateGuess(puzzle.solution, guess))
+		return c.json(config.validateGuess(puzzle.solution, guess));
 	})
 
 	// POST /save-result - authenticated + rate limited
 	// NOTE: After saving, client should call Platform SDK recordStreakActivity() and submitScore()
-	.post('/save-result', authRateLimitMiddleware, async (c) => {
-		const body = await c.req.json()
-		const parsed = SaveResultBodySchema.safeParse(body)
+	.post("/save-result", authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json();
+		const parsed = SaveResultBodySchema.safeParse(body);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
+			throw new HTTPException(400, { message: "Invalid request body" });
 		}
-		const input = parsed.data
-		const user = c.get('user')
+		const input = parsed.data;
+		const user = c.get("user");
 
-		const mode = input.mode
+		const mode = input.mode;
 
 		if (!isValidGameSlug(input.gameSlug)) {
-			throw new HTTPException(404, { message: `Game not found: ${input.gameSlug}` })
+			throw new HTTPException(404, {
+				message: `Game not found: ${input.gameSlug}`,
+			});
 		}
 
-		const validationResult = await validateAndScoreSubmission(input)
+		const validationResult = await validateAndScoreSubmission(input);
 		if (!validationResult.valid) {
-			throw new HTTPException(400, { message: validationResult.error || 'Invalid game result' })
+			throw new HTTPException(400, {
+				message: validationResult.error || "Invalid game result",
+			});
 		}
 
-		const validatedStatus = validationResult.status
-		const serverScore = validationResult.score
+		const validatedStatus = validationResult.status;
+		const serverScore = validationResult.score;
 
-		let puzzleDate: Date
-		let archiveDate: Date | null = null
+		let puzzleDate: Date;
+		let archiveDate: Date | null = null;
 
-		if (mode === 'archive' && input.archiveDate) {
-			puzzleDate = new Date(`${input.archiveDate}T00:00:00Z`)
-			archiveDate = puzzleDate
+		if (mode === "archive" && input.archiveDate) {
+			puzzleDate = new Date(`${input.archiveDate}T00:00:00Z`);
+			archiveDate = puzzleDate;
 		} else {
-			puzzleDate = getTodayUTC()
+			puzzleDate = getTodayUTC();
 		}
 
 		// Map difficulty - 'expert' is treated as null for DB
 		const difficulty =
-			input.difficulty && input.difficulty !== 'expert'
-				? (input.difficulty as 'easy' | 'medium' | 'hard')
-				: undefined
+			input.difficulty && input.difficulty !== "expert"
+				? (input.difficulty as "easy" | "medium" | "hard")
+				: undefined;
 
-		if (mode === 'daily' || mode === 'archive') {
+		if (mode === "daily" || mode === "archive") {
 			const conditions: ReturnType<typeof eq>[] = [
 				eq(gameSessions.userId, user.id),
 				eq(gameSessions.gameSlug, input.gameSlug),
 				eq(gameSessions.mode, mode),
-			]
+			];
 
-			if (mode === 'archive' && archiveDate) {
-				conditions.push(eq(gameSessions.archiveDate, archiveDate))
+			if (mode === "archive" && archiveDate) {
+				conditions.push(eq(gameSessions.archiveDate, archiveDate));
 			} else {
-				conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
+				conditions.push(eq(gameSessions.puzzleDate, puzzleDate));
 			}
 
 			if (difficulty) {
-				conditions.push(eq(gameSessions.difficulty, difficulty))
+				conditions.push(eq(gameSessions.difficulty, difficulty));
 			} else {
-				conditions.push(isNull(gameSessions.difficulty))
+				conditions.push(isNull(gameSessions.difficulty));
 			}
 
 			const [existingSession] = await db
 				.select()
 				.from(gameSessions)
 				.where(and(...conditions))
-				.limit(1)
+				.limit(1);
 
 			if (existingSession) {
 				throw new HTTPException(409, {
-					message: mode === 'daily' ? 'Already played today' : 'Already played this archive puzzle',
-				})
+					message:
+						mode === "daily"
+							? "Already played today"
+							: "Already played this archive puzzle",
+				});
 			}
 		}
 
 		const session = await db.transaction(async (tx) => {
-			if (mode === 'daily' || mode === 'archive') {
+			if (mode === "daily" || mode === "archive") {
 				const conditions: ReturnType<typeof eq>[] = [
 					eq(gameSessions.userId, user.id),
 					eq(gameSessions.gameSlug, input.gameSlug),
 					eq(gameSessions.mode, mode),
-				]
+				];
 
-				if (mode === 'archive' && archiveDate) {
-					conditions.push(eq(gameSessions.archiveDate, archiveDate))
+				if (mode === "archive" && archiveDate) {
+					conditions.push(eq(gameSessions.archiveDate, archiveDate));
 				} else {
-					conditions.push(eq(gameSessions.puzzleDate, puzzleDate))
+					conditions.push(eq(gameSessions.puzzleDate, puzzleDate));
 				}
 
 				if (difficulty) {
-					conditions.push(eq(gameSessions.difficulty, difficulty))
+					conditions.push(eq(gameSessions.difficulty, difficulty));
 				} else {
-					conditions.push(isNull(gameSessions.difficulty))
+					conditions.push(isNull(gameSessions.difficulty));
 				}
 
 				const [existingInTx] = await tx
 					.select()
 					.from(gameSessions)
 					.where(and(...conditions))
-					.limit(1)
+					.limit(1);
 
 				if (existingInTx) {
 					throw new HTTPException(409, {
 						message:
-							mode === 'daily'
+							mode === "daily"
 								? difficulty
 									? `Already played ${difficulty} difficulty today`
-									: 'Already played today'
-								: 'Already played this archive puzzle',
-					})
+									: "Already played today"
+								: "Already played this archive puzzle",
+					});
 				}
 			}
 
@@ -442,12 +488,15 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				timeSpentMs: input.timeSpentMs,
 				state: null,
 				completedAt: new Date(),
-			}
+			};
 
-			const [newSessionResult] = await tx.insert(gameSessions).values(newSession).returning()
+			const [newSessionResult] = await tx
+				.insert(gameSessions)
+				.values(newSession)
+				.returning();
 
-			return newSessionResult
-		})
+			return newSessionResult;
+		});
 
 		// NOTE: Streak tracking and leaderboard updates are now handled by Platform SDK
 		// Client should call:
@@ -456,9 +505,9 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 		// This ensures all engagement data is managed centrally by the Platform
 
 		// Check if auto-freeze was used (for premium users with streak about to break)
-		let usedFreeze = false
-		if (mode === 'daily' && validatedStatus === 'lost') {
-			usedFreeze = await tryAutoFreeze(user.id)
+		let usedFreeze = false;
+		if (mode === "daily" && validatedStatus === "lost") {
+			usedFreeze = await tryAutoFreeze(user.id);
 		}
 
 		return c.json({
@@ -467,18 +516,18 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			mode,
 			score: serverScore,
 			usedFreeze,
-		})
+		});
 	})
 
 	// GET /history - authenticated
-	.get('/history', authMiddleware, async (c) => {
-		const query = c.req.query()
-		const parsed = HistoryQuerySchema.safeParse(query)
+	.get("/history", authMiddleware, async (c) => {
+		const query = c.req.query();
+		const parsed = HistoryQuerySchema.safeParse(query);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid query parameters' })
+			throw new HTTPException(400, { message: "Invalid query parameters" });
 		}
-		const { gameSlug, limit } = parsed.data
-		const user = c.get('user')
+		const { gameSlug, limit } = parsed.data;
+		const user = c.get("user");
 
 		const history = await db
 			.select({
@@ -491,35 +540,42 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				mode: gameSessions.mode,
 			})
 			.from(gameSessions)
-			.where(and(eq(gameSessions.userId, user.id), eq(gameSessions.gameSlug, gameSlug)))
+			.where(
+				and(
+					eq(gameSessions.userId, user.id),
+					eq(gameSessions.gameSlug, gameSlug),
+				),
+			)
 			.orderBy(desc(gameSessions.completedAt))
-			.limit(limit)
+			.limit(limit);
 
-		return c.json(history)
+		return c.json(history);
 	})
 
 	// GET /archive-dates - authenticated
-	.get('/archive-dates', authMiddleware, async (c) => {
-		const query = c.req.query()
-		const parsed = ArchiveDatesQuerySchema.safeParse(query)
+	.get("/archive-dates", authMiddleware, async (c) => {
+		const query = c.req.query();
+		const parsed = ArchiveDatesQuerySchema.safeParse(query);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid query parameters' })
+			throw new HTTPException(400, { message: "Invalid query parameters" });
 		}
-		const { gameSlug, startDate, endDate } = parsed.data
-		const user = c.get('user')
+		const { gameSlug, startDate, endDate } = parsed.data;
+		const user = c.get("user");
 
-		const isPremium = await hasPremiumAccess(user.id)
+		const isPremium = await hasPremiumAccess(user.id);
 		if (!isPremium) {
-			throw new HTTPException(403, { message: 'Archive access requires premium subscription' })
+			throw new HTTPException(403, {
+				message: "Archive access requires premium subscription",
+			});
 		}
 
 		if (!isValidGameSlug(gameSlug)) {
-			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` })
+			throw new HTTPException(404, { message: `Unknown game: ${gameSlug}` });
 		}
 
-		const start = new Date(startDate)
-		const end = new Date(endDate)
-		const today = getTodayUTC()
+		const start = new Date(startDate);
+		const end = new Date(endDate);
+		const today = getTodayUTC();
 
 		const playedSessions = await db
 			.select({ archiveDate: gameSessions.archiveDate })
@@ -528,31 +584,31 @@ const gamesRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				and(
 					eq(gameSessions.userId, user.id),
 					eq(gameSessions.gameSlug, gameSlug),
-					eq(gameSessions.mode, 'archive'),
-					inArray(gameSessions.status, ['won', 'lost']),
+					eq(gameSessions.mode, "archive"),
+					inArray(gameSessions.status, ["won", "lost"]),
 					gte(gameSessions.archiveDate, start),
 				),
-			)
+			);
 
 		const playedDates = new Set(
 			playedSessions
 				.filter((s) => s.archiveDate)
-				.map((s) => s.archiveDate!.toISOString().split('T')[0]),
-		)
+				.map((s) => s.archiveDate!.toISOString().split("T")[0]),
+		);
 
-		const result: { date: string; played: boolean }[] = []
-		const current = new Date(start)
+		const result: { date: string; played: boolean }[] = [];
+		const current = new Date(start);
 		while (current <= end && current < today) {
-			const dateStr = current.toISOString().split('T')[0]
+			const dateStr = current.toISOString().split("T")[0];
 			result.push({
 				date: dateStr,
 				played: playedDates.has(dateStr),
-			})
-			current.setDate(current.getDate() + 1)
+			});
+			current.setDate(current.getDate() + 1);
 		}
 
-		return c.json(result)
-	})
+		return c.json(result);
+	});
 
-export { gamesRoutes }
-export type GamesRoutes = typeof gamesRoutes
+export { gamesRoutes };
+export type GamesRoutes = typeof gamesRoutes;

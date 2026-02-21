@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Motion Components
@@ -18,7 +18,7 @@ import {
 	type MotionProps,
 	motion,
 	useInView,
-} from 'motion/react'
+} from "motion/react";
 import {
 	Children,
 	type HTMLAttributes,
@@ -29,8 +29,8 @@ import {
 	useContext,
 	useRef,
 	useState,
-} from 'react'
-import { duration, easing, spring, stagger } from './config'
+} from "react";
+import { duration, easing, spring, stagger } from "./config";
 import {
 	scaleSpringVariants,
 	scaleVariants,
@@ -39,111 +39,113 @@ import {
 	slideLeftVariants,
 	slideRightVariants,
 	slideUpVariants,
-} from './variants'
+} from "./variants";
 
 // ============================================================================
 // Shared CSS Transition Helpers
 // ============================================================================
 
 /** Pre-computed cubic-bezier string for easeOut */
-const EASE_OUT = `cubic-bezier(${easing.easeOut.join(',')})`
+const EASE_OUT = `cubic-bezier(${easing.easeOut.join(",")})`;
 
 /** Build a CSS transition string for opacity + transform */
 function cssTransition(dur: number) {
-	return `opacity ${dur}s ${EASE_OUT}, transform ${dur}s ${EASE_OUT}`
+	return `opacity ${dur}s ${EASE_OUT}, transform ${dur}s ${EASE_OUT}`;
 }
 
 /** CSS entrance style: hidden state or visible state */
 function entranceStyle(
 	inView: boolean,
 	opts: {
-		duration: number
-		delay?: number
-		translate?: string
-	}
+		duration: number;
+		delay?: number;
+		translate?: string;
+	},
 ) {
 	return {
 		opacity: inView ? 1 : 0,
-		transform: inView ? 'none' : (opts.translate ?? 'translateY(8px)'),
+		transform: inView ? "none" : (opts.translate ?? "translateY(8px)"),
 		transition: cssTransition(opts.duration),
-		transitionDelay: inView ? `${opts.delay ?? 0}s` : '0s',
-	} as const
+		transitionDelay: inView ? `${opts.delay ?? 0}s` : "0s",
+	} as const;
 }
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type Direction = 'up' | 'down' | 'left' | 'right'
-type StaggerSpeed = 'fast' | 'normal' | 'slow'
+type Direction = "up" | "down" | "left" | "right";
+type StaggerSpeed = "fast" | "normal" | "slow";
 
 interface FadeProps {
 	/** Direction of movement during fade */
-	direction?: Direction
+	direction?: Direction;
 	/** Custom duration override */
-	duration?: number
+	duration?: number;
 	/** Custom delay */
-	delay?: number
+	delay?: number;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
-interface ScaleProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface ScaleProps
+	extends Omit<HTMLMotionProps<"div">, "initial" | "animate" | "exit"> {
 	/** Use spring physics */
-	spring?: boolean
+	spring?: boolean;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 }
 
-interface SlideProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface SlideProps
+	extends Omit<HTMLMotionProps<"div">, "initial" | "animate" | "exit"> {
 	/** Direction to slide from */
-	direction: Direction
+	direction: Direction;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 }
 
 interface StaggerListProps {
 	/** Stagger speed */
-	speed?: StaggerSpeed
+	speed?: StaggerSpeed;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 interface StaggerItemProps {
 	/** Animation type */
-	type?: 'fade' | 'fadeUp' | 'scale'
+	type?: "fade" | "fadeUp" | "scale";
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 interface PresenceProps {
 	/** Unique key for the current child */
-	id?: string | number
+	id?: string | number;
 	/** Animation mode */
-	mode?: 'sync' | 'wait' | 'popLayout'
+	mode?: "sync" | "wait" | "popLayout";
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Initial animation on first render */
-	initial?: boolean
+	initial?: boolean;
 }
 
 // ============================================================================
 // Fade Component — CSS First
 // ============================================================================
 
-const fadeTranslates: Record<Direction | 'none', string> = {
-	up: 'translateY(10px)',
-	down: 'translateY(-10px)',
-	left: 'translateX(20px)',
-	right: 'translateX(-20px)',
-	none: 'none',
-}
+const fadeTranslates: Record<Direction | "none", string> = {
+	up: "translateY(10px)",
+	down: "translateY(-10px)",
+	left: "translateX(20px)",
+	right: "translateX(-20px)",
+	none: "none",
+};
 
 /**
  * Fade - CSS transition fade with optional direction
@@ -162,9 +164,9 @@ export function Fade({
 	children,
 	className,
 }: FadeProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const dir = direction ?? 'none'
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const dir = direction ?? "none";
 
 	return (
 		<div
@@ -178,7 +180,7 @@ export function Fade({
 		>
 			{children}
 		</div>
-	)
+	);
 }
 
 // ============================================================================
@@ -207,10 +209,10 @@ export const Scale = forwardRef<HTMLDivElement, ScaleProps>(
 			>
 				{children}
 			</motion.div>
-		)
-	}
-)
-Scale.displayName = 'Scale'
+		);
+	},
+);
+Scale.displayName = "Scale";
 
 // ============================================================================
 // Slide Component — Framer Motion (AnimatePresence compatible)
@@ -221,7 +223,7 @@ const slideDirectionVariants = {
 	down: slideDownVariants,
 	left: slideLeftVariants,
 	right: slideRightVariants,
-}
+};
 
 /**
  * Slide - Full slide animation (100% translation)
@@ -244,10 +246,10 @@ export const Slide = forwardRef<HTMLDivElement, SlideProps>(
 			>
 				{children}
 			</motion.div>
-		)
-	}
-)
-Slide.displayName = 'Slide'
+		);
+	},
+);
+Slide.displayName = "Slide";
 
 // ============================================================================
 // Stagger Components — CSS First
@@ -258,19 +260,23 @@ Slide.displayName = 'Slide'
  * StaggerList/AnimatedList to their child items.
  */
 interface StaggerContextValue {
-	inView: boolean
-	step: number
-	nextIndex: () => number
+	inView: boolean;
+	step: number;
+	nextIndex: () => number;
 }
 
 const StaggerContext = createContext<StaggerContextValue>({
 	inView: true,
 	step: 0,
 	nextIndex: () => 0,
-})
+});
 
 function resolveStep(speed: StaggerSpeed) {
-	return speed === 'fast' ? stagger.fast : speed === 'normal' ? stagger.normal : stagger.slow
+	return speed === "fast"
+		? stagger.fast
+		: speed === "normal"
+			? stagger.normal
+			: stagger.slow;
 }
 
 /**
@@ -285,28 +291,34 @@ function resolveStep(speed: StaggerSpeed) {
  *   <StaggerItem>Item 2</StaggerItem>
  * </StaggerList>
  */
-export function StaggerList({ speed = 'normal', children, className }: StaggerListProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const step = resolveStep(speed)
-	const indexRef = useRef(0)
+export function StaggerList({
+	speed = "normal",
+	children,
+	className,
+}: StaggerListProps) {
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const step = resolveStep(speed);
+	const indexRef = useRef(0);
 	// Reset counter on each render so items get consistent indices
-	indexRef.current = 0
+	indexRef.current = 0;
 
 	return (
-		<StaggerContext.Provider value={{ inView, step, nextIndex: () => indexRef.current++ }}>
+		<StaggerContext.Provider
+			value={{ inView, step, nextIndex: () => indexRef.current++ }}
+		>
 			<div ref={ref} className={className}>
 				{children}
 			</div>
 		</StaggerContext.Provider>
-	)
+	);
 }
 
 const staggerItemTranslates = {
-	fade: 'none',
-	fadeUp: 'translateY(10px)',
-	scale: 'scale(0.9)',
-}
+	fade: "none",
+	fadeUp: "translateY(10px)",
+	scale: "scale(0.9)",
+};
 
 /**
  * StaggerItem - CSS transition child for StaggerList
@@ -317,10 +329,14 @@ const staggerItemTranslates = {
  * @example
  * <StaggerItem type="fadeUp">List item</StaggerItem>
  */
-export function StaggerItem({ type = 'fadeUp', children, className }: StaggerItemProps) {
-	const { inView, step, nextIndex } = useContext(StaggerContext)
-	const [index] = useState(() => nextIndex())
-	const dur = type === 'fade' ? duration.normal : duration.medium
+export function StaggerItem({
+	type = "fadeUp",
+	children,
+	className,
+}: StaggerItemProps) {
+	const { inView, step, nextIndex } = useContext(StaggerContext);
+	const [index] = useState(() => nextIndex());
+	const dur = type === "fade" ? duration.normal : duration.medium;
 
 	return (
 		<div
@@ -333,7 +349,7 @@ export function StaggerItem({ type = 'fadeUp', children, className }: StaggerIte
 		>
 			{children}
 		</div>
-	)
+	);
 }
 
 // ============================================================================
@@ -348,23 +364,29 @@ export function StaggerItem({ type = 'fadeUp', children, className }: StaggerIte
  *   {currentView === 'a' ? <ViewA /> : <ViewB />}
  * </Presence>
  */
-export function Presence({ id, mode = 'wait', children, initial = false }: PresenceProps) {
+export function Presence({
+	id,
+	mode = "wait",
+	children,
+	initial = false,
+}: PresenceProps) {
 	return (
 		<AnimatePresence mode={mode} initial={initial}>
 			{children}
 		</AnimatePresence>
-	)
+	);
 }
 
 // ============================================================================
 // Sidebar Animation Component — Framer Motion (AnimatePresence)
 // ============================================================================
 
-interface SidebarContentProps extends Omit<HTMLMotionProps<'div'>, 'initial' | 'animate' | 'exit'> {
+interface SidebarContentProps
+	extends Omit<HTMLMotionProps<"div">, "initial" | "animate" | "exit"> {
 	/** Unique key for content switching */
-	contentKey: string
+	contentKey: string;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 }
 
 /**
@@ -393,10 +415,10 @@ export const SidebarContent = forwardRef<HTMLDivElement, SidebarContentProps>(
 			>
 				{children}
 			</motion.div>
-		)
-	}
-)
-SidebarContent.displayName = 'SidebarContent'
+		);
+	},
+);
+SidebarContent.displayName = "SidebarContent";
 
 // ============================================================================
 // Loading/Skeleton Transition — Framer Motion (AnimatePresence)
@@ -404,13 +426,13 @@ SidebarContent.displayName = 'SidebarContent'
 
 interface LoadingTransitionProps {
 	/** Whether content is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Loading skeleton component */
-	skeleton: ReactNode
+	skeleton: ReactNode;
 	/** Actual content */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -436,7 +458,10 @@ export function LoadingTransition({
 					<motion.div
 						key="skeleton"
 						initial={{ opacity: 1 }}
-						exit={{ opacity: 0, transition: { duration: duration.normal, ease: easing.easeIn } }}
+						exit={{
+							opacity: 0,
+							transition: { duration: duration.normal, ease: easing.easeIn },
+						}}
 					>
 						{skeleton}
 					</motion.div>
@@ -444,14 +469,17 @@ export function LoadingTransition({
 					<motion.div
 						key="content"
 						initial={{ opacity: 0 }}
-						animate={{ opacity: 1, transition: { duration: duration.medium, ease: easing.easeOut } }}
+						animate={{
+							opacity: 1,
+							transition: { duration: duration.medium, ease: easing.easeOut },
+						}}
 					>
 						{children}
 					</motion.div>
 				)}
 			</AnimatePresence>
 		</div>
-	)
+	);
 }
 
 // ============================================================================
@@ -460,11 +488,11 @@ export function LoadingTransition({
 
 interface AnimatedListProps {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Stagger speed */
-	speed?: StaggerSpeed
+	speed?: StaggerSpeed;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -482,27 +510,33 @@ interface AnimatedListProps {
  *   ))}
  * </AnimatedList>
  */
-export function AnimatedList({ speed = 'fast', children, className }: AnimatedListProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const step = resolveStep(speed)
-	const indexRef = useRef(0)
-	indexRef.current = 0
+export function AnimatedList({
+	speed = "fast",
+	children,
+	className,
+}: AnimatedListProps) {
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const step = resolveStep(speed);
+	const indexRef = useRef(0);
+	indexRef.current = 0;
 
 	return (
-		<StaggerContext.Provider value={{ inView, step, nextIndex: () => indexRef.current++ }}>
+		<StaggerContext.Provider
+			value={{ inView, step, nextIndex: () => indexRef.current++ }}
+		>
 			<div ref={ref} className={className}>
 				{children}
 			</div>
 		</StaggerContext.Provider>
-	)
+	);
 }
 
 interface AnimatedListItemProps {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -513,9 +547,12 @@ interface AnimatedListItemProps {
  *   <div className="p-4 border-b">Row content</div>
  * </AnimatedListItem>
  */
-export function AnimatedListItem({ children, className }: AnimatedListItemProps) {
-	const { inView, step, nextIndex } = useContext(StaggerContext)
-	const [index] = useState(() => nextIndex())
+export function AnimatedListItem({
+	children,
+	className,
+}: AnimatedListItemProps) {
+	const { inView, step, nextIndex } = useContext(StaggerContext);
+	const [index] = useState(() => nextIndex());
 
 	return (
 		<div
@@ -523,12 +560,12 @@ export function AnimatedListItem({ children, className }: AnimatedListItemProps)
 			style={entranceStyle(inView, {
 				duration: duration.normal,
 				delay: index * step,
-				translate: 'none',
+				translate: "none",
 			})}
 		>
 			{children}
 		</div>
-	)
+	);
 }
 
 // ============================================================================
@@ -537,11 +574,11 @@ export function AnimatedListItem({ children, className }: AnimatedListItemProps)
 
 interface CollapseProps {
 	/** Whether the content is visible */
-	isOpen: boolean
+	isOpen: boolean;
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -560,17 +597,17 @@ export function Collapse({ isOpen, children, className }: CollapseProps) {
 			{isOpen && (
 				<motion.div
 					initial={{ height: 0, opacity: 0 }}
-					animate={{ height: 'auto', opacity: 1 }}
+					animate={{ height: "auto", opacity: 1 }}
 					exit={{ height: 0, opacity: 0 }}
 					transition={{ duration: duration.medium, ease: easing.easeInOut }}
 					className={className}
-					style={{ overflow: 'hidden' }}
+					style={{ overflow: "hidden" }}
 				>
 					{children}
 				</motion.div>
 			)}
 		</AnimatePresence>
-	)
+	);
 }
 
 // ============================================================================
@@ -579,9 +616,9 @@ export function Collapse({ isOpen, children, className }: CollapseProps) {
 
 interface AnimatedPageProps {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -596,8 +633,8 @@ interface AnimatedPageProps {
  * </AnimatedPage>
  */
 export function AnimatedPage({ children, className }: AnimatedPageProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true })
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true });
 
 	return (
 		<div
@@ -605,21 +642,21 @@ export function AnimatedPage({ children, className }: AnimatedPageProps) {
 			className={className}
 			style={entranceStyle(inView, {
 				duration: duration.medium,
-				translate: 'translateY(8px)',
+				translate: "translateY(8px)",
 			})}
 		>
 			{children}
 		</div>
-	)
+	);
 }
 
 interface AnimatedGridProps {
 	/** Children to animate (should be direct child elements) */
-	children: ReactNode
+	children: ReactNode;
 	/** Stagger speed */
-	speed?: StaggerSpeed
+	speed?: StaggerSpeed;
 	/** Additional class name for the grid container */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -640,10 +677,14 @@ interface AnimatedGridProps {
  *   <Card>3</Card>
  * </AnimatedGrid>
  */
-export function AnimatedGrid({ children, speed = 'fast', className }: AnimatedGridProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const step = resolveStep(speed)
+export function AnimatedGrid({
+	children,
+	speed = "fast",
+	className,
+}: AnimatedGridProps) {
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const step = resolveStep(speed);
 
 	return (
 		<div ref={ref} className={className}>
@@ -653,24 +694,24 @@ export function AnimatedGrid({ children, speed = 'fast', className }: AnimatedGr
 						style={entranceStyle(inView, {
 							duration: duration.slower,
 							delay: i * step,
-							translate: 'translateY(8px)',
+							translate: "translateY(8px)",
 						})}
 					>
 						{child}
 					</div>
-				) : null
+				) : null,
 			)}
 		</div>
-	)
+	);
 }
 
 interface AnimatedSectionProps {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Delay before animation starts (in seconds) */
-	delay?: number
+	delay?: number;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -685,9 +726,13 @@ interface AnimatedSectionProps {
  *   <p>Content...</p>
  * </AnimatedSection>
  */
-export function AnimatedSection({ children, delay = 0, className }: AnimatedSectionProps) {
-	const ref = useRef<HTMLElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
+export function AnimatedSection({
+	children,
+	delay = 0,
+	className,
+}: AnimatedSectionProps) {
+	const ref = useRef<HTMLElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
 
 	return (
 		<section
@@ -696,25 +741,25 @@ export function AnimatedSection({ children, delay = 0, className }: AnimatedSect
 			style={entranceStyle(inView, {
 				duration: duration.medium,
 				delay,
-				translate: 'translateY(12px)',
+				translate: "translateY(12px)",
 			})}
 		>
 			{children}
 		</section>
-	)
+	);
 }
 
 interface AnimatedEmptyStateProps {
 	/** Icon component */
-	icon: ReactNode
+	icon: ReactNode;
 	/** Title text or element */
-	title: ReactNode
+	title: ReactNode;
 	/** Description text or element */
-	description?: ReactNode
+	description?: ReactNode;
 	/** Action button/link */
-	action?: ReactNode
+	action?: ReactNode;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -738,18 +783,18 @@ export function AnimatedEmptyState({
 	action,
 	className,
 }: AnimatedEmptyStateProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-32px' })
-	const step = stagger.fast
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const step = stagger.fast;
 
 	const itemStyle = (i: number) =>
 		entranceStyle(inView, {
 			duration: duration.medium,
 			delay: i * step,
-			translate: 'translateY(10px)',
-		})
+			translate: "translateY(10px)",
+		});
 
-	let idx = 0
+	let idx = 0;
 	return (
 		<div ref={ref} className={className}>
 			<div style={itemStyle(idx++)}>{icon}</div>
@@ -757,28 +802,28 @@ export function AnimatedEmptyState({
 			{description && <p style={itemStyle(idx++)}>{description}</p>}
 			{action && <div style={itemStyle(idx++)}>{action}</div>}
 		</div>
-	)
+	);
 }
 
 // ============================================================================
 // Animated Button States — Framer Motion (AnimatePresence)
 // ============================================================================
 
-type ButtonState = 'idle' | 'loading' | 'success' | 'error'
+type ButtonState = "idle" | "loading" | "success" | "error";
 
 interface AnimatedButtonContentProps {
 	/** Current button state */
-	state: ButtonState
+	state: ButtonState;
 	/** Default content (shown in idle state) */
-	children: ReactNode
+	children: ReactNode;
 	/** Loading text (optional, defaults to "Loading...") */
-	loadingText?: string
+	loadingText?: string;
 	/** Success text (optional, defaults to "Done!") */
-	successText?: string
+	successText?: string;
 	/** Error text (optional, defaults to "Error") */
-	errorText?: string
+	errorText?: string;
 	/** Class name for the container */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -799,15 +844,17 @@ interface AnimatedButtonContentProps {
 export function AnimatedButtonContent({
 	state,
 	children,
-	loadingText = 'Loading...',
-	successText = 'Done!',
-	errorText = 'Error',
+	loadingText = "Loading...",
+	successText = "Done!",
+	errorText = "Error",
 	className,
 }: AnimatedButtonContentProps) {
 	return (
-		<span className={`relative inline-flex items-center justify-center gap-2 ${className ?? ''}`}>
+		<span
+			className={`relative inline-flex items-center justify-center gap-2 ${className ?? ""}`}
+		>
 			<AnimatePresence mode="wait">
-				{state === 'idle' && (
+				{state === "idle" && (
 					<motion.span
 						key="idle"
 						initial={{ opacity: 0, y: 8 }}
@@ -819,7 +866,7 @@ export function AnimatedButtonContent({
 						{children}
 					</motion.span>
 				)}
-				{state === 'loading' && (
+				{state === "loading" && (
 					<motion.span
 						key="loading"
 						initial={{ opacity: 0, y: 8 }}
@@ -830,17 +877,30 @@ export function AnimatedButtonContent({
 					>
 						<motion.span
 							animate={{ rotate: 360 }}
-							transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+							transition={{
+								duration: 1,
+								repeat: Number.POSITIVE_INFINITY,
+								ease: "linear",
+							}}
 							className="inline-block"
 						>
-							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-								<path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" strokeLinecap="round" />
+							<svg
+								className="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+							>
+								<path
+									d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+									strokeLinecap="round"
+								/>
 							</svg>
 						</motion.span>
 						{loadingText}
 					</motion.span>
 				)}
-				{state === 'success' && (
+				{state === "success" && (
 					<motion.span
 						key="success"
 						initial={{ opacity: 0, scale: 0.8 }}
@@ -852,9 +912,20 @@ export function AnimatedButtonContent({
 						<motion.span
 							initial={{ scale: 0 }}
 							animate={{ scale: 1 }}
-							transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.1 }}
+							transition={{
+								type: "spring",
+								stiffness: 400,
+								damping: 15,
+								delay: 0.1,
+							}}
 						>
-							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+							<svg
+								className="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+							>
 								<motion.path
 									d="M5 13l4 4L19 7"
 									strokeLinecap="round"
@@ -868,7 +939,7 @@ export function AnimatedButtonContent({
 						{successText}
 					</motion.span>
 				)}
-				{state === 'error' && (
+				{state === "error" && (
 					<motion.span
 						key="error"
 						initial={{ opacity: 0, x: -8 }}
@@ -881,7 +952,13 @@ export function AnimatedButtonContent({
 							animate={{ x: [0, -3, 3, -3, 3, 0] }}
 							transition={{ duration: 0.4 }}
 						>
-							<svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+							<svg
+								className="h-4 w-4"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+							>
 								<path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
 							</svg>
 						</motion.span>
@@ -890,7 +967,7 @@ export function AnimatedButtonContent({
 				)}
 			</AnimatePresence>
 		</span>
-	)
+	);
 }
 
 // ============================================================================
@@ -899,11 +976,11 @@ export function AnimatedButtonContent({
 
 interface AnimatedRowProps extends HTMLAttributes<HTMLDivElement> {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Index for stagger delay calculation */
-	index?: number
+	index?: number;
 	/** Base delay before animation starts */
-	baseDelay?: number
+	baseDelay?: number;
 }
 
 /**
@@ -927,8 +1004,8 @@ export function AnimatedRow({
 	style,
 	...props
 }: AnimatedRowProps) {
-	const ref = useRef<HTMLDivElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-64px' })
+	const ref = useRef<HTMLDivElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-64px" });
 
 	return (
 		<div
@@ -938,7 +1015,7 @@ export function AnimatedRow({
 				...entranceStyle(inView, {
 					duration: duration.fast,
 					delay: baseDelay + index * stagger.fast,
-					translate: 'translateY(8px)',
+					translate: "translateY(8px)",
 				}),
 				...style,
 			}}
@@ -946,7 +1023,7 @@ export function AnimatedRow({
 		>
 			{children}
 		</div>
-	)
+	);
 }
 
 // ============================================================================
@@ -955,11 +1032,11 @@ export function AnimatedRow({
 
 interface AnimatedTableRowProps extends HTMLAttributes<HTMLTableRowElement> {
 	/** Children to animate */
-	children: ReactNode
+	children: ReactNode;
 	/** Index for stagger delay calculation */
-	index?: number
+	index?: number;
 	/** Base delay before animation starts */
-	baseDelay?: number
+	baseDelay?: number;
 }
 
 /**
@@ -985,8 +1062,8 @@ export function AnimatedTableRow({
 	style,
 	...props
 }: AnimatedTableRowProps) {
-	const ref = useRef<HTMLTableRowElement>(null)
-	const inView = useInView(ref, { once: true, margin: '-64px' })
+	const ref = useRef<HTMLTableRowElement>(null);
+	const inView = useInView(ref, { once: true, margin: "-64px" });
 
 	return (
 		<tr
@@ -996,7 +1073,7 @@ export function AnimatedTableRow({
 				...entranceStyle(inView, {
 					duration: duration.fast,
 					delay: baseDelay + index * stagger.fast,
-					translate: 'translateY(8px)',
+					translate: "translateY(8px)",
 				}),
 				...style,
 			}}
@@ -1004,20 +1081,20 @@ export function AnimatedTableRow({
 		>
 			{children}
 		</tr>
-	)
+	);
 }
 
 // ============================================================================
 // Shake Animation (for errors, validation) — Framer Motion
 // ============================================================================
 
-interface ShakeProps extends Omit<HTMLMotionProps<'div'>, 'animate'> {
+interface ShakeProps extends Omit<HTMLMotionProps<"div">, "animate"> {
 	/** Children to wrap */
-	children: ReactNode
+	children: ReactNode;
 	/** Trigger shake animation */
-	shake?: boolean
+	shake?: boolean;
 	/** Callback when shake completes */
-	onShakeComplete?: () => void
+	onShakeComplete?: () => void;
 }
 
 /**
@@ -1036,20 +1113,20 @@ export const Shake = forwardRef<HTMLDivElement, ShakeProps>(
 			<motion.div
 				ref={ref}
 				animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
-				transition={{ duration: 0.4, ease: 'easeInOut' }}
+				transition={{ duration: 0.4, ease: "easeInOut" }}
 				onAnimationComplete={() => {
 					if (shake && onShakeComplete) {
-						onShakeComplete()
+						onShakeComplete();
 					}
 				}}
 				{...props}
 			>
 				{children}
 			</motion.div>
-		)
-	}
-)
-Shake.displayName = 'Shake'
+		);
+	},
+);
+Shake.displayName = "Shake";
 
 // ============================================================================
 // Success Checkmark Animation — Framer Motion
@@ -1057,11 +1134,11 @@ Shake.displayName = 'Shake'
 
 interface SuccessCheckProps {
 	/** Whether to show the check animation */
-	show: boolean
+	show: boolean;
 	/** Size in pixels */
-	size?: number
+	size?: number;
 	/** Additional class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -1072,7 +1149,11 @@ interface SuccessCheckProps {
  * @example
  * <SuccessCheck show={formSubmitted} />
  */
-export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) {
+export function SuccessCheck({
+	show,
+	size = 24,
+	className,
+}: SuccessCheckProps) {
 	return (
 		<AnimatePresence>
 			{show && (
@@ -1080,7 +1161,7 @@ export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) 
 					initial={{ opacity: 0, scale: 0.5 }}
 					animate={{ opacity: 1, scale: 1 }}
 					exit={{ opacity: 0, scale: 0.5 }}
-					transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+					transition={{ type: "spring", stiffness: 400, damping: 15 }}
 					className={className}
 					width={size}
 					height={size}
@@ -1095,7 +1176,7 @@ export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) 
 						r="10"
 						initial={{ pathLength: 0 }}
 						animate={{ pathLength: 1 }}
-						transition={{ duration: 0.4, ease: 'easeOut' }}
+						transition={{ duration: 0.4, ease: "easeOut" }}
 					/>
 					<motion.path
 						d="M8 12l3 3 5-6"
@@ -1108,12 +1189,12 @@ export function SuccessCheck({ show, size = 24, className }: SuccessCheckProps) 
 				</motion.svg>
 			)}
 		</AnimatePresence>
-	)
+	);
 }
 
 // ============================================================================
 // Re-export Framer Motion primitives
 // ============================================================================
 
-export { AnimatePresence, motion }
-export type { HTMLMotionProps, MotionProps }
+export { AnimatePresence, motion };
+export type { HTMLMotionProps, MotionProps };

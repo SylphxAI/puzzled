@@ -1,2 +1,2 @@
-export { GameBoard } from './game-board'
-export { Keyboard } from './keyboard'
+export { GameBoard } from "./game-board";
+export { Keyboard } from "./keyboard";

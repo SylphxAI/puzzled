@@ -8,61 +8,61 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type TrackEventItem = components['schemas']['TrackEventItem']
-export type BatchTrackRequest = components['schemas']['BatchTrackRequest']
-export type BatchTrackResponse = components['schemas']['BatchTrackResponse']
-export type ConversionData = components['schemas']['ConversionData']
+export type TrackEventItem = components["schemas"]["TrackEventItem"];
+export type BatchTrackRequest = components["schemas"]["BatchTrackRequest"];
+export type BatchTrackResponse = components["schemas"]["BatchTrackResponse"];
+export type ConversionData = components["schemas"]["ConversionData"];
 
 // SDK-specific types for convenience
 export interface TrackInput {
 	/** Event name */
-	event: string
+	event: string;
 	/** Event properties */
-	properties?: Record<string, unknown>
+	properties?: Record<string, unknown>;
 	/** User ID (optional, for server-side tracking) */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID (for tracking before user signs in) */
-	anonymousId?: string
+	anonymousId?: string;
 	/** Timestamp (defaults to now) */
-	timestamp?: string
+	timestamp?: string;
 }
 
 export interface PageInput {
 	/** Page name or title */
-	name: string
+	name: string;
 	/** Page properties */
-	properties?: Record<string, unknown>
+	properties?: Record<string, unknown>;
 	/** User ID (optional) */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID */
-	anonymousId?: string
+	anonymousId?: string;
 }
 
 export interface IdentifyInput {
 	/** User ID */
-	userId: string
+	userId: string;
 	/** User traits */
-	traits?: Record<string, unknown>
+	traits?: Record<string, unknown>;
 	/** Anonymous ID to link */
-	anonymousId?: string
+	anonymousId?: string;
 }
 
 export interface BatchEvent {
-	type: 'track' | 'page' | 'identify'
-	event?: string
-	name?: string
-	userId?: string
-	anonymousId?: string
-	properties?: Record<string, unknown>
-	traits?: Record<string, unknown>
-	timestamp?: string
+	type: "track" | "page" | "identify";
+	event?: string;
+	name?: string;
+	userId?: string;
+	anonymousId?: string;
+	properties?: Record<string, unknown>;
+	traits?: Record<string, unknown>;
+	timestamp?: string;
 }
 
 // ============================================================================
@@ -81,9 +81,12 @@ export interface BatchEvent {
  * })
  * ```
  */
-export async function track(config: SylphxConfig, input: TrackInput): Promise<void> {
-	await callApi(config, '/analytics/track', {
-		method: 'POST',
+export async function track(
+	config: SylphxConfig,
+	input: TrackInput,
+): Promise<void> {
+	await callApi(config, "/analytics/track", {
+		method: "POST",
 		body: {
 			event: input.event,
 			properties: input.properties ?? {},
@@ -91,7 +94,7 @@ export async function track(config: SylphxConfig, input: TrackInput): Promise<vo
 			anonymousId: input.anonymousId,
 			timestamp: input.timestamp ?? new Date().toISOString(),
 		},
-	})
+	});
 }
 
 /**
@@ -105,9 +108,12 @@ export async function track(config: SylphxConfig, input: TrackInput): Promise<vo
  * })
  * ```
  */
-export async function page(config: SylphxConfig, input: PageInput): Promise<void> {
-	await callApi(config, '/analytics/page', {
-		method: 'POST',
+export async function page(
+	config: SylphxConfig,
+	input: PageInput,
+): Promise<void> {
+	await callApi(config, "/analytics/page", {
+		method: "POST",
 		body: {
 			name: input.name,
 			properties: input.properties ?? {},
@@ -115,7 +121,7 @@ export async function page(config: SylphxConfig, input: PageInput): Promise<void
 			anonymousId: input.anonymousId,
 			timestamp: new Date().toISOString(),
 		},
-	})
+	});
 }
 
 /**
@@ -130,15 +136,18 @@ export async function page(config: SylphxConfig, input: PageInput): Promise<void
  * })
  * ```
  */
-export async function identify(config: SylphxConfig, input: IdentifyInput): Promise<void> {
-	await callApi(config, '/analytics/identify', {
-		method: 'POST',
+export async function identify(
+	config: SylphxConfig,
+	input: IdentifyInput,
+): Promise<void> {
+	await callApi(config, "/analytics/identify", {
+		method: "POST",
 		body: {
 			userId: input.userId,
 			traits: input.traits ?? {},
 			anonymousId: input.anonymousId,
 		},
-	})
+	});
 }
 
 /**
@@ -153,23 +162,31 @@ export async function identify(config: SylphxConfig, input: IdentifyInput): Prom
  * ])
  * ```
  */
-export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Promise<void> {
-	await callApi(config, '/analytics/batch', {
-		method: 'POST',
+export async function trackBatch(
+	config: SylphxConfig,
+	events: BatchEvent[],
+): Promise<void> {
+	await callApi(config, "/analytics/batch", {
+		method: "POST",
 		body: {
 			events: events.map((e) => ({
-				event: e.type === 'track' ? e.event : e.type === 'page' ? `$pageview` : '$identify',
+				event:
+					e.type === "track"
+						? e.event
+						: e.type === "page"
+							? `$pageview`
+							: "$identify",
 				properties: {
 					...e.properties,
-					...(e.type === 'page' && e.name ? { name: e.name } : {}),
-					...(e.type === 'identify' && e.traits ? { traits: e.traits } : {}),
+					...(e.type === "page" && e.name ? { name: e.name } : {}),
+					...(e.type === "identify" && e.traits ? { traits: e.traits } : {}),
 				},
 				userId: e.userId,
 				anonymousId: e.anonymousId,
 				timestamp: e.timestamp ?? new Date().toISOString(),
 			})),
 		},
-	})
+	});
 }
 
 // ============================================================================
@@ -191,15 +208,15 @@ export async function trackBatch(config: SylphxConfig, events: BatchEvent[]): Pr
  */
 export function generateAnonymousId(): string {
 	// Use crypto.randomUUID if available (standard UUID v4)
-	if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-		return crypto.randomUUID()
+	if (typeof crypto !== "undefined" && crypto.randomUUID) {
+		return crypto.randomUUID();
 	}
 	// Fallback for older browsers: generate UUID v4 manually
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-		const r = (Math.random() * 16) | 0
-		const v = c === 'x' ? r : (r & 0x3) | 0x8
-		return v.toString(16)
-	})
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+		const r = (Math.random() * 16) | 0;
+		const v = c === "x" ? r : (r & 0x3) | 0x8;
+		return v.toString(16);
+	});
 }
 
 /**
@@ -218,15 +235,24 @@ export function generateAnonymousId(): string {
  * analytics.identify('user-123', { email: 'user@example.com' })
  * ```
  */
-export function createTracker(config: SylphxConfig, defaultAnonymousId?: string) {
-	const anonymousId = defaultAnonymousId ?? generateAnonymousId()
+export function createTracker(
+	config: SylphxConfig,
+	defaultAnonymousId?: string,
+) {
+	const anonymousId = defaultAnonymousId ?? generateAnonymousId();
 
 	return {
-		track: (event: string, properties?: Record<string, unknown>, userId?: string) =>
-			track(config, { event, properties, userId, anonymousId }),
+		track: (
+			event: string,
+			properties?: Record<string, unknown>,
+			userId?: string,
+		) => track(config, { event, properties, userId, anonymousId }),
 
-		page: (name: string, properties?: Record<string, unknown>, userId?: string) =>
-			page(config, { name, properties, userId, anonymousId }),
+		page: (
+			name: string,
+			properties?: Record<string, unknown>,
+			userId?: string,
+		) => page(config, { name, properties, userId, anonymousId }),
 
 		identify: (userId: string, traits?: Record<string, unknown>) =>
 			identify(config, { userId, traits, anonymousId }),
@@ -234,10 +260,13 @@ export function createTracker(config: SylphxConfig, defaultAnonymousId?: string)
 		batch: (events: BatchEvent[]) =>
 			trackBatch(
 				config,
-				events.map((e) => ({ ...e, anonymousId: e.anonymousId ?? anonymousId }))
+				events.map((e) => ({
+					...e,
+					anonymousId: e.anonymousId ?? anonymousId,
+				})),
 			),
 
 		/** Get the anonymous ID for this tracker */
 		getAnonymousId: () => anonymousId,
-	}
+	};
 }

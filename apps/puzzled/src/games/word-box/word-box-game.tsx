@@ -3,38 +3,40 @@
  * Word game with letters arranged on box sides
  */
 
-'use client'
+"use client";
 
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
-import { Delete, HelpCircle, Play, RotateCcw } from 'lucide-react'
-import { useTranslations } from 'next-intl'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Celebration } from '@/features/celebration/components/celebration'
-import { GameResultModal } from '@/features/daily/components/game-result-modal'
-import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
-import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatTimer } from '@/games/shared/format'
-import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
-import { cn } from '@/lib/utils'
-import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
-import { useWordBox } from './use-word-box'
+import { Celebration } from "@/features/celebration/components/celebration";
+import { GameResultModal } from "@/features/daily/components/game-result-modal";
+import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
+import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
+import { formatTimer } from "@/games/shared/format";
+import { useGameSession } from "@/games/shared/use-game-session";
+import { parsePuzzleDataClient } from "@/games/types";
+import { cn } from "@/lib/utils";
+import { triggerHaptic, triggerSound } from "@/shared/hooks";
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@sylphx/ui";
+import { Delete, HelpCircle, Play, RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { LetterBoxedPuzzleData, LetterBoxedSolution } from "./types";
+import { useWordBox } from "./use-word-box";
 
 type Props = {
-	mode?: 'daily' | 'archive'
-	puzzleId?: string
-	puzzleData?: unknown
-}
+	mode?: "daily" | "archive";
+	puzzleId?: string;
+	puzzleData?: unknown;
+};
 
-export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
-	const t = useTranslations('games.wordBox')
-	const tCommon = useTranslations('common')
+export function WordBoxGame({ mode = "daily", puzzleId, puzzleData }: Props) {
+	const t = useTranslations("games.wordBox");
+	const tCommon = useTranslations("common");
 
 	// Get puzzle from server data (client-safe - no config import)
 	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<LetterBoxedPuzzleData, LetterBoxedSolution>(puzzleData),
-	)
+		parsePuzzleDataClient<LetterBoxedPuzzleData, LetterBoxedSolution>(
+			puzzleData,
+		),
+	);
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -50,79 +52,83 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: 'word-box',
+		gameSlug: "word-box",
 		mode,
 		puzzleId,
-	})
+	});
 
 	// Game-specific state
-	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [showToast, setShowToast] = useState(false)
-	const [toastMessage, setToastMessage] = useState('')
-	const gameEndedRef = useRef(false)
+	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showToast, setShowToast] = useState(false);
+	const [toastMessage, setToastMessage] = useState("");
+	const gameEndedRef = useRef(false);
 
-	const game = useWordBox(puzzle.puzzleData, puzzle.solution)
-	const box = puzzle.puzzleData.box
+	const game = useWordBox(puzzle.puzzleData, puzzle.solution);
+	const box = puzzle.puzzleData.box;
 
 	// Handle game completion - delegate to useGameSession
-	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {
-		gameEndedRef.current = true
+	if (game.state.gameStatus === "won" && !gameEndedRef.current) {
+		gameEndedRef.current = true;
 		endGame({
-			status: 'won',
+			status: "won",
 			attempts: game.state.words.length,
 			data: {
 				words: game.state.words,
 			},
-		})
+		});
 	}
 
 	const showToastMsg = useCallback((message: string) => {
-		setToastMessage(message)
-		setShowToast(true)
-		setTimeout(() => setShowToast(false), 2000)
-	}, [])
+		setToastMessage(message);
+		setShowToast(true);
+		setTimeout(() => setShowToast(false), 2000);
+	}, []);
 
 	const handleSubmit = useCallback(() => {
 		// In production, validate against a dictionary API
 		// For now, accept words 3+ letters that pass box rules
-		const result = game.submitWord(game.state.currentWord.length >= 3)
+		const result = game.submitWord(game.state.currentWord.length >= 3);
 		if (!result.success) {
-			showToastMsg(result.error || 'Invalid word')
-			triggerSound('error')
-			triggerHaptic('error')
+			showToastMsg(result.error || "Invalid word");
+			triggerSound("error");
+			triggerHaptic("error");
 		}
-	}, [game, showToastMsg])
+	}, [game, showToastMsg]);
 
 	const handleShare = useCallback(() => {
-		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
+		const timeMs =
+			game.state.endTime && startTime ? game.state.endTime - startTime : 0;
 
-		const text = `📦 Letter Boxed\n${game.state.words.length} words\n⏱️ ${formatTimer(timeMs)}\n\npuzzled.gg`
-		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.words.length, startTime])
+		const text = `📦 Letter Boxed\n${game.state.words.length} words\n⏱️ ${formatTimer(timeMs)}\n\npuzzled.gg`;
+		navigator.clipboard.writeText(text);
+	}, [game.state.endTime, game.state.words.length, startTime]);
 
 	// Keyboard handler
 	useEffect(() => {
-		if (isReady || game.state.gameStatus !== 'playing') return
+		if (isReady || game.state.gameStatus !== "playing") return;
 
 		function handleKeyDown(e: KeyboardEvent) {
-			if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-				return
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement
+			) {
+				return;
 			}
 
 			if (/^[a-zA-Z]$/.test(e.key)) {
-				game.addLetter(e.key)
-			} else if (e.key === 'Backspace') {
-				e.preventDefault()
-				game.deleteLetter()
-			} else if (e.key === 'Enter') {
-				e.preventDefault()
-				handleSubmit()
+				game.addLetter(e.key);
+			} else if (e.key === "Backspace") {
+				e.preventDefault();
+				game.deleteLetter();
+			} else if (e.key === "Enter") {
+				e.preventDefault();
+				handleSubmit();
 			}
 		}
 
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [isReady, game, handleSubmit])
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isReady, game, handleSubmit]);
 
 	// Ready screen
 	if (isReady) {
@@ -130,33 +136,33 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			<Card className="mx-auto w-full max-w-md">
 				<CardHeader className="text-center">
 					<div className="mb-2 flex justify-center text-4xl">📦</div>
-					<CardTitle>{t('name')}</CardTitle>
-					<p className="text-sm text-muted-foreground">{t('description')}</p>
+					<CardTitle>{t("name")}</CardTitle>
+					<p className="text-sm text-muted-foreground">{t("description")}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
-							{t('rules.title')}
+							{t("rules.title")}
 						</h3>
 						<ul className="space-y-1 text-sm text-muted-foreground">
-							<li>• {t('rules.rule1')}</li>
-							<li>• {t('rules.rule2')}</li>
-							<li>• {t('rules.rule3')}</li>
+							<li>• {t("rules.rule1")}</li>
+							<li>• {t("rules.rule2")}</li>
+							<li>• {t("rules.rule3")}</li>
 						</ul>
 					</div>
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{tCommon('play')}
+						{tCommon("play")}
 					</Button>
 				</CardContent>
 			</Card>
-		)
+		);
 	}
 
-	const allLetters = [...box.top, ...box.right, ...box.bottom, ...box.left]
-	const lastLetter = game.getLastLetter()
+	const allLetters = [...box.top, ...box.right, ...box.bottom, ...box.left];
+	const lastLetter = game.getLastLetter();
 
 	return (
 		<div className="relative flex w-full flex-col items-center">
@@ -165,12 +171,16 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			<div className="flex w-full max-w-md flex-col items-center gap-4">
 				{/* Header */}
 				<div className="flex w-full items-center justify-between px-2">
-					<div className="text-sm text-muted-foreground">{t('name')}</div>
+					<div className="text-sm text-muted-foreground">{t("name")}</div>
 					<div className="flex gap-2">
 						<Button variant="ghost" size="sm" onClick={game.reset}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
-						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setShowHelpModal(true)}
+						>
 							<HelpCircle className="h-4 w-4" />
 						</Button>
 					</div>
@@ -188,12 +198,12 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 								key={`top-${i}`}
 								type="button"
 								onClick={() => game.addLetter(letter)}
-								disabled={game.state.gameStatus !== 'playing'}
+								disabled={game.state.gameStatus !== "playing"}
 								className={cn(
-									'flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all',
+									"flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all",
 									game.state.usedLetters.has(letter)
-										? 'bg-primary text-primary-foreground'
-										: 'bg-muted hover:bg-muted/80',
+										? "bg-primary text-primary-foreground"
+										: "bg-muted hover:bg-muted/80",
 								)}
 							>
 								{letter}
@@ -208,12 +218,12 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 								key={`right-${i}`}
 								type="button"
 								onClick={() => game.addLetter(letter)}
-								disabled={game.state.gameStatus !== 'playing'}
+								disabled={game.state.gameStatus !== "playing"}
 								className={cn(
-									'flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all',
+									"flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all",
 									game.state.usedLetters.has(letter)
-										? 'bg-primary text-primary-foreground'
-										: 'bg-muted hover:bg-muted/80',
+										? "bg-primary text-primary-foreground"
+										: "bg-muted hover:bg-muted/80",
 								)}
 							>
 								{letter}
@@ -228,12 +238,12 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 								key={`bottom-${i}`}
 								type="button"
 								onClick={() => game.addLetter(letter)}
-								disabled={game.state.gameStatus !== 'playing'}
+								disabled={game.state.gameStatus !== "playing"}
 								className={cn(
-									'flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all',
+									"flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all",
 									game.state.usedLetters.has(letter)
-										? 'bg-primary text-primary-foreground'
-										: 'bg-muted hover:bg-muted/80',
+										? "bg-primary text-primary-foreground"
+										: "bg-muted hover:bg-muted/80",
 								)}
 							>
 								{letter}
@@ -248,12 +258,12 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 								key={`left-${i}`}
 								type="button"
 								onClick={() => game.addLetter(letter)}
-								disabled={game.state.gameStatus !== 'playing'}
+								disabled={game.state.gameStatus !== "playing"}
 								className={cn(
-									'flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all',
+									"flex h-10 w-10 items-center justify-center rounded-full text-lg font-bold transition-all",
 									game.state.usedLetters.has(letter)
-										? 'bg-primary text-primary-foreground'
-										: 'bg-muted hover:bg-muted/80',
+										? "bg-primary text-primary-foreground"
+										: "bg-muted hover:bg-muted/80",
 								)}
 							>
 								{letter}
@@ -267,7 +277,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 					{lastLetter && !game.state.currentWord && (
 						<span className="text-muted-foreground">{lastLetter}</span>
 					)}
-					{game.state.currentWord || (lastLetter ? '' : '_')}
+					{game.state.currentWord || (lastLetter ? "" : "_")}
 				</div>
 
 				{/* Action buttons */}
@@ -276,14 +286,17 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 						variant="outline"
 						size="sm"
 						onClick={game.deleteLetter}
-						disabled={game.state.gameStatus !== 'playing' || game.state.currentWord.length === 0}
+						disabled={
+							game.state.gameStatus !== "playing" ||
+							game.state.currentWord.length === 0
+						}
 					>
 						<Delete className="h-4 w-4" />
 					</Button>
 					<Button
 						size="sm"
 						onClick={handleSubmit}
-						disabled={game.state.gameStatus !== 'playing' || !game.canSubmit()}
+						disabled={game.state.gameStatus !== "playing" || !game.canSubmit()}
 					>
 						Enter
 					</Button>
@@ -329,13 +342,19 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				status="won"
 				stats={{
 					attempts: game.state.words.length,
-					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
+					timeSpentMs:
+						game.state.endTime && startTime
+							? game.state.endTime - startTime
+							: 0,
 				}}
 				mode={mode}
 				onShare={handleShare}
 			/>
 
-			<GuestSignupPrompt open={showGuestSignupPrompt} onClose={handleCloseGuestPrompt} />
+			<GuestSignupPrompt
+				open={showGuestSignupPrompt}
+				onClose={handleCloseGuestPrompt}
+			/>
 		</div>
-	)
+	);
 }

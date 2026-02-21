@@ -22,125 +22,129 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useContext } from 'react'
-import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
+import { useCallback, useContext, useState } from "react";
+import { SdkAuthContext, type SdkAuthContextValue } from "../services-context";
 
 // ============================================
 // Types
 // ============================================
 
 export interface ForgotPasswordFormState {
-	email: string
+	email: string;
 }
 
 export interface UseForgotPasswordFormOptions {
 	/** URL to redirect to in reset email */
-	redirectTo?: string
+	redirectTo?: string;
 	/**
 	 * Custom submit handler. If provided, replaces context-based auth.
 	 * Should NOT throw on success (even for non-existent emails - security).
 	 */
-	submitHandler?: (email: string, redirectTo: string) => Promise<void>
+	submitHandler?: (email: string, redirectTo: string) => Promise<void>;
 	/** Callback on success */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Callback on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 }
 
 export interface UseForgotPasswordFormReturn {
 	// Form state
-	form: ForgotPasswordFormState
-	setEmail: (email: string) => void
-	resetForm: () => void
+	form: ForgotPasswordFormState;
+	setEmail: (email: string) => void;
+	resetForm: () => void;
 
 	// UI state
-	isLoading: boolean
-	error: string | null
-	success: boolean
-	clearError: () => void
+	isLoading: boolean;
+	error: string | null;
+	success: boolean;
+	clearError: () => void;
 
 	// Handlers
-	handleSubmit: (e?: React.FormEvent) => Promise<void>
+	handleSubmit: (e?: React.FormEvent) => Promise<void>;
 
 	// Config
-	redirectTo: string
+	redirectTo: string;
 }
 
 // ============================================
 // Hook Implementation
 // ============================================
 
-export function useForgotPasswordForm(options: UseForgotPasswordFormOptions = {}): UseForgotPasswordFormReturn {
+export function useForgotPasswordForm(
+	options: UseForgotPasswordFormOptions = {},
+): UseForgotPasswordFormReturn {
 	const {
-		redirectTo = '/reset-password',
+		redirectTo = "/reset-password",
 		submitHandler,
 		onSuccess,
 		onError,
-	} = options
+	} = options;
 
 	// Get auth context (may be null if outside provider)
-	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null
+	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null;
 
 	// Form state
-	const [form, setForm] = useState<ForgotPasswordFormState>({ email: '' })
+	const [form, setForm] = useState<ForgotPasswordFormState>({ email: "" });
 
 	// UI state
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState(false)
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState(false);
 
 	// Form setters
 	const setEmail = useCallback((email: string) => {
-		setForm({ email })
-		setError(null)
-	}, [])
+		setForm({ email });
+		setError(null);
+	}, []);
 
 	const resetForm = useCallback(() => {
-		setForm({ email: '' })
-		setError(null)
-		setSuccess(false)
-	}, [])
+		setForm({ email: "" });
+		setError(null);
+		setSuccess(false);
+	}, []);
 
 	const clearError = useCallback(() => {
-		setError(null)
-	}, [])
+		setError(null);
+	}, []);
 
 	// Submit handler
 	const handleSubmit = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
-			setIsLoading(true)
-			setError(null)
+			e?.preventDefault();
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (submitHandler) {
-					await submitHandler(form.email, redirectTo)
+					await submitHandler(form.email, redirectTo);
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						setError('SDK not configured. Please wrap your app with SylphxProvider.')
-						return
+						setError(
+							"SDK not configured. Please wrap your app with SylphxProvider.",
+						);
+						return;
 					}
 
-					await authContext.forgotPassword(form.email)
+					await authContext.forgotPassword(form.email);
 				}
 
-				setSuccess(true)
-				onSuccess?.()
+				setSuccess(true);
+				onSuccess?.();
 			} catch (err) {
 				// Still show success to prevent email enumeration
 				// But call onError for logging purposes
-				setSuccess(true)
-				const message = err instanceof Error ? err.message : 'Request failed'
-				onError?.(message)
+				setSuccess(true);
+				const message = err instanceof Error ? err.message : "Request failed";
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[form.email, redirectTo, submitHandler, authContext, onSuccess, onError]
-	)
+		[form.email, redirectTo, submitHandler, authContext, onSuccess, onError],
+	);
 
 	return {
 		// Form state
@@ -159,5 +163,5 @@ export function useForgotPasswordForm(options: UseForgotPasswordFormOptions = {}
 
 		// Config
 		redirectTo,
-	}
+	};
 }

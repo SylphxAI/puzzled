@@ -5,85 +5,84 @@
  * All types are imported from types.ts (SSOT).
  */
 
-import { createContext, useContext, type Context } from 'react'
+import { type Context, createContext, useContext } from "react";
 
 // ============================================================================
 // Import ALL types from types.ts
 // ============================================================================
 
 import type {
-	// Jobs (SDK defines its own Job/JobsListResult with Date types)
-	JobStatusEnum,
-	JobTypeEnum,
-	ScheduleJobInput,
-	ScheduleJobResult,
-	CreateCronInput,
-	CreateCronResult,
-	JobsStatusResult,
-	// Webhooks
-	WebhookConfig,
-	WebhookEnvironment,
-	WebhookDelivery,
-	WebhookDeliveryStatus,
-	WebhookStats,
-	WebhookStatsPeriod,
-	UpdateWebhookConfigInput,
-	UpdateWebhookConfigResult,
-	ReplayDeliveryResult,
-	GetDeliveriesInput,
-	WebhookDeliveriesResult,
-	// Consent
-	ConsentCategory,
-	ConsentType,
-	UserConsent,
-	SetConsentsResult,
+	AIListModelsResponse,
+	AIRateLimitInfo,
+	AIUsagePeriod,
+	// AI
+	AIUsageStats,
+	// Auth
+	AuthLoginResult,
+	AuthMeResult,
+	AuthRegisterResult,
+	AuthVerify2FAResult,
 	// Monitoring
 	CaptureExceptionResult,
 	CaptureMessageResult,
-	MonitoringLevel,
-	// Auth
-	AuthLoginResult,
-	AuthRegisterResult,
-	AuthVerify2FAResult,
-	AuthMeResult,
-	// User
-	UserProfile,
-	LoginHistoryEntry,
-	UserSessionInfo,
 	ConnectedAccount,
-	// Security
-	TwoFactorStatus,
-	TwoFactorSetupResult,
-	TwoFactorVerifyResult,
-	PasskeyInfo,
-	SecurityScoreResult,
-	SecurityFactor,
-	SecurityRecommendation,
-	SecurityPriority,
-	SecurityGrade,
-	PasswordStatus,
-	// AI
-	AIUsageStats,
-	AIRateLimitInfo,
-	AIListModelsResponse,
-	AIUsagePeriod,
+	// Consent
+	ConsentCategory,
+	ConsentType,
+	CreateCronInput,
+	CreateCronResult,
+	GetDeliveriesInput,
+	// Jobs (SDK defines its own Job/JobsListResult with Date types)
+	JobStatusEnum,
+	JobTypeEnum,
+	JobsStatusResult,
+	LoginHistoryEntry,
+	MonitoringLevel,
+	NewsletterPreferences,
 	// Newsletter
 	NewsletterSubscribeInput,
 	NewsletterSubscribeResult,
-	NewsletterVerifyResult,
-	NewsletterUnsubscribeResult,
 	NewsletterUnsubscribeInfo,
-	NewsletterPreferences,
+	NewsletterUnsubscribeResult,
+	NewsletterVerifyResult,
+	PasskeyInfo,
+	PasswordStatus,
+	ReplayDeliveryResult,
+	ScheduleJobInput,
+	ScheduleJobResult,
+	SecurityFactor,
+	SecurityGrade,
+	SecurityPriority,
+	SecurityRecommendation,
+	SecurityScoreResult,
 	// Email
 	SendEmailResult,
 	SendTemplatedResult,
-} from '../types'
+	SetConsentsResult,
+	TwoFactorSetupResult,
+	// Security
+	TwoFactorStatus,
+	TwoFactorVerifyResult,
+	UpdateWebhookConfigInput,
+	UpdateWebhookConfigResult,
+	UserConsent,
+	// User
+	UserProfile,
+	UserSessionInfo,
+	// Webhooks
+	WebhookConfig,
+	WebhookDeliveriesResult,
+	WebhookDelivery,
+	WebhookDeliveryStatus,
+	WebhookEnvironment,
+	WebhookStats,
+	WebhookStatsPeriod,
+} from "../types";
 
 // Re-export commonly used types for convenience
 export type {
 	// Jobs (note: Job/JobsListResult are SDK-specific, defined below)
-	
-	
+
 	ScheduleJobInput,
 	ScheduleJobResult,
 	CreateCronInput,
@@ -95,7 +94,7 @@ export type {
 	ConsentType,
 	UserConsent,
 	// User
-	
+
 	LoginHistoryEntry,
 	UserSessionInfo,
 	ConnectedAccount,
@@ -111,7 +110,7 @@ export type {
 	// AI
 	AIUsageStats,
 	AIListModelsResponse,
-}
+};
 
 // ============================================================================
 // SDK-Specific Job Types
@@ -119,38 +118,55 @@ export type {
 // ============================================================================
 
 /** Job status - includes all possible states */
-export type JobStatus = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled' | 'scheduled' | 'paused' | 'deleted'
+export type JobStatus =
+	| "pending"
+	| "queued"
+	| "running"
+	| "completed"
+	| "failed"
+	| "cancelled"
+	| "scheduled"
+	| "paused"
+	| "deleted";
 
 /** Job status filter for listing jobs */
-export type JobStatusFilter = JobStatus
+export type JobStatusFilter = JobStatus;
 
 // ============================================================================
 // Email Types
 // ============================================================================
 
 export interface EmailOptions {
-	to: string
-	subject: string
-	html: string
-	text?: string
-	replyTo?: string
+	to: string;
+	subject: string;
+	html: string;
+	text?: string;
+	replyTo?: string;
 }
 
 /** Simple alias for EmailOptions */
-export type SimpleEmailOptions = EmailOptions
+export type SimpleEmailOptions = EmailOptions;
 
 /** Email delivery status */
-export type EmailStatus = 'sent' | 'pending' | 'failed'
+export type EmailStatus = "sent" | "pending" | "failed";
 
 /** Email template name type */
-export type EmailTemplateName = string
+export type EmailTemplateName = string;
 
 // ============================================================================
 // Consent Types
 // ============================================================================
 
-import type { ConsentPurposeDefaults, ConsentHistoryResult, GetConsentHistoryInput } from '../consent'
-export type { ConsentPurposeDefaults, ConsentHistoryResult, GetConsentHistoryInput }
+import type {
+	ConsentHistoryResult,
+	ConsentPurposeDefaults,
+	GetConsentHistoryInput,
+} from "../consent";
+export type {
+	ConsentPurposeDefaults,
+	ConsentHistoryResult,
+	GetConsentHistoryInput,
+};
 
 // ============================================================================
 // SDK-Specific Types for Monitoring (Sentry-compatible)
@@ -158,48 +174,48 @@ export type { ConsentPurposeDefaults, ConsentHistoryResult, GetConsentHistoryInp
 
 /** Stack frame for exception tracing */
 export interface StackFrame {
-	filename?: string
-	function?: string
-	lineno?: number
-	colno?: number
-	in_app?: boolean
+	filename?: string;
+	function?: string;
+	lineno?: number;
+	colno?: number;
+	in_app?: boolean;
 }
 
 /** Exception value with stack trace */
 export interface ExceptionValue {
-	type: string
-	value: string
+	type: string;
+	value: string;
 	stacktrace?: {
-		frames: StackFrame[]
-	}
+		frames: StackFrame[];
+	};
 }
 
 /** Breadcrumb for debugging context */
 export interface Breadcrumb {
-	type?: string
-	category?: string
-	message?: string
-	level?: MonitoringLevel
-	data?: Record<string, unknown>
-	timestamp?: number
+	type?: string;
+	category?: string;
+	message?: string;
+	level?: MonitoringLevel;
+	data?: Record<string, unknown>;
+	timestamp?: number;
 }
 
 /** Options for captureException */
 export interface CaptureExceptionOptions {
-	level?: MonitoringLevel
-	tags?: Record<string, string>
-	extra?: Record<string, unknown>
-	fingerprint?: string[]
-	route?: string
-	userAgent?: string
+	level?: MonitoringLevel;
+	tags?: Record<string, string>;
+	extra?: Record<string, unknown>;
+	fingerprint?: string[];
+	route?: string;
+	userAgent?: string;
 }
 
 /** Options for captureMessage */
 export interface CaptureMessageOptions {
-	level?: MonitoringLevel
-	tags?: Record<string, string>
-	extra?: Record<string, unknown>
-	route?: string
+	level?: MonitoringLevel;
+	tags?: Record<string, string>;
+	extra?: Record<string, unknown>;
+	route?: string;
 }
 
 // ============================================================================
@@ -207,36 +223,36 @@ export interface CaptureMessageOptions {
 // ============================================================================
 
 /** Subscriber status */
-export type SubscriberStatus = 'pending' | 'active' | 'unsubscribed'
+export type SubscriberStatus = "pending" | "active" | "unsubscribed";
 
 /** Subscriber preference key type */
-export type SubscriberPreferenceKey = string
+export type SubscriberPreferenceKey = string;
 
 /** Subscriber type for newsletter */
 export interface Subscriber {
-	email: string
-	name?: string
-	status: SubscriberStatus
-	preferences?: Record<string, boolean>
-	subscribedAt?: string
-	unsubscribedAt?: string
+	email: string;
+	name?: string;
+	status: SubscriberStatus;
+	preferences?: Record<string, boolean>;
+	subscribedAt?: string;
+	unsubscribedAt?: string;
 }
 
 // Import AI types that are SDK-specific (not from router)
 import type {
+	AIListModelsOptions,
 	AIMessage,
+	AIModelInfo,
+	AIStreamChunk,
 	AITool,
 	ChatCompletionInput,
 	ChatCompletionResponse,
-	TextCompletionInput,
-	TextCompletionResponse,
 	EmbeddingInput,
 	EmbeddingResponse,
+	TextCompletionInput,
+	TextCompletionResponse,
 	VisionInput,
-	AIModelInfo,
-	AIListModelsOptions,
-	AIStreamChunk,
-} from '../types'
+} from "../types";
 
 // ============================================
 // SDK-Specific Types (not from router)
@@ -247,9 +263,9 @@ import type {
  */
 export interface AsyncState<TError = Error> {
 	/** Whether an operation is in progress */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Last error from an operation */
-	error: TError | null
+	error: TError | null;
 }
 
 /**
@@ -257,9 +273,9 @@ export interface AsyncState<TError = Error> {
  */
 export interface DataState<T, TError = Error> extends AsyncState<TError> {
 	/** The fetched data */
-	data: T | null
+	data: T | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 }
 
 // ============================================
@@ -270,12 +286,17 @@ export interface DataState<T, TError = Error> extends AsyncState<TError> {
  * Generic helper to get required context value
  * Throws descriptive error if used outside provider
  */
-export function useRequiredContext<T>(context: Context<T | null>, serviceName: string): T {
-	const value = useContext(context)
+export function useRequiredContext<T>(
+	context: Context<T | null>,
+	serviceName: string,
+): T {
+	const value = useContext(context);
 	if (!value) {
-		throw new Error(`${serviceName} hooks must be used within a SylphxProvider`)
+		throw new Error(
+			`${serviceName} hooks must be used within a SylphxProvider`,
+		);
 	}
-	return value
+	return value;
 }
 
 // ============================================
@@ -283,20 +304,20 @@ export function useRequiredContext<T>(context: Context<T | null>, serviceName: s
 // ============================================
 
 export interface AIContextValue {
-	chat: (input: ChatCompletionInput) => Promise<ChatCompletionResponse>
-	chatStream: (input: ChatCompletionInput) => AsyncIterable<AIStreamChunk>
-	complete: (input: TextCompletionInput) => Promise<TextCompletionResponse>
-	embed: (input: EmbeddingInput) => Promise<EmbeddingResponse>
-	vision: (input: VisionInput) => Promise<ChatCompletionResponse>
-	getUsage: (period: AIUsagePeriod) => Promise<AIUsageStats>
-	getRateLimitStatus: () => Promise<AIRateLimitInfo>
-	listModels: (options?: AIListModelsOptions) => Promise<AIListModelsResponse>
+	chat: (input: ChatCompletionInput) => Promise<ChatCompletionResponse>;
+	chatStream: (input: ChatCompletionInput) => AsyncIterable<AIStreamChunk>;
+	complete: (input: TextCompletionInput) => Promise<TextCompletionResponse>;
+	embed: (input: EmbeddingInput) => Promise<EmbeddingResponse>;
+	vision: (input: VisionInput) => Promise<ChatCompletionResponse>;
+	getUsage: (period: AIUsagePeriod) => Promise<AIUsageStats>;
+	getRateLimitStatus: () => Promise<AIRateLimitInfo>;
+	listModels: (options?: AIListModelsOptions) => Promise<AIListModelsResponse>;
 }
 
-export const AIContext = createContext<AIContextValue | null>(null)
+export const AIContext = createContext<AIContextValue | null>(null);
 
 export function useAIContext(): AIContextValue {
-	return useRequiredContext(AIContext, 'AI')
+	return useRequiredContext(AIContext, "AI");
 }
 
 // ============================================
@@ -305,53 +326,53 @@ export function useAIContext(): AIContextValue {
 
 /** Job type with all optional fields for flexibility */
 export interface Job {
-	id: string
-	name: string | null
-	type: string
-	status: JobStatus
-	callbackUrl: string
-	payload?: unknown
-	scheduledFor: string | null
-	startedAt?: string | null
-	completedAt?: string | null
-	failedAt?: string | null
-	errorMessage?: string | null
-	lastError?: string | null
-	retries: number
-	maxRetries: number
-	createdAt: string
+	id: string;
+	name: string | null;
+	type: string;
+	status: JobStatus;
+	callbackUrl: string;
+	payload?: unknown;
+	scheduledFor: string | null;
+	startedAt?: string | null;
+	completedAt?: string | null;
+	failedAt?: string | null;
+	errorMessage?: string | null;
+	lastError?: string | null;
+	retries: number;
+	maxRetries: number;
+	createdAt: string;
 }
 
 /** Jobs List Result */
 export interface JobsListResult {
-	jobs: Job[]
-	total: number
-	limit?: number
-	offset?: number
-	hasMore?: boolean
+	jobs: Job[];
+	total: number;
+	limit?: number;
+	offset?: number;
+	hasMore?: boolean;
 }
 
 export interface JobsContextValue {
-	checkStatus: () => Promise<JobsStatusResult>
-	schedule: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
-	createCron: (options: CreateCronInput) => Promise<CreateCronResult>
-	pauseCron: (scheduleId: string) => Promise<boolean>
-	resumeCron: (scheduleId: string) => Promise<boolean>
-	deleteCron: (scheduleId: string) => Promise<boolean>
-	getJob: (jobId: string) => Promise<Job>
+	checkStatus: () => Promise<JobsStatusResult>;
+	schedule: (options: ScheduleJobInput) => Promise<ScheduleJobResult>;
+	createCron: (options: CreateCronInput) => Promise<CreateCronResult>;
+	pauseCron: (scheduleId: string) => Promise<boolean>;
+	resumeCron: (scheduleId: string) => Promise<boolean>;
+	deleteCron: (scheduleId: string) => Promise<boolean>;
+	getJob: (jobId: string) => Promise<Job>;
 	listJobs: (options?: {
-		status?: JobStatusFilter
-		type?: 'one-time' | 'cron'
-		limit?: number
-		offset?: number
-	}) => Promise<JobsListResult>
-	cancelJob: (jobId: string) => Promise<boolean>
+		status?: JobStatusFilter;
+		type?: "one-time" | "cron";
+		limit?: number;
+		offset?: number;
+	}) => Promise<JobsListResult>;
+	cancelJob: (jobId: string) => Promise<boolean>;
 }
 
-export const JobsContext = createContext<JobsContextValue | null>(null)
+export const JobsContext = createContext<JobsContextValue | null>(null);
 
 export function useJobsContext(): JobsContextValue {
-	return useRequiredContext(JobsContext, 'Jobs')
+	return useRequiredContext(JobsContext, "Jobs");
 }
 
 // ============================================
@@ -362,29 +383,31 @@ export interface MonitoringContextValue {
 	captureException: (
 		error: Error,
 		options?: {
-			level?: MonitoringLevel
-			tags?: Record<string, string>
-			extra?: Record<string, unknown>
-			fingerprint?: string[]
-			route?: string
-			userAgent?: string
-		}
-	) => Promise<CaptureExceptionResult>
+			level?: MonitoringLevel;
+			tags?: Record<string, string>;
+			extra?: Record<string, unknown>;
+			fingerprint?: string[];
+			route?: string;
+			userAgent?: string;
+		},
+	) => Promise<CaptureExceptionResult>;
 	captureMessage: (
 		message: string,
 		options?: {
-			level?: MonitoringLevel
-			tags?: Record<string, string>
-			extra?: Record<string, unknown>
-			route?: string
-		}
-	) => Promise<CaptureMessageResult>
+			level?: MonitoringLevel;
+			tags?: Record<string, string>;
+			extra?: Record<string, unknown>;
+			route?: string;
+		},
+	) => Promise<CaptureMessageResult>;
 }
 
-export const MonitoringContext = createContext<MonitoringContextValue | null>(null)
+export const MonitoringContext = createContext<MonitoringContextValue | null>(
+	null,
+);
 
 export function useMonitoringContext(): MonitoringContextValue {
-	return useRequiredContext(MonitoringContext, 'Monitoring')
+	return useRequiredContext(MonitoringContext, "Monitoring");
 }
 
 // ============================================
@@ -392,25 +415,32 @@ export function useMonitoringContext(): MonitoringContextValue {
 // ============================================
 
 export interface ConsentContextValue {
-	anonymousId: string | null
-	userId: string | null
-	getConsentTypes: () => Promise<ConsentType[]>
-	getUserConsents: () => Promise<UserConsent[]>
-	setConsents: (consents: { slug: string; granted: boolean }[]) => Promise<SetConsentsResult>
-	acceptAll: () => Promise<SetConsentsResult>
-	declineOptional: () => Promise<SetConsentsResult>
+	anonymousId: string | null;
+	userId: string | null;
+	getConsentTypes: () => Promise<ConsentType[]>;
+	getUserConsents: () => Promise<UserConsent[]>;
+	setConsents: (
+		consents: { slug: string; granted: boolean }[],
+	) => Promise<SetConsentsResult>;
+	acceptAll: () => Promise<SetConsentsResult>;
+	declineOptional: () => Promise<SetConsentsResult>;
 	/** Check consent for a purpose with optional inline defaults for auto-discovery */
-	checkConsent: (purposeSlug: string, defaults?: ConsentPurposeDefaults) => Promise<boolean>
+	checkConsent: (
+		purposeSlug: string,
+		defaults?: ConsentPurposeDefaults,
+	) => Promise<boolean>;
 	/** Get consent change history for GDPR audit trail */
-	getHistory: (options?: Pick<GetConsentHistoryInput, 'limit' | 'offset'>) => Promise<ConsentHistoryResult>
+	getHistory: (
+		options?: Pick<GetConsentHistoryInput, "limit" | "offset">,
+	) => Promise<ConsentHistoryResult>;
 	/** Consent types from server-fetched config */
-	initialConsentTypes: ConsentType[]
+	initialConsentTypes: ConsentType[];
 }
 
-export const ConsentContext = createContext<ConsentContextValue | null>(null)
+export const ConsentContext = createContext<ConsentContextValue | null>(null);
 
 export function useConsentContext(): ConsentContextValue {
-	return useRequiredContext(ConsentContext, 'Consent')
+	return useRequiredContext(ConsentContext, "Consent");
 }
 
 // ============================================
@@ -418,14 +448,14 @@ export function useConsentContext(): ConsentContextValue {
 // ============================================
 
 export interface UploadProgressEvent {
-	loaded: number
-	total: number
-	progress: number
+	loaded: number;
+	total: number;
+	progress: number;
 }
 
 export interface UploadOptions {
-	path?: string
-	onProgress?: (event: UploadProgressEvent) => void
+	path?: string;
+	onProgress?: (event: UploadProgressEvent) => void;
 	/**
 	 * Enable multipart upload for large files.
 	 * - `true`: Always use multipart upload
@@ -435,7 +465,7 @@ export interface UploadOptions {
 	 * Multipart uploads support files up to 5TB with better
 	 * reliability for large files.
 	 */
-	multipart?: boolean | 'auto'
+	multipart?: boolean | "auto";
 	/**
 	 * AbortSignal to cancel the upload.
 	 * Vercel Blob pattern - enables cancellation of in-progress uploads.
@@ -447,20 +477,23 @@ export interface UploadOptions {
 	 * await upload(file, { signal: controller.signal })
 	 * ```
 	 */
-	signal?: AbortSignal
+	signal?: AbortSignal;
 }
 
 export interface StorageContextValue {
-	upload: (file: File, options?: UploadOptions) => Promise<string>
-	uploadAvatar: (file: File, options?: { onProgress?: (event: UploadProgressEvent) => void }) => Promise<string>
-	deleteFile: (fileId: string) => Promise<void>
-	getUrl: (fileId: string) => Promise<string | null>
+	upload: (file: File, options?: UploadOptions) => Promise<string>;
+	uploadAvatar: (
+		file: File,
+		options?: { onProgress?: (event: UploadProgressEvent) => void },
+	) => Promise<string>;
+	deleteFile: (fileId: string) => Promise<void>;
+	getUrl: (fileId: string) => Promise<string | null>;
 }
 
-export const StorageContext = createContext<StorageContextValue | null>(null)
+export const StorageContext = createContext<StorageContextValue | null>(null);
 
 export function useStorageContext(): StorageContextValue {
-	return useRequiredContext(StorageContext, 'Storage')
+	return useRequiredContext(StorageContext, "Storage");
 }
 
 // ============================================
@@ -468,19 +501,34 @@ export function useStorageContext(): StorageContextValue {
 // ============================================
 
 export interface NewsletterContextValue {
-	subscribe: (options: NewsletterSubscribeInput) => Promise<NewsletterSubscribeResult>
-	verify: (token: string) => Promise<NewsletterVerifyResult>
-	unsubscribe: (email: string, token: string) => Promise<NewsletterUnsubscribeResult>
-	resendVerification: (email: string) => Promise<{ success: boolean; message: string }>
-	getUnsubscribeInfo: (token: string) => Promise<NewsletterUnsubscribeInfo>
-	updatePreferences: (email: string, preferences: Record<string, boolean>) => Promise<{ success: boolean; preferences: Array<{ key: string; enabled: boolean }> }>
-	getPreferences: (email: string) => Promise<NewsletterPreferences>
+	subscribe: (
+		options: NewsletterSubscribeInput,
+	) => Promise<NewsletterSubscribeResult>;
+	verify: (token: string) => Promise<NewsletterVerifyResult>;
+	unsubscribe: (
+		email: string,
+		token: string,
+	) => Promise<NewsletterUnsubscribeResult>;
+	resendVerification: (
+		email: string,
+	) => Promise<{ success: boolean; message: string }>;
+	getUnsubscribeInfo: (token: string) => Promise<NewsletterUnsubscribeInfo>;
+	updatePreferences: (
+		email: string,
+		preferences: Record<string, boolean>,
+	) => Promise<{
+		success: boolean;
+		preferences: Array<{ key: string; enabled: boolean }>;
+	}>;
+	getPreferences: (email: string) => Promise<NewsletterPreferences>;
 }
 
-export const NewsletterContext = createContext<NewsletterContextValue | null>(null)
+export const NewsletterContext = createContext<NewsletterContextValue | null>(
+	null,
+);
 
 export function useNewsletterContext(): NewsletterContextValue {
-	return useRequiredContext(NewsletterContext, 'Newsletter')
+	return useRequiredContext(NewsletterContext, "Newsletter");
 }
 
 // ============================================
@@ -488,20 +536,23 @@ export function useNewsletterContext(): NewsletterContextValue {
 // ============================================
 
 export interface QueryResult<T = unknown> {
-	rows: T[]
-	rowCount: number
+	rows: T[];
+	rowCount: number;
 }
 
 export interface DatabaseContextValue {
-	query: <T = unknown>(sql: string, params?: unknown[]) => Promise<QueryResult<T>>
-	execute: (sql: string, params?: unknown[]) => Promise<{ rowCount: number }>
-	transaction: <T>(fn: (tx: DatabaseContextValue) => Promise<T>) => Promise<T>
+	query: <T = unknown>(
+		sql: string,
+		params?: unknown[],
+	) => Promise<QueryResult<T>>;
+	execute: (sql: string, params?: unknown[]) => Promise<{ rowCount: number }>;
+	transaction: <T>(fn: (tx: DatabaseContextValue) => Promise<T>) => Promise<T>;
 }
 
-export const DatabaseContext = createContext<DatabaseContextValue | null>(null)
+export const DatabaseContext = createContext<DatabaseContextValue | null>(null);
 
 export function useDatabaseContext(): DatabaseContextValue {
-	return useRequiredContext(DatabaseContext, 'Database')
+	return useRequiredContext(DatabaseContext, "Database");
 }
 
 // ============================================
@@ -509,16 +560,31 @@ export function useDatabaseContext(): DatabaseContextValue {
 // ============================================
 
 export interface EmailContextValue {
-	send: (options: { to: string; subject: string; html: string; text?: string; replyTo?: string }) => Promise<SendEmailResult>
-	sendTemplated: (options: { template: string; to: string; data?: Record<string, unknown> }) => Promise<{ success: boolean; template: string }>
-	sendToUser: (options: { userId: string; subject: string; html: string; text?: string }) => Promise<SendEmailResult>
-	newsletter: NewsletterContextValue
+	send: (options: {
+		to: string;
+		subject: string;
+		html: string;
+		text?: string;
+		replyTo?: string;
+	}) => Promise<SendEmailResult>;
+	sendTemplated: (options: {
+		template: string;
+		to: string;
+		data?: Record<string, unknown>;
+	}) => Promise<{ success: boolean; template: string }>;
+	sendToUser: (options: {
+		userId: string;
+		subject: string;
+		html: string;
+		text?: string;
+	}) => Promise<SendEmailResult>;
+	newsletter: NewsletterContextValue;
 }
 
-export const EmailContext = createContext<EmailContextValue | null>(null)
+export const EmailContext = createContext<EmailContextValue | null>(null);
 
 export function useEmailContext(): EmailContextValue {
-	return useRequiredContext(EmailContext, 'Email')
+	return useRequiredContext(EmailContext, "Email");
 }
 
 // ============================================
@@ -526,17 +592,21 @@ export function useEmailContext(): EmailContextValue {
 // ============================================
 
 export interface WebhooksContextValue {
-	getConfig: () => Promise<WebhookConfig>
-	updateConfig: (options: UpdateWebhookConfigInput) => Promise<UpdateWebhookConfigResult>
-	getDeliveries: (options?: GetDeliveriesInput) => Promise<WebhookDeliveriesResult>
-	replayDelivery: (deliveryId: string) => Promise<ReplayDeliveryResult>
-	getStats: (period: WebhookStatsPeriod) => Promise<WebhookStats>
+	getConfig: () => Promise<WebhookConfig>;
+	updateConfig: (
+		options: UpdateWebhookConfigInput,
+	) => Promise<UpdateWebhookConfigResult>;
+	getDeliveries: (
+		options?: GetDeliveriesInput,
+	) => Promise<WebhookDeliveriesResult>;
+	replayDelivery: (deliveryId: string) => Promise<ReplayDeliveryResult>;
+	getStats: (period: WebhookStatsPeriod) => Promise<WebhookStats>;
 }
 
-export const WebhooksContext = createContext<WebhooksContextValue | null>(null)
+export const WebhooksContext = createContext<WebhooksContextValue | null>(null);
 
 export function useWebhooksContext(): WebhooksContextValue {
-	return useRequiredContext(WebhooksContext, 'Webhooks')
+	return useRequiredContext(WebhooksContext, "Webhooks");
 }
 
 // ============================================
@@ -550,56 +620,68 @@ export function useWebhooksContext(): WebhooksContextValue {
  * For basic user data without auth fields, use User from types.ts.
  */
 export interface AuthUser {
-	id: string
-	email: string
-	name: string | null
-	image: string | null
-	emailVerified: boolean
-	twoFactorEnabled: boolean
+	id: string;
+	email: string;
+	name: string | null;
+	image: string | null;
+	emailVerified: boolean;
+	twoFactorEnabled: boolean;
 }
 
 /** Login result shape from SDK */
 export interface SdkLoginResult {
-	requiresTwoFactor: boolean
-	userId?: string
-	user?: AuthUser
+	requiresTwoFactor: boolean;
+	userId?: string;
+	user?: AuthUser;
 }
 
 /** 2FA verification result shape from SDK */
 export interface SdkVerify2FAResult {
-	accessToken: string
-	refreshToken: string
-	expiresIn: number
-	user: AuthUser
+	accessToken: string;
+	refreshToken: string;
+	expiresIn: number;
+	user: AuthUser;
 }
 
 /** Registration result shape from SDK (minimal user data before setup) */
 export interface SdkRegisterResult {
-	requiresVerification: boolean
-	message: string
+	requiresVerification: boolean;
+	message: string;
 	user: {
-		id: string
-		email: string
-		name: string | null
-	}
+		id: string;
+		email: string;
+		name: string | null;
+	};
 }
 
 export interface SdkAuthContextValue {
-	login: (email: string, password: string) => Promise<SdkLoginResult>
-	verifyTwoFactor: (userId: string, code: string) => Promise<SdkVerify2FAResult>
-	register: (name: string, email: string, password: string) => Promise<SdkRegisterResult>
-	forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>
-	resetPassword: (token: string, password: string) => Promise<{ success: boolean }>
-	verifyEmail: (token: string) => Promise<{ success: boolean }>
-	logout: (refreshToken?: string) => Promise<{ success: boolean }>
-	me: () => Promise<AuthUser>
-	getOAuthProviders: () => Promise<{ providers: string[] }>
+	login: (email: string, password: string) => Promise<SdkLoginResult>;
+	verifyTwoFactor: (
+		userId: string,
+		code: string,
+	) => Promise<SdkVerify2FAResult>;
+	register: (
+		name: string,
+		email: string,
+		password: string,
+	) => Promise<SdkRegisterResult>;
+	forgotPassword: (
+		email: string,
+	) => Promise<{ success: boolean; message: string }>;
+	resetPassword: (
+		token: string,
+		password: string,
+	) => Promise<{ success: boolean }>;
+	verifyEmail: (token: string) => Promise<{ success: boolean }>;
+	logout: (refreshToken?: string) => Promise<{ success: boolean }>;
+	me: () => Promise<AuthUser>;
+	getOAuthProviders: () => Promise<{ providers: string[] }>;
 }
 
-export const SdkAuthContext = createContext<SdkAuthContextValue | null>(null)
+export const SdkAuthContext = createContext<SdkAuthContextValue | null>(null);
 
 export function useSdkAuthContext(): SdkAuthContextValue {
-	return useRequiredContext(SdkAuthContext, 'SdkAuth')
+	return useRequiredContext(SdkAuthContext, "SdkAuth");
 }
 
 // ============================================
@@ -608,57 +690,68 @@ export function useSdkAuthContext(): SdkAuthContextValue {
 
 /** SDK User Profile (includes computed fields) */
 export interface SdkUserProfile {
-	id: string
-	email: string
-	name: string | null
-	image: string | null
-	emailVerified: boolean
-	twoFactorEnabled: boolean
-	createdAt: Date
+	id: string;
+	email: string;
+	name: string | null;
+	image: string | null;
+	emailVerified: boolean;
+	twoFactorEnabled: boolean;
+	createdAt: Date;
 }
 
 /** SDK Login History Entry (transformed from API) */
 export interface SdkLoginHistoryEntry {
-	id: string
-	ipAddress: string | null
-	userAgent: string | null
-	location: string | null
-	device: string | null
-	browser: string | null
-	os: string | null
-	loginAt: Date
+	id: string;
+	ipAddress: string | null;
+	userAgent: string | null;
+	location: string | null;
+	device: string | null;
+	browser: string | null;
+	os: string | null;
+	loginAt: Date;
 	/** Whether login was successful (matches API field name) */
-	success: boolean
+	success: boolean;
 }
 
 /** SDK Connected Account (transformed from API) */
 export interface SdkConnectedAccount {
-	provider: string
-	accountId: string
-	email: string | null
-	name: string | null
-	image: string | null
-	connectedAt: Date
+	provider: string;
+	accountId: string;
+	email: string | null;
+	name: string | null;
+	image: string | null;
+	connectedAt: Date;
 }
 
 export interface UserContextValue {
-	getProfile: () => Promise<SdkUserProfile>
-	updateProfile: (data: { name?: string; image?: string }) => Promise<SdkUserProfile>
-	changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean }>
-	getLoginHistory: (options?: { limit?: number }) => Promise<SdkLoginHistoryEntry[]>
-	getSessions: () => Promise<UserSessionInfo[]>
-	revokeSession: (sessionId: string) => Promise<{ success: boolean }>
-	renameSession: (sessionId: string, name: string) => Promise<{ success: boolean }>
-	revokeAllSessions: () => Promise<{ success: boolean; count: number }>
-	getConnectedAccounts: () => Promise<SdkConnectedAccount[]>
-	deleteAccount: (password?: string) => Promise<{ success: boolean }>
-	exportData: () => Promise<{ downloadUrl: string; expiresAt: Date }>
+	getProfile: () => Promise<SdkUserProfile>;
+	updateProfile: (data: {
+		name?: string;
+		image?: string;
+	}) => Promise<SdkUserProfile>;
+	changePassword: (
+		currentPassword: string,
+		newPassword: string,
+	) => Promise<{ success: boolean }>;
+	getLoginHistory: (options?: { limit?: number }) => Promise<
+		SdkLoginHistoryEntry[]
+	>;
+	getSessions: () => Promise<UserSessionInfo[]>;
+	revokeSession: (sessionId: string) => Promise<{ success: boolean }>;
+	renameSession: (
+		sessionId: string,
+		name: string,
+	) => Promise<{ success: boolean }>;
+	revokeAllSessions: () => Promise<{ success: boolean; count: number }>;
+	getConnectedAccounts: () => Promise<SdkConnectedAccount[]>;
+	deleteAccount: (password?: string) => Promise<{ success: boolean }>;
+	exportData: () => Promise<{ downloadUrl: string; expiresAt: Date }>;
 }
 
-export const UserContext = createContext<UserContextValue | null>(null)
+export const UserContext = createContext<UserContextValue | null>(null);
 
 export function useUserContext(): UserContextValue {
-	return useRequiredContext(UserContext, 'User')
+	return useRequiredContext(UserContext, "User");
 }
 
 // ============================================
@@ -667,68 +760,83 @@ export function useUserContext(): UserContextValue {
 
 /** SDK 2FA Status */
 export interface SdkTwoFactorStatus {
-	enabled: boolean
-	backupCodesRemaining: number
+	enabled: boolean;
+	backupCodesRemaining: number;
 }
 
 /** SDK Password Status */
 export interface SdkPasswordStatus {
-	hasPassword: boolean
+	hasPassword: boolean;
 }
 
 /** SDK Passkey Info (transformed from API) */
 export interface SdkPasskeyInfo {
-	id: string
-	name?: string
-	deviceType?: string
-	createdAt: Date
-	lastUsedAt: Date | null
+	id: string;
+	name?: string;
+	deviceType?: string;
+	createdAt: Date;
+	lastUsedAt: Date | null;
 }
 
 /** SDK Security Alert (transformed from API) */
 export interface SdkSecurityAlert {
-	id: string
-	type: string
-	title: string
-	description: string | null
-	metadata: Record<string, unknown> | null
-	read: boolean
-	createdAt: Date
+	id: string;
+	type: string;
+	title: string;
+	description: string | null;
+	metadata: Record<string, unknown> | null;
+	read: boolean;
+	createdAt: Date;
 }
 
 /** SDK Security Alerts Result */
 export interface SdkSecurityAlertsResult {
-	alerts: SdkSecurityAlert[]
-	total: number
+	alerts: SdkSecurityAlert[];
+	total: number;
 }
 
 export interface SecurityContextValue {
-	getTwoFactorStatus: () => Promise<SdkTwoFactorStatus>
-	twoFactorSetup: () => Promise<TwoFactorSetupResult>
-	twoFactorVerify: (code: string) => Promise<TwoFactorVerifyResult>
-	twoFactorDisable: (code: string) => Promise<{ success: boolean }>
-	backupCodesView: (code: string) => Promise<{ codes: string[]; remaining?: number }>
-	backupCodesRegenerate: (code: string) => Promise<{ codes: string[] }>
-	getPasswordStatus: () => Promise<SdkPasswordStatus>
-	passwordSet: (password: string) => Promise<{ success: boolean }>
-	emailChangeRequest: (newEmail: string) => Promise<{ success: boolean; message: string }>
-	emailChangeConfirm: (token: string) => Promise<{ success: boolean; newEmail: string }>
-	passkeyList: () => Promise<SdkPasskeyInfo[]>
-	passkeyRegisterStart: () => Promise<unknown>
-	passkeyRegisterVerify: (credential: unknown, name?: string) => Promise<SdkPasskeyInfo>
-	passkeyRename: (passkeyId: string, name: string) => Promise<{ success: boolean }>
-	passkeyDelete: (passkeyId: string) => Promise<{ success: boolean }>
-	oauthConnect: (provider: string) => Promise<{ redirectUrl: string }>
-	oauthDisconnect: (provider: string) => Promise<{ success: boolean }>
-	getSecurityScore: () => Promise<SecurityScoreResult>
+	getTwoFactorStatus: () => Promise<SdkTwoFactorStatus>;
+	twoFactorSetup: () => Promise<TwoFactorSetupResult>;
+	twoFactorVerify: (code: string) => Promise<TwoFactorVerifyResult>;
+	twoFactorDisable: (code: string) => Promise<{ success: boolean }>;
+	backupCodesView: (
+		code: string,
+	) => Promise<{ codes: string[]; remaining?: number }>;
+	backupCodesRegenerate: (code: string) => Promise<{ codes: string[] }>;
+	getPasswordStatus: () => Promise<SdkPasswordStatus>;
+	passwordSet: (password: string) => Promise<{ success: boolean }>;
+	emailChangeRequest: (
+		newEmail: string,
+	) => Promise<{ success: boolean; message: string }>;
+	emailChangeConfirm: (
+		token: string,
+	) => Promise<{ success: boolean; newEmail: string }>;
+	passkeyList: () => Promise<SdkPasskeyInfo[]>;
+	passkeyRegisterStart: () => Promise<unknown>;
+	passkeyRegisterVerify: (
+		credential: unknown,
+		name?: string,
+	) => Promise<SdkPasskeyInfo>;
+	passkeyRename: (
+		passkeyId: string,
+		name: string,
+	) => Promise<{ success: boolean }>;
+	passkeyDelete: (passkeyId: string) => Promise<{ success: boolean }>;
+	oauthConnect: (provider: string) => Promise<{ redirectUrl: string }>;
+	oauthDisconnect: (provider: string) => Promise<{ success: boolean }>;
+	getSecurityScore: () => Promise<SecurityScoreResult>;
 	// Security Alerts
-	getSecurityAlerts: (options?: { limit?: number; unreadOnly?: boolean }) => Promise<SdkSecurityAlertsResult>
-	markAlertRead: (alertId: string) => Promise<{ success: boolean }>
-	markAllAlertsRead: () => Promise<{ success: boolean }>
+	getSecurityAlerts: (options?: {
+		limit?: number;
+		unreadOnly?: boolean;
+	}) => Promise<SdkSecurityAlertsResult>;
+	markAlertRead: (alertId: string) => Promise<{ success: boolean }>;
+	markAllAlertsRead: () => Promise<{ success: boolean }>;
 }
 
-export const SecurityContext = createContext<SecurityContextValue | null>(null)
+export const SecurityContext = createContext<SecurityContextValue | null>(null);
 
 export function useSecurityContext(): SecurityContextValue {
-	return useRequiredContext(SecurityContext, 'Security')
+	return useRequiredContext(SecurityContext, "Security");
 }

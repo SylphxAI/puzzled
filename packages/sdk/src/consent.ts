@@ -38,83 +38,88 @@
  * ```
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type ConsentType = components['schemas']['ConsentType']
-export type UserConsent = components['schemas']['UserConsent']
-export type SetConsentRequest = components['schemas']['SetConsentRequest']
-export type SetConsentResponse = components['schemas']['SetConsentResponse']
+export type ConsentType = components["schemas"]["ConsentType"];
+export type UserConsent = components["schemas"]["UserConsent"];
+export type SetConsentRequest = components["schemas"]["SetConsentRequest"];
+export type SetConsentResponse = components["schemas"]["SetConsentResponse"];
 
 // SDK-specific types (not directly from API schema)
 /** Consent category for grouping */
-export type ConsentCategory = 'necessary' | 'analytics' | 'marketing' | 'functional' | 'preferences'
+export type ConsentCategory =
+	| "necessary"
+	| "analytics"
+	| "marketing"
+	| "functional"
+	| "preferences";
 
 export interface SetConsentsInput {
 	/** User ID (optional for anonymous users) */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID (for guest users) */
-	anonymousId?: string
+	anonymousId?: string;
 	/** Consent settings by type slug */
-	consents: Record<string, boolean>
+	consents: Record<string, boolean>;
 }
 
 export interface LinkAnonymousConsentsInput {
 	/** The authenticated user ID to link to */
-	userId: string
+	userId: string;
 	/** The anonymous ID whose consents should be linked */
-	anonymousId: string
+	anonymousId: string;
 }
 
 export interface GetConsentHistoryInput {
 	/** User ID (for authenticated users) */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID (for anonymous users) */
-	anonymousId?: string
+	anonymousId?: string;
 	/** Maximum records to return (default: 50) */
-	limit?: number
+	limit?: number;
 	/** Offset for pagination (default: 0) */
-	offset?: number
+	offset?: number;
 }
 
 /** A single consent change history entry */
 export interface ConsentHistoryEntry {
 	/** Unique entry ID */
-	id: string
+	id: string;
 	/** Consent type slug (e.g., 'analytics') */
-	consentType: string
+	consentType: string;
 	/** Display name of the consent type */
-	consentTypeName: string
+	consentTypeName: string;
 	/** Previous consent state (null = initial consent) */
-	previousGranted: boolean | null
+	previousGranted: boolean | null;
 	/** New consent state */
-	newGranted: boolean
+	newGranted: boolean;
 	/** Source of the change (banner, settings, api) */
-	source: string
+	source: string;
 	/** Reason for change (user_action, policy_update, etc.) */
-	reason: string | null
+	reason: string | null;
 	/** ISO timestamp when change occurred */
-	createdAt: string
+	createdAt: string;
 }
 
 export interface ConsentHistoryResult {
 	/** List of consent change entries */
-	entries: ConsentHistoryEntry[]
+	entries: ConsentHistoryEntry[];
 	/** Total number of entries */
-	total: number
+	total: number;
 	/** Whether there are more entries */
-	hasMore: boolean
+	hasMore: boolean;
 }
 
 export interface GetConsentsInput {
 	/** User ID (optional for anonymous users) */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID (for guest users) */
-	anonymousId?: string
+	anonymousId?: string;
 }
 
 /**
@@ -132,17 +137,17 @@ export interface GetConsentsInput {
  */
 export interface ConsentPurposeDefaults {
 	/** Display name */
-	name?: string
+	name?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Category */
-	category?: ConsentCategory
+	category?: ConsentCategory;
 	/** Whether consent is required (always granted) */
-	required?: boolean
+	required?: boolean;
 	/** Whether enabled by default */
-	defaultEnabled?: boolean
+	defaultEnabled?: boolean;
 	/** Sort order in UI */
-	sortOrder?: number
+	sortOrder?: number;
 }
 
 // ============================================================================
@@ -160,8 +165,10 @@ export interface ConsentPurposeDefaults {
  * types.forEach(t => console.log(`${t.name}: ${t.required ? 'Required' : 'Optional'}`))
  * ```
  */
-export async function getConsentTypes(config: SylphxConfig): Promise<ConsentType[]> {
-	return callApi(config, '/consent/types', { method: 'GET' })
+export async function getConsentTypes(
+	config: SylphxConfig,
+): Promise<ConsentType[]> {
+	return callApi(config, "/consent/types", { method: "GET" });
 }
 
 /**
@@ -201,12 +208,12 @@ export async function hasConsent(
 	config: SylphxConfig,
 	purposeSlug: string,
 	input: GetConsentsInput,
-	defaults?: ConsentPurposeDefaults
+	defaults?: ConsentPurposeDefaults,
 ): Promise<boolean> {
-	return callApi(config, '/consent/check', {
-		method: 'POST',
+	return callApi(config, "/consent/check", {
+		method: "POST",
 		body: { purposeSlug, ...input, defaults },
-	})
+	});
 }
 
 /**
@@ -223,12 +230,12 @@ export async function hasConsent(
  */
 export async function getUserConsents(
 	config: SylphxConfig,
-	input: GetConsentsInput
+	input: GetConsentsInput,
 ): Promise<UserConsent[]> {
-	return callApi(config, '/consent/user', {
-		method: 'GET',
+	return callApi(config, "/consent/user", {
+		method: "GET",
 		query: input as Record<string, string | undefined>,
-	})
+	});
 }
 
 /**
@@ -247,9 +254,9 @@ export async function getUserConsents(
  */
 export async function setConsents(
 	config: SylphxConfig,
-	input: SetConsentsInput
+	input: SetConsentsInput,
 ): Promise<void> {
-	return callApi(config, '/consent/set', { method: 'POST', body: input })
+	return callApi(config, "/consent/set", { method: "POST", body: input });
 }
 
 /**
@@ -262,9 +269,12 @@ export async function setConsents(
  */
 export async function acceptAllConsents(
 	config: SylphxConfig,
-	input: GetConsentsInput
+	input: GetConsentsInput,
 ): Promise<void> {
-	return callApi(config, '/consent/accept-all', { method: 'POST', body: input })
+	return callApi(config, "/consent/accept-all", {
+		method: "POST",
+		body: input,
+	});
 }
 
 /**
@@ -277,9 +287,12 @@ export async function acceptAllConsents(
  */
 export async function declineOptionalConsents(
 	config: SylphxConfig,
-	input: GetConsentsInput
+	input: GetConsentsInput,
 ): Promise<void> {
-	return callApi(config, '/consent/decline-optional', { method: 'POST', body: input })
+	return callApi(config, "/consent/decline-optional", {
+		method: "POST",
+		body: input,
+	});
 }
 
 /**
@@ -297,9 +310,12 @@ export async function declineOptionalConsents(
  */
 export async function linkAnonymousConsents(
 	config: SylphxConfig,
-	input: LinkAnonymousConsentsInput
+	input: LinkAnonymousConsentsInput,
 ): Promise<void> {
-	return callApi(config, '/consent/link-anonymous', { method: 'POST', body: input })
+	return callApi(config, "/consent/link-anonymous", {
+		method: "POST",
+		body: input,
+	});
 }
 
 /**
@@ -327,15 +343,15 @@ export async function linkAnonymousConsents(
  */
 export async function getConsentHistory(
 	config: SylphxConfig,
-	input: GetConsentHistoryInput
+	input: GetConsentHistoryInput,
 ): Promise<ConsentHistoryResult> {
-	return callApi(config, '/consent/history', {
-		method: 'GET',
+	return callApi(config, "/consent/history", {
+		method: "GET",
 		query: {
 			userId: input.userId,
 			anonymousId: input.anonymousId,
 			limit: input.limit?.toString(),
 			offset: input.offset?.toString(),
 		},
-	})
+	});
 }

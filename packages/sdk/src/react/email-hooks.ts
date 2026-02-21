@@ -5,18 +5,17 @@
  * Send emails, use templates, and send to users.
  */
 
-'use client'
+"use client";
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from "react";
 import {
-	useEmailContext,
 	type EmailStatus,
-	type SimpleEmailOptions,
 	type EmailTemplateName,
-} from './services-context'
+	type SimpleEmailOptions,
+	useEmailContext,
+} from "./services-context";
 
 // Re-export types for convenience
-
 
 // ============================================
 // useEmail
@@ -24,19 +23,30 @@ import {
 
 export interface UseEmailReturn {
 	/** Send an email */
-	send: (options: SimpleEmailOptions) => Promise<{ success: boolean; id?: string }>
+	send: (
+		options: SimpleEmailOptions,
+	) => Promise<{ success: boolean; id?: string }>;
 	/** Send a templated email */
-	sendTemplated: (options: { template: EmailTemplateName; to: string; data?: Record<string, unknown> }) => Promise<{ success: boolean; template: string }>
+	sendTemplated: (options: {
+		template: EmailTemplateName;
+		to: string;
+		data?: Record<string, unknown>;
+	}) => Promise<{ success: boolean; template: string }>;
 	/** Send email to a user by ID */
-	sendToUser: (options: { userId: string; subject: string; html: string; text?: string }) => Promise<{ success: boolean; id?: string }>
+	sendToUser: (options: {
+		userId: string;
+		subject: string;
+		html: string;
+		text?: string;
+	}) => Promise<{ success: boolean; id?: string }>;
 	/** Whether an operation is in progress */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether the last send was successful */
-	isSuccess: boolean
+	isSuccess: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Reset state */
-	reset: () => void
+	reset: () => void;
 }
 
 /**
@@ -68,78 +78,96 @@ export interface UseEmailReturn {
  * ```
  */
 export function useEmail(): UseEmailReturn {
-	const ctx = useEmailContext()
-	const [isLoading, setIsLoading] = useState(false)
-	const [isSuccess, setIsSuccess] = useState(false)
-	const [error, setError] = useState<Error | null>(null)
+	const ctx = useEmailContext();
+	const [isLoading, setIsLoading] = useState(false);
+	const [isSuccess, setIsSuccess] = useState(false);
+	const [error, setError] = useState<Error | null>(null);
 
 	const reset = useCallback(() => {
-		setIsSuccess(false)
-		setError(null)
-	}, [])
+		setIsSuccess(false);
+		setError(null);
+	}, []);
 
 	const send = useCallback(
-		async (options: SimpleEmailOptions): Promise<{ success: boolean; id?: string }> => {
-			setIsLoading(true)
-			setError(null)
-			setIsSuccess(false)
+		async (
+			options: SimpleEmailOptions,
+		): Promise<{ success: boolean; id?: string }> => {
+			setIsLoading(true);
+			setError(null);
+			setIsSuccess(false);
 
 			try {
-				const result = await ctx.send(options)
-				setIsSuccess(result.success)
-				return result
+				const result = await ctx.send(options);
+				setIsSuccess(result.success);
+				return result;
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to send email')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to send email");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const sendTemplated = useCallback(
-		async (options: { template: EmailTemplateName; to: string; data?: Record<string, unknown> }): Promise<{ success: boolean; template: string }> => {
-			setIsLoading(true)
-			setError(null)
-			setIsSuccess(false)
+		async (options: {
+			template: EmailTemplateName;
+			to: string;
+			data?: Record<string, unknown>;
+		}): Promise<{ success: boolean; template: string }> => {
+			setIsLoading(true);
+			setError(null);
+			setIsSuccess(false);
 
 			try {
-				const result = await ctx.sendTemplated(options)
-				setIsSuccess(result.success)
-				return result
+				const result = await ctx.sendTemplated(options);
+				setIsSuccess(result.success);
+				return result;
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to send templated email')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error
+						? err
+						: new Error("Failed to send templated email");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const sendToUser = useCallback(
-		async (options: { userId: string; subject: string; html: string; text?: string }): Promise<{ success: boolean; id?: string }> => {
-			setIsLoading(true)
-			setError(null)
-			setIsSuccess(false)
+		async (options: {
+			userId: string;
+			subject: string;
+			html: string;
+			text?: string;
+		}): Promise<{ success: boolean; id?: string }> => {
+			setIsLoading(true);
+			setError(null);
+			setIsSuccess(false);
 
 			try {
-				const result = await ctx.sendToUser(options)
-				setIsSuccess(result.success)
-				return result
+				const result = await ctx.sendToUser(options);
+				setIsSuccess(result.success);
+				return result;
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to send email to user')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error
+						? err
+						: new Error("Failed to send email to user");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	return {
 		send,
@@ -149,5 +177,5 @@ export function useEmail(): UseEmailReturn {
 		isSuccess,
 		error,
 		reset,
-	}
+	};
 }

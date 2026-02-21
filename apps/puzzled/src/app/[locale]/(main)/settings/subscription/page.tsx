@@ -1,30 +1,30 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { SubscriptionSettingsContent } from './subscription-client'
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
+import { SubscriptionSettingsContent } from "./subscription-client";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings" });
 
 	return {
-		title: t('subscription.title'),
-	}
+		title: t("subscription.title"),
+	};
 }
 
 export default async function SubscriptionSettingsPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/subscription`)
+		redirect(`/${locale}/login?callbackUrl=/settings/subscription`);
 	}
 
-	return <SubscriptionSettingsContent />
+	return <SubscriptionSettingsContent />;
 }

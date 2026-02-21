@@ -5,54 +5,60 @@
  * Supports automatic reconnection with exponential backoff.
  */
 
-import type {
-	FeatureFlagsConfig,
-	FlagDefinition,
-	StreamMessage,
-	FlagUpdateMessage,
-	FlagDeleteMessage,
-	FlagsMessage,
-	ErrorMessage,
-	FlagClientEvent,
-} from './types'
-import { LocalEvaluator } from './evaluator'
 import {
+	FLAGS_HTTP_POLLING_INTERVAL_MS,
+	FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
 	FLAGS_STREAM_INITIAL_RECONNECT_MS,
 	FLAGS_STREAM_MAX_RECONNECT_MS,
-	FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
-	FLAGS_HTTP_POLLING_INTERVAL_MS,
-} from '../../constants'
+} from "../../constants";
+import type { LocalEvaluator } from "./evaluator";
+import type {
+	ErrorMessage,
+	FeatureFlagsConfig,
+	FlagClientEvent,
+	FlagDefinition,
+	FlagDeleteMessage,
+	FlagUpdateMessage,
+	FlagsMessage,
+	StreamMessage,
+} from "./types";
 
 // ==========================================
 // Types
 // ==========================================
 
-type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+type ConnectionState =
+	| "disconnected"
+	| "connecting"
+	| "connected"
+	| "reconnecting";
 
 interface StreamingOptions {
 	/** SSE endpoint */
-	endpoint: string
+	endpoint: string;
 	/** Environment key for authentication */
-	environmentKey?: string
+	environmentKey?: string;
 	/** Initial reconnection delay in ms */
-	initialReconnectDelay?: number
+	initialReconnectDelay?: number;
 	/** Maximum reconnection delay in ms */
-	maxReconnectDelay?: number
+	maxReconnectDelay?: number;
 	/** Maximum reconnection attempts (0 = infinite) */
-	maxReconnectAttempts?: number
+	maxReconnectAttempts?: number;
 	/** Heartbeat timeout in ms (consider connection dead if no ping) */
-	heartbeatTimeout?: number
+	heartbeatTimeout?: number;
 	/** Debug mode */
-	debug?: boolean
+	debug?: boolean;
 }
 
-const DEFAULT_STREAMING_OPTIONS: Required<Omit<StreamingOptions, 'endpoint' | 'environmentKey'>> = {
+const DEFAULT_STREAMING_OPTIONS: Required<
+	Omit<StreamingOptions, "endpoint" | "environmentKey">
+> = {
 	initialReconnectDelay: FLAGS_STREAM_INITIAL_RECONNECT_MS,
 	maxReconnectDelay: FLAGS_STREAM_MAX_RECONNECT_MS,
 	maxReconnectAttempts: 0, // Infinite
 	heartbeatTimeout: FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
 	debug: false,
-}
+};
 
 // ==========================================
 // Flag Stream
@@ -65,21 +71,22 @@ const DEFAULT_STREAMING_OPTIONS: Required<Omit<StreamingOptions, 'endpoint' | 'e
  * Automatically reconnects on disconnection.
  */
 export class FlagStream {
-	private options: Required<Omit<StreamingOptions, 'environmentKey'>> & Pick<StreamingOptions, 'environmentKey'>
-	private evaluator: LocalEvaluator
-	private eventSource: EventSource | null = null
-	private state: ConnectionState = 'disconnected'
-	private reconnectAttempts = 0
-	private reconnectTimeout: ReturnType<typeof setTimeout> | null = null
-	private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null
-	private listeners: Set<(event: FlagClientEvent) => void> = new Set()
+	private options: Required<Omit<StreamingOptions, "environmentKey">> &
+		Pick<StreamingOptions, "environmentKey">;
+	private evaluator: LocalEvaluator;
+	private eventSource: EventSource | null = null;
+	private state: ConnectionState = "disconnected";
+	private reconnectAttempts = 0;
+	private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+	private heartbeatTimeout: ReturnType<typeof setTimeout> | null = null;
+	private listeners: Set<(event: FlagClientEvent) => void> = new Set();
 
 	constructor(evaluator: LocalEvaluator, options: StreamingOptions) {
-		this.evaluator = evaluator
+		this.evaluator = evaluator;
 		this.options = {
 			...DEFAULT_STREAMING_OPTIONS,
 			...options,
-		}
+		};
 	}
 
 	// ==========================================
@@ -90,56 +97,56 @@ export class FlagStream {
 	 * Connect to the SSE stream
 	 */
 	connect(): void {
-		if (typeof window === 'undefined') return
-		if (this.state === 'connected' || this.state === 'connecting') return
+		if (typeof window === "undefined") return;
+		if (this.state === "connected" || this.state === "connecting") return;
 
-		this.state = 'connecting'
-		this.debug('Connecting to stream', { endpoint: this.options.endpoint })
+		this.state = "connecting";
+		this.debug("Connecting to stream", { endpoint: this.options.endpoint });
 
 		// Build URL with auth
-		const url = new URL(this.options.endpoint, window.location.origin)
+		const url = new URL(this.options.endpoint, window.location.origin);
 		if (this.options.environmentKey) {
-			url.searchParams.set('key', this.options.environmentKey)
+			url.searchParams.set("key", this.options.environmentKey);
 		}
 
 		try {
-			this.eventSource = new EventSource(url.toString())
+			this.eventSource = new EventSource(url.toString());
 
 			this.eventSource.onopen = () => {
-				this.state = 'connected'
-				this.reconnectAttempts = 0
-				this.debug('Connected to stream')
-				this.startHeartbeatMonitor()
-			}
+				this.state = "connected";
+				this.reconnectAttempts = 0;
+				this.debug("Connected to stream");
+				this.startHeartbeatMonitor();
+			};
 
 			this.eventSource.onmessage = (event) => {
-				this.handleMessage(event)
-			}
+				this.handleMessage(event);
+			};
 
 			this.eventSource.onerror = (error) => {
-				this.debug('Stream error', { error })
-				this.handleDisconnect()
-			}
+				this.debug("Stream error", { error });
+				this.handleDisconnect();
+			};
 
 			// Listen for specific event types
-			this.eventSource.addEventListener('flags', (event) => {
-				this.handleFlagsMessage(event)
-			})
+			this.eventSource.addEventListener("flags", (event) => {
+				this.handleFlagsMessage(event);
+			});
 
-			this.eventSource.addEventListener('flag_update', (event) => {
-				this.handleFlagUpdate(event)
-			})
+			this.eventSource.addEventListener("flag_update", (event) => {
+				this.handleFlagUpdate(event);
+			});
 
-			this.eventSource.addEventListener('flag_delete', (event) => {
-				this.handleFlagDelete(event)
-			})
+			this.eventSource.addEventListener("flag_delete", (event) => {
+				this.handleFlagDelete(event);
+			});
 
-			this.eventSource.addEventListener('ping', () => {
-				this.resetHeartbeatMonitor()
-			})
+			this.eventSource.addEventListener("ping", () => {
+				this.resetHeartbeatMonitor();
+			});
 		} catch (error) {
-			this.debug('Failed to create EventSource', { error })
-			this.handleDisconnect()
+			this.debug("Failed to create EventSource", { error });
+			this.handleDisconnect();
 		}
 	}
 
@@ -147,39 +154,39 @@ export class FlagStream {
 	 * Disconnect from the stream
 	 */
 	disconnect(): void {
-		this.debug('Disconnecting from stream')
+		this.debug("Disconnecting from stream");
 
 		if (this.eventSource) {
-			this.eventSource.close()
-			this.eventSource = null
+			this.eventSource.close();
+			this.eventSource = null;
 		}
 
 		if (this.reconnectTimeout) {
-			clearTimeout(this.reconnectTimeout)
-			this.reconnectTimeout = null
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
 		}
 
 		if (this.heartbeatTimeout) {
-			clearTimeout(this.heartbeatTimeout)
-			this.heartbeatTimeout = null
+			clearTimeout(this.heartbeatTimeout);
+			this.heartbeatTimeout = null;
 		}
 
-		this.state = 'disconnected'
-		this.reconnectAttempts = 0
+		this.state = "disconnected";
+		this.reconnectAttempts = 0;
 	}
 
 	/**
 	 * Get current connection state
 	 */
 	getState(): ConnectionState {
-		return this.state
+		return this.state;
 	}
 
 	/**
 	 * Check if connected
 	 */
 	isConnected(): boolean {
-		return this.state === 'connected'
+		return this.state === "connected";
 	}
 
 	// ==========================================
@@ -190,16 +197,16 @@ export class FlagStream {
 	 * Subscribe to flag events
 	 */
 	subscribe(listener: (event: FlagClientEvent) => void): () => void {
-		this.listeners.add(listener)
-		return () => this.listeners.delete(listener)
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
 	}
 
 	private emit(event: FlagClientEvent): void {
 		for (const listener of this.listeners) {
 			try {
-				listener(event)
+				listener(event);
 			} catch (error) {
-				this.debug('Listener error', { error })
+				this.debug("Listener error", { error });
 			}
 		}
 	}
@@ -209,79 +216,79 @@ export class FlagStream {
 	// ==========================================
 
 	private handleMessage(event: MessageEvent): void {
-		this.resetHeartbeatMonitor()
+		this.resetHeartbeatMonitor();
 
 		try {
-			const message = JSON.parse(event.data) as StreamMessage
+			const message = JSON.parse(event.data) as StreamMessage;
 
 			switch (message.type) {
-				case 'flags':
-					this.handleFlagsData((message as FlagsMessage).data)
-					break
-				case 'flag_update':
-					this.handleFlagUpdateData((message as FlagUpdateMessage).data)
-					break
-				case 'flag_delete':
-					this.handleFlagDeleteData((message as FlagDeleteMessage).data)
-					break
-				case 'ping':
+				case "flags":
+					this.handleFlagsData((message as FlagsMessage).data);
+					break;
+				case "flag_update":
+					this.handleFlagUpdateData((message as FlagUpdateMessage).data);
+					break;
+				case "flag_delete":
+					this.handleFlagDeleteData((message as FlagDeleteMessage).data);
+					break;
+				case "ping":
 					// Just reset heartbeat (already done above)
-					break
-				case 'error':
-					this.emit({ type: 'error', error: (message as ErrorMessage).data })
-					break
+					break;
+				case "error":
+					this.emit({ type: "error", error: (message as ErrorMessage).data });
+					break;
 			}
 		} catch (error) {
-			this.debug('Failed to parse message', { error, data: event.data })
+			this.debug("Failed to parse message", { error, data: event.data });
 		}
 	}
 
 	private handleFlagsMessage(event: MessageEvent): void {
-		this.resetHeartbeatMonitor()
+		this.resetHeartbeatMonitor();
 		try {
-			const flags = JSON.parse(event.data) as FlagDefinition[]
-			this.handleFlagsData(flags)
+			const flags = JSON.parse(event.data) as FlagDefinition[];
+			this.handleFlagsData(flags);
 		} catch (error) {
-			this.debug('Failed to parse flags message', { error })
+			this.debug("Failed to parse flags message", { error });
 		}
 	}
 
 	private handleFlagsData(flags: FlagDefinition[]): void {
-		this.evaluator.setFlags(flags)
-		this.emit({ type: 'ready', flags })
-		this.debug('Received initial flags', { count: flags.length })
+		this.evaluator.setFlags(flags);
+		this.emit({ type: "ready", flags });
+		this.debug("Received initial flags", { count: flags.length });
 	}
 
 	private handleFlagUpdate(event: MessageEvent): void {
-		this.resetHeartbeatMonitor()
+		this.resetHeartbeatMonitor();
 		try {
-			const flag = JSON.parse(event.data) as FlagDefinition
-			this.handleFlagUpdateData(flag)
+			const flag = JSON.parse(event.data) as FlagDefinition;
+			this.handleFlagUpdateData(flag);
 		} catch (error) {
-			this.debug('Failed to parse flag update', { error })
+			this.debug("Failed to parse flag update", { error });
 		}
 	}
 
 	private handleFlagUpdateData(flag: FlagDefinition): void {
-		this.evaluator.updateFlag(flag)
-		this.emit({ type: 'updated', flags: this.evaluator.getFlags() })
-		this.debug('Flag updated', { key: flag.key })
+		this.evaluator.updateFlag(flag);
+		this.emit({ type: "updated", flags: this.evaluator.getFlags() });
+		this.debug("Flag updated", { key: flag.key });
 	}
 
 	private handleFlagDelete(event: MessageEvent): void {
-		this.resetHeartbeatMonitor()
+		this.resetHeartbeatMonitor();
 		try {
-			const data = JSON.parse(event.data) as { key: string }
-			this.handleFlagDeleteData(data)
+			const data = JSON.parse(event.data) as { key: string };
+			this.handleFlagDeleteData(data);
 		} catch (error) {
-			this.debug('Failed to parse flag delete', { error })
+			this.debug("Failed to parse flag delete", { error });
 		}
 	}
 
 	private handleFlagDeleteData(data: { key: string }): void {
-		this.evaluator.removeFlag(data.key)
-		this.emit({ type: 'updated', flags: this.evaluator.getFlags() })
-		this.debug('Flag deleted', { key: data.key })
+		this.evaluator.removeFlag(data.key);
+		this.emit({ type: "updated", flags: this.evaluator.getFlags() });
+		this.debug("Flag deleted", { key: data.key });
 	}
 
 	// ==========================================
@@ -290,49 +297,49 @@ export class FlagStream {
 
 	private handleDisconnect(): void {
 		if (this.eventSource) {
-			this.eventSource.close()
-			this.eventSource = null
+			this.eventSource.close();
+			this.eventSource = null;
 		}
 
-		this.stopHeartbeatMonitor()
+		this.stopHeartbeatMonitor();
 
 		if (
 			this.options.maxReconnectAttempts > 0 &&
 			this.reconnectAttempts >= this.options.maxReconnectAttempts
 		) {
-			this.state = 'disconnected'
+			this.state = "disconnected";
 			this.emit({
-				type: 'error',
+				type: "error",
 				error: {
-					code: 'NETWORK_ERROR',
-					message: 'Max reconnection attempts reached',
+					code: "NETWORK_ERROR",
+					message: "Max reconnection attempts reached",
 				},
-			})
-			return
+			});
+			return;
 		}
 
-		this.state = 'reconnecting'
-		this.scheduleReconnect()
+		this.state = "reconnecting";
+		this.scheduleReconnect();
 	}
 
 	private scheduleReconnect(): void {
 		// Calculate delay with exponential backoff + jitter
 		const baseDelay = Math.min(
 			this.options.initialReconnectDelay * Math.pow(2, this.reconnectAttempts),
-			this.options.maxReconnectDelay
-		)
-		const jitter = Math.random() * baseDelay * 0.3
-		const delay = Math.floor(baseDelay + jitter)
+			this.options.maxReconnectDelay,
+		);
+		const jitter = Math.random() * baseDelay * 0.3;
+		const delay = Math.floor(baseDelay + jitter);
 
-		this.debug('Scheduling reconnect', {
+		this.debug("Scheduling reconnect", {
 			attempt: this.reconnectAttempts + 1,
 			delay,
-		})
+		});
 
 		this.reconnectTimeout = setTimeout(() => {
-			this.reconnectAttempts++
-			this.connect()
-		}, delay)
+			this.reconnectAttempts++;
+			this.connect();
+		}, delay);
 	}
 
 	// ==========================================
@@ -340,25 +347,25 @@ export class FlagStream {
 	// ==========================================
 
 	private startHeartbeatMonitor(): void {
-		this.resetHeartbeatMonitor()
+		this.resetHeartbeatMonitor();
 	}
 
 	private resetHeartbeatMonitor(): void {
 		if (this.heartbeatTimeout) {
-			clearTimeout(this.heartbeatTimeout)
+			clearTimeout(this.heartbeatTimeout);
 		}
 
 		this.heartbeatTimeout = setTimeout(() => {
-			this.debug('Heartbeat timeout - reconnecting')
-			this.emit({ type: 'stale' })
-			this.handleDisconnect()
-		}, this.options.heartbeatTimeout)
+			this.debug("Heartbeat timeout - reconnecting");
+			this.emit({ type: "stale" });
+			this.handleDisconnect();
+		}, this.options.heartbeatTimeout);
 	}
 
 	private stopHeartbeatMonitor(): void {
 		if (this.heartbeatTimeout) {
-			clearTimeout(this.heartbeatTimeout)
-			this.heartbeatTimeout = null
+			clearTimeout(this.heartbeatTimeout);
+			this.heartbeatTimeout = null;
 		}
 	}
 
@@ -368,7 +375,7 @@ export class FlagStream {
 
 	private debug(message: string, data?: unknown): void {
 		if (this.options.debug) {
-			console.log(`[FlagStream] ${message}`, data ?? '')
+			console.log(`[FlagStream] ${message}`, data ?? "");
 		}
 	}
 }
@@ -382,9 +389,9 @@ export class FlagStream {
  */
 export function createFlagStream(
 	evaluator: LocalEvaluator,
-	options: StreamingOptions
+	options: StreamingOptions,
 ): FlagStream {
-	return new FlagStream(evaluator, options)
+	return new FlagStream(evaluator, options);
 }
 
 // ==========================================
@@ -396,24 +403,24 @@ export function createFlagStream(
  */
 export async function fetchFlags(
 	endpoint: string,
-	environmentKey?: string
+	environmentKey?: string,
 ): Promise<FlagDefinition[]> {
-	const url = new URL(endpoint)
+	const url = new URL(endpoint);
 	if (environmentKey) {
-		url.searchParams.set('key', environmentKey)
+		url.searchParams.set("key", environmentKey);
 	}
 
 	const response = await fetch(url.toString(), {
 		headers: {
-			Accept: 'application/json',
+			Accept: "application/json",
 		},
-	})
+	});
 
 	if (!response.ok) {
-		throw new Error(`Failed to fetch flags: ${response.status}`)
+		throw new Error(`Failed to fetch flags: ${response.status}`);
 	}
 
-	return response.json()
+	return response.json();
 }
 
 /**
@@ -423,28 +430,32 @@ export function pollFlags(
 	evaluator: LocalEvaluator,
 	endpoint: string,
 	options: {
-		environmentKey?: string
-		interval?: number
-		onError?: (error: Error) => void
-	} = {}
+		environmentKey?: string;
+		interval?: number;
+		onError?: (error: Error) => void;
+	} = {},
 ): () => void {
-	const { environmentKey, interval = FLAGS_HTTP_POLLING_INTERVAL_MS, onError } = options
+	const {
+		environmentKey,
+		interval = FLAGS_HTTP_POLLING_INTERVAL_MS,
+		onError,
+	} = options;
 
 	const poll = async () => {
 		try {
-			const flags = await fetchFlags(endpoint, environmentKey)
-			evaluator.setFlags(flags)
+			const flags = await fetchFlags(endpoint, environmentKey);
+			evaluator.setFlags(flags);
 		} catch (error) {
-			onError?.(error as Error)
+			onError?.(error as Error);
 		}
-	}
+	};
 
 	// Initial fetch
-	void poll()
+	void poll();
 
 	// Set up polling
-	const intervalId = setInterval(poll, interval)
+	const intervalId = setInterval(poll, interval);
 
 	// Return cleanup function
-	return () => clearInterval(intervalId)
+	return () => clearInterval(intervalId);
 }

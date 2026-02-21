@@ -12,42 +12,43 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type ScheduleJobRequest = components['schemas']['ScheduleJobRequest']
-export type ScheduleJobResponse = components['schemas']['ScheduleJobResponse']
-export type ScheduleCronRequest = components['schemas']['ScheduleCronRequest']
-export type ScheduleCronResponse = components['schemas']['ScheduleCronResponse']
-export type Job = components['schemas']['Job']
-export type ListJobsResponse = components['schemas']['ListJobsResponse']
+export type ScheduleJobRequest = components["schemas"]["ScheduleJobRequest"];
+export type ScheduleJobResponse = components["schemas"]["ScheduleJobResponse"];
+export type ScheduleCronRequest = components["schemas"]["ScheduleCronRequest"];
+export type ScheduleCronResponse =
+	components["schemas"]["ScheduleCronResponse"];
+export type Job = components["schemas"]["Job"];
+export type ListJobsResponse = components["schemas"]["ListJobsResponse"];
 
 // SDK-specific types for convenience
 export interface JobInput {
 	/** Callback URL to call when job executes */
-	callbackUrl: string
+	callbackUrl: string;
 	/** Job name/type */
-	name?: string
+	name?: string;
 	/** Job type for categorization */
-	type?: string
+	type?: string;
 	/** Job payload sent to callback */
-	payload?: Record<string, unknown>
+	payload?: Record<string, unknown>;
 	/** HTTP method for callback (default: POST) */
-	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+	method?: "GET" | "POST" | "PUT" | "DELETE";
 	/** Additional headers for callback */
-	headers?: Record<string, string>
+	headers?: Record<string, string>;
 	/** Delay before executing (in seconds, max 604800 = 7 days) */
-	delay?: number
+	delay?: number;
 	/** Schedule for later (ISO timestamp) */
-	scheduledFor?: string
+	scheduledFor?: string;
 	/** Number of retries on failure (0-5, default: 3) */
-	retries?: number
+	retries?: number;
 	/** Request timeout in seconds (1-300, default: 30) */
-	timeout?: number
+	timeout?: number;
 	/**
 	 * Idempotency key for safe retries (Stripe/Inngest pattern).
 	 *
@@ -67,50 +68,56 @@ export interface JobInput {
 	 * })
 	 * ```
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 export interface JobResult {
 	/** Job ID */
-	jobId: string
+	jobId: string;
 	/** QStash message ID */
-	messageId?: string
+	messageId?: string;
 	/** Scheduled execution time */
-	scheduledFor?: string
+	scheduledFor?: string;
 }
 
 export interface JobStatus {
-	id: string
-	name?: string
-	status: 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
-	payload?: Record<string, unknown>
-	result?: unknown
-	error?: string
-	createdAt: string
-	queuedAt?: string
-	startedAt?: string
-	completedAt?: string
+	id: string;
+	name?: string;
+	status:
+		| "pending"
+		| "queued"
+		| "running"
+		| "completed"
+		| "failed"
+		| "cancelled";
+	payload?: Record<string, unknown>;
+	result?: unknown;
+	error?: string;
+	createdAt: string;
+	queuedAt?: string;
+	startedAt?: string;
+	completedAt?: string;
 }
 
 export interface CronInput {
 	/** Callback URL to call on each cron trigger */
-	callbackUrl: string
+	callbackUrl: string;
 	/** Cron expression (e.g., '0 0 * * *' for daily at midnight) */
-	cron: string
+	cron: string;
 	/** Job name (required, max 200 chars) */
-	name: string
+	name: string;
 	/** Job type for categorization */
-	type?: string
+	type?: string;
 	/** Job payload sent to callback */
-	payload?: Record<string, unknown>
+	payload?: Record<string, unknown>;
 	/** HTTP method for callback (default: POST) */
-	method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
+	method?: "GET" | "POST" | "PUT" | "DELETE";
 	/** Additional headers for callback */
-	headers?: Record<string, string>
+	headers?: Record<string, string>;
 	/** Number of retries on failure (0-5, default: 3) */
-	retries?: number
+	retries?: number;
 	/** Start in paused state */
-	paused?: boolean
+	paused?: boolean;
 	/**
 	 * Idempotency key for safe cron creation (Stripe/Inngest pattern).
 	 *
@@ -128,18 +135,18 @@ export interface CronInput {
 	 * })
 	 * ```
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 export interface CronSchedule {
 	/** Internal job ID */
-	jobId?: string
+	jobId?: string;
 	/** QStash schedule ID */
-	scheduleId: string
+	scheduleId: string;
 	/** Cron expression */
-	cron: string
+	cron: string;
 	/** Whether currently paused */
-	paused: boolean
+	paused: boolean;
 }
 
 // ============================================================================
@@ -161,8 +168,14 @@ export interface CronSchedule {
  * console.log(`Job scheduled: ${job.jobId}`)
  * ```
  */
-export async function scheduleJob(config: SylphxConfig, input: JobInput): Promise<JobResult> {
-	return callApi<JobResult>(config, '/jobs/schedule', { method: 'POST', body: input })
+export async function scheduleJob(
+	config: SylphxConfig,
+	input: JobInput,
+): Promise<JobResult> {
+	return callApi<JobResult>(config, "/jobs/schedule", {
+		method: "POST",
+		body: input,
+	});
 }
 
 /**
@@ -174,8 +187,11 @@ export async function scheduleJob(config: SylphxConfig, input: JobInput): Promis
  * console.log(job.status) // 'completed'
  * ```
  */
-export async function getJob(config: SylphxConfig, jobId: string): Promise<JobStatus> {
-	return callApi<JobStatus>(config, `/jobs/${jobId}`, { method: 'GET' })
+export async function getJob(
+	config: SylphxConfig,
+	jobId: string,
+): Promise<JobStatus> {
+	return callApi<JobStatus>(config, `/jobs/${jobId}`, { method: "GET" });
 }
 
 /**
@@ -186,11 +202,18 @@ export async function getJob(config: SylphxConfig, jobId: string): Promise<JobSt
  * await cancelJob(config, 'job-123')
  * ```
  */
-export async function cancelJob(config: SylphxConfig, jobId: string): Promise<boolean> {
-	const result = await callApi<{ success: boolean }>(config, `/jobs/${jobId}/cancel`, {
-		method: 'POST',
-	})
-	return result.success
+export async function cancelJob(
+	config: SylphxConfig,
+	jobId: string,
+): Promise<boolean> {
+	const result = await callApi<{ success: boolean }>(
+		config,
+		`/jobs/${jobId}/cancel`,
+		{
+			method: "POST",
+		},
+	);
+	return result.success;
 }
 
 /**
@@ -203,12 +226,12 @@ export async function cancelJob(config: SylphxConfig, jobId: string): Promise<bo
  */
 export async function listJobs(
 	config: SylphxConfig,
-	options?: { status?: JobStatus['status']; limit?: number; offset?: number }
+	options?: { status?: JobStatus["status"]; limit?: number; offset?: number },
 ): Promise<{ jobs: JobStatus[]; total: number }> {
-	return callApi(config, '/jobs', {
-		method: 'GET',
+	return callApi(config, "/jobs", {
+		method: "GET",
 		query: options as Record<string, string | number | undefined>,
-	})
+	});
 }
 
 /**
@@ -226,8 +249,14 @@ export async function listJobs(
  * console.log(`Cron created: ${cron.scheduleId}`)
  * ```
  */
-export async function createCron(config: SylphxConfig, input: CronInput): Promise<CronSchedule> {
-	return callApi<CronSchedule>(config, '/jobs/cron', { method: 'POST', body: input })
+export async function createCron(
+	config: SylphxConfig,
+	input: CronInput,
+): Promise<CronSchedule> {
+	return callApi<CronSchedule>(config, "/jobs/cron", {
+		method: "POST",
+		body: input,
+	});
 }
 
 /**
@@ -238,11 +267,18 @@ export async function createCron(config: SylphxConfig, input: CronInput): Promis
  * await pauseCron(config, 'schedule-123')
  * ```
  */
-export async function pauseCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}/pause`, {
-		method: 'POST',
-	})
-	return result.success
+export async function pauseCron(
+	config: SylphxConfig,
+	scheduleId: string,
+): Promise<boolean> {
+	const result = await callApi<{ success: boolean }>(
+		config,
+		`/jobs/cron/${scheduleId}/pause`,
+		{
+			method: "POST",
+		},
+	);
+	return result.success;
 }
 
 /**
@@ -253,11 +289,18 @@ export async function pauseCron(config: SylphxConfig, scheduleId: string): Promi
  * await resumeCron(config, 'schedule-123')
  * ```
  */
-export async function resumeCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}/resume`, {
-		method: 'POST',
-	})
-	return result.success
+export async function resumeCron(
+	config: SylphxConfig,
+	scheduleId: string,
+): Promise<boolean> {
+	const result = await callApi<{ success: boolean }>(
+		config,
+		`/jobs/cron/${scheduleId}/resume`,
+		{
+			method: "POST",
+		},
+	);
+	return result.success;
 }
 
 /**
@@ -268,9 +311,16 @@ export async function resumeCron(config: SylphxConfig, scheduleId: string): Prom
  * await deleteCron(config, 'schedule-123')
  * ```
  */
-export async function deleteCron(config: SylphxConfig, scheduleId: string): Promise<boolean> {
-	const result = await callApi<{ success: boolean }>(config, `/jobs/cron/${scheduleId}`, {
-		method: 'DELETE',
-	})
-	return result.success
+export async function deleteCron(
+	config: SylphxConfig,
+	scheduleId: string,
+): Promise<boolean> {
+	const result = await callApi<{ success: boolean }>(
+		config,
+		`/jobs/cron/${scheduleId}`,
+		{
+			method: "DELETE",
+		},
+	);
+	return result.success;
 }

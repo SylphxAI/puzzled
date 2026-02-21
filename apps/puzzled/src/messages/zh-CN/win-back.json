@@ -1,34 +1,34 @@
 {
-  "day7": {
-    "subject": "我们想念您！",
-    "title": "我们想念您！",
-    "body": "我们注意到您有一段时间没有玩了。您的谜题正在等您！",
-    "whatYoureMissing": "您错过的内容：",
-    "cta": "立即游戏"
-  },
-  "day14": {
-    "subject": "Puzzled 有新内容了！",
-    "title": "新谜题在等您！",
-    "body": "已经有几周没见到您了。我们一直在为您创建新挑战！",
-    "whatsNew": "新内容：",
-    "cta": "查看新内容"
-  },
-  "day30": {
-    "subject": "Premium 5折优惠，欢迎回来！",
-    "title": "专为您准备的特别优惠！",
-    "offer": "Premium 5折优惠",
-    "subtitle": "我们希望您回来",
-    "body": "我们很想念您作为 Puzzled 社区的一员！作为对尊贵会员的特别感谢，我们为您提供 Premium 首月5折优惠。",
-    "premiumBenefits": "Premium 福利：",
-    "fullArchive": "完整谜题存档 - 随时访问过去的每日谜题",
-    "streakProtection": "连胜冻结保护 - 永不丢失进度",
-    "advancedStats": "高级统计 - 追踪您的改进",
-    "leaderboardAccess": "排行榜访问 - 与其他玩家竞争",
-    "adFree": "无广告体验 - 纯粹、不间断的游戏体验",
-    "discountCode": "您的专属折扣码：",
-    "expiresWarning": "此优惠将在7天后过期！",
-    "cta": "领取5折优惠",
-    "noObligations": "无任何义务。随时取消。",
-    "unsubscribe": "取消订阅召回邮件"
-  }
+	"day7": {
+		"subject": "我们想念您！",
+		"title": "我们想念您！",
+		"body": "我们注意到您有一段时间没有玩了。您的谜题正在等您！",
+		"whatYoureMissing": "您错过的内容：",
+		"cta": "立即游戏"
+	},
+	"day14": {
+		"subject": "Puzzled 有新内容了！",
+		"title": "新谜题在等您！",
+		"body": "已经有几周没见到您了。我们一直在为您创建新挑战！",
+		"whatsNew": "新内容：",
+		"cta": "查看新内容"
+	},
+	"day30": {
+		"subject": "Premium 5折优惠，欢迎回来！",
+		"title": "专为您准备的特别优惠！",
+		"offer": "Premium 5折优惠",
+		"subtitle": "我们希望您回来",
+		"body": "我们很想念您作为 Puzzled 社区的一员！作为对尊贵会员的特别感谢，我们为您提供 Premium 首月5折优惠。",
+		"premiumBenefits": "Premium 福利：",
+		"fullArchive": "完整谜题存档 - 随时访问过去的每日谜题",
+		"streakProtection": "连胜冻结保护 - 永不丢失进度",
+		"advancedStats": "高级统计 - 追踪您的改进",
+		"leaderboardAccess": "排行榜访问 - 与其他玩家竞争",
+		"adFree": "无广告体验 - 纯粹、不间断的游戏体验",
+		"discountCode": "您的专属折扣码：",
+		"expiresWarning": "此优惠将在7天后过期！",
+		"cta": "领取5折优惠",
+		"noObligations": "无任何义务。随时取消。",
+		"unsubscribe": "取消订阅召回邮件"
+	}
 }

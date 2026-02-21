@@ -5,36 +5,36 @@
  * Shows plan name, status, renewal date, and upgrade CTA.
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect } from 'react'
-import { RequireSdk } from '../hooks'
-import { useBilling } from '../platform-hooks'
+import { useCallback, useEffect, useState } from "react";
+import { RequireSdk } from "../hooks";
+import { useBilling } from "../platform-hooks";
 import {
 	type ThemeVariables,
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from '../ui/styles'
+	mergeStyles,
+} from "../ui/styles";
 
 export interface BillingCardProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** URL to pricing page */
-	pricingUrl?: string
+	pricingUrl?: string;
 	/** Show manage subscription button */
-	showManageButton?: boolean
+	showManageButton?: boolean;
 	/** Show upgrade CTA for free users */
-	showUpgradeCta?: boolean
+	showUpgradeCta?: boolean;
 	/** Callback when portal is opened */
-	onPortalOpen?: () => void
+	onPortalOpen?: () => void;
 	/** Callback on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Card variant */
-	variant?: 'default' | 'compact' | 'detailed'
+	variant?: "default" | "compact" | "detailed";
 }
 
 /**
@@ -50,132 +50,150 @@ export interface BillingCardProps {
  */
 export function BillingCard(props: BillingCardProps) {
 	return (
-		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+		<RequireSdk
+			services={["billing"]}
+			componentType="billing"
+			theme={props.theme}
+		>
 			<BillingCardInner {...props} />
 		</RequireSdk>
-	)
+	);
 }
 
 /** Inner component that safely uses platform hooks */
 function BillingCardInner({
 	theme = defaultTheme,
-	pricingUrl = '/pricing',
+	pricingUrl = "/pricing",
 	showManageButton = true,
 	showUpgradeCta = true,
 	onPortalOpen,
 	onError,
 	className,
-	variant = 'default',
+	variant = "default",
 }: BillingCardProps) {
-	const { subscription, isLoading, isPremium, isTrialing, openPortal, plans } = useBilling()
-	const styles = baseStyles(theme)
+	const { subscription, isLoading, isPremium, isTrialing, openPortal, plans } =
+		useBilling();
+	const styles = baseStyles(theme);
 
-	const [isOpeningPortal, setIsOpeningPortal] = useState(false)
+	const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	const handleManageSubscription = useCallback(async () => {
-		setIsOpeningPortal(true)
-		onPortalOpen?.()
+		setIsOpeningPortal(true);
+		onPortalOpen?.();
 
 		try {
-			await openPortal()
+			await openPortal();
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to open billing portal'
-			onError?.(message)
+			const message =
+				err instanceof Error ? err.message : "Failed to open billing portal";
+			onError?.(message);
 		} finally {
-			setIsOpeningPortal(false)
+			setIsOpeningPortal(false);
 		}
-	}, [openPortal, onPortalOpen, onError])
+	}, [openPortal, onPortalOpen, onError]);
 
 	if (isLoading) {
 		return (
 			<div style={styles.card} className={className}>
-				<div style={mergeStyles(styles.cardContent, styles.flexCenter, { padding: '2rem' })}>
-					<span style={mergeStyles(styles.spinner, { width: '1.5rem', height: '1.5rem' })} />
+				<div
+					style={mergeStyles(styles.cardContent, styles.flexCenter, {
+						padding: "2rem",
+					})}
+				>
+					<span
+						style={mergeStyles(styles.spinner, {
+							width: "1.5rem",
+							height: "1.5rem",
+						})}
+					/>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	// Get status badge color
 	const getStatusBadge = () => {
-		if (!subscription) return null
+		if (!subscription) return null;
 
-		const statusConfig: Record<string, { bg: string; color: string; label: string }> = {
+		const statusConfig: Record<
+			string,
+			{ bg: string; color: string; label: string }
+		> = {
 			active: {
 				bg: `${theme.colorSuccess}15`,
 				color: theme.colorSuccess,
-				label: 'Active',
+				label: "Active",
 			},
 			trialing: {
 				bg: `${theme.colorPrimary}15`,
 				color: theme.colorPrimary,
-				label: 'Trial',
+				label: "Trial",
 			},
 			past_due: {
 				bg: `${theme.colorWarning}15`,
 				color: theme.colorWarning,
-				label: 'Past Due',
+				label: "Past Due",
 			},
 			canceled: {
 				bg: `${theme.colorMutedForeground}15`,
 				color: theme.colorMutedForeground,
-				label: 'Canceled',
+				label: "Canceled",
 			},
 			unpaid: {
 				bg: `${theme.colorDestructive}15`,
 				color: theme.colorDestructive,
-				label: 'Unpaid',
+				label: "Unpaid",
 			},
-		}
+		};
 
-		const config = statusConfig[subscription.status] || statusConfig.active
+		const config = statusConfig[subscription.status] || statusConfig.active;
 		return (
 			<span
 				style={{
-					display: 'inline-flex',
-					alignItems: 'center',
-					padding: '0.125rem 0.5rem',
+					display: "inline-flex",
+					alignItems: "center",
+					padding: "0.125rem 0.5rem",
 					fontSize: theme.fontSizeXs,
 					fontWeight: 500,
-					borderRadius: '9999px',
+					borderRadius: "9999px",
 					backgroundColor: config.bg,
 					color: config.color,
 				}}
 			>
 				{config.label}
 			</span>
-		)
-	}
+		);
+	};
 
 	// Format date
 	const formatDate = (dateStr: string | null | undefined) => {
-		if (!dateStr) return 'N/A'
+		if (!dateStr) return "N/A";
 		return new Date(dateStr).toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-		})
-	}
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+		});
+	};
 
 	// Compact variant
-	if (variant === 'compact') {
+	if (variant === "compact") {
 		return (
 			<div
 				style={mergeStyles(styles.flexBetween, {
-					padding: '0.75rem 1rem',
+					padding: "0.75rem 1rem",
 					backgroundColor: theme.colorMuted,
 					borderRadius: theme.borderRadius,
 				})}
 				className={className}
 			>
 				<div style={styles.flexRow}>
-					<span style={{ fontWeight: 500, marginRight: '0.5rem' }}>
-						{subscription?.planSlug || 'Free'}
+					<span style={{ fontWeight: 500, marginRight: "0.5rem" }}>
+						{subscription?.planSlug || "Free"}
 					</span>
 					{getStatusBadge()}
 				</div>
@@ -186,14 +204,14 @@ function BillingCardInner({
 						disabled={isOpeningPortal}
 						style={mergeStyles(styles.link, { fontSize: theme.fontSizeSm })}
 					>
-						{isOpeningPortal ? 'Opening...' : 'Manage'}
+						{isOpeningPortal ? "Opening..." : "Manage"}
 					</button>
 				)}
 				{!isPremium && showUpgradeCta && (
 					<a
 						href={pricingUrl}
 						style={mergeStyles(styles.button, styles.buttonPrimary, {
-							padding: '0.25rem 0.75rem',
+							padding: "0.25rem 0.75rem",
 							fontSize: theme.fontSizeXs,
 						})}
 					>
@@ -201,21 +219,33 @@ function BillingCardInner({
 					</a>
 				)}
 			</div>
-		)
+		);
 	}
 
 	// Free user - show upgrade CTA
 	if (!isPremium && showUpgradeCta) {
 		// Find the best plan to highlight (first paid plan or 'pro')
-		const highlightPlan = plans.find((p) => p.slug === 'pro') || plans.find((p) => (p.priceMonthly ?? 0) > 0)
+		const highlightPlan =
+			plans.find((p) => p.slug === "pro") ||
+			plans.find((p) => (p.priceMonthly ?? 0) > 0);
 
 		return (
 			<div style={styles.card} className={className}>
 				<div style={styles.cardContent}>
 					<div style={styles.flexBetween}>
 						<div>
-							<h3 style={mergeStyles(styles.cardTitle, { marginBottom: '0.25rem' })}>Free Plan</h3>
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: 0 })}>
+							<h3
+								style={mergeStyles(styles.cardTitle, {
+									marginBottom: "0.25rem",
+								})}
+							>
+								Free Plan
+							</h3>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: 0,
+								})}
+							>
 								Upgrade to unlock premium features
 							</p>
 						</div>
@@ -224,49 +254,56 @@ function BillingCardInner({
 
 					<div
 						style={{
-							marginTop: '1rem',
-							padding: '0.75rem',
+							marginTop: "1rem",
+							padding: "0.75rem",
 							backgroundColor: theme.colorMuted,
 							borderRadius: theme.borderRadius,
 						}}
 					>
 						<ul
 							style={{
-								listStyle: 'none',
+								listStyle: "none",
 								padding: 0,
 								margin: 0,
 								fontSize: theme.fontSizeSm,
 							}}
 						>
-							{highlightPlan?.features?.slice(0, 3).map((feature: string, i: number) => (
-								<li
-									key={i}
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '0.5rem',
-										marginBottom: '0.5rem',
-									}}
-								>
-									<CheckIcon color={theme.colorSuccess} size={16} />
-									{feature}
-								</li>
-							))}
+							{highlightPlan?.features
+								?.slice(0, 3)
+								.map((feature: string, i: number) => (
+									<li
+										key={i}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: "0.5rem",
+											marginBottom: "0.5rem",
+										}}
+									>
+										<CheckIcon color={theme.colorSuccess} size={16} />
+										{feature}
+									</li>
+								))}
 						</ul>
 					</div>
 
 					<a
 						href={pricingUrl}
-						style={mergeStyles(styles.button, styles.buttonPrimary, styles.buttonFullWidth, {
-							marginTop: '1rem',
-						})}
+						style={mergeStyles(
+							styles.button,
+							styles.buttonPrimary,
+							styles.buttonFullWidth,
+							{
+								marginTop: "1rem",
+							},
+						)}
 					>
 						<SparklesIcon size={16} />
 						Upgrade Now
 					</a>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	// Premium user - show subscription details
@@ -274,16 +311,25 @@ function BillingCardInner({
 		<div style={styles.card} className={className}>
 			<div style={styles.cardContent}>
 				{/* Header */}
-				<div style={mergeStyles(styles.flexBetween, { marginBottom: '1rem' })}>
+				<div style={mergeStyles(styles.flexBetween, { marginBottom: "1rem" })}>
 					<div>
-						<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', alignItems: 'center' })}>
+						<div
+							style={mergeStyles(styles.flexRow, {
+								gap: "0.5rem",
+								alignItems: "center",
+							})}
+						>
 							<h3 style={mergeStyles(styles.cardTitle, { margin: 0 })}>
-								{subscription?.planSlug || 'Free'}
+								{subscription?.planSlug || "Free"}
 							</h3>
 							{getStatusBadge()}
 						</div>
 						{subscription?.interval && (
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0.25rem 0 0' })}>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: "0.25rem 0 0",
+								})}
+							>
 								Billed {subscription.interval}
 							</p>
 						)}
@@ -292,29 +338,49 @@ function BillingCardInner({
 				</div>
 
 				{/* Detailed variant - show more info */}
-				{variant === 'detailed' && subscription && (
+				{variant === "detailed" && subscription && (
 					<div
 						style={{
-							display: 'grid',
-							gridTemplateColumns: 'repeat(2, 1fr)',
-							gap: '1rem',
-							marginBottom: '1rem',
-							padding: '1rem',
+							display: "grid",
+							gridTemplateColumns: "repeat(2, 1fr)",
+							gap: "1rem",
+							marginBottom: "1rem",
+							padding: "1rem",
 							backgroundColor: theme.colorMuted,
 							borderRadius: theme.borderRadius,
 						}}
 					>
 						<div>
-							<p style={mergeStyles(styles.textXs, styles.textMuted, { margin: 0 })}>Plan</p>
-							<p style={mergeStyles(styles.textSm, { margin: '0.25rem 0 0', fontWeight: 500 })}>
+							<p
+								style={mergeStyles(styles.textXs, styles.textMuted, {
+									margin: 0,
+								})}
+							>
+								Plan
+							</p>
+							<p
+								style={mergeStyles(styles.textSm, {
+									margin: "0.25rem 0 0",
+									fontWeight: 500,
+								})}
+							>
 								{subscription.planSlug}
 							</p>
 						</div>
 						<div>
-							<p style={mergeStyles(styles.textXs, styles.textMuted, { margin: 0 })}>
-								{subscription.cancelAtPeriodEnd ? 'Ends' : 'Renews'}
+							<p
+								style={mergeStyles(styles.textXs, styles.textMuted, {
+									margin: 0,
+								})}
+							>
+								{subscription.cancelAtPeriodEnd ? "Ends" : "Renews"}
 							</p>
-							<p style={mergeStyles(styles.textSm, { margin: '0.25rem 0 0', fontWeight: 500 })}>
+							<p
+								style={mergeStyles(styles.textSm, {
+									margin: "0.25rem 0 0",
+									fontWeight: 500,
+								})}
+							>
 								{formatDate(subscription.currentPeriodEnd)}
 							</p>
 						</div>
@@ -325,16 +391,26 @@ function BillingCardInner({
 				{isTrialing && subscription?.trialEnd && (
 					<div
 						style={{
-							marginBottom: '1rem',
-							padding: '0.75rem',
+							marginBottom: "1rem",
+							padding: "0.75rem",
 							backgroundColor: `${theme.colorPrimary}10`,
 							borderRadius: theme.borderRadius,
 							border: `1px solid ${theme.colorPrimary}30`,
 						}}
 					>
-						<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', alignItems: 'center' })}>
+						<div
+							style={mergeStyles(styles.flexRow, {
+								gap: "0.5rem",
+								alignItems: "center",
+							})}
+						>
 							<ClockIcon color={theme.colorPrimary} size={16} />
-							<span style={{ fontSize: theme.fontSizeSm, color: theme.colorPrimary }}>
+							<span
+								style={{
+									fontSize: theme.fontSizeSm,
+									color: theme.colorPrimary,
+								}}
+							>
 								Trial ends {formatDate(subscription.trialEnd)}
 							</span>
 						</div>
@@ -345,17 +421,28 @@ function BillingCardInner({
 				{subscription?.cancelAtPeriodEnd && (
 					<div
 						style={{
-							marginBottom: '1rem',
-							padding: '0.75rem',
+							marginBottom: "1rem",
+							padding: "0.75rem",
 							backgroundColor: `${theme.colorWarning}10`,
 							borderRadius: theme.borderRadius,
 							border: `1px solid ${theme.colorWarning}30`,
 						}}
 					>
-						<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', alignItems: 'center' })}>
+						<div
+							style={mergeStyles(styles.flexRow, {
+								gap: "0.5rem",
+								alignItems: "center",
+							})}
+						>
 							<AlertIcon color={theme.colorWarning} size={16} />
-							<span style={{ fontSize: theme.fontSizeSm, color: theme.colorWarning }}>
-								Your subscription will end on {formatDate(subscription.currentPeriodEnd)}
+							<span
+								style={{
+									fontSize: theme.fontSizeSm,
+									color: theme.colorWarning,
+								}}
+							>
+								Your subscription will end on{" "}
+								{formatDate(subscription.currentPeriodEnd)}
 							</span>
 						</div>
 					</div>
@@ -371,7 +458,7 @@ function BillingCardInner({
 							styles.button,
 							styles.buttonOutline,
 							styles.buttonFullWidth,
-							isOpeningPortal ? styles.buttonDisabled : {}
+							isOpeningPortal ? styles.buttonDisabled : {},
 						)}
 					>
 						{isOpeningPortal ? (
@@ -389,7 +476,7 @@ function BillingCardInner({
 				)}
 			</div>
 		</div>
-	)
+	);
 }
 
 // Icons
@@ -405,7 +492,7 @@ function CrownIcon({ color, size = 24 }: { color: string; size?: number }) {
 		>
 			<path d="M2 4l3 12h14l3-12-6 7-4-9-4 9-6-7zm3 14h14v2H5v-2z" />
 		</svg>
-	)
+	);
 }
 
 function SparklesIcon({ size = 24 }: { size?: number }) {
@@ -427,7 +514,7 @@ function SparklesIcon({ size = 24 }: { size?: number }) {
 			<path d="M3 5h4" />
 			<path d="M17 19h4" />
 		</svg>
-	)
+	);
 }
 
 function CheckIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -445,7 +532,7 @@ function CheckIcon({ color, size = 24 }: { color: string; size?: number }) {
 		>
 			<path d="M20 6 9 17l-5-5" />
 		</svg>
-	)
+	);
 }
 
 function ClockIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -464,7 +551,7 @@ function ClockIcon({ color, size = 24 }: { color: string; size?: number }) {
 			<circle cx="12" cy="12" r="10" />
 			<polyline points="12 6 12 12 16 14" />
 		</svg>
-	)
+	);
 }
 
 function AlertIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -484,7 +571,7 @@ function AlertIcon({ color, size = 24 }: { color: string; size?: number }) {
 			<line x1="12" y1="9" x2="12" y2="13" />
 			<line x1="12" y1="17" x2="12.01" y2="17" />
 		</svg>
-	)
+	);
 }
 
 function SettingsIcon({ size = 24 }: { size?: number }) {
@@ -503,5 +590,5 @@ function SettingsIcon({ size = 24 }: { size?: number }) {
 			<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
 			<circle cx="12" cy="12" r="3" />
 		</svg>
-	)
+	);
 }

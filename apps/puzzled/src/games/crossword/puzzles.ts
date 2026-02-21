@@ -5,20 +5,20 @@
  * Word squares are mathematically rare - rows AND columns must be valid words.
  */
 
-import { generateCrosswordPuzzle, getWordSquareCount } from './generator'
-import type { CrosswordPuzzleData } from './types'
+import { generateCrosswordPuzzle, getWordSquareCount } from "./generator";
+import type { CrosswordPuzzleData } from "./types";
 
 /**
  * Get a puzzle based on seed - FROM GENERATOR
  * 35+ verified word squares
  */
 export function getPuzzleFromSeed(seed: number): CrosswordPuzzleData {
-	return generateCrosswordPuzzle(seed)
+	return generateCrosswordPuzzle(seed);
 }
 
 /**
  * Get count of available puzzles
  */
 function _getPuzzleCount(): number {
-	return getWordSquareCount()
+	return getWordSquareCount();
 }

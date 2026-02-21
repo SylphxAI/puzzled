@@ -1,34 +1,34 @@
 {
-  "day7": {
-    "subject": "We miss you!",
-    "title": "We Miss You!",
-    "body": "We noticed you haven't played in a while. Your puzzles are waiting for you!",
-    "whatYoureMissing": "Here's what you're missing:",
-    "cta": "Play Now"
-  },
-  "day14": {
-    "subject": "Here's what's new at Puzzled!",
-    "title": "New Puzzles Waiting For You!",
-    "body": "It's been a couple of weeks since we've seen you. We've been busy creating new challenges just for you!",
-    "whatsNew": "What's New:",
-    "cta": "Check Out What's New"
-  },
-  "day30": {
-    "subject": "Come back with 50% OFF Premium!",
-    "title": "Special Offer Just For You!",
-    "offer": "50% OFF Premium",
-    "subtitle": "We'd love to have you back",
-    "body": "We miss having you as part of the Puzzled community! As a special thank you for being a valued member, we're offering you 50% OFF your first month of Premium.",
-    "premiumBenefits": "Premium Benefits:",
-    "fullArchive": "Full Puzzle Archive - Access past daily puzzles anytime",
-    "streakProtection": "Streak Freeze Protection - Never lose your progress",
-    "advancedStats": "Advanced Statistics - Track your improvements",
-    "leaderboardAccess": "Leaderboard Access - Compete with other players",
-    "adFree": "Ad-Free Experience - Pure, uninterrupted gameplay",
-    "discountCode": "Your exclusive discount code:",
-    "expiresWarning": "This offer expires in 7 days!",
-    "cta": "Claim Your 50% OFF",
-    "noObligations": "No obligations. Cancel anytime.",
-    "unsubscribe": "Unsubscribe from win-back emails"
-  }
+	"day7": {
+		"subject": "We miss you!",
+		"title": "We Miss You!",
+		"body": "We noticed you haven't played in a while. Your puzzles are waiting for you!",
+		"whatYoureMissing": "Here's what you're missing:",
+		"cta": "Play Now"
+	},
+	"day14": {
+		"subject": "Here's what's new at Puzzled!",
+		"title": "New Puzzles Waiting For You!",
+		"body": "It's been a couple of weeks since we've seen you. We've been busy creating new challenges just for you!",
+		"whatsNew": "What's New:",
+		"cta": "Check Out What's New"
+	},
+	"day30": {
+		"subject": "Come back with 50% OFF Premium!",
+		"title": "Special Offer Just For You!",
+		"offer": "50% OFF Premium",
+		"subtitle": "We'd love to have you back",
+		"body": "We miss having you as part of the Puzzled community! As a special thank you for being a valued member, we're offering you 50% OFF your first month of Premium.",
+		"premiumBenefits": "Premium Benefits:",
+		"fullArchive": "Full Puzzle Archive - Access past daily puzzles anytime",
+		"streakProtection": "Streak Freeze Protection - Never lose your progress",
+		"advancedStats": "Advanced Statistics - Track your improvements",
+		"leaderboardAccess": "Leaderboard Access - Compete with other players",
+		"adFree": "Ad-Free Experience - Pure, uninterrupted gameplay",
+		"discountCode": "Your exclusive discount code:",
+		"expiresWarning": "This offer expires in 7 days!",
+		"cta": "Claim Your 50% OFF",
+		"noObligations": "No obligations. Cancel anytime.",
+		"unsubscribe": "Unsubscribe from win-back emails"
+	}
 }

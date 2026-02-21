@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * useReducedMotion Hook
@@ -11,9 +11,9 @@
  * <motion.div animate={prefersReduced ? {} : { scale: 1.1 }} />
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react";
 
-const QUERY = '(prefers-reduced-motion: reduce)'
+const QUERY = "(prefers-reduced-motion: reduce)";
 
 /**
  * Hook to detect if user prefers reduced motion
@@ -21,27 +21,27 @@ const QUERY = '(prefers-reduced-motion: reduce)'
  */
 export function useReducedMotion(): boolean {
 	// Default to false on server, will update on client
-	const [prefersReduced, setPrefersReduced] = useState(false)
+	const [prefersReduced, setPrefersReduced] = useState(false);
 
 	useEffect(() => {
-		const mediaQuery = window.matchMedia(QUERY)
-		setPrefersReduced(mediaQuery.matches)
+		const mediaQuery = window.matchMedia(QUERY);
+		setPrefersReduced(mediaQuery.matches);
 
 		const handleChange = (event: MediaQueryListEvent) => {
-			setPrefersReduced(event.matches)
-		}
+			setPrefersReduced(event.matches);
+		};
 
 		// Modern browsers
 		if (mediaQuery.addEventListener) {
-			mediaQuery.addEventListener('change', handleChange)
-			return () => mediaQuery.removeEventListener('change', handleChange)
+			mediaQuery.addEventListener("change", handleChange);
+			return () => mediaQuery.removeEventListener("change", handleChange);
 		}
 		// Legacy browsers (Safari < 14)
-		mediaQuery.addListener(handleChange)
-		return () => mediaQuery.removeListener(handleChange)
-	}, [])
+		mediaQuery.addListener(handleChange);
+		return () => mediaQuery.removeListener(handleChange);
+	}, []);
 
-	return prefersReduced
+	return prefersReduced;
 }
 
 /**
@@ -50,9 +50,9 @@ export function useReducedMotion(): boolean {
  */
 export function getReducedMotionProps<T extends object>(
 	props: T,
-	prefersReduced: boolean
+	prefersReduced: boolean,
 ): T | Record<string, never> {
-	return prefersReduced ? {} : props
+	return prefersReduced ? {} : props;
 }
 
 /**
@@ -61,7 +61,7 @@ export function getReducedMotionProps<T extends object>(
  */
 export function getReducedMotionTransition<T extends object>(
 	transition: T,
-	prefersReduced: boolean
+	prefersReduced: boolean,
 ): T | { duration: 0 } {
-	return prefersReduced ? { duration: 0 } : transition
+	return prefersReduced ? { duration: 0 } : transition;
 }

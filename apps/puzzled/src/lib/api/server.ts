@@ -20,10 +20,7 @@
  * const res = await games['save-result'].$post({ json: { ... } })
  */
 
-import 'server-only'
-import { hc } from 'hono/client'
-import { cookies, headers } from 'next/headers'
-import { cache } from 'react'
+import "server-only";
 import type {
 	AdminRoutes,
 	GamesRoutes,
@@ -31,27 +28,30 @@ import type {
 	NotificationsRoutes,
 	StatsRoutes,
 	UserRoutes,
-} from '@/server/api/app'
+} from "@/server/api/app";
+import { hc } from "hono/client";
+import { cookies, headers } from "next/headers";
+import { cache } from "react";
 
 // API base path
-const API_BASE = '/api/v1'
+const API_BASE = "/api/v1";
 
 /**
  * Get the base URL for server-side API calls
  */
 function getServerBaseUrl(): string {
 	if (process.env.VERCEL_URL) {
-		return `https://${process.env.VERCEL_URL}`
+		return `https://${process.env.VERCEL_URL}`;
 	}
-	return `http://localhost:${process.env.PORT ?? 3001}`
+	return `http://localhost:${process.env.PORT ?? 3001}`;
 }
 
 /**
  * Create a custom fetch with forwarded headers/cookies for auth
  */
 async function createAuthFetch() {
-	const headersList = await headers()
-	const cookieStore = await cookies()
+	const headersList = await headers();
+	const cookieStore = await cookies();
 
 	return (input: RequestInfo | URL, init?: RequestInit) =>
 		fetch(input, {
@@ -60,10 +60,10 @@ async function createAuthFetch() {
 				...init?.headers,
 				cookie: cookieStore.toString(),
 				// Forward relevant headers for auth context
-				'x-forwarded-for': headersList.get('x-forwarded-for') ?? '',
-				'user-agent': headersList.get('user-agent') ?? '',
+				"x-forwarded-for": headersList.get("x-forwarded-for") ?? "",
+				"user-agent": headersList.get("user-agent") ?? "",
 			},
-		})
+		});
 }
 
 /**
@@ -75,8 +75,8 @@ async function createAuthFetch() {
  * @returns Domain-specific API clients
  */
 export const createServerApi = cache(async () => {
-	const baseUrl = getServerBaseUrl()
-	const authFetch = await createAuthFetch()
+	const baseUrl = getServerBaseUrl();
+	const authFetch = await createAuthFetch();
 
 	return {
 		games: hc<GamesRoutes>(`${baseUrl}${API_BASE}/games`, { fetch: authFetch }),
@@ -85,73 +85,76 @@ export const createServerApi = cache(async () => {
 			fetch: authFetch,
 		}),
 		user: hc<UserRoutes>(`${baseUrl}${API_BASE}/user`, { fetch: authFetch }),
-		notifications: hc<NotificationsRoutes>(`${baseUrl}${API_BASE}/notifications`, {
-			fetch: authFetch,
-		}),
+		notifications: hc<NotificationsRoutes>(
+			`${baseUrl}${API_BASE}/notifications`,
+			{
+				fetch: authFetch,
+			},
+		),
 		admin: hc<AdminRoutes>(`${baseUrl}${API_BASE}/admin`, { fetch: authFetch }),
-	}
-})
+	};
+});
 
 /**
  * Helper types for common API responses
  */
 export type StreakInfo = {
-	currentStreak: number
-	maxStreak: number
-	hasPlayedToday: boolean
-	totalGamesPlayed: number
-	freezesAvailable: number
-	autoFreezeEnabled: boolean
-}
+	currentStreak: number;
+	maxStreak: number;
+	hasPlayedToday: boolean;
+	totalGamesPlayed: number;
+	freezesAvailable: number;
+	autoFreezeEnabled: boolean;
+};
 
 export type TodayCompletion = {
-	slug: string
-	name: string
-	completed: boolean
-	score?: string
-}
+	slug: string;
+	name: string;
+	completed: boolean;
+	score?: string;
+};
 
 export type TodayPlayerCount = {
-	count: number
-}
+	count: number;
+};
 
 export type DailyStatus = {
-	hasCompleted: boolean
+	hasCompleted: boolean;
 	completedSession: {
-		status: 'won' | 'lost'
-		score: number | null
-		attempts: number | null
-		completedAt: Date
-	} | null
+		status: "won" | "lost";
+		score: number | null;
+		attempts: number | null;
+		completedAt: Date;
+	} | null;
 	puzzle: {
-		id: string
-		puzzleNumber: number
-		puzzleDate: string
-		puzzleData: unknown
-		difficulty: string | null
-	}
-	canPlay: boolean
-	mode: 'daily'
-}
+		id: string;
+		puzzleNumber: number;
+		puzzleDate: string;
+		puzzleData: unknown;
+		difficulty: string | null;
+	};
+	canPlay: boolean;
+	mode: "daily";
+};
 
 export type TodaysPuzzle = {
-	puzzleId: string
-	puzzleNumber: number
-	puzzleDate: string
-	puzzleData: unknown
-	difficulty: string | null
-}
+	puzzleId: string;
+	puzzleNumber: number;
+	puzzleDate: string;
+	puzzleData: unknown;
+	difficulty: string | null;
+};
 
 export type UserStats = {
 	[gameSlug: string]: {
-		gameSlug: string
-		gamesPlayed: number
-		gamesWon: number
-		currentStreak: number
-		maxStreak: number
-		totalScore: number
-		averageAttempts: number | null
-		guessDistribution: unknown
-		perfectGames: number
-	}
-}
+		gameSlug: string;
+		gamesPlayed: number;
+		gamesWon: number;
+		currentStreak: number;
+		maxStreak: number;
+		totalScore: number;
+		averageAttempts: number | null;
+		guessDistribution: unknown;
+		perfectGames: number;
+	};
+};

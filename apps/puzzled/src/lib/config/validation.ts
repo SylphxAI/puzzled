@@ -5,7 +5,7 @@
  * Import these constants instead of hardcoding values.
  */
 
-import { z } from 'zod'
+import { z } from "zod";
 
 // ==========================================
 // File Upload Limits
@@ -16,8 +16,13 @@ const _FILE_LIMITS = {
 	AVATAR_MAX_SIZE: 5 * 1024 * 1024,
 
 	/** Allowed avatar MIME types */
-	AVATAR_ALLOWED_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const,
-} as const
+	AVATAR_ALLOWED_TYPES: [
+		"image/jpeg",
+		"image/png",
+		"image/webp",
+		"image/gif",
+	] as const,
+} as const;
 
 // ==========================================
 // OTP / Verification Codes
@@ -29,7 +34,7 @@ const _OTP_CONFIG = {
 
 	/** OTP code expiry in minutes */
 	EXPIRY_MINUTES: 10,
-} as const
+} as const;
 
 // ==========================================
 // Referral Code Rules
@@ -44,14 +49,14 @@ const REFERRAL_CONFIG = {
 
 	/** Allowed characters in referral codes */
 	CODE_PATTERN: /^[A-Z0-9]+$/i,
-} as const
+} as const;
 
 /** Zod schema for referral code validation - SSOT */
 const _referralCodeSchema = z
 	.string()
-	.min(REFERRAL_CONFIG.CODE_MIN_LENGTH, 'Referral code too short')
-	.max(REFERRAL_CONFIG.CODE_MAX_LENGTH, 'Referral code too long')
-	.regex(REFERRAL_CONFIG.CODE_PATTERN, 'Invalid referral code format')
+	.min(REFERRAL_CONFIG.CODE_MIN_LENGTH, "Referral code too short")
+	.max(REFERRAL_CONFIG.CODE_MAX_LENGTH, "Referral code too long")
+	.regex(REFERRAL_CONFIG.CODE_PATTERN, "Invalid referral code format");
 
 // ==========================================
 // Pagination Defaults
@@ -69,19 +74,27 @@ export const PAGINATION = {
 
 	/** Default admin page size */
 	ADMIN_DEFAULT_LIMIT: 50,
-} as const
+} as const;
 
 /** Zod schema for user-facing pagination */
 const _paginationSchema = z.object({
-	limit: z.number().min(1).max(PAGINATION.MAX_LIMIT).default(PAGINATION.DEFAULT_LIMIT),
+	limit: z
+		.number()
+		.min(1)
+		.max(PAGINATION.MAX_LIMIT)
+		.default(PAGINATION.DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
-})
+});
 
 /** Zod schema for admin pagination */
 const _adminPaginationSchema = z.object({
-	limit: z.number().min(1).max(PAGINATION.ADMIN_MAX_LIMIT).default(PAGINATION.ADMIN_DEFAULT_LIMIT),
+	limit: z
+		.number()
+		.min(1)
+		.max(PAGINATION.ADMIN_MAX_LIMIT)
+		.default(PAGINATION.ADMIN_DEFAULT_LIMIT),
 	offset: z.number().min(0).default(0),
-})
+});
 
 // ==========================================
 // Field Size Limits
@@ -106,7 +119,7 @@ const _FIELD_LIMITS = {
 
 	/** Bio limit */
 	BIO_MAX: 500,
-} as const
+} as const;
 
 // ==========================================
 // Currency Configuration
@@ -114,17 +127,17 @@ const _FIELD_LIMITS = {
 
 const CURRENCY_CONFIG = {
 	/** Default currency code */
-	DEFAULT: 'usd' as const,
+	DEFAULT: "usd" as const,
 
 	/** Currency code length (ISO 4217) */
 	CODE_LENGTH: 3,
-} as const
+} as const;
 
 /** Zod schema for currency validation */
 const _currencySchema = z
 	.string()
 	.length(CURRENCY_CONFIG.CODE_LENGTH)
-	.default(CURRENCY_CONFIG.DEFAULT)
+	.default(CURRENCY_CONFIG.DEFAULT);
 
 // ==========================================
 // Batch Operation Limits
@@ -133,7 +146,7 @@ const _currencySchema = z
 const _BATCH_LIMITS = {
 	/** Maximum items in bulk operations */
 	MAX_BATCH_SIZE: 100,
-} as const
+} as const;
 
 // ==========================================
 // Animation Timing (milliseconds)
@@ -148,4 +161,4 @@ const _TIMING = {
 
 	/** Short animation duration */
 	ANIMATION_SHORT: 300,
-} as const
+} as const;

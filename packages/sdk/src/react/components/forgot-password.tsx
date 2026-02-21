@@ -5,42 +5,42 @@
  * Matches Clerk's ForgotPassword component API.
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
-import { safeRedirect } from '../security-utils'
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { UI_COPY_FEEDBACK_MS } from "../../constants";
+import { useSafeAuth, useSafeUser, useSdkReady } from "../hooks";
+import { safeRedirect } from "../security-utils";
+import { Modal } from "../ui/modal";
 import {
 	type ThemeVariables,
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from '../ui/styles'
-import { Modal } from '../ui/modal'
-import { UI_COPY_FEEDBACK_MS } from '../../constants'
+	mergeStyles,
+} from "../ui/styles";
 
 export interface ForgotPasswordProps {
 	/** URL to redirect after password reset email is sent */
-	afterSubmitUrl?: string
+	afterSubmitUrl?: string;
 	/** URL for sign in link */
-	signInUrl?: string
+	signInUrl?: string;
 	/** Display mode */
-	mode?: 'redirect' | 'embedded' | 'modal'
+	mode?: "redirect" | "embedded" | "modal";
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Button content (for redirect/modal mode) */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Called on successful submission */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Show card wrapper (embedded mode) */
-	showCard?: boolean
+	showCard?: boolean;
 	/** Custom header content */
-	header?: React.ReactNode
+	header?: React.ReactNode;
 }
 
 /**
@@ -58,9 +58,9 @@ export interface ForgotPasswordProps {
  * ```
  */
 export function ForgotPassword({
-	afterSubmitUrl = '/check-email',
-	signInUrl = '/sign-in',
-	mode = 'embedded',
+	afterSubmitUrl = "/check-email",
+	signInUrl = "/sign-in",
+	mode = "embedded",
 	theme = defaultTheme,
 	className,
 	children,
@@ -71,67 +71,68 @@ export function ForgotPassword({
 }: ForgotPasswordProps) {
 	// SDK readiness check (SSOT for SSR safety and configuration)
 	const { isReady, renderError } = useSdkReady({
-		services: ['auth', 'user'],
-		componentType: 'auth',
+		services: ["auth", "user"],
+		componentType: "auth",
 		theme,
-	})
+	});
 
-	const { forgotPassword } = useSafeAuth()
-	const { isSignedIn, isLoaded } = useSafeUser()
-	const styles = baseStyles(theme)
+	const { forgotPassword } = useSafeAuth();
+	const { isSignedIn, isLoaded } = useSafeUser();
+	const styles = baseStyles(theme);
 
-	const [modalOpen, setModalOpen] = useState(false)
-	const [email, setEmail] = useState('')
-	const [error, setError] = useState<string | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
-	const [isSubmitted, setIsSubmitted] = useState(false)
-	const [focusedField, setFocusedField] = useState<string | null>(null)
+	const [modalOpen, setModalOpen] = useState(false);
+	const [email, setEmail] = useState("");
+	const [error, setError] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isSubmitted, setIsSubmitted] = useState(false);
+	const [focusedField, setFocusedField] = useState<string | null>(null);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// SDK not ready - render error or null
 	if (!isReady) {
-		return renderError()
+		return renderError();
 	}
 
 	// Don't show if already signed in
 	if (isLoaded && isSignedIn) {
-		return null
+		return null;
 	}
 
 	const handleSubmit = useCallback(
 		async (e: FormEvent) => {
-			e.preventDefault()
-			setIsLoading(true)
-			setError(null)
+			e.preventDefault();
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (!forgotPassword) {
-					throw new Error('Authentication not configured')
+					throw new Error("Authentication not configured");
 				}
-				await forgotPassword({ email })
-				setIsSubmitted(true)
-				onSuccess?.()
+				await forgotPassword({ email });
+				setIsSubmitted(true);
+				onSuccess?.();
 
 				// Redirect after short delay
-				if (afterSubmitUrl && typeof window !== 'undefined') {
+				if (afterSubmitUrl && typeof window !== "undefined") {
 					setTimeout(() => {
-						safeRedirect(afterSubmitUrl, { fallback: '/sign-in' })
-					}, UI_COPY_FEEDBACK_MS)
+						safeRedirect(afterSubmitUrl, { fallback: "/sign-in" });
+					}, UI_COPY_FEEDBACK_MS);
 				}
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to send reset email'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to send reset email";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[email, forgotPassword, afterSubmitUrl, onSuccess, onError]
-	)
+		[email, forgotPassword, afterSubmitUrl, onSuccess, onError],
+	);
 
 	const renderForm = () => {
 		if (isSubmitted) {
@@ -139,21 +140,23 @@ export function ForgotPassword({
 				<div style={styles.textCenter}>
 					<div
 						style={mergeStyles(styles.flexCenter, {
-							width: '3rem',
-							height: '3rem',
-							borderRadius: '50%',
+							width: "3rem",
+							height: "3rem",
+							borderRadius: "50%",
 							backgroundColor: `${theme.colorSuccess}15`,
-							margin: '0 auto 1rem',
+							margin: "0 auto 1rem",
 						})}
 					>
 						<MailIcon color={theme.colorSuccess} />
 					</div>
-					<h3 style={mergeStyles(styles.cardTitle, styles.mb2)}>Check your email</h3>
+					<h3 style={mergeStyles(styles.cardTitle, styles.mb2)}>
+						Check your email
+					</h3>
 					<p style={mergeStyles(styles.textMuted, styles.textSm, styles.mb4)}>
 						We sent a password reset link to <strong>{email}</strong>
 					</p>
 					<p style={mergeStyles(styles.textXs, styles.textMuted)}>
-						Didn't receive it? Check spam or{' '}
+						Didn't receive it? Check spam or{" "}
 						<button
 							type="button"
 							onClick={() => setIsSubmitted(false)}
@@ -163,7 +166,7 @@ export function ForgotPassword({
 						</button>
 					</p>
 				</div>
-			)
+			);
 		}
 
 		return (
@@ -174,10 +177,10 @@ export function ForgotPassword({
 						type="email"
 						value={email}
 						onChange={(e) => {
-							setEmail(e.target.value)
-							setError(null)
+							setEmail(e.target.value);
+							setError(null);
 						}}
-						onFocus={() => setFocusedField('email')}
+						onFocus={() => setFocusedField("email")}
 						onBlur={() => setFocusedField(null)}
 						placeholder="you@example.com"
 						disabled={isLoading}
@@ -185,14 +188,16 @@ export function ForgotPassword({
 						required
 						style={mergeStyles(
 							styles.input,
-							focusedField === 'email' ? styles.inputFocus : {},
-							isLoading ? styles.inputDisabled : {}
+							focusedField === "email" ? styles.inputFocus : {},
+							isLoading ? styles.inputDisabled : {},
 						)}
 					/>
 				</div>
 
 				{error && (
-					<div style={mergeStyles(styles.alert, styles.alertError)}>{error}</div>
+					<div style={mergeStyles(styles.alert, styles.alertError)}>
+						{error}
+					</div>
 				)}
 
 				<button
@@ -202,7 +207,7 @@ export function ForgotPassword({
 						styles.button,
 						styles.buttonPrimary,
 						styles.buttonFullWidth,
-						isLoading ? styles.buttonDisabled : {}
+						isLoading ? styles.buttonDisabled : {},
 					)}
 				>
 					{isLoading ? (
@@ -211,19 +216,26 @@ export function ForgotPassword({
 							Sending...
 						</>
 					) : (
-						'Send reset link'
+						"Send reset link"
 					)}
 				</button>
 
-				<p style={mergeStyles(styles.textCenter, styles.textSm, styles.textMuted, styles.mt4)}>
-					Remember your password?{' '}
+				<p
+					style={mergeStyles(
+						styles.textCenter,
+						styles.textSm,
+						styles.textMuted,
+						styles.mt4,
+					)}
+				>
+					Remember your password?{" "}
 					<a href={signInUrl} style={styles.link}>
 						Sign in
 					</a>
 				</p>
 			</form>
-		)
-	}
+		);
+	};
 
 	const content = (
 		<div style={styles.container}>
@@ -237,27 +249,27 @@ export function ForgotPassword({
 			)}
 			<div style={styles.cardContent}>{renderForm()}</div>
 		</div>
-	)
+	);
 
 	// Embedded mode
-	if (mode === 'embedded') {
+	if (mode === "embedded") {
 		if (showCard) {
-			return <div style={styles.card}>{content}</div>
+			return <div style={styles.card}>{content}</div>;
 		}
-		return content
+		return content;
 	}
 
 	// Modal mode
-	if (mode === 'modal') {
+	if (mode === "modal") {
 		const defaultStyles: React.CSSProperties = {
-			background: 'none',
-			border: 'none',
+			background: "none",
+			border: "none",
 			padding: 0,
-			cursor: 'pointer',
+			cursor: "pointer",
 			color: theme.colorPrimary,
 			fontSize: theme.fontSizeSm,
-			textDecoration: 'underline',
-		}
+			textDecoration: "underline",
+		};
 
 		return (
 			<>
@@ -267,16 +279,20 @@ export function ForgotPassword({
 					style={className ? undefined : defaultStyles}
 					type="button"
 				>
-					{children || 'Forgot password?'}
+					{children || "Forgot password?"}
 				</button>
-				<Modal open={modalOpen} onClose={() => setModalOpen(false)} theme={theme}>
+				<Modal
+					open={modalOpen}
+					onClose={() => setModalOpen(false)}
+					theme={theme}
+				>
 					{content}
 				</Modal>
 			</>
-		)
+		);
 	}
 
-	return null
+	return null;
 }
 
 function MailIcon({ color }: { color: string }) {
@@ -294,5 +310,5 @@ function MailIcon({ color }: { color: string }) {
 			<rect width="20" height="16" x="2" y="4" rx="2" />
 			<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
 		</svg>
-	)
+	);
 }

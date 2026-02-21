@@ -16,75 +16,75 @@
 // ============================================================================
 
 /** Streak activity frequency */
-export type StreakFrequency = 'daily' | 'weekly' | 'custom'
+export type StreakFrequency = "daily" | "weekly" | "custom";
 
 /** Streak definition (auto-discovered or from Console) */
 export interface StreakDefinition {
 	/** Unique identifier */
-	id: string
+	id: string;
 	/** Display name */
-	name: string
+	name: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Activity frequency */
-	frequency: StreakFrequency
+	frequency: StreakFrequency;
 	/** Grace period in hours (default: 0) */
-	gracePeriodHours?: number
+	gracePeriodHours?: number;
 	/** Whether streak resets on miss (default: true) */
-	resetOnMiss?: boolean
+	resetOnMiss?: boolean;
 	/** Maximum streak value (optional cap) */
-	maxValue?: number
+	maxValue?: number;
 	/** Custom interval in hours (only for 'custom' frequency) */
-	customIntervalHours?: number
+	customIntervalHours?: number;
 }
 
 /** User's streak state (from platform) */
 export interface StreakState {
 	/** Streak definition ID */
-	streakId: string
+	streakId: string;
 	/** Current streak count */
-	current: number
+	current: number;
 	/** Longest streak ever */
-	longest: number
+	longest: number;
 	/** Last activity timestamp */
-	lastActivityAt: string | null
+	lastActivityAt: string | null;
 	/** When current streak will expire */
-	expiresAt: string | null
+	expiresAt: string | null;
 	/** Whether streak can be recovered (within grace period) */
-	canRecover: boolean
+	canRecover: boolean;
 	/** Time remaining until expiry in ms */
-	timeRemainingMs: number | null
+	timeRemainingMs: number | null;
 	/** User's timezone preference for streak expiry (IANA timezone, e.g., 'America/New_York') */
-	userTimezone: string | null
+	userTimezone: string | null;
 }
 
 /** Activity recording input */
 export interface RecordActivityInput {
 	/** Streak ID */
-	streakId: string
+	streakId: string;
 	/** User's IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight */
-	userTimezone?: string
+	userTimezone?: string;
 	/** Optional metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 	/**
 	 * Idempotency key for safe retries (Stripe pattern)
 	 *
 	 * Prevents duplicate streak recordings if the same request is retried.
 	 * Use a unique key per logical activity (e.g., `streak-${userId}-${date}`).
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 /** Activity recording result */
 export interface RecordActivityResult {
 	/** Updated streak state */
-	streak: StreakState
+	streak: StreakState;
 	/** Whether this activity extended the streak */
-	extended: boolean
+	extended: boolean;
 	/** Whether a new personal best was achieved */
-	newPersonalBest: boolean
+	newPersonalBest: boolean;
 	/** Previous streak value (for animation) */
-	previousValue: number
+	previousValue: number;
 }
 
 // ============================================================================
@@ -92,106 +92,117 @@ export interface RecordActivityResult {
 // ============================================================================
 
 /** Leaderboard sort direction */
-export type LeaderboardSortDirection = 'asc' | 'desc'
+export type LeaderboardSortDirection = "asc" | "desc";
 
 /** Leaderboard reset period */
-export type LeaderboardResetPeriod = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'never'
+export type LeaderboardResetPeriod =
+	| "hourly"
+	| "daily"
+	| "weekly"
+	| "monthly"
+	| "never";
 
 /** Score aggregation method */
-export type LeaderboardAggregation = 'max' | 'sum' | 'latest' | 'count' | 'min' | 'avg'
+export type LeaderboardAggregation =
+	| "max"
+	| "sum"
+	| "latest"
+	| "count"
+	| "min"
+	| "avg";
 
 /** Leaderboard definition (auto-discovered or from Console) */
 export interface LeaderboardDefinition {
 	/** Unique identifier */
-	id: string
+	id: string;
 	/** Display name */
-	name: string
+	name: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Sort direction (desc = higher is better) */
-	sortDirection: LeaderboardSortDirection
+	sortDirection: LeaderboardSortDirection;
 	/** Reset period */
-	resetPeriod: LeaderboardResetPeriod
+	resetPeriod: LeaderboardResetPeriod;
 	/** How to aggregate multiple scores from same user */
-	aggregation: LeaderboardAggregation
+	aggregation: LeaderboardAggregation;
 	/** Default privacy for entries */
-	defaultPrivacy?: 'public' | 'friends' | 'anonymous'
+	defaultPrivacy?: "public" | "friends" | "anonymous";
 	/** Maximum entries to keep per period */
-	maxEntries?: number
+	maxEntries?: number;
 }
 
 /** Leaderboard entry */
 export interface LeaderboardEntry {
 	/** Rank (1-indexed) */
-	rank: number
+	rank: number;
 	/** User ID (may be null for anonymous) */
-	userId: string | null
+	userId: string | null;
 	/** Display name */
-	displayName: string
+	displayName: string;
 	/** Avatar URL */
-	avatarUrl: string | null
+	avatarUrl: string | null;
 	/** Score/value */
-	value: number
+	value: number;
 	/** Whether this is the current user */
-	isCurrentUser: boolean
+	isCurrentUser: boolean;
 	/** Entry metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 	/** When the score was submitted */
-	submittedAt: string
+	submittedAt: string;
 }
 
 /** Leaderboard query options */
 export interface LeaderboardQueryOptions {
 	/** Number of entries to return (default: 10) */
-	limit?: number
+	limit?: number;
 	/** Offset for pagination */
-	offset?: number
+	offset?: number;
 	/** Include surrounding entries for current user */
-	includeSurrounding?: boolean
+	includeSurrounding?: boolean;
 	/** Number of surrounding entries (default: 2) */
-	surroundingCount?: number
+	surroundingCount?: number;
 }
 
 /** Leaderboard query result */
 export interface LeaderboardResult {
 	/** Leaderboard definition ID */
-	leaderboardId: string
+	leaderboardId: string;
 	/** Period (for periodic leaderboards) */
-	period?: string
+	period?: string;
 	/** Entries (top N or paginated) */
-	entries: LeaderboardEntry[]
+	entries: LeaderboardEntry[];
 	/** Current user's entry (may not be in top entries) */
-	currentUserEntry: LeaderboardEntry | null
+	currentUserEntry: LeaderboardEntry | null;
 	/** Entries surrounding the current user (when includeSurrounding=true and user is outside main entries) */
-	surroundingEntries?: LeaderboardEntry[]
+	surroundingEntries?: LeaderboardEntry[];
 	/** Total participants */
-	totalParticipants: number
+	totalParticipants: number;
 	/** Next reset time (for periodic leaderboards) */
-	nextResetAt: string | null
+	nextResetAt: string | null;
 }
 
 /** Score submission input */
 export interface SubmitScoreInput {
 	/** Leaderboard ID */
-	leaderboardId: string
+	leaderboardId: string;
 	/** Score value */
-	value: number
+	value: number;
 	/** Optional metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 }
 
 /** Score submission result */
 export interface SubmitScoreResult {
 	/** Whether submission was accepted */
-	accepted: boolean
+	accepted: boolean;
 	/** New rank (if in leaderboard) */
-	rank: number | null
+	rank: number | null;
 	/** Previous best (if any) */
-	previousBest: number | null
+	previousBest: number | null;
 	/** Whether this is a new personal best */
-	newPersonalBest: boolean
+	newPersonalBest: boolean;
 	/** Rank change (positive = improved) */
-	rankChange: number | null
+	rankChange: number | null;
 }
 
 // ============================================================================
@@ -199,91 +210,104 @@ export interface SubmitScoreResult {
 // ============================================================================
 
 /** Achievement type */
-export type AchievementType = 'standard' | 'hidden' | 'incremental'
+export type AchievementType = "standard" | "hidden" | "incremental";
 
 /** Achievement tier */
-export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+export type AchievementTier =
+	| "bronze"
+	| "silver"
+	| "gold"
+	| "platinum"
+	| "diamond";
 
 /** Achievement category */
-export type AchievementCategory = string // App-defined
+export type AchievementCategory = string; // App-defined
 
 /** Achievement criteria operator */
-export type CriteriaOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains'
+export type CriteriaOperator =
+	| "eq"
+	| "ne"
+	| "gt"
+	| "gte"
+	| "lt"
+	| "lte"
+	| "in"
+	| "contains";
 
 /** Single criterion */
 export interface AchievementCriterion {
 	/** Property to check (e.g., 'event', 'count', 'streak.daily') */
-	property: string
+	property: string;
 	/** Comparison operator */
-	operator: CriteriaOperator
+	operator: CriteriaOperator;
 	/** Value to compare against */
-	value: string | number | boolean | string[] | number[]
+	value: string | number | boolean | string[] | number[];
 }
 
 /** Achievement criteria (AND logic within, OR between arrays) */
 export interface AchievementCriteria {
 	/** Event name to track (for event-based achievements) */
-	event?: string
+	event?: string;
 	/** Required count of events */
-	count?: number
+	count?: number;
 	/** Additional conditions */
-	conditions?: AchievementCriterion[]
+	conditions?: AchievementCriterion[];
 }
 
 /** Achievement definition (auto-discovered or from Console) */
 export interface AchievementDefinition {
 	/** Unique identifier */
-	id: string
+	id: string;
 	/** Display name */
-	name: string
+	name: string;
 	/** Description (shown before unlock) */
-	description: string
+	description: string;
 	/** Description shown after unlock (optional) */
-	unlockedDescription?: string
+	unlockedDescription?: string;
 	/** Achievement type */
-	type: AchievementType
+	type: AchievementType;
 	/** Tier/rarity */
-	tier: AchievementTier
+	tier: AchievementTier;
 	/** Category (app-defined) */
-	category: AchievementCategory
+	category: AchievementCategory;
 	/** Icon (Iconify name or URL) */
-	icon: string
+	icon: string;
 	/** Points awarded */
-	points?: number
+	points?: number;
 	/** Unlock criteria */
-	criteria: AchievementCriteria
+	criteria: AchievementCriteria;
 	/** Target value for incremental achievements */
-	target?: number
+	target?: number;
 	/** Whether to show in list before unlock */
-	secret?: boolean
+	secret?: boolean;
 	/** Order in list */
-	order?: number
+	order?: number;
 }
 
 /** User's achievement state */
 export interface UserAchievement {
 	/** Achievement definition ID */
-	achievementId: string
+	achievementId: string;
 	/** Whether unlocked */
-	unlocked: boolean
+	unlocked: boolean;
 	/** Unlock timestamp */
-	unlockedAt: string | null
+	unlockedAt: string | null;
 	/** Progress (for incremental) */
-	progress: number
+	progress: number;
 	/** Target (for incremental) */
-	target: number | null
+	target: number | null;
 	/** Progress percentage (0-100) */
-	progressPercent: number
+	progressPercent: number;
 }
 
 /** Achievement unlock event */
 export interface AchievementUnlockEvent {
 	/** Achievement definition */
-	achievement: AchievementDefinition
+	achievement: AchievementDefinition;
 	/** User achievement state */
-	userAchievement: UserAchievement
+	userAchievement: UserAchievement;
 	/** Whether this is a new unlock (vs already unlocked) */
-	isNew: boolean
+	isNew: boolean;
 }
 
 // ============================================================================
@@ -293,18 +317,18 @@ export interface AchievementUnlockEvent {
 /** Complete engagement configuration (fetched from platform) */
 interface EngagementConfig {
 	/** Streak definitions */
-	streaks?: StreakDefinition[]
+	streaks?: StreakDefinition[];
 	/** Leaderboard definitions */
-	leaderboards?: LeaderboardDefinition[]
+	leaderboards?: LeaderboardDefinition[];
 	/** Achievement definitions */
-	achievements?: AchievementDefinition[]
+	achievements?: AchievementDefinition[];
 	/** Achievement categories (for UI grouping) */
 	achievementCategories?: {
-		id: string
-		name: string
-		icon?: string
-		order?: number
-	}[]
+		id: string;
+		name: string;
+		icon?: string;
+		order?: number;
+	}[];
 }
 
 // ============================================================================
@@ -312,12 +336,12 @@ interface EngagementConfig {
 // ============================================================================
 
 export const ACHIEVEMENT_TIER_CONFIG = {
-	bronze: { color: '#CD7F32', points: 10 },
-	silver: { color: '#C0C0C0', points: 25 },
-	gold: { color: '#FFD700', points: 50 },
-	platinum: { color: '#00CED1', points: 100 },
-	diamond: { color: '#B9F2FF', points: 200 },
-} as const
+	bronze: { color: "#CD7F32", points: 10 },
+	silver: { color: "#C0C0C0", points: 25 },
+	gold: { color: "#FFD700", points: 50 },
+	platinum: { color: "#00CED1", points: 100 },
+	diamond: { color: "#B9F2FF", points: 200 },
+} as const;
 
 // ============================================================================
 // Inline Defaults (Auto-Discovery)
@@ -340,19 +364,19 @@ export const ACHIEVEMENT_TIER_CONFIG = {
  */
 export interface StreakDefaults {
 	/** Display name */
-	name?: string
+	name?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Activity frequency */
-	frequency?: StreakFrequency
+	frequency?: StreakFrequency;
 	/** Grace period in hours (default: 0) */
-	gracePeriodHours?: number
+	gracePeriodHours?: number;
 	/** Whether streak resets on miss (default: true) */
-	resetOnMiss?: boolean
+	resetOnMiss?: boolean;
 	/** Maximum streak value (optional cap) */
-	maxValue?: number
+	maxValue?: number;
 	/** Custom interval in hours (only for 'custom' frequency) */
-	customIntervalHours?: number
+	customIntervalHours?: number;
 }
 
 /**
@@ -369,17 +393,17 @@ export interface StreakDefaults {
  */
 export interface LeaderboardDefaults {
 	/** Display name */
-	name?: string
+	name?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Sort direction (desc = higher is better) */
-	sortDirection?: LeaderboardSortDirection
+	sortDirection?: LeaderboardSortDirection;
 	/** Reset period */
-	resetPeriod?: LeaderboardResetPeriod
+	resetPeriod?: LeaderboardResetPeriod;
 	/** How to aggregate multiple scores from same user */
-	aggregation?: LeaderboardAggregation
+	aggregation?: LeaderboardAggregation;
 	/** Maximum entries to keep per period */
-	maxEntries?: number
+	maxEntries?: number;
 }
 
 /**
@@ -397,23 +421,23 @@ export interface LeaderboardDefaults {
  */
 export interface AchievementDefaults {
 	/** Display name */
-	name?: string
+	name?: string;
 	/** Description (shown before unlock) */
-	description?: string
+	description?: string;
 	/** Description shown after unlock */
-	unlockedDescription?: string
+	unlockedDescription?: string;
 	/** Achievement type */
-	type?: AchievementType
+	type?: AchievementType;
 	/** Tier/rarity */
-	tier?: AchievementTier
+	tier?: AchievementTier;
 	/** Category (app-defined) */
-	category?: AchievementCategory
+	category?: AchievementCategory;
 	/** Icon (Iconify name or URL) */
-	icon?: string
+	icon?: string;
 	/** Points awarded */
-	points?: number
+	points?: number;
 	/** Target value for incremental achievements */
-	target?: number
+	target?: number;
 	/** Whether to show in list before unlock */
-	secret?: boolean
+	secret?: boolean;
 }

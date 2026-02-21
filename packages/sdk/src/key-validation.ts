@@ -25,27 +25,27 @@
 // =============================================================================
 
 /** Environment type derived from key prefix */
-export type EnvironmentType = 'development' | 'staging' | 'production'
+export type EnvironmentType = "development" | "staging" | "production";
 
 /** Key type - appId (public) or secret (server) */
-export type KeyType = 'appId' | 'secret'
+export type KeyType = "appId" | "secret";
 
 /** Validation result with clear error information */
 export interface KeyValidationResult {
 	/** Whether the key is valid (possibly after sanitization) */
-	valid: boolean
+	valid: boolean;
 	/** The sanitized key to use (only if valid) */
-	sanitizedKey: string
+	sanitizedKey: string;
 	/** Detected key type */
-	keyType?: KeyType
+	keyType?: KeyType;
 	/** Detected environment */
-	environment?: EnvironmentType
+	environment?: EnvironmentType;
 	/** Error message if invalid */
-	error?: string
+	error?: string;
 	/** Warning message if key was auto-fixed */
-	warning?: string
+	warning?: string;
 	/** Detected issues for debugging */
-	issues?: string[]
+	issues?: string[];
 }
 
 // =============================================================================
@@ -58,7 +58,7 @@ export interface KeyValidationResult {
  * - Environment: dev, stg, or prod (NO typos allowed)
  * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers)
  */
-const APP_ID_PATTERN = /^app_(dev|stg|prod)_[a-z0-9_-]+$/
+const APP_ID_PATTERN = /^app_(dev|stg|prod)_[a-z0-9_-]+$/;
 
 /**
  * Secret key pattern: sk_(dev|stg|prod)_[identifier]
@@ -66,14 +66,14 @@ const APP_ID_PATTERN = /^app_(dev|stg|prod)_[a-z0-9_-]+$/
  * - Environment: dev, stg, or prod (NO typos allowed)
  * - Suffix: alphanumeric with underscores/hyphens (hex for apps, or internal identifiers)
  */
-const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_-]+$/
+const SECRET_KEY_PATTERN = /^sk_(dev|stg|prod)_[a-z0-9_-]+$/;
 
 /** Environment prefix to type mapping */
 const ENV_PREFIX_MAP: Record<string, EnvironmentType> = {
-	dev: 'development',
-	stg: 'staging',
-	prod: 'production',
-}
+	dev: "development",
+	stg: "staging",
+	prod: "production",
+};
 
 // =============================================================================
 // Core Validation Functions
@@ -83,13 +83,13 @@ const ENV_PREFIX_MAP: Record<string, EnvironmentType> = {
  * Detect common issues with a key (whitespace, newlines, etc.)
  */
 function detectKeyIssues(key: string): string[] {
-	const issues: string[] = []
-	if (key !== key.trim()) issues.push('whitespace')
-	if (key.includes('\n')) issues.push('newline')
-	if (key.includes('\r')) issues.push('carriage-return')
-	if (key.includes(' ')) issues.push('space')
-	if (key !== key.toLowerCase()) issues.push('uppercase-chars')
-	return issues
+	const issues: string[] = [];
+	if (key !== key.trim()) issues.push("whitespace");
+	if (key.includes("\n")) issues.push("newline");
+	if (key.includes("\r")) issues.push("carriage-return");
+	if (key.includes(" ")) issues.push("space");
+	if (key !== key.toLowerCase()) issues.push("uppercase-chars");
+	return issues;
 }
 
 /**
@@ -100,9 +100,9 @@ function createSanitizationWarning(
 	issues: string[],
 	envVarName: string,
 ): string {
-	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
+	const keyTypeName = keyType === "appId" ? "App ID" : "Secret Key";
 	return (
-		`[Sylphx] ${keyTypeName} contains ${issues.join(', ')}. ` +
+		`[Sylphx] ${keyTypeName} contains ${issues.join(", ")}. ` +
 		`This is commonly caused by Vercel CLI's 'env pull' command.\n\n` +
 		`To fix permanently:\n` +
 		`1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables\n` +
@@ -110,7 +110,7 @@ function createSanitizationWarning(
 		`3. Remove any trailing whitespace or newline characters\n` +
 		`4. Redeploy your application\n\n` +
 		`The SDK will automatically sanitize the key, but fixing the source is recommended.`
-	)
+	);
 }
 
 /**
@@ -121,10 +121,10 @@ function createInvalidKeyError(
 	key: string,
 	envVarName: string,
 ): string {
-	const prefix = keyType === 'appId' ? 'app' : 'sk'
-	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key
-	const formatHint = `${prefix}_(dev|stg|prod)_[identifier]`
-	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
+	const prefix = keyType === "appId" ? "app" : "sk";
+	const maskedKey = key.length > 20 ? `${key.slice(0, 20)}...` : key;
+	const formatHint = `${prefix}_(dev|stg|prod)_[identifier]`;
+	const keyTypeName = keyType === "appId" ? "App ID" : "Secret Key";
 
 	return (
 		`[Sylphx] Invalid ${keyTypeName} format.\n\n` +
@@ -137,7 +137,7 @@ function createInvalidKeyError(
 		`• Key has wrong prefix (App ID: app_, Secret Key: sk_)\n` +
 		`• Key has invalid environment (must be dev, stg, or prod)\n` +
 		`• Key was copied with extra whitespace`
-	)
+	);
 }
 
 /**
@@ -145,9 +145,9 @@ function createInvalidKeyError(
  */
 function extractEnvironment(key: string): EnvironmentType | undefined {
 	// Match app_ or sk_ prefix followed by environment
-	const match = key.match(/^(?:app|sk)_(dev|stg|prod)_/)
-	if (!match) return undefined
-	return ENV_PREFIX_MAP[match[1]]
+	const match = key.match(/^(?:app|sk)_(dev|stg|prod)_/);
+	if (!match) return undefined;
+	return ENV_PREFIX_MAP[match[1]];
 }
 
 /**
@@ -159,22 +159,22 @@ function validateKeyForType(
 	pattern: RegExp,
 	envVarName: string,
 ): KeyValidationResult {
-	const keyTypeName = keyType === 'appId' ? 'App ID' : 'Secret Key'
+	const keyTypeName = keyType === "appId" ? "App ID" : "Secret Key";
 
 	// Check if key is provided
 	if (!key) {
 		return {
 			valid: false,
-			sanitizedKey: '',
+			sanitizedKey: "",
 			error:
 				`[Sylphx] ${keyTypeName} is required. ` +
 				`Set ${envVarName} in your environment variables.`,
-			issues: ['missing'],
-		}
+			issues: ["missing"],
+		};
 	}
 
 	// Detect issues before validation
-	const issues = detectKeyIssues(key)
+	const issues = detectKeyIssues(key);
 
 	// Check if key matches expected format exactly
 	if (pattern.test(key)) {
@@ -184,11 +184,11 @@ function validateKeyForType(
 			keyType,
 			environment: extractEnvironment(key),
 			issues: [],
-		}
+		};
 	}
 
 	// Key doesn't match - try sanitization (trim + lowercase)
-	const sanitized = key.trim().toLowerCase()
+	const sanitized = key.trim().toLowerCase();
 
 	if (pattern.test(sanitized)) {
 		// Sanitization fixes the issue
@@ -199,16 +199,16 @@ function validateKeyForType(
 			environment: extractEnvironment(sanitized),
 			warning: createSanitizationWarning(keyType, issues, envVarName),
 			issues,
-		}
+		};
 	}
 
 	// Sanitization doesn't fix it - key format is genuinely wrong
 	return {
 		valid: false,
-		sanitizedKey: '',
+		sanitizedKey: "",
 		error: createInvalidKeyError(keyType, key, envVarName),
-		issues: [...issues, 'invalid-format'],
-	}
+		issues: [...issues, "invalid-format"],
+	};
 }
 
 // =============================================================================
@@ -229,8 +229,15 @@ function validateKeyForType(
  * }
  * ```
  */
-export function validateAppId(key: string | undefined | null): KeyValidationResult {
-	return validateKeyForType(key, 'appId', APP_ID_PATTERN, 'NEXT_PUBLIC_SYLPHX_APP_ID')
+export function validateAppId(
+	key: string | undefined | null,
+): KeyValidationResult {
+	return validateKeyForType(
+		key,
+		"appId",
+		APP_ID_PATTERN,
+		"NEXT_PUBLIC_SYLPHX_APP_ID",
+	);
 }
 
 /**
@@ -239,18 +246,20 @@ export function validateAppId(key: string | undefined | null): KeyValidationResu
  * @throws Error if the key is invalid and cannot be sanitized
  * @returns The sanitized App ID
  */
-export function validateAndSanitizeAppId(key: string | undefined | null): string {
-	const result = validateAppId(key)
+export function validateAndSanitizeAppId(
+	key: string | undefined | null,
+): string {
+	const result = validateAppId(key);
 
 	if (!result.valid) {
-		throw new Error(result.error)
+		throw new Error(result.error);
 	}
 
 	if (result.warning) {
-		console.warn(result.warning)
+		console.warn(result.warning);
 	}
 
-	return result.sanitizedKey
+	return result.sanitizedKey;
 }
 
 // =============================================================================
@@ -268,8 +277,15 @@ export function validateAndSanitizeAppId(key: string | undefined | null): string
  * }
  * ```
  */
-export function validateSecretKey(key: string | undefined | null): KeyValidationResult {
-	return validateKeyForType(key, 'secret', SECRET_KEY_PATTERN, 'SYLPHX_SECRET_KEY')
+export function validateSecretKey(
+	key: string | undefined | null,
+): KeyValidationResult {
+	return validateKeyForType(
+		key,
+		"secret",
+		SECRET_KEY_PATTERN,
+		"SYLPHX_SECRET_KEY",
+	);
 }
 
 /**
@@ -278,18 +294,20 @@ export function validateSecretKey(key: string | undefined | null): KeyValidation
  * @throws Error if the key is invalid and cannot be sanitized
  * @returns The sanitized secret key
  */
-export function validateAndSanitizeSecretKey(key: string | undefined | null): string {
-	const result = validateSecretKey(key)
+export function validateAndSanitizeSecretKey(
+	key: string | undefined | null,
+): string {
+	const result = validateSecretKey(key);
 
 	if (!result.valid) {
-		throw new Error(result.error)
+		throw new Error(result.error);
 	}
 
 	if (result.warning) {
-		console.warn(result.warning)
+		console.warn(result.warning);
 	}
 
-	return result.sanitizedKey
+	return result.sanitizedKey;
 }
 
 // =============================================================================
@@ -310,42 +328,42 @@ export function validateAndSanitizeSecretKey(key: string | undefined | null): st
  */
 export function detectEnvironment(key: string): EnvironmentType {
 	// Validate and sanitize first
-	const sanitized = key.trim().toLowerCase()
+	const sanitized = key.trim().toLowerCase();
 
 	// Check both key types
-	if (sanitized.startsWith('sk_')) {
-		const result = validateSecretKey(sanitized)
+	if (sanitized.startsWith("sk_")) {
+		const result = validateSecretKey(sanitized);
 		if (!result.valid) {
-			throw new Error(result.error)
+			throw new Error(result.error);
 		}
-		return result.environment!
+		return result.environment!;
 	}
 
-	if (sanitized.startsWith('app_')) {
-		const result = validateAppId(sanitized)
+	if (sanitized.startsWith("app_")) {
+		const result = validateAppId(sanitized);
 		if (!result.valid) {
-			throw new Error(result.error)
+			throw new Error(result.error);
 		}
-		return result.environment!
+		return result.environment!;
 	}
 
 	throw new Error(
 		`[Sylphx] Invalid key format. Key must start with 'sk_' (secret) or 'app_' (App ID).`,
-	)
+	);
 }
 
 /**
  * Check if running in development environment based on key
  */
 export function isDevelopmentKey(key: string): boolean {
-	return detectEnvironment(key) === 'development'
+	return detectEnvironment(key) === "development";
 }
 
 /**
  * Check if running in production environment based on key
  */
 export function isProductionKey(key: string): boolean {
-	return detectEnvironment(key) === 'production'
+	return detectEnvironment(key) === "production";
 }
 
 // =============================================================================
@@ -365,9 +383,10 @@ export function isProductionKey(key: string): boolean {
  * ```
  */
 export function getCookieNamespace(secretKey: string): string {
-	const env = detectEnvironment(secretKey)
-	const shortEnv = env === 'development' ? 'dev' : env === 'staging' ? 'stg' : 'prod'
-	return `sylphx_${shortEnv}`
+	const env = detectEnvironment(secretKey);
+	const shortEnv =
+		env === "development" ? "dev" : env === "staging" ? "stg" : "prod";
+	return `sylphx_${shortEnv}`;
 }
 
 // =============================================================================
@@ -380,24 +399,24 @@ export function getCookieNamespace(secretKey: string): string {
  * @returns 'appId', 'secret', or null if unknown
  */
 export function detectKeyType(key: string): KeyType | null {
-	const sanitized = key.trim().toLowerCase()
-	if (sanitized.startsWith('app_')) return 'appId'
-	if (sanitized.startsWith('sk_')) return 'secret'
-	return null
+	const sanitized = key.trim().toLowerCase();
+	if (sanitized.startsWith("app_")) return "appId";
+	if (sanitized.startsWith("sk_")) return "secret";
+	return null;
 }
 
 /**
  * Check if a key is an App ID
  */
 export function isAppId(key: string): boolean {
-	return detectKeyType(key) === 'appId'
+	return detectKeyType(key) === "appId";
 }
 
 /**
  * Check if a key is a secret key
  */
 export function isSecretKey(key: string): boolean {
-	return detectKeyType(key) === 'secret'
+	return detectKeyType(key) === "secret";
 }
 
 /**
@@ -415,25 +434,27 @@ export function isSecretKey(key: string): boolean {
  * const sanitizedKey = result.sanitizedKey
  * ```
  */
-export function validateKey(key: string | undefined | null): KeyValidationResult {
-	const keyType = key ? detectKeyType(key) : null
+export function validateKey(
+	key: string | undefined | null,
+): KeyValidationResult {
+	const keyType = key ? detectKeyType(key) : null;
 
-	if (keyType === 'appId') {
-		return validateAppId(key)
+	if (keyType === "appId") {
+		return validateAppId(key);
 	}
-	if (keyType === 'secret') {
-		return validateSecretKey(key)
+	if (keyType === "secret") {
+		return validateSecretKey(key);
 	}
 
 	// Unknown key type - return detailed error
 	return {
 		valid: false,
-		sanitizedKey: '',
+		sanitizedKey: "",
 		error: key
 			? `Invalid key format. Keys must start with 'app_' (App ID) or 'sk_' (Secret Key), followed by environment (dev/stg/prod) and identifier. Got: ${key.slice(0, 20)}...`
-			: 'API key is required but was not provided.',
-		issues: key ? ['invalid_format'] : ['missing'],
-	}
+			: "API key is required but was not provided.",
+		issues: key ? ["invalid_format"] : ["missing"],
+	};
 }
 
 /**
@@ -442,14 +463,14 @@ export function validateKey(key: string | undefined | null): KeyValidationResult
  * Use this when you need the key value and want to throw on invalid input.
  */
 export function validateAndSanitizeKey(key: string | undefined | null): string {
-	const result = validateKey(key)
+	const result = validateKey(key);
 	if (!result.valid) {
-		throw new Error(result.error)
+		throw new Error(result.error);
 	}
 	if (result.warning) {
-		console.warn(`[Sylphx] ${result.warning}`)
+		console.warn(`[Sylphx] ${result.warning}`);
 	}
-	return result.sanitizedKey
+	return result.sanitizedKey;
 }
 
 // =============================================================================
@@ -460,14 +481,14 @@ export function validateAndSanitizeKey(key: string | undefined | null): string {
  * Check if we're in development mode (based on NODE_ENV or hostname)
  */
 export function isDevelopmentRuntime(): boolean {
-	if (typeof process !== 'undefined' && process.env) {
-		return process.env.NODE_ENV === 'development'
+	if (typeof process !== "undefined" && process.env) {
+		return process.env.NODE_ENV === "development";
 	}
-	if (typeof window !== 'undefined') {
+	if (typeof window !== "undefined") {
 		return (
-			window.location.hostname === 'localhost' ||
-			window.location.hostname === '127.0.0.1'
-		)
+			window.location.hostname === "localhost" ||
+			window.location.hostname === "127.0.0.1"
+		);
 	}
-	return false
+	return false;
 }

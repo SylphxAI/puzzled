@@ -35,54 +35,45 @@
  */
 
 // Main tracker
-export { AnalyticsTracker, getAnalyticsTracker, initAnalytics, resetAnalyticsTracker } from './tracker'
+export {
+	AnalyticsTracker,
+	getAnalyticsTracker,
+	initAnalytics,
+	resetAnalyticsTracker,
+} from "./tracker";
 
 // Autocapture
 export {
 	Autocapture,
 	initAutocapture,
-	
-	
-	
-	
-} from './autocapture'
+} from "./autocapture";
 
 // Navigation
 export {
 	NavigationTracker,
 	initNavigationTracker,
-	
 	analyzeReferrer,
-	
-	
-} from './navigation'
+} from "./navigation";
 
 // Element naming
 export {
 	generateElementName,
 	generateEventName,
 	buildElementData,
-	
-} from './element-naming'
+} from "./element-naming";
 
 // Types
 export type {
 	// Core types
-	
+
 	EventProperties,
 	UserProperties,
-	
 	// Events
 	AnalyticsEvent,
-	
-	
-	
 	// Element data
 	ElementData,
 	// Identification
-	
-	
-	
+
 	// Configuration
 	AnalyticsConfig,
 	AutocaptureConfig,
@@ -94,11 +85,9 @@ export type {
 	DeviceContext,
 	PageContext,
 	// Queue
-	
-	
-} from './types'
+} from "./types";
 
-export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from './types'
+export { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG } from "./types";
 
 // Destination Routing
 export {
@@ -117,4 +106,4 @@ export {
 	type DestinationConfig,
 	type DestinationRouterConfig,
 	type DestinationRouter,
-} from './destinations'
+} from "./destinations";

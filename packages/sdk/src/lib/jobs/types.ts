@@ -7,11 +7,11 @@
 
 import {
 	BASE_RETRY_DELAY_MS,
+	DEFAULT_RETRY_DELAYS_MS,
+	JOBS_DLQ_MAX_AGE_MS,
 	JOB_DEFAULT_TIMEOUT_MS,
 	MAX_RETRY_DELAY_MS,
-	JOBS_DLQ_MAX_AGE_MS,
-	DEFAULT_RETRY_DELAYS_MS,
-} from '../../constants'
+} from "../../constants";
 
 // ==========================================
 // Core Types
@@ -19,89 +19,92 @@ import {
 
 /** Job status */
 export type JobStatus =
-	| 'pending'
-	| 'scheduled'
-	| 'running'
-	| 'completed'
-	| 'failed'
-	| 'cancelled'
-	| 'retrying'
-	| 'dead' // In DLQ
+	| "pending"
+	| "scheduled"
+	| "running"
+	| "completed"
+	| "failed"
+	| "cancelled"
+	| "retrying"
+	| "dead"; // In DLQ
 
 /** Job priority */
-export type JobPriority = 'low' | 'normal' | 'high' | 'critical'
+export type JobPriority = "low" | "normal" | "high" | "critical";
 
 /** Job payload - must be JSON serializable */
-export type JobPayload = Record<string, unknown>
+export type JobPayload = Record<string, unknown>;
 
 /** Job result */
-export type JobResult = unknown
+export type JobResult = unknown;
 
 // ==========================================
 // Job Definition
 // ==========================================
 
 /** Job definition */
-export interface JobDefinition<TPayload extends JobPayload = JobPayload, TResult = JobResult> {
+export interface JobDefinition<
+	TPayload extends JobPayload = JobPayload,
+	TResult = JobResult,
+> {
 	/** Unique job type identifier */
-	type: string
+	type: string;
 	/** Human-readable name */
-	name?: string
+	name?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Job handler (server-side) */
-	handler?: (payload: TPayload, context: JobContext) => Promise<TResult>
+	handler?: (payload: TPayload, context: JobContext) => Promise<TResult>;
 	/** Default options */
-	defaults?: JobOptions
+	defaults?: JobOptions;
 	/** Validation schema */
-	validate?: (payload: TPayload) => boolean | string
+	validate?: (payload: TPayload) => boolean | string;
 }
 
 /** Job options */
 export interface JobOptions {
 	/** Priority */
-	priority?: JobPriority
+	priority?: JobPriority;
 	/** Max retry attempts */
-	maxRetries?: number
+	maxRetries?: number;
 	/** Retry delay strategy */
-	retryDelay?: RetryDelayStrategy
+	retryDelay?: RetryDelayStrategy;
 	/** Timeout in ms */
-	timeout?: number
+	timeout?: number;
 	/** Delay execution */
-	delay?: number | Date
+	delay?: number | Date;
 	/** Cron schedule */
-	cron?: string
+	cron?: string;
 	/** Unique job ID (for deduplication) */
-	uniqueId?: string
+	uniqueId?: string;
 	/** Unique key TTL in ms (how long to prevent duplicates) */
-	uniqueTtl?: number
+	uniqueTtl?: number;
 	/** Dead letter queue options */
-	dlq?: DLQOptions
+	dlq?: DLQOptions;
 	/** Tags for filtering */
-	tags?: string[]
+	tags?: string[];
 	/** Custom metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 }
 
 /** Retry delay strategy */
 export type RetryDelayStrategy =
-	| { type: 'fixed'; delay: number }
-	| { type: 'exponential'; base: number; maxDelay?: number }
-	| { type: 'linear'; initial: number; increment: number; maxDelay?: number }
-	| { type: 'custom'; delays: number[] }
+	| { type: "fixed"; delay: number }
+	| { type: "exponential"; base: number; maxDelay?: number }
+	| { type: "linear"; initial: number; increment: number; maxDelay?: number }
+	| { type: "custom"; delays: number[] };
 
 /** DLQ options */
 export interface DLQOptions {
 	/** Enable DLQ */
-	enabled?: boolean
+	enabled?: boolean;
 	/** Max age before auto-discard (ms) */
-	maxAge?: number
+	maxAge?: number;
 	/** Auto-retry from DLQ */
-	autoRetry?: boolean
+	autoRetry?: boolean;
 	/** Auto-retry interval (ms) */
-	autoRetryInterval?: number
+	autoRetryInterval?: number;
 	/** Max auto-retry attempts from DLQ */
-	maxAutoRetries?: number
+	maxAutoRetries?: number;
 }
 
 // ==========================================
@@ -109,67 +112,74 @@ export interface DLQOptions {
 // ==========================================
 
 /** Job instance */
-export interface Job<TPayload extends JobPayload = JobPayload, TResult = JobResult> {
+export interface Job<
+	TPayload extends JobPayload = JobPayload,
+	TResult = JobResult,
+> {
 	/** Unique job ID */
-	id: string
+	id: string;
 	/** Job type */
-	type: string
+	type: string;
 	/** Job payload */
-	payload: TPayload
+	payload: TPayload;
 	/** Current status */
-	status: JobStatus
+	status: JobStatus;
 	/** Priority */
-	priority: JobPriority
+	priority: JobPriority;
 	/** Created timestamp */
-	createdAt: number
+	createdAt: number;
 	/** Scheduled execution time */
-	scheduledAt?: number
+	scheduledAt?: number;
 	/** Started timestamp */
-	startedAt?: number
+	startedAt?: number;
 	/** Completed timestamp */
-	completedAt?: number
+	completedAt?: number;
 	/** Current attempt number */
-	attempt: number
+	attempt: number;
 	/** Max retry attempts */
-	maxRetries: number
+	maxRetries: number;
 	/** Job result (if completed) */
-	result?: TResult
+	result?: TResult;
 	/** Error message (if failed) */
-	error?: string
+	error?: string;
 	/** Error stack trace */
-	errorStack?: string
+	errorStack?: string;
 	/** Progress (0-100) */
-	progress?: number
+	progress?: number;
 	/** Progress message */
-	progressMessage?: string
+	progressMessage?: string;
 	/** Tags */
-	tags?: string[]
+	tags?: string[];
 	/** Custom metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 	/** Parent job ID (for workflows) */
-	parentId?: string
+	parentId?: string;
 	/** Workflow step name (for workflows) */
-	stepName?: string
+	stepName?: string;
 }
 
 /** Job context passed to handlers */
 export interface JobContext {
 	/** Job ID */
-	jobId: string
+	jobId: string;
 	/** Current attempt number */
-	attempt: number
+	attempt: number;
 	/** Signal for cancellation */
-	signal?: AbortSignal
+	signal?: AbortSignal;
 	/** Update progress */
-	setProgress: (progress: number, message?: string) => void
+	setProgress: (progress: number, message?: string) => void;
 	/** Log message */
-	log: (message: string, level?: 'info' | 'warn' | 'error') => void
+	log: (message: string, level?: "info" | "warn" | "error") => void;
 	/** Check if should continue (for long-running jobs) */
-	shouldContinue: () => boolean
+	shouldContinue: () => boolean;
 	/** Schedule a child job */
-	scheduleChild: <T extends JobPayload>(type: string, payload: T, options?: JobOptions) => Promise<string>
+	scheduleChild: <T extends JobPayload>(
+		type: string,
+		payload: T,
+		options?: JobOptions,
+	) => Promise<string>;
 	/** Sleep (durable) */
-	sleep: (ms: number) => Promise<void>
+	sleep: (ms: number) => Promise<void>;
 }
 
 // ==========================================
@@ -177,29 +187,32 @@ export interface JobContext {
 // ==========================================
 
 /** Workflow definition */
-export interface WorkflowDefinition<TInput extends JobPayload = JobPayload, TOutput = JobResult> {
+export interface WorkflowDefinition<
+	TInput extends JobPayload = JobPayload,
+	TOutput = JobResult,
+> {
 	/** Unique workflow type */
-	type: string
+	type: string;
 	/** Human-readable name */
-	name?: string
+	name?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Workflow steps */
-	steps: WorkflowStep[]
+	steps: WorkflowStep[];
 	/** Default options */
-	defaults?: WorkflowOptions
+	defaults?: WorkflowOptions;
 	/** On complete callback */
-	onComplete?: (result: TOutput) => void
+	onComplete?: (result: TOutput) => void;
 	/** On error callback */
-	onError?: (error: Error, step: string) => void
+	onError?: (error: Error, step: string) => void;
 }
 
 /** Workflow options */
 export interface WorkflowOptions extends JobOptions {
 	/** Continue on step failure */
-	continueOnFailure?: boolean
+	continueOnFailure?: boolean;
 	/** Max concurrent steps (for parallel) */
-	maxConcurrency?: number
+	maxConcurrency?: number;
 }
 
 /** Workflow step */
@@ -209,92 +222,92 @@ export type WorkflowStep =
 	| ParallelStep
 	| LoopStep
 	| WaitStep
-	| SubworkflowStep
+	| SubworkflowStep;
 
 /** Job step */
 export interface JobStep {
-	type: 'job'
-	name: string
+	type: "job";
+	name: string;
 	/** Job type to execute */
-	jobType: string
+	jobType: string;
 	/** Payload transform (receives workflow input + previous results) */
-	payload?: (context: StepContext) => JobPayload
+	payload?: (context: StepContext) => JobPayload;
 	/** Step options */
-	options?: JobOptions
+	options?: JobOptions;
 	/** Condition to run this step */
-	if?: (context: StepContext) => boolean
+	if?: (context: StepContext) => boolean;
 	/** On complete transform */
-	onComplete?: (result: JobResult, context: StepContext) => unknown
+	onComplete?: (result: JobResult, context: StepContext) => unknown;
 }
 
 /** Conditional step */
 export interface ConditionalStep {
-	type: 'conditional'
-	name: string
+	type: "conditional";
+	name: string;
 	/** Condition function */
-	condition: (context: StepContext) => boolean
+	condition: (context: StepContext) => boolean;
 	/** Steps if condition is true */
-	then: WorkflowStep[]
+	then: WorkflowStep[];
 	/** Steps if condition is false */
-	else?: WorkflowStep[]
+	else?: WorkflowStep[];
 }
 
 /** Parallel step */
 export interface ParallelStep {
-	type: 'parallel'
-	name: string
+	type: "parallel";
+	name: string;
 	/** Steps to run in parallel */
-	steps: WorkflowStep[]
+	steps: WorkflowStep[];
 	/** Wait for all or any */
-	waitFor?: 'all' | 'any'
+	waitFor?: "all" | "any";
 	/** Max concurrent */
-	maxConcurrency?: number
+	maxConcurrency?: number;
 }
 
 /** Loop step */
 export interface LoopStep {
-	type: 'loop'
-	name: string
+	type: "loop";
+	name: string;
 	/** Array to iterate over, or function to get items */
-	items: unknown[] | ((context: StepContext) => unknown[])
+	items: unknown[] | ((context: StepContext) => unknown[]);
 	/** Step to execute for each item */
-	step: WorkflowStep
+	step: WorkflowStep;
 	/** Max concurrent iterations */
-	maxConcurrency?: number
+	maxConcurrency?: number;
 	/** Break condition */
-	breakIf?: (item: unknown, index: number, context: StepContext) => boolean
+	breakIf?: (item: unknown, index: number, context: StepContext) => boolean;
 }
 
 /** Wait step */
 export interface WaitStep {
-	type: 'wait'
-	name: string
+	type: "wait";
+	name: string;
 	/** Duration in ms, Date, or function */
-	until: number | Date | ((context: StepContext) => number | Date)
+	until: number | Date | ((context: StepContext) => number | Date);
 }
 
 /** Sub-workflow step */
 export interface SubworkflowStep {
-	type: 'subworkflow'
-	name: string
+	type: "subworkflow";
+	name: string;
 	/** Workflow type to execute */
-	workflowType: string
+	workflowType: string;
 	/** Payload transform */
-	payload?: (context: StepContext) => JobPayload
+	payload?: (context: StepContext) => JobPayload;
 	/** Options */
-	options?: WorkflowOptions
+	options?: WorkflowOptions;
 }
 
 /** Step context */
 export interface StepContext {
 	/** Workflow input */
-	input: JobPayload
+	input: JobPayload;
 	/** Results from previous steps */
-	results: Record<string, JobResult>
+	results: Record<string, JobResult>;
 	/** Current step name */
-	currentStep: string
+	currentStep: string;
 	/** Workflow metadata */
-	metadata: Record<string, unknown>
+	metadata: Record<string, unknown>;
 }
 
 // ==========================================
@@ -302,33 +315,36 @@ export interface StepContext {
 // ==========================================
 
 /** Workflow instance */
-export interface Workflow<TInput extends JobPayload = JobPayload, TOutput = JobResult> {
+export interface Workflow<
+	TInput extends JobPayload = JobPayload,
+	TOutput = JobResult,
+> {
 	/** Unique workflow ID */
-	id: string
+	id: string;
 	/** Workflow type */
-	type: string
+	type: string;
 	/** Input payload */
-	input: TInput
+	input: TInput;
 	/** Current status */
-	status: JobStatus
+	status: JobStatus;
 	/** Created timestamp */
-	createdAt: number
+	createdAt: number;
 	/** Started timestamp */
-	startedAt?: number
+	startedAt?: number;
 	/** Completed timestamp */
-	completedAt?: number
+	completedAt?: number;
 	/** Current step name */
-	currentStep?: string
+	currentStep?: string;
 	/** Step results */
-	stepResults: Record<string, JobResult>
+	stepResults: Record<string, JobResult>;
 	/** Step statuses */
-	stepStatuses: Record<string, JobStatus>
+	stepStatuses: Record<string, JobStatus>;
 	/** Final output */
-	output?: TOutput
+	output?: TOutput;
 	/** Error */
-	error?: string
+	error?: string;
 	/** Metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 }
 
 // ==========================================
@@ -338,37 +354,37 @@ export interface Workflow<TInput extends JobPayload = JobPayload, TOutput = JobR
 /** Cron schedule */
 export interface CronSchedule {
 	/** Cron expression */
-	expression: string
+	expression: string;
 	/** Timezone */
-	timezone?: string
+	timezone?: string;
 	/** Start date */
-	startAt?: Date
+	startAt?: Date;
 	/** End date */
-	endAt?: Date
+	endAt?: Date;
 	/** Max runs */
-	maxRuns?: number
+	maxRuns?: number;
 }
 
 /** Scheduled job */
 export interface ScheduledJob {
 	/** Schedule ID */
-	id: string
+	id: string;
 	/** Job type */
-	type: string
+	type: string;
 	/** Job payload */
-	payload: JobPayload
+	payload: JobPayload;
 	/** Cron schedule */
-	cron: CronSchedule
+	cron: CronSchedule;
 	/** Current status */
-	status: 'active' | 'paused' | 'completed'
+	status: "active" | "paused" | "completed";
 	/** Run count */
-	runCount: number
+	runCount: number;
 	/** Next run timestamp */
-	nextRunAt?: number
+	nextRunAt?: number;
 	/** Last run timestamp */
-	lastRunAt?: number
+	lastRunAt?: number;
 	/** Created timestamp */
-	createdAt: number
+	createdAt: number;
 }
 
 // ==========================================
@@ -377,23 +393,33 @@ export interface ScheduledJob {
 
 /** Job event */
 export type JobEvent =
-	| { type: 'job:created'; job: Job }
-	| { type: 'job:started'; job: Job }
-	| { type: 'job:progress'; job: Job; progress: number; message?: string }
-	| { type: 'job:completed'; job: Job; result: JobResult }
-	| { type: 'job:failed'; job: Job; error: string }
-	| { type: 'job:retrying'; job: Job; attempt: number }
-	| { type: 'job:dead'; job: Job }
-	| { type: 'job:cancelled'; job: Job }
+	| { type: "job:created"; job: Job }
+	| { type: "job:started"; job: Job }
+	| { type: "job:progress"; job: Job; progress: number; message?: string }
+	| { type: "job:completed"; job: Job; result: JobResult }
+	| { type: "job:failed"; job: Job; error: string }
+	| { type: "job:retrying"; job: Job; attempt: number }
+	| { type: "job:dead"; job: Job }
+	| { type: "job:cancelled"; job: Job };
 
 /** Workflow event */
 export type WorkflowEvent =
-	| { type: 'workflow:started'; workflow: Workflow }
-	| { type: 'workflow:step:started'; workflow: Workflow; step: string }
-	| { type: 'workflow:step:completed'; workflow: Workflow; step: string; result: JobResult }
-	| { type: 'workflow:step:failed'; workflow: Workflow; step: string; error: string }
-	| { type: 'workflow:completed'; workflow: Workflow; output: JobResult }
-	| { type: 'workflow:failed'; workflow: Workflow; error: string }
+	| { type: "workflow:started"; workflow: Workflow }
+	| { type: "workflow:step:started"; workflow: Workflow; step: string }
+	| {
+			type: "workflow:step:completed";
+			workflow: Workflow;
+			step: string;
+			result: JobResult;
+	  }
+	| {
+			type: "workflow:step:failed";
+			workflow: Workflow;
+			step: string;
+			error: string;
+	  }
+	| { type: "workflow:completed"; workflow: Workflow; output: JobResult }
+	| { type: "workflow:failed"; workflow: Workflow; error: string };
 
 // ==========================================
 // Configuration
@@ -402,26 +428,30 @@ export type WorkflowEvent =
 /** Jobs client configuration */
 export interface JobsConfig {
 	/** API endpoint */
-	apiEndpoint?: string
+	apiEndpoint?: string;
 	/** API key */
-	apiKey?: string
+	apiKey?: string;
 	/** Default job options */
-	defaultOptions?: JobOptions
+	defaultOptions?: JobOptions;
 	/** Enable debug logging */
-	debug?: boolean
+	debug?: boolean;
 	/** Event callbacks */
-	onJobEvent?: (event: JobEvent) => void
-	onWorkflowEvent?: (event: WorkflowEvent) => void
+	onJobEvent?: (event: JobEvent) => void;
+	onWorkflowEvent?: (event: WorkflowEvent) => void;
 }
 
 /** Default configuration */
 export const DEFAULT_JOBS_CONFIG: Required<
-	Pick<JobsConfig, 'defaultOptions' | 'debug'>
+	Pick<JobsConfig, "defaultOptions" | "debug">
 > = {
 	defaultOptions: {
-		priority: 'normal',
+		priority: "normal",
 		maxRetries: 3,
-		retryDelay: { type: 'exponential', base: BASE_RETRY_DELAY_MS, maxDelay: MAX_RETRY_DELAY_MS },
+		retryDelay: {
+			type: "exponential",
+			base: BASE_RETRY_DELAY_MS,
+			maxDelay: MAX_RETRY_DELAY_MS,
+		},
 		timeout: JOB_DEFAULT_TIMEOUT_MS,
 		dlq: {
 			enabled: true,
@@ -429,7 +459,7 @@ export const DEFAULT_JOBS_CONFIG: Required<
 		},
 	},
 	debug: false,
-}
+};
 
 /** Default retry delays (ms) */
-export const DEFAULT_RETRY_DELAYS = DEFAULT_RETRY_DELAYS_MS
+export const DEFAULT_RETRY_DELAYS = DEFAULT_RETRY_DELAYS_MS;

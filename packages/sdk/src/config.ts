@@ -7,9 +7,19 @@
  * Uses appId or secretKey for authentication via x-app-secret header.
  */
 
-import { NetworkError, type SylphxErrorCode, SylphxError, TimeoutError, RateLimitError } from './errors'
-import { validateKey } from './key-validation'
-import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './constants'
+import {
+	DEFAULT_PLATFORM_URL,
+	DEFAULT_TIMEOUT_MS,
+	SDK_API_PATH,
+} from "./constants";
+import {
+	NetworkError,
+	RateLimitError,
+	SylphxError,
+	type SylphxErrorCode,
+	TimeoutError,
+} from "./errors";
+import { validateKey } from "./key-validation";
 
 /**
  * Map HTTP status code to SylphxErrorCode
@@ -17,33 +27,33 @@ import { DEFAULT_TIMEOUT_MS, DEFAULT_PLATFORM_URL, SDK_API_PATH } from './consta
 function httpStatusToErrorCode(status: number): SylphxErrorCode {
 	switch (status) {
 		case 400:
-			return 'BAD_REQUEST'
+			return "BAD_REQUEST";
 		case 401:
-			return 'UNAUTHORIZED'
+			return "UNAUTHORIZED";
 		case 403:
-			return 'FORBIDDEN'
+			return "FORBIDDEN";
 		case 404:
-			return 'NOT_FOUND'
+			return "NOT_FOUND";
 		case 409:
-			return 'CONFLICT'
+			return "CONFLICT";
 		case 413:
-			return 'PAYLOAD_TOO_LARGE'
+			return "PAYLOAD_TOO_LARGE";
 		case 422:
-			return 'UNPROCESSABLE_ENTITY'
+			return "UNPROCESSABLE_ENTITY";
 		case 429:
-			return 'TOO_MANY_REQUESTS'
+			return "TOO_MANY_REQUESTS";
 		case 500:
-			return 'INTERNAL_SERVER_ERROR'
+			return "INTERNAL_SERVER_ERROR";
 		case 501:
-			return 'NOT_IMPLEMENTED'
+			return "NOT_IMPLEMENTED";
 		case 502:
-			return 'BAD_GATEWAY'
+			return "BAD_GATEWAY";
 		case 503:
-			return 'SERVICE_UNAVAILABLE'
+			return "SERVICE_UNAVAILABLE";
 		case 504:
-			return 'GATEWAY_TIMEOUT'
+			return "GATEWAY_TIMEOUT";
 		default:
-			return status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'BAD_REQUEST'
+			return status >= 500 ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST";
 	}
 }
 
@@ -78,20 +88,20 @@ export interface SylphxConfig {
 	 *
 	 * Get this from Platform Console → Apps → Your App → Environments
 	 */
-	readonly secretKey?: string
+	readonly secretKey?: string;
 	/** Platform URL (default: https://sylphx.com) */
-	readonly platformUrl: string
+	readonly platformUrl: string;
 	/** Optional: Current access token for authenticated requests */
-	readonly accessToken?: string
+	readonly accessToken?: string;
 }
 
 /**
  * Configuration input (some fields are optional)
  */
 export interface SylphxConfigInput {
-	secretKey?: string
-	platformUrl?: string
-	accessToken?: string
+	secretKey?: string;
+	platformUrl?: string;
+	accessToken?: string;
 }
 
 /**
@@ -110,26 +120,26 @@ export interface SylphxConfigInput {
  */
 export function createConfig(input: SylphxConfigInput): SylphxConfig {
 	// Validate and sanitize secretKey using SSOT if provided
-	let secretKey: string | undefined
+	let secretKey: string | undefined;
 	if (input.secretKey) {
-		const result = validateKey(input.secretKey)
+		const result = validateKey(input.secretKey);
 		if (!result.valid) {
-			throw new SylphxError(result.error || 'Invalid API key', {
-				code: 'BAD_REQUEST',
+			throw new SylphxError(result.error || "Invalid API key", {
+				code: "BAD_REQUEST",
 				data: { issues: result.issues },
-			})
+			});
 		}
 		if (result.warning) {
-			console.warn(`[Sylphx] ${result.warning}`)
+			console.warn(`[Sylphx] ${result.warning}`);
 		}
-		secretKey = result.sanitizedKey
+		secretKey = result.sanitizedKey;
 	}
 
 	return Object.freeze({
 		secretKey,
 		platformUrl: (input.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
 		accessToken: input.accessToken,
-	})
+	});
 }
 
 /**
@@ -140,11 +150,14 @@ export function createConfig(input: SylphxConfigInput): SylphxConfig {
  * const authenticatedConfig = withToken(config, 'access_token_here')
  * ```
  */
-export function withToken(config: SylphxConfig, accessToken: string): SylphxConfig {
+export function withToken(
+	config: SylphxConfig,
+	accessToken: string,
+): SylphxConfig {
 	return Object.freeze({
 		...config,
 		accessToken,
-	})
+	});
 }
 
 /**
@@ -152,26 +165,26 @@ export function withToken(config: SylphxConfig, accessToken: string): SylphxConf
  */
 export function buildHeaders(config: SylphxConfig): Record<string, string> {
 	const headers: Record<string, string> = {
-		'Content-Type': 'application/json',
-	}
+		"Content-Type": "application/json",
+	};
 
 	if (config.secretKey) {
-		headers['x-app-secret'] = config.secretKey
+		headers["x-app-secret"] = config.secretKey;
 	}
 	if (config.accessToken) {
-		headers['Authorization'] = `Bearer ${config.accessToken}`
+		headers["Authorization"] = `Bearer ${config.accessToken}`;
 	}
 
-	return headers
+	return headers;
 }
 
 /**
  * Internal: Build REST API URL
  */
 export function buildApiUrl(config: SylphxConfig, path: string): string {
-	const base = config.platformUrl.replace(/\/$/, '')
-	const cleanPath = path.startsWith('/') ? path : `/${path}`
-	return `${base}${SDK_API_PATH}${cleanPath}`
+	const base = config.platformUrl.replace(/\/$/, "");
+	const cleanPath = path.startsWith("/") ? path : `/${path}`;
+	return `${base}${SDK_API_PATH}${cleanPath}`;
 }
 
 /**
@@ -187,13 +200,13 @@ export async function callApi<TOutput>(
 	config: SylphxConfig,
 	path: string,
 	options: {
-		method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-		body?: unknown
-		query?: Record<string, string | number | boolean | undefined>
+		method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+		body?: unknown;
+		query?: Record<string, string | number | boolean | undefined>;
 		/** Request timeout in milliseconds (default: 30000) */
-		timeout?: number
+		timeout?: number;
 		/** AbortSignal for manual cancellation */
-		signal?: AbortSignal
+		signal?: AbortSignal;
 		/**
 		 * Idempotency key for safe retries (Stripe pattern)
 		 *
@@ -210,113 +223,132 @@ export async function callApi<TOutput>(
 		 * })
 		 * ```
 		 */
-		idempotencyKey?: string
-	} = {}
+		idempotencyKey?: string;
+	} = {},
 ): Promise<TOutput> {
-	const { method = 'GET', body, query, timeout = DEFAULT_TIMEOUT_MS, signal, idempotencyKey } = options
+	const {
+		method = "GET",
+		body,
+		query,
+		timeout = DEFAULT_TIMEOUT_MS,
+		signal,
+		idempotencyKey,
+	} = options;
 
-	let url = buildApiUrl(config, path)
+	let url = buildApiUrl(config, path);
 
 	// Add query parameters
 	if (query) {
-		const params = new URLSearchParams()
+		const params = new URLSearchParams();
 		for (const [key, value] of Object.entries(query)) {
 			if (value !== undefined) {
-				params.set(key, String(value))
+				params.set(key, String(value));
 			}
 		}
-		const queryString = params.toString()
+		const queryString = params.toString();
 		if (queryString) {
-			url += `?${queryString}`
+			url += `?${queryString}`;
 		}
 	}
 
 	// Create AbortController for timeout
-	const controller = new AbortController()
-	const timeoutId = setTimeout(() => controller.abort(), timeout)
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), timeout);
 
 	// Combine user signal with timeout signal
 	const combinedSignal = signal
 		? AbortSignal.any([signal, controller.signal])
-		: controller.signal
+		: controller.signal;
 
-	const headers = buildHeaders(config)
+	const headers = buildHeaders(config);
 
 	// Add idempotency key header for safe retries (Stripe pattern)
 	if (idempotencyKey) {
-		headers['Idempotency-Key'] = idempotencyKey
+		headers["Idempotency-Key"] = idempotencyKey;
 	}
 
 	const fetchOptions: RequestInit = {
 		method,
 		headers,
 		signal: combinedSignal,
-	}
+	};
 
 	if (body) {
-		fetchOptions.body = JSON.stringify(body)
+		fetchOptions.body = JSON.stringify(body);
 	}
 
-	let response: Response
+	let response: Response;
 	try {
-		response = await fetch(url, fetchOptions)
+		response = await fetch(url, fetchOptions);
 	} catch (error) {
-		clearTimeout(timeoutId)
+		clearTimeout(timeoutId);
 
 		// Handle abort/timeout
 		if (error instanceof Error) {
-			if (error.name === 'AbortError') {
+			if (error.name === "AbortError") {
 				// Check if it was our timeout or user cancellation
 				if (controller.signal.aborted && !signal?.aborted) {
-					throw new TimeoutError(timeout)
+					throw new TimeoutError(timeout);
 				}
-				throw new SylphxError('Request aborted', { code: 'ABORTED', cause: error })
+				throw new SylphxError("Request aborted", {
+					code: "ABORTED",
+					cause: error,
+				});
 			}
 			// Network errors
-			throw new NetworkError(error.message, { cause: error })
+			throw new NetworkError(error.message, { cause: error });
 		}
-		throw new NetworkError('Network request failed')
+		throw new NetworkError("Network request failed");
 	} finally {
-		clearTimeout(timeoutId)
+		clearTimeout(timeoutId);
 	}
 
 	if (!response.ok) {
-		const errorBody = await response.text().catch(() => '')
-		let errorMessage = 'Request failed'
-		let errorData: Record<string, unknown> | undefined
+		const errorBody = await response.text().catch(() => "");
+		let errorMessage = "Request failed";
+		let errorData: Record<string, unknown> | undefined;
 
 		// Safe JSON parsing
 		if (errorBody) {
 			try {
-				const parsed = JSON.parse(errorBody) as { error?: { message?: string }; message?: string }
-				errorMessage = parsed.error?.message ?? parsed.message ?? errorMessage
-				errorData = parsed.error as Record<string, unknown> | undefined
+				const parsed = JSON.parse(errorBody) as {
+					error?: { message?: string };
+					message?: string;
+				};
+				errorMessage = parsed.error?.message ?? parsed.message ?? errorMessage;
+				errorData = parsed.error as Record<string, unknown> | undefined;
 			} catch {
 				// Not JSON, use status text
-				errorMessage = response.statusText || errorMessage
+				errorMessage = response.statusText || errorMessage;
 			}
 		}
 
-		const errorCode = httpStatusToErrorCode(response.status)
+		const errorCode = httpStatusToErrorCode(response.status);
 
 		// Extract rate limit headers (Stripe SDK pattern)
-		const retryAfterHeader = response.headers.get('Retry-After')
-		const rateLimitLimit = response.headers.get('X-RateLimit-Limit')
-		const rateLimitRemaining = response.headers.get('X-RateLimit-Remaining')
-		const rateLimitReset = response.headers.get('X-RateLimit-Reset')
+		const retryAfterHeader = response.headers.get("Retry-After");
+		const rateLimitLimit = response.headers.get("X-RateLimit-Limit");
+		const rateLimitRemaining = response.headers.get("X-RateLimit-Remaining");
+		const rateLimitReset = response.headers.get("X-RateLimit-Reset");
 
-		const retryAfter = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined
+		const retryAfter = retryAfterHeader
+			? Number.parseInt(retryAfterHeader, 10)
+			: undefined;
 
 		// Use specialized RateLimitError for 429 responses
 		if (response.status === 429) {
-			throw new RateLimitError(errorMessage || 'Too many requests', {
+			throw new RateLimitError(errorMessage || "Too many requests", {
 				status: response.status,
 				data: errorData,
 				retryAfter,
-				limit: rateLimitLimit ? parseInt(rateLimitLimit, 10) : undefined,
-				remaining: rateLimitRemaining ? parseInt(rateLimitRemaining, 10) : undefined,
-				resetAt: rateLimitReset ? parseInt(rateLimitReset, 10) : undefined,
-			})
+				limit: rateLimitLimit ? Number.parseInt(rateLimitLimit, 10) : undefined,
+				remaining: rateLimitRemaining
+					? Number.parseInt(rateLimitRemaining, 10)
+					: undefined,
+				resetAt: rateLimitReset
+					? Number.parseInt(rateLimitReset, 10)
+					: undefined,
+			});
 		}
 
 		throw new SylphxError(errorMessage, {
@@ -324,23 +356,23 @@ export async function callApi<TOutput>(
 			status: response.status,
 			data: errorData,
 			retryAfter,
-		})
+		});
 	}
 
 	// Handle empty responses (204 No Content)
-	const text = await response.text()
+	const text = await response.text();
 	if (!text) {
-		return {} as TOutput
+		return {} as TOutput;
 	}
 
 	// Safe JSON parsing for response body
 	try {
-		return JSON.parse(text) as TOutput
+		return JSON.parse(text) as TOutput;
 	} catch (error) {
-		throw new SylphxError('Failed to parse response', {
-			code: 'PARSE_ERROR',
+		throw new SylphxError("Failed to parse response", {
+			code: "PARSE_ERROR",
 			cause: error instanceof Error ? error : undefined,
 			data: { body: text.slice(0, 200) }, // Include snippet for debugging
-		})
+		});
 	}
 }

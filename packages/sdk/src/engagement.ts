@@ -38,7 +38,7 @@
  * ```
  */
 
-import { type SylphxConfig, callApi } from './config'
+import { type SylphxConfig, callApi } from "./config";
 
 // Re-export types from types file
 export type {
@@ -48,7 +48,6 @@ export type {
 	StreakFrequency,
 	RecordActivityInput,
 	RecordActivityResult,
-	
 	// Leaderboards
 	LeaderboardDefinition,
 	LeaderboardEntry,
@@ -59,7 +58,6 @@ export type {
 	LeaderboardAggregation,
 	SubmitScoreInput,
 	SubmitScoreResult,
-	
 	// Achievements
 	AchievementDefinition,
 	AchievementType,
@@ -70,10 +68,9 @@ export type {
 	CriteriaOperator,
 	UserAchievement,
 	AchievementUnlockEvent,
-	
-} from './lib/engagement/types'
+} from "./lib/engagement/types";
 
-export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'
+export { ACHIEVEMENT_TIER_CONFIG } from "./lib/engagement/types";
 
 // ============================================================================
 // Streak Functions
@@ -82,9 +79,9 @@ export { ACHIEVEMENT_TIER_CONFIG } from './lib/engagement/types'
 import type {
 	RecordActivityInput,
 	RecordActivityResult,
-	StreakState,
 	StreakDefaults,
-} from './lib/engagement/types'
+	StreakState,
+} from "./lib/engagement/types";
 
 /**
  * Get current streak state for a user
@@ -99,12 +96,12 @@ import type {
 export async function getStreak(
 	config: SylphxConfig,
 	streakId: string,
-	userId: string
+	userId: string,
 ): Promise<StreakState> {
-	return callApi(config, '/engagement/streaks/get', {
-		method: 'GET',
+	return callApi(config, "/engagement/streaks/get", {
+		method: "GET",
 		query: { streakId, userId },
-	})
+	});
 }
 
 /**
@@ -118,11 +115,14 @@ export async function getStreak(
  * }
  * ```
  */
-export async function getAllStreaks(config: SylphxConfig, userId: string): Promise<StreakState[]> {
-	return callApi(config, '/engagement/streaks', {
-		method: 'GET',
+export async function getAllStreaks(
+	config: SylphxConfig,
+	userId: string,
+): Promise<StreakState[]> {
+	return callApi(config, "/engagement/streaks", {
+		method: "GET",
 		query: { userId },
-	})
+	});
 }
 
 /**
@@ -158,14 +158,14 @@ export async function recordStreakActivity(
 	config: SylphxConfig,
 	input: RecordActivityInput,
 	userId: string,
-	defaults?: StreakDefaults
+	defaults?: StreakDefaults,
 ): Promise<RecordActivityResult> {
-	const { idempotencyKey, ...inputBody } = input
-	return callApi(config, '/engagement/streaks/record', {
-		method: 'POST',
+	const { idempotencyKey, ...inputBody } = input;
+	return callApi(config, "/engagement/streaks/record", {
+		method: "POST",
 		body: { ...inputBody, userId, defaults },
 		idempotencyKey,
-	})
+	});
 }
 
 /**
@@ -182,12 +182,12 @@ export async function recordStreakActivity(
 export async function recoverStreak(
 	config: SylphxConfig,
 	streakId: string,
-	userId: string
+	userId: string,
 ): Promise<{ success: boolean; streak: StreakState }> {
-	return callApi(config, '/engagement/streaks/recover', {
-		method: 'POST',
+	return callApi(config, "/engagement/streaks/recover", {
+		method: "POST",
 		body: { streakId, userId },
-	})
+	});
 }
 
 // ============================================================================
@@ -195,12 +195,12 @@ export async function recoverStreak(
 // ============================================================================
 
 import type {
+	LeaderboardDefaults,
 	LeaderboardQueryOptions,
 	LeaderboardResult,
 	SubmitScoreInput,
 	SubmitScoreResult,
-	LeaderboardDefaults,
-} from './lib/engagement/types'
+} from "./lib/engagement/types";
 
 /**
  * Get leaderboard entries
@@ -225,15 +225,15 @@ export async function getLeaderboard(
 	config: SylphxConfig,
 	leaderboardId: string,
 	userId: string | null,
-	options?: LeaderboardQueryOptions
+	options?: LeaderboardQueryOptions,
 ): Promise<LeaderboardResult> {
-	return callApi(config, '/engagement/leaderboards/get', {
-		method: 'GET',
+	return callApi(config, "/engagement/leaderboards/get", {
+		method: "GET",
 		query: { leaderboardId, userId: userId ?? undefined, ...options } as Record<
 			string,
 			string | number | boolean | undefined
 		>,
-	})
+	});
 }
 
 /**
@@ -272,12 +272,12 @@ export async function submitScore(
 	config: SylphxConfig,
 	input: SubmitScoreInput,
 	userId: string,
-	defaults?: LeaderboardDefaults
+	defaults?: LeaderboardDefaults,
 ): Promise<SubmitScoreResult> {
-	return callApi(config, '/engagement/leaderboards/submit', {
-		method: 'POST',
+	return callApi(config, "/engagement/leaderboards/submit", {
+		method: "POST",
 		body: { ...input, userId, defaults },
-	})
+	});
 }
 
 /**
@@ -294,12 +294,12 @@ export async function submitScore(
 export async function getUserLeaderboardRank(
 	config: SylphxConfig,
 	leaderboardId: string,
-	userId: string
+	userId: string,
 ): Promise<{ rank: number; value: number } | null> {
-	return callApi(config, '/engagement/leaderboards/rank', {
-		method: 'GET',
+	return callApi(config, "/engagement/leaderboards/rank", {
+		method: "GET",
 		query: { leaderboardId, userId },
-	})
+	});
 }
 
 // ============================================================================
@@ -307,10 +307,10 @@ export async function getUserLeaderboardRank(
 // ============================================================================
 
 import type {
+	AchievementDefaults,
 	AchievementUnlockEvent,
 	UserAchievement,
-	AchievementDefaults,
-} from './lib/engagement/types'
+} from "./lib/engagement/types";
 
 /**
  * Get all achievements with user progress
@@ -330,12 +330,12 @@ import type {
  */
 export async function getAchievements(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<UserAchievement[]> {
-	return callApi(config, '/engagement/achievements', {
-		method: 'GET',
+	return callApi(config, "/engagement/achievements", {
+		method: "GET",
 		query: { userId },
-	})
+	});
 }
 
 /**
@@ -352,12 +352,12 @@ export async function getAchievements(
 export async function getAchievement(
 	config: SylphxConfig,
 	achievementId: string,
-	userId: string
+	userId: string,
 ): Promise<UserAchievement | null> {
-	return callApi(config, '/engagement/achievements/get', {
-		method: 'GET',
+	return callApi(config, "/engagement/achievements/get", {
+		method: "GET",
 		query: { achievementId, userId },
-	})
+	});
 }
 
 /**
@@ -388,12 +388,12 @@ export async function unlockAchievement(
 	config: SylphxConfig,
 	achievementId: string,
 	userId: string,
-	defaults?: AchievementDefaults
+	defaults?: AchievementDefaults,
 ): Promise<AchievementUnlockEvent> {
-	return callApi(config, '/engagement/achievements/unlock', {
-		method: 'POST',
+	return callApi(config, "/engagement/achievements/unlock", {
+		method: "POST",
 		body: { achievementId, userId, defaults },
-	})
+	});
 }
 
 /**
@@ -431,12 +431,12 @@ export async function incrementAchievementProgress(
 	achievementId: string,
 	amount: number,
 	userId: string,
-	defaults?: AchievementDefaults
+	defaults?: AchievementDefaults,
 ): Promise<UserAchievement> {
-	return callApi(config, '/engagement/achievements/progress', {
-		method: 'POST',
+	return callApi(config, "/engagement/achievements/progress", {
+		method: "POST",
 		body: { achievementId, amount, userId, defaults },
-	})
+	});
 }
 
 /**
@@ -451,10 +451,10 @@ export async function incrementAchievementProgress(
  */
 export async function getAchievementPoints(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<{ total: number; thisMonth: number; rank: number | null }> {
-	return callApi(config, '/engagement/achievements/points', {
-		method: 'GET',
+	return callApi(config, "/engagement/achievements/points", {
+		method: "GET",
 		query: { userId },
-	})
+	});
 }

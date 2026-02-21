@@ -6,27 +6,34 @@
  */
 
 import {
-	SDK_API_PATH,
-	ANALYTICS_SESSION_TIMEOUT_MS,
 	ANALYTICS_FLUSH_INTERVAL_MS,
 	ANALYTICS_SESSION_KEY,
-} from '../../constants'
+	ANALYTICS_SESSION_TIMEOUT_MS,
+	SDK_API_PATH,
+} from "../../constants";
 
 // ==========================================
 // Core Types
 // ==========================================
 
 /** Event property value types */
-export type PropertyValue = string | number | boolean | null | undefined | PropertyValue[] | { [key: string]: PropertyValue }
+export type PropertyValue =
+	| string
+	| number
+	| boolean
+	| null
+	| undefined
+	| PropertyValue[]
+	| { [key: string]: PropertyValue };
 
 /** Event properties */
-export type EventProperties = Record<string, PropertyValue>
+export type EventProperties = Record<string, PropertyValue>;
 
 /** User properties */
-export type UserProperties = Record<string, PropertyValue>
+export type UserProperties = Record<string, PropertyValue>;
 
 /** Group properties */
-export type GroupProperties = Record<string, PropertyValue>
+export type GroupProperties = Record<string, PropertyValue>;
 
 // ==========================================
 // Event Types
@@ -35,54 +42,54 @@ export type GroupProperties = Record<string, PropertyValue>
 /** Standard event (from PostHog) */
 export interface AnalyticsEvent {
 	/** Event name */
-	event: string
+	event: string;
 	/** Event properties */
-	properties: EventProperties
+	properties: EventProperties;
 	/** User distinct ID */
-	distinct_id: string
+	distinct_id: string;
 	/** Timestamp (ISO 8601) */
-	timestamp: string
+	timestamp: string;
 	/** Library info */
-	$lib?: string
-	$lib_version?: string
+	$lib?: string;
+	$lib_version?: string;
 	/** Set user properties */
-	$set?: UserProperties
+	$set?: UserProperties;
 	/** Set user properties once */
-	$set_once?: UserProperties
+	$set_once?: UserProperties;
 }
 
 /** Autocaptured event */
 interface AutocaptureEvent extends AnalyticsEvent {
-	event: '$autocapture'
+	event: "$autocapture";
 	properties: EventProperties & {
-		$event_type: 'click' | 'submit' | 'change' | 'focus' | 'blur'
-		$elements: ElementData[]
-		$element_name?: string
-		$element_text?: string
-		$element_href?: string
-	}
+		$event_type: "click" | "submit" | "change" | "focus" | "blur";
+		$elements: ElementData[];
+		$element_name?: string;
+		$element_text?: string;
+		$element_href?: string;
+	};
 }
 
 /** Page view event */
 interface PageViewEvent extends AnalyticsEvent {
-	event: '$pageview'
+	event: "$pageview";
 	properties: EventProperties & {
-		$current_url: string
-		$host: string
-		$pathname: string
-		$referrer?: string
-		$referring_domain?: string
-	}
+		$current_url: string;
+		$host: string;
+		$pathname: string;
+		$referrer?: string;
+		$referring_domain?: string;
+	};
 }
 
 /** Page leave event */
 interface PageLeaveEvent extends AnalyticsEvent {
-	event: '$pageleave'
+	event: "$pageleave";
 	properties: EventProperties & {
-		$current_url: string
-		$time_on_page?: number
-		$scroll_depth?: number
-	}
+		$current_url: string;
+		$time_on_page?: number;
+		$scroll_depth?: number;
+	};
 }
 
 // ==========================================
@@ -91,22 +98,22 @@ interface PageLeaveEvent extends AnalyticsEvent {
 
 /** Captured element data */
 export interface ElementData {
-	tag_name: string
-	$el_text?: string
-	attr__id?: string
-	attr__class?: string
-	attr__href?: string
-	attr__name?: string
-	attr__type?: string
-	attr__value?: string
-	attr__placeholder?: string
-	attr__role?: string
-	attr__aria_label?: string
-	attr__data_testid?: string
-	attr__data_analytics?: string
-	nth_child?: number
-	nth_of_type?: number
-	[key: `attr__${string}`]: string | undefined
+	tag_name: string;
+	$el_text?: string;
+	attr__id?: string;
+	attr__class?: string;
+	attr__href?: string;
+	attr__name?: string;
+	attr__type?: string;
+	attr__value?: string;
+	attr__placeholder?: string;
+	attr__role?: string;
+	attr__aria_label?: string;
+	attr__data_testid?: string;
+	attr__data_analytics?: string;
+	nth_child?: number;
+	nth_of_type?: number;
+	[key: `attr__${string}`]: string | undefined;
 }
 
 // ==========================================
@@ -115,22 +122,22 @@ export interface ElementData {
 
 /** Identify call */
 interface IdentifyData {
-	distinct_id: string
-	$set?: UserProperties
-	$set_once?: UserProperties
+	distinct_id: string;
+	$set?: UserProperties;
+	$set_once?: UserProperties;
 }
 
 /** Alias call */
 interface AliasData {
-	alias: string
-	distinct_id: string
+	alias: string;
+	distinct_id: string;
 }
 
 /** Group call */
 interface GroupData {
-	$group_type: string
-	$group_key: string
-	$group_set?: GroupProperties
+	$group_type: string;
+	$group_key: string;
+	$group_set?: GroupProperties;
 }
 
 // ==========================================
@@ -140,72 +147,72 @@ interface GroupData {
 /** Analytics configuration */
 export interface AnalyticsConfig {
 	/** API endpoint */
-	apiEndpoint?: string
+	apiEndpoint?: string;
 	/** API key (optional, for server-side validation) */
-	apiKey?: string
+	apiKey?: string;
 	/** Enable autocapture */
-	autocapture?: boolean | AutocaptureConfig
+	autocapture?: boolean | AutocaptureConfig;
 	/** Enable pageview tracking */
-	capturePageviews?: boolean
+	capturePageviews?: boolean;
 	/** Enable SPA navigation tracking */
-	captureSpaNavigation?: boolean
+	captureSpaNavigation?: boolean;
 	/** Enable page leave tracking */
-	capturePageleave?: boolean
+	capturePageleave?: boolean;
 	/** Enable scroll depth tracking */
-	captureScrollDepth?: boolean
+	captureScrollDepth?: boolean;
 	/** Enable form tracking */
-	captureForms?: boolean
+	captureForms?: boolean;
 	/** Enable error tracking */
-	captureErrors?: boolean
+	captureErrors?: boolean;
 	/** Capture UTM parameters */
-	captureUtm?: boolean
+	captureUtm?: boolean;
 	/** Capture referrer */
-	captureReferrer?: boolean
+	captureReferrer?: boolean;
 	/** Capture device info */
-	captureDevice?: boolean
+	captureDevice?: boolean;
 	/** Session ID cookie name */
-	sessionCookieName?: string
+	sessionCookieName?: string;
 	/** Session timeout in ms (default: 30 min) */
-	sessionTimeout?: number
+	sessionTimeout?: number;
 	/** Properties to add to every event */
-	defaultProperties?: EventProperties
+	defaultProperties?: EventProperties;
 	/** Properties to never capture */
-	propertyDenylist?: string[]
+	propertyDenylist?: string[];
 	/** Sanitize properties before sending */
-	sanitize?: (properties: EventProperties) => EventProperties
+	sanitize?: (properties: EventProperties) => EventProperties;
 	/** Called before sending events */
-	beforeSend?: (event: AnalyticsEvent) => AnalyticsEvent | null
+	beforeSend?: (event: AnalyticsEvent) => AnalyticsEvent | null;
 	/** Enable debug logging */
-	debug?: boolean
+	debug?: boolean;
 	/** Batch events */
-	batchSize?: number
+	batchSize?: number;
 	/** Batch flush interval in ms */
-	flushInterval?: number
+	flushInterval?: number;
 	/**
 	 * Enable persistence
 	 *
 	 * Note: sessionStorage is NOT supported (data lost on tab close = lost analytics).
 	 * Use localStorage for persistent identity or 'none' for ephemeral sessions.
 	 */
-	persistence?: 'localStorage' | 'cookie' | 'none'
+	persistence?: "localStorage" | "cookie" | "none";
 }
 
 /** Autocapture configuration */
 export interface AutocaptureConfig {
 	/** CSS selectors to capture */
-	includeSelectors?: string[]
+	includeSelectors?: string[];
 	/** CSS selectors to exclude */
-	excludeSelectors?: string[]
+	excludeSelectors?: string[];
 	/** Capture text content */
-	captureText?: boolean
+	captureText?: boolean;
 	/** Max text length */
-	maxTextLength?: number
+	maxTextLength?: number;
 	/** Capture attributes */
-	captureAttributes?: string[]
+	captureAttributes?: string[];
 	/** Elements to include (default: button, a, input, select, textarea) */
-	elements?: string[]
+	elements?: string[];
 	/** Event types to capture */
-	eventTypes?: ('click' | 'submit' | 'change' | 'focus' | 'blur')[]
+	eventTypes?: ("click" | "submit" | "change" | "focus" | "blur")[];
 }
 
 /** Default configuration */
@@ -226,28 +233,36 @@ export const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
 	debug: false,
 	batchSize: 10,
 	flushInterval: ANALYTICS_FLUSH_INTERVAL_MS,
-	persistence: 'localStorage',
-}
+	persistence: "localStorage",
+};
 
 /** Default autocapture configuration */
 export const DEFAULT_AUTOCAPTURE_CONFIG: AutocaptureConfig = {
 	captureText: true,
 	maxTextLength: 100,
 	captureAttributes: [
-		'id',
-		'class',
-		'href',
-		'name',
-		'type',
-		'role',
-		'aria-label',
-		'data-testid',
-		'data-analytics',
-		'data-track',
+		"id",
+		"class",
+		"href",
+		"name",
+		"type",
+		"role",
+		"aria-label",
+		"data-testid",
+		"data-analytics",
+		"data-track",
 	],
-	elements: ['button', 'a', 'input', 'select', 'textarea', '[role="button"]', '[data-track]'],
-	eventTypes: ['click', 'submit', 'change'],
-}
+	elements: [
+		"button",
+		"a",
+		"input",
+		"select",
+		"textarea",
+		'[role="button"]',
+		"[data-track]",
+	],
+	eventTypes: ["click", "submit", "change"],
+};
 
 // ==========================================
 // UTM & Attribution
@@ -255,27 +270,33 @@ export const DEFAULT_AUTOCAPTURE_CONFIG: AutocaptureConfig = {
 
 /** UTM parameters */
 export interface UtmParams {
-	utm_source?: string
-	utm_medium?: string
-	utm_campaign?: string
-	utm_term?: string
-	utm_content?: string
+	utm_source?: string;
+	utm_medium?: string;
+	utm_campaign?: string;
+	utm_term?: string;
+	utm_content?: string;
 }
 
 /** Referrer data */
 export interface ReferrerData {
-	$referrer?: string
-	$referring_domain?: string
-	$referrer_source?: 'organic' | 'social' | 'paid' | 'email' | 'direct' | 'unknown'
+	$referrer?: string;
+	$referring_domain?: string;
+	$referrer_source?:
+		| "organic"
+		| "social"
+		| "paid"
+		| "email"
+		| "direct"
+		| "unknown";
 }
 
 /** Attribution data */
 export interface AttributionData extends UtmParams, ReferrerData {
-	$initial_referrer?: string
-	$initial_referring_domain?: string
-	$initial_utm_source?: string
-	$initial_utm_medium?: string
-	$initial_utm_campaign?: string
+	$initial_referrer?: string;
+	$initial_referring_domain?: string;
+	$initial_utm_source?: string;
+	$initial_utm_medium?: string;
+	$initial_utm_campaign?: string;
 }
 
 // ==========================================
@@ -284,28 +305,28 @@ export interface AttributionData extends UtmParams, ReferrerData {
 
 /** Device context */
 export interface DeviceContext {
-	$device_type?: 'Desktop' | 'Mobile' | 'Tablet' | 'Bot'
-	$os?: string
-	$os_version?: string
-	$browser?: string
-	$browser_version?: string
-	$browser_language?: string
-	$screen_height?: number
-	$screen_width?: number
-	$viewport_height?: number
-	$viewport_width?: number
-	$device_pixel_ratio?: number
-	$timezone?: string
+	$device_type?: "Desktop" | "Mobile" | "Tablet" | "Bot";
+	$os?: string;
+	$os_version?: string;
+	$browser?: string;
+	$browser_version?: string;
+	$browser_language?: string;
+	$screen_height?: number;
+	$screen_width?: number;
+	$viewport_height?: number;
+	$viewport_width?: number;
+	$device_pixel_ratio?: number;
+	$timezone?: string;
 }
 
 /** Page context */
 export interface PageContext {
-	$current_url: string
-	$host: string
-	$pathname: string
-	$search?: string
-	$hash?: string
-	$title?: string
+	$current_url: string;
+	$host: string;
+	$pathname: string;
+	$search?: string;
+	$hash?: string;
+	$title?: string;
 }
 
 // ==========================================
@@ -314,17 +335,17 @@ export interface PageContext {
 
 /** Queued event */
 export interface QueuedEvent {
-	event: AnalyticsEvent
-	timestamp: number
-	retries: number
+	event: AnalyticsEvent;
+	timestamp: number;
+	retries: number;
 	/** Unix timestamp when this event can be retried (exponential backoff) */
-	nextRetryAt?: number
+	nextRetryAt?: number;
 }
 
 /** Batch payload */
 interface BatchPayload {
-	api_key?: string
-	batch: AnalyticsEvent[]
+	api_key?: string;
+	batch: AnalyticsEvent[];
 }
 
 // ==========================================
@@ -336,8 +357,8 @@ interface BatchPayload {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/brands
  */
 export interface UABrand {
-	brand: string
-	version: string
+	brand: string;
+	version: string;
 }
 
 /**
@@ -347,16 +368,16 @@ export interface UABrand {
  */
 export interface NavigatorUAData {
 	/** Array of brand/version objects */
-	brands: UABrand[]
+	brands: UABrand[];
 	/** Whether device is mobile */
-	mobile: boolean
+	mobile: boolean;
 	/** Operating system name */
-	platform: string
+	platform: string;
 	/**
 	 * Get high-entropy values (requires permission on some platforms)
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData/getHighEntropyValues
 	 */
-	getHighEntropyValues?: (hints: string[]) => Promise<UAHighEntropyValues>
+	getHighEntropyValues?: (hints: string[]) => Promise<UAHighEntropyValues>;
 }
 
 /**
@@ -364,15 +385,15 @@ export interface NavigatorUAData {
  * Requires explicit permission or Permissions-Policy header
  */
 export interface UAHighEntropyValues {
-	architecture?: string
-	bitness?: string
-	brands?: UABrand[]
-	fullVersionList?: UABrand[]
-	mobile?: boolean
-	model?: string
-	platform?: string
-	platformVersion?: string
-	uaFullVersion?: string
+	architecture?: string;
+	bitness?: string;
+	brands?: UABrand[];
+	fullVersionList?: UABrand[];
+	mobile?: boolean;
+	model?: string;
+	platform?: string;
+	platformVersion?: string;
+	uaFullVersion?: string;
 }
 
 /**
@@ -380,5 +401,5 @@ export interface UAHighEntropyValues {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgentData
  */
 export interface NavigatorWithUAData extends Navigator {
-	userAgentData?: NavigatorUAData
+	userAgentData?: NavigatorUAData;
 }

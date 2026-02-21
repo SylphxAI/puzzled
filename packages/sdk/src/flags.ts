@@ -11,7 +11,7 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
+import { type SylphxConfig, callApi } from "./config";
 
 // ============================================================================
 // Types (SDK-specific - no direct API schema for flag results)
@@ -19,29 +19,29 @@ import { type SylphxConfig, callApi } from './config'
 
 export interface FlagResult {
 	/** Flag key */
-	key: string
+	key: string;
 	/** Whether the flag is enabled for this context */
-	enabled: boolean
+	enabled: boolean;
 	/** Variant value (for multivariate flags) */
-	variant?: string
+	variant?: string;
 	/** Reason for the evaluation result */
-	reason?: string
+	reason?: string;
 	/** Additional payload data */
-	payload?: Record<string, unknown>
+	payload?: Record<string, unknown>;
 }
 
 export interface FlagContext {
 	/** User ID for consistent targeting */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID for pre-auth targeting */
-	anonymousId?: string
+	anonymousId?: string;
 	/** User properties for targeting rules (plan, isAdmin, etc.) */
-	properties?: Record<string, unknown>
+	properties?: Record<string, unknown>;
 }
 
 /** Response from the evaluate endpoint */
 interface EvaluateFlagsResponse {
-	data: Record<string, FlagResult>
+	data: Record<string, FlagResult>;
 }
 
 // ============================================================================
@@ -69,28 +69,32 @@ interface EvaluateFlagsResponse {
 export async function checkFlag(
 	config: SylphxConfig,
 	flagKey: string,
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<FlagResult> {
-	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
-		method: 'POST',
-		body: {
-			context: {
-				userId: context?.userId,
-				anonymousId: context?.anonymousId,
-				properties: context?.properties,
+	const response = await callApi<EvaluateFlagsResponse>(
+		config,
+		"/flags/evaluate",
+		{
+			method: "POST",
+			body: {
+				context: {
+					userId: context?.userId,
+					anonymousId: context?.anonymousId,
+					properties: context?.properties,
+				},
+				keys: [flagKey],
 			},
-			keys: [flagKey],
 		},
-	})
+	);
 
 	// Return the evaluated flag, or a disabled default if not found
 	return (
 		response.data[flagKey] ?? {
 			key: flagKey,
 			enabled: false,
-			reason: 'flag_not_found',
+			reason: "flag_not_found",
 		}
-	)
+	);
 }
 
 /**
@@ -113,21 +117,25 @@ export async function checkFlag(
 export async function getFlags(
 	config: SylphxConfig,
 	flagKeys: string[],
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<Record<string, FlagResult>> {
-	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
-		method: 'POST',
-		body: {
-			context: {
-				userId: context?.userId,
-				anonymousId: context?.anonymousId,
-				properties: context?.properties,
+	const response = await callApi<EvaluateFlagsResponse>(
+		config,
+		"/flags/evaluate",
+		{
+			method: "POST",
+			body: {
+				context: {
+					userId: context?.userId,
+					anonymousId: context?.anonymousId,
+					properties: context?.properties,
+				},
+				keys: flagKeys,
 			},
-			keys: flagKeys,
 		},
-	})
+	);
 
-	return response.data
+	return response.data;
 }
 
 /**
@@ -149,21 +157,25 @@ export async function getFlags(
  */
 export async function getAllFlags(
 	config: SylphxConfig,
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<Record<string, FlagResult>> {
-	const response = await callApi<EvaluateFlagsResponse>(config, '/flags/evaluate', {
-		method: 'POST',
-		body: {
-			context: {
-				userId: context?.userId,
-				anonymousId: context?.anonymousId,
-				properties: context?.properties,
+	const response = await callApi<EvaluateFlagsResponse>(
+		config,
+		"/flags/evaluate",
+		{
+			method: "POST",
+			body: {
+				context: {
+					userId: context?.userId,
+					anonymousId: context?.anonymousId,
+					properties: context?.properties,
+				},
+				// Omit keys to get all flags
 			},
-			// Omit keys to get all flags
 		},
-	})
+	);
 
-	return response.data
+	return response.data;
 }
 
 /**
@@ -179,10 +191,10 @@ export async function getAllFlags(
 export async function isEnabled(
 	config: SylphxConfig,
 	flagKey: string,
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<boolean> {
-	const flag = await checkFlag(config, flagKey, context)
-	return flag.enabled
+	const flag = await checkFlag(config, flagKey, context);
+	return flag.enabled;
 }
 
 /**
@@ -210,10 +222,10 @@ export async function isEnabled(
 export async function getVariant(
 	config: SylphxConfig,
 	flagKey: string,
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<string | undefined> {
-	const flag = await checkFlag(config, flagKey, context)
-	return flag.variant
+	const flag = await checkFlag(config, flagKey, context);
+	return flag.variant;
 }
 
 /**
@@ -231,8 +243,8 @@ export async function getVariant(
 export async function getFlagPayload<T extends Record<string, unknown>>(
 	config: SylphxConfig,
 	flagKey: string,
-	context?: FlagContext
+	context?: FlagContext,
 ): Promise<T | undefined> {
-	const flag = await checkFlag(config, flagKey, context)
-	return flag.payload as T | undefined
+	const flag = await checkFlag(config, flagKey, context);
+	return flag.payload as T | undefined;
 }

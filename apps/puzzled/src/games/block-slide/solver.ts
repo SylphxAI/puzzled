@@ -6,7 +6,7 @@
  * State space is all possible block positions.
  */
 
-import type { Block, BlockSlidePuzzle, Direction } from './types'
+import type { Block, BlockSlidePuzzle, Direction } from "./types";
 
 /**
  * Serialize puzzle state to a unique string for memoization
@@ -16,7 +16,7 @@ function serializeState(blocks: Block[]): string {
 	return blocks
 		.map((b) => `${b.id}:${b.x},${b.y}`)
 		.sort()
-		.join('|')
+		.join("|");
 }
 
 /**
@@ -28,7 +28,7 @@ function blocksOverlap(a: Block, b: Block): boolean {
 		b.x + b.width <= a.x ||
 		a.y + a.height <= b.y ||
 		b.y + b.height <= a.y
-	)
+	);
 }
 
 /**
@@ -42,51 +42,55 @@ function canMoveBlock(
 	gridWidth: number,
 	gridHeight: number,
 ): boolean {
-	const block = blocks[blockIndex]
+	const block = blocks[blockIndex];
 
-	const dx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0
-	const dy = direction === 'up' ? -1 : direction === 'down' ? 1 : 0
+	const dx = direction === "left" ? -1 : direction === "right" ? 1 : 0;
+	const dy = direction === "up" ? -1 : direction === "down" ? 1 : 0;
 
-	const newX = block.x + dx
-	const newY = block.y + dy
+	const newX = block.x + dx;
+	const newY = block.y + dy;
 
 	// Check bounds
-	if (newX < 0 || newY < 0) return false
-	if (newX + block.width > gridWidth) return false
-	if (newY + block.height > gridHeight) return false
+	if (newX < 0 || newY < 0) return false;
+	if (newX + block.width > gridWidth) return false;
+	if (newY + block.height > gridHeight) return false;
 
 	// Check collision with other blocks
-	const movedBlock = { ...block, x: newX, y: newY }
+	const movedBlock = { ...block, x: newX, y: newY };
 	for (let i = 0; i < blocks.length; i++) {
-		if (i === blockIndex) continue
+		if (i === blockIndex) continue;
 		if (blocksOverlap(movedBlock, blocks[i])) {
-			return false
+			return false;
 		}
 	}
 
-	return true
+	return true;
 }
 
 /**
  * Move a block in a direction (returns new blocks array)
  */
-function moveBlock(blocks: Block[], blockIndex: number, direction: Direction): Block[] {
-	const dx = direction === 'left' ? -1 : direction === 'right' ? 1 : 0
-	const dy = direction === 'up' ? -1 : direction === 'down' ? 1 : 0
+function moveBlock(
+	blocks: Block[],
+	blockIndex: number,
+	direction: Direction,
+): Block[] {
+	const dx = direction === "left" ? -1 : direction === "right" ? 1 : 0;
+	const dy = direction === "up" ? -1 : direction === "down" ? 1 : 0;
 
 	return blocks.map((b, i) => {
-		if (i !== blockIndex) return b
-		return { ...b, x: b.x + dx, y: b.y + dy }
-	})
+		if (i !== blockIndex) return b;
+		return { ...b, x: b.x + dx, y: b.y + dy };
+	});
 }
 
 /**
  * Check if target block is at exit position
  */
 function isWinState(blocks: Block[], exitX: number, exitY: number): boolean {
-	const target = blocks.find((b) => b.isTarget)
-	if (!target) return false
-	return target.x === exitX && target.y === exitY
+	const target = blocks.find((b) => b.isTarget);
+	if (!target) return false;
+	return target.x === exitX && target.y === exitY;
 }
 
 /**
@@ -97,28 +101,28 @@ function getNextStates(
 	gridWidth: number,
 	gridHeight: number,
 ): Array<{ blocks: Block[]; state: string }> {
-	const directions: Direction[] = ['up', 'down', 'left', 'right']
-	const nextStates: Array<{ blocks: Block[]; state: string }> = []
+	const directions: Direction[] = ["up", "down", "left", "right"];
+	const nextStates: Array<{ blocks: Block[]; state: string }> = [];
 
 	for (let i = 0; i < blocks.length; i++) {
 		for (const dir of directions) {
 			if (canMoveBlock(blocks, i, dir, gridWidth, gridHeight)) {
-				const newBlocks = moveBlock(blocks, i, dir)
+				const newBlocks = moveBlock(blocks, i, dir);
 				nextStates.push({
 					blocks: newBlocks,
 					state: serializeState(newBlocks),
-				})
+				});
 			}
 		}
 	}
 
-	return nextStates
+	return nextStates;
 }
 
 export type SolveResult = {
-	solvable: boolean
-	minMoves: number
-}
+	solvable: boolean;
+	minMoves: number;
+};
 
 /**
  * Solve a block slide puzzle using BFS
@@ -127,37 +131,42 @@ export type SolveResult = {
  * @param puzzle - The puzzle configuration
  * @param maxMoves - Maximum moves to search (prevent infinite loops)
  */
-export function solvePuzzle(puzzle: BlockSlidePuzzle, maxMoves: number = 150): SolveResult {
-	const { blocks, gridWidth, gridHeight, exitX, exitY } = puzzle
+export function solvePuzzle(
+	puzzle: BlockSlidePuzzle,
+	maxMoves = 150,
+): SolveResult {
+	const { blocks, gridWidth, gridHeight, exitX, exitY } = puzzle;
 
 	// Check if already solved
 	if (isWinState(blocks, exitX, exitY)) {
-		return { solvable: true, minMoves: 0 }
+		return { solvable: true, minMoves: 0 };
 	}
 
-	const initialState = serializeState(blocks)
-	const visited = new Set<string>([initialState])
-	const queue: Array<{ blocks: Block[]; moves: number }> = [{ blocks, moves: 0 }]
+	const initialState = serializeState(blocks);
+	const visited = new Set<string>([initialState]);
+	const queue: Array<{ blocks: Block[]; moves: number }> = [
+		{ blocks, moves: 0 },
+	];
 
 	while (queue.length > 0) {
-		const { blocks: currentBlocks, moves } = queue.shift()!
+		const { blocks: currentBlocks, moves } = queue.shift()!;
 
 		// Limit search depth
-		if (moves >= maxMoves) continue
+		if (moves >= maxMoves) continue;
 
 		for (const next of getNextStates(currentBlocks, gridWidth, gridHeight)) {
-			if (visited.has(next.state)) continue
-			visited.add(next.state)
+			if (visited.has(next.state)) continue;
+			visited.add(next.state);
 
 			if (isWinState(next.blocks, exitX, exitY)) {
-				return { solvable: true, minMoves: moves + 1 }
+				return { solvable: true, minMoves: moves + 1 };
 			}
 
-			queue.push({ blocks: next.blocks, moves: moves + 1 })
+			queue.push({ blocks: next.blocks, moves: moves + 1 });
 		}
 	}
 
-	return { solvable: false, minMoves: -1 }
+	return { solvable: false, minMoves: -1 };
 }
 
 /**
@@ -165,27 +174,27 @@ export function solvePuzzle(puzzle: BlockSlidePuzzle, maxMoves: number = 150): S
  * Checks that blocks don't overlap and are within bounds
  */
 export function isValidConfiguration(puzzle: BlockSlidePuzzle): boolean {
-	const { blocks, gridWidth, gridHeight } = puzzle
+	const { blocks, gridWidth, gridHeight } = puzzle;
 
 	// Check bounds and target existence
-	let hasTarget = false
+	let hasTarget = false;
 	for (const block of blocks) {
-		if (block.isTarget) hasTarget = true
-		if (block.x < 0 || block.y < 0) return false
-		if (block.x + block.width > gridWidth) return false
-		if (block.y + block.height > gridHeight) return false
+		if (block.isTarget) hasTarget = true;
+		if (block.x < 0 || block.y < 0) return false;
+		if (block.x + block.width > gridWidth) return false;
+		if (block.y + block.height > gridHeight) return false;
 	}
 
-	if (!hasTarget) return false
+	if (!hasTarget) return false;
 
 	// Check for overlaps
 	for (let i = 0; i < blocks.length; i++) {
 		for (let j = i + 1; j < blocks.length; j++) {
 			if (blocksOverlap(blocks[i], blocks[j])) {
-				return false
+				return false;
 			}
 		}
 	}
 
-	return true
+	return true;
 }

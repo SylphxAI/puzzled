@@ -13,12 +13,12 @@
  * - Organization selection
  */
 
-import type { ClickIds } from './platform-context'
-import type { UserCookieData } from '../types'
-import { CLICK_ID_EXPIRY_MS, STORAGE_KEY_PREFIX } from '../constants'
+import { CLICK_ID_EXPIRY_MS, STORAGE_KEY_PREFIX } from "../constants";
+import type { UserCookieData } from "../types";
+import type { ClickIds } from "./platform-context";
 
 // Re-export for convenience
-export type { ClickIds, UserCookieData }
+export type { ClickIds, UserCookieData };
 
 // =============================================================================
 // Storage Keys (Non-Auth Only)
@@ -32,23 +32,23 @@ export type { ClickIds, UserCookieData }
  */
 export const STORAGE_KEYS = {
 	// Analytics
-	ANONYMOUS_ID: 'anonymous_id',
+	ANONYMOUS_ID: "anonymous_id",
 	/** Offline analytics queue (Segment pattern) - events queued when offline */
-	OFFLINE_ANALYTICS_QUEUE: 'offline_queue',
+	OFFLINE_ANALYTICS_QUEUE: "offline_queue",
 
 	// Organization selection
-	CURRENT_ORG: 'current_org',
+	CURRENT_ORG: "current_org",
 
 	// Consent management
-	CONSENT: 'consent',
-	CONSENT_TIMESTAMP: 'consent_at',
+	CONSENT: "consent",
+	CONSENT_TIMESTAMP: "consent_at",
 
 	// Click IDs for conversion attribution (gclid, fbclid, ttclid)
-	CLICK_IDS: 'click_ids',
-	CLICK_IDS_CAPTURED_AT: 'click_ids_at',
-} as const
+	CLICK_IDS: "click_ids",
+	CLICK_IDS_CAPTURED_AT: "click_ids_at",
+} as const;
 
-export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
+export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
 
 // =============================================================================
 // Storage Manager
@@ -59,63 +59,63 @@ export type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS]
  * Format: sylphx_{appId}_{key}
  */
 function createStorageKey(appId: string, key: StorageKey): string {
-	return `${STORAGE_KEY_PREFIX}${appId}_${key}`
+	return `${STORAGE_KEY_PREFIX}${appId}_${key}`;
 }
 
 /**
  * Storage manager with app-specific namespacing
  */
 export class SylphxStorage {
-	private appId: string
+	private appId: string;
 
 	constructor(appId: string) {
-		this.appId = appId
+		this.appId = appId;
 	}
 
 	private key(k: StorageKey): string {
-		return createStorageKey(this.appId, k)
+		return createStorageKey(this.appId, k);
 	}
 
 	get(key: StorageKey): string | null {
-		if (typeof window === 'undefined') return null
+		if (typeof window === "undefined") return null;
 		try {
-			return localStorage.getItem(this.key(key))
+			return localStorage.getItem(this.key(key));
 		} catch {
-			return null
+			return null;
 		}
 	}
 
 	set(key: StorageKey, value: string): void {
-		if (typeof window === 'undefined') return
+		if (typeof window === "undefined") return;
 		try {
-			localStorage.setItem(this.key(key), value)
+			localStorage.setItem(this.key(key), value);
 		} catch {
 			// Ignore storage errors (quota exceeded, etc.)
 		}
 	}
 
 	remove(key: StorageKey): void {
-		if (typeof window === 'undefined') return
+		if (typeof window === "undefined") return;
 		try {
-			localStorage.removeItem(this.key(key))
+			localStorage.removeItem(this.key(key));
 		} catch {
 			// Ignore
 		}
 	}
 
 	getJSON<T>(key: StorageKey): T | null {
-		const value = this.get(key)
-		if (!value) return null
+		const value = this.get(key);
+		if (!value) return null;
 		try {
-			return JSON.parse(value) as T
+			return JSON.parse(value) as T;
 		} catch {
-			return null
+			return null;
 		}
 	}
 
 	setJSON<T>(key: StorageKey, value: T): void {
 		try {
-			this.set(key, JSON.stringify(value))
+			this.set(key, JSON.stringify(value));
 		} catch {
 			// Ignore
 		}
@@ -125,27 +125,27 @@ export class SylphxStorage {
 	 * Check if a key exists
 	 */
 	has(key: StorageKey): boolean {
-		return this.get(key) !== null
+		return this.get(key) !== null;
 	}
 
 	/**
 	 * Clear all Sylphx storage for this app
 	 */
 	clear(): void {
-		if (typeof window === 'undefined') return
+		if (typeof window === "undefined") return;
 		try {
-			const prefix = `${STORAGE_KEY_PREFIX}${this.appId}_`
-			const keysToRemove: string[] = []
+			const prefix = `${STORAGE_KEY_PREFIX}${this.appId}_`;
+			const keysToRemove: string[] = [];
 
 			for (let i = 0; i < localStorage.length; i++) {
-				const key = localStorage.key(i)
+				const key = localStorage.key(i);
 				if (key?.startsWith(prefix)) {
-					keysToRemove.push(key)
+					keysToRemove.push(key);
 				}
 			}
 
 			for (const key of keysToRemove) {
-				localStorage.removeItem(key)
+				localStorage.removeItem(key);
 			}
 		} catch {
 			// Storage access failed (private browsing, iframe restrictions, etc.)
@@ -161,27 +161,27 @@ export class SylphxStorage {
  * Generate a unique anonymous ID (UUIDv4)
  */
 function generateAnonymousId(): string {
-	if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-		return crypto.randomUUID()
+	if (typeof crypto !== "undefined" && crypto.randomUUID) {
+		return crypto.randomUUID();
 	}
 	// Fallback for older browsers
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-		const r = (Math.random() * 16) | 0
-		const v = c === 'x' ? r : (r & 0x3) | 0x8
-		return v.toString(16)
-	})
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+		const r = (Math.random() * 16) | 0;
+		const v = c === "x" ? r : (r & 0x3) | 0x8;
+		return v.toString(16);
+	});
 }
 
 /**
  * Get or create anonymous ID
  */
 export function getOrCreateAnonymousId(storage: SylphxStorage): string {
-	let anonymousId = storage.get(STORAGE_KEYS.ANONYMOUS_ID)
+	let anonymousId = storage.get(STORAGE_KEYS.ANONYMOUS_ID);
 	if (!anonymousId) {
-		anonymousId = generateAnonymousId()
-		storage.set(STORAGE_KEYS.ANONYMOUS_ID, anonymousId)
+		anonymousId = generateAnonymousId();
+		storage.set(STORAGE_KEYS.ANONYMOUS_ID, anonymousId);
 	}
-	return anonymousId
+	return anonymousId;
 }
 
 // =============================================================================
@@ -199,54 +199,54 @@ export function getOrCreateAnonymousId(storage: SylphxStorage): string {
  * @returns Captured click IDs (may be empty if none present)
  */
 function captureClickIdsFromUrl(): ClickIds {
-	if (typeof window === 'undefined') return {}
+	if (typeof window === "undefined") return {};
 
-	const params = new URLSearchParams(window.location.search)
-	const clickIds: ClickIds = {}
+	const params = new URLSearchParams(window.location.search);
+	const clickIds: ClickIds = {};
 
-	const gclid = params.get('gclid')
-	const fbclid = params.get('fbclid')
-	const ttclid = params.get('ttclid')
+	const gclid = params.get("gclid");
+	const fbclid = params.get("fbclid");
+	const ttclid = params.get("ttclid");
 
-	if (gclid) clickIds.gclid = gclid
-	if (fbclid) clickIds.fbclid = fbclid
-	if (ttclid) clickIds.ttclid = ttclid
+	if (gclid) clickIds.gclid = gclid;
+	if (fbclid) clickIds.fbclid = fbclid;
+	if (ttclid) clickIds.ttclid = ttclid;
 
-	return clickIds
+	return clickIds;
 }
 
 /**
  * Get stored click IDs (if not expired)
  */
 export function getStoredClickIds(storage: SylphxStorage): ClickIds | null {
-	const capturedAtStr = storage.get(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT)
-	if (!capturedAtStr) return null
+	const capturedAtStr = storage.get(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT);
+	if (!capturedAtStr) return null;
 
-	const capturedAt = parseInt(capturedAtStr, 10)
+	const capturedAt = Number.parseInt(capturedAtStr, 10);
 
 	// Handle corrupted data (NaN) or expired
 	if (isNaN(capturedAt) || Date.now() - capturedAt > CLICK_ID_EXPIRY_MS) {
 		// Invalid or expired - clear and return null
-		storage.remove(STORAGE_KEYS.CLICK_IDS)
-		storage.remove(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT)
-		return null
+		storage.remove(STORAGE_KEYS.CLICK_IDS);
+		storage.remove(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT);
+		return null;
 	}
 
-	return storage.getJSON<ClickIds>(STORAGE_KEYS.CLICK_IDS)
+	return storage.getJSON<ClickIds>(STORAGE_KEYS.CLICK_IDS);
 }
 
 /**
  * Store click IDs with timestamp
  */
 function storeClickIds(storage: SylphxStorage, clickIds: ClickIds): void {
-	if (Object.keys(clickIds).length === 0) return
+	if (Object.keys(clickIds).length === 0) return;
 
 	// Merge with existing (new values take precedence)
-	const existing = getStoredClickIds(storage) || {}
-	const merged = { ...existing, ...clickIds }
+	const existing = getStoredClickIds(storage) || {};
+	const merged = { ...existing, ...clickIds };
 
-	storage.setJSON(STORAGE_KEYS.CLICK_IDS, merged)
-	storage.set(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT, Date.now().toString())
+	storage.setJSON(STORAGE_KEYS.CLICK_IDS, merged);
+	storage.set(STORAGE_KEYS.CLICK_IDS_CAPTURED_AT, Date.now().toString());
 }
 
 /**
@@ -258,16 +258,16 @@ function storeClickIds(storage: SylphxStorage, clickIds: ClickIds): void {
  * @returns The merged click IDs (stored + new)
  */
 export function autoCaptureClickIds(storage: SylphxStorage): ClickIds {
-	const urlClickIds = captureClickIdsFromUrl()
-	const storedClickIds = getStoredClickIds(storage) || {}
+	const urlClickIds = captureClickIdsFromUrl();
+	const storedClickIds = getStoredClickIds(storage) || {};
 
 	// If we have new click IDs in URL, store them
 	if (Object.keys(urlClickIds).length > 0) {
-		storeClickIds(storage, urlClickIds)
-		return { ...storedClickIds, ...urlClickIds }
+		storeClickIds(storage, urlClickIds);
+		return { ...storedClickIds, ...urlClickIds };
 	}
 
-	return storedClickIds
+	return storedClickIds;
 }
 
 /**
@@ -276,9 +276,11 @@ export function autoCaptureClickIds(storage: SylphxStorage): ClickIds {
  * Returns the most relevant click ID based on priority:
  * gclid (Google) > fbclid (Meta) > ttclid (TikTok)
  */
-export function getPrimaryClickId(clickIds: ClickIds | null): string | undefined {
-	if (!clickIds) return undefined
-	return clickIds.gclid || clickIds.fbclid || clickIds.ttclid
+export function getPrimaryClickId(
+	clickIds: ClickIds | null,
+): string | undefined {
+	if (!clickIds) return undefined;
+	return clickIds.gclid || clickIds.fbclid || clickIds.ttclid;
 }
 
 // =============================================================================
@@ -293,14 +295,15 @@ export function getPrimaryClickId(clickIds: ClickIds | null): string | undefined
  */
 function getCookieNamespaceFromAppId(appId: string): string {
 	// Extract environment from appId (e.g., 'app_prod_xxx' → 'prod')
-	const parts = appId.split('_')
-	if (parts.length < 2) return 'sylphx'
+	const parts = appId.split("_");
+	if (parts.length < 2) return "sylphx";
 
-	const envPart = parts[1] // 'dev', 'stg', or 'prod'
-	const shortEnv = envPart === 'development' ? 'dev' : envPart === 'staging' ? 'stg' : envPart
+	const envPart = parts[1]; // 'dev', 'stg', or 'prod'
+	const shortEnv =
+		envPart === "development" ? "dev" : envPart === "staging" ? "stg" : envPart;
 
 	// Match server-side format: sylphx_{shortEnv}
-	return `sylphx_${shortEnv}`
+	return `sylphx_${shortEnv}`;
 }
 
 /**
@@ -315,34 +318,34 @@ function getCookieNamespaceFromAppId(appId: string): string {
  * @returns User data or null if not found/expired
  */
 export function getUserFromCookie(appId: string): UserCookieData | null {
-	if (typeof document === 'undefined') return null
+	if (typeof document === "undefined") return null;
 
 	try {
 		// Cookie name format: __{namespace}_user
 		// Namespace derived from appId to match server-side logic
-		const namespace = getCookieNamespaceFromAppId(appId)
-		const cookieName = `__${namespace}_user`
+		const namespace = getCookieNamespaceFromAppId(appId);
+		const cookieName = `__${namespace}_user`;
 
 		// Parse cookies
-		const cookies = document.cookie.split(';')
+		const cookies = document.cookie.split(";");
 		for (const cookie of cookies) {
-			const [name, ...valueParts] = cookie.trim().split('=')
+			const [name, ...valueParts] = cookie.trim().split("=");
 			if (name === cookieName) {
-				const value = valueParts.join('=') // Handle values with = in them
-				const decoded = decodeURIComponent(value)
-				const userData: UserCookieData = JSON.parse(decoded)
+				const value = valueParts.join("="); // Handle values with = in them
+				const decoded = decodeURIComponent(value);
+				const userData: UserCookieData = JSON.parse(decoded);
 
 				// Check if session is expired
 				if (userData.expiresAt && userData.expiresAt < Date.now()) {
-					return null
+					return null;
 				}
 
-				return userData
+				return userData;
 			}
 		}
-		return null
+		return null;
 	} catch {
-		return null
+		return null;
 	}
 }
 
@@ -354,13 +357,13 @@ export function getUserFromCookie(appId: string): UserCookieData | null {
  * The HttpOnly session/refresh cookies can only be cleared server-side.
  */
 export function clearUserCookie(appId: string): void {
-	if (typeof document === 'undefined') return
+	if (typeof document === "undefined") return;
 
 	try {
-		const namespace = getCookieNamespaceFromAppId(appId)
-		const cookieName = `__${namespace}_user`
+		const namespace = getCookieNamespaceFromAppId(appId);
+		const cookieName = `__${namespace}_user`;
 		// Set cookie with expired date to delete it
-		document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+		document.cookie = `${cookieName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 	} catch {
 		// Ignore errors
 	}

@@ -13,4 +13,4 @@ export const USER_LIMITS = {
 	BIO_MAX_LENGTH: 160,
 	/** Maximum display name length */
 	NAME_MAX_LENGTH: 100,
-} as const
+} as const;

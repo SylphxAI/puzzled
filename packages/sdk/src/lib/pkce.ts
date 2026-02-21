@@ -20,50 +20,55 @@
  * @see https://datatracker.ietf.org/doc/html/rfc7636
  */
 
-import { PKCE_CODE_TTL_MS, PKCE_STORAGE_PREFIX, STORAGE_TEST_KEY } from '../constants'
+import {
+	PKCE_CODE_TTL_MS,
+	PKCE_STORAGE_PREFIX,
+	STORAGE_TEST_KEY,
+} from "../constants";
 
 // ==========================================
 // Constants
 // ==========================================
 
 /** Verifier length (43-128 chars per RFC 7636) */
-const VERIFIER_LENGTH = 64
+const VERIFIER_LENGTH = 64;
 
 /** Characters allowed in code_verifier (unreserved URI chars) */
-const VERIFIER_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
+const VERIFIER_CHARSET =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
 
 /** PKCE entry TTL from constants (10 minutes, matches OAuth state) */
-const PKCE_TTL_MS = PKCE_CODE_TTL_MS
+const PKCE_TTL_MS = PKCE_CODE_TTL_MS;
 
 interface PKCEEntry {
-	verifier: string
-	createdAt: number
+	verifier: string;
+	createdAt: number;
 }
 
 /**
  * Build storage key from appId and optional nonce
  */
 function buildKey(appId: string, nonce?: string): string {
-	return `${PKCE_STORAGE_PREFIX}${nonce ? `${appId}:${nonce}` : appId}`
+	return `${PKCE_STORAGE_PREFIX}${nonce ? `${appId}:${nonce}` : appId}`;
 }
 
 /**
  * In-memory fallback storage (used when sessionStorage is unavailable)
  * Note: This loses verifier on page navigation, so sessionStorage is preferred
  */
-const pkceMemoryFallback = new Map<string, PKCEEntry>()
+const pkceMemoryFallback = new Map<string, PKCEEntry>();
 
 /**
  * Check if sessionStorage is available
  */
 function isSessionStorageAvailable(): boolean {
-	if (typeof window === 'undefined') return false
+	if (typeof window === "undefined") return false;
 	try {
-		sessionStorage.setItem(STORAGE_TEST_KEY, 'test')
-		sessionStorage.removeItem(STORAGE_TEST_KEY)
-		return true
+		sessionStorage.setItem(STORAGE_TEST_KEY, "test");
+		sessionStorage.removeItem(STORAGE_TEST_KEY);
+		return true;
 	} catch {
-		return false
+		return false;
 	}
 }
 
@@ -71,33 +76,33 @@ function isSessionStorageAvailable(): boolean {
  * Get PKCE entry from storage
  */
 function getEntry(key: string): PKCEEntry | null {
-	if (typeof window === 'undefined') return null
+	if (typeof window === "undefined") return null;
 
 	if (isSessionStorageAvailable()) {
-		const stored = sessionStorage.getItem(key)
-		if (!stored) return null
+		const stored = sessionStorage.getItem(key);
+		if (!stored) return null;
 		try {
-			return JSON.parse(stored) as PKCEEntry
+			return JSON.parse(stored) as PKCEEntry;
 		} catch {
-			return null
+			return null;
 		}
 	}
 
 	// Fallback to in-memory (less secure, loses on navigation)
-	return pkceMemoryFallback.get(key) || null
+	return pkceMemoryFallback.get(key) || null;
 }
 
 /**
  * Set PKCE entry in storage
  */
 function setEntry(key: string, entry: PKCEEntry): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
 	if (isSessionStorageAvailable()) {
-		sessionStorage.setItem(key, JSON.stringify(entry))
+		sessionStorage.setItem(key, JSON.stringify(entry));
 	} else {
 		// Fallback to in-memory
-		pkceMemoryFallback.set(key, entry)
+		pkceMemoryFallback.set(key, entry);
 	}
 }
 
@@ -105,12 +110,12 @@ function setEntry(key: string, entry: PKCEEntry): void {
  * Delete PKCE entry from storage
  */
 function deleteEntry(key: string): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
 	if (isSessionStorageAvailable()) {
-		sessionStorage.removeItem(key)
+		sessionStorage.removeItem(key);
 	} else {
-		pkceMemoryFallback.delete(key)
+		pkceMemoryFallback.delete(key);
 	}
 }
 
@@ -118,30 +123,30 @@ function deleteEntry(key: string): void {
  * Clean up expired entries from sessionStorage
  */
 function cleanupExpiredEntries(): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
-	const now = Date.now()
+	const now = Date.now();
 
 	if (isSessionStorageAvailable()) {
 		// Clean sessionStorage
-		const keysToRemove: string[] = []
+		const keysToRemove: string[] = [];
 		for (let i = 0; i < sessionStorage.length; i++) {
-			const key = sessionStorage.key(i)
+			const key = sessionStorage.key(i);
 			if (key?.startsWith(PKCE_STORAGE_PREFIX)) {
-				const entry = getEntry(key)
+				const entry = getEntry(key);
 				if (entry && now - entry.createdAt > PKCE_TTL_MS) {
-					keysToRemove.push(key)
+					keysToRemove.push(key);
 				}
 			}
 		}
 		for (const key of keysToRemove) {
-			sessionStorage.removeItem(key)
+			sessionStorage.removeItem(key);
 		}
 	} else {
 		// Clean in-memory fallback
 		for (const [key, entry] of pkceMemoryFallback.entries()) {
 			if (now - entry.createdAt > PKCE_TTL_MS) {
-				pkceMemoryFallback.delete(key)
+				pkceMemoryFallback.delete(key);
 			}
 		}
 	}
@@ -156,15 +161,15 @@ function cleanupExpiredEntries(): void {
  * Uses Web Crypto API for secure random generation.
  */
 export function generateCodeVerifier(): string {
-	const randomValues = new Uint8Array(VERIFIER_LENGTH)
-	crypto.getRandomValues(randomValues)
+	const randomValues = new Uint8Array(VERIFIER_LENGTH);
+	crypto.getRandomValues(randomValues);
 
-	let verifier = ''
+	let verifier = "";
 	for (let i = 0; i < VERIFIER_LENGTH; i++) {
-		verifier += VERIFIER_CHARSET[randomValues[i] % VERIFIER_CHARSET.length]
+		verifier += VERIFIER_CHARSET[randomValues[i] % VERIFIER_CHARSET.length];
 	}
 
-	return verifier
+	return verifier;
 }
 
 /**
@@ -173,31 +178,31 @@ export function generateCodeVerifier(): string {
  */
 export async function generateCodeChallenge(verifier: string): Promise<string> {
 	// SHA-256 hash
-	const encoder = new TextEncoder()
-	const data = encoder.encode(verifier)
-	const hash = await crypto.subtle.digest('SHA-256', data)
+	const encoder = new TextEncoder();
+	const data = encoder.encode(verifier);
+	const hash = await crypto.subtle.digest("SHA-256", data);
 
 	// Base64url encode (no padding, URL-safe chars)
-	const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)))
-	return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+	const base64 = btoa(String.fromCharCode(...new Uint8Array(hash)));
+	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 /**
  * Generate a complete PKCE pair (verifier + challenge).
  */
 export async function generatePKCE(): Promise<{
-	codeVerifier: string
-	codeChallenge: string
-	codeChallengeMethod: 'S256'
+	codeVerifier: string;
+	codeChallenge: string;
+	codeChallengeMethod: "S256";
 }> {
-	const codeVerifier = generateCodeVerifier()
-	const codeChallenge = await generateCodeChallenge(codeVerifier)
+	const codeVerifier = generateCodeVerifier();
+	const codeChallenge = await generateCodeChallenge(codeVerifier);
 
 	return {
 		codeVerifier,
 		codeChallenge,
-		codeChallengeMethod: 'S256',
-	}
+		codeChallengeMethod: "S256",
+	};
 }
 
 // ==========================================
@@ -220,17 +225,21 @@ export async function generatePKCE(): Promise<{
  * @param appId - The app ID for namespacing
  * @param nonce - Optional nonce for correlating with specific OAuth flow
  */
-export function storePKCEVerifier(verifier: string, appId: string, nonce?: string): void {
-	if (typeof window === 'undefined') return
+export function storePKCEVerifier(
+	verifier: string,
+	appId: string,
+	nonce?: string,
+): void {
+	if (typeof window === "undefined") return;
 
 	// Cleanup expired entries periodically
-	cleanupExpiredEntries()
+	cleanupExpiredEntries();
 
-	const key = buildKey(appId, nonce)
+	const key = buildKey(appId, nonce);
 	setEntry(key, {
 		verifier,
 		createdAt: Date.now(),
-	})
+	});
 }
 
 /**
@@ -241,25 +250,28 @@ export function storePKCEVerifier(verifier: string, appId: string, nonce?: strin
  * @param nonce - Optional nonce for correlating with specific OAuth flow
  * @returns The code_verifier or null if not found/expired
  */
-export function retrievePKCEVerifier(appId: string, nonce?: string): string | null {
-	if (typeof window === 'undefined') return null
+export function retrievePKCEVerifier(
+	appId: string,
+	nonce?: string,
+): string | null {
+	if (typeof window === "undefined") return null;
 
-	const key = buildKey(appId, nonce)
-	const entry = getEntry(key)
+	const key = buildKey(appId, nonce);
+	const entry = getEntry(key);
 
 	if (!entry) {
-		return null
+		return null;
 	}
 
 	// Always delete after retrieval (one-time use)
-	deleteEntry(key)
+	deleteEntry(key);
 
 	// Check if expired
 	if (Date.now() - entry.createdAt > PKCE_TTL_MS) {
-		return null
+		return null;
 	}
 
-	return entry.verifier
+	return entry.verifier;
 }
 
 /**
@@ -269,10 +281,10 @@ export function retrievePKCEVerifier(appId: string, nonce?: string): string | nu
  * @param nonce - Optional nonce for correlating with specific OAuth flow
  */
 export function clearPKCEVerifier(appId: string, nonce?: string): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
-	const key = buildKey(appId, nonce)
-	deleteEntry(key)
+	const key = buildKey(appId, nonce);
+	deleteEntry(key);
 }
 
 /**
@@ -281,25 +293,25 @@ export function clearPKCEVerifier(appId: string, nonce?: string): void {
  * @param appId - The app ID to clear verifiers for
  */
 export function clearAllPKCEVerifiers(appId: string): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
-	const prefix = PKCE_STORAGE_PREFIX + appId
+	const prefix = PKCE_STORAGE_PREFIX + appId;
 
 	if (isSessionStorageAvailable()) {
-		const keysToRemove: string[] = []
+		const keysToRemove: string[] = [];
 		for (let i = 0; i < sessionStorage.length; i++) {
-			const key = sessionStorage.key(i)
+			const key = sessionStorage.key(i);
 			if (key?.startsWith(prefix)) {
-				keysToRemove.push(key)
+				keysToRemove.push(key);
 			}
 		}
 		for (const key of keysToRemove) {
-			sessionStorage.removeItem(key)
+			sessionStorage.removeItem(key);
 		}
 	} else {
 		for (const key of pkceMemoryFallback.keys()) {
 			if (key.startsWith(prefix)) {
-				pkceMemoryFallback.delete(key)
+				pkceMemoryFallback.delete(key);
 			}
 		}
 	}
@@ -321,18 +333,18 @@ function timingSafeEqual(a: string, b: string): boolean {
 	if (a.length !== b.length) {
 		// Still do comparison to maintain constant time
 		// but we know it will fail
-		let _result = 1
+		let _result = 1;
 		for (let i = 0; i < a.length; i++) {
-			_result |= a.charCodeAt(i) ^ (b.charCodeAt(i % b.length) || 0)
+			_result |= a.charCodeAt(i) ^ (b.charCodeAt(i % b.length) || 0);
 		}
-		return false
+		return false;
 	}
 
-	let result = 0
+	let result = 0;
 	for (let i = 0; i < a.length; i++) {
-		result |= a.charCodeAt(i) ^ b.charCodeAt(i)
+		result |= a.charCodeAt(i) ^ b.charCodeAt(i);
 	}
-	return result === 0
+	return result === 0;
 }
 
 /**
@@ -349,16 +361,16 @@ function timingSafeEqual(a: string, b: string): boolean {
 export async function verifyPKCE(
 	codeVerifier: string,
 	codeChallenge: string,
-	method: 'S256' | 'plain' = 'S256',
+	method: "S256" | "plain" = "S256",
 ): Promise<boolean> {
-	if (method === 'plain') {
+	if (method === "plain") {
 		// Plain method: code_verifier === code_challenge (timing-safe)
-		return timingSafeEqual(codeVerifier, codeChallenge)
+		return timingSafeEqual(codeVerifier, codeChallenge);
 	}
 
 	// S256 method: BASE64URL(SHA256(code_verifier)) === code_challenge
-	const computedChallenge = await generateCodeChallenge(codeVerifier)
+	const computedChallenge = await generateCodeChallenge(codeVerifier);
 
 	// Timing-safe comparison
-	return timingSafeEqual(computedChallenge, codeChallenge)
+	return timingSafeEqual(computedChallenge, codeChallenge);
 }

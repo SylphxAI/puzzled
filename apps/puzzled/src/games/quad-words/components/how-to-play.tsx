@@ -1,23 +1,23 @@
-'use client'
+"use client";
 
-import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /**
  * Quordle How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function QuordleHowToPlay() {
-	const t = useTranslations('games.quadWords')
+	const t = useTranslations("games.quadWords");
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t('rules.rule1')}</li>
-					<li>• {t('rules.rule2')}</li>
-					<li>• {t('rules.rule3')}</li>
+					<li>• {t("rules.rule1")}</li>
+					<li>• {t("rules.rule2")}</li>
+					<li>• {t("rules.rule3")}</li>
 				</ul>
 			</div>
 
@@ -37,12 +37,12 @@ export function QuordleHowToPlay() {
 												<div
 													key={col}
 													className={cn(
-														'h-4 w-4 rounded-sm',
-														row === 0 && col < 3 && 'bg-correct',
-														row === 0 && col >= 3 && 'bg-absent',
-														row === 1 && col === 1 && 'bg-present',
-														row === 1 && col !== 1 && 'bg-absent',
-														row === 2 && 'bg-muted',
+														"h-4 w-4 rounded-sm",
+														row === 0 && col < 3 && "bg-correct",
+														row === 0 && col >= 3 && "bg-absent",
+														row === 1 && col === 1 && "bg-present",
+														row === 1 && col !== 1 && "bg-absent",
+														row === 2 && "bg-muted",
 													)}
 												/>
 											))}
@@ -69,10 +69,10 @@ export function QuordleHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _QuordleHowToPlayTitle() {
-	const t = useTranslations('games.quadWords')
-	return <>{t('howToPlay')}</>
+	const t = useTranslations("games.quadWords");
+	return <>{t("howToPlay")}</>;
 }

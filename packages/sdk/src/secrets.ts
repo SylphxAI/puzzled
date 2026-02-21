@@ -28,7 +28,7 @@
  * ```
  */
 
-import { type SylphxConfig, callApi } from './config'
+import { type SylphxConfig, callApi } from "./config";
 
 // ============================================================================
 // Types
@@ -36,44 +36,44 @@ import { type SylphxConfig, callApi } from './config'
 
 export interface GetSecretInput {
 	/** Secret key (uppercase, underscores allowed) */
-	key: string
+	key: string;
 	/** Optional environment ID override */
-	environmentId?: string
+	environmentId?: string;
 }
 
 export interface GetSecretResult {
 	/** Secret key */
-	key: string
+	key: string;
 	/** Decrypted secret value */
-	value: string
+	value: string;
 	/** Version number */
-	version: string
+	version: string;
 }
 
 export interface GetSecretsInput {
 	/** Array of secret keys to retrieve */
-	keys: string[]
+	keys: string[];
 	/** Optional environment ID override */
-	environmentId?: string
+	environmentId?: string;
 }
 
 /** Map of key -> decrypted value */
-export type GetSecretsResult = Record<string, string>
+export type GetSecretsResult = Record<string, string>;
 
 export interface ListSecretKeysInput {
 	/** Optional environment ID filter */
-	environmentId?: string
+	environmentId?: string;
 }
 
 export interface SecretKeyInfo {
 	/** Secret key name */
-	key: string
+	key: string;
 	/** Human-readable description */
-	description: string | null
+	description: string | null;
 	/** Current version */
-	version: string
+	version: string;
 	/** Whether this is environment-specific */
-	isEnvironmentSpecific: boolean
+	isEnvironmentSpecific: boolean;
 }
 
 // ============================================================================
@@ -98,13 +98,13 @@ export async function getSecret(
 	config: SylphxConfig,
 	input: GetSecretInput,
 ): Promise<GetSecretResult> {
-	return callApi<GetSecretResult>(config, '/secrets/get', {
-		method: 'POST',
+	return callApi<GetSecretResult>(config, "/secrets/get", {
+		method: "POST",
 		body: {
 			key: input.key,
 			environmentId: input.environmentId,
 		},
-	})
+	});
 }
 
 /**
@@ -130,13 +130,13 @@ export async function getSecrets(
 	config: SylphxConfig,
 	input: GetSecretsInput,
 ): Promise<GetSecretsResult> {
-	return callApi<GetSecretsResult>(config, '/secrets/getMany', {
-		method: 'POST',
+	return callApi<GetSecretsResult>(config, "/secrets/getMany", {
+		method: "POST",
 		body: {
 			keys: input.keys,
 			environmentId: input.environmentId,
 		},
-	})
+	});
 }
 
 /**
@@ -159,10 +159,12 @@ export async function listSecretKeys(
 	config: SylphxConfig,
 	input: ListSecretKeysInput = {},
 ): Promise<SecretKeyInfo[]> {
-	return callApi<SecretKeyInfo[]>(config, '/secrets/listKeys', {
-		method: 'GET',
-		query: input.environmentId ? { environmentId: input.environmentId } : undefined,
-	})
+	return callApi<SecretKeyInfo[]>(config, "/secrets/listKeys", {
+		method: "GET",
+		query: input.environmentId
+			? { environmentId: input.environmentId }
+			: undefined,
+	});
 }
 
 /**
@@ -179,12 +181,15 @@ export async function listSecretKeys(
  * }
  * ```
  */
-export async function hasSecret(config: SylphxConfig, key: string): Promise<boolean> {
+export async function hasSecret(
+	config: SylphxConfig,
+	key: string,
+): Promise<boolean> {
 	try {
-		const keys = await listSecretKeys(config)
-		return keys.some((k) => k.key === key)
+		const keys = await listSecretKeys(config);
+		return keys.some((k) => k.key === key);
 	} catch {
-		return false
+		return false;
 	}
 }
 
@@ -208,9 +213,9 @@ export async function getAllSecrets(
 	config: SylphxConfig,
 	environmentId?: string,
 ): Promise<GetSecretsResult> {
-	const keys = await listSecretKeys(config, { environmentId })
+	const keys = await listSecretKeys(config, { environmentId });
 	if (keys.length === 0) {
-		return {}
+		return {};
 	}
-	return getSecrets(config, { keys: keys.map((k) => k.key), environmentId })
+	return getSecrets(config, { keys: keys.map((k) => k.key), environmentId });
 }

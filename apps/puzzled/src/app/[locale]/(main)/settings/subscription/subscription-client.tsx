@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
-import { BillingSection, useBilling } from '@sylphx/sdk/react'
-import { Button } from '@sylphx/ui'
-import { Crown } from 'lucide-react'
-import Link from 'next/link'
-import { useLocale, useTranslations } from 'next-intl'
-import { SettingsPageHeader } from '@/shared/components/layout'
+import { SettingsPageHeader } from "@/shared/components/layout";
+import { BillingSection, useBilling } from "@sylphx/sdk/react";
+import { Button } from "@sylphx/ui";
+import { Crown } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 
 /**
  * Subscription Settings Client Component
@@ -16,9 +16,9 @@ import { SettingsPageHeader } from '@/shared/components/layout'
  * - Manage subscription portal
  */
 export function SubscriptionSettingsContent() {
-	const t = useTranslations('settings')
-	const locale = useLocale()
-	const { isPremium, subscription, openPortal, isLoading } = useBilling()
+	const t = useTranslations("settings");
+	const locale = useLocale();
+	const { isPremium, subscription, openPortal, isLoading } = useBilling();
 
 	return (
 		<div className="space-y-6">
@@ -26,23 +26,29 @@ export function SubscriptionSettingsContent() {
 				icon={Crown}
 				gradientClasses="from-amber-500/20 to-orange-500/20"
 				iconColorClass="text-amber-500"
-				title={t('subscription.title')}
-				description={t('subscription.description')}
+				title={t("subscription.title")}
+				description={t("subscription.description")}
 			/>
 
 			{/* Current Plan Status */}
 			<div className="rounded-2xl border bg-card p-6">
 				<div className="flex items-center justify-between">
 					<div>
-						<h3 className="font-semibold">{isPremium ? 'Premium' : 'Free Plan'}</h3>
+						<h3 className="font-semibold">
+							{isPremium ? "Premium" : "Free Plan"}
+						</h3>
 						<p className="text-sm text-muted-foreground">
 							{isPremium
-								? `Subscribed to ${subscription?.planSlug || 'Premium'}`
-								: 'Upgrade to unlock all features'}
+								? `Subscribed to ${subscription?.planSlug || "Premium"}`
+								: "Upgrade to unlock all features"}
 						</p>
 					</div>
 					{isPremium ? (
-						<Button variant="outline" onClick={() => openPortal()} disabled={isLoading}>
+						<Button
+							variant="outline"
+							onClick={() => openPortal()}
+							disabled={isLoading}
+						>
 							Manage Subscription
 						</Button>
 					) : (
@@ -60,5 +66,5 @@ export function SubscriptionSettingsContent() {
 				</div>
 			)}
 		</div>
-	)
+	);
 }

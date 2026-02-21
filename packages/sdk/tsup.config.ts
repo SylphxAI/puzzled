@@ -101,8 +101,8 @@ export default defineConfig([
 			...PEER_EXTERNALS,
 			// Make use-sync-external-store external so the CJS require() is not bundled
 			// into the SDK dist. Next.js will handle it via serverExternalPackages.
-			'use-sync-external-store',
-			'use-sync-external-store/shim',
+			"use-sync-external-store",
+			"use-sync-external-store/shim",
 		],
 		// Bundle all SDK dependencies
 		noExternal: ["rrweb", "@sylphx/ui"],

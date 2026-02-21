@@ -27,7 +27,7 @@ export const duration = {
 	slower: 0.4,
 	/** Slowest - dramatic reveals (500ms) */
 	slowest: 0.5,
-} as const
+} as const;
 
 /** Easing curves for different use cases */
 export const easing = {
@@ -41,21 +41,21 @@ export const easing = {
 	easeInOut: [0.4, 0, 0.2, 1] as const,
 	/** Sharp - quick, snappy animations */
 	sharp: [0.4, 0, 0.6, 1] as const,
-} as const
+} as const;
 
 /** Spring configurations for natural movement */
 export const spring = {
 	/** Default spring - balanced feel */
-	default: { type: 'spring' as const, stiffness: 400, damping: 30 },
+	default: { type: "spring" as const, stiffness: 400, damping: 30 },
 	/** Gentle spring - slower, softer */
-	gentle: { type: 'spring' as const, stiffness: 200, damping: 25 },
+	gentle: { type: "spring" as const, stiffness: 200, damping: 25 },
 	/** Snappy spring - quick response */
-	snappy: { type: 'spring' as const, stiffness: 500, damping: 30 },
+	snappy: { type: "spring" as const, stiffness: 500, damping: 30 },
 	/** Bouncy spring - playful feel */
-	bouncy: { type: 'spring' as const, stiffness: 300, damping: 15 },
+	bouncy: { type: "spring" as const, stiffness: 300, damping: 15 },
 	/** Stiff spring - minimal overshoot */
-	stiff: { type: 'spring' as const, stiffness: 600, damping: 40 },
-} as const
+	stiff: { type: "spring" as const, stiffness: 600, damping: 40 },
+} as const;
 
 /** Stagger delays for list animations */
 export const stagger = {
@@ -65,7 +65,7 @@ export const stagger = {
 	normal: 0.05,
 	/** Slow stagger - 80ms between items */
 	slow: 0.08,
-} as const
+} as const;
 
 /** Common transition presets */
 export const transition = {
@@ -83,4 +83,4 @@ export const transition = {
 	spring: spring.default,
 	/** Spring snappy */
 	springSnappy: spring.snappy,
-} as const
+} as const;

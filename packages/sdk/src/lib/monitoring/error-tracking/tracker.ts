@@ -10,24 +10,24 @@
 
 import {
 	addBreadcrumb,
-	getBreadcrumbs,
 	clearBreadcrumbs,
 	enableAutoCapture,
+	getBreadcrumbs,
 	setMaxBreadcrumbs,
-} from './breadcrumbs'
-import { scrubErrorEvent, scrubString } from './pii-scrubber'
+} from "./breadcrumbs";
+import { scrubErrorEvent, scrubString } from "./pii-scrubber";
 import type {
-	ErrorEvent,
-	ErrorTrackingConfig,
+	Breadcrumb,
 	CaptureExceptionOptions,
 	CaptureMessageOptions,
 	CaptureResult,
+	ErrorEvent,
+	ErrorTrackingConfig,
 	ExceptionValue,
 	StackFrame,
 	UploadCallback,
-	Breadcrumb,
-} from './types'
-import { DEFAULT_ERROR_CONFIG } from './types'
+} from "./types";
+import { DEFAULT_ERROR_CONFIG } from "./types";
 
 // ==========================================
 // Error Tracker Class
@@ -43,19 +43,19 @@ import { DEFAULT_ERROR_CONFIG } from './types'
  * - Device/browser context
  */
 export class ErrorTracker {
-	private config: ErrorTrackingConfig
-	private uploadCallback: UploadCallback | null = null
-	private sessionReplayId: string | null = null
-	private userId: string | null = null
-	private userEmail: string | null = null
-	private userName: string | null = null
+	private config: ErrorTrackingConfig;
+	private uploadCallback: UploadCallback | null = null;
+	private sessionReplayId: string | null = null;
+	private userId: string | null = null;
+	private userEmail: string | null = null;
+	private userName: string | null = null;
 
 	// Adaptive sampling - server-recommended rate overrides config
-	private serverRecommendedSampleRate: number | null = null
-	private enableAdaptiveSampling = true
+	private serverRecommendedSampleRate: number | null = null;
+	private enableAdaptiveSampling = true;
 
 	constructor(config: Partial<ErrorTrackingConfig> = {}) {
-		this.config = { ...DEFAULT_ERROR_CONFIG, ...config }
+		this.config = { ...DEFAULT_ERROR_CONFIG, ...config };
 	}
 
 	// ==========================================
@@ -66,11 +66,11 @@ export class ErrorTracker {
 	 * Initialize error tracking
 	 */
 	init(): void {
-		if (!this.config.enabled) return
-		if (typeof window === 'undefined') return
+		if (!this.config.enabled) return;
+		if (typeof window === "undefined") return;
 
 		// Setup max breadcrumbs
-		setMaxBreadcrumbs(this.config.maxBreadcrumbs)
+		setMaxBreadcrumbs(this.config.maxBreadcrumbs);
 
 		// Setup auto capture
 		enableAutoCapture({
@@ -79,33 +79,35 @@ export class ErrorTracker {
 			network: this.config.autoCaptureNetwork,
 			console: this.config.autoCaptureConsole,
 			navigation: this.config.autoCaptureNavigation,
-		})
+		});
 
 		// Setup global error handlers
 		if (this.config.captureUnhandledErrors) {
-			window.addEventListener('error', (event) => {
+			window.addEventListener("error", (event) => {
 				if (event.error instanceof Error) {
 					void this.captureException(event.error, {
-						tags: { source: 'window.onerror' },
+						tags: { source: "window.onerror" },
 						extra: {
 							filename: event.filename,
 							lineno: event.lineno,
 							colno: event.colno,
 						},
-					})
+					});
 				}
-			})
+			});
 		}
 
 		if (this.config.captureUnhandledRejections) {
-			window.addEventListener('unhandledrejection', (event) => {
+			window.addEventListener("unhandledrejection", (event) => {
 				const error =
-					event.reason instanceof Error ? event.reason : new Error(String(event.reason))
+					event.reason instanceof Error
+						? event.reason
+						: new Error(String(event.reason));
 
 				void this.captureException(error, {
-					tags: { source: 'unhandledrejection' },
-				})
-			})
+					tags: { source: "unhandledrejection" },
+				});
+			});
 		}
 	}
 
@@ -113,7 +115,7 @@ export class ErrorTracker {
 	 * Set upload callback
 	 */
 	onUpload(callback: UploadCallback): void {
-		this.uploadCallback = callback
+		this.uploadCallback = callback;
 	}
 
 	// ==========================================
@@ -125,9 +127,9 @@ export class ErrorTracker {
 	 * When enabled, server's recommendedSampleRate takes precedence over config
 	 */
 	setAdaptiveSampling(enabled: boolean): void {
-		this.enableAdaptiveSampling = enabled
+		this.enableAdaptiveSampling = enabled;
 		if (!enabled) {
-			this.serverRecommendedSampleRate = null
+			this.serverRecommendedSampleRate = null;
 		}
 	}
 
@@ -137,7 +139,7 @@ export class ErrorTracker {
 	 */
 	updateServerRecommendedSampleRate(rate: number | null): void {
 		if (this.enableAdaptiveSampling && rate !== null) {
-			this.serverRecommendedSampleRate = Math.max(0, Math.min(1, rate))
+			this.serverRecommendedSampleRate = Math.max(0, Math.min(1, rate));
 		}
 	}
 
@@ -145,10 +147,13 @@ export class ErrorTracker {
 	 * Get effective sample rate (server recommendation takes precedence)
 	 */
 	getEffectiveSampleRate(): number {
-		if (this.enableAdaptiveSampling && this.serverRecommendedSampleRate !== null) {
-			return this.serverRecommendedSampleRate
+		if (
+			this.enableAdaptiveSampling &&
+			this.serverRecommendedSampleRate !== null
+		) {
+			return this.serverRecommendedSampleRate;
 		}
-		return this.config.sampleRate
+		return this.config.sampleRate;
 	}
 
 	// ==========================================
@@ -159,25 +164,25 @@ export class ErrorTracker {
 	 * Set session replay ID for correlation
 	 */
 	setSessionReplayId(sessionId: string): void {
-		this.sessionReplayId = sessionId
+		this.sessionReplayId = sessionId;
 	}
 
 	/**
 	 * Set user information
 	 */
 	setUser(user: { id?: string; email?: string; username?: string }): void {
-		this.userId = user.id ?? null
-		this.userEmail = user.email ?? null
-		this.userName = user.username ?? null
+		this.userId = user.id ?? null;
+		this.userEmail = user.email ?? null;
+		this.userName = user.username ?? null;
 	}
 
 	/**
 	 * Clear user information
 	 */
 	clearUser(): void {
-		this.userId = null
-		this.userEmail = null
-		this.userName = null
+		this.userId = null;
+		this.userEmail = null;
+		this.userName = null;
 	}
 
 	// ==========================================
@@ -188,7 +193,7 @@ export class ErrorTracker {
 	 * Add a breadcrumb
 	 */
 	addBreadcrumb(breadcrumb: Breadcrumb): void {
-		addBreadcrumb(breadcrumb)
+		addBreadcrumb(breadcrumb);
 	}
 
 	// ==========================================
@@ -200,27 +205,27 @@ export class ErrorTracker {
 	 */
 	async captureException(
 		error: Error,
-		options: CaptureExceptionOptions = {}
+		options: CaptureExceptionOptions = {},
 	): Promise<CaptureResult> {
 		if (!this.config.enabled) {
-			return { eventId: '' }
+			return { eventId: "" };
 		}
 
 		// Sample rate check (uses server-recommended rate if adaptive sampling is enabled)
-		const effectiveSampleRate = this.getEffectiveSampleRate()
+		const effectiveSampleRate = this.getEffectiveSampleRate();
 		if (Math.random() > effectiveSampleRate) {
-			return { eventId: '' }
+			return { eventId: "" };
 		}
 
-		const eventId = this.generateEventId()
-		const timestamp = Date.now()
+		const eventId = this.generateEventId();
+		const timestamp = Date.now();
 
 		// Build event
 		const event: ErrorEvent = {
 			event_id: eventId,
 			timestamp: timestamp / 1000, // Sentry uses seconds
-			platform: 'javascript',
-			level: options.level ?? 'error',
+			platform: "javascript",
+			level: options.level ?? "error",
 			environment: this.config.environment,
 			release: this.config.release,
 			dist: this.config.dist, // Distribution for source map matching
@@ -264,48 +269,51 @@ export class ErrorTracker {
 				values: getBreadcrumbs(),
 			},
 			sdk: {
-				name: 'sylphx-sdk',
-				version: '1.0.0',
+				name: "sylphx-sdk",
+				version: "1.0.0",
 				integrations: this.getIntegrations(),
 			},
-		}
+		};
 
 		// Before send hook - explicitly check for null to allow suppression
 		const processedEvent = this.config.beforeSend
 			? this.config.beforeSend(event)
-			: event
+			: event;
 
 		if (processedEvent === null) {
-			return { eventId: '' }
+			return { eventId: "" };
 		}
 
 		// PII Scrubbing - automatically redact sensitive data (GDPR/privacy compliance)
 		// This runs AFTER beforeSend to ensure user transformations are also scrubbed
-		const scrubbedEvent = this.config.scrubPII !== false
-			? scrubErrorEvent(processedEvent)
-			: processedEvent
+		const scrubbedEvent =
+			this.config.scrubPII !== false
+				? scrubErrorEvent(processedEvent)
+				: processedEvent;
 
 		// Upload
 		try {
 			if (this.uploadCallback) {
-				const uploadResult = await this.uploadCallback(scrubbedEvent)
+				const uploadResult = await this.uploadCallback(scrubbedEvent);
 
 				// Update adaptive sampling based on server feedback
 				if (uploadResult.recommendedSampleRate !== undefined) {
-					this.updateServerRecommendedSampleRate(uploadResult.recommendedSampleRate)
+					this.updateServerRecommendedSampleRate(
+						uploadResult.recommendedSampleRate,
+					);
 				}
 			}
 
 			// Clear breadcrumbs after successful send
-			clearBreadcrumbs()
+			clearBreadcrumbs();
 
 			return {
 				eventId,
 				replaySessionId: this.sessionReplayId ?? undefined,
-			}
+			};
 		} catch (uploadError) {
-			console.error('[Sylphx] Failed to upload error event:', uploadError)
-			return { eventId }
+			console.error("[Sylphx] Failed to upload error event:", uploadError);
+			return { eventId };
 		}
 	}
 
@@ -314,19 +322,19 @@ export class ErrorTracker {
 	 */
 	async captureMessage(
 		message: string,
-		options: CaptureMessageOptions = {}
+		options: CaptureMessageOptions = {},
 	): Promise<CaptureResult> {
 		if (!this.config.enabled) {
-			return { eventId: '' }
+			return { eventId: "" };
 		}
 
-		const eventId = this.generateEventId()
+		const eventId = this.generateEventId();
 
 		const event: ErrorEvent = {
 			event_id: eventId,
 			timestamp: Date.now() / 1000,
-			platform: 'javascript',
-			level: options.level ?? 'info',
+			platform: "javascript",
+			level: options.level ?? "info",
 			environment: this.config.environment,
 			release: this.config.release,
 			message: {
@@ -345,34 +353,35 @@ export class ErrorTracker {
 				values: getBreadcrumbs(),
 			},
 			sdk: {
-				name: 'sylphx-sdk',
-				version: '1.0.0',
+				name: "sylphx-sdk",
+				version: "1.0.0",
 			},
-		}
+		};
 
 		// Before send hook - explicitly check for null to allow suppression
 		const processedEvent = this.config.beforeSend
 			? this.config.beforeSend(event)
-			: event
+			: event;
 
 		if (processedEvent === null) {
-			return { eventId: '' }
+			return { eventId: "" };
 		}
 
 		// PII Scrubbing - automatically redact sensitive data (GDPR/privacy compliance)
-		const scrubbedEvent = this.config.scrubPII !== false
-			? scrubErrorEvent(processedEvent)
-			: processedEvent
+		const scrubbedEvent =
+			this.config.scrubPII !== false
+				? scrubErrorEvent(processedEvent)
+				: processedEvent;
 
 		try {
 			if (this.uploadCallback) {
-				await this.uploadCallback(scrubbedEvent)
+				await this.uploadCallback(scrubbedEvent);
 			}
 
-			return { eventId }
+			return { eventId };
 		} catch (uploadError) {
-			console.error('[Sylphx] Failed to upload message event:', uploadError)
-			return { eventId }
+			console.error("[Sylphx] Failed to upload message event:", uploadError);
+			return { eventId };
 		}
 	}
 
@@ -382,78 +391,88 @@ export class ErrorTracker {
 
 	private generateEventId(): string {
 		// Sentry uses 32-char hex IDs (16 bytes = 32 hex chars)
-		const bytes = new Uint8Array(16)
-		crypto.getRandomValues(bytes)
-		return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+		const bytes = new Uint8Array(16);
+		crypto.getRandomValues(bytes);
+		return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 	}
 
 	private parseException(error: Error): ExceptionValue {
-		const frames: StackFrame[] = []
-		const urlPrefix = this.config.sourceMap?.urlPrefix
-		const debugIds = this.config.sourceMap?.debugIds
+		const frames: StackFrame[] = [];
+		const urlPrefix = this.config.sourceMap?.urlPrefix;
+		const debugIds = this.config.sourceMap?.debugIds;
 
 		if (error.stack) {
-			const lines = error.stack.split('\n').slice(1) // Skip first line (error message)
+			const lines = error.stack.split("\n").slice(1); // Skip first line (error message)
 
 			for (const line of lines) {
 				// Chrome/Edge format: "    at functionName (file:line:col)"
 				// Firefox format: "functionName@file:line:col"
-				const chromeMatch = line.match(/^\s*at\s+(?:(.+?)\s+)?(?:\()?(.+?):(\d+):(\d+)\)?$/)
-				const firefoxMatch = line.match(/^(.*)@(.+?):(\d+):(\d+)$/)
+				const chromeMatch = line.match(
+					/^\s*at\s+(?:(.+?)\s+)?(?:\()?(.+?):(\d+):(\d+)\)?$/,
+				);
+				const firefoxMatch = line.match(/^(.*)@(.+?):(\d+):(\d+)$/);
 
-				const match = chromeMatch || firefoxMatch
+				const match = chromeMatch || firefoxMatch;
 				if (match) {
-					const [, fn, filename, lineno, colno] = match
-					const isInApp = !filename?.includes('node_modules') && !filename?.includes('vendor')
+					const [, fn, filename, lineno, colno] = match;
+					const isInApp =
+						!filename?.includes("node_modules") &&
+						!filename?.includes("vendor");
 
 					// Build abs_path for source map resolution
 					// If urlPrefix is set, prepend it to relative paths for matching
-					let absPath = filename
-					if (urlPrefix && filename && !filename.startsWith('http')) {
-						absPath = urlPrefix.replace(/\/$/, '') + '/' + filename.replace(/^\.?\//, '')
+					let absPath = filename;
+					if (urlPrefix && filename && !filename.startsWith("http")) {
+						absPath =
+							urlPrefix.replace(/\/$/, "") +
+							"/" +
+							filename.replace(/^\.?\//, "");
 					}
 
 					// Look up debug ID for this file (Sentry debug ID pattern)
-					const debugId = debugIds?.[filename ?? '']
+					const debugId = debugIds?.[filename ?? ""];
 
 					frames.push({
-						function: fn || '<anonymous>',
+						function: fn || "<anonymous>",
 						filename,
 						abs_path: absPath, // Full path for source map lookup
-						lineno: parseInt(lineno ?? '0', 10),
-						colno: parseInt(colno ?? '0', 10),
+						lineno: Number.parseInt(lineno ?? "0", 10),
+						colno: Number.parseInt(colno ?? "0", 10),
 						in_app: isInApp,
 						// Include debug ID if available (used for precise source map matching)
 						...(debugId ? { vars: { debug_id: debugId } } : {}),
-					})
+					});
 				}
 			}
 		}
 
 		return {
-			type: error.name || 'Error',
+			type: error.name || "Error",
 			value: error.message,
 			stacktrace: frames.length > 0 ? { frames: frames.reverse() } : undefined, // Sentry wants frames bottom-to-top
 			mechanism: {
-				type: 'generic',
+				type: "generic",
 				handled: true,
 			},
-		}
+		};
 	}
 
-	private getDeviceContext(): ErrorEvent['contexts'] {
-		if (typeof window === 'undefined') return {}
+	private getDeviceContext(): ErrorEvent["contexts"] {
+		if (typeof window === "undefined") return {};
 
-		const ua = navigator.userAgent
-		const browserMatch = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)\/(\d+)/)
-		const osMatch = ua.match(/(Windows|Mac OS X|Linux|Android|iOS)[^\d]*(\d+[\d._]*)?/)
+		const ua = navigator.userAgent;
+		const browserMatch = ua.match(/(Chrome|Firefox|Safari|Edge|Opera)\/(\d+)/);
+		const osMatch = ua.match(
+			/(Windows|Mac OS X|Linux|Android|iOS)[^\d]*(\d+[\d._]*)?/,
+		);
 
 		return {
 			device: {
 				screen_resolution: `${window.screen.width}x${window.screen.height}`,
 				screen_density: window.devicePixelRatio,
-				orientation:
-					window.screen.orientation?.type.includes('landscape') ? 'landscape' : 'portrait',
+				orientation: window.screen.orientation?.type.includes("landscape")
+					? "landscape"
+					: "portrait",
 				online: navigator.onLine,
 			},
 			browser: {
@@ -461,51 +480,54 @@ export class ErrorTracker {
 				version: browserMatch?.[2],
 			},
 			os: {
-				name: osMatch?.[1]?.replace('Mac OS X', 'macOS'),
-				version: osMatch?.[2]?.replace(/_/g, '.'),
+				name: osMatch?.[1]?.replace("Mac OS X", "macOS"),
+				version: osMatch?.[2]?.replace(/_/g, "."),
 			},
 			runtime: {
-				name: 'browser',
+				name: "browser",
 			},
-		}
+		};
 	}
 
-	private getUserContext(): ErrorEvent['user'] | undefined {
+	private getUserContext(): ErrorEvent["user"] | undefined {
 		if (!this.userId && !this.userEmail && !this.userName) {
-			return undefined
+			return undefined;
 		}
 
 		return {
 			id: this.userId ?? undefined,
 			email: this.userEmail ?? undefined,
 			username: this.userName ?? undefined,
-		}
+		};
 	}
 
-	private getRequestContext(): ErrorEvent['request'] | undefined {
-		if (typeof window === 'undefined') return undefined
+	private getRequestContext(): ErrorEvent["request"] | undefined {
+		if (typeof window === "undefined") return undefined;
 
 		return {
 			url: window.location.href,
 			query_string: window.location.search.slice(1),
 			headers: {
-				'User-Agent': navigator.userAgent,
+				"User-Agent": navigator.userAgent,
 			},
-		}
+		};
 	}
 
 	private getIntegrations(): string[] {
-		const integrations: string[] = []
+		const integrations: string[] = [];
 
-		if (this.config.captureUnhandledErrors) integrations.push('GlobalErrorHandler')
-		if (this.config.captureUnhandledRejections) integrations.push('UnhandledRejectionHandler')
-		if (this.config.autoCaptureClicks) integrations.push('ClickCapture')
-		if (this.config.autoCaptureNetwork) integrations.push('NetworkCapture')
-		if (this.config.autoCaptureConsole) integrations.push('ConsoleCapture')
-		if (this.config.autoCaptureNavigation) integrations.push('NavigationCapture')
-		if (this.config.attachReplay) integrations.push('SessionReplay')
+		if (this.config.captureUnhandledErrors)
+			integrations.push("GlobalErrorHandler");
+		if (this.config.captureUnhandledRejections)
+			integrations.push("UnhandledRejectionHandler");
+		if (this.config.autoCaptureClicks) integrations.push("ClickCapture");
+		if (this.config.autoCaptureNetwork) integrations.push("NetworkCapture");
+		if (this.config.autoCaptureConsole) integrations.push("ConsoleCapture");
+		if (this.config.autoCaptureNavigation)
+			integrations.push("NavigationCapture");
+		if (this.config.attachReplay) integrations.push("SessionReplay");
 
-		return integrations
+		return integrations;
 	}
 }
 
@@ -513,30 +535,34 @@ export class ErrorTracker {
 // Singleton Instance
 // ==========================================
 
-let trackerInstance: ErrorTracker | null = null
+let trackerInstance: ErrorTracker | null = null;
 
 /**
  * Get or create the error tracker instance
  */
-export function getTracker(config?: Partial<ErrorTrackingConfig>): ErrorTracker {
+export function getTracker(
+	config?: Partial<ErrorTrackingConfig>,
+): ErrorTracker {
 	if (!trackerInstance) {
-		trackerInstance = new ErrorTracker(config)
+		trackerInstance = new ErrorTracker(config);
 	}
-	return trackerInstance
+	return trackerInstance;
 }
 
 /**
  * Initialize error tracking
  */
-export function initErrorTracking(config?: Partial<ErrorTrackingConfig>): ErrorTracker {
-	const tracker = getTracker(config)
-	tracker.init()
-	return tracker
+export function initErrorTracking(
+	config?: Partial<ErrorTrackingConfig>,
+): ErrorTracker {
+	const tracker = getTracker(config);
+	tracker.init();
+	return tracker;
 }
 
 /**
  * Reset the singleton instance (for testing)
  */
 export function resetTracker(): void {
-	trackerInstance = null
+	trackerInstance = null;
 }

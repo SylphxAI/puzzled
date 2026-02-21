@@ -18,10 +18,19 @@
  * ```
  */
 
-import { createRestClient, createDynamicRestClient, type RestClient, type RestClientConfig } from '../rest-client'
-import { WEBHOOK_MAX_AGE_MS, WEBHOOK_CLOCK_SKEW_MS, JWK_CACHE_TTL_MS } from '../constants'
-import { importJWK, jwtVerify, type JWTPayload } from 'jose'
-import type { AccessTokenPayload } from '../types'
+import { type JWTPayload, importJWK, jwtVerify } from "jose";
+import {
+	JWK_CACHE_TTL_MS,
+	WEBHOOK_CLOCK_SKEW_MS,
+	WEBHOOK_MAX_AGE_MS,
+} from "../constants";
+import {
+	type RestClient,
+	type RestClientConfig,
+	createDynamicRestClient,
+	createRestClient,
+} from "../rest-client";
+import type { AccessTokenPayload } from "../types";
 
 // Re-export key validation utilities from SSOT
 export {
@@ -50,14 +59,14 @@ export {
 	type EnvironmentType,
 	type KeyType,
 	type KeyValidationResult,
-} from '../key-validation'
+} from "../key-validation";
 
 // Internal import for local use (import separately to avoid hoisting issues)
 import {
-	validateAndSanitizeSecretKey,
-	validateAndSanitizeAppId,
 	detectEnvironment as _detectEnvironment,
-} from '../key-validation'
+	validateAndSanitizeAppId,
+	validateAndSanitizeSecretKey,
+} from "../key-validation";
 
 // ============================================================================
 // Configuration
@@ -76,9 +85,9 @@ export interface ServerConfig {
 	 * - Staging: sk_stg_xxx (test mode, production-like settings)
 	 * - Production: sk_prod_xxx (strict settings, live data)
 	 */
-	secretKey: string
+	secretKey: string;
 	/** Platform URL (defaults to https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 // ============================================================================
@@ -109,12 +118,12 @@ export interface ServerConfig {
  */
 export function createServerClient(config: ServerConfig): RestClient {
 	// Validate and sanitize secret key using SSOT
-	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey);
 
 	return createRestClient({
 		secretKey,
 		platformUrl: config.platformUrl?.trim(),
-	})
+	});
 }
 
 /**
@@ -122,13 +131,13 @@ export function createServerClient(config: ServerConfig): RestClient {
  */
 export function createAuthenticatedServerClient(
 	config: ServerConfig,
-	accessToken: string
+	accessToken: string,
 ): RestClient {
 	return createDynamicRestClient({
 		secretKey: config.secretKey,
 		platformUrl: config.platformUrl,
 		getAccessToken: () => accessToken,
-	})
+	});
 }
 
 // ============================================================================
@@ -137,59 +146,63 @@ export function createAuthenticatedServerClient(
 
 /** JWKS Response structure */
 interface JwksResponse {
-	keys: JsonWebKey[]
+	keys: JsonWebKey[];
 }
 
 /** Type guard to validate JWKS response */
 function isJwksResponse(data: unknown): data is JwksResponse {
 	return (
-		typeof data === 'object' &&
+		typeof data === "object" &&
 		data !== null &&
-		'keys' in data &&
+		"keys" in data &&
 		Array.isArray((data as JwksResponse).keys)
-	)
+	);
 }
 
 /** Type guard to validate AccessTokenPayload */
-function isAccessTokenPayload(payload: JWTPayload): payload is JWTPayload & AccessTokenPayload {
+function isAccessTokenPayload(
+	payload: JWTPayload,
+): payload is JWTPayload & AccessTokenPayload {
 	return (
-		typeof payload.sub === 'string' &&
-		typeof payload.email === 'string' &&
-		typeof payload.app_id === 'string' &&
-		typeof payload.iat === 'number' &&
-		typeof payload.exp === 'number'
-	)
+		typeof payload.sub === "string" &&
+		typeof payload.email === "string" &&
+		typeof payload.app_id === "string" &&
+		typeof payload.iat === "number" &&
+		typeof payload.exp === "number"
+	);
 }
 
 // Cache for JWKS
-let jwksCache: { keys: JsonWebKey[]; expiresAt: number } | null = null
+let jwksCache: { keys: JsonWebKey[]; expiresAt: number } | null = null;
 
 /**
  * Fetch JWKS from the platform
  */
-export async function getJwks(platformUrl = DEFAULT_PLATFORM_URL): Promise<JsonWebKey[]> {
-	const now = Date.now()
+export async function getJwks(
+	platformUrl = DEFAULT_PLATFORM_URL,
+): Promise<JsonWebKey[]> {
+	const now = Date.now();
 
 	if (jwksCache && jwksCache.expiresAt > now) {
-		return jwksCache.keys
+		return jwksCache.keys;
 	}
 
-	const response = await fetch(`${platformUrl}/api/auth/.well-known/jwks.json`)
+	const response = await fetch(`${platformUrl}/api/auth/.well-known/jwks.json`);
 	if (!response.ok) {
-		throw new Error('Failed to fetch JWKS')
+		throw new Error("Failed to fetch JWKS");
 	}
 
-	const data: unknown = await response.json()
+	const data: unknown = await response.json();
 	if (!isJwksResponse(data)) {
-		throw new Error('Invalid JWKS response format')
+		throw new Error("Invalid JWKS response format");
 	}
 
 	jwksCache = {
 		keys: data.keys,
 		expiresAt: now + JWK_CACHE_TTL_MS, // Cache for 1 hour
-	}
+	};
 
-	return data.keys
+	return data.keys;
 }
 
 /**
@@ -198,31 +211,31 @@ export async function getJwks(platformUrl = DEFAULT_PLATFORM_URL): Promise<JsonW
 export async function verifyAccessToken(
 	token: string,
 	options: {
-		secretKey?: string
-		platformUrl?: string
-	}
+		secretKey?: string;
+		platformUrl?: string;
+	},
 ): Promise<AccessTokenPayload> {
-	const platformUrl = options.platformUrl || DEFAULT_PLATFORM_URL
-	const keys = await getJwks(platformUrl)
+	const platformUrl = options.platformUrl || DEFAULT_PLATFORM_URL;
+	const keys = await getJwks(platformUrl);
 
 	if (!keys.length) {
-		throw new Error('No keys in JWKS')
+		throw new Error("No keys in JWKS");
 	}
 
 	// Try each key until one works.
 	// Audience validation is handled by the platform when tokens are issued —
 	// the SDK verifies cryptographic signature and issuer only.
-	let lastError: Error | null = null
+	let lastError: Error | null = null;
 	for (const key of keys) {
 		try {
-			const jwk = await importJWK(key, 'RS256')
+			const jwk = await importJWK(key, "RS256");
 			const { payload } = await jwtVerify(token, jwk, {
 				issuer: platformUrl,
-			})
+			});
 
 			// Validate payload structure at runtime
 			if (!isAccessTokenPayload(payload)) {
-				throw new Error('Invalid token payload structure')
+				throw new Error("Invalid token payload structure");
 			}
 
 			return {
@@ -235,13 +248,13 @@ export async function verifyAccessToken(
 				role: payload.role,
 				iat: payload.iat,
 				exp: payload.exp,
-			}
+			};
 		} catch (err) {
-			lastError = err as Error
+			lastError = err as Error;
 		}
 	}
 
-	throw lastError || new Error('Token verification failed')
+	throw lastError || new Error("Token verification failed");
 }
 
 // ============================================================================
@@ -249,23 +262,23 @@ export async function verifyAccessToken(
 // ============================================================================
 
 export interface WebhookPayload {
-	event: string
-	data: unknown
-	timestamp: number
-	id: string
+	event: string;
+	data: unknown;
+	timestamp: number;
+	id: string;
 }
 
 export interface WebhookVerifyResult {
-	valid: boolean
-	payload?: WebhookPayload
-	error?: string
+	valid: boolean;
+	payload?: WebhookPayload;
+	error?: string;
 }
 
 export interface WebhookVerifyOptions {
 	/** Maximum age of webhook in milliseconds (default: 5 minutes) */
-	maxAge?: number
+	maxAge?: number;
 	/** Allow clock skew in milliseconds (default: 30 seconds) */
-	clockSkew?: number
+	clockSkew?: number;
 }
 
 /**
@@ -297,90 +310,94 @@ export interface WebhookVerifyOptions {
  * ```
  */
 export async function verifyWebhook(options: {
-	payload: string
+	payload: string;
 	/** Raw X-Webhook-Signature header value: "t={seconds},v1={hex}" */
-	signatureHeader?: string | null
+	signatureHeader?: string | null;
 	/** Pre-extracted HMAC hex (if parsing header yourself) */
-	signature?: string | null
+	signature?: string | null;
 	/** Pre-extracted timestamp in unix seconds (if parsing header yourself) */
-	timestamp?: string | null
-	secret: string
-	verifyOptions?: WebhookVerifyOptions
+	timestamp?: string | null;
+	secret: string;
+	verifyOptions?: WebhookVerifyOptions;
 }): Promise<WebhookVerifyResult> {
-	const { payload, secret, verifyOptions = {} } = options
-	const { maxAge = WEBHOOK_MAX_AGE_MS, clockSkew = WEBHOOK_CLOCK_SKEW_MS } = verifyOptions
+	const { payload, secret, verifyOptions = {} } = options;
+	const { maxAge = WEBHOOK_MAX_AGE_MS, clockSkew = WEBHOOK_CLOCK_SKEW_MS } =
+		verifyOptions;
 
 	// Parse the combined header format: "t={seconds},v1={hex}"
-	let signatureHex = options.signature ?? null
-	let timestampStr = options.timestamp ?? null
+	let signatureHex = options.signature ?? null;
+	let timestampStr = options.timestamp ?? null;
 
 	if (options.signatureHeader) {
-		const tMatch = options.signatureHeader.match(/t=(\d+)/)
-		const vMatch = options.signatureHeader.match(/v1=([a-f0-9]+)/)
-		if (tMatch) timestampStr = tMatch[1]
-		if (vMatch) signatureHex = vMatch[1]
+		const tMatch = options.signatureHeader.match(/t=(\d+)/);
+		const vMatch = options.signatureHeader.match(/v1=([a-f0-9]+)/);
+		if (tMatch) timestampStr = tMatch[1];
+		if (vMatch) signatureHex = vMatch[1];
 	}
 
 	if (!signatureHex) {
-		return { valid: false, error: 'Missing signature' }
+		return { valid: false, error: "Missing signature" };
 	}
 	if (!timestampStr) {
-		return { valid: false, error: 'Missing timestamp' }
+		return { valid: false, error: "Missing timestamp" };
 	}
 
-	const webhookTimeSeconds = parseInt(timestampStr, 10)
+	const webhookTimeSeconds = Number.parseInt(timestampStr, 10);
 	if (isNaN(webhookTimeSeconds)) {
-		return { valid: false, error: 'Invalid timestamp format' }
+		return { valid: false, error: "Invalid timestamp format" };
 	}
 
 	// Convert seconds → milliseconds for comparison with Date.now()
-	const webhookTimeMs = webhookTimeSeconds * 1000
-	const now = Date.now()
-	const age = now - webhookTimeMs
+	const webhookTimeMs = webhookTimeSeconds * 1000;
+	const now = Date.now();
+	const age = now - webhookTimeMs;
 
 	if (age > maxAge) {
-		return { valid: false, error: `Webhook too old: ${age}ms` }
+		return { valid: false, error: `Webhook too old: ${age}ms` };
 	}
 
 	if (age < -clockSkew) {
-		return { valid: false, error: 'Webhook timestamp is in the future' }
+		return { valid: false, error: "Webhook timestamp is in the future" };
 	}
 
 	// Reconstruct the signed payload: "{seconds}.{body}"
-	const signedPayload = `${timestampStr}.${payload}`
+	const signedPayload = `${timestampStr}.${payload}`;
 
 	try {
-		const expectedSignature = await computeHmacSha256(signedPayload, secret)
+		const expectedSignature = await computeHmacSha256(signedPayload, secret);
 
 		if (!timingSafeEqual(signatureHex, expectedSignature)) {
-			return { valid: false, error: 'Invalid signature' }
+			return { valid: false, error: "Invalid signature" };
 		}
 
-		const parsedPayload = JSON.parse(payload) as WebhookPayload
-		return { valid: true, payload: parsedPayload }
+		const parsedPayload = JSON.parse(payload) as WebhookPayload;
+		return { valid: true, payload: parsedPayload };
 	} catch (error) {
 		return {
 			valid: false,
-			error: error instanceof Error ? error.message : 'Verification failed',
-		}
+			error: error instanceof Error ? error.message : "Verification failed",
+		};
 	}
 }
 
-async function computeHmacSha256(message: string, secret: string): Promise<string> {
-	const encoder = new TextEncoder()
-	const keyData = encoder.encode(secret)
-	const messageData = encoder.encode(message)
+async function computeHmacSha256(
+	message: string,
+	secret: string,
+): Promise<string> {
+	const encoder = new TextEncoder();
+	const keyData = encoder.encode(secret);
+	const messageData = encoder.encode(message);
 
 	const cryptoKey = await crypto.subtle.importKey(
-		'raw',
+		"raw",
 		keyData,
-		{ name: 'HMAC', hash: 'SHA-256' },
+		{ name: "HMAC", hash: "SHA-256" },
 		false,
-		['sign']
-	)
+		["sign"],
+	);
 
-	const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData)
-	return Buffer.from(signature).toString('hex')
+	const signature = await crypto.subtle.sign("HMAC", cryptoKey, messageData);
+	return Buffer.from(signature).toString("hex");
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -388,12 +405,12 @@ function timingSafeEqual(a: string, b: string): boolean {
 	// This prevents timing side-channel leaks: the loop always runs a.length
 	// iterations regardless of whether lengths match, so an attacker cannot
 	// infer b's length from response time.
-	const target = a.length === b.length ? b : a
-	let result = a.length ^ b.length // Non-zero if lengths differ
+	const target = a.length === b.length ? b : a;
+	let result = a.length ^ b.length; // Non-zero if lengths differ
 	for (let i = 0; i < a.length; i++) {
-		result |= a.charCodeAt(i) ^ target.charCodeAt(i)
+		result |= a.charCodeAt(i) ^ target.charCodeAt(i);
 	}
-	return result === 0
+	return result === 0;
 }
 
 /**
@@ -419,74 +436,74 @@ function timingSafeEqual(a: string, b: string): boolean {
  * ```
  */
 export function createWebhookHandler(config: {
-	secret: string
-	handlers: Record<string, (data: unknown) => Promise<void> | void>
-	verifyOptions?: WebhookVerifyOptions
+	secret: string;
+	handlers: Record<string, (data: unknown) => Promise<void> | void>;
+	verifyOptions?: WebhookVerifyOptions;
 }): (request: Request) => Promise<Response> {
 	return async (request: Request) => {
-		const signatureHeader = request.headers.get('x-webhook-signature')
-		const body = await request.text()
+		const signatureHeader = request.headers.get("x-webhook-signature");
+		const body = await request.text();
 
 		const result = await verifyWebhook({
 			payload: body,
 			signatureHeader,
 			secret: config.secret,
 			verifyOptions: config.verifyOptions,
-		})
+		});
 
 		if (!result.valid) {
 			return new Response(JSON.stringify({ error: result.error }), {
 				status: 401,
-				headers: { 'Content-Type': 'application/json' },
-			})
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
-		const { event, data } = result.payload!
-		const handler = config.handlers[event]
+		const { event, data } = result.payload!;
+		const handler = config.handlers[event];
 
 		if (!handler) {
 			return new Response(JSON.stringify({ received: true, handled: false }), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' },
-			})
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		try {
-			await handler(data)
+			await handler(data);
 			return new Response(JSON.stringify({ received: true, handled: true }), {
 				status: 200,
-				headers: { 'Content-Type': 'application/json' },
-			})
+				headers: { "Content-Type": "application/json" },
+			});
 		} catch (error) {
 			return new Response(
 				JSON.stringify({
-					error: 'Handler failed',
-					message: error instanceof Error ? error.message : 'Unknown error',
+					error: "Handler failed",
+					message: error instanceof Error ? error.message : "Unknown error",
 				}),
 				{
 					status: 500,
-					headers: { 'Content-Type': 'application/json' },
-				}
-			)
+					headers: { "Content-Type": "application/json" },
+				},
+			);
 		}
-	}
+	};
 }
 
 // Re-export types
-export type { RestClient, RestClientConfig as ServerClientConfig }
+export type { RestClient, RestClientConfig as ServerClientConfig };
 
 // ============================================================================
 // Server-Side Data Fetching — Shared Infrastructure
 // ============================================================================
 
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from '../constants'
+import { DEFAULT_PLATFORM_URL, SDK_API_PATH } from "../constants";
 
 /** Common options for authenticated SDK fetch — secret key identifies the app */
 interface AuthenticatedFetchOptions {
 	/** Secret key for authentication (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx) */
-	secretKey: string
+	secretKey: string;
 	/** Platform URL (defaults to https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 /**
@@ -495,9 +512,9 @@ interface AuthenticatedFetchOptions {
  */
 interface PublicFetchOptions {
 	/** App ID (app_dev_xxx, app_stg_xxx, app_prod_xxx) — identifies the app */
-	appId: string
+	appId: string;
 	/** Platform URL (defaults to https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 /**
@@ -513,29 +530,29 @@ interface PublicFetchOptions {
  * This is the industry standard (Clerk, Auth0, Firebase) for auth config.
  */
 async function cachedFetch<T>(params: {
-	url: string
-	headers?: Record<string, string>
-	fallback: T
-	label: string
+	url: string;
+	headers?: Record<string, string>;
+	fallback: T;
+	label: string;
 }): Promise<T> {
-	const { url, headers, fallback, label } = params
+	const { url, headers, fallback, label } = params;
 
 	try {
 		const response = await fetch(url, {
 			headers,
-			cache: 'no-store', // Bypass Next.js Data Cache - always fresh
-		})
+			cache: "no-store", // Bypass Next.js Data Cache - always fresh
+		});
 
 		if (!response.ok) {
-			console.warn(`[Sylphx] Failed to fetch ${label}:`, response.status)
-			return fallback
+			console.warn(`[Sylphx] Failed to fetch ${label}:`, response.status);
+			return fallback;
 		}
 
-		const data = await response.json()
-		return (data as T) ?? fallback
+		const data = await response.json();
+		return (data as T) ?? fallback;
 	} catch (error) {
-		console.warn(`[Sylphx] Failed to fetch ${label}:`, error)
-		return fallback
+		console.warn(`[Sylphx] Failed to fetch ${label}:`, error);
+		return fallback;
 	}
 }
 
@@ -548,25 +565,25 @@ function sanitizeOptions<T extends AuthenticatedFetchOptions>(options: T): T {
 		...options,
 		secretKey: validateAndSanitizeSecretKey(options.secretKey),
 		platformUrl: (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim(),
-	}
+	};
 }
 
 /** Build authenticated headers for SDK API calls — secret key identifies the app */
 function sdkHeaders(secretKey: string): Record<string, string> {
-	return { 'x-app-secret': secretKey }
+	return { "x-app-secret": secretKey };
 }
 
 // ============================================================================
 // OAuth Providers (Server-Side)
 // ============================================================================
 
-import type { OAuthProvider } from '@sylphx/ui'
-export type { OAuthProvider }
+import type { OAuthProvider } from "@sylphx/ui";
+export type { OAuthProvider };
 
 /** OAuth provider with display name */
 export interface OAuthProviderInfo {
-	id: OAuthProvider
-	name: string
+	id: OAuthProvider;
+	name: string;
 }
 
 /**
@@ -581,39 +598,45 @@ export interface OAuthProviderInfo {
  * })
  * ```
  */
-export async function getOAuthProviders(options: PublicFetchOptions): Promise<OAuthProvider[]> {
-	const data = await fetchOAuthProviders(options)
-	return (data.providers || []).map(p => p.id)
+export async function getOAuthProviders(
+	options: PublicFetchOptions,
+): Promise<OAuthProvider[]> {
+	const data = await fetchOAuthProviders(options);
+	return (data.providers || []).map((p) => p.id);
 }
 
 /**
  * Get enabled OAuth providers with full info (server-side)
  */
-export async function getOAuthProvidersWithInfo(options: PublicFetchOptions): Promise<OAuthProviderInfo[]> {
-	const data = await fetchOAuthProviders(options)
-	return data.providers || []
+export async function getOAuthProvidersWithInfo(
+	options: PublicFetchOptions,
+): Promise<OAuthProviderInfo[]> {
+	const data = await fetchOAuthProviders(options);
+	return data.providers || [];
 }
 
 /** Shared fetch for OAuth providers — App ID header identifies the app */
-async function fetchOAuthProviders(options: PublicFetchOptions): Promise<{ providers: OAuthProviderInfo[] }> {
-	const baseURL = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim()
+async function fetchOAuthProviders(
+	options: PublicFetchOptions,
+): Promise<{ providers: OAuthProviderInfo[] }> {
+	const baseURL = (options.platformUrl ?? DEFAULT_PLATFORM_URL).trim();
 	// Validate and sanitize App ID - logs warning if key contains whitespace
-	const appId = validateAndSanitizeAppId(options.appId)
+	const appId = validateAndSanitizeAppId(options.appId);
 
 	return cachedFetch<{ providers: OAuthProviderInfo[] }>({
 		url: `${baseURL}/api/auth/providers`,
-		headers: { 'X-App-Id': appId },
+		headers: { "X-App-Id": appId },
 		fallback: { providers: [] },
-		label: 'OAuth providers',
-	})
+		label: "OAuth providers",
+	});
 }
 
 // ============================================================================
 // Plans (Server-Side)
 // ============================================================================
 
-import type { Plan } from '../billing'
-export type { Plan }
+import type { Plan } from "../billing";
+export type { Plan };
 
 /**
  * Get subscription plans for an app (server-side)
@@ -621,23 +644,26 @@ export type { Plan }
  * Note: Prefer using `getAppConfig()` which fetches all config in parallel.
  * This function is used internally by `getAppConfig()`.
  */
-export async function getPlans(options: AuthenticatedFetchOptions): Promise<Plan[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+export async function getPlans(
+	options: AuthenticatedFetchOptions,
+): Promise<Plan[]> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	return cachedFetch<Plan[]>({
 		url: `${platformUrl}${SDK_API_PATH}/billing/plans`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
-		label: 'plans',
-	})
+		label: "plans",
+	});
 }
 
 // ============================================================================
 // Consent Types (Server-Side)
 // ============================================================================
 
-import type { ConsentType } from '../consent'
-export type { ConsentType }
+import type { ConsentType } from "../consent";
+export type { ConsentType };
 
 /**
  * Get consent types for an app (server-side)
@@ -645,15 +671,18 @@ export type { ConsentType }
  * Note: Prefer using `getAppConfig()` which fetches all config in parallel.
  * This function is used internally by `getAppConfig()`.
  */
-export async function getConsentTypes(options: AuthenticatedFetchOptions): Promise<ConsentType[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+export async function getConsentTypes(
+	options: AuthenticatedFetchOptions,
+): Promise<ConsentType[]> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	return cachedFetch<ConsentType[]>({
 		url: `${platformUrl}${SDK_API_PATH}/consent/types`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
-		label: 'consent types',
-	})
+		label: "consent types",
+	});
 }
 
 // ============================================================================
@@ -662,13 +691,13 @@ export async function getConsentTypes(options: AuthenticatedFetchOptions): Promi
 
 /** Feature flag definition for SSR */
 export interface FeatureFlagDefinition {
-	key: string
-	name: string
-	description: string | null
-	enabled: boolean
-	rolloutPercentage: number
-	targetPremiumOnly: boolean
-	targetAdminOnly: boolean
+	key: string;
+	name: string;
+	description: string | null;
+	enabled: boolean;
+	rolloutPercentage: number;
+	targetPremiumOnly: boolean;
+	targetAdminOnly: boolean;
 }
 
 /**
@@ -689,15 +718,18 @@ export interface FeatureFlagDefinition {
  * }
  * ```
  */
-export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promise<FeatureFlagDefinition[]> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+export async function getFeatureFlags(
+	options: AuthenticatedFetchOptions,
+): Promise<FeatureFlagDefinition[]> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	return cachedFetch<FeatureFlagDefinition[]>({
 		url: `${platformUrl}${SDK_API_PATH}/flags`,
 		headers: sdkHeaders(secretKey),
 		fallback: [],
-		label: 'feature flags',
-	})
+		label: "feature flags",
+	});
 }
 
 // ============================================================================
@@ -706,9 +738,9 @@ export async function getFeatureFlags(options: AuthenticatedFetchOptions): Promi
 
 /** App metadata returned by /api/sdk/app */
 export interface AppMetadata {
-	id: string
-	name: string
-	slug: string
+	id: string;
+	name: string;
+	slug: string;
 }
 
 /**
@@ -716,15 +748,18 @@ export interface AppMetadata {
  *
  * @internal Used by getAppConfig() - rarely called directly
  */
-export async function getAppMetadata(options: AuthenticatedFetchOptions): Promise<AppMetadata> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+export async function getAppMetadata(
+	options: AuthenticatedFetchOptions,
+): Promise<AppMetadata> {
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	return cachedFetch<AppMetadata>({
 		url: `${platformUrl}${SDK_API_PATH}/app`,
 		headers: sdkHeaders(secretKey),
-		fallback: { id: '', name: '', slug: '' },
-		label: 'app metadata',
-	})
+		fallback: { id: "", name: "", slug: "" },
+		label: "app metadata",
+	});
 }
 
 // ============================================================================
@@ -733,19 +768,22 @@ export async function getAppMetadata(options: AuthenticatedFetchOptions): Promis
 // The recommended way to initialize the SDK. Fetches all config data in parallel
 // from Server Components, then passes it to SylphxProvider as a required prop.
 
-import type { AppConfig, OAuthProviderInfo as OAuthProviderInfoType } from '../types'
-export type { AppConfig }
+import type {
+	AppConfig,
+	OAuthProviderInfo as OAuthProviderInfoType,
+} from "../types";
+export type { AppConfig };
 
 /**
  * Options for getAppConfig()
  */
 export interface GetAppConfigOptions {
 	/** Secret key for authenticated endpoints (plans, flags, consent types) */
-	secretKey: string
+	secretKey: string;
 	/** App ID for public endpoints (OAuth providers) - identifies your app */
-	appId: string
+	appId: string;
 	/** Platform URL (defaults to https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 /**
@@ -789,17 +827,20 @@ export interface GetAppConfigOptions {
  * }
  * ```
  */
-export async function getAppConfig(options: GetAppConfigOptions): Promise<AppConfig> {
-	const { secretKey, appId, platformUrl } = options
+export async function getAppConfig(
+	options: GetAppConfigOptions,
+): Promise<AppConfig> {
+	const { secretKey, appId, platformUrl } = options;
 
 	// Fetch all config data in parallel for optimal performance
-	const [plans, consentTypes, oauthProviders, featureFlags, app] = await Promise.all([
-		getPlans({ secretKey, platformUrl }),
-		getConsentTypes({ secretKey, platformUrl }),
-		getOAuthProvidersWithInfo({ appId, platformUrl }),
-		getFeatureFlags({ secretKey, platformUrl }),
-		getAppMetadata({ secretKey, platformUrl }),
-	])
+	const [plans, consentTypes, oauthProviders, featureFlags, app] =
+		await Promise.all([
+			getPlans({ secretKey, platformUrl }),
+			getConsentTypes({ secretKey, platformUrl }),
+			getOAuthProvidersWithInfo({ appId, platformUrl }),
+			getFeatureFlags({ secretKey, platformUrl }),
+			getAppMetadata({ secretKey, platformUrl }),
+		]);
 
 	return {
 		plans,
@@ -808,7 +849,7 @@ export async function getAppConfig(options: GetAppConfigOptions): Promise<AppCon
 		featureFlags,
 		app,
 		fetchedAt: new Date().toISOString(),
-	}
+	};
 }
 
 // ============================================================================
@@ -817,20 +858,20 @@ export async function getAppConfig(options: GetAppConfigOptions): Promise<AppCon
 
 /** Referral leaderboard entry */
 export interface ReferralLeaderboardEntry {
-	rank: number
-	userId: string
+	rank: number;
+	userId: string;
 	/** Masked username for privacy */
-	name: string
+	name: string;
 	/** Number of successful referrals */
-	referrals: number
-	isCurrentUser: boolean
+	referrals: number;
+	isCurrentUser: boolean;
 }
 
 /** Referral leaderboard result */
 export interface ReferralLeaderboardResult {
-	entries: ReferralLeaderboardEntry[]
-	total: number
-	period: 'all' | 'month' | 'week'
+	entries: ReferralLeaderboardEntry[];
+	total: number;
+	period: "all" | "month" | "week";
 }
 
 /**
@@ -850,22 +891,29 @@ export interface ReferralLeaderboardResult {
  * }
  * ```
  */
-export async function getReferralLeaderboard(options: AuthenticatedFetchOptions & {
-	limit?: number
-	period?: 'all' | 'month' | 'week'
-}): Promise<ReferralLeaderboardResult> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL, limit = 10, period = 'all' } = sanitizeOptions(options)
+export async function getReferralLeaderboard(
+	options: AuthenticatedFetchOptions & {
+		limit?: number;
+		period?: "all" | "month" | "week";
+	},
+): Promise<ReferralLeaderboardResult> {
+	const {
+		secretKey,
+		platformUrl = DEFAULT_PLATFORM_URL,
+		limit = 10,
+		period = "all",
+	} = sanitizeOptions(options);
 
-	const url = new URL(`${platformUrl}${SDK_API_PATH}/referrals/leaderboard`)
-	url.searchParams.set('limit', String(limit))
-	url.searchParams.set('period', period)
+	const url = new URL(`${platformUrl}${SDK_API_PATH}/referrals/leaderboard`);
+	url.searchParams.set("limit", String(limit));
+	url.searchParams.set("period", period);
 
 	return cachedFetch<ReferralLeaderboardResult>({
 		url: url.toString(),
 		headers: sdkHeaders(secretKey),
 		fallback: { entries: [], total: 0, period },
-		label: 'referral leaderboard',
-	})
+		label: "referral leaderboard",
+	});
 }
 
 // ============================================================================
@@ -874,20 +922,20 @@ export async function getReferralLeaderboard(options: AuthenticatedFetchOptions 
 
 /** Engagement leaderboard entry */
 export interface EngagementLeaderboardEntry {
-	rank: number
-	userId: string
-	name: string
-	score: number
-	isCurrentUser: boolean
+	rank: number;
+	userId: string;
+	name: string;
+	score: number;
+	isCurrentUser: boolean;
 }
 
 /** Engagement leaderboard result */
 export interface EngagementLeaderboardResult {
-	leaderboardId: string
-	entries: EngagementLeaderboardEntry[]
-	period: string
-	resetTime: string | null
-	userEntry: EngagementLeaderboardEntry | null
+	leaderboardId: string;
+	entries: EngagementLeaderboardEntry[];
+	period: string;
+	resetTime: string | null;
+	userEntry: EngagementLeaderboardEntry | null;
 }
 
 /**
@@ -906,21 +954,36 @@ export interface EngagementLeaderboardResult {
  * }
  * ```
  */
-export async function getEngagementLeaderboard(options: AuthenticatedFetchOptions & {
-	leaderboardId: string
-	limit?: number
-}): Promise<EngagementLeaderboardResult> {
-	const { secretKey, leaderboardId, platformUrl = DEFAULT_PLATFORM_URL, limit = 10 } = sanitizeOptions(options)
+export async function getEngagementLeaderboard(
+	options: AuthenticatedFetchOptions & {
+		leaderboardId: string;
+		limit?: number;
+	},
+): Promise<EngagementLeaderboardResult> {
+	const {
+		secretKey,
+		leaderboardId,
+		platformUrl = DEFAULT_PLATFORM_URL,
+		limit = 10,
+	} = sanitizeOptions(options);
 
-	const url = new URL(`${platformUrl}${SDK_API_PATH}/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`)
-	url.searchParams.set('limit', String(limit))
+	const url = new URL(
+		`${platformUrl}${SDK_API_PATH}/engagement/leaderboards/${encodeURIComponent(leaderboardId)}`,
+	);
+	url.searchParams.set("limit", String(limit));
 
 	return cachedFetch<EngagementLeaderboardResult>({
 		url: url.toString(),
 		headers: sdkHeaders(secretKey),
-		fallback: { leaderboardId, entries: [], period: 'all', resetTime: null, userEntry: null },
-		label: 'engagement leaderboard',
-	})
+		fallback: {
+			leaderboardId,
+			entries: [],
+			period: "all",
+			resetTime: null,
+			userEntry: null,
+		},
+		label: "engagement leaderboard",
+	});
 }
 
 // ============================================================================
@@ -929,18 +992,24 @@ export async function getEngagementLeaderboard(options: AuthenticatedFetchOption
 
 /** Database connection info returned by Platform */
 export interface DatabaseConnectionInfo {
-	connectionString: string
-	databaseName: string
-	roleName: string | null
-	status: 'provisioning' | 'ready' | 'suspended' | 'failed' | 'deleted'
+	connectionString: string;
+	databaseName: string;
+	roleName: string | null;
+	status: "provisioning" | "ready" | "suspended" | "failed" | "deleted";
 }
 
 /** Database status info */
 export interface DatabaseStatusInfo {
-	status: 'provisioning' | 'ready' | 'suspended' | 'failed' | 'deleted' | 'not_provisioned'
-	region: string | null
-	pgVersion: number | null
-	databaseName: string | null
+	status:
+		| "provisioning"
+		| "ready"
+		| "suspended"
+		| "failed"
+		| "deleted"
+		| "not_provisioned";
+	region: string | null;
+	pgVersion: number | null;
+	databaseName: string | null;
 }
 
 /**
@@ -969,32 +1038,39 @@ export interface DatabaseStatusInfo {
 export async function getDatabaseConnection(
 	options: AuthenticatedFetchOptions,
 ): Promise<DatabaseConnectionInfo | null> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	try {
-		const response = await fetch(`${platformUrl}${SDK_API_PATH}/database/connection-string`, {
-			headers: sdkHeaders(secretKey),
-			cache: 'no-store', // Always fetch fresh connection string
-		})
+		const response = await fetch(
+			`${platformUrl}${SDK_API_PATH}/database/connection-string`,
+			{
+				headers: sdkHeaders(secretKey),
+				cache: "no-store", // Always fetch fresh connection string
+			},
+		);
 
 		if (!response.ok) {
 			// 404 means database not provisioned - return null
 			if (response.status === 404) {
-				return null
+				return null;
 			}
 			// 412 means database not ready (provisioning, suspended, failed)
 			if (response.status === 412) {
-				console.warn('[Sylphx] Database not ready:', await response.text())
-				return null
+				console.warn("[Sylphx] Database not ready:", await response.text());
+				return null;
 			}
-			console.warn('[Sylphx] Failed to fetch database connection:', response.status)
-			return null
+			console.warn(
+				"[Sylphx] Failed to fetch database connection:",
+				response.status,
+			);
+			return null;
 		}
 
-		return (await response.json()) as DatabaseConnectionInfo
+		return (await response.json()) as DatabaseConnectionInfo;
 	} catch (error) {
-		console.warn('[Sylphx] Failed to fetch database connection:', error)
-		return null
+		console.warn("[Sylphx] Failed to fetch database connection:", error);
+		return null;
 	}
 }
 
@@ -1019,18 +1095,24 @@ export async function getDatabaseConnection(
 export async function getDatabaseStatus(
 	options: AuthenticatedFetchOptions,
 ): Promise<DatabaseStatusInfo> {
-	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } = sanitizeOptions(options)
+	const { secretKey, platformUrl = DEFAULT_PLATFORM_URL } =
+		sanitizeOptions(options);
 
 	return cachedFetch<DatabaseStatusInfo>({
 		url: `${platformUrl}${SDK_API_PATH}/database/status`,
 		headers: sdkHeaders(secretKey),
-		fallback: { status: 'not_provisioned', region: null, pgVersion: null, databaseName: null },
-		label: 'database status',
-	})
+		fallback: {
+			status: "not_provisioned",
+			region: null,
+			pgVersion: null,
+			databaseName: null,
+		},
+		label: "database status",
+	});
 }
 
 // AI Client
-export { createAI, getAI } from './ai'
+export { createAI, getAI } from "./ai";
 export type {
 	AIClient,
 	AIClientOptions,
@@ -1043,24 +1125,24 @@ export type {
 	EmbeddingResponse,
 	ModelInfo,
 	ModelsResponse,
-} from './ai'
+} from "./ai";
 
 // Streams (Real-time Pub/Sub)
-export { createStreams, getStreams } from './streams'
+export { createStreams, getStreams } from "./streams";
 export type {
 	StreamsClient,
 	StreamsClientOptions,
 	StreamMessage,
 	StreamHistoryOptions,
 	ChannelHelper,
-} from './streams'
+} from "./streams";
 
 // KV (Key-Value Store)
-export { createKv, getKv } from './kv'
+export { createKv, getKv } from "./kv";
 export type {
 	KvClient,
 	KvClientOptions,
 	KvSetOptions,
 	KvRateLimitResult,
 	KvZMember,
-} from './kv'
+} from "./kv";

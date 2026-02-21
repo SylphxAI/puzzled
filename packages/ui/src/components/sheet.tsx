@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Sheet Component
@@ -11,11 +11,11 @@
  * See: apps/sylphx/src/app/globals.css (sheet section)
  */
 
-import { Dialog as BaseDialog } from '@base-ui/react/dialog'
-import { type VariantProps, cva } from 'class-variance-authority'
-import { X } from 'lucide-react'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Dialog as BaseDialog } from "@base-ui/react/dialog";
+import { type VariantProps, cva } from "class-variance-authority";
+import { X } from "lucide-react";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // Sheet Root
@@ -23,23 +23,34 @@ import { cn } from '../utils'
 
 interface SheetProps {
 	/** Whether the sheet is open (controlled) */
-	open?: boolean
+	open?: boolean;
 	/** Default open state (uncontrolled) */
-	defaultOpen?: boolean
+	defaultOpen?: boolean;
 	/** Handler fired when open state changes */
-	onOpenChange?: (open: boolean) => void
+	onOpenChange?: (open: boolean) => void;
 	/** Whether the sheet is modal */
-	modal?: boolean
+	modal?: boolean;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
-function Sheet({ open, defaultOpen, onOpenChange, modal = true, children }: SheetProps) {
+function Sheet({
+	open,
+	defaultOpen,
+	onOpenChange,
+	modal = true,
+	children,
+}: SheetProps) {
 	return (
-		<BaseDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={modal}>
+		<BaseDialog.Root
+			open={open}
+			defaultOpen={defaultOpen}
+			onOpenChange={onOpenChange}
+			modal={modal}
+		>
 			{children}
 		</BaseDialog.Root>
-	)
+	);
 }
 
 // ==================
@@ -48,11 +59,11 @@ function Sheet({ open, defaultOpen, onOpenChange, modal = true, children }: Shee
 
 interface SheetTriggerProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Whether to render as child */
-	asChild?: boolean
+	asChild?: boolean;
 }
 
 const SheetTrigger = forwardRef<HTMLButtonElement, SheetTriggerProps>(
@@ -65,8 +76,8 @@ const SheetTrigger = forwardRef<HTMLButtonElement, SheetTriggerProps>(
 			{asChild ? undefined : children}
 		</BaseDialog.Trigger>
 	),
-)
-SheetTrigger.displayName = 'SheetTrigger'
+);
+SheetTrigger.displayName = "SheetTrigger";
 
 // ==================
 // Sheet Close
@@ -74,9 +85,9 @@ SheetTrigger.displayName = 'SheetTrigger'
 
 interface SheetCloseProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const SheetClose = forwardRef<HTMLButtonElement, SheetCloseProps>(
@@ -85,15 +96,15 @@ const SheetClose = forwardRef<HTMLButtonElement, SheetCloseProps>(
 			{children}
 		</BaseDialog.Close>
 	),
-)
-SheetClose.displayName = 'SheetClose'
+);
+SheetClose.displayName = "SheetClose";
 
 // ==================
 // Sheet Portal
 // ==================
 
 function SheetPortal({ children }: { children: React.ReactNode }) {
-	return <BaseDialog.Portal>{children}</BaseDialog.Portal>
+	return <BaseDialog.Portal>{children}</BaseDialog.Portal>;
 }
 
 // ==================
@@ -102,48 +113,55 @@ function SheetPortal({ children }: { children: React.ReactNode }) {
 
 interface SheetOverlayProps {
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const SheetOverlay = forwardRef<HTMLDivElement, SheetOverlayProps>(
 	({ className }, ref) => (
 		<BaseDialog.Backdrop
 			ref={ref}
-			className={cn('sheet-overlay fixed inset-0 z-drawer bg-black/50', className)}
+			className={cn(
+				"sheet-overlay fixed inset-0 z-drawer bg-black/50",
+				className,
+			)}
 		/>
 	),
-)
-SheetOverlay.displayName = 'SheetOverlay'
+);
+SheetOverlay.displayName = "SheetOverlay";
 
 // ==================
 // Sheet Content
 // ==================
 
-const sheetVariants = cva('sheet-panel fixed z-drawer bg-background shadow-lg', {
-	variants: {
-		side: {
-			top: 'sheet-panel-top inset-x-0 top-0 border-b',
-			bottom: 'sheet-panel-bottom inset-x-0 bottom-0 border-t',
-			left: 'sheet-panel-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm',
-			right: 'sheet-panel-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm',
+const sheetVariants = cva(
+	"sheet-panel fixed z-drawer bg-background shadow-lg",
+	{
+		variants: {
+			side: {
+				top: "sheet-panel-top inset-x-0 top-0 border-b",
+				bottom: "sheet-panel-bottom inset-x-0 bottom-0 border-t",
+				left: "sheet-panel-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
+				right:
+					"sheet-panel-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+			},
+		},
+		defaultVariants: {
+			side: "right",
 		},
 	},
-	defaultVariants: {
-		side: 'right',
-	},
-})
+);
 
 interface SheetContentProps extends VariantProps<typeof sheetVariants> {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Whether to hide the close button */
-	hideCloseButton?: boolean
+	hideCloseButton?: boolean;
 }
 
 const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
-	({ side = 'right', className, children, hideCloseButton }, ref) => (
+	({ side = "right", className, children, hideCloseButton }, ref) => (
 		<SheetPortal>
 			<SheetOverlay />
 			<BaseDialog.Popup
@@ -155,10 +173,10 @@ const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
 					<BaseDialog.Close
 						className={cn(
 							// min-h-11 min-w-11 = 44px minimum touch target (WCAG 2.1 AA)
-							'absolute right-4 top-4 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity',
-							'hover:bg-muted hover:opacity-100',
-							'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-							'disabled:pointer-events-none',
+							"absolute right-4 top-4 flex min-h-11 min-w-11 items-center justify-center rounded-full text-muted-foreground opacity-70 ring-offset-background transition-opacity",
+							"hover:bg-muted hover:opacity-100",
+							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+							"disabled:pointer-events-none",
 						)}
 						aria-label="Close panel"
 					>
@@ -168,31 +186,48 @@ const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>(
 			</BaseDialog.Popup>
 		</SheetPortal>
 	),
-)
-SheetContent.displayName = 'SheetContent'
+);
+SheetContent.displayName = "SheetContent";
 
 // ==================
 // Sheet Header
 // ==================
 
-function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn('flex flex-col space-y-2 p-4 border-b border-border', className)} {...props} />
+function SheetHeader({
+	className,
+	...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+	return (
+		<div
+			className={cn(
+				"flex flex-col space-y-2 p-4 border-b border-border",
+				className,
+			)}
+			{...props}
+		/>
+	);
 }
-SheetHeader.displayName = 'SheetHeader'
+SheetHeader.displayName = "SheetHeader";
 
 // ==================
 // Sheet Footer
 // ==================
 
-function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+function SheetFooter({
+	className,
+	...props
+}: React.HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
-			className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border', className)}
+			className={cn(
+				"flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border",
+				className,
+			)}
 			{...props}
 		/>
-	)
+	);
 }
-SheetFooter.displayName = 'SheetFooter'
+SheetFooter.displayName = "SheetFooter";
 
 // ==================
 // Sheet Title
@@ -200,19 +235,22 @@ SheetFooter.displayName = 'SheetFooter'
 
 interface SheetTitleProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const SheetTitle = forwardRef<HTMLHeadingElement, SheetTitleProps>(
 	({ className, children }, ref) => (
-		<BaseDialog.Title ref={ref} className={cn('text-lg font-semibold', className)}>
+		<BaseDialog.Title
+			ref={ref}
+			className={cn("text-lg font-semibold", className)}
+		>
 			{children}
 		</BaseDialog.Title>
 	),
-)
-SheetTitle.displayName = 'SheetTitle'
+);
+SheetTitle.displayName = "SheetTitle";
 
 // ==================
 // Sheet Description
@@ -220,19 +258,23 @@ SheetTitle.displayName = 'SheetTitle'
 
 interface SheetDescriptionProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
-const SheetDescription = forwardRef<HTMLParagraphElement, SheetDescriptionProps>(
-	({ className, children }, ref) => (
-		<BaseDialog.Description ref={ref} className={cn('text-sm text-muted-foreground', className)}>
-			{children}
-		</BaseDialog.Description>
-	),
-)
-SheetDescription.displayName = 'SheetDescription'
+const SheetDescription = forwardRef<
+	HTMLParagraphElement,
+	SheetDescriptionProps
+>(({ className, children }, ref) => (
+	<BaseDialog.Description
+		ref={ref}
+		className={cn("text-sm text-muted-foreground", className)}
+	>
+		{children}
+	</BaseDialog.Description>
+));
+SheetDescription.displayName = "SheetDescription";
 
 export {
 	Sheet,
@@ -245,7 +287,7 @@ export {
 	SheetFooter,
 	SheetTitle,
 	SheetDescription,
-}
+};
 
 export type {
 	SheetProps,
@@ -255,4 +297,4 @@ export type {
 	SheetContentProps,
 	SheetTitleProps,
 	SheetDescriptionProps,
-}
+};

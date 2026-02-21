@@ -22,68 +22,68 @@
  * ```
  */
 
-import { useState, useEffect, useCallback, useMemo, useContext } from 'react'
-import { PlatformContext } from '../platform-context'
-import type { ThemeVariables } from '../ui/styles'
-import { defaultTheme } from '../ui/styles'
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { PlatformContext } from "../platform-context";
 import {
-	ConfigurationError,
 	type ConfigurationComponentType,
-} from '../ui/configuration-error'
+	ConfigurationError,
+} from "../ui/configuration-error";
+import type { ThemeVariables } from "../ui/styles";
+import { defaultTheme } from "../ui/styles";
 
 // ============================================
 // Types
 // ============================================
 
 export type SdkService =
-	| 'auth'
-	| 'user'
-	| 'billing'
-	| 'storage'
-	| 'analytics'
-	| 'flags'
-	| 'consent'
-	| 'organization'
-	| 'monitoring'
-	| 'ai'
-	| 'jobs'
-	| 'notifications'
-	| 'newsletter'
+	| "auth"
+	| "user"
+	| "billing"
+	| "storage"
+	| "analytics"
+	| "flags"
+	| "consent"
+	| "organization"
+	| "monitoring"
+	| "ai"
+	| "jobs"
+	| "notifications"
+	| "newsletter";
 
 // Re-export for convenience
-type ComponentType = ConfigurationComponentType
+type ComponentType = ConfigurationComponentType;
 
 export interface UseSdkReadyOptions {
 	/** Required services for this component */
-	services?: SdkService[]
+	services?: SdkService[];
 	/** Component type for error messaging */
-	componentType?: ComponentType
+	componentType?: ComponentType;
 	/** Theme for error display */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom retry handler */
-	onRetry?: () => void
+	onRetry?: () => void;
 	/**
 	 * Behavior when not configured:
 	 * - 'error': Show ConfigurationError (default for auth components)
 	 * - 'null': Return null silently (for optional UI like UserButton)
 	 * - 'children': Render children anyway (for graceful degradation)
 	 */
-	fallback?: 'error' | 'null' | 'children'
+	fallback?: "error" | "null" | "children";
 }
 
 export interface UseSdkReadyReturn {
 	/** Whether SDK is ready to use */
-	isReady: boolean
+	isReady: boolean;
 	/** Whether component is mounted (client-side) */
-	isMounted: boolean
+	isMounted: boolean;
 	/** Whether SDK is configured */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** Whether we're in SSR */
-	isSSR: boolean
+	isSSR: boolean;
 	/** Render the appropriate error/fallback */
-	renderError: () => React.ReactElement | null
+	renderError: () => React.ReactElement | null;
 	/** Service availability map */
-	services: Record<SdkService, boolean>
+	services: Record<SdkService, boolean>;
 }
 
 // ============================================
@@ -93,30 +93,32 @@ export interface UseSdkReadyReturn {
 /**
  * Hook for checking SDK readiness with SSOT pattern
  */
-export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn {
+export function useSdkReady(
+	options: UseSdkReadyOptions = {},
+): UseSdkReadyReturn {
 	const {
 		services = [],
-		componentType = 'general',
+		componentType = "general",
 		theme = defaultTheme,
 		onRetry,
-		fallback = 'error',
-	} = options
+		fallback = "error",
+	} = options;
 
-	const [isMounted, setIsMounted] = useState(false)
+	const [isMounted, setIsMounted] = useState(false);
 
 	// Get platform context (null if not in provider)
-	const platformContext = useContext(PlatformContext)
+	const platformContext = useContext(PlatformContext);
 
 	// Track mount state
 	useEffect(() => {
-		setIsMounted(true)
-	}, [])
+		setIsMounted(true);
+	}, []);
 
 	// Check if we're in SSR
-	const isSSR = typeof window === 'undefined'
+	const isSSR = typeof window === "undefined";
 
 	// Check if SDK is configured (has appId)
-	const isConfigured = Boolean(platformContext?.appId)
+	const isConfigured = Boolean(platformContext?.appId);
 
 	// Check individual service availability
 	const serviceAvailability = useMemo<Record<SdkService, boolean>>(() => {
@@ -136,7 +138,7 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 				jobs: false,
 				notifications: false,
 				newsletter: false,
-			}
+			};
 		}
 
 		// When configured, all services are available
@@ -155,41 +157,41 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 			jobs: true,
 			notifications: true,
 			newsletter: true,
-		}
-	}, [isConfigured])
+		};
+	}, [isConfigured]);
 
 	// Check if all required services are available
 	const requiredServicesReady =
-		services.length === 0 || services.every((s) => serviceAvailability[s])
+		services.length === 0 || services.every((s) => serviceAvailability[s]);
 
 	// Overall readiness
-	const isReady = !isSSR && isMounted && isConfigured && requiredServicesReady
+	const isReady = !isSSR && isMounted && isConfigured && requiredServicesReady;
 
 	// Render error function
 	const renderError = useCallback((): React.ReactElement | null => {
 		// During SSR, always return null
 		if (isSSR) {
-			return null
+			return null;
 		}
 
 		// Still hydrating, return null
 		if (!isMounted) {
-			return null
+			return null;
 		}
 
 		// If configured and ready, no error to render
 		if (isConfigured && requiredServicesReady) {
-			return null
+			return null;
 		}
 
 		// Handle fallback modes
-		if (fallback === 'null') {
-			return null
+		if (fallback === "null") {
+			return null;
 		}
 
-		if (fallback === 'children') {
+		if (fallback === "children") {
 			// This case is handled by the component itself
-			return null
+			return null;
 		}
 
 		// Use the ConfigurationError component for consistent, polished UI
@@ -199,8 +201,17 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 				componentType={componentType}
 				onRetry={onRetry ?? (() => window.location.reload())}
 			/>
-		)
-	}, [isSSR, isMounted, isConfigured, requiredServicesReady, fallback, theme, componentType, onRetry])
+		);
+	}, [
+		isSSR,
+		isMounted,
+		isConfigured,
+		requiredServicesReady,
+		fallback,
+		theme,
+		componentType,
+		onRetry,
+	]);
 
 	return {
 		isReady,
@@ -209,7 +220,7 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 		isSSR,
 		renderError,
 		services: serviceAvailability,
-	}
+	};
 }
 
 // ============================================
@@ -218,15 +229,15 @@ export function useSdkReady(options: UseSdkReadyOptions = {}): UseSdkReadyReturn
 
 export interface RequireSdkProps {
 	/** Required services */
-	services?: SdkService[]
+	services?: SdkService[];
 	/** Component type for error messaging */
-	componentType?: ComponentType
+	componentType?: ComponentType;
 	/** Theme for error display */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Fallback behavior */
-	fallback?: 'error' | 'null' | 'children'
+	fallback?: "error" | "null" | "children";
 	/** Children to render when ready */
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 /**
@@ -241,9 +252,9 @@ export interface RequireSdkProps {
  */
 export function RequireSdk({
 	services = [],
-	componentType = 'general',
+	componentType = "general",
 	theme,
-	fallback = 'error',
+	fallback = "error",
 	children,
 }: RequireSdkProps): React.ReactElement | null {
 	const { isReady, renderError } = useSdkReady({
@@ -251,14 +262,14 @@ export function RequireSdk({
 		componentType,
 		theme,
 		fallback,
-	})
+	});
 
 	if (!isReady) {
-		const error = renderError()
-		if (error) return error
-		if (fallback === 'children') return <>{children}</>
-		return null
+		const error = renderError();
+		if (error) return error;
+		if (fallback === "children") return <>{children}</>;
+		return null;
 	}
 
-	return <>{children}</>
+	return <>{children}</>;
 }

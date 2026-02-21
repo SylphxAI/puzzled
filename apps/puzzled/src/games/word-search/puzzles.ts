@@ -5,22 +5,22 @@
  * Each seed produces a unique puzzle with a random theme.
  */
 
-import { generateWordSearchPuzzle, getThemeCount } from './generator'
-import type { WordSearchPuzzleData, WordSearchSolution } from './types'
+import { generateWordSearchPuzzle, getThemeCount } from "./generator";
+import type { WordSearchPuzzleData, WordSearchSolution } from "./types";
 
 /**
  * Get a puzzle based on seed
  */
 export function getPuzzleFromSeed(seed: number): {
-	puzzleData: WordSearchPuzzleData
-	solution: WordSearchSolution
+	puzzleData: WordSearchPuzzleData;
+	solution: WordSearchSolution;
 } {
-	return generateWordSearchPuzzle(seed)
+	return generateWordSearchPuzzle(seed);
 }
 
 /**
  * Get count of available themes
  */
 function _getPuzzleCount(): number {
-	return getThemeCount()
+	return getThemeCount();
 }

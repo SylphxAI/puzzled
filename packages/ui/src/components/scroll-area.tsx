@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { ScrollArea as BaseScrollArea } from '@base-ui/react/scroll-area'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { ScrollArea as BaseScrollArea } from "@base-ui/react/scroll-area";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // ScrollArea
@@ -10,14 +10,17 @@ import { cn } from '../utils'
 
 interface ScrollAreaProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
 	({ className, children }, ref) => (
-		<BaseScrollArea.Root ref={ref} className={cn('relative overflow-hidden', className)}>
+		<BaseScrollArea.Root
+			ref={ref}
+			className={cn("relative overflow-hidden", className)}
+		>
 			<BaseScrollArea.Viewport className="h-full w-full rounded-[inherit]">
 				{children}
 			</BaseScrollArea.Viewport>
@@ -25,8 +28,8 @@ const ScrollArea = forwardRef<HTMLDivElement, ScrollAreaProps>(
 			<BaseScrollArea.Corner />
 		</BaseScrollArea.Root>
 	),
-)
-ScrollArea.displayName = 'ScrollArea'
+);
+ScrollArea.displayName = "ScrollArea";
 
 // ==================
 // ScrollBar
@@ -34,32 +37,31 @@ ScrollArea.displayName = 'ScrollArea'
 
 interface ScrollBarProps {
 	/** Orientation of the scrollbar */
-	orientation?: 'vertical' | 'horizontal'
+	orientation?: "vertical" | "horizontal";
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const ScrollBar = forwardRef<HTMLDivElement, ScrollBarProps>(
-	({ className, orientation = 'vertical' }, ref) => (
+	({ className, orientation = "vertical" }, ref) => (
 		<BaseScrollArea.Scrollbar
 			ref={ref}
 			orientation={orientation}
 			className={cn(
-				'flex touch-none select-none transition-colors',
-				orientation === 'vertical' && 'h-full w-2.5 border-l border-l-transparent p-[1px]',
-				orientation === 'horizontal' && 'h-2.5 flex-col border-t border-t-transparent p-[1px]',
+				"flex touch-none select-none transition-colors",
+				orientation === "vertical" &&
+					"h-full w-2.5 border-l border-l-transparent p-[1px]",
+				orientation === "horizontal" &&
+					"h-2.5 flex-col border-t border-t-transparent p-[1px]",
 				className,
 			)}
 		>
 			<BaseScrollArea.Thumb className="relative flex-1 rounded-full bg-border" />
 		</BaseScrollArea.Scrollbar>
 	),
-)
-ScrollBar.displayName = 'ScrollBar'
+);
+ScrollBar.displayName = "ScrollBar";
 
-export { ScrollArea, ScrollBar }
+export { ScrollArea, ScrollBar };
 
-export type {
-	ScrollAreaProps,
-	ScrollBarProps,
-}
+export type { ScrollAreaProps, ScrollBarProps };

@@ -21,19 +21,19 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-	initWebVitals,
-	getWebVitalsReport,
-	resetWebVitals,
-	isWebVitalsInitialized,
+	WEB_VITALS_THRESHOLDS,
+	type WebVitalMetric,
 	type WebVitalsConfig,
 	type WebVitalsReport,
-	type WebVitalMetric,
-	WEB_VITALS_THRESHOLDS,
-} from '../../lib/monitoring/web-vitals'
+	getWebVitalsReport,
+	initWebVitals,
+	isWebVitalsInitialized,
+	resetWebVitals,
+} from "../../lib/monitoring/web-vitals";
 
 // ============================================
 // Types
@@ -41,36 +41,36 @@ import {
 
 export interface UseWebVitalsOptions extends WebVitalsConfig {
 	/** Initialize automatically (default: true) */
-	autoInit?: boolean
+	autoInit?: boolean;
 }
 
 export interface UseWebVitalsReturn {
 	/** Current Web Vitals report */
-	report: WebVitalsReport | null
+	report: WebVitalsReport | null;
 	/** Overall performance score (0-100) */
-	score: number
+	score: number;
 	/** Whether all Core Web Vitals are passing */
-	isGood: boolean
+	isGood: boolean;
 	/** Individual metric values */
 	metrics: {
-		lcp: number | null
-		inp: number | null
-		cls: number | null
-		fcp: number | null
-		ttfb: number | null
-	}
+		lcp: number | null;
+		inp: number | null;
+		cls: number | null;
+		fcp: number | null;
+		ttfb: number | null;
+	};
 	/** Individual metric ratings */
 	ratings: {
-		lcp: 'good' | 'needs-improvement' | 'poor' | null
-		inp: 'good' | 'needs-improvement' | 'poor' | null
-		cls: 'good' | 'needs-improvement' | 'poor' | null
-		fcp: 'good' | 'needs-improvement' | 'poor' | null
-		ttfb: 'good' | 'needs-improvement' | 'poor' | null
-	}
+		lcp: "good" | "needs-improvement" | "poor" | null;
+		inp: "good" | "needs-improvement" | "poor" | null;
+		cls: "good" | "needs-improvement" | "poor" | null;
+		fcp: "good" | "needs-improvement" | "poor" | null;
+		ttfb: "good" | "needs-improvement" | "poor" | null;
+	};
 	/** Manually trigger refresh */
-	refresh: () => void
+	refresh: () => void;
 	/** Reset tracking */
-	reset: () => void
+	reset: () => void;
 }
 
 // ============================================
@@ -109,48 +109,50 @@ export interface UseWebVitalsReturn {
  * }
  * ```
  */
-export function useWebVitals(options: UseWebVitalsOptions = {}): UseWebVitalsReturn {
-	const { autoInit = true, onReport, ...config } = options
-	const [report, setReport] = useState<WebVitalsReport | null>(null)
-	const initRef = useRef(false)
+export function useWebVitals(
+	options: UseWebVitalsOptions = {},
+): UseWebVitalsReturn {
+	const { autoInit = true, onReport, ...config } = options;
+	const [report, setReport] = useState<WebVitalsReport | null>(null);
+	const initRef = useRef(false);
 
 	// Initialize on mount
 	useEffect(() => {
-		if (!autoInit || initRef.current) return
-		if (typeof window === 'undefined') return
+		if (!autoInit || initRef.current) return;
+		if (typeof window === "undefined") return;
 
-		initRef.current = true
+		initRef.current = true;
 
 		// Wrap onReport to update state
 		initWebVitals({
 			...config,
 			onReport: (metric: WebVitalMetric) => {
 				// Update local state
-				setReport(getWebVitalsReport())
+				setReport(getWebVitalsReport());
 				// Call user callback
-				onReport?.(metric)
+				onReport?.(metric);
 			},
-		})
+		});
 
 		// Initial report
-		setReport(getWebVitalsReport())
+		setReport(getWebVitalsReport());
 
 		return () => {
 			// Don't reset on unmount - metrics should persist
-		}
-	}, [autoInit, config, onReport])
+		};
+	}, [autoInit, config, onReport]);
 
 	// Refresh report
 	const refresh = useCallback(() => {
-		setReport(getWebVitalsReport())
-	}, [])
+		setReport(getWebVitalsReport());
+	}, []);
 
 	// Reset tracking
 	const reset = useCallback(() => {
-		resetWebVitals()
-		setReport(null)
-		initRef.current = false
-	}, [])
+		resetWebVitals();
+		setReport(null);
+		initRef.current = false;
+	}, []);
 
 	// Extract individual metrics
 	const metrics = {
@@ -159,7 +161,7 @@ export function useWebVitals(options: UseWebVitalsOptions = {}): UseWebVitalsRet
 		cls: report?.cls?.value ?? null,
 		fcp: report?.fcp?.value ?? null,
 		ttfb: report?.ttfb?.value ?? null,
-	}
+	};
 
 	const ratings = {
 		lcp: report?.lcp?.rating ?? null,
@@ -167,13 +169,13 @@ export function useWebVitals(options: UseWebVitalsOptions = {}): UseWebVitalsRet
 		cls: report?.cls?.rating ?? null,
 		fcp: report?.fcp?.rating ?? null,
 		ttfb: report?.ttfb?.rating ?? null,
-	}
+	};
 
 	// Check if all Core Web Vitals are passing
 	const isGood =
-		(ratings.lcp === 'good' || ratings.lcp === null) &&
-		(ratings.inp === 'good' || ratings.inp === null) &&
-		(ratings.cls === 'good' || ratings.cls === null)
+		(ratings.lcp === "good" || ratings.lcp === null) &&
+		(ratings.inp === "good" || ratings.inp === null) &&
+		(ratings.cls === "good" || ratings.cls === null);
 
 	return {
 		report,
@@ -183,7 +185,7 @@ export function useWebVitals(options: UseWebVitalsOptions = {}): UseWebVitalsRet
 		ratings,
 		refresh,
 		reset,
-	}
+	};
 }
 
 // ============================================
@@ -192,20 +194,20 @@ export function useWebVitals(options: UseWebVitalsOptions = {}): UseWebVitalsRet
 
 export interface UseWebVitalOptions {
 	/** Metric name to track */
-	metric: 'LCP' | 'INP' | 'CLS' | 'FCP' | 'TTFB'
+	metric: "LCP" | "INP" | "CLS" | "FCP" | "TTFB";
 }
 
 export interface UseWebVitalReturn {
 	/** Metric value */
-	value: number | null
+	value: number | null;
 	/** Metric rating */
-	rating: 'good' | 'needs-improvement' | 'poor' | null
+	rating: "good" | "needs-improvement" | "poor" | null;
 	/** Threshold for 'good' rating */
-	goodThreshold: number
+	goodThreshold: number;
 	/** Threshold for 'poor' rating */
-	poorThreshold: number
+	poorThreshold: number;
 	/** Whether metric is passing */
-	isPassing: boolean
+	isPassing: boolean;
 }
 
 /**
@@ -230,18 +232,22 @@ export interface UseWebVitalReturn {
  * ```
  */
 export function useWebVital({ metric }: UseWebVitalOptions): UseWebVitalReturn {
-	const { report } = useWebVitals({ autoInit: true })
+	const { report } = useWebVitals({ autoInit: true });
 
-	const metricData = report?.[metric.toLowerCase() as keyof WebVitalsReport] as WebVitalMetric | undefined
-	const threshold = WEB_VITALS_THRESHOLDS[metric]
+	const metricData = report?.[metric.toLowerCase() as keyof WebVitalsReport] as
+		| WebVitalMetric
+		| undefined;
+	const threshold = WEB_VITALS_THRESHOLDS[metric];
 
 	return {
 		value: metricData?.value ?? null,
 		rating: metricData?.rating ?? null,
 		goodThreshold: threshold.good,
 		poorThreshold: threshold.poor,
-		isPassing: metricData?.rating === 'good' || metricData?.rating === 'needs-improvement',
-	}
+		isPassing:
+			metricData?.rating === "good" ||
+			metricData?.rating === "needs-improvement",
+	};
 }
 
 // ============================================
@@ -250,11 +256,11 @@ export function useWebVital({ metric }: UseWebVitalOptions): UseWebVitalReturn {
 
 export interface UseWebVitalsAnalyticsOptions {
 	/** Track function from useAnalytics */
-	track: (event: string, properties?: Record<string, unknown>) => void
+	track: (event: string, properties?: Record<string, unknown>) => void;
 	/** Event name prefix (default: 'web_vital') */
-	eventPrefix?: string
+	eventPrefix?: string;
 	/** Send report on page hide */
-	reportOnHide?: boolean
+	reportOnHide?: boolean;
 }
 
 /**
@@ -280,9 +286,11 @@ export interface UseWebVitalsAnalyticsOptions {
  * }
  * ```
  */
-export function useWebVitalsAnalytics(options: UseWebVitalsAnalyticsOptions): UseWebVitalsReturn {
-	const { track, eventPrefix = 'web_vital', reportOnHide = true } = options
-	const reportedRef = useRef(false)
+export function useWebVitalsAnalytics(
+	options: UseWebVitalsAnalyticsOptions,
+): UseWebVitalsReturn {
+	const { track, eventPrefix = "web_vital", reportOnHide = true } = options;
+	const reportedRef = useRef(false);
 
 	const webVitals = useWebVitals({
 		onReport: (metric) => {
@@ -293,17 +301,21 @@ export function useWebVitalsAnalytics(options: UseWebVitalsAnalyticsOptions): Us
 				metric_delta: metric.delta,
 				metric_id: metric.id,
 				navigation_type: metric.navigationType,
-			})
+			});
 		},
-	})
+	});
 
 	// Report summary on page hide
 	useEffect(() => {
-		if (!reportOnHide) return
+		if (!reportOnHide) return;
 
 		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'hidden' && !reportedRef.current && webVitals.report) {
-				reportedRef.current = true
+			if (
+				document.visibilityState === "hidden" &&
+				!reportedRef.current &&
+				webVitals.report
+			) {
+				reportedRef.current = true;
 				track(`${eventPrefix}_summary`, {
 					score: webVitals.score,
 					lcp_value: webVitals.metrics.lcp,
@@ -318,17 +330,16 @@ export function useWebVitalsAnalytics(options: UseWebVitalsAnalyticsOptions): Us
 					ttfb_rating: webVitals.ratings.ttfb,
 					is_passing: webVitals.isGood,
 					url: window.location.href,
-				})
+				});
 			}
-		}
+		};
 
-		document.addEventListener('visibilitychange', handleVisibilityChange)
-		return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-	}, [track, eventPrefix, reportOnHide, webVitals])
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () =>
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+	}, [track, eventPrefix, reportOnHide, webVitals]);
 
-	return webVitals
+	return webVitals;
 }
 
 // Re-export types from module
-
-

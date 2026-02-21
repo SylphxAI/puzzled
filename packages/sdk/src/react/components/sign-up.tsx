@@ -4,28 +4,33 @@
  * Flexible sign-up component supporting redirect, embedded, and modal modes.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
-import { SignUpForm, Modal, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
-import type { OAuthProviderId } from '../../types'
+import { useEffect, useState } from "react";
+import type { OAuthProviderId } from "../../types";
+import { useSafeAuth, useSafeUser, useSdkReady } from "../hooks";
+import {
+	Modal,
+	type OAuthProvider,
+	SignUpForm,
+	type ThemeVariables,
+	defaultTheme,
+} from "../ui";
 
 // Re-export for convenience
 
-
 export interface SignUpProps {
 	/** URL to redirect to after successful sign up */
-	afterSignUpUrl?: string
+	afterSignUpUrl?: string;
 	/** URL to redirect users to a waitlist page */
-	waitlistUrl?: string
+	waitlistUrl?: string;
 	/**
 	 * Display mode:
 	 * - 'redirect': Navigate to platform signup page (default)
 	 * - 'embedded': Show full sign-up form inline
 	 * - 'modal': Show full sign-up form in a modal
 	 */
-	mode?: 'redirect' | 'embedded' | 'modal'
+	mode?: "redirect" | "embedded" | "modal";
 	/**
 	 * OAuth providers to show (SDK-level filtering)
 	 * This further filters the providers enabled at platform and app level.
@@ -33,36 +38,36 @@ export interface SignUpProps {
 	 * - [] = hide OAuth section (email only)
 	 * - ['google', 'github'] = only show these (if they're app-enabled)
 	 */
-	providers?: OAuthProviderId[] | null
+	providers?: OAuthProviderId[] | null;
 	/** Theme variables for embedded/modal mode */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom appearance for redirect button */
 	appearance?: {
-		baseStyle?: React.CSSProperties
-		hoverStyle?: React.CSSProperties
-	}
+		baseStyle?: React.CSSProperties;
+		hoverStyle?: React.CSSProperties;
+	};
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Button content (for redirect mode) */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** URL for sign in link (embedded/modal mode) */
-	signInUrl?: string
+	signInUrl?: string;
 	/** Terms of Service URL */
-	termsUrl?: string
+	termsUrl?: string;
 	/** Privacy Policy URL */
-	privacyUrl?: string
+	privacyUrl?: string;
 	/** Initial invite code */
-	inviteCode?: string
+	inviteCode?: string;
 	/** Show invite code field */
-	showInviteCode?: boolean
+	showInviteCode?: boolean;
 	/** Require invite code */
-	requireInviteCode?: boolean
+	requireInviteCode?: boolean;
 	/** Called on successful sign up */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Show card wrapper (embedded mode, default: true) */
-	showCard?: boolean
+	showCard?: boolean;
 }
 
 /**
@@ -97,15 +102,15 @@ export interface SignUpProps {
 export function SignUp({
 	afterSignUpUrl,
 	waitlistUrl,
-	mode = 'redirect',
+	mode = "redirect",
 	providers,
 	theme = defaultTheme,
 	appearance,
 	className,
 	children,
-	signInUrl = '/sign-in',
-	termsUrl = '/terms',
-	privacyUrl = '/privacy',
+	signInUrl = "/sign-in",
+	termsUrl = "/terms",
+	privacyUrl = "/privacy",
 	inviteCode,
 	showInviteCode = false,
 	requireInviteCode = false,
@@ -115,52 +120,52 @@ export function SignUp({
 }: SignUpProps) {
 	// SDK readiness check (SSOT for SSR safety and configuration)
 	const { isReady, renderError } = useSdkReady({
-		services: ['auth', 'user'],
-		componentType: 'sign-up',
+		services: ["auth", "user"],
+		componentType: "sign-up",
 		theme,
-	})
+	});
 
-	const { signUp } = useSafeAuth()
-	const { isSignedIn, isLoaded } = useSafeUser()
-	const [modalOpen, setModalOpen] = useState(false)
+	const { signUp } = useSafeAuth();
+	const { isSignedIn, isLoaded } = useSafeUser();
+	const [modalOpen, setModalOpen] = useState(false);
 
 	// SDK not ready - render error or null
 	if (!isReady) {
-		return renderError()
+		return renderError();
 	}
 
 	// Don't show if already signed in
 	if (isLoaded && isSignedIn) {
-		return null
+		return null;
 	}
 
 	// Convert OAuthProviderId to OAuthProvider (compatible types)
-	const oauthProviders = providers as OAuthProvider[] | undefined | null
+	const oauthProviders = providers as OAuthProvider[] | undefined | null;
 
 	// Redirect mode - show button that navigates to platform
-	if (mode === 'redirect') {
+	if (mode === "redirect") {
 		const handleClick = () => {
 			signUp({
 				redirectUrl: afterSignUpUrl || window.location.href,
 				providers,
-			})
-		}
+			});
+		};
 
 		const defaultStyles: React.CSSProperties = {
-			display: 'inline-flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			padding: '0.5rem 1rem',
-			fontSize: '0.875rem',
+			display: "inline-flex",
+			alignItems: "center",
+			justifyContent: "center",
+			padding: "0.5rem 1rem",
+			fontSize: "0.875rem",
 			fontWeight: 500,
-			borderRadius: '0.375rem',
-			border: '1px solid #e5e7eb',
-			backgroundColor: '#fff',
-			color: '#000',
-			cursor: 'pointer',
-			transition: 'background-color 0.2s',
+			borderRadius: "0.375rem",
+			border: "1px solid #e5e7eb",
+			backgroundColor: "#fff",
+			color: "#000",
+			cursor: "pointer",
+			transition: "background-color 0.2s",
 			...appearance?.baseStyle,
-		}
+		};
 
 		return (
 			<button
@@ -169,18 +174,18 @@ export function SignUp({
 				style={className ? undefined : defaultStyles}
 				type="button"
 			>
-				{children || 'Sign Up'}
+				{children || "Sign Up"}
 			</button>
-		)
+		);
 	}
 
 	// Embedded mode - show form inline
-	if (mode === 'embedded') {
+	if (mode === "embedded") {
 		return (
 			<SignUpForm
 				theme={theme}
 				providers={oauthProviders || []}
-				afterSignUpUrl={afterSignUpUrl || '/dashboard'}
+				afterSignUpUrl={afterSignUpUrl || "/dashboard"}
 				signInUrl={signInUrl}
 				termsUrl={termsUrl}
 				privacyUrl={privacyUrl}
@@ -192,26 +197,26 @@ export function SignUp({
 				onError={onError}
 				showCard={showCard}
 			/>
-		)
+		);
 	}
 
 	// Modal mode - show button that opens modal
-	if (mode === 'modal') {
+	if (mode === "modal") {
 		const defaultStyles: React.CSSProperties = {
-			display: 'inline-flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			padding: '0.5rem 1rem',
-			fontSize: '0.875rem',
+			display: "inline-flex",
+			alignItems: "center",
+			justifyContent: "center",
+			padding: "0.5rem 1rem",
+			fontSize: "0.875rem",
 			fontWeight: 500,
-			borderRadius: '0.375rem',
-			border: '1px solid #e5e7eb',
-			backgroundColor: '#fff',
-			color: '#000',
-			cursor: 'pointer',
-			transition: 'background-color 0.2s',
+			borderRadius: "0.375rem",
+			border: "1px solid #e5e7eb",
+			backgroundColor: "#fff",
+			color: "#000",
+			cursor: "pointer",
+			transition: "background-color 0.2s",
 			...appearance?.baseStyle,
-		}
+		};
 
 		return (
 			<>
@@ -221,7 +226,7 @@ export function SignUp({
 					style={className ? undefined : defaultStyles}
 					type="button"
 				>
-					{children || 'Sign Up'}
+					{children || "Sign Up"}
 				</button>
 				<Modal
 					open={modalOpen}
@@ -231,7 +236,7 @@ export function SignUp({
 					<SignUpForm
 						theme={theme}
 						providers={oauthProviders || []}
-						afterSignUpUrl={afterSignUpUrl || '/dashboard'}
+						afterSignUpUrl={afterSignUpUrl || "/dashboard"}
 						signInUrl={signInUrl}
 						termsUrl={termsUrl}
 						privacyUrl={privacyUrl}
@@ -240,16 +245,16 @@ export function SignUp({
 						requireInviteCode={requireInviteCode}
 						waitlistUrl={waitlistUrl}
 						onSuccess={() => {
-							setModalOpen(false)
-							onSuccess?.()
+							setModalOpen(false);
+							onSuccess?.();
 						}}
 						onError={onError}
 						showCard={false}
 					/>
 				</Modal>
 			</>
-		)
+		);
 	}
 
-	return null
+	return null;
 }

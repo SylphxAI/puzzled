@@ -1,15 +1,15 @@
 {
-  "archiveTitle": "Puzzle Archive",
-  "archiveDesc": "Play puzzles you missed or want to replay",
-  "archiveBenefit1": "Access past daily puzzles",
-  "archiveBenefit2": "Complete your collection",
-  "archiveBenefit3": "Challenge yourself with classics",
-  "streakFreezeTitle": "Streak Freeze",
-  "streakFreezeDesc": "Protect your streak when life gets busy",
-  "streakFreezeBenefit1": "Save your streak on missed days",
-  "streakFreezeBenefit2": "3-6 freezes per month",
-  "streakFreezeBenefit3": "Never lose progress again",
-  "unlockWithPremium": "Unlock with Premium",
-  "unlockPremiumPrice": "Unlock with Premium - $4.99/mo",
-  "notNow": "Not now"
+	"archiveTitle": "Puzzle Archive",
+	"archiveDesc": "Play puzzles you missed or want to replay",
+	"archiveBenefit1": "Access past daily puzzles",
+	"archiveBenefit2": "Complete your collection",
+	"archiveBenefit3": "Challenge yourself with classics",
+	"streakFreezeTitle": "Streak Freeze",
+	"streakFreezeDesc": "Protect your streak when life gets busy",
+	"streakFreezeBenefit1": "Save your streak on missed days",
+	"streakFreezeBenefit2": "3-6 freezes per month",
+	"streakFreezeBenefit3": "Never lose progress again",
+	"unlockWithPremium": "Unlock with Premium",
+	"unlockPremiumPrice": "Unlock with Premium - $4.99/mo",
+	"notNow": "Not now"
 }

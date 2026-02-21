@@ -33,7 +33,7 @@
  * ```
  */
 
-import { type SylphxConfig, callApi } from './config'
+import { type SylphxConfig, callApi } from "./config";
 
 // ============================================================================
 // Types
@@ -41,204 +41,204 @@ import { type SylphxConfig, callApi } from './config'
 
 export interface IndexDocumentInput {
 	/** Document title (weighted higher in search) */
-	title?: string
+	title?: string;
 	/** Document content to index */
-	content: string
+	content: string;
 	/** Namespace for data isolation (e.g., 'products', 'articles') */
-	namespace?: string
+	namespace?: string;
 	/** External document ID (your system's ID) */
-	externalId?: string
+	externalId?: string;
 	/** URL or path */
-	url?: string
+	url?: string;
 	/** Searchable metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 	/** Category facet for filtering */
-	category?: string
+	category?: string;
 	/** Type facet for filtering */
-	type?: string
+	type?: string;
 	/** Tags facet for filtering */
-	tags?: string[]
+	tags?: string[];
 	/** Language for full-text search (default: english) */
-	language?: string
+	language?: string;
 	/** Skip embedding generation (for keyword-only search) */
-	skipEmbedding?: boolean
+	skipEmbedding?: boolean;
 	/** Embedding model to use */
-	embeddingModel?: string
+	embeddingModel?: string;
 }
 
 export interface IndexDocumentResult {
 	/** Generated document ID */
-	id: string
+	id: string;
 	/** External ID if provided */
-	externalId: string | null
+	externalId: string | null;
 	/** Namespace */
-	namespace: string
+	namespace: string;
 }
 
 export interface BatchIndexInput {
 	/** Documents to index (max 100) */
 	documents: Array<{
-		title?: string
-		content: string
-		externalId?: string
-		url?: string
-		metadata?: Record<string, unknown>
-		category?: string
-		type?: string
-		tags?: string[]
-	}>
+		title?: string;
+		content: string;
+		externalId?: string;
+		url?: string;
+		metadata?: Record<string, unknown>;
+		category?: string;
+		type?: string;
+		tags?: string[];
+	}>;
 	/** Namespace for all documents */
-	namespace?: string
+	namespace?: string;
 	/** Language for full-text search */
-	language?: string
+	language?: string;
 	/** Skip embedding generation */
-	skipEmbedding?: boolean
+	skipEmbedding?: boolean;
 	/** Embedding model to use */
-	embeddingModel?: string
+	embeddingModel?: string;
 }
 
 export interface BatchIndexResult {
 	/** Number of documents indexed */
-	indexed: number
+	indexed: number;
 	/** Generated document IDs */
-	ids: string[]
+	ids: string[];
 }
 
-export type SearchType = 'keyword' | 'semantic' | 'hybrid'
+export type SearchType = "keyword" | "semantic" | "hybrid";
 
 export interface SearchInput {
 	/** Search query text */
-	query: string
+	query: string;
 	/** Namespace to search within */
-	namespace?: string
+	namespace?: string;
 	/** Search type: keyword, semantic, or hybrid (default) */
-	searchType?: SearchType
+	searchType?: SearchType;
 	/** Maximum results to return (default: 10, max: 100) */
-	limit?: number
+	limit?: number;
 	/** Offset for pagination */
-	offset?: number
+	offset?: number;
 	/** Minimum similarity threshold (0-1) for semantic search */
-	minSimilarity?: number
+	minSimilarity?: number;
 	/** Enable typo tolerance (default: true) */
-	typoTolerance?: boolean
+	typoTolerance?: boolean;
 	/** Language for full-text search */
-	language?: string
+	language?: string;
 	/** Facet filters */
 	filters?: {
-		category?: string
-		type?: string
-		tags?: string[]
-		metadata?: Record<string, unknown>
-	}
+		category?: string;
+		type?: string;
+		tags?: string[];
+		metadata?: Record<string, unknown>;
+	};
 	/** Include highlighted snippets (default: true) */
-	highlight?: boolean
+	highlight?: boolean;
 	/** Embedding model for semantic search */
-	embeddingModel?: string
+	embeddingModel?: string;
 	/** Track this query for analytics (default: true) */
-	trackQuery?: boolean
+	trackQuery?: boolean;
 	/** Session ID for analytics */
-	sessionId?: string
+	sessionId?: string;
 	/** User ID for analytics */
-	userId?: string
+	userId?: string;
 }
 
 export interface SearchResultItem {
 	/** Document ID */
-	id: string
+	id: string;
 	/** External ID if set */
-	externalId: string | null
+	externalId: string | null;
 	/** Document title */
-	title: string | null
+	title: string | null;
 	/** Document content */
-	content: string
+	content: string;
 	/** Document URL */
-	url: string | null
+	url: string | null;
 	/** Document metadata */
-	metadata: Record<string, unknown> | null
+	metadata: Record<string, unknown> | null;
 	/** Category facet */
-	category: string | null
+	category: string | null;
 	/** Type facet */
-	type: string | null
+	type: string | null;
 	/** Tags facet */
-	tags: string[] | null
+	tags: string[] | null;
 	/** Combined score */
-	score: number
+	score: number;
 	/** Keyword search score (if hybrid) */
-	keywordScore?: number
+	keywordScore?: number;
 	/** Semantic search score (if hybrid) */
-	semanticScore?: number
+	semanticScore?: number;
 	/** Highlighted snippet (if enabled) */
-	highlight?: string
+	highlight?: string;
 }
 
 export interface SearchResponse {
 	/** Search results */
-	results: SearchResultItem[]
+	results: SearchResultItem[];
 	/** Total results found */
-	total: number
+	total: number;
 	/** Original query */
-	query: string
+	query: string;
 	/** Search type used */
-	searchType: SearchType
+	searchType: SearchType;
 	/** Query processing time in ms */
-	latencyMs: number
+	latencyMs: number;
 }
 
 export interface GetFacetsInput {
 	/** Namespace to get facets from */
-	namespace?: string
+	namespace?: string;
 	/** Facets to retrieve */
-	facets?: Array<'category' | 'type' | 'tags'>
+	facets?: Array<"category" | "type" | "tags">;
 	/** Filter facets by category or type */
 	filters?: {
-		category?: string
-		type?: string
-	}
+		category?: string;
+		type?: string;
+	};
 }
 
 export interface FacetsResponse {
 	facets: {
-		category?: Array<{ value: string; count: number }>
-		type?: Array<{ value: string; count: number }>
-		tags?: Array<{ value: string; count: number }>
-	}
+		category?: Array<{ value: string; count: number }>;
+		type?: Array<{ value: string; count: number }>;
+		tags?: Array<{ value: string; count: number }>;
+	};
 }
 
 export interface DeleteDocumentInput {
 	/** Document ID to delete */
-	id?: string
+	id?: string;
 	/** Or delete by external ID */
-	externalId?: string
+	externalId?: string;
 	/** Namespace (required if using externalId) */
-	namespace?: string
+	namespace?: string;
 }
 
 export interface UpsertDocumentInput extends IndexDocumentInput {
 	/** External ID is required for upsert */
-	externalId: string
+	externalId: string;
 }
 
 export interface UpsertDocumentResult extends IndexDocumentResult {
 	/** Whether the document was created (true) or updated (false) */
-	created: boolean
+	created: boolean;
 }
 
 export interface SearchStatsResult {
 	/** Total documents indexed */
-	totalDocuments: number
+	totalDocuments: number;
 	/** Documents with embeddings */
-	documentsWithEmbedding: number
+	documentsWithEmbedding: number;
 	/** Documents by namespace */
-	byNamespace: Array<{ namespace: string; count: number }>
+	byNamespace: Array<{ namespace: string; count: number }>;
 }
 
 export interface TrackClickInput {
 	/** Search query ID */
-	queryId: string
+	queryId: string;
 	/** Clicked document ID */
-	documentId: string
+	documentId: string;
 	/** Position in results (1-indexed) */
-	position: number
+	position: number;
 }
 
 // ============================================================================
@@ -270,23 +270,23 @@ export async function indexDocument(
 	config: SylphxConfig,
 	input: IndexDocumentInput,
 ): Promise<IndexDocumentResult> {
-	return callApi<IndexDocumentResult>(config, '/search/index', {
-		method: 'POST',
+	return callApi<IndexDocumentResult>(config, "/search/index", {
+		method: "POST",
 		body: {
 			title: input.title,
 			content: input.content,
-			namespace: input.namespace ?? 'default',
+			namespace: input.namespace ?? "default",
 			externalId: input.externalId,
 			url: input.url,
 			metadata: input.metadata,
 			category: input.category,
 			type: input.type,
 			tags: input.tags,
-			language: input.language ?? 'english',
+			language: input.language ?? "english",
 			skipEmbedding: input.skipEmbedding ?? false,
-			embeddingModel: input.embeddingModel ?? 'openai/text-embedding-3-small',
+			embeddingModel: input.embeddingModel ?? "openai/text-embedding-3-small",
 		},
-	})
+	});
 }
 
 /**
@@ -317,16 +317,16 @@ export async function batchIndex(
 	config: SylphxConfig,
 	input: BatchIndexInput,
 ): Promise<BatchIndexResult> {
-	return callApi<BatchIndexResult>(config, '/search/batchIndex', {
-		method: 'POST',
+	return callApi<BatchIndexResult>(config, "/search/batchIndex", {
+		method: "POST",
 		body: {
 			documents: input.documents,
-			namespace: input.namespace ?? 'default',
-			language: input.language ?? 'english',
+			namespace: input.namespace ?? "default",
+			language: input.language ?? "english",
 			skipEmbedding: input.skipEmbedding ?? false,
-			embeddingModel: input.embeddingModel ?? 'openai/text-embedding-3-small',
+			embeddingModel: input.embeddingModel ?? "openai/text-embedding-3-small",
 		},
-	})
+	});
 }
 
 /**
@@ -357,26 +357,29 @@ export async function batchIndex(
  * })
  * ```
  */
-export async function search(config: SylphxConfig, input: SearchInput): Promise<SearchResponse> {
-	return callApi<SearchResponse>(config, '/search/search', {
-		method: 'POST',
+export async function search(
+	config: SylphxConfig,
+	input: SearchInput,
+): Promise<SearchResponse> {
+	return callApi<SearchResponse>(config, "/search/search", {
+		method: "POST",
 		body: {
 			query: input.query,
-			namespace: input.namespace ?? 'default',
-			searchType: input.searchType ?? 'hybrid',
+			namespace: input.namespace ?? "default",
+			searchType: input.searchType ?? "hybrid",
 			limit: input.limit ?? 10,
 			offset: input.offset ?? 0,
 			minSimilarity: input.minSimilarity,
 			typoTolerance: input.typoTolerance ?? true,
-			language: input.language ?? 'english',
+			language: input.language ?? "english",
 			filters: input.filters,
 			highlight: input.highlight ?? true,
-			embeddingModel: input.embeddingModel ?? 'openai/text-embedding-3-small',
+			embeddingModel: input.embeddingModel ?? "openai/text-embedding-3-small",
 			trackQuery: input.trackQuery ?? true,
 			sessionId: input.sessionId,
 			userId: input.userId,
 		},
-	})
+	});
 }
 
 /**
@@ -404,14 +407,14 @@ export async function getFacets(
 	config: SylphxConfig,
 	input: GetFacetsInput = {},
 ): Promise<FacetsResponse> {
-	return callApi<FacetsResponse>(config, '/search/getFacets', {
-		method: 'POST',
+	return callApi<FacetsResponse>(config, "/search/getFacets", {
+		method: "POST",
 		body: {
-			namespace: input.namespace ?? 'default',
-			facets: input.facets ?? ['category', 'type'],
+			namespace: input.namespace ?? "default",
+			facets: input.facets ?? ["category", "type"],
 			filters: input.filters,
 		},
-	})
+	});
 }
 
 /**
@@ -437,14 +440,14 @@ export async function deleteDocument(
 	config: SylphxConfig,
 	input: DeleteDocumentInput,
 ): Promise<{ deleted: number }> {
-	return callApi<{ deleted: number }>(config, '/search/delete', {
-		method: 'POST',
+	return callApi<{ deleted: number }>(config, "/search/delete", {
+		method: "POST",
 		body: {
 			id: input.id,
 			externalId: input.externalId,
-			namespace: input.namespace ?? 'default',
+			namespace: input.namespace ?? "default",
 		},
-	})
+	});
 }
 
 /**
@@ -472,23 +475,23 @@ export async function upsertDocument(
 	config: SylphxConfig,
 	input: UpsertDocumentInput,
 ): Promise<UpsertDocumentResult> {
-	return callApi<UpsertDocumentResult>(config, '/search/upsert', {
-		method: 'POST',
+	return callApi<UpsertDocumentResult>(config, "/search/upsert", {
+		method: "POST",
 		body: {
 			title: input.title,
 			content: input.content,
-			namespace: input.namespace ?? 'default',
+			namespace: input.namespace ?? "default",
 			externalId: input.externalId,
 			url: input.url,
 			metadata: input.metadata,
 			category: input.category,
 			type: input.type,
 			tags: input.tags,
-			language: input.language ?? 'english',
+			language: input.language ?? "english",
 			skipEmbedding: input.skipEmbedding ?? false,
-			embeddingModel: input.embeddingModel ?? 'openai/text-embedding-3-small',
+			embeddingModel: input.embeddingModel ?? "openai/text-embedding-3-small",
 		},
-	})
+	});
 }
 
 /**
@@ -509,10 +512,10 @@ export async function getSearchStats(
 	config: SylphxConfig,
 	namespace?: string,
 ): Promise<SearchStatsResult> {
-	return callApi<SearchStatsResult>(config, '/search/getStats', {
-		method: 'POST',
+	return callApi<SearchStatsResult>(config, "/search/getStats", {
+		method: "POST",
 		body: { namespace },
-	})
+	});
 }
 
 /**
@@ -537,8 +540,8 @@ export async function trackClick(
 	config: SylphxConfig,
 	input: TrackClickInput,
 ): Promise<{ success: boolean }> {
-	return callApi<{ success: boolean }>(config, '/search/trackClick', {
-		method: 'POST',
+	return callApi<{ success: boolean }>(config, "/search/trackClick", {
+		method: "POST",
 		body: input,
-	})
+	});
 }

@@ -28,11 +28,11 @@
  * @module @sylphx/ui/checkbox
  */
 
-'use client'
+"use client";
 
-import { Checkbox as BaseCheckbox } from '@base-ui/react/checkbox'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 /**
  * Animated checkmark icon component.
@@ -41,7 +41,7 @@ import { cn } from '../utils'
 function AnimatedCheck({ className }: { className?: string }) {
 	return (
 		<svg
-			className={cn('h-4 w-4', className)}
+			className={cn("h-4 w-4", className)}
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -54,7 +54,7 @@ function AnimatedCheck({ className }: { className?: string }) {
 				className="animate-checkmark motion-reduce:animate-none motion-reduce:[stroke-dashoffset:0]"
 			/>
 		</svg>
-	)
+	);
 }
 
 /**
@@ -62,27 +62,27 @@ function AnimatedCheck({ className }: { className?: string }) {
  */
 interface CheckboxProps {
 	/** Whether the checkbox is checked (controlled). Can be boolean or 'indeterminate' */
-	checked?: boolean | 'indeterminate'
+	checked?: boolean | "indeterminate";
 	/** Default checked state (uncontrolled) */
-	defaultChecked?: boolean
+	defaultChecked?: boolean;
 	/** Handler fired when the checkbox is toggled */
-	onCheckedChange?: (checked: boolean) => void
+	onCheckedChange?: (checked: boolean) => void;
 	/** Whether the checkbox is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Whether the checkbox is required */
-	required?: boolean
+	required?: boolean;
 	/** Name for form submission */
-	name?: string
+	name?: string;
 	/** Value for form submission */
-	value?: string
+	value?: string;
 	/** ID for label association */
-	id?: string
+	id?: string;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Click handler */
-	onClick?: (e: React.MouseEvent) => void
+	onClick?: (e: React.MouseEvent) => void;
 	/** Aria label */
-	'aria-label'?: string
+	"aria-label"?: string;
 }
 
 /**
@@ -113,11 +113,26 @@ interface CheckboxProps {
  * ```
  */
 const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
-	({ className, checked, defaultChecked, onCheckedChange, disabled, required, name, value, id, onClick, 'aria-label': ariaLabel }, ref) => {
+	(
+		{
+			className,
+			checked,
+			defaultChecked,
+			onCheckedChange,
+			disabled,
+			required,
+			name,
+			value,
+			id,
+			onClick,
+			"aria-label": ariaLabel,
+		},
+		ref,
+	) => {
 		// Base UI doesn't support 'indeterminate' string, only boolean
 		// Convert 'indeterminate' to true for visual purposes
-		const normalizedChecked = checked === 'indeterminate' ? true : checked
-		const isIndeterminate = checked === 'indeterminate'
+		const normalizedChecked = checked === "indeterminate" ? true : checked;
+		const isIndeterminate = checked === "indeterminate";
 
 		return (
 			<BaseCheckbox.Root
@@ -136,25 +151,27 @@ const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
 				className={cn(
 					// h-6 w-6 with min-h-11 min-w-11 touch area wrapper effect via padding
 					// Actual checkbox is 24px but clickable area extends via focus ring offset
-					'peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background',
-					'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-					'disabled:cursor-not-allowed disabled:opacity-50',
+					"peer h-6 w-6 shrink-0 rounded-md border border-primary ring-offset-background",
+					"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+					"disabled:cursor-not-allowed disabled:opacity-50",
 					// Base UI uses data-checked instead of data-[state=checked]
-					'data-[checked]:bg-primary data-[checked]:text-primary-foreground',
-					'data-[indeterminate]:bg-primary data-[indeterminate]:text-primary-foreground',
-					'transition-all duration-150 hover:border-primary/70',
-					'active:scale-95 motion-reduce:active:scale-100',
+					"data-[checked]:bg-primary data-[checked]:text-primary-foreground",
+					"data-[indeterminate]:bg-primary data-[indeterminate]:text-primary-foreground",
+					"transition-all duration-150 hover:border-primary/70",
+					"active:scale-95 motion-reduce:active:scale-100",
 					className,
 				)}
 			>
-				<BaseCheckbox.Indicator className={cn('flex items-center justify-center text-current')}>
+				<BaseCheckbox.Indicator
+					className={cn("flex items-center justify-center text-current")}
+				>
 					{isIndeterminate ? <MinusIcon /> : <AnimatedCheck />}
 				</BaseCheckbox.Indicator>
 			</BaseCheckbox.Root>
-		)
+		);
 	},
-)
-Checkbox.displayName = 'Checkbox'
+);
+Checkbox.displayName = "Checkbox";
 
 /**
  * Minus icon for indeterminate state
@@ -162,7 +179,7 @@ Checkbox.displayName = 'Checkbox'
 function MinusIcon({ className }: { className?: string }) {
 	return (
 		<svg
-			className={cn('h-4 w-4', className)}
+			className={cn("h-4 w-4", className)}
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
@@ -171,8 +188,8 @@ function MinusIcon({ className }: { className?: string }) {
 		>
 			<path d="M5 12h14" />
 		</svg>
-	)
+	);
 }
 
-export { Checkbox }
-export type { CheckboxProps }
+export { Checkbox };
+export type { CheckboxProps };

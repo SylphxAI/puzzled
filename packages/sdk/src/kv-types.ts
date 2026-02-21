@@ -10,35 +10,35 @@
 /** TTL options for SET operations */
 export interface KvSetOptions {
 	/** Expire time in seconds */
-	ex?: number
+	ex?: number;
 	/** Expire time in milliseconds */
-	px?: number
+	px?: number;
 	/** Unix timestamp (seconds) at which the key will expire */
-	exat?: number
+	exat?: number;
 	/** Unix timestamp (milliseconds) at which the key will expire */
-	pxat?: number
+	pxat?: number;
 	/** Only set the key if it does not already exist */
-	nx?: boolean
+	nx?: boolean;
 	/** Only set the key if it already exists */
-	xx?: boolean
+	xx?: boolean;
 }
 
 /** Rate limit result */
 export interface KvRateLimitResult {
 	/** Whether the request is allowed (under rate limit) */
-	success: boolean
+	success: boolean;
 	/** The rate limit maximum */
-	limit: number
+	limit: number;
 	/** Remaining requests in current window */
-	remaining: number
+	remaining: number;
 	/** Unix timestamp (ms) when the rate limit resets */
-	reset: number
+	reset: number;
 }
 
 /** Sorted set member */
 export interface KvZMember {
 	/** Member identifier */
-	member: string
+	member: string;
 	/** Score for ranking */
-	score?: number
+	score?: number;
 }

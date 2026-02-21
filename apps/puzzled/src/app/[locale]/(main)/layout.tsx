@@ -1,12 +1,12 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-import { BottomNav, Footer } from '@/shared/components/layout'
-import { LayoutTopNav } from './layout-nav'
-import { LayoutOverlays } from './layout-overlays'
+import { BottomNav, Footer } from "@/shared/components/layout";
+import { LayoutTopNav } from "./layout-nav";
+import { LayoutOverlays } from "./layout-overlays";
 
 type Props = {
-	children: React.ReactNode
-}
+	children: React.ReactNode;
+};
 
 // Skip navigation link for keyboard accessibility
 function SkipNavigation() {
@@ -17,7 +17,7 @@ function SkipNavigation() {
 		>
 			Skip to main content
 		</a>
-	)
+	);
 }
 
 export default function MainLayout({ children }: Props) {
@@ -30,7 +30,11 @@ export default function MainLayout({ children }: Props) {
 
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
-			<div id="main-content" className="flex flex-1 flex-col pb-nav md:pb-0" tabIndex={-1}>
+			<div
+				id="main-content"
+				className="flex flex-1 flex-col pb-nav md:pb-0"
+				tabIndex={-1}
+			>
 				{children}
 				<Footer />
 			</div>
@@ -41,5 +45,5 @@ export default function MainLayout({ children }: Props) {
 			{/* Mobile: Bottom navigation */}
 			<BottomNav />
 		</div>
-	)
+	);
 }

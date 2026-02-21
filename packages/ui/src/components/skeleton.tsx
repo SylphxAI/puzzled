@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * @sylphx/ui - Skeleton Loading Components
@@ -27,13 +27,13 @@
  * @module @sylphx/ui/skeleton
  */
 
-import type { CSSProperties } from 'react'
-import { cn } from '../utils'
+import type { CSSProperties } from "react";
+import { cn } from "../utils";
 
 type SkeletonProps = {
-	className?: string
-	style?: CSSProperties
-}
+	className?: string;
+	style?: CSSProperties;
+};
 
 /**
  * Base Skeleton component with shimmer animation
@@ -48,19 +48,19 @@ export function Skeleton({ className, style }: SkeletonProps) {
 	return (
 		<div
 			className={cn(
-				'relative overflow-hidden rounded-md bg-muted',
+				"relative overflow-hidden rounded-md bg-muted",
 				// Shimmer animation - only active when motion is allowed
-				'motion-safe:before:absolute motion-safe:before:inset-0',
-				'motion-safe:before:-translate-x-full motion-safe:before:animate-[shimmer_2s_infinite]',
-				'motion-safe:before:bg-gradient-to-r motion-safe:before:from-transparent motion-safe:before:via-white/10 motion-safe:before:to-transparent',
+				"motion-safe:before:absolute motion-safe:before:inset-0",
+				"motion-safe:before:-translate-x-full motion-safe:before:animate-[shimmer_2s_infinite]",
+				"motion-safe:before:bg-gradient-to-r motion-safe:before:from-transparent motion-safe:before:via-white/10 motion-safe:before:to-transparent",
 				// Reduced motion fallback - subtle pulse
-				'motion-reduce:animate-pulse',
+				"motion-reduce:animate-pulse",
 				className,
 			)}
 			style={style}
 			aria-hidden="true"
 		/>
-	)
+	);
 }
 
 /**
@@ -74,25 +74,25 @@ export function Skeleton({ className, style }: SkeletonProps) {
 export function SkeletonText({
 	className,
 	lines = 1,
-	lastLineWidth = '75%',
+	lastLineWidth = "75%",
 }: SkeletonProps & {
-	lines?: number
+	lines?: number;
 	/** Width of last line for natural text appearance */
-	lastLineWidth?: string
+	lastLineWidth?: string;
 }) {
 	return (
-		<div className={cn('space-y-2', className)}>
+		<div className={cn("space-y-2", className)}>
 			{Array.from({ length: lines }).map((_, i) => (
 				<Skeleton
 					key={i}
 					className="h-4"
 					style={{
-						width: i === lines - 1 && lines > 1 ? lastLineWidth : '100%',
+						width: i === lines - 1 && lines > 1 ? lastLineWidth : "100%",
 					}}
 				/>
 			))}
 		</div>
-	)
+	);
 }
 
 /**
@@ -105,18 +105,20 @@ export function SkeletonText({
  */
 export function SkeletonAvatar({
 	className,
-	size = 'md',
+	size = "md",
 }: SkeletonProps & {
-	size?: 'sm' | 'md' | 'lg' | 'xl'
+	size?: "sm" | "md" | "lg" | "xl";
 }) {
 	const sizeClasses = {
-		sm: 'h-8 w-8',
-		md: 'h-10 w-10',
-		lg: 'h-12 w-12',
-		xl: 'h-16 w-16',
-	}
+		sm: "h-8 w-8",
+		md: "h-10 w-10",
+		lg: "h-12 w-12",
+		xl: "h-16 w-16",
+	};
 
-	return <Skeleton className={cn(sizeClasses[size], 'rounded-full', className)} />
+	return (
+		<Skeleton className={cn(sizeClasses[size], "rounded-full", className)} />
+	);
 }
 
 /**
@@ -129,19 +131,19 @@ export function SkeletonAvatar({
  */
 export function SkeletonButton({
 	className,
-	size = 'default',
-}: SkeletonProps & { size?: 'default' | 'sm' | 'lg' }) {
+	size = "default",
+}: SkeletonProps & { size?: "default" | "sm" | "lg" }) {
 	return (
 		<Skeleton
 			className={cn(
-				'rounded-lg',
-				size === 'default' && 'h-11 w-24',
-				size === 'sm' && 'h-10 w-20',
-				size === 'lg' && 'h-12 w-28',
+				"rounded-lg",
+				size === "default" && "h-11 w-24",
+				size === "sm" && "h-10 w-20",
+				size === "lg" && "h-12 w-28",
 				className,
 			)}
 		/>
-	)
+	);
 }
 
 /**
@@ -157,11 +159,11 @@ export function SkeletonCard({
 	showHeader = true,
 	contentLines = 2,
 }: SkeletonProps & {
-	showHeader?: boolean
-	contentLines?: number
+	showHeader?: boolean;
+	contentLines?: number;
 }) {
 	return (
-		<div className={cn('rounded-xl border bg-card p-4 sm:p-6', className)}>
+		<div className={cn("rounded-xl border bg-card p-4 sm:p-6", className)}>
 			{showHeader && (
 				<div className="flex items-center gap-4 mb-4">
 					<SkeletonAvatar size="lg" />
@@ -173,7 +175,7 @@ export function SkeletonCard({
 			)}
 			{contentLines > 0 && <SkeletonText lines={contentLines} />}
 		</div>
-	)
+	);
 }
 
 /**
@@ -190,27 +192,30 @@ export function SkeletonTable({
 	columns = 4,
 	showHeader = true,
 }: SkeletonProps & {
-	rows?: number
-	columns?: number
-	showHeader?: boolean
+	rows?: number;
+	columns?: number;
+	showHeader?: boolean;
 }) {
 	// Generate column widths for variety
 	const getColumnWidth = (colIndex: number, isHeader: boolean): string => {
 		if (isHeader) {
-			const headerWidths: string[] = ['w-24', 'w-32', 'w-28', 'w-20', 'w-24']
-			return headerWidths[colIndex % headerWidths.length] as string
+			const headerWidths: string[] = ["w-24", "w-32", "w-28", "w-20", "w-24"];
+			return headerWidths[colIndex % headerWidths.length] as string;
 		}
-		const bodyWidths: string[] = ['w-32', 'w-48', 'w-24', 'w-16', 'w-28']
-		return bodyWidths[colIndex % bodyWidths.length] as string
-	}
+		const bodyWidths: string[] = ["w-32", "w-48", "w-24", "w-16", "w-28"];
+		return bodyWidths[colIndex % bodyWidths.length] as string;
+	};
 
 	return (
-		<div className={cn('w-full', className)}>
+		<div className={cn("w-full", className)}>
 			{/* Header */}
 			{showHeader && (
 				<div className="flex items-center gap-4 px-4 py-3 border-b bg-muted/30">
 					{Array.from({ length: columns }).map((_, col) => (
-						<Skeleton key={col} className={cn('h-4', getColumnWidth(col, true))} />
+						<Skeleton
+							key={col}
+							className={cn("h-4", getColumnWidth(col, true))}
+						/>
 					))}
 				</div>
 			)}
@@ -220,13 +225,16 @@ export function SkeletonTable({
 				{Array.from({ length: rows }).map((_, row) => (
 					<div key={row} className="flex items-center gap-4 px-4 py-3">
 						{Array.from({ length: columns }).map((_, col) => (
-							<Skeleton key={col} className={cn('h-4', getColumnWidth(col, false))} />
+							<Skeleton
+								key={col}
+								className={cn("h-4", getColumnWidth(col, false))}
+							/>
 						))}
 					</div>
 				))}
 			</div>
 		</div>
-	)
+	);
 }
 
 /**
@@ -242,10 +250,10 @@ export function SkeletonStatCard({
 	className,
 	showTrend = false,
 }: SkeletonProps & {
-	showTrend?: boolean
+	showTrend?: boolean;
 }) {
 	return (
-		<div className={cn('rounded-xl border bg-card p-4 sm:p-6', className)}>
+		<div className={cn("rounded-xl border bg-card p-4 sm:p-6", className)}>
 			<div className="flex items-start justify-between">
 				{/* Icon box */}
 				<Skeleton className="h-10 w-10 rounded-lg" />
@@ -259,7 +267,7 @@ export function SkeletonStatCard({
 				<Skeleton className="h-4 w-28" />
 			</div>
 		</div>
-	)
+	);
 }
 
 /**
@@ -272,16 +280,16 @@ export function SkeletonStatGrid({
 	count = 4,
 	showTrend = false,
 }: SkeletonProps & {
-	count?: number
-	showTrend?: boolean
+	count?: number;
+	showTrend?: boolean;
 }) {
 	return (
 		<div
 			className={cn(
-				'grid gap-4',
-				count <= 3 && 'grid-cols-1 sm:grid-cols-3',
-				count === 4 && 'grid-cols-2 lg:grid-cols-4',
-				count > 4 && 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+				"grid gap-4",
+				count <= 3 && "grid-cols-1 sm:grid-cols-3",
+				count === 4 && "grid-cols-2 lg:grid-cols-4",
+				count > 4 && "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
 				className,
 			)}
 		>
@@ -289,7 +297,7 @@ export function SkeletonStatGrid({
 				<SkeletonStatCard key={i} showTrend={showTrend} />
 			))}
 		</div>
-	)
+	);
 }
 
 /**
@@ -302,7 +310,7 @@ export function SkeletonStatGrid({
  */
 export function SkeletonProviderRow({ className }: SkeletonProps) {
 	return (
-		<div className={cn('flex items-center justify-between p-4', className)}>
+		<div className={cn("flex items-center justify-between p-4", className)}>
 			<div className="flex items-center gap-3">
 				{/* Icon box */}
 				<Skeleton className="h-8 w-8 rounded-lg" />
@@ -312,7 +320,7 @@ export function SkeletonProviderRow({ className }: SkeletonProps) {
 			{/* Toggle switch */}
 			<Skeleton className="h-6 w-11 rounded-full" />
 		</div>
-	)
+	);
 }
 
 /**
@@ -324,15 +332,15 @@ export function SkeletonProviderList({
 	className,
 	count = 5,
 }: SkeletonProps & {
-	count?: number
+	count?: number;
 }) {
 	return (
-		<div className={cn('divide-y divide-border', className)}>
+		<div className={cn("divide-y divide-border", className)}>
 			{Array.from({ length: count }).map((_, i) => (
 				<SkeletonProviderRow key={i} />
 			))}
 		</div>
-	)
+	);
 }
 
 // =============================================================================
@@ -351,7 +359,7 @@ export function SkeletonProviderList({
  */
 export function GameCardSkeleton({ className }: SkeletonProps) {
 	return (
-		<div className={cn('rounded-xl border bg-card p-4', className)}>
+		<div className={cn("rounded-xl border bg-card p-4", className)}>
 			{/* Header: Icon + Badge */}
 			<div className="mb-3 flex items-start justify-between">
 				<Skeleton className="h-14 w-14 rounded-2xl" />
@@ -373,7 +381,7 @@ export function GameCardSkeleton({ className }: SkeletonProps) {
 			{/* Action button */}
 			<Skeleton className="mt-4 h-10 w-full rounded-xl" />
 		</div>
-	)
+	);
 }
 
 /**
@@ -386,9 +394,12 @@ export function GameCardSkeleton({ className }: SkeletonProps) {
  */
 export function StatsRowSkeleton({ className }: SkeletonProps) {
 	return (
-		<div className={cn('grid grid-cols-3 gap-3', className)}>
+		<div className={cn("grid grid-cols-3 gap-3", className)}>
 			{Array.from({ length: 3 }).map((_, i) => (
-				<div key={i} className="flex items-center gap-2 rounded-xl bg-muted/50 p-3">
+				<div
+					key={i}
+					className="flex items-center gap-2 rounded-xl bg-muted/50 p-3"
+				>
 					<Skeleton className="h-8 w-8 rounded-lg" />
 					<div className="flex-1 space-y-1">
 						<Skeleton className="h-5 w-12" />
@@ -397,7 +408,7 @@ export function StatsRowSkeleton({ className }: SkeletonProps) {
 				</div>
 			))}
 		</div>
-	)
+	);
 }
 
 /**
@@ -414,9 +425,12 @@ export function LeaderboardEntrySkeleton({
 	rows = 5,
 }: SkeletonProps & { rows?: number }) {
 	return (
-		<div className={cn('space-y-3', className)}>
+		<div className={cn("space-y-3", className)}>
 			{Array.from({ length: rows }).map((_, i) => (
-				<div key={i} className="flex items-center gap-3 rounded-lg border bg-card p-3">
+				<div
+					key={i}
+					className="flex items-center gap-3 rounded-lg border bg-card p-3"
+				>
 					{/* Rank */}
 					<Skeleton className="h-6 w-6 rounded" />
 
@@ -434,7 +448,7 @@ export function LeaderboardEntrySkeleton({
 				</div>
 			))}
 		</div>
-	)
+	);
 }
 
 // =============================================================================
@@ -455,12 +469,14 @@ export function SkeletonDataTableRow({
 	showCheckbox = true,
 	showActions = true,
 }: SkeletonProps & {
-	columns?: number
-	showCheckbox?: boolean
-	showActions?: boolean
+	columns?: number;
+	showCheckbox?: boolean;
+	showActions?: boolean;
 }) {
 	return (
-		<div className={cn('flex items-center gap-4 px-4 py-3 border-b', className)}>
+		<div
+			className={cn("flex items-center gap-4 px-4 py-3 border-b", className)}
+		>
 			{showCheckbox && <Skeleton className="h-4 w-4 rounded" />}
 			{Array.from({ length: columns }).map((_, col) => {
 				// First column often has avatar + text
@@ -473,18 +489,18 @@ export function SkeletonDataTableRow({
 								<Skeleton className="h-3 w-24" />
 							</div>
 						</div>
-					)
+					);
 				}
 				return (
 					<Skeleton
 						key={col}
-						className={cn('h-4', col === columns - 1 ? 'w-16' : 'w-24')}
+						className={cn("h-4", col === columns - 1 ? "w-16" : "w-24")}
 					/>
-				)
+				);
 			})}
 			{showActions && <Skeleton className="h-8 w-8 rounded" />}
 		</div>
-	)
+	);
 }
 
 /**
@@ -500,21 +516,24 @@ export function SkeletonDataTable({
 	showActions = true,
 	showPagination = true,
 }: SkeletonProps & {
-	rows?: number
-	columns?: number
-	showCheckbox?: boolean
-	showActions?: boolean
-	showPagination?: boolean
+	rows?: number;
+	columns?: number;
+	showCheckbox?: boolean;
+	showActions?: boolean;
+	showPagination?: boolean;
 }) {
 	return (
-		<div className={cn('rounded-lg border bg-card overflow-hidden', className)}>
+		<div className={cn("rounded-lg border bg-card overflow-hidden", className)}>
 			{/* Header */}
 			<div className="flex items-center gap-4 px-4 py-3 bg-muted/30 border-b">
 				{showCheckbox && <Skeleton className="h-4 w-4 rounded" />}
 				{Array.from({ length: columns }).map((_, col) => (
 					<Skeleton
 						key={col}
-						className={cn('h-4', col === 0 ? 'w-40' : col === columns - 1 ? 'w-16' : 'w-24')}
+						className={cn(
+							"h-4",
+							col === 0 ? "w-40" : col === columns - 1 ? "w-16" : "w-24",
+						)}
 					/>
 				))}
 				{showActions && <div className="w-8" />}
@@ -542,7 +561,7 @@ export function SkeletonDataTable({
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 /**
@@ -555,11 +574,11 @@ export function SkeletonForm({
 	fields = 3,
 	showSubmitButton = true,
 }: SkeletonProps & {
-	fields?: number
-	showSubmitButton?: boolean
+	fields?: number;
+	showSubmitButton?: boolean;
 }) {
 	return (
-		<div className={cn('space-y-6', className)}>
+		<div className={cn("space-y-6", className)}>
 			{Array.from({ length: fields }).map((_, i) => (
 				<div key={i} className="space-y-2">
 					<Skeleton className="h-4 w-24" />
@@ -572,7 +591,7 @@ export function SkeletonForm({
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 /**
@@ -582,18 +601,18 @@ export function SkeletonBreadcrumb({
 	className,
 	items = 3,
 }: SkeletonProps & {
-	items?: number
+	items?: number;
 }) {
 	return (
-		<div className={cn('flex items-center gap-2', className)}>
+		<div className={cn("flex items-center gap-2", className)}>
 			{Array.from({ length: items }).map((_, i) => (
 				<div key={i} className="flex items-center gap-2">
-					<Skeleton className={cn('h-4', i === items - 1 ? 'w-32' : 'w-16')} />
+					<Skeleton className={cn("h-4", i === items - 1 ? "w-32" : "w-16")} />
 					{i < items - 1 && <Skeleton className="h-4 w-2" />}
 				</div>
 			))}
 		</div>
-	)
+	);
 }
 
 /**
@@ -604,11 +623,11 @@ export function SkeletonPageHeader({
 	showDescription = true,
 	showActions = true,
 }: SkeletonProps & {
-	showDescription?: boolean
-	showActions?: boolean
+	showDescription?: boolean;
+	showActions?: boolean;
 }) {
 	return (
-		<div className={cn('flex items-start justify-between gap-4', className)}>
+		<div className={cn("flex items-start justify-between gap-4", className)}>
 			<div className="space-y-2">
 				<Skeleton className="h-8 w-48" />
 				{showDescription && <Skeleton className="h-4 w-72" />}
@@ -620,5 +639,5 @@ export function SkeletonPageHeader({
 				</div>
 			)}
 		</div>
-	)
+	);
 }

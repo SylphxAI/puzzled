@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
 
 /**
  * Cryptogram How-to-Play content
@@ -12,8 +12,12 @@ export function CryptogramHowToPlay() {
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• Each letter in the quote has been replaced with a different letter</li>
-					<li>• Figure out the substitution pattern to reveal the original quote</li>
+					<li>
+						• Each letter in the quote has been replaced with a different letter
+					</li>
+					<li>
+						• Figure out the substitution pattern to reveal the original quote
+					</li>
 					<li>• The same letter always maps to the same replacement</li>
 				</ul>
 			</div>
@@ -24,7 +28,9 @@ export function CryptogramHowToPlay() {
 
 				<div className="space-y-2 rounded-lg border bg-muted/30 p-3">
 					<div className="flex items-center gap-2">
-						<span className="text-xs font-medium text-muted-foreground">Encrypted:</span>
+						<span className="text-xs font-medium text-muted-foreground">
+							Encrypted:
+						</span>
 						<div className="flex gap-0.5 font-mono text-sm">
 							<CryptoLetter encrypted="K" guess="H" correct />
 							<CryptoLetter encrypted="V" guess="E" correct />
@@ -34,8 +40,12 @@ export function CryptogramHowToPlay() {
 						</div>
 					</div>
 					<div className="flex items-center gap-2">
-						<span className="text-xs font-medium text-muted-foreground">Solution:</span>
-						<span className="font-mono text-sm font-bold text-primary">HELLO</span>
+						<span className="text-xs font-medium text-muted-foreground">
+							Solution:
+						</span>
+						<span className="font-mono text-sm font-bold text-primary">
+							HELLO
+						</span>
 					</div>
 				</div>
 
@@ -55,11 +65,11 @@ export function CryptogramHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _CryptogramHowToPlayTitle() {
-	return <>How to Play Cryptogram</>
+	return <>How to Play Cryptogram</>;
 }
 
 function CryptoLetter({
@@ -67,25 +77,27 @@ function CryptoLetter({
 	guess,
 	correct,
 }: {
-	encrypted: string
-	guess?: string
-	correct?: boolean
+	encrypted: string;
+	guess?: string;
+	correct?: boolean;
 }) {
 	return (
 		<div className="flex flex-col items-center">
 			<div
 				className={cn(
-					'flex h-7 w-6 items-center justify-center rounded border text-xs font-bold',
+					"flex h-7 w-6 items-center justify-center rounded border text-xs font-bold",
 					guess
 						? correct
-							? 'border-green-500 bg-green-500/20 text-green-600'
-							: 'border-red-500 bg-red-500/20 text-red-600'
-						: 'border-muted-foreground/30 bg-background',
+							? "border-green-500 bg-green-500/20 text-green-600"
+							: "border-red-500 bg-red-500/20 text-red-600"
+						: "border-muted-foreground/30 bg-background",
 				)}
 			>
-				{guess || '?'}
+				{guess || "?"}
 			</div>
-			<span className="mt-0.5 text-[10px] text-muted-foreground">{encrypted}</span>
+			<span className="mt-0.5 text-[10px] text-muted-foreground">
+				{encrypted}
+			</span>
 		</div>
-	)
+	);
 }

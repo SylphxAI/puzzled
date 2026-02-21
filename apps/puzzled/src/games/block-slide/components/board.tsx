@@ -4,26 +4,26 @@
  * Renders the game board with grid, exit, and all blocks.
  */
 
-'use client'
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Block as BlockType, Direction } from '../types'
-import { Block } from './block'
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Block as BlockType, Direction } from "../types";
+import { Block } from "./block";
 
 // Default cell size for SSR (375px viewport - 32px padding = 343px / 6 grid = ~57px)
-const DEFAULT_CELL_SIZE = 57
+const DEFAULT_CELL_SIZE = 57;
 
 type Props = {
-	blocks: BlockType[]
-	gridWidth: number
-	gridHeight: number
-	exitX: number
-	exitY: number
-	selectedBlockId: string | null
-	onBlockClick: (blockId: string) => void
-	onBlockDrag: (blockId: string, direction: Direction) => void
-	onMove: (direction: Direction) => void
-}
+	blocks: BlockType[];
+	gridWidth: number;
+	gridHeight: number;
+	exitX: number;
+	exitY: number;
+	selectedBlockId: string | null;
+	onBlockClick: (blockId: string) => void;
+	onBlockDrag: (blockId: string, direction: Direction) => void;
+	onMove: (direction: Direction) => void;
+};
 
 export function Board({
 	blocks,
@@ -36,78 +36,78 @@ export function Board({
 	onBlockDrag,
 	onMove,
 }: Props) {
-	const containerRef = useRef<HTMLDivElement>(null)
+	const containerRef = useRef<HTMLDivElement>(null);
 
 	// Calculate cell size based on viewport and grid size
 	// Use static default for SSR, update on client to avoid hydration mismatch
-	const [cellSize, setCellSize] = useState(DEFAULT_CELL_SIZE)
+	const [cellSize, setCellSize] = useState(DEFAULT_CELL_SIZE);
 
 	useEffect(() => {
 		const calculateCellSize = () => {
-			const viewportWidth = window.innerWidth
-			const maxBoardWidth = Math.min(viewportWidth - 32, 400) // 32px for padding, max 400px
-			const calculatedSize = Math.floor(maxBoardWidth / gridWidth)
+			const viewportWidth = window.innerWidth;
+			const maxBoardWidth = Math.min(viewportWidth - 32, 400); // 32px for padding, max 400px
+			const calculatedSize = Math.floor(maxBoardWidth / gridWidth);
 			// Ensure cell size is reasonable (between 40 and 70 pixels)
-			setCellSize(Math.max(40, Math.min(70, calculatedSize)))
-		}
+			setCellSize(Math.max(40, Math.min(70, calculatedSize)));
+		};
 
-		calculateCellSize()
-		window.addEventListener('resize', calculateCellSize)
-		return () => window.removeEventListener('resize', calculateCellSize)
-	}, [gridWidth])
+		calculateCellSize();
+		window.addEventListener("resize", calculateCellSize);
+		return () => window.removeEventListener("resize", calculateCellSize);
+	}, [gridWidth]);
 
-	const boardWidth = gridWidth * cellSize
-	const boardHeight = gridHeight * cellSize
+	const boardWidth = gridWidth * cellSize;
+	const boardHeight = gridHeight * cellSize;
 
 	// Exit position (at bottom, centered on exit location)
-	const exitLeft = exitX * cellSize
-	const exitWidth = 2 * cellSize // Target block is 2 wide
+	const exitLeft = exitX * cellSize;
+	const exitWidth = 2 * cellSize; // Target block is 2 wide
 
 	// Keyboard controls
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (!selectedBlockId) return
+			if (!selectedBlockId) return;
 
-			let direction: Direction | null = null
+			let direction: Direction | null = null;
 			switch (e.key) {
-				case 'ArrowUp':
-				case 'w':
-				case 'W':
-					direction = 'up'
-					break
-				case 'ArrowDown':
-				case 's':
-				case 'S':
-					direction = 'down'
-					break
-				case 'ArrowLeft':
-				case 'a':
-				case 'A':
-					direction = 'left'
-					break
-				case 'ArrowRight':
-				case 'd':
-				case 'D':
-					direction = 'right'
-					break
+				case "ArrowUp":
+				case "w":
+				case "W":
+					direction = "up";
+					break;
+				case "ArrowDown":
+				case "s":
+				case "S":
+					direction = "down";
+					break;
+				case "ArrowLeft":
+				case "a":
+				case "A":
+					direction = "left";
+					break;
+				case "ArrowRight":
+				case "d":
+				case "D":
+					direction = "right";
+					break;
 			}
 
 			if (direction) {
-				e.preventDefault()
-				onMove(direction)
+				e.preventDefault();
+				onMove(direction);
 			}
-		}
+		};
 
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [selectedBlockId, onMove])
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [selectedBlockId, onMove]);
 
 	const handleBlockDrag = useCallback(
 		(blockId: string) => (direction: Direction) => {
-			onBlockDrag(blockId, direction)
+			onBlockDrag(blockId, direction);
 		},
 		[onBlockDrag],
-	)
+	);
 
 	return (
 		<div className="flex flex-col items-center w-full" ref={containerRef}>
@@ -179,5 +179,5 @@ export function Board({
 				EXIT
 			</div>
 		</div>
-	)
+	);
 }

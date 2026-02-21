@@ -8,15 +8,19 @@
  * This separation prevents bundler errors from server deps in client bundles.
  */
 
-import 'server-only'
+import "server-only";
 
 import {
 	generateConnectionsPuzzle,
 	generateCrosswordPuzzle,
 	generateNonogramPuzzle,
-} from '@/features/puzzle-generator/server'
-import type { LLMGeneratorResult } from './types'
-import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './word-groups/types'
+} from "@/features/puzzle-generator/server";
+import type { LLMGeneratorResult } from "./types";
+import {
+	MAX_MISTAKES,
+	TOTAL_CATEGORIES,
+	WORDS_PER_CATEGORY,
+} from "./word-groups/types";
 
 // ==========================================
 // Connections LLM Generator
@@ -26,36 +30,38 @@ import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './word-group
  * Deterministic shuffle based on seed
  */
 function seededShuffle<T>(array: T[], seed: number): T[] {
-	const shuffled = [...array]
-	let currentSeed = seed
+	const shuffled = [...array];
+	let currentSeed = seed;
 
 	const random = () => {
-		const x = Math.sin(currentSeed++) * 10000
-		return x - Math.floor(x)
-	}
+		const x = Math.sin(currentSeed++) * 10000;
+		return x - Math.floor(x);
+	};
 
 	for (let i = shuffled.length - 1; i > 0; i--) {
-		const j = Math.floor(random() * (i + 1))
-		;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+		const j = Math.floor(random() * (i + 1));
+		[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
 	}
 
-	return shuffled
+	return shuffled;
 }
 
 /**
  * Generate Connections puzzle using LLM
  */
-async function generateConnectionsWithLLM(date: string): Promise<LLMGeneratorResult> {
+async function generateConnectionsWithLLM(
+	date: string,
+): Promise<LLMGeneratorResult> {
 	try {
-		const result = await generateConnectionsPuzzle(date)
+		const result = await generateConnectionsPuzzle(date);
 
 		if (result.valid && result.puzzle) {
-			const puzzle = result.puzzle
-			const seed = parseInt(date.replace(/-/g, ''), 10)
+			const puzzle = result.puzzle;
+			const seed = Number.parseInt(date.replace(/-/g, ""), 10);
 			const shuffledWords = seededShuffle(
 				puzzle.categories.flatMap((cat) => cat.words),
 				seed,
-			)
+			);
 
 			return {
 				success: true,
@@ -68,15 +74,15 @@ async function generateConnectionsWithLLM(date: string): Promise<LLMGeneratorRes
 				solution: {
 					categories: puzzle.categories,
 				},
-			}
+			};
 		}
 
-		return { success: false, error: result.errors.join(', ') }
+		return { success: false, error: result.errors.join(", ") };
 	} catch (error) {
 		return {
 			success: false,
-			error: error instanceof Error ? error.message : 'LLM generation failed',
-		}
+			error: error instanceof Error ? error.message : "LLM generation failed",
+		};
 	}
 }
 
@@ -87,24 +93,26 @@ async function generateConnectionsWithLLM(date: string): Promise<LLMGeneratorRes
 /**
  * Generate Crossword puzzle using LLM
  */
-async function generateCrosswordWithLLM(_date: string): Promise<LLMGeneratorResult> {
+async function generateCrosswordWithLLM(
+	_date: string,
+): Promise<LLMGeneratorResult> {
 	try {
-		const result = await generateCrosswordPuzzle()
+		const result = await generateCrosswordPuzzle();
 
 		if (result.valid && result.puzzleData && result.solution) {
 			return {
 				success: true,
 				puzzleData: result.puzzleData,
 				solution: result.solution,
-			}
+			};
 		}
 
-		return { success: false, error: result.errors.join(', ') }
+		return { success: false, error: result.errors.join(", ") };
 	} catch (error) {
 		return {
 			success: false,
-			error: error instanceof Error ? error.message : 'LLM generation failed',
-		}
+			error: error instanceof Error ? error.message : "LLM generation failed",
+		};
 	}
 }
 
@@ -115,24 +123,26 @@ async function generateCrosswordWithLLM(_date: string): Promise<LLMGeneratorResu
 /**
  * Generate Nonogram puzzle using LLM
  */
-async function generateNonogramWithLLM(_date: string): Promise<LLMGeneratorResult> {
+async function generateNonogramWithLLM(
+	_date: string,
+): Promise<LLMGeneratorResult> {
 	try {
-		const result = await generateNonogramPuzzle()
+		const result = await generateNonogramPuzzle();
 
 		if (result.valid && result.puzzleData && result.solution) {
 			return {
 				success: true,
 				puzzleData: result.puzzleData,
 				solution: result.solution,
-			}
+			};
 		}
 
-		return { success: false, error: result.errors.join(', ') }
+		return { success: false, error: result.errors.join(", ") };
 	} catch (error) {
 		return {
 			success: false,
-			error: error instanceof Error ? error.message : 'LLM generation failed',
-		}
+			error: error instanceof Error ? error.message : "LLM generation failed",
+		};
 	}
 }
 
@@ -140,7 +150,7 @@ async function generateNonogramWithLLM(_date: string): Promise<LLMGeneratorResul
 // Registry of LLM Generators
 // ==========================================
 
-type LLMGenerator = (date: string) => Promise<LLMGeneratorResult>
+type LLMGenerator = (date: string) => Promise<LLMGeneratorResult>;
 
 /**
  * Map of game slugs to their LLM generators
@@ -150,18 +160,18 @@ const LLM_GENERATORS: Record<string, LLMGenerator> = {
 	connections: generateConnectionsWithLLM,
 	crossword: generateCrosswordWithLLM,
 	nonogram: generateNonogramWithLLM,
-}
+};
 
 /**
  * Get LLM generator for a game
  */
 export function getLLMGenerator(slug: string): LLMGenerator | undefined {
-	return LLM_GENERATORS[slug]
+	return LLM_GENERATORS[slug];
 }
 
 /**
  * Check if a game has LLM generation
  */
 function _hasLLMGenerator(slug: string): boolean {
-	return slug in LLM_GENERATORS
+	return slug in LLM_GENERATORS;
 }

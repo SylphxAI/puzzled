@@ -9,13 +9,13 @@
 /** A message from a stream */
 export interface StreamMessage<T = unknown> {
 	/** Stream entry ID (e.g., "1234567890-0") */
-	id: string
+	id: string;
 	/** Event type */
-	event: string
+	event: string;
 	/** Channel the message was sent to */
-	channel: string
+	channel: string;
 	/** Event data */
-	data: T
+	data: T;
 	/** Unix timestamp in milliseconds */
-	timestamp?: number
+	timestamp?: number;
 }

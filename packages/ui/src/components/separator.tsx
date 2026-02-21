@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { Separator as BaseSeparator } from '@base-ui/react/separator'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Separator as BaseSeparator } from "@base-ui/react/separator";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // Separator
@@ -10,28 +10,28 @@ import { cn } from '../utils'
 
 interface SeparatorProps {
 	/** Orientation of the separator */
-	orientation?: 'horizontal' | 'vertical'
+	orientation?: "horizontal" | "vertical";
 	/** Whether the separator is decorative */
-	decorative?: boolean
+	decorative?: boolean;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
-	({ className, orientation = 'horizontal' }, ref) => (
+	({ className, orientation = "horizontal" }, ref) => (
 		<BaseSeparator
 			ref={ref}
 			orientation={orientation}
 			className={cn(
-				'shrink-0 bg-border',
-				orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
+				"shrink-0 bg-border",
+				orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
 				className,
 			)}
 		/>
 	),
-)
-Separator.displayName = 'Separator'
+);
+Separator.displayName = "Separator";
 
-export { Separator }
+export { Separator };
 
-export type { SeparatorProps }
+export type { SeparatorProps };

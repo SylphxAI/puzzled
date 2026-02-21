@@ -7,53 +7,53 @@
  * Newsletter is a sub-feature of the Email service for marketing/bulk emails.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import type { ThemeVariables } from './styles'
+import { useEffect, useState } from "react";
+import { useSubscriberForm } from "../newsletter-hooks";
+import type { ThemeVariables } from "./styles";
 import {
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from './styles'
-import { useSubscriberForm } from '../newsletter-hooks'
+	mergeStyles,
+} from "./styles";
 
 export interface NewsletterFormProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called on successful subscription */
-	onSuccess?: (email: string) => void
+	onSuccess?: (email: string) => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Form title */
-	title?: string
+	title?: string;
 	/** Form description */
-	description?: string
+	description?: string;
 	/** Placeholder text */
-	placeholder?: string
+	placeholder?: string;
 	/** Submit button text */
-	buttonText?: string
+	buttonText?: string;
 	/** Success message */
-	successMessage?: string
+	successMessage?: string;
 	/** Available preference options */
 	preferenceOptions?: Array<{
-		id: string
-		label: string
-		description?: string
-	}>
+		id: string;
+		label: string;
+		description?: string;
+	}>;
 	/** Show preference checkboxes */
-	showPreferences?: boolean
+	showPreferences?: boolean;
 	/** Require at least one preference */
-	requirePreference?: boolean
+	requirePreference?: boolean;
 	/** Show privacy policy link */
-	showPrivacy?: boolean
+	showPrivacy?: boolean;
 	/** Privacy policy URL */
-	privacyUrl?: string
+	privacyUrl?: string;
 	/** Layout style */
-	layout?: 'inline' | 'stacked'
+	layout?: "inline" | "stacked";
 }
 
 /**
@@ -77,16 +77,16 @@ export function NewsletterForm({
 	onError,
 	className,
 	title,
-	description = 'Subscribe to our newsletter',
-	placeholder = 'Enter your email',
-	buttonText = 'Subscribe',
-	successMessage = 'Thanks for subscribing! Please check your email to confirm.',
+	description = "Subscribe to our newsletter",
+	placeholder = "Enter your email",
+	buttonText = "Subscribe",
+	successMessage = "Thanks for subscribing! Please check your email to confirm.",
 	preferenceOptions = [],
 	showPreferences = false,
 	requirePreference = false,
 	showPrivacy = false,
-	privacyUrl = '/privacy',
-	layout = 'stacked',
+	privacyUrl = "/privacy",
+	layout = "stacked",
 }: NewsletterFormProps) {
 	const {
 		email,
@@ -98,82 +98,116 @@ export function NewsletterForm({
 		error: formError,
 		success,
 		reset,
-	} = useSubscriberForm()
+	} = useSubscriberForm();
 
-	const styles = baseStyles(theme)
-	const [localError, setLocalError] = useState<string | null>(null)
+	const styles = baseStyles(theme);
+	const [localError, setLocalError] = useState<string | null>(null);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Handle success callback
 	useEffect(() => {
 		if (success && onSuccess) {
-			onSuccess(email)
+			onSuccess(email);
 		}
-	}, [success, email, onSuccess])
+	}, [success, email, onSuccess]);
 
 	// Handle error callback
 	useEffect(() => {
 		if (formError && onError) {
-			onError(formError.message)
+			onError(formError.message);
 		}
-	}, [formError, onError])
+	}, [formError, onError]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-		setLocalError(null)
+		e.preventDefault();
+		setLocalError(null);
 
 		// Validate email
 		if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-			setLocalError('Please enter a valid email address')
-			return
+			setLocalError("Please enter a valid email address");
+			return;
 		}
 
 		// Validate preferences if required
-		if (requirePreference && showPreferences && Object.values(preferences).filter(Boolean).length === 0) {
-			setLocalError('Please select at least one preference')
-			return
+		if (
+			requirePreference &&
+			showPreferences &&
+			Object.values(preferences).filter(Boolean).length === 0
+		) {
+			setLocalError("Please select at least one preference");
+			return;
 		}
 
-		await submit()
-	}
+		await submit();
+	};
 
-	const errorMessage = localError || (formError ? formError.message : null)
+	const errorMessage = localError || (formError ? formError.message : null);
 
 	if (success) {
 		return (
-			<div className={className} style={mergeStyles(styles.card, { textAlign: 'center' as const, padding: '2rem' })}>
+			<div
+				className={className}
+				style={mergeStyles(styles.card, {
+					textAlign: "center" as const,
+					padding: "2rem",
+				})}
+			>
 				<div style={{ color: theme.colorSuccess }}>
-					<svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2">
+					<svg
+						viewBox="0 0 24 24"
+						width="48"
+						height="48"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+					>
 						<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
 						<polyline points="22 4 12 14.01 9 11.01" />
 					</svg>
 				</div>
-				<p style={{ marginTop: '1rem', color: theme.colorSuccess, fontSize: theme.fontSizeBase }}>
+				<p
+					style={{
+						marginTop: "1rem",
+						color: theme.colorSuccess,
+						fontSize: theme.fontSizeBase,
+					}}
+				>
 					{successMessage}
 				</p>
 				<button
 					type="button"
 					onClick={reset}
-					style={mergeStyles(styles.button, styles.buttonSecondary, { marginTop: '1rem' })}
+					style={mergeStyles(styles.button, styles.buttonSecondary, {
+						marginTop: "1rem",
+					})}
 				>
 					Subscribe another email
 				</button>
 			</div>
-		)
+		);
 	}
 
 	return (
-		<div className={className} style={mergeStyles(styles.card, { padding: '1.5rem' })}>
+		<div
+			className={className}
+			style={mergeStyles(styles.card, { padding: "1.5rem" })}
+		>
 			{title && <h3 style={styles.cardTitle}>{title}</h3>}
 			{description && <p style={styles.cardDescription}>{description}</p>}
 
-			<form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-				<div style={layout === 'inline' ? { display: 'flex', gap: '0.5rem' } : undefined}>
-					<div style={layout === 'inline' ? { flex: 1 } : { marginBottom: '1rem' }}>
+			<form onSubmit={handleSubmit} style={{ marginTop: "1rem" }}>
+				<div
+					style={
+						layout === "inline" ? { display: "flex", gap: "0.5rem" } : undefined
+					}
+				>
+					<div
+						style={layout === "inline" ? { flex: 1 } : { marginBottom: "1rem" }}
+					>
 						<input
 							type="email"
 							value={email}
@@ -182,7 +216,7 @@ export function NewsletterForm({
 							disabled={isLoading}
 							style={mergeStyles(
 								styles.input,
-								errorMessage ? styles.inputError : {}
+								errorMessage ? styles.inputError : {},
 							)}
 						/>
 					</div>
@@ -192,31 +226,30 @@ export function NewsletterForm({
 						style={mergeStyles(
 							styles.button,
 							styles.buttonPrimary,
-							isLoading ? styles.buttonDisabled : {}
+							isLoading ? styles.buttonDisabled : {},
 						)}
 					>
-						{isLoading ? (
-							<span style={styles.spinner} />
-						) : (
-							buttonText
-						)}
+						{isLoading ? <span style={styles.spinner} /> : buttonText}
 					</button>
 				</div>
 
 				{showPreferences && preferenceOptions.length > 0 && (
-					<div style={{ marginTop: '1rem' }}>
-						<p style={mergeStyles(styles.label, { marginBottom: '0.5rem' })}>
-							Email preferences {requirePreference && <span style={{ color: theme.colorDestructive }}>*</span>}
+					<div style={{ marginTop: "1rem" }}>
+						<p style={mergeStyles(styles.label, { marginBottom: "0.5rem" })}>
+							Email preferences{" "}
+							{requirePreference && (
+								<span style={{ color: theme.colorDestructive }}>*</span>
+							)}
 						</p>
 						{preferenceOptions.map((option) => (
 							<label
 								key={option.id}
 								style={{
-									display: 'flex',
-									alignItems: 'flex-start',
-									gap: '0.5rem',
-									marginBottom: '0.5rem',
-									cursor: 'pointer',
+									display: "flex",
+									alignItems: "flex-start",
+									gap: "0.5rem",
+									marginBottom: "0.5rem",
+									cursor: "pointer",
 								}}
 							>
 								<input
@@ -224,12 +257,18 @@ export function NewsletterForm({
 									checked={preferences[option.id] ?? false}
 									onChange={() => togglePreference(option.id)}
 									disabled={isLoading}
-									style={{ marginTop: '0.25rem' }}
+									style={{ marginTop: "0.25rem" }}
 								/>
 								<div>
-									<span style={{ fontSize: theme.fontSizeBase }}>{option.label}</span>
+									<span style={{ fontSize: theme.fontSizeBase }}>
+										{option.label}
+									</span>
 									{option.description && (
-										<p style={mergeStyles(styles.textSm, styles.textMuted, { marginTop: '0.125rem' })}>
+										<p
+											style={mergeStyles(styles.textSm, styles.textMuted, {
+												marginTop: "0.125rem",
+											})}
+										>
 											{option.description}
 										</p>
 									)}
@@ -240,20 +279,34 @@ export function NewsletterForm({
 				)}
 
 				{errorMessage && (
-					<div style={mergeStyles(styles.alert, styles.alertError, { marginTop: '0.5rem', marginBottom: 0 })}>
+					<div
+						style={mergeStyles(styles.alert, styles.alertError, {
+							marginTop: "0.5rem",
+							marginBottom: 0,
+						})}
+					>
 						{errorMessage}
 					</div>
 				)}
 
 				{showPrivacy && (
-					<p style={mergeStyles(styles.textSm, styles.textMuted, { marginTop: '1rem' })}>
-						By subscribing, you agree to our{' '}
-						<a href={privacyUrl} style={styles.link} target="_blank" rel="noopener noreferrer">
+					<p
+						style={mergeStyles(styles.textSm, styles.textMuted, {
+							marginTop: "1rem",
+						})}
+					>
+						By subscribing, you agree to our{" "}
+						<a
+							href={privacyUrl}
+							style={styles.link}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
 							Privacy Policy
 						</a>
 					</p>
 				)}
 			</form>
 		</div>
-	)
+	);
 }

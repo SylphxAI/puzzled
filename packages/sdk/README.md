@@ -163,6 +163,34 @@ const { complete, completion, isLoading } = useCompletion()
 const { embed, embedding } = useEmbedding()
 ```
 
+### Database
+
+Server-side access to your Sylphx managed Postgres database with full type safety.
+
+```ts
+import { createSylphx } from '@sylphx/sdk'
+
+const sylphx = createSylphx({
+  appId: process.env.SYLPHX_APP_ID!,
+  appSecret: process.env.SYLPHX_APP_SECRET!,
+})
+
+// Execute raw SQL (returns typed rows)
+const users = await sylphx.database.query<{ id: string; email: string }>(
+  'SELECT id, email FROM users WHERE active = true LIMIT $1',
+  [100],
+)
+
+// Run migrations (idempotent)
+await sylphx.database.migrate()
+
+// Get connection string for ORMs (Prisma, Drizzle, etc.)
+const connectionUrl = sylphx.database.connectionUrl()
+```
+
+> **Tip:** Use the connection URL with your favourite ORM for full type-safety.
+> The platform manages connection pooling automatically.
+
 ### Storage
 
 ```tsx

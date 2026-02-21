@@ -45,7 +45,7 @@
  * ```
  */
 
-'use client'
+"use client";
 
 import React, {
 	createContext,
@@ -54,19 +54,19 @@ import React, {
 	useEffect,
 	useMemo,
 	useRef,
-} from 'react'
+} from "react";
+import { ANALYTICS_INTERVAL_CHECK_MS } from "../../constants";
 import {
-	AnalyticsTracker,
+	type AnalyticsTracker,
 	initAnalytics,
 	resetAnalyticsTracker,
-} from '../../lib/analytics'
+} from "../../lib/analytics";
 import type {
 	AnalyticsConfig,
 	EventProperties,
-	UserProperties,
 	GroupProperties,
-} from '../../lib/analytics/types'
-import { ANALYTICS_INTERVAL_CHECK_MS } from '../../constants'
+	UserProperties,
+} from "../../lib/analytics/types";
 
 // ==========================================
 // Context Types
@@ -74,28 +74,28 @@ import { ANALYTICS_INTERVAL_CHECK_MS } from '../../constants'
 
 interface AnalyticsContextValue {
 	/** The tracker instance */
-	tracker: AnalyticsTracker
+	tracker: AnalyticsTracker;
 	/** Whether analytics is ready */
-	isReady: boolean
+	isReady: boolean;
 }
 
-const AnalyticsContext = createContext<AnalyticsContextValue | null>(null)
+const AnalyticsContext = createContext<AnalyticsContextValue | null>(null);
 
 // ==========================================
 // Provider Props
 // ==========================================
 
 export interface AnalyticsProviderProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 	/** Analytics configuration */
-	config?: Partial<AnalyticsConfig>
+	config?: Partial<AnalyticsConfig>;
 	/** User to identify on mount */
 	user?: {
-		id: string
-		properties?: UserProperties
-	}
+		id: string;
+		properties?: UserProperties;
+	};
 	/** Disable analytics (e.g., for testing) */
-	disabled?: boolean
+	disabled?: boolean;
 }
 
 // ==========================================
@@ -113,47 +113,49 @@ export function AnalyticsProvider({
 	user,
 	disabled = false,
 }: AnalyticsProviderProps) {
-	const trackerRef = useRef<AnalyticsTracker | null>(null)
-	const [isReady, setIsReady] = React.useState(false)
+	const trackerRef = useRef<AnalyticsTracker | null>(null);
+	const [isReady, setIsReady] = React.useState(false);
 
 	// Initialize tracker
 	useEffect(() => {
-		if (disabled || typeof window === 'undefined') return
+		if (disabled || typeof window === "undefined") return;
 
-		const tracker = initAnalytics(config)
-		trackerRef.current = tracker
-		setIsReady(true)
+		const tracker = initAnalytics(config);
+		trackerRef.current = tracker;
+		setIsReady(true);
 
 		return () => {
-			tracker.shutdown()
-		}
+			tracker.shutdown();
+		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [disabled])
+	}, [disabled]);
 
 	// Identify user when provided
 	useEffect(() => {
 		if (user && trackerRef.current) {
-			trackerRef.current.identify(user.id, user.properties)
+			trackerRef.current.identify(user.id, user.properties);
 		}
-	}, [user])
+	}, [user]);
 
 	// Build context value
 	const value = useMemo<AnalyticsContextValue | null>(() => {
-		if (!trackerRef.current || disabled) return null
+		if (!trackerRef.current || disabled) return null;
 
 		return {
 			tracker: trackerRef.current,
 			isReady,
-		}
-	}, [isReady, disabled])
+		};
+	}, [isReady, disabled]);
 
 	if (disabled) {
-		return <>{children}</>
+		return <>{children}</>;
 	}
 
 	return (
-		<AnalyticsContext.Provider value={value}>{children}</AnalyticsContext.Provider>
-	)
+		<AnalyticsContext.Provider value={value}>
+			{children}
+		</AnalyticsContext.Provider>
+	);
 }
 
 // ==========================================
@@ -162,46 +164,50 @@ export function AnalyticsProvider({
 
 export interface UseAnalyticsReturn {
 	/** Track a custom event */
-	track: (eventName: string, properties?: EventProperties) => void
+	track: (eventName: string, properties?: EventProperties) => void;
 	/** Identify a user */
-	identify: (userId: string, properties?: UserProperties) => void
+	identify: (userId: string, properties?: UserProperties) => void;
 	/** Reset identity (logout) */
-	reset: () => void
+	reset: () => void;
 	/** Set user properties */
-	setUserProperties: (properties: UserProperties) => void
+	setUserProperties: (properties: UserProperties) => void;
 	/** Set user properties once */
-	setUserPropertiesOnce: (properties: UserProperties) => void
+	setUserPropertiesOnce: (properties: UserProperties) => void;
 	/** Increment a numeric user property */
-	incrementUserProperty: (property: string, value?: number) => void
+	incrementUserProperty: (property: string, value?: number) => void;
 	/** Associate user with a group */
-	group: (groupType: string, groupKey: string, properties?: GroupProperties) => void
+	group: (
+		groupType: string,
+		groupKey: string,
+		properties?: GroupProperties,
+	) => void;
 	/** Register super properties (added to all events) */
-	register: (properties: EventProperties) => void
+	register: (properties: EventProperties) => void;
 	/** Get current distinct ID */
-	getDistinctId: () => string | null
+	getDistinctId: () => string | null;
 	/** Whether analytics is ready */
-	isReady: boolean
+	isReady: boolean;
 	/** Flush pending events */
-	flush: () => Promise<void>
+	flush: () => Promise<void>;
 }
 
 /**
  * Main analytics hook
  */
 export function useAnalyticsHook(): UseAnalyticsReturn {
-	const ctx = useContext(AnalyticsContext)
+	const ctx = useContext(AnalyticsContext);
 
 	// Create no-op implementations for when context is not available
-	const noopTrack = useCallback(() => {}, [])
-	const noopIdentify = useCallback(() => {}, [])
-	const noopReset = useCallback(() => {}, [])
-	const noopSetUserProperties = useCallback(() => {}, [])
-	const noopSetUserPropertiesOnce = useCallback(() => {}, [])
-	const noopIncrementUserProperty = useCallback(() => {}, [])
-	const noopGroup = useCallback(() => {}, [])
-	const noopRegister = useCallback(() => {}, [])
-	const noopGetDistinctId = useCallback(() => null, [])
-	const noopFlush = useCallback(async () => {}, [])
+	const noopTrack = useCallback(() => {}, []);
+	const noopIdentify = useCallback(() => {}, []);
+	const noopReset = useCallback(() => {}, []);
+	const noopSetUserProperties = useCallback(() => {}, []);
+	const noopSetUserPropertiesOnce = useCallback(() => {}, []);
+	const noopIncrementUserProperty = useCallback(() => {}, []);
+	const noopGroup = useCallback(() => {}, []);
+	const noopRegister = useCallback(() => {}, []);
+	const noopGetDistinctId = useCallback(() => null, []);
+	const noopFlush = useCallback(async () => {}, []);
 
 	// If no context, return no-op implementations
 	if (!ctx) {
@@ -217,65 +223,65 @@ export function useAnalyticsHook(): UseAnalyticsReturn {
 			getDistinctId: noopGetDistinctId,
 			isReady: false,
 			flush: noopFlush,
-		}
+		};
 	}
 
-	const { tracker, isReady } = ctx
+	const { tracker, isReady } = ctx;
 
 	return {
 		track: useCallback(
 			(eventName: string, properties?: EventProperties) => {
-				tracker.track(eventName, properties)
+				tracker.track(eventName, properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		identify: useCallback(
 			(userId: string, properties?: UserProperties) => {
-				tracker.identify(userId, properties)
+				tracker.identify(userId, properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		reset: useCallback(() => {
-			tracker.reset()
+			tracker.reset();
 		}, [tracker]),
 		setUserProperties: useCallback(
 			(properties: UserProperties) => {
-				tracker.setUserProperties(properties)
+				tracker.setUserProperties(properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		setUserPropertiesOnce: useCallback(
 			(properties: UserProperties) => {
-				tracker.setUserPropertiesOnce(properties)
+				tracker.setUserPropertiesOnce(properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		incrementUserProperty: useCallback(
 			(property: string, value?: number) => {
-				tracker.incrementUserProperty(property, value)
+				tracker.incrementUserProperty(property, value);
 			},
-			[tracker]
+			[tracker],
 		),
 		group: useCallback(
 			(groupType: string, groupKey: string, properties?: GroupProperties) => {
-				tracker.group(groupType, groupKey, properties)
+				tracker.group(groupType, groupKey, properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		register: useCallback(
 			(properties: EventProperties) => {
-				tracker.register(properties)
+				tracker.register(properties);
 			},
-			[tracker]
+			[tracker],
 		),
 		getDistinctId: useCallback(() => {
-			return tracker.getDistinctId()
+			return tracker.getDistinctId();
 		}, [tracker]),
 		isReady,
 		flush: useCallback(async () => {
-			await tracker.flush()
+			await tracker.flush();
 		}, [tracker]),
-	}
+	};
 }
 
 // ==========================================
@@ -285,19 +291,22 @@ export function useAnalyticsHook(): UseAnalyticsReturn {
 /**
  * Hook to track page views manually
  */
-export function usePageView(pageName?: string, properties?: EventProperties): void {
-	const { track, isReady } = useAnalyticsHook()
-	const hasTracked = useRef(false)
+export function usePageView(
+	pageName?: string,
+	properties?: EventProperties,
+): void {
+	const { track, isReady } = useAnalyticsHook();
+	const hasTracked = useRef(false);
 
 	useEffect(() => {
-		if (!isReady || hasTracked.current) return
+		if (!isReady || hasTracked.current) return;
 
-		hasTracked.current = true
-		track('$pageview', {
+		hasTracked.current = true;
+		track("$pageview", {
 			$pathname: pageName || window.location.pathname,
 			...properties,
-		})
-	}, [isReady, track, pageName, properties])
+		});
+	}, [isReady, track, pageName, properties]);
 }
 
 /**
@@ -305,133 +314,133 @@ export function usePageView(pageName?: string, properties?: EventProperties): vo
  */
 export function useComponentTracking(
 	componentName: string,
-	properties?: EventProperties
+	properties?: EventProperties,
 ): void {
-	const { track, isReady } = useAnalyticsHook()
-	const mountTime = useRef(Date.now())
-	const hasTracked = useRef(false)
+	const { track, isReady } = useAnalyticsHook();
+	const mountTime = useRef(Date.now());
+	const hasTracked = useRef(false);
 
 	useEffect(() => {
-		if (!isReady || hasTracked.current) return
+		if (!isReady || hasTracked.current) return;
 
-		hasTracked.current = true
-		track('component_viewed', {
+		hasTracked.current = true;
+		track("component_viewed", {
 			component: componentName,
 			...properties,
-		})
+		});
 
 		return () => {
-			const timeVisible = Date.now() - mountTime.current
-			track('component_hidden', {
+			const timeVisible = Date.now() - mountTime.current;
+			track("component_hidden", {
 				component: componentName,
 				time_visible_ms: timeVisible,
-			})
-		}
-	}, [isReady, track, componentName, properties])
+			});
+		};
+	}, [isReady, track, componentName, properties]);
 }
 
 /**
  * Hook to track feature usage
  */
-export function useFeatureTracking(
-	featureName: string
-): {
-	trackUsed: (properties?: EventProperties) => void
-	trackError: (error: Error, properties?: EventProperties) => void
+export function useFeatureTracking(featureName: string): {
+	trackUsed: (properties?: EventProperties) => void;
+	trackError: (error: Error, properties?: EventProperties) => void;
 } {
-	const { track } = useAnalyticsHook()
+	const { track } = useAnalyticsHook();
 
 	const trackUsed = useCallback(
 		(properties?: EventProperties) => {
-			track('feature_used', {
+			track("feature_used", {
 				feature: featureName,
 				...properties,
-			})
+			});
 		},
-		[track, featureName]
-	)
+		[track, featureName],
+	);
 
 	const trackError = useCallback(
 		(error: Error, properties?: EventProperties) => {
-			track('feature_error', {
+			track("feature_error", {
 				feature: featureName,
 				error_message: error.message,
 				error_name: error.name,
 				...properties,
-			})
+			});
 		},
-		[track, featureName]
-	)
+		[track, featureName],
+	);
 
-	return { trackUsed, trackError }
+	return { trackUsed, trackError };
 }
 
 /**
  * Hook to track form interactions
  */
-export function useFormTracking(
-	formName: string
-): {
-	trackStarted: () => void
-	trackCompleted: (properties?: EventProperties) => void
-	trackAbandoned: () => void
-	trackFieldFilled: (fieldName: string) => void
-	trackError: (fieldName: string, error: string) => void
+export function useFormTracking(formName: string): {
+	trackStarted: () => void;
+	trackCompleted: (properties?: EventProperties) => void;
+	trackAbandoned: () => void;
+	trackFieldFilled: (fieldName: string) => void;
+	trackError: (fieldName: string, error: string) => void;
 } {
-	const { track } = useAnalyticsHook()
-	const startTime = useRef<number | null>(null)
-	const fieldsFilledRef = useRef<Set<string>>(new Set())
+	const { track } = useAnalyticsHook();
+	const startTime = useRef<number | null>(null);
+	const fieldsFilledRef = useRef<Set<string>>(new Set());
 
 	const trackStarted = useCallback(() => {
-		startTime.current = Date.now()
-		track('form_started', { form: formName })
-	}, [track, formName])
+		startTime.current = Date.now();
+		track("form_started", { form: formName });
+	}, [track, formName]);
 
 	const trackCompleted = useCallback(
 		(properties?: EventProperties) => {
-			const duration = startTime.current ? Date.now() - startTime.current : undefined
-			track('form_completed', {
+			const duration = startTime.current
+				? Date.now() - startTime.current
+				: undefined;
+			track("form_completed", {
 				form: formName,
 				duration_ms: duration,
 				fields_filled: fieldsFilledRef.current.size,
 				...properties,
-			})
+			});
 		},
-		[track, formName]
-	)
+		[track, formName],
+	);
 
 	const trackAbandoned = useCallback(() => {
-		const duration = startTime.current ? Date.now() - startTime.current : undefined
-		track('form_abandoned', {
+		const duration = startTime.current
+			? Date.now() - startTime.current
+			: undefined;
+		track("form_abandoned", {
 			form: formName,
 			duration_ms: duration,
 			fields_filled: fieldsFilledRef.current.size,
-		})
-	}, [track, formName])
+		});
+	}, [track, formName]);
 
 	const trackFieldFilled = useCallback(
 		(fieldName: string) => {
 			if (!fieldsFilledRef.current.has(fieldName)) {
-				fieldsFilledRef.current.add(fieldName)
-				track('form_field_filled', {
+				fieldsFilledRef.current.add(fieldName);
+				track("form_field_filled", {
 					form: formName,
 					field: fieldName,
-				})
+				});
 			}
 		},
-		[track, formName]
-	)
+		[track, formName],
+	);
 
 	const trackError = useCallback(
 		(fieldName: string, error: string) => {
-			track('form_field_error', {
+			track("form_field_error", {
 				form: formName,
 				field: fieldName,
 				error,
-			})
+			});
 		},
-		[track, formName]
-	)
+		[track, formName],
+	);
 
 	return {
 		trackStarted,
@@ -439,7 +448,7 @@ export function useFormTracking(
 		trackAbandoned,
 		trackFieldFilled,
 		trackError,
-	}
+	};
 }
 
 /**
@@ -448,66 +457,64 @@ export function useFormTracking(
 export function useTimeTracking(
 	name: string,
 	options?: {
-		trackOnUnmount?: boolean
-		trackIntervals?: number[]
-	}
+		trackOnUnmount?: boolean;
+		trackIntervals?: number[];
+	},
 ): {
-	getTimeSpent: () => number
-	trackNow: () => void
+	getTimeSpent: () => number;
+	trackNow: () => void;
 } {
-	const { track } = useAnalyticsHook()
-	const startTime = useRef(Date.now())
-	const trackedIntervals = useRef<Set<number>>(new Set())
+	const { track } = useAnalyticsHook();
+	const startTime = useRef(Date.now());
+	const trackedIntervals = useRef<Set<number>>(new Set());
 
 	const getTimeSpent = useCallback(() => {
-		return Date.now() - startTime.current
-	}, [])
+		return Date.now() - startTime.current;
+	}, []);
 
 	const trackNow = useCallback(() => {
-		track('time_spent', {
+		track("time_spent", {
 			name,
 			duration_ms: getTimeSpent(),
-		})
-	}, [track, name, getTimeSpent])
+		});
+	}, [track, name, getTimeSpent]);
 
 	useEffect(() => {
-		if (!options?.trackIntervals) return
+		if (!options?.trackIntervals) return;
 
 		const checkIntervals = () => {
-			const elapsed = getTimeSpent()
+			const elapsed = getTimeSpent();
 
 			for (const interval of options.trackIntervals!) {
 				if (elapsed >= interval && !trackedIntervals.current.has(interval)) {
-					trackedIntervals.current.add(interval)
-					track('time_milestone', {
+					trackedIntervals.current.add(interval);
+					track("time_milestone", {
 						name,
 						milestone_ms: interval,
 						actual_ms: elapsed,
-					})
+					});
 				}
 			}
-		}
+		};
 
-		const intervalId = setInterval(checkIntervals, ANALYTICS_INTERVAL_CHECK_MS)
-		return () => clearInterval(intervalId)
-	}, [track, name, getTimeSpent, options?.trackIntervals])
+		const intervalId = setInterval(checkIntervals, ANALYTICS_INTERVAL_CHECK_MS);
+		return () => clearInterval(intervalId);
+	}, [track, name, getTimeSpent, options?.trackIntervals]);
 
 	useEffect(() => {
-		if (!options?.trackOnUnmount) return
+		if (!options?.trackOnUnmount) return;
 
 		return () => {
-			track('time_spent', {
+			track("time_spent", {
 				name,
 				duration_ms: getTimeSpent(),
-			})
-		}
-	}, [track, name, getTimeSpent, options?.trackOnUnmount])
+			});
+		};
+	}, [track, name, getTimeSpent, options?.trackOnUnmount]);
 
-	return { getTimeSpent, trackNow }
+	return { getTimeSpent, trackNow };
 }
 
 // ==========================================
 // Export Types
 // ==========================================
-
-

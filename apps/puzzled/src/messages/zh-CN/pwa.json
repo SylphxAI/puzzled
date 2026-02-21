@@ -1,9 +1,9 @@
 {
-  "installTitle": "添加到主屏幕",
-  "installDescription": "安装 Puzzled 获得最佳体验，支持离线游戏和快速访问。",
-  "installButton": "安装应用",
-  "installInstructionsIOS": "将此应用添加到主屏幕以获得最佳体验。",
-  "iosTap": "点击",
-  "iosThen": "然后",
-  "iosAddHome": "添加到主屏幕"
+	"installTitle": "添加到主屏幕",
+	"installDescription": "安装 Puzzled 获得最佳体验，支持离线游戏和快速访问。",
+	"installButton": "安装应用",
+	"installInstructionsIOS": "将此应用添加到主屏幕以获得最佳体验。",
+	"iosTap": "点击",
+	"iosThen": "然后",
+	"iosAddHome": "添加到主屏幕"
 }

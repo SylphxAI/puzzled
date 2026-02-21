@@ -4,26 +4,32 @@
  * Flexible sign-in component supporting redirect, embedded, and modal modes.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
-import { SignInForm, Modal, type SignInMethod, type OAuthProvider, type ThemeVariables, defaultTheme } from '../ui'
-import type { OAuthProviderId } from '../../types'
+import { useEffect, useState } from "react";
+import type { OAuthProviderId } from "../../types";
+import { useSafeAuth, useSafeUser, useSdkReady } from "../hooks";
+import {
+	Modal,
+	type OAuthProvider,
+	SignInForm,
+	type SignInMethod,
+	type ThemeVariables,
+	defaultTheme,
+} from "../ui";
 
 // Re-export for convenience
 
-
 export interface SignInProps {
 	/** URL to redirect to after successful sign in */
-	afterSignInUrl?: string
+	afterSignInUrl?: string;
 	/**
 	 * Display mode:
 	 * - 'redirect': Navigate to platform login page (default)
 	 * - 'embedded': Show full sign-in form inline
 	 * - 'modal': Show full sign-in form in a modal
 	 */
-	mode?: 'redirect' | 'embedded' | 'modal'
+	mode?: "redirect" | "embedded" | "modal";
 	/**
 	 * OAuth providers to show (SDK-level filtering)
 	 * This further filters the providers enabled at platform and app level.
@@ -31,33 +37,33 @@ export interface SignInProps {
 	 * - [] = hide OAuth section (email only)
 	 * - ['google', 'github'] = only show these (if they're app-enabled)
 	 */
-	providers?: OAuthProviderId[] | null
+	providers?: OAuthProviderId[] | null;
 	/**
 	 * Auth methods to enable for embedded/modal mode
 	 * Default: ['password']
 	 */
-	methods?: SignInMethod[]
+	methods?: SignInMethod[];
 	/** Theme variables for embedded/modal mode */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom appearance for redirect button */
 	appearance?: {
-		baseStyle?: React.CSSProperties
-		hoverStyle?: React.CSSProperties
-	}
+		baseStyle?: React.CSSProperties;
+		hoverStyle?: React.CSSProperties;
+	};
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Button content (for redirect mode) */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** URL for sign up link (embedded/modal mode) */
-	signUpUrl?: string
+	signUpUrl?: string;
 	/** URL for forgot password (embedded/modal mode) */
-	forgotPasswordUrl?: string
+	forgotPasswordUrl?: string;
 	/** Called on successful sign in */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Show card wrapper (embedded mode, default: true) */
-	showCard?: boolean
+	showCard?: boolean;
 }
 
 /**
@@ -85,67 +91,67 @@ export interface SignInProps {
  */
 export function SignIn({
 	afterSignInUrl,
-	mode = 'redirect',
+	mode = "redirect",
 	providers,
-	methods = ['password'],
+	methods = ["password"],
 	theme = defaultTheme,
 	appearance,
 	className,
 	children,
-	signUpUrl = '/sign-up',
-	forgotPasswordUrl = '/forgot-password',
+	signUpUrl = "/sign-up",
+	forgotPasswordUrl = "/forgot-password",
 	onSuccess,
 	onError,
 	showCard = true,
 }: SignInProps) {
 	// SDK readiness check (SSOT for SSR safety and configuration)
 	const { isReady, renderError } = useSdkReady({
-		services: ['auth', 'user'],
-		componentType: 'sign-in',
+		services: ["auth", "user"],
+		componentType: "sign-in",
 		theme,
-	})
+	});
 
-	const { signIn } = useSafeAuth()
-	const { isSignedIn, isLoaded } = useSafeUser()
-	const [modalOpen, setModalOpen] = useState(false)
+	const { signIn } = useSafeAuth();
+	const { isSignedIn, isLoaded } = useSafeUser();
+	const [modalOpen, setModalOpen] = useState(false);
 
 	// SDK not ready - render error or null
 	if (!isReady) {
-		return renderError()
+		return renderError();
 	}
 
 	// Don't show if already signed in
 	if (isLoaded && isSignedIn) {
-		return null
+		return null;
 	}
 
 	// Convert OAuthProviderId to OAuthProvider (compatible types)
-	const oauthProviders = providers as OAuthProvider[] | undefined | null
+	const oauthProviders = providers as OAuthProvider[] | undefined | null;
 
 	// Redirect mode - show button that navigates to platform
-	if (mode === 'redirect') {
+	if (mode === "redirect") {
 		const handleClick = () => {
 			signIn({
 				redirectUrl: afterSignInUrl || window.location.href,
 				providers,
-			})
-		}
+			});
+		};
 
 		const defaultStyles: React.CSSProperties = {
-			display: 'inline-flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			padding: '0.5rem 1rem',
-			fontSize: '0.875rem',
+			display: "inline-flex",
+			alignItems: "center",
+			justifyContent: "center",
+			padding: "0.5rem 1rem",
+			fontSize: "0.875rem",
 			fontWeight: 500,
-			borderRadius: '0.375rem',
-			border: '1px solid transparent',
-			backgroundColor: '#000',
-			color: '#fff',
-			cursor: 'pointer',
-			transition: 'opacity 0.2s',
+			borderRadius: "0.375rem",
+			border: "1px solid transparent",
+			backgroundColor: "#000",
+			color: "#fff",
+			cursor: "pointer",
+			transition: "opacity 0.2s",
 			...appearance?.baseStyle,
-		}
+		};
 
 		return (
 			<button
@@ -154,45 +160,45 @@ export function SignIn({
 				style={className ? undefined : defaultStyles}
 				type="button"
 			>
-				{children || 'Sign In'}
+				{children || "Sign In"}
 			</button>
-		)
+		);
 	}
 
 	// Embedded mode - show form inline
-	if (mode === 'embedded') {
+	if (mode === "embedded") {
 		return (
 			<SignInForm
 				theme={theme}
 				methods={methods}
 				providers={oauthProviders || []}
-				afterSignInUrl={afterSignInUrl || '/dashboard'}
+				afterSignInUrl={afterSignInUrl || "/dashboard"}
 				signUpUrl={signUpUrl}
 				forgotPasswordUrl={forgotPasswordUrl}
 				onSuccess={onSuccess}
 				onError={onError}
 				showCard={showCard}
 			/>
-		)
+		);
 	}
 
 	// Modal mode - show button that opens modal
-	if (mode === 'modal') {
+	if (mode === "modal") {
 		const defaultStyles: React.CSSProperties = {
-			display: 'inline-flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			padding: '0.5rem 1rem',
-			fontSize: '0.875rem',
+			display: "inline-flex",
+			alignItems: "center",
+			justifyContent: "center",
+			padding: "0.5rem 1rem",
+			fontSize: "0.875rem",
 			fontWeight: 500,
-			borderRadius: '0.375rem',
-			border: '1px solid transparent',
-			backgroundColor: '#000',
-			color: '#fff',
-			cursor: 'pointer',
-			transition: 'opacity 0.2s',
+			borderRadius: "0.375rem",
+			border: "1px solid transparent",
+			backgroundColor: "#000",
+			color: "#fff",
+			cursor: "pointer",
+			transition: "opacity 0.2s",
 			...appearance?.baseStyle,
-		}
+		};
 
 		return (
 			<>
@@ -202,7 +208,7 @@ export function SignIn({
 					style={className ? undefined : defaultStyles}
 					type="button"
 				>
-					{children || 'Sign In'}
+					{children || "Sign In"}
 				</button>
 				<Modal
 					open={modalOpen}
@@ -213,20 +219,20 @@ export function SignIn({
 						theme={theme}
 						methods={methods}
 						providers={oauthProviders || []}
-						afterSignInUrl={afterSignInUrl || '/dashboard'}
+						afterSignInUrl={afterSignInUrl || "/dashboard"}
 						signUpUrl={signUpUrl}
 						forgotPasswordUrl={forgotPasswordUrl}
 						onSuccess={() => {
-							setModalOpen(false)
-							onSuccess?.()
+							setModalOpen(false);
+							onSuccess?.();
 						}}
 						onError={onError}
 						showCard={false}
 					/>
 				</Modal>
 			</>
-		)
+		);
 	}
 
-	return null
+	return null;
 }

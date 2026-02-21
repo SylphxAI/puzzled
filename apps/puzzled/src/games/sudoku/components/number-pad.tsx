@@ -3,19 +3,19 @@
  * Number input buttons for mobile
  */
 
-'use client'
+"use client";
 
-import { Button } from '@sylphx/ui'
-import { Delete, PencilLine } from 'lucide-react'
-import { memo, useCallback } from 'react'
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
+import { Button } from "@sylphx/ui";
+import { Delete, PencilLine } from "lucide-react";
+import { memo, useCallback } from "react";
 
 type NumberButtonProps = {
-	num: number
-	isNotesMode: boolean
-	disabled: boolean
-	onPress: (value: number) => void
-}
+	num: number;
+	isNotesMode: boolean;
+	disabled: boolean;
+	onPress: (value: number) => void;
+};
 
 /**
  * Memoized number button - only re-renders when its props change
@@ -26,7 +26,7 @@ const NumberButton = memo(function NumberButton({
 	disabled,
 	onPress,
 }: NumberButtonProps) {
-	const handleClick = useCallback(() => onPress(num), [onPress, num])
+	const handleClick = useCallback(() => onPress(num), [onPress, num]);
 
 	return (
 		<button
@@ -34,25 +34,25 @@ const NumberButton = memo(function NumberButton({
 			disabled={disabled}
 			onClick={handleClick}
 			className={cn(
-				'aspect-square w-full min-w-0 rounded-lg border-2 bg-background text-xs font-semibold transition-all',
-				'hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-50',
-				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-				'xs:text-sm sm:text-base',
-				isNotesMode ? 'border-primary/50 text-primary' : 'border-border',
+				"aspect-square w-full min-w-0 rounded-lg border-2 bg-background text-xs font-semibold transition-all",
+				"hover:bg-muted active:scale-95 disabled:pointer-events-none disabled:opacity-50",
+				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+				"xs:text-sm sm:text-base",
+				isNotesMode ? "border-primary/50 text-primary" : "border-border",
 			)}
 		>
 			{num}
 		</button>
-	)
-})
+	);
+});
 
 type Props = {
-	onNumberPress: (value: number) => void
-	onDelete: () => void
-	onToggleNotes: () => void
-	isNotesMode: boolean
-	disabled?: boolean
-}
+	onNumberPress: (value: number) => void;
+	onDelete: () => void;
+	onToggleNotes: () => void;
+	isNotesMode: boolean;
+	disabled?: boolean;
+};
 
 export function SudokuNumberPad({
 	onNumberPress,
@@ -62,14 +62,17 @@ export function SudokuNumberPad({
 	disabled = false,
 }: Props) {
 	// Memoize stable handler
-	const handleNumberPress = useCallback((value: number) => onNumberPress(value), [onNumberPress])
+	const handleNumberPress = useCallback(
+		(value: number) => onNumberPress(value),
+		[onNumberPress],
+	);
 
 	return (
 		<div className="w-full space-y-2">
 			{/* Numbers 1-9 */}
 			<div
 				className="grid w-full gap-1"
-				style={{ gridTemplateColumns: 'repeat(9, minmax(0, 1fr))' }}
+				style={{ gridTemplateColumns: "repeat(9, minmax(0, 1fr))" }}
 			>
 				{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
 					<NumberButton
@@ -85,7 +88,7 @@ export function SudokuNumberPad({
 			{/* Action buttons */}
 			<div className="flex gap-2">
 				<Button
-					variant={isNotesMode ? 'default' : 'outline'}
+					variant={isNotesMode ? "default" : "outline"}
 					size="sm"
 					disabled={disabled}
 					onClick={onToggleNotes}
@@ -106,5 +109,5 @@ export function SudokuNumberPad({
 				</Button>
 			</div>
 		</div>
-	)
+	);
 }

@@ -30,15 +30,15 @@
 export async function captureError(
 	error: Error | string,
 	context?: {
-		tags?: Record<string, string>
-		extra?: Record<string, unknown>
-		level?: 'fatal' | 'error' | 'warning' | 'info'
-		route?: string
+		tags?: Record<string, string>;
+		extra?: Record<string, unknown>;
+		level?: "fatal" | "error" | "warning" | "info";
+		route?: string;
 	},
 ): Promise<string | null> {
 	// Log to console - platform monitoring endpoint not yet available
-	console.error('[Monitoring] Error:', error, context)
-	return null
+	console.error("[Monitoring] Error:", error, context);
+	return null;
 }
 
 /**
@@ -55,15 +55,18 @@ export async function captureError(
 export async function captureMessage(
 	message: string,
 	options?: {
-		level?: 'fatal' | 'error' | 'warning' | 'info'
-		tags?: Record<string, string>
-		extra?: Record<string, unknown>
-		route?: string
+		level?: "fatal" | "error" | "warning" | "info";
+		tags?: Record<string, string>;
+		extra?: Record<string, unknown>;
+		route?: string;
 	},
 ): Promise<string | null> {
 	// Log to console - platform monitoring endpoint not yet available
-	console.log(`[Monitoring] ${options?.level ?? 'info'}: ${message}`, options?.extra)
-	return null
+	console.log(
+		`[Monitoring] ${options?.level ?? "info"}: ${message}`,
+		options?.extra,
+	);
+	return null;
 }
 
 /**
@@ -73,8 +76,8 @@ async function _captureRequestError(
 	error: Error,
 	request: Request,
 	context?: {
-		tags?: Record<string, string>
-		extra?: Record<string, unknown>
+		tags?: Record<string, string>;
+		extra?: Record<string, unknown>;
 	},
 ): Promise<string | null> {
 	return captureError(error, {
@@ -88,8 +91,11 @@ async function _captureRequestError(
 			...context?.extra,
 			url: request.url,
 			headers: Object.fromEntries(
-				['user-agent', 'referer', 'accept-language'].map((h) => [h, request.headers.get(h)]),
+				["user-agent", "referer", "accept-language"].map((h) => [
+					h,
+					request.headers.get(h),
+				]),
 			),
 		},
-	})
+	});
 }

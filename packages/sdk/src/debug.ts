@@ -15,7 +15,7 @@
 // ============================================================================
 
 /** Storage key for browser-side debug toggle */
-const DEBUG_STORAGE_KEY = 'sylphx_debug'
+const DEBUG_STORAGE_KEY = "sylphx_debug";
 
 /**
  * Check if debug mode is enabled
@@ -27,25 +27,25 @@ const DEBUG_STORAGE_KEY = 'sylphx_debug'
  */
 function isDebugEnabled(): boolean {
 	// Browser environment
-	if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+	if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
 		try {
-			return localStorage.getItem(DEBUG_STORAGE_KEY) === 'true'
+			return localStorage.getItem(DEBUG_STORAGE_KEY) === "true";
 		} catch {
 			// localStorage may be blocked in some contexts
-			return false
+			return false;
 		}
 	}
 
 	// Node.js environment
-	if (typeof process !== 'undefined' && process.env) {
-		return process.env.SYLPHX_DEBUG === 'true'
+	if (typeof process !== "undefined" && process.env) {
+		return process.env.SYLPHX_DEBUG === "true";
 	}
 
-	return false
+	return false;
 }
 
 // Cache the debug state to avoid repeated localStorage/env checks
-let debugModeCache: boolean | null = null
+let debugModeCache: boolean | null = null;
 
 /**
  * Whether debug mode is currently enabled
@@ -54,16 +54,16 @@ let debugModeCache: boolean | null = null
  */
 export function getDebugMode(): boolean {
 	if (debugModeCache === null) {
-		debugModeCache = isDebugEnabled()
+		debugModeCache = isDebugEnabled();
 	}
-	return debugModeCache
+	return debugModeCache;
 }
 
 /**
  * Reset debug mode cache (for testing)
  */
 export function resetDebugModeCache(): void {
-	debugModeCache = null
+	debugModeCache = null;
 }
 
 // ============================================================================
@@ -72,15 +72,15 @@ export function resetDebugModeCache(): void {
 
 /** Debug log categories */
 export type DebugCategory =
-	| 'auth'
-	| 'api'
-	| 'analytics'
-	| 'flags'
-	| 'storage'
-	| 'cache'
-	| 'token'
-	| 'webhook'
-	| 'error'
+	| "auth"
+	| "api"
+	| "analytics"
+	| "flags"
+	| "storage"
+	| "cache"
+	| "token"
+	| "webhook"
+	| "error";
 
 /**
  * Log a debug message with category prefix
@@ -91,30 +91,38 @@ export type DebugCategory =
  * // [Sylphx auth] Token refreshed { expiresIn: 300 }
  * ```
  */
-export function debugLog(category: DebugCategory, message: string, data?: unknown): void {
-	if (!getDebugMode()) return
+export function debugLog(
+	category: DebugCategory,
+	message: string,
+	data?: unknown,
+): void {
+	if (!getDebugMode()) return;
 
-	const prefix = `[Sylphx ${category}]`
+	const prefix = `[Sylphx ${category}]`;
 
 	if (data !== undefined) {
-		console.log(prefix, message, data)
+		console.log(prefix, message, data);
 	} else {
-		console.log(prefix, message)
+		console.log(prefix, message);
 	}
 }
 
 /**
  * Log a debug warning with category prefix
  */
-export function debugWarn(category: DebugCategory, message: string, data?: unknown): void {
-	if (!getDebugMode()) return
+export function debugWarn(
+	category: DebugCategory,
+	message: string,
+	data?: unknown,
+): void {
+	if (!getDebugMode()) return;
 
-	const prefix = `[Sylphx ${category}]`
+	const prefix = `[Sylphx ${category}]`;
 
 	if (data !== undefined) {
-		console.warn(prefix, message, data)
+		console.warn(prefix, message, data);
 	} else {
-		console.warn(prefix, message)
+		console.warn(prefix, message);
 	}
 }
 
@@ -124,15 +132,19 @@ export function debugWarn(category: DebugCategory, message: string, data?: unkno
  * Note: This always logs when debug mode is enabled, regardless of error severity.
  * Production error tracking should use the error tracking service, not this.
  */
-export function debugError(category: DebugCategory, message: string, error?: unknown): void {
-	if (!getDebugMode()) return
+export function debugError(
+	category: DebugCategory,
+	message: string,
+	error?: unknown,
+): void {
+	if (!getDebugMode()) return;
 
-	const prefix = `[Sylphx ${category}]`
+	const prefix = `[Sylphx ${category}]`;
 
 	if (error !== undefined) {
-		console.error(prefix, message, error)
+		console.error(prefix, message, error);
 	} else {
-		console.error(prefix, message)
+		console.error(prefix, message);
 	}
 }
 
@@ -150,19 +162,24 @@ export function debugError(category: DebugCategory, message: string, error?: unk
  * timer.end() // Logs duration if debug mode enabled
  * ```
  */
-export function debugTimer(category: DebugCategory, operation: string): { end: () => void } {
+export function debugTimer(
+	category: DebugCategory,
+	operation: string,
+): { end: () => void } {
 	if (!getDebugMode()) {
-		return { end: () => {} }
+		return { end: () => {} };
 	}
 
-	const start = performance.now()
+	const start = performance.now();
 
 	return {
 		end() {
-			const duration = performance.now() - start
-			debugLog(category, `${operation} completed`, { durationMs: Math.round(duration) })
+			const duration = performance.now() - start;
+			debugLog(category, `${operation} completed`, {
+				durationMs: Math.round(duration),
+			});
 		},
-	}
+	};
 }
 
 // ============================================================================
@@ -178,17 +195,21 @@ export function debugTimer(category: DebugCategory, operation: string): { end: (
  * ```
  */
 export function enableDebug(): void {
-	if (typeof localStorage === 'undefined') {
-		console.warn('[Sylphx] Debug mode can only be enabled in browser environments')
-		return
+	if (typeof localStorage === "undefined") {
+		console.warn(
+			"[Sylphx] Debug mode can only be enabled in browser environments",
+		);
+		return;
 	}
 
 	try {
-		localStorage.setItem(DEBUG_STORAGE_KEY, 'true')
-		debugModeCache = true
-		console.log('[Sylphx] Debug mode enabled. Refresh the page to see debug logs.')
+		localStorage.setItem(DEBUG_STORAGE_KEY, "true");
+		debugModeCache = true;
+		console.log(
+			"[Sylphx] Debug mode enabled. Refresh the page to see debug logs.",
+		);
 	} catch (e) {
-		console.warn('[Sylphx] Failed to enable debug mode:', e)
+		console.warn("[Sylphx] Failed to enable debug mode:", e);
 	}
 }
 
@@ -196,17 +217,19 @@ export function enableDebug(): void {
  * Disable debug mode from browser console
  */
 export function disableDebug(): void {
-	if (typeof localStorage === 'undefined') {
-		console.warn('[Sylphx] Debug mode can only be disabled in browser environments')
-		return
+	if (typeof localStorage === "undefined") {
+		console.warn(
+			"[Sylphx] Debug mode can only be disabled in browser environments",
+		);
+		return;
 	}
 
 	try {
-		localStorage.removeItem(DEBUG_STORAGE_KEY)
-		debugModeCache = false
-		console.log('[Sylphx] Debug mode disabled.')
+		localStorage.removeItem(DEBUG_STORAGE_KEY);
+		debugModeCache = false;
+		console.log("[Sylphx] Debug mode disabled.");
 	} catch (e) {
-		console.warn('[Sylphx] Failed to disable debug mode:', e)
+		console.warn("[Sylphx] Failed to disable debug mode:", e);
 	}
 }
 
@@ -221,20 +244,20 @@ export function disableDebug(): void {
  * providing developers easy console access to debug utilities.
  */
 export function installGlobalDebugHelpers(): void {
-	if (typeof window === 'undefined') return
+	if (typeof window === "undefined") return;
 
 	// Use type assertion to extend window
 	const w = window as typeof window & {
 		__sylphx?: {
-			enableDebug: typeof enableDebug
-			disableDebug: typeof disableDebug
-			isDebugEnabled: typeof getDebugMode
-		}
-	}
+			enableDebug: typeof enableDebug;
+			disableDebug: typeof disableDebug;
+			isDebugEnabled: typeof getDebugMode;
+		};
+	};
 
 	w.__sylphx = {
 		enableDebug,
 		disableDebug,
 		isDebugEnabled: getDebugMode,
-	}
+	};
 }

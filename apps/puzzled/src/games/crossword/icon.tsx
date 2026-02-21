@@ -5,11 +5,11 @@
  * Represents the classic crossword puzzle format
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function CrosswordIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -38,5 +38,5 @@ export function CrosswordIcon({ size = 24, className, ...props }: IconProps) {
 			<rect x="16.5" y="12" width="4.5" height="4.5" fill="currentColor" />
 			<rect x="7.5" y="16.5" width="4.5" height="4.5" fill="currentColor" />
 		</svg>
-	)
+	);
 }

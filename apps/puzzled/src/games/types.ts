@@ -18,7 +18,7 @@
  * - This prevents score manipulation attacks
  */
 
-import type { ComponentType } from 'react'
+import type { ComponentType } from "react";
 
 // ==========================================
 // Constants
@@ -29,7 +29,7 @@ import type { ComponentType } from 'react'
  * Used for day-number calculations (seed = days since launch).
  * DO NOT CHANGE after initial release - breaks historical puzzles.
  */
-export const DEFAULT_LAUNCH_DATE = new Date('2024-01-01')
+export const DEFAULT_LAUNCH_DATE = new Date("2024-01-01");
 
 // ==========================================
 // Game Classification
@@ -38,35 +38,35 @@ export const DEFAULT_LAUNCH_DATE = new Date('2024-01-01')
 /**
  * Primary game category for UI grouping
  */
-export type GameCategory = 'word' | 'logic' | 'math' | 'spatial'
+export type GameCategory = "word" | "logic" | "math" | "spatial";
 
 /**
  * Skills/abilities tested by a game
  * Used for filtering, recommendations, and skill badges
  */
 export type GameSkill =
-	| 'vocabulary' // Word knowledge
-	| 'spelling' // Spelling ability
-	| 'association' // Word/concept association
-	| 'logic' // Logical deduction
-	| 'arithmetic' // Math operations
-	| 'pattern' // Pattern recognition
-	| 'spatial' // Spatial reasoning
-	| 'memory' // Memory/recall
+	| "vocabulary" // Word knowledge
+	| "spelling" // Spelling ability
+	| "association" // Word/concept association
+	| "logic" // Logical deduction
+	| "arithmetic" // Math operations
+	| "pattern" // Pattern recognition
+	| "spatial" // Spatial reasoning
+	| "memory"; // Memory/recall
 
 /**
  * Base difficulty level (for games without difficulty selection)
  */
-export type GameDifficulty = 'easy' | 'medium' | 'hard'
+export type GameDifficulty = "easy" | "medium" | "hard";
 
 /**
  * Puzzle difficulty level (for games with difficulty selection)
  * Used when a game supports multiple difficulty levels
  */
-export type PuzzleDifficulty = 'easy' | 'medium' | 'hard'
+export type PuzzleDifficulty = "easy" | "medium" | "hard";
 
 /** All valid puzzle difficulty values */
-export const PUZZLE_DIFFICULTY_VALUES = ['easy', 'medium', 'hard'] as const
+export const PUZZLE_DIFFICULTY_VALUES = ["easy", "medium", "hard"] as const;
 
 /**
  * Difficulty configuration for games that support difficulty selection
@@ -74,13 +74,13 @@ export const PUZZLE_DIFFICULTY_VALUES = ['easy', 'medium', 'hard'] as const
  */
 export interface DifficultyLevelConfig {
 	/** The difficulty level identifier */
-	level: PuzzleDifficulty
+	level: PuzzleDifficulty;
 	/** Translation key for the difficulty name (e.g., 'easy' -> t('common.difficulty.easy')) */
-	labelKey: string
+	labelKey: string;
 	/** Description of what makes this difficulty different */
-	descriptionKey: string
+	descriptionKey: string;
 	/** Parameters passed to puzzle generation (game-specific) */
-	params: Record<string, unknown>
+	params: Record<string, unknown>;
 }
 
 // ==========================================
@@ -93,11 +93,11 @@ export interface DifficultyLevelConfig {
  */
 export type GameSubmission = {
 	/** Claimed game outcome */
-	status: 'won' | 'lost'
+	status: "won" | "lost";
 	/** Number of attempts/guesses made */
-	attempts: number
+	attempts: number;
 	/** Time spent playing in milliseconds */
-	timeSpentMs: number
+	timeSpentMs: number;
 	/**
 	 * Game-specific data for server validation
 	 * Each game defines what data it needs:
@@ -106,8 +106,8 @@ export type GameSubmission = {
 	 * - Queens: { finalGrid: boolean[][], regions: number[][] }
 	 * - etc.
 	 */
-	data: unknown
-}
+	data: unknown;
+};
 
 /**
  * Result returned by server after validating submission
@@ -115,16 +115,16 @@ export type GameSubmission = {
  */
 export type GameResult =
 	| {
-			valid: true
+			valid: true;
 			/** Server-verified status (may differ from claimed if cheating detected) */
-			status: 'won' | 'lost'
+			status: "won" | "lost";
 			/** Server-calculated score */
-			score: number
+			score: number;
 	  }
 	| {
-			valid: false
-			error: string
-	  }
+			valid: false;
+			error: string;
+	  };
 
 // ==========================================
 // Parsed Puzzle Type
@@ -135,8 +135,8 @@ export type GameResult =
  * Returned by GameConfig.parsePuzzleData()
  */
 export interface ParsedPuzzle<TPuzzleData, TSolution> {
-	puzzleData: TPuzzleData
-	solution: TSolution
+	puzzleData: TPuzzleData;
+	solution: TSolution;
 }
 
 /**
@@ -153,19 +153,24 @@ export interface ParsedPuzzle<TPuzzleData, TSolution> {
  * @param difficulty - Optional difficulty level for games with supportsDifficulty
  */
 export function defaultParsePuzzleData<TPuzzleData, TSolution>(
-	config: Pick<GameConfig<TPuzzleData, TSolution>, 'generatePuzzle'>,
+	config: Pick<GameConfig<TPuzzleData, TSolution>, "generatePuzzle">,
 	data: unknown,
 	puzzleId?: string,
 	difficulty?: PuzzleDifficulty,
 ): ParsedPuzzle<TPuzzleData, TSolution> {
 	// Server provides nested structure with puzzleData and solution
-	if (data && typeof data === 'object' && 'puzzleData' in data && 'solution' in data) {
-		return data as ParsedPuzzle<TPuzzleData, TSolution>
+	if (
+		data &&
+		typeof data === "object" &&
+		"puzzleData" in data &&
+		"solution" in data
+	) {
+		return data as ParsedPuzzle<TPuzzleData, TSolution>;
 	}
 
 	// Fallback: generate from seed (for archive mode or missing data)
-	const seed = Number.parseInt(puzzleId || String(Date.now()), 10)
-	return config.generatePuzzle(seed, difficulty)
+	const seed = Number.parseInt(puzzleId || String(Date.now()), 10);
+	return config.generatePuzzle(seed, difficulty);
 }
 
 /**
@@ -184,10 +189,17 @@ export function defaultParsePuzzleData<TPuzzleData, TSolution>(
 export function parsePuzzleDataClient<TPuzzleData, TSolution>(
 	data: unknown,
 ): ParsedPuzzle<TPuzzleData, TSolution> {
-	if (!data || typeof data !== 'object' || !('puzzleData' in data) || !('solution' in data)) {
-		throw new Error('[Game] Invalid puzzle data format - expected {puzzleData, solution}')
+	if (
+		!data ||
+		typeof data !== "object" ||
+		!("puzzleData" in data) ||
+		!("solution" in data)
+	) {
+		throw new Error(
+			"[Game] Invalid puzzle data format - expected {puzzleData, solution}",
+		);
 	}
-	return data as ParsedPuzzle<TPuzzleData, TSolution>
+	return data as ParsedPuzzle<TPuzzleData, TSolution>;
 }
 
 // ==========================================
@@ -205,15 +217,18 @@ export function parsePuzzleDataClient<TPuzzleData, TSolution>(
  */
 export interface GameProps {
 	/** Unique puzzle identifier (always provided by GameRenderer) */
-	puzzleId?: string
+	puzzleId?: string;
 	/** Puzzle data (game-specific, always provided by GameRenderer) */
-	puzzleData?: unknown
+	puzzleData?: unknown;
 	/** Game mode (default: 'daily') */
-	mode?: 'daily' | 'archive'
+	mode?: "daily" | "archive";
 	/** Difficulty level for games that support it (provided by GameRenderer) */
-	difficulty?: PuzzleDifficulty
+	difficulty?: PuzzleDifficulty;
 	/** Callback when game completes */
-	onComplete?: (result: { status: 'won' | 'lost'; stats: GameCompletionStats }) => void
+	onComplete?: (result: {
+		status: "won" | "lost";
+		stats: GameCompletionStats;
+	}) => void;
 }
 
 /**
@@ -222,14 +237,14 @@ export interface GameProps {
  * Score is added after server validation (client never calculates it)
  */
 export interface GameCompletionStats {
-	status?: 'won' | 'lost'
-	attempts?: number
-	maxAttempts?: number
-	timeSpentMs?: number
-	mistakes?: number
-	hintsUsed?: number
+	status?: "won" | "lost";
+	attempts?: number;
+	maxAttempts?: number;
+	timeSpentMs?: number;
+	mistakes?: number;
+	hintsUsed?: number;
 	/** Server-calculated score - only present after server response */
-	score?: number
+	score?: number;
 }
 
 /**
@@ -237,9 +252,9 @@ export interface GameCompletionStats {
  * Extends completion stats with guaranteed status
  */
 export interface GameShareStats extends GameCompletionStats {
-	status: 'won' | 'lost'
+	status: "won" | "lost";
 	/** Server-calculated score (added after server response) */
-	score?: number
+	score?: number;
 }
 
 // ==========================================
@@ -253,39 +268,39 @@ export interface GameShareStats extends GameCompletionStats {
  *
  * See docs/PUZZLE_GENERATION.md for architecture details.
  */
-export type PuzzleGenerationStrategy = 'seed' | 'llm'
+export type PuzzleGenerationStrategy = "seed" | "llm";
 
 /**
  * Result from LLM puzzle generator
  */
 export type LLMGeneratorResult = {
-	success: boolean
-	puzzleData?: unknown
-	solution?: unknown
-	error?: string
-}
+	success: boolean;
+	puzzleData?: unknown;
+	solution?: unknown;
+	error?: string;
+};
 
 /**
  * Result from puzzle generation workflow
  */
 export type PuzzleGenerationResult = {
-	success: boolean
-	gameSlug: string
-	gameName: string
-	strategy: PuzzleGenerationStrategy
-	error?: string
-}
+	success: boolean;
+	gameSlug: string;
+	gameName: string;
+	strategy: PuzzleGenerationStrategy;
+	error?: string;
+};
 
 /**
  * Summary of all puzzle generations for monitoring
  */
 export type GenerationSummary = {
-	date: string
-	totalGames: number
-	successful: number
-	failed: number
-	results: PuzzleGenerationResult[]
-}
+	date: string;
+	totalGames: number;
+	successful: number;
+	failed: number;
+	results: PuzzleGenerationResult[];
+};
 
 /**
  * Display metadata for UI rendering
@@ -296,13 +311,13 @@ export type GenerationSummary = {
  */
 export interface GameDisplayMeta {
 	/** Translation key suffix for tagline (e.g., 'wordle' -> 'games.wordle.tagline') */
-	taglineKey: string
+	taglineKey: string;
 	/** Translation key suffix for highlight text */
-	highlightKey: string
+	highlightKey: string;
 	/** Estimated time to complete */
-	duration: string
+	duration: string;
 	/** Color theme token - all color classes derived from this */
-	theme: import('./theme-colors').GameColorTheme
+	theme: import("./theme-colors").GameColorTheme;
 }
 
 // ==========================================
@@ -331,26 +346,26 @@ export interface GameConfig<
 	// ==========================================
 	// Metadata
 	// ==========================================
-	slug: string
-	name: string
-	description: string
+	slug: string;
+	name: string;
+	description: string;
 	/** Custom SVG icon component for this game */
-	IconComponent: ComponentType<{ size?: number; className?: string }>
-	sortOrder: number
+	IconComponent: ComponentType<{ size?: number; className?: string }>;
+	sortOrder: number;
 
 	// ==========================================
 	// Classification (for UI filtering/grouping)
 	// ==========================================
 
 	/** Primary category for grouping */
-	category: GameCategory
+	category: GameCategory;
 	/** Skills tested by this game (for filtering and recommendations) */
-	skills: GameSkill[]
+	skills: GameSkill[];
 	/** Base difficulty level (for games without difficulty selection) */
-	difficulty: GameDifficulty
+	difficulty: GameDifficulty;
 
 	/** Display metadata for UI rendering */
-	display: GameDisplayMeta
+	display: GameDisplayMeta;
 
 	// ==========================================
 	// Difficulty Selection (optional)
@@ -366,14 +381,14 @@ export interface GameConfig<
 	 * - Completing ANY difficulty counts for streak (only once per day)
 	 * - Stats track completions per difficulty
 	 */
-	supportsDifficulty?: boolean
+	supportsDifficulty?: boolean;
 
 	/**
 	 * Available difficulty levels for this game
 	 * Required when supportsDifficulty is true
 	 * Order determines display order in UI (first = default)
 	 */
-	difficultyLevels?: DifficultyLevelConfig[]
+	difficultyLevels?: DifficultyLevelConfig[];
 
 	// ==========================================
 	// Components (for plug-and-play UI)
@@ -387,14 +402,14 @@ export interface GameConfig<
 	 * client-side imports (like Celebration) into the server bundle.
 	 * Client components should get GameComponent from client-registry.ts.
 	 */
-	GameComponent?: ComponentType<GameProps>
+	GameComponent?: ComponentType<GameProps>;
 
 	/**
 	 * How-to-play content component
 	 * Rendered inside the HowToPlayModal when user clicks "How to Play"
 	 * Should include title, rules, and visual examples
 	 */
-	HowToPlayContent?: ComponentType
+	HowToPlayContent?: ComponentType;
 
 	// ==========================================
 	// Puzzle Generation
@@ -405,7 +420,7 @@ export interface GameConfig<
 	 * - 'seed': Deterministic from seed (infinite, reproducible) - no AI needed
 	 * - 'llm': Uses LLM to generate (requires semantic understanding) - NO fallback
 	 */
-	generationStrategy: PuzzleGenerationStrategy
+	generationStrategy: PuzzleGenerationStrategy;
 
 	/**
 	 * Generate puzzle data and solution for a given seed
@@ -421,9 +436,9 @@ export interface GameConfig<
 		difficulty?: PuzzleDifficulty,
 		difficultyParams?: Record<string, unknown>,
 	) => {
-		puzzleData: TPuzzleData
-		solution: TSolution
-	}
+		puzzleData: TPuzzleData;
+		solution: TSolution;
+	};
 
 	// ==========================================
 	// Validation & Scoring (SERVER-SIDE)
@@ -438,7 +453,11 @@ export interface GameConfig<
 	 * @param puzzleData - Optional puzzle context
 	 * @returns Validation result with feedback
 	 */
-	validateGuess?: (solution: TSolution, guess: TGuess, puzzleData?: TPuzzleData) => TGuessResult
+	validateGuess?: (
+		solution: TSolution,
+		guess: TGuess,
+		puzzleData?: TPuzzleData,
+	) => TGuessResult;
 
 	/**
 	 * CORE VALIDATION FUNCTION - RUNS ON SERVER ONLY
@@ -466,7 +485,7 @@ export interface GameConfig<
 		solution: TSolution,
 		puzzleData: TPuzzleData,
 		submission: GameSubmission,
-	) => GameResult
+	) => GameResult;
 
 	// ==========================================
 	// Game Lifecycle (optional)
@@ -476,7 +495,7 @@ export interface GameConfig<
 	 * When the game launched (for archive puzzle number calculation)
 	 * If not provided, defaults to 2024-01-01
 	 */
-	launchDate?: Date
+	launchDate?: Date;
 
 	// ==========================================
 	// Display Customization (optional)
@@ -487,7 +506,7 @@ export interface GameConfig<
 	 * Used for special celebration/display in result cards, stats, leaderboards
 	 * If not provided, no "perfect game" badge is shown
 	 */
-	isPerfectGame?: (stats: GameCompletionStats) => boolean
+	isPerfectGame?: (stats: GameCompletionStats) => boolean;
 
 	/**
 	 * Format score for display in UI (e.g., "3/6" for Wordle, "2 mistakes" for Connections)
@@ -497,7 +516,7 @@ export interface GameConfig<
 	 * @param stats - Game completion stats including status, attempts, score, etc.
 	 * @returns Formatted score string for display
 	 */
-	formatScoreDisplay?: (stats: GameShareStats) => string
+	formatScoreDisplay?: (stats: GameShareStats) => string;
 
 	/**
 	 * Compare two game sessions for percentile ranking
@@ -508,13 +527,16 @@ export interface GameConfig<
 	 * @param b - Second session stats
 	 * @returns Comparison result (positive = a is better)
 	 */
-	compareForPercentile?: (a: GameCompletionStats, b: GameCompletionStats) => number
+	compareForPercentile?: (
+		a: GameCompletionStats,
+		b: GameCompletionStats,
+	) => number;
 
 	/**
 	 * Format custom share text for this game
 	 * If not provided, uses default share text format
 	 */
-	formatShareText?: (stats: GameShareStats) => string
+	formatShareText?: (stats: GameShareStats) => string;
 
 	// ==========================================
 	// Share Text Customization (optional)
@@ -524,25 +546,25 @@ export interface GameConfig<
 	 * Get performance emoji for share text
 	 * If not provided, uses generic emoji
 	 */
-	getShareEmoji?: (stats: GameShareStats) => string
+	getShareEmoji?: (stats: GameShareStats) => string;
 
 	/**
 	 * Get victory/loss message for share text
 	 * If not provided, uses generic message
 	 */
-	getShareMessage?: (stats: GameShareStats) => string
+	getShareMessage?: (stats: GameShareStats) => string;
 
 	/**
 	 * Get result string for share text (e.g., "3/6" for Wordle)
 	 * If not provided, returns empty string
 	 */
-	getResultString?: (stats: GameShareStats) => string
+	getResultString?: (stats: GameShareStats) => string;
 
 	/**
 	 * Get challenge message for share text
 	 * If not provided, uses generic challenge
 	 */
-	getChallengeMessage?: (stats: GameShareStats) => string
+	getChallengeMessage?: (stats: GameShareStats) => string;
 }
 
 // ==========================================
@@ -554,4 +576,4 @@ export interface GameConfig<
  * Uses 'any' for flexibility - individual game configs are typed
  */
 // biome-ignore lint/suspicious/noExplicitAny: Generic registry requires any for flexibility
-export type GameRegistry = Record<string, GameConfig<any, any, any, any>>
+export type GameRegistry = Record<string, GameConfig<any, any, any, any>>;

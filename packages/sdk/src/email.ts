@@ -7,34 +7,38 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type SendEmailRequest = components['schemas']['SendEmailRequest']
-export type SendEmailResponse = components['schemas']['SendEmailResponse']
-export type SendTemplatedEmailRequest = components['schemas']['SendTemplatedEmailRequest']
-export type SendTemplatedEmailResponse = components['schemas']['SendTemplatedEmailResponse']
-export type SendToUserRequest = components['schemas']['SendToUserRequest']
-export type SendToUserResponse = components['schemas']['SendToUserResponse']
-export type NewsletterSubscribeRequest = components['schemas']['NewsletterSubscribeRequest']
-export type NewsletterSubscribeResponse = components['schemas']['NewsletterSubscribeResponse']
+export type SendEmailRequest = components["schemas"]["SendEmailRequest"];
+export type SendEmailResponse = components["schemas"]["SendEmailResponse"];
+export type SendTemplatedEmailRequest =
+	components["schemas"]["SendTemplatedEmailRequest"];
+export type SendTemplatedEmailResponse =
+	components["schemas"]["SendTemplatedEmailResponse"];
+export type SendToUserRequest = components["schemas"]["SendToUserRequest"];
+export type SendToUserResponse = components["schemas"]["SendToUserResponse"];
+export type NewsletterSubscribeRequest =
+	components["schemas"]["NewsletterSubscribeRequest"];
+export type NewsletterSubscribeResponse =
+	components["schemas"]["NewsletterSubscribeResponse"];
 
 // SDK-specific types for convenience
 export interface SendEmailOptions {
 	/** Recipient email address */
-	to: string
+	to: string;
 	/** Email subject line */
-	subject: string
+	subject: string;
 	/** HTML content */
-	html: string
+	html: string;
 	/** Plain text content (optional fallback) */
-	text?: string
+	text?: string;
 	/** Reply-to address */
-	replyTo?: string
+	replyTo?: string;
 	/**
 	 * Idempotency key for safe retries (Stripe pattern)
 	 *
@@ -43,105 +47,105 @@ export interface SendEmailOptions {
 	 *
 	 * @example `welcome-email-${userId}`
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 export interface SendTemplatedEmailOptions {
 	/** Template name: 'welcome', 'verification', 'password_reset', 'security_alert' */
-	template: 'welcome' | 'verification' | 'password_reset' | 'security_alert'
+	template: "welcome" | "verification" | "password_reset" | "security_alert";
 	/** Recipient email address */
-	to: string
+	to: string;
 	/** Template variables */
-	data?: Record<string, unknown>
+	data?: Record<string, unknown>;
 	/**
 	 * Idempotency key for safe retries (Stripe pattern)
 	 *
 	 * @example `verification-email-${userId}`
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 export interface SendToUserOptions {
 	/** User ID to send to */
-	userId: string
+	userId: string;
 	/** Email subject line */
-	subject: string
+	subject: string;
 	/** HTML content */
-	html: string
+	html: string;
 	/** Plain text content (optional fallback) */
-	text?: string
+	text?: string;
 	/**
 	 * Idempotency key for safe retries (Stripe pattern)
 	 *
 	 * @example `notification-${userId}-${Date.now()}`
 	 */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 }
 
 export interface ScheduleEmailOptions {
 	/** Recipient email address */
-	to: string
+	to: string;
 	/** Recipient name (optional) */
-	toName?: string
+	toName?: string;
 	/** Email subject line */
-	subject: string
+	subject: string;
 	/** HTML content */
-	html?: string
+	html?: string;
 	/** Plain text content */
-	text?: string
+	text?: string;
 	/** Reply-to address */
-	replyTo?: string
+	replyTo?: string;
 	/** From email (defaults to app's configured sender) */
-	fromEmail?: string
+	fromEmail?: string;
 	/** From name */
-	fromName?: string
+	fromName?: string;
 	/** ISO timestamp for when to send */
-	scheduledFor: string
+	scheduledFor: string;
 	/** Template key for templated emails */
-	templateKey?: string
+	templateKey?: string;
 	/** Template variables */
-	templateData?: Record<string, unknown>
+	templateData?: Record<string, unknown>;
 	/** Idempotency key to prevent duplicates */
-	idempotencyKey?: string
+	idempotencyKey?: string;
 	/** Custom metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 }
 
 export interface ScheduledEmail {
-	id: string
-	to: string
-	toName: string | null
-	subject: string
-	status: 'pending' | 'queued' | 'sent' | 'cancelled' | 'failed'
-	scheduledFor: string
-	sentAt: string | null
-	createdAt: string
+	id: string;
+	to: string;
+	toName: string | null;
+	subject: string;
+	status: "pending" | "queued" | "sent" | "cancelled" | "failed";
+	scheduledFor: string;
+	sentAt: string | null;
+	createdAt: string;
 }
 
 export interface ScheduledEmailsResult {
-	emails: ScheduledEmail[]
-	total: number
-	hasMore: boolean
+	emails: ScheduledEmail[];
+	total: number;
+	hasMore: boolean;
 }
 
 export interface ScheduledEmailStats {
-	total: number
-	pending: number
-	queued: number
-	sent: number
-	cancelled: number
-	failed: number
+	total: number;
+	pending: number;
+	queued: number;
+	sent: number;
+	cancelled: number;
+	failed: number;
 }
 
 export interface ListScheduledEmailsOptions {
-	status?: 'pending' | 'queued' | 'sent' | 'cancelled' | 'failed' | 'all'
-	limit?: number
-	offset?: number
+	status?: "pending" | "queued" | "sent" | "cancelled" | "failed" | "all";
+	limit?: number;
+	offset?: number;
 }
 
 export interface SendResult {
-	id: string
-	success: boolean
+	id: string;
+	success: boolean;
 }
 
 // ============================================================================
@@ -157,8 +161,10 @@ export interface SendResult {
  * if (!configured) console.log('Please configure email settings')
  * ```
  */
-export async function isEmailConfigured(config: SylphxConfig): Promise<boolean> {
-	return callApi(config, '/email/configured', { method: 'GET' })
+export async function isEmailConfigured(
+	config: SylphxConfig,
+): Promise<boolean> {
+	return callApi(config, "/email/configured", { method: "GET" });
 }
 
 /**
@@ -176,14 +182,14 @@ export async function isEmailConfigured(config: SylphxConfig): Promise<boolean> 
  */
 export async function sendEmail(
 	config: SylphxConfig,
-	options: SendEmailOptions
+	options: SendEmailOptions,
 ): Promise<SendResult> {
-	const { idempotencyKey, ...body } = options
-	return callApi(config, '/email/send', {
-		method: 'POST',
+	const { idempotencyKey, ...body } = options;
+	return callApi(config, "/email/send", {
+		method: "POST",
 		body,
 		idempotencyKey,
-	})
+	});
 }
 
 /**
@@ -201,14 +207,14 @@ export async function sendEmail(
  */
 export async function sendTemplatedEmail(
 	config: SylphxConfig,
-	options: SendTemplatedEmailOptions
+	options: SendTemplatedEmailOptions,
 ): Promise<SendResult> {
-	const { idempotencyKey, ...body } = options
-	return callApi(config, '/email/send-templated', {
-		method: 'POST',
+	const { idempotencyKey, ...body } = options;
+	return callApi(config, "/email/send-templated", {
+		method: "POST",
 		body,
 		idempotencyKey,
-	})
+	});
 }
 
 /**
@@ -226,14 +232,14 @@ export async function sendTemplatedEmail(
  */
 export async function sendEmailToUser(
 	config: SylphxConfig,
-	options: SendToUserOptions
+	options: SendToUserOptions,
 ): Promise<SendResult> {
-	const { idempotencyKey, ...body } = options
-	return callApi(config, '/email/send-to-user', {
-		method: 'POST',
+	const { idempotencyKey, ...body } = options;
+	return callApi(config, "/email/send-to-user", {
+		method: "POST",
 		body,
 		idempotencyKey,
-	})
+	});
 }
 
 /**
@@ -251,9 +257,9 @@ export async function sendEmailToUser(
  */
 export async function scheduleEmail(
 	config: SylphxConfig,
-	options: ScheduleEmailOptions
+	options: ScheduleEmailOptions,
 ): Promise<ScheduledEmail> {
-	return callApi(config, '/email/schedule', { method: 'POST', body: options })
+	return callApi(config, "/email/schedule", { method: "POST", body: options });
 }
 
 /**
@@ -269,12 +275,12 @@ export async function scheduleEmail(
  */
 export async function listScheduledEmails(
 	config: SylphxConfig,
-	options?: ListScheduledEmailsOptions
+	options?: ListScheduledEmailsOptions,
 ): Promise<ScheduledEmailsResult> {
-	return callApi(config, '/email/scheduled', {
-		method: 'GET',
+	return callApi(config, "/email/scheduled", {
+		method: "GET",
 		query: options as Record<string, string | number | undefined>,
-	})
+	});
 }
 
 /**
@@ -288,9 +294,9 @@ export async function listScheduledEmails(
  */
 export async function getScheduledEmail(
 	config: SylphxConfig,
-	emailId: string
+	emailId: string,
 ): Promise<ScheduledEmail> {
-	return callApi(config, `/email/scheduled/${emailId}`, { method: 'GET' })
+	return callApi(config, `/email/scheduled/${emailId}`, { method: "GET" });
 }
 
 /**
@@ -303,9 +309,11 @@ export async function getScheduledEmail(
  */
 export async function cancelScheduledEmail(
 	config: SylphxConfig,
-	emailId: string
+	emailId: string,
 ): Promise<void> {
-	return callApi(config, `/email/scheduled/${emailId}/cancel`, { method: 'POST' })
+	return callApi(config, `/email/scheduled/${emailId}/cancel`, {
+		method: "POST",
+	});
 }
 
 /**
@@ -319,12 +327,12 @@ export async function cancelScheduledEmail(
 export async function rescheduleEmail(
 	config: SylphxConfig,
 	emailId: string,
-	scheduledFor: string
+	scheduledFor: string,
 ): Promise<ScheduledEmail> {
 	return callApi(config, `/email/scheduled/${emailId}/reschedule`, {
-		method: 'POST',
+		method: "POST",
 		body: { scheduledFor },
-	})
+	});
 }
 
 /**
@@ -336,6 +344,8 @@ export async function rescheduleEmail(
  * console.log(`${stats.pending} emails pending`)
  * ```
  */
-export async function getScheduledEmailStats(config: SylphxConfig): Promise<ScheduledEmailStats> {
-	return callApi(config, '/email/scheduled/stats', { method: 'GET' })
+export async function getScheduledEmailStats(
+	config: SylphxConfig,
+): Promise<ScheduledEmailStats> {
+	return callApi(config, "/email/scheduled/stats", { method: "GET" });
 }

@@ -5,4 +5,4 @@
  */
 
 /** Standard uppercase English alphabet */
-export const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+export const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

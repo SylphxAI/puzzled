@@ -1,167 +1,167 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1765831394077,
-      "tag": "0000_youthful_red_ghost",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765832455886,
-      "tag": "0001_last_smasher",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765842528606,
-      "tag": "0002_jazzy_overlord",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1765845100867,
-      "tag": "0003_bored_kinsey_walden",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1765903517775,
-      "tag": "0004_harsh_meteorite",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1765934897675,
-      "tag": "0005_wet_scarlet_spider",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1765945113555,
-      "tag": "0006_long_killraven",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1765946430707,
-      "tag": "0007_rainy_masked_marvel",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1765946669743,
-      "tag": "0008_deep_odin",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1765979028273,
-      "tag": "0009_sad_old_lace",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1765982365944,
-      "tag": "0010_violet_ulik",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1765993062116,
-      "tag": "0011_illegal_clint_barton",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1766549450181,
-      "tag": "0012_flat_sasquatch",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "7",
-      "when": 1766690561660,
-      "tag": "0015_busy_valkyrie",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "7",
-      "when": 1767100374608,
-      "tag": "0016_magenta_sprite",
-      "breakpoints": true
-    },
-    {
-      "idx": 17,
-      "version": "7",
-      "when": 1767102702996,
-      "tag": "0017_productive_ironclad",
-      "breakpoints": true
-    },
-    {
-      "idx": 18,
-      "version": "7",
-      "when": 1767781817465,
-      "tag": "0018_glamorous_brother_voodoo",
-      "breakpoints": true
-    },
-    {
-      "idx": 19,
-      "version": "7",
-      "when": 1767782000000,
-      "tag": "0019_eliminate_games_table",
-      "breakpoints": true
-    },
-    {
-      "idx": 20,
-      "version": "7",
-      "when": 1767782100000,
-      "tag": "0020_add_puzzle_difficulty",
-      "breakpoints": true
-    },
-    {
-      "idx": 21,
-      "version": "7",
-      "when": 1767782200000,
-      "tag": "0021_platform_migration",
-      "breakpoints": true
-    },
-    {
-      "idx": 22,
-      "version": "7",
-      "when": 1767782300000,
-      "tag": "0022_add_email_to_display_cache",
-      "breakpoints": true
-    },
-    {
-      "idx": 23,
-      "version": "7",
-      "when": 1769280000000,
-      "tag": "0023_add_locale_to_preferences",
-      "breakpoints": true
-    },
-    {
-      "idx": 24,
-      "version": "7",
-      "when": 1769400000000,
-      "tag": "0024_platform_engagement_migration",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1765831394077,
+			"tag": "0000_youthful_red_ghost",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1765832455886,
+			"tag": "0001_last_smasher",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1765842528606,
+			"tag": "0002_jazzy_overlord",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1765845100867,
+			"tag": "0003_bored_kinsey_walden",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1765903517775,
+			"tag": "0004_harsh_meteorite",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1765934897675,
+			"tag": "0005_wet_scarlet_spider",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1765945113555,
+			"tag": "0006_long_killraven",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1765946430707,
+			"tag": "0007_rainy_masked_marvel",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1765946669743,
+			"tag": "0008_deep_odin",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1765979028273,
+			"tag": "0009_sad_old_lace",
+			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1765982365944,
+			"tag": "0010_violet_ulik",
+			"breakpoints": true
+		},
+		{
+			"idx": 11,
+			"version": "7",
+			"when": 1765993062116,
+			"tag": "0011_illegal_clint_barton",
+			"breakpoints": true
+		},
+		{
+			"idx": 12,
+			"version": "7",
+			"when": 1766549450181,
+			"tag": "0012_flat_sasquatch",
+			"breakpoints": true
+		},
+		{
+			"idx": 15,
+			"version": "7",
+			"when": 1766690561660,
+			"tag": "0015_busy_valkyrie",
+			"breakpoints": true
+		},
+		{
+			"idx": 16,
+			"version": "7",
+			"when": 1767100374608,
+			"tag": "0016_magenta_sprite",
+			"breakpoints": true
+		},
+		{
+			"idx": 17,
+			"version": "7",
+			"when": 1767102702996,
+			"tag": "0017_productive_ironclad",
+			"breakpoints": true
+		},
+		{
+			"idx": 18,
+			"version": "7",
+			"when": 1767781817465,
+			"tag": "0018_glamorous_brother_voodoo",
+			"breakpoints": true
+		},
+		{
+			"idx": 19,
+			"version": "7",
+			"when": 1767782000000,
+			"tag": "0019_eliminate_games_table",
+			"breakpoints": true
+		},
+		{
+			"idx": 20,
+			"version": "7",
+			"when": 1767782100000,
+			"tag": "0020_add_puzzle_difficulty",
+			"breakpoints": true
+		},
+		{
+			"idx": 21,
+			"version": "7",
+			"when": 1767782200000,
+			"tag": "0021_platform_migration",
+			"breakpoints": true
+		},
+		{
+			"idx": 22,
+			"version": "7",
+			"when": 1767782300000,
+			"tag": "0022_add_email_to_display_cache",
+			"breakpoints": true
+		},
+		{
+			"idx": 23,
+			"version": "7",
+			"when": 1769280000000,
+			"tag": "0023_add_locale_to_preferences",
+			"breakpoints": true
+		},
+		{
+			"idx": 24,
+			"version": "7",
+			"when": 1769400000000,
+			"tag": "0024_platform_engagement_migration",
+			"breakpoints": true
+		}
+	]
 }

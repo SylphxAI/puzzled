@@ -20,29 +20,29 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import type { OAuthProvider } from '@sylphx/ui'
-import { useConfig } from './use-config'
+import type { OAuthProvider } from "@sylphx/ui";
+import { useConfig } from "./use-config";
 
 // ============================================
 // Types
 // ============================================
 
 export interface EnabledProvider {
-	id: OAuthProvider
-	name: string
+	id: OAuthProvider;
+	name: string;
 }
 
 export interface UseOAuthProvidersReturn {
 	/** List of enabled OAuth provider IDs */
-	providers: OAuthProvider[]
+	providers: OAuthProvider[];
 	/** Full provider info with names */
-	providerDetails: EnabledProvider[]
+	providerDetails: EnabledProvider[];
 	/** Always false - no client-side loading */
-	isLoading: false
+	isLoading: false;
 	/** Always null - no client-side errors */
-	error: null
+	error: null;
 }
 
 // ============================================
@@ -55,14 +55,14 @@ export interface UseOAuthProvidersReturn {
  * Reads directly from server-fetched config (instant, no loading state).
  */
 export function useOAuthProviders(): UseOAuthProvidersReturn {
-	const config = useConfig()
-	const providerDetails = config.oauthProviders as EnabledProvider[]
-	const providers = providerDetails.map((p) => p.id)
+	const config = useConfig();
+	const providerDetails = config.oauthProviders as EnabledProvider[];
+	const providers = providerDetails.map((p) => p.id);
 
 	return {
 		providers,
 		providerDetails,
 		isLoading: false,
 		error: null,
-	}
+	};
 }

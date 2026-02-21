@@ -9,32 +9,41 @@
  * - Session management
  */
 
+import {
+	ANALYTICS_FLUSH_INTERVAL_MS,
+	ANALYTICS_MAX_RETRIES,
+	ANALYTICS_RETRY_BASE_DELAY_MS,
+	ANALYTICS_RETRY_JITTER,
+	ANALYTICS_RETRY_MAX_DELAY_MS,
+	ANALYTICS_SESSION_TIMEOUT_MS,
+	SDK_API_PATH,
+} from "../../constants";
+import { Autocapture, type AutocaptureEvent } from "./autocapture";
+import {
+	NavigationTracker,
+	type PageLeaveEvent,
+	type PageViewEvent,
+	analyzeReferrer,
+} from "./navigation";
 import type {
 	AnalyticsConfig,
 	AnalyticsEvent,
-	EventProperties,
-	UserProperties,
-	GroupProperties,
-	AutocaptureConfig,
-	QueuedEvent,
-	UtmParams,
 	AttributionData,
+	AutocaptureConfig,
 	DeviceContext,
+	EventProperties,
+	GroupProperties,
 	PageContext,
 	PropertyValue,
-} from './types'
-import { DEFAULT_ANALYTICS_CONFIG, DEFAULT_AUTOCAPTURE_CONFIG, type NavigatorWithUAData } from './types'
+	QueuedEvent,
+	UserProperties,
+	UtmParams,
+} from "./types";
 import {
-	SDK_API_PATH,
-	ANALYTICS_FLUSH_INTERVAL_MS,
-	ANALYTICS_SESSION_TIMEOUT_MS,
-	ANALYTICS_RETRY_BASE_DELAY_MS,
-	ANALYTICS_RETRY_MAX_DELAY_MS,
-	ANALYTICS_RETRY_JITTER,
-	ANALYTICS_MAX_RETRIES,
-} from '../../constants'
-import { Autocapture, type AutocaptureEvent } from './autocapture'
-import { NavigationTracker, type PageViewEvent, type PageLeaveEvent, analyzeReferrer } from './navigation'
+	DEFAULT_ANALYTICS_CONFIG,
+	DEFAULT_AUTOCAPTURE_CONFIG,
+	type NavigatorWithUAData,
+} from "./types";
 
 // ==========================================
 // Analytics Tracker
@@ -46,22 +55,22 @@ import { NavigationTracker, type PageViewEvent, type PageLeaveEvent, analyzeRefe
  * Comprehensive client-side analytics with automatic event capture.
  */
 export class AnalyticsTracker {
-	private config: AnalyticsConfig
-	private distinctId: string | null = null
-	private anonymousId: string
-	private sessionId: string
-	private queue: QueuedEvent[] = []
-	private flushTimeout: ReturnType<typeof setTimeout> | null = null
-	private autocapture: Autocapture | null = null
-	private navigationTracker: NavigationTracker | null = null
-	private attribution: AttributionData = {}
-	private superProperties: EventProperties = {}
-	private isInitialized = false
+	private config: AnalyticsConfig;
+	private distinctId: string | null = null;
+	private anonymousId: string;
+	private sessionId: string;
+	private queue: QueuedEvent[] = [];
+	private flushTimeout: ReturnType<typeof setTimeout> | null = null;
+	private autocapture: Autocapture | null = null;
+	private navigationTracker: NavigationTracker | null = null;
+	private attribution: AttributionData = {};
+	private superProperties: EventProperties = {};
+	private isInitialized = false;
 
 	constructor(config: Partial<AnalyticsConfig> = {}) {
-		this.config = { ...DEFAULT_ANALYTICS_CONFIG, ...config }
-		this.anonymousId = this.getOrCreateAnonymousId()
-		this.sessionId = this.getOrCreateSessionId()
+		this.config = { ...DEFAULT_ANALYTICS_CONFIG, ...config };
+		this.anonymousId = this.getOrCreateAnonymousId();
+		this.sessionId = this.getOrCreateSessionId();
 	}
 
 	// ==========================================
@@ -72,26 +81,26 @@ export class AnalyticsTracker {
 	 * Initialize analytics
 	 */
 	init(): void {
-		if (typeof window === 'undefined') return
-		if (this.isInitialized) return
+		if (typeof window === "undefined") return;
+		if (this.isInitialized) return;
 
-		this.isInitialized = true
+		this.isInitialized = true;
 
 		// Capture initial attribution data
-		this.captureAttribution()
+		this.captureAttribution();
 
 		// Setup autocapture
 		if (this.config.autocapture) {
 			const autocaptureConfig =
-				typeof this.config.autocapture === 'object'
+				typeof this.config.autocapture === "object"
 					? this.config.autocapture
-					: DEFAULT_AUTOCAPTURE_CONFIG
+					: DEFAULT_AUTOCAPTURE_CONFIG;
 
 			this.autocapture = new Autocapture(
 				(event) => this.handleAutocaptureEvent(event),
-				autocaptureConfig
-			)
-			this.autocapture.start()
+				autocaptureConfig,
+			);
+			this.autocapture.start();
 		}
 
 		// Setup navigation tracking
@@ -100,35 +109,35 @@ export class AnalyticsTracker {
 				(event) => this.handlePageView(event),
 				this.config.capturePageleave
 					? (event) => this.handlePageLeave(event)
-					: undefined
-			)
-			this.navigationTracker.start()
+					: undefined,
+			);
+			this.navigationTracker.start();
 		}
 
 		// Load persisted queue
-		this.loadQueue()
+		this.loadQueue();
 
 		// Start flush interval
-		this.startFlushInterval()
+		this.startFlushInterval();
 
 		// Handle page unload - flush remaining events
-		window.addEventListener('beforeunload', () => this.flush())
+		window.addEventListener("beforeunload", () => this.flush());
 
-		this.debug('Analytics initialized', {
+		this.debug("Analytics initialized", {
 			anonymousId: this.anonymousId,
 			sessionId: this.sessionId,
-		})
+		});
 	}
 
 	/**
 	 * Shutdown analytics
 	 */
 	shutdown(): void {
-		this.autocapture?.stop()
-		this.navigationTracker?.stop()
-		this.stopFlushInterval()
-		this.flush()
-		this.isInitialized = false
+		this.autocapture?.stop();
+		this.navigationTracker?.stop();
+		this.stopFlushInterval();
+		this.flush();
+		this.isInitialized = false;
 	}
 
 	// ==========================================
@@ -143,67 +152,67 @@ export class AnalyticsTracker {
 	 * This ensures anonymous activity is linked to the authenticated user.
 	 */
 	identify(userId: string, properties?: UserProperties): void {
-		const previousId = this.distinctId || this.anonymousId
-		const wasAnonymous = !this.distinctId && this.anonymousId !== userId
+		const previousId = this.distinctId || this.anonymousId;
+		const wasAnonymous = !this.distinctId && this.anonymousId !== userId;
 
-		this.distinctId = userId
+		this.distinctId = userId;
 
 		// Track identify event
-		this.track('$identify', {
+		this.track("$identify", {
 			$user_id: userId,
 			$anon_distinct_id: previousId,
 			...(properties && { $set: properties }),
-		})
+		});
 
 		// Auto-alias: Link anonymous ID to authenticated user (Segment/Mixpanel pattern)
 		// This ensures all anonymous activity is associated with the user
 		if (wasAnonymous && previousId !== userId) {
-			this.track('$create_alias', {
+			this.track("$create_alias", {
 				alias: userId,
 				distinct_id: previousId,
-			})
-			this.debug('Auto-aliased anonymous ID to user', {
+			});
+			this.debug("Auto-aliased anonymous ID to user", {
 				anonymousId: previousId,
 				userId,
-			})
+			});
 		}
 
 		// Persist distinct ID
-		this.persistDistinctId(userId)
+		this.persistDistinctId(userId);
 
-		this.debug('User identified', { userId, previousId })
+		this.debug("User identified", { userId, previousId });
 	}
 
 	/**
 	 * Reset identity (logout)
 	 */
 	reset(): void {
-		this.distinctId = null
-		this.anonymousId = this.generateId()
-		this.sessionId = this.generateId()
-		this.superProperties = {}
+		this.distinctId = null;
+		this.anonymousId = this.generateId();
+		this.sessionId = this.generateId();
+		this.superProperties = {};
 
-		this.persistAnonymousId(this.anonymousId)
-		this.clearDistinctId()
+		this.persistAnonymousId(this.anonymousId);
+		this.clearDistinctId();
 
-		this.debug('Identity reset', { anonymousId: this.anonymousId })
+		this.debug("Identity reset", { anonymousId: this.anonymousId });
 	}
 
 	/**
 	 * Alias an identity
 	 */
 	alias(alias: string): void {
-		this.track('$create_alias', {
+		this.track("$create_alias", {
 			alias,
 			distinct_id: this.getDistinctId(),
-		})
+		});
 	}
 
 	/**
 	 * Get current distinct ID
 	 */
 	getDistinctId(): string {
-		return this.distinctId || this.anonymousId
+		return this.distinctId || this.anonymousId;
 	}
 
 	// ==========================================
@@ -214,27 +223,27 @@ export class AnalyticsTracker {
 	 * Set user properties
 	 */
 	setUserProperties(properties: UserProperties): void {
-		this.track('$set', {
+		this.track("$set", {
 			$set: properties,
-		})
+		});
 	}
 
 	/**
 	 * Set user properties once (only if not already set)
 	 */
 	setUserPropertiesOnce(properties: UserProperties): void {
-		this.track('$set_once', {
+		this.track("$set_once", {
 			$set_once: properties,
-		})
+		});
 	}
 
 	/**
 	 * Increment numeric user property
 	 */
-	incrementUserProperty(property: string, value: number = 1): void {
-		this.track('$set', {
+	incrementUserProperty(property: string, value = 1): void {
+		this.track("$set", {
 			$add: { [property]: value },
-		})
+		});
 	}
 
 	// ==========================================
@@ -244,12 +253,16 @@ export class AnalyticsTracker {
 	/**
 	 * Associate user with a group
 	 */
-	group(groupType: string, groupKey: string, properties?: GroupProperties): void {
-		this.track('$groupidentify', {
+	group(
+		groupType: string,
+		groupKey: string,
+		properties?: GroupProperties,
+	): void {
+		this.track("$groupidentify", {
 			$group_type: groupType,
 			$group_key: groupKey,
 			...(properties && { $group_set: properties }),
-		})
+		});
 	}
 
 	// ==========================================
@@ -260,18 +273,18 @@ export class AnalyticsTracker {
 	 * Track a custom event
 	 */
 	track(eventName: string, properties: EventProperties = {}): void {
-		const event = this.buildEvent(eventName, properties)
+		const event = this.buildEvent(eventName, properties);
 
 		// Apply beforeSend hook
 		if (this.config.beforeSend) {
-			const processedEvent = this.config.beforeSend(event)
-			if (!processedEvent) return
-			this.enqueue(processedEvent)
+			const processedEvent = this.config.beforeSend(event);
+			if (!processedEvent) return;
+			this.enqueue(processedEvent);
 		} else {
-			this.enqueue(event)
+			this.enqueue(event);
 		}
 
-		this.debug('Event tracked', { event: eventName, properties })
+		this.debug("Event tracked", { event: eventName, properties });
 	}
 
 	/**
@@ -281,7 +294,7 @@ export class AnalyticsTracker {
 		this.superProperties = {
 			...this.superProperties,
 			...properties,
-		}
+		};
 	}
 
 	/**
@@ -290,7 +303,7 @@ export class AnalyticsTracker {
 	registerOnce(properties: EventProperties): void {
 		for (const [key, value] of Object.entries(properties)) {
 			if (!(key in this.superProperties)) {
-				this.superProperties[key] = value
+				this.superProperties[key] = value;
 			}
 		}
 	}
@@ -299,15 +312,18 @@ export class AnalyticsTracker {
 	 * Unregister a super property
 	 */
 	unregister(propertyName: string): void {
-		delete this.superProperties[propertyName]
+		delete this.superProperties[propertyName];
 	}
 
 	// ==========================================
 	// Event Building
 	// ==========================================
 
-	private buildEvent(eventName: string, properties: EventProperties): AnalyticsEvent {
-		const timestamp = new Date().toISOString()
+	private buildEvent(
+		eventName: string,
+		properties: EventProperties,
+	): AnalyticsEvent {
+		const timestamp = new Date().toISOString();
 
 		// Merge properties
 		let mergedProperties: EventProperties = {
@@ -318,18 +334,18 @@ export class AnalyticsTracker {
 			...this.getPageContext(),
 			...properties,
 			$session_id: this.sessionId,
-		}
+		};
 
 		// Apply denylist
 		if (this.config.propertyDenylist) {
 			for (const key of this.config.propertyDenylist) {
-				delete mergedProperties[key]
+				delete mergedProperties[key];
 			}
 		}
 
 		// Apply sanitization
 		if (this.config.sanitize) {
-			mergedProperties = this.config.sanitize(mergedProperties)
+			mergedProperties = this.config.sanitize(mergedProperties);
 		}
 
 		return {
@@ -337,9 +353,9 @@ export class AnalyticsTracker {
 			properties: mergedProperties,
 			distinct_id: this.getDistinctId(),
 			timestamp,
-			$lib: 'sylphx-sdk',
-			$lib_version: '1.0.0',
-		}
+			$lib: "sylphx-sdk",
+			$lib_version: "1.0.0",
+		};
 	}
 
 	// ==========================================
@@ -347,7 +363,7 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private handleAutocaptureEvent(event: AutocaptureEvent): void {
-		this.track('$autocapture', {
+		this.track("$autocapture", {
 			$event_type: event.eventType,
 			// ElementData[] is semantically compatible with PropertyValue (array of objects)
 			// but TypeScript requires explicit cast due to index signature differences
@@ -355,14 +371,14 @@ export class AnalyticsTracker {
 			$elements: event.elements as unknown as PropertyValue,
 			$element_name: event.elementName,
 			...event.properties,
-		})
+		});
 
 		// Also track as a named event for easier querying
 		this.track(event.eventName, {
 			$autocaptured: true,
 			$element_name: event.elementName,
 			...event.properties,
-		})
+		});
 	}
 
 	// ==========================================
@@ -370,7 +386,7 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private handlePageView(event: PageViewEvent): void {
-		this.track('$pageview', {
+		this.track("$pageview", {
 			...event.context,
 			...(event.utm || {}),
 			$title: event.title,
@@ -381,16 +397,16 @@ export class AnalyticsTracker {
 			...(event.previousScrollDepth !== undefined && {
 				$previous_scroll_depth: event.previousScrollDepth,
 			}),
-		})
+		});
 	}
 
 	private handlePageLeave(event: PageLeaveEvent): void {
-		this.track('$pageleave', {
+		this.track("$pageleave", {
 			$current_url: event.url,
 			$pathname: event.path,
 			$time_on_page: event.timeOnPage,
 			$scroll_depth: event.scrollDepth,
-		})
+		});
 	}
 
 	// ==========================================
@@ -402,13 +418,13 @@ export class AnalyticsTracker {
 			event,
 			timestamp: Date.now(),
 			retries: 0,
-		})
+		});
 
-		this.persistQueue()
+		this.persistQueue();
 
 		// Check if we should flush
 		if (this.queue.length >= (this.config.batchSize ?? 10)) {
-			this.flush()
+			this.flush();
 		}
 	}
 
@@ -422,64 +438,64 @@ export class AnalyticsTracker {
 	 * - Max retries: 10
 	 */
 	async flush(): Promise<void> {
-		if (this.queue.length === 0) return
+		if (this.queue.length === 0) return;
 
-		const now = Date.now()
+		const now = Date.now();
 
 		// Filter to only events ready for retry (backoff elapsed)
-		const readyEvents: QueuedEvent[] = []
-		const pendingEvents: QueuedEvent[] = []
+		const readyEvents: QueuedEvent[] = [];
+		const pendingEvents: QueuedEvent[] = [];
 
 		for (const item of this.queue) {
 			if (!item.nextRetryAt || item.nextRetryAt <= now) {
-				readyEvents.push(item)
+				readyEvents.push(item);
 			} else {
-				pendingEvents.push(item)
+				pendingEvents.push(item);
 			}
 		}
 
 		if (readyEvents.length === 0) {
-			this.debug('No events ready for flush (backoff pending)', {
+			this.debug("No events ready for flush (backoff pending)", {
 				pendingCount: pendingEvents.length,
-			})
-			return
+			});
+			return;
 		}
 
 		// Take batch from ready events
-		const batchSize = this.config.batchSize ?? 10
-		const batch = readyEvents.splice(0, batchSize)
+		const batchSize = this.config.batchSize ?? 10;
+		const batch = readyEvents.splice(0, batchSize);
 
 		// Update queue: remaining ready events + pending events
-		this.queue = [...readyEvents, ...pendingEvents]
+		this.queue = [...readyEvents, ...pendingEvents];
 
 		try {
-			await this.sendBatch(batch.map((q) => q.event))
-			this.persistQueue()
+			await this.sendBatch(batch.map((q) => q.event));
+			this.persistQueue();
 		} catch (error) {
 			// Put failed events back with exponential backoff
 			for (const item of batch) {
 				if (item.retries < ANALYTICS_MAX_RETRIES) {
-					const nextRetry = item.retries + 1
-					const delay = this.calculateBackoffDelay(nextRetry)
+					const nextRetry = item.retries + 1;
+					const delay = this.calculateBackoffDelay(nextRetry);
 					this.queue.unshift({
 						...item,
 						retries: nextRetry,
 						nextRetryAt: now + delay,
-					})
+					});
 				} else {
 					// Max retries exceeded - drop event
-					this.debug('Event dropped after max retries', {
+					this.debug("Event dropped after max retries", {
 						event: item.event.event,
 						retries: item.retries,
-					})
+					});
 				}
 			}
-			this.persistQueue()
-			this.debug('Flush failed, scheduling retry with backoff', {
+			this.persistQueue();
+			this.debug("Flush failed, scheduling retry with backoff", {
 				error,
 				retriesRemaining: ANALYTICS_MAX_RETRIES - (batch[0]?.retries ?? 0),
 				nextRetryIn: this.calculateBackoffDelay((batch[0]?.retries ?? 0) + 1),
-			})
+			});
 		}
 	}
 
@@ -491,41 +507,46 @@ export class AnalyticsTracker {
 	 */
 	private calculateBackoffDelay(retryCount: number): number {
 		// Exponential: base * 2^retries
-		const exponentialDelay = ANALYTICS_RETRY_BASE_DELAY_MS * Math.pow(2, retryCount - 1)
+		const exponentialDelay =
+			ANALYTICS_RETRY_BASE_DELAY_MS * Math.pow(2, retryCount - 1);
 
 		// Cap at max delay
-		const cappedDelay = Math.min(exponentialDelay, ANALYTICS_RETRY_MAX_DELAY_MS)
+		const cappedDelay = Math.min(
+			exponentialDelay,
+			ANALYTICS_RETRY_MAX_DELAY_MS,
+		);
 
 		// Add jitter: ±JITTER%
-		const jitterRange = cappedDelay * ANALYTICS_RETRY_JITTER
-		const jitter = (Math.random() * 2 - 1) * jitterRange
+		const jitterRange = cappedDelay * ANALYTICS_RETRY_JITTER;
+		const jitter = (Math.random() * 2 - 1) * jitterRange;
 
-		return Math.round(cappedDelay + jitter)
+		return Math.round(cappedDelay + jitter);
 	}
 
 	private async sendBatch(events: AnalyticsEvent[]): Promise<void> {
-		const endpoint = this.config.apiEndpoint ?? `${SDK_API_PATH}/analytics/track`
+		const endpoint =
+			this.config.apiEndpoint ?? `${SDK_API_PATH}/analytics/track`;
 
 		const payload = {
 			events: events,
-		}
+		};
 
 		const headers: Record<string, string> = {
-			'Content-Type': 'application/json',
-		}
+			"Content-Type": "application/json",
+		};
 		if (this.config.apiKey) {
-			headers['x-app-secret'] = this.config.apiKey
+			headers["x-app-secret"] = this.config.apiKey;
 		}
 
 		const response = await fetch(endpoint, {
-			method: 'POST',
+			method: "POST",
 			headers,
 			body: JSON.stringify(payload),
 			keepalive: true, // Allow request to complete on page unload
-		})
+		});
 
 		if (!response.ok) {
-			throw new Error(`Analytics send failed: ${response.status}`)
+			throw new Error(`Analytics send failed: ${response.status}`);
 		}
 	}
 
@@ -534,24 +555,24 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private startFlushInterval(): void {
-		if (this.flushTimeout) return
+		if (this.flushTimeout) return;
 
-		const interval = this.config.flushInterval ?? ANALYTICS_FLUSH_INTERVAL_MS
+		const interval = this.config.flushInterval ?? ANALYTICS_FLUSH_INTERVAL_MS;
 
 		const scheduleFlush = () => {
 			this.flushTimeout = setTimeout(() => {
-				void this.flush()
-				scheduleFlush()
-			}, interval)
-		}
+				void this.flush();
+				scheduleFlush();
+			}, interval);
+		};
 
-		scheduleFlush()
+		scheduleFlush();
 	}
 
 	private stopFlushInterval(): void {
 		if (this.flushTimeout) {
-			clearTimeout(this.flushTimeout)
-			this.flushTimeout = null
+			clearTimeout(this.flushTimeout);
+			this.flushTimeout = null;
 		}
 	}
 
@@ -568,7 +589,7 @@ export class AnalyticsTracker {
 	 * @see https://developer.mozilla.org/en-US/docs/Web/API/User-Agent_Client_Hints_API
 	 */
 	private getDeviceContext(): DeviceContext {
-		if (typeof window === 'undefined') return {}
+		if (typeof window === "undefined") return {};
 
 		const context: DeviceContext = {
 			$screen_height: window.screen.height,
@@ -578,110 +599,111 @@ export class AnalyticsTracker {
 			$device_pixel_ratio: window.devicePixelRatio,
 			$browser_language: navigator.language,
 			$timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-		}
+		};
 
 		// Use User-Agent Client Hints API if available (Chromium browsers)
 		// @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData
-		const uaData = (navigator as NavigatorWithUAData).userAgentData
+		const uaData = (navigator as NavigatorWithUAData).userAgentData;
 		if (uaData) {
 			// Sync properties (low entropy, always available)
-			context.$device_type = uaData.mobile ? 'Mobile' : 'Desktop'
-			context.$os = uaData.platform
+			context.$device_type = uaData.mobile ? "Mobile" : "Desktop";
+			context.$os = uaData.platform;
 
 			// Get browser from brands (use first significant brand)
 			const brand = uaData.brands?.find(
-				(b) => !b.brand.includes('Not') && b.brand !== 'Chromium'
-			)
+				(b) => !b.brand.includes("Not") && b.brand !== "Chromium",
+			);
 			if (brand) {
-				context.$browser = brand.brand
-				context.$browser_version = brand.version
+				context.$browser = brand.brand;
+				context.$browser_version = brand.version;
 			}
 		} else {
 			// Fallback: Basic detection from user agent string
-			context.$device_type = this.detectDeviceType()
-			const browserInfo = this.detectBrowser()
-			context.$browser = browserInfo.name
-			context.$browser_version = browserInfo.version
-			context.$os = this.detectOS()
+			context.$device_type = this.detectDeviceType();
+			const browserInfo = this.detectBrowser();
+			context.$browser = browserInfo.name;
+			context.$browser_version = browserInfo.version;
+			context.$os = this.detectOS();
 		}
 
-		return context
+		return context;
 	}
 
 	/**
 	 * Detect device type from screen size (fallback when Client Hints unavailable)
 	 */
-	private detectDeviceType(): DeviceContext['$device_type'] {
-		if (typeof window === 'undefined') return undefined
+	private detectDeviceType(): DeviceContext["$device_type"] {
+		if (typeof window === "undefined") return undefined;
 
-		const width = window.screen.width
-		const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+		const width = window.screen.width;
+		const isTouchDevice =
+			"ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-		if (!isTouchDevice) return 'Desktop'
-		if (width < 768) return 'Mobile'
-		if (width < 1024) return 'Tablet'
-		return 'Desktop'
+		if (!isTouchDevice) return "Desktop";
+		if (width < 768) return "Mobile";
+		if (width < 1024) return "Tablet";
+		return "Desktop";
 	}
 
 	/**
 	 * Detect browser from user agent (fallback when Client Hints unavailable)
 	 */
 	private detectBrowser(): { name?: string; version?: string } {
-		if (typeof navigator === 'undefined') return {}
+		if (typeof navigator === "undefined") return {};
 
-		const ua = navigator.userAgent
-		let name: string | undefined
-		let version: string | undefined
+		const ua = navigator.userAgent;
+		let name: string | undefined;
+		let version: string | undefined;
 
 		// Order matters - check specific browsers first
-		if (ua.includes('Firefox/')) {
-			name = 'Firefox'
-			version = ua.match(/Firefox\/(\d+\.\d+)/)?.[1]
-		} else if (ua.includes('Edg/')) {
-			name = 'Edge'
-			version = ua.match(/Edg\/(\d+\.\d+)/)?.[1]
-		} else if (ua.includes('Chrome/')) {
-			name = 'Chrome'
-			version = ua.match(/Chrome\/(\d+\.\d+)/)?.[1]
-		} else if (ua.includes('Safari/') && !ua.includes('Chrome')) {
-			name = 'Safari'
-			version = ua.match(/Version\/(\d+\.\d+)/)?.[1]
+		if (ua.includes("Firefox/")) {
+			name = "Firefox";
+			version = ua.match(/Firefox\/(\d+\.\d+)/)?.[1];
+		} else if (ua.includes("Edg/")) {
+			name = "Edge";
+			version = ua.match(/Edg\/(\d+\.\d+)/)?.[1];
+		} else if (ua.includes("Chrome/")) {
+			name = "Chrome";
+			version = ua.match(/Chrome\/(\d+\.\d+)/)?.[1];
+		} else if (ua.includes("Safari/") && !ua.includes("Chrome")) {
+			name = "Safari";
+			version = ua.match(/Version\/(\d+\.\d+)/)?.[1];
 		}
 
-		return { name, version }
+		return { name, version };
 	}
 
 	/**
 	 * Detect OS from user agent (fallback when Client Hints unavailable)
 	 */
 	private detectOS(): string | undefined {
-		if (typeof navigator === 'undefined') return undefined
+		if (typeof navigator === "undefined") return undefined;
 
-		const ua = navigator.userAgent
+		const ua = navigator.userAgent;
 
-		if (ua.includes('Windows')) return 'Windows'
-		if (ua.includes('Mac OS X')) return 'macOS'
-		if (ua.includes('Linux')) return 'Linux'
-		if (ua.includes('Android')) return 'Android'
-		if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS'
+		if (ua.includes("Windows")) return "Windows";
+		if (ua.includes("Mac OS X")) return "macOS";
+		if (ua.includes("Linux")) return "Linux";
+		if (ua.includes("Android")) return "Android";
+		if (ua.includes("iPhone") || ua.includes("iPad")) return "iOS";
 
-		return undefined
+		return undefined;
 	}
 
 	private getPageContext(): PageContext {
-		if (typeof window === 'undefined') {
+		if (typeof window === "undefined") {
 			return {
-				$current_url: '',
-				$host: '',
-				$pathname: '',
-			}
+				$current_url: "",
+				$host: "",
+				$pathname: "",
+			};
 		}
 
 		return {
 			$current_url: window.location.href,
 			$host: window.location.host,
 			$pathname: window.location.pathname,
-		}
+		};
 	}
 
 	// ==========================================
@@ -689,42 +711,53 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private captureAttribution(): void {
-		if (typeof window === 'undefined') return
+		if (typeof window === "undefined") return;
 
 		// UTM params
-		const params = new URLSearchParams(window.location.search)
-		const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const
+		const params = new URLSearchParams(window.location.search);
+		const utmKeys = [
+			"utm_source",
+			"utm_medium",
+			"utm_campaign",
+			"utm_term",
+			"utm_content",
+		] as const;
 
 		for (const key of utmKeys) {
-			const value = params.get(key)
+			const value = params.get(key);
 			if (value) {
-				(this.attribution as Record<string, string | undefined>)[key] = value
+				(this.attribution as Record<string, string | undefined>)[key] = value;
 
 				// Also store as initial if not already set
-				const initialKey = `$initial_${key}`
+				const initialKey = `$initial_${key}`;
 				if (!this.loadInitialAttribution(initialKey as keyof AttributionData)) {
-					(this.attribution as Record<string, string | undefined>)[initialKey] = value
-					this.persistInitialAttribution(initialKey as keyof AttributionData, value)
+					(this.attribution as Record<string, string | undefined>)[initialKey] =
+						value;
+					this.persistInitialAttribution(
+						initialKey as keyof AttributionData,
+						value,
+					);
 				}
 			}
 		}
 
 		// Referrer
-		const referrer = document.referrer
+		const referrer = document.referrer;
 		if (referrer) {
-			const referrerData = analyzeReferrer(referrer)
-			this.attribution = { ...this.attribution, ...referrerData }
+			const referrerData = analyzeReferrer(referrer);
+			this.attribution = { ...this.attribution, ...referrerData };
 
 			// Store initial referrer
-			if (!this.loadInitialAttribution('$initial_referrer')) {
-				this.attribution.$initial_referrer = referrer
-				this.attribution.$initial_referring_domain = referrerData.$referring_domain
-				this.persistInitialAttribution('$initial_referrer', referrer)
+			if (!this.loadInitialAttribution("$initial_referrer")) {
+				this.attribution.$initial_referrer = referrer;
+				this.attribution.$initial_referring_domain =
+					referrerData.$referring_domain;
+				this.persistInitialAttribution("$initial_referrer", referrer);
 				if (referrerData.$referring_domain) {
 					this.persistInitialAttribution(
-						'$initial_referring_domain',
-						referrerData.$referring_domain
-					)
+						"$initial_referring_domain",
+						referrerData.$referring_domain,
+					);
 				}
 			}
 		}
@@ -735,123 +768,130 @@ export class AnalyticsTracker {
 	// ==========================================
 
 	private getStorageKey(suffix: string): string {
-		return `sylphx_analytics_${suffix}`
+		return `sylphx_analytics_${suffix}`;
 	}
 
 	private getStorage(): Storage | null {
-		if (typeof window === 'undefined') return null
+		if (typeof window === "undefined") return null;
 
 		switch (this.config.persistence) {
-			case 'localStorage':
-				return localStorage
-			case 'cookie':
+			case "localStorage":
+				return localStorage;
+			case "cookie":
 				// Cookie storage handled separately via document.cookie
 				// Fall back to localStorage for compatibility
-				return localStorage
-			case 'none':
-				return null
+				return localStorage;
+			case "none":
+				return null;
 			default:
-				return localStorage
+				return localStorage;
 		}
 	}
 
 	private getOrCreateAnonymousId(): string {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			const stored = storage.getItem(this.getStorageKey('anon_id'))
-			if (stored) return stored
+			const stored = storage.getItem(this.getStorageKey("anon_id"));
+			if (stored) return stored;
 		}
 
-		const id = this.generateId()
-		this.persistAnonymousId(id)
-		return id
+		const id = this.generateId();
+		this.persistAnonymousId(id);
+		return id;
 	}
 
 	private persistAnonymousId(id: string): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			storage.setItem(this.getStorageKey('anon_id'), id)
+			storage.setItem(this.getStorageKey("anon_id"), id);
 		}
 	}
 
 	private persistDistinctId(id: string): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			storage.setItem(this.getStorageKey('distinct_id'), id)
+			storage.setItem(this.getStorageKey("distinct_id"), id);
 		}
 	}
 
 	private clearDistinctId(): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			storage.removeItem(this.getStorageKey('distinct_id'))
+			storage.removeItem(this.getStorageKey("distinct_id"));
 		}
 	}
 
 	private getOrCreateSessionId(): string {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			const stored = storage.getItem(this.getStorageKey('session_id'))
-			const timestamp = storage.getItem(this.getStorageKey('session_ts'))
+			const stored = storage.getItem(this.getStorageKey("session_id"));
+			const timestamp = storage.getItem(this.getStorageKey("session_ts"));
 
 			if (stored && timestamp) {
-				const lastActivity = parseInt(timestamp, 10)
-				const timeout = this.config.sessionTimeout ?? ANALYTICS_SESSION_TIMEOUT_MS
+				const lastActivity = Number.parseInt(timestamp, 10);
+				const timeout =
+					this.config.sessionTimeout ?? ANALYTICS_SESSION_TIMEOUT_MS;
 
 				if (Date.now() - lastActivity < timeout) {
 					// Update timestamp
-					storage.setItem(this.getStorageKey('session_ts'), Date.now().toString())
-					return stored
+					storage.setItem(
+						this.getStorageKey("session_ts"),
+						Date.now().toString(),
+					);
+					return stored;
 				}
 			}
 		}
 
-		const id = this.generateId()
-		this.persistSessionId(id)
-		return id
+		const id = this.generateId();
+		this.persistSessionId(id);
+		return id;
 	}
 
 	private persistSessionId(id: string): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			storage.setItem(this.getStorageKey('session_id'), id)
-			storage.setItem(this.getStorageKey('session_ts'), Date.now().toString())
+			storage.setItem(this.getStorageKey("session_id"), id);
+			storage.setItem(this.getStorageKey("session_ts"), Date.now().toString());
 		}
 	}
 
 	private loadQueue(): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			const stored = storage.getItem(this.getStorageKey('queue'))
+			const stored = storage.getItem(this.getStorageKey("queue"));
 			if (stored) {
 				try {
-					this.queue = JSON.parse(stored)
+					this.queue = JSON.parse(stored);
 				} catch {
-					this.queue = []
+					this.queue = [];
 				}
 			}
 		}
 	}
 
 	private persistQueue(): void {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			storage.setItem(this.getStorageKey('queue'), JSON.stringify(this.queue))
+			storage.setItem(this.getStorageKey("queue"), JSON.stringify(this.queue));
 		}
 	}
 
 	private loadInitialAttribution(key: keyof AttributionData): string | null {
-		const storage = this.getStorage()
+		const storage = this.getStorage();
 		if (storage) {
-			return storage.getItem(this.getStorageKey(key))
+			return storage.getItem(this.getStorageKey(key));
 		}
-		return null
+		return null;
 	}
 
-	private persistInitialAttribution(key: keyof AttributionData, value: string): void {
-		const storage = this.getStorage()
+	private persistInitialAttribution(
+		key: keyof AttributionData,
+		value: string,
+	): void {
+		const storage = this.getStorage();
 		if (storage) {
-			storage.setItem(this.getStorageKey(key), value)
+			storage.setItem(this.getStorageKey(key), value);
 		}
 	}
 
@@ -861,19 +901,19 @@ export class AnalyticsTracker {
 
 	private generateId(): string {
 		// Use crypto.randomUUID if available, otherwise fallback to manual UUID v4
-		if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-			return crypto.randomUUID()
+		if (typeof crypto !== "undefined" && crypto.randomUUID) {
+			return crypto.randomUUID();
 		}
-		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-			const r = (Math.random() * 16) | 0
-			const v = c === 'x' ? r : (r & 0x3) | 0x8
-			return v.toString(16)
-		})
+		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+			const r = (Math.random() * 16) | 0;
+			const v = c === "x" ? r : (r & 0x3) | 0x8;
+			return v.toString(16);
+		});
 	}
 
 	private debug(message: string, data?: unknown): void {
 		if (this.config.debug) {
-			console.log(`[Analytics] ${message}`, data ?? '')
+			console.log(`[Analytics] ${message}`, data ?? "");
 		}
 	}
 }
@@ -882,31 +922,35 @@ export class AnalyticsTracker {
 // Singleton
 // ==========================================
 
-let trackerInstance: AnalyticsTracker | null = null
+let trackerInstance: AnalyticsTracker | null = null;
 
 /**
  * Get or create analytics tracker
  */
-export function getAnalyticsTracker(config?: Partial<AnalyticsConfig>): AnalyticsTracker {
+export function getAnalyticsTracker(
+	config?: Partial<AnalyticsConfig>,
+): AnalyticsTracker {
 	if (!trackerInstance) {
-		trackerInstance = new AnalyticsTracker(config)
+		trackerInstance = new AnalyticsTracker(config);
 	}
-	return trackerInstance
+	return trackerInstance;
 }
 
 /**
  * Initialize analytics
  */
-export function initAnalytics(config?: Partial<AnalyticsConfig>): AnalyticsTracker {
-	const tracker = getAnalyticsTracker(config)
-	tracker.init()
-	return tracker
+export function initAnalytics(
+	config?: Partial<AnalyticsConfig>,
+): AnalyticsTracker {
+	const tracker = getAnalyticsTracker(config);
+	tracker.init();
+	return tracker;
 }
 
 /**
  * Reset analytics instance (for testing)
  */
 export function resetAnalyticsTracker(): void {
-	trackerInstance?.shutdown()
-	trackerInstance = null
+	trackerInstance?.shutdown();
+	trackerInstance = null;
 }

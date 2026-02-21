@@ -1,36 +1,36 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { Globe, Palette, Sliders } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { LanguageSwitcher } from '@/shared/components/layout'
-import { ThemeToggle } from '@/shared/components/theme'
+import { LanguageSwitcher } from "@/shared/components/layout";
+import { ThemeToggle } from "@/shared/components/theme";
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { Globe, Palette, Sliders } from "lucide-react";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings" });
 
 	return {
-		title: t('preferences.title'),
-	}
+		title: t("preferences.title"),
+	};
 }
 
 export default async function PreferencesPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/preferences`)
+		redirect(`/${locale}/login?callbackUrl=/settings/preferences`);
 	}
 
-	const t = await getTranslations('settings')
+	const t = await getTranslations("settings");
 
 	return (
 		<div className="space-y-6">
@@ -40,8 +40,12 @@ export default async function PreferencesPage({ params }: Props) {
 					<Sliders className="h-6 w-6 text-violet-500" />
 				</div>
 				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('preferences.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('preferences.description')}</p>
+					<h1 className="text-xl font-semibold tracking-tight">
+						{t("preferences.title")}
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						{t("preferences.description")}
+					</p>
 				</div>
 			</div>
 
@@ -52,9 +56,11 @@ export default async function PreferencesPage({ params }: Props) {
 						<Palette className="h-5 w-5 text-violet-500" />
 					</div>
 					<div className="flex-1">
-						<h2 className="font-semibold">{t('preferences.appearance.title')}</h2>
+						<h2 className="font-semibold">
+							{t("preferences.appearance.title")}
+						</h2>
 						<p className="mb-4 text-sm text-muted-foreground">
-							{t('preferences.appearance.description')}
+							{t("preferences.appearance.description")}
 						</p>
 						<ThemeToggle showLabel />
 					</div>
@@ -68,14 +74,14 @@ export default async function PreferencesPage({ params }: Props) {
 						<Globe className="h-5 w-5 text-primary" />
 					</div>
 					<div className="flex-1">
-						<h2 className="font-semibold">{t('preferences.language.title')}</h2>
+						<h2 className="font-semibold">{t("preferences.language.title")}</h2>
 						<p className="mb-4 text-sm text-muted-foreground">
-							{t('preferences.language.description')}
+							{t("preferences.language.description")}
 						</p>
 						<LanguageSwitcher variant="button" />
 					</div>
 				</div>
 			</div>
 		</div>
-	)
+	);
 }

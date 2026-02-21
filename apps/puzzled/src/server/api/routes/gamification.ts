@@ -11,15 +11,19 @@
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
-import { OpenAPIHono, z } from '@hono/zod-openapi'
-import { and, countDistinct, eq, gte, sql } from 'drizzle-orm'
-import { HTTPException } from 'hono/http-exception'
-import { getTodayUTC } from '@/features/daily/server'
-import { getAllGames, getGameConfig } from '@/games/registry'
-import { db } from '@/lib/db'
-import { gameSessions, userFreezeData } from '@/lib/db/schema'
-import { adminMiddleware, authMiddleware, authRateLimitMiddleware } from '../middleware'
-import type { PuzzledAuthEnv } from '../types'
+import { getTodayUTC } from "@/features/daily/server";
+import { getAllGames, getGameConfig } from "@/games/registry";
+import { db } from "@/lib/db";
+import { gameSessions, userFreezeData } from "@/lib/db/schema";
+import { OpenAPIHono, z } from "@hono/zod-openapi";
+import { and, countDistinct, eq, gte, sql } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
+import {
+	adminMiddleware,
+	authMiddleware,
+	authRateLimitMiddleware,
+} from "../middleware";
+import type { PuzzledAuthEnv } from "../types";
 
 // ==========================================
 // Schemas
@@ -27,13 +31,19 @@ import type { PuzzledAuthEnv } from '../types'
 
 const ToggleAutoFreezeBodySchema = z.object({
 	enabled: z.boolean(),
-})
+});
 
 const AddStreakFreezesBodySchema = z.object({
 	userId: z.string().uuid(),
 	count: z.number().min(1).max(10),
-	reason: z.enum(['referral', 'purchase', 'promotion', 'manual', 'premium_perk']),
-})
+	reason: z.enum([
+		"referral",
+		"purchase",
+		"promotion",
+		"manual",
+		"premium_perk",
+	]),
+});
 
 // ==========================================
 // Router (Method Chaining for hc type inference)
@@ -42,9 +52,9 @@ const AddStreakFreezesBodySchema = z.object({
 const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	// GET /streak-info - authenticated
 	// Combines Platform SDK streak + local freeze data
-	.get('/streak-info', authMiddleware, async (c) => {
-		const user = c.get('user')
-		const todayUTC = getTodayUTC()
+	.get("/streak-info", authMiddleware, async (c) => {
+		const user = c.get("user");
+		const todayUTC = getTodayUTC();
 
 		// Compute stats directly from gameSessions (no separate aggregation table)
 		const [statsResult] = await db
@@ -54,15 +64,15 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				todayGamesPlayed: sql<number>`SUM(CASE WHEN ${gameSessions.completedAt} >= ${todayUTC} THEN 1 ELSE 0 END)::int`,
 			})
 			.from(gameSessions)
-			.where(eq(gameSessions.userId, user.id))
+			.where(eq(gameSessions.userId, user.id));
 
-		const hasPlayedToday = (statsResult?.todayGamesPlayed ?? 0) > 0
-		const totalGamesPlayed = statsResult?.totalGamesPlayed ?? 0
+		const hasPlayedToday = (statsResult?.todayGamesPlayed ?? 0) > 0;
+		const totalGamesPlayed = statsResult?.totalGamesPlayed ?? 0;
 
 		// Get freeze data (app-specific premium feature)
 		const freezeData = await db.query.userFreezeData.findFirst({
 			where: eq(userFreezeData.userId, user.id),
-		})
+		});
 
 		// NOTE: Current streak and max streak should come from Platform SDK useStreak()
 		// on the client side. The server returns 0 here as placeholder.
@@ -77,27 +87,27 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			// Freeze data - app-specific premium feature
 			freezesAvailable: freezeData?.freezesAvailable ?? 0,
 			autoFreezeEnabled: freezeData?.autoFreezeEnabled ?? false,
-		})
+		});
 	})
 
 	// GET /today-player-count - public (no auth needed)
-	.get('/today-player-count', async (c) => {
-		const todayUTC = getTodayUTC()
+	.get("/today-player-count", async (c) => {
+		const todayUTC = getTodayUTC();
 
 		const result = await db
 			.select({ count: countDistinct(gameSessions.userId) })
 			.from(gameSessions)
-			.where(gte(gameSessions.completedAt, todayUTC))
+			.where(gte(gameSessions.completedAt, todayUTC));
 
-		return c.json({ count: result[0]?.count ?? 0 })
+		return c.json({ count: result[0]?.count ?? 0 });
 	})
 
 	// GET /today-completions - authenticated
-	.get('/today-completions', authMiddleware, async (c) => {
-		const user = c.get('user')
+	.get("/today-completions", authMiddleware, async (c) => {
+		const user = c.get("user");
 
-		const allGames = getAllGames()
-		const todayUTC = getTodayUTC()
+		const allGames = getAllGames();
+		const todayUTC = getTodayUTC();
 
 		const todaySessions = await db
 			.select({
@@ -107,21 +117,26 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				status: gameSessions.status,
 			})
 			.from(gameSessions)
-			.where(and(eq(gameSessions.userId, user.id), gte(gameSessions.completedAt, todayUTC)))
+			.where(
+				and(
+					eq(gameSessions.userId, user.id),
+					gte(gameSessions.completedAt, todayUTC),
+				),
+			);
 
 		const result = allGames.map((game) => {
-			const session = todaySessions.find((s) => s.gameSlug === game.slug)
-			let score: string | undefined
+			const session = todaySessions.find((s) => s.gameSlug === game.slug);
+			let score: string | undefined;
 
 			if (session) {
-				const config = getGameConfig(game.slug)
+				const config = getGameConfig(game.slug);
 				if (config?.formatScoreDisplay) {
 					score = config.formatScoreDisplay({
-						status: session.status as 'won' | 'lost',
+						status: session.status as "won" | "lost",
 						attempts: session.attempts ?? undefined,
 						score: session.score ?? undefined,
 						timeSpentMs: undefined,
-					})
+					});
 				}
 			}
 
@@ -130,27 +145,27 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				name: game.name,
 				completed: !!session,
 				score,
-			}
-		})
+			};
+		});
 
-		return c.json(result)
+		return c.json(result);
 	})
 
 	// POST /toggle-auto-freeze - authenticated + rate limited
 	// Uses new userFreezeData table (app-specific premium feature)
-	.post('/toggle-auto-freeze', authRateLimitMiddleware, async (c) => {
-		const body = await c.req.json()
-		const parsed = ToggleAutoFreezeBodySchema.safeParse(body)
+	.post("/toggle-auto-freeze", authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json();
+		const parsed = ToggleAutoFreezeBodySchema.safeParse(body);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
+			throw new HTTPException(400, { message: "Invalid request body" });
 		}
-		const { enabled } = parsed.data
-		const user = c.get('user')
-		const now = new Date()
+		const { enabled } = parsed.data;
+		const user = c.get("user");
+		const now = new Date();
 
 		const existing = await db.query.userFreezeData.findFirst({
 			where: eq(userFreezeData.userId, user.id),
-		})
+		});
 
 		if (existing) {
 			await db
@@ -159,45 +174,49 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 					autoFreezeEnabled: enabled,
 					updatedAt: now,
 				})
-				.where(eq(userFreezeData.id, existing.id))
+				.where(eq(userFreezeData.id, existing.id));
 		} else {
 			await db.insert(userFreezeData).values({
 				userId: user.id,
 				freezesAvailable: 0,
 				freezesUsed: 0,
 				autoFreezeEnabled: enabled,
-			})
+			});
 		}
 
-		return c.json({ success: true, autoFreezeEnabled: enabled })
+		return c.json({ success: true, autoFreezeEnabled: enabled });
 	})
 
 	// POST /add-streak-freezes - admin only
 	// Uses new userFreezeData table (app-specific premium feature)
-	.post('/add-streak-freezes', adminMiddleware, async (c) => {
-		const body = await c.req.json()
-		const parsed = AddStreakFreezesBodySchema.safeParse(body)
+	.post("/add-streak-freezes", adminMiddleware, async (c) => {
+		const body = await c.req.json();
+		const parsed = AddStreakFreezesBodySchema.safeParse(body);
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: 'Invalid request body' })
+			throw new HTTPException(400, { message: "Invalid request body" });
 		}
-		const input = parsed.data
-		const now = new Date()
+		const input = parsed.data;
+		const now = new Date();
 
 		const existing = await db.query.userFreezeData.findFirst({
 			where: eq(userFreezeData.userId, input.userId),
-		})
+		});
 
 		if (existing) {
-			const newCount = existing.freezesAvailable + input.count
+			const newCount = existing.freezesAvailable + input.count;
 			await db
 				.update(userFreezeData)
 				.set({
 					freezesAvailable: newCount,
 					updatedAt: now,
 				})
-				.where(eq(userFreezeData.id, existing.id))
+				.where(eq(userFreezeData.id, existing.id));
 
-			return c.json({ success: true, freezesAvailable: newCount, reason: input.reason })
+			return c.json({
+				success: true,
+				freezesAvailable: newCount,
+				reason: input.reason,
+			});
 		}
 
 		await db.insert(userFreezeData).values({
@@ -205,10 +224,14 @@ const gamificationRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			freezesAvailable: input.count,
 			freezesUsed: 0,
 			autoFreezeEnabled: false,
-		})
+		});
 
-		return c.json({ success: true, freezesAvailable: input.count, reason: input.reason })
-	})
+		return c.json({
+			success: true,
+			freezesAvailable: input.count,
+			reason: input.reason,
+		});
+	});
 
-export { gamificationRoutes }
-export type GamificationRoutes = typeof gamificationRoutes
+export { gamificationRoutes };
+export type GamificationRoutes = typeof gamificationRoutes;

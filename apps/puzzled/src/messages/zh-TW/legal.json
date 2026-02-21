@@ -1,118 +1,118 @@
 {
-  "privacy": {
-    "title": "隱私權政策",
-    "lastUpdated": "最後更新",
-    "sections": {
-      "intro": {
-        "title": "簡介",
-        "content": "Puzzled（「我們」）尊重您的隱私並致力於保護您的個人資料。本隱私權政策說明我們如何在您使用服務時收集、使用和保護您的資訊。"
-      },
-      "dataCollection": {
-        "title": "我們收集的資料",
-        "content": "我們收集以下類型的資訊：",
-        "items": {
-          "account": "帳戶資訊：姓名、電子郵件地址和個人頭像",
-          "game": "遊戲資料：分數、統計數據、連勝紀錄和遊戲歷史",
-          "payment": "付款資訊：透過 Stripe 安全處理",
-          "technical": "技術資料：IP 位址、瀏覽器類型和裝置資訊"
-        }
-      },
-      "dataUse": {
-        "title": "我們如何使用您的資料",
-        "content": "我們使用您的資料來：",
-        "items": {
-          "service": "提供和維護我們的遊戲服務",
-          "improve": "改進和個人化您的體驗",
-          "communicate": "發送重要更新和通知",
-          "legal": "遵守法律義務"
-        }
-      },
-      "thirdParty": {
-        "title": "第三方服務",
-        "content": "我們與受信任的第三方服務合作：",
-        "stripe": "付款處理",
-        "google": "身份驗證",
-        "resend": "電子郵件發送"
-      },
-      "cookies": {
-        "title": "Cookie",
-        "content": "我們使用必要的 Cookie 來維護您的工作階段和偏好設定。使用我們的服務即表示您同意我們使用 Cookie。"
-      },
-      "rights": {
-        "title": "您的權利",
-        "content": "您有權：",
-        "items": {
-          "access": "存取您的個人資料",
-          "correct": "更正不正確的資料",
-          "delete": "要求刪除您的資料",
-          "export": "匯出您的資料"
-        }
-      },
-      "contact": {
-        "title": "聯絡我們",
-        "content": "如有隱私相關問題，請聯繫我們："
-      }
-    }
-  },
-  "terms": {
-    "title": "服務條款",
-    "lastUpdated": "最後更新",
-    "sections": {
-      "acceptance": {
-        "title": "條款接受",
-        "content": "使用 Puzzled 即表示您同意受這些服務條款的約束。如果您不同意這些條款，請勿使用我們的服務。"
-      },
-      "service": {
-        "title": "我們的服務",
-        "content": "Puzzled 提供每日益智遊戲和挑戰。我們保留隨時修改、暫停或停止任何部分服務的權利。"
-      },
-      "accounts": {
-        "title": "用戶帳戶",
-        "content": "建立帳戶時，您同意：",
-        "items": {
-          "accurate": "提供準確完整的資訊",
-          "secure": "保護您的登入憑證安全",
-          "responsible": "對您帳戶下的所有活動負責"
-        }
-      },
-      "subscription": {
-        "title": "訂閱與付款",
-        "content": "Premium 訂閱依您選擇的方案計費：",
-        "items": {
-          "billing": "訂閱按月或按年計費",
-          "cancel": "您可隨時取消；取消後可繼續使用至計費週期結束",
-          "refund": "購買後 7 天內可依我們的判斷提供退款"
-        }
-      },
-      "conduct": {
-        "title": "用戶行為",
-        "content": "您同意：",
-        "items": {
-          "legal": "僅將服務用於合法目的",
-          "respect": "尊重其他用戶和我們的社群",
-          "noCheat": "不使用作弊、漏洞利用或自動化工具"
-        }
-      },
-      "ip": {
-        "title": "智慧財產權",
-        "content": "Puzzled 上的所有遊戲、內容和資料均為我們的財產或經授權使用。未經許可，您不得複製、修改或分發任何內容。"
-      },
-      "disclaimer": {
-        "title": "免責聲明",
-        "content": "我們的服務按「現狀」提供，不提供任何形式的保證。我們不保證服務不中斷或無錯誤。"
-      },
-      "liability": {
-        "title": "責任限制",
-        "content": "在法律允許的最大範圍內，Puzzled 不對您使用我們服務所產生的任何間接、附帶或後果性損害負責。"
-      },
-      "changes": {
-        "title": "條款變更",
-        "content": "我們可能會不時更新這些條款。在變更後繼續使用我們的服務即表示接受新條款。"
-      },
-      "contact": {
-        "title": "聯絡方式",
-        "content": "如對這些條款有疑問，請聯繫我們："
-      }
-    }
-  }
+	"privacy": {
+		"title": "隱私權政策",
+		"lastUpdated": "最後更新",
+		"sections": {
+			"intro": {
+				"title": "簡介",
+				"content": "Puzzled（「我們」）尊重您的隱私並致力於保護您的個人資料。本隱私權政策說明我們如何在您使用服務時收集、使用和保護您的資訊。"
+			},
+			"dataCollection": {
+				"title": "我們收集的資料",
+				"content": "我們收集以下類型的資訊：",
+				"items": {
+					"account": "帳戶資訊：姓名、電子郵件地址和個人頭像",
+					"game": "遊戲資料：分數、統計數據、連勝紀錄和遊戲歷史",
+					"payment": "付款資訊：透過 Stripe 安全處理",
+					"technical": "技術資料：IP 位址、瀏覽器類型和裝置資訊"
+				}
+			},
+			"dataUse": {
+				"title": "我們如何使用您的資料",
+				"content": "我們使用您的資料來：",
+				"items": {
+					"service": "提供和維護我們的遊戲服務",
+					"improve": "改進和個人化您的體驗",
+					"communicate": "發送重要更新和通知",
+					"legal": "遵守法律義務"
+				}
+			},
+			"thirdParty": {
+				"title": "第三方服務",
+				"content": "我們與受信任的第三方服務合作：",
+				"stripe": "付款處理",
+				"google": "身份驗證",
+				"resend": "電子郵件發送"
+			},
+			"cookies": {
+				"title": "Cookie",
+				"content": "我們使用必要的 Cookie 來維護您的工作階段和偏好設定。使用我們的服務即表示您同意我們使用 Cookie。"
+			},
+			"rights": {
+				"title": "您的權利",
+				"content": "您有權：",
+				"items": {
+					"access": "存取您的個人資料",
+					"correct": "更正不正確的資料",
+					"delete": "要求刪除您的資料",
+					"export": "匯出您的資料"
+				}
+			},
+			"contact": {
+				"title": "聯絡我們",
+				"content": "如有隱私相關問題，請聯繫我們："
+			}
+		}
+	},
+	"terms": {
+		"title": "服務條款",
+		"lastUpdated": "最後更新",
+		"sections": {
+			"acceptance": {
+				"title": "條款接受",
+				"content": "使用 Puzzled 即表示您同意受這些服務條款的約束。如果您不同意這些條款，請勿使用我們的服務。"
+			},
+			"service": {
+				"title": "我們的服務",
+				"content": "Puzzled 提供每日益智遊戲和挑戰。我們保留隨時修改、暫停或停止任何部分服務的權利。"
+			},
+			"accounts": {
+				"title": "用戶帳戶",
+				"content": "建立帳戶時，您同意：",
+				"items": {
+					"accurate": "提供準確完整的資訊",
+					"secure": "保護您的登入憑證安全",
+					"responsible": "對您帳戶下的所有活動負責"
+				}
+			},
+			"subscription": {
+				"title": "訂閱與付款",
+				"content": "Premium 訂閱依您選擇的方案計費：",
+				"items": {
+					"billing": "訂閱按月或按年計費",
+					"cancel": "您可隨時取消；取消後可繼續使用至計費週期結束",
+					"refund": "購買後 7 天內可依我們的判斷提供退款"
+				}
+			},
+			"conduct": {
+				"title": "用戶行為",
+				"content": "您同意：",
+				"items": {
+					"legal": "僅將服務用於合法目的",
+					"respect": "尊重其他用戶和我們的社群",
+					"noCheat": "不使用作弊、漏洞利用或自動化工具"
+				}
+			},
+			"ip": {
+				"title": "智慧財產權",
+				"content": "Puzzled 上的所有遊戲、內容和資料均為我們的財產或經授權使用。未經許可，您不得複製、修改或分發任何內容。"
+			},
+			"disclaimer": {
+				"title": "免責聲明",
+				"content": "我們的服務按「現狀」提供，不提供任何形式的保證。我們不保證服務不中斷或無錯誤。"
+			},
+			"liability": {
+				"title": "責任限制",
+				"content": "在法律允許的最大範圍內，Puzzled 不對您使用我們服務所產生的任何間接、附帶或後果性損害負責。"
+			},
+			"changes": {
+				"title": "條款變更",
+				"content": "我們可能會不時更新這些條款。在變更後繼續使用我們的服務即表示接受新條款。"
+			},
+			"contact": {
+				"title": "聯絡方式",
+				"content": "如對這些條款有疑問，請聯繫我們："
+			}
+		}
+	}
 }

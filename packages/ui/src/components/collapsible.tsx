@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { Collapsible as BaseCollapsible } from '@base-ui/react/collapsible'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Collapsible as BaseCollapsible } from "@base-ui/react/collapsible";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // Collapsible Root
@@ -10,17 +10,17 @@ import { cn } from '../utils'
 
 interface CollapsibleProps {
 	/** Whether the collapsible is open (controlled) */
-	open?: boolean
+	open?: boolean;
 	/** Default open state (uncontrolled) */
-	defaultOpen?: boolean
+	defaultOpen?: boolean;
 	/** Handler fired when open state changes */
-	onOpenChange?: (open: boolean) => void
+	onOpenChange?: (open: boolean) => void;
 	/** Whether the collapsible is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(
@@ -36,8 +36,8 @@ const Collapsible = forwardRef<HTMLDivElement, CollapsibleProps>(
 			{children}
 		</BaseCollapsible.Root>
 	),
-)
-Collapsible.displayName = 'Collapsible'
+);
+Collapsible.displayName = "Collapsible";
 
 // ==================
 // Collapsible Trigger
@@ -45,25 +45,26 @@ Collapsible.displayName = 'Collapsible'
 
 interface CollapsibleTriggerProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Whether to render as child */
-	asChild?: boolean
+	asChild?: boolean;
 }
 
-const CollapsibleTrigger = forwardRef<HTMLButtonElement, CollapsibleTriggerProps>(
-	({ className, children, asChild }, ref) => (
-		<BaseCollapsible.Trigger
-			ref={ref}
-			className={className}
-			render={asChild ? (children as React.ReactElement) : undefined}
-		>
-			{asChild ? undefined : children}
-		</BaseCollapsible.Trigger>
-	),
-)
-CollapsibleTrigger.displayName = 'CollapsibleTrigger'
+const CollapsibleTrigger = forwardRef<
+	HTMLButtonElement,
+	CollapsibleTriggerProps
+>(({ className, children, asChild }, ref) => (
+	<BaseCollapsible.Trigger
+		ref={ref}
+		className={className}
+		render={asChild ? (children as React.ReactElement) : undefined}
+	>
+		{asChild ? undefined : children}
+	</BaseCollapsible.Trigger>
+));
+CollapsibleTrigger.displayName = "CollapsibleTrigger";
 
 // ==================
 // Collapsible Content
@@ -71,24 +72,27 @@ CollapsibleTrigger.displayName = 'CollapsibleTrigger'
 
 interface CollapsibleContentProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
 	({ className, children }, ref) => (
-		<BaseCollapsible.Panel ref={ref} className={cn('overflow-hidden', className)}>
+		<BaseCollapsible.Panel
+			ref={ref}
+			className={cn("overflow-hidden", className)}
+		>
 			{children}
 		</BaseCollapsible.Panel>
 	),
-)
-CollapsibleContent.displayName = 'CollapsibleContent'
+);
+CollapsibleContent.displayName = "CollapsibleContent";
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+export { Collapsible, CollapsibleTrigger, CollapsibleContent };
 
 export type {
 	CollapsibleProps,
 	CollapsibleTriggerProps,
 	CollapsibleContentProps,
-}
+};

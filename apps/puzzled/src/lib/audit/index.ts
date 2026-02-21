@@ -8,33 +8,33 @@
  * - This file only handles app-specific audit events (games, achievements, etc.)
  */
 
-import { headers } from 'next/headers'
-import type { AuditAction, NewAuditLog } from '@/lib/db/schema'
+import type { AuditAction, NewAuditLog } from "@/lib/db/schema";
+import { headers } from "next/headers";
 
 /**
  * Log an audit event
  */
 async function logAuditEvent(
-	params: Omit<NewAuditLog, 'id' | 'createdAt' | 'ipAddress' | 'userAgent'>,
+	params: Omit<NewAuditLog, "id" | "createdAt" | "ipAddress" | "userAgent">,
 ): Promise<void> {
 	try {
-		const { db } = await import('@/lib/db')
-		const { auditLogs } = await import('@/lib/db/schema')
-		const headersList = await headers()
+		const { db } = await import("@/lib/db");
+		const { auditLogs } = await import("@/lib/db/schema");
+		const headersList = await headers();
 
 		const ipAddress =
-			headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-			headersList.get('x-real-ip') ||
-			'unknown'
-		const userAgent = headersList.get('user-agent') || 'unknown'
+			headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+			headersList.get("x-real-ip") ||
+			"unknown";
+		const userAgent = headersList.get("user-agent") || "unknown";
 
 		await db.insert(auditLogs).values({
 			...params,
 			ipAddress,
 			userAgent,
-		})
+		});
 	} catch (error) {
-		console.error('[Audit] Failed to log event:', error, params)
+		console.error("[Audit] Failed to log event:", error, params);
 	}
 }
 
@@ -54,7 +54,7 @@ export async function logAdminAction(
 		resourceType,
 		resourceId,
 		metadata,
-	})
+	});
 }
 
 /**
@@ -73,7 +73,7 @@ async function _logUserAction(
 		resourceType,
 		resourceId,
 		metadata,
-	})
+	});
 }
 
 /**
@@ -87,11 +87,11 @@ async function _logGameComplete(
 ): Promise<void> {
 	await logAuditEvent({
 		userId,
-		action: 'game_complete',
-		resourceType: 'game_session',
+		action: "game_complete",
+		resourceType: "game_session",
 		resourceId: sessionId,
 		metadata: { gameSlug, ...metadata },
-	})
+	});
 }
 
 /**
@@ -105,11 +105,11 @@ async function _logStreakUpdate(
 ): Promise<void> {
 	await logAuditEvent({
 		userId,
-		action: 'streak_update',
-		resourceType: 'user_stats',
+		action: "streak_update",
+		resourceType: "user_stats",
 		resourceId: gameSlug,
 		metadata: { streak, ...metadata },
-	})
+	});
 }
 
 /**
@@ -122,9 +122,9 @@ async function _logAchievementUnlock(
 ): Promise<void> {
 	await logAuditEvent({
 		userId,
-		action: 'achievement_unlock',
-		resourceType: 'achievement',
+		action: "achievement_unlock",
+		resourceType: "achievement",
 		resourceId: achievementSlug,
 		metadata,
-	})
+	});
 }

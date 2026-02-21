@@ -5,11 +5,11 @@
  * Represents the classic number puzzle
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function SudokuIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -36,12 +36,26 @@ export function SudokuIcon({ size = 24, className, ...props }: IconProps) {
 			<path d="M5.33 2v20M12 2v20M18.67 2v20" strokeWidth="0.5" opacity="0.4" />
 			<path d="M2 5.33h20M2 12h20M2 18.67h20" strokeWidth="0.5" opacity="0.4" />
 			{/* Sample numbers */}
-			<text x="5.33" y="7" textAnchor="middle" fontSize="4" fill="currentColor" stroke="none">
+			<text
+				x="5.33"
+				y="7"
+				textAnchor="middle"
+				fontSize="4"
+				fill="currentColor"
+				stroke="none"
+			>
 				9
 			</text>
-			<text x="12" y="14" textAnchor="middle" fontSize="4" fill="currentColor" stroke="none">
+			<text
+				x="12"
+				y="14"
+				textAnchor="middle"
+				fontSize="4"
+				fill="currentColor"
+				stroke="none"
+			>
 				5
 			</text>
 		</svg>
-	)
+	);
 }

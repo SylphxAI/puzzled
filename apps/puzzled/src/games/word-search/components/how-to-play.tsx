@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
 
 /**
  * Word Search How-to-Play content
@@ -23,18 +23,24 @@ export function WordSearchHowToPlay() {
 				<p className="text-sm font-medium">Example</p>
 
 				<div className="mx-auto grid w-fit grid-cols-5 gap-0.5 rounded border bg-muted/30 p-2">
-					{['C', 'A', 'T', 'X', 'Y'].map((letter, i) => (
-						<GridCell key={`row0-${letter}-${i}`} letter={letter} highlighted={i < 3} />
+					{["C", "A", "T", "X", "Y"].map((letter, i) => (
+						<GridCell
+							key={`row0-${letter}-${i}`}
+							letter={letter}
+							highlighted={i < 3}
+						/>
 					))}
-					{['M', 'O', 'U', 'S', 'E'].map((letter, i) => (
+					{["M", "O", "U", "S", "E"].map((letter, i) => (
 						<GridCell key={`row1-${letter}-${i}`} letter={letter} />
 					))}
-					{['D', 'O', 'G', 'Z', 'Q'].map((letter, i) => (
+					{["D", "O", "G", "Z", "Q"].map((letter, i) => (
 						<GridCell key={`row2-${letter}-${i}`} letter={letter} />
 					))}
 				</div>
 
-				<p className="text-center text-xs text-muted-foreground">Found: CAT, MOUSE, DOG</p>
+				<p className="text-center text-xs text-muted-foreground">
+					Found: CAT, MOUSE, DOG
+				</p>
 			</div>
 
 			{/* Tips */}
@@ -47,22 +53,27 @@ export function WordSearchHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _WordSearchHowToPlayTitle() {
-	return <>How to Play Word Hunt</>
+	return <>How to Play Word Hunt</>;
 }
 
-function GridCell({ letter, highlighted = false }: { letter: string; highlighted?: boolean }) {
+function GridCell({
+	letter,
+	highlighted = false,
+}: { letter: string; highlighted?: boolean }) {
 	return (
 		<div
 			className={cn(
-				'flex h-7 w-7 items-center justify-center rounded text-sm font-bold',
-				highlighted ? 'bg-cyan-500/30 text-cyan-600' : 'bg-background text-foreground',
+				"flex h-7 w-7 items-center justify-center rounded text-sm font-bold",
+				highlighted
+					? "bg-cyan-500/30 text-cyan-600"
+					: "bg-background text-foreground",
 			)}
 		>
 			{letter}
 		</div>
-	)
+	);
 }

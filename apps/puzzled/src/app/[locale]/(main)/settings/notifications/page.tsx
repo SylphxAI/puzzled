@@ -1,33 +1,33 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { Bell } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { NotificationsClient } from './notifications-client'
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { Bell } from "lucide-react";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
+import { NotificationsClient } from "./notifications-client";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings" });
 
 	return {
-		title: t('notifications.metaTitle'),
-	}
+		title: t("notifications.metaTitle"),
+	};
 }
 
 export default async function NotificationsPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/notifications`)
+		redirect(`/${locale}/login?callbackUrl=/settings/notifications`);
 	}
 
-	const t = await getTranslations('settings')
+	const t = await getTranslations("settings");
 
 	return (
 		<div className="space-y-6">
@@ -37,8 +37,12 @@ export default async function NotificationsPage({ params }: Props) {
 					<Bell className="h-6 w-6 text-amber-500" />
 				</div>
 				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('notifications.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('notifications.description')}</p>
+					<h1 className="text-xl font-semibold tracking-tight">
+						{t("notifications.title")}
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						{t("notifications.description")}
+					</p>
 				</div>
 			</div>
 
@@ -47,5 +51,5 @@ export default async function NotificationsPage({ params }: Props) {
 				<NotificationsClient />
 			</div>
 		</div>
-	)
+	);
 }

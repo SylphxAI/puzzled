@@ -4,47 +4,52 @@
  * Hooks for billing, analytics, notifications, and referrals.
  */
 
-'use client'
+"use client";
 
-import { useContext, useCallback } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { STALE_TIME_FREQUENT_MS } from '../constants'
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useContext } from "react";
+import { STALE_TIME_FREQUENT_MS } from "../constants";
 import {
-	PlatformContext,
-	type Subscription,
-	type Plan,
-	type ReferralStats,
-	type PushPreferences,
 	type AnalyticsQuery,
 	type AnalyticsQueryResult,
-	type TrackOptions,
+	type ClickIds,
 	type ConversionData,
 	type DestinationPlatform,
-	type ClickIds,
-	type InAppMessageWithReadStatus,
-	type InAppMessageType,
 	type InAppMessagePriority,
+	type InAppMessageType,
+	type InAppMessageWithReadStatus,
 	type InboxPreferences,
-	type ReferralRewardDefaults,
+	type Plan,
+	PlatformContext,
+	type PushPreferences,
 	type RedeemResult,
-} from './platform-context'
+	type ReferralRewardDefaults,
+	type ReferralStats,
+	type Subscription,
+	type TrackOptions,
+} from "./platform-context";
 
 // Re-export types for convenience
-export type {   TrackOptions, ConversionData, DestinationPlatform, ClickIds }
-export type { InAppMessageWithReadStatus, InAppMessageType, InAppMessagePriority, InboxPreferences }
+export type { TrackOptions, ConversionData, DestinationPlatform, ClickIds };
+export type {
+	InAppMessageWithReadStatus,
+	InAppMessageType,
+	InAppMessagePriority,
+	InboxPreferences,
+};
 
 /** Alias for easier naming */
-export type InAppMessage = InAppMessageWithReadStatus
+export type InAppMessage = InAppMessageWithReadStatus;
 
 /**
  * Internal hook to get platform context
  */
 function usePlatformContext() {
-	const context = useContext(PlatformContext)
+	const context = useContext(PlatformContext);
 	if (!context) {
-		throw new Error('Platform hooks must be used within a SylphxProvider')
+		throw new Error("Platform hooks must be used within a SylphxProvider");
 	}
-	return context
+	return context;
 }
 
 /**
@@ -52,7 +57,7 @@ function usePlatformContext() {
  * Use this for hooks that need to work outside SylphxProvider during SSR/prerendering
  */
 function usePlatformContextSafe() {
-	return useContext(PlatformContext)
+	return useContext(PlatformContext);
 }
 
 // ============================================
@@ -61,32 +66,32 @@ function usePlatformContextSafe() {
 
 export interface UseBillingReturn {
 	/** Current subscription (null if free/none) */
-	subscription: Subscription | null
+	subscription: Subscription | null;
 	/** Whether subscription is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading subscription */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error loading subscription */
-	isError: boolean
+	isError: boolean;
 	/** All available plans */
-	plans: Plan[]
+	plans: Plan[];
 	/** Whether plans are loading */
-	plansLoading: boolean
+	plansLoading: boolean;
 	/** Error loading plans */
-	plansError: Error | null
+	plansError: Error | null;
 	/** Whether user has an active paid subscription */
-	isPremium: boolean
+	isPremium: boolean;
 	/** Whether user is on a trial */
-	isTrialing: boolean
+	isTrialing: boolean;
 	/** Create checkout session and get URL */
 	createCheckout: (
 		planSlug: string,
-		interval: 'monthly' | 'annual' | 'lifetime'
-	) => Promise<string>
+		interval: "monthly" | "annual" | "lifetime",
+	) => Promise<string>;
 	/** Open billing portal to manage subscription */
-	openPortal: () => Promise<void>
+	openPortal: () => Promise<void>;
 	/** Refresh subscription data */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -117,13 +122,13 @@ export interface UseBillingReturn {
  * ```
  */
 export function useBilling(): UseBillingReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
 	const isPremium =
-		ctx.subscription?.status === 'active' ||
-		ctx.subscription?.status === 'trialing'
+		ctx.subscription?.status === "active" ||
+		ctx.subscription?.status === "trialing";
 
-	const isTrialing = ctx.subscription?.status === 'trialing'
+	const isTrialing = ctx.subscription?.status === "trialing";
 
 	return {
 		subscription: ctx.subscription,
@@ -138,7 +143,7 @@ export function useBilling(): UseBillingReturn {
 		createCheckout: ctx.createCheckout,
 		openPortal: ctx.openPortal,
 		refresh: ctx.refreshSubscription,
-	}
+	};
 }
 
 // ============================================
@@ -147,15 +152,15 @@ export function useBilling(): UseBillingReturn {
 
 export interface UseSafeBillingReturn {
 	/** Whether SDK is configured */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** Current subscription (null if free/none or not configured) */
-	subscription: Subscription | null
+	subscription: Subscription | null;
 	/** Whether subscription is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether user has an active paid subscription */
-	isPremium: boolean
+	isPremium: boolean;
 	/** Whether user is on a trial */
-	isTrialing: boolean
+	isTrialing: boolean;
 }
 
 /**
@@ -177,7 +182,7 @@ export interface UseSafeBillingReturn {
  * ```
  */
 export function useSafeBilling(): UseSafeBillingReturn {
-	const ctx = usePlatformContextSafe()
+	const ctx = usePlatformContextSafe();
 
 	if (!ctx) {
 		return {
@@ -186,14 +191,14 @@ export function useSafeBilling(): UseSafeBillingReturn {
 			isLoading: false,
 			isPremium: false,
 			isTrialing: false,
-		}
+		};
 	}
 
 	const isPremium =
-		ctx.subscription?.status === 'active' ||
-		ctx.subscription?.status === 'trialing'
+		ctx.subscription?.status === "active" ||
+		ctx.subscription?.status === "trialing";
 
-	const isTrialing = ctx.subscription?.status === 'trialing'
+	const isTrialing = ctx.subscription?.status === "trialing";
 
 	return {
 		isConfigured: true,
@@ -201,7 +206,7 @@ export function useSafeBilling(): UseSafeBillingReturn {
 		isLoading: ctx.subscriptionLoading,
 		isPremium,
 		isTrialing,
-	}
+	};
 }
 
 // ============================================
@@ -235,15 +240,19 @@ export interface UseAnalyticsReturn {
 	 * track('button_click', { button: 'nav' }, { skipDestinations: true })
 	 * ```
 	 */
-	track: (event: string, properties?: Record<string, unknown>, options?: TrackOptions) => Promise<void>
+	track: (
+		event: string,
+		properties?: Record<string, unknown>,
+		options?: TrackOptions,
+	) => Promise<void>;
 	/** Track a page view */
-	page: (name: string, properties?: Record<string, unknown>) => Promise<void>
+	page: (name: string, properties?: Record<string, unknown>) => Promise<void>;
 	/** Identify user with traits */
-	identify: (traits?: Record<string, unknown>) => Promise<void>
+	identify: (traits?: Record<string, unknown>) => Promise<void>;
 	/** Error from analytics operations */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 }
 
 /**
@@ -289,7 +298,7 @@ export interface UseAnalyticsReturn {
  * ```
  */
 export function useAnalytics(): UseAnalyticsReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
 	return {
 		track: ctx.track,
@@ -297,7 +306,7 @@ export function useAnalytics(): UseAnalyticsReturn {
 		identify: ctx.identify,
 		error: ctx.analyticsError,
 		isError: ctx.analyticsError !== null,
-	}
+	};
 }
 
 // ============================================
@@ -306,17 +315,21 @@ export function useAnalytics(): UseAnalyticsReturn {
 
 export interface UseSafeAnalyticsReturn {
 	/** Whether SDK is configured */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** Track a custom event (no-op if not configured) */
-	track: (event: string, properties?: Record<string, unknown>, options?: TrackOptions) => Promise<void>
+	track: (
+		event: string,
+		properties?: Record<string, unknown>,
+		options?: TrackOptions,
+	) => Promise<void>;
 	/** Track a page view (no-op if not configured) */
-	page: (name: string, properties?: Record<string, unknown>) => Promise<void>
+	page: (name: string, properties?: Record<string, unknown>) => Promise<void>;
 	/** Identify user with traits (no-op if not configured) */
-	identify: (traits?: Record<string, unknown>) => Promise<void>
+	identify: (traits?: Record<string, unknown>) => Promise<void>;
 }
 
 // No-op async function for safe hooks
-const noopAsync = async () => {}
+const noopAsync = async () => {};
 
 /**
  * SSR-safe version of useAnalytics that returns no-op functions when outside SylphxProvider
@@ -338,7 +351,7 @@ const noopAsync = async () => {}
  * ```
  */
 export function useSafeAnalytics(): UseSafeAnalyticsReturn {
-	const ctx = usePlatformContextSafe()
+	const ctx = usePlatformContextSafe();
 
 	if (!ctx) {
 		return {
@@ -346,7 +359,7 @@ export function useSafeAnalytics(): UseSafeAnalyticsReturn {
 			track: noopAsync,
 			page: noopAsync,
 			identify: noopAsync,
-		}
+		};
 	}
 
 	return {
@@ -354,7 +367,7 @@ export function useSafeAnalytics(): UseSafeAnalyticsReturn {
 		track: ctx.track,
 		page: ctx.page,
 		identify: ctx.identify,
-	}
+	};
 }
 
 // ============================================
@@ -363,21 +376,21 @@ export function useSafeAnalytics(): UseSafeAnalyticsReturn {
 
 export interface UseNotificationsReturn {
 	/** Whether push notifications are supported in this browser */
-	isSupported: boolean
+	isSupported: boolean;
 	/** Whether user is subscribed to push */
-	isSubscribed: boolean
+	isSubscribed: boolean;
 	/** User's notification preferences */
-	preferences: PushPreferences | null
+	preferences: PushPreferences | null;
 	/** Error from notification operations */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 	/** Subscribe to notifications */
-	subscribe: () => Promise<boolean>
+	subscribe: () => Promise<boolean>;
 	/** Unsubscribe from notifications */
-	unsubscribe: () => Promise<void>
+	unsubscribe: () => Promise<void>;
 	/** Update notification preferences */
-	updatePreferences: (prefs: Partial<PushPreferences>) => Promise<void>
+	updatePreferences: (prefs: Partial<PushPreferences>) => Promise<void>;
 }
 
 /**
@@ -401,7 +414,7 @@ export interface UseNotificationsReturn {
  * ```
  */
 export function useNotifications(): UseNotificationsReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
 	return {
 		isSupported: ctx.pushSupported,
@@ -412,7 +425,7 @@ export function useNotifications(): UseNotificationsReturn {
 		subscribe: ctx.subscribePush,
 		unsubscribe: ctx.unsubscribePush,
 		updatePreferences: ctx.updatePushPreferences,
-	}
+	};
 }
 
 // ============================================
@@ -420,28 +433,28 @@ export function useNotifications(): UseNotificationsReturn {
 // ============================================
 
 export interface MobileDevice {
-	id: string
-	platform: 'ios' | 'android' | 'web'
-	name: string | null
-	registeredAt: string
-	lastUsedAt: string | null | undefined
+	id: string;
+	platform: "ios" | "android" | "web";
+	name: string | null;
+	registeredAt: string;
+	lastUsedAt: string | null | undefined;
 }
 
 export interface UseMobilePushReturn {
 	/** Whether iOS push is configured for this app */
-	iosConfigured: boolean
+	iosConfigured: boolean;
 	/** Whether Android push is configured for this app */
-	androidConfigured: boolean
+	androidConfigured: boolean;
 	/** Whether any mobile push is configured */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** List of registered devices for current user */
-	devices: MobileDevice[]
+	devices: MobileDevice[];
 	/** Whether mobile push is enabled (has registered devices) */
-	isEnabled: boolean
+	isEnabled: boolean;
 	/** Error from mobile push operations */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 	/**
 	 * Register a mobile device for push notifications
 	 *
@@ -479,21 +492,21 @@ export interface UseMobilePushReturn {
 	 * ```
 	 */
 	registerDevice: (options: {
-		platform: 'ios' | 'android'
-		token: string
-		deviceId?: string
-		deviceName?: string
-		appVersion?: string
-		osVersion?: string
-	}) => Promise<{ success: boolean; tokenId: string }>
+		platform: "ios" | "android";
+		token: string;
+		deviceId?: string;
+		deviceName?: string;
+		appVersion?: string;
+		osVersion?: string;
+	}) => Promise<{ success: boolean; tokenId: string }>;
 	/**
 	 * Unregister a mobile device
 	 *
 	 * Call this when the user logs out or disables notifications.
 	 */
-	unregisterDevice: (token: string) => Promise<void>
+	unregisterDevice: (token: string) => Promise<void>;
 	/** Refresh device list */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -536,15 +549,15 @@ export interface UseMobilePushReturn {
  * ```
  */
 export function useMobilePush(): UseMobilePushReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
-	const config = ctx.mobilePushConfig
-	const prefs = ctx.mobilePushPreferences
+	const config = ctx.mobilePushConfig;
+	const prefs = ctx.mobilePushPreferences;
 
 	// Wrap refresh to return void (the data is already in context)
 	const refresh = useCallback(async (): Promise<void> => {
-		await ctx.getMobilePushPreferences()
-	}, [ctx])
+		await ctx.getMobilePushPreferences();
+	}, [ctx]);
 
 	return {
 		iosConfigured: config?.ios ?? false,
@@ -557,7 +570,7 @@ export function useMobilePush(): UseMobilePushReturn {
 		registerDevice: ctx.registerMobileDevice,
 		unregisterDevice: ctx.unregisterMobileDevice,
 		refresh,
-	}
+	};
 }
 
 // ============================================
@@ -566,23 +579,23 @@ export function useMobilePush(): UseMobilePushReturn {
 
 export interface UseReferralReturn {
 	/** Referral statistics */
-	stats: ReferralStats | null
+	stats: ReferralStats | null;
 	/** Whether referral data is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading referral data */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 	/** User's referral code */
-	code: string | null
+	code: string | null;
 	/** Referral link to share */
-	link: string | null
+	link: string | null;
 	/** Copy referral code to clipboard */
-	copyCode: () => Promise<void>
+	copyCode: () => Promise<void>;
 	/** Copy referral link to clipboard */
-	copyLink: () => Promise<void>
+	copyLink: () => Promise<void>;
 	/** Regenerate referral code */
-	regenerateCode: () => Promise<string>
+	regenerateCode: () => Promise<string>;
 	/**
 	 * Redeem a referral code with optional inline defaults
 	 *
@@ -607,7 +620,10 @@ export interface UseReferralReturn {
 	 * }
 	 * ```
 	 */
-	redeemCode: (code: string, defaults?: ReferralRewardDefaults) => Promise<RedeemResult>
+	redeemCode: (
+		code: string,
+		defaults?: ReferralRewardDefaults,
+	) => Promise<RedeemResult>;
 	/**
 	 * Get leaderboard of top referrers
 	 *
@@ -615,21 +631,24 @@ export interface UseReferralReturn {
 	 * @param options.limit - Maximum entries (1-100, default: 10)
 	 * @param options.period - Time period ('all', 'month', 'week')
 	 */
-	getLeaderboard: (options?: { limit?: number; period?: 'all' | 'month' | 'week' }) => Promise<{
-		period: 'all' | 'month' | 'week'
+	getLeaderboard: (options?: {
+		limit?: number;
+		period?: "all" | "month" | "week";
+	}) => Promise<{
+		period: "all" | "month" | "week";
 		entries: Array<{
-			rank: number
-			userId: string | null
+			rank: number;
+			userId: string | null;
 			/** Masked username for privacy */
-			name: string
-			avatarUrl: string | null
+			name: string;
+			avatarUrl: string | null;
 			/** Number of successful referrals */
-			referrals: number
-			totalReferrals: number
-			isCurrentUser: boolean
-		}>
-		currentUserRank: number | null
-	}>
+			referrals: number;
+			totalReferrals: number;
+			isCurrentUser: boolean;
+		}>;
+		currentUserRank: number | null;
+	}>;
 }
 
 /**
@@ -651,22 +670,22 @@ export interface UseReferralReturn {
  * ```
  */
 export function useReferral(): UseReferralReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
-	const code = ctx.referralCode || null
-	const link = code ? `${ctx.platformUrl}/r/${code}` : null
+	const code = ctx.referralCode || null;
+	const link = code ? `${ctx.platformUrl}/r/${code}` : null;
 
 	const copyCode = useCallback(async () => {
 		if (code) {
-			await navigator.clipboard.writeText(code)
+			await navigator.clipboard.writeText(code);
 		}
-	}, [code])
+	}, [code]);
 
 	const copyLink = useCallback(async () => {
 		if (link) {
-			await navigator.clipboard.writeText(link)
+			await navigator.clipboard.writeText(link);
 		}
-	}, [link])
+	}, [link]);
 
 	return {
 		stats: ctx.referralStats,
@@ -680,7 +699,7 @@ export function useReferral(): UseReferralReturn {
 		regenerateCode: ctx.regenerateReferralCode,
 		redeemCode: ctx.redeemReferralCode,
 		getLeaderboard: ctx.getReferralLeaderboard,
-	}
+	};
 }
 
 // ============================================
@@ -689,26 +708,26 @@ export function useReferral(): UseReferralReturn {
 
 export interface UseAnalyticsQueryOptions {
 	/** The query parameters */
-	query: AnalyticsQuery
+	query: AnalyticsQuery;
 	/** Whether to skip initial fetch */
-	skip?: boolean
+	skip?: boolean;
 	/** Refetch interval in ms */
-	refetchInterval?: number
+	refetchInterval?: number;
 }
 
 export interface UseAnalyticsQueryReturn {
 	/** Query results */
-	data: AnalyticsQueryResult | null
+	data: AnalyticsQueryResult | null;
 	/** Whether query is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether initial load is complete */
-	isInitialized: boolean
+	isInitialized: boolean;
 	/** Error from query */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 	/** Refetch the query */
-	refetch: () => Promise<void>
+	refetch: () => Promise<void>;
 }
 
 /**
@@ -741,12 +760,14 @@ export interface UseAnalyticsQueryReturn {
  * }
  * ```
  */
-export function useAnalyticsQuery(options: UseAnalyticsQueryOptions): UseAnalyticsQueryReturn {
-	const ctx = usePlatformContext()
-	const queryClient = useQueryClient()
+export function useAnalyticsQuery(
+	options: UseAnalyticsQueryOptions,
+): UseAnalyticsQueryReturn {
+	const ctx = usePlatformContext();
+	const queryClient = useQueryClient();
 
 	// Stable query key from options
-	const queryKey = ['sylphx', ctx.appId, 'analytics', options.query] as const
+	const queryKey = ["sylphx", ctx.appId, "analytics", options.query] as const;
 
 	// React Query for analytics data
 	const analyticsQuery = useQuery({
@@ -755,12 +776,12 @@ export function useAnalyticsQuery(options: UseAnalyticsQueryOptions): UseAnalyti
 		enabled: !options.skip,
 		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - analytics data is often time-sensitive
 		refetchInterval: options.refetchInterval ?? false,
-	})
+	});
 
 	// Refetch via React Query invalidation
 	const refetch = useCallback(async () => {
-		await queryClient.invalidateQueries({ queryKey })
-	}, [queryClient, queryKey])
+		await queryClient.invalidateQueries({ queryKey });
+	}, [queryClient, queryKey]);
 
 	return {
 		data: analyticsQuery.data ?? null,
@@ -769,7 +790,7 @@ export function useAnalyticsQuery(options: UseAnalyticsQueryOptions): UseAnalyti
 		error: analyticsQuery.error as Error | null,
 		isError: analyticsQuery.isError,
 		refetch,
-	}
+	};
 }
 
 // ============================================
@@ -789,30 +810,30 @@ export interface UseConversionTrackingReturn {
 	trackConversion: (
 		event: string,
 		data: {
-			value?: number
-			currency?: string
-			orderId?: string
-			properties?: Record<string, unknown>
+			value?: number;
+			currency?: string;
+			orderId?: string;
+			properties?: Record<string, unknown>;
 		},
 		options?: {
 			/** Override auto-captured click ID */
-			clickId?: string
+			clickId?: string;
 			/** Override auto-captured user email */
-			userEmail?: string
+			userEmail?: string;
 			/** Override auto-captured user phone */
-			userPhone?: string
+			userPhone?: string;
 			/** Only forward to specific destinations (default: all with auto-forward enabled) */
-			destinations?: DestinationPlatform[]
-		}
-	) => Promise<void>
+			destinations?: DestinationPlatform[];
+		},
+	) => Promise<void>;
 	/**
 	 * Auto-captured click IDs from URL parameters
 	 */
-	clickIds: ClickIds
+	clickIds: ClickIds;
 	/**
 	 * Get the primary click ID (gclid > fbclid > ttclid)
 	 */
-	primaryClickId: string | undefined
+	primaryClickId: string | undefined;
 }
 
 /**
@@ -870,51 +891,48 @@ export interface UseConversionTrackingReturn {
  * ```
  */
 export function useConversionTracking(): UseConversionTrackingReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
 	const trackConversion = useCallback(
 		async (
 			event: string,
 			data: {
-				value?: number
-				currency?: string
-				orderId?: string
-				properties?: Record<string, unknown>
+				value?: number;
+				currency?: string;
+				orderId?: string;
+				properties?: Record<string, unknown>;
 			},
 			options?: {
-				clickId?: string
-				userEmail?: string
-				userPhone?: string
-				destinations?: DestinationPlatform[]
-			}
+				clickId?: string;
+				userEmail?: string;
+				userPhone?: string;
+				destinations?: DestinationPlatform[];
+			},
 		) => {
 			// Track with conversion data (auto-enriched by ctx.track)
-			await ctx.track(
-				event,
-				data.properties || {},
-				{
-					destinations: options?.destinations,
-					conversion: {
-						value: data.value,
-						currency: data.currency,
-						orderId: data.orderId,
-						clickId: options?.clickId,
-						userEmail: options?.userEmail,
-						userPhone: options?.userPhone,
-					},
-				}
-			)
+			await ctx.track(event, data.properties || {}, {
+				destinations: options?.destinations,
+				conversion: {
+					value: data.value,
+					currency: data.currency,
+					orderId: data.orderId,
+					clickId: options?.clickId,
+					userEmail: options?.userEmail,
+					userPhone: options?.userPhone,
+				},
+			});
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
-	const primaryClickId = ctx.clickIds.gclid || ctx.clickIds.fbclid || ctx.clickIds.ttclid
+	const primaryClickId =
+		ctx.clickIds.gclid || ctx.clickIds.fbclid || ctx.clickIds.ttclid;
 
 	return {
 		trackConversion,
 		clickIds: ctx.clickIds,
 		primaryClickId,
-	}
+	};
 }
 
 // ============================================
@@ -923,35 +941,38 @@ export function useConversionTracking(): UseConversionTrackingReturn {
 
 export interface UseInboxReturn {
 	/** List of in-app messages */
-	messages: InAppMessage[]
+	messages: InAppMessage[];
 	/** Number of unread messages */
-	unreadCount: number
+	unreadCount: number;
 	/** Whether inbox is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading inbox */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an error */
-	isError: boolean
+	isError: boolean;
 	/** User preferences for inbox */
-	preferences: InboxPreferences | null
+	preferences: InboxPreferences | null;
 	/** Mark a specific message as read */
-	markAsRead: (messageId: string) => Promise<void>
+	markAsRead: (messageId: string) => Promise<void>;
 	/** Mark all messages as read */
-	markAllAsRead: () => Promise<void>
+	markAllAsRead: () => Promise<void>;
 	/** Dismiss a message (user closed it) */
-	dismiss: (messageId: string) => Promise<void>
+	dismiss: (messageId: string) => Promise<void>;
 	/** Record that user clicked an action button */
-	recordClick: (messageId: string, action: 'primary' | 'secondary') => Promise<void>
+	recordClick: (
+		messageId: string,
+		action: "primary" | "secondary",
+	) => Promise<void>;
 	/** Update inbox preferences */
-	updatePreferences: (prefs: Partial<InboxPreferences>) => Promise<void>
+	updatePreferences: (prefs: Partial<InboxPreferences>) => Promise<void>;
 	/** Refresh the inbox data */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 	/** Get messages filtered by topic */
-	getByTopic: (topic: string) => InAppMessage[]
+	getByTopic: (topic: string) => InAppMessage[];
 	/** Get messages filtered by type */
-	getByType: (type: InAppMessageType) => InAppMessage[]
+	getByType: (type: InAppMessageType) => InAppMessage[];
 	/** Get unread messages only */
-	unreadMessages: InAppMessage[]
+	unreadMessages: InAppMessage[];
 }
 
 /**
@@ -1024,23 +1045,25 @@ export interface UseInboxReturn {
  * ```
  */
 export function useInbox(): UseInboxReturn {
-	const ctx = usePlatformContext()
+	const ctx = usePlatformContext();
 
 	const getByTopic = useCallback(
 		(topic: string): InAppMessage[] => {
-			return ctx.inboxMessages.filter((m) => m.topic === topic)
+			return ctx.inboxMessages.filter((m) => m.topic === topic);
 		},
-		[ctx.inboxMessages]
-	)
+		[ctx.inboxMessages],
+	);
 
 	const getByType = useCallback(
 		(type: InAppMessageType): InAppMessage[] => {
-			return ctx.inboxMessages.filter((m) => m.type === type)
+			return ctx.inboxMessages.filter((m) => m.type === type);
 		},
-		[ctx.inboxMessages]
-	)
+		[ctx.inboxMessages],
+	);
 
-	const unreadMessages = ctx.inboxMessages.filter((m) => !m.isRead && !m.isDismissed)
+	const unreadMessages = ctx.inboxMessages.filter(
+		(m) => !m.isRead && !m.isDismissed,
+	);
 
 	return {
 		messages: ctx.inboxMessages,
@@ -1058,5 +1081,5 @@ export function useInbox(): UseInboxReturn {
 		getByTopic,
 		getByType,
 		unreadMessages,
-	}
+	};
 }

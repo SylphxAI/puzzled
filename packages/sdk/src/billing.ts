@@ -8,22 +8,21 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type Plan = components['schemas']['Plan']
-export type Subscription = components['schemas']['Subscription']
-export type CheckoutRequest = components['schemas']['CheckoutRequest']
-export type CheckoutResponse = components['schemas']['CheckoutResponse']
-export type PortalRequest = components['schemas']['PortalRequest']
-export type PortalResponse = components['schemas']['PortalResponse']
-export type BalanceResponse = components['schemas']['BalanceResponse']
-export type UsageResponse = components['schemas']['UsageResponse']
-
+export type Plan = components["schemas"]["Plan"];
+export type Subscription = components["schemas"]["Subscription"];
+export type CheckoutRequest = components["schemas"]["CheckoutRequest"];
+export type CheckoutResponse = components["schemas"]["CheckoutResponse"];
+export type PortalRequest = components["schemas"]["PortalRequest"];
+export type PortalResponse = components["schemas"]["PortalResponse"];
+export type BalanceResponse = components["schemas"]["BalanceResponse"];
+export type UsageResponse = components["schemas"]["UsageResponse"];
 
 // ============================================================================
 // Functions
@@ -39,7 +38,7 @@ export type UsageResponse = components['schemas']['UsageResponse']
  * ```
  */
 export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
-	return callApi<Plan[]>(config, '/billing/plans')
+	return callApi<Plan[]>(config, "/billing/plans");
 }
 
 /**
@@ -55,11 +54,11 @@ export async function getPlans(config: SylphxConfig): Promise<Plan[]> {
  */
 export async function getSubscription(
 	config: SylphxConfig,
-	userId: string
+	userId: string,
 ): Promise<Subscription | null> {
-	return callApi<Subscription | null>(config, '/billing/subscription', {
+	return callApi<Subscription | null>(config, "/billing/subscription", {
 		query: { userId },
-	})
+	});
 }
 
 /**
@@ -80,12 +79,12 @@ export async function getSubscription(
  */
 export async function createCheckout(
 	config: SylphxConfig,
-	input: CheckoutRequest
+	input: CheckoutRequest,
 ): Promise<CheckoutResponse> {
-	return callApi<CheckoutResponse>(config, '/billing/checkout', {
-		method: 'POST',
+	return callApi<CheckoutResponse>(config, "/billing/checkout", {
+		method: "POST",
 		body: input,
-	})
+	});
 }
 
 /**
@@ -103,12 +102,12 @@ export async function createCheckout(
  */
 export async function createPortalSession(
 	config: SylphxConfig,
-	input: PortalRequest
+	input: PortalRequest,
 ): Promise<PortalResponse> {
-	return callApi<PortalResponse>(config, '/billing/portal', {
-		method: 'POST',
+	return callApi<PortalResponse>(config, "/billing/portal", {
+		method: "POST",
 		body: input,
-	})
+	});
 }
 
 /**
@@ -120,8 +119,10 @@ export async function createPortalSession(
  * console.log(`Balance: ${balance.balance.currentFormatted}`)
  * ```
  */
-export async function getBillingBalance(config: SylphxConfig): Promise<BalanceResponse> {
-	return callApi<BalanceResponse>(config, '/billing/balance')
+export async function getBillingBalance(
+	config: SylphxConfig,
+): Promise<BalanceResponse> {
+	return callApi<BalanceResponse>(config, "/billing/balance");
 }
 
 /**
@@ -134,9 +135,9 @@ export async function getBillingBalance(config: SylphxConfig): Promise<BalanceRe
  */
 export async function getBillingUsage(
 	config: SylphxConfig,
-	options?: { month?: string }
+	options?: { month?: string },
 ): Promise<UsageResponse> {
-	return callApi<UsageResponse>(config, '/billing/usage', {
+	return callApi<UsageResponse>(config, "/billing/usage", {
 		query: options?.month ? { month: options.month } : undefined,
-	})
+	});
 }

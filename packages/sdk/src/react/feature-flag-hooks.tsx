@@ -27,58 +27,66 @@
  * - Background refetching via refetchInterval (no manual setInterval)
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, createContext, useContext, useMemo, type ReactNode } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { EvaluationReason, FeatureFlagDetailResult } from '../types'
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-	FLAGS_CACHE_TTL_MS,
+	type ReactNode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
+import {
 	FLAGS_CACHE_KEY,
 	FLAGS_CACHE_TIMESTAMP_KEY,
+	FLAGS_CACHE_TTL_MS,
 	STALE_TIME_FREQUENT_MS,
 	STALE_TIME_STABLE_MS,
-} from '../constants'
+} from "../constants";
+import type { EvaluationReason, FeatureFlagDetailResult } from "../types";
 
 // ============================================
 // Types
 // ============================================
 
-export type FlagValue = boolean | string | number | Record<string, unknown>
+export type FlagValue = boolean | string | number | Record<string, unknown>;
 
 export interface FeatureFlag {
-	key: string
-	value: FlagValue
-	enabled: boolean
-	variant?: string
-	payload?: Record<string, unknown>
+	key: string;
+	value: FlagValue;
+	enabled: boolean;
+	variant?: string;
+	payload?: Record<string, unknown>;
 }
 
 export interface FlagOverrides {
-	[key: string]: FlagValue
+	[key: string]: FlagValue;
 }
 
 export interface FeatureFlagContextValue {
 	/** Get a flag value */
-	getFlag: (key: string) => FlagValue | undefined
+	getFlag: (key: string) => FlagValue | undefined;
 	/** Check if a boolean flag is enabled */
-	isEnabled: (key: string) => boolean
+	isEnabled: (key: string) => boolean;
 	/** Get flag variant (for A/B tests) */
-	getVariant: (key: string) => string | undefined
+	getVariant: (key: string) => string | undefined;
 	/** All loaded flags */
-	flags: Map<string, FeatureFlag>
+	flags: Map<string, FeatureFlag>;
 	/** Whether flags are loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading flags */
-	error: Error | null
+	error: Error | null;
 	/** Refresh flags from server */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 	/** Local overrides for testing */
-	overrides: FlagOverrides
+	overrides: FlagOverrides;
 	/** Set a local override */
-	setOverride: (key: string, value: FlagValue) => void
+	setOverride: (key: string, value: FlagValue) => void;
 	/** Clear all overrides */
-	clearOverrides: () => void
+	clearOverrides: () => void;
 }
 
 // ============================================
@@ -86,28 +94,30 @@ export interface FeatureFlagContextValue {
 // ============================================
 
 /** Feature Flag Context - internal use for FlagDevTools */
-export const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(null)
+export const FeatureFlagContext = createContext<FeatureFlagContextValue | null>(
+	null,
+);
 
 export interface FeatureFlagProviderProps {
-	children: ReactNode
+	children: ReactNode;
 	/** API endpoint to fetch flags */
-	endpoint?: string
+	endpoint?: string;
 	/** Initial flags (for SSR) */
-	initialFlags?: FeatureFlag[]
+	initialFlags?: FeatureFlag[];
 	/** User context for flag evaluation */
 	userContext?: {
-		userId?: string
-		email?: string
-		attributes?: Record<string, unknown>
-	}
+		userId?: string;
+		email?: string;
+		attributes?: Record<string, unknown>;
+	};
 	/** Refresh interval in ms (0 to disable) - uses React Query refetchInterval */
-	refreshInterval?: number
+	refreshInterval?: number;
 	/** Enable localStorage caching */
-	enableCache?: boolean
+	enableCache?: boolean;
 }
 
 /** Cache TTL from constants (5 minutes - LaunchDarkly pattern) */
-const CACHE_TTL_MS = FLAGS_CACHE_TTL_MS
+const CACHE_TTL_MS = FLAGS_CACHE_TTL_MS;
 
 /**
  * Feature Flag Provider
@@ -127,149 +137,159 @@ const CACHE_TTL_MS = FLAGS_CACHE_TTL_MS
  */
 export function FeatureFlagProvider({
 	children,
-	endpoint = '/api/flags',
+	endpoint = "/api/flags",
 	initialFlags = [],
 	userContext,
 	refreshInterval = 0,
 	enableCache = true,
 }: FeatureFlagProviderProps) {
-	const queryClient = useQueryClient()
+	const queryClient = useQueryClient();
 
 	// Hydration-safe: start with server-safe defaults, populate from localStorage in useEffect.
 	// Both server and client initial render produce the same value — no mismatch.
-	const [cachedInitialFlags, setCachedInitialFlags] = useState<FeatureFlag[]>(initialFlags)
+	const [cachedInitialFlags, setCachedInitialFlags] =
+		useState<FeatureFlag[]>(initialFlags);
 
 	useEffect(() => {
-		if (!enableCache) return
+		if (!enableCache) return;
 		try {
-			const cached = localStorage.getItem(FLAGS_CACHE_KEY)
-			const timestamp = localStorage.getItem(FLAGS_CACHE_TIMESTAMP_KEY)
+			const cached = localStorage.getItem(FLAGS_CACHE_KEY);
+			const timestamp = localStorage.getItem(FLAGS_CACHE_TIMESTAMP_KEY);
 
 			if (cached && timestamp && !initialFlags.length) {
-				const cacheAge = Date.now() - Number.parseInt(timestamp, 10)
+				const cacheAge = Date.now() - Number.parseInt(timestamp, 10);
 				if (cacheAge < CACHE_TTL_MS) {
-					setCachedInitialFlags(JSON.parse(cached) as FeatureFlag[])
-					return
+					setCachedInitialFlags(JSON.parse(cached) as FeatureFlag[]);
+					return;
 				}
 				// Cache expired — clear it
-				localStorage.removeItem(FLAGS_CACHE_KEY)
-				localStorage.removeItem(FLAGS_CACHE_TIMESTAMP_KEY)
+				localStorage.removeItem(FLAGS_CACHE_KEY);
+				localStorage.removeItem(FLAGS_CACHE_TIMESTAMP_KEY);
 			}
 		} catch {
 			// Ignore cache errors
 		}
-	}, [enableCache, initialFlags])
+	}, [enableCache, initialFlags]);
 
 	// Overrides state — hydration-safe with localStorage sync in useEffect
-	const [overrides, setOverrides] = useState<FlagOverrides>({})
+	const [overrides, setOverrides] = useState<FlagOverrides>({});
 
 	useEffect(() => {
 		try {
-			const stored = localStorage.getItem(`${FLAGS_CACHE_KEY}_overrides`)
+			const stored = localStorage.getItem(`${FLAGS_CACHE_KEY}_overrides`);
 			if (stored) {
-				setOverrides(JSON.parse(stored))
+				setOverrides(JSON.parse(stored));
 			}
 		} catch {
 			// Ignore cache errors
 		}
-	}, [])
+	}, []);
 
 	// React Query for flag fetching with automatic refetch
 	const flagsQuery = useQuery({
-		queryKey: ['sylphx', 'feature-flags', endpoint, userContext?.userId, userContext?.email],
+		queryKey: [
+			"sylphx",
+			"feature-flags",
+			endpoint,
+			userContext?.userId,
+			userContext?.email,
+		],
 		queryFn: async () => {
 			const response = await fetch(endpoint, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ context: userContext }),
-			})
+			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch flags: ${response.status}`)
+				throw new Error(`Failed to fetch flags: ${response.status}`);
 			}
 
-			const data = await response.json()
-			const flagList = data.flags as FeatureFlag[]
+			const data = await response.json();
+			const flagList = data.flags as FeatureFlag[];
 
 			// Cache flags to localStorage with timestamp for TTL validation
-			if (enableCache && typeof window !== 'undefined') {
-				localStorage.setItem(FLAGS_CACHE_KEY, JSON.stringify(flagList))
-				localStorage.setItem(FLAGS_CACHE_TIMESTAMP_KEY, Date.now().toString())
+			if (enableCache && typeof window !== "undefined") {
+				localStorage.setItem(FLAGS_CACHE_KEY, JSON.stringify(flagList));
+				localStorage.setItem(FLAGS_CACHE_TIMESTAMP_KEY, Date.now().toString());
 			}
 
-			return flagList
+			return flagList;
 		},
 		initialData: cachedInitialFlags.length > 0 ? cachedInitialFlags : undefined,
 		staleTime: STALE_TIME_FREQUENT_MS, // 1 minute - flags change occasionally
 		refetchInterval: refreshInterval > 0 ? refreshInterval : undefined,
 		enabled: cachedInitialFlags.length === 0 || refreshInterval > 0,
-	})
+	});
 
 	// Convert flag array to Map for fast lookups
 	const flags = useMemo(() => {
-		const map = new Map<string, FeatureFlag>()
-		const flagList = flagsQuery.data ?? cachedInitialFlags
-		flagList.forEach(flag => map.set(flag.key, flag))
-		return map
-	}, [flagsQuery.data, cachedInitialFlags])
+		const map = new Map<string, FeatureFlag>();
+		const flagList = flagsQuery.data ?? cachedInitialFlags;
+		flagList.forEach((flag) => map.set(flag.key, flag));
+		return map;
+	}, [flagsQuery.data, cachedInitialFlags]);
 
 	// Get flag value (with override support)
 	const getFlag = useCallback(
 		(key: string): FlagValue | undefined => {
 			if (key in overrides) {
-				return overrides[key]
+				return overrides[key];
 			}
-			const flag = flags.get(key)
-			return flag?.value
+			const flag = flags.get(key);
+			return flag?.value;
 		},
-		[flags, overrides]
-	)
+		[flags, overrides],
+	);
 
 	// Check if boolean flag is enabled
 	const isEnabled = useCallback(
 		(key: string): boolean => {
 			if (key in overrides) {
-				return Boolean(overrides[key])
+				return Boolean(overrides[key]);
 			}
-			const flag = flags.get(key)
-			return flag?.enabled ?? false
+			const flag = flags.get(key);
+			return flag?.enabled ?? false;
 		},
-		[flags, overrides]
-	)
+		[flags, overrides],
+	);
 
 	// Get variant for A/B tests
 	const getVariant = useCallback(
 		(key: string): string | undefined => {
-			const flag = flags.get(key)
-			return flag?.variant
+			const flag = flags.get(key);
+			return flag?.variant;
 		},
-		[flags]
-	)
+		[flags],
+	);
 
 	// Override management
 	const setOverride = useCallback((key: string, value: FlagValue) => {
-		setOverrides(prev => {
-			const next = { ...prev, [key]: value }
-			if (typeof window !== 'undefined') {
-				localStorage.setItem(`${FLAGS_CACHE_KEY}_overrides`, JSON.stringify(next))
+		setOverrides((prev) => {
+			const next = { ...prev, [key]: value };
+			if (typeof window !== "undefined") {
+				localStorage.setItem(
+					`${FLAGS_CACHE_KEY}_overrides`,
+					JSON.stringify(next),
+				);
 			}
-			return next
-		})
-	}, [])
+			return next;
+		});
+	}, []);
 
 	const clearOverrides = useCallback(() => {
-		setOverrides({})
-		if (typeof window !== 'undefined') {
-			localStorage.removeItem(`${FLAGS_CACHE_KEY}_overrides`)
+		setOverrides({});
+		if (typeof window !== "undefined") {
+			localStorage.removeItem(`${FLAGS_CACHE_KEY}_overrides`);
 		}
-	}, [])
+	}, []);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'feature-flags', endpoint],
-		})
-	}, [queryClient, endpoint])
+			queryKey: ["sylphx", "feature-flags", endpoint],
+		});
+	}, [queryClient, endpoint]);
 
 	const value: FeatureFlagContextValue = {
 		getFlag,
@@ -282,9 +302,13 @@ export function FeatureFlagProvider({
 		overrides,
 		setOverride,
 		clearOverrides,
-	}
+	};
 
-	return <FeatureFlagContext.Provider value={value}>{children}</FeatureFlagContext.Provider>
+	return (
+		<FeatureFlagContext.Provider value={value}>
+			{children}
+		</FeatureFlagContext.Provider>
+	);
 }
 
 // ============================================
@@ -293,22 +317,22 @@ export function FeatureFlagProvider({
 
 export interface UseFeatureFlagOptions<T extends FlagValue = boolean> {
 	/** Default value if flag not found */
-	defaultValue?: T
+	defaultValue?: T;
 	/** Track flag exposure for analytics */
-	trackExposure?: boolean
+	trackExposure?: boolean;
 }
 
 export interface UseFeatureFlagReturn<T extends FlagValue = boolean> {
 	/** Flag value */
-	value: T
+	value: T;
 	/** Whether flag is enabled (for boolean flags) */
-	isEnabled: boolean
+	isEnabled: boolean;
 	/** Flag variant (for A/B tests) */
-	variant: string | undefined
+	variant: string | undefined;
 	/** Whether flags are loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading flags */
-	error: Error | null
+	error: Error | null;
 }
 
 /**
@@ -348,9 +372,9 @@ export interface UseFeatureFlagReturn<T extends FlagValue = boolean> {
  */
 export function useFeatureFlag<T extends FlagValue = boolean>(
 	key: string,
-	options: UseFeatureFlagOptions<T> = {}
+	options: UseFeatureFlagOptions<T> = {},
 ): UseFeatureFlagReturn<T> {
-	const context = useContext(FeatureFlagContext)
+	const context = useContext(FeatureFlagContext);
 
 	if (!context) {
 		// Return default if no provider (for testing/SSR)
@@ -360,15 +384,15 @@ export function useFeatureFlag<T extends FlagValue = boolean>(
 			variant: undefined,
 			isLoading: false,
 			error: null,
-		}
+		};
 	}
 
-	const { getFlag, isEnabled, getVariant, isLoading, error } = context
+	const { getFlag, isEnabled, getVariant, isLoading, error } = context;
 
-	const flagValue = getFlag(key)
-	const value = (flagValue ?? options.defaultValue ?? false) as T
-	const enabled = isEnabled(key)
-	const variant = getVariant(key)
+	const flagValue = getFlag(key);
+	const value = (flagValue ?? options.defaultValue ?? false) as T;
+	const enabled = isEnabled(key);
+	const variant = getVariant(key);
 
 	return {
 		value,
@@ -376,7 +400,7 @@ export function useFeatureFlag<T extends FlagValue = boolean>(
 		variant,
 		isLoading,
 		error,
-	}
+	};
 }
 
 // ============================================
@@ -400,25 +424,25 @@ export function useFeatureFlag<T extends FlagValue = boolean>(
  * ```
  */
 export function useFeatureFlags(keys: string[]): Record<string, boolean> {
-	const context = useContext(FeatureFlagContext)
+	const context = useContext(FeatureFlagContext);
 
 	if (!context) {
 		return keys.reduce(
 			(acc, key) => {
-				acc[key] = false
-				return acc
+				acc[key] = false;
+				return acc;
 			},
-			{} as Record<string, boolean>
-		)
+			{} as Record<string, boolean>,
+		);
 	}
 
 	return keys.reduce(
 		(acc, key) => {
-			acc[key] = context.isEnabled(key)
-			return acc
+			acc[key] = context.isEnabled(key);
+			return acc;
 		},
-		{} as Record<string, boolean>
-	)
+		{} as Record<string, boolean>,
+	);
 }
 
 // ============================================
@@ -446,21 +470,21 @@ export function useFeatureFlags(keys: string[]): Record<string, boolean> {
  * ```
  */
 export function useFlagOverrides() {
-	const context = useContext(FeatureFlagContext)
+	const context = useContext(FeatureFlagContext);
 
 	if (!context) {
 		return {
 			overrides: {} as FlagOverrides,
 			setOverride: () => {},
 			clearOverrides: () => {},
-		}
+		};
 	}
 
 	return {
 		overrides: context.overrides,
 		setOverride: context.setOverride,
 		clearOverrides: context.clearOverrides,
-	}
+	};
 }
 
 // ============================================
@@ -469,27 +493,27 @@ export function useFlagOverrides() {
 
 interface UseFeatureFlagDetailOptions {
 	/** Default value if flag not found */
-	defaultValue?: boolean
+	defaultValue?: boolean;
 	/** User context for targeting rules */
 	userContext?: {
-		isPremium?: boolean
-		isAdmin?: boolean
-	}
+		isPremium?: boolean;
+		isAdmin?: boolean;
+	};
 }
 
 interface UseFeatureFlagDetailReturn {
 	/** Flag value */
-	enabled: boolean
+	enabled: boolean;
 	/** Whether flags are loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error loading flags */
-	error: Error | null
+	error: Error | null;
 	/** Full evaluation detail (null while loading) */
-	detail: FeatureFlagDetailResult | null
+	detail: FeatureFlagDetailResult | null;
 	/** Evaluation reason (null while loading) */
-	reason: EvaluationReason | null
+	reason: EvaluationReason | null;
 	/** Rollout bucket for this user (for debugging) */
-	rolloutBucket: number | null
+	rolloutBucket: number | null;
 }
 
 /**
@@ -536,34 +560,39 @@ interface UseFeatureFlagDetailReturn {
  */
 function useFeatureFlagWithDetail(
 	key: string,
-	options: UseFeatureFlagDetailOptions = {}
+	options: UseFeatureFlagDetailOptions = {},
 ): UseFeatureFlagDetailReturn {
 	// React Query for flag detail fetching
 	const detailQuery = useQuery({
-		queryKey: ['sylphx', 'feature-flag-detail', key, options.userContext],
+		queryKey: ["sylphx", "feature-flag-detail", key, options.userContext],
 		queryFn: async () => {
-			const response = await fetch(`/api/flags/${encodeURIComponent(key)}/detail`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ userContext: options.userContext }),
-			})
+			const response = await fetch(
+				`/api/flags/${encodeURIComponent(key)}/detail`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ userContext: options.userContext }),
+				},
+			);
 
 			if (!response.ok) {
-				throw new Error(`Failed to fetch flag detail: ${response.status}`)
+				throw new Error(`Failed to fetch flag detail: ${response.status}`);
 			}
 
-			return response.json() as Promise<FeatureFlagDetailResult>
+			return response.json() as Promise<FeatureFlagDetailResult>;
 		},
 		staleTime: STALE_TIME_STABLE_MS, // 5 min - flag details don't change frequently
-	})
+	});
 
-	const detail = detailQuery.data ?? null
-	const enabled = detail?.enabled ?? options.defaultValue ?? false
-	const reason = detail?.reason ?? null
+	const detail = detailQuery.data ?? null;
+	const enabled = detail?.enabled ?? options.defaultValue ?? false;
+	const reason = detail?.reason ?? null;
 	const rolloutBucket =
-		detail?.reason && typeof detail.reason === 'object' && 'rolloutBucket' in detail.reason
-			? (detail.reason as { rolloutBucket?: number }).rolloutBucket ?? null
-			: null
+		detail?.reason &&
+		typeof detail.reason === "object" &&
+		"rolloutBucket" in detail.reason
+			? ((detail.reason as { rolloutBucket?: number }).rolloutBucket ?? null)
+			: null;
 
 	return {
 		enabled,
@@ -572,8 +601,7 @@ function useFeatureFlagWithDetail(
 		detail,
 		reason,
 		rolloutBucket,
-	}
+	};
 }
 
 // Re-export types for convenience
-

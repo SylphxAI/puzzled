@@ -16,17 +16,17 @@
  * - All other game-aware components
  */
 
-import { arithmoConfig } from './arithmo/config'
-import { blockSlideConfig } from './block-slide/config'
-import { crosswordConfig } from './crossword/config'
-import { cryptogramConfig } from './cryptogram/config'
-import { killerSudokuConfig } from './killer-sudoku/config'
-import { nonogramConfig } from './nonogram/config'
-import { patternMatchConfig } from './pattern-match/config'
-import { quadWordsConfig } from './quad-words/config'
-import { queensConfig } from './queens/config'
-import { sudokuConfig } from './sudoku/config'
-import { tangoConfig } from './tango/config'
+import { arithmoConfig } from "./arithmo/config";
+import { blockSlideConfig } from "./block-slide/config";
+import { crosswordConfig } from "./crossword/config";
+import { cryptogramConfig } from "./cryptogram/config";
+import { killerSudokuConfig } from "./killer-sudoku/config";
+import { nonogramConfig } from "./nonogram/config";
+import { patternMatchConfig } from "./pattern-match/config";
+import { quadWordsConfig } from "./quad-words/config";
+import { queensConfig } from "./queens/config";
+import { sudokuConfig } from "./sudoku/config";
+import { tangoConfig } from "./tango/config";
 import type {
 	DifficultyLevelConfig,
 	GameCategory,
@@ -37,13 +37,13 @@ import type {
 	GameResult,
 	GameSkill,
 	GameSubmission,
-} from './types'
-import { wordBoxConfig } from './word-box/config'
-import { wordGroupsConfig } from './word-groups/config'
-import { wordGuessConfig } from './word-guess/config'
-import { wordHiveConfig } from './word-hive/config'
-import { wordLadderConfig } from './word-ladder/config'
-import { wordSearchConfig } from './word-search/config'
+} from "./types";
+import { wordBoxConfig } from "./word-box/config";
+import { wordGroupsConfig } from "./word-groups/config";
+import { wordGuessConfig } from "./word-guess/config";
+import { wordHiveConfig } from "./word-hive/config";
+import { wordLadderConfig } from "./word-ladder/config";
+import { wordSearchConfig } from "./word-search/config";
 
 // ==========================================
 // Game Registry
@@ -53,52 +53,54 @@ import { wordSearchConfig } from './word-search/config'
  * All registered games mapped by slug
  */
 export const GAME_CONFIGS = {
-	'word-guess': wordGuessConfig,
-	'word-groups': wordGroupsConfig,
-	'word-hive': wordHiveConfig,
+	"word-guess": wordGuessConfig,
+	"word-groups": wordGroupsConfig,
+	"word-hive": wordHiveConfig,
 	crossword: crosswordConfig,
 	sudoku: sudokuConfig,
 	nonogram: nonogramConfig,
-	'word-ladder': wordLadderConfig,
+	"word-ladder": wordLadderConfig,
 	arithmo: arithmoConfig,
-	'pattern-match': patternMatchConfig,
-	'block-slide': blockSlideConfig,
+	"pattern-match": patternMatchConfig,
+	"block-slide": blockSlideConfig,
 	queens: queensConfig,
 	tango: tangoConfig,
-	'word-box': wordBoxConfig,
-	'quad-words': quadWordsConfig,
-	'killer-sudoku': killerSudokuConfig,
+	"word-box": wordBoxConfig,
+	"quad-words": quadWordsConfig,
+	"killer-sudoku": killerSudokuConfig,
 	cryptogram: cryptogramConfig,
-	'word-search': wordSearchConfig,
-} as const satisfies GameRegistry
+	"word-search": wordSearchConfig,
+} as const satisfies GameRegistry;
 
 /**
  * Derived type for all valid game slugs
  * Use this instead of hard-coded string unions
  */
-export type GameSlug = keyof typeof GAME_CONFIGS
+export type GameSlug = keyof typeof GAME_CONFIGS;
 
 /**
  * Get list of all registered game slugs
  */
 export function getGameSlugs(): string[] {
-	return Object.keys(GAME_CONFIGS)
+	return Object.keys(GAME_CONFIGS);
 }
 
 /**
  * Get game config by slug
  */
 // biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
-export function getGameConfig(slug: string): GameConfig<any, any, any, any> | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	return GAME_CONFIGS[slug]
+export function getGameConfig(
+	slug: string,
+): GameConfig<any, any, any, any> | undefined {
+	if (!isValidGameSlug(slug)) return undefined;
+	return GAME_CONFIGS[slug];
 }
 
 /**
  * Check if a game slug is registered
  */
 export function isValidGameSlug(slug: string): slug is GameSlug {
-	return slug in GAME_CONFIGS
+	return slug in GAME_CONFIGS;
 }
 
 /**
@@ -106,8 +108,8 @@ export function isValidGameSlug(slug: string): slug is GameSlug {
  * Returns undefined if game not found or has no HowToPlay
  */
 function _getHowToPlayContent(slug: string) {
-	const config = GAME_CONFIGS[slug as GameSlug]
-	return config?.HowToPlayContent
+	const config = GAME_CONFIGS[slug as GameSlug];
+	return config?.HowToPlayContent;
 }
 
 /**
@@ -115,36 +117,36 @@ function _getHowToPlayContent(slug: string) {
  */
 // biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
 export function getAllGames(): GameConfig<any, any, any, any>[] {
-	return Object.values(GAME_CONFIGS).sort((a, b) => a.sortOrder - b.sortOrder)
+	return Object.values(GAME_CONFIGS).sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
 /**
  * Full game metadata including display info for UI rendering
  */
 export type GameMetadata = {
-	slug: string
-	name: string
-	description: string
-	sortOrder: number
+	slug: string;
+	name: string;
+	description: string;
+	sortOrder: number;
 	/** Primary category for grouping */
-	category: GameCategory
+	category: GameCategory;
 	/** Skills tested by this game */
-	skills: GameSkill[]
+	skills: GameSkill[];
 	/** Base difficulty level */
-	difficulty: GameDifficulty
-	display: GameDisplayMeta
+	difficulty: GameDifficulty;
+	display: GameDisplayMeta;
 	/** Whether this game supports player-selectable difficulty levels */
-	supportsDifficulty: boolean
+	supportsDifficulty: boolean;
 	/** Available difficulty levels (if supportsDifficulty is true) */
-	difficultyLevels?: DifficultyLevelConfig[]
-}
+	difficultyLevels?: DifficultyLevelConfig[];
+};
 
 /**
  * Get game metadata (without functions) for client use
  */
 export function getGameMetadata(slug: string): GameMetadata | null {
-	if (!isValidGameSlug(slug)) return null
-	const config = GAME_CONFIGS[slug]
+	if (!isValidGameSlug(slug)) return null;
+	const config = GAME_CONFIGS[slug];
 
 	return {
 		slug: config.slug,
@@ -157,7 +159,7 @@ export function getGameMetadata(slug: string): GameMetadata | null {
 		display: config.display,
 		supportsDifficulty: config.supportsDifficulty ?? false,
 		difficultyLevels: config.difficultyLevels,
-	}
+	};
 }
 
 /**
@@ -176,33 +178,35 @@ export function getAllGameMetadata(): GameMetadata[] {
 		display: config.display,
 		supportsDifficulty: config.supportsDifficulty ?? false,
 		difficultyLevels: config.difficultyLevels,
-	}))
+	}));
 }
 
 /**
  * Get all games that support difficulty selection
  */
 function _getGamesWithDifficulty(): GameMetadata[] {
-	return getAllGameMetadata().filter((game) => game.supportsDifficulty)
+	return getAllGameMetadata().filter((game) => game.supportsDifficulty);
 }
 
 /**
  * Check if a game supports difficulty selection
  */
 export function gameSupportsDifficulty(slug: string): boolean {
-	if (!isValidGameSlug(slug)) return false
-	return GAME_CONFIGS[slug].supportsDifficulty ?? false
+	if (!isValidGameSlug(slug)) return false;
+	return GAME_CONFIGS[slug].supportsDifficulty ?? false;
 }
 
 /**
  * Get difficulty levels for a game
  * Returns undefined if game doesn't support difficulty
  */
-function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	const config = GAME_CONFIGS[slug]
-	if (!config.supportsDifficulty) return undefined
-	return config.difficultyLevels
+function _getGameDifficultyLevels(
+	slug: string,
+): DifficultyLevelConfig[] | undefined {
+	if (!isValidGameSlug(slug)) return undefined;
+	const config = GAME_CONFIGS[slug];
+	if (!config.supportsDifficulty) return undefined;
+	return config.difficultyLevels;
 }
 
 /**
@@ -211,8 +215,8 @@ function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undef
 export function getGameIconComponent(
 	slug: string,
 ): React.ComponentType<{ size?: number; className?: string }> | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	return GAME_CONFIGS[slug].IconComponent
+	if (!isValidGameSlug(slug)) return undefined;
+	return GAME_CONFIGS[slug].IconComponent;
 }
 
 // ==========================================
@@ -224,10 +228,10 @@ export function getGameIconComponent(
  * All users worldwide get same puzzle number on same day
  */
 export function getSeedFromDate(date: Date = new Date()): number {
-	const year = date.getUTCFullYear()
-	const month = date.getUTCMonth() + 1
-	const day = date.getUTCDate()
-	return year * 10000 + month * 100 + day
+	const year = date.getUTCFullYear();
+	const month = date.getUTCMonth() + 1;
+	const day = date.getUTCDate();
+	return year * 10000 + month * 100 + day;
 }
 
 // NOTE: Server-only puzzle generation functions are in registry.server.ts
@@ -256,11 +260,15 @@ export function validateAndScore(
 	submission: GameSubmission,
 ): GameResult {
 	if (!isValidGameSlug(slug)) {
-		return { valid: false, error: `Unknown game: ${slug}` }
+		return { valid: false, error: `Unknown game: ${slug}` };
 	}
-	const config = GAME_CONFIGS[slug]
+	const config = GAME_CONFIGS[slug];
 	// biome-ignore lint/suspicious/noExplicitAny: Runtime validated slug guarantees matching types
-	return config.validateAndScore(solution as any, puzzleData as any, submission)
+	return config.validateAndScore(
+		solution as any,
+		puzzleData as any,
+		submission,
+	);
 }
 
 // ==========================================
@@ -271,4 +279,4 @@ export type {
 	GameConfig,
 	GameResult,
 	GameSubmission,
-} from './types'
+} from "./types";

@@ -1,8 +1,8 @@
 {
-  "daily": "Daily",
-  "archive": "Archive",
-  "dailyDesc": "Today's puzzle - one chance to play",
-  "archiveDesc": "Play past puzzles",
-  "premiumRequired": "Premium required",
-  "upgrade": "Upgrade"
+	"daily": "Daily",
+	"archive": "Archive",
+	"dailyDesc": "Today's puzzle - one chance to play",
+	"archiveDesc": "Play past puzzles",
+	"premiumRequired": "Premium required",
+	"upgrade": "Upgrade"
 }

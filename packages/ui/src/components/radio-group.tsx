@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { RadioGroup as BaseRadioGroup } from '@base-ui/react/radio-group'
-import { Radio as BaseRadio } from '@base-ui/react/radio'
-import { Circle } from 'lucide-react'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Radio as BaseRadio } from "@base-ui/react/radio";
+import { RadioGroup as BaseRadioGroup } from "@base-ui/react/radio-group";
+import { Circle } from "lucide-react";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // RadioGroup Root
@@ -12,27 +12,30 @@ import { cn } from '../utils'
 
 interface RadioGroupProps {
 	/** Controlled value */
-	value?: string
+	value?: string;
 	/** Default value (uncontrolled) */
-	defaultValue?: string
+	defaultValue?: string;
 	/** Handler fired when value changes */
-	onValueChange?: (value: string) => void
+	onValueChange?: (value: string) => void;
 	/** Whether the group is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Whether the group is required */
-	required?: boolean
+	required?: boolean;
 	/** Name for form submission */
-	name?: string
+	name?: string;
 	/** Orientation */
-	orientation?: 'horizontal' | 'vertical'
+	orientation?: "horizontal" | "vertical";
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
-	({ className, value, defaultValue, onValueChange, disabled, name, children }, ref) => (
+	(
+		{ className, value, defaultValue, onValueChange, disabled, name, children },
+		ref,
+	) => (
 		<BaseRadioGroup
 			ref={ref}
 			value={value}
@@ -40,13 +43,13 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 			onValueChange={onValueChange}
 			disabled={disabled}
 			name={name}
-			className={cn('grid gap-2', className)}
+			className={cn("grid gap-2", className)}
 		>
 			{children}
 		</BaseRadioGroup>
 	),
-)
-RadioGroup.displayName = 'RadioGroup'
+);
+RadioGroup.displayName = "RadioGroup";
 
 // ==================
 // RadioGroup Item
@@ -54,11 +57,11 @@ RadioGroup.displayName = 'RadioGroup'
 
 interface RadioGroupItemProps {
 	/** Value of the radio item */
-	value: string
+	value: string;
 	/** Whether the item is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const RadioGroupItem = forwardRef<HTMLButtonElement, RadioGroupItemProps>(
@@ -69,10 +72,10 @@ const RadioGroupItem = forwardRef<HTMLButtonElement, RadioGroupItemProps>(
 			disabled={disabled}
 			className={cn(
 				// h-6 w-6 = 24px visual size, the label alongside provides additional touch area
-				'aspect-square h-6 w-6 rounded-full border border-primary text-primary',
-				'ring-offset-background transition-colors hover:border-primary/70',
-				'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
-				'disabled:cursor-not-allowed disabled:opacity-50',
+				"aspect-square h-6 w-6 rounded-full border border-primary text-primary",
+				"ring-offset-background transition-colors hover:border-primary/70",
+				"focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
+				"disabled:cursor-not-allowed disabled:opacity-50",
 				className,
 			)}
 		>
@@ -81,8 +84,8 @@ const RadioGroupItem = forwardRef<HTMLButtonElement, RadioGroupItemProps>(
 			</BaseRadio.Indicator>
 		</BaseRadio.Root>
 	),
-)
-RadioGroupItem.displayName = 'RadioGroupItem'
+);
+RadioGroupItem.displayName = "RadioGroupItem";
 
 // ==================
 // RadioCard (Card-style radio option)
@@ -90,15 +93,15 @@ RadioGroupItem.displayName = 'RadioGroupItem'
 
 interface RadioCardProps {
 	/** Value of the radio item */
-	value: string
+	value: string;
 	/** Title text */
-	title: string
+	title: string;
 	/** Description text */
-	description?: string
+	description?: string;
 	/** Whether the item is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const RadioCard = forwardRef<HTMLButtonElement, RadioCardProps>(
@@ -109,19 +112,19 @@ const RadioCard = forwardRef<HTMLButtonElement, RadioCardProps>(
 			disabled={disabled}
 			className={cn(
 				// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
-				'flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-4 min-h-11 cursor-pointer',
-				'ring-offset-background transition-all',
-				'hover:bg-muted/50',
-				'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2',
-				'data-[checked]:border-primary data-[checked]:bg-primary/5',
-				'disabled:cursor-not-allowed disabled:opacity-50',
+				"flex items-start gap-3 rounded-lg border border-border/50 bg-card/50 p-4 min-h-11 cursor-pointer",
+				"ring-offset-background transition-all",
+				"hover:bg-muted/50",
+				"focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
+				"data-[checked]:border-primary data-[checked]:bg-primary/5",
+				"disabled:cursor-not-allowed disabled:opacity-50",
 				className,
 			)}
 		>
 			<div
 				className={cn(
-					'mt-0.5 aspect-square h-4 w-4 shrink-0 rounded-full border border-primary',
-					'transition-colors',
+					"mt-0.5 aspect-square h-4 w-4 shrink-0 rounded-full border border-primary",
+					"transition-colors",
 				)}
 			>
 				<BaseRadio.Indicator className="flex items-center justify-center h-full">
@@ -131,18 +134,16 @@ const RadioCard = forwardRef<HTMLButtonElement, RadioCardProps>(
 			<div className="flex-1">
 				<div className="font-medium text-foreground">{title}</div>
 				{description && (
-					<div className="text-sm text-muted-foreground mt-0.5">{description}</div>
+					<div className="text-sm text-muted-foreground mt-0.5">
+						{description}
+					</div>
 				)}
 			</div>
 		</BaseRadio.Root>
 	),
-)
-RadioCard.displayName = 'RadioCard'
+);
+RadioCard.displayName = "RadioCard";
 
-export { RadioGroup, RadioGroupItem, RadioCard }
+export { RadioGroup, RadioGroupItem, RadioCard };
 
-export type {
-	RadioGroupProps,
-	RadioGroupItemProps,
-	RadioCardProps,
-}
+export type { RadioGroupProps, RadioGroupItemProps, RadioCardProps };

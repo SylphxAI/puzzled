@@ -40,23 +40,15 @@ export {
 	addBreadcrumb,
 	getBreadcrumbs,
 	clearBreadcrumbs,
-	
 	enableAutoCapture,
-	
-	
-	
-	
-	
-	
-	
 	// Types
-	
+
 	DEFAULT_ERROR_CONFIG,
-} from './error-tracking'
+} from "./error-tracking";
 
 export type {
 	// Core types
-	
+
 	BreadcrumbType,
 	Breadcrumb,
 	StackFrame,
@@ -69,10 +61,9 @@ export type {
 	CaptureExceptionOptions,
 	CaptureMessageOptions,
 	// Callbacks
-	
-	
+
 	CaptureResult,
-} from './error-tracking'
+} from "./error-tracking";
 
 // ==========================================
 // Session Replay
@@ -95,7 +86,7 @@ export {
 	generatePrivacyReport,
 	// Config
 	DEFAULT_CONFIG as DEFAULT_SESSION_REPLAY_CONFIG,
-} from './session-replay'
+} from "./session-replay";
 
 export type {
 	// Configuration
@@ -120,7 +111,7 @@ export type {
 	// State
 	RecorderState,
 	RecorderStatus,
-} from './session-replay'
+} from "./session-replay";
 
 // ==========================================
 // Network Interceptor
@@ -132,7 +123,7 @@ export {
 	onXHRStart,
 	onXHREnd,
 	resetNetworkInterceptor,
-} from './network-interceptor'
+} from "./network-interceptor";
 
 export type {
 	FetchStartEvent,
@@ -140,7 +131,7 @@ export type {
 	XHRStartEvent,
 	XHREndEvent,
 	UnsubscribeFn as NetworkUnsubscribeFn,
-} from './network-interceptor'
+} from "./network-interceptor";
 
 // ==========================================
 // Web Vitals
@@ -157,7 +148,7 @@ export {
 	// Constants
 	WEB_VITALS_THRESHOLDS,
 	DEFAULT_WEB_VITALS_CONFIG,
-} from './web-vitals'
+} from "./web-vitals";
 
 export type {
 	// Metric types
@@ -170,4 +161,4 @@ export type {
 	WebVitalsReport,
 	// Configuration
 	WebVitalsConfig,
-} from './web-vitals'
+} from "./web-vitals";

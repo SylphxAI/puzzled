@@ -5,7 +5,7 @@
  * Uses CSS custom properties for theming.
  */
 
-import type { CSSProperties } from 'react'
+import type { CSSProperties } from "react";
 
 // ============================================
 // Theme Variables
@@ -13,118 +13,122 @@ import type { CSSProperties } from 'react'
 
 export interface ThemeVariables {
 	// Colors
-	colorPrimary: string
-	colorPrimaryForeground: string
-	colorBackground: string
-	colorForeground: string
-	colorMuted: string
-	colorMutedForeground: string
-	colorBorder: string
-	colorInput: string
-	colorInputBackground: string
-	colorRing: string
-	colorDestructive: string
-	colorDestructiveForeground: string
-	colorSuccess: string
-	colorSuccessForeground: string
-	colorWarning: string
-	colorWarningForeground: string
+	colorPrimary: string;
+	colorPrimaryForeground: string;
+	colorBackground: string;
+	colorForeground: string;
+	colorMuted: string;
+	colorMutedForeground: string;
+	colorBorder: string;
+	colorInput: string;
+	colorInputBackground: string;
+	colorRing: string;
+	colorDestructive: string;
+	colorDestructiveForeground: string;
+	colorSuccess: string;
+	colorSuccessForeground: string;
+	colorWarning: string;
+	colorWarningForeground: string;
 
 	// Typography
-	fontFamily: string
-	fontSizeXs: string
-	fontSizeSm: string
-	fontSizeBase: string
-	fontSizeLg: string
-	fontSizeXl: string
-	fontSizeXxl: string
+	fontFamily: string;
+	fontSizeXs: string;
+	fontSizeSm: string;
+	fontSizeBase: string;
+	fontSizeLg: string;
+	fontSizeXl: string;
+	fontSizeXxl: string;
 
 	// Spacing & Borders
-	borderRadius: string
-	borderRadiusSm: string
-	borderRadiusLg: string
-	spacingUnit: string
+	borderRadius: string;
+	borderRadiusSm: string;
+	borderRadiusLg: string;
+	spacingUnit: string;
 }
 
 export const defaultTheme: ThemeVariables = {
 	// Colors - Light theme
-	colorPrimary: '#0ea5e9',
-	colorPrimaryForeground: '#ffffff',
-	colorBackground: '#ffffff',
-	colorForeground: '#0f172a',
-	colorMuted: '#f1f5f9',
-	colorMutedForeground: '#64748b',
-	colorBorder: '#e2e8f0',
-	colorInput: '#e2e8f0',
-	colorInputBackground: '#ffffff',
-	colorRing: '#0ea5e9',
-	colorDestructive: '#ef4444',
-	colorDestructiveForeground: '#ffffff',
-	colorSuccess: '#22c55e',
-	colorSuccessForeground: '#ffffff',
-	colorWarning: '#f59e0b',
-	colorWarningForeground: '#ffffff',
+	colorPrimary: "#0ea5e9",
+	colorPrimaryForeground: "#ffffff",
+	colorBackground: "#ffffff",
+	colorForeground: "#0f172a",
+	colorMuted: "#f1f5f9",
+	colorMutedForeground: "#64748b",
+	colorBorder: "#e2e8f0",
+	colorInput: "#e2e8f0",
+	colorInputBackground: "#ffffff",
+	colorRing: "#0ea5e9",
+	colorDestructive: "#ef4444",
+	colorDestructiveForeground: "#ffffff",
+	colorSuccess: "#22c55e",
+	colorSuccessForeground: "#ffffff",
+	colorWarning: "#f59e0b",
+	colorWarningForeground: "#ffffff",
 
 	// Typography
 	fontFamily:
 		'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-	fontSizeXs: '0.75rem',
-	fontSizeSm: '0.875rem',
-	fontSizeBase: '1rem',
-	fontSizeLg: '1.125rem',
-	fontSizeXl: '1.25rem',
-	fontSizeXxl: '1.5rem',
+	fontSizeXs: "0.75rem",
+	fontSizeSm: "0.875rem",
+	fontSizeBase: "1rem",
+	fontSizeLg: "1.125rem",
+	fontSizeXl: "1.25rem",
+	fontSizeXxl: "1.5rem",
 
 	// Spacing & Borders
-	borderRadius: '0.5rem',
-	borderRadiusSm: '0.375rem',
-	borderRadiusLg: '0.75rem',
-	spacingUnit: '0.25rem',
-}
+	borderRadius: "0.5rem",
+	borderRadiusSm: "0.375rem",
+	borderRadiusLg: "0.75rem",
+	spacingUnit: "0.25rem",
+};
 
 export const darkTheme: Partial<ThemeVariables> = {
-	colorBackground: '#0f172a',
-	colorForeground: '#f8fafc',
-	colorMuted: '#1e293b',
-	colorMutedForeground: '#94a3b8',
-	colorBorder: '#334155',
-	colorInput: '#334155',
-	colorInputBackground: '#1e293b',
-}
+	colorBackground: "#0f172a",
+	colorForeground: "#f8fafc",
+	colorMuted: "#1e293b",
+	colorMutedForeground: "#94a3b8",
+	colorBorder: "#334155",
+	colorInput: "#334155",
+	colorInputBackground: "#1e293b",
+};
 
 // ============================================
 // Style Utilities
 // ============================================
 
-type StyleFunction = (theme: ThemeVariables) => CSSProperties
+type StyleFunction = (theme: ThemeVariables) => CSSProperties;
 
 /**
  * Create themed styles
  */
-export function createStyles<T extends Record<string, StyleFunction | CSSProperties>>(
-	stylesFn: (theme: ThemeVariables) => T
+export function createStyles<
+	T extends Record<string, StyleFunction | CSSProperties>,
+>(
+	stylesFn: (theme: ThemeVariables) => T,
 ): (theme: ThemeVariables) => { [K in keyof T]: CSSProperties } {
 	return (theme: ThemeVariables) => {
-		const styles = stylesFn(theme)
-		const result: Record<string, CSSProperties> = {}
+		const styles = stylesFn(theme);
+		const result: Record<string, CSSProperties> = {};
 
 		for (const [key, value] of Object.entries(styles)) {
-			if (typeof value === 'function') {
-				result[key] = value(theme)
+			if (typeof value === "function") {
+				result[key] = value(theme);
 			} else {
-				result[key] = value
+				result[key] = value;
 			}
 		}
 
-		return result as { [K in keyof T]: CSSProperties }
-	}
+		return result as { [K in keyof T]: CSSProperties };
+	};
 }
 
 /**
  * Merge multiple style objects
  */
-export function mergeStyles(...styles: (CSSProperties | undefined)[]): CSSProperties {
-	return Object.assign({}, ...styles.filter(Boolean))
+export function mergeStyles(
+	...styles: (CSSProperties | undefined)[]
+): CSSProperties {
+	return Object.assign({}, ...styles.filter(Boolean));
 }
 
 /**
@@ -133,9 +137,9 @@ export function mergeStyles(...styles: (CSSProperties | undefined)[]): CSSProper
 export function conditionalStyle(
 	condition: boolean,
 	trueStyle: CSSProperties,
-	falseStyle?: CSSProperties
+	falseStyle?: CSSProperties,
 ): CSSProperties {
-	return condition ? trueStyle : (falseStyle ?? {})
+	return condition ? trueStyle : (falseStyle ?? {});
 }
 
 // ============================================
@@ -150,7 +154,7 @@ export const baseStyles = createStyles((theme) => ({
 		color: theme.colorForeground,
 		backgroundColor: theme.colorBackground,
 		lineHeight: 1.5,
-		boxSizing: 'border-box',
+		boxSizing: "border-box",
 	},
 
 	// Card
@@ -158,24 +162,24 @@ export const baseStyles = createStyles((theme) => ({
 		backgroundColor: theme.colorBackground,
 		borderRadius: theme.borderRadiusLg,
 		border: `1px solid ${theme.colorBorder}`,
-		boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-		overflow: 'hidden',
+		boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+		overflow: "hidden",
 	},
 
 	cardHeader: {
-		padding: '1.5rem',
-		paddingBottom: '0',
+		padding: "1.5rem",
+		paddingBottom: "0",
 	},
 
 	cardContent: {
-		padding: '1.5rem',
+		padding: "1.5rem",
 	},
 
 	cardTitle: {
 		fontSize: theme.fontSizeXl,
 		fontWeight: 600,
 		margin: 0,
-		marginBottom: '0.25rem',
+		marginBottom: "0.25rem",
 	},
 
 	cardDescription: {
@@ -186,29 +190,29 @@ export const baseStyles = createStyles((theme) => ({
 
 	// Form Elements
 	formGroup: {
-		marginBottom: '1rem',
+		marginBottom: "1rem",
 	},
 
 	label: {
-		display: 'block',
+		display: "block",
 		fontSize: theme.fontSizeSm,
 		fontWeight: 500,
-		marginBottom: '0.5rem',
+		marginBottom: "0.5rem",
 		color: theme.colorForeground,
 	},
 
 	input: {
-		width: '100%',
-		padding: '0.5rem 0.75rem',
+		width: "100%",
+		padding: "0.5rem 0.75rem",
 		fontSize: theme.fontSizeBase,
 		lineHeight: 1.5,
 		color: theme.colorForeground,
 		backgroundColor: theme.colorInputBackground,
 		border: `1px solid ${theme.colorInput}`,
 		borderRadius: theme.borderRadius,
-		outline: 'none',
-		transition: 'border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out',
-		boxSizing: 'border-box',
+		outline: "none",
+		transition: "border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out",
+		boxSizing: "border-box",
 	},
 
 	inputFocus: {
@@ -222,26 +226,26 @@ export const baseStyles = createStyles((theme) => ({
 
 	inputDisabled: {
 		backgroundColor: theme.colorMuted,
-		cursor: 'not-allowed',
+		cursor: "not-allowed",
 		opacity: 0.7,
 	},
 
 	// Buttons
 	button: {
-		display: 'inline-flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		gap: '0.5rem',
-		padding: '0.5rem 1rem',
+		display: "inline-flex",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: "0.5rem",
+		padding: "0.5rem 1rem",
 		fontSize: theme.fontSizeSm,
 		fontWeight: 500,
 		lineHeight: 1.5,
 		borderRadius: theme.borderRadius,
-		border: 'none',
-		cursor: 'pointer',
-		transition: 'all 0.15s ease-in-out',
-		textDecoration: 'none',
-		whiteSpace: 'nowrap',
+		border: "none",
+		cursor: "pointer",
+		transition: "all 0.15s ease-in-out",
+		textDecoration: "none",
+		whiteSpace: "nowrap",
 	},
 
 	buttonPrimary: {
@@ -251,7 +255,7 @@ export const baseStyles = createStyles((theme) => ({
 
 	buttonPrimaryHover: {
 		backgroundColor: theme.colorPrimary,
-		filter: 'brightness(1.1)',
+		filter: "brightness(1.1)",
 	},
 
 	buttonSecondary: {
@@ -260,13 +264,13 @@ export const baseStyles = createStyles((theme) => ({
 	},
 
 	buttonOutline: {
-		backgroundColor: 'transparent',
+		backgroundColor: "transparent",
 		border: `1px solid ${theme.colorBorder}`,
 		color: theme.colorForeground,
 	},
 
 	buttonGhost: {
-		backgroundColor: 'transparent',
+		backgroundColor: "transparent",
 		color: theme.colorForeground,
 	},
 
@@ -277,30 +281,30 @@ export const baseStyles = createStyles((theme) => ({
 
 	buttonDisabled: {
 		opacity: 0.5,
-		cursor: 'not-allowed',
+		cursor: "not-allowed",
 	},
 
 	buttonFullWidth: {
-		width: '100%',
+		width: "100%",
 	},
 
 	// Links
 	link: {
 		color: theme.colorPrimary,
-		textDecoration: 'none',
-		cursor: 'pointer',
+		textDecoration: "none",
+		cursor: "pointer",
 	},
 
 	linkHover: {
-		textDecoration: 'underline',
+		textDecoration: "underline",
 	},
 
 	// Alerts
 	alert: {
-		padding: '0.75rem 1rem',
+		padding: "0.75rem 1rem",
 		borderRadius: theme.borderRadius,
 		fontSize: theme.fontSizeSm,
-		marginBottom: '1rem',
+		marginBottom: "1rem",
 	},
 
 	alertError: {
@@ -323,61 +327,61 @@ export const baseStyles = createStyles((theme) => ({
 
 	// Divider
 	divider: {
-		display: 'flex',
-		alignItems: 'center',
-		margin: '1.5rem 0',
+		display: "flex",
+		alignItems: "center",
+		margin: "1.5rem 0",
 	},
 
 	dividerLine: {
 		flex: 1,
-		height: '1px',
+		height: "1px",
 		backgroundColor: theme.colorBorder,
 	},
 
 	dividerText: {
-		padding: '0 1rem',
+		padding: "0 1rem",
 		fontSize: theme.fontSizeXs,
 		color: theme.colorMutedForeground,
-		textTransform: 'uppercase',
-		letterSpacing: '0.05em',
+		textTransform: "uppercase",
+		letterSpacing: "0.05em",
 	},
 
 	// Tabs
 	tabs: {
-		display: 'flex',
+		display: "flex",
 		backgroundColor: theme.colorMuted,
-		padding: '0.25rem',
+		padding: "0.25rem",
 		borderRadius: theme.borderRadius,
-		marginBottom: '1.5rem',
+		marginBottom: "1.5rem",
 	},
 
 	tab: {
 		flex: 1,
-		padding: '0.5rem 0.75rem',
+		padding: "0.5rem 0.75rem",
 		fontSize: theme.fontSizeSm,
 		fontWeight: 500,
 		color: theme.colorMutedForeground,
-		backgroundColor: 'transparent',
-		border: 'none',
+		backgroundColor: "transparent",
+		border: "none",
 		borderRadius: theme.borderRadiusSm,
-		cursor: 'pointer',
-		transition: 'all 0.15s ease-in-out',
+		cursor: "pointer",
+		transition: "all 0.15s ease-in-out",
 	},
 
 	tabActive: {
 		backgroundColor: theme.colorBackground,
 		color: theme.colorForeground,
-		boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+		boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
 	},
 
 	// Badge
 	badge: {
-		display: 'inline-flex',
-		alignItems: 'center',
-		padding: '0.125rem 0.5rem',
+		display: "inline-flex",
+		alignItems: "center",
+		padding: "0.125rem 0.5rem",
 		fontSize: theme.fontSizeXs,
 		fontWeight: 500,
-		borderRadius: '9999px',
+		borderRadius: "9999px",
 	},
 
 	badgePrimary: {
@@ -402,12 +406,12 @@ export const baseStyles = createStyles((theme) => ({
 
 	// Spinner
 	spinner: {
-		width: '1rem',
-		height: '1rem',
-		border: '2px solid transparent',
-		borderTopColor: 'currentColor',
-		borderRadius: '50%',
-		animation: 'sylphx-spin 0.75s linear infinite',
+		width: "1rem",
+		height: "1rem",
+		border: "2px solid transparent",
+		borderTopColor: "currentColor",
+		borderRadius: "50%",
+		animation: "sylphx-spin 0.75s linear infinite",
 	},
 
 	// Text utilities
@@ -416,7 +420,7 @@ export const baseStyles = createStyles((theme) => ({
 	},
 
 	textCenter: {
-		textAlign: 'center',
+		textAlign: "center",
 	},
 
 	textSm: {
@@ -428,64 +432,64 @@ export const baseStyles = createStyles((theme) => ({
 	},
 
 	// Spacing utilities
-	mt1: { marginTop: '0.25rem' },
-	mt2: { marginTop: '0.5rem' },
-	mt4: { marginTop: '1rem' },
-	mt6: { marginTop: '1.5rem' },
-	mb1: { marginBottom: '0.25rem' },
-	mb2: { marginBottom: '0.5rem' },
-	mb4: { marginBottom: '1rem' },
-	mb6: { marginBottom: '1.5rem' },
+	mt1: { marginTop: "0.25rem" },
+	mt2: { marginTop: "0.5rem" },
+	mt4: { marginTop: "1rem" },
+	mt6: { marginTop: "1.5rem" },
+	mb1: { marginBottom: "0.25rem" },
+	mb2: { marginBottom: "0.5rem" },
+	mb4: { marginBottom: "1rem" },
+	mb6: { marginBottom: "1.5rem" },
 
 	// Flexbox utilities
 	flexRow: {
-		display: 'flex',
-		flexDirection: 'row',
+		display: "flex",
+		flexDirection: "row",
 	},
 
 	flexCol: {
-		display: 'flex',
-		flexDirection: 'column',
+		display: "flex",
+		flexDirection: "column",
 	},
 
 	flexCenter: {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
 	},
 
 	flexBetween: {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'space-between',
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
 	},
 
-	gap1: { gap: '0.25rem' },
-	gap2: { gap: '0.5rem' },
-	gap3: { gap: '0.75rem' },
-	gap4: { gap: '1rem' },
+	gap1: { gap: "0.25rem" },
+	gap2: { gap: "0.5rem" },
+	gap3: { gap: "0.75rem" },
+	gap4: { gap: "1rem" },
 
 	// Grid
 	grid: {
-		display: 'grid',
+		display: "grid",
 	},
 
 	gridCols2: {
-		gridTemplateColumns: 'repeat(2, 1fr)',
+		gridTemplateColumns: "repeat(2, 1fr)",
 	},
-}))
+}));
 
 // ============================================
 // CSS Keyframes (injected once)
 // ============================================
 
-let stylesInjected = false
+let stylesInjected = false;
 
 export function injectGlobalStyles(): void {
-	if (stylesInjected || typeof document === 'undefined') return
+	if (stylesInjected || typeof document === "undefined") return;
 
-	const style = document.createElement('style')
-	style.id = 'sylphx-sdk-styles'
+	const style = document.createElement("style");
+	style.id = "sylphx-sdk-styles";
 	style.textContent = `
     @keyframes sylphx-spin {
       to { transform: rotate(360deg); }
@@ -522,7 +526,7 @@ export function injectGlobalStyles(): void {
       outline: 2px solid var(--sylphx-ring);
       outline-offset: 2px;
     }
-  `
-	document.head.appendChild(style)
-	stylesInjected = true
+  `;
+	document.head.appendChild(style);
+	stylesInjected = true;
 }

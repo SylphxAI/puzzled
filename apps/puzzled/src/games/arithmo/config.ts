@@ -3,21 +3,26 @@
  * Guess the equation in 6 tries (Nerdle-style)
  */
 
-import { calculateWordleScore } from '@/games/shared'
+import { calculateWordleScore } from "@/games/shared";
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameConfig,
 	type GameResult,
 	type GameSubmission,
-} from '../types'
-import { ArithmoHowToPlay } from './components/how-to-play'
-import { getPuzzleFromSeed } from './equations'
-import { ArithmoIcon } from './icon'
-import type { ArithmoGuess, ArithmoGuessResult, ArithmoPuzzleData, ArithmoSolution } from './types'
-import { getGuessResult, isValidEquation } from './types'
+} from "../types";
+import { ArithmoHowToPlay } from "./components/how-to-play";
+import { getPuzzleFromSeed } from "./equations";
+import { ArithmoIcon } from "./icon";
+import type {
+	ArithmoGuess,
+	ArithmoGuessResult,
+	ArithmoPuzzleData,
+	ArithmoSolution,
+} from "./types";
+import { getGuessResult, isValidEquation } from "./types";
 
 // Client-side puzzle data
-type ArithmoPuzzleClientData = ArithmoPuzzleData
+type ArithmoPuzzleClientData = ArithmoPuzzleData;
 
 export const arithmoConfig: GameConfig<
 	ArithmoPuzzleClientData,
@@ -25,72 +30,78 @@ export const arithmoConfig: GameConfig<
 	ArithmoGuess,
 	ArithmoGuessResult
 > = {
-	slug: 'arithmo',
-	name: 'Arithmo',
-	description: 'Guess the equation in 6 tries',
+	slug: "arithmo",
+	name: "Arithmo",
+	description: "Guess the equation in 6 tries",
 	IconComponent: ArithmoIcon,
 	sortOrder: 8,
-	category: 'math',
-	skills: ['arithmetic', 'logic'],
-	difficulty: 'medium',
+	category: "math",
+	skills: ["arithmetic", "logic"],
+	difficulty: "medium",
 	HowToPlayContent: ArithmoHowToPlay,
 	display: {
-		taglineKey: 'games.arithmo.tagline',
-		highlightKey: 'games.arithmo.highlight',
-		duration: '~3 min',
-		theme: 'lime',
+		taglineKey: "games.arithmo.tagline",
+		highlightKey: "games.arithmo.highlight",
+		duration: "~3 min",
+		theme: "lime",
 	},
-	generationStrategy: 'seed',
+	generationStrategy: "seed",
 
 	launchDate: DEFAULT_LAUNCH_DATE,
 
 	isPerfectGame: (stats) => {
-		return stats.status === 'won' && stats.attempts === 1
+		return stats.status === "won" && stats.attempts === 1;
 	},
 
 	formatScoreDisplay: (stats) => {
-		if (stats.status === 'lost') return 'Lost'
+		if (stats.status === "lost") return "Lost";
 		if (stats.attempts && stats.maxAttempts) {
-			return `${stats.attempts}/${stats.maxAttempts}`
+			return `${stats.attempts}/${stats.maxAttempts}`;
 		}
-		return stats.score ? `${stats.score} pts` : 'Won'
+		return stats.score ? `${stats.score} pts` : "Won";
 	},
 
 	compareForPercentile: (a, b) => {
-		if (a.status === 'won' && b.status !== 'won') return 1
-		if (a.status !== 'won' && b.status === 'won') return -1
+		if (a.status === "won" && b.status !== "won") return 1;
+		if (a.status !== "won" && b.status === "won") return -1;
 		// Fewer attempts = better
-		return (b.attempts ?? Infinity) - (a.attempts ?? Infinity)
+		return (
+			(b.attempts ?? Number.POSITIVE_INFINITY) -
+			(a.attempts ?? Number.POSITIVE_INFINITY)
+		);
 	},
 
 	/**
 	 * Generate puzzle from seed
 	 */
 	generatePuzzle(seed: number) {
-		return getPuzzleFromSeed(seed)
+		return getPuzzleFromSeed(seed);
 	},
 
 	/**
 	 * Validate an equation guess
 	 */
-	validateGuess(solution: ArithmoSolution, guess: ArithmoGuess): ArithmoGuessResult {
-		const equation = guess.equation
+	validateGuess(
+		solution: ArithmoSolution,
+		guess: ArithmoGuess,
+	): ArithmoGuessResult {
+		const equation = guess.equation;
 
 		// Check if valid equation
 		if (!isValidEquation(equation)) {
 			return {
 				valid: false,
-				error: 'Invalid equation',
-			}
+				error: "Invalid equation",
+			};
 		}
 
 		// Get result
-		const result = getGuessResult(equation, solution.equation)
+		const result = getGuessResult(equation, solution.equation);
 
 		return {
 			valid: true,
 			result,
-		}
+		};
 	},
 
 	/**
@@ -110,36 +121,46 @@ export const arithmoConfig: GameConfig<
 		_puzzleData: ArithmoPuzzleClientData,
 		submission: GameSubmission,
 	): GameResult {
-		const data = submission.data as { guesses?: string[] } | undefined
+		const data = submission.data as { guesses?: string[] } | undefined;
 
 		// Must have guesses to validate
-		if (!data?.guesses || !Array.isArray(data.guesses) || data.guesses.length === 0) {
-			return { valid: false, error: 'Missing guesses data' }
+		if (
+			!data?.guesses ||
+			!Array.isArray(data.guesses) ||
+			data.guesses.length === 0
+		) {
+			return { valid: false, error: "Missing guesses data" };
 		}
 
 		// Validate each guess is a valid equation
 		for (const guess of data.guesses) {
 			if (!isValidEquation(guess)) {
-				return { valid: false, error: `Invalid equation in guesses: ${guess}` }
+				return { valid: false, error: `Invalid equation in guesses: ${guess}` };
 			}
 		}
 
 		// Check if final guess matches solution
-		const lastGuess = data.guesses[data.guesses.length - 1]
-		const won = lastGuess === solution.equation
+		const lastGuess = data.guesses[data.guesses.length - 1];
+		const won = lastGuess === solution.equation;
 
 		// Verify claimed status
-		if (submission.status === 'won' && !won) {
-			return { valid: false, error: 'Invalid win claim - final guess does not match solution' }
+		if (submission.status === "won" && !won) {
+			return {
+				valid: false,
+				error: "Invalid win claim - final guess does not match solution",
+			};
 		}
-		if (submission.status === 'lost' && won) {
-			return { valid: false, error: 'Invalid loss claim - final guess matches solution' }
+		if (submission.status === "lost" && won) {
+			return {
+				valid: false,
+				error: "Invalid loss claim - final guess matches solution",
+			};
 		}
 
 		// Calculate score using shared Wordle-style formula
-		const attempts = data.guesses.length
-		const score = calculateWordleScore(won, attempts)
+		const attempts = data.guesses.length;
+		const score = calculateWordleScore(won, attempts);
 
-		return { valid: true, status: won ? 'won' : 'lost', score }
+		return { valid: true, status: won ? "won" : "lost", score };
 	},
-}
+};

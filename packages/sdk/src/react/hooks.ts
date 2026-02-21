@@ -4,60 +4,60 @@
  * Hooks for accessing authentication state and actions.
  */
 
-'use client'
+"use client";
 
-import { useContext, useCallback, useState, useEffect, useRef } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { User } from "../types";
 import {
 	AuthContext,
 	type AuthContextValue,
+	type ForgotPasswordOptions,
+	type ResendVerificationEmailOptions,
+	type ResetPasswordOptions,
 	type SignInOptions,
 	type SignInWithOAuthOptions,
-	type ResetPasswordOptions,
 	type VerifyEmailOptions,
-	type ResendVerificationEmailOptions,
-	type ForgotPasswordOptions,
-} from './context'
-import { PlatformContext } from './platform-context'
-import { useRequiredContext } from './services-context'
-import type { User } from '../types'
+} from "./context";
+import { PlatformContext } from "./platform-context";
+import { useRequiredContext } from "./services-context";
 
 /**
  * Internal hook to get auth context
  */
 function useAuthContext(): AuthContextValue {
-	return useRequiredContext(AuthContext, 'Auth')
+	return useRequiredContext(AuthContext, "Auth");
 }
 
 /**
  * Internal hook to get auth context (safe version - returns null if no provider)
  */
 function useAuthContextSafe(): AuthContextValue | null {
-	return useContext(AuthContext)
+	return useContext(AuthContext);
 }
 
 /**
  * Internal hook to get platform context
  */
 function usePlatformContextInternal() {
-	return useRequiredContext(PlatformContext, 'Platform')
+	return useRequiredContext(PlatformContext, "Platform");
 }
 
 /**
  * Convert HeadersInit to Record<string, string>
  */
 function headersToRecord(headers?: HeadersInit): Record<string, string> {
-	if (!headers) return {}
+	if (!headers) return {};
 	if (headers instanceof Headers) {
-		const result: Record<string, string> = {}
+		const result: Record<string, string> = {};
 		headers.forEach((value, key) => {
-			result[key] = value
-		})
-		return result
+			result[key] = value;
+		});
+		return result;
 	}
 	if (Array.isArray(headers)) {
-		return Object.fromEntries(headers)
+		return Object.fromEntries(headers);
 	}
-	return headers as Record<string, string>
+	return headers as Record<string, string>;
 }
 
 // ============================================
@@ -66,15 +66,15 @@ function headersToRecord(headers?: HeadersInit): Record<string, string> {
 
 export interface UseUserReturn {
 	/** Whether auth state has been loaded */
-	isLoaded: boolean
+	isLoaded: boolean;
 	/** Whether auth state is still loading (inverse of isLoaded) */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether user is signed in */
-	isSignedIn: boolean
+	isSignedIn: boolean;
 	/** Current user data (null if not signed in) */
-	user: User | null
+	user: User | null;
 	/** Refresh user data from server */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -93,26 +93,28 @@ export interface UseUserReturn {
  * ```
  */
 export function useUser(): UseUserReturn {
-	const { isLoaded, isSignedIn, user, getToken } = useAuthContext()
-	const platform = useContext(PlatformContext)
+	const { isLoaded, isSignedIn, user, getToken } = useAuthContext();
+	const platform = useContext(PlatformContext);
 
 	const refresh = useCallback(async () => {
 		// Force a token refresh to get updated user data
 		try {
-			const token = await getToken()
+			const token = await getToken();
 			if (token && platform) {
 				// The token refresh will also update user data
 				// Trigger a re-render by dispatching storage event with namespaced key
-				window.dispatchEvent(new StorageEvent('storage', {
-					key: `sylphx_${platform.appId}_user`,
-				}))
+				window.dispatchEvent(
+					new StorageEvent("storage", {
+						key: `sylphx_${platform.appId}_user`,
+					}),
+				);
 			}
 		} catch {
 			// Silently fail - token refresh errors are handled by the auth context
 		}
-	}, [getToken, platform])
+	}, [getToken, platform]);
 
-	return { isLoaded, isLoading: !isLoaded, isSignedIn, user, refresh }
+	return { isLoaded, isLoading: !isLoaded, isSignedIn, user, refresh };
 }
 
 // ============================================
@@ -121,33 +123,35 @@ export function useUser(): UseUserReturn {
 
 export interface UseAuthReturn {
 	/** Whether user is signed in */
-	isSignedIn: boolean
+	isSignedIn: boolean;
 	/** Auth error (e.g., token refresh failed) */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an auth error */
-	isError: boolean
+	isError: boolean;
 	/** Whether an OAuth flow is in progress */
-	isOAuthLoading: boolean
+	isOAuthLoading: boolean;
 	/** OAuth-specific error */
-	oauthError: Error | null
+	oauthError: Error | null;
 	/** Clear OAuth error state */
-	clearOAuthError: () => void
+	clearOAuthError: () => void;
 	/** Redirect to sign in page */
-	signIn: (options?: SignInOptions) => void
+	signIn: (options?: SignInOptions) => void;
 	/** Redirect to sign up page */
-	signUp: (options?: SignInOptions) => void
+	signUp: (options?: SignInOptions) => void;
 	/** Sign out the current user */
-	signOut: (options?: { redirectUrl?: string }) => Promise<void>
+	signOut: (options?: { redirectUrl?: string }) => Promise<void>;
 	/** Get current access token (auto-refreshes if needed) */
-	getToken: () => Promise<string | null>
+	getToken: () => Promise<string | null>;
 	/** Reset password with token */
-	resetPassword: (options: ResetPasswordOptions) => Promise<void>
+	resetPassword: (options: ResetPasswordOptions) => Promise<void>;
 	/** Verify email with token */
-	verifyEmail: (options: VerifyEmailOptions) => Promise<void>
+	verifyEmail: (options: VerifyEmailOptions) => Promise<void>;
 	/** Resend verification email */
-	resendVerificationEmail: (options: ResendVerificationEmailOptions) => Promise<void>
+	resendVerificationEmail: (
+		options: ResendVerificationEmailOptions,
+	) => Promise<void>;
 	/** Request password reset email */
-	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>
+	forgotPassword: (options: ForgotPasswordOptions) => Promise<void>;
 
 	// ==========================================
 	// Direct OAuth Methods (Firebase/Supabase pattern)
@@ -164,25 +168,25 @@ export interface UseAuthReturn {
 	 * await signInWithOAuth({ provider: 'google', redirectUrl: '/dashboard' })
 	 * ```
 	 */
-	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>
+	signInWithOAuth: (options: SignInWithOAuthOptions) => Promise<void>;
 
 	/** Convenience: Sign in with Google directly */
-	signInWithGoogle: (redirectUrl?: string) => Promise<void>
+	signInWithGoogle: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with GitHub directly */
-	signInWithGithub: (redirectUrl?: string) => Promise<void>
+	signInWithGithub: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Apple directly */
-	signInWithApple: (redirectUrl?: string) => Promise<void>
+	signInWithApple: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Discord directly */
-	signInWithDiscord: (redirectUrl?: string) => Promise<void>
+	signInWithDiscord: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Twitter directly */
-	signInWithTwitter: (redirectUrl?: string) => Promise<void>
+	signInWithTwitter: (redirectUrl?: string) => Promise<void>;
 
 	/** Convenience: Sign in with Microsoft directly */
-	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>
+	signInWithMicrosoft: (redirectUrl?: string) => Promise<void>;
 }
 
 /**
@@ -226,7 +230,7 @@ export function useAuth(): UseAuthReturn {
 		signInWithDiscord,
 		signInWithTwitter,
 		signInWithMicrosoft,
-	} = useAuthContext()
+	} = useAuthContext();
 
 	return {
 		isSignedIn,
@@ -251,7 +255,7 @@ export function useAuth(): UseAuthReturn {
 		signInWithDiscord,
 		signInWithTwitter,
 		signInWithMicrosoft,
-	}
+	};
 }
 
 // ============================================
@@ -260,15 +264,15 @@ export function useAuth(): UseAuthReturn {
 
 export interface UseSafeUserReturn {
 	/** Whether Sylphx is configured (provider is mounted) */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** Whether auth state has been loaded */
-	isLoaded: boolean
+	isLoaded: boolean;
 	/** Whether auth state is still loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether user is signed in */
-	isSignedIn: boolean
+	isSignedIn: boolean;
 	/** Current user data (null if not signed in or not configured) */
-	user: User | null
+	user: User | null;
 }
 
 /**
@@ -288,7 +292,7 @@ export interface UseSafeUserReturn {
  * ```
  */
 export function useSafeUser(): UseSafeUserReturn {
-	const context = useAuthContextSafe()
+	const context = useAuthContextSafe();
 
 	if (!context) {
 		return {
@@ -297,7 +301,7 @@ export function useSafeUser(): UseSafeUserReturn {
 			isLoading: false,
 			isSignedIn: false,
 			user: null,
-		}
+		};
 	}
 
 	return {
@@ -306,7 +310,7 @@ export function useSafeUser(): UseSafeUserReturn {
 		isLoading: !context.isLoaded,
 		isSignedIn: context.isSignedIn,
 		user: context.user,
-	}
+	};
 }
 
 // ============================================
@@ -315,35 +319,37 @@ export function useSafeUser(): UseSafeUserReturn {
 
 export interface UseSafeAuthReturn {
 	/** Whether Sylphx is configured (provider is mounted) */
-	isConfigured: boolean
+	isConfigured: boolean;
 	/** Whether user is signed in */
-	isSignedIn: boolean
+	isSignedIn: boolean;
 	/** Auth error (null if not configured) */
-	error: Error | null
+	error: Error | null;
 	/** Whether there was an auth error */
-	isError: boolean
+	isError: boolean;
 	/** Whether an OAuth flow is in progress */
-	isOAuthLoading: boolean
+	isOAuthLoading: boolean;
 	/** OAuth-specific error */
-	oauthError: Error | null
+	oauthError: Error | null;
 	/** Clear OAuth error state */
-	clearOAuthError: () => void
+	clearOAuthError: () => void;
 	/** Redirect to sign in page (no-op if not configured) */
-	signIn: (options?: SignInOptions) => void
+	signIn: (options?: SignInOptions) => void;
 	/** Redirect to sign up page (no-op if not configured) */
-	signUp: (options?: SignInOptions) => void
+	signUp: (options?: SignInOptions) => void;
 	/** Sign out the current user (no-op if not configured) */
-	signOut: (options?: { redirectUrl?: string }) => Promise<void>
+	signOut: (options?: { redirectUrl?: string }) => Promise<void>;
 	/** Get current access token (returns null if not configured) */
-	getToken: () => Promise<string | null>
+	getToken: () => Promise<string | null>;
 	/** Reset password with token (throws if not configured) */
-	resetPassword: ((options: ResetPasswordOptions) => Promise<void>) | null
+	resetPassword: ((options: ResetPasswordOptions) => Promise<void>) | null;
 	/** Verify email with token (throws if not configured) */
-	verifyEmail: ((options: VerifyEmailOptions) => Promise<void>) | null
+	verifyEmail: ((options: VerifyEmailOptions) => Promise<void>) | null;
 	/** Resend verification email (throws if not configured) */
-	resendVerificationEmail: ((options: ResendVerificationEmailOptions) => Promise<void>) | null
+	resendVerificationEmail:
+		| ((options: ResendVerificationEmailOptions) => Promise<void>)
+		| null;
 	/** Request password reset email (throws if not configured) */
-	forgotPassword: ((options: ForgotPasswordOptions) => Promise<void>) | null
+	forgotPassword: ((options: ForgotPasswordOptions) => Promise<void>) | null;
 
 	// ==========================================
 	// Direct OAuth Methods (Firebase/Supabase pattern)
@@ -362,25 +368,25 @@ export interface UseSafeAuthReturn {
 	 * await signInWithOAuth({ provider: 'google' })
 	 * ```
 	 */
-	signInWithOAuth: ((options: SignInWithOAuthOptions) => Promise<void>) | null
+	signInWithOAuth: ((options: SignInWithOAuthOptions) => Promise<void>) | null;
 
 	/** Convenience: Sign in with Google directly */
-	signInWithGoogle: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithGoogle: ((redirectUrl?: string) => Promise<void>) | null;
 
 	/** Convenience: Sign in with GitHub directly */
-	signInWithGithub: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithGithub: ((redirectUrl?: string) => Promise<void>) | null;
 
 	/** Convenience: Sign in with Apple directly */
-	signInWithApple: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithApple: ((redirectUrl?: string) => Promise<void>) | null;
 
 	/** Convenience: Sign in with Discord directly */
-	signInWithDiscord: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithDiscord: ((redirectUrl?: string) => Promise<void>) | null;
 
 	/** Convenience: Sign in with Twitter directly */
-	signInWithTwitter: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithTwitter: ((redirectUrl?: string) => Promise<void>) | null;
 
 	/** Convenience: Sign in with Microsoft directly */
-	signInWithMicrosoft: ((redirectUrl?: string) => Promise<void>) | null
+	signInWithMicrosoft: ((redirectUrl?: string) => Promise<void>) | null;
 }
 
 /**
@@ -399,7 +405,7 @@ export interface UseSafeAuthReturn {
  * ```
  */
 export function useSafeAuth(): UseSafeAuthReturn {
-	const context = useAuthContextSafe()
+	const context = useAuthContextSafe();
 
 	if (!context) {
 		return {
@@ -426,7 +432,7 @@ export function useSafeAuth(): UseSafeAuthReturn {
 			signInWithDiscord: null,
 			signInWithTwitter: null,
 			signInWithMicrosoft: null,
-		}
+		};
 	}
 
 	return {
@@ -453,7 +459,7 @@ export function useSafeAuth(): UseSafeAuthReturn {
 		signInWithDiscord: context.signInWithDiscord,
 		signInWithTwitter: context.signInWithTwitter,
 		signInWithMicrosoft: context.signInWithMicrosoft,
-	}
+	};
 }
 
 // ============================================
@@ -466,16 +472,16 @@ export function useSafeAuth(): UseSafeAuthReturn {
  */
 export interface AuthSession {
 	/** Current user */
-	user: User
+	user: User;
 	/** Access token */
-	accessToken: string
+	accessToken: string;
 }
 
 export interface UseSessionReturn {
 	/** Whether session has been loaded */
-	isLoaded: boolean
+	isLoaded: boolean;
 	/** Current session (null if not signed in) */
-	session: AuthSession | null
+	session: AuthSession | null;
 }
 
 /**
@@ -498,14 +504,14 @@ export interface UseSessionReturn {
  * ```
  */
 export function useSession(): UseSessionReturn {
-	const { isLoaded, isSignedIn, user, accessToken } = useAuthContext()
+	const { isLoaded, isSignedIn, user, accessToken } = useAuthContext();
 
 	if (!isLoaded) {
-		return { isLoaded: false, session: null }
+		return { isLoaded: false, session: null };
 	}
 
 	if (!isSignedIn || !user || !accessToken) {
-		return { isLoaded: true, session: null }
+		return { isLoaded: true, session: null };
 	}
 
 	return {
@@ -514,7 +520,7 @@ export function useSession(): UseSessionReturn {
 			user,
 			accessToken,
 		},
-	}
+	};
 }
 
 // ============================================
@@ -529,14 +535,14 @@ export function useSession(): UseSessionReturn {
  */
 export interface SylphxClientConfig {
 	/** App ID (environment-specific: app_dev_xxx, app_stg_xxx, app_prod_xxx) */
-	appId: string
+	appId: string;
 	/** Platform API URL */
-	platformUrl: string
+	platformUrl: string;
 }
 
 export interface UseSylphxReturn extends AuthContextValue {
 	/** SDK configuration */
-	config: SylphxClientConfig
+	config: SylphxClientConfig;
 }
 
 /**
@@ -545,8 +551,8 @@ export interface UseSylphxReturn extends AuthContextValue {
  * Prefer using useUser, useAuth, or useSession for specific needs.
  */
 export function useSylphx(): UseSylphxReturn {
-	const auth = useAuthContext()
-	const platform = usePlatformContextInternal()
+	const auth = useAuthContext();
+	const platform = usePlatformContextInternal();
 
 	return {
 		...auth,
@@ -554,7 +560,7 @@ export function useSylphx(): UseSylphxReturn {
 			appId: platform.appId,
 			platformUrl: platform.platformUrl,
 		},
-	}
+	};
 }
 
 // ============================================
@@ -562,63 +568,88 @@ export function useSylphx(): UseSylphxReturn {
 // Full organization management via SDK REST API
 // ============================================
 
+import { createConfig } from "../config";
 // Import Organization types and functions from orgs.ts (SSOT)
-import * as OrgFunctions from '../orgs'
+import * as OrgFunctions from "../orgs";
 import type {
+	OrgRole,
+	Organization,
+	OrganizationInvitation,
+	OrganizationMember,
+} from "../orgs";
+
+export type {
 	Organization,
 	OrganizationMember,
 	OrganizationInvitation,
 	OrgRole,
-} from '../orgs'
-import { createConfig } from '../config'
-
-export type { Organization, OrganizationMember, OrganizationInvitation, OrgRole }
+};
 
 /**
  * Return type for useOrganization hook
  */
 export interface UseOrganizationReturn {
 	/** Current selected organization */
-	organization: Organization | null
+	organization: Organization | null;
 	/** List of all user's organizations */
-	organizations: Organization[]
+	organizations: Organization[];
 	/** Members of current organization */
-	members: OrganizationMember[]
+	members: OrganizationMember[];
 	/** Pending invitations (if admin) */
-	invitations: OrganizationInvitation[]
+	invitations: OrganizationInvitation[];
 	/** Whether data is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Loading error */
-	error: Error | null
+	error: Error | null;
 	/** User's role in current organization */
-	role: OrgRole | null
+	role: OrgRole | null;
 	/** Check if user has a specific permission */
-	hasPermission: (permission: 'manage_members' | 'access_billing' | 'manage_apps' | 'view_analytics') => boolean
+	hasPermission: (
+		permission:
+			| "manage_members"
+			| "access_billing"
+			| "manage_apps"
+			| "view_analytics",
+	) => boolean;
 	/** Switch to a different organization */
-	setOrganization: (orgIdOrSlug: string | null) => Promise<void>
+	setOrganization: (orgIdOrSlug: string | null) => Promise<void>;
 	/** Create a new organization */
-	createOrganization: (data: { name: string; slug?: string; email?: string }) => Promise<Organization>
+	createOrganization: (data: {
+		name: string;
+		slug?: string;
+		email?: string;
+	}) => Promise<Organization>;
 	/** Update current organization */
-	updateOrganization: (data: { name?: string; slug?: string; logoUrl?: string | null }) => Promise<Organization>
+	updateOrganization: (data: {
+		name?: string;
+		slug?: string;
+		logoUrl?: string | null;
+	}) => Promise<Organization>;
 	/** Delete current organization (requires super_admin) */
-	deleteOrganization: () => Promise<void>
+	deleteOrganization: () => Promise<void>;
 	/** Invite a member to current organization */
-	inviteMember: (email: string, role: OrgRole) => Promise<OrganizationInvitation>
+	inviteMember: (
+		email: string,
+		role: OrgRole,
+	) => Promise<OrganizationInvitation>;
 	/** Update a member's role */
-	updateMemberRole: (userId: string, role: OrgRole) => Promise<OrganizationMember>
+	updateMemberRole: (
+		userId: string,
+		role: OrgRole,
+	) => Promise<OrganizationMember>;
 	/** Remove a member from organization */
-	removeMember: (userId: string) => Promise<void>
+	removeMember: (userId: string) => Promise<void>;
 	/** Leave current organization */
-	leave: () => Promise<void>
+	leave: () => Promise<void>;
 	/** Revoke a pending invitation */
-	revokeInvitation: (invitationId: string) => Promise<void>
+	revokeInvitation: (invitationId: string) => Promise<void>;
 	/** Refresh organization data */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 // Cross-tab sync constants for organizations (Clerk pattern)
-const ORG_STORAGE_KEY = 'sylphx_active_org'
-const ORG_BROADCAST_CHANNEL = 'sylphx_org_sync'
+const ORG_STORAGE_KEY = "sylphx_active_org";
+const ORG_BROADCAST_CHANNEL = "sylphx_org_sync";
 
 /**
  * Hook to manage organizations and RBAC
@@ -649,276 +680,362 @@ const ORG_BROADCAST_CHANNEL = 'sylphx_org_sync'
  * ```
  */
 export function useOrganization(): UseOrganizationReturn {
-	const platform = useContext(PlatformContext)
+	const platform = useContext(PlatformContext);
 
 	// Initialize from localStorage for SSR safety
-	const [organizations, setOrganizations] = useState<Organization[]>([])
-	const [organization, setOrganization] = useState<Organization | null>(null)
-	const [members, setMembers] = useState<OrganizationMember[]>([])
-	const [invitations, setInvitations] = useState<OrganizationInvitation[]>([])
-	const [role, setRole] = useState<OrgRole | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<Error | null>(null)
+	const [organizations, setOrganizations] = useState<Organization[]>([]);
+	const [organization, setOrganization] = useState<Organization | null>(null);
+	const [members, setMembers] = useState<OrganizationMember[]>([]);
+	const [invitations, setInvitations] = useState<OrganizationInvitation[]>([]);
+	const [role, setRole] = useState<OrgRole | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<Error | null>(null);
 
 	// BroadcastChannel ref for cross-tab sync (Clerk pattern)
-	const channelRef = useRef<BroadcastChannel | null>(null)
+	const channelRef = useRef<BroadcastChannel | null>(null);
 
 	// Create config for API calls using platform context
 	const config = platform
 		? createConfig({
 				secretKey: platform.appId, // appId is the appId
 				platformUrl: platform.platformUrl,
-		  })
-		: null
+			})
+		: null;
 
 	// Get stored org slug from localStorage
 	const getStoredOrgSlug = useCallback((): string | null => {
-		if (typeof window === 'undefined') return null
+		if (typeof window === "undefined") return null;
 		try {
-			const key = platform?.appId ? `${ORG_STORAGE_KEY}_${platform.appId}` : ORG_STORAGE_KEY
-			return localStorage.getItem(key)
+			const key = platform?.appId
+				? `${ORG_STORAGE_KEY}_${platform.appId}`
+				: ORG_STORAGE_KEY;
+			return localStorage.getItem(key);
 		} catch {
-			return null
+			return null;
 		}
-	}, [platform?.appId])
+	}, [platform?.appId]);
 
 	// Store org slug to localStorage
-	const storeOrgSlug = useCallback((slug: string | null) => {
-		if (typeof window === 'undefined') return
-		try {
-			const key = platform?.appId ? `${ORG_STORAGE_KEY}_${platform.appId}` : ORG_STORAGE_KEY
-			if (slug) {
-				localStorage.setItem(key, slug)
-			} else {
-				localStorage.removeItem(key)
+	const storeOrgSlug = useCallback(
+		(slug: string | null) => {
+			if (typeof window === "undefined") return;
+			try {
+				const key = platform?.appId
+					? `${ORG_STORAGE_KEY}_${platform.appId}`
+					: ORG_STORAGE_KEY;
+				if (slug) {
+					localStorage.setItem(key, slug);
+				} else {
+					localStorage.removeItem(key);
+				}
+			} catch {
+				// Ignore storage errors
 			}
-		} catch {
-			// Ignore storage errors
-		}
-	}, [platform?.appId])
+		},
+		[platform?.appId],
+	);
 
 	// Broadcast org change to other tabs (Clerk pattern)
 	const broadcastOrgChange = useCallback((org: Organization | null) => {
 		if (channelRef.current) {
 			channelRef.current.postMessage({
-				type: 'org_change',
+				type: "org_change",
 				organization: org,
 				timestamp: Date.now(),
-			})
+			});
 		}
-	}, [])
+	}, []);
 
 	// Set up cross-tab sync via BroadcastChannel (Clerk pattern)
 	useEffect(() => {
-		if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return
+		if (typeof window === "undefined" || !("BroadcastChannel" in window))
+			return;
 
 		const channelName = platform?.appId
 			? `${ORG_BROADCAST_CHANNEL}_${platform.appId}`
-			: ORG_BROADCAST_CHANNEL
+			: ORG_BROADCAST_CHANNEL;
 
-		const channel = new BroadcastChannel(channelName)
-		channelRef.current = channel
+		const channel = new BroadcastChannel(channelName);
+		channelRef.current = channel;
 
 		channel.onmessage = (event) => {
-			if (event.data.type === 'org_change') {
-				const newOrg = event.data.organization as Organization | null
-				setOrganization(newOrg)
-				setRole(null) // Role will be refreshed on next load
+			if (event.data.type === "org_change") {
+				const newOrg = event.data.organization as Organization | null;
+				setOrganization(newOrg);
+				setRole(null); // Role will be refreshed on next load
 				// Store the change locally too
-				storeOrgSlug(newOrg?.slug ?? null)
+				storeOrgSlug(newOrg?.slug ?? null);
 			}
-		}
+		};
 
 		return () => {
-			channel.close()
-			channelRef.current = null
-		}
-	}, [platform?.appId, storeOrgSlug])
+			channel.close();
+			channelRef.current = null;
+		};
+	}, [platform?.appId, storeOrgSlug]);
 
 	// Load organizations on mount (with localStorage restore)
 	useEffect(() => {
 		if (!config) {
-			setIsLoading(false)
-			return
+			setIsLoading(false);
+			return;
 		}
 
-		let mounted = true
+		let mounted = true;
 
 		async function loadOrgs() {
 			try {
-				const result = await OrgFunctions.getOrganizations(config!)
+				const result = await OrgFunctions.getOrganizations(config!);
 				if (mounted) {
-					setOrganizations(result.organizations)
+					setOrganizations(result.organizations);
 
 					// Restore from localStorage first, then fallback to first org
-					const storedSlug = getStoredOrgSlug()
+					const storedSlug = getStoredOrgSlug();
 					const orgToSelect = storedSlug
-						? result.organizations.find(o => o.slug === storedSlug)
-						: result.organizations[0]
+						? result.organizations.find((o) => o.slug === storedSlug)
+						: result.organizations[0];
 
 					if (orgToSelect && !organization) {
-						await selectOrganization(orgToSelect.slug)
+						await selectOrganization(orgToSelect.slug);
 					}
-					setIsLoading(false)
+					setIsLoading(false);
 				}
 			} catch (err) {
 				if (mounted) {
-					setError(err instanceof Error ? err : new Error('Failed to load organizations'))
-					setIsLoading(false)
+					setError(
+						err instanceof Error
+							? err
+							: new Error("Failed to load organizations"),
+					);
+					setIsLoading(false);
 				}
 			}
 		}
 
-		loadOrgs()
-		return () => { mounted = false }
-	}, [config?.platformUrl, getStoredOrgSlug])
+		loadOrgs();
+		return () => {
+			mounted = false;
+		};
+	}, [config?.platformUrl, getStoredOrgSlug]);
 
 	// Select an organization by ID or slug (with cross-tab sync)
-	const selectOrganization = useCallback(async (orgIdOrSlug: string | null) => {
-		if (!config || !orgIdOrSlug) {
-			setOrganization(null)
-			setMembers([])
-			setInvitations([])
-			setRole(null)
-			storeOrgSlug(null)
-			broadcastOrgChange(null)
-			return
-		}
-
-		try {
-			const result = await OrgFunctions.getOrganization(config, orgIdOrSlug)
-			setOrganization(result.organization)
-			setRole(result.membership?.role ?? null)
-
-			// Persist selection to localStorage and broadcast to other tabs
-			storeOrgSlug(result.organization.slug)
-			broadcastOrgChange(result.organization)
-
-			// Load members
-			const membersResult = await OrgFunctions.getOrganizationMembers(config, orgIdOrSlug)
-			setMembers(membersResult.members)
-
-			// Load invitations if admin
-			if (result.membership && ['super_admin', 'admin'].includes(result.membership.role)) {
-				try {
-					const invResult = await OrgFunctions.getOrganizationInvitations(config, orgIdOrSlug)
-					setInvitations(invResult.invitations)
-				} catch {
-					// May not have permission
-					setInvitations([])
-				}
-			} else {
-				setInvitations([])
+	const selectOrganization = useCallback(
+		async (orgIdOrSlug: string | null) => {
+			if (!config || !orgIdOrSlug) {
+				setOrganization(null);
+				setMembers([]);
+				setInvitations([]);
+				setRole(null);
+				storeOrgSlug(null);
+				broadcastOrgChange(null);
+				return;
 			}
-		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to load organization'))
-		}
-	}, [config, storeOrgSlug, broadcastOrgChange])
+
+			try {
+				const result = await OrgFunctions.getOrganization(config, orgIdOrSlug);
+				setOrganization(result.organization);
+				setRole(result.membership?.role ?? null);
+
+				// Persist selection to localStorage and broadcast to other tabs
+				storeOrgSlug(result.organization.slug);
+				broadcastOrgChange(result.organization);
+
+				// Load members
+				const membersResult = await OrgFunctions.getOrganizationMembers(
+					config,
+					orgIdOrSlug,
+				);
+				setMembers(membersResult.members);
+
+				// Load invitations if admin
+				if (
+					result.membership &&
+					["super_admin", "admin"].includes(result.membership.role)
+				) {
+					try {
+						const invResult = await OrgFunctions.getOrganizationInvitations(
+							config,
+							orgIdOrSlug,
+						);
+						setInvitations(invResult.invitations);
+					} catch {
+						// May not have permission
+						setInvitations([]);
+					}
+				} else {
+					setInvitations([]);
+				}
+			} catch (err) {
+				setError(
+					err instanceof Error ? err : new Error("Failed to load organization"),
+				);
+			}
+		},
+		[config, storeOrgSlug, broadcastOrgChange],
+	);
 
 	// Permission checking
-	const hasPermission = useCallback((permission: string): boolean => {
-		if (!role) return false
+	const hasPermission = useCallback(
+		(permission: string): boolean => {
+			if (!role) return false;
 
-		const rolePermissions: Record<OrgRole, string[]> = {
-			super_admin: ['manage_members', 'access_billing', 'manage_apps', 'view_analytics'],
-			admin: ['manage_members', 'access_billing', 'manage_apps', 'view_analytics'],
-			billing: ['access_billing'],
-			analytics: ['view_analytics'],
-			developer: ['manage_apps', 'view_analytics'],
-			viewer: ['view_analytics'],
-		}
+			const rolePermissions: Record<OrgRole, string[]> = {
+				super_admin: [
+					"manage_members",
+					"access_billing",
+					"manage_apps",
+					"view_analytics",
+				],
+				admin: [
+					"manage_members",
+					"access_billing",
+					"manage_apps",
+					"view_analytics",
+				],
+				billing: ["access_billing"],
+				analytics: ["view_analytics"],
+				developer: ["manage_apps", "view_analytics"],
+				viewer: ["view_analytics"],
+			};
 
-		return rolePermissions[role]?.includes(permission) ?? false
-	}, [role])
+			return rolePermissions[role]?.includes(permission) ?? false;
+		},
+		[role],
+	);
 
 	// CRUD operations
-	const createOrg = useCallback(async (data: { name: string; slug?: string; email?: string }) => {
-		if (!config) throw new Error('Not configured')
-		const result = await OrgFunctions.createOrganization(config, data)
-		setOrganizations(prev => [...prev, result.organization])
-		await selectOrganization(result.organization.slug)
-		return result.organization
-	}, [config, selectOrganization])
+	const createOrg = useCallback(
+		async (data: { name: string; slug?: string; email?: string }) => {
+			if (!config) throw new Error("Not configured");
+			const result = await OrgFunctions.createOrganization(config, data);
+			setOrganizations((prev) => [...prev, result.organization]);
+			await selectOrganization(result.organization.slug);
+			return result.organization;
+		},
+		[config, selectOrganization],
+	);
 
-	const updateOrg = useCallback(async (data: { name?: string; slug?: string; logoUrl?: string | null }) => {
-		if (!config || !organization) throw new Error('No organization selected')
-		const result = await OrgFunctions.updateOrganization(config, organization.id, data)
-		setOrganization(result.organization)
-		setOrganizations(prev => prev.map(o => o.id === result.organization.id ? result.organization : o))
-		return result.organization
-	}, [config, organization])
+	const updateOrg = useCallback(
+		async (data: { name?: string; slug?: string; logoUrl?: string | null }) => {
+			if (!config || !organization) throw new Error("No organization selected");
+			const result = await OrgFunctions.updateOrganization(
+				config,
+				organization.id,
+				data,
+			);
+			setOrganization(result.organization);
+			setOrganizations((prev) =>
+				prev.map((o) =>
+					o.id === result.organization.id ? result.organization : o,
+				),
+			);
+			return result.organization;
+		},
+		[config, organization],
+	);
 
 	const deleteOrg = useCallback(async () => {
-		if (!config || !organization) throw new Error('No organization selected')
-		await OrgFunctions.deleteOrganization(config, organization.id)
-		setOrganizations(prev => prev.filter(o => o.id !== organization.id))
-		const remaining = organizations.filter(o => o.id !== organization.id)
+		if (!config || !organization) throw new Error("No organization selected");
+		await OrgFunctions.deleteOrganization(config, organization.id);
+		setOrganizations((prev) => prev.filter((o) => o.id !== organization.id));
+		const remaining = organizations.filter((o) => o.id !== organization.id);
 		if (remaining.length > 0) {
-			await selectOrganization(remaining[0].slug)
+			await selectOrganization(remaining[0].slug);
 		} else {
-			setOrganization(null)
-			setMembers([])
-			setRole(null)
+			setOrganization(null);
+			setMembers([]);
+			setRole(null);
 		}
-	}, [config, organization, organizations, selectOrganization])
+	}, [config, organization, organizations, selectOrganization]);
 
 	// Member operations
-	const inviteMember = useCallback(async (email: string, memberRole: OrgRole) => {
-		if (!config || !organization) throw new Error('No organization selected')
-		const result = await OrgFunctions.inviteOrganizationMember(config, organization.id, { email, role: memberRole })
-		setInvitations(prev => [...prev, result.invitation])
-		return result.invitation
-	}, [config, organization])
+	const inviteMember = useCallback(
+		async (email: string, memberRole: OrgRole) => {
+			if (!config || !organization) throw new Error("No organization selected");
+			const result = await OrgFunctions.inviteOrganizationMember(
+				config,
+				organization.id,
+				{ email, role: memberRole },
+			);
+			setInvitations((prev) => [...prev, result.invitation]);
+			return result.invitation;
+		},
+		[config, organization],
+	);
 
-	const updateMemberRole = useCallback(async (userId: string, newRole: OrgRole) => {
-		if (!config || !organization) throw new Error('No organization selected')
-		const result = await OrgFunctions.updateOrganizationMemberRole(config, organization.id, userId, newRole)
-		setMembers(prev => prev.map(m => m.userId === userId ? result.member : m))
-		return result.member
-	}, [config, organization])
+	const updateMemberRole = useCallback(
+		async (userId: string, newRole: OrgRole) => {
+			if (!config || !organization) throw new Error("No organization selected");
+			const result = await OrgFunctions.updateOrganizationMemberRole(
+				config,
+				organization.id,
+				userId,
+				newRole,
+			);
+			setMembers((prev) =>
+				prev.map((m) => (m.userId === userId ? result.member : m)),
+			);
+			return result.member;
+		},
+		[config, organization],
+	);
 
-	const removeMember = useCallback(async (userId: string) => {
-		if (!config || !organization) throw new Error('No organization selected')
-		await OrgFunctions.removeOrganizationMember(config, organization.id, userId)
-		setMembers(prev => prev.filter(m => m.userId !== userId))
-	}, [config, organization])
+	const removeMember = useCallback(
+		async (userId: string) => {
+			if (!config || !organization) throw new Error("No organization selected");
+			await OrgFunctions.removeOrganizationMember(
+				config,
+				organization.id,
+				userId,
+			);
+			setMembers((prev) => prev.filter((m) => m.userId !== userId));
+		},
+		[config, organization],
+	);
 
 	const leave = useCallback(async () => {
-		if (!config || !organization) throw new Error('No organization selected')
-		await OrgFunctions.leaveOrganization(config, organization.id)
-		setOrganizations(prev => prev.filter(o => o.id !== organization.id))
-		const remaining = organizations.filter(o => o.id !== organization.id)
+		if (!config || !organization) throw new Error("No organization selected");
+		await OrgFunctions.leaveOrganization(config, organization.id);
+		setOrganizations((prev) => prev.filter((o) => o.id !== organization.id));
+		const remaining = organizations.filter((o) => o.id !== organization.id);
 		if (remaining.length > 0) {
-			await selectOrganization(remaining[0].slug)
+			await selectOrganization(remaining[0].slug);
 		} else {
-			setOrganization(null)
-			setMembers([])
-			setRole(null)
+			setOrganization(null);
+			setMembers([]);
+			setRole(null);
 		}
-	}, [config, organization, organizations, selectOrganization])
+	}, [config, organization, organizations, selectOrganization]);
 
-	const revokeInvitation = useCallback(async (invitationId: string) => {
-		if (!config || !organization) throw new Error('No organization selected')
-		await OrgFunctions.revokeOrganizationInvitation(config, organization.id, invitationId)
-		setInvitations(prev => prev.filter(i => i.id !== invitationId))
-	}, [config, organization])
+	const revokeInvitation = useCallback(
+		async (invitationId: string) => {
+			if (!config || !organization) throw new Error("No organization selected");
+			await OrgFunctions.revokeOrganizationInvitation(
+				config,
+				organization.id,
+				invitationId,
+			);
+			setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+		},
+		[config, organization],
+	);
 
 	// Refresh all data
 	const refresh = useCallback(async () => {
-		if (!config) return
-		setIsLoading(true)
+		if (!config) return;
+		setIsLoading(true);
 		try {
-			const result = await OrgFunctions.getOrganizations(config)
-			setOrganizations(result.organizations)
+			const result = await OrgFunctions.getOrganizations(config);
+			setOrganizations(result.organizations);
 			if (organization) {
-				await selectOrganization(organization.slug)
+				await selectOrganization(organization.slug);
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err : new Error('Failed to refresh'))
+			setError(err instanceof Error ? err : new Error("Failed to refresh"));
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}, [config, organization, selectOrganization])
+	}, [config, organization, selectOrganization]);
 
 	return {
 		organization,
@@ -939,15 +1056,15 @@ export function useOrganization(): UseOrganizationReturn {
 		leave,
 		revokeInvitation,
 		refresh,
-	}
+	};
 }
 
 // SDK Ready Hook - SSOT for configuration checking
-export { useSdkReady, RequireSdk } from './hooks/use-sdk-ready'
+export { useSdkReady, RequireSdk } from "./hooks/use-sdk-ready";
 
 // OAuth Providers Hook - fetch enabled providers from platform
 export {
 	useOAuthProviders,
 	type EnabledProvider,
 	type UseOAuthProvidersReturn,
-} from './hooks/use-oauth-providers'
+} from "./hooks/use-oauth-providers";

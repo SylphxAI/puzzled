@@ -23,39 +23,40 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useEffect, useRef, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
-	createDestinationRouter,
-	type DestinationRouterConfig,
-	type DestinationRouter,
-	type DestinationType,
 	type DestinationConfig,
+	type DestinationRouter,
+	type DestinationRouterConfig,
+	type DestinationType,
 	type EventProperties,
 	type UserProperties,
-} from '../../lib/analytics'
-import { useConsent, type ConsentCategory } from '../consent-hooks'
-import { useUser } from '../hooks'
+	createDestinationRouter,
+} from "../../lib/analytics";
+import { type ConsentCategory, useConsent } from "../consent-hooks";
+import { useUser } from "../hooks";
 
 // ============================================
 // Types
 // ============================================
 
-export interface UseDestinationRouterOptions extends Omit<DestinationRouterConfig, 'checkConsent' | 'distinctId'> {
+export interface UseDestinationRouterOptions
+	extends Omit<DestinationRouterConfig, "checkConsent" | "distinctId"> {
 	/** Auto-sync with consent state (default: true) */
-	syncConsent?: boolean
+	syncConsent?: boolean;
 	/** Auto-sync distinct ID with user (default: true) */
-	syncUser?: boolean
+	syncUser?: boolean;
 	/** Initialize on mount (default: true) */
-	autoInit?: boolean
+	autoInit?: boolean;
 }
 
 export interface UseDestinationRouterReturn extends DestinationRouter {
 	/** Whether router is initialized */
-	isInitialized: boolean
+	isInitialized: boolean;
 	/** Current enabled destinations */
-	enabledDestinations: DestinationConfig[]
+	enabledDestinations: DestinationConfig[];
 }
 
 // ============================================
@@ -95,106 +96,128 @@ export interface UseDestinationRouterReturn extends DestinationRouter {
  * }
  * ```
  */
-export function useDestinationRouter(options: UseDestinationRouterOptions): UseDestinationRouterReturn {
-	const { destinations, syncConsent = true, syncUser = true, autoInit = true, debug = false } = options
+export function useDestinationRouter(
+	options: UseDestinationRouterOptions,
+): UseDestinationRouterReturn {
+	const {
+		destinations,
+		syncConsent = true,
+		syncUser = true,
+		autoInit = true,
+		debug = false,
+	} = options;
 
-	const routerRef = useRef<DestinationRouter | null>(null)
-	const initializedRef = useRef(false)
+	const routerRef = useRef<DestinationRouter | null>(null);
+	const initializedRef = useRef(false);
 
 	// Get consent state
-	const { hasConsent: checkConsent } = useConsent()
+	const { hasConsent: checkConsent } = useConsent();
 
 	// Get user
-	const { user } = useUser()
+	const { user } = useUser();
 
 	// Create router once
 	const router = useMemo(() => {
-		if (!autoInit || typeof window === 'undefined') return null
+		if (!autoInit || typeof window === "undefined") return null;
 
 		const newRouter = createDestinationRouter({
 			destinations,
-			checkConsent: syncConsent ? (category: ConsentCategory) => checkConsent(category) : undefined,
+			checkConsent: syncConsent
+				? (category: ConsentCategory) => checkConsent(category)
+				: undefined,
 			defaultConsent: !syncConsent,
 			debug,
 			distinctId: syncUser && user?.id ? user.id : undefined,
-		})
+		});
 
-		routerRef.current = newRouter
-		initializedRef.current = true
+		routerRef.current = newRouter;
+		initializedRef.current = true;
 
-		return newRouter
-	}, [destinations, autoInit, syncConsent, checkConsent, debug, syncUser, user?.id])
+		return newRouter;
+	}, [
+		destinations,
+		autoInit,
+		syncConsent,
+		checkConsent,
+		debug,
+		syncUser,
+		user?.id,
+	]);
 
 	// Sync consent changes
 	useEffect(() => {
-		if (!syncConsent || !routerRef.current) return
-		routerRef.current.setConsentChecker((category) => checkConsent(category))
-	}, [syncConsent, checkConsent])
+		if (!syncConsent || !routerRef.current) return;
+		routerRef.current.setConsentChecker((category) => checkConsent(category));
+	}, [syncConsent, checkConsent]);
 
 	// Sync user changes
 	useEffect(() => {
-		if (!syncUser || !routerRef.current || !user?.id) return
-		routerRef.current.setDistinctId(user.id)
+		if (!syncUser || !routerRef.current || !user?.id) return;
+		routerRef.current.setDistinctId(user.id);
 		// Optionally identify across destinations
 		routerRef.current.identify(user.id, {
 			email: user.email,
 			name: user.name,
-		})
-	}, [syncUser, user?.id, user?.email, user?.name])
+		});
+	}, [syncUser, user?.id, user?.email, user?.name]);
 
 	// Memoized methods to prevent unnecessary re-renders
 	const track = useCallback(
 		(event: string, properties?: EventProperties) => {
-			router?.track(event, properties)
+			router?.track(event, properties);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const trackTo = useCallback(
-		(destinationType: DestinationType, event: string, properties?: EventProperties) => {
-			router?.trackTo(destinationType, event, properties)
+		(
+			destinationType: DestinationType,
+			event: string,
+			properties?: EventProperties,
+		) => {
+			router?.trackTo(destinationType, event, properties);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const identify = useCallback(
 		(userId: string, traits?: UserProperties) => {
-			router?.identify(userId, traits)
+			router?.identify(userId, traits);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const page = useCallback(
 		(name?: string, properties?: EventProperties) => {
-			router?.page(name, properties)
+			router?.page(name, properties);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const getEnabledDestinations = useCallback(() => {
-		return router?.getEnabledDestinations() || []
-	}, [router])
+		return router?.getEnabledDestinations() || [];
+	}, [router]);
 
 	const setDestinationEnabled = useCallback(
 		(type: DestinationType, enabled: boolean) => {
-			router?.setDestinationEnabled(type, enabled)
+			router?.setDestinationEnabled(type, enabled);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const setConsentChecker = useCallback(
 		(fn: (category: ConsentCategory) => boolean) => {
-			router?.setConsentChecker(fn)
+			router?.setConsentChecker(fn);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	const setDistinctId = useCallback(
 		(id: string) => {
-			router?.setDistinctId(id)
+			router?.setDistinctId(id);
 		},
-		[router]
-	)
+		[router],
+	);
 
 	return {
 		isInitialized: initializedRef.current,
@@ -207,19 +230,20 @@ export function useDestinationRouter(options: UseDestinationRouterOptions): UseD
 		setDestinationEnabled,
 		setConsentChecker,
 		setDistinctId,
-	}
+	};
 }
 
 // ============================================
 // Context Hook
 // ============================================
 
-import { createContext, useContext, type ReactNode } from 'react'
+import { type ReactNode, createContext, useContext } from "react";
 
-const DestinationRouterContext = createContext<DestinationRouter | null>(null)
+const DestinationRouterContext = createContext<DestinationRouter | null>(null);
 
-export interface DestinationRouterProviderProps extends UseDestinationRouterOptions {
-	children: ReactNode
+export interface DestinationRouterProviderProps
+	extends UseDestinationRouterOptions {
+	children: ReactNode;
 }
 
 /**
@@ -237,10 +261,17 @@ export interface DestinationRouterProviderProps extends UseDestinationRouterOpti
  * </DestinationRouterProvider>
  * ```
  */
-export function DestinationRouterProvider({ children, ...options }: DestinationRouterProviderProps) {
-	const router = useDestinationRouter(options)
+export function DestinationRouterProvider({
+	children,
+	...options
+}: DestinationRouterProviderProps) {
+	const router = useDestinationRouter(options);
 
-	return <DestinationRouterContext.Provider value={router}>{children}</DestinationRouterContext.Provider>
+	return (
+		<DestinationRouterContext.Provider value={router}>
+			{children}
+		</DestinationRouterContext.Provider>
+	);
 }
 
 /**
@@ -255,8 +286,7 @@ export function DestinationRouterProvider({ children, ...options }: DestinationR
  * ```
  */
 export function useRouterContext(): DestinationRouter | null {
-	return useContext(DestinationRouterContext)
+	return useContext(DestinationRouterContext);
 }
 
 // Re-export types
-

@@ -18,44 +18,48 @@
  * - Background refetching
  */
 
-'use client'
+"use client";
 
-import { useCallback, useContext, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { STALE_TIME_FREQUENT_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STABLE_MS } from '../constants'
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useContext, useMemo, useState } from "react";
+import {
+	STALE_TIME_FREQUENT_MS,
+	STALE_TIME_MODERATE_MS,
+	STALE_TIME_STABLE_MS,
+} from "../constants";
 import type {
+	AchievementDefaults,
 	AchievementDefinition,
 	AchievementUnlockEvent,
+	LeaderboardDefaults,
 	LeaderboardEntry,
 	LeaderboardQueryOptions,
 	LeaderboardResult,
 	RecordActivityResult,
+	StreakDefaults,
 	StreakState,
 	SubmitScoreResult,
 	UserAchievement,
-	StreakDefaults,
-	LeaderboardDefaults,
-	AchievementDefaults,
-} from '../lib/engagement/types'
-import { PlatformContext } from './platform-context'
+} from "../lib/engagement/types";
+import { PlatformContext } from "./platform-context";
 
 // ============================================================================
 // Context Hook
 // ============================================================================
 
 function useEngagementContext() {
-	const context = useContext(PlatformContext)
+	const context = useContext(PlatformContext);
 	if (!context) {
-		throw new Error('Engagement hooks must be used within a SylphxProvider')
+		throw new Error("Engagement hooks must be used within a SylphxProvider");
 	}
-	return context
+	return context;
 }
 
 /**
  * Safe version that returns null if no provider (for SSR/prerendering)
  */
 function useEngagementContextSafe() {
-	return useContext(PlatformContext)
+	return useContext(PlatformContext);
 }
 
 // ============================================================================
@@ -64,35 +68,37 @@ function useEngagementContextSafe() {
 
 export interface UseStreakReturn {
 	/** Current streak state */
-	state: StreakState | null
+	state: StreakState | null;
 	/** Whether loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error if any */
-	error: Error | null
+	error: Error | null;
 	/** Current streak value */
-	current: number
+	current: number;
 	/** Longest streak ever */
-	longest: number
+	longest: number;
 	/** Whether streak can be recovered */
-	canRecover: boolean
+	canRecover: boolean;
 	/** Time remaining until expiry (ms) */
-	timeRemainingMs: number | null
+	timeRemainingMs: number | null;
 	/** User's stored timezone preference (IANA timezone) */
-	userTimezone: string | null
+	userTimezone: string | null;
 	/** Record activity to extend streak */
-	recordActivity: (metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
+	recordActivity: (
+		metadata?: Record<string, unknown>,
+	) => Promise<RecordActivityResult>;
 	/** Recover streak (if within grace period) */
-	recover: () => Promise<{ success: boolean; streak: StreakState }>
+	recover: () => Promise<{ success: boolean; streak: StreakState }>;
 	/** Refresh streak state */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /** Options for useStreak hook */
 interface UseStreakOptions {
 	/** Optional inline defaults for auto-discovery */
-	defaults?: StreakDefaults
+	defaults?: StreakDefaults;
 	/** User's IANA timezone (e.g., 'America/New_York') for calculating streak expiry at user's local midnight */
-	userTimezone?: string
+	userTimezone?: string;
 }
 
 /**
@@ -146,52 +152,65 @@ interface UseStreakOptions {
  * }
  * ```
  */
-export function useStreak(streakId: string, options?: UseStreakOptions): UseStreakReturn {
-	const { defaults, userTimezone } = options ?? {}
-	const ctx = useEngagementContext()
+export function useStreak(
+	streakId: string,
+	options?: UseStreakOptions,
+): UseStreakReturn {
+	const { defaults, userTimezone } = options ?? {};
+	const ctx = useEngagementContext();
 
 	// React Query for streak data
 	const streakQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+		queryKey: ["sylphx", ctx.appId, "streak", streakId, userTimezone],
 		queryFn: () => ctx.getStreak(streakId, defaults, userTimezone),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - streaks can change frequently
-	})
+	});
 
-	const state = streakQuery.data ?? null
+	const state = streakQuery.data ?? null;
 
 	// Record activity (passes inline defaults for auto-discovery and timezone)
 	const recordActivity = useCallback(
-		async (metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
-			const result = await ctx.recordStreakActivity(streakId, metadata, defaults, userTimezone)
+		async (
+			metadata?: Record<string, unknown>,
+		): Promise<RecordActivityResult> => {
+			const result = await ctx.recordStreakActivity(
+				streakId,
+				metadata,
+				defaults,
+				userTimezone,
+			);
 			// Update cache with new streak state
 			ctx.queryClient.setQueryData(
-				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-				result.streak
-			)
-			return result
+				["sylphx", ctx.appId, "streak", streakId, userTimezone],
+				result.streak,
+			);
+			return result;
 		},
-		[ctx, streakId, defaults, userTimezone]
-	)
+		[ctx, streakId, defaults, userTimezone],
+	);
 
 	// Recover streak (passes timezone)
-	const recover = useCallback(async (): Promise<{ success: boolean; streak: StreakState }> => {
-		const result = await ctx.recoverStreak(streakId, userTimezone)
+	const recover = useCallback(async (): Promise<{
+		success: boolean;
+		streak: StreakState;
+	}> => {
+		const result = await ctx.recoverStreak(streakId, userTimezone);
 		if (result.success) {
 			ctx.queryClient.setQueryData(
-				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-				result.streak
-			)
+				["sylphx", ctx.appId, "streak", streakId, userTimezone],
+				result.streak,
+			);
 		}
-		return result
-	}, [ctx, streakId, userTimezone])
+		return result;
+	}, [ctx, streakId, userTimezone]);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'streak', streakId],
-		})
-	}, [ctx, streakId])
+			queryKey: ["sylphx", ctx.appId, "streak", streakId],
+		});
+	}, [ctx, streakId]);
 
 	return {
 		state,
@@ -205,7 +224,7 @@ export function useStreak(streakId: string, options?: UseStreakOptions): UseStre
 		recordActivity,
 		recover,
 		refresh,
-	}
+	};
 }
 
 // ============================================================================
@@ -214,21 +233,24 @@ export function useStreak(streakId: string, options?: UseStreakOptions): UseStre
 
 export interface UseLeaderboardReturn {
 	/** Leaderboard data */
-	data: LeaderboardResult | null
+	data: LeaderboardResult | null;
 	/** Whether loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error if any */
-	error: Error | null
+	error: Error | null;
 	/** Top entries */
-	entries: LeaderboardEntry[]
+	entries: LeaderboardEntry[];
 	/** Current user's entry */
-	currentUserEntry: LeaderboardEntry | null
+	currentUserEntry: LeaderboardEntry | null;
 	/** Total participants */
-	totalParticipants: number
+	totalParticipants: number;
 	/** Submit a score */
-	submitScore: (value: number, metadata?: Record<string, unknown>) => Promise<SubmitScoreResult>
+	submitScore: (
+		value: number,
+		metadata?: Record<string, unknown>,
+	) => Promise<SubmitScoreResult>;
 	/** Refresh leaderboard */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -279,41 +301,49 @@ export interface UseLeaderboardReturn {
 export function useLeaderboard(
 	leaderboardId: string,
 	options?: LeaderboardQueryOptions,
-	defaults?: LeaderboardDefaults
+	defaults?: LeaderboardDefaults,
 ): UseLeaderboardReturn {
-	const ctx = useEngagementContext()
+	const ctx = useEngagementContext();
 
 	// Stable key for options
-	const optionsKey = JSON.stringify(options ?? {})
+	const optionsKey = JSON.stringify(options ?? {});
 
 	// React Query for leaderboard data
 	const leaderboardQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
+		queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
 		staleTime: STALE_TIME_MODERATE_MS, // 2 min - leaderboards change moderately
-	})
+	});
 
-	const data = leaderboardQuery.data ?? null
+	const data = leaderboardQuery.data ?? null;
 
 	// Submit score (passes inline defaults for auto-discovery)
 	const submitScore = useCallback(
-		async (value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
-			const result = await ctx.submitScore(leaderboardId, value, metadata, defaults)
+		async (
+			value: number,
+			metadata?: Record<string, unknown>,
+		): Promise<SubmitScoreResult> => {
+			const result = await ctx.submitScore(
+				leaderboardId,
+				value,
+				metadata,
+				defaults,
+			);
 			// Invalidate to get updated rankings
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId],
+			});
+			return result;
 		},
-		[ctx, leaderboardId, defaults]
-	)
+		[ctx, leaderboardId, defaults],
+	);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
-		})
-	}, [ctx, leaderboardId])
+			queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId],
+		});
+	}, [ctx, leaderboardId]);
 
 	return {
 		data,
@@ -324,7 +354,7 @@ export function useLeaderboard(
 		totalParticipants: data?.totalParticipants ?? 0,
 		submitScore,
 		refresh,
-	}
+	};
 }
 
 // ============================================================================
@@ -333,31 +363,34 @@ export function useLeaderboard(
 
 export interface UseAchievementsReturn {
 	/** User achievement states */
-	achievements: UserAchievement[]
+	achievements: UserAchievement[];
 	/** Whether loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error if any */
-	error: Error | null
+	error: Error | null;
 	/** Unlocked achievements */
-	unlocked: UserAchievement[]
+	unlocked: UserAchievement[];
 	/** Locked achievements (with progress) */
-	locked: UserAchievement[]
+	locked: UserAchievement[];
 	/** Get achievement state by ID */
-	getAchievement: (id: string) => UserAchievement | null
+	getAchievement: (id: string) => UserAchievement | null;
 	/** Manually unlock an achievement (with optional inline defaults for auto-discovery) */
-	unlock: (achievementId: string, defaults?: AchievementDefaults) => Promise<AchievementUnlockEvent>
+	unlock: (
+		achievementId: string,
+		defaults?: AchievementDefaults,
+	) => Promise<AchievementUnlockEvent>;
 	/** Increment progress (with optional inline defaults for auto-discovery) */
 	incrementProgress: (
 		achievementId: string,
 		amount: number,
-		defaults?: AchievementDefaults
-	) => Promise<UserAchievement>
+		defaults?: AchievementDefaults,
+	) => Promise<UserAchievement>;
 	/** Refresh achievements */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 	/** Recently unlocked (for toast) */
-	recentUnlock: AchievementUnlockEvent | null
+	recentUnlock: AchievementUnlockEvent | null;
 	/** Dismiss recent unlock */
-	dismissRecentUnlock: () => void
+	dismissRecentUnlock: () => void;
 }
 
 /**
@@ -430,71 +463,89 @@ export interface UseAchievementsReturn {
  * ```
  */
 export function useAchievements(): UseAchievementsReturn {
-	const ctx = useEngagementContext()
-	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
+	const ctx = useEngagementContext();
+	const [recentUnlock, setRecentUnlock] =
+		useState<AchievementUnlockEvent | null>(null);
 
 	// React Query for achievements data
 	const achievementsQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'achievements'],
+		queryKey: ["sylphx", ctx.appId, "achievements"],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_STABLE_MS, // 5 min - achievements don't change often
-	})
+	});
 
-	const achievements = achievementsQuery.data ?? []
+	const achievements = achievementsQuery.data ?? [];
 
 	// Computed values
-	const unlocked = useMemo(() => achievements.filter((a) => a.unlocked), [achievements])
-	const locked = useMemo(() => achievements.filter((a) => !a.unlocked), [achievements])
+	const unlocked = useMemo(
+		() => achievements.filter((a) => a.unlocked),
+		[achievements],
+	);
+	const locked = useMemo(
+		() => achievements.filter((a) => !a.unlocked),
+		[achievements],
+	);
 
 	// Get achievement by ID
 	const getAchievement = useCallback(
 		(id: string): UserAchievement | null => {
-			return achievements.find((a) => a.achievementId === id) ?? null
+			return achievements.find((a) => a.achievementId === id) ?? null;
 		},
-		[achievements]
-	)
+		[achievements],
+	);
 
 	// Unlock achievement (passes inline defaults for auto-discovery)
 	const unlock = useCallback(
-		async (achievementId: string, defaults?: AchievementDefaults): Promise<AchievementUnlockEvent> => {
-			const result = await ctx.unlockAchievement(achievementId, defaults)
+		async (
+			achievementId: string,
+			defaults?: AchievementDefaults,
+		): Promise<AchievementUnlockEvent> => {
+			const result = await ctx.unlockAchievement(achievementId, defaults);
 			if (result.isNew) {
-				setRecentUnlock(result)
+				setRecentUnlock(result);
 			}
 			// Invalidate to get updated achievements list
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'achievements'],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "achievements"],
+			});
+			return result;
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	// Increment progress (passes inline defaults for auto-discovery)
 	const incrementProgress = useCallback(
-		async (achievementId: string, amount: number, defaults?: AchievementDefaults): Promise<UserAchievement> => {
-			const result = await ctx.incrementAchievementProgress(achievementId, amount, defaults)
+		async (
+			achievementId: string,
+			amount: number,
+			defaults?: AchievementDefaults,
+		): Promise<UserAchievement> => {
+			const result = await ctx.incrementAchievementProgress(
+				achievementId,
+				amount,
+				defaults,
+			);
 			// Invalidate to get updated achievements list
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'achievements'],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "achievements"],
+			});
+			return result;
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'achievements'],
-		})
-	}, [ctx])
+			queryKey: ["sylphx", ctx.appId, "achievements"],
+		});
+	}, [ctx]);
 
 	// Dismiss recent unlock
 	const dismissRecentUnlock = useCallback(() => {
-		setRecentUnlock(null)
-	}, [])
+		setRecentUnlock(null);
+	}, []);
 
 	return {
 		achievements,
@@ -508,7 +559,7 @@ export function useAchievements(): UseAchievementsReturn {
 		refresh,
 		recentUnlock,
 		dismissRecentUnlock,
-	}
+	};
 }
 
 // ============================================================================
@@ -518,11 +569,11 @@ export function useAchievements(): UseAchievementsReturn {
 // Type-safe stub functions for safe hooks when context is unavailable
 // These return sensible defaults instead of using unsafe type assertions
 
-const noopAsyncVoid = async (): Promise<void> => {}
+const noopAsyncVoid = async (): Promise<void> => {};
 
 /** Default streak state for stubs */
 const defaultStreakState: StreakState = {
-	streakId: '',
+	streakId: "",
 	current: 0,
 	longest: 0,
 	lastActivityAt: null,
@@ -530,7 +581,7 @@ const defaultStreakState: StreakState = {
 	canRecover: false,
 	timeRemainingMs: null,
 	userTimezone: null,
-}
+};
 
 /** Stub for recordActivity when no context */
 const stubRecordActivity = async (): Promise<RecordActivityResult> => ({
@@ -538,13 +589,16 @@ const stubRecordActivity = async (): Promise<RecordActivityResult> => ({
 	extended: false,
 	newPersonalBest: false,
 	previousValue: 0,
-})
+});
 
 /** Stub for recover when no context */
-const stubRecover = async (): Promise<{ success: boolean; streak: StreakState }> => ({
+const stubRecover = async (): Promise<{
+	success: boolean;
+	streak: StreakState;
+}> => ({
 	success: false,
 	streak: defaultStreakState,
-})
+});
 
 /** Stub for submitScore when no context */
 const stubSubmitScore = async (): Promise<SubmitScoreResult> => ({
@@ -553,51 +607,54 @@ const stubSubmitScore = async (): Promise<SubmitScoreResult> => ({
 	previousBest: null,
 	newPersonalBest: false,
 	rankChange: null,
-})
+});
 
 /** Default user achievement for stubs */
 const defaultUserAchievement: UserAchievement = {
-	achievementId: '',
+	achievementId: "",
 	unlocked: false,
 	unlockedAt: null,
 	progress: 0,
 	target: null,
 	progressPercent: 0,
-}
+};
 
 /** Stub for achievement unlock when no context */
 const stubUnlockAchievement = async (): Promise<AchievementUnlockEvent> => ({
 	achievement: {
-		id: '',
-		name: '',
-		description: '',
-		type: 'standard',
-		tier: 'bronze',
-		category: '',
-		icon: '',
+		id: "",
+		name: "",
+		description: "",
+		type: "standard",
+		tier: "bronze",
+		category: "",
+		icon: "",
 		criteria: {},
 	},
 	userAchievement: defaultUserAchievement,
 	isNew: false,
-})
+});
 
 /** Stub for achievement progress when no context */
-const stubIncrementProgress = async (): Promise<UserAchievement> => defaultUserAchievement
+const stubIncrementProgress = async (): Promise<UserAchievement> =>
+	defaultUserAchievement;
 
 /** Safe return type for useStreak when outside provider */
 export interface UseSafeStreakReturn {
-	state: StreakState | null
-	isLoading: boolean
-	error: Error | null
-	current: number
-	longest: number
-	canRecover: boolean
-	timeRemainingMs: number | null
-	userTimezone: string | null
-	recordActivity: (metadata?: Record<string, unknown>) => Promise<RecordActivityResult>
-	recover: () => Promise<{ success: boolean; streak: StreakState }>
-	refresh: () => Promise<void>
-	isConfigured: boolean
+	state: StreakState | null;
+	isLoading: boolean;
+	error: Error | null;
+	current: number;
+	longest: number;
+	canRecover: boolean;
+	timeRemainingMs: number | null;
+	userTimezone: string | null;
+	recordActivity: (
+		metadata?: Record<string, unknown>,
+	) => Promise<RecordActivityResult>;
+	recover: () => Promise<{ success: boolean; streak: StreakState }>;
+	refresh: () => Promise<void>;
+	isConfigured: boolean;
 }
 
 /**
@@ -606,8 +663,11 @@ export interface UseSafeStreakReturn {
  * Returns safe defaults when called outside SylphxProvider.
  * Use this in components that may render during static generation.
  */
-export function useSafeStreak(streakId: string, options?: UseStreakOptions): UseSafeStreakReturn {
-	const ctx = useEngagementContextSafe()
+export function useSafeStreak(
+	streakId: string,
+	options?: UseStreakOptions,
+): UseSafeStreakReturn {
+	const ctx = useEngagementContextSafe();
 
 	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
@@ -624,49 +684,59 @@ export function useSafeStreak(streakId: string, options?: UseStreakOptions): Use
 			recover: stubRecover,
 			refresh: noopAsyncVoid,
 			isConfigured: false,
-		}
+		};
 	}
 
-	const { defaults, userTimezone } = options ?? {}
+	const { defaults, userTimezone } = options ?? {};
 
 	// React Query for streak data
 	const streakQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'streak', streakId, userTimezone],
+		queryKey: ["sylphx", ctx.appId, "streak", streakId, userTimezone],
 		queryFn: () => ctx.getStreak(streakId, defaults, userTimezone),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_FREQUENT_MS,
-	})
+	});
 
-	const state = streakQuery.data ?? null
+	const state = streakQuery.data ?? null;
 
 	const recordActivity = useCallback(
-		async (metadata?: Record<string, unknown>): Promise<RecordActivityResult> => {
-			const result = await ctx.recordStreakActivity(streakId, metadata, defaults, userTimezone)
+		async (
+			metadata?: Record<string, unknown>,
+		): Promise<RecordActivityResult> => {
+			const result = await ctx.recordStreakActivity(
+				streakId,
+				metadata,
+				defaults,
+				userTimezone,
+			);
 			ctx.queryClient.setQueryData(
-				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-				result.streak
-			)
-			return result
+				["sylphx", ctx.appId, "streak", streakId, userTimezone],
+				result.streak,
+			);
+			return result;
 		},
-		[ctx, streakId, defaults, userTimezone]
-	)
+		[ctx, streakId, defaults, userTimezone],
+	);
 
-	const recover = useCallback(async (): Promise<{ success: boolean; streak: StreakState }> => {
-		const result = await ctx.recoverStreak(streakId, userTimezone)
+	const recover = useCallback(async (): Promise<{
+		success: boolean;
+		streak: StreakState;
+	}> => {
+		const result = await ctx.recoverStreak(streakId, userTimezone);
 		if (result.success) {
 			ctx.queryClient.setQueryData(
-				['sylphx', ctx.appId, 'streak', streakId, userTimezone],
-				result.streak
-			)
+				["sylphx", ctx.appId, "streak", streakId, userTimezone],
+				result.streak,
+			);
 		}
-		return result
-	}, [ctx, streakId, userTimezone])
+		return result;
+	}, [ctx, streakId, userTimezone]);
 
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'streak', streakId],
-		})
-	}, [ctx, streakId])
+			queryKey: ["sylphx", ctx.appId, "streak", streakId],
+		});
+	}, [ctx, streakId]);
 
 	return {
 		state,
@@ -681,20 +751,23 @@ export function useSafeStreak(streakId: string, options?: UseStreakOptions): Use
 		recover,
 		refresh,
 		isConfigured: true,
-	}
+	};
 }
 
 /** Safe return type for useLeaderboard when outside provider */
 export interface UseSafeLeaderboardReturn {
-	data: LeaderboardResult | null
-	isLoading: boolean
-	error: Error | null
-	entries: LeaderboardEntry[]
-	currentUserEntry: LeaderboardEntry | null
-	totalParticipants: number
-	submitScore: (value: number, metadata?: Record<string, unknown>) => Promise<SubmitScoreResult>
-	refresh: () => Promise<void>
-	isConfigured: boolean
+	data: LeaderboardResult | null;
+	isLoading: boolean;
+	error: Error | null;
+	entries: LeaderboardEntry[];
+	currentUserEntry: LeaderboardEntry | null;
+	totalParticipants: number;
+	submitScore: (
+		value: number,
+		metadata?: Record<string, unknown>,
+	) => Promise<SubmitScoreResult>;
+	refresh: () => Promise<void>;
+	isConfigured: boolean;
 }
 
 /**
@@ -706,9 +779,9 @@ export interface UseSafeLeaderboardReturn {
 export function useSafeLeaderboard(
 	leaderboardId: string,
 	options?: LeaderboardQueryOptions,
-	defaults?: LeaderboardDefaults
+	defaults?: LeaderboardDefaults,
 ): UseSafeLeaderboardReturn {
-	const ctx = useEngagementContextSafe()
+	const ctx = useEngagementContextSafe();
 
 	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
@@ -722,35 +795,43 @@ export function useSafeLeaderboard(
 			submitScore: stubSubmitScore,
 			refresh: noopAsyncVoid,
 			isConfigured: false,
-		}
+		};
 	}
 
-	const optionsKey = JSON.stringify(options ?? {})
+	const optionsKey = JSON.stringify(options ?? {});
 
 	const leaderboardQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId, optionsKey],
+		queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId, optionsKey],
 		queryFn: () => ctx.getLeaderboard(leaderboardId, options),
 		staleTime: STALE_TIME_MODERATE_MS,
-	})
+	});
 
-	const data = leaderboardQuery.data ?? null
+	const data = leaderboardQuery.data ?? null;
 
 	const submitScore = useCallback(
-		async (value: number, metadata?: Record<string, unknown>): Promise<SubmitScoreResult> => {
-			const result = await ctx.submitScore(leaderboardId, value, metadata, defaults)
+		async (
+			value: number,
+			metadata?: Record<string, unknown>,
+		): Promise<SubmitScoreResult> => {
+			const result = await ctx.submitScore(
+				leaderboardId,
+				value,
+				metadata,
+				defaults,
+			);
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId],
+			});
+			return result;
 		},
-		[ctx, leaderboardId, defaults]
-	)
+		[ctx, leaderboardId, defaults],
+	);
 
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'leaderboard', leaderboardId],
-		})
-	}, [ctx, leaderboardId])
+			queryKey: ["sylphx", ctx.appId, "leaderboard", leaderboardId],
+		});
+	}, [ctx, leaderboardId]);
 
 	return {
 		data,
@@ -762,27 +843,30 @@ export function useSafeLeaderboard(
 		submitScore,
 		refresh,
 		isConfigured: true,
-	}
+	};
 }
 
 /** Safe return type for useAchievements when outside provider */
 export interface UseSafeAchievementsReturn {
-	achievements: UserAchievement[]
-	isLoading: boolean
-	error: Error | null
-	unlocked: UserAchievement[]
-	locked: UserAchievement[]
-	getAchievement: (id: string) => UserAchievement | null
-	unlock: (achievementId: string, defaults?: AchievementDefaults) => Promise<AchievementUnlockEvent>
+	achievements: UserAchievement[];
+	isLoading: boolean;
+	error: Error | null;
+	unlocked: UserAchievement[];
+	locked: UserAchievement[];
+	getAchievement: (id: string) => UserAchievement | null;
+	unlock: (
+		achievementId: string,
+		defaults?: AchievementDefaults,
+	) => Promise<AchievementUnlockEvent>;
 	incrementProgress: (
 		achievementId: string,
 		amount: number,
-		defaults?: AchievementDefaults
-	) => Promise<UserAchievement>
-	refresh: () => Promise<void>
-	recentUnlock: AchievementUnlockEvent | null
-	dismissRecentUnlock: () => void
-	isConfigured: boolean
+		defaults?: AchievementDefaults,
+	) => Promise<UserAchievement>;
+	refresh: () => Promise<void>;
+	recentUnlock: AchievementUnlockEvent | null;
+	dismissRecentUnlock: () => void;
+	isConfigured: boolean;
 }
 
 /**
@@ -792,8 +876,9 @@ export interface UseSafeAchievementsReturn {
  * Use this in components that may render during static generation.
  */
 export function useSafeAchievements(): UseSafeAchievementsReturn {
-	const ctx = useEngagementContextSafe()
-	const [recentUnlock, setRecentUnlock] = useState<AchievementUnlockEvent | null>(null)
+	const ctx = useEngagementContextSafe();
+	const [recentUnlock, setRecentUnlock] =
+		useState<AchievementUnlockEvent | null>(null);
 
 	// If no context, return safe defaults with type-safe stubs
 	if (!ctx) {
@@ -810,62 +895,79 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 			recentUnlock: null,
 			dismissRecentUnlock: () => {},
 			isConfigured: false,
-		}
+		};
 	}
 
 	const achievementsQuery = useQuery({
-		queryKey: ['sylphx', ctx.appId, 'achievements'],
+		queryKey: ["sylphx", ctx.appId, "achievements"],
 		queryFn: () => ctx.getAchievements(),
 		enabled: !!ctx.user,
 		staleTime: STALE_TIME_STABLE_MS,
-	})
+	});
 
-	const achievements = achievementsQuery.data ?? []
+	const achievements = achievementsQuery.data ?? [];
 
-	const unlocked = useMemo(() => achievements.filter((a) => a.unlocked), [achievements])
-	const locked = useMemo(() => achievements.filter((a) => !a.unlocked), [achievements])
+	const unlocked = useMemo(
+		() => achievements.filter((a) => a.unlocked),
+		[achievements],
+	);
+	const locked = useMemo(
+		() => achievements.filter((a) => !a.unlocked),
+		[achievements],
+	);
 
 	const getAchievement = useCallback(
 		(id: string): UserAchievement | null => {
-			return achievements.find((a) => a.achievementId === id) ?? null
+			return achievements.find((a) => a.achievementId === id) ?? null;
 		},
-		[achievements]
-	)
+		[achievements],
+	);
 
 	const unlock = useCallback(
-		async (achievementId: string, defaults?: AchievementDefaults): Promise<AchievementUnlockEvent> => {
-			const result = await ctx.unlockAchievement(achievementId, defaults)
+		async (
+			achievementId: string,
+			defaults?: AchievementDefaults,
+		): Promise<AchievementUnlockEvent> => {
+			const result = await ctx.unlockAchievement(achievementId, defaults);
 			if (result.isNew) {
-				setRecentUnlock(result)
+				setRecentUnlock(result);
 			}
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'achievements'],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "achievements"],
+			});
+			return result;
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const incrementProgress = useCallback(
-		async (achievementId: string, amount: number, defaults?: AchievementDefaults): Promise<UserAchievement> => {
-			const result = await ctx.incrementAchievementProgress(achievementId, amount, defaults)
+		async (
+			achievementId: string,
+			amount: number,
+			defaults?: AchievementDefaults,
+		): Promise<UserAchievement> => {
+			const result = await ctx.incrementAchievementProgress(
+				achievementId,
+				amount,
+				defaults,
+			);
 			void ctx.queryClient.invalidateQueries({
-				queryKey: ['sylphx', ctx.appId, 'achievements'],
-			})
-			return result
+				queryKey: ["sylphx", ctx.appId, "achievements"],
+			});
+			return result;
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const refresh = useCallback(async () => {
 		await ctx.queryClient.invalidateQueries({
-			queryKey: ['sylphx', ctx.appId, 'achievements'],
-		})
-	}, [ctx])
+			queryKey: ["sylphx", ctx.appId, "achievements"],
+		});
+	}, [ctx]);
 
 	const dismissRecentUnlock = useCallback(() => {
-		setRecentUnlock(null)
-	}, [])
+		setRecentUnlock(null);
+	}, []);
 
 	return {
 		achievements,
@@ -880,5 +982,5 @@ export function useSafeAchievements(): UseSafeAchievementsReturn {
 		recentUnlock,
 		dismissRecentUnlock,
 		isConfigured: true,
-	}
+	};
 }

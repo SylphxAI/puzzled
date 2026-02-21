@@ -47,7 +47,7 @@
 
 /* Dark Mode */
 .dark .admin-theme,
-html[class~='dark'] .admin-theme {
+html[class~="dark"] .admin-theme {
 	/* Base Colors - Deep layered darks */
 	--admin-bg-base: #09090b; /* zinc-950 */
 	--admin-bg-elevated: #18181b; /* zinc-900 */
@@ -128,17 +128,17 @@ html[class~='dark'] .admin-theme {
 	color: var(--admin-text-primary);
 }
 
-.admin-sidebar-nav-item[aria-current='page'],
+.admin-sidebar-nav-item[aria-current="page"],
 .admin-sidebar-nav-item.active,
 .admin-sidebar-nav-item-active {
 	background: var(--admin-accent-subtle);
 	color: var(--admin-accent);
 }
 
-.admin-sidebar-nav-item[aria-current='page']::before,
+.admin-sidebar-nav-item[aria-current="page"]::before,
 .admin-sidebar-nav-item.active::before,
 .admin-sidebar-nav-item-active::before {
-	content: '';
+	content: "";
 	position: absolute;
 	left: 0;
 	top: 50%;
@@ -172,13 +172,18 @@ html[class~='dark'] .admin-theme {
 }
 
 .admin-stat-card::before {
-	content: '';
+	content: "";
 	position: absolute;
 	top: 0;
 	left: 0;
 	right: 0;
 	height: 1px;
-	background: linear-gradient(90deg, transparent, var(--admin-border-subtle), transparent);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--admin-border-subtle),
+		transparent
+	);
 }
 
 .admin-stat-card:hover {
@@ -351,7 +356,11 @@ html[class~='dark'] .admin-theme {
 	width: 40px;
 	height: 40px;
 	border-radius: 50%;
-	background: linear-gradient(135deg, var(--admin-bg-surface), var(--admin-bg-hover));
+	background: linear-gradient(
+		135deg,
+		var(--admin-bg-surface),
+		var(--admin-bg-hover)
+	);
 	color: var(--admin-text-primary);
 	font-weight: 500;
 	font-size: 0.875rem;
@@ -412,10 +421,18 @@ html[class~='dark'] .admin-theme {
 	animation: admin-fade-in 0.3s ease-out forwards;
 }
 
-.admin-stagger-1 { animation-delay: 0.05s; }
-.admin-stagger-2 { animation-delay: 0.1s; }
-.admin-stagger-3 { animation-delay: 0.15s; }
-.admin-stagger-4 { animation-delay: 0.2s; }
+.admin-stagger-1 {
+	animation-delay: 0.05s;
+}
+.admin-stagger-2 {
+	animation-delay: 0.1s;
+}
+.admin-stagger-3 {
+	animation-delay: 0.15s;
+}
+.admin-stagger-4 {
+	animation-delay: 0.2s;
+}
 
 /* Empty State */
 .admin-empty-state {
@@ -518,7 +535,7 @@ html[class~='dark'] .admin-theme {
 
 /* Code Block */
 .admin-code {
-	font-family: 'IBM Plex Mono', ui-monospace, monospace;
+	font-family: "IBM Plex Mono", ui-monospace, monospace;
 	background: var(--admin-bg-surface);
 	padding: 2px 8px;
 	border-radius: 4px;
@@ -574,7 +591,7 @@ html[class~='dark'] .admin-theme {
 }
 
 .admin-data-mono {
-	font-family: 'IBM Plex Mono', ui-monospace, monospace;
+	font-family: "IBM Plex Mono", ui-monospace, monospace;
 	font-size: 0.75rem;
 	color: var(--admin-text-secondary);
 }
@@ -588,7 +605,11 @@ html[class~='dark'] .admin-theme {
 	display: flex;
 	align-items: center;
 	gap: 16px;
-	background: linear-gradient(135deg, var(--admin-bg-elevated) 0%, var(--admin-bg-surface) 100%);
+	background: linear-gradient(
+		135deg,
+		var(--admin-bg-elevated) 0%,
+		var(--admin-bg-surface) 100%
+	);
 	border: 1px solid var(--admin-border);
 	border-radius: 12px;
 	padding: 16px 24px;
@@ -630,13 +651,25 @@ html[class~='dark'] .admin-theme {
 }
 
 @keyframes admin-pulse {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0.6; }
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
 }
 
 @keyframes admin-pulse-urgent {
-	0%, 100% { opacity: 1; transform: scale(1); }
-	50% { opacity: 0.8; transform: scale(1.2); }
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.8;
+		transform: scale(1.2);
+	}
 }
 
 /* Sparkline Chart */
@@ -816,13 +849,18 @@ html[class~='dark'] .admin-theme {
 }
 
 .admin-stat-card-enhanced::before {
-	content: '';
+	content: "";
 	position: absolute;
 	top: 0;
 	left: 0;
 	right: 0;
 	height: 1px;
-	background: linear-gradient(90deg, transparent, var(--admin-border-subtle), transparent);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		var(--admin-border-subtle),
+		transparent
+	);
 }
 
 .admin-stat-card-enhanced:hover {
@@ -1064,7 +1102,7 @@ html[class~='dark'] .admin-theme {
 
 .admin-divider::before,
 .admin-divider::after {
-	content: '';
+	content: "";
 	flex: 1;
 	height: 1px;
 	background: var(--admin-border);
@@ -1140,7 +1178,7 @@ html[class~='dark'] .admin-theme {
 	background: var(--admin-bg-elevated);
 	border: 1px solid var(--admin-border-subtle);
 	border-radius: 4px;
-	font-family: 'IBM Plex Mono', ui-monospace, monospace;
+	font-family: "IBM Plex Mono", ui-monospace, monospace;
 	font-size: 0.6875rem;
 	font-weight: 500;
 	color: var(--admin-text-muted);
@@ -1267,16 +1305,16 @@ html[class~='dark'] .admin-theme {
 	transition: all 0.1s ease;
 }
 
-.admin-command-item[data-selected='true'] {
+.admin-command-item[data-selected="true"] {
 	background: var(--admin-accent-subtle);
 	color: var(--admin-text-primary);
 }
 
-.admin-command-item[data-selected='true'] svg {
+.admin-command-item[data-selected="true"] svg {
 	color: var(--admin-accent);
 }
 
-.admin-command-item:hover:not([data-selected='true']) {
+.admin-command-item:hover:not([data-selected="true"]) {
 	background: var(--admin-bg-surface);
 }
 
@@ -1381,7 +1419,7 @@ html[class~='dark'] .admin-theme {
 }
 
 .admin-checkbox:checked::after {
-	content: '';
+	content: "";
 	position: absolute;
 	left: 5px;
 	top: 2px;

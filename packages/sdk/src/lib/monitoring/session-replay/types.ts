@@ -5,8 +5,11 @@
  * Built on rrweb with SOTA enhancements.
  */
 
-import type { eventWithTime, recordOptions } from 'rrweb'
-import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS } from '../../../constants'
+import type { eventWithTime, recordOptions } from "rrweb";
+import {
+	SESSION_REPLAY_MAX_DURATION_MS,
+	SESSION_REPLAY_UPLOAD_INTERVAL_MS,
+} from "../../../constants";
 
 // ==========================================
 // Configuration Types
@@ -19,18 +22,18 @@ import { SESSION_REPLAY_MAX_DURATION_MS, SESSION_REPLAY_UPLOAD_INTERVAL_MS } fro
  * - `balanced`: Mask inputs and sensitive fields only
  * - `minimal`: Only mask explicitly marked fields
  */
-export type PrivacyMode = 'strict' | 'balanced' | 'minimal'
+export type PrivacyMode = "strict" | "balanced" | "minimal";
 
 /**
  * Sampling strategy for controlling recording volume
  */
 export interface SamplingStrategy {
 	/** Percentage of sessions to record (0-100) */
-	rate: number
+	rate: number;
 	/** Always record sessions with errors */
-	alwaysRecordErrors: boolean
+	alwaysRecordErrors: boolean;
 	/** Always record sessions matching these user segments */
-	segments?: string[]
+	segments?: string[];
 }
 
 /**
@@ -38,43 +41,43 @@ export interface SamplingStrategy {
  */
 export interface SessionReplayConfig {
 	/** Enable/disable session replay */
-	enabled: boolean
+	enabled: boolean;
 	/** Sampling configuration */
-	sampling: SamplingStrategy
+	sampling: SamplingStrategy;
 	/** Maximum session duration in milliseconds (default: 60 min) */
-	maxDuration: number
+	maxDuration: number;
 	/** Privacy mode */
-	privacyMode: PrivacyMode
+	privacyMode: PrivacyMode;
 	/** Custom CSS selectors to always mask */
-	maskSelectors: string[]
+	maskSelectors: string[];
 	/** Custom CSS selectors to always block (remove from recording) */
-	blockSelectors: string[]
+	blockSelectors: string[];
 	/** Custom CSS selectors to ignore (don't record interactions) */
-	ignoreSelectors: string[]
+	ignoreSelectors: string[];
 
 	// SOTA Features
 	/** Correlate with error tracking */
-	errorCorrelation: boolean
+	errorCorrelation: boolean;
 	/** Enable rage click detection */
-	rageClickDetection: boolean
+	rageClickDetection: boolean;
 	/** Enable dead click detection */
-	deadClickDetection: boolean
+	deadClickDetection: boolean;
 	/** Enable AI session summary */
-	aiSummary: boolean
+	aiSummary: boolean;
 	/** Enable click heatmaps */
-	heatmaps: boolean
+	heatmaps: boolean;
 	/** Enable network request capture */
-	networkCapture: boolean
+	networkCapture: boolean;
 	/** Enable console log capture */
-	consoleCapture: boolean
+	consoleCapture: boolean;
 
 	// Performance
 	/** Compress events before sending */
-	compress: boolean
+	compress: boolean;
 	/** Batch size for uploading events */
-	batchSize: number
+	batchSize: number;
 	/** Upload interval in milliseconds */
-	uploadInterval: number
+	uploadInterval: number;
 }
 
 /**
@@ -87,7 +90,7 @@ export const DEFAULT_CONFIG: SessionReplayConfig = {
 		alwaysRecordErrors: true,
 	},
 	maxDuration: SESSION_REPLAY_MAX_DURATION_MS, // 60 minutes
-	privacyMode: 'balanced',
+	privacyMode: "balanced",
 	maskSelectors: [],
 	blockSelectors: [],
 	ignoreSelectors: [],
@@ -101,7 +104,7 @@ export const DEFAULT_CONFIG: SessionReplayConfig = {
 	compress: true,
 	batchSize: 50,
 	uploadInterval: SESSION_REPLAY_UPLOAD_INTERVAL_MS,
-}
+};
 
 // ==========================================
 // Event Types
@@ -111,65 +114,65 @@ export const DEFAULT_CONFIG: SessionReplayConfig = {
  * Custom event marker types
  */
 export type MarkerType =
-	| 'error'
-	| 'rage-click'
-	| 'dead-click'
-	| 'navigation'
-	| 'user-feedback'
-	| 'conversion'
-	| 'custom'
+	| "error"
+	| "rage-click"
+	| "dead-click"
+	| "navigation"
+	| "user-feedback"
+	| "conversion"
+	| "custom";
 
 /**
  * Custom event marker for session timeline
  */
 export interface SessionMarker {
-	type: MarkerType
-	timestamp: number
-	payload: Record<string, unknown>
+	type: MarkerType;
+	timestamp: number;
+	payload: Record<string, unknown>;
 }
 
 /**
  * Rage click detection result
  */
 export interface RageClick {
-	timestamp: number
-	element: string
-	selector: string
-	clickCount: number
-	duration: number
+	timestamp: number;
+	element: string;
+	selector: string;
+	clickCount: number;
+	duration: number;
 }
 
 /**
  * Dead click detection result (click with no effect)
  */
 export interface DeadClick {
-	timestamp: number
-	element: string
-	selector: string
-	expectedAction: string
+	timestamp: number;
+	element: string;
+	selector: string;
+	expectedAction: string;
 }
 
 /**
  * Network request capture
  */
 export interface NetworkRequest {
-	timestamp: number
-	method: string
-	url: string
-	status: number
-	duration: number
-	requestSize?: number
-	responseSize?: number
+	timestamp: number;
+	method: string;
+	url: string;
+	status: number;
+	duration: number;
+	requestSize?: number;
+	responseSize?: number;
 }
 
 /**
  * Console log capture
  */
 export interface ConsoleLog {
-	timestamp: number
-	level: 'log' | 'info' | 'warn' | 'error'
-	message: string
-	stack?: string
+	timestamp: number;
+	level: "log" | "info" | "warn" | "error";
+	message: string;
+	stack?: string;
 }
 
 // ==========================================
@@ -180,43 +183,43 @@ export interface ConsoleLog {
  * Session metadata
  */
 export interface SessionMetadata {
-	sessionId: string
-	userId?: string
-	startTime: number
-	endTime?: number
-	url: string
-	userAgent: string
-	screenWidth: number
-	screenHeight: number
-	devicePixelRatio: number
-	timezone: string
-	language: string
+	sessionId: string;
+	userId?: string;
+	startTime: number;
+	endTime?: number;
+	url: string;
+	userAgent: string;
+	screenWidth: number;
+	screenHeight: number;
+	devicePixelRatio: number;
+	timezone: string;
+	language: string;
 }
 
 /**
  * Session data for upload
  */
 export interface SessionData {
-	metadata: SessionMetadata
-	events: eventWithTime[]
-	markers: SessionMarker[]
-	rageClicks: RageClick[]
-	deadClicks: DeadClick[]
-	networkRequests: NetworkRequest[]
-	consoleLogs: ConsoleLog[]
+	metadata: SessionMetadata;
+	events: eventWithTime[];
+	markers: SessionMarker[];
+	rageClicks: RageClick[];
+	deadClicks: DeadClick[];
+	networkRequests: NetworkRequest[];
+	consoleLogs: ConsoleLog[];
 }
 
 /**
  * Session summary generated by AI
  */
 export interface SessionSummary {
-	sessionId: string
-	summary: string
-	keyEvents: string[]
-	userIntent: string
-	issues: string[]
-	sentiment: 'positive' | 'neutral' | 'frustrated'
-	generatedAt: number
+	sessionId: string;
+	summary: string;
+	keyEvents: string[];
+	userIntent: string;
+	issues: string[];
+	sentiment: "positive" | "neutral" | "frustrated";
+	generatedAt: number;
 }
 
 // ==========================================
@@ -226,32 +229,32 @@ export interface SessionSummary {
 /**
  * Event callback for custom processing
  */
-export type EventCallback = (event: eventWithTime) => void
+export type EventCallback = (event: eventWithTime) => void;
 
 /**
  * Upload callback for custom transport
  */
-export type UploadCallback = (data: SessionData) => Promise<void>
+export type UploadCallback = (data: SessionData) => Promise<void>;
 
 /**
  * Error callback
  */
-export type ErrorCallback = (error: Error) => void
+export type ErrorCallback = (error: Error) => void;
 
 // ==========================================
 // Recorder State
 // ==========================================
 
-export type RecorderState = 'idle' | 'recording' | 'paused' | 'stopped'
+export type RecorderState = "idle" | "recording" | "paused" | "stopped";
 
 /**
  * Recorder status
  */
 export interface RecorderStatus {
-	state: RecorderState
-	sessionId: string | null
-	eventCount: number
-	startTime: number | null
-	duration: number
-	bytesRecorded: number
+	state: RecorderState;
+	sessionId: string | null;
+	eventCount: number;
+	startTime: number | null;
+	duration: number;
+	bytesRecorded: number;
 }

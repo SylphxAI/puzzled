@@ -23,20 +23,20 @@
  */
 
 import type {
-	WorkflowDefinition,
-	WorkflowStep,
-	WorkflowOptions,
-	JobStep,
 	ConditionalStep,
-	ParallelStep,
-	LoopStep,
-	WaitStep,
-	SubworkflowStep,
-	StepContext,
+	JobOptions,
 	JobPayload,
 	JobResult,
-	JobOptions,
-} from './types'
+	JobStep,
+	LoopStep,
+	ParallelStep,
+	StepContext,
+	SubworkflowStep,
+	WaitStep,
+	WorkflowDefinition,
+	WorkflowOptions,
+	WorkflowStep,
+} from "./types";
 
 // ==========================================
 // Workflow Builder
@@ -45,10 +45,11 @@ import type {
 /**
  * Create a new workflow builder
  */
-export function createWorkflow<TInput extends JobPayload = JobPayload, TOutput = JobResult>(
-	type: string
-): WorkflowBuilder<TInput, TOutput> {
-	return new WorkflowBuilder<TInput, TOutput>(type)
+export function createWorkflow<
+	TInput extends JobPayload = JobPayload,
+	TOutput = JobResult,
+>(type: string): WorkflowBuilder<TInput, TOutput> {
+	return new WorkflowBuilder<TInput, TOutput>(type);
 }
 
 /**
@@ -56,36 +57,39 @@ export function createWorkflow<TInput extends JobPayload = JobPayload, TOutput =
  *
  * Fluent API for building workflow definitions.
  */
-export class WorkflowBuilder<TInput extends JobPayload = JobPayload, TOutput = JobResult> {
-	private definition: Partial<WorkflowDefinition<TInput, TOutput>> = {}
-	private _steps: WorkflowStep[] = []
+export class WorkflowBuilder<
+	TInput extends JobPayload = JobPayload,
+	TOutput = JobResult,
+> {
+	private definition: Partial<WorkflowDefinition<TInput, TOutput>> = {};
+	private _steps: WorkflowStep[] = [];
 
 	constructor(type: string) {
-		this.definition.type = type
+		this.definition.type = type;
 	}
 
 	/**
 	 * Set workflow name
 	 */
 	name(name: string): this {
-		this.definition.name = name
-		return this
+		this.definition.name = name;
+		return this;
 	}
 
 	/**
 	 * Set workflow description
 	 */
 	description(description: string): this {
-		this.definition.description = description
-		return this
+		this.definition.description = description;
+		return this;
 	}
 
 	/**
 	 * Set default options
 	 */
 	defaults(options: WorkflowOptions): this {
-		this.definition.defaults = options
-		return this
+		this.definition.defaults = options;
+		return this;
 	}
 
 	/**
@@ -93,9 +97,9 @@ export class WorkflowBuilder<TInput extends JobPayload = JobPayload, TOutput = J
 	 */
 	step(name: string, step: WorkflowStep): this {
 		// Override step name
-		const namedStep = { ...step, name }
-		this._steps.push(namedStep)
-		return this
+		const namedStep = { ...step, name };
+		this._steps.push(namedStep);
+		return this;
 	}
 
 	/**
@@ -103,25 +107,25 @@ export class WorkflowBuilder<TInput extends JobPayload = JobPayload, TOutput = J
 	 */
 	steps(...steps: Array<[string, WorkflowStep]>): this {
 		for (const [name, step] of steps) {
-			this.step(name, step)
+			this.step(name, step);
 		}
-		return this
+		return this;
 	}
 
 	/**
 	 * Add on complete callback
 	 */
 	onComplete(callback: (result: TOutput) => void): this {
-		this.definition.onComplete = callback
-		return this
+		this.definition.onComplete = callback;
+		return this;
 	}
 
 	/**
 	 * Add on error callback
 	 */
 	onError(callback: (error: Error, step: string) => void): this {
-		this.definition.onError = callback
-		return this
+		this.definition.onError = callback;
+		return this;
 	}
 
 	/**
@@ -136,7 +140,7 @@ export class WorkflowBuilder<TInput extends JobPayload = JobPayload, TOutput = J
 			defaults: this.definition.defaults,
 			onComplete: this.definition.onComplete,
 			onError: this.definition.onError,
-		}
+		};
 	}
 }
 
@@ -150,15 +154,20 @@ export class WorkflowBuilder<TInput extends JobPayload = JobPayload, TOutput = J
 export function job(
 	jobType: string,
 	payload?: JobPayload | ((context: StepContext) => JobPayload),
-	options?: JobOptions
+	options?: JobOptions,
 ): JobStep {
 	return {
-		type: 'job',
+		type: "job",
 		name: jobType,
 		jobType,
-		payload: typeof payload === 'function' ? payload : payload ? () => payload : undefined,
+		payload:
+			typeof payload === "function"
+				? payload
+				: payload
+					? () => payload
+					: undefined,
 		options,
-	}
+	};
 }
 
 /**
@@ -167,15 +176,15 @@ export function job(
 export function conditional(
 	condition: (context: StepContext) => boolean,
 	thenSteps: WorkflowStep[],
-	elseSteps?: WorkflowStep[]
+	elseSteps?: WorkflowStep[],
 ): ConditionalStep {
 	return {
-		type: 'conditional',
-		name: 'conditional',
+		type: "conditional",
+		name: "conditional",
 		condition,
 		then: thenSteps,
 		else: elseSteps,
-	}
+	};
 }
 
 /**
@@ -183,15 +192,15 @@ export function conditional(
  */
 export function parallel(
 	steps: WorkflowStep[],
-	options?: { waitFor?: 'all' | 'any'; maxConcurrency?: number }
+	options?: { waitFor?: "all" | "any"; maxConcurrency?: number },
 ): ParallelStep {
 	return {
-		type: 'parallel',
-		name: 'parallel',
+		type: "parallel",
+		name: "parallel",
 		steps,
-		waitFor: options?.waitFor || 'all',
+		waitFor: options?.waitFor || "all",
 		maxConcurrency: options?.maxConcurrency,
-	}
+	};
 }
 
 /**
@@ -200,29 +209,32 @@ export function parallel(
 export function loop(
 	items: unknown[] | ((context: StepContext) => unknown[]),
 	step: WorkflowStep,
-	options?: { maxConcurrency?: number; breakIf?: (item: unknown, index: number, context: StepContext) => boolean }
+	options?: {
+		maxConcurrency?: number;
+		breakIf?: (item: unknown, index: number, context: StepContext) => boolean;
+	},
 ): LoopStep {
 	return {
-		type: 'loop',
-		name: 'loop',
+		type: "loop",
+		name: "loop",
 		items,
 		step,
 		maxConcurrency: options?.maxConcurrency,
 		breakIf: options?.breakIf,
-	}
+	};
 }
 
 /**
  * Create a wait step
  */
 export function wait(
-	until: number | Date | ((context: StepContext) => number | Date)
+	until: number | Date | ((context: StepContext) => number | Date),
 ): WaitStep {
 	return {
-		type: 'wait',
-		name: 'wait',
+		type: "wait",
+		name: "wait",
 		until,
-	}
+	};
 }
 
 /**
@@ -231,15 +243,20 @@ export function wait(
 export function subworkflow(
 	workflowType: string,
 	payload?: JobPayload | ((context: StepContext) => JobPayload),
-	options?: WorkflowOptions
+	options?: WorkflowOptions,
 ): SubworkflowStep {
 	return {
-		type: 'subworkflow',
+		type: "subworkflow",
 		name: workflowType,
 		workflowType,
-		payload: typeof payload === 'function' ? payload : payload ? () => payload : undefined,
+		payload:
+			typeof payload === "function"
+				? payload
+				: payload
+					? () => payload
+					: undefined,
 		options,
-	}
+	};
 }
 
 // ==========================================
@@ -253,27 +270,29 @@ export function jobIf(
 	condition: (context: StepContext) => boolean,
 	jobType: string,
 	payload?: JobPayload | ((context: StepContext) => JobPayload),
-	options?: JobOptions
+	options?: JobOptions,
 ): JobStep {
-	const step = job(jobType, payload, options)
+	const step = job(jobType, payload, options);
 	return {
 		...step,
 		if: condition,
-	}
+	};
 }
 
 /**
  * Create a delay step (alias for wait)
  */
 export function delay(ms: number): WaitStep {
-	return wait(ms)
+	return wait(ms);
 }
 
 /**
  * Create a step that sleeps until a specific time
  */
-export function sleepUntil(date: Date | ((context: StepContext) => Date)): WaitStep {
-	return wait(date)
+export function sleepUntil(
+	date: Date | ((context: StepContext) => Date),
+): WaitStep {
+	return wait(date);
 }
 
 /**
@@ -281,7 +300,7 @@ export function sleepUntil(date: Date | ((context: StepContext) => Date)): WaitS
  */
 export function withRetry(
 	step: JobStep,
-	options: { maxRetries: number; retryDelay?: number }
+	options: { maxRetries: number; retryDelay?: number },
 ): JobStep {
 	return {
 		...step,
@@ -289,10 +308,10 @@ export function withRetry(
 			...step.options,
 			maxRetries: options.maxRetries,
 			retryDelay: options.retryDelay
-				? { type: 'fixed', delay: options.retryDelay }
+				? { type: "fixed", delay: options.retryDelay }
 				: undefined,
 		},
-	}
+	};
 }
 
 /**
@@ -305,7 +324,7 @@ export function withTimeout(step: JobStep, timeoutMs: number): JobStep {
 			...step.options,
 			timeout: timeoutMs,
 		},
-	}
+	};
 }
 
 // ==========================================
@@ -317,10 +336,10 @@ export function withTimeout(step: JobStep, timeoutMs: number): JobStep {
  */
 export function sequence(...workflows: WorkflowDefinition[]): WorkflowStep[] {
 	return workflows.map((workflow, index) => ({
-		type: 'subworkflow' as const,
+		type: "subworkflow" as const,
 		name: `sequence-${index}-${workflow.type}`,
 		workflowType: workflow.type,
-	}))
+	}));
 }
 
 /**
@@ -330,37 +349,37 @@ export function fanOut(
 	items: unknown[] | ((context: StepContext) => unknown[]),
 	jobType: string,
 	payloadMapper: (item: unknown, index: number) => JobPayload,
-	options?: { maxConcurrency?: number }
+	options?: { maxConcurrency?: number },
 ): LoopStep {
 	return loop(
 		items,
 		{
-			type: 'job',
+			type: "job",
 			name: `fanout-${jobType}`,
 			jobType,
 			payload: (ctx) => {
 				// This is a simplified version - real implementation needs item context
-				return {} as JobPayload
+				return {} as JobPayload;
 			},
 		},
-		{ maxConcurrency: options?.maxConcurrency }
-	)
+		{ maxConcurrency: options?.maxConcurrency },
+	);
 }
 
 /**
  * Saga pattern: Define compensating actions for each step
  */
 export interface SagaStep {
-	forward: JobStep
-	compensate: JobStep
+	forward: JobStep;
+	compensate: JobStep;
 }
 
 export function saga(steps: SagaStep[]): WorkflowStep[] {
 	// Build forward steps with compensation tracking
-	const workflowSteps: WorkflowStep[] = []
+	const workflowSteps: WorkflowStep[] = [];
 
 	for (let i = 0; i < steps.length; i++) {
-		const step = steps[i]!
+		const step = steps[i]!;
 
 		// Add forward step with error handling
 		const forwardStep: JobStep = {
@@ -369,20 +388,20 @@ export function saga(steps: SagaStep[]): WorkflowStep[] {
 			onComplete: (result, ctx) => {
 				// Track completed step for potential compensation
 				ctx.metadata.completedSagaSteps = [
-					...(ctx.metadata.completedSagaSteps as number[] || []),
+					...((ctx.metadata.completedSagaSteps as number[]) || []),
 					i,
-				]
-				return result
+				];
+				return result;
 			},
-		}
+		};
 
-		workflowSteps.push(forwardStep)
+		workflowSteps.push(forwardStep);
 	}
 
 	// Note: Actual saga compensation logic would be handled by the executor
 	// This is a simplified client-side representation
 
-	return workflowSteps
+	return workflowSteps;
 }
 
 // ==========================================
@@ -393,40 +412,40 @@ export function saga(steps: SagaStep[]): WorkflowStep[] {
  * Validate a workflow definition
  */
 export function validateWorkflow(workflow: WorkflowDefinition): string[] {
-	const errors: string[] = []
+	const errors: string[] = [];
 
 	if (!workflow.type) {
-		errors.push('Workflow type is required')
+		errors.push("Workflow type is required");
 	}
 
 	if (!workflow.steps || workflow.steps.length === 0) {
-		errors.push('Workflow must have at least one step')
+		errors.push("Workflow must have at least one step");
 	}
 
 	// Check for duplicate step names
-	const stepNames = new Set<string>()
+	const stepNames = new Set<string>();
 	const checkSteps = (steps: WorkflowStep[]) => {
 		for (const step of steps) {
 			if (stepNames.has(step.name)) {
-				errors.push(`Duplicate step name: ${step.name}`)
+				errors.push(`Duplicate step name: ${step.name}`);
 			}
-			stepNames.add(step.name)
+			stepNames.add(step.name);
 
 			// Recursively check nested steps
-			if (step.type === 'conditional') {
-				checkSteps(step.then)
-				if (step.else) checkSteps(step.else)
-			} else if (step.type === 'parallel') {
-				checkSteps(step.steps)
-			} else if (step.type === 'loop') {
-				checkSteps([step.step])
+			if (step.type === "conditional") {
+				checkSteps(step.then);
+				if (step.else) checkSteps(step.else);
+			} else if (step.type === "parallel") {
+				checkSteps(step.steps);
+			} else if (step.type === "loop") {
+				checkSteps([step.step]);
 			}
 		}
-	}
+	};
 
 	if (workflow.steps) {
-		checkSteps(workflow.steps)
+		checkSteps(workflow.steps);
 	}
 
-	return errors
+	return errors;
 }

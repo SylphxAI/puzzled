@@ -10,12 +10,17 @@
  * - Delayed updates after admin changes
  */
 
-'use client'
+"use client";
 
-import { createContext, useContext } from 'react'
-import type { AppConfig, OAuthProviderInfo, FeatureFlagDefinition, AppMetadata } from '../../types'
-import type { Plan } from '../../billing'
-import type { ConsentType } from '../../consent'
+import { createContext, useContext } from "react";
+import type { Plan } from "../../billing";
+import type { ConsentType } from "../../consent";
+import type {
+	AppConfig,
+	AppMetadata,
+	FeatureFlagDefinition,
+	OAuthProviderInfo,
+} from "../../types";
 
 // ============================================
 // Config Context
@@ -24,7 +29,7 @@ import type { ConsentType } from '../../consent'
 /**
  * Context for server-fetched configuration (required)
  */
-export const ConfigContext = createContext<AppConfig | null>(null)
+export const ConfigContext = createContext<AppConfig | null>(null);
 
 /**
  * Hook to get the full app config
@@ -41,11 +46,11 @@ export const ConfigContext = createContext<AppConfig | null>(null)
  * ```
  */
 export function useConfig(): AppConfig {
-	const config = useContext(ConfigContext)
+	const config = useContext(ConfigContext);
 	if (!config) {
-		throw new Error('useConfig must be used within a SylphxProvider')
+		throw new Error("useConfig must be used within a SylphxProvider");
 	}
-	return config
+	return config;
 }
 
 // ============================================
@@ -64,7 +69,7 @@ export function useConfig(): AppConfig {
  * ```
  */
 export function usePlans(): Plan[] {
-	return useConfig().plans
+	return useConfig().plans;
 }
 
 /**
@@ -79,7 +84,7 @@ export function usePlans(): Plan[] {
  * ```
  */
 export function useOAuthProviders(): OAuthProviderInfo[] {
-	return useConfig().oauthProviders
+	return useConfig().oauthProviders;
 }
 
 /**
@@ -94,7 +99,7 @@ export function useOAuthProviders(): OAuthProviderInfo[] {
  * ```
  */
 export function useConsentTypes(): ConsentType[] {
-	return useConfig().consentTypes
+	return useConfig().consentTypes;
 }
 
 /**
@@ -112,7 +117,7 @@ export function useConsentTypes(): ConsentType[] {
  * ```
  */
 export function useFeatureFlagDefinitions(): FeatureFlagDefinition[] {
-	return useConfig().featureFlags
+	return useConfig().featureFlags;
 }
 
 /**
@@ -127,10 +132,15 @@ export function useFeatureFlagDefinitions(): FeatureFlagDefinition[] {
  * ```
  */
 export function useAppMetadata(): AppMetadata {
-	return useConfig().app
+	return useConfig().app;
 }
 
 // Re-export types
-export type { AppConfig, OAuthProviderInfo, FeatureFlagDefinition, AppMetadata }
-export type { Plan }
-export type { ConsentType }
+export type {
+	AppConfig,
+	OAuthProviderInfo,
+	FeatureFlagDefinition,
+	AppMetadata,
+};
+export type { Plan };
+export type { ConsentType };

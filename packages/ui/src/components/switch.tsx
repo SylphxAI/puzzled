@@ -29,38 +29,38 @@
  * @module @sylphx/ui/switch
  */
 
-'use client'
+"use client";
 
-import { Switch as BaseSwitch } from '@base-ui/react/switch'
-import { forwardRef, useId } from 'react'
-import { cn } from '../utils'
+import { Switch as BaseSwitch } from "@base-ui/react/switch";
+import { forwardRef, useId } from "react";
+import { cn } from "../utils";
 
 /**
  * Props for the Switch component.
  */
 interface SwitchProps {
 	/** Whether the switch is checked (controlled) */
-	checked?: boolean
+	checked?: boolean;
 	/** Default checked state (uncontrolled) */
-	defaultChecked?: boolean
+	defaultChecked?: boolean;
 	/** Handler fired when the switch is toggled */
-	onCheckedChange?: (checked: boolean) => void
+	onCheckedChange?: (checked: boolean) => void;
 	/** Whether the switch is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Whether the switch is required */
-	required?: boolean
+	required?: boolean;
 	/** Name for form submission */
-	name?: string
+	name?: string;
 	/** Value for form submission */
-	value?: string
+	value?: string;
 	/** ID for label association */
-	id?: string
+	id?: string;
 	/** Label text displayed next to the switch */
-	label?: string
+	label?: string;
 	/** Description text displayed below the label */
-	description?: string
+	description?: string;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -71,9 +71,24 @@ interface SwitchProps {
  * in a <style> tag to avoid Tailwind v4/Turbopack tree-shaking issues.
  */
 const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
-	({ className, label, description, id: providedId, checked, defaultChecked, onCheckedChange, disabled, required, name, value }, ref) => {
-		const generatedId = useId()
-		const id = providedId || generatedId
+	(
+		{
+			className,
+			label,
+			description,
+			id: providedId,
+			checked,
+			defaultChecked,
+			onCheckedChange,
+			disabled,
+			required,
+			name,
+			value,
+		},
+		ref,
+	) => {
+		const generatedId = useId();
+		const id = providedId || generatedId;
 
 		const switchElement = (
 			<BaseSwitch.Root
@@ -86,14 +101,14 @@ const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
 				onCheckedChange={onCheckedChange}
 				disabled={disabled}
 				required={required}
-				className={cn('switch-root', className)}
+				className={cn("switch-root", className)}
 			>
 				<BaseSwitch.Thumb className="switch-thumb" />
 			</BaseSwitch.Root>
-		)
+		);
 
 		if (!label && !description) {
-			return switchElement
+			return switchElement;
 		}
 
 		return (
@@ -101,14 +116,16 @@ const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
 				{switchElement}
 				<label htmlFor={id} className="cursor-pointer select-none">
 					{label && <span className="text-sm font-medium">{label}</span>}
-					{description && <p className="text-sm text-muted-foreground">{description}</p>}
+					{description && (
+						<p className="text-sm text-muted-foreground">{description}</p>
+					)}
 				</label>
 			</div>
-		)
+		);
 	},
-)
+);
 
-Switch.displayName = 'Switch'
+Switch.displayName = "Switch";
 
-export { Switch }
-export type { SwitchProps }
+export { Switch };
+export type { SwitchProps };

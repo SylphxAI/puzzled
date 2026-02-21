@@ -10,21 +10,23 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, callApi } from './config'
-import type { components } from './generated/api'
+import { type SylphxConfig, callApi } from "./config";
+import type { components } from "./generated/api";
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type Organization = components['schemas']['Organization']
-export type OrganizationMember = components['schemas']['OrganizationMember']
-export type OrganizationInvitation = components['schemas']['OrganizationInvitation']
-export type OrganizationMembership = components['schemas']['OrganizationMembership']
-export type OrgRole = components['schemas']['OrgRole']
-export type CreateOrgInput = components['schemas']['CreateOrgRequest']
-export type UpdateOrgInput = components['schemas']['UpdateOrgRequest']
-export type InviteMemberInput = components['schemas']['InviteMemberRequest']
+export type Organization = components["schemas"]["Organization"];
+export type OrganizationMember = components["schemas"]["OrganizationMember"];
+export type OrganizationInvitation =
+	components["schemas"]["OrganizationInvitation"];
+export type OrganizationMembership =
+	components["schemas"]["OrganizationMembership"];
+export type OrgRole = components["schemas"]["OrgRole"];
+export type CreateOrgInput = components["schemas"]["CreateOrgRequest"];
+export type UpdateOrgInput = components["schemas"]["UpdateOrgRequest"];
+export type InviteMemberInput = components["schemas"]["InviteMemberRequest"];
 
 // ============================================================================
 // Organization CRUD
@@ -41,7 +43,7 @@ export type InviteMemberInput = components['schemas']['InviteMemberRequest']
 export async function getOrganizations(
 	config: SylphxConfig,
 ): Promise<{ organizations: Organization[] }> {
-	return callApi<{ organizations: Organization[] }>(config, '/orgs')
+	return callApi<{ organizations: Organization[] }>(config, "/orgs");
 }
 
 /**
@@ -55,11 +57,14 @@ export async function getOrganizations(
 export async function getOrganization(
 	config: SylphxConfig,
 	orgIdOrSlug: string,
-): Promise<{ organization: Organization; membership: OrganizationMembership | null }> {
-	return callApi<{ organization: Organization; membership: OrganizationMembership | null }>(
-		config,
-		`/orgs/${orgIdOrSlug}`,
-	)
+): Promise<{
+	organization: Organization;
+	membership: OrganizationMembership | null;
+}> {
+	return callApi<{
+		organization: Organization;
+		membership: OrganizationMembership | null;
+	}>(config, `/orgs/${orgIdOrSlug}`);
 }
 
 /**
@@ -77,10 +82,10 @@ export async function createOrganization(
 	config: SylphxConfig,
 	input: CreateOrgInput,
 ): Promise<{ organization: Organization }> {
-	return callApi<{ organization: Organization }>(config, '/orgs', {
-		method: 'POST',
+	return callApi<{ organization: Organization }>(config, "/orgs", {
+		method: "POST",
 		body: input,
-	})
+	});
 }
 
 /**
@@ -98,10 +103,14 @@ export async function updateOrganization(
 	orgIdOrSlug: string,
 	input: UpdateOrgInput,
 ): Promise<{ organization: Organization }> {
-	return callApi<{ organization: Organization }>(config, `/orgs/${orgIdOrSlug}`, {
-		method: 'PUT',
-		body: input,
-	})
+	return callApi<{ organization: Organization }>(
+		config,
+		`/orgs/${orgIdOrSlug}`,
+		{
+			method: "PUT",
+			body: input,
+		},
+	);
 }
 
 /**
@@ -119,8 +128,8 @@ export async function deleteOrganization(
 	orgIdOrSlug: string,
 ): Promise<{ success: boolean }> {
 	return callApi<{ success: boolean }>(config, `/orgs/${orgIdOrSlug}`, {
-		method: 'DELETE',
-	})
+		method: "DELETE",
+	});
 }
 
 // ============================================================================
@@ -139,7 +148,10 @@ export async function getOrganizationMembers(
 	config: SylphxConfig,
 	orgIdOrSlug: string,
 ): Promise<{ members: OrganizationMember[] }> {
-	return callApi<{ members: OrganizationMember[] }>(config, `/orgs/${orgIdOrSlug}/members`)
+	return callApi<{ members: OrganizationMember[] }>(
+		config,
+		`/orgs/${orgIdOrSlug}/members`,
+	);
 }
 
 /**
@@ -164,10 +176,10 @@ export async function inviteOrganizationMember(
 		config,
 		`/orgs/${orgIdOrSlug}/members/invite`,
 		{
-			method: 'POST',
+			method: "POST",
 			body: input,
 		},
-	)
+	);
 }
 
 /**
@@ -190,10 +202,10 @@ export async function updateOrganizationMemberRole(
 		config,
 		`/orgs/${orgIdOrSlug}/members/${memberId}/role`,
 		{
-			method: 'PUT',
+			method: "PUT",
 			body: { role },
 		},
-	)
+	);
 }
 
 /**
@@ -211,9 +223,13 @@ export async function removeOrganizationMember(
 	orgIdOrSlug: string,
 	memberId: string,
 ): Promise<{ success: boolean }> {
-	return callApi<{ success: boolean }>(config, `/orgs/${orgIdOrSlug}/members/${memberId}`, {
-		method: 'DELETE',
-	})
+	return callApi<{ success: boolean }>(
+		config,
+		`/orgs/${orgIdOrSlug}/members/${memberId}`,
+		{
+			method: "DELETE",
+		},
+	);
 }
 
 /**
@@ -229,8 +245,8 @@ export async function leaveOrganization(
 	orgIdOrSlug: string,
 ): Promise<{ success: boolean }> {
 	return callApi<{ success: boolean }>(config, `/orgs/${orgIdOrSlug}/leave`, {
-		method: 'POST',
-	})
+		method: "POST",
+	});
 }
 
 // ============================================================================
@@ -254,7 +270,7 @@ export async function getOrganizationInvitations(
 	return callApi<{ invitations: OrganizationInvitation[] }>(
 		config,
 		`/orgs/${orgIdOrSlug}/invitations`,
-	)
+	);
 }
 
 /**
@@ -269,10 +285,14 @@ export async function acceptOrganizationInvitation(
 	config: SylphxConfig,
 	token: string,
 ): Promise<{ organization: Organization }> {
-	return callApi<{ organization: Organization }>(config, '/orgs/invitations/accept', {
-		method: 'POST',
-		body: { token },
-	})
+	return callApi<{ organization: Organization }>(
+		config,
+		"/orgs/invitations/accept",
+		{
+			method: "POST",
+			body: { token },
+		},
+	);
 }
 
 /**
@@ -294,9 +314,9 @@ export async function revokeOrganizationInvitation(
 		config,
 		`/orgs/${orgIdOrSlug}/invitations/${invitationId}`,
 		{
-			method: 'DELETE',
+			method: "DELETE",
 		},
-	)
+	);
 }
 
 // ============================================================================
@@ -306,41 +326,50 @@ export async function revokeOrganizationInvitation(
 /**
  * Check if user has a specific role or higher in the organization
  */
-export function hasRole(membership: OrganizationMembership | null, minimumRole: OrgRole): boolean {
-	if (!membership) return false
+export function hasRole(
+	membership: OrganizationMembership | null,
+	minimumRole: OrgRole,
+): boolean {
+	if (!membership) return false;
 
 	const roleHierarchy: OrgRole[] = [
-		'viewer',
-		'analytics',
-		'developer',
-		'billing',
-		'admin',
-		'super_admin',
-	]
+		"viewer",
+		"analytics",
+		"developer",
+		"billing",
+		"admin",
+		"super_admin",
+	];
 
-	const userRoleIndex = roleHierarchy.indexOf(membership.role)
-	const requiredRoleIndex = roleHierarchy.indexOf(minimumRole)
+	const userRoleIndex = roleHierarchy.indexOf(membership.role);
+	const requiredRoleIndex = roleHierarchy.indexOf(minimumRole);
 
-	return userRoleIndex >= requiredRoleIndex
+	return userRoleIndex >= requiredRoleIndex;
 }
 
 /**
  * Check if user can manage members (invite, remove, change roles)
  */
-export function canManageMembers(membership: OrganizationMembership | null): boolean {
-	return hasRole(membership, 'admin')
+export function canManageMembers(
+	membership: OrganizationMembership | null,
+): boolean {
+	return hasRole(membership, "admin");
 }
 
 /**
  * Check if user can manage organization settings
  */
-export function canManageSettings(membership: OrganizationMembership | null): boolean {
-	return hasRole(membership, 'admin')
+export function canManageSettings(
+	membership: OrganizationMembership | null,
+): boolean {
+	return hasRole(membership, "admin");
 }
 
 /**
  * Check if user can delete the organization
  */
-export function canDeleteOrganization(membership: OrganizationMembership | null): boolean {
-	return hasRole(membership, 'super_admin')
+export function canDeleteOrganization(
+	membership: OrganizationMembership | null,
+): boolean {
+	return hasRole(membership, "super_admin");
 }

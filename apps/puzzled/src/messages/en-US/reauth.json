@@ -1,25 +1,25 @@
 {
-  "title": "Verify Your Identity",
-  "description": "For your security, please verify your identity to continue.",
-  "selectMethod": "Select verification method",
-  "usePassword": "Password",
-  "useEmailCode": "Email Code",
-  "password": "Password",
-  "enterCode": "Verification Code",
-  "sendCode": "Send Verification Code",
-  "resendCode": "Resend code",
-  "resendIn": "Resend in {seconds}s",
-  "sending": "Sending...",
-  "verifying": "Verifying...",
-  "verify": "Verify",
-  "verified": "Identity Verified!",
-  "codeSent": "Verification code sent to your email",
-  "codeExpiry": "Code expires in 10 minutes",
-  "codeExpiresIn": "Code expires in {minutes}:{seconds, number, ::00}",
-  "codeExpired": "Code expired. Please request a new one.",
-  "emailCodeDescription": "We'll send a 6-digit verification code to your email address.",
-  "errors": {
-    "passwordRequired": "Please enter your password",
-    "codeInvalid": "Please enter a valid 6-digit code"
-  }
+	"title": "Verify Your Identity",
+	"description": "For your security, please verify your identity to continue.",
+	"selectMethod": "Select verification method",
+	"usePassword": "Password",
+	"useEmailCode": "Email Code",
+	"password": "Password",
+	"enterCode": "Verification Code",
+	"sendCode": "Send Verification Code",
+	"resendCode": "Resend code",
+	"resendIn": "Resend in {seconds}s",
+	"sending": "Sending...",
+	"verifying": "Verifying...",
+	"verify": "Verify",
+	"verified": "Identity Verified!",
+	"codeSent": "Verification code sent to your email",
+	"codeExpiry": "Code expires in 10 minutes",
+	"codeExpiresIn": "Code expires in {minutes}:{seconds, number, ::00}",
+	"codeExpired": "Code expired. Please request a new one.",
+	"emailCodeDescription": "We'll send a 6-digit verification code to your email address.",
+	"errors": {
+		"passwordRequired": "Please enter your password",
+		"codeInvalid": "Please enter a valid 6-digit code"
+	}
 }

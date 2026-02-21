@@ -5,37 +5,37 @@
  * Self-contained with CSS-in-JS styles.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'
-import type { ThemeVariables } from './styles'
+import { useCallback, useEffect, useState } from "react";
+import { UI_NOTIFICATION_MS, UI_SUCCESS_REDIRECT_MS } from "../../constants";
+import { RequireSdk, useAuth, useUser } from "../hooks";
+import { useSecurityContext, useUserContext } from "../services-context";
+import type { ThemeVariables } from "./styles";
 import {
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from './styles'
-import { useUser, useAuth, RequireSdk } from '../hooks'
-import { UI_NOTIFICATION_MS, UI_SUCCESS_REDIRECT_MS } from '../../constants'
-import { useUserContext, useSecurityContext } from '../services-context'
+	mergeStyles,
+} from "./styles";
 
 export interface AccountSectionProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called on successful action */
-	onSuccess?: (message: string) => void
+	onSuccess?: (message: string) => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Show email change option */
-	showEmailChange?: boolean
+	showEmailChange?: boolean;
 	/** Show data export option */
-	showDataExport?: boolean
+	showDataExport?: boolean;
 	/** Show account deletion option */
-	showDeleteAccount?: boolean
+	showDeleteAccount?: boolean;
 	/** URL to redirect after account deletion */
-	afterDeleteUrl?: string
+	afterDeleteUrl?: string;
 }
 
 /**
@@ -51,10 +51,10 @@ export interface AccountSectionProps {
  */
 export function AccountSection(props: AccountSectionProps) {
 	return (
-		<RequireSdk services={['auth']} componentType="account" theme={props.theme}>
+		<RequireSdk services={["auth"]} componentType="account" theme={props.theme}>
 			<AccountSectionInner {...props} />
 		</RequireSdk>
-	)
+	);
 }
 
 /** Inner component that safely uses platform hooks */
@@ -66,196 +66,204 @@ function AccountSectionInner({
 	showEmailChange = true,
 	showDataExport = true,
 	showDeleteAccount = true,
-	afterDeleteUrl = '/',
+	afterDeleteUrl = "/",
 }: AccountSectionProps) {
-	const { user } = useUser()
-	const { signOut } = useAuth()
-	const userContext = useUserContext()
-	const securityContext = useSecurityContext()
-	const styles = baseStyles(theme)
+	const { user } = useUser();
+	const { signOut } = useAuth();
+	const userContext = useUserContext();
+	const securityContext = useSecurityContext();
+	const styles = baseStyles(theme);
 
 	// State
-	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState<string | null>(null)
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState<string | null>(null);
 
 	// Email change state
-	const [showEmailChangeForm, setShowEmailChangeForm] = useState(false)
-	const [newEmail, setNewEmail] = useState('')
-	const [emailPassword, setEmailPassword] = useState('')
-	const [isChangingEmail, setIsChangingEmail] = useState(false)
+	const [showEmailChangeForm, setShowEmailChangeForm] = useState(false);
+	const [newEmail, setNewEmail] = useState("");
+	const [emailPassword, setEmailPassword] = useState("");
+	const [isChangingEmail, setIsChangingEmail] = useState(false);
 
 	// Data export state
-	const [isExporting, setIsExporting] = useState(false)
-	const [exportUrl, setExportUrl] = useState<string | null>(null)
+	const [isExporting, setIsExporting] = useState(false);
+	const [exportUrl, setExportUrl] = useState<string | null>(null);
 
 	// Delete account state
-	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-	const [deleteConfirmText, setDeleteConfirmText] = useState('')
-	const [deletePassword, setDeletePassword] = useState('')
-	const [delete2FACode, setDelete2FACode] = useState('')
-	const [isDeleting, setIsDeleting] = useState(false)
-	const [deleteStep, setDeleteStep] = useState<'confirm' | 'password' | '2fa'>('confirm')
-	const [has2FAEnabled, setHas2FAEnabled] = useState(false)
-	const [isChecking2FA, setIsChecking2FA] = useState(false)
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [deleteConfirmText, setDeleteConfirmText] = useState("");
+	const [deletePassword, setDeletePassword] = useState("");
+	const [delete2FACode, setDelete2FACode] = useState("");
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [deleteStep, setDeleteStep] = useState<"confirm" | "password" | "2fa">(
+		"confirm",
+	);
+	const [has2FAEnabled, setHas2FAEnabled] = useState(false);
+	const [isChecking2FA, setIsChecking2FA] = useState(false);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Clear messages after timeout
 	useEffect(() => {
 		if (success || error) {
 			const timer = setTimeout(() => {
-				setSuccess(null)
-				setError(null)
-			}, UI_NOTIFICATION_MS)
-			return () => clearTimeout(timer)
+				setSuccess(null);
+				setError(null);
+			}, UI_NOTIFICATION_MS);
+			return () => clearTimeout(timer);
 		}
-	}, [success, error])
+	}, [success, error]);
 
 	// Handle email change request
 	const handleEmailChange = async (e: React.FormEvent) => {
-		e.preventDefault()
+		e.preventDefault();
 
-		if (!newEmail || !newEmail.includes('@')) {
-			setError('Please enter a valid email address')
-			return
+		if (!newEmail || !newEmail.includes("@")) {
+			setError("Please enter a valid email address");
+			return;
 		}
 
-		setIsChangingEmail(true)
-		setError(null)
+		setIsChangingEmail(true);
+		setError(null);
 
 		try {
-			const result = await securityContext.emailChangeRequest(newEmail)
-			setShowEmailChangeForm(false)
-			setNewEmail('')
-			setEmailPassword('')
-			setSuccess(result.message || 'Verification email sent to your new address. Please check your inbox.')
-			onSuccess?.('Verification email sent')
+			const result = await securityContext.emailChangeRequest(newEmail);
+			setShowEmailChangeForm(false);
+			setNewEmail("");
+			setEmailPassword("");
+			setSuccess(
+				result.message ||
+					"Verification email sent to your new address. Please check your inbox.",
+			);
+			onSuccess?.("Verification email sent");
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to change email'
-			setError(message)
-			onError?.(message)
+			const message =
+				err instanceof Error ? err.message : "Failed to change email";
+			setError(message);
+			onError?.(message);
 		} finally {
-			setIsChangingEmail(false)
+			setIsChangingEmail(false);
 		}
-	}
+	};
 
 	// Handle data export
 	const handleDataExport = async () => {
-		setIsExporting(true)
-		setError(null)
+		setIsExporting(true);
+		setError(null);
 
 		try {
-			const data = await userContext.exportData()
-			setExportUrl(data.downloadUrl)
-			setSuccess('Your data export is ready for download')
-			onSuccess?.('Data export ready')
+			const data = await userContext.exportData();
+			setExportUrl(data.downloadUrl);
+			setSuccess("Your data export is ready for download");
+			onSuccess?.("Data export ready");
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to export data'
-			setError(message)
-			onError?.(message)
+			const message =
+				err instanceof Error ? err.message : "Failed to export data";
+			setError(message);
+			onError?.(message);
 		} finally {
-			setIsExporting(false)
+			setIsExporting(false);
 		}
-	}
+	};
 
 	// Check 2FA status when delete confirmation is shown (industry best practice)
 	const checkSecurityStatus = useCallback(async () => {
-		setIsChecking2FA(true)
+		setIsChecking2FA(true);
 		try {
-			const status = await securityContext.getTwoFactorStatus()
-			setHas2FAEnabled(status.enabled)
+			const status = await securityContext.getTwoFactorStatus();
+			setHas2FAEnabled(status.enabled);
 		} catch {
 			// If we can't check 2FA, assume it's not enabled
-			setHas2FAEnabled(false)
+			setHas2FAEnabled(false);
 		} finally {
-			setIsChecking2FA(false)
+			setIsChecking2FA(false);
 		}
-	}, [securityContext])
+	}, [securityContext]);
 
 	// Handle delete confirmation step
 	const handleDeleteConfirmStep = async () => {
-		if (deleteConfirmText !== 'DELETE') {
-			setError('Please type DELETE to confirm')
-			return
+		if (deleteConfirmText !== "DELETE") {
+			setError("Please type DELETE to confirm");
+			return;
 		}
 
 		// Check 2FA status before proceeding
-		await checkSecurityStatus()
+		await checkSecurityStatus();
 
 		// Move to password step
-		setDeleteStep('password')
-	}
+		setDeleteStep("password");
+	};
 
 	// Handle password verification step
 	const handlePasswordStep = () => {
 		if (!deletePassword) {
-			setError('Please enter your password')
-			return
+			setError("Please enter your password");
+			return;
 		}
 
 		if (has2FAEnabled) {
 			// Move to 2FA step
-			setDeleteStep('2fa')
+			setDeleteStep("2fa");
 		} else {
 			// No 2FA, proceed with deletion
-			handleDeleteAccount()
+			handleDeleteAccount();
 		}
-	}
+	};
 
 	// Handle 2FA verification step (industry standard: verify 2FA before destructive actions)
 	const handle2FAStep = () => {
 		if (!delete2FACode || delete2FACode.length !== 6) {
-			setError('Please enter a valid 6-digit code')
-			return
+			setError("Please enter a valid 6-digit code");
+			return;
 		}
-		handleDeleteAccount()
-	}
+		handleDeleteAccount();
+	};
 
 	// Handle account deletion with password and optional 2FA
 	const handleDeleteAccount = async () => {
-		setIsDeleting(true)
-		setError(null)
+		setIsDeleting(true);
+		setError(null);
 
 		try {
 			// If 2FA is enabled, verify the code first
 			if (has2FAEnabled && delete2FACode) {
-				await securityContext.twoFactorVerify(delete2FACode)
+				await securityContext.twoFactorVerify(delete2FACode);
 			}
 
 			// Proceed with deletion (pass password for re-authentication)
-			await userContext.deleteAccount(deletePassword)
-			setSuccess('Account deleted. Redirecting...')
-			onSuccess?.('Account deleted')
+			await userContext.deleteAccount(deletePassword);
+			setSuccess("Account deleted. Redirecting...");
+			onSuccess?.("Account deleted");
 
 			// Sign out and redirect
 			setTimeout(async () => {
-				await signOut({ redirectUrl: afterDeleteUrl })
-			}, UI_SUCCESS_REDIRECT_MS)
+				await signOut({ redirectUrl: afterDeleteUrl });
+			}, UI_SUCCESS_REDIRECT_MS);
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to delete account'
-			setError(message)
-			onError?.(message)
-			setIsDeleting(false)
+			const message =
+				err instanceof Error ? err.message : "Failed to delete account";
+			setError(message);
+			onError?.(message);
+			setIsDeleting(false);
 		}
-	}
+	};
 
 	// Reset delete state
 	const resetDeleteState = () => {
-		setShowDeleteConfirm(false)
-		setDeleteConfirmText('')
-		setDeletePassword('')
-		setDelete2FACode('')
-		setDeleteStep('confirm')
-		setHas2FAEnabled(false)
-	}
+		setShowDeleteConfirm(false);
+		setDeleteConfirmText("");
+		setDeletePassword("");
+		setDelete2FACode("");
+		setDeleteStep("confirm");
+		setHas2FAEnabled(false);
+	};
 
 	const cardStyles: React.CSSProperties = mergeStyles(styles.card, {
-		padding: '1rem',
-		marginBottom: '1rem',
-	})
+		padding: "1rem",
+		marginBottom: "1rem",
+	});
 
 	return (
 		<div className={className}>
@@ -277,7 +285,11 @@ function AccountSectionInner({
 					<div style={styles.flexBetween}>
 						<div>
 							<h4 style={{ margin: 0, fontWeight: 500 }}>Email Address</h4>
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0.25rem 0 0' })}>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: "0.25rem 0 0",
+								})}
+							>
 								{user?.email}
 							</p>
 						</div>
@@ -295,7 +307,11 @@ function AccountSectionInner({
 					{showEmailChangeForm && (
 						<form
 							onSubmit={handleEmailChange}
-							style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${theme.colorBorder}` }}
+							style={{
+								marginTop: "1rem",
+								paddingTop: "1rem",
+								borderTop: `1px solid ${theme.colorBorder}`,
+							}}
 						>
 							<div style={styles.formGroup}>
 								<label style={styles.label}>New Email Address</label>
@@ -319,14 +335,14 @@ function AccountSectionInner({
 									style={styles.input}
 								/>
 							</div>
-							<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
+							<div style={mergeStyles(styles.flexRow, { gap: "0.5rem" })}>
 								<button
 									type="submit"
 									disabled={isChangingEmail}
 									style={mergeStyles(
 										styles.button,
 										styles.buttonPrimary,
-										isChangingEmail ? styles.buttonDisabled : {}
+										isChangingEmail ? styles.buttonDisabled : {},
 									)}
 								>
 									{isChangingEmail ? (
@@ -335,15 +351,15 @@ function AccountSectionInner({
 											Sending...
 										</>
 									) : (
-										'Send Verification'
+										"Send Verification"
 									)}
 								</button>
 								<button
 									type="button"
 									onClick={() => {
-										setShowEmailChangeForm(false)
-										setNewEmail('')
-										setEmailPassword('')
+										setShowEmailChangeForm(false);
+										setNewEmail("");
+										setEmailPassword("");
 									}}
 									style={mergeStyles(styles.button, styles.buttonOutline)}
 								>
@@ -361,7 +377,11 @@ function AccountSectionInner({
 					<div style={styles.flexBetween}>
 						<div>
 							<h4 style={{ margin: 0, fontWeight: 500 }}>Export Your Data</h4>
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0.25rem 0 0' })}>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: "0.25rem 0 0",
+								})}
+							>
 								Download a copy of all your data
 							</p>
 						</div>
@@ -373,7 +393,7 @@ function AccountSectionInner({
 								style={mergeStyles(
 									styles.button,
 									styles.buttonOutline,
-									isExporting ? styles.buttonDisabled : {}
+									isExporting ? styles.buttonDisabled : {},
 								)}
 							>
 								{isExporting ? (
@@ -412,10 +432,20 @@ function AccountSectionInner({
 				>
 					<div style={styles.flexBetween}>
 						<div>
-							<h4 style={{ margin: 0, fontWeight: 500, color: theme.colorDestructive }}>
+							<h4
+								style={{
+									margin: 0,
+									fontWeight: 500,
+									color: theme.colorDestructive,
+								}}
+							>
 								Delete Account
 							</h4>
-							<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0.25rem 0 0' })}>
+							<p
+								style={mergeStyles(styles.textSm, styles.textMuted, {
+									margin: "0.25rem 0 0",
+								})}
+							>
 								Permanently delete your account and all data
 							</p>
 						</div>
@@ -434,29 +464,43 @@ function AccountSectionInner({
 					{showDeleteConfirm && (
 						<div
 							style={{
-								marginTop: '1rem',
-								paddingTop: '1rem',
+								marginTop: "1rem",
+								paddingTop: "1rem",
 								borderTop: `1px solid ${theme.colorDestructive}30`,
 							}}
 						>
 							{/* Step indicator */}
-							<div style={mergeStyles(styles.textXs, styles.textMuted, { marginBottom: '1rem' })}>
-								Step {deleteStep === 'confirm' ? '1' : deleteStep === 'password' ? '2' : '3'} of {has2FAEnabled ? '3' : '2'}
+							<div
+								style={mergeStyles(styles.textXs, styles.textMuted, {
+									marginBottom: "1rem",
+								})}
+							>
+								Step{" "}
+								{deleteStep === "confirm"
+									? "1"
+									: deleteStep === "password"
+										? "2"
+										: "3"}{" "}
+								of {has2FAEnabled ? "3" : "2"}
 							</div>
 
 							{/* Step 1: Confirm with DELETE text */}
-							{deleteStep === 'confirm' && (
+							{deleteStep === "confirm" && (
 								<>
 									<div
 										style={mergeStyles(styles.alert, styles.alertError, {
 											backgroundColor: `${theme.colorDestructive}10`,
 										})}
 									>
-										<strong>Warning:</strong> This action cannot be undone. All your data will be permanently
-										deleted.
+										<strong>Warning:</strong> This action cannot be undone. All
+										your data will be permanently deleted.
 									</div>
 
-									<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '1rem 0 0.5rem' })}>
+									<p
+										style={mergeStyles(styles.textSm, styles.textMuted, {
+											margin: "1rem 0 0.5rem",
+										})}
+									>
 										Type <strong>DELETE</strong> to confirm:
 									</p>
 									<input
@@ -464,18 +508,20 @@ function AccountSectionInner({
 										value={deleteConfirmText}
 										onChange={(e) => setDeleteConfirmText(e.target.value)}
 										placeholder="DELETE"
-										style={mergeStyles(styles.input, { marginBottom: '1rem' })}
+										style={mergeStyles(styles.input, { marginBottom: "1rem" })}
 									/>
 
-									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
+									<div style={mergeStyles(styles.flexRow, { gap: "0.5rem" })}>
 										<button
 											type="button"
 											onClick={handleDeleteConfirmStep}
-											disabled={isChecking2FA || deleteConfirmText !== 'DELETE'}
+											disabled={isChecking2FA || deleteConfirmText !== "DELETE"}
 											style={mergeStyles(
 												styles.button,
 												styles.buttonDestructive,
-												(isChecking2FA || deleteConfirmText !== 'DELETE') ? styles.buttonDisabled : {}
+												isChecking2FA || deleteConfirmText !== "DELETE"
+													? styles.buttonDisabled
+													: {},
 											)}
 										>
 											{isChecking2FA ? (
@@ -484,7 +530,7 @@ function AccountSectionInner({
 													Checking...
 												</>
 											) : (
-												'Continue'
+												"Continue"
 											)}
 										</button>
 										<button
@@ -499,9 +545,13 @@ function AccountSectionInner({
 							)}
 
 							{/* Step 2: Password verification */}
-							{deleteStep === 'password' && (
+							{deleteStep === "password" && (
 								<>
-									<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: '0 0 0.5rem' })}>
+									<p
+										style={mergeStyles(styles.textSm, styles.textMuted, {
+											margin: "0 0 0.5rem",
+										})}
+									>
 										Enter your password to verify your identity:
 									</p>
 									<input
@@ -510,10 +560,10 @@ function AccountSectionInner({
 										onChange={(e) => setDeletePassword(e.target.value)}
 										placeholder="Enter your password"
 										autoComplete="current-password"
-										style={mergeStyles(styles.input, { marginBottom: '1rem' })}
+										style={mergeStyles(styles.input, { marginBottom: "1rem" })}
 									/>
 
-									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem' })}>
+									<div style={mergeStyles(styles.flexRow, { gap: "0.5rem" })}>
 										<button
 											type="button"
 											onClick={handlePasswordStep}
@@ -521,14 +571,14 @@ function AccountSectionInner({
 											style={mergeStyles(
 												styles.button,
 												styles.buttonDestructive,
-												!deletePassword ? styles.buttonDisabled : {}
+												!deletePassword ? styles.buttonDisabled : {},
 											)}
 										>
-											{has2FAEnabled ? 'Continue' : 'Delete Account'}
+											{has2FAEnabled ? "Continue" : "Delete Account"}
 										</button>
 										<button
 											type="button"
-											onClick={() => setDeleteStep('confirm')}
+											onClick={() => setDeleteStep("confirm")}
 											style={mergeStyles(styles.button, styles.buttonOutline)}
 										>
 											Back
@@ -538,37 +588,53 @@ function AccountSectionInner({
 							)}
 
 							{/* Step 3: 2FA verification (only if 2FA is enabled) */}
-							{deleteStep === '2fa' && (
+							{deleteStep === "2fa" && (
 								<>
 									<div
 										style={mergeStyles(styles.flexCenter, {
-											width: '3rem',
-											height: '3rem',
-											borderRadius: '50%',
+											width: "3rem",
+											height: "3rem",
+											borderRadius: "50%",
 											backgroundColor: `${theme.colorDestructive}15`,
-											margin: '0 auto 1rem',
+											margin: "0 auto 1rem",
 										})}
 									>
 										<ShieldIcon size={24} color={theme.colorDestructive} />
 									</div>
-									<p style={mergeStyles(styles.textSm, styles.textMuted, styles.textCenter, { margin: '0 0 1rem' })}>
+									<p
+										style={mergeStyles(
+											styles.textSm,
+											styles.textMuted,
+											styles.textCenter,
+											{ margin: "0 0 1rem" },
+										)}
+									>
 										Enter your two-factor authentication code to confirm:
 									</p>
 									<input
 										type="text"
 										value={delete2FACode}
-										onChange={(e) => setDelete2FACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+										onChange={(e) =>
+											setDelete2FACode(
+												e.target.value.replace(/\D/g, "").slice(0, 6),
+											)
+										}
 										placeholder="000000"
 										maxLength={6}
 										style={mergeStyles(styles.input, {
-											marginBottom: '1rem',
-											textAlign: 'center',
-											letterSpacing: '0.5em',
-											fontSize: theme.fontSizeLg
+											marginBottom: "1rem",
+											textAlign: "center",
+											letterSpacing: "0.5em",
+											fontSize: theme.fontSizeLg,
 										})}
 									/>
 
-									<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', justifyContent: 'center' })}>
+									<div
+										style={mergeStyles(styles.flexRow, {
+											gap: "0.5rem",
+											justifyContent: "center",
+										})}
+									>
 										<button
 											type="button"
 											onClick={handle2FAStep}
@@ -576,7 +642,9 @@ function AccountSectionInner({
 											style={mergeStyles(
 												styles.button,
 												styles.buttonDestructive,
-												(isDeleting || delete2FACode.length !== 6) ? styles.buttonDisabled : {}
+												isDeleting || delete2FACode.length !== 6
+													? styles.buttonDisabled
+													: {},
 											)}
 										>
 											{isDeleting ? (
@@ -585,12 +653,12 @@ function AccountSectionInner({
 													Deleting...
 												</>
 											) : (
-												'Permanently Delete'
+												"Permanently Delete"
 											)}
 										</button>
 										<button
 											type="button"
-											onClick={() => setDeleteStep('password')}
+											onClick={() => setDeleteStep("password")}
 											style={mergeStyles(styles.button, styles.buttonOutline)}
 										>
 											Back
@@ -603,7 +671,7 @@ function AccountSectionInner({
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 // Icons
@@ -623,7 +691,7 @@ function DownloadIcon({ size = 24 }: { size?: number }) {
 			<polyline points="7 10 12 15 17 10" />
 			<line x1="12" y1="15" x2="12" y2="3" />
 		</svg>
-	)
+	);
 }
 
 function TrashIcon({ size = 24 }: { size?: number }) {
@@ -641,10 +709,13 @@ function TrashIcon({ size = 24 }: { size?: number }) {
 			<polyline points="3 6 5 6 21 6" />
 			<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
 		</svg>
-	)
+	);
 }
 
-function ShieldIcon({ size = 24, color = 'currentColor' }: { size?: number; color?: string }) {
+function ShieldIcon({
+	size = 24,
+	color = "currentColor",
+}: { size?: number; color?: string }) {
 	return (
 		<svg
 			width={size}
@@ -658,5 +729,5 @@ function ShieldIcon({ size = 24, color = 'currentColor' }: { size?: number; colo
 		>
 			<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
 		</svg>
-	)
+	);
 }

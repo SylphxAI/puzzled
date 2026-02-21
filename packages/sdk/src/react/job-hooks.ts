@@ -7,21 +7,34 @@
  * Uses proper React Context pattern (no module singletons).
  */
 
-'use client'
+"use client";
 
-import { useCallback, useState, useEffect, useRef } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { JOB_POLL_INTERVAL_MS } from "../constants";
+import type {
+	CreateCronInput,
+	CreateCronResult,
+	ScheduleJobInput,
+	ScheduleJobResult,
+} from "../types";
 import {
-	useJobsContext,
+	type Job,
 	type JobStatus,
 	type JobStatusFilter,
-	type Job,
-} from './services-context'
-import type { ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult } from '../types'
-import { JOB_POLL_INTERVAL_MS } from '../constants'
+	useJobsContext,
+} from "./services-context";
 
 // Re-export types for convenience
-export type { JobStatus, JobStatusFilter, Job, ScheduleJobInput, ScheduleJobResult, CreateCronInput, CreateCronResult }
+export type {
+	JobStatus,
+	JobStatusFilter,
+	Job,
+	ScheduleJobInput,
+	ScheduleJobResult,
+	CreateCronInput,
+	CreateCronResult,
+};
 
 // ============================================
 // useJobs
@@ -29,32 +42,32 @@ export type { JobStatus, JobStatusFilter, Job, ScheduleJobInput, ScheduleJobResu
 
 export interface UseJobsReturn {
 	/** Check if background jobs are available */
-	isAvailable: () => Promise<boolean>
+	isAvailable: () => Promise<boolean>;
 	/** Schedule a one-time job */
-	schedule: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
+	schedule: (options: ScheduleJobInput) => Promise<ScheduleJobResult>;
 	/** Create a recurring cron job */
-	createCron: (options: CreateCronInput) => Promise<CreateCronResult>
+	createCron: (options: CreateCronInput) => Promise<CreateCronResult>;
 	/** Pause a cron job */
-	pauseCron: (scheduleId: string) => Promise<boolean>
+	pauseCron: (scheduleId: string) => Promise<boolean>;
 	/** Resume a paused cron job */
-	resumeCron: (scheduleId: string) => Promise<boolean>
+	resumeCron: (scheduleId: string) => Promise<boolean>;
 	/** Delete a cron job */
-	deleteCron: (scheduleId: string) => Promise<boolean>
+	deleteCron: (scheduleId: string) => Promise<boolean>;
 	/** Get job status */
-	getJob: (jobId: string) => Promise<Job>
+	getJob: (jobId: string) => Promise<Job>;
 	/** List jobs */
 	listJobs: (options?: {
-		status?: JobStatusFilter
-		type?: 'one-time' | 'cron'
-		limit?: number
-		offset?: number
-	}) => Promise<Job[]>
+		status?: JobStatusFilter;
+		type?: "one-time" | "cron";
+		limit?: number;
+		offset?: number;
+	}) => Promise<Job[]>;
 	/** Cancel a pending/queued job */
-	cancelJob: (jobId: string) => Promise<boolean>
+	cancelJob: (jobId: string) => Promise<boolean>;
 	/** Whether a job operation is in progress */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 }
 
 /**
@@ -100,160 +113,168 @@ export interface UseJobsReturn {
  * ```
  */
 export function useJobs(): UseJobsReturn {
-	const ctx = useJobsContext()
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<Error | null>(null)
+	const ctx = useJobsContext();
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<Error | null>(null);
 
 	const isAvailable = useCallback(async (): Promise<boolean> => {
 		try {
-			const status = await ctx.checkStatus()
-			return status.available
+			const status = await ctx.checkStatus();
+			return status.available;
 		} catch {
-			return false
+			return false;
 		}
-	}, [ctx])
+	}, [ctx]);
 
 	const schedule = useCallback(
 		async (options: ScheduleJobInput): Promise<ScheduleJobResult> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.schedule(options)
+				return await ctx.schedule(options);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to schedule job')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to schedule job");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const createCron = useCallback(
 		async (options: CreateCronInput): Promise<CreateCronResult> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.createCron(options)
+				return await ctx.createCron(options);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to create cron job')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to create cron job");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const pauseCron = useCallback(
 		async (scheduleId: string): Promise<boolean> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.pauseCron(scheduleId)
+				return await ctx.pauseCron(scheduleId);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to pause cron')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to pause cron");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const resumeCron = useCallback(
 		async (scheduleId: string): Promise<boolean> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.resumeCron(scheduleId)
+				return await ctx.resumeCron(scheduleId);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to resume cron')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to resume cron");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const deleteCron = useCallback(
 		async (scheduleId: string): Promise<boolean> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.deleteCron(scheduleId)
+				return await ctx.deleteCron(scheduleId);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to delete cron')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to delete cron");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const getJob = useCallback(
 		async (jobId: string): Promise<Job> => {
 			try {
-				return await ctx.getJob(jobId)
+				return await ctx.getJob(jobId);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to get job')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to get job");
+				setError(error);
+				throw error;
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const listJobs = useCallback(
 		async (
 			options: {
-				status?: JobStatusFilter
-				type?: 'one-time' | 'cron'
-				limit?: number
-				offset?: number
-			} = {}
+				status?: JobStatusFilter;
+				type?: "one-time" | "cron";
+				limit?: number;
+				offset?: number;
+			} = {},
 		): Promise<Job[]> => {
 			try {
-				const result = await ctx.listJobs(options)
-				return result.jobs
+				const result = await ctx.listJobs(options);
+				return result.jobs;
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to list jobs')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to list jobs");
+				setError(error);
+				throw error;
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	const cancelJob = useCallback(
 		async (jobId: string): Promise<boolean> => {
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				return await ctx.cancelJob(jobId)
+				return await ctx.cancelJob(jobId);
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to cancel job')
-				setError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to cancel job");
+				setError(error);
+				throw error;
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[ctx]
-	)
+		[ctx],
+	);
 
 	return {
 		isAvailable,
@@ -267,62 +288,68 @@ export function useJobs(): UseJobsReturn {
 		cancelJob,
 		isLoading,
 		error,
-	}
+	};
 }
 
 // ============================================
 // useJobProgress
 // ============================================
 
-type JobPhase = 'pending' | 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+type JobPhase =
+	| "pending"
+	| "queued"
+	| "running"
+	| "completed"
+	| "failed"
+	| "cancelled";
 
 interface JobProgress {
 	/** Current phase of the job */
-	phase: JobPhase
+	phase: JobPhase;
 	/** Progress percentage (0-100), estimated based on phase */
-	progress: number
+	progress: number;
 	/** Whether the job is still in progress */
-	isInProgress: boolean
+	isInProgress: boolean;
 	/** Whether the job completed successfully */
-	isComplete: boolean
+	isComplete: boolean;
 	/** Whether the job failed */
-	isFailed: boolean
+	isFailed: boolean;
 	/** Time elapsed since job was scheduled (ms) */
-	elapsedMs: number
+	elapsedMs: number;
 	/** Estimated time remaining (ms), null if unknown */
-	estimatedRemainingMs: number | null
+	estimatedRemainingMs: number | null;
 }
 
 interface UseJobProgressOptions {
 	/** Polling interval in ms (default: 2000) */
-	pollInterval?: number
+	pollInterval?: number;
 	/** Stop polling when job completes (default: true) */
-	stopOnComplete?: boolean
+	stopOnComplete?: boolean;
 	/** Maximum poll attempts before stopping (default: 100) */
-	maxPolls?: number
+	maxPolls?: number;
 	/** Callback when job completes successfully */
-	onComplete?: (job: Job) => void
+	onComplete?: (job: Job) => void;
 	/** Callback when job fails */
-	onFailed?: (job: Job, error: string | null) => void
+	onFailed?: (job: Job, error: string | null) => void;
 	/** Callback when job status changes */
-	onStatusChange?: (job: Job, previousStatus: JobStatus | null) => void
+	onStatusChange?: (job: Job, previousStatus: JobStatus | null) => void;
 }
 
 interface UseJobProgressReturn {
 	/** Current job data (null until first fetch) */
-	job: Job | null
+	job: Job | null;
 	/** Progress information */
-	progress: JobProgress
+	progress: JobProgress;
 	/** Whether currently fetching job status */
-	isPolling: boolean
+	isPolling: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Start polling for job progress */
-	start: () => void
+	start: () => void;
 	/** Stop polling */
-	stop: () => void
+	stop: () => void;
 	/** Manually refresh job status */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -392,7 +419,7 @@ interface UseJobProgressReturn {
  */
 function useJobProgress(
 	jobId: string | null | undefined,
-	options: UseJobProgressOptions = {}
+	options: UseJobProgressOptions = {},
 ): UseJobProgressReturn {
 	const {
 		pollInterval = JOB_POLL_INTERVAL_MS,
@@ -401,156 +428,164 @@ function useJobProgress(
 		onComplete,
 		onFailed,
 		onStatusChange,
-	} = options
+	} = options;
 
-	const ctx = useJobsContext()
-	const queryClient = useQueryClient()
+	const ctx = useJobsContext();
+	const queryClient = useQueryClient();
 
 	// Track whether we should continue polling
-	const [shouldPoll, setShouldPoll] = useState(!!jobId)
-	const pollCountRef = useRef(0)
-	const previousStatusRef = useRef<JobStatus | null>(null)
-	const startTimeRef = useRef<number>(Date.now())
-	const callbacksFiredRef = useRef<{ complete: boolean; failed: boolean }>({ complete: false, failed: false })
+	const [shouldPoll, setShouldPoll] = useState(!!jobId);
+	const pollCountRef = useRef(0);
+	const previousStatusRef = useRef<JobStatus | null>(null);
+	const startTimeRef = useRef<number>(Date.now());
+	const callbacksFiredRef = useRef<{ complete: boolean; failed: boolean }>({
+		complete: false,
+		failed: false,
+	});
 
 	// Reset state when jobId changes
 	useEffect(() => {
 		if (jobId) {
-			setShouldPoll(true)
-			pollCountRef.current = 0
-			startTimeRef.current = Date.now()
-			previousStatusRef.current = null
-			callbacksFiredRef.current = { complete: false, failed: false }
+			setShouldPoll(true);
+			pollCountRef.current = 0;
+			startTimeRef.current = Date.now();
+			previousStatusRef.current = null;
+			callbacksFiredRef.current = { complete: false, failed: false };
 		} else {
-			setShouldPoll(false)
+			setShouldPoll(false);
 		}
-	}, [jobId])
+	}, [jobId]);
 
 	// React Query for job polling
 	const jobQuery = useQuery({
-		queryKey: ['sylphx', 'job', 'progress', jobId],
+		queryKey: ["sylphx", "job", "progress", jobId],
 		queryFn: () => ctx.getJob(jobId!),
 		enabled: !!jobId && shouldPoll,
 		staleTime: 0, // Always refetch for progress tracking
 		refetchInterval: shouldPoll ? pollInterval : false,
-	})
+	});
 
-	const job = jobQuery.data ?? null
+	const job = jobQuery.data ?? null;
 
 	// Handle status changes and callbacks
 	useEffect(() => {
-		if (!job) return
+		if (!job) return;
 
-		const currentStatus = job.status as JobStatus
-		pollCountRef.current++
+		const currentStatus = job.status as JobStatus;
+		pollCountRef.current++;
 
 		// Fire status change callback
 		if (previousStatusRef.current !== currentStatus) {
-			onStatusChange?.(job, previousStatusRef.current)
-			previousStatusRef.current = currentStatus
+			onStatusChange?.(job, previousStatusRef.current);
+			previousStatusRef.current = currentStatus;
 		}
 
 		// Handle terminal states
-		const isTerminal = ['completed', 'failed', 'cancelled'].includes(currentStatus)
+		const isTerminal = ["completed", "failed", "cancelled"].includes(
+			currentStatus,
+		);
 
-		if (currentStatus === 'completed' && !callbacksFiredRef.current.complete) {
-			callbacksFiredRef.current.complete = true
-			onComplete?.(job)
-		} else if (currentStatus === 'failed' && !callbacksFiredRef.current.failed) {
-			callbacksFiredRef.current.failed = true
-			onFailed?.(job, job.lastError ?? null)
+		if (currentStatus === "completed" && !callbacksFiredRef.current.complete) {
+			callbacksFiredRef.current.complete = true;
+			onComplete?.(job);
+		} else if (
+			currentStatus === "failed" &&
+			!callbacksFiredRef.current.failed
+		) {
+			callbacksFiredRef.current.failed = true;
+			onFailed?.(job, job.lastError ?? null);
 		}
 
 		// Stop polling on terminal state or max polls reached
 		if ((isTerminal && stopOnComplete) || pollCountRef.current >= maxPolls) {
-			setShouldPoll(false)
+			setShouldPoll(false);
 		}
-	}, [job, stopOnComplete, maxPolls, onComplete, onFailed, onStatusChange])
+	}, [job, stopOnComplete, maxPolls, onComplete, onFailed, onStatusChange]);
 
 	// Calculate progress based on job status
 	const calculateProgress = useCallback((job: Job | null): JobProgress => {
-		const now = Date.now()
-		const startTime = startTimeRef.current
+		const now = Date.now();
+		const startTime = startTimeRef.current;
 
 		if (!job) {
 			return {
-				phase: 'pending',
+				phase: "pending",
 				progress: 0,
 				isInProgress: false,
 				isComplete: false,
 				isFailed: false,
 				elapsedMs: 0,
 				estimatedRemainingMs: null,
-			}
+			};
 		}
 
-		const status = job.status as JobStatus
-		const elapsedMs = now - startTime
+		const status = job.status as JobStatus;
+		const elapsedMs = now - startTime;
 
 		// Map status to phase and progress
-		let phase: JobPhase
-		let progress: number
-		let isInProgress: boolean
-		let isComplete: boolean
-		let isFailed: boolean
+		let phase: JobPhase;
+		let progress: number;
+		let isInProgress: boolean;
+		let isComplete: boolean;
+		let isFailed: boolean;
 
 		switch (status) {
-			case 'pending':
-				phase = 'pending'
-				progress = 10
-				isInProgress = true
-				isComplete = false
-				isFailed = false
-				break
-			case 'queued':
-				phase = 'queued'
-				progress = 25
-				isInProgress = true
-				isComplete = false
-				isFailed = false
-				break
-			case 'running':
-				phase = 'running'
-				progress = 50 // Could be enhanced with actual progress from job metadata
-				isInProgress = true
-				isComplete = false
-				isFailed = false
-				break
-			case 'completed':
-				phase = 'completed'
-				progress = 100
-				isInProgress = false
-				isComplete = true
-				isFailed = false
-				break
-			case 'failed':
-				phase = 'failed'
-				progress = 0
-				isInProgress = false
-				isComplete = false
-				isFailed = true
-				break
-			case 'cancelled':
-				phase = 'cancelled'
-				progress = 0
-				isInProgress = false
-				isComplete = false
-				isFailed = false
-				break
+			case "pending":
+				phase = "pending";
+				progress = 10;
+				isInProgress = true;
+				isComplete = false;
+				isFailed = false;
+				break;
+			case "queued":
+				phase = "queued";
+				progress = 25;
+				isInProgress = true;
+				isComplete = false;
+				isFailed = false;
+				break;
+			case "running":
+				phase = "running";
+				progress = 50; // Could be enhanced with actual progress from job metadata
+				isInProgress = true;
+				isComplete = false;
+				isFailed = false;
+				break;
+			case "completed":
+				phase = "completed";
+				progress = 100;
+				isInProgress = false;
+				isComplete = true;
+				isFailed = false;
+				break;
+			case "failed":
+				phase = "failed";
+				progress = 0;
+				isInProgress = false;
+				isComplete = false;
+				isFailed = true;
+				break;
+			case "cancelled":
+				phase = "cancelled";
+				progress = 0;
+				isInProgress = false;
+				isComplete = false;
+				isFailed = false;
+				break;
 			default:
-				phase = 'pending'
-				progress = 0
-				isInProgress = true
-				isComplete = false
-				isFailed = false
+				phase = "pending";
+				progress = 0;
+				isInProgress = true;
+				isComplete = false;
+				isFailed = false;
 		}
 
 		// Estimate remaining time based on average completion time
-		let estimatedRemainingMs: number | null = null
+		let estimatedRemainingMs: number | null = null;
 		if (isInProgress && elapsedMs > 0 && progress > 0 && progress < 100) {
-			const progressRate = progress / elapsedMs
-			const remainingProgress = 100 - progress
-			estimatedRemainingMs = Math.round(remainingProgress / progressRate)
+			const progressRate = progress / elapsedMs;
+			const remainingProgress = 100 - progress;
+			estimatedRemainingMs = Math.round(remainingProgress / progressRate);
 		}
 
 		return {
@@ -561,31 +596,31 @@ function useJobProgress(
 			isFailed,
 			elapsedMs,
 			estimatedRemainingMs,
-		}
-	}, [])
+		};
+	}, []);
 
 	// Start polling
 	const start = useCallback(() => {
-		if (!jobId) return
-		pollCountRef.current = 0
-		startTimeRef.current = Date.now()
-		callbacksFiredRef.current = { complete: false, failed: false }
-		setShouldPoll(true)
-	}, [jobId])
+		if (!jobId) return;
+		pollCountRef.current = 0;
+		startTimeRef.current = Date.now();
+		callbacksFiredRef.current = { complete: false, failed: false };
+		setShouldPoll(true);
+	}, [jobId]);
 
 	// Stop polling
 	const stop = useCallback(() => {
-		setShouldPoll(false)
-	}, [])
+		setShouldPoll(false);
+	}, []);
 
 	// Manual refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'job', 'progress', jobId],
-		})
-	}, [queryClient, jobId])
+			queryKey: ["sylphx", "job", "progress", jobId],
+		});
+	}, [queryClient, jobId]);
 
-	const progress = calculateProgress(job)
+	const progress = calculateProgress(job);
 
 	return {
 		job,
@@ -595,7 +630,7 @@ function useJobProgress(
 		start,
 		stop,
 		refresh,
-	}
+	};
 }
 
 // ============================================
@@ -604,26 +639,26 @@ function useJobProgress(
 
 interface UseScheduleWithProgressOptions extends UseJobProgressOptions {
 	/** Auto-start tracking after scheduling */
-	autoStart?: boolean
+	autoStart?: boolean;
 }
 
 interface UseScheduleWithProgressReturn {
 	/** Schedule a job and start tracking */
-	scheduleAndTrack: (options: ScheduleJobInput) => Promise<ScheduleJobResult>
+	scheduleAndTrack: (options: ScheduleJobInput) => Promise<ScheduleJobResult>;
 	/** Current job being tracked */
-	job: Job | null
+	job: Job | null;
 	/** Progress information */
-	progress: JobProgress
+	progress: JobProgress;
 	/** Job ID of the scheduled job */
-	jobId: string | null
+	jobId: string | null;
 	/** Whether scheduling is in progress */
-	isScheduling: boolean
+	isScheduling: boolean;
 	/** Whether polling job status */
-	isPolling: boolean
+	isPolling: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Reset the tracker to initial state */
-	reset: () => void
+	reset: () => void;
 }
 
 /**
@@ -683,51 +718,55 @@ interface UseScheduleWithProgressReturn {
  * ```
  */
 function useScheduleWithProgress(
-	options: UseScheduleWithProgressOptions = {}
+	options: UseScheduleWithProgressOptions = {},
 ): UseScheduleWithProgressReturn {
-	const { autoStart = true, ...progressOptions } = options
+	const { autoStart = true, ...progressOptions } = options;
 
-	const { schedule } = useJobs()
-	const [jobId, setJobId] = useState<string | null>(null)
-	const [isScheduling, setIsScheduling] = useState(false)
-	const [scheduleError, setScheduleError] = useState<Error | null>(null)
+	const { schedule } = useJobs();
+	const [jobId, setJobId] = useState<string | null>(null);
+	const [isScheduling, setIsScheduling] = useState(false);
+	const [scheduleError, setScheduleError] = useState<Error | null>(null);
 
-	const { job, progress, isPolling, error: progressError, start } = useJobProgress(
-		autoStart ? jobId : null,
-		progressOptions
-	)
+	const {
+		job,
+		progress,
+		isPolling,
+		error: progressError,
+		start,
+	} = useJobProgress(autoStart ? jobId : null, progressOptions);
 
 	const scheduleAndTrack = useCallback(
 		async (scheduleOptions: ScheduleJobInput): Promise<ScheduleJobResult> => {
-			setIsScheduling(true)
-			setScheduleError(null)
+			setIsScheduling(true);
+			setScheduleError(null);
 
 			try {
-				const result = await schedule(scheduleOptions)
-				setJobId(result.jobId)
+				const result = await schedule(scheduleOptions);
+				setJobId(result.jobId);
 
 				// If autoStart is false, manually start polling
 				if (!autoStart) {
-					start()
+					start();
 				}
 
-				return result
+				return result;
 			} catch (err) {
-				const error = err instanceof Error ? err : new Error('Failed to schedule job')
-				setScheduleError(error)
-				throw error
+				const error =
+					err instanceof Error ? err : new Error("Failed to schedule job");
+				setScheduleError(error);
+				throw error;
 			} finally {
-				setIsScheduling(false)
+				setIsScheduling(false);
 			}
 		},
-		[schedule, autoStart, start]
-	)
+		[schedule, autoStart, start],
+	);
 
 	const reset = useCallback(() => {
-		setJobId(null)
-		setIsScheduling(false)
-		setScheduleError(null)
-	}, [])
+		setJobId(null);
+		setIsScheduling(false);
+		setScheduleError(null);
+	}, []);
 
 	return {
 		scheduleAndTrack,
@@ -738,5 +777,5 @@ function useScheduleWithProgress(
 		isPolling,
 		error: scheduleError ?? progressError,
 		reset,
-	}
+	};
 }

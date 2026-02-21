@@ -1,8 +1,8 @@
 {
-  "title": "成就",
-  "unlocked": "已解鎖",
-  "locked": "未解鎖",
-  "nextUp": "即將達成",
-  "progress": "進度",
-  "shareAchievement": "分享成就"
+	"title": "成就",
+	"unlocked": "已解鎖",
+	"locked": "未解鎖",
+	"nextUp": "即將達成",
+	"progress": "進度",
+	"shareAchievement": "分享成就"
 }

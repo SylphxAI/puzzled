@@ -16,77 +16,84 @@
  * ```
  */
 
-import { Children, cloneElement, forwardRef, isValidElement } from 'react'
+import { Children, cloneElement, forwardRef, isValidElement } from "react";
 
-function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>): React.RefCallback<T> {
+function mergeRefs<T>(
+	...refs: Array<React.Ref<T> | undefined>
+): React.RefCallback<T> {
 	return (node) => {
 		for (const ref of refs) {
-			if (typeof ref === 'function') {
-				ref(node)
+			if (typeof ref === "function") {
+				ref(node);
 			} else if (ref != null) {
-				;(ref as React.MutableRefObject<T | null>).current = node
+				(ref as React.MutableRefObject<T | null>).current = node;
 			}
 		}
-	}
+	};
 }
 
 function mergeProps(
 	slotProps: Record<string, unknown>,
 	childProps: Record<string, unknown>,
 ): Record<string, unknown> {
-	const overrideProps: Record<string, unknown> = { ...childProps }
+	const overrideProps: Record<string, unknown> = { ...childProps };
 
 	for (const propName in childProps) {
-		const slotPropValue = slotProps[propName]
-		const childPropValue = childProps[propName]
+		const slotPropValue = slotProps[propName];
+		const childPropValue = childProps[propName];
 
-		const isHandler = /^on[A-Z]/.test(propName)
+		const isHandler = /^on[A-Z]/.test(propName);
 
 		if (isHandler) {
 			// Merge event handlers
 			if (slotPropValue && childPropValue) {
 				overrideProps[propName] = (...args: unknown[]) => {
-					;(childPropValue as (...args: unknown[]) => void)(...args)
-					;(slotPropValue as (...args: unknown[]) => void)(...args)
-				}
+					(childPropValue as (...args: unknown[]) => void)(...args);
+					(slotPropValue as (...args: unknown[]) => void)(...args);
+				};
 			} else if (slotPropValue) {
-				overrideProps[propName] = slotPropValue
+				overrideProps[propName] = slotPropValue;
 			}
-		} else if (propName === 'style') {
+		} else if (propName === "style") {
 			// Merge styles
-			overrideProps[propName] = { ...(slotPropValue as object), ...(childPropValue as object) }
-		} else if (propName === 'className') {
+			overrideProps[propName] = {
+				...(slotPropValue as object),
+				...(childPropValue as object),
+			};
+		} else if (propName === "className") {
 			// Merge classNames
-			overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(' ')
+			overrideProps[propName] = [slotPropValue, childPropValue]
+				.filter(Boolean)
+				.join(" ");
 		}
 	}
 
-	return { ...slotProps, ...overrideProps }
+	return { ...slotProps, ...overrideProps };
 }
 
 interface SlotProps extends React.HTMLAttributes<HTMLElement> {
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const Slot = forwardRef<HTMLElement, SlotProps>((props, forwardedRef) => {
-	const { children, ...slotProps } = props
-	const childrenArray = Children.toArray(children)
-	const child = childrenArray[0]
+	const { children, ...slotProps } = props;
+	const childrenArray = Children.toArray(children);
+	const child = childrenArray[0];
 
 	if (!isValidElement(child)) {
-		return null
+		return null;
 	}
 
-	const childProps = child.props as Record<string, unknown>
-	const childRef = (child as { ref?: React.Ref<unknown> }).ref
+	const childProps = child.props as Record<string, unknown>;
+	const childRef = (child as { ref?: React.Ref<unknown> }).ref;
 
 	return cloneElement(child, {
 		...mergeProps(slotProps, childProps),
 		ref: forwardedRef ? mergeRefs(forwardedRef, childRef) : childRef,
-	} as React.Attributes)
-})
+	} as React.Attributes);
+});
 
-Slot.displayName = 'Slot'
+Slot.displayName = "Slot";
 
-export { Slot }
-export type { SlotProps }
+export { Slot };
+export type { SlotProps };

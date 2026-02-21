@@ -35,69 +35,87 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useEffect, useRef, useCallback, createContext, useContext, useState, type ReactNode } from 'react'
-import { useConsent, useConsentGate, type ConsentCategory } from './consent-hooks'
-import { CONSENT_WAIT_FOR_UPDATE_MS } from '../constants'
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import { CONSENT_WAIT_FOR_UPDATE_MS } from "../constants";
+import {
+	type ConsentCategory,
+	useConsent,
+	useConsentGate,
+} from "./consent-hooks";
 
 // ============================================
 // Types
 // ============================================
 
-export type ScriptStrategy = 'beforeInteractive' | 'afterInteractive' | 'lazyOnload' | 'worker'
+export type ScriptStrategy =
+	| "beforeInteractive"
+	| "afterInteractive"
+	| "lazyOnload"
+	| "worker";
 
 export interface ConsentScriptProps {
 	/** External script URL */
-	src?: string
+	src?: string;
 	/** Inline script content (children) */
-	children?: string
+	children?: string;
 	/** Required consent category */
-	category: ConsentCategory
+	category: ConsentCategory;
 	/** Script loading strategy (Next.js compatible) */
-	strategy?: ScriptStrategy
+	strategy?: ScriptStrategy;
 	/** Called when script loads successfully */
-	onLoad?: () => void
+	onLoad?: () => void;
 	/** Called when script fails to load */
-	onError?: (error: Error) => void
+	onError?: (error: Error) => void;
 	/** Called when script is blocked due to no consent */
-	onBlock?: () => void
+	onBlock?: () => void;
 	/** Additional script attributes */
-	async?: boolean
-	defer?: boolean
-	id?: string
-	nonce?: string
+	async?: boolean;
+	defer?: boolean;
+	id?: string;
+	nonce?: string;
 	/** data-* attributes */
-	[key: `data-${string}`]: string | undefined
+	[key: `data-${string}`]: string | undefined;
 }
 
 export interface ScriptQueueItem {
-	id: string
-	src?: string
-	content?: string
-	category: ConsentCategory
-	strategy: ScriptStrategy
-	attributes: Record<string, string | boolean | undefined>
-	onLoad?: () => void
-	onError?: (error: Error) => void
+	id: string;
+	src?: string;
+	content?: string;
+	category: ConsentCategory;
+	strategy: ScriptStrategy;
+	attributes: Record<string, string | boolean | undefined>;
+	onLoad?: () => void;
+	onError?: (error: Error) => void;
 }
 
 export interface ScriptManagerContextValue {
 	/** Queue a script for loading when consent is granted */
-	queueScript: (item: ScriptQueueItem) => void
+	queueScript: (item: ScriptQueueItem) => void;
 	/** Remove a script from queue */
-	dequeueScript: (id: string) => void
+	dequeueScript: (id: string) => void;
 	/** Check if a script is loaded */
-	isLoaded: (id: string) => boolean
+	isLoaded: (id: string) => boolean;
 	/** Get all blocked scripts */
-	getBlockedScripts: () => ScriptQueueItem[]
+	getBlockedScripts: () => ScriptQueueItem[];
 }
 
 // ============================================
 // Script Manager Context
 // ============================================
 
-const ScriptManagerContext = createContext<ScriptManagerContextValue | null>(null)
+const ScriptManagerContext = createContext<ScriptManagerContextValue | null>(
+	null,
+);
 
 /**
  * Script Manager Provider
@@ -115,53 +133,71 @@ const ScriptManagerContext = createContext<ScriptManagerContextValue | null>(nul
  * ```
  */
 export function ScriptManagerProvider({ children }: { children: ReactNode }) {
-	const [queue, setQueue] = useState<ScriptQueueItem[]>([])
-	const [loadedScripts, setLoadedScripts] = useState<Set<string>>(new Set())
+	const [queue, setQueue] = useState<ScriptQueueItem[]>([]);
+	const [loadedScripts, setLoadedScripts] = useState<Set<string>>(new Set());
 
 	const queueScript = useCallback((item: ScriptQueueItem) => {
 		setQueue((prev) => {
 			// Don't add duplicates
-			if (prev.some((s) => s.id === item.id)) return prev
-			return [...prev, item]
-		})
-	}, [])
+			if (prev.some((s) => s.id === item.id)) return prev;
+			return [...prev, item];
+		});
+	}, []);
 
 	const dequeueScript = useCallback((id: string) => {
-		setQueue((prev) => prev.filter((s) => s.id !== id))
-	}, [])
+		setQueue((prev) => prev.filter((s) => s.id !== id));
+	}, []);
 
-	const isLoaded = useCallback((id: string) => loadedScripts.has(id), [loadedScripts])
+	const isLoaded = useCallback(
+		(id: string) => loadedScripts.has(id),
+		[loadedScripts],
+	);
 
-	const getBlockedScripts = useCallback(() => queue, [queue])
+	const getBlockedScripts = useCallback(() => queue, [queue]);
 
 	// Mark script as loaded
 	const markLoaded = useCallback((id: string) => {
-		setLoadedScripts((prev) => new Set(prev).add(id))
-	}, [])
+		setLoadedScripts((prev) => new Set(prev).add(id));
+	}, []);
 
 	const value: ScriptManagerContextValue = {
 		queueScript,
 		dequeueScript,
 		isLoaded,
 		getBlockedScripts,
-	}
+	};
 
 	return (
 		<ScriptManagerContext.Provider value={value}>
 			{children}
 			{/* Render queue processors for each category */}
-			<QueueProcessor category="analytics" queue={queue} onLoad={markLoaded} onDequeue={dequeueScript} />
-			<QueueProcessor category="marketing" queue={queue} onLoad={markLoaded} onDequeue={dequeueScript} />
-			<QueueProcessor category="preferences" queue={queue} onLoad={markLoaded} onDequeue={dequeueScript} />
+			<QueueProcessor
+				category="analytics"
+				queue={queue}
+				onLoad={markLoaded}
+				onDequeue={dequeueScript}
+			/>
+			<QueueProcessor
+				category="marketing"
+				queue={queue}
+				onLoad={markLoaded}
+				onDequeue={dequeueScript}
+			/>
+			<QueueProcessor
+				category="preferences"
+				queue={queue}
+				onLoad={markLoaded}
+				onDequeue={dequeueScript}
+			/>
 		</ScriptManagerContext.Provider>
-	)
+	);
 }
 
 /**
  * Hook to access script manager
  */
 export function useScriptManager(): ScriptManagerContextValue | null {
-	return useContext(ScriptManagerContext)
+	return useContext(ScriptManagerContext);
 }
 
 // ============================================
@@ -169,39 +205,46 @@ export function useScriptManager(): ScriptManagerContextValue | null {
 // ============================================
 
 interface QueueProcessorProps {
-	category: ConsentCategory
-	queue: ScriptQueueItem[]
-	onLoad: (id: string) => void
-	onDequeue: (id: string) => void
+	category: ConsentCategory;
+	queue: ScriptQueueItem[];
+	onLoad: (id: string) => void;
+	onDequeue: (id: string) => void;
 }
 
-function QueueProcessor({ category, queue, onLoad, onDequeue }: QueueProcessorProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category })
-	const processedRef = useRef<Set<string>>(new Set())
+function QueueProcessor({
+	category,
+	queue,
+	onLoad,
+	onDequeue,
+}: QueueProcessorProps) {
+	const { hasConsent, isLoading } = useConsentGate({ category });
+	const processedRef = useRef<Set<string>>(new Set());
 
 	useEffect(() => {
-		if (isLoading || !hasConsent) return
+		if (isLoading || !hasConsent) return;
 
 		// Process all queued scripts for this category
-		const categoryScripts = queue.filter((s) => s.category === category && !processedRef.current.has(s.id))
+		const categoryScripts = queue.filter(
+			(s) => s.category === category && !processedRef.current.has(s.id),
+		);
 
 		for (const script of categoryScripts) {
-			processedRef.current.add(script.id)
+			processedRef.current.add(script.id);
 			loadScript(script)
 				.then(() => {
-					script.onLoad?.()
-					onLoad(script.id)
+					script.onLoad?.();
+					onLoad(script.id);
 				})
 				.catch((error) => {
-					script.onError?.(error)
+					script.onError?.(error);
 				})
 				.finally(() => {
-					onDequeue(script.id)
-				})
+					onDequeue(script.id);
+				});
 		}
-	}, [hasConsent, isLoading, queue, category, onLoad, onDequeue])
+	}, [hasConsent, isLoading, queue, category, onLoad, onDequeue]);
 
-	return null
+	return null;
 }
 
 // ============================================
@@ -215,82 +258,83 @@ async function loadScript(item: ScriptQueueItem): Promise<void> {
 	return new Promise((resolve, reject) => {
 		// Check if already loaded
 		if (item.src && document.querySelector(`script[src="${item.src}"]`)) {
-			resolve()
-			return
+			resolve();
+			return;
 		}
 
-		const script = document.createElement('script')
+		const script = document.createElement("script");
 
 		if (item.src) {
-			script.src = item.src
+			script.src = item.src;
 		} else if (item.content) {
-			script.textContent = item.content
+			script.textContent = item.content;
 		}
 
 		// Apply attributes
 		for (const [key, value] of Object.entries(item.attributes)) {
-			if (value === undefined) continue
-			if (typeof value === 'boolean') {
-				if (value) script.setAttribute(key, '')
+			if (value === undefined) continue;
+			if (typeof value === "boolean") {
+				if (value) script.setAttribute(key, "");
 			} else {
-				script.setAttribute(key, value)
+				script.setAttribute(key, value);
 			}
 		}
 
 		// Set id for tracking
 		if (item.id) {
-			script.id = item.id
+			script.id = item.id;
 		}
 
 		// Apply strategy
 		switch (item.strategy) {
-			case 'beforeInteractive':
+			case "beforeInteractive":
 				// Load immediately (blocking)
-				break
-			case 'afterInteractive':
-				script.async = true
-				break
-			case 'lazyOnload':
-				script.async = true
-				script.defer = true
-				break
-			case 'worker':
+				break;
+			case "afterInteractive":
+				script.async = true;
+				break;
+			case "lazyOnload":
+				script.async = true;
+				script.defer = true;
+				break;
+			case "worker":
 				// Web Worker strategy - not supported for external scripts
 				// Falls back to async
-				script.async = true
-				break
+				script.async = true;
+				break;
 		}
 
-		script.onload = () => resolve()
-		script.onerror = () => reject(new Error(`Failed to load script: ${item.src ?? 'inline'}`))
+		script.onload = () => resolve();
+		script.onerror = () =>
+			reject(new Error(`Failed to load script: ${item.src ?? "inline"}`));
 
 		// Inline scripts execute immediately
 		if (!item.src && item.content) {
-			document.head.appendChild(script)
-			resolve()
-			return
+			document.head.appendChild(script);
+			resolve();
+			return;
 		}
 
-		document.head.appendChild(script)
-	})
+		document.head.appendChild(script);
+	});
 }
 
 // ============================================
 // ConsentScript Component
 // ============================================
 
-let scriptIdCounter = 0
+let scriptIdCounter = 0;
 function generateScriptId(src?: string): string {
 	if (src) {
 		// Generate ID from URL
 		try {
-			const url = new URL(src)
-			return `consent-script-${url.hostname.replace(/\./g, '-')}-${scriptIdCounter++}`
+			const url = new URL(src);
+			return `consent-script-${url.hostname.replace(/\./g, "-")}-${scriptIdCounter++}`;
 		} catch {
-			return `consent-script-${scriptIdCounter++}`
+			return `consent-script-${scriptIdCounter++}`;
 		}
 	}
-	return `consent-script-inline-${scriptIdCounter++}`
+	return `consent-script-inline-${scriptIdCounter++}`;
 }
 
 /**
@@ -318,7 +362,7 @@ export function ConsentScript({
 	src,
 	children,
 	category,
-	strategy = 'afterInteractive',
+	strategy = "afterInteractive",
 	onLoad,
 	onError,
 	onBlock,
@@ -328,13 +372,13 @@ export function ConsentScript({
 	nonce,
 	...dataAttributes
 }: ConsentScriptProps) {
-	const scriptManager = useScriptManager()
+	const scriptManager = useScriptManager();
 	const { hasConsent, isLoading } = useConsentGate({
 		category,
 		onDeny: onBlock,
-	})
-	const scriptIdRef = useRef(providedId ?? generateScriptId(src))
-	const loadedRef = useRef(false)
+	});
+	const scriptIdRef = useRef(providedId ?? generateScriptId(src));
+	const loadedRef = useRef(false);
 
 	// Build attributes object
 	const attributes: Record<string, string | boolean | undefined> = {
@@ -342,14 +386,14 @@ export function ConsentScript({
 		defer,
 		nonce,
 		...dataAttributes,
-	}
+	};
 
 	useEffect(() => {
 		// Skip if already loaded
-		if (loadedRef.current) return
+		if (loadedRef.current) return;
 
 		// Skip during loading
-		if (isLoading) return
+		if (isLoading) return;
 
 		if (hasConsent) {
 			// Load immediately
@@ -362,16 +406,16 @@ export function ConsentScript({
 				attributes,
 				onLoad,
 				onError,
-			}
+			};
 
 			loadScript(item)
 				.then(() => {
-					loadedRef.current = true
-					onLoad?.()
+					loadedRef.current = true;
+					onLoad?.();
 				})
 				.catch((error) => {
-					onError?.(error)
-				})
+					onError?.(error);
+				});
 		} else if (scriptManager) {
 			// Queue for later
 			scriptManager.queueScript({
@@ -383,21 +427,32 @@ export function ConsentScript({
 				attributes,
 				onLoad,
 				onError,
-			})
+			});
 		}
-	}, [hasConsent, isLoading, src, children, category, strategy, scriptManager, onLoad, onError, attributes])
+	}, [
+		hasConsent,
+		isLoading,
+		src,
+		children,
+		category,
+		strategy,
+		scriptManager,
+		onLoad,
+		onError,
+		attributes,
+	]);
 
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
 			if (scriptManager) {
-				scriptManager.dequeueScript(scriptIdRef.current)
+				scriptManager.dequeueScript(scriptIdRef.current);
 			}
-		}
-	}, [scriptManager])
+		};
+	}, [scriptManager]);
 
 	// Don't render anything - script is loaded dynamically
-	return null
+	return null;
 }
 
 // ============================================
@@ -406,13 +461,13 @@ export function ConsentScript({
 
 export interface GoogleAnalyticsProps {
 	/** Google Analytics Measurement ID (G-XXXXXX) */
-	measurementId: string
+	measurementId: string;
 	/** Script loading strategy */
-	strategy?: ScriptStrategy
+	strategy?: ScriptStrategy;
 	/** Additional gtag config options */
-	config?: Record<string, unknown>
+	config?: Record<string, unknown>;
 	/** Called when GA loads */
-	onLoad?: () => void
+	onLoad?: () => void;
 }
 
 /**
@@ -429,47 +484,52 @@ export interface GoogleAnalyticsProps {
  * />
  * ```
  */
-export function GoogleAnalytics({ measurementId, strategy = 'afterInteractive', config, onLoad }: GoogleAnalyticsProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category: 'analytics' })
-	const loadedRef = useRef(false)
+export function GoogleAnalytics({
+	measurementId,
+	strategy = "afterInteractive",
+	config,
+	onLoad,
+}: GoogleAnalyticsProps) {
+	const { hasConsent, isLoading } = useConsentGate({ category: "analytics" });
+	const loadedRef = useRef(false);
 
 	useEffect(() => {
-		if (loadedRef.current || isLoading || !hasConsent) return
+		if (loadedRef.current || isLoading || !hasConsent) return;
 
 		// Load gtag.js
-		const script = document.createElement('script')
-		script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
-		script.async = true
+		const script = document.createElement("script");
+		script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+		script.async = true;
 
 		script.onload = () => {
 			// Initialize gtag
-			window.dataLayer = window.dataLayer || []
+			window.dataLayer = window.dataLayer || [];
 			function gtag(...args: unknown[]) {
-				window.dataLayer.push(args)
+				window.dataLayer.push(args);
 			}
-			window.gtag = gtag
-			gtag('js', new Date())
-			gtag('config', measurementId, config ?? {})
+			window.gtag = gtag;
+			gtag("js", new Date());
+			gtag("config", measurementId, config ?? {});
 
-			loadedRef.current = true
-			onLoad?.()
-		}
+			loadedRef.current = true;
+			onLoad?.();
+		};
 
-		document.head.appendChild(script)
-	}, [hasConsent, isLoading, measurementId, config, onLoad])
+		document.head.appendChild(script);
+	}, [hasConsent, isLoading, measurementId, config, onLoad]);
 
-	return null
+	return null;
 }
 
 export interface GoogleTagManagerProps {
 	/** GTM Container ID (GTM-XXXXXX) */
-	containerId: string
+	containerId: string;
 	/** Script loading strategy */
-	strategy?: ScriptStrategy
+	strategy?: ScriptStrategy;
 	/** Data layer name (default: dataLayer) */
-	dataLayerName?: string
+	dataLayerName?: string;
 	/** Called when GTM loads */
-	onLoad?: () => void
+	onLoad?: () => void;
 }
 
 /**
@@ -485,46 +545,47 @@ export interface GoogleTagManagerProps {
  */
 export function GoogleTagManager({
 	containerId,
-	strategy = 'afterInteractive',
-	dataLayerName = 'dataLayer',
+	strategy = "afterInteractive",
+	dataLayerName = "dataLayer",
 	onLoad,
 }: GoogleTagManagerProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category: 'analytics' })
-	const loadedRef = useRef(false)
+	const { hasConsent, isLoading } = useConsentGate({ category: "analytics" });
+	const loadedRef = useRef(false);
 
 	useEffect(() => {
-		if (loadedRef.current || isLoading || !hasConsent) return
+		if (loadedRef.current || isLoading || !hasConsent) return;
 
 		// Initialize dataLayer
-		window[dataLayerName as 'dataLayer'] = window[dataLayerName as 'dataLayer'] || []
-		window[dataLayerName as 'dataLayer'].push({
-			'gtm.start': new Date().getTime(),
-			event: 'gtm.js',
-		})
+		window[dataLayerName as "dataLayer"] =
+			window[dataLayerName as "dataLayer"] || [];
+		window[dataLayerName as "dataLayer"].push({
+			"gtm.start": new Date().getTime(),
+			event: "gtm.js",
+		});
 
 		// Load GTM script
-		const script = document.createElement('script')
-		script.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}${dataLayerName !== 'dataLayer' ? `&l=${dataLayerName}` : ''}`
-		script.async = true
+		const script = document.createElement("script");
+		script.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}${dataLayerName !== "dataLayer" ? `&l=${dataLayerName}` : ""}`;
+		script.async = true;
 
 		script.onload = () => {
-			loadedRef.current = true
-			onLoad?.()
-		}
+			loadedRef.current = true;
+			onLoad?.();
+		};
 
-		document.head.appendChild(script)
-	}, [hasConsent, isLoading, containerId, dataLayerName, onLoad])
+		document.head.appendChild(script);
+	}, [hasConsent, isLoading, containerId, dataLayerName, onLoad]);
 
-	return null
+	return null;
 }
 
 export interface FacebookPixelProps {
 	/** Facebook Pixel ID */
-	pixelId: string
+	pixelId: string;
 	/** Called when Pixel loads */
-	onLoad?: () => void
+	onLoad?: () => void;
 	/** Auto-track PageView on load */
-	autoPageView?: boolean
+	autoPageView?: boolean;
 }
 
 /**
@@ -537,54 +598,58 @@ export interface FacebookPixelProps {
  * <FacebookPixel pixelId="XXXXXX" autoPageView />
  * ```
  */
-export function FacebookPixel({ pixelId, onLoad, autoPageView = true }: FacebookPixelProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category: 'marketing' })
-	const loadedRef = useRef(false)
+export function FacebookPixel({
+	pixelId,
+	onLoad,
+	autoPageView = true,
+}: FacebookPixelProps) {
+	const { hasConsent, isLoading } = useConsentGate({ category: "marketing" });
+	const loadedRef = useRef(false);
 
 	useEffect(() => {
-		if (loadedRef.current || isLoading || !hasConsent) return
+		if (loadedRef.current || isLoading || !hasConsent) return;
 
 		// Initialize fbq
-		const n = (window.fbq = function (...args: unknown[]) {
+		const n = (window.fbq = ((...args: unknown[]) => {
 			if (n.callMethod) {
-				n.callMethod.apply(n, args)
+				n.callMethod.apply(n, args);
 			} else {
-				n.queue.push(args)
+				n.queue.push(args);
 			}
-		} as unknown as typeof window.fbq)
-		if (!window._fbq) window._fbq = n
-		n.push = n
-		n.loaded = true
-		n.version = '2.0'
-		n.queue = []
+		}) as unknown as typeof window.fbq);
+		if (!window._fbq) window._fbq = n;
+		n.push = n;
+		n.loaded = true;
+		n.version = "2.0";
+		n.queue = [];
 
 		// Load Facebook Pixel script
-		const script = document.createElement('script')
-		script.src = 'https://connect.facebook.net/en_US/fbevents.js'
-		script.async = true
+		const script = document.createElement("script");
+		script.src = "https://connect.facebook.net/en_US/fbevents.js";
+		script.async = true;
 
 		script.onload = () => {
-			window.fbq('init', pixelId)
+			window.fbq("init", pixelId);
 			if (autoPageView) {
-				window.fbq('track', 'PageView')
+				window.fbq("track", "PageView");
 			}
-			loadedRef.current = true
-			onLoad?.()
-		}
+			loadedRef.current = true;
+			onLoad?.();
+		};
 
-		document.head.appendChild(script)
-	}, [hasConsent, isLoading, pixelId, autoPageView, onLoad])
+		document.head.appendChild(script);
+	}, [hasConsent, isLoading, pixelId, autoPageView, onLoad]);
 
-	return null
+	return null;
 }
 
 export interface HotjarProps {
 	/** Hotjar Site ID */
-	siteId: number
+	siteId: number;
 	/** Hotjar Snippet Version (default: 6) */
-	version?: number
+	version?: number;
 	/** Called when Hotjar loads */
-	onLoad?: () => void
+	onLoad?: () => void;
 }
 
 /**
@@ -598,41 +663,41 @@ export interface HotjarProps {
  * ```
  */
 export function Hotjar({ siteId, version = 6, onLoad }: HotjarProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category: 'analytics' })
-	const loadedRef = useRef(false)
+	const { hasConsent, isLoading } = useConsentGate({ category: "analytics" });
+	const loadedRef = useRef(false);
 
 	useEffect(() => {
-		if (loadedRef.current || isLoading || !hasConsent) return
+		if (loadedRef.current || isLoading || !hasConsent) return;
 
 		// Initialize Hotjar
 		window.hj =
 			window.hj ||
-			function (...args: unknown[]) {
-				;(window.hj.q = window.hj.q || []).push(args)
-			}
-		window._hjSettings = { hjid: siteId, hjsv: version }
+			((...args: unknown[]) => {
+				(window.hj.q = window.hj.q || []).push(args);
+			});
+		window._hjSettings = { hjid: siteId, hjsv: version };
 
 		// Load Hotjar script
-		const script = document.createElement('script')
-		script.src = `https://static.hotjar.com/c/hotjar-${siteId}.js?sv=${version}`
-		script.async = true
+		const script = document.createElement("script");
+		script.src = `https://static.hotjar.com/c/hotjar-${siteId}.js?sv=${version}`;
+		script.async = true;
 
 		script.onload = () => {
-			loadedRef.current = true
-			onLoad?.()
-		}
+			loadedRef.current = true;
+			onLoad?.();
+		};
 
-		document.head.appendChild(script)
-	}, [hasConsent, isLoading, siteId, version, onLoad])
+		document.head.appendChild(script);
+	}, [hasConsent, isLoading, siteId, version, onLoad]);
 
-	return null
+	return null;
 }
 
 export interface IntercomProps {
 	/** Intercom App ID */
-	appId: string
+	appId: string;
 	/** Called when Intercom loads */
-	onLoad?: () => void
+	onLoad?: () => void;
 }
 
 /**
@@ -647,44 +712,44 @@ export interface IntercomProps {
  * ```
  */
 export function Intercom({ appId, onLoad }: IntercomProps) {
-	const { hasConsent, isLoading } = useConsentGate({ category: 'preferences' })
-	const loadedRef = useRef(false)
+	const { hasConsent, isLoading } = useConsentGate({ category: "preferences" });
+	const loadedRef = useRef(false);
 
 	useEffect(() => {
-		if (loadedRef.current || isLoading || !hasConsent) return
+		if (loadedRef.current || isLoading || !hasConsent) return;
 
 		// Initialize Intercom
-		window.intercomSettings = { app_id: appId }
+		window.intercomSettings = { app_id: appId };
 
-		const ic = window.Intercom
-		if (typeof ic === 'function') {
-			ic('reattach_activator')
-			ic('update', window.intercomSettings)
+		const ic = window.Intercom;
+		if (typeof ic === "function") {
+			ic("reattach_activator");
+			ic("update", window.intercomSettings);
 		} else {
-			const i = function (...args: unknown[]) {
-				i.c(args)
-			} as unknown as typeof window.Intercom
-			i.q = []
-			i.c = function (args: unknown[]) {
-				i.q.push(args)
-			}
-			window.Intercom = i
+			const i = ((...args: unknown[]) => {
+				i.c(args);
+			}) as unknown as typeof window.Intercom;
+			i.q = [];
+			i.c = (args: unknown[]) => {
+				i.q.push(args);
+			};
+			window.Intercom = i;
 		}
 
 		// Load Intercom script
-		const script = document.createElement('script')
-		script.src = `https://widget.intercom.io/widget/${appId}`
-		script.async = true
+		const script = document.createElement("script");
+		script.src = `https://widget.intercom.io/widget/${appId}`;
+		script.async = true;
 
 		script.onload = () => {
-			loadedRef.current = true
-			onLoad?.()
-		}
+			loadedRef.current = true;
+			onLoad?.();
+		};
 
-		document.head.appendChild(script)
-	}, [hasConsent, isLoading, appId, onLoad])
+		document.head.appendChild(script);
+	}, [hasConsent, isLoading, appId, onLoad]);
 
-	return null
+	return null;
 }
 
 // ============================================
@@ -704,44 +769,45 @@ export function Intercom({ appId, onLoad }: IntercomProps) {
  * - security_storage: Enables storage for security (always granted)
  */
 export type GoogleConsentType =
-	| 'ad_storage'
-	| 'ad_user_data'
-	| 'ad_personalization'
-	| 'analytics_storage'
-	| 'functionality_storage'
-	| 'personalization_storage'
-	| 'security_storage'
+	| "ad_storage"
+	| "ad_user_data"
+	| "ad_personalization"
+	| "analytics_storage"
+	| "functionality_storage"
+	| "personalization_storage"
+	| "security_storage";
 
-export type GoogleConsentState = 'granted' | 'denied'
+export type GoogleConsentState = "granted" | "denied";
 
 export interface GoogleConsentModeConfig {
 	/** Default consent states (before user interaction) */
-	defaults?: Partial<Record<GoogleConsentType, GoogleConsentState>>
+	defaults?: Partial<Record<GoogleConsentType, GoogleConsentState>>;
 	/** Wait for update timeout in ms (default: CONSENT_WAIT_FOR_UPDATE_MS) */
-	waitForUpdate?: number
+	waitForUpdate?: number;
 	/** Regions to apply defaults (e.g., ['EU', 'US-CA']) */
-	regions?: string[]
+	regions?: string[];
 	/** Enable URL passthrough for ad click info */
-	urlPassthrough?: boolean
+	urlPassthrough?: boolean;
 	/** Enable ads data redaction when consent denied */
-	adsDataRedaction?: boolean
+	adsDataRedaction?: boolean;
 }
 
 export interface GoogleConsentModeProps extends GoogleConsentModeConfig {
 	/** Called when consent mode is initialized */
-	onInit?: () => void
+	onInit?: () => void;
 }
 
 /**
  * Map our consent categories to Google Consent Mode types
  */
-const CONSENT_CATEGORY_TO_GOOGLE: Record<ConsentCategory, GoogleConsentType[]> = {
-	necessary: ['security_storage'],
-	functional: ['functionality_storage'],
-	preferences: ['personalization_storage'],
-	analytics: ['analytics_storage'],
-	marketing: ['ad_storage', 'ad_user_data', 'ad_personalization'],
-}
+const CONSENT_CATEGORY_TO_GOOGLE: Record<ConsentCategory, GoogleConsentType[]> =
+	{
+		necessary: ["security_storage"],
+		functional: ["functionality_storage"],
+		preferences: ["personalization_storage"],
+		analytics: ["analytics_storage"],
+		marketing: ["ad_storage", "ad_user_data", "ad_personalization"],
+	};
 
 /**
  * Google Consent Mode v2 Integration
@@ -778,13 +844,13 @@ const CONSENT_CATEGORY_TO_GOOGLE: Record<ConsentCategory, GoogleConsentType[]> =
  */
 export function GoogleConsentMode({
 	defaults = {
-		ad_storage: 'denied',
-		ad_user_data: 'denied',
-		ad_personalization: 'denied',
-		analytics_storage: 'denied',
-		functionality_storage: 'granted',
-		personalization_storage: 'denied',
-		security_storage: 'granted',
+		ad_storage: "denied",
+		ad_user_data: "denied",
+		ad_personalization: "denied",
+		analytics_storage: "denied",
+		functionality_storage: "granted",
+		personalization_storage: "denied",
+		security_storage: "granted",
 	},
 	waitForUpdate = CONSENT_WAIT_FOR_UPDATE_MS,
 	regions,
@@ -792,82 +858,98 @@ export function GoogleConsentMode({
 	adsDataRedaction = true,
 	onInit,
 }: GoogleConsentModeProps) {
-	const { hasConsent: checkConsent, isLoading } = useConsent()
-	const initializedRef = useRef(false)
-	const lastConsentRef = useRef<Record<string, boolean>>({})
+	const { hasConsent: checkConsent, isLoading } = useConsent();
+	const initializedRef = useRef(false);
+	const lastConsentRef = useRef<Record<string, boolean>>({});
 
 	// Initialize consent mode defaults
 	useEffect(() => {
-		if (initializedRef.current) return
+		if (initializedRef.current) return;
 
 		// Initialize dataLayer and gtag
-		window.dataLayer = window.dataLayer || []
+		window.dataLayer = window.dataLayer || [];
 		function gtag(...args: unknown[]) {
-			window.dataLayer.push(args)
+			window.dataLayer.push(args);
 		}
-		window.gtag = gtag
+		window.gtag = gtag;
 
 		// Set default consent state
-		const defaultConsent: Record<string, string> = {}
+		const defaultConsent: Record<string, string> = {};
 		for (const [type, state] of Object.entries(defaults)) {
-			defaultConsent[type] = state
+			defaultConsent[type] = state;
 		}
 
 		// Add regions if specified
 		if (regions?.length) {
-			gtag('consent', 'default', {
+			gtag("consent", "default", {
 				...defaultConsent,
 				regions,
 				wait_for_update: waitForUpdate,
-			})
+			});
 		} else {
-			gtag('consent', 'default', {
+			gtag("consent", "default", {
 				...defaultConsent,
 				wait_for_update: waitForUpdate,
-			})
+			});
 		}
 
 		// Configure additional settings
 		if (urlPassthrough) {
-			gtag('set', 'url_passthrough', true)
+			gtag("set", "url_passthrough", true);
 		}
 
 		if (adsDataRedaction) {
-			gtag('set', 'ads_data_redaction', true)
+			gtag("set", "ads_data_redaction", true);
 		}
 
-		initializedRef.current = true
-		onInit?.()
-	}, [defaults, waitForUpdate, regions, urlPassthrough, adsDataRedaction, onInit])
+		initializedRef.current = true;
+		onInit?.();
+	}, [
+		defaults,
+		waitForUpdate,
+		regions,
+		urlPassthrough,
+		adsDataRedaction,
+		onInit,
+	]);
 
 	// Update consent when user preferences change
 	useEffect(() => {
-		if (!initializedRef.current || isLoading) return
+		if (!initializedRef.current || isLoading) return;
 
 		// Build Google consent update from our categories
-		const consentUpdate: Record<string, GoogleConsentState> = {}
+		const consentUpdate: Record<string, GoogleConsentState> = {};
 
 		// Check each category and map to Google consent types
-		for (const category of ['necessary', 'functional', 'preferences', 'analytics', 'marketing'] as ConsentCategory[]) {
-			const hasCategory = checkConsent(category)
-			const googleTypes = CONSENT_CATEGORY_TO_GOOGLE[category]
+		for (const category of [
+			"necessary",
+			"functional",
+			"preferences",
+			"analytics",
+			"marketing",
+		] as ConsentCategory[]) {
+			const hasCategory = checkConsent(category);
+			const googleTypes = CONSENT_CATEGORY_TO_GOOGLE[category];
 
 			for (const googleType of googleTypes) {
-				consentUpdate[googleType] = hasCategory ? 'granted' : 'denied'
+				consentUpdate[googleType] = hasCategory ? "granted" : "denied";
 			}
 		}
 
 		// Only update if something changed
-		const consentKey = JSON.stringify(consentUpdate)
-		if (consentKey === JSON.stringify(lastConsentRef.current)) return
+		const consentKey = JSON.stringify(consentUpdate);
+		if (consentKey === JSON.stringify(lastConsentRef.current)) return;
 
-		lastConsentRef.current = consentUpdate as unknown as Record<string, boolean>
+		lastConsentRef.current = consentUpdate as unknown as Record<
+			string,
+			boolean
+		>;
 
 		// Send consent update to Google
-		window.gtag?.('consent', 'update', consentUpdate)
-	}, [checkConsent, isLoading])
+		window.gtag?.("consent", "update", consentUpdate);
+	}, [checkConsent, isLoading]);
 
-	return null
+	return null;
 }
 
 /**
@@ -887,47 +969,53 @@ export function GoogleConsentMode({
  * ```
  */
 export function useGoogleConsentMode() {
-	const updateConsent = useCallback((type: GoogleConsentType, state: GoogleConsentState) => {
-		if (typeof window === 'undefined' || !window.gtag) return
+	const updateConsent = useCallback(
+		(type: GoogleConsentType, state: GoogleConsentState) => {
+			if (typeof window === "undefined" || !window.gtag) return;
 
-		window.gtag('consent', 'update', {
-			[type]: state,
-		})
-	}, [])
+			window.gtag("consent", "update", {
+				[type]: state,
+			});
+		},
+		[],
+	);
 
-	const updateMultiple = useCallback((consents: Partial<Record<GoogleConsentType, GoogleConsentState>>) => {
-		if (typeof window === 'undefined' || !window.gtag) return
+	const updateMultiple = useCallback(
+		(consents: Partial<Record<GoogleConsentType, GoogleConsentState>>) => {
+			if (typeof window === "undefined" || !window.gtag) return;
 
-		window.gtag('consent', 'update', consents)
-	}, [])
+			window.gtag("consent", "update", consents);
+		},
+		[],
+	);
 
 	const revokeAll = useCallback(() => {
 		updateMultiple({
-			ad_storage: 'denied',
-			ad_user_data: 'denied',
-			ad_personalization: 'denied',
-			analytics_storage: 'denied',
-			personalization_storage: 'denied',
-		})
-	}, [updateMultiple])
+			ad_storage: "denied",
+			ad_user_data: "denied",
+			ad_personalization: "denied",
+			analytics_storage: "denied",
+			personalization_storage: "denied",
+		});
+	}, [updateMultiple]);
 
 	const grantAll = useCallback(() => {
 		updateMultiple({
-			ad_storage: 'granted',
-			ad_user_data: 'granted',
-			ad_personalization: 'granted',
-			analytics_storage: 'granted',
-			functionality_storage: 'granted',
-			personalization_storage: 'granted',
-		})
-	}, [updateMultiple])
+			ad_storage: "granted",
+			ad_user_data: "granted",
+			ad_personalization: "granted",
+			analytics_storage: "granted",
+			functionality_storage: "granted",
+			personalization_storage: "granted",
+		});
+	}, [updateMultiple]);
 
 	return {
 		updateConsent,
 		updateMultiple,
 		revokeAll,
 		grantAll,
-	}
+	};
 }
 
 // ============================================
@@ -937,33 +1025,33 @@ export function useGoogleConsentMode() {
 declare global {
 	interface Window {
 		// Google Analytics / Consent Mode
-		dataLayer: unknown[]
-		gtag: (...args: unknown[]) => void
+		dataLayer: unknown[];
+		gtag: (...args: unknown[]) => void;
 
 		// Facebook Pixel
 		fbq: {
-			(...args: unknown[]): void
-			callMethod?: (...args: unknown[]) => void
-			queue: unknown[][]
-			push: (...args: unknown[]) => void
-			loaded: boolean
-			version: string
-		}
-		_fbq: typeof window.fbq
+			(...args: unknown[]): void;
+			callMethod?: (...args: unknown[]) => void;
+			queue: unknown[][];
+			push: (...args: unknown[]) => void;
+			loaded: boolean;
+			version: string;
+		};
+		_fbq: typeof window.fbq;
 
 		// Hotjar
 		hj: {
-			(...args: unknown[]): void
-			q?: unknown[][]
-		}
-		_hjSettings: { hjid: number; hjsv: number }
+			(...args: unknown[]): void;
+			q?: unknown[][];
+		};
+		_hjSettings: { hjid: number; hjsv: number };
 
 		// Intercom
 		Intercom: {
-			(...args: unknown[]): void
-			q: unknown[][]
-			c: (args: unknown[]) => void
-		}
-		intercomSettings: { app_id: string; [key: string]: unknown }
+			(...args: unknown[]): void;
+			q: unknown[][];
+			c: (args: unknown[]) => void;
+		};
+		intercomSettings: { app_id: string; [key: string]: unknown };
 	}
 }

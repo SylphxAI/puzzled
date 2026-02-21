@@ -1,20 +1,22 @@
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { GameDashboard } from '@/features/admin/components/game-dashboard'
-import { getGameConfig } from '@/games/registry'
+import { GameDashboard } from "@/features/admin/components/game-dashboard";
+import { getGameConfig } from "@/games/registry";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
-type Params = Promise<{ slug: string }>
+type Params = Promise<{ slug: string }>;
 
-export default async function AdminGameDetailPage({ params }: { params: Params }) {
-	const { slug } = await params
+export default async function AdminGameDetailPage({
+	params,
+}: { params: Params }) {
+	const { slug } = await params;
 
 	// Validate game exists
-	const game = getGameConfig(slug)
+	const game = getGameConfig(slug);
 	if (!game) {
-		notFound()
+		notFound();
 	}
 
 	return (
@@ -31,5 +33,5 @@ export default async function AdminGameDetailPage({ params }: { params: Params }
 			{/* Game Dashboard */}
 			<GameDashboard slug={slug} />
 		</div>
-	)
+	);
 }

@@ -26,7 +26,7 @@
  * @module @sylphx/ui/badge
  */
 
-import { cn } from '../utils'
+import { cn } from "../utils";
 
 /**
  * Badge variant type for different visual styles.
@@ -37,7 +37,13 @@ import { cn } from '../utils'
  * - `error`: Red error/danger indicator
  * - `outline`: Bordered badge with transparent background
  */
-type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'error' | 'outline'
+type BadgeVariant =
+	| "default"
+	| "secondary"
+	| "success"
+	| "warning"
+	| "error"
+	| "outline";
 
 /**
  * Badge size type.
@@ -45,36 +51,36 @@ type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'error' | 
  * - `md`: Default size
  * - `lg`: Larger badge
  */
-type BadgeSize = 'sm' | 'md' | 'lg'
+type BadgeSize = "sm" | "md" | "lg";
 
 /**
  * Props for the Badge component.
  */
 type BadgeProps = {
 	/** Visual variant of the badge */
-	variant?: BadgeVariant
+	variant?: BadgeVariant;
 	/** Size of the badge */
-	size?: BadgeSize
+	size?: BadgeSize;
 	/** Badge content */
-	children: React.ReactNode
+	children: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
-}
+	className?: string;
+};
 
 const variantStyles: Record<BadgeVariant, string> = {
-	default: 'bg-primary text-primary-foreground',
-	secondary: 'bg-muted text-muted-foreground',
-	success: 'bg-success/10 text-success',
-	warning: 'bg-warning/10 text-warning',
-	error: 'bg-error/10 text-error',
-	outline: 'border bg-transparent text-foreground',
-}
+	default: "bg-primary text-primary-foreground",
+	secondary: "bg-muted text-muted-foreground",
+	success: "bg-success/10 text-success",
+	warning: "bg-warning/10 text-warning",
+	error: "bg-error/10 text-error",
+	outline: "border bg-transparent text-foreground",
+};
 
 const sizeStyles: Record<BadgeSize, string> = {
-	sm: 'px-1.5 py-0.5 text-xs',
-	md: 'px-2 py-0.5 text-xs',
-	lg: 'px-2.5 py-1 text-sm',
-}
+	sm: "px-1.5 py-0.5 text-xs",
+	md: "px-2 py-0.5 text-xs",
+	lg: "px-2.5 py-1 text-sm",
+};
 
 /**
  * Badge component for displaying status, categories, or labels.
@@ -98,11 +104,16 @@ const sizeStyles: Record<BadgeSize, string> = {
  * </Badge>
  * ```
  */
-export function Badge({ variant = 'default', size = 'md', children, className }: BadgeProps) {
+export function Badge({
+	variant = "default",
+	size = "md",
+	children,
+	className,
+}: BadgeProps) {
 	return (
 		<span
 			className={cn(
-				'inline-flex items-center gap-1 rounded-full font-medium',
+				"inline-flex items-center gap-1 rounded-full font-medium",
 				variantStyles[variant],
 				sizeStyles[size],
 				className,
@@ -110,7 +121,7 @@ export function Badge({ variant = 'default', size = 'md', children, className }:
 		>
 			{children}
 		</span>
-	)
+	);
 }
 
 /**
@@ -118,12 +129,12 @@ export function Badge({ variant = 'default', size = 'md', children, className }:
  */
 type StatusDotProps = {
 	/** Status type that determines the color */
-	status: 'online' | 'offline' | 'away' | 'busy'
+	status: "online" | "offline" | "away" | "busy";
 	/** Whether to show pulse animation for online/busy status */
-	pulse?: boolean
+	pulse?: boolean;
 	/** Additional CSS classes */
-	className?: string
-}
+	className?: string;
+};
 
 /**
  * Small colored dot for indicating status.
@@ -147,29 +158,33 @@ type StatusDotProps = {
  * <StatusDot status="online" pulse />
  * ```
  */
-export function StatusDot({ status, pulse = false, className }: StatusDotProps) {
+export function StatusDot({
+	status,
+	pulse = false,
+	className,
+}: StatusDotProps) {
 	const statusColors = {
-		online: 'bg-success text-success/40',
-		offline: 'bg-muted-foreground text-muted-foreground/40',
-		away: 'bg-warning text-warning/40',
-		busy: 'bg-error text-error/40',
-	}
+		online: "bg-success text-success/40",
+		offline: "bg-muted-foreground text-muted-foreground/40",
+		away: "bg-warning text-warning/40",
+		busy: "bg-error text-error/40",
+	};
 
 	// Only pulse for online and busy statuses by default
-	const shouldPulse = pulse && (status === 'online' || status === 'busy')
+	const shouldPulse = pulse && (status === "online" || status === "busy");
 
 	return (
 		<span
 			className={cn(
-				'relative inline-block h-2 w-2 rounded-full',
+				"relative inline-block h-2 w-2 rounded-full",
 				statusColors[status],
-				shouldPulse && 'animate-status-pulse motion-reduce:after:hidden',
+				shouldPulse && "animate-status-pulse motion-reduce:after:hidden",
 				className,
 			)}
 			role="img"
 			aria-label={status}
 		/>
-	)
+	);
 }
 
 /**
@@ -177,12 +192,12 @@ export function StatusDot({ status, pulse = false, className }: StatusDotProps) 
  */
 type CountBadgeProps = {
 	/** Number to display */
-	count: number
+	count: number;
 	/** Maximum number before showing "99+" (default: 99) */
-	max?: number
+	max?: number;
 	/** Additional CSS classes */
-	className?: string
-}
+	className?: string;
+};
 
 /**
  * Notification count badge.
@@ -202,18 +217,18 @@ type CountBadgeProps = {
  * ```
  */
 export function CountBadge({ count, max = 99, className }: CountBadgeProps) {
-	if (count === 0) return null
+	if (count === 0) return null;
 
-	const displayCount = count > max ? `${max}+` : count
+	const displayCount = count > max ? `${max}+` : count;
 
 	return (
 		<span
 			className={cn(
-				'inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1.5 text-xs font-bold text-error-foreground',
+				"inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1.5 text-xs font-bold text-error-foreground",
 				className,
 			)}
 		>
 			{displayCount}
 		</span>
-	)
+	);
 }

@@ -5,19 +5,22 @@
  * All paths are verified to have exactly one-letter changes.
  */
 
-import { generateWordLadderPuzzle, getPuzzleCount as getGenPuzzleCount } from './generator'
-import type { WordLadderPuzzleData, WordLadderSolution } from './types'
+import {
+	generateWordLadderPuzzle,
+	getPuzzleCount as getGenPuzzleCount,
+} from "./generator";
+import type { WordLadderPuzzleData, WordLadderSolution } from "./types";
 
-export { getWordList } from './dictionary'
+export { getWordList } from "./dictionary";
 
 /**
  * Get a puzzle based on seed - uses validated puzzle pool
  */
 export function getPuzzleFromSeed(seed: number): {
-	puzzleData: WordLadderPuzzleData
-	solution: WordLadderSolution
+	puzzleData: WordLadderPuzzleData;
+	solution: WordLadderSolution;
 } {
-	const puzzle = generateWordLadderPuzzle(seed)
+	const puzzle = generateWordLadderPuzzle(seed);
 
 	return {
 		puzzleData: {
@@ -29,12 +32,12 @@ export function getPuzzleFromSeed(seed: number): {
 		solution: {
 			path: puzzle.path,
 		},
-	}
+	};
 }
 
 /**
  * Get count of available puzzles
  */
 function _getPuzzleCount(): number {
-	return getGenPuzzleCount()
+	return getGenPuzzleCount();
 }

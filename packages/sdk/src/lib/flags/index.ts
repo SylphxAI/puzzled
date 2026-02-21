@@ -36,33 +36,39 @@
  */
 
 // Evaluator
-export { LocalEvaluator, getEvaluator, initFeatureFlags, resetEvaluator } from './evaluator'
+export {
+	LocalEvaluator,
+	getEvaluator,
+	initFeatureFlags,
+	resetEvaluator,
+} from "./evaluator";
 
 // Streaming
-export { FlagStream, createFlagStream, fetchFlags, pollFlags } from './streaming'
+export {
+	FlagStream,
+	createFlagStream,
+	fetchFlags,
+	pollFlags,
+} from "./streaming";
 
 // Experiments
 export {
 	ExperimentManager,
 	getExperimentManager,
-	
 	createExperiment,
 	calculateSampleSize,
 	calculateExperimentDuration,
-} from './experiments'
+} from "./experiments";
 
 // Targeting
-
 
 // Hashing
 export {
 	murmurHash3,
 	getBucket,
-	
 	getUserBucket,
 	selectVariant,
-	
-} from './hash'
+} from "./hash";
 
 // Types
 export type {
@@ -77,20 +83,15 @@ export type {
 	EvaluationContext,
 	EvaluationResult,
 	EvaluationReason,
-	
 	// Experiments
 	Experiment,
 	ExperimentExposure,
 	// Streaming
-	
-	
-	
-	
-	
+
 	// Configuration
 	FeatureFlagsConfig,
 	// Events
 	FlagClientEvent,
-} from './types'
+} from "./types";
 
-export { DEFAULT_FLAGS_CONFIG } from './types'
+export { DEFAULT_FLAGS_CONFIG } from "./types";

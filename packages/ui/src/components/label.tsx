@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { Field as BaseField } from '@base-ui/react/field'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Field as BaseField } from "@base-ui/react/field";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // Label
@@ -10,9 +10,9 @@ import { cn } from '../utils'
 
 interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const Label = forwardRef<HTMLLabelElement, LabelProps>(
@@ -20,7 +20,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(
 		<BaseField.Label
 			ref={ref}
 			className={cn(
-				'text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
+				"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
 				className,
 			)}
 			{...props}
@@ -28,9 +28,9 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(
 			{children}
 		</BaseField.Label>
 	),
-)
-Label.displayName = 'Label'
+);
+Label.displayName = "Label";
 
-export { Label }
+export { Label };
 
-export type { LabelProps }
+export type { LabelProps };

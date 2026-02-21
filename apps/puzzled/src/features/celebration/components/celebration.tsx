@@ -1,21 +1,21 @@
-'use client'
+"use client";
 
-import { Icon } from '@sylphx/ui'
-import { useEffect, useState } from 'react'
+import { Icon } from "@sylphx/ui";
+import { useEffect, useState } from "react";
 
 type CelebrationProps = {
-	show: boolean
-	onComplete?: () => void
-}
+	show: boolean;
+	onComplete?: () => void;
+};
 
 // Simple, performant celebration animation
 export function Celebration({ show, onComplete }: CelebrationProps) {
-	const [particles, setParticles] = useState<Particle[]>([])
-	const [isAnimating, setIsAnimating] = useState(false)
+	const [particles, setParticles] = useState<Particle[]>([]);
+	const [isAnimating, setIsAnimating] = useState(false);
 
 	useEffect(() => {
 		if (show && !isAnimating) {
-			setIsAnimating(true)
+			setIsAnimating(true);
 			// Generate particles
 			const newParticles: Particle[] = Array.from({ length: 50 }, (_, i) => ({
 				id: i,
@@ -24,21 +24,21 @@ export function Celebration({ show, onComplete }: CelebrationProps) {
 				duration: 1 + Math.random() * 1,
 				color: COLORS[Math.floor(Math.random() * COLORS.length)],
 				size: 6 + Math.random() * 8,
-			}))
-			setParticles(newParticles)
+			}));
+			setParticles(newParticles);
 
 			// Clear after animation
 			const timeout = setTimeout(() => {
-				setParticles([])
-				setIsAnimating(false)
-				onComplete?.()
-			}, 2500)
+				setParticles([]);
+				setIsAnimating(false);
+				onComplete?.();
+			}, 2500);
 
-			return () => clearTimeout(timeout)
+			return () => clearTimeout(timeout);
 		}
-	}, [show, isAnimating, onComplete])
+	}, [show, isAnimating, onComplete]);
 
-	if (particles.length === 0) return null
+	if (particles.length === 0) return null;
 
 	return (
 		<div className="pointer-events-none fixed inset-0 z-toast overflow-hidden">
@@ -73,22 +73,22 @@ export function Celebration({ show, onComplete }: CelebrationProps) {
 				}
 			`}</style>
 		</div>
-	)
+	);
 }
 
 // Star burst for perfect games
 export function StarBurst({ show }: { show: boolean }) {
-	const [visible, setVisible] = useState(false)
+	const [visible, setVisible] = useState(false);
 
 	useEffect(() => {
 		if (show) {
-			setVisible(true)
-			const timeout = setTimeout(() => setVisible(false), 1000)
-			return () => clearTimeout(timeout)
+			setVisible(true);
+			const timeout = setTimeout(() => setVisible(false), 1000);
+			return () => clearTimeout(timeout);
 		}
-	}, [show])
+	}, [show]);
 
-	if (!visible) return null
+	if (!visible) return null;
 
 	return (
 		<div className="pointer-events-none fixed inset-0 z-toast flex items-center justify-center">
@@ -99,8 +99,8 @@ export function StarBurst({ show }: { show: boolean }) {
 					style={
 						{
 							animationDelay: `${i * 0.05}s`,
-							'--tx': `${pos.x}px`,
-							'--ty': `${pos.y}px`,
+							"--tx": `${pos.x}px`,
+							"--ty": `${pos.y}px`,
 						} as React.CSSProperties
 					}
 				>
@@ -127,29 +127,34 @@ export function StarBurst({ show }: { show: boolean }) {
 				}
 			`}</style>
 		</div>
-	)
+	);
 }
 
 type Particle = {
-	id: number
-	x: number
-	delay: number
-	duration: number
-	color: string
-	size: number
-}
+	id: number;
+	x: number;
+	delay: number;
+	duration: number;
+	color: string;
+	size: number;
+};
 
 const COLORS = [
-	'var(--celebration-green)',
-	'var(--celebration-yellow)',
-	'var(--celebration-blue)',
-	'var(--celebration-pink)',
-	'var(--celebration-orange)',
-	'var(--celebration-purple)',
-]
+	"var(--celebration-green)",
+	"var(--celebration-yellow)",
+	"var(--celebration-blue)",
+	"var(--celebration-pink)",
+	"var(--celebration-orange)",
+	"var(--celebration-purple)",
+];
 
 // Iconify star icons for celebration
-const STAR_ICONS = ['mdi:star', 'mdi:star-four-points', 'mdi:star-shooting', 'mdi:sparkles']
+const STAR_ICONS = [
+	"mdi:star",
+	"mdi:star-four-points",
+	"mdi:star-shooting",
+	"mdi:sparkles",
+];
 
 const STAR_POSITIONS = [
 	{ x: -100, y: -80 },
@@ -160,4 +165,4 @@ const STAR_POSITIONS = [
 	{ x: 100, y: 80 },
 	{ x: 0, y: -100 },
 	{ x: 0, y: 100 },
-]
+];

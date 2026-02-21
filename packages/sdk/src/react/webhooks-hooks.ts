@@ -13,19 +13,27 @@
  * - Infinite query for paginated deliveries
  */
 
-'use client'
+"use client";
 
-import { useCallback } from 'react'
-import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useWebhooksContext } from './services-context'
+import {
+	useInfiniteQuery,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
+import { useCallback } from "react";
+import {
+	STALE_TIME_MODERATE_MS,
+	STALE_TIME_STABLE_MS,
+	STALE_TIME_STATS_MS,
+} from "../constants";
 import type {
-	WebhookEnvironment,
 	WebhookDelivery,
 	WebhookDeliveryStatus,
+	WebhookEnvironment,
 	WebhookStats,
 	WebhookStatsPeriod,
-} from '../types'
-import { STALE_TIME_STABLE_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STATS_MS } from '../constants'
+} from "../types";
+import { useWebhooksContext } from "./services-context";
 
 // ============================================
 // useWebhooks
@@ -33,26 +41,26 @@ import { STALE_TIME_STABLE_MS, STALE_TIME_MODERATE_MS, STALE_TIME_STATS_MS } fro
 
 export interface UseWebhooksReturn {
 	/** Webhook configuration by environment */
-	environments: WebhookEnvironment[]
+	environments: WebhookEnvironment[];
 	/** Supported event types */
-	supportedEvents: string[]
+	supportedEvents: string[];
 	/** Whether config is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Update webhook config for an environment */
 	updateConfig: (options: {
-		environmentId: string
-		webhookUrl: string | null
-		regenerateSecret?: boolean
+		environmentId: string;
+		webhookUrl: string | null;
+		regenerateSecret?: boolean;
 	}) => Promise<{
-		success: boolean
-		webhookUrl: string | null
-		secretGenerated: boolean
-		webhookSecret?: string
-	}>
+		success: boolean;
+		webhookUrl: string | null;
+		secretGenerated: boolean;
+		webhookSecret?: string;
+	}>;
 	/** Refresh the configuration */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -96,41 +104,41 @@ export interface UseWebhooksReturn {
  * ```
  */
 export function useWebhooks(): UseWebhooksReturn {
-	const ctx = useWebhooksContext()
-	const queryClient = useQueryClient()
+	const ctx = useWebhooksContext();
+	const queryClient = useQueryClient();
 
 	// React Query for webhook config
 	const configQuery = useQuery({
-		queryKey: ['sylphx', 'webhooks', 'config'],
+		queryKey: ["sylphx", "webhooks", "config"],
 		queryFn: () => ctx.getConfig(),
 		staleTime: STALE_TIME_STABLE_MS, // 5 min - config rarely changes
-	})
+	});
 
-	const config = configQuery.data
+	const config = configQuery.data;
 
 	// Update config
 	const updateConfig = useCallback(
 		async (options: {
-			environmentId: string
-			webhookUrl: string | null
-			regenerateSecret?: boolean
+			environmentId: string;
+			webhookUrl: string | null;
+			regenerateSecret?: boolean;
 		}) => {
-			const result = await ctx.updateConfig(options)
+			const result = await ctx.updateConfig(options);
 			// Invalidate to get updated state
 			await queryClient.invalidateQueries({
-				queryKey: ['sylphx', 'webhooks', 'config'],
-			})
-			return result
+				queryKey: ["sylphx", "webhooks", "config"],
+			});
+			return result;
 		},
-		[ctx, queryClient]
-	)
+		[ctx, queryClient],
+	);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'webhooks', 'config'],
-		})
-	}, [queryClient])
+			queryKey: ["sylphx", "webhooks", "config"],
+		});
+	}, [queryClient]);
 
 	return {
 		environments: config?.environments ?? [],
@@ -139,7 +147,7 @@ export function useWebhooks(): UseWebhooksReturn {
 		error: configQuery.error as Error | null,
 		updateConfig,
 		refresh,
-	}
+	};
 }
 
 // ============================================
@@ -148,36 +156,38 @@ export function useWebhooks(): UseWebhooksReturn {
 
 export interface UseWebhookDeliveriesOptions {
 	/** Filter by status */
-	status?: WebhookDeliveryStatus
+	status?: WebhookDeliveryStatus;
 	/** Filter by event type */
-	event?: string
+	event?: string;
 	/** Number of deliveries to fetch per page */
-	limit?: number
+	limit?: number;
 	/** Whether to skip initial fetch */
-	skip?: boolean
+	skip?: boolean;
 	/** Refetch interval in ms (uses React Query's refetchInterval) */
-	refetchInterval?: number
+	refetchInterval?: number;
 }
 
 export interface UseWebhookDeliveriesReturn {
 	/** Webhook deliveries (all loaded pages) */
-	deliveries: WebhookDelivery[]
+	deliveries: WebhookDelivery[];
 	/** Total count of matching deliveries */
-	total: number
+	total: number;
 	/** Whether deliveries are loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Whether fetching next page */
-	isFetchingNextPage: boolean
+	isFetchingNextPage: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Replay a delivery */
-	replay: (deliveryId: string) => Promise<{ success: boolean; newDeliveryId?: string }>
+	replay: (
+		deliveryId: string,
+	) => Promise<{ success: boolean; newDeliveryId?: string }>;
 	/** Refresh deliveries */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 	/** Load more deliveries */
-	loadMore: () => Promise<void>
+	loadMore: () => Promise<void>;
 	/** Whether there are more deliveries to load */
-	hasMore: boolean
+	hasMore: boolean;
 }
 
 /**
@@ -228,61 +238,67 @@ export interface UseWebhookDeliveriesReturn {
  * ```
  */
 export function useWebhookDeliveries(
-	options: UseWebhookDeliveriesOptions = {}
+	options: UseWebhookDeliveriesOptions = {},
 ): UseWebhookDeliveriesReturn {
-	const { status, event, limit = 50, skip = false, refetchInterval } = options
-	const ctx = useWebhooksContext()
-	const queryClient = useQueryClient()
+	const { status, event, limit = 50, skip = false, refetchInterval } = options;
+	const ctx = useWebhooksContext();
+	const queryClient = useQueryClient();
 
 	// React Query infinite query for paginated deliveries
 	const deliveriesQuery = useInfiniteQuery({
-		queryKey: ['sylphx', 'webhooks', 'deliveries', { status, event, limit }],
+		queryKey: ["sylphx", "webhooks", "deliveries", { status, event, limit }],
 		queryFn: async ({ pageParam = 0 }) => {
-			return ctx.getDeliveries({ status, event, limit, offset: pageParam })
+			return ctx.getDeliveries({ status, event, limit, offset: pageParam });
 		},
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => {
-			const loadedCount = allPages.reduce((sum, page) => sum + page.deliveries.length, 0)
+			const loadedCount = allPages.reduce(
+				(sum, page) => sum + page.deliveries.length,
+				0,
+			);
 			if (loadedCount >= lastPage.total) {
-				return undefined // No more pages
+				return undefined; // No more pages
 			}
-			return loadedCount // Next offset
+			return loadedCount; // Next offset
 		},
 		enabled: !skip,
 		staleTime: STALE_TIME_STATS_MS, // 30 sec - deliveries change moderately
 		refetchInterval: refetchInterval ?? false,
-	})
+	});
 
 	// Flatten all pages into single deliveries array
-	const deliveries = deliveriesQuery.data?.pages.flatMap((page) => page.deliveries) ?? []
-	const total = deliveriesQuery.data?.pages[0]?.total ?? 0
+	const deliveries =
+		deliveriesQuery.data?.pages.flatMap((page) => page.deliveries) ?? [];
+	const total = deliveriesQuery.data?.pages[0]?.total ?? 0;
 
 	// Replay delivery
 	const replay = useCallback(
-		async (deliveryId: string): Promise<{ success: boolean; newDeliveryId?: string }> => {
-			const result = await ctx.replayDelivery(deliveryId)
+		async (
+			deliveryId: string,
+		): Promise<{ success: boolean; newDeliveryId?: string }> => {
+			const result = await ctx.replayDelivery(deliveryId);
 			// Invalidate to get updated status
 			await queryClient.invalidateQueries({
-				queryKey: ['sylphx', 'webhooks', 'deliveries'],
-			})
-			return result
+				queryKey: ["sylphx", "webhooks", "deliveries"],
+			});
+			return result;
 		},
-		[ctx, queryClient]
-	)
+		[ctx, queryClient],
+	);
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'webhooks', 'deliveries'],
-		})
-	}, [queryClient])
+			queryKey: ["sylphx", "webhooks", "deliveries"],
+		});
+	}, [queryClient]);
 
 	// Load more via fetchNextPage
 	const loadMore = useCallback(async () => {
 		if (deliveriesQuery.hasNextPage && !deliveriesQuery.isFetchingNextPage) {
-			await deliveriesQuery.fetchNextPage()
+			await deliveriesQuery.fetchNextPage();
 		}
-	}, [deliveriesQuery])
+	}, [deliveriesQuery]);
 
 	return {
 		deliveries,
@@ -294,7 +310,7 @@ export function useWebhookDeliveries(
 		refresh,
 		loadMore,
 		hasMore: deliveriesQuery.hasNextPage ?? false,
-	}
+	};
 }
 
 // ============================================
@@ -303,13 +319,13 @@ export function useWebhookDeliveries(
 
 export interface UseWebhookStatsReturn {
 	/** Webhook statistics */
-	stats: WebhookStats | null
+	stats: WebhookStats | null;
 	/** Whether stats are loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Last error */
-	error: Error | null
+	error: Error | null;
 	/** Refresh stats */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -332,28 +348,30 @@ export interface UseWebhookStatsReturn {
  * }
  * ```
  */
-export function useWebhookStats(period: WebhookStatsPeriod = 'week'): UseWebhookStatsReturn {
-	const ctx = useWebhooksContext()
-	const queryClient = useQueryClient()
+export function useWebhookStats(
+	period: WebhookStatsPeriod = "week",
+): UseWebhookStatsReturn {
+	const ctx = useWebhooksContext();
+	const queryClient = useQueryClient();
 
 	// React Query for webhook stats
 	const statsQuery = useQuery({
-		queryKey: ['sylphx', 'webhooks', 'stats', period],
+		queryKey: ["sylphx", "webhooks", "stats", period],
 		queryFn: () => ctx.getStats(period),
 		staleTime: STALE_TIME_MODERATE_MS, // 2 min - stats aggregate data
-	})
+	});
 
 	// Refresh via React Query invalidation
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'webhooks', 'stats', period],
-		})
-	}, [queryClient, period])
+			queryKey: ["sylphx", "webhooks", "stats", period],
+		});
+	}, [queryClient, period]);
 
 	return {
 		stats: statsQuery.data ?? null,
 		isLoading: statsQuery.isLoading,
 		error: statsQuery.error as Error | null,
 		refresh,
-	}
+	};
 }

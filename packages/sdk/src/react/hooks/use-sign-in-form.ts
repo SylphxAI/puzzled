@@ -27,122 +27,135 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useContext } from 'react'
-import type { OAuthProvider } from '@sylphx/ui'
-import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
-import { safeRedirect } from '../security-utils'
+import type { OAuthProvider } from "@sylphx/ui";
+import { useCallback, useContext, useState } from "react";
+import { safeRedirect } from "../security-utils";
+import { SdkAuthContext, type SdkAuthContextValue } from "../services-context";
 
 // Re-export for convenience
-export type { OAuthProvider } from '@sylphx/ui'
+export type { OAuthProvider } from "@sylphx/ui";
 
 // ============================================
 // Types
 // ============================================
 
-export type SignInMethod = 'password' | 'magic-link' | 'otp'
+export type SignInMethod = "password" | "magic-link" | "otp";
 
 export interface SignInFormState {
-	email: string
-	password: string
-	otp: string
+	email: string;
+	password: string;
+	otp: string;
 }
 
-export type SignInStep = 'email' | 'password' | 'otp' | 'otp-verify' | 'magic-link-sent'
+export type SignInStep =
+	| "email"
+	| "password"
+	| "otp"
+	| "otp-verify"
+	| "magic-link-sent";
 
 export interface PreSubmitResult {
-	success: boolean
-	error?: string
-	lockoutUntil?: string
+	success: boolean;
+	error?: string;
+	lockoutUntil?: string;
 }
 
 export interface UseSignInFormOptions {
 	/** Auth methods to enable */
-	methods?: SignInMethod[]
+	methods?: SignInMethod[];
 	/** OAuth providers to show */
-	providers?: OAuthProvider[]
+	providers?: OAuthProvider[];
 	/** URL to redirect after sign in */
-	afterSignInUrl?: string
+	afterSignInUrl?: string;
 	/**
 	 * Called before submit to validate/check lockout.
 	 * Return { success: false, error: '...' } to block submit.
 	 */
-	onBeforeSubmit?: (credentials: { email: string; password: string }) => Promise<PreSubmitResult>
+	onBeforeSubmit?: (credentials: {
+		email: string;
+		password: string;
+	}) => Promise<PreSubmitResult>;
 	/**
 	 * Called on submit error (e.g., to record failure).
 	 */
-	onSubmitError?: (email: string, error: string) => Promise<void>
+	onSubmitError?: (email: string, error: string) => Promise<void>;
 	/**
 	 * Custom submit handler. If provided, replaces context-based auth.
 	 * Throw error to indicate failure.
 	 */
-	submitHandler?: (credentials: { email: string; password: string }) => Promise<void>
+	submitHandler?: (credentials: {
+		email: string;
+		password: string;
+	}) => Promise<void>;
 	/**
 	 * Custom OAuth handler. If provided, replaces default redirect.
 	 */
-	oauthHandler?: (provider: OAuthProvider) => Promise<void>
+	oauthHandler?: (provider: OAuthProvider) => Promise<void>;
 	/**
 	 * Custom magic link handler.
 	 */
-	magicLinkHandler?: (email: string) => Promise<void>
+	magicLinkHandler?: (email: string) => Promise<void>;
 	/**
 	 * Custom OTP request handler.
 	 */
-	otpRequestHandler?: (email: string) => Promise<void>
+	otpRequestHandler?: (email: string) => Promise<void>;
 	/**
 	 * Custom OTP verify handler.
 	 */
-	otpVerifyHandler?: (email: string, code: string) => Promise<void>
+	otpVerifyHandler?: (email: string, code: string) => Promise<void>;
 	/** Callback on successful sign in */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Callback on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 }
 
 export interface UseSignInFormReturn {
 	// Form state
-	form: SignInFormState
-	setEmail: (email: string) => void
-	setPassword: (password: string) => void
-	setOtp: (otp: string) => void
-	resetForm: () => void
+	form: SignInFormState;
+	setEmail: (email: string) => void;
+	setPassword: (password: string) => void;
+	setOtp: (otp: string) => void;
+	resetForm: () => void;
 
 	// UI state
-	step: SignInStep
-	setStep: (step: SignInStep) => void
-	isLoading: boolean
-	loadingProvider: OAuthProvider | null
-	error: string | null
-	lockoutUntil: string | null
-	clearError: () => void
+	step: SignInStep;
+	setStep: (step: SignInStep) => void;
+	isLoading: boolean;
+	loadingProvider: OAuthProvider | null;
+	error: string | null;
+	lockoutUntil: string | null;
+	clearError: () => void;
 
 	// 2FA state
-	pendingTwoFactor: { userId: string; email: string } | null
+	pendingTwoFactor: { userId: string; email: string } | null;
 
 	// Handlers
-	handlePasswordSubmit: (e?: React.FormEvent) => Promise<void>
-	handleOAuthSignIn: (provider: OAuthProvider) => void
-	handleMagicLinkRequest: (e?: React.FormEvent) => Promise<void>
-	handleOtpRequest: () => Promise<void>
-	handleOtpVerify: (e?: React.FormEvent) => Promise<void>
-	handleTwoFactorVerify: (e?: React.FormEvent) => Promise<void>
+	handlePasswordSubmit: (e?: React.FormEvent) => Promise<void>;
+	handleOAuthSignIn: (provider: OAuthProvider) => void;
+	handleMagicLinkRequest: (e?: React.FormEvent) => Promise<void>;
+	handleOtpRequest: () => Promise<void>;
+	handleOtpVerify: (e?: React.FormEvent) => Promise<void>;
+	handleTwoFactorVerify: (e?: React.FormEvent) => Promise<void>;
 
 	// Config (for UI)
-	methods: SignInMethod[]
-	providers: OAuthProvider[]
-	afterSignInUrl: string
+	methods: SignInMethod[];
+	providers: OAuthProvider[];
+	afterSignInUrl: string;
 }
 
 // ============================================
 // Hook Implementation
 // ============================================
 
-export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInFormReturn {
+export function useSignInForm(
+	options: UseSignInFormOptions = {},
+): UseSignInFormReturn {
 	const {
-		methods = ['password'],
+		methods = ["password"],
 		providers = [],
-		afterSignInUrl = '/dashboard',
+		afterSignInUrl = "/dashboard",
 		onBeforeSubmit,
 		onSubmitError,
 		submitHandler,
@@ -152,64 +165,71 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 		otpVerifyHandler,
 		onSuccess,
 		onError,
-	} = options
+	} = options;
 
 	// Get auth context (may be null if outside provider)
-	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null
+	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null;
 
 	// Form state
 	const [form, setForm] = useState<SignInFormState>({
-		email: '',
-		password: '',
-		otp: '',
-	})
+		email: "",
+		password: "",
+		otp: "",
+	});
 
 	// UI state
-	const [step, setStep] = useState<SignInStep>(methods.includes('password') ? 'password' : 'email')
-	const [isLoading, setIsLoading] = useState(false)
-	const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null)
-	const [error, setError] = useState<string | null>(null)
-	const [lockoutUntil, setLockoutUntil] = useState<string | null>(null)
+	const [step, setStep] = useState<SignInStep>(
+		methods.includes("password") ? "password" : "email",
+	);
+	const [isLoading, setIsLoading] = useState(false);
+	const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(
+		null,
+	);
+	const [error, setError] = useState<string | null>(null);
+	const [lockoutUntil, setLockoutUntil] = useState<string | null>(null);
 
 	// 2FA state
-	const [pendingTwoFactor, setPendingTwoFactor] = useState<{ userId: string; email: string } | null>(null)
+	const [pendingTwoFactor, setPendingTwoFactor] = useState<{
+		userId: string;
+		email: string;
+	} | null>(null);
 
 	// Form setters
 	const setEmail = useCallback((email: string) => {
-		setForm((prev) => ({ ...prev, email }))
-		setError(null)
-		setLockoutUntil(null)
-	}, [])
+		setForm((prev) => ({ ...prev, email }));
+		setError(null);
+		setLockoutUntil(null);
+	}, []);
 
 	const setPassword = useCallback((password: string) => {
-		setForm((prev) => ({ ...prev, password }))
-		setError(null)
-	}, [])
+		setForm((prev) => ({ ...prev, password }));
+		setError(null);
+	}, []);
 
 	const setOtp = useCallback((otp: string) => {
-		setForm((prev) => ({ ...prev, otp }))
-		setError(null)
-	}, [])
+		setForm((prev) => ({ ...prev, otp }));
+		setError(null);
+	}, []);
 
 	const resetForm = useCallback(() => {
-		setForm({ email: '', password: '', otp: '' })
-		setError(null)
-		setLockoutUntil(null)
-		setPendingTwoFactor(null)
-	}, [])
+		setForm({ email: "", password: "", otp: "" });
+		setError(null);
+		setLockoutUntil(null);
+		setPendingTwoFactor(null);
+	}, []);
 
 	const clearError = useCallback(() => {
-		setError(null)
-		setLockoutUntil(null)
-	}, [])
+		setError(null);
+		setLockoutUntil(null);
+	}, []);
 
 	// Password submit handler
 	const handlePasswordSubmit = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
-			setIsLoading(true)
-			setError(null)
-			setLockoutUntil(null)
+			e?.preventDefault();
+			setIsLoading(true);
+			setError(null);
+			setLockoutUntil(null);
 
 			try {
 				// Pre-submit check (e.g., lockout protection)
@@ -217,13 +237,13 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 					const preCheck = await onBeforeSubmit({
 						email: form.email,
 						password: form.password,
-					})
+					});
 					if (!preCheck.success) {
-						setError(preCheck.error || 'Login blocked')
+						setError(preCheck.error || "Login blocked");
 						if (preCheck.lockoutUntil) {
-							setLockoutUntil(preCheck.lockoutUntil)
+							setLockoutUntil(preCheck.lockoutUntil);
 						}
-						return
+						return;
 					}
 				}
 
@@ -232,198 +252,231 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 					await submitHandler({
 						email: form.email,
 						password: form.password,
-					})
-					onSuccess?.()
+					});
+					onSuccess?.();
 					// Use safeRedirect to prevent XSS via malicious afterSignInUrl
-					safeRedirect(afterSignInUrl, { fallback: '/dashboard' })
-					return
+					safeRedirect(afterSignInUrl, { fallback: "/dashboard" });
+					return;
 				}
 
 				// Use auth context (SDK mode)
 				if (!authContext) {
-					setError('SDK not configured. Please wrap your app with SylphxProvider.')
-					return
+					setError(
+						"SDK not configured. Please wrap your app with SylphxProvider.",
+					);
+					return;
 				}
 
-				const result = await authContext.login(form.email, form.password)
+				const result = await authContext.login(form.email, form.password);
 
 				// Check if 2FA is required
 				if (result.requiresTwoFactor) {
 					if (!result.userId) {
-						setError('Authentication failed: missing user ID for two-factor verification')
-						return
+						setError(
+							"Authentication failed: missing user ID for two-factor verification",
+						);
+						return;
 					}
-					setPendingTwoFactor({ userId: result.userId, email: form.email })
-					setStep('otp-verify')
-					return
+					setPendingTwoFactor({ userId: result.userId, email: form.email });
+					setStep("otp-verify");
+					return;
 				}
 
-				onSuccess?.()
+				onSuccess?.();
 
 				// Use safeRedirect to prevent XSS via malicious afterSignInUrl
-				safeRedirect(afterSignInUrl, { fallback: '/dashboard' })
+				safeRedirect(afterSignInUrl, { fallback: "/dashboard" });
 			} catch (err) {
 				// Distinguish between network errors and auth errors
-				let message: string
-				if (err instanceof TypeError && err.message === 'Failed to fetch') {
-					message = 'Unable to connect. Please check your internet connection and try again.'
+				let message: string;
+				if (err instanceof TypeError && err.message === "Failed to fetch") {
+					message =
+						"Unable to connect. Please check your internet connection and try again.";
 				} else if (err instanceof Error) {
-					message = err.message
+					message = err.message;
 				} else {
-					message = 'Sign in failed'
+					message = "Sign in failed";
 				}
-				setError(message)
-				onError?.(message)
+				setError(message);
+				onError?.(message);
 
 				// Record failure if handler provided
 				if (onSubmitError) {
 					await onSubmitError(form.email, message).catch(() => {
 						// Silently ignore failure recording errors
-					})
+					});
 				}
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[form, onBeforeSubmit, submitHandler, authContext, afterSignInUrl, onSuccess, onError, onSubmitError]
-	)
+		[
+			form,
+			onBeforeSubmit,
+			submitHandler,
+			authContext,
+			afterSignInUrl,
+			onSuccess,
+			onError,
+			onSubmitError,
+		],
+	);
 
 	// 2FA verification handler
 	const handleTwoFactorVerify = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
+			e?.preventDefault();
 			if (!pendingTwoFactor) {
-				setError('No pending two-factor authentication')
-				return
+				setError("No pending two-factor authentication");
+				return;
 			}
 
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (!authContext) {
-					setError('SDK not configured. Please wrap your app with SylphxProvider.')
-					return
+					setError(
+						"SDK not configured. Please wrap your app with SylphxProvider.",
+					);
+					return;
 				}
 
-				await authContext.verifyTwoFactor(pendingTwoFactor.userId, form.otp)
+				await authContext.verifyTwoFactor(pendingTwoFactor.userId, form.otp);
 
-				onSuccess?.()
-				setPendingTwoFactor(null)
+				onSuccess?.();
+				setPendingTwoFactor(null);
 
 				// Use safeRedirect to prevent XSS via malicious afterSignInUrl
-				safeRedirect(afterSignInUrl, { fallback: '/dashboard' })
+				safeRedirect(afterSignInUrl, { fallback: "/dashboard" });
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Invalid verification code'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Invalid verification code";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[pendingTwoFactor, form.otp, authContext, afterSignInUrl, onSuccess, onError]
-	)
+		[
+			pendingTwoFactor,
+			form.otp,
+			authContext,
+			afterSignInUrl,
+			onSuccess,
+			onError,
+		],
+	);
 
 	// OAuth handler
 	const handleOAuthSignIn = useCallback(
 		(provider: OAuthProvider) => {
-			setLoadingProvider(provider)
-			setError(null)
+			setLoadingProvider(provider);
+			setError(null);
 
 			if (oauthHandler) {
 				oauthHandler(provider).catch((err) => {
-					setError(err instanceof Error ? err.message : 'OAuth sign in failed')
-					setLoadingProvider(null)
-				})
+					setError(err instanceof Error ? err.message : "OAuth sign in failed");
+					setLoadingProvider(null);
+				});
 			} else {
 				// OAuth requires redirect - this should be handled by the platform
 				// SDK apps should configure oauthHandler or use <SignIn> component
-				setError('OAuth sign-in requires a custom oauthHandler or use the SignIn component')
-				setLoadingProvider(null)
+				setError(
+					"OAuth sign-in requires a custom oauthHandler or use the SignIn component",
+				);
+				setLoadingProvider(null);
 			}
 		},
-		[oauthHandler]
-	)
+		[oauthHandler],
+	);
 
 	// Magic link request
 	const handleMagicLinkRequest = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
-			setIsLoading(true)
-			setError(null)
+			e?.preventDefault();
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (magicLinkHandler) {
-					await magicLinkHandler(form.email)
+					await magicLinkHandler(form.email);
 				} else {
 					// Magic link requires custom handler
-					throw new Error('Magic link sign-in requires a custom magicLinkHandler')
+					throw new Error(
+						"Magic link sign-in requires a custom magicLinkHandler",
+					);
 				}
 
-				setStep('magic-link-sent')
+				setStep("magic-link-sent");
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to send magic link'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to send magic link";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[form.email, magicLinkHandler, onError]
-	)
+		[form.email, magicLinkHandler, onError],
+	);
 
 	// OTP request
 	const handleOtpRequest = useCallback(async () => {
-		setIsLoading(true)
-		setError(null)
+		setIsLoading(true);
+		setError(null);
 
 		try {
 			if (otpRequestHandler) {
-				await otpRequestHandler(form.email)
+				await otpRequestHandler(form.email);
 			} else {
 				// OTP requires custom handler
-				throw new Error('OTP sign-in requires a custom otpRequestHandler')
+				throw new Error("OTP sign-in requires a custom otpRequestHandler");
 			}
 
-			setStep('otp')
+			setStep("otp");
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Failed to send code'
-			setError(message)
-			onError?.(message)
+			const message =
+				err instanceof Error ? err.message : "Failed to send code";
+			setError(message);
+			onError?.(message);
 		} finally {
-			setIsLoading(false)
+			setIsLoading(false);
 		}
-	}, [form.email, otpRequestHandler, onError])
+	}, [form.email, otpRequestHandler, onError]);
 
 	// OTP verify
 	const handleOtpVerify = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
-			setIsLoading(true)
-			setError(null)
+			e?.preventDefault();
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (otpVerifyHandler) {
-					await otpVerifyHandler(form.email, form.otp)
+					await otpVerifyHandler(form.email, form.otp);
 				} else {
 					// OTP requires custom handler
-					throw new Error('OTP verification requires a custom otpVerifyHandler')
+					throw new Error(
+						"OTP verification requires a custom otpVerifyHandler",
+					);
 				}
 
-				onSuccess?.()
+				onSuccess?.();
 
 				// Use safeRedirect to prevent XSS via malicious afterSignInUrl
-				safeRedirect(afterSignInUrl, { fallback: '/dashboard' })
+				safeRedirect(afterSignInUrl, { fallback: "/dashboard" });
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Verification failed'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Verification failed";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[form, otpVerifyHandler, afterSignInUrl, onSuccess, onError]
-	)
+		[form, otpVerifyHandler, afterSignInUrl, onSuccess, onError],
+	);
 
 	return {
 		// Form state
@@ -457,5 +510,5 @@ export function useSignInForm(options: UseSignInFormOptions = {}): UseSignInForm
 		methods,
 		providers,
 		afterSignInUrl,
-	}
+	};
 }

@@ -18,38 +18,41 @@
  * - Reduces 3-hop to 2-hop: Platform → QStash → App webhook (direct execution)
  */
 
-import { type NextRequest, NextResponse } from 'next/server'
-import { env } from '@/lib/env'
-import { executeJob, JOB_HANDLERS } from '@/lib/jobs/handlers'
+import { env } from "@/lib/env";
+import { JOB_HANDLERS, executeJob } from "@/lib/jobs/handlers";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
-export const maxDuration = 300 // 5 minutes for long-running jobs like puzzle generation
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 300; // 5 minutes for long-running jobs like puzzle generation
 
 // ==========================================
 // Request Verification
 // ==========================================
 
 interface PlatformJobPayload {
-	appId: string
-	userId?: string
-	payload?: Record<string, unknown>
-	timestamp: string
+	appId: string;
+	userId?: string;
+	payload?: Record<string, unknown>;
+	timestamp: string;
 }
 
-function verifyPlatformRequest(req: NextRequest): { valid: boolean; error?: string } {
-	const secretKey = req.headers.get('x-app-secret')
+function verifyPlatformRequest(req: NextRequest): {
+	valid: boolean;
+	error?: string;
+} {
+	const secretKey = req.headers.get("x-app-secret");
 
 	// Verify secret key matches our app
 	if (!secretKey) {
-		return { valid: false, error: 'Missing x-app-secret header' }
+		return { valid: false, error: "Missing x-app-secret header" };
 	}
 
 	if (secretKey !== env.SYLPHX_SECRET_KEY) {
-		return { valid: false, error: 'Invalid secret key' }
+		return { valid: false, error: "Invalid secret key" };
 	}
 
-	return { valid: true }
+	return { valid: true };
 }
 
 // ==========================================
@@ -57,50 +60,58 @@ function verifyPlatformRequest(req: NextRequest): { valid: boolean; error?: stri
 // ==========================================
 
 export async function POST(req: NextRequest) {
-	const logPrefix = '[PlatformJobs]'
+	const logPrefix = "[PlatformJobs]";
 
 	// Verify request is from Platform
-	const verification = verifyPlatformRequest(req)
+	const verification = verifyPlatformRequest(req);
 	if (!verification.valid) {
-		console.error(`${logPrefix} Verification failed: ${verification.error}`)
-		return NextResponse.json({ error: verification.error }, { status: 401 })
+		console.error(`${logPrefix} Verification failed: ${verification.error}`);
+		return NextResponse.json({ error: verification.error }, { status: 401 });
 	}
 
 	// Extract job info from headers
-	const cronName = req.headers.get('x-sylphx-cron-name')
-	const jobId = req.headers.get('x-sylphx-job-id')
+	const cronName = req.headers.get("x-sylphx-cron-name");
+	const jobId = req.headers.get("x-sylphx-job-id");
 
 	if (!cronName) {
-		console.error(`${logPrefix} Missing cron name`)
-		return NextResponse.json({ error: 'Missing X-Sylphx-Cron-Name header' }, { status: 400 })
+		console.error(`${logPrefix} Missing cron name`);
+		return NextResponse.json(
+			{ error: "Missing X-Sylphx-Cron-Name header" },
+			{ status: 400 },
+		);
 	}
 
-	console.log(`${logPrefix} Received job: ${cronName} (jobId: ${jobId})`)
+	console.log(`${logPrefix} Received job: ${cronName} (jobId: ${jobId})`);
 
 	// Parse body for payload
-	let payload: PlatformJobPayload | null = null
+	let payload: PlatformJobPayload | null = null;
 	try {
-		payload = await req.json()
+		payload = await req.json();
 	} catch {
 		// Body is optional
 	}
 
 	// Check if we have a handler for this job
-	const handlerFactory = JOB_HANDLERS[cronName]
+	const handlerFactory = JOB_HANDLERS[cronName];
 	if (!handlerFactory) {
-		console.error(`${logPrefix} Unknown job: ${cronName}`)
-		return NextResponse.json({ error: `Unknown job: ${cronName}` }, { status: 404 })
+		console.error(`${logPrefix} Unknown job: ${cronName}`);
+		return NextResponse.json(
+			{ error: `Unknown job: ${cronName}` },
+			{ status: 404 },
+		);
 	}
 
-	console.log(`${logPrefix} Executing job directly`)
+	console.log(`${logPrefix} Executing job directly`);
 
 	// Execute job synchronously (no HTTP hop)
 	const result = await executeJob(cronName, payload?.payload ?? {}, {
 		jobId: jobId ?? undefined,
 		timestamp: new Date(),
-	})
+	});
 
-	console.log(`${logPrefix} Job completed: ${result.success ? 'success' : 'failed'}`)
+	console.log(
+		`${logPrefix} Job completed: ${result.success ? "success" : "failed"}`,
+	);
 
 	return NextResponse.json(
 		{
@@ -111,5 +122,5 @@ export async function POST(req: NextRequest) {
 			timestamp: new Date().toISOString(),
 		},
 		{ status: result.success ? 200 : 500 },
-	)
+	);
 }

@@ -12,62 +12,62 @@
  * - OpenAPI documentation is added after routes are mounted
  */
 
-import { OpenAPIHono } from '@hono/zod-openapi'
-import { headers } from 'next/headers'
-import { errorHandler, loggerMiddleware } from './middleware'
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { headers } from "next/headers";
+import { errorHandler, loggerMiddleware } from "./middleware";
 import {
 	type AdminRoutes,
-	adminRoutes,
 	type GamesRoutes,
 	type GamificationRoutes,
+	type NotificationsRoutes,
+	type StatsRoutes,
+	type UserRoutes,
+	adminRoutes,
 	gamesRoutes,
 	gamificationRoutes,
-	type NotificationsRoutes,
 	notificationsRoutes,
-	type StatsRoutes,
 	statsRoutes,
-	type UserRoutes,
 	userRoutes,
-} from './routes'
-import type { PuzzledEnv } from './types'
+} from "./routes";
+import type { PuzzledEnv } from "./types";
 
 // API version
-export const API_VERSION = '1'
-export const API_BASE_PATH = `/api/v${API_VERSION}`
+export const API_VERSION = "1";
+export const API_BASE_PATH = `/api/v${API_VERSION}`;
 
 // Create base app with global middleware
 const baseApp = new OpenAPIHono<PuzzledEnv>()
 	.basePath(API_BASE_PATH)
 	// Set headers context for all requests
-	.use('*', async (c, next) => {
-		const headersList = await headers()
-		c.set('headers', headersList)
-		await next()
+	.use("*", async (c, next) => {
+		const headersList = await headers();
+		c.set("headers", headersList);
+		await next();
 	})
 	// Logging (dev only)
-	.use('*', loggerMiddleware)
+	.use("*", loggerMiddleware)
 	// Error handling
-	.use('*', errorHandler)
+	.use("*", errorHandler)
 	// Health Check (no auth required)
-	.get('/health', (c) => {
+	.get("/health", (c) => {
 		return c.json({
-			status: 'ok',
+			status: "ok",
 			timestamp: new Date().toISOString(),
 			version: API_VERSION,
-		})
-	})
+		});
+	});
 
 // Mount route modules (chained for type inference)
 const appWithRoutes = baseApp
-	.route('/games', gamesRoutes)
-	.route('/stats', statsRoutes)
-	.route('/gamification', gamificationRoutes)
-	.route('/user', userRoutes)
-	.route('/notifications', notificationsRoutes)
-	.route('/admin', adminRoutes)
+	.route("/games", gamesRoutes)
+	.route("/stats", statsRoutes)
+	.route("/gamification", gamificationRoutes)
+	.route("/user", userRoutes)
+	.route("/notifications", notificationsRoutes)
+	.route("/admin", adminRoutes);
 
 // Export type for hc client inference (must be from the chained app)
-export type AppType = typeof appWithRoutes
+export type AppType = typeof appWithRoutes;
 
 // Export domain-specific route types for hc clients
 export type {
@@ -77,47 +77,53 @@ export type {
 	NotificationsRoutes,
 	StatsRoutes,
 	UserRoutes,
-}
+};
 
 // Create the final app with OpenAPI documentation
 // Note: We use a separate OpenAPIHono instance because .route() returns Hono, not OpenAPIHono
-const app = new OpenAPIHono<PuzzledEnv>().basePath(API_BASE_PATH)
+const app = new OpenAPIHono<PuzzledEnv>().basePath(API_BASE_PATH);
 
 // Re-mount all middleware and routes on the OpenAPI app
-app.use('*', async (c, next) => {
-	const headersList = await headers()
-	c.set('headers', headersList)
-	await next()
-})
-app.use('*', loggerMiddleware)
-app.use('*', errorHandler)
-app.get('/health', (c) => {
+app.use("*", async (c, next) => {
+	const headersList = await headers();
+	c.set("headers", headersList);
+	await next();
+});
+app.use("*", loggerMiddleware);
+app.use("*", errorHandler);
+app.get("/health", (c) => {
 	return c.json({
-		status: 'ok',
+		status: "ok",
 		timestamp: new Date().toISOString(),
 		version: API_VERSION,
-	})
-})
-app.route('/games', gamesRoutes)
-app.route('/stats', statsRoutes)
-app.route('/gamification', gamificationRoutes)
-app.route('/user', userRoutes)
-app.route('/notifications', notificationsRoutes)
-app.route('/admin', adminRoutes)
+	});
+});
+app.route("/games", gamesRoutes);
+app.route("/stats", statsRoutes);
+app.route("/gamification", gamificationRoutes);
+app.route("/user", userRoutes);
+app.route("/notifications", notificationsRoutes);
+app.route("/admin", adminRoutes);
 
 // OpenAPI Documentation
-app.doc('/openapi.json', {
-	openapi: '3.0.0',
+app.doc("/openapi.json", {
+	openapi: "3.0.0",
 	info: {
-		title: 'Puzzled API',
+		title: "Puzzled API",
 		version: API_VERSION,
 		description: `REST API for Puzzled daily puzzle games (v${API_VERSION}). Authentication via Sylphx Platform SDK cookies.`,
 	},
 	servers: [
-		{ url: `https://puzzled.sylphx.com${API_BASE_PATH}`, description: 'Production' },
-		{ url: `http://localhost:3001${API_BASE_PATH}`, description: 'Local Development' },
+		{
+			url: `https://puzzled.sylphx.com${API_BASE_PATH}`,
+			description: "Production",
+		},
+		{
+			url: `http://localhost:3001${API_BASE_PATH}`,
+			description: "Local Development",
+		},
 	],
 	security: [{ cookieAuth: [] }],
-})
+});
 
-export { app }
+export { app };

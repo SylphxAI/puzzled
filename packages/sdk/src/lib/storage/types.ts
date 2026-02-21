@@ -8,13 +8,13 @@
 
 interface StorageConfig {
 	/** Publishable key — identifies the app */
-	appId: string
+	appId: string;
 	/** Platform URL (default: https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 	/** User ID for authenticated uploads */
-	userId?: string
+	userId?: string;
 	/** Debug mode */
-	debug?: boolean
+	debug?: boolean;
 }
 
 // ==========================================
@@ -23,15 +23,15 @@ interface StorageConfig {
 
 export interface UploadOptions {
 	/** Custom path/folder for the file */
-	path?: string
+	path?: string;
 	/** Progress callback */
-	onProgress?: (event: UploadProgressEvent) => void
+	onProgress?: (event: UploadProgressEvent) => void;
 	/** Custom filename (defaults to original) */
-	filename?: string
+	filename?: string;
 	/** Content type override */
-	contentType?: string
+	contentType?: string;
 	/** Custom metadata */
-	metadata?: Record<string, string>
+	metadata?: Record<string, string>;
 	/**
 	 * Enable multipart upload for large files.
 	 * - `true`: Always use multipart upload
@@ -41,7 +41,7 @@ export interface UploadOptions {
 	 * Multipart uploads support files up to 5TB and provide
 	 * better reliability for large files with resumable uploads.
 	 */
-	multipart?: boolean | 'auto'
+	multipart?: boolean | "auto";
 	/**
 	 * AbortSignal to cancel the upload.
 	 * Vercel Blob pattern - enables cancellation of in-progress uploads.
@@ -54,27 +54,27 @@ export interface UploadOptions {
 	 * await upload(file, { signal: controller.signal })
 	 * ```
 	 */
-	signal?: AbortSignal
+	signal?: AbortSignal;
 }
 
 export interface UploadProgressEvent {
 	/** Bytes uploaded */
-	loaded: number
+	loaded: number;
 	/** Total bytes */
-	total: number
+	total: number;
 	/** Progress percentage (0-100) */
-	progress: number
+	progress: number;
 }
 
 export interface UploadResult {
 	/** Public URL of uploaded file */
-	url: string
+	url: string;
 	/** File path/key in storage */
-	pathname: string
+	pathname: string;
 	/** Content type */
-	contentType: string
+	contentType: string;
 	/** File size in bytes */
-	size: number
+	size: number;
 }
 
 // ==========================================
@@ -83,21 +83,21 @@ export interface UploadResult {
 
 export interface StorageFile {
 	/** File ID */
-	id: string
+	id: string;
 	/** File path/key */
-	path: string
+	path: string;
 	/** Original filename */
-	filename: string
+	filename: string;
 	/** MIME type */
-	mimeType: string
+	mimeType: string;
 	/** Size in bytes */
-	sizeBytes: number
+	sizeBytes: number;
 	/** Public URL (if public) */
-	publicUrl?: string | null
+	publicUrl?: string | null;
 	/** Created timestamp */
-	createdAt: string
+	createdAt: string;
 	/** Custom metadata */
-	metadata?: Record<string, string>
+	metadata?: Record<string, string>;
 }
 
 // ==========================================
@@ -106,59 +106,59 @@ export interface StorageFile {
 
 interface ListFilesOptions {
 	/** Folder/prefix to list */
-	prefix?: string
+	prefix?: string;
 	/** Max results per page */
-	limit?: number
+	limit?: number;
 	/** Cursor for pagination */
-	cursor?: string
+	cursor?: string;
 }
 
 interface ListFilesResult {
 	/** Files in this page */
-	files: StorageFile[]
+	files: StorageFile[];
 	/** Cursor for next page */
-	cursor?: string
+	cursor?: string;
 	/** Whether there are more results */
-	hasMore: boolean
+	hasMore: boolean;
 }
 
 // ==========================================
 // Image Transformation Types
 // ==========================================
 
-type ImageFormat = 'webp' | 'avif' | 'jpeg' | 'png' | 'auto'
-type ImageFit = 'cover' | 'contain' | 'fill' | 'inside' | 'outside'
+type ImageFormat = "webp" | "avif" | "jpeg" | "png" | "auto";
+type ImageFit = "cover" | "contain" | "fill" | "inside" | "outside";
 
 interface ImageTransformOptions {
 	/** Target width in pixels */
-	width?: number
+	width?: number;
 	/** Target height in pixels */
-	height?: number
+	height?: number;
 	/** Quality (1-100, default: 80) */
-	quality?: number
+	quality?: number;
 	/** Output format (default: auto - picks best based on browser) */
-	format?: ImageFormat
+	format?: ImageFormat;
 	/** Fit mode when both width and height are specified */
-	fit?: ImageFit
+	fit?: ImageFit;
 	/** Background color for transparent images (hex without #) */
-	background?: string
+	background?: string;
 	/** Enable blur effect (1-100) */
-	blur?: number
+	blur?: number;
 	/** Auto-optimize for web delivery */
-	optimize?: boolean
+	optimize?: boolean;
 }
 
 interface ImageTransformResult {
 	/** Transformed image URL */
-	url: string
+	url: string;
 	/** Content type of transformed image */
-	contentType: string
+	contentType: string;
 	/** Size of transformed image in bytes */
-	size: number
+	size: number;
 	/** Width of transformed image */
-	width: number
+	width: number;
 	/** Height of transformed image */
-	height: number
+	height: number;
 	/** Whether image was served from cache */
-	cached: boolean
+	cached: boolean;
 }

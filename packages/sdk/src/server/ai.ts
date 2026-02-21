@@ -41,104 +41,105 @@
 
 export interface AIClientOptions {
 	/** Secret key for authentication (default: SYLPHX_SECRET_KEY env var) */
-	secretKey?: string
+	secretKey?: string;
 	/** Platform URL (default: SYLPHX_PLATFORM_URL env var or https://sylphx.com) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 // ChatMessage re-exported from ai.ts (SSOT)
-export type { ChatMessage } from '../ai'
-import type { ChatMessage } from '../ai'
-import { validateAndSanitizeSecretKey } from '../key-validation'
-import { DEFAULT_PLATFORM_URL } from '../constants'
+export type { ChatMessage } from "../ai";
+import type { ChatMessage } from "../ai";
+import { DEFAULT_PLATFORM_URL } from "../constants";
+import { validateAndSanitizeSecretKey } from "../key-validation";
 
 export interface ChatCompletionOptions {
-	model: string
-	messages: ChatMessage[]
-	temperature?: number
-	max_tokens?: number
-	top_p?: number
-	frequency_penalty?: number
-	presence_penalty?: number
-	stop?: string | string[]
-	stream?: false
-	user?: string
+	model: string;
+	messages: ChatMessage[];
+	temperature?: number;
+	max_tokens?: number;
+	top_p?: number;
+	frequency_penalty?: number;
+	presence_penalty?: number;
+	stop?: string | string[];
+	stream?: false;
+	user?: string;
 }
 
-export interface ChatCompletionStreamOptions extends Omit<ChatCompletionOptions, 'stream'> {
-	stream: true
+export interface ChatCompletionStreamOptions
+	extends Omit<ChatCompletionOptions, "stream"> {
+	stream: true;
 }
 
 export interface ChatCompletionResponse {
-	id: string
-	object: 'chat.completion'
-	created: number
-	model: string
+	id: string;
+	object: "chat.completion";
+	created: number;
+	model: string;
 	choices: Array<{
-		index: number
+		index: number;
 		message: {
-			role: 'assistant'
-			content: string
-		}
-		finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null
-	}>
+			role: "assistant";
+			content: string;
+		};
+		finish_reason: "stop" | "length" | "tool_calls" | "content_filter" | null;
+	}>;
 	usage: {
-		prompt_tokens: number
-		completion_tokens: number
-		total_tokens: number
-	}
+		prompt_tokens: number;
+		completion_tokens: number;
+		total_tokens: number;
+	};
 }
 
 export interface ChatCompletionChunk {
-	id: string
-	object: 'chat.completion.chunk'
-	created: number
-	model: string
+	id: string;
+	object: "chat.completion.chunk";
+	created: number;
+	model: string;
 	choices: Array<{
-		index: number
+		index: number;
 		delta: {
-			role?: 'assistant'
-			content?: string
-		}
-		finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null
-	}>
+			role?: "assistant";
+			content?: string;
+		};
+		finish_reason: "stop" | "length" | "tool_calls" | "content_filter" | null;
+	}>;
 }
 
 export interface EmbeddingOptions {
-	model: string
-	input: string | string[]
-	dimensions?: number
-	user?: string
+	model: string;
+	input: string | string[];
+	dimensions?: number;
+	user?: string;
 }
 
 export interface EmbeddingResponse {
-	object: 'list'
+	object: "list";
 	data: Array<{
-		object: 'embedding'
-		index: number
-		embedding: number[]
-	}>
-	model: string
+		object: "embedding";
+		index: number;
+		embedding: number[];
+	}>;
+	model: string;
 	usage: {
-		prompt_tokens: number
-		total_tokens: number
-	}
+		prompt_tokens: number;
+		total_tokens: number;
+	};
 }
 
 export interface ModelInfo {
-	id: string
-	name: string
-	context_length: number
+	id: string;
+	name: string;
+	context_length: number;
 	pricing: {
-		prompt: string
-		completion: string
-	}
-	capabilities: string[]
+		prompt: string;
+		completion: string;
+	};
+	capabilities: string[];
 }
 
 export interface ModelsResponse {
-	object: 'list'
-	data: ModelInfo[]
+	object: "list";
+	data: ModelInfo[];
 }
 
 // ============================================
@@ -147,13 +148,18 @@ export interface ModelsResponse {
 
 export interface AIClient {
 	/** Create a chat completion */
-	chat(options: ChatCompletionOptions): Promise<ChatCompletionResponse>
+	chat(options: ChatCompletionOptions): Promise<ChatCompletionResponse>;
 	/** Create a streaming chat completion */
-	chat(options: ChatCompletionStreamOptions): Promise<AsyncIterable<ChatCompletionChunk>>
+	chat(
+		options: ChatCompletionStreamOptions,
+	): Promise<AsyncIterable<ChatCompletionChunk>>;
 	/** Create embeddings */
-	embed(options: EmbeddingOptions): Promise<EmbeddingResponse>
+	embed(options: EmbeddingOptions): Promise<EmbeddingResponse>;
 	/** List available models */
-	listModels(options?: { capability?: string; search?: string }): Promise<ModelsResponse>
+	listModels(options?: {
+		capability?: string;
+		search?: string;
+	}): Promise<ModelsResponse>;
 }
 
 /**
@@ -164,78 +170,87 @@ export interface AIClient {
  * - SYLPHX_SECRET_KEY: Your app's secret key (sk_dev_xxx, sk_stg_xxx, sk_prod_xxx)
  */
 export function createAI(options: AIClientOptions = {}): AIClient {
-	const baseURL = (options.platformUrl || process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
-	const rawApiKey = options.secretKey || process.env.SYLPHX_SECRET_KEY
+	const baseURL = (
+		options.platformUrl ||
+		process.env.SYLPHX_PLATFORM_URL ||
+		DEFAULT_PLATFORM_URL
+	).trim();
+	const rawApiKey = options.secretKey || process.env.SYLPHX_SECRET_KEY;
 
 	// Validate and sanitize API key using SSOT
-	const apiKey = validateAndSanitizeSecretKey(rawApiKey)
+	const apiKey = validateAndSanitizeSecretKey(rawApiKey);
 
 	const headers = {
-		'Content-Type': 'application/json',
+		"Content-Type": "application/json",
 		Authorization: `Bearer ${apiKey}`,
-	}
+	};
 
 	async function chat(
-		opts: ChatCompletionOptions | ChatCompletionStreamOptions
+		opts: ChatCompletionOptions | ChatCompletionStreamOptions,
 	): Promise<ChatCompletionResponse | AsyncIterable<ChatCompletionChunk>> {
 		const response = await fetch(`${baseURL}/api/v1/chat/completions`, {
-			method: 'POST',
+			method: "POST",
 			headers,
 			body: JSON.stringify(opts),
-		})
-
-		if (!response.ok) {
-			const error = await response.json().catch(() => ({ error: { message: 'Chat failed' } }))
-			throw new Error(error.error?.message || 'Chat failed')
-		}
-
-		if (opts.stream) {
-			// Return async iterable for streaming
-			return parseSSEStream(response)
-		}
-
-		return response.json()
-	}
-
-	async function embed(opts: EmbeddingOptions): Promise<EmbeddingResponse> {
-		const response = await fetch(`${baseURL}/api/v1/embeddings`, {
-			method: 'POST',
-			headers,
-			body: JSON.stringify(opts),
-		})
+		});
 
 		if (!response.ok) {
 			const error = await response
 				.json()
-				.catch(() => ({ error: { message: 'Embedding failed' } }))
-			throw new Error(error.error?.message || 'Embedding failed')
+				.catch(() => ({ error: { message: "Chat failed" } }));
+			throw new Error(error.error?.message || "Chat failed");
 		}
 
-		return response.json()
+		if (opts.stream) {
+			// Return async iterable for streaming
+			return parseSSEStream(response);
+		}
+
+		return response.json();
 	}
 
-	async function listModels(
-		opts?: { capability?: string; search?: string }
-	): Promise<ModelsResponse> {
-		const params = new URLSearchParams()
-		if (opts?.capability) params.set('capability', opts.capability)
-		if (opts?.search) params.set('search', opts.search)
-		const query = params.toString()
-
-		const response = await fetch(`${baseURL}/api/v1/models${query ? `?${query}` : ''}`)
+	async function embed(opts: EmbeddingOptions): Promise<EmbeddingResponse> {
+		const response = await fetch(`${baseURL}/api/v1/embeddings`, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(opts),
+		});
 
 		if (!response.ok) {
-			throw new Error('Failed to fetch models')
+			const error = await response
+				.json()
+				.catch(() => ({ error: { message: "Embedding failed" } }));
+			throw new Error(error.error?.message || "Embedding failed");
 		}
 
-		return response.json()
+		return response.json();
+	}
+
+	async function listModels(opts?: {
+		capability?: string;
+		search?: string;
+	}): Promise<ModelsResponse> {
+		const params = new URLSearchParams();
+		if (opts?.capability) params.set("capability", opts.capability);
+		if (opts?.search) params.set("search", opts.search);
+		const query = params.toString();
+
+		const response = await fetch(
+			`${baseURL}/api/v1/models${query ? `?${query}` : ""}`,
+		);
+
+		if (!response.ok) {
+			throw new Error("Failed to fetch models");
+		}
+
+		return response.json();
 	}
 
 	return {
-		chat: chat as AIClient['chat'],
+		chat: chat as AIClient["chat"],
 		embed,
 		listModels,
-	}
+	};
 }
 
 // ============================================
@@ -243,35 +258,35 @@ export function createAI(options: AIClientOptions = {}): AIClient {
 // ============================================
 
 async function* parseSSEStream(
-	response: Response
+	response: Response,
 ): AsyncIterable<ChatCompletionChunk> {
-	const reader = response.body?.getReader()
+	const reader = response.body?.getReader();
 	if (!reader) {
-		throw new Error('Response body is not readable')
+		throw new Error("Response body is not readable");
 	}
 
-	const decoder = new TextDecoder()
-	let buffer = ''
+	const decoder = new TextDecoder();
+	let buffer = "";
 
 	try {
 		while (true) {
-			const { done, value } = await reader.read()
-			if (done) break
+			const { done, value } = await reader.read();
+			if (done) break;
 
-			buffer += decoder.decode(value, { stream: true })
-			const lines = buffer.split('\n')
-			buffer = lines.pop() || ''
+			buffer += decoder.decode(value, { stream: true });
+			const lines = buffer.split("\n");
+			buffer = lines.pop() || "";
 
 			for (const line of lines) {
-				if (line.startsWith('data: ')) {
-					const data = line.slice(6)
-					if (data === '[DONE]') {
-						return
+				if (line.startsWith("data: ")) {
+					const data = line.slice(6);
+					if (data === "[DONE]") {
+						return;
 					}
 
 					try {
-						const chunk = JSON.parse(data) as ChatCompletionChunk
-						yield chunk
+						const chunk = JSON.parse(data) as ChatCompletionChunk;
+						yield chunk;
 					} catch {
 						// Skip invalid JSON
 					}
@@ -279,7 +294,7 @@ async function* parseSSEStream(
 			}
 		}
 	} finally {
-		reader.releaseLock()
+		reader.releaseLock();
 	}
 }
 
@@ -287,7 +302,7 @@ async function* parseSSEStream(
 // Convenience Functions
 // ============================================
 
-let defaultClient: AIClient | null = null
+let defaultClient: AIClient | null = null;
 
 /**
  * Get the default AI client (singleton)
@@ -295,7 +310,7 @@ let defaultClient: AIClient | null = null
  */
 export function getAI(): AIClient {
 	if (!defaultClient) {
-		defaultClient = createAI()
+		defaultClient = createAI();
 	}
-	return defaultClient
+	return defaultClient;
 }

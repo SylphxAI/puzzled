@@ -36,7 +36,7 @@
 // Components
 // ============================================
 
-export { GlobalErrorHandler, SessionReplayProvider } from './components'
+export { GlobalErrorHandler, SessionReplayProvider } from "./components";
 
 // ============================================
 // Hooks

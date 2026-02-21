@@ -4,13 +4,24 @@
  * OrganizationProfile, CreateOrganization, OrganizationList
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect, type CSSProperties, type FormEvent } from 'react'
-import type { ThemeVariables } from './styles'
-import { defaultTheme, baseStyles, mergeStyles, injectGlobalStyles } from './styles'
-import { UI_FORM_SUCCESS_MS } from '../../constants'
-import { useOrganization, RequireSdk, type Organization, type OrganizationMember, type OrgRole } from '../hooks'
+import { type CSSProperties, type FormEvent, useEffect, useState } from "react";
+import { UI_FORM_SUCCESS_MS } from "../../constants";
+import {
+	type OrgRole,
+	type Organization,
+	type OrganizationMember,
+	RequireSdk,
+	useOrganization,
+} from "../hooks";
+import type { ThemeVariables } from "./styles";
+import {
+	baseStyles,
+	defaultTheme,
+	injectGlobalStyles,
+	mergeStyles,
+} from "./styles";
 
 // ============================================
 // OrganizationProfile
@@ -18,21 +29,25 @@ import { useOrganization, RequireSdk, type Organization, type OrganizationMember
 
 export interface OrganizationProfileProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Organization to display (uses hook if not provided) */
-	organization?: Organization
+	organization?: Organization;
 	/** Whether user can edit */
-	canEdit?: boolean
+	canEdit?: boolean;
 	/** Called when save is clicked */
-	onSave?: (data: { name: string; slug?: string; logoUrl?: string }) => Promise<void>
+	onSave?: (data: {
+		name: string;
+		slug?: string;
+		logoUrl?: string;
+	}) => Promise<void>;
 	/** Called when delete is clicked */
-	onDelete?: () => Promise<void>
+	onDelete?: () => Promise<void>;
 	/** Show danger zone */
-	showDangerZone?: boolean
+	showDangerZone?: boolean;
 	/** Show members section */
-	showMembers?: boolean
+	showMembers?: boolean;
 }
 
 /**
@@ -48,10 +63,14 @@ export interface OrganizationProfileProps {
  */
 export function OrganizationProfile(props: OrganizationProfileProps) {
 	return (
-		<RequireSdk services={['organization']} componentType="organization" theme={props.theme}>
+		<RequireSdk
+			services={["organization"]}
+			componentType="organization"
+			theme={props.theme}
+		>
 			<OrganizationProfileInner {...props} />
 		</RequireSdk>
-	)
+	);
 }
 
 /** Inner component that safely uses platform hooks */
@@ -65,110 +84,133 @@ function OrganizationProfileInner({
 	showDangerZone = true,
 	showMembers = true,
 }: OrganizationProfileProps) {
-	const hookResult = useOrganization()
-	const org = propOrg ?? hookResult.organization
-	const members = hookResult.members
+	const hookResult = useOrganization();
+	const org = propOrg ?? hookResult.organization;
+	const members = hookResult.members;
 
-	const [name, setName] = useState(org?.name ?? '')
-	const [slug, setSlug] = useState(org?.slug ?? '')
-	const [isSaving, setIsSaving] = useState(false)
-	const [isDeleting, setIsDeleting] = useState(false)
-	const [saveSuccess, setSaveSuccess] = useState(false)
-	const [deleteConfirm, setDeleteConfirm] = useState('')
+	const [name, setName] = useState(org?.name ?? "");
+	const [slug, setSlug] = useState(org?.slug ?? "");
+	const [isSaving, setIsSaving] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [saveSuccess, setSaveSuccess] = useState(false);
+	const [deleteConfirm, setDeleteConfirm] = useState("");
 
-	const styles = baseStyles(theme)
+	const styles = baseStyles(theme);
 
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	useEffect(() => {
 		if (org) {
-			setName(org.name)
-			setSlug(org.slug ?? '')
+			setName(org.name);
+			setSlug(org.slug ?? "");
 		}
-	}, [org])
+	}, [org]);
 
 	useEffect(() => {
 		if (saveSuccess) {
-			const timer = setTimeout(() => setSaveSuccess(false), UI_FORM_SUCCESS_MS)
-			return () => clearTimeout(timer)
+			const timer = setTimeout(() => setSaveSuccess(false), UI_FORM_SUCCESS_MS);
+			return () => clearTimeout(timer);
 		}
-	}, [saveSuccess])
+	}, [saveSuccess]);
 
 	const handleSave = async (e: FormEvent) => {
-		e.preventDefault()
-		if (!onSave || !name.trim()) return
+		e.preventDefault();
+		if (!onSave || !name.trim()) return;
 
-		setIsSaving(true)
+		setIsSaving(true);
 		try {
-			await onSave({ name: name.trim(), slug: slug.trim() || undefined })
-			setSaveSuccess(true)
+			await onSave({ name: name.trim(), slug: slug.trim() || undefined });
+			setSaveSuccess(true);
 		} finally {
-			setIsSaving(false)
+			setIsSaving(false);
 		}
-	}
+	};
 
 	const handleDelete = async () => {
-		if (!onDelete || deleteConfirm !== org?.name) return
+		if (!onDelete || deleteConfirm !== org?.name) return;
 
-		setIsDeleting(true)
+		setIsDeleting(true);
 		try {
-			await onDelete()
+			await onDelete();
 		} finally {
-			setIsDeleting(false)
+			setIsDeleting(false);
 		}
-	}
+	};
 
 	const containerStyle: CSSProperties = {
 		fontFamily: theme.fontFamily,
-	}
+	};
 
 	const sectionStyle: CSSProperties = {
-		marginBottom: '2rem',
-		padding: '1.5rem',
+		marginBottom: "2rem",
+		padding: "1.5rem",
 		border: `1px solid ${theme.colorBorder}`,
 		borderRadius: theme.borderRadius,
-	}
+	};
 
 	const inputStyle: CSSProperties = {
-		width: '100%',
-		padding: '0.75rem',
+		width: "100%",
+		padding: "0.75rem",
 		border: `1px solid ${theme.colorBorder}`,
 		borderRadius: theme.borderRadius,
 		backgroundColor: theme.colorBackground,
 		color: theme.colorForeground,
 		fontSize: theme.fontSizeSm,
 		fontFamily: theme.fontFamily,
-	}
+	};
 
 	if (!org) {
 		return (
 			<div style={containerStyle} className={className}>
-				<div style={{ textAlign: 'center', padding: '3rem', color: theme.colorMutedForeground }}>
+				<div
+					style={{
+						textAlign: "center",
+						padding: "3rem",
+						color: theme.colorMutedForeground,
+					}}
+				>
 					No organization selected
 				</div>
 			</div>
-		)
+		);
 	}
 
 	return (
 		<div style={containerStyle} className={className}>
 			{/* General Settings */}
 			<div style={sectionStyle}>
-				<h3 style={{ margin: '0 0 1.5rem', fontSize: theme.fontSizeLg, fontWeight: 600 }}>
+				<h3
+					style={{
+						margin: "0 0 1.5rem",
+						fontSize: theme.fontSizeLg,
+						fontWeight: 600,
+					}}
+				>
 					Organization Settings
 				</h3>
 
 				{saveSuccess && (
-					<div style={mergeStyles(styles.alert, styles.alertSuccess, { marginBottom: '1rem' })}>
+					<div
+						style={mergeStyles(styles.alert, styles.alertSuccess, {
+							marginBottom: "1rem",
+						})}
+					>
 						Settings saved successfully
 					</div>
 				)}
 
 				<form onSubmit={handleSave}>
-					<div style={{ marginBottom: '1rem' }}>
-						<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: theme.fontSizeSm }}>
+					<div style={{ marginBottom: "1rem" }}>
+						<label
+							style={{
+								display: "block",
+								marginBottom: "0.5rem",
+								fontWeight: 500,
+								fontSize: theme.fontSizeSm,
+							}}
+						>
 							Organization Name
 						</label>
 						<input
@@ -181,20 +223,35 @@ function OrganizationProfileInner({
 						/>
 					</div>
 
-					<div style={{ marginBottom: '1.5rem' }}>
-						<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: theme.fontSizeSm }}>
+					<div style={{ marginBottom: "1.5rem" }}>
+						<label
+							style={{
+								display: "block",
+								marginBottom: "0.5rem",
+								fontWeight: 500,
+								fontSize: theme.fontSizeSm,
+							}}
+						>
 							URL Slug
 						</label>
 						<input
 							type="text"
 							value={slug}
-							onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+							onChange={(e) =>
+								setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+							}
 							disabled={!canEdit}
 							style={inputStyle}
 							placeholder="my-organization"
 						/>
-						<p style={{ margin: '0.25rem 0 0', fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
-							Used in URLs: /org/{slug || 'my-organization'}
+						<p
+							style={{
+								margin: "0.25rem 0 0",
+								fontSize: theme.fontSizeXs,
+								color: theme.colorMutedForeground,
+							}}
+						>
+							Used in URLs: /org/{slug || "my-organization"}
 						</p>
 					</div>
 
@@ -204,7 +261,7 @@ function OrganizationProfileInner({
 							disabled={isSaving || !name.trim()}
 							style={mergeStyles(styles.button, styles.buttonPrimary)}
 						>
-							{isSaving ? <span style={styles.spinner} /> : 'Save Changes'}
+							{isSaving ? <span style={styles.spinner} /> : "Save Changes"}
 						</button>
 					)}
 				</form>
@@ -213,45 +270,68 @@ function OrganizationProfileInner({
 			{/* Members */}
 			{showMembers && members.length > 0 && (
 				<div style={sectionStyle}>
-					<h3 style={{ margin: '0 0 1rem', fontSize: theme.fontSizeLg, fontWeight: 600 }}>
+					<h3
+						style={{
+							margin: "0 0 1rem",
+							fontSize: theme.fontSizeLg,
+							fontWeight: 600,
+						}}
+					>
 						Members ({members.length})
 					</h3>
-					<div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+					<div
+						style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+					>
 						{members.slice(0, 5).map((member) => (
 							<div
 								key={member.userId}
 								style={{
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'space-between',
-									padding: '0.75rem',
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "space-between",
+									padding: "0.75rem",
 									backgroundColor: theme.colorMuted,
 									borderRadius: theme.borderRadiusSm,
 								}}
 							>
-								<div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										gap: "0.75rem",
+									}}
+								>
 									<div
 										style={{
 											width: 32,
 											height: 32,
-											borderRadius: '50%',
+											borderRadius: "50%",
 											backgroundColor: theme.colorPrimary,
 											color: theme.colorPrimaryForeground,
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'center',
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
 											fontWeight: 600,
 											fontSize: theme.fontSizeXs,
 										}}
 									>
-										{member.name?.charAt(0).toUpperCase() ?? member.email?.charAt(0).toUpperCase() ?? '?'}
+										{member.name?.charAt(0).toUpperCase() ??
+											member.email?.charAt(0).toUpperCase() ??
+											"?"}
 									</div>
 									<div>
-										<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>
+										<div
+											style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}
+										>
 											{member.name ?? member.email}
 										</div>
 										{member.name && member.email && (
-											<div style={{ fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
+											<div
+												style={{
+													fontSize: theme.fontSizeXs,
+													color: theme.colorMutedForeground,
+												}}
+											>
 												{member.email}
 											</div>
 										)}
@@ -260,11 +340,17 @@ function OrganizationProfileInner({
 								<span
 									style={{
 										fontSize: theme.fontSizeXs,
-										padding: '0.25rem 0.5rem',
-										backgroundColor: member.role === 'super_admin' ? theme.colorPrimary : theme.colorBackground,
-										color: member.role === 'super_admin' ? theme.colorPrimaryForeground : theme.colorForeground,
+										padding: "0.25rem 0.5rem",
+										backgroundColor:
+											member.role === "super_admin"
+												? theme.colorPrimary
+												: theme.colorBackground,
+										color:
+											member.role === "super_admin"
+												? theme.colorPrimaryForeground
+												: theme.colorForeground,
 										borderRadius: theme.borderRadiusSm,
-										textTransform: 'capitalize',
+										textTransform: "capitalize",
 									}}
 								>
 									{member.role}
@@ -272,7 +358,14 @@ function OrganizationProfileInner({
 							</div>
 						))}
 						{members.length > 5 && (
-							<p style={{ margin: '0.5rem 0 0', fontSize: theme.fontSizeXs, color: theme.colorMutedForeground, textAlign: 'center' }}>
+							<p
+								style={{
+									margin: "0.5rem 0 0",
+									fontSize: theme.fontSizeXs,
+									color: theme.colorMutedForeground,
+									textAlign: "center",
+								}}
+							>
 								+{members.length - 5} more members
 							</p>
 						)}
@@ -289,15 +382,35 @@ function OrganizationProfileInner({
 						backgroundColor: `${theme.colorDestructive}08`,
 					}}
 				>
-					<h3 style={{ margin: '0 0 0.5rem', fontSize: theme.fontSizeLg, fontWeight: 600, color: theme.colorDestructive }}>
+					<h3
+						style={{
+							margin: "0 0 0.5rem",
+							fontSize: theme.fontSizeLg,
+							fontWeight: 600,
+							color: theme.colorDestructive,
+						}}
+					>
 						Danger Zone
 					</h3>
-					<p style={{ margin: '0 0 1rem', fontSize: theme.fontSizeSm, color: theme.colorMutedForeground }}>
-						Deleting this organization will remove all data, members, and settings. This action cannot be undone.
+					<p
+						style={{
+							margin: "0 0 1rem",
+							fontSize: theme.fontSizeSm,
+							color: theme.colorMutedForeground,
+						}}
+					>
+						Deleting this organization will remove all data, members, and
+						settings. This action cannot be undone.
 					</p>
 
-					<div style={{ marginBottom: '1rem' }}>
-						<label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fontSizeSm }}>
+					<div style={{ marginBottom: "1rem" }}>
+						<label
+							style={{
+								display: "block",
+								marginBottom: "0.5rem",
+								fontSize: theme.fontSizeSm,
+							}}
+						>
 							Type <strong>{org.name}</strong> to confirm
 						</label>
 						<input
@@ -317,12 +430,16 @@ function OrganizationProfileInner({
 							opacity: deleteConfirm !== org.name ? 0.5 : 1,
 						})}
 					>
-						{isDeleting ? <span style={styles.spinner} /> : 'Delete Organization'}
+						{isDeleting ? (
+							<span style={styles.spinner} />
+						) : (
+							"Delete Organization"
+						)}
 					</button>
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 // ============================================
@@ -331,19 +448,19 @@ function OrganizationProfileInner({
 
 export interface CreateOrganizationProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Title */
-	title?: string
+	title?: string;
 	/** Description */
-	description?: string
+	description?: string;
 	/** Called when organization is created */
-	onCreate: (data: { name: string; slug?: string }) => Promise<void>
+	onCreate: (data: { name: string; slug?: string }) => Promise<void>;
 	/** Called when cancelled */
-	onCancel?: () => void
+	onCancel?: () => void;
 	/** Show cancel button */
-	showCancel?: boolean
+	showCancel?: boolean;
 }
 
 /**
@@ -362,88 +479,113 @@ export interface CreateOrganizationProps {
 export function CreateOrganization({
 	theme = defaultTheme,
 	className,
-	title = 'Create Organization',
-	description = 'Organizations let you collaborate with team members and manage shared resources.',
+	title = "Create Organization",
+	description = "Organizations let you collaborate with team members and manage shared resources.",
 	onCreate,
 	onCancel,
 	showCancel = true,
 }: CreateOrganizationProps) {
-	const [name, setName] = useState('')
-	const [slug, setSlug] = useState('')
-	const [isCreating, setIsCreating] = useState(false)
-	const [error, setError] = useState<string | null>(null)
+	const [name, setName] = useState("");
+	const [slug, setSlug] = useState("");
+	const [isCreating, setIsCreating] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 
-	const styles = baseStyles(theme)
+	const styles = baseStyles(theme);
 
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Auto-generate slug from name
 	useEffect(() => {
 		if (name && !slug) {
 			const generatedSlug = name
 				.toLowerCase()
-				.replace(/[^a-z0-9]+/g, '-')
-				.replace(/^-|-$/g, '')
-			setSlug(generatedSlug)
+				.replace(/[^a-z0-9]+/g, "-")
+				.replace(/^-|-$/g, "");
+			setSlug(generatedSlug);
 		}
-	}, [name, slug])
+	}, [name, slug]);
 
 	const handleSubmit = async (e: FormEvent) => {
-		e.preventDefault()
-		if (!name.trim()) return
+		e.preventDefault();
+		if (!name.trim()) return;
 
-		setIsCreating(true)
-		setError(null)
+		setIsCreating(true);
+		setError(null);
 
 		try {
-			await onCreate({ name: name.trim(), slug: slug.trim() || undefined })
+			await onCreate({ name: name.trim(), slug: slug.trim() || undefined });
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Failed to create organization')
+			setError(
+				err instanceof Error ? err.message : "Failed to create organization",
+			);
 		} finally {
-			setIsCreating(false)
+			setIsCreating(false);
 		}
-	}
+	};
 
 	const containerStyle: CSSProperties = {
 		fontFamily: theme.fontFamily,
-		maxWidth: '400px',
-		margin: '0 auto',
-	}
+		maxWidth: "400px",
+		margin: "0 auto",
+	};
 
 	const inputStyle: CSSProperties = {
-		width: '100%',
-		padding: '0.75rem',
+		width: "100%",
+		padding: "0.75rem",
 		border: `1px solid ${theme.colorBorder}`,
 		borderRadius: theme.borderRadius,
 		backgroundColor: theme.colorBackground,
 		color: theme.colorForeground,
 		fontSize: theme.fontSizeSm,
 		fontFamily: theme.fontFamily,
-	}
+	};
 
 	return (
 		<div style={containerStyle} className={className}>
-			<div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+			<div style={{ textAlign: "center", marginBottom: "2rem" }}>
 				<OrgIcon color={theme.colorPrimary} size={48} />
-				<h2 style={{ margin: '1rem 0 0.5rem', fontSize: theme.fontSizeXl, fontWeight: 600 }}>
+				<h2
+					style={{
+						margin: "1rem 0 0.5rem",
+						fontSize: theme.fontSizeXl,
+						fontWeight: 600,
+					}}
+				>
 					{title}
 				</h2>
-				<p style={{ margin: 0, color: theme.colorMutedForeground, fontSize: theme.fontSizeSm }}>
+				<p
+					style={{
+						margin: 0,
+						color: theme.colorMutedForeground,
+						fontSize: theme.fontSizeSm,
+					}}
+				>
 					{description}
 				</p>
 			</div>
 
 			{error && (
-				<div style={mergeStyles(styles.alert, styles.alertError, { marginBottom: '1rem' })}>
+				<div
+					style={mergeStyles(styles.alert, styles.alertError, {
+						marginBottom: "1rem",
+					})}
+				>
 					{error}
 				</div>
 			)}
 
 			<form onSubmit={handleSubmit}>
-				<div style={{ marginBottom: '1rem' }}>
-					<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: theme.fontSizeSm }}>
+				<div style={{ marginBottom: "1rem" }}>
+					<label
+						style={{
+							display: "block",
+							marginBottom: "0.5rem",
+							fontWeight: 500,
+							fontSize: theme.fontSizeSm,
+						}}
+					>
 						Organization Name *
 					</label>
 					<input
@@ -456,28 +598,45 @@ export function CreateOrganization({
 					/>
 				</div>
 
-				<div style={{ marginBottom: '1.5rem' }}>
-					<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: theme.fontSizeSm }}>
+				<div style={{ marginBottom: "1.5rem" }}>
+					<label
+						style={{
+							display: "block",
+							marginBottom: "0.5rem",
+							fontWeight: 500,
+							fontSize: theme.fontSizeSm,
+						}}
+					>
 						URL Slug
 					</label>
 					<input
 						type="text"
 						value={slug}
-						onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+						onChange={(e) =>
+							setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+						}
 						style={inputStyle}
 						placeholder="acme-inc"
 					/>
-					<p style={{ margin: '0.25rem 0 0', fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
+					<p
+						style={{
+							margin: "0.25rem 0 0",
+							fontSize: theme.fontSizeXs,
+							color: theme.colorMutedForeground,
+						}}
+					>
 						Letters, numbers, and hyphens only
 					</p>
 				</div>
 
-				<div style={{ display: 'flex', gap: '0.75rem' }}>
+				<div style={{ display: "flex", gap: "0.75rem" }}>
 					{showCancel && onCancel && (
 						<button
 							type="button"
 							onClick={onCancel}
-							style={mergeStyles(styles.button, styles.buttonOutline, { flex: 1 })}
+							style={mergeStyles(styles.button, styles.buttonOutline, {
+								flex: 1,
+							})}
 						>
 							Cancel
 						</button>
@@ -485,14 +644,20 @@ export function CreateOrganization({
 					<button
 						type="submit"
 						disabled={isCreating || !name.trim()}
-						style={mergeStyles(styles.button, styles.buttonPrimary, { flex: 1 })}
+						style={mergeStyles(styles.button, styles.buttonPrimary, {
+							flex: 1,
+						})}
 					>
-						{isCreating ? <span style={styles.spinner} /> : 'Create Organization'}
+						{isCreating ? (
+							<span style={styles.spinner} />
+						) : (
+							"Create Organization"
+						)}
 					</button>
 				</div>
 			</form>
 		</div>
-	)
+	);
 }
 
 // ============================================
@@ -501,21 +666,21 @@ export function CreateOrganization({
 
 export interface OrganizationListProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Organizations to display */
-	organizations: Organization[]
+	organizations: Organization[];
 	/** Currently selected organization ID */
-	selectedId?: string
+	selectedId?: string;
 	/** Called when organization is selected */
-	onSelect?: (org: Organization) => void
+	onSelect?: (org: Organization) => void;
 	/** Called when create is clicked */
-	onCreate?: () => void
+	onCreate?: () => void;
 	/** Show create button */
-	showCreateButton?: boolean
+	showCreateButton?: boolean;
 	/** Empty state message */
-	emptyMessage?: string
+	emptyMessage?: string;
 }
 
 /**
@@ -539,44 +704,46 @@ export function OrganizationList({
 	onSelect,
 	onCreate,
 	showCreateButton = true,
-	emptyMessage = 'No organizations',
+	emptyMessage = "No organizations",
 }: OrganizationListProps) {
-	const styles = baseStyles(theme)
+	const styles = baseStyles(theme);
 
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	const containerStyle: CSSProperties = {
 		fontFamily: theme.fontFamily,
-	}
+	};
 
 	const itemStyle = (isSelected: boolean): CSSProperties => ({
-		display: 'flex',
-		alignItems: 'center',
-		gap: '0.75rem',
-		padding: '0.75rem 1rem',
+		display: "flex",
+		alignItems: "center",
+		gap: "0.75rem",
+		padding: "0.75rem 1rem",
 		border: `1px solid ${isSelected ? theme.colorPrimary : theme.colorBorder}`,
 		borderRadius: theme.borderRadius,
-		backgroundColor: isSelected ? `${theme.colorPrimary}10` : theme.colorBackground,
-		cursor: 'pointer',
-		transition: 'all 0.15s ease',
-	})
+		backgroundColor: isSelected
+			? `${theme.colorPrimary}10`
+			: theme.colorBackground,
+		cursor: "pointer",
+		transition: "all 0.15s ease",
+	});
 
 	return (
 		<div style={containerStyle} className={className}>
 			{organizations.length === 0 ? (
 				<div
 					style={{
-						padding: '3rem',
-						textAlign: 'center',
+						padding: "3rem",
+						textAlign: "center",
 						color: theme.colorMutedForeground,
 						border: `1px solid ${theme.colorBorder}`,
 						borderRadius: theme.borderRadius,
 					}}
 				>
 					<OrgIcon color={theme.colorMuted} size={48} />
-					<p style={{ margin: '1rem 0' }}>{emptyMessage}</p>
+					<p style={{ margin: "1rem 0" }}>{emptyMessage}</p>
 					{showCreateButton && onCreate && (
 						<button
 							type="button"
@@ -589,7 +756,9 @@ export function OrganizationList({
 				</div>
 			) : (
 				<>
-					<div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+					<div
+						style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+					>
 						{organizations.map((org) => (
 							<div
 								key={org.id}
@@ -598,8 +767,8 @@ export function OrganizationList({
 								role="button"
 								tabIndex={0}
 								onKeyDown={(e) => {
-									if (e.key === 'Enter' || e.key === ' ') {
-										onSelect?.(org)
+									if (e.key === "Enter" || e.key === " ") {
+										onSelect?.(org);
 									}
 								}}
 							>
@@ -610,9 +779,9 @@ export function OrganizationList({
 										borderRadius: theme.borderRadiusSm,
 										backgroundColor: theme.colorPrimary,
 										color: theme.colorPrimaryForeground,
-										display: 'flex',
-										alignItems: 'center',
-										justifyContent: 'center',
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
 										fontWeight: 600,
 										fontSize: theme.fontSizeLg,
 									}}
@@ -620,9 +789,16 @@ export function OrganizationList({
 									{org.name.charAt(0).toUpperCase()}
 								</div>
 								<div style={{ flex: 1, minWidth: 0 }}>
-									<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>{org.name}</div>
+									<div style={{ fontWeight: 500, fontSize: theme.fontSizeSm }}>
+										{org.name}
+									</div>
 									{org.slug && (
-										<div style={{ fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
+										<div
+											style={{
+												fontSize: theme.fontSizeXs,
+												color: theme.colorMutedForeground,
+											}}
+										>
 											/{org.slug}
 										</div>
 									)}
@@ -639,8 +815,8 @@ export function OrganizationList({
 							type="button"
 							onClick={onCreate}
 							style={mergeStyles(styles.button, styles.buttonOutline, {
-								width: '100%',
-								marginTop: '1rem',
+								width: "100%",
+								marginTop: "1rem",
 							})}
 						>
 							<PlusIcon color={theme.colorForeground} /> Create Organization
@@ -649,7 +825,7 @@ export function OrganizationList({
 				</>
 			)}
 		</div>
-	)
+	);
 }
 
 // ============================================
@@ -658,28 +834,56 @@ export function OrganizationList({
 
 function OrgIcon({ color, size = 24 }: { color: string; size?: number }) {
 	return (
-		<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+		<svg
+			width={size}
+			height={size}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke={color}
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
 			<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
 			<circle cx="9" cy="7" r="4" />
 			<path d="M23 21v-2a4 4 0 0 0-3-3.87" />
 			<path d="M16 3.13a4 4 0 0 1 0 7.75" />
 		</svg>
-	)
+	);
 }
 
 function CheckIcon({ color }: { color: string }) {
 	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke={color}
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+		>
 			<polyline points="20 6 9 17 4 12" />
 		</svg>
-	)
+	);
 }
 
 function PlusIcon({ color }: { color: string }) {
 	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.25rem' }}>
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke={color}
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			style={{ marginRight: "0.25rem" }}
+		>
 			<line x1="12" y1="5" x2="12" y2="19" />
 			<line x1="5" y1="12" x2="19" y2="12" />
 		</svg>
-	)
+	);
 }

@@ -5,7 +5,12 @@
  * Supports various operators for flexible targeting.
  */
 
-import type { EvaluationContext, TargetingCondition, TargetingOperator, TargetingRule } from './types'
+import type {
+	EvaluationContext,
+	TargetingCondition,
+	TargetingOperator,
+	TargetingRule,
+} from "./types";
 
 // ==========================================
 // Condition Evaluation
@@ -14,30 +19,41 @@ import type { EvaluationContext, TargetingCondition, TargetingOperator, Targetin
 /**
  * Evaluate a single targeting condition
  */
-function evaluateCondition(condition: TargetingCondition, context: EvaluationContext): boolean {
-	const attributeValue = getAttributeValue(condition.attribute, context)
+function evaluateCondition(
+	condition: TargetingCondition,
+	context: EvaluationContext,
+): boolean {
+	const attributeValue = getAttributeValue(condition.attribute, context);
 
 	// Handle null/undefined attribute
 	if (attributeValue === null || attributeValue === undefined) {
 		// Only 'not_in' and 'not_contains' can match when attribute is missing
-		if (condition.operator === 'not_in' || condition.operator === 'not_contains') {
-			return true
+		if (
+			condition.operator === "not_in" ||
+			condition.operator === "not_contains"
+		) {
+			return true;
 		}
-		return false
+		return false;
 	}
 
-	return evaluateOperator(condition.operator, attributeValue, condition.value)
+	return evaluateOperator(condition.operator, attributeValue, condition.value);
 }
 
 /**
  * Evaluate all conditions in a rule (AND logic)
  */
-function evaluateRule(rule: TargetingRule, context: EvaluationContext): boolean {
+function evaluateRule(
+	rule: TargetingRule,
+	context: EvaluationContext,
+): boolean {
 	if (rule.conditions.length === 0) {
-		return true // No conditions = always match
+		return true; // No conditions = always match
 	}
 
-	return rule.conditions.every((condition) => evaluateCondition(condition, context))
+	return rule.conditions.every((condition) =>
+		evaluateCondition(condition, context),
+	);
 }
 
 /**
@@ -45,14 +61,14 @@ function evaluateRule(rule: TargetingRule, context: EvaluationContext): boolean 
  */
 export function findMatchingRule(
 	rules: TargetingRule[],
-	context: EvaluationContext
+	context: EvaluationContext,
 ): TargetingRule | null {
 	for (const rule of rules) {
 		if (evaluateRule(rule, context)) {
-			return rule
+			return rule;
 		}
 	}
-	return null
+	return null;
 }
 
 // ==========================================
@@ -70,25 +86,25 @@ export function findMatchingRule(
  */
 function getAttributeValue(path: string, context: EvaluationContext): unknown {
 	// Handle top-level attributes first
-	if (path in context && !path.includes('.')) {
-		return context[path]
+	if (path in context && !path.includes(".")) {
+		return context[path];
 	}
 
 	// Handle nested paths
-	const parts = path.split('.')
-	let value: unknown = context
+	const parts = path.split(".");
+	let value: unknown = context;
 
 	for (const part of parts) {
 		if (value === null || value === undefined) {
-			return undefined
+			return undefined;
 		}
-		if (typeof value !== 'object') {
-			return undefined
+		if (typeof value !== "object") {
+			return undefined;
 		}
-		value = (value as Record<string, unknown>)[part]
+		value = (value as Record<string, unknown>)[part];
 	}
 
-	return value
+	return value;
 }
 
 // ==========================================
@@ -98,61 +114,65 @@ function getAttributeValue(path: string, context: EvaluationContext): unknown {
 /**
  * Evaluate a comparison operator
  */
-function evaluateOperator(operator: TargetingOperator, actual: unknown, expected: unknown): boolean {
+function evaluateOperator(
+	operator: TargetingOperator,
+	actual: unknown,
+	expected: unknown,
+): boolean {
 	switch (operator) {
-		case 'eq':
-			return equals(actual, expected)
+		case "eq":
+			return equals(actual, expected);
 
-		case 'neq':
-			return !equals(actual, expected)
+		case "neq":
+			return !equals(actual, expected);
 
-		case 'gt':
-			return compare(actual, expected) > 0
+		case "gt":
+			return compare(actual, expected) > 0;
 
-		case 'gte':
-			return compare(actual, expected) >= 0
+		case "gte":
+			return compare(actual, expected) >= 0;
 
-		case 'lt':
-			return compare(actual, expected) < 0
+		case "lt":
+			return compare(actual, expected) < 0;
 
-		case 'lte':
-			return compare(actual, expected) <= 0
+		case "lte":
+			return compare(actual, expected) <= 0;
 
-		case 'contains':
-			return contains(actual, expected)
+		case "contains":
+			return contains(actual, expected);
 
-		case 'not_contains':
-			return !contains(actual, expected)
+		case "not_contains":
+			return !contains(actual, expected);
 
-		case 'starts_with':
-			return startsWith(actual, expected)
+		case "starts_with":
+			return startsWith(actual, expected);
 
-		case 'ends_with':
-			return endsWith(actual, expected)
+		case "ends_with":
+			return endsWith(actual, expected);
 
-		case 'in':
-			return isIn(actual, expected)
+		case "in":
+			return isIn(actual, expected);
 
-		case 'not_in':
-			return !isIn(actual, expected)
+		case "not_in":
+			return !isIn(actual, expected);
 
-		case 'regex':
-			return matchesRegex(actual, expected)
+		case "regex":
+			return matchesRegex(actual, expected);
 
-		case 'semver_gt':
-			return compareSemver(actual, expected) > 0
+		case "semver_gt":
+			return compareSemver(actual, expected) > 0;
 
-		case 'semver_gte':
-			return compareSemver(actual, expected) >= 0
+		case "semver_gte":
+			return compareSemver(actual, expected) >= 0;
 
-		case 'semver_lt':
-			return compareSemver(actual, expected) < 0
+		case "semver_lt":
+			return compareSemver(actual, expected) < 0;
 
-		case 'semver_lte':
-			return compareSemver(actual, expected) <= 0
+		case "semver_lte":
+			return compareSemver(actual, expected) <= 0;
 
 		default:
-			return false
+			return false;
 	}
 }
 
@@ -162,73 +182,73 @@ function evaluateOperator(operator: TargetingOperator, actual: unknown, expected
 
 function equals(actual: unknown, expected: unknown): boolean {
 	// Type coercion for common cases
-	if (typeof actual === 'string' && typeof expected === 'number') {
-		return actual === String(expected)
+	if (typeof actual === "string" && typeof expected === "number") {
+		return actual === String(expected);
 	}
-	if (typeof actual === 'number' && typeof expected === 'string') {
-		return String(actual) === expected
+	if (typeof actual === "number" && typeof expected === "string") {
+		return String(actual) === expected;
 	}
-	if (typeof actual === 'boolean' && typeof expected === 'string') {
-		return actual === (expected === 'true')
+	if (typeof actual === "boolean" && typeof expected === "string") {
+		return actual === (expected === "true");
 	}
 
-	return actual === expected
+	return actual === expected;
 }
 
 function compare(actual: unknown, expected: unknown): number {
-	const numActual = Number(actual)
-	const numExpected = Number(expected)
+	const numActual = Number(actual);
+	const numExpected = Number(expected);
 
 	if (!isNaN(numActual) && !isNaN(numExpected)) {
-		return numActual - numExpected
+		return numActual - numExpected;
 	}
 
 	// Fallback to string comparison
-	const strActual = String(actual)
-	const strExpected = String(expected)
-	return strActual.localeCompare(strExpected)
+	const strActual = String(actual);
+	const strExpected = String(expected);
+	return strActual.localeCompare(strExpected);
 }
 
 function contains(actual: unknown, expected: unknown): boolean {
-	if (typeof actual === 'string' && typeof expected === 'string') {
-		return actual.toLowerCase().includes(expected.toLowerCase())
+	if (typeof actual === "string" && typeof expected === "string") {
+		return actual.toLowerCase().includes(expected.toLowerCase());
 	}
 	if (Array.isArray(actual)) {
-		return actual.some((item) => equals(item, expected))
+		return actual.some((item) => equals(item, expected));
 	}
-	return false
+	return false;
 }
 
 function startsWith(actual: unknown, expected: unknown): boolean {
-	if (typeof actual === 'string' && typeof expected === 'string') {
-		return actual.toLowerCase().startsWith(expected.toLowerCase())
+	if (typeof actual === "string" && typeof expected === "string") {
+		return actual.toLowerCase().startsWith(expected.toLowerCase());
 	}
-	return false
+	return false;
 }
 
 function endsWith(actual: unknown, expected: unknown): boolean {
-	if (typeof actual === 'string' && typeof expected === 'string') {
-		return actual.toLowerCase().endsWith(expected.toLowerCase())
+	if (typeof actual === "string" && typeof expected === "string") {
+		return actual.toLowerCase().endsWith(expected.toLowerCase());
 	}
-	return false
+	return false;
 }
 
 function isIn(actual: unknown, expected: unknown): boolean {
 	if (!Array.isArray(expected)) {
-		return false
+		return false;
 	}
-	return expected.some((item) => equals(actual, item))
+	return expected.some((item) => equals(actual, item));
 }
 
 function matchesRegex(actual: unknown, expected: unknown): boolean {
-	if (typeof actual !== 'string' || typeof expected !== 'string') {
-		return false
+	if (typeof actual !== "string" || typeof expected !== "string") {
+		return false;
 	}
 	try {
-		const regex = new RegExp(expected, 'i')
-		return regex.test(actual)
+		const regex = new RegExp(expected, "i");
+		return regex.test(actual);
 	} catch {
-		return false
+		return false;
 	}
 }
 
@@ -237,76 +257,85 @@ function matchesRegex(actual: unknown, expected: unknown): boolean {
 // ==========================================
 
 interface SemverParts {
-	major: number
-	minor: number
-	patch: number
-	prerelease: string[]
+	major: number;
+	minor: number;
+	patch: number;
+	prerelease: string[];
 }
 
 function parseSemver(version: unknown): SemverParts | null {
-	if (typeof version !== 'string') return null
+	if (typeof version !== "string") return null;
 
-	const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/)
-	if (!match) return null
+	const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
+	if (!match) return null;
 
 	return {
-		major: parseInt(match[1]!, 10),
-		minor: parseInt(match[2]!, 10),
-		patch: parseInt(match[3]!, 10),
-		prerelease: match[4] ? match[4].split('.') : [],
-	}
+		major: Number.parseInt(match[1]!, 10),
+		minor: Number.parseInt(match[2]!, 10),
+		patch: Number.parseInt(match[3]!, 10),
+		prerelease: match[4] ? match[4].split(".") : [],
+	};
 }
 
 function compareSemver(actual: unknown, expected: unknown): number {
-	const actualParts = parseSemver(actual)
-	const expectedParts = parseSemver(expected)
+	const actualParts = parseSemver(actual);
+	const expectedParts = parseSemver(expected);
 
-	if (!actualParts || !expectedParts) return 0
+	if (!actualParts || !expectedParts) return 0;
 
 	// Compare major.minor.patch
 	if (actualParts.major !== expectedParts.major) {
-		return actualParts.major - expectedParts.major
+		return actualParts.major - expectedParts.major;
 	}
 	if (actualParts.minor !== expectedParts.minor) {
-		return actualParts.minor - expectedParts.minor
+		return actualParts.minor - expectedParts.minor;
 	}
 	if (actualParts.patch !== expectedParts.patch) {
-		return actualParts.patch - expectedParts.patch
+		return actualParts.patch - expectedParts.patch;
 	}
 
 	// Prerelease versions have lower precedence
-	if (actualParts.prerelease.length === 0 && expectedParts.prerelease.length > 0) {
-		return 1 // Actual is release, expected is prerelease
+	if (
+		actualParts.prerelease.length === 0 &&
+		expectedParts.prerelease.length > 0
+	) {
+		return 1; // Actual is release, expected is prerelease
 	}
-	if (actualParts.prerelease.length > 0 && expectedParts.prerelease.length === 0) {
-		return -1 // Actual is prerelease, expected is release
+	if (
+		actualParts.prerelease.length > 0 &&
+		expectedParts.prerelease.length === 0
+	) {
+		return -1; // Actual is prerelease, expected is release
 	}
 
 	// Compare prerelease identifiers
-	const maxLen = Math.max(actualParts.prerelease.length, expectedParts.prerelease.length)
+	const maxLen = Math.max(
+		actualParts.prerelease.length,
+		expectedParts.prerelease.length,
+	);
 	for (let i = 0; i < maxLen; i++) {
-		const actualPre = actualParts.prerelease[i]
-		const expectedPre = expectedParts.prerelease[i]
+		const actualPre = actualParts.prerelease[i];
+		const expectedPre = expectedParts.prerelease[i];
 
-		if (actualPre === undefined) return -1
-		if (expectedPre === undefined) return 1
+		if (actualPre === undefined) return -1;
+		if (expectedPre === undefined) return 1;
 
-		const numActual = parseInt(actualPre, 10)
-		const numExpected = parseInt(expectedPre, 10)
+		const numActual = Number.parseInt(actualPre, 10);
+		const numExpected = Number.parseInt(expectedPre, 10);
 
 		if (!isNaN(numActual) && !isNaN(numExpected)) {
-			if (numActual !== numExpected) return numActual - numExpected
+			if (numActual !== numExpected) return numActual - numExpected;
 		} else if (!isNaN(numActual)) {
-			return -1 // Numbers have lower precedence than strings
+			return -1; // Numbers have lower precedence than strings
 		} else if (!isNaN(numExpected)) {
-			return 1
+			return 1;
 		} else {
-			const cmp = actualPre.localeCompare(expectedPre)
-			if (cmp !== 0) return cmp
+			const cmp = actualPre.localeCompare(expectedPre);
+			if (cmp !== 0) return cmp;
 		}
 	}
 
-	return 0
+	return 0;
 }
 
 // ==========================================
@@ -316,40 +345,48 @@ function compareSemver(actual: unknown, expected: unknown): number {
 /**
  * Merge context objects, with later objects taking precedence
  */
-export function mergeContext(...contexts: (EvaluationContext | undefined)[]): EvaluationContext {
-	const result: EvaluationContext = {}
+export function mergeContext(
+	...contexts: (EvaluationContext | undefined)[]
+): EvaluationContext {
+	const result: EvaluationContext = {};
 
 	for (const ctx of contexts) {
-		if (!ctx) continue
+		if (!ctx) continue;
 
 		for (const [key, value] of Object.entries(ctx)) {
-			if (value === undefined) continue
+			if (value === undefined) continue;
 
-			if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+			if (
+				typeof value === "object" &&
+				value !== null &&
+				!Array.isArray(value)
+			) {
 				// Deep merge objects
 				result[key] = {
 					...(result[key] as Record<string, unknown> | undefined),
 					...value,
-				}
+				};
 			} else {
-				result[key] = value
+				result[key] = value;
 			}
 		}
 	}
 
-	return result
+	return result;
 }
 
 /**
  * Validate that required context fields are present
  */
 function validateContext(context: EvaluationContext): string[] {
-	const errors: string[] = []
+	const errors: string[] = [];
 
 	// Must have at least one identifier
 	if (!context.userId && !context.anonymousId) {
-		errors.push('Context must have either userId or anonymousId for consistent bucketing')
+		errors.push(
+			"Context must have either userId or anonymousId for consistent bucketing",
+		);
 	}
 
-	return errors
+	return errors;
 }

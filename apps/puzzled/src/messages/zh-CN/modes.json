@@ -1,8 +1,8 @@
 {
-  "daily": "每日",
-  "archive": "历史",
-  "dailyDesc": "今日谜题 - 仅有一次机会",
-  "archiveDesc": "游玩过去的谜题",
-  "premiumRequired": "需要 Premium",
-  "upgrade": "升级"
+	"daily": "每日",
+	"archive": "历史",
+	"dailyDesc": "今日谜题 - 仅有一次机会",
+	"archiveDesc": "游玩过去的谜题",
+	"premiumRequired": "需要 Premium",
+	"upgrade": "升级"
 }

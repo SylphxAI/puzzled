@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Global Error Handler
@@ -10,10 +10,10 @@
  * to demonstrate real error tracking integration.
  */
 
-import { useGlobalErrorHandler } from '@sylphx/sdk/react'
+import { useGlobalErrorHandler } from "@sylphx/sdk/react";
 
 interface GlobalErrorHandlerProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 /**
@@ -38,11 +38,11 @@ export function GlobalErrorHandler({ children }: GlobalErrorHandlerProps) {
 		handleErrors: true,
 		handleRejections: true,
 		onCapture: (eventId) => {
-			if (eventId && process.env.NODE_ENV === 'development') {
-				console.log('[Sylphx] Error captured:', eventId)
+			if (eventId && process.env.NODE_ENV === "development") {
+				console.log("[Sylphx] Error captured:", eventId);
 			}
 		},
-	})
+	});
 
-	return <>{children}</>
+	return <>{children}</>;
 }

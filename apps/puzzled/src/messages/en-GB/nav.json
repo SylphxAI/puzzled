@@ -1,9 +1,9 @@
 {
-  "home": "Home",
-  "games": "Games",
-  "stats": "Stats",
-  "leaderboard": "Leaderboard",
-  "pricing": "Pricing",
-  "profile": "Profile",
-  "main": "Main navigation"
+	"home": "Home",
+	"games": "Games",
+	"stats": "Stats",
+	"leaderboard": "Leaderboard",
+	"pricing": "Pricing",
+	"profile": "Profile",
+	"main": "Main navigation"
 }

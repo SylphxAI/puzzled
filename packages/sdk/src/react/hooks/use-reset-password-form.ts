@@ -29,183 +29,206 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useMemo, useContext } from 'react'
-import { SdkAuthContext, type SdkAuthContextValue } from '../services-context'
-import { UI_COPY_FEEDBACK_MS, MIN_PASSWORD_LENGTH } from '../../constants'
+import { useCallback, useContext, useMemo, useState } from "react";
+import { MIN_PASSWORD_LENGTH, UI_COPY_FEEDBACK_MS } from "../../constants";
+import { SdkAuthContext, type SdkAuthContextValue } from "../services-context";
 
 // ============================================
 // Types
 // ============================================
 
 export interface ResetPasswordFormState {
-	password: string
-	confirmPassword: string
+	password: string;
+	confirmPassword: string;
 }
 
 export interface UseResetPasswordFormOptions {
 	/** Reset token from URL */
-	token: string
+	token: string;
 	/** Minimum password length */
-	minPasswordLength?: number
+	minPasswordLength?: number;
 	/** URL to redirect after reset */
-	afterResetUrl?: string
+	afterResetUrl?: string;
 	/**
 	 * Custom submit handler. If provided, replaces context-based auth.
 	 * Throw error to indicate failure.
 	 */
-	submitHandler?: (token: string, newPassword: string) => Promise<void>
+	submitHandler?: (token: string, newPassword: string) => Promise<void>;
 	/** Callback on success */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Callback on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 }
 
 export interface UseResetPasswordFormReturn {
 	// Form state
-	form: ResetPasswordFormState
-	setPassword: (password: string) => void
-	setConfirmPassword: (confirmPassword: string) => void
-	resetForm: () => void
+	form: ResetPasswordFormState;
+	setPassword: (password: string) => void;
+	setConfirmPassword: (confirmPassword: string) => void;
+	resetForm: () => void;
 
 	// Password visibility
-	showPassword: boolean
-	toggleShowPassword: () => void
+	showPassword: boolean;
+	toggleShowPassword: () => void;
 
 	// Validation
-	passwordValid: boolean
-	passwordsMatch: boolean
-	isValid: boolean
-	minPasswordLength: number
+	passwordValid: boolean;
+	passwordsMatch: boolean;
+	isValid: boolean;
+	minPasswordLength: number;
 
 	// UI state
-	isLoading: boolean
-	error: string | null
-	success: boolean
-	clearError: () => void
+	isLoading: boolean;
+	error: string | null;
+	success: boolean;
+	clearError: () => void;
 
 	// Handlers
-	handleSubmit: (e?: React.FormEvent) => Promise<void>
+	handleSubmit: (e?: React.FormEvent) => Promise<void>;
 
 	// Config
-	token: string
-	afterResetUrl: string
+	token: string;
+	afterResetUrl: string;
 }
 
 // ============================================
 // Hook Implementation
 // ============================================
 
-export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseResetPasswordFormReturn {
+export function useResetPasswordForm(
+	options: UseResetPasswordFormOptions,
+): UseResetPasswordFormReturn {
 	const {
 		token,
 		minPasswordLength = MIN_PASSWORD_LENGTH, // NIST SP 800-63B (2023) recommends 12+ chars
-		afterResetUrl = '/login',
+		afterResetUrl = "/login",
 		submitHandler,
 		onSuccess,
 		onError,
-	} = options
+	} = options;
 
 	// Get auth context (may be null if outside provider)
-	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null
+	const authContext = useContext(SdkAuthContext) as SdkAuthContextValue | null;
 
 	// Form state
 	const [form, setForm] = useState<ResetPasswordFormState>({
-		password: '',
-		confirmPassword: '',
-	})
+		password: "",
+		confirmPassword: "",
+	});
 
 	// UI state
-	const [showPassword, setShowPassword] = useState(false)
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState(false)
+	const [showPassword, setShowPassword] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState(false);
 
 	// Validation
-	const passwordValid = useMemo(() => form.password.length >= minPasswordLength, [form.password, minPasswordLength])
+	const passwordValid = useMemo(
+		() => form.password.length >= minPasswordLength,
+		[form.password, minPasswordLength],
+	);
 	const passwordsMatch = useMemo(
-		() => form.password === form.confirmPassword && form.confirmPassword.length > 0,
-		[form.password, form.confirmPassword]
-	)
-	const isValid = useMemo(() => passwordValid && passwordsMatch, [passwordValid, passwordsMatch])
+		() =>
+			form.password === form.confirmPassword && form.confirmPassword.length > 0,
+		[form.password, form.confirmPassword],
+	);
+	const isValid = useMemo(
+		() => passwordValid && passwordsMatch,
+		[passwordValid, passwordsMatch],
+	);
 
 	// Form setters
 	const setPassword = useCallback((password: string) => {
-		setForm((prev) => ({ ...prev, password }))
-		setError(null)
-	}, [])
+		setForm((prev) => ({ ...prev, password }));
+		setError(null);
+	}, []);
 
 	const setConfirmPassword = useCallback((confirmPassword: string) => {
-		setForm((prev) => ({ ...prev, confirmPassword }))
-		setError(null)
-	}, [])
+		setForm((prev) => ({ ...prev, confirmPassword }));
+		setError(null);
+	}, []);
 
 	const resetForm = useCallback(() => {
-		setForm({ password: '', confirmPassword: '' })
-		setError(null)
-		setSuccess(false)
-	}, [])
+		setForm({ password: "", confirmPassword: "" });
+		setError(null);
+		setSuccess(false);
+	}, []);
 
 	const clearError = useCallback(() => {
-		setError(null)
-	}, [])
+		setError(null);
+	}, []);
 
 	const toggleShowPassword = useCallback(() => {
-		setShowPassword((prev) => !prev)
-	}, [])
+		setShowPassword((prev) => !prev);
+	}, []);
 
 	// Submit handler
 	const handleSubmit = useCallback(
 		async (e?: React.FormEvent) => {
-			e?.preventDefault()
+			e?.preventDefault();
 
 			// Validate
 			if (!passwordsMatch) {
-				setError('Passwords do not match')
-				return
+				setError("Passwords do not match");
+				return;
 			}
 
 			if (!passwordValid) {
-				setError(`Password must be at least ${minPasswordLength} characters`)
-				return
+				setError(`Password must be at least ${minPasswordLength} characters`);
+				return;
 			}
 
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
 				if (submitHandler) {
-					await submitHandler(token, form.password)
+					await submitHandler(token, form.password);
 				} else {
 					// Use auth context (SDK mode)
 					if (!authContext) {
-						setError('SDK not configured. Please wrap your app with SylphxProvider.')
-						return
+						setError(
+							"SDK not configured. Please wrap your app with SylphxProvider.",
+						);
+						return;
 					}
 
-					await authContext.resetPassword(token, form.password)
+					await authContext.resetPassword(token, form.password);
 				}
 
-				setSuccess(true)
-				onSuccess?.()
+				setSuccess(true);
+				onSuccess?.();
 
 				// Redirect after short delay
-				if (typeof window !== 'undefined') {
+				if (typeof window !== "undefined") {
 					setTimeout(() => {
-						window.location.href = afterResetUrl
-					}, UI_COPY_FEEDBACK_MS)
+						window.location.href = afterResetUrl;
+					}, UI_COPY_FEEDBACK_MS);
 				}
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to reset password'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to reset password";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[form, token, passwordValid, passwordsMatch, minPasswordLength, submitHandler, authContext, afterResetUrl, onSuccess, onError]
-	)
+		[
+			form,
+			token,
+			passwordValid,
+			passwordsMatch,
+			minPasswordLength,
+			submitHandler,
+			authContext,
+			afterResetUrl,
+			onSuccess,
+			onError,
+		],
+	);
 
 	return {
 		// Form state
@@ -236,5 +259,5 @@ export function useResetPasswordForm(options: UseResetPasswordFormOptions): UseR
 		// Config
 		token,
 		afterResetUrl,
-	}
+	};
 }

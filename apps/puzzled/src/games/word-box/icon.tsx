@@ -5,11 +5,11 @@
  * Represents the Letter Boxed mechanic
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function WordBoxIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -49,5 +49,5 @@ export function WordBoxIcon({ size = 24, className, ...props }: IconProps) {
 			{/* Connection line */}
 			<path d="M8 4L16 20" strokeWidth="1" opacity="0.5" />
 		</svg>
-	)
+	);
 }

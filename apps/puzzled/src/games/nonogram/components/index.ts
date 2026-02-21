@@ -1,1 +1,1 @@
-export { NonogramGrid } from './grid'
+export { NonogramGrid } from "./grid";

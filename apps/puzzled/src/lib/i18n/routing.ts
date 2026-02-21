@@ -1,6 +1,6 @@
-import { createNavigation } from 'next-intl/navigation'
-import { defineRouting } from 'next-intl/routing'
-import { defaultLocale, locales } from './config'
+import { createNavigation } from "next-intl/navigation";
+import { defineRouting } from "next-intl/routing";
+import { defaultLocale, locales } from "./config";
 
 /**
  * Next-intl routing configuration
@@ -16,13 +16,13 @@ export const routing = defineRouting({
 	defaultLocale: defaultLocale,
 
 	// Default locale (en-US) has no prefix, others do
-	localePrefix: 'as-needed',
+	localePrefix: "as-needed",
 
 	// Disable automatic browser language detection redirect
 	// Users stay on default (en-US) unless they explicitly switch
 	// This prevents confusing redirects and maintains SEO
 	localeDetection: false,
-})
+});
 
 // Export locale-aware navigation utilities
-export const { Link, usePathname, useRouter } = createNavigation(routing)
+export const { Link, usePathname, useRouter } = createNavigation(routing);

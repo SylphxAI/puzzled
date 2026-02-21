@@ -15,20 +15,16 @@
  * - __sylphx_{namespace}_user     — JS-readable user data (5 min)
  */
 
-import { cache } from 'react'
-import type { User, TokenResponse } from '../types'
+import { cache } from "react";
+import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from "../constants";
 import {
-	getAuthCookies,
-	setAuthCookies,
-	clearAuthCookies,
-} from './cookies'
-import { verifyAccessToken } from '../server'
-import {
-	validateAndSanitizeSecretKey,
-	validateAndSanitizeAppId,
 	getCookieNamespace as getCookieNamespaceFromKey,
-} from '../key-validation'
-import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from '../constants'
+	validateAndSanitizeAppId,
+	validateAndSanitizeSecretKey,
+} from "../key-validation";
+import { verifyAccessToken } from "../server";
+import type { TokenResponse, User } from "../types";
+import { clearAuthCookies, getAuthCookies, setAuthCookies } from "./cookies";
 
 // =============================================================================
 // Type Guards
@@ -37,14 +33,14 @@ import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from '../constants'
 /** Type guard for token response */
 function isTokenResponse(data: unknown): data is TokenResponse {
 	return (
-		typeof data === 'object' &&
+		typeof data === "object" &&
 		data !== null &&
-		'accessToken' in data &&
-		'refreshToken' in data &&
-		'user' in data &&
-		typeof (data as TokenResponse).accessToken === 'string' &&
-		typeof (data as TokenResponse).refreshToken === 'string'
-	)
+		"accessToken" in data &&
+		"refreshToken" in data &&
+		"user" in data &&
+		typeof (data as TokenResponse).accessToken === "string" &&
+		typeof (data as TokenResponse).refreshToken === "string"
+	);
 }
 
 // =============================================================================
@@ -52,7 +48,7 @@ function isTokenResponse(data: unknown): data is TokenResponse {
 // =============================================================================
 
 // Configuration for server helpers (auto-configured from env vars)
-let serverConfig: { secretKey: string; platformUrl: string } | null = null
+let serverConfig: { secretKey: string; platformUrl: string } | null = null;
 
 /**
  * Configure the SDK for server-side usage
@@ -75,15 +71,15 @@ let serverConfig: { secretKey: string; platformUrl: string } | null = null
  * ```
  */
 export function configureServer(config: {
-	secretKey: string
-	platformUrl?: string
+	secretKey: string;
+	platformUrl?: string;
 }) {
 	// Validate and sanitize secret key using SSOT
-	const secretKey = validateAndSanitizeSecretKey(config.secretKey)
+	const secretKey = validateAndSanitizeSecretKey(config.secretKey);
 	serverConfig = {
 		secretKey,
 		platformUrl: (config.platformUrl || DEFAULT_PLATFORM_URL).trim(),
-	}
+	};
 }
 
 /**
@@ -95,28 +91,30 @@ export function configureServer(config: {
 function getConfig(): { secretKey: string; platformUrl: string } | null {
 	// Return cached config if already set
 	if (serverConfig) {
-		return serverConfig
+		return serverConfig;
 	}
 
 	// Auto-configure from environment variables (Clerk/Auth0 pattern)
-	const rawSecretKey = process.env.SYLPHX_SECRET_KEY
+	const rawSecretKey = process.env.SYLPHX_SECRET_KEY;
 	if (!rawSecretKey) {
 		// No secret key configured - cannot authenticate
 		// This is expected for public pages that don't need auth
-		return null
+		return null;
 	}
 
 	try {
-		const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
-		const platformUrl = (process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL).trim()
+		const secretKey = validateAndSanitizeSecretKey(rawSecretKey);
+		const platformUrl = (
+			process.env.SYLPHX_PLATFORM_URL || DEFAULT_PLATFORM_URL
+		).trim();
 
 		// Cache the auto-configured settings
-		serverConfig = { secretKey, platformUrl }
-		return serverConfig
+		serverConfig = { secretKey, platformUrl };
+		return serverConfig;
 	} catch (error) {
 		// Invalid secret key format - log warning and return null
-		console.warn('[Sylphx] Invalid SYLPHX_SECRET_KEY format:', error)
-		return null
+		console.warn("[Sylphx] Invalid SYLPHX_SECRET_KEY format:", error);
+		return null;
 	}
 }
 
@@ -125,9 +123,9 @@ function getConfig(): { secretKey: string; platformUrl: string } | null {
  * Uses the SSOT getCookieNamespace function from key-validation.
  */
 function getCookieNamespace(): string {
-	const config = getConfig()
-	if (!config) return 'sylphx'
-	return getCookieNamespaceFromKey(config.secretKey)
+	const config = getConfig();
+	if (!config) return "sylphx";
+	return getCookieNamespaceFromKey(config.secretKey);
 }
 
 // =============================================================================
@@ -138,10 +136,10 @@ function getCookieNamespace(): string {
  * Auth state returned by auth()
  */
 export interface AuthResult {
-	userId: string | null
-	user: User | null
+	userId: string | null;
+	user: User | null;
 	/** Session token (for internal use only - not exposed to client) */
-	sessionToken: string | null
+	sessionToken: string | null;
 }
 
 // =============================================================================
@@ -171,26 +169,31 @@ export interface AuthResult {
  * ```
  */
 export const auth = cache(async (): Promise<AuthResult> => {
-	const config = getConfig()
+	const config = getConfig();
 
 	// SDK not configured - return unauthenticated state
 	if (!config) {
-		return { userId: null, user: null, sessionToken: null }
+		return { userId: null, user: null, sessionToken: null };
 	}
 
-	const namespace = getCookieNamespace()
-	const { sessionToken, refreshToken, user, expiresAt } = await getAuthCookies(namespace)
+	const namespace = getCookieNamespace();
+	const { sessionToken, refreshToken, user, expiresAt } =
+		await getAuthCookies(namespace);
 
 	// No tokens at all
 	if (!sessionToken && !refreshToken) {
-		return { userId: null, user: null, sessionToken: null }
+		return { userId: null, user: null, sessionToken: null };
 	}
 
 	// Session token exists and not expired (with 30 second buffer)
-	if (sessionToken && expiresAt && expiresAt > Date.now() + TOKEN_EXPIRY_BUFFER_MS) {
+	if (
+		sessionToken &&
+		expiresAt &&
+		expiresAt > Date.now() + TOKEN_EXPIRY_BUFFER_MS
+	) {
 		// Verify token is valid
 		try {
-			const payload = await verifyAccessToken(sessionToken, config)
+			const payload = await verifyAccessToken(sessionToken, config);
 			return {
 				userId: payload.sub,
 				user: user || {
@@ -201,7 +204,7 @@ export const auth = cache(async (): Promise<AuthResult> => {
 					emailVerified: payload.email_verified,
 				},
 				sessionToken,
-			}
+			};
 		} catch {
 			// Token verification failed - treat as expired
 		}
@@ -218,15 +221,15 @@ export const auth = cache(async (): Promise<AuthResult> => {
 				userId: user.id,
 				user,
 				sessionToken: sessionToken || null, // May be expired, but user data is valid
-			}
+			};
 		}
 	}
 
 	// No valid session - return unauthenticated
 	// NOTE: We don't clear cookies here because cookies can only be modified in Route Handlers.
 	// The middleware will clear invalid cookies on next request.
-	return { userId: null, user: null, sessionToken: null }
-})
+	return { userId: null, user: null, sessionToken: null };
+});
 
 // =============================================================================
 // Convenience Functions
@@ -247,16 +250,16 @@ export const auth = cache(async (): Promise<AuthResult> => {
  * ```
  */
 export async function currentUser(): Promise<User | null> {
-	const { user } = await auth()
-	return user
+	const { user } = await auth();
+	return user;
 }
 
 /**
  * Get the current user ID (null if not logged in)
  */
 export async function currentUserId(): Promise<string | null> {
-	const { userId } = await auth()
-	return userId
+	const { userId } = await auth();
+	return userId;
 }
 
 // =============================================================================
@@ -282,35 +285,39 @@ export async function currentUserId(): Promise<string | null> {
  * ```
  */
 export async function handleCallback(code: string): Promise<User> {
-	const config = getConfig()
+	const config = getConfig();
 	if (!config) {
-		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
+		throw new Error(
+			"Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.",
+		);
 	}
 
 	const response = await fetch(`${config.platformUrl}/api/auth/token`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({
-			grant_type: 'authorization_code',
+			grant_type: "authorization_code",
 			code,
 			client_secret: config.secretKey,
 		}),
-	})
+	});
 
 	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({ error: 'Token exchange failed' })) as { error?: string }
-		throw new Error(errorData.error || 'Token exchange failed')
+		const errorData = (await response
+			.json()
+			.catch(() => ({ error: "Token exchange failed" }))) as { error?: string };
+		throw new Error(errorData.error || "Token exchange failed");
 	}
 
-	const data: unknown = await response.json()
+	const data: unknown = await response.json();
 	if (!isTokenResponse(data)) {
-		throw new Error('Invalid token response format')
+		throw new Error("Invalid token response format");
 	}
 
-	const namespace = getCookieNamespace()
-	await setAuthCookies(namespace, data)
+	const namespace = getCookieNamespace();
+	await setAuthCookies(namespace, data);
 
-	return data.user
+	return data.user;
 }
 
 // =============================================================================
@@ -333,34 +340,34 @@ export async function handleCallback(code: string): Promise<User> {
  * ```
  */
 export async function signOut(): Promise<void> {
-	const config = getConfig()
+	const config = getConfig();
 
 	// SDK not configured - nothing to sign out from
 	if (!config) {
-		return
+		return;
 	}
 
-	const namespace = getCookieNamespace()
-	const { refreshToken } = await getAuthCookies(namespace)
+	const namespace = getCookieNamespace();
+	const { refreshToken } = await getAuthCookies(namespace);
 
 	// Revoke token on platform
 	if (refreshToken) {
 		try {
 			await fetch(`${config.platformUrl}/api/auth/revoke`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					token: refreshToken,
 					client_secret: config.secretKey,
 				}),
-			})
+			});
 		} catch {
 			// Ignore revocation errors
 		}
 	}
 
 	// Clear all auth cookies
-	await clearAuthCookies(namespace)
+	await clearAuthCookies(namespace);
 }
 
 // =============================================================================
@@ -377,9 +384,9 @@ export async function signOut(): Promise<void> {
  * through the standard flow.
  */
 export async function syncAuthToCookies(tokens: TokenResponse): Promise<void> {
-	'use server'
-	const namespace = getCookieNamespace()
-	await setAuthCookies(namespace, tokens)
+	"use server";
+	const namespace = getCookieNamespace();
+	await setAuthCookies(namespace, tokens);
 }
 
 // =============================================================================
@@ -390,39 +397,43 @@ export async function syncAuthToCookies(tokens: TokenResponse): Promise<void> {
  * Get authorization URL for OAuth redirect
  */
 export function getAuthorizationUrl(options?: {
-	redirectUri?: string
-	mode?: 'login' | 'signup'
-	state?: string
-	appId?: string
+	redirectUri?: string;
+	mode?: "login" | "signup";
+	state?: string;
+	appId?: string;
 }): string {
-	const config = getConfig()
+	const config = getConfig();
 	if (!config) {
-		throw new Error('Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.')
+		throw new Error(
+			"Sylphx SDK not configured. Set SYLPHX_SECRET_KEY environment variable.",
+		);
 	}
 
-	const rawClientId = options?.appId || process.env.NEXT_PUBLIC_SYLPHX_APP_ID
+	const rawClientId = options?.appId || process.env.NEXT_PUBLIC_SYLPHX_APP_ID;
 	if (!rawClientId) {
-		throw new Error('App ID is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_APP_ID.')
+		throw new Error(
+			"App ID is required for authorization URL. Set NEXT_PUBLIC_SYLPHX_APP_ID.",
+		);
 	}
 
 	// Validate and sanitize app ID using SSOT
-	const clientId = validateAndSanitizeAppId(rawClientId)
+	const clientId = validateAndSanitizeAppId(rawClientId);
 
 	const params = new URLSearchParams({
 		client_id: clientId,
-		redirect_uri: options?.redirectUri || '/',
-		response_type: 'code',
-	})
+		redirect_uri: options?.redirectUri || "/",
+		response_type: "code",
+	});
 
-	if (options?.mode === 'signup') {
-		params.set('mode', 'signup')
+	if (options?.mode === "signup") {
+		params.set("mode", "signup");
 	}
 
 	if (options?.state) {
-		params.set('state', options.state)
+		params.set("state", options.state);
 	}
 
-	return `${config.platformUrl}/auth/authorize?${params}`
+	return `${config.platformUrl}/auth/authorize?${params}`;
 }
 
 // =============================================================================
@@ -455,6 +466,6 @@ export function getAuthorizationUrl(options?: {
  * ```
  */
 export async function getSessionToken(): Promise<string | null> {
-	const { sessionToken } = await auth()
-	return sessionToken
+	const { sessionToken } = await auth();
+	return sessionToken;
 }

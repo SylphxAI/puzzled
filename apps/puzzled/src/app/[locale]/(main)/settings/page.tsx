@@ -1,4 +1,4 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from "@sylphx/sdk/nextjs";
 import {
 	Bell,
 	CreditCard,
@@ -8,101 +8,101 @@ import {
 	Shield,
 	ShieldCheck,
 	User,
-} from 'lucide-react'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+} from "lucide-react";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'common' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "common" });
 	return {
-		title: t('settings'),
-	}
+		title: t("settings"),
+	};
 }
 
 const settingsCards = [
 	{
-		href: '/settings/profile',
+		href: "/settings/profile",
 		icon: User,
-		labelKey: 'profile' as const,
-		descKey: 'profileDesc' as const,
-		color: 'from-blue-500/20 to-cyan-500/20',
-		iconColor: 'text-blue-500',
+		labelKey: "profile" as const,
+		descKey: "profileDesc" as const,
+		color: "from-blue-500/20 to-cyan-500/20",
+		iconColor: "text-blue-500",
 	},
 	{
-		href: '/settings/account',
+		href: "/settings/account",
 		icon: Shield,
-		labelKey: 'account' as const,
-		descKey: 'accountDesc' as const,
-		color: 'from-purple-500/20 to-pink-500/20',
-		iconColor: 'text-purple-500',
+		labelKey: "account" as const,
+		descKey: "accountDesc" as const,
+		color: "from-purple-500/20 to-pink-500/20",
+		iconColor: "text-purple-500",
 	},
 	{
-		href: '/settings/preferences',
+		href: "/settings/preferences",
 		icon: Palette,
-		labelKey: 'preferences' as const,
-		descKey: 'preferencesDesc' as const,
-		color: 'from-green-500/20 to-emerald-500/20',
-		iconColor: 'text-green-500',
+		labelKey: "preferences" as const,
+		descKey: "preferencesDesc" as const,
+		color: "from-green-500/20 to-emerald-500/20",
+		iconColor: "text-green-500",
 	},
 	{
-		href: '/settings/notifications',
+		href: "/settings/notifications",
 		icon: Bell,
-		labelKey: 'notifications' as const,
-		descKey: 'notificationsDesc' as const,
-		color: 'from-amber-500/20 to-orange-500/20',
-		iconColor: 'text-amber-500',
+		labelKey: "notifications" as const,
+		descKey: "notificationsDesc" as const,
+		color: "from-amber-500/20 to-orange-500/20",
+		iconColor: "text-amber-500",
 	},
 	{
-		href: '/settings/security',
+		href: "/settings/security",
 		icon: ShieldCheck,
-		labelKey: 'security' as const,
-		descKey: 'securityDesc' as const,
-		color: 'from-red-500/20 to-rose-500/20',
-		iconColor: 'text-red-500',
+		labelKey: "security" as const,
+		descKey: "securityDesc" as const,
+		color: "from-red-500/20 to-rose-500/20",
+		iconColor: "text-red-500",
 	},
 	{
-		href: '/settings/subscription',
+		href: "/settings/subscription",
 		icon: CreditCard,
-		labelKey: 'subscription' as const,
-		descKey: 'subscriptionDesc' as const,
-		color: 'from-indigo-500/20 to-violet-500/20',
-		iconColor: 'text-indigo-500',
+		labelKey: "subscription" as const,
+		descKey: "subscriptionDesc" as const,
+		color: "from-indigo-500/20 to-violet-500/20",
+		iconColor: "text-indigo-500",
 	},
 	{
-		href: '/settings/referrals',
+		href: "/settings/referrals",
 		icon: Gift,
-		labelKey: 'referrals' as const,
-		descKey: 'referralsDesc' as const,
-		color: 'from-pink-500/20 to-fuchsia-500/20',
-		iconColor: 'text-pink-500',
+		labelKey: "referrals" as const,
+		descKey: "referralsDesc" as const,
+		color: "from-pink-500/20 to-fuchsia-500/20",
+		iconColor: "text-pink-500",
 	},
 	{
-		href: '/settings/privacy',
+		href: "/settings/privacy",
 		icon: ShieldCheck,
-		labelKey: 'privacy' as const,
-		descKey: 'privacyDesc' as const,
-		color: 'from-slate-500/20 to-gray-500/20',
-		iconColor: 'text-slate-500',
+		labelKey: "privacy" as const,
+		descKey: "privacyDesc" as const,
+		color: "from-slate-500/20 to-gray-500/20",
+		iconColor: "text-slate-500",
 	},
-]
+];
 
 export default async function SettingsOverviewPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings`)
+		redirect(`/${locale}/login?callbackUrl=/settings`);
 	}
 
-	const t = await getTranslations('settings')
+	const t = await getTranslations("settings");
 
 	return (
 		<div className="space-y-6">
@@ -112,8 +112,12 @@ export default async function SettingsOverviewPage({ params }: Props) {
 					<LayoutDashboard className="h-6 w-6 text-primary" />
 				</div>
 				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('nav.overview')}</h1>
-					<p className="text-sm text-muted-foreground">{t('nav.overviewDesc')}</p>
+					<h1 className="text-xl font-semibold tracking-tight">
+						{t("nav.overview")}
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						{t("nav.overviewDesc")}
+					</p>
 				</div>
 			</div>
 
@@ -134,11 +138,13 @@ export default async function SettingsOverviewPage({ params }: Props) {
 							<h3 className="font-medium leading-tight group-hover:text-primary">
 								{t(`nav.${card.labelKey}`)}
 							</h3>
-							<p className="mt-0.5 text-sm text-muted-foreground">{t(`nav.${card.descKey}`)}</p>
+							<p className="mt-0.5 text-sm text-muted-foreground">
+								{t(`nav.${card.descKey}`)}
+							</p>
 						</div>
 					</Link>
 				))}
 			</div>
 		</div>
-	)
+	);
 }

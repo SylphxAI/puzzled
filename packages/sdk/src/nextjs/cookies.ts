@@ -23,16 +23,16 @@
  * - SameSite=Lax for CSRF protection
  */
 
-import { cookies } from 'next/headers'
-import type { TokenResponse, User, UserCookieData } from '../types'
+import { cookies } from "next/headers";
 import {
-	SESSION_TOKEN_LIFETIME_SECONDS,
 	REFRESH_TOKEN_LIFETIME_SECONDS,
+	SESSION_TOKEN_LIFETIME_SECONDS,
 	TOKEN_EXPIRY_BUFFER_MS,
-} from '../constants'
+} from "../constants";
+import type { TokenResponse, User, UserCookieData } from "../types";
 
 // Re-export UserCookieData for consumers of this module
-export type { UserCookieData }
+export type { UserCookieData };
 
 // =============================================================================
 // Cookie Name Generator
@@ -61,7 +61,7 @@ export function getCookieNames(namespace: string) {
 		REFRESH: `__${namespace}_refresh`,
 		/** JS-readable user data for client hydration (5 min) */
 		USER: `__${namespace}_user`,
-	}
+	};
 }
 
 // =============================================================================
@@ -71,12 +71,12 @@ export function getCookieNames(namespace: string) {
 /**
  * Session token lifetime (5 minutes like Clerk)
  */
-export const SESSION_TOKEN_LIFETIME = SESSION_TOKEN_LIFETIME_SECONDS
+export const SESSION_TOKEN_LIFETIME = SESSION_TOKEN_LIFETIME_SECONDS;
 
 /**
  * Refresh token lifetime (30 days)
  */
-export const REFRESH_TOKEN_LIFETIME = REFRESH_TOKEN_LIFETIME_SECONDS
+export const REFRESH_TOKEN_LIFETIME = REFRESH_TOKEN_LIFETIME_SECONDS;
 
 /**
  * Cookie options for HttpOnly tokens (session, refresh)
@@ -88,10 +88,10 @@ export const REFRESH_TOKEN_LIFETIME = REFRESH_TOKEN_LIFETIME_SECONDS
  */
 export const SECURE_COOKIE_OPTIONS = {
 	httpOnly: true,
-	secure: process.env.NODE_ENV === 'production',
-	sameSite: 'lax' as const,
-	path: '/',
-}
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "lax" as const,
+	path: "/",
+};
 
 /**
  * Cookie options for JS-readable user cookie
@@ -102,10 +102,10 @@ export const SECURE_COOKIE_OPTIONS = {
  */
 export const USER_COOKIE_OPTIONS = {
 	httpOnly: false, // Readable by client JS for hydration
-	secure: process.env.NODE_ENV === 'production',
-	sameSite: 'lax' as const,
-	path: '/',
-}
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "lax" as const,
+	path: "/",
+};
 
 // =============================================================================
 // Types
@@ -116,13 +116,13 @@ export const USER_COOKIE_OPTIONS = {
  */
 export interface AuthCookiesData {
 	/** Access token from SESSION cookie (HttpOnly) */
-	sessionToken: string | null
+	sessionToken: string | null;
 	/** Refresh token from REFRESH cookie (HttpOnly) */
-	refreshToken: string | null
+	refreshToken: string | null;
 	/** User data from USER cookie (JS-readable) */
-	user: User | null
+	user: User | null;
 	/** Expiry timestamp from USER cookie */
-	expiresAt: number | null
+	expiresAt: number | null;
 }
 
 // =============================================================================
@@ -134,30 +134,32 @@ export interface AuthCookiesData {
  *
  * Used by auth() to read current auth state.
  */
-export async function getAuthCookies(namespace: string): Promise<AuthCookiesData> {
-	const cookieStore = await cookies()
-	const names = getCookieNames(namespace)
+export async function getAuthCookies(
+	namespace: string,
+): Promise<AuthCookiesData> {
+	const cookieStore = await cookies();
+	const names = getCookieNames(namespace);
 
-	const sessionToken = cookieStore.get(names.SESSION)?.value || null
-	const refreshToken = cookieStore.get(names.REFRESH)?.value || null
-	const userCookieValue = cookieStore.get(names.USER)?.value || null
+	const sessionToken = cookieStore.get(names.SESSION)?.value || null;
+	const refreshToken = cookieStore.get(names.REFRESH)?.value || null;
+	const userCookieValue = cookieStore.get(names.USER)?.value || null;
 
-	let user: User | null = null
-	let expiresAt: number | null = null
+	let user: User | null = null;
+	let expiresAt: number | null = null;
 
 	if (userCookieValue) {
 		try {
-			const parsed: UserCookieData = JSON.parse(userCookieValue)
-			user = parsed.user
-			expiresAt = parsed.expiresAt
+			const parsed: UserCookieData = JSON.parse(userCookieValue);
+			user = parsed.user;
+			expiresAt = parsed.expiresAt;
 		} catch {
 			// Invalid JSON, treat as no user
-			user = null
-			expiresAt = null
+			user = null;
+			expiresAt = null;
 		}
 	}
 
-	return { sessionToken, refreshToken, user, expiresAt }
+	return { sessionToken, refreshToken, user, expiresAt };
 }
 
 /**
@@ -175,36 +177,36 @@ export async function getAuthCookies(namespace: string): Promise<AuthCookiesData
 export async function setAuthCookies(
 	namespace: string,
 	response: TokenResponse,
-	options?: { sessionLifetime?: number }
+	options?: { sessionLifetime?: number },
 ): Promise<void> {
-	const cookieStore = await cookies()
-	const names = getCookieNames(namespace)
+	const cookieStore = await cookies();
+	const names = getCookieNames(namespace);
 
 	// Use custom session lifetime or default (5 min)
-	const sessionLifetime = options?.sessionLifetime ?? SESSION_TOKEN_LIFETIME
-	const expiresAt = Date.now() + sessionLifetime * 1000
+	const sessionLifetime = options?.sessionLifetime ?? SESSION_TOKEN_LIFETIME;
+	const expiresAt = Date.now() + sessionLifetime * 1000;
 
 	// SESSION cookie - HttpOnly access token
 	cookieStore.set(names.SESSION, response.accessToken, {
 		...SECURE_COOKIE_OPTIONS,
 		maxAge: sessionLifetime,
-	})
+	});
 
 	// REFRESH cookie - HttpOnly refresh token (30 days)
 	cookieStore.set(names.REFRESH, response.refreshToken, {
 		...SECURE_COOKIE_OPTIONS,
 		maxAge: REFRESH_TOKEN_LIFETIME,
-	})
+	});
 
 	// USER cookie - JS-readable for client hydration
 	const userData: UserCookieData = {
 		user: response.user,
 		expiresAt,
-	}
+	};
 	cookieStore.set(names.USER, JSON.stringify(userData), {
 		...USER_COOKIE_OPTIONS,
 		maxAge: sessionLifetime,
-	})
+	});
 }
 
 /**
@@ -213,12 +215,12 @@ export async function setAuthCookies(
  * Call on sign out to remove all auth state.
  */
 export async function clearAuthCookies(namespace: string): Promise<void> {
-	const cookieStore = await cookies()
-	const names = getCookieNames(namespace)
+	const cookieStore = await cookies();
+	const names = getCookieNames(namespace);
 
-	cookieStore.delete(names.SESSION)
-	cookieStore.delete(names.REFRESH)
-	cookieStore.delete(names.USER)
+	cookieStore.delete(names.SESSION);
+	cookieStore.delete(names.REFRESH);
+	cookieStore.delete(names.USER);
 }
 
 /**
@@ -227,18 +229,18 @@ export async function clearAuthCookies(namespace: string): Promise<void> {
  * Uses a 30 second buffer to account for network latency.
  */
 export async function isSessionExpired(namespace: string): Promise<boolean> {
-	const { expiresAt } = await getAuthCookies(namespace)
-	if (!expiresAt) return true
+	const { expiresAt } = await getAuthCookies(namespace);
+	if (!expiresAt) return true;
 	// 30 second buffer
-	return expiresAt < Date.now() + TOKEN_EXPIRY_BUFFER_MS
+	return expiresAt < Date.now() + TOKEN_EXPIRY_BUFFER_MS;
 }
 
 /**
  * Check if we have a refresh token (can potentially refresh)
  */
 export async function hasRefreshToken(namespace: string): Promise<boolean> {
-	const { refreshToken } = await getAuthCookies(namespace)
-	return !!refreshToken
+	const { refreshToken } = await getAuthCookies(namespace);
+	return !!refreshToken;
 }
 
 // =============================================================================
@@ -246,7 +248,7 @@ export async function hasRefreshToken(namespace: string): Promise<boolean> {
 // =============================================================================
 // Middleware uses NextResponse.cookies, not next/headers cookies()
 
-import type { NextResponse } from 'next/server'
+import type { NextResponse } from "next/server";
 
 /**
  * Set auth cookies on a NextResponse (for middleware use)
@@ -259,30 +261,30 @@ export function setAuthCookiesMiddleware(
 	namespace: string,
 	tokens: TokenResponse,
 ): void {
-	const names = getCookieNames(namespace)
-	const expiresAt = Date.now() + SESSION_TOKEN_LIFETIME * 1000
+	const names = getCookieNames(namespace);
+	const expiresAt = Date.now() + SESSION_TOKEN_LIFETIME * 1000;
 
 	// SESSION cookie - HttpOnly access token
 	response.cookies.set(names.SESSION, tokens.accessToken, {
 		...SECURE_COOKIE_OPTIONS,
 		maxAge: SESSION_TOKEN_LIFETIME,
-	})
+	});
 
 	// REFRESH cookie - HttpOnly refresh token
 	response.cookies.set(names.REFRESH, tokens.refreshToken, {
 		...SECURE_COOKIE_OPTIONS,
 		maxAge: REFRESH_TOKEN_LIFETIME,
-	})
+	});
 
 	// USER cookie - JS-readable for client hydration
 	const userData: UserCookieData = {
 		user: tokens.user,
 		expiresAt,
-	}
+	};
 	response.cookies.set(names.USER, JSON.stringify(userData), {
 		...USER_COOKIE_OPTIONS,
 		maxAge: SESSION_TOKEN_LIFETIME,
-	})
+	});
 }
 
 /**
@@ -292,10 +294,10 @@ export function clearAuthCookiesMiddleware(
 	response: NextResponse,
 	namespace: string,
 ): void {
-	const names = getCookieNames(namespace)
-	response.cookies.delete(names.SESSION)
-	response.cookies.delete(names.REFRESH)
-	response.cookies.delete(names.USER)
+	const names = getCookieNames(namespace);
+	response.cookies.delete(names.SESSION);
+	response.cookies.delete(names.REFRESH);
+	response.cookies.delete(names.USER);
 }
 
 /**
@@ -303,8 +305,8 @@ export function clearAuthCookiesMiddleware(
  */
 export function parseUserCookie(value: string): UserCookieData | null {
 	try {
-		return JSON.parse(value) as UserCookieData
+		return JSON.parse(value) as UserCookieData;
 	} catch {
-		return null
+		return null;
 	}
 }

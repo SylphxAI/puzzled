@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { Popover as BasePopover } from '@base-ui/react/popover'
-import { motion } from 'motion/react'
-import { forwardRef } from 'react'
-import { duration, easing } from '../motion/config'
-import { cn } from '../utils'
+import { Popover as BasePopover } from "@base-ui/react/popover";
+import { motion } from "motion/react";
+import { forwardRef } from "react";
+import { duration, easing } from "../motion/config";
+import { cn } from "../utils";
 
 // ==================
 // Popover Root
@@ -12,21 +12,25 @@ import { cn } from '../utils'
 
 interface PopoverProps {
 	/** Whether the popover is open (controlled) */
-	open?: boolean
+	open?: boolean;
 	/** Default open state (uncontrolled) */
-	defaultOpen?: boolean
+	defaultOpen?: boolean;
 	/** Handler fired when open state changes */
-	onOpenChange?: (open: boolean) => void
+	onOpenChange?: (open: boolean) => void;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 function Popover({ open, defaultOpen, onOpenChange, children }: PopoverProps) {
 	return (
-		<BasePopover.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+		<BasePopover.Root
+			open={open}
+			defaultOpen={defaultOpen}
+			onOpenChange={onOpenChange}
+		>
 			{children}
 		</BasePopover.Root>
-	)
+	);
 }
 
 // ==================
@@ -35,11 +39,11 @@ function Popover({ open, defaultOpen, onOpenChange, children }: PopoverProps) {
 
 interface PopoverTriggerProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Whether to render as child element */
-	asChild?: boolean
+	asChild?: boolean;
 }
 
 const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>(
@@ -52,8 +56,8 @@ const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>(
 			{asChild ? undefined : children}
 		</BasePopover.Trigger>
 	),
-)
-PopoverTrigger.displayName = 'PopoverTrigger'
+);
+PopoverTrigger.displayName = "PopoverTrigger";
 
 // ==================
 // Popover Anchor (custom implementation - not in Base UI)
@@ -61,9 +65,9 @@ PopoverTrigger.displayName = 'PopoverTrigger'
 
 interface PopoverAnchorProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const PopoverAnchor = forwardRef<HTMLDivElement, PopoverAnchorProps>(
@@ -72,8 +76,8 @@ const PopoverAnchor = forwardRef<HTMLDivElement, PopoverAnchorProps>(
 			{children}
 		</div>
 	),
-)
-PopoverAnchor.displayName = 'PopoverAnchor'
+);
+PopoverAnchor.displayName = "PopoverAnchor";
 
 // ==================
 // Popover Close
@@ -81,9 +85,9 @@ PopoverAnchor.displayName = 'PopoverAnchor'
 
 interface PopoverCloseProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const PopoverClose = forwardRef<HTMLButtonElement, PopoverCloseProps>(
@@ -92,42 +96,55 @@ const PopoverClose = forwardRef<HTMLButtonElement, PopoverCloseProps>(
 			{children}
 		</BasePopover.Close>
 	),
-)
-PopoverClose.displayName = 'PopoverClose'
+);
+PopoverClose.displayName = "PopoverClose";
 
 // ==================
 // Popover Content
 // ==================
 
-const MotionDiv = motion.create('div')
+const MotionDiv = motion.create("div");
 
 interface PopoverContentProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Alignment relative to trigger */
-	align?: 'start' | 'center' | 'end'
+	align?: "start" | "center" | "end";
 	/** Side offset */
-	sideOffset?: number
+	sideOffset?: number;
 	/** Side */
-	side?: 'top' | 'right' | 'bottom' | 'left'
+	side?: "top" | "right" | "bottom" | "left";
 	/** Whether to render as child element (ignored, kept for API compat) */
-	asChild?: boolean
+	asChild?: boolean;
 	/** Force mount the content (ignored, kept for API compat) */
-	forceMount?: boolean
+	forceMount?: boolean;
 	/** Click handler */
-	onClick?: (e: React.MouseEvent) => void
+	onClick?: (e: React.MouseEvent) => void;
 }
 
 const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
-	({ className, align = 'center', sideOffset = 4, side = 'bottom', onClick, children }, ref) => (
+	(
+		{
+			className,
+			align = "center",
+			sideOffset = 4,
+			side = "bottom",
+			onClick,
+			children,
+		},
+		ref,
+	) => (
 		<BasePopover.Portal>
 			<BasePopover.Positioner sideOffset={sideOffset} side={side} align={align}>
 				<BasePopover.Popup
 					ref={ref}
 					onClick={onClick}
-					className={cn('z-popover w-72 rounded-lg border bg-card text-card-foreground shadow-lg outline-none', className)}
+					className={cn(
+						"z-popover w-72 rounded-lg border bg-card text-card-foreground shadow-lg outline-none",
+						className,
+					)}
 				>
 					<MotionDiv
 						initial={{ opacity: 0, scale: 0.95, y: -4 }}
@@ -141,10 +158,10 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
 			</BasePopover.Positioner>
 		</BasePopover.Portal>
 	),
-)
-PopoverContent.displayName = 'PopoverContent'
+);
+PopoverContent.displayName = "PopoverContent";
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor, PopoverClose }
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor, PopoverClose };
 
 export type {
 	PopoverProps,
@@ -152,4 +169,4 @@ export type {
 	PopoverContentProps,
 	PopoverAnchorProps,
 	PopoverCloseProps,
-}
+};

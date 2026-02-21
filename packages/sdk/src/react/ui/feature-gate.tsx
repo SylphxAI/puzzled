@@ -5,13 +5,23 @@
  * Supports loading states, fallbacks, and A/B test variants.
  */
 
-'use client'
+"use client";
 
-import { type ReactNode, type CSSProperties, useState, useContext } from 'react'
-import { useFeatureFlag, FeatureFlagContext, type FlagValue, type FeatureFlag } from '../feature-flag-hooks'
-import type { ThemeVariables } from './styles'
-import { defaultTheme, baseStyles, mergeStyles } from './styles'
-import { Z_INDEX_CRITICAL_OVERLAY } from '../../constants'
+import {
+	type CSSProperties,
+	type ReactNode,
+	useContext,
+	useState,
+} from "react";
+import { Z_INDEX_CRITICAL_OVERLAY } from "../../constants";
+import {
+	type FeatureFlag,
+	FeatureFlagContext,
+	type FlagValue,
+	useFeatureFlag,
+} from "../feature-flag-hooks";
+import type { ThemeVariables } from "./styles";
+import { baseStyles, defaultTheme, mergeStyles } from "./styles";
 
 // ============================================
 // FeatureGate
@@ -19,19 +29,19 @@ import { Z_INDEX_CRITICAL_OVERLAY } from '../../constants'
 
 export interface FeatureGateProps {
 	/** Feature flag key */
-	flag: string
+	flag: string;
 	/** Content to show when flag is enabled */
-	children: ReactNode
+	children: ReactNode;
 	/** Content to show when flag is disabled */
-	fallback?: ReactNode
+	fallback?: ReactNode;
 	/** Content to show while loading */
-	loadingFallback?: ReactNode
+	loadingFallback?: ReactNode;
 	/** Show loading state */
-	showLoading?: boolean
+	showLoading?: boolean;
 	/** Invert the gate (show children when flag is OFF) */
-	invert?: boolean
+	invert?: boolean;
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 }
 
 /**
@@ -67,24 +77,24 @@ export function FeatureGate({
 	invert = false,
 	theme = defaultTheme,
 }: FeatureGateProps) {
-	const { isEnabled, isLoading } = useFeatureFlag(flag)
+	const { isEnabled, isLoading } = useFeatureFlag(flag);
 
 	// Show loading state
 	if (isLoading && showLoading) {
 		if (loadingFallback) {
-			return <>{loadingFallback}</>
+			return <>{loadingFallback}</>;
 		}
-		return <FeatureGateLoading theme={theme} />
+		return <FeatureGateLoading theme={theme} />;
 	}
 
 	// Determine if gate should be open
-	const shouldShow = invert ? !isEnabled : isEnabled
+	const shouldShow = invert ? !isEnabled : isEnabled;
 
 	if (shouldShow) {
-		return <>{children}</>
+		return <>{children}</>;
 	}
 
-	return <>{fallback}</>
+	return <>{fallback}</>;
 }
 
 // ============================================
@@ -93,17 +103,17 @@ export function FeatureGate({
 
 export interface FeatureVariantProps {
 	/** Feature flag key */
-	flag: string
+	flag: string;
 	/** Map of variant name to component */
-	variants: Record<string, ReactNode>
+	variants: Record<string, ReactNode>;
 	/** Default content if no variant matches */
-	defaultVariant?: ReactNode
+	defaultVariant?: ReactNode;
 	/** Content to show while loading */
-	loadingFallback?: ReactNode
+	loadingFallback?: ReactNode;
 	/** Show loading state */
-	showLoading?: boolean
+	showLoading?: boolean;
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 }
 
 /**
@@ -130,22 +140,22 @@ export function FeatureVariant({
 	showLoading = false,
 	theme = defaultTheme,
 }: FeatureVariantProps) {
-	const { variant, isLoading } = useFeatureFlag(flag)
+	const { variant, isLoading } = useFeatureFlag(flag);
 
 	// Show loading state
 	if (isLoading && showLoading) {
 		if (loadingFallback) {
-			return <>{loadingFallback}</>
+			return <>{loadingFallback}</>;
 		}
-		return <FeatureGateLoading theme={theme} />
+		return <FeatureGateLoading theme={theme} />;
 	}
 
 	// Find matching variant
 	if (variant && variant in variants) {
-		return <>{variants[variant]}</>
+		return <>{variants[variant]}</>;
 	}
 
-	return <>{defaultVariant}</>
+	return <>{defaultVariant}</>;
 }
 
 // ============================================
@@ -154,11 +164,11 @@ export function FeatureVariant({
 
 export interface FeatureValueProps<T extends FlagValue = string> {
 	/** Feature flag key */
-	flag: string
+	flag: string;
 	/** Render function that receives the flag value */
-	children: (value: T, isLoading: boolean) => ReactNode
+	children: (value: T, isLoading: boolean) => ReactNode;
 	/** Default value if flag not found */
-	defaultValue?: T
+	defaultValue?: T;
 }
 
 /**
@@ -187,8 +197,8 @@ export function FeatureValue<T extends FlagValue = string>({
 	children,
 	defaultValue,
 }: FeatureValueProps<T>) {
-	const { value, isLoading } = useFeatureFlag<T>(flag, { defaultValue })
-	return <>{children(value, isLoading)}</>
+	const { value, isLoading } = useFeatureFlag<T>(flag, { defaultValue });
+	return <>{children(value, isLoading)}</>;
 }
 
 // ============================================
@@ -196,20 +206,20 @@ export function FeatureValue<T extends FlagValue = string>({
 // ============================================
 
 function FeatureGateLoading({ theme }: { theme: ThemeVariables }) {
-	const styles = baseStyles(theme)
+	const styles = baseStyles(theme);
 
 	const containerStyle: CSSProperties = {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		padding: '1rem',
-	}
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: "1rem",
+	};
 
 	return (
 		<div style={containerStyle}>
 			<span style={styles.spinner} />
 		</div>
-	)
+	);
 }
 
 // ============================================
@@ -218,13 +228,13 @@ function FeatureGateLoading({ theme }: { theme: ThemeVariables }) {
 
 export interface FlagDevToolsProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Position on screen */
-	position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+	position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
 	/** Initially collapsed */
-	defaultCollapsed?: boolean
+	defaultCollapsed?: boolean;
 	/** Custom class name */
-	className?: string
+	className?: string;
 }
 
 /**
@@ -241,63 +251,63 @@ export interface FlagDevToolsProps {
  */
 export function FlagDevTools({
 	theme = defaultTheme,
-	position = 'bottom-right',
+	position = "bottom-right",
 	defaultCollapsed = true,
 	className,
 }: FlagDevToolsProps) {
-	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed)
-	const context = useContext(FeatureFlagContext)
-	const styles = baseStyles(theme)
+	const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+	const context = useContext(FeatureFlagContext);
+	const styles = baseStyles(theme);
 
 	if (!context) {
-		return null
+		return null;
 	}
 
-	const { flags, overrides, setOverride, clearOverrides, isLoading } = context
+	const { flags, overrides, setOverride, clearOverrides, isLoading } = context;
 
 	const positionStyles: Record<string, CSSProperties> = {
-		'bottom-right': { bottom: '1rem', right: '1rem' },
-		'bottom-left': { bottom: '1rem', left: '1rem' },
-		'top-right': { top: '1rem', right: '1rem' },
-		'top-left': { top: '1rem', left: '1rem' },
-	}
+		"bottom-right": { bottom: "1rem", right: "1rem" },
+		"bottom-left": { bottom: "1rem", left: "1rem" },
+		"top-right": { top: "1rem", right: "1rem" },
+		"top-left": { top: "1rem", left: "1rem" },
+	};
 
 	const containerStyle: CSSProperties = mergeStyles(
 		{
-			position: 'fixed',
+			position: "fixed",
 			zIndex: Z_INDEX_CRITICAL_OVERLAY,
 			fontFamily: theme.fontFamily,
 			fontSize: theme.fontSizeSm,
 		},
-		positionStyles[position]
-	)
+		positionStyles[position],
+	);
 
 	const panelStyle: CSSProperties = mergeStyles(styles.card, {
-		width: '320px',
-		maxHeight: '400px',
-		overflow: 'auto',
-	})
+		width: "320px",
+		maxHeight: "400px",
+		overflow: "auto",
+	});
 
 	const headerStyle: CSSProperties = {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		padding: '0.75rem 1rem',
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		padding: "0.75rem 1rem",
 		borderBottom: `1px solid ${theme.colorBorder}`,
 		backgroundColor: theme.colorMuted,
-	}
+	};
 
 	const flagListStyle: CSSProperties = {
-		padding: '0.5rem',
-	}
+		padding: "0.5rem",
+	};
 
 	const flagItemStyle: CSSProperties = {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		padding: '0.5rem',
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		padding: "0.5rem",
 		borderRadius: theme.borderRadiusSm,
-	}
+	};
 
 	if (isCollapsed) {
 		return (
@@ -306,32 +316,39 @@ export function FlagDevTools({
 					type="button"
 					onClick={() => setIsCollapsed(false)}
 					style={mergeStyles(styles.button, styles.buttonPrimary, {
-						padding: '0.5rem 0.75rem',
+						padding: "0.5rem 0.75rem",
 						fontSize: theme.fontSizeXs,
 					})}
 				>
 					<FlagIcon /> Flags
 				</button>
 			</div>
-		)
+		);
 	}
 
-	const flagEntries: [string, FeatureFlag][] = Array.from(flags.entries())
+	const flagEntries: [string, FeatureFlag][] = Array.from(flags.entries());
 
 	return (
 		<div style={containerStyle} className={className}>
 			<div style={panelStyle}>
 				<div style={headerStyle}>
-					<span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+					<span
+						style={{
+							fontWeight: 600,
+							display: "flex",
+							alignItems: "center",
+							gap: "0.5rem",
+						}}
+					>
 						<FlagIcon /> Feature Flags
 					</span>
-					<div style={{ display: 'flex', gap: '0.5rem' }}>
+					<div style={{ display: "flex", gap: "0.5rem" }}>
 						{Object.keys(overrides).length > 0 && (
 							<button
 								type="button"
 								onClick={clearOverrides}
 								style={mergeStyles(styles.button, styles.buttonGhost, {
-									padding: '0.25rem 0.5rem',
+									padding: "0.25rem 0.5rem",
 									fontSize: theme.fontSizeXs,
 								})}
 							>
@@ -342,7 +359,7 @@ export function FlagDevTools({
 							type="button"
 							onClick={() => setIsCollapsed(true)}
 							style={mergeStyles(styles.button, styles.buttonGhost, {
-								padding: '0.25rem',
+								padding: "0.25rem",
 							})}
 						>
 							<CloseIcon />
@@ -351,39 +368,52 @@ export function FlagDevTools({
 				</div>
 
 				{isLoading ? (
-					<div style={{ padding: '2rem', textAlign: 'center' }}>
+					<div style={{ padding: "2rem", textAlign: "center" }}>
 						<span style={styles.spinner} />
 					</div>
 				) : flagEntries.length === 0 ? (
-					<div style={{ padding: '2rem', textAlign: 'center', color: theme.colorMutedForeground }}>
+					<div
+						style={{
+							padding: "2rem",
+							textAlign: "center",
+							color: theme.colorMutedForeground,
+						}}
+					>
 						No flags loaded
 					</div>
 				) : (
 					<div style={flagListStyle}>
 						{flagEntries.map(([key, flag]) => {
-							const hasOverride = key in overrides
-							const currentValue = hasOverride ? overrides[key] : flag.enabled
+							const hasOverride = key in overrides;
+							const currentValue = hasOverride ? overrides[key] : flag.enabled;
 
 							return (
 								<div
 									key={key}
 									style={mergeStyles(flagItemStyle, {
-										backgroundColor: hasOverride ? `${theme.colorWarning}15` : 'transparent',
+										backgroundColor: hasOverride
+											? `${theme.colorWarning}15`
+											: "transparent",
 									})}
 								>
 									<div style={{ flex: 1, minWidth: 0 }}>
 										<div
 											style={{
 												fontWeight: 500,
-												overflow: 'hidden',
-												textOverflow: 'ellipsis',
-												whiteSpace: 'nowrap',
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+												whiteSpace: "nowrap",
 											}}
 										>
 											{key}
 										</div>
 										{flag.variant && (
-											<div style={{ fontSize: theme.fontSizeXs, color: theme.colorMutedForeground }}>
+											<div
+												style={{
+													fontSize: theme.fontSizeXs,
+													color: theme.colorMutedForeground,
+												}}
+											>
 												Variant: {flag.variant}
 											</div>
 										)}
@@ -394,13 +424,13 @@ export function FlagDevTools({
 										theme={theme}
 									/>
 								</div>
-							)
+							);
 						})}
 					</div>
 				)}
 			</div>
 		</div>
-	)
+	);
 }
 
 // ============================================
@@ -408,58 +438,72 @@ export function FlagDevTools({
 // ============================================
 
 interface ToggleProps {
-	checked: boolean
-	onChange: (checked: boolean) => void
-	theme: ThemeVariables
+	checked: boolean;
+	onChange: (checked: boolean) => void;
+	theme: ThemeVariables;
 }
 
 function Toggle({ checked, onChange, theme }: ToggleProps) {
 	const style: CSSProperties = {
-		position: 'relative',
-		width: '36px',
-		height: '20px',
+		position: "relative",
+		width: "36px",
+		height: "20px",
 		backgroundColor: checked ? theme.colorPrimary : theme.colorMuted,
-		borderRadius: '10px',
-		cursor: 'pointer',
-		transition: 'background-color 0.2s ease',
-		border: 'none',
+		borderRadius: "10px",
+		cursor: "pointer",
+		transition: "background-color 0.2s ease",
+		border: "none",
 		padding: 0,
 		flexShrink: 0,
-	}
+	};
 
 	const knobStyle: CSSProperties = {
-		position: 'absolute',
-		top: '2px',
-		left: checked ? '18px' : '2px',
-		width: '16px',
-		height: '16px',
-		backgroundColor: '#fff',
-		borderRadius: '50%',
-		boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
-		transition: 'left 0.2s ease',
-	}
+		position: "absolute",
+		top: "2px",
+		left: checked ? "18px" : "2px",
+		width: "16px",
+		height: "16px",
+		backgroundColor: "#fff",
+		borderRadius: "50%",
+		boxShadow: "0 1px 3px rgba(0, 0, 0, 0.2)",
+		transition: "left 0.2s ease",
+	};
 
 	return (
 		<button type="button" onClick={() => onChange(!checked)} style={style}>
 			<span style={knobStyle} />
 		</button>
-	)
+	);
 }
 
 function FlagIcon() {
 	return (
-		<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+		<svg
+			width="14"
+			height="14"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+		>
 			<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
 			<line x1="4" y1="22" x2="4" y2="15" />
 		</svg>
-	)
+	);
 }
 
 function CloseIcon() {
 	return (
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+		<svg
+			width="16"
+			height="16"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+		>
 			<line x1="18" y1="6" x2="6" y2="18" />
 			<line x1="6" y1="6" x2="18" y2="18" />
 		</svg>
-	)
+	);
 }

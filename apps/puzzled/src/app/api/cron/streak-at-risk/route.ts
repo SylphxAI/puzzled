@@ -1,7 +1,7 @@
-import { createWorkflowCronHandler } from '@/lib/api/cron'
+import { createWorkflowCronHandler } from "@/lib/api/cron";
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * Streak-at-risk reminder cron job
@@ -16,8 +16,8 @@ export const dynamic = 'force-dynamic'
  *   and sends push notifications to warn them
  */
 export const GET = createWorkflowCronHandler({
-	workflowPath: '/api/workflow/daily-reminder',
-	workflowBody: { type: 'streak-at-risk' },
-	logPrefix: '[StreakAtRisk]',
-	successMessage: 'Streak-at-risk workflow triggered',
-})
+	workflowPath: "/api/workflow/daily-reminder",
+	workflowBody: { type: "streak-at-risk" },
+	logPrefix: "[StreakAtRisk]",
+	successMessage: "Streak-at-risk workflow triggered",
+});

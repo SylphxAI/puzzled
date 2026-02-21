@@ -1,8 +1,8 @@
 {
-  "title": "Cookie Preferences",
-  "message": "我們使用必要的 Cookie 來確保網站正常運作。",
-  "details": "這些 Cookie 用於維護您的工作階段和偏好設定。",
-  "accept": "接受",
-  "decline": "拒絕",
-  "learnMore": "瞭解更多"
+	"title": "Cookie Preferences",
+	"message": "我們使用必要的 Cookie 來確保網站正常運作。",
+	"details": "這些 Cookie 用於維護您的工作階段和偏好設定。",
+	"accept": "接受",
+	"decline": "拒絕",
+	"learnMore": "瞭解更多"
 }

@@ -1,1 +1,1 @@
-export { useSaveGameResult } from './use-save-game-result'
+export { useSaveGameResult } from "./use-save-game-result";

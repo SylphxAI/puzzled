@@ -1,21 +1,21 @@
 {
-  "free": "免費",
-  "premium": "Premium",
-  "annual": "年費",
-  "perMonth": "/月",
-  "perYear": "/年",
-  "subscribe": "訂閱",
-  "currentPlan": "目前方案",
-  "upgrade": "升級",
-  "features": {
-    "freeGame": "每日 1 款免費遊戲",
-    "allGames": "所有遊戲無限玩",
-    "noAds": "無廣告",
-    "stats": "完整統計",
-    "leaderboard": "排行榜",
-    "push": "推播通知",
-    "earlyAccess": "新遊戲搶先玩"
-  },
-  "portalError": "Unable to open billing portal",
-  "portalErrorDescription": "Please try again or contact support if the problem persists."
+	"free": "免費",
+	"premium": "Premium",
+	"annual": "年費",
+	"perMonth": "/月",
+	"perYear": "/年",
+	"subscribe": "訂閱",
+	"currentPlan": "目前方案",
+	"upgrade": "升級",
+	"features": {
+		"freeGame": "每日 1 款免費遊戲",
+		"allGames": "所有遊戲無限玩",
+		"noAds": "無廣告",
+		"stats": "完整統計",
+		"leaderboard": "排行榜",
+		"push": "推播通知",
+		"earlyAccess": "新遊戲搶先玩"
+	},
+	"portalError": "Unable to open billing portal",
+	"portalErrorDescription": "Please try again or contact support if the problem persists."
 }

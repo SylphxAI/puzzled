@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { useTranslations } from 'next-intl'
+import { useTranslations } from "next-intl";
 
 /**
  * Crossword How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function CrosswordHowToPlay() {
-	const t = useTranslations('games.crossword')
+	const t = useTranslations("games.crossword");
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t('rules.rule1')}</li>
-					<li>• {t('rules.rule2')}</li>
-					<li>• {t('rules.rule3')}</li>
+					<li>• {t("rules.rule1")}</li>
+					<li>• {t("rules.rule2")}</li>
+					<li>• {t("rules.rule3")}</li>
 				</ul>
 			</div>
 
@@ -40,7 +40,8 @@ export function CrosswordHowToPlay() {
 
 				<div className="text-xs text-muted-foreground">
 					<p>
-						<strong>Across:</strong> 1. Browser marker (TAB), 4. Furry companion (PET)
+						<strong>Across:</strong> 1. Browser marker (TAB), 4. Furry companion
+						(PET)
 					</p>
 					<p>
 						<strong>Down:</strong> 1. Summit (TOP), 3. Wager (BET)
@@ -48,15 +49,18 @@ export function CrosswordHowToPlay() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _CrosswordHowToPlayTitle() {
-	const t = useTranslations('games.crossword')
-	return <>{t('howToPlay')}</>
+	const t = useTranslations("games.crossword");
+	return <>{t("howToPlay")}</>;
 }
 
-function CrosswordCell({ letter, number }: { letter: string; number?: number }) {
+function CrosswordCell({
+	letter,
+	number,
+}: { letter: string; number?: number }) {
 	return (
 		<div className="relative flex h-8 w-8 items-center justify-center bg-background text-sm font-bold">
 			{number && (
@@ -66,5 +70,5 @@ function CrosswordCell({ letter, number }: { letter: string; number?: number }) 
 			)}
 			{letter}
 		</div>
-	)
+	);
 }

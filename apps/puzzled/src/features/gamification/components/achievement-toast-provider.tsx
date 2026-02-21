@@ -1,28 +1,30 @@
-'use client'
+"use client";
 
-import { createContext, useCallback, useContext, useState } from 'react'
-import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { Achievement } from '../lib/achievements'
-import { AchievementToast } from './achievement-toast'
+import { triggerHaptic, triggerSound } from "@/shared/hooks";
+import { createContext, useCallback, useContext, useState } from "react";
+import type { Achievement } from "../lib/achievements";
+import { AchievementToast } from "./achievement-toast";
 
 type AchievementContextValue = {
 	/** Show an achievement toast */
-	showAchievement: (achievement: Achievement, onShare?: () => void) => void
-}
+	showAchievement: (achievement: Achievement, onShare?: () => void) => void;
+};
 
-const AchievementContext = createContext<AchievementContextValue | null>(null)
+const AchievementContext = createContext<AchievementContextValue | null>(null);
 
 export function useAchievementToast() {
-	const context = useContext(AchievementContext)
+	const context = useContext(AchievementContext);
 	if (!context) {
-		throw new Error('useAchievementToast must be used within AchievementToastProvider')
+		throw new Error(
+			"useAchievementToast must be used within AchievementToastProvider",
+		);
 	}
-	return context
+	return context;
 }
 
 type Props = {
-	children: React.ReactNode
-}
+	children: React.ReactNode;
+};
 
 /**
  * Provider for achievement toasts
@@ -31,21 +33,25 @@ type Props = {
  * This provider only handles toast display - no localStorage tracking needed.
  */
 export function AchievementToastProvider({ children }: Props) {
-	const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null)
-	const [onShare, setOnShare] = useState<(() => void) | undefined>(undefined)
+	const [currentAchievement, setCurrentAchievement] =
+		useState<Achievement | null>(null);
+	const [onShare, setOnShare] = useState<(() => void) | undefined>(undefined);
 
 	// Show an achievement toast
-	const showAchievement = useCallback((achievement: Achievement, shareHandler?: () => void) => {
-		triggerSound('achievement')
-		triggerHaptic('achievement')
-		setCurrentAchievement(achievement)
-		setOnShare(() => shareHandler)
-	}, [])
+	const showAchievement = useCallback(
+		(achievement: Achievement, shareHandler?: () => void) => {
+			triggerSound("achievement");
+			triggerHaptic("achievement");
+			setCurrentAchievement(achievement);
+			setOnShare(() => shareHandler);
+		},
+		[],
+	);
 
 	const handleClose = useCallback(() => {
-		setCurrentAchievement(null)
-		setOnShare(undefined)
-	}, [])
+		setCurrentAchievement(null);
+		setOnShare(undefined);
+	}, []);
 
 	return (
 		<AchievementContext.Provider value={{ showAchievement }}>
@@ -64,5 +70,5 @@ export function AchievementToastProvider({ children }: Props) {
 				/>
 			)}
 		</AchievementContext.Provider>
-	)
+	);
 }

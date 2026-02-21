@@ -16,14 +16,14 @@
  */
 
 // Configuration
-export { duration, easing, spring, stagger, transition } from './config'
+export { duration, easing, spring, stagger, transition } from "./config";
 
 // Hooks
 export {
 	useReducedMotion,
 	getReducedMotionProps,
 	getReducedMotionTransition,
-} from './use-reduced-motion'
+} from "./use-reduced-motion";
 
 // Variants
 export {
@@ -59,7 +59,7 @@ export {
 	buttonTapVariants,
 	cardHoverVariants,
 	hoverScaleVariants,
-} from './variants'
+} from "./variants";
 
 // Components
 export {
@@ -94,7 +94,7 @@ export {
 	// Types
 	type HTMLMotionProps,
 	type MotionProps,
-} from './components'
+} from "./components";
 
 // Page transitions
-export { PageTransition, PageTransitionMain } from './page-transition'
+export { PageTransition, PageTransitionMain } from "./page-transition";

@@ -26,10 +26,10 @@
  */
 
 import {
-	TOKEN_EXPIRY_BUFFER_MS,
-	MAX_RETRIES,
 	BASE_RETRY_DELAY_MS,
-} from '../constants'
+	MAX_RETRIES,
+	TOKEN_EXPIRY_BUFFER_MS,
+} from "../constants";
 
 // =============================================================================
 // Types
@@ -37,11 +37,11 @@ import {
 
 export interface TokenManagerConfig {
 	/** Check if user is signed in */
-	isSignedIn: () => boolean
+	isSignedIn: () => boolean;
 	/** Called when token refresh fails (e.g., session expired) */
-	onSessionExpired?: () => void
+	onSessionExpired?: () => void;
 	/** Auth route prefix (e.g., '/auth') */
-	authPrefix: string
+	authPrefix: string;
 }
 
 // =============================================================================
@@ -49,14 +49,14 @@ export interface TokenManagerConfig {
 // =============================================================================
 
 export class TokenManager {
-	private token: string | null = null
-	private tokenExpiry: number | null = null
-	private fetchPromise: Promise<string | null> | null = null
-	private refreshTimer: ReturnType<typeof setTimeout> | null = null
-	private config: TokenManagerConfig
+	private token: string | null = null;
+	private tokenExpiry: number | null = null;
+	private fetchPromise: Promise<string | null> | null = null;
+	private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+	private config: TokenManagerConfig;
 
 	constructor(config: TokenManagerConfig) {
-		this.config = config
+		this.config = config;
 	}
 
 	/**
@@ -68,26 +68,30 @@ export class TokenManager {
 	async getToken(): Promise<string | null> {
 		// Not signed in — no token needed
 		if (!this.config.isSignedIn()) {
-			return null
+			return null;
 		}
 
 		// Token exists and not expired (with buffer for network latency)
-		if (this.token && this.tokenExpiry && Date.now() < this.tokenExpiry - TOKEN_EXPIRY_BUFFER_MS) {
-			return this.token
+		if (
+			this.token &&
+			this.tokenExpiry &&
+			Date.now() < this.tokenExpiry - TOKEN_EXPIRY_BUFFER_MS
+		) {
+			return this.token;
 		}
 
 		// Already fetching — wait for that promise (request queuing)
 		if (this.fetchPromise) {
-			return this.fetchPromise
+			return this.fetchPromise;
 		}
 
 		// Fetch new token
-		this.fetchPromise = this.fetchTokenWithRetry()
+		this.fetchPromise = this.fetchTokenWithRetry();
 		try {
-			const token = await this.fetchPromise
-			return token
+			const token = await this.fetchPromise;
+			return token;
 		} finally {
-			this.fetchPromise = null
+			this.fetchPromise = null;
 		}
 	}
 
@@ -95,11 +99,11 @@ export class TokenManager {
 	 * Invalidate cached token (call on 401)
 	 */
 	invalidate(): void {
-		this.token = null
-		this.tokenExpiry = null
+		this.token = null;
+		this.tokenExpiry = null;
 		if (this.refreshTimer) {
-			clearTimeout(this.refreshTimer)
-			this.refreshTimer = null
+			clearTimeout(this.refreshTimer);
+			this.refreshTimer = null;
 		}
 	}
 
@@ -107,8 +111,8 @@ export class TokenManager {
 	 * Clear everything (call on sign out)
 	 */
 	clear(): void {
-		this.invalidate()
-		this.fetchPromise = null
+		this.invalidate();
+		this.fetchPromise = null;
 	}
 
 	/**
@@ -119,26 +123,26 @@ export class TokenManager {
 			try {
 				// Use configurable authPrefix for token endpoint
 				const response = await fetch(`${this.config.authPrefix}/token`, {
-					method: 'GET',
-					credentials: 'include',
-				})
+					method: "GET",
+					credentials: "include",
+				});
 
 				if (response.ok) {
-					const data = await response.json()
-					const accessToken = data.accessToken as string | null
+					const data = await response.json();
+					const accessToken = data.accessToken as string | null;
 
 					if (accessToken) {
-						this.token = accessToken
-						this.tokenExpiry = this.decodeTokenExpiry(accessToken)
-						this.scheduleRefresh()
-						return accessToken
+						this.token = accessToken;
+						this.tokenExpiry = this.decodeTokenExpiry(accessToken);
+						this.scheduleRefresh();
+						return accessToken;
 					}
 				}
 
 				// 401 = session expired, don't retry
 				if (response.status === 401) {
-					this.config.onSessionExpired?.()
-					return null
+					this.config.onSessionExpired?.();
+					return null;
 				}
 
 				// Other errors — retry with backoff
@@ -148,12 +152,14 @@ export class TokenManager {
 
 			// Exponential backoff: 1s, 2s, 4s
 			if (attempt < MAX_RETRIES - 1) {
-				await new Promise((r) => setTimeout(r, BASE_RETRY_DELAY_MS * 2 ** attempt))
+				await new Promise((r) =>
+					setTimeout(r, BASE_RETRY_DELAY_MS * 2 ** attempt),
+				);
 			}
 		}
 
 		// All retries failed
-		return null
+		return null;
 	}
 
 	/**
@@ -162,16 +168,16 @@ export class TokenManager {
 	 */
 	private decodeTokenExpiry(token: string): number | null {
 		try {
-			const parts = token.split('.')
-			if (parts.length !== 3) return null
-			const payload = parts[1]
-			const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-			const jsonPayload = atob(base64)
-			const parsed = JSON.parse(jsonPayload) as { exp?: number }
+			const parts = token.split(".");
+			if (parts.length !== 3) return null;
+			const payload = parts[1];
+			const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+			const jsonPayload = atob(base64);
+			const parsed = JSON.parse(jsonPayload) as { exp?: number };
 			// exp is in seconds, convert to milliseconds
-			return parsed.exp ? parsed.exp * 1000 : null
+			return parsed.exp ? parsed.exp * 1000 : null;
 		} catch {
-			return null
+			return null;
 		}
 	}
 
@@ -180,21 +186,21 @@ export class TokenManager {
 	 */
 	private scheduleRefresh(): void {
 		if (this.refreshTimer) {
-			clearTimeout(this.refreshTimer)
+			clearTimeout(this.refreshTimer);
 		}
 
-		if (!this.tokenExpiry) return
+		if (!this.tokenExpiry) return;
 
 		// Refresh before expiry (buffer accounts for network latency)
-		const refreshIn = this.tokenExpiry - Date.now() - TOKEN_EXPIRY_BUFFER_MS
+		const refreshIn = this.tokenExpiry - Date.now() - TOKEN_EXPIRY_BUFFER_MS;
 
 		if (refreshIn > 0) {
 			this.refreshTimer = setTimeout(() => {
 				// Only refresh if still signed in
 				if (this.config.isSignedIn()) {
-					this.fetchTokenWithRetry()
+					this.fetchTokenWithRetry();
 				}
-			}, refreshIn)
+			}, refreshIn);
 		}
 	}
 }

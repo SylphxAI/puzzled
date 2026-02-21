@@ -4,46 +4,70 @@
  * Modal/form for inviting new members to an organization.
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useOrganization, RequireSdk, type OrgRole } from '../hooks'
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { UI_SUCCESS_REDIRECT_MS } from "../../constants";
+import { type OrgRole, RequireSdk, useOrganization } from "../hooks";
 import {
 	type ThemeVariables,
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from '../ui/styles'
-import { UI_SUCCESS_REDIRECT_MS } from '../../constants'
+	mergeStyles,
+} from "../ui/styles";
 
 export interface InviteMemberProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called when invite is successful */
-	onSuccess?: (email: string, role: OrgRole) => void
+	onSuccess?: (email: string, role: OrgRole) => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Called when modal is closed */
-	onClose?: () => void
+	onClose?: () => void;
 	/** Show as modal */
-	asModal?: boolean
+	asModal?: boolean;
 	/** Default role for new invites */
-	defaultRole?: OrgRole
+	defaultRole?: OrgRole;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Show role descriptions */
-	showRoleDescriptions?: boolean
+	showRoleDescriptions?: boolean;
 }
 
 const ROLE_OPTIONS: { value: OrgRole; label: string; description: string }[] = [
-	{ value: 'viewer', label: 'Viewer', description: 'Read-only access to analytics' },
-	{ value: 'developer', label: 'Developer', description: 'Manage apps and deployments' },
-	{ value: 'analytics', label: 'Analytics', description: 'View analytics and reports' },
-	{ value: 'billing', label: 'Billing', description: 'Access billing and payments' },
-	{ value: 'admin', label: 'Admin', description: 'Manage members, apps, and analytics' },
-	{ value: 'super_admin', label: 'Super Admin', description: 'Full access to everything' },
-]
+	{
+		value: "viewer",
+		label: "Viewer",
+		description: "Read-only access to analytics",
+	},
+	{
+		value: "developer",
+		label: "Developer",
+		description: "Manage apps and deployments",
+	},
+	{
+		value: "analytics",
+		label: "Analytics",
+		description: "View analytics and reports",
+	},
+	{
+		value: "billing",
+		label: "Billing",
+		description: "Access billing and payments",
+	},
+	{
+		value: "admin",
+		label: "Admin",
+		description: "Manage members, apps, and analytics",
+	},
+	{
+		value: "super_admin",
+		label: "Super Admin",
+		description: "Full access to everything",
+	},
+];
 
 /**
  * InviteMember component for inviting users to an organization
@@ -67,10 +91,14 @@ const ROLE_OPTIONS: { value: OrgRole; label: string; description: string }[] = [
  */
 export function InviteMember(props: InviteMemberProps) {
 	return (
-		<RequireSdk services={['organization']} componentType="organization" theme={props.theme}>
+		<RequireSdk
+			services={["organization"]}
+			componentType="organization"
+			theme={props.theme}
+		>
 			<InviteMemberInner {...props} />
 		</RequireSdk>
-	)
+	);
 }
 
 /** Inner component that safely uses platform hooks */
@@ -80,88 +108,102 @@ function InviteMemberInner({
 	onError,
 	onClose,
 	asModal = false,
-	defaultRole = 'viewer',
+	defaultRole = "viewer",
 	className,
 	showRoleDescriptions = true,
 }: InviteMemberProps) {
-	const { organization, inviteMember, hasPermission } = useOrganization()
-	const styles = baseStyles(theme)
+	const { organization, inviteMember, hasPermission } = useOrganization();
+	const styles = baseStyles(theme);
 
-	const [email, setEmail] = useState('')
-	const [role, setRole] = useState<OrgRole>(defaultRole)
-	const [isLoading, setIsLoading] = useState(false)
-	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState(false)
-	const [focusedField, setFocusedField] = useState<string | null>(null)
+	const [email, setEmail] = useState("");
+	const [role, setRole] = useState<OrgRole>(defaultRole);
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [success, setSuccess] = useState(false);
+	const [focusedField, setFocusedField] = useState<string | null>(null);
 
-	const canInvite = hasPermission('manage_members')
+	const canInvite = hasPermission("manage_members");
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Handle escape key for modal
 	useEffect(() => {
-		if (!asModal) return
+		if (!asModal) return;
 
 		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') {
-				onClose?.()
+			if (e.key === "Escape") {
+				onClose?.();
 			}
-		}
+		};
 
-		document.addEventListener('keydown', handleEscape)
-		return () => document.removeEventListener('keydown', handleEscape)
-	}, [asModal, onClose])
+		document.addEventListener("keydown", handleEscape);
+		return () => document.removeEventListener("keydown", handleEscape);
+	}, [asModal, onClose]);
 
 	const handleSubmit = useCallback(
 		async (e: FormEvent) => {
-			e.preventDefault()
-			if (!email.trim()) return
+			e.preventDefault();
+			if (!email.trim()) return;
 
-			setIsLoading(true)
-			setError(null)
+			setIsLoading(true);
+			setError(null);
 
 			try {
-				await inviteMember(email.trim(), role)
-				setSuccess(true)
-				onSuccess?.(email.trim(), role)
+				await inviteMember(email.trim(), role);
+				setSuccess(true);
+				onSuccess?.(email.trim(), role);
 
 				// Reset form after success
 				setTimeout(() => {
-					setEmail('')
-					setRole(defaultRole)
-					setSuccess(false)
+					setEmail("");
+					setRole(defaultRole);
+					setSuccess(false);
 					if (asModal) {
-						onClose?.()
+						onClose?.();
 					}
-				}, UI_SUCCESS_REDIRECT_MS)
+				}, UI_SUCCESS_REDIRECT_MS);
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to send invite'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to send invite";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[email, role, inviteMember, onSuccess, onError, asModal, onClose, defaultRole]
-	)
+		[
+			email,
+			role,
+			inviteMember,
+			onSuccess,
+			onError,
+			asModal,
+			onClose,
+			defaultRole,
+		],
+	);
 
 	if (!canInvite) {
 		return (
 			<div style={mergeStyles(styles.alert, styles.alertWarning)}>
 				You don't have permission to invite members
 			</div>
-		)
+		);
 	}
 
 	if (!organization) {
 		return (
-			<div style={mergeStyles(styles.textCenter, styles.textMuted, { padding: '1rem' })}>
+			<div
+				style={mergeStyles(styles.textCenter, styles.textMuted, {
+					padding: "1rem",
+				})}
+			>
 				No organization selected
 			</div>
-		)
+		);
 	}
 
 	const formContent = (
@@ -173,11 +215,11 @@ function InviteMemberInner({
 					type="email"
 					value={email}
 					onChange={(e) => {
-						setEmail(e.target.value)
-						setError(null)
-						setSuccess(false)
+						setEmail(e.target.value);
+						setError(null);
+						setSuccess(false);
 					}}
-					onFocus={() => setFocusedField('email')}
+					onFocus={() => setFocusedField("email")}
 					onBlur={() => setFocusedField(null)}
 					placeholder="colleague@company.com"
 					disabled={isLoading}
@@ -185,8 +227,8 @@ function InviteMemberInner({
 					autoFocus
 					style={mergeStyles(
 						styles.input,
-						focusedField === 'email' ? styles.inputFocus : {},
-						isLoading ? styles.inputDisabled : {}
+						focusedField === "email" ? styles.inputFocus : {},
+						isLoading ? styles.inputDisabled : {},
 					)}
 				/>
 			</div>
@@ -196,28 +238,29 @@ function InviteMemberInner({
 				<label style={styles.label}>Role</label>
 				<div
 					style={{
-						display: 'flex',
-						flexDirection: 'column',
-						gap: '0.5rem',
+						display: "flex",
+						flexDirection: "column",
+						gap: "0.5rem",
 						border: `1px solid ${theme.colorBorder}`,
 						borderRadius: theme.borderRadius,
-						overflow: 'hidden',
+						overflow: "hidden",
 					}}
 				>
 					{ROLE_OPTIONS.map((option) => (
 						<label
 							key={option.value}
 							style={{
-								display: 'flex',
-								alignItems: 'flex-start',
-								gap: '0.75rem',
-								padding: '0.75rem',
-								cursor: 'pointer',
-								backgroundColor: role === option.value ? theme.colorMuted : 'transparent',
+								display: "flex",
+								alignItems: "flex-start",
+								gap: "0.75rem",
+								padding: "0.75rem",
+								cursor: "pointer",
+								backgroundColor:
+									role === option.value ? theme.colorMuted : "transparent",
 								borderBottom:
 									option.value !== ROLE_OPTIONS[ROLE_OPTIONS.length - 1].value
 										? `1px solid ${theme.colorBorder}`
-										: 'none',
+										: "none",
 							}}
 						>
 							<input
@@ -228,7 +271,7 @@ function InviteMemberInner({
 								onChange={() => setRole(option.value)}
 								disabled={isLoading}
 								style={{
-									marginTop: '0.125rem',
+									marginTop: "0.125rem",
 									accentColor: theme.colorPrimary,
 								}}
 							/>
@@ -241,7 +284,7 @@ function InviteMemberInner({
 										style={{
 											fontSize: theme.fontSizeXs,
 											color: theme.colorMutedForeground,
-											marginTop: '0.125rem',
+											marginTop: "0.125rem",
 										}}
 									>
 										{option.description}
@@ -254,12 +297,19 @@ function InviteMemberInner({
 			</div>
 
 			{/* Error message */}
-			{error && <div style={mergeStyles(styles.alert, styles.alertError)}>{error}</div>}
+			{error && (
+				<div style={mergeStyles(styles.alert, styles.alertError)}>{error}</div>
+			)}
 
 			{/* Success message */}
 			{success && (
 				<div style={mergeStyles(styles.alert, styles.alertSuccess)}>
-					<div style={mergeStyles(styles.flexRow, { gap: '0.5rem', alignItems: 'center' })}>
+					<div
+						style={mergeStyles(styles.flexRow, {
+							gap: "0.5rem",
+							alignItems: "center",
+						})}
+					>
 						<CheckIcon color={theme.colorSuccess} size={16} />
 						Invite sent to {email}!
 					</div>
@@ -267,7 +317,12 @@ function InviteMemberInner({
 			)}
 
 			{/* Actions */}
-			<div style={mergeStyles(styles.flexRow, { gap: '0.75rem', marginTop: '1rem' })}>
+			<div
+				style={mergeStyles(styles.flexRow, {
+					gap: "0.75rem",
+					marginTop: "1rem",
+				})}
+			>
 				<button
 					type="submit"
 					disabled={isLoading || !email.trim() || success}
@@ -275,7 +330,7 @@ function InviteMemberInner({
 						styles.button,
 						styles.buttonPrimary,
 						{ flex: 1 },
-						isLoading || !email.trim() || success ? styles.buttonDisabled : {}
+						isLoading || !email.trim() || success ? styles.buttonDisabled : {},
 					)}
 				>
 					{isLoading ? (
@@ -306,7 +361,7 @@ function InviteMemberInner({
 				)}
 			</div>
 		</form>
-	)
+	);
 
 	// Modal wrapper
 	if (asModal) {
@@ -315,11 +370,11 @@ function InviteMemberInner({
 				{/* Backdrop */}
 				<div
 					style={{
-						position: 'fixed',
+						position: "fixed",
 						inset: 0,
-						backgroundColor: 'rgba(0, 0, 0, 0.5)',
+						backgroundColor: "rgba(0, 0, 0, 0.5)",
 						zIndex: 99,
-						animation: 'sylphx-fade-in 0.15s ease-out',
+						animation: "sylphx-fade-in 0.15s ease-out",
 					}}
 					onClick={onClose}
 				/>
@@ -327,16 +382,16 @@ function InviteMemberInner({
 				{/* Modal */}
 				<div
 					style={{
-						position: 'fixed',
-						top: '50%',
-						left: '50%',
-						transform: 'translate(-50%, -50%)',
-						width: '100%',
-						maxWidth: '420px',
-						maxHeight: '90vh',
-						overflow: 'auto',
+						position: "fixed",
+						top: "50%",
+						left: "50%",
+						transform: "translate(-50%, -50%)",
+						width: "100%",
+						maxWidth: "420px",
+						maxHeight: "90vh",
+						overflow: "auto",
 						zIndex: 100,
-						animation: 'sylphx-scale-in 0.15s ease-out',
+						animation: "sylphx-scale-in 0.15s ease-out",
 					}}
 					className={className}
 				>
@@ -353,10 +408,10 @@ function InviteMemberInner({
 									type="button"
 									onClick={onClose}
 									style={{
-										padding: '0.25rem',
-										backgroundColor: 'transparent',
-										border: 'none',
-										cursor: 'pointer',
+										padding: "0.25rem",
+										backgroundColor: "transparent",
+										border: "none",
+										cursor: "pointer",
 										color: theme.colorMutedForeground,
 									}}
 								>
@@ -368,7 +423,7 @@ function InviteMemberInner({
 					</div>
 				</div>
 			</>
-		)
+		);
 	}
 
 	// Card wrapper (non-modal)
@@ -384,7 +439,7 @@ function InviteMemberInner({
 				<div style={styles.cardContent}>{formContent}</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 // Icons
@@ -403,7 +458,7 @@ function CheckIcon({ color, size = 24 }: { color: string; size?: number }) {
 		>
 			<path d="M20 6 9 17l-5-5" />
 		</svg>
-	)
+	);
 }
 
 function SendIcon({ size = 24 }: { size?: number }) {
@@ -422,7 +477,7 @@ function SendIcon({ size = 24 }: { size?: number }) {
 			<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z" />
 			<path d="m21.854 2.147-10.94 10.939" />
 		</svg>
-	)
+	);
 }
 
 function XIcon({ size = 24 }: { size?: number }) {
@@ -441,5 +496,5 @@ function XIcon({ size = 24 }: { size?: number }) {
 			<path d="M18 6 6 18" />
 			<path d="m6 6 12 12" />
 		</svg>
-	)
+	);
 }

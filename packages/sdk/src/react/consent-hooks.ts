@@ -20,23 +20,23 @@
  * - Optimistic updates via useMutation
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { STALE_TIME_STABLE_MS } from '../constants'
-import { useContext } from 'react'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+import { useContext } from "react";
+import type { ConsentPurposeDefaults } from "../consent";
+import { STALE_TIME_STABLE_MS } from "../constants";
 import {
-	useConsentContext,
-	ConsentContext,
 	type ConsentCategory,
+	ConsentContext,
 	type ConsentType,
 	type UserConsent,
-} from './services-context'
-import type { ConsentPurposeDefaults } from '../consent'
+	useConsentContext,
+} from "./services-context";
 
 // Re-export types from services-context for convenience
-export type { ConsentCategory, ConsentType, UserConsent }
+export type { ConsentCategory, ConsentType, UserConsent };
 
 // ============================================
 // useConsent
@@ -44,33 +44,33 @@ export type { ConsentCategory, ConsentType, UserConsent }
 
 export interface UseConsentReturn {
 	/** All consent types for this app */
-	types: ConsentType[]
+	types: ConsentType[];
 	/** User's current consent values by type ID */
-	consents: Record<string, boolean>
+	consents: Record<string, boolean>;
 	/** Whether consent data is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error from consent operations */
-	error: Error | null
+	error: Error | null;
 	/** Whether consent banner should be shown */
-	showBanner: boolean
+	showBanner: boolean;
 	/** Whether user has given any consent */
-	hasConsented: boolean
+	hasConsented: boolean;
 	/** Check if a specific category is consented */
-	hasConsent: (category: ConsentCategory) => boolean
+	hasConsent: (category: ConsentCategory) => boolean;
 	/** Set consent for a single type */
-	setConsent: (typeId: string, value: boolean) => void
+	setConsent: (typeId: string, value: boolean) => void;
 	/** Set multiple consents at once */
-	setConsents: (consents: Record<string, boolean>) => void
+	setConsents: (consents: Record<string, boolean>) => void;
 	/** Accept all consents */
-	acceptAll: () => Promise<void>
+	acceptAll: () => Promise<void>;
 	/** Decline optional consents (keep only required) */
-	declineOptional: () => Promise<void>
+	declineOptional: () => Promise<void>;
 	/** Save current consent selections */
-	saveConsents: () => Promise<void>
+	saveConsents: () => Promise<void>;
 	/** Open consent preferences modal/banner */
-	openPreferences: () => void
+	openPreferences: () => void;
 	/** Close consent banner */
-	closeBanner: () => void
+	closeBanner: () => void;
 	/**
 	 * Grant consent for a category and save immediately (Google Consent Mode v2 pattern)
 	 *
@@ -82,7 +82,7 @@ export interface UseConsentReturn {
 	 * await grantConsent('analytics')
 	 * ```
 	 */
-	grantConsent: (category: ConsentCategory) => Promise<void>
+	grantConsent: (category: ConsentCategory) => Promise<void>;
 	/**
 	 * Revoke consent for a category and save immediately (Google Consent Mode v2 pattern)
 	 *
@@ -94,7 +94,7 @@ export interface UseConsentReturn {
 	 * await revokeConsent('marketing')
 	 * ```
 	 */
-	revokeConsent: (category: ConsentCategory) => Promise<void>
+	revokeConsent: (category: ConsentCategory) => Promise<void>;
 }
 
 /**
@@ -144,160 +144,182 @@ export interface UseConsentReturn {
  * ```
  */
 export function useConsent(): UseConsentReturn {
-	const ctx = useConsentContext()
-	const queryClient = useQueryClient()
+	const ctx = useConsentContext();
+	const queryClient = useQueryClient();
 
 	// Local state for user selections (before saving)
-	const [localConsents, setLocalConsentsState] = useState<Record<string, boolean>>({})
-	const [showBanner, setShowBanner] = useState(false)
-	const [initialized, setInitialized] = useState(false)
+	const [localConsents, setLocalConsentsState] = useState<
+		Record<string, boolean>
+	>({});
+	const [showBanner, setShowBanner] = useState(false);
+	const [initialized, setInitialized] = useState(false);
 
 	// React Query for consent types
 	// Use initialData for SSR hydration to avoid loading states
 	const typesQuery = useQuery({
-		queryKey: ['sylphx', 'consent', 'types'],
+		queryKey: ["sylphx", "consent", "types"],
 		queryFn: () => ctx.getConsentTypes(),
 		staleTime: STALE_TIME_STABLE_MS, // 5 min
 		initialData: ctx.initialConsentTypes,
-	})
+	});
 
 	// React Query for user consents
 	// Note: Errors are NOT silently swallowed - GDPR compliance requires explicit handling
 	const userConsentsQuery = useQuery({
-		queryKey: ['sylphx', 'consent', 'user'],
+		queryKey: ["sylphx", "consent", "user"],
 		queryFn: async () => {
-			const consentsResponse = await ctx.getUserConsents()
-			const consentsMap: Record<string, boolean> = {}
+			const consentsResponse = await ctx.getUserConsents();
+			const consentsMap: Record<string, boolean> = {};
 			// Check if user has explicitly made any consent choices
 			// If grantedAt is set, user has made an explicit choice
-			let hasExplicitChoice = false
+			let hasExplicitChoice = false;
 			for (const consent of consentsResponse) {
-				consentsMap[consent.slug] = consent.granted ?? false
+				consentsMap[consent.slug] = consent.granted ?? false;
 				if (consent.grantedAt) {
-					hasExplicitChoice = true
+					hasExplicitChoice = true;
 				}
 			}
-			return { consents: consentsMap, hasExplicitChoice }
+			return { consents: consentsMap, hasExplicitChoice };
 		},
 		staleTime: STALE_TIME_STABLE_MS, // 5 min
 		// Return empty object for unauthenticated users (explicit retry: false)
 		retry: false,
-	})
+	});
 
 	// Initialize local state and banner visibility when data loads
 	useEffect(() => {
 		if (!typesQuery.isLoading && !userConsentsQuery.isLoading && !initialized) {
-			const data = userConsentsQuery.data
-			const serverConsents = data?.consents ?? {}
-			const hasExplicitChoice = data?.hasExplicitChoice ?? false
-			setLocalConsentsState(serverConsents)
+			const data = userConsentsQuery.data;
+			const serverConsents = data?.consents ?? {};
+			const hasExplicitChoice = data?.hasExplicitChoice ?? false;
+			setLocalConsentsState(serverConsents);
 			// Show banner if user has NOT made any explicit consent choices
-			setShowBanner(!hasExplicitChoice)
-			setInitialized(true)
+			setShowBanner(!hasExplicitChoice);
+			setInitialized(true);
 		}
-	}, [typesQuery.isLoading, userConsentsQuery.isLoading, userConsentsQuery.data, initialized])
+	}, [
+		typesQuery.isLoading,
+		userConsentsQuery.isLoading,
+		userConsentsQuery.data,
+		initialized,
+	]);
 
 	// Mutations for saving consents
 	const saveConsentsMutation = useMutation({
-		mutationFn: async (consentList: Array<{ slug: string; granted: boolean }>) => {
-			await ctx.setConsents(consentList)
-			return consentList
+		mutationFn: async (
+			consentList: Array<{ slug: string; granted: boolean }>,
+		) => {
+			await ctx.setConsents(consentList);
+			return consentList;
 		},
 		onSuccess: (consentList) => {
 			// Update cache with saved values
-			const consentsMap: Record<string, boolean> = {}
+			const consentsMap: Record<string, boolean> = {};
 			for (const consent of consentList) {
-				consentsMap[consent.slug] = consent.granted
+				consentsMap[consent.slug] = consent.granted;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: consentsMap, hasExplicitChoice: true })
-			setLocalConsentsState(consentsMap)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: consentsMap,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(consentsMap);
+			setShowBanner(false);
 		},
-	})
+	});
 
 	const acceptAllMutation = useMutation({
 		mutationFn: async () => {
-			await ctx.acceptAll()
+			await ctx.acceptAll();
 		},
 		onSuccess: () => {
 			// Set all consents to true
-			const types = typesQuery.data ?? []
-			const allConsents: Record<string, boolean> = {}
+			const types = typesQuery.data ?? [];
+			const allConsents: Record<string, boolean> = {};
 			for (const type of types) {
-				allConsents[type.slug] = true
+				allConsents[type.slug] = true;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: allConsents, hasExplicitChoice: true })
-			setLocalConsentsState(allConsents)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: allConsents,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(allConsents);
+			setShowBanner(false);
 		},
-	})
+	});
 
 	const declineOptionalMutation = useMutation({
 		mutationFn: async () => {
-			await ctx.declineOptional()
+			await ctx.declineOptional();
 		},
 		onSuccess: () => {
 			// Set only required consents to true
-			const types = typesQuery.data ?? []
-			const requiredConsents: Record<string, boolean> = {}
+			const types = typesQuery.data ?? [];
+			const requiredConsents: Record<string, boolean> = {};
 			for (const type of types) {
-				requiredConsents[type.slug] = type.required
+				requiredConsents[type.slug] = type.required;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: requiredConsents, hasExplicitChoice: true })
-			setLocalConsentsState(requiredConsents)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: requiredConsents,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(requiredConsents);
+			setShowBanner(false);
 		},
-	})
+	});
 
-	const types = typesQuery.data ?? []
-	const consents = localConsents
-	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false
-	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading
-	const error = (typesQuery.error ?? userConsentsQuery.error ?? saveConsentsMutation.error ?? acceptAllMutation.error ?? declineOptionalMutation.error) as Error | null
+	const types = typesQuery.data ?? [];
+	const consents = localConsents;
+	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false;
+	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading;
+	const error = (typesQuery.error ??
+		userConsentsQuery.error ??
+		saveConsentsMutation.error ??
+		acceptAllMutation.error ??
+		declineOptionalMutation.error) as Error | null;
 
 	const hasConsent = useCallback(
 		(category: ConsentCategory): boolean => {
 			// Necessary is always consented
-			if (category === 'necessary') return true
+			if (category === "necessary") return true;
 
 			// Check if any consent type in this category is consented
-			const categoryTypes = types.filter((t) => t.category === category)
-			return categoryTypes.some((t) => consents[t.slug] ?? t.defaultEnabled)
+			const categoryTypes = types.filter((t) => t.category === category);
+			return categoryTypes.some((t) => consents[t.slug] ?? t.defaultEnabled);
 		},
-		[types, consents]
-	)
+		[types, consents],
+	);
 
 	const setConsent = useCallback((typeId: string, value: boolean) => {
-		setLocalConsentsState((prev) => ({ ...prev, [typeId]: value }))
-	}, [])
+		setLocalConsentsState((prev) => ({ ...prev, [typeId]: value }));
+	}, []);
 
 	const setConsents = useCallback((newConsents: Record<string, boolean>) => {
-		setLocalConsentsState((prev) => ({ ...prev, ...newConsents }))
-	}, [])
+		setLocalConsentsState((prev) => ({ ...prev, ...newConsents }));
+	}, []);
 
 	const saveConsents = useCallback(async () => {
 		const consentList = types.map((type) => ({
 			slug: type.slug,
 			granted: consents[type.slug] ?? type.defaultEnabled,
-		}))
-		await saveConsentsMutation.mutateAsync(consentList)
-	}, [types, consents, saveConsentsMutation])
+		}));
+		await saveConsentsMutation.mutateAsync(consentList);
+	}, [types, consents, saveConsentsMutation]);
 
 	const acceptAll = useCallback(async () => {
-		await acceptAllMutation.mutateAsync()
-	}, [acceptAllMutation])
+		await acceptAllMutation.mutateAsync();
+	}, [acceptAllMutation]);
 
 	const declineOptional = useCallback(async () => {
-		await declineOptionalMutation.mutateAsync()
-	}, [declineOptionalMutation])
+		await declineOptionalMutation.mutateAsync();
+	}, [declineOptionalMutation]);
 
 	const openPreferences = useCallback(() => {
-		setShowBanner(true)
-	}, [])
+		setShowBanner(true);
+	}, []);
 
 	const closeBanner = useCallback(() => {
-		setShowBanner(false)
-	}, [])
+		setShowBanner(false);
+	}, []);
 
 	/**
 	 * Grant consent for a specific category and save immediately
@@ -306,25 +328,25 @@ export function useConsent(): UseConsentReturn {
 	const grantConsent = useCallback(
 		async (category: ConsentCategory) => {
 			// Find all types in this category
-			const categoryTypes = types.filter((t) => t.category === category)
-			if (categoryTypes.length === 0) return
+			const categoryTypes = types.filter((t) => t.category === category);
+			if (categoryTypes.length === 0) return;
 
 			// Build updated consents
-			const updatedConsents: Record<string, boolean> = { ...consents }
+			const updatedConsents: Record<string, boolean> = { ...consents };
 			for (const type of categoryTypes) {
-				updatedConsents[type.slug] = true
+				updatedConsents[type.slug] = true;
 			}
-			setLocalConsentsState(updatedConsents)
+			setLocalConsentsState(updatedConsents);
 
 			// Save immediately
 			const consentList = types.map((type) => ({
 				slug: type.slug,
 				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
-			}))
-			await saveConsentsMutation.mutateAsync(consentList)
+			}));
+			await saveConsentsMutation.mutateAsync(consentList);
 		},
-		[types, consents, saveConsentsMutation]
-	)
+		[types, consents, saveConsentsMutation],
+	);
 
 	/**
 	 * Revoke consent for a specific category and save immediately
@@ -333,28 +355,28 @@ export function useConsent(): UseConsentReturn {
 	const revokeConsent = useCallback(
 		async (category: ConsentCategory) => {
 			// Find all types in this category
-			const categoryTypes = types.filter((t) => t.category === category)
-			if (categoryTypes.length === 0) return
+			const categoryTypes = types.filter((t) => t.category === category);
+			if (categoryTypes.length === 0) return;
 
 			// Build updated consents (only revoke non-required types)
-			const updatedConsents: Record<string, boolean> = { ...consents }
+			const updatedConsents: Record<string, boolean> = { ...consents };
 			for (const type of categoryTypes) {
 				// Required consents cannot be revoked
 				if (!type.required) {
-					updatedConsents[type.slug] = false
+					updatedConsents[type.slug] = false;
 				}
 			}
-			setLocalConsentsState(updatedConsents)
+			setLocalConsentsState(updatedConsents);
 
 			// Save immediately
 			const consentList = types.map((type) => ({
 				slug: type.slug,
 				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
-			}))
-			await saveConsentsMutation.mutateAsync(consentList)
+			}));
+			await saveConsentsMutation.mutateAsync(consentList);
 		},
-		[types, consents, saveConsentsMutation]
-	)
+		[types, consents, saveConsentsMutation],
+	);
 
 	return {
 		types,
@@ -373,7 +395,7 @@ export function useConsent(): UseConsentReturn {
 		closeBanner,
 		grantConsent,
 		revokeConsent,
-	}
+	};
 }
 
 // ============================================
@@ -382,20 +404,20 @@ export function useConsent(): UseConsentReturn {
 
 export interface UseConsentGateOptions {
 	/** Required consent category */
-	category: ConsentCategory
+	category: ConsentCategory;
 	/** Called when consent is granted */
-	onConsent?: () => void
+	onConsent?: () => void;
 	/** Called when consent is denied */
-	onDeny?: () => void
+	onDeny?: () => void;
 }
 
 export interface UseConsentGateReturn {
 	/** Whether the required consent is granted */
-	hasConsent: boolean
+	hasConsent: boolean;
 	/** Whether consent data is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Request consent (opens preferences) */
-	requestConsent: () => void
+	requestConsent: () => void;
 }
 
 /**
@@ -416,25 +438,27 @@ export interface UseConsentGateReturn {
  * }
  * ```
  */
-export function useConsentGate(options: UseConsentGateOptions): UseConsentGateReturn {
-	const { hasConsent: checkConsent, isLoading, openPreferences } = useConsent()
-	const hasConsent = checkConsent(options.category)
+export function useConsentGate(
+	options: UseConsentGateOptions,
+): UseConsentGateReturn {
+	const { hasConsent: checkConsent, isLoading, openPreferences } = useConsent();
+	const hasConsent = checkConsent(options.category);
 
 	useEffect(() => {
 		if (!isLoading) {
 			if (hasConsent) {
-				options.onConsent?.()
+				options.onConsent?.();
 			} else {
-				options.onDeny?.()
+				options.onDeny?.();
 			}
 		}
-	}, [hasConsent, isLoading, options])
+	}, [hasConsent, isLoading, options]);
 
 	return {
 		hasConsent,
 		isLoading,
 		requestConsent: openPreferences,
-	}
+	};
 }
 
 // ============================================
@@ -443,13 +467,13 @@ export function useConsentGate(options: UseConsentGateOptions): UseConsentGateRe
 
 export interface ConsentGuardProps {
 	/** Required consent category */
-	category: ConsentCategory
+	category: ConsentCategory;
 	/** Content to render when consent is granted */
-	children: React.ReactNode
+	children: React.ReactNode;
 	/** Fallback content when consent is denied */
-	fallback?: React.ReactNode
+	fallback?: React.ReactNode;
 	/** Show loading state */
-	loading?: React.ReactNode
+	loading?: React.ReactNode;
 }
 
 /**
@@ -471,11 +495,11 @@ export function ConsentGuard({
 	fallback = null,
 	loading = null,
 }: ConsentGuardProps): React.ReactNode {
-	const { hasConsent, isLoading } = useConsentGate({ category })
+	const { hasConsent, isLoading } = useConsentGate({ category });
 
-	if (isLoading) return loading
-	if (!hasConsent) return fallback
-	return children
+	if (isLoading) return loading;
+	if (!hasConsent) return fallback;
+	return children;
 }
 
 // ============================================
@@ -484,23 +508,22 @@ export function ConsentGuard({
 
 // Re-export ConsentPurposeDefaults for convenience
 
-
 export interface UseConsentCheckOptions {
 	/** Consent purpose slug (e.g., 'analytics', 'marketing') */
-	purposeSlug: string
+	purposeSlug: string;
 	/** Optional inline defaults for auto-discovery */
-	defaults?: ConsentPurposeDefaults
+	defaults?: ConsentPurposeDefaults;
 }
 
 export interface UseConsentCheckReturn {
 	/** Whether consent is granted */
-	hasConsent: boolean
+	hasConsent: boolean;
 	/** Whether consent check is loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Error if any */
-	error: Error | null
+	error: Error | null;
 	/** Refresh consent status */
-	refresh: () => Promise<void>
+	refresh: () => Promise<void>;
 }
 
 /**
@@ -535,30 +558,38 @@ export interface UseConsentCheckReturn {
  * }
  * ```
  */
-export function useConsentCheck(options: UseConsentCheckOptions): UseConsentCheckReturn {
-	const ctx = useConsentContext()
-	const queryClient = useQueryClient()
+export function useConsentCheck(
+	options: UseConsentCheckOptions,
+): UseConsentCheckReturn {
+	const ctx = useConsentContext();
+	const queryClient = useQueryClient();
 
 	// React Query for consent check
 	const consentQuery = useQuery({
-		queryKey: ['sylphx', 'consent', 'check', options.purposeSlug, options.defaults],
+		queryKey: [
+			"sylphx",
+			"consent",
+			"check",
+			options.purposeSlug,
+			options.defaults,
+		],
 		queryFn: () => ctx.checkConsent(options.purposeSlug, options.defaults),
 		staleTime: STALE_TIME_STABLE_MS, // 5 min
-	})
+	});
 
 	// Refresh via React Query
 	const refresh = useCallback(async () => {
 		await queryClient.invalidateQueries({
-			queryKey: ['sylphx', 'consent', 'check', options.purposeSlug],
-		})
-	}, [queryClient, options.purposeSlug])
+			queryKey: ["sylphx", "consent", "check", options.purposeSlug],
+		});
+	}, [queryClient, options.purposeSlug]);
 
 	return {
 		hasConsent: consentQuery.data ?? false,
 		isLoading: consentQuery.isLoading,
 		error: consentQuery.error as Error | null,
 		refresh,
-	}
+	};
 }
 
 // ============================================
@@ -566,27 +597,27 @@ export function useConsentCheck(options: UseConsentCheckOptions): UseConsentChec
 // ============================================
 
 // No-op async function for safe hooks
-const noopAsync = async () => {}
+const noopAsync = async () => {};
 
 /** Safe return type for useConsent when outside provider */
 export interface UseSafeConsentReturn {
-	types: ConsentType[]
-	consents: Record<string, boolean>
-	isLoading: boolean
-	error: Error | null
-	showBanner: boolean
-	hasConsented: boolean
-	hasConsent: (category: ConsentCategory) => boolean
-	setConsent: (typeId: string, value: boolean) => void
-	setConsents: (consents: Record<string, boolean>) => void
-	acceptAll: () => Promise<void>
-	declineOptional: () => Promise<void>
-	saveConsents: () => Promise<void>
-	openPreferences: () => void
-	closeBanner: () => void
-	grantConsent: (category: ConsentCategory) => Promise<void>
-	revokeConsent: (category: ConsentCategory) => Promise<void>
-	isConfigured: boolean
+	types: ConsentType[];
+	consents: Record<string, boolean>;
+	isLoading: boolean;
+	error: Error | null;
+	showBanner: boolean;
+	hasConsented: boolean;
+	hasConsent: (category: ConsentCategory) => boolean;
+	setConsent: (typeId: string, value: boolean) => void;
+	setConsents: (consents: Record<string, boolean>) => void;
+	acceptAll: () => Promise<void>;
+	declineOptional: () => Promise<void>;
+	saveConsents: () => Promise<void>;
+	openPreferences: () => void;
+	closeBanner: () => void;
+	grantConsent: (category: ConsentCategory) => Promise<void>;
+	revokeConsent: (category: ConsentCategory) => Promise<void>;
+	isConfigured: boolean;
 }
 
 /**
@@ -596,7 +627,7 @@ export interface UseSafeConsentReturn {
  * Use this in components that may render during static generation.
  */
 export function useSafeConsent(): UseSafeConsentReturn {
-	const ctx = useContext(ConsentContext)
+	const ctx = useContext(ConsentContext);
 
 	// If no context, return safe defaults
 	if (!ctx) {
@@ -618,204 +649,226 @@ export function useSafeConsent(): UseSafeConsentReturn {
 			grantConsent: noopAsync,
 			revokeConsent: noopAsync,
 			isConfigured: false,
-		}
+		};
 	}
 
 	// Use the standard hook when context is available
-	const queryClient = useQueryClient()
+	const queryClient = useQueryClient();
 
 	// Local state for user selections (before saving)
-	const [localConsents, setLocalConsentsState] = useState<Record<string, boolean>>({})
-	const [showBanner, setShowBanner] = useState(false)
-	const [initialized, setInitialized] = useState(false)
+	const [localConsents, setLocalConsentsState] = useState<
+		Record<string, boolean>
+	>({});
+	const [showBanner, setShowBanner] = useState(false);
+	const [initialized, setInitialized] = useState(false);
 
 	// React Query for consent types
 	// Use initialData for SSR hydration to avoid loading states
 	const typesQuery = useQuery({
-		queryKey: ['sylphx', 'consent', 'types'],
+		queryKey: ["sylphx", "consent", "types"],
 		queryFn: () => ctx.getConsentTypes(),
 		staleTime: STALE_TIME_STABLE_MS,
 		initialData: ctx.initialConsentTypes,
-	})
+	});
 
 	// React Query for user consents
 	// Note: Errors are NOT silently swallowed - GDPR compliance requires explicit handling
 	const userConsentsQuery = useQuery({
-		queryKey: ['sylphx', 'consent', 'user'],
+		queryKey: ["sylphx", "consent", "user"],
 		queryFn: async () => {
-			const consentsResponse = await ctx.getUserConsents()
-			const consentsMap: Record<string, boolean> = {}
+			const consentsResponse = await ctx.getUserConsents();
+			const consentsMap: Record<string, boolean> = {};
 			// Check if user has explicitly made any consent choices
-			let hasExplicitChoice = false
+			let hasExplicitChoice = false;
 			for (const consent of consentsResponse) {
-				consentsMap[consent.slug] = consent.granted ?? false
+				consentsMap[consent.slug] = consent.granted ?? false;
 				if (consent.grantedAt) {
-					hasExplicitChoice = true
+					hasExplicitChoice = true;
 				}
 			}
-			return { consents: consentsMap, hasExplicitChoice }
+			return { consents: consentsMap, hasExplicitChoice };
 		},
 		staleTime: STALE_TIME_STABLE_MS,
 		// Return empty object for unauthenticated users (explicit retry: false)
 		retry: false,
-	})
+	});
 
 	// Initialize local state and banner visibility when data loads
 	useEffect(() => {
 		if (!typesQuery.isLoading && !userConsentsQuery.isLoading && !initialized) {
-			const data = userConsentsQuery.data
-			const serverConsents = data?.consents ?? {}
-			const hasExplicitChoice = data?.hasExplicitChoice ?? false
-			setLocalConsentsState(serverConsents)
+			const data = userConsentsQuery.data;
+			const serverConsents = data?.consents ?? {};
+			const hasExplicitChoice = data?.hasExplicitChoice ?? false;
+			setLocalConsentsState(serverConsents);
 			// Show banner if user has NOT made any explicit consent choices
-			setShowBanner(!hasExplicitChoice)
-			setInitialized(true)
+			setShowBanner(!hasExplicitChoice);
+			setInitialized(true);
 		}
-	}, [typesQuery.isLoading, userConsentsQuery.isLoading, userConsentsQuery.data, initialized])
+	}, [
+		typesQuery.isLoading,
+		userConsentsQuery.isLoading,
+		userConsentsQuery.data,
+		initialized,
+	]);
 
 	// Mutations for saving consents
 	const saveConsentsMutation = useMutation({
-		mutationFn: async (consentList: Array<{ slug: string; granted: boolean }>) => {
-			await ctx.setConsents(consentList)
-			return consentList
+		mutationFn: async (
+			consentList: Array<{ slug: string; granted: boolean }>,
+		) => {
+			await ctx.setConsents(consentList);
+			return consentList;
 		},
 		onSuccess: (consentList) => {
-			const consentsMap: Record<string, boolean> = {}
+			const consentsMap: Record<string, boolean> = {};
 			for (const consent of consentList) {
-				consentsMap[consent.slug] = consent.granted
+				consentsMap[consent.slug] = consent.granted;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: consentsMap, hasExplicitChoice: true })
-			setLocalConsentsState(consentsMap)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: consentsMap,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(consentsMap);
+			setShowBanner(false);
 		},
-	})
+	});
 
 	const acceptAllMutation = useMutation({
 		mutationFn: async () => {
-			await ctx.acceptAll()
+			await ctx.acceptAll();
 		},
 		onSuccess: () => {
-			const types = typesQuery.data ?? []
-			const allConsents: Record<string, boolean> = {}
+			const types = typesQuery.data ?? [];
+			const allConsents: Record<string, boolean> = {};
 			for (const type of types) {
-				allConsents[type.slug] = true
+				allConsents[type.slug] = true;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: allConsents, hasExplicitChoice: true })
-			setLocalConsentsState(allConsents)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: allConsents,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(allConsents);
+			setShowBanner(false);
 		},
-	})
+	});
 
 	const declineOptionalMutation = useMutation({
 		mutationFn: async () => {
-			await ctx.declineOptional()
+			await ctx.declineOptional();
 		},
 		onSuccess: () => {
-			const types = typesQuery.data ?? []
-			const requiredConsents: Record<string, boolean> = {}
+			const types = typesQuery.data ?? [];
+			const requiredConsents: Record<string, boolean> = {};
 			for (const type of types) {
-				requiredConsents[type.slug] = type.required
+				requiredConsents[type.slug] = type.required;
 			}
-			queryClient.setQueryData(['sylphx', 'consent', 'user'], { consents: requiredConsents, hasExplicitChoice: true })
-			setLocalConsentsState(requiredConsents)
-			setShowBanner(false)
+			queryClient.setQueryData(["sylphx", "consent", "user"], {
+				consents: requiredConsents,
+				hasExplicitChoice: true,
+			});
+			setLocalConsentsState(requiredConsents);
+			setShowBanner(false);
 		},
-	})
+	});
 
-	const types = typesQuery.data ?? []
-	const consents = localConsents
-	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false
-	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading
-	const error = (typesQuery.error ?? userConsentsQuery.error ?? saveConsentsMutation.error ?? acceptAllMutation.error ?? declineOptionalMutation.error) as Error | null
+	const types = typesQuery.data ?? [];
+	const consents = localConsents;
+	const hasConsented = userConsentsQuery.data?.hasExplicitChoice ?? false;
+	const isLoading = typesQuery.isLoading || userConsentsQuery.isLoading;
+	const error = (typesQuery.error ??
+		userConsentsQuery.error ??
+		saveConsentsMutation.error ??
+		acceptAllMutation.error ??
+		declineOptionalMutation.error) as Error | null;
 
 	const hasConsentFn = useCallback(
 		(category: ConsentCategory): boolean => {
-			if (category === 'necessary') return true
-			const categoryTypes = types.filter((t) => t.category === category)
-			return categoryTypes.some((t) => consents[t.slug] ?? t.defaultEnabled)
+			if (category === "necessary") return true;
+			const categoryTypes = types.filter((t) => t.category === category);
+			return categoryTypes.some((t) => consents[t.slug] ?? t.defaultEnabled);
 		},
-		[types, consents]
-	)
+		[types, consents],
+	);
 
 	const setConsent = useCallback((typeId: string, value: boolean) => {
-		setLocalConsentsState((prev) => ({ ...prev, [typeId]: value }))
-	}, [])
+		setLocalConsentsState((prev) => ({ ...prev, [typeId]: value }));
+	}, []);
 
 	const setConsents = useCallback((newConsents: Record<string, boolean>) => {
-		setLocalConsentsState((prev) => ({ ...prev, ...newConsents }))
-	}, [])
+		setLocalConsentsState((prev) => ({ ...prev, ...newConsents }));
+	}, []);
 
 	const saveConsents = useCallback(async () => {
 		const consentList = types.map((type) => ({
 			slug: type.slug,
 			granted: consents[type.slug] ?? type.defaultEnabled,
-		}))
-		await saveConsentsMutation.mutateAsync(consentList)
-	}, [types, consents, saveConsentsMutation])
+		}));
+		await saveConsentsMutation.mutateAsync(consentList);
+	}, [types, consents, saveConsentsMutation]);
 
 	const acceptAll = useCallback(async () => {
-		await acceptAllMutation.mutateAsync()
-	}, [acceptAllMutation])
+		await acceptAllMutation.mutateAsync();
+	}, [acceptAllMutation]);
 
 	const declineOptional = useCallback(async () => {
-		await declineOptionalMutation.mutateAsync()
-	}, [declineOptionalMutation])
+		await declineOptionalMutation.mutateAsync();
+	}, [declineOptionalMutation]);
 
 	const openPreferences = useCallback(() => {
-		setShowBanner(true)
-	}, [])
+		setShowBanner(true);
+	}, []);
 
 	const closeBanner = useCallback(() => {
-		setShowBanner(false)
-	}, [])
+		setShowBanner(false);
+	}, []);
 
 	/**
 	 * Grant consent for a specific category and save immediately
 	 */
 	const grantConsent = useCallback(
 		async (category: ConsentCategory) => {
-			const categoryTypes = types.filter((t) => t.category === category)
-			if (categoryTypes.length === 0) return
+			const categoryTypes = types.filter((t) => t.category === category);
+			if (categoryTypes.length === 0) return;
 
-			const updatedConsents: Record<string, boolean> = { ...consents }
+			const updatedConsents: Record<string, boolean> = { ...consents };
 			for (const type of categoryTypes) {
-				updatedConsents[type.slug] = true
+				updatedConsents[type.slug] = true;
 			}
-			setLocalConsentsState(updatedConsents)
+			setLocalConsentsState(updatedConsents);
 
 			const consentList = types.map((type) => ({
 				slug: type.slug,
 				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
-			}))
-			await saveConsentsMutation.mutateAsync(consentList)
+			}));
+			await saveConsentsMutation.mutateAsync(consentList);
 		},
-		[types, consents, saveConsentsMutation]
-	)
+		[types, consents, saveConsentsMutation],
+	);
 
 	/**
 	 * Revoke consent for a specific category and save immediately
 	 */
 	const revokeConsent = useCallback(
 		async (category: ConsentCategory) => {
-			const categoryTypes = types.filter((t) => t.category === category)
-			if (categoryTypes.length === 0) return
+			const categoryTypes = types.filter((t) => t.category === category);
+			if (categoryTypes.length === 0) return;
 
-			const updatedConsents: Record<string, boolean> = { ...consents }
+			const updatedConsents: Record<string, boolean> = { ...consents };
 			for (const type of categoryTypes) {
 				if (!type.required) {
-					updatedConsents[type.slug] = false
+					updatedConsents[type.slug] = false;
 				}
 			}
-			setLocalConsentsState(updatedConsents)
+			setLocalConsentsState(updatedConsents);
 
 			const consentList = types.map((type) => ({
 				slug: type.slug,
 				granted: updatedConsents[type.slug] ?? type.defaultEnabled,
-			}))
-			await saveConsentsMutation.mutateAsync(consentList)
+			}));
+			await saveConsentsMutation.mutateAsync(consentList);
 		},
-		[types, consents, saveConsentsMutation]
-	)
+		[types, consents, saveConsentsMutation],
+	);
 
 	return {
 		types,
@@ -835,7 +888,7 @@ export function useSafeConsent(): UseSafeConsentReturn {
 		grantConsent,
 		revokeConsent,
 		isConfigured: true,
-	}
+	};
 }
 
 // The useConsent hook is the primary export for consent management.

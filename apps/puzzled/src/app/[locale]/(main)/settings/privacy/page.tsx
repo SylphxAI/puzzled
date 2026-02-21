@@ -1,32 +1,32 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { ExternalLink, Shield } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { ExternalLink, Shield } from "lucide-react";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings.privacy' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings.privacy" });
 
 	return {
-		title: t('title'),
-	}
+		title: t("title"),
+	};
 }
 
 export default async function PrivacySettingsPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/privacy`)
+		redirect(`/${locale}/login?callbackUrl=/settings/privacy`);
 	}
 
-	const t = await getTranslations()
+	const t = await getTranslations();
 
 	return (
 		<div className="space-y-6">
@@ -36,8 +36,12 @@ export default async function PrivacySettingsPage({ params }: Props) {
 					<Shield className="h-6 w-6 text-teal-500" />
 				</div>
 				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('settings.privacy.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('settings.privacy.description')}</p>
+					<h1 className="text-xl font-semibold tracking-tight">
+						{t("settings.privacy.title")}
+					</h1>
+					<p className="text-sm text-muted-foreground">
+						{t("settings.privacy.description")}
+					</p>
 				</div>
 			</div>
 
@@ -51,8 +55,9 @@ export default async function PrivacySettingsPage({ params }: Props) {
 						Privacy settings are managed through the Sylphx Platform
 					</h2>
 					<p className="mb-6 max-w-md text-sm text-muted-foreground">
-						Data privacy, profile visibility, and account deletion options are managed through the
-						central Sylphx Platform to ensure consistent privacy controls across all applications.
+						Data privacy, profile visibility, and account deletion options are
+						managed through the central Sylphx Platform to ensure consistent
+						privacy controls across all applications.
 					</p>
 					<a
 						href="https://platform.sylphx.com/settings/privacy"
@@ -66,5 +71,5 @@ export default async function PrivacySettingsPage({ params }: Props) {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }

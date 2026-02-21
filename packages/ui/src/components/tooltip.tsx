@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
-import { motion } from 'motion/react'
-import { forwardRef } from 'react'
-import { duration, easing } from '../motion/config'
-import { cn } from '../utils'
+import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
+import { motion } from "motion/react";
+import { forwardRef } from "react";
+import { duration, easing } from "../motion/config";
+import { cn } from "../utils";
 
 // ==================
 // Tooltip Provider
@@ -12,17 +12,20 @@ import { cn } from '../utils'
 
 interface TooltipProviderProps {
 	/** Delay in ms before showing tooltips */
-	delayDuration?: number
+	delayDuration?: number;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
-function TooltipProvider({ delayDuration = 200, children }: TooltipProviderProps) {
+function TooltipProvider({
+	delayDuration = 200,
+	children,
+}: TooltipProviderProps) {
 	return (
 		<BaseTooltip.Provider delay={delayDuration}>
 			{children}
 		</BaseTooltip.Provider>
-	)
+	);
 }
 
 // ==================
@@ -31,15 +34,15 @@ function TooltipProvider({ delayDuration = 200, children }: TooltipProviderProps
 
 interface TooltipProps {
 	/** Whether the tooltip is open (controlled) */
-	open?: boolean
+	open?: boolean;
 	/** Default open state (uncontrolled) */
-	defaultOpen?: boolean
+	defaultOpen?: boolean;
 	/** Handler fired when open state changes */
-	onOpenChange?: (open: boolean) => void
+	onOpenChange?: (open: boolean) => void;
 	/** Delay in ms before showing (only works without Provider) */
-	delayDuration?: number
+	delayDuration?: number;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 function Tooltip({ open, defaultOpen, onOpenChange, children }: TooltipProps) {
@@ -51,7 +54,7 @@ function Tooltip({ open, defaultOpen, onOpenChange, children }: TooltipProps) {
 		>
 			{children}
 		</BaseTooltip.Root>
-	)
+	);
 }
 
 // ==================
@@ -60,11 +63,11 @@ function Tooltip({ open, defaultOpen, onOpenChange, children }: TooltipProps) {
 
 interface TooltipTriggerProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Whether to render as child */
-	asChild?: boolean
+	asChild?: boolean;
 }
 
 const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
@@ -77,33 +80,36 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
 			{asChild ? undefined : children}
 		</BaseTooltip.Trigger>
 	),
-)
-TooltipTrigger.displayName = 'TooltipTrigger'
+);
+TooltipTrigger.displayName = "TooltipTrigger";
 
 // ==================
 // Tooltip Content
 // ==================
 
-const MotionDiv = motion.create('div')
+const MotionDiv = motion.create("div");
 
 interface TooltipContentProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Side offset */
-	sideOffset?: number
+	sideOffset?: number;
 	/** Side */
-	side?: 'top' | 'right' | 'bottom' | 'left'
+	side?: "top" | "right" | "bottom" | "left";
 }
 
 const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
-	({ className, sideOffset = 4, side = 'top', children }, ref) => (
+	({ className, sideOffset = 4, side = "top", children }, ref) => (
 		<BaseTooltip.Portal>
 			<BaseTooltip.Positioner sideOffset={sideOffset} side={side}>
 				<BaseTooltip.Popup
 					ref={ref}
-					className={cn('z-tooltip overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md', className)}
+					className={cn(
+						"z-tooltip overflow-hidden rounded-lg bg-foreground text-sm text-background shadow-md",
+						className,
+					)}
 				>
 					<MotionDiv
 						initial={{ opacity: 0, scale: 0.96 }}
@@ -117,24 +123,24 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
 			</BaseTooltip.Positioner>
 		</BaseTooltip.Portal>
 	),
-)
-TooltipContent.displayName = 'TooltipContent'
+);
+TooltipContent.displayName = "TooltipContent";
 
 // ==================
 // Simple Tooltip (Convenience Component)
 // ==================
 
 type SimpleTooltipProps = {
-	content: React.ReactNode
-	children: React.ReactNode
-	side?: 'top' | 'right' | 'bottom' | 'left'
-	delayDuration?: number
-}
+	content: React.ReactNode;
+	children: React.ReactNode;
+	side?: "top" | "right" | "bottom" | "left";
+	delayDuration?: number;
+};
 
 function SimpleTooltip({
 	content,
 	children,
-	side = 'top',
+	side = "top",
 	delayDuration = 200,
 }: SimpleTooltipProps) {
 	return (
@@ -144,10 +150,16 @@ function SimpleTooltip({
 				<TooltipContent side={side}>{content}</TooltipContent>
 			</Tooltip>
 		</TooltipProvider>
-	)
+	);
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, SimpleTooltip }
+export {
+	Tooltip,
+	TooltipTrigger,
+	TooltipContent,
+	TooltipProvider,
+	SimpleTooltip,
+};
 
 export type {
 	TooltipProps,
@@ -155,4 +167,4 @@ export type {
 	TooltipTriggerProps,
 	TooltipContentProps,
 	SimpleTooltipProps,
-}
+};

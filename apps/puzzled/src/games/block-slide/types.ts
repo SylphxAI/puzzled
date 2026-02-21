@@ -5,28 +5,28 @@
  */
 
 export type Block = {
-	id: string
-	x: number
-	y: number
-	width: number
-	height: number
-	isTarget: boolean
-}
+	id: string;
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	isTarget: boolean;
+};
 
 export type BlockSlidePuzzle = {
-	blocks: Block[]
-	gridWidth: number
-	gridHeight: number
-	exitX: number
-	exitY: number
-	minMoves: number
-}
+	blocks: Block[];
+	gridWidth: number;
+	gridHeight: number;
+	exitX: number;
+	exitY: number;
+	minMoves: number;
+};
 
 export type BlockSlideSolution = {
-	minMoves: number
-}
+	minMoves: number;
+};
 
-export type Direction = 'up' | 'down' | 'left' | 'right'
+export type Direction = "up" | "down" | "left" | "right";
 
 /**
  * Check if a block can move in a direction
@@ -39,26 +39,28 @@ export function canMove(
 	gridWidth: number,
 	gridHeight: number,
 ): boolean {
-	const block = blocks.find((b) => b.id === blockId)
-	if (!block) return false
+	const block = blocks.find((b) => b.id === blockId);
+	if (!block) return false;
 
-	const newX = block.x + (direction === 'left' ? -1 : direction === 'right' ? 1 : 0)
-	const newY = block.y + (direction === 'up' ? -1 : direction === 'down' ? 1 : 0)
+	const newX =
+		block.x + (direction === "left" ? -1 : direction === "right" ? 1 : 0);
+	const newY =
+		block.y + (direction === "up" ? -1 : direction === "down" ? 1 : 0);
 
 	// Check bounds
-	if (newX < 0 || newY < 0) return false
-	if (newX + block.width > gridWidth) return false
-	if (newY + block.height > gridHeight) return false
+	if (newX < 0 || newY < 0) return false;
+	if (newX + block.width > gridWidth) return false;
+	if (newY + block.height > gridHeight) return false;
 
 	// Check collision with other blocks
 	for (const other of blocks) {
-		if (other.id === blockId) continue
+		if (other.id === blockId) continue;
 		if (blocksOverlap({ ...block, x: newX, y: newY }, other)) {
-			return false
+			return false;
 		}
 	}
 
-	return true
+	return true;
 }
 
 /**
@@ -70,28 +72,32 @@ function blocksOverlap(a: Block, b: Block): boolean {
 		b.x + b.width <= a.x ||
 		a.y + a.height <= b.y ||
 		b.y + b.height <= a.y
-	)
+	);
 }
 
 /**
  * Move a block in a direction
  */
-export function moveBlock(blocks: Block[], blockId: string, direction: Direction): Block[] {
+export function moveBlock(
+	blocks: Block[],
+	blockId: string,
+	direction: Direction,
+): Block[] {
 	return blocks.map((block) => {
-		if (block.id !== blockId) return block
+		if (block.id !== blockId) return block;
 		return {
 			...block,
-			x: block.x + (direction === 'left' ? -1 : direction === 'right' ? 1 : 0),
-			y: block.y + (direction === 'up' ? -1 : direction === 'down' ? 1 : 0),
-		}
-	})
+			x: block.x + (direction === "left" ? -1 : direction === "right" ? 1 : 0),
+			y: block.y + (direction === "up" ? -1 : direction === "down" ? 1 : 0),
+		};
+	});
 }
 
 /**
  * Check if the target block has reached the exit
  */
 export function isWin(blocks: Block[], exitX: number, exitY: number): boolean {
-	const target = blocks.find((b) => b.isTarget)
-	if (!target) return false
-	return target.x === exitX && target.y === exitY
+	const target = blocks.find((b) => b.isTarget);
+	if (!target) return false;
+	return target.x === exitX && target.y === exitY;
 }

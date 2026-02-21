@@ -5,11 +5,11 @@
  * Represents balancing two symbols
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function TangoIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -40,5 +40,5 @@ export function TangoIcon({ size = 24, className, ...props }: IconProps) {
 			<path d="M6 10a2.5 2.5 0 0 1 0 4 2 2 0 0 0 0-4z" fill="currentColor" />
 			<path d="M18 16a2.5 2.5 0 0 1 0 4 2 2 0 0 0 0-4z" fill="currentColor" />
 		</svg>
-	)
+	);
 }

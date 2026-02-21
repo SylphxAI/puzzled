@@ -36,7 +36,12 @@
  */
 
 // Core tracker
-export { ErrorTracker, getTracker, initErrorTracking, resetTracker } from './tracker'
+export {
+	ErrorTracker,
+	getTracker,
+	initErrorTracking,
+	resetTracker,
+} from "./tracker";
 
 // PII Scrubbing (GDPR compliance)
 export {
@@ -45,24 +50,15 @@ export {
 	scrubErrorEvent,
 	createScrubber,
 	type PIIScrubberConfig,
-} from './pii-scrubber'
+} from "./pii-scrubber";
 
 // Breadcrumbs
 export {
 	addBreadcrumb,
 	getBreadcrumbs,
 	clearBreadcrumbs,
-	
 	enableAutoCapture,
-	
-	
-	
-	
-	
-	
-	
-	
-} from './breadcrumbs'
+} from "./breadcrumbs";
 
 // Types
 export type {
@@ -83,6 +79,6 @@ export type {
 	UploadCallback,
 	UploadResult,
 	CaptureResult,
-} from './types'
+} from "./types";
 
-export { DEFAULT_ERROR_CONFIG } from './types'
+export { DEFAULT_ERROR_CONFIG } from "./types";

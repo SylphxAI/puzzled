@@ -4,7856 +4,7910 @@
  */
 
 export interface paths {
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * User login
-         * @description Authenticate user with email and password. Returns tokens or 2FA requirement.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["LoginRequest"];
-                };
-            };
-            responses: {
-                /** @description Login successful or 2FA required */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["LoginResponse"];
-                    };
-                };
-                /** @description Invalid credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create account
-         * @description Register a new user account. Email verification will be sent.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["RegisterRequest"];
-                };
-            };
-            responses: {
-                /** @description Account created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RegisterResponse"];
-                    };
-                };
-                /** @description Email already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/verify-2fa": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify 2FA code
-         * @description Complete login by verifying TOTP code or backup code.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["TwoFactorVerifyRequest"];
-                };
-            };
-            responses: {
-                /** @description 2FA verified, tokens returned */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TokenResponse"];
-                    };
-                };
-                /** @description Invalid code */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/forgot-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request password reset
-         * @description Send password reset email. Always returns success to prevent email enumeration.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ForgotPasswordRequest"];
-                };
-            };
-            responses: {
-                /** @description Request processed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/reset-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reset password with token
-         * @description Reset password using token from email.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ResetPasswordRequest"];
-                };
-            };
-            responses: {
-                /** @description Password reset successful */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Invalid or expired token */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/verify-email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify email address
-         * @description Verify email address using token from email.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["VerifyEmailRequest"];
-                };
-            };
-            responses: {
-                /** @description Email verified */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Invalid or expired token */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * End session
-         * @description Revoke refresh token and end session.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["LogoutRequest"];
-                };
-            };
-            responses: {
-                /** @description Logged out */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get current user
-         * @description Get current authenticated user info.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Current user info */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MeResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/oauth-providers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List OAuth providers
-         * @description Get list of enabled OAuth providers for the app.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of OAuth providers */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OAuthProvidersResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/profile": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get user profile
-         * @description Get current user profile details.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User profile */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UserProfile"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update profile
-         * @description Update user profile details.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateProfileRequest"];
-                };
-            };
-            responses: {
-                /** @description Profile updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UserProfile"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/security": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get security settings
-         * @description Get user security settings (2FA, password status).
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Security settings */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SecuritySettings"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get active sessions
-         * @description List all active sessions for the user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of sessions */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SessionsResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/sessions/{sessionId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Revoke session
-         * @description Revoke a specific session by ID.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    sessionId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Session revoked */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/login-history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get login history
-         * @description Get recent login history for the user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Login history */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["LoginHistoryEntry"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/connected-accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get connected accounts
-         * @description List OAuth accounts connected to the user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Connected accounts */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ConnectedAccount"][];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Export user data
-         * @description Export all user data (GDPR data portability).
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User data export */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: unknown;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/account": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete account
-         * @description Permanently delete user account and all data (GDPR right to deletion).
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Account deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get subscription plans
-         * @description List available subscription plans for the app.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of plans */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PlansResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/subscription": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get user subscription
-         * @description Get current subscription for a user.
-         */
-        get: {
-            parameters: {
-                query: {
-                    userId: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User subscription (null if none) */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Subscription"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create checkout session
-         * @description Create a Stripe checkout session for subscription.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CheckoutRequest"];
-                };
-            };
-            responses: {
-                /** @description Checkout session created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CheckoutResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/portal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create billing portal session
-         * @description Create a Stripe billing portal session for subscription management.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["PortalRequest"];
-                };
-            };
-            responses: {
-                /** @description Portal session created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PortalResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/balance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get account balance
-         * @description Get organization billing balance and status.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Balance info */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BalanceResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/billing/usage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get usage metrics
-         * @description Get app usage metrics for the current billing period.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    month?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Usage metrics */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UsageResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/track": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Track batch events
-         * @description Track multiple analytics events in a single request. Supports deduplication, quota enforcement, and automatic forwarding to conversion destinations (Google Ads, Meta, TikTok).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["BatchTrackRequest"];
-                };
-            };
-            responses: {
-                /** @description Events tracked successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BatchTrackResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/query": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Query analytics data
-         * @description Query and aggregate analytics events. Supports date range filtering, event name filtering, and configurable result limits.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["AnalyticsQueryRequest"];
-                };
-            };
-            responses: {
-                /** @description Query results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AnalyticsQueryResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get jobs status
-         * @description Check if background jobs are available and get provider info.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Jobs status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["JobStatusResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Schedule a job
-         * @description Schedule a one-time background job with optional delay or scheduled time.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ScheduleJobRequest"];
-                };
-            };
-            responses: {
-                /** @description Job scheduled */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ScheduleJobResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Jobs not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List jobs
-         * @description List jobs for the authenticated app with optional filtering.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    status?: "pending" | "queued" | "running" | "completed" | "failed" | "scheduled" | "paused" | "deleted";
-                    type?: "one-time" | "cron";
-                    limit?: number;
-                    offset?: number | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of jobs */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ListJobsResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/{jobId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get job
-         * @description Get a specific job by ID.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    jobId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Job details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Job"];
-                    };
-                };
-                /** @description Job not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/{jobId}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel job
-         * @description Cancel a pending or queued job.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    jobId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Job cancelled */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Cannot cancel job (invalid status) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Job not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/cron": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create cron schedule
-         * @description Create a recurring cron job schedule.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ScheduleCronRequest"];
-                };
-            };
-            responses: {
-                /** @description Cron schedule created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ScheduleCronResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Jobs not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/cron/{scheduleId}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pause cron schedule
-         * @description Pause a recurring cron job schedule.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    scheduleId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Schedule paused */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Schedule not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Jobs not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/cron/{scheduleId}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resume cron schedule
-         * @description Resume a paused cron job schedule.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    scheduleId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Schedule resumed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Schedule not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Jobs not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/jobs/cron/{scheduleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete cron schedule
-         * @description Delete a recurring cron job schedule.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    scheduleId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Schedule deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Schedule not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Jobs not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/referrals/code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get referral code
-         * @description Get or create referral code for current user. Billing: 1 operation per code creation (not lookup).
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Referral code */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReferralCodeResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/referrals/code/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Regenerate referral code
-         * @description Regenerate a new referral code (invalidates old one). Billing: 1 operation per regeneration.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description New referral code with stats */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RegenerateCodeResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No pending referral code to regenerate */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/referrals/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get referral stats
-         * @description Get referral statistics for current user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Referral statistics */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReferralStatsResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/referrals/redeem": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Redeem referral code
-         * @description Redeem a referral code. Uses row-level locking to prevent race conditions. Billing: 1 operation per redemption.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["RedeemReferralRequest"];
-                };
-            };
-            responses: {
-                /** @description Referral redeemed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RedeemReferralResponse"];
-                    };
-                };
-                /** @description Invalid request (already used, self-referral) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid or already used referral code */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/referrals/leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get referral leaderboard
-         * @description Get referral leaderboard. Returns top referrers ranked by completed referrals. Privacy-safe: Only returns anonymized/partial names.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    limit?: number;
-                    period?: "all" | "month" | "week";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Leaderboard data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["LeaderboardResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get push preferences
-         * @description Get web push notification preferences for the current user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Push preferences */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PushPreferencesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update push preferences
-         * @description Update web push notification preferences for the current user.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Push preferences updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PushPreferencesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register push subscription
-         * @description Register a web push subscription for the current user.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["RegisterPushRequest"];
-                };
-            };
-            responses: {
-                /** @description Subscription registered */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RegisterPushResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/unregister": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Unregister push subscription
-         * @description Unregister a web push subscription for the current user.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UnregisterPushRequest"];
-                };
-            };
-            responses: {
-                /** @description Subscription unregistered */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/mobile/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get mobile push config
-         * @description Check if mobile push is configured for this app.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Mobile push configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MobileConfigResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/mobile/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get mobile push preferences
-         * @description Get mobile push notification preferences for the current user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Mobile push preferences */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MobilePreferencesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/mobile/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register mobile device
-         * @description Register a mobile device token for push notifications.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["RegisterMobileDeviceRequest"];
-                };
-            };
-            responses: {
-                /** @description Device registered */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["RegisterMobileDeviceResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/mobile/unregister": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Unregister mobile device
-         * @description Unregister a mobile device token.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UnregisterMobileDeviceRequest"];
-                };
-            };
-            responses: {
-                /** @description Device unregistered */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get in-app messages
-         * @description Get in-app messages for the current user.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    type?: "info" | "success" | "warning" | "error" | "announcement" | "system" | "action";
-                    topic?: string;
-                    unreadOnly?: boolean | null;
-                    limit?: number;
-                    offset?: number | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of in-app messages */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InAppMessagesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/unread-count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get unread message count
-         * @description Get the count of unread in-app messages for the current user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Unread count */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UnreadCountResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/{messageId}/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Mark message as read
-         * @description Mark a specific in-app message as read.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    messageId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Message marked as read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/mark-all-read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Mark all messages as read
-         * @description Mark all in-app messages as read for the current user.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description All messages marked as read */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MarkAllReadResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/{messageId}/dismiss": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Dismiss message
-         * @description Dismiss a specific in-app message.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    messageId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Message dismissed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/{messageId}/click": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Record message click
-         * @description Record an action click on a message.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    messageId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["RecordClickRequest"];
-                };
-            };
-            responses: {
-                /** @description Click recorded */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/messages/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get message preferences
-         * @description Get in-app message preferences for the current user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Message preferences */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["MessagePreferencesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update message preferences
-         * @description Update in-app message preferences for the current user.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateMessagePreferencesRequest"];
-                };
-            };
-            responses: {
-                /** @description Preferences updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/storage/files/{fileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get file info
-         * @description Get metadata and URL for a specific file by ID.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    fileId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description File info */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["StorageFile"];
-                    };
-                };
-                /** @description Invalid file ID format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description File not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        /**
-         * Delete file
-         * @description Delete a file from storage by ID.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    fileId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description File deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Invalid file ID format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description File not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/storage/upload-url": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get upload URL
-         * @description Get a presigned URL and configuration for client-side file uploads. Uses Vercel Blob for direct browser-to-storage uploads with zero server bandwidth.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UploadUrlRequest"];
-                };
-            };
-            responses: {
-                /** @description Upload URL and configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UploadUrlResponse"];
-                    };
-                };
-                /** @description Invalid request or content type not allowed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Storage quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/monitoring/exception": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Capture exception
-         * @description Capture an exception for error tracking. Supports stack traces, breadcrumbs, and custom fingerprinting for grouping. Billing: Unique errors (new fingerprints) are billed against quota. Duplicate occurrences of the same error are FREE.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CaptureExceptionRequest"];
-                };
-            };
-            responses: {
-                /** @description Exception captured successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CaptureExceptionResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Error tracking quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/monitoring/message": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Capture message
-         * @description Capture a log message for monitoring. Supports severity levels, tags, and extra context. Billing: Unique messages (new fingerprints) are billed against quota. Duplicate occurrences of the same message are FREE.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CaptureMessageRequest"];
-                };
-            };
-            responses: {
-                /** @description Message captured successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CaptureMessageResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Error tracking quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/ai/usage": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get AI usage statistics
-         * @description Get AI usage statistics for the app including token counts, costs, and breakdowns by model and request type.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Time period for usage stats */
-                    period?: "day" | "week" | "month";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description AI usage statistics */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIUsageResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/ai/rate-limit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get AI rate limit status
-         * @description Get current AI rate limits and usage within those limits for the app.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Rate limit status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIRateLimitResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/ai/models": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List available AI models
-         * @description List available AI models with optional filtering by provider and capability. Models are filtered based on app configuration.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Filter by provider (e.g., openai, anthropic) */
-                    provider?: string;
-                    /** @description Filter by capability */
-                    capability?: "chat" | "vision" | "tool" | "embedding";
-                    /** @description Search by model name or description */
-                    search?: string;
-                    /** @description Number of results to return */
-                    limit?: number;
-                    /** @description Offset for pagination */
-                    offset?: number | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of available models */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AIModelsResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/consent/types": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get consent types
-         * @description Get all consent types for the app. Auto-creates GDPR-standard defaults if none exist.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of consent types */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ConsentTypesResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/consent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get user consents
-         * @description Get consent status for a user by userId or anonymousId.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description User ID (for logged-in users) */
-                    userId?: string;
-                    /** @description Anonymous ID (for non-logged-in users) */
-                    anonymousId?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User consent status */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UserConsentsResponse"];
-                    };
-                };
-                /** @description Missing userId or anonymousId */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /**
-         * Set user consents
-         * @description Set consent preferences for a user. Records consent history for audit trail.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SetConsentRequest"];
-                };
-            };
-            responses: {
-                /** @description Consents updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SetConsentResponse"];
-                    };
-                };
-                /** @description Invalid request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Consent quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/consent/accept-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Accept all consents
-         * @description Accept all consent types. Shortcut for consent banner "Accept All" button.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["AcceptAllConsentRequest"];
-                };
-            };
-            responses: {
-                /** @description All consents accepted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SetConsentResponse"];
-                    };
-                };
-                /** @description Invalid request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Consent quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/consent/decline-optional": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Decline optional consents
-         * @description Decline all optional consents. Only required consents remain granted. Shortcut for consent banner "Reject All" button.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["DeclineOptionalConsentRequest"];
-                };
-            };
-            responses: {
-                /** @description Optional consents declined */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SetConsentResponse"];
-                    };
-                };
-                /** @description Invalid request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Consent quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/email/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send email
-         * @description Send a custom email. Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SendEmailRequest"];
-                };
-            };
-            responses: {
-                /** @description Email sent successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SendEmailResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email service not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/email/send-templated": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send templated email
-         * @description Send a pre-built templated email (welcome, verification, password_reset, security_alert). Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SendTemplatedEmailRequest"];
-                };
-            };
-            responses: {
-                /** @description Templated email sent successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SendTemplatedEmailResponse"];
-                    };
-                };
-                /** @description Invalid request body or missing required template data */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email service not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/email/send-to-user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Send email to user
-         * @description Send an email to a user by their ID. Looks up user email from database. Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SendToUserRequest"];
-                };
-            };
-            responses: {
-                /** @description Email sent successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SendToUserResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description User not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email service not configured */
-                503: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/subscribe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Subscribe to newsletter
-         * @description Subscribe to newsletter. Creates subscriber and sends verification email (double opt-in). Quota: email/subscribers (monthly limit per app).
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["NewsletterSubscribeRequest"];
-                };
-            };
-            responses: {
-                /** @description Subscription initiated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterSubscribeResponse"];
-                    };
-                };
-                /** @description Invalid email or request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Subscriber quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify subscription
-         * @description Verify subscription email using token from verification email. Confirms double opt-in and activates subscription.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["NewsletterVerifyRequest"];
-                };
-            };
-            responses: {
-                /** @description Subscription verified */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterVerifyResponse"];
-                    };
-                };
-                /** @description Token expired or invalid request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid verification token */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/unsubscribe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Unsubscribe from newsletter
-         * @description Unsubscribe from newsletter. Requires valid unsubscribe token from email.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["NewsletterUnsubscribeRequest"];
-                };
-            };
-            responses: {
-                /** @description Successfully unsubscribed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterUnsubscribeResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid unsubscribe token */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/resend-verification": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Resend verification email
-         * @description Resend verification email. Always returns success to prevent email enumeration.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["NewsletterResendVerificationRequest"];
-                };
-            };
-            responses: {
-                /** @description Request processed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterResendVerificationResponse"];
-                    };
-                };
-                /** @description Invalid email format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/unsubscribe-info": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get unsubscribe info
-         * @description Get subscriber info for rendering unsubscribe confirmation page.
-         */
-        get: {
-            parameters: {
-                query: {
-                    /** @description Unsubscribe token from email */
-                    token: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Subscriber info for unsubscribe page */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterUnsubscribeInfoResponse"];
-                    };
-                };
-                /** @description Missing token parameter */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid unsubscribe link */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/newsletter/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get newsletter preferences
-         * @description Get newsletter subscription preferences for a subscriber.
-         */
-        get: {
-            parameters: {
-                query: {
-                    /** @description Subscriber email */
-                    email: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Subscriber preferences */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterPreferences"];
-                    };
-                };
-                /** @description Missing email parameter */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Subscriber not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update newsletter preferences
-         * @description Update newsletter subscription preferences for a subscriber.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["NewsletterUpdatePreferencesRequest"];
-                };
-            };
-            responses: {
-                /** @description Preferences updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["NewsletterUpdatePreferencesResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Subscriber not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhooks/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get webhook configuration
-         * @description Get webhook configuration for all environments in the app. Returns webhook URLs, secret status, and supported event types.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Webhook configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["WebhookConfigResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update webhook configuration
-         * @description Update webhook URL for an environment. Optionally regenerate the webhook secret. Rate limited to 10 updates per minute.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateWebhookConfigRequest"];
-                };
-            };
-            responses: {
-                /** @description Webhook configuration updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UpdateWebhookConfigResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Environment not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhooks/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get webhook deliveries
-         * @description Get webhook delivery history with optional filtering by status and event type. Supports pagination.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    status?: "pending" | "queued" | "delivered" | "failed";
-                    event?: string;
-                    limit?: number;
-                    offset?: number | null;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Webhook deliveries */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ListWebhookDeliveriesResponse"];
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhooks/deliveries/{deliveryId}/replay": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Replay webhook delivery
-         * @description Replay a failed or pending webhook delivery. Rate limited to 10 replays per minute. Billing: 1 webhook delivery per replay.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    deliveryId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Webhook replayed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ReplayDeliveryResponse"];
-                    };
-                };
-                /** @description Invalid delivery ID or cannot replay already delivered webhook */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Webhook quota exceeded */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Delivery not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description No webhook secret configured */
-                412: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Rate limit exceeded */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhooks/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get webhook statistics
-         * @description Get webhook delivery statistics for the app including totals, delivery rate, and breakdowns by event and status.
-         */
-        get: {
-            parameters: {
-                query?: {
-                    period?: "day" | "week" | "month";
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Webhook statistics */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["WebhookStatsResponse"];
-                    };
-                };
-                /** @description Invalid query parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid app credentials */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/2fa/setup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Setup 2FA
-         * @description Start 2FA setup. Returns TOTP secret and QR code data for authenticator app.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description TOTP setup data */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TwoFactorSetupResponse"];
-                    };
-                };
-                /** @description 2FA already enabled */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/2fa/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify 2FA setup
-         * @description Verify and enable 2FA with a TOTP code. Returns backup codes on success.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["Security2FAVerifyRequest"];
-                };
-            };
-            responses: {
-                /** @description 2FA enabled with backup codes */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Security2FAVerifyResponse"];
-                    };
-                };
-                /** @description Setup not started or already enabled */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid code or not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/2fa/disable": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Disable 2FA
-         * @description Disable 2FA. This is a sensitive operation that may require re-authentication.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description 2FA disabled */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Security2FADisableResponse"];
-                    };
-                };
-                /** @description 2FA not enabled */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/backup-codes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * View backup codes
-         * @description View remaining unused backup codes. Requires 2FA to be enabled.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Backup codes */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BackupCodesResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description 2FA not enabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/backup-codes/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Regenerate backup codes
-         * @description Generate new backup codes. Invalidates all previous codes.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description New backup codes */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["BackupCodesRegenerateResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description 2FA not enabled */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/password/set": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set password
-         * @description Set password for OAuth-only users who want to add password authentication.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["SetPasswordRequest"];
-                };
-            };
-            responses: {
-                /** @description Password set */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description User already has password or invalid password */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/email/change": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request email change
-         * @description Request to change email address. Sends verification email to the new address.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["EmailChangeRequest"];
-                };
-            };
-            responses: {
-                /** @description Verification email sent */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["EmailChangeResponse"];
-                    };
-                };
-                /** @description Invalid email */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Email already in use */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/email/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Confirm email change
-         * @description Confirm email change using token from verification email.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["EmailChangeConfirmRequest"];
-                };
-            };
-            responses: {
-                /** @description Email changed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["EmailChangeConfirmResponse"];
-                    };
-                };
-                /** @description Token expired */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid token */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/passkeys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List passkeys
-         * @description List all registered passkeys for the user.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of passkeys */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PasskeysListResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/passkeys/register/start": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Start passkey registration
-         * @description Start WebAuthn passkey registration. Returns options for navigator.credentials.create().
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description WebAuthn registration options */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PasskeyRegistrationOptions"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/passkeys/register/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify passkey registration
-         * @description Complete passkey registration by verifying the WebAuthn response.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["PasskeyRegisterVerifyRequest"];
-                };
-            };
-            responses: {
-                /** @description Passkey registered */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["PasskeyRegisterVerifyResponse"];
-                    };
-                };
-                /** @description Invalid WebAuthn response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/passkeys/{passkeyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Rename passkey
-         * @description Update the name of a passkey.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    passkeyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["PasskeyRenameRequest"];
-                };
-            };
-            responses: {
-                /** @description Passkey renamed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Invalid name */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Passkey not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /**
-         * Delete passkey
-         * @description Delete a passkey. This is a sensitive operation that may require re-authentication.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    passkeyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Passkey deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Passkey not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/oauth/disconnect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Disconnect OAuth provider
-         * @description Disconnect a connected OAuth provider. User must have another authentication method available.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["OAuthDisconnectRequest"];
-                };
-            };
-            responses: {
-                /** @description Provider disconnected */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OAuthDisconnectResponse"];
-                    };
-                };
-                /** @description Cannot disconnect - would leave user without authentication method */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Provider not connected */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/security/score": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get security score
-         * @description Get security score with breakdown of factors and recommendations for improvement.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Security score and recommendations */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SecurityScore"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/challenge/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Verify identity
-         * @description Verify identity for step-up authentication. Supports password, email code, TOTP, and backup code verification.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["ChallengeVerifyRequest"];
-                };
-            };
-            responses: {
-                /** @description Verification successful */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ChallengeVerifyResponse"];
-                    };
-                };
-                /** @description Invalid verification method or no code sent */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invalid credentials or not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Too many failed attempts - temporarily locked out */
-                429: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get user organizations
-         * @description Get all organizations the current user belongs to.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of organizations */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OrganizationsResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /**
-         * Create organization
-         * @description Create a new organization. The current user becomes super_admin.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["CreateOrgRequest"];
-                };
-            };
-            responses: {
-                /** @description Organization created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CreateOrgResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Slug already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get organization
-         * @description Get organization by ID or slug.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Organization details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OrganizationResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        /**
-         * Update organization
-         * @description Update an organization. Requires admin or super_admin role.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateOrgRequest"];
-                };
-            };
-            responses: {
-                /** @description Organization updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["CreateOrgResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Slug already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        /**
-         * Delete organization
-         * @description Delete an organization. Requires super_admin role.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Organization deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get organization members
-         * @description Get all members of an organization.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of members */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OrganizationMembersResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not a member of this organization */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/members/invite": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Invite member
-         * @description Invite a member to an organization. Requires admin or super_admin role.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["InviteMemberRequest"];
-                };
-            };
-            responses: {
-                /** @description Invitation created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["InviteMemberResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description User already a member or invitation already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/members/{memberId}/role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update member role
-         * @description Update a member's role. Requires admin or super_admin role.
-         */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                    memberId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateMemberRoleRequest"];
-                };
-            };
-            responses: {
-                /** @description Role updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["UpdateMemberRoleResponse"];
-                    };
-                };
-                /** @description Invalid request body */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization or member not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/members/{memberId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Remove member
-         * @description Remove a member from an organization. Requires admin or super_admin role.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                    memberId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Member removed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization or member not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/leave": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Leave organization
-         * @description Leave an organization. Super admins cannot leave if they are the only admin.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Left organization */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Cannot leave - only admin */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found or not a member */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get invitations
-         * @description Get pending invitations for an organization. Requires admin or super_admin role.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of invitations */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["OrganizationInvitationsResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/invitations/accept": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Accept invitation
-         * @description Accept an organization invitation using the invitation token.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["AcceptInvitationRequest"];
-                };
-            };
-            responses: {
-                /** @description Invitation accepted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["AcceptInvitationResponse"];
-                    };
-                };
-                /** @description Invalid or expired token */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Invitation not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orgs/{orgIdOrSlug}/invitations/{invitationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Revoke invitation
-         * @description Revoke a pending invitation. Requires admin or super_admin role.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    orgIdOrSlug: string;
-                    invitationId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Invitation revoked */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SuccessResponse"];
-                    };
-                };
-                /** @description Not authenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Insufficient permissions */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Organization or invitation not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+	"/auth/login": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * User login
+		 * @description Authenticate user with email and password. Returns tokens or 2FA requirement.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["LoginRequest"];
+				};
+			};
+			responses: {
+				/** @description Login successful or 2FA required */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["LoginResponse"];
+					};
+				};
+				/** @description Invalid credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/register": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create account
+		 * @description Register a new user account. Email verification will be sent.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["RegisterRequest"];
+				};
+			};
+			responses: {
+				/** @description Account created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["RegisterResponse"];
+					};
+				};
+				/** @description Email already exists */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/verify-2fa": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify 2FA code
+		 * @description Complete login by verifying TOTP code or backup code.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["TwoFactorVerifyRequest"];
+				};
+			};
+			responses: {
+				/** @description 2FA verified, tokens returned */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["TokenResponse"];
+					};
+				};
+				/** @description Invalid code */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/forgot-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Request password reset
+		 * @description Send password reset email. Always returns success to prevent email enumeration.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["ForgotPasswordRequest"];
+				};
+			};
+			responses: {
+				/** @description Request processed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/reset-password": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Reset password with token
+		 * @description Reset password using token from email.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["ResetPasswordRequest"];
+				};
+			};
+			responses: {
+				/** @description Password reset successful */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Invalid or expired token */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/verify-email": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify email address
+		 * @description Verify email address using token from email.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["VerifyEmailRequest"];
+				};
+			};
+			responses: {
+				/** @description Email verified */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Invalid or expired token */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/logout": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * End session
+		 * @description Revoke refresh token and end session.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["LogoutRequest"];
+				};
+			};
+			responses: {
+				/** @description Logged out */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/me": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get current user
+		 * @description Get current authenticated user info.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Current user info */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["MeResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/auth/oauth-providers": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List OAuth providers
+		 * @description Get list of enabled OAuth providers for the app.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of OAuth providers */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OAuthProvidersResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/profile": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user profile
+		 * @description Get current user profile details.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description User profile */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UserProfile"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update profile
+		 * @description Update user profile details.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UpdateProfileRequest"];
+				};
+			};
+			responses: {
+				/** @description Profile updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UserProfile"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/security": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get security settings
+		 * @description Get user security settings (2FA, password status).
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Security settings */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SecuritySettings"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/sessions": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get active sessions
+		 * @description List all active sessions for the user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of sessions */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SessionsResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/sessions/{sessionId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Revoke session
+		 * @description Revoke a specific session by ID.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					sessionId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Session revoked */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/login-history": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get login history
+		 * @description Get recent login history for the user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Login history */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["LoginHistoryEntry"][];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/connected-accounts": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get connected accounts
+		 * @description List OAuth accounts connected to the user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Connected accounts */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ConnectedAccount"][];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Export user data
+		 * @description Export all user data (GDPR data portability).
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description User data export */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": {
+							[key: string]: unknown;
+						};
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/user/account": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Delete account
+		 * @description Permanently delete user account and all data (GDPR right to deletion).
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Account deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/plans": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get subscription plans
+		 * @description List available subscription plans for the app.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of plans */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PlansResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/subscription": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user subscription
+		 * @description Get current subscription for a user.
+		 */
+		get: {
+			parameters: {
+				query: {
+					userId: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description User subscription (null if none) */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["Subscription"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/checkout": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create checkout session
+		 * @description Create a Stripe checkout session for subscription.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["CheckoutRequest"];
+				};
+			};
+			responses: {
+				/** @description Checkout session created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["CheckoutResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/portal": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create billing portal session
+		 * @description Create a Stripe billing portal session for subscription management.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["PortalRequest"];
+				};
+			};
+			responses: {
+				/** @description Portal session created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PortalResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/balance": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get account balance
+		 * @description Get organization billing balance and status.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Balance info */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["BalanceResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/billing/usage": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get usage metrics
+		 * @description Get app usage metrics for the current billing period.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					month?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Usage metrics */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UsageResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/analytics/track": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Track batch events
+		 * @description Track multiple analytics events in a single request. Supports deduplication, quota enforcement, and automatic forwarding to conversion destinations (Google Ads, Meta, TikTok).
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["BatchTrackRequest"];
+				};
+			};
+			responses: {
+				/** @description Events tracked successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["BatchTrackResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/analytics/query": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Query analytics data
+		 * @description Query and aggregate analytics events. Supports date range filtering, event name filtering, and configurable result limits.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["AnalyticsQueryRequest"];
+				};
+			};
+			responses: {
+				/** @description Query results */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["AnalyticsQueryResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/status": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get jobs status
+		 * @description Check if background jobs are available and get provider info.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Jobs status */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["JobStatusResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/schedule": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Schedule a job
+		 * @description Schedule a one-time background job with optional delay or scheduled time.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["ScheduleJobRequest"];
+				};
+			};
+			responses: {
+				/** @description Job scheduled */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ScheduleJobResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Jobs not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List jobs
+		 * @description List jobs for the authenticated app with optional filtering.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					status?:
+						| "pending"
+						| "queued"
+						| "running"
+						| "completed"
+						| "failed"
+						| "scheduled"
+						| "paused"
+						| "deleted";
+					type?: "one-time" | "cron";
+					limit?: number;
+					offset?: number | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of jobs */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ListJobsResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/{jobId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get job
+		 * @description Get a specific job by ID.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job details */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["Job"];
+					};
+				};
+				/** @description Job not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/{jobId}/cancel": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Cancel job
+		 * @description Cancel a pending or queued job.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					jobId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Job cancelled */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Cannot cancel job (invalid status) */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Job not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/cron": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Create cron schedule
+		 * @description Create a recurring cron job schedule.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["ScheduleCronRequest"];
+				};
+			};
+			responses: {
+				/** @description Cron schedule created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ScheduleCronResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Jobs not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/cron/{scheduleId}/pause": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Pause cron schedule
+		 * @description Pause a recurring cron job schedule.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					scheduleId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Schedule paused */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Schedule not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Jobs not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/cron/{scheduleId}/resume": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Resume cron schedule
+		 * @description Resume a paused cron job schedule.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					scheduleId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Schedule resumed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Schedule not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Jobs not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/jobs/cron/{scheduleId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Delete cron schedule
+		 * @description Delete a recurring cron job schedule.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					scheduleId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Schedule deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Schedule not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Jobs not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/referrals/code": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get referral code
+		 * @description Get or create referral code for current user. Billing: 1 operation per code creation (not lookup).
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Referral code */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ReferralCodeResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/referrals/code/regenerate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Regenerate referral code
+		 * @description Regenerate a new referral code (invalidates old one). Billing: 1 operation per regeneration.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description New referral code with stats */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["RegenerateCodeResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description No pending referral code to regenerate */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/referrals/stats": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get referral stats
+		 * @description Get referral statistics for current user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Referral statistics */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ReferralStatsResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/referrals/redeem": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Redeem referral code
+		 * @description Redeem a referral code. Uses row-level locking to prevent race conditions. Billing: 1 operation per redemption.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["RedeemReferralRequest"];
+				};
+			};
+			responses: {
+				/** @description Referral redeemed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["RedeemReferralResponse"];
+					};
+				};
+				/** @description Invalid request (already used, self-referral) */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid or already used referral code */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/referrals/leaderboard": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get referral leaderboard
+		 * @description Get referral leaderboard. Returns top referrers ranked by completed referrals. Privacy-safe: Only returns anonymized/partial names.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					limit?: number;
+					period?: "all" | "month" | "week";
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Leaderboard data */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["LeaderboardResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/preferences": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get push preferences
+		 * @description Get web push notification preferences for the current user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Push preferences */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PushPreferencesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update push preferences
+		 * @description Update web push notification preferences for the current user.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Push preferences updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PushPreferencesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/register": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Register push subscription
+		 * @description Register a web push subscription for the current user.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["RegisterPushRequest"];
+				};
+			};
+			responses: {
+				/** @description Subscription registered */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["RegisterPushResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/unregister": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Unregister push subscription
+		 * @description Unregister a web push subscription for the current user.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UnregisterPushRequest"];
+				};
+			};
+			responses: {
+				/** @description Subscription unregistered */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/mobile/config": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get mobile push config
+		 * @description Check if mobile push is configured for this app.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Mobile push configuration */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["MobileConfigResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/mobile/preferences": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get mobile push preferences
+		 * @description Get mobile push notification preferences for the current user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Mobile push preferences */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["MobilePreferencesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/mobile/register": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Register mobile device
+		 * @description Register a mobile device token for push notifications.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["RegisterMobileDeviceRequest"];
+				};
+			};
+			responses: {
+				/** @description Device registered */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["RegisterMobileDeviceResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/mobile/unregister": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Unregister mobile device
+		 * @description Unregister a mobile device token.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UnregisterMobileDeviceRequest"];
+				};
+			};
+			responses: {
+				/** @description Device unregistered */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get in-app messages
+		 * @description Get in-app messages for the current user.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					type?:
+						| "info"
+						| "success"
+						| "warning"
+						| "error"
+						| "announcement"
+						| "system"
+						| "action";
+					topic?: string;
+					unreadOnly?: boolean | null;
+					limit?: number;
+					offset?: number | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of in-app messages */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["InAppMessagesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/unread-count": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get unread message count
+		 * @description Get the count of unread in-app messages for the current user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Unread count */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UnreadCountResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/{messageId}/read": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Mark message as read
+		 * @description Mark a specific in-app message as read.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					messageId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Message marked as read */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/mark-all-read": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Mark all messages as read
+		 * @description Mark all in-app messages as read for the current user.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description All messages marked as read */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["MarkAllReadResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/{messageId}/dismiss": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Dismiss message
+		 * @description Dismiss a specific in-app message.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					messageId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Message dismissed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/{messageId}/click": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Record message click
+		 * @description Record an action click on a message.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					messageId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["RecordClickRequest"];
+				};
+			};
+			responses: {
+				/** @description Click recorded */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/notifications/messages/preferences": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get message preferences
+		 * @description Get in-app message preferences for the current user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Message preferences */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["MessagePreferencesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update message preferences
+		 * @description Update in-app message preferences for the current user.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UpdateMessagePreferencesRequest"];
+				};
+			};
+			responses: {
+				/** @description Preferences updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/storage/files/{fileId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get file info
+		 * @description Get metadata and URL for a specific file by ID.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					fileId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description File info */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["StorageFile"];
+					};
+				};
+				/** @description Invalid file ID format */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description File not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		/**
+		 * Delete file
+		 * @description Delete a file from storage by ID.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					fileId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description File deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Invalid file ID format */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description File not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/storage/upload-url": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Get upload URL
+		 * @description Get a presigned URL and configuration for client-side file uploads. Uses Vercel Blob for direct browser-to-storage uploads with zero server bandwidth.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UploadUrlRequest"];
+				};
+			};
+			responses: {
+				/** @description Upload URL and configuration */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UploadUrlResponse"];
+					};
+				};
+				/** @description Invalid request or content type not allowed */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Storage quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/monitoring/exception": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Capture exception
+		 * @description Capture an exception for error tracking. Supports stack traces, breadcrumbs, and custom fingerprinting for grouping. Billing: Unique errors (new fingerprints) are billed against quota. Duplicate occurrences of the same error are FREE.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["CaptureExceptionRequest"];
+				};
+			};
+			responses: {
+				/** @description Exception captured successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["CaptureExceptionResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error tracking quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/monitoring/message": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Capture message
+		 * @description Capture a log message for monitoring. Supports severity levels, tags, and extra context. Billing: Unique messages (new fingerprints) are billed against quota. Duplicate occurrences of the same message are FREE.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["CaptureMessageRequest"];
+				};
+			};
+			responses: {
+				/** @description Message captured successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["CaptureMessageResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Error tracking quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/ai/usage": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get AI usage statistics
+		 * @description Get AI usage statistics for the app including token counts, costs, and breakdowns by model and request type.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Time period for usage stats */
+					period?: "day" | "week" | "month";
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description AI usage statistics */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["AIUsageResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/ai/rate-limit": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get AI rate limit status
+		 * @description Get current AI rate limits and usage within those limits for the app.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Rate limit status */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["AIRateLimitResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/ai/models": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List available AI models
+		 * @description List available AI models with optional filtering by provider and capability. Models are filtered based on app configuration.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Filter by provider (e.g., openai, anthropic) */
+					provider?: string;
+					/** @description Filter by capability */
+					capability?: "chat" | "vision" | "tool" | "embedding";
+					/** @description Search by model name or description */
+					search?: string;
+					/** @description Number of results to return */
+					limit?: number;
+					/** @description Offset for pagination */
+					offset?: number | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of available models */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["AIModelsResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/consent/types": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get consent types
+		 * @description Get all consent types for the app. Auto-creates GDPR-standard defaults if none exist.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of consent types */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ConsentTypesResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/consent": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user consents
+		 * @description Get consent status for a user by userId or anonymousId.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					/** @description User ID (for logged-in users) */
+					userId?: string;
+					/** @description Anonymous ID (for non-logged-in users) */
+					anonymousId?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description User consent status */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UserConsentsResponse"];
+					};
+				};
+				/** @description Missing userId or anonymousId */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Set user consents
+		 * @description Set consent preferences for a user. Records consent history for audit trail.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["SetConsentRequest"];
+				};
+			};
+			responses: {
+				/** @description Consents updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SetConsentResponse"];
+					};
+				};
+				/** @description Invalid request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Consent quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/consent/accept-all": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Accept all consents
+		 * @description Accept all consent types. Shortcut for consent banner "Accept All" button.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["AcceptAllConsentRequest"];
+				};
+			};
+			responses: {
+				/** @description All consents accepted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SetConsentResponse"];
+					};
+				};
+				/** @description Invalid request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Consent quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/consent/decline-optional": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Decline optional consents
+		 * @description Decline all optional consents. Only required consents remain granted. Shortcut for consent banner "Reject All" button.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["DeclineOptionalConsentRequest"];
+				};
+			};
+			responses: {
+				/** @description Optional consents declined */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SetConsentResponse"];
+					};
+				};
+				/** @description Invalid request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Consent quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/email/send": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Send email
+		 * @description Send a custom email. Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["SendEmailRequest"];
+				};
+			};
+			responses: {
+				/** @description Email sent successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SendEmailResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email service not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/email/send-templated": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Send templated email
+		 * @description Send a pre-built templated email (welcome, verification, password_reset, security_alert). Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["SendTemplatedEmailRequest"];
+				};
+			};
+			responses: {
+				/** @description Templated email sent successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SendTemplatedEmailResponse"];
+					};
+				};
+				/** @description Invalid request body or missing required template data */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email service not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/email/send-to-user": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Send email to user
+		 * @description Send an email to a user by their ID. Looks up user email from database. Quota: email/emails (monthly limit per app). Failed sends are NOT billed.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["SendToUserRequest"];
+				};
+			};
+			responses: {
+				/** @description Email sent successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SendToUserResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description User not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email service not configured */
+				503: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/subscribe": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Subscribe to newsletter
+		 * @description Subscribe to newsletter. Creates subscriber and sends verification email (double opt-in). Quota: email/subscribers (monthly limit per app).
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["NewsletterSubscribeRequest"];
+				};
+			};
+			responses: {
+				/** @description Subscription initiated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterSubscribeResponse"];
+					};
+				};
+				/** @description Invalid email or request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Subscriber quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/verify": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify subscription
+		 * @description Verify subscription email using token from verification email. Confirms double opt-in and activates subscription.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["NewsletterVerifyRequest"];
+				};
+			};
+			responses: {
+				/** @description Subscription verified */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterVerifyResponse"];
+					};
+				};
+				/** @description Token expired or invalid request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid verification token */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/unsubscribe": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Unsubscribe from newsletter
+		 * @description Unsubscribe from newsletter. Requires valid unsubscribe token from email.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["NewsletterUnsubscribeRequest"];
+				};
+			};
+			responses: {
+				/** @description Successfully unsubscribed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterUnsubscribeResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid unsubscribe token */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/resend-verification": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Resend verification email
+		 * @description Resend verification email. Always returns success to prevent email enumeration.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["NewsletterResendVerificationRequest"];
+				};
+			};
+			responses: {
+				/** @description Request processed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterResendVerificationResponse"];
+					};
+				};
+				/** @description Invalid email format */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/unsubscribe-info": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get unsubscribe info
+		 * @description Get subscriber info for rendering unsubscribe confirmation page.
+		 */
+		get: {
+			parameters: {
+				query: {
+					/** @description Unsubscribe token from email */
+					token: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Subscriber info for unsubscribe page */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterUnsubscribeInfoResponse"];
+					};
+				};
+				/** @description Missing token parameter */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid unsubscribe link */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/newsletter/preferences": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get newsletter preferences
+		 * @description Get newsletter subscription preferences for a subscriber.
+		 */
+		get: {
+			parameters: {
+				query: {
+					/** @description Subscriber email */
+					email: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Subscriber preferences */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterPreferences"];
+					};
+				};
+				/** @description Missing email parameter */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Subscriber not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update newsletter preferences
+		 * @description Update newsletter subscription preferences for a subscriber.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["NewsletterUpdatePreferencesRequest"];
+				};
+			};
+			responses: {
+				/** @description Preferences updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["NewsletterUpdatePreferencesResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Subscriber not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/webhooks/config": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get webhook configuration
+		 * @description Get webhook configuration for all environments in the app. Returns webhook URLs, secret status, and supported event types.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Webhook configuration */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["WebhookConfigResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update webhook configuration
+		 * @description Update webhook URL for an environment. Optionally regenerate the webhook secret. Rate limited to 10 updates per minute.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UpdateWebhookConfigRequest"];
+				};
+			};
+			responses: {
+				/** @description Webhook configuration updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UpdateWebhookConfigResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Environment not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/webhooks/deliveries": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get webhook deliveries
+		 * @description Get webhook delivery history with optional filtering by status and event type. Supports pagination.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					status?: "pending" | "queued" | "delivered" | "failed";
+					event?: string;
+					limit?: number;
+					offset?: number | null;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Webhook deliveries */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ListWebhookDeliveriesResponse"];
+					};
+				};
+				/** @description Invalid query parameters */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/webhooks/deliveries/{deliveryId}/replay": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Replay webhook delivery
+		 * @description Replay a failed or pending webhook delivery. Rate limited to 10 replays per minute. Billing: 1 webhook delivery per replay.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					deliveryId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Webhook replayed successfully */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ReplayDeliveryResponse"];
+					};
+				};
+				/** @description Invalid delivery ID or cannot replay already delivered webhook */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Webhook quota exceeded */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Delivery not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description No webhook secret configured */
+				412: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Rate limit exceeded */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/webhooks/stats": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get webhook statistics
+		 * @description Get webhook delivery statistics for the app including totals, delivery rate, and breakdowns by event and status.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					period?: "day" | "week" | "month";
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Webhook statistics */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["WebhookStatsResponse"];
+					};
+				};
+				/** @description Invalid query parameters */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid app credentials */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/2fa/setup": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Setup 2FA
+		 * @description Start 2FA setup. Returns TOTP secret and QR code data for authenticator app.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description TOTP setup data */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["TwoFactorSetupResponse"];
+					};
+				};
+				/** @description 2FA already enabled */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/2fa/verify": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify 2FA setup
+		 * @description Verify and enable 2FA with a TOTP code. Returns backup codes on success.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["Security2FAVerifyRequest"];
+				};
+			};
+			responses: {
+				/** @description 2FA enabled with backup codes */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["Security2FAVerifyResponse"];
+					};
+				};
+				/** @description Setup not started or already enabled */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid code or not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/2fa/disable": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Disable 2FA
+		 * @description Disable 2FA. This is a sensitive operation that may require re-authentication.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description 2FA disabled */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["Security2FADisableResponse"];
+					};
+				};
+				/** @description 2FA not enabled */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/backup-codes": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * View backup codes
+		 * @description View remaining unused backup codes. Requires 2FA to be enabled.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Backup codes */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["BackupCodesResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description 2FA not enabled */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/backup-codes/regenerate": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Regenerate backup codes
+		 * @description Generate new backup codes. Invalidates all previous codes.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description New backup codes */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["BackupCodesRegenerateResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description 2FA not enabled */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/password/set": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Set password
+		 * @description Set password for OAuth-only users who want to add password authentication.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["SetPasswordRequest"];
+				};
+			};
+			responses: {
+				/** @description Password set */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description User already has password or invalid password */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/email/change": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Request email change
+		 * @description Request to change email address. Sends verification email to the new address.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["EmailChangeRequest"];
+				};
+			};
+			responses: {
+				/** @description Verification email sent */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["EmailChangeResponse"];
+					};
+				};
+				/** @description Invalid email */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Email already in use */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/email/confirm": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Confirm email change
+		 * @description Confirm email change using token from verification email.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["EmailChangeConfirmRequest"];
+				};
+			};
+			responses: {
+				/** @description Email changed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["EmailChangeConfirmResponse"];
+					};
+				};
+				/** @description Token expired */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid token */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/passkeys": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * List passkeys
+		 * @description List all registered passkeys for the user.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of passkeys */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PasskeysListResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/passkeys/register/start": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Start passkey registration
+		 * @description Start WebAuthn passkey registration. Returns options for navigator.credentials.create().
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description WebAuthn registration options */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PasskeyRegistrationOptions"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/passkeys/register/verify": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify passkey registration
+		 * @description Complete passkey registration by verifying the WebAuthn response.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["PasskeyRegisterVerifyRequest"];
+				};
+			};
+			responses: {
+				/** @description Passkey registered */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["PasskeyRegisterVerifyResponse"];
+					};
+				};
+				/** @description Invalid WebAuthn response */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/passkeys/{passkeyId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Rename passkey
+		 * @description Update the name of a passkey.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					passkeyId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["PasskeyRenameRequest"];
+				};
+			};
+			responses: {
+				/** @description Passkey renamed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Invalid name */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Passkey not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		/**
+		 * Delete passkey
+		 * @description Delete a passkey. This is a sensitive operation that may require re-authentication.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					passkeyId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Passkey deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Passkey not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/oauth/disconnect": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Disconnect OAuth provider
+		 * @description Disconnect a connected OAuth provider. User must have another authentication method available.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["OAuthDisconnectRequest"];
+				};
+			};
+			responses: {
+				/** @description Provider disconnected */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OAuthDisconnectResponse"];
+					};
+				};
+				/** @description Cannot disconnect - would leave user without authentication method */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Provider not connected */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/security/score": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get security score
+		 * @description Get security score with breakdown of factors and recommendations for improvement.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Security score and recommendations */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SecurityScore"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/challenge/verify": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Verify identity
+		 * @description Verify identity for step-up authentication. Supports password, email code, TOTP, and backup code verification.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["ChallengeVerifyRequest"];
+				};
+			};
+			responses: {
+				/** @description Verification successful */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ChallengeVerifyResponse"];
+					};
+				};
+				/** @description Invalid verification method or no code sent */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invalid credentials or not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Too many failed attempts - temporarily locked out */
+				429: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get user organizations
+		 * @description Get all organizations the current user belongs to.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of organizations */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OrganizationsResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Create organization
+		 * @description Create a new organization. The current user becomes super_admin.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["CreateOrgRequest"];
+				};
+			};
+			responses: {
+				/** @description Organization created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["CreateOrgResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Slug already exists */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get organization
+		 * @description Get organization by ID or slug.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Organization details */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OrganizationResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		/**
+		 * Update organization
+		 * @description Update an organization. Requires admin or super_admin role.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UpdateOrgRequest"];
+				};
+			};
+			responses: {
+				/** @description Organization updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["CreateOrgResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Slug already exists */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		/**
+		 * Delete organization
+		 * @description Delete an organization. Requires super_admin role.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Organization deleted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/members": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get organization members
+		 * @description Get all members of an organization.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of members */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OrganizationMembersResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not a member of this organization */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/members/invite": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Invite member
+		 * @description Invite a member to an organization. Requires admin or super_admin role.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["InviteMemberRequest"];
+				};
+			};
+			responses: {
+				/** @description Invitation created */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["InviteMemberResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description User already a member or invitation already exists */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/members/{memberId}/role": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		/**
+		 * Update member role
+		 * @description Update a member's role. Requires admin or super_admin role.
+		 */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+					memberId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["UpdateMemberRoleRequest"];
+				};
+			};
+			responses: {
+				/** @description Role updated */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["UpdateMemberRoleResponse"];
+					};
+				};
+				/** @description Invalid request body */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization or member not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/members/{memberId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Remove member
+		 * @description Remove a member from an organization. Requires admin or super_admin role.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+					memberId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Member removed */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization or member not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/leave": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Leave organization
+		 * @description Leave an organization. Super admins cannot leave if they are the only admin.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Left organization */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Cannot leave - only admin */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found or not a member */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/invitations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Get invitations
+		 * @description Get pending invitations for an organization. Requires admin or super_admin role.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description List of invitations */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["OrganizationInvitationsResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/invitations/accept": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Accept invitation
+		 * @description Accept an organization invitation using the invitation token.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": components["schemas"]["AcceptInvitationRequest"];
+				};
+			};
+			responses: {
+				/** @description Invitation accepted */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["AcceptInvitationResponse"];
+					};
+				};
+				/** @description Invalid or expired token */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Invitation not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/orgs/{orgIdOrSlug}/invitations/{invitationId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Revoke invitation
+		 * @description Revoke a pending invitation. Requires admin or super_admin role.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					orgIdOrSlug: string;
+					invitationId: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Invitation revoked */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["SuccessResponse"];
+					};
+				};
+				/** @description Not authenticated */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Insufficient permissions */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				/** @description Organization or invitation not found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        ErrorResponse: {
-            error: {
-                message: string;
-                code: string;
-            };
-        };
-        User: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            name: string | null;
-            /** Format: uri */
-            image?: string | null;
-            emailVerified: boolean;
-        };
-        TokenResponse: {
-            accessToken: string;
-            refreshToken: string;
-            /** @description Token expiry in seconds */
-            expiresIn: number;
-            user: components["schemas"]["User"];
-        };
-        /** @enum {string} */
-        OrgRole: "super_admin" | "admin" | "billing" | "analytics" | "developer" | "viewer";
-        Organization: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            slug: string;
-            /** Format: uri */
-            logoUrl: string | null;
-            /** Format: email */
-            email: string | null;
-            /** Format: email */
-            billingEmail: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        OrganizationMember: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            userId: string;
-            /** Format: email */
-            email: string;
-            name: string | null;
-            /** Format: uri */
-            image: string | null;
-            role: components["schemas"]["OrgRole"];
-            /** Format: date-time */
-            joinedAt: string;
-        };
-        OrganizationInvitation: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            role: components["schemas"]["OrgRole"];
-            /** @enum {string} */
-            status: "pending" | "accepted" | "expired" | "revoked";
-            /** Format: uuid */
-            invitedById: string;
-            invitedByName: string | null;
-            /** Format: date-time */
-            expiresAt: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        OrganizationMembership: {
-            role: components["schemas"]["OrgRole"];
-            /** Format: date-time */
-            joinedAt: string;
-        };
-        CreateOrgRequest: {
-            name: string;
-            slug?: string;
-            /** Format: email */
-            email?: string;
-        };
-        UpdateOrgRequest: {
-            name?: string;
-            slug?: string;
-            /** Format: uri */
-            logoUrl?: string | null;
-            /** Format: email */
-            email?: string | null;
-            /** Format: email */
-            billingEmail?: string | null;
-        };
-        InviteMemberRequest: {
-            /** Format: email */
-            email: string;
-            role: components["schemas"]["OrgRole"];
-        };
-        UpdateMemberRoleRequest: {
-            role: components["schemas"]["OrgRole"];
-        };
-        AcceptInvitationRequest: {
-            token: string;
-        };
-        OrganizationsResponse: {
-            organizations: components["schemas"]["Organization"][];
-        };
-        OrganizationResponse: {
-            organization: components["schemas"]["Organization"];
-            membership: components["schemas"]["OrganizationMembership"] & unknown;
-        };
-        CreateOrgResponse: {
-            organization: components["schemas"]["Organization"];
-        };
-        OrganizationMembersResponse: {
-            members: components["schemas"]["OrganizationMember"][];
-        };
-        OrganizationInvitationsResponse: {
-            invitations: components["schemas"]["OrganizationInvitation"][];
-        };
-        InviteMemberResponse: {
-            invitation: components["schemas"]["OrganizationInvitation"];
-        };
-        UpdateMemberRoleResponse: {
-            member: components["schemas"]["OrganizationMember"];
-        };
-        AcceptInvitationResponse: {
-            organization: components["schemas"]["Organization"];
-        };
-        LoginResponse: {
-            /** @enum {boolean} */
-            requiresTwoFactor: false;
-            accessToken: string;
-            refreshToken: string;
-            expiresIn: number;
-            user: components["schemas"]["User"];
-        } | {
-            /** @enum {boolean} */
-            requiresTwoFactor: true;
-            /** Format: uuid */
-            userId: string;
-            /** Format: email */
-            email: string;
-        };
-        LoginRequest: {
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        RegisterResponse: {
-            requiresVerification: boolean;
-            message: string;
-            user: {
-                /** Format: uuid */
-                id: string;
-                /** Format: email */
-                email: string;
-                name: string | null;
-            };
-        };
-        RegisterRequest: {
-            name: string;
-            /** Format: email */
-            email: string;
-            password: string;
-        };
-        TwoFactorVerifyRequest: {
-            /** Format: uuid */
-            userId: string;
-            code: string;
-        };
-        SuccessResponse: {
-            success: boolean;
-            message?: string;
-        };
-        ForgotPasswordRequest: {
-            /** Format: email */
-            email: string;
-        };
-        ResetPasswordRequest: {
-            token: string;
-            password: string;
-        };
-        VerifyEmailRequest: {
-            token: string;
-        };
-        LogoutRequest: {
-            refreshToken?: string;
-        };
-        MeResponse: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            name: string | null;
-            /** Format: uri */
-            image?: string | null;
-            emailVerified: boolean;
-            twoFactorEnabled: boolean;
-        };
-        OAuthProvidersResponse: {
-            providers: string[];
-        };
-        UserProfile: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            name: string | null;
-            /** Format: uri */
-            image?: string | null;
-            emailVerified: boolean;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        UpdateProfileRequest: {
-            name?: string;
-            /** Format: uri */
-            image?: string | null;
-        };
-        SecuritySettings: {
-            twoFactorEnabled: boolean;
-            hasPassword: boolean;
-            emailVerified: boolean;
-        };
-        SessionsResponse: components["schemas"]["Session"][];
-        Session: {
-            /** Format: uuid */
-            id: string;
-            isCurrent: boolean;
-            deviceName?: string | null;
-            browser?: string | null;
-            os?: string | null;
-            deviceType?: string | null;
-            ipAddress?: string | null;
-            country?: string | null;
-            city?: string | null;
-            /** Format: date-time */
-            lastActiveAt: string;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        LoginHistoryEntry: {
-            /** Format: uuid */
-            id: string;
-            ipAddress?: string | null;
-            userAgent?: string | null;
-            country?: string | null;
-            city?: string | null;
-            device?: string | null;
-            success: boolean;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        ConnectedAccount: {
-            provider: string;
-            /** Format: date-time */
-            connectedAt: string;
-        };
-        PlansResponse: components["schemas"]["Plan"][];
-        Plan: {
-            /** Format: uuid */
-            id: string;
-            slug: string;
-            name: string;
-            description: string | null;
-            features: string[];
-            priceMonthly: number | null;
-            priceAnnual: number | null;
-            priceLifetime: number | null;
-        };
-        Subscription: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            userId: string;
-            /** Format: uuid */
-            planId: string;
-            planSlug: string;
-            status: string;
-            /** @enum {string} */
-            interval: "monthly" | "annual" | "lifetime";
-            /** Format: date-time */
-            currentPeriodStart: string | null;
-            /** Format: date-time */
-            currentPeriodEnd: string | null;
-            cancelAtPeriodEnd: boolean;
-            /** Format: date-time */
-            trialEnd: string | null;
-        } | null;
-        CheckoutResponse: {
-            /** Format: uri */
-            checkoutUrl: string | null;
-            sessionId: string;
-        };
-        CheckoutRequest: {
-            /** Format: uuid */
-            userId: string;
-            planSlug: string;
-            /** @enum {string} */
-            interval: "monthly" | "annual" | "lifetime";
-            /** Format: uri */
-            successUrl: string;
-            /** Format: uri */
-            cancelUrl: string;
-        };
-        PortalResponse: {
-            /** Format: uri */
-            portalUrl: string;
-        };
-        PortalRequest: {
-            /** Format: uuid */
-            userId: string;
-            /** Format: uri */
-            returnUrl: string;
-        };
-        BalanceResponse: {
-            balance: {
-                current: number;
-                currentFormatted: string;
-            };
-            status: {
-                level: string;
-                isHealthy: boolean;
-                isLow: boolean;
-                alertThreshold: number;
-            };
-            /** @enum {string} */
-            billingType: "prepaid" | "postpaid";
-            trustLevel: string;
-            spendingCap: number | null;
-            currentMonthSpend: number;
-            spendingCapPercent: number | null;
-            /** Format: date-time */
-            gracePeriodEndsAt: string | null;
-            isAdminOrg: boolean;
-        };
-        UsageResponse: {
-            period: {
-                type: string;
-                /** Format: date-time */
-                start: string;
-                /** Format: date-time */
-                end: string;
-            };
-            metrics: {
-                aiCostMicrodollars: number;
-                storageBytesUsed: number;
-                storageEgressBytes: number;
-                storageUploads: number;
-                dbStorageBytes: number;
-                dbComputeSeconds: number;
-                emailSentCount: number;
-                jobInvocationCount: number;
-                cronActiveCount: number;
-                notificationsSentCount: number;
-                analyticsEventCount: number;
-                webhookDeliveryCount: number;
-                errorEventCount: number;
-                authMau: number;
-            } | null;
-        };
-        BatchTrackResponse: {
-            success: boolean;
-            /** @description Number of new events tracked */
-            count: number;
-            /** @description Number of duplicate events filtered out */
-            deduplicated: number;
-            /** @description Total events in the request */
-            total: number;
-        };
-        BatchTrackRequest: {
-            events: components["schemas"]["TrackEventItem"][];
-        };
-        TrackEventItem: {
-            event: string;
-            properties?: {
-                [key: string]: unknown;
-            };
-            /** Format: date-time */
-            timestamp?: string;
-            destinations?: ("google_ads" | "meta" | "tiktok")[];
-            skipDestinations?: boolean;
-            conversion?: components["schemas"]["ConversionData"];
-        };
-        ConversionData: {
-            clickId?: string;
-            value?: number;
-            currency?: string;
-            orderId?: string;
-            /** Format: email */
-            userEmail?: string;
-            userPhone?: string;
-            userFirstName?: string;
-            userLastName?: string;
-        };
-        AnalyticsQueryResponse: {
-            data: {
-                eventName: string;
-                count: number;
-            }[];
-            /** @description Total count across all events */
-            total: number;
-        };
-        AnalyticsQueryRequest: {
-            /**
-             * Format: date-time
-             * @description Start of date range (ISO 8601)
-             */
-            dateFrom?: string;
-            /**
-             * Format: date-time
-             * @description End of date range (ISO 8601)
-             */
-            dateTo?: string;
-            /** @description Filter by specific event names */
-            events?: string[];
-            /**
-             * @description Group by time interval
-             * @enum {string}
-             */
-            interval?: "hour" | "day" | "week" | "month";
-            /**
-             * @description Limit results (default 100, max 1000)
-             * @default 100
-             */
-            limit: number;
-        };
-        JobStatusResponse: {
-            available: boolean;
-            provider: string;
-        };
-        ScheduleJobResponse: {
-            /** Format: uuid */
-            jobId?: string;
-            messageId?: string;
-            /** Format: date-time */
-            scheduledFor?: string | null;
-        };
-        ScheduleJobRequest: {
-            /** Format: uri */
-            callbackUrl: string;
-            payload?: {
-                [key: string]: unknown;
-            };
-            /**
-             * @default POST
-             * @enum {string}
-             */
-            method: "GET" | "POST" | "PUT" | "DELETE";
-            headers?: {
-                [key: string]: string;
-            };
-            delay?: number;
-            /** Format: date-time */
-            scheduledFor?: string;
-            /** @default 3 */
-            retries: number;
-            name?: string;
-            type?: string;
-            /** @default 30 */
-            timeout: number;
-        };
-        ListJobsResponse: {
-            jobs: components["schemas"]["Job"][];
-            total: number;
-            limit: number;
-            offset: number;
-        };
-        Job: {
-            /** Format: uuid */
-            id: string;
-            name: string | null;
-            type: string;
-            /** @enum {string} */
-            status: "pending" | "queued" | "running" | "completed" | "failed" | "scheduled" | "paused" | "cancelled" | "deleted";
-            callbackUrl: string;
-            payload?: {
-                [key: string]: unknown;
-            };
-            /** Format: date-time */
-            scheduledFor: string | null;
-            /** Format: date-time */
-            startedAt: string | null;
-            /** Format: date-time */
-            completedAt: string | null;
-            /** Format: date-time */
-            failedAt: string | null;
-            retries: number;
-            maxRetries: number;
-            lastError: string | null;
-            cronExpression: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        ScheduleCronResponse: {
-            /** Format: uuid */
-            jobId?: string;
-            scheduleId: string;
-            cron: string;
-            paused: boolean;
-        };
-        ScheduleCronRequest: {
-            /** Format: uri */
-            callbackUrl: string;
-            cron: string;
-            payload?: {
-                [key: string]: unknown;
-            };
-            /**
-             * @default POST
-             * @enum {string}
-             */
-            method: "GET" | "POST" | "PUT" | "DELETE";
-            headers?: {
-                [key: string]: string;
-            };
-            /** @default 3 */
-            retries: number;
-            name: string;
-            type?: string;
-            /** @default false */
-            paused: boolean;
-        };
-        ReferralCodeResponse: {
-            /** @description 8-character referral code */
-            code: string;
-            /** @enum {string} */
-            status: "pending" | "completed" | "expired";
-        };
-        RegenerateCodeResponse: {
-            /** @description New 8-character referral code */
-            code: string;
-            totalReferrals: number;
-            completedReferrals: number;
-            pendingReferrals: number;
-        };
-        ReferralStatsResponse: {
-            /** @description Total referrals created */
-            totalReferrals: number;
-            /** @description Successfully completed referrals */
-            completedReferrals: number;
-            /** @description Pending referrals */
-            pendingReferrals: number;
-        };
-        RedeemReferralResponse: {
-            success: boolean;
-            /** @description Type of reward applied */
-            rewardType: string;
-            /** @description Details of reward applied to referee */
-            referredReward?: {
-                [key: string]: unknown;
-            };
-            /** @description Details of reward applied to referrer */
-            referrerReward?: {
-                [key: string]: unknown;
-            };
-        };
-        RedeemReferralRequest: {
-            /** @description Referral code to redeem */
-            code: string;
-            defaults?: components["schemas"]["ReferralRewardDefaults"];
-        };
-        /** @description Optional inline defaults for reward configuration */
-        ReferralRewardDefaults: {
-            referrerReward?: components["schemas"]["ReferralRewardConfig"];
-            refereeReward?: components["schemas"]["ReferralRewardConfig"] & unknown;
-            /** @description Whether both parties get rewarded (default: true) */
-            doubleReward?: boolean;
-            /** @description Minimum days before rewards are granted (anti-fraud) */
-            minimumDaysBeforeReward?: number;
-        };
-        /** @description Reward for the person who shared the code */
-        ReferralRewardConfig: {
-            /** @enum {string} */
-            type: "points" | "premium_trial" | "discount" | "credit";
-            /** @description Points to award (for type: points) */
-            points?: number;
-            /** @description Trial days to grant (for type: premium_trial) */
-            days?: number;
-            /** @description Discount percentage (for type: discount) */
-            discountPercent?: number;
-            /** @description Credit amount in cents (for type: credit) */
-            creditCents?: number;
-        };
-        LeaderboardResponse: {
-            /** @enum {string} */
-            period: "all" | "month" | "week";
-            entries: components["schemas"]["LeaderboardEntry"][];
-            /** @description Current user rank if authenticated */
-            currentUserRank: number | null;
-        };
-        LeaderboardEntry: {
-            /** @description Position in the leaderboard */
-            rank: number;
-            /**
-             * Format: uuid
-             * @description User ID (only revealed if current user)
-             */
-            userId: string | null;
-            /** @description Masked name for privacy */
-            displayName: string | null;
-            /** Format: uri */
-            avatarUrl: string | null;
-            completedReferrals: number;
-            totalReferrals: number;
-            isCurrentUser: boolean;
-        };
-        PushPreferencesResponse: {
-            enabled: boolean;
-            subscriptionCount: number;
-        };
-        RegisterPushResponse: {
-            success: boolean;
-            updated: boolean;
-        };
-        RegisterPushRequest: {
-            subscription: {
-                /** Format: uri */
-                endpoint: string;
-                keys: {
-                    p256dh: string;
-                    auth: string;
-                };
-            };
-        };
-        UnregisterPushRequest: {
-            /** Format: uri */
-            endpoint: string;
-        };
-        MobileConfigResponse: {
-            ios: boolean;
-            android: boolean;
-            anyConfigured: boolean;
-        };
-        MobilePreferencesResponse: {
-            enabled: boolean;
-            devices: components["schemas"]["MobileDevice"][];
-        };
-        MobileDevice: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            platform: "ios" | "android";
-            name: string | null;
-            /** Format: date-time */
-            registeredAt: string;
-            /** Format: date-time */
-            lastUsedAt: string | null;
-        };
-        RegisterMobileDeviceResponse: {
-            success: boolean;
-            updated: boolean;
-            /** Format: uuid */
-            tokenId: string;
-        };
-        RegisterMobileDeviceRequest: {
-            /** @enum {string} */
-            platform: "ios" | "android";
-            token: string;
-            deviceId?: string;
-            deviceName?: string;
-            appVersion?: string;
-            osVersion?: string;
-        };
-        UnregisterMobileDeviceRequest: {
-            token: string;
-        };
-        InAppMessagesResponse: components["schemas"]["InAppMessage"][];
-        InAppMessage: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string|null} */
-            type: "info" | "success" | "warning" | "error" | "announcement" | "system" | "action" | null;
-            /** @enum {string|null} */
-            priority: "low" | "normal" | "high" | "urgent" | null;
-            title: string;
-            body: string;
-            icon: string | null;
-            imageUrl: string | null;
-            actionText: string | null;
-            actionUrl: string | null;
-            secondaryActionText: string | null;
-            secondaryActionUrl: string | null;
-            metadata: {
-                [key: string]: unknown;
-            } | null;
-            topic: string | null;
-            isRead: boolean;
-            isDismissed: boolean;
-            /** Format: date-time */
-            readAt: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        UnreadCountResponse: {
-            count: number;
-        };
-        MarkAllReadResponse: {
-            success: boolean;
-            markedCount: number;
-        };
-        RecordClickRequest: {
-            /** @enum {string} */
-            action: "primary" | "secondary";
-        };
-        MessagePreferencesResponse: {
-            enabled: boolean;
-            mutedTopics: string[];
-            highPriorityOnly: boolean;
-        };
-        UpdateMessagePreferencesRequest: {
-            enabled?: boolean;
-            mutedTopics?: string[];
-            highPriorityOnly?: boolean;
-        };
-        StorageFile: {
-            /** Format: uuid */
-            id: string;
-            filename: string;
-            path: string;
-            /** Format: uri */
-            url: string | null;
-            mimeType: string;
-            /** @description File size in bytes */
-            size: number;
-            metadata: {
-                [key: string]: unknown;
-            } | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        UploadUrlResponse: {
-            /**
-             * Format: uri
-             * @description Endpoint URL for the upload
-             */
-            uploadEndpoint: string;
-            /** @description JSON payload to include in the upload request */
-            clientPayload: string;
-            /** @description Maximum file size in bytes */
-            maxSize: number;
-            /** @description List of allowed MIME types */
-            allowedContentTypes: string[];
-            /** @description Instructions for making the upload request */
-            instructions: {
-                method: string;
-                headers: {
-                    [key: string]: string;
-                };
-                body: {
-                    type: string;
-                    payload: {
-                        pathname: string;
-                        clientPayload: string;
-                    };
-                };
-            };
-        };
-        UploadUrlRequest: {
-            /** @description Name of the file to upload */
-            filename: string;
-            /** @description MIME type of the file */
-            contentType?: string;
-            /** @description Optional folder path within app storage */
-            folder?: string;
-            /** @description Custom metadata to attach to the file */
-            metadata?: {
-                [key: string]: unknown;
-            };
-        };
-        CaptureExceptionResponse: {
-            /**
-             * Format: uuid
-             * @description Unique event ID
-             */
-            eventId: string;
-            /** @description Whether this is a new unique error or a duplicate */
-            isNewError: boolean;
-        };
-        CaptureExceptionRequest: {
-            /** @description The exception to capture */
-            exception: {
-                values: components["schemas"]["MonitoringExceptionValue"][];
-            };
-            level?: components["schemas"]["MonitoringErrorLevel"];
-            /** @description Tags for filtering */
-            tags?: {
-                [key: string]: string;
-            };
-            /** @description Extra context data */
-            extra?: {
-                [key: string]: unknown;
-            };
-            /** @description Breadcrumbs leading up to the error */
-            breadcrumbs?: components["schemas"]["MonitoringBreadcrumb"][];
-            /** @description Current page/screen */
-            route?: string;
-            /** @description User agent */
-            userAgent?: string;
-            /** @description Custom fingerprint for grouping */
-            fingerprint?: string[];
-            /** @description Release version */
-            release?: string;
-            /** @description Environment (dev/staging/prod) */
-            environment?: string;
-        };
-        MonitoringExceptionValue: {
-            /** @description Exception type (e.g., "TypeError", "ReferenceError") */
-            type: string;
-            /** @description Exception message */
-            value: string;
-            stacktrace?: {
-                frames: {
-                    filename?: string;
-                    function?: string;
-                    lineno?: number;
-                    colno?: number;
-                    in_app?: boolean;
-                }[];
-            };
-        };
-        /**
-         * @description Error level
-         * @enum {string}
-         */
-        MonitoringErrorLevel: "fatal" | "error" | "warning" | "info";
-        MonitoringBreadcrumb: {
-            type: string;
-            category: string;
-            message: string;
-            timestamp: string;
-        };
-        CaptureMessageResponse: {
-            /**
-             * Format: uuid
-             * @description Unique event ID
-             */
-            eventId: string;
-            /** @description Whether this is a new unique message or a duplicate */
-            isNewError: boolean;
-        };
-        CaptureMessageRequest: {
-            /** @description Message to capture */
-            message: string;
-            level?: components["schemas"]["MonitoringErrorLevel"] & unknown;
-            /** @description Tags for filtering */
-            tags?: {
-                [key: string]: string;
-            };
-            /** @description Extra context data */
-            extra?: {
-                [key: string]: unknown;
-            };
-            /** @description Current page/screen */
-            route?: string;
-        };
-        AIUsageResponse: {
-            /** @enum {string} */
-            period: "day" | "week" | "month";
-            /** @description Total number of AI requests */
-            requests: number;
-            tokens: {
-                /** @description Total input tokens */
-                input: number;
-                /** @description Total output tokens */
-                output: number;
-                /** @description Total tokens (input + output) */
-                total: number;
-            };
-            cost: {
-                /** @description Cost in microdollars (1/1,000,000 USD) */
-                microdollars: number;
-                /** @description Human-readable cost string */
-                formatted: string;
-            };
-            /** @description Usage breakdown by model */
-            byModel: {
-                [key: string]: {
-                    requests: number;
-                    tokens: number;
-                    cost: number;
-                };
-            };
-            /** @description Usage breakdown by request type (chat, embedding, vision) */
-            byType: {
-                [key: string]: {
-                    requests: number;
-                    tokens: number;
-                };
-            };
-        };
-        AIRateLimitResponse: {
-            /** @description Max requests per minute (null if unlimited) */
-            requestsPerMinute: number | null;
-            /** @description Max requests per day (null if unlimited) */
-            requestsPerDay: number | null;
-            /** @description Max tokens per minute (null if unlimited) */
-            tokensPerMinute: number | null;
-            /** @description Max tokens per day (null if unlimited) */
-            tokensPerDay: number | null;
-            /** @description Max cost per day in microdollars (null if unlimited) */
-            costPerDayMicrodollars: number | null;
-            current: {
-                /** @description Requests made in the last minute */
-                requestsThisMinute: number;
-                /** @description Requests made today */
-                requestsToday: number;
-                /** @description Tokens used in the last minute */
-                tokensThisMinute: number;
-                /** @description Tokens used today */
-                tokensToday: number;
-                /** @description Cost today in microdollars */
-                costToday: number;
-            };
-        };
-        AIModelsResponse: {
-            models: components["schemas"]["AIModel"][];
-            /** @description Total number of matching models */
-            total: number;
-            /** @description Whether more results are available */
-            hasMore: boolean;
-        };
-        AIModel: {
-            /** @description Model ID (e.g., openai/gpt-4) */
-            id: string;
-            /** @description Human-readable model name */
-            name: string;
-            /** @description Model description */
-            description?: string | null;
-            /** @description Model capabilities */
-            capabilities: ("chat" | "vision" | "tool" | "embedding")[];
-            /** @description Maximum context window size */
-            contextWindow?: number;
-            pricing?: {
-                /** @description Cost per input token in USD */
-                inputPerToken?: number;
-                /** @description Cost per output token in USD */
-                outputPerToken?: number;
-            };
-        };
-        ConsentTypesResponse: components["schemas"]["ConsentType"][];
-        ConsentType: {
-            /** Format: uuid */
-            id: string;
-            slug: string;
-            /** @enum {string} */
-            category: "necessary" | "analytics" | "marketing" | "preferences" | "functional";
-            name: string;
-            description: string;
-            required: boolean;
-            defaultEnabled: boolean;
-        };
-        UserConsentsResponse: components["schemas"]["UserConsent"][];
-        UserConsent: {
-            slug: string;
-            /** @enum {string} */
-            category: "necessary" | "analytics" | "marketing" | "preferences" | "functional";
-            name: string;
-            required: boolean;
-            granted: boolean;
-            /** Format: date-time */
-            grantedAt: string | null;
-            version: number | null;
-        };
-        SetConsentResponse: {
-            consents: {
-                slug: string;
-                granted: boolean;
-            }[];
-        };
-        SetConsentRequest: {
-            /**
-             * Format: uuid
-             * @description User ID (for logged-in users)
-             */
-            userId?: string;
-            /** @description Anonymous ID (for non-logged-in users) */
-            anonymousId?: string;
-            /** @description Consents to set */
-            consents: {
-                /** @description Consent type slug */
-                slug: string;
-                /** @description Whether consent is granted */
-                granted: boolean;
-            }[];
-            /**
-             * @description Source of consent
-             * @default banner
-             * @enum {string}
-             */
-            source: "banner" | "settings" | "api";
-            /** @description User agent string */
-            userAgent?: string;
-        };
-        AcceptAllConsentRequest: {
-            /**
-             * Format: uuid
-             * @description User ID (for logged-in users)
-             */
-            userId?: string;
-            /** @description Anonymous ID (for non-logged-in users) */
-            anonymousId?: string;
-            /**
-             * @description Source of consent
-             * @default banner
-             * @enum {string}
-             */
-            source: "banner" | "settings" | "api";
-            /** @description User agent string */
-            userAgent?: string;
-        };
-        DeclineOptionalConsentRequest: {
-            /**
-             * Format: uuid
-             * @description User ID (for logged-in users)
-             */
-            userId?: string;
-            /** @description Anonymous ID (for non-logged-in users) */
-            anonymousId?: string;
-            /**
-             * @description Source of consent
-             * @default banner
-             * @enum {string}
-             */
-            source: "banner" | "settings" | "api";
-            /** @description User agent string */
-            userAgent?: string;
-        };
-        SendEmailResponse: {
-            success: boolean;
-            /** @description Email ID from provider */
-            id?: string;
-        };
-        SendEmailRequest: {
-            /**
-             * Format: email
-             * @description Recipient email address
-             */
-            to: string;
-            /** @description Email subject */
-            subject: string;
-            /** @description Email HTML content */
-            html: string;
-            /** @description Plain text fallback */
-            text?: string;
-            /**
-             * Format: email
-             * @description Reply-to email address
-             */
-            replyTo?: string;
-        };
-        SendTemplatedEmailResponse: {
-            success: boolean;
-            /** @description Template that was sent */
-            template: string;
-        };
-        SendTemplatedEmailRequest: {
-            /**
-             * @description Template type
-             * @enum {string}
-             */
-            template: "welcome" | "verification" | "password_reset" | "security_alert";
-            /**
-             * Format: email
-             * @description Recipient email address
-             */
-            to: string;
-            /** @description Template variables */
-            data?: {
-                [key: string]: unknown;
-            };
-        };
-        SendToUserResponse: {
-            success: boolean;
-            /** @description Email ID from provider */
-            id?: string;
-        };
-        SendToUserRequest: {
-            /**
-             * Format: uuid
-             * @description User ID to send email to
-             */
-            userId: string;
-            /** @description Email subject */
-            subject: string;
-            /** @description Email HTML content */
-            html: string;
-            /** @description Plain text fallback */
-            text?: string;
-        };
-        NewsletterSubscribeResponse: {
-            success: boolean;
-            /** @description Human-readable result message */
-            message: string;
-            /** @description Whether email verification is required */
-            requiresVerification: boolean;
-            /** @description Whether email was already subscribed */
-            alreadySubscribed: boolean;
-        };
-        NewsletterSubscribeRequest: {
-            /**
-             * Format: email
-             * @description Subscriber email address
-             */
-            email: string;
-            /**
-             * @description Subscription source
-             * @default website
-             * @enum {string}
-             */
-            source: "website" | "waitlist" | "referral" | "api" | "import";
-            /** @description Subscriber name */
-            name?: string;
-            /** @description Additional tracking metadata */
-            metadata?: {
-                referrer?: string;
-                utmSource?: string;
-                utmMedium?: string;
-                utmCampaign?: string;
-                referralCode?: string;
-            } & {
-                [key: string]: unknown;
-            };
-            /** @description Initial subscription preferences */
-            preferences?: {
-                newsletter?: boolean;
-                product_updates?: boolean;
-                promotions?: boolean;
-                changelog?: boolean;
-                security_alerts?: boolean;
-            };
-        };
-        NewsletterVerifyResponse: {
-            success: boolean;
-            /** @description Human-readable result message */
-            message: string;
-            /**
-             * Format: email
-             * @description Verified email address
-             */
-            email: string;
-        };
-        NewsletterVerifyRequest: {
-            /** @description Verification token from email */
-            token: string;
-        };
-        NewsletterUnsubscribeResponse: {
-            success: boolean;
-            /** @description Human-readable result message */
-            message: string;
-            /**
-             * Format: email
-             * @description Unsubscribed email address
-             */
-            email: string;
-        };
-        NewsletterUnsubscribeRequest: {
-            /**
-             * Format: email
-             * @description Email to unsubscribe
-             */
-            email: string;
-            /** @description Unsubscribe token from email */
-            token: string;
-        };
-        NewsletterResendVerificationResponse: {
-            success: boolean;
-            /** @description Human-readable result message */
-            message: string;
-        };
-        NewsletterResendVerificationRequest: {
-            /**
-             * Format: email
-             * @description Email to resend verification to
-             */
-            email: string;
-        };
-        NewsletterUnsubscribeInfoResponse: {
-            /**
-             * Format: email
-             * @description Subscriber email
-             */
-            email: string;
-            /** @description Subscriber name */
-            name: string | null;
-            /**
-             * Format: date-time
-             * @description When subscription was confirmed
-             */
-            subscribedAt: string | null;
-        };
-        NewsletterPreferences: {
-            /** @description Newsletter preference */
-            newsletter: boolean;
-            /** @description Product updates preference */
-            product_updates: boolean;
-            /** @description Promotions preference */
-            promotions: boolean;
-            /** @description Changelog preference */
-            changelog: boolean;
-            /** @description Security alerts preference */
-            security_alerts: boolean;
-        };
-        NewsletterUpdatePreferencesResponse: {
-            success: boolean;
-            preferences: components["schemas"]["NewsletterPreferences"] & unknown;
-        };
-        NewsletterUpdatePreferencesRequest: {
-            /**
-             * Format: email
-             * @description Subscriber email
-             */
-            email: string;
-            /** @description Preferences to update */
-            preferences: {
-                newsletter?: boolean;
-                product_updates?: boolean;
-                promotions?: boolean;
-                changelog?: boolean;
-                security_alerts?: boolean;
-            };
-        };
-        WebhookConfigResponse: {
-            environments: components["schemas"]["WebhookEnvironmentConfig"][];
-            supportedEvents: string[];
-        };
-        WebhookEnvironmentConfig: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            /** Format: uri */
-            webhookUrl: string | null;
-            hasSecret: boolean;
-            /** Format: date-time */
-            updatedAt: string | null;
-        };
-        UpdateWebhookConfigResponse: {
-            success: boolean;
-            /** Format: uri */
-            webhookUrl: string | null;
-            secretGenerated: boolean;
-            /** @description Only returned on initial setup or regeneration */
-            webhookSecret?: string;
-        };
-        UpdateWebhookConfigRequest: {
-            /** Format: uuid */
-            environmentId: string;
-            /** Format: uri */
-            webhookUrl: string | null;
-            /** @default false */
-            regenerateSecret: boolean;
-        };
-        ListWebhookDeliveriesResponse: {
-            deliveries: components["schemas"]["WebhookDelivery"][];
-            total: number;
-            limit: number;
-            offset: number;
-        };
-        WebhookDelivery: {
-            /** Format: uuid */
-            id: string;
-            event: string;
-            url: string;
-            /** @enum {string} */
-            status: "pending" | "queued" | "delivered" | "failed";
-            retryCount: number;
-            responseStatus: number | null;
-            error: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            queuedAt: string | null;
-            /** Format: date-time */
-            deliveredAt: string | null;
-            /** Format: date-time */
-            failedAt: string | null;
-        };
-        ReplayDeliveryResponse: {
-            success: boolean;
-            /** Format: uuid */
-            newDeliveryId?: string;
-            messageId?: string;
-        };
-        WebhookStatsResponse: {
-            /** @enum {string} */
-            period: "day" | "week" | "month";
-            totals: {
-                total: number;
-                delivered: number;
-                failed: number;
-                pending: number;
-                /** @description Percentage formatted as string (e.g., "95.5%") */
-                deliveryRate: string;
-            };
-            byEvent: {
-                event: string;
-                count: number;
-            }[];
-            byStatus: {
-                /** @enum {string} */
-                status: "pending" | "queued" | "delivered" | "failed";
-                count: number;
-            }[];
-        };
-        TwoFactorSetupResponse: {
-            /** @description TOTP secret key */
-            secret: string;
-            /** @description TOTP URI for QR code generation */
-            uri: string;
-            /** @description Base64 encoded QR code image */
-            qrCode?: string;
-        };
-        Security2FAVerifyResponse: {
-            success: boolean;
-            /** @description One-time backup codes */
-            backupCodes: string[];
-        };
-        Security2FAVerifyRequest: {
-            /** @description 6-digit TOTP code */
-            code: string;
-        };
-        Security2FADisableResponse: {
-            success: boolean;
-        };
-        BackupCodesResponse: {
-            /** @description Remaining unused backup codes */
-            codes: string[];
-            /** @description Number of remaining codes */
-            count: number;
-        };
-        BackupCodesRegenerateResponse: {
-            /** @description New backup codes */
-            codes: string[];
-        };
-        SetPasswordRequest: {
-            /** @description New password */
-            password: string;
-        };
-        EmailChangeResponse: {
-            success: boolean;
-            message: string;
-            /**
-             * Format: date-time
-             * @description When the verification link expires
-             */
-            expiresAt: string;
-        };
-        EmailChangeRequest: {
-            /**
-             * Format: email
-             * @description New email address
-             */
-            newEmail: string;
-        };
-        EmailChangeConfirmResponse: {
-            success: boolean;
-            /**
-             * Format: email
-             * @description The new email address
-             */
-            newEmail: string;
-        };
-        EmailChangeConfirmRequest: {
-            /** @description Verification token from email */
-            token: string;
-        };
-        PasskeysListResponse: {
-            passkeys: components["schemas"]["Passkey"][];
-        };
-        Passkey: {
-            /** Format: uuid */
-            id: string;
-            name: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            lastUsedAt: string | null;
-        };
-        PasskeyRegistrationOptions: {
-            challenge: string;
-            rp: {
-                name: string;
-                id: string;
-            };
-            user: {
-                id: string;
-                name: string;
-                displayName: string;
-            };
-            pubKeyCredParams: {
-                /** @enum {string} */
-                type: "public-key";
-                alg: number;
-            }[];
-            timeout?: number;
-            attestation?: string;
-            excludeCredentials?: {
-                /** @enum {string} */
-                type: "public-key";
-                id: string;
-            }[];
-            authenticatorSelection?: {
-                authenticatorAttachment?: string;
-                requireResidentKey?: boolean;
-                residentKey?: string;
-                userVerification?: string;
-            };
-        } & {
-            [key: string]: unknown;
-        };
-        PasskeyRegisterVerifyResponse: {
-            /** Format: uuid */
-            id: string;
-            name: string | null;
-            /** Format: date-time */
-            createdAt: string;
-        };
-        PasskeyRegisterVerifyRequest: {
-            /** @description WebAuthn RegistrationResponseJSON */
-            credential?: unknown;
-            /** @description Optional device name */
-            deviceName?: string;
-        };
-        PasskeyRenameRequest: {
-            name: string;
-        };
-        OAuthDisconnectResponse: {
-            success: boolean;
-        };
-        OAuthDisconnectRequest: {
-            /** @description OAuth provider name (e.g., google, github) */
-            provider: string;
-        };
-        SecurityScore: {
-            /** @description Overall security score */
-            score: number;
-            /**
-             * @description Security level
-             * @enum {string}
-             */
-            level: "critical" | "low" | "medium" | "high" | "excellent";
-            /** @description Individual security factors */
-            factors: {
-                name: string;
-                enabled: boolean;
-                weight: number;
-                description: string;
-            }[];
-            /** @description Recommended security improvements */
-            recommendations: {
-                /** @enum {string} */
-                priority: "high" | "medium" | "low";
-                title: string;
-                description: string;
-                action?: string;
-            }[];
-        };
-        ChallengeVerifyResponse: {
-            verified: boolean;
-            /** @enum {string} */
-            method: "password" | "email" | "totp" | "backup";
-            /**
-             * @description Type of verification completed
-             * @enum {string}
-             */
-            type: "identity" | "mfa";
-        };
-        ChallengeVerifyRequest: {
-            /**
-             * @description Verification method
-             * @enum {string}
-             */
-            method: "password" | "email" | "totp" | "backup";
-            /** @description Verification value (password, code, etc.) */
-            value: string;
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+	schemas: {
+		ErrorResponse: {
+			error: {
+				message: string;
+				code: string;
+			};
+		};
+		User: {
+			/** Format: uuid */
+			id: string;
+			/** Format: email */
+			email: string;
+			name: string | null;
+			/** Format: uri */
+			image?: string | null;
+			emailVerified: boolean;
+		};
+		TokenResponse: {
+			accessToken: string;
+			refreshToken: string;
+			/** @description Token expiry in seconds */
+			expiresIn: number;
+			user: components["schemas"]["User"];
+		};
+		/** @enum {string} */
+		OrgRole:
+			| "super_admin"
+			| "admin"
+			| "billing"
+			| "analytics"
+			| "developer"
+			| "viewer";
+		Organization: {
+			/** Format: uuid */
+			id: string;
+			name: string;
+			slug: string;
+			/** Format: uri */
+			logoUrl: string | null;
+			/** Format: email */
+			email: string | null;
+			/** Format: email */
+			billingEmail: string | null;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		OrganizationMember: {
+			/** Format: uuid */
+			id: string;
+			/** Format: uuid */
+			userId: string;
+			/** Format: email */
+			email: string;
+			name: string | null;
+			/** Format: uri */
+			image: string | null;
+			role: components["schemas"]["OrgRole"];
+			/** Format: date-time */
+			joinedAt: string;
+		};
+		OrganizationInvitation: {
+			/** Format: uuid */
+			id: string;
+			/** Format: email */
+			email: string;
+			role: components["schemas"]["OrgRole"];
+			/** @enum {string} */
+			status: "pending" | "accepted" | "expired" | "revoked";
+			/** Format: uuid */
+			invitedById: string;
+			invitedByName: string | null;
+			/** Format: date-time */
+			expiresAt: string;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		OrganizationMembership: {
+			role: components["schemas"]["OrgRole"];
+			/** Format: date-time */
+			joinedAt: string;
+		};
+		CreateOrgRequest: {
+			name: string;
+			slug?: string;
+			/** Format: email */
+			email?: string;
+		};
+		UpdateOrgRequest: {
+			name?: string;
+			slug?: string;
+			/** Format: uri */
+			logoUrl?: string | null;
+			/** Format: email */
+			email?: string | null;
+			/** Format: email */
+			billingEmail?: string | null;
+		};
+		InviteMemberRequest: {
+			/** Format: email */
+			email: string;
+			role: components["schemas"]["OrgRole"];
+		};
+		UpdateMemberRoleRequest: {
+			role: components["schemas"]["OrgRole"];
+		};
+		AcceptInvitationRequest: {
+			token: string;
+		};
+		OrganizationsResponse: {
+			organizations: components["schemas"]["Organization"][];
+		};
+		OrganizationResponse: {
+			organization: components["schemas"]["Organization"];
+			membership: components["schemas"]["OrganizationMembership"] & unknown;
+		};
+		CreateOrgResponse: {
+			organization: components["schemas"]["Organization"];
+		};
+		OrganizationMembersResponse: {
+			members: components["schemas"]["OrganizationMember"][];
+		};
+		OrganizationInvitationsResponse: {
+			invitations: components["schemas"]["OrganizationInvitation"][];
+		};
+		InviteMemberResponse: {
+			invitation: components["schemas"]["OrganizationInvitation"];
+		};
+		UpdateMemberRoleResponse: {
+			member: components["schemas"]["OrganizationMember"];
+		};
+		AcceptInvitationResponse: {
+			organization: components["schemas"]["Organization"];
+		};
+		LoginResponse:
+			| {
+					/** @enum {boolean} */
+					requiresTwoFactor: false;
+					accessToken: string;
+					refreshToken: string;
+					expiresIn: number;
+					user: components["schemas"]["User"];
+			  }
+			| {
+					/** @enum {boolean} */
+					requiresTwoFactor: true;
+					/** Format: uuid */
+					userId: string;
+					/** Format: email */
+					email: string;
+			  };
+		LoginRequest: {
+			/** Format: email */
+			email: string;
+			password: string;
+		};
+		RegisterResponse: {
+			requiresVerification: boolean;
+			message: string;
+			user: {
+				/** Format: uuid */
+				id: string;
+				/** Format: email */
+				email: string;
+				name: string | null;
+			};
+		};
+		RegisterRequest: {
+			name: string;
+			/** Format: email */
+			email: string;
+			password: string;
+		};
+		TwoFactorVerifyRequest: {
+			/** Format: uuid */
+			userId: string;
+			code: string;
+		};
+		SuccessResponse: {
+			success: boolean;
+			message?: string;
+		};
+		ForgotPasswordRequest: {
+			/** Format: email */
+			email: string;
+		};
+		ResetPasswordRequest: {
+			token: string;
+			password: string;
+		};
+		VerifyEmailRequest: {
+			token: string;
+		};
+		LogoutRequest: {
+			refreshToken?: string;
+		};
+		MeResponse: {
+			/** Format: uuid */
+			id: string;
+			/** Format: email */
+			email: string;
+			name: string | null;
+			/** Format: uri */
+			image?: string | null;
+			emailVerified: boolean;
+			twoFactorEnabled: boolean;
+		};
+		OAuthProvidersResponse: {
+			providers: string[];
+		};
+		UserProfile: {
+			/** Format: uuid */
+			id: string;
+			/** Format: email */
+			email: string;
+			name: string | null;
+			/** Format: uri */
+			image?: string | null;
+			emailVerified: boolean;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		UpdateProfileRequest: {
+			name?: string;
+			/** Format: uri */
+			image?: string | null;
+		};
+		SecuritySettings: {
+			twoFactorEnabled: boolean;
+			hasPassword: boolean;
+			emailVerified: boolean;
+		};
+		SessionsResponse: components["schemas"]["Session"][];
+		Session: {
+			/** Format: uuid */
+			id: string;
+			isCurrent: boolean;
+			deviceName?: string | null;
+			browser?: string | null;
+			os?: string | null;
+			deviceType?: string | null;
+			ipAddress?: string | null;
+			country?: string | null;
+			city?: string | null;
+			/** Format: date-time */
+			lastActiveAt: string;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		LoginHistoryEntry: {
+			/** Format: uuid */
+			id: string;
+			ipAddress?: string | null;
+			userAgent?: string | null;
+			country?: string | null;
+			city?: string | null;
+			device?: string | null;
+			success: boolean;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		ConnectedAccount: {
+			provider: string;
+			/** Format: date-time */
+			connectedAt: string;
+		};
+		PlansResponse: components["schemas"]["Plan"][];
+		Plan: {
+			/** Format: uuid */
+			id: string;
+			slug: string;
+			name: string;
+			description: string | null;
+			features: string[];
+			priceMonthly: number | null;
+			priceAnnual: number | null;
+			priceLifetime: number | null;
+		};
+		Subscription: {
+			/** Format: uuid */
+			id: string;
+			/** Format: uuid */
+			userId: string;
+			/** Format: uuid */
+			planId: string;
+			planSlug: string;
+			status: string;
+			/** @enum {string} */
+			interval: "monthly" | "annual" | "lifetime";
+			/** Format: date-time */
+			currentPeriodStart: string | null;
+			/** Format: date-time */
+			currentPeriodEnd: string | null;
+			cancelAtPeriodEnd: boolean;
+			/** Format: date-time */
+			trialEnd: string | null;
+		} | null;
+		CheckoutResponse: {
+			/** Format: uri */
+			checkoutUrl: string | null;
+			sessionId: string;
+		};
+		CheckoutRequest: {
+			/** Format: uuid */
+			userId: string;
+			planSlug: string;
+			/** @enum {string} */
+			interval: "monthly" | "annual" | "lifetime";
+			/** Format: uri */
+			successUrl: string;
+			/** Format: uri */
+			cancelUrl: string;
+		};
+		PortalResponse: {
+			/** Format: uri */
+			portalUrl: string;
+		};
+		PortalRequest: {
+			/** Format: uuid */
+			userId: string;
+			/** Format: uri */
+			returnUrl: string;
+		};
+		BalanceResponse: {
+			balance: {
+				current: number;
+				currentFormatted: string;
+			};
+			status: {
+				level: string;
+				isHealthy: boolean;
+				isLow: boolean;
+				alertThreshold: number;
+			};
+			/** @enum {string} */
+			billingType: "prepaid" | "postpaid";
+			trustLevel: string;
+			spendingCap: number | null;
+			currentMonthSpend: number;
+			spendingCapPercent: number | null;
+			/** Format: date-time */
+			gracePeriodEndsAt: string | null;
+			isAdminOrg: boolean;
+		};
+		UsageResponse: {
+			period: {
+				type: string;
+				/** Format: date-time */
+				start: string;
+				/** Format: date-time */
+				end: string;
+			};
+			metrics: {
+				aiCostMicrodollars: number;
+				storageBytesUsed: number;
+				storageEgressBytes: number;
+				storageUploads: number;
+				dbStorageBytes: number;
+				dbComputeSeconds: number;
+				emailSentCount: number;
+				jobInvocationCount: number;
+				cronActiveCount: number;
+				notificationsSentCount: number;
+				analyticsEventCount: number;
+				webhookDeliveryCount: number;
+				errorEventCount: number;
+				authMau: number;
+			} | null;
+		};
+		BatchTrackResponse: {
+			success: boolean;
+			/** @description Number of new events tracked */
+			count: number;
+			/** @description Number of duplicate events filtered out */
+			deduplicated: number;
+			/** @description Total events in the request */
+			total: number;
+		};
+		BatchTrackRequest: {
+			events: components["schemas"]["TrackEventItem"][];
+		};
+		TrackEventItem: {
+			event: string;
+			properties?: {
+				[key: string]: unknown;
+			};
+			/** Format: date-time */
+			timestamp?: string;
+			destinations?: ("google_ads" | "meta" | "tiktok")[];
+			skipDestinations?: boolean;
+			conversion?: components["schemas"]["ConversionData"];
+		};
+		ConversionData: {
+			clickId?: string;
+			value?: number;
+			currency?: string;
+			orderId?: string;
+			/** Format: email */
+			userEmail?: string;
+			userPhone?: string;
+			userFirstName?: string;
+			userLastName?: string;
+		};
+		AnalyticsQueryResponse: {
+			data: {
+				eventName: string;
+				count: number;
+			}[];
+			/** @description Total count across all events */
+			total: number;
+		};
+		AnalyticsQueryRequest: {
+			/**
+			 * Format: date-time
+			 * @description Start of date range (ISO 8601)
+			 */
+			dateFrom?: string;
+			/**
+			 * Format: date-time
+			 * @description End of date range (ISO 8601)
+			 */
+			dateTo?: string;
+			/** @description Filter by specific event names */
+			events?: string[];
+			/**
+			 * @description Group by time interval
+			 * @enum {string}
+			 */
+			interval?: "hour" | "day" | "week" | "month";
+			/**
+			 * @description Limit results (default 100, max 1000)
+			 * @default 100
+			 */
+			limit: number;
+		};
+		JobStatusResponse: {
+			available: boolean;
+			provider: string;
+		};
+		ScheduleJobResponse: {
+			/** Format: uuid */
+			jobId?: string;
+			messageId?: string;
+			/** Format: date-time */
+			scheduledFor?: string | null;
+		};
+		ScheduleJobRequest: {
+			/** Format: uri */
+			callbackUrl: string;
+			payload?: {
+				[key: string]: unknown;
+			};
+			/**
+			 * @default POST
+			 * @enum {string}
+			 */
+			method: "GET" | "POST" | "PUT" | "DELETE";
+			headers?: {
+				[key: string]: string;
+			};
+			delay?: number;
+			/** Format: date-time */
+			scheduledFor?: string;
+			/** @default 3 */
+			retries: number;
+			name?: string;
+			type?: string;
+			/** @default 30 */
+			timeout: number;
+		};
+		ListJobsResponse: {
+			jobs: components["schemas"]["Job"][];
+			total: number;
+			limit: number;
+			offset: number;
+		};
+		Job: {
+			/** Format: uuid */
+			id: string;
+			name: string | null;
+			type: string;
+			/** @enum {string} */
+			status:
+				| "pending"
+				| "queued"
+				| "running"
+				| "completed"
+				| "failed"
+				| "scheduled"
+				| "paused"
+				| "cancelled"
+				| "deleted";
+			callbackUrl: string;
+			payload?: {
+				[key: string]: unknown;
+			};
+			/** Format: date-time */
+			scheduledFor: string | null;
+			/** Format: date-time */
+			startedAt: string | null;
+			/** Format: date-time */
+			completedAt: string | null;
+			/** Format: date-time */
+			failedAt: string | null;
+			retries: number;
+			maxRetries: number;
+			lastError: string | null;
+			cronExpression: string | null;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		ScheduleCronResponse: {
+			/** Format: uuid */
+			jobId?: string;
+			scheduleId: string;
+			cron: string;
+			paused: boolean;
+		};
+		ScheduleCronRequest: {
+			/** Format: uri */
+			callbackUrl: string;
+			cron: string;
+			payload?: {
+				[key: string]: unknown;
+			};
+			/**
+			 * @default POST
+			 * @enum {string}
+			 */
+			method: "GET" | "POST" | "PUT" | "DELETE";
+			headers?: {
+				[key: string]: string;
+			};
+			/** @default 3 */
+			retries: number;
+			name: string;
+			type?: string;
+			/** @default false */
+			paused: boolean;
+		};
+		ReferralCodeResponse: {
+			/** @description 8-character referral code */
+			code: string;
+			/** @enum {string} */
+			status: "pending" | "completed" | "expired";
+		};
+		RegenerateCodeResponse: {
+			/** @description New 8-character referral code */
+			code: string;
+			totalReferrals: number;
+			completedReferrals: number;
+			pendingReferrals: number;
+		};
+		ReferralStatsResponse: {
+			/** @description Total referrals created */
+			totalReferrals: number;
+			/** @description Successfully completed referrals */
+			completedReferrals: number;
+			/** @description Pending referrals */
+			pendingReferrals: number;
+		};
+		RedeemReferralResponse: {
+			success: boolean;
+			/** @description Type of reward applied */
+			rewardType: string;
+			/** @description Details of reward applied to referee */
+			referredReward?: {
+				[key: string]: unknown;
+			};
+			/** @description Details of reward applied to referrer */
+			referrerReward?: {
+				[key: string]: unknown;
+			};
+		};
+		RedeemReferralRequest: {
+			/** @description Referral code to redeem */
+			code: string;
+			defaults?: components["schemas"]["ReferralRewardDefaults"];
+		};
+		/** @description Optional inline defaults for reward configuration */
+		ReferralRewardDefaults: {
+			referrerReward?: components["schemas"]["ReferralRewardConfig"];
+			refereeReward?: components["schemas"]["ReferralRewardConfig"] & unknown;
+			/** @description Whether both parties get rewarded (default: true) */
+			doubleReward?: boolean;
+			/** @description Minimum days before rewards are granted (anti-fraud) */
+			minimumDaysBeforeReward?: number;
+		};
+		/** @description Reward for the person who shared the code */
+		ReferralRewardConfig: {
+			/** @enum {string} */
+			type: "points" | "premium_trial" | "discount" | "credit";
+			/** @description Points to award (for type: points) */
+			points?: number;
+			/** @description Trial days to grant (for type: premium_trial) */
+			days?: number;
+			/** @description Discount percentage (for type: discount) */
+			discountPercent?: number;
+			/** @description Credit amount in cents (for type: credit) */
+			creditCents?: number;
+		};
+		LeaderboardResponse: {
+			/** @enum {string} */
+			period: "all" | "month" | "week";
+			entries: components["schemas"]["LeaderboardEntry"][];
+			/** @description Current user rank if authenticated */
+			currentUserRank: number | null;
+		};
+		LeaderboardEntry: {
+			/** @description Position in the leaderboard */
+			rank: number;
+			/**
+			 * Format: uuid
+			 * @description User ID (only revealed if current user)
+			 */
+			userId: string | null;
+			/** @description Masked name for privacy */
+			displayName: string | null;
+			/** Format: uri */
+			avatarUrl: string | null;
+			completedReferrals: number;
+			totalReferrals: number;
+			isCurrentUser: boolean;
+		};
+		PushPreferencesResponse: {
+			enabled: boolean;
+			subscriptionCount: number;
+		};
+		RegisterPushResponse: {
+			success: boolean;
+			updated: boolean;
+		};
+		RegisterPushRequest: {
+			subscription: {
+				/** Format: uri */
+				endpoint: string;
+				keys: {
+					p256dh: string;
+					auth: string;
+				};
+			};
+		};
+		UnregisterPushRequest: {
+			/** Format: uri */
+			endpoint: string;
+		};
+		MobileConfigResponse: {
+			ios: boolean;
+			android: boolean;
+			anyConfigured: boolean;
+		};
+		MobilePreferencesResponse: {
+			enabled: boolean;
+			devices: components["schemas"]["MobileDevice"][];
+		};
+		MobileDevice: {
+			/** Format: uuid */
+			id: string;
+			/** @enum {string} */
+			platform: "ios" | "android";
+			name: string | null;
+			/** Format: date-time */
+			registeredAt: string;
+			/** Format: date-time */
+			lastUsedAt: string | null;
+		};
+		RegisterMobileDeviceResponse: {
+			success: boolean;
+			updated: boolean;
+			/** Format: uuid */
+			tokenId: string;
+		};
+		RegisterMobileDeviceRequest: {
+			/** @enum {string} */
+			platform: "ios" | "android";
+			token: string;
+			deviceId?: string;
+			deviceName?: string;
+			appVersion?: string;
+			osVersion?: string;
+		};
+		UnregisterMobileDeviceRequest: {
+			token: string;
+		};
+		InAppMessagesResponse: components["schemas"]["InAppMessage"][];
+		InAppMessage: {
+			/** Format: uuid */
+			id: string;
+			/** @enum {string|null} */
+			type:
+				| "info"
+				| "success"
+				| "warning"
+				| "error"
+				| "announcement"
+				| "system"
+				| "action"
+				| null;
+			/** @enum {string|null} */
+			priority: "low" | "normal" | "high" | "urgent" | null;
+			title: string;
+			body: string;
+			icon: string | null;
+			imageUrl: string | null;
+			actionText: string | null;
+			actionUrl: string | null;
+			secondaryActionText: string | null;
+			secondaryActionUrl: string | null;
+			metadata: {
+				[key: string]: unknown;
+			} | null;
+			topic: string | null;
+			isRead: boolean;
+			isDismissed: boolean;
+			/** Format: date-time */
+			readAt: string | null;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		UnreadCountResponse: {
+			count: number;
+		};
+		MarkAllReadResponse: {
+			success: boolean;
+			markedCount: number;
+		};
+		RecordClickRequest: {
+			/** @enum {string} */
+			action: "primary" | "secondary";
+		};
+		MessagePreferencesResponse: {
+			enabled: boolean;
+			mutedTopics: string[];
+			highPriorityOnly: boolean;
+		};
+		UpdateMessagePreferencesRequest: {
+			enabled?: boolean;
+			mutedTopics?: string[];
+			highPriorityOnly?: boolean;
+		};
+		StorageFile: {
+			/** Format: uuid */
+			id: string;
+			filename: string;
+			path: string;
+			/** Format: uri */
+			url: string | null;
+			mimeType: string;
+			/** @description File size in bytes */
+			size: number;
+			metadata: {
+				[key: string]: unknown;
+			} | null;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		UploadUrlResponse: {
+			/**
+			 * Format: uri
+			 * @description Endpoint URL for the upload
+			 */
+			uploadEndpoint: string;
+			/** @description JSON payload to include in the upload request */
+			clientPayload: string;
+			/** @description Maximum file size in bytes */
+			maxSize: number;
+			/** @description List of allowed MIME types */
+			allowedContentTypes: string[];
+			/** @description Instructions for making the upload request */
+			instructions: {
+				method: string;
+				headers: {
+					[key: string]: string;
+				};
+				body: {
+					type: string;
+					payload: {
+						pathname: string;
+						clientPayload: string;
+					};
+				};
+			};
+		};
+		UploadUrlRequest: {
+			/** @description Name of the file to upload */
+			filename: string;
+			/** @description MIME type of the file */
+			contentType?: string;
+			/** @description Optional folder path within app storage */
+			folder?: string;
+			/** @description Custom metadata to attach to the file */
+			metadata?: {
+				[key: string]: unknown;
+			};
+		};
+		CaptureExceptionResponse: {
+			/**
+			 * Format: uuid
+			 * @description Unique event ID
+			 */
+			eventId: string;
+			/** @description Whether this is a new unique error or a duplicate */
+			isNewError: boolean;
+		};
+		CaptureExceptionRequest: {
+			/** @description The exception to capture */
+			exception: {
+				values: components["schemas"]["MonitoringExceptionValue"][];
+			};
+			level?: components["schemas"]["MonitoringErrorLevel"];
+			/** @description Tags for filtering */
+			tags?: {
+				[key: string]: string;
+			};
+			/** @description Extra context data */
+			extra?: {
+				[key: string]: unknown;
+			};
+			/** @description Breadcrumbs leading up to the error */
+			breadcrumbs?: components["schemas"]["MonitoringBreadcrumb"][];
+			/** @description Current page/screen */
+			route?: string;
+			/** @description User agent */
+			userAgent?: string;
+			/** @description Custom fingerprint for grouping */
+			fingerprint?: string[];
+			/** @description Release version */
+			release?: string;
+			/** @description Environment (dev/staging/prod) */
+			environment?: string;
+		};
+		MonitoringExceptionValue: {
+			/** @description Exception type (e.g., "TypeError", "ReferenceError") */
+			type: string;
+			/** @description Exception message */
+			value: string;
+			stacktrace?: {
+				frames: {
+					filename?: string;
+					function?: string;
+					lineno?: number;
+					colno?: number;
+					in_app?: boolean;
+				}[];
+			};
+		};
+		/**
+		 * @description Error level
+		 * @enum {string}
+		 */
+		MonitoringErrorLevel: "fatal" | "error" | "warning" | "info";
+		MonitoringBreadcrumb: {
+			type: string;
+			category: string;
+			message: string;
+			timestamp: string;
+		};
+		CaptureMessageResponse: {
+			/**
+			 * Format: uuid
+			 * @description Unique event ID
+			 */
+			eventId: string;
+			/** @description Whether this is a new unique message or a duplicate */
+			isNewError: boolean;
+		};
+		CaptureMessageRequest: {
+			/** @description Message to capture */
+			message: string;
+			level?: components["schemas"]["MonitoringErrorLevel"] & unknown;
+			/** @description Tags for filtering */
+			tags?: {
+				[key: string]: string;
+			};
+			/** @description Extra context data */
+			extra?: {
+				[key: string]: unknown;
+			};
+			/** @description Current page/screen */
+			route?: string;
+		};
+		AIUsageResponse: {
+			/** @enum {string} */
+			period: "day" | "week" | "month";
+			/** @description Total number of AI requests */
+			requests: number;
+			tokens: {
+				/** @description Total input tokens */
+				input: number;
+				/** @description Total output tokens */
+				output: number;
+				/** @description Total tokens (input + output) */
+				total: number;
+			};
+			cost: {
+				/** @description Cost in microdollars (1/1,000,000 USD) */
+				microdollars: number;
+				/** @description Human-readable cost string */
+				formatted: string;
+			};
+			/** @description Usage breakdown by model */
+			byModel: {
+				[key: string]: {
+					requests: number;
+					tokens: number;
+					cost: number;
+				};
+			};
+			/** @description Usage breakdown by request type (chat, embedding, vision) */
+			byType: {
+				[key: string]: {
+					requests: number;
+					tokens: number;
+				};
+			};
+		};
+		AIRateLimitResponse: {
+			/** @description Max requests per minute (null if unlimited) */
+			requestsPerMinute: number | null;
+			/** @description Max requests per day (null if unlimited) */
+			requestsPerDay: number | null;
+			/** @description Max tokens per minute (null if unlimited) */
+			tokensPerMinute: number | null;
+			/** @description Max tokens per day (null if unlimited) */
+			tokensPerDay: number | null;
+			/** @description Max cost per day in microdollars (null if unlimited) */
+			costPerDayMicrodollars: number | null;
+			current: {
+				/** @description Requests made in the last minute */
+				requestsThisMinute: number;
+				/** @description Requests made today */
+				requestsToday: number;
+				/** @description Tokens used in the last minute */
+				tokensThisMinute: number;
+				/** @description Tokens used today */
+				tokensToday: number;
+				/** @description Cost today in microdollars */
+				costToday: number;
+			};
+		};
+		AIModelsResponse: {
+			models: components["schemas"]["AIModel"][];
+			/** @description Total number of matching models */
+			total: number;
+			/** @description Whether more results are available */
+			hasMore: boolean;
+		};
+		AIModel: {
+			/** @description Model ID (e.g., openai/gpt-4) */
+			id: string;
+			/** @description Human-readable model name */
+			name: string;
+			/** @description Model description */
+			description?: string | null;
+			/** @description Model capabilities */
+			capabilities: ("chat" | "vision" | "tool" | "embedding")[];
+			/** @description Maximum context window size */
+			contextWindow?: number;
+			pricing?: {
+				/** @description Cost per input token in USD */
+				inputPerToken?: number;
+				/** @description Cost per output token in USD */
+				outputPerToken?: number;
+			};
+		};
+		ConsentTypesResponse: components["schemas"]["ConsentType"][];
+		ConsentType: {
+			/** Format: uuid */
+			id: string;
+			slug: string;
+			/** @enum {string} */
+			category:
+				| "necessary"
+				| "analytics"
+				| "marketing"
+				| "preferences"
+				| "functional";
+			name: string;
+			description: string;
+			required: boolean;
+			defaultEnabled: boolean;
+		};
+		UserConsentsResponse: components["schemas"]["UserConsent"][];
+		UserConsent: {
+			slug: string;
+			/** @enum {string} */
+			category:
+				| "necessary"
+				| "analytics"
+				| "marketing"
+				| "preferences"
+				| "functional";
+			name: string;
+			required: boolean;
+			granted: boolean;
+			/** Format: date-time */
+			grantedAt: string | null;
+			version: number | null;
+		};
+		SetConsentResponse: {
+			consents: {
+				slug: string;
+				granted: boolean;
+			}[];
+		};
+		SetConsentRequest: {
+			/**
+			 * Format: uuid
+			 * @description User ID (for logged-in users)
+			 */
+			userId?: string;
+			/** @description Anonymous ID (for non-logged-in users) */
+			anonymousId?: string;
+			/** @description Consents to set */
+			consents: {
+				/** @description Consent type slug */
+				slug: string;
+				/** @description Whether consent is granted */
+				granted: boolean;
+			}[];
+			/**
+			 * @description Source of consent
+			 * @default banner
+			 * @enum {string}
+			 */
+			source: "banner" | "settings" | "api";
+			/** @description User agent string */
+			userAgent?: string;
+		};
+		AcceptAllConsentRequest: {
+			/**
+			 * Format: uuid
+			 * @description User ID (for logged-in users)
+			 */
+			userId?: string;
+			/** @description Anonymous ID (for non-logged-in users) */
+			anonymousId?: string;
+			/**
+			 * @description Source of consent
+			 * @default banner
+			 * @enum {string}
+			 */
+			source: "banner" | "settings" | "api";
+			/** @description User agent string */
+			userAgent?: string;
+		};
+		DeclineOptionalConsentRequest: {
+			/**
+			 * Format: uuid
+			 * @description User ID (for logged-in users)
+			 */
+			userId?: string;
+			/** @description Anonymous ID (for non-logged-in users) */
+			anonymousId?: string;
+			/**
+			 * @description Source of consent
+			 * @default banner
+			 * @enum {string}
+			 */
+			source: "banner" | "settings" | "api";
+			/** @description User agent string */
+			userAgent?: string;
+		};
+		SendEmailResponse: {
+			success: boolean;
+			/** @description Email ID from provider */
+			id?: string;
+		};
+		SendEmailRequest: {
+			/**
+			 * Format: email
+			 * @description Recipient email address
+			 */
+			to: string;
+			/** @description Email subject */
+			subject: string;
+			/** @description Email HTML content */
+			html: string;
+			/** @description Plain text fallback */
+			text?: string;
+			/**
+			 * Format: email
+			 * @description Reply-to email address
+			 */
+			replyTo?: string;
+		};
+		SendTemplatedEmailResponse: {
+			success: boolean;
+			/** @description Template that was sent */
+			template: string;
+		};
+		SendTemplatedEmailRequest: {
+			/**
+			 * @description Template type
+			 * @enum {string}
+			 */
+			template:
+				| "welcome"
+				| "verification"
+				| "password_reset"
+				| "security_alert";
+			/**
+			 * Format: email
+			 * @description Recipient email address
+			 */
+			to: string;
+			/** @description Template variables */
+			data?: {
+				[key: string]: unknown;
+			};
+		};
+		SendToUserResponse: {
+			success: boolean;
+			/** @description Email ID from provider */
+			id?: string;
+		};
+		SendToUserRequest: {
+			/**
+			 * Format: uuid
+			 * @description User ID to send email to
+			 */
+			userId: string;
+			/** @description Email subject */
+			subject: string;
+			/** @description Email HTML content */
+			html: string;
+			/** @description Plain text fallback */
+			text?: string;
+		};
+		NewsletterSubscribeResponse: {
+			success: boolean;
+			/** @description Human-readable result message */
+			message: string;
+			/** @description Whether email verification is required */
+			requiresVerification: boolean;
+			/** @description Whether email was already subscribed */
+			alreadySubscribed: boolean;
+		};
+		NewsletterSubscribeRequest: {
+			/**
+			 * Format: email
+			 * @description Subscriber email address
+			 */
+			email: string;
+			/**
+			 * @description Subscription source
+			 * @default website
+			 * @enum {string}
+			 */
+			source: "website" | "waitlist" | "referral" | "api" | "import";
+			/** @description Subscriber name */
+			name?: string;
+			/** @description Additional tracking metadata */
+			metadata?: {
+				referrer?: string;
+				utmSource?: string;
+				utmMedium?: string;
+				utmCampaign?: string;
+				referralCode?: string;
+			} & {
+				[key: string]: unknown;
+			};
+			/** @description Initial subscription preferences */
+			preferences?: {
+				newsletter?: boolean;
+				product_updates?: boolean;
+				promotions?: boolean;
+				changelog?: boolean;
+				security_alerts?: boolean;
+			};
+		};
+		NewsletterVerifyResponse: {
+			success: boolean;
+			/** @description Human-readable result message */
+			message: string;
+			/**
+			 * Format: email
+			 * @description Verified email address
+			 */
+			email: string;
+		};
+		NewsletterVerifyRequest: {
+			/** @description Verification token from email */
+			token: string;
+		};
+		NewsletterUnsubscribeResponse: {
+			success: boolean;
+			/** @description Human-readable result message */
+			message: string;
+			/**
+			 * Format: email
+			 * @description Unsubscribed email address
+			 */
+			email: string;
+		};
+		NewsletterUnsubscribeRequest: {
+			/**
+			 * Format: email
+			 * @description Email to unsubscribe
+			 */
+			email: string;
+			/** @description Unsubscribe token from email */
+			token: string;
+		};
+		NewsletterResendVerificationResponse: {
+			success: boolean;
+			/** @description Human-readable result message */
+			message: string;
+		};
+		NewsletterResendVerificationRequest: {
+			/**
+			 * Format: email
+			 * @description Email to resend verification to
+			 */
+			email: string;
+		};
+		NewsletterUnsubscribeInfoResponse: {
+			/**
+			 * Format: email
+			 * @description Subscriber email
+			 */
+			email: string;
+			/** @description Subscriber name */
+			name: string | null;
+			/**
+			 * Format: date-time
+			 * @description When subscription was confirmed
+			 */
+			subscribedAt: string | null;
+		};
+		NewsletterPreferences: {
+			/** @description Newsletter preference */
+			newsletter: boolean;
+			/** @description Product updates preference */
+			product_updates: boolean;
+			/** @description Promotions preference */
+			promotions: boolean;
+			/** @description Changelog preference */
+			changelog: boolean;
+			/** @description Security alerts preference */
+			security_alerts: boolean;
+		};
+		NewsletterUpdatePreferencesResponse: {
+			success: boolean;
+			preferences: components["schemas"]["NewsletterPreferences"] & unknown;
+		};
+		NewsletterUpdatePreferencesRequest: {
+			/**
+			 * Format: email
+			 * @description Subscriber email
+			 */
+			email: string;
+			/** @description Preferences to update */
+			preferences: {
+				newsletter?: boolean;
+				product_updates?: boolean;
+				promotions?: boolean;
+				changelog?: boolean;
+				security_alerts?: boolean;
+			};
+		};
+		WebhookConfigResponse: {
+			environments: components["schemas"]["WebhookEnvironmentConfig"][];
+			supportedEvents: string[];
+		};
+		WebhookEnvironmentConfig: {
+			/** Format: uuid */
+			id: string;
+			name: string;
+			/** Format: uri */
+			webhookUrl: string | null;
+			hasSecret: boolean;
+			/** Format: date-time */
+			updatedAt: string | null;
+		};
+		UpdateWebhookConfigResponse: {
+			success: boolean;
+			/** Format: uri */
+			webhookUrl: string | null;
+			secretGenerated: boolean;
+			/** @description Only returned on initial setup or regeneration */
+			webhookSecret?: string;
+		};
+		UpdateWebhookConfigRequest: {
+			/** Format: uuid */
+			environmentId: string;
+			/** Format: uri */
+			webhookUrl: string | null;
+			/** @default false */
+			regenerateSecret: boolean;
+		};
+		ListWebhookDeliveriesResponse: {
+			deliveries: components["schemas"]["WebhookDelivery"][];
+			total: number;
+			limit: number;
+			offset: number;
+		};
+		WebhookDelivery: {
+			/** Format: uuid */
+			id: string;
+			event: string;
+			url: string;
+			/** @enum {string} */
+			status: "pending" | "queued" | "delivered" | "failed";
+			retryCount: number;
+			responseStatus: number | null;
+			error: string | null;
+			/** Format: date-time */
+			createdAt: string;
+			/** Format: date-time */
+			queuedAt: string | null;
+			/** Format: date-time */
+			deliveredAt: string | null;
+			/** Format: date-time */
+			failedAt: string | null;
+		};
+		ReplayDeliveryResponse: {
+			success: boolean;
+			/** Format: uuid */
+			newDeliveryId?: string;
+			messageId?: string;
+		};
+		WebhookStatsResponse: {
+			/** @enum {string} */
+			period: "day" | "week" | "month";
+			totals: {
+				total: number;
+				delivered: number;
+				failed: number;
+				pending: number;
+				/** @description Percentage formatted as string (e.g., "95.5%") */
+				deliveryRate: string;
+			};
+			byEvent: {
+				event: string;
+				count: number;
+			}[];
+			byStatus: {
+				/** @enum {string} */
+				status: "pending" | "queued" | "delivered" | "failed";
+				count: number;
+			}[];
+		};
+		TwoFactorSetupResponse: {
+			/** @description TOTP secret key */
+			secret: string;
+			/** @description TOTP URI for QR code generation */
+			uri: string;
+			/** @description Base64 encoded QR code image */
+			qrCode?: string;
+		};
+		Security2FAVerifyResponse: {
+			success: boolean;
+			/** @description One-time backup codes */
+			backupCodes: string[];
+		};
+		Security2FAVerifyRequest: {
+			/** @description 6-digit TOTP code */
+			code: string;
+		};
+		Security2FADisableResponse: {
+			success: boolean;
+		};
+		BackupCodesResponse: {
+			/** @description Remaining unused backup codes */
+			codes: string[];
+			/** @description Number of remaining codes */
+			count: number;
+		};
+		BackupCodesRegenerateResponse: {
+			/** @description New backup codes */
+			codes: string[];
+		};
+		SetPasswordRequest: {
+			/** @description New password */
+			password: string;
+		};
+		EmailChangeResponse: {
+			success: boolean;
+			message: string;
+			/**
+			 * Format: date-time
+			 * @description When the verification link expires
+			 */
+			expiresAt: string;
+		};
+		EmailChangeRequest: {
+			/**
+			 * Format: email
+			 * @description New email address
+			 */
+			newEmail: string;
+		};
+		EmailChangeConfirmResponse: {
+			success: boolean;
+			/**
+			 * Format: email
+			 * @description The new email address
+			 */
+			newEmail: string;
+		};
+		EmailChangeConfirmRequest: {
+			/** @description Verification token from email */
+			token: string;
+		};
+		PasskeysListResponse: {
+			passkeys: components["schemas"]["Passkey"][];
+		};
+		Passkey: {
+			/** Format: uuid */
+			id: string;
+			name: string | null;
+			/** Format: date-time */
+			createdAt: string;
+			/** Format: date-time */
+			lastUsedAt: string | null;
+		};
+		PasskeyRegistrationOptions: {
+			challenge: string;
+			rp: {
+				name: string;
+				id: string;
+			};
+			user: {
+				id: string;
+				name: string;
+				displayName: string;
+			};
+			pubKeyCredParams: {
+				/** @enum {string} */
+				type: "public-key";
+				alg: number;
+			}[];
+			timeout?: number;
+			attestation?: string;
+			excludeCredentials?: {
+				/** @enum {string} */
+				type: "public-key";
+				id: string;
+			}[];
+			authenticatorSelection?: {
+				authenticatorAttachment?: string;
+				requireResidentKey?: boolean;
+				residentKey?: string;
+				userVerification?: string;
+			};
+		} & {
+			[key: string]: unknown;
+		};
+		PasskeyRegisterVerifyResponse: {
+			/** Format: uuid */
+			id: string;
+			name: string | null;
+			/** Format: date-time */
+			createdAt: string;
+		};
+		PasskeyRegisterVerifyRequest: {
+			/** @description WebAuthn RegistrationResponseJSON */
+			credential?: unknown;
+			/** @description Optional device name */
+			deviceName?: string;
+		};
+		PasskeyRenameRequest: {
+			name: string;
+		};
+		OAuthDisconnectResponse: {
+			success: boolean;
+		};
+		OAuthDisconnectRequest: {
+			/** @description OAuth provider name (e.g., google, github) */
+			provider: string;
+		};
+		SecurityScore: {
+			/** @description Overall security score */
+			score: number;
+			/**
+			 * @description Security level
+			 * @enum {string}
+			 */
+			level: "critical" | "low" | "medium" | "high" | "excellent";
+			/** @description Individual security factors */
+			factors: {
+				name: string;
+				enabled: boolean;
+				weight: number;
+				description: string;
+			}[];
+			/** @description Recommended security improvements */
+			recommendations: {
+				/** @enum {string} */
+				priority: "high" | "medium" | "low";
+				title: string;
+				description: string;
+				action?: string;
+			}[];
+		};
+		ChallengeVerifyResponse: {
+			verified: boolean;
+			/** @enum {string} */
+			method: "password" | "email" | "totp" | "backup";
+			/**
+			 * @description Type of verification completed
+			 * @enum {string}
+			 */
+			type: "identity" | "mfa";
+		};
+		ChallengeVerifyRequest: {
+			/**
+			 * @description Verification method
+			 * @enum {string}
+			 */
+			method: "password" | "email" | "totp" | "backup";
+			/** @description Verification value (password, code, etc.) */
+			value: string;
+		};
+	};
+	responses: never;
+	parameters: never;
+	requestBodies: never;
+	headers: never;
+	pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

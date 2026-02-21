@@ -1,22 +1,22 @@
-'use client'
+"use client";
 
-import { useTranslations } from 'next-intl'
+import { useTranslations } from "next-intl";
 
 /**
  * Block Slide How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function BlockSlideHowToPlay() {
-	const t = useTranslations('games.blockSlide')
+	const t = useTranslations("games.blockSlide");
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t('rules.rule1')}</li>
-					<li>• {t('rules.rule2')}</li>
-					<li>• {t('rules.rule3')}</li>
+					<li>• {t("rules.rule1")}</li>
+					<li>• {t("rules.rule2")}</li>
+					<li>• {t("rules.rule3")}</li>
 				</ul>
 			</div>
 
@@ -30,7 +30,10 @@ export function BlockSlideHowToPlay() {
 						{/* Grid lines */}
 						<div className="absolute inset-0 grid grid-cols-4 grid-rows-5">
 							{Array.from({ length: 20 }).map((_, i) => (
-								<div key={i} className="border border-slate-200/50 dark:border-slate-700/50" />
+								<div
+									key={i}
+									className="border border-slate-200/50 dark:border-slate-700/50"
+								/>
 							))}
 						</div>
 						{/* Target block (red 2x2) */}
@@ -50,8 +53,8 @@ export function BlockSlideHowToPlay() {
 				</div>
 
 				<p className="text-center text-xs text-muted-foreground">
-					Slide blocks to move the <span className="font-bold text-red-500">★ block</span> to the
-					exit
+					Slide blocks to move the{" "}
+					<span className="font-bold text-red-500">★ block</span> to the exit
 				</p>
 			</div>
 
@@ -65,10 +68,10 @@ export function BlockSlideHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _BlockSlideHowToPlayTitle() {
-	const t = useTranslations('games.blockSlide')
-	return <>{t('howToPlay')}</>
+	const t = useTranslations("games.blockSlide");
+	return <>{t("howToPlay")}</>;
 }

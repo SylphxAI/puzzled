@@ -63,9 +63,10 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import React, {
+import type React from "react";
+import {
 	createContext,
 	useCallback,
 	useContext,
@@ -74,16 +75,16 @@ import React, {
 	useRef,
 	useState,
 	useSyncExternalStore,
-} from 'react'
+} from "react";
 import {
-	LocalEvaluator,
+	type ExperimentManager,
+	type FlagStream,
+	type LocalEvaluator,
+	createFlagStream,
+	getExperimentManager,
 	initFeatureFlags,
 	resetEvaluator,
-	FlagStream,
-	createFlagStream,
-	ExperimentManager,
-	getExperimentManager,
-} from '../../lib/flags'
+} from "../../lib/flags";
 import type {
 	EvaluationContext,
 	EvaluationResult,
@@ -91,7 +92,7 @@ import type {
 	FlagClientEvent,
 	FlagDefinition,
 	FlagValue,
-} from '../../lib/flags/types'
+} from "../../lib/flags/types";
 
 // ==========================================
 // Context Types
@@ -99,43 +100,45 @@ import type {
 
 interface FeatureFlagsContextValue {
 	/** The evaluator instance */
-	evaluator: LocalEvaluator
+	evaluator: LocalEvaluator;
 	/** The stream instance (if streaming enabled) */
-	stream: FlagStream | null
+	stream: FlagStream | null;
 	/** The experiment manager */
-	experiments: ExperimentManager
+	experiments: ExperimentManager;
 	/** Whether flags are ready */
-	isReady: boolean
+	isReady: boolean;
 	/** Whether currently loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Current error (if any) */
-	error: Error | null
+	error: Error | null;
 	/** All flag definitions */
-	flags: FlagDefinition[]
+	flags: FlagDefinition[];
 	/** Update version (increments on flag updates) */
-	updateVersion: number
+	updateVersion: number;
 }
 
-const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(null)
+const FeatureFlagsContext = createContext<FeatureFlagsContextValue | null>(
+	null,
+);
 
 // ==========================================
 // Provider Props
 // ==========================================
 
 export interface FeatureFlagsProviderProps {
-	children: React.ReactNode
+	children: React.ReactNode;
 	/** Feature flags configuration */
-	config?: FeatureFlagsConfig
+	config?: FeatureFlagsConfig;
 	/** Initial evaluation context */
-	context?: EvaluationContext
+	context?: EvaluationContext;
 	/** Initial flags (for SSR) */
-	initialFlags?: FlagDefinition[]
+	initialFlags?: FlagDefinition[];
 	/** Enable SSE streaming (default: true) */
-	enableStreaming?: boolean
+	enableStreaming?: boolean;
 	/** Callback when flags are ready */
-	onReady?: (flags: FlagDefinition[]) => void
+	onReady?: (flags: FlagDefinition[]) => void;
 	/** Callback on error */
-	onError?: (error: Error) => void
+	onError?: (error: Error) => void;
 }
 
 // ==========================================
@@ -157,42 +160,42 @@ export function FeatureFlagsProvider({
 	onReady,
 	onError,
 }: FeatureFlagsProviderProps) {
-	const [isReady, setIsReady] = useState(!!initialFlags?.length)
-	const [isLoading, setIsLoading] = useState(!initialFlags?.length)
-	const [error, setError] = useState<Error | null>(null)
-	const [updateVersion, setUpdateVersion] = useState(0)
+	const [isReady, setIsReady] = useState(!!initialFlags?.length);
+	const [isLoading, setIsLoading] = useState(!initialFlags?.length);
+	const [error, setError] = useState<Error | null>(null);
+	const [updateVersion, setUpdateVersion] = useState(0);
 
-	const evaluatorRef = useRef<LocalEvaluator | null>(null)
-	const streamRef = useRef<FlagStream | null>(null)
-	const experimentsRef = useRef<ExperimentManager | null>(null)
+	const evaluatorRef = useRef<LocalEvaluator | null>(null);
+	const streamRef = useRef<FlagStream | null>(null);
+	const experimentsRef = useRef<ExperimentManager | null>(null);
 
 	// Initialize evaluator
 	useEffect(() => {
-		if (evaluatorRef.current) return
+		if (evaluatorRef.current) return;
 
 		const evaluator = initFeatureFlags({
 			...config,
 			onFlagsUpdated: (flags) => {
-				setUpdateVersion((v) => v + 1)
-				config.onFlagsUpdated?.(flags)
+				setUpdateVersion((v) => v + 1);
+				config.onFlagsUpdated?.(flags);
 			},
-		})
+		});
 
 		// Set initial context
 		if (context) {
-			evaluator.setContext(context)
+			evaluator.setContext(context);
 		}
 
 		// Set initial flags if provided (SSR)
 		if (initialFlags?.length) {
-			evaluator.setFlags(initialFlags)
+			evaluator.setFlags(initialFlags);
 		}
 
-		evaluatorRef.current = evaluator
+		evaluatorRef.current = evaluator;
 		experimentsRef.current = getExperimentManager(evaluator, {
 			onExposure: config.onExposure,
 			debug: config.debug,
-		})
+		});
 
 		// Setup streaming if enabled
 		if (enableStreaming && config.streamEndpoint) {
@@ -200,66 +203,66 @@ export function FeatureFlagsProvider({
 				endpoint: config.streamEndpoint,
 				environmentKey: config.environmentKey,
 				debug: config.debug,
-			})
+			});
 
 			const unsubscribe = stream.subscribe((event) => {
-				handleStreamEvent(event)
-			})
+				handleStreamEvent(event);
+			});
 
-			stream.connect()
-			streamRef.current = stream
+			stream.connect();
+			streamRef.current = stream;
 
 			return () => {
-				unsubscribe()
-				stream.disconnect()
-			}
+				unsubscribe();
+				stream.disconnect();
+			};
 		} else {
 			// No streaming - just mark as ready
-			setIsReady(true)
-			setIsLoading(false)
+			setIsReady(true);
+			setIsLoading(false);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
+	}, []);
 
 	// Update context when it changes
 	useEffect(() => {
 		if (context && evaluatorRef.current) {
-			evaluatorRef.current.setContext(context)
+			evaluatorRef.current.setContext(context);
 		}
-	}, [context])
+	}, [context]);
 
 	// Handle stream events
 	const handleStreamEvent = useCallback(
 		(event: FlagClientEvent) => {
 			switch (event.type) {
-				case 'ready':
-					setIsReady(true)
-					setIsLoading(false)
-					setError(null)
-					onReady?.(event.flags)
-					break
+				case "ready":
+					setIsReady(true);
+					setIsLoading(false);
+					setError(null);
+					onReady?.(event.flags);
+					break;
 
-				case 'updated':
-					setUpdateVersion((v) => v + 1)
-					break
+				case "updated":
+					setUpdateVersion((v) => v + 1);
+					break;
 
-				case 'error':
-					const err = new Error(event.error.message)
-					setError(err)
-					onError?.(err)
-					break
+				case "error":
+					const err = new Error(event.error.message);
+					setError(err);
+					onError?.(err);
+					break;
 
-				case 'stale':
+				case "stale":
 					// Could show a warning to user
-					break
+					break;
 
-				case 'reconnected':
-					setError(null)
-					break
+				case "reconnected":
+					setError(null);
+					break;
 			}
 		},
-		[onReady, onError]
-	)
+		[onReady, onError],
+	);
 
 	// Build context value
 	const value = useMemo<FeatureFlagsContextValue>(
@@ -273,17 +276,19 @@ export function FeatureFlagsProvider({
 			flags: evaluatorRef.current?.getFlags() ?? [],
 			updateVersion,
 		}),
-		[isReady, isLoading, error, updateVersion]
-	)
+		[isReady, isLoading, error, updateVersion],
+	);
 
 	// Don't render until evaluator is initialized
 	if (!evaluatorRef.current) {
-		return null
+		return null;
 	}
 
 	return (
-		<FeatureFlagsContext.Provider value={value}>{children}</FeatureFlagsContext.Provider>
-	)
+		<FeatureFlagsContext.Provider value={value}>
+			{children}
+		</FeatureFlagsContext.Provider>
+	);
 }
 
 // ==========================================
@@ -292,31 +297,34 @@ export function FeatureFlagsProvider({
 
 export interface UseFeatureFlagsReturn {
 	/** Check if a boolean flag is enabled */
-	isEnabled: (flagKey: string, defaultValue?: boolean) => boolean
+	isEnabled: (flagKey: string, defaultValue?: boolean) => boolean;
 	/** Get a string flag value */
-	getString: (flagKey: string, defaultValue?: string) => string
+	getString: (flagKey: string, defaultValue?: string) => string;
 	/** Get a number flag value */
-	getNumber: (flagKey: string, defaultValue?: number) => number
+	getNumber: (flagKey: string, defaultValue?: number) => number;
 	/** Get a JSON flag value */
-	getJSON: <T extends Record<string, unknown>>(flagKey: string, defaultValue: T) => T
+	getJSON: <T extends Record<string, unknown>>(
+		flagKey: string,
+		defaultValue: T,
+	) => T;
 	/** Full evaluation with metadata */
 	evaluate: <T = FlagValue>(
 		flagKey: string,
 		defaultValue: T,
-		contextOverride?: EvaluationContext
-	) => EvaluationResult<T>
+		contextOverride?: EvaluationContext,
+	) => EvaluationResult<T>;
 	/** Whether flags are ready */
-	isReady: boolean
+	isReady: boolean;
 	/** Whether currently loading */
-	isLoading: boolean
+	isLoading: boolean;
 	/** Current error */
-	error: Error | null
+	error: Error | null;
 	/** All flag definitions */
-	flags: FlagDefinition[]
+	flags: FlagDefinition[];
 	/** Update context */
-	setContext: (context: EvaluationContext) => void
+	setContext: (context: EvaluationContext) => void;
 	/** Update context (merge) */
-	updateContext: (partial: Partial<EvaluationContext>) => void
+	updateContext: (partial: Partial<EvaluationContext>) => void;
 }
 
 /**
@@ -325,73 +333,75 @@ export interface UseFeatureFlagsReturn {
  * Provides access to flag evaluation and status.
  */
 export function useFeatureFlags(): UseFeatureFlagsReturn {
-	const ctx = useContext(FeatureFlagsContext)
+	const ctx = useContext(FeatureFlagsContext);
 
 	if (!ctx) {
-		throw new Error('useFeatureFlags must be used within a FeatureFlagsProvider')
+		throw new Error(
+			"useFeatureFlags must be used within a FeatureFlagsProvider",
+		);
 	}
 
-	const { evaluator, isReady, isLoading, error, flags, updateVersion } = ctx
+	const { evaluator, isReady, isLoading, error, flags, updateVersion } = ctx;
 
 	// Create stable callbacks that re-evaluate when flags update
 	const isEnabled = useCallback(
 		(flagKey: string, defaultValue = false) => {
 			// updateVersion ensures re-evaluation on flag changes
-			void updateVersion
-			return evaluator.isEnabled(flagKey, defaultValue)
+			void updateVersion;
+			return evaluator.isEnabled(flagKey, defaultValue);
 		},
-		[evaluator, updateVersion]
-	)
+		[evaluator, updateVersion],
+	);
 
 	const getString = useCallback(
-		(flagKey: string, defaultValue = '') => {
-			void updateVersion
-			return evaluator.getString(flagKey, defaultValue)
+		(flagKey: string, defaultValue = "") => {
+			void updateVersion;
+			return evaluator.getString(flagKey, defaultValue);
 		},
-		[evaluator, updateVersion]
-	)
+		[evaluator, updateVersion],
+	);
 
 	const getNumber = useCallback(
 		(flagKey: string, defaultValue = 0) => {
-			void updateVersion
-			return evaluator.getNumber(flagKey, defaultValue)
+			void updateVersion;
+			return evaluator.getNumber(flagKey, defaultValue);
 		},
-		[evaluator, updateVersion]
-	)
+		[evaluator, updateVersion],
+	);
 
 	const getJSON = useCallback(
 		<T extends Record<string, unknown>>(flagKey: string, defaultValue: T) => {
-			void updateVersion
-			return evaluator.getJSON(flagKey, defaultValue)
+			void updateVersion;
+			return evaluator.getJSON(flagKey, defaultValue);
 		},
-		[evaluator, updateVersion]
-	)
+		[evaluator, updateVersion],
+	);
 
 	const evaluate = useCallback(
 		<T = FlagValue>(
 			flagKey: string,
 			defaultValue: T,
-			contextOverride?: EvaluationContext
+			contextOverride?: EvaluationContext,
 		) => {
-			void updateVersion
-			return evaluator.evaluate(flagKey, defaultValue, contextOverride)
+			void updateVersion;
+			return evaluator.evaluate(flagKey, defaultValue, contextOverride);
 		},
-		[evaluator, updateVersion]
-	)
+		[evaluator, updateVersion],
+	);
 
 	const setContext = useCallback(
 		(context: EvaluationContext) => {
-			evaluator.setContext(context)
+			evaluator.setContext(context);
 		},
-		[evaluator]
-	)
+		[evaluator],
+	);
 
 	const updateContext = useCallback(
 		(partial: Partial<EvaluationContext>) => {
-			evaluator.updateContext(partial)
+			evaluator.updateContext(partial);
 		},
-		[evaluator]
-	)
+		[evaluator],
+	);
 
 	return {
 		isEnabled,
@@ -405,7 +415,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
 		flags,
 		setContext,
 		updateContext,
-	}
+	};
 }
 
 // ==========================================
@@ -416,37 +426,37 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
  * Hook for a single boolean flag
  */
 export function useFlag(flagKey: string, defaultValue = false): boolean {
-	const { isEnabled, updateVersion } = useFeatureFlagsContext()
+	const { isEnabled, updateVersion } = useFeatureFlagsContext();
 	// Include updateVersion in deps to trigger re-render on flag changes
 	return useMemo(
 		() => isEnabled(flagKey, defaultValue),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[flagKey, defaultValue, updateVersion]
-	)
+		[flagKey, defaultValue, updateVersion],
+	);
 }
 
 /**
  * Hook for a single string flag
  */
-export function useFlagString(flagKey: string, defaultValue = ''): string {
-	const { getString, updateVersion } = useFeatureFlagsContext()
+export function useFlagString(flagKey: string, defaultValue = ""): string {
+	const { getString, updateVersion } = useFeatureFlagsContext();
 	return useMemo(
 		() => getString(flagKey, defaultValue),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[flagKey, defaultValue, updateVersion]
-	)
+		[flagKey, defaultValue, updateVersion],
+	);
 }
 
 /**
  * Hook for a single number flag
  */
 export function useFlagNumber(flagKey: string, defaultValue = 0): number {
-	const { getNumber, updateVersion } = useFeatureFlagsContext()
+	const { getNumber, updateVersion } = useFeatureFlagsContext();
 	return useMemo(
 		() => getNumber(flagKey, defaultValue),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[flagKey, defaultValue, updateVersion]
-	)
+		[flagKey, defaultValue, updateVersion],
+	);
 }
 
 /**
@@ -454,14 +464,14 @@ export function useFlagNumber(flagKey: string, defaultValue = 0): number {
  */
 export function useFlagJSON<T extends Record<string, unknown>>(
 	flagKey: string,
-	defaultValue: T
+	defaultValue: T,
 ): T {
-	const { getJSON, updateVersion } = useFeatureFlagsContext()
+	const { getJSON, updateVersion } = useFeatureFlagsContext();
 	return useMemo(
 		() => getJSON(flagKey, defaultValue),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[flagKey, defaultValue, updateVersion]
-	)
+		[flagKey, defaultValue, updateVersion],
+	);
 }
 
 /**
@@ -470,14 +480,14 @@ export function useFlagJSON<T extends Record<string, unknown>>(
 export function useFlagEvaluation<T = FlagValue>(
 	flagKey: string,
 	defaultValue: T,
-	contextOverride?: EvaluationContext
+	contextOverride?: EvaluationContext,
 ): EvaluationResult<T> {
-	const { evaluate, updateVersion } = useFeatureFlagsContext()
+	const { evaluate, updateVersion } = useFeatureFlagsContext();
 	return useMemo(
 		() => evaluate(flagKey, defaultValue, contextOverride),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[flagKey, defaultValue, contextOverride, updateVersion]
-	)
+		[flagKey, defaultValue, contextOverride, updateVersion],
+	);
 }
 
 // ==========================================
@@ -486,50 +496,54 @@ export function useFlagEvaluation<T = FlagValue>(
 
 interface UseExperimentReturn {
 	/** Assigned variant */
-	variant: string
+	variant: string;
 	/** Whether user is in the experiment */
-	inExperiment: boolean
+	inExperiment: boolean;
 	/** Variant payload (if any) */
-	payload?: Record<string, unknown>
+	payload?: Record<string, unknown>;
 }
 
 /**
  * Hook for A/B test experiments
  */
 export function useExperiment(experimentKey: string): UseExperimentReturn {
-	const ctx = useContext(FeatureFlagsContext)
+	const ctx = useContext(FeatureFlagsContext);
 
 	if (!ctx) {
-		throw new Error('useExperiment must be used within a FeatureFlagsProvider')
+		throw new Error("useExperiment must be used within a FeatureFlagsProvider");
 	}
 
-	const { experiments, updateVersion } = ctx
+	const { experiments, updateVersion } = ctx;
 
 	return useMemo(() => {
-		const result = experiments.getVariant(experimentKey)
+		const result = experiments.getVariant(experimentKey);
 		return {
 			variant: result.variant,
 			inExperiment: result.inExperiment,
 			payload: result.payload,
-		}
+		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [experiments, experimentKey, updateVersion])
+	}, [experiments, experimentKey, updateVersion]);
 }
 
 /**
  * Check if user is in a specific variant
  */
-export function useIsInVariant(experimentKey: string, variant: string): boolean {
-	const { variant: assignedVariant, inExperiment } = useExperiment(experimentKey)
-	return inExperiment && assignedVariant === variant
+export function useIsInVariant(
+	experimentKey: string,
+	variant: string,
+): boolean {
+	const { variant: assignedVariant, inExperiment } =
+		useExperiment(experimentKey);
+	return inExperiment && assignedVariant === variant;
 }
 
 /**
  * Check if user is in treatment (any non-control variant)
  */
 export function useIsInTreatment(experimentKey: string): boolean {
-	const { variant, inExperiment } = useExperiment(experimentKey)
-	return inExperiment && variant !== 'control'
+	const { variant, inExperiment } = useExperiment(experimentKey);
+	return inExperiment && variant !== "control";
 }
 
 // ==========================================
@@ -540,48 +554,57 @@ export function useIsInTreatment(experimentKey: string): boolean {
  * Low-level context access (for advanced use)
  */
 function useFeatureFlagsContext() {
-	const ctx = useContext(FeatureFlagsContext)
+	const ctx = useContext(FeatureFlagsContext);
 
 	if (!ctx) {
-		throw new Error('Feature flags hooks must be used within a FeatureFlagsProvider')
+		throw new Error(
+			"Feature flags hooks must be used within a FeatureFlagsProvider",
+		);
 	}
 
-	const { evaluator, updateVersion } = ctx
+	const { evaluator, updateVersion } = ctx;
 
 	return {
-		isEnabled: (key: string, defaultValue: boolean) => evaluator.isEnabled(key, defaultValue),
-		getString: (key: string, defaultValue: string) => evaluator.getString(key, defaultValue),
-		getNumber: (key: string, defaultValue: number) => evaluator.getNumber(key, defaultValue),
-		getJSON: <T extends Record<string, unknown>>(key: string, defaultValue: T) =>
-			evaluator.getJSON(key, defaultValue),
+		isEnabled: (key: string, defaultValue: boolean) =>
+			evaluator.isEnabled(key, defaultValue),
+		getString: (key: string, defaultValue: string) =>
+			evaluator.getString(key, defaultValue),
+		getNumber: (key: string, defaultValue: number) =>
+			evaluator.getNumber(key, defaultValue),
+		getJSON: <T extends Record<string, unknown>>(
+			key: string,
+			defaultValue: T,
+		) => evaluator.getJSON(key, defaultValue),
 		evaluate: <T = FlagValue>(
 			key: string,
 			defaultValue: T,
-			contextOverride?: EvaluationContext
+			contextOverride?: EvaluationContext,
 		) => evaluator.evaluate(key, defaultValue, contextOverride),
 		updateVersion,
-	}
+	};
 }
 
 /**
  * Hook to track flag loading state
  */
-export function useFlagsReady(): { isReady: boolean; isLoading: boolean; error: Error | null } {
-	const ctx = useContext(FeatureFlagsContext)
+export function useFlagsReady(): {
+	isReady: boolean;
+	isLoading: boolean;
+	error: Error | null;
+} {
+	const ctx = useContext(FeatureFlagsContext);
 
 	if (!ctx) {
-		return { isReady: false, isLoading: true, error: null }
+		return { isReady: false, isLoading: true, error: null };
 	}
 
 	return {
 		isReady: ctx.isReady,
 		isLoading: ctx.isLoading,
 		error: ctx.error,
-	}
+	};
 }
 
 // ==========================================
 // Types Export
 // ==========================================
-
-

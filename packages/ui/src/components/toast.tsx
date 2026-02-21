@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Toast Component — Sonner-based
@@ -12,39 +12,39 @@
  * The useToast hook provides the same API as before for backward compatibility.
  */
 
-import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { toast as sonnerToast, Toaster as SonnerToaster } from 'sonner'
+import { AlertCircle, CheckCircle, Info, XCircle } from "lucide-react";
+import type { ReactNode } from "react";
+import { Toaster as SonnerToaster, toast as sonnerToast } from "sonner";
 
 // Re-export Sonner's toast for direct access when needed
-export { sonnerToast as toast }
+export { sonnerToast as toast };
 
 // ==========================================
 // Types
 // ==========================================
 
-type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info'
+type ToastType = "default" | "success" | "error" | "warning" | "info";
 
 type ToastAction = {
-	label: string
-	onClick: () => void | Promise<void>
-}
+	label: string;
+	onClick: () => void | Promise<void>;
+};
 
 type ToastOptions = {
-	description?: string
-	duration?: number
-	action?: ToastAction
-}
+	description?: string;
+	duration?: number;
+	action?: ToastAction;
+};
 
 type UndoableOptions = {
-	description?: string
+	description?: string;
 	/** Called when user clicks Undo - should restore the item */
-	onUndo: () => void | Promise<void>
+	onUndo: () => void | Promise<void>;
 	/** Called when timeout passes without undo - should perform the actual delete */
-	onConfirm?: () => void | Promise<void>
+	onConfirm?: () => void | Promise<void>;
 	/** Timeout in milliseconds (default: 5000) */
-	timeoutMs?: number
-}
+	timeoutMs?: number;
+};
 
 // ==========================================
 // Icons for variants
@@ -56,17 +56,17 @@ const variantIcons: Record<ToastType, ReactNode | null> = {
 	error: <XCircle className="h-5 w-5 text-[var(--color-error)]" />,
 	warning: <AlertCircle className="h-5 w-5 text-[var(--color-warning)]" />,
 	info: <Info className="h-5 w-5 text-[var(--color-info)]" />,
-}
+};
 
 // ==========================================
 // Helper Functions
 // ==========================================
 
 function normalizeOptions(options?: ToastOptions | string): ToastOptions {
-	if (typeof options === 'string') {
-		return { description: options }
+	if (typeof options === "string") {
+		return { description: options };
 	}
-	return options ?? {}
+	return options ?? {};
 }
 
 // ==========================================
@@ -74,10 +74,10 @@ function normalizeOptions(options?: ToastOptions | string): ToastOptions {
 // ==========================================
 
 type UseToastReturn = {
-	success: (title: string, options?: ToastOptions | string) => string | number
-	error: (title: string, options?: ToastOptions | string) => string | number
-	warning: (title: string, options?: ToastOptions | string) => string | number
-	info: (title: string, options?: ToastOptions | string) => string | number
+	success: (title: string, options?: ToastOptions | string) => string | number;
+	error: (title: string, options?: ToastOptions | string) => string | number;
+	warning: (title: string, options?: ToastOptions | string) => string | number;
+	info: (title: string, options?: ToastOptions | string) => string | number;
 	/**
 	 * Show toast with undo action - delays actual deletion until timeout passes
 	 *
@@ -87,9 +87,9 @@ type UseToastReturn = {
 	 * 3. If user clicks Undo, call onUndo to restore item
 	 * 4. If timeout passes, call onConfirm to actually delete
 	 */
-	undoable: (title: string, options: UndoableOptions) => string | number
-	dismiss: (id?: string | number) => void
-}
+	undoable: (title: string, options: UndoableOptions) => string | number;
+	dismiss: (id?: string | number) => void;
+};
 
 /**
  * Hook to show toast notifications
@@ -107,8 +107,11 @@ type UseToastReturn = {
  * ```
  */
 export function useToast(): UseToastReturn {
-	const success = (title: string, options?: ToastOptions | string): string | number => {
-		const opts = normalizeOptions(options)
+	const success = (
+		title: string,
+		options?: ToastOptions | string,
+	): string | number => {
+		const opts = normalizeOptions(options);
 		return sonnerToast.success(title, {
 			description: opts.description,
 			duration: opts.duration ?? 5000,
@@ -119,11 +122,14 @@ export function useToast(): UseToastReturn {
 						onClick: opts.action.onClick,
 					}
 				: undefined,
-		})
-	}
+		});
+	};
 
-	const error = (title: string, options?: ToastOptions | string): string | number => {
-		const opts = normalizeOptions(options)
+	const error = (
+		title: string,
+		options?: ToastOptions | string,
+	): string | number => {
+		const opts = normalizeOptions(options);
 		return sonnerToast.error(title, {
 			description: opts.description,
 			duration: opts.duration ?? 5000,
@@ -134,11 +140,14 @@ export function useToast(): UseToastReturn {
 						onClick: opts.action.onClick,
 					}
 				: undefined,
-		})
-	}
+		});
+	};
 
-	const warning = (title: string, options?: ToastOptions | string): string | number => {
-		const opts = normalizeOptions(options)
+	const warning = (
+		title: string,
+		options?: ToastOptions | string,
+	): string | number => {
+		const opts = normalizeOptions(options);
 		return sonnerToast.warning(title, {
 			description: opts.description,
 			duration: opts.duration ?? 5000,
@@ -149,11 +158,14 @@ export function useToast(): UseToastReturn {
 						onClick: opts.action.onClick,
 					}
 				: undefined,
-		})
-	}
+		});
+	};
 
-	const info = (title: string, options?: ToastOptions | string): string | number => {
-		const opts = normalizeOptions(options)
+	const info = (
+		title: string,
+		options?: ToastOptions | string,
+	): string | number => {
+		const opts = normalizeOptions(options);
 		return sonnerToast.info(title, {
 			description: opts.description,
 			duration: opts.duration ?? 5000,
@@ -164,48 +176,51 @@ export function useToast(): UseToastReturn {
 						onClick: opts.action.onClick,
 					}
 				: undefined,
-		})
-	}
+		});
+	};
 
-	const undoable = (title: string, options: UndoableOptions): string | number => {
-		const timeoutMs = options.timeoutMs ?? 5000
-		let undoClicked = false
+	const undoable = (
+		title: string,
+		options: UndoableOptions,
+	): string | number => {
+		const timeoutMs = options.timeoutMs ?? 5000;
+		let undoClicked = false;
 
 		const id = sonnerToast(title, {
 			description: options.description,
 			duration: timeoutMs,
 			action: {
-				label: 'Undo',
+				label: "Undo",
 				onClick: async () => {
-					undoClicked = true
-					await options.onUndo()
+					undoClicked = true;
+					await options.onUndo();
 				},
 			},
-		})
+		});
 
 		// Schedule the confirm callback when timeout passes
 		if (options.onConfirm) {
 			setTimeout(async () => {
 				if (!undoClicked) {
 					try {
-						await options.onConfirm?.()
+						await options.onConfirm?.();
 					} catch (err) {
 						// If confirm fails, we can't easily undo at this point
 						// The toast is already gone, but we log for debugging
-						console.error('Undoable action confirm failed:', err)
+						console.error("Undoable action confirm failed:", err);
 					}
 				}
-			}, timeoutMs)
+			}, timeoutMs);
 		}
 
-		return id
-	}
+		return id;
+	};
 
 	const dismiss = (id?: string | number) => {
-		sonnerToast.dismiss(id)
-	}
+		sonnerToast.dismiss(id);
+	};
 
-	return { success, error, warning, info, undoable, dismiss }
+	return { success, error, warning, info, undoable, dismiss };
 }
 
 // ==========================================
@@ -214,16 +229,22 @@ export function useToast(): UseToastReturn {
 
 type ToasterProps = {
 	/** Position on screen */
-	position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-center' | 'bottom-center'
+	position?:
+		| "top-left"
+		| "top-right"
+		| "bottom-left"
+		| "bottom-right"
+		| "top-center"
+		| "bottom-center";
 	/** Whether to expand toasts by default */
-	expand?: boolean
+	expand?: boolean;
 	/** Rich colors for success/error/warning variants */
-	richColors?: boolean
+	richColors?: boolean;
 	/** Theme mode */
-	theme?: 'light' | 'dark' | 'system'
+	theme?: "light" | "dark" | "system";
 	/** Close button on all toasts */
-	closeButton?: boolean
-}
+	closeButton?: boolean;
+};
 
 /**
  * Toast container component — place once in your app layout
@@ -244,10 +265,10 @@ type ToasterProps = {
  * ```
  */
 export function Toaster({
-	position = 'bottom-right',
+	position = "bottom-right",
 	expand = false,
 	richColors = true,
-	theme = 'system',
+	theme = "system",
 	closeButton = true,
 }: ToasterProps = {}) {
 	return (
@@ -260,16 +281,18 @@ export function Toaster({
 			toastOptions={{
 				classNames: {
 					toast:
-						'group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
-					description: 'group-[.toast]:text-muted-foreground',
-					actionButton: 'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
-					cancelButton: 'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
+						"group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+					description: "group-[.toast]:text-muted-foreground",
+					actionButton:
+						"group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+					cancelButton:
+						"group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
 					closeButton:
-						'group-[.toast]:bg-card group-[.toast]:border-border group-[.toast]:text-foreground',
+						"group-[.toast]:bg-card group-[.toast]:border-border group-[.toast]:text-foreground",
 				},
 			}}
 		/>
-	)
+	);
 }
 
 // ==========================================
@@ -301,8 +324,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 			{children}
 			<Toaster />
 		</>
-	)
+	);
 }
 
 // Alias for backward compatibility
-export { ToastProvider as ToastProviderWithContext }
+export { ToastProvider as ToastProviderWithContext };

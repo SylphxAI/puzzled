@@ -26,61 +26,80 @@
  * ```
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect, useCallback, useRef, useContext, useMemo } from 'react'
-import { DEFAULT_PLATFORM_URL, SDK_API_PATH, SDK_VERSION, SDK_PLATFORM } from '../../constants'
-import { SylphxError, RateLimitError } from '../../errors'
-import type { SylphxErrorCode } from '../../errors'
-import type { StreamMessage } from '../../realtime-types'
-import { PlatformContext } from '../platform-context'
+import {
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
+import {
+	DEFAULT_PLATFORM_URL,
+	SDK_API_PATH,
+	SDK_PLATFORM,
+	SDK_VERSION,
+} from "../../constants";
+import { RateLimitError, SylphxError } from "../../errors";
+import type { SylphxErrorCode } from "../../errors";
+import type { StreamMessage } from "../../realtime-types";
+import { PlatformContext } from "../platform-context";
 
 // Re-export shared type for consumers who import from react
-export type { StreamMessage }
+export type { StreamMessage };
 
 /** Connection status */
-export type RealtimeStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected'
+export type RealtimeStatus =
+	| "connecting"
+	| "connected"
+	| "reconnecting"
+	| "disconnected";
 
 /** Options for useRealtime hook */
 export interface UseRealtimeOptions<T> {
 	/** Events to listen for (if empty, listens to all events) */
-	events?: string[]
+	events?: string[];
 	/** Number of historical messages to load on connect, or options object */
-	history?: number | { start?: string; limit?: number }
+	history?: number | { start?: string; limit?: number };
 	/** Callback when connected */
-	onConnect?: (channel: string) => void
+	onConnect?: (channel: string) => void;
 	/** Callback on new message */
-	onMessage?: (message: StreamMessage<T>) => void
+	onMessage?: (message: StreamMessage<T>) => void;
 	/** Callback on reconnect signal */
-	onReconnect?: () => void
+	onReconnect?: () => void;
 	/** Callback on error */
-	onError?: (error: Error) => void
+	onError?: (error: Error) => void;
 	/** Whether to auto-connect (default: true) */
-	enabled?: boolean
+	enabled?: boolean;
 	/** Platform URL (uses provider config if not specified) */
-	platformUrl?: string
+	platformUrl?: string;
 }
 
 /** Return type for useRealtime hook */
 export interface UseRealtimeReturn<T> {
 	/** Messages in chronological order */
-	messages: StreamMessage<T>[]
+	messages: StreamMessage<T>[];
 	/** Connection state */
-	status: RealtimeStatus
+	status: RealtimeStatus;
 	/** Emit to this channel */
-	emit: (event: string, data: T) => Promise<string>
+	emit: (event: string, data: T) => Promise<string>;
 	/** Clear local messages */
-	clear: () => void
+	clear: () => void;
 	/** Manually connect */
-	connect: () => void
+	connect: () => void;
 	/** Manually disconnect */
-	disconnect: () => void
+	disconnect: () => void;
 }
 
 /** Options for useRealtimeChannels hook */
-export interface UseRealtimeChannelsOptions<T> extends Omit<UseRealtimeOptions<T>, 'history'> {
+export interface UseRealtimeChannelsOptions<T>
+	extends Omit<UseRealtimeOptions<T>, "history"> {
 	/** History options per channel, or single value for all */
-	history?: number | Record<string, number | { start?: string; limit?: number }>
+	history?:
+		| number
+		| Record<string, number | { start?: string; limit?: number }>;
 }
 
 // ============================================
@@ -117,7 +136,7 @@ export interface UseRealtimeChannelsOptions<T> extends Omit<UseRealtimeOptions<T
  */
 export function useRealtime<T = unknown>(
 	channel: string,
-	options: UseRealtimeOptions<T> = {}
+	options: UseRealtimeOptions<T> = {},
 ): UseRealtimeReturn<T> {
 	const {
 		events,
@@ -128,233 +147,269 @@ export function useRealtime<T = unknown>(
 		onError,
 		enabled = true,
 		platformUrl: customPlatformUrl,
-	} = options
+	} = options;
 
-	const [messages, setMessages] = useState<StreamMessage<T>[]>([])
-	const [status, setStatus] = useState<RealtimeStatus>('disconnected')
+	const [messages, setMessages] = useState<StreamMessage<T>[]>([]);
+	const [status, setStatus] = useState<RealtimeStatus>("disconnected");
 
 	// Get platform context for API key and URL
-	const platformContext = useContext(PlatformContext)
-	const appId = platformContext?.appId || ''
+	const platformContext = useContext(PlatformContext);
+	const appId = platformContext?.appId || "";
 
 	// Refs to avoid stale closures
-	const lastAckRef = useRef<string>('0')
-	const eventSourceRef = useRef<EventSource | null>(null)
-	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-	const reconnectAttemptRef = useRef(0)
-	const mountedRef = useRef(true)
+	const lastAckRef = useRef<string>("0");
+	const eventSourceRef = useRef<EventSource | null>(null);
+	const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
+	const reconnectAttemptRef = useRef(0);
+	const mountedRef = useRef(true);
 
 	// Determine platform URL
-	const platformUrl = customPlatformUrl || platformContext?.platformUrl || DEFAULT_PLATFORM_URL
+	const platformUrl =
+		customPlatformUrl || platformContext?.platformUrl || DEFAULT_PLATFORM_URL;
 
 	// Build subscription URL
 	const buildUrl = useCallback(() => {
-		const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`)
-		url.searchParams.set('channel', channel)
+		const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`);
+		url.searchParams.set("channel", channel);
 
 		// Add last acknowledged ID for resumption
-		if (lastAckRef.current !== '0') {
-			url.searchParams.set(`last_ack_${channel}`, lastAckRef.current)
+		if (lastAckRef.current !== "0") {
+			url.searchParams.set(`last_ack_${channel}`, lastAckRef.current);
 		}
 
-		return url.toString()
-	}, [platformUrl, channel])
+		return url.toString();
+	}, [platformUrl, channel]);
 
 	// SDK headers for fetch calls
-	const sdkHeaders = useMemo(() => ({
-		'Content-Type': 'application/json',
-		'x-app-secret': appId,
-		'X-SDK-Version': SDK_VERSION,
-		'X-SDK-Platform': SDK_PLATFORM,
-	}), [appId])
+	const sdkHeaders = useMemo(
+		() => ({
+			"Content-Type": "application/json",
+			"x-app-secret": appId,
+			"X-SDK-Version": SDK_VERSION,
+			"X-SDK-Platform": SDK_PLATFORM,
+		}),
+		[appId],
+	);
 
 	// Fetch history
 	const fetchHistory = useCallback(async () => {
-		if (!history) return
+		if (!history) return;
 
-		const historyLimit = typeof history === 'number' ? history : history.limit ?? 100
-		const historyStart = typeof history === 'object' ? history.start : undefined
+		const historyLimit =
+			typeof history === "number" ? history : (history.limit ?? 100);
+		const historyStart =
+			typeof history === "object" ? history.start : undefined;
 
 		try {
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/history`, {
-				method: 'POST',
-				headers: sdkHeaders,
-				body: JSON.stringify({
-					channel,
-					start: historyStart,
-					limit: historyLimit,
-				}),
-			})
+			const response = await fetch(
+				`${platformUrl}${SDK_API_PATH}/realtime/history`,
+				{
+					method: "POST",
+					headers: sdkHeaders,
+					body: JSON.stringify({
+						channel,
+						start: historyStart,
+						limit: historyLimit,
+					}),
+				},
+			);
 
-			if (!response.ok) return
+			if (!response.ok) return;
 
-			const result = (await response.json()) as { messages: StreamMessage<T>[] }
-			if (!mountedRef.current) return
+			const result = (await response.json()) as {
+				messages: StreamMessage<T>[];
+			};
+			if (!mountedRef.current) return;
 
 			if (result.messages.length > 0) {
-				setMessages(result.messages)
+				setMessages(result.messages);
 				// Update last ack to latest message
-				lastAckRef.current = result.messages[result.messages.length - 1].id
+				lastAckRef.current = result.messages[result.messages.length - 1].id;
 			}
 		} catch {
 			// History fetch is best-effort, don't fail the connection
 		}
-	}, [platformUrl, sdkHeaders, channel, history])
+	}, [platformUrl, sdkHeaders, channel, history]);
 
 	// Connect to SSE stream
 	const connect = useCallback(() => {
-		if (!enabled || !appId) return
+		if (!enabled || !appId) return;
 
 		// Clean up existing connection
 		if (eventSourceRef.current) {
-			eventSourceRef.current.close()
+			eventSourceRef.current.close();
 		}
 
-		setStatus('connecting')
+		setStatus("connecting");
 
 		// EventSource doesn't support custom headers, so we use query params
-		const url = new URL(buildUrl())
-		url.searchParams.set('app_id', appId)
+		const url = new URL(buildUrl());
+		url.searchParams.set("app_id", appId);
 
-		const es = new EventSource(url.toString())
-		eventSourceRef.current = es
+		const es = new EventSource(url.toString());
+		eventSourceRef.current = es;
 
 		es.onopen = () => {
-			if (!mountedRef.current) return
-			reconnectAttemptRef.current = 0 // Reset backoff on successful connect
-			setStatus('connected')
-			fetchHistory()
-			onConnect?.(channel)
-		}
+			if (!mountedRef.current) return;
+			reconnectAttemptRef.current = 0; // Reset backoff on successful connect
+			setStatus("connected");
+			fetchHistory();
+			onConnect?.(channel);
+		};
 
 		es.onmessage = (event) => {
-			if (!mountedRef.current) return
+			if (!mountedRef.current) return;
 
 			try {
-				const data = JSON.parse(event.data) as StreamMessage<T> & { type?: string }
+				const data = JSON.parse(event.data) as StreamMessage<T> & {
+					type?: string;
+				};
 
 				// Handle special message types
-				if (data.type === 'connected') {
-					setStatus('connected')
-					onConnect?.(channel)
-					return
+				if (data.type === "connected") {
+					setStatus("connected");
+					onConnect?.(channel);
+					return;
 				}
 
-				if (data.type === 'reconnect') {
-					setStatus('reconnecting')
-					onReconnect?.()
-					es.close()
+				if (data.type === "reconnect") {
+					setStatus("reconnecting");
+					onReconnect?.();
+					es.close();
 					// Reconnect after small delay
 					reconnectTimeoutRef.current = setTimeout(() => {
-						if (mountedRef.current) connect()
-					}, 100)
-					return
+						if (mountedRef.current) connect();
+					}, 100);
+					return;
 				}
 
-				if (data.type === 'heartbeat') {
+				if (data.type === "heartbeat") {
 					// Heartbeat - just keep connection alive
-					return
+					return;
 				}
 
 				// Regular message - check event filter
 				if (events && events.length > 0 && !events.includes(data.event)) {
-					return
+					return;
 				}
 
 				// Add message to state
-				setMessages((prev) => [...prev, data as StreamMessage<T>])
-				lastAckRef.current = data.id
-				onMessage?.(data as StreamMessage<T>)
+				setMessages((prev) => [...prev, data as StreamMessage<T>]);
+				lastAckRef.current = data.id;
+				onMessage?.(data as StreamMessage<T>);
 			} catch {
 				// Invalid JSON - ignore
 			}
-		}
+		};
 
 		es.onerror = () => {
-			if (!mountedRef.current) return
+			if (!mountedRef.current) return;
 
-			setStatus('reconnecting')
-			es.close()
+			setStatus("reconnecting");
+			es.close();
 
 			// Reconnect with exponential backoff: 1s, 2s, 4s, 8s, ... up to 30s
-			const attempt = reconnectAttemptRef.current
-			reconnectAttemptRef.current = attempt + 1
-			const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
+			const attempt = reconnectAttemptRef.current;
+			reconnectAttemptRef.current = attempt + 1;
+			const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
 			reconnectTimeoutRef.current = setTimeout(() => {
-				if (mountedRef.current && enabled) connect()
-			}, delay)
+				if (mountedRef.current && enabled) connect();
+			}, delay);
 
-			onError?.(new Error('SSE connection error'))
-		}
-	}, [enabled, appId, buildUrl, fetchHistory, channel, events, onConnect, onMessage, onReconnect, onError])
+			onError?.(new Error("SSE connection error"));
+		};
+	}, [
+		enabled,
+		appId,
+		buildUrl,
+		fetchHistory,
+		channel,
+		events,
+		onConnect,
+		onMessage,
+		onReconnect,
+		onError,
+	]);
 
 	// Disconnect
 	const disconnect = useCallback(() => {
 		if (eventSourceRef.current) {
-			eventSourceRef.current.close()
-			eventSourceRef.current = null
+			eventSourceRef.current.close();
+			eventSourceRef.current = null;
 		}
 		if (reconnectTimeoutRef.current) {
-			clearTimeout(reconnectTimeoutRef.current)
-			reconnectTimeoutRef.current = null
+			clearTimeout(reconnectTimeoutRef.current);
+			reconnectTimeoutRef.current = null;
 		}
-		setStatus('disconnected')
-	}, [])
+		setStatus("disconnected");
+	}, []);
 
 	// Emit message with SylphxError wrapping
 	const emit = useCallback(
 		async (event: string, data: T): Promise<string> => {
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
-				method: 'POST',
-				headers: sdkHeaders,
-				body: JSON.stringify({ channel, event, data }),
-			})
+			const response = await fetch(
+				`${platformUrl}${SDK_API_PATH}/realtime/emit`,
+				{
+					method: "POST",
+					headers: sdkHeaders,
+					body: JSON.stringify({ channel, event, data }),
+				},
+			);
 
 			if (!response.ok) {
-				const errorBody = await response.json().catch(() => ({ error: 'Emit failed' }))
-				const message = typeof errorBody.error === 'string' ? errorBody.error : 'Emit failed'
+				const errorBody = await response
+					.json()
+					.catch(() => ({ error: "Emit failed" }));
+				const message =
+					typeof errorBody.error === "string" ? errorBody.error : "Emit failed";
 
 				if (response.status === 429) {
 					throw new RateLimitError(message, {
-						retryAfter: Number(response.headers.get('Retry-After')) || undefined,
-					})
+						retryAfter:
+							Number(response.headers.get("Retry-After")) || undefined,
+					});
 				}
 
 				const codeMap: Record<number, SylphxErrorCode> = {
-					400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN',
-					404: 'NOT_FOUND', 500: 'INTERNAL_SERVER_ERROR',
-				}
+					400: "BAD_REQUEST",
+					401: "UNAUTHORIZED",
+					403: "FORBIDDEN",
+					404: "NOT_FOUND",
+					500: "INTERNAL_SERVER_ERROR",
+				};
 				throw new SylphxError(message, {
-					code: codeMap[response.status] ?? 'UNKNOWN',
+					code: codeMap[response.status] ?? "UNKNOWN",
 					status: response.status,
-				})
+				});
 			}
 
-			const result = (await response.json()) as { id: string }
-			return result.id
+			const result = (await response.json()) as { id: string };
+			return result.id;
 		},
-		[platformUrl, sdkHeaders, channel]
-	)
+		[platformUrl, sdkHeaders, channel],
+	);
 
 	// Clear messages
 	const clear = useCallback(() => {
-		setMessages([])
-		lastAckRef.current = '0'
-	}, [])
+		setMessages([]);
+		lastAckRef.current = "0";
+	}, []);
 
 	// Effect: Connect on mount, disconnect on unmount
 	useEffect(() => {
-		mountedRef.current = true
+		mountedRef.current = true;
 
 		if (enabled && appId) {
-			connect()
+			connect();
 		}
 
 		return () => {
-			mountedRef.current = false
-			disconnect()
-		}
-	}, [enabled, appId, channel, connect, disconnect]) // Reconnect when channel changes
+			mountedRef.current = false;
+			disconnect();
+		};
+	}, [enabled, appId, channel, connect, disconnect]); // Reconnect when channel changes
 
 	return {
 		messages,
@@ -363,7 +418,7 @@ export function useRealtime<T = unknown>(
 		clear,
 		connect,
 		disconnect,
-	}
+	};
 }
 
 // ============================================
@@ -397,7 +452,7 @@ export function useRealtime<T = unknown>(
  */
 export function useRealtimeChannels<T = unknown>(
 	channels: string[],
-	options: UseRealtimeChannelsOptions<T> = {}
+	options: UseRealtimeChannelsOptions<T> = {},
 ): UseRealtimeReturn<T> {
 	const {
 		events,
@@ -408,170 +463,205 @@ export function useRealtimeChannels<T = unknown>(
 		onError,
 		enabled = true,
 		platformUrl: customPlatformUrl,
-	} = options
+	} = options;
 
-	const [messages, setMessages] = useState<StreamMessage<T>[]>([])
-	const [statuses, setStatuses] = useState<Record<string, RealtimeStatus>>({})
+	const [messages, setMessages] = useState<StreamMessage<T>[]>([]);
+	const [statuses, setStatuses] = useState<Record<string, RealtimeStatus>>({});
 
 	// Get platform context for API key and URL
-	const platformContext = useContext(PlatformContext)
-	const appId = platformContext?.appId || ''
-	const platformUrl = customPlatformUrl || platformContext?.platformUrl || DEFAULT_PLATFORM_URL
+	const platformContext = useContext(PlatformContext);
+	const appId = platformContext?.appId || "";
+	const platformUrl =
+		customPlatformUrl || platformContext?.platformUrl || DEFAULT_PLATFORM_URL;
 
 	// Refs
-	const lastAcksRef = useRef<Record<string, string>>({})
-	const eventSourcesRef = useRef<Record<string, EventSource>>({})
-	const mountedRef = useRef(true)
+	const lastAcksRef = useRef<Record<string, string>>({});
+	const eventSourcesRef = useRef<Record<string, EventSource>>({});
+	const mountedRef = useRef(true);
 
 	// Computed overall status
 	const status: RealtimeStatus = (() => {
-		const statusValues = Object.values(statuses)
-		if (statusValues.length === 0) return 'disconnected'
-		if (statusValues.some((s) => s === 'connecting')) return 'connecting'
-		if (statusValues.some((s) => s === 'reconnecting')) return 'reconnecting'
-		if (statusValues.every((s) => s === 'connected')) return 'connected'
-		return 'disconnected'
-	})()
+		const statusValues = Object.values(statuses);
+		if (statusValues.length === 0) return "disconnected";
+		if (statusValues.some((s) => s === "connecting")) return "connecting";
+		if (statusValues.some((s) => s === "reconnecting")) return "reconnecting";
+		if (statusValues.every((s) => s === "connected")) return "connected";
+		return "disconnected";
+	})();
 
 	// Connect to a single channel
 	const connectChannel = useCallback(
 		(channel: string) => {
-			if (!enabled || !appId) return
+			if (!enabled || !appId) return;
 
 			// Clean up existing
 			if (eventSourcesRef.current[channel]) {
-				eventSourcesRef.current[channel].close()
+				eventSourcesRef.current[channel].close();
 			}
 
-			setStatuses((prev) => ({ ...prev, [channel]: 'connecting' }))
+			setStatuses((prev) => ({ ...prev, [channel]: "connecting" }));
 
-			const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`)
-			url.searchParams.set('channel', channel)
-			url.searchParams.set('app_id', appId)
+			const url = new URL(`${platformUrl}${SDK_API_PATH}/realtime/subscribe`);
+			url.searchParams.set("channel", channel);
+			url.searchParams.set("app_id", appId);
 
-			const lastAck = lastAcksRef.current[channel]
-			if (lastAck && lastAck !== '0') {
-				url.searchParams.set(`last_ack_${channel}`, lastAck)
+			const lastAck = lastAcksRef.current[channel];
+			if (lastAck && lastAck !== "0") {
+				url.searchParams.set(`last_ack_${channel}`, lastAck);
 			}
 
-			const es = new EventSource(url.toString())
-			eventSourcesRef.current[channel] = es
+			const es = new EventSource(url.toString());
+			eventSourcesRef.current[channel] = es;
 
 			es.onopen = () => {
-				if (!mountedRef.current) return
-				setStatuses((prev) => ({ ...prev, [channel]: 'connected' }))
-				onConnect?.(channel)
-			}
+				if (!mountedRef.current) return;
+				setStatuses((prev) => ({ ...prev, [channel]: "connected" }));
+				onConnect?.(channel);
+			};
 
 			es.onmessage = (event) => {
-				if (!mountedRef.current) return
+				if (!mountedRef.current) return;
 
 				try {
-					const data = JSON.parse(event.data) as StreamMessage<T> & { type?: string }
+					const data = JSON.parse(event.data) as StreamMessage<T> & {
+						type?: string;
+					};
 
-					if (data.type === 'connected' || data.type === 'heartbeat') return
-					if (data.type === 'reconnect') {
-						setStatuses((prev) => ({ ...prev, [channel]: 'reconnecting' }))
-						onReconnect?.()
-						es.close()
-						setTimeout(() => mountedRef.current && connectChannel(channel), 100)
-						return
+					if (data.type === "connected" || data.type === "heartbeat") return;
+					if (data.type === "reconnect") {
+						setStatuses((prev) => ({ ...prev, [channel]: "reconnecting" }));
+						onReconnect?.();
+						es.close();
+						setTimeout(
+							() => mountedRef.current && connectChannel(channel),
+							100,
+						);
+						return;
 					}
 
-					if (events && events.length > 0 && !events.includes(data.event)) return
+					if (events && events.length > 0 && !events.includes(data.event))
+						return;
 
-					setMessages((prev) => [...prev, data as StreamMessage<T>])
-					lastAcksRef.current[channel] = data.id
-					onMessage?.(data as StreamMessage<T>)
+					setMessages((prev) => [...prev, data as StreamMessage<T>]);
+					lastAcksRef.current[channel] = data.id;
+					onMessage?.(data as StreamMessage<T>);
 				} catch {
 					// Ignore invalid JSON
 				}
-			}
+			};
 
 			es.onerror = () => {
-				if (!mountedRef.current) return
-				setStatuses((prev) => ({ ...prev, [channel]: 'reconnecting' }))
-				es.close()
-				setTimeout(() => mountedRef.current && enabled && connectChannel(channel), 1000)
-				onError?.(new Error(`SSE connection error for channel: ${channel}`))
-			}
+				if (!mountedRef.current) return;
+				setStatuses((prev) => ({ ...prev, [channel]: "reconnecting" }));
+				es.close();
+				setTimeout(
+					() => mountedRef.current && enabled && connectChannel(channel),
+					1000,
+				);
+				onError?.(new Error(`SSE connection error for channel: ${channel}`));
+			};
 		},
-		[enabled, appId, platformUrl, events, onConnect, onMessage, onReconnect, onError]
-	)
+		[
+			enabled,
+			appId,
+			platformUrl,
+			events,
+			onConnect,
+			onMessage,
+			onReconnect,
+			onError,
+		],
+	);
 
 	// Connect all channels
 	const connect = useCallback(() => {
-		channels.forEach(connectChannel)
-	}, [channels, connectChannel])
+		channels.forEach(connectChannel);
+	}, [channels, connectChannel]);
 
 	// Disconnect all
 	const disconnect = useCallback(() => {
-		Object.values(eventSourcesRef.current).forEach((es) => es.close())
-		eventSourcesRef.current = {}
-		setStatuses({})
-	}, [])
+		Object.values(eventSourcesRef.current).forEach((es) => es.close());
+		eventSourcesRef.current = {};
+		setStatuses({});
+	}, []);
 
 	// SDK headers for multi-channel emit
-	const sdkHeaders = useMemo(() => ({
-		'Content-Type': 'application/json',
-		'x-app-secret': appId,
-		'X-SDK-Version': SDK_VERSION,
-		'X-SDK-Platform': SDK_PLATFORM,
-	}), [appId])
+	const sdkHeaders = useMemo(
+		() => ({
+			"Content-Type": "application/json",
+			"x-app-secret": appId,
+			"X-SDK-Version": SDK_VERSION,
+			"X-SDK-Platform": SDK_PLATFORM,
+		}),
+		[appId],
+	);
 
 	// Emit to a specific channel with SylphxError wrapping
 	const emit = useCallback(
 		async (event: string, data: T, targetChannel?: string): Promise<string> => {
-			const channel = targetChannel || channels[0]
-			if (!channel) throw new SylphxError('No channel specified', { code: 'BAD_REQUEST' })
+			const channel = targetChannel || channels[0];
+			if (!channel)
+				throw new SylphxError("No channel specified", { code: "BAD_REQUEST" });
 
-			const response = await fetch(`${platformUrl}${SDK_API_PATH}/realtime/emit`, {
-				method: 'POST',
-				headers: sdkHeaders,
-				body: JSON.stringify({ channel, event, data }),
-			})
+			const response = await fetch(
+				`${platformUrl}${SDK_API_PATH}/realtime/emit`,
+				{
+					method: "POST",
+					headers: sdkHeaders,
+					body: JSON.stringify({ channel, event, data }),
+				},
+			);
 
 			if (!response.ok) {
-				const errorBody = await response.json().catch(() => ({ error: 'Emit failed' }))
-				const message = typeof errorBody.error === 'string' ? errorBody.error : 'Emit failed'
+				const errorBody = await response
+					.json()
+					.catch(() => ({ error: "Emit failed" }));
+				const message =
+					typeof errorBody.error === "string" ? errorBody.error : "Emit failed";
 
 				if (response.status === 429) {
 					throw new RateLimitError(message, {
-						retryAfter: Number(response.headers.get('Retry-After')) || undefined,
-					})
+						retryAfter:
+							Number(response.headers.get("Retry-After")) || undefined,
+					});
 				}
 
 				throw new SylphxError(message, {
-					code: response.status === 401 ? 'UNAUTHORIZED' : response.status === 403 ? 'FORBIDDEN' : 'UNKNOWN',
+					code:
+						response.status === 401
+							? "UNAUTHORIZED"
+							: response.status === 403
+								? "FORBIDDEN"
+								: "UNKNOWN",
 					status: response.status,
-				})
+				});
 			}
 
-			const result = (await response.json()) as { id: string }
-			return result.id
+			const result = (await response.json()) as { id: string };
+			return result.id;
 		},
-		[channels, platformUrl, sdkHeaders]
-	)
+		[channels, platformUrl, sdkHeaders],
+	);
 
 	// Clear all messages
 	const clear = useCallback(() => {
-		setMessages([])
-		lastAcksRef.current = {}
-	}, [])
+		setMessages([]);
+		lastAcksRef.current = {};
+	}, []);
 
 	// Effect: Connect on mount
 	useEffect(() => {
-		mountedRef.current = true
+		mountedRef.current = true;
 
 		if (enabled && appId && channels.length > 0) {
-			connect()
+			connect();
 		}
 
 		return () => {
-			mountedRef.current = false
-			disconnect()
-		}
-	}, [enabled, appId, channels.join(',')]) // Reconnect when channels change
+			mountedRef.current = false;
+			disconnect();
+		};
+	}, [enabled, appId, channels.join(",")]); // Reconnect when channels change
 
 	return {
 		messages,
@@ -580,5 +670,5 @@ export function useRealtimeChannels<T = unknown>(
 		clear,
 		connect,
 		disconnect,
-	}
+	};
 }

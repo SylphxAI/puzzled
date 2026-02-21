@@ -37,92 +37,91 @@
  * Full types available with `lib: ["WebWorker"]` in tsconfig.
  */
 interface PushEventData {
-	json(): unknown
-	text(): string
+	json(): unknown;
+	text(): string;
 }
 
 interface PushEvent extends ExtendableEvent {
-	data: PushEventData | null
+	data: PushEventData | null;
 }
 
 interface NotificationEvent extends ExtendableEvent {
 	notification: Notification & {
-		data?: Record<string, unknown>
-		close(): void
-	}
-	action?: string
+		data?: Record<string, unknown>;
+		close(): void;
+	};
+	action?: string;
 }
 
 interface WindowClient {
-	url: string
-	focus(): Promise<WindowClient>
+	url: string;
+	focus(): Promise<WindowClient>;
 }
 
 interface Clients {
-	matchAll(options: { type: 'window'; includeUncontrolled: boolean }): Promise<WindowClient[]>
-	openWindow(url: string): Promise<WindowClient | null>
-	claim(): Promise<void>
+	matchAll(options: { type: "window"; includeUncontrolled: boolean }): Promise<
+		WindowClient[]
+	>;
+	openWindow(url: string): Promise<WindowClient | null>;
+	claim(): Promise<void>;
 }
 
 interface ExtendableEvent extends Event {
-	waitUntil(promise: Promise<unknown>): void
+	waitUntil(promise: Promise<unknown>): void;
 }
 
 interface ServiceWorkerRegistration {
-	showNotification(title: string, options?: NotificationOptions): Promise<void>
+	showNotification(title: string, options?: NotificationOptions): Promise<void>;
 }
 
 interface ServiceWorkerGlobalScopeSubset {
-	readonly registration: ServiceWorkerRegistration
-	readonly clients: Clients
+	readonly registration: ServiceWorkerRegistration;
+	readonly clients: Clients;
+	addEventListener(type: "push", listener: (event: PushEvent) => void): void;
 	addEventListener(
-		type: 'push',
-		listener: (event: PushEvent) => void,
-	): void
-	addEventListener(
-		type: 'notificationclick' | 'notificationclose',
+		type: "notificationclick" | "notificationclose",
 		listener: (event: NotificationEvent) => void,
-	): void
+	): void;
 	addEventListener(
-		type: 'activate',
+		type: "activate",
 		listener: (event: ExtendableEvent) => void,
-	): void
+	): void;
 }
 
-declare const self: ServiceWorkerGlobalScopeSubset
+declare const self: ServiceWorkerGlobalScopeSubset;
 
 /**
  * Notification payload from Sylphx platform
  */
 export interface PushNotificationPayload {
 	/** Notification title */
-	title: string
+	title: string;
 	/** Notification body text */
-	body: string
+	body: string;
 	/** Icon URL (optional, falls back to default) */
-	icon?: string
+	icon?: string;
 	/** Badge URL for Android (optional) */
-	badge?: string
+	badge?: string;
 	/** Image URL for expanded notification (optional) */
-	image?: string
+	image?: string;
 	/** Click action URL (optional) */
-	url?: string
+	url?: string;
 	/** Action buttons (optional) */
 	actions?: Array<{
-		action: string
-		title: string
-		icon?: string
-	}>
+		action: string;
+		title: string;
+		icon?: string;
+	}>;
 	/** Custom data payload */
-	data?: Record<string, unknown>
+	data?: Record<string, unknown>;
 	/** Notification tag for grouping (optional) */
-	tag?: string
+	tag?: string;
 	/** Whether to require interaction (optional) */
-	requireInteraction?: boolean
+	requireInteraction?: boolean;
 	/** Vibration pattern (optional) */
-	vibrate?: number[]
+	vibrate?: number[];
 	/** Silent notification (optional) */
-	silent?: boolean
+	silent?: boolean;
 }
 
 /**
@@ -130,17 +129,17 @@ export interface PushNotificationPayload {
  */
 export interface PushServiceWorkerConfig {
 	/** Default icon for notifications without an icon */
-	defaultIcon?: string
+	defaultIcon?: string;
 	/** Default badge for notifications without a badge */
-	defaultBadge?: string
+	defaultBadge?: string;
 	/** Called when notification is clicked */
-	onNotificationClick?: (data: PushNotificationPayload) => void
+	onNotificationClick?: (data: PushNotificationPayload) => void;
 	/** Called when notification is closed without clicking */
-	onNotificationClose?: (data: PushNotificationPayload) => void
+	onNotificationClose?: (data: PushNotificationPayload) => void;
 	/** Platform API URL for analytics/token refresh */
-	platformUrl?: string
+	platformUrl?: string;
 	/** App ID for API calls */
-	appId?: string
+	appId?: string;
 }
 
 /**
@@ -160,25 +159,32 @@ export interface PushServiceWorkerConfig {
  * })
  * ```
  */
-export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): void {
-	const { defaultIcon, defaultBadge, onNotificationClick, onNotificationClose } = config
+export function initPushServiceWorker(
+	config: PushServiceWorkerConfig = {},
+): void {
+	const {
+		defaultIcon,
+		defaultBadge,
+		onNotificationClick,
+		onNotificationClose,
+	} = config;
 
 	// Handle push events (when notification arrives)
-	self.addEventListener('push', (event) => {
+	self.addEventListener("push", (event) => {
 		if (!event.data) {
-			console.warn('[Sylphx SW] Push event received without data')
-			return
+			console.warn("[Sylphx SW] Push event received without data");
+			return;
 		}
 
-		let payload: PushNotificationPayload
+		let payload: PushNotificationPayload;
 		try {
-			payload = event.data.json() as PushNotificationPayload
+			payload = event.data.json() as PushNotificationPayload;
 		} catch {
 			// Fallback for plain text payloads
 			payload = {
-				title: 'Notification',
+				title: "Notification",
 				body: event.data.text(),
-			}
+			};
 		}
 
 		// Build notification options (compatible with both browser and SW contexts)
@@ -197,68 +203,70 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
 			vibrate: payload.vibrate,
 			silent: payload.silent ?? false,
 			actions: payload.actions,
-		}
+		};
 
 		event.waitUntil(
-			self.registration.showNotification(payload.title, notificationOptions)
-		)
-	})
+			self.registration.showNotification(payload.title, notificationOptions),
+		);
+	});
 
 	// Handle notification click events
-	self.addEventListener('notificationclick', (event) => {
-		event.notification.close()
+	self.addEventListener("notificationclick", (event) => {
+		event.notification.close();
 
-		const data = event.notification.data
-		const payload = data?._sylphxPayload as PushNotificationPayload | undefined
-		const url = data?.url as string | undefined
+		const data = event.notification.data;
+		const payload = data?._sylphxPayload as PushNotificationPayload | undefined;
+		const url = data?.url as string | undefined;
 
 		// Call custom handler if provided
 		if (onNotificationClick && payload) {
-			onNotificationClick(payload)
+			onNotificationClick(payload);
 		}
 
 		// Handle action button clicks
 		if (event.action) {
 			// Custom action handling
-			console.log('[Sylphx SW] Action clicked:', event.action)
+			console.log("[Sylphx SW] Action clicked:", event.action);
 		}
 
 		// Navigate to URL if provided
 		if (url) {
 			event.waitUntil(
-				self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-					// Try to focus an existing window with this URL
-					for (const client of clientList) {
-						if (client.url === url && 'focus' in client) {
-							return client.focus()
+				self.clients
+					.matchAll({ type: "window", includeUncontrolled: true })
+					.then((clientList) => {
+						// Try to focus an existing window with this URL
+						for (const client of clientList) {
+							if (client.url === url && "focus" in client) {
+								return client.focus();
+							}
 						}
-					}
-					// Open a new window if no existing window found
-					return self.clients.openWindow(url)
-				})
-			)
+						// Open a new window if no existing window found
+						return self.clients.openWindow(url);
+					}),
+			);
 		}
-	})
+	});
 
 	// Handle notification close events (for analytics)
-	self.addEventListener('notificationclose', (event) => {
-		const data = event.notification.data
-		const payload = data?._sylphxPayload as PushNotificationPayload | undefined
+	self.addEventListener("notificationclose", (event) => {
+		const data = event.notification.data;
+		const payload = data?._sylphxPayload as PushNotificationPayload | undefined;
 
 		if (onNotificationClose && payload) {
-			onNotificationClose(payload)
+			onNotificationClose(payload);
 		}
-	})
+	});
 
 	// Handle service worker activation
-	self.addEventListener('activate', (event) => {
+	self.addEventListener("activate", (event) => {
 		event.waitUntil(
 			// Claim all clients immediately
-			self.clients.claim()
-		)
-	})
+			self.clients.claim(),
+		);
+	});
 
-	console.log('[Sylphx SW] Push notification service worker initialized')
+	console.log("[Sylphx SW] Push notification service worker initialized");
 }
 
 /**
@@ -280,8 +288,11 @@ export function initPushServiceWorker(config: PushServiceWorkerConfig = {}): voi
  * }
  * ```
  */
-export function createServiceWorkerScript(config: PushServiceWorkerConfig = {}): string {
-	const { defaultIcon = '/icon-192.png', defaultBadge = '/badge-72.png' } = config
+export function createServiceWorkerScript(
+	config: PushServiceWorkerConfig = {},
+): string {
+	const { defaultIcon = "/icon-192.png", defaultBadge = "/badge-72.png" } =
+		config;
 
 	return `
 // Sylphx Push Notification Service Worker
@@ -343,7 +354,7 @@ self.addEventListener('activate', (event) => {
 });
 
 console.log('[Sylphx SW] Push notification service worker active');
-`.trim()
+`.trim();
 }
 
 /**
@@ -362,20 +373,20 @@ console.log('[Sylphx SW] Push notification service worker active');
  * ```
  */
 export async function registerPushServiceWorker(
-	swPath = '/sw.js'
+	swPath = "/sw.js",
 ): Promise<ServiceWorkerRegistration | null> {
-	if (typeof window === 'undefined') return null
-	if (!('serviceWorker' in navigator)) {
-		console.warn('[Sylphx] Service workers not supported')
-		return null
+	if (typeof window === "undefined") return null;
+	if (!("serviceWorker" in navigator)) {
+		console.warn("[Sylphx] Service workers not supported");
+		return null;
 	}
 
 	try {
-		const registration = await navigator.serviceWorker.register(swPath)
-		console.log('[Sylphx] Service worker registered:', registration.scope)
-		return registration
+		const registration = await navigator.serviceWorker.register(swPath);
+		console.log("[Sylphx] Service worker registered:", registration.scope);
+		return registration;
 	} catch (error) {
-		console.error('[Sylphx] Service worker registration failed:', error)
-		return null
+		console.error("[Sylphx] Service worker registration failed:", error);
+		return null;
 	}
 }

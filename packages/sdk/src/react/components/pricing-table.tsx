@@ -5,38 +5,41 @@
  * Matches Clerk's pricing table pattern but for billing.
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect } from 'react'
-import { RequireSdk } from '../hooks'
-import { useBilling } from '../platform-hooks'
+import { useCallback, useEffect, useState } from "react";
+import { RequireSdk } from "../hooks";
+import { useBilling } from "../platform-hooks";
 import {
 	type ThemeVariables,
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from '../ui/styles'
+	mergeStyles,
+} from "../ui/styles";
 
 export interface PricingTableProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Billing interval to show by default */
-	defaultInterval?: 'monthly' | 'annual' | 'lifetime'
+	defaultInterval?: "monthly" | "annual" | "lifetime";
 	/** Show interval toggle */
-	showIntervalToggle?: boolean
+	showIntervalToggle?: boolean;
 	/** Highlight this plan slug */
-	highlightPlan?: string
+	highlightPlan?: string;
 	/** Called when checkout starts */
-	onCheckoutStart?: (planSlug: string, interval: 'monthly' | 'annual' | 'lifetime') => void
+	onCheckoutStart?: (
+		planSlug: string,
+		interval: "monthly" | "annual" | "lifetime",
+	) => void;
 	/** Called on checkout error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Show annual savings badge */
-	showAnnualSavings?: boolean
+	showAnnualSavings?: boolean;
 	/** Feature comparison mode */
-	showFeatureComparison?: boolean
+	showFeatureComparison?: boolean;
 }
 
 /**
@@ -53,16 +56,20 @@ export interface PricingTableProps {
  */
 export function PricingTable(props: PricingTableProps) {
 	return (
-		<RequireSdk services={['billing']} componentType="billing" theme={props.theme}>
+		<RequireSdk
+			services={["billing"]}
+			componentType="billing"
+			theme={props.theme}
+		>
 			<PricingTableInner {...props} />
 		</RequireSdk>
-	)
+	);
 }
 
 /** Inner component that safely uses platform hooks */
 function PricingTableInner({
 	theme = defaultTheme,
-	defaultInterval = 'monthly',
+	defaultInterval = "monthly",
 	showIntervalToggle = true,
 	highlightPlan,
 	onCheckoutStart,
@@ -71,57 +78,70 @@ function PricingTableInner({
 	showAnnualSavings = true,
 	showFeatureComparison = false,
 }: PricingTableProps) {
-	const { plans, plansLoading, plansError, subscription, isPremium, createCheckout, refresh } = useBilling()
-	const styles = baseStyles(theme)
+	const {
+		plans,
+		plansLoading,
+		plansError,
+		subscription,
+		isPremium,
+		createCheckout,
+		refresh,
+	} = useBilling();
+	const styles = baseStyles(theme);
 
-	const [interval, setInterval] = useState<'monthly' | 'annual' | 'lifetime'>(defaultInterval)
-	const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+	const [interval, setInterval] = useState<"monthly" | "annual" | "lifetime">(
+		defaultInterval,
+	);
+	const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	const handleCheckout = useCallback(
 		async (planSlug: string) => {
-			setLoadingPlan(planSlug)
-			onCheckoutStart?.(planSlug, interval)
+			setLoadingPlan(planSlug);
+			onCheckoutStart?.(planSlug, interval);
 
 			try {
-				const checkoutUrl = await createCheckout(planSlug, interval)
-				if (typeof window !== 'undefined') {
-					window.location.href = checkoutUrl
+				const checkoutUrl = await createCheckout(planSlug, interval);
+				if (typeof window !== "undefined") {
+					window.location.href = checkoutUrl;
 				}
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to start checkout'
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to start checkout";
+				onError?.(message);
 			} finally {
-				setLoadingPlan(null)
+				setLoadingPlan(null);
 			}
 		},
-		[interval, createCheckout, onCheckoutStart, onError]
-	)
+		[interval, createCheckout, onCheckoutStart, onError],
+	);
 
 	if (plansLoading) {
 		return (
-			<div style={mergeStyles(styles.flexCenter, { padding: '3rem' })}>
-				<span style={mergeStyles(styles.spinner, { width: '2rem', height: '2rem' })} />
+			<div style={mergeStyles(styles.flexCenter, { padding: "3rem" })}>
+				<span
+					style={mergeStyles(styles.spinner, { width: "2rem", height: "2rem" })}
+				/>
 			</div>
-		)
+		);
 	}
 
 	if (plansError) {
 		return (
-			<div className={className} style={{ padding: '2rem' }}>
+			<div className={className} style={{ padding: "2rem" }}>
 				<div style={mergeStyles(styles.alert, styles.alertError)}>
-					<div style={{ marginBottom: '0.75rem' }}>
+					<div style={{ marginBottom: "0.75rem" }}>
 						Failed to load pricing plans. Please try again.
 					</div>
 					<button
 						type="button"
 						onClick={() => refresh()}
 						style={mergeStyles(styles.button, styles.buttonOutline, {
-							padding: '0.5rem 1rem',
+							padding: "0.5rem 1rem",
 							fontSize: theme.fontSizeSm,
 						})}
 					>
@@ -130,136 +150,156 @@ function PricingTableInner({
 					</button>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	if (!plans || plans.length === 0) {
 		return (
-			<div style={mergeStyles(styles.textCenter, styles.textMuted, { padding: '2rem' })}>
+			<div
+				style={mergeStyles(styles.textCenter, styles.textMuted, {
+					padding: "2rem",
+				})}
+			>
 				No plans available
 			</div>
-		)
+		);
 	}
 
 	// Get price for a plan based on interval
-	const getPlanPrice = (plan: (typeof plans)[0], int: 'monthly' | 'annual' | 'lifetime') => {
+	const getPlanPrice = (
+		plan: (typeof plans)[0],
+		int: "monthly" | "annual" | "lifetime",
+	) => {
 		switch (int) {
-			case 'monthly':
-				return plan.priceMonthly || 0
-			case 'annual':
-				return plan.priceAnnual || 0
-			case 'lifetime':
-				return plan.priceLifetime || 0
+			case "monthly":
+				return plan.priceMonthly || 0;
+			case "annual":
+				return plan.priceAnnual || 0;
+			case "lifetime":
+				return plan.priceLifetime || 0;
 			default:
-				return 0
+				return 0;
 		}
-	}
+	};
 
 	// Calculate annual savings
 	const getAnnualSavings = (plan: (typeof plans)[0]) => {
-		const monthly = plan.priceMonthly || 0
-		const annual = plan.priceAnnual || 0
+		const monthly = plan.priceMonthly || 0;
+		const annual = plan.priceAnnual || 0;
 		if (monthly > 0 && annual > 0) {
-			const yearlyFromMonthly = monthly * 12
-			const savings = Math.round(((yearlyFromMonthly - annual) / yearlyFromMonthly) * 100)
-			return savings > 0 ? savings : 0
+			const yearlyFromMonthly = monthly * 12;
+			const savings = Math.round(
+				((yearlyFromMonthly - annual) / yearlyFromMonthly) * 100,
+			);
+			return savings > 0 ? savings : 0;
 		}
-		return 0
-	}
+		return 0;
+	};
 
 	const containerStyles: React.CSSProperties = {
-		display: 'grid',
+		display: "grid",
 		gridTemplateColumns: `repeat(${Math.min(plans.length, 3)}, 1fr)`,
-		gap: '1.5rem',
-		maxWidth: '1000px',
-		margin: '0 auto',
-	}
+		gap: "1.5rem",
+		maxWidth: "1000px",
+		margin: "0 auto",
+	};
 
 	const planCardStyles = (isHighlighted: boolean): React.CSSProperties => ({
 		backgroundColor: theme.colorBackground,
 		borderRadius: theme.borderRadiusLg,
-		border: `${isHighlighted ? '2px' : '1px'} solid ${isHighlighted ? theme.colorPrimary : theme.colorBorder}`,
-		padding: '1.5rem',
-		display: 'flex',
-		flexDirection: 'column',
-		position: 'relative',
+		border: `${isHighlighted ? "2px" : "1px"} solid ${isHighlighted ? theme.colorPrimary : theme.colorBorder}`,
+		padding: "1.5rem",
+		display: "flex",
+		flexDirection: "column",
+		position: "relative",
 		boxShadow: isHighlighted
 			? `0 8px 30px ${theme.colorPrimary}20`
-			: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-	})
+			: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+	});
 
 	const badgeStyles: React.CSSProperties = {
-		position: 'absolute',
-		top: '-0.75rem',
-		left: '50%',
-		transform: 'translateX(-50%)',
+		position: "absolute",
+		top: "-0.75rem",
+		left: "50%",
+		transform: "translateX(-50%)",
 		backgroundColor: theme.colorPrimary,
 		color: theme.colorPrimaryForeground,
-		padding: '0.25rem 0.75rem',
-		borderRadius: '9999px',
+		padding: "0.25rem 0.75rem",
+		borderRadius: "9999px",
 		fontSize: theme.fontSizeXs,
 		fontWeight: 600,
-		textTransform: 'uppercase',
-		letterSpacing: '0.05em',
-		whiteSpace: 'nowrap',
-	}
+		textTransform: "uppercase",
+		letterSpacing: "0.05em",
+		whiteSpace: "nowrap",
+	};
 
 	const priceStyles: React.CSSProperties = {
-		fontSize: '2.5rem',
+		fontSize: "2.5rem",
 		fontWeight: 700,
 		color: theme.colorForeground,
 		lineHeight: 1,
-	}
+	};
 
 	const intervalTextStyles: React.CSSProperties = {
 		fontSize: theme.fontSizeSm,
 		color: theme.colorMutedForeground,
-		marginLeft: '0.25rem',
-	}
+		marginLeft: "0.25rem",
+	};
 
 	const featureListStyles: React.CSSProperties = {
-		listStyle: 'none',
+		listStyle: "none",
 		padding: 0,
-		margin: '1.5rem 0',
+		margin: "1.5rem 0",
 		flex: 1,
-	}
+	};
 
 	const featureItemStyles: React.CSSProperties = {
-		display: 'flex',
-		alignItems: 'flex-start',
-		gap: '0.5rem',
-		marginBottom: '0.75rem',
+		display: "flex",
+		alignItems: "flex-start",
+		gap: "0.5rem",
+		marginBottom: "0.75rem",
 		fontSize: theme.fontSizeSm,
 		color: theme.colorForeground,
-	}
+	};
 
 	return (
 		<div className={className}>
 			{/* Interval Toggle */}
 			{showIntervalToggle && (
-				<div style={mergeStyles(styles.flexCenter, { marginBottom: '2rem', gap: '0.5rem' })}>
+				<div
+					style={mergeStyles(styles.flexCenter, {
+						marginBottom: "2rem",
+						gap: "0.5rem",
+					})}
+				>
 					<div style={styles.tabs}>
 						<button
 							type="button"
-							onClick={() => setInterval('monthly')}
-							style={mergeStyles(styles.tab, interval === 'monthly' ? styles.tabActive : {})}
+							onClick={() => setInterval("monthly")}
+							style={mergeStyles(
+								styles.tab,
+								interval === "monthly" ? styles.tabActive : {},
+							)}
 						>
 							Monthly
 						</button>
 						<button
 							type="button"
-							onClick={() => setInterval('annual')}
-							style={mergeStyles(styles.tab, interval === 'annual' ? styles.tabActive : {})}
+							onClick={() => setInterval("annual")}
+							style={mergeStyles(
+								styles.tab,
+								interval === "annual" ? styles.tabActive : {},
+							)}
 						>
 							Annual
 							{showAnnualSavings && (
 								<span
 									style={{
-										marginLeft: '0.5rem',
+										marginLeft: "0.5rem",
 										backgroundColor: `${theme.colorSuccess}20`,
 										color: theme.colorSuccess,
-										padding: '0.125rem 0.375rem',
-										borderRadius: '4px',
+										padding: "0.125rem 0.375rem",
+										borderRadius: "4px",
 										fontSize: theme.fontSizeXs,
 										fontWeight: 600,
 									}}
@@ -275,10 +315,12 @@ function PricingTableInner({
 			{/* Plans Grid */}
 			<div style={containerStyles}>
 				{plans.map((plan) => {
-					const isHighlighted = plan.slug === highlightPlan || plan.slug === 'pro'
-					const isCurrentPlan = subscription?.planSlug === plan.slug
-					const price = getPlanPrice(plan, interval)
-					const annualSavings = interval === 'monthly' ? getAnnualSavings(plan) : 0
+					const isHighlighted =
+						plan.slug === highlightPlan || plan.slug === "pro";
+					const isCurrentPlan = subscription?.planSlug === plan.slug;
+					const price = getPlanPrice(plan, interval);
+					const annualSavings =
+						interval === "monthly" ? getAnnualSavings(plan) : 0;
 
 					return (
 						<div key={plan.id} style={planCardStyles(isHighlighted)}>
@@ -286,40 +328,49 @@ function PricingTableInner({
 							{isHighlighted && <div style={badgeStyles}>Most Popular</div>}
 
 							{/* Plan Header */}
-							<div style={{ marginBottom: '1rem' }}>
+							<div style={{ marginBottom: "1rem" }}>
 								<h3
 									style={{
 										fontSize: theme.fontSizeLg,
 										fontWeight: 600,
 										margin: 0,
-										marginBottom: '0.25rem',
+										marginBottom: "0.25rem",
 									}}
 								>
 									{plan.name}
 								</h3>
 								{plan.description && (
-									<p style={mergeStyles(styles.textSm, styles.textMuted, { margin: 0 })}>
+									<p
+										style={mergeStyles(styles.textSm, styles.textMuted, {
+											margin: 0,
+										})}
+									>
 										{plan.description}
 									</p>
 								)}
 							</div>
 
 							{/* Price */}
-							<div style={{ marginBottom: '1rem' }}>
+							<div style={{ marginBottom: "1rem" }}>
 								<span style={priceStyles}>
 									{price === 0 ? (
-										'Free'
+										"Free"
 									) : (
 										<>
 											${(price / 100).toFixed(price % 100 === 0 ? 0 : 2)}
 											<span style={intervalTextStyles}>
-												/{interval === 'lifetime' ? 'lifetime' : interval === 'annual' ? 'year' : 'mo'}
+												/
+												{interval === "lifetime"
+													? "lifetime"
+													: interval === "annual"
+														? "year"
+														: "mo"}
 											</span>
 										</>
 									)}
 								</span>
 								{annualSavings > 0 && showAnnualSavings && (
-									<div style={{ marginTop: '0.5rem' }}>
+									<div style={{ marginTop: "0.5rem" }}>
 										<span
 											style={{
 												fontSize: theme.fontSizeXs,
@@ -346,9 +397,14 @@ function PricingTableInner({
 							{/* CTA Button */}
 							{isCurrentPlan ? (
 								<div
-									style={mergeStyles(styles.button, styles.buttonOutline, styles.buttonFullWidth, {
-										cursor: 'default',
-									})}
+									style={mergeStyles(
+										styles.button,
+										styles.buttonOutline,
+										styles.buttonFullWidth,
+										{
+											cursor: "default",
+										},
+									)}
 								>
 									<CheckIcon color={theme.colorSuccess} size={16} />
 									Current Plan
@@ -361,7 +417,7 @@ function PricingTableInner({
 										styles.button,
 										styles.buttonOutline,
 										styles.buttonFullWidth,
-										styles.buttonDisabled
+										styles.buttonDisabled,
 									)}
 								>
 									Free Plan
@@ -375,7 +431,7 @@ function PricingTableInner({
 										styles.button,
 										isHighlighted ? styles.buttonPrimary : styles.buttonOutline,
 										styles.buttonFullWidth,
-										loadingPlan !== null ? styles.buttonDisabled : {}
+										loadingPlan !== null ? styles.buttonDisabled : {},
 									)}
 								>
 									{loadingPlan === plan.slug ? (
@@ -384,28 +440,30 @@ function PricingTableInner({
 											Processing...
 										</>
 									) : isPremium ? (
-										'Switch Plan'
+										"Switch Plan"
 									) : (
-										'Get Started'
+										"Get Started"
 									)}
 								</button>
 							)}
 						</div>
-					)
+					);
 				})}
 			</div>
 
 			{/* Feature Comparison Table */}
 			{showFeatureComparison && plans.length > 1 && (
-				<div style={{ marginTop: '3rem' }}>
-					<h3 style={mergeStyles(styles.textCenter, { marginBottom: '1.5rem' })}>
+				<div style={{ marginTop: "3rem" }}>
+					<h3
+						style={mergeStyles(styles.textCenter, { marginBottom: "1.5rem" })}
+					>
 						Compare Plans
 					</h3>
 					<FeatureComparisonTable plans={plans} theme={theme} />
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 // Feature comparison table component
@@ -413,39 +471,44 @@ function FeatureComparisonTable({
 	plans,
 	theme,
 }: {
-	plans: Array<{ name: string; features?: string[] | null }>
-	theme: ThemeVariables
+	plans: Array<{ name: string; features?: string[] | null }>;
+	theme: ThemeVariables;
 }) {
 	// Extract all unique features across plans
-	const allFeatures = Array.from(new Set(plans.flatMap((p) => p.features || [])))
+	const allFeatures = Array.from(
+		new Set(plans.flatMap((p) => p.features || [])),
+	);
 
 	const cellStyles: React.CSSProperties = {
-		padding: '0.75rem 1rem',
+		padding: "0.75rem 1rem",
 		borderBottom: `1px solid ${theme.colorBorder}`,
 		fontSize: theme.fontSizeSm,
-	}
+	};
 
 	const headerCellStyles: React.CSSProperties = {
 		...cellStyles,
 		fontWeight: 600,
 		backgroundColor: theme.colorMuted,
-	}
+	};
 
 	return (
 		<table
 			style={{
-				width: '100%',
-				borderCollapse: 'collapse',
+				width: "100%",
+				borderCollapse: "collapse",
 				border: `1px solid ${theme.colorBorder}`,
 				borderRadius: theme.borderRadius,
-				overflow: 'hidden',
+				overflow: "hidden",
 			}}
 		>
 			<thead>
 				<tr>
 					<th style={headerCellStyles}>Feature</th>
 					{plans.map((plan) => (
-						<th key={plan.name} style={mergeStyles(headerCellStyles, { textAlign: 'center' })}>
+						<th
+							key={plan.name}
+							style={mergeStyles(headerCellStyles, { textAlign: "center" })}
+						>
 							{plan.name}
 						</th>
 					))}
@@ -456,7 +519,10 @@ function FeatureComparisonTable({
 					<tr key={index}>
 						<td style={cellStyles}>{feature}</td>
 						{plans.map((plan) => (
-							<td key={plan.name} style={mergeStyles(cellStyles, { textAlign: 'center' })}>
+							<td
+								key={plan.name}
+								style={mergeStyles(cellStyles, { textAlign: "center" })}
+							>
 								{plan.features?.includes(feature) ? (
 									<CheckIcon color={theme.colorSuccess} size={18} />
 								) : (
@@ -468,7 +534,7 @@ function FeatureComparisonTable({
 				))}
 			</tbody>
 		</table>
-	)
+	);
 }
 
 function CheckIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -486,7 +552,7 @@ function CheckIcon({ color, size = 24 }: { color: string; size?: number }) {
 		>
 			<path d="M20 6 9 17l-5-5" />
 		</svg>
-	)
+	);
 }
 
 function XIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -505,7 +571,7 @@ function XIcon({ color, size = 24 }: { color: string; size?: number }) {
 			<path d="M18 6 6 18" />
 			<path d="m6 6 12 12" />
 		</svg>
-	)
+	);
 }
 
 function RefreshIcon({ color, size = 24 }: { color: string; size?: number }) {
@@ -519,12 +585,12 @@ function RefreshIcon({ color, size = 24 }: { color: string; size?: number }) {
 			strokeWidth="2"
 			strokeLinecap="round"
 			strokeLinejoin="round"
-			style={{ flexShrink: 0, marginRight: '0.25rem' }}
+			style={{ flexShrink: 0, marginRight: "0.25rem" }}
 		>
 			<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
 			<path d="M3 3v5h5" />
 			<path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
 			<path d="M16 16h5v5" />
 		</svg>
-	)
+	);
 }

@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { Accordion as BaseAccordion } from '@base-ui/react/accordion'
-import { ChevronDown } from 'lucide-react'
-import { forwardRef } from 'react'
-import { cn } from '../utils'
+import { Accordion as BaseAccordion } from "@base-ui/react/accordion";
+import { ChevronDown } from "lucide-react";
+import { forwardRef } from "react";
+import { cn } from "../utils";
 
 // ==================
 // Accordion Root
@@ -11,25 +11,37 @@ import { cn } from '../utils'
 
 interface AccordionProps {
 	/** Allow multiple items to be open at once */
-	type?: 'single' | 'multiple'
+	type?: "single" | "multiple";
 	/** Controlled value */
-	value?: string[]
+	value?: string[];
 	/** Default value (uncontrolled) */
-	defaultValue?: string[]
+	defaultValue?: string[];
 	/** Handler fired when value changes */
-	onValueChange?: (value: string[]) => void
+	onValueChange?: (value: string[]) => void;
 	/** Whether the accordion is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Orientation */
-	orientation?: 'horizontal' | 'vertical'
+	orientation?: "horizontal" | "vertical";
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const Accordion = forwardRef<HTMLDivElement, AccordionProps>(
-	({ className, type = 'single', value, defaultValue, onValueChange, disabled, orientation = 'vertical', children }, ref) => (
+	(
+		{
+			className,
+			type = "single",
+			value,
+			defaultValue,
+			onValueChange,
+			disabled,
+			orientation = "vertical",
+			children,
+		},
+		ref,
+	) => (
 		<BaseAccordion.Root
 			ref={ref}
 			value={value}
@@ -41,8 +53,8 @@ const Accordion = forwardRef<HTMLDivElement, AccordionProps>(
 			{children}
 		</BaseAccordion.Root>
 	),
-)
-Accordion.displayName = 'Accordion'
+);
+Accordion.displayName = "Accordion";
 
 // ==================
 // Accordion Item
@@ -50,13 +62,13 @@ Accordion.displayName = 'Accordion'
 
 interface AccordionItemProps {
 	/** Value of the item */
-	value: string
+	value: string;
 	/** Whether the item is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 }
 
 const AccordionItem = forwardRef<HTMLDivElement, AccordionItemProps>(
@@ -65,13 +77,13 @@ const AccordionItem = forwardRef<HTMLDivElement, AccordionItemProps>(
 			ref={ref}
 			value={value}
 			disabled={disabled}
-			className={cn('border-b', className)}
+			className={cn("border-b", className)}
 		>
 			{children}
 		</BaseAccordion.Item>
 	),
-)
-AccordionItem.displayName = 'AccordionItem'
+);
+AccordionItem.displayName = "AccordionItem";
 
 // ==================
 // Accordion Trigger
@@ -79,9 +91,9 @@ AccordionItem.displayName = 'AccordionItem'
 
 interface AccordionTriggerProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
@@ -91,9 +103,9 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
 				ref={ref}
 				className={cn(
 					// min-h-11 = 44px minimum touch target (WCAG 2.1 AA)
-					'flex flex-1 items-center justify-between min-h-11 py-4 text-sm font-medium transition-all hover:underline text-left',
-					'rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-					'[&[data-panel-open]>svg]:rotate-180',
+					"flex flex-1 items-center justify-between min-h-11 py-4 text-sm font-medium transition-all hover:underline text-left",
+					"rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+					"[&[data-panel-open]>svg]:rotate-180",
 					className,
 				)}
 			>
@@ -102,8 +114,8 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
 			</BaseAccordion.Trigger>
 		</BaseAccordion.Header>
 	),
-)
-AccordionTrigger.displayName = 'AccordionTrigger'
+);
+AccordionTrigger.displayName = "AccordionTrigger";
 
 // ==================
 // Accordion Content
@@ -111,9 +123,9 @@ AccordionTrigger.displayName = 'AccordionTrigger'
 
 interface AccordionContentProps {
 	/** Children */
-	children?: React.ReactNode
+	children?: React.ReactNode;
 	/** Additional CSS classes */
-	className?: string
+	className?: string;
 }
 
 const AccordionContent = forwardRef<HTMLDivElement, AccordionContentProps>(
@@ -122,17 +134,17 @@ const AccordionContent = forwardRef<HTMLDivElement, AccordionContentProps>(
 			ref={ref}
 			className="overflow-hidden text-sm data-[ending-style]:animate-accordion-up data-[starting-style]:animate-accordion-down"
 		>
-			<div className={cn('pb-4 pt-0', className)}>{children}</div>
+			<div className={cn("pb-4 pt-0", className)}>{children}</div>
 		</BaseAccordion.Panel>
 	),
-)
-AccordionContent.displayName = 'AccordionContent'
+);
+AccordionContent.displayName = "AccordionContent";
 
-export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };
 
 export type {
 	AccordionProps,
 	AccordionItemProps,
 	AccordionTriggerProps,
 	AccordionContentProps,
-}
+};

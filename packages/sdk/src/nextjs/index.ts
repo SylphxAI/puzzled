@@ -53,7 +53,7 @@ export {
 	createMatcher,
 	getNamespace,
 	type SylphxMiddlewareConfig,
-} from './middleware'
+} from "./middleware";
 
 // =============================================================================
 // Server-side Auth (for Server Components)
@@ -70,7 +70,7 @@ export {
 	getAuthorizationUrl,
 	getSessionToken,
 	type AuthResult,
-} from './server'
+} from "./server";
 
 // =============================================================================
 // Cookie Helpers (advanced use only)
@@ -92,10 +92,10 @@ export {
 	USER_COOKIE_OPTIONS,
 	type UserCookieData,
 	type AuthCookiesData,
-} from './cookies'
+} from "./cookies";
 
 // Re-export constants needed for token expiry calculations
 export {
 	TOKEN_EXPIRY_BUFFER_MS,
 	SESSION_TOKEN_LIFETIME_MS,
-} from '../constants'
+} from "../constants";

@@ -31,9 +31,9 @@
  * @module @sylphx/ui/button
  */
 
-import { type ButtonHTMLAttributes, forwardRef } from 'react'
-import { cn } from '../utils'
-import { Slot } from './slot'
+import { type ButtonHTMLAttributes, forwardRef } from "react";
+import { cn } from "../utils";
+import { Slot } from "./slot";
 
 /**
  * Props for the Button component.
@@ -51,7 +51,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	 * - `ghost`: Minimal button for navigation/text links
 	 * - `destructive`: Red button for dangerous actions
 	 */
-	variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'
+	variant?: "default" | "secondary" | "outline" | "ghost" | "destructive";
 	/**
 	 * Size variant. All sizes meet 44px minimum touch target (WCAG 2.1 AA).
 	 * - `default`: Standard size (h-11 = 44px)
@@ -59,12 +59,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	 * - `lg`: Large size (h-12 = 48px)
 	 * - `icon`: Square button for icons (h-11 w-11 = 44x44px)
 	 */
-	size?: 'default' | 'sm' | 'lg' | 'icon'
+	size?: "default" | "sm" | "lg" | "icon";
 	/**
 	 * If true, the button will render as the child element (using Slot).
 	 * Useful for rendering as a link with proper button styling.
 	 */
-	asChild?: boolean
+	asChild?: boolean;
 }
 
 /**
@@ -83,34 +83,34 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * ```
  */
 export function buttonVariants({
-	variant = 'default',
-	size = 'default',
+	variant = "default",
+	size = "default",
 	className,
 }: {
-	variant?: ButtonProps['variant']
-	size?: ButtonProps['size']
-	className?: string
+	variant?: ButtonProps["variant"];
+	size?: ButtonProps["size"];
+	className?: string;
 } = {}) {
 	return cn(
 		// Base styles - Professional with subtle feedback
-		'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60',
+		"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60",
 		// Variants - each with appropriate hover feedback
-		variant === 'default' &&
-			'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:-translate-y-px hover:shadow-md',
-		variant === 'secondary' &&
-			'bg-muted text-foreground hover:bg-muted/70 hover:shadow-sm',
-		variant === 'outline' &&
-			'border border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/40 hover:shadow-sm',
-		variant === 'ghost' && 'hover:bg-muted/80',
-		variant === 'destructive' &&
-			'bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md',
+		variant === "default" &&
+			"bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:-translate-y-px hover:shadow-md",
+		variant === "secondary" &&
+			"bg-muted text-foreground hover:bg-muted/70 hover:shadow-sm",
+		variant === "outline" &&
+			"border border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/40 hover:shadow-sm",
+		variant === "ghost" && "hover:bg-muted/80",
+		variant === "destructive" &&
+			"bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:shadow-md",
 		// Sizes - all meet 44px (h-11) minimum touch target (WCAG 2.1 AA)
-		size === 'default' && 'h-11 px-5 py-2',
-		size === 'sm' && 'h-11 px-4 text-sm',
-		size === 'lg' && 'h-12 px-6 text-lg',
-		size === 'icon' && 'h-11 w-11',
+		size === "default" && "h-11 px-5 py-2",
+		size === "sm" && "h-11 px-4 text-sm",
+		size === "lg" && "h-12 px-6 text-lg",
+		size === "icon" && "h-11 w-11",
 		className,
-	)
+	);
 }
 
 /**
@@ -126,12 +126,27 @@ export function buttonVariants({
  * @see {@link ButtonProps} for available props
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-	({ className, variant = 'default', size = 'default', asChild = false, ...props }, ref) => {
-		const Comp = asChild ? Slot : 'button'
-		return <Comp ref={ref} className={buttonVariants({ variant, size, className })} {...props} />
+	(
+		{
+			className,
+			variant = "default",
+			size = "default",
+			asChild = false,
+			...props
+		},
+		ref,
+	) => {
+		const Comp = asChild ? Slot : "button";
+		return (
+			<Comp
+				ref={ref}
+				className={buttonVariants({ variant, size, className })}
+				{...props}
+			/>
+		);
 	},
-)
+);
 
-Button.displayName = 'Button'
+Button.displayName = "Button";
 
-export { Button }
+export { Button };

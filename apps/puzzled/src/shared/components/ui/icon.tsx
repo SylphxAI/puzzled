@@ -6,4 +6,4 @@
  *
  * @see https://iconify.design/docs/icon-components/react/
  */
-export { Icon, type IconProps } from '@iconify/react'
+export { Icon, type IconProps } from "@iconify/react";

@@ -5,37 +5,37 @@
  * Matches Clerk's ResetPassword component API.
  */
 
-'use client'
+"use client";
 
-import { useState, useCallback, useEffect, type FormEvent } from 'react'
-import { useSafeAuth, useSafeUser, useSdkReady } from '../hooks'
-import { safeRedirect } from '../security-utils'
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { UI_COPY_FEEDBACK_MS } from "../../constants";
+import { useSafeAuth, useSafeUser, useSdkReady } from "../hooks";
+import { safeRedirect } from "../security-utils";
 import {
 	type ThemeVariables,
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from '../ui/styles'
-import { UI_COPY_FEEDBACK_MS } from '../../constants'
+	mergeStyles,
+} from "../ui/styles";
 
 export interface ResetPasswordProps {
 	/** Password reset token (usually from URL) */
-	token?: string
+	token?: string;
 	/** URL to redirect after successful reset */
-	afterResetUrl?: string
+	afterResetUrl?: string;
 	/** URL for sign in link */
-	signInUrl?: string
+	signInUrl?: string;
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called on successful reset */
-	onSuccess?: () => void
+	onSuccess?: () => void;
 	/** Called on error */
-	onError?: (error: string) => void
+	onError?: (error: string) => void;
 	/** Show card wrapper */
-	showCard?: boolean
+	showCard?: boolean;
 	/** Custom header content */
-	header?: React.ReactNode
+	header?: React.ReactNode;
 }
 
 /**
@@ -55,8 +55,8 @@ export interface ResetPasswordProps {
  */
 export function ResetPassword({
 	token,
-	afterResetUrl = '/sign-in',
-	signInUrl = '/sign-in',
+	afterResetUrl = "/sign-in",
+	signInUrl = "/sign-in",
 	theme = defaultTheme,
 	onSuccess,
 	onError,
@@ -65,38 +65,38 @@ export function ResetPassword({
 }: ResetPasswordProps) {
 	// SDK readiness check (SSOT for SSR safety and configuration)
 	const { isReady, renderError } = useSdkReady({
-		services: ['auth', 'user'],
-		componentType: 'auth',
+		services: ["auth", "user"],
+		componentType: "auth",
 		theme,
-	})
+	});
 
-	const { resetPassword } = useSafeAuth()
-	const { isSignedIn, isLoaded } = useSafeUser()
-	const styles = baseStyles(theme)
+	const { resetPassword } = useSafeAuth();
+	const { isSignedIn, isLoaded } = useSafeUser();
+	const styles = baseStyles(theme);
 
-	const [password, setPassword] = useState('')
-	const [confirmPassword, setConfirmPassword] = useState('')
-	const [error, setError] = useState<string | null>(null)
-	const [isLoading, setIsLoading] = useState(false)
-	const [isSuccess, setIsSuccess] = useState(false)
-	const [focusedField, setFocusedField] = useState<string | null>(null)
+	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [error, setError] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isSuccess, setIsSuccess] = useState(false);
+	const [focusedField, setFocusedField] = useState<string | null>(null);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// SDK not ready - render error or null
 	if (!isReady) {
-		return renderError()
+		return renderError();
 	}
 
 	// Redirect if already signed in
 	if (isLoaded && isSignedIn) {
-		if (typeof window !== 'undefined') {
-			safeRedirect(afterResetUrl, { fallback: '/sign-in' })
+		if (typeof window !== "undefined") {
+			safeRedirect(afterResetUrl, { fallback: "/sign-in" });
 		}
-		return null
+		return null;
 	}
 
 	// Show error if no token
@@ -113,59 +113,72 @@ export function ResetPassword({
 					<div style={styles.cardContent}>
 						<a
 							href={signInUrl}
-							style={mergeStyles(styles.button, styles.buttonPrimary, styles.buttonFullWidth)}
+							style={mergeStyles(
+								styles.button,
+								styles.buttonPrimary,
+								styles.buttonFullWidth,
+							)}
 						>
 							Back to sign in
 						</a>
 					</div>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	const handleSubmit = useCallback(
 		async (e: FormEvent) => {
-			e.preventDefault()
-			setError(null)
+			e.preventDefault();
+			setError(null);
 
 			// Validate passwords match
 			if (password !== confirmPassword) {
-				setError('Passwords do not match')
-				return
+				setError("Passwords do not match");
+				return;
 			}
 
 			// Validate password length (NIST SP 800-63B recommends 12+ chars)
 			if (password.length < 12) {
-				setError('Password must be at least 12 characters')
-				return
+				setError("Password must be at least 12 characters");
+				return;
 			}
 
-			setIsLoading(true)
+			setIsLoading(true);
 
 			try {
 				if (!resetPassword) {
-					throw new Error('Authentication not configured')
+					throw new Error("Authentication not configured");
 				}
-				await resetPassword({ token, newPassword: password })
-				setIsSuccess(true)
-				onSuccess?.()
+				await resetPassword({ token, newPassword: password });
+				setIsSuccess(true);
+				onSuccess?.();
 
 				// Redirect after short delay
-				if (typeof window !== 'undefined') {
+				if (typeof window !== "undefined") {
 					setTimeout(() => {
-						safeRedirect(afterResetUrl, { fallback: '/sign-in' })
-					}, UI_COPY_FEEDBACK_MS)
+						safeRedirect(afterResetUrl, { fallback: "/sign-in" });
+					}, UI_COPY_FEEDBACK_MS);
 				}
 			} catch (err) {
-				const message = err instanceof Error ? err.message : 'Failed to reset password'
-				setError(message)
-				onError?.(message)
+				const message =
+					err instanceof Error ? err.message : "Failed to reset password";
+				setError(message);
+				onError?.(message);
 			} finally {
-				setIsLoading(false)
+				setIsLoading(false);
 			}
 		},
-		[token, password, confirmPassword, resetPassword, afterResetUrl, onSuccess, onError]
-	)
+		[
+			token,
+			password,
+			confirmPassword,
+			resetPassword,
+			afterResetUrl,
+			onSuccess,
+			onError,
+		],
+	);
 
 	const renderForm = () => {
 		if (isSuccess) {
@@ -173,21 +186,23 @@ export function ResetPassword({
 				<div style={styles.textCenter}>
 					<div
 						style={mergeStyles(styles.flexCenter, {
-							width: '3rem',
-							height: '3rem',
-							borderRadius: '50%',
+							width: "3rem",
+							height: "3rem",
+							borderRadius: "50%",
 							backgroundColor: `${theme.colorSuccess}15`,
-							margin: '0 auto 1rem',
+							margin: "0 auto 1rem",
 						})}
 					>
 						<CheckIcon color={theme.colorSuccess} />
 					</div>
-					<h3 style={mergeStyles(styles.cardTitle, styles.mb2)}>Password reset!</h3>
+					<h3 style={mergeStyles(styles.cardTitle, styles.mb2)}>
+						Password reset!
+					</h3>
 					<p style={mergeStyles(styles.textMuted, styles.textSm, styles.mb4)}>
 						Your password has been updated. Redirecting to sign in...
 					</p>
 				</div>
-			)
+			);
 		}
 
 		return (
@@ -198,10 +213,10 @@ export function ResetPassword({
 						type="password"
 						value={password}
 						onChange={(e) => {
-							setPassword(e.target.value)
-							setError(null)
+							setPassword(e.target.value);
+							setError(null);
 						}}
-						onFocus={() => setFocusedField('password')}
+						onFocus={() => setFocusedField("password")}
 						onBlur={() => setFocusedField(null)}
 						placeholder="••••••••"
 						disabled={isLoading}
@@ -210,8 +225,8 @@ export function ResetPassword({
 						minLength={12}
 						style={mergeStyles(
 							styles.input,
-							focusedField === 'password' ? styles.inputFocus : {},
-							isLoading ? styles.inputDisabled : {}
+							focusedField === "password" ? styles.inputFocus : {},
+							isLoading ? styles.inputDisabled : {},
 						)}
 					/>
 					<p style={mergeStyles(styles.textXs, styles.textMuted, styles.mt1)}>
@@ -225,10 +240,10 @@ export function ResetPassword({
 						type="password"
 						value={confirmPassword}
 						onChange={(e) => {
-							setConfirmPassword(e.target.value)
-							setError(null)
+							setConfirmPassword(e.target.value);
+							setError(null);
 						}}
-						onFocus={() => setFocusedField('confirmPassword')}
+						onFocus={() => setFocusedField("confirmPassword")}
 						onBlur={() => setFocusedField(null)}
 						placeholder="••••••••"
 						disabled={isLoading}
@@ -236,14 +251,16 @@ export function ResetPassword({
 						required
 						style={mergeStyles(
 							styles.input,
-							focusedField === 'confirmPassword' ? styles.inputFocus : {},
-							isLoading ? styles.inputDisabled : {}
+							focusedField === "confirmPassword" ? styles.inputFocus : {},
+							isLoading ? styles.inputDisabled : {},
 						)}
 					/>
 				</div>
 
 				{error && (
-					<div style={mergeStyles(styles.alert, styles.alertError)}>{error}</div>
+					<div style={mergeStyles(styles.alert, styles.alertError)}>
+						{error}
+					</div>
 				)}
 
 				<button
@@ -253,7 +270,7 @@ export function ResetPassword({
 						styles.button,
 						styles.buttonPrimary,
 						styles.buttonFullWidth,
-						isLoading ? styles.buttonDisabled : {}
+						isLoading ? styles.buttonDisabled : {},
 					)}
 				>
 					{isLoading ? (
@@ -262,18 +279,25 @@ export function ResetPassword({
 							Resetting...
 						</>
 					) : (
-						'Reset password'
+						"Reset password"
 					)}
 				</button>
 
-				<p style={mergeStyles(styles.textCenter, styles.textSm, styles.textMuted, styles.mt4)}>
+				<p
+					style={mergeStyles(
+						styles.textCenter,
+						styles.textSm,
+						styles.textMuted,
+						styles.mt4,
+					)}
+				>
 					<a href={signInUrl} style={styles.link}>
 						Back to sign in
 					</a>
 				</p>
 			</form>
-		)
-	}
+		);
+	};
 
 	const content = (
 		<div style={styles.container}>
@@ -285,13 +309,13 @@ export function ResetPassword({
 			)}
 			<div style={styles.cardContent}>{renderForm()}</div>
 		</div>
-	)
+	);
 
 	if (showCard) {
-		return <div style={styles.card}>{content}</div>
+		return <div style={styles.card}>{content}</div>;
 	}
 
-	return content
+	return content;
 }
 
 function CheckIcon({ color }: { color: string }) {
@@ -308,5 +332,5 @@ function CheckIcon({ color }: { color: string }) {
 		>
 			<path d="M20 6 9 17l-5-5" />
 		</svg>
-	)
+	);
 }

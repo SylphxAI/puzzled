@@ -5,8 +5,8 @@
  * Uses Platform SDK for subscription checks.
  */
 
-import { getSubscription } from '@sylphx/sdk'
-import { getSdkConfig } from '@/lib/sdk-server'
+import { getSdkConfig } from "@/lib/sdk-server";
+import { getSubscription } from "@sylphx/sdk";
 
 // ==========================================
 // Plan Constants
@@ -15,7 +15,7 @@ import { getSdkConfig } from '@/lib/sdk-server'
 /**
  * Premium plan slugs (paid plans)
  */
-const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
+const PREMIUM_PLANS = ["premium", "lifetime", "pro"] as const;
 
 /**
  * Game rotation for free tier
@@ -24,12 +24,12 @@ const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
  * NOTE: These must match actual game slugs from the games registry
  */
 const FREE_GAME_ROTATION = [
-	'word-guess', // Wordle-style word game
-	'word-groups', // Connections-style grouping
-	'queens', // N-Queens puzzle
-	'sudoku', // Classic sudoku
-	'crossword', // Daily crossword
-] as const
+	"word-guess", // Wordle-style word game
+	"word-groups", // Connections-style grouping
+	"queens", // N-Queens puzzle
+	"sudoku", // Classic sudoku
+	"crossword", // Daily crossword
+] as const;
 
 // ==========================================
 // Plan Checking
@@ -39,15 +39,15 @@ const FREE_GAME_ROTATION = [
  * Check if a plan slug represents a premium (paid) plan
  */
 function _isPremiumPlan(planSlug: string | null | undefined): boolean {
-	if (!planSlug) return false
-	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
+	if (!planSlug) return false;
+	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number]);
 }
 
 /**
  * Check if a plan slug is the free plan
  */
 function _isFreePlan(planSlug: string | null | undefined): boolean {
-	return !planSlug || planSlug === 'free'
+	return !planSlug || planSlug === "free";
 }
 
 // ==========================================
@@ -61,26 +61,27 @@ function _isFreePlan(planSlug: string | null | undefined): boolean {
  * Uses UTC date to ensure consistent rotation across timezones.
  */
 export function getTodaysFreeGame(): string {
-	const today = new Date()
+	const today = new Date();
 	// Use UTC date to ensure consistent rotation across timezones
 	const dayOfYear = Math.floor(
-		(today.getTime() - new Date(today.getUTCFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
-	)
-	return FREE_GAME_ROTATION[dayOfYear % FREE_GAME_ROTATION.length]
+		(today.getTime() - new Date(today.getUTCFullYear(), 0, 0).getTime()) /
+			(1000 * 60 * 60 * 24),
+	);
+	return FREE_GAME_ROTATION[dayOfYear % FREE_GAME_ROTATION.length];
 }
 
 /**
  * Check if a game is free today for free-tier users
  */
 function isGameFreeToday(gameSlug: string): boolean {
-	return gameSlug === getTodaysFreeGame()
+	return gameSlug === getTodaysFreeGame();
 }
 
 /**
  * Get the list of games in free rotation
  */
 export function getFreeGameRotation(): readonly string[] {
-	return FREE_GAME_ROTATION
+	return FREE_GAME_ROTATION;
 }
 
 // ==========================================
@@ -97,22 +98,23 @@ export function getFreeGameRotation(): readonly string[] {
  */
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
 	try {
-		const config = getSdkConfig()
-		const subscription = await getSubscription(config, userId)
+		const config = getSdkConfig();
+		const subscription = await getSubscription(config, userId);
 
-		if (!subscription) return false
+		if (!subscription) return false;
 
 		// Check if subscription is active and on a premium plan
-		const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+		const isActive =
+			subscription.status === "active" || subscription.status === "trialing";
 		const isPremium = PREMIUM_PLANS.includes(
 			subscription.planSlug as (typeof PREMIUM_PLANS)[number],
-		)
+		);
 
-		return isActive && isPremium
+		return isActive && isPremium;
 	} catch (error) {
 		// Log error but don't block - default to free tier
-		console.error('[Billing] Failed to check premium access:', error)
-		return false
+		console.error("[Billing] Failed to check premium access:", error);
+		return false;
 	}
 }
 
@@ -125,20 +127,23 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
  * @param userId - Platform user ID (null for anonymous)
  * @param gameSlug - Game to check access for
  */
-export async function canAccessGame(userId: string | null, gameSlug: string): Promise<boolean> {
+export async function canAccessGame(
+	userId: string | null,
+	gameSlug: string,
+): Promise<boolean> {
 	// Anonymous users can only play the free game
 	if (!userId) {
-		return isGameFreeToday(gameSlug)
+		return isGameFreeToday(gameSlug);
 	}
 
 	// Check if user has premium
-	const hasPremium = await hasPremiumAccess(userId)
+	const hasPremium = await hasPremiumAccess(userId);
 	if (hasPremium) {
-		return true
+		return true;
 	}
 
 	// Free user - can only play today's free game
-	return isGameFreeToday(gameSlug)
+	return isGameFreeToday(gameSlug);
 }
 
 // Re-export for convenience (alias)

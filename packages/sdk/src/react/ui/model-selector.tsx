@@ -5,40 +5,40 @@
  * Supports filtering by capability and search.
  */
 
-'use client'
+"use client";
 
-import { useState, useEffect, useRef } from 'react'
-import type { ThemeVariables } from './styles'
+import { useEffect, useRef, useState } from "react";
+import type { AIModelInfo } from "../../types";
+import { useModels } from "../ai-hooks";
+import type { ThemeVariables } from "./styles";
 import {
-	defaultTheme,
 	baseStyles,
-	mergeStyles,
+	defaultTheme,
 	injectGlobalStyles,
-} from './styles'
-import { useModels } from '../ai-hooks'
-import type { AIModelInfo } from '../../types'
+	mergeStyles,
+} from "./styles";
 
 export interface ModelSelectorProps {
 	/** Theme variables */
-	theme?: ThemeVariables
+	theme?: ThemeVariables;
 	/** Called when a model is selected */
-	onSelect: (model: AIModelInfo) => void
+	onSelect: (model: AIModelInfo) => void;
 	/** Currently selected model ID */
-	value?: string
+	value?: string;
 	/** Filter by capability */
-	capability?: 'chat' | 'vision' | 'tool' | 'embedding'
+	capability?: "chat" | "vision" | "tool" | "embedding";
 	/** Placeholder text */
-	placeholder?: string
+	placeholder?: string;
 	/** Whether the selector is disabled */
-	disabled?: boolean
+	disabled?: boolean;
 	/** Custom class name */
-	className?: string
+	className?: string;
 	/** Show pricing info */
-	showPricing?: boolean
+	showPricing?: boolean;
 	/** Show context window */
-	showContextWindow?: boolean
+	showContextWindow?: boolean;
 	/** Compact mode (for inline use) */
-	compact?: boolean
+	compact?: boolean;
 }
 
 /**
@@ -66,171 +66,178 @@ export function ModelSelector({
 	onSelect,
 	value,
 	capability,
-	placeholder = 'Select a model...',
+	placeholder = "Select a model...",
 	disabled = false,
 	className,
 	showPricing = true,
 	showContextWindow = true,
 	compact = false,
 }: ModelSelectorProps) {
-	const styles = baseStyles(theme)
-	const [isOpen, setIsOpen] = useState(false)
-	const [searchValue, setSearchValue] = useState('')
-	const containerRef = useRef<HTMLDivElement>(null)
-	const inputRef = useRef<HTMLInputElement>(null)
+	const styles = baseStyles(theme);
+	const [isOpen, setIsOpen] = useState(false);
+	const [searchValue, setSearchValue] = useState("");
+	const containerRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	const { models, isLoading, error, setSearch, hasMore, loadMore } = useModels({
 		capability,
 		fetchOnMount: true,
 		pageSize: 50,
-	})
+	});
 
 	// Find selected model
-	const selectedModel = models.find((m) => m.id === value)
+	const selectedModel = models.find((m) => m.id === value);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Close on outside click
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
-			if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-				setIsOpen(false)
+			if (
+				containerRef.current &&
+				!containerRef.current.contains(event.target as Node)
+			) {
+				setIsOpen(false);
 			}
-		}
+		};
 
-		document.addEventListener('mousedown', handleClickOutside)
-		return () => document.removeEventListener('mousedown', handleClickOutside)
-	}, [])
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	// Handle search input
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value
-		setSearchValue(value)
-		setSearch(value)
-	}
+		const value = e.target.value;
+		setSearchValue(value);
+		setSearch(value);
+	};
 
 	// Handle model selection
 	const handleSelect = (model: AIModelInfo) => {
-		onSelect(model)
-		setIsOpen(false)
-		setSearchValue('')
-		setSearch('')
-	}
+		onSelect(model);
+		setIsOpen(false);
+		setSearchValue("");
+		setSearch("");
+	};
 
 	// Handle scroll for infinite loading
 	const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-		const target = e.target as HTMLDivElement
-		const bottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 50
+		const target = e.target as HTMLDivElement;
+		const bottom =
+			target.scrollHeight - target.scrollTop <= target.clientHeight + 50;
 		if (bottom && hasMore && !isLoading) {
-			loadMore()
+			loadMore();
 		}
-	}
+	};
 
 	// Format context window
 	const formatContext = (tokens: number) => {
 		if (tokens >= 1000000) {
-			return `${(tokens / 1000000).toFixed(1)}M`
+			return `${(tokens / 1000000).toFixed(1)}M`;
 		}
 		if (tokens >= 1000) {
-			return `${(tokens / 1000).toFixed(0)}K`
+			return `${(tokens / 1000).toFixed(0)}K`;
 		}
-		return tokens.toString()
-	}
+		return tokens.toString();
+	};
 
 	// Format price
 	const formatPrice = (pricePerMillion: number) => {
-		if (pricePerMillion === 0) return 'Free'
-		if (pricePerMillion < 0.01) return `$${pricePerMillion.toFixed(4)}`
-		if (pricePerMillion < 1) return `$${pricePerMillion.toFixed(2)}`
-		return `$${pricePerMillion.toFixed(1)}`
-	}
+		if (pricePerMillion === 0) return "Free";
+		if (pricePerMillion < 0.01) return `$${pricePerMillion.toFixed(4)}`;
+		if (pricePerMillion < 1) return `$${pricePerMillion.toFixed(2)}`;
+		return `$${pricePerMillion.toFixed(1)}`;
+	};
 
 	// Get capability badge color
 	const getCapabilityColor = (cap: string) => {
 		switch (cap) {
-			case 'chat':
-				return theme.colorPrimary
-			case 'vision':
-				return '#9333ea' // purple
-			case 'tool':
-				return '#059669' // green
-			case 'embedding':
-				return '#d97706' // amber
+			case "chat":
+				return theme.colorPrimary;
+			case "vision":
+				return "#9333ea"; // purple
+			case "tool":
+				return "#059669"; // green
+			case "embedding":
+				return "#d97706"; // amber
 			default:
-				return theme.colorMuted
+				return theme.colorMuted;
 		}
-	}
+	};
 
 	const containerStyles: React.CSSProperties = {
-		position: 'relative',
-		width: '100%',
-	}
+		position: "relative",
+		width: "100%",
+	};
 
 	const triggerStyles: React.CSSProperties = mergeStyles(styles.input, {
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'space-between',
-		cursor: disabled ? 'not-allowed' : 'pointer',
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		cursor: disabled ? "not-allowed" : "pointer",
 		opacity: disabled ? 0.5 : 1,
-		padding: compact ? '0.5rem 0.75rem' : '0.75rem 1rem',
-	})
+		padding: compact ? "0.5rem 0.75rem" : "0.75rem 1rem",
+	});
 
 	const dropdownStyles: React.CSSProperties = {
-		position: 'absolute',
-		top: '100%',
+		position: "absolute",
+		top: "100%",
 		left: 0,
 		right: 0,
-		marginTop: '0.25rem',
+		marginTop: "0.25rem",
 		backgroundColor: theme.colorBackground,
 		border: `1px solid ${theme.colorBorder}`,
 		borderRadius: theme.borderRadius,
-		boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+		boxShadow:
+			"0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
 		zIndex: 50,
-		maxHeight: '400px',
-		overflow: 'hidden',
-		display: 'flex',
-		flexDirection: 'column',
-	}
+		maxHeight: "400px",
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+	};
 
 	const searchInputStyles: React.CSSProperties = mergeStyles(styles.input, {
-		margin: '0.5rem',
+		margin: "0.5rem",
 		marginBottom: 0,
-		width: 'calc(100% - 1rem)',
-	})
+		width: "calc(100% - 1rem)",
+	});
 
 	const listStyles: React.CSSProperties = {
-		overflowY: 'auto',
-		maxHeight: '340px',
-		padding: '0.5rem',
-	}
+		overflowY: "auto",
+		maxHeight: "340px",
+		padding: "0.5rem",
+	};
 
 	const itemStyles = (isSelected: boolean): React.CSSProperties => ({
-		display: 'flex',
-		flexDirection: 'column',
-		padding: '0.75rem',
+		display: "flex",
+		flexDirection: "column",
+		padding: "0.75rem",
 		borderRadius: theme.borderRadius,
-		cursor: 'pointer',
-		backgroundColor: isSelected ? `${theme.colorPrimary}10` : 'transparent',
-		border: isSelected ? `1px solid ${theme.colorPrimary}30` : '1px solid transparent',
-		marginBottom: '0.25rem',
-		transition: 'background-color 0.15s',
-	})
+		cursor: "pointer",
+		backgroundColor: isSelected ? `${theme.colorPrimary}10` : "transparent",
+		border: isSelected
+			? `1px solid ${theme.colorPrimary}30`
+			: "1px solid transparent",
+		marginBottom: "0.25rem",
+		transition: "background-color 0.15s",
+	});
 
 	const badgeStyles = (color: string): React.CSSProperties => ({
-		display: 'inline-flex',
-		alignItems: 'center',
-		padding: '0.125rem 0.375rem',
-		borderRadius: '9999px',
-		fontSize: '0.625rem',
+		display: "inline-flex",
+		alignItems: "center",
+		padding: "0.125rem 0.375rem",
+		borderRadius: "9999px",
+		fontSize: "0.625rem",
 		fontWeight: 500,
 		backgroundColor: `${color}15`,
 		color,
-		textTransform: 'uppercase',
-		letterSpacing: '0.05em',
-	})
+		textTransform: "uppercase",
+		letterSpacing: "0.05em",
+	});
 
 	return (
 		<div ref={containerRef} style={containerStyles} className={className}>
@@ -241,16 +248,31 @@ export function ModelSelector({
 				role="button"
 				tabIndex={disabled ? -1 : 0}
 				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault()
-						if (!disabled) setIsOpen(!isOpen)
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						if (!disabled) setIsOpen(!isOpen);
 					}
 				}}
 			>
-				<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: "0.5rem",
+						flex: 1,
+						minWidth: 0,
+					}}
+				>
 					{selectedModel ? (
 						<>
-							<span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+							<span
+								style={{
+									fontWeight: 500,
+									overflow: "hidden",
+									textOverflow: "ellipsis",
+									whiteSpace: "nowrap",
+								}}
+							>
 								{selectedModel.name}
 							</span>
 							{!compact && showContextWindow && (
@@ -263,7 +285,7 @@ export function ModelSelector({
 						<span style={styles.textMuted}>{placeholder}</span>
 					)}
 				</div>
-				<ChevronIcon direction={isOpen ? 'up' : 'down'} />
+				<ChevronIcon direction={isOpen ? "up" : "down"} />
 			</div>
 
 			{/* Dropdown */}
@@ -283,13 +305,21 @@ export function ModelSelector({
 					{/* Model list */}
 					<div style={listStyles} onScroll={handleScroll}>
 						{error && (
-							<div style={mergeStyles(styles.alert, styles.alertError, { margin: '0.5rem' })}>
+							<div
+								style={mergeStyles(styles.alert, styles.alertError, {
+									margin: "0.5rem",
+								})}
+							>
 								{error.message}
 							</div>
 						)}
 
 						{models.length === 0 && !isLoading && (
-							<div style={mergeStyles(styles.textCenter, styles.textMuted, { padding: '2rem' })}>
+							<div
+								style={mergeStyles(styles.textCenter, styles.textMuted, {
+									padding: "2rem",
+								})}
+							>
 								No models found
 							</div>
 						)}
@@ -301,17 +331,24 @@ export function ModelSelector({
 								onClick={() => handleSelect(model)}
 								onMouseEnter={(e) => {
 									if (model.id !== value) {
-										e.currentTarget.style.backgroundColor = theme.colorMuted
+										e.currentTarget.style.backgroundColor = theme.colorMuted;
 									}
 								}}
 								onMouseLeave={(e) => {
 									if (model.id !== value) {
-										e.currentTarget.style.backgroundColor = 'transparent'
+										e.currentTarget.style.backgroundColor = "transparent";
 									}
 								}}
 							>
 								{/* Model name and ID */}
-								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "space-between",
+										marginBottom: "0.25rem",
+									}}
+								>
 									<span style={{ fontWeight: 500 }}>{model.name}</span>
 									{showContextWindow && (
 										<span style={mergeStyles(styles.textXs, styles.textMuted)}>
@@ -321,16 +358,37 @@ export function ModelSelector({
 								</div>
 
 								{/* Model ID */}
-								<div style={mergeStyles(styles.textXs, styles.textMuted, { marginBottom: '0.5rem', fontFamily: 'monospace' })}>
+								<div
+									style={mergeStyles(styles.textXs, styles.textMuted, {
+										marginBottom: "0.5rem",
+										fontFamily: "monospace",
+									})}
+								>
 									{model.id}
 								</div>
 
 								{/* Capabilities and pricing */}
-								<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+								<div
+									style={{
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "space-between",
+										gap: "0.5rem",
+									}}
+								>
 									{/* Capabilities */}
-									<div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+									<div
+										style={{
+											display: "flex",
+											gap: "0.25rem",
+											flexWrap: "wrap",
+										}}
+									>
 										{model.capabilities.map((cap) => (
-											<span key={cap} style={badgeStyles(getCapabilityColor(cap))}>
+											<span
+												key={cap}
+												style={badgeStyles(getCapabilityColor(cap))}
+											>
 												{cap}
 											</span>
 										))}
@@ -339,7 +397,8 @@ export function ModelSelector({
 									{/* Pricing */}
 									{showPricing && (
 										<div style={mergeStyles(styles.textXs, styles.textMuted)}>
-											{formatPrice(model.inputCostPer1M ?? 0)}/{formatPrice(model.outputCostPer1M ?? 0)} per 1M
+											{formatPrice(model.inputCostPer1M ?? 0)}/
+											{formatPrice(model.outputCostPer1M ?? 0)} per 1M
 										</div>
 									)}
 								</div>
@@ -348,12 +407,12 @@ export function ModelSelector({
 								{model.description && (
 									<div
 										style={mergeStyles(styles.textXs, styles.textMuted, {
-											marginTop: '0.5rem',
-											overflow: 'hidden',
-											textOverflow: 'ellipsis',
-											display: '-webkit-box',
+											marginTop: "0.5rem",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											display: "-webkit-box",
 											WebkitLineClamp: 2,
-											WebkitBoxOrient: 'vertical',
+											WebkitBoxOrient: "vertical",
 										})}
 									>
 										{model.description}
@@ -364,7 +423,7 @@ export function ModelSelector({
 
 						{/* Loading indicator */}
 						{isLoading && (
-							<div style={mergeStyles(styles.flexCenter, { padding: '1rem' })}>
+							<div style={mergeStyles(styles.flexCenter, { padding: "1rem" })}>
 								<span style={styles.spinner} />
 							</div>
 						)}
@@ -372,11 +431,11 @@ export function ModelSelector({
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 // Icons
-function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
+function ChevronIcon({ direction }: { direction: "up" | "down" }) {
 	return (
 		<svg
 			width="16"
@@ -387,11 +446,11 @@ function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
 			strokeWidth="2"
 			strokeLinecap="round"
 			strokeLinejoin="round"
-			style={{ transform: direction === 'up' ? 'rotate(180deg)' : undefined }}
+			style={{ transform: direction === "up" ? "rotate(180deg)" : undefined }}
 		>
 			<polyline points="6 9 12 15 18 9" />
 		</svg>
-	)
+	);
 }
 
 /**
@@ -400,12 +459,12 @@ function ChevronIcon({ direction }: { direction: 'up' | 'down' }) {
  * Display a single model in a card format.
  */
 export interface ModelCardProps {
-	model: AIModelInfo
-	theme?: ThemeVariables
-	onSelect?: () => void
-	selected?: boolean
-	showPricing?: boolean
-	className?: string
+	model: AIModelInfo;
+	theme?: ThemeVariables;
+	onSelect?: () => void;
+	selected?: boolean;
+	showPricing?: boolean;
+	className?: string;
 }
 
 export function ModelCard({
@@ -416,58 +475,60 @@ export function ModelCard({
 	showPricing = true,
 	className,
 }: ModelCardProps) {
-	const styles = baseStyles(theme)
+	const styles = baseStyles(theme);
 
 	// Format context window
 	const formatContext = (tokens: number) => {
-		if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`
-		if (tokens >= 1000) return `${(tokens / 1000).toFixed(0)}K`
-		return tokens.toString()
-	}
+		if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
+		if (tokens >= 1000) return `${(tokens / 1000).toFixed(0)}K`;
+		return tokens.toString();
+	};
 
 	// Format price
 	const formatPrice = (pricePerMillion: number) => {
-		if (pricePerMillion === 0) return 'Free'
-		if (pricePerMillion < 0.01) return `$${pricePerMillion.toFixed(4)}`
-		if (pricePerMillion < 1) return `$${pricePerMillion.toFixed(2)}`
-		return `$${pricePerMillion.toFixed(1)}`
-	}
+		if (pricePerMillion === 0) return "Free";
+		if (pricePerMillion < 0.01) return `$${pricePerMillion.toFixed(4)}`;
+		if (pricePerMillion < 1) return `$${pricePerMillion.toFixed(2)}`;
+		return `$${pricePerMillion.toFixed(1)}`;
+	};
 
 	// Get capability badge color
 	const getCapabilityColor = (cap: string) => {
 		switch (cap) {
-			case 'chat':
-				return theme.colorPrimary
-			case 'vision':
-				return '#9333ea'
-			case 'tool':
-				return '#059669'
-			case 'embedding':
-				return '#d97706'
+			case "chat":
+				return theme.colorPrimary;
+			case "vision":
+				return "#9333ea";
+			case "tool":
+				return "#059669";
+			case "embedding":
+				return "#d97706";
 			default:
-				return theme.colorMuted
+				return theme.colorMuted;
 		}
-	}
+	};
 
 	const cardStyles: React.CSSProperties = mergeStyles(styles.card, {
-		padding: '1rem',
-		cursor: onSelect ? 'pointer' : 'default',
-		border: selected ? `2px solid ${theme.colorPrimary}` : `1px solid ${theme.colorBorder}`,
-		transition: 'border-color 0.15s, box-shadow 0.15s',
-	})
+		padding: "1rem",
+		cursor: onSelect ? "pointer" : "default",
+		border: selected
+			? `2px solid ${theme.colorPrimary}`
+			: `1px solid ${theme.colorBorder}`,
+		transition: "border-color 0.15s, box-shadow 0.15s",
+	});
 
 	const badgeStyles = (color: string): React.CSSProperties => ({
-		display: 'inline-flex',
-		alignItems: 'center',
-		padding: '0.125rem 0.375rem',
-		borderRadius: '9999px',
-		fontSize: '0.625rem',
+		display: "inline-flex",
+		alignItems: "center",
+		padding: "0.125rem 0.375rem",
+		borderRadius: "9999px",
+		fontSize: "0.625rem",
 		fontWeight: 500,
 		backgroundColor: `${color}15`,
 		color,
-		textTransform: 'uppercase',
-		letterSpacing: '0.05em',
-	})
+		textTransform: "uppercase",
+		letterSpacing: "0.05em",
+	});
 
 	return (
 		<div
@@ -476,20 +537,36 @@ export function ModelCard({
 			onClick={onSelect}
 			onMouseEnter={(e) => {
 				if (onSelect && !selected) {
-					e.currentTarget.style.borderColor = theme.colorPrimary
+					e.currentTarget.style.borderColor = theme.colorPrimary;
 				}
 			}}
 			onMouseLeave={(e) => {
 				if (!selected) {
-					e.currentTarget.style.borderColor = theme.colorBorder
+					e.currentTarget.style.borderColor = theme.colorBorder;
 				}
 			}}
 		>
 			{/* Header */}
-			<div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+			<div
+				style={{
+					display: "flex",
+					alignItems: "flex-start",
+					justifyContent: "space-between",
+					marginBottom: "0.5rem",
+				}}
+			>
 				<div>
-					<h4 style={{ margin: 0, fontSize: theme.fontSizeBase, fontWeight: 600 }}>{model.name}</h4>
-					<p style={mergeStyles(styles.textXs, styles.textMuted, { margin: '0.25rem 0 0', fontFamily: 'monospace' })}>
+					<h4
+						style={{ margin: 0, fontSize: theme.fontSizeBase, fontWeight: 600 }}
+					>
+						{model.name}
+					</h4>
+					<p
+						style={mergeStyles(styles.textXs, styles.textMuted, {
+							margin: "0.25rem 0 0",
+							fontFamily: "monospace",
+						})}
+					>
 						{model.id}
 					</p>
 				</div>
@@ -499,7 +576,14 @@ export function ModelCard({
 			</div>
 
 			{/* Capabilities */}
-			<div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+			<div
+				style={{
+					display: "flex",
+					gap: "0.25rem",
+					marginBottom: "0.75rem",
+					flexWrap: "wrap",
+				}}
+			>
 				{model.capabilities.map((cap) => (
 					<span key={cap} style={badgeStyles(getCapabilityColor(cap))}>
 						{cap}
@@ -511,12 +595,12 @@ export function ModelCard({
 			{model.description && (
 				<p
 					style={mergeStyles(styles.textSm, styles.textMuted, {
-						margin: '0 0 0.75rem',
-						overflow: 'hidden',
-						textOverflow: 'ellipsis',
-						display: '-webkit-box',
+						margin: "0 0 0.75rem",
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						display: "-webkit-box",
 						WebkitLineClamp: 2,
-						WebkitBoxOrient: 'vertical',
+						WebkitBoxOrient: "vertical",
 					})}
 				>
 					{model.description}
@@ -525,23 +609,39 @@ export function ModelCard({
 
 			{/* Pricing */}
 			{showPricing && (
-				<div style={{ display: 'flex', gap: '1rem' }}>
+				<div style={{ display: "flex", gap: "1rem" }}>
 					<div>
-						<span style={mergeStyles(styles.textXs, styles.textMuted)}>Input</span>
-						<p style={{ margin: '0.125rem 0 0', fontSize: theme.fontSizeSm, fontWeight: 500 }}>
+						<span style={mergeStyles(styles.textXs, styles.textMuted)}>
+							Input
+						</span>
+						<p
+							style={{
+								margin: "0.125rem 0 0",
+								fontSize: theme.fontSizeSm,
+								fontWeight: 500,
+							}}
+						>
 							{formatPrice(model.inputCostPer1M ?? 0)}/1M
 						</p>
 					</div>
 					<div>
-						<span style={mergeStyles(styles.textXs, styles.textMuted)}>Output</span>
-						<p style={{ margin: '0.125rem 0 0', fontSize: theme.fontSizeSm, fontWeight: 500 }}>
+						<span style={mergeStyles(styles.textXs, styles.textMuted)}>
+							Output
+						</span>
+						<p
+							style={{
+								margin: "0.125rem 0 0",
+								fontSize: theme.fontSizeSm,
+								fontWeight: 500,
+							}}
+						>
 							{formatPrice(model.outputCostPer1M ?? 0)}/1M
 						</p>
 					</div>
 				</div>
 			)}
 		</div>
-	)
+	);
 }
 
 /**
@@ -550,13 +650,13 @@ export function ModelCard({
  * Display models in a grid layout with filtering.
  */
 export interface ModelGridProps {
-	theme?: ThemeVariables
-	onSelect: (model: AIModelInfo) => void
-	value?: string
-	capability?: 'chat' | 'vision' | 'tool' | 'embedding'
-	showPricing?: boolean
-	columns?: 1 | 2 | 3 | 4
-	className?: string
+	theme?: ThemeVariables;
+	onSelect: (model: AIModelInfo) => void;
+	value?: string;
+	capability?: "chat" | "vision" | "tool" | "embedding";
+	showPricing?: boolean;
+	columns?: 1 | 2 | 3 | 4;
+	className?: string;
 }
 
 export function ModelGrid({
@@ -568,58 +668,78 @@ export function ModelGrid({
 	columns = 3,
 	className,
 }: ModelGridProps) {
-	const styles = baseStyles(theme)
-	const { models, isLoading, error, setSearch, setCapability, hasMore, loadMore, total } = useModels({
+	const styles = baseStyles(theme);
+	const {
+		models,
+		isLoading,
+		error,
+		setSearch,
+		setCapability,
+		hasMore,
+		loadMore,
+		total,
+	} = useModels({
 		capability,
 		fetchOnMount: true,
 		pageSize: 24,
-	})
+	});
 
-	const [searchValue, setSearchValue] = useState('')
-	const [filterCapability, setFilterCapability] = useState(capability)
+	const [searchValue, setSearchValue] = useState("");
+	const [filterCapability, setFilterCapability] = useState(capability);
 
 	// Inject global styles
 	useEffect(() => {
-		injectGlobalStyles()
-	}, [])
+		injectGlobalStyles();
+	}, []);
 
 	// Handle search
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value
-		setSearchValue(value)
-		setSearch(value)
-	}
+		const value = e.target.value;
+		setSearchValue(value);
+		setSearch(value);
+	};
 
 	// Handle capability filter
 	const handleCapabilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const value = e.target.value as 'chat' | 'vision' | 'tool' | 'embedding' | ''
-		setFilterCapability(value || undefined)
-		setCapability(value || undefined)
-	}
+		const value = e.target.value as
+			| "chat"
+			| "vision"
+			| "tool"
+			| "embedding"
+			| "";
+		setFilterCapability(value || undefined);
+		setCapability(value || undefined);
+	};
 
 	const gridStyles: React.CSSProperties = {
-		display: 'grid',
+		display: "grid",
 		gridTemplateColumns: `repeat(${columns}, 1fr)`,
-		gap: '1rem',
-	}
+		gap: "1rem",
+	};
 
 	return (
 		<div className={className}>
 			{/* Filters */}
-			<div style={mergeStyles(styles.flexRow, { gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' })}>
-				<div style={{ flex: 1, minWidth: '200px' }}>
+			<div
+				style={mergeStyles(styles.flexRow, {
+					gap: "1rem",
+					marginBottom: "1.5rem",
+					flexWrap: "wrap",
+				})}
+			>
+				<div style={{ flex: 1, minWidth: "200px" }}>
 					<input
 						type="text"
 						value={searchValue}
 						onChange={handleSearchChange}
 						placeholder="Search models..."
-						style={mergeStyles(styles.input, { width: '100%' })}
+						style={mergeStyles(styles.input, { width: "100%" })}
 					/>
 				</div>
 				<select
-					value={filterCapability || ''}
+					value={filterCapability || ""}
 					onChange={handleCapabilityChange}
-					style={mergeStyles(styles.input, { minWidth: '150px' })}
+					style={mergeStyles(styles.input, { minWidth: "150px" })}
 				>
 					<option value="">All capabilities</option>
 					<option value="chat">Chat</option>
@@ -627,7 +747,11 @@ export function ModelGrid({
 					<option value="tool">Tool Use</option>
 					<option value="embedding">Embedding</option>
 				</select>
-				<span style={mergeStyles(styles.textSm, styles.textMuted, { alignSelf: 'center' })}>
+				<span
+					style={mergeStyles(styles.textSm, styles.textMuted, {
+						alignSelf: "center",
+					})}
+				>
 					{total} models
 				</span>
 			</div>
@@ -655,11 +779,11 @@ export function ModelGrid({
 
 			{/* Loading / Load more */}
 			{isLoading ? (
-				<div style={mergeStyles(styles.flexCenter, { padding: '2rem' })}>
+				<div style={mergeStyles(styles.flexCenter, { padding: "2rem" })}>
 					<span style={styles.spinner} />
 				</div>
 			) : hasMore ? (
-				<div style={mergeStyles(styles.flexCenter, { padding: '1.5rem' })}>
+				<div style={mergeStyles(styles.flexCenter, { padding: "1.5rem" })}>
 					<button
 						type="button"
 						onClick={loadMore}
@@ -672,10 +796,14 @@ export function ModelGrid({
 
 			{/* Empty state */}
 			{!isLoading && models.length === 0 && (
-				<div style={mergeStyles(styles.textCenter, styles.textMuted, { padding: '3rem' })}>
+				<div
+					style={mergeStyles(styles.textCenter, styles.textMuted, {
+						padding: "3rem",
+					})}
+				>
 					No models found matching your criteria
 				</div>
 			)}
 		</div>
-	)
+	);
 }

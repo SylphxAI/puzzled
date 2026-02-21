@@ -34,10 +34,14 @@
  */
 
 // Core recorder
-export { SessionRecorder, getRecorder, resetRecorder } from './recorder'
+export { SessionRecorder, getRecorder, resetRecorder } from "./recorder";
 
 // Detectors
-export { RageClickDetector, DeadClickDetector, ScrollThrashingDetector } from './detectors'
+export {
+	RageClickDetector,
+	DeadClickDetector,
+	ScrollThrashingDetector,
+} from "./detectors";
 
 // Privacy utilities
 export {
@@ -46,7 +50,7 @@ export {
 	sanitizeForLogging,
 	sanitizeUrl,
 	generatePrivacyReport,
-} from './privacy'
+} from "./privacy";
 
 // Types
 export type {
@@ -72,6 +76,6 @@ export type {
 	// State
 	RecorderState,
 	RecorderStatus,
-} from './types'
+} from "./types";
 
-export { DEFAULT_CONFIG } from './types'
+export { DEFAULT_CONFIG } from "./types";

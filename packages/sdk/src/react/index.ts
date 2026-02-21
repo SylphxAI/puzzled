@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * @sylphx/platform-sdk/react
@@ -44,7 +44,7 @@
  */
 
 // Provider
-export { SylphxProvider, type SylphxProviderProps } from './provider'
+export { SylphxProvider, type SylphxProviderProps } from "./provider";
 
 // Config Hooks (Server-First Pattern - config is required)
 export {
@@ -59,7 +59,7 @@ export {
 	type OAuthProviderInfo,
 	type FeatureFlagDefinition,
 	type AppMetadata,
-} from './hooks/use-config'
+} from "./hooks/use-config";
 
 // Auth Context (for advanced usage)
 export {
@@ -68,10 +68,14 @@ export {
 	type AuthState,
 	type SignInOptions,
 	type SignInWithOAuthOptions,
-} from './context'
+} from "./context";
 
 // OAuth Types (from @sylphx/ui - SSOT)
-export { OAuthIcons, OAUTH_PROVIDER_META, type OAuthProvider } from '@sylphx/ui'
+export {
+	OAuthIcons,
+	OAUTH_PROVIDER_META,
+	type OAuthProvider,
+} from "@sylphx/ui";
 
 // Platform Context (for advanced usage)
 export {
@@ -85,7 +89,7 @@ export {
 	type AnalyticsDataPoint,
 	type AnalyticsQueryResult,
 	type ClickIds as PlatformClickIds,
-} from './platform-context'
+} from "./platform-context";
 
 // Services Context (for advanced usage)
 export {
@@ -158,10 +162,10 @@ export {
 	type SecurityRecommendation,
 	type SecurityPriority,
 	type SecurityGrade,
-} from './services-context'
+} from "./services-context";
 
 // Re-export auth types from types.ts
-export type { AuthLoginResult, AuthRegisterResult } from '../types'
+export type { AuthLoginResult, AuthRegisterResult } from "../types";
 
 // Auth Hooks
 export {
@@ -191,10 +195,10 @@ export {
 	type OrganizationMember,
 	type OrganizationInvitation,
 	type OrgRole,
-} from './hooks'
+} from "./hooks";
 
 // Session types (from types.ts - SSOT)
-export { type DeviceSession } from '../types'
+export type { DeviceSession } from "../types";
 
 // Platform Hooks
 export {
@@ -232,7 +236,7 @@ export {
 	type InboxPreferences,
 	// Mobile Push types
 	type MobileDevice,
-} from './platform-hooks'
+} from "./platform-hooks";
 
 // Storage Hooks (separated from auth hooks)
 export {
@@ -242,7 +246,7 @@ export {
 	type UseFileUploadReturn,
 	type UseFileUploadOptions,
 	type StorageFile,
-} from './storage-hooks'
+} from "./storage-hooks";
 
 // AI Hooks
 export {
@@ -260,7 +264,7 @@ export {
 	type UseEmbeddingOptions,
 	type UseModelsOptions,
 	type UseModelsReturn,
-} from './ai-hooks'
+} from "./ai-hooks";
 
 // Monitoring Hooks (Error Tracking)
 export {
@@ -274,7 +278,7 @@ export {
 	type Breadcrumb,
 	type CaptureExceptionOptions,
 	type CaptureMessageOptions,
-} from './monitoring-hooks'
+} from "./monitoring-hooks";
 
 // Background Job Hooks
 export {
@@ -287,7 +291,7 @@ export {
 	type CreateCronInput,
 	type ScheduleJobResult,
 	type CreateCronResult,
-} from './job-hooks'
+} from "./job-hooks";
 
 // Consent Hooks (GDPR/CCPA)
 export {
@@ -306,7 +310,7 @@ export {
 	type ConsentGuardProps,
 	type UseConsentCheckOptions,
 	type UseConsentCheckReturn,
-} from './consent-hooks'
+} from "./consent-hooks";
 
 // Consent-Aware Script Loading (GDPR/CCPA Auto-Block)
 export {
@@ -337,7 +341,7 @@ export {
 	type GoogleConsentState,
 	type GoogleConsentModeConfig,
 	type GoogleConsentModeProps,
-} from './consent-scripts'
+} from "./consent-scripts";
 
 // Feature Flag Hooks (Simple/Polling - React Query based)
 // Use for: Basic flag checks, polling refresh, React Query integration
@@ -354,7 +358,7 @@ export {
 	type FlagOverrides,
 	type UseFeatureFlagOptions,
 	type UseFeatureFlagReturn,
-} from './feature-flag-hooks'
+} from "./feature-flag-hooks";
 
 // Newsletter Hooks (Part of Email Service - Marketing Email)
 // Note: Newsletter is a sub-feature of the Email service
@@ -364,13 +368,13 @@ export {
 	type UseNewsletterReturn,
 	type UseSubscriberFormOptions,
 	type UseSubscriberFormReturn,
-} from './newsletter-hooks'
+} from "./newsletter-hooks";
 
 // Email Hooks
 export {
 	useEmail,
 	type UseEmailReturn,
-} from './email-hooks'
+} from "./email-hooks";
 
 // Webhooks Hooks
 export {
@@ -381,7 +385,7 @@ export {
 	type UseWebhookDeliveriesOptions,
 	type UseWebhookDeliveriesReturn,
 	type UseWebhookStatsReturn,
-} from './webhooks-hooks'
+} from "./webhooks-hooks";
 
 // Engagement Hooks (Streaks, Leaderboards, Achievements)
 export {
@@ -398,7 +402,7 @@ export {
 	type UseSafeStreakReturn,
 	type UseSafeLeaderboardReturn,
 	type UseSafeAchievementsReturn,
-} from './engagement-hooks'
+} from "./engagement-hooks";
 
 // Headless Hooks (for custom UIs)
 export {
@@ -409,7 +413,7 @@ export {
 	type SignInStep,
 	type SignInMethod,
 	type PreSubmitResult,
-} from './hooks/use-sign-in-form'
+} from "./hooks/use-sign-in-form";
 
 export {
 	useSignUpForm,
@@ -420,24 +424,24 @@ export {
 	type SignUpSubmitResult,
 	type AdditionalField,
 	type InviteInfo,
-} from './hooks/use-sign-up-form'
+} from "./hooks/use-sign-up-form";
 
 export {
 	useForgotPasswordForm,
 	type UseForgotPasswordFormOptions,
 	type UseForgotPasswordFormReturn,
 	type ForgotPasswordFormState,
-} from './hooks/use-forgot-password-form'
+} from "./hooks/use-forgot-password-form";
 
 export {
 	useResetPasswordForm,
 	type UseResetPasswordFormOptions,
 	type UseResetPasswordFormReturn,
 	type ResetPasswordFormState,
-} from './hooks/use-reset-password-form'
+} from "./hooks/use-reset-password-form";
 
 // Protected route components
-export { SignedIn, SignedOut, ProtectedRoute, AuthLoading } from './protected'
+export { SignedIn, SignedOut, ProtectedRoute, AuthLoading } from "./protected";
 
 // UI Components
 export {
@@ -472,7 +476,7 @@ export {
 	type CheckoutButtonProps,
 	type ProtectProps,
 	type StandardRole,
-} from './components'
+} from "./components";
 
 // ============================================================================
 // Embedded UI Components (Clerk-like)
@@ -490,10 +494,10 @@ export {
 	conditionalStyle,
 	baseStyles,
 	injectGlobalStyles,
-} from './ui/styles'
+} from "./ui/styles";
 
 // Modal
-export { Modal, useModal, type ModalProps } from './ui/modal'
+export { Modal, useModal, type ModalProps } from "./ui/modal";
 
 // OAuth
 export {
@@ -502,58 +506,58 @@ export {
 	OrDivider,
 	type OAuthButtonProps,
 	type OAuthButtonsProps,
-} from './ui/oauth-buttons'
+} from "./ui/oauth-buttons";
 
 // Sign In Form
 export {
 	SignInForm,
 	type SignInFormProps,
 	// Note: SignInMethod already exported from hooks
-} from './ui/sign-in-form'
+} from "./ui/sign-in-form";
 
 // Sign Up Form
 export {
 	SignUpForm,
 	type SignUpFormProps,
 	// Note: AdditionalField already exported from hooks
-} from './ui/sign-up-form'
+} from "./ui/sign-up-form";
 
 // User Profile
 export {
 	UserProfile,
 	type UserProfileProps,
 	type ProfileSection,
-} from './ui/user-profile'
+} from "./ui/user-profile";
 
 // Security Settings
 export {
 	SecuritySettings,
 	type SecuritySettingsProps,
-} from './ui/security-settings'
+} from "./ui/security-settings";
 
 // Billing Section
 export {
 	BillingSection,
 	type BillingSectionProps,
-} from './ui/billing-section'
+} from "./ui/billing-section";
 
 // Account Section
 export {
 	AccountSection,
 	type AccountSectionProps,
-} from './ui/account-section'
+} from "./ui/account-section";
 
 // Notification Settings
 export {
 	NotificationSettings,
 	type NotificationSettingsProps,
-} from './ui/notification-settings'
+} from "./ui/notification-settings";
 
 // Referral Card
 export {
 	ReferralCard,
 	type ReferralCardProps,
-} from './ui/referral-card'
+} from "./ui/referral-card";
 
 // Model Selector (AI)
 export {
@@ -563,19 +567,19 @@ export {
 	type ModelSelectorProps,
 	type ModelCardProps,
 	type ModelGridProps,
-} from './ui/model-selector'
+} from "./ui/model-selector";
 
 // Cookie Banner (Privacy/GDPR)
 export {
 	CookieBanner,
 	type CookieBannerProps,
-} from './ui/cookie-banner'
+} from "./ui/cookie-banner";
 
 // Consent Preferences (Privacy/GDPR)
 export {
 	ConsentPreferences,
 	type ConsentPreferencesProps,
-} from './ui/consent-preferences'
+} from "./ui/consent-preferences";
 
 // Feature Gates (Feature Flags)
 export {
@@ -587,7 +591,7 @@ export {
 	type FeatureVariantProps,
 	type FeatureValueProps,
 	type FlagDevToolsProps,
-} from './ui/feature-gate'
+} from "./ui/feature-gate";
 
 // File Upload (Storage)
 export {
@@ -597,7 +601,7 @@ export {
 	type FileUploadProps,
 	type ImageUploaderProps,
 	type AvatarUploadProps,
-} from './ui/file-upload'
+} from "./ui/file-upload";
 
 // Push Notifications
 export {
@@ -608,7 +612,7 @@ export {
 	type NotificationBellProps,
 	type NotificationListProps,
 	type Notification,
-} from './ui/push-notifications'
+} from "./ui/push-notifications";
 
 // Error Boundary & Feedback (Monitoring)
 export {
@@ -619,7 +623,7 @@ export {
 	type SylphxErrorBoundaryProps,
 	type ErrorBoundaryFallbackProps,
 	type FeedbackWidgetProps,
-} from './ui/error-boundary'
+} from "./ui/error-boundary";
 
 // AI Chat Interface
 export {
@@ -630,7 +634,7 @@ export {
 	type ChatBubbleProps,
 	type ChatInputProps,
 	type ChatMessage,
-} from './ui/chat-interface'
+} from "./ui/chat-interface";
 
 // Billing Management (Invoice, Payment Methods, Usage)
 export {
@@ -643,7 +647,7 @@ export {
 	type Invoice,
 	type PaymentMethod,
 	type UsageItem,
-} from './ui/billing-management'
+} from "./ui/billing-management";
 
 // Organization Management
 export {
@@ -653,7 +657,7 @@ export {
 	type OrganizationProfileProps,
 	type CreateOrganizationProps,
 	type OrganizationListProps,
-} from './ui/organization-management'
+} from "./ui/organization-management";
 
 // Job Scheduler (Background Jobs)
 export {
@@ -663,7 +667,7 @@ export {
 	type JobSchedulerProps,
 	type JobListProps,
 	type CronBuilderProps,
-} from './ui/job-scheduler'
+} from "./ui/job-scheduler";
 
 // Analytics Dashboard
 export {
@@ -680,7 +684,7 @@ export {
 	type AnalyticsEvent,
 	type AnalyticsStat,
 	type TimeSeriesData,
-} from './ui/analytics-dashboard'
+} from "./ui/analytics-dashboard";
 
 // Webhook Manager
 export {
@@ -690,7 +694,7 @@ export {
 	type WebhookDeliveryLogProps,
 	type Webhook,
 	type WebhookDelivery,
-} from './ui/webhook-manager'
+} from "./ui/webhook-manager";
 
 // API Key Manager
 export {
@@ -698,31 +702,35 @@ export {
 	type APIKeyManagerProps,
 	type APIKey,
 	type NewAPIKey,
-} from './ui/api-key-manager'
+} from "./ui/api-key-manager";
 
 // Newsletter Components (Part of Email Service - Marketing Email)
 export {
 	NewsletterForm,
 	type NewsletterFormProps,
-} from './ui/newsletter-form'
+} from "./ui/newsletter-form";
 
 export {
 	SubscriberPreferences,
 	type SubscriberPreferencesProps,
 	type PreferenceOption,
-} from './ui/subscriber-preferences'
+} from "./ui/subscriber-preferences";
 
 export {
 	UnsubscribeConfirm,
 	type UnsubscribeConfirmProps,
-} from './ui/unsubscribe-confirm'
+} from "./ui/unsubscribe-confirm";
 
 // ============================================================================
 // Security Utilities
 // ============================================================================
 // Safe redirect and URL validation functions to prevent XSS attacks.
 
-export { safeRedirect, isValidRedirectUrl, sanitizeUrl } from './security-utils'
+export {
+	safeRedirect,
+	isValidRedirectUrl,
+	sanitizeUrl,
+} from "./security-utils";
 
 // ============================================================================
 // Key Validation — Single Source of Truth
@@ -756,7 +764,7 @@ export {
 	type KeyValidationResult,
 	type EnvironmentType,
 	type KeyType,
-} from '../key-validation'
+} from "../key-validation";
 
 // ============================================================================
 // Session Replay (SOTA - built on rrweb)
@@ -771,7 +779,7 @@ export {
 	type UseSessionReplayOptions,
 	type UseSessionReplayReturn,
 	type WithSessionReplayProps,
-} from './hooks/use-session-replay'
+} from "./hooks/use-session-replay";
 
 // Session Replay Core (for advanced usage)
 export {
@@ -804,7 +812,7 @@ export {
 	type ErrorCallback,
 	type RecorderState,
 	type RecorderStatus,
-} from '../lib/monitoring'
+} from "../lib/monitoring";
 
 // ============================================================================
 // Web Vitals (Core Web Vitals Monitoring)
@@ -823,7 +831,7 @@ export {
 	type UseWebVitalOptions,
 	type UseWebVitalReturn,
 	type UseWebVitalsAnalyticsOptions,
-} from './hooks/use-web-vitals'
+} from "./hooks/use-web-vitals";
 
 // Web Vitals Core (for advanced usage)
 export {
@@ -842,7 +850,7 @@ export {
 	type WebVitalAttribution,
 	type WebVitalsReport,
 	type WebVitalsConfig,
-} from '../lib/monitoring'
+} from "../lib/monitoring";
 
 // ============================================================================
 // Enhanced Error Tracking (with Session Replay integration)
@@ -856,7 +864,7 @@ export {
 	type UseEnhancedErrorTrackingOptions,
 	type UseEnhancedErrorTrackingReturn,
 	type UseCombinedMonitoringOptions,
-} from './hooks/use-error-tracking'
+} from "./hooks/use-error-tracking";
 
 // Error Tracking Core (for advanced usage)
 export {
@@ -878,7 +886,7 @@ export {
 	type BreadcrumbType,
 	type StackFrame,
 	type ExceptionValue,
-} from '../lib/monitoring'
+} from "../lib/monitoring";
 
 // ============================================================================
 // SOTA Feature Flags (Local Evaluation + SSE Streaming + A/B Testing)
@@ -901,7 +909,7 @@ export {
 	useFlagsReady,
 	type FeatureFlagsProviderProps,
 	type UseFeatureFlagsReturn as UseFlagsReturn,
-} from './hooks/use-flags'
+} from "./hooks/use-flags";
 
 // Feature Flags Core (for advanced usage)
 export {
@@ -936,7 +944,7 @@ export {
 	type ExperimentExposure,
 	type FeatureFlagsConfig,
 	type FlagClientEvent,
-} from '../lib/flags'
+} from "../lib/flags";
 
 // ============================================================================
 // SOTA Analytics (Smart Autocapture + SPA Navigation + Intelligent Naming)
@@ -955,7 +963,7 @@ export {
 	useTimeTracking,
 	type AnalyticsProviderProps,
 	type UseAnalyticsReturn as UseSmartAnalyticsReturn,
-} from './hooks/use-analytics'
+} from "./hooks/use-analytics";
 
 // Analytics Core (for advanced usage)
 export {
@@ -984,7 +992,7 @@ export {
 	type AttributionData,
 	type DeviceContext as AnalyticsDeviceContext,
 	type PageContext as AnalyticsPageContext,
-} from '../lib/analytics'
+} from "../lib/analytics";
 
 // ============================================================================
 // Analytics Destination Routing
@@ -1001,7 +1009,7 @@ export {
 	type UseDestinationRouterOptions,
 	type UseDestinationRouterReturn,
 	type DestinationRouterProviderProps,
-} from './hooks/use-destination-router'
+} from "./hooks/use-destination-router";
 
 // Destination Router Core (for advanced usage)
 export {
@@ -1020,7 +1028,7 @@ export {
 	type DestinationConfig,
 	type DestinationRouterConfig,
 	type DestinationRouter,
-} from '../lib/analytics'
+} from "../lib/analytics";
 
 // ============================================================================
 // SOTA Background Jobs (Workflow DSL + Durable Execution)
@@ -1032,11 +1040,9 @@ export {
 	// Client
 	JobsClient,
 	createJobsClient,
-
 	// Workflow Builder
 	createWorkflow,
 	WorkflowBuilder,
-
 	// Step Builders
 	job,
 	conditional,
@@ -1044,27 +1050,22 @@ export {
 	loop,
 	wait,
 	subworkflow,
-
 	// Step Helpers
 	jobIf,
 	delay,
 	sleepUntil,
 	withRetry,
 	withTimeout,
-
 	// Composition
 	sequence,
 	fanOut,
 	saga,
 	type SagaStep,
-
 	// Validation
 	validateWorkflow,
-
 	// Constants
 	DEFAULT_JOBS_CONFIG,
 	DEFAULT_RETRY_DELAYS,
-
 	// Types
 	type JobStatus as JobsStatus,
 	type JobPriority,
@@ -1092,7 +1093,7 @@ export {
 	type JobEvent,
 	type WorkflowEvent,
 	type JobsConfig,
-} from '../lib/jobs'
+} from "../lib/jobs";
 
 // ============================================================================
 // Real-time Streaming (Redis Streams via SSE)
@@ -1108,7 +1109,7 @@ export {
 	type UseRealtimeOptions,
 	type UseRealtimeReturn,
 	type UseRealtimeChannelsOptions,
-} from './hooks/use-realtime'
+} from "./hooks/use-realtime";
 
 // ============================================================================
 // KV (Key-Value Store)
@@ -1123,4 +1124,4 @@ export {
 	type KvZMember,
 	type UseKvOptions,
 	type UseKvReturn,
-} from './hooks/use-kv'
+} from "./hooks/use-kv";

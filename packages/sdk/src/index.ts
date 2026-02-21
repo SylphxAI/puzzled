@@ -84,7 +84,7 @@ export {
 	withToken,
 	type SylphxConfig,
 	type SylphxConfigInput,
-} from './config'
+} from "./config";
 
 // =============================================================================
 // Debug Utilities
@@ -101,7 +101,7 @@ export {
 	disableDebug,
 	installGlobalDebugHelpers,
 	type DebugCategory,
-} from './debug'
+} from "./debug";
 
 // =============================================================================
 // REST Client
@@ -124,7 +124,7 @@ export {
 	type CircuitBreakerConfig,
 	type DeduplicationConfig,
 	type paths as RestPaths,
-} from './rest-client'
+} from "./rest-client";
 
 // =============================================================================
 // Error Handling
@@ -149,7 +149,7 @@ export {
 	ERROR_CODE_STATUS,
 	type SylphxErrorCode,
 	type SylphxErrorOptions,
-} from './errors'
+} from "./errors";
 
 // =============================================================================
 // Auth Functions
@@ -180,7 +180,7 @@ export {
 	type SessionResult,
 	type TokenIntrospectionResult,
 	type RevokeTokenOptions,
-} from './auth'
+} from "./auth";
 
 // =============================================================================
 // Analytics Functions
@@ -197,7 +197,7 @@ export {
 	type PageInput,
 	type IdentifyInput,
 	type BatchEvent,
-} from './analytics'
+} from "./analytics";
 
 // =============================================================================
 // AI Functions
@@ -224,7 +224,7 @@ export {
 	type AIRateLimitResponse,
 	type AIModelsResponse,
 	type AIModel,
-} from './ai'
+} from "./ai";
 
 // =============================================================================
 // Billing Functions
@@ -246,7 +246,7 @@ export {
 	type PortalResponse,
 	type BalanceResponse,
 	type UsageResponse,
-} from './billing'
+} from "./billing";
 
 // =============================================================================
 // Storage Functions
@@ -265,7 +265,7 @@ export {
 	type FileInfo,
 	type SignedUrlOptions,
 	type SignedUrlResult,
-} from './storage'
+} from "./storage";
 
 // =============================================================================
 // Notifications Functions
@@ -279,7 +279,7 @@ export {
 	updatePushPreferences,
 	type PushSubscription,
 	type PushNotification,
-} from './notifications'
+} from "./notifications";
 
 // Service Worker utilities for push notifications (OneSignal/FCM pattern)
 export {
@@ -288,7 +288,7 @@ export {
 	registerPushServiceWorker,
 	type PushNotificationPayload,
 	type PushServiceWorkerConfig,
-} from './lib/notifications/service-worker'
+} from "./lib/notifications/service-worker";
 
 // =============================================================================
 // Jobs Functions
@@ -308,7 +308,7 @@ export {
 	type JobStatus,
 	type CronInput,
 	type CronSchedule,
-} from './jobs'
+} from "./jobs";
 
 // =============================================================================
 // Feature Flags Functions
@@ -323,7 +323,7 @@ export {
 	getFlagPayload,
 	type FlagResult,
 	type FlagContext,
-} from './flags'
+} from "./flags";
 
 // =============================================================================
 // Webhooks Functions
@@ -341,7 +341,7 @@ export {
 	type WebhookDelivery,
 	type WebhookDeliveriesResult,
 	type WebhookStats,
-} from './webhooks'
+} from "./webhooks";
 
 // =============================================================================
 // Email Functions
@@ -367,7 +367,7 @@ export {
 	type ScheduledEmailStats,
 	type ListScheduledEmailsOptions,
 	type SendResult,
-} from './email'
+} from "./email";
 
 // =============================================================================
 // Consent Functions (GDPR/CCPA)
@@ -394,7 +394,7 @@ export {
 	type GetConsentHistoryInput,
 	type ConsentHistoryEntry,
 	type ConsentHistoryResult,
-} from './consent'
+} from "./consent";
 
 // =============================================================================
 // Referrals Functions
@@ -413,7 +413,7 @@ export {
 	type LeaderboardEntry,
 	type LeaderboardResult,
 	type LeaderboardOptions,
-} from './referrals'
+} from "./referrals";
 
 // =============================================================================
 // Engagement Functions (Streaks, Leaderboards, Achievements)
@@ -461,7 +461,7 @@ export {
 	type CriteriaOperator,
 	type UserAchievement,
 	type AchievementUnlockEvent,
-} from './engagement'
+} from "./engagement";
 
 // =============================================================================
 // Organization Functions
@@ -498,7 +498,7 @@ export {
 	type CreateOrgInput,
 	type UpdateOrgInput,
 	type InviteMemberInput,
-} from './orgs'
+} from "./orgs";
 
 // =============================================================================
 // Secrets Functions
@@ -516,7 +516,7 @@ export {
 	type GetSecretsResult,
 	type ListSecretKeysInput,
 	type SecretKeyInfo,
-} from './secrets'
+} from "./secrets";
 
 // =============================================================================
 // Search Functions
@@ -546,7 +546,7 @@ export {
 	type UpsertDocumentResult,
 	type SearchStatsResult,
 	type TrackClickInput,
-} from './search'
+} from "./search";
 
 // =============================================================================
 // Common Types (re-exported from types.ts)
@@ -585,4 +585,4 @@ export type {
 	PaginatedResponse,
 	SuccessResponse,
 	ErrorResponse,
-} from './types'
+} from "./types";

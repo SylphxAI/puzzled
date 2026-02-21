@@ -5,11 +5,11 @@
  * Represents solving 4 puzzles at once
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function QuadWordsIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -37,10 +37,18 @@ export function QuadWordsIcon({ size = 24, className, ...props }: IconProps) {
 			<rect x="2" y="13" width="9" height="9" rx="1" />
 			<path d="M5.5 13v9M2 16.5h9" strokeWidth="0.75" />
 			{/* Bottom right grid - completed */}
-			<rect x="13" y="13" width="9" height="9" rx="1" fill="currentColor" opacity="0.2" />
+			<rect
+				x="13"
+				y="13"
+				width="9"
+				height="9"
+				rx="1"
+				fill="currentColor"
+				opacity="0.2"
+			/>
 			<path d="M16.5 13v9M13 16.5h9" strokeWidth="0.75" />
 			{/* Checkmark on completed */}
 			<path d="M15 17.5l2 2 4-4" strokeWidth="2" />
 		</svg>
-	)
+	);
 }

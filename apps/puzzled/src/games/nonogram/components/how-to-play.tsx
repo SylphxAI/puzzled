@@ -1,24 +1,24 @@
-'use client'
+"use client";
 
-import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 /**
  * Nonogram How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function NonogramHowToPlay() {
-	const t = useTranslations('games.nonogram')
+	const t = useTranslations("games.nonogram");
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
-				<p className="font-medium">{t('rules.title')}</p>
+				<p className="font-medium">{t("rules.title")}</p>
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t('rules.rule1')}</li>
-					<li>• {t('rules.rule2')}</li>
-					<li>• {t('rules.rule3')}</li>
+					<li>• {t("rules.rule1")}</li>
+					<li>• {t("rules.rule2")}</li>
+					<li>• {t("rules.rule3")}</li>
 				</ul>
 			</div>
 
@@ -78,21 +78,21 @@ export function NonogramHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	)
+	);
 }
 
 function _NonogramHowToPlayTitle() {
-	const t = useTranslations('games.nonogram')
-	return <>{t('howToPlay')}</>
+	const t = useTranslations("games.nonogram");
+	return <>{t("howToPlay")}</>;
 }
 
 function NonogramCell({ filled = false }: { filled?: boolean }) {
 	return (
 		<div
 			className={cn(
-				'flex h-6 w-6 items-center justify-center',
-				filled ? 'bg-foreground' : 'bg-background',
+				"flex h-6 w-6 items-center justify-center",
+				filled ? "bg-foreground" : "bg-background",
 			)}
 		/>
-	)
+	);
 }

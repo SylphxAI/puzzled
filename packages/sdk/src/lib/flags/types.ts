@@ -5,80 +5,89 @@
  * Supports percentage rollouts, user targeting, and A/B testing.
  */
 
-import { FLAGS_CACHE_TTL_MS, FLAGS_STALE_WHILE_REVALIDATE_MS, FLAGS_STORAGE_KEY } from '../../constants'
+import {
+	FLAGS_CACHE_TTL_MS,
+	FLAGS_STALE_WHILE_REVALIDATE_MS,
+	FLAGS_STORAGE_KEY,
+} from "../../constants";
 
 // ==========================================
 // Core Types
 // ==========================================
 
 /** Flag value types */
-export type FlagValue = boolean | string | number | Record<string, unknown> | null
+export type FlagValue =
+	| boolean
+	| string
+	| number
+	| Record<string, unknown>
+	| null;
 
 /** Flag value variant */
 export interface FlagVariant {
-	key: string
-	value: FlagValue
+	key: string;
+	value: FlagValue;
 	/** Percentage weight (0-100) */
-	weight?: number
+	weight?: number;
 	/** Optional payload for A/B tests */
-	payload?: Record<string, unknown>
+	payload?: Record<string, unknown>;
 }
 
 /** Targeting operator */
 export type TargetingOperator =
-	| 'eq'
-	| 'neq'
-	| 'gt'
-	| 'gte'
-	| 'lt'
-	| 'lte'
-	| 'contains'
-	| 'not_contains'
-	| 'starts_with'
-	| 'ends_with'
-	| 'in'
-	| 'not_in'
-	| 'regex'
-	| 'semver_gt'
-	| 'semver_gte'
-	| 'semver_lt'
-	| 'semver_lte'
+	| "eq"
+	| "neq"
+	| "gt"
+	| "gte"
+	| "lt"
+	| "lte"
+	| "contains"
+	| "not_contains"
+	| "starts_with"
+	| "ends_with"
+	| "in"
+	| "not_in"
+	| "regex"
+	| "semver_gt"
+	| "semver_gte"
+	| "semver_lt"
+	| "semver_lte";
 
 /** Targeting condition */
 export interface TargetingCondition {
-	attribute: string
-	operator: TargetingOperator
-	value: unknown
+	attribute: string;
+	operator: TargetingOperator;
+	value: unknown;
 }
 
 /** Targeting rule with conditions */
 export interface TargetingRule {
-	id: string
+	id: string;
 	/** All conditions must match (AND) */
-	conditions: TargetingCondition[]
+	conditions: TargetingCondition[];
 	/** Variant to serve if rule matches */
-	variant: string
+	variant: string;
 	/** Optional percentage rollout within this rule */
-	percentage?: number
+	percentage?: number;
 }
 
 /** Feature flag definition */
 export interface FlagDefinition {
-	key: string
+	key: string;
 	/** Flag is active */
-	enabled: boolean
+	enabled: boolean;
 	/** Default variant when no rules match */
-	defaultVariant: string
+	defaultVariant: string;
 	/** All possible variants */
-	variants: FlagVariant[]
+	variants: FlagVariant[];
 	/** Targeting rules (evaluated in order) */
-	rules: TargetingRule[]
+	rules: TargetingRule[];
 	/** Optional salt for consistent hashing */
-	salt?: string
+	salt?: string;
 	/** Last updated timestamp */
-	updatedAt: number
+	updatedAt: number;
 	/** Optional metadata */
-	metadata?: Record<string, unknown>
+	metadata?: Record<string, unknown>;
 }
 
 // ==========================================
@@ -88,67 +97,71 @@ export interface FlagDefinition {
 /** Context for flag evaluation */
 export interface EvaluationContext {
 	/** User ID for consistent bucketing */
-	userId?: string
+	userId?: string;
 	/** Anonymous ID for pre-auth bucketing */
-	anonymousId?: string
+	anonymousId?: string;
 	/** User email */
-	email?: string
+	email?: string;
 	/** User attributes for targeting */
-	attributes?: Record<string, unknown>
+	attributes?: Record<string, unknown>;
 	/** Device/platform info */
 	device?: {
-		type?: 'mobile' | 'tablet' | 'desktop'
-		os?: string
-		browser?: string
-	}
+		type?: "mobile" | "tablet" | "desktop";
+		os?: string;
+		browser?: string;
+	};
 	/** Geographic info */
 	geo?: {
-		country?: string
-		region?: string
-		city?: string
-	}
+		country?: string;
+		region?: string;
+		city?: string;
+	};
 	/** App version for semver targeting */
-	appVersion?: string
+	appVersion?: string;
 	/** Custom properties */
-	[key: string]: unknown
+	[key: string]: unknown;
 }
 
 /** Evaluation result */
 export interface EvaluationResult<T = FlagValue> {
 	/** The evaluated value */
-	value: T
+	value: T;
 	/** Variant key that was selected */
-	variant: string
+	variant: string;
 	/** Whether the flag is enabled */
-	enabled: boolean
+	enabled: boolean;
 	/** Rule that matched (if any) */
-	matchedRule?: string
+	matchedRule?: string;
 	/** Reason for the evaluation result */
-	reason: EvaluationReason
+	reason: EvaluationReason;
 	/** Flag definition version */
-	version?: number
+	version?: number;
 }
 
 /** Why a particular value was returned */
 export type EvaluationReason =
-	| 'flag_disabled'
-	| 'flag_not_found'
-	| 'default'
-	| 'default_value'
-	| 'rule_match'
-	| 'percentage_rollout'
-	| 'targeting_match'
-	| 'error'
-	| 'cache_hit'
-	| 'stale'
+	| "flag_disabled"
+	| "flag_not_found"
+	| "default"
+	| "default_value"
+	| "rule_match"
+	| "percentage_rollout"
+	| "targeting_match"
+	| "error"
+	| "cache_hit"
+	| "stale"
 	// Extended reason with debug info
-	| { rolloutBucket?: number; [key: string]: unknown }
+	| { rolloutBucket?: number; [key: string]: unknown };
 
 /** Evaluation error */
 export interface EvaluationError {
-	code: 'FLAG_NOT_FOUND' | 'INVALID_CONTEXT' | 'EVALUATION_ERROR' | 'NETWORK_ERROR'
-	message: string
-	flagKey?: string
+	code:
+		| "FLAG_NOT_FOUND"
+		| "INVALID_CONTEXT"
+		| "EVALUATION_ERROR"
+		| "NETWORK_ERROR";
+	message: string;
+	flagKey?: string;
 }
 
 // ==========================================
@@ -157,33 +170,33 @@ export interface EvaluationError {
 
 /** Experiment definition */
 export interface Experiment {
-	id: string
-	key: string
-	name: string
+	id: string;
+	key: string;
+	name: string;
 	/** Feature flag controlling this experiment */
-	flagKey: string
+	flagKey: string;
 	/** Hypothesis being tested */
-	hypothesis?: string
+	hypothesis?: string;
 	/** Metric keys to track */
-	metrics: string[]
+	metrics: string[];
 	/** Experiment status */
-	status: 'draft' | 'running' | 'paused' | 'concluded'
+	status: "draft" | "running" | "paused" | "concluded";
 	/** Start/end dates */
-	startedAt?: number
-	endedAt?: number
+	startedAt?: number;
+	endedAt?: number;
 	/** Winning variant (if concluded) */
-	winner?: string
+	winner?: string;
 }
 
 /** Experiment exposure event */
 export interface ExperimentExposure {
-	experimentId: string
-	experimentKey: string
-	variant: string
-	userId?: string
-	anonymousId?: string
-	timestamp: number
-	context?: Record<string, unknown>
+	experimentId: string;
+	experimentKey: string;
+	variant: string;
+	userId?: string;
+	anonymousId?: string;
+	timestamp: number;
+	context?: Record<string, unknown>;
 }
 
 // ==========================================
@@ -191,41 +204,46 @@ export interface ExperimentExposure {
 // ==========================================
 
 /** SSE message types */
-export type StreamMessageType = 'flags' | 'flag_update' | 'flag_delete' | 'ping' | 'error'
+export type StreamMessageType =
+	| "flags"
+	| "flag_update"
+	| "flag_delete"
+	| "ping"
+	| "error";
 
 /** SSE message */
 export interface StreamMessage {
-	type: StreamMessageType
-	data: unknown
-	timestamp: number
+	type: StreamMessageType;
+	data: unknown;
+	timestamp: number;
 }
 
 /** Flag update message */
 export interface FlagUpdateMessage {
-	type: 'flag_update'
-	data: FlagDefinition
-	timestamp: number
+	type: "flag_update";
+	data: FlagDefinition;
+	timestamp: number;
 }
 
 /** Flag delete message */
 export interface FlagDeleteMessage {
-	type: 'flag_delete'
-	data: { key: string }
-	timestamp: number
+	type: "flag_delete";
+	data: { key: string };
+	timestamp: number;
 }
 
 /** Initial flags message */
 export interface FlagsMessage {
-	type: 'flags'
-	data: FlagDefinition[]
-	timestamp: number
+	type: "flags";
+	data: FlagDefinition[];
+	timestamp: number;
 }
 
 /** Error message from stream */
 export interface ErrorMessage {
-	type: 'error'
-	data: EvaluationError
-	timestamp: number
+	type: "error";
+	data: EvaluationError;
+	timestamp: number;
 }
 
 // ==========================================
@@ -235,41 +253,48 @@ export interface ErrorMessage {
 /** Feature flags client configuration */
 export interface FeatureFlagsConfig {
 	/** API endpoint for fetching flags */
-	apiEndpoint?: string
+	apiEndpoint?: string;
 	/** SSE endpoint for streaming updates */
-	streamEndpoint?: string
+	streamEndpoint?: string;
 	/** Environment key */
-	environmentKey?: string
+	environmentKey?: string;
 	/** Cache TTL in ms (default: 5 minutes) */
-	cacheTtl?: number
+	cacheTtl?: number;
 	/** Stale-while-revalidate window in ms (default: 1 minute) */
-	staleWhileRevalidate?: number
+	staleWhileRevalidate?: number;
 	/** Enable offline support */
-	offlineSupport?: boolean
+	offlineSupport?: boolean;
 	/** localStorage key for persistence */
-	storageKey?: string
+	storageKey?: string;
 	/** Enable debug logging */
-	debug?: boolean
+	debug?: boolean;
 	/** Callback when flags are updated */
-	onFlagsUpdated?: (flags: FlagDefinition[]) => void
+	onFlagsUpdated?: (flags: FlagDefinition[]) => void;
 	/** Callback when evaluation happens */
-	onEvaluation?: (flagKey: string, result: EvaluationResult) => void
+	onEvaluation?: (flagKey: string, result: EvaluationResult) => void;
 	/** Callback for experiment exposures */
-	onExposure?: (exposure: ExperimentExposure) => void
+	onExposure?: (exposure: ExperimentExposure) => void;
 	/** Initial context */
-	initialContext?: EvaluationContext
+	initialContext?: EvaluationContext;
 }
 
 /** Default configuration */
 export const DEFAULT_FLAGS_CONFIG: Required<
-	Pick<FeatureFlagsConfig, 'cacheTtl' | 'staleWhileRevalidate' | 'offlineSupport' | 'storageKey' | 'debug'>
+	Pick<
+		FeatureFlagsConfig,
+		| "cacheTtl"
+		| "staleWhileRevalidate"
+		| "offlineSupport"
+		| "storageKey"
+		| "debug"
+	>
 > = {
 	cacheTtl: FLAGS_CACHE_TTL_MS,
 	staleWhileRevalidate: FLAGS_STALE_WHILE_REVALIDATE_MS,
 	offlineSupport: true,
 	storageKey: FLAGS_STORAGE_KEY,
 	debug: false,
-}
+};
 
 // ==========================================
 // Event Types
@@ -277,8 +302,8 @@ export const DEFAULT_FLAGS_CONFIG: Required<
 
 /** Client events */
 export type FlagClientEvent =
-	| { type: 'ready'; flags: FlagDefinition[] }
-	| { type: 'updated'; flags: FlagDefinition[] }
-	| { type: 'error'; error: EvaluationError }
-	| { type: 'stale' }
-	| { type: 'reconnected' }
+	| { type: "ready"; flags: FlagDefinition[] }
+	| { type: "updated"; flags: FlagDefinition[] }
+	| { type: "error"; error: EvaluationError }
+	| { type: "stale" }
+	| { type: "reconnected" };

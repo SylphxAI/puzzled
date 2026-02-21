@@ -1,33 +1,37 @@
-'use client'
+"use client";
 
-import { cn } from '@/lib/utils'
-import { getNextRankThreshold, RANK_THRESHOLDS, type SpellingBeeRank } from '../types'
+import { cn } from "@/lib/utils";
+import {
+	RANK_THRESHOLDS,
+	type SpellingBeeRank,
+	getNextRankThreshold,
+} from "../types";
 
 type RankDisplayProps = {
-	rank: SpellingBeeRank
-	score: number
-	maxScore: number
-}
+	rank: SpellingBeeRank;
+	score: number;
+	maxScore: number;
+};
 
 const RANK_LABELS: Record<SpellingBeeRank, string> = {
-	beginner: 'Beginner',
-	'good-start': 'Good Start',
-	'moving-up': 'Moving Up',
-	good: 'Good',
-	solid: 'Solid',
-	nice: 'Nice',
-	great: 'Great',
-	amazing: 'Amazing',
-	genius: 'Genius',
-	'queen-bee': 'Queen Bee 👑',
-}
+	beginner: "Beginner",
+	"good-start": "Good Start",
+	"moving-up": "Moving Up",
+	good: "Good",
+	solid: "Solid",
+	nice: "Nice",
+	great: "Great",
+	amazing: "Amazing",
+	genius: "Genius",
+	"queen-bee": "Queen Bee 👑",
+};
 
 /**
  * Display current rank and progress bar
  */
 export function RankDisplay({ rank, score, maxScore }: RankDisplayProps) {
-	const progressPercent = maxScore > 0 ? (score / maxScore) * 100 : 0
-	const nextRank = getNextRankThreshold(score, maxScore)
+	const progressPercent = maxScore > 0 ? (score / maxScore) * 100 : 0;
+	const nextRank = getNextRankThreshold(score, maxScore);
 
 	return (
 		<div className="w-full space-y-2">
@@ -35,9 +39,9 @@ export function RankDisplay({ rank, score, maxScore }: RankDisplayProps) {
 			<div className="flex items-center justify-between">
 				<span
 					className={cn(
-						'text-sm font-semibold',
-						rank === 'queen-bee' && 'text-amber-500',
-						rank === 'genius' && 'text-purple-500',
+						"text-sm font-semibold",
+						rank === "queen-bee" && "text-amber-500",
+						rank === "genius" && "text-purple-500",
 					)}
 				>
 					{RANK_LABELS[rank]}
@@ -50,8 +54,10 @@ export function RankDisplay({ rank, score, maxScore }: RankDisplayProps) {
 				{/* Progress fill */}
 				<div
 					className={cn(
-						'absolute inset-y-0 left-0 transition-all duration-500',
-						rank === 'queen-bee' ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-primary',
+						"absolute inset-y-0 left-0 transition-all duration-500",
+						rank === "queen-bee"
+							? "bg-gradient-to-r from-amber-400 to-amber-500"
+							: "bg-primary",
 					)}
 					style={{ width: `${Math.min(progressPercent, 100)}%` }}
 				/>
@@ -69,10 +75,11 @@ export function RankDisplay({ rank, score, maxScore }: RankDisplayProps) {
 			{/* Next rank info */}
 			{nextRank && (
 				<p className="text-xs text-muted-foreground">
-					{nextRank.pointsNeeded} more point{nextRank.pointsNeeded !== 1 ? 's' : ''} to{' '}
+					{nextRank.pointsNeeded} more point
+					{nextRank.pointsNeeded !== 1 ? "s" : ""} to{" "}
 					{RANK_LABELS[nextRank.rank]}
 				</p>
 			)}
 		</div>
-	)
+	);
 }

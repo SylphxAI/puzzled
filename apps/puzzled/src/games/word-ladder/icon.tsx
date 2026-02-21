@@ -5,11 +5,11 @@
  * Represents changing one letter at a time
  */
 
-import type { SVGProps } from 'react'
+import type { SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number
-}
+	size?: number;
+};
 
 export function WordLadderIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -33,12 +33,20 @@ export function WordLadderIcon({ size = 24, className, ...props }: IconProps) {
 			<path d="M12 6.5v3" />
 			<path d="M10 8l2 2 2-2" fill="none" />
 			{/* Middle word - highlighted */}
-			<rect x="5" y="10" width="14" height="4" rx="1" fill="currentColor" opacity="0.3" />
+			<rect
+				x="5"
+				y="10"
+				width="14"
+				height="4"
+				rx="1"
+				fill="currentColor"
+				opacity="0.3"
+			/>
 			{/* Arrow down */}
 			<path d="M12 14.5v3" />
 			<path d="M10 16l2 2 2-2" fill="none" />
 			{/* Bottom word */}
 			<rect x="5" y="18" width="14" height="4" rx="1" />
 		</svg>
-	)
+	);
 }

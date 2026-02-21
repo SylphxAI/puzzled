@@ -1,30 +1,30 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { SecuritySettingsContent } from './security-client'
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { redirect } from "next/navigation";
+import { SecuritySettingsContent } from "./security-client";
 
 type Props = {
-	params: Promise<{ locale: string }>
-}
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'settings' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "settings" });
 
 	return {
-		title: t('security.title'),
-	}
+		title: t("security.title"),
+	};
 }
 
 export default async function SecuritySettingsPage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/security`)
+		redirect(`/${locale}/login?callbackUrl=/settings/security`);
 	}
 
-	return <SecuritySettingsContent />
+	return <SecuritySettingsContent />;
 }

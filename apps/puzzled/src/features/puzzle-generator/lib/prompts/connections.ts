@@ -32,7 +32,7 @@ RULES:
    - Things with a property ("Things that are red")
    - Pop culture (Movie titles, Band names with a theme)
    - Wordplay (Homophones, words containing another word)
-   - Association (Things found in a kitchen)`
+   - Association (Things found in a kitchen)`;
 
 export const CONNECTIONS_USER_PROMPT = `Generate a Connections puzzle for today.
 
@@ -70,7 +70,7 @@ Requirements:
 - Make level 3 (purple) particularly clever or unexpected
 - Category names should be descriptive but not give away the answer too easily
 
-Return ONLY the JSON, no explanation.`
+Return ONLY the JSON, no explanation.`;
 
 const _CONNECTIONS_THEMED_PROMPT = (
 	theme: string,
@@ -78,4 +78,4 @@ const _CONNECTIONS_THEMED_PROMPT = (
 
 At least one category should relate to this theme, but don't make it too obvious.
 
-Return ONLY valid JSON in the same format as before.`
+Return ONLY valid JSON in the same format as before.`;

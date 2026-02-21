@@ -1,45 +1,45 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getTranslations, setRequestLocale } from 'next-intl/server'
-import type { ReactNode } from 'react'
-import { Header } from '@/shared/components/layout'
+import { Header } from "@/shared/components/layout";
+import { currentUser } from "@sylphx/sdk/nextjs";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 
 type Props = {
-	children: ReactNode
-	params: Promise<{ locale: string }>
-}
+	children: ReactNode;
+	params: Promise<{ locale: string }>;
+};
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'common' })
+	const { locale } = await params;
+	const t = await getTranslations({ locale, namespace: "common" });
 
 	return {
-		title: t('settings'),
-	}
+		title: t("settings"),
+	};
 }
 
 const settingsLinks = [
-	{ href: '/settings', label: 'Overview' },
-	{ href: '/settings/profile', label: 'Profile' },
-	{ href: '/settings/account', label: 'Account' },
-	{ href: '/settings/preferences', label: 'Preferences' },
-	{ href: '/settings/notifications', label: 'Notifications' },
-	{ href: '/settings/security', label: 'Security' },
-	{ href: '/settings/subscription', label: 'Subscription' },
-	{ href: '/settings/referrals', label: 'Referrals' },
-	{ href: '/settings/privacy', label: 'Privacy' },
-]
+	{ href: "/settings", label: "Overview" },
+	{ href: "/settings/profile", label: "Profile" },
+	{ href: "/settings/account", label: "Account" },
+	{ href: "/settings/preferences", label: "Preferences" },
+	{ href: "/settings/notifications", label: "Notifications" },
+	{ href: "/settings/security", label: "Security" },
+	{ href: "/settings/subscription", label: "Subscription" },
+	{ href: "/settings/referrals", label: "Referrals" },
+	{ href: "/settings/privacy", label: "Privacy" },
+];
 
 export default async function SettingsLayout({ children, params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+	const { locale } = await params;
+	setRequestLocale(locale);
 
-	const user = await currentUser()
+	const user = await currentUser();
 
 	// Redirect to login if not authenticated
 	if (!user) {
-		redirect(`/${locale}/login`)
+		redirect(`/${locale}/login`);
 	}
 
 	return (
@@ -49,7 +49,9 @@ export default async function SettingsLayout({ children, params }: Props) {
 				<div className="mx-auto w-full max-w-6xl">
 					<div className="mb-6">
 						<h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-						<p className="text-muted-foreground">Manage your account settings and preferences</p>
+						<p className="text-muted-foreground">
+							Manage your account settings and preferences
+						</p>
 					</div>
 
 					<div className="flex flex-col gap-6 md:flex-row md:gap-8">
@@ -70,10 +72,12 @@ export default async function SettingsLayout({ children, params }: Props) {
 						</nav>
 
 						{/* Main Content Area */}
-						<div className="w-full flex-1 space-y-6 md:max-w-[800px]">{children}</div>
+						<div className="w-full flex-1 space-y-6 md:max-w-[800px]">
+							{children}
+						</div>
 					</div>
 				</div>
 			</main>
 		</>
-	)
+	);
 }

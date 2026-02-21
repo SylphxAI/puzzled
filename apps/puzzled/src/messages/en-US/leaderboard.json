@@ -1,15 +1,15 @@
 {
-  "streak": "Streak",
-  "score": "Score",
-  "wins": "Wins",
-  "wantToCompete": "Want to compete?",
-  "premiumPrompt": "Sign in and upgrade to Premium to appear on leaderboards!",
-  "period": {
-    "today": "Today",
-    "week": "This Week",
-    "all": "All Time"
-  },
-  "noData": "No players yet. Be the first!",
-  "yourRank": "Your Rank",
-  "topPlayers": "Top Players"
+	"streak": "Streak",
+	"score": "Score",
+	"wins": "Wins",
+	"wantToCompete": "Want to compete?",
+	"premiumPrompt": "Sign in and upgrade to Premium to appear on leaderboards!",
+	"period": {
+		"today": "Today",
+		"week": "This Week",
+		"all": "All Time"
+	},
+	"noData": "No players yet. Be the first!",
+	"yourRank": "Your Rank",
+	"topPlayers": "Top Players"
 }
