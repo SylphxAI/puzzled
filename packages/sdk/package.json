@@ -24,14 +24,20 @@
 	},
 	"main": "./dist/index.js",
 	"types": "./src/index.ts",
-	"files": ["dist", "src", "ADR.md"],
+	"files": ["dist", "src", "ADR.md", "README.md"],
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
+		"prepare": "tsup",
+		"prepublishOnly": "tsup",
 		"generate:types": "openapi-typescript https://sylphx.com/api/openapi.json -o src/generated/api.d.ts",
 		"generate:types:local": "openapi-typescript http://localhost:3002/api/openapi.json -o src/generated/api.d.ts"
+	},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
 	},
 	"peerDependencies": {
 		"@tanstack/react-query": ">=5",
