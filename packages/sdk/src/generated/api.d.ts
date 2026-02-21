@@ -6385,6 +6385,574 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/logs": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Query application logs
+		 * @description Query stored application logs with filtering by level, time range, and search.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					level?: "debug" | "info" | "warn" | "error" | "fatal";
+					since?: string;
+					until?: string;
+					limit?: number;
+					search?: string;
+					traceId?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": {
+							logs: {
+								id: string;
+								level: "debug" | "info" | "warn" | "error" | "fatal";
+								message: string;
+								timestamp: string;
+								metadata: Record<string, unknown> | null;
+								traceId: string | null;
+								source: string | null;
+								userId: string | null;
+							}[];
+							total: number;
+						};
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Ingest log entries
+		 * @description Ingest one or more application log entries.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": {
+						logs: {
+							level: "debug" | "info" | "warn" | "error" | "fatal";
+							message: string;
+							timestamp?: string;
+							metadata?: Record<string, unknown>;
+							traceId?: string;
+							source?: string;
+							userId?: string;
+						}[];
+					};
+				};
+			};
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: { "application/json": { ingested: number } };
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/trigger/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Trigger a deployment
+		 * @description Trigger a new deployment for the specified environment.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": { branch?: string };
+				};
+			};
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": { deploymentId: string; message: string };
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				503: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/status/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		/**
+		 * Get deployment status
+		 * @description Get the current deployment status of an environment.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": {
+							status:
+								| "running"
+								| "stopped"
+								| "unhealthy"
+								| "deploying"
+								| "unknown";
+							commitSha: string | null;
+							branch: string;
+							deployedAt: string | null;
+							url: string | null;
+						};
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/history/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		/**
+		 * List deployment history
+		 * @description List past deployments for an environment, most recent first.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": {
+							deployments: {
+								id: string;
+								status:
+									| "queued"
+									| "running"
+									| "building"
+									| "success"
+									| "failed"
+									| "cancelled";
+								commitSha: string | null;
+								message: string | null;
+								triggeredBy: string | null;
+								createdAt: string;
+								duration: number | null;
+							}[];
+						};
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/rollback/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * Rollback deployment
+		 * @description Rollback to a previous deployment.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: {
+				content: {
+					"application/json": { deploymentId?: string };
+				};
+			};
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": { deploymentId: string; message: string };
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/envvars/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		/**
+		 * List environment variables
+		 * @description List all environment variables for a deployment environment.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": {
+							vars: { key: string; value: string }[];
+						};
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Set environment variable
+		 * @description Set or update an environment variable.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": { key: string; value: string; secret?: boolean };
+				};
+			};
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: { "application/json": { success: boolean } };
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/envvars/{envId}/{key}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string; key: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Delete environment variable
+		 * @description Delete an environment variable from a deployment environment.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string; key: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: { "application/json": { success: boolean } };
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/domains/{envId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string };
+			cookie?: never;
+		};
+		/**
+		 * List custom domains
+		 * @description List all custom domains configured for a deployment environment.
+		 */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": {
+							domains: { domain: string; primary?: boolean }[];
+						};
+					};
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		put?: never;
+		/**
+		 * Add custom domain
+		 * @description Add a custom domain to a deployment environment.
+		 */
+		post: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string };
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					"application/json": { domain: string };
+				};
+			};
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: { "application/json": { success: boolean } };
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/deploy/domains/{envId}/{domain}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: { envId: string; domain: string };
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		/**
+		 * Remove custom domain
+		 * @description Remove a custom domain from a deployment environment.
+		 */
+		delete: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: { envId: string; domain: string };
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				200: {
+					headers: { [name: string]: unknown };
+					content: { "application/json": { success: boolean } };
+				};
+				401: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+				404: {
+					headers: { [name: string]: unknown };
+					content: {
+						"application/json": components["schemas"]["ErrorResponse"];
+					};
+				};
+			};
+		};
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 }
 export type webhooks = Record<string, never>;
 export interface components {

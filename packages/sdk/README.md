@@ -1,6 +1,13 @@
 # @sylphx/sdk
 
+[![npm version](https://img.shields.io/npm/v/@sylphx/sdk.svg?style=flat)](https://www.npmjs.com/package/@sylphx/sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![docs](https://img.shields.io/badge/docs-sylphx.com%2Fdocs-green)](https://sylphx.com/docs)
+
 Complete SDK for integrating apps with the Sylphx Platform. Get auth, billing, analytics, AI, storage, and more with minimal setup.
+
+📖 **Full documentation:** [sylphx.com/docs](https://sylphx.com/docs)
 
 ## Installation
 

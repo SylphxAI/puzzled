@@ -3,7 +3,7 @@
  *
  * ## Architecture Decision (ADR-001)
  *
- * We use only 4 entry points, separated by peer dependency requirements:
+ * We use only 5 entry points, separated by peer dependency requirements:
  *
  * | Entry Point | Peer Dependencies | Why Separate |
  * |-------------|-------------------|--------------|
@@ -11,6 +11,7 @@
  * | react/index.ts | react, react-dom | Has 'use client', needs React |
  * | server/index.ts | jose | Uses Node.js crypto APIs |
  * | nextjs/index.ts | next | Uses next/headers, next/server |
+ * | web-analytics.ts | None | Web Analytics tracker (standalone) |
  *
  * Multiple entry points are NOT needed for tree-shaking.
  * Modern bundlers (Vite, esbuild, webpack 5) tree-shake unused exports
@@ -45,11 +46,11 @@ export default defineConfig([
 	// Tree-shaking handled by consumer's bundler, not by separate entry points.
 	{
 		entry: ["src/index.ts"],
-		format: ["esm"],
-		// dts: false - We use "source types" pattern instead of .d.ts generation
-		// TypeScript consumers get types from source files via package.json "types" field
-		// This provides perfect type fidelity without dts generation issues
-		dts: false,
+		format: ["esm", "cjs"],
+		outExtension({ format }) {
+			return { js: format === "esm" ? ".mjs" : ".js" };
+		},
+		dts: true,
 		splitting: false,
 		sourcemap: true,
 		clean: true,
@@ -64,8 +65,11 @@ export default defineConfig([
 	// Requires jose for JWT verification. Server-only, never expose to browser.
 	{
 		entry: { "server/index": "src/server/index.ts" },
-		format: ["esm"],
-		dts: false,
+		format: ["esm", "cjs"],
+		outExtension({ format }) {
+			return { js: format === "esm" ? ".mjs" : ".js" };
+		},
+		dts: true,
 		splitting: false,
 		sourcemap: true,
 		external: PEER_EXTERNALS,
@@ -78,8 +82,11 @@ export default defineConfig([
 	// Requires next for middleware, cookies, server components.
 	{
 		entry: { "nextjs/index": "src/nextjs/index.ts" },
-		format: ["esm"],
-		dts: false,
+		format: ["esm", "cjs"],
+		outExtension({ format }) {
+			return { js: format === "esm" ? ".mjs" : ".js" };
+		},
+		dts: true,
 		splitting: false,
 		sourcemap: true,
 		external: PEER_EXTERNALS,
@@ -93,8 +100,11 @@ export default defineConfig([
 	// This is the largest entry point due to UI components.
 	{
 		entry: { "react/index": "src/react/index.ts" },
-		format: ["esm"],
-		dts: false,
+		format: ["esm", "cjs"],
+		outExtension({ format }) {
+			return { js: format === "esm" ? ".mjs" : ".js" };
+		},
+		dts: true,
 		splitting: false,
 		sourcemap: true,
 		external: [
@@ -106,5 +116,21 @@ export default defineConfig([
 		],
 		// Bundle all SDK dependencies
 		noExternal: ["rrweb", "@sylphx/ui"],
+	},
+
+	// ==========================================================================
+	// Web Analytics Entry Point - Standalone Tracker
+	// ==========================================================================
+	// Lightweight analytics tracker, no React dependency.
+	{
+		entry: { "web-analytics": "src/web-analytics.ts" },
+		format: ["esm", "cjs"],
+		outExtension({ format }) {
+			return { js: format === "esm" ? ".mjs" : ".js" };
+		},
+		dts: true,
+		splitting: false,
+		sourcemap: true,
+		external: PEER_EXTERNALS,
 	},
 ]);
