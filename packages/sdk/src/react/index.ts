@@ -1125,3 +1125,27 @@ export {
 	type UseKvOptions,
 	type UseKvReturn,
 } from "./hooks/use-kv";
+
+// ============================================================================
+// Web Analytics
+// ============================================================================
+// Drop-in page-view tracking component + hook. Works with Next.js App Router,
+// Pages Router, and any React SPA.
+
+export {
+	WebAnalytics,
+	useWebAnalytics,
+	type WebAnalyticsProps,
+	type UseWebAnalyticsReturn,
+} from "./components/web-analytics";
+
+// ============================================================================
+// Speed Insights (Core Web Vitals)
+// ============================================================================
+// Automatic LCP, CLS, INP, FCP, TTFB collection and reporting.
+
+export {
+	SpeedInsights,
+	type SpeedInsightsProps,
+	type VitalReportPayload,
+} from "./components/speed-insights";
