@@ -37,6 +37,7 @@
  * | Email | `sendEmail`, `sendTemplatedEmail` | Email sending |
  * | Notifications | `registerPush`, `sendPush` | Push notifications |
  * | Engagement | `getStreak`, `unlockAchievement` | Gamification |
+ * | Monitoring | `captureException`, `captureMessage` | Error tracking |
  * | Orgs | `createOrganization`, `inviteOrganizationMember` | Multi-tenancy |
  *
  * ## Usage
@@ -547,6 +548,21 @@ export {
 	type SearchStatsResult,
 	type TrackClickInput,
 } from "./search";
+
+// =============================================================================
+// Monitoring Functions (Server-side Error Tracking)
+// =============================================================================
+
+export {
+	captureException,
+	captureMessage,
+	type CaptureExceptionRequest,
+	type CaptureMessageRequest,
+	type MonitoringExceptionValue,
+	type MonitoringBreadcrumb,
+	type MonitoringErrorLevel,
+	type MonitoringCaptureResult,
+} from "./monitoring";
 
 // =============================================================================
 // Common Types (re-exported from types.ts)
