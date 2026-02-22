@@ -27,6 +27,9 @@
  * | Auth | `signIn`, `signUp`, `signOut` | Authentication |
  * | Analytics | `track`, `page`, `identify` | Event tracking |
  * | AI | `chat`, `embed`, `complete` | AI/LLM operations |
+ * | Database | `getDatabaseConnectionString`, `getDatabaseStatus` | Provisioned PostgreSQL |
+ * | KV | `kvSet`, `kvGet`, `kvRateLimit` | Redis key-value store |
+ * | Realtime | `realtimeEmit`, `getRealtimeHistory` | Redis Streams pub/sub |
  * | Billing | `getPlans`, `createCheckout` | Subscriptions |
  * | Storage | `uploadFile`, `getFileUrl` | File storage |
  * | Jobs | `scheduleJob`, `createCron` | Background jobs |
@@ -38,6 +41,7 @@
  * | Notifications | `registerPush`, `sendPush` | Push notifications |
  * | Engagement | `getStreak`, `unlockAchievement` | Gamification |
  * | Monitoring | `captureException`, `captureMessage` | Error tracking |
+ * | Deploy | `triggerDeploy`, `getDeployStatus` | CI/CD deployments |
  * | Orgs | `createOrganization`, `inviteOrganizationMember` | Multi-tenancy |
  *
  * ## Usage
@@ -550,18 +554,114 @@ export {
 } from "./search";
 
 // =============================================================================
-// Monitoring Functions (Server-side Error Tracking)
+// Database Functions (Platform-provisioned PostgreSQL)
+// =============================================================================
+
+export {
+	getDatabaseConnectionString,
+	getDatabaseStatus,
+	type DatabaseConnectionInfo,
+	type DatabaseStatusInfo,
+	type DatabaseStatus,
+} from "./database";
+
+// =============================================================================
+// KV Functions (Redis key-value store)
+// =============================================================================
+
+export {
+	kvSet,
+	kvGet,
+	kvDelete,
+	kvExists,
+	kvExpire,
+	kvIncr,
+	kvMset,
+	kvMget,
+	kvHset,
+	kvHget,
+	kvHgetall,
+	kvLpush,
+	kvLrange,
+	kvZadd,
+	kvZrange,
+	kvRateLimit,
+	type KvSetRequest,
+	type KvSetOptions,
+	type KvMsetRequest,
+	type KvMgetRequest,
+	type KvHsetRequest,
+	type KvHgetRequest,
+	type KvHgetallRequest,
+	type KvLpushRequest,
+	type KvLrangeRequest,
+	type KvZaddRequest,
+	type KvZrangeRequest,
+	type KvIncrRequest,
+	type KvExpireRequest,
+	type KvRateLimitRequest,
+	type KvRateLimitResult,
+	type KvZMember,
+} from "./kv";
+
+// =============================================================================
+// Realtime Functions (Redis Streams pub/sub)
+// =============================================================================
+
+export {
+	realtimeEmit,
+	getRealtimeHistory,
+	type StreamMessage,
+	type RealtimeEmitRequest,
+	type RealtimeEmitResponse,
+	type RealtimeHistoryRequest,
+	type RealtimeHistoryResponse,
+} from "./realtime";
+
+// =============================================================================
+// Deploy Functions (CI/CD)
+// =============================================================================
+
+export {
+	triggerDeploy,
+	getDeployStatus,
+	getDeployHistory,
+	rollbackDeploy,
+	getBuildLogHistory,
+	listEnvVars,
+	setEnvVar,
+	deleteEnvVar,
+	listCustomDomains,
+	addCustomDomain,
+	removeCustomDomain,
+	type DeployStatus,
+	type DeployInfo,
+	type TriggerDeployRequest,
+	type RollbackDeployRequest,
+	type EnvVar,
+	type SetEnvVarRequest,
+	type CustomDomain,
+	type AddDomainRequest,
+	type DeployHistoryResponse,
+	type BuildLog,
+	type BuildLogHistoryResponse,
+} from "./deploy";
+
+// =============================================================================
+// Monitoring Functions (Error Tracking)
 // =============================================================================
 
 export {
 	captureException,
+	captureExceptionRaw,
 	captureMessage,
 	type CaptureExceptionRequest,
 	type CaptureMessageRequest,
-	type MonitoringExceptionValue,
-	type MonitoringBreadcrumb,
-	type MonitoringErrorLevel,
-	type MonitoringCaptureResult,
+	type ExceptionFrame,
+	type ExceptionValue,
+	type Breadcrumb,
+	type MonitoringSeverity,
+	type MonitoringResponse,
 } from "./monitoring";
 
 // =============================================================================

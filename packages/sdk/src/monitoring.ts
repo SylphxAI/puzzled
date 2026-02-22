@@ -1,192 +1,254 @@
 /**
- * Monitoring Functions — Server-Side Error Tracking
+ * Monitoring Functions
  *
- * Capture exceptions and log messages from server-side code.
+ * Pure functions for error tracking and log capture.
+ * Works client-side and server-side.
  *
- * Types are derived from the OpenAPI spec (generated/api.d.ts).
- * Run `bun run generate:types:local` to regenerate after API changes.
+ * ## Industry Patterns
+ * - **Error grouping via fingerprinting** — Same error only billed once (Sentry pattern)
+ * - **Adaptive sampling** — Automatic sample rate adjustment based on quota usage
+ * - **Breadcrumb trails** — Contextual trail leading to errors
  *
  * @example
- * ```typescript
+ * ```ts
  * import { createConfig, captureException, captureMessage } from '@sylphx/sdk'
  *
- * const config = createConfig({ appId: process.env.SYLPHX_APP_ID! })
+ * const config = createConfig({ appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID! })
  *
+ * // Capture errors
  * try {
  *   await riskyOperation()
- * } catch (error) {
- *   await captureException(config, error)
+ * } catch (err) {
+ *   await captureException(config, err as Error)
  * }
+ *
+ * // Capture log messages
+ * await captureMessage(config, 'User completed onboarding', { level: 'info' })
  * ```
  */
 
 import { type SylphxConfig, callApi } from "./config";
-import type { components } from "./generated/api";
 
 // ============================================================================
-// Types (re-exported from generated OpenAPI spec)
+// Types
 // ============================================================================
 
-export type CaptureExceptionRequest =
-	components["schemas"]["CaptureExceptionRequest"];
-export type CaptureMessageRequest =
-	components["schemas"]["CaptureMessageRequest"];
-export type MonitoringExceptionValue =
-	components["schemas"]["MonitoringExceptionValue"];
-export type MonitoringBreadcrumb =
-	components["schemas"]["MonitoringBreadcrumb"];
-export type MonitoringErrorLevel =
-	components["schemas"]["MonitoringErrorLevel"];
+export type MonitoringSeverity = "fatal" | "error" | "warning" | "info";
 
-/** Successful capture response */
-export interface MonitoringCaptureResult {
-	/** Unique event ID assigned by the platform */
+export interface ExceptionFrame {
+	/** Source filename */
+	filename?: string;
+	/** Function name */
+	function?: string;
+	/** Line number */
+	lineno?: number;
+	/** Column number */
+	colno?: number;
+}
+
+export interface ExceptionValue {
+	/** Exception class/type (e.g., "TypeError") */
+	type: string;
+	/** Exception message */
+	value: string;
+	/** Stack trace frames (innermost first) */
+	stacktrace?: { frames?: ExceptionFrame[] };
+}
+
+export interface Breadcrumb {
+	/** Breadcrumb type (e.g., "navigation", "http", "ui.click") */
+	type?: string;
+	/** Log level */
+	level?: MonitoringSeverity;
+	/** Breadcrumb message */
+	message?: string;
+	/** Breadcrumb data */
+	data?: Record<string, unknown>;
+	/** Unix timestamp (seconds) */
+	timestamp?: number;
+}
+
+export interface CaptureExceptionRequest {
+	/** Exception value(s) — first is primary, rest are chained causes */
+	exception: { values: ExceptionValue[] };
+	/** Severity level (default: "error") */
+	level?: MonitoringSeverity;
+	/** Current page route */
+	route?: string;
+	/** User agent string */
+	userAgent?: string;
+	/** App release version */
+	release?: string;
+	/** Environment name (e.g., "production", "staging") */
+	environment?: string;
+	/** Custom tags for filtering */
+	tags?: Record<string, string>;
+	/** Extra context data */
+	extra?: Record<string, unknown>;
+	/** Breadcrumb trail leading to the error */
+	breadcrumbs?: Breadcrumb[];
+	/** Custom fingerprint for grouping (overrides automatic grouping) */
+	fingerprint?: string[];
+}
+
+export interface CaptureMessageRequest {
+	/** Log message */
+	message: string;
+	/** Severity level (default: "info") */
+	level?: MonitoringSeverity;
+	/** Current page route */
+	route?: string;
+	/** App release version */
+	release?: string;
+	/** Custom tags for filtering */
+	tags?: Record<string, string>;
+	/** Extra context data */
+	extra?: Record<string, unknown>;
+}
+
+export interface MonitoringResponse {
+	/** Internal event ID */
 	eventId: string;
-	/** True if this is a brand-new unique error (billed). False if duplicate (free). */
+	/** Whether this is a new unique error (true = billed, false = duplicate = free) */
 	isNewError: boolean;
+	/** Current quota usage percentage (0-100+). Present when >= 50%. */
+	quotaUsage?: number;
+	/**
+	 * Recommended client-side sample rate (0.0-1.0).
+	 * Reduce your error capture rate to this value when quota is high.
+	 * Present when quotaUsage >= 50%.
+	 */
+	recommendedSampleRate?: number;
 }
 
 // ============================================================================
-// Helpers — error → SDK payload
+// Helpers
 // ============================================================================
 
 /**
- * Convert a JavaScript Error (or unknown thrown value) to the
- * `exception.values` format expected by the API.
+ * Convert a native Error object to ExceptionValue format.
  */
-function errorToExceptionValues(error: unknown): MonitoringExceptionValue[] {
-	if (error instanceof Error) {
-		const frames = (error.stack ?? "")
-			.split("\n")
-			.slice(1) // Skip "Error: <message>" header line
-			.map((line) => {
-				// Parse "    at <fn> (<file>:<line>:<col>)"
-				const match = line.trim().match(/at (.+?) \((.+?):(\d+):(\d+)\)/);
-				if (match) {
-					return {
-						filename: match[2],
-						function: match[1],
-						lineno: Number(match[3]),
-						colno: Number(match[4]),
-						in_app: !match[2]?.includes("node_modules"),
-					};
-				}
-				return { filename: line.trim() };
-			});
+function errorToExceptionValue(error: Error): ExceptionValue {
+	const frames: ExceptionFrame[] = [];
 
-		return [
-			{
-				type: error.name ?? "Error",
-				value: error.message,
-				stacktrace: frames.length > 0 ? { frames } : undefined,
-			},
-		];
+	if (error.stack) {
+		// Parse V8/SpiderMonkey style stack traces
+		const lines = error.stack.split("\n").slice(1);
+		for (const line of lines) {
+			// V8: "    at functionName (file:line:col)"
+			const v8Match = line.match(/^\s+at\s+(.+?)\s+\((.+):(\d+):(\d+)\)$/);
+			if (v8Match) {
+				frames.push({
+					function: v8Match[1],
+					filename: v8Match[2],
+					lineno: Number(v8Match[3]),
+					colno: Number(v8Match[4]),
+				});
+				continue;
+			}
+			// V8 (no function): "    at file:line:col"
+			const v8AnonMatch = line.match(/^\s+at\s+(.+):(\d+):(\d+)$/);
+			if (v8AnonMatch) {
+				frames.push({
+					filename: v8AnonMatch[1],
+					lineno: Number(v8AnonMatch[2]),
+					colno: Number(v8AnonMatch[3]),
+				});
+			}
+		}
 	}
 
-	return [
-		{
-			type: "UnknownError",
-			value: String(error),
-		},
-	];
+	return {
+		type: error.name || "Error",
+		value: error.message,
+		stacktrace: frames.length > 0 ? { frames } : undefined,
+	};
 }
 
 // ============================================================================
-// API Functions
+// Functions
 // ============================================================================
 
 /**
- * Capture an exception from server-side code.
+ * Capture an exception for error tracking.
  *
- * Automatically parses the Error stack trace into structured frames.
- * Errors with the same fingerprint are grouped — only the first occurrence
- * per fingerprint is billed.
- *
- * @param config   SDK config (appId or secretKey)
- * @param error    The caught error (Error instance or any thrown value)
- * @param options  Additional context (tags, breadcrumbs, release, etc.)
+ * Errors with the same fingerprint are grouped automatically.
+ * Duplicate occurrences of the same error are FREE (only new unique
+ * errors count against your quota).
  *
  * @example
- * ```typescript
+ * ```ts
  * try {
- *   await processPayment(userId)
- * } catch (error) {
- *   await captureException(config, error, {
- *     tags: { component: 'billing', userId },
- *     release: '2.1.0',
+ *   await processPayment(amount)
+ * } catch (err) {
+ *   const result = await captureException(config, err as Error, {
+ *     tags: { paymentProvider: 'stripe' },
+ *     extra: { amount, userId },
  *   })
  * }
  * ```
  */
 export async function captureException(
 	config: SylphxConfig,
-	error: unknown,
-	options?: {
-		level?: MonitoringErrorLevel;
-		tags?: Record<string, string>;
-		extra?: Record<string, unknown>;
-		breadcrumbs?: MonitoringBreadcrumb[];
-		route?: string;
-		fingerprint?: string[];
-		release?: string;
-		environment?: string;
-	},
-): Promise<MonitoringCaptureResult> {
-	const body: CaptureExceptionRequest = {
-		exception: {
-			values: errorToExceptionValues(error),
-		},
-		level: options?.level ?? "error",
-		tags: options?.tags,
-		extra: options?.extra,
-		breadcrumbs: options?.breadcrumbs,
-		route: options?.route,
-		fingerprint: options?.fingerprint,
-		release: options?.release,
-		environment: options?.environment,
+	error: Error,
+	options: Omit<CaptureExceptionRequest, "exception"> = {},
+): Promise<MonitoringResponse> {
+	const exceptionValue = errorToExceptionValue(error);
+	const request: CaptureExceptionRequest = {
+		...options,
+		exception: { values: [exceptionValue] },
 	};
-
-	return callApi<MonitoringCaptureResult>(config, "/monitoring/exception", {
+	return callApi<MonitoringResponse>(config, "/sdk/monitoring/exception", {
 		method: "POST",
-		body,
+		body: request,
+	});
+}
+
+/**
+ * Capture an exception with full control over the exception payload.
+ *
+ * Use this for structured exception capture with custom types, chained
+ * causes, or when not working with native Error objects.
+ */
+export async function captureExceptionRaw(
+	config: SylphxConfig,
+	request: CaptureExceptionRequest,
+): Promise<MonitoringResponse> {
+	return callApi<MonitoringResponse>(config, "/sdk/monitoring/exception", {
+		method: "POST",
+		body: request,
 	});
 }
 
 /**
  * Capture a log message for monitoring.
  *
- * Use for structured logging that you want searchable in the monitoring
- * dashboard — e.g., deprecation warnings, background job milestones, etc.
+ * Like `captureException` but for non-error events (warnings, info, etc.).
+ * Messages with the same content are grouped automatically.
  *
  * @example
- * ```typescript
+ * ```ts
+ * // Info log
  * await captureMessage(config, 'Payment webhook received', {
  *   level: 'info',
- *   tags: { eventType: 'payment.succeeded' },
- *   extra: { amount: 4900, currency: 'usd' },
+ *   tags: { provider: 'stripe', event: 'payment.succeeded' },
+ * })
+ *
+ * // Warning
+ * await captureMessage(config, 'Slow query detected', {
+ *   level: 'warning',
+ *   extra: { queryMs: 2400, query: sql },
  * })
  * ```
  */
 export async function captureMessage(
 	config: SylphxConfig,
 	message: string,
-	options?: {
-		level?: MonitoringErrorLevel;
-		tags?: Record<string, string>;
-		extra?: Record<string, unknown>;
-		route?: string;
-	},
-): Promise<MonitoringCaptureResult> {
-	const body: CaptureMessageRequest = {
-		message,
-		level: options?.level ?? "info",
-		tags: options?.tags,
-		extra: options?.extra,
-		route: options?.route,
-	};
-
-	return callApi<MonitoringCaptureResult>(config, "/monitoring/message", {
+	options: Omit<CaptureMessageRequest, "message"> = {},
+): Promise<MonitoringResponse> {
+	const request: CaptureMessageRequest = { ...options, message };
+	return callApi<MonitoringResponse>(config, "/sdk/monitoring/message", {
 		method: "POST",
-		body,
+		body: request,
 	});
 }
