@@ -1127,6 +1127,16 @@ export {
 } from "./hooks/use-kv";
 
 // ============================================================================
+// Search Hooks
+// ============================================================================
+
+export {
+	useSearch,
+	type UseSearchOptions,
+	type UseSearchReturn,
+} from "./hooks/use-search";
+
+// ============================================================================
 // Web Analytics
 // ============================================================================
 // Drop-in page-view tracking component + hook. Works with Next.js App Router,
