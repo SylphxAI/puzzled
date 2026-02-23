@@ -2,19 +2,21 @@ import IORedis from "ioredis";
 import { RateLimiterRedis } from "rate-limiter-flexible";
 
 // Validate environment variables at module load - fail fast
+// Skip during Next.js build phase (NEXT_PHASE is set during `next build`)
 const REDIS_URL = process.env.REDIS_URL;
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
 
-if (!REDIS_URL) {
+if (!REDIS_URL && !IS_BUILD) {
 	throw new Error(
 		"[Redis] Missing required environment variable REDIS_URL. " +
 			"Format: redis://:password@host:6379",
 	);
 }
 
-// Create Redis client
-export const redis = new IORedis(REDIS_URL, {
+// Create Redis client (use placeholder URL during build so module loads without error)
+export const redis = new IORedis(REDIS_URL ?? "redis://localhost:6379", {
 	maxRetriesPerRequest: 3,
-	lazyConnect: false,
+	lazyConnect: IS_BUILD,
 	enableReadyCheck: false,
 });
 

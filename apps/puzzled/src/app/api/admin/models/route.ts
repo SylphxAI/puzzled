@@ -3,6 +3,7 @@ import { ai } from "@/features/puzzle-generator/server";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs"; // Required for auth
+export const dynamic = "force-dynamic"; // Prevent static generation at build time
 
 /**
  * GET /api/admin/models
