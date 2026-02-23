@@ -88,6 +88,8 @@ export interface ServerConfig {
 	secretKey: string;
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string;
+	/** Optional cache TTL in seconds. Default: 60 */
+	revalidate?: number;
 }
 
 // ============================================================================
@@ -343,7 +345,7 @@ export async function verifyWebhook(options: {
 	}
 
 	const webhookTimeSeconds = Number.parseInt(timestampStr, 10);
-	if (isNaN(webhookTimeSeconds)) {
+	if (Number.isNaN(webhookTimeSeconds)) {
 		return { valid: false, error: "Invalid timestamp format" };
 	}
 
@@ -458,7 +460,14 @@ export function createWebhookHandler(config: {
 			});
 		}
 
-		const { event, data } = result.payload!;
+		if (!result.payload) {
+			return new Response(JSON.stringify({ error: "Missing payload" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
+
+		const { event, data } = result.payload;
 		const handler = config.handlers[event];
 
 		if (!handler) {
@@ -504,6 +513,8 @@ interface AuthenticatedFetchOptions {
 	secretKey: string;
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string;
+	/** Optional cache TTL in seconds. Default: 60 */
+	revalidate?: number;
 }
 
 /**
@@ -515,6 +526,8 @@ interface PublicFetchOptions {
 	appId: string;
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string;
+	/** Optional cache TTL in seconds. Default: 60 */
+	revalidate?: number;
 }
 
 /**
@@ -534,13 +547,15 @@ async function cachedFetch<T>(params: {
 	headers?: Record<string, string>;
 	fallback: T;
 	label: string;
+	revalidate?: number;
 }): Promise<T> {
-	const { url, headers, fallback, label } = params;
+	const { url, headers, fallback, label, revalidate = 60 } = params;
 
 	try {
 		const response = await fetch(url, {
 			headers,
-			cache: "no-store", // Bypass Next.js Data Cache - always fresh
+			// @ts-ignore - Next.js extended fetch option
+			next: { revalidate }, // Next.js Data Cache with TTL
 		});
 
 		if (!response.ok) {
@@ -784,6 +799,8 @@ export interface GetAppConfigOptions {
 	appId: string;
 	/** Platform URL (defaults to https://sylphx.com) */
 	platformUrl?: string;
+	/** Optional cache TTL in seconds. Default: 60 */
+	revalidate?: number;
 }
 
 /**
