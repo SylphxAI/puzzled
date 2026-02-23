@@ -7,8 +7,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 export const runtime = "nodejs"; // Required for crypto
+export const dynamic = "force-dynamic"; // Prevent static analysis at build time
 
-// Fail fast if secret is missing - this is a security-critical credential
+// Lazy secret getter - only validates at request time, not at build time
 function getSecret(): string {
 	const secret = process.env.CRON_SECRET;
 	if (!secret) {
@@ -16,7 +17,6 @@ function getSecret(): string {
 	}
 	return secret;
 }
-const UNSUBSCRIBE_SECRET = getSecret();
 
 // Token expiration: 30 days
 const TOKEN_EXPIRY_DAYS = 30;
@@ -30,7 +30,7 @@ const TOKEN_EXPIRY_MS = TOKEN_EXPIRY_DAYS * DAY_MS;
 export function generateUnsubscribeToken(userId: string): string {
 	const timestamp = Date.now().toString(36); // Base36 for shorter encoding
 	const data = `${userId}.${timestamp}`;
-	const signature = createHmac("sha256", UNSUBSCRIBE_SECRET)
+	const signature = createHmac("sha256", getSecret())
 		.update(data)
 		.digest("hex")
 		.slice(0, 16);
@@ -80,7 +80,7 @@ function verifyUnsubscribeToken(token: string): string | null {
 
 	// Verify signature
 	const data = `${userId}.${timestamp}`;
-	const expectedSignature = createHmac("sha256", UNSUBSCRIBE_SECRET)
+	const expectedSignature = createHmac("sha256", getSecret())
 		.update(data)
 		.digest("hex")
 		.slice(0, 16);
