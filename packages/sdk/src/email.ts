@@ -349,3 +349,172 @@ export async function getScheduledEmailStats(
 ): Promise<ScheduledEmailStats> {
 	return callApi(config, "/email/scheduled/stats", { method: "GET" });
 }
+
+// ============================================================================
+// Email Domain Management
+// ============================================================================
+
+/**
+ * DNS record required for domain verification
+ */
+export interface DnsRecord {
+	/** DNS record type */
+	type: "MX" | "TXT" | "CNAME";
+	/** DNS record name (hostname) */
+	name: string;
+	/** DNS record value */
+	value: string;
+	/** MX priority (only for MX records) */
+	priority?: number;
+	/** TTL in seconds */
+	ttl: number;
+}
+
+/**
+ * A registered custom sending domain
+ */
+export interface EmailDomain {
+	id: string;
+	domain: string;
+	status: "pending" | "verifying" | "verified" | "failed";
+	defaultFromEmail: string | null;
+	defaultFromName: string | null;
+	dnsRecords: DnsRecord[];
+	createdAt: string;
+	verifiedAt: string | null;
+}
+
+export interface RegisterEmailDomainOptions {
+	/** Default from address for this domain (e.g. support@cubeage.com) */
+	defaultFromEmail?: string;
+	/** Default sender display name (e.g. Cubeage Support) */
+	defaultFromName?: string;
+}
+
+export interface SetDefaultEmailDomainOptions {
+	/** Override the default from address */
+	defaultFromEmail?: string;
+	/** Override the default sender name */
+	defaultFromName?: string;
+}
+
+/**
+ * Register a custom sending domain
+ *
+ * Creates the domain in Resend and returns DNS records to add.
+ * After adding DNS records, call verifyEmailDomain to confirm ownership.
+ *
+ * @example
+ * ```typescript
+ * const domain = await registerEmailDomain(config, 'cubeage.com', {
+ *   defaultFromEmail: 'support@cubeage.com',
+ *   defaultFromName: 'Cubeage Support',
+ * })
+ * console.log('Add these DNS records:', domain.dnsRecords)
+ * ```
+ */
+export async function registerEmailDomain(
+	config: SylphxConfig,
+	domain: string,
+	opts?: RegisterEmailDomainOptions,
+): Promise<EmailDomain> {
+	return callApi(config, "/email/domains", {
+		method: "POST",
+		body: { domain, ...opts },
+	});
+}
+
+/**
+ * List all custom sending domains for this app
+ *
+ * @example
+ * ```typescript
+ * const { domains } = await listEmailDomains(config)
+ * for (const d of domains) {
+ *   console.log(d.domain, d.status)
+ * }
+ * ```
+ */
+export async function listEmailDomains(
+	config: SylphxConfig,
+): Promise<{ domains: EmailDomain[] }> {
+	return callApi(config, "/email/domains", { method: "GET" });
+}
+
+/**
+ * Get a specific domain by ID
+ *
+ * @example
+ * ```typescript
+ * const domain = await getEmailDomain(config, 'domain-uuid')
+ * console.log(domain.dnsRecords)
+ * ```
+ */
+export async function getEmailDomain(
+	config: SylphxConfig,
+	domainId: string,
+): Promise<EmailDomain> {
+	return callApi(config, `/email/domains/${domainId}`, { method: "GET" });
+}
+
+/**
+ * Delete a custom sending domain
+ *
+ * Removes the domain from both Resend and the platform.
+ *
+ * @example
+ * ```typescript
+ * await deleteEmailDomain(config, 'domain-uuid')
+ * ```
+ */
+export async function deleteEmailDomain(
+	config: SylphxConfig,
+	domainId: string,
+): Promise<void> {
+	return callApi(config, `/email/domains/${domainId}`, { method: "DELETE" });
+}
+
+/**
+ * Trigger DNS verification for a domain
+ *
+ * Resend will check if your DNS records have been added correctly.
+ * Status changes to 'verified' on success or 'failed' on error.
+ *
+ * @example
+ * ```typescript
+ * const domain = await verifyEmailDomain(config, 'domain-uuid')
+ * if (domain.status === 'verified') {
+ *   console.log('Domain verified!')
+ * }
+ * ```
+ */
+export async function verifyEmailDomain(
+	config: SylphxConfig,
+	domainId: string,
+): Promise<EmailDomain> {
+	return callApi(config, `/email/domains/${domainId}/verify`, {
+		method: "POST",
+	});
+}
+
+/**
+ * Set a domain as the default sender for this app
+ *
+ * @example
+ * ```typescript
+ * const domain = await setDefaultEmailDomain(config, 'domain-uuid', {
+ *   defaultFromEmail: 'support@cubeage.com',
+ *   defaultFromName: 'Cubeage Support',
+ * })
+ * ```
+ */
+export async function setDefaultEmailDomain(
+	config: SylphxConfig,
+	domainId: string,
+	opts?: SetDefaultEmailDomainOptions,
+): Promise<EmailDomain> {
+	return callApi(config, `/email/domains/${domainId}/set-default`, {
+		method: "POST",
+		body: opts ?? {},
+	});
+}
