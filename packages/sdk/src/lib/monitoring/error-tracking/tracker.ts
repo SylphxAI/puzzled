@@ -466,14 +466,22 @@ export class ErrorTracker {
 			/(Windows|Mac OS X|Linux|Android|iOS)[^\d]*(\d+[\d._]*)?/,
 		);
 
+		const screen = typeof window !== "undefined" ? window.screen : null;
+		const nav = typeof navigator !== "undefined" ? navigator : null;
+
 		return {
 			device: {
-				screen_resolution: `${window.screen.width}x${window.screen.height}`,
-				screen_density: window.devicePixelRatio,
-				orientation: window.screen.orientation?.type.includes("landscape")
-					? "landscape"
-					: "portrait",
-				online: navigator.onLine,
+				screen_resolution:
+					screen != null
+						? `${screen.width}x${screen.height}`
+						: "unknown",
+				screen_density:
+					typeof window !== "undefined" ? window.devicePixelRatio : undefined,
+				orientation:
+					screen?.orientation?.type.includes("landscape")
+						? "landscape"
+						: "portrait",
+				online: nav?.onLine,
 			},
 			browser: {
 				name: browserMatch?.[1],
@@ -502,7 +510,8 @@ export class ErrorTracker {
 	}
 
 	private getRequestContext(): ErrorEvent["request"] | undefined {
-		if (typeof window === "undefined") return undefined;
+		if (typeof window === "undefined" || window.location == null)
+			return undefined;
 
 		return {
 			url: window.location.href,

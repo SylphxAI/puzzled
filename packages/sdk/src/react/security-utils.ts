@@ -51,7 +51,10 @@ export function isValidRedirectUrl(
 	} = {},
 ): boolean {
 	const {
-		origin = typeof window !== "undefined" ? window.location.origin : "",
+		origin =
+			typeof window !== "undefined" && window.location != null
+				? window.location.origin
+				: "",
 		allowedOrigins = [],
 		allowRelative = true,
 	} = options;

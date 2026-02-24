@@ -1,4 +1,3 @@
-[dotenv@17.3.1] injecting env (0) from .env.local -- tip: ⚙️  write to custom object with { processEnv: myObject }
 CREATE TYPE "public"."announcement_type" AS ENUM('info', 'warning', 'success', 'maintenance');
 CREATE TYPE "public"."audit_action" AS ENUM('create', 'update', 'delete', 'game_complete', 'streak_update', 'achievement_unlock', 'admin_action');
 CREATE TYPE "public"."dlq_status" AS ENUM('pending', 'retrying', 'resolved', 'failed');

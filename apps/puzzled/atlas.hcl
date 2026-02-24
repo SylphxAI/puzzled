@@ -7,7 +7,7 @@ data "external_schema" "drizzle" {
 }
 
 env "local" {
-  dev = "docker://postgres/16/dev?search_path=public"
+  dev = "docker://pgvector/pgvector/pg18/dev?search_path=public"
 
   schema {
     src = data.external_schema.drizzle.url
@@ -21,7 +21,7 @@ env "local" {
 }
 
 env "ci" {
-  dev = "docker://postgres/16/dev?search_path=public"
+  dev = "docker://pgvector/pgvector/pg18/dev?search_path=public"
 
   schema {
     src = data.external_schema.drizzle.url
