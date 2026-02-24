@@ -40,6 +40,19 @@ export interface SendEmailOptions {
 	/** Reply-to address */
 	replyTo?: string;
 	/**
+	 * Sender email address (must be from a verified domain).
+	 * Falls back to the app environment default, then the platform FROM_EMAIL.
+	 *
+	 * @example `support@yourdomain.com`
+	 */
+	fromEmail?: string;
+	/**
+	 * Sender display name (used together with fromEmail).
+	 *
+	 * @example `Acme Support`
+	 */
+	fromName?: string;
+	/**
 	 * Idempotency key for safe retries (Stripe pattern)
 	 *
 	 * When provided, prevents duplicate email sends if the same request
