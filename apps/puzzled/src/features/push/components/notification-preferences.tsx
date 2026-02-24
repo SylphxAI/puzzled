@@ -1,18 +1,15 @@
-"use client";
+'use client'
 
-import { useCallback, useEffect, useState } from "react";
-import {
-	type PuzzledNotificationPreferences,
-	usePuzzledPush,
-} from "../hooks/use-puzzled-push";
+import { useCallback, useEffect, useState } from 'react'
+import { type PuzzledNotificationPreferences, usePuzzledPush } from '../hooks/use-puzzled-push'
 
 interface NotificationPreferencesProps {
 	/** Callback when preferences are saved */
-	onSave?: (preferences: PuzzledNotificationPreferences) => void;
+	onSave?: (preferences: PuzzledNotificationPreferences) => void
 	/** Show as compact inline or full settings panel */
-	variant?: "inline" | "panel";
+	variant?: 'inline' | 'panel'
 	/** Custom class name */
-	className?: string;
+	className?: string
 }
 
 /**
@@ -27,7 +24,7 @@ interface NotificationPreferencesProps {
  */
 export function NotificationPreferences({
 	onSave,
-	variant = "panel",
+	variant = 'panel',
 	className,
 }: NotificationPreferencesProps) {
 	const {
@@ -39,44 +36,40 @@ export function NotificationPreferences({
 		updatePreferences,
 		error,
 		isLoadingPreferences,
-	} = usePuzzledPush();
+	} = usePuzzledPush()
 
-	const [localPrefs, setLocalPrefs] =
-		useState<PuzzledNotificationPreferences>(preferences);
-	const [isSaving, setIsSaving] = useState(false);
+	const [localPrefs, setLocalPrefs] = useState<PuzzledNotificationPreferences>(preferences)
+	const [isSaving, setIsSaving] = useState(false)
 
 	// Sync local state when server preferences load
 	useEffect(() => {
-		setLocalPrefs(preferences);
-	}, [preferences]);
+		setLocalPrefs(preferences)
+	}, [preferences])
 
-	const handleToggle = useCallback(
-		(key: keyof PuzzledNotificationPreferences) => {
-			setLocalPrefs((prev) => ({
-				...prev,
-				[key]: typeof prev[key] === "boolean" ? !prev[key] : prev[key],
-			}));
-		},
-		[],
-	);
+	const handleToggle = useCallback((key: keyof PuzzledNotificationPreferences) => {
+		setLocalPrefs((prev) => ({
+			...prev,
+			[key]: typeof prev[key] === 'boolean' ? !prev[key] : prev[key],
+		}))
+	}, [])
 
 	const handleSave = async () => {
-		setIsSaving(true);
+		setIsSaving(true)
 		try {
-			await updatePreferences(localPrefs);
-			onSave?.(localPrefs);
+			await updatePreferences(localPrefs)
+			onSave?.(localPrefs)
 		} finally {
-			setIsSaving(false);
+			setIsSaving(false)
 		}
-	};
+	}
 
 	const handleEnablePush = async () => {
-		await requestPermission();
-	};
+		await requestPermission()
+	}
 
 	const handleDisablePush = async () => {
-		await disablePush();
-	};
+		await disablePush()
+	}
 
 	if (!isSupported) {
 		return (
@@ -85,7 +78,7 @@ export function NotificationPreferences({
 					Push notifications are not supported in this browser.
 				</p>
 			</div>
-		);
+		)
 	}
 
 	const PreferenceItem = ({
@@ -95,11 +88,11 @@ export function NotificationPreferences({
 		onChange,
 		disabled,
 	}: {
-		label: string;
-		description: string;
-		checked: boolean;
-		onChange: () => void;
-		disabled?: boolean;
+		label: string
+		description: string
+		checked: boolean
+		onChange: () => void
+		disabled?: boolean
 	}) => (
 		<label className="flex items-start gap-3 py-3 cursor-pointer">
 			<input
@@ -114,9 +107,9 @@ export function NotificationPreferences({
 				<p className="text-xs text-muted-foreground">{description}</p>
 			</div>
 		</label>
-	);
+	)
 
-	if (variant === "inline") {
+	if (variant === 'inline') {
 		return (
 			<div className={className}>
 				<div className="flex items-center justify-between">
@@ -124,8 +117,8 @@ export function NotificationPreferences({
 						<p className="text-sm font-medium">Push Notifications</p>
 						<p className="text-xs text-muted-foreground">
 							{isEnabled
-								? "Notifications are enabled"
-								: "Enable notifications to get daily reminders"}
+								? 'Notifications are enabled'
+								: 'Enable notifications to get daily reminders'}
 						</p>
 					</div>
 					<button
@@ -133,15 +126,15 @@ export function NotificationPreferences({
 						onClick={isEnabled ? handleDisablePush : handleEnablePush}
 						className={`px-3 py-1.5 text-sm font-medium rounded-md ${
 							isEnabled
-								? "bg-muted text-muted-foreground hover:bg-muted/80"
-								: "bg-primary text-primary-foreground hover:bg-primary/90"
+								? 'bg-muted text-muted-foreground hover:bg-muted/80'
+								: 'bg-primary text-primary-foreground hover:bg-primary/90'
 						}`}
 					>
-						{isEnabled ? "Disable" : "Enable"}
+						{isEnabled ? 'Disable' : 'Enable'}
 					</button>
 				</div>
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -158,12 +151,12 @@ export function NotificationPreferences({
 					type="button"
 					onClick={isEnabled ? handleDisablePush : handleEnablePush}
 					className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-						isEnabled ? "bg-primary" : "bg-muted"
+						isEnabled ? 'bg-primary' : 'bg-muted'
 					}`}
 				>
 					<span
 						className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-							isEnabled ? "translate-x-6" : "translate-x-1"
+							isEnabled ? 'translate-x-6' : 'translate-x-1'
 						}`}
 					/>
 				</button>
@@ -190,21 +183,21 @@ export function NotificationPreferences({
 								label="Daily Puzzle Reminder"
 								description="Get reminded when the new daily puzzle is available"
 								checked={localPrefs.pushDailyReminder}
-								onChange={() => handleToggle("pushDailyReminder")}
+								onChange={() => handleToggle('pushDailyReminder')}
 							/>
 
 							<PreferenceItem
 								label="Streak Alerts"
 								description="Get a reminder before your streak is about to expire"
 								checked={localPrefs.pushStreakAlert}
-								onChange={() => handleToggle("pushStreakAlert")}
+								onChange={() => handleToggle('pushStreakAlert')}
 							/>
 
 							<PreferenceItem
 								label="New Games"
 								description="Get notified when new games are added"
 								checked={localPrefs.pushNewGames}
-								onChange={() => handleToggle("pushNewGames")}
+								onChange={() => handleToggle('pushNewGames')}
 							/>
 
 							<div className="pt-4">
@@ -214,7 +207,7 @@ export function NotificationPreferences({
 									disabled={isSaving}
 									className="w-full px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 disabled:opacity-50"
 								>
-									{isSaving ? "Saving..." : "Save Preferences"}
+									{isSaving ? 'Saving...' : 'Save Preferences'}
 								</button>
 							</div>
 						</>
@@ -241,7 +234,7 @@ export function NotificationPreferences({
 				</div>
 			)}
 		</div>
-	);
+	)
 }
 
 function BellIcon({ className }: { className?: string }) {
@@ -257,5 +250,5 @@ function BellIcon({ className }: { className?: string }) {
 			<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
 			<path d="M13.73 21a2 2 0 01-3.46 0" />
 		</svg>
-	);
+	)
 }

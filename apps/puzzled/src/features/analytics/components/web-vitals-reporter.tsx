@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { useSafeAnalytics } from "@sylphx/sdk/react";
-import { useEffect, useState } from "react";
-import { initWebVitals, setWebVitalsTracker } from "../lib/web-vitals";
+import { useSafeAnalytics } from '@sylphx/sdk/react'
+import { useEffect, useState } from 'react'
+import { initWebVitals, setWebVitalsTracker } from '../lib/web-vitals'
 
 /**
  * Web Vitals Reporter Component
@@ -11,18 +11,18 @@ import { initWebVitals, setWebVitalsTracker } from "../lib/web-vitals";
  * Only runs in production with user consent.
  */
 export function WebVitalsReporter() {
-	const [isMounted, setIsMounted] = useState(false);
+	const [isMounted, setIsMounted] = useState(false)
 
 	// Only render on client side to avoid SSG/SSR issues
 	useEffect(() => {
-		setIsMounted(true);
-	}, []);
+		setIsMounted(true)
+	}, [])
 
 	if (!isMounted) {
-		return null;
+		return null
 	}
 
-	return <WebVitalsReporterInner />;
+	return <WebVitalsReporterInner />
 }
 
 /**
@@ -30,15 +30,15 @@ export function WebVitalsReporter() {
  * Only rendered client-side after mount
  */
 function WebVitalsReporterInner() {
-	const { track } = useSafeAnalytics();
+	const { track } = useSafeAnalytics()
 
 	useEffect(() => {
 		// Initialize web vitals listeners
-		initWebVitals();
+		initWebVitals()
 
 		// Connect to SDK analytics for reporting
-		setWebVitalsTracker(track);
-	}, [track]);
+		setWebVitalsTracker(track)
+	}, [track])
 
-	return null;
+	return null
 }

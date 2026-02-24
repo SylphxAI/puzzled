@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl'
 
 /**
  * Killer Sudoku How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function KillerSudokuHowToPlay() {
-	const t = useTranslations("games.killerSudoku");
+	const t = useTranslations('games.killerSudoku')
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t("rules.rule1")}</li>
-					<li>• {t("rules.rule2")}</li>
-					<li>• {t("rules.rule3")}</li>
+					<li>• {t('rules.rule1')}</li>
+					<li>• {t('rules.rule2')}</li>
+					<li>• {t('rules.rule3')}</li>
 				</ul>
 			</div>
 
@@ -89,10 +89,10 @@ export function KillerSudokuHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	);
+	)
 }
 
 function _KillerSudokuHowToPlayTitle() {
-	const t = useTranslations("games.killerSudoku");
-	return <>{t("howToPlay")}</>;
+	const t = useTranslations('games.killerSudoku')
+	return <>{t('howToPlay')}</>
 }

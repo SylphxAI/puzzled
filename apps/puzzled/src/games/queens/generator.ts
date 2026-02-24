@@ -8,80 +8,77 @@
  * 3. Expand regions to fill the grid using flood-fill
  */
 
-import { seededRandom, shuffleArray } from "@/games/shared/random";
-import type { QueensPuzzleData, QueensSolution } from "./types";
+import { seededRandom, shuffleArray } from '@/games/shared/random'
+import type { QueensPuzzleData, QueensSolution } from './types'
 
 /**
  * Check if queens at positions are valid (no row/column conflicts, no adjacency)
  */
 function _isValidQueenPlacement(queens: [number, number][]): boolean {
-	const size = queens.length;
+	const size = queens.length
 
 	for (let i = 0; i < size; i++) {
-		const [r1, c1] = queens[i];
+		const [r1, c1] = queens[i]
 
 		for (let j = i + 1; j < size; j++) {
-			const [r2, c2] = queens[j];
+			const [r2, c2] = queens[j]
 
 			// Same row
-			if (r1 === r2) return false;
+			if (r1 === r2) return false
 
 			// Same column
-			if (c1 === c2) return false;
+			if (c1 === c2) return false
 
 			// Adjacent (including diagonal)
-			if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) return false;
+			if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) return false
 		}
 	}
 
-	return true;
+	return true
 }
 
 /**
  * Generate valid queen positions using backtracking
  */
-function generateQueenPositions(
-	size: number,
-	random: () => number,
-): [number, number][] {
-	const queens: [number, number][] = [];
+function generateQueenPositions(size: number, random: () => number): [number, number][] {
+	const queens: [number, number][] = []
 
 	function canPlace(row: number, col: number): boolean {
 		for (const [r, c] of queens) {
 			// Same column
-			if (c === col) return false;
+			if (c === col) return false
 			// Adjacent (including diagonal)
-			if (Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1) return false;
+			if (Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1) return false
 		}
-		return true;
+		return true
 	}
 
 	function solve(row: number): boolean {
 		if (row >= size) {
-			return true;
+			return true
 		}
 
 		// Try columns in random order
 		const cols = shuffleArray(
 			Array.from({ length: size }, (_, i) => i),
 			random,
-		);
+		)
 
 		for (const col of cols) {
 			if (canPlace(row, col)) {
-				queens.push([row, col]);
+				queens.push([row, col])
 				if (solve(row + 1)) {
-					return true;
+					return true
 				}
-				queens.pop();
+				queens.pop()
 			}
 		}
 
-		return false;
+		return false
 	}
 
-	solve(0);
-	return queens;
+	solve(0)
+	return queens
 }
 
 /**
@@ -93,14 +90,12 @@ function generateRegions(
 	queens: [number, number][],
 	random: () => number,
 ): number[][] {
-	const regions: number[][] = Array.from({ length: size }, () =>
-		Array(size).fill(-1),
-	);
+	const regions: number[][] = Array.from({ length: size }, () => Array(size).fill(-1))
 
 	// Assign queens to their regions
 	queens.forEach(([row, col], index) => {
-		regions[row][col] = index;
-	});
+		regions[row][col] = index
+	})
 
 	// BFS to expand regions
 	const directions = [
@@ -108,54 +103,48 @@ function generateRegions(
 		[1, 0],
 		[0, -1],
 		[0, 1],
-	];
+	]
 
 	// Keep expanding until all cells are assigned
-	let unassigned = size * size - size;
-	let iterations = 0;
-	const maxIterations = size * size * 10;
+	let unassigned = size * size - size
+	let iterations = 0
+	const maxIterations = size * size * 10
 
 	while (unassigned > 0 && iterations < maxIterations) {
-		iterations++;
+		iterations++
 
 		// Pick a random region to expand
-		const regionIndex = Math.floor(random() * size);
-		const [_qr, _qc] = queens[regionIndex];
+		const regionIndex = Math.floor(random() * size)
+		const [_qr, _qc] = queens[regionIndex]
 
 		// Find cells belonging to this region
-		const regionCells: [number, number][] = [];
+		const regionCells: [number, number][] = []
 		for (let r = 0; r < size; r++) {
 			for (let c = 0; c < size; c++) {
 				if (regions[r][c] === regionIndex) {
-					regionCells.push([r, c]);
+					regionCells.push([r, c])
 				}
 			}
 		}
 
 		// Shuffle region cells and try to expand
-		const shuffledCells = shuffleArray(regionCells, random);
+		const shuffledCells = shuffleArray(regionCells, random)
 
 		for (const [r, c] of shuffledCells) {
-			const shuffledDirs = shuffleArray([...directions], random);
+			const shuffledDirs = shuffleArray([...directions], random)
 
 			for (const [dr, dc] of shuffledDirs) {
-				const nr = r + dr;
-				const nc = c + dc;
+				const nr = r + dr
+				const nc = c + dc
 
-				if (
-					nr >= 0 &&
-					nr < size &&
-					nc >= 0 &&
-					nc < size &&
-					regions[nr][nc] === -1
-				) {
-					regions[nr][nc] = regionIndex;
-					unassigned--;
-					break;
+				if (nr >= 0 && nr < size && nc >= 0 && nc < size && regions[nr][nc] === -1) {
+					regions[nr][nc] = regionIndex
+					unassigned--
+					break
 				}
 			}
 
-			if (unassigned === 0) break;
+			if (unassigned === 0) break
 		}
 	}
 
@@ -164,27 +153,27 @@ function generateRegions(
 		for (let c = 0; c < size; c++) {
 			if (regions[r][c] === -1) {
 				// Find nearest assigned cell
-				let minDist = Number.POSITIVE_INFINITY;
-				let nearestRegion = 0;
+				let minDist = Number.POSITIVE_INFINITY
+				let nearestRegion = 0
 
 				for (let nr = 0; nr < size; nr++) {
 					for (let nc = 0; nc < size; nc++) {
 						if (regions[nr][nc] !== -1) {
-							const dist = Math.abs(nr - r) + Math.abs(nc - c);
+							const dist = Math.abs(nr - r) + Math.abs(nc - c)
 							if (dist < minDist) {
-								minDist = dist;
-								nearestRegion = regions[nr][nc];
+								minDist = dist
+								nearestRegion = regions[nr][nc]
 							}
 						}
 					}
 				}
 
-				regions[r][c] = nearestRegion;
+				regions[r][c] = nearestRegion
 			}
 		}
 	}
 
-	return regions;
+	return regions
 }
 
 /**
@@ -194,47 +183,43 @@ function hasUniqueSolution(
 	regions: number[][],
 	size: number,
 ): { unique: boolean; solution?: [number, number][] } {
-	const solutions: [number, number][][] = [];
+	const solutions: [number, number][][] = []
 
-	function canPlace(
-		queens: [number, number][],
-		row: number,
-		col: number,
-	): boolean {
+	function canPlace(queens: [number, number][], row: number, col: number): boolean {
 		for (const [r, c] of queens) {
 			// Same column
-			if (c === col) return false;
+			if (c === col) return false
 			// Adjacent (including diagonal)
-			if (Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1) return false;
+			if (Math.abs(r - row) <= 1 && Math.abs(c - col) <= 1) return false
 			// Same region
-			if (regions[r][c] === regions[row][col]) return false;
+			if (regions[r][c] === regions[row][col]) return false
 		}
-		return true;
+		return true
 	}
 
 	function solve(row: number, queens: [number, number][]): void {
-		if (solutions.length > 1) return; // Stop if we found multiple solutions
+		if (solutions.length > 1) return // Stop if we found multiple solutions
 
 		if (row >= size) {
-			solutions.push([...queens]);
-			return;
+			solutions.push([...queens])
+			return
 		}
 
 		for (let col = 0; col < size; col++) {
 			if (canPlace(queens, row, col)) {
-				queens.push([row, col]);
-				solve(row + 1, queens);
-				queens.pop();
+				queens.push([row, col])
+				solve(row + 1, queens)
+				queens.pop()
 			}
 		}
 	}
 
-	solve(0, []);
+	solve(0, [])
 
 	return {
 		unique: solutions.length === 1,
 		solution: solutions[0],
-	};
+	}
 }
 
 /**
@@ -244,38 +229,38 @@ export function generateQueensPuzzle(
 	seed: number,
 	size = 6,
 ): {
-	puzzleData: QueensPuzzleData;
-	solution: QueensSolution;
+	puzzleData: QueensPuzzleData
+	solution: QueensSolution
 } {
-	const random = seededRandom(seed);
+	const random = seededRandom(seed)
 
 	// Generate valid queen positions
-	let queens = generateQueenPositions(size, random);
-	let regions = generateRegions(size, queens, random);
+	let queens = generateQueenPositions(size, random)
+	let regions = generateRegions(size, queens, random)
 
 	// Verify unique solution (regenerate if not)
-	let attempts = 0;
-	const maxAttempts = 10;
+	let attempts = 0
+	const maxAttempts = 10
 
 	while (attempts < maxAttempts) {
-		const result = hasUniqueSolution(regions, size);
+		const result = hasUniqueSolution(regions, size)
 		if (result.unique && result.solution) {
-			queens = result.solution;
-			break;
+			queens = result.solution
+			break
 		}
 
 		// Regenerate with modified seed
-		const newRandom = seededRandom(seed + attempts + 1);
-		queens = generateQueenPositions(size, newRandom);
-		regions = generateRegions(size, queens, newRandom);
-		attempts++;
+		const newRandom = seededRandom(seed + attempts + 1)
+		queens = generateQueenPositions(size, newRandom)
+		regions = generateRegions(size, queens, newRandom)
+		attempts++
 	}
 
 	// Ensure we found a unique solution
 	if (attempts >= maxAttempts) {
 		throw new Error(
 			`Queens: Failed to generate puzzle with unique solution for seed ${seed} after ${maxAttempts} attempts`,
-		);
+		)
 	}
 
 	return {
@@ -286,7 +271,7 @@ export function generateQueensPuzzle(
 		solution: {
 			queens,
 		},
-	};
+	}
 }
 
 /**
@@ -297,10 +282,10 @@ export function generateQueensPuzzle(
  * Saturday-Sunday: 8x8 (hardest)
  */
 function _getSizeFromSeed(seed: number): number {
-	const dayOfWeek = seed % 7;
-	if (dayOfWeek === 0) return 5; // Sunday -> easiest (treat as Monday)
-	if (dayOfWeek <= 2) return 5; // Mon-Tue
-	if (dayOfWeek <= 4) return 6; // Wed-Thu
-	if (dayOfWeek <= 5) return 7; // Fri
-	return 8; // Sat
+	const dayOfWeek = seed % 7
+	if (dayOfWeek === 0) return 5 // Sunday -> easiest (treat as Monday)
+	if (dayOfWeek <= 2) return 5 // Mon-Tue
+	if (dayOfWeek <= 4) return 6 // Wed-Thu
+	if (dayOfWeek <= 5) return 7 // Fri
+	return 8 // Sat
 }

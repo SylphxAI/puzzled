@@ -5,11 +5,11 @@
  * Represents the core Wordle-like guessing mechanic
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
 export function WordGuessIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -34,5 +34,5 @@ export function WordGuessIcon({ size = 24, className, ...props }: IconProps) {
 			{/* Hint lines below */}
 			<path d="M2 15h4M7 15h4M12 15h4M17 15h4" strokeWidth="1" opacity="0.4" />
 		</svg>
-	);
+	)
 }

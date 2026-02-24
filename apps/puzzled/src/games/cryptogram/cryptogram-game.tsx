@@ -3,41 +3,37 @@
  * Decrypt famous quotes by letter substitution
  */
 
-"use client";
+'use client'
 
-import { Celebration } from "@/features/celebration/components/celebration";
-import { GameResultModal } from "@/features/daily/components/game-result-modal";
-import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { formatTimer } from "@/games/shared/format";
-import { useGameSession } from "@/games/shared/use-game-session";
-import { parsePuzzleDataClient } from "@/games/types";
-import { cn } from "@/lib/utils";
-import { triggerHaptic } from "@/shared/hooks";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@sylphx/ui";
-import { HelpCircle, Lightbulb, Play, RotateCcw } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { CryptogramPuzzleData, CryptogramSolution } from "./types";
-import { ALPHABET, MAX_HINTS } from "./types";
-import { useCryptogram } from "./use-cryptogram";
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { HelpCircle, Lightbulb, Play, RotateCcw } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatTimer } from '@/games/shared/format'
+import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
+import { cn } from '@/lib/utils'
+import { triggerHaptic } from '@/shared/hooks'
+import type { CryptogramPuzzleData, CryptogramSolution } from './types'
+import { ALPHABET, MAX_HINTS } from './types'
+import { useCryptogram } from './use-cryptogram'
 
 type Props = {
-	mode?: "daily" | "archive";
-	puzzleId?: string;
-	puzzleData?: unknown;
-};
+	mode?: 'daily' | 'archive'
+	puzzleId?: string
+	puzzleData?: unknown
+}
 
-export function CryptogramGame({
-	mode = "daily",
-	puzzleId,
-	puzzleData,
-}: Props) {
-	const tCommon = useTranslations("common");
+export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+	const tCommon = useTranslations('common')
 
 	const [puzzle] = useState(() =>
 		parsePuzzleDataClient<CryptogramPuzzleData, CryptogramSolution>(puzzleData),
-	);
+	)
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -51,21 +47,21 @@ export function CryptogramGame({
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: "cryptogram",
+		gameSlug: 'cryptogram',
 		mode,
 		puzzleId,
 		enableStarBurst: true,
-	});
+	})
 
-	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useCryptogram(puzzle.puzzleData, puzzle.solution);
-	const progress = game.getProgress();
-	const gameEndedRef = useRef(false);
+	const game = useCryptogram(puzzle.puzzleData, puzzle.solution)
+	const progress = game.getProgress()
+	const gameEndedRef = useRef(false)
 
 	// Handle game end - delegate to useGameSession
-	if (game.state.gameStatus !== "playing" && !gameEndedRef.current) {
-		gameEndedRef.current = true;
+	if (game.state.gameStatus !== 'playing' && !gameEndedRef.current) {
+		gameEndedRef.current = true
 		endGame({
 			status: game.state.gameStatus,
 			hintsUsed: game.state.hintsUsed,
@@ -73,51 +69,44 @@ export function CryptogramGame({
 				guesses: game.state.guesses,
 				hintsUsed: game.state.hintsUsed,
 			},
-		});
+		})
 	}
 
 	// Handle keyboard input
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (game.state.gameStatus !== "playing") return;
-			if (!game.state.selectedLetter) return;
+			if (game.state.gameStatus !== 'playing') return
+			if (!game.state.selectedLetter) return
 
-			const key = e.key.toUpperCase();
+			const key = e.key.toUpperCase()
 
-			if (key === "BACKSPACE" || key === "DELETE") {
-				game.clearGuess(game.state.selectedLetter);
-				e.preventDefault();
-			} else if (key.length === 1 && key >= "A" && key <= "Z") {
-				game.setGuess(game.state.selectedLetter, key);
-				triggerHaptic("light");
-				e.preventDefault();
-			} else if (key === "ESCAPE") {
-				game.selectLetter(null);
-				e.preventDefault();
+			if (key === 'BACKSPACE' || key === 'DELETE') {
+				game.clearGuess(game.state.selectedLetter)
+				e.preventDefault()
+			} else if (key.length === 1 && key >= 'A' && key <= 'Z') {
+				game.setGuess(game.state.selectedLetter, key)
+				triggerHaptic('light')
+				e.preventDefault()
+			} else if (key === 'ESCAPE') {
+				game.selectLetter(null)
+				e.preventDefault()
 			}
-		};
+		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [game, game.state.selectedLetter, game.state.gameStatus]);
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [game, game.state.selectedLetter, game.state.gameStatus])
 
 	const handleShare = useCallback(() => {
-		const timeMs =
-			game.state.endTime && startTime ? game.state.endTime - startTime : 0;
+		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const hintsText =
-			game.state.hintsUsed > 0 ? ` (${game.state.hintsUsed} hints)` : "";
-		const text = `Cryptogram\n"${puzzle.puzzleData.author}"\n${formatTimer(timeMs)}${hintsText}\n\npuzzled.gg`;
-		navigator.clipboard.writeText(text);
-	}, [
-		game.state.endTime,
-		game.state.hintsUsed,
-		startTime,
-		puzzle.puzzleData.author,
-	]);
+		const hintsText = game.state.hintsUsed > 0 ? ` (${game.state.hintsUsed} hints)` : ''
+		const text = `Cryptogram\n"${puzzle.puzzleData.author}"\n${formatTimer(timeMs)}${hintsText}\n\npuzzled.gg`
+		navigator.clipboard.writeText(text)
+	}, [game.state.endTime, game.state.hintsUsed, startTime, puzzle.puzzleData.author])
 
 	// Parse the encrypted text into words for display
-	const words = puzzle.puzzleData.encryptedText.split(" ");
+	const words = puzzle.puzzleData.encryptedText.split(' ')
 
 	// Ready screen
 	if (isReady) {
@@ -126,9 +115,7 @@ export function CryptogramGame({
 				<CardHeader className="text-center">
 					<div className="mb-2 flex justify-center text-4xl">🔐</div>
 					<CardTitle>Cryptogram</CardTitle>
-					<p className="text-sm text-muted-foreground">
-						Decrypt the famous quote
-					</p>
+					<p className="text-sm text-muted-foreground">Decrypt the famous quote</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<div className="rounded-lg bg-muted/50 p-4">
@@ -145,11 +132,11 @@ export function CryptogramGame({
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{tCommon("play")}
+						{tCommon('play')}
 					</Button>
 				</CardContent>
 			</Card>
-		);
+		)
 	}
 
 	return (
@@ -174,18 +161,12 @@ export function CryptogramGame({
 							className="gap-1"
 						>
 							<Lightbulb className="h-4 w-4" />
-							<span className="text-xs">
-								{MAX_HINTS - game.state.hintsUsed}
-							</span>
+							<span className="text-xs">{MAX_HINTS - game.state.hintsUsed}</span>
 						</Button>
 						<Button variant="ghost" size="sm" onClick={game.reset}>
 							<RotateCcw className="h-4 w-4" />
 						</Button>
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setShowHelpModal(true)}
-						>
+						<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 							<HelpCircle className="h-4 w-4" />
 						</Button>
 					</div>
@@ -194,20 +175,18 @@ export function CryptogramGame({
 				{/* Quote author hint */}
 				<div className="rounded-lg bg-muted/30 px-4 py-2 text-center">
 					<span className="text-sm text-muted-foreground">Quote by </span>
-					<span className="text-sm font-medium">
-						{puzzle.puzzleData.author}
-					</span>
+					<span className="text-sm font-medium">{puzzle.puzzleData.author}</span>
 				</div>
 
 				{/* Encrypted text display */}
 				<div className="flex flex-wrap justify-center gap-x-4 gap-y-3 px-4">
 					{words.map((word, wordIndex) => (
 						<div key={wordIndex} className="flex gap-0.5">
-							{word.split("").map((char, charIndex) => {
-								const isLetter = char >= "A" && char <= "Z";
-								const guess = isLetter ? game.state.guesses[char] : null;
-								const isSelected = game.state.selectedLetter === char;
-								const isRevealed = game.state.revealedLetters.includes(char);
+							{word.split('').map((char, charIndex) => {
+								const isLetter = char >= 'A' && char <= 'Z'
+								const guess = isLetter ? game.state.guesses[char] : null
+								const isSelected = game.state.selectedLetter === char
+								const isRevealed = game.state.revealedLetters.includes(char)
 
 								if (!isLetter) {
 									// Punctuation
@@ -218,7 +197,7 @@ export function CryptogramGame({
 										>
 											{char}
 										</div>
-									);
+									)
 								}
 
 								return (
@@ -226,41 +205,37 @@ export function CryptogramGame({
 										key={charIndex}
 										type="button"
 										onClick={() =>
-											!isRevealed &&
-											game.state.gameStatus === "playing" &&
-											game.selectLetter(char)
+											!isRevealed && game.state.gameStatus === 'playing' && game.selectLetter(char)
 										}
-										disabled={isRevealed || game.state.gameStatus !== "playing"}
+										disabled={isRevealed || game.state.gameStatus !== 'playing'}
 										className={cn(
-											"flex h-10 w-7 flex-col items-center justify-end rounded transition-all",
-											"sm:h-12 sm:w-8",
-											isSelected && "ring-2 ring-primary ring-offset-2",
+											'flex h-10 w-7 flex-col items-center justify-end rounded transition-all',
+											'sm:h-12 sm:w-8',
+											isSelected && 'ring-2 ring-primary ring-offset-2',
 											isRevealed
-												? "cursor-default bg-green-500/20"
-												: "cursor-pointer hover:bg-muted",
-											game.state.gameStatus !== "playing" && "cursor-default",
+												? 'cursor-default bg-green-500/20'
+												: 'cursor-pointer hover:bg-muted',
+											game.state.gameStatus !== 'playing' && 'cursor-default',
 										)}
 									>
 										{/* Guess (what player thinks it is) */}
 										<span
 											className={cn(
-												"text-base font-bold",
-												"sm:text-lg",
+												'text-base font-bold',
+												'sm:text-lg',
 												isRevealed
-													? "text-green-600"
+													? 'text-green-600'
 													: guess
-														? "text-primary"
-														: "text-muted-foreground/30",
+														? 'text-primary'
+														: 'text-muted-foreground/30',
 											)}
 										>
-											{guess || "_"}
+											{guess || '_'}
 										</span>
 										{/* Encrypted letter (shown below) */}
-										<span className="text-[10px] text-muted-foreground">
-											{char}
-										</span>
+										<span className="text-[10px] text-muted-foreground">{char}</span>
 									</button>
-								);
+								)
 							})}
 						</div>
 					))}
@@ -269,39 +244,33 @@ export function CryptogramGame({
 				{/* Keyboard */}
 				<div className="mt-4 w-full max-w-lg px-2">
 					<div className="flex flex-wrap justify-center gap-1">
-						{ALPHABET.split("").map((letter) => {
+						{ALPHABET.split('').map((letter) => {
 							// Check if this letter is already used as a guess
-							const isUsed = Object.values(game.state.guesses).includes(letter);
+							const isUsed = Object.values(game.state.guesses).includes(letter)
 
 							return (
 								<button
 									key={letter}
 									type="button"
 									onClick={() => {
-										if (
-											game.state.selectedLetter &&
-											game.state.gameStatus === "playing"
-										) {
-											game.setGuess(game.state.selectedLetter, letter);
-											triggerHaptic("light");
+										if (game.state.selectedLetter && game.state.gameStatus === 'playing') {
+											game.setGuess(game.state.selectedLetter, letter)
+											triggerHaptic('light')
 										}
 									}}
-									disabled={
-										game.state.gameStatus !== "playing" ||
-										!game.state.selectedLetter
-									}
+									disabled={game.state.gameStatus !== 'playing' || !game.state.selectedLetter}
 									className={cn(
-										"flex h-10 w-8 items-center justify-center rounded-lg border text-sm font-bold transition-all",
-										"sm:h-11 sm:w-9 sm:text-base",
+										'flex h-10 w-8 items-center justify-center rounded-lg border text-sm font-bold transition-all',
+										'sm:h-11 sm:w-9 sm:text-base',
 										isUsed
-											? "border-muted bg-muted/50 text-muted-foreground"
-											: "border-border bg-background hover:bg-muted",
-										!game.state.selectedLetter && "opacity-50",
+											? 'border-muted bg-muted/50 text-muted-foreground'
+											: 'border-border bg-background hover:bg-muted',
+										!game.state.selectedLetter && 'opacity-50',
 									)}
 								>
 									{letter}
 								</button>
-							);
+							)
 						})}
 					</div>
 				</div>
@@ -324,12 +293,9 @@ export function CryptogramGame({
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
 				gameType="cryptogram"
-				status={game.state.gameStatus === "won" ? "won" : "lost"}
+				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
-					timeSpentMs:
-						game.state.endTime && startTime
-							? game.state.endTime - startTime
-							: 0,
+					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 					hintsUsed: game.state.hintsUsed,
 				}}
 				mode={mode}
@@ -342,5 +308,5 @@ export function CryptogramGame({
 				streakCount={1}
 			/>
 		</div>
-	);
+	)
 }

@@ -3,49 +3,38 @@
  * Main game wrapper with state management
  */
 
-"use client";
+'use client'
 
-import { Celebration } from "@/features/celebration/components/celebration";
-import { GameResultModal } from "@/features/daily/components/game-result-modal";
-import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { formatTimer } from "@/games/shared/format";
-import { useGameSession } from "@/games/shared/use-game-session";
-import { parsePuzzleDataClient } from "@/games/types";
-import { WordLadderIcon } from "@/shared/components/ui/game-icons";
-import { triggerHaptic, triggerSound } from "@/shared/hooks";
-import {
-	Button,
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	Input,
-} from "@sylphx/ui";
-import { HelpCircle, Play, Undo2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { WordLadderDisplay } from "./components";
-import type { WordLadderPuzzleData, WordLadderSolution } from "./types";
-import { useWordLadder } from "./use-word-ladder";
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@sylphx/ui'
+import { HelpCircle, Play, Undo2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatTimer } from '@/games/shared/format'
+import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
+import { WordLadderIcon } from '@/shared/components/ui/game-icons'
+import { triggerHaptic, triggerSound } from '@/shared/hooks'
+import { WordLadderDisplay } from './components'
+import type { WordLadderPuzzleData, WordLadderSolution } from './types'
+import { useWordLadder } from './use-word-ladder'
 
 type Props = {
-	mode?: "daily" | "archive";
-	puzzleId?: string;
-	puzzleData?: unknown;
-};
+	mode?: 'daily' | 'archive'
+	puzzleId?: string
+	puzzleData?: unknown
+}
 
-export function WordLadderGame({
-	mode = "daily",
-	puzzleId,
-	puzzleData,
-}: Props) {
-	const t = useTranslations("games.wordLadder");
+export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+	const t = useTranslations('games.wordLadder')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() =>
 		parsePuzzleDataClient<WordLadderPuzzleData, WordLadderSolution>(puzzleData),
-	);
+	)
 
 	const {
 		isReady,
@@ -58,116 +47,110 @@ export function WordLadderGame({
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: "word-ladder",
+		gameSlug: 'word-ladder',
 		mode,
 		puzzleId,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Optimal path
-	});
+	})
 
-	const [showHelpModal, setShowHelpModal] = useState(false);
-	const inputRef = useRef<HTMLInputElement>(null);
+	const [showHelpModal, setShowHelpModal] = useState(false)
+	const inputRef = useRef<HTMLInputElement>(null)
 
 	// Game hook
-	const game = useWordLadder();
+	const game = useWordLadder()
 
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.puzzleData);
+			game.init(puzzle.puzzleData)
 		}
-	}, [puzzle, isReady, game.init]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Focus input after game starts
 	useEffect(() => {
 		if (!isReady && inputRef.current) {
-			inputRef.current.focus();
+			inputRef.current.focus()
 		}
-	}, [isReady]);
+	}, [isReady])
 
 	// Track game completion - in useEffect to avoid render-phase side effects
-	const gameEndedRef = useRef(false);
+	const gameEndedRef = useRef(false)
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
-			gameEndedRef.current = true;
+			gameEndedRef.current = true
 			endGame({
-				status: "won",
+				status: 'won',
 				attempts: game.state.path.length - 1,
 				maxAttempts: puzzle.puzzleData.minSteps,
 				data: {
 					path: game.state.path,
 				},
-			});
+			})
 		}
-	}, [
-		game.state.isComplete,
-		game.state.path,
-		puzzle.puzzleData.minSteps,
-		endGame,
-	]);
+	}, [game.state.isComplete, game.state.path, puzzle.puzzleData.minSteps, endGame])
 
 	// Track previous path length to detect successful submission
-	const prevPathLengthRef = useRef(game.state.path.length);
+	const prevPathLengthRef = useRef(game.state.path.length)
 
 	// React to error state changes
 	useEffect(() => {
 		if (game.state.error) {
-			triggerHaptic("error");
-			triggerSound("error");
+			triggerHaptic('error')
+			triggerSound('error')
 		}
-	}, [game.state.error]);
+	}, [game.state.error])
 
 	// React to successful word submission (path grew)
 	useEffect(() => {
 		if (game.state.path.length > prevPathLengthRef.current) {
-			triggerHaptic("light");
-			triggerSound("correct");
+			triggerHaptic('light')
+			triggerSound('correct')
 		}
-		prevPathLengthRef.current = game.state.path.length;
-	}, [game.state.path.length]);
+		prevPathLengthRef.current = game.state.path.length
+	}, [game.state.path.length])
 
 	// Handle form submission
 	const handleSubmit = useCallback(
 		(e: React.FormEvent) => {
-			e.preventDefault();
-			if (!game.state.currentWord) return;
-			game.submitWord();
+			e.preventDefault()
+			if (!game.state.currentWord) return
+			game.submitWord()
 		},
 		[game],
-	);
+	)
 
 	// Share result
 	const handleShare = useCallback(() => {
-		const timeMs =
-			game.state.endTime && startTime ? game.state.endTime - startTime : 0;
-		const steps = game.state.path.length - 1;
+		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
+		const steps = game.state.path.length - 1
 
-		const text = `🪜 Word Ladder: ${puzzle.puzzleData.startWord} → ${puzzle.puzzleData.endWord}\n📊 ${steps} steps • ⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`;
-		navigator.clipboard.writeText(text);
+		const text = `🪜 Word Ladder: ${puzzle.puzzleData.startWord} → ${puzzle.puzzleData.endWord}\n📊 ${steps} steps • ⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
+		navigator.clipboard.writeText(text)
 	}, [
 		game.state.endTime,
 		game.state.path.length,
 		startTime,
 		puzzle.puzzleData.startWord,
 		puzzle.puzzleData.endWord,
-	]);
+	])
 
 	// Get error message
 	const getErrorMessage = () => {
-		if (!game.state.error) return null;
+		if (!game.state.error) return null
 		switch (game.state.error) {
-			case "notInList":
-				return t("messages.notInList");
-			case "wrongLength":
-				return t("messages.wrongLength");
-			case "notOneChange":
-				return t("messages.notOneChange");
-			case "alreadyUsed":
-				return t("messages.alreadyUsed");
+			case 'notInList':
+				return t('messages.notInList')
+			case 'wrongLength':
+				return t('messages.wrongLength')
+			case 'notOneChange':
+				return t('messages.notOneChange')
+			case 'alreadyUsed':
+				return t('messages.alreadyUsed')
 			default:
-				return null;
+				return null
 		}
-	};
+	}
 
 	// Ready screen
 	if (isReady) {
@@ -177,8 +160,8 @@ export function WordLadderGame({
 					<div className="mb-2 flex justify-center">
 						<WordLadderIcon size={48} className="text-primary" />
 					</div>
-					<CardTitle>{t("name")}</CardTitle>
-					<p className="text-sm text-muted-foreground">{t("description")}</p>
+					<CardTitle>{t('name')}</CardTitle>
+					<p className="text-sm text-muted-foreground">{t('description')}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Preview */}
@@ -196,22 +179,22 @@ export function WordLadderGame({
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
-							{t("rules.title")}
+							{t('rules.title')}
 						</h3>
 						<ul className="space-y-1 text-sm text-muted-foreground">
-							<li>• {t("rules.rule1")}</li>
-							<li>• {t("rules.rule2")}</li>
-							<li>• {t("rules.rule3")}</li>
+							<li>• {t('rules.rule1')}</li>
+							<li>• {t('rules.rule2')}</li>
+							<li>• {t('rules.rule3')}</li>
 						</ul>
 					</div>
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{t("startGame")}
+						{t('startGame')}
 					</Button>
 				</CardContent>
 			</Card>
-		);
+		)
 	}
 
 	return (
@@ -221,7 +204,7 @@ export function WordLadderGame({
 
 			{/* Header */}
 			<div className="flex w-full max-w-xs items-center justify-between">
-				<div className="text-sm text-muted-foreground">{t("name")}</div>
+				<div className="text-sm text-muted-foreground">{t('name')}</div>
 				<Button
 					variant="ghost"
 					size="sm"
@@ -249,26 +232,20 @@ export function WordLadderGame({
 						ref={inputRef}
 						value={game.state.currentWord}
 						onChange={(e) => game.setInput(e.target.value)}
-						placeholder={t("enterWord")}
+						placeholder={t('enterWord')}
 						maxLength={puzzle.puzzleData.wordLength}
 						className="min-h-[44px] text-center text-base font-bold uppercase sm:text-lg"
 						autoComplete="off"
 						autoCapitalize="characters"
 					/>
-					<Button
-						type="submit"
-						disabled={!game.state.currentWord}
-						className="min-h-[44px]"
-					>
-						{t("submit")}
+					<Button type="submit" disabled={!game.state.currentWord} className="min-h-[44px]">
+						{t('submit')}
 					</Button>
 				</form>
 			)}
 
 			{/* Error message */}
-			{game.state.error && (
-				<div className="text-sm text-destructive">{getErrorMessage()}</div>
-			)}
+			{game.state.error && <div className="text-sm text-destructive">{getErrorMessage()}</div>}
 
 			{/* Controls */}
 			<div className="flex gap-2">
@@ -280,7 +257,7 @@ export function WordLadderGame({
 					className="min-h-[44px]"
 				>
 					<Undo2 className="mr-1 h-4 w-4" />
-					{t("undo")}
+					{t('undo')}
 				</Button>
 			</div>
 
@@ -300,10 +277,7 @@ export function WordLadderGame({
 				stats={{
 					attempts: game.state.path.length - 1,
 					maxAttempts: puzzle.puzzleData.minSteps,
-					timeSpentMs:
-						game.state.endTime && startTime
-							? game.state.endTime - startTime
-							: 0,
+					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}
 				onShare={handleShare}
@@ -316,5 +290,5 @@ export function WordLadderGame({
 				streakCount={1}
 			/>
 		</div>
-	);
+	)
 }

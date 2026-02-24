@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 /**
  * API Provider
@@ -7,9 +7,9 @@
  * React Query provider for the Hono API client.
  */
 
-import { MINUTE_MS } from "@/lib/constants/time";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { useState } from 'react'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 /**
  * Create React Query client with optimized defaults
@@ -31,28 +31,28 @@ function makeQueryClient() {
 				retry: 1,
 			},
 		},
-	});
+	})
 }
 
 // Singleton pattern for browser
-let browserQueryClient: QueryClient | undefined;
+let browserQueryClient: QueryClient | undefined
 
 function getQueryClient() {
-	if (typeof window === "undefined") {
+	if (typeof window === 'undefined') {
 		// Server: always make a new query client
-		return makeQueryClient();
+		return makeQueryClient()
 	}
 	// Browser: make a new query client if we don't already have one
 	// This is very important so we don't re-make a new client
 	if (!browserQueryClient) {
-		browserQueryClient = makeQueryClient();
+		browserQueryClient = makeQueryClient()
 	}
-	return browserQueryClient;
+	return browserQueryClient
 }
 
 type Props = {
-	children: React.ReactNode;
-};
+	children: React.ReactNode
+}
 
 /**
  * API Provider Component
@@ -66,9 +66,7 @@ type Props = {
  * </ApiProvider>
  */
 export function ApiProvider({ children }: Props) {
-	const [queryClient] = useState(() => getQueryClient());
+	const [queryClient] = useState(() => getQueryClient())
 
-	return (
-		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-	);
+	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }

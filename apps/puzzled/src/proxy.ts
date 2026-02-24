@@ -12,32 +12,27 @@
  * No manual /api/auth/* routes needed.
  */
 
-import {
-	type Locale,
-	defaultLocale,
-	isValidLocale,
-	locales,
-} from "@/lib/i18n/config";
-import { routing } from "@/lib/i18n/routing";
-import { createSylphxMiddleware } from "@sylphx/sdk/nextjs";
-import createMiddleware from "next-intl/middleware";
-import { type NextRequest, NextResponse } from "next/server";
+import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
+import { type NextRequest, NextResponse } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
+import { routing } from '@/lib/i18n/routing'
 
 // =============================================================================
 // i18n Middleware
 // =============================================================================
 
-const intlMiddleware = createMiddleware(routing);
+const intlMiddleware = createMiddleware(routing)
 
 // Locale pattern for URL matching
-const LOCALE_PATTERN = new RegExp(`^/(${locales.join("|")})/`);
+const LOCALE_PATTERN = new RegExp(`^/(${locales.join('|')})/`)
 
 function getLocaleFromPath(pathname: string): Locale | null {
-	const match = pathname.match(LOCALE_PATTERN);
+	const match = pathname.match(LOCALE_PATTERN)
 	if (match?.[1] && isValidLocale(match[1])) {
-		return match[1] as Locale;
+		return match[1] as Locale
 	}
-	return null;
+	return null
 }
 
 // =============================================================================
@@ -47,11 +42,11 @@ function getLocaleFromPath(pathname: string): Locale | null {
 // Create Sylphx middleware (handles auth routes, token refresh, route protection)
 const sylphxMiddleware = createSylphxMiddleware({
 	publicRoutes: [
-		"/",
-		"/about",
-		"/pricing",
-		"/blog/*",
-		"/games/*",
+		'/',
+		'/about',
+		'/pricing',
+		'/blog/*',
+		'/games/*',
 		// i18n prefixed routes
 		...locales.flatMap((locale) => [
 			`/${locale}`,
@@ -61,20 +56,20 @@ const sylphxMiddleware = createSylphxMiddleware({
 			`/${locale}/games/*`,
 		]),
 	],
-	ignoredRoutes: ["/api/*", "/monitoring"],
-	signInUrl: "/login",
-	afterSignInUrl: "/dashboard",
-	afterSignOutUrl: "/",
-	authPrefix: "/auth",
-	debug: process.env.NODE_ENV === "development",
-});
+	ignoredRoutes: ['/api/*', '/monitoring'],
+	signInUrl: '/login',
+	afterSignInUrl: '/dashboard',
+	afterSignOutUrl: '/',
+	authPrefix: '/auth',
+	debug: process.env.NODE_ENV === 'development',
+})
 
 // =============================================================================
 // Combined Proxy
 // =============================================================================
 
 export async function proxy(request: NextRequest) {
-	const { pathname } = request.nextUrl;
+	const { pathname } = request.nextUrl
 
 	// =========================================================================
 	// Skip non-page routes
@@ -82,41 +77,36 @@ export async function proxy(request: NextRequest) {
 
 	// Skip files with extensions, Next.js internals, API routes
 	if (
-		pathname.includes(".") ||
-		pathname.startsWith("/_next") ||
-		pathname.startsWith("/api") ||
-		pathname.startsWith("/monitoring")
+		pathname.includes('.') ||
+		pathname.startsWith('/_next') ||
+		pathname.startsWith('/api') ||
+		pathname.startsWith('/monitoring')
 	) {
-		return NextResponse.next();
+		return NextResponse.next()
 	}
 
 	// =========================================================================
 	// i18n: Redirect /en-US/* to non-prefixed (en-US is default)
 	// =========================================================================
 
-	if (pathname.startsWith("/en-US/") || pathname === "/en-US") {
-		const newPathname =
-			pathname === "/en-US" ? "/" : pathname.replace(/^\/en-US/, "");
-		const url = request.nextUrl.clone();
-		url.pathname = newPathname;
-		return NextResponse.redirect(url, 308);
+	if (pathname.startsWith('/en-US/') || pathname === '/en-US') {
+		const newPathname = pathname === '/en-US' ? '/' : pathname.replace(/^\/en-US/, '')
+		const url = request.nextUrl.clone()
+		url.pathname = newPathname
+		return NextResponse.redirect(url, 308)
 	}
 
 	// =========================================================================
 	// i18n: Redirect to preferred locale if set
 	// =========================================================================
 
-	const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
-	if (
-		cookieLocale &&
-		isValidLocale(cookieLocale) &&
-		cookieLocale !== defaultLocale
-	) {
-		const pathLocale = getLocaleFromPath(pathname);
+	const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value
+	if (cookieLocale && isValidLocale(cookieLocale) && cookieLocale !== defaultLocale) {
+		const pathLocale = getLocaleFromPath(pathname)
 		if (!pathLocale) {
-			const url = request.nextUrl.clone();
-			url.pathname = `/${cookieLocale}${pathname}`;
-			return NextResponse.redirect(url);
+			const url = request.nextUrl.clone()
+			url.pathname = `/${cookieLocale}${pathname}`
+			return NextResponse.redirect(url)
 		}
 	}
 
@@ -124,17 +114,17 @@ export async function proxy(request: NextRequest) {
 	// Auth Routes: Let Sylphx handle /auth/*
 	// =========================================================================
 
-	if (pathname.startsWith("/auth/")) {
-		return sylphxMiddleware(request);
+	if (pathname.startsWith('/auth/')) {
+		return sylphxMiddleware(request)
 	}
 
 	// =========================================================================
 	// Check if Sylphx is enabled
 	// =========================================================================
 
-	const sylphxEnabled = Boolean(process.env.SYLPHX_SECRET_KEY);
+	const sylphxEnabled = Boolean(process.env.SYLPHX_SECRET_KEY)
 	if (!sylphxEnabled) {
-		return intlMiddleware(request);
+		return intlMiddleware(request)
 	}
 
 	// =========================================================================
@@ -142,11 +132,11 @@ export async function proxy(request: NextRequest) {
 	// =========================================================================
 
 	// Run Sylphx middleware to handle token refresh and route protection
-	const sylphxResponse = await sylphxMiddleware(request);
+	const sylphxResponse = await sylphxMiddleware(request)
 
 	// If Sylphx wants to redirect (e.g., to login), respect that
 	if (sylphxResponse.status >= 300 && sylphxResponse.status < 400) {
-		return sylphxResponse;
+		return sylphxResponse
 	}
 
 	// =========================================================================
@@ -154,7 +144,7 @@ export async function proxy(request: NextRequest) {
 	// =========================================================================
 
 	// Apply i18n middleware
-	const intlResponse = intlMiddleware(request);
+	const intlResponse = intlMiddleware(request)
 
 	// Merge cookies from Sylphx response (token refresh) into intl response
 	// This ensures refreshed tokens are sent to the browser
@@ -167,13 +157,13 @@ export async function proxy(request: NextRequest) {
 			sameSite: cookie.sameSite,
 			maxAge: cookie.maxAge,
 			expires: cookie.expires,
-		});
+		})
 	}
 
-	return intlResponse;
+	return intlResponse
 }
 
 export const config = {
 	// Match all paths except static files
-	matcher: ["/((?!_next|monitoring|.*\\..*).*)", "/"],
-};
+	matcher: ['/((?!_next|monitoring|.*\\..*).*)', '/'],
+}

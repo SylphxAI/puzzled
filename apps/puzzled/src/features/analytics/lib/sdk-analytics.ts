@@ -13,83 +13,79 @@
  * - Page unload handling
  */
 
-"use client";
+'use client'
 
-import type { PuzzleDifficulty } from "@/games/types";
-import { useAnalytics } from "@sylphx/sdk/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { canTrackAnalytics } from "./consent";
+import { useAnalytics } from '@sylphx/sdk/react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+import type { PuzzleDifficulty } from '@/games/types'
+import { canTrackAnalytics } from './consent'
 
 // ==========================================
 // Constants
 // ==========================================
 
-import {
-	ANALYTICS_OFFLINE_QUEUE_KEY,
-	SESSION_ID_KEY,
-	SESSION_START_KEY,
-} from "@/lib/storage-keys";
+import { ANALYTICS_OFFLINE_QUEUE_KEY, SESSION_ID_KEY, SESSION_START_KEY } from '@/lib/storage-keys'
 
-const BATCH_SIZE = 10;
-const BATCH_INTERVAL_MS = 5000;
-const MAX_RETRIES = 5;
-const BASE_RETRY_DELAY_MS = 1000;
+const BATCH_SIZE = 10
+const BATCH_INTERVAL_MS = 5000
+const MAX_RETRIES = 5
+const BASE_RETRY_DELAY_MS = 1000
 
 // ==========================================
 // Types
 // ==========================================
 
 export interface GameStartEvent {
-	game: string;
-	mode: "daily" | "archive" | "practice";
-	difficulty?: PuzzleDifficulty;
-	puzzleId?: string;
+	game: string
+	mode: 'daily' | 'archive' | 'practice'
+	difficulty?: PuzzleDifficulty
+	puzzleId?: string
 }
 
 export interface GameCompleteEvent {
-	game: string;
-	status: "won" | "lost";
-	attempts: number;
-	timeSpentMs: number;
-	score?: number;
-	mode: "daily" | "archive" | "practice";
-	difficulty?: PuzzleDifficulty;
-	puzzleId?: string;
+	game: string
+	status: 'won' | 'lost'
+	attempts: number
+	timeSpentMs: number
+	score?: number
+	mode: 'daily' | 'archive' | 'practice'
+	difficulty?: PuzzleDifficulty
+	puzzleId?: string
 }
 
 export interface AchievementEvent {
-	achievementId: string;
-	achievementName: string;
-	category: string;
-	points: number;
+	achievementId: string
+	achievementName: string
+	category: string
+	points: number
 }
 
 export interface StreakEvent {
-	streakType: "daily" | "weekly";
-	streakCount: number;
-	isNewRecord: boolean;
+	streakType: 'daily' | 'weekly'
+	streakCount: number
+	isNewRecord: boolean
 }
 
-type UserJourneyStage = "new" | "returning" | "premium";
+type UserJourneyStage = 'new' | 'returning' | 'premium'
 
-type DeviceType = "mobile" | "tablet" | "desktop";
+type DeviceType = 'mobile' | 'tablet' | 'desktop'
 
 interface EventDimensions {
-	device_type: DeviceType;
-	session_id: string;
-	session_duration_ms: number;
-	journey_stage: UserJourneyStage;
-	time_to_first_interaction_ms: number | null;
-	is_online: boolean;
-	viewport_width: number;
-	viewport_height: number;
+	device_type: DeviceType
+	session_id: string
+	session_duration_ms: number
+	journey_stage: UserJourneyStage
+	time_to_first_interaction_ms: number | null
+	is_online: boolean
+	viewport_width: number
+	viewport_height: number
 }
 
 interface QueuedEvent {
-	eventName: string;
-	properties: Record<string, unknown>;
-	timestamp: string;
-	retryCount: number;
+	eventName: string
+	properties: Record<string, unknown>
+	timestamp: string
+	retryCount: number
 }
 
 // ==========================================
@@ -97,26 +93,25 @@ interface QueuedEvent {
 // ==========================================
 
 function getDeviceType(): DeviceType {
-	if (typeof window === "undefined") return "desktop";
+	if (typeof window === 'undefined') return 'desktop'
 
-	const userAgent = navigator.userAgent.toLowerCase();
-	const screenWidth = window.innerWidth;
+	const userAgent = navigator.userAgent.toLowerCase()
+	const screenWidth = window.innerWidth
 
 	// Check for tablet first (both UA and screen size)
 	const isTabletUA =
 		/ipad|android(?!.*mobile)|tablet/i.test(userAgent) ||
-		(navigator.maxTouchPoints > 0 && screenWidth >= 768 && screenWidth < 1024);
+		(navigator.maxTouchPoints > 0 && screenWidth >= 768 && screenWidth < 1024)
 
-	if (isTabletUA) return "tablet";
+	if (isTabletUA) return 'tablet'
 
 	// Check for mobile
-	const isMobileUA =
-		/mobile|iphone|ipod|android.*mobile|blackberry|opera mini|iemobile/i.test(
-			userAgent,
-		);
-	if (isMobileUA || screenWidth < 768) return "mobile";
+	const isMobileUA = /mobile|iphone|ipod|android.*mobile|blackberry|opera mini|iemobile/i.test(
+		userAgent,
+	)
+	if (isMobileUA || screenWidth < 768) return 'mobile'
 
-	return "desktop";
+	return 'desktop'
 }
 
 // ==========================================
@@ -124,88 +119,85 @@ function getDeviceType(): DeviceType {
 // ==========================================
 
 function generateSessionId(): string {
-	return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+	return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
 }
 
 function getOrCreateSessionId(): string {
-	if (typeof window === "undefined") return generateSessionId();
+	if (typeof window === 'undefined') return generateSessionId()
 
-	let sessionId = sessionStorage.getItem(SESSION_ID_KEY);
+	let sessionId = sessionStorage.getItem(SESSION_ID_KEY)
 	if (!sessionId) {
-		sessionId = generateSessionId();
-		sessionStorage.setItem(SESSION_ID_KEY, sessionId);
-		sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
+		sessionId = generateSessionId()
+		sessionStorage.setItem(SESSION_ID_KEY, sessionId)
+		sessionStorage.setItem(SESSION_START_KEY, Date.now().toString())
 	}
-	return sessionId;
+	return sessionId
 }
 
 function getSessionDurationMs(): number {
-	if (typeof window === "undefined") return 0;
+	if (typeof window === 'undefined') return 0
 
-	const startTime = sessionStorage.getItem(SESSION_START_KEY);
-	if (!startTime) return 0;
+	const startTime = sessionStorage.getItem(SESSION_START_KEY)
+	if (!startTime) return 0
 
-	return Date.now() - Number.parseInt(startTime, 10);
+	return Date.now() - Number.parseInt(startTime, 10)
 }
 
 // ==========================================
 // Offline Queue (IndexedDB)
 // ==========================================
 
-const DB_NAME = "puzzled-analytics";
-const STORE_NAME = "offline-events";
-const DB_VERSION = 1;
+const DB_NAME = 'puzzled-analytics'
+const STORE_NAME = 'offline-events'
+const DB_VERSION = 1
 
 async function openDB(): Promise<IDBDatabase | null> {
-	if (typeof indexedDB === "undefined") return null;
+	if (typeof indexedDB === 'undefined') return null
 
 	return new Promise((resolve, reject) => {
-		const request = indexedDB.open(DB_NAME, DB_VERSION);
+		const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-		request.onerror = () => reject(request.error);
-		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error)
+		request.onsuccess = () => resolve(request.result)
 
 		request.onupgradeneeded = (event) => {
-			const db = (event.target as IDBOpenDBRequest).result;
+			const db = (event.target as IDBOpenDBRequest).result
 			if (!db.objectStoreNames.contains(STORE_NAME)) {
 				db.createObjectStore(STORE_NAME, {
-					keyPath: "id",
+					keyPath: 'id',
 					autoIncrement: true,
-				});
+				})
 			}
-		};
-	});
+		}
+	})
 }
 
 async function saveToOfflineQueue(events: QueuedEvent[]): Promise<void> {
 	try {
-		const db = await openDB();
+		const db = await openDB()
 		if (!db) {
 			// Fallback to localStorage if IndexedDB unavailable
-			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY);
-			const queue: QueuedEvent[] = existing ? JSON.parse(existing) : [];
-			queue.push(...events);
+			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY)
+			const queue: QueuedEvent[] = existing ? JSON.parse(existing) : []
+			queue.push(...events)
 			// Limit to 1000 events
-			localStorage.setItem(
-				ANALYTICS_OFFLINE_QUEUE_KEY,
-				JSON.stringify(queue.slice(-1000)),
-			);
-			return;
+			localStorage.setItem(ANALYTICS_OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-1000)))
+			return
 		}
 
-		const tx = db.transaction(STORE_NAME, "readwrite");
-		const store = tx.objectStore(STORE_NAME);
+		const tx = db.transaction(STORE_NAME, 'readwrite')
+		const store = tx.objectStore(STORE_NAME)
 
 		for (const event of events) {
-			store.add(event);
+			store.add(event)
 		}
 
 		await new Promise<void>((resolve, reject) => {
-			tx.oncomplete = () => resolve();
-			tx.onerror = () => reject(tx.error);
-		});
+			tx.oncomplete = () => resolve()
+			tx.onerror = () => reject(tx.error)
+		})
 
-		db.close();
+		db.close()
 	} catch {
 		// Silently fail - analytics shouldn't break the app
 	}
@@ -213,44 +205,44 @@ async function saveToOfflineQueue(events: QueuedEvent[]): Promise<void> {
 
 async function getOfflineQueue(): Promise<QueuedEvent[]> {
 	try {
-		const db = await openDB();
+		const db = await openDB()
 		if (!db) {
 			// Fallback to localStorage
-			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY);
-			return existing ? JSON.parse(existing) : [];
+			const existing = localStorage.getItem(ANALYTICS_OFFLINE_QUEUE_KEY)
+			return existing ? JSON.parse(existing) : []
 		}
 
-		const tx = db.transaction(STORE_NAME, "readonly");
-		const store = tx.objectStore(STORE_NAME);
+		const tx = db.transaction(STORE_NAME, 'readonly')
+		const store = tx.objectStore(STORE_NAME)
 
 		return new Promise((resolve, reject) => {
-			const request = store.getAll();
-			request.onsuccess = () => resolve(request.result || []);
-			request.onerror = () => reject(request.error);
-		});
+			const request = store.getAll()
+			request.onsuccess = () => resolve(request.result || [])
+			request.onerror = () => reject(request.error)
+		})
 	} catch {
-		return [];
+		return []
 	}
 }
 
 async function clearOfflineQueue(): Promise<void> {
 	try {
-		const db = await openDB();
+		const db = await openDB()
 		if (!db) {
-			localStorage.removeItem(ANALYTICS_OFFLINE_QUEUE_KEY);
-			return;
+			localStorage.removeItem(ANALYTICS_OFFLINE_QUEUE_KEY)
+			return
 		}
 
-		const tx = db.transaction(STORE_NAME, "readwrite");
-		const store = tx.objectStore(STORE_NAME);
-		store.clear();
+		const tx = db.transaction(STORE_NAME, 'readwrite')
+		const store = tx.objectStore(STORE_NAME)
+		store.clear()
 
 		await new Promise<void>((resolve, reject) => {
-			tx.oncomplete = () => resolve();
-			tx.onerror = () => reject(tx.error);
-		});
+			tx.oncomplete = () => resolve()
+			tx.onerror = () => reject(tx.error)
+		})
 
-		db.close();
+		db.close()
 	} catch {
 		// Silently fail
 	}
@@ -260,28 +252,28 @@ async function clearOfflineQueue(): Promise<void> {
 // Event Dimensions Enrichment
 // ==========================================
 
-let firstInteractionTime: number | null = null;
+let firstInteractionTime: number | null = null
 
 function recordFirstInteraction(): void {
-	if (firstInteractionTime === null && typeof window !== "undefined") {
-		firstInteractionTime = performance.now();
+	if (firstInteractionTime === null && typeof window !== 'undefined') {
+		firstInteractionTime = performance.now()
 	}
 }
 
 function setupFirstInteractionTracking(): void {
-	if (typeof window === "undefined") return;
+	if (typeof window === 'undefined') return
 
-	const events = ["click", "keydown", "touchstart", "scroll"];
+	const events = ['click', 'keydown', 'touchstart', 'scroll']
 	const handler = () => {
-		recordFirstInteraction();
+		recordFirstInteraction()
 		// Remove listeners after first interaction
 		for (const event of events) {
-			window.removeEventListener(event, handler, { capture: true });
+			window.removeEventListener(event, handler, { capture: true })
 		}
-	};
+	}
 
 	for (const event of events) {
-		window.addEventListener(event, handler, { capture: true, once: true });
+		window.addEventListener(event, handler, { capture: true, once: true })
 	}
 }
 
@@ -292,10 +284,10 @@ function getEventDimensions(journeyStage: UserJourneyStage): EventDimensions {
 		session_duration_ms: getSessionDurationMs(),
 		journey_stage: journeyStage,
 		time_to_first_interaction_ms: firstInteractionTime,
-		is_online: typeof navigator !== "undefined" ? navigator.onLine : true,
-		viewport_width: typeof window !== "undefined" ? window.innerWidth : 0,
-		viewport_height: typeof window !== "undefined" ? window.innerHeight : 0,
-	};
+		is_online: typeof navigator !== 'undefined' ? navigator.onLine : true,
+		viewport_width: typeof window !== 'undefined' ? window.innerWidth : 0,
+		viewport_height: typeof window !== 'undefined' ? window.innerHeight : 0,
+	}
 }
 
 // ==========================================
@@ -304,10 +296,10 @@ function getEventDimensions(journeyStage: UserJourneyStage): EventDimensions {
 
 function calculateRetryDelay(retryCount: number): number {
 	// Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped)
-	const delay = Math.min(BASE_RETRY_DELAY_MS * 2 ** retryCount, 30000);
+	const delay = Math.min(BASE_RETRY_DELAY_MS * 2 ** retryCount, 30000)
 	// Add jitter (0-25% of delay)
-	const jitter = delay * 0.25 * Math.random();
-	return delay + jitter;
+	const jitter = delay * 0.25 * Math.random()
+	return delay + jitter
 }
 
 // ==========================================
@@ -315,165 +307,162 @@ function calculateRetryDelay(retryCount: number): number {
 // ==========================================
 
 interface QueueManager {
-	enqueue: (eventName: string, properties: Record<string, unknown>) => void;
-	flush: () => Promise<void>;
-	destroy: () => void;
+	enqueue: (eventName: string, properties: Record<string, unknown>) => void
+	flush: () => Promise<void>
+	destroy: () => void
 }
 
 function createQueueManager(
-	trackFn: (
-		event: string,
-		properties?: Record<string, unknown>,
-	) => Promise<void>,
+	trackFn: (event: string, properties?: Record<string, unknown>) => Promise<void>,
 	journeyStage: UserJourneyStage,
 ): QueueManager {
-	const queue: QueuedEvent[] = [];
-	let flushTimeout: ReturnType<typeof setTimeout> | null = null;
-	let isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
-	let isDestroyed = false;
-	let isFlushing = false;
+	const queue: QueuedEvent[] = []
+	let flushTimeout: ReturnType<typeof setTimeout> | null = null
+	let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true
+	let isDestroyed = false
+	let isFlushing = false
 
 	const scheduleFlush = () => {
-		if (flushTimeout) clearTimeout(flushTimeout);
+		if (flushTimeout) clearTimeout(flushTimeout)
 		flushTimeout = setTimeout(() => {
-			void flush();
-		}, BATCH_INTERVAL_MS);
-	};
+			void flush()
+		}, BATCH_INTERVAL_MS)
+	}
 
 	const flush = async () => {
-		if (queue.length === 0 || isDestroyed || isFlushing) return;
+		if (queue.length === 0 || isDestroyed || isFlushing) return
 
 		// Check consent before sending
 		if (!canTrackAnalytics()) {
-			queue.length = 0;
-			return;
+			queue.length = 0
+			return
 		}
 
-		isFlushing = true;
-		const eventsToSend = queue.splice(0, queue.length);
+		isFlushing = true
+		const eventsToSend = queue.splice(0, queue.length)
 
 		if (!isOnline) {
 			// Save to offline queue
-			await saveToOfflineQueue(eventsToSend);
-			isFlushing = false;
-			return;
+			await saveToOfflineQueue(eventsToSend)
+			isFlushing = false
+			return
 		}
 
-		const failedEvents: QueuedEvent[] = [];
+		const failedEvents: QueuedEvent[] = []
 
 		// Track each event with retry logic
 		for (const event of eventsToSend) {
 			try {
-				await trackFn(event.eventName, event.properties);
+				await trackFn(event.eventName, event.properties)
 			} catch {
 				// Collect failed events for retry
 				if (event.retryCount < MAX_RETRIES) {
-					failedEvents.push({ ...event, retryCount: event.retryCount + 1 });
+					failedEvents.push({ ...event, retryCount: event.retryCount + 1 })
 				} else {
 					// Exceeded max retries - save to offline queue
-					await saveToOfflineQueue([event]);
+					await saveToOfflineQueue([event])
 				}
 			}
 		}
 
-		isFlushing = false;
+		isFlushing = false
 
 		// Schedule retry for failed events
 		if (failedEvents.length > 0) {
-			const retryDelay = calculateRetryDelay(failedEvents[0].retryCount);
+			const retryDelay = calculateRetryDelay(failedEvents[0].retryCount)
 			setTimeout(() => {
 				for (const event of failedEvents) {
-					queue.push(event);
+					queue.push(event)
 				}
-				void flush();
-			}, retryDelay);
+				void flush()
+			}, retryDelay)
 		}
-	};
+	}
 
 	const enqueue = (eventName: string, properties: Record<string, unknown>) => {
-		if (isDestroyed) return;
+		if (isDestroyed) return
 
 		// Check consent before queueing
-		if (!canTrackAnalytics()) return;
+		if (!canTrackAnalytics()) return
 
-		const dimensions = getEventDimensions(journeyStage);
+		const dimensions = getEventDimensions(journeyStage)
 		const enrichedProperties = {
 			...properties,
 			...dimensions,
-		};
+		}
 
 		queue.push({
 			eventName,
 			properties: enrichedProperties,
 			timestamp: new Date().toISOString(),
 			retryCount: 0,
-		});
+		})
 
 		if (queue.length >= BATCH_SIZE) {
-			void flush();
+			void flush()
 		} else {
-			scheduleFlush();
+			scheduleFlush()
 		}
-	};
+	}
 
 	// Handle online/offline state changes
 	const handleOnline = async () => {
-		isOnline = true;
+		isOnline = true
 		// Try to send offline queue
-		const offlineEvents = await getOfflineQueue();
+		const offlineEvents = await getOfflineQueue()
 		if (offlineEvents.length > 0) {
-			await clearOfflineQueue();
+			await clearOfflineQueue()
 			for (const event of offlineEvents) {
-				queue.push({ ...event, retryCount: 0 });
+				queue.push({ ...event, retryCount: 0 })
 			}
-			void flush();
+			void flush()
 		}
-	};
+	}
 
 	const handleOffline = () => {
-		isOnline = false;
-	};
+		isOnline = false
+	}
 
 	// Handle page unload - use sendBeacon if available
 	const handleUnload = () => {
 		if (queue.length > 0 && canTrackAnalytics()) {
 			// Best effort flush on unload
-			void flush();
+			void flush()
 		}
-	};
+	}
 
 	const handleVisibilityChange = () => {
-		if (document.visibilityState === "hidden") {
-			void flush();
+		if (document.visibilityState === 'hidden') {
+			void flush()
 		}
-	};
+	}
 
 	// Setup event listeners
-	if (typeof window !== "undefined") {
-		window.addEventListener("online", handleOnline);
-		window.addEventListener("offline", handleOffline);
-		window.addEventListener("beforeunload", handleUnload);
-		document.addEventListener("visibilitychange", handleVisibilityChange);
+	if (typeof window !== 'undefined') {
+		window.addEventListener('online', handleOnline)
+		window.addEventListener('offline', handleOffline)
+		window.addEventListener('beforeunload', handleUnload)
+		document.addEventListener('visibilitychange', handleVisibilityChange)
 	}
 
 	const destroy = () => {
-		isDestroyed = true;
-		if (flushTimeout) clearTimeout(flushTimeout);
+		isDestroyed = true
+		if (flushTimeout) clearTimeout(flushTimeout)
 
-		if (typeof window !== "undefined") {
-			window.removeEventListener("online", handleOnline);
-			window.removeEventListener("offline", handleOffline);
-			window.removeEventListener("beforeunload", handleUnload);
-			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('online', handleOnline)
+			window.removeEventListener('offline', handleOffline)
+			window.removeEventListener('beforeunload', handleUnload)
+			document.removeEventListener('visibilitychange', handleVisibilityChange)
 		}
 
 		// Final flush attempt
 		if (queue.length > 0) {
-			void flush();
+			void flush()
 		}
-	};
+	}
 
-	return { enqueue, flush, destroy };
+	return { enqueue, flush, destroy }
 }
 
 // ==========================================
@@ -482,7 +471,7 @@ function createQueueManager(
 
 interface UseGameAnalyticsOptions {
 	/** User journey stage for analytics segmentation */
-	journeyStage?: UserJourneyStage;
+	journeyStage?: UserJourneyStage
 }
 
 /**
@@ -509,58 +498,55 @@ interface UseGameAnalyticsOptions {
  * ```
  */
 export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
-	const { journeyStage = "new" } = options;
-	const { track, error: analyticsError } = useAnalytics();
+	const { journeyStage = 'new' } = options
+	const { track, error: analyticsError } = useAnalytics()
 
-	const queueManagerRef = useRef<QueueManager | null>(null);
+	const queueManagerRef = useRef<QueueManager | null>(null)
 
 	// Initialize queue manager and first interaction tracking
 	useEffect(() => {
-		setupFirstInteractionTracking();
+		setupFirstInteractionTracking()
 
-		queueManagerRef.current = createQueueManager(track, journeyStage);
+		queueManagerRef.current = createQueueManager(track, journeyStage)
 
 		// Check for offline events on mount
 		void (async () => {
-			if (typeof navigator !== "undefined" && navigator.onLine) {
-				const offlineEvents = await getOfflineQueue();
+			if (typeof navigator !== 'undefined' && navigator.onLine) {
+				const offlineEvents = await getOfflineQueue()
 				if (offlineEvents.length > 0 && queueManagerRef.current) {
-					await clearOfflineQueue();
+					await clearOfflineQueue()
 					for (const event of offlineEvents) {
-						queueManagerRef.current.enqueue(event.eventName, event.properties);
+						queueManagerRef.current.enqueue(event.eventName, event.properties)
 					}
 				}
 			}
-		})();
+		})()
 
 		return () => {
-			queueManagerRef.current?.destroy();
-			queueManagerRef.current = null;
-		};
-	}, [track, journeyStage]);
+			queueManagerRef.current?.destroy()
+			queueManagerRef.current = null
+		}
+	}, [track, journeyStage])
 
-	const enqueueEvent = useCallback(
-		(eventName: string, properties: Record<string, unknown>) => {
-			queueManagerRef.current?.enqueue(eventName, properties);
-		},
-		[],
-	);
+	const enqueueEvent = useCallback((eventName: string, properties: Record<string, unknown>) => {
+		queueManagerRef.current?.enqueue(eventName, properties)
+	}, [])
 
 	const trackGameStart = useCallback(
 		(event: GameStartEvent) => {
-			enqueueEvent("game_started", {
+			enqueueEvent('game_started', {
 				game_slug: event.game,
 				mode: event.mode,
 				difficulty: event.difficulty,
 				puzzle_id: event.puzzleId,
-			});
+			})
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const trackGameComplete = useCallback(
 		(event: GameCompleteEvent) => {
-			enqueueEvent("game_completed", {
+			enqueueEvent('game_completed', {
 				game_slug: event.game,
 				status: event.status,
 				attempts: event.attempts,
@@ -569,87 +555,80 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 				mode: event.mode,
 				difficulty: event.difficulty,
 				puzzle_id: event.puzzleId,
-			});
+			})
 
 			// Also track win/loss specifically for funnel analysis
-			if (event.status === "won") {
-				enqueueEvent("game_won", {
+			if (event.status === 'won') {
+				enqueueEvent('game_won', {
 					game_slug: event.game,
 					attempts: event.attempts,
 					time_spent_ms: event.timeSpentMs,
 					score: event.score,
-				});
+				})
 			} else {
-				enqueueEvent("game_lost", {
+				enqueueEvent('game_lost', {
 					game_slug: event.game,
 					attempts: event.attempts,
 					time_spent_ms: event.timeSpentMs,
-				});
+				})
 			}
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const trackAchievement = useCallback(
 		(event: AchievementEvent) => {
-			enqueueEvent("achievement_unlocked", {
+			enqueueEvent('achievement_unlocked', {
 				achievement_id: event.achievementId,
 				achievement_name: event.achievementName,
 				category: event.category,
 				points: event.points,
-			});
+			})
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const trackStreak = useCallback(
 		(event: StreakEvent) => {
-			enqueueEvent("streak_updated", {
+			enqueueEvent('streak_updated', {
 				streak_type: event.streakType,
 				streak_count: event.streakCount,
 				is_new_record: event.isNewRecord,
-			});
+			})
 
 			// Track milestone streaks separately
-			if (
-				event.streakCount === 7 ||
-				event.streakCount === 30 ||
-				event.streakCount === 100
-			) {
-				enqueueEvent("streak_milestone", {
+			if (event.streakCount === 7 || event.streakCount === 30 || event.streakCount === 100) {
+				enqueueEvent('streak_milestone', {
 					streak_type: event.streakType,
 					milestone: event.streakCount,
-				});
+				})
 			}
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const trackSubscription = useCallback(
-		(
-			action: "started" | "cancelled" | "upgraded" | "downgraded",
-			planId: string,
-		) => {
+		(action: 'started' | 'cancelled' | 'upgraded' | 'downgraded', planId: string) => {
 			enqueueEvent(`subscription_${action}`, {
 				plan_id: planId,
-			});
+			})
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const trackFeatureUsed = useCallback(
 		(feature: string, properties?: Record<string, unknown>) => {
-			enqueueEvent("feature_used", {
+			enqueueEvent('feature_used', {
 				feature,
 				...properties,
-			});
+			})
 		},
 		[enqueueEvent],
-	);
+	)
 
 	const flushEvents = useCallback(async () => {
-		await queueManagerRef.current?.flush();
-	}, []);
+		await queueManagerRef.current?.flush()
+	}, [])
 
 	return {
 		trackGameStart,
@@ -660,7 +639,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 		trackFeatureUsed,
 		flushEvents,
 		analyticsError,
-	};
+	}
 }
 
 // ==========================================
@@ -677,18 +656,15 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
  * ```
  */
 function _useJourneyStage(params: {
-	isAuthenticated: boolean;
-	isPremium?: boolean;
-	daysSinceFirstVisit?: number;
+	isAuthenticated: boolean
+	isPremium?: boolean
+	daysSinceFirstVisit?: number
 }): UserJourneyStage {
 	return useMemo(() => {
-		if (params.isPremium) return "premium";
-		if (params.isAuthenticated) return "returning";
-		if (
-			params.daysSinceFirstVisit !== undefined &&
-			params.daysSinceFirstVisit > 1
-		)
-			return "returning";
-		return "new";
-	}, [params.isAuthenticated, params.isPremium, params.daysSinceFirstVisit]);
+		if (params.isPremium) return 'premium'
+		if (params.isAuthenticated) return 'returning'
+		if (params.daysSinceFirstVisit !== undefined && params.daysSinceFirstVisit > 1)
+			return 'returning'
+		return 'new'
+	}, [params.isAuthenticated, params.isPremium, params.daysSinceFirstVisit])
 }

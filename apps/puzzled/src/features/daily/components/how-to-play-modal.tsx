@@ -1,26 +1,17 @@
-"use client";
+'use client'
 
-import {
-	type GameSlug,
-	getHowToPlayConfig,
-} from "@/games/how-to-play-registry";
-import { DEFAULT_GAME_COLORS, getGameColors } from "@/games/theme-colors";
-import { cn } from "@/lib/utils";
-import { GameIcon } from "@/shared/components/ui/game-icons";
-import {
-	Dialog,
-	DialogBody,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@sylphx/ui";
-import { useTranslations } from "next-intl";
+import { Dialog, DialogBody, DialogContent, DialogHeader, DialogTitle } from '@sylphx/ui'
+import { useTranslations } from 'next-intl'
+import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
+import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
+import { cn } from '@/lib/utils'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type HowToPlayModalProps = {
-	open: boolean;
-	onClose: () => void;
-	gameSlug: GameSlug;
-};
+	open: boolean
+	onClose: () => void
+	gameSlug: GameSlug
+}
 
 /**
  * HowToPlayModal - Dynamic game instructions from client registry
@@ -36,17 +27,11 @@ type HowToPlayModalProps = {
  * 2. Add HowToPlayContent to client-registry.ts
  * That's it - the modal will automatically render it.
  */
-export function HowToPlayModal({
-	open,
-	onClose,
-	gameSlug,
-}: HowToPlayModalProps) {
-	const t = useTranslations();
-	const config = getHowToPlayConfig(gameSlug);
-	const HowToPlayContent = config?.HowToPlayContent;
-	const colors = config?.display?.theme
-		? getGameColors(config.display.theme)
-		: DEFAULT_GAME_COLORS;
+export function HowToPlayModal({ open, onClose, gameSlug }: HowToPlayModalProps) {
+	const t = useTranslations()
+	const config = getHowToPlayConfig(gameSlug)
+	const HowToPlayContent = config?.HowToPlayContent
+	const colors = config?.display?.theme ? getGameColors(config.display.theme) : DEFAULT_GAME_COLORS
 
 	return (
 		<Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -56,7 +41,7 @@ export function HowToPlayModal({
 						{/* Game icon with accent color background */}
 						<div
 							className={cn(
-								"flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+								'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
 								colors.bgLight,
 							)}
 						>
@@ -65,10 +50,10 @@ export function HowToPlayModal({
 						{/* Game name and subtitle */}
 						<div className="flex flex-col">
 							<span className="text-base font-semibold leading-tight">
-								{config?.name || "Game"}
+								{config?.name || 'Game'}
 							</span>
 							<span className="text-xs font-normal text-muted-foreground">
-								{t("common.howToPlay")}
+								{t('common.howToPlay')}
 							</span>
 						</div>
 					</DialogTitle>
@@ -84,5 +69,5 @@ export function HowToPlayModal({
 				</DialogBody>
 			</DialogContent>
 		</Dialog>
-	);
+	)
 }

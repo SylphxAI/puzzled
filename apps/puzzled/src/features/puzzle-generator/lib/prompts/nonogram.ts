@@ -25,7 +25,7 @@ EXAMPLE SUBJECTS:
 - Medium: Umbrella, Rocket, Crown, Mushroom, Anchor, Ghost
 - Creative: Coffee cup, Robot, Sailboat, Cactus, Penguin
 
-The puzzle should be satisfying to solve and reveal a clear picture at the end.`;
+The puzzle should be satisfying to solve and reveal a clear picture at the end.`
 
 export const NONOGRAM_USER_PROMPT = `Generate a Nonogram pixel art puzzle.
 
@@ -56,7 +56,7 @@ Requirements:
 
 Be creative! Think of unique objects: telescope, cupcake, headphones, lighthouse, hot air balloon, etc.
 
-Return ONLY the JSON, no explanation.`;
+Return ONLY the JSON, no explanation.`
 
 /**
  * Themed prompt for specific categories
@@ -73,7 +73,7 @@ Return ONLY valid JSON in the same format as before:
   "grid": [[...], [...], ...]  // 10×10 grid of 0s and 1s
 }
 
-Make sure the silhouette is recognizable as something related to "${theme}".`;
+Make sure the silhouette is recognizable as something related to "${theme}".`
 
 /**
  * Exclusion prompt to avoid duplicate themes
@@ -83,7 +83,7 @@ const _NONOGRAM_AVOID_THEMES_PROMPT = (
 ) => `Generate a Nonogram pixel art puzzle.
 
 IMPORTANT: Do NOT create any of these themes (already used):
-${usedThemes.map((t) => `- ${t}`).join("\n")}
+${usedThemes.map((t) => `- ${t}`).join('\n')}
 
 Create something completely different and unique!
 
@@ -91,4 +91,4 @@ Return ONLY valid JSON in the standard format:
 {
   "theme": "UNIQUE OBJECT NAME",
   "grid": [[...], [...], ...]  // 10×10 grid of 0s and 1s
-}`;
+}`

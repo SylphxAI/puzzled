@@ -5,17 +5,13 @@
  * Represents finding matching patterns
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
-export function PatternMatchIcon({
-	size = 24,
-	className,
-	...props
-}: IconProps) {
+export function PatternMatchIcon({ size = 24, className, ...props }: IconProps) {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -44,5 +40,5 @@ export function PatternMatchIcon({
 			<path d="M20 7l2 3h-4z" fill="currentColor" />
 			<path d="M20 13l2 3h-4z" fill="currentColor" />
 		</svg>
-	);
+	)
 }

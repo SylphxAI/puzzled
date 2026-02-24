@@ -1,14 +1,14 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from 'lucide-react'
 
 type SettingsPageHeaderProps = {
-	icon: LucideIcon;
+	icon: LucideIcon
 	/** CSS classes for gradient background (include full class names for Tailwind) */
-	gradientClasses: string;
+	gradientClasses: string
 	/** CSS classes for icon color */
-	iconColorClass: string;
-	title: string;
-	description: string;
-};
+	iconColorClass: string
+	title: string
+	description: string
+}
 
 /**
  * Reusable header component for settings pages.
@@ -47,5 +47,5 @@ export function SettingsPageHeader({
 				<p className="text-sm text-muted-foreground">{description}</p>
 			</div>
 		</div>
-	);
+	)
 }

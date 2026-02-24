@@ -36,7 +36,7 @@ VALID WORD REQUIREMENTS:
 - No proper nouns (names, places, brands)
 - No abbreviations or acronyms
 - No slang or vulgar terms
-- Prefer common words over rare ones`;
+- Prefer common words over rare ones`
 
 export const CROSSWORD_USER_PROMPT = `Generate a 5×5 Crossword Mini word square puzzle.
 
@@ -75,7 +75,7 @@ Requirements:
 - Provide exactly 5 down clues (numbered 1-5)
 - Create something DIFFERENT from the example
 
-Return ONLY the JSON, no explanation.`;
+Return ONLY the JSON, no explanation.`
 
 /**
  * Prompt to avoid duplicate puzzles
@@ -85,7 +85,7 @@ const _CROSSWORD_AVOID_WORDS_PROMPT = (
 ) => `Generate a 5×5 Crossword Mini word square puzzle.
 
 IMPORTANT: Do NOT use any of these words (already used in recent puzzles):
-${usedWords.map((w) => `- ${w}`).join("\n")}
+${usedWords.map((w) => `- ${w}`).join('\n')}
 
 Create a completely different word square with fresh words!
 
@@ -96,4 +96,4 @@ Return ONLY valid JSON in the standard format:
     "across": [{"number": 1, "clue": "..."}, ...],
     "down": [{"number": 1, "clue": "..."}, ...]
   }
-}`;
+}`

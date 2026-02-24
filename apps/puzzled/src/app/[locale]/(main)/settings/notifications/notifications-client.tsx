@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { NotificationPreferences } from "@/features/push";
+import { NotificationPreferences } from '@/features/push'
 
 /**
  * Client-side notification settings
@@ -14,8 +14,8 @@ export function NotificationsClient() {
 			variant="panel"
 			onSave={(prefs) => {
 				// Preferences are saved via the hook
-				console.log("[NotificationsClient] Preferences saved:", prefs);
+				console.log('[NotificationsClient] Preferences saved:', prefs)
 			}}
 		/>
-	);
+	)
 }

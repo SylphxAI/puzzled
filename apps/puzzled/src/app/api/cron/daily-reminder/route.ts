@@ -1,7 +1,7 @@
-import { createWorkflowCronHandler } from "@/lib/api/cron";
+import { createWorkflowCronHandler } from '@/lib/api/cron'
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 /**
  * Daily puzzle reminder cron job
@@ -15,8 +15,8 @@ export const dynamic = "force-dynamic";
  * - Workflow sends push notifications to all subscribed users
  */
 export const GET = createWorkflowCronHandler({
-	workflowPath: "/api/workflow/daily-reminder",
-	workflowBody: { type: "all" },
-	logPrefix: "[DailyReminder]",
-	successMessage: "Daily reminder workflow triggered",
-});
+	workflowPath: '/api/workflow/daily-reminder',
+	workflowBody: { type: 'all' },
+	logPrefix: '[DailyReminder]',
+	successMessage: 'Daily reminder workflow triggered',
+})

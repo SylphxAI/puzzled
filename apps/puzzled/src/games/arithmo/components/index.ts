@@ -1,2 +1,2 @@
-export { ArithmoGrid } from "./grid";
-export { ArithmoKeyboard } from "./keyboard";
+export { ArithmoGrid } from './grid'
+export { ArithmoKeyboard } from './keyboard'

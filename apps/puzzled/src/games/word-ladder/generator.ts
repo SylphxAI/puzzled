@@ -8,51 +8,47 @@
  * DO NOT MODIFY - changing this will break historical puzzles
  */
 
-import { seededRandom } from "@/games/shared/random";
-import { getWordList } from "./dictionary";
-import { isOneLetterChange } from "./types";
+import { seededRandom } from '@/games/shared/random'
+import { getWordList } from './dictionary'
+import { isOneLetterChange } from './types'
 
 /**
  * ⚠️ FROZEN: BFS to find shortest path between words
  * DO NOT MODIFY - changing this breaks historical puzzles
  */
-function findShortestPath(
-	start: string,
-	end: string,
-	wordList: Set<string>,
-): string[] | null {
-	if (start.length !== end.length) return null;
-	if (!wordList.has(start) || !wordList.has(end)) return null;
-	if (start === end) return [start];
+function findShortestPath(start: string, end: string, wordList: Set<string>): string[] | null {
+	if (start.length !== end.length) return null
+	if (!wordList.has(start) || !wordList.has(end)) return null
+	if (start === end) return [start]
 
-	const queue: string[][] = [[start]];
-	const visited = new Set([start]);
+	const queue: string[][] = [[start]]
+	const visited = new Set([start])
 
 	while (queue.length > 0) {
-		const path = queue.shift()!;
-		const current = path[path.length - 1];
+		const path = queue.shift()!
+		const current = path[path.length - 1]
 
 		if (current === end) {
-			return path;
+			return path
 		}
 
 		// Generate all neighbors (one letter change)
 		for (let i = 0; i < current.length; i++) {
 			for (let c = 97; c <= 122; c++) {
-				const char = String.fromCharCode(c);
-				if (char === current[i]) continue;
+				const char = String.fromCharCode(c)
+				if (char === current[i]) continue
 
-				const neighbor = current.slice(0, i) + char + current.slice(i + 1);
+				const neighbor = current.slice(0, i) + char + current.slice(i + 1)
 
 				if (wordList.has(neighbor) && !visited.has(neighbor)) {
-					visited.add(neighbor);
-					queue.push([...path, neighbor]);
+					visited.add(neighbor)
+					queue.push([...path, neighbor])
 				}
 			}
 		}
 	}
 
-	return null; // No path found
+	return null // No path found
 }
 
 /**
@@ -62,7 +58,7 @@ function findShortestPath(
 function getWordsByLength(wordList: Set<string>, length: number): string[] {
 	return Array.from(wordList)
 		.filter((w) => w.length === length)
-		.sort(); // Sorted for deterministic ordering
+		.sort() // Sorted for deterministic ordering
 }
 
 /**
@@ -70,8 +66,8 @@ function getWordsByLength(wordList: Set<string>, length: number): string[] {
  * DO NOT MODIFY - changing this breaks historical puzzles
  */
 function selectWord(words: string[], random: () => number): string {
-	const index = Math.floor(random() * words.length);
-	return words[index];
+	const index = Math.floor(random() * words.length)
+	return words[index]
 }
 
 /**
@@ -87,46 +83,46 @@ function selectWord(words: string[], random: () => number): string {
  * 6. Return puzzle when valid path found
  */
 export function generateWordLadderPuzzle(seed: number): {
-	start: string;
-	end: string;
-	path: string[];
+	start: string
+	end: string
+	path: string[]
 } {
-	const wordList = getWordList();
-	const random = seededRandom(seed);
+	const wordList = getWordList()
+	const random = seededRandom(seed)
 
 	// Get words by length
-	const words3 = getWordsByLength(wordList, 3);
-	const words4 = getWordsByLength(wordList, 4);
+	const words3 = getWordsByLength(wordList, 3)
+	const words4 = getWordsByLength(wordList, 4)
 
 	// Configuration attempts (deterministic from seed)
-	const maxAttempts = 100;
+	const maxAttempts = 100
 
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		// Select word length: 70% 4-letter, 30% 3-letter (4-letter more interesting)
-		const useLength4 = random() < 0.7;
-		const words = useLength4 ? words4 : words3;
+		const useLength4 = random() < 0.7
+		const words = useLength4 ? words4 : words3
 
-		if (words.length < 2) continue;
+		if (words.length < 2) continue
 
 		// Select start and end words
-		const start = selectWord(words, random);
-		let end = selectWord(words, random);
+		const start = selectWord(words, random)
+		let end = selectWord(words, random)
 
 		// Ensure different words
-		let endAttempts = 0;
+		let endAttempts = 0
 		while (end === start && endAttempts < 10) {
-			end = selectWord(words, random);
-			endAttempts++;
+			end = selectWord(words, random)
+			endAttempts++
 		}
 
-		if (start === end) continue;
+		if (start === end) continue
 
 		// Find shortest path via BFS
-		const path = findShortestPath(start, end, wordList);
+		const path = findShortestPath(start, end, wordList)
 
 		// Validate path quality
 		if (path && path.length >= 2 && path.length <= 8) {
-			return { start, end, path };
+			return { start, end, path }
 		}
 	}
 
@@ -135,7 +131,7 @@ export function generateWordLadderPuzzle(seed: number): {
 	throw new Error(
 		`Word Ladder generation failed for seed ${seed} after ${maxAttempts} attempts. ` +
 			`Dictionary may be incomplete or corrupted.`,
-	);
+	)
 }
 
 /**
@@ -143,14 +139,14 @@ export function generateWordLadderPuzzle(seed: number): {
  * Used for testing and verification
  */
 function _validatePath(path: string[]): boolean {
-	if (path.length < 2) return false;
+	if (path.length < 2) return false
 
 	for (let i = 1; i < path.length; i++) {
 		if (!isOneLetterChange(path[i - 1], path[i])) {
-			return false;
+			return false
 		}
 	}
-	return true;
+	return true
 }
 
 /**
@@ -158,7 +154,7 @@ function _validatePath(path: string[]): boolean {
  * Returns Infinity since this is algorithmically generated
  */
 export function getPuzzleCount(): number {
-	return Number.POSITIVE_INFINITY;
+	return Number.POSITIVE_INFINITY
 }
 
 /**

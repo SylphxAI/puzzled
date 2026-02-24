@@ -15,17 +15,17 @@
  * - Loss: 0 points
  */
 
-import { describe, expect, test } from "bun:test";
-import type { GameSubmission } from "../types";
-import { quadWordsConfig } from "./config";
-import { MAX_GUESSES } from "./types";
+import { describe, expect, test } from 'bun:test'
+import type { GameSubmission } from '../types'
+import { quadWordsConfig } from './config'
+import { MAX_GUESSES } from './types'
 
 // Generate a puzzle for testing
-const { puzzleData, solution } = quadWordsConfig.generatePuzzle(12345);
+const { puzzleData, solution } = quadWordsConfig.generatePuzzle(12345)
 
 // Helper to create submission
 function createSubmission(
-	status: "won" | "lost",
+	status: 'won' | 'lost',
 	guesses: string[],
 	solvedBoards: number,
 	timeSpentMs = 120000,
@@ -35,277 +35,184 @@ function createSubmission(
 		attempts: guesses.length,
 		timeSpentMs,
 		data: { guesses, solvedBoards },
-	};
+	}
 }
 
-describe("quad-words validateAndScore", () => {
-	describe("valid solutions", () => {
-		test("5 guesses with all boards solved scores 100 points", () => {
-			const submission = createSubmission(
-				"won",
-				["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK"],
-				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+describe('quad-words validateAndScore', () => {
+	describe('valid solutions', () => {
+		test('5 guesses with all boards solved scores 100 points', () => {
+			const submission = createSubmission('won', ['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK'], 4)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(100);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(100)
 			}
-		});
+		})
 
-		test("6 guesses scores 90 points", () => {
+		test('6 guesses scores 90 points', () => {
 			const submission = createSubmission(
-				"won",
-				["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK", "JUMPY"],
+				'won',
+				['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK', 'JUMPY'],
 				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(90);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(90)
 			}
-		});
+		})
 
-		test("7 guesses scores 80 points", () => {
+		test('7 guesses scores 80 points', () => {
 			const submission = createSubmission(
-				"won",
-				["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK", "JUMPY", "WALTZ"],
+				'won',
+				['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK', 'JUMPY', 'WALTZ'],
 				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(80);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(80)
 			}
-		});
+		})
 
-		test("8 guesses scores 70 points", () => {
+		test('8 guesses scores 70 points', () => {
 			const submission = createSubmission(
-				"won",
-				[
-					"CRANE",
-					"SLATE",
-					"AUDIO",
-					"PLUMB",
-					"QUICK",
-					"JUMPY",
-					"WALTZ",
-					"NYMPH",
-				],
+				'won',
+				['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK', 'JUMPY', 'WALTZ', 'NYMPH'],
 				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(70);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(70)
 			}
-		});
+		})
 
-		test("9 guesses scores 60 points", () => {
+		test('9 guesses scores 60 points', () => {
 			const submission = createSubmission(
-				"won",
-				[
-					"CRANE",
-					"SLATE",
-					"AUDIO",
-					"PLUMB",
-					"QUICK",
-					"JUMPY",
-					"WALTZ",
-					"NYMPH",
-					"GLYPH",
-				],
+				'won',
+				['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK', 'JUMPY', 'WALTZ', 'NYMPH', 'GLYPH'],
 				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(60);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(60)
 			}
-		});
+		})
 
-		test("minimum score is 40 for wins with many guesses", () => {
+		test('minimum score is 40 for wins with many guesses', () => {
 			// Even with many guesses, minimum is 40
-			const submission = createSubmission("won", Array(15).fill("CRANE"), 4);
+			const submission = createSubmission('won', Array(15).fill('CRANE'), 4)
 
 			// This should fail due to too many guesses
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
 			// If it exceeds MAX_GUESSES, should be invalid
 			if (15 > MAX_GUESSES) {
-				expect(result.valid).toBe(false);
+				expect(result.valid).toBe(false)
 			}
-		});
+		})
 
-		test("loss with incomplete boards scores 0 points", () => {
+		test('loss with incomplete boards scores 0 points', () => {
 			const submission = createSubmission(
-				"lost",
-				[
-					"CRANE",
-					"SLATE",
-					"AUDIO",
-					"PLUMB",
-					"QUICK",
-					"JUMPY",
-					"WALTZ",
-					"NYMPH",
-					"GLYPH",
-				],
+				'lost',
+				['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK', 'JUMPY', 'WALTZ', 'NYMPH', 'GLYPH'],
 				2,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("lost");
-				expect(result.score).toBe(0);
+				expect(result.status).toBe('lost')
+				expect(result.score).toBe(0)
 			}
-		});
-	});
+		})
+	})
 
-	describe("invalid submissions", () => {
-		test("rejects win claim without all boards solved", () => {
-			const submission = createSubmission(
-				"won",
-				["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK"],
-				3,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+	describe('invalid submissions', () => {
+		test('rejects win claim without all boards solved', () => {
+			const submission = createSubmission('won', ['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK'], 3)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("Not all boards solved");
+				expect(result.error).toContain('Not all boards solved')
 			}
-		});
+		})
 
-		test("rejects loss claim when all boards solved", () => {
-			const submission = createSubmission(
-				"lost",
-				["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK"],
-				4,
-			);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('rejects loss claim when all boards solved', () => {
+			const submission = createSubmission('lost', ['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK'], 4)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("Invalid loss claim");
+				expect(result.error).toContain('Invalid loss claim')
 			}
-		});
+		})
 
-		test("rejects too many guesses", () => {
+		test('rejects too many guesses', () => {
 			// MAX_GUESSES is 9 for Quordle
-			const tooManyGuesses = Array(MAX_GUESSES + 1).fill("CRANE");
-			const submission = createSubmission("won", tooManyGuesses, 4);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			const tooManyGuesses = Array(MAX_GUESSES + 1).fill('CRANE')
+			const submission = createSubmission('won', tooManyGuesses, 4)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("Too many guesses");
+				expect(result.error).toContain('Too many guesses')
 			}
-		});
-	});
+		})
+	})
 
-	describe("edge cases", () => {
-		test("handles missing solvedBoards", () => {
+	describe('edge cases', () => {
+		test('handles missing solvedBoards', () => {
 			const submission: GameSubmission = {
-				status: "won",
+				status: 'won',
 				attempts: 5,
 				timeSpentMs: 120000,
-				data: { guesses: ["CRANE", "SLATE", "AUDIO", "PLUMB", "QUICK"] },
-			};
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+				data: { guesses: ['CRANE', 'SLATE', 'AUDIO', 'PLUMB', 'QUICK'] },
+			}
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
 			// Should fail because solvedBoards is not 4
-			expect(result.valid).toBe(false);
-		});
+			expect(result.valid).toBe(false)
+		})
 
-		test("handles null data for loss", () => {
+		test('handles null data for loss', () => {
 			const submission: GameSubmission = {
-				status: "lost",
+				status: 'lost',
 				attempts: 0,
 				timeSpentMs: 120000,
 				data: null,
-			};
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			}
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
 			// Loss without 4 boards solved is valid
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("lost");
-				expect(result.score).toBe(0);
+				expect(result.status).toBe('lost')
+				expect(result.score).toBe(0)
 			}
-		});
+		})
 
-		test("handles zero solved boards as loss", () => {
-			const submission = createSubmission("lost", ["CRANE"], 0);
-			const result = quadWordsConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('handles zero solved boards as loss', () => {
+			const submission = createSubmission('lost', ['CRANE'], 0)
+			const result = quadWordsConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("lost");
+				expect(result.status).toBe('lost')
 			}
-		});
-	});
-});
+		})
+	})
+})

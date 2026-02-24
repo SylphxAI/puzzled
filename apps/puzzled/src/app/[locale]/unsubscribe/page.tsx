@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { Link } from "@/lib/i18n/routing";
-import { Button, GamepadIcon } from "@sylphx/ui";
-import { CheckCircle, Loader2, Mail, XCircle } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Button, GamepadIcon } from '@sylphx/ui'
+import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { Link } from '@/lib/i18n/routing'
 
-type UnsubscribeState = "loading" | "success" | "error" | "idle";
+type UnsubscribeState = 'loading' | 'success' | 'error' | 'idle'
 
 export default function UnsubscribePage() {
 	return (
@@ -19,65 +19,65 @@ export default function UnsubscribePage() {
 		>
 			<UnsubscribeContent />
 		</Suspense>
-	);
+	)
 }
 
 function UnsubscribeContent() {
-	const searchParams = useSearchParams();
-	const success = searchParams.get("success");
-	const error = searchParams.get("error");
-	const token = searchParams.get("token");
+	const searchParams = useSearchParams()
+	const success = searchParams.get('success')
+	const error = searchParams.get('error')
+	const token = searchParams.get('token')
 
-	const [state, setState] = useState<UnsubscribeState>("idle");
-	const [errorMessage, setErrorMessage] = useState("");
+	const [state, setState] = useState<UnsubscribeState>('idle')
+	const [errorMessage, setErrorMessage] = useState('')
 
 	// Handle redirect results from GET endpoint or POST-based unsubscribe
 	useEffect(() => {
 		const handleUnsubscribe = async (unsubToken: string) => {
-			setState("loading");
+			setState('loading')
 			try {
-				const response = await fetch("/api/email/unsubscribe", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
+				const response = await fetch('/api/email/unsubscribe', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ token: unsubToken }),
-				});
+				})
 
-				const data = await response.json();
+				const data = await response.json()
 
 				if (response.ok) {
-					setState("success");
+					setState('success')
 				} else {
-					setState("error");
-					setErrorMessage(data.error || "Failed to unsubscribe");
+					setState('error')
+					setErrorMessage(data.error || 'Failed to unsubscribe')
 				}
 			} catch {
-				setState("error");
-				setErrorMessage("Network error. Please try again.");
+				setState('error')
+				setErrorMessage('Network error. Please try again.')
 			}
-		};
+		}
 
-		if (success === "true") {
-			setState("success");
+		if (success === 'true') {
+			setState('success')
 		} else if (error) {
-			setState("error");
+			setState('error')
 			switch (error) {
-				case "missing_token":
-					setErrorMessage("No unsubscribe token provided.");
-					break;
-				case "invalid_token":
-					setErrorMessage("Invalid or expired unsubscribe link.");
-					break;
-				case "not_found":
-					setErrorMessage("User not found.");
-					break;
+				case 'missing_token':
+					setErrorMessage('No unsubscribe token provided.')
+					break
+				case 'invalid_token':
+					setErrorMessage('Invalid or expired unsubscribe link.')
+					break
+				case 'not_found':
+					setErrorMessage('User not found.')
+					break
 				default:
-					setErrorMessage("Failed to unsubscribe. Please try again.");
+					setErrorMessage('Failed to unsubscribe. Please try again.')
 			}
 		} else if (token) {
 			// Handle POST-based unsubscribe
-			handleUnsubscribe(token);
+			handleUnsubscribe(token)
 		}
-	}, [success, error, token]);
+	}, [success, error, token])
 
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center px-4">
@@ -91,7 +91,7 @@ function UnsubscribeContent() {
 				</div>
 
 				{/* Loading State */}
-				{state === "loading" && (
+				{state === 'loading' && (
 					<div className="space-y-4">
 						<Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
 						<p className="text-muted-foreground">Processing your request...</p>
@@ -99,16 +99,14 @@ function UnsubscribeContent() {
 				)}
 
 				{/* Success State */}
-				{state === "success" && (
+				{state === 'success' && (
 					<div className="space-y-4">
 						<CheckCircle className="mx-auto h-12 w-12 text-correct" />
 						<div>
-							<h2 className="text-xl font-semibold">
-								Unsubscribed Successfully
-							</h2>
+							<h2 className="text-xl font-semibold">Unsubscribed Successfully</h2>
 							<p className="text-muted-foreground">
-								You've been unsubscribed from marketing emails. You'll still
-								receive important account notifications.
+								You've been unsubscribed from marketing emails. You'll still receive important
+								account notifications.
 							</p>
 						</div>
 						<Link href="/">
@@ -118,7 +116,7 @@ function UnsubscribeContent() {
 				)}
 
 				{/* Error State */}
-				{state === "error" && (
+				{state === 'error' && (
 					<div className="space-y-4">
 						<XCircle className="mx-auto h-12 w-12 text-wrong" />
 						<div>
@@ -139,14 +137,14 @@ function UnsubscribeContent() {
 				)}
 
 				{/* Idle State (no token provided) */}
-				{state === "idle" && !token && !success && !error && (
+				{state === 'idle' && !token && !success && !error && (
 					<div className="space-y-4">
 						<Mail className="mx-auto h-12 w-12 text-primary" />
 						<div>
 							<h2 className="text-xl font-semibold">Email Preferences</h2>
 							<p className="text-muted-foreground">
-								To manage your email preferences, please use the unsubscribe
-								link in any of our emails or visit your account settings.
+								To manage your email preferences, please use the unsubscribe link in any of our
+								emails or visit your account settings.
 							</p>
 						</div>
 						<div className="space-y-2">
@@ -163,5 +161,5 @@ function UnsubscribeContent() {
 				)}
 			</div>
 		</div>
-	);
+	)
 }

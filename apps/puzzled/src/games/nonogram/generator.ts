@@ -5,20 +5,20 @@
  * Uses seed to select and optionally transform patterns.
  */
 
-import { seededRandom } from "@/games/shared/random";
-import type { NonogramPuzzleData, NonogramSolution } from "./types";
-import { generateClues } from "./types";
+import { seededRandom } from '@/games/shared/random'
+import type { NonogramPuzzleData, NonogramSolution } from './types'
+import { generateClues } from './types'
 
 type Pattern = {
-	theme: string;
-	grid: number[][]; // 10x10 grid, 0 = empty, 1 = filled
-};
+	theme: string
+	grid: number[][] // 10x10 grid, 0 = empty, 1 = filled
+}
 
 // 50+ pixel art patterns
 const PATTERNS: Pattern[] = [
 	// === SYMBOLS ===
 	{
-		theme: "Heart",
+		theme: 'Heart',
 		grid: [
 			[0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
 			[1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
@@ -33,7 +33,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Star",
+		theme: 'Star',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
@@ -48,7 +48,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Moon",
+		theme: 'Moon',
 		grid: [
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
 			[0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
@@ -63,7 +63,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Sun",
+		theme: 'Sun',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[1, 0, 0, 0, 1, 1, 0, 0, 0, 1],
@@ -78,7 +78,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Lightning",
+		theme: 'Lightning',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -93,7 +93,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Cloud",
+		theme: 'Cloud',
 		grid: [
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
@@ -108,7 +108,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Raindrop",
+		theme: 'Raindrop',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -125,7 +125,7 @@ const PATTERNS: Pattern[] = [
 
 	// === FACES ===
 	{
-		theme: "Smiley",
+		theme: 'Smiley',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -140,7 +140,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Wink",
+		theme: 'Wink',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -155,7 +155,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Sad",
+		theme: 'Sad',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -170,7 +170,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Cool",
+		theme: 'Cool',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -185,7 +185,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Ghost",
+		theme: 'Ghost',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -200,7 +200,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Skull",
+		theme: 'Skull',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -217,7 +217,7 @@ const PATTERNS: Pattern[] = [
 
 	// === BUILDINGS ===
 	{
-		theme: "House",
+		theme: 'House',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -232,7 +232,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Castle",
+		theme: 'Castle',
 		grid: [
 			[1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
 			[1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
@@ -247,7 +247,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Tower",
+		theme: 'Tower',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -262,7 +262,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Church",
+		theme: 'Church',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -279,7 +279,7 @@ const PATTERNS: Pattern[] = [
 
 	// === NATURE ===
 	{
-		theme: "Tree",
+		theme: 'Tree',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -294,7 +294,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Flower",
+		theme: 'Flower',
 		grid: [
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
 			[0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
@@ -309,7 +309,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Mushroom",
+		theme: 'Mushroom',
 		grid: [
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
@@ -324,7 +324,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Mountain",
+		theme: 'Mountain',
 		grid: [
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
@@ -339,7 +339,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Leaf",
+		theme: 'Leaf',
 		grid: [
 			[0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
 			[0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
@@ -356,7 +356,7 @@ const PATTERNS: Pattern[] = [
 
 	// === ANIMALS ===
 	{
-		theme: "Fish",
+		theme: 'Fish',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -371,7 +371,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Bird",
+		theme: 'Bird',
 		grid: [
 			[0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
 			[0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
@@ -386,7 +386,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Cat",
+		theme: 'Cat',
 		grid: [
 			[1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
 			[1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
@@ -401,7 +401,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Dog",
+		theme: 'Dog',
 		grid: [
 			[0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
 			[1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
@@ -416,7 +416,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Bunny",
+		theme: 'Bunny',
 		grid: [
 			[0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
 			[0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
@@ -431,7 +431,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Butterfly",
+		theme: 'Butterfly',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[1, 1, 0, 0, 1, 1, 0, 0, 1, 1],
@@ -448,7 +448,7 @@ const PATTERNS: Pattern[] = [
 
 	// === OBJECTS ===
 	{
-		theme: "Arrow",
+		theme: 'Arrow',
 		grid: [
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
@@ -463,7 +463,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Cup",
+		theme: 'Cup',
 		grid: [
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -478,7 +478,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Umbrella",
+		theme: 'Umbrella',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -493,7 +493,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Key",
+		theme: 'Key',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
 			[0, 1, 1, 0, 0, 1, 1, 0, 0, 0],
@@ -508,7 +508,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Lock",
+		theme: 'Lock',
 		grid: [
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
 			[0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
@@ -523,7 +523,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Gift",
+		theme: 'Gift',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -538,7 +538,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Bell",
+		theme: 'Bell',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -553,7 +553,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Crown",
+		theme: 'Crown',
 		grid: [
 			[0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
 			[0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
@@ -570,7 +570,7 @@ const PATTERNS: Pattern[] = [
 
 	// === VEHICLES ===
 	{
-		theme: "Boat",
+		theme: 'Boat',
 		grid: [
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
@@ -585,7 +585,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Car",
+		theme: 'Car',
 		grid: [
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -600,7 +600,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Plane",
+		theme: 'Plane',
 		grid: [
 			[0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
@@ -615,7 +615,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Rocket",
+		theme: 'Rocket',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -632,7 +632,7 @@ const PATTERNS: Pattern[] = [
 
 	// === LETTERS/NUMBERS ===
 	{
-		theme: "A",
+		theme: 'A',
 		grid: [
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
 			[0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
@@ -647,7 +647,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "X",
+		theme: 'X',
 		grid: [
 			[1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
 			[0, 1, 1, 0, 0, 0, 0, 1, 1, 0],
@@ -662,7 +662,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "O",
+		theme: 'O',
 		grid: [
 			[0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 0, 0, 1, 1, 1, 0],
@@ -677,7 +677,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "1",
+		theme: '1',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
@@ -694,7 +694,7 @@ const PATTERNS: Pattern[] = [
 
 	// === FOOD ===
 	{
-		theme: "Apple",
+		theme: 'Apple',
 		grid: [
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
@@ -709,7 +709,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Cake",
+		theme: 'Cake',
 		grid: [
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
@@ -724,7 +724,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Pizza",
+		theme: 'Pizza',
 		grid: [
 			[0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
@@ -741,7 +741,7 @@ const PATTERNS: Pattern[] = [
 
 	// === MISC ===
 	{
-		theme: "Plus",
+		theme: 'Plus',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
@@ -756,7 +756,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Diamond",
+		theme: 'Diamond',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -771,7 +771,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Anchor",
+		theme: 'Anchor',
 		grid: [
 			[0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
 			[0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
@@ -786,7 +786,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Hourglass",
+		theme: 'Hourglass',
 		grid: [
 			[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -801,7 +801,7 @@ const PATTERNS: Pattern[] = [
 		],
 	},
 	{
-		theme: "Flag",
+		theme: 'Flag',
 		grid: [
 			[0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
 			[0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
@@ -815,29 +815,29 @@ const PATTERNS: Pattern[] = [
 			[0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
 		],
 	},
-];
+]
 
 /**
  * Transform pattern (flip/rotate) for more variety
  */
 function transformPattern(grid: number[][], seed: number): number[][] {
-	const random = seededRandom(seed);
-	const transform = Math.floor(random() * 4); // 0-3 different transforms
+	const random = seededRandom(seed)
+	const transform = Math.floor(random() * 4) // 0-3 different transforms
 
-	let result = grid.map((row) => [...row]);
+	let result = grid.map((row) => [...row])
 
 	if (transform === 1) {
 		// Horizontal flip
-		result = result.map((row) => row.reverse());
+		result = result.map((row) => row.reverse())
 	} else if (transform === 2) {
 		// Vertical flip
-		result = result.reverse();
+		result = result.reverse()
 	} else if (transform === 3) {
 		// Both flips (180° rotation)
-		result = result.reverse().map((row) => row.reverse());
+		result = result.reverse().map((row) => row.reverse())
 	}
 
-	return result;
+	return result
 }
 
 /**
@@ -845,23 +845,21 @@ function transformPattern(grid: number[][], seed: number): number[][] {
  * Uses pattern pool + optional transformations
  */
 export function generateNonogramPuzzle(seed: number): {
-	puzzleData: NonogramPuzzleData;
-	solution: NonogramSolution;
+	puzzleData: NonogramPuzzleData
+	solution: NonogramSolution
 } {
 	// Select pattern based on seed
-	const patternIndex = Math.abs(seed) % PATTERNS.length;
-	const pattern = PATTERNS[patternIndex];
+	const patternIndex = Math.abs(seed) % PATTERNS.length
+	const pattern = PATTERNS[patternIndex]
 
 	// Apply transformation for variety (doubles effective puzzle count)
-	const transformedGrid = transformPattern(pattern.grid, seed);
+	const transformedGrid = transformPattern(pattern.grid, seed)
 
 	// Convert to boolean grid
-	const solution: boolean[][] = transformedGrid.map((row) =>
-		row.map((cell) => cell === 1),
-	);
+	const solution: boolean[][] = transformedGrid.map((row) => row.map((cell) => cell === 1))
 
 	// Generate clues
-	const { rowClues, colClues } = generateClues(solution);
+	const { rowClues, colClues } = generateClues(solution)
 
 	return {
 		puzzleData: {
@@ -872,19 +870,19 @@ export function generateNonogramPuzzle(seed: number): {
 			theme: pattern.theme,
 		},
 		solution: { grid: solution },
-	};
+	}
 }
 
 /**
  * Get count of available patterns
  */
 function _getPatternCount(): number {
-	return PATTERNS.length;
+	return PATTERNS.length
 }
 
 /**
  * Get count of effective puzzles (patterns × transforms)
  */
 function _getEffectivePuzzleCount(): number {
-	return PATTERNS.length * 4; // 4 transforms per pattern
+	return PATTERNS.length * 4 // 4 transforms per pattern
 }

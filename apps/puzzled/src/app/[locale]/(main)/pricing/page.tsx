@@ -1,23 +1,23 @@
-import { Header } from "@/shared/components/layout";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { PricingContent } from "./pricing-client";
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { Header } from '@/shared/components/layout'
+import { PricingContent } from './pricing-client'
 
 type Props = {
-	params: Promise<{ locale: string }>;
-};
+	params: Promise<{ locale: string }>
+}
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "subscription" });
+	const { locale } = await params
+	const t = await getTranslations({ locale, namespace: 'subscription' })
 
 	return {
-		title: t("premium"),
-	};
+		title: t('premium'),
+	}
 }
 
 export default async function PricingPage({ params }: Props) {
-	const { locale } = await params;
-	setRequestLocale(locale);
+	const { locale } = await params
+	setRequestLocale(locale)
 
 	// Plans are now fetched server-side in layout.tsx via getAppConfig()
 	// and available via usePlans() hook - no need to fetch here
@@ -29,5 +29,5 @@ export default async function PricingPage({ params }: Props) {
 				<PricingContent locale={locale} />
 			</main>
 		</>
-	);
+	)
 }

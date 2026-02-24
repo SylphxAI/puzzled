@@ -1,23 +1,23 @@
-"use client";
+'use client'
 
-import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl'
+import { cn } from '@/lib/utils'
 
 /**
  * Sudoku How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function SudokuHowToPlay() {
-	const t = useTranslations("games.sudoku");
+	const t = useTranslations('games.sudoku')
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t("rules.rule1")}</li>
-					<li>• {t("rules.rule2")}</li>
-					<li>• {t("rules.rule3")}</li>
+					<li>• {t('rules.rule1')}</li>
+					<li>• {t('rules.rule2')}</li>
+					<li>• {t('rules.rule3')}</li>
 				</ul>
 			</div>
 
@@ -52,26 +52,23 @@ export function SudokuHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	);
+	)
 }
 
 function _SudokuHowToPlayTitle() {
-	const t = useTranslations("games.sudoku");
-	return <>{t("howToPlay")}</>;
+	const t = useTranslations('games.sudoku')
+	return <>{t('howToPlay')}</>
 }
 
-function SudokuCell({
-	value,
-	isGiven = false,
-}: { value: number | null; isGiven?: boolean }) {
+function SudokuCell({ value, isGiven = false }: { value: number | null; isGiven?: boolean }) {
 	return (
 		<div
 			className={cn(
-				"flex h-8 w-8 items-center justify-center bg-background text-sm",
-				isGiven ? "font-bold" : "text-primary",
+				'flex h-8 w-8 items-center justify-center bg-background text-sm',
+				isGiven ? 'font-bold' : 'text-primary',
 			)}
 		>
 			{value}
 		</div>
-	);
+	)
 }

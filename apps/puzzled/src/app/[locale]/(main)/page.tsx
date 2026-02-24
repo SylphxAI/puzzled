@@ -1,107 +1,94 @@
-import { getPuzzleDateString } from "@/features/daily/server";
-import { DailyHero, SocialProof } from "@/features/gamification/components";
-import { StreakWarning } from "@/features/streak/components/streak-warning";
-import { getAllGameMetadata } from "@/games/registry";
+import { currentUser } from '@sylphx/sdk/nextjs'
+import { Button } from '@sylphx/ui'
+import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { getPuzzleDateString } from '@/features/daily/server'
+import { DailyHero, SocialProof } from '@/features/gamification/components'
+import { StreakWarning } from '@/features/streak/components/streak-warning'
+import { getAllGameMetadata } from '@/games/registry'
 import {
+	createServerApi,
 	type StreakInfo,
 	type TodayCompletion,
 	type TodayPlayerCount,
-	createServerApi,
-} from "@/lib/api/server";
-import {
-	getFreeGameRotation,
-	getTodaysFreeGame,
-	hasPremiumAccess,
-} from "@/lib/billing/server";
-import { Link } from "@/lib/i18n/routing";
-import { Logo } from "@/shared/components/layout";
-import { currentUser } from "@sylphx/sdk/nextjs";
-import { Button } from "@sylphx/ui";
-import {
-	BarChart3,
-	Crown,
-	Flame,
-	Settings,
-	Sparkles,
-	Trophy,
-} from "lucide-react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+} from '@/lib/api/server'
+import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { Link } from '@/lib/i18n/routing'
+import { Logo } from '@/shared/components/layout'
 
 type Props = {
-	params: Promise<{ locale: string }>;
-};
+	params: Promise<{ locale: string }>
+}
 
 export async function generateMetadata({ params }: Props) {
-	const { locale } = await params;
-	const t = await getTranslations({ locale, namespace: "home" });
+	const { locale } = await params
+	const t = await getTranslations({ locale, namespace: 'home' })
 
 	return {
-		title: t("metaTitle"),
-		description: t("metaDescription"),
+		title: t('metaTitle'),
+		description: t('metaDescription'),
 		openGraph: {
-			title: t("metaTitle"),
-			description: t("metaDescription"),
+			title: t('metaTitle'),
+			description: t('metaDescription'),
 		},
-	};
+	}
 }
 
 export default async function HomePage({ params }: Props) {
-	const { locale } = await params;
-	setRequestLocale(locale);
+	const { locale } = await params
+	setRequestLocale(locale)
 
-	const user = await currentUser();
-	const { gamification } = await createServerApi();
+	const user = await currentUser()
+	const { gamification } = await createServerApi()
 
 	// Get user's premium status from platform
-	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false;
+	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
 
 	// Get today's free game from rotation
-	const todaysFreeGame = getTodaysFreeGame();
+	const todaysFreeGame = getTodaysFreeGame()
 
 	// Calculate tomorrow's free game for preview
-	const freeGameRotation = getFreeGameRotation();
-	const todayIndex = freeGameRotation.indexOf(todaysFreeGame);
-	const tomorrowsFreeGame =
-		freeGameRotation[(todayIndex + 1) % freeGameRotation.length];
+	const freeGameRotation = getFreeGameRotation()
+	const todayIndex = freeGameRotation.indexOf(todaysFreeGame)
+	const tomorrowsFreeGame = freeGameRotation[(todayIndex + 1) % freeGameRotation.length]
 
 	// Slug to readable name mapping (for tomorrow's preview)
 	const gameNameMap: Record<string, string> = {
-		"word-guess": "Word Guess",
-		"word-groups": "Word Groups",
-		queens: "Queens",
-		sudoku: "Sudoku",
-		crossword: "Crossword",
-		"word-hive": "Word Hive",
-		arithmo: "Arithmo",
-		tango: "Tango",
-	};
-	const tomorrowsFreeGameName =
-		gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame;
+		'word-guess': 'Word Guess',
+		'word-groups': 'Word Groups',
+		queens: 'Queens',
+		sudoku: 'Sudoku',
+		crossword: 'Crossword',
+		'word-hive': 'Word Hive',
+		arithmo: 'Arithmo',
+		tango: 'Tango',
+	}
+	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
 	// Fetch user's streak info, today's completions, and player count
-	let streakInfo: StreakInfo | null = null;
-	let todayCompletions: TodayCompletion[] = [];
-	let todayPlayerCount = 0;
+	let streakInfo: StreakInfo | null = null
+	let todayCompletions: TodayCompletion[] = []
+	let todayPlayerCount = 0
 
 	try {
 		// Always fetch player count (public data)
-		const playerCountRes = await gamification["today-player-count"].$get();
-		const playerCountData = (await playerCountRes.json()) as TodayPlayerCount;
-		todayPlayerCount = playerCountData.count;
+		const playerCountRes = await gamification['today-player-count'].$get()
+		const playerCountData = (await playerCountRes.json()) as TodayPlayerCount
+		todayPlayerCount = playerCountData.count
 
 		// Fetch user-specific data if logged in
 		if (user) {
 			const [streakRes, completionsRes] = await Promise.all([
-				gamification["streak-info"].$get(),
-				gamification["today-completions"].$get(),
-			]);
-			streakInfo = (await streakRes.json()) as StreakInfo;
-			todayCompletions = (await completionsRes.json()) as TodayCompletion[];
+				gamification['streak-info'].$get(),
+				gamification['today-completions'].$get(),
+			])
+			streakInfo = (await streakRes.json()) as StreakInfo
+			todayCompletions = (await completionsRes.json()) as TodayCompletion[]
 		}
 	} catch (error) {
 		// Log error for debugging but continue with defaults
 		// This is a non-critical path - user can still access games
-		console.error("[HomePage] Failed to fetch stats:", error);
+		console.error('[HomePage] Failed to fetch stats:', error)
 	}
 
 	return (
@@ -114,23 +101,23 @@ export default async function HomePage({ params }: Props) {
 			isPremium={isPremium}
 			todayPlayerCount={todayPlayerCount}
 		/>
-	);
+	)
 }
 
 type HomeContentProps = {
-	streakInfo: StreakInfo | null;
+	streakInfo: StreakInfo | null
 	todayCompletions: {
-		slug: string;
-		name: string;
-		completed: boolean;
-		score?: string;
-	}[];
-	locale: string;
-	todaysFreeGame: string;
-	tomorrowsFreeGameName: string;
-	isPremium: boolean;
-	todayPlayerCount: number;
-};
+		slug: string
+		name: string
+		completed: boolean
+		score?: string
+	}[]
+	locale: string
+	todaysFreeGame: string
+	tomorrowsFreeGameName: string
+	isPremium: boolean
+	todayPlayerCount: number
+}
 
 async function HomeContent({
 	streakInfo,
@@ -141,31 +128,31 @@ async function HomeContent({
 	isPremium,
 	todayPlayerCount,
 }: HomeContentProps) {
-	const t = await getTranslations();
-	const today = new Date();
-	const dateString = getPuzzleDateString(today, locale);
+	const t = await getTranslations()
+	const today = new Date()
+	const dateString = getPuzzleDateString(today, locale)
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
-	const gameMetadata = getAllGameMetadata();
+	const gameMetadata = getAllGameMetadata()
 
 	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
 	const slugToCamelCase = (slug: string) =>
-		slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+		slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
 
 	// Get current streak and whether user has played today
-	const currentStreak = streakInfo?.currentStreak ?? 0;
-	const bestStreak = streakInfo?.maxStreak ?? 0;
-	const hasPlayedToday = streakInfo?.hasPlayedToday ?? false;
-	const totalGamesPlayed = streakInfo?.totalGamesPlayed ?? 0;
+	const currentStreak = streakInfo?.currentStreak ?? 0
+	const bestStreak = streakInfo?.maxStreak ?? 0
+	const hasPlayedToday = streakInfo?.hasPlayedToday ?? false
+	const totalGamesPlayed = streakInfo?.totalGamesPlayed ?? 0
 
 	// Check for streak milestones
-	const streakMilestones = [7, 30, 50, 100, 365];
-	const recentMilestone = streakMilestones.find((m) => currentStreak === m);
+	const streakMilestones = [7, 30, 50, 100, 365]
+	const recentMilestone = streakMilestones.find((m) => currentStreak === m)
 
 	// Merge game info with completion status and free/locked status
 	const gamesWithCompletion = gameMetadata.map((game) => {
-		const completion = todayCompletions.find((c) => c.slug === game.slug);
-		const isFreeToday = game.slug === todaysFreeGame;
+		const completion = todayCompletions.find((c) => c.slug === game.slug)
+		const isFreeToday = game.slug === todaysFreeGame
 		return {
 			slug: game.slug,
 			name: t(`games.${slugToCamelCase(game.slug)}.name`),
@@ -175,8 +162,8 @@ async function HomeContent({
 			// Free game is unlocked for everyone, other games locked for non-premium
 			locked: !isPremium && !isFreeToday,
 			isFreeToday,
-		};
-	});
+		}
+	})
 
 	return (
 		<main className="flex-1">
@@ -191,15 +178,13 @@ async function HomeContent({
 						{/* Streak indicator */}
 						<div className="flex items-center gap-1 rounded-full bg-stat-streak/10 px-2.5 py-1">
 							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">
-								{currentStreak}
-							</span>
+							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
 						</div>
 
 						<Link href="/settings">
 							<Button variant="ghost" size="icon" className="h-9 w-9">
 								<Settings className="h-5 w-5" />
-								<span className="sr-only">{t("common.settings")}</span>
+								<span className="sr-only">{t('common.settings')}</span>
 							</Button>
 						</Link>
 					</div>
@@ -210,10 +195,7 @@ async function HomeContent({
 			{streakInfo && currentStreak > 0 && !hasPlayedToday && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
-						<StreakWarning
-							currentStreak={currentStreak}
-							hasPlayedToday={hasPlayedToday}
-						/>
+						<StreakWarning currentStreak={currentStreak} hasPlayedToday={hasPlayedToday} />
 					</div>
 				</section>
 			)}
@@ -233,11 +215,7 @@ async function HomeContent({
 			{/* Social Proof */}
 			<section className="px-4 pt-4">
 				<div className="mx-auto max-w-4xl">
-					<SocialProof
-						playerCount={todayPlayerCount}
-						locale={locale}
-						variant="banner"
-					/>
+					<SocialProof playerCount={todayPlayerCount} locale={locale} variant="banner" />
 				</div>
 			</section>
 
@@ -252,10 +230,10 @@ async function HomeContent({
 									<Flame className="h-6 w-6 text-stat-streak animate-pulse" />
 								</div>
 								<h3 className="text-lg font-bold text-stat-streak">
-									🎉 {t("home.streakMilestone", { days: recentMilestone })}
+									🎉 {t('home.streakMilestone', { days: recentMilestone })}
 								</h3>
 								<p className="mt-1 text-sm text-muted-foreground">
-									{t("home.streakMilestoneDesc")}
+									{t('home.streakMilestoneDesc')}
 								</p>
 							</div>
 						</div>
@@ -273,12 +251,8 @@ async function HomeContent({
 									<Trophy className="h-4 w-4 text-primary" />
 								</div>
 								<div>
-									<p className="text-lg font-bold tabular-nums">
-										{totalGamesPlayed}
-									</p>
-									<p className="text-[10px] text-muted-foreground">
-										{t("home.gamesPlayed")}
-									</p>
+									<p className="text-lg font-bold tabular-nums">{totalGamesPlayed}</p>
+									<p className="text-[10px] text-muted-foreground">{t('home.gamesPlayed')}</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-2 rounded-xl bg-muted/50 p-3">
@@ -286,12 +260,8 @@ async function HomeContent({
 									<Flame className="h-4 w-4 text-stat-streak" />
 								</div>
 								<div>
-									<p className="text-lg font-bold tabular-nums">
-										{currentStreak}
-									</p>
-									<p className="text-[10px] text-muted-foreground">
-										{t("home.streak")}
-									</p>
+									<p className="text-lg font-bold tabular-nums">{currentStreak}</p>
+									<p className="text-[10px] text-muted-foreground">{t('home.streak')}</p>
 								</div>
 							</div>
 							<div className="flex items-center gap-2 rounded-xl bg-muted/50 p-3">
@@ -300,9 +270,7 @@ async function HomeContent({
 								</div>
 								<div>
 									<p className="text-lg font-bold tabular-nums">{bestStreak}</p>
-									<p className="text-[10px] text-muted-foreground">
-										{t("home.bestStreak")}
-									</p>
+									<p className="text-[10px] text-muted-foreground">{t('home.bestStreak')}</p>
 								</div>
 							</div>
 						</div>
@@ -321,10 +289,8 @@ async function HomeContent({
 										<Crown className="h-6 w-6 text-white" />
 									</div>
 									<div className="flex-1">
-										<h3 className="font-semibold">{t("home.unlockAll")}</h3>
-										<p className="text-sm text-muted-foreground">
-											{t("home.premiumBenefits")}
-										</p>
+										<h3 className="font-semibold">{t('home.unlockAll')}</h3>
+										<p className="text-sm text-muted-foreground">{t('home.premiumBenefits')}</p>
 									</div>
 									<Sparkles className="h-5 w-5 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
 								</div>
@@ -337,5 +303,5 @@ async function HomeContent({
 			{/* Spacer for mobile bottom nav */}
 			<div className="h-6 md:h-12" />
 		</main>
-	);
+	)
 }

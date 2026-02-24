@@ -5,17 +5,13 @@
  * Represents sudoku with sum constraints
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
-export function KillerSudokuIcon({
-	size = 24,
-	className,
-	...props
-}: IconProps) {
+export function KillerSudokuIcon({ size = 24, className, ...props }: IconProps) {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -37,12 +33,7 @@ export function KillerSudokuIcon({
 			<path d="M8.67 2v20M15.33 2v20" strokeWidth="1.5" />
 			<path d="M2 8.67h20M2 15.33h20" strokeWidth="1.5" />
 			{/* Cage outlines (dotted) */}
-			<path
-				d="M2 2h6.67v6.67H2z"
-				strokeDasharray="2 1"
-				fill="currentColor"
-				fillOpacity="0.1"
-			/>
+			<path d="M2 2h6.67v6.67H2z" strokeDasharray="2 1" fill="currentColor" fillOpacity="0.1" />
 			<path
 				d="M15.33 8.67h6.67v6.67h-6.67z"
 				strokeDasharray="2 1"
@@ -54,5 +45,5 @@ export function KillerSudokuIcon({
 				17
 			</text>
 		</svg>
-	);
+	)
 }

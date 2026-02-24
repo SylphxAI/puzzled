@@ -19,36 +19,32 @@
  * - Both convert to seed (YYYYMMDD integer) for generation
  */
 
-import {
-	getGameConfig,
-	getSeedFromDate,
-	isValidGameSlug,
-} from "@/games/registry";
-import type { PuzzleDifficulty } from "@/games/types";
-import { db } from "@/lib/db";
-import { dailyPuzzles } from "@/lib/db/schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull } from 'drizzle-orm'
+import { getGameConfig, getSeedFromDate, isValidGameSlug } from '@/games/registry'
+import type { PuzzleDifficulty } from '@/games/types'
+import { db } from '@/lib/db'
+import { dailyPuzzles } from '@/lib/db/schema'
 
 // ==========================================
 // Types
 // ==========================================
 
 type PuzzleResult = {
-	id: string;
-	gameSlug: string;
-	puzzleDate: Date;
-	puzzleData: unknown;
-	solution: unknown;
-	difficulty: PuzzleDifficulty | null;
-	seed: number | null;
-	generatorVersion: string | null;
-	createdAt: Date;
-};
+	id: string
+	gameSlug: string
+	puzzleDate: Date
+	puzzleData: unknown
+	solution: unknown
+	difficulty: PuzzleDifficulty | null
+	seed: number | null
+	generatorVersion: string | null
+	createdAt: Date
+}
 
 export type GetOrCreatePuzzleResult = {
-	puzzle: PuzzleResult;
-	wasGenerated: boolean;
-};
+	puzzle: PuzzleResult
+	wasGenerated: boolean
+}
 
 // ==========================================
 // Core Functions
@@ -58,7 +54,7 @@ export type GetOrCreatePuzzleResult = {
  * Convert Date to date string (YYYY-MM-DD) in UTC
  */
 function toDateString(date: Date): string {
-	return date.toISOString().split("T")[0];
+	return date.toISOString().split('T')[0]
 }
 
 /**
@@ -77,36 +73,30 @@ function generatePuzzleData(
 	date: Date,
 	difficulty?: PuzzleDifficulty,
 ): { puzzleData: unknown; solution: unknown; seed: number } {
-	const config = getGameConfig(gameSlug);
+	const config = getGameConfig(gameSlug)
 	if (!config) {
-		throw new Error(`Unknown game: ${gameSlug}`);
+		throw new Error(`Unknown game: ${gameSlug}`)
 	}
 
 	// LLM games must have puzzles pre-generated - no silent fallback
-	if (config.generationStrategy === "llm") {
+	if (config.generationStrategy === 'llm') {
 		throw new Error(
 			`[${gameSlug}] LLM-generated puzzle not found for ${toDateString(date)}. ` +
 				`Puzzle generation workflow may have failed. Check workflow logs.`,
-		);
+		)
 	}
 
 	// Use getSeedFromDate for consistency with registry.server.ts
 	// Both produce YYYYMMDD integer (e.g., 20241228)
 	// For difficulty-enabled games, add offset to ensure different puzzles per difficulty
-	const baseSeed = getSeedFromDate(date);
+	const baseSeed = getSeedFromDate(date)
 	const difficultyOffset =
-		difficulty === "easy"
-			? 0
-			: difficulty === "medium"
-				? 1
-				: difficulty === "hard"
-					? 2
-					: 0;
-	const seed = baseSeed + difficultyOffset;
+		difficulty === 'easy' ? 0 : difficulty === 'medium' ? 1 : difficulty === 'hard' ? 2 : 0
+	const seed = baseSeed + difficultyOffset
 
-	const { puzzleData, solution } = config.generatePuzzle(seed, difficulty);
+	const { puzzleData, solution } = config.generatePuzzle(seed, difficulty)
 
-	return { puzzleData, solution, seed };
+	return { puzzleData, solution, seed }
 }
 
 /**
@@ -133,21 +123,18 @@ export async function getOrCreatePuzzle(
 	difficulty?: PuzzleDifficulty,
 ): Promise<GetOrCreatePuzzleResult> {
 	if (!isValidGameSlug(gameSlug)) {
-		throw new Error(`Invalid game slug: ${gameSlug}`);
+		throw new Error(`Invalid game slug: ${gameSlug}`)
 	}
 
 	// Build query conditions based on whether difficulty is provided
 	// For games with difficulty: match specific difficulty level
 	// For games without difficulty: match null difficulty
-	const conditions = [
-		eq(dailyPuzzles.gameSlug, gameSlug),
-		eq(dailyPuzzles.puzzleDate, date),
-	];
+	const conditions = [eq(dailyPuzzles.gameSlug, gameSlug), eq(dailyPuzzles.puzzleDate, date)]
 
 	if (difficulty) {
-		conditions.push(eq(dailyPuzzles.difficulty, difficulty));
+		conditions.push(eq(dailyPuzzles.difficulty, difficulty))
 	} else {
-		conditions.push(isNull(dailyPuzzles.difficulty));
+		conditions.push(isNull(dailyPuzzles.difficulty))
 	}
 
 	// Try to fetch existing puzzle
@@ -156,19 +143,15 @@ export async function getOrCreatePuzzle(
 		.from(dailyPuzzles)
 		.where(and(...conditions))
 		.limit(1)
-		.then((r) => r[0]);
+		.then((r) => r[0])
 
 	if (puzzle) {
-		return { puzzle, wasGenerated: false };
+		return { puzzle, wasGenerated: false }
 	}
 
 	// Puzzle doesn't exist - generate it
 	// For LLM games, this will throw (they must be pre-generated)
-	const { puzzleData, solution, seed } = generatePuzzleData(
-		gameSlug,
-		date,
-		difficulty,
-	);
+	const { puzzleData, solution, seed } = generatePuzzleData(gameSlug, date, difficulty)
 
 	// Insert with race condition handling
 	// If two users request the same puzzle simultaneously, one INSERT wins
@@ -181,13 +164,13 @@ export async function getOrCreatePuzzle(
 			solution,
 			difficulty: difficulty ?? null,
 			seed,
-			generatorVersion: "v1.0",
+			generatorVersion: 'v1.0',
 		})
 		.onConflictDoNothing()
-		.returning();
+		.returning()
 
 	if (newPuzzle) {
-		return { puzzle: newPuzzle, wasGenerated: true };
+		return { puzzle: newPuzzle, wasGenerated: true }
 	}
 
 	// Conflict occurred - another request won, fetch the winner's puzzle
@@ -196,17 +179,17 @@ export async function getOrCreatePuzzle(
 		.from(dailyPuzzles)
 		.where(and(...conditions))
 		.limit(1)
-		.then((r) => r[0]);
+		.then((r) => r[0])
 
 	if (!puzzle) {
 		// This should never happen - indicates a serious bug
 		throw new Error(
 			`[${gameSlug}] Puzzle vanished after race condition handling. ` +
 				`This is a critical bug - please report.`,
-		);
+		)
 	}
 
-	return { puzzle, wasGenerated: false };
+	return { puzzle, wasGenerated: false }
 }
 
 /**
@@ -217,27 +200,22 @@ async function _getPuzzleById(puzzleId: string): Promise<PuzzleResult | null> {
 		.select()
 		.from(dailyPuzzles)
 		.where(eq(dailyPuzzles.id, puzzleId))
-		.limit(1);
+		.limit(1)
 
-	return puzzle || null;
+	return puzzle || null
 }
 
 /**
  * Check if a puzzle exists for a game and date
  */
 async function _puzzleExists(gameSlug: string, date: Date): Promise<boolean> {
-	if (!isValidGameSlug(gameSlug)) return false;
+	if (!isValidGameSlug(gameSlug)) return false
 
 	const [puzzle] = await db
 		.select({ id: dailyPuzzles.id })
 		.from(dailyPuzzles)
-		.where(
-			and(
-				eq(dailyPuzzles.gameSlug, gameSlug),
-				eq(dailyPuzzles.puzzleDate, date),
-			),
-		)
-		.limit(1);
+		.where(and(eq(dailyPuzzles.gameSlug, gameSlug), eq(dailyPuzzles.puzzleDate, date)))
+		.limit(1)
 
-	return !!puzzle;
+	return !!puzzle
 }

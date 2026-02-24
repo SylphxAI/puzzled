@@ -1,23 +1,23 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl'
 
 /**
  * Queens How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function QueensHowToPlay() {
-	const t = useTranslations("games.queens");
+	const t = useTranslations('games.queens')
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t("rules.rule1")}</li>
-					<li>• {t("rules.rule2")}</li>
-					<li>• {t("rules.rule3")}</li>
-					<li>• {t("rules.rule4")}</li>
+					<li>• {t('rules.rule1')}</li>
+					<li>• {t('rules.rule2')}</li>
+					<li>• {t('rules.rule3')}</li>
+					<li>• {t('rules.rule4')}</li>
 				</ul>
 			</div>
 
@@ -44,9 +44,7 @@ export function QueensHowToPlay() {
 							👑
 						</div>
 						{/* Row 2: Red(Q), Yellow, Yellow, Green */}
-						<div className="flex h-8 w-8 items-center justify-center rounded bg-red-400/70">
-							👑
-						</div>
+						<div className="flex h-8 w-8 items-center justify-center rounded bg-red-400/70">👑</div>
 						<div className="h-8 w-8 rounded bg-yellow-400/70" />
 						<div className="h-8 w-8 rounded bg-yellow-400/70" />
 						<div className="h-8 w-8 rounded bg-green-400/70" />
@@ -63,9 +61,7 @@ export function QueensHowToPlay() {
 				<p className="text-center text-xs text-muted-foreground">
 					Each row, column, and color region has exactly one 👑
 					<br />
-					<span className="text-[10px]">
-						Queens cannot touch (including diagonally)
-					</span>
+					<span className="text-[10px]">Queens cannot touch (including diagonally)</span>
 				</p>
 			</div>
 
@@ -79,10 +75,10 @@ export function QueensHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	);
+	)
 }
 
 function _QueensHowToPlayTitle() {
-	const t = useTranslations("games.queens");
-	return <>{t("howToPlay")}</>;
+	const t = useTranslations('games.queens')
+	return <>{t('howToPlay')}</>
 }

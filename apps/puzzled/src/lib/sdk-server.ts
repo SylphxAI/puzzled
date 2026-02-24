@@ -5,10 +5,10 @@
  * Platform SDK functions (leaderboards, achievements, etc.)
  */
 
-import { type SylphxConfig, createConfig } from "@sylphx/sdk";
-import { env } from "./env";
+import { createConfig, type SylphxConfig } from '@sylphx/sdk'
+import { env } from './env'
 
-let cachedConfig: SylphxConfig | null = null;
+let cachedConfig: SylphxConfig | null = null
 
 /**
  * Get SDK configuration for server-side calls
@@ -26,9 +26,8 @@ export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
 			secretKey: env.SYLPHX_SECRET_KEY,
-			platformUrl:
-				process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL || "https://sylphx.com",
-		});
+			platformUrl: process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL || 'https://sylphx.com',
+		})
 	}
-	return cachedConfig;
+	return cachedConfig
 }

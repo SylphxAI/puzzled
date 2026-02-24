@@ -19,11 +19,11 @@
  * @returns Function that returns next random number in [0, 1)
  */
 export function seededRandom(seed: number): () => number {
-	let state = seed;
+	let state = seed
 	return () => {
-		state = (state * 1103515245 + 12345) & 0x7fffffff;
-		return state / 0x7fffffff;
-	};
+		state = (state * 1103515245 + 12345) & 0x7fffffff
+		return state / 0x7fffffff
+	}
 }
 
 /**
@@ -36,12 +36,12 @@ export function seededRandom(seed: number): () => number {
  * @returns New shuffled array
  */
 export function shuffleArray<T>(array: T[], random: () => number): T[] {
-	const result = [...array];
+	const result = [...array]
 	for (let i = result.length - 1; i > 0; i--) {
-		const j = Math.floor(random() * (i + 1));
-		[result[i], result[j]] = [result[j], result[i]];
+		const j = Math.floor(random() * (i + 1))
+		;[result[i], result[j]] = [result[j], result[i]]
 	}
-	return result;
+	return result
 }
 
 /**
@@ -52,7 +52,7 @@ export function shuffleArray<T>(array: T[], random: () => number): T[] {
  * @returns New shuffled array
  */
 function _seededShuffle<T>(array: T[], seed: number): T[] {
-	return shuffleArray(array, seededRandom(seed));
+	return shuffleArray(array, seededRandom(seed))
 }
 
 /**
@@ -62,11 +62,8 @@ function _seededShuffle<T>(array: T[], seed: number): T[] {
  * @param random - Random function returning [0, 1). Defaults to Math.random for non-deterministic use.
  * @returns Random element from array
  */
-export function pickRandom<T>(
-	array: T[],
-	random: () => number = Math.random,
-): T {
-	return array[Math.floor(random() * array.length)];
+export function pickRandom<T>(array: T[], random: () => number = Math.random): T {
+	return array[Math.floor(random() * array.length)]
 }
 
 /**
@@ -78,5 +75,5 @@ export function pickRandom<T>(
  * @returns Array of n random elements
  */
 function _pickRandomN<T>(array: T[], n: number, random: () => number): T[] {
-	return shuffleArray(array, random).slice(0, n);
+	return shuffleArray(array, random).slice(0, n)
 }

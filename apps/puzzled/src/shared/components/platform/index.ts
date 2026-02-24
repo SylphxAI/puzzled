@@ -1,1 +1,1 @@
-export { PlatformProvider } from "./sylphx-provider";
+export { PlatformProvider } from './sylphx-provider'

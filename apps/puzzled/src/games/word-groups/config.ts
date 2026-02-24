@@ -3,7 +3,7 @@
  * Implements GameConfig interface for modular game system
  */
 
-import { pickRandom, seededRandom, shuffleArray } from "@/games/shared";
+import { pickRandom, seededRandom, shuffleArray } from '@/games/shared'
 import {
 	DEFAULT_LAUNCH_DATE,
 	type GameCompletionStats,
@@ -11,12 +11,12 @@ import {
 	type GameResult,
 	type GameShareStats,
 	type GameSubmission,
-} from "../types";
-import { ConnectionsHowToPlay } from "./components/how-to-play";
-import { WordGroupsIcon } from "./icon";
-import { PUZZLES } from "./puzzles";
-import type { Category, ConnectionsPuzzle } from "./types";
-import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from "./types";
+} from '../types'
+import { ConnectionsHowToPlay } from './components/how-to-play'
+import { WordGroupsIcon } from './icon'
+import { PUZZLES } from './puzzles'
+import type { Category, ConnectionsPuzzle } from './types'
+import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
 // ==========================================
 // Types
@@ -26,35 +26,35 @@ import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from "./types";
  * Puzzle data sent to client (shuffled words only, no category groupings)
  */
 export type ConnectionsPuzzleData = {
-	words: string[];
-	maxMistakes: number;
-	wordsPerCategory: number;
-	totalCategories: number;
-};
+	words: string[]
+	maxMistakes: number
+	wordsPerCategory: number
+	totalCategories: number
+}
 
 /**
  * Solution stored server-side only
  */
 export type ConnectionsSolution = {
-	categories: Category[];
-};
+	categories: Category[]
+}
 
 /**
  * Client's guess for validation
  */
 type ConnectionsGuess = {
-	words: string[]; // 4 words guessed as a category
-};
+	words: string[] // 4 words guessed as a category
+}
 
 /**
  * Result of validating a guess
  */
 type ConnectionsGuessResult = {
-	valid: boolean;
-	isCorrect: boolean;
-	category?: Category;
-	error?: string;
-};
+	valid: boolean
+	isCorrect: boolean
+	category?: Category
+	error?: string
+}
 
 // ==========================================
 // Helper Functions
@@ -64,8 +64,8 @@ type ConnectionsGuessResult = {
  * Get puzzle from seed deterministically
  */
 function getPuzzleFromSeed(seed: number): ConnectionsPuzzle {
-	const index = seed % PUZZLES.length;
-	return PUZZLES[index];
+	const index = seed % PUZZLES.length
+	return PUZZLES[index]
 }
 
 /**
@@ -75,27 +75,22 @@ function getPuzzleFromSeed(seed: number): ConnectionsPuzzle {
  * DO NOT change the algorithm - it will break historical puzzles
  */
 function getShuffledWords(puzzle: ConnectionsPuzzle, seed: number): string[] {
-	const allWords = puzzle.categories.flatMap((cat) => cat.words);
+	const allWords = puzzle.categories.flatMap((cat) => cat.words)
 	// Use the FROZEN shared LCG algorithm for deterministic shuffle
 	// Previous implementation used Math.sin() which varies across JS engines
-	return shuffleArray(allWords, seededRandom(seed));
+	return shuffleArray(allWords, seededRandom(seed))
 }
 
 /**
  * Check if words match a category
  */
-function findMatchingCategory(
-	words: string[],
-	categories: Category[],
-): Category | undefined {
-	const wordSet = new Set(words.map((w) => w.toUpperCase()));
+function findMatchingCategory(words: string[], categories: Category[]): Category | undefined {
+	const wordSet = new Set(words.map((w) => w.toUpperCase()))
 
 	return categories.find((cat) => {
-		const catWords = cat.words.map((w) => w.toUpperCase());
-		return (
-			catWords.length === wordSet.size && catWords.every((w) => wordSet.has(w))
-		);
-	});
+		const catWords = cat.words.map((w) => w.toUpperCase())
+		return catWords.length === wordSet.size && catWords.every((w) => wordSet.has(w))
+	})
 }
 
 // ==========================================
@@ -108,33 +103,33 @@ export const wordGroupsConfig: GameConfig<
 	ConnectionsGuess,
 	ConnectionsGuessResult
 > = {
-	slug: "word-groups",
-	name: "Word Groups",
-	description: "Group 16 words into 4 categories of 4",
+	slug: 'word-groups',
+	name: 'Word Groups',
+	description: 'Group 16 words into 4 categories of 4',
 	IconComponent: WordGroupsIcon,
 	sortOrder: 2,
-	category: "word",
-	skills: ["vocabulary", "association", "logic"],
-	difficulty: "medium",
+	category: 'word',
+	skills: ['vocabulary', 'association', 'logic'],
+	difficulty: 'medium',
 	HowToPlayContent: ConnectionsHowToPlay,
 	display: {
-		taglineKey: "games.wordGroups.tagline",
-		highlightKey: "games.wordGroups.highlight",
-		duration: "~3 min",
-		theme: "violet",
+		taglineKey: 'games.wordGroups.tagline',
+		highlightKey: 'games.wordGroups.highlight',
+		duration: '~3 min',
+		theme: 'violet',
 	},
 
 	// Connections uses LLM for daily puzzle generation (semantic categories)
 	// Archive mode uses seed-based selection from curated puzzle pool
-	generationStrategy: "llm",
+	generationStrategy: 'llm',
 
 	/**
 	 * Generate puzzle from seed
 	 * Uses curated puzzle pool with themed word groups
 	 */
 	generatePuzzle: (seed: number) => {
-		const puzzle = getPuzzleFromSeed(seed);
-		const shuffledWords = getShuffledWords(puzzle, seed);
+		const puzzle = getPuzzleFromSeed(seed)
+		const shuffledWords = getShuffledWords(puzzle, seed)
 
 		return {
 			puzzleData: {
@@ -146,7 +141,7 @@ export const wordGroupsConfig: GameConfig<
 			solution: {
 				categories: puzzle.categories,
 			},
-		};
+		}
 	},
 
 	/**
@@ -162,27 +157,24 @@ export const wordGroupsConfig: GameConfig<
 				valid: false,
 				isCorrect: false,
 				error: `Must select exactly ${WORDS_PER_CATEGORY} words`,
-			};
+			}
 		}
 
 		// Check if words match any category
-		const matchingCategory = findMatchingCategory(
-			guess.words,
-			solution.categories,
-		);
+		const matchingCategory = findMatchingCategory(guess.words, solution.categories)
 
 		if (matchingCategory) {
 			return {
 				valid: true,
 				isCorrect: true,
 				category: matchingCategory,
-			};
+			}
 		}
 
 		return {
 			valid: true,
 			isCorrect: false,
-		};
+		}
 	},
 
 	/**
@@ -200,49 +192,47 @@ export const wordGroupsConfig: GameConfig<
 		_puzzleData: ConnectionsPuzzleData,
 		submission: GameSubmission,
 	): GameResult => {
-		const data = submission.data as
-			| { foundCategories?: string[][]; mistakes?: number }
-			| undefined;
+		const data = submission.data as { foundCategories?: string[][]; mistakes?: number } | undefined
 
 		// Must have found categories to validate
 		if (!data?.foundCategories) {
-			return { valid: false, error: "Missing found categories data" };
+			return { valid: false, error: 'Missing found categories data' }
 		}
 
 		// Count valid categories found
-		const foundCategories = data.foundCategories;
+		const foundCategories = data.foundCategories
 		const validCategoryCount = foundCategories.filter((found) => {
 			if (!Array.isArray(found) || found.length !== WORDS_PER_CATEGORY) {
-				return false;
+				return false
 			}
-			return findMatchingCategory(found, solution.categories) !== undefined;
-		}).length;
+			return findMatchingCategory(found, solution.categories) !== undefined
+		}).length
 
-		const foundAll = validCategoryCount === TOTAL_CATEGORIES;
+		const foundAll = validCategoryCount === TOTAL_CATEGORIES
 
 		// Verify claimed status
-		if (submission.status === "won" && !foundAll) {
+		if (submission.status === 'won' && !foundAll) {
 			return {
 				valid: false,
-				error: "Invalid win claim - not all categories found correctly",
-			};
+				error: 'Invalid win claim - not all categories found correctly',
+			}
 		}
-		if (submission.status === "lost" && foundAll) {
+		if (submission.status === 'lost' && foundAll) {
 			return {
 				valid: false,
-				error: "Invalid loss claim - all categories found correctly",
-			};
+				error: 'Invalid loss claim - all categories found correctly',
+			}
 		}
 
 		// Calculate score
 		if (!foundAll) {
-			return { valid: true, status: "lost", score: 0 };
+			return { valid: true, status: 'lost', score: 0 }
 		}
 
-		const mistakes = data.mistakes ?? 0;
-		const score = Math.max(0, 100 - mistakes * 25);
+		const mistakes = data.mistakes ?? 0
+		const score = Math.max(0, 100 - mistakes * 25)
 
-		return { valid: true, status: "won", score };
+		return { valid: true, status: 'won', score }
 	},
 
 	/**
@@ -253,19 +243,17 @@ export const wordGroupsConfig: GameConfig<
 	launchDate: DEFAULT_LAUNCH_DATE,
 
 	formatScoreDisplay: (stats: GameCompletionStats) => {
-		if (stats.status === "lost") return "Lost";
-		const mistakes = stats.mistakes ?? 0;
-		return mistakes === 0
-			? "Perfect!"
-			: `${mistakes} mistake${mistakes === 1 ? "" : "s"}`;
+		if (stats.status === 'lost') return 'Lost'
+		const mistakes = stats.mistakes ?? 0
+		return mistakes === 0 ? 'Perfect!' : `${mistakes} mistake${mistakes === 1 ? '' : 's'}`
 	},
 
 	compareForPercentile: (a: GameCompletionStats, b: GameCompletionStats) => {
 		// Wins beat losses
-		if (a.status === "won" && b.status !== "won") return 1;
-		if (a.status !== "won" && b.status === "won") return -1;
+		if (a.status === 'won' && b.status !== 'won') return 1
+		if (a.status !== 'won' && b.status === 'won') return -1
 		// For wins, fewer mistakes = better
-		return (b.mistakes ?? 4) - (a.mistakes ?? 4);
+		return (b.mistakes ?? 4) - (a.mistakes ?? 4)
 	},
 
 	// ==========================================
@@ -273,50 +261,48 @@ export const wordGroupsConfig: GameConfig<
 	// ==========================================
 
 	getShareEmoji: (stats: GameShareStats) => {
-		if (stats.status === "lost") return pickRandom(["😅", "💔", "🙈", "😤"]);
-		const mistakes = stats.mistakes ?? 0;
-		if (mistakes === 0) return pickRandom(["🤯", "🎯", "👑"]);
-		if (mistakes === 1) return pickRandom(["🔥", "⚡", "✨"]);
-		if (mistakes <= 2) return pickRandom(["💪", "🎉", "🙌"]);
-		return pickRandom(["😮‍💨", "🥵", "😅"]);
+		if (stats.status === 'lost') return pickRandom(['😅', '💔', '🙈', '😤'])
+		const mistakes = stats.mistakes ?? 0
+		if (mistakes === 0) return pickRandom(['🤯', '🎯', '👑'])
+		if (mistakes === 1) return pickRandom(['🔥', '⚡', '✨'])
+		if (mistakes <= 2) return pickRandom(['💪', '🎉', '🙌'])
+		return pickRandom(['😮‍💨', '🥵', '😅'])
 	},
 
 	getShareMessage: (stats: GameShareStats) => {
-		if (stats.status === "lost") {
+		if (stats.status === 'lost') {
 			return pickRandom([
-				"This one got me...",
-				"Tougher than expected!",
+				'This one got me...',
+				'Tougher than expected!',
 				"Can you solve what I couldn't?",
-				"This puzzle broke me!",
-			]);
+				'This puzzle broke me!',
+			])
 		}
-		const mistakes = stats.mistakes ?? 0;
-		if (mistakes === 0)
-			return pickRandom(["Perfect game!", "Flawless!", "No mistakes!"]);
-		if (mistakes === 1)
-			return pickRandom(["Almost perfect!", "So close to flawless!"]);
-		if (mistakes <= 2) return pickRandom(["Solved it!", "Got there!"]);
-		return pickRandom(["Scraped through!", "That was close!"]);
+		const mistakes = stats.mistakes ?? 0
+		if (mistakes === 0) return pickRandom(['Perfect game!', 'Flawless!', 'No mistakes!'])
+		if (mistakes === 1) return pickRandom(['Almost perfect!', 'So close to flawless!'])
+		if (mistakes <= 2) return pickRandom(['Solved it!', 'Got there!'])
+		return pickRandom(['Scraped through!', 'That was close!'])
 	},
 
 	getResultString: (stats: GameShareStats) => {
-		if (stats.status === "lost") return "Failed";
-		const mistakes = stats.mistakes ?? 0;
+		if (stats.status === 'lost') return 'Failed'
+		const mistakes = stats.mistakes ?? 0
 		return mistakes === 0
-			? "Perfect! 0 mistakes"
-			: `${mistakes} mistake${mistakes === 1 ? "" : "s"}`;
+			? 'Perfect! 0 mistakes'
+			: `${mistakes} mistake${mistakes === 1 ? '' : 's'}`
 	},
 
 	getChallengeMessage: (stats: GameShareStats) => {
-		if (stats.status === "lost") {
+		if (stats.status === 'lost') {
 			return pickRandom([
-				"Can you solve it?",
-				"Think you can do better?",
-				"Try beating this puzzle!",
-			]);
+				'Can you solve it?',
+				'Think you can do better?',
+				'Try beating this puzzle!',
+			])
 		}
-		const mistakes = stats.mistakes ?? 0;
-		if (mistakes === 0) return "Try to match my perfect game!";
-		return "Can you solve it with fewer mistakes?";
+		const mistakes = stats.mistakes ?? 0
+		if (mistakes === 0) return 'Try to match my perfect game!'
+		return 'Can you solve it with fewer mistakes?'
 	},
-};
+}

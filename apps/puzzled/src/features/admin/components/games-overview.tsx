@@ -1,8 +1,5 @@
-"use client";
+'use client'
 
-import { useGamesOverview } from "@/lib/api";
-import { MINUTE_MS } from "@/lib/constants/time";
-import { GameIcon } from "@/shared/components/ui/game-icons";
 import {
 	AlertCircle,
 	ArrowRight,
@@ -11,9 +8,12 @@ import {
 	RefreshCw,
 	TrendingUp,
 	Users,
-} from "lucide-react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+} from 'lucide-react'
+import Link from 'next/link'
+import { useTranslations } from 'next-intl'
+import { useGamesOverview } from '@/lib/api'
+import { MINUTE_MS } from '@/lib/constants/time'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 /**
  * Games Overview
@@ -22,7 +22,7 @@ import Link from "next/link";
  * The router returns: { slug, name, todayGamesPlayed, todayWins, allTimeGamesPlayed, allTimeWins }
  */
 export function GamesOverview() {
-	const t = useTranslations("admin.games");
+	const t = useTranslations('admin.games')
 
 	const {
 		data: games,
@@ -31,45 +31,36 @@ export function GamesOverview() {
 		isRefetching,
 	} = useGamesOverview({
 		refetchInterval: MINUTE_MS,
-	});
+	})
 
 	if (isLoading) {
-		return <GamesOverviewSkeleton />;
+		return <GamesOverviewSkeleton />
 	}
 
 	if (!games || games.length === 0) {
 		return (
 			<div className="admin-card p-8 text-center">
 				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
-				<p className="mt-2 text-[var(--admin-text-secondary)]">
-					Failed to load games data
-				</p>
+				<p className="mt-2 text-[var(--admin-text-secondary)]">Failed to load games data</p>
 			</div>
-		);
+		)
 	}
 
 	// Calculate summary stats
-	const totalPlaysToday = games.reduce((sum, g) => sum + g.todayGamesPlayed, 0);
-	const totalPlaysAllTime = games.reduce(
-		(sum, g) => sum + g.allTimeGamesPlayed,
-		0,
-	);
-	const _totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0);
+	const totalPlaysToday = games.reduce((sum, g) => sum + g.todayGamesPlayed, 0)
+	const totalPlaysAllTime = games.reduce((sum, g) => sum + g.allTimeGamesPlayed, 0)
+	const _totalWinsToday = games.reduce((sum, g) => sum + g.todayWins, 0)
 	const avgWinRate =
 		totalPlaysAllTime > 0
-			? Math.round(
-					(games.reduce((sum, g) => sum + g.allTimeWins, 0) /
-						totalPlaysAllTime) *
-						100,
-				)
-			: 0;
+			? Math.round((games.reduce((sum, g) => sum + g.allTimeWins, 0) / totalPlaysAllTime) * 100)
+			: 0
 
 	return (
 		<div className="space-y-6">
 			{/* Header with refresh */}
 			<div className="flex items-center justify-between">
 				<p className="text-sm text-[var(--admin-text-muted)]">
-					{t("totalGames", { count: games.length })}
+					{t('totalGames', { count: games.length })}
 				</p>
 				<button
 					type="button"
@@ -77,10 +68,8 @@ export function GamesOverview() {
 					disabled={isRefetching}
 					className="admin-btn admin-btn-ghost"
 				>
-					<RefreshCw
-						className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`}
-					/>
-					{t("refresh")}
+					<RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+					{t('refresh')}
 				</button>
 			</div>
 
@@ -115,7 +104,7 @@ export function GamesOverview() {
 				))}
 			</div>
 		</div>
-	);
+	)
 }
 
 function SummaryCard({
@@ -123,9 +112,9 @@ function SummaryCard({
 	label,
 	value,
 }: {
-	icon: React.ReactNode;
-	label: string;
-	value: string | number;
+	icon: React.ReactNode
+	label: string
+	value: string | number
 }) {
 	return (
 		<div className="admin-card p-4">
@@ -134,30 +123,26 @@ function SummaryCard({
 					{icon}
 				</div>
 				<div>
-					<p className="text-2xl font-semibold text-[var(--admin-text-primary)]">
-						{value}
-					</p>
+					<p className="text-2xl font-semibold text-[var(--admin-text-primary)]">{value}</p>
 					<p className="text-xs text-[var(--admin-text-muted)]">{label}</p>
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 type GameData = {
-	slug: string;
-	name: string;
-	todayGamesPlayed: number;
-	todayWins: number;
-	allTimeGamesPlayed: number;
-	allTimeWins: number;
-};
+	slug: string
+	name: string
+	todayGamesPlayed: number
+	todayWins: number
+	allTimeGamesPlayed: number
+	allTimeWins: number
+}
 
 function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 	const winRate =
-		game.allTimeGamesPlayed > 0
-			? Math.round((game.allTimeWins / game.allTimeGamesPlayed) * 100)
-			: 0;
+		game.allTimeGamesPlayed > 0 ? Math.round((game.allTimeWins / game.allTimeGamesPlayed) * 100) : 0
 
 	return (
 		<Link
@@ -169,11 +154,7 @@ function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 			<div className="flex items-start justify-between">
 				<div className="flex items-center gap-3">
 					<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--admin-bg-surface)]">
-						<GameIcon
-							slug={game.slug}
-							size={24}
-							className="text-[var(--admin-text-secondary)]"
-						/>
+						<GameIcon slug={game.slug} size={24} className="text-[var(--admin-text-secondary)]" />
 					</div>
 					<div>
 						<h3 className="font-semibold text-[var(--admin-text-primary)] group-hover:text-[var(--admin-accent)]">
@@ -193,9 +174,7 @@ function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 					<p className="text-xs text-[var(--admin-text-muted)]">All Time</p>
 				</div>
 				<div>
-					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{winRate}%
-					</p>
+					<p className="text-lg font-semibold text-[var(--admin-text-primary)]">{winRate}%</p>
 					<p className="text-xs text-[var(--admin-text-muted)]">Win Rate</p>
 				</div>
 				<div>
@@ -206,7 +185,7 @@ function GameCard({ game, delay = 0 }: { game: GameData; delay?: number }) {
 				</div>
 			</div>
 		</Link>
-	);
+	)
 }
 
 function GamesOverviewSkeleton() {
@@ -256,5 +235,5 @@ function GamesOverviewSkeleton() {
 				))}
 			</div>
 		</div>
-	);
+	)
 }

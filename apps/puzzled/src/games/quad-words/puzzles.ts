@@ -2,15 +2,15 @@
  * Quordle Puzzle Access
  */
 
-import { generateQuordlePuzzle } from "./generator";
-import type { QuordlePuzzleData, QuordleSolution } from "./types";
+import { generateQuordlePuzzle } from './generator'
+import type { QuordlePuzzleData, QuordleSolution } from './types'
 
 /**
  * Get puzzle from seed (deterministic)
  */
 export function getPuzzleFromSeed(seed: number): {
-	puzzleData: QuordlePuzzleData;
-	solution: QuordleSolution;
+	puzzleData: QuordlePuzzleData
+	solution: QuordleSolution
 } {
-	return generateQuordlePuzzle(seed);
+	return generateQuordlePuzzle(seed)
 }

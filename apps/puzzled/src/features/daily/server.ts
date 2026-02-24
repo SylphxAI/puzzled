@@ -6,4 +6,4 @@ export {
 	getPuzzleNumber,
 	getTodayUTC,
 	getYesterdayUTC,
-} from "./lib/puzzle-utils";
+} from './lib/puzzle-utils'

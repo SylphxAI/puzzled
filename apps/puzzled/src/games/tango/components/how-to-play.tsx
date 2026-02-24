@@ -1,22 +1,22 @@
-"use client";
+'use client'
 
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl'
 
 /**
  * Tango How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function TangoHowToPlay() {
-	const t = useTranslations("games.tango");
+	const t = useTranslations('games.tango')
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t("rules.rule1")}</li>
-					<li>• {t("rules.rule2")}</li>
-					<li>• {t("rules.rule3")}</li>
+					<li>• {t('rules.rule1')}</li>
+					<li>• {t('rules.rule2')}</li>
+					<li>• {t('rules.rule3')}</li>
 				</ul>
 			</div>
 
@@ -92,10 +92,10 @@ export function TangoHowToPlay() {
 				</ul>
 			</div>
 		</div>
-	);
+	)
 }
 
 function _TangoHowToPlayTitle() {
-	const t = useTranslations("games.tango");
-	return <>{t("howToPlay")}</>;
+	const t = useTranslations('games.tango')
+	return <>{t('howToPlay')}</>
 }

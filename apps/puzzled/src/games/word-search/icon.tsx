@@ -5,11 +5,11 @@
  * Represents finding hidden words
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
 export function WordSearchIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -30,16 +30,8 @@ export function WordSearchIcon({ size = 24, className, ...props }: IconProps) {
 			{/* Grid */}
 			<rect x="3" y="3" width="18" height="18" rx="1" />
 			{/* Grid lines */}
-			<path
-				d="M7.2 3v18M11.4 3v18M15.6 3v18"
-				strokeWidth="0.75"
-				opacity="0.3"
-			/>
-			<path
-				d="M3 7.2h18M3 11.4h18M3 15.6h18"
-				strokeWidth="0.75"
-				opacity="0.3"
-			/>
+			<path d="M7.2 3v18M11.4 3v18M15.6 3v18" strokeWidth="0.75" opacity="0.3" />
+			<path d="M3 7.2h18M3 11.4h18M3 15.6h18" strokeWidth="0.75" opacity="0.3" />
 			{/* Diagonal highlight - found word */}
 			<rect
 				x="4"
@@ -56,5 +48,5 @@ export function WordSearchIcon({ size = 24, className, ...props }: IconProps) {
 			<circle cx="9.3" cy="9.3" r="1" fill="currentColor" />
 			<circle cx="13.5" cy="13.5" r="1" fill="currentColor" />
 		</svg>
-	);
+	)
 }

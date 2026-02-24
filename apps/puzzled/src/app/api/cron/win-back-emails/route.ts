@@ -1,7 +1,7 @@
-import { createWorkflowCronHandler } from "@/lib/api/cron";
+import { createWorkflowCronHandler } from '@/lib/api/cron'
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 /**
  * Win-back email cron job
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  * - Workflow finds inactive users (7, 14, 30 days) and sends emails
  */
 export const GET = createWorkflowCronHandler({
-	workflowPath: "/api/workflow/win-back-emails",
-	logPrefix: "[WinBackEmails]",
-	successMessage: "Win-back emails workflow triggered",
-});
+	workflowPath: '/api/workflow/win-back-emails',
+	logPrefix: '[WinBackEmails]',
+	successMessage: 'Win-back emails workflow triggered',
+})

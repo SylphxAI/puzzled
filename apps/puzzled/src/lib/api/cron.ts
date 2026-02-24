@@ -1,5 +1,5 @@
-import { getServerBaseUrl } from "@/lib/utils";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
+import { getServerBaseUrl } from '@/lib/utils'
 
 /**
  * Cron Job Utilities (SSOT)
@@ -17,24 +17,21 @@ import { NextResponse } from "next/server";
  * const authError = verifyCronAuth(request)
  * if (authError) return authError
  */
-export function verifyCronAuth(
-	request: Request,
-	logPrefix = "[Cron]",
-): Response | null {
-	const authHeader = request.headers.get("authorization");
-	const cronSecret = process.env.CRON_SECRET;
+export function verifyCronAuth(request: Request, logPrefix = '[Cron]'): Response | null {
+	const authHeader = request.headers.get('authorization')
+	const cronSecret = process.env.CRON_SECRET
 
 	if (!cronSecret) {
-		console.error(`${logPrefix} CRON_SECRET not configured`);
-		return NextResponse.json({ error: "Cron not configured" }, { status: 500 });
+		console.error(`${logPrefix} CRON_SECRET not configured`)
+		return NextResponse.json({ error: 'Cron not configured' }, { status: 500 })
 	}
 
 	if (authHeader !== `Bearer ${cronSecret}`) {
-		console.error(`${logPrefix} Invalid authorization`);
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		console.error(`${logPrefix} Invalid authorization`)
+		return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 	}
 
-	return null;
+	return null
 }
 
 /**
@@ -48,40 +45,32 @@ export function verifyCronAuth(
 function triggerWorkflow(
 	workflowPath: string,
 	body: Record<string, unknown> = {},
-	logPrefix = "[Cron]",
+	logPrefix = '[Cron]',
 ): void {
-	const baseUrl = getServerBaseUrl();
-	const workflowUrl = `${baseUrl}${workflowPath}`;
+	const baseUrl = getServerBaseUrl()
+	const workflowUrl = `${baseUrl}${workflowPath}`
 
-	console.log(
-		`${logPrefix} Triggering workflow: ${workflowPath} (fire-and-forget)`,
-	);
+	console.log(`${logPrefix} Triggering workflow: ${workflowPath} (fire-and-forget)`)
 
 	fetch(workflowUrl, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(body),
 	}).catch((error) => {
-		console.error(
-			`${logPrefix} Failed to trigger workflow ${workflowPath}:`,
-			error,
-		);
-	});
+		console.error(`${logPrefix} Failed to trigger workflow ${workflowPath}:`, error)
+	})
 }
 
 /**
  * Create a standard cron success response
  */
-export function cronSuccess(
-	message: string,
-	extra: Record<string, unknown> = {},
-): Response {
+export function cronSuccess(message: string, extra: Record<string, unknown> = {}): Response {
 	return NextResponse.json({
 		success: true,
 		message,
 		timestamp: new Date().toISOString(),
 		...extra,
-	});
+	})
 }
 
 /**
@@ -95,7 +84,7 @@ function _cronError(message: string, status = 500): Response {
 			timestamp: new Date().toISOString(),
 		},
 		{ status },
-	);
+	)
 }
 
 /**
@@ -112,24 +101,19 @@ function _cronError(message: string, status = 500): Response {
  * })
  */
 export function createWorkflowCronHandler(options: {
-	workflowPath: string;
-	workflowBody?: Record<string, unknown>;
-	logPrefix?: string;
-	successMessage: string;
+	workflowPath: string
+	workflowBody?: Record<string, unknown>
+	logPrefix?: string
+	successMessage: string
 }): (request: Request) => Response {
-	const {
-		workflowPath,
-		workflowBody = {},
-		logPrefix = "[Cron]",
-		successMessage,
-	} = options;
+	const { workflowPath, workflowBody = {}, logPrefix = '[Cron]', successMessage } = options
 
 	return (request: Request) => {
-		const authError = verifyCronAuth(request, logPrefix);
-		if (authError) return authError;
+		const authError = verifyCronAuth(request, logPrefix)
+		if (authError) return authError
 
-		triggerWorkflow(workflowPath, workflowBody, logPrefix);
+		triggerWorkflow(workflowPath, workflowBody, logPrefix)
 
-		return cronSuccess(successMessage);
-	};
+		return cronSuccess(successMessage)
+	}
 }

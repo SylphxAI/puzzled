@@ -5,22 +5,22 @@
  * Each quote gets a unique substitution cipher based on seed.
  */
 
-import { generateCryptogramPuzzle, getQuoteCount } from "./generator";
-import type { CryptogramPuzzleData, CryptogramSolution } from "./types";
+import { generateCryptogramPuzzle, getQuoteCount } from './generator'
+import type { CryptogramPuzzleData, CryptogramSolution } from './types'
 
 /**
  * Get a puzzle based on seed
  */
 export function getPuzzleFromSeed(seed: number): {
-	puzzleData: CryptogramPuzzleData;
-	solution: CryptogramSolution;
+	puzzleData: CryptogramPuzzleData
+	solution: CryptogramSolution
 } {
-	return generateCryptogramPuzzle(seed);
+	return generateCryptogramPuzzle(seed)
 }
 
 /**
  * Get count of available quotes
  */
 function _getPuzzleCount(): number {
-	return getQuoteCount();
+	return getQuoteCount()
 }

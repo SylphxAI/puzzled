@@ -1,14 +1,5 @@
-"use client";
+'use client'
 
-import {
-	type Locale,
-	localeCountryCodes,
-	localeGroups,
-	localeNames,
-	localeShortNames,
-} from "@/lib/i18n/config";
-import { usePathname, useRouter } from "@/lib/i18n/routing";
-import { cn } from "@/lib/utils";
 import {
 	Button,
 	DropdownMenu,
@@ -19,10 +10,19 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 	Icon,
-} from "@sylphx/ui";
-import { Check, ChevronDown, Languages } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
+} from '@sylphx/ui'
+import { Check, ChevronDown, Languages } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
+import { useTransition } from 'react'
+import {
+	type Locale,
+	localeCountryCodes,
+	localeGroups,
+	localeNames,
+	localeShortNames,
+} from '@/lib/i18n/config'
+import { usePathname, useRouter } from '@/lib/i18n/routing'
+import { cn } from '@/lib/utils'
 
 // ==========================================
 // Language Switcher Component
@@ -30,36 +30,33 @@ import { useTransition } from "react";
 
 interface LanguageSwitcherProps {
 	/** Show as full button with text instead of icon-only */
-	variant?: "icon" | "button" | "inline";
+	variant?: 'icon' | 'button' | 'inline'
 	/** Additional class names */
-	className?: string;
+	className?: string
 }
 
-export function LanguageSwitcher({
-	variant = "icon",
-	className,
-}: LanguageSwitcherProps) {
-	const t = useTranslations("common");
-	const locale = useLocale() as Locale;
-	const router = useRouter();
-	const pathname = usePathname();
-	const [isPending, startTransition] = useTransition();
+export function LanguageSwitcher({ variant = 'icon', className }: LanguageSwitcherProps) {
+	const t = useTranslations('common')
+	const locale = useLocale() as Locale
+	const router = useRouter()
+	const pathname = usePathname()
+	const [isPending, startTransition] = useTransition()
 
 	const handleLocaleChange = (newLocale: Locale) => {
-		if (newLocale === locale) return;
+		if (newLocale === locale) return
 
 		startTransition(() => {
 			// Update URL with new locale
-			router.replace(pathname, { locale: newLocale });
+			router.replace(pathname, { locale: newLocale })
 
 			// Store preference in cookie for returning visitors
 			// biome-ignore lint/suspicious/noDocumentCookie: locale preference must be set client-side as a simple cookie for the proxy to read before JS hydration
-			document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-		});
-	};
+			document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
+		})
+	}
 
 	// Icon-only trigger (for header/navbar)
-	if (variant === "icon") {
+	if (variant === 'icon') {
 		return (
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
@@ -67,12 +64,12 @@ export function LanguageSwitcher({
 						variant="ghost"
 						size="icon"
 						className={cn(
-							"relative h-10 w-10 rounded-full",
-							"hover:bg-muted",
-							isPending && "pointer-events-none opacity-50",
+							'relative h-10 w-10 rounded-full',
+							'hover:bg-muted',
+							isPending && 'pointer-events-none opacity-50',
 							className,
 						)}
-						aria-label={t("changeLanguage")}
+						aria-label={t('changeLanguage')}
 					>
 						<Icon
 							icon={`circle-flags:${localeCountryCodes[locale]}`}
@@ -92,22 +89,22 @@ export function LanguageSwitcher({
 					isPending={isPending}
 				/>
 			</DropdownMenu>
-		);
+		)
 	}
 
 	// Button trigger with text (for settings page)
-	if (variant === "button") {
+	if (variant === 'button') {
 		return (
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button
 						variant="outline"
 						className={cn(
-							"h-11 min-w-[180px] justify-between gap-3 px-4",
-							isPending && "pointer-events-none opacity-50",
+							'h-11 min-w-[180px] justify-between gap-3 px-4',
+							isPending && 'pointer-events-none opacity-50',
 							className,
 						)}
-						aria-label={t("changeLanguage")}
+						aria-label={t('changeLanguage')}
 					>
 						<span className="flex items-center gap-3">
 							<Icon
@@ -126,7 +123,7 @@ export function LanguageSwitcher({
 					isPending={isPending}
 				/>
 			</DropdownMenu>
-		);
+		)
 	}
 
 	// Inline variant (for inline text with current language)
@@ -136,13 +133,13 @@ export function LanguageSwitcher({
 				<button
 					type="button"
 					className={cn(
-						"inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium",
-						"text-primary underline-offset-4 hover:underline",
-						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-						isPending && "pointer-events-none opacity-50",
+						'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium',
+						'text-primary underline-offset-4 hover:underline',
+						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+						isPending && 'pointer-events-none opacity-50',
 						className,
 					)}
-					aria-label={t("changeLanguage")}
+					aria-label={t('changeLanguage')}
 				>
 					<Icon
 						icon={`circle-flags:${localeCountryCodes[locale]}`}
@@ -158,7 +155,7 @@ export function LanguageSwitcher({
 				isPending={isPending}
 			/>
 		</DropdownMenu>
-	);
+	)
 }
 
 // ==========================================
@@ -166,9 +163,9 @@ export function LanguageSwitcher({
 // ==========================================
 
 interface LanguageDropdownContentProps {
-	currentLocale: Locale;
-	onSelect: (locale: Locale) => void;
-	isPending: boolean;
+	currentLocale: Locale
+	onSelect: (locale: Locale) => void
+	isPending: boolean
 }
 
 function LanguageDropdownContent({
@@ -176,14 +173,14 @@ function LanguageDropdownContent({
 	onSelect,
 	isPending,
 }: LanguageDropdownContentProps) {
-	const t = useTranslations("common");
+	const t = useTranslations('common')
 
 	return (
 		<DropdownMenuContent align="end" className="w-64 p-2" sideOffset={8}>
 			{/* Header */}
 			<div className="mb-2 flex items-center gap-2 px-2 py-1.5">
 				<Languages className="h-4 w-4 text-muted-foreground" />
-				<span className="text-sm font-medium">{t("selectLanguage")}</span>
+				<span className="text-sm font-medium">{t('selectLanguage')}</span>
 			</div>
 
 			<DropdownMenuSeparator />
@@ -224,11 +221,9 @@ function LanguageDropdownContent({
 
 			{/* Footer note */}
 			<DropdownMenuSeparator className="my-2" />
-			<p className="px-2 py-1.5 text-xs text-muted-foreground">
-				{t("languageChangeNote")}
-			</p>
+			<p className="px-2 py-1.5 text-xs text-muted-foreground">{t('languageChangeNote')}</p>
 		</DropdownMenuContent>
-	);
+	)
 }
 
 // ==========================================
@@ -236,24 +231,19 @@ function LanguageDropdownContent({
 // ==========================================
 
 interface LanguageMenuItemProps {
-	locale: Locale;
-	isSelected: boolean;
-	onSelect: (locale: Locale) => void;
-	disabled?: boolean;
+	locale: Locale
+	isSelected: boolean
+	onSelect: (locale: Locale) => void
+	disabled?: boolean
 }
 
-function LanguageMenuItem({
-	locale,
-	isSelected,
-	onSelect,
-	disabled,
-}: LanguageMenuItemProps) {
+function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMenuItemProps) {
 	return (
 		<DropdownMenuItem
 			className={cn(
-				"flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5",
-				"focus:bg-accent",
-				isSelected && "bg-accent/50",
+				'flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5',
+				'focus:bg-accent',
+				isSelected && 'bg-accent/50',
 			)}
 			onSelect={() => onSelect(locale)}
 			disabled={disabled}
@@ -264,23 +254,17 @@ function LanguageMenuItem({
 				aria-hidden="true"
 			/>
 			<div className="flex flex-1 flex-col gap-0.5">
-				<span className={cn("text-sm", isSelected && "font-medium")}>
-					{localeNames[locale]}
-				</span>
+				<span className={cn('text-sm', isSelected && 'font-medium')}>{localeNames[locale]}</span>
 				{/* Show region hint for Chinese variants */}
-				{locale === "zh-HK" && (
-					<span className="text-xs text-muted-foreground">Hong Kong</span>
-				)}
-				{locale === "zh-TW" && (
-					<span className="text-xs text-muted-foreground">Taiwan</span>
-				)}
-				{locale === "zh-CN" && (
+				{locale === 'zh-HK' && <span className="text-xs text-muted-foreground">Hong Kong</span>}
+				{locale === 'zh-TW' && <span className="text-xs text-muted-foreground">Taiwan</span>}
+				{locale === 'zh-CN' && (
 					<span className="text-xs text-muted-foreground">Mainland China</span>
 				)}
 			</div>
 			{isSelected && <Check className="h-4 w-4 shrink-0 text-primary" />}
 		</DropdownMenuItem>
-	);
+	)
 }
 
 // ==========================================
@@ -292,18 +276,18 @@ function LanguageMenuItem({
  * Use in mobile headers or tight spaces
  */
 function _LanguageIndicator({ className }: { className?: string }) {
-	const locale = useLocale() as Locale;
+	const locale = useLocale() as Locale
 
 	return (
-		<div className={cn("flex items-center gap-1.5", className)}>
+		<div className={cn('flex items-center gap-1.5', className)}>
 			<Icon
 				icon={`circle-flags:${localeCountryCodes[locale]}`}
 				className="h-4 w-4"
 				aria-hidden="true"
 			/>
 			<span className="text-xs font-medium uppercase text-muted-foreground">
-				{locale.split("-")[1] || locale}
+				{locale.split('-')[1] || locale}
 			</span>
 		</div>
-	);
+	)
 }

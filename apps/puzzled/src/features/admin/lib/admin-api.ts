@@ -8,150 +8,143 @@
  * - No local users table - platform is source of truth
  */
 
-import { redis } from "@/lib/redis";
-import { isAdminRole } from "@/lib/roles";
-import { auth } from "@sylphx/sdk/nextjs";
-import { type NextRequest, NextResponse } from "next/server";
-import { RateLimiterRedis } from "rate-limiter-flexible";
+import { auth } from '@sylphx/sdk/nextjs'
+import { type NextRequest, NextResponse } from 'next/server'
+import { RateLimiterRedis } from 'rate-limiter-flexible'
+import { redis } from '@/lib/redis'
+import { isAdminRole } from '@/lib/roles'
 
 /**
  * Constant-time string comparison to prevent timing attacks
  */
 function secureCompare(a: string, b: string): boolean {
-	if (typeof a !== "string" || typeof b !== "string") {
-		return false;
+	if (typeof a !== 'string' || typeof b !== 'string') {
+		return false
 	}
 
-	const encoder = new TextEncoder();
-	const aBytes = encoder.encode(a);
-	const bBytes = encoder.encode(b);
+	const encoder = new TextEncoder()
+	const aBytes = encoder.encode(a)
+	const bBytes = encoder.encode(b)
 
-	const maxLen = Math.max(aBytes.length, bBytes.length);
-	let result = aBytes.length === bBytes.length ? 0 : 1;
+	const maxLen = Math.max(aBytes.length, bBytes.length)
+	let result = aBytes.length === bBytes.length ? 0 : 1
 
 	for (let i = 0; i < maxLen; i++) {
-		const aByte = i < aBytes.length ? aBytes[i] : 0;
-		const bByte = i < bBytes.length ? bBytes[i] : 0;
-		result |= aByte ^ bByte;
+		const aByte = i < aBytes.length ? aBytes[i] : 0
+		const bByte = i < bBytes.length ? bBytes[i] : 0
+		result |= aByte ^ bByte
 	}
 
-	return result === 0;
+	return result === 0
 }
 
 // Strict rate limiting for admin secret attempts (3 per hour per IP)
 const _adminSecretLimiter = new RateLimiterRedis({
 	storeClient: redis,
-	keyPrefix: "puzzled:admin-secret",
+	keyPrefix: 'puzzled:admin-secret',
 	points: 3,
 	duration: 3600, // 1 hour
-});
+})
 
 const adminSecretRatelimit = {
 	async limit(identifier: string): Promise<{ success: boolean }> {
 		try {
-			await _adminSecretLimiter.consume(identifier);
-			return { success: true };
+			await _adminSecretLimiter.consume(identifier)
+			return { success: true }
 		} catch {
-			return { success: false };
+			return { success: false }
 		}
 	},
-};
+}
 
 /**
  * Log admin access attempts for security auditing
  */
 async function logAdminAccess(
-	method: "secret" | "session",
+	method: 'secret' | 'session',
 	success: boolean,
 	ip: string,
 	userId?: string,
 ) {
-	const timestamp = new Date().toISOString();
+	const timestamp = new Date().toISOString()
 	const logEntry = {
 		timestamp,
 		method,
 		success,
 		ip,
-		userId: userId || "anonymous",
-	};
-	console.warn("[ADMIN ACCESS]", JSON.stringify(logEntry));
-	const key = `admin-audit:${timestamp}:${method}:${ip}`;
-	await redis.setex(key, 30 * 24 * 60 * 60, JSON.stringify(logEntry));
+		userId: userId || 'anonymous',
+	}
+	console.warn('[ADMIN ACCESS]', JSON.stringify(logEntry))
+	const key = `admin-audit:${timestamp}:${method}:${ip}`
+	await redis.setex(key, 30 * 24 * 60 * 60, JSON.stringify(logEntry))
 }
 
 /** Admin check result */
 export type AdminCheckResult =
 	| { allowed: true; userId: string }
-	| { allowed: false; reason: "unauthorized" | "rate_limited" };
+	| { allowed: false; reason: 'unauthorized' | 'rate_limited' }
 
 /**
  * Check if request is from an admin
  */
-export async function checkAdminWithMfa(
-	request: NextRequest,
-): Promise<AdminCheckResult> {
-	const ip =
-		request.headers.get("x-forwarded-for") ||
-		request.headers.get("x-real-ip") ||
-		"unknown";
+export async function checkAdminWithMfa(request: NextRequest): Promise<AdminCheckResult> {
+	const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
 
 	// Check header secret first (for programmatic access)
-	const adminSecret = request.headers.get("x-admin-secret");
+	const adminSecret = request.headers.get('x-admin-secret')
 	if (adminSecret) {
-		const { success: rateLimitOk } = await adminSecretRatelimit.limit(ip);
+		const { success: rateLimitOk } = await adminSecretRatelimit.limit(ip)
 		if (!rateLimitOk) {
-			await logAdminAccess("secret", false, ip);
-			return { allowed: false, reason: "rate_limited" };
+			await logAdminAccess('secret', false, ip)
+			return { allowed: false, reason: 'rate_limited' }
 		}
 
 		if (!process.env.ADMIN_SECRET) {
-			await logAdminAccess("secret", false, ip);
-			return { allowed: false, reason: "unauthorized" };
+			await logAdminAccess('secret', false, ip)
+			return { allowed: false, reason: 'unauthorized' }
 		}
 
-		const isValidSecret = secureCompare(adminSecret, process.env.ADMIN_SECRET);
-		await logAdminAccess("secret", isValidSecret, ip);
+		const isValidSecret = secureCompare(adminSecret, process.env.ADMIN_SECRET)
+		await logAdminAccess('secret', isValidSecret, ip)
 
 		if (!isValidSecret) {
-			return { allowed: false, reason: "unauthorized" };
+			return { allowed: false, reason: 'unauthorized' }
 		}
 
-		return { allowed: true, userId: "admin-secret" };
+		return { allowed: true, userId: 'admin-secret' }
 	}
 
 	// Check session-based auth
 	try {
-		const { userId, user } = await auth();
+		const { userId, user } = await auth()
 		if (!userId || !user) {
-			return { allowed: false, reason: "unauthorized" };
+			return { allowed: false, reason: 'unauthorized' }
 		}
 
 		if (!isAdminRole(user.role)) {
-			return { allowed: false, reason: "unauthorized" };
+			return { allowed: false, reason: 'unauthorized' }
 		}
 
-		await logAdminAccess("session", true, ip, userId);
-		return { allowed: true, userId };
+		await logAdminAccess('session', true, ip, userId)
+		return { allowed: true, userId }
 	} catch {
-		return { allowed: false, reason: "unauthorized" };
+		return { allowed: false, reason: 'unauthorized' }
 	}
 }
 
 /** Return unauthorized response */
 function unauthorized() {
-	return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }
 
 /** Return response based on admin check result */
-export function adminCheckResponse(
-	result: AdminCheckResult,
-): NextResponse | null {
-	if (result.allowed) return null;
+export function adminCheckResponse(result: AdminCheckResult): NextResponse | null {
+	if (result.allowed) return null
 
 	switch (result.reason) {
-		case "rate_limited":
-			return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
+		case 'rate_limited':
+			return NextResponse.json({ error: 'Too many attempts' }, { status: 429 })
 		default:
-			return unauthorized();
+			return unauthorized()
 	}
 }

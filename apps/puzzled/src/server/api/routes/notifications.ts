@@ -8,13 +8,13 @@
  * NOTE: Uses method chaining for proper hc type inference.
  */
 
-import { db } from "@/lib/db";
-import { notificationPreferences } from "@/lib/db/schema";
-import { OpenAPIHono, z } from "@hono/zod-openapi";
-import { eq } from "drizzle-orm";
-import { HTTPException } from "hono/http-exception";
-import { authMiddleware, authRateLimitMiddleware } from "../middleware";
-import type { PuzzledAuthEnv } from "../types";
+import { OpenAPIHono, z } from '@hono/zod-openapi'
+import { eq } from 'drizzle-orm'
+import { HTTPException } from 'hono/http-exception'
+import { db } from '@/lib/db'
+import { notificationPreferences } from '@/lib/db/schema'
+import { authMiddleware, authRateLimitMiddleware } from '../middleware'
+import type { PuzzledAuthEnv } from '../types'
 
 // ==========================================
 // Schemas
@@ -27,15 +27,15 @@ const UpdatePushPreferencesBodySchema = z.object({
 	pushNewGames: z.boolean().optional(),
 	dailyReminderTime: z
 		.string()
-		.regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:mm)")
+		.regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:mm)')
 		.optional(),
-});
+})
 
 const UpdateEmailPreferencesBodySchema = z.object({
 	emailEnabled: z.boolean().optional(),
 	emailWeeklyDigest: z.boolean().optional(),
 	emailMarketing: z.boolean().optional(),
-});
+})
 
 // ==========================================
 // Router (Method Chaining for hc type inference)
@@ -43,14 +43,14 @@ const UpdateEmailPreferencesBodySchema = z.object({
 
 const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	// GET /preferences - authenticated
-	.get("/preferences", authMiddleware, async (c) => {
-		const user = c.get("user");
+	.get('/preferences', authMiddleware, async (c) => {
+		const user = c.get('user')
 
 		const [prefs] = await db
 			.select()
 			.from(notificationPreferences)
 			.where(eq(notificationPreferences.userId, user.id))
-			.limit(1);
+			.limit(1)
 
 		if (!prefs) {
 			return c.json({
@@ -58,11 +58,11 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				pushDailyReminder: true,
 				pushStreakAlert: true,
 				pushNewGames: true,
-				dailyReminderTime: "09:00",
+				dailyReminderTime: '09:00',
 				emailEnabled: true,
 				emailWeeklyDigest: true,
 				emailMarketing: true,
-			});
+			})
 		}
 
 		return c.json({
@@ -70,22 +70,22 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 			pushDailyReminder: prefs.pushDailyReminder,
 			pushStreakAlert: prefs.pushStreakAlert,
 			pushNewGames: prefs.pushNewGames,
-			dailyReminderTime: prefs.dailyReminderTime ?? "09:00",
+			dailyReminderTime: prefs.dailyReminderTime ?? '09:00',
 			emailEnabled: prefs.emailEnabled,
 			emailWeeklyDigest: prefs.emailWeeklyDigest,
 			emailMarketing: prefs.emailMarketing,
-		});
+		})
 	})
 
 	// PUT /push-preferences - authenticated + rate limited
-	.put("/push-preferences", authRateLimitMiddleware, async (c) => {
-		const body = await c.req.json();
-		const parsed = UpdatePushPreferencesBodySchema.safeParse(body);
+	.put('/push-preferences', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = UpdatePushPreferencesBodySchema.safeParse(body)
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: "Invalid request body" });
+			throw new HTTPException(400, { message: 'Invalid request body' })
 		}
-		const input = parsed.data;
-		const user = c.get("user");
+		const input = parsed.data
+		const user = c.get('user')
 
 		const [updated] = await db
 			.insert(notificationPreferences)
@@ -95,7 +95,7 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				pushDailyReminder: input.pushDailyReminder ?? true,
 				pushStreakAlert: input.pushStreakAlert ?? true,
 				pushNewGames: input.pushNewGames ?? true,
-				dailyReminderTime: input.dailyReminderTime ?? "09:00",
+				dailyReminderTime: input.dailyReminderTime ?? '09:00',
 				updatedAt: new Date(),
 			})
 			.onConflictDoUpdate({
@@ -119,7 +119,7 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 					updatedAt: new Date(),
 				},
 			})
-			.returning();
+			.returning()
 
 		return c.json({
 			success: true,
@@ -130,18 +130,18 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				pushNewGames: updated.pushNewGames,
 				dailyReminderTime: updated.dailyReminderTime,
 			},
-		});
+		})
 	})
 
 	// PUT /email-preferences - authenticated + rate limited
-	.put("/email-preferences", authRateLimitMiddleware, async (c) => {
-		const body = await c.req.json();
-		const parsed = UpdateEmailPreferencesBodySchema.safeParse(body);
+	.put('/email-preferences', authRateLimitMiddleware, async (c) => {
+		const body = await c.req.json()
+		const parsed = UpdateEmailPreferencesBodySchema.safeParse(body)
 		if (!parsed.success) {
-			throw new HTTPException(400, { message: "Invalid request body" });
+			throw new HTTPException(400, { message: 'Invalid request body' })
 		}
-		const input = parsed.data;
-		const user = c.get("user");
+		const input = parsed.data
+		const user = c.get('user')
 
 		const [updated] = await db
 			.insert(notificationPreferences)
@@ -167,7 +167,7 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 					updatedAt: new Date(),
 				},
 			})
-			.returning();
+			.returning()
 
 		return c.json({
 			success: true,
@@ -176,8 +176,8 @@ const notificationsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 				emailWeeklyDigest: updated.emailWeeklyDigest,
 				emailMarketing: updated.emailMarketing,
 			},
-		});
-	});
+		})
+	})
 
-export { notificationsRoutes };
-export type NotificationsRoutes = typeof notificationsRoutes;
+export { notificationsRoutes }
+export type NotificationsRoutes = typeof notificationsRoutes

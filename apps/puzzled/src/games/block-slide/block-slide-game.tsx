@@ -3,49 +3,39 @@
  * Slide blocks to free the target block and guide it to the exit.
  */
 
-"use client";
+'use client'
 
-import { Celebration } from "@/features/celebration/components/celebration";
-import { GameResultModal } from "@/features/daily/components/game-result-modal";
-import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { formatTimer } from "@/games/shared/format";
-import { useGameSession } from "@/games/shared/use-game-session";
-import { parsePuzzleDataClient } from "@/games/types";
-import { BlockSlideIcon } from "@/shared/components/ui/game-icons";
-import { triggerHaptic, triggerSound } from "@/shared/hooks";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@sylphx/ui";
-import { Flag, HelpCircle, Play, RotateCcw } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Board } from "./components/board";
-import type {
-	BlockSlidePuzzle as BlockSlideClientData,
-	BlockSlideSolution,
-} from "./types";
-import { useBlockSlide } from "./use-block-slide";
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { Flag, HelpCircle, Play, RotateCcw } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatTimer } from '@/games/shared/format'
+import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
+import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
+import { triggerHaptic, triggerSound } from '@/shared/hooks'
+import { Board } from './components/board'
+import type { BlockSlidePuzzle as BlockSlideClientData, BlockSlideSolution } from './types'
+import { useBlockSlide } from './use-block-slide'
 
 type Props = {
-	mode?: "daily" | "archive";
-	puzzleId?: string;
-	puzzleData?: unknown;
-};
+	mode?: 'daily' | 'archive'
+	puzzleId?: string
+	puzzleData?: unknown
+}
 
-export function BlockSlideGame({
-	mode = "daily",
-	puzzleId,
-	puzzleData,
-}: Props) {
-	const t = useTranslations("games.blockSlide");
+export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
 	const [puzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<
-			BlockSlideClientData,
-			BlockSlideSolution
-		>(puzzleData);
-		return parsed.puzzleData;
-	});
+		const parsed = parsePuzzleDataClient<BlockSlideClientData, BlockSlideSolution>(puzzleData)
+		return parsed.puzzleData
+	})
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -59,76 +49,70 @@ export function BlockSlideGame({
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: "block-slide",
+		gameSlug: 'block-slide',
 		mode,
 		puzzleId,
 		enableStarBurst: false,
-	});
+	})
 
-	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false)
 
 	// Game hook
-	const game = useBlockSlide(puzzle);
+	const game = useBlockSlide(puzzle)
 
 	// Handle messages
 	useEffect(() => {
 		if (game.message) {
 			switch (game.message) {
-				case "moved":
-					triggerHaptic("light");
-					break;
-				case "blocked":
-					triggerHaptic("error");
-					triggerSound("error");
-					break;
-				case "win":
-					triggerHaptic("success");
-					triggerSound("perfectWin");
-					break;
+				case 'moved':
+					triggerHaptic('light')
+					break
+				case 'blocked':
+					triggerHaptic('error')
+					triggerSound('error')
+					break
+				case 'win':
+					triggerHaptic('success')
+					triggerSound('perfectWin')
+					break
 			}
-			game.clearMessage();
+			game.clearMessage()
 		}
-	}, [game.message, game.clearMessage]);
+	}, [game.message, game.clearMessage])
 
-	const gameEndedRef = useRef(false);
+	const gameEndedRef = useRef(false)
 
 	// Handle game end - in useEffect to avoid render-phase side effects
 	useEffect(() => {
-		if (
-			(game.status === "won" || game.status === "gave_up") &&
-			!gameEndedRef.current
-		) {
-			gameEndedRef.current = true;
+		if ((game.status === 'won' || game.status === 'gave_up') && !gameEndedRef.current) {
+			gameEndedRef.current = true
 			endGame({
-				status: game.status === "won" ? "won" : "lost",
+				status: game.status === 'won' ? 'won' : 'lost',
 				attempts: game.moveCount,
 				data: {
 					moveCount: game.moveCount,
 					minMoves: game.minMoves,
 				},
-			});
+			})
 		}
-	}, [game.status, game.moveCount, game.minMoves, endGame]);
+	}, [game.status, game.moveCount, game.minMoves, endGame])
 
 	// Share result
 	const handleShare = useCallback(() => {
-		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0;
+		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0
 
-		const emoji = game.status === "won" ? "🎉" : "😔";
-		const efficiency =
-			game.minMoves > 0
-				? Math.round((game.minMoves / game.moveCount) * 100)
-				: 0;
-		const text = `🧊 Block Slide\n${emoji} ${game.moveCount} moves (min: ${game.minMoves}) • ${efficiency}% efficiency\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`;
-		navigator.clipboard.writeText(text);
-	}, [game.status, game.endTime, game.moveCount, game.minMoves, startTime]);
+		const emoji = game.status === 'won' ? '🎉' : '😔'
+		const efficiency = game.minMoves > 0 ? Math.round((game.minMoves / game.moveCount) * 100) : 0
+		const text = `🧊 Block Slide\n${emoji} ${game.moveCount} moves (min: ${game.minMoves}) • ${efficiency}% efficiency\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
+		navigator.clipboard.writeText(text)
+	}, [game.status, game.endTime, game.moveCount, game.minMoves, startTime])
 
 	// Reset game
 	const handleReset = useCallback(() => {
-		game.reset();
-	}, [game]);
+		game.reset()
+	}, [game])
 
-	const isComplete = game.status === "won" || game.status === "gave_up";
+	const isComplete = game.status === 'won' || game.status === 'gave_up'
 
 	// Ready screen
 	if (isReady) {
@@ -138,30 +122,30 @@ export function BlockSlideGame({
 					<div className="mb-2 flex justify-center">
 						<BlockSlideIcon size={48} className="text-primary" />
 					</div>
-					<CardTitle>{t("name")}</CardTitle>
-					<p className="text-sm text-muted-foreground">{t("description")}</p>
+					<CardTitle>{t('name')}</CardTitle>
+					<p className="text-sm text-muted-foreground">{t('description')}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Rules */}
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
-							{t("rules.title")}
+							{t('rules.title')}
 						</h3>
 						<ul className="space-y-1 text-sm text-muted-foreground">
-							<li>• {t("rules.rule1")}</li>
-							<li>• {t("rules.rule2")}</li>
-							<li>• {t("rules.rule3")}</li>
+							<li>• {t('rules.rule1')}</li>
+							<li>• {t('rules.rule2')}</li>
+							<li>• {t('rules.rule3')}</li>
 						</ul>
 					</div>
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{t("startGame")}
+						{t('startGame')}
 					</Button>
 				</CardContent>
 			</Card>
-		);
+		)
 	}
 
 	return (
@@ -173,24 +157,16 @@ export function BlockSlideGame({
 			<div className="flex w-full max-w-sm items-center justify-between">
 				<div className="flex items-center gap-2 sm:gap-4">
 					<div className="text-center">
-						<div className="text-xl sm:text-2xl font-bold">
-							{game.moveCount}
-						</div>
-						<div className="text-[10px] sm:text-xs text-muted-foreground">
-							{t("moves")}
-						</div>
+						<div className="text-xl sm:text-2xl font-bold">{game.moveCount}</div>
+						<div className="text-[10px] sm:text-xs text-muted-foreground">{t('moves')}</div>
 					</div>
 					<div className="text-center">
 						<div className="text-xs sm:text-sm text-muted-foreground">
-							{t("minMoves")}: {game.minMoves}
+							{t('minMoves')}: {game.minMoves}
 						</div>
 					</div>
 				</div>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => setShowHelpModal(true)}
-				>
+				<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 					<HelpCircle className="h-4 w-4" />
 				</Button>
 			</div>
@@ -213,23 +189,17 @@ export function BlockSlideGame({
 				<div className="flex w-full max-w-sm gap-2">
 					<Button variant="outline" onClick={handleReset} className="flex-1">
 						<RotateCcw className="mr-2 h-4 w-4" />
-						{t("reset")}
+						{t('reset')}
 					</Button>
-					<Button
-						variant="ghost"
-						onClick={game.giveUp}
-						className="text-muted-foreground"
-					>
+					<Button variant="ghost" onClick={game.giveUp} className="text-muted-foreground">
 						<Flag className="mr-2 h-4 w-4" />
-						{t("giveUp")}
+						{t('giveUp')}
 					</Button>
 				</div>
 			)}
 
 			{/* Hint */}
-			{!isComplete && (
-				<p className="text-center text-xs text-muted-foreground">{t("hint")}</p>
-			)}
+			{!isComplete && <p className="text-center text-xs text-muted-foreground">{t('hint')}</p>}
 
 			{/* Modals */}
 			<HowToPlayModal
@@ -242,7 +212,7 @@ export function BlockSlideGame({
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
 				gameType="block-slide"
-				status={game.status === "won" ? "won" : "lost"}
+				status={game.status === 'won' ? 'won' : 'lost'}
 				stats={{
 					score: game.moveCount,
 					mistakes: Math.max(0, game.moveCount - game.minMoves),
@@ -258,5 +228,5 @@ export function BlockSlideGame({
 				streakCount={1}
 			/>
 		</div>
-	);
+	)
 }

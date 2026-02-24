@@ -1,29 +1,28 @@
-"use client";
+'use client'
 
-import { cn } from "@/lib/utils";
-import { Dialog } from "@base-ui/react/dialog";
-import { X } from "lucide-react";
-import { forwardRef } from "react";
+import { Dialog } from '@base-ui/react/dialog'
+import { X } from 'lucide-react'
+import { forwardRef } from 'react'
+import { cn } from '@/lib/utils'
 
-const AdminDialog = Dialog.Root;
+const AdminDialog = Dialog.Root
 
-const AdminDialogOverlay = forwardRef<
-	HTMLDivElement,
-	React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-	<Dialog.Backdrop
-		ref={ref}
-		className={cn(
-			"admin-dialog-overlay fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm",
-			className,
-		)}
-		{...props}
-	/>
-));
-AdminDialogOverlay.displayName = "AdminDialogOverlay";
+const AdminDialogOverlay = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+	({ className, ...props }, ref) => (
+		<Dialog.Backdrop
+			ref={ref}
+			className={cn(
+				'admin-dialog-overlay fixed inset-0 z-overlay bg-black/70 backdrop-blur-sm',
+				className,
+			)}
+			{...props}
+		/>
+	),
+)
+AdminDialogOverlay.displayName = 'AdminDialogOverlay'
 
 interface AdminDialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
-	hideCloseButton?: boolean;
+	hideCloseButton?: boolean
 }
 
 const AdminDialogContent = forwardRef<HTMLDivElement, AdminDialogContentProps>(
@@ -33,7 +32,7 @@ const AdminDialogContent = forwardRef<HTMLDivElement, AdminDialogContentProps>(
 			<Dialog.Popup
 				ref={ref}
 				className={cn(
-					"admin-dialog-content fixed inset-4 z-modal mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8",
+					'admin-dialog-content fixed inset-4 z-modal mx-auto flex max-w-2xl items-start justify-center overflow-y-auto pt-8',
 					className,
 				)}
 				{...props}
@@ -50,39 +49,32 @@ const AdminDialogContent = forwardRef<HTMLDivElement, AdminDialogContentProps>(
 			</Dialog.Popup>
 		</Dialog.Portal>
 	),
-);
-AdminDialogContent.displayName = "AdminDialogContent";
+)
+AdminDialogContent.displayName = 'AdminDialogContent'
 
-function AdminDialogHeader({
-	className,
-	...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function AdminDialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between border-b border-[var(--admin-border)] px-6 py-4",
+				'flex items-center justify-between border-b border-[var(--admin-border)] px-6 py-4',
 				className,
 			)}
 			{...props}
 		/>
-	);
+	)
 }
-AdminDialogHeader.displayName = "AdminDialogHeader";
+AdminDialogHeader.displayName = 'AdminDialogHeader'
 
-const AdminDialogTitle = forwardRef<
-	HTMLHeadingElement,
-	React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-	<Dialog.Title
-		ref={ref}
-		className={cn(
-			"text-lg font-semibold text-[var(--admin-text-primary)]",
-			className,
-		)}
-		{...props}
-	/>
-));
-AdminDialogTitle.displayName = "AdminDialogTitle";
+const AdminDialogTitle = forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
+	({ className, ...props }, ref) => (
+		<Dialog.Title
+			ref={ref}
+			className={cn('text-lg font-semibold text-[var(--admin-text-primary)]', className)}
+			{...props}
+		/>
+	),
+)
+AdminDialogTitle.displayName = 'AdminDialogTitle'
 
 const AdminDialogDescription = forwardRef<
 	HTMLParagraphElement,
@@ -90,35 +82,29 @@ const AdminDialogDescription = forwardRef<
 >(({ className, ...props }, ref) => (
 	<Dialog.Description
 		ref={ref}
-		className={cn("text-sm text-[var(--admin-text-muted)]", className)}
+		className={cn('text-sm text-[var(--admin-text-muted)]', className)}
 		{...props}
 	/>
-));
-AdminDialogDescription.displayName = "AdminDialogDescription";
+))
+AdminDialogDescription.displayName = 'AdminDialogDescription'
 
-function AdminDialogBody({
-	className,
-	...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-	return <div className={cn("p-6", className)} {...props} />;
+function AdminDialogBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+	return <div className={cn('p-6', className)} {...props} />
 }
-AdminDialogBody.displayName = "AdminDialogBody";
+AdminDialogBody.displayName = 'AdminDialogBody'
 
-function AdminDialogFooter({
-	className,
-	...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+function AdminDialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between border-t border-[var(--admin-border)] px-6 py-4",
+				'flex items-center justify-between border-t border-[var(--admin-border)] px-6 py-4',
 				className,
 			)}
 			{...props}
 		/>
-	);
+	)
 }
-AdminDialogFooter.displayName = "AdminDialogFooter";
+AdminDialogFooter.displayName = 'AdminDialogFooter'
 
 export {
 	AdminDialog,
@@ -127,4 +113,4 @@ export {
 	AdminDialogTitle,
 	AdminDialogBody,
 	AdminDialogFooter,
-};
+}

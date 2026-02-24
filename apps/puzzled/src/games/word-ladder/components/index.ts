@@ -1,1 +1,1 @@
-export { WordLadderDisplay } from "./ladder";
+export { WordLadderDisplay } from './ladder'

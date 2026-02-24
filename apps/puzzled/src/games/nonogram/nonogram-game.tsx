@@ -3,38 +3,38 @@
  * Main game wrapper with state management
  */
 
-"use client";
+'use client'
 
-import { Celebration } from "@/features/celebration/components/celebration";
-import { GameResultModal } from "@/features/daily/components/game-result-modal";
-import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { formatTimer } from "@/games/shared/format";
-import { useGameSession } from "@/games/shared/use-game-session";
-import { parsePuzzleDataClient } from "@/games/types";
-import { NonogramIcon } from "@/shared/components/ui/game-icons";
-import { triggerHaptic } from "@/shared/hooks";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@sylphx/ui";
-import { HelpCircle, MousePointer2, Play, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { NonogramGrid } from "./components";
-import type { NonogramPuzzleData, NonogramSolution } from "./types";
-import { useNonogram } from "./use-nonogram";
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { HelpCircle, MousePointer2, Play, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatTimer } from '@/games/shared/format'
+import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
+import { NonogramIcon } from '@/shared/components/ui/game-icons'
+import { triggerHaptic } from '@/shared/hooks'
+import { NonogramGrid } from './components'
+import type { NonogramPuzzleData, NonogramSolution } from './types'
+import { useNonogram } from './use-nonogram'
 
 type Props = {
-	mode?: "daily" | "archive";
-	puzzleId?: string;
-	puzzleData?: unknown;
-};
+	mode?: 'daily' | 'archive'
+	puzzleId?: string
+	puzzleData?: unknown
+}
 
-export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
-	const t = useTranslations("games.nonogram");
+export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+	const t = useTranslations('games.nonogram')
 
 	// Get puzzle from server data or generate from seed (deterministic)
 	const [puzzle] = useState(() =>
 		parsePuzzleDataClient<NonogramPuzzleData, NonogramSolution>(puzzleData),
-	);
+	)
 
 	const {
 		isReady,
@@ -47,94 +47,91 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: "nonogram",
+		gameSlug: 'nonogram',
 		mode,
 		puzzleId,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
-	});
+	})
 
-	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false)
 
 	// Game hook
-	const game = useNonogram();
+	const game = useNonogram()
 
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.puzzleData, puzzle.solution.grid);
+			game.init(puzzle.puzzleData, puzzle.solution.grid)
 		}
-	}, [puzzle, isReady, game.init]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Track game completion - in useEffect to avoid render-phase side effects
-	const gameEndedRef = useRef(false);
+	const gameEndedRef = useRef(false)
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
-			gameEndedRef.current = true;
+			gameEndedRef.current = true
 			// Convert CellState[][] to boolean[][] for server
-			const finalGrid = game.state.userGrid.map((row) =>
-				row.map((cell) => cell === "filled"),
-			);
+			const finalGrid = game.state.userGrid.map((row) => row.map((cell) => cell === 'filled'))
 			endGame({
-				status: "won",
+				status: 'won',
 				attempts: 1,
 				maxAttempts: 1,
 				data: {
 					finalGrid,
 				},
-			});
+			})
 		}
-	}, [game.state.isComplete, game.state.userGrid, endGame]);
+	}, [game.state.isComplete, game.state.userGrid, endGame])
 
 	// Handle cell click - toggle based on fill mode
 	const handleCellClick = useCallback(
 		(row: number, col: number) => {
-			game.toggleCell(row, col);
-			triggerHaptic("light");
+			game.toggleCell(row, col)
+			triggerHaptic('light')
 		},
 		[game],
-	);
+	)
 
 	// Handle right-click - opposite of current mode
 	// Only toggle between empty and the opposite state (don't overwrite same-mode cells)
 	const handleCellRightClick = useCallback(
 		(row: number, col: number) => {
-			const currentState = game.state.userGrid[row]?.[col];
-			if (currentState === undefined) return;
+			const currentState = game.state.userGrid[row]?.[col]
+			if (currentState === undefined) return
 
-			if (game.state.fillMode === "fill") {
+			if (game.state.fillMode === 'fill') {
 				// In fill mode, right-click toggles marks on empty/marked cells only
 				// Don't overwrite filled cells
-				if (currentState === "empty") {
-					game.setCell(row, col, "marked");
-				} else if (currentState === "marked") {
-					game.setCell(row, col, "empty");
+				if (currentState === 'empty') {
+					game.setCell(row, col, 'marked')
+				} else if (currentState === 'marked') {
+					game.setCell(row, col, 'empty')
 				}
 				// Ignore right-click on filled cells
 			} else {
 				// In mark mode, right-click toggles fills on empty/filled cells only
 				// Don't overwrite marked cells
-				if (currentState === "empty") {
-					game.setCell(row, col, "filled");
-				} else if (currentState === "filled") {
-					game.setCell(row, col, "empty");
+				if (currentState === 'empty') {
+					game.setCell(row, col, 'filled')
+				} else if (currentState === 'filled') {
+					game.setCell(row, col, 'empty')
 				}
 				// Ignore right-click on marked cells
 			}
-			triggerHaptic("light");
+			triggerHaptic('light')
 		},
 		[game],
-	);
+	)
 
 	// Share result
 	const handleShare = useCallback(() => {
-		const timeMs =
-			game.state.endTime && startTime ? game.state.endTime - startTime : 0;
+		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const theme = puzzle.puzzleData.theme || "Picture";
-		const text = `🎨 Nonogram: ${theme}\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`;
-		navigator.clipboard.writeText(text);
-	}, [game.state.endTime, startTime, puzzle.puzzleData.theme]);
+		const theme = puzzle.puzzleData.theme || 'Picture'
+		const text = `🎨 Nonogram: ${theme}\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
+		navigator.clipboard.writeText(text)
+	}, [game.state.endTime, startTime, puzzle.puzzleData.theme])
 
 	// Ready screen
 	if (isReady) {
@@ -144,30 +141,30 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 					<div className="mb-2 flex justify-center">
 						<NonogramIcon size={48} className="text-primary" />
 					</div>
-					<CardTitle>{t("name")}</CardTitle>
-					<p className="text-sm text-muted-foreground">{t("description")}</p>
+					<CardTitle>{t('name')}</CardTitle>
+					<p className="text-sm text-muted-foreground">{t('description')}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Rules */}
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
-							{t("rules.title")}
+							{t('rules.title')}
 						</h3>
 						<ul className="space-y-1 text-sm text-muted-foreground">
-							<li>• {t("rules.rule1")}</li>
-							<li>• {t("rules.rule2")}</li>
-							<li>• {t("rules.rule3")}</li>
+							<li>• {t('rules.rule1')}</li>
+							<li>• {t('rules.rule2')}</li>
+							<li>• {t('rules.rule3')}</li>
 						</ul>
 					</div>
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{t("startGame")}
+						{t('startGame')}
 					</Button>
 				</CardContent>
 			</Card>
-		);
+		)
 	}
 
 	return (
@@ -178,14 +175,9 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 			{/* Header with help button */}
 			<div className="flex w-full max-w-sm items-center justify-between">
 				<div className="text-sm text-muted-foreground">
-					{t("name")}{" "}
-					{puzzle.puzzleData.theme && `• ${puzzle.puzzleData.theme}`}
+					{t('name')} {puzzle.puzzleData.theme && `• ${puzzle.puzzleData.theme}`}
 				</div>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => setShowHelpModal(true)}
-				>
+				<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 					<HelpCircle className="h-4 w-4" />
 				</Button>
 			</div>
@@ -208,30 +200,28 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 			{/* Mode toggle */}
 			<div className="flex gap-2">
 				<Button
-					variant={game.state.fillMode === "fill" ? "default" : "outline"}
+					variant={game.state.fillMode === 'fill' ? 'default' : 'outline'}
 					size="sm"
 					onClick={game.toggleMode}
 					disabled={game.state.isComplete}
 				>
 					<MousePointer2 className="mr-1 h-4 w-4" />
-					{t("fillMode")}
+					{t('fillMode')}
 				</Button>
 				<Button
-					variant={game.state.fillMode === "mark" ? "default" : "outline"}
+					variant={game.state.fillMode === 'mark' ? 'default' : 'outline'}
 					size="sm"
 					onClick={game.toggleMode}
 					disabled={game.state.isComplete}
 				>
 					<X className="mr-1 h-4 w-4" />
-					{t("markMode")}
+					{t('markMode')}
 				</Button>
 			</div>
 
 			{/* Error counter */}
 			{game.state.errors > 0 && (
-				<div className="text-sm text-destructive">
-					{t("errors", { count: game.state.errors })}
-				</div>
+				<div className="text-sm text-destructive">{t('errors', { count: game.state.errors })}</div>
 			)}
 
 			{/* Help Modal */}
@@ -250,10 +240,7 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 				stats={{
 					attempts: 1,
 					maxAttempts: 1,
-					timeSpentMs:
-						game.state.endTime && startTime
-							? game.state.endTime - startTime
-							: 0,
+					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}
 				onShare={handleShare}
@@ -266,5 +253,5 @@ export function NonogramGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 				streakCount={1}
 			/>
 		</div>
-	);
+	)
 }

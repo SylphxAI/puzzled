@@ -1,23 +1,23 @@
-"use client";
+'use client'
 
-import { cn } from "@/lib/utils";
-import { useTranslations } from "next-intl";
+import { useTranslations } from 'next-intl'
+import { cn } from '@/lib/utils'
 
 /**
  * Arithmo How-to-Play content
  * Self-contained component for game rules and examples
  */
 export function ArithmoHowToPlay() {
-	const t = useTranslations("games.arithmo");
+	const t = useTranslations('games.arithmo')
 
 	return (
 		<div className="space-y-4">
 			{/* Basic rules */}
 			<div className="space-y-2">
 				<ul className="space-y-1.5 text-sm text-muted-foreground">
-					<li>• {t("rules.rule1")}</li>
-					<li>• {t("rules.rule2")}</li>
-					<li>• {t("rules.rule3")}</li>
+					<li>• {t('rules.rule1')}</li>
+					<li>• {t('rules.rule2')}</li>
+					<li>• {t('rules.rule3')}</li>
 				</ul>
 			</div>
 
@@ -41,16 +41,14 @@ export function ArithmoHowToPlay() {
 
 				<div className="space-y-1 text-xs text-muted-foreground">
 					<p>
-						<span className="mr-1 inline-block h-4 w-4 rounded bg-correct" />{" "}
-						Correct position
+						<span className="mr-1 inline-block h-4 w-4 rounded bg-correct" /> Correct position
 					</p>
 					<p>
-						<span className="mr-1 inline-block h-4 w-4 rounded bg-present" /> In
-						equation, wrong position
+						<span className="mr-1 inline-block h-4 w-4 rounded bg-present" /> In equation, wrong
+						position
 					</p>
 					<p>
-						<span className="mr-1 inline-block h-4 w-4 rounded bg-absent" /> Not
-						in equation
+						<span className="mr-1 inline-block h-4 w-4 rounded bg-absent" /> Not in equation
 					</p>
 				</div>
 			</div>
@@ -68,28 +66,25 @@ export function ArithmoHowToPlay() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 function _ArithmoHowToPlayTitle() {
-	const t = useTranslations("games.arithmo");
-	return <>{t("howToPlay")}</>;
+	const t = useTranslations('games.arithmo')
+	return <>{t('howToPlay')}</>
 }
 
-function ArithmoCell({
-	char,
-	status,
-}: { char: string; status: "correct" | "present" | "absent" }) {
+function ArithmoCell({ char, status }: { char: string; status: 'correct' | 'present' | 'absent' }) {
 	return (
 		<div
 			className={cn(
-				"flex h-8 w-8 items-center justify-center rounded text-sm font-bold text-white",
-				status === "correct" && "bg-correct",
-				status === "present" && "bg-present",
-				status === "absent" && "bg-absent",
+				'flex h-8 w-8 items-center justify-center rounded text-sm font-bold text-white',
+				status === 'correct' && 'bg-correct',
+				status === 'present' && 'bg-present',
+				status === 'absent' && 'bg-absent',
 			)}
 		>
 			{char}
 		</div>
-	);
+	)
 }

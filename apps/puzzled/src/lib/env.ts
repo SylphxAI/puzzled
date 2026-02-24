@@ -11,77 +11,77 @@
  */
 
 type EnvVar = {
-	name: string;
-	required: boolean;
-	description: string;
+	name: string
+	required: boolean
+	description: string
 	/** Only validate in these runtimes (nodejs, edge) */
-	runtimes?: ("nodejs" | "edge")[];
-};
+	runtimes?: ('nodejs' | 'edge')[]
+}
 
 // Server-side required variables
 const SERVER_REQUIRED: EnvVar[] = [
 	{
-		name: "DATABASE_URL",
+		name: 'DATABASE_URL',
 		required: true,
-		description: "PostgreSQL connection string",
-		runtimes: ["nodejs"],
+		description: 'PostgreSQL connection string',
+		runtimes: ['nodejs'],
 	},
 	{
-		name: "SYLPHX_SECRET_KEY",
+		name: 'SYLPHX_SECRET_KEY',
 		required: true,
-		description: "Sylphx Platform Secret Key (identifies the app)",
-		runtimes: ["nodejs"],
+		description: 'Sylphx Platform Secret Key (identifies the app)',
+		runtimes: ['nodejs'],
 	},
 	{
-		name: "KV_REST_API_URL",
+		name: 'KV_REST_API_URL',
 		required: false, // Has UPSTASH_REDIS_REST_URL fallback
-		description: "Redis/KV store URL (or UPSTASH_REDIS_REST_URL)",
+		description: 'Redis/KV store URL (or UPSTASH_REDIS_REST_URL)',
 	},
 	{
-		name: "KV_REST_API_TOKEN",
+		name: 'KV_REST_API_TOKEN',
 		required: false, // Has UPSTASH_REDIS_REST_TOKEN fallback
-		description: "Redis/KV store token (or UPSTASH_REDIS_REST_TOKEN)",
+		description: 'Redis/KV store token (or UPSTASH_REDIS_REST_TOKEN)',
 	},
-];
+]
 
 // Feature-specific variables (validated when feature is used)
 // Note: Stripe/billing is handled by Sylphx Platform SDK
 const FEATURE_VARS: EnvVar[] = [
 	{
-		name: "RESEND_API_KEY",
+		name: 'RESEND_API_KEY',
 		required: false, // Checked at runtime by email.ts
-		description: "Resend API key for email",
+		description: 'Resend API key for email',
 	},
 	// Note: AI/LLM now goes through Sylphx Platform SDK (uses SYLPHX_SECRET_KEY)
 	{
-		name: "CRON_SECRET",
+		name: 'CRON_SECRET',
 		required: false,
-		description: "Secret for securing cron endpoints",
+		description: 'Secret for securing cron endpoints',
 	},
 	{
-		name: "QSTASH_TOKEN",
+		name: 'QSTASH_TOKEN',
 		required: false,
-		description: "QStash token for scheduled tasks",
+		description: 'QStash token for scheduled tasks',
 	},
 	{
-		name: "ADMIN_SECRET",
+		name: 'ADMIN_SECRET',
 		required: false,
-		description: "Admin API access secret",
+		description: 'Admin API access secret',
 	},
 	{
-		name: "VAPID_PRIVATE_KEY",
+		name: 'VAPID_PRIVATE_KEY',
 		required: false,
-		description: "VAPID key for web push notifications",
+		description: 'VAPID key for web push notifications',
 	},
 	{
-		name: "INIT_SECRET",
+		name: 'INIT_SECRET',
 		required: false,
-		description: "Secret for /api/init endpoint (required in production)",
+		description: 'Secret for /api/init endpoint (required in production)',
 	},
-];
+]
 
 // Security-critical vars that should be set in production
-const PRODUCTION_SECURITY_VARS = ["INIT_SECRET", "CRON_SECRET", "ADMIN_SECRET"];
+const PRODUCTION_SECURITY_VARS = ['INIT_SECRET', 'CRON_SECRET', 'ADMIN_SECRET']
 
 /**
  * Validate environment variables at startup
@@ -90,56 +90,54 @@ const PRODUCTION_SECURITY_VARS = ["INIT_SECRET", "CRON_SECRET", "ADMIN_SECRET"];
  * @throws Error if required variables are missing
  */
 export function validateEnv(): void {
-	const runtime = process.env.NEXT_RUNTIME as "nodejs" | "edge" | undefined;
-	const missing: string[] = [];
-	const warnings: string[] = [];
+	const runtime = process.env.NEXT_RUNTIME as 'nodejs' | 'edge' | undefined
+	const missing: string[] = []
+	const warnings: string[] = []
 
 	// Check required server variables
 	for (const envVar of SERVER_REQUIRED) {
 		// Skip if not applicable to current runtime
 		if (envVar.runtimes && runtime && !envVar.runtimes.includes(runtime)) {
-			continue;
+			continue
 		}
 
-		const value = process.env[envVar.name];
+		const value = process.env[envVar.name]
 
 		if (envVar.required && !value) {
-			missing.push(`${envVar.name} - ${envVar.description}`);
+			missing.push(`${envVar.name} - ${envVar.description}`)
 		}
 	}
 
 	// Check Redis - needs either KV_* or UPSTASH_* vars
-	const hasRedis = !!process.env.REDIS_URL;
+	const hasRedis = !!process.env.REDIS_URL
 
-	if (!hasRedis && runtime === "nodejs") {
-		missing.push(
-			"REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)",
-		);
+	if (!hasRedis && runtime === 'nodejs') {
+		missing.push('REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)')
 	}
 
 	// Warn about missing feature variables (don't fail)
 	for (const envVar of FEATURE_VARS) {
-		const value = process.env[envVar.name];
+		const value = process.env[envVar.name]
 		if (!value) {
-			warnings.push(`${envVar.name} not set - ${envVar.description}`);
+			warnings.push(`${envVar.name} not set - ${envVar.description}`)
 		}
 	}
 
 	// Log warnings in development
-	if (warnings.length > 0 && process.env.NODE_ENV === "development") {
-		console.warn("[ENV] Optional variables not configured:");
+	if (warnings.length > 0 && process.env.NODE_ENV === 'development') {
+		console.warn('[ENV] Optional variables not configured:')
 		for (const warning of warnings) {
-			console.warn(`  - ${warning}`);
+			console.warn(`  - ${warning}`)
 		}
 	}
 
 	// SECURITY: Warn about missing security-critical vars in production
-	if (process.env.NODE_ENV === "production") {
+	if (process.env.NODE_ENV === 'production') {
 		for (const varName of PRODUCTION_SECURITY_VARS) {
 			if (!process.env[varName]) {
 				console.warn(
 					`[ENV] SECURITY WARNING: ${varName} not set in production - endpoints may be vulnerable`,
-				);
+				)
 			}
 		}
 	}
@@ -147,14 +145,14 @@ export function validateEnv(): void {
 	// Fail on missing required variables
 	if (missing.length > 0) {
 		const message = [
-			"[ENV] Missing required environment variables:",
+			'[ENV] Missing required environment variables:',
 			...missing.map((m) => `  - ${m}`),
-			"",
-			"Please configure these in your .env file or environment.",
-		].join("\n");
+			'',
+			'Please configure these in your .env file or environment.',
+		].join('\n')
 
-		console.error(message);
-		throw new Error(message);
+		console.error(message)
+		throw new Error(message)
 	}
 }
 
@@ -163,38 +161,35 @@ export function validateEnv(): void {
  * Use for variables that are required at call time
  */
 export function getRequiredEnv(name: string): string {
-	const value = process.env[name];
+	const value = process.env[name]
 	if (!value) {
-		throw new Error(`Required environment variable ${name} is not set`);
+		throw new Error(`Required environment variable ${name} is not set`)
 	}
-	return value;
+	return value
 }
 
 /**
  * Get optional environment variable with default
  */
 function _getOptionalEnv(name: string, defaultValue: string): string {
-	return process.env[name] || defaultValue;
+	return process.env[name] || defaultValue
 }
 
 /**
  * Check if a feature is configured (has required env vars)
  * Note: Billing/Stripe is handled by Sylphx Platform SDK
  */
-function _isFeatureConfigured(feature: "email" | "push" | "ai"): boolean {
+function _isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
 	switch (feature) {
-		case "email":
-			return !!process.env.RESEND_API_KEY;
-		case "push":
-			return (
-				!!process.env.VAPID_PRIVATE_KEY &&
-				!!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-			);
-		case "ai":
+		case 'email':
+			return !!process.env.RESEND_API_KEY
+		case 'push':
+			return !!process.env.VAPID_PRIVATE_KEY && !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+		case 'ai':
 			// AI goes through Sylphx Platform SDK
-			return !!process.env.SYLPHX_SECRET_KEY;
+			return !!process.env.SYLPHX_SECRET_KEY
 		default:
-			return false;
+			return false
 	}
 }
 
@@ -204,18 +199,18 @@ function _isFeatureConfigured(feature: "email" | "push" | "ai"): boolean {
 export const env = {
 	/** Platform SDK Secret Key — identifies the app (server-side only) */
 	get SYLPHX_SECRET_KEY() {
-		return getRequiredEnv("SYLPHX_SECRET_KEY");
+		return getRequiredEnv('SYLPHX_SECRET_KEY')
 	},
 	/** Database URL */
 	get DATABASE_URL() {
-		return getRequiredEnv("DATABASE_URL");
+		return getRequiredEnv('DATABASE_URL')
 	},
 	/** Node environment */
 	get NODE_ENV() {
-		return process.env.NODE_ENV || "development";
+		return process.env.NODE_ENV || 'development'
 	},
 	/** Base URL for the app */
 	get NEXT_PUBLIC_APP_URL() {
-		return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+		return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 	},
-};
+}

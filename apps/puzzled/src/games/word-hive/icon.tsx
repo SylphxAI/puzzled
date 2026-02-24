@@ -5,11 +5,11 @@
  * Represents the spelling bee mechanic with 7 letters
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
 export function WordHiveIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -37,5 +37,5 @@ export function WordHiveIcon({ size = 24, className, ...props }: IconProps) {
 			<path d="M5.5 12.3l3 1.7v3.4l-3 1.7-3-1.7V14l3-1.7z" />
 			<path d="M5.5 4.5l3 1.7v3.4l-3 1.7-3-1.7V6.2l3-1.7z" />
 		</svg>
-	);
+	)
 }

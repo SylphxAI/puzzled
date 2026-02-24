@@ -1,1 +1,1 @@
-export { WebVitalsReporter } from "./web-vitals-reporter";
+export { WebVitalsReporter } from './web-vitals-reporter'

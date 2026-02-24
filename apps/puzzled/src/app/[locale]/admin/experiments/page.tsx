@@ -5,22 +5,22 @@
  * Experiments are managed via Sylphx Platform SDK's feature flags.
  */
 
-import { EXPERIMENTS } from "@/features/analytics/lib/ab-testing";
-import { FlaskConical, Settings } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { FlaskConical, Settings } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
+import { EXPERIMENTS } from '@/features/analytics/lib/ab-testing'
 
 export default async function ExperimentsPage() {
-	const t = await getTranslations("admin.experiments");
+	const t = await getTranslations('admin.experiments')
 
-	const experimentEntries = Object.entries(EXPERIMENTS);
+	const experimentEntries = Object.entries(EXPERIMENTS)
 
 	return (
 		<div className="space-y-8">
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div className="admin-page-header">
-					<h1 className="admin-page-title">{t("title")}</h1>
-					<p className="admin-page-subtitle">{t("subtitle")}</p>
+					<h1 className="admin-page-title">{t('title')}</h1>
+					<p className="admin-page-subtitle">{t('subtitle')}</p>
 				</div>
 			</div>
 
@@ -32,10 +32,10 @@ export default async function ExperimentsPage() {
 							<FlaskConical className="h-8 w-8 text-purple-400" />
 						</div>
 						<h3 className="text-lg font-semibold text-[var(--admin-text-primary)]">
-							{t("emptyState.title")}
+							{t('emptyState.title')}
 						</h3>
 						<p className="mt-2 max-w-md text-sm text-[var(--admin-text-secondary)]">
-							{t("emptyState.description")}
+							{t('emptyState.description')}
 						</p>
 					</div>
 				</div>
@@ -80,7 +80,7 @@ export default async function ExperimentsPage() {
 									<table className="admin-table">
 										<thead>
 											<tr>
-												<th>{t("variant")}</th>
+												<th>{t('variant')}</th>
 												<th className="text-right">Status</th>
 											</tr>
 										</thead>
@@ -90,10 +90,8 @@ export default async function ExperimentsPage() {
 													<td>
 														<div className="flex items-center gap-2">
 															<code className="admin-code">{variant}</code>
-															{variant === "control" && (
-																<span className="admin-badge admin-badge-muted">
-																	Control
-																</span>
+															{variant === 'control' && (
+																<span className="admin-badge admin-badge-muted">Control</span>
 															)}
 														</div>
 													</td>
@@ -115,24 +113,22 @@ export default async function ExperimentsPage() {
 			<div className="admin-section">
 				<div className="admin-section-content">
 					<h3 className="mb-2 font-semibold text-[var(--admin-text-primary)]">
-						{t("howToUse.title")}
+						{t('howToUse.title')}
 					</h3>
 					<div className="space-y-2 text-sm text-[var(--admin-text-secondary)]">
-						<p>{t("howToUse.step1")}</p>
-						<p>{t("howToUse.step2")}</p>
-						<p>{t("howToUse.step3")}</p>
+						<p>{t('howToUse.step1')}</p>
+						<p>{t('howToUse.step2')}</p>
+						<p>{t('howToUse.step3')}</p>
 					</div>
 					<div className="mt-4 flex items-center gap-2 text-sm text-[var(--admin-text-muted)]">
 						<Settings className="h-4 w-4" />
 						<span>
-							Manage experiments via{" "}
-							<code className="admin-code">
-								features/analytics/lib/ab-testing.ts
-							</code>
+							Manage experiments via{' '}
+							<code className="admin-code">features/analytics/lib/ab-testing.ts</code>
 						</span>
 					</div>
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

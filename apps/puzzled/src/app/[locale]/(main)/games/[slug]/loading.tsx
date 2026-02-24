@@ -26,5 +26,5 @@ export default function GameLoading() {
 				<div className="h-10 w-32 animate-pulse rounded-lg bg-muted" />
 			</main>
 		</div>
-	);
+	)
 }

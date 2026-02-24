@@ -1,30 +1,30 @@
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
-import { CreateAnnouncementButton } from "@/features/admin/components/announcement-editor";
-import { AnnouncementsList } from "@/features/admin/components/announcements-list";
-import { db } from "@/lib/db";
-import { announcements } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
-import { Bell } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { desc } from 'drizzle-orm'
+import { Bell } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
+import { CreateAnnouncementButton } from '@/features/admin/components/announcement-editor'
+import { AnnouncementsList } from '@/features/admin/components/announcements-list'
+import { db } from '@/lib/db'
+import { announcements } from '@/lib/db/schema'
 
 async function getAnnouncements() {
 	return db.query.announcements.findMany({
 		orderBy: desc(announcements.createdAt),
-	});
+	})
 }
 
 export default async function AdminAnnouncementsPage() {
-	const t = await getTranslations("admin.announcements");
-	const allAnnouncements = await getAnnouncements();
+	const t = await getTranslations('admin.announcements')
+	const allAnnouncements = await getAnnouncements()
 
 	return (
 		<div className="space-y-8">
 			{/* Header */}
 			<div className="flex items-center justify-between">
 				<div className="admin-page-header">
-					<h1 className="admin-page-title">{t("title")}</h1>
-					<p className="admin-page-subtitle">{t("subtitle")}</p>
+					<h1 className="admin-page-title">{t('title')}</h1>
+					<p className="admin-page-subtitle">{t('subtitle')}</p>
 				</div>
 				<CreateAnnouncementButton />
 			</div>
@@ -36,15 +36,13 @@ export default async function AdminAnnouncementsPage() {
 						<Bell className="h-6 w-6 text-[var(--admin-text-muted)]" />
 					</div>
 					<h3 className="text-lg font-semibold text-[var(--admin-text-primary)]">
-						{t("noAnnouncementsYet")}
+						{t('noAnnouncementsYet')}
 					</h3>
-					<p className="mt-1 text-[var(--admin-text-muted)]">
-						{t("noAnnouncementsHint")}
-					</p>
+					<p className="mt-1 text-[var(--admin-text-muted)]">{t('noAnnouncementsHint')}</p>
 				</div>
 			) : (
 				<AnnouncementsList announcements={allAnnouncements} />
 			)}
 		</div>
-	);
+	)
 }

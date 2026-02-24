@@ -1,33 +1,33 @@
-"use client";
+'use client'
 
-import { Link, usePathname } from "@/lib/i18n/routing";
-import { cn } from "@/lib/utils";
-import { useSafeUser } from "@sylphx/sdk/react";
-import { Flame } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { Logo } from "./logo";
-import { UserMenu } from "./user-menu";
+import { useSafeUser } from '@sylphx/sdk/react'
+import { Flame } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/lib/i18n/routing'
+import { cn } from '@/lib/utils'
+import { Logo } from './logo'
+import { UserMenu } from './user-menu'
 
 const navItems = [
-	{ href: "/", labelKey: "nav.home" },
-	{ href: "/stats", labelKey: "nav.stats" },
-	{ href: "/leaderboard", labelKey: "nav.leaderboard" },
-] as const;
+	{ href: '/', labelKey: 'nav.home' },
+	{ href: '/stats', labelKey: 'nav.stats' },
+	{ href: '/leaderboard', labelKey: 'nav.leaderboard' },
+] as const
 
 type TopNavProps = {
-	currentStreak?: number;
-};
+	currentStreak?: number
+}
 
 /**
  * Desktop top navigation - hidden on mobile, shown on md+ screens
  */
 export function TopNav({ currentStreak = 0 }: TopNavProps) {
-	const t = useTranslations();
-	const pathname = usePathname();
-	const { user } = useSafeUser();
+	const t = useTranslations()
+	const pathname = usePathname()
+	const { user } = useSafeUser()
 
 	// User ID available for guest data migration if needed
-	void user?.id;
+	void user?.id
 
 	return (
 		<header className="sticky top-0 z-header hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:block">
@@ -36,27 +36,25 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 				<div className="flex items-center gap-8">
 					<Logo size="md" />
 
-					<nav className="flex items-center gap-1" aria-label={t("nav.main")}>
+					<nav className="flex items-center gap-1" aria-label={t('nav.main')}>
 						{navItems.map(({ href, labelKey }) => {
-							const isActive =
-								pathname === href ||
-								(href !== "/" && pathname.startsWith(href));
+							const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
 
 							return (
 								<Link
 									key={href}
 									href={href}
-									aria-current={isActive ? "page" : undefined}
+									aria-current={isActive ? 'page' : undefined}
 									className={cn(
-										"rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+										'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
 										isActive
-											? "bg-muted text-foreground"
-											: "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+											? 'bg-muted text-foreground'
+											: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
 									)}
 								>
 									{t(labelKey)}
 								</Link>
-							);
+							)
 						})}
 					</nav>
 				</div>
@@ -67,9 +65,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 					{currentStreak > 0 && (
 						<div className="flex items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 py-1.5">
 							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">
-								{currentStreak}
-							</span>
+							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
 						</div>
 					)}
 
@@ -77,5 +73,5 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 				</div>
 			</div>
 		</header>
-	);
+	)
 }

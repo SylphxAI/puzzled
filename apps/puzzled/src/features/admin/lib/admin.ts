@@ -8,11 +8,11 @@
  * - No local users table - platform is source of truth
  */
 
-import { isAdminRole } from "@/lib/roles";
-import { auth } from "@sylphx/sdk/nextjs";
+import { auth } from '@sylphx/sdk/nextjs'
+import { isAdminRole } from '@/lib/roles'
 
 /** Admin error codes */
-export type AdminErrorCode = "NOT_LOGGED_IN" | "NOT_ADMIN" | "FORBIDDEN";
+export type AdminErrorCode = 'NOT_LOGGED_IN' | 'NOT_ADMIN' | 'FORBIDDEN'
 
 /** Admin error class */
 export class AdminError extends Error {
@@ -20,8 +20,8 @@ export class AdminError extends Error {
 		public code: AdminErrorCode,
 		message: string,
 	) {
-		super(message);
-		this.name = "AdminError";
+		super(message)
+		this.name = 'AdminError'
 	}
 }
 
@@ -29,32 +29,29 @@ export class AdminError extends Error {
  * Get current session (server-side)
  */
 async function getSession() {
-	return auth();
+	return auth()
 }
 
 /**
  * Check if a role has admin privileges
  */
 function hasAdminRole(role: string | null | undefined): boolean {
-	return isAdminRole(role);
+	return isAdminRole(role)
 }
 
 /**
  * Require admin access - throws AdminError if not admin
  */
 export async function requireAdmin() {
-	const { userId, user } = await getSession();
+	const { userId, user } = await getSession()
 
 	if (!userId || !user) {
-		throw new AdminError(
-			"NOT_LOGGED_IN",
-			"You must be logged in to access this page.",
-		);
+		throw new AdminError('NOT_LOGGED_IN', 'You must be logged in to access this page.')
 	}
 
 	if (!hasAdminRole(user.role)) {
-		throw new AdminError("NOT_ADMIN", "You do not have admin privileges.");
+		throw new AdminError('NOT_ADMIN', 'You do not have admin privileges.')
 	}
 
-	return { userId, user };
+	return { userId, user }
 }

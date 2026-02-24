@@ -5,11 +5,11 @@
  * Represents guessing equations
  */
 
-import type { SVGProps } from "react";
+import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement> & {
-	size?: number;
-};
+	size?: number
+}
 
 export function ArithmoIcon({ size = 24, className, ...props }: IconProps) {
 	return (
@@ -29,80 +29,29 @@ export function ArithmoIcon({ size = 24, className, ...props }: IconProps) {
 		>
 			{/* Equation tiles */}
 			<rect x="1" y="9" width="4" height="6" rx="0.5" />
-			<text
-				x="3"
-				y="14"
-				textAnchor="middle"
-				fontSize="5"
-				fill="currentColor"
-				stroke="none"
-			>
+			<text x="3" y="14" textAnchor="middle" fontSize="5" fill="currentColor" stroke="none">
 				7
 			</text>
 
-			<rect
-				x="5.5"
-				y="9"
-				width="4"
-				height="6"
-				rx="0.5"
-				fill="currentColor"
-				opacity="0.3"
-			/>
-			<text
-				x="7.5"
-				y="14"
-				textAnchor="middle"
-				fontSize="5"
-				fill="currentColor"
-				stroke="none"
-			>
+			<rect x="5.5" y="9" width="4" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
+			<text x="7.5" y="14" textAnchor="middle" fontSize="5" fill="currentColor" stroke="none">
 				+
 			</text>
 
 			<rect x="10" y="9" width="4" height="6" rx="0.5" />
-			<text
-				x="12"
-				y="14"
-				textAnchor="middle"
-				fontSize="5"
-				fill="currentColor"
-				stroke="none"
-			>
+			<text x="12" y="14" textAnchor="middle" fontSize="5" fill="currentColor" stroke="none">
 				5
 			</text>
 
-			<rect
-				x="14.5"
-				y="9"
-				width="4"
-				height="6"
-				rx="0.5"
-				fill="currentColor"
-				opacity="0.3"
-			/>
-			<text
-				x="16.5"
-				y="14"
-				textAnchor="middle"
-				fontSize="5"
-				fill="currentColor"
-				stroke="none"
-			>
+			<rect x="14.5" y="9" width="4" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
+			<text x="16.5" y="14" textAnchor="middle" fontSize="5" fill="currentColor" stroke="none">
 				=
 			</text>
 
 			<rect x="19" y="9" width="4" height="6" rx="0.5" fill="currentColor" />
-			<text
-				x="21"
-				y="14"
-				textAnchor="middle"
-				fontSize="5"
-				fill="white"
-				stroke="none"
-			>
+			<text x="21" y="14" textAnchor="middle" fontSize="5" fill="white" stroke="none">
 				?
 			</text>
 		</svg>
-	);
+	)
 }

@@ -1,48 +1,45 @@
-"use client";
+'use client'
 
-import {
-	useNotificationPreferences,
-	useUpdatePushPreferences,
-} from "@/lib/api";
-import { MINUTE_MS } from "@/lib/constants/time";
-import { useAnalytics, useNotifications } from "@sylphx/sdk/react";
-import { useCallback } from "react";
+import { useAnalytics, useNotifications } from '@sylphx/sdk/react'
+import { useCallback } from 'react'
+import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 /**
  * Puzzled-specific notification types
  */
 type PuzzledNotificationType =
-	| "daily_puzzle" // Daily puzzle available
-	| "streak_reminder" // Streak at risk
-	| "streak_milestone" // Streak milestone reached
-	| "achievement" // New achievement unlocked
-	| "friend_challenge" // Friend sent a challenge
-	| "leaderboard"; // Leaderboard update
+	| 'daily_puzzle' // Daily puzzle available
+	| 'streak_reminder' // Streak at risk
+	| 'streak_milestone' // Streak milestone reached
+	| 'achievement' // New achievement unlocked
+	| 'friend_challenge' // Friend sent a challenge
+	| 'leaderboard' // Leaderboard update
 
 /**
  * Puzzled notification payload
  */
 export interface PuzzledNotification {
-	type: PuzzledNotificationType;
-	title: string;
-	body: string;
+	type: PuzzledNotificationType
+	title: string
+	body: string
 	/** Game slug if applicable */
-	game?: string;
+	game?: string
 	/** URL to navigate to */
-	url?: string;
+	url?: string
 	/** Additional data */
-	data?: Record<string, unknown>;
+	data?: Record<string, unknown>
 }
 
 /**
  * Notification preferences for Puzzled
  */
 export interface PuzzledNotificationPreferences {
-	pushEnabled: boolean;
-	pushDailyReminder: boolean;
-	pushStreakAlert: boolean;
-	pushNewGames: boolean;
-	dailyReminderTime: string;
+	pushEnabled: boolean
+	pushDailyReminder: boolean
+	pushStreakAlert: boolean
+	pushNewGames: boolean
+	dailyReminderTime: string
 }
 
 /**
@@ -70,7 +67,7 @@ export interface PuzzledNotificationPreferences {
  * ```
  */
 export function usePuzzledPush() {
-	const { track } = useAnalytics();
+	const { track } = useAnalytics()
 	const {
 		isSupported,
 		isSubscribed,
@@ -78,43 +75,42 @@ export function usePuzzledPush() {
 		unsubscribe,
 		error,
 		preferences: sdkPreferences,
-	} = useNotifications();
+	} = useNotifications()
 
 	// Fetch preferences from server
-	const { data: serverPreferences, refetch: refetchPreferences } =
-		useNotificationPreferences({
-			// Don't refetch too aggressively
-			staleTime: 5 * MINUTE_MS,
-		});
+	const { data: serverPreferences, refetch: refetchPreferences } = useNotificationPreferences({
+		// Don't refetch too aggressively
+		staleTime: 5 * MINUTE_MS,
+	})
 
 	// Mutation to update preferences
-	const updateMutation = useUpdatePushPreferences();
+	const updateMutation = useUpdatePushPreferences()
 
 	/**
 	 * Request push notification permission
 	 */
 	const requestPermission = useCallback(async () => {
-		const success = await subscribe();
+		const success = await subscribe()
 
 		if (success) {
-			track("push_enabled", {
-				source: "puzzled",
-			});
+			track('push_enabled', {
+				source: 'puzzled',
+			})
 		}
 
-		return success;
-	}, [subscribe, track]);
+		return success
+	}, [subscribe, track])
 
 	/**
 	 * Disable push notifications
 	 */
 	const disablePush = useCallback(async () => {
-		await unsubscribe();
-		track("push_disabled", {
-			source: "puzzled",
-		});
-		return true;
-	}, [unsubscribe, track]);
+		await unsubscribe()
+		track('push_disabled', {
+			source: 'puzzled',
+		})
+		return true
+	}, [unsubscribe, track])
 
 	/**
 	 * Get notification preferences from server
@@ -124,8 +120,8 @@ export function usePuzzledPush() {
 		pushDailyReminder: serverPreferences?.pushDailyReminder ?? true,
 		pushStreakAlert: serverPreferences?.pushStreakAlert ?? true,
 		pushNewGames: serverPreferences?.pushNewGames ?? true,
-		dailyReminderTime: serverPreferences?.dailyReminderTime ?? "09:00",
-	};
+		dailyReminderTime: serverPreferences?.dailyReminderTime ?? '09:00',
+	}
 
 	/**
 	 * Update notification preferences on server
@@ -134,16 +130,16 @@ export function usePuzzledPush() {
 		async (updates: Partial<PuzzledNotificationPreferences>) => {
 			await updateMutation.mutateAsync(updates, {
 				onSuccess: () => {
-					refetchPreferences();
+					refetchPreferences()
 				},
-			});
-			track("push_preferences_updated", {
+			})
+			track('push_preferences_updated', {
 				...updates,
-			});
-			return true;
+			})
+			return true
 		},
 		[updateMutation, track, refetchPreferences],
-	);
+	)
 
 	return {
 		/** Whether push notifications are supported in this browser */
@@ -164,5 +160,5 @@ export function usePuzzledPush() {
 		isLoadingPreferences: !serverPreferences,
 		/** SDK push preferences (for advanced usage) */
 		sdkPreferences,
-	};
+	}
 }

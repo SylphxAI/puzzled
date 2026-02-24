@@ -1,20 +1,12 @@
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
-import { daysAgo } from "@/lib/constants/time";
-import { db } from "@/lib/db";
-import { auditLogs, deadLetterQueue, gameSessions } from "@/lib/db/schema";
-import { count, desc, eq, gte } from "drizzle-orm";
-import {
-	Activity,
-	AlertTriangle,
-	Gamepad2,
-	Server,
-	Settings,
-	TrendingUp,
-	Zap,
-} from "lucide-react";
-import { getLocale, getTranslations } from "next-intl/server";
-import Link from "next/link";
+import { count, desc, eq, gte } from 'drizzle-orm'
+import { Activity, AlertTriangle, Gamepad2, Server, Settings, TrendingUp, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { daysAgo } from '@/lib/constants/time'
+import { db } from '@/lib/db'
+import { auditLogs, deadLetterQueue, gameSessions } from '@/lib/db/schema'
 
 /**
  * Admin Dashboard
@@ -25,28 +17,24 @@ import Link from "next/link";
 
 // Get comprehensive dashboard stats
 async function getDashboardStats() {
-	const now = new Date();
-	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-	const sevenDaysAgo = daysAgo(7, today);
+	const now = new Date()
+	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+	const sevenDaysAgo = daysAgo(7, today)
 
 	// App-specific metrics from local database
 	// Note: Platform metrics (users, revenue) are viewable in the Sylphx admin dashboard
-	const [sessionCount, sessionsThisWeek, dlqPending, dlqFailed] =
-		await Promise.all([
-			db.select({ count: count() }).from(gameSessions),
-			db
-				.select({ count: count() })
-				.from(gameSessions)
-				.where(gte(gameSessions.completedAt, sevenDaysAgo)),
-			db
-				.select({ count: count() })
-				.from(deadLetterQueue)
-				.where(eq(deadLetterQueue.status, "pending")),
-			db
-				.select({ count: count() })
-				.from(deadLetterQueue)
-				.where(eq(deadLetterQueue.status, "failed")),
-		]);
+	const [sessionCount, sessionsThisWeek, dlqPending, dlqFailed] = await Promise.all([
+		db.select({ count: count() }).from(gameSessions),
+		db
+			.select({ count: count() })
+			.from(gameSessions)
+			.where(gte(gameSessions.completedAt, sevenDaysAgo)),
+		db
+			.select({ count: count() })
+			.from(deadLetterQueue)
+			.where(eq(deadLetterQueue.status, 'pending')),
+		db.select({ count: count() }).from(deadLetterQueue).where(eq(deadLetterQueue.status, 'failed')),
+	])
 
 	return {
 		// App-specific stats (from local DB)
@@ -55,7 +43,7 @@ async function getDashboardStats() {
 		sessionsThisWeek: sessionsThisWeek[0]?.count ?? 0,
 		dlqPending: dlqPending[0]?.count ?? 0,
 		dlqFailed: dlqFailed[0]?.count ?? 0,
-	};
+	}
 }
 
 // Get recent activity from audit logs
@@ -63,87 +51,76 @@ async function getRecentActivity() {
 	const logs = await db.query.auditLogs.findMany({
 		orderBy: desc(auditLogs.createdAt),
 		limit: 8,
-	});
+	})
 
-	return logs;
+	return logs
 }
 
 export default async function AdminDashboard() {
-	const locale = await getLocale();
-	const t = await getTranslations("admin.dashboard");
-	const [stats, recentActivity] = await Promise.all([
-		getDashboardStats(),
-		getRecentActivity(),
-	]);
+	const locale = await getLocale()
+	const t = await getTranslations('admin.dashboard')
+	const [stats, recentActivity] = await Promise.all([getDashboardStats(), getRecentActivity()])
 
 	// System health status
-	const systemHealth =
-		stats.dlqFailed > 0
-			? "error"
-			: stats.dlqPending > 5
-				? "warning"
-				: "healthy";
+	const systemHealth = stats.dlqFailed > 0 ? 'error' : stats.dlqPending > 5 ? 'warning' : 'healthy'
 
 	return (
 		<div className="space-y-8">
 			{/* System Health Bar */}
 			<div className="admin-health-bar">
 				<div className="flex items-center gap-2">
-					<Server
-						className="h-4 w-4 text-[var(--admin-text-muted)]"
-						aria-hidden="true"
-					/>
+					<Server className="h-4 w-4 text-[var(--admin-text-muted)]" aria-hidden="true" />
 					<span className="text-sm font-medium text-[var(--admin-text-primary)]">
-						{t("systemStatus")}
+						{t('systemStatus')}
 					</span>
 				</div>
 
 				<div className="flex flex-1 items-center gap-4">
-					<HealthIndicator status={systemHealth} label={t("services")} />
+					<HealthIndicator status={systemHealth} label={t('services')} />
 					<HealthIndicator
-						status={stats.dlqPending > 0 ? "warning" : "healthy"}
+						status={stats.dlqPending > 0 ? 'warning' : 'healthy'}
 						label={`DLQ: ${stats.dlqPending}`}
 					/>
-					<HealthIndicator status="healthy" label={t("database")} />
+					<HealthIndicator status="healthy" label={t('database')} />
 				</div>
 
 				<div className="admin-live-indicator">
 					<span className="admin-live-dot" />
-					{t("live")}
+					{t('live')}
 				</div>
 			</div>
 
 			{/* Header */}
 			<div className="admin-page-header">
-				<h1 className="admin-page-title">{t("title")}</h1>
-				<p className="admin-page-subtitle">{t("subtitle")}</p>
+				<h1 className="admin-page-title">{t('title')}</h1>
+				<p className="admin-page-subtitle">{t('subtitle')}</p>
 			</div>
 
 			{/* App Stats Grid */}
 			<div className="admin-metrics-grid admin-metrics-grid-4">
 				<EnhancedStatCard
-					title={t("gameSessions")}
+					title={t('gameSessions')}
 					value={stats.sessions}
 					icon={Gamepad2}
 					accentColor="purple"
 					delay={0}
 				/>
 				<EnhancedStatCard
-					title={t("sessionsThisWeek")}
+					title={t('sessionsThisWeek')}
 					value={stats.sessionsThisWeek}
 					icon={TrendingUp}
 					accentColor="emerald"
 					delay={1}
 				/>
 				<EnhancedStatCard
-					title={t("dlqPending")}
+					title={t('dlqPending')}
 					value={stats.dlqPending}
 					icon={AlertTriangle}
 					accentColor="amber"
 					delay={2}
 				/>
 				<EnhancedStatCard
-					title={t("dlqFailed")}
+					title={t('dlqFailed')}
 					value={stats.dlqFailed}
 					icon={AlertTriangle}
 					accentColor="default"
@@ -155,10 +132,8 @@ export default async function AdminDashboard() {
 			<div className="admin-dashboard-section">
 				<div className="admin-section-header">
 					<div>
-						<h2 className="admin-section-title">{t("quickActions")}</h2>
-						<p className="admin-section-subtitle">
-							{t("quickActionsDescription")}
-						</p>
+						<h2 className="admin-section-title">{t('quickActions')}</h2>
+						<p className="admin-section-subtitle">{t('quickActionsDescription')}</p>
 					</div>
 				</div>
 
@@ -167,109 +142,94 @@ export default async function AdminDashboard() {
 						<div
 							className="admin-quick-action-icon"
 							style={{
-								background: "rgba(245, 158, 11, 0.15)",
-								color: "#fbbf24",
+								background: 'rgba(245, 158, 11, 0.15)',
+								color: '#fbbf24',
 							}}
 						>
 							<AlertTriangle className="h-5 w-5" aria-hidden="true" />
 						</div>
-						<span className="admin-quick-action-label">{t("reviewDLQ")}</span>
+						<span className="admin-quick-action-label">{t('reviewDLQ')}</span>
 					</Link>
 
 					<Link href="/admin/games" className="admin-quick-action">
 						<div
 							className="admin-quick-action-icon"
 							style={{
-								background: "rgba(168, 85, 247, 0.15)",
-								color: "#a78bfa",
+								background: 'rgba(168, 85, 247, 0.15)',
+								color: '#a78bfa',
 							}}
 						>
 							<Gamepad2 className="h-5 w-5" aria-hidden="true" />
 						</div>
-						<span className="admin-quick-action-label">{t("gameStats")}</span>
+						<span className="admin-quick-action-label">{t('gameStats')}</span>
 					</Link>
 
 					<Link href="/admin/audit-logs" className="admin-quick-action">
 						<div
 							className="admin-quick-action-icon"
 							style={{
-								background: "rgba(59, 130, 246, 0.15)",
-								color: "#60a5fa",
+								background: 'rgba(59, 130, 246, 0.15)',
+								color: '#60a5fa',
 							}}
 						>
 							<Activity className="h-5 w-5" aria-hidden="true" />
 						</div>
-						<span className="admin-quick-action-label">{t("auditLogs")}</span>
+						<span className="admin-quick-action-label">{t('auditLogs')}</span>
 					</Link>
 
 					<Link href="/admin/settings" className="admin-quick-action">
 						<div
 							className="admin-quick-action-icon"
 							style={{
-								background: "var(--admin-bg-surface)",
-								color: "var(--admin-text-secondary)",
+								background: 'var(--admin-bg-surface)',
+								color: 'var(--admin-text-secondary)',
 							}}
 						>
 							<Settings className="h-5 w-5" aria-hidden="true" />
 						</div>
-						<span className="admin-quick-action-label">{t("settings")}</span>
+						<span className="admin-quick-action-label">{t('settings')}</span>
 					</Link>
 				</div>
 			</div>
 
 			{/* Activity Feed */}
-			<div
-				className="admin-activity-feed admin-animate-in"
-				style={{ animationDelay: "0.25s" }}
-			>
+			<div className="admin-activity-feed admin-animate-in" style={{ animationDelay: '0.25s' }}>
 				<div className="admin-activity-header">
-					<span className="admin-activity-title">{t("recentActivity")}</span>
-					<Link
-						href="/admin/audit-logs"
-						className="admin-btn admin-btn-ghost text-xs"
-					>
-						{t("viewAll")}
+					<span className="admin-activity-title">{t('recentActivity')}</span>
+					<Link href="/admin/audit-logs" className="admin-btn admin-btn-ghost text-xs">
+						{t('viewAll')}
 					</Link>
 				</div>
 				<div className="admin-activity-list">
 					{recentActivity.length === 0 ? (
 						<div className="px-5 py-12 text-center text-[var(--admin-text-muted)]">
-							{t("noActivity")}
+							{t('noActivity')}
 						</div>
 					) : (
-						recentActivity.map((log) => (
-							<ActivityItem key={log.id} log={log} locale={locale} />
-						))
+						recentActivity.map((log) => <ActivityItem key={log.id} log={log} locale={locale} />)
 					)}
 				</div>
 			</div>
 
 			{/* Key Metrics Summary */}
-			<div
-				className="admin-card admin-animate-in p-6"
-				style={{ animationDelay: "0.35s" }}
-			>
+			<div className="admin-card admin-animate-in p-6" style={{ animationDelay: '0.35s' }}>
 				<div className="mb-4 flex items-center justify-between">
-					<h3 className="font-semibold text-[var(--admin-text-primary)]">
-						{t("keyMetrics")}
-					</h3>
-					<span className="text-xs text-[var(--admin-text-muted)]">
-						{t("last7Days")}
-					</span>
+					<h3 className="font-semibold text-[var(--admin-text-primary)]">{t('keyMetrics')}</h3>
+					<span className="text-xs text-[var(--admin-text-muted)]">{t('last7Days')}</span>
 				</div>
 				<div className="grid gap-4 sm:grid-cols-2">
 					<div className="admin-metric-row border-none py-0">
-						<span className="admin-metric-label">{t("gamesPlayed")}</span>
+						<span className="admin-metric-label">{t('gamesPlayed')}</span>
 						<span className="admin-metric-value">{stats.sessionsThisWeek}</span>
 					</div>
 					<div className="admin-metric-row border-none py-0">
-						<span className="admin-metric-label">{t("failedJobs")}</span>
+						<span className="admin-metric-label">{t('failedJobs')}</span>
 						<span className="admin-metric-value">{stats.dlqFailed}</span>
 					</div>
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 // System Health Indicator
@@ -277,21 +237,21 @@ function HealthIndicator({
 	status,
 	label,
 }: {
-	status: "healthy" | "warning" | "error";
-	label: string;
+	status: 'healthy' | 'warning' | 'error'
+	label: string
 }) {
 	const dotClass = {
-		healthy: "admin-health-dot-success",
-		warning: "admin-health-dot-warning",
-		error: "admin-health-dot-error",
-	};
+		healthy: 'admin-health-dot-success',
+		warning: 'admin-health-dot-warning',
+		error: 'admin-health-dot-error',
+	}
 
 	return (
 		<div className="admin-health-indicator">
 			<span className={`admin-health-dot ${dotClass[status]}`} />
 			<span className="text-[var(--admin-text-secondary)]">{label}</span>
 		</div>
-	);
+	)
 }
 
 // Enhanced Stat Card
@@ -299,21 +259,21 @@ function EnhancedStatCard({
 	title,
 	value,
 	icon: Icon,
-	accentColor = "default",
+	accentColor = 'default',
 	delay = 0,
 }: {
-	title: string;
-	value: string | number;
-	icon: typeof Gamepad2;
-	accentColor?: "default" | "emerald" | "purple" | "amber";
-	delay?: number;
+	title: string
+	value: string | number
+	icon: typeof Gamepad2
+	accentColor?: 'default' | 'emerald' | 'purple' | 'amber'
+	delay?: number
 }) {
 	const iconColors = {
-		default: "admin-stat-icon",
-		emerald: "admin-stat-icon-success",
-		purple: "bg-purple-500/15 text-purple-400",
-		amber: "admin-stat-icon-warning",
-	};
+		default: 'admin-stat-icon',
+		emerald: 'admin-stat-icon-success',
+		purple: 'bg-purple-500/15 text-purple-400',
+		amber: 'admin-stat-icon-warning',
+	}
 
 	return (
 		<div
@@ -331,7 +291,7 @@ function EnhancedStatCard({
 			</div>
 			<div className="admin-stat-label mt-1">{title}</div>
 		</div>
-	);
+	)
 }
 
 // Activity Item
@@ -340,28 +300,26 @@ function ActivityItem({
 	locale,
 }: {
 	log: {
-		id: string;
-		action: string;
-		actorId: string | null;
-		metadata: unknown;
-		createdAt: Date;
-	};
-	locale: string;
+		id: string
+		action: string
+		actorId: string | null
+		metadata: unknown
+		createdAt: Date
+	}
+	locale: string
 }) {
-	const iconMap: Record<string, { icon: typeof Activity; className: string }> =
-		{
-			game: { icon: Gamepad2, className: "admin-activity-icon-game" },
-			achievement: {
-				icon: TrendingUp,
-				className: "admin-activity-icon-payment",
-			},
-			streak: { icon: Zap, className: "admin-activity-icon-system" },
-			admin: { icon: Settings, className: "admin-activity-icon-user" },
-		};
+	const iconMap: Record<string, { icon: typeof Activity; className: string }> = {
+		game: { icon: Gamepad2, className: 'admin-activity-icon-game' },
+		achievement: {
+			icon: TrendingUp,
+			className: 'admin-activity-icon-payment',
+		},
+		streak: { icon: Zap, className: 'admin-activity-icon-system' },
+		admin: { icon: Settings, className: 'admin-activity-icon-user' },
+	}
 
-	const actionType = log.action.split("_")[0] || "admin";
-	const { icon: ActivityIcon, className: iconClass } =
-		iconMap[actionType] || iconMap.admin;
+	const actionType = log.action.split('_')[0] || 'admin'
+	const { icon: ActivityIcon, className: iconClass } = iconMap[actionType] || iconMap.admin
 
 	return (
 		<div className="admin-activity-item">
@@ -370,38 +328,31 @@ function ActivityItem({
 			</div>
 			<div className="admin-activity-content">
 				<div className="admin-activity-text">
-					<span className="text-[var(--admin-text-secondary)]">
-						{formatAction(log.action)}
-					</span>
+					<span className="text-[var(--admin-text-secondary)]">{formatAction(log.action)}</span>
 				</div>
-				<div className="admin-activity-time">
-					{formatRelativeTime(log.createdAt, locale)}
-				</div>
+				<div className="admin-activity-time">{formatRelativeTime(log.createdAt, locale)}</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 // Helper: Format action string
 function formatAction(action: string): string {
-	return action.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+	return action.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
 }
 
 // Helper: Format relative time
 function formatRelativeTime(date: Date, locale: string): string {
-	const now = new Date();
-	const diffMs = now.getTime() - new Date(date).getTime();
-	const diffMins = Math.floor(diffMs / 60000);
-	const diffHours = Math.floor(diffMins / 60);
-	const diffDays = Math.floor(diffHours / 24);
+	const now = new Date()
+	const diffMs = now.getTime() - new Date(date).getTime()
+	const diffMins = Math.floor(diffMs / 60000)
+	const diffHours = Math.floor(diffMins / 60)
+	const diffDays = Math.floor(diffHours / 24)
 
-	if (diffMins < 1) return locale === "zh" ? "刚刚" : "Just now";
-	if (diffMins < 60)
-		return locale === "zh" ? `${diffMins}分钟前` : `${diffMins}m ago`;
-	if (diffHours < 24)
-		return locale === "zh" ? `${diffHours}小时前` : `${diffHours}h ago`;
-	if (diffDays < 7)
-		return locale === "zh" ? `${diffDays}天前` : `${diffDays}d ago`;
+	if (diffMins < 1) return locale === 'zh' ? '刚刚' : 'Just now'
+	if (diffMins < 60) return locale === 'zh' ? `${diffMins}分钟前` : `${diffMins}m ago`
+	if (diffHours < 24) return locale === 'zh' ? `${diffHours}小时前` : `${diffHours}h ago`
+	if (diffDays < 7) return locale === 'zh' ? `${diffDays}天前` : `${diffDays}d ago`
 
-	return new Date(date).toLocaleDateString(locale);
+	return new Date(date).toLocaleDateString(locale)
 }

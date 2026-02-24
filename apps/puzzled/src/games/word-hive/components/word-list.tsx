@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState } from 'react'
+import { cn } from '@/lib/utils'
 
 type WordListProps = {
-	foundWords: string[];
-	totalWords: number;
-	pangrams: string[];
-};
+	foundWords: string[]
+	totalWords: number
+	pangrams: string[]
+}
 
 /**
  * Display list of found words with expandable view
  */
 export function WordList({ foundWords, totalWords, pangrams }: WordListProps) {
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(false)
 
 	// Sort words alphabetically
-	const sortedWords = [...foundWords].sort();
+	const sortedWords = [...foundWords].sort()
 
 	// Show first few words when collapsed
-	const displayWords = expanded ? sortedWords : sortedWords.slice(0, 5);
-	const hasMore = sortedWords.length > 5;
+	const displayWords = expanded ? sortedWords : sortedWords.slice(0, 5)
+	const hasMore = sortedWords.length > 5
 
 	return (
 		<div className="w-full rounded-lg border bg-card p-3 sm:p-4">
@@ -44,14 +44,14 @@ export function WordList({ foundWords, totalWords, pangrams }: WordListProps) {
 							<span
 								key={word}
 								className={cn(
-									"rounded-full px-2.5 py-1 text-xs font-medium",
+									'rounded-full px-2.5 py-1 text-xs font-medium',
 									pangrams.includes(word)
-										? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-										: "bg-muted text-muted-foreground",
+										? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+										: 'bg-muted text-muted-foreground',
 								)}
 							>
 								{word.toLowerCase()}
-								{pangrams.includes(word) && " ✨"}
+								{pangrams.includes(word) && ' ✨'}
 							</span>
 						))}
 					</div>
@@ -69,8 +69,7 @@ export function WordList({ foundWords, totalWords, pangrams }: WordListProps) {
 								</>
 							) : (
 								<>
-									Show all {sortedWords.length} words{" "}
-									<ChevronDown className="h-3 w-3" />
+									Show all {sortedWords.length} words <ChevronDown className="h-3 w-3" />
 								</>
 							)}
 						</button>
@@ -78,5 +77,5 @@ export function WordList({ foundWords, totalWords, pangrams }: WordListProps) {
 				</>
 			)}
 		</div>
-	);
+	)
 }

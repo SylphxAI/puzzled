@@ -5,24 +5,24 @@
  * Auth is handled by Sylphx Platform SDK (100% dogfooding).
  */
 
-import type { AuthResult } from "@sylphx/sdk/nextjs";
+import type { AuthResult } from '@sylphx/sdk/nextjs'
 
 /**
  * Platform user from SDK auth result
  */
-export type User = NonNullable<AuthResult["user"]>;
+export type User = NonNullable<AuthResult['user']>
 
 /**
  * User role types (matches Platform SDK)
  */
 export type UserRole =
-	| "super_admin"
-	| "admin"
-	| "billing"
-	| "analytics"
-	| "developer"
-	| "viewer"
-	| "member";
+	| 'super_admin'
+	| 'admin'
+	| 'billing'
+	| 'analytics'
+	| 'developer'
+	| 'viewer'
+	| 'member'
 
 /**
  * Hono environment for public routes (no auth required)
@@ -30,9 +30,9 @@ export type UserRole =
 export type PuzzledEnv = {
 	Variables: {
 		/** Request headers */
-		headers: Headers;
-	};
-};
+		headers: Headers
+	}
+}
 
 /**
  * Hono environment for authenticated routes
@@ -40,18 +40,18 @@ export type PuzzledEnv = {
 export type PuzzledAuthEnv = {
 	Variables: {
 		/** Authenticated platform user */
-		user: User;
+		user: User
 		/** User ID shortcut */
-		userId: string;
+		userId: string
 		/** Session token for SDK API calls */
-		sessionToken: string | null;
+		sessionToken: string | null
 		/** Request headers */
-		headers: Headers;
-	};
-};
+		headers: Headers
+	}
+}
 
 /**
  * Hono environment for admin-only routes
  * Requires admin or super_admin role
  */
-export type PuzzledAdminEnv = PuzzledAuthEnv;
+export type PuzzledAdminEnv = PuzzledAuthEnv

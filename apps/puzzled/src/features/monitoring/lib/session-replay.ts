@@ -11,8 +11,8 @@
  * - Conservative sampling rate
  */
 
-import { MINUTE_MS } from "@/lib/constants/time";
-import type { PrivacyMode, SessionReplayConfig } from "@sylphx/sdk/react";
+import type { PrivacyMode, SessionReplayConfig } from '@sylphx/sdk/react'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 /**
  * Default session replay configuration for Puzzled app
@@ -25,7 +25,7 @@ const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
 	},
 
 	// Privacy settings
-	privacyMode: "balanced" as PrivacyMode, // Auto-detect and mask sensitive fields
+	privacyMode: 'balanced' as PrivacyMode, // Auto-detect and mask sensitive fields
 
 	// Additional selectors to mask (game-specific sensitive areas)
 	maskSelectors: [
@@ -33,15 +33,15 @@ const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
 		'[data-testid="user-email"]',
 		'[data-testid="user-phone"]',
 		// Any explicitly marked private content
-		"[data-private]",
-		"[data-mask]",
+		'[data-private]',
+		'[data-mask]',
 	],
 
 	// Elements to completely exclude from recording
 	blockSelectors: [
 		// Payment forms are handled by Stripe's iframe, but add explicit block
-		"[data-stripe]",
-		".stripe-element",
+		'[data-stripe]',
+		'.stripe-element',
 	],
 
 	// SOTA features for debugging
@@ -58,25 +58,25 @@ const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
 	compress: true,
 	batchSize: 50,
 	uploadInterval: 10000, // Upload every 10 seconds
-};
+}
 
 /**
  * Get session replay configuration based on environment
  */
 export function getSessionReplayConfig(): Partial<SessionReplayConfig> {
-	const isProduction = process.env.NODE_ENV === "production";
+	const isProduction = process.env.NODE_ENV === 'production'
 
 	// Disable in non-production environments
 	if (!isProduction) {
 		return {
 			enabled: false,
-		};
+		}
 	}
 
 	return {
 		...SESSION_REPLAY_CONFIG,
 		enabled: true,
-	};
+	}
 }
 
 /**
@@ -84,27 +84,27 @@ export function getSessionReplayConfig(): Partial<SessionReplayConfig> {
  * Returns adjusted sample rate or null to use default
  */
 export function getAdjustedSampleRate(options: {
-	isPremium?: boolean;
-	isNewUser?: boolean;
-	hasRecentErrors?: boolean;
+	isPremium?: boolean
+	isNewUser?: boolean
+	hasRecentErrors?: boolean
 }): number | null {
-	const { isPremium, isNewUser, hasRecentErrors } = options;
+	const { isPremium, isNewUser, hasRecentErrors } = options
 
 	// Always capture users who have had recent errors
 	if (hasRecentErrors) {
-		return 100;
+		return 100
 	}
 
 	// Higher sampling for new users to understand onboarding issues
 	if (isNewUser) {
-		return 30;
+		return 30
 	}
 
 	// Premium users - higher sampling for better support
 	if (isPremium) {
-		return 25;
+		return 25
 	}
 
 	// Use default sampling rate
-	return null;
+	return null
 }

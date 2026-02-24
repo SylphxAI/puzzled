@@ -1,18 +1,14 @@
 // Force dynamic rendering - admin pages should never be statically generated
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic'
 
-import {
-	AdminCommandPalette,
-	AdminError,
-	requireAdmin,
-} from "@/features/admin";
-import { AdminThemeToggle } from "@/features/admin/components/admin-theme-toggle";
-import { AdminSidebar } from "@/features/admin/components/sidebar";
-import { ShieldOff } from "lucide-react";
-import type { Metadata } from "next";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import "@/features/admin/admin.css";
+import { ShieldOff } from 'lucide-react'
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { AdminCommandPalette, AdminError, requireAdmin } from '@/features/admin'
+import { AdminThemeToggle } from '@/features/admin/components/admin-theme-toggle'
+import { AdminSidebar } from '@/features/admin/components/sidebar'
+import '@/features/admin/admin.css'
 
 // Prevent admin pages from being indexed
 export const metadata: Metadata = {
@@ -20,11 +16,11 @@ export const metadata: Metadata = {
 		index: false,
 		follow: false,
 	},
-};
+}
 
 type Props = {
-	children: React.ReactNode;
-};
+	children: React.ReactNode
+}
 
 /**
  * Admin access error page - shows why access was denied
@@ -45,24 +41,24 @@ function AdminAccessDenied({ message }: { message: string }) {
 				</Link>
 			</div>
 		</div>
-	);
+	)
 }
 
 export default async function AdminLayout({ children }: Props) {
 	try {
-		await requireAdmin();
+		await requireAdmin()
 	} catch (error) {
 		if (error instanceof AdminError) {
 			switch (error.code) {
-				case "NOT_LOGGED_IN":
-					return redirect("/login?callbackUrl=/admin");
-				case "NOT_ADMIN":
-				case "FORBIDDEN":
-					return <AdminAccessDenied message={error.message} />;
+				case 'NOT_LOGGED_IN':
+					return redirect('/login?callbackUrl=/admin')
+				case 'NOT_ADMIN':
+				case 'FORBIDDEN':
+					return <AdminAccessDenied message={error.message} />
 			}
 		}
 
-		return <AdminAccessDenied message="An unexpected error occurred." />;
+		return <AdminAccessDenied message="An unexpected error occurred." />
 	}
 
 	return (
@@ -77,5 +73,5 @@ export default async function AdminLayout({ children }: Props) {
 				<div className="mx-auto max-w-6xl p-8">{children}</div>
 			</main>
 		</div>
-	);
+	)
 }

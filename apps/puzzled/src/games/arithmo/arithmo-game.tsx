@@ -3,38 +3,38 @@
  * Guess the equation in 6 tries (Nerdle-style)
  */
 
-"use client";
+'use client'
 
-import { Celebration } from "@/features/celebration/components/celebration";
-import { GameResultModal } from "@/features/daily/components/game-result-modal";
-import { GuestSignupPrompt } from "@/features/daily/components/guest-signup-prompt";
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { useGameSession } from "@/games/shared/use-game-session";
-import { parsePuzzleDataClient } from "@/games/types";
-import { ArithmoIcon } from "@/shared/components/ui/game-icons";
-import { triggerHaptic, triggerSound } from "@/shared/hooks";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@sylphx/ui";
-import { HelpCircle, Play } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArithmoGrid, ArithmoKeyboard } from "./components";
-import type { ArithmoPuzzleData, ArithmoSolution } from "./types";
-import { MAX_ATTEMPTS } from "./types";
-import { useArithmo } from "./use-arithmo";
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
+import { HelpCircle, Play } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Celebration } from '@/features/celebration/components/celebration'
+import { GameResultModal } from '@/features/daily/components/game-result-modal'
+import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
+import { ArithmoIcon } from '@/shared/components/ui/game-icons'
+import { triggerHaptic, triggerSound } from '@/shared/hooks'
+import { ArithmoGrid, ArithmoKeyboard } from './components'
+import type { ArithmoPuzzleData, ArithmoSolution } from './types'
+import { MAX_ATTEMPTS } from './types'
+import { useArithmo } from './use-arithmo'
 
 type Props = {
-	mode?: "daily" | "archive";
-	puzzleId?: string;
-	puzzleData?: unknown;
-};
+	mode?: 'daily' | 'archive'
+	puzzleId?: string
+	puzzleData?: unknown
+}
 
-export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
-	const t = useTranslations("games.arithmo");
+export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+	const t = useTranslations('games.arithmo')
 
 	// Get puzzle from server data
 	const [puzzle] = useState(() =>
 		parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData),
-	);
+	)
 
 	const {
 		isReady,
@@ -47,78 +47,72 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: "arithmo",
+		gameSlug: 'arithmo',
 		mode,
 		puzzleId,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
-	});
+	})
 
-	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false)
 
 	// Game hook
-	const game = useArithmo();
+	const game = useArithmo()
 
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.solution.equation);
+			game.init(puzzle.solution.equation)
 		}
-	}, [puzzle, isReady, game.init]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Handle submit
 	const handleSubmit = useCallback(() => {
-		if (!puzzle) return;
+		if (!puzzle) return
 
-		game.submitGuess(puzzle.solution.equation);
+		game.submitGuess(puzzle.solution.equation)
 
 		if (game.state.error) {
-			triggerHaptic("error");
-			triggerSound("error");
+			triggerHaptic('error')
+			triggerSound('error')
 		}
-	}, [game, puzzle]);
+	}, [game, puzzle])
 
 	// Keyboard event listener
 	useEffect(() => {
-		if (isReady || game.state.isComplete) return;
+		if (isReady || game.state.isComplete) return
 
 		function handleKeyDown(e: KeyboardEvent) {
-			if (e.ctrlKey || e.metaKey || e.altKey) return;
+			if (e.ctrlKey || e.metaKey || e.altKey) return
 
-			if (e.key === "Enter") {
-				e.preventDefault();
-				handleSubmit();
-			} else if (e.key === "Backspace") {
-				e.preventDefault();
-				game.deleteChar();
+			if (e.key === 'Enter') {
+				e.preventDefault()
+				handleSubmit()
+			} else if (e.key === 'Backspace') {
+				e.preventDefault()
+				game.deleteChar()
 			} else if (/^[0-9+\-*/=]$/.test(e.key)) {
-				e.preventDefault();
-				game.addChar(e.key);
+				e.preventDefault()
+				game.addChar(e.key)
 			}
 		}
 
-		window.addEventListener("keydown", handleKeyDown);
-		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [
-		isReady,
-		game.state.isComplete,
-		game.addChar,
-		game.deleteChar,
-		handleSubmit,
-	]); // eslint-disable-line react-hooks/exhaustive-deps
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [isReady, game.state.isComplete, game.addChar, game.deleteChar, handleSubmit]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Track game completion
-	const gameEndedRef = useRef(false);
+	const gameEndedRef = useRef(false)
 	if (game.state.isComplete && !gameEndedRef.current) {
-		gameEndedRef.current = true;
+		gameEndedRef.current = true
 		endGame({
-			status: game.state.isWon ? "won" : "lost",
+			status: game.state.isWon ? 'won' : 'lost',
 			attempts: game.state.guesses.length,
 			maxAttempts: MAX_ATTEMPTS,
 			data: {
 				guesses: game.state.guesses,
 			},
-		});
+		})
 	}
 
 	// Share result
@@ -126,30 +120,28 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 		const emojis = game.state.results
 			.map((row) =>
 				row
-					.map((status) =>
-						status === "correct" ? "🟩" : status === "present" ? "🟨" : "⬛",
-					)
-					.join(""),
+					.map((status) => (status === 'correct' ? '🟩' : status === 'present' ? '🟨' : '⬛'))
+					.join(''),
 			)
-			.join("\n");
+			.join('\n')
 
-		const attempts = game.state.isWon ? game.state.guesses.length : "X";
-		const text = `🧮 Arithmo ${attempts}/${MAX_ATTEMPTS}\n\n${emojis}\n\nPlay at puzzled.gg`;
-		navigator.clipboard.writeText(text);
-	}, [game.state.results, game.state.guesses.length, game.state.isWon]);
+		const attempts = game.state.isWon ? game.state.guesses.length : 'X'
+		const text = `🧮 Arithmo ${attempts}/${MAX_ATTEMPTS}\n\n${emojis}\n\nPlay at puzzled.gg`
+		navigator.clipboard.writeText(text)
+	}, [game.state.results, game.state.guesses.length, game.state.isWon])
 
 	// Get error message
 	const getErrorMessage = () => {
-		if (!game.state.error) return null;
+		if (!game.state.error) return null
 		switch (game.state.error) {
-			case "notComplete":
-				return t("messages.notComplete");
-			case "invalid":
-				return t("messages.invalid");
+			case 'notComplete':
+				return t('messages.notComplete')
+			case 'invalid':
+				return t('messages.invalid')
 			default:
-				return null;
+				return null
 		}
-	};
+	}
 
 	// Ready screen
 	if (isReady) {
@@ -159,30 +151,30 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 					<div className="mb-2 flex justify-center">
 						<ArithmoIcon size={48} className="text-primary" />
 					</div>
-					<CardTitle>{t("name")}</CardTitle>
-					<p className="text-sm text-muted-foreground">{t("description")}</p>
+					<CardTitle>{t('name')}</CardTitle>
+					<p className="text-sm text-muted-foreground">{t('description')}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{/* Rules */}
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
-							{t("rules.title")}
+							{t('rules.title')}
 						</h3>
 						<ul className="space-y-1 text-sm text-muted-foreground">
-							<li>• {t("rules.rule1")}</li>
-							<li>• {t("rules.rule2")}</li>
-							<li>• {t("rules.rule3")}</li>
+							<li>• {t('rules.rule1')}</li>
+							<li>• {t('rules.rule2')}</li>
+							<li>• {t('rules.rule3')}</li>
 						</ul>
 					</div>
 
 					<Button onClick={startGame} className="w-full" size="lg">
 						<Play className="mr-2 h-4 w-4" />
-						{t("startGame")}
+						{t('startGame')}
 					</Button>
 				</CardContent>
 			</Card>
-		);
+		)
 	}
 
 	return (
@@ -192,12 +184,8 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 
 			{/* Header */}
 			<div className="flex w-full max-w-sm items-center justify-between">
-				<div className="text-sm text-muted-foreground">{t("name")}</div>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={() => setShowHelpModal(true)}
-				>
+				<div className="text-sm text-muted-foreground">{t('name')}</div>
+				<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 					<HelpCircle className="h-4 w-4" />
 				</Button>
 			</div>
@@ -212,9 +200,7 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 
 			{/* Error message */}
 			{game.state.error && (
-				<div className="text-sm text-destructive animate-in fade-in">
-					{getErrorMessage()}
-				</div>
+				<div className="text-sm text-destructive animate-in fade-in">{getErrorMessage()}</div>
 			)}
 
 			{/* Keyboard */}
@@ -238,15 +224,12 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
 				gameType="arithmo"
-				status={game.state.isWon ? "won" : "lost"}
+				status={game.state.isWon ? 'won' : 'lost'}
 				solution={game.state.isWon ? undefined : puzzle.solution.equation}
 				stats={{
 					attempts: game.state.guesses.length,
 					maxAttempts: MAX_ATTEMPTS,
-					timeSpentMs:
-						game.state.endTime && startTime
-							? game.state.endTime - startTime
-							: 0,
+					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}
 				onShare={handleShare}
@@ -259,5 +242,5 @@ export function ArithmoGame({ mode = "daily", puzzleId, puzzleData }: Props) {
 				streakCount={1}
 			/>
 		</div>
-	);
+	)
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 /**
  * Error Boundary for Locale Routes
@@ -8,30 +8,30 @@
  * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
  */
 
-import { useErrorTracking } from "@sylphx/sdk/react";
-import { Button } from "@sylphx/ui";
-import { AlertTriangle, Home, RefreshCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useErrorTracking } from '@sylphx/sdk/react'
+import { Button } from '@sylphx/ui'
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
 interface ErrorProps {
-	error: Error & { digest?: string };
-	reset: () => void;
+	error: Error & { digest?: string }
+	reset: () => void
 }
 
 export default function LocaleError({ error, reset }: ErrorProps) {
-	const { captureException } = useErrorTracking();
-	const reported = useRef(false);
+	const { captureException } = useErrorTracking()
+	const reported = useRef(false)
 
 	useEffect(() => {
-		if (reported.current) return;
-		reported.current = true;
+		if (reported.current) return
+		reported.current = true
 
 		// DOGFOODING: Report error to Sylphx Platform via SDK
 		captureException(error, {
-			tags: { boundary: "locale" },
+			tags: { boundary: 'locale' },
 			extra: { digest: error.digest },
-		});
-	}, [error, captureException]);
+		})
+	}, [error, captureException])
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
@@ -42,15 +42,12 @@ export default function LocaleError({ error, reset }: ErrorProps) {
 
 				<h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
 				<p className="text-muted-foreground mb-6">
-					We encountered an unexpected error. Please try again or return to the
-					home page.
+					We encountered an unexpected error. Please try again or return to the home page.
 				</p>
 
-				{process.env.NODE_ENV === "development" && (
+				{process.env.NODE_ENV === 'development' && (
 					<details className="mb-6 text-left bg-muted/50 rounded-lg p-4">
-						<summary className="cursor-pointer text-sm font-medium">
-							Error details
-						</summary>
+						<summary className="cursor-pointer text-sm font-medium">Error details</summary>
 						<pre className="mt-2 text-xs overflow-auto whitespace-pre-wrap text-destructive">
 							{error.message}
 							{error.stack && `\n\n${error.stack}`}
@@ -72,5 +69,5 @@ export default function LocaleError({ error, reset }: ErrorProps) {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

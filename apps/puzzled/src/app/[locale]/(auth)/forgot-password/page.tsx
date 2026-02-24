@@ -1,18 +1,17 @@
-"use client";
+'use client'
 
-import { Link } from "@/lib/i18n/routing";
-import { useForgotPasswordForm } from "@sylphx/sdk/react";
-import { Button, GamepadIcon, Input } from "@sylphx/ui";
-import { ArrowLeft, Check, Loader2, Mail, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useForgotPasswordForm } from '@sylphx/sdk/react'
+import { Button, GamepadIcon, Input } from '@sylphx/ui'
+import { ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/lib/i18n/routing'
 
 export default function ForgotPasswordPage() {
-	const t = useTranslations("auth");
+	const t = useTranslations('auth')
 
-	const { form, setEmail, isLoading, error, success, handleSubmit } =
-		useForgotPasswordForm({
-			redirectTo: "/reset-password",
-		});
+	const { form, setEmail, isLoading, error, success, handleSubmit } = useForgotPasswordForm({
+		redirectTo: '/reset-password',
+	})
 
 	// Success state - email sent
 	if (success) {
@@ -21,7 +20,7 @@ export default function ForgotPasswordPage() {
 				<Link
 					href="/"
 					className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-					aria-label={t("close")}
+					aria-label={t('close')}
 				>
 					<X className="h-6 w-6" />
 				</Link>
@@ -31,17 +30,17 @@ export default function ForgotPasswordPage() {
 						<Check className="h-8 w-8 text-primary" />
 					</div>
 					<div>
-						<h1 className="text-2xl font-bold">{t("checkYourEmail")}</h1>
-						<p className="mt-2 text-muted-foreground">{t("resetLinkSent")}</p>
+						<h1 className="text-2xl font-bold">{t('checkYourEmail')}</h1>
+						<p className="mt-2 text-muted-foreground">{t('resetLinkSent')}</p>
 					</div>
 					<Link href="/login">
 						<Button variant="outline" className="w-full">
-							{t("backToLogin")}
+							{t('backToLogin')}
 						</Button>
 					</Link>
 				</div>
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -50,7 +49,7 @@ export default function ForgotPasswordPage() {
 			<Link
 				href="/"
 				className="absolute right-4 top-4 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-				aria-label={t("close")}
+				aria-label={t('close')}
 			>
 				<X className="h-6 w-6" />
 			</Link>
@@ -61,12 +60,8 @@ export default function ForgotPasswordPage() {
 					<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-violet-500/20">
 						<GamepadIcon size={40} className="text-primary" />
 					</div>
-					<h1 className="text-2xl font-bold tracking-tight">
-						{t("forgotPasswordTitle")}
-					</h1>
-					<p className="mt-2 text-muted-foreground">
-						{t("forgotPasswordDescription")}
-					</p>
+					<h1 className="text-2xl font-bold tracking-tight">{t('forgotPasswordTitle')}</h1>
+					<p className="mt-2 text-muted-foreground">{t('forgotPasswordDescription')}</p>
 				</div>
 
 				{/* Form */}
@@ -74,7 +69,7 @@ export default function ForgotPasswordPage() {
 					{/* Email */}
 					<div className="space-y-2">
 						<label htmlFor="email" className="text-sm font-medium">
-							{t("email")}
+							{t('email')}
 						</label>
 						<div className="relative">
 							<Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -100,18 +95,14 @@ export default function ForgotPasswordPage() {
 					)}
 
 					{/* Submit Button */}
-					<Button
-						type="submit"
-						className="h-12 w-full text-base font-medium"
-						disabled={isLoading}
-					>
+					<Button type="submit" className="h-12 w-full text-base font-medium" disabled={isLoading}>
 						{isLoading ? (
 							<>
 								<Loader2 className="mr-2 h-5 w-5 animate-spin" />
-								{t("sending")}
+								{t('sending')}
 							</>
 						) : (
-							t("sendResetLink")
+							t('sendResetLink')
 						)}
 					</Button>
 				</form>
@@ -123,10 +114,10 @@ export default function ForgotPasswordPage() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						{t("backToLogin")}
+						{t('backToLogin')}
 					</Link>
 				</p>
 			</div>
 		</div>
-	);
+	)
 }

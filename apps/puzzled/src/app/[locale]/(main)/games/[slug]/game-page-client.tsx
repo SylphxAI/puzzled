@@ -1,24 +1,24 @@
-"use client";
+'use client'
 
-import { HowToPlayModal } from "@/features/daily/components/how-to-play-modal";
-import { MinimalHeader } from "@/features/daily/components/minimal-header";
-import type { GameSlug } from "@/games/how-to-play-registry";
-import type { PuzzleDifficulty } from "@/games/types";
-import type { GameMode } from "@/lib/db/schema";
-import { useState } from "react";
-import { GameRenderer } from "./game-renderer";
+import { useState } from 'react'
+import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { MinimalHeader } from '@/features/daily/components/minimal-header'
+import type { GameSlug } from '@/games/how-to-play-registry'
+import type { PuzzleDifficulty } from '@/games/types'
+import type { GameMode } from '@/lib/db/schema'
+import { GameRenderer } from './game-renderer'
 
 type GamePageClientProps = {
-	slug: GameSlug;
-	gameName: string;
-	puzzleDate: string;
-	currentStreak: number;
-	mode: GameMode;
-	locale: string;
-	puzzleId: string;
-	puzzleData: unknown;
-	difficulty?: PuzzleDifficulty;
-};
+	slug: GameSlug
+	gameName: string
+	puzzleDate: string
+	currentStreak: number
+	mode: GameMode
+	locale: string
+	puzzleId: string
+	puzzleData: unknown
+	difficulty?: PuzzleDifficulty
+}
 
 export function GamePageClient({
 	slug,
@@ -31,7 +31,7 @@ export function GamePageClient({
 	puzzleData,
 	difficulty,
 }: GamePageClientProps) {
-	const [showHelpModal, setShowHelpModal] = useState(false);
+	const [showHelpModal, setShowHelpModal] = useState(false)
 
 	return (
 		<div className="flex flex-1 flex-col">
@@ -64,5 +64,5 @@ export function GamePageClient({
 				/>
 			</main>
 		</div>
-	);
+	)
 }

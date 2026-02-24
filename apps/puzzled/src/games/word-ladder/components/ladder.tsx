@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
 /**
  * Word Ladder Display Component
  * Shows the path from start to end word
  */
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
 type WordLadderDisplayProps = {
-	startWord: string;
-	endWord: string;
-	path: string[];
-	minSteps: number;
-};
+	startWord: string
+	endWord: string
+	path: string[]
+	minSteps: number
+}
 
 export function WordLadderDisplay({
 	startWord: _startWord,
@@ -20,7 +20,7 @@ export function WordLadderDisplay({
 	path,
 	minSteps,
 }: WordLadderDisplayProps) {
-	const currentSteps = path.length - 1; // First word doesn't count as a step
+	const currentSteps = path.length - 1 // First word doesn't count as a step
 
 	return (
 		<div className="flex w-full flex-col items-center gap-2 px-2 sm:px-0">
@@ -38,10 +38,7 @@ export function WordLadderDisplay({
 							word={word}
 							isStart={index === 0}
 							isEnd={word.toLowerCase() === endWord.toLowerCase()}
-							isLatest={
-								index === path.length - 1 &&
-								word.toLowerCase() !== endWord.toLowerCase()
-							}
+							isLatest={index === path.length - 1 && word.toLowerCase() !== endWord.toLowerCase()}
 							previousWord={index > 0 ? path[index - 1] : undefined}
 						/>
 						{/* Connector line */}
@@ -70,17 +67,17 @@ export function WordLadderDisplay({
 				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 type WordRungProps = {
-	word: string;
-	isStart?: boolean;
-	isEnd?: boolean;
-	isLatest?: boolean;
-	isTarget?: boolean;
-	previousWord?: string;
-};
+	word: string
+	isStart?: boolean
+	isEnd?: boolean
+	isLatest?: boolean
+	isTarget?: boolean
+	previousWord?: string
+}
 
 function WordRung({
 	word,
@@ -92,34 +89,31 @@ function WordRung({
 }: WordRungProps) {
 	// Find which letter changed from previous word
 	const changedIndex = previousWord
-		? [...word.toLowerCase()].findIndex(
-				(letter, i) => letter !== previousWord.toLowerCase()[i],
-			)
-		: -1;
+		? [...word.toLowerCase()].findIndex((letter, i) => letter !== previousWord.toLowerCase()[i])
+		: -1
 
 	return (
 		<div
 			className={cn(
-				"flex w-full items-center justify-center gap-1 rounded-lg px-2 py-3 sm:px-4",
-				isStart && "bg-primary text-primary-foreground",
-				isEnd && !isTarget && "bg-correct text-white",
-				isTarget &&
-					"border-2 border-dashed border-muted-foreground bg-muted/50",
-				isLatest && "bg-present text-white",
-				!isStart && !isEnd && !isLatest && !isTarget && "bg-muted",
+				'flex w-full items-center justify-center gap-1 rounded-lg px-2 py-3 sm:px-4',
+				isStart && 'bg-primary text-primary-foreground',
+				isEnd && !isTarget && 'bg-correct text-white',
+				isTarget && 'border-2 border-dashed border-muted-foreground bg-muted/50',
+				isLatest && 'bg-present text-white',
+				!isStart && !isEnd && !isLatest && !isTarget && 'bg-muted',
 			)}
 		>
-			{word.split("").map((letter, i) => (
+			{word.split('').map((letter, i) => (
 				<span
 					key={i}
 					className={cn(
-						"inline-flex h-9 w-9 items-center justify-center rounded text-base font-bold uppercase sm:h-10 sm:w-10 sm:text-lg",
-						changedIndex === i && !isStart && "bg-black/20",
+						'inline-flex h-9 w-9 items-center justify-center rounded text-base font-bold uppercase sm:h-10 sm:w-10 sm:text-lg',
+						changedIndex === i && !isStart && 'bg-black/20',
 					)}
 				>
-					{isTarget ? "?" : letter}
+					{isTarget ? '?' : letter}
 				</span>
 			))}
 		</div>
-	);
+	)
 }

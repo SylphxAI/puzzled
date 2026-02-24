@@ -1,129 +1,104 @@
-"use client";
+'use client'
 
-import {
-	useDlqList,
-	useDlqMarkFailed,
-	useDlqResolve,
-	useDlqRetry,
-} from "@/lib/api";
-import { PAGINATION } from "@/lib/config/validation";
-import type { deadLetterQueue } from "@/lib/db/schema";
-import { ConfirmDialog } from "@sylphx/ui";
-import {
-	AlertTriangle,
-	CheckCircle,
-	Clock,
-	Loader2,
-	Play,
-	RefreshCw,
-	XCircle,
-} from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { ConfirmDialog } from '@sylphx/ui'
+import { AlertTriangle, CheckCircle, Clock, Loader2, Play, RefreshCw, XCircle } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useLocale, useTranslations } from 'next-intl'
+import { useState } from 'react'
+import { useDlqList, useDlqMarkFailed, useDlqResolve, useDlqRetry } from '@/lib/api'
+import { PAGINATION } from '@/lib/config/validation'
+import type { deadLetterQueue } from '@/lib/db/schema'
 
-type DLQItem = typeof deadLetterQueue.$inferSelect;
+type DLQItem = typeof deadLetterQueue.$inferSelect
 type DLQStats = {
-	total: number;
-	pending: number;
-	retrying: number;
-	resolved: number;
-	failed: number;
-	byWorkflow: Record<string, number>;
-};
+	total: number
+	pending: number
+	retrying: number
+	resolved: number
+	failed: number
+	byWorkflow: Record<string, number>
+}
 
 type DLQDashboardProps = {
-	initialStats: DLQStats;
-	initialItems: DLQItem[];
-};
+	initialStats: DLQStats
+	initialItems: DLQItem[]
+}
 
-export function DLQDashboard({
-	initialStats,
-	initialItems,
-}: DLQDashboardProps) {
-	const t = useTranslations("admin.dlq");
-	const _locale = useLocale();
-	const router = useRouter();
-	const [filter, setFilter] = useState<string | undefined>(undefined);
+export function DLQDashboard({ initialStats, initialItems }: DLQDashboardProps) {
+	const t = useTranslations('admin.dlq')
+	const _locale = useLocale()
+	const router = useRouter()
+	const [filter, setFilter] = useState<string | undefined>(undefined)
 
 	// Use dlqList with includeStats
 	const { data, refetch } = useDlqList(
 		{
-			status: filter as
-				| "pending"
-				| "retrying"
-				| "resolved"
-				| "failed"
-				| undefined,
+			status: filter as 'pending' | 'retrying' | 'resolved' | 'failed' | undefined,
 			limit: PAGINATION.ADMIN_MAX_LIMIT,
 		},
 		{
 			refetchInterval: 30000,
 		},
-	);
+	)
 
-	const items = data?.items ?? initialItems;
-	const stats = data?.stats ?? initialStats;
+	const items = data?.items ?? initialItems
+	const stats = data?.stats ?? initialStats
 
 	const handleRefresh = () => {
-		refetch();
-		router.refresh();
-	};
+		refetch()
+		router.refresh()
+	}
 
 	return (
 		<div className="space-y-6">
 			{/* Stats Cards */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 				<StatCard
-					label={t("stats.total")}
+					label={t('stats.total')}
 					value={stats.total}
 					icon={AlertTriangle}
 					onClick={() => setFilter(undefined)}
 					active={filter === undefined}
 				/>
 				<StatCard
-					label={t("stats.pending")}
+					label={t('stats.pending')}
 					value={stats.pending}
 					icon={Clock}
 					variant="warning"
-					onClick={() => setFilter("pending")}
-					active={filter === "pending"}
+					onClick={() => setFilter('pending')}
+					active={filter === 'pending'}
 				/>
 				<StatCard
-					label={t("stats.retrying")}
+					label={t('stats.retrying')}
 					value={stats.retrying}
 					icon={Loader2}
 					variant="info"
-					onClick={() => setFilter("retrying")}
-					active={filter === "retrying"}
+					onClick={() => setFilter('retrying')}
+					active={filter === 'retrying'}
 				/>
 				<StatCard
-					label={t("stats.resolved")}
+					label={t('stats.resolved')}
 					value={stats.resolved}
 					icon={CheckCircle}
 					variant="success"
-					onClick={() => setFilter("resolved")}
-					active={filter === "resolved"}
+					onClick={() => setFilter('resolved')}
+					active={filter === 'resolved'}
 				/>
 				<StatCard
-					label={t("stats.failed")}
+					label={t('stats.failed')}
 					value={stats.failed}
 					icon={XCircle}
 					variant="error"
-					onClick={() => setFilter("failed")}
-					active={filter === "failed"}
+					onClick={() => setFilter('failed')}
+					active={filter === 'failed'}
 				/>
 			</div>
 
 			{/* Refresh Button */}
 			<div className="flex justify-end">
-				<button
-					type="button"
-					className="admin-btn admin-btn-ghost"
-					onClick={handleRefresh}
-				>
+				<button type="button" className="admin-btn admin-btn-ghost" onClick={handleRefresh}>
 					<RefreshCw className="h-4 w-4" />
-					{t("refresh")}
+					{t('refresh')}
 				</button>
 			</div>
 
@@ -133,10 +108,8 @@ export function DLQDashboard({
 					<div className="admin-empty-state-icon !bg-[var(--admin-success)]/10">
 						<CheckCircle className="h-6 w-6 text-[var(--admin-success)]" />
 					</div>
-					<h3 className="admin-empty-state-title">{t("empty.title")}</h3>
-					<p className="admin-empty-state-description">
-						{t("empty.description")}
-					</p>
+					<h3 className="admin-empty-state-title">{t('empty.title')}</h3>
+					<p className="admin-empty-state-description">{t('empty.description')}</p>
 				</div>
 			) : (
 				<div className="admin-card overflow-hidden">
@@ -144,21 +117,17 @@ export function DLQDashboard({
 						<table className="admin-table">
 							<thead>
 								<tr>
-									<th>{t("table.workflow")}</th>
-									<th>{t("table.error")}</th>
-									<th>{t("table.retries")}</th>
-									<th>{t("table.status")}</th>
-									<th>{t("table.created")}</th>
-									<th>{t("table.actions")}</th>
+									<th>{t('table.workflow')}</th>
+									<th>{t('table.error')}</th>
+									<th>{t('table.retries')}</th>
+									<th>{t('table.status')}</th>
+									<th>{t('table.created')}</th>
+									<th>{t('table.actions')}</th>
 								</tr>
 							</thead>
 							<tbody>
 								{items.map((item) => (
-									<DLQItemRow
-										key={item.id}
-										item={item}
-										onUpdate={handleRefresh}
-									/>
+									<DLQItemRow key={item.id} item={item} onUpdate={handleRefresh} />
 								))}
 							</tbody>
 						</table>
@@ -166,140 +135,129 @@ export function DLQDashboard({
 				</div>
 			)}
 		</div>
-	);
+	)
 }
 
 function StatCard({
 	label,
 	value,
 	icon: Icon,
-	variant = "default",
+	variant = 'default',
 	onClick,
 	active,
 }: {
-	label: string;
-	value: number;
-	icon: typeof AlertTriangle;
-	variant?: "default" | "warning" | "info" | "success" | "error";
-	onClick?: () => void;
-	active?: boolean;
+	label: string
+	value: number
+	icon: typeof AlertTriangle
+	variant?: 'default' | 'warning' | 'info' | 'success' | 'error'
+	onClick?: () => void
+	active?: boolean
 }) {
 	const iconVariantClass = {
-		default: "admin-stat-icon",
-		warning: "admin-stat-icon-warning",
-		info: "admin-stat-icon-info",
-		success: "admin-stat-icon-success",
-		error: "admin-stat-icon-error",
-	};
+		default: 'admin-stat-icon',
+		warning: 'admin-stat-icon-warning',
+		info: 'admin-stat-icon-info',
+		success: 'admin-stat-icon-success',
+		error: 'admin-stat-icon-error',
+	}
 
 	return (
 		<button
 			type="button"
 			onClick={onClick}
-			aria-label={`${label}: ${value}${active ? " (selected)" : ""}`}
+			aria-label={`${label}: ${value}${active ? ' (selected)' : ''}`}
 			aria-pressed={active}
-			className={`admin-stat-card admin-stat-clickable p-4 text-left ${active ? "admin-stat-active" : ""}`}
+			className={`admin-stat-card admin-stat-clickable p-4 text-left ${active ? 'admin-stat-active' : ''}`}
 		>
-			<div
-				className={`mb-2 inline-flex rounded-lg p-2 ${iconVariantClass[variant]}`}
-			>
+			<div className={`mb-2 inline-flex rounded-lg p-2 ${iconVariantClass[variant]}`}>
 				<Icon className="h-5 w-5" aria-hidden="true" />
 			</div>
 			<div className="admin-stat-value">{value}</div>
 			<div className="admin-stat-label">{label}</div>
 		</button>
-	);
+	)
 }
 
-function DLQItemRow({
-	item,
-	onUpdate,
-}: { item: DLQItem; onUpdate: () => void }) {
-	const t = useTranslations("admin.dlq");
-	const tCommon = useTranslations("common");
-	const locale = useLocale();
-	const [loading, setLoading] = useState<string | null>(null);
-	const [retryDialogOpen, setRetryDialogOpen] = useState(false);
+function DLQItemRow({ item, onUpdate }: { item: DLQItem; onUpdate: () => void }) {
+	const t = useTranslations('admin.dlq')
+	const tCommon = useTranslations('common')
+	const locale = useLocale()
+	const [loading, setLoading] = useState<string | null>(null)
+	const [retryDialogOpen, setRetryDialogOpen] = useState(false)
 
-	const retryMutation = useDlqRetry();
-	const resolveMutation = useDlqResolve();
-	const markFailedMutation = useDlqMarkFailed();
+	const retryMutation = useDlqRetry()
+	const resolveMutation = useDlqResolve()
+	const markFailedMutation = useDlqMarkFailed()
 
 	const handleRetryClick = () => {
-		setRetryDialogOpen(true);
-	};
+		setRetryDialogOpen(true)
+	}
 
 	const handleRetryConfirm = () => {
-		setLoading("retry");
+		setLoading('retry')
 		retryMutation.mutate(
 			{ id: item.id },
 			{
 				onSuccess: () => onUpdate(),
 				onSettled: () => setLoading(null),
 			},
-		);
-	};
+		)
+	}
 
 	const handleResolve = () => {
-		setLoading("resolve");
+		setLoading('resolve')
 		resolveMutation.mutate(
 			{ id: item.id },
 			{
 				onSuccess: () => onUpdate(),
 				onSettled: () => setLoading(null),
 			},
-		);
-	};
+		)
+	}
 
 	const handleFail = () => {
-		setLoading("fail");
+		setLoading('fail')
 		markFailedMutation.mutate(
 			{ id: item.id },
 			{
 				onSuccess: () => onUpdate(),
 				onSettled: () => setLoading(null),
 			},
-		);
-	};
+		)
+	}
 
 	const statusBadgeClass: Record<string, string> = {
-		pending: "admin-badge admin-badge-warning",
-		retrying: "admin-badge admin-badge-info",
-		resolved: "admin-badge admin-badge-success",
-		failed: "admin-badge admin-badge-error",
-	};
+		pending: 'admin-badge admin-badge-warning',
+		retrying: 'admin-badge admin-badge-info',
+		resolved: 'admin-badge admin-badge-success',
+		failed: 'admin-badge admin-badge-error',
+	}
 
 	const statusIcons: Record<string, typeof Clock> = {
 		pending: Clock,
 		retrying: Loader2,
 		resolved: CheckCircle,
 		failed: XCircle,
-	};
+	}
 
-	const canRetry = item.status === "pending" || item.status === "failed";
-	const canResolve = item.status === "pending" || item.status === "retrying";
-	const exceedsRetries = item.retryCount >= item.maxRetries;
+	const canRetry = item.status === 'pending' || item.status === 'failed'
+	const canResolve = item.status === 'pending' || item.status === 'retrying'
+	const exceedsRetries = item.retryCount >= item.maxRetries
 
 	return (
 		<tr>
 			<td>
-				<div className="font-medium text-[var(--admin-text-primary)]">
-					{item.workflowName}
-				</div>
+				<div className="font-medium text-[var(--admin-text-primary)]">{item.workflowName}</div>
 				{item.workflowRunId && (
-					<div className="admin-data-mono">
-						{item.workflowRunId.slice(0, 8)}...
-					</div>
+					<div className="admin-data-mono">{item.workflowRunId.slice(0, 8)}...</div>
 				)}
 			</td>
 			<td className="max-w-xs">
-				<div className="line-clamp-2 text-sm text-[var(--admin-text-secondary)]">
-					{item.error}
-				</div>
+				<div className="line-clamp-2 text-sm text-[var(--admin-text-secondary)]">{item.error}</div>
 			</td>
 			<td>
 				<span
-					className={`font-mono text-sm ${exceedsRetries ? "text-[var(--admin-error)]" : "text-[var(--admin-text-secondary)]"}`}
+					className={`font-mono text-sm ${exceedsRetries ? 'text-[var(--admin-error)]' : 'text-[var(--admin-text-secondary)]'}`}
 				>
 					{item.retryCount}/{item.maxRetries}
 				</span>
@@ -307,13 +265,13 @@ function DLQItemRow({
 			<td>
 				<span className={statusBadgeClass[item.status]}>
 					{(() => {
-						const StatusIcon = statusIcons[item.status];
+						const StatusIcon = statusIcons[item.status]
 						return StatusIcon ? (
 							<StatusIcon
-								className={`h-3 w-3 ${item.status === "retrying" ? "animate-spin" : ""}`}
+								className={`h-3 w-3 ${item.status === 'retrying' ? 'animate-spin' : ''}`}
 								aria-hidden="true"
 							/>
-						) : null;
+						) : null
 					})()}
 					{t(`status.${item.status}`)}
 				</span>
@@ -330,13 +288,10 @@ function DLQItemRow({
 								className="admin-btn admin-btn-ghost p-2"
 								onClick={handleRetryClick}
 								disabled={loading !== null}
-								aria-label={t("actions.retry")}
+								aria-label={t('actions.retry')}
 							>
-								{loading === "retry" ? (
-									<Loader2
-										className="h-4 w-4 animate-spin"
-										aria-hidden="true"
-									/>
+								{loading === 'retry' ? (
+									<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
 								) : (
 									<Play className="h-4 w-4" aria-hidden="true" />
 								)}
@@ -348,18 +303,12 @@ function DLQItemRow({
 								className="admin-btn admin-btn-ghost p-2"
 								onClick={handleResolve}
 								disabled={loading !== null}
-								aria-label={t("actions.resolve")}
+								aria-label={t('actions.resolve')}
 							>
-								{loading === "resolve" ? (
-									<Loader2
-										className="h-4 w-4 animate-spin"
-										aria-hidden="true"
-									/>
+								{loading === 'resolve' ? (
+									<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
 								) : (
-									<CheckCircle
-										className="h-4 w-4 text-[var(--admin-success)]"
-										aria-hidden="true"
-									/>
+									<CheckCircle className="h-4 w-4 text-[var(--admin-success)]" aria-hidden="true" />
 								)}
 							</button>
 						)}
@@ -369,25 +318,17 @@ function DLQItemRow({
 								className="admin-btn admin-btn-ghost p-2"
 								onClick={handleFail}
 								disabled={loading !== null}
-								aria-label={t("actions.fail")}
+								aria-label={t('actions.fail')}
 							>
-								{loading === "fail" ? (
-									<Loader2
-										className="h-4 w-4 animate-spin"
-										aria-hidden="true"
-									/>
+								{loading === 'fail' ? (
+									<Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
 								) : (
-									<XCircle
-										className="h-4 w-4 text-[var(--admin-error)]"
-										aria-hidden="true"
-									/>
+									<XCircle className="h-4 w-4 text-[var(--admin-error)]" aria-hidden="true" />
 								)}
 							</button>
 						)}
 					</div>
-					{(retryMutation.error ||
-						resolveMutation.error ||
-						markFailedMutation.error) && (
+					{(retryMutation.error || resolveMutation.error || markFailedMutation.error) && (
 						<span className="text-xs text-[var(--admin-error)]">
 							{retryMutation.error?.message ||
 								resolveMutation.error?.message ||
@@ -401,13 +342,13 @@ function DLQItemRow({
 			<ConfirmDialog
 				open={retryDialogOpen}
 				onOpenChange={setRetryDialogOpen}
-				title={t("confirmRetryTitle")}
-				description={t("confirmRetryDescription")}
-				confirmLabel={t("actions.retry")}
-				cancelLabel={tCommon("cancel")}
+				title={t('confirmRetryTitle')}
+				description={t('confirmRetryDescription')}
+				confirmLabel={t('actions.retry')}
+				cancelLabel={tCommon('cancel')}
 				onConfirm={handleRetryConfirm}
 				variant="default"
 			/>
 		</tr>
-	);
+	)
 }

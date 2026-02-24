@@ -10,7 +10,7 @@
  *   vibratePattern('success') // Pattern vibration
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from 'react'
 
 // Vibration patterns (in milliseconds)
 // Format: [vibrate, pause, vibrate, pause, ...]
@@ -37,37 +37,36 @@ const HAPTIC_PATTERNS = {
 	select: [12], // Selection made
 	notification: [50, 100, 50], // New notification
 	shuffle: [15, 30, 15], // Shuffle action
-} as const;
+} as const
 
-export type HapticPattern = keyof typeof HAPTIC_PATTERNS;
+export type HapticPattern = keyof typeof HAPTIC_PATTERNS
 
-type HapticIntensity = "light" | "medium" | "heavy";
+type HapticIntensity = 'light' | 'medium' | 'heavy'
 
 function _useHaptic() {
 	// Check if Vibration API is supported
 	const isSupported = useMemo(() => {
-		if (typeof window === "undefined") return false;
-		return "vibrate" in navigator;
-	}, []);
+		if (typeof window === 'undefined') return false
+		return 'vibrate' in navigator
+	}, [])
 
 	/**
 	 * Trigger a single vibration
 	 * @param intensity - The intensity of the vibration
 	 */
 	const vibrate = useCallback(
-		(intensity: HapticIntensity = "medium") => {
-			if (!isSupported) return false;
+		(intensity: HapticIntensity = 'medium') => {
+			if (!isSupported) return false
 
 			try {
-				const duration =
-					intensity === "light" ? 10 : intensity === "medium" ? 25 : 50;
-				return navigator.vibrate(duration);
+				const duration = intensity === 'light' ? 10 : intensity === 'medium' ? 25 : 50
+				return navigator.vibrate(duration)
 			} catch {
-				return false;
+				return false
 			}
 		},
 		[isSupported],
-	);
+	)
 
 	/**
 	 * Trigger a pattern vibration
@@ -75,54 +74,52 @@ function _useHaptic() {
 	 */
 	const vibratePattern = useCallback(
 		(pattern: HapticPattern | number[]) => {
-			if (!isSupported) return false;
+			if (!isSupported) return false
 
 			try {
-				const patternArray = Array.isArray(pattern)
-					? pattern
-					: HAPTIC_PATTERNS[pattern];
-				return navigator.vibrate(patternArray);
+				const patternArray = Array.isArray(pattern) ? pattern : HAPTIC_PATTERNS[pattern]
+				return navigator.vibrate(patternArray)
 			} catch {
-				return false;
+				return false
 			}
 		},
 		[isSupported],
-	);
+	)
 
 	/**
 	 * Stop any ongoing vibration
 	 */
 	const cancel = useCallback(() => {
-		if (!isSupported) return;
+		if (!isSupported) return
 
 		try {
-			navigator.vibrate(0);
+			navigator.vibrate(0)
 		} catch {
 			// Silently fail if vibration isn't supported
 		}
-	}, [isSupported]);
+	}, [isSupported])
 
 	return {
 		isSupported,
 		vibrate,
 		vibratePattern,
 		cancel,
-	};
+	}
 }
 
 /**
  * Simple function to trigger haptic feedback without using the hook
  * Useful for one-off vibrations in event handlers
  */
-export function triggerHaptic(pattern: HapticPattern = "medium"): boolean {
-	if (typeof window === "undefined" || !("vibrate" in navigator)) {
-		return false;
+export function triggerHaptic(pattern: HapticPattern = 'medium'): boolean {
+	if (typeof window === 'undefined' || !('vibrate' in navigator)) {
+		return false
 	}
 
 	try {
-		const patternArray = HAPTIC_PATTERNS[pattern];
-		return navigator.vibrate(patternArray);
+		const patternArray = HAPTIC_PATTERNS[pattern]
+		return navigator.vibrate(patternArray)
 	} catch {
-		return false;
+		return false
 	}
 }

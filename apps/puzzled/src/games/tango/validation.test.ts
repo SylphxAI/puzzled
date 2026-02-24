@@ -12,30 +12,30 @@
  * - Minimum: 100 points for a win
  */
 
-import { describe, expect, test } from "bun:test";
-import type { GameSubmission } from "../types";
-import { tangoConfig } from "./config";
-import type { CellValue } from "./types";
+import { describe, expect, test } from 'bun:test'
+import type { GameSubmission } from '../types'
+import { tangoConfig } from './config'
+import type { CellValue } from './types'
 
 // Generate a puzzle for testing
-const { puzzleData, solution } = tangoConfig.generatePuzzle(12345);
+const { puzzleData, solution } = tangoConfig.generatePuzzle(12345)
 
 // Create correct grid from solution
-const correctGrid = solution.grid;
+const correctGrid = solution.grid
 
 // Create incorrect grid (toggle one cell)
 const incorrectGrid = solution.grid.map((row, r) =>
 	row.map((cell, c) => {
 		if (r === 0 && c === 0) {
-			return cell === "sun" ? "moon" : "sun";
+			return cell === 'sun' ? 'moon' : 'sun'
 		}
-		return cell;
+		return cell
 	}),
-) as CellValue[][];
+) as CellValue[][]
 
 // Helper to create submission
 function createSubmission(
-	status: "won" | "lost",
+	status: 'won' | 'lost',
 	grid: CellValue[][] | undefined,
 	timeSpentMs: number,
 ): GameSubmission {
@@ -44,175 +44,131 @@ function createSubmission(
 		attempts: 1,
 		timeSpentMs,
 		data: grid !== undefined ? { grid } : {},
-	};
+	}
 }
 
-describe("tango validateAndScore", () => {
-	describe("valid solutions", () => {
-		test("fast solve scores 500 points", () => {
-			const submission = createSubmission("won", correctGrid, 0);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+describe('tango validateAndScore', () => {
+	describe('valid solutions', () => {
+		test('fast solve scores 500 points', () => {
+			const submission = createSubmission('won', correctGrid, 0)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(500);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(500)
 			}
-		});
+		})
 
-		test("100 second solve scores 450 points", () => {
-			const submission = createSubmission("won", correctGrid, 100000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('100 second solve scores 450 points', () => {
+			const submission = createSubmission('won', correctGrid, 100000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(450); // 500 - 50
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(450) // 500 - 50
 			}
-		});
+		})
 
-		test("200 second solve scores 400 points", () => {
-			const submission = createSubmission("won", correctGrid, 200000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('200 second solve scores 400 points', () => {
+			const submission = createSubmission('won', correctGrid, 200000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(400);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(400)
 			}
-		});
+		})
 
-		test("minimum score is 100 for wins", () => {
-			const submission = createSubmission("won", correctGrid, 2000000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('minimum score is 100 for wins', () => {
+			const submission = createSubmission('won', correctGrid, 2000000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("won");
-				expect(result.score).toBe(100);
+				expect(result.status).toBe('won')
+				expect(result.score).toBe(100)
 			}
-		});
+		})
 
-		test("loss scores 0 points", () => {
-			const submission = createSubmission("lost", incorrectGrid, 60000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('loss scores 0 points', () => {
+			const submission = createSubmission('lost', incorrectGrid, 60000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(true);
+			expect(result.valid).toBe(true)
 			if (result.valid) {
-				expect(result.status).toBe("lost");
-				expect(result.score).toBe(0);
+				expect(result.status).toBe('lost')
+				expect(result.score).toBe(0)
 			}
-		});
-	});
+		})
+	})
 
-	describe("invalid submissions", () => {
-		test("rejects missing grid data", () => {
-			const submission = createSubmission("won", undefined, 60000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+	describe('invalid submissions', () => {
+		test('rejects missing grid data', () => {
+			const submission = createSubmission('won', undefined, 60000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("Missing grid");
+				expect(result.error).toContain('Missing grid')
 			}
-		});
+		})
 
-		test("rejects false win claim with incorrect grid", () => {
-			const submission = createSubmission("won", incorrectGrid, 60000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('rejects false win claim with incorrect grid', () => {
+			const submission = createSubmission('won', incorrectGrid, 60000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("not correctly solved");
+				expect(result.error).toContain('not correctly solved')
 			}
-		});
+		})
 
-		test("rejects false loss claim with correct grid", () => {
-			const submission = createSubmission("lost", correctGrid, 60000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+		test('rejects false loss claim with correct grid', () => {
+			const submission = createSubmission('lost', correctGrid, 60000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
+			expect(result.valid).toBe(false)
 			if (!result.valid) {
-				expect(result.error).toContain("Invalid loss claim");
+				expect(result.error).toContain('Invalid loss claim')
 			}
-		});
-	});
+		})
+	})
 
-	describe("edge cases", () => {
-		test("handles null data", () => {
+	describe('edge cases', () => {
+		test('handles null data', () => {
 			const submission: GameSubmission = {
-				status: "won",
+				status: 'won',
 				attempts: 1,
 				timeSpentMs: 60000,
 				data: null,
-			};
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
-
-			expect(result.valid).toBe(false);
-		});
-
-		test("time penalty calculation - odd seconds", () => {
-			// 99 seconds = floor(99/2) = 49 penalty
-			const submission = createSubmission("won", correctGrid, 99000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
-
-			expect(result.valid).toBe(true);
-			if (result.valid) {
-				expect(result.score).toBe(451); // 500 - 49
 			}
-		});
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-		test("grid with empty cells is invalid", () => {
+			expect(result.valid).toBe(false)
+		})
+
+		test('time penalty calculation - odd seconds', () => {
+			// 99 seconds = floor(99/2) = 49 penalty
+			const submission = createSubmission('won', correctGrid, 99000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
+
+			expect(result.valid).toBe(true)
+			if (result.valid) {
+				expect(result.score).toBe(451) // 500 - 49
+			}
+		})
+
+		test('grid with empty cells is invalid', () => {
 			const gridWithEmpty = correctGrid.map((row, r) =>
 				row.map((cell, c) => (r === 0 && c === 0 ? null : cell)),
-			) as CellValue[][];
-			const submission = createSubmission("won", gridWithEmpty, 60000);
-			const result = tangoConfig.validateAndScore(
-				solution,
-				puzzleData,
-				submission,
-			);
+			) as CellValue[][]
+			const submission = createSubmission('won', gridWithEmpty, 60000)
+			const result = tangoConfig.validateAndScore(solution, puzzleData, submission)
 
-			expect(result.valid).toBe(false);
-		});
-	});
-});
+			expect(result.valid).toBe(false)
+		})
+	})
+})

@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 /**
  * Sylphx Platform Provider Wrapper
@@ -13,32 +13,27 @@
  * - App contains business logic only (games, streaks, achievements)
  */
 
-import { MINUTE_MS } from "@/lib/constants/time";
-import type { AppConfig } from "@sylphx/sdk/react";
-import {
-	FeatureFlagProvider,
-	SylphxProvider,
-	useSafeBilling,
-	useSafeUser,
-} from "@sylphx/sdk/react";
-import type * as React from "react";
+import type { AppConfig } from '@sylphx/sdk/react'
+import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
+import type * as React from 'react'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
-	children: React.ReactNode;
+	children: React.ReactNode
 	/** Sylphx Publishable Key (required when using Sylphx) */
-	appId: string;
+	appId: string
 	/** Server-fetched config via getAppConfig() (required) */
-	config: AppConfig;
+	config: AppConfig
 	/** Platform URL (optional, defaults to https://sylphx.com) */
-	platformUrl?: string;
+	platformUrl?: string
 }
 
 /**
  * Inner component that has access to user context for feature flags
  */
 function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
-	const { user } = useSafeUser();
-	const { subscription, isPremium } = useSafeBilling();
+	const { user } = useSafeUser()
+	const { subscription, isPremium } = useSafeBilling()
 
 	return (
 		<FeatureFlagProvider
@@ -60,15 +55,10 @@ function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
 		>
 			{children}
 		</FeatureFlagProvider>
-	);
+	)
 }
 
-export function PlatformProvider({
-	children,
-	appId,
-	config,
-	platformUrl,
-}: PlatformProviderProps) {
+export function PlatformProvider({ children, appId, config, platformUrl }: PlatformProviderProps) {
 	return (
 		<SylphxProvider
 			appId={appId}
@@ -78,5 +68,5 @@ export function PlatformProvider({
 		>
 			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
-	);
+	)
 }

@@ -25,10 +25,7 @@ export default function Loading() {
 
 					<div className="space-y-3">
 						{[1, 2, 3].map((i) => (
-							<div
-								key={i}
-								className="flex items-center gap-4 rounded-xl border p-4"
-							>
+							<div key={i} className="flex items-center gap-4 rounded-xl border p-4">
 								<div className="h-12 w-12 animate-pulse rounded-xl bg-muted" />
 								<div className="flex-1">
 									<div className="h-4 w-24 animate-pulse rounded bg-muted" />
@@ -46,10 +43,7 @@ export default function Loading() {
 					<div className="mb-4 h-5 w-24 animate-pulse rounded bg-muted" />
 					<div className="grid grid-cols-2 gap-3">
 						{[1, 2].map((i) => (
-							<div
-								key={i}
-								className="flex items-center gap-3 rounded-xl border p-4"
-							>
+							<div key={i} className="flex items-center gap-3 rounded-xl border p-4">
 								<div className="h-10 w-10 animate-pulse rounded-xl bg-muted" />
 								<div>
 									<div className="h-6 w-8 animate-pulse rounded bg-muted" />
@@ -61,5 +55,5 @@ export default function Loading() {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

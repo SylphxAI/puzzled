@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 /**
  * Error Boundary for Auth Routes
@@ -7,29 +7,29 @@
  * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
  */
 
-import { useErrorTracking } from "@sylphx/sdk/react";
-import { Button } from "@sylphx/ui";
-import { AlertTriangle, Home, RefreshCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useErrorTracking } from '@sylphx/sdk/react'
+import { Button } from '@sylphx/ui'
+import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
 interface ErrorProps {
-	error: Error & { digest?: string };
-	reset: () => void;
+	error: Error & { digest?: string }
+	reset: () => void
 }
 
 export default function AuthError({ error, reset }: ErrorProps) {
-	const { captureException } = useErrorTracking();
-	const reported = useRef(false);
+	const { captureException } = useErrorTracking()
+	const reported = useRef(false)
 
 	useEffect(() => {
-		if (reported.current) return;
-		reported.current = true;
+		if (reported.current) return
+		reported.current = true
 
 		captureException(error, {
-			tags: { boundary: "auth" },
+			tags: { boundary: 'auth' },
 			extra: { digest: error.digest },
-		});
-	}, [error, captureException]);
+		})
+	}, [error, captureException])
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
@@ -57,5 +57,5 @@ export default function AuthError({ error, reset }: ErrorProps) {
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
