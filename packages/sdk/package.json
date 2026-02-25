@@ -1,34 +1,34 @@
 {
 	"name": "@sylphx/sdk",
-	"version": "0.1.0",
+	"version": "0.0.1",
 	"description": "Sylphx SDK - State-of-the-art platform SDK with pure functions",
 	"type": "module",
 	"sideEffects": false,
 	"exports": {
 		".": {
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.mjs",
-			"require": "./dist/index.js",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/index.js"
 		},
 		"./react": {
+			"types": "./dist/react/index.d.ts",
 			"import": "./dist/react/index.mjs",
-			"require": "./dist/react/index.js",
-			"types": "./dist/react/index.d.ts"
+			"require": "./dist/react/index.js"
 		},
 		"./server": {
+			"types": "./dist/server/index.d.ts",
 			"import": "./dist/server/index.mjs",
-			"require": "./dist/server/index.js",
-			"types": "./dist/server/index.d.ts"
+			"require": "./dist/server/index.js"
 		},
 		"./nextjs": {
+			"types": "./dist/nextjs/index.d.ts",
 			"import": "./dist/nextjs/index.mjs",
-			"require": "./dist/nextjs/index.js",
-			"types": "./dist/nextjs/index.d.ts"
+			"require": "./dist/nextjs/index.js"
 		},
 		"./web-analytics": {
+			"types": "./dist/web-analytics.d.ts",
 			"import": "./dist/web-analytics.mjs",
-			"require": "./dist/web-analytics.js",
-			"types": "./dist/web-analytics.d.ts"
+			"require": "./dist/web-analytics.js"
 		}
 	},
 	"main": "./dist/index.js",
