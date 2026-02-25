@@ -2,11 +2,11 @@
  * Storage Context Value Factory
  *
  * Creates the Storage context value for the SylphxProvider.
- * Provides file upload using presigned S3 URLs (MinIO-compatible).
+ * Provides file upload using presigned S3 URLs (B2-compatible).
  *
  * Upload flow:
  * 1. Request presigned upload URL from platform API
- * 2. Upload directly to MinIO (zero server bandwidth)
+ * 2. Upload directly to B2 (zero server bandwidth)
  * 3. Notify platform of completed upload for DB recording
  */
 
@@ -99,9 +99,9 @@ async function uploadWithPresignedUrl(
  * Create Storage context value.
  *
  * Uses presigned S3 URLs for client-side uploads with:
- * - Zero server bandwidth (direct to MinIO)
+ * - Zero server bandwidth (direct to B2)
  * - Real progress tracking via XHR
- * - Works with any S3-compatible storage (MinIO, AWS S3, etc.)
+ * - Works with any S3-compatible storage (B2, AWS S3, etc.)
  */
 export function createStorageValue(
 	config: CreateStorageValueConfig,

@@ -2838,7 +2838,7 @@ function SylphxProviderInner({
 	 *
 	 * Architecture:
 	 * 1. Client calls our /api/storage/upload to get a client token
-	 * 2. Client uploads directly to MinIO via presigned URL (zero server bandwidth)
+	 * 2. Client uploads directly to B2 via presigned URL (zero server bandwidth)
 	 * 3. Platform records file in DB and consumes quota
 	 *
 	 * Benefits:
