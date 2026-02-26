@@ -47,6 +47,7 @@ export * from "./components/skeleton";
 export * from "./components/slot";
 export * from "./components/slider";
 export * from "./components/switch";
+export * from "./components/table";
 export * from "./components/tabs";
 export * from "./components/toast";
 export * from "./components/tooltip";
