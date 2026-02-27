@@ -187,7 +187,7 @@ export async function chat(
 		const error = await response
 			.json()
 			.catch(() => ({ error: { message: "Chat request failed" } }));
-		throw new SylphxError(error.error?.message ?? "Chat request failed", {
+		throw new SylphxError(error?.error?.message ?? "Chat request failed", {
 			code: "BAD_REQUEST",
 		});
 	}
@@ -267,7 +267,7 @@ export function chatStream(
 				const error = await response
 					.json()
 					.catch(() => ({ error: { message: "Stream request failed" } }));
-				throw new SylphxError(error.error?.message ?? "Stream request failed", {
+				throw new SylphxError(error?.error?.message ?? "Stream request failed", {
 					code: "BAD_REQUEST",
 				});
 			}
@@ -366,7 +366,7 @@ export async function embed(
 		const error = await response
 			.json()
 			.catch(() => ({ error: { message: "Embedding request failed" } }));
-		throw new SylphxError(error.error?.message ?? "Embedding request failed", {
+		throw new SylphxError(error?.error?.message ?? "Embedding request failed", {
 			code: "BAD_REQUEST",
 		});
 	}
