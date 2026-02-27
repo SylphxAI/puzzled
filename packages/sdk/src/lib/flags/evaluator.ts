@@ -410,7 +410,7 @@ export class LocalEvaluator {
 	// ==========================================
 
 	private loadFromStorage(): void {
-		if (typeof window === "undefined") return;
+		if (typeof window === "undefined" || typeof localStorage === "undefined") return;
 
 		try {
 			const key = this.config.storageKey ?? "sylphx_flags";
@@ -437,7 +437,7 @@ export class LocalEvaluator {
 	}
 
 	private saveToStorage(): void {
-		if (typeof window === "undefined") return;
+		if (typeof window === "undefined" || typeof localStorage === "undefined") return;
 		if (this.config.offlineSupport === false) return;
 
 		try {
@@ -520,7 +520,7 @@ export class LocalEvaluator {
 		this.evaluationCache.clear();
 		this.context = {};
 
-		if (typeof window !== "undefined" && this.config.offlineSupport !== false) {
+		if (typeof window !== "undefined" && typeof localStorage !== "undefined" && this.config.offlineSupport !== false) {
 			const key = this.config.storageKey ?? "sylphx_flags";
 			localStorage.removeItem(key);
 		}
