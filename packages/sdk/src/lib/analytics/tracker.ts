@@ -591,19 +591,28 @@ export class AnalyticsTracker {
 	private getDeviceContext(): DeviceContext {
 		if (typeof window === "undefined") return {};
 
+		let screenHeight: number | undefined;
+		let screenWidth: number | undefined;
+		try {
+			screenHeight = window.screen?.height;
+			screenWidth = window.screen?.width;
+		} catch {
+			// screen not available in non-browser environments
+		}
+
 		const context: DeviceContext = {
-			$screen_height: window.screen.height,
-			$screen_width: window.screen.width,
+			$screen_height: screenHeight,
+			$screen_width: screenWidth,
 			$viewport_height: window.innerHeight,
 			$viewport_width: window.innerWidth,
 			$device_pixel_ratio: window.devicePixelRatio,
-			$browser_language: navigator.language,
+			$browser_language: typeof navigator !== "undefined" ? navigator.language : undefined,
 			$timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		};
 
 		// Use User-Agent Client Hints API if available (Chromium browsers)
 		// @see https://developer.mozilla.org/en-US/docs/Web/API/NavigatorUAData
-		const uaData = (navigator as NavigatorWithUAData).userAgentData;
+		const uaData = typeof navigator !== "undefined" ? (navigator as NavigatorWithUAData).userAgentData : undefined;
 		if (uaData) {
 			// Sync properties (low entropy, always available)
 			context.$device_type = uaData.mobile ? "Mobile" : "Desktop";
@@ -635,13 +644,14 @@ export class AnalyticsTracker {
 	private detectDeviceType(): DeviceContext["$device_type"] {
 		if (typeof window === "undefined") return undefined;
 
-		const width = window.screen.width;
+		let width: number | undefined;
+		try { width = window.screen?.width; } catch { /* non-browser env */ }
 		const isTouchDevice =
-			"ontouchstart" in window || navigator.maxTouchPoints > 0;
+			"ontouchstart" in window || (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
 
 		if (!isTouchDevice) return "Desktop";
-		if (width < 768) return "Mobile";
-		if (width < 1024) return "Tablet";
+		if (width !== undefined && width < 768) return "Mobile";
+		if (width !== undefined && width < 1024) return "Tablet";
 		return "Desktop";
 	}
 
@@ -772,7 +782,7 @@ export class AnalyticsTracker {
 	}
 
 	private getStorage(): Storage | null {
-		if (typeof window === "undefined") return null;
+		if (typeof window === "undefined" || typeof localStorage === "undefined") return null;
 
 		switch (this.config.persistence) {
 			case "localStorage":
