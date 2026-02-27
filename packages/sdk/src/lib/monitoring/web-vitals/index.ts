@@ -493,7 +493,7 @@ export function getWebVitalsReport(): WebVitalsReport {
 		fcp: metrics.FCP,
 		ttfb: metrics.TTFB,
 		score: calculateScore(metrics),
-		url: typeof window !== "undefined" ? window.location.href : "",
+		url: typeof window !== "undefined" && window.location ? window.location.href : "",
 		userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
 		timestamp: Date.now(),
 	};

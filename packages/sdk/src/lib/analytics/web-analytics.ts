@@ -87,7 +87,7 @@ function getOrCreateSessionId(): string {
 }
 
 function getCurrentPath(hashMode: boolean): string {
-	if (typeof window === "undefined") return "/";
+	if (typeof window === "undefined" || !window.location) return "/";
 	if (hashMode) {
 		return window.location.hash.replace(/^#/, "") || "/";
 	}
@@ -163,9 +163,9 @@ export class WebAnalyticsTracker {
 
 		const payload: PageViewPayload = {
 			path: currentPath,
-			referrer: document.referrer || "",
-			userAgent: navigator.userAgent,
-			screenWidth: window.screen.width,
+			referrer: typeof document !== "undefined" ? document.referrer || "" : "",
+			userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+			screenWidth: window.screen?.width,
 			sessionId: getOrCreateSessionId(),
 			timestamp: Date.now(),
 		};

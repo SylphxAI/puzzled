@@ -709,6 +709,10 @@ export class AnalyticsTracker {
 			};
 		}
 
+		if (!window.location) {
+			return { $current_url: "", $host: "", $pathname: "" };
+		}
+
 		return {
 			$current_url: window.location.href,
 			$host: window.location.host,
@@ -724,6 +728,7 @@ export class AnalyticsTracker {
 		if (typeof window === "undefined") return;
 
 		// UTM params
+		if (!window.location) return;
 		const params = new URLSearchParams(window.location.search);
 		const utmKeys = [
 			"utm_source",
