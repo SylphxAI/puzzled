@@ -2,7 +2,7 @@ FROM oven/bun:alpine AS builder
 WORKDIR /app
 
 # 1. Copy manifest files first — bun install layer cached until lockfile changes
-COPY package.json bun.lockb turbo.json ./
+COPY package.json bun.lock bunfig.toml turbo.json ./
 COPY apps/sylphx/package.json         ./apps/sylphx/
 COPY apps/puzzled/package.json        ./apps/puzzled/
 COPY apps/trivia/package.json         ./apps/trivia/
@@ -12,7 +12,6 @@ COPY packages/ui/package.json         ./packages/ui/
 COPY packages/sylphx-cli/package.json ./packages/sylphx-cli/
 COPY packages/sylphx-runner/package.json ./packages/sylphx-runner/
 COPY packages/create-sylphx-app/package.json ./packages/create-sylphx-app/
-COPY tooling/typescript/package.json  ./tooling/typescript/
 
 # 2. Install with persistent bun cache — fast even on cache miss
 RUN --mount=type=cache,target=/root/.bun/install/cache \
