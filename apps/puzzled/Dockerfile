@@ -28,7 +28,7 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_SYLPHX_APP_ID=$NEXT_PUBLIC_SYLPHX_APP_ID
 
 # 4. Build SDK first (tsup, sequential — avoids OOM from parallel entry points)
-RUN cd packages/sdk && bun run build
+RUN cd packages/sdk && bun run build:docker
 
 # 5. Build Puzzled (Next.js — imports SDK from packages/sdk/dist, UI from src directly)
 RUN cd apps/puzzled && bun run build

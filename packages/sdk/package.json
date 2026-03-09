@@ -34,7 +34,10 @@
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
-	"files": ["dist", "README.md"],
+	"files": [
+		"dist",
+		"README.md"
+	],
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
@@ -45,7 +48,8 @@
 		"prepare": "tsup",
 		"prepublishOnly": "tsup",
 		"generate:types": "openapi-typescript https://sylphx.com/api/openapi.json -o src/generated/api.d.ts",
-		"generate:types:local": "openapi-typescript http://localhost:3002/api/openapi.json -o src/generated/api.d.ts"
+		"generate:types:local": "openapi-typescript http://localhost:3002/api/openapi.json -o src/generated/api.d.ts",
+		"build:docker": "tsup --no-dts"
 	},
 	"publishConfig": {
 		"access": "public",
