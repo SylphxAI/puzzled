@@ -6,8 +6,6 @@ COPY . .
 
 # Single bun install for proper workspace resolution (all packages get their node_modules)
 RUN bun install --ignore-scripts
-# Fix missing peer dependency in @sylphx/sdk that Turbopack requires
-RUN bun add use-sync-external-store --exact 2>/dev/null || true
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 
