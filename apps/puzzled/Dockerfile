@@ -1,5 +1,9 @@
+# Import pre-built SDK (built once in sdk-base job, shared across all app builds)
+FROM registry.sylphx.com/library/sdk-base:latest AS sdk-pre
+
 FROM oven/bun:alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
 # 1. Copy manifest files first — bun install layer cached until lockfile changes
 COPY package.json bun.lock bunfig.toml turbo.json ./
@@ -17,7 +21,11 @@ COPY packages/create-sylphx-app/package.json ./packages/create-sylphx-app/
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --ignore-scripts
 
-# 3. Copy full source (only invalidates the build step, not install)
+# 3. Inject pre-built SDK dist (from sdk-base — no SDK rebuild in this container)
+#    **/dist is in .dockerignore, so COPY . . below will NOT overwrite this.
+COPY --from=sdk-pre /app/packages/sdk/dist ./packages/sdk/dist
+
+# 4. Copy full source (only invalidates the build step, not install)
 COPY . .
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
@@ -27,10 +35,7 @@ ARG NEXT_PUBLIC_SYLPHX_APP_ID
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_SYLPHX_APP_ID=$NEXT_PUBLIC_SYLPHX_APP_ID
 
-# 4. Build SDK first (tsup, sequential — avoids OOM from parallel entry points)
-RUN cd packages/sdk && bun run build:docker
-
-# 5. Build Puzzled (Next.js — imports SDK from packages/sdk/dist, UI from src directly)
+# 5. Build Puzzled (Next.js — SDK already in dist/, UI imported from src directly)
 RUN cd apps/puzzled && bun run build
 
 FROM node:alpine AS runner
