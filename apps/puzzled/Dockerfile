@@ -1,21 +1,36 @@
 FROM oven/bun:alpine AS builder
 WORKDIR /app
 
-# Copy all source first
-COPY . .
+# 1. Copy manifest files first — bun install layer cached until lockfile changes
+COPY package.json bun.lockb turbo.json ./
+COPY apps/sylphx/package.json         ./apps/sylphx/
+COPY apps/puzzled/package.json        ./apps/puzzled/
+COPY apps/trivia/package.json         ./apps/trivia/
+COPY apps/storage-worker/package.json ./apps/storage-worker/
+COPY packages/sdk/package.json        ./packages/sdk/
+COPY packages/ui/package.json         ./packages/ui/
+COPY packages/sylphx-cli/package.json ./packages/sylphx-cli/
+COPY packages/sylphx-runner/package.json ./packages/sylphx-runner/
+COPY packages/create-sylphx-app/package.json ./packages/create-sylphx-app/
+COPY tooling/typescript/package.json  ./tooling/typescript/
 
-# Single bun install for proper workspace resolution (all packages get their node_modules)
-RUN bun install --ignore-scripts
+# 2. Install with persistent bun cache — fast even on cache miss
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --ignore-scripts
+
+# 3. Copy full source (only invalidates the build step, not install)
+COPY . .
 
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 
-# Build args for env vars needed at build time (NEXT_PUBLIC_*)
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_SYLPHX_APP_ID
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_SYLPHX_APP_ID=$NEXT_PUBLIC_SYLPHX_APP_ID
 
-RUN ./node_modules/.bin/turbo run build --filter=@sylphx/puzzled
+# 4. Build — runs only when source changes (install above is cached)
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    ./node_modules/.bin/turbo run build --filter=@sylphx/puzzled
 
 FROM node:alpine AS runner
 WORKDIR /app
