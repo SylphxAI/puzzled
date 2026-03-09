@@ -27,9 +27,11 @@ ARG NEXT_PUBLIC_SYLPHX_APP_ID
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_PUBLIC_SYLPHX_APP_ID=$NEXT_PUBLIC_SYLPHX_APP_ID
 
-# 4. Build — runs only when source changes (install above is cached)
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    ./node_modules/.bin/turbo run build --filter=@sylphx/puzzled
+# 4. Build SDK first (tsup, sequential — avoids OOM from parallel entry points)
+RUN cd packages/sdk && bun run build
+
+# 5. Build Puzzled (Next.js — imports SDK from packages/sdk/dist, UI from src directly)
+RUN cd apps/puzzled && bun run build
 
 FROM node:alpine AS runner
 WORKDIR /app
