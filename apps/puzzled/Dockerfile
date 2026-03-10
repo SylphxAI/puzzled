@@ -1,5 +1,5 @@
 # Import pre-built SDK (built once in sdk-base job, shared across all app builds)
-FROM registry.sylphx.com/library/sdk-base:latest AS sdk-pre
+FROM registry.sylphx.com/sylphx/sdk-base:latest AS sdk-pre
 
 FROM oven/bun:alpine AS builder
 WORKDIR /app
