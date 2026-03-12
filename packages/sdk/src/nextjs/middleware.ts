@@ -27,24 +27,21 @@
  * That's it. No /api/auth/* routes needed.
  */
 
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from "../constants";
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { DEFAULT_PLATFORM_URL, TOKEN_EXPIRY_BUFFER_MS } from '../constants'
+import { getCookieNamespace, validateAndSanitizeSecretKey } from '../key-validation'
+import type { TokenResponse } from '../types'
 import {
-	getCookieNamespace,
-	validateAndSanitizeSecretKey,
-} from "../key-validation";
-import type { TokenResponse } from "../types";
-import {
+	clearAuthCookiesMiddleware,
+	getCookieNames,
 	REFRESH_TOKEN_LIFETIME,
 	SECURE_COOKIE_OPTIONS,
 	SESSION_TOKEN_LIFETIME,
+	setAuthCookiesMiddleware,
 	USER_COOKIE_OPTIONS,
 	type UserCookieData,
-	clearAuthCookiesMiddleware,
-	getCookieNames,
-	setAuthCookiesMiddleware,
-} from "./cookies";
+} from './cookies'
 
 // =============================================================================
 // Types
@@ -58,7 +55,7 @@ export interface SylphxMiddlewareConfig {
 	 * @example ['/', '/about', '/pricing', '/blog/*']
 	 * @default ['/']
 	 */
-	publicRoutes?: string[];
+	publicRoutes?: string[]
 
 	/**
 	 * Routes that middleware should completely ignore.
@@ -66,25 +63,25 @@ export interface SylphxMiddlewareConfig {
 	 *
 	 * @default []
 	 */
-	ignoredRoutes?: string[];
+	ignoredRoutes?: string[]
 
 	/**
 	 * URL to redirect unauthenticated users.
 	 * @default '/login'
 	 */
-	signInUrl?: string;
+	signInUrl?: string
 
 	/**
 	 * URL to redirect after sign out.
 	 * @default '/'
 	 */
-	afterSignOutUrl?: string;
+	afterSignOutUrl?: string
 
 	/**
 	 * URL to redirect after successful sign in.
 	 * @default '/dashboard'
 	 */
-	afterSignInUrl?: string;
+	afterSignInUrl?: string
 
 	/**
 	 * Auth routes prefix. Routes are mounted at:
@@ -93,13 +90,13 @@ export interface SylphxMiddlewareConfig {
 	 *
 	 * @default '/auth'
 	 */
-	authPrefix?: string;
+	authPrefix?: string
 
 	/**
 	 * Enable debug logging.
 	 * @default false
 	 */
-	debug?: boolean;
+	debug?: boolean
 
 	/**
 	 * Secret key for authentication.
@@ -109,7 +106,7 @@ export interface SylphxMiddlewareConfig {
 	 *
 	 * @default process.env.SYLPHX_SECRET_KEY
 	 */
-	secretKey?: string;
+	secretKey?: string
 
 	/**
 	 * Platform URL for API calls.
@@ -117,7 +114,7 @@ export interface SylphxMiddlewareConfig {
 	 *
 	 * @default process.env.SYLPHX_PLATFORM_URL || 'https://sylphx.com'
 	 */
-	platformUrl?: string;
+	platformUrl?: string
 
 	/**
 	 * Callback to add custom headers/logic to responses.
@@ -132,10 +129,7 @@ export interface SylphxMiddlewareConfig {
 	 * }
 	 * ```
 	 */
-	onResponse?: (
-		response: NextResponse,
-		request: NextRequest,
-	) => void | Promise<void>;
+	onResponse?: (response: NextResponse, request: NextRequest) => void | Promise<void>
 }
 
 // =============================================================================
@@ -147,31 +141,29 @@ export interface SylphxMiddlewareConfig {
  */
 function isTokenResponse(data: unknown): data is TokenResponse {
 	return (
-		typeof data === "object" &&
+		typeof data === 'object' &&
 		data !== null &&
-		"accessToken" in data &&
-		"refreshToken" in data &&
-		"user" in data &&
-		typeof (data as TokenResponse).accessToken === "string" &&
-		typeof (data as TokenResponse).refreshToken === "string"
-	);
+		'accessToken' in data &&
+		'refreshToken' in data &&
+		'user' in data &&
+		typeof (data as TokenResponse).accessToken === 'string' &&
+		typeof (data as TokenResponse).refreshToken === 'string'
+	)
 }
 
 /**
  * Decode JWT payload without verification (for expiry check)
  */
-function decodeJwtPayload(
-	token: string,
-): { exp?: number; sub?: string } | null {
+function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
 	try {
-		const parts = token.split(".");
-		if (parts.length !== 3) return null;
-		const payload = parts[1];
-		const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-		const jsonPayload = atob(base64);
-		return JSON.parse(jsonPayload);
+		const parts = token.split('.')
+		if (parts.length !== 3) return null
+		const payload = parts[1]
+		const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+		const jsonPayload = atob(base64)
+		return JSON.parse(jsonPayload)
 	} catch {
-		return null;
+		return null
 	}
 }
 
@@ -179,32 +171,32 @@ function decodeJwtPayload(
  * Check if token is expired (with 30s buffer)
  */
 function isTokenExpired(token: string): boolean {
-	const payload = decodeJwtPayload(token);
-	if (!payload?.exp) return true;
-	return payload.exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS;
+	const payload = decodeJwtPayload(token)
+	if (!payload?.exp) return true
+	return payload.exp * 1000 < Date.now() + TOKEN_EXPIRY_BUFFER_MS
 }
 
 /**
  * Check if path matches pattern
  */
 function matchesPattern(pathname: string, pattern: string): boolean {
-	if (pattern === pathname) return true;
-	if (pattern.endsWith("/*")) {
-		const base = pattern.slice(0, -2);
-		return pathname === base || pathname.startsWith(`${base}/`);
+	if (pattern === pathname) return true
+	if (pattern.endsWith('/*')) {
+		const base = pattern.slice(0, -2)
+		return pathname === base || pathname.startsWith(`${base}/`)
 	}
-	if (pattern.endsWith("/**")) {
-		const base = pattern.slice(0, -3);
-		return pathname === base || pathname.startsWith(`${base}/`);
+	if (pattern.endsWith('/**')) {
+		const base = pattern.slice(0, -3)
+		return pathname === base || pathname.startsWith(`${base}/`)
 	}
-	return false;
+	return false
 }
 
 /**
  * Check if pathname matches any patterns
  */
 function matchesAny(pathname: string, patterns: string[]): boolean {
-	return patterns.some((p) => matchesPattern(pathname, p));
+	return patterns.some((p) => matchesPattern(pathname, p))
 }
 
 // =============================================================================
@@ -212,96 +204,88 @@ function matchesAny(pathname: string, patterns: string[]): boolean {
 // =============================================================================
 
 interface MiddlewareContext {
-	secretKey: string;
-	platformUrl: string;
-	namespace: string;
-	cookieNames: ReturnType<typeof getCookieNames>;
+	secretKey: string
+	platformUrl: string
+	namespace: string
+	cookieNames: ReturnType<typeof getCookieNames>
 	config: {
-		publicRoutes: string[];
-		ignoredRoutes: string[];
-		signInUrl: string;
-		afterSignOutUrl: string;
-		afterSignInUrl: string;
-		authPrefix: string;
-		debug: boolean;
-		onResponse?: (
-			response: NextResponse,
-			request: NextRequest,
-		) => void | Promise<void>;
-	};
-	log: (msg: string, data?: unknown) => void;
+		publicRoutes: string[]
+		ignoredRoutes: string[]
+		signInUrl: string
+		afterSignOutUrl: string
+		afterSignInUrl: string
+		authPrefix: string
+		debug: boolean
+		onResponse?: (response: NextResponse, request: NextRequest) => void | Promise<void>
+	}
+	log: (msg: string, data?: unknown) => void
 }
 
 /**
  * Handle OAuth callback
  * GET {authPrefix}/callback?code=xxx
  */
-async function handleCallback(
-	request: NextRequest,
-	ctx: MiddlewareContext,
-): Promise<NextResponse> {
-	const { searchParams } = request.nextUrl;
-	const code = searchParams.get("code");
-	const error = searchParams.get("error");
-	const errorDescription = searchParams.get("error_description");
-	const redirectTo =
-		searchParams.get("redirect_to") || ctx.config.afterSignInUrl;
+async function handleCallback(request: NextRequest, ctx: MiddlewareContext): Promise<NextResponse> {
+	const { searchParams } = request.nextUrl
+	const code = searchParams.get('code')
+	const error = searchParams.get('error')
+	const errorDescription = searchParams.get('error_description')
+	const redirectTo = searchParams.get('redirect_to') || ctx.config.afterSignInUrl
 
-	ctx.log("Callback", { hasCode: !!code, error });
+	ctx.log('Callback', { hasCode: !!code, error })
 
 	// Handle OAuth errors
 	if (error) {
-		const url = new URL(ctx.config.signInUrl, request.url);
-		url.searchParams.set("error", error);
-		if (errorDescription)
-			url.searchParams.set("error_description", errorDescription);
-		return NextResponse.redirect(url);
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', error)
+		if (errorDescription) url.searchParams.set('error_description', errorDescription)
+		return NextResponse.redirect(url)
 	}
 
 	if (!code) {
-		const url = new URL(ctx.config.signInUrl, request.url);
-		url.searchParams.set("error", "missing_code");
-		return NextResponse.redirect(url);
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', 'missing_code')
+		return NextResponse.redirect(url)
 	}
 
 	try {
 		// Exchange code for tokens
-		const res = await fetch(`${ctx.platformUrl}/api/auth/token`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
+		const res = await fetch(`${ctx.platformUrl}/api/v1/auth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				grant_type: "authorization_code",
+				grant_type: 'authorization_code',
 				code,
 				client_secret: ctx.secretKey,
 			}),
-		});
+		})
 
 		if (!res.ok) {
-			const data = (await res.json().catch(() => ({}))) as { error?: string };
-			const url = new URL(ctx.config.signInUrl, request.url);
-			url.searchParams.set("error", data.error || "token_exchange_failed");
-			return NextResponse.redirect(url);
+			const data = (await res.json().catch(() => ({}))) as { error?: string }
+			const url = new URL(ctx.config.signInUrl, request.url)
+			url.searchParams.set('error', data.error || 'token_exchange_failed')
+			return NextResponse.redirect(url)
 		}
 
-		const data: unknown = await res.json();
+		const data: unknown = await res.json()
 		if (!isTokenResponse(data)) {
-			const url = new URL(ctx.config.signInUrl, request.url);
-			url.searchParams.set("error", "invalid_response");
-			return NextResponse.redirect(url);
+			const url = new URL(ctx.config.signInUrl, request.url)
+			url.searchParams.set('error', 'invalid_response')
+			return NextResponse.redirect(url)
 		}
 
 		// Success: set cookies and redirect
-		const successUrl = new URL(redirectTo, request.url);
-		const response = NextResponse.redirect(successUrl);
-		setAuthCookiesMiddleware(response, ctx.namespace, data);
+		const successUrl = new URL(redirectTo, request.url)
+		const response = NextResponse.redirect(successUrl)
+		setAuthCookiesMiddleware(response, ctx.namespace, data)
 
-		ctx.log("Callback success", { redirectTo });
-		return response;
+		ctx.log('Callback success', { redirectTo })
+		return response
 	} catch (err) {
-		console.error("[Sylphx] Callback error:", err);
-		const url = new URL(ctx.config.signInUrl, request.url);
-		url.searchParams.set("error", "internal_error");
-		return NextResponse.redirect(url);
+		console.error('[Sylphx] Callback error:', err)
+		const url = new URL(ctx.config.signInUrl, request.url)
+		url.searchParams.set('error', 'internal_error')
+		return NextResponse.redirect(url)
 	}
 }
 
@@ -309,37 +293,34 @@ async function handleCallback(
  * Handle sign out
  * GET/POST {authPrefix}/signout
  */
-async function handleSignOut(
-	request: NextRequest,
-	ctx: MiddlewareContext,
-): Promise<NextResponse> {
-	ctx.log("Signout");
+async function handleSignOut(request: NextRequest, ctx: MiddlewareContext): Promise<NextResponse> {
+	ctx.log('Signout')
 
-	const refreshToken = request.cookies.get(ctx.cookieNames.REFRESH)?.value;
+	const refreshToken = request.cookies.get(ctx.cookieNames.REFRESH)?.value
 
 	// Revoke token on platform (best-effort)
 	if (refreshToken) {
 		try {
-			await fetch(`${ctx.platformUrl}/api/auth/revoke`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
+			await fetch(`${ctx.platformUrl}/api/v1/auth/revoke`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					token: refreshToken,
 					client_secret: ctx.secretKey,
 				}),
-			});
+			})
 		} catch {
 			// Ignore
 		}
 	}
 
 	// Clear cookies and redirect
-	const url = new URL(ctx.config.afterSignOutUrl, request.url);
-	const response = NextResponse.redirect(url);
-	clearAuthCookiesMiddleware(response, ctx.namespace);
+	const url = new URL(ctx.config.afterSignOutUrl, request.url)
+	const response = NextResponse.redirect(url)
+	clearAuthCookiesMiddleware(response, ctx.namespace)
 
-	ctx.log("Signout complete");
-	return response;
+	ctx.log('Signout complete')
+	return response
 }
 
 /**
@@ -350,33 +331,24 @@ async function handleSignOut(
  * This enables the BFF (Backend-for-Frontend) pattern where clients need
  * bearer tokens for external API calls but tokens are stored in HttpOnly cookies.
  */
-function handleToken(
-	request: NextRequest,
-	ctx: MiddlewareContext,
-): NextResponse {
-	ctx.log("Token request");
+function handleToken(request: NextRequest, ctx: MiddlewareContext): NextResponse {
+	ctx.log('Token request')
 
-	const sessionToken = request.cookies.get(ctx.cookieNames.SESSION)?.value;
+	const sessionToken = request.cookies.get(ctx.cookieNames.SESSION)?.value
 
 	if (!sessionToken) {
-		ctx.log("No session token");
-		return NextResponse.json(
-			{ error: "Not authenticated", accessToken: null },
-			{ status: 401 },
-		);
+		ctx.log('No session token')
+		return NextResponse.json({ error: 'Not authenticated', accessToken: null }, { status: 401 })
 	}
 
 	// Check if token is expired
 	if (isTokenExpired(sessionToken)) {
-		ctx.log("Session token expired");
-		return NextResponse.json(
-			{ error: "Session expired", accessToken: null },
-			{ status: 401 },
-		);
+		ctx.log('Session token expired')
+		return NextResponse.json({ error: 'Session expired', accessToken: null }, { status: 401 })
 	}
 
-	ctx.log("Token returned");
-	return NextResponse.json({ accessToken: sessionToken });
+	ctx.log('Token returned')
+	return NextResponse.json({ accessToken: sessionToken })
 }
 
 /**
@@ -386,35 +358,35 @@ async function refreshTokens(
 	refreshToken: string,
 	ctx: MiddlewareContext,
 ): Promise<TokenResponse | null> {
-	ctx.log("Refreshing tokens");
+	ctx.log('Refreshing tokens')
 
 	try {
-		const res = await fetch(`${ctx.platformUrl}/api/auth/token`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
+		const res = await fetch(`${ctx.platformUrl}/api/v1/auth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				grant_type: "refresh_token",
+				grant_type: 'refresh_token',
 				refresh_token: refreshToken,
 				client_secret: ctx.secretKey,
 			}),
-		});
+		})
 
 		if (!res.ok) {
-			ctx.log("Refresh failed", res.status);
-			return null;
+			ctx.log('Refresh failed', res.status)
+			return null
 		}
 
-		const data: unknown = await res.json();
+		const data: unknown = await res.json()
 		if (!isTokenResponse(data)) {
-			ctx.log("Invalid refresh response");
-			return null;
+			ctx.log('Invalid refresh response')
+			return null
 		}
 
-		ctx.log("Refresh success");
-		return data;
+		ctx.log('Refresh success')
+		return data
 	} catch (err) {
-		ctx.log("Refresh error", err);
-		return null;
+		ctx.log('Refresh error', err)
+		return null
 	}
 }
 
@@ -445,59 +417,57 @@ async function refreshTokens(
  * }
  * ```
  */
-export function createSylphxMiddleware(
-	userConfig: SylphxMiddlewareConfig = {},
-) {
+export function createSylphxMiddleware(userConfig: SylphxMiddlewareConfig = {}) {
 	// ==========================================================================
 	// Configuration (validated at startup, not per-request)
 	// ==========================================================================
 
 	// Secret key: prefer config, fallback to env var
-	const rawSecretKey = userConfig.secretKey || process.env.SYLPHX_SECRET_KEY;
+	const rawSecretKey = userConfig.secretKey || process.env.SYLPHX_SECRET_KEY
 	if (!rawSecretKey) {
 		throw new Error(
-			"[Sylphx] Secret key is required.\n" +
-				"Either pass secretKey in config or set SYLPHX_SECRET_KEY env var.\n" +
-				"Get your key from Sylphx Console → API Keys.",
-		);
+			'[Sylphx] Secret key is required.\n' +
+				'Either pass secretKey in config or set SYLPHX_SECRET_KEY env var.\n' +
+				'Get your key from Sylphx Console → API Keys.',
+		)
 	}
 
-	const secretKey = validateAndSanitizeSecretKey(rawSecretKey);
+	const secretKey = validateAndSanitizeSecretKey(rawSecretKey)
 
 	// Platform URL: prefer config, then env var, then default
 	const platformUrl = (
 		userConfig.platformUrl ||
 		process.env.SYLPHX_PLATFORM_URL ||
 		DEFAULT_PLATFORM_URL
-	).trim();
+	).trim()
 
-	const namespace = getCookieNamespace(secretKey);
-	const cookieNames = getCookieNames(namespace);
+	const namespace = getCookieNamespace(secretKey)
+	const cookieNames = getCookieNames(namespace)
 
 	const config = {
-		publicRoutes: userConfig.publicRoutes ?? ["/"],
+		publicRoutes: userConfig.publicRoutes ?? ['/'],
 		ignoredRoutes: userConfig.ignoredRoutes ?? [],
-		signInUrl: userConfig.signInUrl ?? "/login",
-		afterSignOutUrl: userConfig.afterSignOutUrl ?? "/",
-		afterSignInUrl: userConfig.afterSignInUrl ?? "/dashboard",
-		authPrefix: userConfig.authPrefix ?? "/auth",
+		signInUrl: userConfig.signInUrl ?? '/login',
+		afterSignOutUrl: userConfig.afterSignOutUrl ?? '/',
+		afterSignInUrl: userConfig.afterSignInUrl ?? '/dashboard',
+		authPrefix: userConfig.authPrefix ?? '/auth',
 		debug: userConfig.debug ?? false,
 		onResponse: userConfig.onResponse,
-	};
+	}
 
 	// Auth routes and sign-in URL are always public
 	const publicRoutes = [
 		...config.publicRoutes,
 		config.signInUrl,
-		"/signup",
+		'/signup',
 		`${config.authPrefix}/*`,
-	];
+	]
 
 	const log = (msg: string, data?: unknown) => {
 		if (config.debug) {
-			console.log(`[Sylphx] ${msg}`, data ?? "");
+			console.log(`[Sylphx] ${msg}`, data ?? '')
 		}
-	};
+	}
 
 	const ctx: MiddlewareContext = {
 		secretKey,
@@ -506,31 +476,29 @@ export function createSylphxMiddleware(
 		cookieNames,
 		config,
 		log,
-	};
+	}
 
 	// ==========================================================================
 	// Middleware Function
 	// ==========================================================================
 
-	return async function middleware(
-		request: NextRequest,
-	): Promise<NextResponse> {
-		const { pathname } = request.nextUrl;
+	return async function middleware(request: NextRequest): Promise<NextResponse> {
+		const { pathname } = request.nextUrl
 
-		log(`${request.method} ${pathname}`);
+		log(`${request.method} ${pathname}`)
 
 		// ======================================================================
 		// Skip: Ignored routes, static files
 		// ======================================================================
 
 		if (matchesAny(pathname, config.ignoredRoutes)) {
-			log("Ignored route");
-			return NextResponse.next();
+			log('Ignored route')
+			return NextResponse.next()
 		}
 
 		// Skip files with extensions and Next.js internals
-		if (pathname.includes(".") || pathname.startsWith("/_next")) {
-			return NextResponse.next();
+		if (pathname.includes('.') || pathname.startsWith('/_next')) {
+			return NextResponse.next()
 		}
 
 		// ======================================================================
@@ -538,42 +506,42 @@ export function createSylphxMiddleware(
 		// ======================================================================
 
 		if (pathname === `${config.authPrefix}/callback`) {
-			return handleCallback(request, ctx);
+			return handleCallback(request, ctx)
 		}
 
 		if (pathname === `${config.authPrefix}/signout`) {
-			return handleSignOut(request, ctx);
+			return handleSignOut(request, ctx)
 		}
 
 		if (pathname === `${config.authPrefix}/token`) {
-			return handleToken(request, ctx);
+			return handleToken(request, ctx)
 		}
 
 		// ======================================================================
 		// Token Refresh (Every Request)
 		// ======================================================================
 
-		const sessionToken = request.cookies.get(cookieNames.SESSION)?.value;
-		const refreshToken = request.cookies.get(cookieNames.REFRESH)?.value;
-		const hasValidSession = sessionToken && !isTokenExpired(sessionToken);
+		const sessionToken = request.cookies.get(cookieNames.SESSION)?.value
+		const refreshToken = request.cookies.get(cookieNames.REFRESH)?.value
+		const hasValidSession = sessionToken && !isTokenExpired(sessionToken)
 
-		const response = NextResponse.next();
-		let isAuthenticated = hasValidSession;
+		const response = NextResponse.next()
+		let isAuthenticated = hasValidSession
 
 		// Session expired + refresh token exists → refresh server-side
 		if (!hasValidSession && refreshToken) {
-			log("Session expired, refreshing");
+			log('Session expired, refreshing')
 
-			const tokens = await refreshTokens(refreshToken, ctx);
+			const tokens = await refreshTokens(refreshToken, ctx)
 
 			if (tokens) {
 				// Success: update cookies
-				setAuthCookiesMiddleware(response, namespace, tokens);
-				isAuthenticated = true;
+				setAuthCookiesMiddleware(response, namespace, tokens)
+				isAuthenticated = true
 			} else {
 				// Failed: clear cookies
-				clearAuthCookiesMiddleware(response, namespace);
-				isAuthenticated = false;
+				clearAuthCookiesMiddleware(response, namespace)
+				isAuthenticated = false
 			}
 		}
 
@@ -581,20 +549,20 @@ export function createSylphxMiddleware(
 		// Route Protection
 		// ======================================================================
 
-		const isPublic = matchesAny(pathname, publicRoutes);
+		const isPublic = matchesAny(pathname, publicRoutes)
 
 		// Protected route + not authenticated → redirect to sign-in
 		if (!isPublic && !isAuthenticated) {
-			log("Redirecting to sign-in");
-			const url = new URL(config.signInUrl, request.url);
-			url.searchParams.set("redirect_to", pathname);
-			return NextResponse.redirect(url);
+			log('Redirecting to sign-in')
+			const url = new URL(config.signInUrl, request.url)
+			url.searchParams.set('redirect_to', pathname)
+			return NextResponse.redirect(url)
 		}
 
 		// Authenticated + on sign-in page → redirect to dashboard
 		if (isAuthenticated && pathname === config.signInUrl) {
-			log("Redirecting from sign-in to dashboard");
-			return NextResponse.redirect(new URL(config.afterSignInUrl, request.url));
+			log('Redirecting from sign-in to dashboard')
+			return NextResponse.redirect(new URL(config.afterSignInUrl, request.url))
 		}
 
 		// ======================================================================
@@ -602,11 +570,11 @@ export function createSylphxMiddleware(
 		// ======================================================================
 
 		if (config.onResponse) {
-			await config.onResponse(response, request);
+			await config.onResponse(response, request)
 		}
 
-		return response;
-	};
+		return response
+	}
 }
 
 // =============================================================================
@@ -618,13 +586,13 @@ export function createSylphxMiddleware(
  */
 export function createMatcher(): { matcher: string[] } {
 	return {
-		matcher: ["/((?!_next|monitoring|.*\\..*).*)", "/"],
-	};
+		matcher: ['/((?!_next|monitoring|.*\\..*).*)', '/'],
+	}
 }
 
 /**
  * Get cookie namespace from secret key (for advanced use)
  */
 export function getNamespace(secretKey: string): string {
-	return getCookieNamespace(validateAndSanitizeSecretKey(secretKey));
+	return getCookieNamespace(validateAndSanitizeSecretKey(secretKey))
 }

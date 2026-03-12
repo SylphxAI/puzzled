@@ -10,22 +10,21 @@
  * Run `bun run generate:types:local` to regenerate after API changes.
  */
 
-import { type SylphxConfig, buildHeaders, callApi } from "./config";
-import { SylphxError } from "./errors";
-import type { components } from "./generated/api";
+import { buildHeaders, callApi, type SylphxConfig } from './config'
+import { SylphxError } from './errors'
+import type { components } from './generated/api'
 
 // ============================================================================
 // Types (re-exported from generated OpenAPI spec)
 // ============================================================================
 
-export type LoginRequest = components["schemas"]["LoginRequest"];
-export type LoginResponse = components["schemas"]["LoginResponse"];
-export type RegisterRequest = components["schemas"]["RegisterRequest"];
-export type RegisterResponse = components["schemas"]["RegisterResponse"];
-export type TokenResponse = components["schemas"]["TokenResponse"];
-export type TwoFactorVerifyRequest =
-	components["schemas"]["TwoFactorVerifyRequest"];
-export type MeResponse = components["schemas"]["MeResponse"];
+export type LoginRequest = components['schemas']['LoginRequest']
+export type LoginResponse = components['schemas']['LoginResponse']
+export type RegisterRequest = components['schemas']['RegisterRequest']
+export type RegisterResponse = components['schemas']['RegisterResponse']
+export type TokenResponse = components['schemas']['TokenResponse']
+export type TwoFactorVerifyRequest = components['schemas']['TwoFactorVerifyRequest']
+export type MeResponse = components['schemas']['MeResponse']
 
 // SDK-specific types (not directly from API schema)
 /**
@@ -33,29 +32,29 @@ export type MeResponse = components["schemas"]["MeResponse"];
  */
 export interface TokenIntrospectionResult {
 	/** Whether the token is active/valid */
-	active: boolean;
+	active: boolean
 	/** Token type (access_token or refresh_token) */
-	token_type?: "access_token" | "refresh_token";
+	token_type?: 'access_token' | 'refresh_token'
 	/** User ID */
-	sub?: string;
+	sub?: string
 	/** User email */
-	email?: string;
+	email?: string
 	/** User name */
-	name?: string;
+	name?: string
 	/** App ID */
-	client_id?: string;
+	client_id?: string
 	/** Audience */
-	aud?: string;
+	aud?: string
 	/** Issuer */
-	iss?: string;
+	iss?: string
 	/** Expiration time (Unix timestamp) */
-	exp?: number;
+	exp?: number
 	/** Issued at time (Unix timestamp) */
-	iat?: number;
+	iat?: number
 	/** User role */
-	role?: string;
+	role?: string
 	/** Email verification status */
-	email_verified?: boolean;
+	email_verified?: boolean
 }
 
 /**
@@ -63,20 +62,20 @@ export interface TokenIntrospectionResult {
  */
 export interface RevokeTokenOptions {
 	/** Revoke all tokens for a user in this app */
-	revokeAll?: boolean;
+	revokeAll?: boolean
 	/** User ID (required when revoking all) */
-	userId?: string;
+	userId?: string
 }
 
 // SDK-specific types (not in generated API)
 export interface SessionResult {
 	user: {
-		id: string;
-		email: string;
-		name: string | null;
-		image: string | null;
-		emailVerified: boolean;
-	} | null;
+		id: string
+		email: string
+		name: string | null
+		image: string | null
+		emailVerified: boolean
+	} | null
 }
 
 // ============================================================================
@@ -97,14 +96,11 @@ export interface SessionResult {
  * }
  * ```
  */
-export async function signIn(
-	config: SylphxConfig,
-	input: LoginRequest,
-): Promise<LoginResponse> {
-	return callApi<LoginResponse>(config, "/auth/login", {
-		method: "POST",
+export async function signIn(config: SylphxConfig, input: LoginRequest): Promise<LoginResponse> {
+	return callApi<LoginResponse>(config, '/auth/login', {
+		method: 'POST',
 		body: input,
-	});
+	})
 }
 
 /**
@@ -124,10 +120,10 @@ export async function signUp(
 	config: SylphxConfig,
 	input: RegisterRequest,
 ): Promise<RegisterResponse> {
-	return callApi<RegisterResponse>(config, "/auth/register", {
-		method: "POST",
+	return callApi<RegisterResponse>(config, '/auth/register', {
+		method: 'POST',
 		body: input,
-	});
+	})
 }
 
 /**
@@ -139,7 +135,7 @@ export async function signUp(
  * ```
  */
 export async function signOut(config: SylphxConfig): Promise<void> {
-	await callApi<void>(config, "/auth/logout", { method: "POST" });
+	await callApi<void>(config, '/auth/logout', { method: 'POST' })
 }
 
 /**
@@ -151,30 +147,25 @@ export async function signOut(config: SylphxConfig): Promise<void> {
  * const newConfig = withToken(config, tokens.accessToken)
  * ```
  */
-export async function refreshToken(
-	config: SylphxConfig,
-	token: string,
-): Promise<TokenResponse> {
-	const response = await fetch(`${config.platformUrl}/api/auth/token`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+export async function refreshToken(config: SylphxConfig, token: string): Promise<TokenResponse> {
+	const response = await fetch(`${config.platformUrl}/api/v1/auth/token`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-			grant_type: "refresh_token",
+			grant_type: 'refresh_token',
 			refresh_token: token,
 			client_secret: config.secretKey,
 		}),
-	});
+	})
 
 	if (!response.ok) {
-		const error = await response
-			.json()
-			.catch(() => ({ message: "Token refresh failed" }));
-		throw new SylphxError(error.message ?? "Token refresh failed", {
-			code: "UNAUTHORIZED",
-		});
+		const error = await response.json().catch(() => ({ message: 'Token refresh failed' }))
+		throw new SylphxError(error.message ?? 'Token refresh failed', {
+			code: 'UNAUTHORIZED',
+		})
 	}
 
-	return response.json();
+	return response.json()
 }
 
 /**
@@ -185,23 +176,18 @@ export async function refreshToken(
  * await verifyEmail(config, token)
  * ```
  */
-export async function verifyEmail(
-	config: SylphxConfig,
-	token: string,
-): Promise<void> {
-	const response = await fetch(`${config.platformUrl}/api/auth/verify-email`, {
-		method: "POST",
+export async function verifyEmail(config: SylphxConfig, token: string): Promise<void> {
+	const response = await fetch(`${config.platformUrl}/api/v1/auth/verify-email`, {
+		method: 'POST',
 		headers: buildHeaders(config),
 		body: JSON.stringify({ token }),
-	});
+	})
 
 	if (!response.ok) {
-		const error = await response
-			.json()
-			.catch(() => ({ message: "Email verification failed" }));
-		throw new SylphxError(error.message ?? "Email verification failed", {
-			code: "BAD_REQUEST",
-		});
+		const error = await response.json().catch(() => ({ message: 'Email verification failed' }))
+		throw new SylphxError(error.message ?? 'Email verification failed', {
+			code: 'BAD_REQUEST',
+		})
 	}
 }
 
@@ -213,14 +199,11 @@ export async function verifyEmail(
  * await forgotPassword(config, 'user@example.com')
  * ```
  */
-export async function forgotPassword(
-	config: SylphxConfig,
-	email: string,
-): Promise<void> {
-	await callApi<{ success: boolean }>(config, "/auth/forgot-password", {
-		method: "POST",
+export async function forgotPassword(config: SylphxConfig, email: string): Promise<void> {
+	await callApi<{ success: boolean }>(config, '/auth/forgot-password', {
+		method: 'POST',
 		body: { email },
-	});
+	})
 }
 
 /**
@@ -235,10 +218,10 @@ export async function resetPassword(
 	config: SylphxConfig,
 	input: { token: string; password: string },
 ): Promise<void> {
-	await callApi<{ success: boolean }>(config, "/auth/reset-password", {
-		method: "POST",
+	await callApi<{ success: boolean }>(config, '/auth/reset-password', {
+		method: 'POST',
 		body: { token: input.token, newPassword: input.password },
-	});
+	})
 }
 
 /**
@@ -254,14 +237,14 @@ export async function resetPassword(
  */
 export async function getSession(config: SylphxConfig): Promise<SessionResult> {
 	if (!config.accessToken) {
-		return { user: null };
+		return { user: null }
 	}
 
 	try {
-		const user = await callApi<SessionResult["user"]>(config, "/auth/me");
-		return { user };
+		const user = await callApi<SessionResult['user']>(config, '/auth/me')
+		return { user }
 	} catch {
-		return { user: null };
+		return { user: null }
 	}
 }
 
@@ -281,10 +264,10 @@ export async function verifyTwoFactor(
 	userId: string,
 	code: string,
 ): Promise<TokenResponse> {
-	return callApi<TokenResponse>(config, "/auth/verify-2fa", {
-		method: "POST",
+	return callApi<TokenResponse>(config, '/auth/verify-2fa', {
+		method: 'POST',
 		body: { userId, code },
-	});
+	})
 }
 
 /**
@@ -307,24 +290,24 @@ export async function verifyTwoFactor(
 export async function introspectToken(
 	config: SylphxConfig,
 	token: string,
-	tokenTypeHint?: "access_token" | "refresh_token",
+	tokenTypeHint?: 'access_token' | 'refresh_token',
 ): Promise<TokenIntrospectionResult> {
-	const response = await fetch(`${config.platformUrl}/api/auth/introspect`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+	const response = await fetch(`${config.platformUrl}/api/v1/auth/introspect`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
 			token,
 			token_type_hint: tokenTypeHint,
 			client_secret: config.secretKey,
 		}),
-	});
+	})
 
 	if (!response.ok) {
 		// Per RFC 7662, errors should return inactive
-		return { active: false };
+		return { active: false }
 	}
 
-	return response.json();
+	return response.json()
 }
 
 /**
@@ -349,16 +332,16 @@ export async function revokeToken(
 	token: string,
 	options?: RevokeTokenOptions,
 ): Promise<void> {
-	await fetch(`${config.platformUrl}/api/auth/revoke`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
+	await fetch(`${config.platformUrl}/api/v1/auth/revoke`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
 			token: options?.revokeAll ? undefined : token,
 			client_secret: config.secretKey,
 			user_id: options?.userId,
 			revoke_all: options?.revokeAll,
 		}),
-	});
+	})
 	// Per RFC 7009, always succeeds (200 OK)
 }
 
@@ -373,9 +356,6 @@ export async function revokeToken(
  * await revokeAllTokens(config, userId)
  * ```
  */
-export async function revokeAllTokens(
-	config: SylphxConfig,
-	userId: string,
-): Promise<void> {
-	await revokeToken(config, "", { revokeAll: true, userId });
+export async function revokeAllTokens(config: SylphxConfig, userId: string): Promise<void> {
+	await revokeToken(config, '', { revokeAll: true, userId })
 }
