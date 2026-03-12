@@ -1,6 +1,3 @@
-# Import pre-built SDK (built once in sdk-base job, shared across all app builds)
-FROM registry.sylphx.com/sylphx/sdk-base:latest AS sdk-pre
-
 FROM oven/bun:alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
@@ -17,13 +14,13 @@ COPY packages/sylphx-cli/package.json ./packages/sylphx-cli/
 COPY packages/sylphx-runner/package.json ./packages/sylphx-runner/
 COPY packages/create-sylphx-app/package.json ./packages/create-sylphx-app/
 
-# 2. Install with persistent bun cache — fast even on cache miss
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    bun install --ignore-scripts
+# 2. Install deps
+RUN bun install --ignore-scripts
 
-# 3. Inject pre-built SDK dist (from sdk-base — no SDK rebuild in this container)
-#    **/dist is in .dockerignore, so COPY . . below will NOT overwrite this.
-COPY --from=sdk-pre /app/packages/sdk/dist ./packages/sdk/dist
+# 3. Copy SDK + UI source, then build (layer cached by Kaniko until SDK code changes)
+COPY packages/sdk ./packages/sdk
+COPY packages/ui  ./packages/ui
+RUN cd packages/sdk && bun run build
 
 # 4. Copy full source (only invalidates the build step, not install)
 COPY . .
