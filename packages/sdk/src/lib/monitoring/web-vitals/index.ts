@@ -46,7 +46,6 @@ import {
 	onINP,
 	onLCP,
 	onTTFB,
-	type ReportOpts,
 	type TTFBMetric,
 } from 'web-vitals'
 import {
@@ -417,7 +416,7 @@ export function initWebVitals(userConfig: WebVitalsConfig = {}): void {
 	metrics = {}
 
 	// Report options
-	const reportOpts: ReportOpts = {
+	const reportOpts = {
 		reportAllChanges: false,
 	}
 
@@ -517,5 +516,4 @@ export function isWebVitalsInitialized(): boolean {
 	return initialized
 }
 
-// Re-export useful types from web-vitals
-export type { ReportOpts }
+// Note: ReportOpts is intentionally not re-exported (not part of public API)
