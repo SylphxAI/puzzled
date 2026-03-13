@@ -4,169 +4,162 @@
  * Tests for the WebAnalyticsTracker class.
  */
 
-import {
-	afterEach,
-	beforeEach,
-	describe,
-	expect,
-	mock,
-	spyOn,
-	test,
-} from "bun:test";
-import {
-	type WebAnalyticsOptions,
-	WebAnalyticsTracker,
-} from "../src/lib/analytics/web-analytics";
+import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test'
+import { type WebAnalyticsOptions, WebAnalyticsTracker } from '../src/lib/analytics/web-analytics'
 
 // ============================================================================
 // Test Setup
 // ============================================================================
 
 const DEFAULT_OPTIONS: WebAnalyticsOptions = {
-	appKey: "test_app_key_12345",
-	endpoint: "https://test.example.com",
+	appKey: 'test_app_key_12345',
+	endpoint: 'https://test.example.com',
 	trackPageViews: true,
 	trackBounce: true,
 	hashMode: false,
 	debug: false,
-};
+}
 
 // ============================================================================
 // Tests
 // ============================================================================
 
-describe("WebAnalyticsTracker", () => {
-	let tracker: WebAnalyticsTracker;
-	let fetchSpy: ReturnType<typeof spyOn>;
+describe('WebAnalyticsTracker', () => {
+	let tracker: WebAnalyticsTracker
+	let fetchSpy: ReturnType<typeof spyOn>
+	let originalFetch: typeof globalThis.fetch
 
 	beforeEach(() => {
-		tracker = new WebAnalyticsTracker();
+		tracker = new WebAnalyticsTracker()
 
-		// Mock fetch globally
+		// Save and mock fetch globally (restored in afterEach)
+		originalFetch = global.fetch
 		global.fetch = mock(
 			async () => new Response(JSON.stringify({ ok: true }), { status: 200 }),
-		) as typeof fetch;
+		) as typeof fetch
 
 		// Reset sessionStorage
 		try {
-			sessionStorage.clear();
+			sessionStorage.clear()
 		} catch {
 			// May not be available in all test environments
 		}
-	});
+	})
 
 	afterEach(() => {
+		// Restore real fetch so other test files aren't affected
+		global.fetch = originalFetch
 		// Clean up event listeners etc.
 		try {
-			tracker.destroy?.();
+			tracker.destroy?.()
 		} catch {
 			// destroy may not exist or may already be cleaned up
 		}
-	});
+	})
 
-	describe("initialization", () => {
-		test("initializes with required options", () => {
-			expect(() => tracker.init(DEFAULT_OPTIONS)).not.toThrow();
-		});
+	describe('initialization', () => {
+		test('initializes with required options', () => {
+			expect(() => tracker.init(DEFAULT_OPTIONS)).not.toThrow()
+		})
 
-		test("initializes with minimal options (appKey + endpoint only)", () => {
+		test('initializes with minimal options (appKey + endpoint only)', () => {
 			expect(() =>
-				tracker.init({ appKey: "test_key", endpoint: "https://example.com" }),
-			).not.toThrow();
-		});
+				tracker.init({ appKey: 'test_key', endpoint: 'https://example.com' }),
+			).not.toThrow()
+		})
 
-		test("throws or handles missing appKey gracefully", () => {
+		test('throws or handles missing appKey gracefully', () => {
 			// Should handle gracefully - either throw or log warning
-			const invalidOptions = { ...DEFAULT_OPTIONS, appKey: "" };
+			const invalidOptions = { ...DEFAULT_OPTIONS, appKey: '' }
 			// Test that it doesn't crash the whole runtime
 			try {
-				tracker.init(invalidOptions);
+				tracker.init(invalidOptions)
 			} catch (err) {
-				expect(err).toBeDefined();
+				expect(err).toBeDefined()
 			}
-		});
-	});
+		})
+	})
 
-	describe("page view tracking", () => {
-		test("tracks a page view by calling the endpoint", async () => {
-			tracker.init(DEFAULT_OPTIONS);
-			await tracker.trackPageView?.("/test-page");
+	describe('page view tracking', () => {
+		test('tracks a page view by calling the endpoint', async () => {
+			tracker.init(DEFAULT_OPTIONS)
+			await tracker.trackPageView?.('/test-page')
 			// If trackPageView is auto-called on init, verify fetch was called
 			// at some point during or after init
-			expect(global.fetch).toBeDefined();
-		});
+			expect(global.fetch).toBeDefined()
+		})
 
-		test("page view payload includes required fields", async () => {
-			let capturedBody: unknown = null;
+		test('page view payload includes required fields', async () => {
+			let capturedBody: unknown = null
 			global.fetch = mock(async (url: string, opts?: RequestInit) => {
 				if (opts?.body) {
 					try {
-						capturedBody = JSON.parse(opts.body as string);
-					} catch { /* Body may not be valid JSON — ignore and capture nothing */ }
+						capturedBody = JSON.parse(opts.body as string)
+					} catch {
+						/* Body may not be valid JSON — ignore and capture nothing */
+					}
 				}
-				return new Response(JSON.stringify({ ok: true }), { status: 200 });
-			}) as typeof fetch;
+				return new Response(JSON.stringify({ ok: true }), { status: 200 })
+			}) as typeof fetch
 
-			tracker.init(DEFAULT_OPTIONS);
-			await tracker.trackPageView?.("/about");
+			tracker.init(DEFAULT_OPTIONS)
+			await tracker.trackPageView?.('/about')
 
 			// If fetch was called with a body, validate structure
 			if (capturedBody) {
-				const payload = capturedBody as Record<string, unknown>;
+				const payload = capturedBody as Record<string, unknown>
 				// Should contain path, timestamp or similar
-				expect(typeof payload).toBe("object");
+				expect(typeof payload).toBe('object')
 			}
-		});
-	});
+		})
+	})
 
-	describe("SPA route change handling", () => {
-		test("registers history/hash listeners on init", () => {
+	describe('SPA route change handling', () => {
+		test('registers history/hash listeners on init', () => {
 			// Only test in browser-like environment
-			if (typeof window === "undefined") {
-				expect(true).toBe(true); // skip in Node env
-				return;
+			if (typeof window === 'undefined') {
+				expect(true).toBe(true) // skip in Node env
+				return
 			}
-			const addEventListenerSpy = spyOn(window, "addEventListener");
-			tracker.init({ ...DEFAULT_OPTIONS, trackPageViews: true });
+			const addEventListenerSpy = spyOn(window, 'addEventListener')
+			tracker.init({ ...DEFAULT_OPTIONS, trackPageViews: true })
 			// Should have added event listeners for navigation
-			expect(addEventListenerSpy).toHaveBeenCalled();
-		});
+			expect(addEventListenerSpy).toHaveBeenCalled()
+		})
 
-		test("hash mode tracks hash changes when enabled", () => {
-			expect(() =>
-				tracker.init({ ...DEFAULT_OPTIONS, hashMode: true }),
-			).not.toThrow();
-		});
-	});
+		test('hash mode tracks hash changes when enabled', () => {
+			expect(() => tracker.init({ ...DEFAULT_OPTIONS, hashMode: true })).not.toThrow()
+		})
+	})
 
-	describe("Do Not Track", () => {
-		test("respects navigator.doNotTrack when set", () => {
+	describe('Do Not Track', () => {
+		test('respects navigator.doNotTrack when set', () => {
 			// Simulate DNT being set
-			Object.defineProperty(navigator, "doNotTrack", {
-				get: () => "1",
+			Object.defineProperty(navigator, 'doNotTrack', {
+				get: () => '1',
 				configurable: true,
-			});
+			})
 
 			// Tracker should still initialize without errors
-			expect(() => tracker.init(DEFAULT_OPTIONS)).not.toThrow();
+			expect(() => tracker.init(DEFAULT_OPTIONS)).not.toThrow()
 
 			// Reset DNT
-			Object.defineProperty(navigator, "doNotTrack", {
+			Object.defineProperty(navigator, 'doNotTrack', {
 				get: () => null,
 				configurable: true,
-			});
-		});
-	});
+			})
+		})
+	})
 
-	describe("endpoint URL construction", () => {
-		test("constructs correct analytics endpoint from base URL", () => {
+	describe('endpoint URL construction', () => {
+		test('constructs correct analytics endpoint from base URL', () => {
 			// Verify no trailing slash issues
 			expect(() =>
-				tracker.init({ ...DEFAULT_OPTIONS, endpoint: "https://example.com/" }),
-			).not.toThrow();
+				tracker.init({ ...DEFAULT_OPTIONS, endpoint: 'https://example.com/' }),
+			).not.toThrow()
 			expect(() =>
-				tracker.init({ ...DEFAULT_OPTIONS, endpoint: "https://example.com" }),
-			).not.toThrow();
-		});
-	});
-});
+				tracker.init({ ...DEFAULT_OPTIONS, endpoint: 'https://example.com' }),
+			).not.toThrow()
+		})
+	})
+})
