@@ -18,15 +18,18 @@ export * from "./motion";
 // Components
 export * from "./components/accordion";
 export * from "./components/alert-dialog";
+export * from "./components/animated-counter";
 export * from "./components/avatar";
 export * from "./components/badge";
 export * from "./components/breadcrumb";
 export * from "./components/button";
 export * from "./components/card";
+export * from "./components/challenge-modal";
 export * from "./components/checkbox";
 export * from "./components/collapsible";
 export * from "./components/dialog";
 export * from "./components/dropdown-menu";
+export * from "./components/form-feedback";
 export * from "./components/game-icons";
 export * from "./components/icon";
 export * from "./components/inline-editable";
