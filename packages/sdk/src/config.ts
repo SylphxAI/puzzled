@@ -112,9 +112,9 @@ export interface SylphxConfig {
 	/**
 	 * API base path appended to platformUrl for all requests.
 	 *
-	 * Default: /api/app/v1 (legacy path via main Next.js app)
+	 * Default: /api/v1 (legacy path via main Next.js app)
 	 * When ref is set: /v1 (new SDK server path)
-	 * When explicit platformUrl is set: /api/app/v1 (unchanged)
+	 * When explicit platformUrl is set: /api/v1 (unchanged)
 	 */
 	readonly apiBasePath?: string
 	/** Optional: Current access token for authenticated requests */
@@ -188,7 +188,7 @@ export function createConfig(input: SylphxConfigInput): SylphxConfig {
 		platformUrl = `https://${input.ref}.${DEFAULT_SDK_API_HOST}`
 		apiBasePath = SDK_API_PATH_NEW
 	} else {
-		// Legacy default: https://sylphx.com/api/app/v1
+		// Legacy default: https://sylphx.com/api/v1
 		platformUrl = DEFAULT_PLATFORM_URL
 		apiBasePath = SDK_API_PATH
 	}
@@ -241,7 +241,7 @@ export function buildHeaders(config: SylphxConfig): Record<string, string> {
  *
  * Uses config.apiBasePath which is:
  * - /v1 when targeting the new per-project subdomain ({ref}.api.sylphx.com)
- * - /api/app/v1 when targeting the legacy path (sylphx.com)
+ * - /api/v1 when targeting the legacy path (sylphx.com)
  */
 export function buildApiUrl(config: SylphxConfig, path: string): string {
 	const base = config.platformUrl.replace(/\/$/, '')

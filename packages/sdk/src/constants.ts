@@ -67,14 +67,14 @@ export function resolveSecretKey(explicit?: string): string | undefined {
 export const SDK_API_VERSION = 'v1'
 
 /**
- * SDK API base path — legacy path served from main Next.js app.
+ * SDK API base path — served from the unified platform Hono app.
  *
- * Used when `platformUrl` is set to `https://sylphx.com` (default).
- * Points to the runtime Hono app mounted at /api/app/v1 (via Next.js catch-all).
+ * Used when `platformUrl` is set (e.g. `https://sylphx.com`).
+ * BaaS routes are mounted at /api/v1/projects/:slug/* on the platform app.
  *
  * @deprecated Prefer project `ref`-based URL: https://{ref}.api.sylphx.com/v1
  */
-export const SDK_API_PATH = `/api/app/v1`
+export const SDK_API_PATH = `/api/v1`
 
 /**
  * SDK API path for new subdomain-based SDK server.
