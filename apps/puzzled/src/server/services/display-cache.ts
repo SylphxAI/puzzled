@@ -7,19 +7,15 @@
  * ARCHITECTURE:
  * - Primary source: Local userDisplayCache table (SSOT for app-local display data)
  * - Population: Platform webhooks (user.created, user.updated)
- * - Cache TTL: 1 hour (for staleness checking only)
+ * - Cache populated via webhooks (no TTL-based staleness tracking)
  *
  * Note: The platform SDK is for current-user operations. For bulk user data,
  * use platform webhooks to keep the local cache in sync.
  */
 
 import { eq, inArray } from 'drizzle-orm'
-import { HOUR_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { type UserDisplayCache, userDisplayCache } from '@/lib/db/schema'
-
-/** Cache TTL in milliseconds (1 hour) - used for staleness warnings only */
-const CACHE_TTL_MS = HOUR_MS
 
 /** Display data returned by this service */
 export interface DisplayData {
@@ -54,19 +50,6 @@ export async function getDisplayData(
 	const cacheMap = new Map<string, UserDisplayCache>()
 	for (const entry of cached) {
 		cacheMap.set(entry.userId, entry)
-	}
-
-	const now = Date.now()
-	const staleThreshold = now - CACHE_TTL_MS
-
-	// Log stale entries (for monitoring)
-	const staleCount = uniqueIds.filter((id) => {
-		const entry = cacheMap.get(id)
-		return entry && entry.cachedAt.getTime() < staleThreshold
-	}).length
-
-	if (staleCount > 0) {
-		console.debug(`[DisplayCache] ${staleCount} stale entries detected`)
 	}
 
 	// Return current cache data
@@ -178,6 +161,4 @@ async function _batchUpdateDisplayCache(
 				},
 			})
 	}
-
-	console.log(`[DisplayCache] Updated ${users.length} entries`)
 }
