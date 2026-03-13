@@ -1,0 +1,11 @@
+[install]
+# Use exact versions for reproducible builds
+exact = true
+
+[install.lockfile]
+# Save lockfile in binary format for speed
+save = true
+
+[test]
+# Exclude Playwright E2E tests from Bun test runner
+exclude = ["**/e2e-tests/**", "**/playwright-report/**"]

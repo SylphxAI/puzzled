@@ -1,0 +1,60 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"remoteCache": {
+		"enabled": true,
+		"signature": true
+	},
+	"globalDependencies": [".env*"],
+	"globalPassThroughEnv": [
+		"DATABASE_URL",
+		"POSTGRES_*",
+		"PG*",
+		"REDIS_URL",
+		"STORAGE_*",
+		"TRIGGER_*",
+		"SYLPHX_*",
+		"BETTER_AUTH_*",
+		"GOOGLE_CLIENT_*",
+		"STRIPE_*",
+		"RESEND_*",
+		"OPENROUTER_*",
+		"PUZZLE_GENERATOR_MODEL",
+		"VAPID_*",
+		"CRON_SECRET",
+		"ADMIN_SECRET",
+		"INIT_SECRET",
+		"INITIAL_SUPERADMIN_EMAIL",
+		"NODE_ENV",
+		"SKIP_DB_MIGRATE",
+		"SKIP_ENV_VALIDATION",
+		"PLATFORM_ENCRYPTION_KEY",
+		"NODE_OPTIONS",
+		"CI"
+	],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": [".next/**", "!.next/cache/**", "dist/**"],
+			"env": ["NEXT_PUBLIC_*"]
+		},
+		"build:with-migrate": {
+			"dependsOn": ["^build"],
+			"outputs": [".next/**", "!.next/cache/**", "dist/**"],
+			"env": ["NEXT_PUBLIC_*"],
+			"cache": false
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"lint": {},
+		"typecheck": {},
+		"test": {
+			"dependsOn": ["^build"]
+		},
+		"clean": {
+			"cache": false
+		}
+	}
+}
