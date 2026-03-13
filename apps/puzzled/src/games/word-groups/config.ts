@@ -15,29 +15,10 @@ import {
 import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
 import { PUZZLES } from './puzzles'
-import type { Category, ConnectionsPuzzle } from './types'
+import type { Category, ConnectionsPuzzle, ConnectionsPuzzleData, ConnectionsSolution } from './types'
 import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
-// ==========================================
-// Types
-// ==========================================
-
-/**
- * Puzzle data sent to client (shuffled words only, no category groupings)
- */
-export type ConnectionsPuzzleData = {
-	words: string[]
-	maxMistakes: number
-	wordsPerCategory: number
-	totalCategories: number
-}
-
-/**
- * Solution stored server-side only
- */
-export type ConnectionsSolution = {
-	categories: Category[]
-}
+export type { ConnectionsPuzzleData, ConnectionsSolution }
 
 /**
  * Client's guess for validation

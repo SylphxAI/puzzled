@@ -13,19 +13,10 @@ import {
 import { CrosswordHowToPlay } from './components/how-to-play'
 import { CrosswordIcon } from './icon'
 import { getPuzzleFromSeed } from './puzzles'
-import type { CrosswordGuess, CrosswordGuessResult, CrosswordPuzzleData } from './types'
+import type { CrosswordGuess, CrosswordGuessResult, CrosswordPuzzleClientData, CrosswordPuzzleData, CrosswordSolution } from './types'
 import { GRID_SIZE, isGridComplete } from './types'
 
-// Client-side puzzle data (no solution exposed)
-export type CrosswordPuzzleClientData = {
-	grid: (string | null)[][] // Grid structure with black squares, letters hidden
-	clues: CrosswordPuzzleData['clues']
-}
-
-// Solution type (exported for use in components)
-export type CrosswordSolution = {
-	grid: string[][] // Complete grid with all answers
-}
+export type { CrosswordPuzzleClientData, CrosswordSolution }
 
 export const crosswordConfig: GameConfig<
 	CrosswordPuzzleClientData,

@@ -15,19 +15,10 @@ import {
 import { SudokuHowToPlay } from './components/how-to-play'
 import { generateSudokuPuzzle } from './generator'
 import { SudokuIcon } from './icon'
-import type { SudokuGuess, SudokuGuessResult } from './types'
+import type { SudokuGuess, SudokuGuessResult, SudokuPuzzleClientData, SudokuSolution } from './types'
 import { GRID_SIZE } from './types'
 
-// Client-side puzzle data (solution hidden)
-export type SudokuPuzzleClientData = {
-	grid: (number | null)[][] // 9x9, null = empty cell
-	difficulty: 'easy' | 'medium' | 'hard'
-}
-
-// Solution type
-export type SudokuSolution = {
-	grid: number[][] // Complete 9x9 solution
-}
+export type { SudokuPuzzleClientData, SudokuSolution }
 
 /**
  * Difficulty level configurations for Sudoku

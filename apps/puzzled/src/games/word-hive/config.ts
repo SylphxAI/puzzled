@@ -12,24 +12,10 @@ import {
 import { SpellingBeeHowToPlay } from './components/how-to-play'
 import { WordHiveIcon } from './icon'
 import { calculateMaxScore, getPuzzleFromSeed } from './puzzles'
+import type { SpellingBeePuzzleClientData } from './types'
 import { calculateWordScore, MIN_WORD_LENGTH } from './types'
 
-// ==========================================
-// Types
-// ==========================================
-
-/**
- * Puzzle data sent to client
- * NOTE: validWords and pangrams ARE needed client-side for Spelling Bee
- * (unlike other games where solution is secret)
- */
-export type SpellingBeePuzzleClientData = {
-	centerLetter: string
-	outerLetters: string[]
-	maxScore: number
-	validWords: string[]
-	pangrams: string[]
-}
+export type { SpellingBeePuzzleClientData }
 
 /**
  * Solution stored server-side (same as puzzleData for Spelling Bee)
