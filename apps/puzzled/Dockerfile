@@ -1,4 +1,4 @@
-FROM oven/bun:alpine AS builder
+FROM oven/bun:1.3.6-alpine AS builder
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
 
@@ -35,11 +35,15 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
 # 5. Build Puzzled (Next.js — SDK already in dist/, UI imported from src directly)
 RUN cd apps/puzzled && bun run build
 
-FROM node:alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
-COPY --from=builder /app/apps/puzzled/public ./public
-COPY --from=builder /app/apps/puzzled/.next/standalone ./
-COPY --from=builder /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
+
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+USER nextjs
+
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
 EXPOSE 3000
 CMD ["node", "apps/puzzled/server.js"]
