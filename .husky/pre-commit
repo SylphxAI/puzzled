@@ -1,0 +1,31 @@
+#!/bin/sh
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# Lint staged files
+echo "📝 Checking code style..."
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$' | grep -v 'biome\.json$' || true)
+if [ -n "$STAGED_FILES" ]; then
+    echo "$STAGED_FILES" | xargs ./node_modules/.bin/biome check --write --no-errors-on-unmatched
+    echo "$STAGED_FILES" | xargs git add
+fi
+
+# Type check affected packages
+echo "🔎 Running type check..."
+CHANGED_SDK=$(git diff --cached --name-only | grep -E '^packages/sdk/' || true)
+CHANGED_UI=$(git diff --cached --name-only | grep -E '^packages/ui/' || true)
+CHANGED_PUZZLED=$(git diff --cached --name-only | grep -E '^apps/puzzled/' || true)
+
+FILTER_ARGS=""
+if [ -n "$CHANGED_SDK" ]; then FILTER_ARGS="$FILTER_ARGS --filter=@sylphx/sdk"; fi
+if [ -n "$CHANGED_UI" ]; then FILTER_ARGS="$FILTER_ARGS --filter=@sylphx/ui"; fi
+if [ -n "$CHANGED_PUZZLED" ]; then FILTER_ARGS="$FILTER_ARGS --filter=@sylphx/puzzled"; fi
+
+if [ -n "$FILTER_ARGS" ]; then
+    NODE_OPTIONS='--max-old-space-size=4096' SKIP_ENV_VALIDATION=true bunx turbo typecheck $FILTER_ARGS
+else
+    echo "No workspace changes, skipping typecheck"
+fi
+
+echo "✅ Pre-commit checks passed!"

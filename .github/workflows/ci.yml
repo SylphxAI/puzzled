@@ -1,0 +1,224 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/ci.yml'
+  push:
+    branches: [main, dev]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: sylphx
+  TURBO_API: https://turbo.sylphx.com
+  TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+jobs:
+  # ==========================================
+  # Code Quality
+  # ==========================================
+
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: sylphx-standard
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.9'
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Run Biome lint
+        run: bun run lint
+        working-directory: apps/puzzled
+
+      - name: Run TypeScript type check
+        run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --filter=@sylphx/sdk --concurrency=1
+        env:
+          NODE_OPTIONS: '--max-old-space-size=5120'
+          SKIP_ENV_VALIDATION: 'true'
+
+  # ==========================================
+  # Security
+  # ==========================================
+
+  security:
+    name: Security Scan
+    runs-on: sylphx-standard
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.9'
+
+      - name: Dependency vulnerability audit
+        run: bun audit --audit-level=high || echo "⚠️ Vulnerabilities found - review before production"
+
+      - name: Secret detection
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+        continue-on-error: true
+
+  # ==========================================
+  # Database Migrations
+  # ==========================================
+
+  migrations:
+    name: Migration Integrity
+    runs-on: sylphx-standard
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Setup Atlas
+        run: |
+          mkdir -p /tmp/atlas-bin
+          curl -sL "https://atlasbinaries.com/atlas/atlas-linux-amd64-latest" \
+            -o /tmp/atlas-bin/atlas
+          chmod +x /tmp/atlas-bin/atlas
+          echo "/tmp/atlas-bin" >> "$GITHUB_PATH"
+          /tmp/atlas-bin/atlas version
+
+      - name: Verify migration checksums
+        run: |
+          DIR="apps/puzzled/atlas/migrations"
+          echo "Checking $DIR..."
+          /tmp/atlas-bin/atlas migrate hash --dir "file://$DIR" 2>&1
+
+          if git diff --name-only HEAD | grep -q "$DIR/atlas.sum"; then
+            echo "✖ atlas.sum is stale — run 'bun run atlas:hash' in apps/puzzled and commit"
+            exit 1
+          fi
+          echo "✓ Migration checksums OK"
+
+      - name: Verify no uncommitted migrations
+        run: |
+          if git status --porcelain | grep -E "atlas/migrations/.*\.sql$|atlas\.sum"; then
+            echo "ERROR: Uncommitted migration files detected!"
+            exit 1
+          fi
+          echo "✓ All migrations committed"
+
+  # ==========================================
+  # Unit Tests
+  # ==========================================
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: sylphx-standard
+    timeout-minutes: 20
+    needs: [lint-and-typecheck]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.9'
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Run unit tests
+        run: bun run test:unit
+        working-directory: apps/puzzled
+        env:
+          NODE_ENV: test
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
+          SKIP_ENV_VALIDATION: 'true'
+
+      - name: Run SDK tests
+        run: bun test --coverage
+        working-directory: packages/sdk
+        env:
+          NODE_ENV: test
+
+  # ==========================================
+  # Build Validation
+  # ==========================================
+
+  build:
+    name: Build
+    runs-on: sylphx-standard
+    timeout-minutes: 30
+    needs: [lint-and-typecheck, migrations, unit-tests]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.9'
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build SDK
+        run: bun run build
+        working-directory: packages/sdk
+
+      - name: Build Puzzled (type-safe next build)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          NODE_OPTIONS: '--max-old-space-size=5120'
+          SKIP_ENV_VALIDATION: 'true'
+          SKIP_DB_MIGRATE: 'true'
+          DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/placeholder'
+          BETTER_AUTH_SECRET: 'ci-placeholder-secret-32-chars-min'
+          BETTER_AUTH_URL: 'http://localhost:3000'
+          REDIS_URL: 'redis://:placeholder@localhost:6379'
+          NEXT_PUBLIC_APP_URL: 'https://puzzled.gg'
+          NEXT_PUBLIC_SYLPHX_APP_ID: 'app_ci_placeholder'
+          CRON_SECRET: 'ci-placeholder-cron-secret'
+          ADMIN_SECRET: 'ci-placeholder-admin-secret'
