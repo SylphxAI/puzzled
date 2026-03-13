@@ -20,7 +20,7 @@ function getDb(): NodePgDatabase<typeof schema> {
 			throw new Error(
 				'DATABASE_URL environment variable is required.\n\n' +
 					'For local development: Set DATABASE_URL in .env.local\n' +
-					'For production: Set via docker-compose environment / Coolify env vars.',
+					'For production: Set via environment variables.',
 			)
 		}
 		_pool = new Pool({ connectionString: url })
