@@ -102,7 +102,7 @@ describe("WebAnalyticsTracker", () => {
 				if (opts?.body) {
 					try {
 						capturedBody = JSON.parse(opts.body as string);
-					} catch {}
+					} catch { /* Body may not be valid JSON — ignore and capture nothing */ }
 				}
 				return new Response(JSON.stringify({ ok: true }), { status: 200 });
 			}) as typeof fetch;
