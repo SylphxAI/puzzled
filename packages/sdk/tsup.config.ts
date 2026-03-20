@@ -113,6 +113,7 @@ export default defineConfig([
 			// into the SDK dist. Next.js will handle it via serverExternalPackages.
 			'use-sync-external-store',
 			'use-sync-external-store/shim',
+			'use-sync-external-store/shim/with-selector',
 		],
 		// Bundle all SDK dependencies
 		noExternal: ['rrweb', '@sylphx/ui', 'web-vitals'],
