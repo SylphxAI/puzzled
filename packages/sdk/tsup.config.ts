@@ -107,16 +107,10 @@ export default defineConfig([
 		dts: true,
 		splitting: false,
 		sourcemap: true,
-		external: [
-			...PEER_EXTERNALS,
-			// Make use-sync-external-store external so the CJS require() is not bundled
-			// into the SDK dist. Next.js will handle it via serverExternalPackages.
-			'use-sync-external-store',
-			'use-sync-external-store/shim',
-			'use-sync-external-store/shim/with-selector',
-		],
-		// Bundle all SDK dependencies
-		noExternal: ['rrweb', '@sylphx/ui', 'web-vitals'],
+		external: PEER_EXTERNALS,
+		// Bundle all SDK dependencies including use-sync-external-store
+		// (Turbopack client builds cannot resolve it as an external)
+		noExternal: ['rrweb', '@sylphx/ui', 'web-vitals', 'use-sync-external-store'],
 	},
 
 	// ==========================================================================
