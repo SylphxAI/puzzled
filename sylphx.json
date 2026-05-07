@@ -1,5 +1,0 @@
-{
-	"dockerfilePath": "apps/puzzled/Dockerfile",
-	"buildContext": ".",
-	"releaseCommand": "atlas migrate apply --env production --baseline 20260222000000"
-}

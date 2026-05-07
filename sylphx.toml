@@ -1,0 +1,16 @@
+version = "1"
+
+[project]
+name = "puzzled-monorepo"
+slug = "puzzled"
+org = "sylphx"
+
+[build]
+strategy = "dockerfile"
+dockerfile = "apps/puzzled/Dockerfile"
+context = "."
+
+[[services]]
+name = "web"
+type = "worker"
+release_command = "atlas migrate apply --env production --baseline 20260222000000"
