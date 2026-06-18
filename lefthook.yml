@@ -1,0 +1,43 @@
+# Git hooks managed by lefthook (migrated from husky).
+# Faithful 1:1 translation of the former .husky/pre-commit script.
+pre-commit:
+  parallel: false
+  commands:
+    # Step 1: lint/format staged files with biome, then re-stage the fixes.
+    # Mirrors: biome check --write on staged *.{ts,tsx,js,jsx,json} (excluding
+    # biome.json) followed by `git add`.
+    01-biome:
+      priority: 1
+      glob: "*.{ts,tsx,js,jsx,json}"
+      exclude:
+        - "biome.json"
+        - "**/biome.json"
+      run: ./node_modules/.bin/biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    # Step 2: typecheck only the affected workspaces. Each command is gated by
+    # the staged paths, matching the original `git diff --cached | grep '^...'`
+    # conditionals. turbo dedupes/caches, so multiple matches stay correct.
+    02-typecheck-sdk:
+      priority: 2
+      glob: "packages/sdk/**"
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        SKIP_ENV_VALIDATION: "true"
+      run: bunx turbo typecheck --filter=@sylphx/sdk
+
+    03-typecheck-ui:
+      priority: 3
+      glob: "packages/ui/**"
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        SKIP_ENV_VALIDATION: "true"
+      run: bunx turbo typecheck --filter=@sylphx/ui
+
+    04-typecheck-puzzled:
+      priority: 4
+      glob: "apps/puzzled/**"
+      env:
+        NODE_OPTIONS: "--max-old-space-size=4096"
+        SKIP_ENV_VALIDATION: "true"
+      run: bunx turbo typecheck --filter=@sylphx/puzzled

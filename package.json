@@ -14,14 +14,14 @@
 		"typecheck": "turbo typecheck",
 		"test": "turbo test",
 		"clean": "turbo clean && rm -rf node_modules",
-		"prepare": "husky || true"
+		"prepare": "git config --unset core.hooksPath >/dev/null 2>&1; lefthook install || true"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.12",
 		"@commitlint/cli": "20.3.1",
 		"@commitlint/config-conventional": "20.3.1",
 		"@types/node": "25.0.10",
-		"husky": "9.1.7",
+		"lefthook": "2.1.9",
 		"turbo": "2.7.5"
 	}
 }
