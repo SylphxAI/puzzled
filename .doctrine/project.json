@@ -1,0 +1,133 @@
+{
+	"schemaVersion": 1,
+	"project": {
+		"repo": "SylphxAI/puzzled",
+		"name": "Puzzled",
+		"lifecycle": "production",
+		"layer": "application",
+		"summary": "Puzzled is a production puzzle-game application repo owning the Puzzled Next.js app, repo-local SDK/UI integration, Atlas migrations, Sylphx deployment manifest, and application-specific game/user workflows.",
+		"goals": [
+			"Ship the Puzzled game application with reliable app, database, auth, settings, analytics, and deployment behavior.",
+			"Keep Puzzled-specific product behavior inside this repo and use external projects only through documented public contracts.",
+			"Maintain safe Atlas migration and Sylphx deployment evidence for production changes."
+		],
+		"nonGoals": [
+			"Own Sylphx Platform core behavior or shared SDK semantics beyond repo-local integration.",
+			"Encode another product's game or customer-specific behavior into this app.",
+			"Treat source revert as complete recovery after migrations or deploy side effects have run."
+		]
+	},
+	"boundaries": {
+		"owns": [
+			{
+				"name": "puzzled-application",
+				"description": "The Next.js Puzzled application, game flows, settings/profile behavior, auth integration, analytics, and app-local tests."
+			},
+			{
+				"name": "puzzled-deployment-and-data",
+				"description": "Sylphx deployment manifest, Dockerfile, Atlas migrations, database schema usage, and release-command behavior."
+			}
+		],
+		"doesNotOwn": [
+			"Sylphx Platform core PaaS/BaaS control-plane behavior, deployment controller internals, or shared billing ledger.",
+			"Shared SDK/UI semantics beyond repo-local consumption unless changed through their owning public contracts.",
+			"Sibling product domain models or customer-specific game behavior."
+		],
+		"publicSurfaces": [
+			{
+				"type": "application",
+				"name": "Puzzled web app",
+				"location": "apps/puzzled/"
+			},
+			{
+				"type": "manifest",
+				"name": "Sylphx deploy manifest",
+				"location": "sylphx.toml"
+			},
+			{
+				"type": "manifest",
+				"name": "Atlas migrations",
+				"location": "apps/puzzled/atlas/migrations/"
+			},
+			{
+				"type": "workflow",
+				"name": "CI workflow",
+				"location": ".github/workflows/ci.yml"
+			}
+		],
+		"allowedDependencies": [
+			{
+				"repo": "SylphxAI/doctrine",
+				"surface": "enterprise engineering doctrine",
+				"direction": "downward"
+			},
+			{
+				"repo": "SylphxAI/platform",
+				"surface": "Sylphx deployment, SDK, and platform contracts",
+				"direction": "platform-contract"
+			}
+		],
+		"forbiddenCouplings": [
+			"Do not put Puzzled-specific behavior into shared SDK/UI packages without a generalized public contract.",
+			"Do not bypass Atlas migration checks or the Sylphx deployment manifest for production changes.",
+			"Do not treat source revert as complete recovery after migrations or deploy side effects."
+		]
+	},
+	"documentation": {
+		"adr": {
+			"path": "PROJECT.md",
+			"status": "planned"
+		},
+		"specs": {
+			"path": "apps/puzzled/package.json",
+			"status": "present"
+		},
+		"catalog": {
+			"path": "PROJECT.md",
+			"status": "present"
+		},
+		"runbooks": {
+			"path": "AGENTS.md",
+			"status": "present"
+		},
+		"generatedReferences": {
+			"path": "apps/puzzled/.next/",
+			"status": "generated"
+		}
+	},
+	"delivery": {
+		"ciModel": "legacy-ci",
+		"requiredContexts": [
+			"Lint & Type Check",
+			"Security Scan",
+			"Migration Integrity",
+			"Unit Tests",
+			"Build"
+		],
+		"deployPath": "Sylphx deploy manifest in sylphx.toml builds apps/puzzled/Dockerfile and runs Atlas release_command before rollout.",
+		"productionProof": "CI contexts, Atlas migration checksum proof, Sylphx deploy/readback evidence, app health smoke, and logs for runtime behavior changes.",
+		"recoveryClass": "forward-fix-only"
+	},
+	"commercial": {
+		"status": "monetized",
+		"decisionHome": "PROJECT.md",
+		"pricingSourceOfTruth": "Puzzled product configuration and Sylphx Platform billing surfaces",
+		"metricsSourceOfTruth": "Puzzled analytics and platform deployment telemetry",
+		"requiredRecords": ["pricing", "packaging", "roadmap", "experiment"],
+		"guardrails": [
+			"Pricing, packaging, game roadmap, and growth experiments require decision records backed by product and market evidence.",
+			"Commercial decisions must not leak into shared SDK/UI packages without a generalized contract."
+		]
+	},
+	"adoption": {
+		"status": "baseline",
+		"gaps": [
+			{
+				"id": "ci-path-filter",
+				"description": "CI path filters currently omit PROJECT.md, AGENTS.md, and .doctrine/**, so docs-only control-plane changes may not emit required contexts.",
+				"owner": "SylphxAI/puzzled",
+				"target": "before full doctrine admission adoption"
+			}
+		]
+	}
+}
