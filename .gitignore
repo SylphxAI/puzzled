@@ -63,3 +63,4 @@ pr*.patch
 MEMORY.md
 memory/
 .claude/
+/target/
