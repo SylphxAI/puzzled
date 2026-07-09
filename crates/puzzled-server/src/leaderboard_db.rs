@@ -101,17 +101,46 @@ fn period_start(period: LeaderboardPeriod) -> Option<DateTime<Utc>> {
     }
 }
 
-#[derive(Debug, sqlx::FromRow)]
-struct RankRow {
-    user_id: Uuid,
-    total_score: i32,
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct RankRow {
+    pub user_id: Uuid,
+    pub total_score: i32,
 }
 
-#[derive(Debug, sqlx::FromRow)]
-struct DisplayRow {
-    user_id: Uuid,
-    display_name: Option<String>,
-    avatar_url: Option<String>,
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct DisplayRow {
+    pub user_id: Uuid,
+    pub display_name: Option<String>,
+    pub avatar_url: Option<String>,
+}
+
+/// Build leaderboard entries from SQL rank rows + display cache — parity with
+/// `stats.ts` rankings.map + getDisplayData enrichment.
+#[must_use]
+pub fn build_leaderboard_entries(
+    rows: &[RankRow],
+    display_rows: &[DisplayRow],
+) -> Vec<LeaderboardEntry> {
+    let display_map: std::collections::HashMap<Uuid, &DisplayRow> = display_rows
+        .iter()
+        .map(|row| (row.user_id, row))
+        .collect();
+
+    rows.iter()
+        .enumerate()
+        .map(|(index, row)| {
+            let display = display_map.get(&row.user_id);
+            LeaderboardEntry {
+                rank: (index as i32) + 1,
+                user_id: row.user_id,
+                user_name: display
+                    .and_then(|entry| entry.display_name.clone())
+                    .or_else(|| Some("Anonymous".to_string())),
+                user_image: display.and_then(|entry| entry.avatar_url.clone()),
+                value: row.total_score,
+            }
+        })
+        .collect()
 }
 
 /// Load score leaderboard rows from Postgres when pool is configured.
@@ -188,29 +217,7 @@ pub async fn fetch_score_leaderboard(
     .fetch_all(pool)
     .await?;
 
-    let display_map: std::collections::HashMap<Uuid, DisplayRow> = display_rows
-        .into_iter()
-        .map(|row| (row.user_id, row))
-        .collect();
-
-    let entries = rows
-        .into_iter()
-        .enumerate()
-        .map(|(index, row)| {
-            let display = display_map.get(&row.user_id);
-            LeaderboardEntry {
-                rank: (index as i32) + 1,
-                user_id: row.user_id,
-                user_name: display
-                    .and_then(|d| d.display_name.clone())
-                    .or_else(|| Some("Anonymous".to_string())),
-                user_image: display.and_then(|d| d.avatar_url.clone()),
-                value: row.total_score,
-            }
-        })
-        .collect();
-
-    Ok(entries)
+    Ok(build_leaderboard_entries(&rows, &display_rows))
 }
 
 #[cfg(test)]

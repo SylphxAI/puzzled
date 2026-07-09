@@ -38,12 +38,12 @@
       "id": "leaderboard-read",
       "domain": "game-read",
       "weight": 4,
-      "state": "rust_impl",
-      "tsSurface": "apps/puzzled/src/app/api/v1/[[...route]]/route.ts",
+      "state": "parity_proven",
+      "tsSurface": "apps/puzzled/src/server/api/routes/stats.ts",
       "protoRpc": "puzzled.v1.StatsService/GetLeaderboard",
       "rustSurface": "crates/puzzled-server/src/leaderboard*.rs",
-      "parityTest": "crates/puzzled-server/tests/leaderboard_stub.rs",
-      "notes": "S1 sqlx leaderboard read; Next Hono still primary for most routes."
+      "parityTest": "fixtures/leaderboard/golden.json; crates/puzzled-server/tests/leaderboard_parity.rs; apps/puzzled/tests/leaderboard-golden.test.ts",
+      "notes": "S1 sqlx leaderboard read + golden fixture parity vs stats.ts; Next Hono still primary for most routes."
     },
     {
       "id": "api-v1-hono-monolith",
@@ -78,12 +78,12 @@
     "total": 7,
     "ts_only": 4,
     "contracted": 1,
-    "rust_impl": 2,
-    "parity_proven": 0,
+    "rust_impl": 1,
+    "parity_proven": 1,
     "authority_rust": 0,
     "ts_deleted": 0,
     "completion_progress": 0.0,
     "authority_progress": 0.0,
-    "weighted_progress": 0.1852
+    "weighted_progress": 0.2133
   }
 }

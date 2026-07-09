@@ -4,7 +4,7 @@ pub mod db_config;
 
 mod game_slugs;
 mod leaderboard;
-mod leaderboard_db;
+pub mod leaderboard_db;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
