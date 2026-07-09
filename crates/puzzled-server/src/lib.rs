@@ -7,7 +7,7 @@ mod leaderboard;
 mod leaderboard_db;
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -77,10 +77,7 @@ async fn readyz(State(state): State<AppState>) -> Response {
 
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let postgres_ok = if let Some(pool) = &state.pool {
-        sqlx::query_scalar::<_, i32>("SELECT 1")
-            .fetch_one(pool)
-            .await
-            .is_ok()
+        postgres_ping(pool).await
     } else {
         false
     };
@@ -102,6 +99,17 @@ async fn readyz(State(state): State<AppState>) -> Response {
         })),
     )
         .into_response()
+}
+
+async fn postgres_ping(pool: &PgPool) -> bool {
+    tokio::time::timeout(
+        Duration::from_millis(500),
+        sqlx::query_scalar::<_, i32>("SELECT 1").fetch_one(pool),
+    )
+    .await
+    .ok()
+    .and_then(Result::ok)
+    .is_some()
 }
 
 pub fn router(state: AppState) -> Router {

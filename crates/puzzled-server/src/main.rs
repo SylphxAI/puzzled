@@ -20,6 +20,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = match select_database_url() {
         Some(url) => match PgPoolOptions::new()
             .max_connections(5)
+            .acquire_timeout(Duration::from_secs(3))
+            .test_before_acquire(true)
+            .max_lifetime(Some(Duration::from_secs(600)))
             .connect(&url)
             .await
         {
