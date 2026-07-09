@@ -40,6 +40,8 @@ CI gates for lint/typecheck, security, migrations, tests, and build.
 - `bun run typecheck`
 - `bun run test`
 - `bun run build`
+- `bun run check:proto-buf` — `buf lint` + `buf breaking` (ADR-168 S0)
+- `cargo test -p puzzled-server` and `cargo clippy -p puzzled-server -- -D warnings`
 - `atlas migrate hash --dir file://apps/puzzled/atlas/migrations`
 
 Docs-only boundary changes may be validated by diff review, referenced-file

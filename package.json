@@ -13,6 +13,7 @@
 		"lint": "turbo lint",
 		"typecheck": "turbo typecheck",
 		"test": "turbo test",
+		"check:proto-buf": "bun scripts/check-proto-buf.ts",
 		"clean": "turbo clean && rm -rf node_modules",
 		"prepare": "git config --unset core.hooksPath >/dev/null 2>&1; lefthook install || true"
 	},

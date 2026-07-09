@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "repo": "SylphxAI/puzzled",
+  "lockedAt": "2026-07-09T21:35:00Z",
+  "inventorySource": ["hono", "proto", "manual"],
+  "inScopeBoundary": {
+    "includeGlobs": [
+      "crates/puzzled-server/**",
+      "apps/puzzled/src/app/api/**",
+      "apps/puzzled/src/server/**",
+      "proto/puzzled/**"
+    ],
+    "excludeGlobs": [
+      "apps/puzzled/src/app/**/page.tsx",
+      "packages/ui/**"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "proto-contract-stack",
+      "domain": "contracts",
+      "weight": 5,
+      "state": "contracted",
+      "protoRpc": "proto/puzzled/v1/*",
+      "notes": "ADR-168 S0: proto/puzzled/v1/health.proto + stats.proto; buf lint + baseline."
+    },
+    {
+      "id": "api-health-probe",
+      "domain": "api-edge",
+      "weight": 2,
+      "state": "rust_impl",
+      "protoRpc": "puzzled.v1.HealthService",
+      "rustSurface": "crates/puzzled-server/src/lib.rs#/healthz;/readyz",
+      "parityTest": "crates/puzzled-server/tests/health_parity.rs",
+      "prodProbe": "sylphx.toml api /healthz"
+    },
+    {
+      "id": "leaderboard-read",
+      "domain": "game-read",
+      "weight": 4,
+      "state": "rust_impl",
+      "tsSurface": "apps/puzzled/src/app/api/v1/[[...route]]/route.ts",
+      "protoRpc": "puzzled.v1.StatsService/GetLeaderboard",
+      "rustSurface": "crates/puzzled-server/src/leaderboard*.rs",
+      "parityTest": "crates/puzzled-server/tests/leaderboard_stub.rs",
+      "notes": "S1 sqlx leaderboard read; Next Hono still primary for most routes."
+    },
+    {
+      "id": "api-v1-hono-monolith",
+      "domain": "api-edge",
+      "weight": 5,
+      "state": "ts_only",
+      "tsSurface": "apps/puzzled/src/app/api/v1/[[...route]]/route.ts"
+    },
+    {
+      "id": "auth-sessions",
+      "domain": "auth",
+      "weight": 4,
+      "state": "ts_only",
+      "tsSurface": "apps/puzzled/src/server/** (auth)"
+    },
+    {
+      "id": "puzzle-generation-jobs",
+      "domain": "jobs",
+      "weight": 4,
+      "state": "ts_only",
+      "tsSurface": "apps/puzzled/src/app/api/jobs/**; cron/**"
+    },
+    {
+      "id": "platform-webhooks",
+      "domain": "integrations",
+      "weight": 3,
+      "state": "ts_only",
+      "tsSurface": "apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "ts_only": 4,
+    "contracted": 1,
+    "rust_impl": 2,
+    "parity_proven": 0,
+    "authority_rust": 0,
+    "ts_deleted": 0,
+    "completion_progress": 0.0,
+    "authority_progress": 0.0,
+    "weighted_progress": 0.1852
+  }
+}

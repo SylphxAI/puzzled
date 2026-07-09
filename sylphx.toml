@@ -20,7 +20,7 @@ release_command = "atlas migrate apply --env production --baseline 2026022200000
 name = "api"
 type = "web"
 port = 8080
-watch_paths = ["crates/puzzled-server/**", "Cargo.toml", "Cargo.lock", "sylphx.toml"]
+watch_paths = ["crates/puzzled-server/**", "proto/**", "buf.yaml", "Cargo.toml", "Cargo.lock", "sylphx.toml"]
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"
