@@ -1,8 +1,10 @@
-//! Puzzled Server — ADR-168 S0 scaffold: health probes + domain stub.
+//! Puzzled Server — ADR-168 S1: health probes + leaderboard read slice.
 
-use leaderboard::leaderboard_stub;
+pub mod db_config;
 
+mod game_slugs;
 mod leaderboard;
+mod leaderboard_db;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
@@ -12,23 +14,28 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
+use leaderboard::{leaderboard_stub, stats_leaderboard};
 use serde::Serialize;
 use serde_json::json;
+use sqlx::PgPool;
 
 pub use leaderboard::LeaderboardStubBody;
-
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone)]
 pub struct AppState {
     started_at: Instant,
+    pub pool: Option<PgPool>,
 }
 
 impl AppState {
     #[must_use]
-    pub fn new() -> Self {
-        Self { started_at: Instant::now() }
+    pub fn new(pool: Option<PgPool>) -> Self {
+        Self {
+            started_at: Instant::now(),
+            pool,
+        }
     }
 
     #[must_use]
@@ -39,7 +46,7 @@ impl AppState {
 
 impl Default for AppState {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
@@ -67,12 +74,31 @@ async fn readyz(State(state): State<AppState>) -> Response {
     if shutting_down() {
         return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
     }
+
+    let slice = if state.pool.is_some() { "S1" } else { "S0" };
+    let postgres_ok = if let Some(pool) = &state.pool {
+        sqlx::query_scalar::<_, i32>("SELECT 1")
+            .fetch_one(pool)
+            .await
+            .is_ok()
+    } else {
+        false
+    };
+
     (
         StatusCode::OK,
         Json(json!({
             "status": "ok",
             "uptime_s": state.uptime_secs(),
-            "stub": true,
+            "slice": slice,
+            "dependencies": [
+                {
+                    "name": "postgres",
+                    "ok": postgres_ok,
+                    "detail": "sqlx leaderboard read (ADR-168 S1)"
+                }
+            ],
+            "stub": state.pool.is_none(),
         })),
     )
         .into_response()
@@ -83,6 +109,7 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/api/leaderboard", get(leaderboard_stub))
+        .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .with_state(state)
 }
 
@@ -104,7 +131,9 @@ pub async fn shutdown_signal() {
     #[cfg(unix)]
     let terminate = async {
         match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
-            Ok(mut stream) => { stream.recv().await; }
+            Ok(mut stream) => {
+                stream.recv().await;
+            }
             Err(error) => tracing::error!(%error, "failed to install SIGTERM handler"),
         }
     };
@@ -148,7 +177,7 @@ mod tests {
 
     #[tokio::test]
     async fn healthz_returns_ok_json() {
-        let app = router(AppState::new());
+        let app = router(AppState::new(None));
         let response = match app
             .oneshot(build_request(Method::GET, "/healthz", Body::empty()))
             .await
@@ -163,7 +192,7 @@ mod tests {
 
     #[tokio::test]
     async fn domain_stub_returns_contract() {
-        let app = router(AppState::new());
+        let app = router(AppState::new(None));
         let response = match app
             .oneshot(build_request(Method::GET, "/api/leaderboard", Body::empty()))
             .await
@@ -175,5 +204,43 @@ mod tests {
         let json = body_json(response).await;
         assert!(json["entries"].as_array().is_some_and(|entries| entries.is_empty()));
         assert_eq!(json["stub"], true);
+    }
+
+    #[tokio::test]
+    async fn stats_leaderboard_invalid_query_returns_empty_array() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(
+                Method::GET,
+                "/api/v1/stats/leaderboard",
+                Body::empty(),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("leaderboard request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert!(json.as_array().is_some_and(|entries| entries.is_empty()));
+    }
+
+    #[tokio::test]
+    async fn stats_leaderboard_streak_returns_empty_array_without_db() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(
+                Method::GET,
+                "/api/v1/stats/leaderboard?gameSlug=sudoku&type=streak",
+                Body::empty(),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("leaderboard request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert!(json.as_array().is_some_and(|entries| entries.is_empty()));
     }
 }
