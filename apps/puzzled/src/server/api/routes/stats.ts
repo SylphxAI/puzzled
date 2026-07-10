@@ -19,6 +19,7 @@ import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
 import { GAME_RESULT_STATUSES, gameSessions, userPreferences } from '@/lib/db/schema'
 import { cache, keys } from '@/lib/redis'
+import { proxyToRustApi, shouldProxyLeaderboardToRust } from '../../rust-api-proxy'
 import { getDisplayData } from '../../services/display-cache'
 import { authMiddleware, rateLimitMiddleware } from '../middleware'
 import type { PuzzledAuthEnv } from '../types'
@@ -350,8 +351,13 @@ const statsRoutes = new OpenAPIHono<PuzzledAuthEnv>()
 	})
 
 	// GET /leaderboard - public
+	// ADR-168 S2: prod ingress path_prefixes → Rust api; local dev proxies when PUZZLED_USE_RUST_LEADERBOARD=1.
 	// NOTE: For streak leaderboards, client should use Platform SDK useLeaderboard()
 	.get('/leaderboard', async (c) => {
+		if (shouldProxyLeaderboardToRust()) {
+			return proxyToRustApi(c.req.raw)
+		}
+
 		const query = c.req.query()
 		const parsed = LeaderboardQuerySchema.safeParse(query)
 		if (!parsed.success) return c.json([])

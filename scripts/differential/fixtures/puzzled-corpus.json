@@ -1,0 +1,30 @@
+{
+  "corpusVersion": 1,
+  "slices": [
+    {
+      "id": "puzzle-grid-generation",
+      "fixture": "fixtures/puzzle-grid/golden.json",
+      "domains": ["random", "sudoku", "http"],
+      "tsSurface": "apps/puzzled/src/games/sudoku/generator.ts; apps/puzzled/src/games/shared/random.ts",
+      "rustSurface": "crates/puzzled-core; crates/puzzled-server/src/puzzle_grid.rs",
+      "httpPath": "/api/v1/puzzles/grid"
+    },
+    {
+      "id": "puzzle-solution-submit",
+      "fixture": "fixtures/puzzle-solution/golden.json",
+      "domains": ["scoring", "http"],
+      "tsSurface": "apps/puzzled/src/games/registry.ts validateAndScore",
+      "rustSurface": "crates/puzzled-core/src/scoring.rs; crates/puzzled-server/src/puzzle_submit.rs",
+      "httpPath": "/api/v1/puzzles/submit"
+    },
+    {
+      "id": "leaderboard-read",
+      "fixture": "fixtures/leaderboard/golden.json",
+      "domains": ["http", "enrich", "queryParse"],
+      "tsSurface": "apps/puzzled/src/server/api/routes/stats.ts GET /leaderboard",
+      "rustSurface": "crates/puzzled-server/src/leaderboard*.rs; crates/puzzled-server/src/leaderboard_db.rs",
+      "httpPaths": ["/api/v1/stats/leaderboard", "/api/leaderboard"]
+    }
+  ],
+  "notes": "ADR-168 rej-010 differential corpus — golden fixtures are frozen TS baselines; oracle re-executes TS authority paths."
+}

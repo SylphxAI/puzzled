@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "repo": "SylphxAI/puzzled",
+  "rejectionRef": "rej-010",
+  "lockedAt": "2026-07-10T21:30:00Z",
+  "differentialHarness": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
+  "slice": "puzzle-grid:random|shuffle|sudoku|http GET /api/v1/puzzles/grid",
+  "inScopeBoundary": {
+    "includeGlobs": [
+      "crates/puzzled-core/src/random.rs",
+      "crates/puzzled-core/src/sudoku.rs",
+      "crates/puzzled-server/src/puzzle_grid.rs",
+      "fixtures/puzzle-grid/golden.json",
+      "crates/puzzled-core/tests/puzzle_grid_parity.rs",
+      "crates/puzzled-server/tests/puzzle_grid_http_parity.rs",
+      "crates/puzzled-server/tests/puzzled_differential.rs",
+      "scripts/differential/**",
+      "scripts/run-puzzled-differential.sh"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "puzzle-grid-generation",
+      "domain": "game-write",
+      "weight": 4,
+      "state": "rust_impl",
+      "tsSurface": "apps/puzzled/src/games/sudoku/generator.ts; apps/puzzled/src/games/shared/random.ts",
+      "rustSurface": "crates/puzzled-core; crates/puzzled-server/src/puzzle_grid.rs",
+      "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle",
+      "proof": {
+        "status": "missing",
+        "dependencyGlobs": [
+          "fixtures/puzzle-grid/golden.json",
+          "crates/puzzled-core/tests/puzzle_grid_parity.rs",
+          "crates/puzzled-server/tests/puzzled_differential.rs",
+          "scripts/differential/puzzled-oracle.ts",
+          "scripts/run-puzzled-differential.sh"
+        ],
+        "staleReason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs",
+        "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
+      }
+    }
+  ],
+  "summary": {
+    "total": 1,
+    "notes": "CI parity slice manifest for puzzle-grid golden fixture differential gate (rej-010). Does not promote fleet ledger state."
+  }
+}

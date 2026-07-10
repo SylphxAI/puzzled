@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "repo": "SylphxAI/puzzled",
+  "rejectionRef": "rej-010",
+  "verifiedAt": null,
+  "status": "harness_landed",
+  "slice": "puzzle-grid|puzzle-solution-submit|leaderboard-read",
+  "promotionPolicy": "NO_PROMOTIONS — puzzle-grid-generation and sibling capabilities ledger states remain rust_impl; proof.status remains missing until differential_green at bound SHAs",
+  "harness": {
+    "entrypoint": "scripts/run-puzzled-differential.sh",
+    "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle; puzzle_solution_submit_differential_matches_ts_oracle; leaderboard_read_differential_matches_ts_oracle; puzzled_differential_matches_ts_oracle",
+    "oracle": "scripts/differential/puzzled-oracle.ts",
+    "corpusManifest": "scripts/differential/fixtures/puzzled-corpus.json",
+    "goldenFixtures": [
+      "fixtures/puzzle-grid/golden.json",
+      "fixtures/puzzle-solution/golden.json",
+      "fixtures/leaderboard/golden.json"
+    ],
+    "gate": "scripts/check-proto-buf.ts"
+  },
+  "capabilities": [
+    "puzzle-grid-generation",
+    "puzzle-solution-submit",
+    "leaderboard-read"
+  ],
+  "caseCounts": {
+    "puzzleGrid": 5,
+    "puzzleSolution": 11,
+    "leaderboard": 13,
+    "total": 29
+  },
+  "requires": {
+    "bun": "1.x",
+    "cargo": "puzzled-server test binary"
+  },
+  "boundedSlices": {
+    "puzzle-grid": {
+      "entrypoint": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle",
+      "cases": 5,
+      "harness": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
+      "goldenFixture": "fixtures/puzzle-grid/golden.json",
+      "domains": ["random", "shuffle", "sudoku", "http"]
+    },
+    "puzzle-solution-submit": {
+      "entrypoint": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_solution_submit_differential_matches_ts_oracle",
+      "cases": 11,
+      "harness": "scripts/run-puzzled-differential.sh --slice puzzle-solution-submit"
+    },
+    "leaderboard-read": {
+      "entrypoint": "crates/puzzled-server/tests/puzzled_differential.rs#leaderboard_read_differential_matches_ts_oracle",
+      "cases": 13,
+      "harness": "scripts/run-puzzled-differential.sh --slice leaderboard-read"
+    }
+  },
+  "notes": "rej-010 differential harness for frozen TS golden baselines (puzzle-grid/solution/leaderboard) vs Rust puzzled-core + puzzled-server HTTP. Cycle37 focus: puzzle_grid_generation_differential_matches_ts_oracle (5 cases from fixtures/puzzle-grid/golden.json). Run: bash scripts/run-puzzled-differential.sh [--slice puzzle-grid|puzzle-solution-submit|leaderboard-read]"
+}

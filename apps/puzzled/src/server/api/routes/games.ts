@@ -17,6 +17,10 @@ import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
 import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
+import {
+	shouldDelegateScoringToRust,
+	validateAndScoreViaRust,
+} from '../../rust-api-client'
 import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
 import { hasPremiumAccess } from '@/lib/billing/server'
 import { PAGINATION } from '@/lib/config/validation'
@@ -108,6 +112,15 @@ async function validateAndScoreSubmission(input: {
 		attempts: input.attempts,
 		timeSpentMs: input.timeSpentMs,
 		data: input.data,
+	}
+
+	if (shouldDelegateScoringToRust()) {
+		return validateAndScoreViaRust({
+			gameSlug: input.gameSlug,
+			solution: puzzle.solution,
+			puzzleData: puzzle.puzzleData,
+			submission,
+		})
 	}
 
 	return validateAndScore(input.gameSlug, puzzle.solution, puzzle.puzzleData, submission)

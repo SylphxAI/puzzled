@@ -1,0 +1,17 @@
+[package]
+name = "puzzled-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Frozen puzzle grid generators (ADR-168 S2 seed-based parity)"
+
+[lints]
+workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

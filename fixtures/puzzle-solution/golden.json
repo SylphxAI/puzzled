@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "source": "apps/puzzled/src/games/sudoku/config.ts validateAndScore (ADR-168 S2 puzzle-solution-submit)",
+  "capturedAt": "2026-07-10",
+  "captureNote": "Run bun scripts/capture-puzzle-solution-golden.ts to embed scoringCases + httpCases",
+  "scoringCases": [
+    {
+      "id": "fast-win-no-mistakes",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 0,
+        "data": { "useSolutionGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 1000 }
+    },
+    {
+      "id": "100s-win-no-mistakes",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 100000,
+        "data": { "useSolutionGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 900 }
+    },
+    {
+      "id": "500s-win-capped-time-penalty",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 600000,
+        "data": { "useSolutionGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 500 }
+    },
+    {
+      "id": "fast-win-5-mistakes",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 0,
+        "data": { "useSolutionGrid": true, "mistakes": 5 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 750 }
+    },
+    {
+      "id": "200s-win-3-mistakes",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 200000,
+        "data": { "useSolutionGrid": true, "mistakes": 3 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 650 }
+    },
+    {
+      "id": "minimum-win-score-100",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 700000,
+        "data": { "useSolutionGrid": true, "mistakes": 20 }
+      },
+      "expected": { "valid": true, "status": "won", "score": 100 }
+    },
+    {
+      "id": "loss-scores-zero",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "lost",
+        "attempts": 1,
+        "timeSpentMs": 60000,
+        "data": { "useIncorrectGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": true, "status": "lost", "score": 0 }
+    },
+    {
+      "id": "missing-final-grid",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 60000,
+        "data": { "mistakes": 0 }
+      },
+      "expected": { "valid": false, "error": "Missing final grid data" }
+    },
+    {
+      "id": "false-win-claim",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "won",
+        "attempts": 1,
+        "timeSpentMs": 60000,
+        "data": { "useIncorrectGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": false, "error": "Invalid win claim - grid does not match solution" }
+    },
+    {
+      "id": "false-loss-claim",
+      "gameSlug": "sudoku",
+      "seed": 12345,
+      "difficulty": "medium",
+      "submission": {
+        "status": "lost",
+        "attempts": 1,
+        "timeSpentMs": 60000,
+        "data": { "useSolutionGrid": true, "mistakes": 0 }
+      },
+      "expected": { "valid": false, "error": "Invalid loss claim - grid matches solution" }
+    }
+  ],
+  "httpCases": [
+    {
+      "id": "unsupported-game",
+      "method": "POST",
+      "path": "/api/v1/puzzles/submit",
+      "requestBody": {
+        "gameSlug": "word-guess",
+        "solution": { "grid": [] },
+        "submission": {
+          "status": "won",
+          "attempts": 1,
+          "timeSpentMs": 0,
+          "data": {}
+        }
+      },
+      "httpStatus": 400,
+      "responseBody": {
+        "error": "unsupported gameSlug",
+        "supported": ["sudoku"],
+        "slice": "S2-puzzle-solution-submit"
+      }
+    }
+  ]
+}

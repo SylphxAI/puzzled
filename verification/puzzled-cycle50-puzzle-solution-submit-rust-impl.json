@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 2,
+  "repo": "SylphxAI/puzzled",
+  "cycle": "cycle50",
+  "reauditRef": "rej-010",
+  "verifiedAt": "2026-07-10T31:00:00Z",
+  "status": "rust_impl_on_disk_verified",
+  "executionStatus": "harness_present_shell_unavailable",
+  "promotionPolicy": "NO_PROMOTIONS — rust_impl ONLY per rej-010; proof.status remains missing until differential_green at bound SHAs",
+  "slice": "puzzle-solution-submit",
+  "capabilities": ["puzzle-solution-submit"],
+  "rustSurfaces": [
+    "crates/puzzled-core/src/scoring.rs",
+    "crates/puzzled-server/src/puzzle_submit.rs",
+    "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_solution_submit_differential_matches_ts_oracle"
+  ],
+  "harness": {
+    "entrypoint": "scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
+    "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_solution_submit_differential_matches_ts_oracle",
+    "oracle": "scripts/differential/puzzled-oracle.ts",
+    "corpus": "scripts/differential/fixtures/puzzled-corpus.json",
+    "goldenFixtures": ["fixtures/puzzle-solution/golden.json"]
+  },
+  "caseCounts": {
+    "scoringCases": 10,
+    "httpCases": 1,
+    "total": 11
+  },
+  "resumeCommands": [
+    "cargo test -p puzzled-server --test puzzled_differential puzzle_solution_submit_differential_matches_ts_oracle",
+    "bash scripts/run-puzzled-differential.sh --slice puzzle-solution-submit"
+  ],
+  "notes": "Cycle50 rej-010: puzzle-solution-submit bounded differential harness on-disk verify (11 cases). Shell unavailable (rej-007)."
+}

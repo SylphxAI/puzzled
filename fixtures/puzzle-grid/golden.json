@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "source": "apps/puzzled/src/games/shared/random.ts + sudoku/generator.ts (ADR-168 S2 puzzle-grid)",
+  "capturedAt": "2026-07-09",
+  "captureNote": "Run bun scripts/capture-puzzle-grid-golden.ts to embed sudoku grids + shuffle cases",
+  "randomCases": [
+    {
+      "id": "lcg-seed-0-first-5",
+      "seed": 0,
+      "values": [
+        0.000005743188679369882,
+        0.655150985118598,
+        0.304813159696082,
+        0.674960825727877,
+        0.106769745234406
+      ]
+    },
+    {
+      "id": "lcg-seed-42-first-3",
+      "seed": 42,
+      "values": [
+        0.581842450827886,
+        0.380212314942857,
+        0.862033407512345
+      ]
+    }
+  ],
+  "sudokuCases": [
+    {
+      "id": "seed-42-medium",
+      "seed": 42,
+      "difficulty": "medium"
+    },
+    {
+      "id": "seed-12345-medium",
+      "seed": 12345,
+      "difficulty": "medium"
+    }
+  ],
+  "httpCases": [
+    {
+      "id": "unsupported-game",
+      "path": "/api/v1/puzzles/grid",
+      "query": "gameSlug=wordle&seed=1",
+      "httpStatus": 400,
+      "body": {
+        "error": "unsupported gameSlug",
+        "supported": ["sudoku"],
+        "slice": "S2-puzzle-grid"
+      }
+    }
+  ]
+}

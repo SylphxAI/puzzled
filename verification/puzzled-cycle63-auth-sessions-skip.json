@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "repo": "SylphxAI/puzzled",
+  "cycle": "cycle63",
+  "reauditRef": "rej-010",
+  "verifiedAt": "2026-07-10T54:00:00Z",
+  "status": "harness_metadata_only",
+  "executionStatus": "harness_present_shell_unavailable",
+  "slice": "auth-sessions",
+  "tsOnlyAction": "skip",
+  "harness": {
+    "entrypoint": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
+    "verificationRef": "verification/puzzled-cycle52-puzzle-grid-generation-rust-impl.json"
+  },
+  "notes": "Cycle63 rej-010: cycle53 rotation — auth-sessions ts_only deferred."
+}

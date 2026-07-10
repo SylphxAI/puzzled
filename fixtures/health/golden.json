@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "source": "apps/puzzled/src/server/api/app.ts GET /api/v1/health + puzzled-server probes",
+  "capturedAt": "2026-07-09",
+  "mode": "S0_no_postgres",
+  "healthz": {
+    "httpStatus": 200,
+    "body": {
+      "status": "ok"
+    }
+  },
+  "readyz": {
+    "httpStatus": 200,
+    "body": {
+      "status": "ok",
+      "slice": "S0",
+      "stub": true,
+      "dependencies": [
+        {
+          "name": "postgres",
+          "ok": false,
+          "detail": "sqlx leaderboard read (ADR-168 S1)"
+        }
+      ]
+    }
+  }
+}

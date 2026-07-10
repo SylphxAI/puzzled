@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// Seed-based puzzle grid generation (ADR-168 S2).
+// HTTP: GET /api/v1/puzzles/grid?gameSlug=sudoku&seed=YYYYMMDD&difficulty=medium
+
+message GenerateGridRequest {
+  string game_slug = 1;
+  int64 seed = 2;
+  string difficulty = 3;
+}
+
+message SudokuGridRow {
+  repeated uint32 cells = 1;
+}
+
+message SudokuPuzzlePayload {
+  repeated SudokuGridRow grid = 1;
+  string difficulty = 2;
+}
+
+message SudokuSolutionPayload {
+  repeated SudokuGridRow grid = 1;
+}
+
+message GenerateGridResponse {
+  string game_slug = 1;
+  int64 seed = 2;
+  SudokuPuzzlePayload puzzle_data = 3;
+  SudokuSolutionPayload solution = 4;
+  string slice = 5;
+}
+
+// HTTP: POST /api/v1/puzzles/submit
+
+message SubmitSolutionRequest {
+  string game_slug = 1;
+  SudokuSolutionPayload solution = 2;
+  SudokuPuzzlePayload puzzle_data = 3;
+  string submission_json = 4;
+}
+
+message SubmitSolutionResponse {
+  bool valid = 1;
+  string status = 2;
+  uint32 score = 3;
+  string error = 4;
+  string slice = 5;
+}
+
+service PuzzleService {
+  rpc GenerateGrid(GenerateGridRequest) returns (GenerateGridResponse);
+  rpc SubmitSolution(SubmitSolutionRequest) returns (SubmitSolutionResponse);
+}

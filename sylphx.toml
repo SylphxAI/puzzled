@@ -14,13 +14,20 @@ context = "."
 name = "web"
 type = "worker"
 release_command = "atlas migrate apply --env production --baseline 20260222000000"
+# ADR-168 S2: web may proxy health/leaderboard/puzzle-grid/puzzle-submit to Rust api in local dev
+# (PUZZLED_USE_RUST_HEALTH=1, PUZZLED_USE_RUST_LEADERBOARD=1, PUZZLED_USE_RUST_PUZZLE_GRID=1,
+#  PUZZLED_USE_RUST_PUZZLE_SUBMIT=1).
+connect = { services = ["api"] }
 
 # Rust API authority — strangler sidecar until auth/read parity (ADR-168).
 [[services]]
 name = "api"
 type = "web"
 port = 8080
-watch_paths = ["crates/puzzled-server/**", "proto/**", "buf.yaml", "Cargo.toml", "Cargo.lock", "sylphx.toml"]
+deploy_priority = 100
+# S2: platform ingress routes health + leaderboard read directly — no web proxy hop.
+path_prefixes = ["/healthz", "/readyz", "/api/v1/stats/leaderboard", "/api/leaderboard", "/api/v1/puzzles/grid", "/api/v1/puzzles/submit"]
+watch_paths = ["crates/puzzled-core/**", "crates/puzzled-server/**", "proto/**", "fixtures/puzzle-grid/**", "fixtures/puzzle-solution/**", "buf.yaml", "Cargo.toml", "Cargo.lock", "sylphx.toml"]
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"

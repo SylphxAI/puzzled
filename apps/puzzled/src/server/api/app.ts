@@ -14,6 +14,7 @@
 
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { headers } from 'next/headers'
+import { proxyToRustApi, shouldProxyHealthToRust } from '../rust-api-proxy'
 import { errorHandler, loggerMiddleware } from './middleware'
 import {
 	type AdminRoutes,
@@ -24,6 +25,8 @@ import {
 	gamificationRoutes,
 	type NotificationsRoutes,
 	notificationsRoutes,
+	type PuzzlesRoutes,
+	puzzlesRoutes,
 	type StatsRoutes,
 	statsRoutes,
 	type UserRoutes,
@@ -49,7 +52,11 @@ const baseApp = new OpenAPIHono<PuzzledEnv>()
 	// Error handling
 	.use('*', errorHandler)
 	// Health Check (no auth required)
-	.get('/health', (c) => {
+	// ADR-168 S2: prod routes /healthz to Rust api; local dev proxies when PUZZLED_USE_RUST_HEALTH=1.
+	.get('/health', async (c) => {
+		if (shouldProxyHealthToRust()) {
+			return proxyToRustApi(c.req.raw, { rustPath: '/healthz' })
+		}
 		return c.json({
 			status: 'ok',
 			timestamp: new Date().toISOString(),
@@ -60,6 +67,7 @@ const baseApp = new OpenAPIHono<PuzzledEnv>()
 // Mount route modules (chained for type inference)
 const appWithRoutes = baseApp
 	.route('/games', gamesRoutes)
+	.route('/puzzles', puzzlesRoutes)
 	.route('/stats', statsRoutes)
 	.route('/gamification', gamificationRoutes)
 	.route('/user', userRoutes)
@@ -75,6 +83,7 @@ export type {
 	GamificationRoutes,
 	GamesRoutes,
 	NotificationsRoutes,
+	PuzzlesRoutes,
 	StatsRoutes,
 	UserRoutes,
 }
@@ -91,7 +100,10 @@ app.use('*', async (c, next) => {
 })
 app.use('*', loggerMiddleware)
 app.use('*', errorHandler)
-app.get('/health', (c) => {
+app.get('/health', async (c) => {
+	if (shouldProxyHealthToRust()) {
+		return proxyToRustApi(c.req.raw, { rustPath: '/healthz' })
+	}
 	return c.json({
 		status: 'ok',
 		timestamp: new Date().toISOString(),
@@ -99,6 +111,7 @@ app.get('/health', (c) => {
 	})
 })
 app.route('/games', gamesRoutes)
+app.route('/puzzles', puzzlesRoutes)
 app.route('/stats', statsRoutes)
 app.route('/gamification', gamificationRoutes)
 app.route('/user', userRoutes)
