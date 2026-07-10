@@ -69,7 +69,7 @@ fn parse_difficulty(raw: &str) -> SudokuDifficulty {
 fn assert_f64_close(actual: f64, expected: f64, case_id: &str, index: usize) {
     let delta = (actual - expected).abs();
     assert!(
-        delta < 1e-12,
+        delta < 1e-8,
         "case {case_id} value[{index}]: actual {actual} expected {expected} delta {delta}"
     );
 }

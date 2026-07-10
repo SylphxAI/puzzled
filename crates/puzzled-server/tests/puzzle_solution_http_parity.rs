@@ -39,7 +39,7 @@ fn load_golden() -> GoldenFile {
     let raw = fs::read_to_string(&path)
         .unwrap_or_else(|error| panic!("read golden corpus {}: {error}", path.display()));
     serde_json::from_str(&raw)
-        .unwrap_or_else(|error| panic!("parse golden corpus {}: {error}", path.display()));
+        .unwrap_or_else(|error| panic!("parse golden corpus {}: {error}", path.display()))
 }
 
 fn pick_ephemeral_port() -> u16 {
