@@ -19,10 +19,14 @@
   ],
   "reauditRef": "rej-010",
   "verificationRef": "verification/puzzled-cycle50-puzzle-solution-submit-rust-impl.json",
-  "inventorySource": ["hono", "proto", "manual"],
+  "inventorySource": [
+    "hono",
+    "proto",
+    "manual"
+  ],
   "promotionHold": {
     "active": true,
-    "reason": "rej-010 promotion freeze — differential harness landed; awaiting differential_green at bound SHAs before authority_rust restore",
+    "reason": "rej-010 promotion freeze \u2014 differential harness landed; awaiting differential_green at bound SHAs before authority_rust restore",
     "rejectionRef": "rej-010",
     "since": "2026-07-10T21:30:00Z"
   },
@@ -59,7 +63,7 @@
       "state": "rust_impl",
       "proof": {
         "status": "stale",
-        "staleReason": "rej-010 retroactive audit — no SHA-bound differential proof",
+        "staleReason": "rej-010 retroactive audit \u2014 no SHA-bound differential proof",
         "staleAt": "2026-07-10T21:30:00Z"
       },
       "promotionHold": {
@@ -88,12 +92,12 @@
           "scripts/differential/**",
           "scripts/run-puzzled-differential.sh"
         ],
-        "staleReason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs",
+        "staleReason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs",
         "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs; NO auto-promotion",
+        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
         "rejectionRef": "rej-010",
         "since": "2026-07-10T21:30:00Z"
       },
@@ -103,7 +107,7 @@
       "parityTest": "fixtures/leaderboard/golden.json; crates/puzzled-server/tests/leaderboard_parity.rs; apps/puzzled/tests/leaderboard-golden.test.ts; apps/puzzled/src/server/rust-api-proxy.test.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#leaderboard_read_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice leaderboard-read",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/stats/leaderboard,/api/leaderboard]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "S2 api-leaderboard: golden fixture parity on frozen baseline — 7 httpCases, 3 enrichCases, 3 queryParseCases. authority_rust NOT claimed (rej-010)."
+      "notes": "S2 api-leaderboard: golden fixture parity on frozen baseline \u2014 7 httpCases, 3 enrichCases, 3 queryParseCases. authority_rust NOT claimed (rej-010)."
     },
     {
       "id": "puzzle-grid-generation",
@@ -119,12 +123,12 @@
           "scripts/differential/**",
           "scripts/run-puzzled-differential.sh"
         ],
-        "staleReason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs",
+        "staleReason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs",
         "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs; NO auto-promotion",
+        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
         "rejectionRef": "rej-010",
         "since": "2026-07-10T21:30:00Z"
       },
@@ -149,12 +153,12 @@
           "scripts/differential/**",
           "scripts/run-puzzled-differential.sh"
         ],
-        "staleReason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs",
+        "staleReason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs",
         "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: differential harness landed — awaiting differential_green at bound SHAs; NO auto-promotion",
+        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
         "rejectionRef": "rej-010",
         "since": "2026-07-10T21:30:00Z"
       },
@@ -210,39 +214,39 @@
     "authority_progress": 0.444,
     "verified_authority_progress": 0,
     "weighted_progress": 0.4,
-    "notes": "rej-010 honest metrics — puzzle-grid + puzzle-solution + leaderboard held at rust_impl; proof.status missing until differential_green",
+    "notes": "rej-010 honest metrics \u2014 puzzle-grid + puzzle-solution + leaderboard held at rust_impl; proof.status missing until differential_green",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
       "verificationRef": "verification/puzzled-cycle48-puzzle-solution-submit-rust-impl.json",
-      "notes": "rej-010 rust_impl ONLY — cycle48 highest-value unimplemented slice: puzzle-solution-submit bounded differential (11 cases)"
+      "notes": "rej-010 rust_impl ONLY \u2014 cycle48 highest-value unimplemented slice: puzzle-solution-submit bounded differential (11 cases)"
     },
     "cycle50_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
       "verificationRef": "verification/puzzled-cycle50-puzzle-solution-submit-rust-impl.json",
-      "notes": "rej-010 rust_impl ONLY — cycle50 highest-value unimplemented slice: puzzle-solution-submit bounded differential (11 cases)"
+      "notes": "rej-010 rust_impl ONLY \u2014 cycle50 highest-value unimplemented slice: puzzle-solution-submit bounded differential (11 cases)"
     },
     "cycle52_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-grid-generation",
       "verificationRef": "verification/puzzled-cycle52-puzzle-grid-generation-rust-impl.json",
-      "notes": "rej-010 rust_impl ONLY — cycle52 rotation slice: puzzle-grid-generation bounded differential (5 cases); ts_only skip auth-sessions"
+      "notes": "rej-010 rust_impl ONLY \u2014 cycle52 rotation slice: puzzle-grid-generation bounded differential (5 cases); ts_only skip auth-sessions"
     },
     "cycle63_delta": {
       "action": "skip",
       "slice": "auth-sessions",
       "verificationRef": "verification/puzzled-cycle63-auth-sessions-skip.json",
-      "notes": "rej-010 cycle53 rotation — auth-sessions ts_only deferred"
+      "notes": "rej-010 cycle53 rotation \u2014 auth-sessions ts_only deferred"
     },
     "cycle64_delta": {
       "ts_only_deferred": 1,
       "slice": "api-v1-hono-monolith",
       "verificationRef": "verification/puzzled-cycle64-api-v1-hono-monolith-skip.json",
-      "notes": "rej-010 cycle64 — api-v1-hono-monolith ts_only deferred"
+      "notes": "rej-010 cycle64 \u2014 api-v1-hono-monolith ts_only deferred"
     }
   },
-  "cycle37Slice": "puzzle-grid-generation bounded differential slice (weight 4) — 5-case TS oracle vs Rust SSOT golden fixtures",
+  "cycle37Slice": "puzzle-grid-generation bounded differential slice (weight 4) \u2014 5-case TS oracle vs Rust SSOT golden fixtures",
   "cycle38": {
     "boundedSlice": "puzzle-grid-generation|leaderboard-read|puzzle-solution-submit",
     "status": "rust_impl_on_disk_verified",
@@ -256,7 +260,7 @@
       "fixtures/leaderboard/golden.json",
       "fixtures/puzzle-solution/golden.json"
     ],
-    "notes": "cycle38 rej-010: puzzle-grid + leaderboard + solution-submit bounded differential harness confirmed on disk. rust_impl ONLY — proof.status missing until differential_green."
+    "notes": "cycle38 rej-010: puzzle-grid + leaderboard + solution-submit bounded differential harness confirmed on disk. rust_impl ONLY \u2014 proof.status missing until differential_green."
   },
   "cycle44": {
     "boundedSlice": "puzzle-grid-generation",
@@ -274,9 +278,9 @@
     "caseCounts": {
       "puzzleGrid": 5
     },
-    "notes": "cycle44 rej-010: puzzle-grid-generation bounded differential harness re-verified on disk. rust_impl ONLY — proof.status missing until differential_green at bound SHAs."
+    "notes": "cycle44 rej-010: puzzle-grid-generation bounded differential harness re-verified on disk. rust_impl ONLY \u2014 proof.status missing until differential_green at bound SHAs."
   },
-  "cycle48Slice": "puzzle-solution-submit — bounded differential; bash scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
+  "cycle48Slice": "puzzle-solution-submit \u2014 bounded differential; bash scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
   "cycle48": {
     "boundedSlice": "puzzle-solution-submit",
     "status": "rust_impl_on_disk_verified",
@@ -297,9 +301,9 @@
       "httpCases": 1,
       "total": 11
     },
-    "notes": "cycle48 rej-010: puzzle-solution-submit bounded differential harness on-disk verify. rust_impl ONLY — proof.status missing until differential_green at bound SHAs."
+    "notes": "cycle48 rej-010: puzzle-solution-submit bounded differential harness on-disk verify. rust_impl ONLY \u2014 proof.status missing until differential_green at bound SHAs."
   },
-  "cycle50Slice": "puzzle-solution-submit — bounded --slice entrypoint; bash scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
+  "cycle50Slice": "puzzle-solution-submit \u2014 bounded --slice entrypoint; bash scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
   "cycle50": {
     "boundedSlice": "puzzle-solution-submit",
     "status": "rust_impl_on_disk_verified",
@@ -314,17 +318,19 @@
       "scripts/differential/puzzled-oracle.ts",
       "scripts/differential/fixtures/puzzled-corpus.json"
     ],
-    "caseCounts": { "total": 11 },
-    "notes": "cycle50 rej-010: puzzle-solution-submit bounded differential harness on-disk verify. rust_impl ONLY — proof.status missing until differential_green at bound SHAs."
+    "caseCounts": {
+      "total": 11
+    },
+    "notes": "cycle50 rej-010: puzzle-solution-submit bounded differential harness on-disk verify. rust_impl ONLY \u2014 proof.status missing until differential_green at bound SHAs."
   },
-  "cycle51Slice": "skip — next ts_only api-v1-hono-monolith (weight 5) monolith-scale",
+  "cycle51Slice": "skip \u2014 next ts_only api-v1-hono-monolith (weight 5) monolith-scale",
   "cycle51": {
     "action": "skip",
     "nextTsOnlyCandidate": "auth-sessions",
     "skipReason": "api-v1-hono-monolith too large for single bounded slice; auth-sessions (weight 4) candidate for cycle52",
     "reauditRef": "rej-010"
   },
-  "cycle52Slice": "puzzle-grid-generation — bounded --slice entrypoint; bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
+  "cycle52Slice": "puzzle-grid-generation \u2014 bounded --slice entrypoint; bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
   "cycle52": {
     "boundedSlice": "puzzle-grid-generation",
     "status": "rust_impl_on_disk_verified",
@@ -345,10 +351,10 @@
     "caseCounts": {
       "puzzleGrid": 5
     },
-    "notes": "cycle52 rej-010: puzzle-grid-generation bounded differential harness on-disk verify. rust_impl ONLY — proof.status missing until differential_green at bound SHAs."
+    "notes": "cycle52 rej-010: puzzle-grid-generation bounded differential harness on-disk verify. rust_impl ONLY \u2014 proof.status missing until differential_green at bound SHAs."
   },
-  "cycle63Slice": "auth-sessions — cycle53 skip; puzzle-grid re-verify via bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
-  "cycle64Slice": "api-v1-hono-monolith — cycle64 skip; puzzle-grid re-verify via bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
+  "cycle63Slice": "auth-sessions \u2014 cycle53 skip; puzzle-grid re-verify via bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
+  "cycle64Slice": "api-v1-hono-monolith \u2014 cycle64 skip; puzzle-grid re-verify via bash scripts/run-puzzled-differential.sh --slice puzzle-grid",
   "cycle63": {
     "action": "skip",
     "boundedSlice": "auth-sessions",
@@ -356,7 +362,7 @@
     "reauditRef": "rej-010",
     "verificationRef": "verification/puzzled-cycle63-auth-sessions-skip.json",
     "harnessPath": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
-    "notes": "cycle63 rej-010: cycle53 rotation metadata — auth-sessions ts_only deferred."
+    "notes": "cycle63 rej-010: cycle53 rotation metadata \u2014 auth-sessions ts_only deferred."
   },
   "cycle64": {
     "boundedSlice": "api-v1-hono-monolith",
@@ -367,6 +373,6 @@
     "skipReason": "api-v1-hono-monolith monolith-scale API deferred",
     "harnessPath": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
     "reverifySlice": "puzzle-grid",
-    "notes": "cycle64 rej-010: api-v1-hono-monolith ts_only deferred — harness metadata only."
+    "notes": "cycle64 rej-010: api-v1-hono-monolith ts_only deferred \u2014 harness metadata only."
   }
 }

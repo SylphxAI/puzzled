@@ -55,23 +55,18 @@ if (lint.exitCode !== 0) {
 console.log('[check:proto-buf] buf lint OK')
 
 const descriptorBaseline = join(repoRoot, 'proto/baseline/descriptors.binpb')
-const gitBaselines = [
-	{ treeRef: 'main', against: '.git#branch=main,subdir=proto' },
-	{ treeRef: 'HEAD^', against: '.git#ref=HEAD^,subdir=proto' },
-] as const
+const mainHasProto =
+	await $`git ls-tree -r --name-only main -- proto/puzzled`.nothrow()
 
 let againstRef: string | null = null
-for (const candidate of gitBaselines) {
-	const hasProto =
-		await $`git ls-tree -r --name-only ${candidate.treeRef} -- proto/puzzled`.nothrow()
-	if (hasProto.exitCode === 0 && hasProto.stdout.toString().trim().length > 0) {
-		againstRef = candidate.against
-		break
-	}
-}
+let baselineNote = 'main branch proto baseline'
 
-if (!againstRef && existsSync(descriptorBaseline)) {
+if (mainHasProto.exitCode === 0 && mainHasProto.stdout.toString().trim().length > 0) {
+	againstRef = '.git#branch=main'
+} else if (existsSync(descriptorBaseline)) {
 	againstRef = descriptorBaseline
+	baselineNote =
+		'transitional descriptor baseline until proto merges to main; CI will switch to main automatically'
 }
 
 if (!againstRef) {
@@ -85,6 +80,7 @@ if (!againstRef) {
 		process.exit(breaking.exitCode ?? 1)
 	}
 	console.log(`[check:proto-buf] buf breaking OK (against ${againstRef})`)
+	console.log(`[check:proto-buf] baseline_note: ${baselineNote}`)
 }
 
 const protoHealth = join(repoRoot, 'proto/puzzled/v1/health.proto')

@@ -359,12 +359,13 @@ fn rust_http_output(client: &Client, port: u16, case: &OracleCase) -> Value {
     }
     .unwrap_or_else(|error| panic!("case {} request: {error}", case.id));
 
+    let http_status = response.status().as_u16();
     let body: Value = response
         .json()
         .unwrap_or_else(|error| panic!("case {} parse json: {error}", case.id));
 
     json!({
-        "httpStatus": response.status().as_u16(),
+        "httpStatus": http_status,
         "body": body
     })
 }
