@@ -1,9 +1,10 @@
 /**
  * Golden fixture parity: TS validateAndScore vs frozen baseline corpus.
  */
+
+import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'bun:test'
 import { validateAndScore } from '@/games/registry'
 import { sudokuConfig } from '@/games/sudoku/config'
 import type { GameSubmission } from '@/games/types'
@@ -23,9 +24,7 @@ type ScoringCase = {
 			finalGrid?: (number | null)[][]
 		}
 	}
-	expected:
-		| { valid: true; status: 'won' | 'lost'; score: number }
-		| { valid: false; error: string }
+	expected: { valid: true; status: 'won' | 'lost'; score: number } | { valid: false; error: string }
 }
 
 function buildSubmission(
@@ -60,12 +59,7 @@ describe('puzzle-solution golden corpus', () => {
 				scoringCase.difficulty,
 			)
 			const submission = buildSubmission(scoringCase.submission, solution.grid)
-			const actual = validateAndScore(
-				scoringCase.gameSlug,
-				solution,
-				puzzleData,
-				submission,
-			)
+			const actual = validateAndScore(scoringCase.gameSlug, solution, puzzleData, submission)
 
 			if (scoringCase.expected.valid) {
 				expect(actual.valid).toBe(true)

@@ -59,9 +59,9 @@ describe('puzzle-grid golden parity baseline', () => {
 			const replay = generateSudokuPuzzle(sudokuCase.seed, sudokuCase.difficulty)
 			expect(actual).toEqual(replay)
 
-			if (sudokuCase.puzzleData && sudokuCase.solution) {
-				expect(actual.puzzleData).toEqual(sudokuCase.puzzleData)
-				expect(actual.solution).toEqual(sudokuCase.solution)
+			if (sudokuCase.puzzleData != null && sudokuCase.solution != null) {
+				expect(actual.puzzleData).toEqual(sudokuCase.puzzleData as typeof actual.puzzleData)
+				expect(actual.solution).toEqual(sudokuCase.solution as typeof actual.solution)
 			}
 		})
 	}

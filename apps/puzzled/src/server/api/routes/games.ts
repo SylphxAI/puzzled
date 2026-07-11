@@ -17,10 +17,6 @@ import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm'
 import { HTTPException } from 'hono/http-exception'
 import { getPuzzleDateStringUTC, getPuzzleNumber, getTodayUTC } from '@/features/daily/server'
 import { getGameConfig, isValidGameSlug, validateAndScore } from '@/games/registry'
-import {
-	shouldDelegateScoringToRust,
-	validateAndScoreViaRust,
-} from '../../rust-api-client'
 import type { GameResult, GameSubmission, PuzzleDifficulty } from '@/games/types'
 import { hasPremiumAccess } from '@/lib/billing/server'
 import { PAGINATION } from '@/lib/config/validation'
@@ -33,6 +29,7 @@ import {
 	type NewGameSession,
 	userFreezeData,
 } from '@/lib/db/schema'
+import { shouldDelegateScoringToRust, validateAndScoreViaRust } from '../../rust-api-client'
 import { getOrCreatePuzzle } from '../../services/puzzle'
 import { authMiddleware, authRateLimitMiddleware, optionalAuthMiddleware } from '../middleware'
 import type { PuzzledAuthEnv } from '../types'

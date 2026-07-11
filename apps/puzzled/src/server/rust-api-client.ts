@@ -20,9 +20,7 @@ export function shouldDelegateScoringToRust(): boolean {
 /**
  * Validate and score a puzzle submission via Rust POST /api/v1/puzzles/submit.
  */
-export async function validateAndScoreViaRust(
-	input: ValidateAndScoreInput,
-): Promise<GameResult> {
+export async function validateAndScoreViaRust(input: ValidateAndScoreInput): Promise<GameResult> {
 	const url = `${resolveRustApiBaseUrl()}/api/v1/puzzles/submit`
 	const response = await fetch(url, {
 		method: 'POST',
