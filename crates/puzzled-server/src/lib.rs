@@ -1,10 +1,12 @@
-//! Puzzled Server — ADR-168 S1: health probes + leaderboard read slice.
+//! Puzzled Server — ADR-168 S2: health + leaderboard read + puzzle grid + solution submit.
 
 pub mod db_config;
 
 mod game_slugs;
 mod leaderboard;
-mod leaderboard_db;
+pub mod leaderboard_db;
+mod puzzle_grid;
+mod puzzle_submit;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -12,9 +14,11 @@ use std::time::{Duration, Instant};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use leaderboard::{leaderboard_stub, stats_leaderboard};
+use puzzle_grid::generate_grid;
+use puzzle_submit::submit_solution;
 use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
@@ -118,6 +122,8 @@ pub fn router(state: AppState) -> Router {
         .route("/readyz", get(readyz))
         .route("/api/leaderboard", get(leaderboard_stub))
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
+        .route("/api/v1/puzzles/grid", get(generate_grid))
+        .route("/api/v1/puzzles/submit", post(submit_solution))
         .with_state(state)
 }
 
