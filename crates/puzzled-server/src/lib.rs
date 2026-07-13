@@ -2,8 +2,11 @@
 
 pub mod db_config;
 
+mod game_format;
 mod game_slugs;
+mod pattern_match;
 mod placement;
+mod random_lcg;
 mod scoring;
 mod leaderboard;
 mod leaderboard_db;
@@ -22,7 +25,12 @@ use serde_json::json;
 use sqlx::PgPool;
 
 pub use leaderboard::LeaderboardStubBody;
+pub use game_format::{
+    calculate_wordle_score, compare_by_time, format_time_score, format_timer, is_perfect_game,
+};
+pub use pattern_match::{find_all_sets, generate_all_cards, is_valid_set, Card, Color, Fill, Shape};
 pub use placement::{is_valid_placement, GRID_SIZE};
+pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);

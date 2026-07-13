@@ -190,13 +190,49 @@
       "weight": 3,
       "state": "ts_only",
       "tsSurface": "apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts"
+    },
+    {
+      "id": "game-shared-random-lcg",
+      "domain": "game-core",
+      "weight": 2,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/shared/random.ts",
+      "rustSurface": "crates/puzzled-server/src/random_lcg.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: frozen LCG + Fisher-Yates. proof_missing. NO authority_rust."
+    },
+    {
+      "id": "game-shared-format-score",
+      "domain": "game-core",
+      "weight": 2,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/shared/format.ts",
+      "rustSurface": "crates/puzzled-server/src/game_format.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing."
+    },
+    {
+      "id": "pattern-match-set-logic",
+      "domain": "game-core",
+      "weight": 3,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/pattern-match/types.ts",
+      "rustSurface": "crates/puzzled-server/src/pattern_match.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: is_valid_set/find_all_sets/generate_all_cards. proof_missing."
     }
   ],
   "summary": {
-    "total": 9,
+    "total": 12,
     "ts_only": 5,
     "contracted": 1,
-    "rust_impl": 3,
+    "rust_impl": 6,
     "parity_proven": 0,
     "authority_rust": 0,
     "ts_deleted": 0,
@@ -406,5 +442,9 @@
       "parity_proven"
     ],
     "goal_complete": false
+  },
+  "bulkResidual": {
+    "wave": "FLEET-PRODUCTS-WAVE2",
+    "note": "pure residual deepen: random_lcg + game_format + pattern_match; authority_rust false"
   }
 }
