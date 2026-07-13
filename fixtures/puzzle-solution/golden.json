@@ -1,0 +1,44 @@
+{
+  "scoringCases": [
+    {
+      "difficulty": "easy",
+      "expected": {
+        "score": 995,
+        "status": "won",
+        "valid": true
+      },
+      "gameSlug": "sudoku",
+      "id": "win-fast-seed-42",
+      "seed": 42,
+      "submission": {
+        "attempts": 1,
+        "data": {
+          "mistakes": 0,
+          "useSolutionGrid": true
+        },
+        "status": "won",
+        "timeSpentMs": 5000
+      }
+    },
+    {
+      "difficulty": "easy",
+      "expected": {
+        "score": 0,
+        "status": "lost",
+        "valid": true
+      },
+      "gameSlug": "sudoku",
+      "id": "loss-seed-42",
+      "seed": 42,
+      "submission": {
+        "attempts": 3,
+        "data": {
+          "mistakes": 3,
+          "useIncorrectGrid": true
+        },
+        "status": "lost",
+        "timeSpentMs": 60000
+      }
+    }
+  ]
+}

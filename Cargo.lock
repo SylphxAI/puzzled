@@ -1119,11 +1119,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "puzzled-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "puzzled-server"
 version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
+ "puzzled-core",
  "reqwest",
  "serde",
  "serde_json",
