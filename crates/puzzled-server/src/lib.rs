@@ -3,6 +3,8 @@
 pub mod db_config;
 
 mod game_slugs;
+mod placement;
+mod scoring;
 mod leaderboard;
 mod leaderboard_db;
 
@@ -20,6 +22,8 @@ use serde_json::json;
 use sqlx::PgPool;
 
 pub use leaderboard::LeaderboardStubBody;
+pub use placement::{is_valid_placement, GRID_SIZE};
+pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
