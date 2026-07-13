@@ -7,6 +7,7 @@ mod game_slugs;
 mod pattern_match;
 mod placement;
 mod crossword_grid;
+mod word_hive;
 mod random_lcg;
 mod scoring;
 mod wordle_eval;
@@ -35,6 +36,7 @@ pub use game_format::{
 pub use pattern_match::{find_all_sets, generate_all_cards, is_valid_set, Card, Color, Fill, Shape};
 pub use placement::{is_valid_placement, GRID_SIZE};
 pub use crossword_grid::{is_crossword_grid_complete, CROSSWORD_GRID_SIZE};
+pub use word_hive::{calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change, MIN_WORD_LENGTH};
 pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
