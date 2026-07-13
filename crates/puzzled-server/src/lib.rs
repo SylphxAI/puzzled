@@ -10,6 +10,7 @@ mod random_lcg;
 mod scoring;
 mod wordle_eval;
 mod nonogram_clues;
+mod queens_conflict;
 mod leaderboard;
 mod leaderboard_db;
 
@@ -36,6 +37,7 @@ pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
 pub use nonogram_clues::{generate_clues, is_grid_complete};
+pub use queens_conflict::{get_conflicts, is_solved, Cell as QueensCell};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
