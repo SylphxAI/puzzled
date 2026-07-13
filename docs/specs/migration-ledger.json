@@ -113,24 +113,17 @@
       "id": "puzzle-grid-generation",
       "domain": "game-write",
       "weight": 4,
-      "state": "rust_impl",
+      "state": "ts_only",
       "proof": {
         "status": "missing",
-        "dependencyGlobs": [
-          "fixtures/puzzle-grid/golden.json",
-          "crates/puzzled-core/tests/puzzle_grid_parity.rs",
-          "crates/puzzled-server/tests/puzzled_differential.rs",
-          "scripts/differential/**",
-          "scripts/run-puzzled-differential.sh"
-        ],
-        "staleReason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs",
-        "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
+        "staleReason": "surface_missing on main tip",
+        "staleAt": "2026-07-13T00:30:00Z"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
+        "reason": "FLEET-PRODUCTS-A-TICK: demoted rust_impl\u2192ts_only \u2014 rustSurface absent on main tip (no puzzled-core/puzzle_grid.rs)",
         "rejectionRef": "rej-010",
-        "since": "2026-07-10T21:30:00Z"
+        "since": "2026-07-13T00:30:00Z"
       },
       "tsSurface": "apps/puzzled/src/games/sudoku/generator.ts generateSudokuPuzzle (thin proxy fallback for HTTP)",
       "protoRpc": "puzzled.v1.PuzzleService/GenerateGrid",
@@ -138,7 +131,7 @@
       "parityTest": "fixtures/puzzle-grid/golden.json; crates/puzzled-core/tests/puzzle_grid_parity.rs; crates/puzzled-server/tests/puzzle_grid_http_parity.rs; apps/puzzled/tests/puzzle-grid-golden.test.ts; scripts/capture-puzzle-grid-golden.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-grid",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/grid]; scripts/api-smoke.sh",
-      "notes": "Cycle37 rej-010 bounded slice: puzzle_grid_generation_differential_matches_ts_oracle (5+ cases: random LCG, shuffle, sudoku core + HTTP). Golden fixtures in fixtures/puzzle-grid/golden.json. authority_rust NOT claimed."
+      "notes": "Cycle37 rej-010 bounded slice: puzzle_grid_generation_differential_matches_ts_oracle (5+ cases: random LCG, shuffle, sudoku core + HTTP). Golden fixtures in fixtures/puzzle-grid/golden.json. authority_rust NOT claimed. [honesty-repair 2026-07-13: rust_impl\u2192ts_only surface_missing]"
     },
     {
       "id": "puzzle-solution-submit",
@@ -148,27 +141,26 @@
       "proof": {
         "status": "missing",
         "dependencyGlobs": [
-          "fixtures/puzzle-solution/golden.json",
-          "crates/puzzled-server/tests/puzzled_differential.rs",
-          "scripts/differential/**",
-          "scripts/run-puzzled-differential.sh"
+          "crates/puzzled-server/src/scoring.rs",
+          "crates/puzzled-server/src/placement.rs",
+          "apps/puzzled/src/games/sudoku/config.ts"
         ],
-        "staleReason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs",
-        "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
+        "staleReason": "FLEET-PRODUCTS-A-TICK: pure validate_and_score/is_valid_placement ported offline; HTTP submit route still TS; no differential_green SHA bind",
+        "staleAt": "2026-07-13T00:30:00Z"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
+        "reason": "rej-010 pure residual only \u2014 need differential_green + canary for promotion",
         "rejectionRef": "rej-010",
-        "since": "2026-07-10T21:30:00Z"
+        "since": "2026-07-13T00:30:00Z"
       },
       "tsSurface": "apps/puzzled/src/games/registry.ts validateAndScore; apps/puzzled/src/server/api/routes/games.ts POST /save-result scoring delegation (thin proxy fallback)",
       "protoRpc": "puzzled.v1.PuzzleService/SubmitSolution",
-      "rustSurface": "crates/puzzled-core/src/scoring.rs; crates/puzzled-server/src/puzzle_submit.rs",
-      "parityTest": "fixtures/puzzle-solution/golden.json; crates/puzzled-core/tests/puzzle_solution_parity.rs; crates/puzzled-server/tests/puzzle_solution_http_parity.rs; apps/puzzled/tests/puzzle-solution-golden.test.ts; scripts/capture-puzzle-solution-golden.ts",
+      "rustSurface": "crates/puzzled-server/src/scoring.rs; crates/puzzled-server/src/placement.rs",
+      "parityTest": "cargo test -p puzzled-server scoring::; placement::",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_solution_submit_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/submit]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "S2 Cycle 17: Rust puzzled-core frozen sudoku validateAndScore parity; HTTP POST /api/v1/puzzles/submit. authority_rust NOT claimed (rej-010)."
+      "notes": "FLEET-PRODUCTS-A-TICK pure residual: sudoku validate_and_score + is_valid_placement ported to Rust. HTTP POST /api/v1/puzzles/submit remains TS. NO authority_rust/ts_deleted."
     },
     {
       "id": "api-v1-hono-monolith",
@@ -198,23 +190,59 @@
       "weight": 3,
       "state": "ts_only",
       "tsSurface": "apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts"
+    },
+    {
+      "id": "game-shared-random-lcg",
+      "domain": "game-core",
+      "weight": 2,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/shared/random.ts",
+      "rustSurface": "crates/puzzled-server/src/random_lcg.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: frozen LCG + Fisher-Yates. proof_missing. NO authority_rust."
+    },
+    {
+      "id": "game-shared-format-score",
+      "domain": "game-core",
+      "weight": 2,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/shared/format.ts",
+      "rustSurface": "crates/puzzled-server/src/game_format.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing."
+    },
+    {
+      "id": "pattern-match-set-logic",
+      "domain": "game-core",
+      "weight": 3,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing"
+      },
+      "tsSurface": "apps/puzzled/src/games/pattern-match/types.ts",
+      "rustSurface": "crates/puzzled-server/src/pattern_match.rs",
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: is_valid_set/find_all_sets/generate_all_cards. proof_missing."
     }
   ],
   "summary": {
-    "total": 9,
-    "ts_only": 4,
+    "total": 12,
+    "ts_only": 5,
     "contracted": 1,
-    "rust_impl": 4,
+    "rust_impl": 6,
     "parity_proven": 0,
     "authority_rust": 0,
     "ts_deleted": 0,
     "proof_missing": 3,
     "proof_stale": 1,
     "completion_progress": 0.0,
-    "authority_progress": 0.444,
-    "verified_authority_progress": 0,
+    "authority_progress": 0.0,
+    "verified_authority_progress": 0.0,
     "weighted_progress": 0.4,
-    "notes": "rej-010 honest metrics \u2014 puzzle-grid + puzzle-solution + leaderboard held at rust_impl; proof.status missing until differential_green",
+    "notes": "rej-010 honest metrics \u2014 puzzle-grid + puzzle-solution + leaderboard held at rust_impl; proof.status missing until differential_green | FLEET-PRODUCTS-A-TICK: product-ledger honesty bind (rej-010); NO authority_rust/ts_deleted/REPO_COMPLETE claims",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -244,7 +272,9 @@
       "slice": "api-v1-hono-monolith",
       "verificationRef": "verification/puzzled-cycle64-api-v1-hono-monolith-skip.json",
       "notes": "rej-010 cycle64 \u2014 api-v1-hono-monolith ts_only deferred"
-    }
+    },
+    "productsAHonestyAt": "2026-07-13T00:30:00Z",
+    "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK"
   },
   "cycle37Slice": "puzzle-grid-generation bounded differential slice (weight 4) \u2014 5-case TS oracle vs Rust SSOT golden fixtures",
   "cycle38": {
@@ -374,5 +404,47 @@
     "harnessPath": "scripts/run-puzzled-differential.sh --slice puzzle-grid",
     "reverifySlice": "puzzle-grid",
     "notes": "cycle64 rej-010: api-v1-hono-monolith ts_only deferred \u2014 harness metadata only."
+  },
+  "productsATick": {
+    "tick": "FLEET-PRODUCTS-A-TICK",
+    "at": "2026-07-13T00:30:00Z",
+    "action": "pure_residual_and_honesty_bind",
+    "demotions": [
+      {
+        "id": "puzzle-grid-generation",
+        "before": "rust_impl",
+        "after": "ts_only",
+        "reason": "surface_missing"
+      }
+    ],
+    "purePorts": [
+      {
+        "capability": "puzzle-solution-submit",
+        "functions": [
+          "validate_and_score",
+          "is_valid_placement"
+        ],
+        "files": [
+          "crates/puzzled-server/src/scoring.rs",
+          "crates/puzzled-server/src/placement.rs",
+          "crates/puzzled-server/src/lib.rs"
+        ],
+        "state": "rust_impl",
+        "proof": "missing"
+      }
+    ],
+    "residualClass": "pure_residual_deepen",
+    "explicitNonClaims": [
+      "authority_rust",
+      "ts_deleted",
+      "canary_green",
+      "REPO_COMPLETE",
+      "parity_proven"
+    ],
+    "goal_complete": false
+  },
+  "bulkResidual": {
+    "wave": "FLEET-PRODUCTS-WAVE2",
+    "note": "pure residual deepen: random_lcg + game_format + pattern_match; authority_rust false"
   }
 }
