@@ -36,6 +36,35 @@ pub fn is_valid_placement(grid: &[Vec<Option<u8>>], row: usize, col: usize, valu
     true
 }
 
+
+/// Check if every cell of `user_values` matches `solution`.
+/// Mirrors `isGridComplete(userGrid, solution)` using plain Option/u8 values
+/// (caller maps SudokuCell.value → Option<u8>).
+#[must_use]
+pub fn is_grid_complete(user_values: &[Vec<Option<u8>>], solution: &[Vec<u8>]) -> bool {
+    if solution.len() != GRID_SIZE {
+        return false;
+    }
+    for row in 0..GRID_SIZE {
+        let sol_row = match solution.get(row) {
+            Some(r) if r.len() == GRID_SIZE => r,
+            _ => return false,
+        };
+        let user_row = match user_values.get(row) {
+            Some(r) => r,
+            None => return false,
+        };
+        for col in 0..GRID_SIZE {
+            let sol = sol_row[col];
+            let user = user_row.get(col).copied().flatten();
+            if user != Some(sol) {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -69,5 +98,27 @@ mod tests {
         let mut g = empty_grid();
         g[1][1] = Some(5);
         assert!(!is_valid_placement(&g, 0, 0, 5));
+    }
+
+    #[test]
+    fn grid_complete_matches_solution() {
+        let sol: Vec<Vec<u8>> = (0..9)
+            .map(|r| (0..9).map(|c| (((r * 3 + r / 3 + c) % 9) + 1) as u8).collect())
+            .collect();
+        let user: Vec<Vec<Option<u8>>> = sol
+            .iter()
+            .map(|row| row.iter().map(|v| Some(*v)).collect())
+            .collect();
+        assert!(is_grid_complete(&user, &sol));
+        let mut incomplete = user.clone();
+        incomplete[0][0] = None;
+        assert!(!is_grid_complete(&incomplete, &sol));
+        let mut wrong = user;
+        wrong[0][0] = Some(9);
+        // may or may not equal sol[0][0]; force mismatch
+        if wrong[0][0] == Some(sol[0][0]) {
+            wrong[0][0] = Some(if sol[0][0] == 1 { 2 } else { 1 });
+        }
+        assert!(!is_grid_complete(&wrong, &sol));
     }
 }
