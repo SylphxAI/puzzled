@@ -80,13 +80,12 @@ jobs:
           bun-version: '1.3.9'
 
       - name: Dependency vulnerability audit
-        run: bun audit --audit-level=high || echo "⚠️ Vulnerabilities found - review before production"
+        run: bun audit --audit-level=high
 
       - name: Secret detection
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@30d5bb91af1a771378349dbbb0c82129392acf70 # v3.95.6
         with:
           extra_args: --only-verified
-        continue-on-error: true
 
   # ==========================================
   # Database Migrations
