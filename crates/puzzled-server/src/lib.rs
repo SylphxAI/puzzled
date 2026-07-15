@@ -1,11 +1,16 @@
 //! Puzzled Server — ADR-168: health + leaderboard + puzzle grid/submit + product dens
-//! for auth-sessions, generation jobs, and platform webhooks.
+//! for auth-sessions, generation jobs, platform webhooks, and Hono api-v1 monolith domains.
 
 pub mod db_config;
 
 mod auth_sessions;
+mod daily_time;
+mod games_api;
+mod gamification_api;
 mod generation_jobs;
 mod platform_webhooks;
+mod prefs_api;
+mod stats_api;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
@@ -39,17 +44,29 @@ use std::time::{Duration, Instant};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use auth_sessions::validate_session_http;
+use games_api::{
+    archive_access_http, archive_dates_http, daily_status_http, history_http, save_result_http,
+    todays_puzzle_http,
+};
+use gamification_api::{
+    add_streak_freezes_http, streak_info_http, toggle_auto_freeze_http, try_auto_freeze_http,
+};
 use generation_jobs::{execute_job_http, plan_generation_http};
 use leaderboard::{leaderboard_stub, stats_leaderboard};
 use platform_webhooks::platform_jobs_webhook;
+use prefs_api::{
+    check_username_http, update_email_preferences_http, update_profile_http,
+    update_push_preferences_http, update_ui_preferences_http,
+};
 use puzzle_grid::generate_grid;
 use puzzle_submit::submit_solution;
 use serde::Serialize;
 use serde_json::json;
 use sqlx::PgPool;
+use stats_api::{today_percentile_http, user_stats_shape_http};
 
 pub use leaderboard::LeaderboardStubBody;
 pub use leaderboard_enrich::{
@@ -162,6 +179,19 @@ pub use auth_sessions::{
     extract_bearer, extract_session_cookie, optional_auth, require_auth, resolve_session_token,
     validate_session, AuthError, SessionContext,
 };
+pub use daily_time::{
+    expand_archive_dates, get_puzzle_number, get_today_utc, get_yesterday_utc,
+    is_valid_archive_date, puzzle_date_string_utc, DEFAULT_LAUNCH_DATE,
+};
+pub use games_api::{
+    build_archive_dates, build_daily_status, check_archive_access, map_session_difficulty,
+    plan_save_result, ClaimedStatus, GameMode, RouteDifficulty, SaveResultError, SaveResultInput,
+    SaveResultPlan,
+};
+pub use gamification_api::{
+    add_streak_freezes, build_streak_info, toggle_auto_freeze, try_auto_freeze, FreezeData,
+    FreezeReason, StreakInfo,
+};
 pub use generation_jobs::{
     execute_generate_daily_puzzles, execute_job, get_seed_from_date, is_known_job,
     parse_date_yyyy_mm_dd, plan_daily_generation, GenerationPlan, GenerationStrategy,
@@ -171,6 +201,16 @@ pub use generation_jobs::{
 pub use platform_webhooks::{
     extract_job_headers, handle_platform_job, secrets_equal, verify_platform_request,
     VerificationResult, HEADER_APP_SECRET, HEADER_CRON_NAME, HEADER_JOB_ID,
+};
+pub use prefs_api::{
+    apply_email_preferences, apply_profile_update, apply_push_preferences, apply_ui_preferences,
+    is_valid_reminder_time, username_available, validate_bio, validate_username, NotificationPrefs,
+    ProfilePrefs, BIO_MAX_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH,
+};
+pub use stats_api::{
+    build_user_game_stats, compute_percentile, default_compare,
+    rank_from_better_count as stats_rank_from_better_count, PercentileResult, PercentileStatsOwned,
+    UserGameStats,
 };
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
@@ -277,6 +317,39 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/jobs/plan", post(plan_generation_http))
         .route("/api/v1/jobs/execute", post(execute_job_http))
         .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
+        // WAVE5: Hono api-v1 monolith product dens (games/stats/user/notifications/gamification)
+        .route("/api/v1/games/daily-status", get(daily_status_http))
+        .route("/api/v1/games/todays-puzzle", get(todays_puzzle_http))
+        .route("/api/v1/games/archive-access", post(archive_access_http))
+        .route("/api/v1/games/save-result", post(save_result_http))
+        .route("/api/v1/games/archive-dates", get(archive_dates_http))
+        .route("/api/v1/games/history", get(history_http))
+        .route("/api/v1/stats/today-percentile", get(today_percentile_http))
+        .route("/api/v1/stats/user-stats/shape", post(user_stats_shape_http))
+        .route("/api/v1/user/check-username", get(check_username_http))
+        .route("/api/v1/user/profile", put(update_profile_http))
+        .route("/api/v1/user/preferences", put(update_ui_preferences_http))
+        .route(
+            "/api/v1/notifications/push-preferences",
+            put(update_push_preferences_http),
+        )
+        .route(
+            "/api/v1/notifications/email-preferences",
+            put(update_email_preferences_http),
+        )
+        .route("/api/v1/gamification/streak-info", post(streak_info_http))
+        .route(
+            "/api/v1/gamification/toggle-auto-freeze",
+            post(toggle_auto_freeze_http),
+        )
+        .route(
+            "/api/v1/gamification/add-streak-freezes",
+            post(add_streak_freezes_http),
+        )
+        .route(
+            "/api/v1/gamification/try-auto-freeze",
+            post(try_auto_freeze_http),
+        )
         .with_state(state)
 }
 

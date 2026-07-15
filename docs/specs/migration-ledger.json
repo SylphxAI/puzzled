@@ -173,8 +173,23 @@
       "id": "api-v1-hono-monolith",
       "domain": "api-edge",
       "weight": 5,
-      "state": "ts_only",
-      "tsSurface": "apps/puzzled/src/app/api/v1/[[...route]]/route.ts"
+      "state": "rust_impl",
+      "tsSurface": "apps/puzzled/src/app/api/v1/[[...route]]/route.ts; apps/puzzled/src/server/api/routes/{games,stats,user,notifications,gamification,admin}.ts",
+      "rustSurface": "crates/puzzled-server/src/{daily_time,games_api,stats_api,prefs_api,gamification_api}.rs; lib.rs router /api/v1/{games,stats,user,notifications,gamification}/*",
+      "parityTest": "cargo test -p puzzled-server --lib daily_time:: games_api:: stats_api:: prefs_api:: gamification_api::",
+      "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/games,/api/v1/user,/api/v1/notifications,/api/v1/gamification,/api/v1/stats/today-percentile]",
+      "notes": "WAVE5 product dens: Hono games/stats/user/notifications/gamification request validation + policy + envelope shaping + HTTP product routes. Admin DLQ/announcements residual; full sqlx session/puzzle materialization dual-path; Platform SDK OAuth/streak/leaderboard residual; Next route remains oracle until cutover. NO authority_rust / ts_deleted.",
+      "proof": {
+        "status": "missing",
+        "staleReason": "unit parity green; DB dual-path + admin residual + rej-010 differential not bound",
+        "verificationRef": "crates/puzzled-server/src/games_api.rs#tests"
+      },
+      "promotionHold": {
+        "active": true,
+        "reason": "rej-010: product dens present; dual-path TS Hono remains; no sole-prod claim",
+        "rejectionRef": "rej-010",
+        "since": "2026-07-15T18:00:00Z"
+      }
     },
     {
       "id": "auth-sessions",
