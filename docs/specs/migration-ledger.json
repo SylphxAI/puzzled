@@ -178,7 +178,7 @@
       "rustSurface": "crates/puzzled-server/src/{daily_time,games_api,stats_api,prefs_api,gamification_api}.rs; lib.rs router /api/v1/{games,stats,user,notifications,gamification}/*",
       "parityTest": "cargo test -p puzzled-server --lib daily_time:: games_api:: stats_api:: prefs_api:: gamification_api::",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/games,/api/v1/user,/api/v1/notifications,/api/v1/gamification,/api/v1/stats/today-percentile]",
-      "notes": "WAVE5 product dens: Hono games/stats/user/notifications/gamification request validation + policy + envelope shaping + HTTP product routes. Admin DLQ/announcements residual; full sqlx session/puzzle materialization dual-path; Platform SDK OAuth/streak/leaderboard residual; Next route remains oracle until cutover. NO authority_rust / ts_deleted.",
+      "notes": "WAVE5 product dens: Hono games/stats/user/notifications/gamification request validation + policy + envelope shaping + HTTP product routes. Admin DLQ/announcements residual; full sqlx session/puzzle materialization dual-path; Platform SDK OAuth/streak/leaderboard residual; Next route remains oracle until cutover. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted.",
       "proof": {
         "status": "missing",
         "staleReason": "unit parity green; DB dual-path + admin residual + rej-010 differential not bound",
@@ -199,7 +199,7 @@
       "tsSurface": "apps/puzzled/src/server/** (auth)",
       "rustSurface": "crates/puzzled-server/src/auth_sessions.rs",
       "parityTest": "cargo test -p puzzled-server auth_sessions::",
-      "notes": "WAVE4 product dens: session validate/require/optional + bearer/cookie extract product gate. Platform SDK OAuth/UI remains TS. NO authority_rust / ts_deleted.",
+      "notes": "WAVE4 product dens: session validate/require/optional + bearer/cookie extract product gate. Platform SDK OAuth/UI remains TS. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted.",
       "proof": {
         "status": "missing",
         "staleReason": "unit parity green; Platform SDK integration not bound",
@@ -229,7 +229,7 @@
       "tsSurface": "apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts",
       "rustSurface": "crates/puzzled-server/src/platform_webhooks.rs",
       "parityTest": "cargo test -p puzzled-server platform_webhooks::",
-      "notes": "WAVE4 product dens: x-app-secret verify + cron header extract + job dispatch product path. Next.js route remains thin oracle until cutover. NO authority_rust / ts_deleted.",
+      "notes": "WAVE4 product dens: x-app-secret verify + cron header extract + job dispatch product path. Next.js route remains thin oracle until cutover. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted.",
       "proof": {
         "status": "missing",
         "staleReason": "unit parity green; live Platform delivery not bound",
@@ -503,9 +503,9 @@
   ],
   "summary": {
     "total": 27,
-    "ts_only": 1,
+    "ts_only": 0,
     "contracted": 1,
-    "rust_impl": 25,
+    "rust_impl": 26,
     "parity_proven": 0,
     "authority_rust": 0,
     "ts_deleted": 0,
@@ -515,7 +515,7 @@
     "authority_progress": 0.0,
     "verified_authority_progress": 0.0,
     "weighted_progress": 0.7,
-    "notes": "WAVE4 product dens 2026-07-15: auth-sessions + puzzle-generation-jobs + platform-webhooks \u2192 rust_impl product paths; cargo test -p puzzled-server --lib green. residual ts_only: api-v1-hono-monolith (FE/Next). NO authority_rust / ts_deleted / prod_audit_pass.",
+    "notes": "WAVE4 product dens 2026-07-15: auth-sessions + puzzle-generation-jobs + platform-webhooks \u2192 rust_impl product paths; cargo test -p puzzled-server --lib green. residual ts_only: api-v1-hono-monolith (FE/Next). NO authority_rust / ts_deleted / prod_audit_pass. BLOCKED7 pure residual 2026-07-15T18:29:28Z: roles_pure+storage_keys_pure+backoff_pure. states ts_only=0 contracted=1 rust_impl=26. NO authority_rust/ts_deleted/prod_audit_pass.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -549,11 +549,11 @@
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
     "lastMutation": {
-      "at": "2026-07-15T17:36:46Z",
-      "action": "wave4_product_dens_auth_jobs_webhooks",
-      "notes": "product dens beyond pure scoring"
+      "at": "2026-07-15T18:29:28Z",
+      "action": "blocked7_pure_residual_roles_storage_backoff",
+      "notes": "pure residual dual-oracle deepen under hono/product dens; denom honesty from capability states"
     },
-    "updatedAt": "2026-07-15T17:36:46Z",
+    "updatedAt": "2026-07-15T18:29:28Z",
     "deployLagHonesty": {
       "local": "cargo test/clippy --all-targets + differential GREEN after pure residual continue3 (crossword+nonogram score deepen)",
       "production": "2026-07-15T12:33Z reprobe idle-tie-elxzm6: healthz/readyz 200 (readyz slice=S1; postgres ok=false this probe); leaderboard stub 200; grid/submit GET+POST still 404 \u2014 deploy lag; NO prod_audit_pass",
