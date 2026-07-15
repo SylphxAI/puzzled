@@ -409,23 +409,53 @@
 			"rustSurface": "crates/puzzled-server/src/word_search.rs",
 			"parityTest": "cargo test -p puzzled-server word_search::",
 			"notes": "adversarial residual pure continue2: found-words claim + time score. Grid generator remains TS. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "crossword-grid-score",
+			"domain": "game-core",
+			"weight": 2,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/crossword_grid.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/crossword/types.ts isGridComplete/getClueNumbers; config.ts validateAndScore",
+			"rustSurface": "crates/puzzled-server/src/crossword_grid.rs",
+			"parityTest": "cargo test -p puzzled-server crossword_grid::",
+			"notes": "adversarial residual pure continue3: grid match + time score + clue numbers + cell guess. LLM/seed generator remains TS. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "nonogram-grid-score",
+			"domain": "game-core",
+			"weight": 2,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/nonogram_clues.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/nonogram/types.ts generateClues; config.ts validateAndScore",
+			"rustSurface": "crates/puzzled-server/src/nonogram_clues.rs",
+			"parityTest": "cargo test -p puzzled-server nonogram_clues::",
+			"notes": "adversarial residual pure continue3: clues + grid match + time/error score + cell guess. Pattern generator remains TS. NO authority_rust / ts_deleted."
 		}
 	],
 	"summary": {
-		"total": 24,
+		"total": 26,
 		"ts_only": 4,
 		"contracted": 1,
-		"rust_impl": 19,
+		"rust_impl": 21,
 		"parity_proven": 0,
 		"authority_rust": 0,
 		"ts_deleted": 0,
-		"proof_missing": 15,
+		"proof_missing": 17,
 		"proof_stale": 0,
 		"completion_progress": 0.0,
 		"authority_progress": 0.0,
 		"verified_authority_progress": 0.0,
-		"weighted_progress": 0.66,
-		"notes": "adversarial residual continue2 2026-07-15T11:50Z: pure tango binary is_solved/score + arithmo equation score + killer-sudoku grid score + word-search found-words score; cargo test/clippy --all-targets green. prod re-probe idle-tie-elxzm6: healthz/readyz 200, grid/submit still 404 (deploy lag; readyz slice=S1). residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain. NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
+		"weighted_progress": 0.7,
+		"notes": "adversarial residual continue3 2026-07-15: pure crossword grid/score/clue-numbers + nonogram grid/score (time+error); cargo test/clippy --all-targets green. prod re-probe idle-tie-elxzm6: healthz/readyz 200, grid/submit still 404 (deploy lag; readyz slice=S1). residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain. NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
 		"cycle48_delta": {
 			"rust_impl_verified": 1,
 			"slice": "puzzle-solution-submit",
@@ -458,11 +488,11 @@
 		},
 		"productsAHonestyAt": "2026-07-13T00:30:00Z",
 		"productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
-		"lastMutation": "ADVERSARIAL-PURE-RESIDUAL-TANGO+ARITHMO+KILLER+WORD-SEARCH+PROD-REPROBE",
-		"updatedAt": "2026-07-15T11:50:00Z",
+		"lastMutation": "ADVERSARIAL-PURE-RESIDUAL-CROSSWORD+NONOGRAM+PROD-REPROBE",
+		"updatedAt": "2026-07-15T20:35:00Z",
 		"deployLagHonesty": {
-			"local": "cargo test/clippy --all-targets + differential GREEN after pure residual continue2 (tango+arithmo+killer+word-search)",
-			"production": "2026-07-15T11:50:00Z reprobe: healthz/readyz 200 (readyz slice=S1); grid/submit GET+POST still 404 — deploy lag; NO prod_audit_pass",
+			"local": "cargo test/clippy --all-targets + differential GREEN after pure residual continue3 (crossword+nonogram score deepen)",
+			"production": "2026-07-15T12:33Z reprobe idle-tie-elxzm6: healthz/readyz 200 (readyz slice=S1; postgres ok=false this probe); leaderboard stub 200; grid/submit GET+POST still 404 — deploy lag; NO prod_audit_pass",
 			"rule": "integration≠deploy; raw-push frozen; do not claim prod_audit_pass until digest-bound canary"
 		},
 		"explicitNonClaims": [

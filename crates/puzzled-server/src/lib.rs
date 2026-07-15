@@ -56,7 +56,13 @@ pub use pattern_match::{find_all_sets, generate_all_cards, is_valid_set, Card, C
 pub use placement::{
     is_grid_complete as is_sudoku_grid_complete, is_valid_placement, GRID_SIZE,
 };
-pub use crossword_grid::{is_crossword_grid_complete, CROSSWORD_GRID_SIZE};
+pub use crossword_grid::{
+    crossword_score, get_clue_numbers, is_crossword_grid_complete, is_grid_complete_str,
+    validate_and_score as crossword_validate_and_score, validate_guess as crossword_validate_guess,
+    GameResult as CrosswordGameResult, SubmissionStatus as CrosswordSubmissionStatus,
+    BASE_WIN_SCORE as CROSSWORD_BASE_WIN_SCORE, CROSSWORD_GRID_SIZE,
+    MIN_WIN_SCORE as CROSSWORD_MIN_WIN_SCORE,
+};
 pub use word_hive::{
     calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change,
     validate_and_score as word_hive_validate_and_score, GameResult as WordHiveGameResult,
@@ -70,7 +76,13 @@ pub use word_box::{
 pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
-pub use nonogram_clues::{generate_clues, is_grid_complete as is_nonogram_grid_complete};
+pub use nonogram_clues::{
+    generate_clues, is_grid_complete as is_nonogram_grid_complete, nonogram_score,
+    validate_and_score as nonogram_validate_and_score, validate_guess as nonogram_validate_guess,
+    GameResult as NonogramGameResult, SubmissionStatus as NonogramSubmissionStatus,
+    BASE_WIN_SCORE as NONOGRAM_BASE_WIN_SCORE, ERROR_PENALTY as NONOGRAM_ERROR_PENALTY,
+    MIN_WIN_SCORE as NONOGRAM_MIN_WIN_SCORE,
+};
 pub use queens_conflict::{
     get_conflicts, is_solved, queens_score, validate_and_score as queens_validate_and_score,
     Cell as QueensCell, GameResult as QueensGameResult, SubmissionStatus as QueensSubmissionStatus,
