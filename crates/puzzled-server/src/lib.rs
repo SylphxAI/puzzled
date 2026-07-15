@@ -19,6 +19,10 @@ mod word_ladder;
 mod cryptogram;
 mod quad_words;
 mod block_slide;
+mod tango;
+mod arithmo;
+mod killer_sudoku;
+mod word_search;
 mod leaderboard;
 pub mod leaderboard_db;
 mod leaderboard_enrich;
@@ -105,6 +109,30 @@ pub use block_slide::{
     DEFAULT_MAX_MOVES as BLOCK_SLIDE_DEFAULT_MAX_MOVES, EXTRA_MOVE_PENALTY as BLOCK_SLIDE_EXTRA_MOVE_PENALTY,
     FAST_SOLVE_BONUS as BLOCK_SLIDE_FAST_SOLVE_BONUS, FAST_SOLVE_MS as BLOCK_SLIDE_FAST_SOLVE_MS,
     MIN_WIN_SCORE as BLOCK_SLIDE_MIN_WIN_SCORE,
+};
+pub use tango::{
+    get_conflicts as tango_get_conflicts, has_consecutive_violation, is_solved as tango_is_solved,
+    tango_score, validate_and_score as tango_validate_and_score, CellValue as TangoCellValue,
+    GameResult as TangoGameResult, SubmissionStatus as TangoSubmissionStatus,
+    BASE_WIN_SCORE as TANGO_BASE_WIN_SCORE, MAX_CONSECUTIVE as TANGO_MAX_CONSECUTIVE,
+    MIN_WIN_SCORE as TANGO_MIN_WIN_SCORE,
+};
+pub use arithmo::{
+    arithmo_score, get_guess_result as arithmo_get_guess_result, is_valid_equation,
+    validate_and_score as arithmo_validate_and_score, CharStatus as ArithmoCharStatus,
+    GameResult as ArithmoGameResult, SubmissionStatus as ArithmoSubmissionStatus,
+    EQUATION_LENGTH as ARITHMO_EQUATION_LENGTH, MAX_ATTEMPTS as ARITHMO_MAX_ATTEMPTS,
+};
+pub use killer_sudoku::{
+    grid_matches_solution as killer_grid_matches_solution, killer_sudoku_score,
+    validate_and_score as killer_sudoku_validate_and_score, GameResult as KillerSudokuGameResult,
+    SubmissionStatus as KillerSudokuSubmissionStatus, BASE_WIN_SCORE as KILLER_BASE_WIN_SCORE,
+    GRID_SIZE as KILLER_GRID_SIZE, MIN_WIN_SCORE as KILLER_MIN_WIN_SCORE,
+};
+pub use word_search::{
+    validate_and_score as word_search_validate_and_score, word_search_score,
+    GameResult as WordSearchGameResult, SubmissionStatus as WordSearchSubmissionStatus,
+    BASE_WIN_SCORE as WORD_SEARCH_BASE_WIN_SCORE, MIN_WIN_SCORE as WORD_SEARCH_MIN_WIN_SCORE,
 };
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
