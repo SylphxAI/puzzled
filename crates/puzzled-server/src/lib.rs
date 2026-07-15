@@ -75,7 +75,12 @@ pub use word_box::{
 };
 pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
-pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
+pub use wordle_eval::{
+    compare_for_percentile as word_guess_compare_for_percentile, evaluate_guess,
+    format_score_display as word_guess_format_score_display, is_perfect_game as word_guess_is_perfect,
+    is_winning_guess, validate_and_score as word_guess_validate_and_score, GameResult as WordGuessGameResult,
+    LetterStatus, SubmissionStatus as WordGuessSubmissionStatus, MAX_GUESSES, WORD_LENGTH,
+};
 pub use nonogram_clues::{
     generate_clues, is_grid_complete as is_nonogram_grid_complete, nonogram_score,
     validate_and_score as nonogram_validate_and_score, validate_guess as nonogram_validate_guess,
