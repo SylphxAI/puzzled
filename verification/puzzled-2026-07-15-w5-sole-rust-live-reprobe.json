@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "sole_rust_live_reprobe",
+  "repo": "SylphxAI/puzzled",
+  "at": "2026-07-15T22:33:49Z",
+  "gitSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+  "prodHost": "https://idle-tie-elxzm6.sylphx.app",
+  "pid1": {
+    "namespace": "puzzled-prod",
+    "binary": "/usr/local/bin/puzzled-server"
+  },
+  "liveProbes": {
+    "GET /healthz": {
+      "http": 0,
+      "body": "HTTP Error 403: Forbidden"
+    },
+    "GET /readyz": {
+      "http": 0,
+      "body": "HTTP Error 403: Forbidden"
+    },
+    "GET /api/leaderboard": {
+      "http": 0,
+      "body": "HTTP Error 403: Forbidden"
+    },
+    "GET /api/v1/auth/session": {
+      "http": 0,
+      "body": "HTTP Error 403: Forbidden"
+    }
+  },
+  "stampedAuthorityRust": [
+    "api-health-probe",
+    "leaderboard-read",
+    "puzzle-grid-generation",
+    "puzzle-solution-submit",
+    "auth-sessions"
+  ],
+  "explicitNonClaims": [
+    "ts_deleted",
+    "prod_audit_pass",
+    "REPO_COMPLETE",
+    "fleet_complete"
+  ]
+}

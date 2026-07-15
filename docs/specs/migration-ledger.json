@@ -67,9 +67,9 @@
         "staleReason": null,
         "staleAt": "2026-07-10T21:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
-        "verifiedAt": "2026-07-15T21:21:51Z",
-        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "lastComparedMainSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+        "verifiedAt": "2026-07-15T22:33:49Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json",
         "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
@@ -111,9 +111,9 @@
         ],
         "staleReason": null,
         "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json",
-        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
-        "verifiedAt": "2026-07-15T21:21:51Z",
-        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "lastComparedMainSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+        "verifiedAt": "2026-07-15T22:33:49Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json",
         "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
@@ -151,9 +151,9 @@
         "staleReason": null,
         "staleAt": "2026-07-13T00:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
-        "verifiedAt": "2026-07-15T21:21:51Z",
-        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "lastComparedMainSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+        "verifiedAt": "2026-07-15T22:33:49Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json",
         "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
@@ -196,9 +196,9 @@
         "staleReason": null,
         "staleAt": "2026-07-13T00:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
-        "verifiedAt": "2026-07-15T21:21:51Z",
-        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "lastComparedMainSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+        "verifiedAt": "2026-07-15T22:33:49Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json",
         "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
@@ -265,9 +265,9 @@
         "status": "caught_up",
         "staleReason": null,
         "verificationRef": "crates/puzzled-server/src/auth_sessions.rs#tests",
-        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
-        "verifiedAt": "2026-07-15T21:21:51Z",
-        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "lastComparedMainSha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+        "verifiedAt": "2026-07-15T22:33:49Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json",
         "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "prodProbe": "sylphx.toml path_prefixes=[/api/v1/auth/session]; scripts/api-smoke.sh",
@@ -829,5 +829,10 @@
   "bulkResidual": {
     "wave": "FLEET-PRODUCTS-WAVE2",
     "note": "pure residual deepen: random_lcg + game_format + pattern_match; authority_rust false"
+  },
+  "w5LiveReprobe": {
+    "at": "2026-07-15T22:33:49Z",
+    "sha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
+    "verificationRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json"
   }
 }
