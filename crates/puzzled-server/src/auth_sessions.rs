@@ -199,6 +199,54 @@ pub async fn validate_session_http(Json(body): Json<ValidateSessionBody>) -> Res
     }
 }
 
+/// Extract trusted edge identity headers (`x-user-id`, `x-user-name` / `x-display-name`).
+#[must_use]
+pub fn extract_edge_user(headers: &HeaderMap) -> (Option<String>, Option<String>) {
+    let user_id = headers
+        .get("x-user-id")
+        .and_then(|v| v.to_str().ok())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string);
+    let display_name = headers
+        .get("x-display-name")
+        .or_else(|| headers.get("x-user-name"))
+        .and_then(|v| v.to_str().ok())
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string);
+    (user_id, display_name)
+}
+
+/// HTTP: GET /api/v1/auth/session — resolve optional session from cookies / bearer / edge headers.
+///
+/// Prod sole-process probes hit this path (not only `/validate`). Missing credentials
+/// return 200 with `authenticated: false` (optional session read — not a hard gate).
+pub async fn get_session_http(headers: HeaderMap) -> Response {
+    let token = resolve_session_token(&headers);
+    let (edge_user, edge_name) = extract_edge_user(&headers);
+    match optional_auth(edge_user.as_deref(), token.as_deref(), edge_name.as_deref()) {
+        Some(session) => (
+            StatusCode::OK,
+            Json(json!({
+                "authenticated": true,
+                "session": session,
+                "slice": "auth-sessions",
+            })),
+        )
+            .into_response(),
+        None => (
+            StatusCode::OK,
+            Json(json!({
+                "authenticated": false,
+                "session": null,
+                "slice": "auth-sessions",
+            })),
+        )
+            .into_response(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

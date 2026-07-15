@@ -693,6 +693,36 @@ pub struct HistoryQuery {
 }
 
 /// GET /api/v1/games/history — validates query; returns empty history (DB residual).
+/// HTTP: GET /api/v1/games — domain index (prod sole-process probe; not a 404).
+pub async fn games_index_http() -> Response {
+    let games: Vec<Value> = crate::game_slugs::all_game_slugs()
+        .iter()
+        .map(|slug| {
+            json!({
+                "slug": slug,
+                "href": format!("/api/v1/games/daily-status?gameSlug={slug}"),
+            })
+        })
+        .collect();
+    (
+        StatusCode::OK,
+        Json(json!({
+            "games": games,
+            "count": games.len(),
+            "slice": "api-v1-hono-monolith",
+            "endpoints": [
+                "GET /api/v1/games/daily-status",
+                "GET /api/v1/games/todays-puzzle",
+                "POST /api/v1/games/archive-access",
+                "POST /api/v1/games/save-result",
+                "GET /api/v1/games/archive-dates",
+                "GET /api/v1/games/history",
+            ],
+        })),
+    )
+        .into_response()
+}
+
 pub async fn history_http(Query(q): Query<HistoryQuery>) -> Response {
     let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
         return (

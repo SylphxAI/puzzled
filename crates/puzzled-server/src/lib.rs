@@ -51,10 +51,10 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
-use auth_sessions::validate_session_http;
+use auth_sessions::{get_session_http, validate_session_http};
 use games_api::{
-    archive_access_http, archive_dates_http, daily_status_http, history_http, save_result_http,
-    todays_puzzle_http,
+    archive_access_http, archive_dates_http, daily_status_http, games_index_http, history_http,
+    save_result_http, todays_puzzle_http,
 };
 use gamification_api::{
     add_streak_freezes_http, streak_info_http, toggle_auto_freeze_http, try_auto_freeze_http,
@@ -341,11 +341,15 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/puzzles/grid", get(generate_grid))
         .route("/api/v1/puzzles/submit", post(submit_solution))
         // Product dens: auth / jobs / webhooks / generators backend
+        // GET /api/v1/auth/session — prod sole-process probe path (optional session read)
+        .route("/api/v1/auth/session", get(get_session_http))
         .route("/api/v1/auth/session/validate", post(validate_session_http))
         .route("/api/v1/jobs/plan", post(plan_generation_http))
         .route("/api/v1/jobs/execute", post(execute_job_http))
         .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
         // WAVE5: Hono api-v1 monolith product dens (games/stats/user/notifications/gamification)
+        // GET /api/v1/games — domain index (prod probe; must not 404)
+        .route("/api/v1/games", get(games_index_http))
         .route("/api/v1/games/daily-status", get(daily_status_http))
         .route("/api/v1/games/todays-puzzle", get(todays_puzzle_http))
         .route("/api/v1/games/archive-access", post(archive_access_http))
@@ -472,6 +476,47 @@ mod tests {
         let json = body_json(response).await;
         assert!(json["entries"].as_array().is_some_and(|entries| entries.is_empty()));
         assert_eq!(json["stub"], true);
+    }
+
+    #[tokio::test]
+    async fn auth_session_get_returns_unauthenticated_without_credentials() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(
+                Method::GET,
+                "/api/v1/auth/session",
+                Body::empty(),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("auth session request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["authenticated"], false);
+        assert_eq!(json["session"], serde_json::Value::Null);
+        assert_eq!(json["slice"], "auth-sessions");
+    }
+
+    #[tokio::test]
+    async fn games_index_lists_registered_slugs() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(Method::GET, "/api/v1/games", Body::empty()))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("games index request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["slice"], "api-v1-hono-monolith");
+        let games = json["games"]
+            .as_array()
+            .expect("games array");
+        assert!(games.len() >= 10);
+        assert!(games.iter().any(|g| g["slug"] == "sudoku"));
     }
 
     #[tokio::test]

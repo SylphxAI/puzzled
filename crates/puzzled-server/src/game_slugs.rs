@@ -26,6 +26,12 @@ pub fn is_valid_game_slug(slug: &str) -> bool {
     VALID_SLUGS.contains(&slug)
 }
 
+/// Frozen catalog of registered game slugs (order matches registry keys).
+#[must_use]
+pub fn all_game_slugs() -> &'static [&'static str] {
+    VALID_SLUGS
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
