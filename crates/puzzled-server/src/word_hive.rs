@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn next_rank() {
-        let n = get_next_rank_threshold(0, 100).unwrap();
+        let n = get_next_rank_threshold(0, 100).unwrap_or_else(|| panic!("threshold"));
         assert_eq!(n.0, "good");
         assert_eq!(n.1, 8);
         assert!(get_next_rank_threshold(100, 100).is_none());

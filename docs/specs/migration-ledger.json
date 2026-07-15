@@ -236,23 +236,38 @@
       "tsSurface": "apps/puzzled/src/games/pattern-match/types.ts",
       "rustSurface": "crates/puzzled-server/src/pattern_match.rs",
       "notes": "FLEET-PRODUCTS-WAVE2 pure residual: is_valid_set/find_all_sets/generate_all_cards. proof_missing."
+    },
+    {
+      "id": "word-groups-match-score",
+      "domain": "game-core",
+      "weight": 3,
+      "state": "rust_impl",
+      "proof": {
+        "status": "missing",
+        "staleReason": "unit parity green; full TS oracle differential not bound",
+        "verificationRef": "crates/puzzled-server/src/word_groups.rs#tests"
+      },
+      "tsSurface": "apps/puzzled/src/games/word-groups/config.ts validateAndScore; findMatchingCategory",
+      "rustSurface": "crates/puzzled-server/src/word_groups.rs",
+      "parityTest": "cargo test -p puzzled-server word_groups::",
+      "notes": "adversarial residual pure deepen: Connections find_matching_category + mistake score table + validate_and_score claim checks. NO authority_rust / ts_deleted (client hooks + puzzle pool remain TS)."
     }
   ],
   "summary": {
-    "total": 12,
+    "total": 13,
     "ts_only": 4,
     "contracted": 1,
-    "rust_impl": 7,
+    "rust_impl": 8,
     "parity_proven": 0,
     "authority_rust": 0,
     "ts_deleted": 0,
-    "proof_missing": 3,
+    "proof_missing": 4,
     "proof_stale": 1,
     "completion_progress": 0.0,
     "authority_progress": 0.0,
     "verified_authority_progress": 0.0,
-    "weighted_progress": 0.4,
-    "notes": "adversarial residual 2026-07-15: clippy -D warnings + pure leaderboard_enrich deepen; differential green locally; residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain ts_only (no false ts_deleted for huge Hono backends). prod grid/submit 404 = deploy lag / pre-fix image (integration≠deploy). NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
+    "weighted_progress": 0.42,
+    "notes": "adversarial residual 2026-07-15T10: re-probe prod grid/submit still 404 (healthz/readyz ok, CF browser-UA); clippy --all-targets -D warnings repair; pure word-groups match/score deepen. residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain. NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -285,11 +300,11 @@
     },
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
-    "lastMutation": "ADVERSARIAL-LEADERBOARD-ENRICH-PURE+LEDGER-CONFLICT-REPAIR",
-    "updatedAt": "2026-07-15T06:30:00Z",
+    "lastMutation": "ADVERSARIAL-WORD-GROUPS-PURE+CLIPPY-ALL-TARGETS+PROD-REPROBE",
+    "updatedAt": "2026-07-15T10:20:00Z",
     "deployLagHonesty": {
-      "local": "differential_green on tip after S2 parity+Dockerfile fix",
-      "production": "grid/submit 404 — pre-fix image / deploy lag",
+      "local": "cargo test/clippy --all-targets + differential green after word-groups pure + clippy repair",
+      "production": "2026-07-15T10:16:10Z reprobe: healthz/readyz 200; grid/submit GET+POST still 404 — pre-fix image / deploy lag (readyz slice=S1, uptime_s~18k)",
       "rule": "integration≠deploy; raw-push frozen; do not claim prod_audit_pass until digest-bound canary"
     },
     "explicitNonClaims": [

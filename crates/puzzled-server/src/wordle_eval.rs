@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn all_correct() {
-        let r = evaluate_guess("crane", "crane").unwrap();
+        let r = evaluate_guess("crane", "crane").unwrap_or_else(|| panic!("evaluate"));
         assert!(is_winning_guess(&r));
         assert!(r.iter().all(|s| *s == LetterStatus::Correct));
     }
@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn classic_duplicate_handling() {
         // ABIDE vs SPEED: E present once, D present
-        let r = evaluate_guess("speed", "abide").unwrap();
+        let r = evaluate_guess("speed", "abide").unwrap_or_else(|| panic!("evaluate speed"));
         assert_eq!(
             r,
             vec![
@@ -90,7 +90,7 @@ mod tests {
             ]
         );
         // WORLD vs HELLO: L present once, O present
-        let r2 = evaluate_guess("hello", "world").unwrap();
+        let r2 = evaluate_guess("hello", "world").unwrap_or_else(|| panic!("evaluate hello"));
         assert_eq!(
             r2,
             vec![
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn case_insensitive() {
-        let r = evaluate_guess("CrAnE", "crane").unwrap();
+        let r = evaluate_guess("CrAnE", "crane").unwrap_or_else(|| panic!("evaluate"));
         assert!(is_winning_guess(&r));
     }
 }

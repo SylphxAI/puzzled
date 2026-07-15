@@ -13,7 +13,9 @@ struct GoldenFile {
     random_cases: Vec<RandomCase>,
     #[serde(rename = "sudokuCases")]
     sudoku_cases: Vec<SudokuCase>,
+    /// Present in golden corpus; HTTP parity lives in puzzled-server tests.
     #[serde(rename = "httpCases")]
+    #[allow(dead_code)]
     http_cases: Vec<HttpCase>,
 }
 
@@ -36,7 +38,9 @@ struct SudokuCase {
     solution: Option<Value>,
 }
 
+/// Deserialized for corpus shape only (HTTP exercised in puzzled-server).
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct HttpCase {
     id: String,
     path: String,
@@ -104,7 +108,9 @@ fn sudoku_seed_cases_are_deterministic_and_valid() {
         if let (Some(expected_puzzle), Some(expected_solution)) =
             (&case.puzzle_data, &case.solution)
         {
-            let actual = serde_json::to_value(&first).expect("serialize sudoku result");
+            let actual = serde_json::to_value(&first).unwrap_or_else(|error| {
+                panic!("serialize sudoku result {}: {error}", case.id)
+            });
             assert_eq!(
                 actual.get("puzzleData"),
                 Some(expected_puzzle),
@@ -131,7 +137,9 @@ fn shuffle_matches_golden_when_present() {
             .unwrap_or_else(|error| panic!("parse shuffle input {}: {error}", case.id));
         let mut rng = seeded_random(case.seed);
         let actual = shuffle_array(&items, &mut rng);
-        let actual_json = serde_json::to_value(actual).expect("serialize shuffle");
+        let actual_json = serde_json::to_value(actual).unwrap_or_else(|error| {
+            panic!("serialize shuffle {}: {error}", case.id)
+        });
         assert_eq!(actual_json, expected, "shuffle case {}", case.id);
     }
 }

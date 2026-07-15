@@ -119,11 +119,7 @@ mod tests {
         for (seed, expected) in cases {
             let mut rng = SeededRandom::new(*seed);
             let actual = shuffle_array(&["a", "b", "c", "d"], &mut rng);
-            assert_eq!(
-                actual,
-                expected.iter().copied().collect::<Vec<_>>(),
-                "shuffle seed {seed}"
-            );
+            assert_eq!(actual, expected.to_vec(), "shuffle seed {seed}");
         }
     }
 }

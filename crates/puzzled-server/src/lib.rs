@@ -14,6 +14,7 @@ mod scoring;
 mod wordle_eval;
 mod nonogram_clues;
 mod queens_conflict;
+mod word_groups;
 mod leaderboard;
 pub mod leaderboard_db;
 mod leaderboard_enrich;
@@ -55,6 +56,12 @@ pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStat
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
 pub use nonogram_clues::{generate_clues, is_grid_complete as is_nonogram_grid_complete};
 pub use queens_conflict::{get_conflicts, is_solved, Cell as QueensCell};
+pub use word_groups::{
+    count_matching_words, find_matching_category, validate_and_score as word_groups_validate_and_score,
+    word_groups_score, Category as WordGroupsCategory, GameResult as WordGroupsGameResult,
+    SubmissionStatus as WordGroupsSubmissionStatus, MAX_MISTAKES, TOTAL_CATEGORIES,
+    WORDS_PER_CATEGORY,
+};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 

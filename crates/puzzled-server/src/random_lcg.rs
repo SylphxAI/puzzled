@@ -85,7 +85,7 @@ mod tests {
         let mut rng = SeededRandom::new(1);
         let items = [10, 20, 30];
         for _ in 0..10 {
-            let v = pick_random(&items, &mut rng).unwrap();
+            let v = pick_random(&items, &mut rng).unwrap_or_else(|| panic!("pick"));
             assert!(items.contains(&v));
         }
         assert!(pick_random::<i32>(&[], &mut rng).is_none());

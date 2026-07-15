@@ -124,4 +124,5 @@ fn http_cases_match_golden_baseline() {
     }
 
     let _ = child.kill();
+    let _ = child.wait();
 }
