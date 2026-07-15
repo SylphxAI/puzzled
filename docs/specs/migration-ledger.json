@@ -117,6 +117,7 @@
       "weight": 4,
       "state": "rust_impl",
       "proof": {
+<<<<<<< HEAD
         "status": "differential_green",
         "staleReason": null,
         "staleAt": "2026-07-13T00:30:00Z",
@@ -126,6 +127,17 @@
       "promotionHold": {
         "active": true,
         "reason": "canary/deploy digest not yet bound; residual TS backends remain",
+=======
+        "status": "canary_green",
+        "staleReason": "surface_missing on main tip",
+        "staleAt": "2026-07-13T00:30:00Z",
+        "lastComparedMainSha": "b22ba3d4544ee00efc06c88343f50519726ecc7d",
+        "verifiedAt": "2026-07-15T05:10:00Z"
+      },
+      "promotionHold": {
+        "active": true,
+        "reason": "rust_impl only until production path deletes TS sudoku generator default",
+>>>>>>> 9e3df77 (chore(ledger): honesty repair puzzle-grid-generation to rust_impl)
         "rejectionRef": "rej-010",
         "since": "2026-07-13T00:30:00Z"
       },
@@ -135,7 +147,11 @@
       "parityTest": "fixtures/puzzle-grid/golden.json; crates/puzzled-core/tests/puzzle_grid_parity.rs; crates/puzzled-server/tests/puzzle_grid_http_parity.rs; apps/puzzled/tests/puzzle-grid-golden.test.ts; scripts/capture-puzzle-grid-golden.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-grid",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/grid]; scripts/api-smoke.sh",
+<<<<<<< HEAD
       "notes": "parity fixed: Fisher-Yates (i+1), JS object-literal triple random() for removeCount; Dockerfile ships puzzled-core; differential green. NO ts_deleted (client generators remain)."
+=======
+      "notes": "Honesty repair: crates/puzzled-core/src/sudoku.rs + puzzled-server/src/puzzle_grid.rs present on main; cargo test puzzle_grid_parity + puzzle_grid_http_parity green. Demotion surface_missing no longer true. NOT ts_deleted \u2014 TS game configs still generate many games."
+>>>>>>> 9e3df77 (chore(ledger): honesty repair puzzle-grid-generation to rust_impl)
     },
     {
       "id": "puzzle-solution-submit",
@@ -283,7 +299,9 @@
       "notes": "rej-010 cycle64 \u2014 api-v1-hono-monolith ts_only deferred"
     },
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
-    "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK"
+    "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
+    "lastMutation": "ADVERSARIAL-PUZZLE-GRID-HONESTY-REPAIR",
+    "updatedAt": "2026-07-15T05:10:00Z"
   },
   "cycle37Slice": "puzzle-grid-generation bounded differential slice (weight 4) \u2014 5-case TS oracle vs Rust SSOT golden fixtures",
   "cycle38": {
