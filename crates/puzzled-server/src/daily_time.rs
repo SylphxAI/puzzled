@@ -87,6 +87,37 @@ pub fn ymd(date: NaiveDate) -> (i32, u32, u32) {
     (date.year(), date.month(), date.day())
 }
 
+/// Next UTC midnight after the given calendar day (TS `getNextMidnightUTC`).
+/// For `today` = calendar date, returns `today + 1 day` (release boundary).
+#[must_use]
+pub fn next_midnight_utc_date(today: NaiveDate) -> NaiveDate {
+    today + Duration::days(1)
+}
+
+/// Milliseconds until next UTC midnight from an injectable now.
+/// `now_ms` is Unix epoch ms; `today` is the UTC calendar day of `now`
+/// (caller injects to avoid clock drift in tests).
+/// Parity: TS `getMsUntilNextUTCMidnight`.
+#[must_use]
+pub fn ms_until_next_utc_midnight(now_ms: i64, today: NaiveDate) -> i64 {
+    let next = next_midnight_utc_date(today);
+    let next_midnight_ms = match next.and_hms_opt(0, 0, 0) {
+        Some(ndt) => ndt.and_utc().timestamp_millis(),
+        None => now_ms, // unreachable for midnight; fail closed to zero wait
+    };
+    next_midnight_ms - now_ms
+}
+
+/// Breakdown of ms-until-midnight into h/m/s (TS `_getTimeUntilNextUTCMidnight`).
+#[must_use]
+pub fn time_until_next_utc_midnight(ms_until: i64) -> (u64, u64, u64) {
+    let ms = ms_until.max(0) as u64;
+    let hours = ms / (1000 * 60 * 60);
+    let minutes = (ms % (1000 * 60 * 60)) / (1000 * 60);
+    let seconds = (ms % (1000 * 60)) / 1000;
+    (hours, minutes, seconds)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,5 +174,23 @@ mod tests {
             NaiveDate::from_ymd_opt(2024, 6, 2).expect("d"),
             today
         ));
+    }
+
+    #[test]
+    fn next_midnight_and_countdown() {
+        let today = NaiveDate::from_ymd_opt(2024, 7, 15).expect("d");
+        assert_eq!(
+            next_midnight_utc_date(today),
+            NaiveDate::from_ymd_opt(2024, 7, 16).expect("d")
+        );
+        // 2024-07-15T21:00:00Z → 3h to midnight
+        let now_ms = 1_721_077_200_000_i64;
+        let ms = ms_until_next_utc_midnight(now_ms, today);
+        assert_eq!(ms, 3 * 60 * 60 * 1000);
+        assert_eq!(time_until_next_utc_midnight(ms), (3, 0, 0));
+        assert_eq!(
+            time_until_next_utc_midnight(3_661_000),
+            (1, 1, 1)
+        );
     }
 }

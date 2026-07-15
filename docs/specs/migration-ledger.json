@@ -306,7 +306,7 @@
       "tsSurface": "apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts",
       "rustSurface": "crates/puzzled-server/src/platform_webhooks.rs",
       "parityTest": "cargo test -p puzzled-server platform_webhooks::",
-      "notes": "WAVE4 product dens: x-app-secret verify + cron header extract + job dispatch product path. Next.js route remains thin oracle until cutover. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted. [BLOCKED11-PURE 2026-07-15] pure residual validation_limits_pure (pagination/referral/avatar/batch) + time_constants_pure (day/hour/minute offsets + alphabet). NO authority_rust/ts_deleted.",
+      "notes": "WAVE4 product dens: x-app-secret verify + cron header extract + job dispatch product path. Next.js route remains thin oracle until cutover. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted. [BLOCKED11-PURE 2026-07-15] pure residual validation_limits_pure (pagination/referral/avatar/batch) + time_constants_pure (day/hour/minute offsets + alphabet). NO authority_rust/ts_deleted. [BLOCKED4-PRODUCT 2026-07-15] product residual dual-oracle: billing_access_pure (free-game rotation + premium plan + access gate) + i18n_locale_pure + domain_enums_pure + llm_json_parse_pure + daily_time next-midnight deepen. NO authority_rust/ts_deleted.",
       "proof": {
         "status": "missing",
         "staleReason": "unit parity green; live Platform delivery not bound",
@@ -338,7 +338,7 @@
       },
       "tsSurface": "apps/puzzled/src/games/shared/format.ts",
       "rustSurface": "crates/puzzled-server/src/game_format.rs",
-      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing. [BLOCKED3-PURE 2026-07-15] pure residual app_config_pure + user_profile_limits_pure + html_escape_pure dual-oracle. denom retained (authority_rust\u00d75 / rust_impl\u00d721). NO ts_deleted / denom_shrink / false demote."
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing. [BLOCKED3-PURE 2026-07-15] pure residual app_config_pure + user_profile_limits_pure + html_escape_pure dual-oracle. [BLOCKED4-PRODUCT 2026-07-15] product residual dual-oracle billing_access + i18n_locale + domain_enums + llm_json_parse + daily_time midnight. denom retained (authority_rust\u00d75 / rust_impl\u00d721). NO ts_deleted / denom_shrink / false demote."
     },
     {
       "id": "pattern-match-set-logic",
@@ -592,7 +592,7 @@
     "authority_progress": 0.185,
     "verified_authority_progress": 0.185,
     "weighted_progress": 0.933,
-    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged. BLOCKED3 pure residual 2026-07-15T21:28:00Z: app_config_pure + user_profile_limits_pure + html_escape_pure. denom retained ts_only=0 contracted=1 rust_impl=21 authority_rust=5. NO ts_deleted/prod_audit_pass/denom_shrink.",
+    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged. BLOCKED3 pure residual 2026-07-15T21:28:00Z: app_config_pure + user_profile_limits_pure + html_escape_pure. BLOCKED4 product residual 2026-07-15T21:40:00Z: billing_access_pure + i18n_locale_pure + domain_enums_pure + llm_json_parse_pure + daily_time next-midnight deepen. denom retained ts_only=0 contracted=1 rust_impl=21 authority_rust=5. NO ts_deleted/prod_audit_pass/denom_shrink.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -626,11 +626,11 @@
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
     "lastMutation": {
-      "at": "2026-07-15T21:28:00Z",
-      "action": "blocked3_pure_residual_app_config_profile_html",
-      "notes": "Pure residual dens only; authority stamps retained; denom not shrunk."
+      "at": "2026-07-15T21:40:00Z",
+      "action": "blocked4_product_residual_billing_i18n_enums_llm_json",
+      "notes": "Product residual dual-oracle dens only; authority stamps retained; denom not shrunk; no TS restore."
     },
-    "updatedAt": "2026-07-15T21:28:00Z",
+    "updatedAt": "2026-07-15T21:40:00Z",
     "deployLagHonesty": {
       "local": "authority stamps from ledger + tip SHA; cargo not required for ledger-only stamp",
       "production": "2026-07-15T21:21:51Z api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app: healthz/readyz (stub=false), leaderboard non-stub envelope, auth/session, games index+daily-status, grid 200, submit 200",

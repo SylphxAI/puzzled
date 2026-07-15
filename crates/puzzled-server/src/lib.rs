@@ -19,6 +19,10 @@ mod validation_limits_pure;
 mod app_config_pure;
 mod user_profile_limits_pure;
 mod html_escape_pure;
+mod billing_access_pure;
+mod i18n_locale_pure;
+mod domain_enums_pure;
+mod llm_json_parse_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
@@ -112,6 +116,28 @@ pub use user_profile_limits_pure::{
     NAME_MAX_LENGTH,
 };
 pub use html_escape_pure::{escape_html, needs_escape};
+pub use billing_access_pure::{
+    can_access_game, day_of_year_ts_utc, free_game_for_day_of_year, has_premium_access,
+    is_free_plan, is_game_free_today, is_premium_plan, todays_free_game, FREE_GAME_ROTATION,
+    PREMIUM_PLANS,
+};
+pub use i18n_locale_pure::{
+    is_chinese_locale, is_english_locale, is_valid_locale, language_from_locale, locale_country_code,
+    locale_currency, locale_date_style, locale_direction, locale_fallback, locale_name,
+    locale_short_name, resolve_locale, DEFAULT_LOCALE, LOCALES, LOCALE_GROUP_CHINESE,
+    LOCALE_GROUP_ENGLISH,
+};
+pub use domain_enums_pure::{
+    is_announcement_type, is_app_setting_key, is_audit_action, is_dlq_status, is_dlq_terminal,
+    is_game_mode, is_game_result_status, is_game_status, is_puzzle_difficulty, is_session_active,
+    is_win_back_email_type, win_back_day_offset, ANNOUNCEMENT_TYPE_VALUES, APP_SETTING_KEYS,
+    AUDIT_ACTION_VALUES, DLQ_STATUS_VALUES, GAME_MODE_VALUES, GAME_RESULT_STATUSES,
+    GAME_STATUS_VALUES, PUZZLE_DIFFICULTY_VALUES, WIN_BACK_EMAIL_TYPES,
+};
+pub use llm_json_parse_pure::{
+    extract_first_json_object, is_valid_json_text, looks_like_json_start, parse_llm_json_response,
+    strip_markdown_fences,
+};
 
 pub use time_constants_pure::{
     alphabet_char, alphabet_index, days_from_now_ms, days_to_seconds, hours_from_now_ms,
@@ -223,7 +249,8 @@ pub use auth_sessions::{
 };
 pub use daily_time::{
     expand_archive_dates, get_puzzle_number, get_today_utc, get_yesterday_utc,
-    is_valid_archive_date, puzzle_date_string_utc, DEFAULT_LAUNCH_DATE,
+    is_valid_archive_date, ms_until_next_utc_midnight, next_midnight_utc_date,
+    puzzle_date_string_utc, time_until_next_utc_midnight, ymd, DEFAULT_LAUNCH_DATE,
 };
 pub use games_api::{
     build_archive_dates, build_daily_status, check_archive_access, map_session_difficulty,
