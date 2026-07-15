@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "repo": "SylphxAI/puzzled",
+  "kind": "authority_stamp_prod_smoke",
+  "at": "2026-07-15T21:21:51Z",
+  "gitSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+  "gitShaShort": "4bbe4c51e8c5",
+  "prodHost": "https://idle-tie-elxzm6.sylphx.app",
+  "smokeCommand": "bash scripts/api-smoke.sh",
+  "smokeExit": 0,
+  "smokeLogExcerpt": [
+    "=== puzzled-api prod smoke 2026-07-15T21:20:28Z ===",
+    "base: https://idle-tie-elxzm6.sylphx.app",
+    "PASS: /healthz",
+    "PASS: /readyz",
+    "PASS: /api/leaderboard envelope (entries + stub authority)",
+    "PASS: /api/v1/stats/leaderboard array contract",
+    "PASS: /readyz slice marker",
+    "PASS: /api/v1/auth/session",
+    "PASS: /api/v1/games domain index",
+    "PASS: /api/v1/games/daily-status",
+    "PASS: /api/v1/puzzles/grid",
+    "PASS: /api/v1/puzzles/submit",
+    "=== puzzled-api prod smoke passed ==="
+  ],
+  "stampedAuthorityRust": [
+    "api-health-probe",
+    "leaderboard-read",
+    "puzzle-grid-generation",
+    "puzzle-solution-submit",
+    "auth-sessions"
+  ],
+  "basis": [
+    "sylphx.toml api path_prefixes sole-edge (no dual-run)",
+    "scripts/api-smoke.sh GREEN on idle-tie-elxzm6",
+    "readyz stub=false postgres ok",
+    "GET /api/v1/auth/session product envelope",
+    "GET /api/v1/games domain index",
+    "GET /api/v1/puzzles/grid 200 S2",
+    "POST /api/v1/puzzles/submit 200 valid won"
+  ],
+  "explicitNonClaims": [
+    "ts_deleted",
+    "prod_audit_pass",
+    "REPO_COMPLETE",
+    "authority_rust for api-v1-hono-monolith whole surface",
+    "authority_rust for pure game-core dens residuals",
+    "authority_rust for puzzle-generation-jobs / platform-webhooks"
+  ],
+  "residualBlockers": [
+    "Hono catch-all dual residual for admin + local/oracle",
+    "Platform SDK OAuth/UI login still TS",
+    "user/notifications/gamification DB materialization dual-path",
+    "pure game-core dens still rust_impl without authority"
+  ],
+  "ledgerPath": "docs/specs/migration-ledger.json"
+}

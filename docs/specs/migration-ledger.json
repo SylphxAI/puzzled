@@ -26,9 +26,10 @@
   ],
   "promotionHold": {
     "active": true,
-    "reason": "rej-010 promotion freeze \u2014 differential harness landed; awaiting differential_green at bound SHAs before authority_rust restore",
+    "reason": "partial release: 5 path_prefix surfaces stamped authority_rust after prod smoke; remaining pure dens + hono admin dual-path + jobs/webhooks still hold full completion",
     "rejectionRef": "rej-010",
-    "since": "2026-07-10T21:30:00Z"
+    "since": "2026-07-10T21:30:00Z",
+    "partialAuthorityAt": "2026-07-15T21:21:51Z"
   },
   "inScopeBoundary": {
     "includeGlobs": [
@@ -60,48 +61,66 @@
       "id": "api-health-probe",
       "domain": "api-edge",
       "weight": 2,
-      "state": "rust_impl",
+      "state": "authority_rust",
       "proof": {
         "status": "caught_up",
         "staleReason": null,
         "staleAt": "2026-07-10T21:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "PENDING_PUSH"
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
-        "active": true,
-        "reason": "canary/deploy digest not yet bound; residual TS backends remain",
-        "rejectionRef": "rej-010",
-        "since": "2026-07-10T21:30:00Z"
+        "active": false,
+        "reason": "cleared 2026-07-15T21:21:51Z: prod path_prefix sole-Rust + api-smoke GREEN; residual holds only on ts_deleted/admin dual-path",
+        "clearedAt": "2026-07-15T21:21:51Z",
+        "rejectionRef": "rej-010"
       },
-      "tsSurface": "apps/puzzled/src/server/api/app.ts GET /api/v1/health (thin proxy fallback)",
+      "tsSurface": "apps/puzzled/src/server/api/app.ts GET /api/v1/health (residual non-edge only)",
       "protoRpc": "puzzled.v1.HealthService",
       "rustSurface": "crates/puzzled-server/src/lib.rs#/healthz;/readyz",
       "parityTest": "fixtures/health/golden.json; crates/puzzled-server/tests/health_parity.rs; apps/puzzled/src/server/rust-api-proxy.test.ts",
       "prodProbe": "sylphx.toml api path_prefixes=[/healthz,/readyz]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "S2: platform ingress routes /healthz + /readyz to Rust api; web proxies /api/v1/health when API_INTERNAL_URL or PUZZLED_USE_RUST_HEALTH=1."
+      "notes": "PROD sole-Rust authority: platform path_prefixes /healthz+/readyz hit puzzled-server. api-smoke.sh GREEN 2026-07-15T21:21:51Z on https://idle-tie-elxzm6.sylphx.app: readyz status=ok stub=false slice=S1 postgres ok. TS /api/v1/health residual thin path only when not path_prefixed. NO ts_deleted (FE residual).",
+      "authorityStamp": {
+        "at": "2026-07-15T21:21:51Z",
+        "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "basis": [
+          "sylphx.toml path_prefixes",
+          "scripts/api-smoke.sh GREEN",
+          "no dual-run edge"
+        ],
+        "ts_deleted": false,
+        "prod_audit_pass": false
+      }
     },
     {
       "id": "leaderboard-read",
       "domain": "game-read",
       "weight": 4,
-      "state": "rust_impl",
+      "state": "authority_rust",
       "proof": {
-        "status": "missing",
+        "status": "caught_up",
         "dependencyGlobs": [
           "fixtures/leaderboard/golden.json",
           "crates/puzzled-server/tests/puzzled_differential.rs",
           "scripts/differential/**",
           "scripts/run-puzzled-differential.sh"
         ],
-        "staleReason": "pure enrich unit-green; full TS oracle DB differential still missing (needs DATABASE_URL)",
-        "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json"
+        "staleReason": null,
+        "verificationRef": "verification/puzzled-2026-07-10T2130-puzzle-grid-differential.json",
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
-        "active": true,
-        "reason": "rej-010: differential harness landed \u2014 awaiting differential_green at bound SHAs; NO auto-promotion",
-        "rejectionRef": "rej-010",
-        "since": "2026-07-10T21:30:00Z"
+        "active": false,
+        "reason": "cleared 2026-07-15T21:21:51Z: prod path_prefix sole-Rust + api-smoke GREEN; residual holds only on ts_deleted/admin dual-path",
+        "clearedAt": "2026-07-15T21:21:51Z",
+        "rejectionRef": "rej-010"
       },
       "tsSurface": "apps/puzzled/src/server/api/routes/stats.ts GET /leaderboard (thin proxy fallback)",
       "protoRpc": "puzzled.v1.StatsService/GetLeaderboard",
@@ -109,26 +128,39 @@
       "parityTest": "fixtures/leaderboard/golden.json; crates/puzzled-server/tests/leaderboard_parity.rs; apps/puzzled/tests/leaderboard-golden.test.ts; apps/puzzled/src/server/rust-api-proxy.test.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#leaderboard_read_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice leaderboard-read",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/stats/leaderboard,/api/leaderboard]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "stub envelope + sqlx path; pure enrich kernel (rank/Anonymous/cache period/TTL) in leaderboard_enrich.rs with unit parity. Full DB oracle differential still requires DATABASE_URL. NO authority_rust / ts_deleted."
+      "notes": "PROD sole-Rust authority: path_prefixes /api/leaderboard + /api/v1/stats/leaderboard. api-smoke GREEN 2026-07-15T21:21:51Z: leaderboard stub=false when readyz non-stub; stats array contract. sqlx path live (entries may be empty / leaderboard_read_failed envelope under empty tables). TS stats.ts residual dual-path for non-edge only. NO ts_deleted.",
+      "authorityStamp": {
+        "at": "2026-07-15T21:21:51Z",
+        "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "basis": [
+          "sylphx.toml path_prefixes",
+          "scripts/api-smoke.sh GREEN",
+          "no dual-run edge"
+        ],
+        "ts_deleted": false,
+        "prod_audit_pass": false
+      }
     },
     {
       "id": "puzzle-grid-generation",
       "domain": "game-write",
       "weight": 4,
-      "state": "rust_impl",
+      "state": "authority_rust",
       "proof": {
         "status": "differential_green",
         "staleReason": null,
         "staleAt": "2026-07-13T00:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "PENDING_PUSH",
-        "verifiedAt": "2026-07-15T06:30:00Z"
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
-        "active": true,
-        "reason": "integration\u2260deploy: local differential green; prod grid/submit still 404 until deploy digest binds tip image; residual TS backends remain (hono/auth/jobs/webhooks). NO ts_deleted.",
-        "rejectionRef": "rej-010",
-        "since": "2026-07-13T00:30:00Z"
+        "active": false,
+        "reason": "cleared 2026-07-15T21:21:51Z: prod path_prefix sole-Rust + api-smoke GREEN; residual holds only on ts_deleted/admin dual-path",
+        "clearedAt": "2026-07-15T21:21:51Z",
+        "rejectionRef": "rej-010"
       },
       "tsSurface": "apps/puzzled/src/games/sudoku/generator.ts generateSudokuPuzzle (thin proxy fallback for HTTP)",
       "protoRpc": "puzzled.v1.PuzzleService/GenerateGrid",
@@ -136,13 +168,24 @@
       "parityTest": "fixtures/puzzle-grid/golden.json; crates/puzzled-core/tests/puzzle_grid_parity.rs; crates/puzzled-server/tests/puzzle_grid_http_parity.rs; apps/puzzled/tests/puzzle-grid-golden.test.ts; scripts/capture-puzzle-grid-golden.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-grid",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/grid]; scripts/api-smoke.sh",
-      "notes": "parity fixed: Fisher-Yates (i+1), JS object-literal triple random() for removeCount; Dockerfile ships puzzled-core; differential green locally. Honesty: surface present (puzzled-core sudoku + puzzle_grid). PROD deploy lag: grid/submit 404 on pre-fix image \u2014 NOT local parity failure. NO ts_deleted (client generators + multi-game TS configs remain)."
+      "notes": "PROD sole-Rust authority: path_prefix /api/v1/puzzles/grid. differential_green local + api-smoke GREEN 2026-07-15T21:21:51Z: GET grid?gameSlug=sudoku&seed=42&difficulty=easy \u2192 200 slice=S2-puzzle-grid. Client generators remain TS residual. NO ts_deleted (multi-game client configs).",
+      "authorityStamp": {
+        "at": "2026-07-15T21:21:51Z",
+        "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "basis": [
+          "sylphx.toml path_prefixes",
+          "scripts/api-smoke.sh GREEN",
+          "no dual-run edge"
+        ],
+        "ts_deleted": false,
+        "prod_audit_pass": false
+      }
     },
     {
       "id": "puzzle-solution-submit",
       "domain": "game-write",
       "weight": 4,
-      "state": "rust_impl",
+      "state": "authority_rust",
       "proof": {
         "status": "differential_green",
         "dependencyGlobs": [
@@ -153,21 +196,35 @@
         "staleReason": null,
         "staleAt": "2026-07-13T00:30:00Z",
         "verificationRef": "scripts/run-puzzled-differential.sh",
-        "lastComparedMainSha": "PENDING_PUSH"
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app"
       },
       "promotionHold": {
-        "active": true,
-        "reason": "canary/deploy digest not yet bound; residual TS backends remain",
-        "rejectionRef": "rej-010",
-        "since": "2026-07-13T00:30:00Z"
+        "active": false,
+        "reason": "cleared 2026-07-15T21:21:51Z: prod path_prefix sole-Rust + api-smoke GREEN; residual holds only on ts_deleted/admin dual-path",
+        "clearedAt": "2026-07-15T21:21:51Z",
+        "rejectionRef": "rej-010"
       },
-      "tsSurface": "apps/puzzled/src/games/registry.ts validateAndScore; apps/puzzled/src/server/api/routes/games.ts POST /save-result scoring delegation (thin proxy fallback)",
+      "tsSurface": "apps/puzzled/src/games/registry.ts validateAndScore; games.ts POST /save-result (oracle residual; prod edge is Rust)",
       "protoRpc": "puzzled.v1.PuzzleService/SubmitSolution",
       "rustSurface": "crates/puzzled-server/src/scoring.rs; crates/puzzled-server/src/placement.rs",
       "parityTest": "cargo test -p puzzled-server scoring::; placement::",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_solution_submit_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-solution-submit",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/submit]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "FLEET-PRODUCTS-A-TICK pure residual: sudoku validate_and_score + is_valid_placement ported to Rust. HTTP POST /api/v1/puzzles/submit remains TS. NO authority_rust/ts_deleted."
+      "notes": "PROD sole-Rust authority: path_prefix POST /api/v1/puzzles/submit. differential_green local + api-smoke GREEN 2026-07-15T21:21:51Z: submit with grid solution \u2192 valid=true status=won score int. TS validateAndScore/save-result remain client/oracle residual. NO ts_deleted.",
+      "authorityStamp": {
+        "at": "2026-07-15T21:21:51Z",
+        "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "basis": [
+          "sylphx.toml path_prefixes",
+          "scripts/api-smoke.sh GREEN",
+          "no dual-run edge"
+        ],
+        "ts_deleted": false,
+        "prod_audit_pass": false
+      }
     },
     {
       "id": "api-v1-hono-monolith",
@@ -178,15 +235,19 @@
       "rustSurface": "crates/puzzled-server/src/{daily_time,games_api,stats_api,prefs_api,gamification_api}.rs; lib.rs router /api/v1/{games,stats,user,notifications,gamification}/*",
       "parityTest": "cargo test -p puzzled-server --lib daily_time:: games_api:: stats_api:: prefs_api:: gamification_api::",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/games,/api/v1/user,/api/v1/notifications,/api/v1/gamification,/api/v1/stats/today-percentile]",
-      "notes": "WAVE5 product dens: Hono games/stats/user/notifications/gamification request validation + policy + envelope shaping + HTTP product routes. Admin DLQ/announcements residual; full sqlx session/puzzle materialization dual-path; Platform SDK OAuth/streak/leaderboard residual; Next route remains oracle until cutover. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted. [BLOCKED11-PURE 2026-07-15] pure residual validation_limits_pure (pagination/referral/avatar/batch) + time_constants_pure (day/hour/minute offsets + alphabet). NO authority_rust/ts_deleted.",
+      "notes": "WAVE5 dens + PROD partial sole-path: path_prefixes cover /api/v1/games|/user|/notifications|/gamification|/stats/today-percentile. api-smoke GREEN 2026-07-15T21:21:51Z: GET /api/v1/games index + daily-status live (slice=api-v1-hono-monolith). NOT authority_rust for whole monolith: admin DLQ residual; DB session/puzzle materialization dual-path; user/notifications/gamification root 404 (subroutes densed only); Platform SDK streak residual. NO ts_deleted (Hono catch-all retained as local/oracle residual).",
       "proof": {
-        "status": "missing",
-        "staleReason": "unit parity green; DB dual-path + admin residual + rej-010 differential not bound",
-        "verificationRef": "crates/puzzled-server/src/games_api.rs#tests"
+        "status": "caught_up",
+        "staleReason": "games product paths prod sole-Rust; full monolith authority blocked on admin+DB dual-path",
+        "verificationRef": "crates/puzzled-server/src/games_api.rs#tests",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app",
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010: product dens present; dual-path TS Hono remains; no sole-prod claim",
+        "reason": "partial prod sole-path (games index/daily-status); admin+DB dual-path blocks whole-monolith authority_rust",
         "rejectionRef": "rej-010",
         "since": "2026-07-15T18:00:00Z"
       }
@@ -195,15 +256,31 @@
       "id": "auth-sessions",
       "domain": "auth",
       "weight": 4,
-      "state": "rust_impl",
+      "state": "authority_rust",
       "tsSurface": "apps/puzzled/src/server/** (auth)",
       "rustSurface": "crates/puzzled-server/src/auth_sessions.rs",
       "parityTest": "cargo test -p puzzled-server auth_sessions::",
-      "notes": "WAVE4 product dens: session validate/require/optional + bearer/cookie extract product gate. Platform SDK OAuth/UI remains TS. NO authority_rust / ts_deleted. [BLOCKED7-PURE 2026-07-15] pure residual roles_pure + storage_keys_pure + backoff_pure dual-oracle (roles.ts / storage-keys.ts / dlq backoff + time offsets). NO authority_rust/ts_deleted. [BLOCKED11-PURE 2026-07-15] pure residual validation_limits_pure (pagination/referral/avatar/batch) + time_constants_pure (day/hour/minute offsets + alphabet). NO authority_rust/ts_deleted.",
+      "notes": "PROD sole-Rust authority for GET /api/v1/auth/session (+ validate route densed). api-smoke GREEN 2026-07-15T21:21:51Z: authenticated=false session=null slice=auth-sessions. Platform SDK OAuth/UI login residual remains TS. NO ts_deleted.",
       "proof": {
-        "status": "missing",
-        "staleReason": "unit parity green; Platform SDK integration not bound",
-        "verificationRef": "crates/puzzled-server/src/auth_sessions.rs#tests"
+        "status": "caught_up",
+        "staleReason": null,
+        "verificationRef": "crates/puzzled-server/src/auth_sessions.rs#tests",
+        "lastComparedMainSha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "verifiedAt": "2026-07-15T21:21:51Z",
+        "prodSmokeRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json",
+        "prodHost": "https://idle-tie-elxzm6.sylphx.app"
+      },
+      "prodProbe": "sylphx.toml path_prefixes=[/api/v1/auth/session]; scripts/api-smoke.sh",
+      "authorityStamp": {
+        "at": "2026-07-15T21:21:51Z",
+        "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+        "basis": [
+          "sylphx.toml path_prefixes",
+          "scripts/api-smoke.sh GREEN",
+          "no dual-run edge"
+        ],
+        "ts_deleted": false,
+        "prod_audit_pass": false
       }
     },
     {
@@ -505,17 +582,17 @@
     "total": 27,
     "ts_only": 0,
     "contracted": 1,
-    "rust_impl": 26,
+    "rust_impl": 21,
     "parity_proven": 0,
-    "authority_rust": 0,
+    "authority_rust": 5,
     "ts_deleted": 0,
     "proof_missing": 17,
     "proof_stale": 0,
     "completion_progress": 0.0,
-    "authority_progress": 0.0,
-    "verified_authority_progress": 0.0,
-    "weighted_progress": 0.7,
-    "notes": "WAVE4 product dens 2026-07-15: auth-sessions + puzzle-generation-jobs + platform-webhooks \u2192 rust_impl product paths; cargo test -p puzzled-server --lib green. residual ts_only: api-v1-hono-monolith (FE/Next). NO authority_rust / ts_deleted / prod_audit_pass. BLOCKED7 pure residual 2026-07-15T18:29:28Z: roles_pure+storage_keys_pure+backoff_pure. states ts_only=0 contracted=1 rust_impl=26. NO authority_rust/ts_deleted/prod_audit_pass. BLOCKED11 pure residual 2026-07-15T19:40:00Z: validation_limits_pure+time_constants_pure. states ts_only=0 contracted=1 rust_impl=26. NO authority_rust/ts_deleted/prod_audit_pass.",
+    "authority_progress": 0.185,
+    "verified_authority_progress": 0.185,
+    "weighted_progress": 0.933,
+    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -549,23 +626,38 @@
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
     "lastMutation": {
-      "at": "2026-07-15T19:40:00Z",
-      "action": "blocked11_pure_residual_validation_time_constants",
-      "notes": "pure residual dual-oracle deepen under hono/product dens; denom honesty from capability states"
+      "at": "2026-07-15T21:21:51Z",
+      "action": "authority_stamps_prod_smoke_path_prefix_surfaces",
+      "notes": "promote only surfaces with path_prefix + live prod smoke; honest non-claims for Hono dual residual"
     },
-    "updatedAt": "2026-07-15T19:40:00Z",
+    "updatedAt": "2026-07-15T21:21:51Z",
     "deployLagHonesty": {
-      "local": "cargo test/clippy --all-targets + differential GREEN after pure residual continue3 (crossword+nonogram score deepen)",
-      "production": "2026-07-15T12:33Z reprobe idle-tie-elxzm6: healthz/readyz 200 (readyz slice=S1; postgres ok=false this probe); leaderboard stub 200; grid/submit GET+POST still 404 \u2014 deploy lag; NO prod_audit_pass",
-      "rule": "integration\u2260deploy; raw-push frozen; do not claim prod_audit_pass until digest-bound canary"
+      "local": "authority stamps from ledger + tip SHA; cargo not required for ledger-only stamp",
+      "production": "2026-07-15T21:21:51Z api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app: healthz/readyz (stub=false), leaderboard non-stub envelope, auth/session, games index+daily-status, grid 200, submit 200",
+      "rule": "integration\u2260deploy; authority_rust claimed only for path_prefix sole edge; raw-push deploy still platform-owned"
     },
     "explicitNonClaims": [
-      "authority_rust",
       "ts_deleted",
       "prod_audit_pass",
       "REPO_COMPLETE",
-      "false_ts_deleted_for_hono_monolith"
-    ]
+      "false_ts_deleted_for_hono_monolith",
+      "authority_rust_for_full_hono_monolith",
+      "authority_rust_for_pure_game_core_dens"
+    ],
+    "authorityStampWave": {
+      "at": "2026-07-15T21:21:51Z",
+      "sha": "4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa",
+      "stamped": [
+        "api-health-probe",
+        "leaderboard-read",
+        "puzzle-grid-generation",
+        "puzzle-solution-submit",
+        "auth-sessions"
+      ],
+      "prodHost": "https://idle-tie-elxzm6.sylphx.app",
+      "smokeLog": "/tmp/grok-goal-0521e2346d7c/implementer/domain-densed/puzzled-prod-smoke.log",
+      "verificationRef": "verification/puzzled-2026-07-15-authority-stamps-prod-smoke.json"
+    }
   },
   "cycle37Slice": "puzzle-grid-generation bounded differential slice (weight 4) \u2014 5-case TS oracle vs Rust SSOT golden fixtures",
   "cycle38": {
