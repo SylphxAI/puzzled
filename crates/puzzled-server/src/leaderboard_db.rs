@@ -6,6 +6,9 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::game_slugs::is_valid_game_slug;
+use crate::leaderboard_enrich::{
+    enrich_leaderboard_entries, DisplayFields, RankScore,
+};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -188,29 +191,29 @@ pub async fn fetch_score_leaderboard(
     .fetch_all(pool)
     .await?;
 
-    let display_map: std::collections::HashMap<Uuid, DisplayRow> = display_rows
+    let display_map: std::collections::HashMap<Uuid, DisplayFields> = display_rows
         .into_iter()
-        .map(|row| (row.user_id, row))
-        .collect();
-
-    let entries = rows
-        .into_iter()
-        .enumerate()
-        .map(|(index, row)| {
-            let display = display_map.get(&row.user_id);
-            LeaderboardEntry {
-                rank: (index as i32) + 1,
-                user_id: row.user_id,
-                user_name: display
-                    .and_then(|d| d.display_name.clone())
-                    .or_else(|| Some("Anonymous".to_string())),
-                user_image: display.and_then(|d| d.avatar_url.clone()),
-                value: row.total_score,
-            }
+        .map(|row| {
+            (
+                row.user_id,
+                DisplayFields {
+                    display_name: row.display_name,
+                    avatar_url: row.avatar_url,
+                },
+            )
         })
         .collect();
 
-    Ok(entries)
+    let rankings: Vec<RankScore> = rows
+        .into_iter()
+        .map(|row| RankScore {
+            user_id: row.user_id,
+            total_score: row.total_score,
+        })
+        .collect();
+
+    // Pure enrich (rank + Anonymous fallback) — shared kernel with unit parity.
+    Ok(enrich_leaderboard_entries(&rankings, &display_map))
 }
 
 #[cfg(test)]

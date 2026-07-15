@@ -2,6 +2,8 @@
 //! `apps/puzzled/src/games/queens/types.ts#getConflicts|isSolved`.
 //! FLEET-PRODUCTS-WAVE5 pure residual. NO authority_rust / ts_deleted.
 
+#![allow(clippy::needless_range_loop)] // 2D conflict scans are clearer with explicit indices
+
 /// Cell coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cell {
@@ -47,10 +49,12 @@ pub fn get_conflicts(
         if r >= 0 && c >= 0 {
             let r = r as usize;
             let c = c as usize;
-            if r < size && c < size && grid[r].get(c).copied().unwrap_or(false) {
-                if !conflicts.iter().any(|cf| cf.row == r && cf.col == c) {
-                    conflicts.push(Cell { row: r, col: c });
-                }
+            if r < size
+                && c < size
+                && grid[r].get(c).copied().unwrap_or(false)
+                && !conflicts.iter().any(|cf| cf.row == r && cf.col == c)
+            {
+                conflicts.push(Cell { row: r, col: c });
             }
         }
     }
@@ -65,10 +69,9 @@ pub fn get_conflicts(
             if (r != row || c != col)
                 && grid[r].get(c).copied().unwrap_or(false)
                 && regions.get(r).and_then(|rv| rv.get(c)).copied() == Some(my_region)
+                && !conflicts.iter().any(|cf| cf.row == r && cf.col == c)
             {
-                if !conflicts.iter().any(|cf| cf.row == r && cf.col == c) {
-                    conflicts.push(Cell { row: r, col: c });
-                }
+                conflicts.push(Cell { row: r, col: c });
             }
         }
     }

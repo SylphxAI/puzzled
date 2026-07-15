@@ -16,6 +16,7 @@ mod nonogram_clues;
 mod queens_conflict;
 mod leaderboard;
 pub mod leaderboard_db;
+mod leaderboard_enrich;
 mod puzzle_grid;
 mod puzzle_submit;
 
@@ -35,18 +36,24 @@ use serde_json::json;
 use sqlx::PgPool;
 
 pub use leaderboard::LeaderboardStubBody;
+pub use leaderboard_enrich::{
+    cache_period_for, display_name_or_anonymous, enrich_leaderboard_entries, rank_from_better_count,
+    DisplayFields, LeaderboardCachePeriod, RankScore, ANONYMOUS_DISPLAY_NAME,
+};
 pub use game_format::{
     calculate_wordle_score, compare_by_time, format_time_score, format_timer, is_perfect_game,
 };
 pub use pattern_match::{find_all_sets, generate_all_cards, is_valid_set, Card, Color, Fill, Shape};
-pub use placement::{is_valid_placement, GRID_SIZE};
+pub use placement::{
+    is_grid_complete as is_sudoku_grid_complete, is_valid_placement, GRID_SIZE,
+};
 pub use crossword_grid::{is_crossword_grid_complete, CROSSWORD_GRID_SIZE};
 pub use word_hive::{calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change, MIN_WORD_LENGTH};
 pub use word_box::{all_letters_used, get_used_letters, has_valid_side_transitions, starts_with_last_letter, uses_valid_letters, LetterBox};
 pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
-pub use nonogram_clues::{generate_clues, is_grid_complete};
+pub use nonogram_clues::{generate_clues, is_grid_complete as is_nonogram_grid_complete};
 pub use queens_conflict::{get_conflicts, is_solved, Cell as QueensCell};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);

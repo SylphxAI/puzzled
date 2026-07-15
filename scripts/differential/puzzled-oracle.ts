@@ -8,7 +8,7 @@
  * Fail-closed: no SKIP-as-pass. Requires bun.
  */
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -182,7 +182,9 @@ function main(): void {
     caseCount: cases.length,
     cases,
   };
-  const outPath = join(__dirname, "fixtures/puzzled-oracle-out.json");
+  const outDir = join(__dirname, "fixtures");
+  mkdirSync(outDir, { recursive: true });
+  const outPath = join(outDir, "puzzled-oracle-out.json");
   writeFileSync(outPath, `${JSON.stringify(corpus, null, 2)}\n`);
   console.log(
     JSON.stringify({

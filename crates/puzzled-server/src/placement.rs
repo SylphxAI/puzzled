@@ -1,5 +1,7 @@
 //! Pure Sudoku placement validity — mirrors `apps/puzzled/src/games/sudoku/types.ts`.
 
+#![allow(clippy::needless_range_loop)] // 2D grid scans are clearer with explicit indices
+
 pub const GRID_SIZE: usize = 9;
 pub const BOX_SIZE: usize = 3;
 

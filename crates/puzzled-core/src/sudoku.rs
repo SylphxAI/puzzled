@@ -43,6 +43,7 @@ pub struct SudokuPuzzleResult {
     pub solution: SudokuSolution,
 }
 
+#[allow(clippy::needless_range_loop)] // 2D box/row/col scan is clearer with index ranges
 fn is_valid_placement(grid: &[Vec<u8>], row: usize, col: usize, value: u8) -> bool {
     for column in 0..GRID_SIZE {
         if column != col && grid[row][column] == value {
@@ -96,6 +97,7 @@ fn generate_complete_grid(random: &mut SeededRandom) -> Vec<Vec<u8>> {
     grid
 }
 
+#[allow(clippy::needless_range_loop)] // 2D box/row/col scan is clearer with index ranges
 fn is_valid_placement_optional(
     grid: &[Vec<Option<u8>>],
     row: usize,
@@ -178,9 +180,9 @@ fn remove_numbers(
     //     hard: 52 + Math.floor(random() * 4),
     //   }[difficulty]
     // JS evaluates ALL three `random()` calls before indexing — three draws every time.
-    let easy = 32 + (random.next() * 4.0).floor() as usize;
-    let medium = 42 + (random.next() * 4.0).floor() as usize;
-    let hard = 52 + (random.next() * 4.0).floor() as usize;
+    let easy = 32 + (random.next_f64() * 4.0).floor() as usize;
+    let medium = 42 + (random.next_f64() * 4.0).floor() as usize;
+    let hard = 52 + (random.next_f64() * 4.0).floor() as usize;
     let remove_count = match difficulty {
         SudokuDifficulty::Easy => easy,
         SudokuDifficulty::Medium => medium,
@@ -207,9 +209,15 @@ fn remove_numbers(
         }
         let backup = puzzle[row][col];
         puzzle[row][col] = None;
-        if difficulty == SudokuDifficulty::Easy || random.next() > 0.3 {
-            removed += 1;
-        } else if count_solutions(&puzzle, 2) == 1 {
+        // Easy always keeps (no extra draw). Medium/hard: 70% keep without uniqueness
+        // check; 30% keep only if unique. Short-circuit must match frozen TS.
+        let keep_removed = if difficulty == SudokuDifficulty::Easy {
+            true
+        } else {
+            let roll = random.next_f64();
+            roll > 0.3 || count_solutions(&puzzle, 2) == 1
+        };
+        if keep_removed {
             removed += 1;
         } else {
             puzzle[row][col] = backup;

@@ -2,6 +2,8 @@
 //! mirrors `apps/puzzled/src/games/nonogram/types.ts`.
 //! FLEET-PRODUCTS-WAVE4 pure residual. NO authority_rust / ts_deleted.
 
+#![allow(clippy::needless_range_loop)] // 2D run-length scans are clearer with explicit indices
+
 /// Generate row/col run-length clues from a boolean solution grid.
 #[must_use]
 pub fn generate_clues(solution: &[Vec<bool>]) -> (Vec<Vec<u32>>, Vec<Vec<u32>>) {

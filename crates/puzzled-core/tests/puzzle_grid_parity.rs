@@ -80,7 +80,7 @@ fn random_lcg_matches_golden_baseline() {
     for case in &golden.random_cases {
         let mut rng = seeded_random(case.seed);
         for (index, expected) in case.values.iter().enumerate() {
-            let actual = rng.next();
+            let actual = rng.next_f64();
             assert_f64_close(actual, *expected, &case.id, index);
         }
     }

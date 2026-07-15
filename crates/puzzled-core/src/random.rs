@@ -36,7 +36,8 @@ impl SeededRandom {
     }
 
     /// Draw the next value in `[0, 1)`.
-    pub fn next(&mut self) -> f64 {
+    /// Named `next_f64` (not `next`) to avoid clippy `should_implement_trait` vs `Iterator::next`.
+    pub fn next_f64(&mut self) -> f64 {
         self.draw_count += 1;
         let product = self.state * MULTIPLIER + INCREMENT;
         let masked = (to_int32(product) as u32) & 0x7fff_ffff;
@@ -47,7 +48,7 @@ impl SeededRandom {
     /// Collect the next `count` draws (for golden fixture verification).
     #[must_use]
     pub fn next_n(&mut self, count: usize) -> Vec<f64> {
-        (0..count).map(|_| self.next()).collect()
+        (0..count).map(|_| self.next_f64()).collect()
     }
 }
 
@@ -71,7 +72,7 @@ pub fn seeded_random(seed: i64) -> SeededRandom {
 pub fn shuffle_array<T: Clone>(array: &[T], random: &mut SeededRandom) -> Vec<T> {
     let mut result = array.to_vec();
     for index in (1..result.len()).rev() {
-        let random_unit = random.next();
+        let random_unit = random.next_f64();
         // Match TS: Math.floor(random() * (i + 1)) → j ∈ [0, i]
         let swap_index = (random_unit * (index as f64 + 1.0)).floor() as usize;
         result.swap(index, swap_index);
@@ -86,7 +87,7 @@ mod tests {
     #[test]
     fn seed_zero_first_draw_matches_frozen_baseline() {
         let mut rng = SeededRandom::new(0);
-        let first = rng.next();
+        let first = rng.next_f64();
         let expected = 12_345.0 / MODULUS;
         assert!(
             (first - expected).abs() < f64::EPSILON,
@@ -99,7 +100,7 @@ mod tests {
         let mut rng1 = SeededRandom::new(999);
         let mut rng2 = SeededRandom::new(999);
         for _ in 0..10 {
-            assert_eq!(rng1.next().to_bits(), rng2.next().to_bits());
+            assert_eq!(rng1.next_f64().to_bits(), rng2.next_f64().to_bits());
         }
     }
 
