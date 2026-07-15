@@ -1,14 +1,42 @@
-//! Pure queens conflict / solved check — mirrors
-//! `apps/puzzled/src/games/queens/types.ts#getConflicts|isSolved`.
-//! FLEET-PRODUCTS-WAVE5 pure residual. NO authority_rust / ts_deleted.
+//! Pure queens conflict / solved check + score — mirrors
+//! `apps/puzzled/src/games/queens/types.ts#getConflicts|isSolved` and
+//! `config.ts#validateAndScore`.
+//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
 
 #![allow(clippy::needless_range_loop)] // 2D conflict scans are clearer with explicit indices
+
+/// Base score for a win before time penalty.
+pub const BASE_WIN_SCORE: u32 = 500;
+/// Floor score for a win.
+pub const MIN_WIN_SCORE: u32 = 100;
 
 /// Cell coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cell {
     pub row: usize,
     pub col: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubmissionStatus {
+    Won,
+    Lost,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GameResult {
+    Invalid { error: String },
+    Valid {
+        status: SubmissionStatus,
+        score: u32,
+    },
+}
+
+impl GameResult {
+    #[must_use]
+    pub fn is_valid(&self) -> bool {
+        matches!(self, Self::Valid { .. })
+    }
 }
 
 /// Conflicts for placing a queen at (row, col) on a boolean grid with regions.
@@ -145,6 +173,55 @@ pub fn is_solved(grid: &[Vec<bool>], regions: &[Vec<i32>], size: usize) -> bool 
     true
 }
 
+/// Score: `max(100, 500 - floor(seconds/2))`.
+#[must_use]
+pub fn queens_score(time_spent_ms: u64) -> u32 {
+    let seconds = time_spent_ms / 1000;
+    let time_penalty = (seconds / 2) as u32;
+    BASE_WIN_SCORE.saturating_sub(time_penalty).max(MIN_WIN_SCORE)
+}
+
+/// Validate claimed win/loss against `is_solved` grid; score wins.
+#[must_use]
+pub fn validate_and_score(
+    final_grid: Option<&[Vec<bool>]>,
+    regions: &[Vec<i32>],
+    size: usize,
+    time_spent_ms: u64,
+    claimed: SubmissionStatus,
+) -> GameResult {
+    let Some(grid) = final_grid else {
+        return GameResult::Invalid {
+            error: "Missing final grid data".into(),
+        };
+    };
+
+    let won = is_solved(grid, regions, size);
+
+    if claimed == SubmissionStatus::Won && !won {
+        return GameResult::Invalid {
+            error: "Invalid win claim - puzzle not solved correctly".into(),
+        };
+    }
+    if claimed == SubmissionStatus::Lost && won {
+        return GameResult::Invalid {
+            error: "Invalid loss claim - puzzle is solved correctly".into(),
+        };
+    }
+
+    if !won {
+        return GameResult::Valid {
+            status: SubmissionStatus::Lost,
+            score: 0,
+        };
+    }
+
+    GameResult::Valid {
+        status: SubmissionStatus::Won,
+        score: queens_score(time_spent_ms),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -210,5 +287,32 @@ mod tests {
         // queen count ok
         let count: usize = g.iter().map(|r| r.iter().filter(|&&q| q).count()).sum();
         assert_eq!(count, 4);
+    }
+
+    #[test]
+    fn score_table() {
+        assert_eq!(queens_score(0), 500);
+        assert_eq!(queens_score(2_000), 499); // 2s → floor(2/2)=1
+        assert_eq!(queens_score(120_000), 440); // 120s → 60
+        assert_eq!(queens_score(1_000_000), 100); // floor
+    }
+
+    #[test]
+    fn validate_missing_and_loss() {
+        let regions = vec![vec![0; 4]; 4];
+        let missing = validate_and_score(None, &regions, 4, 0, SubmissionStatus::Won);
+        assert!(!missing.is_valid());
+        let empty = empty(4);
+        let lost = validate_and_score(Some(&empty), &regions, 4, 0, SubmissionStatus::Lost);
+        assert_eq!(
+            lost,
+            GameResult::Valid {
+                status: SubmissionStatus::Lost,
+                score: 0
+            }
+        );
+        let false_win =
+            validate_and_score(Some(&empty), &regions, 4, 0, SubmissionStatus::Won);
+        assert!(!false_win.is_valid());
     }
 }

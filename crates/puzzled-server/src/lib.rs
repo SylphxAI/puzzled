@@ -18,6 +18,7 @@ mod word_groups;
 mod word_ladder;
 mod cryptogram;
 mod quad_words;
+mod block_slide;
 mod leaderboard;
 pub mod leaderboard_db;
 mod leaderboard_enrich;
@@ -52,13 +53,25 @@ pub use placement::{
     is_grid_complete as is_sudoku_grid_complete, is_valid_placement, GRID_SIZE,
 };
 pub use crossword_grid::{is_crossword_grid_complete, CROSSWORD_GRID_SIZE};
-pub use word_hive::{calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change, MIN_WORD_LENGTH};
-pub use word_box::{all_letters_used, get_used_letters, has_valid_side_transitions, starts_with_last_letter, uses_valid_letters, LetterBox};
+pub use word_hive::{
+    calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change,
+    validate_and_score as word_hive_validate_and_score, GameResult as WordHiveGameResult,
+    MIN_WORD_LENGTH,
+};
+pub use word_box::{
+    all_letters_used, get_used_letters, has_valid_side_transitions, starts_with_last_letter,
+    uses_valid_letters, validate_and_score as word_box_validate_and_score, word_box_score,
+    GameResult as WordBoxGameResult, LetterBox, SubmissionStatus as WordBoxSubmissionStatus,
+};
 pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
 pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus, MAX_GUESSES, WORD_LENGTH};
 pub use nonogram_clues::{generate_clues, is_grid_complete as is_nonogram_grid_complete};
-pub use queens_conflict::{get_conflicts, is_solved, Cell as QueensCell};
+pub use queens_conflict::{
+    get_conflicts, is_solved, queens_score, validate_and_score as queens_validate_and_score,
+    Cell as QueensCell, GameResult as QueensGameResult, SubmissionStatus as QueensSubmissionStatus,
+    BASE_WIN_SCORE as QUEENS_BASE_WIN_SCORE, MIN_WIN_SCORE as QUEENS_MIN_WIN_SCORE,
+};
 pub use word_groups::{
     count_matching_words, find_matching_category, validate_and_score as word_groups_validate_and_score,
     word_groups_score, Category as WordGroupsCategory, GameResult as WordGroupsGameResult,
@@ -83,6 +96,15 @@ pub use quad_words::{
     validate_and_score as quad_words_validate_and_score, GameResult as QuadWordsGameResult,
     SubmissionStatus as QuadWordsSubmissionStatus, MAX_GUESSES as QUAD_WORDS_MAX_GUESSES,
     MIN_WIN_SCORE as QUAD_WORDS_MIN_WIN_SCORE, OPTIMAL_GUESSES as QUAD_WORDS_OPTIMAL_GUESSES,
+};
+pub use block_slide::{
+    block_slide_score, can_move, is_valid_configuration, is_win, move_block, serialize_state,
+    solve_puzzle, validate_and_score as block_slide_validate_and_score, Block, BlockSlidePuzzle,
+    Direction as BlockSlideDirection, GameResult as BlockSlideGameResult, SolveResult,
+    SubmissionStatus as BlockSlideSubmissionStatus, BASE_WIN_SCORE as BLOCK_SLIDE_BASE_WIN_SCORE,
+    DEFAULT_MAX_MOVES as BLOCK_SLIDE_DEFAULT_MAX_MOVES, EXTRA_MOVE_PENALTY as BLOCK_SLIDE_EXTRA_MOVE_PENALTY,
+    FAST_SOLVE_BONUS as BLOCK_SLIDE_FAST_SOLVE_BONUS, FAST_SOLVE_MS as BLOCK_SLIDE_FAST_SOLVE_MS,
+    MIN_WIN_SCORE as BLOCK_SLIDE_MIN_WIN_SCORE,
 };
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);

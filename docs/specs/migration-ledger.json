@@ -289,23 +289,83 @@
 			"rustSurface": "crates/puzzled-server/src/quad_words.rs",
 			"parityTest": "cargo test -p puzzled-server quad_words::",
 			"notes": "adversarial residual pure deepen: quordle score table + four-board eval + claim checks. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "block-slide-solver-score",
+			"domain": "game-core",
+			"weight": 3,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/block_slide.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/block-slide/{types,solver,config}.ts",
+			"rustSurface": "crates/puzzled-server/src/block_slide.rs",
+			"parityTest": "cargo test -p puzzled-server block_slide::",
+			"notes": "adversarial residual pure deepen: can_move/move/is_win + BFS solve + config validity + move/time score. Generator remains TS. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "word-box-letter-score",
+			"domain": "game-core",
+			"weight": 2,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/word_box.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/word-box/types.ts; config.ts validateAndScore",
+			"rustSurface": "crates/puzzled-server/src/word_box.rs",
+			"parityTest": "cargo test -p puzzled-server word_box::",
+			"notes": "adversarial residual pure deepen: letter-box side transitions + word-count score table + cover claim. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "queens-solve-score",
+			"domain": "game-core",
+			"weight": 2,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/queens_conflict.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/queens/types.ts getConflicts/isSolved; config.ts validateAndScore",
+			"rustSurface": "crates/puzzled-server/src/queens_conflict.rs",
+			"parityTest": "cargo test -p puzzled-server queens_conflict::",
+			"notes": "adversarial residual pure deepen: conflict/solved + time score + win/loss claim. Generator remains TS. NO authority_rust / ts_deleted."
+		},
+		{
+			"id": "word-hive-word-score",
+			"domain": "game-core",
+			"weight": 2,
+			"state": "rust_impl",
+			"proof": {
+				"status": "missing",
+				"staleReason": "unit parity green; full TS oracle differential not bound",
+				"verificationRef": "crates/puzzled-server/src/word_hive.rs#tests"
+			},
+			"tsSurface": "apps/puzzled/src/games/word-hive/types.ts; config.ts validateAndScore",
+			"rustSurface": "crates/puzzled-server/src/word_hive.rs",
+			"parityTest": "cargo test -p puzzled-server word_hive::",
+			"notes": "adversarial residual pure deepen: per-word/pangram score + found-words claim sum + ranks. Dictionary pool remains TS. NO authority_rust / ts_deleted."
 		}
 	],
 	"summary": {
-		"total": 16,
+		"total": 20,
 		"ts_only": 4,
 		"contracted": 1,
-		"rust_impl": 11,
+		"rust_impl": 15,
 		"parity_proven": 0,
 		"authority_rust": 0,
 		"ts_deleted": 0,
-		"proof_missing": 7,
+		"proof_missing": 11,
 		"proof_stale": 1,
 		"completion_progress": 0.0,
 		"authority_progress": 0.0,
 		"verified_authority_progress": 0.0,
-		"weighted_progress": 0.69,
-		"notes": "adversarial residual continue 2026-07-15T10:55Z: pure deepen word-ladder path/score + cryptogram substitution/score + quad-words score/eval; cargo test/clippy --all-targets green. prod re-probe idle-tie-elxzm6: healthz/readyz 200, grid/submit GET+POST still 404 (deploy lag, readyz slice=S1). residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain. NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
+		"weighted_progress": 0.66,
+		"notes": "adversarial residual deepen 2026-07-15T11:25Z: pure block-slide solver/score + word-box score + queens score + word-hive validate; cargo test/clippy --all-targets green. prod re-probe idle-tie-elxzm6: healthz/readyz 200, grid/submit still 404 (deploy lag; readyz postgres ok=false). residual ts_only=4 (hono/auth/jobs/webhooks) MUST remain. NO prod_audit_pass / authority_rust / all-ts_deleted claim.",
 		"cycle48_delta": {
 			"rust_impl_verified": 1,
 			"slice": "puzzle-solution-submit",
@@ -338,11 +398,11 @@
 		},
 		"productsAHonestyAt": "2026-07-13T00:30:00Z",
 		"productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
-		"lastMutation": "ADVERSARIAL-PURE-RESIDUAL-WORD-LADDER+CRYPTOGRAM+QUAD-WORDS+PROD-REPROBE",
-		"updatedAt": "2026-07-15T10:55:00Z",
+		"lastMutation": "ADVERSARIAL-PURE-RESIDUAL-BLOCK-SLIDE+WORD-BOX+QUEENS+WORD-HIVE+PROD-REPROBE",
+		"updatedAt": "2026-07-15T11:25:05Z",
 		"deployLagHonesty": {
-			"local": "cargo test/clippy --all-targets + differential after pure residual deepen",
-			"production": "2026-07-15T10:50:11Z reprobe: healthz/readyz 200; grid/submit GET+POST still 404 \u2014 pre-fix image / deploy lag (readyz slice=S1, uptime_s~20k)",
+			"local": "cargo test/clippy --all-targets + differential GREEN after pure residual deepen (block-slide+word-box+queens+word-hive)",
+			"production": "2026-07-15T11:25:05Z reprobe: healthz/readyz 200 (readyz slice=S1 postgres ok=false); grid/submit GET+POST still 404 \u2014 deploy lag; NO prod_audit_pass",
 			"rule": "integration\u2260deploy; raw-push frozen; do not claim prod_audit_pass until digest-bound canary"
 		},
 		"explicitNonClaims": [

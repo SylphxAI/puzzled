@@ -1,6 +1,6 @@
-//! Pure Letter Boxed validation — mirrors
-//! `apps/puzzled/src/games/word-box/types.ts`.
-//! FLEET-BULK pure residual. NO authority_rust / ts_deleted.
+//! Pure Letter Boxed validation + score — mirrors
+//! `apps/puzzled/src/games/word-box/types.ts` + `config.ts#validateAndScore`.
+//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
 
 use std::collections::BTreeSet;
 
@@ -18,6 +18,28 @@ pub enum BoxSide {
     Right,
     Bottom,
     Left,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SubmissionStatus {
+    Won,
+    Lost,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GameResult {
+    Invalid { error: String },
+    Valid {
+        status: SubmissionStatus,
+        score: u32,
+    },
+}
+
+impl GameResult {
+    #[must_use]
+    pub fn is_valid(&self) -> bool {
+        matches!(self, Self::Valid { .. })
+    }
 }
 
 fn upper(c: char) -> char {
@@ -56,9 +78,7 @@ pub fn all_letters(box_: &LetterBox) -> Vec<char> {
 #[must_use]
 pub fn uses_valid_letters(box_: &LetterBox, word: &str) -> bool {
     let all = all_letters(box_);
-    word.chars()
-        .map(upper)
-        .all(|l| all.contains(&l))
+    word.chars().map(upper).all(|l| all.contains(&l))
 }
 
 /// Consecutive letters must come from different sides.
@@ -111,6 +131,74 @@ pub fn all_letters_used(box_: &LetterBox, used: &BTreeSet<char>) -> bool {
     all_letters(box_).into_iter().all(|l| used.contains(&l))
 }
 
+/// Word-count score table: ≤2→100, 3→80, 4→60, 5+→40.
+#[must_use]
+pub fn word_box_score(word_count: u32) -> u32 {
+    if word_count <= 2 {
+        100
+    } else if word_count == 3 {
+        80
+    } else if word_count == 4 {
+        60
+    } else {
+        40
+    }
+}
+
+/// Validate claimed words cover the box (win) or accept loss; compute score.
+///
+/// `all_letters` is the 12-letter solution alphabet (top/right/bottom/left ×3).
+#[must_use]
+pub fn validate_and_score(
+    all_letters: &[char],
+    words: Option<&[String]>,
+    claimed: SubmissionStatus,
+) -> GameResult {
+    if claimed == SubmissionStatus::Lost {
+        return GameResult::Valid {
+            status: SubmissionStatus::Lost,
+            score: 0,
+        };
+    }
+
+    let Some(words) = words else {
+        return GameResult::Invalid {
+            error: "Missing words data".into(),
+        };
+    };
+    if words.is_empty() {
+        return GameResult::Invalid {
+            error: "Missing words data".into(),
+        };
+    }
+
+    if all_letters.len() < 12 {
+        return GameResult::Invalid {
+            error: "Invalid solution letters".into(),
+        };
+    }
+
+    let box_ = LetterBox {
+        top: [all_letters[0], all_letters[1], all_letters[2]],
+        right: [all_letters[3], all_letters[4], all_letters[5]],
+        bottom: [all_letters[6], all_letters[7], all_letters[8]],
+        left: [all_letters[9], all_letters[10], all_letters[11]],
+    };
+
+    let word_refs: Vec<&str> = words.iter().map(String::as_str).collect();
+    let used = get_used_letters(&word_refs);
+    if !all_letters_used(&box_, &used) {
+        return GameResult::Invalid {
+            error: "Not all letters used".into(),
+        };
+    }
+
+    GameResult::Valid {
+        status: SubmissionStatus::Won,
+        score: word_box_score(words.len() as u32),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -144,5 +232,54 @@ mod tests {
         assert!(all_letters_used(&b, &used));
         let partial = get_used_letters(&["ABC"]);
         assert!(!all_letters_used(&b, &partial));
+    }
+
+    #[test]
+    fn score_and_validate() {
+        assert_eq!(word_box_score(2), 100);
+        assert_eq!(word_box_score(3), 80);
+        assert_eq!(word_box_score(4), 60);
+        assert_eq!(word_box_score(5), 40);
+        let letters: Vec<char> = "ABCDEFGHIJKL".chars().collect();
+        let words = vec![
+            "ABC".into(),
+            "DEF".into(),
+            "GHI".into(),
+            "JKL".into(),
+        ];
+        let r = validate_and_score(&letters, Some(&words), SubmissionStatus::Won);
+        assert_eq!(
+            r,
+            GameResult::Valid {
+                status: SubmissionStatus::Won,
+                score: 60
+            }
+        );
+        let lost = validate_and_score(&letters, None, SubmissionStatus::Lost);
+        assert_eq!(
+            lost,
+            GameResult::Valid {
+                status: SubmissionStatus::Lost,
+                score: 0
+            }
+        );
+        let incomplete =
+            validate_and_score(&letters, Some(&["ABC".into()]), SubmissionStatus::Won);
+        assert!(!incomplete.is_valid());
+        let two = validate_and_score(
+            &letters,
+            Some(&[
+                "ABCDEF".into(),
+                "GHIJKL".into(),
+            ]),
+            SubmissionStatus::Won,
+        );
+        assert_eq!(
+            two,
+            GameResult::Valid {
+                status: SubmissionStatus::Won,
+                score: 100
+            }
+        );
     }
 }

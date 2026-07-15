@@ -1,6 +1,8 @@
-//! Pure word-hive (spelling bee) scoring — mirrors
-//! `apps/puzzled/src/games/word-hive/types.ts` + word-ladder one-letter change.
-//! FLEET-PRODUCTS-WAVE8 pure residual. NO authority_rust / ts_deleted.
+//! Pure word-hive (spelling bee) scoring + validateAndScore — mirrors
+//! `apps/puzzled/src/games/word-hive/types.ts` + `config.ts#validateAndScore`.
+//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+
+use std::collections::HashSet;
 
 /// Minimum accepted word length (MIN_WORD_LENGTH).
 pub const MIN_WORD_LENGTH: usize = 4;
@@ -84,6 +86,51 @@ pub fn is_one_letter_change(word1: &str, word2: &str) -> bool {
     differences == 1
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GameResult {
+    Invalid { error: String },
+    Valid { status: &'static str, score: u32 },
+}
+
+impl GameResult {
+    #[must_use]
+    pub fn is_valid(&self) -> bool {
+        matches!(self, Self::Valid { .. })
+    }
+}
+
+/// Sum word scores for claimed found words; every word must be in `valid_words`.
+/// Spelling Bee always completes as `"won"` (ranks determine quality).
+#[must_use]
+pub fn validate_and_score(
+    valid_words: &HashSet<String>,
+    pangrams: &HashSet<String>,
+    found_words: Option<&[String]>,
+) -> GameResult {
+    let Some(found) = found_words else {
+        return GameResult::Invalid {
+            error: "Missing found words data".into(),
+        };
+    };
+
+    let mut score = 0u32;
+    for word in found {
+        let upper = word.to_ascii_uppercase();
+        if !valid_words.contains(&upper) {
+            return GameResult::Invalid {
+                error: format!("Invalid word claim: {word}"),
+            };
+        }
+        let is_pangram = pangrams.contains(&upper);
+        score = score.saturating_add(calculate_word_score(&upper, is_pangram));
+    }
+
+    GameResult::Valid {
+        status: "won",
+        score,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,5 +166,28 @@ mod tests {
         assert!(!is_one_letter_change("cold", "warm"));
         assert!(!is_one_letter_change("cold", "colder"));
         assert!(!is_one_letter_change("cold", "cold"));
+    }
+
+    #[test]
+    fn validate_sum_and_reject() {
+        let valid: HashSet<String> = ["TEST", "TESTS", "TESTING"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        let pangrams: HashSet<String> = ["TESTING"].into_iter().map(str::to_string).collect();
+        let found = vec!["test".into(), "testing".into()];
+        let r = validate_and_score(&valid, &pangrams, Some(&found));
+        // test=1, testing pangram=7+7=14 → 15
+        assert_eq!(
+            r,
+            GameResult::Valid {
+                status: "won",
+                score: 15
+            }
+        );
+        let bad = validate_and_score(&valid, &pangrams, Some(&["nope".into()]));
+        assert!(!bad.is_valid());
+        let missing = validate_and_score(&valid, &pangrams, None);
+        assert!(!missing.is_valid());
     }
 }
