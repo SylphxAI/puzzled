@@ -26,6 +26,7 @@ mod llm_json_parse_pure;
 mod format_url_pure;
 mod pii_scrub_pure;
 mod flags_hash_pure;
+mod key_validation_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
