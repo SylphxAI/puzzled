@@ -15,6 +15,9 @@ mod wordle_eval;
 mod nonogram_clues;
 mod queens_conflict;
 mod word_groups;
+mod word_ladder;
+mod cryptogram;
+mod quad_words;
 mod leaderboard;
 pub mod leaderboard_db;
 mod leaderboard_enrich;
@@ -61,6 +64,25 @@ pub use word_groups::{
     word_groups_score, Category as WordGroupsCategory, GameResult as WordGroupsGameResult,
     SubmissionStatus as WordGroupsSubmissionStatus, MAX_MISTAKES, TOTAL_CATEGORIES,
     WORDS_PER_CATEGORY,
+};
+pub use word_ladder::{
+    is_one_letter_change as is_word_ladder_one_letter_change,
+    validate_and_score as word_ladder_validate_and_score, word_ladder_score,
+    GameResult as WordLadderGameResult, SubmissionStatus as WordLadderSubmissionStatus,
+    BASE_WIN_SCORE as WORD_LADDER_BASE_WIN_SCORE, EXTRA_STEP_PENALTY as WORD_LADDER_EXTRA_STEP_PENALTY,
+    MIN_WIN_SCORE as WORD_LADDER_MIN_WIN_SCORE,
+};
+pub use cryptogram::{
+    cryptogram_score, is_fully_solved, unique_encrypted_letters,
+    validate_and_score as cryptogram_validate_and_score, GameResult as CryptogramGameResult,
+    SubmissionStatus as CryptogramSubmissionStatus, BASE_WIN_SCORE as CRYPTOGRAM_BASE_WIN_SCORE,
+    HINT_PENALTY as CRYPTOGRAM_HINT_PENALTY, MIN_WIN_SCORE as CRYPTOGRAM_MIN_WIN_SCORE,
+};
+pub use quad_words::{
+    evaluate_four, get_best_status, guess_solves_target, quad_words_score,
+    validate_and_score as quad_words_validate_and_score, GameResult as QuadWordsGameResult,
+    SubmissionStatus as QuadWordsSubmissionStatus, MAX_GUESSES as QUAD_WORDS_MAX_GUESSES,
+    MIN_WIN_SCORE as QUAD_WORDS_MIN_WIN_SCORE, OPTIMAL_GUESSES as QUAD_WORDS_OPTIMAL_GUESSES,
 };
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
