@@ -1,7 +1,11 @@
-//! Puzzled Server — ADR-168 S2: health + leaderboard read + puzzle grid + solution submit.
+//! Puzzled Server — ADR-168: health + leaderboard + puzzle grid/submit + product dens
+//! for auth-sessions, generation jobs, and platform webhooks.
 
 pub mod db_config;
 
+mod auth_sessions;
+mod generation_jobs;
+mod platform_webhooks;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
@@ -37,7 +41,10 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use auth_sessions::validate_session_http;
+use generation_jobs::{execute_job_http, plan_generation_http};
 use leaderboard::{leaderboard_stub, stats_leaderboard};
+use platform_webhooks::platform_jobs_webhook;
 use puzzle_grid::generate_grid;
 use puzzle_submit::submit_solution;
 use serde::Serialize;
@@ -151,6 +158,20 @@ pub use word_search::{
     GameResult as WordSearchGameResult, SubmissionStatus as WordSearchSubmissionStatus,
     BASE_WIN_SCORE as WORD_SEARCH_BASE_WIN_SCORE, MIN_WIN_SCORE as WORD_SEARCH_MIN_WIN_SCORE,
 };
+pub use auth_sessions::{
+    extract_bearer, extract_session_cookie, optional_auth, require_auth, resolve_session_token,
+    validate_session, AuthError, SessionContext,
+};
+pub use generation_jobs::{
+    execute_generate_daily_puzzles, execute_job, get_seed_from_date, is_known_job,
+    parse_date_yyyy_mm_dd, plan_daily_generation, GenerationPlan, GenerationStrategy,
+    GenerationUnit, JobResult, PuzzleDifficulty, JOB_GENERATE_DAILY_PUZZLES, LLM_GAMES,
+    RUST_SEED_GAMES,
+};
+pub use platform_webhooks::{
+    extract_job_headers, handle_platform_job, secrets_equal, verify_platform_request,
+    VerificationResult, HEADER_APP_SECRET, HEADER_CRON_NAME, HEADER_JOB_ID,
+};
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
@@ -251,6 +272,11 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .route("/api/v1/puzzles/grid", get(generate_grid))
         .route("/api/v1/puzzles/submit", post(submit_solution))
+        // Product dens: auth / jobs / webhooks / generators backend
+        .route("/api/v1/auth/session/validate", post(validate_session_http))
+        .route("/api/v1/jobs/plan", post(plan_generation_http))
+        .route("/api/v1/jobs/execute", post(execute_job_http))
+        .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
         .with_state(state)
 }
 
