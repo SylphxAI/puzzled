@@ -13,10 +13,11 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-/// Parity: `USER_LIMITS` in `apps/puzzled/src/lib/config/user.ts`.
-pub const USERNAME_MIN_LENGTH: usize = 3;
-pub const USERNAME_MAX_LENGTH: usize = 20;
-pub const BIO_MAX_LENGTH: usize = 160;
+/// Parity: `USER_LIMITS` in `apps/puzzled/src/lib/config/user.ts`
+/// (SSOT densed in `user_profile_limits_pure`).
+pub use crate::user_profile_limits_pure::{
+    BIO_MAX_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH,
+};
 
 /// Username validation (lowercase letters, digits, underscore).
 #[derive(Debug, Clone, PartialEq, Eq)]

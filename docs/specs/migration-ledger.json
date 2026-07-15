@@ -235,7 +235,7 @@
       "rustSurface": "crates/puzzled-server/src/{daily_time,games_api,stats_api,prefs_api,gamification_api}.rs; lib.rs router /api/v1/{games,stats,user,notifications,gamification}/*",
       "parityTest": "cargo test -p puzzled-server --lib daily_time:: games_api:: stats_api:: prefs_api:: gamification_api::",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/games,/api/v1/user,/api/v1/notifications,/api/v1/gamification,/api/v1/stats/today-percentile]",
-      "notes": "WAVE5 dens + PROD partial sole-path: path_prefixes cover /api/v1/games|/user|/notifications|/gamification|/stats/today-percentile. api-smoke GREEN 2026-07-15T21:21:51Z: GET /api/v1/games index + daily-status live (slice=api-v1-hono-monolith). NOT authority_rust for whole monolith: admin DLQ residual; DB session/puzzle materialization dual-path; user/notifications/gamification root 404 (subroutes densed only); Platform SDK streak residual. NO ts_deleted (Hono catch-all retained as local/oracle residual).",
+      "notes": "WAVE5 dens + PROD partial sole-path: path_prefixes cover /api/v1/games|/user|/notifications|/gamification|/stats/today-percentile. api-smoke GREEN 2026-07-15T21:21:51Z: GET /api/v1/games index + daily-status live (slice=api-v1-hono-monolith). NOT authority_rust for whole monolith: admin DLQ residual; DB session/puzzle materialization dual-path; user/notifications/gamification root 404 (subroutes densed only); Platform SDK streak residual. NO ts_deleted (Hono catch-all retained as local/oracle residual). [BLOCKED3-PURE 2026-07-15] pure residual app_config_pure + user_profile_limits_pure + html_escape_pure dual-oracle. denom retained (authority_rust\u00d75 / rust_impl\u00d721). NO ts_deleted / denom_shrink / false demote.",
       "proof": {
         "status": "caught_up",
         "staleReason": "games product paths prod sole-Rust; full monolith authority blocked on admin+DB dual-path",
@@ -338,7 +338,7 @@
       },
       "tsSurface": "apps/puzzled/src/games/shared/format.ts",
       "rustSurface": "crates/puzzled-server/src/game_format.rs",
-      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing."
+      "notes": "FLEET-PRODUCTS-WAVE2 pure residual: format_timer/wordle score/perfect/share. proof_missing. [BLOCKED3-PURE 2026-07-15] pure residual app_config_pure + user_profile_limits_pure + html_escape_pure dual-oracle. denom retained (authority_rust\u00d75 / rust_impl\u00d721). NO ts_deleted / denom_shrink / false demote."
     },
     {
       "id": "pattern-match-set-logic",
@@ -592,7 +592,7 @@
     "authority_progress": 0.185,
     "verified_authority_progress": 0.185,
     "weighted_progress": 0.933,
-    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged.",
+    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged. BLOCKED3 pure residual 2026-07-15T21:28:00Z: app_config_pure + user_profile_limits_pure + html_escape_pure. denom retained ts_only=0 contracted=1 rust_impl=21 authority_rust=5. NO ts_deleted/prod_audit_pass/denom_shrink.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -626,11 +626,11 @@
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
     "lastMutation": {
-      "at": "2026-07-15T21:21:51Z",
-      "action": "authority_stamps_prod_smoke_path_prefix_surfaces",
-      "notes": "promote only surfaces with path_prefix + live prod smoke; honest non-claims for Hono dual residual"
+      "at": "2026-07-15T21:28:00Z",
+      "action": "blocked3_pure_residual_app_config_profile_html",
+      "notes": "Pure residual dens only; authority stamps retained; denom not shrunk."
     },
-    "updatedAt": "2026-07-15T21:21:51Z",
+    "updatedAt": "2026-07-15T21:28:00Z",
     "deployLagHonesty": {
       "local": "authority stamps from ledger + tip SHA; cargo not required for ledger-only stamp",
       "production": "2026-07-15T21:21:51Z api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app: healthz/readyz (stub=false), leaderboard non-stub envelope, auth/session, games index+daily-status, grid 200, submit 200",

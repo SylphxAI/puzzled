@@ -16,6 +16,9 @@ mod stats_api;
 mod storage_keys_pure;
 mod time_constants_pure;
 mod validation_limits_pure;
+mod app_config_pure;
+mod user_profile_limits_pure;
+mod html_escape_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
@@ -99,6 +102,17 @@ pub use validation_limits_pure::{
     DESCRIPTION_MAX, MAX_BATCH_SIZE, MAX_LIMIT, NAME_MAX, OTP_CODE_LENGTH, OTP_EXPIRY_MINUTES,
     REFERRAL_CODE_MAX, REFERRAL_CODE_MIN, TITLE_MAX, USERNAME_MAX, USERNAME_MIN,
 };
+
+pub use app_config_pure::{
+    email_at_domain, is_known_app_email, APP_DOMAIN, APP_NAME, DEFAULT_FROM_EMAIL, LEGAL_EMAIL,
+    PRIVACY_EMAIL, SUPPORT_EMAIL,
+};
+pub use user_profile_limits_pure::{
+    clamp_bio, is_valid_profile_bio_len, is_valid_profile_name_len, is_valid_profile_username_len,
+    NAME_MAX_LENGTH,
+};
+pub use html_escape_pure::{escape_html, needs_escape};
+
 pub use time_constants_pure::{
     alphabet_char, alphabet_index, days_from_now_ms, days_to_seconds, hours_from_now_ms,
     hours_to_seconds, minutes_to_seconds, seconds_to_ms, weeks_to_ms, ALPHABET, DAY_SECONDS,
