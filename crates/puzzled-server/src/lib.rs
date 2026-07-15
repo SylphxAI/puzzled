@@ -23,6 +23,7 @@ mod billing_access_pure;
 mod i18n_locale_pure;
 mod domain_enums_pure;
 mod llm_json_parse_pure;
+mod format_url_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;

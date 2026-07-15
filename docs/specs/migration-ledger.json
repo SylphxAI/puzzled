@@ -592,7 +592,7 @@
     "authority_progress": 0.185,
     "verified_authority_progress": 0.185,
     "weighted_progress": 0.933,
-    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged. BLOCKED3 pure residual 2026-07-15T21:28:00Z: app_config_pure + user_profile_limits_pure + html_escape_pure. BLOCKED4 product residual 2026-07-15T21:40:00Z: billing_access_pure + i18n_locale_pure + domain_enums_pure + llm_json_parse_pure + daily_time next-midnight deepen. denom retained ts_only=0 contracted=1 rust_impl=21 authority_rust=5. NO ts_deleted/prod_audit_pass/denom_shrink.",
+    "notes": "AUTHORITY-STAMP 2026-07-15T21:21:51Z sha=4bbe4c51e8c5c7184f1a59681dcd2d6ce069a3aa: stamped authority_rust on api-health-probe + leaderboard-read + puzzle-grid-generation + puzzle-solution-submit + auth-sessions after scripts/api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app (health/readyz/leaderboard/auth/games/grid/submit). api-v1-hono-monolith remains rust_impl (partial prod games sole-path; admin/DB residual). NO ts_deleted / prod_audit_pass / REPO_COMPLETE. Pure game-core dens residual unchanged. BLOCKED3 pure residual 2026-07-15T21:28:00Z: app_config_pure + user_profile_limits_pure + html_escape_pure. BLOCKED4 product residual 2026-07-15T21:40:00Z: billing_access_pure + i18n_locale_pure + domain_enums_pure + llm_json_parse_pure + daily_time next-midnight deepen. denom retained ts_only=0 contracted=1 rust_impl=21 authority_rust=5. NO ts_deleted/prod_audit_pass/denom_shrink. WAVE7 pure residual: format_number_en + get_base_url/get_server_base_url dual-oracle of utils.ts. Live reprobe idle-tie path_prefixes. authority_rust retained 5. NO ts_deleted invent.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",
@@ -625,12 +625,8 @@
     },
     "productsAHonestyAt": "2026-07-13T00:30:00Z",
     "productsAHonestyTick": "FLEET-PRODUCTS-A-TICK",
-    "lastMutation": {
-      "at": "2026-07-15T21:40:00Z",
-      "action": "blocked4_product_residual_billing_i18n_enums_llm_json",
-      "notes": "Product residual dual-oracle dens only; authority stamps retained; denom not shrunk; no TS restore."
-    },
-    "updatedAt": "2026-07-15T21:40:00Z",
+    "lastMutation": "puzzled_wave7_format_url_pure_live_reprobe",
+    "updatedAt": "2026-07-15T22:48:15Z",
     "deployLagHonesty": {
       "local": "authority stamps from ledger + tip SHA; cargo not required for ledger-only stamp",
       "production": "2026-07-15T21:21:51Z api-smoke.sh GREEN on https://idle-tie-elxzm6.sylphx.app: healthz/readyz (stub=false), leaderboard non-stub envelope, auth/session, games index+daily-status, grid 200, submit 200",
@@ -834,5 +830,14 @@
     "at": "2026-07-15T22:33:49Z",
     "sha": "b13f6240cc88ef7323485ad5e3461d295d59936c",
     "verificationRef": "verification/puzzled-2026-07-15-w5-sole-rust-live-reprobe.json"
+  },
+  "lastMutation": "puzzled_wave7_format_url_pure_live_reprobe",
+  "w7LiveReprobe": {
+    "at": "2026-07-15T22:48:15Z",
+    "host": "https://idle-tie-elxzm6.sylphx.app",
+    "proof": "verification/puzzled-2026-07-15-w7-sole-rust-live-reprobe.json",
+    "dens": "format_url_pure residual",
+    "authority_rust_delta": 0,
+    "ts_deleted_delta": 0
   }
 }
