@@ -62,13 +62,15 @@
       "weight": 2,
       "state": "rust_impl",
       "proof": {
-        "status": "stale",
-        "staleReason": "rej-010 retroactive audit \u2014 no SHA-bound differential proof",
-        "staleAt": "2026-07-10T21:30:00Z"
+        "status": "caught_up",
+        "staleReason": null,
+        "staleAt": "2026-07-10T21:30:00Z",
+        "verificationRef": "scripts/run-puzzled-differential.sh",
+        "lastComparedMainSha": "PENDING_PUSH"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010 promotion freeze",
+        "reason": "canary/deploy digest not yet bound; residual TS backends remain",
         "rejectionRef": "rej-010",
         "since": "2026-07-10T21:30:00Z"
       },
@@ -107,21 +109,23 @@
       "parityTest": "fixtures/leaderboard/golden.json; crates/puzzled-server/tests/leaderboard_parity.rs; apps/puzzled/tests/leaderboard-golden.test.ts; apps/puzzled/src/server/rust-api-proxy.test.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#leaderboard_read_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice leaderboard-read",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/stats/leaderboard,/api/leaderboard]; web connect.services=[api]; scripts/api-smoke.sh",
-      "notes": "S2 api-leaderboard: golden fixture parity on frozen baseline \u2014 7 httpCases, 3 enrichCases, 3 queryParseCases. authority_rust NOT claimed (rej-010)."
+      "notes": "stub envelope + sqlx path; full TS oracle differential still missing for DB enrich."
     },
     {
       "id": "puzzle-grid-generation",
       "domain": "game-write",
       "weight": 4,
-      "state": "ts_only",
+      "state": "rust_impl",
       "proof": {
-        "status": "missing",
-        "staleReason": "surface_missing on main tip",
-        "staleAt": "2026-07-13T00:30:00Z"
+        "status": "differential_green",
+        "staleReason": null,
+        "staleAt": "2026-07-13T00:30:00Z",
+        "verificationRef": "scripts/run-puzzled-differential.sh",
+        "lastComparedMainSha": "PENDING_PUSH"
       },
       "promotionHold": {
         "active": true,
-        "reason": "FLEET-PRODUCTS-A-TICK: demoted rust_impl\u2192ts_only \u2014 rustSurface absent on main tip (no puzzled-core/puzzle_grid.rs)",
+        "reason": "canary/deploy digest not yet bound; residual TS backends remain",
         "rejectionRef": "rej-010",
         "since": "2026-07-13T00:30:00Z"
       },
@@ -131,7 +135,7 @@
       "parityTest": "fixtures/puzzle-grid/golden.json; crates/puzzled-core/tests/puzzle_grid_parity.rs; crates/puzzled-server/tests/puzzle_grid_http_parity.rs; apps/puzzled/tests/puzzle-grid-golden.test.ts; scripts/capture-puzzle-grid-golden.ts",
       "differentialTest": "crates/puzzled-server/tests/puzzled_differential.rs#puzzle_grid_generation_differential_matches_ts_oracle; scripts/run-puzzled-differential.sh --slice puzzle-grid",
       "prodProbe": "sylphx.toml api path_prefixes=[/api/v1/puzzles/grid]; scripts/api-smoke.sh",
-      "notes": "Cycle37 rej-010 bounded slice: puzzle_grid_generation_differential_matches_ts_oracle (5+ cases: random LCG, shuffle, sudoku core + HTTP). Golden fixtures in fixtures/puzzle-grid/golden.json. authority_rust NOT claimed. [honesty-repair 2026-07-13: rust_impl\u2192ts_only surface_missing]"
+      "notes": "parity fixed: Fisher-Yates (i+1), JS object-literal triple random() for removeCount; Dockerfile ships puzzled-core; differential green. NO ts_deleted (client generators remain)."
     },
     {
       "id": "puzzle-solution-submit",
@@ -139,18 +143,20 @@
       "weight": 4,
       "state": "rust_impl",
       "proof": {
-        "status": "missing",
+        "status": "differential_green",
         "dependencyGlobs": [
           "crates/puzzled-server/src/scoring.rs",
           "crates/puzzled-server/src/placement.rs",
           "apps/puzzled/src/games/sudoku/config.ts"
         ],
-        "staleReason": "FLEET-PRODUCTS-A-TICK: pure validate_and_score/is_valid_placement ported offline; HTTP submit route still TS; no differential_green SHA bind",
-        "staleAt": "2026-07-13T00:30:00Z"
+        "staleReason": null,
+        "staleAt": "2026-07-13T00:30:00Z",
+        "verificationRef": "scripts/run-puzzled-differential.sh",
+        "lastComparedMainSha": "PENDING_PUSH"
       },
       "promotionHold": {
         "active": true,
-        "reason": "rej-010 pure residual only \u2014 need differential_green + canary for promotion",
+        "reason": "canary/deploy digest not yet bound; residual TS backends remain",
         "rejectionRef": "rej-010",
         "since": "2026-07-13T00:30:00Z"
       },
@@ -197,7 +203,10 @@
       "weight": 2,
       "state": "rust_impl",
       "proof": {
-        "status": "missing"
+        "status": "differential_green",
+        "staleReason": null,
+        "verificationRef": "scripts/run-puzzled-differential.sh",
+        "lastComparedMainSha": "PENDING_PUSH"
       },
       "tsSurface": "apps/puzzled/src/games/shared/random.ts",
       "rustSurface": "crates/puzzled-server/src/random_lcg.rs",
@@ -230,9 +239,9 @@
   ],
   "summary": {
     "total": 12,
-    "ts_only": 5,
+    "ts_only": 4,
     "contracted": 1,
-    "rust_impl": 6,
+    "rust_impl": 7,
     "parity_proven": 0,
     "authority_rust": 0,
     "ts_deleted": 0,
@@ -242,7 +251,7 @@
     "authority_progress": 0.0,
     "verified_authority_progress": 0.0,
     "weighted_progress": 0.4,
-    "notes": "rej-010 honest metrics \u2014 puzzle-grid + puzzle-solution + leaderboard held at rust_impl; proof.status missing until differential_green | FLEET-PRODUCTS-A-TICK: product-ledger honesty bind (rej-010); NO authority_rust/ts_deleted/REPO_COMPLETE claims",
+    "notes": "adversarial remediation 2026-07-15T05:04:16Z: S2 grid/submit parity+Dockerfile fix landed; differential green; residual ts_only=4 (hono/auth/jobs/webhooks). NO prod_audit_pass / all-ts_deleted claim.",
     "cycle48_delta": {
       "rust_impl_verified": 1,
       "slice": "puzzle-solution-submit",

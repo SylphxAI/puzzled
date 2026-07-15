@@ -20,7 +20,22 @@ release_command = "atlas migrate apply --env production --baseline 2026022200000
 name = "api"
 type = "web"
 port = 8080
-watch_paths = ["crates/puzzled-server/**", "Cargo.toml", "Cargo.lock", "sylphx.toml"]
+# Platform edge strangler: route S0–S2 Rust paths to api (not Next.js).
+path_prefixes = [
+  "/healthz",
+  "/readyz",
+  "/api/leaderboard",
+  "/api/v1/stats/leaderboard",
+  "/api/v1/puzzles/grid",
+  "/api/v1/puzzles/submit",
+]
+watch_paths = [
+  "crates/puzzled-server/**",
+  "crates/puzzled-core/**",
+  "Cargo.toml",
+  "Cargo.lock",
+  "sylphx.toml",
+]
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"

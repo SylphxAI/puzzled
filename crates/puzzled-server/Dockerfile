@@ -1,7 +1,10 @@
 # puzzled-server — Rust drop-in authority (ADR-168 S0+)
+# Workspace members: puzzled-core (pure generators/scoring) + puzzled-server (HTTP).
 FROM rust:1-bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
+COPY crates/puzzled-core/Cargo.toml crates/puzzled-core/Cargo.toml
+COPY crates/puzzled-core/src crates/puzzled-core/src
 COPY crates/puzzled-server/Cargo.toml crates/puzzled-server/Cargo.toml
 COPY crates/puzzled-server/src crates/puzzled-server/src
 ENV CARGO_BUILD_JOBS=2

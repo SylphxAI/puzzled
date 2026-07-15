@@ -171,10 +171,20 @@ fn remove_numbers(
     difficulty: SudokuDifficulty,
     random: &mut SeededRandom,
 ) -> Vec<Vec<Option<u8>>> {
+    // Match frozen TS object-literal evaluation order exactly:
+    //   const removeCount = {
+    //     easy: 32 + Math.floor(random() * 4),
+    //     medium: 42 + Math.floor(random() * 4),
+    //     hard: 52 + Math.floor(random() * 4),
+    //   }[difficulty]
+    // JS evaluates ALL three `random()` calls before indexing — three draws every time.
+    let easy = 32 + (random.next() * 4.0).floor() as usize;
+    let medium = 42 + (random.next() * 4.0).floor() as usize;
+    let hard = 52 + (random.next() * 4.0).floor() as usize;
     let remove_count = match difficulty {
-        SudokuDifficulty::Easy => 32 + (random.next().floor() as usize),
-        SudokuDifficulty::Medium => 42 + (random.next().floor() as usize),
-        SudokuDifficulty::Hard => 52 + (random.next().floor() as usize),
+        SudokuDifficulty::Easy => easy,
+        SudokuDifficulty::Medium => medium,
+        SudokuDifficulty::Hard => hard,
     };
 
     let mut puzzle: Vec<Vec<Option<u8>>> = solution
@@ -244,5 +254,22 @@ mod tests {
             values.sort_unstable();
             assert_eq!(values, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
         }
+    }
+
+    /// Regression: TS object-literal removeCount evaluates three random() draws.
+    /// Seed 0 easy puzzleData.grid[0] must keep cells 1 and 9 (TS oracle).
+    #[test]
+    fn seed_zero_easy_matches_ts_oracle_row0() {
+        let puzzle = generate_sudoku_puzzle(0, SudokuDifficulty::Easy);
+        let row0 = &puzzle.puzzle_data.grid[0];
+        assert_eq!(row0[0], Some(2));
+        assert_eq!(row0[1], Some(3));
+        assert_eq!(row0[2], None);
+        assert_eq!(row0[3], Some(1));
+        assert_eq!(row0[4], None);
+        assert_eq!(row0[5], Some(6));
+        assert_eq!(row0[6], Some(7));
+        assert_eq!(row0[7], Some(8));
+        assert_eq!(row0[8], Some(9));
     }
 }

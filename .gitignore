@@ -65,3 +65,4 @@ memory/
 .claude/
 /target/
 target/
+scripts/differential/fixtures/puzzled-oracle-out.json
