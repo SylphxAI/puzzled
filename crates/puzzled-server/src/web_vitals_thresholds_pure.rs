@@ -2256,3 +2256,70 @@ mod wave103_tests {
         assert!(wave102_lcp_edges_shell());
     }
 }
+// ── wave104 pure residual dens: web-vitals INP-edges CLS-poor score-poor FCP-good all-thresholds dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP edges dual-oracle.
+#[must_use]
+pub fn wave104_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: CLS poor boundary dual-oracle.
+#[must_use]
+pub fn wave104_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: score poor dual-oracle.
+#[must_use]
+pub fn wave104_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Good) == 100
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: FCP good boundary dual-oracle.
+#[must_use]
+pub fn wave104_fcp_good_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 0.1)
+            == MetricRating::NeedsImprovement
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: all thresholds good < poor dual-oracle.
+#[must_use]
+pub fn wave104_all_thresholds_shell() -> bool {
+    good_strictly_below_poor()
+        && thresholds_for(WebVitalName::Inp) == (200.0, 500.0)
+        && thresholds_for(WebVitalName::Cls) == (0.1, 0.25)
+        && thresholds_for(WebVitalName::Lcp) == (2_500.0, 4_000.0)
+}
+
+#[cfg(test)]
+mod wave104_tests {
+    use super::*;
+
+    #[test]
+    fn wave104_web_vitals_inp_edges_cls_poor_score_poor_fcp_good_all_thresholds_dual_oracle() {
+        assert!(wave104_inp_edges_shell());
+        assert!(wave104_cls_poor_shell());
+        assert!(wave104_score_poor_shell());
+        assert!(wave104_fcp_good_shell());
+        assert!(wave104_all_thresholds_shell());
+        assert!(wave102_lcp_edges_shell());
+    }
+}
