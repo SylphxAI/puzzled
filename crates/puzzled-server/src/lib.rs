@@ -29,6 +29,7 @@ mod flags_hash_pure;
 mod key_validation_pure;
 mod pkce_pure;
 mod redis_keys_pure;
+mod privacy_sanitize_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
