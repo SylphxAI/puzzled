@@ -34,6 +34,7 @@ mod web_vitals_thresholds_pure;
 mod reduced_motion_pure;
 mod redirect_url_pure;
 mod redirect_security_pure;
+mod motion_duration_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
