@@ -318,3 +318,63 @@ mod wave72_tests {
         assert_eq!(rating_score_ladder(), [100, 50, 0]);
     }
 }
+
+// ── wave74 pure residual dens: web-vitals TTFB/INP score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: TTFB rating edges.
+#[must_use]
+pub fn wave74_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, 801.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_801.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: INP rating edges.
+#[must_use]
+pub fn wave74_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, 200.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 201.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 501.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: LCP good boundary inclusive.
+#[must_use]
+pub fn wave74_lcp_good_boundary_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 2_500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2_501.0) == MetricRating::NeedsImprovement
+}
+
+/// Dual-oracle residual: score points ladder.
+#[must_use]
+pub fn wave74_score_points_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: CLS thresholds constants.
+#[must_use]
+pub fn wave74_cls_constants_shell() -> bool {
+    WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+        && thresholds_for(WebVitalName::Cls) == (0.1, 0.25)
+}
+
+#[cfg(test)]
+mod wave74_tests {
+    use super::*;
+
+    #[test]
+    fn wave74_web_vitals_ttfb_inp_score_dual_oracle() {
+        assert!(wave74_ttfb_edges_shell());
+        assert!(wave74_inp_edges_shell());
+        assert!(wave74_lcp_good_boundary_shell());
+        assert!(wave74_score_points_shell());
+        assert!(wave74_cls_constants_shell());
+        assert_eq!(MetricRating::NeedsImprovement.as_str(), "needs-improvement");
+    }
+}
