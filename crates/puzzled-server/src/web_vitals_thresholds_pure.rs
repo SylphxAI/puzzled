@@ -3498,3 +3498,64 @@ mod wave123_tests {
         assert!(wave122_fcp_poor_shell());
     }
 }
+// ── wave124 pure residual dens: web-vitals cls-poor inp-poor fcp-good ttfb-needs score-poor dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: CLS poor dual-oracle.
+#[must_use]
+pub fn wave124_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: INP poor dual-oracle.
+#[must_use]
+pub fn wave124_inp_poor_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: FCP good dual-oracle.
+#[must_use]
+pub fn wave124_fcp_good_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+}
+
+/// Dual-oracle residual: TTFB needs-improvement dual-oracle.
+#[must_use]
+pub fn wave124_ttfb_needs_shell() -> bool {
+    get_rating(
+        WebVitalName::Ttfb,
+        (WEB_VITALS_TTFB_GOOD_MS + WEB_VITALS_TTFB_POOR_MS) / 2.0,
+    ) == MetricRating::NeedsImprovement
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+}
+
+/// Dual-oracle residual: score poor dual-oracle.
+#[must_use]
+pub fn wave124_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+        && MetricRating::Good.as_str() == "good"
+}
+
+#[cfg(test)]
+mod wave124_tests {
+    use super::*;
+
+    #[test]
+    fn wave124_web_vitals_cls_inp_fcp_ttfb_score_dual_oracle() {
+        assert!(wave124_cls_poor_shell());
+        assert!(wave124_inp_poor_shell());
+        assert!(wave124_fcp_good_shell());
+        assert!(wave124_ttfb_needs_shell());
+        assert!(wave124_score_poor_shell());
+        assert!(wave123_ttfb_poor_shell());
+    }
+}
