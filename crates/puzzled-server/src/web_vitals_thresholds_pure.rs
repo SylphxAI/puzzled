@@ -1015,3 +1015,73 @@ mod wave85_tests {
         assert!(wave84_good_below_poor_shell());
     }
 }
+// ── wave86 pure residual dens: web-vitals FCP LCP score as_str dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good/poor edges inclusive.
+#[must_use]
+pub fn wave86_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+}
+
+/// Dual-oracle residual: LCP thresholds pair + ratings.
+#[must_use]
+pub fn wave86_lcp_pair_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: score ladder 100/50/0.
+#[must_use]
+pub fn wave86_score_ladder_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && rating_score_ladder() == [100, 50, 0]
+}
+
+/// Dual-oracle residual: MetricRating as_str wire labels.
+#[must_use]
+pub fn wave86_rating_as_str_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: good strictly below poor for all metrics.
+#[must_use]
+pub fn wave86_good_below_poor_shell() -> bool {
+    let pairs = [
+        thresholds_for(WebVitalName::Lcp),
+        thresholds_for(WebVitalName::Inp),
+        thresholds_for(WebVitalName::Cls),
+        thresholds_for(WebVitalName::Fcp),
+        thresholds_for(WebVitalName::Ttfb),
+    ];
+    pairs.iter().all(|(g, p)| *g < *p)
+}
+
+#[cfg(test)]
+mod wave86_tests {
+    use super::*;
+
+    #[test]
+    fn wave86_web_vitals_fcp_lcp_score_as_str_dual_oracle() {
+        assert!(wave86_fcp_edges_shell());
+        assert!(wave86_lcp_pair_shell());
+        assert!(wave86_score_ladder_shell());
+        assert!(wave86_rating_as_str_shell());
+        assert!(wave86_good_below_poor_shell());
+        assert!(wave85_score_ladder_shell());
+    }
+}
