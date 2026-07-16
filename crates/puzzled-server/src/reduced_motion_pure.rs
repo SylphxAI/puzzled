@@ -50,3 +50,42 @@ mod tests {
         assert!(!is_reduced_motion_query("(prefers-color-scheme: dark)"));
     }
 }
+
+// ── wave70 pure residual dens: reduced-motion SSR/query dual-oracle residual ──
+// Dual-oracle residual of use-reduced-motion pure halves.
+// matchMedia / React effect I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: SSR default is false until hydrate.
+#[must_use]
+pub fn ssr_default_false_shell() -> bool {
+    !reduced_motion_ssr_default()
+}
+
+/// Dual-oracle residual: WCAG reduce query string exact.
+#[must_use]
+pub fn wcag_query_exact_shell() -> bool {
+    is_reduced_motion_query(REDUCED_MOTION_MEDIA_QUERY)
+        && REDUCED_MOTION_MEDIA_QUERY == "(prefers-reduced-motion: reduce)"
+        && !is_reduced_motion_query("(prefers-reduced-motion: no-preference)")
+}
+
+/// Dual-oracle residual: matches maps 1:1 to prefers flag.
+#[must_use]
+pub fn matches_map_shell() -> bool {
+    prefers_reduced_from_matches(true)
+        && !prefers_reduced_from_matches(false)
+        && reduced_motion_safe_animation_empty(true)
+        && !reduced_motion_safe_animation_empty(false)
+}
+
+#[cfg(test)]
+mod wave70_tests {
+    use super::*;
+
+    #[test]
+    fn wave70_reduced_motion_ssr_query_dual_oracle() {
+        assert!(ssr_default_false_shell());
+        assert!(wcag_query_exact_shell());
+        assert!(matches_map_shell());
+    }
+}

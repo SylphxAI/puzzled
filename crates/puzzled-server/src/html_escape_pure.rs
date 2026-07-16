@@ -47,3 +47,55 @@ mod tests {
         assert!(needs_escape("<"));
     }
 }
+
+// ── wave70 pure residual dens: HTML entity escape table dual-oracle residual ──
+// Dual-oracle residual of utils.ts _escapeHtml entity map pure half.
+// Email send I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: entity map covers five significant chars.
+#[must_use]
+pub fn entity_map_covers_five() -> bool {
+    escape_html(r#"&<>"'"#) == "&amp;&lt;&gt;&quot;&#39;"
+}
+
+/// Dual-oracle residual: idempotent on safe text.
+#[must_use]
+pub fn escape_idempotent_on_safe() -> bool {
+    let s = "hello world 123";
+    escape_html(s) == s && !needs_escape(s)
+}
+
+/// Dual-oracle residual: needs_escape detects any special.
+#[must_use]
+pub fn needs_escape_any_special_shell() -> bool {
+    needs_escape("&")
+        && needs_escape("<")
+        && needs_escape(">")
+        && needs_escape("\"")
+        && needs_escape("'")
+        && !needs_escape("safe-text_ok")
+}
+
+/// Dual-oracle residual: script injection neutralized.
+#[must_use]
+pub fn script_injection_neutralized() -> bool {
+    let out = escape_html(r#"<img src=x onerror='alert(1)'>"#);
+    !out.contains('<')
+        && !out.contains('>')
+        && out.contains("&lt;img")
+        && out.contains("&#39;")
+}
+
+#[cfg(test)]
+mod wave70_tests {
+    use super::*;
+
+    #[test]
+    fn wave70_html_entity_escape_table_dual_oracle() {
+        assert!(entity_map_covers_five());
+        assert!(escape_idempotent_on_safe());
+        assert!(needs_escape_any_special_shell());
+        assert!(script_injection_neutralized());
+        assert_eq!(escape_html("a & b < c"), "a &amp; b &lt; c");
+    }
+}
