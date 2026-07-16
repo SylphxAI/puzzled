@@ -2795,3 +2795,65 @@ mod wave111_tests {
         assert!(wave110_lcp_needs_shell());
     }
 }
+// ── wave112 pure residual dens: web-vitals lcp-needs ttfb-good fcp-poor score-poor inp-good dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP needs-improvement dual-oracle.
+#[must_use]
+pub fn wave112_lcp_needs_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 3_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS) == MetricRating::NeedsImprovement
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: TTFB good dual-oracle.
+#[must_use]
+pub fn wave112_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && thresholds_for(WebVitalName::Ttfb) == (800.0, 1_800.0)
+}
+
+/// Dual-oracle residual: FCP poor dual-oracle.
+#[must_use]
+pub fn wave112_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, 3_500.0) == MetricRating::Poor
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: score poor dual-oracle.
+#[must_use]
+pub fn wave112_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+}
+
+/// Dual-oracle residual: INP good dual-oracle.
+#[must_use]
+pub fn wave112_inp_good_shell() -> bool {
+    get_rating(WebVitalName::Inp, 100.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && thresholds_for(WebVitalName::Inp) == (200.0, 500.0)
+}
+
+#[cfg(test)]
+mod wave112_tests {
+    use super::*;
+
+    #[test]
+    fn wave112_web_vitals_lcp_needs_ttfb_good_fcp_poor_score_poor_inp_good_dual_oracle() {
+        assert!(wave112_lcp_needs_shell());
+        assert!(wave112_ttfb_good_shell());
+        assert!(wave112_fcp_poor_shell());
+        assert!(wave112_score_poor_shell());
+        assert!(wave112_inp_good_shell());
+        assert!(wave111_fcp_good_shell());
+    }
+}
