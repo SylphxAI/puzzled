@@ -145,3 +145,68 @@ mod tests {
         assert_eq!(win_back_day_offset("day1"), None);
     }
 }
+
+// ── wave65 pure residual dens: domain enum catalog dual-oracle residual ──
+// Dual-oracle residual of schema.ts business enum pure halves.
+// Clock / DB I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: game status catalog size is 4.
+#[must_use]
+pub fn game_status_count() -> usize {
+    GAME_STATUS_VALUES.len()
+}
+
+/// Dual-oracle residual: game mode catalog size is 2.
+#[must_use]
+pub fn game_mode_count() -> usize {
+    GAME_MODE_VALUES.len()
+}
+
+/// Dual-oracle residual: difficulty catalog size is 3.
+#[must_use]
+pub fn puzzle_difficulty_count() -> usize {
+    PUZZLE_DIFFICULTY_VALUES.len()
+}
+
+/// Dual-oracle residual: DLQ status catalog size is 4.
+#[must_use]
+pub fn dlq_status_count() -> usize {
+    DLQ_STATUS_VALUES.len()
+}
+
+/// Dual-oracle residual: result statuses are subset of game statuses.
+#[must_use]
+pub fn game_result_subset_of_status() -> bool {
+    GAME_RESULT_STATUSES.iter().all(|s| is_game_status(s))
+}
+
+/// Dual-oracle residual: win-back email day ladder.
+#[must_use]
+pub fn win_back_email_day_ladder() -> [&'static str; 3] {
+    [WIN_BACK_EMAIL_TYPES[0], WIN_BACK_EMAIL_TYPES[1], WIN_BACK_EMAIL_TYPES[2]]
+}
+
+#[cfg(test)]
+mod wave65_tests {
+    use super::*;
+
+    #[test]
+    fn wave65_domain_enum_catalog_dual_oracle() {
+        assert_eq!(game_status_count(), 4);
+        assert_eq!(game_mode_count(), 2);
+        assert_eq!(puzzle_difficulty_count(), 3);
+        assert_eq!(dlq_status_count(), 4);
+        assert!(game_result_subset_of_status());
+        assert_eq!(win_back_email_day_ladder(), ["day7", "day14", "day30"]);
+        assert!(is_game_status("in_progress"));
+        assert!(is_game_mode("daily"));
+        assert!(is_puzzle_difficulty("hard"));
+        assert!(is_dlq_status("retrying"));
+        assert!(is_dlq_terminal("resolved"));
+        assert!(!is_dlq_terminal("pending"));
+        assert!(is_audit_action("game_complete"));
+        assert!(is_announcement_type("maintenance"));
+        assert!(is_app_setting_key("maintenance_mode"));
+        assert!(!is_game_status("queued"));
+    }
+}
