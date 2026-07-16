@@ -3149,3 +3149,62 @@ mod wave117_tests {
         assert!(wave116_ttfb_good_shell());
     }
 }
+// ── wave118 pure residual dens: web-vitals fcp-good lcp-poor inp-needs good-below score dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good dual-oracle.
+#[must_use]
+pub fn wave118_fcp_good_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+}
+
+/// Dual-oracle residual: LCP poor dual-oracle.
+#[must_use]
+pub fn wave118_lcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: INP needs-improvement mid dual-oracle.
+#[must_use]
+pub fn wave118_inp_needs_shell() -> bool {
+    let mid = (WEB_VITALS_INP_GOOD_MS + WEB_VITALS_INP_POOR_MS) / 2.0;
+    get_rating(WebVitalName::Inp, mid) == MetricRating::NeedsImprovement
+        && mid > WEB_VITALS_INP_GOOD_MS
+        && mid <= WEB_VITALS_INP_POOR_MS
+}
+
+/// Dual-oracle residual: good strictly below poor all vitals dual-oracle.
+#[must_use]
+pub fn wave118_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+        && WEB_VITALS_TTFB_GOOD_MS < WEB_VITALS_TTFB_POOR_MS
+}
+
+/// Dual-oracle residual: score points ladder dual-oracle.
+#[must_use]
+pub fn wave118_score_ladder_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && rating_score_ladder() == [100, 50, 0]
+}
+
+#[cfg(test)]
+mod wave118_tests {
+    use super::*;
+
+    #[test]
+    fn wave118_web_vitals_fcp_lcp_inp_good_below_score_dual_oracle() {
+        assert!(wave118_fcp_good_shell());
+        assert!(wave118_lcp_poor_shell());
+        assert!(wave118_inp_needs_shell());
+        assert!(wave118_good_below_poor_shell());
+        assert!(wave118_score_ladder_shell());
+        assert!(wave117_inp_good_shell());
+    }
+}
