@@ -1772,3 +1772,74 @@ mod wave96_tests {
         assert!(wave95_lcp_edges_shell());
     }
 }
+
+// ── wave97 pure residual dens: web-vitals LCP INP CLS needs score pairs dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good/needs/poor edges.
+#[must_use]
+pub fn wave97_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: INP edges + constants.
+#[must_use]
+pub fn wave97_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: CLS edges + constants.
+#[must_use]
+pub fn wave97_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD + 0.01)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: needs-improvement score dual-oracle.
+#[must_use]
+pub fn wave97_needs_score_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_ladder() == [100, 50, 0]
+}
+
+/// Dual-oracle residual: LCP/INP/CLS threshold pairs dual-oracle.
+#[must_use]
+pub fn wave97_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && good_strictly_below_poor()
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+}
+
+#[cfg(test)]
+mod wave97_tests {
+    use super::*;
+
+    #[test]
+    fn wave97_web_vitals_lcp_inp_cls_needs_score_pairs_dual_oracle() {
+        assert!(wave97_lcp_edges_shell());
+        assert!(wave97_inp_edges_shell());
+        assert!(wave97_cls_edges_shell());
+        assert!(wave97_needs_score_shell());
+        assert!(wave97_pairs_shell());
+        assert!(wave96_fcp_edges_shell());
+    }
+}
