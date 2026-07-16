@@ -685,3 +685,67 @@ mod wave79_tests {
         assert!(wave78_poor_score_shell());
     }
 }
+
+
+// ── wave80 pure residual dens: web-vitals INP TTFB score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP good/needs/poor edges.
+#[must_use]
+pub fn wave80_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, 200.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 201.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 501.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB good/needs/poor edges.
+#[must_use]
+pub fn wave80_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, 801.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_801.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: score points 100/50/0.
+#[must_use]
+pub fn wave80_score_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: threshold pairs for INP/TTFB.
+#[must_use]
+pub fn wave80_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: CLS/FCP good-below-poor invariant.
+#[must_use]
+pub fn wave80_good_below_poor_shell() -> bool {
+    WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+        && WEB_VITALS_FCP_GOOD_MS < WEB_VITALS_FCP_POOR_MS
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+}
+
+#[cfg(test)]
+mod wave80_tests {
+    use super::*;
+
+    #[test]
+    fn wave80_web_vitals_inp_ttfb_score_dual_oracle() {
+        assert!(wave80_inp_edges_shell());
+        assert!(wave80_ttfb_edges_shell());
+        assert!(wave80_score_shell());
+        assert!(wave80_threshold_pairs_shell());
+        assert!(wave80_good_below_poor_shell());
+        assert!(wave79_cls_const_shell());
+    }
+}
