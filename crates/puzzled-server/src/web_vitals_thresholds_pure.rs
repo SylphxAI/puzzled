@@ -3922,3 +3922,62 @@ mod wave130_tests {
         assert!(wave129_inp_edges_shell());
     }
 }
+// ── wave131 pure residual dens: web-vitals inp-good ttfb-poor cls-good score-poor inp-poor dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: INP good dual-oracle.
+#[must_use]
+pub fn wave131_inp_good_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+}
+
+/// Dual-oracle residual: TTFB poor dual-oracle.
+#[must_use]
+pub fn wave131_ttfb_poor_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: CLS good dual-oracle.
+#[must_use]
+pub fn wave131_cls_good_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_GOOD == 0.1
+}
+
+/// Dual-oracle residual: score poor points dual-oracle.
+#[must_use]
+pub fn wave131_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+}
+
+/// Dual-oracle residual: INP poor dual-oracle.
+#[must_use]
+pub fn wave131_inp_poor_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_POOR_MS == 500.0
+        && WEB_VITALS_INP_GOOD_MS < WEB_VITALS_INP_POOR_MS
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave131_tests {
+    use super::*;
+
+    #[test]
+    fn wave131_web_vitals_inp_ttfb_cls_score_inp_dual_oracle() {
+        assert!(wave131_inp_good_shell());
+        assert!(wave131_ttfb_poor_shell());
+        assert!(wave131_cls_good_shell());
+        assert!(wave131_score_poor_shell());
+        assert!(wave131_inp_poor_shell());
+        assert!(wave130_lcp_good_shell());
+    }
+}
