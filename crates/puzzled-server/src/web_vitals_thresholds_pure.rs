@@ -3045,3 +3045,52 @@ mod wave115_tests {
         assert!(wave112_lcp_needs_shell());
     }
 }
+// ── wave116 pure residual dens: web-vitals ttfb-good lcp-good fcp-poor cls-good score-good dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: TTFB good dual-oracle.
+#[must_use]
+pub fn wave116_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS - 1.0) == MetricRating::Good
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+}
+
+/// Dual-oracle residual: LCP good dual-oracle.
+#[must_use]
+pub fn wave116_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS - 1.0) == MetricRating::Good
+}
+
+/// Dual-oracle residual: FCP poor dual-oracle.
+#[must_use]
+pub fn wave116_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS good dual-oracle.
+#[must_use]
+pub fn wave116_cls_good_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD / 2.0) == MetricRating::Good
+}
+
+/// Dual-oracle residual: score points good dual-oracle.
+#[must_use]
+pub fn wave116_score_good_shell() -> bool {
+    rating_score_points(MetricRating::Good) > rating_score_points(MetricRating::Poor)
+        && rating_score_points(MetricRating::NeedsImprovement) > rating_score_points(MetricRating::Poor)
+}
+
+#[cfg(test)]
+mod wave116_tests {
+    use super::*;
+
+    #[test]
+    fn wave116_web_vitals_ttfb_lcp_fcp_cls_score_dual_oracle() {
+        assert!(wave116_ttfb_good_shell());
+        assert!(wave116_lcp_good_shell());
+        assert!(wave116_fcp_poor_shell());
+        assert!(wave116_cls_good_shell());
+        assert!(wave116_score_good_shell());
+        assert!(wave115_lcp_needs_shell());
+    }
+}
