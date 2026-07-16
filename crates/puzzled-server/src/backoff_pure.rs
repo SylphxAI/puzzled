@@ -123,3 +123,61 @@ mod tests {
         assert_eq!(minutes_ago_ms(5, from), from - 300_000);
     }
 }
+
+
+// ── product residual dens wave72: job backoff base table+ready gate dual-oracle residual ──
+// Dual-oracle residual of backoff_base_ms / is_ready_for_retry pure halves.
+// Job runner / sleep residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: base/max delay constants.
+#[must_use]
+pub fn backoff_constants_shell() -> (u64, u64) {
+    (BASE_DELAY_MS, MAX_DELAY_MS)
+}
+
+/// Dual-oracle residual: exponential base table head + clamp.
+#[must_use]
+pub fn backoff_base_table_shell() -> [u64; 4] {
+    [
+        backoff_base_ms(0),
+        backoff_base_ms(1),
+        backoff_base_ms(2),
+        backoff_base_ms(10),
+    ]
+}
+
+/// Dual-oracle residual: zero-jitter equals base; unit=1 adds 10%.
+#[must_use]
+pub fn backoff_jitter_shell() -> bool {
+    calculate_backoff_delay_ms(0, 0.0) == 60_000
+        && calculate_backoff_delay_ms(0, 1.0) == 66_000
+}
+
+/// Dual-oracle residual: ready gate respects elapsed + max retries.
+#[must_use]
+pub fn backoff_ready_gate_shell() -> bool {
+    let now = 1_000_000_i64;
+    is_ready_for_retry(now, None, 0, 5, 0.0)
+        && !is_ready_for_retry(now, Some(now - 1_000), 0, 5, 0.0)
+        && is_ready_for_retry(now, Some(now - 60_000), 0, 5, 0.0)
+        && !is_ready_for_retry(now, Some(now - 60_000), 6, 5, 0.0)
+}
+
+#[cfg(test)]
+mod wave72_tests {
+    use super::*;
+
+    #[test]
+    fn wave72_backoff_base_ready_dual_oracle() {
+        assert_eq!(backoff_constants_shell(), (60_000, 3_600_000));
+        assert_eq!(
+            backoff_base_table_shell(),
+            [60_000, 120_000, 240_000, MAX_DELAY_MS]
+        );
+        assert!(backoff_jitter_shell());
+        assert!(backoff_ready_gate_shell());
+        assert_eq!(days_to_ms(1), 86_400_000);
+        assert_eq!(hours_to_ms(1), 3_600_000);
+        assert_eq!(minutes_to_ms(1), 60_000);
+    }
+}
