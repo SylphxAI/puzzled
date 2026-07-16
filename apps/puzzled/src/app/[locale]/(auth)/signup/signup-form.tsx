@@ -66,7 +66,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		// Note: OAuth signup and login use the same flow - provider creates account if needed
 		oauthHandler: async (provider) => {
-			await signInWithOAuth?.({ provider, redirectUrl: '/' })
+			await signInWithOAuth?.({ provider: provider as any, redirectUrl: '/' })
 		},
 	})
 
@@ -128,7 +128,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					<>
 						<div className="space-y-3">
 							{providers.map((provider) => {
-								const Icon = OAuthIcons[provider]
+								const Icon = OAuthIcons[provider as keyof typeof OAuthIcons]
 								const isProviderLoading = loadingProvider === provider
 								return (
 									<Button

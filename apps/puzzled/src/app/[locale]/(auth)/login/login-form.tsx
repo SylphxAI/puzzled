@@ -33,7 +33,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 		// OAuth handler: direct OAuth flow (Firebase/Supabase pattern)
 		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		oauthHandler: async (provider) => {
-			await signInWithOAuth?.({ provider, redirectUrl: '/' })
+			await signInWithOAuth?.({ provider: provider as any, redirectUrl: '/' })
 		},
 	})
 
@@ -63,7 +63,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 					<>
 						<div className="space-y-3">
 							{providers.map((provider) => {
-								const Icon = OAuthIcons[provider]
+								const Icon = OAuthIcons[provider as keyof typeof OAuthIcons]
 								const isProviderLoading = loadingProvider === provider
 								return (
 									<Button

@@ -186,7 +186,7 @@ export function ReferralsContent() {
 						<div className="flex flex-col items-center rounded-lg bg-muted p-4">
 							<UserCheck className="mb-2 h-5 w-5 text-green-500" />
 							<span className="text-2xl font-bold text-green-500">
-								{stats?.successfulReferrals ?? 0}
+								{stats?.completedReferrals ?? 0}
 							</span>
 							<span className="text-xs text-muted-foreground">{t('completed')}</span>
 						</div>

@@ -102,7 +102,7 @@ async function registerCronJob(job: CronJobDefinition): Promise<CronSchedule | n
 			retries: 3,
 		})
 
-		console.log(`✅ Registered: ${job.name} (${job.cron}) → ${result.scheduleId}`)
+		console.log(`✅ Registered: ${job.name} (${job.cron}) → ${JSON.stringify(result)}`)
 		return result
 	} catch (error) {
 		console.error(`❌ Failed to register ${job.name}:`, error)
