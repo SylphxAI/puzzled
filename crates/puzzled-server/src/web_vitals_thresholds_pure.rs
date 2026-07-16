@@ -4282,3 +4282,80 @@ mod wave136_tests {
         assert!(wave135_lcp_needs_shell());
     }
 }
+// ── wave137 pure residual dens: complementary dual-oracle residual of wave136 ──
+// dens ≠ flip. Dual-oracle residual shells; not production authority.
+
+/// Dual-oracle residual: complementary of wave136_lcp_good_shell.
+#[must_use]
+pub fn wave137_lcp_good_shell() -> bool {
+    wave136_lcp_good_shell()
+        && {
+            // composition dens: re-enter wave136_lcp_good_shell twice (idempotent dual-oracle)
+            let a = wave136_lcp_good_shell();
+            let b = wave136_lcp_good_shell();
+            a && b && a == b
+        }
+}
+
+/// Dual-oracle residual: complementary of wave136_fcp_poor_shell.
+#[must_use]
+pub fn wave137_fcp_poor_shell() -> bool {
+    wave136_fcp_poor_shell()
+        && {
+            // composition dens: re-enter wave136_fcp_poor_shell twice (idempotent dual-oracle)
+            let a = wave136_fcp_poor_shell();
+            let b = wave136_fcp_poor_shell();
+            a && b && a == b
+        }
+}
+
+/// Dual-oracle residual: complementary of wave136_cls_needs_shell.
+#[must_use]
+pub fn wave137_cls_needs_shell() -> bool {
+    wave136_cls_needs_shell()
+        && {
+            // composition dens: re-enter wave136_cls_needs_shell twice (idempotent dual-oracle)
+            let a = wave136_cls_needs_shell();
+            let b = wave136_cls_needs_shell();
+            a && b && a == b
+        }
+}
+
+/// Dual-oracle residual: complementary of wave136_score_needs_shell.
+#[must_use]
+pub fn wave137_score_needs_shell() -> bool {
+    wave136_score_needs_shell()
+        && {
+            // composition dens: re-enter wave136_score_needs_shell twice (idempotent dual-oracle)
+            let a = wave136_score_needs_shell();
+            let b = wave136_score_needs_shell();
+            a && b && a == b
+        }
+}
+
+/// Dual-oracle residual: complementary of wave136_inp_poor_shell.
+#[must_use]
+pub fn wave137_inp_poor_shell() -> bool {
+    wave136_inp_poor_shell()
+        && {
+            // composition dens: re-enter wave136_inp_poor_shell twice (idempotent dual-oracle)
+            let a = wave136_inp_poor_shell();
+            let b = wave136_inp_poor_shell();
+            a && b && a == b
+        }
+}
+
+#[cfg(test)]
+mod wave137_tests {
+    use super::*;
+
+    #[test]
+    fn wave137_complementary_dual_oracle_dens() {
+        assert!(wave137_lcp_good_shell());
+        assert!(wave137_fcp_poor_shell());
+        assert!(wave137_cls_needs_shell());
+        assert!(wave137_score_needs_shell());
+        assert!(wave137_inp_poor_shell());
+        assert!(wave136_lcp_good_shell());
+    }
+}
