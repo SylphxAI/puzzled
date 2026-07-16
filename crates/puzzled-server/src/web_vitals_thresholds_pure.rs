@@ -885,3 +885,66 @@ mod wave83_tests {
         assert!(wave81_rating_wire_shell());
     }
 }
+
+// ── wave84 pure residual dens: web-vitals LCP CLS FCP edges score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good/needs/poor edges.
+#[must_use]
+pub fn wave84_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 2_500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2_500.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS edges dual-oracle.
+#[must_use]
+pub fn wave84_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.1001) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.25) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.2501) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: FCP threshold pair + edges.
+#[must_use]
+pub fn wave84_fcp_shell() -> bool {
+    thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 0.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: score points + as_str dual-oracle.
+#[must_use]
+pub fn wave84_score_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: good strictly below poor closed.
+#[must_use]
+pub fn wave84_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+}
+
+#[cfg(test)]
+mod wave84_tests {
+    use super::*;
+
+    #[test]
+    fn wave84_web_vitals_lcp_cls_fcp_edges_score_dual_oracle() {
+        assert!(wave84_lcp_edges_shell());
+        assert!(wave84_cls_edges_shell());
+        assert!(wave84_fcp_shell());
+        assert!(wave84_score_shell());
+        assert!(wave84_good_below_poor_shell());
+        assert!(wave83_good_below_poor_shell());
+    }
+}
