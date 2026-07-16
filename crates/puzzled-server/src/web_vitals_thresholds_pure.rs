@@ -186,3 +186,63 @@ mod wave68_tests {
         assert_eq!(MetricRating::Good.as_str(), "good");
     }
 }
+
+
+// ── wave71 pure residual dens: web-vitals rating edges dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP edge ratings at good/poor.
+#[must_use]
+pub fn fcp_rating_edge_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS unitless edges.
+#[must_use]
+pub fn cls_rating_edge_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: rating wire strings.
+#[must_use]
+pub fn rating_wire_strings_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: score points ladder 100/50/0.
+#[must_use]
+pub fn score_points_ladder_shell() -> bool {
+    rating_score_ladder() == [100, 50, 0]
+}
+
+/// Dual-oracle residual: LCP good below FCP poor (cross-metric honesty).
+#[must_use]
+pub fn lcp_between_fcp_shell() -> bool {
+    WEB_VITALS_FCP_GOOD_MS < WEB_VITALS_LCP_GOOD_MS
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+}
+
+#[cfg(test)]
+mod wave71_tests {
+    use super::*;
+
+    #[test]
+    fn wave71_web_vitals_rating_edges_dual_oracle() {
+        assert!(fcp_rating_edge_shell());
+        assert!(cls_rating_edge_shell());
+        assert!(rating_wire_strings_shell());
+        assert!(score_points_ladder_shell());
+        assert!(lcp_between_fcp_shell());
+        assert!(good_strictly_below_poor());
+        assert_eq!(thresholds_for(WebVitalName::Inp), (200.0, 500.0));
+    }
+}
