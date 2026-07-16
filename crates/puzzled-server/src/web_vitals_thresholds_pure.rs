@@ -1291,3 +1291,70 @@ mod wave89_tests {
         assert!(wave88_score_wire_shell());
     }
 }
+
+// ── wave90 pure residual dens: web-vitals INP TTFB FCP score edges dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP mid needs + edges.
+#[must_use]
+pub fn wave90_inp_mid_shell() -> bool {
+    get_rating(WebVitalName::Inp, 350.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Inp)
+            == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+}
+
+/// Dual-oracle residual: TTFB edges good/poor.
+#[must_use]
+pub fn wave90_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+}
+
+/// Dual-oracle residual: FCP poor edge + constants.
+#[must_use]
+pub fn wave90_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: score good 100 + as_str wire.
+#[must_use]
+pub fn wave90_score_good_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+}
+
+/// Dual-oracle residual: LCP/CLS dual constants + ratings.
+#[must_use]
+pub fn wave90_lcp_cls_dual_shell() -> bool {
+    WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && get_rating(WebVitalName::Lcp, 2_500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+}
+
+#[cfg(test)]
+mod wave90_tests {
+    use super::*;
+
+    #[test]
+    fn wave90_web_vitals_inp_ttfb_fcp_score_edges_dual_oracle() {
+        assert!(wave90_inp_mid_shell());
+        assert!(wave90_ttfb_edges_shell());
+        assert!(wave90_fcp_poor_shell());
+        assert!(wave90_score_good_shell());
+        assert!(wave90_lcp_cls_dual_shell());
+        assert!(wave89_score_poor_shell());
+    }
+}
