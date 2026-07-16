@@ -1495,3 +1495,73 @@ mod wave92_tests {
         assert!(wave91_inp_good_shell());
     }
 }
+
+// ── wave93 pure residual dens: web-vitals LCP INP CLS score wire dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good/needs/poor edges.
+#[must_use]
+pub fn wave93_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: INP edges + constants.
+#[must_use]
+pub fn wave93_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: CLS edges dual-oracle.
+#[must_use]
+pub fn wave93_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD + 0.001)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.001) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: score wire + rating strings.
+#[must_use]
+pub fn wave93_score_wire_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: threshold pairs LCP/INP/CLS dual-oracle.
+#[must_use]
+pub fn wave93_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+#[cfg(test)]
+mod wave93_tests {
+    use super::*;
+
+    #[test]
+    fn wave93_web_vitals_lcp_inp_cls_score_wire_dual_oracle() {
+        assert!(wave93_lcp_edges_shell());
+        assert!(wave93_inp_edges_shell());
+        assert!(wave93_cls_edges_shell());
+        assert!(wave93_score_wire_shell());
+        assert!(wave93_threshold_pairs_shell());
+        assert!(wave92_fcp_edges_shell());
+    }
+}
