@@ -497,3 +497,65 @@ mod wave76_tests {
         assert!(wave75_lcp_constants_shell());
     }
 }
+
+
+// ── wave77 pure residual dens: web-vitals FCP CLS rating score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good/poor boundary ratings.
+#[must_use]
+pub fn wave77_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, 1_800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, 1_801.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_001.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS edges at 0.1 / 0.25.
+#[must_use]
+pub fn wave77_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.11) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.25) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.26) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: score points ladder + as_str.
+#[must_use]
+pub fn wave77_score_str_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+}
+
+/// Dual-oracle residual: thresholds_for pairs match constants.
+#[must_use]
+pub fn wave77_thresholds_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+}
+
+/// Dual-oracle residual: all metrics good strictly below poor.
+#[must_use]
+pub fn wave77_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave77_tests {
+    use super::*;
+
+    #[test]
+    fn wave77_web_vitals_fcp_cls_rating_score_dual_oracle() {
+        assert!(wave77_fcp_edges_shell());
+        assert!(wave77_cls_edges_shell());
+        assert!(wave77_score_str_shell());
+        assert!(wave77_thresholds_pairs_shell());
+        assert!(wave77_good_below_poor_shell());
+        assert!(wave76_needs_score_shell());
+    }
+}
