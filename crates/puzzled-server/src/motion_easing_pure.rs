@@ -527,3 +527,51 @@ mod wave82_tests {
         assert!(wave82_motion_default_catalog_shell());
     }
 }
+
+
+// ── product residual dens wave83: motion easeIn/InOut+gentle/bouncy dual-oracle residual ──
+// Dual-oracle residual of motion config easing/spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: easeIn + easeInOut bezier closed.
+#[must_use]
+pub fn wave83_easing_in_inout_shell() -> bool {
+    easing_bezier("easeIn") == Some(EASING_EASE_IN)
+        && easing_bezier("easeInOut") == Some(EASING_EASE_IN_OUT)
+        && EASING_EASE_IN == [0.4, 0.0, 1.0, 1.0]
+        && EASING_EASE_IN_OUT == [0.4, 0.0, 0.2, 1.0]
+        && easing_bezier("EaseIn").is_none()
+}
+
+/// Dual-oracle residual: gentle + bouncy spring poles.
+#[must_use]
+pub fn wave83_spring_gentle_bouncy_shell() -> bool {
+    spring_stiffness("gentle") == Some(200)
+        && spring_damping("gentle") == Some(25)
+        && spring_stiffness("bouncy") == Some(300)
+        && spring_damping("bouncy") == Some(15)
+        && spring_damping("missing").is_none()
+}
+
+/// Dual-oracle residual: default easing + spring type + catalog sizes.
+#[must_use]
+pub fn wave83_motion_default_type_shell() -> bool {
+    easing_bezier("default") == Some(EASING_DEFAULT)
+        && EASING_DEFAULT == [0.25, 0.1, 0.25, 1.0]
+        && SPRING_TYPE == "spring"
+        && EASING_KEYS.len() == 5
+        && SPRING_KEYS.contains(&"gentle")
+        && SPRING_KEYS.contains(&"bouncy")
+}
+
+#[cfg(test)]
+mod wave83_tests {
+    use super::*;
+
+    #[test]
+    fn wave83_motion_in_gentle_bouncy_dual_oracle() {
+        assert!(wave83_easing_in_inout_shell());
+        assert!(wave83_spring_gentle_bouncy_shell());
+        assert!(wave83_motion_default_type_shell());
+    }
+}
