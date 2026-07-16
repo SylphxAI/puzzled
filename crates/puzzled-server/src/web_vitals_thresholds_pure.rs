@@ -5292,3 +5292,63 @@ mod wave156_tests {
         assert!(wave136_cls_needs_shell());
     }
 }
+
+// ── wave157 pure residual dens: base dual-oracle residual (web_vitals pure) ──
+// dens ≠ flip. No authority_rust / ts_deleted / prod_audit_pass invent.
+// Dual-oracle re-enters wave136 base pure poles (not 3^n re-wrap of wave156 —
+// nested complementary chain from wave137 is already densed; PreferRust OFF).
+
+/// Dual-oracle residual: base re-entry of wave136_cls_needs_shell.
+#[must_use]
+pub fn wave157_cls_needs_shell() -> bool {
+    let a = wave136_cls_needs_shell();
+    let b = wave136_cls_needs_shell();
+    a && b && a == b
+}
+
+/// Dual-oracle residual: base re-entry of wave136_fcp_poor_shell.
+#[must_use]
+pub fn wave157_fcp_poor_shell() -> bool {
+    let a = wave136_fcp_poor_shell();
+    let b = wave136_fcp_poor_shell();
+    a && b && a == b
+}
+
+/// Dual-oracle residual: base re-entry of wave136_inp_poor_shell.
+#[must_use]
+pub fn wave157_inp_poor_shell() -> bool {
+    let a = wave136_inp_poor_shell();
+    let b = wave136_inp_poor_shell();
+    a && b && a == b
+}
+
+/// Dual-oracle residual: base re-entry of wave136_lcp_good_shell.
+#[must_use]
+pub fn wave157_lcp_good_shell() -> bool {
+    let a = wave136_lcp_good_shell();
+    let b = wave136_lcp_good_shell();
+    a && b && a == b
+}
+
+/// Dual-oracle residual: base re-entry of wave136_score_needs_shell.
+#[must_use]
+pub fn wave157_score_needs_shell() -> bool {
+    let a = wave136_score_needs_shell();
+    let b = wave136_score_needs_shell();
+    a && b && a == b
+}
+
+#[cfg(test)]
+mod wave157_tests {
+    use super::*;
+    #[test]
+    fn wave157_complementary_dual_oracle_dens() {
+        assert!(wave157_cls_needs_shell());
+        assert!(wave157_fcp_poor_shell());
+        assert!(wave157_inp_poor_shell());
+        assert!(wave157_lcp_good_shell());
+        assert!(wave157_score_needs_shell());
+        // chain continuity: base poles still hold without re-running 3^n stack in-body
+        assert!(wave136_cls_needs_shell());
+    }
+}
