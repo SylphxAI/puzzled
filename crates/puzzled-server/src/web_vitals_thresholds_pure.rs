@@ -2662,3 +2662,72 @@ mod wave109_tests {
         assert!(wave107_lcp_edges_shell());
     }
 }
+// ── wave110 pure residual dens: web-vitals lcp-needs ttfb-good cls-poor score-poor threshold-pairs dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP needs mid dual-oracle.
+#[must_use]
+pub fn wave110_lcp_needs_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0)
+        == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: TTFB good at boundary dual-oracle.
+#[must_use]
+pub fn wave110_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: CLS poor above dual-oracle.
+#[must_use]
+pub fn wave110_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: score poor zero dual-oracle.
+#[must_use]
+pub fn wave110_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Good) == 100
+        && MetricRating::Poor.as_str() == "poor"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: LCP/TTFB threshold pairs dual-oracle.
+#[must_use]
+pub fn wave110_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (2_500.0, 4_000.0)
+        && thresholds_for(WebVitalName::Ttfb) == (800.0, 1_800.0)
+        && thresholds_for(WebVitalName::Inp) == (200.0, 500.0)
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave110_tests {
+    use super::*;
+
+    #[test]
+    fn wave110_web_vitals_lcp_needs_ttfb_good_cls_poor_score_poor_threshold_pairs_dual_oracle() {
+        assert!(wave110_lcp_needs_shell());
+        assert!(wave110_ttfb_good_shell());
+        assert!(wave110_cls_poor_shell());
+        assert!(wave110_score_poor_shell());
+        assert!(wave110_threshold_pairs_shell());
+        assert!(wave109_fcp_needs_shell());
+    }
+}
