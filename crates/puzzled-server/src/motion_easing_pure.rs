@@ -186,3 +186,54 @@ mod wave75_tests {
         assert!(wave75_spring_default_shell());
     }
 }
+
+
+// ── product residual dens wave76: motion easing sharp+spring stiff dual-oracle residual ──
+// Dual-oracle residual of motion config easing/spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: sharp easing + easeInOut bezier closed.
+#[must_use]
+pub fn wave76_easing_sharp_shell() -> bool {
+    easing_bezier("sharp") == Some(EASING_SHARP)
+        && EASING_SHARP == [0.4, 0.0, 0.6, 1.0]
+        && easing_bezier("easeInOut") == Some(EASING_EASE_IN_OUT)
+        && EASING_EASE_IN_OUT == [0.4, 0.0, 0.2, 1.0]
+        && easing_bezier("unknown").is_none()
+        && EASING_KEYS.contains(&"sharp")
+}
+
+/// Dual-oracle residual: stiff spring stiffness/damping extremes.
+#[must_use]
+pub fn wave76_spring_stiff_shell() -> bool {
+    spring_stiffness("stiff") == Some(600)
+        && spring_damping("stiff") == Some(40)
+        && spring_stiffness("gentle") == Some(200)
+        && spring_damping("gentle") == Some(25)
+        && spring_stiffness("nope").is_none()
+        && SPRING_KEYS.contains(&"stiff")
+}
+
+/// Dual-oracle residual: spring type tag + default pair + key counts.
+#[must_use]
+pub fn wave76_spring_default_catalog_shell() -> bool {
+    SPRING_TYPE == "spring"
+        && spring_stiffness("default") == Some(400)
+        && spring_damping("default") == Some(30)
+        && EASING_KEYS.len() == 5
+        && SPRING_KEYS.len() == 5
+        && SPRING_STIFFNESS.len() == 5
+        && SPRING_DAMPING.len() == 5
+}
+
+#[cfg(test)]
+mod wave76_tests {
+    use super::*;
+
+    #[test]
+    fn wave76_motion_easing_sharp_spring_stiff_dual_oracle() {
+        assert!(wave76_easing_sharp_shell());
+        assert!(wave76_spring_stiff_shell());
+        assert!(wave76_spring_default_catalog_shell());
+    }
+}
