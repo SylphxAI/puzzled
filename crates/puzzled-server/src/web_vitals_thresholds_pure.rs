@@ -559,3 +559,65 @@ mod wave77_tests {
         assert!(wave76_needs_score_shell());
     }
 }
+
+
+// ── wave78 pure residual dens: web-vitals INP TTFB LCP poor score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP good/poor boundary ratings.
+#[must_use]
+pub fn wave78_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, 200.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 200.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB edges at 800 / 1800.
+#[must_use]
+pub fn wave78_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, 800.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: poor score 0 + as_str.
+#[must_use]
+pub fn wave78_poor_score_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+}
+
+/// Dual-oracle residual: LCP constants pair.
+#[must_use]
+pub fn wave78_lcp_const_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: FCP constants + good below poor all.
+#[must_use]
+pub fn wave78_fcp_good_below_shell() -> bool {
+    WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave78_tests {
+    use super::*;
+
+    #[test]
+    fn wave78_web_vitals_inp_ttfb_lcp_poor_score_dual_oracle() {
+        assert!(wave78_inp_edges_shell());
+        assert!(wave78_ttfb_edges_shell());
+        assert!(wave78_poor_score_shell());
+        assert!(wave78_lcp_const_shell());
+        assert!(wave78_fcp_good_below_shell());
+        assert!(wave77_score_str_shell());
+    }
+}
