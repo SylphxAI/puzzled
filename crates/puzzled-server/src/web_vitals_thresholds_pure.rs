@@ -1358,3 +1358,71 @@ mod wave90_tests {
         assert!(wave89_score_poor_shell());
     }
 }
+
+// ── wave91 pure residual dens: web-vitals CLS LCP score wire INP dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: CLS mid needs + edges.
+#[must_use]
+pub fn wave91_cls_mid_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.15) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+/// Dual-oracle residual: LCP poor edge + constants.
+#[must_use]
+pub fn wave91_lcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: score needs 50 + ladder dual-oracle.
+#[must_use]
+pub fn wave91_score_needs_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: rating wire strings closed.
+#[must_use]
+pub fn wave91_rating_wire_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::Poor.as_str() == "poor"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: INP good boundary + constants dual-oracle.
+#[must_use]
+pub fn wave91_inp_good_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+        && thresholds_for(WebVitalName::Inp)
+            == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+}
+
+#[cfg(test)]
+mod wave91_tests {
+    use super::*;
+
+    #[test]
+    fn wave91_web_vitals_cls_lcp_score_wire_inp_dual_oracle() {
+        assert!(wave91_cls_mid_shell());
+        assert!(wave91_lcp_poor_shell());
+        assert!(wave91_score_needs_shell());
+        assert!(wave91_rating_wire_shell());
+        assert!(wave91_inp_good_shell());
+        assert!(wave90_score_good_shell());
+    }
+}
