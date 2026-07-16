@@ -286,3 +286,50 @@ mod wave77_tests {
         assert!(wave77_motion_catalog_shell());
     }
 }
+
+
+// ── product residual dens wave78: motion easeOut+spring snappy/stiff dual-oracle residual ──
+// Dual-oracle residual of motion config easing/spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: easeOut + sharp bezier closed.
+#[must_use]
+pub fn wave78_easing_ease_out_sharp_shell() -> bool {
+    easing_bezier("easeOut") == Some(EASING_EASE_OUT)
+        && easing_bezier("sharp") == Some(EASING_SHARP)
+        && EASING_EASE_OUT == [0.0, 0.0, 0.2, 1.0]
+        && EASING_SHARP == [0.4, 0.0, 0.6, 1.0]
+        && easing_bezier("linear").is_none()
+}
+
+/// Dual-oracle residual: spring snappy + stiff stiffness/damping.
+#[must_use]
+pub fn wave78_spring_snappy_stiff_shell() -> bool {
+    spring_stiffness("snappy") == Some(500)
+        && spring_damping("snappy") == Some(30)
+        && spring_stiffness("stiff") == Some(600)
+        && spring_damping("stiff") == Some(40)
+        && SPRING_TYPE == "spring"
+}
+
+/// Dual-oracle residual: key catalogs ordered + unknown reject.
+#[must_use]
+pub fn wave78_motion_keys_shell() -> bool {
+    EASING_KEYS == ["default", "easeOut", "easeIn", "easeInOut", "sharp"]
+        && SPRING_KEYS == ["default", "gentle", "snappy", "bouncy", "stiff"]
+        && spring_stiffness("nope").is_none()
+        && spring_damping("nope").is_none()
+        && easing_bezier("EaseOut").is_none()
+}
+
+#[cfg(test)]
+mod wave78_tests {
+    use super::*;
+
+    #[test]
+    fn wave78_motion_ease_out_spring_snappy_stiff_dual_oracle() {
+        assert!(wave78_easing_ease_out_sharp_shell());
+        assert!(wave78_spring_snappy_stiff_shell());
+        assert!(wave78_motion_keys_shell());
+    }
+}
