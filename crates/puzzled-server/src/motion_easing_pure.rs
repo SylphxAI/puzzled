@@ -138,3 +138,51 @@ mod wave74_tests {
         assert!(wave74_spring_type_shell());
     }
 }
+
+
+// ── product residual dens wave75: motion easing mid+spring dual-oracle residual ──
+// Dual-oracle residual of motion easing/spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: easing mid keys + unknown reject.
+#[must_use]
+pub fn wave75_easing_mid_shell() -> bool {
+    EASING_KEYS == ["default", "easeOut", "easeIn", "easeInOut", "sharp"]
+        && easing_bezier("easeIn") == Some([0.4, 0.0, 1.0, 1.0])
+        && easing_bezier("easeInOut") == Some([0.4, 0.0, 0.2, 1.0])
+        && easing_bezier("easeOut") == Some([0.0, 0.0, 0.2, 1.0])
+        && easing_bezier("missing").is_none()
+}
+
+/// Dual-oracle residual: spring snappy/bouncy/gentle stiffness+damping.
+#[must_use]
+pub fn wave75_spring_mid_shell() -> bool {
+    SPRING_KEYS.len() == 5
+        && spring_stiffness("snappy") == Some(500)
+        && spring_stiffness("bouncy") == Some(300)
+        && spring_stiffness("gentle") == Some(200)
+        && spring_damping("snappy") == Some(30)
+        && spring_damping("gentle") == Some(25)
+        && spring_damping("bouncy") == Some(15)
+        && spring_stiffness("nope").is_none()
+}
+
+/// Dual-oracle residual: spring type tag + default pair.
+#[must_use]
+pub fn wave75_spring_default_shell() -> bool {
+    SPRING_TYPE == "spring"
+        && spring_stiffness("default") == Some(400)
+        && spring_damping("default") == Some(30)
+}
+
+#[cfg(test)]
+mod wave75_tests {
+    use super::*;
+
+    #[test]
+    fn wave75_motion_easing_mid_spring_dual_oracle() {
+        assert!(wave75_easing_mid_shell());
+        assert!(wave75_spring_mid_shell());
+        assert!(wave75_spring_default_shell());
+    }
+}
