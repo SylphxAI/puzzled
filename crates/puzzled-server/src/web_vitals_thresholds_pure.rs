@@ -438,3 +438,62 @@ mod wave75_tests {
         assert!(wave74_score_points_shell());
     }
 }
+
+
+// ── wave76 pure residual dens: web-vitals INP TTFB needs score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP good/needs/poor edges.
+#[must_use]
+pub fn wave76_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, 200.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 200.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB constants + thresholds_for.
+#[must_use]
+pub fn wave76_ttfb_constants_shell() -> bool {
+    WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+        && thresholds_for(WebVitalName::Ttfb) == (800.0, 1_800.0)
+}
+
+/// Dual-oracle residual: needs-improvement score 50.
+#[must_use]
+pub fn wave76_needs_score_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: good strictly below poor for all metrics.
+#[must_use]
+pub fn wave76_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+}
+
+/// Dual-oracle residual: LCP edge ratings.
+#[must_use]
+pub fn wave76_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 2500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2500.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4000.1) == MetricRating::Poor
+}
+
+#[cfg(test)]
+mod wave76_tests {
+    use super::*;
+
+    #[test]
+    fn wave76_web_vitals_inp_ttfb_needs_score_dual_oracle() {
+        assert!(wave76_inp_edges_shell());
+        assert!(wave76_ttfb_constants_shell());
+        assert!(wave76_needs_score_shell());
+        assert!(wave76_good_below_poor_shell());
+        assert!(wave76_lcp_edges_shell());
+        assert!(wave75_lcp_constants_shell());
+    }
+}
