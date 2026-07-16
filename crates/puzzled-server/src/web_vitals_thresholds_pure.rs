@@ -246,3 +246,75 @@ mod wave71_tests {
         assert_eq!(thresholds_for(WebVitalName::Inp), (200.0, 500.0));
     }
 }
+
+// ── wave72 pure residual dens: web-vitals LCP/INP/TTFB edges dual-oracle residual ──
+// Dual-oracle residual of LCP/INP/TTFB rating edges pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP rating edges.
+#[must_use]
+pub fn lcp_rating_edge_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: INP rating edges.
+#[must_use]
+pub fn inp_rating_edge_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB rating edges.
+#[must_use]
+pub fn ttfb_rating_edge_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: threshold pairs match constants.
+#[must_use]
+pub fn thresholds_pair_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb)
+            == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+}
+
+/// Dual-oracle residual: all metrics good strictly below poor.
+#[must_use]
+pub fn all_metrics_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+        && WEB_VITALS_INP_GOOD_MS < WEB_VITALS_INP_POOR_MS
+        && WEB_VITALS_TTFB_GOOD_MS < WEB_VITALS_TTFB_POOR_MS
+}
+
+#[cfg(test)]
+mod wave72_tests {
+    use super::*;
+
+    #[test]
+    fn wave72_web_vitals_lcp_inp_ttfb_edges_dual_oracle() {
+        assert!(lcp_rating_edge_shell());
+        assert!(inp_rating_edge_shell());
+        assert!(ttfb_rating_edge_shell());
+        assert!(thresholds_pair_shell());
+        assert!(all_metrics_good_below_poor_shell());
+        assert!(fcp_rating_edge_shell());
+        assert!(cls_rating_edge_shell());
+        assert_eq!(rating_score_ladder(), [100, 50, 0]);
+    }
+}
