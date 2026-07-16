@@ -79,3 +79,65 @@ mod tests {
         assert!(!is_stagger_key("instant"));
     }
 }
+
+// ── product residual dens wave73: motion duration catalog+stagger dual-oracle residual ──
+// Dual-oracle residual of packages/ui motion duration/stagger pure halves.
+// Framer Motion I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: duration ladder seconds.
+#[must_use]
+pub fn wave73_duration_ladder_shell() -> bool {
+    duration_seconds("instant") == Some(0.0)
+        && duration_seconds("fast") == Some(0.1)
+        && duration_seconds("normal") == Some(0.15)
+        && duration_seconds("medium") == Some(0.2)
+        && duration_seconds("slow") == Some(0.3)
+        && duration_seconds("slower") == Some(0.4)
+        && duration_seconds("slowest") == Some(0.5)
+        && duration_seconds("unknown").is_none()
+        && DURATION_KEYS.len() == 7
+}
+
+/// Dual-oracle residual: micro class ≤ normal.
+#[must_use]
+pub fn wave73_micro_class_shell() -> bool {
+    is_micro_duration("instant")
+        && is_micro_duration("fast")
+        && is_micro_duration("normal")
+        && !is_micro_duration("medium")
+        && !is_micro_duration("slow")
+}
+
+/// Dual-oracle residual: stagger constants + keys.
+#[must_use]
+pub fn wave73_stagger_shell() -> bool {
+    (STAGGER_FAST - 0.03).abs() < 1e-12
+        && (STAGGER_NORMAL - 0.05).abs() < 1e-12
+        && (STAGGER_SLOW - 0.08).abs() < 1e-12
+        && is_stagger_key("fast")
+        && is_stagger_key("normal")
+        && is_stagger_key("slow")
+        && !is_stagger_key("instant")
+}
+
+/// Dual-oracle residual: catalog key order head/tail.
+#[must_use]
+pub fn wave73_duration_keys_order_shell() -> bool {
+    DURATION_KEYS[0] == "instant"
+        && DURATION_KEYS[DURATION_KEYS.len() - 1] == "slowest"
+        && DURATION_KEYS.contains(&"medium")
+}
+
+#[cfg(test)]
+mod wave73_tests {
+    use super::*;
+
+    #[test]
+    fn wave73_motion_duration_catalog_stagger_dual_oracle() {
+        assert!(wave73_duration_ladder_shell());
+        assert!(wave73_micro_class_shell());
+        assert!(wave73_stagger_shell());
+        assert!(wave73_duration_keys_order_shell());
+    }
+}
+
