@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// Stats and leaderboard read contracts (ADR-168 S1).
+// HTTP transitional path: GET /api/v1/stats/leaderboard
+
+enum LeaderboardType {
+  LEADERBOARD_TYPE_UNSPECIFIED = 0;
+  LEADERBOARD_TYPE_STREAK = 1;
+  LEADERBOARD_TYPE_SCORE = 2;
+}
+
+enum LeaderboardPeriod {
+  LEADERBOARD_PERIOD_UNSPECIFIED = 0;
+  LEADERBOARD_PERIOD_TODAY = 1;
+  LEADERBOARD_PERIOD_WEEK = 2;
+  LEADERBOARD_PERIOD_ALL = 3;
+}
+
+message LeaderboardEntry {
+  int32 rank = 1;
+  string user_id = 2;
+  optional string user_name = 3;
+  optional string user_image = 4;
+  int32 value = 5;
+}
+
+message GetLeaderboardRequest {
+  string game_slug = 1;
+  LeaderboardType type = 2;
+  LeaderboardPeriod period = 3;
+  int32 limit = 4;
+}
+
+message GetLeaderboardResponse {
+  repeated LeaderboardEntry entries = 1;
+}
+
+service StatsService {
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
+}

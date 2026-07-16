@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// Health and readiness for puzzled-server (ADR-168).
+// HTTP probes: GET /healthz, GET /readyz (sylphx.toml api service).
+
+enum ServingStatus {
+  SERVING_STATUS_UNSPECIFIED = 0;
+  SERVING_STATUS_OK = 1;
+  SERVING_STATUS_NOT_READY = 2;
+  SERVING_STATUS_UNAVAILABLE = 3;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  ServingStatus status = 1;
+  string message = 2;
+}
+
+message ReadyRequest {}
+
+message DependencyStatus {
+  string name = 1;
+  bool ok = 2;
+  string detail = 3;
+}
+
+message ReadyResponse {
+  ServingStatus status = 1;
+  string message = 2;
+  uint64 uptime_s = 3;
+  string slice = 4;
+  repeated DependencyStatus dependencies = 5;
+  bool stub = 6;
+}
+
+service HealthService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Ready(ReadyRequest) returns (ReadyResponse);
+}
