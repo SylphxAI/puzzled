@@ -333,3 +333,52 @@ mod wave78_tests {
         assert!(wave78_motion_keys_shell());
     }
 }
+
+
+// ── product residual dens wave79: motion easeIn+spring gentle/bouncy dual-oracle residual ──
+// Dual-oracle residual of motion config easing/spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: easeIn + easeInOut + default bezier closed.
+#[must_use]
+pub fn wave79_easing_in_inout_shell() -> bool {
+    easing_bezier("easeIn") == Some(EASING_EASE_IN)
+        && easing_bezier("easeInOut") == Some(EASING_EASE_IN_OUT)
+        && easing_bezier("default") == Some(EASING_DEFAULT)
+        && EASING_EASE_IN == [0.4, 0.0, 1.0, 1.0]
+        && EASING_EASE_IN_OUT == [0.4, 0.0, 0.2, 1.0]
+        && easing_bezier("easein").is_none()
+}
+
+/// Dual-oracle residual: spring gentle + bouncy stiffness/damping.
+#[must_use]
+pub fn wave79_spring_gentle_bouncy_shell() -> bool {
+    spring_stiffness("gentle") == Some(200)
+        && spring_damping("gentle") == Some(25)
+        && spring_stiffness("bouncy") == Some(300)
+        && spring_damping("bouncy") == Some(15)
+        && spring_stiffness("default") == Some(400)
+        && spring_damping("default") == Some(30)
+}
+
+/// Dual-oracle residual: key catalog lengths + type tag.
+#[must_use]
+pub fn wave79_motion_catalog_len_shell() -> bool {
+    EASING_KEYS.len() == 5
+        && SPRING_KEYS.len() == 5
+        && SPRING_TYPE == "spring"
+        && spring_stiffness("unknown").is_none()
+        && easing_bezier("sharp") == Some(EASING_SHARP)
+}
+
+#[cfg(test)]
+mod wave79_tests {
+    use super::*;
+
+    #[test]
+    fn wave79_motion_ease_in_spring_gentle_bouncy_dual_oracle() {
+        assert!(wave79_easing_in_inout_shell());
+        assert!(wave79_spring_gentle_bouncy_shell());
+        assert!(wave79_motion_catalog_len_shell());
+    }
+}
