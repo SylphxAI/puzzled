@@ -1085,3 +1085,74 @@ mod wave86_tests {
         assert!(wave85_score_ladder_shell());
     }
 }
+
+// ── wave87 pure residual dens: web-vitals FCP LCP CLS score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP edges good/needs/poor.
+#[must_use]
+pub fn wave87_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Fcp)
+            == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+}
+
+/// Dual-oracle residual: LCP mid needs-improvement + as_str.
+#[must_use]
+pub fn wave87_lcp_mid_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 3000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: CLS edges + good strict below poor.
+#[must_use]
+pub fn wave87_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.05) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.2) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.5) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+}
+
+/// Dual-oracle residual: score ladder + poor zero.
+#[must_use]
+pub fn wave87_score_ladder_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: INP/TTFB pairs good below poor.
+#[must_use]
+pub fn wave87_inp_ttfb_pairs_shell() -> bool {
+    let (ig, ip) = thresholds_for(WebVitalName::Inp);
+    let (tg, tp) = thresholds_for(WebVitalName::Ttfb);
+    ig == WEB_VITALS_INP_GOOD_MS
+        && ip == WEB_VITALS_INP_POOR_MS
+        && tg == WEB_VITALS_TTFB_GOOD_MS
+        && tp == WEB_VITALS_TTFB_POOR_MS
+        && ig < ip
+        && tg < tp
+}
+
+#[cfg(test)]
+mod wave87_tests {
+    use super::*;
+
+    #[test]
+    fn wave87_web_vitals_fcp_lcp_cls_score_dual_oracle() {
+        assert!(wave87_fcp_edges_shell());
+        assert!(wave87_lcp_mid_shell());
+        assert!(wave87_cls_edges_shell());
+        assert!(wave87_score_ladder_shell());
+        assert!(wave87_inp_ttfb_pairs_shell());
+        assert!(wave85_cls_edges_shell());
+    }
+}
