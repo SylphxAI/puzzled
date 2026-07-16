@@ -621,3 +621,67 @@ mod wave78_tests {
         assert!(wave77_score_str_shell());
     }
 }
+
+
+// ── wave79 pure residual dens: web-vitals CLS FCP LCP needs dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: CLS edges at 0.1 / 0.25.
+#[must_use]
+pub fn wave79_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.1001) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.25) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.2501) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: FCP edges at 1800 / 3000.
+#[must_use]
+pub fn wave79_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, 1_800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, 1_800.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: LCP edges at 2500 / 4000.
+#[must_use]
+pub fn wave79_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 2_500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2_500.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: needs-improvement score 50 + wire string.
+#[must_use]
+pub fn wave79_needs_score_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && rating_score_points(MetricRating::Good) == 100
+}
+
+/// Dual-oracle residual: CLS constants + good below poor invariant.
+#[must_use]
+pub fn wave79_cls_const_shell() -> bool {
+    thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave79_tests {
+    use super::*;
+
+    #[test]
+    fn wave79_web_vitals_cls_fcp_lcp_needs_dual_oracle() {
+        assert!(wave79_cls_edges_shell());
+        assert!(wave79_fcp_edges_shell());
+        assert!(wave79_lcp_edges_shell());
+        assert!(wave79_needs_score_shell());
+        assert!(wave79_cls_const_shell());
+        assert!(wave78_poor_score_shell());
+    }
+}
