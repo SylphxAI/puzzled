@@ -164,3 +164,75 @@ mod tests {
         assert_eq!(BIO_MAX, 500);
     }
 }
+
+
+// ── wave67 pure residual dens: validation limit ladder dual-oracle residual ──
+// Dual-oracle residual of validation limit constants pure halves.
+// Tracker / network flush I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: pagination limit shell (default, max, admin_max).
+#[must_use]
+pub fn pagination_limit_shell() -> (u32, u32, u32) {
+    (DEFAULT_LIMIT, MAX_LIMIT, ADMIN_MAX_LIMIT)
+}
+
+/// Dual-oracle residual: referral code length shell.
+#[must_use]
+pub fn referral_code_len_shell() -> (usize, usize) {
+    (REFERRAL_CODE_MIN, REFERRAL_CODE_MAX)
+}
+
+/// Dual-oracle residual: field max ladder name/title/description/content/bio.
+#[must_use]
+pub fn field_max_ladder() -> [usize; 5] {
+    [NAME_MAX, TITLE_MAX, DESCRIPTION_MAX, CONTENT_MAX, BIO_MAX]
+}
+
+/// Dual-oracle residual: username length shell.
+#[must_use]
+pub fn username_len_shell() -> (usize, usize) {
+    (USERNAME_MIN, USERNAME_MAX)
+}
+
+/// Dual-oracle residual: otp shell (len, expiry minutes).
+#[must_use]
+pub fn otp_shell() -> (usize, u32) {
+    (OTP_CODE_LENGTH, OTP_EXPIRY_MINUTES)
+}
+
+/// Dual-oracle residual: avatar max size is 5 MiB.
+#[must_use]
+pub fn avatar_max_is_5mib() -> bool {
+    AVATAR_MAX_SIZE == 5 * 1024 * 1024
+}
+
+/// Dual-oracle residual: default currency is usd.
+#[must_use]
+pub fn default_currency_is_usd() -> bool {
+    DEFAULT_CURRENCY == "usd" && CURRENCY_CODE_LENGTH == 3
+}
+
+#[cfg(test)]
+mod wave67_tests {
+    use super::*;
+
+    #[test]
+    fn wave67_validation_limit_ladder_dual_oracle() {
+        assert_eq!(pagination_limit_shell(), (10, 50, 100));
+        assert_eq!(referral_code_len_shell(), (5, 20));
+        assert_eq!(field_max_ladder(), [100, 200, 500, 2000, 500]);
+        assert_eq!(username_len_shell(), (3, 30));
+        assert_eq!(otp_shell(), (6, 10));
+        assert!(avatar_max_is_5mib());
+        assert!(default_currency_is_usd());
+        assert_eq!(MAX_BATCH_SIZE, 100);
+        assert_eq!(ADMIN_DEFAULT_LIMIT, 50);
+        assert!(is_valid_referral_code("ABCDE"));
+        assert!(!is_valid_referral_code("ab"));
+        assert!(is_valid_username_len("abc"));
+        assert!(!is_valid_username_len("ab"));
+        assert_eq!(normalize_currency(Some("USD")), "usd");
+        assert!(is_batch_size_ok(100));
+        assert!(!is_batch_size_ok(101));
+    }
+}
