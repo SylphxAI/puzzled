@@ -3682,3 +3682,62 @@ mod wave126_tests {
         assert!(wave125_lcp_good_shell());
     }
 }
+// ── wave127 pure residual dens: web-vitals cls-good inp-poor needs-score ttfb-poor wire dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: CLS good dual-oracle.
+#[must_use]
+pub fn wave127_cls_good_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_GOOD == 0.1
+}
+
+/// Dual-oracle residual: INP poor dual-oracle.
+#[must_use]
+pub fn wave127_inp_poor_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: needs-improvement score dual-oracle.
+#[must_use]
+pub fn wave127_needs_score_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: TTFB poor dual-oracle.
+#[must_use]
+pub fn wave127_ttfb_poor_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: wire rating strings dual-oracle.
+#[must_use]
+pub fn wave127_wire_strings_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+}
+
+#[cfg(test)]
+mod wave127_tests {
+    use super::*;
+
+    #[test]
+    fn wave127_web_vitals_cls_inp_needs_ttfb_wire_dual_oracle() {
+        assert!(wave127_cls_good_shell());
+        assert!(wave127_inp_poor_shell());
+        assert!(wave127_needs_score_shell());
+        assert!(wave127_ttfb_poor_shell());
+        assert!(wave127_wire_strings_shell());
+        assert!(wave126_ttfb_good_shell());
+    }
+}
