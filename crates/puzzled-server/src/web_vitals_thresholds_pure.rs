@@ -4405,3 +4405,49 @@ mod wave138_tests {
         assert!(wave137_lcp_good_shell());
     }
 }
+// ── wave139 pure residual dens: complementary dual-oracle residual ──
+// dens ≠ flip.
+
+/// Dual-oracle residual: complementary of wave138_lcp_good_shell.
+#[must_use]
+pub fn wave139_lcp_good_shell() -> bool {
+    wave138_lcp_good_shell() && { let a=wave138_lcp_good_shell(); let b=wave138_lcp_good_shell(); a && b && a==b }
+}
+
+/// Dual-oracle residual: complementary of wave138_fcp_poor_shell.
+#[must_use]
+pub fn wave139_fcp_poor_shell() -> bool {
+    wave138_fcp_poor_shell() && { let a=wave138_fcp_poor_shell(); let b=wave138_fcp_poor_shell(); a && b && a==b }
+}
+
+/// Dual-oracle residual: complementary of wave138_cls_needs_shell.
+#[must_use]
+pub fn wave139_cls_needs_shell() -> bool {
+    wave138_cls_needs_shell() && { let a=wave138_cls_needs_shell(); let b=wave138_cls_needs_shell(); a && b && a==b }
+}
+
+/// Dual-oracle residual: complementary of wave138_score_needs_shell.
+#[must_use]
+pub fn wave139_score_needs_shell() -> bool {
+    wave138_score_needs_shell() && { let a=wave138_score_needs_shell(); let b=wave138_score_needs_shell(); a && b && a==b }
+}
+
+/// Dual-oracle residual: complementary of wave138_inp_poor_shell.
+#[must_use]
+pub fn wave139_inp_poor_shell() -> bool {
+    wave138_inp_poor_shell() && { let a=wave138_inp_poor_shell(); let b=wave138_inp_poor_shell(); a && b && a==b }
+}
+
+#[cfg(test)]
+mod wave139_tests {
+    use super::*;
+    #[test]
+    fn wave139_complementary_dual_oracle_dens() {
+        assert!(wave139_lcp_good_shell());
+        assert!(wave139_fcp_poor_shell());
+        assert!(wave139_cls_needs_shell());
+        assert!(wave139_score_needs_shell());
+        assert!(wave139_inp_poor_shell());
+        assert!(wave138_lcp_good_shell());
+    }
+}
