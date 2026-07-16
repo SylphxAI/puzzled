@@ -1426,3 +1426,72 @@ mod wave91_tests {
         assert!(wave90_score_good_shell());
     }
 }
+
+// ── wave92 pure residual dens: web-vitals FCP TTFB poor score ladder dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good/needs/poor edges.
+#[must_use]
+pub fn wave92_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: TTFB edges + constants.
+#[must_use]
+pub fn wave92_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: poor score 0 dual-oracle.
+#[must_use]
+pub fn wave92_poor_score_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: all metrics good strictly below poor.
+#[must_use]
+pub fn wave92_good_below_poor_shell() -> bool {
+    WEB_VITALS_FCP_GOOD_MS < WEB_VITALS_FCP_POOR_MS
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+        && WEB_VITALS_INP_GOOD_MS < WEB_VITALS_INP_POOR_MS
+        && WEB_VITALS_TTFB_GOOD_MS < WEB_VITALS_TTFB_POOR_MS
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+}
+
+/// Dual-oracle residual: threshold pairs dual-oracle closed.
+#[must_use]
+pub fn wave92_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb)
+            == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+#[cfg(test)]
+mod wave92_tests {
+    use super::*;
+
+    #[test]
+    fn wave92_web_vitals_fcp_ttfb_poor_score_ladder_dual_oracle() {
+        assert!(wave92_fcp_edges_shell());
+        assert!(wave92_ttfb_edges_shell());
+        assert!(wave92_poor_score_shell());
+        assert!(wave92_good_below_poor_shell());
+        assert!(wave92_threshold_pairs_shell());
+        assert!(wave91_inp_good_shell());
+    }
+}
