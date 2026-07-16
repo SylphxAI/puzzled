@@ -216,3 +216,72 @@ mod wave69_tests {
     }
 }
 
+
+
+// ── wave70 pure residual dens: error class partition dual-oracle residual ──
+// Dual-oracle residual of ERROR_CODES client/server/transport partition pure half.
+// Tracker / network flush I/O residual retained. dens ≠ flip.
+// product residual dens wave70
+
+/// Dual-oracle residual: extra client statuses (413/422).
+#[must_use]
+pub fn extra_client_status_ladder() -> [u16; 2] {
+    [
+        error_code_status("PAYLOAD_TOO_LARGE").unwrap_or(0),
+        error_code_status("UNPROCESSABLE_ENTITY").unwrap_or(0),
+    ]
+}
+
+/// Dual-oracle residual: retryable includes transport + 5xx subset.
+#[must_use]
+pub fn retryable_includes_transport_and_gateway() -> bool {
+    is_retryable_code("NETWORK_ERROR")
+        && is_retryable_code("TIMEOUT")
+        && is_retryable_code("BAD_GATEWAY")
+        && is_retryable_code("GATEWAY_TIMEOUT")
+        && !is_retryable_code("NOT_FOUND")
+}
+
+/// Dual-oracle residual: client count among catalog (status 400-499).
+#[must_use]
+pub fn client_error_code_count() -> usize {
+    ERROR_CODES.iter().filter(|c| is_client_error_code(c)).count()
+}
+
+/// Dual-oracle residual: server count among catalog.
+#[must_use]
+pub fn server_error_code_count() -> usize {
+    ERROR_CODES.iter().filter(|c| is_server_error_code(c)).count()
+}
+
+/// Dual-oracle residual: transport count among catalog.
+#[must_use]
+pub fn transport_error_code_count() -> usize {
+    ERROR_CODES.iter().filter(|c| is_transport_error_code(c)).count()
+}
+
+/// Dual-oracle residual: partition covers full catalog.
+#[must_use]
+pub fn partition_covers_catalog() -> bool {
+    client_error_code_count() + server_error_code_count() + transport_error_code_count()
+        == ERROR_CODES.len()
+}
+
+#[cfg(test)]
+mod wave70_tests {
+    use super::*;
+
+    #[test]
+    fn wave70_error_class_partition_dual_oracle() {
+        assert_eq!(extra_client_status_ladder(), [413, 422]);
+        assert!(retryable_includes_transport_and_gateway());
+        assert_eq!(client_error_code_count(), 8);
+        assert_eq!(server_error_code_count(), 5);
+        assert_eq!(transport_error_code_count(), 5);
+        assert!(partition_covers_catalog());
+        assert_eq!(error_catalog_size_shell(), (18, 7));
+        assert!(transport_codes_status_zero());
+        assert!(retryable_subset_of_catalog());
+        assert!(error_class_probes_ok());
+    }
+}
