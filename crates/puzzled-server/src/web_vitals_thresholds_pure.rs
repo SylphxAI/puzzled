@@ -4099,3 +4099,62 @@ mod wave133_tests {
         assert!(wave132_lcp_good_shell());
     }
 }
+// ── wave134 pure residual dens: web-vitals lcp-good fcp-poor cls-needs score-needs fcp-good dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good dual-oracle.
+#[must_use]
+pub fn wave134_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2_000.0) == MetricRating::Good
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+}
+
+/// Dual-oracle residual: FCP poor dual-oracle.
+#[must_use]
+pub fn wave134_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: CLS needs-improvement dual-oracle.
+#[must_use]
+pub fn wave134_cls_needs_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD + 0.01) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR) == MetricRating::NeedsImprovement
+        && WEB_VITALS_CLS_GOOD == 0.1
+}
+
+/// Dual-oracle residual: score needs-improvement points dual-oracle.
+#[must_use]
+pub fn wave134_score_needs_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: FCP good dual-oracle.
+#[must_use]
+pub fn wave134_fcp_good_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, 1_000.0) == MetricRating::Good
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave134_tests {
+    use super::*;
+
+    #[test]
+    fn wave134_web_vitals_lcp_fcp_cls_score_fcp_good_dual_oracle() {
+        assert!(wave134_lcp_good_shell());
+        assert!(wave134_fcp_poor_shell());
+        assert!(wave134_cls_needs_shell());
+        assert!(wave134_score_needs_shell());
+        assert!(wave134_fcp_good_shell());
+        assert!(wave133_lcp_poor_shell());
+    }
+}
