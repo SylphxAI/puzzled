@@ -1,6 +1,7 @@
 //! Puzzled Server — ADR-168: health + leaderboard + puzzle grid/submit + product dens
 //! for auth-sessions, generation jobs, platform webhooks, and Hono api-v1 monolith domains.
 
+pub mod achievement_tier_pure;
 pub mod db_config;
 
 mod auth_sessions;
