@@ -378,3 +378,63 @@ mod wave74_tests {
         assert_eq!(MetricRating::NeedsImprovement.as_str(), "needs-improvement");
     }
 }
+
+// ── wave75 pure residual dens: web-vitals FCP CLS rating dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good/needs/poor edges.
+#[must_use]
+pub fn wave75_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, 1800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, 1800.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS unitless edges.
+#[must_use]
+pub fn wave75_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.11) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.25) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.26) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: rating as_str catalog.
+#[must_use]
+pub fn wave75_rating_str_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: score points + thresholds_for FCP.
+#[must_use]
+pub fn wave75_score_and_fcp_thresholds_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+}
+
+/// Dual-oracle residual: LCP constants wire.
+#[must_use]
+pub fn wave75_lcp_constants_shell() -> bool {
+    WEB_VITALS_LCP_GOOD_MS == 2_500.0 && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+#[cfg(test)]
+mod wave75_tests {
+    use super::*;
+
+    #[test]
+    fn wave75_web_vitals_fcp_cls_rating_dual_oracle() {
+        assert!(wave75_fcp_edges_shell());
+        assert!(wave75_cls_edges_shell());
+        assert!(wave75_rating_str_shell());
+        assert!(wave75_score_and_fcp_thresholds_shell());
+        assert!(wave75_lcp_constants_shell());
+        assert!(wave74_score_points_shell());
+    }
+}
