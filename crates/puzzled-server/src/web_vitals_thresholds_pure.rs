@@ -2857,3 +2857,66 @@ mod wave112_tests {
         assert!(wave111_fcp_good_shell());
     }
 }
+// ── wave113 pure residual dens: web-vitals lcp-needs ttfb-good cls-poor score-poor threshold-pairs dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP needs dual-oracle.
+#[must_use]
+pub fn wave113_lcp_needs_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 3_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: TTFB good dual-oracle.
+#[must_use]
+pub fn wave113_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: CLS poor dual-oracle.
+#[must_use]
+pub fn wave113_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.5) == MetricRating::Poor
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && WEB_VITALS_CLS_POOR == 0.25
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: score poor dual-oracle.
+#[must_use]
+pub fn wave113_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+}
+
+/// Dual-oracle residual: threshold pairs dual-oracle.
+#[must_use]
+pub fn wave113_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (2_500.0, 4_000.0)
+        && thresholds_for(WebVitalName::Inp) == (200.0, 500.0)
+        && thresholds_for(WebVitalName::Fcp) == (1_800.0, 3_000.0)
+        && thresholds_for(WebVitalName::Ttfb) == (800.0, 1_800.0)
+        && thresholds_for(WebVitalName::Cls) == (0.1, 0.25)
+}
+
+#[cfg(test)]
+mod wave113_tests {
+    use super::*;
+
+    #[test]
+    fn wave113_web_vitals_lcp_needs_ttfb_good_cls_poor_score_poor_threshold_pairs_dual_oracle() {
+        assert!(wave113_lcp_needs_shell());
+        assert!(wave113_ttfb_good_shell());
+        assert!(wave113_cls_poor_shell());
+        assert!(wave113_score_poor_shell());
+        assert!(wave113_threshold_pairs_shell());
+        assert!(wave111_fcp_good_shell());
+    }
+}
