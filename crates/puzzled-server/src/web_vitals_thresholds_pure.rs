@@ -3801,3 +3801,64 @@ mod wave128_tests {
         assert!(wave127_cls_good_shell());
     }
 }
+// ── wave129 pure residual dens: web-vitals inp ttfb lcp-poor needs wire dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: INP edges dual-oracle.
+#[must_use]
+pub fn wave129_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+}
+
+/// Dual-oracle residual: TTFB good dual-oracle.
+#[must_use]
+pub fn wave129_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: LCP poor dual-oracle.
+#[must_use]
+pub fn wave129_lcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+}
+
+/// Dual-oracle residual: needs-improvement score dual-oracle.
+#[must_use]
+pub fn wave129_needs_score_shell() -> bool {
+    rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: rating wire strings dual-oracle.
+#[must_use]
+pub fn wave129_wire_strings_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::Poor.as_str() == "poor"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave129_tests {
+    use super::*;
+
+    #[test]
+    fn wave129_web_vitals_inp_ttfb_lcp_needs_wire_dual_oracle() {
+        assert!(wave129_inp_edges_shell());
+        assert!(wave129_ttfb_good_shell());
+        assert!(wave129_lcp_poor_shell());
+        assert!(wave129_needs_score_shell());
+        assert!(wave129_wire_strings_shell());
+        assert!(wave128_lcp_good_shell());
+    }
+}
