@@ -2117,3 +2117,73 @@ mod wave101_tests {
         assert!(wave100_fcp_edges_shell());
     }
 }
+// ── wave102 pure residual dens: web-vitals LCP-edges FCP-poor TTFB-good rating-wire thresholds-fn dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP edges dual-oracle.
+#[must_use]
+pub fn wave102_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: FCP poor boundary dual-oracle.
+#[must_use]
+pub fn wave102_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS)
+        == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 0.1) == MetricRating::Poor
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS - 0.1) == MetricRating::Good
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: TTFB good boundary dual-oracle.
+#[must_use]
+pub fn wave102_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS + 0.1)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 0.1) == MetricRating::Poor
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: rating wire strings dual-oracle.
+#[must_use]
+pub fn wave102_rating_wire_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+}
+
+/// Dual-oracle residual: thresholds_for pairs dual-oracle.
+#[must_use]
+pub fn wave102_thresholds_fn_shell() -> bool {
+    thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+#[cfg(test)]
+mod wave102_tests {
+    use super::*;
+
+    #[test]
+    fn wave102_web_vitals_lcp_edges_fcp_poor_ttfb_good_rating_wire_thresholds_fn_dual_oracle() {
+        assert!(wave102_lcp_edges_shell());
+        assert!(wave102_fcp_poor_shell());
+        assert!(wave102_ttfb_good_shell());
+        assert!(wave102_rating_wire_shell());
+        assert!(wave102_thresholds_fn_shell());
+        assert!(wave101_cls_edges_shell());
+    }
+}
