@@ -3094,3 +3094,58 @@ mod wave116_tests {
         assert!(wave115_lcp_needs_shell());
     }
 }
+// ── wave117 pure residual dens: web-vitals inp-good inp-poor ttfb-needs cls-poor wire dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: INP good dual-oracle.
+#[must_use]
+pub fn wave117_inp_good_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+}
+
+/// Dual-oracle residual: INP poor dual-oracle.
+#[must_use]
+pub fn wave117_inp_poor_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB needs improvement dual-oracle.
+#[must_use]
+pub fn wave117_ttfb_needs_shell() -> bool {
+    let mid = (WEB_VITALS_TTFB_GOOD_MS + WEB_VITALS_TTFB_POOR_MS) / 2.0;
+    get_rating(WebVitalName::Ttfb, mid) == MetricRating::NeedsImprovement
+}
+
+/// Dual-oracle residual: CLS poor dual-oracle.
+#[must_use]
+pub fn wave117_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+/// Dual-oracle residual: rating wire strings dual-oracle.
+#[must_use]
+pub fn wave117_wire_strings_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+#[cfg(test)]
+mod wave117_tests {
+    use super::*;
+
+    #[test]
+    fn wave117_web_vitals_inp_ttfb_cls_wire_dual_oracle() {
+        assert!(wave117_inp_good_shell());
+        assert!(wave117_inp_poor_shell());
+        assert!(wave117_ttfb_needs_shell());
+        assert!(wave117_cls_poor_shell());
+        assert!(wave117_wire_strings_shell());
+        assert!(wave116_ttfb_good_shell());
+    }
+}
