@@ -93,3 +93,48 @@ mod tests {
         assert_eq!(SPRING_TYPE, "spring");
     }
 }
+
+
+// ── product residual dens wave74: motion easing+spring catalog dual-oracle residual ──
+// Dual-oracle residual of motion easing / spring pure halves.
+// Framer Motion / matchMedia I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: easing keys closed five + bezier head/tail.
+#[must_use]
+pub fn wave74_easing_catalog_shell() -> bool {
+    EASING_KEYS.len() == 5
+        && easing_bezier("default") == Some([0.25, 0.1, 0.25, 1.0])
+        && easing_bezier("sharp") == Some([0.4, 0.0, 0.6, 1.0])
+        && easing_bezier("easeOut") == Some([0.0, 0.0, 0.2, 1.0])
+        && easing_bezier("nope").is_none()
+}
+
+/// Dual-oracle residual: spring stiffness/damping catalog.
+#[must_use]
+pub fn wave74_spring_catalog_shell() -> bool {
+    SPRING_KEYS.len() == 5
+        && spring_stiffness("default") == Some(400)
+        && spring_stiffness("gentle") == Some(200)
+        && spring_stiffness("stiff") == Some(600)
+        && spring_damping("bouncy") == Some(15)
+        && spring_damping("stiff") == Some(40)
+        && spring_stiffness("x").is_none()
+}
+
+/// Dual-oracle residual: spring type tag.
+#[must_use]
+pub fn wave74_spring_type_shell() -> bool {
+    SPRING_TYPE == "spring"
+}
+
+#[cfg(test)]
+mod wave74_tests {
+    use super::*;
+
+    #[test]
+    fn wave74_motion_easing_spring_catalog_dual_oracle() {
+        assert!(wave74_easing_catalog_shell());
+        assert!(wave74_spring_catalog_shell());
+        assert!(wave74_spring_type_shell());
+    }
+}
