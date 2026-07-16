@@ -38,6 +38,7 @@ mod motion_duration_pure;
 mod game_color_themes_pure;
 mod motion_easing_pure;
 mod share_squares_pure;
+mod region_colors_pure;
 mod jobs_retry_delays_pure;
 mod session_replay_timing_pure;
 mod analytics_timing_pure;
