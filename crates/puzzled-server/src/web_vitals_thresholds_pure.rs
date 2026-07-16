@@ -3208,3 +3208,61 @@ mod wave118_tests {
         assert!(wave117_inp_good_shell());
     }
 }
+// ── wave119 pure residual dens: web-vitals ttfb-good cls-needs lcp-good wire-strings fcp-poor dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: TTFB good dual-oracle.
+#[must_use]
+pub fn wave119_ttfb_good_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+}
+
+/// Dual-oracle residual: CLS needs-improvement mid dual-oracle.
+#[must_use]
+pub fn wave119_cls_needs_shell() -> bool {
+    let mid = (WEB_VITALS_CLS_GOOD + WEB_VITALS_CLS_POOR) / 2.0;
+    get_rating(WebVitalName::Cls, mid) == MetricRating::NeedsImprovement
+        && mid > WEB_VITALS_CLS_GOOD
+        && mid <= WEB_VITALS_CLS_POOR
+}
+
+/// Dual-oracle residual: LCP good dual-oracle.
+#[must_use]
+pub fn wave119_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+}
+
+/// Dual-oracle residual: rating wire strings dual-oracle.
+#[must_use]
+pub fn wave119_wire_strings_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: FCP poor dual-oracle.
+#[must_use]
+pub fn wave119_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+#[cfg(test)]
+mod wave119_tests {
+    use super::*;
+
+    #[test]
+    fn wave119_web_vitals_ttfb_cls_lcp_wire_fcp_dual_oracle() {
+        assert!(wave119_ttfb_good_shell());
+        assert!(wave119_cls_needs_shell());
+        assert!(wave119_lcp_good_shell());
+        assert!(wave119_wire_strings_shell());
+        assert!(wave119_fcp_poor_shell());
+        assert!(wave118_score_ladder_shell());
+    }
+}
