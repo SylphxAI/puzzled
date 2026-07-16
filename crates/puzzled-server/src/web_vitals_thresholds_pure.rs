@@ -2594,3 +2594,71 @@ mod wave108_tests {
         assert!(wave107_lcp_edges_shell());
     }
 }
+// ── wave109 pure residual dens: web-vitals fcp-needs inp-poor cls-zero score-good all-pairs dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP needs mid dual-oracle.
+#[must_use]
+pub fn wave109_fcp_needs_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS + 1.0)
+        == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_FCP_GOOD_MS == 1_800.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: INP poor above dual-oracle.
+#[must_use]
+pub fn wave109_inp_poor_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: CLS zero good dual-oracle.
+#[must_use]
+pub fn wave109_cls_zero_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.0) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR) == MetricRating::NeedsImprovement
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: score good 100 dual-oracle.
+#[must_use]
+pub fn wave109_score_good_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+}
+
+/// Dual-oracle residual: all threshold pairs ordered dual-oracle.
+#[must_use]
+pub fn wave109_all_pairs_shell() -> bool {
+    good_strictly_below_poor()
+        && thresholds_for(WebVitalName::Fcp) == (1_800.0, 3_000.0)
+        && thresholds_for(WebVitalName::Inp) == (200.0, 500.0)
+        && thresholds_for(WebVitalName::Cls) == (0.1, 0.25)
+}
+
+#[cfg(test)]
+mod wave109_tests {
+    use super::*;
+
+    #[test]
+    fn wave109_web_vitals_fcp_needs_inp_poor_cls_zero_score_good_all_pairs_dual_oracle() {
+        assert!(wave109_fcp_needs_shell());
+        assert!(wave109_inp_poor_shell());
+        assert!(wave109_cls_zero_shell());
+        assert!(wave109_score_good_shell());
+        assert!(wave109_all_pairs_shell());
+        assert!(wave107_lcp_edges_shell());
+    }
+}
