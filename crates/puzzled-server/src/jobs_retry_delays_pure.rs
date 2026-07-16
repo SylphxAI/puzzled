@@ -42,6 +42,47 @@ pub fn dlq_max_age_is_seven_days() -> bool {
     JOBS_DLQ_MAX_AGE_MS == 604_800_000
 }
 
+// ── wave70 pure residual dens: job poll + ladder shell dual-oracle residual ──
+// Dual-oracle of JOB_POLL_INTERVAL_MS + timeout/poll shell pure half.
+// Job runner / status polling I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: default job status polling interval ms.
+pub const JOB_POLL_INTERVAL_MS: u64 = 2_000;
+
+/// Dual-oracle residual: job timeout / poll shell.
+#[must_use]
+pub fn job_timeout_poll_shell() -> (u64, u64) {
+    (JOB_DEFAULT_TIMEOUT_MS, JOB_POLL_INTERVAL_MS)
+}
+
+/// Dual-oracle residual: poll interval is strictly less than default timeout.
+#[must_use]
+pub fn poll_faster_than_timeout() -> bool {
+    JOB_POLL_INTERVAL_MS < JOB_DEFAULT_TIMEOUT_MS
+}
+
+/// Dual-oracle residual: max config delay equals ladder step 3 (30s).
+#[must_use]
+pub fn max_retry_matches_ladder_step() -> bool {
+    DEFAULT_RETRY_DELAYS_MS.get(3).copied() == Some(MAX_RETRY_DELAY_MS)
+}
+
+/// Dual-oracle residual: ladder length + head/tail shell.
+#[must_use]
+pub fn retry_ladder_shell() -> (usize, u64, u64) {
+    (
+        DEFAULT_RETRY_DELAYS_MS.len(),
+        DEFAULT_RETRY_DELAYS_MS[0],
+        *DEFAULT_RETRY_DELAYS_MS.last().unwrap_or(&0),
+    )
+}
+
+/// Dual-oracle residual: attempts needed to reach final ladder step (0-based last index).
+#[must_use]
+pub fn final_ladder_attempt_index() -> usize {
+    DEFAULT_RETRY_DELAYS_MS.len().saturating_sub(1)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -59,5 +100,24 @@ mod tests {
         assert_eq!(retry_delay_at(99), 60_000);
         assert!(base_matches_ladder_head());
         assert!(dlq_max_age_is_seven_days());
+    }
+}
+
+#[cfg(test)]
+mod wave70_tests {
+    use super::*;
+
+    #[test]
+    fn wave70_jobs_poll_ladder_shell_dual_oracle() {
+        assert_eq!(JOB_POLL_INTERVAL_MS, 2_000);
+        assert_eq!(job_timeout_poll_shell(), (60_000, 2_000));
+        assert!(poll_faster_than_timeout());
+        assert!(max_retry_matches_ladder_step());
+        assert_eq!(retry_ladder_shell(), (5, 1_000, 60_000));
+        assert_eq!(final_ladder_attempt_index(), 4);
+        assert_eq!(retry_delay_at(final_ladder_attempt_index()), 60_000);
+        assert!(retry_delays_strictly_increasing());
+        assert!(dlq_max_age_is_seven_days());
+        assert!(base_matches_ladder_head());
     }
 }

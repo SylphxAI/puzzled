@@ -45,6 +45,7 @@ mod session_replay_timing_pure;
 mod analytics_timing_pure;
 mod error_codes_pure;
 mod oauth_providers_pure;
+mod sdk_resilience_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
