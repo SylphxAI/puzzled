@@ -4158,3 +4158,65 @@ mod wave134_tests {
         assert!(wave133_lcp_poor_shell());
     }
 }
+// ── wave135 pure residual dens: web-vitals lcp-needs inp-good ttfb-poor cls-good score-poor dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: LCP needs-improvement dual-oracle.
+#[must_use]
+pub fn wave135_lcp_needs_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 1.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS) == MetricRating::NeedsImprovement
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: INP good dual-oracle.
+#[must_use]
+pub fn wave135_inp_good_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 100.0) == MetricRating::Good
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+}
+
+/// Dual-oracle residual: TTFB poor dual-oracle.
+#[must_use]
+pub fn wave135_ttfb_poor_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+}
+
+/// Dual-oracle residual: CLS good dual-oracle.
+#[must_use]
+pub fn wave135_cls_good_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.05) == MetricRating::Good
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: score poor points dual-oracle.
+#[must_use]
+pub fn wave135_score_poor_shell() -> bool {
+    rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+        && MetricRating::Good.as_str() == "good"
+}
+
+#[cfg(test)]
+mod wave135_tests {
+    use super::*;
+
+    #[test]
+    fn wave135_web_vitals_lcp_needs_inp_ttfb_cls_score_dual_oracle() {
+        assert!(wave135_lcp_needs_shell());
+        assert!(wave135_inp_good_shell());
+        assert!(wave135_ttfb_poor_shell());
+        assert!(wave135_cls_good_shell());
+        assert!(wave135_score_poor_shell());
+        assert!(wave134_lcp_good_shell());
+    }
+}
