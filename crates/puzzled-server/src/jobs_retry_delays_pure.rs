@@ -121,3 +121,72 @@ mod wave70_tests {
         assert!(base_matches_ladder_head());
     }
 }
+
+
+// ── wave71 pure residual dens: retry delay attempt ladder dual-oracle residual ──
+// Dual-oracle residual of DEFAULT_RETRY_DELAYS_MS pure half.
+// Job runner / network I/O residual retained. dens ≠ flip.
+// product residual dens wave71
+
+/// Dual-oracle residual: full attempt delay ladder 0..4.
+#[must_use]
+pub fn retry_delay_attempt_ladder() -> [u64; 5] {
+    [
+        retry_delay_at(0),
+        retry_delay_at(1),
+        retry_delay_at(2),
+        retry_delay_at(3),
+        retry_delay_at(4),
+    ]
+}
+
+/// Dual-oracle residual: past-end clamps to last ladder step.
+#[must_use]
+pub fn retry_delay_past_end_clamps() -> bool {
+    retry_delay_at(5) == 60_000 && retry_delay_at(99) == 60_000
+}
+
+/// Dual-oracle residual: DLQ age days shell.
+#[must_use]
+pub fn dlq_age_days_shell() -> u64 {
+    JOBS_DLQ_MAX_AGE_MS / (24 * 60 * 60 * 1000)
+}
+
+/// Dual-oracle residual: base/max/timeout numeric shell.
+#[must_use]
+pub fn jobs_timing_numeric_shell() -> (u64, u64, u64, u64) {
+    (
+        BASE_RETRY_DELAY_MS,
+        MAX_RETRY_DELAY_MS,
+        JOB_DEFAULT_TIMEOUT_MS,
+        JOB_POLL_INTERVAL_MS,
+    )
+}
+
+/// Dual-oracle residual: ladder matches DEFAULT_RETRY_DELAYS_MS.
+#[must_use]
+pub fn retry_ladder_matches_const() -> bool {
+    DEFAULT_RETRY_DELAYS_MS == retry_delay_attempt_ladder()
+}
+
+#[cfg(test)]
+mod wave71_tests {
+    use super::*;
+
+    #[test]
+    fn wave71_retry_delay_attempt_ladder_dual_oracle() {
+        assert_eq!(
+            retry_delay_attempt_ladder(),
+            [1_000, 5_000, 15_000, 30_000, 60_000]
+        );
+        assert!(retry_delay_past_end_clamps());
+        assert_eq!(dlq_age_days_shell(), 7);
+        assert_eq!(
+            jobs_timing_numeric_shell(),
+            (1_000, 30_000, 60_000, 2_000)
+        );
+        assert!(retry_ladder_matches_const());
+        assert!(retry_delays_strictly_increasing());
+        assert!(poll_faster_than_timeout());
+    }
+}
