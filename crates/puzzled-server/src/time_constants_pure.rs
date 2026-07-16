@@ -109,3 +109,57 @@ mod tests {
         assert_eq!(alphabet_char(26), None);
     }
 }
+
+
+// ── wave64 pure residual dens: time unit ladder dual-oracle residual ──
+// Dual-oracle residual of time constants SECOND/MINUTE/HOUR/DAY/WEEK pure halves.
+// Clock / DB I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: seconds ladder minute → hour → day → week.
+#[must_use]
+pub fn seconds_unit_ladder() -> [i64; 4] {
+    [MINUTE_SECONDS, HOUR_SECONDS, DAY_SECONDS, WEEK_SECONDS]
+}
+
+/// Dual-oracle residual: unit ladder strictly increasing.
+#[must_use]
+pub fn seconds_unit_ladder_strictly_increasing() -> bool {
+    let l = seconds_unit_ladder();
+    l[0] < l[1] && l[1] < l[2] && l[2] < l[3]
+}
+
+/// Dual-oracle residual: week ms equals week_seconds * SECOND_MS.
+#[must_use]
+pub fn week_ms_matches_seconds() -> bool {
+    WEEK_MS == WEEK_SECONDS * SECOND_MS
+}
+
+/// Dual-oracle residual: day has 24 hours.
+#[must_use]
+pub fn day_has_twenty_four_hours() -> bool {
+    DAY_SECONDS == 24 * HOUR_SECONDS
+}
+
+/// Dual-oracle residual: alphabet length is 26.
+#[must_use]
+pub fn alphabet_len_is_twenty_six() -> bool {
+    ALPHABET.len() == 26
+}
+
+#[cfg(test)]
+mod wave64_tests {
+    use super::*;
+
+    #[test]
+    fn wave64_time_unit_ladder_dual_oracle() {
+        assert_eq!(seconds_unit_ladder(), [60, 3_600, 86_400, 604_800]);
+        assert!(seconds_unit_ladder_strictly_increasing());
+        assert!(week_ms_matches_seconds());
+        assert!(day_has_twenty_four_hours());
+        assert!(alphabet_len_is_twenty_six());
+        assert_eq!(SECOND_MS, 1_000);
+        assert_eq!(weeks_to_ms(2), WEEK_MS * 2);
+        assert_eq!(days_to_seconds(7), WEEK_SECONDS);
+    }
+}
+
