@@ -111,3 +111,78 @@ mod tests {
         assert_eq!(MetricRating::Poor.as_str(), "poor");
     }
 }
+
+
+// ── wave68 pure residual dens: web-vitals threshold ladder dual-oracle residual ──
+// Dual-oracle residual of FCP/LCP/INP/TTFB/CLS good/poor thresholds pure half.
+// Tracker / network flush I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: FCP good/poor shell.
+#[must_use]
+pub fn fcp_threshold_shell() -> (f64, f64) {
+    (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+}
+
+/// Dual-oracle residual: LCP good/poor shell.
+#[must_use]
+pub fn lcp_threshold_shell() -> (f64, f64) {
+    (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+}
+
+/// Dual-oracle residual: INP good/poor shell.
+#[must_use]
+pub fn inp_threshold_shell() -> (f64, f64) {
+    (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+}
+
+/// Dual-oracle residual: TTFB good/poor shell.
+#[must_use]
+pub fn ttfb_threshold_shell() -> (f64, f64) {
+    (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+}
+
+/// Dual-oracle residual: CLS good/poor shell.
+#[must_use]
+pub fn cls_threshold_shell() -> (f64, f64) {
+    (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+}
+
+/// Dual-oracle residual: good thresholds strictly below poor for all vitals.
+#[must_use]
+pub fn good_strictly_below_poor() -> bool {
+    WEB_VITALS_FCP_GOOD_MS < WEB_VITALS_FCP_POOR_MS
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+        && WEB_VITALS_INP_GOOD_MS < WEB_VITALS_INP_POOR_MS
+        && WEB_VITALS_TTFB_GOOD_MS < WEB_VITALS_TTFB_POOR_MS
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+}
+
+/// Dual-oracle residual: score points ladder good/needs/poor.
+#[must_use]
+pub fn rating_score_ladder() -> [u32; 3] {
+    [
+        rating_score_points(MetricRating::Good),
+        rating_score_points(MetricRating::NeedsImprovement),
+        rating_score_points(MetricRating::Poor),
+    ]
+}
+
+#[cfg(test)]
+mod wave68_tests {
+    use super::*;
+
+    #[test]
+    fn wave68_web_vitals_threshold_ladder_dual_oracle() {
+        assert_eq!(fcp_threshold_shell(), (1_800.0, 3_000.0));
+        assert_eq!(lcp_threshold_shell(), (2_500.0, 4_000.0));
+        assert_eq!(inp_threshold_shell(), (200.0, 500.0));
+        assert_eq!(ttfb_threshold_shell(), (800.0, 1_800.0));
+        assert_eq!(cls_threshold_shell(), (0.1, 0.25));
+        assert!(good_strictly_below_poor());
+        assert_eq!(rating_score_ladder(), [100, 50, 0]);
+        assert_eq!(get_rating(WebVitalName::Fcp, 1000.0), MetricRating::Good);
+        assert_eq!(get_rating(WebVitalName::Ttfb, 2000.0), MetricRating::Poor);
+        assert_eq!(thresholds_for(WebVitalName::Inp), (200.0, 500.0));
+        assert_eq!(MetricRating::Good.as_str(), "good");
+    }
+}
