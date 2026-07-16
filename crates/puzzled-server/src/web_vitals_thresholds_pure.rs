@@ -3559,3 +3559,67 @@ mod wave124_tests {
         assert!(wave123_ttfb_poor_shell());
     }
 }
+// ── wave125 pure residual dens: web-vitals lcp-good fcp-poor cls-needs inp-needs score-good dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good dual-oracle.
+#[must_use]
+pub fn wave125_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+}
+
+/// Dual-oracle residual: FCP poor dual-oracle.
+#[must_use]
+pub fn wave125_fcp_poor_shell() -> bool {
+    get_rating(WebVitalName::Fcp, WEB_VITALS_FCP_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+}
+
+/// Dual-oracle residual: CLS needs-improvement dual-oracle.
+#[must_use]
+pub fn wave125_cls_needs_shell() -> bool {
+    get_rating(
+        WebVitalName::Cls,
+        (WEB_VITALS_CLS_GOOD + WEB_VITALS_CLS_POOR) / 2.0,
+    ) == MetricRating::NeedsImprovement
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_GOOD == 0.1
+}
+
+/// Dual-oracle residual: INP needs-improvement dual-oracle.
+#[must_use]
+pub fn wave125_inp_needs_shell() -> bool {
+    get_rating(
+        WebVitalName::Inp,
+        (WEB_VITALS_INP_GOOD_MS + WEB_VITALS_INP_POOR_MS) / 2.0,
+    ) == MetricRating::NeedsImprovement
+        && thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+}
+
+/// Dual-oracle residual: score good dual-oracle.
+#[must_use]
+pub fn wave125_score_good_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && MetricRating::Good.as_str() == "good"
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+#[cfg(test)]
+mod wave125_tests {
+    use super::*;
+
+    #[test]
+    fn wave125_web_vitals_lcp_fcp_cls_inp_score_dual_oracle() {
+        assert!(wave125_lcp_good_shell());
+        assert!(wave125_fcp_poor_shell());
+        assert!(wave125_cls_needs_shell());
+        assert!(wave125_inp_needs_shell());
+        assert!(wave125_score_good_shell());
+        assert!(wave124_cls_poor_shell());
+    }
+}
