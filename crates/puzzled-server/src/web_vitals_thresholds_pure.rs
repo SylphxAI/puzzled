@@ -749,3 +749,73 @@ mod wave80_tests {
         assert!(wave79_cls_const_shell());
     }
 }
+
+
+// ── wave81 pure residual dens: web-vitals LCP FCP CLS rating wire dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: LCP good/needs/poor edges.
+#[must_use]
+pub fn wave81_lcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Lcp, 2_500.0) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, 2_500.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, 4_000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: FCP good/needs/poor edges.
+#[must_use]
+pub fn wave81_fcp_edges_shell() -> bool {
+    get_rating(WebVitalName::Fcp, 1_800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Fcp, 1_800.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_000.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Fcp, 3_000.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: CLS edges + constants.
+#[must_use]
+pub fn wave81_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, 0.1) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.11) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.25) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, 0.26) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: rating wire strings + score ladder.
+#[must_use]
+pub fn wave81_rating_wire_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: LCP/FCP threshold pairs + good-below-poor.
+#[must_use]
+pub fn wave81_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && thresholds_for(WebVitalName::Fcp) == (WEB_VITALS_FCP_GOOD_MS, WEB_VITALS_FCP_POOR_MS)
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_FCP_POOR_MS == 3_000.0
+        && good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave81_tests {
+    use super::*;
+
+    #[test]
+    fn wave81_web_vitals_lcp_fcp_cls_rating_wire_dual_oracle() {
+        assert!(wave81_lcp_edges_shell());
+        assert!(wave81_fcp_edges_shell());
+        assert!(wave81_cls_edges_shell());
+        assert!(wave81_rating_wire_shell());
+        assert!(wave81_threshold_pairs_shell());
+        assert!(wave80_score_shell());
+    }
+}
