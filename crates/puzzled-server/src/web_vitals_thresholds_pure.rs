@@ -819,3 +819,69 @@ mod wave81_tests {
         assert!(wave80_score_shell());
     }
 }
+
+
+// ── wave83 pure residual dens: web-vitals INP TTFB score as_str dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP good/needs/poor edges.
+#[must_use]
+pub fn wave83_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, 200.0) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, 200.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, 500.1) == MetricRating::Poor
+}
+
+/// Dual-oracle residual: TTFB edges + constants.
+#[must_use]
+pub fn wave83_ttfb_edges_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, 800.0) == MetricRating::Good
+        && get_rating(WebVitalName::Ttfb, 800.1) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Ttfb, 1_800.1) == MetricRating::Poor
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: score points + as_str.
+#[must_use]
+pub fn wave83_score_as_str_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: INP/TTFB threshold pairs.
+#[must_use]
+pub fn wave83_threshold_pairs_shell() -> bool {
+    thresholds_for(WebVitalName::Inp) == (WEB_VITALS_INP_GOOD_MS, WEB_VITALS_INP_POOR_MS)
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: good strictly below poor for all metrics.
+#[must_use]
+pub fn wave83_good_below_poor_shell() -> bool {
+    good_strictly_below_poor()
+}
+
+#[cfg(test)]
+mod wave83_tests {
+    use super::*;
+
+    #[test]
+    fn wave83_web_vitals_inp_ttfb_score_as_str_dual_oracle() {
+        assert!(wave83_inp_edges_shell());
+        assert!(wave83_ttfb_edges_shell());
+        assert!(wave83_score_as_str_shell());
+        assert!(wave83_threshold_pairs_shell());
+        assert!(wave83_good_below_poor_shell());
+        assert!(wave81_rating_wire_shell());
+    }
+}
