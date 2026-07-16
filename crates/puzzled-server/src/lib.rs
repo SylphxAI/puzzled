@@ -31,6 +31,7 @@ mod pkce_pure;
 mod redis_keys_pure;
 mod privacy_sanitize_pure;
 mod web_vitals_thresholds_pure;
+mod reduced_motion_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
