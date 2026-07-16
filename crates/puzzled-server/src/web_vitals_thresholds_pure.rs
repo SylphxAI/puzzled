@@ -3324,3 +3324,61 @@ mod wave120_tests {
         assert!(wave119_ttfb_good_shell());
     }
 }
+// ── wave121 pure residual dens: web-vitals ttfb-poor cls-poor lcp-good inp-needs score-wire dual-oracle residual ──
+// Dual-oracle residual of web vitals thresholds pure halves. dens ≠ flip.
+
+/// Dual-oracle residual: TTFB poor dual-oracle.
+#[must_use]
+pub fn wave121_ttfb_poor_shell() -> bool {
+    get_rating(WebVitalName::Ttfb, WEB_VITALS_TTFB_POOR_MS + 1.0) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+}
+
+/// Dual-oracle residual: CLS poor dual-oracle.
+#[must_use]
+pub fn wave121_cls_poor_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && thresholds_for(WebVitalName::Cls) == (WEB_VITALS_CLS_GOOD, WEB_VITALS_CLS_POOR)
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: LCP good dual-oracle.
+#[must_use]
+pub fn wave121_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && thresholds_for(WebVitalName::Lcp) == (WEB_VITALS_LCP_GOOD_MS, WEB_VITALS_LCP_POOR_MS)
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+}
+
+/// Dual-oracle residual: INP needs-improvement dual-oracle.
+#[must_use]
+pub fn wave121_inp_needs_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS) == MetricRating::NeedsImprovement
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: score wire strings dual-oracle.
+#[must_use]
+pub fn wave121_score_wire_shell() -> bool {
+    MetricRating::Good.as_str() == "good"
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+        && MetricRating::Poor.as_str() == "poor"
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+#[cfg(test)]
+mod wave121_tests {
+    use super::*;
+
+    #[test]
+    fn wave121_web_vitals_ttfb_cls_lcp_inp_score_dual_oracle() {
+        assert!(wave121_ttfb_poor_shell());
+        assert!(wave121_cls_poor_shell());
+        assert!(wave121_lcp_good_shell());
+        assert!(wave121_inp_needs_shell());
+        assert!(wave121_score_wire_shell());
+        assert!(wave120_inp_good_shell());
+    }
+}
