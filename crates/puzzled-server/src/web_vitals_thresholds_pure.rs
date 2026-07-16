@@ -2046,3 +2046,74 @@ mod wave100_tests {
         assert!(wave99_lcp_exact_shell());
     }
 }
+// ── wave101 pure residual dens: web-vitals CLS-edges INP-edges LCP-good score-ladder all-below dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: CLS edges dual-oracle.
+#[must_use]
+pub fn wave101_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+/// Dual-oracle residual: INP edges dual-oracle.
+#[must_use]
+pub fn wave101_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: LCP good boundary dual-oracle.
+#[must_use]
+pub fn wave101_lcp_good_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_GOOD_MS + 0.1)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 0.1) == MetricRating::Poor
+        && WEB_VITALS_LCP_GOOD_MS == 2_500.0
+        && WEB_VITALS_LCP_POOR_MS == 4_000.0
+}
+
+/// Dual-oracle residual: score ladder dual-oracle.
+#[must_use]
+pub fn wave101_score_ladder_shell() -> bool {
+    rating_score_ladder() == [100, 50, 0]
+        && rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+}
+
+/// Dual-oracle residual: all metrics good strictly below poor dual-oracle.
+#[must_use]
+pub fn wave101_all_below_shell() -> bool {
+    good_strictly_below_poor()
+        && WEB_VITALS_FCP_GOOD_MS < WEB_VITALS_FCP_POOR_MS
+        && WEB_VITALS_LCP_GOOD_MS < WEB_VITALS_LCP_POOR_MS
+        && WEB_VITALS_INP_GOOD_MS < WEB_VITALS_INP_POOR_MS
+        && WEB_VITALS_TTFB_GOOD_MS < WEB_VITALS_TTFB_POOR_MS
+        && WEB_VITALS_CLS_GOOD < WEB_VITALS_CLS_POOR
+}
+
+#[cfg(test)]
+mod wave101_tests {
+    use super::*;
+
+    #[test]
+    fn wave101_web_vitals_cls_edges_inp_edges_lcp_good_score_ladder_all_below_dual_oracle() {
+        assert!(wave101_cls_edges_shell());
+        assert!(wave101_inp_edges_shell());
+        assert!(wave101_lcp_good_shell());
+        assert!(wave101_score_ladder_shell());
+        assert!(wave101_all_below_shell());
+        assert!(wave100_fcp_edges_shell());
+    }
+}
