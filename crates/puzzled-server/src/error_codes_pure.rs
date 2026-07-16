@@ -133,3 +133,86 @@ mod tests {
         }
     }
 }
+
+// ── wave69 pure residual dens: error code status ladder dual-oracle residual ──
+// Dual-oracle residual of ERROR_CODES status/http pure half.
+// Tracker / network flush I/O residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: catalog sizes (all, retryable).
+#[must_use]
+pub fn error_catalog_size_shell() -> (usize, usize) {
+    (ERROR_CODES.len(), RETRYABLE_CODES.len())
+}
+
+/// Dual-oracle residual: client 4xx status ladder.
+#[must_use]
+pub fn client_error_status_ladder() -> [u16; 6] {
+    [
+        error_code_status("BAD_REQUEST").unwrap_or(0),
+        error_code_status("UNAUTHORIZED").unwrap_or(0),
+        error_code_status("FORBIDDEN").unwrap_or(0),
+        error_code_status("NOT_FOUND").unwrap_or(0),
+        error_code_status("CONFLICT").unwrap_or(0),
+        error_code_status("TOO_MANY_REQUESTS").unwrap_or(0),
+    ]
+}
+
+/// Dual-oracle residual: server 5xx status ladder.
+#[must_use]
+pub fn server_error_status_ladder() -> [u16; 5] {
+    [
+        error_code_status("INTERNAL_SERVER_ERROR").unwrap_or(0),
+        error_code_status("NOT_IMPLEMENTED").unwrap_or(0),
+        error_code_status("BAD_GATEWAY").unwrap_or(0),
+        error_code_status("SERVICE_UNAVAILABLE").unwrap_or(0),
+        error_code_status("GATEWAY_TIMEOUT").unwrap_or(0),
+    ]
+}
+
+/// Dual-oracle residual: transport codes all map to 0.
+#[must_use]
+pub fn transport_codes_status_zero() -> bool {
+    ["NETWORK_ERROR", "TIMEOUT", "ABORTED", "PARSE_ERROR", "UNKNOWN"]
+        .iter()
+        .all(|c| error_code_status(c) == Some(0) && is_transport_error_code(c))
+}
+
+/// Dual-oracle residual: every retryable is known and subset of catalog.
+#[must_use]
+pub fn retryable_subset_of_catalog() -> bool {
+    RETRYABLE_CODES.iter().all(|c| is_error_code(c) && is_retryable_code(c))
+}
+
+/// Dual-oracle residual: class probes.
+#[must_use]
+pub fn error_class_probes_ok() -> bool {
+    is_client_error_code("FORBIDDEN")
+        && is_server_error_code("SERVICE_UNAVAILABLE")
+        && is_transport_error_code("ABORTED")
+        && !is_client_error_code("NETWORK_ERROR")
+        && !is_retryable_code("UNAUTHORIZED")
+}
+
+#[cfg(test)]
+mod wave69_tests {
+    use super::*;
+
+    #[test]
+    fn wave69_error_code_status_ladder_dual_oracle() {
+        assert_eq!(error_catalog_size_shell(), (18, 7));
+        assert_eq!(
+            client_error_status_ladder(),
+            [400, 401, 403, 404, 409, 429]
+        );
+        assert_eq!(
+            server_error_status_ladder(),
+            [500, 501, 502, 503, 504]
+        );
+        assert!(transport_codes_status_zero());
+        assert!(retryable_subset_of_catalog());
+        assert!(error_class_probes_ok());
+        assert_eq!(error_code_status("NOPE"), None);
+        assert!(!is_error_code("TEAPOT"));
+    }
+}
+
