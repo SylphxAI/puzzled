@@ -38,6 +38,8 @@ mod motion_duration_pure;
 mod game_color_themes_pure;
 mod motion_easing_pure;
 mod share_squares_pure;
+mod error_codes_pure;
+mod oauth_providers_pure;
 mod game_format;
 mod game_slugs;
 mod pattern_match;
