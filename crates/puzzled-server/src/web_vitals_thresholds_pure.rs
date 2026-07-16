@@ -948,3 +948,70 @@ mod wave84_tests {
         assert!(wave83_good_below_poor_shell());
     }
 }
+
+// ── wave85 pure residual dens: web-vitals INP TTFB rating score dual-oracle residual ──
+// Dual-oracle residual of web-vitals thresholds pure halves.
+// Browser PerformanceObserver residual retained. dens ≠ flip.
+
+/// Dual-oracle residual: INP edges good/needs/poor.
+#[must_use]
+pub fn wave85_inp_edges_shell() -> bool {
+    get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS) == MetricRating::Good
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_GOOD_MS + 1.0)
+            == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Inp, WEB_VITALS_INP_POOR_MS + 1.0) == MetricRating::Poor
+        && WEB_VITALS_INP_GOOD_MS == 200.0
+        && WEB_VITALS_INP_POOR_MS == 500.0
+}
+
+/// Dual-oracle residual: TTFB threshold pair + rating mid.
+#[must_use]
+pub fn wave85_ttfb_pair_shell() -> bool {
+    thresholds_for(WebVitalName::Ttfb) == (WEB_VITALS_TTFB_GOOD_MS, WEB_VITALS_TTFB_POOR_MS)
+        && WEB_VITALS_TTFB_GOOD_MS == 800.0
+        && WEB_VITALS_TTFB_POOR_MS == 1_800.0
+        && get_rating(WebVitalName::Ttfb, 1_000.0) == MetricRating::NeedsImprovement
+}
+
+/// Dual-oracle residual: rating score points ladder.
+#[must_use]
+pub fn wave85_score_ladder_shell() -> bool {
+    rating_score_points(MetricRating::Good) == 100
+        && rating_score_points(MetricRating::NeedsImprovement) == 50
+        && rating_score_points(MetricRating::Poor) == 0
+        && MetricRating::NeedsImprovement.as_str() == "needs-improvement"
+}
+
+/// Dual-oracle residual: LCP poor boundary + as_str good.
+#[must_use]
+pub fn wave85_lcp_as_str_shell() -> bool {
+    get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Lcp, WEB_VITALS_LCP_POOR_MS + 0.1) == MetricRating::Poor
+        && MetricRating::Good.as_str() == "good"
+        && MetricRating::Poor.as_str() == "poor"
+}
+
+/// Dual-oracle residual: CLS unitless edges dual-oracle.
+#[must_use]
+pub fn wave85_cls_edges_shell() -> bool {
+    get_rating(WebVitalName::Cls, WEB_VITALS_CLS_GOOD) == MetricRating::Good
+        && get_rating(WebVitalName::Cls, 0.15) == MetricRating::NeedsImprovement
+        && get_rating(WebVitalName::Cls, WEB_VITALS_CLS_POOR + 0.01) == MetricRating::Poor
+        && WEB_VITALS_CLS_GOOD == 0.1
+        && WEB_VITALS_CLS_POOR == 0.25
+}
+
+#[cfg(test)]
+mod wave85_tests {
+    use super::*;
+
+    #[test]
+    fn wave85_web_vitals_inp_ttfb_rating_score_dual_oracle() {
+        assert!(wave85_inp_edges_shell());
+        assert!(wave85_ttfb_pair_shell());
+        assert!(wave85_score_ladder_shell());
+        assert!(wave85_lcp_as_str_shell());
+        assert!(wave85_cls_edges_shell());
+        assert!(wave84_good_below_poor_shell());
+    }
+}
