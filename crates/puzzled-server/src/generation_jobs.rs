@@ -229,7 +229,7 @@ pub fn execute_generate_daily_puzzles(plan: &GenerationPlan) -> JobResult {
                 } else {
                     failed.push(json!({
                         "gameSlug": unit.game_slug,
-                        "error": "seed generator not densed in Rust",
+                        "error": "seed generator is not available in Rust yet",
                     }));
                 }
             }
