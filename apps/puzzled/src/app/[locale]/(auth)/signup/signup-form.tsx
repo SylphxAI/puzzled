@@ -7,6 +7,10 @@ import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 
+type OAuthSignInProvider = NonNullable<
+	Parameters<NonNullable<ReturnType<typeof useSafeAuth>['signInWithOAuth']>>[0]
+>['provider']
+
 // Password strength calculation
 function calculatePasswordStrength(password: string): {
 	score: number
@@ -66,7 +70,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		// Note: OAuth signup and login use the same flow - provider creates account if needed
 		oauthHandler: async (provider) => {
-			await signInWithOAuth?.({ provider: provider as any, redirectUrl: '/' })
+			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
 		},
 	})
 
