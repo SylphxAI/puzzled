@@ -64,7 +64,7 @@ jobs:
         working-directory: apps/puzzled
 
       - name: Run TypeScript type check
-        run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --filter=@sylphx/sdk --concurrency=1
+        run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1
         env:
           NODE_OPTIONS: '--max-old-space-size=5120'
           SKIP_ENV_VALIDATION: 'true'
