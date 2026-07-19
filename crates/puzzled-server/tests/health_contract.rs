@@ -72,17 +72,21 @@ fn healthz_returns_ok_json() {
 }
 
 #[test]
-fn readyz_returns_ok_json() {
+fn readyz_fails_closed_without_postgres() {
+    // Without DATABASE_URL / pool, readiness must fail closed (503), not fake green.
     let port = pick_ephemeral_port();
     let mut child = spawn_api(port);
     let response = wait_for_ok(port, "/readyz");
-    assert_eq!(response.status(), 200);
+    assert_eq!(response.status(), 503);
     let body: serde_json::Value = match response.json() {
         Ok(body) => body,
         Err(error) => panic!("response json: {error}"),
     };
-    assert_eq!(body["status"], "ok");
+    assert_eq!(body["status"], "not_ready");
     assert_eq!(body["stub"], true);
+    assert_eq!(body["dependencies"][0]["name"], "postgres");
+    assert_eq!(body["dependencies"][0]["ok"], false);
+    assert_eq!(body["dependencies"][0]["required"], true);
     let _ = child.kill();
     let _ = child.wait();
 }

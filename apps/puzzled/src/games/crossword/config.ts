@@ -13,7 +13,12 @@ import {
 import { CrosswordHowToPlay } from './components/how-to-play'
 import { CrosswordIcon } from './icon'
 import { getPuzzleFromSeed } from './puzzles'
-import type { CrosswordGuess, CrosswordGuessResult, CrosswordPuzzleClientData, CrosswordPuzzleData, CrosswordSolution } from './types'
+import type {
+	CrosswordGuess,
+	CrosswordGuessResult,
+	CrosswordPuzzleClientData,
+	CrosswordSolution,
+} from './types'
 import { GRID_SIZE, isGridComplete } from './types'
 
 export type { CrosswordPuzzleClientData, CrosswordSolution }

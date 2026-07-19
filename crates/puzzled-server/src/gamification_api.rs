@@ -4,11 +4,16 @@
 //! `apps/puzzled/src/server/api/routes/gamification.ts`.
 //! Platform SDK streak values remain client residual (server returns 0).
 
-use axum::http::StatusCode;
+use axum::extract::State;
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sqlx::PgPool;
+
+use crate::auth_sessions::require_verified_identity;
+use crate::AppState;
 
 /// Freeze reason labels (parity: AddStreakFreezesBodySchema).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -208,29 +213,67 @@ pub struct ToggleAutoFreezeBody {
     pub freezes_used: Option<i32>,
 }
 
-/// POST /api/v1/gamification/toggle-auto-freeze
-pub async fn toggle_auto_freeze_http(Json(body): Json<ToggleAutoFreezeBody>) -> Response {
-    if body.user_id.trim().is_empty() {
+/// POST /api/v1/gamification/toggle-auto-freeze — verified self identity + durable write.
+pub async fn toggle_auto_freeze_http(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<ToggleAutoFreezeBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
+    if !body.user_id.trim().is_empty()
+        && body.user_id.trim() != identity.user_id
+        && !identity.is_admin
+    {
         return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "userId required", "slice": "api-v1-hono-monolith" })),
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": "cannot mutate another user freeze settings",
+                "slice": "api-v1-hono-monolith",
+            })),
         )
             .into_response();
     }
     let data = FreezeData {
-        user_id: body.user_id,
+        user_id: identity.user_id.clone(),
         freezes_available: body.freezes_available.unwrap_or(0),
         freezes_used: body.freezes_used.unwrap_or(0),
         auto_freeze_enabled: false,
     };
     let updated = toggle_auto_freeze(data, body.enabled);
+    let mut persisted = false;
+    if let Some(pool) = state.pool.as_ref() {
+        if let Err(e) = upsert_freeze_data(pool, &updated).await {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({ "success": false, "error": e, "slice": "api-v1-hono-monolith" })),
+            )
+                .into_response();
+        }
+        persisted = true;
+    }
     (
         StatusCode::OK,
         Json(json!({
             "success": true,
             "autoFreezeEnabled": updated.auto_freeze_enabled,
             "freeze": updated,
+            "persisted": persisted,
             "slice": "api-v1-hono-monolith",
+            "auth": "platform_jwt_rs256",
         })),
     )
         .into_response()
@@ -245,25 +288,82 @@ pub struct AddStreakFreezesBody {
     pub freezes_available: Option<i32>,
 }
 
-/// POST /api/v1/gamification/add-streak-freezes
-pub async fn add_streak_freezes_http(Json(body): Json<AddStreakFreezesBody>) -> Response {
+/// POST /api/v1/gamification/add-streak-freezes — admin-gated durable mutation.
+pub async fn add_streak_freezes_http(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<AddStreakFreezesBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
+    if !identity.is_admin {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "success": false,
+                "error": "admin scope required",
+                "slice": "api-v1-hono-monolith",
+                "auth": "platform_jwt_rs256",
+            })),
+        )
+            .into_response();
+    }
+    let target_user = if body.user_id.trim().is_empty() {
+        identity.user_id.clone()
+    } else {
+        body.user_id.trim().to_string()
+    };
+    let mut freezes_available = body.freezes_available.unwrap_or(0);
+    if let Some(pool) = state.pool.as_ref() {
+        if let Ok(v) = load_freezes_available(pool, &target_user).await {
+            freezes_available = v;
+        }
+    }
     let data = FreezeData {
-        user_id: body.user_id,
-        freezes_available: body.freezes_available.unwrap_or(0),
+        user_id: target_user.clone(),
+        freezes_available,
         freezes_used: 0,
         auto_freeze_enabled: false,
     };
     match add_streak_freezes(data, body.count, &body.reason) {
-        Ok((updated, reason)) => (
-            StatusCode::OK,
-            Json(json!({
-                "success": true,
-                "freezesAvailable": updated.freezes_available,
-                "reason": reason.as_str(),
-                "slice": "api-v1-hono-monolith",
-            })),
-        )
-            .into_response(),
+        Ok((updated, reason)) => {
+            let mut persisted = false;
+            if let Some(pool) = state.pool.as_ref() {
+                if let Err(e) = upsert_freeze_data(pool, &updated).await {
+                    return (
+                        StatusCode::SERVICE_UNAVAILABLE,
+                        Json(json!({ "success": false, "error": e, "slice": "api-v1-hono-monolith" })),
+                    )
+                        .into_response();
+                }
+                persisted = true;
+            }
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "success": true,
+                    "freezesAvailable": updated.freezes_available,
+                    "reason": reason.as_str(),
+                    "persisted": persisted,
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response()
+        }
         Err(err) => (
             err.status(),
             Json(json!({
@@ -274,6 +374,40 @@ pub async fn add_streak_freezes_http(Json(body): Json<AddStreakFreezesBody>) -> 
         )
             .into_response(),
     }
+}
+
+async fn load_freezes_available(pool: &PgPool, user_id: &str) -> Result<i32, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| e.to_string())?;
+    let row: Option<(i32,)> =
+        sqlx::query_as("SELECT freezes_available FROM user_freeze_data WHERE user_id = $1 LIMIT 1")
+            .bind(uid)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    Ok(row.map(|r| r.0).unwrap_or(0))
+}
+
+async fn upsert_freeze_data(pool: &PgPool, data: &FreezeData) -> Result<(), String> {
+    let uid = uuid::Uuid::parse_str(&data.user_id).map_err(|e| e.to_string())?;
+    sqlx::query(
+        r#"
+        INSERT INTO user_freeze_data (user_id, freezes_available, freezes_used, auto_freeze_enabled, updated_at)
+        VALUES ($1, $2, $3, $4, now())
+        ON CONFLICT (user_id) DO UPDATE SET
+            freezes_available = EXCLUDED.freezes_available,
+            freezes_used = EXCLUDED.freezes_used,
+            auto_freeze_enabled = EXCLUDED.auto_freeze_enabled,
+            updated_at = now()
+        "#,
+    )
+    .bind(uid)
+    .bind(data.freezes_available)
+    .bind(data.freezes_used)
+    .bind(data.auto_freeze_enabled)
+    .execute(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[derive(Debug, Deserialize)]

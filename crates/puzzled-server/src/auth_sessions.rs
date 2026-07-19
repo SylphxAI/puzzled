@@ -1,15 +1,18 @@
 //! Product auth session gate for puzzled-server (dens path for `auth-sessions`).
 //!
-//! Ports the Hono auth middleware contract from
-//! `apps/puzzled/src/server/api/middleware/auth.ts` without calling the Platform
-//! SDK. Session identity is supplied by the edge / gateway; this module validates
-//! shape and required-vs-optional policy. FE UI / OAuth flows remain TS.
+//! Product auth for puzzled-server.
+//!
+//! Identity is verified via Platform RS256 JWT (`Authorization: Bearer …`) using
+//! JWKS (see [`crate::platform_jwt`]). Caller-supplied `x-user-id` is **never**
+//! trusted as identity. Empty-token or header-only "sessions" fail closed.
 
 use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use crate::platform_jwt::{self, JwtError, VerifiedIdentity};
 
 /// Authenticated session context (mirrors Hono `PuzzledAuthEnv` user fields).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,6 +46,11 @@ impl AuthError {
     pub fn status(&self) -> StatusCode {
         StatusCode::UNAUTHORIZED
     }
+}
+
+/// Require cryptographically verified Platform JWT identity.
+pub fn require_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity, JwtError> {
+    platform_jwt::resolve_verified_identity(headers)
 }
 
 /// Extract bearer token from `Authorization: Bearer …` header.
@@ -138,70 +146,85 @@ pub fn optional_auth(
     validate_session(user_id, session_token, display_name).ok()
 }
 
-/// HTTP: POST /api/v1/auth/session/validate — product auth gate.
+/// HTTP: POST /api/v1/auth/session/validate — cryptographic JWT gate.
+///
+/// Body may carry `sessionToken` (Bearer JWT). `userId` in the body is ignored
+/// for identity; only verified JWT `sub` is accepted.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ValidateSessionBody {
+    /// Ignored for identity (compatibility field only).
     pub user_id: Option<String>,
     pub session_token: Option<String>,
     pub display_name: Option<String>,
-    /// When true (default), missing credentials → 401. When false, returns `{authenticated:false}`.
+    /// When true (default), missing/invalid credentials → 401.
     pub required: Option<bool>,
 }
 
-pub async fn validate_session_http(Json(body): Json<ValidateSessionBody>) -> Response {
+pub async fn validate_session_http(
+    headers: HeaderMap,
+    Json(body): Json<ValidateSessionBody>,
+) -> Response {
     let required = body.required.unwrap_or(true);
-    let uid = body.user_id.as_deref();
-    let tok = body.session_token.as_deref();
-    let name = body.display_name.as_deref();
+    // Prefer Authorization header; fall back to body sessionToken as JWT.
+    let token = platform_jwt::extract_bearer(&headers).or_else(|| {
+        body.session_token
+            .as_ref()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+    });
 
-    if required {
-        match require_auth(uid, tok, name) {
-            Ok(session) => (
-                StatusCode::OK,
-                Json(json!({
-                    "authenticated": true,
-                    "session": session,
-                    "slice": "auth-sessions",
-                })),
-            )
-                .into_response(),
-            Err(err) => (
-                err.status(),
-                Json(json!({
-                    "authenticated": false,
-                    "error": err.message(),
-                    "code": format!("{:?}", err).to_ascii_lowercase(),
-                    "slice": "auth-sessions",
-                })),
-            )
-                .into_response(),
-        }
-    } else {
-        match optional_auth(uid, tok, name) {
-            Some(session) => (
-                StatusCode::OK,
-                Json(json!({
-                    "authenticated": true,
-                    "session": session,
-                    "slice": "auth-sessions",
-                })),
-            )
-                .into_response(),
-            None => (
-                StatusCode::OK,
-                Json(json!({
-                    "authenticated": false,
-                    "session": null,
-                    "slice": "auth-sessions",
-                })),
-            )
-                .into_response(),
-        }
+    let verified = match token {
+        Some(t) => platform_jwt::verify_platform_jwt(&t),
+        None => Err(JwtError::MissingBearer),
+    };
+
+    match (required, verified) {
+        (_, Ok(id)) => (
+            StatusCode::OK,
+            Json(json!({
+                "authenticated": true,
+                "session": {
+                    "userId": id.user_id,
+                    "displayName": id.display_name.or(body.display_name),
+                    "email": id.email,
+                    "isAdmin": id.is_admin,
+                },
+                "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
+            })),
+        )
+            .into_response(),
+        (false, Err(JwtError::MissingBearer)) => (
+            StatusCode::OK,
+            Json(json!({
+                "authenticated": false,
+                "session": null,
+                "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
+            })),
+        )
+            .into_response(),
+        (true, Err(err)) | (false, Err(err)) => (
+            if required {
+                err.status()
+            } else {
+                StatusCode::OK
+            },
+            Json(json!({
+                "authenticated": false,
+                "session": null,
+                "error": err.message(),
+                "code": err.code(),
+                "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
+            })),
+        )
+            .into_response(),
     }
 }
 
-/// Extract trusted edge identity headers (`x-user-id`, `x-user-name` / `x-display-name`).
+/// Extract **untrusted** edge identity headers. Never use as auth principal.
 #[must_use]
 pub fn extract_edge_user(headers: &HeaderMap) -> (Option<String>, Option<String>) {
     let user_id = headers
@@ -225,24 +248,41 @@ pub fn extract_edge_user(headers: &HeaderMap) -> (Option<String>, Option<String>
 /// Prod sole-process probes hit this path (not only `/validate`). Missing credentials
 /// return 200 with `authenticated: false` (optional session read — not a hard gate).
 pub async fn get_session_http(headers: HeaderMap) -> Response {
-    let token = resolve_session_token(&headers);
-    let (edge_user, edge_name) = extract_edge_user(&headers);
-    match optional_auth(edge_user.as_deref(), token.as_deref(), edge_name.as_deref()) {
-        Some(session) => (
+    match platform_jwt::resolve_verified_identity(&headers) {
+        Ok(id) => (
             StatusCode::OK,
             Json(json!({
                 "authenticated": true,
-                "session": session,
+                "session": {
+                    "userId": id.user_id,
+                    "displayName": id.display_name,
+                    "email": id.email,
+                    "isAdmin": id.is_admin,
+                },
                 "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
             })),
         )
             .into_response(),
-        None => (
+        Err(JwtError::MissingBearer) => (
             StatusCode::OK,
             Json(json!({
                 "authenticated": false,
                 "session": null,
                 "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
+            })),
+        )
+            .into_response(),
+        Err(err) => (
+            err.status(),
+            Json(json!({
+                "authenticated": false,
+                "session": null,
+                "error": err.message(),
+                "code": err.code(),
+                "slice": "auth-sessions",
+                "auth": "platform_jwt_rs256",
             })),
         )
             .into_response(),

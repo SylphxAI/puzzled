@@ -8,13 +8,18 @@
 //! optional); scoring kernels already live in sibling modules. Platform SDK
 //! streak/score side-effects stay client-side (TS oracle).
 
-use axum::extract::Query;
+use axum::extract::{Query, State};
+use axum::http::HeaderMap;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sqlx::PgPool;
+
+use crate::auth_sessions::require_verified_identity;
+use crate::AppState;
 
 use crate::daily_time::{
     expand_archive_dates, get_puzzle_number, get_today_utc, is_valid_archive_date,
@@ -574,8 +579,27 @@ pub struct SaveResultBody {
     pub used_freeze: Option<bool>,
 }
 
-/// POST /api/v1/games/save-result — plan + optional score envelope.
-pub async fn save_result_http(Json(body): Json<SaveResultBody>) -> Response {
+/// POST /api/v1/games/save-result — verified JWT + plan validation + durable write.
+pub async fn save_result_http(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<SaveResultBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
     let today = get_today_utc();
     let input = SaveResultInput {
         game_slug: &body.game_slug,
@@ -590,20 +614,47 @@ pub async fn save_result_http(Json(body): Json<SaveResultBody>) -> Response {
         already_played: body.already_played.unwrap_or(false),
     };
     match plan_save_result(&input) {
-        Ok(plan) => (
-            StatusCode::OK,
-            Json(json!({
-                "success": true,
-                "plan": plan,
-                "mode": plan.mode.as_str(),
-                "score": body.score,
-                "usedFreeze": body.used_freeze.unwrap_or(false),
-                "session": null,
-                "stub": true,
-                "slice": "api-v1-hono-monolith",
-            })),
-        )
-            .into_response(),
+        Ok(plan) => {
+            let mut persisted = false;
+            let mut session_id: Option<String> = None;
+            if let Some(pool) = state.pool.as_ref() {
+                match persist_game_session(pool, &identity.user_id, &body, &plan).await {
+                    Ok(id) => {
+                        persisted = true;
+                        session_id = Some(id);
+                    }
+                    Err(e) => {
+                        return (
+                            StatusCode::SERVICE_UNAVAILABLE,
+                            Json(json!({
+                                "success": false,
+                                "error": e,
+                                "slice": "api-v1-hono-monolith",
+                            })),
+                        )
+                            .into_response();
+                    }
+                }
+            }
+            (
+                StatusCode::OK,
+                Json(json!({
+                    "success": true,
+                    "plan": plan,
+                    "mode": plan.mode.as_str(),
+                    "score": body.score,
+                    "usedFreeze": body.used_freeze.unwrap_or(false),
+                    "userId": identity.user_id,
+                    "sessionId": session_id,
+                    "persisted": persisted,
+                    "stub": !persisted,
+                    "serverAuthoritative": true,
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response()
+        }
         Err(err) => (
             err.status(),
             Json(json!({
@@ -614,6 +665,49 @@ pub async fn save_result_http(Json(body): Json<SaveResultBody>) -> Response {
         )
             .into_response(),
     }
+}
+
+async fn persist_game_session(
+    pool: &PgPool,
+    user_id: &str,
+    body: &SaveResultBody,
+    plan: &SaveResultPlan,
+) -> Result<String, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    // DB enum game_status: in_progress|won|lost|abandoned
+    let status = plan.status.as_str();
+    // DB enum game_mode: daily|archive (practice maps to daily for storage)
+    let mode = match plan.mode {
+        GameMode::Archive => "archive",
+        GameMode::Daily | GameMode::Practice => "daily",
+    };
+    let row: (uuid::Uuid,) = sqlx::query_as(
+        r#"
+        INSERT INTO game_sessions (
+            user_id, game_slug, difficulty, mode, status, score, attempts, time_spent_ms, completed_at
+        ) VALUES (
+            $1, $2,
+            $3::puzzle_difficulty,
+            $4::game_mode,
+            $5::game_status,
+            $6, $7, $8,
+            now()
+        )
+        RETURNING id
+        "#,
+    )
+    .bind(uid)
+    .bind(&plan.game_slug)
+    .bind(plan.difficulty.as_deref())
+    .bind(mode)
+    .bind(status)
+    .bind(body.score.map(|s| s as i32))
+    .bind(plan.attempts as i32)
+    .bind(plan.time_spent_ms as i32)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("game_sessions insert failed: {e}"))?;
+    Ok(row.0.to_string())
 }
 
 #[derive(Debug, Deserialize)]

@@ -15,7 +15,12 @@ import {
 import { ConnectionsHowToPlay } from './components/how-to-play'
 import { WordGroupsIcon } from './icon'
 import { PUZZLES } from './puzzles'
-import type { Category, ConnectionsPuzzle, ConnectionsPuzzleData, ConnectionsSolution } from './types'
+import type {
+	Category,
+	ConnectionsPuzzle,
+	ConnectionsPuzzleData,
+	ConnectionsSolution,
+} from './types'
 import { MAX_MISTAKES, TOTAL_CATEGORIES, WORDS_PER_CATEGORY } from './types'
 
 export type { ConnectionsPuzzleData, ConnectionsSolution }

@@ -7,6 +7,10 @@ import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 
+type OAuthSignInProvider = NonNullable<
+	Parameters<NonNullable<ReturnType<typeof useSafeAuth>['signInWithOAuth']>>[0]
+>['provider']
+
 interface LoginFormProps {
 	providers: OAuthProvider[]
 }
@@ -33,7 +37,7 @@ export function LoginForm({ providers }: LoginFormProps) {
 		// OAuth handler: direct OAuth flow (Firebase/Supabase pattern)
 		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		oauthHandler: async (provider) => {
-			await signInWithOAuth?.({ provider: provider as any, redirectUrl: '/' })
+			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
 		},
 	})
 
