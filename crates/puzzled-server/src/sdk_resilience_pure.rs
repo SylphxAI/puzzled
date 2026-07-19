@@ -161,9 +161,7 @@ pub fn api_key_expiry_ladder_secs() -> [u64; 5] {
 /// Dual-oracle residual: API key expiry ladder strictly increasing.
 #[must_use]
 pub fn api_key_expiry_strictly_increasing() -> bool {
-    api_key_expiry_ladder_secs()
-        .windows(2)
-        .all(|w| w[1] > w[0])
+    api_key_expiry_ladder_secs().windows(2).all(|w| w[1] > w[0])
 }
 
 /// Dual-oracle residual: security + AI shell.
@@ -209,10 +207,7 @@ mod wave70_tests {
     fn wave70_sdk_resilience_cache_ui_dual_oracle() {
         assert_eq!(flags_cache_shell(), (300_000, 60_000));
         assert!(flags_swr_shorter_than_ttl());
-        assert_eq!(
-            stale_time_ladder_ms(),
-            [30_000, 60_000, 120_000, 300_000]
-        );
+        assert_eq!(stale_time_ladder_ms(), [30_000, 60_000, 120_000, 300_000]);
         assert!(stale_time_ladder_strictly_increasing());
         assert!(click_id_is_ninety_days());
         assert_eq!(JWK_CACHE_TTL_MS, 3_600_000);

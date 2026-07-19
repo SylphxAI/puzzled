@@ -201,10 +201,7 @@ mod wave66_tests {
             FLAGS_STREAM_HEARTBEAT_TIMEOUT_MS,
         );
         assert!(init < max);
-        assert_eq!(
-            webhook_pkce_timing_shell(),
-            (300_000, 30_000, 600_000)
-        );
+        assert_eq!(webhook_pkce_timing_shell(), (300_000, 30_000, 600_000));
         assert!(default_timeout_equals_token_buffer());
         assert_eq!(MAX_RETRIES, 3);
         assert_eq!(ANALYTICS_MAX_TEXT_LENGTH, 100);

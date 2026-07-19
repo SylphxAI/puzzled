@@ -80,10 +80,7 @@ pub fn needs_escape_any_special_shell() -> bool {
 #[must_use]
 pub fn script_injection_neutralized() -> bool {
     let out = escape_html(r#"<img src=x onerror='alert(1)'>"#);
-    !out.contains('<')
-        && !out.contains('>')
-        && out.contains("&lt;img")
-        && out.contains("&#39;")
+    !out.contains('<') && !out.contains('>') && out.contains("&lt;img") && out.contains("&#39;")
 }
 
 #[cfg(test)]

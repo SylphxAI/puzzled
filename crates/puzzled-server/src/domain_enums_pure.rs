@@ -116,12 +116,18 @@ mod tests {
 
     #[test]
     fn enum_catalogs_dual_oracle() {
-        assert_eq!(GAME_STATUS_VALUES, &["in_progress", "won", "lost", "abandoned"]);
+        assert_eq!(
+            GAME_STATUS_VALUES,
+            &["in_progress", "won", "lost", "abandoned"]
+        );
         assert_eq!(GAME_RESULT_STATUSES, &["won", "lost"]);
         assert_eq!(GAME_MODE_VALUES, &["daily", "archive"]);
         assert_eq!(PUZZLE_DIFFICULTY_VALUES, &["easy", "medium", "hard"]);
         assert_eq!(WIN_BACK_EMAIL_TYPES, &["day7", "day14", "day30"]);
-        assert_eq!(DLQ_STATUS_VALUES, &["pending", "retrying", "resolved", "failed"]);
+        assert_eq!(
+            DLQ_STATUS_VALUES,
+            &["pending", "retrying", "resolved", "failed"]
+        );
         assert_eq!(AUDIT_ACTION_VALUES.len(), 7);
         assert_eq!(ANNOUNCEMENT_TYPE_VALUES.len(), 4);
         assert_eq!(APP_SETTING_KEYS.len(), 3);
@@ -183,7 +189,11 @@ pub fn game_result_subset_of_status() -> bool {
 /// Dual-oracle residual: win-back email day ladder.
 #[must_use]
 pub fn win_back_email_day_ladder() -> [&'static str; 3] {
-    [WIN_BACK_EMAIL_TYPES[0], WIN_BACK_EMAIL_TYPES[1], WIN_BACK_EMAIL_TYPES[2]]
+    [
+        WIN_BACK_EMAIL_TYPES[0],
+        WIN_BACK_EMAIL_TYPES[1],
+        WIN_BACK_EMAIL_TYPES[2],
+    ]
 }
 
 #[cfg(test)]

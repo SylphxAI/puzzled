@@ -6,9 +6,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::game_slugs::is_valid_game_slug;
-use crate::leaderboard_enrich::{
-    enrich_leaderboard_entries, DisplayFields, RankScore,
-};
+use crate::leaderboard_enrich::{enrich_leaderboard_entries, DisplayFields, RankScore};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -237,8 +235,13 @@ mod tests {
 
     #[test]
     fn rejects_invalid_limit() {
-        assert!(LeaderboardQuery::from_params(Some("sudoku"), Some("score"), None, Some("0")).is_none());
-        assert!(LeaderboardQuery::from_params(Some("sudoku"), Some("score"), None, Some("101")).is_none());
+        assert!(
+            LeaderboardQuery::from_params(Some("sudoku"), Some("score"), None, Some("0")).is_none()
+        );
+        assert!(
+            LeaderboardQuery::from_params(Some("sudoku"), Some("score"), None, Some("101"))
+                .is_none()
+        );
     }
 
     #[test]

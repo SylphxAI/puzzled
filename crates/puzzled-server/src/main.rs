@@ -49,8 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     info!(
         port,
-        slice,
-        "puzzled-server listening on :{port} (/healthz, /readyz, /api/v1/stats/leaderboard)"
+        slice, "puzzled-server listening on :{port} (/healthz, /readyz, /api/v1/stats/leaderboard)"
     );
 
     axum::serve(listener, app)

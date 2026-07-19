@@ -38,8 +38,13 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
-    Valid { status: SubmissionStatus, score: u32 },
+    Invalid {
+        error: String,
+    },
+    Valid {
+        status: SubmissionStatus,
+        score: u32,
+    },
 }
 
 impl GameResult {
@@ -75,7 +80,10 @@ pub fn evaluate_guess(guess: &str, solution: &str) -> Option<Vec<LetterStatus>> 
         if result[i] == LetterStatus::Correct {
             continue;
         }
-        if let Some(idx) = solution_chars.iter().position(|&c| c == Some(guess_chars[i])) {
+        if let Some(idx) = solution_chars
+            .iter()
+            .position(|&c| c == Some(guess_chars[i]))
+        {
             result[i] = LetterStatus::Present;
             solution_chars[idx] = None;
         }
@@ -164,10 +172,7 @@ pub fn validate_and_score(
         }
     }
 
-    let last = guesses_upper
-        .last()
-        .map(String::as_str)
-        .unwrap_or_default();
+    let last = guesses_upper.last().map(String::as_str).unwrap_or_default();
     let won = last == solution;
 
     if claimed == SubmissionStatus::Won && !won {

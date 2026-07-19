@@ -108,9 +108,8 @@ fn sudoku_seed_cases_are_deterministic_and_valid() {
         if let (Some(expected_puzzle), Some(expected_solution)) =
             (&case.puzzle_data, &case.solution)
         {
-            let actual = serde_json::to_value(&first).unwrap_or_else(|error| {
-                panic!("serialize sudoku result {}: {error}", case.id)
-            });
+            let actual = serde_json::to_value(&first)
+                .unwrap_or_else(|error| panic!("serialize sudoku result {}: {error}", case.id));
             assert_eq!(
                 actual.get("puzzleData"),
                 Some(expected_puzzle),
@@ -132,14 +131,15 @@ fn shuffle_matches_golden_when_present() {
     let golden = load_golden();
     for case in golden.random_cases {
         let Some(input) = case.input else { continue };
-        let Some(expected) = case.output else { continue };
+        let Some(expected) = case.output else {
+            continue;
+        };
         let items: Vec<String> = serde_json::from_value(input)
             .unwrap_or_else(|error| panic!("parse shuffle input {}: {error}", case.id));
         let mut rng = seeded_random(case.seed);
         let actual = shuffle_array(&items, &mut rng);
-        let actual_json = serde_json::to_value(actual).unwrap_or_else(|error| {
-            panic!("serialize shuffle {}: {error}", case.id)
-        });
+        let actual_json = serde_json::to_value(actual)
+            .unwrap_or_else(|error| panic!("serialize shuffle {}: {error}", case.id));
         assert_eq!(actual_json, expected, "shuffle case {}", case.id);
     }
 }

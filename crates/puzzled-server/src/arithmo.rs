@@ -25,7 +25,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -332,11 +334,7 @@ mod tests {
     #[test]
     fn validate_win_loss() {
         let sol = "12+34=46";
-        let win = validate_and_score(
-            sol,
-            Some(&[sol.to_string()]),
-            SubmissionStatus::Won,
-        );
+        let win = validate_and_score(sol, Some(&[sol.to_string()]), SubmissionStatus::Won);
         assert_eq!(
             win,
             GameResult::Valid {
@@ -375,11 +373,7 @@ mod tests {
                 score: 0
             }
         );
-        let false_win = validate_and_score(
-            sol,
-            Some(&["56-32=24".into()]),
-            SubmissionStatus::Won,
-        );
+        let false_win = validate_and_score(sol, Some(&["56-32=24".into()]), SubmissionStatus::Won);
         assert!(!false_win.is_valid());
         let bad = validate_and_score(
             sol,

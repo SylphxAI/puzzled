@@ -39,7 +39,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -63,17 +65,10 @@ pub fn has_consecutive_violation(grid: &[Vec<CellValue>], row: usize, col: usize
     let size = grid.len();
 
     // horizontal: three same centered or spanning this cell
-    if col >= 2
-        && grid[row][col - 1] == value
-        && grid[row][col - 2] == value
-    {
+    if col >= 2 && grid[row][col - 1] == value && grid[row][col - 2] == value {
         return true;
     }
-    if col >= 1
-        && col + 1 < size
-        && grid[row][col - 1] == value
-        && grid[row][col + 1] == value
-    {
+    if col >= 1 && col + 1 < size && grid[row][col - 1] == value && grid[row][col + 1] == value {
         return true;
     }
     if col + 2 < size && grid[row][col + 1] == value && grid[row][col + 2] == value {
@@ -81,17 +76,10 @@ pub fn has_consecutive_violation(grid: &[Vec<CellValue>], row: usize, col: usize
     }
 
     // vertical
-    if row >= 2
-        && grid[row - 1][col] == value
-        && grid[row - 2][col] == value
-    {
+    if row >= 2 && grid[row - 1][col] == value && grid[row - 2][col] == value {
         return true;
     }
-    if row >= 1
-        && row + 1 < size
-        && grid[row - 1][col] == value
-        && grid[row + 1][col] == value
-    {
+    if row >= 1 && row + 1 < size && grid[row - 1][col] == value && grid[row + 1][col] == value {
         return true;
     }
     if row + 2 < size && grid[row + 1][col] == value && grid[row + 2][col] == value {
@@ -221,7 +209,9 @@ pub fn is_solved(grid: &[Vec<CellValue>]) -> bool {
 pub fn tango_score(time_spent_ms: u64) -> u32 {
     let seconds = time_spent_ms / 1000;
     let time_penalty = (seconds / 2) as u32;
-    BASE_WIN_SCORE.saturating_sub(time_penalty).max(MIN_WIN_SCORE)
+    BASE_WIN_SCORE
+        .saturating_sub(time_penalty)
+        .max(MIN_WIN_SCORE)
 }
 
 /// Validate claimed win/loss; optionally require exact solution match on win.

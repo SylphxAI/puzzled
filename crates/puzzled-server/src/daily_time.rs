@@ -36,8 +36,7 @@ pub fn puzzle_date_string_utc(date: NaiveDate) -> String {
 ///
 /// Returns an error string when the format is invalid.
 pub fn parse_date_yyyy_mm_dd(date: &str) -> Result<NaiveDate, String> {
-    NaiveDate::parse_from_str(date.trim(), "%Y-%m-%d")
-        .map_err(|_| format!("invalid date: {date}"))
+    NaiveDate::parse_from_str(date.trim(), "%Y-%m-%d").map_err(|_| format!("invalid date: {date}"))
 }
 
 /// Puzzle number for a game on a given date.
@@ -63,11 +62,7 @@ pub fn is_valid_archive_date(archive_date: NaiveDate, today: NaiveDate) -> bool 
 
 /// Expand inclusive `[start, end]` calendar dates that are strictly before `today`.
 #[must_use]
-pub fn expand_archive_dates(
-    start: NaiveDate,
-    end: NaiveDate,
-    today: NaiveDate,
-) -> Vec<NaiveDate> {
+pub fn expand_archive_dates(start: NaiveDate, end: NaiveDate, today: NaiveDate) -> Vec<NaiveDate> {
     if start > end {
         return Vec::new();
     }
@@ -188,9 +183,6 @@ mod tests {
         let ms = ms_until_next_utc_midnight(now_ms, today);
         assert_eq!(ms, 3 * 60 * 60 * 1000);
         assert_eq!(time_until_next_utc_midnight(ms), (3, 0, 0));
-        assert_eq!(
-            time_until_next_utc_midnight(3_661_000),
-            (1, 1, 1)
-        );
+        assert_eq!(time_until_next_utc_midnight(3_661_000), (1, 1, 1));
     }
 }

@@ -18,7 +18,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -70,10 +72,7 @@ pub fn is_crossword_grid_complete(
 
 /// String-grid complete check used by `validateAndScore` (TS CrosswordSolution.grid is string[][]).
 #[must_use]
-pub fn is_grid_complete_str(
-    user_grid: &[Vec<Option<String>>],
-    solution: &[Vec<String>],
-) -> bool {
+pub fn is_grid_complete_str(user_grid: &[Vec<Option<String>>], solution: &[Vec<String>]) -> bool {
     for row in 0..CROSSWORD_GRID_SIZE {
         for col in 0..CROSSWORD_GRID_SIZE {
             let sol = solution
@@ -222,11 +221,7 @@ mod tests {
     fn grid(cells: [[Option<&str>; 5]; 5]) -> Vec<Vec<Option<String>>> {
         cells
             .into_iter()
-            .map(|row| {
-                row.into_iter()
-                    .map(|c| c.map(|s| s.to_string()))
-                    .collect()
-            })
+            .map(|row| row.into_iter().map(|c| c.map(|s| s.to_string())).collect())
             .collect()
     }
 

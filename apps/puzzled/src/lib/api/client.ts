@@ -16,15 +16,10 @@
  */
 
 import { hc } from 'hono/client'
-import type {
-	AdminRoutes,
-	GamesRoutes,
-	GamificationRoutes,
-	NotificationsRoutes,
-	StatsRoutes,
-	UserRoutes,
-} from '@/server/api/app'
 
+// The Rust OpenAPI client generator will replace this dynamic boundary.
+// biome-ignore lint/suspicious/noExplicitAny: Hono no longer owns the API type graph.
+export type DynamicApiClient = any
 // API base path
 const API_BASE = '/api/v1'
 
@@ -81,37 +76,37 @@ export class ApiError extends Error {
  * Games API client
  * - Daily status, puzzles, validation, results, history
  */
-export const gamesApi = hc<GamesRoutes>(`${API_BASE}/games`)
+export const gamesApi = hc(`${API_BASE}/games`) as unknown as DynamicApiClient
 
 /**
  * Stats API client
  * - User stats, rankings, leaderboards
  */
-export const statsApi = hc<StatsRoutes>(`${API_BASE}/stats`)
+export const statsApi = hc(`${API_BASE}/stats`) as unknown as DynamicApiClient
 
 /**
  * Gamification API client
  * - Streaks, player counts, achievements
  */
-export const gamificationApi = hc<GamificationRoutes>(`${API_BASE}/gamification`)
+export const gamificationApi = hc(`${API_BASE}/gamification`) as unknown as DynamicApiClient
 
 /**
  * User API client
  * - Profile, preferences, username
  */
-export const userApi = hc<UserRoutes>(`${API_BASE}/user`)
+export const userApi = hc(`${API_BASE}/user`) as unknown as DynamicApiClient
 
 /**
  * Notifications API client
  * - Push and email preferences
  */
-export const notificationsApi = hc<NotificationsRoutes>(`${API_BASE}/notifications`)
+export const notificationsApi = hc(`${API_BASE}/notifications`) as unknown as DynamicApiClient
 
 /**
  * Admin API client
  * - DLQ, audit logs, settings, announcements, feature flags, analytics
  */
-export const adminApi = hc<AdminRoutes>(`${API_BASE}/admin`)
+export const adminApi = hc(`${API_BASE}/admin`) as unknown as DynamicApiClient
 
 // ==========================================
 // Convenience export for all clients

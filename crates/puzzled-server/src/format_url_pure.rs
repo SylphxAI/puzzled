@@ -130,7 +130,10 @@ mod tests {
             get_base_url(true, Some("https://o"), true, &env),
             "https://o"
         );
-        assert_eq!(get_base_url(false, None, false, &env), "https://puzzled.app");
+        assert_eq!(
+            get_base_url(false, None, false, &env),
+            "https://puzzled.app"
+        );
 
         let env2 = BaseUrlEnv {
             next_public_app_url: None,
@@ -144,7 +147,10 @@ mod tests {
             vercel_url: None,
             port: Some("3001".into()),
         };
-        assert_eq!(get_base_url(false, None, false, &env3), "http://localhost:3001");
+        assert_eq!(
+            get_base_url(false, None, false, &env3),
+            "http://localhost:3001"
+        );
         assert_eq!(get_server_base_url(&env3), "http://localhost:3000");
     }
 }

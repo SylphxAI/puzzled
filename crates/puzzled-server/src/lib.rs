@@ -1,87 +1,87 @@
-//! Puzzled Server — ADR-168: health + leaderboard + puzzle grid/submit + product dens
+//! Puzzled product API: health, games, scoring, identity, jobs, and preferences.
 //! for auth-sessions, generation jobs, platform webhooks, and Hono api-v1 monolith domains.
 
 pub mod achievement_tier_pure;
 pub mod db_config;
 
+mod analytics_timing_pure;
+mod app_config_pure;
+mod arithmo;
 mod auth_sessions;
 mod backoff_pure;
+mod billing_access_pure;
+mod block_slide;
+mod crossword_grid;
+mod cryptogram;
 mod daily_time;
+mod domain_enums_pure;
+mod error_codes_pure;
+mod flags_hash_pure;
+mod format_url_pure;
+mod game_color_themes_pure;
+mod game_format;
+mod game_slugs;
 mod games_api;
 mod gamification_api;
 mod generation_jobs;
-mod platform_webhooks;
-mod prefs_api;
-mod roles_pure;
-mod stats_api;
-mod storage_keys_pure;
-mod time_constants_pure;
-mod validation_limits_pure;
-mod app_config_pure;
-mod user_profile_limits_pure;
 mod html_escape_pure;
-mod billing_access_pure;
 mod i18n_locale_pure;
-mod domain_enums_pure;
-mod llm_json_parse_pure;
-mod format_url_pure;
-mod pii_scrub_pure;
-mod flags_hash_pure;
-mod key_validation_pure;
-mod pkce_pure;
-mod redis_keys_pure;
-mod privacy_sanitize_pure;
-mod web_vitals_thresholds_pure;
-mod reduced_motion_pure;
-mod redirect_url_pure;
-mod redirect_security_pure;
-mod motion_duration_pure;
-mod game_color_themes_pure;
-mod motion_easing_pure;
-mod share_squares_pure;
-mod region_colors_pure;
 mod jobs_retry_delays_pure;
-mod session_replay_timing_pure;
-mod analytics_timing_pure;
-mod error_codes_pure;
-mod oauth_providers_pure;
-mod sdk_resilience_pure;
-mod game_format;
-mod game_slugs;
-mod pattern_match;
-mod placement;
-mod crossword_grid;
-mod word_hive;
-mod word_box;
-mod random_lcg;
-mod scoring;
-mod wordle_eval;
-mod nonogram_clues;
-mod queens_conflict;
-mod word_groups;
-mod word_ladder;
-mod cryptogram;
-mod quad_words;
-mod block_slide;
-mod tango;
-mod arithmo;
+mod key_validation_pure;
 mod killer_sudoku;
-mod word_search;
 mod leaderboard;
 pub mod leaderboard_db;
 mod leaderboard_enrich;
+mod llm_json_parse_pure;
+mod motion_duration_pure;
+mod motion_easing_pure;
+mod nonogram_clues;
+mod oauth_providers_pure;
+mod pattern_match;
+mod pii_scrub_pure;
+mod pkce_pure;
+mod placement;
+mod platform_webhooks;
+mod prefs_api;
+mod privacy_sanitize_pure;
 mod puzzle_grid;
 mod puzzle_submit;
+mod quad_words;
+mod queens_conflict;
+mod random_lcg;
+mod redirect_security_pure;
+mod redirect_url_pure;
+mod redis_keys_pure;
+mod reduced_motion_pure;
+mod region_colors_pure;
+mod roles_pure;
+mod scoring;
+mod sdk_resilience_pure;
+mod session_replay_timing_pure;
+mod share_squares_pure;
+mod stats_api;
+mod storage_keys_pure;
+mod tango;
+mod time_constants_pure;
+mod user_profile_limits_pure;
+mod validation_limits_pure;
+mod web_vitals_thresholds_pure;
+mod word_box;
+mod word_groups;
+mod word_hive;
+mod word_ladder;
+mod word_search;
+mod wordle_eval;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+use auth_sessions::{get_session_http, validate_session_http};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Json, Router};
-use auth_sessions::{get_session_http, validate_session_http};
 use games_api::{
     archive_access_http, archive_dates_http, daily_status_http, games_index_http, history_http,
     save_result_http, todays_puzzle_http,
@@ -103,23 +103,26 @@ use serde_json::json;
 use sqlx::PgPool;
 use stats_api::{today_percentile_http, user_stats_shape_http};
 
-pub use leaderboard::LeaderboardStubBody;
-pub use leaderboard_enrich::{
-    cache_period_for, display_name_or_anonymous, enrich_leaderboard_entries, rank_from_better_count,
-    DisplayFields, LeaderboardCachePeriod, RankScore, ANONYMOUS_DISPLAY_NAME,
+pub use backoff_pure::{
+    backoff_base_ms, calculate_backoff_delay_ms, days_ago_ms, days_to_ms, hours_ago_ms,
+    hours_to_ms, is_ready_for_retry, minutes_ago_ms, minutes_to_ms, BASE_DELAY_MS, MAX_DELAY_MS,
 };
 pub use game_format::{
     calculate_wordle_score, compare_by_time, format_time_score, format_timer, is_perfect_game,
 };
-pub use roles_pure::{has_higher_role, has_minimum_role, is_admin_role, is_super_admin_role, role_level};
+pub use leaderboard::LeaderboardStubBody;
+pub use leaderboard_enrich::{
+    cache_period_for, display_name_or_anonymous, enrich_leaderboard_entries,
+    rank_from_better_count, DisplayFields, LeaderboardCachePeriod, RankScore,
+    ANONYMOUS_DISPLAY_NAME,
+};
+pub use roles_pure::{
+    has_higher_role, has_minimum_role, is_admin_role, is_super_admin_role, role_level,
+};
 pub use storage_keys_pure::{
     get_game_session_key, namespaced_key, ANALYTICS_OFFLINE_QUEUE_KEY, CONSENT_KEY,
     CONSENT_TIMESTAMP_KEY, GUEST_GAMES_KEY, GUEST_ONBOARDING_KEY, PWA_PROMPT_DISMISSED_KEY,
     SESSION_ID_KEY, SESSION_START_KEY, SOUND_ENABLED_KEY,
-};
-pub use backoff_pure::{
-    backoff_base_ms, calculate_backoff_delay_ms, days_ago_ms, days_to_ms, hours_ago_ms, hours_to_ms,
-    is_ready_for_retry, minutes_ago_ms, minutes_to_ms, BASE_DELAY_MS, MAX_DELAY_MS,
 };
 pub use validation_limits_pure::{
     clamp_admin_limit, clamp_offset, clamp_user_limit, field_len_ok, is_allowed_avatar_mime,
@@ -134,21 +137,10 @@ pub use app_config_pure::{
     email_at_domain, is_known_app_email, APP_DOMAIN, APP_NAME, DEFAULT_FROM_EMAIL, LEGAL_EMAIL,
     PRIVACY_EMAIL, SUPPORT_EMAIL,
 };
-pub use user_profile_limits_pure::{
-    clamp_bio, is_valid_profile_bio_len, is_valid_profile_name_len, is_valid_profile_username_len,
-    NAME_MAX_LENGTH,
-};
-pub use html_escape_pure::{escape_html, needs_escape};
 pub use billing_access_pure::{
     can_access_game, day_of_year_ts_utc, free_game_for_day_of_year, has_premium_access,
     is_free_plan, is_game_free_today, is_premium_plan, todays_free_game, FREE_GAME_ROTATION,
     PREMIUM_PLANS,
-};
-pub use i18n_locale_pure::{
-    is_chinese_locale, is_english_locale, is_valid_locale, language_from_locale, locale_country_code,
-    locale_currency, locale_date_style, locale_direction, locale_fallback, locale_name,
-    locale_short_name, resolve_locale, DEFAULT_LOCALE, LOCALES, LOCALE_GROUP_CHINESE,
-    LOCALE_GROUP_ENGLISH,
 };
 pub use domain_enums_pure::{
     is_announcement_type, is_app_setting_key, is_audit_action, is_dlq_status, is_dlq_terminal,
@@ -157,19 +149,41 @@ pub use domain_enums_pure::{
     AUDIT_ACTION_VALUES, DLQ_STATUS_VALUES, GAME_MODE_VALUES, GAME_RESULT_STATUSES,
     GAME_STATUS_VALUES, PUZZLE_DIFFICULTY_VALUES, WIN_BACK_EMAIL_TYPES,
 };
+pub use html_escape_pure::{escape_html, needs_escape};
+pub use i18n_locale_pure::{
+    is_chinese_locale, is_english_locale, is_valid_locale, language_from_locale,
+    locale_country_code, locale_currency, locale_date_style, locale_direction, locale_fallback,
+    locale_name, locale_short_name, resolve_locale, DEFAULT_LOCALE, LOCALES, LOCALE_GROUP_CHINESE,
+    LOCALE_GROUP_ENGLISH,
+};
 pub use llm_json_parse_pure::{
     extract_first_json_object, is_valid_json_text, looks_like_json_start, parse_llm_json_response,
     strip_markdown_fences,
 };
-
-pub use time_constants_pure::{
-    alphabet_char, alphabet_index, days_from_now_ms, days_to_seconds, hours_from_now_ms,
-    hours_to_seconds, minutes_to_seconds, seconds_to_ms, weeks_to_ms, ALPHABET, DAY_SECONDS,
-    HOUR_SECONDS, MINUTE_SECONDS, SECOND_MS, WEEK_MS, WEEK_SECONDS,
+pub use user_profile_limits_pure::{
+    clamp_bio, is_valid_profile_bio_len, is_valid_profile_name_len, is_valid_profile_username_len,
+    NAME_MAX_LENGTH,
 };
-pub use pattern_match::{find_all_sets, generate_all_cards, is_valid_set, Card, Color, Fill, Shape};
-pub use placement::{
-    is_grid_complete as is_sudoku_grid_complete, is_valid_placement, GRID_SIZE,
+
+pub use arithmo::{
+    arithmo_score, get_guess_result as arithmo_get_guess_result, is_valid_equation,
+    validate_and_score as arithmo_validate_and_score, CharStatus as ArithmoCharStatus,
+    GameResult as ArithmoGameResult, SubmissionStatus as ArithmoSubmissionStatus,
+    EQUATION_LENGTH as ARITHMO_EQUATION_LENGTH, MAX_ATTEMPTS as ARITHMO_MAX_ATTEMPTS,
+};
+pub use auth_sessions::{
+    extract_bearer, extract_session_cookie, optional_auth, require_auth, resolve_session_token,
+    validate_session, AuthError, SessionContext,
+};
+pub use block_slide::{
+    block_slide_score, can_move, is_valid_configuration, is_win, move_block, serialize_state,
+    solve_puzzle, validate_and_score as block_slide_validate_and_score, Block, BlockSlidePuzzle,
+    Direction as BlockSlideDirection, GameResult as BlockSlideGameResult, SolveResult,
+    SubmissionStatus as BlockSlideSubmissionStatus, BASE_WIN_SCORE as BLOCK_SLIDE_BASE_WIN_SCORE,
+    DEFAULT_MAX_MOVES as BLOCK_SLIDE_DEFAULT_MAX_MOVES,
+    EXTRA_MOVE_PENALTY as BLOCK_SLIDE_EXTRA_MOVE_PENALTY,
+    FAST_SOLVE_BONUS as BLOCK_SLIDE_FAST_SOLVE_BONUS, FAST_SOLVE_MS as BLOCK_SLIDE_FAST_SOLVE_MS,
+    MIN_WIN_SCORE as BLOCK_SLIDE_MIN_WIN_SCORE,
 };
 pub use crossword_grid::{
     crossword_score, get_clue_numbers, is_crossword_grid_complete, is_grid_complete_str,
@@ -178,97 +192,11 @@ pub use crossword_grid::{
     BASE_WIN_SCORE as CROSSWORD_BASE_WIN_SCORE, CROSSWORD_GRID_SIZE,
     MIN_WIN_SCORE as CROSSWORD_MIN_WIN_SCORE,
 };
-pub use word_hive::{
-    calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change,
-    validate_and_score as word_hive_validate_and_score, GameResult as WordHiveGameResult,
-    MIN_WORD_LENGTH,
-};
-pub use word_box::{
-    all_letters_used, get_used_letters, has_valid_side_transitions, starts_with_last_letter,
-    uses_valid_letters, validate_and_score as word_box_validate_and_score, word_box_score,
-    GameResult as WordBoxGameResult, LetterBox, SubmissionStatus as WordBoxSubmissionStatus,
-};
-pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
-pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
-pub use wordle_eval::{
-    compare_for_percentile as word_guess_compare_for_percentile, evaluate_guess,
-    format_score_display as word_guess_format_score_display, is_perfect_game as word_guess_is_perfect,
-    is_winning_guess, validate_and_score as word_guess_validate_and_score, GameResult as WordGuessGameResult,
-    LetterStatus, SubmissionStatus as WordGuessSubmissionStatus, MAX_GUESSES, WORD_LENGTH,
-};
-pub use nonogram_clues::{
-    generate_clues, is_grid_complete as is_nonogram_grid_complete, nonogram_score,
-    validate_and_score as nonogram_validate_and_score, validate_guess as nonogram_validate_guess,
-    GameResult as NonogramGameResult, SubmissionStatus as NonogramSubmissionStatus,
-    BASE_WIN_SCORE as NONOGRAM_BASE_WIN_SCORE, ERROR_PENALTY as NONOGRAM_ERROR_PENALTY,
-    MIN_WIN_SCORE as NONOGRAM_MIN_WIN_SCORE,
-};
-pub use queens_conflict::{
-    get_conflicts, is_solved, queens_score, validate_and_score as queens_validate_and_score,
-    Cell as QueensCell, GameResult as QueensGameResult, SubmissionStatus as QueensSubmissionStatus,
-    BASE_WIN_SCORE as QUEENS_BASE_WIN_SCORE, MIN_WIN_SCORE as QUEENS_MIN_WIN_SCORE,
-};
-pub use word_groups::{
-    count_matching_words, find_matching_category, validate_and_score as word_groups_validate_and_score,
-    word_groups_score, Category as WordGroupsCategory, GameResult as WordGroupsGameResult,
-    SubmissionStatus as WordGroupsSubmissionStatus, MAX_MISTAKES, TOTAL_CATEGORIES,
-    WORDS_PER_CATEGORY,
-};
-pub use word_ladder::{
-    is_one_letter_change as is_word_ladder_one_letter_change,
-    validate_and_score as word_ladder_validate_and_score, word_ladder_score,
-    GameResult as WordLadderGameResult, SubmissionStatus as WordLadderSubmissionStatus,
-    BASE_WIN_SCORE as WORD_LADDER_BASE_WIN_SCORE, EXTRA_STEP_PENALTY as WORD_LADDER_EXTRA_STEP_PENALTY,
-    MIN_WIN_SCORE as WORD_LADDER_MIN_WIN_SCORE,
-};
 pub use cryptogram::{
     cryptogram_score, is_fully_solved, unique_encrypted_letters,
     validate_and_score as cryptogram_validate_and_score, GameResult as CryptogramGameResult,
     SubmissionStatus as CryptogramSubmissionStatus, BASE_WIN_SCORE as CRYPTOGRAM_BASE_WIN_SCORE,
     HINT_PENALTY as CRYPTOGRAM_HINT_PENALTY, MIN_WIN_SCORE as CRYPTOGRAM_MIN_WIN_SCORE,
-};
-pub use quad_words::{
-    evaluate_four, get_best_status, guess_solves_target, quad_words_score,
-    validate_and_score as quad_words_validate_and_score, GameResult as QuadWordsGameResult,
-    SubmissionStatus as QuadWordsSubmissionStatus, MAX_GUESSES as QUAD_WORDS_MAX_GUESSES,
-    MIN_WIN_SCORE as QUAD_WORDS_MIN_WIN_SCORE, OPTIMAL_GUESSES as QUAD_WORDS_OPTIMAL_GUESSES,
-};
-pub use block_slide::{
-    block_slide_score, can_move, is_valid_configuration, is_win, move_block, serialize_state,
-    solve_puzzle, validate_and_score as block_slide_validate_and_score, Block, BlockSlidePuzzle,
-    Direction as BlockSlideDirection, GameResult as BlockSlideGameResult, SolveResult,
-    SubmissionStatus as BlockSlideSubmissionStatus, BASE_WIN_SCORE as BLOCK_SLIDE_BASE_WIN_SCORE,
-    DEFAULT_MAX_MOVES as BLOCK_SLIDE_DEFAULT_MAX_MOVES, EXTRA_MOVE_PENALTY as BLOCK_SLIDE_EXTRA_MOVE_PENALTY,
-    FAST_SOLVE_BONUS as BLOCK_SLIDE_FAST_SOLVE_BONUS, FAST_SOLVE_MS as BLOCK_SLIDE_FAST_SOLVE_MS,
-    MIN_WIN_SCORE as BLOCK_SLIDE_MIN_WIN_SCORE,
-};
-pub use tango::{
-    get_conflicts as tango_get_conflicts, has_consecutive_violation, is_solved as tango_is_solved,
-    tango_score, validate_and_score as tango_validate_and_score, CellValue as TangoCellValue,
-    GameResult as TangoGameResult, SubmissionStatus as TangoSubmissionStatus,
-    BASE_WIN_SCORE as TANGO_BASE_WIN_SCORE, MAX_CONSECUTIVE as TANGO_MAX_CONSECUTIVE,
-    MIN_WIN_SCORE as TANGO_MIN_WIN_SCORE,
-};
-pub use arithmo::{
-    arithmo_score, get_guess_result as arithmo_get_guess_result, is_valid_equation,
-    validate_and_score as arithmo_validate_and_score, CharStatus as ArithmoCharStatus,
-    GameResult as ArithmoGameResult, SubmissionStatus as ArithmoSubmissionStatus,
-    EQUATION_LENGTH as ARITHMO_EQUATION_LENGTH, MAX_ATTEMPTS as ARITHMO_MAX_ATTEMPTS,
-};
-pub use killer_sudoku::{
-    grid_matches_solution as killer_grid_matches_solution, killer_sudoku_score,
-    validate_and_score as killer_sudoku_validate_and_score, GameResult as KillerSudokuGameResult,
-    SubmissionStatus as KillerSudokuSubmissionStatus, BASE_WIN_SCORE as KILLER_BASE_WIN_SCORE,
-    GRID_SIZE as KILLER_GRID_SIZE, MIN_WIN_SCORE as KILLER_MIN_WIN_SCORE,
-};
-pub use word_search::{
-    validate_and_score as word_search_validate_and_score, word_search_score,
-    GameResult as WordSearchGameResult, SubmissionStatus as WordSearchSubmissionStatus,
-    BASE_WIN_SCORE as WORD_SEARCH_BASE_WIN_SCORE, MIN_WIN_SCORE as WORD_SEARCH_MIN_WIN_SCORE,
-};
-pub use auth_sessions::{
-    extract_bearer, extract_session_cookie, optional_auth, require_auth, resolve_session_token,
-    validate_session, AuthError, SessionContext,
 };
 pub use daily_time::{
     expand_archive_dates, get_puzzle_number, get_today_utc, get_yesterday_utc,
@@ -290,6 +218,23 @@ pub use generation_jobs::{
     GenerationUnit, JobResult, PuzzleDifficulty, JOB_GENERATE_DAILY_PUZZLES, LLM_GAMES,
     RUST_SEED_GAMES,
 };
+pub use killer_sudoku::{
+    grid_matches_solution as killer_grid_matches_solution, killer_sudoku_score,
+    validate_and_score as killer_sudoku_validate_and_score, GameResult as KillerSudokuGameResult,
+    SubmissionStatus as KillerSudokuSubmissionStatus, BASE_WIN_SCORE as KILLER_BASE_WIN_SCORE,
+    GRID_SIZE as KILLER_GRID_SIZE, MIN_WIN_SCORE as KILLER_MIN_WIN_SCORE,
+};
+pub use nonogram_clues::{
+    generate_clues, is_grid_complete as is_nonogram_grid_complete, nonogram_score,
+    validate_and_score as nonogram_validate_and_score, validate_guess as nonogram_validate_guess,
+    GameResult as NonogramGameResult, SubmissionStatus as NonogramSubmissionStatus,
+    BASE_WIN_SCORE as NONOGRAM_BASE_WIN_SCORE, ERROR_PENALTY as NONOGRAM_ERROR_PENALTY,
+    MIN_WIN_SCORE as NONOGRAM_MIN_WIN_SCORE,
+};
+pub use pattern_match::{
+    find_all_sets, generate_all_cards, is_valid_set, Card, Color, Fill, Shape,
+};
+pub use placement::{is_grid_complete as is_sudoku_grid_complete, is_valid_placement, GRID_SIZE};
 pub use platform_webhooks::{
     extract_job_headers, handle_platform_job, secrets_equal, verify_platform_request,
     VerificationResult, HEADER_APP_SECRET, HEADER_CRON_NAME, HEADER_JOB_ID,
@@ -299,10 +244,72 @@ pub use prefs_api::{
     is_valid_reminder_time, username_available, validate_bio, validate_username, NotificationPrefs,
     ProfilePrefs, BIO_MAX_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH,
 };
+pub use quad_words::{
+    evaluate_four, get_best_status, guess_solves_target, quad_words_score,
+    validate_and_score as quad_words_validate_and_score, GameResult as QuadWordsGameResult,
+    SubmissionStatus as QuadWordsSubmissionStatus, MAX_GUESSES as QUAD_WORDS_MAX_GUESSES,
+    MIN_WIN_SCORE as QUAD_WORDS_MIN_WIN_SCORE, OPTIMAL_GUESSES as QUAD_WORDS_OPTIMAL_GUESSES,
+};
+pub use queens_conflict::{
+    get_conflicts, is_solved, queens_score, validate_and_score as queens_validate_and_score,
+    Cell as QueensCell, GameResult as QueensGameResult, SubmissionStatus as QueensSubmissionStatus,
+    BASE_WIN_SCORE as QUEENS_BASE_WIN_SCORE, MIN_WIN_SCORE as QUEENS_MIN_WIN_SCORE,
+};
+pub use random_lcg::{pick_random, shuffle_array, SeededRandom};
+pub use scoring::{validate_and_score, GameResult, GameSubmission, SubmissionStatus};
 pub use stats_api::{
     build_user_game_stats, compute_percentile, default_compare,
     rank_from_better_count as stats_rank_from_better_count, PercentileResult, PercentileStatsOwned,
     UserGameStats,
+};
+pub use tango::{
+    get_conflicts as tango_get_conflicts, has_consecutive_violation, is_solved as tango_is_solved,
+    tango_score, validate_and_score as tango_validate_and_score, CellValue as TangoCellValue,
+    GameResult as TangoGameResult, SubmissionStatus as TangoSubmissionStatus,
+    BASE_WIN_SCORE as TANGO_BASE_WIN_SCORE, MAX_CONSECUTIVE as TANGO_MAX_CONSECUTIVE,
+    MIN_WIN_SCORE as TANGO_MIN_WIN_SCORE,
+};
+pub use time_constants_pure::{
+    alphabet_char, alphabet_index, days_from_now_ms, days_to_seconds, hours_from_now_ms,
+    hours_to_seconds, minutes_to_seconds, seconds_to_ms, weeks_to_ms, ALPHABET, DAY_SECONDS,
+    HOUR_SECONDS, MINUTE_SECONDS, SECOND_MS, WEEK_MS, WEEK_SECONDS,
+};
+pub use word_box::{
+    all_letters_used, get_used_letters, has_valid_side_transitions, starts_with_last_letter,
+    uses_valid_letters, validate_and_score as word_box_validate_and_score, word_box_score,
+    GameResult as WordBoxGameResult, LetterBox, SubmissionStatus as WordBoxSubmissionStatus,
+};
+pub use word_groups::{
+    count_matching_words, find_matching_category,
+    validate_and_score as word_groups_validate_and_score, word_groups_score,
+    Category as WordGroupsCategory, GameResult as WordGroupsGameResult,
+    SubmissionStatus as WordGroupsSubmissionStatus, MAX_MISTAKES, TOTAL_CATEGORIES,
+    WORDS_PER_CATEGORY,
+};
+pub use word_hive::{
+    calculate_word_score, get_next_rank_threshold, get_rank_for_score, is_one_letter_change,
+    validate_and_score as word_hive_validate_and_score, GameResult as WordHiveGameResult,
+    MIN_WORD_LENGTH,
+};
+pub use word_ladder::{
+    is_one_letter_change as is_word_ladder_one_letter_change,
+    validate_and_score as word_ladder_validate_and_score, word_ladder_score,
+    GameResult as WordLadderGameResult, SubmissionStatus as WordLadderSubmissionStatus,
+    BASE_WIN_SCORE as WORD_LADDER_BASE_WIN_SCORE,
+    EXTRA_STEP_PENALTY as WORD_LADDER_EXTRA_STEP_PENALTY,
+    MIN_WIN_SCORE as WORD_LADDER_MIN_WIN_SCORE,
+};
+pub use word_search::{
+    validate_and_score as word_search_validate_and_score, word_search_score,
+    GameResult as WordSearchGameResult, SubmissionStatus as WordSearchSubmissionStatus,
+    BASE_WIN_SCORE as WORD_SEARCH_BASE_WIN_SCORE, MIN_WIN_SCORE as WORD_SEARCH_MIN_WIN_SCORE,
+};
+pub use wordle_eval::{
+    compare_for_percentile as word_guess_compare_for_percentile, evaluate_guess,
+    format_score_display as word_guess_format_score_display,
+    is_perfect_game as word_guess_is_perfect, is_winning_guess,
+    validate_and_score as word_guess_validate_and_score, GameResult as WordGuessGameResult,
+    LetterStatus, SubmissionStatus as WordGuessSubmissionStatus, MAX_GUESSES, WORD_LENGTH,
 };
 
 static SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
@@ -404,14 +411,14 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .route("/api/v1/puzzles/grid", get(generate_grid))
         .route("/api/v1/puzzles/submit", post(submit_solution))
-        // Product dens: auth / jobs / webhooks / generators backend
+        // Auth, jobs, webhooks, and generators.
         // GET /api/v1/auth/session — prod sole-process probe path (optional session read)
         .route("/api/v1/auth/session", get(get_session_http))
         .route("/api/v1/auth/session/validate", post(validate_session_http))
         .route("/api/v1/jobs/plan", post(plan_generation_http))
         .route("/api/v1/jobs/execute", post(execute_job_http))
         .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
-        // WAVE5: Hono api-v1 monolith product dens (games/stats/user/notifications/gamification)
+        // Product domains formerly served by the Hono API.
         // GET /api/v1/games — domain index (prod probe; must not 404)
         .route("/api/v1/games", get(games_index_http))
         .route("/api/v1/games/daily-status", get(daily_status_http))
@@ -421,7 +428,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/games/archive-dates", get(archive_dates_http))
         .route("/api/v1/games/history", get(history_http))
         .route("/api/v1/stats/today-percentile", get(today_percentile_http))
-        .route("/api/v1/stats/user-stats/shape", post(user_stats_shape_http))
+        .route(
+            "/api/v1/stats/user-stats/shape",
+            post(user_stats_shape_http),
+        )
         .route("/api/v1/user/check-username", get(check_username_http))
         .route("/api/v1/user/profile", put(update_profile_http))
         .route("/api/v1/user/preferences", put(update_ui_preferences_http))
@@ -530,7 +540,11 @@ mod tests {
     async fn domain_stub_returns_contract() {
         let app = router(AppState::new(None));
         let response = match app
-            .oneshot(build_request(Method::GET, "/api/leaderboard", Body::empty()))
+            .oneshot(build_request(
+                Method::GET,
+                "/api/leaderboard",
+                Body::empty(),
+            ))
             .await
         {
             Ok(response) => response,
@@ -538,7 +552,9 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
-        assert!(json["entries"].as_array().is_some_and(|entries| entries.is_empty()));
+        assert!(json["entries"]
+            .as_array()
+            .is_some_and(|entries| entries.is_empty()));
         assert_eq!(json["stub"], true);
     }
 
@@ -576,9 +592,7 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
         assert_eq!(json["slice"], "api-v1-hono-monolith");
-        let games = json["games"]
-            .as_array()
-            .expect("games array");
+        let games = json["games"].as_array().expect("games array");
         assert!(games.len() >= 10);
         assert!(games.iter().any(|g| g["slug"] == "sudoku"));
     }

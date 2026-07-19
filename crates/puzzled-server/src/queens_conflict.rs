@@ -25,7 +25,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -67,9 +69,14 @@ pub fn get_conflicts(
     }
     // adjacent (incl diagonals)
     let dirs: [(isize, isize); 8] = [
-        (-1, -1), (-1, 0), (-1, 1),
-        (0, -1),           (0, 1),
-        (1, -1),  (1, 0),  (1, 1),
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, -1),
+        (0, 1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
     ];
     for (dr, dc) in dirs {
         let r = row as isize + dr;
@@ -178,7 +185,9 @@ pub fn is_solved(grid: &[Vec<bool>], regions: &[Vec<i32>], size: usize) -> bool 
 pub fn queens_score(time_spent_ms: u64) -> u32 {
     let seconds = time_spent_ms / 1000;
     let time_penalty = (seconds / 2) as u32;
-    BASE_WIN_SCORE.saturating_sub(time_penalty).max(MIN_WIN_SCORE)
+    BASE_WIN_SCORE
+        .saturating_sub(time_penalty)
+        .max(MIN_WIN_SCORE)
 }
 
 /// Validate claimed win/loss against `is_solved` grid; score wins.
@@ -235,7 +244,12 @@ mod tests {
         let mut g = empty(4);
         g[0][0] = true;
         g[0][2] = true;
-        let regions = vec![vec![0, 0, 1, 1], vec![0, 0, 1, 1], vec![2, 2, 3, 3], vec![2, 2, 3, 3]];
+        let regions = vec![
+            vec![0, 0, 1, 1],
+            vec![0, 0, 1, 1],
+            vec![2, 2, 3, 3],
+            vec![2, 2, 3, 3],
+        ];
         let c = get_conflicts(&g, &regions, 0, 0);
         assert!(c.iter().any(|x| x.row == 0 && x.col == 2));
     }
@@ -280,8 +294,10 @@ mod tests {
         ];
         // Not asserting solved true without carefully designed regions;
         // assert conflict-free for non-adjacent queens on rows/cols
-        assert!(get_conflicts(&g, &regions, 0, 1).is_empty()
-            || !get_conflicts(&g, &regions, 0, 1).is_empty());
+        assert!(
+            get_conflicts(&g, &regions, 0, 1).is_empty()
+                || !get_conflicts(&g, &regions, 0, 1).is_empty()
+        );
         // simpler: size mismatch fails
         assert!(!is_solved(&g, &regions, 5));
         // queen count ok
@@ -311,8 +327,7 @@ mod tests {
                 score: 0
             }
         );
-        let false_win =
-            validate_and_score(Some(&empty), &regions, 4, 0, SubmissionStatus::Won);
+        let false_win = validate_and_score(Some(&empty), &regions, 4, 0, SubmissionStatus::Won);
         assert!(!false_win.is_valid());
     }
 }

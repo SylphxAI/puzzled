@@ -9,8 +9,7 @@
 
 /// Dual-oracle residual: GameColorTheme union members in GAME_COLOR_THEMES order.
 pub const GAME_COLOR_THEME_IDS: &[&str] = &[
-    "emerald", "cyan", "violet", "amber", "pink", "rose", "blue", "sky", "orange",
-    "lime", "slate",
+    "emerald", "cyan", "violet", "amber", "pink", "rose", "blue", "sky", "orange", "lime", "slate",
 ];
 
 /// Dual-oracle residual: solid bg classes aligned with theme ids.

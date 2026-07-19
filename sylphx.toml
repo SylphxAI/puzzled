@@ -15,27 +15,17 @@ name = "web"
 type = "worker"
 release_command = "atlas migrate apply --env production --baseline 20260222000000"
 
-# Rust API authority — strangler sidecar until auth/read parity (ADR-168).
+# Rust owns the product API. Next.js owns presentation and web-only adapters.
 [[services]]
 name = "api"
 type = "web"
 port = 8080
-# Platform edge strangler: route S0–S2 Rust paths to api (not Next.js).
+# Route the complete public API namespace to Rust; no dual backend remains.
 path_prefixes = [
   "/healthz",
   "/readyz",
   "/api/leaderboard",
-  "/api/v1/stats/leaderboard",
-  "/api/v1/stats/today-percentile",
-  "/api/v1/stats/user-stats",
-  "/api/v1/puzzles/grid",
-  "/api/v1/puzzles/submit",
-  "/api/v1/auth/session",
-  "/api/v1/jobs",
-  "/api/v1/games",
-  "/api/v1/user",
-  "/api/v1/notifications",
-  "/api/v1/gamification",
+  "/api/v1",
   "/api/webhooks/platform-jobs",
 ]
 watch_paths = [

@@ -5,8 +5,7 @@
 //! NO authority_rust / ts_deleted invent.
 
 /// Dual-oracle residual: dangerous URL protocols blocked for redirects.
-pub const DANGEROUS_REDIRECT_PROTOCOLS: &[&str] =
-    &["javascript:", "data:", "vbscript:", "file:"];
+pub const DANGEROUS_REDIRECT_PROTOCOLS: &[&str] = &["javascript:", "data:", "vbscript:", "file:"];
 
 /// Dual-oracle residual: safe redirect fallback path.
 pub const SAFE_REDIRECT_FALLBACK: &str = "/";
@@ -46,10 +45,7 @@ pub fn is_safe_relative_path(url: &str) -> bool {
 /// Returns `Some(true/false)` when pure rules decide; `None` means host must
 /// parse absolute URL + same-origin / allowlist (product residual).
 #[must_use]
-pub fn redirect_pure_decision(
-    url: &str,
-    allow_relative: bool,
-) -> Option<bool> {
+pub fn redirect_pure_decision(url: &str, allow_relative: bool) -> Option<bool> {
     if url.trim().is_empty() {
         return Some(false);
     }

@@ -20,9 +20,7 @@ pub fn is_valid_code_verifier(verifier: &str) -> bool {
     if verifier.len() < 43 || verifier.len() > 128 {
         return false;
     }
-    verifier
-        .chars()
-        .all(|c| VERIFIER_CHARSET.contains(c))
+    verifier.chars().all(|c| VERIFIER_CHARSET.contains(c))
 }
 
 /// Dual-oracle product verifier length residual.
@@ -64,10 +62,7 @@ mod tests {
         assert!(!is_valid_code_verifier("short"));
         assert!(!is_valid_code_verifier(&("A".repeat(42) + "!")));
         assert_eq!(pkce_storage_key("app1", None), "sylphx_pkce_app1");
-        assert_eq!(
-            pkce_storage_key("app1", Some("n1")),
-            "sylphx_pkce_app1:n1"
-        );
+        assert_eq!(pkce_storage_key("app1", Some("n1")), "sylphx_pkce_app1:n1");
         assert!(!pkce_entry_expired(0, 599_999));
         assert!(pkce_entry_expired(0, 600_000));
     }

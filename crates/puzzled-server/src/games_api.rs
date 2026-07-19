@@ -141,8 +141,7 @@ pub fn map_session_difficulty(raw: Option<&str>) -> Result<Option<&'static str>,
     match raw {
         None => Ok(None),
         Some(s) => {
-            let d = RouteDifficulty::parse(s)
-                .ok_or_else(|| format!("invalid difficulty: {s}"))?;
+            let d = RouteDifficulty::parse(s).ok_or_else(|| format!("invalid difficulty: {s}"))?;
             Ok(d.db_difficulty())
         }
     }
@@ -228,7 +227,8 @@ pub fn plan_save_result(input: &SaveResultInput<'_>) -> Result<SaveResultPlan, S
     if !is_valid_game_slug(input.game_slug) {
         return Err(SaveResultError::InvalidGameSlug);
     }
-    let mode = GameMode::parse(input.mode.unwrap_or("daily")).ok_or(SaveResultError::InvalidMode)?;
+    let mode =
+        GameMode::parse(input.mode.unwrap_or("daily")).ok_or(SaveResultError::InvalidMode)?;
     let status = ClaimedStatus::parse(input.status).ok_or(SaveResultError::InvalidStatus)?;
     if !status.is_validatable() {
         return Err(SaveResultError::AbandonedNotValidatable);
@@ -433,7 +433,12 @@ pub struct DailyStatusQuery {
 
 /// GET /api/v1/games/daily-status
 pub async fn daily_status_http(Query(q): Query<DailyStatusQuery>) -> Response {
-    let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(slug) = q
+        .game_slug
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({ "error": "Invalid query parameters", "slice": "api-v1-hono-monolith" })),
@@ -478,7 +483,12 @@ pub struct TodaysPuzzleQuery {
 
 /// GET /api/v1/games/todays-puzzle
 pub async fn todays_puzzle_http(Query(q): Query<TodaysPuzzleQuery>) -> Response {
-    let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(slug) = q
+        .game_slug
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return (StatusCode::OK, Json(Value::Null)).into_response();
     };
     if !is_valid_game_slug(slug) {
@@ -619,7 +629,12 @@ pub struct ArchiveDatesQuery {
 
 /// GET /api/v1/games/archive-dates
 pub async fn archive_dates_http(Query(q): Query<ArchiveDatesQuery>) -> Response {
-    let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(slug) = q
+        .game_slug
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({ "error": "Invalid query parameters", "slice": "api-v1-hono-monolith" })),
@@ -724,7 +739,12 @@ pub async fn games_index_http() -> Response {
 }
 
 pub async fn history_http(Query(q): Query<HistoryQuery>) -> Response {
-    let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(slug) = q
+        .game_slug
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return (
             StatusCode::BAD_REQUEST,
             Json(json!({ "error": "Invalid query parameters", "slice": "api-v1-hono-monolith" })),
@@ -800,8 +820,7 @@ mod tests {
 
     #[test]
     fn plan_save_duplicate_daily() {
-        let err =
-            plan_save_result(&save_input("sudoku", "won", None, true)).expect_err("dup");
+        let err = plan_save_result(&save_input("sudoku", "won", None, true)).expect_err("dup");
         assert_eq!(err, SaveResultError::AlreadyPlayed);
     }
 

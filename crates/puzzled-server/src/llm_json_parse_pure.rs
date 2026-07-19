@@ -81,10 +81,7 @@ mod tests {
         assert_eq!(parse_llm_json_response(bare), Some(json!({"b": [1, 2]})));
 
         let prose = "Here you go: {\"ok\":true} thanks";
-        assert_eq!(
-            extract_first_json_object(prose),
-            Some(r#"{"ok":true}"#)
-        );
+        assert_eq!(extract_first_json_object(prose), Some(r#"{"ok":true}"#));
         assert_eq!(parse_llm_json_response(prose), Some(json!({"ok": true})));
 
         assert!(parse_llm_json_response("not json").is_none());

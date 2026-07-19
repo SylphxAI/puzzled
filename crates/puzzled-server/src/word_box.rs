@@ -28,7 +28,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -241,12 +243,7 @@ mod tests {
         assert_eq!(word_box_score(4), 60);
         assert_eq!(word_box_score(5), 40);
         let letters: Vec<char> = "ABCDEFGHIJKL".chars().collect();
-        let words = vec![
-            "ABC".into(),
-            "DEF".into(),
-            "GHI".into(),
-            "JKL".into(),
-        ];
+        let words = vec!["ABC".into(), "DEF".into(), "GHI".into(), "JKL".into()];
         let r = validate_and_score(&letters, Some(&words), SubmissionStatus::Won);
         assert_eq!(
             r,
@@ -263,15 +260,11 @@ mod tests {
                 score: 0
             }
         );
-        let incomplete =
-            validate_and_score(&letters, Some(&["ABC".into()]), SubmissionStatus::Won);
+        let incomplete = validate_and_score(&letters, Some(&["ABC".into()]), SubmissionStatus::Won);
         assert!(!incomplete.is_valid());
         let two = validate_and_score(
             &letters,
-            Some(&[
-                "ABCDEF".into(),
-                "GHIJKL".into(),
-            ]),
+            Some(&["ABCDEF".into(), "GHIJKL".into()]),
             SubmissionStatus::Won,
         );
         assert_eq!(

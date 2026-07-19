@@ -15,7 +15,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -34,7 +36,9 @@ impl GameResult {
 pub fn word_search_score(time_spent_ms: u64) -> u32 {
     let seconds = time_spent_ms / 1000;
     let time_penalty = (seconds / 2) as u32;
-    BASE_WIN_SCORE.saturating_sub(time_penalty).max(MIN_WIN_SCORE)
+    BASE_WIN_SCORE
+        .saturating_sub(time_penalty)
+        .max(MIN_WIN_SCORE)
 }
 
 /// Validate found-words claim against solution word list; score full finds.

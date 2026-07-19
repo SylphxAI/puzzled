@@ -20,7 +20,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -122,10 +124,7 @@ mod tests {
 
     fn sample_cipher() -> BTreeMap<String, String> {
         // encrypted -> original
-        BTreeMap::from([
-            ("X".into(), "H".into()),
-            ("Y".into(), "I".into()),
-        ])
+        BTreeMap::from([("X".into(), "H".into()), ("Y".into(), "I".into())])
     }
 
     fn correct_guesses() -> BTreeMap<String, String> {
@@ -154,13 +153,7 @@ mod tests {
     fn perfect_win() {
         let cipher = sample_cipher();
         let guesses = correct_guesses();
-        let result = validate_and_score(
-            &cipher,
-            Some(&guesses),
-            Some(0),
-            0,
-            SubmissionStatus::Won,
-        );
+        let result = validate_and_score(&cipher, Some(&guesses), Some(0), 0, SubmissionStatus::Won);
         assert_eq!(
             result,
             GameResult::Valid {
@@ -175,13 +168,7 @@ mod tests {
         let cipher = sample_cipher();
         let mut guesses = correct_guesses();
         guesses.insert("X".into(), "Z".into());
-        let result = validate_and_score(
-            &cipher,
-            Some(&guesses),
-            Some(0),
-            0,
-            SubmissionStatus::Won,
-        );
+        let result = validate_and_score(&cipher, Some(&guesses), Some(0), 0, SubmissionStatus::Won);
         assert!(!result.is_valid());
     }
 
@@ -189,13 +176,8 @@ mod tests {
     fn false_loss_rejected() {
         let cipher = sample_cipher();
         let guesses = correct_guesses();
-        let result = validate_and_score(
-            &cipher,
-            Some(&guesses),
-            Some(0),
-            0,
-            SubmissionStatus::Lost,
-        );
+        let result =
+            validate_and_score(&cipher, Some(&guesses), Some(0), 0, SubmissionStatus::Lost);
         assert!(!result.is_valid());
     }
 
@@ -203,13 +185,8 @@ mod tests {
     fn incomplete_is_loss() {
         let cipher = sample_cipher();
         let guesses = BTreeMap::from([("X".into(), "H".into())]);
-        let result = validate_and_score(
-            &cipher,
-            Some(&guesses),
-            Some(0),
-            0,
-            SubmissionStatus::Lost,
-        );
+        let result =
+            validate_and_score(&cipher, Some(&guesses), Some(0), 0, SubmissionStatus::Lost);
         assert_eq!(
             result,
             GameResult::Valid {

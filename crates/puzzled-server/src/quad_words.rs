@@ -20,7 +20,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -69,7 +71,9 @@ pub fn quad_words_score(guess_count: u32) -> u32 {
         // Still allow early solves at 100 (same formula saturates upward).
         return 100;
     }
-    let penalty = guess_count.saturating_sub(OPTIMAL_GUESSES).saturating_mul(10);
+    let penalty = guess_count
+        .saturating_sub(OPTIMAL_GUESSES)
+        .saturating_mul(10);
     100u32.saturating_sub(penalty).max(MIN_WIN_SCORE)
 }
 

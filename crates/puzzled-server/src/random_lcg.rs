@@ -17,11 +17,7 @@ impl SeededRandom {
     pub fn next_f64(&mut self) -> f64 {
         // TS: state = (state * 1103515245 + 12345) & 0x7fffffff
         //     return state / 0x7fffffff
-        self.state = self
-            .state
-            .wrapping_mul(1_103_515_245)
-            .wrapping_add(12_345)
-            & 0x7fff_ffff;
+        self.state = self.state.wrapping_mul(1_103_515_245).wrapping_add(12_345) & 0x7fff_ffff;
         f64::from(self.state) / f64::from(0x7fff_ffff_u32)
     }
 }

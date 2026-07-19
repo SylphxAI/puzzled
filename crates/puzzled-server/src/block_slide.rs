@@ -81,7 +81,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -335,9 +337,7 @@ pub fn validate_and_score(
 
     if move_count < min_moves {
         return GameResult::Invalid {
-            error: format!(
-                "Impossible: solved in {move_count} moves, minimum is {min_moves}"
-            ),
+            error: format!("Impossible: solved in {move_count} moves, minimum is {min_moves}"),
         };
     }
 

@@ -121,10 +121,7 @@ pub fn validate_and_score_sudoku(
 
     let seconds = submission.time_spent_ms / 1000;
     let time_penalty = seconds.min(500);
-    let mistakes = data
-        .get("mistakes")
-        .and_then(Value::as_u64)
-        .unwrap_or(0);
+    let mistakes = data.get("mistakes").and_then(Value::as_u64).unwrap_or(0);
     let mistake_penalty = mistakes.saturating_mul(50);
     let score = 1000u32
         .saturating_sub(time_penalty as u32)
@@ -176,10 +173,7 @@ mod tests {
             })),
         };
         let result = validate_and_score_sudoku(&solution, &submission);
-        assert_eq!(
-            result,
-            ScoringResult::valid(SubmissionStatus::Won, 1000)
-        );
+        assert_eq!(result, ScoringResult::valid(SubmissionStatus::Won, 1000));
     }
 
     #[test]

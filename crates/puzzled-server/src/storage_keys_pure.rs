@@ -48,7 +48,10 @@ mod tests {
         assert_eq!(PWA_PROMPT_DISMISSED_KEY, "puzzled:pwa:prompt-dismissed");
         assert_eq!(GUEST_ONBOARDING_KEY, "puzzled:guest:onboarding");
         assert_eq!(GUEST_GAMES_KEY, "puzzled:guest:games");
-        assert_eq!(ANALYTICS_OFFLINE_QUEUE_KEY, "puzzled:analytics:offline-queue");
+        assert_eq!(
+            ANALYTICS_OFFLINE_QUEUE_KEY,
+            "puzzled:analytics:offline-queue"
+        );
         assert_eq!(SESSION_START_KEY, "puzzled:session:start");
         assert_eq!(SESSION_ID_KEY, "puzzled:session:id");
     }

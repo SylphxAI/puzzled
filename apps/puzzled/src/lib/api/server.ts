@@ -24,14 +24,7 @@ import 'server-only'
 import { hc } from 'hono/client'
 import { cookies, headers } from 'next/headers'
 import { cache } from 'react'
-import type {
-	AdminRoutes,
-	GamesRoutes,
-	GamificationRoutes,
-	NotificationsRoutes,
-	StatsRoutes,
-	UserRoutes,
-} from '@/server/api/app'
+import type { DynamicApiClient } from './client'
 
 // API base path
 const API_BASE = '/api/v1'
@@ -79,17 +72,25 @@ export const createServerApi = cache(async () => {
 	const authFetch = await createAuthFetch()
 
 	return {
-		games: hc<GamesRoutes>(`${baseUrl}${API_BASE}/games`, { fetch: authFetch }),
-		stats: hc<StatsRoutes>(`${baseUrl}${API_BASE}/stats`, { fetch: authFetch }),
-		gamification: hc<GamificationRoutes>(`${baseUrl}${API_BASE}/gamification`, {
+		games: hc(`${baseUrl}${API_BASE}/games`, {
 			fetch: authFetch,
-		}),
-		user: hc<UserRoutes>(`${baseUrl}${API_BASE}/user`, { fetch: authFetch }),
-		notifications: hc<NotificationsRoutes>(`${baseUrl}${API_BASE}/notifications`, {
+		}) as unknown as DynamicApiClient,
+		stats: hc(`${baseUrl}${API_BASE}/stats`, {
 			fetch: authFetch,
-		}),
-		admin: hc<AdminRoutes>(`${baseUrl}${API_BASE}/admin`, { fetch: authFetch }),
-	}
+		}) as unknown as DynamicApiClient,
+		gamification: hc(`${baseUrl}${API_BASE}/gamification`, {
+			fetch: authFetch,
+		}) as unknown as DynamicApiClient,
+		user: hc(`${baseUrl}${API_BASE}/user`, {
+			fetch: authFetch,
+		}) as unknown as DynamicApiClient,
+		notifications: hc(`${baseUrl}${API_BASE}/notifications`, {
+			fetch: authFetch,
+		}) as unknown as DynamicApiClient,
+		admin: hc(`${baseUrl}${API_BASE}/admin`, {
+			fetch: authFetch,
+		}) as unknown as DynamicApiClient,
+	} satisfies Record<string, DynamicApiClient>
 })
 
 /**

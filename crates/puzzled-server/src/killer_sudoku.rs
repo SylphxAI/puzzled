@@ -22,7 +22,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -50,10 +52,7 @@ pub fn killer_sudoku_score(time_spent_ms: u64, mistakes: u32) -> u32 {
 
 /// Whether submitted grid fully matches solution (9×9 digits).
 #[must_use]
-pub fn grid_matches_solution(
-    submitted: &[Vec<Option<u8>>],
-    solution: &[Vec<u8>],
-) -> bool {
+pub fn grid_matches_solution(submitted: &[Vec<Option<u8>>], solution: &[Vec<u8>]) -> bool {
     if submitted.len() != GRID_SIZE || solution.len() != GRID_SIZE {
         return false;
     }

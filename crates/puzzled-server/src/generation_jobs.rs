@@ -323,7 +323,11 @@ pub async fn plan_generation_http(Json(body): Json<PlanGenerationBody>) -> Respo
         Ok((y, m, d)) => {
             let seed = get_seed_from_date(y, m, d);
             let plan = plan_daily_generation(&body.date, seed);
-            (StatusCode::OK, Json(json!({ "plan": plan, "slice": "puzzle-generation-jobs" }))).into_response()
+            (
+                StatusCode::OK,
+                Json(json!({ "plan": plan, "slice": "puzzle-generation-jobs" })),
+            )
+                .into_response()
         }
         Err(e) => (
             StatusCode::BAD_REQUEST,
@@ -344,7 +348,11 @@ pub async fn execute_job_http(Json(body): Json<ExecuteJobBody>) -> Response {
     let result = execute_job(&body.job, body.date.as_deref());
     let status = if result.success {
         StatusCode::OK
-    } else if result.error.as_deref().is_some_and(|e| e.starts_with("Unknown job")) {
+    } else if result
+        .error
+        .as_deref()
+        .is_some_and(|e| e.starts_with("Unknown job"))
+    {
         StatusCode::NOT_FOUND
     } else {
         StatusCode::BAD_REQUEST

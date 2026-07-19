@@ -138,7 +138,12 @@ pub struct TodayPercentileQuery {
 
 /// GET /api/v1/stats/today-percentile
 pub async fn today_percentile_http(Query(q): Query<TodayPercentileQuery>) -> Response {
-    let Some(slug) = q.game_slug.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(slug) = q
+        .game_slug
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return (StatusCode::OK, Json(serde_json::Value::Null)).into_response();
     };
     if !is_valid_game_slug(slug) {
@@ -152,8 +157,7 @@ pub async fn today_percentile_http(Query(q): Query<TodayPercentileQuery>) -> Res
         if total <= 0 {
             return (StatusCode::OK, Json(serde_json::Value::Null)).into_response();
         }
-        let percentile =
-            ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
+        let percentile = ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
         return (
             StatusCode::OK,
             Json(json!({

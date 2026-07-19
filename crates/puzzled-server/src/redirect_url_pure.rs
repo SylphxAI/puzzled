@@ -103,10 +103,7 @@ mod tests {
         assert!(!redirect_url_pure_gate("", true));
         assert_eq!(DEFAULT_PLATFORM_URL, "https://sylphx.com");
         assert_eq!(ENV_PLATFORM_URL, "SYLPHX_PLATFORM_URL");
-        assert_eq!(
-            resolve_platform_url(None, None, None),
-            "https://sylphx.com"
-        );
+        assert_eq!(resolve_platform_url(None, None, None), "https://sylphx.com");
         assert_eq!(
             resolve_platform_url(Some(" https://a "), None, None),
             "https://a"

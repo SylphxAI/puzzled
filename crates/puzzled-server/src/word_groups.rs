@@ -25,7 +25,9 @@ pub enum SubmissionStatus {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GameResult {
-    Invalid { error: String },
+    Invalid {
+        error: String,
+    },
     Valid {
         status: SubmissionStatus,
         score: u32,
@@ -163,12 +165,7 @@ mod tests {
             },
             Category {
                 name: "Colors".into(),
-                words: vec![
-                    "RED".into(),
-                    "BLUE".into(),
-                    "GREEN".into(),
-                    "YELLOW".into(),
-                ],
+                words: vec!["RED".into(), "BLUE".into(), "GREEN".into(), "YELLOW".into()],
                 level: 1,
             },
             Category {
@@ -178,12 +175,7 @@ mod tests {
             },
             Category {
                 name: "Numbers".into(),
-                words: vec![
-                    "ONE".into(),
-                    "TWO".into(),
-                    "THREE".into(),
-                    "FOUR".into(),
-                ],
+                words: vec!["ONE".into(), "TWO".into(), "THREE".into(), "FOUR".into()],
                 level: 3,
             },
         ]
@@ -232,12 +224,7 @@ mod tests {
     fn perfect_win() {
         let cats = sample_categories();
         let found = all_found(&cats);
-        let result = validate_and_score(
-            &cats,
-            Some(&found),
-            Some(0),
-            SubmissionStatus::Won,
-        );
+        let result = validate_and_score(&cats, Some(&found), Some(0), SubmissionStatus::Won);
         assert_eq!(
             result,
             GameResult::Valid {
@@ -251,12 +238,7 @@ mod tests {
     fn three_mistakes_scores_25() {
         let cats = sample_categories();
         let found = all_found(&cats);
-        let result = validate_and_score(
-            &cats,
-            Some(&found),
-            Some(3),
-            SubmissionStatus::Won,
-        );
+        let result = validate_and_score(&cats, Some(&found), Some(3), SubmissionStatus::Won);
         assert_eq!(
             result,
             GameResult::Valid {
@@ -270,12 +252,7 @@ mod tests {
     fn false_win_claim_rejected() {
         let cats = sample_categories();
         let found = vec![cats[0].words.clone()];
-        let result = validate_and_score(
-            &cats,
-            Some(&found),
-            Some(0),
-            SubmissionStatus::Won,
-        );
+        let result = validate_and_score(&cats, Some(&found), Some(0), SubmissionStatus::Won);
         assert!(!result.is_valid());
     }
 
@@ -283,12 +260,7 @@ mod tests {
     fn loss_when_not_all_found() {
         let cats = sample_categories();
         let found = vec![cats[0].words.clone(), cats[1].words.clone()];
-        let result = validate_and_score(
-            &cats,
-            Some(&found),
-            Some(4),
-            SubmissionStatus::Lost,
-        );
+        let result = validate_and_score(&cats, Some(&found), Some(4), SubmissionStatus::Lost);
         assert_eq!(
             result,
             GameResult::Valid {

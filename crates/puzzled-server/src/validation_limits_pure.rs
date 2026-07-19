@@ -165,7 +165,6 @@ mod tests {
     }
 }
 
-
 // ── wave67 pure residual dens: validation limit ladder dual-oracle residual ──
 // Dual-oracle residual of validation limit constants pure halves.
 // Tracker / network flush I/O residual retained. dens ≠ flip.

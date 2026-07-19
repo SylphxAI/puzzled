@@ -8,9 +8,5 @@ pub mod scoring;
 pub mod sudoku;
 
 pub use random::{seeded_random, shuffle_array, SeededRandom};
-pub use scoring::{
-    validate_and_score_sudoku, GameSubmission, ScoringResult, SubmissionStatus,
-};
-pub use sudoku::{
-    generate_sudoku_puzzle, SudokuDifficulty, SudokuPuzzleResult, SudokuSolution,
-};
+pub use scoring::{validate_and_score_sudoku, GameSubmission, ScoringResult, SubmissionStatus};
+pub use sudoku::{generate_sudoku_puzzle, SudokuDifficulty, SudokuPuzzleResult, SudokuSolution};

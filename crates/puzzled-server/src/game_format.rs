@@ -33,7 +33,11 @@ pub fn calculate_wordle_score(won: bool, attempts: u32) -> u32 {
 
 /// Format share score: "Lost" | timer | "N pts" | "Won".
 #[must_use]
-pub fn format_time_score(status_lost: bool, time_spent_ms: Option<u64>, score: Option<u32>) -> String {
+pub fn format_time_score(
+    status_lost: bool,
+    time_spent_ms: Option<u64>,
+    score: Option<u32>,
+) -> String {
     if status_lost {
         return "Lost".into();
     }

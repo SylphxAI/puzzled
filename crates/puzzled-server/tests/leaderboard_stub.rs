@@ -72,7 +72,9 @@ fn domain_stub_contract() {
         Ok(body) => body,
         Err(error) => panic!("response json: {error}"),
     };
-    assert!(body["entries"].as_array().is_some_and(|entries| entries.is_empty()));
+    assert!(body["entries"]
+        .as_array()
+        .is_some_and(|entries| entries.is_empty()));
     assert_eq!(body["stub"], true);
     let _ = child.kill();
     let _ = child.wait();

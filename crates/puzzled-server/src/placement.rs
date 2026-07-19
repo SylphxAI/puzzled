@@ -19,7 +19,14 @@ pub fn is_valid_placement(grid: &[Vec<Option<u8>>], row: usize, col: usize, valu
         }
     }
     for r in 0..GRID_SIZE {
-        if r != row && grid.get(r).and_then(|rowv| rowv.get(col)).copied().flatten() == Some(value) {
+        if r != row
+            && grid
+                .get(r)
+                .and_then(|rowv| rowv.get(col))
+                .copied()
+                .flatten()
+                == Some(value)
+        {
             return false;
         }
     }
@@ -37,7 +44,6 @@ pub fn is_valid_placement(grid: &[Vec<Option<u8>>], row: usize, col: usize, valu
     }
     true
 }
-
 
 /// Check if every cell of `user_values` matches `solution`.
 /// Mirrors `isGridComplete(userGrid, solution)` using plain Option/u8 values
@@ -105,7 +111,11 @@ mod tests {
     #[test]
     fn grid_complete_matches_solution() {
         let sol: Vec<Vec<u8>> = (0..9)
-            .map(|r| (0..9).map(|c| (((r * 3 + r / 3 + c) % 9) + 1) as u8).collect())
+            .map(|r| {
+                (0..9)
+                    .map(|c| (((r * 3 + r / 3 + c) % 9) + 1) as u8)
+                    .collect()
+            })
             .collect();
         let user: Vec<Vec<Option<u8>>> = sol
             .iter()

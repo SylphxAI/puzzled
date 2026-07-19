@@ -8,13 +8,8 @@
 pub const PREMIUM_PLANS: &[&str] = &["premium", "lifetime", "pro"];
 
 /// Free-tier daily rotation (TS `FREE_GAME_ROTATION` order).
-pub const FREE_GAME_ROTATION: &[&str] = &[
-    "word-guess",
-    "word-groups",
-    "queens",
-    "sudoku",
-    "crossword",
-];
+pub const FREE_GAME_ROTATION: &[&str] =
+    &["word-guess", "word-groups", "queens", "sudoku", "crossword"];
 
 const DAY_MS: i64 = 86_400_000;
 

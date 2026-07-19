@@ -110,7 +110,6 @@ mod tests {
     }
 }
 
-
 // ── wave64 pure residual dens: time unit ladder dual-oracle residual ──
 // Dual-oracle residual of time constants SECOND/MINUTE/HOUR/DAY/WEEK pure halves.
 // Clock / DB I/O residual retained. dens ≠ flip.
@@ -162,4 +161,3 @@ mod wave64_tests {
         assert_eq!(days_to_seconds(7), WEEK_SECONDS);
     }
 }
-

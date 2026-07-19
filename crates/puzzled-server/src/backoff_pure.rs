@@ -124,7 +124,6 @@ mod tests {
     }
 }
 
-
 // ── product residual dens wave72: job backoff base table+ready gate dual-oracle residual ──
 // Dual-oracle residual of backoff_base_ms / is_ready_for_retry pure halves.
 // Job runner / sleep residual retained. dens ≠ flip.
@@ -149,8 +148,7 @@ pub fn backoff_base_table_shell() -> [u64; 4] {
 /// Dual-oracle residual: zero-jitter equals base; unit=1 adds 10%.
 #[must_use]
 pub fn backoff_jitter_shell() -> bool {
-    calculate_backoff_delay_ms(0, 0.0) == 60_000
-        && calculate_backoff_delay_ms(0, 1.0) == 66_000
+    calculate_backoff_delay_ms(0, 0.0) == 60_000 && calculate_backoff_delay_ms(0, 1.0) == 66_000
 }
 
 /// Dual-oracle residual: ready gate respects elapsed + max retries.

@@ -26,7 +26,10 @@ pub struct VerificationResult {
 
 /// Verify Platform webhook request (parity: verifyPlatformRequest).
 #[must_use]
-pub fn verify_platform_request(provided_secret: Option<&str>, expected_secret: &str) -> VerificationResult {
+pub fn verify_platform_request(
+    provided_secret: Option<&str>,
+    expected_secret: &str,
+) -> VerificationResult {
     let Some(secret) = provided_secret.map(str::trim).filter(|s| !s.is_empty()) else {
         return VerificationResult {
             valid: false,
@@ -84,10 +87,7 @@ pub fn extract_job_headers(headers: &HeaderMap) -> (Option<String>, Option<Strin
 
 /// Handle a verified platform job delivery (product path).
 #[must_use]
-pub fn handle_platform_job(
-    cron_name: &str,
-    target_date: Option<&str>,
-) -> (StatusCode, JobResult) {
+pub fn handle_platform_job(cron_name: &str, target_date: Option<&str>) -> (StatusCode, JobResult) {
     if !is_known_job(cron_name) {
         return (
             StatusCode::NOT_FOUND,
@@ -130,9 +130,7 @@ pub async fn platform_jobs_webhook(
         .or_else(|_| std::env::var("PUZZLED_APP_SECRET"))
         .unwrap_or_default();
 
-    let provided = headers
-        .get(HEADER_APP_SECRET)
-        .and_then(|v| v.to_str().ok());
+    let provided = headers.get(HEADER_APP_SECRET).and_then(|v| v.to_str().ok());
 
     let verification = verify_platform_request(provided, &expected);
     if !verification.valid {
@@ -158,14 +156,12 @@ pub async fn platform_jobs_webhook(
             .into_response();
     };
 
-    let date = body
-        .date
-        .or_else(|| {
-            body.payload
-                .as_ref()
-                .and_then(|p| p.get("date"))
-                .and_then(|v| v.as_str().map(str::to_string))
-        });
+    let date = body.date.or_else(|| {
+        body.payload
+            .as_ref()
+            .and_then(|p| p.get("date"))
+            .and_then(|v| v.as_str().map(str::to_string))
+    });
 
     let (status, result) = handle_platform_job(&cron_name, date.as_deref());
     (

@@ -43,8 +43,7 @@ pub fn looks_like_credit_card(s: &str) -> bool {
 #[must_use]
 pub fn looks_like_ssn(s: &str) -> bool {
     let digits: String = s.chars().filter(|c| c.is_ascii_digit()).collect();
-    digits.len() == 9
-        && (s.contains('-') || s.contains(' ') || s.len() == 9)
+    digits.len() == 9 && (s.contains('-') || s.contains(' ') || s.len() == 9)
 }
 
 /// Detect IPv4.
@@ -109,11 +108,22 @@ pub fn scrub_pii_text(input: &str) -> String {
     }
 
     // SSN-like and cards (digit heavy tokens)
-    out = scrub_tokens(&out, |t| looks_like_ssn(t) && (t.contains('-') || t.contains(' ')), REPL_SSN);
-    out = scrub_tokens(&out, |t| {
-        let compact: String = t.chars().filter(|c| c.is_ascii_digit() || *c == '-' || *c == ' ').collect();
-        looks_like_credit_card(&compact) && t.chars().any(|c| c.is_ascii_digit())
-    }, REPL_CREDIT_CARD);
+    out = scrub_tokens(
+        &out,
+        |t| looks_like_ssn(t) && (t.contains('-') || t.contains(' ')),
+        REPL_SSN,
+    );
+    out = scrub_tokens(
+        &out,
+        |t| {
+            let compact: String = t
+                .chars()
+                .filter(|c| c.is_ascii_digit() || *c == '-' || *c == ' ')
+                .collect();
+            looks_like_credit_card(&compact) && t.chars().any(|c| c.is_ascii_digit())
+        },
+        REPL_CREDIT_CARD,
+    );
 
     out
 }

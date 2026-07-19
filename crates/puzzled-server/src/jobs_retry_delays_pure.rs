@@ -93,7 +93,10 @@ mod tests {
         assert_eq!(MAX_RETRY_DELAY_MS, 30_000);
         assert_eq!(JOB_DEFAULT_TIMEOUT_MS, 60_000);
         assert_eq!(JOBS_DLQ_MAX_AGE_MS, 604_800_000);
-        assert_eq!(DEFAULT_RETRY_DELAYS_MS, &[1_000, 5_000, 15_000, 30_000, 60_000]);
+        assert_eq!(
+            DEFAULT_RETRY_DELAYS_MS,
+            &[1_000, 5_000, 15_000, 30_000, 60_000]
+        );
         assert!(retry_delays_strictly_increasing());
         assert_eq!(retry_delay_at(0), 1_000);
         assert_eq!(retry_delay_at(2), 15_000);
@@ -121,7 +124,6 @@ mod wave70_tests {
         assert!(base_matches_ladder_head());
     }
 }
-
 
 // ── wave71 pure residual dens: retry delay attempt ladder dual-oracle residual ──
 // Dual-oracle residual of DEFAULT_RETRY_DELAYS_MS pure half.
@@ -181,10 +183,7 @@ mod wave71_tests {
         );
         assert!(retry_delay_past_end_clamps());
         assert_eq!(dlq_age_days_shell(), 7);
-        assert_eq!(
-            jobs_timing_numeric_shell(),
-            (1_000, 30_000, 60_000, 2_000)
-        );
+        assert_eq!(jobs_timing_numeric_shell(), (1_000, 30_000, 60_000, 2_000));
         assert!(retry_ladder_matches_const());
         assert!(retry_delays_strictly_increasing());
         assert!(poll_faster_than_timeout());

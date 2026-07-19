@@ -31,15 +31,10 @@ impl UsernameError {
     #[must_use]
     pub fn message(&self) -> String {
         match self {
-            Self::TooShort => format!(
-                "Username must be at least {USERNAME_MIN_LENGTH} characters"
-            ),
-            Self::TooLong => format!(
-                "Username must be at most {USERNAME_MAX_LENGTH} characters"
-            ),
+            Self::TooShort => format!("Username must be at least {USERNAME_MIN_LENGTH} characters"),
+            Self::TooLong => format!("Username must be at most {USERNAME_MAX_LENGTH} characters"),
             Self::InvalidChars => {
-                "Username can only contain lowercase letters, numbers, and underscores"
-                    .to_string()
+                "Username can only contain lowercase letters, numbers, and underscores".to_string()
             }
         }
     }
@@ -109,8 +104,8 @@ pub fn is_valid_reminder_time(raw: &str) -> bool {
     };
     // Allow 0-9 or 00-23 for hour; minutes 00-59. TS: /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
     let hour_ok = h <= 23;
-    let hour_str_ok = matches!(parts[0].len(), 1 | 2)
-        && parts[0].chars().all(|c| c.is_ascii_digit());
+    let hour_str_ok =
+        matches!(parts[0].len(), 1 | 2) && parts[0].chars().all(|c| c.is_ascii_digit());
     let min_ok = m <= 59 && parts[1].len() == 2 && parts[1].chars().all(|c| c.is_ascii_digit());
     hour_ok && hour_str_ok && min_ok
 }

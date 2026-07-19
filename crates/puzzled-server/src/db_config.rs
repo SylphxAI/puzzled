@@ -33,7 +33,9 @@ mod tests {
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     fn env_test_guard() -> MutexGuard<'static, ()> {
-        ENV_LOCK.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+        ENV_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     struct EnvRestore {
@@ -44,10 +46,7 @@ mod tests {
     impl EnvRestore {
         fn snapshot(keys: &[&str]) -> Self {
             let keys: Vec<String> = keys.iter().map(|key| (*key).to_string()).collect();
-            let values = keys
-                .iter()
-                .map(|key| std::env::var(key).ok())
-                .collect();
+            let values = keys.iter().map(|key| std::env::var(key).ok()).collect();
             Self { keys, values }
         }
     }
