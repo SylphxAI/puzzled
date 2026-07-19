@@ -17,7 +17,6 @@ import type {
 	CrosswordGuess,
 	CrosswordGuessResult,
 	CrosswordPuzzleClientData,
-	CrosswordPuzzleData,
 	CrosswordSolution,
 } from './types'
 import { GRID_SIZE, isGridComplete } from './types'
