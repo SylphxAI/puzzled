@@ -15,7 +15,12 @@ import {
 import { SudokuHowToPlay } from './components/how-to-play'
 import { generateSudokuPuzzle } from './generator'
 import { SudokuIcon } from './icon'
-import type { SudokuGuess, SudokuGuessResult, SudokuPuzzleClientData, SudokuSolution } from './types'
+import type {
+	SudokuGuess,
+	SudokuGuessResult,
+	SudokuPuzzleClientData,
+	SudokuSolution,
+} from './types'
 import { GRID_SIZE } from './types'
 
 export type { SudokuPuzzleClientData, SudokuSolution }

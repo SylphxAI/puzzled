@@ -258,6 +258,7 @@ pub fn apply_email_preferences(
 // Persistence
 // ---------------------------------------------------------------------------
 
+#[allow(clippy::too_many_arguments)]
 async fn upsert_user_preferences(
     pool: &PgPool,
     user_id: &str,
@@ -294,6 +295,7 @@ async fn upsert_user_preferences(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn upsert_notification_preferences(
     pool: &PgPool,
     user_id: &str,

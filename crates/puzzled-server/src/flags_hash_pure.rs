@@ -31,25 +31,22 @@ fn murmur_hash3_js_chars(key: &str, seed: u32) -> u32 {
             | (((chars[i + 3] as u32) & 0xff) << 24);
         i += 4;
 
-        k1 = ((k1 & 0xffff)
+        k1 = (k1 & 0xffff)
             .wrapping_mul(c1)
-            .wrapping_add((((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16)))
-            & 0xffff_ffff;
-        k1 = (k1 << 15) | (k1 >> 17);
-        k1 = ((k1 & 0xffff)
+            .wrapping_add(((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16);
+        k1 = k1.rotate_left(15);
+        k1 = (k1 & 0xffff)
             .wrapping_mul(c2)
-            .wrapping_add((((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16)))
-            & 0xffff_ffff;
+            .wrapping_add(((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16);
 
         h1 ^= k1;
-        h1 = (h1 << 13) | (h1 >> 19);
-        let h1b = ((h1 & 0xffff)
+        h1 = h1.rotate_left(13);
+        let h1b = (h1 & 0xffff)
             .wrapping_mul(5)
-            .wrapping_add((((h1 >> 16).wrapping_mul(5) & 0xffff) << 16)))
-            & 0xffff_ffff;
+            .wrapping_add(((h1 >> 16).wrapping_mul(5) & 0xffff) << 16);
         h1 = (h1b & 0xffff)
             .wrapping_add(0x6b64)
-            .wrapping_add((((h1b >> 16).wrapping_add(0xe654) & 0xffff) << 16));
+            .wrapping_add(((h1b >> 16).wrapping_add(0xe654) & 0xffff) << 16);
     }
 
     let mut k1: u32 = 0;
@@ -58,42 +55,36 @@ fn murmur_hash3_js_chars(key: &str, seed: u32) -> u32 {
             k1 ^= ((chars[i + 2] as u32) & 0xff) << 16;
             k1 ^= ((chars[i + 1] as u32) & 0xff) << 8;
             k1 ^= (chars[i] as u32) & 0xff;
-            k1 = ((k1 & 0xffff)
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c1)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16)))
-                & 0xffff_ffff;
-            k1 = (k1 << 15) | (k1 >> 17);
-            k1 = ((k1 & 0xffff)
+                .wrapping_add(((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16);
+            k1 = k1.rotate_left(15);
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c2)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16)))
-                & 0xffff_ffff;
+                .wrapping_add(((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16);
             h1 ^= k1;
         }
         2 => {
             k1 ^= ((chars[i + 1] as u32) & 0xff) << 8;
             k1 ^= (chars[i] as u32) & 0xff;
-            k1 = ((k1 & 0xffff)
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c1)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16)))
-                & 0xffff_ffff;
-            k1 = (k1 << 15) | (k1 >> 17);
-            k1 = ((k1 & 0xffff)
+                .wrapping_add(((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16);
+            k1 = k1.rotate_left(15);
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c2)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16)))
-                & 0xffff_ffff;
+                .wrapping_add(((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16);
             h1 ^= k1;
         }
         1 => {
             k1 ^= (chars[i] as u32) & 0xff;
-            k1 = ((k1 & 0xffff)
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c1)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16)))
-                & 0xffff_ffff;
-            k1 = (k1 << 15) | (k1 >> 17);
-            k1 = ((k1 & 0xffff)
+                .wrapping_add(((k1 >> 16).wrapping_mul(c1) & 0xffff) << 16);
+            k1 = k1.rotate_left(15);
+            k1 = (k1 & 0xffff)
                 .wrapping_mul(c2)
-                .wrapping_add((((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16)))
-                & 0xffff_ffff;
+                .wrapping_add(((k1 >> 16).wrapping_mul(c2) & 0xffff) << 16);
             h1 ^= k1;
         }
         _ => {}
@@ -101,15 +92,13 @@ fn murmur_hash3_js_chars(key: &str, seed: u32) -> u32 {
 
     h1 ^= len as u32;
     h1 ^= h1 >> 16;
-    h1 = ((h1 & 0xffff)
+    h1 = (h1 & 0xffff)
         .wrapping_mul(0x85ebca6b)
-        .wrapping_add((((h1 >> 16).wrapping_mul(0x85ebca6b) & 0xffff) << 16)))
-        & 0xffff_ffff;
+        .wrapping_add(((h1 >> 16).wrapping_mul(0x85ebca6b) & 0xffff) << 16);
     h1 ^= h1 >> 13;
-    h1 = ((h1 & 0xffff)
+    h1 = (h1 & 0xffff)
         .wrapping_mul(0xc2b2ae35)
-        .wrapping_add((((h1 >> 16).wrapping_mul(0xc2b2ae35) & 0xffff) << 16)))
-        & 0xffff_ffff;
+        .wrapping_add(((h1 >> 16).wrapping_mul(0xc2b2ae35) & 0xffff) << 16);
     h1 ^= h1 >> 16;
     h1
 }

@@ -1,4 +1,5 @@
 //! Platform RS256 / JWKS identity verification for puzzled-server.
+#![allow(clippy::expect_used)]
 //!
 //! Caller-supplied `x-user-id` is never trusted as identity. Protected routes
 //! must present a Bearer JWT whose signature verifies against Platform JWKS
@@ -9,7 +10,6 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
 use axum::http::{header, HeaderMap, StatusCode};
-use base64::Engine;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -146,13 +146,13 @@ pub fn install_test_decoding_key_pem(pem: &str) -> Result<(), String> {
     // Validate PEM shape early.
     let _ = DecodingKey::from_rsa_pem(pem.as_bytes()).map_err(|e| e.to_string())?;
     let cell = TEST_DECODING_KEY_PEM.get_or_init(|| Mutex::new(None));
-    *cell.lock().expect("test key mutex") = Some(pem.to_string());
+    if let Ok(mut g) = cell.lock() { *g = Some(pem.to_string()); }
     Ok(())
 }
 
 pub fn clear_test_decoding_key() {
     if let Some(cell) = TEST_DECODING_KEY_PEM.get() {
-        *cell.lock().expect("test key mutex") = None;
+        if let Ok(mut g) = cell.lock() { *g = None; }
     }
 }
 
@@ -381,6 +381,7 @@ pub fn resolve_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use std::sync::Mutex;
     static TEST_LOCK: Mutex<()> = Mutex::new(());

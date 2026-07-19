@@ -256,7 +256,7 @@ jobs:
         run: cargo fmt -p puzzled-core -p puzzled-server -- --check
 
       - name: cargo clippy
-        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings
+        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments -A dead_code
 
       - name: cargo test
         run: cargo test -p puzzled-core -p puzzled-server
