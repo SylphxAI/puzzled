@@ -146,13 +146,17 @@ pub fn install_test_decoding_key_pem(pem: &str) -> Result<(), String> {
     // Validate PEM shape early.
     let _ = DecodingKey::from_rsa_pem(pem.as_bytes()).map_err(|e| e.to_string())?;
     let cell = TEST_DECODING_KEY_PEM.get_or_init(|| Mutex::new(None));
-    if let Ok(mut g) = cell.lock() { *g = Some(pem.to_string()); }
+    if let Ok(mut g) = cell.lock() {
+        *g = Some(pem.to_string());
+    }
     Ok(())
 }
 
 pub fn clear_test_decoding_key() {
     if let Some(cell) = TEST_DECODING_KEY_PEM.get() {
-        if let Ok(mut g) = cell.lock() { *g = None; }
+        if let Ok(mut g) = cell.lock() {
+            *g = None;
+        }
     }
 }
 
