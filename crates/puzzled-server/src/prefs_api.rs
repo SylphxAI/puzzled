@@ -6,12 +6,17 @@
 //! `apps/puzzled/src/server/api/routes/notifications.ts`.
 //! DB upsert + Platform profile fields remain dual-path residual.
 
-use axum::extract::Query;
+use axum::extract::{Query, State};
+use axum::http::HeaderMap;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sqlx::PgPool;
+
+use crate::auth_sessions::require_verified_identity;
+use crate::AppState;
 
 /// Parity: `USER_LIMITS` in `apps/puzzled/src/lib/config/user.ts`
 /// (SSOT densed in `user_profile_limits_pure`).
@@ -250,6 +255,97 @@ pub fn apply_email_preferences(
 }
 
 // ---------------------------------------------------------------------------
+// Persistence
+// ---------------------------------------------------------------------------
+
+async fn upsert_user_preferences(
+    pool: &PgPool,
+    user_id: &str,
+    username: Option<&str>,
+    bio: Option<&str>,
+    is_public_profile: Option<bool>,
+    compact_mode: Option<bool>,
+    leaderboard_visible: Option<bool>,
+) -> Result<(), String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    sqlx::query(
+        r#"
+        INSERT INTO user_preferences (
+            user_id, username, bio, is_public_profile, compact_mode, leaderboard_visible, updated_at
+        ) VALUES ($1, $2, $3, COALESCE($4, false), COALESCE($5, false), COALESCE($6, true), now())
+        ON CONFLICT (user_id) DO UPDATE SET
+            username = COALESCE($2, user_preferences.username),
+            bio = COALESCE($3, user_preferences.bio),
+            is_public_profile = COALESCE($4, user_preferences.is_public_profile),
+            compact_mode = COALESCE($5, user_preferences.compact_mode),
+            leaderboard_visible = COALESCE($6, user_preferences.leaderboard_visible),
+            updated_at = now()
+        "#,
+    )
+    .bind(uid)
+    .bind(username)
+    .bind(bio)
+    .bind(is_public_profile)
+    .bind(compact_mode)
+    .bind(leaderboard_visible)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("prefs upsert failed: {e}"))?;
+    Ok(())
+}
+
+async fn upsert_notification_preferences(
+    pool: &PgPool,
+    user_id: &str,
+    push_enabled: Option<bool>,
+    push_daily_reminder: Option<bool>,
+    push_streak_alert: Option<bool>,
+    push_new_games: Option<bool>,
+    daily_reminder_time: Option<&str>,
+    email_enabled: Option<bool>,
+    email_weekly_digest: Option<bool>,
+    email_marketing: Option<bool>,
+) -> Result<(), String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    sqlx::query(
+        r#"
+        INSERT INTO notification_preferences (
+            user_id, push_enabled, push_daily_reminder, push_streak_alert, push_new_games,
+            daily_reminder_time, email_enabled, email_weekly_digest, email_marketing, updated_at
+        ) VALUES (
+            $1,
+            COALESCE($2, true), COALESCE($3, true), COALESCE($4, true), COALESCE($5, true),
+            COALESCE($6, '09:00'), COALESCE($7, true), COALESCE($8, true), COALESCE($9, true),
+            now()
+        )
+        ON CONFLICT (user_id) DO UPDATE SET
+            push_enabled = COALESCE($2, notification_preferences.push_enabled),
+            push_daily_reminder = COALESCE($3, notification_preferences.push_daily_reminder),
+            push_streak_alert = COALESCE($4, notification_preferences.push_streak_alert),
+            push_new_games = COALESCE($5, notification_preferences.push_new_games),
+            daily_reminder_time = COALESCE($6, notification_preferences.daily_reminder_time),
+            email_enabled = COALESCE($7, notification_preferences.email_enabled),
+            email_weekly_digest = COALESCE($8, notification_preferences.email_weekly_digest),
+            email_marketing = COALESCE($9, notification_preferences.email_marketing),
+            updated_at = now()
+        "#,
+    )
+    .bind(uid)
+    .bind(push_enabled)
+    .bind(push_daily_reminder)
+    .bind(push_streak_alert)
+    .bind(push_new_games)
+    .bind(daily_reminder_time)
+    .bind(email_enabled)
+    .bind(email_weekly_digest)
+    .bind(email_marketing)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("notification prefs upsert failed: {e}"))?;
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // HTTP
 // ---------------------------------------------------------------------------
 
@@ -293,6 +389,7 @@ pub async fn check_username_http(Query(q): Query<CheckUsernameQuery>) -> Respons
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProfileBody {
+    #[serde(default)]
     pub user_id: String,
     pub username: Option<String>,
     pub bio: Option<String>,
@@ -300,28 +397,39 @@ pub struct UpdateProfileBody {
     pub existing_owner: Option<String>,
 }
 
-/// PUT /api/v1/user/profile — validate + shape (DB residual).
-pub async fn update_profile_http(Json(body): Json<UpdateProfileBody>) -> Response {
-    if body.user_id.trim().is_empty() {
+/// PUT /api/v1/user/profile — verified JWT identity + durable upsert when DB present.
+pub async fn update_profile_http(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateProfileBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
+    // Never trust caller-supplied userId.
+    if !body.user_id.trim().is_empty() && body.user_id.trim() != identity.user_id {
         return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "userId required", "slice": "api-v1-hono-monolith" })),
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": "userId does not match verified identity",
+                "slice": "api-v1-hono-monolith",
+            })),
         )
             .into_response();
     }
     if let Some(ref u) = body.username {
-        if let Some(ref owner) = body.existing_owner {
-            if owner != &body.user_id {
-                return (
-                    StatusCode::CONFLICT,
-                    Json(json!({
-                        "error": "Username is already taken",
-                        "slice": "api-v1-hono-monolith",
-                    })),
-                )
-                    .into_response();
-            }
-        }
         if let Err(e) = validate_username(u) {
             return (
                 StatusCode::BAD_REQUEST,
@@ -331,60 +439,109 @@ pub async fn update_profile_http(Json(body): Json<UpdateProfileBody>) -> Respons
         }
     }
     let base = ProfilePrefs {
-        user_id: body.user_id,
+        user_id: identity.user_id.clone(),
         username: None,
         bio: None,
         is_public_profile: false,
         compact_mode: false,
         leaderboard_visible: true,
     };
-    match apply_profile_update(
+    let prefs = match apply_profile_update(
         base,
         body.username.as_deref(),
         body.bio.as_deref(),
         body.is_public_profile,
     ) {
-        Ok(prefs) => (
-            StatusCode::OK,
-            Json(json!({
-                "success": true,
-                "preferences": {
-                    "userId": prefs.user_id,
-                    "username": prefs.username,
-                    "bio": prefs.bio,
-                    "isPublicProfile": prefs.is_public_profile,
-                },
-                "slice": "api-v1-hono-monolith",
-            })),
+        Ok(p) => p,
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({ "error": e, "slice": "api-v1-hono-monolith" })),
+            )
+                .into_response();
+        }
+    };
+    let mut persisted = false;
+    if let Some(pool) = state.pool.as_ref() {
+        if let Err(e) = upsert_user_preferences(
+            pool,
+            &prefs.user_id,
+            prefs.username.as_deref(),
+            prefs.bio.as_deref(),
+            Some(prefs.is_public_profile),
+            None,
+            None,
         )
-            .into_response(),
-        Err(e) => (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": e, "slice": "api-v1-hono-monolith" })),
-        )
-            .into_response(),
+        .await
+        {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({ "error": e, "slice": "api-v1-hono-monolith" })),
+            )
+                .into_response();
+        }
+        persisted = true;
     }
+    (
+        StatusCode::OK,
+        Json(json!({
+            "success": true,
+            "preferences": {
+                "userId": prefs.user_id,
+                "username": prefs.username,
+                "bio": prefs.bio,
+                "isPublicProfile": prefs.is_public_profile,
+            },
+            "persisted": persisted,
+            "slice": "api-v1-hono-monolith",
+            "auth": "platform_jwt_rs256",
+        })),
+    )
+        .into_response()
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUiPrefsBody {
+    #[serde(default)]
     pub user_id: String,
     pub compact_mode: Option<bool>,
     pub leaderboard_visible: Option<bool>,
 }
 
-/// PUT /api/v1/user/preferences
-pub async fn update_ui_preferences_http(Json(body): Json<UpdateUiPrefsBody>) -> Response {
-    if body.user_id.trim().is_empty() {
+/// PUT /api/v1/user/preferences — verified JWT + durable upsert.
+pub async fn update_ui_preferences_http(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<UpdateUiPrefsBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
+    if !body.user_id.trim().is_empty() && body.user_id.trim() != identity.user_id {
         return (
-            StatusCode::BAD_REQUEST,
-            Json(json!({ "error": "userId required", "slice": "api-v1-hono-monolith" })),
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": "userId does not match verified identity",
+                "slice": "api-v1-hono-monolith",
+            })),
         )
             .into_response();
     }
     let base = ProfilePrefs {
-        user_id: body.user_id,
+        user_id: identity.user_id.clone(),
         username: None,
         bio: None,
         is_public_profile: false,
@@ -392,6 +549,27 @@ pub async fn update_ui_preferences_http(Json(body): Json<UpdateUiPrefsBody>) -> 
         leaderboard_visible: true,
     };
     let prefs = apply_ui_preferences(base, body.compact_mode, body.leaderboard_visible);
+    let mut persisted = false;
+    if let Some(pool) = state.pool.as_ref() {
+        if let Err(e) = upsert_user_preferences(
+            pool,
+            &prefs.user_id,
+            None,
+            None,
+            None,
+            Some(prefs.compact_mode),
+            Some(prefs.leaderboard_visible),
+        )
+        .await
+        {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({ "error": e, "slice": "api-v1-hono-monolith" })),
+            )
+                .into_response();
+        }
+        persisted = true;
+    }
     (
         StatusCode::OK,
         Json(json!({
@@ -400,7 +578,9 @@ pub async fn update_ui_preferences_http(Json(body): Json<UpdateUiPrefsBody>) -> 
                 "compactMode": prefs.compact_mode,
                 "leaderboardVisible": prefs.leaderboard_visible,
             },
+            "persisted": persisted,
             "slice": "api-v1-hono-monolith",
+            "auth": "platform_jwt_rs256",
         })),
     )
         .into_response()

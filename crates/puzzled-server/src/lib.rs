@@ -41,6 +41,7 @@ mod pattern_match;
 mod pii_scrub_pure;
 mod pkce_pure;
 mod placement;
+mod platform_jwt;
 mod platform_webhooks;
 mod prefs_api;
 mod privacy_sanitize_pure;
@@ -91,6 +92,7 @@ use gamification_api::{
 };
 use generation_jobs::{execute_job_http, plan_generation_http};
 use leaderboard::{leaderboard_stub, stats_leaderboard};
+pub use platform_jwt::{resolve_verified_identity, verify_platform_jwt, VerifiedIdentity};
 use platform_webhooks::platform_jobs_webhook;
 use prefs_api::{
     check_username_http, update_email_preferences_http, update_profile_http,
@@ -366,24 +368,33 @@ async fn readyz(State(state): State<AppState>) -> Response {
         return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
     }
 
+    // Fail closed: production readiness requires a live Postgres dependency.
+    // Absence of DATABASE_URL or a failed ping is not "ready".
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let postgres_ok = if let Some(pool) = &state.pool {
         postgres_ping(pool).await
     } else {
         false
     };
+    let ready = postgres_ok;
+    let status = if ready {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
 
     (
-        StatusCode::OK,
+        status,
         Json(json!({
-            "status": "ok",
+            "status": if ready { "ok" } else { "not_ready" },
             "uptime_s": state.uptime_secs(),
             "slice": slice,
             "dependencies": [
                 {
                     "name": "postgres",
                     "ok": postgres_ok,
-                    "detail": "sqlx leaderboard read (ADR-168 S1)"
+                    "required": true,
+                    "detail": "sqlx product persistence (fail-closed readiness)"
                 }
             ],
             "stub": state.pool.is_none(),
@@ -534,6 +545,23 @@ mod tests {
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
         assert_eq!(json["status"], "ok");
+    }
+
+    #[tokio::test]
+    async fn readyz_fails_closed_without_database() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(Method::GET, "/readyz", Body::empty()))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("readyz request: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let json = body_json(response).await;
+        assert_eq!(json["status"], "not_ready");
+        assert_eq!(json["dependencies"][0]["ok"], false);
+        assert_eq!(json["dependencies"][0]["required"], true);
     }
 
     #[tokio::test]

@@ -6,12 +6,20 @@ on:
     paths:
       - 'apps/**'
       - 'packages/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'sylphx.toml'
       - '.github/workflows/ci.yml'
   push:
     branches: [main, dev]
     paths:
       - 'apps/**'
       - 'packages/**'
+      - 'crates/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'sylphx.toml'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
@@ -221,3 +229,34 @@ jobs:
           NEXT_PUBLIC_SYLPHX_APP_ID: 'app_ci_placeholder'
           CRON_SECRET: 'ci-placeholder-cron-secret'
           ADMIN_SECRET: 'ci-placeholder-admin-secret'
+
+  # ==========================================
+  # Rust product API (sole backend process)
+  # ==========================================
+
+  rust-api:
+    name: Rust API
+    runs-on: sylphx-standard
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '.'
+
+      - name: cargo fmt
+        run: cargo fmt -p puzzled-core -p puzzled-server -- --check
+
+      - name: cargo clippy
+        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings
+
+      - name: cargo test
+        run: cargo test -p puzzled-core -p puzzled-server
