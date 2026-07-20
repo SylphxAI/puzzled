@@ -346,6 +346,8 @@ impl Default for AppState {
 #[derive(Serialize)]
 struct HealthBody {
     status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    git_commit_sha: Option<String>,
 }
 
 pub fn request_shutdown() {
@@ -356,11 +358,35 @@ fn shutting_down() -> bool {
     SHUTTING_DOWN.load(Ordering::Relaxed)
 }
 
+fn git_commit_sha() -> Option<String> {
+    for key in [
+        "SYLPHX_GIT_COMMIT_SHA",
+        "GIT_COMMIT_SHA",
+        "GIT_SHA",
+        "GITHUB_SHA",
+    ] {
+        if let Ok(value) = std::env::var(key) {
+            let trimmed = value.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed.to_string());
+            }
+        }
+    }
+    option_env!("GIT_COMMIT").map(str::to_string)
+}
+
 async fn healthz() -> Response {
     if shutting_down() {
         return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
     }
-    (StatusCode::OK, Json(HealthBody { status: "ok" })).into_response()
+    (
+        StatusCode::OK,
+        Json(HealthBody {
+            status: "ok",
+            git_commit_sha: git_commit_sha(),
+        }),
+    )
+        .into_response()
 }
 
 async fn readyz(State(state): State<AppState>) -> Response {
@@ -389,6 +415,7 @@ async fn readyz(State(state): State<AppState>) -> Response {
             "status": if ready { "ok" } else { "not_ready" },
             "uptime_s": state.uptime_secs(),
             "slice": slice,
+            "git_commit_sha": git_commit_sha(),
             "dependencies": [
                 {
                     "name": "postgres",
