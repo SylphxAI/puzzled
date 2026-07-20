@@ -1,7 +1,7 @@
 //! UTC daily puzzle time helpers — parity with
 //! `apps/puzzled/src/features/daily/lib/puzzle-utils.ts`.
 //!
-//! Pure product kernel used by games/stats/gamification dens paths.
+//! Pure product kernel used by games/stats/gamification residual paths.
 //! Launch date default matches TS `DEFAULT_LAUNCH_DATE` (2024-01-01).
 
 use chrono::{Datelike, Duration, NaiveDate, Utc};
@@ -77,7 +77,7 @@ pub fn expand_archive_dates(start: NaiveDate, end: NaiveDate, today: NaiveDate) 
 
 /// Year/month/day components for seed helpers that still take integer parts.
 #[must_use]
-#[allow(dead_code)] // used by generation seed bridges / future dens
+#[allow(dead_code)] // used by generation seed bridges / future residual
 pub fn ymd(date: NaiveDate) -> (i32, u32, u32) {
     (date.year(), date.month(), date.day())
 }

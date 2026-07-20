@@ -1,6 +1,6 @@
 //! Pure time unit constants + forward offsets + alphabet —
 //! dual-oracle residual deepen of `apps/puzzled/src/lib/constants/time.ts`
-//! and `constants/strings.ts` beyond the ms-ago helpers already densed in
+//! and `constants/strings.ts` beyond the ms-ago helpers already migrated in
 //! `backoff_pure` (days/hours/minutes_ago_ms). NO authority_rust / ts_deleted.
 
 /// Base second in ms (TS `SECOND_MS`).
@@ -110,9 +110,9 @@ mod tests {
     }
 }
 
-// ── wave64 pure residual dens: time unit ladder dual-oracle residual ──
+// ── wave64 pure residual unit: time unit ladder dual-oracle residual ──
 // Dual-oracle residual of time constants SECOND/MINUTE/HOUR/DAY/WEEK pure halves.
-// Clock / DB I/O residual retained. dens ≠ flip.
+// Clock / DB I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: seconds ladder minute → hour → day → week.
 #[must_use]

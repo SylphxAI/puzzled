@@ -1,7 +1,7 @@
 //! Pure format + base-URL residual dual-oracle of
 //! `apps/puzzled/src/lib/utils.ts` (`formatNumber`, `getBaseUrl`, `getServerBaseUrl`).
 //!
-//! Locale `Intl.NumberFormat` full ICU remains FE residual; en-US grouping densed.
+//! Locale `Intl.NumberFormat` full ICU remains FE residual; en-US grouping migrated.
 //! Window/env host injection for URL resolution. NO authority_rust / ts_deleted.
 
 /// Format integer with en-US thousands separators (dual-oracle of Intl en).

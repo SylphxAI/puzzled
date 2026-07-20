@@ -1,4 +1,4 @@
-//! Product auth session gate for puzzled-server (dens path for `auth-sessions`).
+//! Product auth session gate for puzzled-server (residual path for `auth-sessions`).
 //!
 //! Product auth for puzzled-server.
 //!

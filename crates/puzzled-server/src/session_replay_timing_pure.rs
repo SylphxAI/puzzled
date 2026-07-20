@@ -2,7 +2,7 @@
 //! dual-oracle of `packages/sdk/src/constants.ts` SESSION_REPLAY_* pure halves.
 //!
 //! Recorder / upload I/O remains product residual.
-//! NO authority_rust / ts_deleted invent. dens ≠ flip.
+//! NO authority_rust / ts_deleted invent. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: max session replay duration ms (60 minutes).
 pub const SESSION_REPLAY_MAX_DURATION_MS: u64 = 60 * 60 * 1000;

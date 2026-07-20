@@ -165,9 +165,9 @@ mod tests {
     }
 }
 
-// ── wave67 pure residual dens: validation limit ladder dual-oracle residual ──
+// ── wave67 pure residual unit: validation limit ladder dual-oracle residual ──
 // Dual-oracle residual of validation limit constants pure halves.
-// Tracker / network flush I/O residual retained. dens ≠ flip.
+// Tracker / network flush I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: pagination limit shell (default, max, admin_max).
 #[must_use]

@@ -69,7 +69,7 @@ pub fn top_achievement_tier() -> &'static str {
     "diamond"
 }
 
-// ── wave69 pure residual dens: achievement tier ladder dual-oracle residual ──
+// ── wave69 pure residual unit: achievement tier ladder dual-oracle residual ──
 
 #[cfg(test)]
 mod wave69_tests {

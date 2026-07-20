@@ -1,4 +1,4 @@
-//! Hono games domain product dens (`api-v1-hono-monolith` /games/*).
+//! Hono games domain product residual (`api-v1-hono-monolith` /games/*).
 //!
 //! Ports request validation, mode/difficulty mapping, archive access policy,
 //! and daily-status envelope construction from
@@ -423,7 +423,7 @@ pub struct ArchiveDateEntry {
 }
 
 // ---------------------------------------------------------------------------
-// HTTP handlers (product dens surface)
+// HTTP handlers (product residual surface)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
@@ -529,7 +529,7 @@ pub struct ArchiveAccessBody {
     pub already_played: Option<bool>,
 }
 
-/// POST /api/v1/games/archive-access — product policy dens (premium + past).
+/// POST /api/v1/games/archive-access — product policy residual (premium + past).
 pub async fn archive_access_http(Json(body): Json<ArchiveAccessBody>) -> Response {
     let today = get_today_utc();
     match check_archive_access(

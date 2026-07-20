@@ -1,4 +1,4 @@
-//! Hono gamification domain product dens (`api-v1-hono-monolith` /gamification/*).
+//! Hono gamification domain product residual (`api-v1-hono-monolith` /gamification/*).
 //!
 //! Ports freeze toggle/add policy + streak-info envelope from
 //! `apps/puzzled/src/server/api/routes/gamification.ts`.
@@ -181,7 +181,7 @@ pub struct StreakInfoBody {
     pub auto_freeze_enabled: Option<bool>,
 }
 
-/// POST /api/v1/gamification/streak-info — shape dens (DB residual).
+/// POST /api/v1/gamification/streak-info — shape residual (DB residual).
 pub async fn streak_info_http(Json(body): Json<StreakInfoBody>) -> Response {
     let freeze = FreezeData {
         user_id: body.user_id.unwrap_or_default(),
@@ -420,7 +420,7 @@ pub struct TryAutoFreezeBody {
     pub auto_freeze_enabled: Option<bool>,
 }
 
-/// POST /api/v1/gamification/try-auto-freeze — loss path dens.
+/// POST /api/v1/gamification/try-auto-freeze — loss path residual.
 pub async fn try_auto_freeze_http(Json(body): Json<TryAutoFreezeBody>) -> Response {
     let data = FreezeData {
         user_id: body.user_id,

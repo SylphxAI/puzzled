@@ -80,9 +80,9 @@ mod tests {
     }
 }
 
-// ── product residual dens wave73: motion duration catalog+stagger dual-oracle residual ──
+// ── product residual unit wave73: motion duration catalog+stagger dual-oracle residual ──
 // Dual-oracle residual of packages/ui motion duration/stagger pure halves.
-// Framer Motion I/O residual retained. dens ≠ flip.
+// Framer Motion I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: duration ladder seconds.
 #[must_use]

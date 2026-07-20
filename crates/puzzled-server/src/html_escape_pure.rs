@@ -48,9 +48,9 @@ mod tests {
     }
 }
 
-// ── wave70 pure residual dens: HTML entity escape table dual-oracle residual ──
+// ── wave70 pure residual unit: HTML entity escape table dual-oracle residual ──
 // Dual-oracle residual of utils.ts _escapeHtml entity map pure half.
-// Email send I/O residual retained. dens ≠ flip.
+// Email send I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: entity map covers five significant chars.
 #[must_use]

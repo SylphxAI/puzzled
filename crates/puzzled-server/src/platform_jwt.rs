@@ -73,7 +73,7 @@ pub struct PlatformClaims {
     pub iss: Option<String>,
     #[serde(default)]
     pub app_id: Option<String>,
-    /// Optional admin / scope claim for admin-gated dens.
+    /// Optional admin / scope claim for admin-gated residual.
     #[serde(default)]
     pub scope: Option<String>,
     #[serde(default)]

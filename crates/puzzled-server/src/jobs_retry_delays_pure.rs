@@ -4,7 +4,7 @@
 //! `JOB_DEFAULT_TIMEOUT_MS` / `JOBS_DLQ_MAX_AGE_MS` pure halves.
 //!
 //! Job runner / DLQ I/O remains product residual.
-//! NO authority_rust / ts_deleted invent. dens ≠ flip.
+//! NO authority_rust / ts_deleted invent. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: base retry delay ms.
 pub const BASE_RETRY_DELAY_MS: u64 = 1_000;
@@ -42,9 +42,9 @@ pub fn dlq_max_age_is_seven_days() -> bool {
     JOBS_DLQ_MAX_AGE_MS == 604_800_000
 }
 
-// ── wave70 pure residual dens: job poll + ladder shell dual-oracle residual ──
+// ── wave70 pure residual unit: job poll + ladder shell dual-oracle residual ──
 // Dual-oracle of JOB_POLL_INTERVAL_MS + timeout/poll shell pure half.
-// Job runner / status polling I/O residual retained. dens ≠ flip.
+// Job runner / status polling I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: default job status polling interval ms.
 pub const JOB_POLL_INTERVAL_MS: u64 = 2_000;
@@ -125,10 +125,10 @@ mod wave70_tests {
     }
 }
 
-// ── wave71 pure residual dens: retry delay attempt ladder dual-oracle residual ──
+// ── wave71 pure residual unit: retry delay attempt ladder dual-oracle residual ──
 // Dual-oracle residual of DEFAULT_RETRY_DELAYS_MS pure half.
-// Job runner / network I/O residual retained. dens ≠ flip.
-// product residual dens wave71
+// Job runner / network I/O residual retained. pure residual ≠ authority flip.
+// product residual unit wave71
 
 /// Dual-oracle residual: full attempt delay ladder 0..4.
 #[must_use]

@@ -1,4 +1,4 @@
-//! Platform jobs webhook product path (dens for `platform-webhooks`).
+//! Platform jobs webhook product path (residual for `platform-webhooks`).
 //!
 //! Ports verification + dispatch from
 //! `apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts`.
