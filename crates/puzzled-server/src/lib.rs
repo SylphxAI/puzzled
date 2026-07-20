@@ -358,7 +358,6 @@ fn shutting_down() -> bool {
     SHUTTING_DOWN.load(Ordering::Relaxed)
 }
 
-
 fn git_commit_sha() -> Option<String> {
     for key in [
         "SYLPHX_GIT_COMMIT_SHA",
@@ -380,7 +379,14 @@ async fn healthz() -> Response {
     if shutting_down() {
         return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
     }
-    (StatusCode::OK, Json(HealthBody { status: "ok", git_commit_sha: git_commit_sha() })).into_response()
+    (
+        StatusCode::OK,
+        Json(HealthBody {
+            status: "ok",
+            git_commit_sha: git_commit_sha(),
+        }),
+    )
+        .into_response()
 }
 
 async fn readyz(State(state): State<AppState>) -> Response {
