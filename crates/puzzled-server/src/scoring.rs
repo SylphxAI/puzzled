@@ -1,6 +1,6 @@
 //! Pure Sudoku validateAndScore — mirrors `apps/puzzled/src/games/sudoku/config.ts`.
 //!
-//! FLEET-PRODUCTS-A-TICK offline pure residual. HTTP submit route remains TS.
+//! PORTFOLIO-PRODUCTS-A-TICK offline pure residual. HTTP submit route remains TS.
 //! NO authority_rust / ts_deleted claim.
 
 use crate::placement::GRID_SIZE;

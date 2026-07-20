@@ -1,7 +1,7 @@
 //! Pure crossword grid complete check + score — mirrors
 //! `apps/puzzled/src/games/crossword/types.ts#isGridComplete` and
 //! `apps/puzzled/src/games/crossword/config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 /// Mini-crossword grid size (5x5).
 pub const CROSSWORD_GRID_SIZE: usize = 5;

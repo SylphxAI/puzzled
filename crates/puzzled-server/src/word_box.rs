@@ -1,6 +1,6 @@
 //! Pure Letter Boxed validation + score — mirrors
 //! `apps/puzzled/src/games/word-box/types.ts` + `config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 use std::collections::BTreeSet;
 

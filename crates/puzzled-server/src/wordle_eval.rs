@@ -1,6 +1,6 @@
 //! Pure Wordle guess evaluation + validateAndScore —
 //! mirrors `apps/puzzled/src/games/word-guess/config.ts`.
-//! FLEET residual pure continue4. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure continue4. NO authority_rust / ts_deleted.
 //!
 //! Dictionary membership is injectable so this kernel stays pure/IO-free
 //! (same pattern as word_ladder).

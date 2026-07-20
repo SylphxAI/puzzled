@@ -1,7 +1,7 @@
 //! Block Slide pure move/solver/score — mirrors
 //! `apps/puzzled/src/games/block-slide/{types,solver,config}.ts`.
 //!
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 //! Generator (seeded layout search) remains TS; this kernel covers legality,
 //! BFS min-moves, configuration validity, and validateAndScore.
 

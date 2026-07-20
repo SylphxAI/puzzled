@@ -1,7 +1,7 @@
 //! Pure killer-sudoku grid match + score — mirrors
 //! `apps/puzzled/src/games/killer-sudoku/config.ts#validateAndScore`.
 //! Same scoring formula as classic sudoku (base 1000 / time / mistakes).
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 /// Grid size.
 pub const GRID_SIZE: usize = 9;
