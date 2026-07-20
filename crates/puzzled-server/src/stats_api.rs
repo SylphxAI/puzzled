@@ -1,4 +1,4 @@
-//! Hono stats domain product dens beyond leaderboard-read
+//! Hono stats domain product residual beyond leaderboard-read
 //! (`api-v1-hono-monolith` /stats/* residual).
 //!
 //! Ports pure percentile compare + aggregate shaping from
@@ -130,7 +130,7 @@ pub struct TodayPercentileQuery {
     pub score: Option<i32>,
     pub mistakes: Option<i32>,
     pub time_spent_ms: Option<i64>,
-    /// Optional pre-supplied totalPlayers for dual-oracle fixture dens.
+    /// Optional pre-supplied totalPlayers for dual-oracle fixture residual.
     pub total_players: Option<i32>,
     /// Optional betterThan count when sessions not inlined.
     pub better_than: Option<i32>,
@@ -206,7 +206,7 @@ pub struct UserStatsInput {
     pub perfect_games: Option<i32>,
 }
 
-/// POST /api/v1/stats/user-stats/shape — pure aggregate shaping dens.
+/// POST /api/v1/stats/user-stats/shape — pure aggregate shaping residual.
 pub async fn user_stats_shape_http(Json(body): Json<UserStatsBody>) -> Response {
     let games = body.games.unwrap_or_default();
     let mut out = serde_json::Map::new();

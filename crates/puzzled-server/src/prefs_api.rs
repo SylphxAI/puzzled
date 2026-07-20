@@ -1,4 +1,4 @@
-//! Hono user + notifications preferences product dens
+//! Hono user + notifications preferences product residual
 //! (`api-v1-hono-monolith` /user/* + /notifications/*).
 //!
 //! Ports validation kernels from
@@ -19,7 +19,7 @@ use crate::auth_sessions::require_verified_identity;
 use crate::AppState;
 
 /// Parity: `USER_LIMITS` in `apps/puzzled/src/lib/config/user.ts`
-/// (SSOT densed in `user_profile_limits_pure`).
+/// (SSOT migrated in `user_profile_limits_pure`).
 pub use crate::user_profile_limits_pure::{
     BIO_MAX_LENGTH, USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH,
 };

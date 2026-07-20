@@ -152,9 +152,9 @@ mod tests {
     }
 }
 
-// ── wave65 pure residual dens: domain enum catalog dual-oracle residual ──
+// ── wave65 pure residual unit: domain enum catalog dual-oracle residual ──
 // Dual-oracle residual of schema.ts business enum pure halves.
-// Clock / DB I/O residual retained. dens ≠ flip.
+// Clock / DB I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: game status catalog size is 4.
 #[must_use]

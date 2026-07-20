@@ -1,4 +1,4 @@
-//! Product generation-job orchestration (dens path for `puzzle-generation-jobs`).
+//! Product generation-job orchestration (residual path for `puzzle-generation-jobs`).
 //!
 //! Ports job registry + seed/date planning from
 //! `apps/puzzled/src/lib/jobs/handlers.ts` and
@@ -20,7 +20,7 @@ pub const JOB_DAILY_REMINDER: &str = "daily-reminder";
 pub const JOB_STREAK_AT_RISK: &str = "streak-at-risk";
 pub const JOB_WIN_BACK_EMAILS: &str = "win-back-emails";
 
-/// Seed-based games densed in Rust (generators backend product slice).
+/// Seed-based games migrated in Rust (generators backend product slice).
 pub const RUST_SEED_GAMES: &[&str] = &["sudoku"];
 
 /// Games that still require LLM pre-generation (FE-TS residual).
@@ -286,7 +286,7 @@ pub fn execute_job(cron_name: &str, target_date: Option<&str>) -> JobResult {
             let plan = plan_daily_generation(date, seed);
             execute_generate_daily_puzzles(&plan)
         }
-        // Notification / DLQ handlers densed as acknowledged stubs (I/O stays Platform/TS).
+        // Notification / DLQ handlers migrated as acknowledged stubs (I/O stays Platform/TS).
         JOB_DLQ_RETRY | JOB_DAILY_REMINDER | JOB_STREAK_AT_RISK | JOB_WIN_BACK_EMAILS => {
             JobResult {
                 success: true,

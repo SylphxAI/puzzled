@@ -1,9 +1,9 @@
-# ADR-168 — Fleet Puzzled Rust North Star architecture
+# ADR-168 — Portfolio Puzzled Rust North Star architecture
 
 - **Status:** Accepted
 - **Date:** 2026-07-09
 - **Relates to:** ADR-167 (SylphxAI/doctrine)
-- **Change class:** `required-future` for Puzzled; `advisory` for fleet
+- **Change class:** `required-future` for Puzzled; `advisory` for portfolio
 
 ## Context
 
@@ -60,7 +60,7 @@ transport. The game web UI and shared UI package remain TypeScript per language 
 ## Consequences
 
 - New backend code defaults to `crates/puzzled-*`.
-- Fleet cutover registry: auth/read slice is first parity milestone.
+- Portfolio cutover registry: auth/read slice is first parity milestone.
 - Atlas migrations and Sylphx deploy evidence required per slice.
 
 ## Validation

@@ -51,9 +51,9 @@ mod tests {
     }
 }
 
-// ── wave70 pure residual dens: reduced-motion SSR/query dual-oracle residual ──
+// ── wave70 pure residual unit: reduced-motion SSR/query dual-oracle residual ──
 // Dual-oracle residual of use-reduced-motion pure halves.
-// matchMedia / React effect I/O residual retained. dens ≠ flip.
+// matchMedia / React effect I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: SSR default is false until hydrate.
 #[must_use]

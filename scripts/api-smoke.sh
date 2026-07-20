@@ -42,7 +42,7 @@ echo "$readyz" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.g
   || fail "/readyz slice: $readyz"
 pass "/readyz slice marker"
 
-# Prod sole-process probes that previously 404'd on incomplete dens.
+# Prod sole-process probes that previously 404'd on incomplete residual.
 auth_session="$(curl -fsS "$BASE_URL/api/v1/auth/session")"
 echo "$auth_session" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('authenticated') is False or d.get('session'); assert d.get('slice')=='auth-sessions'" \
   || fail "/api/v1/auth/session: $auth_session"

@@ -124,9 +124,9 @@ mod tests {
     }
 }
 
-// ── product residual dens wave72: job backoff base table+ready gate dual-oracle residual ──
+// ── product residual unit wave72: job backoff base table+ready gate dual-oracle residual ──
 // Dual-oracle residual of backoff_base_ms / is_ready_for_retry pure halves.
-// Job runner / sleep residual retained. dens ≠ flip.
+// Job runner / sleep residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: base/max delay constants.
 #[must_use]

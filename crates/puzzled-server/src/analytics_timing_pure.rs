@@ -1,10 +1,10 @@
 //! Pure analytics + auth timing residual —
 //! dual-oracle of `packages/sdk/src/constants.ts`
 //! ANALYTICS_* / DEFAULT_TIMEOUT_MS / TOKEN_* / FLAGS_STREAM_* pure halves
-//! beyond jobs retry + session-replay modules already densed.
+//! beyond jobs retry + session-replay modules already migrated.
 //!
 //! Tracker / network flush I/O remains product residual.
-//! NO authority_rust / ts_deleted invent. dens ≠ flip. PreferRust OFF.
+//! NO authority_rust / ts_deleted invent. pure residual ≠ authority flip. PreferRust OFF.
 
 /// Dual-oracle residual: default request timeout ms.
 pub const DEFAULT_TIMEOUT_MS: u64 = 30_000;
@@ -129,9 +129,9 @@ mod tests {
     }
 }
 
-// ── wave66 pure residual dens: auth/analytics/flags timing ladder dual-oracle residual ──
+// ── wave66 pure residual unit: auth/analytics/flags timing ladder dual-oracle residual ──
 // Dual-oracle residual of packages/sdk constants.ts timing pure halves.
-// Tracker / network flush I/O residual retained. dens ≠ flip.
+// Tracker / network flush I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: session token lifetime shell (seconds, ms).
 #[must_use]

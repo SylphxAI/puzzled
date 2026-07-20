@@ -134,9 +134,9 @@ mod tests {
     }
 }
 
-// ── wave69 pure residual dens: error code status ladder dual-oracle residual ──
+// ── wave69 pure residual unit: error code status ladder dual-oracle residual ──
 // Dual-oracle residual of ERROR_CODES status/http pure half.
-// Tracker / network flush I/O residual retained. dens ≠ flip.
+// Tracker / network flush I/O residual retained. pure residual ≠ authority flip.
 
 /// Dual-oracle residual: catalog sizes (all, retryable).
 #[must_use]
@@ -218,10 +218,10 @@ mod wave69_tests {
     }
 }
 
-// ── wave70 pure residual dens: error class partition dual-oracle residual ──
+// ── wave70 pure residual unit: error class partition dual-oracle residual ──
 // Dual-oracle residual of ERROR_CODES client/server/transport partition pure half.
-// Tracker / network flush I/O residual retained. dens ≠ flip.
-// product residual dens wave70
+// Tracker / network flush I/O residual retained. pure residual ≠ authority flip.
+// product residual unit wave70
 
 /// Dual-oracle residual: extra client statuses (413/422).
 #[must_use]

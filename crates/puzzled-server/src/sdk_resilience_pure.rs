@@ -1,14 +1,14 @@
 //! Pure SDK resilience / cache / UI residual —
-//! dual-oracle of `packages/sdk/src/constants.ts` pure halves not yet densed in
+//! dual-oracle of `packages/sdk/src/constants.ts` pure halves not yet migrated in
 //! jobs/session-replay/analytics/web-vitals modules:
 //! FLAGS_CACHE_* / STALE_TIME_* / UI_* / STORAGE_* / CIRCUIT_BREAKER_* /
 //! API_KEY_EXPIRY_* / MIN_PASSWORD_LENGTH / DEFAULT_CONTEXT_WINDOW /
 //! JWK_CACHE_TTL / CLICK_ID_EXPIRY / analytics track caps.
 //!
 //! Network / storage I/O remains product residual.
-//! NO authority_rust / ts_deleted invent. dens ≠ flip.
+//! NO authority_rust / ts_deleted invent. pure residual ≠ authority flip.
 
-// ── wave70 pure residual dens: sdk resilience + cache/UI ladder dual-oracle ──
+// ── wave70 pure residual unit: sdk resilience + cache/UI ladder dual-oracle ──
 
 /// Dual-oracle residual: feature flags cache TTL ms (5 minutes).
 pub const FLAGS_CACHE_TTL_MS: u64 = 5 * 60 * 1000;
