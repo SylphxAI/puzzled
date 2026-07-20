@@ -1,7 +1,7 @@
 //! Pure nonogram clue generation / grid match / score —
 //! mirrors `apps/puzzled/src/games/nonogram/types.ts` and
 //! `apps/puzzled/src/games/nonogram/config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 #![allow(clippy::needless_range_loop)] // 2D run-length scans are clearer with explicit indices
 

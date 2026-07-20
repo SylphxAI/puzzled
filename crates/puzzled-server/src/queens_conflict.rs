@@ -1,7 +1,7 @@
 //! Pure queens conflict / solved check + score — mirrors
 //! `apps/puzzled/src/games/queens/types.ts#getConflicts|isSolved` and
 //! `config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 #![allow(clippy::needless_range_loop)] // 2D conflict scans are clearer with explicit indices
 

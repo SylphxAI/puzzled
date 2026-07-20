@@ -1,7 +1,7 @@
 //! Pure tango (binary sun/moon) is_solved + score — mirrors
 //! `apps/puzzled/src/games/tango/types.ts#isSolved|getConflicts` and
 //! `config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 #![allow(clippy::needless_range_loop)]
 

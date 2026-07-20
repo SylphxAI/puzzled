@@ -28,3 +28,7 @@ atlas migrate hash --dir file://apps/puzzled/atlas/migrations
 
 - Prefer the **narrowest** affected check before full workspace runs.
 - Report layers honestly: local diff · trunk FF · deploy · prod proof (do not collapse).
+
+## Language hygiene
+
+Machine gate: `bash scripts/check-language-hygiene.sh`.

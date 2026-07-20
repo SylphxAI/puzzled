@@ -1,7 +1,7 @@
 //! Word Groups (Connections) pure match + score — mirrors
 //! `apps/puzzled/src/games/word-groups/config.ts`.
 //!
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 /// Words per category (Connections standard).
 pub const WORDS_PER_CATEGORY: usize = 4;

@@ -1,7 +1,7 @@
 //! Pure arithmo equation validation + score — mirrors
 //! `apps/puzzled/src/games/arithmo/types.ts#isValidEquation|getGuessResult` and
 //! `config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 use crate::game_format::calculate_wordle_score;
 

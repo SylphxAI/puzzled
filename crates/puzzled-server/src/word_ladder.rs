@@ -1,7 +1,7 @@
 //! Word Ladder pure path + score — mirrors
 //! `apps/puzzled/src/games/word-ladder/types.ts` + `config.ts#validateAndScore`.
 //!
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 //! Dictionary membership is injectable so this kernel stays pure/IO-free.
 
 use std::collections::HashSet;

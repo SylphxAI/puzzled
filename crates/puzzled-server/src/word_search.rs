@@ -1,6 +1,6 @@
 //! Pure word-search found-words claim + score — mirrors
 //! `apps/puzzled/src/games/word-search/config.ts#validateAndScore`.
-//! FLEET residual pure deepen. NO authority_rust / ts_deleted.
+//! PORTFOLIO residual pure deepen. NO authority_rust / ts_deleted.
 
 /// Base win score.
 pub const BASE_WIN_SCORE: u32 = 500;
