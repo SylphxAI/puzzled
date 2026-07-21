@@ -96,7 +96,10 @@ pub fn resolve_session_token(headers: &HeaderMap) -> Option<String> {
     extract_bearer(headers).or_else(|| extract_session_cookie(headers))
 }
 
-/// Validate a pre-resolved session (from trusted gateway / Platform SDK edge).
+/// Shape-only session check (non-empty user id + token).
+///
+/// **Not cryptographic identity.** Product HTTP handlers must use
+/// [`require_verified_identity`] so `sub` comes from a verified Platform JWT.
 ///
 /// # Errors
 ///
@@ -123,12 +126,15 @@ pub fn validate_session(
     }
 }
 
-/// Required auth: fail closed without a valid session.
+/// Legacy non-cryptographic session shape check.
 ///
-/// # Errors
+/// **Not product identity.** Caller-supplied `user_id` is never accepted as
+/// identity on HTTP routes — use [`require_verified_identity`] /
+/// [`platform_jwt::resolve_verified_identity`] only.
 ///
-/// Returns [`AuthError`] when credentials are missing or empty.
-pub fn require_auth(
+/// Kept private for unit tests of the shape validator; do not re-export.
+#[cfg(test)]
+fn require_auth(
     user_id: Option<&str>,
     session_token: Option<&str>,
     display_name: Option<&str>,
@@ -136,9 +142,10 @@ pub fn require_auth(
     validate_session(user_id, session_token, display_name)
 }
 
-/// Optional auth: returns `None` when unauthenticated (never errors).
+/// Optional shape check — same non-identity caveat as [`require_auth`].
+#[cfg(test)]
 #[must_use]
-pub fn optional_auth(
+fn optional_auth(
     user_id: Option<&str>,
     session_token: Option<&str>,
     display_name: Option<&str>,
