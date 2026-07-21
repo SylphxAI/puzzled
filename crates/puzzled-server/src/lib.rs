@@ -174,7 +174,7 @@ pub use arithmo::{
     EQUATION_LENGTH as ARITHMO_EQUATION_LENGTH, MAX_ATTEMPTS as ARITHMO_MAX_ATTEMPTS,
 };
 pub use auth_sessions::{
-    extract_bearer, extract_session_cookie, optional_auth, require_auth, resolve_session_token,
+    extract_bearer, extract_session_cookie, require_verified_identity, resolve_session_token,
     validate_session, AuthError, SessionContext,
 };
 pub use block_slide::{
