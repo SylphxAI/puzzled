@@ -2,8 +2,6 @@ version = "1"
 
 [project]
 name = "puzzled-monorepo"
-slug = "puzzled"
-org = "sylphx"
 
 [build]
 strategy = "dockerfile"
