@@ -11,6 +11,9 @@ context = "."
 [[services]]
 name = "web"
 type = "worker"
+# Platform injects API_INTERNAL_URL for private web → api calls (connect graph).
+# Public /api/* still routes via path_prefixes on the api service edge.
+connect = { services = ["api"] }
 release_command = "atlas migrate apply --env production --baseline 20260222000000"
 
 # Rust owns the product API. Next.js owns presentation and web-only adapters.
@@ -33,10 +36,13 @@ watch_paths = [
   "Cargo.lock",
   "sylphx.toml",
 ]
+
+[services.health]
+mode = "http"
+# ADR-141 single path.
+path = "/healthz"
+
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"
 context = "."
-[services.health]
-mode = "http"
-path = "/healthz"
