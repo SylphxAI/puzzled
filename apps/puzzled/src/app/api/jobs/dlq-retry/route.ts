@@ -1,4 +1,8 @@
 /**
+ * ADR-169 residual: internal/job residual path; platform webhook uses lib/jobs handlers directly.
+ */
+
+/**
  * DLQ Retry Processor
  *
  * Per spec: Dead-letter handling must include automatic retry with exponential backoff.

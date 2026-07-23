@@ -1,30 +1,22 @@
-//! Product generation-job orchestration (residual path for `puzzle-generation-jobs`).
+//! Product generation-job orchestration (ADR-169).
 //!
-//! Ports job registry + seed/date planning from
-//! `apps/puzzled/src/lib/jobs/handlers.ts` and
-//! `apps/puzzled/src/lib/jobs/handlers/generate-puzzles.ts` / registry seed helpers.
-//! LLM generators and DB writes remain TS/FE-side; this is the backend plan +
-//! seed-game dispatch product path.
+//! Pure plan/seed execution lives here; residual I/O jobs fail closed and
+//! execute on the web platform-jobs webhook until Rust adapters own effects.
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use puzzled_core::jobs_policy::job_catalog::{
+    is_known_job as catalog_is_known_job, is_residual_io_job, JOB_GENERATE_DAILY_PUZZLES,
+    LLM_GAMES, RUST_SEED_GAMES,
+};
+#[cfg(test)]
+use puzzled_core::jobs_policy::job_catalog::{
+    JOB_DAILY_REMINDER, JOB_DLQ_RETRY, JOB_STREAK_AT_RISK, JOB_WIN_BACK_EMAILS,
+};
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-/// Known platform cron / job names (parity: JOB_HANDLERS keys).
-pub const JOB_GENERATE_DAILY_PUZZLES: &str = "generate-daily-puzzles";
-pub const JOB_DLQ_RETRY: &str = "dlq-retry";
-pub const JOB_DAILY_REMINDER: &str = "daily-reminder";
-pub const JOB_STREAK_AT_RISK: &str = "streak-at-risk";
-pub const JOB_WIN_BACK_EMAILS: &str = "win-back-emails";
-
-/// Seed-based games migrated in Rust (generators backend product slice).
-pub const RUST_SEED_GAMES: &[&str] = &["sudoku"];
-
-/// Games that still require LLM pre-generation (FE-TS residual).
-pub const LLM_GAMES: &[&str] = &["word-groups", "crossword", "cryptogram"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -169,14 +161,7 @@ pub fn plan_daily_generation(date: &str, base_seed: i64) -> GenerationPlan {
 /// Whether a job name is registered (parity: JOB_HANDLERS lookup).
 #[must_use]
 pub fn is_known_job(cron_name: &str) -> bool {
-    matches!(
-        cron_name,
-        JOB_GENERATE_DAILY_PUZZLES
-            | JOB_DLQ_RETRY
-            | JOB_DAILY_REMINDER
-            | JOB_STREAK_AT_RISK
-            | JOB_WIN_BACK_EMAILS
-    )
+    catalog_is_known_job(cron_name)
 }
 
 /// Result of executing a registered job in the Rust product path.
@@ -246,6 +231,8 @@ pub fn execute_generate_daily_puzzles(plan: &GenerationPlan) -> JobResult {
             "generated": generated,
             "deferredLlm": deferred,
             "failed": failed,
+            "persisted": false,
+            "residualDbWrite": "web:/api/webhooks/platform-jobs",
             "slice": "puzzle-generation-jobs",
         }),
         error: if success {
@@ -286,18 +273,21 @@ pub fn execute_job(cron_name: &str, target_date: Option<&str>) -> JobResult {
             let plan = plan_daily_generation(date, seed);
             execute_generate_daily_puzzles(&plan)
         }
-        // Notification / DLQ handlers migrated as acknowledged stubs (I/O stays Platform/TS).
-        JOB_DLQ_RETRY | JOB_DAILY_REMINDER | JOB_STREAK_AT_RISK | JOB_WIN_BACK_EMAILS => {
+        // Residual I/O jobs: fail closed on the Rust product API.
+        // Full execution remains on the web residual webhook executor until
+        // SQL/email/push adapters land in this shell (ADR-169).
+        name if is_residual_io_job(name) => {
             JobResult {
-                success: true,
+                success: false,
                 job: cron_name.to_string(),
                 data: json!({
-                    "acknowledged": true,
-                    "execution": "rust-product-envelope",
-                    "io": "deferred-to-platform-or-ts",
+                    "execution": "not-implemented-in-rust",
+                    "residualAuthority": "web:/api/webhooks/platform-jobs",
                     "slice": "puzzle-generation-jobs",
                 }),
-                error: None,
+                error: Some(format!(
+                    "job `{cron_name}` residual I/O is not implemented in puzzled-server; use web platform-jobs webhook"
+                )),
             }
         }
         _ => JobResult {
@@ -420,5 +410,23 @@ mod tests {
         assert!(is_known_job(JOB_GENERATE_DAILY_PUZZLES));
         assert!(is_known_job(JOB_DLQ_RETRY));
         assert!(!is_known_job("nope"));
+    }
+
+    #[test]
+    fn residual_io_jobs_fail_closed() {
+        for job in [
+            JOB_DLQ_RETRY,
+            JOB_DAILY_REMINDER,
+            JOB_STREAK_AT_RISK,
+            JOB_WIN_BACK_EMAILS,
+        ] {
+            let r = execute_job(job, None);
+            assert!(!r.success, "{job} must not false-succeed");
+            assert!(is_residual_io_job(job));
+            assert!(
+                r.error.as_deref().unwrap_or("").contains("residual"),
+                "{job} error should name residual authority"
+            );
+        }
     }
 }

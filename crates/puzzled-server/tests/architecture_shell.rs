@@ -60,7 +60,8 @@ fn router_registers_rust_api_prefixes() {
         "/readyz",
         "/api/leaderboard",
         "/api/v1",
-        "/api/webhooks/platform-jobs",
+        "/api/v1/jobs/plan",
+        "/api/v1/jobs/execute",
     ] {
         assert!(router.contains(route), "router missing {route}");
     }
@@ -107,18 +108,31 @@ fn sql_adapters_exist_for_persisting_capabilities() {
 }
 
 #[test]
-fn edge_owned_webhook_has_no_dual_next_authority() {
+fn web_residual_webhook_executes_jobs_until_rust_io_adapters_land() {
     // Repo-root relative from crate manifest.
     let route =
         manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
     let text =
         fs::read_to_string(&route).unwrap_or_else(|e| panic!("read {}: {e}", route.display()));
     assert!(
-        text.contains("NON-AUTHORITY") && text.contains("410"),
-        "Next platform-jobs route must remain explicit non-authority 410 marker"
+        text.contains("executeJob") && text.contains("web-residual-job-executor"),
+        "web residual webhook must execute JOB_HANDLERS until Rust I/O adapters land"
     );
     assert!(
-        !text.contains("executeJob("),
-        "Next platform-jobs route must not execute jobs"
+        !text.contains("status: 410"),
+        "must not 410 the residual job executor while edge routes webhook to web"
+    );
+
+    let manifest = fs::read_to_string(manifest_dir().join("../../sylphx.toml"))
+        .unwrap_or_else(|e| panic!("read sylphx.toml: {e}"));
+    // Only the path_prefixes array is binding for edge routing; comments may mention the path.
+    let prefixes = manifest
+        .split("path_prefixes")
+        .nth(1)
+        .and_then(|s| s.split(']').next())
+        .unwrap_or("");
+    assert!(
+        !prefixes.contains("/api/webhooks/platform-jobs"),
+        "api path_prefixes must not steal residual webhook from web until Rust owns full I/O"
     );
 }

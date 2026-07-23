@@ -1,3 +1,7 @@
+/**
+ * ADR-169 residual: internal/job residual path; platform webhook uses lib/jobs handlers directly.
+ */
+
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes for puzzle generation
 

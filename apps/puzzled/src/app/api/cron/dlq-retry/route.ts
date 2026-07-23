@@ -1,3 +1,7 @@
+/**
+ * ADR-169 residual: legacy Vercel-style cron dual entry; production Platform crons use /api/webhooks/platform-jobs.
+ */
+
 import { cronSuccess, verifyCronAuth } from '@/lib/api/cron'
 import { getServerBaseUrl } from '@/lib/utils'
 

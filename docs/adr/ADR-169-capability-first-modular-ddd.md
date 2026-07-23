@@ -101,7 +101,7 @@ authority.
 
 | Alternative | Why rejected |
 | --- | --- |
-| Keep flat `puzzled-server` + dens pure files | Violates capability ownership and FCIS |
+| Keep flat `puzzled-server` + flat pure residual files | Violates capability ownership and FCIS |
 | One crate per game / per residual | Micro-crate tax without isolation benefit |
 | Move pure domain into Next.js packages | Contradicts Rust API authority and Skills language pillars |
 | Expand-contract every module forever | No live dual-write requirement for in-process module moves |
@@ -126,17 +126,27 @@ authority.
 
 ## Transitional residual (explicit, not done)
 
-Until deleted with proof, these remain **temporary strangler residuals** and are
-**not** capability-first completion:
+### Job I/O authority (corrected)
 
-1. Next.js `/api/jobs/*` and `/api/cron/*` handlers under the web service still
-   execute product jobs that have parallel Rust `generation_jobs` surfaces.
-   Edge `path_prefixes` currently send `/api/webhooks/platform-jobs` to Rust only.
-2. Some shell interfaces still contain SQL for prefs/gamification residual paths;
-   extraction to adapters is incremental with ports.
-3. `presentation_policy` pure constants remain dual-oracle parity kernels used by
-   tests; they are not a user-facing backend promise and may move to a presentation
-   package when no backend consumer remains.
+Full platform job **effects** (LLM generation, DB persistence, email/push, DLQ)
+remain on the **web residual executor**:
 
-Landed completion requires eliminating item 1 dual write authority and finishing
-adapter/port extraction for remaining SQL interfaces.
+- `apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts` + `src/lib/jobs/**`
+- `sylphx.toml` api `path_prefixes` intentionally **omit**
+  `/api/webhooks/platform-jobs` so edge does not send job I/O to Rust stubs
+
+Rust owns:
+
+- pure plan/seed materialization at `/api/v1/jobs/plan` and `/api/v1/jobs/execute`
+- fail-closed responses for residual I/O job names (no false `success: true`)
+- pure job catalog under `puzzled_core::jobs_policy::job_catalog`
+
+### Other residuals
+
+1. Legacy Next `/api/cron/*` fire-and-forget paths remain non-platform dual entry
+   points for local/Vercel-era flows; production Platform crons use the webhook.
+2. `presentation_policy` pure dual-oracle constants remain parity kernels.
+3. Progressive extraction of remaining pure application helpers from shell
+   interfaces continues without changing public HTTP contracts.
+
+Landed job-authority rule: **never claim Rust job completion for residual I/O**.

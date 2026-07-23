@@ -27,8 +27,9 @@ path_prefixes = [
   "/readyz",
   "/api/leaderboard",
   "/api/v1",
-  "/api/webhooks/platform-jobs",
 ]
+# /api/webhooks/platform-jobs stays on web residual executor until Rust job
+# adapters own full I/O (LLM/DB/email/DLQ). See ADR-169 residual section.
 watch_paths = [
   "crates/puzzled-server/**",
   "crates/puzzled-core/**",
