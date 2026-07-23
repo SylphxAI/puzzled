@@ -1,3 +1,7 @@
+/**
+ * ADR-169 residual: legacy Vercel-style cron dual entry; production Platform crons use /api/webhooks/platform-jobs.
+ */
+
 import { createWorkflowCronHandler } from '@/lib/api/cron'
 
 export const runtime = 'nodejs'

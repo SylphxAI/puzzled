@@ -38,6 +38,8 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/auth/session/validate", post(validate_session_http))
         .route("/api/v1/jobs/plan", post(plan_generation_http))
         .route("/api/v1/jobs/execute", post(execute_job_http))
+        // Progressive surface for seed plan/execute probes; residual I/O jobs fail closed.
+        // Edge traffic for platform callbacks stays on web (sylphx path_prefixes).
         .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
         // Product domains formerly served by the Hono API.
         // GET /api/v1/games — domain index (prod probe; must not 404)
