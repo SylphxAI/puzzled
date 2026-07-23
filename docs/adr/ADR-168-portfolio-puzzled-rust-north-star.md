@@ -1,6 +1,7 @@
 # ADR-168 — Portfolio Puzzled Rust North Star architecture
 
-- **Status:** Accepted
+- **Status:** Superseded in part by ADR-169 (module/crate shape); transport north star retained
+- **Superseded by:** ADR-169-capability-first-modular-ddd.md
 - **Date:** 2026-07-09
 - **Relates to:** ADR-167 (SylphxAI/doctrine)
 - **Change class:** `required-future` for Puzzled; `advisory` for portfolio
