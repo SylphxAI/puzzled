@@ -21,10 +21,8 @@ pre-commit:
     02-typecheck-sdk:
       priority: 2
       glob: "packages/sdk/**"
-      env:
-        NODE_OPTIONS: "--max-old-space-size=4096"
-        SKIP_ENV_VALIDATION: "true"
-      run: bunx turbo typecheck --filter=@sylphx/sdk
+      # Local package is retired (@puzzled/sdk-local-retired); dogfood uses npm @sylphx/sdk.
+      run: 'echo "retired local sdk: skip typecheck"'
 
     03-typecheck-ui:
       priority: 3
