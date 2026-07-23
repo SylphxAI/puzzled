@@ -5,7 +5,10 @@ Static engineering and delivery standards load from the active Skills runtime
 SSOT). Doctrine and Mission Control are retired historical lineage and must not
 be loaded as current instruction authority.
 
-Local truth: `PROJECT.md`, `.doctrine/project.json` when present.
+Local truth: `PROJECT.md`, `docs/adr/`, `.doctrine/project.json` when present.
+
+Architecture SSOT: binding Skills `engineering-standard` + `docs/adr/ADR-169-capability-first-modular-ddd.md`.
+Rust layout: `crates/puzzled-core` (functional core) + `crates/puzzled-server` (imperative shell).
 
 ## Boundary hazards
 

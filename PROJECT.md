@@ -8,7 +8,7 @@ manifest, and application-specific game/user workflows.
 
 - Lifecycle: `production`
 - Layer: `application`
-- Doctrine source of truth: [SylphxAI/doctrine](https://github.com/SylphxAI/doctrine)
+- Instruction SSOT: binding Skills (`engineering-standard`). Architecture: [ADR-169](docs/adr/ADR-169-capability-first-modular-ddd.md) (supersedes ADR-168 module shape; retains Rust API authority).
 - Machine manifest: `.doctrine/project.json`
 
 ## Goals
@@ -32,7 +32,9 @@ manifest, and application-specific game/user workflows.
 ## Boundaries
 
 Puzzled owns its application code, app package, migrations, deployment manifest,
-local SDK/UI consumption, and product-specific game workflows. It does not own
+local SDK/UI consumption, and product-specific game workflows.
+Rust functional core lives in `crates/puzzled-core` (capability modules);
+imperative API shell lives in `crates/puzzled-server`. It does not own
 Sylphx Platform internals, external package release policy, or sibling product
 domain models.
 
