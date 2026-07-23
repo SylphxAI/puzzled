@@ -15,12 +15,12 @@ pub use capabilities::puzzle_play::sudoku_scoring::{
 };
 
 // Capability roots for shell/application imports
-pub use capabilities::puzzle_play;
-pub use capabilities::identity_policy;
-pub use capabilities::leaderboard;
-pub use capabilities::gamification;
-pub use capabilities::product_policy;
-pub use capabilities::privacy;
-pub use capabilities::presentation_policy;
-pub use capabilities::jobs_policy;
 pub use capabilities::billing_access;
+pub use capabilities::gamification;
+pub use capabilities::identity_policy;
+pub use capabilities::jobs_policy;
+pub use capabilities::leaderboard;
+pub use capabilities::presentation_policy;
+pub use capabilities::privacy;
+pub use capabilities::product_policy;
+pub use capabilities::puzzle_play;

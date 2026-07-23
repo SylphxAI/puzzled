@@ -3,11 +3,11 @@
 use axum::routing::{get, post, put};
 use axum::Router;
 
-use crate::capabilities::generation_jobs::interfaces::{
-    execute_job_http, plan_generation_http, platform_jobs_webhook,
-};
 use crate::capabilities::gamification::interfaces::{
     add_streak_freezes_http, streak_info_http, toggle_auto_freeze_http, try_auto_freeze_http,
+};
+use crate::capabilities::generation_jobs::interfaces::{
+    execute_job_http, plan_generation_http, platform_jobs_webhook,
 };
 use crate::capabilities::identity_access::interfaces::{get_session_http, validate_session_http};
 use crate::capabilities::leaderboard::interfaces::{leaderboard_stub, stats_leaderboard};
@@ -79,5 +79,3 @@ pub fn router(state: AppState) -> Router {
         )
         .with_state(state)
 }
-
-

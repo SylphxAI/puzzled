@@ -1,9 +1,9 @@
 //! Capability `puzzle_play` functional core.
 
-
-pub mod domain;
 pub mod application;
+pub mod domain;
 
+pub use application::game_flows;
 pub use domain::arithmo;
 pub use domain::block_slide;
 pub use domain::crossword_grid;
@@ -30,5 +30,3 @@ pub use domain::word_hive;
 pub use domain::word_ladder;
 pub use domain::word_search;
 pub use domain::wordle_eval;
-pub use application::game_flows;
-

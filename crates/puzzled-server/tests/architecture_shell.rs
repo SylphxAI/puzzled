@@ -77,7 +77,8 @@ fn cross_capability_auth_goes_through_identity_contract() {
         {
             continue;
         }
-        let text = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         if text.contains("identity_access::interfaces::auth_sessions")
             || text.contains("identity_access::adapters::platform_jwt")
         {
@@ -108,9 +109,10 @@ fn sql_adapters_exist_for_persisting_capabilities() {
 #[test]
 fn edge_owned_webhook_has_no_dual_next_authority() {
     // Repo-root relative from crate manifest.
-    let route = manifest_dir()
-        .join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
-    let text = fs::read_to_string(&route).unwrap_or_else(|e| panic!("read {}: {e}", route.display()));
+    let route =
+        manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
+    let text =
+        fs::read_to_string(&route).unwrap_or_else(|e| panic!("read {}: {e}", route.display()));
     assert!(
         text.contains("NON-AUTHORITY") && text.contains("410"),
         "Next platform-jobs route must remain explicit non-authority 410 marker"

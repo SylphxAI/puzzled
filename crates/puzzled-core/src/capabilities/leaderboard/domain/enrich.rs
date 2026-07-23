@@ -8,7 +8,6 @@ use std::collections::HashMap;
 
 use uuid::Uuid;
 
-
 /// Ranked leaderboard row after pure display enrichment.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]

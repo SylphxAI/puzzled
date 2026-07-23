@@ -12,7 +12,9 @@ use axum::Json;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::capabilities::identity_access::adapters::platform_jwt::{self, JwtError, VerifiedIdentity};
+use crate::capabilities::identity_access::adapters::platform_jwt::{
+    self, JwtError, VerifiedIdentity,
+};
 
 /// Authenticated session context (mirrors Hono `PuzzledAuthEnv` user fields).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

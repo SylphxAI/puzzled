@@ -6,8 +6,10 @@ use axum::Json;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::capabilities::leaderboard::adapters::leaderboard_db::{fetch_score_leaderboard, LeaderboardEntry, LeaderboardQuery};
 use crate::bootstrap::AppState;
+use crate::capabilities::leaderboard::adapters::leaderboard_db::{
+    fetch_score_leaderboard, LeaderboardEntry, LeaderboardQuery,
+};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

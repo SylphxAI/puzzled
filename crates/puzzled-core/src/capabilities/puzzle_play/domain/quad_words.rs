@@ -3,7 +3,9 @@
 //!
 //! Letter evaluation reuses [`crate::capabilities::puzzle_play::wordle_eval`]. NO authority_rust / ts_deleted.
 
-use crate::capabilities::puzzle_play::wordle_eval::{evaluate_guess, is_winning_guess, LetterStatus};
+use crate::capabilities::puzzle_play::wordle_eval::{
+    evaluate_guess, is_winning_guess, LetterStatus,
+};
 
 /// Max guesses allowed (Quordle standard in this app).
 pub const MAX_GUESSES: u32 = 9;

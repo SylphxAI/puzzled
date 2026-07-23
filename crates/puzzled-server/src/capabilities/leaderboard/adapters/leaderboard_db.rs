@@ -4,8 +4,8 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 use puzzled_core::leaderboard::enrich::{enrich_leaderboard_entries, DisplayFields, RankScore};
+use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
 pub use puzzled_core::leaderboard::enrich::LeaderboardEntry;
 

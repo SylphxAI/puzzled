@@ -1,6 +1,5 @@
 //! Capability `product_policy` functional core.
 
-
 pub mod domain;
 
 pub use domain::app_config;
@@ -16,4 +15,3 @@ pub use domain::storage_keys;
 pub use domain::time_constants;
 pub use domain::user_profile_limits;
 pub use domain::validation_limits;
-

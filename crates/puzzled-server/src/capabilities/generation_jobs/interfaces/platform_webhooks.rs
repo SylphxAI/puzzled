@@ -11,7 +11,9 @@ use axum::Json;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::capabilities::generation_jobs::interfaces::generation_jobs::{execute_job, is_known_job, JobResult};
+use crate::capabilities::generation_jobs::interfaces::generation_jobs::{
+    execute_job, is_known_job, JobResult,
+};
 
 /// Header names used by Platform job delivery.
 pub const HEADER_APP_SECRET: &str = "x-app-secret";

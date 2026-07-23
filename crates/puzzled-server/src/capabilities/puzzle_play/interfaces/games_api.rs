@@ -13,8 +13,10 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::bootstrap::AppState;
-use crate::capabilities::puzzle_play::adapters::game_sessions_db::{persist_game_session, PersistGameSessionInput};
 use crate::capabilities::identity_access::contract::require_verified_identity;
+use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
+    persist_game_session, PersistGameSessionInput,
+};
 use puzzled_core::puzzle_play::daily_time::{
     get_puzzle_number, get_today_utc, parse_date_yyyy_mm_dd, puzzle_date_string_utc,
 };
@@ -32,7 +34,6 @@ use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 fn domain_status(code: u16) -> StatusCode {
     StatusCode::from_u16(code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -225,7 +226,16 @@ pub async fn save_result_http(
             let mut persisted = false;
             let mut session_id: Option<String> = None;
             if let Some(pool) = state.pool.as_ref() {
-                match persist_game_session(pool, PersistGameSessionInput { user_id: &identity.user_id, score: body.score.map(|s| s as i32), plan: &plan }).await {
+                match persist_game_session(
+                    pool,
+                    PersistGameSessionInput {
+                        user_id: &identity.user_id,
+                        score: body.score.map(|s| s as i32),
+                        plan: &plan,
+                    },
+                )
+                .await
+                {
                     Ok(id) => {
                         persisted = true;
                         session_id = Some(id);

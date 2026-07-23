@@ -102,4 +102,3 @@ async fn postgres_ping(pool: &PgPool) -> bool {
     .and_then(Result::ok)
     .is_some()
 }
-

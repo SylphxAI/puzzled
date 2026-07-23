@@ -254,7 +254,15 @@ pub async fn toggle_auto_freeze_http(
     let updated = toggle_auto_freeze(data, body.enabled);
     let mut persisted = false;
     if let Some(pool) = state.pool.as_ref() {
-        if let Err(e) = upsert_freeze_data(pool, &updated.user_id, updated.freezes_available, updated.freezes_used, updated.auto_freeze_enabled).await {
+        if let Err(e) = upsert_freeze_data(
+            pool,
+            &updated.user_id,
+            updated.freezes_available,
+            updated.freezes_used,
+            updated.auto_freeze_enabled,
+        )
+        .await
+        {
             return (
                 StatusCode::SERVICE_UNAVAILABLE,
                 Json(json!({ "success": false, "error": e, "slice": "api-v1-hono-monolith" })),
@@ -340,7 +348,15 @@ pub async fn add_streak_freezes_http(
         Ok((updated, reason)) => {
             let mut persisted = false;
             if let Some(pool) = state.pool.as_ref() {
-                if let Err(e) = upsert_freeze_data(pool, &updated.user_id, updated.freezes_available, updated.freezes_used, updated.auto_freeze_enabled).await {
+                if let Err(e) = upsert_freeze_data(
+                    pool,
+                    &updated.user_id,
+                    updated.freezes_available,
+                    updated.freezes_used,
+                    updated.auto_freeze_enabled,
+                )
+                .await
+                {
                     return (
                         StatusCode::SERVICE_UNAVAILABLE,
                         Json(json!({ "success": false, "error": e, "slice": "api-v1-hono-monolith" })),
@@ -373,8 +389,6 @@ pub async fn add_streak_freezes_http(
             .into_response(),
     }
 }
-
-
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -65,7 +65,11 @@ fn capability_modules_have_domain_layer() {
         "billing_access",
     ] {
         let domain = root.join(cap).join("domain").join("mod.rs");
-        assert!(domain.is_file(), "missing domain layer {}", domain.display());
+        assert!(
+            domain.is_file(),
+            "missing domain layer {}",
+            domain.display()
+        );
     }
     assert!(
         root.join("puzzle_play/application/mod.rs").is_file(),
@@ -78,8 +82,15 @@ fn core_source_tree_has_no_shell_framework_imports() {
     let src = manifest_dir().join("src");
     let mut offenders = Vec::new();
     for entry in walk_rs(&src) {
-        let text = fs::read_to_string(&entry).unwrap_or_else(|e| panic!("read {}: {e}", entry.display()));
-        for needle in ["use axum", "use sqlx", "use reqwest", "use tokio::", "std::env::"] {
+        let text =
+            fs::read_to_string(&entry).unwrap_or_else(|e| panic!("read {}: {e}", entry.display()));
+        for needle in [
+            "use axum",
+            "use sqlx",
+            "use reqwest",
+            "use tokio::",
+            "std::env::",
+        ] {
             if text.contains(needle) {
                 offenders.push(format!("{} contains `{needle}`", entry.display()));
             }
