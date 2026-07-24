@@ -1,7 +1,7 @@
 //! Product generation-job orchestration (ADR-169).
 //!
-//! Pure plan/seed execution lives here; residual I/O jobs fail closed and
-//! execute on the web platform-jobs webhook until Rust adapters own effects.
+//! Pure plan/seed execution lives here. Full platform job effects are owned by
+//! the web job worker (ADR-170). Web-worker job names fail closed on this API.
 
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -232,7 +232,7 @@ pub fn execute_generate_daily_puzzles(plan: &GenerationPlan) -> JobResult {
             "deferredLlm": deferred,
             "failed": failed,
             "persisted": false,
-            "residualDbWrite": "web:/api/webhooks/platform-jobs",
+            "terminalDbWrite": "web:/api/webhooks/platform-jobs",
             "slice": "puzzle-generation-jobs",
         }),
         error: if success {
@@ -273,20 +273,18 @@ pub fn execute_job(cron_name: &str, target_date: Option<&str>) -> JobResult {
             let plan = plan_daily_generation(date, seed);
             execute_generate_daily_puzzles(&plan)
         }
-        // Residual I/O jobs: fail closed on the Rust product API.
-        // Full execution remains on the web residual webhook executor until
-        // SQL/email/push adapters land in this shell (ADR-169).
+        // Web-worker-owned jobs (ADR-170): fail closed on the Rust product API.
         name if is_residual_io_job(name) => {
             JobResult {
                 success: false,
                 job: cron_name.to_string(),
                 data: json!({
                     "execution": "not-implemented-in-rust",
-                    "residualAuthority": "web:/api/webhooks/platform-jobs",
+                    "terminalAuthority": "web:/api/webhooks/platform-jobs",
                     "slice": "puzzle-generation-jobs",
                 }),
                 error: Some(format!(
-                    "job `{cron_name}` residual I/O is not implemented in puzzled-server; use web platform-jobs webhook"
+                    "job `{cron_name}` effects are owned by the web platform job worker (ADR-170); use /api/webhooks/platform-jobs"
                 )),
             }
         }
@@ -413,7 +411,7 @@ mod tests {
     }
 
     #[test]
-    fn residual_io_jobs_fail_closed() {
+    fn web_worker_jobs_fail_closed_on_rust_api() {
         for job in [
             JOB_DLQ_RETRY,
             JOB_DAILY_REMINDER,
@@ -421,11 +419,14 @@ mod tests {
             JOB_WIN_BACK_EMAILS,
         ] {
             let r = execute_job(job, None);
-            assert!(!r.success, "{job} must not false-succeed");
+            assert!(!r.success, "{job} must not false-succeed on Rust API");
             assert!(is_residual_io_job(job));
             assert!(
-                r.error.as_deref().unwrap_or("").contains("residual"),
-                "{job} error should name residual authority"
+                r.error
+                    .as_deref()
+                    .unwrap_or("")
+                    .contains("web platform job worker"),
+                "{job} error should name web job worker authority"
             );
         }
     }

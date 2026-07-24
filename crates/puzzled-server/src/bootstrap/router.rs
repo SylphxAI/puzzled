@@ -6,9 +6,7 @@ use axum::Router;
 use crate::capabilities::gamification::interfaces::{
     add_streak_freezes_http, streak_info_http, toggle_auto_freeze_http, try_auto_freeze_http,
 };
-use crate::capabilities::generation_jobs::interfaces::{
-    execute_job_http, plan_generation_http, platform_jobs_webhook,
-};
+use crate::capabilities::generation_jobs::interfaces::{execute_job_http, plan_generation_http};
 use crate::capabilities::identity_access::interfaces::{get_session_http, validate_session_http};
 use crate::capabilities::leaderboard::interfaces::{leaderboard_stub, stats_leaderboard};
 use crate::capabilities::preferences::interfaces::{
@@ -32,15 +30,12 @@ pub fn router(state: AppState) -> Router {
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .route("/api/v1/puzzles/grid", get(generate_grid))
         .route("/api/v1/puzzles/submit", post(submit_solution))
-        // Auth, jobs, webhooks, and generators.
+        // Auth + pure job plan/execute (ADR-170: platform job worker is web).
         // GET /api/v1/auth/session — prod sole-process probe path (optional session read)
         .route("/api/v1/auth/session", get(get_session_http))
         .route("/api/v1/auth/session/validate", post(validate_session_http))
         .route("/api/v1/jobs/plan", post(plan_generation_http))
         .route("/api/v1/jobs/execute", post(execute_job_http))
-        // Progressive surface for seed plan/execute probes; residual I/O jobs fail closed.
-        // Edge traffic for platform callbacks stays on web (sylphx path_prefixes).
-        .route("/api/webhooks/platform-jobs", post(platform_jobs_webhook))
         // Product domains formerly served by the Hono API.
         // GET /api/v1/games — domain index (prod probe; must not 404)
         .route("/api/v1/games", get(games_index_http))

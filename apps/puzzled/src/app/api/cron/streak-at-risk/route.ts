@@ -1,27 +1,33 @@
 /**
- * ADR-169 residual: legacy Vercel-style cron dual entry; production Platform crons use /api/webhooks/platform-jobs.
+ * ADR-170 terminal retirement.
+ *
+ * Dual public entry retired. Platform job worker authority is:
+ *   POST /api/webhooks/platform-jobs
+ * (web service; register-crons callbackUrl).
+ *
+ * Legacy Vercel cron dual entry.
  */
 
-import { createWorkflowCronHandler } from '@/lib/api/cron'
+import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/**
- * Streak-at-risk reminder cron job
- *
- * Triggered by Vercel Cron at 18:00 UTC daily (see vercel.json)
- * Fire-and-forget: triggers Upstash Workflow and returns immediately
- *
- * Architecture:
- * - Vercel Cron triggers this endpoint (< 1s, lightweight)
- * - This endpoint fires the Upstash Workflow (no timeout, retry, DLQ)
- * - Workflow finds users with active streaks who haven't played today
- *   and sends push notifications to warn them
- */
-export const GET = createWorkflowCronHandler({
-	workflowPath: '/api/workflow/daily-reminder',
-	workflowBody: { type: 'streak-at-risk' },
-	logPrefix: '[StreakAtRisk]',
-	successMessage: 'Streak-at-risk workflow triggered',
-})
+function gone() {
+	return NextResponse.json(
+		{
+			error: 'gone',
+			authority: 'web:/api/webhooks/platform-jobs',
+			message: 'This dual HTTP entry is retired (ADR-170). Use the Platform job worker webhook.',
+		},
+		{ status: 410 },
+	)
+}
+
+export function GET() {
+	return gone()
+}
+
+export function POST() {
+	return gone()
+}

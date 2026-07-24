@@ -1,4 +1,7 @@
-//! Capability `presentation_policy` functional core.
+//! Presentation parity kernel (dual-oracle constants).
+//!
+//! Not an independent product capability promise (ADR-170). These pure constants
+//! exist for cross-language parity tests only; they are not a backend surface.
 
 pub mod domain;
 
