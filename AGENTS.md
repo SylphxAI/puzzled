@@ -7,7 +7,7 @@ be loaded as current instruction authority.
 
 Local truth: `PROJECT.md`, `docs/adr/`, `.doctrine/project.json` when present.
 
-Architecture SSOT: binding Skills `engineering-standard` + `docs/adr/ADR-169-capability-first-modular-ddd.md`.
+Architecture SSOT: binding Skills `engineering-standard` + ADR-169/ADR-170 (`docs/adr/`).
 Rust layout: `crates/puzzled-core` (functional core) + `crates/puzzled-server` (imperative shell).
 
 ## Boundary hazards

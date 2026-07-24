@@ -8,7 +8,7 @@ manifest, and application-specific game/user workflows.
 
 - Lifecycle: `production`
 - Layer: `application`
-- Instruction SSOT: binding Skills (`engineering-standard`). Architecture: [ADR-169](docs/adr/ADR-169-capability-first-modular-ddd.md) (supersedes ADR-168 module shape; retains Rust API authority).
+- Instruction SSOT: binding Skills (`engineering-standard`). Architecture: [ADR-169](docs/adr/ADR-169-capability-first-modular-ddd.md) + [ADR-170](docs/adr/ADR-170-terminal-capability-ownership.md) (supersedes ADR-168 module shape; retains Rust API authority).
 - Machine manifest: `.doctrine/project.json`
 
 ## Goals

@@ -1,6 +1,7 @@
 # ADR-169 — Capability-first Modular DDD for Puzzled
 
 - **Status:** Accepted
+- **Residual closure:** ADR-170 closes job-worker residual wording
 - **Date:** 2026-07-23
 - **Supersedes:** ADR-168 (sections on crate/module shape and residual flat layout)
 - **Relates to:** Binding Skills `engineering-standard` (Capability-first Modular DDD,
@@ -124,29 +125,11 @@ authority.
 - No dual-authority Next route for `sylphx.toml` `api` `path_prefixes`
 
 
-## Transitional residual (explicit, not done)
+## Job ownership residual — **closed by ADR-170**
 
-### Job I/O authority (corrected)
+Job worker public authority is terminal on the web service
+(`/api/webhooks/platform-jobs` + `src/lib/jobs/**`). See
+[ADR-170](ADR-170-terminal-capability-ownership.md).
 
-Full platform job **effects** (LLM generation, DB persistence, email/push, DLQ)
-remain on the **web residual executor**:
-
-- `apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts` + `src/lib/jobs/**`
-- `sylphx.toml` api `path_prefixes` intentionally **omit**
-  `/api/webhooks/platform-jobs` so edge does not send job I/O to Rust stubs
-
-Rust owns:
-
-- pure plan/seed materialization at `/api/v1/jobs/plan` and `/api/v1/jobs/execute`
-- fail-closed responses for residual I/O job names (no false `success: true`)
-- pure job catalog under `puzzled_core::jobs_policy::job_catalog`
-
-### Other residuals
-
-1. Legacy Next `/api/cron/*` fire-and-forget paths remain non-platform dual entry
-   points for local/Vercel-era flows; production Platform crons use the webhook.
-2. `presentation_policy` pure dual-oracle constants remain parity kernels.
-3. Progressive extraction of remaining pure application helpers from shell
-   interfaces continues without changing public HTTP contracts.
-
-Landed job-authority rule: **never claim Rust job completion for residual I/O**.
+Rust retains pure seed plan/execute at `/api/v1/jobs/*` only. Dual legacy
+cron/jobs HTTP entry points are retired (410).

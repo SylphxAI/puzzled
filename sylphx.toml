@@ -21,15 +21,14 @@ release_command = "atlas migrate apply --env production --baseline 2026022200000
 name = "api"
 type = "web"
 port = 8080
-# Route the complete public API namespace to Rust; no dual backend remains.
+# Product API namespace on Rust. Platform job webhook is terminal on web (ADR-170).
 path_prefixes = [
   "/healthz",
   "/readyz",
   "/api/leaderboard",
   "/api/v1",
 ]
-# /api/webhooks/platform-jobs stays on web residual executor until Rust job
-# adapters own full I/O (LLM/DB/email/DLQ). See ADR-169 residual section.
+# /api/webhooks/platform-jobs is terminal on web job worker (ADR-170).
 watch_paths = [
   "crates/puzzled-server/**",
   "crates/puzzled-core/**",

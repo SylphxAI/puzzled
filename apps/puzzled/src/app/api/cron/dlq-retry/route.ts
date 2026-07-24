@@ -1,38 +1,33 @@
 /**
- * ADR-169 residual: legacy Vercel-style cron dual entry; production Platform crons use /api/webhooks/platform-jobs.
+ * ADR-170 terminal retirement.
+ *
+ * Dual public entry retired. Platform job worker authority is:
+ *   POST /api/webhooks/platform-jobs
+ * (web service; register-crons callbackUrl).
+ *
+ * Legacy Vercel cron dual entry.
  */
 
-import { cronSuccess, verifyCronAuth } from '@/lib/api/cron'
-import { getServerBaseUrl } from '@/lib/utils'
+import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/**
- * DLQ retry cron job
- *
- * Triggered by Vercel Cron hourly (see vercel.json)
- * Processes failed jobs in the dead letter queue.
- */
-export function GET(request: Request): Response {
-	const authError = verifyCronAuth(request, '[DLQ]')
-	if (authError) return authError
-
-	const baseUrl = getServerBaseUrl()
-	const jobUrl = `${baseUrl}/api/jobs/dlq-retry`
-
-	console.log('[DLQ] Triggering DLQ retry job')
-
-	// Fire-and-forget - don't await
-	fetch(jobUrl, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'x-internal-call': 'true',
+function gone() {
+	return NextResponse.json(
+		{
+			error: 'gone',
+			authority: 'web:/api/webhooks/platform-jobs',
+			message: 'This dual HTTP entry is retired (ADR-170). Use the Platform job worker webhook.',
 		},
-	}).catch((error) => {
-		console.error('[DLQ] Failed to trigger job:', error)
-	})
+		{ status: 410 },
+	)
+}
 
-	return cronSuccess('DLQ retry job triggered')
+export function GET() {
+	return gone()
+}
+
+export function POST() {
+	return gone()
 }
