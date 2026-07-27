@@ -22,6 +22,21 @@ fn walk_rs(dir: &Path) -> Vec<PathBuf> {
     out
 }
 
+fn walk_files(dir: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let entries = fs::read_dir(dir).unwrap_or_else(|e| panic!("read_dir {}: {e}", dir.display()));
+    for entry in entries {
+        let entry = entry.unwrap_or_else(|e| panic!("dir entry: {e}"));
+        let path = entry.path();
+        if path.is_dir() {
+            out.extend(walk_files(&path));
+        } else {
+            out.push(path);
+        }
+    }
+    out
+}
+
 #[test]
 fn shell_depends_on_puzzled_core() {
     let toml = fs::read_to_string(manifest_dir().join("Cargo.toml"))
@@ -134,5 +149,28 @@ fn web_residual_webhook_executes_jobs_until_rust_io_adapters_land() {
     assert!(
         !prefixes.contains("/api/webhooks/platform-jobs"),
         "api path_prefixes must not steal residual webhook from web until Rust owns full I/O"
+    );
+}
+
+#[test]
+fn retired_web_server_directory_cannot_reintroduce_executable_backend_source() {
+    // This directory contained unmounted legacy TypeScript only. Keeping it
+    // executable would recreate the false-authority trap this cutover removes.
+    let root = manifest_dir().join("../../apps/puzzled/src/server");
+    let executable_extensions = ["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs"];
+    let offenders = walk_files(&root)
+        .into_iter()
+        .filter(|path| {
+            path.extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| executable_extensions.contains(&extension))
+        })
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
+
+    assert!(
+        offenders.is_empty(),
+        "retired web-server archive must not regain executable source:\n{}",
+        offenders.join("\n")
     );
 }
