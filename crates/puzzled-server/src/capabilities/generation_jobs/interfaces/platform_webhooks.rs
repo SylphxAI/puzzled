@@ -87,7 +87,12 @@ pub fn extract_job_headers(headers: &HeaderMap) -> (Option<String>, Option<Strin
     (cron, job_id)
 }
 
-/// Handle a verified platform job delivery (product path).
+/// Handle a verified platform job delivery.
+///
+/// This endpoint may expose Rust-owned pure planning/generation, but it must
+/// never acknowledge an externally delivered job as complete until the owning
+/// Rust path has durably persisted its result.  The live callback edge remains
+/// the web residual executor while those adapters are unfinished.
 #[must_use]
 pub fn handle_platform_job(cron_name: &str, target_date: Option<&str>) -> (StatusCode, JobResult) {
     if !is_known_job(cron_name) {
@@ -101,9 +106,21 @@ pub fn handle_platform_job(cron_name: &str, target_date: Option<&str>) -> (Statu
             },
         );
     }
-    let result = execute_job(cron_name, target_date);
-    let status = if result.success {
+    let mut result = execute_job(cron_name, target_date);
+    let status = if result.success
+        && result
+            .data
+            .get("persisted")
+            .and_then(serde_json::Value::as_bool)
+            == Some(true)
+    {
         StatusCode::OK
+    } else if result.success {
+        result.success = false;
+        result.error = Some(format!(
+            "job `{cron_name}` is not complete in puzzled-server: no durable result was persisted; use web platform-jobs webhook"
+        ));
+        StatusCode::NOT_IMPLEMENTED
     } else {
         StatusCode::INTERNAL_SERVER_ERROR
     };
@@ -209,10 +226,18 @@ mod tests {
     }
 
     #[test]
-    fn handle_generate_job_ok() {
+    fn handle_generate_job_fails_closed_until_rust_persists_it() {
         let (status, result) = handle_platform_job("generate-daily-puzzles", Some("2024-12-25"));
-        assert_eq!(status, StatusCode::OK);
-        assert!(result.success);
+        assert_eq!(status, StatusCode::NOT_IMPLEMENTED);
+        assert!(!result.success, "non-persisted work must not false-succeed");
+        assert_eq!(result.data["persisted"], false);
+        assert!(
+            result
+                .error
+                .as_deref()
+                .is_some_and(|error| error.contains("no durable result was persisted")),
+            "error must name the non-completion boundary"
+        );
     }
 
     #[test]
