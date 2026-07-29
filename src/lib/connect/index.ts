@@ -12,6 +12,9 @@ export {
 	type StatePlacementDecision,
 	zustandForbiddenForServerState,
 } from './state-classification'
+export * from './stats-client'
+export * from './stats-domain'
+export { useGetLeaderboardQuery } from './stats-query'
 export {
 	getConnectTransport,
 	getConnectTransport,
