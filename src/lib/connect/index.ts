@@ -6,8 +6,18 @@ export {
 } from './health-client'
 export { isServingOk, type ServingStatusLabel, servingStatusLabel } from './serving-status'
 export {
+	type ClientStateClass,
+	classifyClientState,
+	type StatePlacementDecision,
+	zustandForbiddenForServerState,
+} from './state-classification'
+export {
 	getConnectTransport,
+	getConnectTransport,
+	normalizeConnectBaseUrl,
 	normalizeGrpcWebBaseUrl,
 	resetConnectTransportCache,
+	resetConnectTransportCache,
+	resolveConnectBaseUrl,
 	resolveGrpcWebBaseUrl,
 } from './transport'

@@ -21,13 +21,15 @@ use crate::capabilities::puzzle_play::interfaces::{
 };
 use crate::capabilities::stats::interfaces::{today_percentile_http, user_stats_shape_http};
 
-use super::health::{healthz, readyz};
+use super::health::{connect_health, connect_ready, healthz, readyz};
 use super::state::AppState;
 
 pub fn router(state: AppState) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
+        .route("/puzzled.v1.HealthService/Health", post(connect_health))
+        .route("/puzzled.v1.HealthService/Ready", post(connect_ready))
         .route("/api/leaderboard", get(leaderboard_stub))
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .route("/api/v1/puzzles/grid", get(generate_grid))

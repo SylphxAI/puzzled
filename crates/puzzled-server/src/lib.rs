@@ -58,6 +58,26 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn connect_health_returns_serving_ok() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(
+                Method::POST,
+                "/puzzled.v1.HealthService/Health",
+                Body::from("{}"),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect health: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["status"], 1);
+        assert_eq!(json["message"], "ok");
+    }
+
+    #[tokio::test]
     async fn readyz_fails_closed_without_database() {
         let app = router(AppState::new(None));
         let response = match app
