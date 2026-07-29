@@ -5,8 +5,8 @@ import {
 } from './stats-product-authority'
 
 describe('Stats product authority', () => {
-  test('default rest', () => {
-    expect(resolveStatsProductAuthorityMode({})).toBe('rest')
+  test('default connect (SOTA cutover)', () => {
+    expect(resolveStatsProductAuthorityMode({})).toBe('connect')
   })
   test('connect plans', () => {
     const plan = planStatsLeaderboardProduct(

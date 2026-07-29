@@ -30,3 +30,4 @@ export {
   planStatsLeaderboardProduct,
   type StatsProductAuthorityMode,
 } from './stats-product-authority'
+export { admitLeaderboardViaConnect } from './stats-admission'
