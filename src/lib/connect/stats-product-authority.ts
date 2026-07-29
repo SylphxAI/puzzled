@@ -15,9 +15,11 @@ export function resolveStatsProductAuthorityMode(
   env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
 ): StatsProductAuthorityMode {
   const raw = env.NEXT_PUBLIC_PUZZLED_STATS_PRODUCT_AUTHORITY?.trim().toLowerCase()
+  if (raw === 'rest' || raw === 'sse' || raw === 'off') return 'rest'
   if (raw === 'connect_required' || raw === 'required' || raw === 'hard') return 'connect_required'
   if (raw === 'connect' || raw === 'true' || raw === '1') return 'connect'
-  return 'rest'
+  // Hard SOTA leap: Connect leaderboard is product default.
+  return 'connect'
 }
 
 export function planStatsLeaderboardProduct(
