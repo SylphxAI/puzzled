@@ -25,3 +25,8 @@ export {
 	resolveConnectBaseUrl,
 	resolveGrpcWebBaseUrl,
 } from './transport'
+export {
+  resolveStatsProductAuthorityMode,
+  planStatsLeaderboardProduct,
+  type StatsProductAuthorityMode,
+} from './stats-product-authority'
