@@ -1,0 +1,3754 @@
+import {
+	QueryClient,
+	QueryClientProvider,
+	useQuery,
+} from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { linkAnonymousConsents } from "../consent";
+import {
+	ANALYTICS_FLUSH_TIMEOUT_MS,
+	ANALYTICS_INTERVAL_CHECK_MS,
+	ANALYTICS_MAX_TRACKED_EVENT_IDS,
+	ANALYTICS_QUEUE_LIMIT,
+	ANALYTICS_TRACKED_IDS_KEEP,
+	DEFAULT_AUTH_PREFIX,
+	DEFAULT_CONTEXT_WINDOW,
+	DEFAULT_PLATFORM_URL,
+	NEW_USER_THRESHOLD_MS,
+	SDK_API_PATH,
+	SESSION_TOKEN_LIFETIME_MS,
+	STALE_TIME_FREQUENT_MS,
+	STALE_TIME_MODERATE_MS,
+	STALE_TIME_STABLE_MS,
+	STORAGE_MULTIPART_THRESHOLD_BYTES,
+} from "../constants";
+import { validateAndSanitizeAppId } from "../key-validation";
+import type {
+	AchievementDefaults,
+	AchievementUnlockEvent,
+	LeaderboardDefaults,
+	LeaderboardQueryOptions,
+	LeaderboardResult,
+	RecordActivityResult,
+	StreakDefaults,
+	StreakState,
+	SubmitScoreResult,
+	UserAchievement,
+} from "../lib/engagement/types";
+import type { AIProvider, AppConfig, TokenResponse, User } from "../types";
+import { AuthContext, type AuthState } from "./context";
+import { inferProviderFromModelId } from "./context-values";
+import { ConfigContext } from "./hooks/use-config";
+import {
+	type InAppMessageWithReadStatus,
+	type InboxPreferences,
+	type MobilePushConfig,
+	type MobilePushPlatform,
+	type MobilePushPreferences,
+	type Plan,
+	PlatformContext,
+	type PushPreferences,
+	type ReferralStats,
+	type Subscription,
+} from "./platform-context";
+import { type RestApiClient, createRestApi } from "./rest-client";
+import { isValidRedirectUrl, safeRedirect } from "./security-utils";
+import {
+	AIContext,
+	type AIContextValue,
+	ConsentContext,
+	type ConsentContextValue,
+	DatabaseContext,
+	type DatabaseContextValue,
+	EmailContext,
+	type EmailContextValue,
+	JobsContext,
+	type JobsContextValue,
+	MonitoringContext,
+	type MonitoringContextValue,
+	NewsletterContext,
+	type NewsletterContextValue,
+	SdkAuthContext,
+	type SdkAuthContextValue,
+	SecurityContext,
+	type SecurityContextValue,
+	StorageContext,
+	type StorageContextValue,
+	type UploadOptions,
+	type UploadProgressEvent,
+	UserContext,
+	type UserContextValue,
+	WebhooksContext,
+	type WebhooksContextValue,
+} from "./services-context";
+import {
+	type ClickIds,
+	STORAGE_KEYS,
+	SylphxStorage,
+	autoCaptureClickIds,
+	clearUserCookie,
+	getOrCreateAnonymousId,
+	getPrimaryClickId,
+	getStoredClickIds,
+	getUserFromCookie,
+} from "./storage-utils";
+import { TokenManager } from "./token-manager";
+
+import type { SylphxProviderProps } from "./types";
+
+
+/**
+ * SylphxProviderInner
+ *
+ * Inner provider that uses useQuery hooks. Must be rendered inside QueryClientProvider.
+ */
+export function SylphxProviderInner({
+	children,
+	appId: appIdProp,
+	platformUrl: providedPlatformUrl,
+	afterSignOutUrl = "/",
+	vapidPublicKey,
+	autoTracking = true,
+	queryClient,
+	config,
+	authPrefix = "/auth",
+}: SylphxProviderProps & { queryClient: QueryClient }) {
+	// Validate and sanitize app ID at initialization
+	// Following industry-standard "fail fast" pattern (Stripe, Clerk, Firebase)
+	// - Validates key format against expected pattern
+	// - Logs warning if key contains whitespace (common Vercel CLI bug)
+	// - Throws error if key is completely invalid
+	const appId = validateAndSanitizeAppId(appIdProp);
+	const platformUrl = providedPlatformUrl?.trim() || DEFAULT_PLATFORM_URL;
+
+	// ============================================
+	// Storage (namespaced by app identifier)
+	// ============================================
+	const storage = useMemo(() => new SylphxStorage(appId), [appId]);
+
+	// Hydration-safe: start with empty string, populate from localStorage in useEffect
+	// Server and client initial render both produce '' — no mismatch
+	const [anonymousId, setAnonymousId] = useState("");
+	useEffect(() => {
+		setAnonymousId(getOrCreateAnonymousId(storage));
+	}, [storage]);
+
+	// ============================================
+	// Click ID Auto-Capture (for conversion attribution)
+	// ============================================
+	const [clickIds, setClickIds] = useState<ClickIds>({});
+	const hasInitializedClickIds = useRef(false);
+
+	// Auto-capture click IDs from URL on mount
+	useEffect(() => {
+		if (hasInitializedClickIds.current) return;
+		hasInitializedClickIds.current = true;
+
+		// Capture and store any click IDs from URL
+		const captured = autoCaptureClickIds(storage);
+		setClickIds(captured);
+	}, [storage]);
+
+	// ============================================
+	// Auth State — Cookie-Centric (Single Source of Truth)
+	// ============================================
+	// Hydration-safe: start with isLoaded: false (loading state).
+	// Both server and client initial render produce the same output.
+	// Cookie is read in useEffect below to populate the real auth state.
+	//
+	// Note: Declared early because TokenManager needs isSignedIn check
+	const [authState, setAuthState] = useState<AuthState>({
+		isLoaded: false,
+		isSignedIn: false,
+		user: null,
+		accessToken: null,
+		refreshToken: null,
+		error: null,
+		isOAuthLoading: false,
+		oauthError: null,
+	});
+
+	// Hydrate auth state from cookie after mount (avoids server/client mismatch)
+	useEffect(() => {
+		const userCookieData = getUserFromCookie(appId);
+		if (userCookieData && userCookieData.expiresAt > Date.now()) {
+			setAuthState({
+				isLoaded: true,
+				isSignedIn: true,
+				user: userCookieData.user,
+				accessToken: null,
+				refreshToken: null,
+				error: null,
+				isOAuthLoading: false,
+				oauthError: null,
+			});
+		} else {
+			setAuthState((prev) => ({ ...prev, isLoaded: true }));
+		}
+	}, [appId]);
+
+	// Ref to track current auth state for TokenManager (avoids stale closure)
+	const authStateRef = useRef(authState);
+	useEffect(() => {
+		authStateRef.current = authState;
+	}, [authState]);
+
+	// ============================================
+	// Token Manager — State of the Art
+	// ============================================
+	// Handles: Lazy fetch, request queuing, auto-refresh, retry with backoff, 401 recovery
+	const tokenManager = useMemo(
+		() =>
+			new TokenManager({
+				isSignedIn: () => authStateRef.current.isSignedIn,
+				onSessionExpired: () => {
+					// Session expired — clear auth state
+					setAuthState((prev) => ({
+						...prev,
+						isSignedIn: false,
+						user: null,
+						error: new Error("Session expired"),
+					}));
+					// Clear user cookie
+					clearUserCookie(appId);
+				},
+				authPrefix,
+			}),
+		[appId, authPrefix],
+	);
+
+	// Clear token manager when auth state changes to signed out
+	useEffect(() => {
+		if (!authState.isSignedIn) {
+			tokenManager.clear();
+		}
+	}, [authState.isSignedIn, tokenManager]);
+
+	// ============================================
+	// Identity Link on Login (Segment/Mixpanel Pattern)
+	// ============================================
+	// When user transitions from anonymous to authenticated,
+	// link their anonymous consent records to their user account.
+	// This ensures consent history is preserved across the identity merge.
+	//
+	// Uses null sentinel to distinguish "not yet initialized" from "signed out".
+	// Only tracks transitions AFTER isLoaded is true, preventing the false
+	// anonymous→authenticated transition that occurs during initial hydration
+	// (authState starts at isSignedIn:false then becomes true from cookie read).
+	const prevIsSignedIn = useRef<boolean | null>(null);
+	useEffect(() => {
+		// Wait until auth state is loaded before tracking transitions
+		if (!authState.isLoaded) return;
+
+		// First time isLoaded becomes true — establish baseline, don't trigger link
+		if (prevIsSignedIn.current === null) {
+			prevIsSignedIn.current = authState.isSignedIn;
+			return;
+		}
+
+		const wasAnonymous = !prevIsSignedIn.current;
+		const isNowAuthenticated = authState.isSignedIn && authState.user?.id;
+
+		if (wasAnonymous && isNowAuthenticated && authState.user && anonymousId) {
+			// User just logged in — link anonymous consents
+			const config = {
+				appId,
+				platformUrl,
+				accessToken: undefined, // Will use cookie auth via middleware
+			};
+
+			linkAnonymousConsents(config, {
+				userId: authState.user.id,
+				anonymousId,
+			}).catch((err) => {
+				// Non-fatal: log but don't break the app
+				console.warn("[Sylphx] Failed to link anonymous consents:", err);
+			});
+		}
+
+		prevIsSignedIn.current = authState.isSignedIn;
+	}, [
+		authState.isLoaded,
+		authState.isSignedIn,
+		authState.user?.id,
+		anonymousId,
+		appId,
+		platformUrl,
+	]);
+
+	// ============================================
+	// REST API Client — With Token Management
+	// ============================================
+	const api = useMemo(
+		() =>
+			createRestApi({
+				appId,
+				platformUrl,
+				tokenManager,
+			}),
+		[appId, platformUrl, tokenManager],
+	);
+
+	// ============================================
+	// Platform State - React Query for server data
+	// ============================================
+
+	// Plans: Always from server-fetched config (no client-side fetching)
+	const plans = config.plans;
+	const plansLoading = false;
+	const plansError: Error | null = null;
+
+	// Subscription - React Query (enabled when signed in)
+	const subscriptionQuery = useQuery({
+		queryKey: ["sylphx", appId, "subscription", authState.user?.id],
+		queryFn: () =>
+			api.get<Subscription | null>("/billing/subscription", {
+				userId: authState.user!.id,
+			}),
+		enabled: authState.isSignedIn && !!authState.user?.id,
+		staleTime: STALE_TIME_MODERATE_MS, // 2 min - subscription can change after payment
+	});
+	const subscription = subscriptionQuery.data ?? null;
+	const subscriptionLoading = subscriptionQuery.isLoading;
+	const subscriptionError = subscriptionQuery.error as Error | null;
+
+	// Referrals - React Query (enabled when signed in)
+	const referralsQuery = useQuery({
+		queryKey: ["sylphx", appId, "referrals"],
+		queryFn: async () => {
+			const [stats, codeData] = await Promise.all([
+				api.get<ReferralStats>("/referrals/stats"),
+				api.get<{ code: string }>("/referrals/code"),
+			]);
+			return { stats, code: codeData.code };
+		},
+		enabled: authState.isSignedIn,
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
+	});
+	const referralStats = referralsQuery.data?.stats ?? null;
+	const referralCode = referralsQuery.data?.code ?? null;
+	const referralLoading = referralsQuery.isLoading;
+	const referralError = referralsQuery.error as Error | null;
+
+	// Push Preferences - React Query (enabled when signed in)
+	const pushPreferencesQuery = useQuery({
+		queryKey: ["sylphx", appId, "pushPreferences"],
+		queryFn: () => api.get<PushPreferences>("/notifications/preferences"),
+		enabled: authState.isSignedIn,
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
+	});
+	const pushPreferences = pushPreferencesQuery.data ?? null;
+	const pushError = pushPreferencesQuery.error as Error | null;
+	const [pushSubscribed, setPushSubscribed] = useState(false);
+	const [analyticsError, setAnalyticsError] = useState<Error | null>(null);
+
+	// Mobile Push Config/Preferences - React Query (enabled when signed in)
+	const mobilePushQuery = useQuery({
+		queryKey: ["sylphx", appId, "mobilePush"],
+		queryFn: async () => {
+			const [config, preferences] = await Promise.all([
+				api.get<MobilePushConfig>("/notifications/mobile/config"),
+				api.get<MobilePushPreferences>("/notifications/mobile/preferences"),
+			]);
+			return { config, preferences };
+		},
+		enabled: authState.isSignedIn,
+		staleTime: STALE_TIME_STABLE_MS, // 5 min
+	});
+	const mobilePushConfig = mobilePushQuery.data?.config ?? null;
+	const mobilePushPreferences = mobilePushQuery.data?.preferences ?? null;
+	const mobilePushError = mobilePushQuery.error as Error | null;
+
+	// ============================================
+	// In-App Messages (Inbox) - React Query (enabled when signed in)
+	// ============================================
+	const inboxQuery = useQuery({
+		queryKey: ["sylphx", appId, "inbox"],
+		queryFn: async () => {
+			const [messages, unreadCountResult, preferences] = await Promise.all([
+				api.get<InAppMessageWithReadStatus[]>("/notifications/messages", {
+					limit: "50",
+				}),
+				api.get<{ count: number }>("/notifications/messages/unread-count"),
+				api.get<InboxPreferences>("/notifications/messages/preferences"),
+			]);
+			return { messages, unreadCount: unreadCountResult.count, preferences };
+		},
+		enabled: authState.isSignedIn,
+		staleTime: STALE_TIME_FREQUENT_MS, // 1 min - inbox changes frequently
+	});
+	const inboxMessages = inboxQuery.data?.messages ?? [];
+	const inboxUnreadCount = inboxQuery.data?.unreadCount ?? 0;
+	const inboxPreferences = inboxQuery.data?.preferences ?? null;
+	const inboxLoading = inboxQuery.isLoading;
+	const inboxError = inboxQuery.error as Error | null;
+
+	// Check if push is supported (deferred to useEffect to avoid hydration mismatch)
+	const [pushSupported, setPushSupported] = useState(false);
+	useEffect(() => {
+		setPushSupported("serviceWorker" in navigator && "PushManager" in window);
+	}, []);
+
+	// Analytics queue for batching
+	const analyticsQueue = useRef<
+		Array<{ type: string; data: Record<string, unknown>; eventId: string }>
+	>([]);
+	const flushTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const trackedEventIds = useRef<Set<string>>(new Set());
+
+	// ============================================
+	// sendBeacon Fallback for Analytics (Segment/Amplitude Pattern)
+	// ============================================
+	// Ensures analytics events are not lost when user closes the tab
+	// sendBeacon is designed to work during page unload when fetch would be cancelled
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		const handleBeforeUnload = () => {
+			const events = analyticsQueue.current;
+			if (events.length === 0) return;
+
+			try {
+				// Build payload for sendBeacon
+				const payload = JSON.stringify({
+					events: events.map(({ type, data }) => ({
+						event: type,
+						properties: data,
+						timestamp: data.timestamp as string | undefined,
+					})),
+				});
+
+				// sendBeacon returns true if the request is successfully queued
+				// It works even during page unload when fetch would be cancelled
+				const beaconUrl = `${platformUrl}${SDK_API_PATH}/analytics/track`;
+				const blob = new Blob([payload], { type: "application/json" });
+
+				// Note: sendBeacon doesn't support custom headers, so we include appId in URL
+				// Server should accept this for beacon requests
+				const beaconSent = navigator.sendBeacon(
+					`${beaconUrl}?appId=${encodeURIComponent(appId)}`,
+					blob,
+				);
+
+				if (beaconSent) {
+					// Clear the queue since beacon was queued successfully
+					analyticsQueue.current = [];
+				}
+			} catch {
+				// Best effort - if sendBeacon fails, events are lost
+				// This is acceptable as it's a rare edge case
+			}
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		// Also handle visibilitychange for mobile (tab switch = potential app close)
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "hidden") {
+				handleBeforeUnload();
+			}
+		};
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, [appId, platformUrl]);
+
+	// ============================================
+	// Auto-tracking configuration
+	// ============================================
+	const autoTrackConfig = useMemo(() => {
+		if (autoTracking === false) {
+			return {
+				pageview: false,
+				login: false,
+				signup: false,
+				logout: false,
+				purchase: false,
+			};
+		}
+		if (autoTracking === true) {
+			return {
+				pageview: true,
+				login: true,
+				signup: true,
+				logout: true,
+				purchase: true,
+			};
+		}
+		return {
+			pageview: autoTracking.pageview ?? true,
+			login: autoTracking.login ?? true,
+			signup: autoTracking.signup ?? true,
+			logout: autoTracking.logout ?? true,
+			purchase: autoTracking.purchase ?? true,
+		};
+	}, [autoTracking]);
+
+	// ============================================
+	// Auth State Updates
+	// ============================================
+	// Note: Tokens are stored in HttpOnly cookies (server-side).
+	// These functions only update React state for UI reactivity.
+	// Cookies are managed by middleware and server-side handlers.
+
+	/**
+	 * Update auth state after successful authentication.
+	 *
+	 * Note: This does NOT store tokens in localStorage (XSS protection).
+	 * Tokens are in HttpOnly cookies, managed server-side.
+	 */
+	const saveTokens = useCallback(
+		(response: TokenResponse) => {
+			// Update auth state (tokens are in HttpOnly cookies, not accessible to JS)
+			setAuthState({
+				isLoaded: true,
+				isSignedIn: true,
+				user: response.user,
+				// Tokens not exposed to JavaScript — they're in HttpOnly cookies
+				accessToken: null,
+				refreshToken: null,
+				error: null,
+				isOAuthLoading: false,
+				oauthError: null,
+			});
+
+			// Broadcast auth change to other tabs
+			if (
+				typeof window !== "undefined" &&
+				typeof BroadcastChannel !== "undefined"
+			) {
+				try {
+					const channel = new BroadcastChannel(`sylphx-auth-${appId}`);
+					channel.postMessage({
+						type: "auth-change",
+						isSignedIn: true,
+						user: response.user,
+					});
+					channel.close();
+				} catch {
+					// BroadcastChannel not supported
+				}
+			}
+		},
+		[appId],
+	);
+
+	/**
+	 * Clear auth state on sign out.
+	 *
+	 * Note: Actual cookie clearing happens server-side via signOut().
+	 * This function clears the JS-readable user cookie for immediate UI update.
+	 */
+	const clearTokens = useCallback(
+		(error?: Error) => {
+			// Clear the JS-readable user cookie (for immediate UI update)
+			clearUserCookie(appId);
+
+			setAuthState({
+				isLoaded: true,
+				isSignedIn: false,
+				user: null,
+				accessToken: null,
+				refreshToken: null,
+				error: error || null,
+				isOAuthLoading: false,
+				oauthError: null,
+			});
+
+			// Broadcast sign-out to other tabs
+			if (
+				typeof window !== "undefined" &&
+				typeof BroadcastChannel !== "undefined"
+			) {
+				try {
+					const channel = new BroadcastChannel(`sylphx-auth-${appId}`);
+					channel.postMessage({
+						type: "auth-change",
+						isSignedIn: false,
+						user: null,
+					});
+					channel.close();
+				} catch {
+					// BroadcastChannel not supported
+				}
+			}
+		},
+		[appId],
+	);
+
+	// ============================================
+	// Cross-Tab Auth Sync (BroadcastChannel)
+	// ============================================
+	// With cookie-centric auth, cookies sync automatically across tabs.
+	// We use BroadcastChannel to sync React state across tabs for immediate UI updates.
+	useEffect(() => {
+		if (typeof BroadcastChannel === "undefined") return;
+
+		const channel = new BroadcastChannel(`sylphx-auth-${appId}`);
+
+		const handleMessage = (event: MessageEvent) => {
+			if (event.data?.type === "auth-change") {
+				setAuthState((prev) => ({
+					...prev,
+					isLoaded: true,
+					isSignedIn: event.data.isSignedIn,
+					user: event.data.user,
+					error: null,
+				}));
+			}
+		};
+
+		channel.addEventListener("message", handleMessage);
+
+		return () => {
+			channel.removeEventListener("message", handleMessage);
+			channel.close();
+		};
+	}, [appId]);
+
+	// ============================================
+	// Tab Focus Sync (re-read cookie on visibility change)
+	// ============================================
+	// When user switches tabs, re-read cookie to catch any auth changes
+	useEffect(() => {
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				const userCookieData = getUserFromCookie(appId);
+				const isSignedIn = !!(
+					userCookieData && userCookieData.expiresAt > Date.now()
+				);
+
+				setAuthState((prev) => {
+					// Only update if auth state actually changed
+					if (
+						prev.isSignedIn !== isSignedIn ||
+						prev.user?.id !== userCookieData?.user?.id
+					) {
+						return {
+							...prev,
+							isLoaded: true,
+							isSignedIn,
+							user: userCookieData?.user ?? null,
+						};
+					}
+					return prev;
+				});
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () =>
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+	}, [appId]);
+
+	// ============================================
+	// Handle OAuth Error in URL (error from provider)
+	// ============================================
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+
+		const params = new URLSearchParams(window.location.search);
+		const error = params.get("error");
+		const errorDescription = params.get("error_description");
+
+		if (error) {
+			const oauthError = new Error(errorDescription || error);
+			setAuthState((prev) => ({
+				...prev,
+				isLoaded: true,
+				isSignedIn: false,
+				oauthError,
+			}));
+
+			// Clean up URL params
+			const cleanUrl = new URL(window.location.href);
+			cleanUrl.searchParams.delete("error");
+			cleanUrl.searchParams.delete("error_description");
+			window.history.replaceState({}, "", cleanUrl.toString());
+		}
+	}, []);
+
+	// ============================================
+	// Token Refresh — Handled by Middleware (Server-Side)
+	// ============================================
+	// With the new cookie-centric architecture, token refresh happens
+	// server-side in the middleware. No client-side refresh needed.
+	// The middleware checks session expiry and refreshes automatically.
+
+	// ============================================
+	// All server data is now handled by React Query:
+	// - Plans (plansQuery)
+	// - Subscription (subscriptionQuery)
+	// - Referrals (referralsQuery)
+	// - Push Preferences (pushPreferencesQuery)
+	// - Mobile Push (mobilePushQuery)
+	// - Inbox Messages (inboxQuery)
+	// ============================================
+
+	// ============================================
+	// Auth Actions
+	// ============================================
+
+	/**
+	 * Resolve a redirect URL to an absolute URL.
+	 * Platform requires absolute URLs for redirect_uri validation.
+	 */
+	const resolveRedirectUrl = useCallback((url: string | undefined): string => {
+		if (typeof window === "undefined") return "";
+		if (!url) return window.location.href;
+
+		// Relative URL starting with / - resolve against current origin
+		if (url.startsWith("/") && !url.startsWith("//")) {
+			return `${window.location.origin}${url}`;
+		}
+
+		// Already absolute URL
+		return url;
+	}, []);
+
+	const signIn = useCallback(
+		(options?: { redirectUrl?: string; providers?: string[] | null }) => {
+			// Resolve and validate redirectUrl to prevent open redirect attacks
+			const resolvedUrl = resolveRedirectUrl(options?.redirectUrl);
+			const redirectUri = isValidRedirectUrl(resolvedUrl, {
+				allowedOrigins: [platformUrl],
+			})
+				? resolvedUrl
+				: typeof window !== "undefined"
+					? window.location.href
+					: "";
+			const params = new URLSearchParams({
+				client_id: appId || "",
+				redirect_uri: redirectUri,
+				response_type: "code",
+			});
+			if (options?.providers !== undefined && options.providers !== null) {
+				params.set("providers", options.providers.join(","));
+			}
+			// Safe redirect to platform auth (platformUrl is trusted)
+			if (typeof window !== "undefined") {
+				window.location.href = `${platformUrl}/auth/authorize?${params}`;
+			}
+		},
+		[appId, platformUrl, resolveRedirectUrl],
+	);
+
+	const signUp = useCallback(
+		(options?: { redirectUrl?: string; providers?: string[] | null }) => {
+			// Resolve and validate redirectUrl to prevent open redirect attacks
+			const resolvedUrl = resolveRedirectUrl(options?.redirectUrl);
+			const redirectUri = isValidRedirectUrl(resolvedUrl, {
+				allowedOrigins: [platformUrl],
+			})
+				? resolvedUrl
+				: typeof window !== "undefined"
+					? window.location.href
+					: "";
+			const params = new URLSearchParams({
+				client_id: appId || "",
+				redirect_uri: redirectUri,
+				response_type: "code",
+				mode: "signup",
+			});
+			if (options?.providers !== undefined && options.providers !== null) {
+				params.set("providers", options.providers.join(","));
+			}
+			// Safe redirect to platform auth (platformUrl is trusted)
+			if (typeof window !== "undefined") {
+				window.location.href = `${platformUrl}/auth/authorize?${params}`;
+			}
+		},
+		[appId, platformUrl, resolveRedirectUrl],
+	);
+
+	const signOut = useCallback(
+		async (options?: { redirectUrl?: string }) => {
+			// Call server-side signout to clear HttpOnly cookies and revoke tokens
+			// Uses authPrefix to match middleware route (default: /auth/signout)
+			try {
+				await fetch(`${authPrefix}/signout`, {
+					method: "POST",
+					credentials: "include", // Send cookies
+				});
+			} catch {
+				// Best-effort signout - continue even if server call fails
+			}
+
+			// Clear client-side state
+			clearTokens();
+
+			// Use safe redirect with validation to prevent XSS
+			const redirectUrl = options?.redirectUrl || afterSignOutUrl;
+			safeRedirect(redirectUrl, { fallback: afterSignOutUrl || "/" });
+		},
+		[clearTokens, afterSignOutUrl, authPrefix],
+	);
+
+	/**
+	 * Get an access token for third-party API calls (BFF pattern).
+	 *
+	 * For same-origin requests, cookies are sent automatically — no token needed.
+	 * This is only for when you need to call third-party APIs that require a Bearer token.
+	 *
+	 * Implementation: Calls {authPrefix}/token endpoint which reads the
+	 * HttpOnly session cookie and returns the token. This keeps tokens secure
+	 * while allowing controlled access for third-party API calls.
+	 *
+	 * @example
+	 * ```ts
+	 * // For third-party APIs
+	 * const token = await getToken()
+	 * await fetch('https://api.thirdparty.com/data', {
+	 *   headers: { Authorization: `Bearer ${token}` }
+	 * })
+	 *
+	 * // For same-origin APIs - NO TOKEN NEEDED, cookies sent automatically
+	 * await fetch('/api/data')
+	 * ```
+	 */
+	const getToken = useCallback(async (): Promise<string | null> => {
+		if (!authState.isSignedIn) {
+			return null;
+		}
+
+		try {
+			// Call BFF endpoint to get token from HttpOnly cookie
+			const response = await fetch(`${authPrefix}/token`, {
+				method: "GET",
+				credentials: "include", // Send cookies
+			});
+
+			if (!response.ok) {
+				return null;
+			}
+
+			const data = await response.json();
+			return data.accessToken ?? null;
+		} catch {
+			return null;
+		}
+	}, [authState.isSignedIn, authPrefix]);
+
+	const resetPassword = useCallback(
+		async (options: { token: string; newPassword: string }) => {
+			const response = await fetch(`${platformUrl}/api/auth/reset-password`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					token: options.token,
+					new_password: options.newPassword,
+					client_id: appId || "",
+				}),
+			});
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ message: "Password reset failed" }));
+				throw new Error(error.message || "Password reset failed");
+			}
+		},
+		[appId, platformUrl],
+	);
+
+	const verifyEmail = useCallback(
+		async (options: { token: string }) => {
+			const response = await fetch(`${platformUrl}/api/auth/verify-email`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					token: options.token,
+					client_id: appId || "",
+				}),
+			});
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ message: "Email verification failed" }));
+				throw new Error(error.message || "Email verification failed");
+			}
+		},
+		[appId, platformUrl],
+	);
+
+	const resendVerificationEmail = useCallback(
+		async (options: { email: string }) => {
+			const response = await fetch(
+				`${platformUrl}/api/auth/resend-verification`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						email: options.email,
+						client_id: appId || "",
+					}),
+				},
+			);
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ message: "Failed to resend verification email" }));
+				throw new Error(error.message || "Failed to resend verification email");
+			}
+		},
+		[appId, platformUrl],
+	);
+
+	const forgotPassword = useCallback(
+		async (options: { email: string }) => {
+			const response = await fetch(`${platformUrl}/api/auth/forgot-password`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					email: options.email,
+					client_id: appId || "",
+				}),
+			});
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ message: "Failed to send password reset email" }));
+				throw new Error(error.message || "Failed to send password reset email");
+			}
+		},
+		[appId, platformUrl],
+	);
+
+	// ============================================
+	// Direct OAuth Methods (Firebase/Supabase pattern)
+	// User goes directly to OAuth provider - no platform UI
+	// ============================================
+
+	/**
+	 * Clear OAuth error state.
+	 * Call this to reset error state before a retry.
+	 */
+	const clearOAuthError = useCallback(() => {
+		setAuthState((prev) => ({ ...prev, oauthError: null }));
+	}, []);
+
+	/**
+	 * Sign in with OAuth provider directly.
+	 * Fetches authorization URL from platform, then redirects user to OAuth provider.
+	 * No platform login UI is shown - user goes straight to Google/GitHub/etc.
+	 *
+	 * Uses PKCE (RFC 7636) for security - required for public clients per OAuth 2.1.
+	 *
+	 * SSR AUTHENTICATION:
+	 * OAuth callback is handled by middleware at /auth/callback.
+	 * Middleware exchanges the code and sets HTTP-only cookies server-side.
+	 * This ensures `auth()` works in Server Components.
+	 */
+	const signInWithOAuth = useCallback(
+		async (options: {
+			provider: string;
+			redirectUrl?: string;
+			scopes?: string[];
+		}) => {
+			const { provider, redirectUrl, scopes } = options;
+			const finalDestination = resolveRedirectUrl(redirectUrl);
+
+			// Set loading state and clear any previous OAuth error
+			setAuthState((prev) => ({
+				...prev,
+				isOAuthLoading: true,
+				oauthError: null,
+			}));
+
+			try {
+				// Generate PKCE codes (RFC 7636) - required for public clients
+				const { generatePKCE, storePKCEVerifier } = await import("../lib/pkce");
+				const pkce = await generatePKCE();
+
+				// Store code_verifier for later use in token exchange
+				storePKCEVerifier(pkce.codeVerifier, appId);
+
+				// Build the server-side callback URL that will handle code exchange
+				// This ensures cookies are set for SSR authentication
+				// Format: {authPrefix}/callback?redirect_to=<finalDestination>
+				const callbackUrl = new URL(
+					`${authPrefix}/callback`,
+					window.location.origin,
+				);
+				callbackUrl.searchParams.set("redirect_to", finalDestination);
+				const serverCallbackUri = callbackUrl.toString();
+
+				// Fetch OAuth authorization URL from platform
+				const response = await fetch(
+					`${platformUrl}${SDK_API_PATH}/oauth/authorize`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							"x-app-secret": appId || "",
+						},
+						body: JSON.stringify({
+							provider,
+							redirect_uri: serverCallbackUri,
+							code_challenge: pkce.codeChallenge,
+							code_challenge_method: pkce.codeChallengeMethod,
+							// Custom scopes support (optional)
+							...(scopes && scopes.length > 0 && { scopes }),
+						}),
+					},
+				);
+
+				if (!response.ok) {
+					// Clear stored verifier on error
+					const { clearPKCEVerifier } = await import("../lib/pkce");
+					clearPKCEVerifier(appId);
+
+					const error = await response
+						.json()
+						.catch(() => ({ message: "Failed to initiate OAuth" }));
+					throw new Error(
+						error.message || `Failed to initiate ${provider} sign-in`,
+					);
+				}
+
+				const { authorization_url } = await response.json();
+
+				// Redirect directly to OAuth provider (no platform UI)
+				// Note: isOAuthLoading stays true until page unloads (redirect)
+				if (typeof window !== "undefined") {
+					window.location.href = authorization_url;
+				}
+			} catch (error) {
+				// Set error state and clear loading
+				const oauthError =
+					error instanceof Error ? error : new Error("OAuth sign-in failed");
+				setAuthState((prev) => ({
+					...prev,
+					isOAuthLoading: false,
+					oauthError,
+				}));
+				throw error;
+			}
+		},
+		[platformUrl, appId, resolveRedirectUrl, authPrefix],
+	);
+
+	// Convenience methods for common OAuth providers
+	const signInWithGoogle = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "google", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	const signInWithGithub = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "github", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	const signInWithApple = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "apple", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	const signInWithDiscord = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "discord", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	const signInWithTwitter = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "twitter", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	const signInWithMicrosoft = useCallback(
+		(redirectUrl?: string) =>
+			signInWithOAuth({ provider: "microsoft", redirectUrl }),
+		[signInWithOAuth],
+	);
+
+	// ============================================
+	// Magic Link (Passwordless) Methods
+	// ============================================
+
+	/**
+	 * Sign in with magic link (passwordless).
+	 * Sends an email with a one-time login link.
+	 * The user clicks the link to authenticate without a password.
+	 */
+	const signInWithMagicLink = useCallback(
+		async (options: { email: string; redirectUrl?: string }) => {
+			const { email, redirectUrl } = options;
+			const resolvedRedirect = resolveRedirectUrl(redirectUrl);
+
+			const response = await fetch(
+				`${platformUrl}${SDK_API_PATH}/auth/magic-link`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"x-app-secret": appId || "",
+					},
+					body: JSON.stringify({
+						email,
+						redirectUrl: resolvedRedirect,
+					}),
+				},
+			);
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ message: "Failed to send magic link" }));
+				throw new Error(error.message || "Failed to send magic link");
+			}
+
+			// Magic link sent successfully - no further action needed
+			// User will click the link in their email to complete sign-in
+		},
+		[platformUrl, appId, resolveRedirectUrl],
+	);
+
+	// ============================================
+	// Billing Actions
+	// ============================================
+	const createCheckout = useCallback(
+		async (
+			planSlug: string,
+			interval: "monthly" | "annual" | "lifetime",
+		): Promise<string> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to create checkout");
+			}
+			const data = await api.post<{ checkoutUrl?: string }>(
+				"/billing/checkout",
+				{
+					userId: authState.user.id,
+					planSlug,
+					interval,
+					successUrl: window.location.href,
+					cancelUrl: window.location.href,
+				},
+			);
+			return data.checkoutUrl ?? "";
+		},
+		[api, authState.user?.id],
+	);
+
+	const openPortal = useCallback(async (): Promise<void> => {
+		if (!authState.user?.id) {
+			throw new Error("User must be signed in to access billing portal");
+		}
+		const data = await api.post<{ portalUrl: string }>("/billing/portal", {
+			userId: authState.user.id,
+			returnUrl: window.location.href,
+		});
+		window.location.href = data.portalUrl;
+	}, [api, authState.user?.id]);
+
+	const refreshSubscription = useCallback(async (): Promise<void> => {
+		// Use React Query invalidation to refetch subscription
+		await queryClient.invalidateQueries({
+			queryKey: ["sylphx", appId, "subscription"],
+		});
+	}, [queryClient, appId]);
+
+	// ============================================
+	// Offline Analytics Queue (Segment Pattern)
+	// ============================================
+	// Track online status for offline queuing
+	// Hydration-safe: assume online initially (matches server rendering)
+	const [isOnline, setIsOnline] = useState(true);
+
+	// Sync with actual navigator.onLine after mount
+	useEffect(() => {
+		setIsOnline(navigator.onLine);
+
+		const handleOnline = () => setIsOnline(true);
+		const handleOffline = () => setIsOnline(false);
+
+		window.addEventListener("online", handleOnline);
+		window.addEventListener("offline", handleOffline);
+
+		return () => {
+			window.removeEventListener("online", handleOnline);
+			window.removeEventListener("offline", handleOffline);
+		};
+	}, []);
+
+	// Queue events to localStorage when offline
+	const queueToOfflineStorage = useCallback(
+		(
+			events: Array<{
+				type: string;
+				data: Record<string, unknown>;
+				eventId: string;
+			}>,
+		) => {
+			try {
+				const existingQueue =
+					storage.getJSON<typeof events>(
+						STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE,
+					) || [];
+				const merged = [...existingQueue, ...events];
+				// Keep only the most recent events to prevent storage bloat
+				const trimmed =
+					merged.length > ANALYTICS_QUEUE_LIMIT
+						? merged.slice(-ANALYTICS_QUEUE_LIMIT)
+						: merged;
+				storage.setJSON(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE, trimmed);
+			} catch {
+				// localStorage might be full or unavailable - best effort
+			}
+		},
+		[storage],
+	);
+
+	// Get offline queue from localStorage
+	const getOfflineQueue = useCallback(() => {
+		try {
+			return (
+				storage.getJSON<
+					Array<{
+						type: string;
+						data: Record<string, unknown>;
+						eventId: string;
+					}>
+				>(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE) || []
+			);
+		} catch {
+			return [];
+		}
+	}, [storage]);
+
+	// Clear offline queue
+	const clearOfflineQueue = useCallback(() => {
+		try {
+			storage.remove(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE);
+		} catch {
+			// Best effort
+		}
+	}, [storage]);
+
+	// ============================================
+	// Analytics Actions (with deduplication)
+	// ============================================
+
+	const flushAnalytics = useCallback(async () => {
+		// Include offline queue in flush
+		const offlineEvents = getOfflineQueue();
+		const memoryEvents = analyticsQueue.current;
+		const allEvents = [...offlineEvents, ...memoryEvents];
+
+		if (allEvents.length === 0) return;
+
+		// If offline, queue everything to localStorage and return
+		if (!isOnline) {
+			queueToOfflineStorage(memoryEvents);
+			analyticsQueue.current = [];
+			return;
+		}
+
+		// Clear both queues optimistically
+		analyticsQueue.current = [];
+		clearOfflineQueue();
+
+		try {
+			await api.post("/analytics/track", {
+				events: allEvents.map(({ type, data }) => ({
+					event: type,
+					properties: data,
+					timestamp: data.timestamp as string | undefined,
+				})),
+			});
+			setAnalyticsError(null);
+		} catch (error) {
+			setAnalyticsError(
+				error instanceof Error ? error : new Error("Failed to send analytics"),
+			);
+			// Re-queue on failure - to offline storage if we're now offline, otherwise memory
+			if (!navigator.onLine) {
+				queueToOfflineStorage(allEvents);
+			} else {
+				const requeued = [...allEvents, ...analyticsQueue.current];
+				if (requeued.length > ANALYTICS_QUEUE_LIMIT) {
+					analyticsQueue.current = requeued.slice(-ANALYTICS_QUEUE_LIMIT);
+				} else {
+					analyticsQueue.current = requeued;
+				}
+			}
+		}
+	}, [
+		api,
+		isOnline,
+		getOfflineQueue,
+		clearOfflineQueue,
+		queueToOfflineStorage,
+	]);
+
+	// Flush when coming back online
+	useEffect(() => {
+		if (isOnline) {
+			// Small delay to ensure network is stable
+			const timeout = setTimeout(() => {
+				flushAnalytics();
+			}, 1000);
+			return () => clearTimeout(timeout);
+		}
+	}, [isOnline, flushAnalytics]);
+
+	const enqueueAnalytics = useCallback(
+		(type: string, data: Record<string, unknown>, eventId?: string) => {
+			// Skip events with no user identifier — prevents empty-anonymousId
+			// events during hydration before useEffect populates the real ID
+			if (!anonymousId && !authState.user?.id) return;
+
+			// Deduplicate by eventId if provided
+			const id =
+				eventId ||
+				`${type}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+			if (trackedEventIds.current.has(id)) {
+				return; // Already tracked
+			}
+			trackedEventIds.current.add(id);
+
+			// Clean up old event IDs
+			if (trackedEventIds.current.size > ANALYTICS_MAX_TRACKED_EVENT_IDS) {
+				const ids = Array.from(trackedEventIds.current);
+				trackedEventIds.current = new Set(
+					ids.slice(-ANALYTICS_TRACKED_IDS_KEEP),
+				);
+			}
+
+			if (analyticsQueue.current.length >= ANALYTICS_QUEUE_LIMIT) {
+				analyticsQueue.current = analyticsQueue.current.slice(1);
+			}
+
+			analyticsQueue.current.push({
+				type,
+				data: {
+					...data,
+					timestamp: new Date().toISOString(),
+					userId: authState.user?.id,
+					anonymousId,
+				},
+				eventId: id,
+			});
+
+			if (analyticsQueue.current.length >= 10) {
+				flushAnalytics();
+			} else {
+				if (flushTimeoutRef.current) {
+					clearTimeout(flushTimeoutRef.current);
+				}
+				flushTimeoutRef.current = setTimeout(
+					flushAnalytics,
+					ANALYTICS_FLUSH_TIMEOUT_MS,
+				);
+			}
+		},
+		[authState.user?.id, anonymousId, flushAnalytics],
+	);
+
+	const track = useCallback(
+		async (
+			event: string,
+			properties?: Record<string, unknown>,
+			options?: import("./platform-context").TrackOptions,
+		) => {
+			// Don't track auto-events if they're disabled
+			const autoEvents = [
+				"$pageview",
+				"$login",
+				"$signup",
+				"$logout",
+				"$purchase",
+			];
+			if (autoEvents.includes(event)) {
+				const configKey = event.slice(1) as keyof typeof autoTrackConfig;
+				if (!autoTrackConfig[configKey]) {
+					return; // Auto-tracking disabled for this event
+				}
+			}
+
+			// Auto-enrich conversion data with click IDs and user info
+			let enrichedConversion = options?.conversion;
+			if (options?.conversion || options?.destinations) {
+				// Get current click IDs from storage (in case they were updated)
+				const currentClickIds = getStoredClickIds(storage) || clickIds;
+
+				enrichedConversion = {
+					// User-provided conversion data takes precedence
+					...options?.conversion,
+					// Auto-fill click ID if not explicitly provided
+					clickId:
+						options?.conversion?.clickId ?? getPrimaryClickId(currentClickIds),
+					// Auto-fill user data from auth state (use ?? to respect explicit falsy values)
+					userEmail: options?.conversion?.userEmail ?? authState.user?.email,
+					userFirstName:
+						options?.conversion?.userFirstName ??
+						authState.user?.name?.split(" ")[0],
+					userLastName:
+						options?.conversion?.userLastName ??
+						(authState.user?.name?.split(" ").slice(1).join(" ") || undefined),
+				};
+			}
+
+			enqueueAnalytics("track", {
+				event,
+				properties: properties || {},
+				// Destination options (passed to server)
+				destinations: options?.destinations,
+				skipDestinations: options?.skipDestinations,
+				conversion: enrichedConversion,
+			});
+		},
+		[enqueueAnalytics, autoTrackConfig, storage, clickIds, authState.user],
+	);
+
+	const page = useCallback(
+		async (name: string, properties?: Record<string, unknown>) => {
+			enqueueAnalytics("page", { name, properties: properties || {} });
+		},
+		[enqueueAnalytics],
+	);
+
+	const identify = useCallback(
+		async (traits?: Record<string, unknown>) => {
+			if (!authState.user?.id) return;
+			enqueueAnalytics("identify", {
+				userId: authState.user.id,
+				traits: traits || {},
+			});
+		},
+		[authState.user?.id, enqueueAnalytics],
+	);
+
+	const queryAnalytics = useCallback(
+		async (
+			analyticsQuery: import("./platform-context").AnalyticsQuery,
+		): Promise<import("./platform-context").AnalyticsQueryResult> => {
+			try {
+				const result = await api.post<
+					import("./platform-context").AnalyticsQueryResult
+				>("/analytics/query", analyticsQuery);
+				return {
+					data: result.data,
+					total: result.total,
+				};
+			} catch (err) {
+				const error =
+					err instanceof Error ? err : new Error("Analytics query failed");
+				setAnalyticsError(error);
+				throw error;
+			}
+		},
+		[api],
+	);
+
+	// ============================================
+	// Auto-Instrumented Events (with deduplication)
+	// ============================================
+	const prevAuthStateRef = useRef<AuthState | null>(null);
+	const prevSubscriptionRef = useRef<Subscription | null>(null);
+	const hasTrackedInitialPageview = useRef(false);
+
+	// Auto-track $pageview
+	// Deferred until anonymousId or userId is available (avoids empty-identifier events)
+	useEffect(() => {
+		if (!autoTrackConfig.pageview || hasTrackedInitialPageview.current) return;
+		// Wait for a stable user identifier before tracking
+		if (!anonymousId && !authState.user?.id) return;
+
+		hasTrackedInitialPageview.current = true;
+		const pageviewId = `pageview_${window.location.pathname}_${Date.now()}`;
+		enqueueAnalytics(
+			"page",
+			{
+				name: "$pageview",
+				properties: {
+					url: window.location.href,
+					path: window.location.pathname,
+					referrer: document.referrer,
+					title: document.title,
+				},
+			},
+			pageviewId,
+		);
+	}, [
+		autoTrackConfig.pageview,
+		enqueueAnalytics,
+		anonymousId,
+		authState.user?.id,
+	]);
+
+	// Auto-track route changes
+	useEffect(() => {
+		if (!autoTrackConfig.pageview || typeof window === "undefined") return;
+
+		const handleRouteChange = () => {
+			const pageviewId = `pageview_${window.location.pathname}_${Date.now()}`;
+			enqueueAnalytics(
+				"page",
+				{
+					name: "$pageview",
+					properties: {
+						url: window.location.href,
+						path: window.location.pathname,
+						referrer: document.referrer,
+						title: document.title,
+					},
+				},
+				pageviewId,
+			);
+		};
+
+		window.addEventListener("popstate", handleRouteChange);
+		return () => window.removeEventListener("popstate", handleRouteChange);
+	}, [autoTrackConfig.pageview, enqueueAnalytics]);
+
+	// Auto-track auth events
+	useEffect(() => {
+		const prevState = prevAuthStateRef.current;
+		const currentState = authState;
+
+		// Detect sign-in transition
+		if (
+			prevState &&
+			!prevState.isSignedIn &&
+			currentState.isSignedIn &&
+			currentState.user
+		) {
+			const userCreatedAt = currentState.user.createdAt
+				? new Date(currentState.user.createdAt).getTime()
+				: 0;
+			const isNewUser = Date.now() - userCreatedAt < NEW_USER_THRESHOLD_MS;
+
+			const eventId = `auth_${currentState.user.id}_${isNewUser ? "signup" : "login"}_${Date.now()}`;
+
+			// Get click IDs for conversion attribution
+			const currentClickIds = getStoredClickIds(storage) || clickIds;
+
+			if (isNewUser && autoTrackConfig.signup) {
+				enqueueAnalytics(
+					"track",
+					{
+						event: "$signup",
+						properties: {
+							userId: currentState.user.id,
+							email: currentState.user.email,
+							method: "platform",
+						},
+						// Auto-forward signups as conversions (common for lead gen campaigns)
+						conversion: {
+							clickId: getPrimaryClickId(currentClickIds),
+							userEmail: currentState.user.email,
+							userFirstName: currentState.user.name?.split(" ")[0],
+							userLastName:
+								currentState.user.name?.split(" ").slice(1).join(" ") ||
+								undefined,
+						},
+					},
+					eventId,
+				);
+			} else if (!isNewUser && autoTrackConfig.login) {
+				enqueueAnalytics(
+					"track",
+					{
+						event: "$login",
+						properties: {
+							userId: currentState.user.id,
+							email: currentState.user.email,
+							method: "platform",
+						},
+					},
+					eventId,
+				);
+			}
+
+			// Identify user
+			enqueueAnalytics("identify", {
+				userId: currentState.user.id,
+				traits: {
+					email: currentState.user.email,
+					name: currentState.user.name,
+					image: currentState.user.image,
+				},
+			});
+		}
+
+		// Detect sign-out
+		if (
+			prevState?.isSignedIn &&
+			!currentState.isSignedIn &&
+			autoTrackConfig.logout
+		) {
+			const eventId = `auth_${prevState.user?.id}_logout_${Date.now()}`;
+			enqueueAnalytics(
+				"track",
+				{
+					event: "$logout",
+					properties: { userId: prevState.user?.id },
+				},
+				eventId,
+			);
+		}
+
+		prevAuthStateRef.current = currentState;
+	}, [authState, enqueueAnalytics, autoTrackConfig, storage, clickIds]);
+
+	// Auto-track subscription events with conversion data
+	useEffect(() => {
+		const prevSub = prevSubscriptionRef.current;
+		const currentSub = subscription;
+
+		if (
+			autoTrackConfig.purchase &&
+			currentSub &&
+			(currentSub.status === "active" || currentSub.status === "trialing") &&
+			(!prevSub ||
+				(prevSub.status !== "active" && prevSub.status !== "trialing"))
+		) {
+			const eventId = `purchase_${currentSub.id}_${Date.now()}`;
+
+			// Auto-enrich with conversion data for ad platform attribution
+			const currentClickIds = getStoredClickIds(storage) || clickIds;
+
+			enqueueAnalytics(
+				"track",
+				{
+					event: "$purchase",
+					properties: {
+						planId: currentSub.planId,
+						planSlug: currentSub.planSlug,
+						interval: currentSub.interval,
+						isTrialing: currentSub.status === "trialing",
+					},
+					// Auto-forward to all configured destinations
+					// (destinations with auto-forward + 'purchase' in event filter will receive this)
+					conversion: {
+						clickId: getPrimaryClickId(currentClickIds),
+						// Note: Value/currency not in Subscription type - will be enriched server-side if available
+						orderId: currentSub.id,
+						userEmail: authState.user?.email,
+						userFirstName: authState.user?.name?.split(" ")[0],
+						userLastName:
+							authState.user?.name?.split(" ").slice(1).join(" ") || undefined,
+					},
+				},
+				eventId,
+			);
+		}
+
+		prevSubscriptionRef.current = currentSub;
+	}, [
+		subscription,
+		enqueueAnalytics,
+		autoTrackConfig.purchase,
+		storage,
+		clickIds,
+		authState.user,
+	]);
+
+	// ============================================
+	// Push Notification Actions
+	// ============================================
+	const subscribePush = useCallback(async (): Promise<boolean> => {
+		if (!pushSupported || !vapidPublicKey) return false;
+
+		try {
+			const registration = await navigator.serviceWorker.ready;
+			const sub = await registration.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: vapidPublicKey,
+			});
+
+			const json = sub.toJSON();
+
+			await api.post("/notifications/register", {
+				subscription: {
+					endpoint: json.endpoint!,
+					keys: {
+						p256dh: json.keys?.p256dh!,
+						auth: json.keys?.auth!,
+					},
+				},
+			});
+
+			setPushSubscribed(true);
+			return true;
+		} catch {
+			return false;
+		}
+	}, [pushSupported, vapidPublicKey, api]);
+
+	const unsubscribePush = useCallback(async (): Promise<void> => {
+		try {
+			const registration = await navigator.serviceWorker.ready;
+			const sub = await registration.pushManager.getSubscription();
+
+			if (sub) {
+				await api.post("/notifications/unregister", { endpoint: sub.endpoint });
+				await sub.unsubscribe();
+			}
+
+			setPushSubscribed(false);
+		} catch {
+			// Push unsubscribe is best-effort
+		}
+	}, [api]);
+
+	const updatePushPreferences = useCallback(
+		async (prefs: {
+			enabled?: boolean;
+			categories?: Record<string, boolean>;
+		}): Promise<void> => {
+			// Web push preference updates are handled by subscribe/unsubscribe
+			// Categories are managed via in-app message preferences
+			if (prefs.enabled === false) {
+				await unsubscribePush();
+			}
+			// Optimistic update for categories via React Query
+			if (prefs.categories && pushPreferences) {
+				queryClient.setQueryData<PushPreferences>(
+					["sylphx", appId, "pushPreferences"],
+					(old) => {
+						if (!old) return old;
+						return { ...old, categories: prefs.categories! };
+					},
+				);
+			}
+		},
+		[pushPreferences, unsubscribePush, queryClient, appId],
+	);
+
+	// ============================================
+	// Mobile Push Notification Actions - React Query cache updates
+	// ============================================
+	const mobilePushQueryKey = ["sylphx", appId, "mobilePush"];
+
+	const registerMobileDevice = useCallback(
+		async (options: {
+			platform: MobilePushPlatform;
+			token: string;
+			deviceId?: string;
+			deviceName?: string;
+			appVersion?: string;
+			osVersion?: string;
+		}): Promise<{ success: boolean; tokenId: string }> => {
+			// Cast platform to the API expected type (web devices are read-only)
+			const result = await api.post<{ success: boolean; tokenId: string }>(
+				"/notifications/mobile/register",
+				{
+					...options,
+					platform: options.platform as "ios" | "android",
+				},
+			);
+			// Refresh mobile push data via React Query
+			void queryClient.invalidateQueries({ queryKey: mobilePushQueryKey });
+			return result;
+		},
+		[api, queryClient, appId],
+	);
+
+	const unregisterMobileDevice = useCallback(
+		async (token: string): Promise<void> => {
+			await api.post("/notifications/mobile/unregister", { token });
+			// Refresh mobile push data via React Query
+			void queryClient.invalidateQueries({ queryKey: mobilePushQueryKey });
+		},
+		[api, queryClient, appId],
+	);
+
+	const getMobilePushPreferences =
+		useCallback(async (): Promise<MobilePushPreferences> => {
+			// Trigger refetch via React Query and wait for fresh data
+			await queryClient.invalidateQueries({ queryKey: mobilePushQueryKey });
+			const data = queryClient.getQueryData<{
+				config: MobilePushConfig;
+				preferences: MobilePushPreferences;
+			}>(mobilePushQueryKey);
+			if (!data?.preferences) {
+				throw new Error("Failed to get mobile push preferences");
+			}
+			return data.preferences;
+		}, [queryClient, appId]);
+
+	// ============================================
+	// Referral Actions
+	// ============================================
+	const copyReferralCode = useCallback(async (): Promise<void> => {
+		if (referralCode) {
+			await navigator.clipboard.writeText(referralCode);
+		}
+	}, [referralCode]);
+
+	const regenerateReferralCode = useCallback(async (): Promise<string> => {
+		const data = await api.post<{ code: string }>("/referrals/code/regenerate");
+		// Invalidate referrals query to refetch the new code
+		void queryClient.invalidateQueries({
+			queryKey: ["sylphx", appId, "referrals"],
+		});
+		return data.code;
+	}, [api, queryClient, appId]);
+
+	const redeemReferralCode = useCallback(
+		async (
+			code: string,
+			_defaults?: import("../referrals").ReferralRewardDefaults,
+		): Promise<import("../referrals").RedeemResult> => {
+			// Note: defaults parameter is for future use when server supports auto-discovery
+			// Currently the server uses Console-configured rewards
+			return api.post<import("../referrals").RedeemResult>(
+				"/referrals/redeem",
+				{ code },
+			);
+		},
+		[api],
+	);
+
+	const getReferralLeaderboard = useCallback(
+		async (options?: {
+			limit?: number;
+			period?: "all" | "month" | "week";
+		}): Promise<{
+			period: "all" | "month" | "week";
+			entries: Array<{
+				rank: number;
+				userId: string | null;
+				/** Masked username for privacy */
+				name: string;
+				avatarUrl: string | null;
+				/** Number of successful referrals */
+				referrals: number;
+				totalReferrals: number;
+				isCurrentUser: boolean;
+			}>;
+			currentUserRank: number | null;
+		}> => {
+			return api.get("/referrals/leaderboard", {
+				limit: options?.limit?.toString(),
+				period: options?.period,
+			});
+		},
+		[api],
+	);
+
+	// ============================================
+	// Engagement Actions (Streaks, Leaderboards, Achievements)
+	// ============================================
+	const getStreak = useCallback(
+		async (
+			streakId: string,
+			defaults?: StreakDefaults,
+			userTimezone?: string,
+		): Promise<StreakState> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to get streak");
+			}
+			return api.get<StreakState>(`/engagement/streaks/${streakId}`, {
+				userId: authState.user.id,
+				defaults: defaults ? JSON.stringify(defaults) : undefined,
+				userTimezone,
+			});
+		},
+		[api, authState.user?.id],
+	);
+
+	const recordStreakActivity = useCallback(
+		async (
+			streakId: string,
+			metadata?: Record<string, unknown>,
+			defaults?: StreakDefaults,
+		): Promise<RecordActivityResult> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to record activity");
+			}
+			return api.post<RecordActivityResult>(
+				`/engagement/streaks/${streakId}/activity`,
+				{ userId: authState.user.id, metadata, defaults },
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	const recoverStreak = useCallback(
+		async (
+			streakId: string,
+		): Promise<{ success: boolean; streak: StreakState }> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to recover streak");
+			}
+			return api.post<{ success: boolean; streak: StreakState }>(
+				`/engagement/streaks/${streakId}/recover`,
+				{ userId: authState.user.id },
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	const getEngagementLeaderboard = useCallback(
+		async (
+			leaderboardId: string,
+			options?: LeaderboardQueryOptions & {
+				defaults?: LeaderboardDefaults;
+				period?: string;
+			},
+		): Promise<LeaderboardResult> => {
+			return api.get<LeaderboardResult>(
+				`/engagement/leaderboards/${leaderboardId}`,
+				{
+					userId: authState.user?.id ?? undefined,
+					limit: options?.limit?.toString(),
+					offset: options?.offset?.toString(),
+					period: options?.period,
+				},
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	const submitScore = useCallback(
+		async (
+			leaderboardId: string,
+			value: number,
+			metadata?: Record<string, unknown>,
+			defaults?: LeaderboardDefaults,
+		): Promise<SubmitScoreResult> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to submit score");
+			}
+			return api.post<SubmitScoreResult>(
+				`/engagement/leaderboards/${leaderboardId}/score`,
+				{ value, userId: authState.user.id, metadata, defaults },
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	const getAchievements = useCallback(async (): Promise<UserAchievement[]> => {
+		if (!authState.user?.id) {
+			throw new Error("User must be authenticated to get achievements");
+		}
+		return api.get<UserAchievement[]>("/engagement/achievements", {
+			userId: authState.user.id,
+		});
+	}, [api, authState.user?.id]);
+
+	const unlockAchievement = useCallback(
+		async (
+			achievementId: string,
+			defaults?: AchievementDefaults,
+		): Promise<AchievementUnlockEvent> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to unlock achievement");
+			}
+			return api.post<AchievementUnlockEvent>(
+				`/engagement/achievements/${achievementId}/unlock`,
+				{ userId: authState.user.id, defaults },
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	const incrementAchievementProgress = useCallback(
+		async (
+			achievementId: string,
+			amount: number,
+			defaults?: AchievementDefaults,
+		): Promise<UserAchievement> => {
+			if (!authState.user?.id) {
+				throw new Error("User must be authenticated to increment progress");
+			}
+			return api.post<UserAchievement>(
+				`/engagement/achievements/${achievementId}/progress`,
+				{ amount, userId: authState.user.id, defaults },
+			);
+		},
+		[api, authState.user?.id],
+	);
+
+	// ============================================
+	// In-App Messages (Inbox) Actions - React Query optimistic updates
+	// ============================================
+	type InboxQueryData = {
+		messages: InAppMessageWithReadStatus[];
+		unreadCount: number;
+		preferences: InboxPreferences | null;
+	};
+	const inboxQueryKey = ["sylphx", appId, "inbox"];
+
+	const refreshInbox = useCallback(async (): Promise<void> => {
+		await queryClient.invalidateQueries({ queryKey: inboxQueryKey });
+	}, [queryClient, appId]);
+
+	const markInboxMessageAsRead = useCallback(
+		async (messageId: string): Promise<void> => {
+			// Optimistic update via React Query
+			const previousData =
+				queryClient.getQueryData<InboxQueryData>(inboxQueryKey);
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old;
+				return {
+					...old,
+					messages: old.messages.map((m) =>
+						m.id === messageId
+							? { ...m, isRead: true, readAt: new Date().toISOString() }
+							: m,
+					),
+					unreadCount: Math.max(0, old.unreadCount - 1),
+				};
+			});
+			try {
+				await api.post(`/notifications/messages/${messageId}/read`);
+			} catch (err) {
+				// Rollback on error
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData);
+				throw err;
+			}
+		},
+		[api, queryClient, appId],
+	);
+
+	const markAllInboxMessagesAsRead = useCallback(async (): Promise<void> => {
+		// Optimistic update via React Query
+		const previousData =
+			queryClient.getQueryData<InboxQueryData>(inboxQueryKey);
+		queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+			if (!old) return old;
+			return {
+				...old,
+				messages: old.messages.map((m) => ({
+					...m,
+					isRead: true,
+					readAt: new Date().toISOString(),
+				})),
+				unreadCount: 0,
+			};
+		});
+		try {
+			await api.post("/notifications/messages/mark-all-read");
+		} catch (err) {
+			// Rollback on error
+			if (previousData) queryClient.setQueryData(inboxQueryKey, previousData);
+			throw err;
+		}
+	}, [api, queryClient, appId]);
+
+	const dismissInboxMessage = useCallback(
+		async (messageId: string): Promise<void> => {
+			// Optimistic update via React Query - remove from list
+			const previousData =
+				queryClient.getQueryData<InboxQueryData>(inboxQueryKey);
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old;
+				return {
+					...old,
+					messages: old.messages.filter((m) => m.id !== messageId),
+				};
+			});
+			try {
+				await api.post(`/notifications/messages/${messageId}/dismiss`);
+			} catch (err) {
+				// Rollback on error
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData);
+				throw err;
+			}
+		},
+		[api, queryClient, appId],
+	);
+
+	const recordInboxMessageClick = useCallback(
+		async (
+			messageId: string,
+			action: "primary" | "secondary",
+		): Promise<void> => {
+			// Optimistic update via React Query - mark as read
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old;
+				return {
+					...old,
+					messages: old.messages.map((m) =>
+						m.id === messageId
+							? { ...m, isRead: true, readAt: new Date().toISOString() }
+							: m,
+					),
+				};
+			});
+			try {
+				await api.post(`/notifications/messages/${messageId}/click`, {
+					action,
+				});
+			} catch (err) {
+				console.error("Failed to record message click:", err);
+				// Don't throw - this is a non-critical action
+			}
+		},
+		[api, queryClient, appId],
+	);
+
+	const updateInboxPreferences = useCallback(
+		async (prefs: {
+			enabled?: boolean;
+			mutedTopics?: string[];
+			highPriorityOnly?: boolean;
+		}): Promise<void> => {
+			// Optimistic update via React Query
+			const previousData =
+				queryClient.getQueryData<InboxQueryData>(inboxQueryKey);
+			queryClient.setQueryData<InboxQueryData>(inboxQueryKey, (old) => {
+				if (!old) return old;
+				return {
+					...old,
+					preferences: old.preferences
+						? { ...old.preferences, ...prefs }
+						: null,
+				};
+			});
+			try {
+				await api.put("/notifications/messages/preferences", prefs);
+			} catch (err) {
+				// Rollback on error
+				if (previousData) queryClient.setQueryData(inboxQueryKey, previousData);
+				throw err;
+			}
+		},
+		[api, queryClient, appId],
+	);
+
+	// ============================================
+	// AI API Helper (uses OpenAI-compatible endpoints)
+	// ============================================
+	const aiApiCall = useCallback(
+		async <T,>(endpoint: string, options: RequestInit = {}): Promise<T> => {
+			// AI endpoints use appId as Bearer token directly
+			const response = await fetch(`${platformUrl}${endpoint}`, {
+				...options,
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${appId}`,
+					...options.headers,
+				},
+			});
+
+			if (!response.ok) {
+				const error = await response
+					.json()
+					.catch(() => ({ error: { message: "API call failed" } }));
+				throw new Error(error.error?.message || "API call failed");
+			}
+
+			return response.json();
+		},
+		[platformUrl, appId],
+	);
+
+	// ============================================
+	// AI Context Value (uses OpenAI-compatible /api/v1/* endpoints)
+	// ============================================
+	const aiValue: AIContextValue = useMemo(
+		() => ({
+			chat: async (input) => {
+				// Convert SDK input format to OpenAI format
+				const response = await aiApiCall<{
+					id: string;
+					model: string;
+					choices: Array<{
+						index: number;
+						message: { role: "assistant"; content: string };
+						finish_reason: string;
+					}>;
+					usage: {
+						prompt_tokens: number;
+						completion_tokens: number;
+						total_tokens: number;
+					};
+				}>("/api/v1/chat/completions", {
+					method: "POST",
+					body: JSON.stringify({
+						model: input.model,
+						messages: input.messages,
+						temperature: input.temperature,
+						max_tokens: input.maxTokens,
+						top_p: input.topP,
+						frequency_penalty: input.frequencyPenalty,
+						presence_penalty: input.presencePenalty,
+						stop: input.stop,
+						tools: input.tools,
+					}),
+				});
+
+				// Convert OpenAI response to SDK format
+				return {
+					id: response.id,
+					model: response.model,
+					choices: response.choices.map((c) => ({
+						index: c.index,
+						message: {
+							role: c.message.role,
+							content: c.message.content,
+						},
+						finishReason: c.finish_reason as
+							| "stop"
+							| "length"
+							| "tool_calls"
+							| "content_filter"
+							| null,
+					})),
+					usage: {
+						promptTokens: response.usage.prompt_tokens,
+						completionTokens: response.usage.completion_tokens,
+						totalTokens: response.usage.total_tokens,
+					},
+				};
+			},
+			chatStream: (input) => {
+				// Return an async iterable that yields chunks from SSE stream
+				const controller = new AbortController();
+
+				return {
+					[Symbol.asyncIterator]: async function* () {
+						const response = await fetch(
+							`${platformUrl}/api/v1/chat/completions`,
+							{
+								method: "POST",
+								headers: {
+									"Content-Type": "application/json",
+									Authorization: `Bearer ${appId}`,
+								},
+								body: JSON.stringify({
+									model: input.model,
+									messages: input.messages,
+									temperature: input.temperature,
+									max_tokens: input.maxTokens,
+									top_p: input.topP,
+									frequency_penalty: input.frequencyPenalty,
+									presence_penalty: input.presencePenalty,
+									stop: input.stop,
+									tools: input.tools,
+									stream: true,
+								}),
+								signal: controller.signal,
+							},
+						);
+
+						if (!response.ok) {
+							const error = await response
+								.json()
+								.catch(() => ({ error: { message: "Stream request failed" } }));
+							throw new Error(error.error?.message || "Stream request failed");
+						}
+
+						const reader = response.body?.getReader();
+						if (!reader) {
+							throw new Error("No response body");
+						}
+
+						const decoder = new TextDecoder();
+						let buffer = "";
+
+						try {
+							while (true) {
+								const { done, value } = await reader.read();
+								if (done) break;
+
+								buffer += decoder.decode(value, { stream: true });
+								const lines = buffer.split("\n");
+								buffer = lines.pop() || "";
+
+								for (const line of lines) {
+									if (line.startsWith("data: ")) {
+										const data = line.slice(6).trim();
+										if (data === "[DONE]") {
+											return;
+										}
+
+										try {
+											const chunk = JSON.parse(data);
+
+											yield {
+												id: chunk.id || "",
+												model: chunk.model || input.model,
+												choices: (chunk.choices || []).map(
+													(c: Record<string, unknown>) => ({
+														index: typeof c.index === "number" ? c.index : 0,
+														delta: {
+															role: (c.delta as Record<string, unknown>)
+																?.role as "assistant" | undefined,
+															content: (c.delta as Record<string, unknown>)
+																?.content as string | undefined,
+															toolCalls: (c.delta as Record<string, unknown>)
+																?.tool_calls as unknown[] | undefined,
+														},
+														finishReason:
+															(c.finish_reason as
+																| "stop"
+																| "length"
+																| "tool_calls"
+																| "content_filter") || null,
+													}),
+												),
+											};
+										} catch {
+											// Skip malformed JSON lines
+										}
+									}
+								}
+							}
+						} finally {
+							reader.releaseLock();
+						}
+					},
+				};
+			},
+			complete: async (input) => {
+				// Use chat completions for text completion (completion API is deprecated)
+				const response = await aiApiCall<{
+					id: string;
+					model: string;
+					choices: Array<{
+						message: { content: string };
+						finish_reason: string;
+					}>;
+					usage: {
+						prompt_tokens: number;
+						completion_tokens: number;
+						total_tokens: number;
+					};
+				}>("/api/v1/chat/completions", {
+					method: "POST",
+					body: JSON.stringify({
+						model: input.model,
+						messages: [{ role: "user", content: input.prompt }],
+						temperature: input.temperature,
+						max_tokens: input.maxTokens,
+						stop: input.stop,
+					}),
+				});
+
+				return {
+					id: response.id,
+					model: response.model,
+					choices: [
+						{
+							index: 0,
+							text: response.choices[0]?.message.content ?? "",
+							finishReason: response.choices[0]?.finish_reason as
+								| "stop"
+								| "length"
+								| null,
+						},
+					],
+					usage: {
+						promptTokens: response.usage.prompt_tokens,
+						completionTokens: response.usage.completion_tokens,
+						totalTokens: response.usage.total_tokens,
+					},
+				};
+			},
+			embed: async (input) => {
+				const response = await aiApiCall<{
+					model: string;
+					data: Array<{ index: number; embedding: number[] }>;
+					usage: { prompt_tokens: number; total_tokens: number };
+				}>("/api/v1/embeddings", {
+					method: "POST",
+					body: JSON.stringify({
+						model: input.model,
+						input: input.input,
+						dimensions: input.dimensions,
+					}),
+				});
+
+				return {
+					id: crypto.randomUUID(),
+					model: response.model,
+					embeddings: response.data.map((d) => d.embedding),
+					data: response.data,
+					usage: {
+						promptTokens: response.usage.prompt_tokens,
+						totalTokens: response.usage.total_tokens,
+					},
+				};
+			},
+			vision: async (input) => {
+				// Vision is just chat with image content
+				const response = await aiApiCall<{
+					id: string;
+					model: string;
+					choices: Array<{
+						index: number;
+						message: { role: "assistant"; content: string };
+						finish_reason: string;
+					}>;
+					usage: {
+						prompt_tokens: number;
+						completion_tokens: number;
+						total_tokens: number;
+					};
+				}>("/api/v1/chat/completions", {
+					method: "POST",
+					body: JSON.stringify({
+						model: input.model,
+						messages: input.messages,
+						max_tokens: input.maxTokens,
+					}),
+				});
+
+				return {
+					id: response.id,
+					model: response.model,
+					choices: response.choices.map((c) => ({
+						index: c.index,
+						message: {
+							role: c.message.role,
+							content: c.message.content,
+						},
+						finishReason: c.finish_reason as
+							| "stop"
+							| "length"
+							| "tool_calls"
+							| "content_filter"
+							| null,
+					})),
+					usage: {
+						promptTokens: response.usage.prompt_tokens,
+						completionTokens: response.usage.completion_tokens,
+						totalTokens: response.usage.total_tokens,
+					},
+				};
+			},
+			getUsage: async (period) => {
+				return await api.get("/ai/usage", { period });
+			},
+			getRateLimitStatus: async () => {
+				return await api.get("/ai/rate-limit");
+			},
+			listModels: async (options) => {
+				const response = await api.get<{
+					models: Array<{
+						id: string;
+						name?: string;
+						contextWindow?: number;
+						capabilities?: string[];
+						inputCostPer1M?: number;
+						outputCostPer1M?: number;
+						description?: string;
+					}>;
+					total: number;
+					hasMore: boolean;
+				}>("/ai/models", {
+					capability: options?.capability,
+					search: options?.search,
+					limit: options?.limit?.toString(),
+					offset: options?.offset?.toString(),
+				});
+				return {
+					models: response.models.map((m) => ({
+						id: m.id,
+						name: m.name || m.id,
+						provider: inferProviderFromModelId(m.id),
+						contextWindow: m.contextWindow || 0,
+						maxOutputTokens: Math.floor(
+							(m.contextWindow || DEFAULT_CONTEXT_WINDOW) / 4,
+						),
+						capabilities: m.capabilities || ["chat"],
+						inputCostPer1M: m.inputCostPer1M ?? 0,
+						outputCostPer1M: m.outputCostPer1M ?? 0,
+						description: m.description || "",
+					})),
+					total: response.total,
+					hasMore: response.hasMore,
+				};
+			},
+		}),
+		[aiApiCall, api, platformUrl, appId],
+	);
+
+	// ============================================
+	// Jobs Context Value
+	// ============================================
+	const jobsValue: JobsContextValue = useMemo(
+		() => ({
+			checkStatus: async () => {
+				return await api.get("/jobs/status");
+			},
+			schedule: async (options) => {
+				return await api.post("/jobs/schedule", options);
+			},
+			createCron: async (options) => {
+				return await api.post("/jobs/cron", options);
+			},
+			pauseCron: async (scheduleId) => {
+				const result = await api.post<{ success: boolean }>(
+					`/jobs/cron/${scheduleId}/pause`,
+				);
+				return result.success;
+			},
+			resumeCron: async (scheduleId) => {
+				const result = await api.post<{ success: boolean }>(
+					`/jobs/cron/${scheduleId}/resume`,
+				);
+				return result.success;
+			},
+			deleteCron: async (scheduleId) => {
+				const result = await api.del<{ success: boolean }>(
+					`/jobs/cron/${scheduleId}`,
+				);
+				return result.success;
+			},
+			getJob: async (jobId) => {
+				return await api.get(`/jobs/${jobId}`);
+			},
+			listJobs: async (options = {}) => {
+				// Cast status to exclude 'cancelled' which isn't in API enum
+				const status =
+					options.status === "cancelled" ? undefined : options.status;
+				return await api.get("/jobs", {
+					status,
+					limit: options.limit?.toString(),
+					offset: options.offset?.toString(),
+				});
+			},
+			cancelJob: async (jobId) => {
+				const result = await api.post<{ success: boolean }>(
+					`/jobs/${jobId}/cancel`,
+				);
+				return result.success;
+			},
+		}),
+		[api],
+	);
+
+	// ============================================
+	// Monitoring Context Value
+	// ============================================
+	const monitoringValue: MonitoringContextValue = useMemo(
+		() => ({
+			captureException: async (error, options = {}) => {
+				// Transform Error object into structured format for API
+				const frames: Array<{
+					filename?: string;
+					function?: string;
+					lineno?: number;
+					colno?: number;
+					in_app?: boolean;
+				}> = [];
+				if (error.stack) {
+					const lines = error.stack.split("\n").slice(1);
+					for (const line of lines) {
+						const match = line.match(
+							/^\s*at\s+(?:(.+?)\s+)?(?:\()?(.+?):(\d+):(\d+)\)?$/,
+						);
+						if (match) {
+							frames.push({
+								function: match[1] || "<anonymous>",
+								filename: match[2],
+								lineno: Number.parseInt(match[3] ?? "0", 10),
+								colno: Number.parseInt(match[4] ?? "0", 10),
+								in_app: !match[2]?.includes("node_modules"),
+							});
+						}
+					}
+				}
+				return await api.post("/monitoring/exception", {
+					exception: {
+						values: [
+							{
+								type: error.name || "Error",
+								value: error.message,
+								stacktrace: frames.length > 0 ? { frames } : undefined,
+							},
+						],
+					},
+					level: options.level,
+					tags: options.tags,
+					extra: options.extra,
+					fingerprint: options.fingerprint,
+					route: options.route,
+					userAgent: options.userAgent,
+				});
+			},
+			captureMessage: async (message, options = {}) => {
+				return await api.post("/monitoring/message", {
+					message,
+					level: options.level,
+					tags: options.tags,
+					extra: options.extra,
+					route: options.route,
+				});
+			},
+		}),
+		[api],
+	);
+
+	// ============================================
+	// Consent Context Value
+	// ============================================
+	const consentValue: ConsentContextValue = useMemo(
+		() => ({
+			anonymousId,
+			userId: authState.user?.id ?? null,
+			// Consent types from server-fetched config
+			initialConsentTypes: config.consentTypes,
+			getConsentTypes: async () => {
+				// Return types from server-fetched config (no client fetch needed)
+				return config.consentTypes;
+			},
+			getUserConsents: async () => {
+				// API returns UserConsent shape matching generated/api.d.ts
+				const consents = await api.get<
+					Array<{
+						slug: string;
+						category:
+							| "necessary"
+							| "analytics"
+							| "marketing"
+							| "preferences"
+							| "functional";
+						name: string;
+						required: boolean;
+						granted: boolean;
+						grantedAt: string | null;
+						version: number | null;
+					}>
+				>("/consent", {
+					userId: authState.user?.id,
+					anonymousId,
+				});
+				return consents;
+			},
+			setConsents: async (consents) => {
+				return await api.post("/consent", {
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
+					anonymousId,
+					consents,
+					source: "banner",
+				});
+			},
+			acceptAll: async () => {
+				return await api.post("/consent/accept-all", {
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
+					anonymousId,
+					source: "banner",
+				});
+			},
+			declineOptional: async () => {
+				return await api.post("/consent/decline-optional", {
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
+					anonymousId,
+					source: "banner",
+				});
+			},
+			checkConsent: async (purposeSlug, defaults) => {
+				// Get user's current consents
+				try {
+					const consents = await api.get<
+						Array<{ slug: string; granted: boolean }>
+					>("/consent", {
+						// Only include userId if truthy (Zod optional doesn't accept null)
+						...(authState.user?.id && { userId: authState.user.id }),
+						anonymousId,
+					});
+					// Find consent for this purpose
+					const consent = consents.find((c) => c.slug === purposeSlug);
+					if (consent) {
+						return consent.granted;
+					}
+					// Purpose not found - use default if provided, otherwise false
+					return defaults?.defaultEnabled ?? false;
+				} catch {
+					// On error, use default if provided
+					return defaults?.defaultEnabled ?? false;
+				}
+			},
+			getHistory: async (options) => {
+				return await api.get("/consent/history", {
+					// Only include userId if truthy (Zod optional doesn't accept null)
+					...(authState.user?.id && { userId: authState.user.id }),
+					anonymousId,
+					limit: options?.limit?.toString(),
+					offset: options?.offset?.toString(),
+				});
+			},
+		}),
+		[api, anonymousId, authState.user?.id, config],
+	);
+
+	// ============================================
+	// Storage Context Value
+	// ============================================
+
+	/**
+	 * Modern client upload using Vercel Blob.
+	 *
+	 * Architecture:
+	 * 1. Client calls our /api/storage/upload to get a client token
+	 * 2. Client uploads directly to B2 via presigned URL (zero server bandwidth)
+	 * 3. Platform records file in DB and consumes quota
+	 *
+	 * Benefits:
+	 * - Zero server bandwidth (direct to storage)
+	 * - Real progress tracking via XHR
+	 * - Works with any S3-compatible storage
+	 */
+	const storageValue: StorageContextValue = useMemo(
+		() => ({
+			upload: async (file: File, options?: UploadOptions) => {
+				// Step 1: Request presigned URL
+				const clientPayload = JSON.stringify({
+					appId,
+					userId: authState.user?.id,
+					type: "file",
+					folder: options?.path,
+				});
+
+				const tokenRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						type: "generate-token",
+						pathname: file.name,
+						clientPayload,
+					}),
+				});
+
+				if (!tokenRes.ok) {
+					const err = (await tokenRes
+						.json()
+						.catch(() => ({ error: "Unknown error" }))) as { error?: string };
+					throw new Error(err.error ?? "Failed to get upload token");
+				}
+
+				const { presignedUrl, url, storageKey, tokenPayload } =
+					(await tokenRes.json()) as {
+						presignedUrl: string;
+						url: string;
+						storageKey: string;
+						tokenPayload: string;
+					};
+
+				// Step 2: Upload directly with XHR for progress tracking
+				await new Promise<void>((resolve, reject) => {
+					const xhr = new XMLHttpRequest();
+					if (options?.onProgress) {
+						xhr.upload.addEventListener("progress", (e) => {
+							if (e.lengthComputable) {
+								options.onProgress!({
+									loaded: e.loaded,
+									total: e.total,
+									progress: Math.round((e.loaded / e.total) * 100),
+								} satisfies UploadProgressEvent);
+							}
+						});
+					}
+					xhr.addEventListener("load", () =>
+						xhr.status >= 200 && xhr.status < 300
+							? resolve()
+							: reject(new Error(`Upload failed: ${xhr.status}`)),
+					);
+					xhr.addEventListener("error", () =>
+						reject(new Error("Upload network error")),
+					);
+					xhr.open("PUT", presignedUrl);
+					xhr.setRequestHeader(
+						"Content-Type",
+						file.type || "application/octet-stream",
+					);
+					xhr.send(file);
+				});
+
+				// Step 3: Notify platform of completed upload
+				const completeRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						type: "upload-complete",
+						url,
+						pathname: storageKey,
+						tokenPayload,
+					}),
+				});
+
+				if (!completeRes.ok) throw new Error("Failed to complete upload");
+				const result = (await completeRes.json()) as { url: string };
+				return result.url;
+			},
+			uploadAvatar: async (
+				file: File,
+				options?: { onProgress?: (event: UploadProgressEvent) => void },
+			) => {
+				if (!authState.user?.id)
+					throw new Error("Must be logged in to upload avatar");
+
+				const clientPayload = JSON.stringify({
+					appId,
+					userId: authState.user.id,
+					type: "avatar",
+				});
+				const tokenRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						type: "generate-token",
+						pathname: file.name,
+						clientPayload,
+					}),
+				});
+				if (!tokenRes.ok) throw new Error("Failed to get upload token");
+
+				const { presignedUrl, url, storageKey, tokenPayload } =
+					(await tokenRes.json()) as {
+						presignedUrl: string;
+						url: string;
+						storageKey: string;
+						tokenPayload: string;
+					};
+
+				await new Promise<void>((resolve, reject) => {
+					const xhr = new XMLHttpRequest();
+					if (options?.onProgress) {
+						xhr.upload.addEventListener("progress", (e) => {
+							if (e.lengthComputable) {
+								options.onProgress!({
+									loaded: e.loaded,
+									total: e.total,
+									progress: Math.round((e.loaded / e.total) * 100),
+								} satisfies UploadProgressEvent);
+							}
+						});
+					}
+					xhr.addEventListener("load", () =>
+						xhr.status >= 200 && xhr.status < 300
+							? resolve()
+							: reject(new Error(`Upload failed: ${xhr.status}`)),
+					);
+					xhr.addEventListener("error", () =>
+						reject(new Error("Upload network error")),
+					);
+					xhr.open("PUT", presignedUrl);
+					xhr.setRequestHeader(
+						"Content-Type",
+						file.type || "application/octet-stream",
+					);
+					xhr.send(file);
+				});
+
+				const completeRes = await fetch(`${platformUrl}/api/storage/upload`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						type: "upload-complete",
+						url,
+						pathname: storageKey,
+						tokenPayload,
+					}),
+				});
+				if (!completeRes.ok)
+					throw new Error("Failed to complete avatar upload");
+				const result = (await completeRes.json()) as { url: string };
+				return result.url;
+			},
+			deleteFile: async (fileId: string) => {
+				await api.del(`/storage/files/${fileId}`);
+			},
+			getUrl: async (fileId: string) => {
+				const data = await api.get<{ url: string }>(`/storage/files/${fileId}`);
+				return data.url;
+			},
+		}),
+		[api, platformUrl, appId, authState.user?.id],
+	);
+
+	// ============================================
+	// Newsletter Context Value
+	// ============================================
+	const newsletterValue: NewsletterContextValue = useMemo(
+		() => ({
+			subscribe: async (options) => {
+				return await api.post("/newsletter/subscribe", options);
+			},
+			verify: async (token) => {
+				return await api.post("/newsletter/verify", { token });
+			},
+			unsubscribe: async (email, token) => {
+				return await api.post("/newsletter/unsubscribe", { email, token });
+			},
+			resendVerification: async (email) => {
+				return await api.post("/newsletter/resend-verification", { email });
+			},
+			getUnsubscribeInfo: async (token) => {
+				return await api.get("/newsletter/unsubscribe-info", { token });
+			},
+			updatePreferences: async (email, preferences) => {
+				return await api.put("/newsletter/preferences", { email, preferences });
+			},
+			getPreferences: async (email) => {
+				return await api.get("/newsletter/preferences", { email });
+			},
+		}),
+		[api],
+	);
+
+	// ============================================
+	// Database Context Value
+	// ============================================
+	// NOTE: Database uses direct Neon connection, not tRPC
+	// Users should use @sylphx/platform-sdk/db with DATABASE_URL from Console
+	const databaseValue: DatabaseContextValue = useMemo(
+		() => ({
+			query: async () => {
+				throw new Error(
+					"Database queries through SDK hooks are not supported. " +
+						"Use @sylphx/platform-sdk/db with DATABASE_URL from the Console instead. " +
+						"See: https://sylphx.com/docs/database",
+				);
+			},
+			execute: async () => {
+				throw new Error(
+					"Database mutations through SDK hooks are not supported. " +
+						"Use @sylphx/platform-sdk/db with DATABASE_URL from the Console instead. " +
+						"See: https://sylphx.com/docs/database",
+				);
+			},
+			transaction: async () => {
+				throw new Error(
+					"Database transactions through SDK hooks are not supported. " +
+						"Use @sylphx/platform-sdk/db with DATABASE_URL from the Console instead. " +
+						"See: https://sylphx.com/docs/database",
+				);
+			},
+		}),
+		[],
+	);
+
+	// ============================================
+	// Email Context Value (includes Newsletter/Marketing)
+	// ============================================
+	const emailValue: EmailContextValue = useMemo(
+		() => ({
+			// Transactional Email
+			send: async (options) => {
+				return await api.post("/email/send", options);
+			},
+			sendTemplated: async (options) => {
+				// Cast template to expected type - SDK accepts any string, API has fixed set
+				const result = await api.post<{ success: boolean }>(
+					"/email/send-templated",
+					{
+						...options,
+						template: options.template as
+							| "welcome"
+							| "verification"
+							| "password_reset"
+							| "security_alert",
+					},
+				);
+				return { success: result.success, template: options.template };
+			},
+			sendToUser: async (options) => {
+				return await api.post("/email/send-to-user", options);
+			},
+			// Marketing Email (Newsletter)
+			newsletter: {
+				subscribe: async (options) => {
+					return await api.post("/newsletter/subscribe", options);
+				},
+				verify: async (token) => {
+					return await api.post("/newsletter/verify", { token });
+				},
+				unsubscribe: async (email, token) => {
+					return await api.post("/newsletter/unsubscribe", { email, token });
+				},
+				resendVerification: async (email) => {
+					return await api.post("/newsletter/resend-verification", { email });
+				},
+				getUnsubscribeInfo: async (token) => {
+					return await api.get("/newsletter/unsubscribe-info", { token });
+				},
+				updatePreferences: async (email, preferences) => {
+					return await api.put("/newsletter/preferences", {
+						email,
+						preferences,
+					});
+				},
+				getPreferences: async (email) => {
+					return await api.get("/newsletter/preferences", { email });
+				},
+			},
+		}),
+		[api],
+	);
+
+	// ============================================
+	// Webhooks Context Value
+	// ============================================
+	const webhooksValue: WebhooksContextValue = useMemo(
+		() => ({
+			getConfig: async () => {
+				return await api.get("/webhooks/config");
+			},
+			updateConfig: async (options) => {
+				return await api.put("/webhooks/config", options);
+			},
+			getDeliveries: async (options = {}) => {
+				return await api.get("/webhooks/deliveries", {
+					limit: options.limit?.toString(),
+					offset: options.offset?.toString(),
+					status: options.status,
+				});
+			},
+			replayDelivery: async (deliveryId) => {
+				return await api.post(`/webhooks/deliveries/${deliveryId}/replay`);
+			},
+			getStats: async (period) => {
+				return await api.get("/webhooks/stats", { period });
+			},
+		}),
+		[api],
+	);
+
+	// ============================================
+	// SDK Auth Context Value (for direct API calls)
+	// ============================================
+	const sdkAuthValue: SdkAuthContextValue = useMemo(
+		() => ({
+			login: async (email, password) => {
+				const result = await api.post<{
+					requiresTwoFactor?: boolean;
+					userId?: string;
+					user?: {
+						id: string;
+						email: string;
+						name?: string | null;
+						image?: string | null;
+						emailVerified?: boolean;
+					};
+				}>("/auth/login", { email, password });
+				return {
+					requiresTwoFactor: result.requiresTwoFactor ?? false,
+					userId: result.userId,
+					user: result.user
+						? {
+								id: result.user.id,
+								email: result.user.email,
+								name: result.user.name ?? null,
+								image: result.user.image ?? null,
+								emailVerified: result.user.emailVerified ?? false,
+								twoFactorEnabled: false, // Get from security settings if needed
+							}
+						: undefined,
+				};
+			},
+			verifyTwoFactor: async (userId, code) => {
+				const result = await api.post<{
+					accessToken: string;
+					refreshToken: string;
+					expiresIn: number;
+					user: {
+						id: string;
+						email: string;
+						name?: string | null;
+						image?: string | null;
+						emailVerified?: boolean;
+					};
+				}>("/auth/verify-2fa", { userId, code });
+				// Save tokens after successful 2FA
+				saveTokens({
+					accessToken: result.accessToken,
+					refreshToken: result.refreshToken,
+					expiresIn: result.expiresIn,
+					user: result.user as User,
+				});
+				return {
+					accessToken: result.accessToken,
+					refreshToken: result.refreshToken,
+					expiresIn: result.expiresIn,
+					user: {
+						id: result.user.id,
+						email: result.user.email,
+						name: result.user.name ?? null,
+						image: result.user.image ?? null,
+						emailVerified: result.user.emailVerified ?? false,
+						twoFactorEnabled: true, // They just verified 2FA so it must be enabled
+					},
+				};
+			},
+			register: async (name, email, password) => {
+				const result = await api.post<{
+					user: { id: string; email: string; name?: string | null };
+				}>("/auth/register", { email, password, name });
+				return {
+					requiresVerification: true,
+					message: "Please check your email to verify your account",
+					user: {
+						id: result.user.id,
+						email: result.user.email,
+						name: result.user.name ?? null,
+					},
+				};
+			},
+			forgotPassword: async (email) => {
+				const result = await api.post<{ success: boolean }>(
+					"/auth/forgot-password",
+					{ email },
+				);
+				return {
+					success: result.success,
+					message: "Password reset email sent",
+				};
+			},
+			resetPassword: async (token, password) => {
+				return await api.post("/auth/reset-password", {
+					token,
+					newPassword: password,
+				});
+			},
+			verifyEmail: async (token) => {
+				// Call platform verify email endpoint
+				const response = await fetch(`${platformUrl}/api/auth/verify-email`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ token, client_id: appId || "" }),
+				});
+				if (!response.ok) {
+					const error = await response
+						.json()
+						.catch(() => ({ message: "Email verification failed" }));
+					throw new Error(error.message || "Email verification failed");
+				}
+				return { success: true };
+			},
+			logout: async (_refreshToken) => {
+				await api.post("/auth/logout");
+				clearTokens();
+				return { success: true };
+			},
+			me: async () => {
+				const profile = await api.get<{
+					id: string;
+					email: string;
+					name?: string | null;
+					image?: string | null;
+					emailVerified?: boolean;
+					createdAt?: string;
+				}>("/user/profile");
+				// Get 2FA status from security settings
+				const security = await api.get<{ twoFactorEnabled?: boolean }>(
+					"/user/security",
+				);
+				return {
+					id: profile.id,
+					email: profile.email,
+					name: profile.name ?? null,
+					image: profile.image ?? null,
+					emailVerified: profile.emailVerified ?? false,
+					twoFactorEnabled: security.twoFactorEnabled ?? false,
+				};
+			},
+			getOAuthProviders: async () => {
+				if (!appId) return { providers: [] };
+				const response = await fetch(`${platformUrl}/api/auth/providers`, {
+					headers: { "X-App-Id": appId },
+				});
+				if (!response.ok) {
+					return { providers: [] };
+				}
+				const data = await response.json();
+				return { providers: data.providers || [] };
+			},
+		}),
+		[api, platformUrl, appId, saveTokens, clearTokens],
+	);
+
+	// ============================================
+	// User Context Value (for profile/session management)
+	// ============================================
+	// Type definitions for user API responses
+	type ProfileResponse = {
+		id: string;
+		email: string;
+		name?: string | null;
+		image?: string | null;
+		emailVerified?: boolean;
+		createdAt?: string;
+	};
+	type SecuritySettingsResponse = {
+		twoFactorEnabled?: boolean;
+		hasPassword?: boolean;
+	};
+	type SessionResponse = {
+		id: string;
+		isCurrent: boolean;
+		deviceName?: string;
+		browser?: string;
+		os?: string;
+		deviceType?: string;
+		ipAddress?: string;
+		country?: string;
+		city?: string;
+		lastActiveAt?: string;
+		createdAt?: string;
+	};
+	type LoginHistoryEntry = {
+		id?: string;
+		ipAddress?: string;
+		userAgent?: string;
+		city?: string;
+		country?: string;
+		device?: string;
+		createdAt?: string;
+		success?: boolean;
+	};
+	type ConnectedAccountResponse = { provider: string; connectedAt?: string };
+
+	const userValue: UserContextValue = useMemo(
+		() => ({
+			getProfile: async () => {
+				const profile = await api.get<ProfileResponse>("/user/profile");
+				const security =
+					await api.get<SecuritySettingsResponse>("/user/security");
+				return {
+					id: profile.id,
+					email: profile.email,
+					name: profile.name ?? null,
+					image: profile.image ?? null,
+					emailVerified: profile.emailVerified ?? false,
+					twoFactorEnabled: security.twoFactorEnabled ?? false,
+					createdAt: profile.createdAt
+						? new Date(profile.createdAt)
+						: new Date(),
+				};
+			},
+			updateProfile: async (data) => {
+				const profile = await api.put<ProfileResponse>("/user/profile", data);
+				// Update local auth state if user info changed
+				if (authState.user) {
+					setAuthState({
+						...authState,
+						user: {
+							...authState.user,
+							name: profile.name ?? authState.user.name,
+							image: profile.image ?? authState.user.image,
+						},
+					});
+				}
+				// updateProfile returns minimal data, fetch full profile for complete info
+				const fullProfile = await api.get<ProfileResponse>("/user/profile");
+				const security =
+					await api.get<SecuritySettingsResponse>("/user/security");
+				return {
+					id: profile.id,
+					email: profile.email,
+					name: profile.name ?? null,
+					image: profile.image ?? null,
+					emailVerified: fullProfile.emailVerified ?? false,
+					twoFactorEnabled: security.twoFactorEnabled ?? false,
+					createdAt: fullProfile.createdAt
+						? new Date(fullProfile.createdAt)
+						: new Date(),
+				};
+			},
+			changePassword: async (currentPassword, newPassword) => {
+				// First verify identity with current password
+				await api.post("/challenge/verify", {
+					method: "password",
+					value: currentPassword,
+				});
+				// Then change password
+				return await api.post("/user/profile", { password: newPassword });
+			},
+			getLoginHistory: async (options) => {
+				const history = await api.get<
+					Array<{
+						id: string;
+						ipAddress: string | null;
+						userAgent: string | null;
+						country: string | null;
+						city: string | null;
+						device: string | null;
+						success: boolean;
+						createdAt: string;
+					}>
+				>("/user/login-history");
+				const items = options?.limit
+					? history.slice(0, options.limit)
+					: history;
+				return items.map((h) => ({
+					id: h.id,
+					ipAddress: h.ipAddress,
+					userAgent: h.userAgent,
+					location:
+						h.city && h.country
+							? `${h.city}, ${h.country}`
+							: (h.country ?? null),
+					device: h.device,
+					browser: null, // Not available from API
+					os: null, // Not available from API
+					loginAt: new Date(h.createdAt),
+					success: h.success,
+				}));
+			},
+			getSessions: async () => {
+				const response = await api.get<SessionResponse[]>("/user/sessions");
+				return response.map((s) => ({
+					id: s.id,
+					isCurrent: s.isCurrent,
+					deviceName: s.deviceName,
+					browser: s.browser,
+					os: s.os,
+					deviceType: s.deviceType,
+					ipAddress: s.ipAddress,
+					country: s.country,
+					city: s.city,
+					lastActiveAt: s.lastActiveAt,
+					createdAt: s.createdAt,
+				}));
+			},
+			revokeSession: async (sessionId) => {
+				return await api.del(`/user/sessions/${sessionId}`);
+			},
+			renameSession: async (sessionId, name) => {
+				return await api.put(`/user/sessions/${sessionId}`, { name });
+			},
+			revokeAllSessions: async () => {
+				return await api.post("/user/sessions/revoke-all");
+			},
+			getConnectedAccounts: async () => {
+				// Connected accounts are part of security settings
+				const security = await api.get<{
+					connectedAccounts?: ConnectedAccountResponse[];
+				}>("/user/security");
+				const accounts = security.connectedAccounts ?? [];
+				return accounts.map((a) => ({
+					provider: a.provider,
+					accountId: "", // Not available in the API response
+					email: null, // Not available in the API response
+					name: null, // Not available in the API response
+					image: null, // Not available in the API response
+					connectedAt: a.connectedAt ? new Date(a.connectedAt) : new Date(),
+				}));
+			},
+			deleteAccount: async (password) => {
+				// Challenge verification handled by user.deleteAccount via challenge system
+				if (password) {
+					await api.post("/challenge/verify", {
+						method: "password",
+						value: password,
+					});
+				}
+				return await api.del("/user/account");
+			},
+			exportData: async () => {
+				const response = await api.get<{
+					downloadUrl: string;
+					expiresAt: string;
+				}>("/user/export");
+				return {
+					downloadUrl: response.downloadUrl,
+					expiresAt: new Date(response.expiresAt),
+				};
+			},
+		}),
+		[api, authState, setAuthState],
+	);
+
+	// ============================================
+	// Security Context Value (for 2FA, passkeys, etc.)
+	// ============================================
+	// Type definitions for security API responses
+	type PasskeyResponse = {
+		id: string;
+		/** Passkey name (user-assigned label) */
+		name: string | null;
+		createdAt: string;
+		lastUsedAt: string | null;
+	};
+
+	type SecurityAlertResponse = {
+		id: string;
+		type: string;
+		title: string;
+		description: string | null;
+		metadata: Record<string, unknown> | null;
+		read: boolean;
+		createdAt: string;
+	};
+
+	const securityValue: SecurityContextValue = useMemo(
+		() => ({
+			getTwoFactorStatus: async () => {
+				const settings =
+					await api.get<SecuritySettingsResponse>("/user/security");
+				// Backup codes count is retrieved separately if needed
+				return {
+					enabled: settings.twoFactorEnabled ?? false,
+					backupCodesRemaining: 0, // Would need separate endpoint to get this
+				};
+			},
+			twoFactorSetup: async () => {
+				return await api.post("/security/2fa/setup");
+			},
+			twoFactorVerify: async (code) => {
+				return await api.post("/security/2fa/verify", { code });
+			},
+			twoFactorDisable: async (_code) => {
+				// Note: Code verification is handled by challenge middleware, not the method itself
+				return await api.post("/security/2fa/disable");
+			},
+			backupCodesView: async (_code) => {
+				// Note: Code verification is handled by challenge middleware, not the method itself
+				return await api.get("/security/backup-codes");
+			},
+			backupCodesRegenerate: async (_code) => {
+				// Note: Code verification is handled by challenge middleware, not the method itself
+				return await api.post("/security/backup-codes/regenerate");
+			},
+			getPasswordStatus: async () => {
+				const settings =
+					await api.get<SecuritySettingsResponse>("/user/security");
+				return { hasPassword: settings.hasPassword ?? true };
+			},
+			passwordSet: async (password) => {
+				return await api.post("/security/password/set", { password });
+			},
+			emailChangeRequest: async (newEmail) => {
+				return await api.post("/security/email/change", { newEmail });
+			},
+			emailChangeConfirm: async (token) => {
+				return await api.post("/security/email/confirm", { token });
+			},
+			passkeyList: async () => {
+				const response = await api.get<{ passkeys: PasskeyResponse[] }>(
+					"/security/passkeys",
+				);
+				return response.passkeys.map((p) => ({
+					id: p.id,
+					name: p.name ?? undefined,
+					deviceType: undefined, // Not returned by API
+					createdAt: new Date(p.createdAt),
+					lastUsedAt: p.lastUsedAt ? new Date(p.lastUsedAt) : null,
+				}));
+			},
+			passkeyRegisterStart: async () => {
+				return await api.post("/security/passkeys/register/start");
+			},
+			passkeyRegisterVerify: async (credential, name) => {
+				return await api.post("/security/passkeys/register/verify", {
+					credential,
+					deviceName: name ?? "Passkey",
+				});
+			},
+			passkeyRename: async (passkeyId: string, name: string) => {
+				return await api.put(`/security/passkeys/${passkeyId}`, { name });
+			},
+			passkeyDelete: async (passkeyId: string) => {
+				return await api.del(`/security/passkeys/${passkeyId}`);
+			},
+			oauthConnect: async (provider) => {
+				const redirectUri = window.location.href;
+				return {
+					redirectUrl: `${platformUrl}/auth/connect/${provider}?client_id=${appId || ""}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+				};
+			},
+			oauthDisconnect: async (provider) => {
+				return await api.post("/security/oauth/disconnect", { provider });
+			},
+			getSecurityScore: async () => {
+				return await api.get("/security/score");
+			},
+			// Security Alerts
+			getSecurityAlerts: async (options) => {
+				const params = new URLSearchParams();
+				if (options?.limit) params.set("limit", String(options.limit));
+				if (options?.unreadOnly) params.set("unreadOnly", "true");
+				const query = params.toString();
+				const response = await api.get<{
+					alerts: SecurityAlertResponse[];
+					total: number;
+				}>(`/security/alerts${query ? `?${query}` : ""}`);
+				return {
+					alerts: response.alerts.map((a) => ({
+						id: a.id,
+						type: a.type,
+						title: a.title,
+						description: a.description,
+						metadata: a.metadata,
+						read: a.read,
+						createdAt: new Date(a.createdAt),
+					})),
+					total: response.total,
+				};
+			},
+			markAlertRead: async (alertId: string) => {
+				return await api.post(`/security/alerts/${alertId}/read`);
+			},
+			markAllAlertsRead: async () => {
+				return await api.post("/security/alerts/read-all");
+			},
+		}),
+		[api, platformUrl, appId],
+	);
+
+	// ============================================
+	// Context Values
+	// ============================================
+	const authValue = useMemo(
+		() => ({
+			...authState,
+			signIn,
+			signUp,
+			signOut,
+			getToken,
+			resetPassword,
+			verifyEmail,
+			resendVerificationEmail,
+			forgotPassword,
+			// OAuth state management
+			clearOAuthError,
+			// Direct OAuth methods (Firebase/Supabase pattern)
+			signInWithOAuth,
+			signInWithGoogle,
+			signInWithGithub,
+			signInWithApple,
+			signInWithDiscord,
+			signInWithTwitter,
+			signInWithMicrosoft,
+			// Magic Link (passwordless)
+			signInWithMagicLink,
+		}),
+		[
+			authState,
+			signIn,
+			signUp,
+			signOut,
+			getToken,
+			resetPassword,
+			verifyEmail,
+			resendVerificationEmail,
+			forgotPassword,
+			clearOAuthError,
+			signInWithOAuth,
+			signInWithGoogle,
+			signInWithGithub,
+			signInWithApple,
+			signInWithDiscord,
+			signInWithTwitter,
+			signInWithMicrosoft,
+			signInWithMagicLink,
+		],
+	);
+
+	const platformValue = useMemo(
+		() => ({
+			appId,
+			platformUrl,
+			anonymousId,
+			queryClient,
+			clickIds,
+			subscription,
+			subscriptionLoading,
+			subscriptionError,
+			plans,
+			plansLoading,
+			plansError,
+			createCheckout,
+			openPortal,
+			refreshSubscription,
+			track,
+			page,
+			identify,
+			queryAnalytics,
+			analyticsError,
+			pushSupported,
+			pushSubscribed,
+			pushPreferences,
+			pushError,
+			subscribePush,
+			unsubscribePush,
+			updatePushPreferences,
+			// Mobile Push
+			mobilePushConfig,
+			mobilePushPreferences,
+			mobilePushError,
+			registerMobileDevice,
+			unregisterMobileDevice,
+			getMobilePushPreferences,
+			referralStats,
+			referralCode,
+			referralLoading,
+			referralError,
+			copyReferralCode,
+			regenerateReferralCode,
+			redeemReferralCode,
+			getReferralLeaderboard,
+			// In-App Messages (Inbox)
+			inboxMessages,
+			inboxUnreadCount,
+			inboxLoading,
+			inboxError,
+			inboxPreferences,
+			refreshInbox,
+			markInboxMessageAsRead,
+			markAllInboxMessagesAsRead,
+			dismissInboxMessage,
+			recordInboxMessageClick,
+			updateInboxPreferences,
+			getBillingBalance: async () => {
+				return await api.get<{
+					balance: { current: number; currentFormatted: string };
+					status: {
+						level: string;
+						isHealthy: boolean;
+						isLow: boolean;
+						alertThreshold: number;
+					};
+					billingType: string;
+					trustLevel: string;
+					spendingCap: number | null;
+					currentMonthSpend: number;
+					spendingCapPercent: number | null;
+					gracePeriodEndsAt: string | null;
+					isAdminOrg: boolean;
+				}>("/billing/balance");
+			},
+			getBillingUsage: async (options?: { month?: string }) => {
+				return await api.get<{
+					period: { type: string; start: string; end: string };
+					metrics: {
+						aiCostMicrodollars: number;
+						storageBytesUsed: number;
+						storageEgressBytes: number;
+						storageUploads: number;
+						dbStorageBytes: number;
+						dbComputeSeconds: number;
+						emailSentCount: number;
+						jobInvocationCount: number;
+						cronActiveCount: number;
+						pushSentCount?: number;
+						analyticsEventCount: number;
+						webhookDeliveryCount: number;
+						errorEventCount: number;
+						authMau: number;
+					} | null;
+				}>("/billing/usage", { month: options?.month });
+			},
+			// Engagement
+			user: authState.user,
+			getStreak,
+			recordStreakActivity,
+			recoverStreak,
+			getLeaderboard: getEngagementLeaderboard, // Engagement leaderboard
+			submitScore,
+			getAchievements,
+			unlockAchievement,
+			incrementAchievementProgress,
+		}),
+		[
+			api,
+			appId,
+			platformUrl,
+			anonymousId,
+			queryClient,
+			clickIds,
+			subscription,
+			subscriptionLoading,
+			subscriptionError,
+			plans,
+			plansLoading,
+			plansError,
+			createCheckout,
+			openPortal,
+			refreshSubscription,
+			track,
+			page,
+			identify,
+			queryAnalytics,
+			analyticsError,
+			pushSupported,
+			pushSubscribed,
+			pushPreferences,
+			pushError,
+			subscribePush,
+			unsubscribePush,
+			updatePushPreferences,
+			// Mobile Push deps
+			mobilePushConfig,
+			mobilePushPreferences,
+			mobilePushError,
+			registerMobileDevice,
+			unregisterMobileDevice,
+			getMobilePushPreferences,
+			referralStats,
+			referralCode,
+			referralLoading,
+			referralError,
+			copyReferralCode,
+			regenerateReferralCode,
+			redeemReferralCode,
+			getReferralLeaderboard,
+			// Inbox deps
+			inboxMessages,
+			inboxUnreadCount,
+			inboxLoading,
+			inboxError,
+			inboxPreferences,
+			refreshInbox,
+			markInboxMessageAsRead,
+			markAllInboxMessagesAsRead,
+			dismissInboxMessage,
+			recordInboxMessageClick,
+			updateInboxPreferences,
+			// Engagement deps
+			authState.user,
+			getStreak,
+			recordStreakActivity,
+			recoverStreak,
+			getEngagementLeaderboard,
+			submitScore,
+			getAchievements,
+			unlockAchievement,
+			incrementAchievementProgress,
+		],
+	);
+
+	// QueryClientProvider is now provided by the outer SylphxProvider wrapper
+	return (
+		<AuthContext.Provider value={authValue}>
+			<SdkAuthContext.Provider value={sdkAuthValue}>
+				<UserContext.Provider value={userValue}>
+					<SecurityContext.Provider value={securityValue}>
+						<PlatformContext.Provider value={platformValue}>
+							<StorageContext.Provider value={storageValue}>
+								<AIContext.Provider value={aiValue}>
+									<JobsContext.Provider value={jobsValue}>
+										<MonitoringContext.Provider value={monitoringValue}>
+											<ConsentContext.Provider value={consentValue}>
+												<DatabaseContext.Provider value={databaseValue}>
+													<EmailContext.Provider value={emailValue}>
+														{/* Newsletter: Marketing/bulk email subscriptions */}
+														<NewsletterContext.Provider value={newsletterValue}>
+															<WebhooksContext.Provider value={webhooksValue}>
+																{children}
+															</WebhooksContext.Provider>
+														</NewsletterContext.Provider>
+													</EmailContext.Provider>
+												</DatabaseContext.Provider>
+											</ConsentContext.Provider>
+										</MonitoringContext.Provider>
+									</JobsContext.Provider>
+								</AIContext.Provider>
+							</StorageContext.Provider>
+						</PlatformContext.Provider>
+					</SecurityContext.Provider>
+				</UserContext.Provider>
+			</SdkAuthContext.Provider>
+		</AuthContext.Provider>
+	);
+}
