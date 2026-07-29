@@ -30,3 +30,9 @@ export function trimTrackedEventIds(ids: string[], keep: number): string[] {
 export function buildAnalyticsBeaconPayload(appId: string, events: AnalyticsEvent[]): string {
 	return JSON.stringify({ appId, events })
 }
+
+/** Cap queue to last N events (drop oldest). */
+export function capAnalyticsQueue<T>(queue: T[], limit: number): T[] {
+  if (queue.length <= limit) return queue;
+  return queue.slice(queue.length - limit);
+}

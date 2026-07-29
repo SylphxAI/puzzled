@@ -52,3 +52,12 @@ describe('provider pure helpers', () => {
 		})
 	})
 })
+
+import { capAnalyticsQueue } from "../analytics-queue";
+
+describe("capAnalyticsQueue", () => {
+  test("keeps last N", () => {
+    expect(capAnalyticsQueue([1, 2, 3, 4], 2)).toEqual([3, 4]);
+    expect(capAnalyticsQueue([1], 5)).toEqual([1]);
+  });
+});
