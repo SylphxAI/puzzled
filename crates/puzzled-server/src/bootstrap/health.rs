@@ -102,3 +102,46 @@ async fn postgres_ping(pool: &PgPool) -> bool {
     .and_then(Result::ok)
     .is_some()
 }
+
+
+/// POST `/puzzled.v1.HealthService/Health` — Connect JSON unary (Protobuf SSOT).
+pub(crate) async fn connect_health() -> Response {
+    if shutting_down() {
+        return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
+    }
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "application/json")],
+        Json(json!({
+            "status": 1,
+            "message": "ok",
+        })),
+    )
+        .into_response()
+}
+
+/// POST `/puzzled.v1.HealthService/Ready` — Connect JSON unary.
+pub(crate) async fn connect_ready(State(state): State<AppState>) -> Response {
+    if shutting_down() {
+        return (StatusCode::SERVICE_UNAVAILABLE, "shutting down").into_response();
+    }
+    let ready = state.pool.is_some();
+    let status = if ready { 1 } else { 2 };
+    (
+        StatusCode::OK,
+        [(axum::http::header::CONTENT_TYPE, "application/json")],
+        Json(json!({
+            "status": status,
+            "message": if ready { "ok" } else { "not_ready" },
+            "uptimeS": state.uptime_secs().to_string(),
+            "slice": if ready { "S1" } else { "S0" },
+            "dependencies": [{
+                "name": "postgres",
+                "ok": ready,
+                "detail": "sqlx pool presence",
+            }],
+            "stub": !ready,
+        })),
+    )
+        .into_response()
+}
