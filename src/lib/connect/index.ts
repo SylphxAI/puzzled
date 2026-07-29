@@ -4,6 +4,7 @@ export {
 	fetchProtoReady,
 	type HealthServiceClient,
 } from './health-client'
+export * from './health-query'
 export { isServingOk, type ServingStatusLabel, servingStatusLabel } from './serving-status'
 export {
 	type ClientStateClass,

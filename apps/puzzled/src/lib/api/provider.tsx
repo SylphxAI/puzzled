@@ -9,6 +9,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ConnectTransportProvider } from '@/lib/connect/provider'
 import { MINUTE_MS } from '@/lib/constants/time'
 
 /**
@@ -68,5 +69,9 @@ type Props = {
 export function ApiProvider({ children }: Props) {
 	const [queryClient] = useState(() => getQueryClient())
 
-	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+	return (
+		<QueryClientProvider client={queryClient}>
+			<ConnectTransportProvider>{children}</ConnectTransportProvider>
+		</QueryClientProvider>
+	)
 }
