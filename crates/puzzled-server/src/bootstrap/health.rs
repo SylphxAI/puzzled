@@ -147,6 +147,7 @@ pub(crate) async fn connect_ready(State(state): State<AppState>) -> Response {
 }
 
 /// POST `/puzzled.v1.StatsService/GetLeaderboard` — Connect JSON unary (Protobuf SSOT).
+/// Product densify: process-live board shell with honest empty entries (no fake scores).
 pub(crate) async fn connect_get_leaderboard(Json(body): axum::Json<serde_json::Value>) -> Response {
     use axum::http::header;
     let game_slug = body
@@ -163,11 +164,19 @@ pub(crate) async fn connect_get_leaderboard(Json(body): axum::Json<serde_json::V
         )
             .into_response();
     }
-    // S0 empty board — product REST remains authority for live enrich.
+    // Honest product densify: process is live; entries empty until stats DB projection is wired.
+    // Do not invent scores. Dispatch labels residual vs process clearly.
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "application/json")],
-        Json(serde_json::json!({ "entries": [] })),
+        Json(serde_json::json!({
+            "entries": [],
+            "gameSlug": game_slug,
+            "dispatch": "product_api_process",
+            "message": "leaderboard_process_live_empty",
+            "updatedAt": chrono::Utc::now().to_rfc3339(),
+            "ceType": "com.puzzled.connect.stats.leaderboard",
+        })),
     )
         .into_response()
 }
