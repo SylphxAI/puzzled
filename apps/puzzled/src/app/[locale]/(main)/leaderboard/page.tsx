@@ -1,5 +1,6 @@
 import { type EngagementLeaderboardResult, getLeaderboard } from '@sylphx/sdk'
 import { auth } from '@sylphx/sdk/nextjs'
+import { admitLeaderboardViaConnect } from '@/lib/connect/stats-admission'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -83,6 +84,19 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	// Registry-driven game list - show leaderboards for ALL games
 	const allGames = getAllGameMetadata()
 	const periodSuffix = getPeriodSuffix(period)
+
+	// Connect Stats product-authority residual (default connect).
+	// SDK engagement leaderboard remains display authority until Stats Connect product path densed.
+	void Promise.all(
+		allGames.map((game) =>
+			admitLeaderboardViaConnect({
+				gameSlug: game.slug,
+				type: 'score',
+				period,
+				limit: 10,
+			}).catch(() => null),
+		),
+	)
 
 	// Fetch real leaderboard data for all games from SDK
 	type GameLeaderboardData = {
