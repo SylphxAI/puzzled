@@ -47,7 +47,9 @@ import {
 	type ReferralStats,
 	type Subscription,
 } from './platform-context'
-import { resolveRedirectUrlPure } from './pure'
+import { resolveRedirectUrlPure,
+	capAnalyticsQueue,
+	trimTrackedEventIds } from './pure'
 import { createRestApi, type RestApiClient } from './rest-client'
 import { isValidRedirectUrl, safeRedirect } from './security-utils'
 import {
@@ -1133,7 +1135,7 @@ export function SylphxProviderInner({
 				const merged = [...existingQueue, ...events]
 				// Keep only the most recent events to prevent storage bloat
 				const trimmed =
-					merged.length > ANALYTICS_QUEUE_LIMIT ? merged.slice(-ANALYTICS_QUEUE_LIMIT) : merged
+					capAnalyticsQueue(merged, ANALYTICS_QUEUE_LIMIT)
 				storage.setJSON(STORAGE_KEYS.OFFLINE_ANALYTICS_QUEUE, trimmed)
 			} catch {
 				// localStorage might be full or unavailable - best effort
@@ -1242,9 +1244,9 @@ export function SylphxProviderInner({
 
 			// Clean up old event IDs
 			if (trackedEventIds.current.size > ANALYTICS_MAX_TRACKED_EVENT_IDS) {
-				const ids = Array.from(trackedEventIds.current)
-				trackedEventIds.current = new Set(ids.slice(-ANALYTICS_TRACKED_IDS_KEEP))
-			}
+			const ids = Array.from(trackedEventIds.current)
+			trackedEventIds.current = new Set(trimTrackedEventIds(ids, ANALYTICS_TRACKED_IDS_KEEP))
+		}
 
 			if (analyticsQueue.current.length >= ANALYTICS_QUEUE_LIMIT) {
 				analyticsQueue.current = analyticsQueue.current.slice(1)
