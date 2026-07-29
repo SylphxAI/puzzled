@@ -147,9 +147,16 @@ pub(crate) async fn connect_ready(State(state): State<AppState>) -> Response {
 }
 
 /// POST `/puzzled.v1.StatsService/GetLeaderboard` — Connect JSON unary (Protobuf SSOT).
-/// Product densify: process-live board shell with honest empty entries (no fake scores).
-pub(crate) async fn connect_get_leaderboard(Json(body): axum::Json<serde_json::Value>) -> Response {
+/// Product densify: Postgres score leaderboard when pool present; honest empty residual otherwise.
+pub(crate) async fn connect_get_leaderboard(
+    State(state): State<AppState>,
+    Json(body): axum::Json<serde_json::Value>,
+) -> Response {
     use axum::http::header;
+    use crate::capabilities::leaderboard::adapters::leaderboard_db::{
+        fetch_score_leaderboard, LeaderboardQuery,
+    };
+
     let game_slug = body
         .get("gameSlug")
         .or_else(|| body.get("game_slug"))
@@ -164,16 +171,67 @@ pub(crate) async fn connect_get_leaderboard(Json(body): axum::Json<serde_json::V
         )
             .into_response();
     }
-    // Honest product densify: process is live; entries empty until stats DB projection is wired.
-    // Do not invent scores. Dispatch labels residual vs process clearly.
+    let leaderboard_type = body
+        .get("type")
+        .or_else(|| body.get("leaderboardType"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("score");
+    let period = body
+        .get("period")
+        .and_then(|v| v.as_str())
+        .unwrap_or("all");
+    let limit = body
+        .get("limit")
+        .map(|v| match v {
+            serde_json::Value::Number(n) => n.to_string(),
+            serde_json::Value::String(s) => s.clone(),
+            _ => "10".to_string(),
+        })
+        .unwrap_or_else(|| "10".to_string());
+
+    if let Some(pool) = &state.pool {
+        if let Some(query) = LeaderboardQuery::from_params(
+            Some(game_slug),
+            Some(leaderboard_type),
+            Some(period),
+            Some(limit.as_str()),
+        ) {
+            match fetch_score_leaderboard(pool, &query).await {
+                Ok(entries) => {
+                    return (
+                        StatusCode::OK,
+                        [(header::CONTENT_TYPE, "application/json")],
+                        Json(serde_json::json!({
+                            "entries": entries,
+                            "gameSlug": query.game_slug,
+                            "dispatch": "product_db",
+                            "stub": false,
+                            "updatedAt": chrono::Utc::now().to_rfc3339(),
+                            "ceType": "com.puzzled.connect.stats.leaderboard",
+                        })),
+                    )
+                        .into_response();
+                }
+                Err(error) => {
+                    tracing::warn!(%error, %game_slug, "connect GetLeaderboard product_db failed");
+                }
+            }
+        }
+    }
+
+    // No pool or read failure: honest residual empty board (do not invent scores).
     (
         StatusCode::OK,
         [(header::CONTENT_TYPE, "application/json")],
         Json(serde_json::json!({
             "entries": [],
             "gameSlug": game_slug,
-            "dispatch": "product_api_process",
-            "message": "leaderboard_process_live_empty",
+            "dispatch": if state.pool.is_some() {
+                "product_db_empty_or_error"
+            } else {
+                "pure_residual_no_db"
+            },
+            "stub": state.pool.is_none(),
             "updatedAt": chrono::Utc::now().to_rfc3339(),
             "ceType": "com.puzzled.connect.stats.leaderboard",
         })),
