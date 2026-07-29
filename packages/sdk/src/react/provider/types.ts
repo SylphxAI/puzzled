@@ -1,3 +1,4 @@
+/** SylphxProvider public props. */
 import {
 	QueryClient,
 	QueryClientProvider,
@@ -94,5 +95,81 @@ import {
 } from "./storage-utils";
 import { TokenManager } from "./token-manager";
 
-export type { SylphxProviderProps } from "./provider/types";
-export { SylphxProvider } from "./provider/outer";
+
+// TokenManager extracted to ./token-manager.ts for maintainability
+// REST API Client extracted to ./rest-client.ts for maintainability
+// Service context value factories extracted to ./context-values/ for maintainability
+
+// Storage upload is now handled via presigned URLs in context-values/storage.ts
+
+// ============================================
+// Types
+// ============================================
+
+export interface SylphxProviderProps {
+	children: React.ReactNode;
+	/**
+	 * Your app's ID (environment-specific identifier)
+	 * Format: app_dev_xxx, app_stg_xxx, or app_prod_xxx
+	 * Get this from Platform Admin → Apps → Your App → Environments
+	 *
+	 * The App ID IS the app identity — no separate key needed.
+	 */
+	appId?: string;
+	/** Platform URL (default: https://sylphx.com) */
+	platformUrl?: string;
+	/** After sign out, redirect to this URL */
+	afterSignOutUrl?: string;
+	/** VAPID public key for push notifications (get from platform) */
+	vapidPublicKey?: string;
+	/**
+	 * Auto-tracking configuration
+	 * - true: enable all auto-tracking (default)
+	 * - false: disable all auto-tracking
+	 * - object: fine-grained control
+	 */
+	autoTracking?:
+		| boolean
+		| {
+				pageview?: boolean;
+				login?: boolean;
+				signup?: boolean;
+				logout?: boolean;
+				purchase?: boolean;
+		  };
+	/**
+	 * App configuration fetched server-side via getAppConfig()
+	 *
+	 * **Required:** Use `getAppConfig()` from '@sylphx/sdk/server' in Server Components
+	 * to fetch all config data and pass it here.
+	 *
+	 * @example
+	 * ```tsx
+	 * // layout.tsx (Server Component)
+	 * import { getAppConfig } from '@sylphx/sdk/server'
+	 *
+	 * export default async function RootLayout({ children }) {
+	 *   const config = await getAppConfig({
+	 *     secretKey: process.env.SYLPHX_SECRET_KEY!,
+	 *     appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
+	 *   })
+	 *
+	 *   return (
+	 *     <SylphxProvider config={config} appId={...}>
+	 *       {children}
+	 *     </SylphxProvider>
+	 *   )
+	 * }
+	 * ```
+	 */
+	config: AppConfig;
+	/**
+	 * Auth route prefix. Must match the `authPrefix` in your middleware config.
+	 * Default: '/auth' (matches middleware default)
+	 *
+	 * This determines where OAuth callbacks are routed:
+	 * - '/auth' → callback at /auth/callback
+	 * - '/api/auth' → callback at /api/auth/callback
+	 */
+	authPrefix?: string;
+}

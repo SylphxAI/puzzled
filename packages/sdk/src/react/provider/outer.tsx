@@ -94,5 +94,64 @@ import {
 } from "./storage-utils";
 import { TokenManager } from "./token-manager";
 
-export type { SylphxProviderProps } from "./provider/types";
-export { SylphxProvider } from "./provider/outer";
+import type { SylphxProviderProps } from "./types";
+import { SylphxProviderInner } from "./inner";
+
+
+// ============================================
+// Provider Component
+// ============================================
+
+/**
+ * SylphxProvider
+ *
+ * Wrapper that sets up QueryClientProvider first, then renders the inner provider.
+ * This is necessary because the inner provider uses useQuery hooks that require
+ * QueryClientProvider context.
+ */
+export function SylphxProvider({
+	children,
+	appId,
+	platformUrl: providedPlatformUrl,
+	afterSignOutUrl = "/",
+	vapidPublicKey,
+	autoTracking = true,
+	config,
+	authPrefix = "/auth",
+}: SylphxProviderProps) {
+	// Create QueryClient at the outer level
+	const [queryClient] = useState(
+		() =>
+			new QueryClient({
+				defaultOptions: {
+					queries: {
+						// SDK default: 5 min stale time, no refetch on window focus
+						staleTime: STALE_TIME_STABLE_MS,
+						refetchOnWindowFocus: false,
+						retry: 1,
+					},
+				},
+			}),
+	);
+
+	// Wrap with QueryClientProvider FIRST, then render inner provider
+	// ConfigContext wraps everything to provide server-fetched config
+	return (
+		<ConfigContext.Provider value={config}>
+			<QueryClientProvider client={queryClient}>
+				<SylphxProviderInner
+					appId={appId}
+					platformUrl={providedPlatformUrl}
+					afterSignOutUrl={afterSignOutUrl}
+					vapidPublicKey={vapidPublicKey}
+					autoTracking={autoTracking}
+					queryClient={queryClient}
+					config={config}
+					authPrefix={authPrefix}
+				>
+					{children}
+				</SylphxProviderInner>
+			</QueryClientProvider>
+		</ConfigContext.Provider>
+	);
+}
