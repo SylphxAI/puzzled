@@ -145,3 +145,29 @@ pub(crate) async fn connect_ready(State(state): State<AppState>) -> Response {
     )
         .into_response()
 }
+
+/// POST `/puzzled.v1.StatsService/GetLeaderboard` — Connect JSON unary (Protobuf SSOT).
+pub(crate) async fn connect_get_leaderboard(Json(body): axum::Json<serde_json::Value>) -> Response {
+    use axum::http::header;
+    let game_slug = body
+        .get("gameSlug")
+        .or_else(|| body.get("game_slug"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .trim();
+    if game_slug.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            [(header::CONTENT_TYPE, "application/json")],
+            Json(serde_json::json!({"code":"invalid_argument","message":"game_slug_required"})),
+        )
+            .into_response();
+    }
+    // S0 empty board — product REST remains authority for live enrich.
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "application/json")],
+        Json(serde_json::json!({ "entries": [] })),
+    )
+        .into_response()
+}
