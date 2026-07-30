@@ -14,13 +14,9 @@ import {
 export type PuzzleProductAuthorityMode = 'rest' | 'connect' | 'connect_required'
 
 export function resolvePuzzleProductAuthorityMode(
-	env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
+	_env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
 ): PuzzleProductAuthorityMode {
-	const raw = env.NEXT_PUBLIC_PUZZLED_PLAY_PRODUCT_AUTHORITY?.trim().toLowerCase()
-	if (raw === 'rest' || raw === 'sse' || raw === 'off') return 'rest'
-	if (raw === 'connect_required' || raw === 'required' || raw === 'hard') return 'connect_required'
-	if (raw === 'connect' || raw === 'true' || raw === '1') return 'connect'
-	// Hard SOTA leap: Connect primary play is product default.
+	// HARD PATH: densified play is sole Connect — REST dual opt-out deleted.
 	return 'connect'
 }
 
