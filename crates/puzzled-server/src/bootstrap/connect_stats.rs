@@ -10,9 +10,10 @@ use super::state::AppState;
 use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery, LeaderboardType as DbType,
 };
+use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 use crate::proto::puzzled::v1::{
-    GetLeaderboardRequest, GetLeaderboardResponse, LeaderboardEntry, LeaderboardPeriod,
-    LeaderboardType, StatsService,
+    GetLeaderboardRequest, GetLeaderboardResponse, GetTodayPercentileRequest,
+    GetTodayPercentileResponse, LeaderboardEntry, LeaderboardPeriod, LeaderboardType, StatsService,
 };
 
 #[derive(Clone)]
@@ -106,6 +107,76 @@ impl StatsService for StatsConnectService {
         // No pool or read failure: honest residual empty board (do not invent scores).
         Response::ok(GetLeaderboardResponse {
             entries: Vec::new(),
+            ..Default::default()
+        })
+    }
+
+    async fn get_today_percentile(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetTodayPercentileRequest>,
+    ) -> ServiceResult<GetTodayPercentileResponse> {
+        let req = request.to_owned_message();
+        let slug = req.game_slug.trim();
+        if slug.is_empty() || !is_valid_game_slug(slug) {
+            return Response::ok(GetTodayPercentileResponse {
+                dispatch: "invalid_or_empty".into(),
+                ..Default::default()
+            });
+        }
+        let status = req.status.trim();
+        if status.is_empty() {
+            return Response::ok(GetTodayPercentileResponse {
+                game_slug: slug.into(),
+                dispatch: "status_required".into(),
+                ..Default::default()
+            });
+        }
+
+        // Fixture residual: pure dual-oracle when counts supplied (no invent from empty DB).
+        if let (Some(total), Some(better)) = (req.total_players, req.better_than) {
+            if total <= 0 {
+                return Response::ok(GetTodayPercentileResponse {
+                    game_slug: slug.into(),
+                    status: status.into(),
+                    dispatch: "empty_cohort".into(),
+                    ..Default::default()
+                });
+            }
+            let percentile =
+                ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
+            return Response::ok(GetTodayPercentileResponse {
+                percentile: Some(percentile),
+                total_players: total,
+                game_slug: slug.into(),
+                status: status.into(),
+                score: req.score,
+                attempts: req.attempts,
+                mistakes: req.mistakes,
+                time_spent_ms: req.time_spent_ms,
+                stub: false,
+                dispatch: "product_fixture".into(),
+                ..Default::default()
+            });
+        }
+
+        // Without sessions/DB densify: honest stub residual (parity with REST null path).
+        Response::ok(GetTodayPercentileResponse {
+            percentile: None,
+            total_players: 0,
+            game_slug: slug.into(),
+            status: status.into(),
+            score: req.score,
+            attempts: req.attempts,
+            mistakes: req.mistakes,
+            time_spent_ms: req.time_spent_ms,
+            stub: true,
+            dispatch: if self.state.pool.is_some() {
+                "product_db_sessions_residual"
+            } else {
+                "pure_residual_no_db"
+            }
+            .into(),
             ..Default::default()
         })
     }

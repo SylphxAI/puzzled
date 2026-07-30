@@ -1,5 +1,5 @@
 /**
- * StatsService pure domain (puzzled.v1) — FCIS for GetLeaderboard.
+ * StatsService pure domain (puzzled.v1) — FCIS for GetLeaderboard + GetTodayPercentile.
  */
 export type LeaderboardTypeInput = 'streak' | 'score' | 'unspecified'
 export type LeaderboardPeriodInput = 'today' | 'week' | 'all' | 'unspecified'
@@ -9,6 +9,18 @@ export type GetLeaderboardInput = {
 	type: LeaderboardTypeInput
 	period: LeaderboardPeriodInput
 	limit: number
+}
+
+export type GetTodayPercentileInput = {
+	gameSlug: string
+	status: string
+	score?: number
+	attempts?: number
+	mistakes?: number
+	timeSpentMs?: number
+	/** Fixture residual for pure dual-oracle (no DB). */
+	totalPlayers?: number
+	betterThan?: number
 }
 
 /** Dual-oracle with server limit clamps. */
@@ -21,6 +33,13 @@ export function clampLeaderboardLimit(limit: number): number {
 export function validateGetLeaderboardInput(input: GetLeaderboardInput): string | null {
 	if (!input.gameSlug.trim()) return 'game_slug_required'
 	if (input.gameSlug.length > 64) return 'game_slug_too_long'
+	return null
+}
+
+export function validateGetTodayPercentileInput(input: GetTodayPercentileInput): string | null {
+	if (!input.gameSlug.trim()) return 'game_slug_required'
+	if (input.gameSlug.length > 64) return 'game_slug_too_long'
+	if (!input.status.trim()) return 'status_required'
 	return null
 }
 

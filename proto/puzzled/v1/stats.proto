@@ -37,6 +37,34 @@ message GetLeaderboardResponse {
   repeated LeaderboardEntry entries = 1;
 }
 
+
+// Today percentile densify — parity with GET /api/v1/stats/today-percentile.
+message GetTodayPercentileRequest {
+  string game_slug = 1;
+  string status = 2;
+  optional int32 score = 3;
+  optional int32 attempts = 4;
+  optional int32 mistakes = 5;
+  optional int64 time_spent_ms = 6;
+  // Fixture residual for pure dual-oracle (no DB).
+  optional int32 total_players = 7;
+  optional int32 better_than = 8;
+}
+
+message GetTodayPercentileResponse {
+  optional int32 percentile = 1;
+  int32 total_players = 2;
+  string game_slug = 3;
+  string status = 4;
+  optional int32 score = 5;
+  optional int32 attempts = 6;
+  optional int32 mistakes = 7;
+  optional int64 time_spent_ms = 8;
+  bool stub = 9;
+  string dispatch = 10;
+}
+
 service StatsService {
   rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
+  rpc GetTodayPercentile(GetTodayPercentileRequest) returns (GetTodayPercentileResponse);
 }

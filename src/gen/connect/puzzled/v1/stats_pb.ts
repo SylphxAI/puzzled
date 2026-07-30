@@ -12,7 +12,7 @@ import { enumDesc, fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf
 export const file_puzzled_v1_stats: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChZwdXp6bGVkL3YxL3N0YXRzLnByb3RvEgpwdXp6bGVkLnYxIo4BChBMZWFkZXJib2FyZEVudHJ5EgwKBHJhbmsYASABKAUSDwoHdXNlcl9pZBgCIAEoCRIWCgl1c2VyX25hbWUYAyABKAlIAIgBARIXCgp1c2VyX2ltYWdlGAQgASgJSAGIAQESDQoFdmFsdWUYBSABKAVCDAoKX3VzZXJfbmFtZUINCgtfdXNlcl9pbWFnZSKTAQoVR2V0TGVhZGVyYm9hcmRSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIpCgR0eXBlGAIgASgOMhsucHV6emxlZC52MS5MZWFkZXJib2FyZFR5cGUSLQoGcGVyaW9kGAMgASgOMh0ucHV6emxlZC52MS5MZWFkZXJib2FyZFBlcmlvZBINCgVsaW1pdBgEIAEoBSJHChZHZXRMZWFkZXJib2FyZFJlc3BvbnNlEi0KB2VudHJpZXMYASADKAsyHC5wdXp6bGVkLnYxLkxlYWRlcmJvYXJkRW50cnkqbAoPTGVhZGVyYm9hcmRUeXBlEiAKHExFQURFUkJPQVJEX1RZUEVfVU5TUEVDSUZJRUQQABIbChdMRUFERVJCT0FSRF9UWVBFX1NUUkVBSxABEhoKFkxFQURFUkJPQVJEX1RZUEVfU0NPUkUQAiqOAQoRTGVhZGVyYm9hcmRQZXJpb2QSIgoeTEVBREVSQk9BUkRfUEVSSU9EX1VOU1BFQ0lGSUVEEAASHAoYTEVBREVSQk9BUkRfUEVSSU9EX1RPREFZEAESGwoXTEVBREVSQk9BUkRfUEVSSU9EX1dFRUsQAhIaChZMRUFERVJCT0FSRF9QRVJJT0RfQUxMEAMyZwoMU3RhdHNTZXJ2aWNlElcKDkdldExlYWRlcmJvYXJkEiEucHV6emxlZC52MS5HZXRMZWFkZXJib2FyZFJlcXVlc3QaIi5wdXp6bGVkLnYxLkdldExlYWRlcmJvYXJkUmVzcG9uc2ViBnByb3RvMw',
+		'ChZwdXp6bGVkL3YxL3N0YXRzLnByb3RvEgpwdXp6bGVkLnYxIo4BChBMZWFkZXJib2FyZEVudHJ5EgwKBHJhbmsYASABKAUSDwoHdXNlcl9pZBgCIAEoCRIWCgl1c2VyX25hbWUYAyABKAlIAIgBARIXCgp1c2VyX2ltYWdlGAQgASgJSAGIAQESDQoFdmFsdWUYBSABKAVCDAoKX3VzZXJfbmFtZUINCgtfdXNlcl9pbWFnZSKTAQoVR2V0TGVhZGVyYm9hcmRSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIpCgR0eXBlGAIgASgOMhsucHV6emxlZC52MS5MZWFkZXJib2FyZFR5cGUSLQoGcGVyaW9kGAMgASgOMh0ucHV6emxlZC52MS5MZWFkZXJib2FyZFBlcmlvZBINCgVsaW1pdBgEIAEoBSJHChZHZXRMZWFkZXJib2FyZFJlc3BvbnNlEi0KB2VudHJpZXMYASADKAsyHC5wdXp6bGVkLnYxLkxlYWRlcmJvYXJkRW50cnkiqgIKGUdldFRvZGF5UGVyY2VudGlsZVJlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEg4KBnN0YXR1cxgCIAEoCRISCgVzY29yZRgDIAEoBUgAiAEBEhUKCGF0dGVtcHRzGAQgASgFSAGIAQESFQoIbWlzdGFrZXMYBSABKAVIAogBARIaCg10aW1lX3NwZW50X21zGAYgASgDSAOIAQESGgoNdG90YWxfcGxheWVycxgHIAEoBUgEiAEBEhgKC2JldHRlcl90aGFuGAggASgFSAWIAQFCCAoGX3Njb3JlQgsKCV9hdHRlbXB0c0ILCglfbWlzdGFrZXNCEAoOX3RpbWVfc3BlbnRfbXNCEAoOX3RvdGFsX3BsYXllcnNCDgoMX2JldHRlcl90aGFuIrICChpHZXRUb2RheVBlcmNlbnRpbGVSZXNwb25zZRIXCgpwZXJjZW50aWxlGAEgASgFSACIAQESFQoNdG90YWxfcGxheWVycxgCIAEoBRIRCglnYW1lX3NsdWcYAyABKAkSDgoGc3RhdHVzGAQgASgJEhIKBXNjb3JlGAUgASgFSAGIAQESFQoIYXR0ZW1wdHMYBiABKAVIAogBARIVCghtaXN0YWtlcxgHIAEoBUgDiAEBEhoKDXRpbWVfc3BlbnRfbXMYCCABKANIBIgBARIMCgRzdHViGAkgASgIEhAKCGRpc3BhdGNoGAogASgJQg0KC19wZXJjZW50aWxlQggKBl9zY29yZUILCglfYXR0ZW1wdHNCCwoJX21pc3Rha2VzQhAKDl90aW1lX3NwZW50X21zKmwKD0xlYWRlcmJvYXJkVHlwZRIgChxMRUFERVJCT0FSRF9UWVBFX1VOU1BFQ0lGSUVEEAASGwoXTEVBREVSQk9BUkRfVFlQRV9TVFJFQUsQARIaChZMRUFERVJCT0FSRF9UWVBFX1NDT1JFEAIqjgEKEUxlYWRlcmJvYXJkUGVyaW9kEiIKHkxFQURFUkJPQVJEX1BFUklPRF9VTlNQRUNJRklFRBAAEhwKGExFQURFUkJPQVJEX1BFUklPRF9UT0RBWRABEhsKF0xFQURFUkJPQVJEX1BFUklPRF9XRUVLEAISGgoWTEVBREVSQk9BUkRfUEVSSU9EX0FMTBADMswBCgxTdGF0c1NlcnZpY2USVwoOR2V0TGVhZGVyYm9hcmQSIS5wdXp6bGVkLnYxLkdldExlYWRlcmJvYXJkUmVxdWVzdBoiLnB1enpsZWQudjEuR2V0TGVhZGVyYm9hcmRSZXNwb25zZRJjChJHZXRUb2RheVBlcmNlbnRpbGUSJS5wdXp6bGVkLnYxLkdldFRvZGF5UGVyY2VudGlsZVJlcXVlc3QaJi5wdXp6bGVkLnYxLkdldFRvZGF5UGVyY2VudGlsZVJlc3BvbnNlYgZwcm90bzM',
 	)
 
 /**
@@ -105,6 +105,126 @@ export const GetLeaderboardResponseSchema: GenMessage<GetLeaderboardResponse> =
 	messageDesc(file_puzzled_v1_stats, 2)
 
 /**
+ * Today percentile densify — parity with GET /api/v1/stats/today-percentile.
+ *
+ * @generated from message puzzled.v1.GetTodayPercentileRequest
+ */
+export type GetTodayPercentileRequest = Message<'puzzled.v1.GetTodayPercentileRequest'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: string status = 2;
+	 */
+	status: string
+
+	/**
+	 * @generated from field: optional int32 score = 3;
+	 */
+	score?: number | undefined
+
+	/**
+	 * @generated from field: optional int32 attempts = 4;
+	 */
+	attempts?: number | undefined
+
+	/**
+	 * @generated from field: optional int32 mistakes = 5;
+	 */
+	mistakes?: number | undefined
+
+	/**
+	 * @generated from field: optional int64 time_spent_ms = 6;
+	 */
+	timeSpentMs?: bigint | undefined
+
+	/**
+	 * Fixture residual for pure dual-oracle (no DB).
+	 *
+	 * @generated from field: optional int32 total_players = 7;
+	 */
+	totalPlayers?: number | undefined
+
+	/**
+	 * @generated from field: optional int32 better_than = 8;
+	 */
+	betterThan?: number | undefined
+}
+
+/**
+ * Describes the message puzzled.v1.GetTodayPercentileRequest.
+ * Use `create(GetTodayPercentileRequestSchema)` to create a new message.
+ */
+export const GetTodayPercentileRequestSchema: GenMessage<GetTodayPercentileRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 3)
+
+/**
+ * @generated from message puzzled.v1.GetTodayPercentileResponse
+ */
+export type GetTodayPercentileResponse = Message<'puzzled.v1.GetTodayPercentileResponse'> & {
+	/**
+	 * @generated from field: optional int32 percentile = 1;
+	 */
+	percentile?: number | undefined
+
+	/**
+	 * @generated from field: int32 total_players = 2;
+	 */
+	totalPlayers: number
+
+	/**
+	 * @generated from field: string game_slug = 3;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: string status = 4;
+	 */
+	status: string
+
+	/**
+	 * @generated from field: optional int32 score = 5;
+	 */
+	score?: number | undefined
+
+	/**
+	 * @generated from field: optional int32 attempts = 6;
+	 */
+	attempts?: number | undefined
+
+	/**
+	 * @generated from field: optional int32 mistakes = 7;
+	 */
+	mistakes?: number | undefined
+
+	/**
+	 * @generated from field: optional int64 time_spent_ms = 8;
+	 */
+	timeSpentMs?: bigint | undefined
+
+	/**
+	 * @generated from field: bool stub = 9;
+	 */
+	stub: boolean
+
+	/**
+	 * @generated from field: string dispatch = 10;
+	 */
+	dispatch: string
+}
+
+/**
+ * Describes the message puzzled.v1.GetTodayPercentileResponse.
+ * Use `create(GetTodayPercentileResponseSchema)` to create a new message.
+ */
+export const GetTodayPercentileResponseSchema: GenMessage<GetTodayPercentileResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 4)
+
+/**
  * @generated from enum puzzled.v1.LeaderboardType
  */
 export enum LeaderboardType {
@@ -174,5 +294,13 @@ export const StatsService: GenService<{
 		methodKind: 'unary'
 		input: typeof GetLeaderboardRequestSchema
 		output: typeof GetLeaderboardResponseSchema
+	}
+	/**
+	 * @generated from rpc puzzled.v1.StatsService.GetTodayPercentile
+	 */
+	getTodayPercentile: {
+		methodKind: 'unary'
+		input: typeof GetTodayPercentileRequestSchema
+		output: typeof GetTodayPercentileResponseSchema
 	}
 }> = /*@__PURE__*/ serviceDesc(file_puzzled_v1_stats, 0)

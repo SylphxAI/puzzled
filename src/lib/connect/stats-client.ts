@@ -3,6 +3,8 @@ import { type Client, createClient } from '@connectrpc/connect'
 import {
 	GetLeaderboardRequestSchema,
 	type GetLeaderboardResponse,
+	GetTodayPercentileRequestSchema,
+	type GetTodayPercentileResponse,
 	LeaderboardPeriod,
 	LeaderboardType,
 	StatsService,
@@ -10,9 +12,11 @@ import {
 import {
 	clampLeaderboardLimit,
 	type GetLeaderboardInput,
+	type GetTodayPercentileInput,
 	type LeaderboardPeriodInput,
 	type LeaderboardTypeInput,
 	validateGetLeaderboardInput,
+	validateGetTodayPercentileInput,
 } from './stats-domain'
 import { getConnectTransport } from './transport'
 
@@ -28,6 +32,16 @@ export const statsQueryKeys = {
 			input.type,
 			input.period,
 			input.limit,
+		] as const,
+	todayPercentile: (input: GetTodayPercentileInput) =>
+		[
+			...statsQueryKeys.root,
+			'GetTodayPercentile',
+			input.gameSlug,
+			input.status,
+			input.score ?? null,
+			input.totalPlayers ?? null,
+			input.betterThan ?? null,
 		] as const,
 }
 
@@ -72,6 +86,28 @@ export async function getLeaderboard(
 			type: toType(input.type),
 			period: toPeriod(input.period),
 			limit: clampLeaderboardLimit(input.limit),
+		}),
+	)
+}
+
+/** Sole Connect GetTodayPercentile densify (beyond leaderboard). */
+export async function getTodayPercentile(
+	input: GetTodayPercentileInput,
+	client?: StatsServiceClient,
+): Promise<GetTodayPercentileResponse> {
+	const err = validateGetTodayPercentileInput(input)
+	if (err) throw new Error(err)
+	const c = client ?? createStatsServiceClient()
+	return c.getTodayPercentile(
+		create(GetTodayPercentileRequestSchema, {
+			gameSlug: input.gameSlug.trim(),
+			status: input.status.trim(),
+			score: input.score,
+			attempts: input.attempts,
+			mistakes: input.mistakes,
+			timeSpentMs: input.timeSpentMs,
+			totalPlayers: input.totalPlayers,
+			betterThan: input.betterThan,
 		}),
 	)
 }
