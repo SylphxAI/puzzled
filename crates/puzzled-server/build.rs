@@ -9,6 +9,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .files(&[
             proto_root.join("puzzled/v1/health.proto"),
             proto_root.join("puzzled/v1/stats.proto"),
+            proto_root.join("puzzled/v1/puzzle.proto"),
         ])
         .includes(&[proto_root.as_path()])
         .include_file("_connectrpc.rs")

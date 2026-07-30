@@ -89,7 +89,8 @@ if (!againstRef) {
 
 const protoHealth = join(repoRoot, 'proto/puzzled/v1/health.proto')
 const protoStats = join(repoRoot, 'proto/puzzled/v1/stats.proto')
-if (!existsSync(protoHealth) || !existsSync(protoStats)) {
+const protoPuzzle = join(repoRoot, 'proto/puzzled/v1/puzzle.proto')
+if (!existsSync(protoHealth) || !existsSync(protoStats) || !existsSync(protoPuzzle)) {
 	console.error('[check:proto-buf] missing proto/puzzled/v1/*.proto')
 	process.exit(1)
 }

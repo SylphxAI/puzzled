@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// Primary puzzle-play product contracts (ADR-168 S2 leap).
+// HTTP transitional paths (strangler residual under Connect authority):
+//   GET  /api/v1/puzzles/grid
+//   GET  /api/v1/games/todays-puzzle + /api/v1/games/daily-status
+//   POST /api/v1/puzzles/submit
+
+message GetPuzzleRequest {
+  string game_slug = 1;
+  int64 seed = 2;
+  string difficulty = 3;
+}
+
+message GetPuzzleResponse {
+  string game_slug = 1;
+  int64 seed = 2;
+  string difficulty = 3;
+  // JSON-encoded puzzle_data / solution for cross-game flexibility.
+  string puzzle_data_json = 4;
+  string solution_json = 5;
+  string slice = 6;
+}
+
+message GetDailyRequest {
+  string game_slug = 1;
+  string difficulty = 2;
+  optional string puzzle_id = 3;
+  bool has_completed = 4;
+}
+
+message GetDailyResponse {
+  string game_slug = 1;
+  uint32 puzzle_number = 2;
+  string puzzle_date = 3;
+  optional string puzzle_id = 4;
+  string difficulty = 5;
+  bool has_completed = 6;
+  bool can_play = 7;
+  string mode = 8;
+  string slice = 9;
+  bool stub = 10;
+  // Optional densified puzzle payload (JSON); empty when not materialised.
+  string puzzle_data_json = 11;
+}
+
+message SubmitGuessRequest {
+  string game_slug = 1;
+  int64 seed = 2;
+  string difficulty = 3;
+  // won | lost
+  string status = 4;
+  uint32 attempts = 5;
+  uint64 time_spent_ms = 6;
+  // JSON submission data (e.g. {"finalGrid":[[...]]})
+  string submission_json = 7;
+}
+
+message SubmitGuessResponse {
+  bool valid = 1;
+  string status = 2;
+  optional uint32 score = 3;
+  string game_slug = 4;
+  int64 seed = 5;
+  optional string error = 6;
+  string slice = 7;
+}
+
+service PuzzleService {
+  rpc GetPuzzle(GetPuzzleRequest) returns (GetPuzzleResponse);
+  rpc GetDaily(GetDailyRequest) returns (GetDailyResponse);
+  rpc SubmitGuess(SubmitGuessRequest) returns (SubmitGuessResponse);
+}

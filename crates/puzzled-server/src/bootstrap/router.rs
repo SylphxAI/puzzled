@@ -22,6 +22,7 @@ use crate::capabilities::puzzle_play::interfaces::{
 use crate::capabilities::stats::interfaces::{today_percentile_http, user_stats_shape_http};
 
 use super::connect_health::health_connect_service;
+use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
 use super::health::{healthz, readyz};
 use super::state::AppState;
@@ -31,7 +32,8 @@ use super::state::AppState;
 pub fn router(state: AppState) -> Router {
     let connect = connectrpc::Router::new()
         .add_service(health_connect_service(state.clone()))
-        .add_service(stats_connect_service(state.clone()));
+        .add_service(stats_connect_service(state.clone()))
+        .add_service(puzzle_connect_service(state.clone()));
 
     Router::new()
         .route("/healthz", get(healthz))

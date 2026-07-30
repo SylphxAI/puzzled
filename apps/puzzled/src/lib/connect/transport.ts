@@ -37,7 +37,8 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
-		credentials: 'include',
+		// Cookie-auth fetch credentials (cast: connect-web option surface varies by minor).
+		...({ credentials: 'include' } as Record<string, string>),
 	})
 	return cachedTransport
 }

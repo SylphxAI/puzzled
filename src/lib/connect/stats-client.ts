@@ -105,7 +105,10 @@ export async function getTodayPercentile(
 			score: input.score,
 			attempts: input.attempts,
 			mistakes: input.mistakes,
-			timeSpentMs: input.timeSpentMs,
+			timeSpentMs:
+				input.timeSpentMs === undefined
+					? undefined
+					: BigInt(Math.trunc(input.timeSpentMs)),
 			totalPlayers: input.totalPlayers,
 			betterThan: input.betterThan,
 		}),

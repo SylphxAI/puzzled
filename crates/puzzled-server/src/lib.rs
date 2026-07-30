@@ -141,6 +141,106 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn connect_get_puzzle_densifies_sudoku_grid() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetPuzzle",
+                Body::from(r#"{"gameSlug":"sudoku","seed":"42","difficulty":"easy"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetPuzzle: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "sudoku");
+        assert_eq!(json["slice"], "S2-puzzle-connect");
+        let puzzle_data = json["puzzleDataJson"]
+            .as_str()
+            .expect("puzzleDataJson densified");
+        assert!(puzzle_data.contains("grid"), "expected densified grid JSON");
+        let solution = json["solutionJson"].as_str().expect("solutionJson densified");
+        assert!(solution.contains("grid"), "expected densified solution JSON");
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_requires_game_slug() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from("{}"),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_densifies_envelope() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(r#"{"gameSlug":"sudoku","difficulty":"medium"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "sudoku");
+        assert_eq!(json["slice"], "S2-daily-connect");
+        assert_eq!(json["mode"], "daily");
+        assert_eq!(json["canPlay"], true);
+        assert!(json["puzzleNumber"].as_u64().unwrap_or(0) > 0);
+        assert!(!json["puzzleDate"].as_str().unwrap_or("").is_empty());
+        // Sudoku daily densifies puzzle_data from seed generator (not pure residual).
+        // ProtoJSON omits false defaults — missing/null means stub=false.
+        assert!(
+            json.get("stub").map_or(true, |v| v == false || v.is_null()),
+            "unexpected stub: {:?}",
+            json.get("stub")
+        );
+        let pd = json["puzzleDataJson"].as_str().unwrap_or("");
+        assert!(pd.contains("grid"), "expected densified daily puzzle_data");
+    }
+
+    #[tokio::test]
+    async fn connect_submit_guess_invalid_without_grid() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/SubmitGuess",
+                Body::from(
+                    r#"{"gameSlug":"sudoku","seed":"1","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{}"}"#,
+                ),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect SubmitGuess: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        // ProtoJSON may omit valid=false; treat missing as false.
+        assert!(
+            json.get("valid").map_or(true, |v| v == false || v.is_null()),
+            "unexpected valid: {:?}",
+            json.get("valid")
+        );
+        assert_eq!(json["slice"], "S2-puzzle-solution-connect");
+        assert!(json["error"].as_str().is_some());
+    }
+
+    #[tokio::test]
     async fn readyz_fails_closed_without_database() {
         let app = router(AppState::new(None));
         let response = match app

@@ -132,15 +132,17 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 		allGames.forEach((game, idx) => {
 			const connect = connectResults[idx]
-			if (connect && connect.ok && connect.response?.entries?.length) {
+			if (connect && connect.mode !== 'rest' && connect.ok && connect.response?.entries?.length) {
 				// Connect returned data → sole authority; no SDK dual residual.
-				const entries: LeaderboardEntry[] = connect.response.entries.map((e) => ({
-					rank: e.rank,
-					name: e.userName || e.userId || 'Anonymous',
-					avatarIndex: Math.max(0, e.rank - 1),
-					score: e.value,
-					isCurrentUser: Boolean(user?.id && e.userId === user.id),
-				}))
+				const entries: LeaderboardEntry[] = connect.response.entries.map(
+					(e: { rank: number; userName?: string; userId?: string; value: number }) => ({
+						rank: e.rank,
+						name: e.userName || e.userId || 'Anonymous',
+						avatarIndex: Math.max(0, e.rank - 1),
+						score: e.value,
+						isCurrentUser: Boolean(user?.id && e.userId === user.id),
+					}),
+				)
 				gameLeaderboards.push({
 					slug: game.slug,
 					name: game.name,
@@ -152,7 +154,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 			}
 
 			// connect_required fail-closed: empty product surface, no SDK dual.
-			if (connect && 'failClosed' in connect && connect.failClosed) {
+			if (connect && connect.mode !== 'rest' && connect.failClosed) {
 				gameLeaderboards.push({
 					slug: game.slug,
 					name: game.name,

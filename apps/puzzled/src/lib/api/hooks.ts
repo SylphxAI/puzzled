@@ -14,6 +14,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
+import { admitGetDailyViaConnect, shouldUseRestPlayResidual } from '@/lib/connect/puzzle-admission'
 import {
 	ApiError,
 	adminApi,
@@ -264,6 +265,46 @@ export function useDailyStatus(
 	return useQuery({
 		queryKey: queryKeys.dailyStatus(gameSlug, difficulty),
 		queryFn: async () => {
+			// Default connect authority: sole PuzzleService.GetDaily densify.
+			// Dual REST success is fail-closed under connect modes.
+			const admit = await admitGetDailyViaConnect({
+				gameSlug,
+				difficulty,
+			})
+			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+				if (admit.ok) {
+					const r = admit.response
+					return {
+						hasCompleted: r.hasCompleted,
+						completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
+						puzzle: {
+							id: r.puzzleId ?? null,
+							puzzleNumber: r.puzzleNumber,
+							puzzleDate: r.puzzleDate,
+							puzzleData: r.puzzleDataJson
+								? (() => {
+										try {
+											return JSON.parse(r.puzzleDataJson)
+										} catch {
+											return null
+										}
+									})()
+								: null,
+							difficulty: r.difficulty || difficulty || null,
+						},
+						canPlay: r.canPlay,
+						mode: r.mode || 'daily',
+						slice: r.slice || 'S2-daily-connect',
+						authority: 'connect' as const,
+					}
+				}
+				if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
+					throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+						code: 'CONNECT_PLAY_FAIL_CLOSED',
+						message: admit.error || 'connect_play_fail_closed',
+					})
+				}
+			}
 			const res = await gamesApi['daily-status'].$get({
 				query: { gameSlug, difficulty },
 			})
@@ -281,6 +322,40 @@ export function useTodaysPuzzle(
 	return useQuery({
 		queryKey: queryKeys.todaysPuzzle(gameSlug, difficulty),
 		queryFn: async () => {
+			// Product play path: Connect GetDaily densify (not dual REST under default).
+			const admit = await admitGetDailyViaConnect({
+				gameSlug,
+				difficulty,
+			})
+			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+				if (admit.ok) {
+					const r = admit.response
+					return {
+						puzzleId: r.puzzleId ?? null,
+						puzzleNumber: r.puzzleNumber,
+						puzzleDate: r.puzzleDate,
+						puzzleData: r.puzzleDataJson
+							? (() => {
+									try {
+										return JSON.parse(r.puzzleDataJson)
+									} catch {
+										return null
+									}
+								})()
+							: null,
+						difficulty: r.difficulty || difficulty || null,
+						slice: r.slice || 'S2-daily-connect',
+						stub: r.stub,
+						authority: 'connect' as const,
+					}
+				}
+				if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
+					throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+						code: 'CONNECT_PLAY_FAIL_CLOSED',
+						message: admit.error || 'connect_play_fail_closed',
+					})
+				}
+			}
 			const res = await gamesApi['todays-puzzle'].$get({
 				query: { gameSlug, difficulty },
 			})
