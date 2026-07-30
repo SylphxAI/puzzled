@@ -130,9 +130,14 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
-        assert!(json["entries"]
-            .as_array()
-            .is_some_and(|entries| entries.is_empty()));
+        // ProtoJSON omits empty repeated fields; treat missing as empty.
+        assert!(
+            json.get("entries").map_or(true, |v| v
+                .as_array()
+                .is_some_and(|entries| entries.is_empty())),
+            "unexpected entries: {:?}",
+            json.get("entries")
+        );
     }
 
     #[tokio::test]
