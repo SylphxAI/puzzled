@@ -7,6 +7,12 @@ edition = "2021"
 license = "Proprietary"
 publish = false
 
+[workspace.dependencies]
+connectrpc = { version = "0.8", features = ["axum"] }
+buffa = { version = "0.8.1", features = ["json"] }
+buffa-types = { version = "0.8", features = ["json"] }
+connectrpc-build = "0.8"
+
 [workspace.lints.rust]
 unsafe_code = "forbid"
 

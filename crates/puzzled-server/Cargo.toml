@@ -31,6 +31,14 @@ jsonwebtoken = { version = "9", default-features = false, features = ["use_pem"]
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
 
+# technology-stack-profile: buffa + connectrpc
+connectrpc = { workspace = true }
+buffa = { workspace = true }
+buffa-types = { workspace = true }
+
+[build-dependencies]
+connectrpc-build = { workspace = true }
+
 [dev-dependencies]
 puzzled-core = { path = "../puzzled-core" }
 rand = "0.8"

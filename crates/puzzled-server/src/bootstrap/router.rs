@@ -21,16 +21,21 @@ use crate::capabilities::puzzle_play::interfaces::{
 };
 use crate::capabilities::stats::interfaces::{today_percentile_http, user_stats_shape_http};
 
-use super::health::{connect_get_leaderboard, connect_health, connect_ready, healthz, readyz};
+use super::connect_health::health_connect_service;
+use super::connect_stats::stats_connect_service;
+use super::health::{healthz, readyz};
 use super::state::AppState;
 
+/// technology-stack-profile: product Connect RPCs mount via `connectrpc::Router`
+/// (buffa + connectrpc-build). Hand-rolled Connect JSON routes are retired.
 pub fn router(state: AppState) -> Router {
+    let connect = connectrpc::Router::new()
+        .add_service(health_connect_service(state.clone()))
+        .add_service(stats_connect_service(state.clone()));
+
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
-        .route("/puzzled.v1.HealthService/Health", post(connect_health))
-        .route("/puzzled.v1.HealthService/Ready", post(connect_ready))
-        .route("/puzzled.v1.StatsService/GetLeaderboard", post(connect_get_leaderboard))
         .route("/api/leaderboard", get(leaderboard_stub))
         .route("/api/v1/stats/leaderboard", get(stats_leaderboard))
         .route("/api/v1/puzzles/grid", get(generate_grid))
@@ -83,4 +88,5 @@ pub fn router(state: AppState) -> Router {
             post(try_auto_freeze_http),
         )
         .with_state(state)
+        .fallback_service(connect.into_axum_service())
 }

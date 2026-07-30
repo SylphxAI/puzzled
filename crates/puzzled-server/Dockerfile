@@ -3,9 +3,11 @@
 FROM rust:1-bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
+COPY proto proto
 COPY crates/puzzled-core/Cargo.toml crates/puzzled-core/Cargo.toml
 COPY crates/puzzled-core/src crates/puzzled-core/src
 COPY crates/puzzled-server/Cargo.toml crates/puzzled-server/Cargo.toml
+COPY crates/puzzled-server/build.rs crates/puzzled-server/build.rs
 COPY crates/puzzled-server/src crates/puzzled-server/src
 ENV CARGO_BUILD_JOBS=2
 RUN cargo build --locked --release -p puzzled-server

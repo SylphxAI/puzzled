@@ -1,3 +1,6 @@
+/**
+ * technology-stack-profile: generated HealthService client (not hand-rolled fetch).
+ */
 import { create } from '@bufbuild/protobuf'
 import { type Client, createClient } from '@connectrpc/connect'
 import {

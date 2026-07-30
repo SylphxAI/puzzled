@@ -25,6 +25,7 @@ port = 8080
 path_prefixes = [
   "/healthz",
   "/readyz",
+  "/puzzled.v1",
   "/api/leaderboard",
   "/api/v1",
 ]

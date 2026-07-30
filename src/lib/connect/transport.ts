@@ -1,5 +1,6 @@
 /**
- * Connect-Web transport (Connect protocol) — Protobuf SSOT clients.
+ * technology-stack-profile web-react client transport:
+ * @bufbuild/protobuf + @connectrpc/connect-web (ProtoJSON browser default).
  */
 
 import type { Transport } from '@connectrpc/connect'
@@ -35,7 +36,8 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedBase = base
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
-		useBinaryFormat: false,
+		useBinaryFormat: false, // browserDefaultEncoding: protojson
+		credentials: 'include',
 	})
 	return cachedTransport
 }

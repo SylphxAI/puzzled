@@ -4,6 +4,12 @@
 //! Domain decisions live in `puzzled-core`.
 
 pub mod bootstrap;
+
+/// Generated Connect/Protobuf types (buffa + connectrpc-build).
+pub mod proto {
+    connectrpc::include_generated!();
+}
+
 pub mod capabilities;
 pub mod shared;
 
@@ -28,6 +34,18 @@ mod tests {
         match Request::builder().method(method).uri(uri).body(body) {
             Ok(request) => request,
             Err(error) => panic!("build request {method_name} {uri}: {error}"),
+        }
+    }
+
+    fn build_connect_request(uri: &str, body: Body) -> Request<Body> {
+        match Request::builder()
+            .method(Method::POST)
+            .uri(uri)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(body)
+        {
+            Ok(request) => request,
+            Err(error) => panic!("build connect request {uri}: {error}"),
         }
     }
 
@@ -61,8 +79,7 @@ mod tests {
     async fn connect_health_returns_serving_ok() {
         let app = router(AppState::new(None));
         let response = match app
-            .oneshot(build_request(
-                Method::POST,
+            .oneshot(build_connect_request(
                 "/puzzled.v1.HealthService/Health",
                 Body::from("{}"),
             ))
@@ -73,8 +90,49 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
-        assert_eq!(json["status"], 1);
+        // Proto3 JSON enum: name string (buffa) — numeric wire value is 1 (SERVING_STATUS_OK).
+        assert!(
+            json["status"] == "SERVING_STATUS_OK" || json["status"] == 1,
+            "unexpected status: {}",
+            json["status"]
+        );
         assert_eq!(json["message"], "ok");
+    }
+
+    #[tokio::test]
+    async fn connect_get_leaderboard_requires_game_slug() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.StatsService/GetLeaderboard",
+                Body::from("{}"),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetLeaderboard: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn connect_get_leaderboard_empty_without_db() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.StatsService/GetLeaderboard",
+                Body::from(r#"{"gameSlug":"sudoku","type":"LEADERBOARD_TYPE_SCORE","period":"LEADERBOARD_PERIOD_ALL","limit":10}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetLeaderboard: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert!(json["entries"]
+            .as_array()
+            .is_some_and(|entries| entries.is_empty()));
     }
 
     #[tokio::test]
