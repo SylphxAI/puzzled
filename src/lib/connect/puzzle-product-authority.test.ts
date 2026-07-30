@@ -25,12 +25,12 @@ describe('Puzzle product authority', () => {
 		}
 	})
 
-	test('required fail-closed on empty slug', () => {
+	test('fail-closed on empty slug under sole connect (HARD PATH)', () => {
 		const plan = planPuzzleGetPuzzleProduct(
 			{ gameSlug: '', seed: 1 },
 			{ NEXT_PUBLIC_PUZZLED_PLAY_PRODUCT_AUTHORITY: 'connect_required' },
 		)
-		expect(plan.mode).toBe('connect_required')
+		expect(plan.mode).toBe('connect')
 		if (plan.mode !== 'rest') expect(plan.connect.ok).toBe(false)
 	})
 
