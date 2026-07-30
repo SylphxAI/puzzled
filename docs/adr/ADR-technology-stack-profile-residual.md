@@ -1,32 +1,29 @@
 # ADR: technology-stack-profile residual honesty
 
-- **Status:** Accepted (residual inventory)
+- **Status:** Accepted (clean migrate — sole createClient product densify)
 - **Date:** 2026-07-30
 - **Profile:** SylphxAI/skills `technology-stack-profile`
 
 ## Context
 
-Portfolio SOTA requires buffa + connectrpc product RPC and Connect-Web/Query web
-clients. This repository has stack foundation work landed, but may still have
-REST densify residual, partial product RPC coverage, or analysis-language
-backend-effect residuals.
+Puzzled is **dev-phase / non-public-serving**. Product RPC densify uses
+buffa + connectrpc + createClient (`puzzle-client` / `stats-client`).
 
 ## Decision
 
-1. Product RPC authority is buffa + connectrpc (Rust) where a backend role exists.
-2. Web product densify uses Connect-Web + Connect-Query + TanStack Query.
-3. Do not claim full profile completion while residual densify or non-Rust
-   backend effects remain for declared backend roles.
-4. Python/TS analysis tooling is OK; product backend effects are not.
+1. Product RPC authority is buffa + connectrpc on Rust product services.
+2. Web densify uses createClient only under default connect (no hand-JSON dual).
+3. Pure residual authority opt-out remains for offline fixtures only.
 
 ## Residual inventory
 
-Track repo-specific open densify / residual paths in PROJECT.md or follow-up
-commits. This ADR prevents silent greenwashing of partial cutovers.
+- No `*-residual.ts` hand-JSON dual modules remain under `src/lib/connect`.
+- Product admission/authority modules gate pure vs connect without dual success.
 
 ## Validation
 
 ```bash
 buf lint
-# cargo / bun checks as applicable
+bun test src/lib/connect
+cargo test -p puzzled --lib
 ```
