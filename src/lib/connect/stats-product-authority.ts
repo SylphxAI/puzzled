@@ -51,3 +51,26 @@ export function planStatsLeaderboardProduct(
   }
   return { mode, connect: { ok: true, value }, failClosed: mode === 'connect_required' }
 }
+
+/**
+ * Whether SDK residual may densify after a Connect admit attempt.
+ * Sole Connect when data present; SDK only when Connect empty/fail and not fail-closed.
+ */
+export function shouldUseSdkLeaderboardResidual(
+  admit:
+    | null
+    | {
+        mode: string
+        ok?: boolean
+        failClosed?: boolean
+        skipped?: boolean
+        response?: { entries?: readonly unknown[] }
+      },
+): boolean {
+  if (!admit) return true
+  if (admit.mode === 'rest' || admit.skipped) return true
+  if (admit.failClosed) return false
+  if (admit.ok && (admit.response?.entries?.length ?? 0) > 0) return false
+  // Connect empty or failed (admit mode): residual SDK allowed
+  return true
+}
