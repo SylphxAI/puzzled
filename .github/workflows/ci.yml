@@ -213,30 +213,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      - name: Build SDK
-        run: bun run build
-        working-directory: packages/sdk
-
-      - name: Build Puzzled (type-safe next build)
-        run: bun run build
-        working-directory: apps/puzzled
-        env:
-          NODE_OPTIONS: '--max-old-space-size=5120'
-          SKIP_ENV_VALIDATION: 'true'
-          SKIP_DB_MIGRATE: 'true'
-          DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/placeholder'
-          BETTER_AUTH_SECRET: 'ci-placeholder-secret-32-chars-min'
-          BETTER_AUTH_URL: 'http://localhost:3000'
-          REDIS_URL: 'redis://:placeholder@localhost:6379'
-          NEXT_PUBLIC_APP_URL: 'https://puzzled.gg'
-          NEXT_PUBLIC_SYLPHX_APP_ID: 'app_ci_placeholder'
-          CRON_SECRET: 'ci-placeholder-cron-secret'
-          ADMIN_SECRET: 'ci-placeholder-admin-secret'
-
-  # ==========================================
-  # Rust product API (sole backend process)
-  # ==========================================
-
+      # Removed discarded packaging: Build SDK — Platform builds once
+      # Removed discarded packaging: Build Puzzled (type-safe next build) — Platform builds once
   rust-api:
     name: Rust API
     runs-on: sylphx-linux-standard
