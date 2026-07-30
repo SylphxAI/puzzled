@@ -62,3 +62,34 @@ export function encodeSubmissionJson(input: SubmitGuessInput): string {
 		return ''
 	}
 }
+
+/**
+ * Resolve Connect SubmitGuess seed from product save input.
+ * Prefer explicit seed, then numeric puzzleId, else stable hash of puzzleId.
+ */
+export function resolveSubmitGuessSeed(input: {
+	seed?: number
+	puzzleId?: string
+	puzzleNumber?: number
+}): number | null {
+	if (typeof input.seed === 'number' && Number.isFinite(input.seed)) {
+		return Math.trunc(input.seed)
+	}
+	if (typeof input.puzzleNumber === 'number' && Number.isFinite(input.puzzleNumber)) {
+		return Math.trunc(input.puzzleNumber)
+	}
+	const id = (input.puzzleId ?? '').trim()
+	if (!id) return null
+	if (/^-?\d+$/.test(id)) {
+		const n = Number(id)
+		if (Number.isFinite(n)) return Math.trunc(n)
+	}
+	// FNV-1a 32-bit — deterministic densify envelope when puzzleId is opaque (uuid).
+	let h = 0x811c9dc5
+	for (let i = 0; i < id.length; i++) {
+		h ^= id.charCodeAt(i)
+		h = Math.imul(h, 0x01000193)
+	}
+	const n = h | 0
+	return n === 0 ? 1 : Math.abs(n)
+}

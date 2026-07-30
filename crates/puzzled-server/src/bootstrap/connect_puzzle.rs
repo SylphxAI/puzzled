@@ -215,10 +215,10 @@ impl PuzzleService for PuzzleConnectService {
                 "game_slug_required",
             ));
         }
-        if game_slug != "sudoku" {
+        if !is_valid_game_slug(game_slug) {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
-                "unsupported_game_slug",
+                "unknown_game",
             ));
         }
 
@@ -242,6 +242,21 @@ impl PuzzleService for PuzzleConnectService {
                 }
             }
         };
+
+        // Sudoku: full generator + validate_and_score densify.
+        // Other games: sole Connect claim accept (no dual REST); score residual honest None.
+        if game_slug != "sudoku" {
+            return Response::ok(SubmitGuessResponse {
+                valid: true,
+                status: status_label(status).to_string(),
+                score: None,
+                game_slug: game_slug.to_string(),
+                seed: req.seed,
+                error: None,
+                slice: SLICE_SUBMIT.to_string(),
+                ..Default::default()
+            });
+        }
 
         let difficulty = parse_difficulty(&req.difficulty);
         let puzzle = generate_sudoku_puzzle(req.seed, difficulty);

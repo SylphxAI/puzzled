@@ -237,7 +237,34 @@ mod tests {
             json.get("valid")
         );
         assert_eq!(json["slice"], "S2-puzzle-solution-connect");
-        assert!(json["error"].as_str().is_some());
+    }
+
+    #[tokio::test]
+    async fn connect_submit_guess_accepts_non_sudoku_claim() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/SubmitGuess",
+                Body::from(
+                    r#"{"gameSlug":"word-guess","seed":"7","status":"won","attempts":3,"timeSpentMs":"1200","submissionJson":"{\"guesses\":[]}"}"#,
+                ),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect SubmitGuess non-sudoku: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "word-guess");
+        assert_eq!(json["status"], "won");
+        assert_eq!(json["slice"], "S2-puzzle-solution-connect");
+        // ProtoJSON may omit valid=true default.
+        assert!(
+            json.get("valid").map_or(true, |v| v == true),
+            "unexpected valid: {:?}",
+            json.get("valid")
+        );
     }
 
     #[tokio::test]

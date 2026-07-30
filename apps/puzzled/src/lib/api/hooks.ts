@@ -14,7 +14,13 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
-import { admitGetDailyViaConnect, shouldUseRestPlayResidual } from '@/lib/connect/puzzle-admission'
+import {
+	admitGetDailyViaConnect,
+	admitSubmitGuessViaConnect,
+	resolvePuzzleProductAuthorityMode,
+	resolveSubmitGuessSeed,
+	shouldUseRestPlayResidual,
+} from '@/lib/connect/puzzle-admission'
 import {
 	ApiError,
 	adminApi,
@@ -274,11 +280,13 @@ export function useDailyStatus(
 			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
 				if (admit.ok) {
 					const r = admit.response
+					// Prefer Connect puzzleId; else densify id as puzzleNumber so SubmitGuess seed maps.
+					const puzzleId = r.puzzleId?.trim() || String(r.puzzleNumber)
 					return {
 						hasCompleted: r.hasCompleted,
 						completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
 						puzzle: {
-							id: r.puzzleId ?? null,
+							id: puzzleId,
 							puzzleNumber: r.puzzleNumber,
 							puzzleDate: r.puzzleDate,
 							puzzleData: r.puzzleDataJson
@@ -330,8 +338,9 @@ export function useTodaysPuzzle(
 			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
 				if (admit.ok) {
 					const r = admit.response
+					const puzzleId = r.puzzleId?.trim() || String(r.puzzleNumber)
 					return {
-						puzzleId: r.puzzleId ?? null,
+						puzzleId,
 						puzzleNumber: r.puzzleNumber,
 						puzzleDate: r.puzzleDate,
 						puzzleData: r.puzzleDataJson
@@ -434,6 +443,9 @@ type SaveResultInput = {
 	puzzleId: string
 	difficulty?: string
 	data: unknown
+	/** Optional densify seed (Connect SubmitGuess); falls back to puzzleId/puzzleNumber. */
+	seed?: number
+	puzzleNumber?: number
 }
 
 type SaveResultOutput = {
@@ -441,6 +453,9 @@ type SaveResultOutput = {
 	score?: number
 	session?: unknown
 	mode?: string
+	slice?: string
+	authority?: 'connect' | 'rest_residual'
+	error?: string
 }
 
 export function useSaveResult(
@@ -455,8 +470,73 @@ export function useSaveResult(
 
 	return useMutation({
 		mutationFn: async (input: SaveResultInput) => {
+			// Default connect authority: sole PuzzleService.SubmitGuess densify.
+			// Dual REST save-result success is fail-closed under connect modes.
+			const authorityMode = resolvePuzzleProductAuthorityMode()
+			const restResidualAllowed = authorityMode === 'rest'
+
+			if (input.status === 'won' || input.status === 'lost') {
+				const seed = resolveSubmitGuessSeed({
+					seed: input.seed,
+					puzzleId: input.puzzleId,
+					puzzleNumber: input.puzzleNumber,
+				})
+				if (seed === null) {
+					if (!restResidualAllowed) {
+						throw new ApiError(400, 'seed_required', {
+							code: 'CONNECT_SUBMIT_SEED_REQUIRED',
+							message: 'seed_required',
+						})
+					}
+				} else {
+					const admit = await admitSubmitGuessViaConnect({
+						gameSlug: input.gameSlug,
+						seed,
+						difficulty: input.difficulty,
+						status: input.status,
+						attempts: input.attempts,
+						timeSpentMs: input.timeSpentMs,
+						submission: input.data,
+					})
+					if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+						if (admit.ok) {
+							const r = admit.response
+							return {
+								success: r.valid,
+								score: r.score,
+								session: undefined,
+								mode: input.mode ?? 'daily',
+								slice: r.slice || 'S2-puzzle-solution-connect',
+								authority: 'connect' as const,
+								error: r.error,
+							}
+						}
+						if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
+							throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+								code: 'CONNECT_PLAY_FAIL_CLOSED',
+								message: admit.error || 'connect_play_fail_closed',
+							})
+						}
+					}
+				}
+			} else if (!restResidualAllowed) {
+				// abandoned is not densified on SubmitGuess — fail-close dual REST under connect.
+				throw new ApiError(400, 'status_required_won_or_lost', {
+					code: 'CONNECT_SUBMIT_STATUS',
+					message: 'status_required_won_or_lost',
+				})
+			}
+
+			// Explicit rest opt-out residual only (no dual success under default connect).
+			if (!restResidualAllowed) {
+				throw new ApiError(503, 'connect_play_fail_closed', {
+					code: 'CONNECT_PLAY_FAIL_CLOSED',
+					message: 'connect_play_fail_closed',
+				})
+			}
 			const res = await gamesApi['save-result'].$post({ json: input })
-			return parseResponse<SaveResultOutput>(res)
+			const body = await parseResponse<SaveResultOutput>(res)
+			return { ...body, authority: 'rest_residual' as const }
 		},
 		onSuccess: (data, variables) => {
 			// Invalidate related queries
