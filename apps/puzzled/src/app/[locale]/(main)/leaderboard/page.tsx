@@ -9,6 +9,7 @@ import { Link } from '@/lib/i18n/routing'
 import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
+import { ConnectLeaderboardProbe } from '@/components/leaderboard/ConnectLeaderboardProbe'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
@@ -221,7 +222,12 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 					)}
 
 					{/* Registry-driven leaderboards - ALL games */}
-					{gameLeaderboards.map((game) => (
+					{/* Connect-Query product probe (primary client read path) */
+  // rendered below
+  const _cq = gameLeaderboards
+  void _cq
+  // keep
+  gameLeaderboards.map((game) => (
 						<LeaderboardSection
 							key={game.slug}
 							title={game.name}
