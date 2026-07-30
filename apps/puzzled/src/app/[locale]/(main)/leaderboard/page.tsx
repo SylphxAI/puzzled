@@ -85,51 +85,68 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	const allGames = getAllGameMetadata()
 	const periodSuffix = getPeriodSuffix(period)
 
-	// Connect Stats product-authority residual (default connect).
-	// SDK engagement leaderboard remains display authority until Stats Connect product path densed.
-	void Promise.all(
-		allGames.map((game) =>
-			admitLeaderboardViaConnect({
-				gameSlug: game.slug,
-				type: 'score',
-				period,
-				limit: 10,
-			}).catch(() => null),
-		),
-	)
-
-	// Fetch real leaderboard data for all games from SDK
+	// Product authority: Connect Stats.GetLeaderboard first (default connect).
+	// SDK engagement residual only when Connect unavailable or empty.
 	type GameLeaderboardData = {
 		slug: string
 		name: string
 		entries: LeaderboardEntry[]
 		userRank: UserRankData | null
+		authority?: 'connect' | 'sdk_residual'
 	}
 
 	const gameLeaderboards: GameLeaderboardData[] = []
 
 	try {
-		// Fetch leaderboards for all games in parallel
-		const leaderboardPromises = allGames.map(
-			(game) =>
-				getLeaderboard(
-					sdkConfig,
-					`puzzled-${game.slug}-${periodSuffix}`,
-					user?.id ?? null,
-					{ limit: game.slug === allGames[0].slug ? 10 : 5 }, // Primary game gets 10, others get 5
-				).catch(() => null), // Gracefully handle missing leaderboards
+		const connectResults = await Promise.all(
+			allGames.map((game) =>
+				admitLeaderboardViaConnect({
+					gameSlug: game.slug,
+					type: 'score',
+					period,
+					limit: game.slug === allGames[0]?.slug ? 10 : 5,
+				}).catch(() => null),
+			),
 		)
-		const leaderboardResults = await Promise.all(leaderboardPromises)
 
-		// Map results to game leaderboard data
+		const needSdk = connectResults.map((r) => !(r && r.ok && r.response?.entries?.length))
+		const sdkResults = await Promise.all(
+			allGames.map((game, idx) =>
+				needSdk[idx]
+					? getLeaderboard(
+							sdkConfig,
+							`puzzled-${game.slug}-${periodSuffix}`,
+							user?.id ?? null,
+							{ limit: game.slug === allGames[0]?.slug ? 10 : 5 },
+						).catch(() => null)
+					: Promise.resolve(null),
+			),
+		)
+
 		allGames.forEach((game, idx) => {
-			const sdkResult = leaderboardResults[idx]
-			const entries = sdkResult?.entries.map(mapSdkEntry) ?? []
+			const connect = connectResults[idx]
+			if (connect && connect.ok && connect.response?.entries?.length) {
+				const entries: LeaderboardEntry[] = connect.response.entries.map((e) => ({
+					rank: e.rank,
+					name: e.userName || e.userId || 'Anonymous',
+					avatarIndex: Math.max(0, e.rank - 1),
+					score: e.value,
+					isCurrentUser: Boolean(user?.id && e.userId === user.id),
+				}))
+				gameLeaderboards.push({
+					slug: game.slug,
+					name: game.name,
+					entries,
+					userRank: null,
+					authority: 'connect',
+				})
+				return
+			}
 
-			// SDK includes currentUserEntry if user is not in top entries
+			const sdkResult = sdkResults[idx]
+			const entries = sdkResult?.entries.map(mapSdkEntry) ?? []
 			let userRank: UserRankData | null = null
 			if (user && sdkResult?.currentUserEntry && !sdkResult.currentUserEntry.isCurrentUser) {
-				// User is outside top entries, show their rank separately
 				const entry = sdkResult.currentUserEntry
 				if (!entries.some((e) => e.isCurrentUser)) {
 					userRank = {
@@ -139,12 +156,12 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 					}
 				}
 			}
-
 			gameLeaderboards.push({
 				slug: game.slug,
 				name: game.name,
 				entries,
 				userRank,
+				authority: 'sdk_residual',
 			})
 		})
 	} catch {
