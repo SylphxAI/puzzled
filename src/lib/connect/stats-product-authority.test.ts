@@ -14,6 +14,9 @@ describe('Stats product authority', () => {
       { NEXT_PUBLIC_PUZZLED_STATS_PRODUCT_AUTHORITY: 'connect' },
     )
     expect(plan.mode).toBe('connect')
+    if (plan.mode !== 'rest') {
+      expect(plan.failClosed).toBe(true)
+    }
     if (plan.mode === 'connect' && plan.connect.ok) {
       expect(plan.connect.value.gameSlug).toBe('word-groups')
     }

@@ -89,8 +89,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	const periodSuffix = getPeriodSuffix(period)
 
 	// Product authority: sole Connect Stats.GetLeaderboard admit (default connect).
-	// SDK residual only when Connect empty/fail — never after Connect returns data,
-	// and never under connect_required fail-closed.
+	// Fail-closed under connect: no dual SDK residual (SDK only when AUTHORITY=rest).
 	type GameLeaderboardData = {
 		slug: string
 		name: string
@@ -113,7 +112,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 			),
 		)
 
-		// Sole Connect when data present; dual SDK residual only for empty/fail (not failClosed).
+		// Sole Connect under connect modes; SDK residual only when admit skipped (rest).
 		const needSdk = connectResults.map((r) => shouldUseSdkLeaderboardResidual(r))
 		const anySdk = needSdk.some(Boolean)
 		const sdkResults = anySdk

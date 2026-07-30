@@ -2,11 +2,11 @@ import { describe, expect, test } from 'bun:test'
 import { shouldUseSdkLeaderboardResidual } from './stats-product-authority'
 
 describe('shouldUseSdkLeaderboardResidual', () => {
-  test('allows SDK when admit is null', () => {
-    expect(shouldUseSdkLeaderboardResidual(null)).toBe(true)
+  test('blocks SDK when admit is null (connect default fail-closed)', () => {
+    expect(shouldUseSdkLeaderboardResidual(null)).toBe(false)
   })
 
-  test('allows SDK for rest skip', () => {
+  test('allows SDK for rest skip only', () => {
     expect(
       shouldUseSdkLeaderboardResidual({ mode: 'rest', skipped: true, failClosed: false }),
     ).toBe(true)
@@ -17,31 +17,31 @@ describe('shouldUseSdkLeaderboardResidual', () => {
       shouldUseSdkLeaderboardResidual({
         mode: 'connect',
         ok: true,
-        failClosed: false,
+        failClosed: true,
         response: { entries: [{ rank: 1 }] },
       }),
     ).toBe(false)
   })
 
-  test('allows SDK when Connect empty (admit residual)', () => {
+  test('blocks SDK when Connect empty under connect (fail-closed)', () => {
     expect(
       shouldUseSdkLeaderboardResidual({
         mode: 'connect',
         ok: true,
-        failClosed: false,
+        failClosed: true,
         response: { entries: [] },
       }),
-    ).toBe(true)
+    ).toBe(false)
   })
 
-  test('allows SDK when Connect fails under admit', () => {
+  test('blocks SDK when Connect fails under connect (fail-closed)', () => {
     expect(
       shouldUseSdkLeaderboardResidual({
         mode: 'connect',
         ok: false,
-        failClosed: false,
+        failClosed: true,
       }),
-    ).toBe(true)
+    ).toBe(false)
   })
 
   test('blocks SDK under connect_required fail-closed', () => {

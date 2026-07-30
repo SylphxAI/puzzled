@@ -46,15 +46,18 @@ export function planStatsLeaderboardProduct(
     limit: clampLeaderboardLimit(input.limit ?? 10),
   }
   const err = validateGetLeaderboardInput(value)
+  // Connect modes fail-closed: sole GetLeaderboard — no dual SDK residual.
+  const failClosed = true
   if (err) {
-    return { mode, connect: { ok: false, error: err }, failClosed: mode === 'connect_required' }
+    return { mode, connect: { ok: false, error: err }, failClosed }
   }
-  return { mode, connect: { ok: true, value }, failClosed: mode === 'connect_required' }
+  return { mode, connect: { ok: true, value }, failClosed }
 }
 
 /**
  * Whether SDK residual may densify after a Connect admit attempt.
- * Sole Connect when data present; SDK only when Connect empty/fail and not fail-closed.
+ * Under connect modes: fail-closed — never dual SDK residual.
+ * SDK residual only for explicit rest opt-out / skipped admit.
  */
 export function shouldUseSdkLeaderboardResidual(
   admit:
@@ -67,10 +70,8 @@ export function shouldUseSdkLeaderboardResidual(
         response?: { entries?: readonly unknown[] }
       },
 ): boolean {
-  if (!admit) return true
+  if (!admit) return false
   if (admit.mode === 'rest' || admit.skipped) return true
-  if (admit.failClosed) return false
-  if (admit.ok && (admit.response?.entries?.length ?? 0) > 0) return false
-  // Connect empty or failed (admit mode): residual SDK allowed
-  return true
+  // connect / connect_required: sole Connect, never dual SDK residual
+  return false
 }
