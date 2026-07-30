@@ -1,6 +1,9 @@
 import { type EngagementLeaderboardResult, getLeaderboard } from '@sylphx/sdk'
 import { auth } from '@sylphx/sdk/nextjs'
-import { admitLeaderboardViaConnect } from '@/lib/connect/stats-admission'
+import {
+	admitLeaderboardViaConnect,
+	shouldUseSdkLeaderboardResidual,
+} from '@/lib/connect/stats-admission'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -9,7 +12,6 @@ import { Link } from '@/lib/i18n/routing'
 import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { ConnectLeaderboardProbe } from '@/components/leaderboard/ConnectLeaderboardProbe'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
@@ -86,14 +88,15 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 	const allGames = getAllGameMetadata()
 	const periodSuffix = getPeriodSuffix(period)
 
-	// Product authority: Connect Stats.GetLeaderboard first (default connect).
-	// SDK engagement residual only when Connect unavailable or empty.
+	// Product authority: sole Connect Stats.GetLeaderboard admit (default connect).
+	// SDK residual only when Connect empty/fail — never after Connect returns data,
+	// and never under connect_required fail-closed.
 	type GameLeaderboardData = {
 		slug: string
 		name: string
 		entries: LeaderboardEntry[]
 		userRank: UserRankData | null
-		authority?: 'connect' | 'sdk_residual'
+		authority?: 'connect' | 'sdk_residual' | 'connect_empty'
 	}
 
 	const gameLeaderboards: GameLeaderboardData[] = []
@@ -110,23 +113,28 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 			),
 		)
 
-		const needSdk = connectResults.map((r) => !(r && r.ok && r.response?.entries?.length))
-		const sdkResults = await Promise.all(
-			allGames.map((game, idx) =>
-				needSdk[idx]
-					? getLeaderboard(
-							sdkConfig,
-							`puzzled-${game.slug}-${periodSuffix}`,
-							user?.id ?? null,
-							{ limit: game.slug === allGames[0]?.slug ? 10 : 5 },
-						).catch(() => null)
-					: Promise.resolve(null),
-			),
-		)
+		// Sole Connect when data present; dual SDK residual only for empty/fail (not failClosed).
+		const needSdk = connectResults.map((r) => shouldUseSdkLeaderboardResidual(r))
+		const anySdk = needSdk.some(Boolean)
+		const sdkResults = anySdk
+			? await Promise.all(
+					allGames.map((game, idx) =>
+						needSdk[idx]
+							? getLeaderboard(
+									sdkConfig,
+									`puzzled-${game.slug}-${periodSuffix}`,
+									user?.id ?? null,
+									{ limit: game.slug === allGames[0]?.slug ? 10 : 5 },
+								).catch(() => null)
+							: Promise.resolve(null),
+					),
+				)
+			: allGames.map(() => null)
 
 		allGames.forEach((game, idx) => {
 			const connect = connectResults[idx]
 			if (connect && connect.ok && connect.response?.entries?.length) {
+				// Connect returned data → sole authority; no SDK dual residual.
 				const entries: LeaderboardEntry[] = connect.response.entries.map((e) => ({
 					rank: e.rank,
 					name: e.userName || e.userId || 'Anonymous',
@@ -144,6 +152,19 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 				return
 			}
 
+			// connect_required fail-closed: empty product surface, no SDK dual.
+			if (connect && 'failClosed' in connect && connect.failClosed) {
+				gameLeaderboards.push({
+					slug: game.slug,
+					name: game.name,
+					entries: [],
+					userRank: null,
+					authority: 'connect_empty',
+				})
+				return
+			}
+
+			// Connect empty/fail (admit) or rest opt-out → residual SDK densify only.
 			const sdkResult = sdkResults[idx]
 			const entries = sdkResult?.entries.map(mapSdkEntry) ?? []
 			let userRank: UserRankData | null = null
@@ -162,7 +183,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 				name: game.name,
 				entries,
 				userRank,
-				authority: 'sdk_residual',
+				authority: sdkResult ? 'sdk_residual' : 'connect_empty',
 			})
 		})
 	} catch {
@@ -221,13 +242,8 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 						</div>
 					)}
 
-					{/* Registry-driven leaderboards - ALL games */}
-					{/* Connect-Query product probe (primary client read path) */
-  // rendered below
-  const _cq = gameLeaderboards
-  void _cq
-  // keep
-  gameLeaderboards.map((game) => (
+					{/* Registry-driven leaderboards — sole Connect admit product surface */}
+					{gameLeaderboards.map((game) => (
 						<LeaderboardSection
 							key={game.slug}
 							title={game.name}
