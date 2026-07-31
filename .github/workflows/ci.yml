@@ -1,5 +1,11 @@
 name: CI
 
+# Fast Trunk (Agent-native):
+# - Aggregate source verdict: source-ci/pass
+# - CI = source correctness only; Platform builds production once
+# - Merge Queue off by default (no merge_group trigger)
+# - Concurrency cancels superseded PR/branch tip runs
+
 on:
   pull_request:
     branches: [main, dev]
@@ -28,6 +34,11 @@ env:
   TURBO_TEAM: sylphx
   TURBO_API: https://turbo.sylphx.com
   TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+
+concurrency:
+  # Fast Trunk: supersede obsolete runs for the same PR or branch tip.
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ==========================================
