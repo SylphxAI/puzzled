@@ -1,6 +1,9 @@
-# puzzled-server — Rust drop-in authority (ADR-168 S0+)
-# Workspace members: puzzled-core (pure generators/scoring) + puzzled-server (HTTP).
+# puzzled-server — Rust Connect dens product authority
 FROM rust:1-bookworm AS builder
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends protobuf-compiler ca-certificates \
+  && rm -rf /var/lib/apt/lists/* \
+  && protoc --version
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY proto proto

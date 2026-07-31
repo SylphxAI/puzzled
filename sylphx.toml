@@ -23,9 +23,11 @@ type = "web"
 port = 8080
 # Route the complete public API namespace to Rust; no dual backend remains.
 path_prefixes = [
+  "/puzzled.v1.HealthService",
+  "/puzzled.v1.PuzzleService",
+  "/puzzled.v1.StatsService",
   "/healthz",
   "/readyz",
-  "/puzzled.v1",
   "/api/leaderboard",
   "/api/v1",
 ]
