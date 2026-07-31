@@ -1,5 +1,6 @@
 /**
  * Pure product-authority planner for Puzzled Stats leaderboard.
+ * HARD PATH: densified stats is sole Connect — dual residual deleted.
  */
 import {
 	clampLeaderboardLimit,
@@ -9,13 +10,19 @@ import {
 	validateGetLeaderboardInput,
 } from './stats-domain'
 
-export type StatsProductAuthorityMode = 'rest' | 'connect' | 'connect_required'
+export type StatsProductAuthorityMode = 'connect'
 
 export function resolveStatsProductAuthorityMode(
 	_env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
 ): StatsProductAuthorityMode {
-	// HARD PATH clean migrate: densified product is sole Connect — dual residual opt-out deleted.
+	// HARD PATH: always connect. Dual residual opt-out deleted.
 	return 'connect'
+}
+
+export type StatsConnectPlan = {
+	mode: 'connect'
+	connect: { ok: true; value: GetLeaderboardInput } | { ok: false; error: string }
+	failClosed: true
 }
 
 export function planStatsLeaderboardProduct(
@@ -26,15 +33,8 @@ export function planStatsLeaderboardProduct(
 		limit?: number
 	},
 	env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
-):
-	| { mode: 'rest'; connect: null }
-	| {
-			mode: 'connect' | 'connect_required'
-			connect: { ok: true; value: GetLeaderboardInput } | { ok: false; error: string }
-			failClosed: boolean
-	  } {
+): StatsConnectPlan {
 	const mode = resolveStatsProductAuthorityMode(env)
-	if (mode === 'rest') return { mode: 'rest', connect: null }
 	const value: GetLeaderboardInput = {
 		gameSlug: input.gameSlug,
 		type: input.type ?? 'score',
@@ -42,30 +42,21 @@ export function planStatsLeaderboardProduct(
 		limit: clampLeaderboardLimit(input.limit ?? 10),
 	}
 	const err = validateGetLeaderboardInput(value)
-	// Connect modes fail-closed: sole GetLeaderboard — no dual SDK residual.
-	const failClosed = true
-	if (err) {
-		return { mode, connect: { ok: false, error: err }, failClosed }
-	}
-	return { mode, connect: { ok: true, value }, failClosed }
+	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
+	return { mode, connect: { ok: true, value }, failClosed: true }
 }
 
 /**
- * Whether SDK residual may densify after a Connect admit attempt.
- * Under connect modes: fail-closed — never dual SDK residual.
- * SDK residual only for explicit rest opt-out / skipped admit.
+ * Dual SDK leaderboard residual permanently deleted under sole Connect.
+ * Always false — fail-closed fence for call sites.
  */
 export function shouldUseSdkLeaderboardResidual(
-	admit: null | {
+	_admit: null | {
 		mode: string
 		ok?: boolean
 		failClosed?: boolean
 		skipped?: boolean
-		response?: { entries?: readonly unknown[] }
 	},
 ): boolean {
-	if (!admit) return false
-	if (admit.mode === 'rest' || admit.skipped) return true
-	// connect / connect_required: sole Connect, never dual SDK residual
 	return false
 }

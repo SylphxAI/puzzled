@@ -18,16 +18,15 @@ describe('Stats product authority', () => {
 		).toBe('connect')
 	})
 
-	test('connect plans', () => {
+	test('connect plans even when env requests rest', () => {
 		const plan = planStatsLeaderboardProduct(
 			{ gameSlug: 'word-groups' },
 			{ NEXT_PUBLIC_PUZZLED_STATS_PRODUCT_AUTHORITY: 'rest' },
 		)
 		expect(plan.mode).toBe('connect')
-		if (plan.mode !== 'rest') {
-			expect(plan.failClosed).toBe(true)
-		}
-		if (plan.mode === 'connect' && plan.connect.ok) {
+		expect(plan.failClosed).toBe(true)
+		expect(plan.connect.ok).toBe(true)
+		if (plan.connect.ok) {
 			expect(plan.connect.value.gameSlug).toBe('word-groups')
 		}
 	})
@@ -37,8 +36,8 @@ describe('Stats product authority', () => {
 			{ gameSlug: '' },
 			{ NEXT_PUBLIC_PUZZLED_STATS_PRODUCT_AUTHORITY: 'connect_required' },
 		)
-		// HARD PATH: always connect (not connect_required enum), still fail-closed.
 		expect(plan.mode).toBe('connect')
-		if (plan.mode !== 'rest') expect(plan.connect.ok).toBe(false)
+		expect(plan.connect.ok).toBe(false)
+		expect(plan.failClosed).toBe(true)
 	})
 })

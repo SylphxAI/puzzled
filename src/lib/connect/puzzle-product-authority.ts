@@ -1,6 +1,6 @@
 /**
  * Pure product-authority planner for Puzzled primary play (PuzzleService).
- * Default connect: sole Connect densify — dual REST play success fail-closed.
+ * HARD PATH: densified play is sole Connect — REST dual success path deleted.
  */
 import {
 	type GetDailyInput,
@@ -11,27 +11,27 @@ import {
 	validateSubmitGuessInput,
 } from './puzzle-domain'
 
-export type PuzzleProductAuthorityMode = 'rest' | 'connect' | 'connect_required'
+/** Sole densified product authority for play surfaces. */
+export type PuzzleProductAuthorityMode = 'connect'
 
 export function resolvePuzzleProductAuthorityMode(
 	_env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
 ): PuzzleProductAuthorityMode {
-	// HARD PATH: densified play is sole Connect — REST dual opt-out deleted.
+	// HARD PATH: always connect. REST dual residual opt-out deleted.
 	return 'connect'
+}
+
+export type PuzzleConnectPlan<T> = {
+	mode: 'connect'
+	connect: { ok: true; value: T } | { ok: false; error: string }
+	failClosed: true
 }
 
 export function planPuzzleGetDailyProduct(
 	input: GetDailyInput,
 	env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
-):
-	| { mode: 'rest'; connect: null }
-	| {
-			mode: 'connect' | 'connect_required'
-			connect: { ok: true; value: GetDailyInput } | { ok: false; error: string }
-			failClosed: boolean
-	  } {
+): PuzzleConnectPlan<GetDailyInput> {
 	const mode = resolvePuzzleProductAuthorityMode(env)
-	if (mode === 'rest') return { mode: 'rest', connect: null }
 	const value: GetDailyInput = {
 		gameSlug: input.gameSlug,
 		difficulty: input.difficulty,
@@ -39,62 +39,41 @@ export function planPuzzleGetDailyProduct(
 		hasCompleted: input.hasCompleted,
 	}
 	const err = validateGetDailyInput(value)
-	const failClosed = true
-	if (err) return { mode, connect: { ok: false, error: err }, failClosed }
-	return { mode, connect: { ok: true, value }, failClosed }
+	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
+	return { mode, connect: { ok: true, value }, failClosed: true }
 }
 
 export function planPuzzleGetPuzzleProduct(
 	input: GetPuzzleInput,
 	env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
-):
-	| { mode: 'rest'; connect: null }
-	| {
-			mode: 'connect' | 'connect_required'
-			connect: { ok: true; value: GetPuzzleInput } | { ok: false; error: string }
-			failClosed: boolean
-	  } {
+): PuzzleConnectPlan<GetPuzzleInput> {
 	const mode = resolvePuzzleProductAuthorityMode(env)
-	if (mode === 'rest') return { mode: 'rest', connect: null }
 	const err = validateGetPuzzleInput(input)
-	const failClosed = true
-	if (err) return { mode, connect: { ok: false, error: err }, failClosed }
-	return { mode, connect: { ok: true, value: input }, failClosed }
+	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
+	return { mode, connect: { ok: true, value: input }, failClosed: true }
 }
 
 export function planPuzzleSubmitGuessProduct(
 	input: SubmitGuessInput,
 	env: Record<string, string | undefined> = typeof process !== 'undefined' ? process.env : {},
-):
-	| { mode: 'rest'; connect: null }
-	| {
-			mode: 'connect' | 'connect_required'
-			connect: { ok: true; value: SubmitGuessInput } | { ok: false; error: string }
-			failClosed: boolean
-	  } {
+): PuzzleConnectPlan<SubmitGuessInput> {
 	const mode = resolvePuzzleProductAuthorityMode(env)
-	if (mode === 'rest') return { mode: 'rest', connect: null }
 	const err = validateSubmitGuessInput(input)
-	const failClosed = true
-	if (err) return { mode, connect: { ok: false, error: err }, failClosed }
-	return { mode, connect: { ok: true, value: input }, failClosed }
+	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
+	return { mode, connect: { ok: true, value: input }, failClosed: true }
 }
 
 /**
- * Whether dual REST play residual may densify after a Connect admit attempt.
- * Under connect modes: fail-closed — never dual REST product success.
- * REST residual only for explicit rest opt-out / skipped admit.
+ * Dual REST play residual permanently deleted under sole Connect.
+ * Always false — kept as a named fail-closed fence for call sites.
  */
 export function shouldUseRestPlayResidual(
-	admit: null | {
+	_admit: null | {
 		mode: string
 		ok?: boolean
 		failClosed?: boolean
 		skipped?: boolean
 	},
 ): boolean {
-	if (!admit) return false
-	if (admit.mode === 'rest' || admit.skipped) return true
-	// connect / connect_required: sole Connect, never dual REST residual
 	return false
 }
