@@ -10,7 +10,9 @@ context = "."
 
 [[services]]
 name = "web"
-type = "worker"
+type = "web"
+port = 3000
+# ADR-5140: presentation is web
 # Platform injects API_INTERNAL_URL for private web → api calls (connect graph).
 # Public /api/* still routes via path_prefixes on the api service edge.
 connect = { services = ["api"] }
