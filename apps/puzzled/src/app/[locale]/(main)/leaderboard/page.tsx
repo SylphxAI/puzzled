@@ -1,13 +1,13 @@
 import { type EngagementLeaderboardResult, getLeaderboard } from '@sylphx/sdk'
 import { auth } from '@sylphx/sdk/nextjs'
-import {
-	admitLeaderboardViaConnect,
-	shouldUseSdkLeaderboardResidual,
-} from '@/lib/connect/stats-admission'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getAllGameMetadata } from '@/games/registry'
+import {
+	admitLeaderboardViaConnect,
+	shouldUseSdkLeaderboardResidual,
+} from '@/lib/connect/stats-admission'
 import { Link } from '@/lib/i18n/routing'
 import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
@@ -132,7 +132,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 		allGames.forEach((game, idx) => {
 			const connect = connectResults[idx]
-			if (connect && connect.mode !== 'rest' && connect.ok && connect.response?.entries?.length) {
+			if (connect && connect.ok && connect.response?.entries?.length) {
 				// Connect returned data → sole authority; no SDK dual residual.
 				const entries: LeaderboardEntry[] = connect.response.entries.map(
 					(e: { rank: number; userName?: string; userId?: string; value: number }) => ({
@@ -154,7 +154,7 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 			}
 
 			// connect_required fail-closed: empty product surface, no SDK dual.
-			if (connect && connect.mode !== 'rest' && connect.failClosed) {
+			if (connect && Boolean(connect.failClosed)) {
 				gameLeaderboards.push({
 					slug: game.slug,
 					name: game.name,

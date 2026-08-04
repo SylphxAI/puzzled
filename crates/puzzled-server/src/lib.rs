@@ -161,8 +161,13 @@ mod tests {
             .as_str()
             .expect("puzzleDataJson densified");
         assert!(puzzle_data.contains("grid"), "expected densified grid JSON");
-        let solution = json["solutionJson"].as_str().expect("solutionJson densified");
-        assert!(solution.contains("grid"), "expected densified solution JSON");
+        let solution = json["solutionJson"]
+            .as_str()
+            .expect("solutionJson densified");
+        assert!(
+            solution.contains("grid"),
+            "expected densified solution JSON"
+        );
     }
 
     #[tokio::test]
@@ -232,7 +237,8 @@ mod tests {
         let json = body_json(response).await;
         // ProtoJSON may omit valid=false; treat missing as false.
         assert!(
-            json.get("valid").map_or(true, |v| v == false || v.is_null()),
+            json.get("valid")
+                .map_or(true, |v| v == false || v.is_null()),
             "unexpected valid: {:?}",
             json.get("valid")
         );

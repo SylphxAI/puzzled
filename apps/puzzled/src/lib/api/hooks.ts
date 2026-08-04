@@ -17,7 +17,6 @@ import {
 import {
 	admitGetDailyViaConnect,
 	admitSubmitGuessViaConnect,
-	resolvePuzzleProductAuthorityMode,
 	resolveSubmitGuessSeed,
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
@@ -277,7 +276,7 @@ export function useDailyStatus(
 				gameSlug,
 				difficulty,
 			})
-			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+			if (!('skipped' in admit && admit.skipped)) {
 				if (admit.ok) {
 					const r = admit.response
 					// Prefer Connect puzzleId; else densify id as puzzleNumber so SubmitGuess seed maps.
@@ -335,7 +334,7 @@ export function useTodaysPuzzle(
 				gameSlug,
 				difficulty,
 			})
-			if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+			if (!('skipped' in admit && admit.skipped)) {
 				if (admit.ok) {
 					const r = admit.response
 					const puzzleId = r.puzzleId?.trim() || String(r.puzzleNumber)
@@ -472,8 +471,8 @@ export function useSaveResult(
 		mutationFn: async (input: SaveResultInput) => {
 			// Default connect authority: sole PuzzleService.SubmitGuess densify.
 			// Dual REST save-result success is fail-closed under connect modes.
-			const authorityMode = resolvePuzzleProductAuthorityMode()
-			const restResidualAllowed = authorityMode === 'rest'
+			// HARD PATH: resolvePuzzleProductAuthorityMode always returns connect.
+			const restResidualAllowed = false
 
 			if (input.status === 'won' || input.status === 'lost') {
 				const seed = resolveSubmitGuessSeed({
@@ -498,7 +497,7 @@ export function useSaveResult(
 						timeSpentMs: input.timeSpentMs,
 						submission: input.data,
 					})
-					if (admit.mode !== 'rest' && !('skipped' in admit && admit.skipped)) {
+					if (!('skipped' in admit && admit.skipped)) {
 						if (admit.ok) {
 							const r = admit.response
 							return {

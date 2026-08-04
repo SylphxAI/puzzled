@@ -4,13 +4,15 @@
 use std::sync::Arc;
 
 use chrono::Utc;
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, get_today_utc};
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 use puzzled_core::{
     generate_sudoku_puzzle, validate_and_score_sudoku, GameSubmission, ScoringResult,
-    SudokuDifficulty, SubmissionStatus,
+    SubmissionStatus, SudokuDifficulty,
 };
 use serde_json::{json, Value};
 
@@ -99,9 +101,8 @@ impl PuzzleService for PuzzleConnectService {
             })
             .to_string()
         });
-        let solution_json = serde_json::to_string(&result.solution).unwrap_or_else(|_| {
-            json!({ "grid": result.solution.grid }).to_string()
-        });
+        let solution_json = serde_json::to_string(&result.solution)
+            .unwrap_or_else(|_| json!({ "grid": result.solution.grid }).to_string());
 
         Response::ok(GetPuzzleResponse {
             game_slug: game_slug.to_string(),
