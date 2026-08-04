@@ -1,9 +1,9 @@
 name: CI
 
-# Fast Trunk (Agent-native):
+# Agent-Native Queued Trunk:
 # - Aggregate source verdict: source-ci/pass
 # - CI = source correctness only; Platform builds production once
-# - Merge Queue off by default (no merge_group trigger)
+# - merge_group required for Merge Queue admission
 # - Concurrency cancels superseded PR/branch tip runs
 
 on:
@@ -37,7 +37,7 @@ env:
   TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
 
 concurrency:
-  # Fast Trunk: supersede obsolete runs for the same PR or branch tip.
+  # Queued Trunk: supersede obsolete runs for the same PR or branch tip.
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: true
 
