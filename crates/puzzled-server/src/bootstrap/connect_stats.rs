@@ -4,17 +4,20 @@
 use std::sync::Arc;
 
 use buffa::EnumValue;
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 
 use super::state::AppState;
 use crate::capabilities::leaderboard::adapters::leaderboard_db::{
-    fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery, LeaderboardType as DbType,
+    fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery,
+    LeaderboardType as DbType,
 };
-use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 use crate::proto::puzzled::v1::{
     GetLeaderboardRequest, GetLeaderboardResponse, GetTodayPercentileRequest,
     GetTodayPercentileResponse, LeaderboardEntry, LeaderboardPeriod, LeaderboardType, StatsService,
 };
+use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
 #[derive(Clone)]
 pub struct StatsConnectService {
@@ -143,8 +146,7 @@ impl StatsService for StatsConnectService {
                     ..Default::default()
                 });
             }
-            let percentile =
-                ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
+            let percentile = ((f64::from(better.max(0)) / f64::from(total)) * 100.0).round() as i32;
             return Response::ok(GetTodayPercentileResponse {
                 percentile: Some(percentile),
                 total_players: total,
