@@ -8,6 +8,11 @@ strategy = "dockerfile"
 dockerfile = "apps/puzzled/Dockerfile"
 context = "."
 
+[ci]
+# PR previews are admitted (ADR-170 deploy-layer proof); project policy,
+# labels, and capacity gates still apply on the platform side.
+preview_deploys = true
+
 [[services]]
 name = "web"
 type = "web"
