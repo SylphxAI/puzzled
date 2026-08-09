@@ -236,6 +236,16 @@ jobs:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '.'
+
       - name: Build Rust api binary (locked release)
         run: |
           if ! command -v protoc >/dev/null 2>&1; then
