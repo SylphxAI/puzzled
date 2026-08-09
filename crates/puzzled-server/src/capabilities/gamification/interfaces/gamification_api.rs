@@ -2,7 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-
 /// Freeze reason labels (parity: AddStreakFreezesBodySchema).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -85,7 +84,6 @@ impl AddFreezeError {
             Self::EmptyUserId => "userId required",
         }
     }
-
 }
 
 /// Add freezes (parity: count 1..=10).

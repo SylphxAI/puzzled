@@ -507,12 +507,9 @@ mod tests {
             validation_config_inner(None, None, true),
             Err(JwtError::JwksUnavailable(_))
         ));
-        assert!(validation_config_inner(
-            Some("puzzled".into()),
-            Some("sylphx".into()),
-            true,
-        )
-        .is_ok());
+        assert!(
+            validation_config_inner(Some("puzzled".into()), Some("sylphx".into()), true,).is_ok()
+        );
         assert!(validation_config_inner(None, None, false).is_ok());
     }
 

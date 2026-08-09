@@ -51,10 +51,16 @@ impl SubmissionVerdict {
     }
 }
 
-fn status_from_wl(status: crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus) -> SubmissionStatus {
+fn status_from_wl(
+    status: crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus,
+) -> SubmissionStatus {
     match status {
-        crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Won => SubmissionStatus::Won,
-        crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Lost => SubmissionStatus::Lost,
+        crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Won => {
+            SubmissionStatus::Won
+        }
+        crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Lost => {
+            SubmissionStatus::Lost
+        }
     }
 }
 
@@ -90,10 +96,16 @@ pub fn validate_submission(
     }
 }
 
-fn claimed_wl(status: SubmissionStatus) -> crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus {
+fn claimed_wl(
+    status: SubmissionStatus,
+) -> crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus {
     match status {
-        SubmissionStatus::Won => crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Won,
-        SubmissionStatus::Lost => crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Lost,
+        SubmissionStatus::Won => {
+            crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Won
+        }
+        SubmissionStatus::Lost => {
+            crate::capabilities::puzzle_play::domain::wordle_eval::SubmissionStatus::Lost
+        }
     }
 }
 
@@ -107,7 +119,11 @@ struct WordGuessSubmission {
     guesses: Vec<String>,
 }
 
-fn word_guess(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn word_guess(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::wordle_eval;
     let Ok(sub) = serde_json::from_value::<WordGuessSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing guesses data");
@@ -115,10 +131,13 @@ fn word_guess(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) 
     let Some(word) = solution.get("word").and_then(Value::as_str) else {
         return SubmissionVerdict::invalid("Missing solution word");
     };
-    let result = wordle_eval::validate_and_score(word, Some(&sub.guesses), claimed_wl(env.status), None);
+    let result =
+        wordle_eval::validate_and_score(word, Some(&sub.guesses), claimed_wl(env.status), None);
     match result {
         wordle_eval::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
-        wordle_eval::GameResult::Valid { status, score } => SubmissionVerdict::valid(status_from_wl(status), score),
+        wordle_eval::GameResult::Valid { status, score } => {
+            SubmissionVerdict::valid(status_from_wl(status), score)
+        }
     }
 }
 
@@ -136,7 +155,11 @@ struct WordGroupsSubmission {
     mistakes: Option<u32>,
 }
 
-fn word_groups(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn word_groups(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::word_groups;
     let Ok(sub) = serde_json::from_value::<WordGroupsSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Invalid word-groups submission");
@@ -158,7 +181,11 @@ fn word_groups(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope)
             .map(ToString::to_string)
             .collect();
         let level = c.get("level").and_then(Value::as_u64).unwrap_or(0) as u8;
-        categories.push(word_groups::Category { name: name.to_string(), words, level });
+        categories.push(word_groups::Category {
+            name: name.to_string(),
+            words,
+            level,
+        });
     }
     let result = word_groups::validate_and_score(
         &categories,
@@ -189,7 +216,11 @@ struct WordHiveSubmission {
     found_words: Vec<String>,
 }
 
-fn word_hive(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn word_hive(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::word_hive;
     let Ok(sub) = serde_json::from_value::<WordHiveSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing found words data");
@@ -206,11 +237,17 @@ fn word_hive(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -
             pangrams.insert(w.to_ascii_uppercase());
         }
     }
-    let found: Vec<String> = sub.found_words.iter().map(|w| w.to_ascii_uppercase()).collect();
+    let found: Vec<String> = sub
+        .found_words
+        .iter()
+        .map(|w| w.to_ascii_uppercase())
+        .collect();
     let result = word_hive::validate_and_score(&valid_words, &pangrams, Some(&found));
     match result {
         word_hive::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
-        word_hive::GameResult::Valid { score, .. } => SubmissionVerdict::valid(SubmissionStatus::Won, score),
+        word_hive::GameResult::Valid { score, .. } => {
+            SubmissionVerdict::valid(SubmissionStatus::Won, score)
+        }
     }
 }
 
@@ -224,7 +261,11 @@ struct CrosswordSubmission {
     final_grid: Vec<Vec<Option<String>>>,
 }
 
-fn crossword(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn crossword(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::crossword_grid;
     let Ok(sub) = serde_json::from_value::<CrosswordSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing final grid data");
@@ -236,7 +277,13 @@ fn crossword(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -
     for row in grid {
         let row: Vec<String> = row
             .as_array()
-            .map(|cells| cells.iter().filter_map(Value::as_str).map(ToString::to_string).collect())
+            .map(|cells| {
+                cells
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(ToString::to_string)
+                    .collect()
+            })
             .unwrap_or_default();
         solution_grid.push(row);
     }
@@ -277,7 +324,13 @@ fn sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> S
     for row in grid {
         let row: Vec<u8> = row
             .as_array()
-            .map(|cells| cells.iter().filter_map(Value::as_u64).map(|v| v as u8).collect())
+            .map(|cells| {
+                cells
+                    .iter()
+                    .filter_map(Value::as_u64)
+                    .map(|v| v as u8)
+                    .collect()
+            })
             .unwrap_or_default();
         solution_grid.push(row);
     }
@@ -290,8 +343,17 @@ fn sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> S
         time_spent_ms: env.time_spent_ms,
         data: Some(env.data.clone()),
     };
-    match validate_and_score_sudoku(&SudokuSolution { grid: solution_grid }, &game_submission) {
-        ScoringResult::Valid { valid, status, score } => {
+    match validate_and_score_sudoku(
+        &SudokuSolution {
+            grid: solution_grid,
+        },
+        &game_submission,
+    ) {
+        ScoringResult::Valid {
+            valid,
+            status,
+            score,
+        } => {
             if !valid {
                 SubmissionVerdict::invalid("Invalid sudoku solution")
             } else {
@@ -367,7 +429,11 @@ struct WordLadderSubmission {
     path: Vec<String>,
 }
 
-fn word_ladder(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn word_ladder(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::word_ladder;
     let Ok(sub) = serde_json::from_value::<WordLadderSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing path data");
@@ -375,7 +441,11 @@ fn word_ladder(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope)
     let Some(path) = solution.get("path").and_then(Value::as_array) else {
         return SubmissionVerdict::invalid("Missing ladder solution path");
     };
-    let solution_path: Vec<String> = path.iter().filter_map(Value::as_str).map(ToString::to_string).collect();
+    let solution_path: Vec<String> = path
+        .iter()
+        .filter_map(Value::as_str)
+        .map(ToString::to_string)
+        .collect();
     let result = word_ladder::validate_and_score(
         &solution_path,
         Some(&sub.path),
@@ -412,7 +482,8 @@ fn arithmo(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> 
     let Some(equation) = solution.get("equation").and_then(Value::as_str) else {
         return SubmissionVerdict::invalid("Missing solution equation");
     };
-    let result = arithmo::validate_and_score(equation, Some(&sub.guesses), arithmo::SubmissionStatus::Won);
+    let result =
+        arithmo::validate_and_score(equation, Some(&sub.guesses), arithmo::SubmissionStatus::Won);
     match result {
         arithmo::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         arithmo::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -439,7 +510,11 @@ struct PatternMatchSubmission {
     mistakes: Option<u32>,
 }
 
-fn pattern_match(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn pattern_match(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     let Ok(sub) = serde_json::from_value::<PatternMatchSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Invalid pattern-match submission");
     };
@@ -450,7 +525,12 @@ fn pattern_match(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelop
     for set in valid_sets {
         let set: Vec<u16> = set
             .as_array()
-            .map(|idx| idx.iter().filter_map(Value::as_u64).map(|v| v as u16).collect())
+            .map(|idx| {
+                idx.iter()
+                    .filter_map(Value::as_u64)
+                    .map(|v| v as u16)
+                    .collect()
+            })
             .unwrap_or_default();
         if set.len() == 3 {
             expected.push(set);
@@ -478,7 +558,10 @@ fn pattern_match(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelop
             return SubmissionVerdict::invalid("Duplicate set");
         }
     }
-    let total = solution.get("totalSets").and_then(Value::as_u64).unwrap_or(expected.len() as u64) as usize;
+    let total = solution
+        .get("totalSets")
+        .and_then(Value::as_u64)
+        .unwrap_or(expected.len() as u64) as usize;
     if found.len() != total {
         return SubmissionVerdict::invalid("Not all sets found");
     }
@@ -495,7 +578,11 @@ struct BlockSlideSubmission {
     move_count: u32,
 }
 
-fn block_slide(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn block_slide(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::block_slide;
     let Ok(sub) = serde_json::from_value::<BlockSlideSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing moveCount data");
@@ -545,15 +632,24 @@ fn queens(puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> Su
     if size == 0 {
         return SubmissionVerdict::invalid("Missing queens size");
     }
-    let regions = puzzle_data.get("regions").and_then(Value::as_array).map(|rows| {
-        rows.iter()
-            .map(|row| {
-                row.as_array()
-                    .map(|cells| cells.iter().filter_map(Value::as_i64).map(|v| v as i32).collect())
-                    .unwrap_or_default()
-            })
-            .collect::<Vec<Vec<i32>>>()
-    });
+    let regions = puzzle_data
+        .get("regions")
+        .and_then(Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .map(|row| {
+                    row.as_array()
+                        .map(|cells| {
+                            cells
+                                .iter()
+                                .filter_map(Value::as_i64)
+                                .map(|v| v as i32)
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                })
+                .collect::<Vec<Vec<i32>>>()
+        });
     let Some(regions) = regions else {
         return SubmissionVerdict::invalid("Missing queens regions");
     };
@@ -650,7 +746,8 @@ fn word_box(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) ->
         return SubmissionVerdict::invalid("Missing allLetters solution");
     };
     let letters: Vec<char> = all_letters.chars().collect();
-    let result = word_box::validate_and_score(&letters, Some(&sub.words), word_box::SubmissionStatus::Won);
+    let result =
+        word_box::validate_and_score(&letters, Some(&sub.words), word_box::SubmissionStatus::Won);
     match result {
         word_box::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         word_box::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -677,7 +774,11 @@ struct QuadWordsSubmission {
     solved_boards: Option<Vec<bool>>,
 }
 
-fn quad_words(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn quad_words(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::quad_words;
     let Ok(sub) = serde_json::from_value::<QuadWordsSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Invalid quad-words submission");
@@ -685,7 +786,11 @@ fn quad_words(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) 
     let Some(words) = solution.get("words").and_then(Value::as_array) else {
         return SubmissionVerdict::invalid("Missing quad-words solution words");
     };
-    let targets: Vec<String> = words.iter().filter_map(Value::as_str).map(ToString::to_string).collect();
+    let targets: Vec<String> = words
+        .iter()
+        .filter_map(Value::as_str)
+        .map(ToString::to_string)
+        .collect();
     if targets.len() != 4 {
         return SubmissionVerdict::invalid("Invalid quad-words solution");
     }
@@ -708,7 +813,11 @@ fn quad_words(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) 
             return SubmissionVerdict::invalid("Solved-board claim does not match guess history");
         }
     }
-    let result = quad_words::validate_and_score(Some(solved_count), Some(history.len() as u32), quad_words::SubmissionStatus::Won);
+    let result = quad_words::validate_and_score(
+        Some(solved_count),
+        Some(history.len() as u32),
+        quad_words::SubmissionStatus::Won,
+    );
     match result {
         quad_words::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         quad_words::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -733,7 +842,11 @@ struct KillerSudokuSubmission {
     mistakes: Option<u32>,
 }
 
-fn killer_sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn killer_sudoku(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::killer_sudoku;
     let Ok(sub) = serde_json::from_value::<KillerSudokuSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing final grid data");
@@ -745,7 +858,13 @@ fn killer_sudoku(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelop
     for row in grid {
         let row: Vec<u8> = row
             .as_array()
-            .map(|cells| cells.iter().filter_map(Value::as_u64).map(|v| v as u8).collect())
+            .map(|cells| {
+                cells
+                    .iter()
+                    .filter_map(Value::as_u64)
+                    .map(|v| v as u8)
+                    .collect()
+            })
             .unwrap_or_default();
         solution_grid.push(row);
     }
@@ -780,7 +899,11 @@ struct CryptogramSubmission {
     hints_used: Option<u32>,
 }
 
-fn cryptogram(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn cryptogram(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::cryptogram;
     let Ok(sub) = serde_json::from_value::<CryptogramSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing guesses data");
@@ -823,7 +946,11 @@ struct WordSearchSubmission {
     found_words: Vec<String>,
 }
 
-fn word_search(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> SubmissionVerdict {
+fn word_search(
+    _puzzle_data: &Value,
+    solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
     use crate::capabilities::puzzle_play::domain::word_search;
     let Ok(sub) = serde_json::from_value::<WordSearchSubmission>(env.data.clone()) else {
         return SubmissionVerdict::invalid("Missing found words data");
@@ -831,8 +958,16 @@ fn word_search(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope)
     let Some(words) = solution.get("words").and_then(Value::as_array) else {
         return SubmissionVerdict::invalid("Missing word-search solution words");
     };
-    let solution_words: Vec<String> = words.iter().filter_map(Value::as_str).map(ToString::to_string).collect();
-    let found: Vec<String> = sub.found_words.iter().map(|w| w.to_ascii_uppercase()).collect();
+    let solution_words: Vec<String> = words
+        .iter()
+        .filter_map(Value::as_str)
+        .map(ToString::to_string)
+        .collect();
+    let found: Vec<String> = sub
+        .found_words
+        .iter()
+        .map(|w| w.to_ascii_uppercase())
+        .collect();
     let result = word_search::validate_and_score(
         &solution_words,
         Some(&found),
@@ -910,7 +1045,9 @@ mod tests {
     fn quad_words_rejects_false_solved_claim() {
         let solution = json!({ "words": ["ABCD", "EFGH", "IJKL", "MNOP"] });
         // guesses that never solve any board; client claims 4 solved
-        let data = env(json!({ "guessHistory": ["AAAA", "BBBB"], "solvedBoards": [true, true, true, true] }));
+        let data = env(
+            json!({ "guessHistory": ["AAAA", "BBBB"], "solvedBoards": [true, true, true, true] }),
+        );
         let v = validate_submission("quad-words", &json!({}), &solution, &data);
         assert!(!v.valid);
     }

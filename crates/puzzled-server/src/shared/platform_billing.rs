@@ -60,7 +60,11 @@ pub async fn is_premium(user_id: &str) -> bool {
     let plan_slug = body
         .get("planSlug")
         .and_then(Value::as_str)
-        .or_else(|| body.get("plan").and_then(|p| p.get("slug")).and_then(Value::as_str))
+        .or_else(|| {
+            body.get("plan")
+                .and_then(|p| p.get("slug"))
+                .and_then(Value::as_str)
+        })
         .unwrap_or("");
     let active = status == "active" || status == "trialing";
     active && PREMIUM_PLANS.contains(&plan_slug)

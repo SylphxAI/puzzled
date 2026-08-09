@@ -2,7 +2,9 @@
 
 use std::sync::Arc;
 
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 
 use super::identity::require_identity;
 use super::state::AppState;
@@ -12,10 +14,10 @@ use crate::capabilities::preferences::adapters::preferences_db::{
 };
 use crate::proto::puzzled::v1::{
     CheckUsernameRequest, CheckUsernameResponse, GetNotificationPreferencesRequest,
-    GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse, PreferencesService,
-    Profile, UpdateEmailPreferencesRequest, UpdateEmailPreferencesResponse,
-    UpdateProfileRequest, UpdateProfileResponse, UpdatePushPreferencesRequest,
-    UpdatePushPreferencesResponse, NotificationPreferences,
+    GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse,
+    NotificationPreferences, PreferencesService, Profile, UpdateEmailPreferencesRequest,
+    UpdateEmailPreferencesResponse, UpdateProfileRequest, UpdateProfileResponse,
+    UpdatePushPreferencesRequest, UpdatePushPreferencesResponse,
 };
 
 #[derive(Clone)]
@@ -30,26 +32,72 @@ impl PreferencesConnectService {
 
     fn profile_from_json(value: &serde_json::Value) -> Profile {
         Profile {
-            username: value.get("username").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            bio: value.get("bio").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            is_public_profile: value.get("isPublicProfile").and_then(|v| v.as_bool()).unwrap_or(false),
-            compact_mode: value.get("compactMode").and_then(|v| v.as_bool()).unwrap_or(false),
-            leaderboard_visible: value.get("leaderboardVisible").and_then(|v| v.as_bool()).unwrap_or(true),
-            locale: value.get("locale").and_then(|v| v.as_str()).unwrap_or("en-US").to_string(),
+            username: value
+                .get("username")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_string(),
+            bio: value
+                .get("bio")
+                .and_then(|v| v.as_str())
+                .unwrap_or_default()
+                .to_string(),
+            is_public_profile: value
+                .get("isPublicProfile")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
+            compact_mode: value
+                .get("compactMode")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false),
+            leaderboard_visible: value
+                .get("leaderboardVisible")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            locale: value
+                .get("locale")
+                .and_then(|v| v.as_str())
+                .unwrap_or("en-US")
+                .to_string(),
             ..Default::default()
         }
     }
 
     fn prefs_from_json(value: &serde_json::Value) -> NotificationPreferences {
         NotificationPreferences {
-            push_enabled: value.get("pushEnabled").and_then(|v| v.as_bool()).unwrap_or(true),
-            push_daily_reminder: value.get("pushDailyReminder").and_then(|v| v.as_bool()).unwrap_or(true),
-            push_streak_alert: value.get("pushStreakAlert").and_then(|v| v.as_bool()).unwrap_or(true),
-            push_new_games: value.get("pushNewGames").and_then(|v| v.as_bool()).unwrap_or(true),
-            daily_reminder_time: value.get("dailyReminderTime").and_then(|v| v.as_str()).unwrap_or("09:00").to_string(),
-            email_enabled: value.get("emailEnabled").and_then(|v| v.as_bool()).unwrap_or(true),
-            email_weekly_digest: value.get("emailWeeklyDigest").and_then(|v| v.as_bool()).unwrap_or(true),
-            email_marketing: value.get("emailMarketing").and_then(|v| v.as_bool()).unwrap_or(true),
+            push_enabled: value
+                .get("pushEnabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            push_daily_reminder: value
+                .get("pushDailyReminder")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            push_streak_alert: value
+                .get("pushStreakAlert")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            push_new_games: value
+                .get("pushNewGames")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            daily_reminder_time: value
+                .get("dailyReminderTime")
+                .and_then(|v| v.as_str())
+                .unwrap_or("09:00")
+                .to_string(),
+            email_enabled: value
+                .get("emailEnabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            email_weekly_digest: value
+                .get("emailWeeklyDigest")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            email_marketing: value
+                .get("emailMarketing")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
             ..Default::default()
         }
     }
@@ -69,7 +117,10 @@ impl PreferencesService for PreferencesConnectService {
                 Ok(None) => Profile::default(),
                 Err(error) => {
                     tracing::warn!(%error, "get_profile read failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "preferences_read_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "preferences_read_failed",
+                    ));
                 }
             },
             None => Profile::default(),
@@ -106,7 +157,10 @@ impl PreferencesService for PreferencesConnectService {
                     Ok(false) => {}
                     Err(error) => {
                         tracing::warn!(%error, "username check failed");
-                        return Err(ConnectError::new(ErrorCode::Internal, "username_check_failed"));
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "username_check_failed",
+                        ));
                     }
                 }
             }
@@ -122,7 +176,10 @@ impl PreferencesService for PreferencesConnectService {
             .await
             {
                 tracing::warn!(%error, "profile upsert failed");
-                return Err(ConnectError::new(ErrorCode::Internal, "profile_update_failed"));
+                return Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "profile_update_failed",
+                ));
             }
         }
         let profile = match &self.state.pool {
@@ -147,14 +204,20 @@ impl PreferencesService for PreferencesConnectService {
         let req = request.to_owned_message();
         let username = req.username.trim().to_string();
         if username.is_empty() {
-            return Err(ConnectError::new(ErrorCode::InvalidArgument, "username_required"));
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "username_required",
+            ));
         }
         let available = match &self.state.pool {
             Some(pool) => match username_taken(pool, &identity.user_id, &username).await {
                 Ok(taken) => !taken,
                 Err(error) => {
                     tracing::warn!(%error, "username check failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "username_check_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "username_check_failed",
+                    ));
                 }
             },
             None => true,
@@ -213,7 +276,10 @@ impl PreferencesService for PreferencesConnectService {
             .await
             {
                 tracing::warn!(%error, "push prefs upsert failed");
-                return Err(ConnectError::new(ErrorCode::Internal, "preferences_update_failed"));
+                return Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "preferences_update_failed",
+                ));
             }
         }
         let prefs = match &self.state.pool {
@@ -252,7 +318,10 @@ impl PreferencesService for PreferencesConnectService {
             .await
             {
                 tracing::warn!(%error, "email prefs upsert failed");
-                return Err(ConnectError::new(ErrorCode::Internal, "preferences_update_failed"));
+                return Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "preferences_update_failed",
+                ));
             }
         }
         let prefs = match &self.state.pool {

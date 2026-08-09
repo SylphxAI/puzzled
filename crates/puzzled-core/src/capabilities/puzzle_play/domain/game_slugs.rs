@@ -35,13 +35,8 @@ pub fn all_game_slugs() -> &'static [&'static str] {
 }
 
 /// Premium-free daily rotation (mirrors apps/puzzled/src/lib/billing/server.ts).
-const FREE_GAME_ROTATION: [&str; 5] = [
-    "word-guess",
-    "word-groups",
-    "queens",
-    "sudoku",
-    "crossword",
-];
+const FREE_GAME_ROTATION: [&str; 5] =
+    ["word-guess", "word-groups", "queens", "sudoku", "crossword"];
 
 /// Today's free game for a UTC date (day-of-year rotation).
 #[must_use]

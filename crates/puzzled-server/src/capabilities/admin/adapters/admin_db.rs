@@ -57,27 +57,29 @@ type DlqRow = (
 
 pub async fn list_announcements(pool: &PgPool) -> Result<Vec<Value>, String> {
     let rows: Vec<AnnouncementRow> = sqlx::query_as(
-            r#"
+        r#"
             SELECT id, title, content, type::text, is_active, created_at, updated_at
             FROM announcements ORDER BY created_at DESC
             "#,
-        )
-        .fetch_all(pool)
-        .await
-        .map_err(|e| format!("announcements list failed: {e}"))?;
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("announcements list failed: {e}"))?;
     Ok(rows
         .into_iter()
-        .map(|(id, title, content, typ, is_active, created_at, updated_at)| {
-            serde_json::json!({
-                "id": id.to_string(),
-                "title": title,
-                "body": content,
-                "type": typ,
-                "active": is_active,
-                "createdAt": created_at.to_rfc3339(),
-                "updatedAt": updated_at.to_rfc3339(),
-            })
-        })
+        .map(
+            |(id, title, content, typ, is_active, created_at, updated_at)| {
+                serde_json::json!({
+                    "id": id.to_string(),
+                    "title": title,
+                    "body": content,
+                    "type": typ,
+                    "active": is_active,
+                    "createdAt": created_at.to_rfc3339(),
+                    "updatedAt": updated_at.to_rfc3339(),
+                })
+            },
+        )
         .collect())
 }
 
@@ -126,7 +128,7 @@ pub async fn update_announcement(
 ) -> Result<Value, String> {
     let id = Uuid::parse_str(id).map_err(|e| format!("invalid announcement id: {e}"))?;
     let row: Option<AnnouncementUpdateRow> = sqlx::query_as(
-            r#"
+        r#"
             UPDATE announcements SET
                 title = COALESCE($2, title),
                 content = COALESCE($3, content),
@@ -136,15 +138,15 @@ pub async fn update_announcement(
             WHERE id = $1
             RETURNING title, content, type::text, is_active, created_at, updated_at
             "#,
-        )
-        .bind(id)
-        .bind(title)
-        .bind(body)
-        .bind(typ)
-        .bind(active)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| format!("announcement update failed: {e}"))?;
+    )
+    .bind(id)
+    .bind(title)
+    .bind(body)
+    .bind(typ)
+    .bind(active)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("announcement update failed: {e}"))?;
     row.map(|(title, content, typ, is_active, created_at, updated_at)| {
         serde_json::json!({
             "id": id.to_string(),
@@ -340,12 +342,11 @@ pub async fn list_dlq(
         .fetch_one(pool)
         .await
         .map_err(|e| format!("dlq count failed: {e}"))?;
-    let status_counts: Vec<(String, i64)> = sqlx::query_as(
-        "SELECT status::text, COUNT(*) FROM dead_letter_queue GROUP BY status",
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(|e| format!("dlq status counts failed: {e}"))?;
+    let status_counts: Vec<(String, i64)> =
+        sqlx::query_as("SELECT status::text, COUNT(*) FROM dead_letter_queue GROUP BY status")
+            .fetch_all(pool)
+            .await
+            .map_err(|e| format!("dlq status counts failed: {e}"))?;
     let workflow_counts: Vec<(String, i64)> = sqlx::query_as(
         "SELECT workflow_name, COUNT(*) FROM dead_letter_queue GROUP BY workflow_name",
     )
@@ -381,7 +382,16 @@ pub async fn list_dlq(
     let entries = rows
         .into_iter()
         .map(
-            |(id, workflow_name, payload, status, retry_count, error, created_at, last_retry_at)| {
+            |(
+                id,
+                workflow_name,
+                payload,
+                status,
+                retry_count,
+                error,
+                created_at,
+                last_retry_at,
+            )| {
                 serde_json::json!({
                     "id": id.to_string(),
                     "jobType": workflow_name,

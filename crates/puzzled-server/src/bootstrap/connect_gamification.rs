@@ -3,7 +3,9 @@
 
 use std::sync::Arc;
 
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 
 use super::identity::{require_admin, require_identity};
 use super::state::AppState;
@@ -43,7 +45,12 @@ impl GamificationConnectService {
         data
     }
 
-    fn to_info(&self, freeze: &FreezeData, has_played_today: bool, total_played: u32) -> StreakInfo {
+    fn to_info(
+        &self,
+        freeze: &FreezeData,
+        has_played_today: bool,
+        total_played: u32,
+    ) -> StreakInfo {
         StreakInfo {
             current_streak: 0,
             max_streak: 0,
@@ -67,7 +74,15 @@ impl GamificationService for GamificationConnectService {
         let today = get_today_utc(Utc::now());
         let (played_today, total) = match &self.state.pool {
             Some(pool) => {
-                let played = match has_completed_session(pool, &identity.user_id, "word-guess", Some(today), None).await {
+                let played = match has_completed_session(
+                    pool,
+                    &identity.user_id,
+                    "word-guess",
+                    Some(today),
+                    None,
+                )
+                .await
+                {
                     Ok(v) => v,
                     Err(error) => {
                         tracing::warn!(%error, "streak played-today lookup failed");
@@ -117,7 +132,10 @@ impl GamificationService for GamificationConnectService {
             .await
             {
                 tracing::warn!(%error, "freeze upsert failed");
-                return Err(ConnectError::new(ErrorCode::Internal, "freeze_update_failed"));
+                return Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "freeze_update_failed",
+                ));
             }
         }
         Response::ok(ToggleAutoFreezeResponse {
@@ -148,7 +166,10 @@ impl GamificationService for GamificationConnectService {
                 .await
                 {
                     tracing::warn!(%error, "freeze upsert failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "freeze_update_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "freeze_update_failed",
+                    ));
                 }
             }
         }
@@ -170,9 +191,8 @@ impl GamificationService for GamificationConnectService {
             ConnectError::new(ErrorCode::InvalidArgument, "invalid_freeze_reason")
         })?;
         let mut freeze = self.load_freeze(&req.user_id).await;
-        let (updated, _) = add_streak_freezes(freeze.clone(), req.count as i32, &req.reason).map_err(|e| {
-            ConnectError::new(ErrorCode::InvalidArgument, format!("{e:?}"))
-        })?;
+        let (updated, _) = add_streak_freezes(freeze.clone(), req.count as i32, &req.reason)
+            .map_err(|e| ConnectError::new(ErrorCode::InvalidArgument, format!("{e:?}")))?;
         freeze = updated;
         if let Some(pool) = &self.state.pool {
             if let Err(error) = upsert_freeze_data(
@@ -185,7 +205,10 @@ impl GamificationService for GamificationConnectService {
             .await
             {
                 tracing::warn!(%error, "freeze upsert failed");
-                return Err(ConnectError::new(ErrorCode::Internal, "freeze_update_failed"));
+                return Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "freeze_update_failed",
+                ));
             }
         }
         Response::ok(AddStreakFreezesResponse {

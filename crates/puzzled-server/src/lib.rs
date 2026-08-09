@@ -69,7 +69,12 @@ mod tests {
             exp: chrono::Utc::now().timestamp() + 3600,
         };
         let key = EncodingKey::from_rsa_pem(priv_pem.as_bytes()).expect("enc key");
-        encode(&JwtHeader::new(jsonwebtoken::Algorithm::RS256), &claims, &key).expect("mint")
+        encode(
+            &JwtHeader::new(jsonwebtoken::Algorithm::RS256),
+            &claims,
+            &key,
+        )
+        .expect("mint")
     }
 
     fn build_connect_request_with_auth(uri: &str, body: Body, token: &str) -> Request<Body> {
@@ -206,9 +211,7 @@ mod tests {
         let app = router(AppState::new(None));
         let token = mint_test_token("user_free_02");
         let free_slug = today_free_slug();
-        let body = format!(
-            r#"{{"gameSlug":"{free_slug}","puzzleDate":"2020-01-01"}}"#
-        );
+        let body = format!(r#"{{"gameSlug":"{free_slug}","puzzleDate":"2020-01-01"}}"#);
         let response = match app
             .oneshot(build_connect_request_with_auth(
                 "/puzzled.v1.PuzzleService/GetDaily",
@@ -273,7 +276,10 @@ mod tests {
         let app = router(AppState::new(None));
         let body = format!(r#"{{"gameSlug":"{free_slug}","difficulty":"medium"}}"#);
         let response = match app
-            .oneshot(build_connect_request("/puzzled.v1.PuzzleService/GetDaily", Body::from(body)))
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(body),
+            ))
             .await
         {
             Ok(response) => response,
@@ -341,7 +347,8 @@ mod tests {
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
-                json.get("valid").map_or(true, |v| v == false || v.is_null()),
+                json.get("valid")
+                    .map_or(true, |v| v == false || v.is_null()),
                 "expected invalid verdict, got: {:?}",
                 json.get("valid")
             );

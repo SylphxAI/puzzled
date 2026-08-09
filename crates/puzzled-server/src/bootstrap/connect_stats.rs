@@ -8,10 +8,14 @@ use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 
+use super::identity::require_identity;
 use super::state::AppState;
 use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery,
     LeaderboardType as DbType,
+};
+use crate::capabilities::stats::adapters::sessions_stats_db::{
+    today_overview, user_history, user_stats,
 };
 use crate::proto::puzzled::v1::{
     GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
@@ -19,10 +23,6 @@ use crate::proto::puzzled::v1::{
     GetTodayPercentileResponse, GetUserStatsRequest, GetUserStatsResponse, LeaderboardEntry,
     LeaderboardPeriod, LeaderboardType, SessionEntry, StatsService, UserGameStats,
 };
-use crate::capabilities::stats::adapters::sessions_stats_db::{
-    today_overview, user_history, user_stats,
-};
-use super::identity::require_identity;
 use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
 #[derive(Clone)]
@@ -194,18 +194,20 @@ impl StatsService for StatsConnectService {
         _request: ServiceRequest<'_, GetTodayOverviewRequest>,
     ) -> ServiceResult<GetTodayOverviewResponse> {
         let (player_count, completions) = match &self.state.pool {
-            Some(pool) => today_overview(pool)
-                .await
-                .map_err(|e| {
-                    tracing::warn!(%e, "today overview failed");
-                    ConnectError::new(ErrorCode::Internal, "today_overview_failed")
-                })?,
+            Some(pool) => today_overview(pool).await.map_err(|e| {
+                tracing::warn!(%e, "today overview failed");
+                ConnectError::new(ErrorCode::Internal, "today_overview_failed")
+            })?,
             None => (0, Vec::new()),
         };
         let completions_proto = completions
             .iter()
             .map(|c| crate::proto::puzzled::v1::GameCompletionCount {
-                game_slug: c.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                game_slug: c
+                    .get("gameSlug")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 count: c.get("count").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
                 ..Default::default()
             })
@@ -234,7 +236,11 @@ impl StatsService for StatsConnectService {
         let games_proto: Vec<UserGameStats> = games
             .iter()
             .map(|g| UserGameStats {
-                game_slug: g.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                game_slug: g
+                    .get("gameSlug")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 games_played: g.get("gamesPlayed").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
                 games_won: g.get("gamesWon").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
                 best_score: g.get("bestScore").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
@@ -259,23 +265,45 @@ impl StatsService for StatsConnectService {
         let req = request.to_owned_message();
         let slug = (!req.game_slug.trim().is_empty()).then(|| req.game_slug.trim().to_string());
         let rows = match &self.state.pool {
-            Some(pool) => user_history(pool, &identity.user_id, slug.as_deref(), req.limit).await.map_err(|e| {
-                tracing::warn!(%e, "history read failed");
-                ConnectError::new(ErrorCode::Internal, "history_read_failed")
-            })?,
+            Some(pool) => user_history(pool, &identity.user_id, slug.as_deref(), req.limit)
+                .await
+                .map_err(|e| {
+                    tracing::warn!(%e, "history read failed");
+                    ConnectError::new(ErrorCode::Internal, "history_read_failed")
+                })?,
             None => Vec::new(),
         };
         let sessions: Vec<SessionEntry> = rows
             .iter()
             .map(|r| SessionEntry {
-                game_slug: r.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                puzzle_id: r.get("puzzleId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                puzzle_date: r.get("puzzleDate").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                status: r.get("status").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                game_slug: r
+                    .get("gameSlug")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
+                puzzle_id: r
+                    .get("puzzleId")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
+                puzzle_date: r
+                    .get("puzzleDate")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
+                status: r
+                    .get("status")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 score: r.get("score").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
                 attempts: r.get("attempts").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
                 time_spent_ms: r.get("timeSpentMs").and_then(|v| v.as_u64()).unwrap_or(0),
-                mode: r.get("mode").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                mode: r
+                    .get("mode")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 ..Default::default()
             })
             .collect();

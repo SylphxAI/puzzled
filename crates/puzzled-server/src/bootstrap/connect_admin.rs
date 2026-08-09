@@ -3,7 +3,9 @@
 
 use std::sync::Arc;
 
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 use serde_json::Value;
 
 use super::identity::require_admin;
@@ -11,56 +13,147 @@ use super::state::AppState;
 use crate::capabilities::admin::adapters::admin_db;
 use crate::proto::puzzled::v1::{
     AdminService, Announcement, AppSettings, AuditLogEntry, CreateAnnouncementRequest,
-    CreateAnnouncementResponse, DeleteAnnouncementRequest, DeleteAnnouncementResponse,
-    DlqEntry, GamesOverviewRequest, GamesOverviewResponse, GetAuditLogRequest,
-    GetAuditLogResponse, GetSettingsRequest, GetSettingsResponse, ListAnnouncementsRequest,
-    ListAnnouncementsResponse, ListAuditLogsRequest, ListAuditLogsResponse, ListDlqRequest,
-    ListDlqResponse, SystemHealthRequest, SystemHealthResponse, UpdateAnnouncementRequest,
+    CreateAnnouncementResponse, DailyStat, DeleteAnnouncementRequest, DeleteAnnouncementResponse,
+    DlqEntry, GamesOverviewRequest, GamesOverviewResponse, GetAuditLogRequest, GetAuditLogResponse,
+    GetGameAnalyticsRequest, GetGameAnalyticsResponse, GetSettingsRequest, GetSettingsResponse,
+    ListAnnouncementsRequest, ListAnnouncementsResponse, ListAuditLogsRequest,
+    ListAuditLogsResponse, ListDlqRequest, ListDlqResponse, MarkDlqFailedRequest,
+    MarkDlqFailedResponse, ResolveDlqRequest, ResolveDlqResponse, RetryDlqRequest,
+    RetryDlqResponse, SystemHealthRequest, SystemHealthResponse, UpdateAnnouncementRequest,
     UpdateAnnouncementResponse, UpdateSettingsRequest, UpdateSettingsResponse,
-    DailyStat, GetGameAnalyticsRequest, GetGameAnalyticsResponse,
-    MarkDlqFailedRequest, MarkDlqFailedResponse, ResolveDlqRequest, ResolveDlqResponse,
-    RetryDlqRequest, RetryDlqResponse,
 };
 
 fn announcement_from_json(v: &Value) -> Announcement {
     Announcement {
-        id: v.get("id").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        title: v.get("title").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        body: v.get("body").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        r#type: v.get("type").and_then(|x| x.as_str()).unwrap_or("info").to_string(),
+        id: v
+            .get("id")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        title: v
+            .get("title")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        body: v
+            .get("body")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        r#type: v
+            .get("type")
+            .and_then(|x| x.as_str())
+            .unwrap_or("info")
+            .to_string(),
         active: v.get("active").and_then(|x| x.as_bool()).unwrap_or(true),
-        created_at: v.get("createdAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        updated_at: v.get("updatedAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        created_at: v
+            .get("createdAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        updated_at: v
+            .get("updatedAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
         ..Default::default()
     }
 }
 
 fn audit_from_json(v: &Value) -> AuditLogEntry {
     AuditLogEntry {
-        id: v.get("id").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        user_id: v.get("userId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        actor_id: v.get("actorId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        action: v.get("action").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        entity_type: v.get("entityType").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        entity_id: v.get("entityId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        metadata_json: v.get("metadataJson").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        created_at: v.get("createdAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        ip_address: v.get("ipAddress").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        user_agent: v.get("userAgent").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        id: v
+            .get("id")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        user_id: v
+            .get("userId")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        actor_id: v
+            .get("actorId")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        action: v
+            .get("action")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        entity_type: v
+            .get("entityType")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        entity_id: v
+            .get("entityId")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        metadata_json: v
+            .get("metadataJson")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        created_at: v
+            .get("createdAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        ip_address: v
+            .get("ipAddress")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        user_agent: v
+            .get("userAgent")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
         ..Default::default()
     }
 }
 
 fn dlq_from_json(v: &Value) -> DlqEntry {
     DlqEntry {
-        id: v.get("id").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        job_type: v.get("jobType").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        payload_json: v.get("payloadJson").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        status: v.get("status").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        id: v
+            .get("id")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        job_type: v
+            .get("jobType")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        payload_json: v
+            .get("payloadJson")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        status: v
+            .get("status")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
         attempts: v.get("attempts").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
-        error: v.get("error").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        created_at: v.get("createdAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-        next_retry_at: v.get("nextRetryAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        error: v
+            .get("error")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        created_at: v
+            .get("createdAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
+        next_retry_at: v
+            .get("nextRetryAt")
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_string(),
         ..Default::default()
     }
 }
@@ -76,9 +169,10 @@ impl AdminConnectService {
     }
 
     fn pool(&self) -> Result<&sqlx::PgPool, ConnectError> {
-        self.state.pool.as_ref().ok_or_else(|| {
-            ConnectError::new(ErrorCode::Unavailable, "database_unavailable")
-        })
+        self.state
+            .pool
+            .as_ref()
+            .ok_or_else(|| ConnectError::new(ErrorCode::Unavailable, "database_unavailable"))
     }
 }
 
@@ -118,7 +212,11 @@ impl AdminService for AdminConnectService {
             pool,
             req.title.trim(),
             req.body.trim(),
-            if req.r#type.trim().is_empty() { "info" } else { req.r#type.trim() },
+            if req.r#type.trim().is_empty() {
+                "info"
+            } else {
+                req.r#type.trim()
+            },
             req.active,
             &identity.user_id,
         )
@@ -184,7 +282,11 @@ impl AdminService for AdminConnectService {
         let settings = rows
             .iter()
             .map(|v| AppSettings {
-                key: v.get("key").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+                key: v
+                    .get("key")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 value_json: v.get("value").map(|x| x.to_string()).unwrap_or_default(),
                 ..Default::default()
             })
@@ -203,15 +305,18 @@ impl AdminService for AdminConnectService {
         let identity = require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
-        let value: Value = serde_json::from_str(&req.value_json).map_err(|_| {
-            ConnectError::new(ErrorCode::InvalidArgument, "invalid_value_json")
-        })?;
+        let value: Value = serde_json::from_str(&req.value_json)
+            .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, "invalid_value_json"))?;
         let row = admin_db::upsert_setting(pool, req.key.trim(), &value, &identity.user_id)
             .await
             .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
         Response::ok(UpdateSettingsResponse {
             setting: Some(AppSettings {
-                key: row.get("key").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+                key: row
+                    .get("key")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 value_json: row.get("value").map(|x| x.to_string()).unwrap_or_default(),
                 ..Default::default()
             })
@@ -285,9 +390,7 @@ impl AdminService for AdminConnectService {
                 .and_then(|v| v.as_object())
                 .map(|m| {
                     m.iter()
-                        .map(|(k, v)| {
-                            (k.clone(), v.as_u64().unwrap_or(0) as u32)
-                        })
+                        .map(|(k, v)| (k.clone(), v.as_u64().unwrap_or(0) as u32))
                         .collect()
                 })
                 .unwrap_or_default(),
@@ -359,11 +462,20 @@ impl AdminService for AdminConnectService {
         let games = rows
             .iter()
             .map(|v| crate::proto::puzzled::v1::GamesOverviewEntry {
-                slug: v.get("slug").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
-                name: v.get("slug").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+                slug: v
+                    .get("slug")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
+                name: v
+                    .get("slug")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 today_played: v.get("todayPlayed").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
                 today_wins: v.get("todayWins").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
-                all_time_played: v.get("allTimePlayed").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
+                all_time_played: v.get("allTimePlayed").and_then(|x| x.as_u64()).unwrap_or(0)
+                    as u32,
                 all_time_wins: v.get("allTimeWins").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
                 ..Default::default()
             })
@@ -388,7 +500,11 @@ impl AdminService for AdminConnectService {
         let daily_stats: Vec<DailyStat> = rows
             .iter()
             .map(|v| DailyStat {
-                date: v.get("date").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+                date: v
+                    .get("date")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or_default()
+                    .to_string(),
                 games_played: v.get("gamesPlayed").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
                 wins: v.get("wins").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
                 avg_attempts: v.get("avgAttempts").and_then(|x| x.as_f64()).unwrap_or(0.0),

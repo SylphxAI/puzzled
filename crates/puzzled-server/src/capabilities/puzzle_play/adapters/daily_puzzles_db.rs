@@ -46,38 +46,37 @@ pub async fn fetch_daily_puzzle(
     difficulty: Option<&str>,
 ) -> Result<Option<StoredPuzzle>, String> {
     let date = date.and_hms_opt(0, 0, 0).ok_or("invalid date")?;
-    let row: Option<PuzzleRow> =
-        match difficulty {
-            Some(diff) => sqlx::query_as(
-                r#"
+    let row: Option<PuzzleRow> = match difficulty {
+        Some(diff) => sqlx::query_as(
+            r#"
                 SELECT id, game_slug, puzzle_data, solution, difficulty::text
                 FROM daily_puzzles
                 WHERE game_slug = $1 AND puzzle_date = $2 AND difficulty::text = $3
                 ORDER BY created_at DESC
                 LIMIT 1
                 "#,
-            )
-            .bind(game_slug)
-            .bind(date)
-            .bind(diff)
-            .fetch_optional(pool)
-            .await
-            .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
-            None => sqlx::query_as(
-                r#"
+        )
+        .bind(game_slug)
+        .bind(date)
+        .bind(diff)
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
+        None => sqlx::query_as(
+            r#"
                 SELECT id, game_slug, puzzle_data, solution, difficulty::text
                 FROM daily_puzzles
                 WHERE game_slug = $1 AND puzzle_date = $2
                 ORDER BY created_at DESC
                 LIMIT 1
                 "#,
-            )
-            .bind(game_slug)
-            .bind(date)
-            .fetch_optional(pool)
-            .await
-            .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
-        };
+        )
+        .bind(game_slug)
+        .bind(date)
+        .fetch_optional(pool)
+        .await
+        .map_err(|e| format!("daily_puzzles query failed: {e}"))?,
+    };
     Ok(row.map(|(id, slug, data, sol, diff)| row_to_puzzle(id, slug, data, sol, diff)))
 }
 
@@ -87,17 +86,16 @@ pub async fn fetch_puzzle_by_id(
     puzzle_id: &str,
 ) -> Result<Option<StoredPuzzle>, String> {
     let id = Uuid::parse_str(puzzle_id).map_err(|e| format!("invalid puzzle id: {e}"))?;
-    let row: Option<PuzzleRow> =
-        sqlx::query_as(
-            r#"
+    let row: Option<PuzzleRow> = sqlx::query_as(
+        r#"
             SELECT id, game_slug, puzzle_data, solution, difficulty::text
             FROM daily_puzzles
             WHERE id = $1
             "#,
-        )
-        .bind(id)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| format!("daily_puzzles query failed: {e}"))?;
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("daily_puzzles query failed: {e}"))?;
     Ok(row.map(|(i, slug, data, sol, diff)| row_to_puzzle(i, slug, data, sol, diff)))
 }

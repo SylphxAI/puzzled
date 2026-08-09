@@ -127,14 +127,18 @@ fn sql_adapters_exist_for_persisting_capabilities() {
 fn jobs_executor_is_sole_rust() {
     // The web residual executor is deleted (ADR-170): the webhook route must
     // not exist and the api service must register JobsService.
-    let webhook = manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
+    let webhook =
+        manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
     assert!(
         !webhook.exists(),
         "web residual webhook must be deleted; JobsService is the sole executor"
     );
     let router = fs::read_to_string(manifest_dir().join("src/bootstrap/router.rs"))
         .unwrap_or_else(|e| panic!("read router: {e}"));
-    assert!(router.contains("jobs_connect_service"), "JobsService must be mounted");
+    assert!(
+        router.contains("jobs_connect_service"),
+        "JobsService must be mounted"
+    );
     let proto = manifest_dir().join("../../proto/puzzled/v1/jobs.proto");
     assert!(proto.is_file(), "jobs.proto must exist");
 }

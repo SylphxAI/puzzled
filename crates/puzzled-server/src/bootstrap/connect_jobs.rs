@@ -8,15 +8,15 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use chrono::Utc;
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 use reqwest::header::{HeaderMap as ReqHeaderMap, HeaderValue, CONTENT_TYPE};
 use serde_json::json;
 
 use super::state::AppState;
 use crate::capabilities::jobs::adapters::jobs_db;
-use crate::proto::puzzled::v1::{
-    JobsService, RunRetentionJobRequest, RunRetentionJobResponse,
-};
+use crate::proto::puzzled::v1::{JobsService, RunRetentionJobRequest, RunRetentionJobResponse};
 
 fn constant_time_eq(a: &str, b: &str) -> bool {
     let ha = sha256(a.as_bytes());
@@ -57,7 +57,10 @@ impl JobsConnectService {
             .and_then(|v| v.to_str().ok())
             .unwrap_or_default();
         if !constant_time_eq(provided, &expected) {
-            return Err(ConnectError::new(ErrorCode::Unauthenticated, "invalid_app_secret"));
+            return Err(ConnectError::new(
+                ErrorCode::Unauthenticated,
+                "invalid_app_secret",
+            ));
         }
         Ok(())
     }
@@ -76,7 +79,10 @@ impl JobsConnectService {
             .map_err(|e| format!("platform client build failed: {e}"))?;
         let mut headers = ReqHeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        headers.insert("x-app-secret", HeaderValue::from_str(&secret).map_err(|e| e.to_string())?);
+        headers.insert(
+            "x-app-secret",
+            HeaderValue::from_str(&secret).map_err(|e| e.to_string())?,
+        );
         let response = client
             .post(format!("{base}{path}"))
             .headers(headers)
@@ -149,7 +155,9 @@ impl JobsConnectService {
                     .await
                 {
                     Ok(()) => {
-                        if let Err(e) = jobs_db::record_win_back_email(pool, &user_id, email_type, today).await {
+                        if let Err(e) =
+                            jobs_db::record_win_back_email(pool, &user_id, email_type, today).await
+                        {
                             errors.push(format!("{user_id} record: {e}"));
                         } else {
                             processed += 1;

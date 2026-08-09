@@ -41,7 +41,10 @@ fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectEr
         return verify_platform_jwt(&token)
             .map_err(|err| ConnectError::new(ErrorCode::Unauthenticated, err.message()));
     }
-    Err(ConnectError::new(ErrorCode::Unauthenticated, "identity_required"))
+    Err(ConnectError::new(
+        ErrorCode::Unauthenticated,
+        "identity_required",
+    ))
 }
 
 /// Verify the identity from Bearer or session cookie (fails closed when absent).
@@ -64,8 +67,8 @@ pub fn require_admin(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectEr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::http::HeaderMap;
     use axum::http::header::{AUTHORIZATION, COOKIE};
+    use axum::http::HeaderMap;
 
     #[test]
     fn session_cookie_is_extracted() {
@@ -77,10 +80,7 @@ mod tests {
                 .unwrap(),
         );
         let jwt = extract_session_cookie_jwt(&headers);
-        assert_eq!(
-            jwt.as_deref(),
-            Some("eyJhbGciOiJSUzI1NiJ9.abc.def")
-        );
+        assert_eq!(jwt.as_deref(), Some("eyJhbGciOiJSUzI1NiJ9.abc.def"));
     }
 
     #[test]

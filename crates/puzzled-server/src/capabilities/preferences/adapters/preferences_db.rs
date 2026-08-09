@@ -97,7 +97,14 @@ pub async fn fetch_user_preferences(
     user_id: &str,
 ) -> Result<Option<serde_json::Value>, String> {
     let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
-    type PrefRow = (Option<String>, Option<String>, bool, bool, bool, Option<String>);
+    type PrefRow = (
+        Option<String>,
+        Option<String>,
+        bool,
+        bool,
+        bool,
+        Option<String>,
+    );
     let row: Option<PrefRow> = sqlx::query_as(
         r#"
         SELECT username, bio, is_public_profile, compact_mode, leaderboard_visible, locale
@@ -142,8 +149,25 @@ pub async fn fetch_notification_preferences(
     .fetch_optional(pool)
     .await
     .map_err(|e| format!("notification prefs read failed: {e}"))?;
-    let (push_enabled, push_daily_reminder, push_streak_alert, push_new_games, daily_reminder_time, email_enabled, email_weekly_digest, email_marketing) =
-        row.unwrap_or((true, true, true, true, "09:00".to_string(), true, true, true));
+    let (
+        push_enabled,
+        push_daily_reminder,
+        push_streak_alert,
+        push_new_games,
+        daily_reminder_time,
+        email_enabled,
+        email_weekly_digest,
+        email_marketing,
+    ) = row.unwrap_or((
+        true,
+        true,
+        true,
+        true,
+        "09:00".to_string(),
+        true,
+        true,
+        true,
+    ));
     Ok(serde_json::json!({
         "pushEnabled": push_enabled,
         "pushDailyReminder": push_daily_reminder,
@@ -157,11 +181,7 @@ pub async fn fetch_notification_preferences(
 }
 
 /// True when the username is taken by another user.
-pub async fn username_taken(
-    pool: &PgPool,
-    user_id: &str,
-    username: &str,
-) -> Result<bool, String> {
+pub async fn username_taken(pool: &PgPool, user_id: &str, username: &str) -> Result<bool, String> {
     let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
     let row: Option<(String,)> = sqlx::query_as(
         "SELECT user_id::text FROM user_preferences WHERE username = $1 AND user_id <> $2 LIMIT 1",

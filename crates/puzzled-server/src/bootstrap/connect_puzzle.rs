@@ -11,22 +11,25 @@
 use std::sync::Arc;
 
 use chrono::{NaiveDate, Utc};
-use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
+use connectrpc::{
+    ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
+};
 use serde_json::Value;
 use tracing::warn;
 
-use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, get_today_utc};
-use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::{is_game_free_today, is_valid_game_slug};
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
+use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, get_today_utc};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
+use puzzled_core::puzzle_play::game_flows::build_daily_status;
+use puzzled_core::puzzle_play::game_slugs::{is_game_free_today, is_valid_game_slug};
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{fetch_daily_puzzle, fetch_puzzle_by_id};
-use crate::shared::platform_billing::is_premium;
+use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
+    fetch_daily_puzzle, fetch_puzzle_by_id,
+};
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     has_completed_session, persist_validated_session,
 };
@@ -34,6 +37,7 @@ use crate::proto::puzzled::v1::{
     GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, PuzzleService,
     SubmitGuessRequest, SubmitGuessResponse,
 };
+use crate::shared::platform_billing::is_premium;
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
 const SLICE_DAILY: &str = "S2-daily-connect";
@@ -242,7 +246,15 @@ impl PuzzleService for PuzzleConnectService {
         // Completion is server-derived from the user's sessions.
         let has_completed = match (identity.as_deref(), &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match has_completed_session(pool, uid, game_slug, Some(puzzle_date), puzzle_id.as_deref()).await {
+                match has_completed_session(
+                    pool,
+                    uid,
+                    game_slug,
+                    Some(puzzle_date),
+                    puzzle_id.as_deref(),
+                )
+                .await
+                {
                     Ok(v) => v,
                     Err(error) => {
                         warn!(%error, "get_daily completion lookup failed");
@@ -275,15 +287,16 @@ impl PuzzleService for PuzzleConnectService {
                     body.puzzle.puzzle_date
                 },
                 puzzle_id,
-                difficulty: body.puzzle.difficulty.unwrap_or_else(|| difficulty.unwrap_or_default()),
+                difficulty: body
+                    .puzzle
+                    .difficulty
+                    .unwrap_or_else(|| difficulty.unwrap_or_default()),
                 has_completed,
                 can_play: !has_completed,
                 mode: body.mode.to_string(),
                 slice: SLICE_DAILY.to_string(),
                 stub,
-                puzzle_data_json: puzzle_data
-                    .map(|v| v.to_string())
-                    .unwrap_or_default(),
+                puzzle_data_json: puzzle_data.map(|v| v.to_string()).unwrap_or_default(),
                 ..Default::default()
             }),
             Err(404) => Err(ConnectError::new(ErrorCode::NotFound, "unknown_game")),
@@ -343,7 +356,8 @@ impl PuzzleService for PuzzleConnectService {
         let today = get_today_utc(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         // Server-enforced premium gating (archive + non-rotation games).
-        self.enforce_play_access(Some(&uid), game_slug, date).await?;
+        self.enforce_play_access(Some(&uid), game_slug, date)
+            .await?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {
@@ -358,7 +372,9 @@ impl PuzzleService for PuzzleConnectService {
         let (puzzle_data, solution, resolved_id) = if let Some(pid) = req.puzzle_id.as_deref() {
             match &self.state.pool {
                 Some(pool) => match fetch_puzzle_by_id(pool, pid).await {
-                    Ok(Some(p)) if p.game_slug == game_slug => (p.puzzle_data, p.solution, Some(p.id.to_string())),
+                    Ok(Some(p)) if p.game_slug == game_slug => {
+                        (p.puzzle_data, p.solution, Some(p.id.to_string()))
+                    }
                     Ok(Some(_)) => {
                         return Err(ConnectError::new(
                             ErrorCode::InvalidArgument,
@@ -366,10 +382,7 @@ impl PuzzleService for PuzzleConnectService {
                         ));
                     }
                     Ok(None) => {
-                        return Err(ConnectError::new(
-                            ErrorCode::NotFound,
-                            "puzzle_unavailable",
-                        ));
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
                     Err(error) => {
                         warn!(%error, "submit puzzle lookup failed");
@@ -380,10 +393,7 @@ impl PuzzleService for PuzzleConnectService {
                     }
                 },
                 None => {
-                    return Err(ConnectError::new(
-                        ErrorCode::NotFound,
-                        "puzzle_unavailable",
-                    ));
+                    return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                 }
             }
         } else if let Some(pool) = &self.state.pool {
@@ -393,28 +403,33 @@ impl PuzzleService for PuzzleConnectService {
                     if game_slug == "sudoku" {
                         let seed = i64::from(get_puzzle_number(date, None));
                         let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
-                        (sudoku_puzzle_data(seed, diff), Some(sudoku_solution(seed, diff)), None)
+                        (
+                            sudoku_puzzle_data(seed, diff),
+                            Some(sudoku_solution(seed, diff)),
+                            None,
+                        )
                     } else {
-                        return Err(ConnectError::new(
-                            ErrorCode::NotFound,
-                            "puzzle_unavailable",
-                        ));
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
                 }
                 Err(error) => {
                     warn!(%error, "submit puzzle lookup failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "puzzle_lookup_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "puzzle_lookup_failed",
+                    ));
                 }
             }
         } else if game_slug == "sudoku" {
             let seed = i64::from(get_puzzle_number(date, None));
             let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
-            (sudoku_puzzle_data(seed, diff), Some(sudoku_solution(seed, diff)), None)
+            (
+                sudoku_puzzle_data(seed, diff),
+                Some(sudoku_solution(seed, diff)),
+                None,
+            )
         } else {
-            return Err(ConnectError::new(
-                ErrorCode::NotFound,
-                "puzzle_unavailable",
-            ));
+            return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
         };
 
         let Some(solution) = solution else {
@@ -436,7 +451,10 @@ impl PuzzleService for PuzzleConnectService {
                 Ok(false) => {}
                 Err(error) => {
                     warn!(%error, "submit completion lookup failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "session_lookup_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "session_lookup_failed",
+                    ));
                 }
             }
         }
@@ -455,7 +473,10 @@ impl PuzzleService for PuzzleConnectService {
                 status: String::new(),
                 score: None,
                 game_slug: game_slug.to_string(),
-                error: verdict.error.clone().or_else(|| Some("invalid_submission".to_string())),
+                error: verdict
+                    .error
+                    .clone()
+                    .or_else(|| Some("invalid_submission".to_string())),
                 slice: SLICE_SUBMIT.to_string(),
                 ..Default::default()
             });
@@ -482,7 +503,10 @@ impl PuzzleService for PuzzleConnectService {
                 Ok(_) => {}
                 Err(error) => {
                     warn!(%error, "submit session persist failed");
-                    return Err(ConnectError::new(ErrorCode::Internal, "session_persist_failed"));
+                    return Err(ConnectError::new(
+                        ErrorCode::Internal,
+                        "session_persist_failed",
+                    ));
                 }
             }
         }
