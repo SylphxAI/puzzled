@@ -17,7 +17,7 @@ use tracing::warn;
 
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, get_today_utc};
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
+use puzzled_core::puzzle_play::game_slugs::{is_game_free_today, is_valid_game_slug};
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
@@ -26,6 +26,7 @@ use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{fetch_daily_puzzle, fetch_puzzle_by_id};
+use crate::shared::platform_billing::is_premium;
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     has_completed_session, persist_validated_session,
 };
@@ -53,6 +54,45 @@ impl PuzzleConnectService {
         match require_identity(ctx) {
             Ok(identity) => Ok(Some(identity.user_id)),
             Err(_) => Ok(None), // guest read; submits enforce identity separately
+        }
+    }
+
+    /// Enforce premium gating for a served puzzle (ADR-170).
+    ///
+    /// - Archive reads (date != today) always require premium.
+    /// - Non-rotation games require premium.
+    /// - The daily free-rotation game is playable by everyone.
+    async fn enforce_play_access(
+        &self,
+        user_id: Option<&str>,
+        game_slug: &str,
+        date: chrono::NaiveDate,
+    ) -> Result<(), ConnectError> {
+        let today = get_today_utc(Utc::now());
+        if date != today {
+            // Archive access is a premium feature.
+            return self.require_premium(user_id).await;
+        }
+        if !is_game_free_today(game_slug, today) {
+            return self.require_premium(user_id).await;
+        }
+        Ok(())
+    }
+
+    async fn require_premium(&self, user_id: Option<&str>) -> Result<(), ConnectError> {
+        let Some(uid) = user_id else {
+            return Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "premium_required",
+            ));
+        };
+        if is_premium(uid).await {
+            Ok(())
+        } else {
+            Err(ConnectError::new(
+                ErrorCode::PermissionDenied,
+                "premium_required",
+            ))
         }
     }
 }
@@ -172,6 +212,10 @@ impl PuzzleService for PuzzleConnectService {
         // Archive reads: puzzle_date (YYYY-MM-DD), default = today.
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
+
+        // Server-enforced premium gating (archive + non-rotation games).
+        self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
+            .await?;
 
         // Resolve the served puzzle: stored row first, deterministic sudoku fallback.
         let mut puzzle_data: Option<Value> = None;
@@ -298,6 +342,8 @@ impl PuzzleService for PuzzleConnectService {
 
         let today = get_today_utc(Utc::now());
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
+        // Server-enforced premium gating (archive + non-rotation games).
+        self.enforce_play_access(Some(&uid), game_slug, date).await?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {
