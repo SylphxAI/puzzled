@@ -67,4 +67,43 @@ message GetTodayPercentileResponse {
 service StatsService {
   rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
   rpc GetTodayPercentile(GetTodayPercentileRequest) returns (GetTodayPercentileResponse);
+  rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+message GetUserStatsRequest {
+  string game_slug = 1;
+}
+
+message UserGameStats {
+  string game_slug = 1;
+  uint32 games_played = 2;
+  uint32 games_won = 3;
+  uint32 best_score = 4;
+}
+
+message GetUserStatsResponse {
+  repeated UserGameStats games = 1;
+  uint32 total_played = 2;
+  uint32 total_won = 3;
+}
+
+message GetHistoryRequest {
+  string game_slug = 1;
+  uint32 limit = 2;
+}
+
+message SessionEntry {
+  string game_slug = 1;
+  string puzzle_id = 2;
+  string puzzle_date = 3;
+  string status = 4;
+  uint32 score = 5;
+  uint32 attempts = 6;
+  uint64 time_spent_ms = 7;
+  string mode = 8;
+}
+
+message GetHistoryResponse {
+  repeated SessionEntry sessions = 1;
 }

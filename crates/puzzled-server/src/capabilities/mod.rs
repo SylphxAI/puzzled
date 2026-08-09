@@ -1,5 +1,6 @@
 //! Imperative-shell capability modules (ADR-169).
 
+pub mod admin;
 pub mod gamification;
 pub mod generation_jobs;
 pub mod identity_access;

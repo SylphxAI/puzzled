@@ -179,13 +179,16 @@ impl PuzzleService for PuzzleConnectService {
             }
         };
         let today = get_today_utc(Utc::now());
+        // Archive reads: puzzle_date (YYYY-MM-DD), default = today.
+        let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
+        let is_archive = puzzle_date != today;
 
         // Resolve the served puzzle: stored row first, deterministic sudoku fallback.
         let mut puzzle_data: Option<Value> = None;
         let mut puzzle_id: Option<String> = None;
         let mut stub = true;
         if let Some(pool) = &self.state.pool {
-            match fetch_daily_puzzle(pool, game_slug, today, difficulty.as_deref()).await {
+            match fetch_daily_puzzle(pool, game_slug, puzzle_date, difficulty.as_deref()).await {
                 Ok(Some(p)) => {
                     puzzle_data = Some(p.puzzle_data);
                     puzzle_id = Some(p.id.to_string());
@@ -196,7 +199,7 @@ impl PuzzleService for PuzzleConnectService {
             }
         }
         if puzzle_data.is_none() && game_slug == "sudoku" {
-            let seed = i64::from(get_puzzle_number(today, None));
+            let seed = i64::from(get_puzzle_number(puzzle_date, None));
             let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
             puzzle_data = Some(sudoku_puzzle_data(seed, diff));
             stub = false;
@@ -205,7 +208,7 @@ impl PuzzleService for PuzzleConnectService {
         // Completion is server-derived from the user's sessions.
         let has_completed = match (identity.as_deref(), &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match has_completed_session(pool, uid, game_slug, Some(today), puzzle_id.as_deref()).await {
+                match has_completed_session(pool, uid, game_slug, Some(puzzle_date), puzzle_id.as_deref()).await {
                     Ok(v) => v,
                     Err(error) => {
                         warn!(%error, "get_daily completion lookup failed");
@@ -232,7 +235,11 @@ impl PuzzleService for PuzzleConnectService {
             Ok(body) => Response::ok(GetDailyResponse {
                 game_slug: game_slug.to_string(),
                 puzzle_number: body.puzzle.puzzle_number,
-                puzzle_date: body.puzzle.puzzle_date,
+                puzzle_date: if is_archive {
+                    puzzle_date.format("%Y-%m-%d").to_string()
+                } else {
+                    body.puzzle.puzzle_date
+                },
                 puzzle_id,
                 difficulty: body.puzzle.difficulty.unwrap_or_else(|| difficulty.unwrap_or_default()),
                 has_completed,

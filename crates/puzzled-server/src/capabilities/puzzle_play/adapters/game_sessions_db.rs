@@ -158,3 +158,16 @@ pub async fn persist_validated_session(
     .map_err(|e| format!("game_sessions insert failed: {e}"))?;
     Ok(row.map_or_else(String::new, |(id,)| id.to_string()))
 }
+
+/// Count a user's completed sessions (any game).
+pub async fn count_sessions(pool: &PgPool, user_id: &str) -> Result<u32, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let row: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM game_sessions WHERE user_id = $1 AND status IN ('won','lost')",
+    )
+    .bind(uid)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("session count failed: {e}"))?;
+    Ok(row.0.max(0) as u32)
+}

@@ -14,9 +14,13 @@ use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     LeaderboardType as DbType,
 };
 use crate::proto::puzzled::v1::{
-    GetLeaderboardRequest, GetLeaderboardResponse, GetTodayPercentileRequest,
-    GetTodayPercentileResponse, LeaderboardEntry, LeaderboardPeriod, LeaderboardType, StatsService,
+    GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
+    GetTodayPercentileRequest, GetTodayPercentileResponse, GetUserStatsRequest,
+    GetUserStatsResponse, LeaderboardEntry, LeaderboardPeriod, LeaderboardType, SessionEntry,
+    StatsService, UserGameStats,
 };
+use crate::capabilities::stats::adapters::sessions_stats_db::{user_history, user_stats};
+use super::identity::require_identity;
 use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
 #[derive(Clone)]
@@ -179,6 +183,73 @@ impl StatsService for StatsConnectService {
                 "pure_residual_no_db"
             }
             .into(),
+            ..Default::default()
+        })
+    }
+    async fn get_user_stats(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetUserStatsRequest>,
+    ) -> ServiceResult<GetUserStatsResponse> {
+        let identity = require_identity(&ctx)?;
+        let req = request.to_owned_message();
+        let (games, total_played, total_won) = match &self.state.pool {
+            Some(pool) => user_stats(pool, &identity.user_id).await.map_err(|e| {
+                tracing::warn!(%e, "user stats read failed");
+                ConnectError::new(ErrorCode::Internal, "user_stats_read_failed")
+            })?,
+            None => (Vec::new(), 0, 0),
+        };
+        let games_proto: Vec<UserGameStats> = games
+            .iter()
+            .map(|g| UserGameStats {
+                game_slug: g.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                games_played: g.get("gamesPlayed").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                games_won: g.get("gamesWon").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                best_score: g.get("bestScore").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                ..Default::default()
+            })
+            .collect();
+        let _ = req;
+        Response::ok(GetUserStatsResponse {
+            games: games_proto,
+            total_played,
+            total_won,
+            ..Default::default()
+        })
+    }
+
+    async fn get_history(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GetHistoryRequest>,
+    ) -> ServiceResult<GetHistoryResponse> {
+        let identity = require_identity(&ctx)?;
+        let req = request.to_owned_message();
+        let slug = (!req.game_slug.trim().is_empty()).then(|| req.game_slug.trim().to_string());
+        let rows = match &self.state.pool {
+            Some(pool) => user_history(pool, &identity.user_id, slug.as_deref(), req.limit).await.map_err(|e| {
+                tracing::warn!(%e, "history read failed");
+                ConnectError::new(ErrorCode::Internal, "history_read_failed")
+            })?,
+            None => Vec::new(),
+        };
+        let sessions: Vec<SessionEntry> = rows
+            .iter()
+            .map(|r| SessionEntry {
+                game_slug: r.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                puzzle_id: r.get("puzzleId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                puzzle_date: r.get("puzzleDate").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                status: r.get("status").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                score: r.get("score").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                attempts: r.get("attempts").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                time_spent_ms: r.get("timeSpentMs").and_then(|v| v.as_u64()).unwrap_or(0),
+                mode: r.get("mode").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                ..Default::default()
+            })
+            .collect();
+        Response::ok(GetHistoryResponse {
+            sessions,
             ..Default::default()
         })
     }

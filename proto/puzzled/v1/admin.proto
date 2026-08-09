@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// AdminService: internal operations surface. Every method requires a verified
+// identity with an exact admin scope claim (admin | platform:admin).
+
+message Announcement {
+  string id = 1;
+  string title = 2;
+  string body = 3;
+  string type = 4;
+  bool active = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+message ListAnnouncementsRequest {}
+message ListAnnouncementsResponse {
+  repeated Announcement announcements = 1;
+}
+
+message CreateAnnouncementRequest {
+  string title = 1;
+  string body = 2;
+  string type = 3;
+  bool active = 4;
+}
+message CreateAnnouncementResponse {
+  Announcement announcement = 1;
+}
+
+message UpdateAnnouncementRequest {
+  string id = 1;
+  optional string title = 2;
+  optional string body = 3;
+  optional string type = 4;
+  optional bool active = 5;
+}
+message UpdateAnnouncementResponse {
+  Announcement announcement = 1;
+}
+
+message DeleteAnnouncementRequest {
+  string id = 1;
+}
+message DeleteAnnouncementResponse {
+  bool deleted = 1;
+}
+
+message AppSettings {
+  string key = 1;
+  string value_json = 2;
+}
+message GetSettingsRequest {}
+message GetSettingsResponse {
+  repeated AppSettings settings = 1;
+}
+message UpdateSettingsRequest {
+  string key = 1;
+  string value_json = 2;
+}
+message UpdateSettingsResponse {
+  AppSettings setting = 1;
+}
+
+message AuditLogEntry {
+  string id = 1;
+  string user_id = 2;
+  string action = 3;
+  string entity_type = 4;
+  string entity_id = 5;
+  string metadata_json = 6;
+  string created_at = 7;
+}
+message ListAuditLogsRequest {
+  uint32 limit = 1;
+  uint32 offset = 2;
+  string action = 3;
+}
+message ListAuditLogsResponse {
+  repeated AuditLogEntry entries = 1;
+  uint32 total = 2;
+}
+message GetAuditLogRequest {
+  string id = 1;
+}
+message GetAuditLogResponse {
+  AuditLogEntry entry = 1;
+}
+
+message DlqEntry {
+  string id = 1;
+  string job_type = 2;
+  string payload_json = 3;
+  string status = 4;
+  uint32 attempts = 5;
+  string error = 6;
+  string created_at = 7;
+  string next_retry_at = 8;
+}
+message ListDlqRequest {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+message ListDlqResponse {
+  repeated DlqEntry entries = 1;
+  uint32 total = 2;
+}
+message DlqActionRequest {
+  string id = 1;
+}
+message DlqActionResponse {
+  bool ok = 1;
+}
+
+message GamesOverviewRequest {}
+message GamesOverviewEntry {
+  string slug = 1;
+  string name = 2;
+  uint32 today_played = 3;
+  uint32 today_wins = 4;
+  uint32 all_time_played = 5;
+  uint32 all_time_wins = 6;
+}
+message GamesOverviewResponse {
+  repeated GamesOverviewEntry games = 1;
+}
+
+message SystemHealthRequest {}
+message SystemHealthResponse {
+  bool database_ok = 1;
+  string database_error = 2;
+  string uptime = 3;
+}
+
+service AdminService {
+  rpc ListAnnouncements(ListAnnouncementsRequest) returns (ListAnnouncementsResponse);
+  rpc CreateAnnouncement(CreateAnnouncementRequest) returns (CreateAnnouncementResponse);
+  rpc UpdateAnnouncement(UpdateAnnouncementRequest) returns (UpdateAnnouncementResponse);
+  rpc DeleteAnnouncement(DeleteAnnouncementRequest) returns (DeleteAnnouncementResponse);
+  rpc GetSettings(GetSettingsRequest) returns (GetSettingsResponse);
+  rpc UpdateSettings(UpdateSettingsRequest) returns (UpdateSettingsResponse);
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+  rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
+  rpc ListDlq(ListDlqRequest) returns (ListDlqResponse);
+  rpc RetryDlq(DlqActionRequest) returns (DlqActionResponse);
+  rpc ResolveDlq(DlqActionRequest) returns (DlqActionResponse);
+  rpc MarkDlqFailed(DlqActionRequest) returns (DlqActionResponse);
+  rpc GamesOverview(GamesOverviewRequest) returns (GamesOverviewResponse);
+  rpc SystemHealth(SystemHealthRequest) returns (SystemHealthResponse);
+}

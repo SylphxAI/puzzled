@@ -27,6 +27,8 @@ message GetDailyRequest {
   string game_slug = 1;
   string difficulty = 2;
   optional string puzzle_id = 3;
+  // Archive reads: YYYY-MM-DD (default = today).
+  optional string puzzle_date = 5;
   reserved 4; // has_completed removed: completion is server-derived
 }
 

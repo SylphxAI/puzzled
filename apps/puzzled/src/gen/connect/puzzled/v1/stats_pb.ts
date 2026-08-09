@@ -12,7 +12,7 @@ import { enumDesc, fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf
 export const file_puzzled_v1_stats: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChZwdXp6bGVkL3YxL3N0YXRzLnByb3RvEgpwdXp6bGVkLnYxIo4BChBMZWFkZXJib2FyZEVudHJ5EgwKBHJhbmsYASABKAUSDwoHdXNlcl9pZBgCIAEoCRIWCgl1c2VyX25hbWUYAyABKAlIAIgBARIXCgp1c2VyX2ltYWdlGAQgASgJSAGIAQESDQoFdmFsdWUYBSABKAVCDAoKX3VzZXJfbmFtZUINCgtfdXNlcl9pbWFnZSKTAQoVR2V0TGVhZGVyYm9hcmRSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIpCgR0eXBlGAIgASgOMhsucHV6emxlZC52MS5MZWFkZXJib2FyZFR5cGUSLQoGcGVyaW9kGAMgASgOMh0ucHV6emxlZC52MS5MZWFkZXJib2FyZFBlcmlvZBINCgVsaW1pdBgEIAEoBSJHChZHZXRMZWFkZXJib2FyZFJlc3BvbnNlEi0KB2VudHJpZXMYASADKAsyHC5wdXp6bGVkLnYxLkxlYWRlcmJvYXJkRW50cnkiqgIKGUdldFRvZGF5UGVyY2VudGlsZVJlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEg4KBnN0YXR1cxgCIAEoCRISCgVzY29yZRgDIAEoBUgAiAEBEhUKCGF0dGVtcHRzGAQgASgFSAGIAQESFQoIbWlzdGFrZXMYBSABKAVIAogBARIaCg10aW1lX3NwZW50X21zGAYgASgDSAOIAQESGgoNdG90YWxfcGxheWVycxgHIAEoBUgEiAEBEhgKC2JldHRlcl90aGFuGAggASgFSAWIAQFCCAoGX3Njb3JlQgsKCV9hdHRlbXB0c0ILCglfbWlzdGFrZXNCEAoOX3RpbWVfc3BlbnRfbXNCEAoOX3RvdGFsX3BsYXllcnNCDgoMX2JldHRlcl90aGFuIrICChpHZXRUb2RheVBlcmNlbnRpbGVSZXNwb25zZRIXCgpwZXJjZW50aWxlGAEgASgFSACIAQESFQoNdG90YWxfcGxheWVycxgCIAEoBRIRCglnYW1lX3NsdWcYAyABKAkSDgoGc3RhdHVzGAQgASgJEhIKBXNjb3JlGAUgASgFSAGIAQESFQoIYXR0ZW1wdHMYBiABKAVIAogBARIVCghtaXN0YWtlcxgHIAEoBUgDiAEBEhoKDXRpbWVfc3BlbnRfbXMYCCABKANIBIgBARIMCgRzdHViGAkgASgIEhAKCGRpc3BhdGNoGAogASgJQg0KC19wZXJjZW50aWxlQggKBl9zY29yZUILCglfYXR0ZW1wdHNCCwoJX21pc3Rha2VzQhAKDl90aW1lX3NwZW50X21zKmwKD0xlYWRlcmJvYXJkVHlwZRIgChxMRUFERVJCT0FSRF9UWVBFX1VOU1BFQ0lGSUVEEAASGwoXTEVBREVSQk9BUkRfVFlQRV9TVFJFQUsQARIaChZMRUFERVJCT0FSRF9UWVBFX1NDT1JFEAIqjgEKEUxlYWRlcmJvYXJkUGVyaW9kEiIKHkxFQURFUkJPQVJEX1BFUklPRF9VTlNQRUNJRklFRBAAEhwKGExFQURFUkJPQVJEX1BFUklPRF9UT0RBWRABEhsKF0xFQURFUkJPQVJEX1BFUklPRF9XRUVLEAISGgoWTEVBREVSQk9BUkRfUEVSSU9EX0FMTBADMswBCgxTdGF0c1NlcnZpY2USVwoOR2V0TGVhZGVyYm9hcmQSIS5wdXp6bGVkLnYxLkdldExlYWRlcmJvYXJkUmVxdWVzdBoiLnB1enpsZWQudjEuR2V0TGVhZGVyYm9hcmRSZXNwb25zZRJjChJHZXRUb2RheVBlcmNlbnRpbGUSJS5wdXp6bGVkLnYxLkdldFRvZGF5UGVyY2VudGlsZVJlcXVlc3QaJi5wdXp6bGVkLnYxLkdldFRvZGF5UGVyY2VudGlsZVJlc3BvbnNlYgZwcm90bzM',
+		'ChZwdXp6bGVkL3YxL3N0YXRzLnByb3RvEgpwdXp6bGVkLnYxIo4BChBMZWFkZXJib2FyZEVudHJ5EgwKBHJhbmsYASABKAUSDwoHdXNlcl9pZBgCIAEoCRIWCgl1c2VyX25hbWUYAyABKAlIAIgBARIXCgp1c2VyX2ltYWdlGAQgASgJSAGIAQESDQoFdmFsdWUYBSABKAVCDAoKX3VzZXJfbmFtZUINCgtfdXNlcl9pbWFnZSKTAQoVR2V0TGVhZGVyYm9hcmRSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIpCgR0eXBlGAIgASgOMhsucHV6emxlZC52MS5MZWFkZXJib2FyZFR5cGUSLQoGcGVyaW9kGAMgASgOMh0ucHV6emxlZC52MS5MZWFkZXJib2FyZFBlcmlvZBINCgVsaW1pdBgEIAEoBSJHChZHZXRMZWFkZXJib2FyZFJlc3BvbnNlEi0KB2VudHJpZXMYASADKAsyHC5wdXp6bGVkLnYxLkxlYWRlcmJvYXJkRW50cnkiqgIKGUdldFRvZGF5UGVyY2VudGlsZVJlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEg4KBnN0YXR1cxgCIAEoCRISCgVzY29yZRgDIAEoBUgAiAEBEhUKCGF0dGVtcHRzGAQgASgFSAGIAQESFQoIbWlzdGFrZXMYBSABKAVIAogBARIaCg10aW1lX3NwZW50X21zGAYgASgDSAOIAQESGgoNdG90YWxfcGxheWVycxgHIAEoBUgEiAEBEhgKC2JldHRlcl90aGFuGAggASgFSAWIAQFCCAoGX3Njb3JlQgsKCV9hdHRlbXB0c0ILCglfbWlzdGFrZXNCEAoOX3RpbWVfc3BlbnRfbXNCEAoOX3RvdGFsX3BsYXllcnNCDgoMX2JldHRlcl90aGFuIrICChpHZXRUb2RheVBlcmNlbnRpbGVSZXNwb25zZRIXCgpwZXJjZW50aWxlGAEgASgFSACIAQESFQoNdG90YWxfcGxheWVycxgCIAEoBRIRCglnYW1lX3NsdWcYAyABKAkSDgoGc3RhdHVzGAQgASgJEhIKBXNjb3JlGAUgASgFSAGIAQESFQoIYXR0ZW1wdHMYBiABKAVIAogBARIVCghtaXN0YWtlcxgHIAEoBUgDiAEBEhoKDXRpbWVfc3BlbnRfbXMYCCABKANIBIgBARIMCgRzdHViGAkgASgIEhAKCGRpc3BhdGNoGAogASgJQg0KC19wZXJjZW50aWxlQggKBl9zY29yZUILCglfYXR0ZW1wdHNCCwoJX21pc3Rha2VzQhAKDl90aW1lX3NwZW50X21zIigKE0dldFVzZXJTdGF0c1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJIl8KDVVzZXJHYW1lU3RhdHMSEQoJZ2FtZV9zbHVnGAEgASgJEhQKDGdhbWVzX3BsYXllZBgCIAEoDRIRCglnYW1lc193b24YAyABKA0SEgoKYmVzdF9zY29yZRgEIAEoDSJpChRHZXRVc2VyU3RhdHNSZXNwb25zZRIoCgVnYW1lcxgBIAMoCzIZLnB1enpsZWQudjEuVXNlckdhbWVTdGF0cxIUCgx0b3RhbF9wbGF5ZWQYAiABKA0SEQoJdG90YWxfd29uGAMgASgNIjUKEUdldEhpc3RvcnlSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRINCgVsaW1pdBgCIAEoDSKfAQoMU2Vzc2lvbkVudHJ5EhEKCWdhbWVfc2x1ZxgBIAEoCRIRCglwdXp6bGVfaWQYAiABKAkSEwoLcHV6emxlX2RhdGUYAyABKAkSDgoGc3RhdHVzGAQgASgJEg0KBXNjb3JlGAUgASgNEhAKCGF0dGVtcHRzGAYgASgNEhUKDXRpbWVfc3BlbnRfbXMYByABKAQSDAoEbW9kZRgIIAEoCSJAChJHZXRIaXN0b3J5UmVzcG9uc2USKgoIc2Vzc2lvbnMYASADKAsyGC5wdXp6bGVkLnYxLlNlc3Npb25FbnRyeSpsCg9MZWFkZXJib2FyZFR5cGUSIAocTEVBREVSQk9BUkRfVFlQRV9VTlNQRUNJRklFRBAAEhsKF0xFQURFUkJPQVJEX1RZUEVfU1RSRUFLEAESGgoWTEVBREVSQk9BUkRfVFlQRV9TQ09SRRACKo4BChFMZWFkZXJib2FyZFBlcmlvZBIiCh5MRUFERVJCT0FSRF9QRVJJT0RfVU5TUEVDSUZJRUQQABIcChhMRUFERVJCT0FSRF9QRVJJT0RfVE9EQVkQARIbChdMRUFERVJCT0FSRF9QRVJJT0RfV0VFSxACEhoKFkxFQURFUkJPQVJEX1BFUklPRF9BTEwQAzLMAQoMU3RhdHNTZXJ2aWNlElcKDkdldExlYWRlcmJvYXJkEiEucHV6emxlZC52MS5HZXRMZWFkZXJib2FyZFJlcXVlc3QaIi5wdXp6bGVkLnYxLkdldExlYWRlcmJvYXJkUmVzcG9uc2USYwoSR2V0VG9kYXlQZXJjZW50aWxlEiUucHV6emxlZC52MS5HZXRUb2RheVBlcmNlbnRpbGVSZXF1ZXN0GiYucHV6emxlZC52MS5HZXRUb2RheVBlcmNlbnRpbGVSZXNwb25zZWIGcHJvdG8z',
 	)
 
 /**
@@ -223,6 +223,179 @@ export type GetTodayPercentileResponse = Message<'puzzled.v1.GetTodayPercentileR
 export const GetTodayPercentileResponseSchema: GenMessage<GetTodayPercentileResponse> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_stats, 4)
+
+/**
+ * @generated from message puzzled.v1.GetUserStatsRequest
+ */
+export type GetUserStatsRequest = Message<'puzzled.v1.GetUserStatsRequest'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+}
+
+/**
+ * Describes the message puzzled.v1.GetUserStatsRequest.
+ * Use `create(GetUserStatsRequestSchema)` to create a new message.
+ */
+export const GetUserStatsRequestSchema: GenMessage<GetUserStatsRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 5)
+
+/**
+ * @generated from message puzzled.v1.UserGameStats
+ */
+export type UserGameStats = Message<'puzzled.v1.UserGameStats'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: uint32 games_played = 2;
+	 */
+	gamesPlayed: number
+
+	/**
+	 * @generated from field: uint32 games_won = 3;
+	 */
+	gamesWon: number
+
+	/**
+	 * @generated from field: uint32 best_score = 4;
+	 */
+	bestScore: number
+}
+
+/**
+ * Describes the message puzzled.v1.UserGameStats.
+ * Use `create(UserGameStatsSchema)` to create a new message.
+ */
+export const UserGameStatsSchema: GenMessage<UserGameStats> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 6)
+
+/**
+ * @generated from message puzzled.v1.GetUserStatsResponse
+ */
+export type GetUserStatsResponse = Message<'puzzled.v1.GetUserStatsResponse'> & {
+	/**
+	 * @generated from field: repeated puzzled.v1.UserGameStats games = 1;
+	 */
+	games: UserGameStats[]
+
+	/**
+	 * @generated from field: uint32 total_played = 2;
+	 */
+	totalPlayed: number
+
+	/**
+	 * @generated from field: uint32 total_won = 3;
+	 */
+	totalWon: number
+}
+
+/**
+ * Describes the message puzzled.v1.GetUserStatsResponse.
+ * Use `create(GetUserStatsResponseSchema)` to create a new message.
+ */
+export const GetUserStatsResponseSchema: GenMessage<GetUserStatsResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 7)
+
+/**
+ * @generated from message puzzled.v1.GetHistoryRequest
+ */
+export type GetHistoryRequest = Message<'puzzled.v1.GetHistoryRequest'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: uint32 limit = 2;
+	 */
+	limit: number
+}
+
+/**
+ * Describes the message puzzled.v1.GetHistoryRequest.
+ * Use `create(GetHistoryRequestSchema)` to create a new message.
+ */
+export const GetHistoryRequestSchema: GenMessage<GetHistoryRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 8)
+
+/**
+ * @generated from message puzzled.v1.SessionEntry
+ */
+export type SessionEntry = Message<'puzzled.v1.SessionEntry'> & {
+	/**
+	 * @generated from field: string game_slug = 1;
+	 */
+	gameSlug: string
+
+	/**
+	 * @generated from field: string puzzle_id = 2;
+	 */
+	puzzleId: string
+
+	/**
+	 * @generated from field: string puzzle_date = 3;
+	 */
+	puzzleDate: string
+
+	/**
+	 * @generated from field: string status = 4;
+	 */
+	status: string
+
+	/**
+	 * @generated from field: uint32 score = 5;
+	 */
+	score: number
+
+	/**
+	 * @generated from field: uint32 attempts = 6;
+	 */
+	attempts: number
+
+	/**
+	 * @generated from field: uint64 time_spent_ms = 7;
+	 */
+	timeSpentMs: bigint
+
+	/**
+	 * @generated from field: string mode = 8;
+	 */
+	mode: string
+}
+
+/**
+ * Describes the message puzzled.v1.SessionEntry.
+ * Use `create(SessionEntrySchema)` to create a new message.
+ */
+export const SessionEntrySchema: GenMessage<SessionEntry> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 9)
+
+/**
+ * @generated from message puzzled.v1.GetHistoryResponse
+ */
+export type GetHistoryResponse = Message<'puzzled.v1.GetHistoryResponse'> & {
+	/**
+	 * @generated from field: repeated puzzled.v1.SessionEntry sessions = 1;
+	 */
+	sessions: SessionEntry[]
+}
+
+/**
+ * Describes the message puzzled.v1.GetHistoryResponse.
+ * Use `create(GetHistoryResponseSchema)` to create a new message.
+ */
+export const GetHistoryResponseSchema: GenMessage<GetHistoryResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_stats, 10)
 
 /**
  * @generated from enum puzzled.v1.LeaderboardType

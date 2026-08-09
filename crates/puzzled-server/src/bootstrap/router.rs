@@ -18,7 +18,10 @@ use crate::capabilities::preferences::interfaces::{
 
 use crate::capabilities::stats::interfaces::{today_percentile_http, user_stats_shape_http};
 
+use super::connect_admin::admin_connect_service;
+use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
+use super::connect_preferences::preferences_connect_service;
 use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
 use super::health::{healthz, readyz};
@@ -28,9 +31,12 @@ use super::state::AppState;
 /// (buffa + connectrpc-build). Hand-rolled Connect JSON routes are retired.
 pub fn router(state: AppState) -> Router {
     let connect = connectrpc::Router::new()
+        .add_service(admin_connect_service(state.clone()))
+        .add_service(gamification_connect_service(state.clone()))
         .add_service(health_connect_service(state.clone()))
-        .add_service(stats_connect_service(state.clone()))
-        .add_service(puzzle_connect_service(state.clone()));
+        .add_service(preferences_connect_service(state.clone()))
+        .add_service(puzzle_connect_service(state.clone()))
+        .add_service(stats_connect_service(state.clone()));
 
     Router::new()
         .route("/healthz", get(healthz))

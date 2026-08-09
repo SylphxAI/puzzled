@@ -7,7 +7,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // technology-stack-profile: connectrpc-build + buffa (not prost hand handlers).
     connectrpc_build::Config::new()
         .files(&[
+            proto_root.join("puzzled/v1/admin.proto"),
+            proto_root.join("puzzled/v1/gamification.proto"),
             proto_root.join("puzzled/v1/health.proto"),
+            proto_root.join("puzzled/v1/preferences.proto"),
             proto_root.join("puzzled/v1/stats.proto"),
             proto_root.join("puzzled/v1/puzzle.proto"),
         ])
