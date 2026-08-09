@@ -5,16 +5,14 @@ RUN apk add --no-cache libc6-compat
 # 1. Copy manifest files — bun install layer cached until lockfile changes
 COPY package.json bun.lock bunfig.toml turbo.json ./
 COPY apps/puzzled/package.json   ./apps/puzzled/
-COPY packages/sdk/package.json   ./packages/sdk/
 COPY packages/ui/package.json    ./packages/ui/
 
 # 2. Install deps
 RUN bun install --ignore-scripts
 
-# 3. Build SDK + UI (cached until package source changes)
-COPY packages/sdk ./packages/sdk
+# 3. Build UI (cached until package source changes)
 COPY packages/ui  ./packages/ui
-RUN cd packages/sdk && bun run build
+RUN cd packages/ui && bun run build
 
 # 4. Copy full source
 COPY apps/puzzled ./apps/puzzled

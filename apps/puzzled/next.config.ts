@@ -1,72 +1,27 @@
-import withSerwistInit from '@serwist/next'
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 
 const withNextIntl = createNextIntlPlugin('./src/lib/i18n/request.ts')
 
-const withSerwist = withSerwistInit({
-	swSrc: 'src/app/sw.ts',
-	swDest: 'public/sw.js',
-	disable: process.env.NODE_ENV === 'development',
-})
-
 const nextConfig: NextConfig = {
 	output: 'standalone',
 	transpilePackages: ['@sylphx/sdk'],
-	serverExternalPackages: ['use-sync-external-store'],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 
-	// Redirects for renamed games and legacy locales
+	// Redirects: active locale aliases and real game renames only.
+	// Removed locales (es/ja/ko/de/fr/pt-BR/it/nl/pl/tr/id/th/vi) and dead
+	// slugs (worldle/nerdle) are not redirected — no legacy surface.
 	async redirects() {
 		return [
-			// Legacy locale redirects (old BCP-47 → new regional locales)
-			// Redirect zh-Hans (Simplified Chinese) → zh-CN
+			// Old BCP-47 locale aliases -> current regional locales
 			{ source: '/zh-Hans', destination: '/zh-CN', permanent: true },
-			{
-				source: '/zh-Hans/:path*',
-				destination: '/zh-CN/:path*',
-				permanent: true,
-			},
-			// Redirect zh-Hant (Traditional Chinese) → zh-HK (Hong Kong as default)
+			{ source: '/zh-Hans/:path*', destination: '/zh-CN/:path*', permanent: true },
 			{ source: '/zh-Hant', destination: '/zh-HK', permanent: true },
-			{
-				source: '/zh-Hant/:path*',
-				destination: '/zh-HK/:path*',
-				permanent: true,
-			},
-			// Redirect old single-language locales → default (en-US, no prefix)
+			{ source: '/zh-Hant/:path*', destination: '/zh-HK/:path*', permanent: true },
 			{ source: '/en', destination: '/', permanent: true },
 			{ source: '/en/:path*', destination: '/:path*', permanent: true },
-			// Redirect removed locales → default (users can switch in settings)
-			{ source: '/es', destination: '/', permanent: false },
-			{ source: '/es/:path*', destination: '/:path*', permanent: false },
-			{ source: '/ja', destination: '/', permanent: false },
-			{ source: '/ja/:path*', destination: '/:path*', permanent: false },
-			{ source: '/ko', destination: '/', permanent: false },
-			{ source: '/ko/:path*', destination: '/:path*', permanent: false },
-			{ source: '/de', destination: '/', permanent: false },
-			{ source: '/de/:path*', destination: '/:path*', permanent: false },
-			{ source: '/fr', destination: '/', permanent: false },
-			{ source: '/fr/:path*', destination: '/:path*', permanent: false },
-			{ source: '/pt-BR', destination: '/', permanent: false },
-			{ source: '/pt-BR/:path*', destination: '/:path*', permanent: false },
-			{ source: '/it', destination: '/', permanent: false },
-			{ source: '/it/:path*', destination: '/:path*', permanent: false },
-			{ source: '/nl', destination: '/', permanent: false },
-			{ source: '/nl/:path*', destination: '/:path*', permanent: false },
-			{ source: '/pl', destination: '/', permanent: false },
-			{ source: '/pl/:path*', destination: '/:path*', permanent: false },
-			{ source: '/tr', destination: '/', permanent: false },
-			{ source: '/tr/:path*', destination: '/:path*', permanent: false },
-			{ source: '/id', destination: '/', permanent: false },
-			{ source: '/id/:path*', destination: '/:path*', permanent: false },
-			{ source: '/th', destination: '/', permanent: false },
-			{ source: '/th/:path*', destination: '/:path*', permanent: false },
-			{ source: '/vi', destination: '/', permanent: false },
-			{ source: '/vi/:path*', destination: '/:path*', permanent: false },
-
-			// Old game slugs → new slugs (permanent redirects)
+			// Renamed games
 			{
 				source: '/games/wordle',
 				destination: '/games/word-guess',
@@ -93,17 +48,6 @@ const nextConfig: NextConfig = {
 				permanent: true,
 			},
 			{
-				source: '/games/worldle',
-				destination: '/games/globe-guess',
-				permanent: true,
-			},
-			{
-				source: '/games/nerdle',
-				destination: '/games/mathler',
-				permanent: true,
-			},
-			// Localized versions
-			{
 				source: '/:locale/games/wordle',
 				destination: '/:locale/games/word-guess',
 				permanent: true,
@@ -126,16 +70,6 @@ const nextConfig: NextConfig = {
 			{
 				source: '/:locale/games/letter-boxed',
 				destination: '/:locale/games/word-box',
-				permanent: true,
-			},
-			{
-				source: '/:locale/games/worldle',
-				destination: '/:locale/games/globe-guess',
-				permanent: true,
-			},
-			{
-				source: '/:locale/games/nerdle',
-				destination: '/:locale/games/mathler',
 				permanent: true,
 			},
 		]
@@ -289,4 +223,4 @@ const nextConfig: NextConfig = {
 
 // Compose all config wrappers
 // Note: Error tracking via Sylphx Platform SDK (see src/lib/monitoring.ts)
-export default withSerwist(withNextIntl(nextConfig))
+export default withNextIntl(nextConfig)

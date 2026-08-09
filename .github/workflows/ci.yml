@@ -198,11 +198,6 @@ jobs:
           DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
           SKIP_ENV_VALIDATION: 'true'
 
-      - name: Run SDK tests
-        run: bun test --coverage
-        working-directory: packages/sdk
-        env:
-          NODE_ENV: test
 
   # ==========================================
   # Build Validation
