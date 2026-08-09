@@ -36,7 +36,6 @@ export function planPuzzleGetDailyProduct(
 		gameSlug: input.gameSlug,
 		difficulty: input.difficulty,
 		puzzleId: input.puzzleId,
-		hasCompleted: input.hasCompleted,
 	}
 	const err = validateGetDailyInput(value)
 	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }

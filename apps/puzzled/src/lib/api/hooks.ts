@@ -19,7 +19,6 @@ import {
 	admitSubmitGuessViaConnect,
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
-import { resolveSubmitGuessSeed } from '@/lib/connect/puzzle-domain'
 import {
 	ApiError,
 	adminApi,
@@ -469,73 +468,39 @@ export function useSaveResult(
 
 	return useMutation({
 		mutationFn: async (input: SaveResultInput) => {
-			// Default connect authority: sole PuzzleService.SubmitGuess densify.
-			// Dual REST save-result success is fail-closed under connect modes.
-			// HARD PATH: resolvePuzzleProductAuthorityMode always returns connect.
-			const restResidualAllowed = false
-
-			if (input.status === 'won' || input.status === 'lost') {
-				const seed = resolveSubmitGuessSeed({
-					seed: input.seed,
-					puzzleId: input.puzzleId,
-					puzzleNumber: input.puzzleNumber,
-				})
-				if (seed === null) {
-					if (!restResidualAllowed) {
-						throw new ApiError(400, 'seed_required', {
-							code: 'CONNECT_SUBMIT_SEED_REQUIRED',
-							message: 'seed_required',
-						})
-					}
-				} else {
-					const admit = await admitSubmitGuessViaConnect({
-						gameSlug: input.gameSlug,
-						seed,
-						difficulty: input.difficulty,
-						status: input.status,
-						attempts: input.attempts,
-						timeSpentMs: input.timeSpentMs,
-						submission: input.data,
-					})
-					if (!('skipped' in admit && admit.skipped)) {
-						if (admit.ok) {
-							const r = admit.response
-							return {
-								success: r.valid,
-								score: r.score,
-								session: undefined,
-								mode: input.mode ?? 'daily',
-								slice: r.slice || 'S2-puzzle-solution-connect',
-								authority: 'connect' as const,
-								error: r.error,
-							}
-						}
-						if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
-							throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-								code: 'CONNECT_PLAY_FAIL_CLOSED',
-								message: admit.error || 'connect_play_fail_closed',
-							})
-						}
-					}
-				}
-			} else if (!restResidualAllowed) {
-				// abandoned is not densified on SubmitGuess — fail-close dual REST under connect.
+			// Sole Connect authority: PuzzleService.SubmitGuess. No REST fallback.
+			if (input.status !== 'won' && input.status !== 'lost') {
 				throw new ApiError(400, 'status_required_won_or_lost', {
 					code: 'CONNECT_SUBMIT_STATUS',
 					message: 'status_required_won_or_lost',
 				})
 			}
-
-			// Explicit rest opt-out residual only (no dual success under default connect).
-			if (!restResidualAllowed) {
-				throw new ApiError(503, 'connect_play_fail_closed', {
-					code: 'CONNECT_PLAY_FAIL_CLOSED',
-					message: 'connect_play_fail_closed',
-				})
+			const admit = await admitSubmitGuessViaConnect({
+				gameSlug: input.gameSlug,
+				difficulty: input.difficulty,
+				status: input.status,
+				attempts: input.attempts,
+				timeSpentMs: input.timeSpentMs,
+				submission: input.data,
+				puzzleId: input.puzzleId || undefined,
+				puzzleDate: input.mode === 'archive' ? input.archiveDate : undefined,
+			})
+			if (admit.ok) {
+				const r = admit.response
+				return {
+					success: r.valid,
+					score: r.score,
+					session: undefined,
+					mode: input.mode ?? 'daily',
+					slice: r.slice || 'S2-puzzle-solution-connect',
+					authority: 'connect' as const,
+					error: r.error,
+				}
 			}
-			const res = await gamesApi['save-result'].$post({ json: input })
-			const body = await parseResponse<SaveResultOutput>(res)
-			return { ...body, authority: 'rest_residual' as const }
+			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+				code: 'CONNECT_PLAY_FAIL_CLOSED',
+				message: admit.error || 'connect_play_fail_closed',
+			})
 		},
 		onSuccess: (data, variables) => {
 			// Invalidate related queries

@@ -43,7 +43,6 @@ export const puzzleQueryKeys = {
 			input.gameSlug,
 			input.difficulty ?? null,
 			input.puzzleId ?? null,
-			input.hasCompleted ?? false,
 		] as const,
 }
 
@@ -79,7 +78,6 @@ export async function getDaily(
 			gameSlug: input.gameSlug.trim(),
 			difficulty: (input.difficulty ?? '').trim(),
 			puzzleId: input.puzzleId?.trim() || undefined,
-			hasCompleted: input.hasCompleted ?? false,
 		}),
 	)
 }
@@ -94,12 +92,13 @@ export async function submitGuess(
 	return c.submitGuess(
 		create(SubmitGuessRequestSchema, {
 			gameSlug: input.gameSlug.trim(),
-			seed: BigInt(Math.trunc(input.seed)),
 			difficulty: (input.difficulty ?? 'medium').trim(),
 			status: input.status,
 			attempts: Math.trunc(input.attempts),
 			timeSpentMs: BigInt(Math.trunc(input.timeSpentMs)),
 			submissionJson: encodeSubmissionJson(input),
+			puzzleId: input.puzzleId?.trim() || undefined,
+			puzzleDate: input.puzzleDate?.trim() || undefined,
 		}),
 	)
 }

@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package puzzled.v1;
 
-// Primary puzzle-play product contracts (ADR-168 S2 leap).
-// HTTP transitional paths (strangler residual under Connect authority):
-//   GET  /api/v1/puzzles/grid
-//   GET  /api/v1/games/todays-puzzle + /api/v1/games/daily-status
-//   POST /api/v1/puzzles/submit
+// PuzzleService: server-authoritative play.
+// Solutions never leave the server. Submissions are validated against the
+// served puzzle (stored content or deterministic date-seed generation).
 
 message GetPuzzleRequest {
   string game_slug = 1;
+  // Practice/seed mode only; daily/archive authority derives the served
+  // puzzle from puzzle_id or puzzle_date, never from a client seed.
   int64 seed = 2;
   string difficulty = 3;
 }
@@ -18,17 +18,16 @@ message GetPuzzleResponse {
   string game_slug = 1;
   int64 seed = 2;
   string difficulty = 3;
-  // JSON-encoded puzzle_data / solution for cross-game flexibility.
   string puzzle_data_json = 4;
-  string solution_json = 5;
   string slice = 6;
+  reserved 5; // solution_json removed: solutions never leave the server
 }
 
 message GetDailyRequest {
   string game_slug = 1;
   string difficulty = 2;
   optional string puzzle_id = 3;
-  bool has_completed = 4;
+  reserved 4; // has_completed removed: completion is server-derived
 }
 
 message GetDailyResponse {
@@ -42,20 +41,22 @@ message GetDailyResponse {
   string mode = 8;
   string slice = 9;
   bool stub = 10;
-  // Optional densified puzzle payload (JSON); empty when not materialised.
   string puzzle_data_json = 11;
 }
 
 message SubmitGuessRequest {
   string game_slug = 1;
-  int64 seed = 2;
   string difficulty = 3;
-  // won | lost
   string status = 4;
   uint32 attempts = 5;
   uint64 time_spent_ms = 6;
-  // JSON submission data (e.g. {"finalGrid":[[...]]})
   string submission_json = 7;
+  // Served-puzzle identity: puzzle_id (stored content) or puzzle_date
+  // (YYYY-MM-DD; default = today). The server derives the served puzzle
+  // itself; client seeds are never trusted for authority.
+  optional string puzzle_id = 8;
+  optional string puzzle_date = 9;
+  reserved 2; // seed removed: not an authority input
 }
 
 message SubmitGuessResponse {
@@ -63,9 +64,9 @@ message SubmitGuessResponse {
   string status = 2;
   optional uint32 score = 3;
   string game_slug = 4;
-  int64 seed = 5;
   optional string error = 6;
   string slice = 7;
+  reserved 5; // seed removed with the request field
 }
 
 service PuzzleService {

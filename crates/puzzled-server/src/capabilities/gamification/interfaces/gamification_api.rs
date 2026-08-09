@@ -172,17 +172,35 @@ pub fn build_streak_info(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StreakInfoBody {
-    pub user_id: Option<String>,
     pub has_played_today: Option<bool>,
     pub total_games_played: Option<i32>,
     pub freezes_available: Option<i32>,
     pub auto_freeze_enabled: Option<bool>,
 }
 
-/// POST /api/v1/gamification/streak-info — shape residual (DB residual).
-pub async fn streak_info_http(Json(body): Json<StreakInfoBody>) -> Response {
+/// POST /api/v1/gamification/streak-info — verified self identity; body user_id
+/// is never trusted.
+pub async fn streak_info_http(
+    headers: HeaderMap,
+    Json(body): Json<StreakInfoBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
     let freeze = FreezeData {
-        user_id: body.user_id.unwrap_or_default(),
+        user_id: identity.user_id,
         freezes_available: body.freezes_available.unwrap_or(0),
         freezes_used: 0,
         auto_freeze_enabled: body.auto_freeze_enabled.unwrap_or(false),
@@ -232,10 +250,7 @@ pub async fn toggle_auto_freeze_http(
                 .into_response();
         }
     };
-    if !body.user_id.trim().is_empty()
-        && body.user_id.trim() != identity.user_id
-        && !identity.is_admin
-    {
+    if !body.user_id.trim().is_empty() && body.user_id.trim() != identity.user_id {
         return (
             StatusCode::FORBIDDEN,
             Json(json!({
@@ -393,17 +408,35 @@ pub async fn add_streak_freezes_http(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TryAutoFreezeBody {
-    pub user_id: String,
     pub is_premium: bool,
     pub freezes_available: Option<i32>,
     pub freezes_used: Option<i32>,
     pub auto_freeze_enabled: Option<bool>,
 }
 
-/// POST /api/v1/gamification/try-auto-freeze — loss path residual.
-pub async fn try_auto_freeze_http(Json(body): Json<TryAutoFreezeBody>) -> Response {
+/// POST /api/v1/gamification/try-auto-freeze — verified self identity; body
+/// user_id is never trusted.
+pub async fn try_auto_freeze_http(
+    headers: HeaderMap,
+    Json(body): Json<TryAutoFreezeBody>,
+) -> Response {
+    let identity = match require_verified_identity(&headers) {
+        Ok(id) => id,
+        Err(err) => {
+            return (
+                err.status(),
+                Json(json!({
+                    "error": err.message(),
+                    "code": err.code(),
+                    "slice": "api-v1-hono-monolith",
+                    "auth": "platform_jwt_rs256",
+                })),
+            )
+                .into_response();
+        }
+    };
     let data = FreezeData {
-        user_id: body.user_id,
+        user_id: identity.user_id,
         freezes_available: body.freezes_available.unwrap_or(0),
         freezes_used: body.freezes_used.unwrap_or(0),
         auto_freeze_enabled: body.auto_freeze_enabled.unwrap_or(false),

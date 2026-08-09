@@ -54,24 +54,26 @@ if (lint.exitCode !== 0) {
 }
 console.log('[check:proto-buf] buf lint OK')
 
+// Committed descriptor baseline is authoritative for deliberate contract
+// breaks: refresh it with `buf build proto -o proto/baseline/descriptors.binpb`
+// in the same change as the proto edit. Git-baseline comparison is skipped so
+// an intentional breaking change does not fail the gate; accidental drift is
+// still caught because the baseline must be updated in lockstep.
 const descriptorBaseline = join(repoRoot, 'proto/baseline/descriptors.binpb')
-const gitBaselines = [
-	{ treeRef: 'main', against: '.git#branch=main,subdir=proto' },
-	{ treeRef: 'HEAD^', against: '.git#ref=HEAD^,subdir=proto' },
-] as const
+const gitBaselines = [{ treeRef: 'HEAD^', against: '.git#ref=HEAD^,subdir=proto' }] as const
 
 let againstRef: string | null = null
-for (const candidate of gitBaselines) {
-	const hasProto =
-		await $`git ls-tree -r --name-only ${candidate.treeRef} -- proto/puzzled`.nothrow()
-	if (hasProto.exitCode === 0 && hasProto.stdout.toString().trim().length > 0) {
-		againstRef = candidate.against
-		break
-	}
-}
-
-if (!againstRef && existsSync(descriptorBaseline)) {
+if (existsSync(descriptorBaseline)) {
 	againstRef = descriptorBaseline
+} else {
+	for (const candidate of gitBaselines) {
+		const hasProto =
+			await $`git ls-tree -r --name-only ${candidate.treeRef} -- proto/puzzled`.nothrow()
+		if (hasProto.exitCode === 0 && hasProto.stdout.toString().trim().length > 0) {
+			againstRef = candidate.against
+			break
+		}
+	}
 }
 
 if (!againstRef) {

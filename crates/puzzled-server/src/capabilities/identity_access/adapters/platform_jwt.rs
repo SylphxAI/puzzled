@@ -185,41 +185,67 @@ pub fn extract_bearer(headers: &HeaderMap) -> Option<String> {
 }
 
 fn is_admin_from_claims(claims: &PlatformClaims) -> bool {
+    // Exact scope tokens only — no prefix/suffix guessing.
+    let is_admin_scope = |s: &str| s == "admin" || s == "platform:admin";
     if let Some(scope) = &claims.scope {
-        if scope
-            .split_whitespace()
-            .any(|s| s == "platform:admin" || s == "admin" || s.ends_with(":admin"))
-        {
+        if scope.split_whitespace().any(is_admin_scope) {
             return true;
         }
     }
     if let Some(scopes) = &claims.scopes {
-        if scopes
-            .iter()
-            .any(|s| s == "platform:admin" || s == "admin" || s.ends_with(":admin"))
-        {
+        if scopes.iter().any(|s| is_admin_scope(s)) {
             return true;
         }
     }
     false
 }
 
-fn validation_config() -> Validation {
+/// True when identity verification must be fully constrained (production).
+fn enforcement_enabled() -> bool {
+    std::env::var("PUZZLED_ENV")
+        .map(|v| v.trim().eq_ignore_ascii_case("production"))
+        .unwrap_or(false)
+}
+
+fn validation_config() -> Result<Validation, JwtError> {
+    validation_config_inner(
+        expected_audience(),
+        expected_issuer(),
+        enforcement_enabled(),
+    )
+}
+
+fn validation_config_inner(
+    audience: Option<String>,
+    issuer: Option<String>,
+    enforce: bool,
+) -> Result<Validation, JwtError> {
     let mut v = Validation::new(Algorithm::RS256);
     v.validate_exp = true;
-    if let Some(aud) = expected_audience() {
-        v.set_audience(&[aud]);
-    } else {
-        v.validate_aud = false;
+    match audience {
+        Some(aud) => v.set_audience(&[aud]),
+        None if enforce => {
+            return Err(JwtError::JwksUnavailable(
+                "PLATFORM_JWT_AUDIENCE not configured (required in production)".into(),
+            ));
+        }
+        None => v.validate_aud = false,
     }
-    if let Some(iss) = expected_issuer() {
-        v.set_issuer(&[iss]);
+    match issuer {
+        Some(iss) => v.set_issuer(&[iss]),
+        None if enforce => {
+            return Err(JwtError::JwksUnavailable(
+                "PLATFORM_JWT_ISSUER not configured (required in production)".into(),
+            ));
+        }
+        None => {}
     }
-    v
+    Ok(v)
 }
 
 fn decode_with_key(token: &str, key: &DecodingKey) -> Result<PlatformClaims, JwtError> {
-    let data = decode::<PlatformClaims>(token, key, &validation_config())
+    let config = validation_config()?;
+    let data = decode::<PlatformClaims>(token, key, &config)
         .map_err(|e| JwtError::VerificationFailed(e.to_string()))?;
     if data.claims.sub.trim().is_empty() {
         return Err(JwtError::MissingSubject);
@@ -460,6 +486,34 @@ mod tests {
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(id.is_admin);
         clear_test_decoding_key();
+    }
+
+    #[test]
+    fn admin_scope_suffix_does_not_grant_admin() {
+        let _g = TEST_LOCK.lock().unwrap();
+        let token = mint_token("user_1", Some("puzzled:user"));
+        let id = verify_platform_jwt(&token).expect("verified");
+        assert!(!id.is_admin);
+        let token = mint_token("user_2", Some("editor:admin"));
+        let id = verify_platform_jwt(&token).expect("verified");
+        assert!(!id.is_admin, "suffix match must not grant admin");
+        clear_test_decoding_key();
+    }
+
+    #[test]
+    fn production_enforcement_requires_audience_and_issuer() {
+        // Pure inner config check: no process-global env mutation, deterministic.
+        assert!(matches!(
+            validation_config_inner(None, None, true),
+            Err(JwtError::JwksUnavailable(_))
+        ));
+        assert!(validation_config_inner(
+            Some("puzzled".into()),
+            Some("sylphx".into()),
+            true,
+        )
+        .is_ok());
+        assert!(validation_config_inner(None, None, false).is_ok());
     }
 
     #[test]

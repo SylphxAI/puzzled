@@ -12,7 +12,7 @@ import { fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf/codegenv2
 export const file_puzzled_v1_puzzle: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkiiAEKEUdldFB1enpsZVJlc3BvbnNlEhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkSGAoQcHV6emxlX2RhdGFfanNvbhgEIAEoCRIVCg1zb2x1dGlvbl9qc29uGAUgASgJEg0KBXNsaWNlGAYgASgJInUKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIWCglwdXp6bGVfaWQYAyABKAlIAIgBARIVCg1oYXNfY29tcGxldGVkGAQgASgIQgwKCl9wdXp6bGVfaWQi+QEKEEdldERhaWx5UmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEhUKDXB1enpsZV9udW1iZXIYAiABKA0SEwoLcHV6emxlX2RhdGUYAyABKAkSFgoJcHV6emxlX2lkGAQgASgJSACIAQESEgoKZGlmZmljdWx0eRgFIAEoCRIVCg1oYXNfY29tcGxldGVkGAYgASgIEhAKCGNhbl9wbGF5GAcgASgIEgwKBG1vZGUYCCABKAkSDQoFc2xpY2UYCSABKAkSDAoEc3R1YhgKIAEoCBIYChBwdXp6bGVfZGF0YV9qc29uGAsgASgJQgwKCl9wdXp6bGVfaWQimwEKElN1Ym1pdEd1ZXNzUmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSDAoEc2VlZBgCIAEoAxISCgpkaWZmaWN1bHR5GAMgASgJEg4KBnN0YXR1cxgEIAEoCRIQCghhdHRlbXB0cxgFIAEoDRIVCg10aW1lX3NwZW50X21zGAYgASgEEhcKD3N1Ym1pc3Npb25fanNvbhgHIAEoCSKgAQoTU3VibWl0R3Vlc3NSZXNwb25zZRINCgV2YWxpZBgBIAEoCBIOCgZzdGF0dXMYAiABKAkSEgoFc2NvcmUYAyABKA1IAIgBARIRCglnYW1lX3NsdWcYBCABKAkSDAoEc2VlZBgFIAEoAxISCgVlcnJvchgGIAEoCUgBiAEBEg0KBXNsaWNlGAcgASgJQggKBl9zY29yZUIICgZfZXJyb3Iy8AEKDVB1enpsZVNlcnZpY2USSAoJR2V0UHV6emxlEhwucHV6emxlZC52MS5HZXRQdXp6bGVSZXF1ZXN0Gh0ucHV6emxlZC52MS5HZXRQdXp6bGVSZXNwb25zZRJFCghHZXREYWlseRIbLnB1enpsZWQudjEuR2V0RGFpbHlSZXF1ZXN0GhwucHV6emxlZC52MS5HZXREYWlseVJlc3BvbnNlEk4KC1N1Ym1pdEd1ZXNzEh4ucHV6emxlZC52MS5TdWJtaXRHdWVzc1JlcXVlc3QaHy5wdXp6bGVkLnYxLlN1Ym1pdEd1ZXNzUmVzcG9uc2ViBnByb3RvMw',
+		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGImQKD0dldERhaWx5UmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgCIAEoCRIWCglwdXp6bGVfaWQYAyABKAlIAIgBAUIMCgpfcHV6emxlX2lkSgQIBBAFIvkBChBHZXREYWlseVJlc3BvbnNlEhEKCWdhbWVfc2x1ZxgBIAEoCRIVCg1wdXp6bGVfbnVtYmVyGAIgASgNEhMKC3B1enpsZV9kYXRlGAMgASgJEhYKCXB1enpsZV9pZBgEIAEoCUgAiAEBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCUIMCgpfcHV6emxlX2lkIuMBChJTdWJtaXRHdWVzc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAyABKAkSDgoGc3RhdHVzGAQgASgJEhAKCGF0dGVtcHRzGAUgASgNEhUKDXRpbWVfc3BlbnRfbXMYBiABKAQSFwoPc3VibWlzc2lvbl9qc29uGAcgASgJEhYKCXB1enpsZV9pZBgIIAEoCUgAiAEBEhgKC3B1enpsZV9kYXRlGAkgASgJSAGIAQFCDAoKX3B1enpsZV9pZEIOCgxfcHV6emxlX2RhdGVKBAgCEAMimAEKE1N1Ym1pdEd1ZXNzUmVzcG9uc2USDQoFdmFsaWQYASABKAgSDgoGc3RhdHVzGAIgASgJEhIKBXNjb3JlGAMgASgNSACIAQESEQoJZ2FtZV9zbHVnGAQgASgJEhIKBWVycm9yGAYgASgJSAGIAQESDQoFc2xpY2UYByABKAlCCAoGX3Njb3JlQggKBl9lcnJvckoECAUQBjLwAQoNUHV6emxlU2VydmljZRJICglHZXRQdXp6bGUSHC5wdXp6bGVkLnYxLkdldFB1enpsZVJlcXVlc3QaHS5wdXp6bGVkLnYxLkdldFB1enpsZVJlc3BvbnNlEkUKCEdldERhaWx5EhsucHV6emxlZC52MS5HZXREYWlseVJlcXVlc3QaHC5wdXp6bGVkLnYxLkdldERhaWx5UmVzcG9uc2USTgoLU3VibWl0R3Vlc3MSHi5wdXp6bGVkLnYxLlN1Ym1pdEd1ZXNzUmVxdWVzdBofLnB1enpsZWQudjEuU3VibWl0R3Vlc3NSZXNwb25zZWIGcHJvdG8z',
 	)
 
 /**
@@ -25,6 +25,9 @@ export type GetPuzzleRequest = Message<'puzzled.v1.GetPuzzleRequest'> & {
 	gameSlug: string
 
 	/**
+	 * Practice/seed mode only; daily/archive authority derives the served
+	 * puzzle from puzzle_id or puzzle_date, never from a client seed.
+	 *
 	 * @generated from field: int64 seed = 2;
 	 */
 	seed: bigint
@@ -63,16 +66,9 @@ export type GetPuzzleResponse = Message<'puzzled.v1.GetPuzzleResponse'> & {
 	difficulty: string
 
 	/**
-	 * JSON-encoded puzzle_data / solution for cross-game flexibility.
-	 *
 	 * @generated from field: string puzzle_data_json = 4;
 	 */
 	puzzleDataJson: string
-
-	/**
-	 * @generated from field: string solution_json = 5;
-	 */
-	solutionJson: string
 
 	/**
 	 * @generated from field: string slice = 6;
@@ -106,11 +102,6 @@ export type GetDailyRequest = Message<'puzzled.v1.GetDailyRequest'> & {
 	 * @generated from field: optional string puzzle_id = 3;
 	 */
 	puzzleId?: string | undefined
-
-	/**
-	 * @generated from field: bool has_completed = 4;
-	 */
-	hasCompleted: boolean
 }
 
 /**
@@ -176,8 +167,6 @@ export type GetDailyResponse = Message<'puzzled.v1.GetDailyResponse'> & {
 	stub: boolean
 
 	/**
-	 * Optional densified puzzle payload (JSON); empty when not materialised.
-	 *
 	 * @generated from field: string puzzle_data_json = 11;
 	 */
 	puzzleDataJson: string
@@ -201,18 +190,11 @@ export type SubmitGuessRequest = Message<'puzzled.v1.SubmitGuessRequest'> & {
 	gameSlug: string
 
 	/**
-	 * @generated from field: int64 seed = 2;
-	 */
-	seed: bigint
-
-	/**
 	 * @generated from field: string difficulty = 3;
 	 */
 	difficulty: string
 
 	/**
-	 * won | lost
-	 *
 	 * @generated from field: string status = 4;
 	 */
 	status: string
@@ -228,11 +210,23 @@ export type SubmitGuessRequest = Message<'puzzled.v1.SubmitGuessRequest'> & {
 	timeSpentMs: bigint
 
 	/**
-	 * JSON submission data (e.g. {"finalGrid":[[...]]})
-	 *
 	 * @generated from field: string submission_json = 7;
 	 */
 	submissionJson: string
+
+	/**
+	 * Served-puzzle identity: puzzle_id (stored content) or puzzle_date
+	 * (YYYY-MM-DD; default = today). The server derives the served puzzle
+	 * itself; client seeds are never trusted for authority.
+	 *
+	 * @generated from field: optional string puzzle_id = 8;
+	 */
+	puzzleId?: string | undefined
+
+	/**
+	 * @generated from field: optional string puzzle_date = 9;
+	 */
+	puzzleDate?: string | undefined
 }
 
 /**
@@ -266,11 +260,6 @@ export type SubmitGuessResponse = Message<'puzzled.v1.SubmitGuessResponse'> & {
 	 * @generated from field: string game_slug = 4;
 	 */
 	gameSlug: string
-
-	/**
-	 * @generated from field: int64 seed = 5;
-	 */
-	seed: bigint
 
 	/**
 	 * @generated from field: optional string error = 6;

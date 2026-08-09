@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	encodeSubmissionJson,
-	resolveSubmitGuessSeed,
 	validateGetDailyInput,
 	validateGetPuzzleInput,
 	validateSubmitGuessInput,
@@ -23,7 +22,6 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 		expect(
 			validateSubmitGuessInput({
 				gameSlug: 'sudoku',
-				seed: 1,
 				status: 'won',
 				attempts: 1,
 				timeSpentMs: 10,
@@ -32,7 +30,6 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 		expect(
 			validateSubmitGuessInput({
 				gameSlug: 'sudoku',
-				seed: 1,
 				status: 'abandoned' as 'won' | 'lost',
 				attempts: 1,
 				timeSpentMs: 10,
@@ -44,7 +41,6 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 		expect(
 			encodeSubmissionJson({
 				gameSlug: 'sudoku',
-				seed: 1,
 				status: 'won',
 				attempts: 1,
 				timeSpentMs: 1,
@@ -54,23 +50,11 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 		expect(
 			encodeSubmissionJson({
 				gameSlug: 'sudoku',
-				seed: 1,
 				status: 'won',
 				attempts: 1,
 				timeSpentMs: 1,
 				submissionJson: '{"a":1}',
 			}),
 		).toBe('{"a":1}')
-	})
-
-	test('resolveSubmitGuessSeed prefers explicit seed then puzzleNumber then numeric id', () => {
-		expect(resolveSubmitGuessSeed({ seed: 42, puzzleId: '99', puzzleNumber: 7 })).toBe(42)
-		expect(resolveSubmitGuessSeed({ puzzleNumber: 11, puzzleId: 'abc' })).toBe(11)
-		expect(resolveSubmitGuessSeed({ puzzleId: '12345' })).toBe(12345)
-		expect(resolveSubmitGuessSeed({ puzzleId: '' })).toBeNull()
-		const hashed = resolveSubmitGuessSeed({ puzzleId: 'opaque-uuid-v4' })
-		expect(hashed).not.toBeNull()
-		expect(Number.isFinite(hashed!)).toBe(true)
-		expect(resolveSubmitGuessSeed({ puzzleId: 'opaque-uuid-v4' })).toBe(hashed)
 	})
 })

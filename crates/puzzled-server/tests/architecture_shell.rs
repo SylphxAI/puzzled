@@ -48,7 +48,6 @@ fn shell_depends_on_puzzled_core() {
 fn shell_capability_tree_exists() {
     let root = manifest_dir().join("src/capabilities");
     for rel in [
-        "puzzle_play/interfaces/games_api.rs",
         "puzzle_play/adapters/game_sessions_db.rs",
         "identity_access/adapters/platform_jwt.rs",
         "identity_access/contract.rs",
@@ -73,7 +72,6 @@ fn router_registers_rust_api_prefixes() {
     for route in [
         "/healthz",
         "/readyz",
-        "/api/leaderboard",
         "/api/v1",
         "/api/v1/jobs/plan",
         "/api/v1/jobs/execute",

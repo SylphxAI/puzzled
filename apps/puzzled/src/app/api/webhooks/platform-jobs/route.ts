@@ -14,6 +14,7 @@
  * the web service remains the residual executor (not a dual public backend).
  */
 
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { type NextRequest, NextResponse } from 'next/server'
 import { env } from '@/lib/env'
 import { executeJob, JOB_HANDLERS } from '@/lib/jobs/handlers'
@@ -29,6 +30,12 @@ interface PlatformJobPayload {
 	timestamp: string
 }
 
+function constantTimeEqual(a: string, b: string): boolean {
+	const ha = createHash('sha256').update(a).digest()
+	const hb = createHash('sha256').update(b).digest()
+	return timingSafeEqual(ha, hb)
+}
+
 function verifyPlatformRequest(req: NextRequest): {
 	valid: boolean
 	error?: string
@@ -39,7 +46,7 @@ function verifyPlatformRequest(req: NextRequest): {
 		return { valid: false, error: 'Missing x-app-secret header' }
 	}
 
-	if (secretKey !== env.SYLPHX_SECRET_KEY) {
+	if (!constantTimeEqual(secretKey, env.SYLPHX_SECRET_KEY)) {
 		return { valid: false, error: 'Invalid secret key' }
 	}
 

@@ -49,6 +49,42 @@ mod tests {
         }
     }
 
+    fn mint_test_token(sub: &str) -> String {
+        use jsonwebtoken::{encode, EncodingKey, Header as JwtHeader};
+        let priv_pem = include_str!("../testdata/platform_jwt_test_priv.pem");
+        let pub_pem = include_str!("../testdata/platform_jwt_test_pub.pem");
+        crate::capabilities::identity_access::adapters::platform_jwt::install_test_decoding_key_pem(
+            pub_pem,
+        )
+        .expect("install test key");
+        #[derive(serde::Serialize)]
+        struct MintClaims {
+            sub: String,
+            name: String,
+            exp: i64,
+        }
+        let claims = MintClaims {
+            sub: sub.to_string(),
+            name: "Test User".to_string(),
+            exp: chrono::Utc::now().timestamp() + 3600,
+        };
+        let key = EncodingKey::from_rsa_pem(priv_pem.as_bytes()).expect("enc key");
+        encode(&JwtHeader::new(jsonwebtoken::Algorithm::RS256), &claims, &key).expect("mint")
+    }
+
+    fn build_connect_request_with_auth(uri: &str, body: Body, token: &str) -> Request<Body> {
+        match Request::builder()
+            .method(Method::POST)
+            .uri(uri)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header(axum::http::header::AUTHORIZATION, format!("Bearer {token}"))
+            .body(body)
+        {
+            Ok(request) => request,
+            Err(error) => panic!("build connect request {uri}: {error}"),
+        }
+    }
+
     async fn body_json(response: Response) -> serde_json::Value {
         let body = match to_bytes(response.into_body(), usize::MAX).await {
             Ok(body) => body,
@@ -161,12 +197,9 @@ mod tests {
             .as_str()
             .expect("puzzleDataJson densified");
         assert!(puzzle_data.contains("grid"), "expected densified grid JSON");
-        let solution = json["solutionJson"]
-            .as_str()
-            .expect("solutionJson densified");
         assert!(
-            solution.contains("grid"),
-            "expected densified solution JSON"
+            json.get("solutionJson").is_none(),
+            "solutions must never leave the server"
         );
     }
 
@@ -219,14 +252,34 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_submit_guess_invalid_without_grid() {
+    async fn connect_submit_guess_requires_identity() {
         let app = router(AppState::new(None));
         let response = match app
             .oneshot(build_connect_request(
                 "/puzzled.v1.PuzzleService/SubmitGuess",
                 Body::from(
-                    r#"{"gameSlug":"sudoku","seed":"1","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{}"}"#,
+                    r#"{"gameSlug":"sudoku","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{}"}"#,
                 ),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect SubmitGuess: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn connect_submit_guess_validates_against_served_puzzle() {
+        let app = router(AppState::new(None));
+        let token = mint_test_token("user_test_01");
+        let response = match app
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.PuzzleService/SubmitGuess",
+                Body::from(
+                    r#"{"gameSlug":"sudoku","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{}"}"#,
+                ),
+                &token,
             ))
             .await
         {
@@ -235,42 +288,36 @@ mod tests {
         };
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
-        // ProtoJSON may omit valid=false; treat missing as false.
+        // Empty submission cannot be a valid sudoku solution. ProtoJSON omits
+        // default false; missing/null means invalid.
         assert!(
-            json.get("valid")
-                .map_or(true, |v| v == false || v.is_null()),
-            "unexpected valid: {:?}",
+            json.get("valid").map_or(true, |v| v == false || v.is_null()),
+            "expected invalid verdict, got: {:?}",
             json.get("valid")
         );
         assert_eq!(json["slice"], "S2-puzzle-solution-connect");
     }
 
     #[tokio::test]
-    async fn connect_submit_guess_accepts_non_sudoku_claim() {
+    async fn connect_submit_guess_rejects_unserved_puzzle() {
+        // Non-deterministic games without a stored puzzle must fail closed —
+        // no accept-any claims, no invented scores.
         let app = router(AppState::new(None));
+        let token = mint_test_token("user_test_02");
         let response = match app
-            .oneshot(build_connect_request(
+            .oneshot(build_connect_request_with_auth(
                 "/puzzled.v1.PuzzleService/SubmitGuess",
                 Body::from(
-                    r#"{"gameSlug":"word-guess","seed":"7","status":"won","attempts":3,"timeSpentMs":"1200","submissionJson":"{\"guesses\":[]}"}"#,
+                    r#"{"gameSlug":"word-guess","status":"won","attempts":3,"timeSpentMs":"1200","submissionJson":"{\"guesses\":[\"HELLO\"]}"}"#,
                 ),
+                &token,
             ))
             .await
         {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess non-sudoku: {error}"),
         };
-        assert_eq!(response.status(), StatusCode::OK);
-        let json = body_json(response).await;
-        assert_eq!(json["gameSlug"], "word-guess");
-        assert_eq!(json["status"], "won");
-        assert_eq!(json["slice"], "S2-puzzle-solution-connect");
-        // ProtoJSON may omit valid=true default.
-        assert!(
-            json.get("valid").map_or(true, |v| v == true),
-            "unexpected valid: {:?}",
-            json.get("valid")
-        );
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
     }
 
     #[tokio::test]
@@ -288,28 +335,6 @@ mod tests {
         assert_eq!(json["status"], "not_ready");
         assert_eq!(json["dependencies"][0]["ok"], false);
         assert_eq!(json["dependencies"][0]["required"], true);
-    }
-
-    #[tokio::test]
-    async fn domain_stub_returns_contract() {
-        let app = router(AppState::new(None));
-        let response = match app
-            .oneshot(build_request(
-                Method::GET,
-                "/api/leaderboard",
-                Body::empty(),
-            ))
-            .await
-        {
-            Ok(response) => response,
-            Err(error) => panic!("stub request: {error}"),
-        };
-        assert_eq!(response.status(), StatusCode::OK);
-        let json = body_json(response).await;
-        assert!(json["entries"]
-            .as_array()
-            .is_some_and(|entries| entries.is_empty()));
-        assert_eq!(json["stub"], true);
     }
 
     #[tokio::test]
@@ -331,24 +356,6 @@ mod tests {
         assert_eq!(json["authenticated"], false);
         assert_eq!(json["session"], serde_json::Value::Null);
         assert_eq!(json["slice"], "auth-sessions");
-    }
-
-    #[tokio::test]
-    async fn games_index_lists_registered_slugs() {
-        let app = router(AppState::new(None));
-        let response = match app
-            .oneshot(build_request(Method::GET, "/api/v1/games", Body::empty()))
-            .await
-        {
-            Ok(response) => response,
-            Err(error) => panic!("games index request: {error}"),
-        };
-        assert_eq!(response.status(), StatusCode::OK);
-        let json = body_json(response).await;
-        assert_eq!(json["slice"], "api-v1-hono-monolith");
-        let games = json["games"].as_array().expect("games array");
-        assert!(games.len() >= 10);
-        assert!(games.iter().any(|g| g["slug"] == "sudoku"));
     }
 
     #[tokio::test]

@@ -30,7 +30,6 @@ path_prefixes = [
   "/puzzled.v1.StatsService",
   "/healthz",
   "/readyz",
-  "/api/leaderboard",
   "/api/v1",
 ]
 # /api/webhooks/platform-jobs stays on web residual executor until Rust job
