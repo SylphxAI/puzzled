@@ -72,7 +72,7 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
 
       # bun 1.3.x --frozen-lockfile false-positives here; committed lock remains authority.
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
       - name: Run Biome lint
         run: bun run lint
@@ -188,7 +188,7 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
       - name: Run unit tests
         run: bun run test:unit
@@ -227,7 +227,7 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
       - name: Build web (next build, typecheck enforced)
         run: bun run build
