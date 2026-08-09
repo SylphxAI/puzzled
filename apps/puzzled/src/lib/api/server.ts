@@ -1,101 +1,36 @@
 /**
- * Server-side API Client for Puzzled
+ * Server-side API helpers — sole Connect authority (ADR-170).
  *
- * Domain-specific hc (Hono client) instances for use in:
- * - React Server Components (RSC)
- * - Server Actions
- *
- * Each domain has its own client for better code splitting and type inference.
- * Uses React's cache() to dedupe calls within the same request.
- *
- * @example
- * // In a Server Component
- * const { gamification } = await createServerApi()
- * const res = await gamification['streak-info'].$get()
- * const streakInfo = await res.json()
- *
- * @example
- * // In a Server Action
- * const { games } = await createServerApi()
- * const res = await games['save-result'].$post({ json: { ... } })
+ * Server components call the api service through the private
+ * API_INTERNAL_URL (platform-injected) and forward the browser's session
+ * cookie (HttpOnly `__sylphx_*_session` JWT) for identity. There is no Hono
+ * REST client; the web service has no backend authority.
  */
 
 import 'server-only'
-import { hc } from 'hono/client'
-import { cookies, headers } from 'next/headers'
+
+import { create } from '@bufbuild/protobuf'
+import { createClient } from '@connectrpc/connect'
+import { createConnectTransport } from '@connectrpc/connect-web'
+import { cookies } from 'next/headers'
 import { cache } from 'react'
-import type { DynamicApiClient } from './client'
 
-// API base path
-const API_BASE = '/api/v1'
+import {
+	GamificationService,
+	GetStreakInfoRequestSchema,
+} from '@/gen/connect/puzzled/v1/gamification_pb'
+import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import {
+	GetTodayOverviewRequestSchema,
+	GetUserStatsRequestSchema,
+	StatsService,
+} from '@/gen/connect/puzzled/v1/stats_pb'
+import { resolveConnectBaseUrl } from '@/lib/connect/transport'
 
-/**
- * Get the base URL for server-side API calls
- */
-function getServerBaseUrl(): string {
-	if (process.env.VERCEL_URL) {
-		return `https://${process.env.VERCEL_URL}`
-	}
-	return `http://localhost:${process.env.PORT ?? 3001}`
-}
+// ==========================================
+// Response types (unchanged public shapes)
+// ==========================================
 
-/**
- * Create a custom fetch with forwarded headers/cookies for auth
- */
-async function createAuthFetch() {
-	const headersList = await headers()
-	const cookieStore = await cookies()
-
-	return (input: RequestInfo | URL, init?: RequestInit) =>
-		fetch(input, {
-			...init,
-			headers: {
-				...init?.headers,
-				cookie: cookieStore.toString(),
-				// Forward relevant headers for auth context
-				'x-forwarded-for': headersList.get('x-forwarded-for') ?? '',
-				'user-agent': headersList.get('user-agent') ?? '',
-			},
-		})
-}
-
-/**
- * Create cached server-side Hono clients
- *
- * Uses React's cache() to dedupe calls within the same request.
- * Each request gets its own clients with proper headers/cookies.
- *
- * @returns Domain-specific API clients
- */
-export const createServerApi = cache(async () => {
-	const baseUrl = getServerBaseUrl()
-	const authFetch = await createAuthFetch()
-
-	return {
-		games: hc(`${baseUrl}${API_BASE}/games`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-		stats: hc(`${baseUrl}${API_BASE}/stats`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-		gamification: hc(`${baseUrl}${API_BASE}/gamification`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-		user: hc(`${baseUrl}${API_BASE}/user`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-		notifications: hc(`${baseUrl}${API_BASE}/notifications`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-		admin: hc(`${baseUrl}${API_BASE}/admin`, {
-			fetch: authFetch,
-		}) as unknown as DynamicApiClient,
-	} satisfies Record<string, DynamicApiClient>
-})
-
-/**
- * Helper types for common API responses
- */
 export type StreakInfo = {
 	currentStreak: number
 	maxStreak: number
@@ -103,17 +38,6 @@ export type StreakInfo = {
 	totalGamesPlayed: number
 	freezesAvailable: number
 	autoFreezeEnabled: boolean
-}
-
-export type TodayCompletion = {
-	slug: string
-	name: string
-	completed: boolean
-	score?: string
-}
-
-export type TodayPlayerCount = {
-	count: number
 }
 
 export type DailyStatus = {
@@ -156,3 +80,163 @@ export type UserStats = {
 		perfectGames: number
 	}
 }
+
+// ==========================================
+// Per-request Connect transport (forwards the session cookie)
+// ==========================================
+
+async function getServerTransport() {
+	const cookieStore = await cookies()
+	const cookie = cookieStore.toString()
+	const baseUrl = resolveConnectBaseUrl()
+	return createConnectTransport({
+		baseUrl,
+		useBinaryFormat: false,
+		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
+			fetch(input, {
+				...init,
+				headers: {
+					...(init?.headers as Record<string, string> | undefined),
+					cookie,
+				},
+			})) as typeof fetch,
+	})
+}
+
+function parsePuzzleData(json: string): unknown {
+	if (!json) return null
+	try {
+		return JSON.parse(json)
+	} catch {
+		return null
+	}
+}
+
+// ==========================================
+// Server data accessors (sole Connect)
+// ==========================================
+
+export const getServerDailyStatus = cache(
+	async (input: {
+		gameSlug: string
+		difficulty?: string
+		puzzleDate?: string
+	}): Promise<DailyStatus> => {
+		const transport = await getServerTransport()
+		const client = createClient(PuzzleService, transport)
+		const res = await client.getDaily(
+			create(GetDailyRequestSchema, {
+				gameSlug: input.gameSlug.trim(),
+				difficulty: (input.difficulty ?? '').trim(),
+				puzzleDate: input.puzzleDate?.trim() || undefined,
+			}),
+		)
+		return {
+			hasCompleted: res.hasCompleted,
+			completedSession: res.hasCompleted
+				? { status: 'won', score: null, attempts: null, completedAt: new Date() }
+				: null,
+			puzzle: {
+				id: res.puzzleId?.trim() || String(res.puzzleNumber),
+				puzzleNumber: Number(res.puzzleNumber),
+				puzzleDate: res.puzzleDate,
+				puzzleData: parsePuzzleData(res.puzzleDataJson),
+				difficulty: res.difficulty || input.difficulty || null,
+			},
+			canPlay: res.canPlay,
+			mode: 'daily',
+		}
+	},
+)
+
+export const getServerTodaysPuzzle = cache(
+	async (input: { gameSlug: string; difficulty?: string }): Promise<TodaysPuzzle> => {
+		const transport = await getServerTransport()
+		const client = createClient(PuzzleService, transport)
+		const res = await client.getDaily(
+			create(GetDailyRequestSchema, {
+				gameSlug: input.gameSlug.trim(),
+				difficulty: (input.difficulty ?? '').trim(),
+			}),
+		)
+		return {
+			puzzleId: res.puzzleId?.trim() || String(res.puzzleNumber),
+			puzzleNumber: Number(res.puzzleNumber),
+			puzzleDate: res.puzzleDate,
+			puzzleData: parsePuzzleData(res.puzzleDataJson),
+			difficulty: res.difficulty || input.difficulty || null,
+		}
+	},
+)
+
+export const getServerStreakInfo = cache(async (): Promise<StreakInfo> => {
+	const transport = await getServerTransport()
+	const client = createClient(GamificationService, transport)
+	const res = await client.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
+	const info = res.info
+	return {
+		currentStreak: info ? Number(info.currentStreak) : 0,
+		maxStreak: info ? Number(info.maxStreak) : 0,
+		hasPlayedToday: info ? info.hasPlayedToday : false,
+		totalGamesPlayed: info ? Number(info.totalGamesPlayed) : 0,
+		freezesAvailable: info ? Number(info.freezesAvailable) : 0,
+		autoFreezeEnabled: info ? info.autoFreezeEnabled : false,
+	}
+})
+
+export const getServerUserStats = cache(async (): Promise<UserStats> => {
+	const transport = await getServerTransport()
+	const client = createClient(StatsService, transport)
+	const res = await client.getUserStats(create(GetUserStatsRequestSchema, { gameSlug: '' }))
+	const out: UserStats = {}
+	for (const g of res.games) {
+		out[g.gameSlug] = {
+			gameSlug: g.gameSlug,
+			gamesPlayed: Number(g.gamesPlayed),
+			gamesWon: Number(g.gamesWon),
+			currentStreak: 0,
+			maxStreak: 0,
+			totalScore: Number(g.bestScore),
+			averageAttempts: null,
+			guessDistribution: null,
+			perfectGames: 0,
+		}
+	}
+	return out
+})
+
+export type TodayCompletion = {
+	slug: string
+	name: string
+	completed: boolean
+	score?: string
+}
+
+export type TodayPlayerCount = {
+	count: number
+}
+
+export const getServerTodayOverview = cache(
+	async (): Promise<{
+		playerCount: number
+		completions: { gameSlug: string; count: number }[]
+	}> => {
+		const transport = await getServerTransport()
+		const client = createClient(StatsService, transport)
+		const res = await client.getTodayOverview(create(GetTodayOverviewRequestSchema, {}))
+		return {
+			playerCount: Number(res.playerCount),
+			completions: res.completions.map((c) => ({
+				gameSlug: c.gameSlug,
+				count: Number(c.count),
+			})),
+		}
+	},
+)
+
+/**
+ * Back-compat shim deleted: no Hono clients exist. Use the typed accessors
+ * above (getServerDailyStatus / getServerTodaysPuzzle / getServerStreakInfo /
+ * getServerUserStats) from server components.
+ */
+export const createServerApi = null as never

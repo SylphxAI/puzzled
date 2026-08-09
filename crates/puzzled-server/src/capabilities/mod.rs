@@ -2,7 +2,6 @@
 
 pub mod admin;
 pub mod gamification;
-pub mod generation_jobs;
 pub mod identity_access;
 pub mod leaderboard;
 pub mod preferences;

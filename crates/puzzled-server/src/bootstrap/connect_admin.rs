@@ -17,6 +17,7 @@ use crate::proto::puzzled::v1::{
     ListAnnouncementsResponse, ListAuditLogsRequest, ListAuditLogsResponse, ListDlqRequest,
     ListDlqResponse, SystemHealthRequest, SystemHealthResponse, UpdateAnnouncementRequest,
     UpdateAnnouncementResponse, UpdateSettingsRequest, UpdateSettingsResponse,
+    DailyStat, GameAnalyticsRequest, GameAnalyticsResponse,
 };
 
 fn announcement_from_json(v: &Value) -> Announcement {
@@ -36,11 +37,14 @@ fn audit_from_json(v: &Value) -> AuditLogEntry {
     AuditLogEntry {
         id: v.get("id").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         user_id: v.get("userId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        actor_id: v.get("actorId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         action: v.get("action").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         entity_type: v.get("entityType").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         entity_id: v.get("entityId").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         metadata_json: v.get("metadataJson").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         created_at: v.get("createdAt").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        ip_address: v.get("ipAddress").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+        user_agent: v.get("userAgent").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
         ..Default::default()
     }
 }
@@ -264,12 +268,27 @@ impl AdminService for AdminConnectService {
         let pool = self.pool()?;
         let req = request.to_owned_message();
         let limit = req.limit.clamp(1, 200);
-        let (rows, total) = admin_db::list_dlq(pool, limit, req.offset)
+        let (rows, total, stats) = admin_db::list_dlq(pool, limit, req.offset)
             .await
             .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
         Response::ok(ListDlqResponse {
             entries: rows.iter().map(dlq_from_json).collect(),
             total,
+            pending: stats.get("pending").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            retrying: stats.get("retrying").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            resolved: stats.get("resolved").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            failed: stats.get("failed").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+            by_workflow: stats
+                .get("byWorkflow")
+                .and_then(|v| v.as_object())
+                .map(|m| {
+                    m.iter()
+                        .map(|(k, v)| {
+                            (k.clone(), v.as_u64().unwrap_or(0) as u32)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default(),
             ..Default::default()
         })
     }
@@ -349,6 +368,33 @@ impl AdminService for AdminConnectService {
             .collect();
         Response::ok(GamesOverviewResponse {
             games,
+            ..Default::default()
+        })
+    }
+
+    async fn get_game_analytics(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, GameAnalyticsRequest>,
+    ) -> ServiceResult<GameAnalyticsResponse> {
+        require_admin(&ctx)?;
+        let pool = self.pool()?;
+        let req = request.to_owned_message();
+        let rows = admin_db::game_analytics(pool, req.game_slug.trim(), req.days)
+            .await
+            .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
+        let daily_stats: Vec<DailyStat> = rows
+            .iter()
+            .map(|v| DailyStat {
+                date: v.get("date").and_then(|x| x.as_str()).unwrap_or_default().to_string(),
+                games_played: v.get("gamesPlayed").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
+                wins: v.get("wins").and_then(|x| x.as_u64()).unwrap_or(0) as u32,
+                avg_attempts: v.get("avgAttempts").and_then(|x| x.as_f64()).unwrap_or(0.0),
+                ..Default::default()
+            })
+            .collect();
+        Response::ok(GameAnalyticsResponse {
+            daily_stats,
             ..Default::default()
         })
     }

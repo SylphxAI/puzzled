@@ -67,11 +67,14 @@ message UpdateSettingsResponse {
 message AuditLogEntry {
   string id = 1;
   string user_id = 2;
+  string actor_id = 8;
   string action = 3;
   string entity_type = 4;
   string entity_id = 5;
   string metadata_json = 6;
   string created_at = 7;
+  string ip_address = 9;
+  string user_agent = 10;
 }
 message ListAuditLogsRequest {
   uint32 limit = 1;
@@ -106,6 +109,11 @@ message ListDlqRequest {
 message ListDlqResponse {
   repeated DlqEntry entries = 1;
   uint32 total = 2;
+  uint32 pending = 3;
+  uint32 retrying = 4;
+  uint32 resolved = 5;
+  uint32 failed = 6;
+  map<string, uint32> by_workflow = 7;
 }
 message DlqActionRequest {
   string id = 1;
@@ -134,6 +142,20 @@ message SystemHealthResponse {
   string uptime = 3;
 }
 
+message GameAnalyticsRequest {
+  string game_slug = 1;
+  uint32 days = 2;
+}
+message DailyStat {
+  string date = 1;
+  uint32 games_played = 2;
+  uint32 wins = 3;
+  double avg_attempts = 4;
+}
+message GameAnalyticsResponse {
+  repeated DailyStat daily_stats = 1;
+}
+
 service AdminService {
   rpc ListAnnouncements(ListAnnouncementsRequest) returns (ListAnnouncementsResponse);
   rpc CreateAnnouncement(CreateAnnouncementRequest) returns (CreateAnnouncementResponse);
@@ -149,4 +171,5 @@ service AdminService {
   rpc MarkDlqFailed(DlqActionRequest) returns (DlqActionResponse);
   rpc GamesOverview(GamesOverviewRequest) returns (GamesOverviewResponse);
   rpc SystemHealth(SystemHealthRequest) returns (SystemHealthResponse);
+  rpc GetGameAnalytics(GameAnalyticsRequest) returns (GameAnalyticsResponse);
 }

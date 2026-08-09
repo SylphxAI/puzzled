@@ -7,10 +7,10 @@ import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
 import {
-	createServerApi,
+	getServerStreakInfo,
+	getServerTodayOverview,
 	type StreakInfo,
 	type TodayCompletion,
-	type TodayPlayerCount,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
@@ -39,7 +39,6 @@ export default async function HomePage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const user = await currentUser()
-	const { gamification } = await createServerApi()
 
 	// Get user's premium status from platform
 	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
@@ -71,19 +70,18 @@ export default async function HomePage({ params }: Props) {
 	let todayPlayerCount = 0
 
 	try {
-		// Always fetch player count (public data)
-		const playerCountRes = await gamification['today-player-count'].$get()
-		const playerCountData = (await playerCountRes.json()) as TodayPlayerCount
-		todayPlayerCount = playerCountData.count
+		// Always fetch public today overview (player count + completions)
+		const overview = await getServerTodayOverview()
+		todayPlayerCount = overview.playerCount
+		todayCompletions = overview.completions.map((c) => ({
+			slug: c.gameSlug,
+			name: c.gameSlug,
+			completed: c.count > 0,
+		}))
 
-		// Fetch user-specific data if logged in
+		// Fetch user-specific streak info if logged in
 		if (user) {
-			const [streakRes, completionsRes] = await Promise.all([
-				gamification['streak-info'].$get(),
-				gamification['today-completions'].$get(),
-			])
-			streakInfo = (await streakRes.json()) as StreakInfo
-			todayCompletions = (await completionsRes.json()) as TodayCompletion[]
+			streakInfo = await getServerStreakInfo()
 		}
 	} catch (error) {
 		// Log error for debugging but continue with defaults

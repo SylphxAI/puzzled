@@ -48,17 +48,15 @@ fn shell_depends_on_puzzled_core() {
 fn shell_capability_tree_exists() {
     let root = manifest_dir().join("src/capabilities");
     for rel in [
-        "puzzle_play/adapters/game_sessions_db.rs",
+        "admin/adapters/admin_db.rs",
+        "gamification/interfaces/gamification_api.rs",
         "identity_access/adapters/platform_jwt.rs",
         "identity_access/contract.rs",
-        "identity_access/interfaces/auth_sessions.rs",
         "leaderboard/adapters/leaderboard_db.rs",
-        "leaderboard/interfaces/leaderboard.rs",
-        "preferences/interfaces/prefs_api.rs",
-        "gamification/interfaces/gamification_api.rs",
-        "stats/interfaces/stats_api.rs",
-        "generation_jobs/interfaces/generation_jobs.rs",
-        "generation_jobs/interfaces/platform_webhooks.rs",
+        "preferences/adapters/preferences_db.rs",
+        "puzzle_play/adapters/daily_puzzles_db.rs",
+        "puzzle_play/adapters/game_sessions_db.rs",
+        "stats/adapters/sessions_stats_db.rs",
     ] {
         let path = root.join(rel);
         assert!(path.is_file(), "missing shell module {}", path.display());
@@ -69,14 +67,19 @@ fn shell_capability_tree_exists() {
 fn router_registers_rust_api_prefixes() {
     let router = fs::read_to_string(manifest_dir().join("src/bootstrap/router.rs"))
         .unwrap_or_else(|e| panic!("read router: {e}"));
-    for route in [
-        "/healthz",
-        "/readyz",
-        "/api/v1",
-        "/api/v1/jobs/plan",
-        "/api/v1/jobs/execute",
-    ] {
+    for route in ["/healthz", "/readyz"] {
         assert!(router.contains(route), "router missing {route}");
+    }
+    // Sole surface: Connect services only — no hand-rolled REST routes remain.
+    assert!(!router.contains("/api/v1"), "REST surface must be deleted");
+    for service in [
+        "admin_connect_service",
+        "gamification_connect_service",
+        "preferences_connect_service",
+        "puzzle_connect_service",
+        "stats_connect_service",
+    ] {
+        assert!(router.contains(service), "router missing {service}");
     }
 }
 

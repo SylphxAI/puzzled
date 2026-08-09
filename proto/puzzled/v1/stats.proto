@@ -69,6 +69,7 @@ service StatsService {
   rpc GetTodayPercentile(GetTodayPercentileRequest) returns (GetTodayPercentileResponse);
   rpc GetUserStats(GetUserStatsRequest) returns (GetUserStatsResponse);
   rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc GetTodayOverview(GetTodayOverviewRequest) returns (GetTodayOverviewResponse);
 }
 
 message GetUserStatsRequest {
@@ -106,4 +107,16 @@ message SessionEntry {
 
 message GetHistoryResponse {
   repeated SessionEntry sessions = 1;
+}
+
+message GetTodayOverviewRequest {}
+
+message GameCompletionCount {
+  string game_slug = 1;
+  uint32 count = 2;
+}
+
+message GetTodayOverviewResponse {
+  uint32 player_count = 1;
+  repeated GameCompletionCount completions = 2;
 }

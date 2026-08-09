@@ -1,10 +1,10 @@
 'use client'
 
 /**
- * React Query Hooks for Puzzled API
+ * Puzzled React Query hooks — sole Connect authority (ADR-170).
  *
- * Uses domain-specific hc clients for type-safe API calls.
- * Each hook fetches via hc then parses JSON response.
+ * Every hook calls a generated Connect client. The Hono REST client layer is
+ * deleted; there is no REST fallback and no client-computed authority.
  */
 
 import {
@@ -14,251 +14,94 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
+import type { Announcement } from '@/gen/connect/puzzled/v1/admin_pb'
+import {
+	createAnnouncement,
+	deleteAnnouncement,
+	gameAnalytics,
+	gamesOverview,
+	getAuditLog,
+	getSettings,
+	listAnnouncements,
+	listAuditLogs,
+	listDlq,
+	markDlqFailed,
+	resolveDlq,
+	retryDlq,
+	systemHealth,
+	updateAnnouncement,
+	updateSetting,
+} from '@/lib/connect/admin-client'
+import {
+	checkUsername,
+	getNotificationPreferences,
+	getProfile,
+	updateEmailPreferences,
+	updateProfile,
+	updatePushPreferences,
+} from '@/lib/connect/preferences-client'
 import {
 	admitGetDailyViaConnect,
 	admitSubmitGuessViaConnect,
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
-import {
-	ApiError,
-	adminApi,
-	gamesApi,
-	gamificationApi,
-	notificationsApi,
-	statsApi,
-	userApi,
-} from './client'
+import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
 
 // ==========================================
-// Response Types
+// Errors
 // ==========================================
 
-/** Today percentile response */
-type TodayPercentileResponse = {
-	percentile: number
-	totalPlayers: number
-}
-
-/** Games overview item */
-type GameOverviewItem = {
-	slug: string
-	name: string
-	todayGamesPlayed: number
-	todayWins: number
-	allTimeGamesPlayed: number
-	allTimeWins: number
-}
-
-/** Daily stats item */
-type DailyStatsItem = {
-	date: string
-	gamesPlayed: number
-	wins: number | null
-	avgAttempts: number | null
-}
-
-/** Game analytics response */
-type GameAnalyticsResponse = {
-	dailyStats: DailyStatsItem[]
-}
-
-/** System health response */
-type SystemHealthResponse = {
-	database: boolean
-	redis: boolean
-	timestamp: string
-}
-
-/** Audit log item - matches schema type for components */
-type AuditLogItem = {
-	id: string
-	action: string
-	resourceType: string
-	resourceId: string | null
-	userId: string | null
-	actorId: string | null
-	ipAddress: string | null
-	userAgent: string | null
-	metadata: Record<string, unknown> | null
-	createdAt: Date
-}
-
-/** Audit logs response */
-type AuditLogsResponse = {
-	logs: AuditLogItem[]
-	total: number
-}
-
-/** DLQ item - matches deadLetterQueue.$inferSelect */
-type DLQItem = {
-	id: string
-	workflowName: string
-	workflowRunId: string | null
-	error: string
-	errorStack: string | null
-	payload: Record<string, unknown> | null
-	metadata: Record<string, unknown> | null
-	retryCount: number
-	maxRetries: number
-	status: 'pending' | 'retrying' | 'resolved' | 'failed'
-	lastRetryAt: Date | null
-	resolvedAt: Date | null
-	createdAt: Date
-}
-
-/** DLQ stats */
-type DLQStats = {
-	total: number
-	pending: number
-	retrying: number
-	resolved: number
-	failed: number
-	byWorkflow: Record<string, number>
-}
-
-/** DLQ list response */
-type DLQListResponse = {
-	items: DLQItem[]
-	stats?: DLQStats
-}
-
-/** User stats response - per-game stats */
-type UserStatsResponse = {
-	wordle?: {
-		gamesPlayed: number
-		gamesWon: number
-		guessDistribution?: Record<string, number>
+export class ApiError extends Error {
+	constructor(
+		public readonly status: number,
+		message: string,
+		public readonly error?: {
+			code?: string
+			message?: string
+			zodError?: { formErrors: string[]; fieldErrors: Record<string, string[]> }
+		},
+	) {
+		super(message)
+		this.name = 'ApiError'
 	}
-	connections?: {
-		gamesPlayed: number
-		gamesWon: number
-		perfectGames?: number
-	}
-	[key: string]: unknown
 }
 
-/** Notification preferences response */
-type NotificationPreferencesResponse = {
-	pushEnabled?: boolean
-	pushDailyReminder?: boolean
-	pushStreakAlert?: boolean
-	pushNewGames?: boolean
-	dailyReminderTime?: string
+function toApiError(e: unknown, fallbackCode: string): ApiError {
+	if (e instanceof ApiError) return e
+	const message = e instanceof Error ? e.message : String(e)
+	return new ApiError(503, message, { code: fallbackCode, message })
 }
 
 // ==========================================
-// Query Keys
+// Query keys
 // ==========================================
 
 export const queryKeys = {
-	// Games
-	games: ['games'] as const,
+	root: ['puzzled'] as const,
 	dailyStatus: (gameSlug: string, difficulty?: string) =>
-		['games', 'dailyStatus', gameSlug, difficulty] as const,
+		['puzzled', 'daily-status', gameSlug, difficulty ?? null] as const,
 	todaysPuzzle: (gameSlug: string, difficulty?: string) =>
-		['games', 'todaysPuzzle', gameSlug, difficulty] as const,
-	archivePuzzle: (gameSlug: string, date: string) =>
-		['games', 'archivePuzzle', gameSlug, date] as const,
-	history: (gameSlug: string) => ['games', 'history', gameSlug] as const,
-	archiveDates: (gameSlug: string, startDate: string, endDate: string) =>
-		['games', 'archiveDates', gameSlug, startDate, endDate] as const,
-
-	// Stats
-	stats: ['stats'] as const,
-	userStats: () => ['stats', 'userStats'] as const,
-	userRank: (gameSlug: string, type: string, period: string) =>
-		['stats', 'userRank', gameSlug, type, period] as const,
-	leaderboard: (gameSlug: string, type: string, period: string) =>
-		['stats', 'leaderboard', gameSlug, type, period] as const,
-	todayPercentile: (params: {
-		gameSlug: string
-		status: string
-		attempts?: number
-		score?: number
-	}) => ['stats', 'todayPercentile', params] as const,
-
-	// Gamification
-	gamification: ['gamification'] as const,
-	streakInfo: () => ['gamification', 'streakInfo'] as const,
-	todayPlayerCount: () => ['gamification', 'todayPlayerCount'] as const,
-	todayCompletions: () => ['gamification', 'todayCompletions'] as const,
-
-	// User
-	user: ['user'] as const,
-	profile: () => ['user', 'profile'] as const,
-	checkUsername: (username: string) => ['user', 'checkUsername', username] as const,
-
-	// Notifications
-	notifications: ['notifications'] as const,
-	notificationPreferences: () => ['notifications', 'preferences'] as const,
-
-	// Admin
-	admin: ['admin'] as const,
-	dlq: (params?: { workflow?: string; status?: string }) => ['admin', 'dlq', params] as const,
-	auditLogs: (params?: Record<string, unknown>) => ['admin', 'auditLogs', params] as const,
-	auditLogDetails: (id: string) => ['admin', 'auditLogDetails', id] as const,
-	settings: () => ['admin', 'settings'] as const,
-	announcements: () => ['admin', 'announcements'] as const,
-	gamesOverview: () => ['admin', 'analytics', 'gamesOverview'] as const,
+		['puzzled', 'todays-puzzle', gameSlug, difficulty ?? null] as const,
+	userStats: () => ['puzzled', 'user-stats'] as const,
+	streakInfo: () => ['puzzled', 'streak-info'] as const,
+	todayCompletions: () => ['puzzled', 'today-completions'] as const,
+	notificationPreferences: () => ['puzzled', 'notification-preferences'] as const,
+	auditLogs: (params?: Record<string, unknown>) =>
+		['puzzled', 'admin', 'audit-logs', params ?? {}] as const,
+	auditLogDetails: (id: string) => ['puzzled', 'admin', 'audit-logs', id] as const,
+	dlq: (params?: Record<string, unknown>) => ['puzzled', 'admin', 'dlq', params ?? {}] as const,
+	announcements: () => ['puzzled', 'admin', 'announcements'] as const,
+	settings: () => ['puzzled', 'admin', 'settings'] as const,
+	gamesOverview: () => ['puzzled', 'admin', 'games-overview'] as const,
 	gameAnalytics: (slug: string, days: number) =>
-		['admin', 'analytics', 'game', slug, days] as const,
-	systemHealth: () => ['admin', 'system', 'health'] as const,
-	realTimeStats: () => ['admin', 'analytics', 'realTime'] as const,
-	freezeAnalytics: () => ['admin', 'analytics', 'freezes'] as const,
-} as const
-
-// ==========================================
-// Helper: Parse hc response with error handling
-// ==========================================
-
-async function parseResponse<T>(response: Response): Promise<T> {
-	if (!response.ok) {
-		// Try to parse error response as JSON
-		let errorPayload: { error?: { message?: string; code?: string } } = {
-			error: { message: 'Request failed' },
-		}
-
-		try {
-			const text = await response.text()
-			if (text) {
-				errorPayload = JSON.parse(text)
-			}
-		} catch (parseError) {
-			// JSON parsing failed — log for debugging and include status context
-			console.error(
-				`[Puzzled API] Failed to parse error response (${response.status}):`,
-				parseError,
-			)
-			errorPayload = {
-				error: {
-					message: `Request failed with status ${response.status}`,
-					code: 'PARSE_ERROR',
-				},
-			}
-		}
-
-		throw new ApiError(
-			response.status,
-			errorPayload.error?.message ?? 'Request failed',
-			errorPayload.error,
-		)
-	}
-
-	// Parse successful response
-	try {
-		return await response.json()
-	} catch (parseError) {
-		// Success response JSON parsing failed — this is unexpected
-		console.error('[Puzzled API] Failed to parse success response:', parseError)
-		throw new ApiError(500, 'Invalid response format', {
-			code: 'PARSE_ERROR',
-			message: 'Server returned invalid JSON',
-		})
-	}
+		['puzzled', 'admin', 'game-analytics', slug, days] as const,
+	systemHealth: () => ['puzzled', 'admin', 'system-health'] as const,
+	todayPercentile: (params: Record<string, unknown>) =>
+		['puzzled', 'today-percentile', params] as const,
 }
 
 // ==========================================
-// Games Hooks
+// Play (sole Connect)
 // ==========================================
 
 export function useDailyStatus(
@@ -269,52 +112,37 @@ export function useDailyStatus(
 	return useQuery({
 		queryKey: queryKeys.dailyStatus(gameSlug, difficulty),
 		queryFn: async () => {
-			// Default connect authority: sole PuzzleService.GetDaily densify.
-			// Dual REST success is fail-closed under connect modes.
-			const admit = await admitGetDailyViaConnect({
-				gameSlug,
-				difficulty,
-			})
-			if (!('skipped' in admit && admit.skipped)) {
-				if (admit.ok) {
-					const r = admit.response
-					// Prefer Connect puzzleId; else densify id as puzzleNumber so SubmitGuess seed maps.
-					const puzzleId = r.puzzleId?.trim() || String(r.puzzleNumber)
-					return {
-						hasCompleted: r.hasCompleted,
-						completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
-						puzzle: {
-							id: puzzleId,
-							puzzleNumber: r.puzzleNumber,
-							puzzleDate: r.puzzleDate,
-							puzzleData: r.puzzleDataJson
-								? (() => {
-										try {
-											return JSON.parse(r.puzzleDataJson)
-										} catch {
-											return null
-										}
-									})()
-								: null,
-							difficulty: r.difficulty || difficulty || null,
-						},
-						canPlay: r.canPlay,
-						mode: r.mode || 'daily',
-						slice: r.slice || 'S2-daily-connect',
-						authority: 'connect' as const,
-					}
-				}
-				if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
-					throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-						code: 'CONNECT_PLAY_FAIL_CLOSED',
-						message: admit.error || 'connect_play_fail_closed',
-					})
+			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
+			if (admit.ok) {
+				const r = admit.response
+				return {
+					hasCompleted: r.hasCompleted,
+					completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
+					puzzle: {
+						id: r.puzzleId?.trim() || String(r.puzzleNumber),
+						puzzleNumber: r.puzzleNumber,
+						puzzleDate: r.puzzleDate,
+						puzzleData: r.puzzleDataJson
+							? (() => {
+									try {
+										return JSON.parse(r.puzzleDataJson)
+									} catch {
+										return null
+									}
+								})()
+							: null,
+						difficulty: r.difficulty || difficulty || null,
+					},
+					canPlay: r.canPlay,
+					mode: r.mode || 'daily',
+					slice: r.slice || 'S2-daily-connect',
+					authority: 'connect' as const,
 				}
 			}
-			const res = await gamesApi['daily-status'].$get({
-				query: { gameSlug, difficulty },
+			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+				code: 'CONNECT_PLAY_FAIL_CLOSED',
+				message: admit.error || 'connect_play_fail_closed',
 			})
-			return parseResponse(res)
 		},
 		...options,
 	})
@@ -328,131 +156,57 @@ export function useTodaysPuzzle(
 	return useQuery({
 		queryKey: queryKeys.todaysPuzzle(gameSlug, difficulty),
 		queryFn: async () => {
-			// Product play path: Connect GetDaily densify (not dual REST under default).
-			const admit = await admitGetDailyViaConnect({
-				gameSlug,
-				difficulty,
-			})
-			if (!('skipped' in admit && admit.skipped)) {
-				if (admit.ok) {
-					const r = admit.response
-					const puzzleId = r.puzzleId?.trim() || String(r.puzzleNumber)
-					return {
-						puzzleId,
-						puzzleNumber: r.puzzleNumber,
-						puzzleDate: r.puzzleDate,
-						puzzleData: r.puzzleDataJson
-							? (() => {
-									try {
-										return JSON.parse(r.puzzleDataJson)
-									} catch {
-										return null
-									}
-								})()
-							: null,
-						difficulty: r.difficulty || difficulty || null,
-						slice: r.slice || 'S2-daily-connect',
-						stub: r.stub,
-						authority: 'connect' as const,
-					}
-				}
-				if (admit.failClosed || !shouldUseRestPlayResidual(admit)) {
-					throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-						code: 'CONNECT_PLAY_FAIL_CLOSED',
-						message: admit.error || 'connect_play_fail_closed',
-					})
+			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
+			if (admit.ok) {
+				const r = admit.response
+				return {
+					puzzleId: r.puzzleId?.trim() || String(r.puzzleNumber),
+					puzzleNumber: r.puzzleNumber,
+					puzzleDate: r.puzzleDate,
+					puzzleData: r.puzzleDataJson
+						? (() => {
+								try {
+									return JSON.parse(r.puzzleDataJson)
+								} catch {
+									return null
+								}
+							})()
+						: null,
+					difficulty: r.difficulty || difficulty || null,
+					slice: r.slice || 'S2-daily-connect',
+					stub: r.stub,
+					authority: 'connect' as const,
 				}
 			}
-			const res = await gamesApi['todays-puzzle'].$get({
-				query: { gameSlug, difficulty },
+			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+				code: 'CONNECT_PLAY_FAIL_CLOSED',
+				message: admit.error || 'connect_play_fail_closed',
 			})
-			return parseResponse(res)
 		},
 		...options,
 	})
 }
 
-export function useArchivePuzzle(
-	gameSlug: string,
-	date: string,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.archivePuzzle(gameSlug, date),
-		queryFn: async () => {
-			const res = await gamesApi['archive-puzzle'].$get({
-				query: { gameSlug, date },
-			})
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useGameHistory(
-	gameSlug: string,
-	limit?: number,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.history(gameSlug),
-		queryFn: async () => {
-			const res = await gamesApi.history.$get({ query: { gameSlug, limit } })
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useArchiveDates(
-	gameSlug: string,
-	startDate: string,
-	endDate: string,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.archiveDates(gameSlug, startDate, endDate),
-		queryFn: async () => {
-			const res = await gamesApi['archive-dates'].$get({
-				query: { gameSlug, startDate, endDate },
-			})
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useValidateGuess() {
-	return useMutation({
-		mutationFn: async (input: { puzzleId: string; gameSlug: string; guess: unknown }) => {
-			const res = await gamesApi['validate-guess'].$post({ json: input })
-			return parseResponse(res)
-		},
-	})
-}
-
-type SaveResultInput = {
-	gameSlug: string
-	status: 'won' | 'lost' | 'abandoned'
+export type SaveResultInput = {
+	status: 'won' | 'lost'
 	attempts: number
 	timeSpentMs: number
-	mode?: 'daily' | 'archive' | 'practice'
+	mode?: 'daily' | 'archive'
 	archiveDate?: string
-	puzzleId: string
-	difficulty?: string
-	data: unknown
-	/** Optional densify seed (Connect SubmitGuess); falls back to puzzleId/puzzleNumber. */
-	seed?: number
+	puzzleId?: string
 	puzzleNumber?: number
+	difficulty?: string
+	gameSlug: string
+	data?: unknown
 }
 
-type SaveResultOutput = {
+export type SaveResultOutput = {
 	success: boolean
 	score?: number
 	session?: unknown
-	mode?: string
-	slice?: string
-	authority?: 'connect' | 'rest_residual'
+	mode: string
+	slice: string
+	authority: 'connect'
 	error?: string
 }
 
@@ -503,7 +257,6 @@ export function useSaveResult(
 			})
 		},
 		onSuccess: (data, variables) => {
-			// Invalidate related queries
 			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
 			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
 			queryClient.invalidateQueries({ queryKey: queryKeys.todayCompletions() })
@@ -517,8 +270,22 @@ export function useSaveResult(
 }
 
 // ==========================================
-// Stats Hooks
+// Stats (sole Connect)
 // ==========================================
+
+export type UserStatsEntry = {
+	gameSlug: string
+	gamesPlayed: number
+	gamesWon: number
+	currentStreak: number
+	maxStreak: number
+	totalScore: number
+	averageAttempts: number | null
+	guessDistribution: Record<string, number> | null
+	perfectGames: number
+}
+
+export type UserStatsResponse = Record<string, UserStatsEntry>
 
 export function useUserStats(
 	options?: Omit<UseQueryOptions<UserStatsResponse, ApiError>, 'queryKey' | 'queryFn'>,
@@ -526,48 +293,34 @@ export function useUserStats(
 	return useQuery({
 		queryKey: queryKeys.userStats(),
 		queryFn: async () => {
-			const res = await statsApi['user-stats'].$get()
-			return parseResponse<UserStatsResponse>(res)
+			try {
+				const res = await getUserStats({})
+				const out: UserStatsResponse = {}
+				for (const g of res.games) {
+					out[g.gameSlug] = {
+						gameSlug: g.gameSlug,
+						gamesPlayed: g.gamesPlayed,
+						gamesWon: g.gamesWon,
+						currentStreak: 0,
+						maxStreak: 0,
+						totalScore: g.bestScore,
+						averageAttempts: null,
+						guessDistribution: null,
+						perfectGames: 0,
+					}
+				}
+				return out
+			} catch (e) {
+				throw toApiError(e, 'USER_STATS_FAILED')
+			}
 		},
 		...options,
 	})
 }
 
-export function useUserRank(
-	gameSlug: string,
-	type: 'streak' | 'score' = 'streak',
-	period: 'today' | 'week' | 'all' = 'all',
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.userRank(gameSlug, type, period),
-		queryFn: async () => {
-			const res = await statsApi['user-rank'].$get({
-				query: { gameSlug, type, period },
-			})
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useLeaderboard(
-	gameSlug: string,
-	type: 'streak' | 'score' = 'streak',
-	period: 'today' | 'week' | 'all' = 'all',
-	limit = 20,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.leaderboard(gameSlug, type, period),
-		queryFn: async () => {
-			const res = await statsApi.leaderboard.$get({
-				query: { gameSlug, type, period, limit },
-			})
-			return parseResponse(res)
-		},
-		...options,
-	})
+export type TodayPercentileResponse = {
+	percentile: number | null
+	totalPlayers: number
 }
 
 export function useTodayPercentile(
@@ -584,8 +337,22 @@ export function useTodayPercentile(
 	return useQuery({
 		queryKey: queryKeys.todayPercentile(params),
 		queryFn: async () => {
-			const res = await statsApi['today-percentile'].$get({ query: params })
-			return parseResponse<TodayPercentileResponse>(res)
+			try {
+				const res = await getTodayPercentile({
+					gameSlug: params.gameSlug,
+					status: params.status,
+					attempts: params.attempts,
+					score: params.score,
+					mistakes: params.mistakes,
+					timeSpentMs: params.timeSpentMs,
+				})
+				return {
+					percentile: res.percentile === undefined ? null : Number(res.percentile),
+					totalPlayers: Number(res.totalPlayers),
+				}
+			} catch (e) {
+				throw toApiError(e, 'PERCENTILE_FAILED')
+			}
 		},
 		enabled: !!params.gameSlug && !!params.status,
 		...options,
@@ -593,128 +360,19 @@ export function useTodayPercentile(
 }
 
 // ==========================================
-// Gamification Hooks
+// Notification preferences (sole Connect)
 // ==========================================
 
-export function useStreakInfo(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.streakInfo(),
-		queryFn: async () => {
-			const res = await gamificationApi['streak-info'].$get()
-			return parseResponse(res)
-		},
-		...options,
-	})
+export type NotificationPreferencesResponse = {
+	pushEnabled: boolean
+	pushDailyReminder: boolean
+	pushStreakAlert: boolean
+	pushNewGames: boolean
+	dailyReminderTime: string
+	emailEnabled: boolean
+	emailWeeklyDigest: boolean
+	emailMarketing: boolean
 }
-
-export function useTodayPlayerCount(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.todayPlayerCount(),
-		queryFn: async () => {
-			const res = await gamificationApi['today-player-count'].$get()
-			return parseResponse(res)
-		},
-		staleTime: 30 * 1000, // 30 seconds
-		...options,
-	})
-}
-
-export function useTodayCompletions(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.todayCompletions(),
-		queryFn: async () => {
-			const res = await gamificationApi['today-completions'].$get()
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useToggleAutoFreeze() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { enabled: boolean }) => {
-			const res = await gamificationApi['toggle-auto-freeze'].$post({
-				json: input,
-			})
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
-		},
-	})
-}
-
-// ==========================================
-// User Hooks
-// ==========================================
-
-export function useProfile(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.profile(),
-		queryFn: async () => {
-			const res = await userApi.profile.$get()
-			return parseResponse(res)
-		},
-		...options,
-	})
-}
-
-export function useCheckUsername(
-	username: string,
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.checkUsername(username),
-		queryFn: async () => {
-			const res = await userApi['check-username'].$get({ query: { username } })
-			return parseResponse(res)
-		},
-		enabled: username.length >= 3,
-		...options,
-	})
-}
-
-export function useUpdateProfile() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { username?: string; bio?: string; isPublicProfile?: boolean }) => {
-			const res = await userApi.profile.$put({ json: input })
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
-		},
-	})
-}
-
-export function useUpdatePreferences() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { compactMode?: boolean; leaderboardVisible?: boolean }) => {
-			const res = await userApi.preferences.$put({ json: input })
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.profile() })
-		},
-	})
-}
-
-// ==========================================
-// Notifications Hooks
-// ==========================================
 
 export function useNotificationPreferences(
 	options?: Omit<
@@ -725,8 +383,21 @@ export function useNotificationPreferences(
 	return useQuery({
 		queryKey: queryKeys.notificationPreferences(),
 		queryFn: async () => {
-			const res = await notificationsApi.preferences.$get()
-			return parseResponse<NotificationPreferencesResponse>(res)
+			try {
+				const p = await getNotificationPreferences()
+				return {
+					pushEnabled: p.pushEnabled,
+					pushDailyReminder: p.pushDailyReminder,
+					pushStreakAlert: p.pushStreakAlert,
+					pushNewGames: p.pushNewGames,
+					dailyReminderTime: p.dailyReminderTime,
+					emailEnabled: p.emailEnabled,
+					emailWeeklyDigest: p.emailWeeklyDigest,
+					emailMarketing: p.emailMarketing,
+				}
+			} catch (e) {
+				throw toApiError(e, 'PREFERENCES_FAILED')
+			}
 		},
 		...options,
 	})
@@ -737,15 +408,33 @@ export function useUpdatePushPreferences() {
 
 	return useMutation({
 		mutationFn: async (input: Record<string, unknown>) => {
-			const res = await notificationsApi['push-preferences'].$put({
-				json: input,
-			})
-			return parseResponse(res)
+			try {
+				const p = await updatePushPreferences({
+					pushEnabled: typeof input.pushEnabled === 'boolean' ? input.pushEnabled : undefined,
+					pushDailyReminder:
+						typeof input.pushDailyReminder === 'boolean' ? input.pushDailyReminder : undefined,
+					pushStreakAlert:
+						typeof input.pushStreakAlert === 'boolean' ? input.pushStreakAlert : undefined,
+					pushNewGames: typeof input.pushNewGames === 'boolean' ? input.pushNewGames : undefined,
+					dailyReminderTime:
+						typeof input.dailyReminderTime === 'string' ? input.dailyReminderTime : undefined,
+				})
+				return {
+					pushEnabled: p.pushEnabled,
+					pushDailyReminder: p.pushDailyReminder,
+					pushStreakAlert: p.pushStreakAlert,
+					pushNewGames: p.pushNewGames,
+					dailyReminderTime: p.dailyReminderTime,
+					emailEnabled: p.emailEnabled,
+					emailWeeklyDigest: p.emailWeeklyDigest,
+					emailMarketing: p.emailMarketing,
+				}
+			} catch (e) {
+				throw toApiError(e, 'PREFERENCES_UPDATE_FAILED')
+			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.notificationPreferences(),
-			})
+			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
 		},
 	})
 }
@@ -755,99 +444,117 @@ export function useUpdateEmailPreferences() {
 
 	return useMutation({
 		mutationFn: async (input: Record<string, unknown>) => {
-			const res = await notificationsApi['email-preferences'].$put({
-				json: input,
-			})
-			return parseResponse(res)
+			try {
+				const p = await updateEmailPreferences({
+					emailEnabled: typeof input.emailEnabled === 'boolean' ? input.emailEnabled : undefined,
+					emailWeeklyDigest:
+						typeof input.emailWeeklyDigest === 'boolean' ? input.emailWeeklyDigest : undefined,
+					emailMarketing:
+						typeof input.emailMarketing === 'boolean' ? input.emailMarketing : undefined,
+				})
+				return {
+					pushEnabled: p.pushEnabled,
+					pushDailyReminder: p.pushDailyReminder,
+					pushStreakAlert: p.pushStreakAlert,
+					pushNewGames: p.pushNewGames,
+					dailyReminderTime: p.dailyReminderTime,
+					emailEnabled: p.emailEnabled,
+					emailWeeklyDigest: p.emailWeeklyDigest,
+					emailMarketing: p.emailMarketing,
+				}
+			} catch (e) {
+				throw toApiError(e, 'PREFERENCES_UPDATE_FAILED')
+			}
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: queryKeys.notificationPreferences(),
-			})
+			queryClient.invalidateQueries({ queryKey: queryKeys.notificationPreferences() })
 		},
 	})
 }
 
 // ==========================================
-// Admin Hooks
+// Admin (sole Connect, exact admin scope)
 // ==========================================
 
-export function useDlqList(
-	params?: {
-		workflow?: string
-		status?: string
-		limit?: number
-		offset?: number
-	},
-	options?: Omit<UseQueryOptions<DLQListResponse, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.dlq(params),
-		queryFn: async () => {
-			const res = await adminApi.dlq.$get({ query: params ?? {} })
-			return parseResponse<DLQListResponse>(res)
-		},
-		...options,
-	})
+export type AuditLogEntryShape = {
+	id: string
+	userId: string | null
+	actorId: string | null
+	action: string
+	resourceType: string
+	resourceId: string | null
+	metadata: Record<string, unknown> | null
+	ipAddress: string | null
+	userAgent: string | null
+	createdAt: Date
 }
 
-export function useDlqRetry() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { id: string }) => {
-			const res = await adminApi.dlq[':id'].retry.$post({
-				param: { id: input.id },
-			})
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
-		},
-	})
+export type AuditLogListResponse = {
+	logs: AuditLogEntryShape[]
+	total: number
 }
 
-export function useDlqResolve() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { id: string }) => {
-			const res = await adminApi.dlq[':id'].resolve.$post({
-				param: { id: input.id },
-			})
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
-		},
-	})
-}
-
-export function useDlqMarkFailed() {
-	const queryClient = useQueryClient()
-
-	return useMutation({
-		mutationFn: async (input: { id: string }) => {
-			const res = await adminApi.dlq[':id']['mark-failed'].$post({
-				param: { id: input.id },
-			})
-			return parseResponse(res)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['admin', 'dlq'] })
-		},
-	})
+function mapAuditEntry(e: {
+	id: string
+	userId: string
+	actorId: string
+	action: string
+	entityType: string
+	entityId: string
+	metadataJson: string
+	ipAddress: string
+	userAgent: string
+	createdAt: string
+}): AuditLogEntryShape {
+	let metadata: Record<string, unknown> | undefined
+	if (e.metadataJson) {
+		try {
+			metadata = JSON.parse(e.metadataJson) as Record<string, unknown>
+		} catch {
+			metadata = undefined
+		}
+	}
+	return {
+		id: e.id,
+		userId: e.userId || null,
+		actorId: e.actorId || null,
+		action: e.action,
+		resourceType: e.entityType,
+		resourceId: e.entityId || null,
+		metadata: metadata ?? null,
+		ipAddress: e.ipAddress || null,
+		userAgent: e.userAgent || null,
+		createdAt: new Date(e.createdAt),
+	}
 }
 
 export function useAuditLogs(
-	params?: Record<string, unknown>,
-	options?: Omit<UseQueryOptions<AuditLogsResponse, ApiError>, 'queryKey' | 'queryFn'>,
+	params?: {
+		limit?: number
+		offset?: number
+		action?: string
+		resourceType?: string
+		dateFrom?: string
+		dateTo?: string
+	},
+	options?: Omit<UseQueryOptions<AuditLogListResponse, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
-		queryKey: queryKeys.auditLogs(params),
+		queryKey: queryKeys.auditLogs(params ?? {}),
 		queryFn: async () => {
-			const res = await adminApi['audit-logs'].$get({ query: params ?? {} })
-			return parseResponse<AuditLogsResponse>(res)
+			try {
+				const res = await listAuditLogs({
+					limit: params?.limit ?? 50,
+					offset: params?.offset ?? 0,
+					action: params?.action ?? '',
+				})
+				return {
+					logs: res.entries.map(mapAuditEntry),
+					total: res.total,
+				}
+			} catch (e) {
+				throw toApiError(e, 'AUDIT_LOGS_FAILED')
+			}
 		},
 		...options,
 	})
@@ -855,54 +562,171 @@ export function useAuditLogs(
 
 export function useAuditLogDetails(
 	id: string,
-	options?: Omit<UseQueryOptions<AuditLogItem, ApiError>, 'queryKey' | 'queryFn'>,
+	options?: Omit<UseQueryOptions<AuditLogEntryShape, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
 		queryKey: queryKeys.auditLogDetails(id),
 		queryFn: async () => {
-			const res = await adminApi['audit-logs'][':id'].$get({ param: { id } })
-			return parseResponse<AuditLogItem>(res)
+			try {
+				return mapAuditEntry(await getAuditLog(id))
+			} catch (e) {
+				throw toApiError(e, 'AUDIT_LOG_FAILED')
+			}
 		},
 		enabled: !!id,
 		...options,
 	})
 }
 
-export function useSettings(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
+export type DlqEntryShape = {
+	id: string
+	workflowName: string
+	workflowRunId: string | null
+	payload: Record<string, unknown> | null
+	error: string
+	errorStack: string | null
+	status: 'pending' | 'retrying' | 'resolved' | 'failed'
+	retryCount: number
+	maxRetries: number
+	lastRetryAt: Date | null
+	resolvedAt: Date | null
+	metadata: Record<string, unknown> | null
+	createdAt: Date
+}
+
+export type DLQListResponse = {
+	items: DlqEntryShape[]
+	stats: {
+		total: number
+		pending: number
+		retrying: number
+		resolved: number
+		failed: number
+		byWorkflow: Record<string, number>
+	}
+}
+
+function mapDlqEntry(e: {
+	id: string
+	jobType: string
+	payloadJson: string
+	status: string
+	attempts: number
+	error: string
+	createdAt: string
+	nextRetryAt: string
+}): DlqEntryShape {
+	let payload: Record<string, unknown> | null = null
+	if (e.payloadJson) {
+		try {
+			payload = JSON.parse(e.payloadJson) as Record<string, unknown>
+		} catch {
+			payload = null
+		}
+	}
+	const parseDate = (raw: string): Date | null => {
+		if (!raw) return null
+		const d = new Date(raw)
+		return Number.isNaN(d.getTime()) ? null : d
+	}
+	return {
+		id: e.id,
+		workflowName: e.jobType,
+		workflowRunId: null,
+		payload,
+		error: e.error,
+		errorStack: null,
+		status: e.status as 'pending' | 'retrying' | 'resolved' | 'failed',
+		retryCount: e.attempts,
+		maxRetries: 3,
+		lastRetryAt: parseDate(e.nextRetryAt),
+		resolvedAt: null,
+		metadata: null,
+		createdAt: parseDate(e.createdAt) ?? new Date(),
+	}
+}
+
+export function useDlqList(
+	params?: { workflow?: string; status?: string; limit?: number; offset?: number },
+	options?: Omit<UseQueryOptions<DLQListResponse, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
-		queryKey: queryKeys.settings(),
+		queryKey: queryKeys.dlq(params ?? {}),
 		queryFn: async () => {
-			const res = await adminApi.settings.$get()
-			return parseResponse(res)
+			try {
+				const res = await listDlq({
+					limit: params?.limit ?? 50,
+					offset: params?.offset ?? 0,
+				})
+				return {
+					items: res.entries.map(mapDlqEntry),
+					stats: {
+						total: res.total,
+						pending: res.pending,
+						retrying: res.retrying,
+						resolved: res.resolved,
+						failed: res.failed,
+						byWorkflow: res.byWorkflow,
+					},
+				}
+			} catch (e) {
+				throw toApiError(e, 'DLQ_FAILED')
+			}
 		},
 		...options,
 	})
 }
 
-export function useUpdateSetting() {
-	const queryClient = useQueryClient()
-
+export function useDlqRetry() {
 	return useMutation({
-		mutationFn: async (input: { key: string; value: string }) => {
-			const res = await adminApi.settings.$put({ json: input })
-			return parseResponse(res)
+		mutationFn: async (input: { id: string }) => {
+			try {
+				await retryDlq(input.id)
+				return { ok: true }
+			} catch (e) {
+				throw toApiError(e, 'DLQ_RETRY_FAILED')
+			}
 		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: queryKeys.settings() })
+	})
+}
+
+export function useDlqResolve() {
+	return useMutation({
+		mutationFn: async (input: { id: string }) => {
+			try {
+				await resolveDlq(input.id)
+				return { ok: true }
+			} catch (e) {
+				throw toApiError(e, 'DLQ_RESOLVE_FAILED')
+			}
+		},
+	})
+}
+
+export function useDlqMarkFailed() {
+	return useMutation({
+		mutationFn: async (input: { id: string }) => {
+			try {
+				await markDlqFailed(input.id)
+				return { ok: true }
+			} catch (e) {
+				throw toApiError(e, 'DLQ_MARK_FAILED')
+			}
 		},
 	})
 }
 
 export function useAnnouncements(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
+	options?: Omit<UseQueryOptions<Announcement[], ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
 		queryKey: queryKeys.announcements(),
 		queryFn: async () => {
-			const res = await adminApi.announcements.$get()
-			return parseResponse(res)
+			try {
+				return await listAnnouncements()
+			} catch (e) {
+				throw toApiError(e, 'ANNOUNCEMENTS_FAILED')
+			}
 		},
 		...options,
 	})
@@ -910,11 +734,18 @@ export function useAnnouncements(
 
 export function useCreateAnnouncement() {
 	const queryClient = useQueryClient()
-
 	return useMutation({
 		mutationFn: async (input: Record<string, unknown>) => {
-			const res = await adminApi.announcements.$post({ json: input })
-			return parseResponse(res)
+			try {
+				return await createAnnouncement({
+					title: String(input.title ?? ''),
+					body: String(input.body ?? ''),
+					type: typeof input.type === 'string' ? input.type : 'info',
+					active: typeof input.active === 'boolean' ? input.active : true,
+				})
+			} catch (e) {
+				throw toApiError(e, 'ANNOUNCEMENT_CREATE_FAILED')
+			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
@@ -924,18 +755,19 @@ export function useCreateAnnouncement() {
 
 export function useUpdateAnnouncement() {
 	const queryClient = useQueryClient()
-
 	return useMutation({
 		mutationFn: async (input: { id: string } & Record<string, unknown>) => {
-			const { id, ...data } = input
-			// Route accepts body but hc doesn't infer it - use fetch directly
-			const res = await fetch(`/api/v1/admin/announcements/${id}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(data),
-				credentials: 'include',
-			})
-			return parseResponse(res)
+			try {
+				return await updateAnnouncement({
+					id: input.id,
+					title: typeof input.title === 'string' ? input.title : undefined,
+					body: typeof input.body === 'string' ? input.body : undefined,
+					type: typeof input.type === 'string' ? input.type : undefined,
+					active: typeof input.active === 'boolean' ? input.active : undefined,
+				})
+			} catch (e) {
+				throw toApiError(e, 'ANNOUNCEMENT_UPDATE_FAILED')
+			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
@@ -945,13 +777,14 @@ export function useUpdateAnnouncement() {
 
 export function useDeleteAnnouncement() {
 	const queryClient = useQueryClient()
-
 	return useMutation({
 		mutationFn: async (input: { id: string }) => {
-			const res = await adminApi.announcements[':id'].$delete({
-				param: { id: input.id },
-			})
-			return parseResponse(res)
+			try {
+				await deleteAnnouncement(input.id)
+				return { ok: true }
+			} catch (e) {
+				throw toApiError(e, 'ANNOUNCEMENT_DELETE_FAILED')
+			}
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.announcements() })
@@ -959,20 +792,104 @@ export function useDeleteAnnouncement() {
 	})
 }
 
-// NOTE: Feature flags now managed via Platform Console (Sylphx Platform)
-// Use Platform SDK useFeatureFlags() hook instead of local admin hooks
+export function useSettings(
+	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
+) {
+	return useQuery({
+		queryKey: queryKeys.settings(),
+		queryFn: async () => {
+			try {
+				return await getSettings()
+			} catch (e) {
+				throw toApiError(e, 'SETTINGS_FAILED')
+			}
+		},
+		...options,
+	})
+}
+
+export function useUpdateSetting() {
+	const queryClient = useQueryClient()
+	return useMutation({
+		mutationFn: async (input: { key: string; valueJson: string }) => {
+			try {
+				return await updateSetting(input.key, input.valueJson)
+			} catch (e) {
+				throw toApiError(e, 'SETTINGS_UPDATE_FAILED')
+			}
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: queryKeys.settings() })
+		},
+	})
+}
+
+export type GamesOverviewEntry = {
+	slug: string
+	name: string
+	todayPlayed: number
+	todayGamesPlayed: number
+	todayWins: number
+	allTimeGamesPlayed: number
+	allTimeWins: number
+}
+
+export type GamesOverviewResponse = GamesOverviewEntry[]
+
+const GAME_NAMES: Record<string, string> = {
+	'word-guess': 'Word Guess',
+	'word-groups': 'Word Groups',
+	'word-hive': 'Word Hive',
+	crossword: 'Crossword',
+	sudoku: 'Sudoku',
+	nonogram: 'Nonogram',
+	'word-ladder': 'Word Ladder',
+	arithmo: 'Arithmo',
+	'pattern-match': 'Pattern Match',
+	'block-slide': 'Block Slide',
+	queens: 'Queens',
+	tango: 'Tango',
+	'word-box': 'Letter Boxed',
+	'quad-words': 'Quad Words',
+	'killer-sudoku': 'Killer Sudoku',
+	cryptogram: 'Cryptogram',
+	'word-search': 'Word Search',
+}
 
 export function useGamesOverview(
-	options?: Omit<UseQueryOptions<GameOverviewItem[], ApiError>, 'queryKey' | 'queryFn'>,
+	options?: Omit<UseQueryOptions<GamesOverviewResponse, ApiError>, 'queryKey' | 'queryFn'>,
 ) {
 	return useQuery({
 		queryKey: queryKeys.gamesOverview(),
 		queryFn: async () => {
-			const res = await adminApi.analytics['games-overview'].$get()
-			return parseResponse<GameOverviewItem[]>(res)
+			try {
+				const rows = await gamesOverview()
+				return rows.map((g) => {
+					return {
+						slug: g.slug,
+						name: GAME_NAMES[g.slug] ?? g.slug,
+						todayPlayed: Number(g.todayPlayed),
+						todayGamesPlayed: Number(g.todayPlayed),
+						todayWins: Number(g.todayWins),
+						allTimeGamesPlayed: Number(g.allTimePlayed),
+						allTimeWins: Number(g.allTimeWins),
+					}
+				})
+			} catch (e) {
+				throw toApiError(e, 'GAMES_OVERVIEW_FAILED')
+			}
 		},
 		...options,
 	})
+}
+
+export type GameAnalyticsResponse = {
+	dailyStats: {
+		date: string
+		gamesPlayed: number
+		wins: number | null
+		avgAttempts: number | null
+	}[]
 }
 
 export function useGameAnalytics(
@@ -983,15 +900,31 @@ export function useGameAnalytics(
 	return useQuery({
 		queryKey: queryKeys.gameAnalytics(slug, days),
 		queryFn: async () => {
-			// Route accepts query params but hc doesn't infer it - use fetch directly
-			const res = await fetch(`/api/v1/admin/analytics/game/${slug}?days=${days}`, {
-				credentials: 'include',
-			})
-			return parseResponse<GameAnalyticsResponse>(res)
+			try {
+				const rows = await gameAnalytics(slug, days)
+				return {
+					dailyStats: rows.map((d) => ({
+						date: d.date,
+						gamesPlayed: Number(d.gamesPlayed),
+						wins: Number(d.wins),
+						avgAttempts: Number(d.avgAttempts),
+					})),
+				}
+			} catch (e) {
+				throw toApiError(e, 'GAME_ANALYTICS_FAILED')
+			}
 		},
 		enabled: !!slug,
 		...options,
 	})
+}
+
+export type SystemHealthResponse = {
+	database: boolean
+	redis: boolean
+	timestamp: string
+	uptime: string
+	databaseError?: string
 }
 
 export function useSystemHealth(
@@ -1000,78 +933,81 @@ export function useSystemHealth(
 	return useQuery({
 		queryKey: queryKeys.systemHealth(),
 		queryFn: async () => {
-			const res = await adminApi.system.health.$get()
-			return parseResponse<SystemHealthResponse>(res)
+			try {
+				const h = await systemHealth()
+				return {
+					database: h.databaseOk,
+					// The api service does not manage Redis; it is not part of the
+					// api health contract (platform-owned infrastructure).
+					redis: true,
+					timestamp: new Date().toISOString(),
+					uptime: h.uptime,
+					databaseError: h.databaseError || undefined,
+				}
+			} catch (e) {
+				throw toApiError(e, 'SYSTEM_HEALTH_FAILED')
+			}
 		},
-		refetchInterval: 30 * 1000, // 30 seconds
-		...options,
-	})
-}
-
-export function useRealTimeStats(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.realTimeStats(),
-		queryFn: async () => {
-			const res = await adminApi.analytics['real-time'].$get()
-			return parseResponse(res)
-		},
-		refetchInterval: 10 * 1000, // 10 seconds
-		...options,
-	})
-}
-
-export function useFreezeAnalytics(
-	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.freezeAnalytics(),
-		queryFn: async () => {
-			const res = await adminApi.analytics.freezes.$get()
-			return parseResponse(res)
-		},
+		refetchInterval: 30 * 1000,
 		...options,
 	})
 }
 
 // ==========================================
-// Utility Hook for Query Invalidation
+// Profile (sole Connect) — used by future settings surfaces
 // ==========================================
 
-/**
- * Hook to access query utilities for manual cache operations
- * Replacement for trpc.useUtils()
- */
-export function useApiUtils() {
+export function useProfile(
+	options?: Omit<UseQueryOptions<unknown, ApiError>, 'queryKey' | 'queryFn'>,
+) {
+	return useQuery({
+		queryKey: ['puzzled', 'profile'] as const,
+		queryFn: async () => {
+			try {
+				return await getProfile()
+			} catch (e) {
+				throw toApiError(e, 'PROFILE_FAILED')
+			}
+		},
+		...options,
+	})
+}
+
+export function useUpdateProfile() {
 	const queryClient = useQueryClient()
-
-	return {
-		stats: {
-			getUserStats: {
-				invalidate: () => queryClient.invalidateQueries({ queryKey: queryKeys.userStats() }),
-			},
+	return useMutation({
+		mutationFn: async (input: Record<string, unknown>) => {
+			try {
+				return await updateProfile({
+					username: typeof input.username === 'string' ? input.username : undefined,
+					bio: typeof input.bio === 'string' ? input.bio : undefined,
+					isPublicProfile:
+						typeof input.isPublicProfile === 'boolean' ? input.isPublicProfile : undefined,
+					compactMode: typeof input.compactMode === 'boolean' ? input.compactMode : undefined,
+					leaderboardVisible:
+						typeof input.leaderboardVisible === 'boolean' ? input.leaderboardVisible : undefined,
+				})
+			} catch (e) {
+				throw toApiError(e, 'PROFILE_UPDATE_FAILED')
+			}
 		},
-		gamification: {
-			getStreakInfo: {
-				invalidate: () => queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() }),
-			},
-			getTodayCompletions: {
-				invalidate: () =>
-					queryClient.invalidateQueries({
-						queryKey: queryKeys.todayCompletions(),
-					}),
-			},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['puzzled', 'profile'] as const })
 		},
-		games: {
-			getDailyStatus: {
-				invalidate: (params?: { gameSlug?: string; difficulty?: string }) =>
-					queryClient.invalidateQueries({
-						queryKey: params?.gameSlug
-							? queryKeys.dailyStatus(params.gameSlug, params.difficulty)
-							: ['games', 'dailyStatus'],
-					}),
-			},
-		},
-	}
+	})
 }
+
+export function useCheckUsername() {
+	return useMutation({
+		mutationFn: async (input: { username: string }) => {
+			try {
+				return { available: await checkUsername(input.username) }
+			} catch (e) {
+				throw toApiError(e, 'USERNAME_CHECK_FAILED')
+			}
+		},
+	})
+}
+
+// Kept as a fail-closed fence: no REST residual exists (sole Connect).
+export { shouldUseRestPlayResidual }

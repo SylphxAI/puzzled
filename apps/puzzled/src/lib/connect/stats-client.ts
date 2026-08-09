@@ -1,10 +1,12 @@
 import { create } from '@bufbuild/protobuf'
 import { type Client, createClient } from '@connectrpc/connect'
 import {
+	GetHistoryRequestSchema,
 	GetLeaderboardRequestSchema,
 	type GetLeaderboardResponse,
 	GetTodayPercentileRequestSchema,
 	type GetTodayPercentileResponse,
+	GetUserStatsRequestSchema,
 	LeaderboardPeriod,
 	LeaderboardType,
 	StatsService,
@@ -111,4 +113,67 @@ export async function getTodayPercentile(
 			betterThan: input.betterThan,
 		}),
 	)
+}
+
+export async function getUserStats(
+	input: { gameSlug?: string },
+	client?: StatsServiceClient,
+): Promise<{
+	games: {
+		gameSlug: string
+		gamesPlayed: number
+		gamesWon: number
+		bestScore: number
+	}[]
+	totalPlayed: number
+	totalWon: number
+}> {
+	const c = client ?? createStatsServiceClient()
+	const res = await c.getUserStats(
+		create(GetUserStatsRequestSchema, { gameSlug: input.gameSlug ?? '' }),
+	)
+	return {
+		games: res.games.map((g) => ({
+			gameSlug: g.gameSlug,
+			gamesPlayed: Number(g.gamesPlayed),
+			gamesWon: Number(g.gamesWon),
+			bestScore: Number(g.bestScore),
+		})),
+		totalPlayed: Number(res.totalPlayed),
+		totalWon: Number(res.totalWon),
+	}
+}
+
+export async function getHistory(
+	input: { gameSlug?: string; limit?: number },
+	client?: StatsServiceClient,
+): Promise<
+	{
+		gameSlug: string
+		puzzleId: string
+		puzzleDate: string
+		status: string
+		score: number
+		attempts: number
+		timeSpentMs: number
+		mode: string
+	}[]
+> {
+	const c = client ?? createStatsServiceClient()
+	const res = await c.getHistory(
+		create(GetHistoryRequestSchema, {
+			gameSlug: input.gameSlug ?? '',
+			limit: input.limit ?? 50,
+		}),
+	)
+	return res.sessions.map((s) => ({
+		gameSlug: s.gameSlug,
+		puzzleId: s.puzzleId,
+		puzzleDate: s.puzzleDate,
+		status: s.status,
+		score: Number(s.score),
+		attempts: Number(s.attempts),
+		timeSpentMs: Number(s.timeSpentMs),
+		mode: s.mode,
+	}))
 }

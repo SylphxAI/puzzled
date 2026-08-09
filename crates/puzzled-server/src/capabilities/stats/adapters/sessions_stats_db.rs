@@ -108,3 +108,31 @@ pub async fn user_history(
         )
         .collect())
 }
+
+/// Public today overview: distinct players + completions per game (today).
+pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value>), String> {
+    let players: (i64,) = sqlx::query_as(
+        r#"
+        SELECT COUNT(DISTINCT user_id) FROM game_sessions
+        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
+        "#,
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("today players failed: {e}"))?;
+    let rows: Vec<(String, i64)> = sqlx::query_as(
+        r#"
+        SELECT game_slug, COUNT(*) FROM game_sessions
+        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
+        GROUP BY game_slug ORDER BY game_slug
+        "#,
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("today completions failed: {e}"))?;
+    let completions = rows
+        .into_iter()
+        .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
+        .collect();
+    Ok((players.0.max(0) as u32, completions))
+}

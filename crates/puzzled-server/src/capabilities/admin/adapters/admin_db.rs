@@ -24,18 +24,24 @@ type AnnouncementUpdateRow = (
 type AuditRow = (
     Uuid,
     Option<Uuid>,
-    String,
-    String,
-    Option<String>,
-    Option<Value>,
-    chrono::DateTime<chrono::Utc>,
-);
-type AuditGetRow = (
     Option<Uuid>,
     String,
     String,
     Option<String>,
     Option<Value>,
+    Option<String>,
+    Option<String>,
+    chrono::DateTime<chrono::Utc>,
+);
+type AuditGetRow = (
+    Option<Uuid>,
+    Option<Uuid>,
+    String,
+    String,
+    Option<String>,
+    Option<Value>,
+    Option<String>,
+    Option<String>,
     chrono::DateTime<chrono::Utc>,
 );
 type DlqRow = (
@@ -228,7 +234,7 @@ pub async fn list_audit_logs(
     let rows: Vec<AuditRow> = match action {
         Some(action) => sqlx::query_as(
             r#"
-            SELECT id, user_id, action::text, resource_type, resource_id, metadata, created_at
+            SELECT id, user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at
             FROM audit_logs WHERE action::text = $1
             ORDER BY created_at DESC LIMIT $2 OFFSET $3
             "#,
@@ -241,7 +247,7 @@ pub async fn list_audit_logs(
         .map_err(|e| format!("audit list failed: {e}"))?,
         None => sqlx::query_as(
             r#"
-            SELECT id, user_id, action::text, resource_type, resource_id, metadata, created_at
+            SELECT id, user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at
             FROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2
             "#,
         )
@@ -254,14 +260,28 @@ pub async fn list_audit_logs(
     let entries = rows
         .into_iter()
         .map(
-            |(id, user_id, action, resource_type, resource_id, metadata, created_at)| {
+            |(
+                id,
+                user_id,
+                actor_id,
+                action,
+                resource_type,
+                resource_id,
+                metadata,
+                ip_address,
+                user_agent,
+                created_at,
+            )| {
                 serde_json::json!({
                     "id": id.to_string(),
                     "userId": user_id.map(|u| u.to_string()),
+                    "actorId": actor_id.map(|u| u.to_string()),
                     "action": action,
                     "entityType": resource_type,
                     "entityId": resource_id,
                     "metadataJson": metadata.map(|m| m.to_string()),
+                    "ipAddress": ip_address,
+                    "userAgent": user_agent,
                     "createdAt": created_at.to_rfc3339(),
                 })
             },
@@ -274,7 +294,7 @@ pub async fn get_audit_log(pool: &PgPool, id: &str) -> Result<Value, String> {
     let id = Uuid::parse_str(id).map_err(|e| format!("invalid audit id: {e}"))?;
     let row: Option<AuditGetRow> = sqlx::query_as(
         r#"
-        SELECT user_id, action::text, resource_type, resource_id, metadata, created_at
+        SELECT user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at
         FROM audit_logs WHERE id = $1
         "#,
     )
@@ -282,25 +302,71 @@ pub async fn get_audit_log(pool: &PgPool, id: &str) -> Result<Value, String> {
     .fetch_optional(pool)
     .await
     .map_err(|e| format!("audit get failed: {e}"))?;
-    row.map(|(user_id, action, resource_type, resource_id, metadata, created_at)| {
-        serde_json::json!({
-            "id": id.to_string(),
-            "userId": user_id.map(|u| u.to_string()),
-            "action": action,
-            "entityType": resource_type,
-            "entityId": resource_id,
-            "metadataJson": metadata.map(|m| m.to_string()),
-            "createdAt": created_at.to_rfc3339(),
-        })
-    })
+    row.map(
+        |(
+            user_id,
+            actor_id,
+            action,
+            resource_type,
+            resource_id,
+            metadata,
+            ip_address,
+            user_agent,
+            created_at,
+        )| {
+            serde_json::json!({
+                "id": id.to_string(),
+                "userId": user_id.map(|u| u.to_string()),
+                "actorId": actor_id.map(|u| u.to_string()),
+                "action": action,
+                "entityType": resource_type,
+                "entityId": resource_id,
+                "metadataJson": metadata.map(|m| m.to_string()),
+                "ipAddress": ip_address,
+                "userAgent": user_agent,
+                "createdAt": created_at.to_rfc3339(),
+            })
+        },
+    )
     .ok_or_else(|| "audit entry not found".to_string())
 }
 
-pub async fn list_dlq(pool: &PgPool, limit: u32, offset: u32) -> Result<(Vec<Value>, u32), String> {
+pub async fn list_dlq(
+    pool: &PgPool,
+    limit: u32,
+    offset: u32,
+) -> Result<(Vec<Value>, u32, serde_json::Value), String> {
     let total: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM dead_letter_queue")
         .fetch_one(pool)
         .await
         .map_err(|e| format!("dlq count failed: {e}"))?;
+    let status_counts: Vec<(String, i64)> = sqlx::query_as(
+        "SELECT status::text, COUNT(*) FROM dead_letter_queue GROUP BY status",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("dlq status counts failed: {e}"))?;
+    let workflow_counts: Vec<(String, i64)> = sqlx::query_as(
+        "SELECT workflow_name, COUNT(*) FROM dead_letter_queue GROUP BY workflow_name",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("dlq workflow counts failed: {e}"))?;
+    let mut counts = serde_json::Map::new();
+    for (status, count) in status_counts {
+        counts.insert(status, serde_json::json!(count));
+    }
+    let mut by_workflow = serde_json::Map::new();
+    for (name, count) in workflow_counts {
+        by_workflow.insert(name, serde_json::json!(count));
+    }
+    let stats = serde_json::json!({
+        "pending": counts.get("pending").cloned().unwrap_or(serde_json::json!(0)),
+        "retrying": counts.get("retrying").cloned().unwrap_or(serde_json::json!(0)),
+        "resolved": counts.get("resolved").cloned().unwrap_or(serde_json::json!(0)),
+        "failed": counts.get("failed").cloned().unwrap_or(serde_json::json!(0)),
+        "byWorkflow": by_workflow,
+    });
     let rows: Vec<DlqRow> = sqlx::query_as(
         r#"
         SELECT id, workflow_name, payload, status::text, retry_count, error, created_at, last_retry_at
@@ -329,7 +395,7 @@ pub async fn list_dlq(pool: &PgPool, limit: u32, offset: u32) -> Result<(Vec<Val
             },
         )
         .collect();
-    Ok((entries, total.0.max(0) as u32))
+    Ok((entries, total.0.max(0) as u32, stats))
 }
 
 pub async fn dlq_retry(pool: &PgPool, id: &str) -> Result<bool, String> {
@@ -398,6 +464,45 @@ pub async fn games_overview(pool: &PgPool) -> Result<Vec<Value>, String> {
                 "todayWins": today_wins,
                 "allTimePlayed": all_played,
                 "allTimeWins": all_wins,
+            })
+        })
+        .collect())
+}
+
+/// Daily play/wins per day for a game over the last N days.
+pub async fn game_analytics(
+    pool: &PgPool,
+    game_slug: &str,
+    days: u32,
+) -> Result<Vec<serde_json::Value>, String> {
+    let days = days.clamp(1, 365) as i64;
+    let rows: Vec<(chrono::NaiveDate, i64, i64, f64)> = sqlx::query_as(
+        r#"
+        SELECT completed_at::date AS day,
+               COUNT(*) AS games_played,
+               COUNT(*) FILTER (WHERE status = 'won') AS wins,
+               COALESCE(AVG(attempts), 0)::float8 AS avg_attempts
+        FROM game_sessions
+        WHERE game_slug = $1
+          AND status IN ('won','lost')
+          AND completed_at >= now() - ($2 * INTERVAL '1 day')
+        GROUP BY completed_at::date
+        ORDER BY completed_at::date
+        "#,
+    )
+    .bind(game_slug)
+    .bind(days)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("game analytics failed: {e}"))?;
+    Ok(rows
+        .into_iter()
+        .map(|(day, played, wins, avg)| {
+            serde_json::json!({
+                "date": day.format("%Y-%m-%d").to_string(),
+                "gamesPlayed": played,
+                "wins": wins,
+                "avgAttempts": avg,
             })
         })
         .collect())

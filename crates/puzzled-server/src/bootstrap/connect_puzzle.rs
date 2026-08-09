@@ -10,7 +10,6 @@
 
 use std::sync::Arc;
 
-use axum::http::HeaderMap;
 use chrono::{NaiveDate, Utc};
 use connectrpc::{ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult};
 use serde_json::Value;
@@ -26,9 +25,6 @@ use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
-use crate::capabilities::identity_access::adapters::platform_jwt::{
-    extract_bearer, verify_platform_jwt,
-};
 use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{fetch_daily_puzzle, fetch_puzzle_by_id};
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
     has_completed_session, persist_validated_session,
@@ -53,16 +49,10 @@ impl PuzzleConnectService {
     }
 
     fn identity(&self, ctx: &RequestContext) -> Result<Option<String>, ConnectError> {
-        let headers: &HeaderMap = ctx.headers();
-        let Some(token) = extract_bearer(headers) else {
-            return Ok(None);
-        };
-        match verify_platform_jwt(&token) {
+        use crate::bootstrap::identity::require_identity;
+        match require_identity(ctx) {
             Ok(identity) => Ok(Some(identity.user_id)),
-            Err(err) => Err(ConnectError::new(
-                ErrorCode::Unauthenticated,
-                err.message(),
-            )),
+            Err(_) => Ok(None), // guest read; submits enforce identity separately
         }
     }
 }

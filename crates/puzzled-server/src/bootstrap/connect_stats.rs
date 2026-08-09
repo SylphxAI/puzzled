@@ -15,11 +15,13 @@ use crate::capabilities::leaderboard::adapters::leaderboard_db::{
 };
 use crate::proto::puzzled::v1::{
     GetHistoryRequest, GetHistoryResponse, GetLeaderboardRequest, GetLeaderboardResponse,
-    GetTodayPercentileRequest, GetTodayPercentileResponse, GetUserStatsRequest,
-    GetUserStatsResponse, LeaderboardEntry, LeaderboardPeriod, LeaderboardType, SessionEntry,
-    StatsService, UserGameStats,
+    GetTodayOverviewRequest, GetTodayOverviewResponse, GetTodayPercentileRequest,
+    GetTodayPercentileResponse, GetUserStatsRequest, GetUserStatsResponse, LeaderboardEntry,
+    LeaderboardPeriod, LeaderboardType, SessionEntry, StatsService, UserGameStats,
 };
-use crate::capabilities::stats::adapters::sessions_stats_db::{user_history, user_stats};
+use crate::capabilities::stats::adapters::sessions_stats_db::{
+    today_overview, user_history, user_stats,
+};
 use super::identity::require_identity;
 use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
@@ -186,6 +188,35 @@ impl StatsService for StatsConnectService {
             ..Default::default()
         })
     }
+    async fn get_today_overview(
+        &self,
+        _ctx: RequestContext,
+        _request: ServiceRequest<'_, GetTodayOverviewRequest>,
+    ) -> ServiceResult<GetTodayOverviewResponse> {
+        let (player_count, completions) = match &self.state.pool {
+            Some(pool) => today_overview(pool)
+                .await
+                .map_err(|e| {
+                    tracing::warn!(%e, "today overview failed");
+                    ConnectError::new(ErrorCode::Internal, "today_overview_failed")
+                })?,
+            None => (0, Vec::new()),
+        };
+        let completions_proto = completions
+            .iter()
+            .map(|c| crate::proto::puzzled::v1::GameCompletionCount {
+                game_slug: c.get("gameSlug").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                count: c.get("count").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+                ..Default::default()
+            })
+            .collect();
+        Response::ok(GetTodayOverviewResponse {
+            player_count,
+            completions: completions_proto,
+            ..Default::default()
+        })
+    }
+
     async fn get_user_stats(
         &self,
         ctx: RequestContext,
