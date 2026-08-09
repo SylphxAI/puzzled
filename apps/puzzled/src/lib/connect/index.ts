@@ -41,11 +41,7 @@ export {
 export { useGetLeaderboardQuery } from './stats-query'
 export {
 	getConnectTransport,
-	getConnectTransport,
 	normalizeConnectBaseUrl,
-	normalizeGrpcWebBaseUrl,
-	resetConnectTransportCache,
 	resetConnectTransportCache,
 	resolveConnectBaseUrl,
-	resolveGrpcWebBaseUrl,
 } from './transport'

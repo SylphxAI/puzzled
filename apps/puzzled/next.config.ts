@@ -17,14 +17,6 @@ const nextConfig: NextConfig = {
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 
-	// Skip type-checking errors from SDK's cross-workspace type resolution
-	// The SDK currently references platform source types which aren't resolvable
-	// from the puzzled app context. Long-term fix: SDK should generate standalone
-	// .d.ts files bundled with the package rather than cross-workspace references.
-	typescript: {
-		ignoreBuildErrors: true,
-	},
-
 	// Redirects for renamed games and legacy locales
 	async redirects() {
 		return [

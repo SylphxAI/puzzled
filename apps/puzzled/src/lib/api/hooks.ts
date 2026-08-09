@@ -17,9 +17,9 @@ import {
 import {
 	admitGetDailyViaConnect,
 	admitSubmitGuessViaConnect,
-	resolveSubmitGuessSeed,
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
+import { resolveSubmitGuessSeed } from '@/lib/connect/puzzle-domain'
 import {
 	ApiError,
 	adminApi,

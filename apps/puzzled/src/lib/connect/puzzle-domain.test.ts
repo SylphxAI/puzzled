@@ -30,11 +30,10 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 			}),
 		).toBeNull()
 		expect(
-			// @ts-expect-error intentional bad status
 			validateSubmitGuessInput({
 				gameSlug: 'sudoku',
 				seed: 1,
-				status: 'abandoned',
+				status: 'abandoned' as 'won' | 'lost',
 				attempts: 1,
 				timeSpentMs: 10,
 			}),

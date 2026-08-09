@@ -2,7 +2,7 @@
 
 import { TransportProvider } from '@connectrpc/connect-query'
 import type { ReactNode } from 'react'
-import { getConnectTransport } from '../../../../../src/lib/connect/transport'
+import { getConnectTransport } from './transport'
 
 export function ConnectTransportProvider({
 	children,

@@ -78,6 +78,12 @@ jobs:
         run: bun run lint
         working-directory: apps/puzzled
 
+      - name: Proto contract gate (buf lint + breaking)
+        run: bun run check:proto-buf
+
+      - name: Platform boundary fence
+        run: bash scripts/check-platform-boundary.sh .
+
       - name: Run TypeScript type check
         run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1
         env:
@@ -228,8 +234,20 @@ jobs:
 
       - run: bun install
 
-      # Removed discarded packaging: Build SDK — Platform builds once
-      # Removed discarded packaging: Build Puzzled (type-safe next build) — Platform builds once
+      - name: Build web (next build, typecheck enforced)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+
+      - name: Build Rust api binary (locked release)
+        run: |
+          if ! command -v protoc >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends protobuf-compiler
+          fi
+          cargo build --locked --release -p puzzled-server
   rust-api:
     name: Rust API
     runs-on: sylphx-linux-standard
@@ -260,7 +278,7 @@ jobs:
         run: cargo fmt -p puzzled-core -p puzzled-server -- --check
 
       - name: cargo clippy
-        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments -A dead_code
+        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
 
       - name: cargo test
         run: cargo test -p puzzled-core -p puzzled-server
