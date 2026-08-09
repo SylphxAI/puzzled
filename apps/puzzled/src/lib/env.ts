@@ -52,36 +52,12 @@ const FEATURE_VARS: EnvVar[] = [
 		required: false, // Checked at runtime by email.ts
 		description: 'Resend API key for email',
 	},
-	// Note: AI/LLM now goes through Sylphx Platform SDK (uses SYLPHX_SECRET_KEY)
-	{
-		name: 'CRON_SECRET',
-		required: false,
-		description: 'Secret for securing cron endpoints',
-	},
-	{
-		name: 'QSTASH_TOKEN',
-		required: false,
-		description: 'QStash token for scheduled tasks',
-	},
-	{
-		name: 'ADMIN_SECRET',
-		required: false,
-		description: 'Admin API access secret',
-	},
-	{
-		name: 'VAPID_PRIVATE_KEY',
-		required: false,
-		description: 'VAPID key for web push notifications',
-	},
-	{
-		name: 'INIT_SECRET',
-		required: false,
-		description: 'Secret for /api/init endpoint (required in production)',
-	},
+	// Note: AI/LLM goes through Sylphx Platform SDK (uses SYLPHX_SECRET_KEY).
+	// Email/push delivery is platform-owned; no local provider keys are needed.
 ]
 
 // Security-critical vars that should be set in production
-const PRODUCTION_SECURITY_VARS = ['INIT_SECRET', 'CRON_SECRET', 'ADMIN_SECRET']
+const PRODUCTION_SECURITY_VARS: string[] = []
 
 /**
  * Validate environment variables at startup

@@ -9,6 +9,7 @@ use axum::Router;
 use super::connect_admin::admin_connect_service;
 use super::connect_gamification::gamification_connect_service;
 use super::connect_health::health_connect_service;
+use super::connect_jobs::jobs_connect_service;
 use super::connect_preferences::preferences_connect_service;
 use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
@@ -20,6 +21,7 @@ pub fn router(state: AppState) -> Router {
         .add_service(admin_connect_service(state.clone()))
         .add_service(gamification_connect_service(state.clone()))
         .add_service(health_connect_service(state.clone()))
+        .add_service(jobs_connect_service(state.clone()))
         .add_service(preferences_connect_service(state.clone()))
         .add_service(puzzle_connect_service(state.clone()))
         .add_service(stats_connect_service(state.clone()));

@@ -124,6 +124,62 @@ fn sql_adapters_exist_for_persisting_capabilities() {
 }
 
 #[test]
+fn jobs_executor_is_sole_rust() {
+    // The web residual executor is deleted (ADR-170): the webhook route must
+    // not exist and the api service must register JobsService.
+    let webhook = manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
+    assert!(
+        !webhook.exists(),
+        "web residual webhook must be deleted; JobsService is the sole executor"
+    );
+    let router = fs::read_to_string(manifest_dir().join("src/bootstrap/router.rs"))
+        .unwrap_or_else(|e| panic!("read router: {e}"));
+    assert!(router.contains("jobs_connect_service"), "JobsService must be mounted");
+    let proto = manifest_dir().join("../../proto/puzzled/v1/jobs.proto");
+    assert!(proto.is_file(), "jobs.proto must exist");
+}
+
+#[test]
+fn cross_capability_auth_goes_through_identity_contract() {
+    let src = manifest_dir().join("src/capabilities");
+    let mut offenders = Vec::new();
+    for path in walk_rs(&src) {
+        if path.ends_with("auth_sessions.rs")
+            || path.ends_with("platform_jwt.rs")
+            || path.ends_with("contract.rs")
+        {
+            continue;
+        }
+        let text =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        if text.contains("identity_access::interfaces::auth_sessions")
+            || text.contains("identity_access::adapters::platform_jwt")
+        {
+            offenders.push(path.display().to_string());
+        }
+    }
+    assert!(
+        offenders.is_empty(),
+        "capabilities must use identity_access::contract, not private internals:\n{}",
+        offenders.join("\n")
+    );
+}
+
+#[test]
+fn sql_adapters_exist_for_persisting_capabilities() {
+    let root = manifest_dir().join("src/capabilities");
+    for rel in [
+        "puzzle_play/adapters/game_sessions_db.rs",
+        "preferences/adapters/preferences_db.rs",
+        "gamification/adapters/freezes_db.rs",
+        "leaderboard/adapters/leaderboard_db.rs",
+        "identity_access/adapters/platform_jwt.rs",
+    ] {
+        assert!(root.join(rel).is_file(), "missing adapter {rel}");
+    }
+}
+
+#[test]
 fn web_residual_webhook_executes_jobs_until_rust_io_adapters_land() {
     // Repo-root relative from crate manifest.
     let route =

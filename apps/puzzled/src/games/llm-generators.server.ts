@@ -8,8 +8,6 @@
  * This separation prevents bundler errors from server deps in client bundles.
  */
 
-import 'server-only'
-
 import {
 	generateConnectionsPuzzle,
 	generateCrosswordPuzzle,

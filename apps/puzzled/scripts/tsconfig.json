@@ -1,0 +1,16 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["../src/*"],
+			"server-only": ["./shims/server-only.ts"]
+		}
+	},
+	"include": [
+		"./**/*.ts",
+		"../src/lib/db/**/*.ts",
+		"../src/games/**/*.ts",
+		"../src/features/puzzle-generator/**/*.ts",
+		"../src/lib/connect/**/*.ts"
+	]
+}

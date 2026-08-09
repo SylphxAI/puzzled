@@ -3,6 +3,7 @@
 mod connect_admin;
 mod connect_gamification;
 mod connect_health;
+mod connect_jobs;
 mod connect_preferences;
 mod connect_puzzle;
 mod connect_stats;
