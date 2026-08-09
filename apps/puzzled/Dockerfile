@@ -17,7 +17,7 @@ RUN cd packages/ui && bun run build
 # 4. Copy full source
 COPY apps/puzzled ./apps/puzzled
 
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 SKIP_ENV_VALIDATION=1
 
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_SYLPHX_APP_ID
