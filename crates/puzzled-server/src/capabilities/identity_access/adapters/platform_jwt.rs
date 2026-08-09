@@ -120,6 +120,26 @@ struct JwksCache {
 
 static JWKS_CACHE: OnceLock<Mutex<Option<JwksCache>>> = OnceLock::new();
 static TEST_DECODING_KEY_PEM: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+/// Process-lifetime blocking client. Must NOT be dropped inside an async
+/// context (tokio panics on runtime drop from async); keeping it static means
+/// it is never dropped per-request.
+static JWKS_BLOCKING_CLIENT: OnceLock<reqwest::blocking::Client> = OnceLock::new();
+
+fn jwks_blocking_client() -> &'static reqwest::blocking::Client {
+    JWKS_BLOCKING_CLIENT.get_or_init(|| {
+        reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .expect("jwks blocking client")
+    })
+}
+
+/// Shared lock so tests that install/clear the process-local test key do not
+/// race with each other (used by lib tests and this module's tests).
+pub fn test_key_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 fn jwks_url() -> String {
     std::env::var("PLATFORM_JWKS_URL")
@@ -255,10 +275,7 @@ fn decode_with_key(token: &str, key: &DecodingKey) -> Result<PlatformClaims, Jwt
 
 fn fetch_jwks_blocking() -> Result<JwksCache, JwtError> {
     let url = jwks_url();
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()
-        .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?;
+    let client = jwks_blocking_client();
     let doc: JwksDocument = client
         .get(&url)
         .send()
@@ -415,7 +432,11 @@ pub fn resolve_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use std::sync::Mutex;
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    fn lock() -> std::sync::MutexGuard<'static, ()> {
+        super::test_key_lock()
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+    }
 
     use super::*;
     use axum::http::HeaderValue;
@@ -447,7 +468,7 @@ mod tests {
 
     #[test]
     fn rejects_missing_bearer() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         clear_test_decoding_key();
         let h = HeaderMap::new();
         let err = resolve_verified_identity(&h).unwrap_err();
@@ -456,7 +477,7 @@ mod tests {
 
     #[test]
     fn rejects_x_user_id_without_jwt() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         clear_test_decoding_key();
         let mut h = HeaderMap::new();
         h.insert("x-user-id", HeaderValue::from_static("attacker"));
@@ -466,7 +487,7 @@ mod tests {
 
     #[test]
     fn verifies_rs256_and_extracts_sub() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         let token = mint_token("user_01hxyz", None);
         let mut h = HeaderMap::new();
         h.insert(
@@ -481,7 +502,7 @@ mod tests {
 
     #[test]
     fn admin_scope_detected() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         let token = mint_token("admin_1", Some("platform:admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(id.is_admin);
@@ -490,7 +511,7 @@ mod tests {
 
     #[test]
     fn admin_scope_suffix_does_not_grant_admin() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         let token = mint_token("user_1", Some("puzzled:user"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(!id.is_admin);
@@ -515,7 +536,7 @@ mod tests {
 
     #[test]
     fn rejects_garbage_token() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let err = verify_platform_jwt("not-a-jwt").unwrap_err();
         assert_eq!(err, JwtError::MalformedToken);
