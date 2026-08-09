@@ -11,16 +11,18 @@ import {
 	CreateAnnouncementRequestSchema,
 	type DailyStat,
 	DeleteAnnouncementRequestSchema,
-	DlqActionRequestSchema,
 	type DlqEntry,
-	GameAnalyticsRequestSchema,
 	type GamesOverviewEntry,
 	GamesOverviewRequestSchema,
 	GetAuditLogRequestSchema,
+	GetGameAnalyticsRequestSchema,
 	GetSettingsRequestSchema,
 	ListAnnouncementsRequestSchema,
 	ListAuditLogsRequestSchema,
 	ListDlqRequestSchema,
+	MarkDlqFailedRequestSchema,
+	ResolveDlqRequestSchema,
+	RetryDlqRequestSchema,
 	SystemHealthRequestSchema,
 	type SystemHealthResponse,
 	UpdateAnnouncementRequestSchema,
@@ -148,17 +150,17 @@ export async function listDlq(
 
 export async function retryDlq(id: string, client?: AdminServiceClient): Promise<void> {
 	const c = client ?? createAdminServiceClient()
-	await c.retryDlq(create(DlqActionRequestSchema, { id }))
+	await c.retryDlq(create(RetryDlqRequestSchema, { id }))
 }
 
 export async function resolveDlq(id: string, client?: AdminServiceClient): Promise<void> {
 	const c = client ?? createAdminServiceClient()
-	await c.resolveDlq(create(DlqActionRequestSchema, { id }))
+	await c.resolveDlq(create(ResolveDlqRequestSchema, { id }))
 }
 
 export async function markDlqFailed(id: string, client?: AdminServiceClient): Promise<void> {
 	const c = client ?? createAdminServiceClient()
-	await c.markDlqFailed(create(DlqActionRequestSchema, { id }))
+	await c.markDlqFailed(create(MarkDlqFailedRequestSchema, { id }))
 }
 
 export async function gamesOverview(client?: AdminServiceClient): Promise<GamesOverviewEntry[]> {
@@ -173,7 +175,7 @@ export async function gameAnalytics(
 	client?: AdminServiceClient,
 ): Promise<DailyStat[]> {
 	const c = client ?? createAdminServiceClient()
-	const res = await c.getGameAnalytics(create(GameAnalyticsRequestSchema, { gameSlug, days }))
+	const res = await c.getGameAnalytics(create(GetGameAnalyticsRequestSchema, { gameSlug, days }))
 	return res.dailyStats
 }
 

@@ -1,45 +1,37 @@
 # Puzzled Project
 
 Puzzled is a production puzzle-game application repo. It owns the Puzzled
-Next.js app, repo-local SDK/UI integration, Atlas migrations, Sylphx deployment
+Next.js app, repo-local UI package, Atlas migrations, Sylphx deployment
 manifest, and application-specific game/user workflows.
 
 ## Lifecycle
 
-- Lifecycle: `production`
+- Lifecycle: **dev-phase until live proof** (ADR-170 §6). No production claim
+  exists until both images build from the Dockerfiles and an end-to-end
+  play→save→leaderboard→premium round trip is demonstrated on a deployed
+  environment.
 - Layer: `application`
-- Instruction SSOT: binding Skills (`engineering-standard`). Architecture: [ADR-169](docs/adr/ADR-169-capability-first-modular-ddd.md) (supersedes ADR-168 module shape; retains Rust API authority).
-- Machine manifest: `.doctrine/project.json`
+- Instruction SSOT: binding Skills (`engineering-standard`). Architecture:
+  [ADR-170](docs/adr/ADR-170-clean-break-north-star.md) (sole Connect, sole
+  Rust executor, content tool).
 
-## Goals
+## Architecture
 
-- Ship the Puzzled game application with reliable app, database, auth, settings,
-  analytics, and deployment behavior.
-- Keep Puzzled-specific product behavior inside this repo and use external
-  projects only through documented public contracts.
-- Maintain safe Atlas migration and Sylphx deployment evidence for production
-  changes.
-
-## Non-Goals
-
-- Do not own Sylphx Platform core behavior or shared SDK semantics beyond
-  repo-local integration.
-- Do not encode another product's game or customer-specific behavior into this
-  app.
-- Do not treat source revert as complete recovery after migrations or deploy
-  side effects have run.
-
-## Boundaries
-
-Puzzled owns its application code, app package, migrations, deployment manifest,
-local SDK/UI consumption, and product-specific game workflows.
-Rust functional core lives in `crates/puzzled-core` (capability modules);
-imperative API shell lives in `crates/puzzled-server`. It does not own
-Sylphx Platform internals, external package release policy, or sibling product
-domain models.
+- **api** (Rust, `crates/puzzled-server`): sole backend. Connect RPC services
+  only — Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs. No
+  REST surface. Identity from Platform JWT (Bearer or session cookie).
+- **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
+  client; Platform SDK for auth/billing/flags/AI. No backend authority.
+- **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
+  policy.
+- **Content**: `apps/puzzled/scripts/generate-content.ts` imports daily
+  puzzles into the content store (`daily_puzzles`); the api serves and
+  validates from it. No runtime generation service.
+- **DB**: Atlas-managed Postgres; single runtime writer is the api service.
 
 ## Delivery
 
+<<<<<<< HEAD
 CI declares `Lint & Type Check`, `Security Scan`, `Migration Integrity`, `Unit
 Tests`, and `Build`. The workflow currently path-filters to app/package/workflow
 changes, so docs-only project-control metadata may need central status fan-in or
@@ -48,3 +40,9 @@ ruleset adjustment before the repo can claim full doctrine admission.
 ## Delivery authority
 
 See [docs/north-star/DELIVERY-AUTHORITY.md](docs/north-star/DELIVERY-AUTHORITY.md).
+=======
+CI runs lint/typecheck, buf + platform-boundary gates, migration integrity,
+unit tests (app + Rust), and real builds (web `next build` + Rust release).
+Evidence is per layer: source / CI / deploy / live — a green check or a 200
+is not proof.
+>>>>>>> a518392 (docs(adr): ADR-170 clean-break north star + proto naming conformance)

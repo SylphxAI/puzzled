@@ -7,8 +7,9 @@ be loaded as current instruction authority.
 
 Local truth: `PROJECT.md`, `docs/adr/`, `.doctrine/project.json` when present.
 
-Architecture SSOT: binding Skills `engineering-standard` + `docs/adr/ADR-169-capability-first-modular-ddd.md`.
-Rust layout: `crates/puzzled-core` (functional core) + `crates/puzzled-server` (imperative shell).
+Architecture SSOT: binding Skills `engineering-standard` + `docs/adr/ADR-170-clean-break-north-star.md`
+(sole Connect, sole Rust executor, content tool). Rust layout:
+`crates/puzzled-core` (functional core) + `crates/puzzled-server` (imperative shell).
 
 ## Boundary hazards
 
@@ -39,16 +40,15 @@ Machine gate: `bash scripts/check-language-hygiene.sh`.
 
 ## Backend false-authority fence
 
-Work: wi_01KYFN6993PMG8WD00Q51AE231
+The **Rust backend cutover is complete** (ADR-170):
 
-If this repository has completed a **Rust backend** cutover:
-
-1. Production backend behavior authority is the Rust crate/binary/service path declared in `sylphx.toml` / deploy manifests / package `bin` native path / Docker ENTRYPOINT.
-2. Residual TypeScript service trees or alternate TS engines are **not** product authority unless explicitly proven still on the live path.
-3. Do not "fix production" by editing residual TypeScript and assuming deploy/runtime will pick it up.
-4. Prefer deleting residual TS backend trees after Rust sole proof; keep history in Git.
-5. Intentional TypeScript frontends, npm packaging wrappers, and native-binding surfaces may remain.
-
-### Repo-specific note
-
-Prefer Rust crates for backend; residual TS server paths need deploy proof before treating as authority.
+1. Production backend authority is the Rust crate/binary/service path declared
+   in `sylphx.toml` / deploy manifests / Docker ENTRYPOINT
+   (`crates/puzzled-server`).
+2. The Next.js service is presentation-only: no DB writes, no job execution,
+   no email/push delivery, no REST API surface.
+3. Do not reintroduce TypeScript backend authority (jobs, generation, REST)
+   — the content tool (`apps/puzzled/scripts/generate-content.ts`) is the only
+   non-Rust backend-adjacent code and it is a standalone tool, not a service.
+4. Do not reintroduce the REST `/api/v1` surface or a Hono client layer; the
+   sole transport is Connect RPC.

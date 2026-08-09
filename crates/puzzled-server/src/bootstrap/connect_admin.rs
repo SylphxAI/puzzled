@@ -11,13 +11,15 @@ use super::state::AppState;
 use crate::capabilities::admin::adapters::admin_db;
 use crate::proto::puzzled::v1::{
     AdminService, Announcement, AppSettings, AuditLogEntry, CreateAnnouncementRequest,
-    CreateAnnouncementResponse, DeleteAnnouncementRequest, DeleteAnnouncementResponse, DlqActionRequest,
-    DlqActionResponse, DlqEntry, GamesOverviewRequest, GamesOverviewResponse, GetAuditLogRequest,
+    CreateAnnouncementResponse, DeleteAnnouncementRequest, DeleteAnnouncementResponse,
+    DlqEntry, GamesOverviewRequest, GamesOverviewResponse, GetAuditLogRequest,
     GetAuditLogResponse, GetSettingsRequest, GetSettingsResponse, ListAnnouncementsRequest,
     ListAnnouncementsResponse, ListAuditLogsRequest, ListAuditLogsResponse, ListDlqRequest,
     ListDlqResponse, SystemHealthRequest, SystemHealthResponse, UpdateAnnouncementRequest,
     UpdateAnnouncementResponse, UpdateSettingsRequest, UpdateSettingsResponse,
-    DailyStat, GameAnalyticsRequest, GameAnalyticsResponse,
+    DailyStat, GetGameAnalyticsRequest, GetGameAnalyticsResponse,
+    MarkDlqFailedRequest, MarkDlqFailedResponse, ResolveDlqRequest, ResolveDlqResponse,
+    RetryDlqRequest, RetryDlqResponse,
 };
 
 fn announcement_from_json(v: &Value) -> Announcement {
@@ -296,15 +298,15 @@ impl AdminService for AdminConnectService {
     async fn retry_dlq(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, DlqActionRequest>,
-    ) -> ServiceResult<DlqActionResponse> {
+        request: ServiceRequest<'_, RetryDlqRequest>,
+    ) -> ServiceResult<RetryDlqResponse> {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
         let ok = admin_db::dlq_retry(pool, req.id.trim())
             .await
             .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
-        Response::ok(DlqActionResponse {
+        Response::ok(RetryDlqResponse {
             ok,
             ..Default::default()
         })
@@ -313,15 +315,15 @@ impl AdminService for AdminConnectService {
     async fn resolve_dlq(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, DlqActionRequest>,
-    ) -> ServiceResult<DlqActionResponse> {
+        request: ServiceRequest<'_, ResolveDlqRequest>,
+    ) -> ServiceResult<ResolveDlqResponse> {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
         let ok = admin_db::dlq_resolve(pool, req.id.trim())
             .await
             .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
-        Response::ok(DlqActionResponse {
+        Response::ok(ResolveDlqResponse {
             ok,
             ..Default::default()
         })
@@ -330,15 +332,15 @@ impl AdminService for AdminConnectService {
     async fn mark_dlq_failed(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, DlqActionRequest>,
-    ) -> ServiceResult<DlqActionResponse> {
+        request: ServiceRequest<'_, MarkDlqFailedRequest>,
+    ) -> ServiceResult<MarkDlqFailedResponse> {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
         let ok = admin_db::dlq_mark_failed(pool, req.id.trim())
             .await
             .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;
-        Response::ok(DlqActionResponse {
+        Response::ok(MarkDlqFailedResponse {
             ok,
             ..Default::default()
         })
@@ -375,8 +377,8 @@ impl AdminService for AdminConnectService {
     async fn get_game_analytics(
         &self,
         ctx: RequestContext,
-        request: ServiceRequest<'_, GameAnalyticsRequest>,
-    ) -> ServiceResult<GameAnalyticsResponse> {
+        request: ServiceRequest<'_, GetGameAnalyticsRequest>,
+    ) -> ServiceResult<GetGameAnalyticsResponse> {
         require_admin(&ctx)?;
         let pool = self.pool()?;
         let req = request.to_owned_message();
@@ -393,7 +395,7 @@ impl AdminService for AdminConnectService {
                 ..Default::default()
             })
             .collect();
-        Response::ok(GameAnalyticsResponse {
+        Response::ok(GetGameAnalyticsResponse {
             daily_stats,
             ..Default::default()
         })

@@ -115,10 +115,24 @@ message ListDlqResponse {
   uint32 failed = 6;
   map<string, uint32> by_workflow = 7;
 }
-message DlqActionRequest {
+message RetryDlqRequest {
   string id = 1;
 }
-message DlqActionResponse {
+message RetryDlqResponse {
+  bool ok = 1;
+}
+
+message ResolveDlqRequest {
+  string id = 1;
+}
+message ResolveDlqResponse {
+  bool ok = 1;
+}
+
+message MarkDlqFailedRequest {
+  string id = 1;
+}
+message MarkDlqFailedResponse {
   bool ok = 1;
 }
 
@@ -142,7 +156,7 @@ message SystemHealthResponse {
   string uptime = 3;
 }
 
-message GameAnalyticsRequest {
+message GetGameAnalyticsRequest {
   string game_slug = 1;
   uint32 days = 2;
 }
@@ -152,7 +166,7 @@ message DailyStat {
   uint32 wins = 3;
   double avg_attempts = 4;
 }
-message GameAnalyticsResponse {
+message GetGameAnalyticsResponse {
   repeated DailyStat daily_stats = 1;
 }
 
@@ -166,10 +180,10 @@ service AdminService {
   rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
   rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
   rpc ListDlq(ListDlqRequest) returns (ListDlqResponse);
-  rpc RetryDlq(DlqActionRequest) returns (DlqActionResponse);
-  rpc ResolveDlq(DlqActionRequest) returns (DlqActionResponse);
-  rpc MarkDlqFailed(DlqActionRequest) returns (DlqActionResponse);
+  rpc RetryDlq(RetryDlqRequest) returns (RetryDlqResponse);
+  rpc ResolveDlq(ResolveDlqRequest) returns (ResolveDlqResponse);
+  rpc MarkDlqFailed(MarkDlqFailedRequest) returns (MarkDlqFailedResponse);
   rpc GamesOverview(GamesOverviewRequest) returns (GamesOverviewResponse);
   rpc SystemHealth(SystemHealthRequest) returns (SystemHealthResponse);
-  rpc GetGameAnalytics(GameAnalyticsRequest) returns (GameAnalyticsResponse);
+  rpc GetGameAnalytics(GetGameAnalyticsRequest) returns (GetGameAnalyticsResponse);
 }

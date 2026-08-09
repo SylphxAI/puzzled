@@ -12,7 +12,7 @@ import { fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf/codegenv2
 export const file_puzzled_v1_admin: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChZwdXp6bGVkL3YxL2FkbWluLnByb3RvEgpwdXp6bGVkLnYxIn0KDEFubm91bmNlbWVudBIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIMCgRib2R5GAMgASgJEgwKBHR5cGUYBCABKAkSDgoGYWN0aXZlGAUgASgIEhIKCmNyZWF0ZWRfYXQYBiABKAkSEgoKdXBkYXRlZF9hdBgHIAEoCSIaChhMaXN0QW5ub3VuY2VtZW50c1JlcXVlc3QiTAoZTGlzdEFubm91bmNlbWVudHNSZXNwb25zZRIvCg1hbm5vdW5jZW1lbnRzGAEgAygLMhgucHV6emxlZC52MS5Bbm5vdW5jZW1lbnQiVgoZQ3JlYXRlQW5ub3VuY2VtZW50UmVxdWVzdBINCgV0aXRsZRgBIAEoCRIMCgRib2R5GAIgASgJEgwKBHR5cGUYAyABKAkSDgoGYWN0aXZlGAQgASgIIkwKGkNyZWF0ZUFubm91bmNlbWVudFJlc3BvbnNlEi4KDGFubm91bmNlbWVudBgBIAEoCzIYLnB1enpsZWQudjEuQW5ub3VuY2VtZW50Ip0BChlVcGRhdGVBbm5vdW5jZW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQESEQoEYm9keRgDIAEoCUgBiAEBEhEKBHR5cGUYBCABKAlIAogBARITCgZhY3RpdmUYBSABKAhIA4gBAUIICgZfdGl0bGVCBwoFX2JvZHlCBwoFX3R5cGVCCQoHX2FjdGl2ZSJMChpVcGRhdGVBbm5vdW5jZW1lbnRSZXNwb25zZRIuCgxhbm5vdW5jZW1lbnQYASABKAsyGC5wdXp6bGVkLnYxLkFubm91bmNlbWVudCInChlEZWxldGVBbm5vdW5jZW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJIi0KGkRlbGV0ZUFubm91bmNlbWVudFJlc3BvbnNlEg8KB2RlbGV0ZWQYASABKAgiLgoLQXBwU2V0dGluZ3MSCwoDa2V5GAEgASgJEhIKCnZhbHVlX2pzb24YAiABKAkiFAoSR2V0U2V0dGluZ3NSZXF1ZXN0IkAKE0dldFNldHRpbmdzUmVzcG9uc2USKQoIc2V0dGluZ3MYASADKAsyFy5wdXp6bGVkLnYxLkFwcFNldHRpbmdzIjgKFVVwZGF0ZVNldHRpbmdzUmVxdWVzdBILCgNrZXkYASABKAkSEgoKdmFsdWVfanNvbhgCIAEoCSJCChZVcGRhdGVTZXR0aW5nc1Jlc3BvbnNlEigKB3NldHRpbmcYASABKAsyFy5wdXp6bGVkLnYxLkFwcFNldHRpbmdzIskBCg1BdWRpdExvZ0VudHJ5EgoKAmlkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSEAoIYWN0b3JfaWQYCCABKAkSDgoGYWN0aW9uGAMgASgJEhMKC2VudGl0eV90eXBlGAQgASgJEhEKCWVudGl0eV9pZBgFIAEoCRIVCg1tZXRhZGF0YV9qc29uGAYgASgJEhIKCmNyZWF0ZWRfYXQYByABKAkSEgoKaXBfYWRkcmVzcxgJIAEoCRISCgp1c2VyX2FnZW50GAogASgJIkUKFExpc3RBdWRpdExvZ3NSZXF1ZXN0Eg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDRIOCgZhY3Rpb24YAyABKAkiUgoVTGlzdEF1ZGl0TG9nc1Jlc3BvbnNlEioKB2VudHJpZXMYASADKAsyGS5wdXp6bGVkLnYxLkF1ZGl0TG9nRW50cnkSDQoFdG90YWwYAiABKA0iIAoSR2V0QXVkaXRMb2dSZXF1ZXN0EgoKAmlkGAEgASgJIj8KE0dldEF1ZGl0TG9nUmVzcG9uc2USKAoFZW50cnkYASABKAsyGS5wdXp6bGVkLnYxLkF1ZGl0TG9nRW50cnkimgEKCERscUVudHJ5EgoKAmlkGAEgASgJEhAKCGpvYl90eXBlGAIgASgJEhQKDHBheWxvYWRfanNvbhgDIAEoCRIOCgZzdGF0dXMYBCABKAkSEAoIYXR0ZW1wdHMYBSABKA0SDQoFZXJyb3IYBiABKAkSEgoKY3JlYXRlZF9hdBgHIAEoCRIVCg1uZXh0X3JldHJ5X2F0GAggASgJIi8KDkxpc3REbHFSZXF1ZXN0Eg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSKBAgoPTGlzdERscVJlc3BvbnNlEiUKB2VudHJpZXMYASADKAsyFC5wdXp6bGVkLnYxLkRscUVudHJ5Eg0KBXRvdGFsGAIgASgNEg8KB3BlbmRpbmcYAyABKA0SEAoIcmV0cnlpbmcYBCABKA0SEAoIcmVzb2x2ZWQYBSABKA0SDgoGZmFpbGVkGAYgASgNEkAKC2J5X3dvcmtmbG93GAcgAygLMisucHV6emxlZC52MS5MaXN0RGxxUmVzcG9uc2UuQnlXb3JrZmxvd0VudHJ5GjEKD0J5V29ya2Zsb3dFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKA06AjgBIh4KEERscUFjdGlvblJlcXVlc3QSCgoCaWQYASABKAkiHwoRRGxxQWN0aW9uUmVzcG9uc2USCgoCb2sYASABKAgiFgoUR2FtZXNPdmVydmlld1JlcXVlc3QiigEKEkdhbWVzT3ZlcnZpZXdFbnRyeRIMCgRzbHVnGAEgASgJEgwKBG5hbWUYAiABKAkSFAoMdG9kYXlfcGxheWVkGAMgASgNEhIKCnRvZGF5X3dpbnMYBCABKA0SFwoPYWxsX3RpbWVfcGxheWVkGAUgASgNEhUKDWFsbF90aW1lX3dpbnMYBiABKA0iRgoVR2FtZXNPdmVydmlld1Jlc3BvbnNlEi0KBWdhbWVzGAEgAygLMh4ucHV6emxlZC52MS5HYW1lc092ZXJ2aWV3RW50cnkiFQoTU3lzdGVtSGVhbHRoUmVxdWVzdCJTChRTeXN0ZW1IZWFsdGhSZXNwb25zZRITCgtkYXRhYmFzZV9vaxgBIAEoCBIWCg5kYXRhYmFzZV9lcnJvchgCIAEoCRIOCgZ1cHRpbWUYAyABKAkiNwoUR2FtZUFuYWx5dGljc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEgwKBGRheXMYAiABKA0iUwoJRGFpbHlTdGF0EgwKBGRhdGUYASABKAkSFAoMZ2FtZXNfcGxheWVkGAIgASgNEgwKBHdpbnMYAyABKA0SFAoMYXZnX2F0dGVtcHRzGAQgASgBIkMKFUdhbWVBbmFseXRpY3NSZXNwb25zZRIqCgtkYWlseV9zdGF0cxgBIAMoCzIVLnB1enpsZWQudjEuRGFpbHlTdGF0MpYKCgxBZG1pblNlcnZpY2USYAoRTGlzdEFubm91bmNlbWVudHMSJC5wdXp6bGVkLnYxLkxpc3RBbm5vdW5jZW1lbnRzUmVxdWVzdBolLnB1enpsZWQudjEuTGlzdEFubm91bmNlbWVudHNSZXNwb25zZRJjChJDcmVhdGVBbm5vdW5jZW1lbnQSJS5wdXp6bGVkLnYxLkNyZWF0ZUFubm91bmNlbWVudFJlcXVlc3QaJi5wdXp6bGVkLnYxLkNyZWF0ZUFubm91bmNlbWVudFJlc3BvbnNlEmMKElVwZGF0ZUFubm91bmNlbWVudBIlLnB1enpsZWQudjEuVXBkYXRlQW5ub3VuY2VtZW50UmVxdWVzdBomLnB1enpsZWQudjEuVXBkYXRlQW5ub3VuY2VtZW50UmVzcG9uc2USYwoSRGVsZXRlQW5ub3VuY2VtZW50EiUucHV6emxlZC52MS5EZWxldGVBbm5vdW5jZW1lbnRSZXF1ZXN0GiYucHV6emxlZC52MS5EZWxldGVBbm5vdW5jZW1lbnRSZXNwb25zZRJOCgtHZXRTZXR0aW5ncxIeLnB1enpsZWQudjEuR2V0U2V0dGluZ3NSZXF1ZXN0Gh8ucHV6emxlZC52MS5HZXRTZXR0aW5nc1Jlc3BvbnNlElcKDlVwZGF0ZVNldHRpbmdzEiEucHV6emxlZC52MS5VcGRhdGVTZXR0aW5nc1JlcXVlc3QaIi5wdXp6bGVkLnYxLlVwZGF0ZVNldHRpbmdzUmVzcG9uc2USVAoNTGlzdEF1ZGl0TG9ncxIgLnB1enpsZWQudjEuTGlzdEF1ZGl0TG9nc1JlcXVlc3QaIS5wdXp6bGVkLnYxLkxpc3RBdWRpdExvZ3NSZXNwb25zZRJOCgtHZXRBdWRpdExvZxIeLnB1enpsZWQudjEuR2V0QXVkaXRMb2dSZXF1ZXN0Gh8ucHV6emxlZC52MS5HZXRBdWRpdExvZ1Jlc3BvbnNlEkIKB0xpc3REbHESGi5wdXp6bGVkLnYxLkxpc3REbHFSZXF1ZXN0GhsucHV6emxlZC52MS5MaXN0RGxxUmVzcG9uc2USRwoIUmV0cnlEbHESHC5wdXp6bGVkLnYxLkRscUFjdGlvblJlcXVlc3QaHS5wdXp6bGVkLnYxLkRscUFjdGlvblJlc3BvbnNlEkkKClJlc29sdmVEbHESHC5wdXp6bGVkLnYxLkRscUFjdGlvblJlcXVlc3QaHS5wdXp6bGVkLnYxLkRscUFjdGlvblJlc3BvbnNlEkwKDU1hcmtEbHFGYWlsZWQSHC5wdXp6bGVkLnYxLkRscUFjdGlvblJlcXVlc3QaHS5wdXp6bGVkLnYxLkRscUFjdGlvblJlc3BvbnNlElQKDUdhbWVzT3ZlcnZpZXcSIC5wdXp6bGVkLnYxLkdhbWVzT3ZlcnZpZXdSZXF1ZXN0GiEucHV6emxlZC52MS5HYW1lc092ZXJ2aWV3UmVzcG9uc2USUQoMU3lzdGVtSGVhbHRoEh8ucHV6emxlZC52MS5TeXN0ZW1IZWFsdGhSZXF1ZXN0GiAucHV6emxlZC52MS5TeXN0ZW1IZWFsdGhSZXNwb25zZRJXChBHZXRHYW1lQW5hbHl0aWNzEiAucHV6emxlZC52MS5HYW1lQW5hbHl0aWNzUmVxdWVzdBohLnB1enpsZWQudjEuR2FtZUFuYWx5dGljc1Jlc3BvbnNlYgZwcm90bzM',
+		'ChZwdXp6bGVkL3YxL2FkbWluLnByb3RvEgpwdXp6bGVkLnYxIn0KDEFubm91bmNlbWVudBIKCgJpZBgBIAEoCRINCgV0aXRsZRgCIAEoCRIMCgRib2R5GAMgASgJEgwKBHR5cGUYBCABKAkSDgoGYWN0aXZlGAUgASgIEhIKCmNyZWF0ZWRfYXQYBiABKAkSEgoKdXBkYXRlZF9hdBgHIAEoCSIaChhMaXN0QW5ub3VuY2VtZW50c1JlcXVlc3QiTAoZTGlzdEFubm91bmNlbWVudHNSZXNwb25zZRIvCg1hbm5vdW5jZW1lbnRzGAEgAygLMhgucHV6emxlZC52MS5Bbm5vdW5jZW1lbnQiVgoZQ3JlYXRlQW5ub3VuY2VtZW50UmVxdWVzdBINCgV0aXRsZRgBIAEoCRIMCgRib2R5GAIgASgJEgwKBHR5cGUYAyABKAkSDgoGYWN0aXZlGAQgASgIIkwKGkNyZWF0ZUFubm91bmNlbWVudFJlc3BvbnNlEi4KDGFubm91bmNlbWVudBgBIAEoCzIYLnB1enpsZWQudjEuQW5ub3VuY2VtZW50Ip0BChlVcGRhdGVBbm5vdW5jZW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQESEQoEYm9keRgDIAEoCUgBiAEBEhEKBHR5cGUYBCABKAlIAogBARITCgZhY3RpdmUYBSABKAhIA4gBAUIICgZfdGl0bGVCBwoFX2JvZHlCBwoFX3R5cGVCCQoHX2FjdGl2ZSJMChpVcGRhdGVBbm5vdW5jZW1lbnRSZXNwb25zZRIuCgxhbm5vdW5jZW1lbnQYASABKAsyGC5wdXp6bGVkLnYxLkFubm91bmNlbWVudCInChlEZWxldGVBbm5vdW5jZW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJIi0KGkRlbGV0ZUFubm91bmNlbWVudFJlc3BvbnNlEg8KB2RlbGV0ZWQYASABKAgiLgoLQXBwU2V0dGluZ3MSCwoDa2V5GAEgASgJEhIKCnZhbHVlX2pzb24YAiABKAkiFAoSR2V0U2V0dGluZ3NSZXF1ZXN0IkAKE0dldFNldHRpbmdzUmVzcG9uc2USKQoIc2V0dGluZ3MYASADKAsyFy5wdXp6bGVkLnYxLkFwcFNldHRpbmdzIjgKFVVwZGF0ZVNldHRpbmdzUmVxdWVzdBILCgNrZXkYASABKAkSEgoKdmFsdWVfanNvbhgCIAEoCSJCChZVcGRhdGVTZXR0aW5nc1Jlc3BvbnNlEigKB3NldHRpbmcYASABKAsyFy5wdXp6bGVkLnYxLkFwcFNldHRpbmdzIskBCg1BdWRpdExvZ0VudHJ5EgoKAmlkGAEgASgJEg8KB3VzZXJfaWQYAiABKAkSEAoIYWN0b3JfaWQYCCABKAkSDgoGYWN0aW9uGAMgASgJEhMKC2VudGl0eV90eXBlGAQgASgJEhEKCWVudGl0eV9pZBgFIAEoCRIVCg1tZXRhZGF0YV9qc29uGAYgASgJEhIKCmNyZWF0ZWRfYXQYByABKAkSEgoKaXBfYWRkcmVzcxgJIAEoCRISCgp1c2VyX2FnZW50GAogASgJIkUKFExpc3RBdWRpdExvZ3NSZXF1ZXN0Eg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDRIOCgZhY3Rpb24YAyABKAkiUgoVTGlzdEF1ZGl0TG9nc1Jlc3BvbnNlEioKB2VudHJpZXMYASADKAsyGS5wdXp6bGVkLnYxLkF1ZGl0TG9nRW50cnkSDQoFdG90YWwYAiABKA0iIAoSR2V0QXVkaXRMb2dSZXF1ZXN0EgoKAmlkGAEgASgJIj8KE0dldEF1ZGl0TG9nUmVzcG9uc2USKAoFZW50cnkYASABKAsyGS5wdXp6bGVkLnYxLkF1ZGl0TG9nRW50cnkimgEKCERscUVudHJ5EgoKAmlkGAEgASgJEhAKCGpvYl90eXBlGAIgASgJEhQKDHBheWxvYWRfanNvbhgDIAEoCRIOCgZzdGF0dXMYBCABKAkSEAoIYXR0ZW1wdHMYBSABKA0SDQoFZXJyb3IYBiABKAkSEgoKY3JlYXRlZF9hdBgHIAEoCRIVCg1uZXh0X3JldHJ5X2F0GAggASgJIi8KDkxpc3REbHFSZXF1ZXN0Eg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSKBAgoPTGlzdERscVJlc3BvbnNlEiUKB2VudHJpZXMYASADKAsyFC5wdXp6bGVkLnYxLkRscUVudHJ5Eg0KBXRvdGFsGAIgASgNEg8KB3BlbmRpbmcYAyABKA0SEAoIcmV0cnlpbmcYBCABKA0SEAoIcmVzb2x2ZWQYBSABKA0SDgoGZmFpbGVkGAYgASgNEkAKC2J5X3dvcmtmbG93GAcgAygLMisucHV6emxlZC52MS5MaXN0RGxxUmVzcG9uc2UuQnlXb3JrZmxvd0VudHJ5GjEKD0J5V29ya2Zsb3dFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKA06AjgBIh0KD1JldHJ5RGxxUmVxdWVzdBIKCgJpZBgBIAEoCSIeChBSZXRyeURscVJlc3BvbnNlEgoKAm9rGAEgASgIIh8KEVJlc29sdmVEbHFSZXF1ZXN0EgoKAmlkGAEgASgJIiAKElJlc29sdmVEbHFSZXNwb25zZRIKCgJvaxgBIAEoCCIiChRNYXJrRGxxRmFpbGVkUmVxdWVzdBIKCgJpZBgBIAEoCSIjChVNYXJrRGxxRmFpbGVkUmVzcG9uc2USCgoCb2sYASABKAgiFgoUR2FtZXNPdmVydmlld1JlcXVlc3QiigEKEkdhbWVzT3ZlcnZpZXdFbnRyeRIMCgRzbHVnGAEgASgJEgwKBG5hbWUYAiABKAkSFAoMdG9kYXlfcGxheWVkGAMgASgNEhIKCnRvZGF5X3dpbnMYBCABKA0SFwoPYWxsX3RpbWVfcGxheWVkGAUgASgNEhUKDWFsbF90aW1lX3dpbnMYBiABKA0iRgoVR2FtZXNPdmVydmlld1Jlc3BvbnNlEi0KBWdhbWVzGAEgAygLMh4ucHV6emxlZC52MS5HYW1lc092ZXJ2aWV3RW50cnkiFQoTU3lzdGVtSGVhbHRoUmVxdWVzdCJTChRTeXN0ZW1IZWFsdGhSZXNwb25zZRITCgtkYXRhYmFzZV9vaxgBIAEoCBIWCg5kYXRhYmFzZV9lcnJvchgCIAEoCRIOCgZ1cHRpbWUYAyABKAkiOgoXR2V0R2FtZUFuYWx5dGljc1JlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEgwKBGRheXMYAiABKA0iUwoJRGFpbHlTdGF0EgwKBGRhdGUYASABKAkSFAoMZ2FtZXNfcGxheWVkGAIgASgNEgwKBHdpbnMYAyABKA0SFAoMYXZnX2F0dGVtcHRzGAQgASgBIkYKGEdldEdhbWVBbmFseXRpY3NSZXNwb25zZRIqCgtkYWlseV9zdGF0cxgBIAMoCzIVLnB1enpsZWQudjEuRGFpbHlTdGF0MqQKCgxBZG1pblNlcnZpY2USYAoRTGlzdEFubm91bmNlbWVudHMSJC5wdXp6bGVkLnYxLkxpc3RBbm5vdW5jZW1lbnRzUmVxdWVzdBolLnB1enpsZWQudjEuTGlzdEFubm91bmNlbWVudHNSZXNwb25zZRJjChJDcmVhdGVBbm5vdW5jZW1lbnQSJS5wdXp6bGVkLnYxLkNyZWF0ZUFubm91bmNlbWVudFJlcXVlc3QaJi5wdXp6bGVkLnYxLkNyZWF0ZUFubm91bmNlbWVudFJlc3BvbnNlEmMKElVwZGF0ZUFubm91bmNlbWVudBIlLnB1enpsZWQudjEuVXBkYXRlQW5ub3VuY2VtZW50UmVxdWVzdBomLnB1enpsZWQudjEuVXBkYXRlQW5ub3VuY2VtZW50UmVzcG9uc2USYwoSRGVsZXRlQW5ub3VuY2VtZW50EiUucHV6emxlZC52MS5EZWxldGVBbm5vdW5jZW1lbnRSZXF1ZXN0GiYucHV6emxlZC52MS5EZWxldGVBbm5vdW5jZW1lbnRSZXNwb25zZRJOCgtHZXRTZXR0aW5ncxIeLnB1enpsZWQudjEuR2V0U2V0dGluZ3NSZXF1ZXN0Gh8ucHV6emxlZC52MS5HZXRTZXR0aW5nc1Jlc3BvbnNlElcKDlVwZGF0ZVNldHRpbmdzEiEucHV6emxlZC52MS5VcGRhdGVTZXR0aW5nc1JlcXVlc3QaIi5wdXp6bGVkLnYxLlVwZGF0ZVNldHRpbmdzUmVzcG9uc2USVAoNTGlzdEF1ZGl0TG9ncxIgLnB1enpsZWQudjEuTGlzdEF1ZGl0TG9nc1JlcXVlc3QaIS5wdXp6bGVkLnYxLkxpc3RBdWRpdExvZ3NSZXNwb25zZRJOCgtHZXRBdWRpdExvZxIeLnB1enpsZWQudjEuR2V0QXVkaXRMb2dSZXF1ZXN0Gh8ucHV6emxlZC52MS5HZXRBdWRpdExvZ1Jlc3BvbnNlEkIKB0xpc3REbHESGi5wdXp6bGVkLnYxLkxpc3REbHFSZXF1ZXN0GhsucHV6emxlZC52MS5MaXN0RGxxUmVzcG9uc2USRQoIUmV0cnlEbHESGy5wdXp6bGVkLnYxLlJldHJ5RGxxUmVxdWVzdBocLnB1enpsZWQudjEuUmV0cnlEbHFSZXNwb25zZRJLCgpSZXNvbHZlRGxxEh0ucHV6emxlZC52MS5SZXNvbHZlRGxxUmVxdWVzdBoeLnB1enpsZWQudjEuUmVzb2x2ZURscVJlc3BvbnNlElQKDU1hcmtEbHFGYWlsZWQSIC5wdXp6bGVkLnYxLk1hcmtEbHFGYWlsZWRSZXF1ZXN0GiEucHV6emxlZC52MS5NYXJrRGxxRmFpbGVkUmVzcG9uc2USVAoNR2FtZXNPdmVydmlldxIgLnB1enpsZWQudjEuR2FtZXNPdmVydmlld1JlcXVlc3QaIS5wdXp6bGVkLnYxLkdhbWVzT3ZlcnZpZXdSZXNwb25zZRJRCgxTeXN0ZW1IZWFsdGgSHy5wdXp6bGVkLnYxLlN5c3RlbUhlYWx0aFJlcXVlc3QaIC5wdXp6bGVkLnYxLlN5c3RlbUhlYWx0aFJlc3BvbnNlEl0KEEdldEdhbWVBbmFseXRpY3MSIy5wdXp6bGVkLnYxLkdldEdhbWVBbmFseXRpY3NSZXF1ZXN0GiQucHV6emxlZC52MS5HZXRHYW1lQW5hbHl0aWNzUmVzcG9uc2ViBnByb3RvMw',
 	)
 
 /**
@@ -607,9 +607,9 @@ export const ListDlqResponseSchema: GenMessage<ListDlqResponse> =
 	messageDesc(file_puzzled_v1_admin, 21)
 
 /**
- * @generated from message puzzled.v1.DlqActionRequest
+ * @generated from message puzzled.v1.RetryDlqRequest
  */
-export type DlqActionRequest = Message<'puzzled.v1.DlqActionRequest'> & {
+export type RetryDlqRequest = Message<'puzzled.v1.RetryDlqRequest'> & {
 	/**
 	 * @generated from field: string id = 1;
 	 */
@@ -617,17 +617,17 @@ export type DlqActionRequest = Message<'puzzled.v1.DlqActionRequest'> & {
 }
 
 /**
- * Describes the message puzzled.v1.DlqActionRequest.
- * Use `create(DlqActionRequestSchema)` to create a new message.
+ * Describes the message puzzled.v1.RetryDlqRequest.
+ * Use `create(RetryDlqRequestSchema)` to create a new message.
  */
-export const DlqActionRequestSchema: GenMessage<DlqActionRequest> =
+export const RetryDlqRequestSchema: GenMessage<RetryDlqRequest> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_admin, 22)
 
 /**
- * @generated from message puzzled.v1.DlqActionResponse
+ * @generated from message puzzled.v1.RetryDlqResponse
  */
-export type DlqActionResponse = Message<'puzzled.v1.DlqActionResponse'> & {
+export type RetryDlqResponse = Message<'puzzled.v1.RetryDlqResponse'> & {
 	/**
 	 * @generated from field: bool ok = 1;
 	 */
@@ -635,12 +635,84 @@ export type DlqActionResponse = Message<'puzzled.v1.DlqActionResponse'> & {
 }
 
 /**
- * Describes the message puzzled.v1.DlqActionResponse.
- * Use `create(DlqActionResponseSchema)` to create a new message.
+ * Describes the message puzzled.v1.RetryDlqResponse.
+ * Use `create(RetryDlqResponseSchema)` to create a new message.
  */
-export const DlqActionResponseSchema: GenMessage<DlqActionResponse> =
+export const RetryDlqResponseSchema: GenMessage<RetryDlqResponse> =
 	/*@__PURE__*/
 	messageDesc(file_puzzled_v1_admin, 23)
+
+/**
+ * @generated from message puzzled.v1.ResolveDlqRequest
+ */
+export type ResolveDlqRequest = Message<'puzzled.v1.ResolveDlqRequest'> & {
+	/**
+	 * @generated from field: string id = 1;
+	 */
+	id: string
+}
+
+/**
+ * Describes the message puzzled.v1.ResolveDlqRequest.
+ * Use `create(ResolveDlqRequestSchema)` to create a new message.
+ */
+export const ResolveDlqRequestSchema: GenMessage<ResolveDlqRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_admin, 24)
+
+/**
+ * @generated from message puzzled.v1.ResolveDlqResponse
+ */
+export type ResolveDlqResponse = Message<'puzzled.v1.ResolveDlqResponse'> & {
+	/**
+	 * @generated from field: bool ok = 1;
+	 */
+	ok: boolean
+}
+
+/**
+ * Describes the message puzzled.v1.ResolveDlqResponse.
+ * Use `create(ResolveDlqResponseSchema)` to create a new message.
+ */
+export const ResolveDlqResponseSchema: GenMessage<ResolveDlqResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_admin, 25)
+
+/**
+ * @generated from message puzzled.v1.MarkDlqFailedRequest
+ */
+export type MarkDlqFailedRequest = Message<'puzzled.v1.MarkDlqFailedRequest'> & {
+	/**
+	 * @generated from field: string id = 1;
+	 */
+	id: string
+}
+
+/**
+ * Describes the message puzzled.v1.MarkDlqFailedRequest.
+ * Use `create(MarkDlqFailedRequestSchema)` to create a new message.
+ */
+export const MarkDlqFailedRequestSchema: GenMessage<MarkDlqFailedRequest> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_admin, 26)
+
+/**
+ * @generated from message puzzled.v1.MarkDlqFailedResponse
+ */
+export type MarkDlqFailedResponse = Message<'puzzled.v1.MarkDlqFailedResponse'> & {
+	/**
+	 * @generated from field: bool ok = 1;
+	 */
+	ok: boolean
+}
+
+/**
+ * Describes the message puzzled.v1.MarkDlqFailedResponse.
+ * Use `create(MarkDlqFailedResponseSchema)` to create a new message.
+ */
+export const MarkDlqFailedResponseSchema: GenMessage<MarkDlqFailedResponse> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_admin, 27)
 
 /**
  * @generated from message puzzled.v1.GamesOverviewRequest
@@ -653,7 +725,7 @@ export type GamesOverviewRequest = Message<'puzzled.v1.GamesOverviewRequest'> & 
  */
 export const GamesOverviewRequestSchema: GenMessage<GamesOverviewRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 24)
+	messageDesc(file_puzzled_v1_admin, 28)
 
 /**
  * @generated from message puzzled.v1.GamesOverviewEntry
@@ -696,7 +768,7 @@ export type GamesOverviewEntry = Message<'puzzled.v1.GamesOverviewEntry'> & {
  */
 export const GamesOverviewEntrySchema: GenMessage<GamesOverviewEntry> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 25)
+	messageDesc(file_puzzled_v1_admin, 29)
 
 /**
  * @generated from message puzzled.v1.GamesOverviewResponse
@@ -714,7 +786,7 @@ export type GamesOverviewResponse = Message<'puzzled.v1.GamesOverviewResponse'> 
  */
 export const GamesOverviewResponseSchema: GenMessage<GamesOverviewResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 26)
+	messageDesc(file_puzzled_v1_admin, 30)
 
 /**
  * @generated from message puzzled.v1.SystemHealthRequest
@@ -727,7 +799,7 @@ export type SystemHealthRequest = Message<'puzzled.v1.SystemHealthRequest'> & {}
  */
 export const SystemHealthRequestSchema: GenMessage<SystemHealthRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 27)
+	messageDesc(file_puzzled_v1_admin, 31)
 
 /**
  * @generated from message puzzled.v1.SystemHealthResponse
@@ -755,12 +827,12 @@ export type SystemHealthResponse = Message<'puzzled.v1.SystemHealthResponse'> & 
  */
 export const SystemHealthResponseSchema: GenMessage<SystemHealthResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 28)
+	messageDesc(file_puzzled_v1_admin, 32)
 
 /**
- * @generated from message puzzled.v1.GameAnalyticsRequest
+ * @generated from message puzzled.v1.GetGameAnalyticsRequest
  */
-export type GameAnalyticsRequest = Message<'puzzled.v1.GameAnalyticsRequest'> & {
+export type GetGameAnalyticsRequest = Message<'puzzled.v1.GetGameAnalyticsRequest'> & {
 	/**
 	 * @generated from field: string game_slug = 1;
 	 */
@@ -773,12 +845,12 @@ export type GameAnalyticsRequest = Message<'puzzled.v1.GameAnalyticsRequest'> & 
 }
 
 /**
- * Describes the message puzzled.v1.GameAnalyticsRequest.
- * Use `create(GameAnalyticsRequestSchema)` to create a new message.
+ * Describes the message puzzled.v1.GetGameAnalyticsRequest.
+ * Use `create(GetGameAnalyticsRequestSchema)` to create a new message.
  */
-export const GameAnalyticsRequestSchema: GenMessage<GameAnalyticsRequest> =
+export const GetGameAnalyticsRequestSchema: GenMessage<GetGameAnalyticsRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 29)
+	messageDesc(file_puzzled_v1_admin, 33)
 
 /**
  * @generated from message puzzled.v1.DailyStat
@@ -811,12 +883,12 @@ export type DailyStat = Message<'puzzled.v1.DailyStat'> & {
  */
 export const DailyStatSchema: GenMessage<DailyStat> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 30)
+	messageDesc(file_puzzled_v1_admin, 34)
 
 /**
- * @generated from message puzzled.v1.GameAnalyticsResponse
+ * @generated from message puzzled.v1.GetGameAnalyticsResponse
  */
-export type GameAnalyticsResponse = Message<'puzzled.v1.GameAnalyticsResponse'> & {
+export type GetGameAnalyticsResponse = Message<'puzzled.v1.GetGameAnalyticsResponse'> & {
 	/**
 	 * @generated from field: repeated puzzled.v1.DailyStat daily_stats = 1;
 	 */
@@ -824,12 +896,12 @@ export type GameAnalyticsResponse = Message<'puzzled.v1.GameAnalyticsResponse'> 
 }
 
 /**
- * Describes the message puzzled.v1.GameAnalyticsResponse.
- * Use `create(GameAnalyticsResponseSchema)` to create a new message.
+ * Describes the message puzzled.v1.GetGameAnalyticsResponse.
+ * Use `create(GetGameAnalyticsResponseSchema)` to create a new message.
  */
-export const GameAnalyticsResponseSchema: GenMessage<GameAnalyticsResponse> =
+export const GetGameAnalyticsResponseSchema: GenMessage<GetGameAnalyticsResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_admin, 31)
+	messageDesc(file_puzzled_v1_admin, 35)
 
 /**
  * @generated from service puzzled.v1.AdminService
@@ -912,24 +984,24 @@ export const AdminService: GenService<{
 	 */
 	retryDlq: {
 		methodKind: 'unary'
-		input: typeof DlqActionRequestSchema
-		output: typeof DlqActionResponseSchema
+		input: typeof RetryDlqRequestSchema
+		output: typeof RetryDlqResponseSchema
 	}
 	/**
 	 * @generated from rpc puzzled.v1.AdminService.ResolveDlq
 	 */
 	resolveDlq: {
 		methodKind: 'unary'
-		input: typeof DlqActionRequestSchema
-		output: typeof DlqActionResponseSchema
+		input: typeof ResolveDlqRequestSchema
+		output: typeof ResolveDlqResponseSchema
 	}
 	/**
 	 * @generated from rpc puzzled.v1.AdminService.MarkDlqFailed
 	 */
 	markDlqFailed: {
 		methodKind: 'unary'
-		input: typeof DlqActionRequestSchema
-		output: typeof DlqActionResponseSchema
+		input: typeof MarkDlqFailedRequestSchema
+		output: typeof MarkDlqFailedResponseSchema
 	}
 	/**
 	 * @generated from rpc puzzled.v1.AdminService.GamesOverview
@@ -952,7 +1024,7 @@ export const AdminService: GenService<{
 	 */
 	getGameAnalytics: {
 		methodKind: 'unary'
-		input: typeof GameAnalyticsRequestSchema
-		output: typeof GameAnalyticsResponseSchema
+		input: typeof GetGameAnalyticsRequestSchema
+		output: typeof GetGameAnalyticsResponseSchema
 	}
 }> = /*@__PURE__*/ serviceDesc(file_puzzled_v1_admin, 0)
