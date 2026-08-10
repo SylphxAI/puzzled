@@ -25,7 +25,6 @@
 		"atlas:hash": "atlas migrate hash --env local",
 		"db:studio": "drizzle-kit studio",
 		"db:export": "drizzle-kit export",
-		"db:seed": "bun run src/lib/db/seed.ts",
 		"generate:content": "bun run scripts/generate-content.ts"
 	},
 	"dependencies": {
