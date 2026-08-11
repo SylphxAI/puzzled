@@ -124,7 +124,13 @@ authority.
 - No dual-authority Next route for `sylphx.toml` `api` `path_prefixes`
 
 
-## Transitional residual (explicit, not done)
+## Transitional residual (superseded by ADR-170)
+
+> **Superseded:** ADR-170 (2026-08-09) records the clean-break end state. The
+> web residual executor, the REST `/api/v1` surface, the Hono client layer,
+> and the legacy cron/job paths listed below are **deleted**, not transitional.
+> Retained from this ADR: capability-first modular DDD and the two-crate policy.
+
 
 ### Job I/O authority (corrected)
 

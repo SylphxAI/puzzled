@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// GamificationService: streaks and streak-freezes. Identity comes from the
+// verified Bearer JWT; client-supplied user ids are never trusted.
+
+message StreakInfo {
+  uint32 current_streak = 1;
+  uint32 max_streak = 2;
+  bool has_played_today = 3;
+  uint32 total_games_played = 4;
+  uint32 freezes_available = 5;
+  bool auto_freeze_enabled = 6;
+}
+
+message GetStreakInfoRequest {}
+message GetStreakInfoResponse {
+  StreakInfo info = 1;
+}
+
+message ToggleAutoFreezeRequest {
+  bool enabled = 1;
+}
+message ToggleAutoFreezeResponse {
+  StreakInfo info = 1;
+}
+
+message TryAutoFreezeRequest {
+  bool is_premium = 1;
+}
+message TryAutoFreezeResponse {
+  bool used_freeze = 1;
+  StreakInfo info = 2;
+}
+
+message AddStreakFreezesRequest {
+  string user_id = 1;
+  uint32 count = 2;
+  string reason = 3;
+}
+message AddStreakFreezesResponse {
+  StreakInfo info = 1;
+}
+
+service GamificationService {
+  rpc GetStreakInfo(GetStreakInfoRequest) returns (GetStreakInfoResponse);
+  rpc ToggleAutoFreeze(ToggleAutoFreezeRequest) returns (ToggleAutoFreezeResponse);
+  rpc TryAutoFreeze(TryAutoFreezeRequest) returns (TryAutoFreezeResponse);
+  rpc AddStreakFreezes(AddStreakFreezesRequest) returns (AddStreakFreezesResponse);
+}

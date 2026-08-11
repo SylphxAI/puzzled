@@ -1,6 +1,6 @@
 version: v2
 plugins:
   - local: node_modules/.bin/protoc-gen-es
-    out: src/gen/connect
+    out: apps/puzzled/src/gen/connect
     opt:
       - target=ts

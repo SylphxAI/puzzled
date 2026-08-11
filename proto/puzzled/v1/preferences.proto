@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// PreferencesService: durable app-scoped user settings. Identity comes from
+// the verified Bearer JWT; the request body never carries a user id.
+
+message Profile {
+  string username = 1;
+  string bio = 2;
+  bool is_public_profile = 3;
+  bool compact_mode = 4;
+  bool leaderboard_visible = 5;
+  string locale = 6;
+}
+
+message NotificationPreferences {
+  bool push_enabled = 1;
+  bool push_daily_reminder = 2;
+  bool push_streak_alert = 3;
+  bool push_new_games = 4;
+  string daily_reminder_time = 5;
+  bool email_enabled = 6;
+  bool email_weekly_digest = 7;
+  bool email_marketing = 8;
+}
+
+message GetProfileRequest {}
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+message UpdateProfileRequest {
+  optional string username = 1;
+  optional string bio = 2;
+  optional bool is_public_profile = 3;
+  optional bool compact_mode = 4;
+  optional bool leaderboard_visible = 5;
+  optional string locale = 6;
+}
+message UpdateProfileResponse {
+  Profile profile = 1;
+}
+
+message CheckUsernameRequest {
+  string username = 1;
+}
+message CheckUsernameResponse {
+  bool available = 1;
+}
+
+message GetNotificationPreferencesRequest {}
+message GetNotificationPreferencesResponse {
+  NotificationPreferences preferences = 1;
+}
+
+message UpdatePushPreferencesRequest {
+  optional bool push_enabled = 1;
+  optional bool push_daily_reminder = 2;
+  optional bool push_streak_alert = 3;
+  optional bool push_new_games = 4;
+  optional string daily_reminder_time = 5;
+}
+message UpdatePushPreferencesResponse {
+  NotificationPreferences preferences = 1;
+}
+
+message UpdateEmailPreferencesRequest {
+  optional bool email_enabled = 1;
+  optional bool email_weekly_digest = 2;
+  optional bool email_marketing = 3;
+}
+message UpdateEmailPreferencesResponse {
+  NotificationPreferences preferences = 1;
+}
+
+service PreferencesService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc CheckUsername(CheckUsernameRequest) returns (CheckUsernameResponse);
+  rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
+  rpc UpdatePushPreferences(UpdatePushPreferencesRequest) returns (UpdatePushPreferencesResponse);
+  rpc UpdateEmailPreferences(UpdateEmailPreferencesRequest) returns (UpdateEmailPreferencesResponse);
+}

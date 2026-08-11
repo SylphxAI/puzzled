@@ -120,6 +120,26 @@ struct JwksCache {
 
 static JWKS_CACHE: OnceLock<Mutex<Option<JwksCache>>> = OnceLock::new();
 static TEST_DECODING_KEY_PEM: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+/// Process-lifetime blocking client. Must NOT be dropped inside an async
+/// context (tokio panics on runtime drop from async); keeping it static means
+/// it is never dropped per-request.
+static JWKS_BLOCKING_CLIENT: OnceLock<reqwest::blocking::Client> = OnceLock::new();
+
+fn jwks_blocking_client() -> &'static reqwest::blocking::Client {
+    JWKS_BLOCKING_CLIENT.get_or_init(|| {
+        reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .build()
+            .expect("jwks blocking client")
+    })
+}
+
+/// Shared lock so tests that install/clear the process-local test key do not
+/// race with each other (used by lib tests and this module's tests).
+pub fn test_key_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
 
 fn jwks_url() -> String {
     std::env::var("PLATFORM_JWKS_URL")
@@ -185,41 +205,67 @@ pub fn extract_bearer(headers: &HeaderMap) -> Option<String> {
 }
 
 fn is_admin_from_claims(claims: &PlatformClaims) -> bool {
+    // Exact scope tokens only — no prefix/suffix guessing.
+    let is_admin_scope = |s: &str| s == "admin" || s == "platform:admin";
     if let Some(scope) = &claims.scope {
-        if scope
-            .split_whitespace()
-            .any(|s| s == "platform:admin" || s == "admin" || s.ends_with(":admin"))
-        {
+        if scope.split_whitespace().any(is_admin_scope) {
             return true;
         }
     }
     if let Some(scopes) = &claims.scopes {
-        if scopes
-            .iter()
-            .any(|s| s == "platform:admin" || s == "admin" || s.ends_with(":admin"))
-        {
+        if scopes.iter().any(|s| is_admin_scope(s)) {
             return true;
         }
     }
     false
 }
 
-fn validation_config() -> Validation {
+/// True when identity verification must be fully constrained (production).
+fn enforcement_enabled() -> bool {
+    std::env::var("PUZZLED_ENV")
+        .map(|v| v.trim().eq_ignore_ascii_case("production"))
+        .unwrap_or(false)
+}
+
+fn validation_config() -> Result<Validation, JwtError> {
+    validation_config_inner(
+        expected_audience(),
+        expected_issuer(),
+        enforcement_enabled(),
+    )
+}
+
+fn validation_config_inner(
+    audience: Option<String>,
+    issuer: Option<String>,
+    enforce: bool,
+) -> Result<Validation, JwtError> {
     let mut v = Validation::new(Algorithm::RS256);
     v.validate_exp = true;
-    if let Some(aud) = expected_audience() {
-        v.set_audience(&[aud]);
-    } else {
-        v.validate_aud = false;
+    match audience {
+        Some(aud) => v.set_audience(&[aud]),
+        None if enforce => {
+            return Err(JwtError::JwksUnavailable(
+                "PLATFORM_JWT_AUDIENCE not configured (required in production)".into(),
+            ));
+        }
+        None => v.validate_aud = false,
     }
-    if let Some(iss) = expected_issuer() {
-        v.set_issuer(&[iss]);
+    match issuer {
+        Some(iss) => v.set_issuer(&[iss]),
+        None if enforce => {
+            return Err(JwtError::JwksUnavailable(
+                "PLATFORM_JWT_ISSUER not configured (required in production)".into(),
+            ));
+        }
+        None => {}
     }
-    v
+    Ok(v)
 }
 
 fn decode_with_key(token: &str, key: &DecodingKey) -> Result<PlatformClaims, JwtError> {
-    let data = decode::<PlatformClaims>(token, key, &validation_config())
+    let config = validation_config()?;
+    let data = decode::<PlatformClaims>(token, key, &config)
         .map_err(|e| JwtError::VerificationFailed(e.to_string()))?;
     if data.claims.sub.trim().is_empty() {
         return Err(JwtError::MissingSubject);
@@ -229,10 +275,7 @@ fn decode_with_key(token: &str, key: &DecodingKey) -> Result<PlatformClaims, Jwt
 
 fn fetch_jwks_blocking() -> Result<JwksCache, JwtError> {
     let url = jwks_url();
-    let client = reqwest::blocking::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()
-        .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?;
+    let client = jwks_blocking_client();
     let doc: JwksDocument = client
         .get(&url)
         .send()
@@ -389,7 +432,11 @@ pub fn resolve_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use std::sync::Mutex;
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
+    fn lock() -> std::sync::MutexGuard<'static, ()> {
+        super::test_key_lock()
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+    }
 
     use super::*;
     use axum::http::HeaderValue;
@@ -421,7 +468,7 @@ mod tests {
 
     #[test]
     fn rejects_missing_bearer() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         clear_test_decoding_key();
         let h = HeaderMap::new();
         let err = resolve_verified_identity(&h).unwrap_err();
@@ -430,7 +477,7 @@ mod tests {
 
     #[test]
     fn rejects_x_user_id_without_jwt() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         clear_test_decoding_key();
         let mut h = HeaderMap::new();
         h.insert("x-user-id", HeaderValue::from_static("attacker"));
@@ -440,7 +487,7 @@ mod tests {
 
     #[test]
     fn verifies_rs256_and_extracts_sub() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         let token = mint_token("user_01hxyz", None);
         let mut h = HeaderMap::new();
         h.insert(
@@ -455,7 +502,7 @@ mod tests {
 
     #[test]
     fn admin_scope_detected() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         let token = mint_token("admin_1", Some("platform:admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(id.is_admin);
@@ -463,8 +510,33 @@ mod tests {
     }
 
     #[test]
+    fn admin_scope_suffix_does_not_grant_admin() {
+        let _g = lock();
+        let token = mint_token("user_1", Some("puzzled:user"));
+        let id = verify_platform_jwt(&token).expect("verified");
+        assert!(!id.is_admin);
+        let token = mint_token("user_2", Some("editor:admin"));
+        let id = verify_platform_jwt(&token).expect("verified");
+        assert!(!id.is_admin, "suffix match must not grant admin");
+        clear_test_decoding_key();
+    }
+
+    #[test]
+    fn production_enforcement_requires_audience_and_issuer() {
+        // Pure inner config check: no process-global env mutation, deterministic.
+        assert!(matches!(
+            validation_config_inner(None, None, true),
+            Err(JwtError::JwksUnavailable(_))
+        ));
+        assert!(
+            validation_config_inner(Some("puzzled".into()), Some("sylphx".into()), true,).is_ok()
+        );
+        assert!(validation_config_inner(None, None, false).is_ok());
+    }
+
+    #[test]
     fn rejects_garbage_token() {
-        let _g = TEST_LOCK.lock().unwrap();
+        let _g = lock();
         install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
         let err = verify_platform_jwt("not-a-jwt").unwrap_err();
         assert_eq!(err, JwtError::MalformedToken);

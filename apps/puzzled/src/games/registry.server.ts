@@ -7,8 +7,6 @@
  * The separation prevents bundler errors from server deps in client bundles.
  */
 
-import 'server-only'
-
 import { getLLMGenerator } from './llm-generators.server'
 import { GAME_CONFIGS, getAllGames, isValidGameSlug } from './registry'
 import type { GenerationSummary, PuzzleDifficulty, PuzzleGenerationResult } from './types'

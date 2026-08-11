@@ -4,7 +4,7 @@ import { BarChart3, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Achievements } from '@/features/gamification/components/achievements'
-import { createServerApi, type UserStats } from '@/lib/api/server'
+import { getServerUserStats } from '@/lib/api/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
 import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
@@ -83,14 +83,11 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	const { stats: statsApi } = await createServerApi()
-
-	// Get user's real stats
+	// Get user's real stats (sole Connect)
 	let stats: StatsData = { wordle: emptyStats, connections: emptyStats }
 
 	try {
-		const userStatsRes = await statsApi['user-stats'].$get()
-		const userStats = (await userStatsRes.json()) as UserStats
+		const userStats = await getServerUserStats()
 		stats = {
 			wordle: userStats.wordle
 				? {

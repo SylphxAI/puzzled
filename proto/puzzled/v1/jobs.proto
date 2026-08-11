@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package puzzled.v1;
+
+// JobsService: scheduled retention jobs executed by the api service.
+// Authenticated with the platform app secret (x-app-secret header); effects
+// (email/push) are delivered through the Platform BaaS HTTP API.
+
+message RunRetentionJobRequest {
+  // daily-reminder | win-back-emails
+  string name = 1;
+}
+
+message RunRetentionJobResponse {
+  bool ok = 1;
+  uint32 processed = 2;
+  repeated string errors = 3;
+}
+
+service JobsService {
+  rpc RunRetentionJob(RunRetentionJobRequest) returns (RunRetentionJobResponse);
+}

@@ -72,11 +72,17 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
 
       # bun 1.3.x --frozen-lockfile false-positives here; committed lock remains authority.
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
       - name: Run Biome lint
         run: bun run lint
         working-directory: apps/puzzled
+
+      - name: Proto contract gate (buf lint + breaking)
+        run: bun run check:proto-buf
+
+      - name: Platform boundary fence
+        run: bash scripts/check-platform-boundary.sh .
 
       - name: Run TypeScript type check
         run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1
@@ -182,7 +188,7 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
       - name: Run unit tests
         run: bun run test:unit
@@ -192,11 +198,6 @@ jobs:
           DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
           SKIP_ENV_VALIDATION: 'true'
 
-      - name: Run SDK tests
-        run: bun test --coverage
-        working-directory: packages/sdk
-        env:
-          NODE_ENV: test
 
   # ==========================================
   # Build Validation
@@ -226,10 +227,32 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - run: bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000
 
-      # Removed discarded packaging: Build SDK — Platform builds once
-      # Removed discarded packaging: Build Puzzled (type-safe next build) — Platform builds once
+      - name: Build web (next build, typecheck enforced)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '.'
+
+      - name: Build Rust api binary (locked release)
+        run: |
+          if ! command -v protoc >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends protobuf-compiler
+          fi
+          cargo build --locked --release -p puzzled-server
   rust-api:
     name: Rust API
     runs-on: sylphx-linux-standard
@@ -260,7 +283,7 @@ jobs:
         run: cargo fmt -p puzzled-core -p puzzled-server -- --check
 
       - name: cargo clippy
-        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments -A dead_code
+        run: cargo clippy -p puzzled-core -p puzzled-server -- -D warnings -A clippy::double_parens -A clippy::too_many_arguments
 
       - name: cargo test
         run: cargo test -p puzzled-core -p puzzled-server

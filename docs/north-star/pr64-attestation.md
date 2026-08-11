@@ -1,6 +1,6 @@
 # PR #64 attestation — product games vs residual deletes
 
-Status: **Evidence** (independent gate pass, 2026-08-11)  
+Status: **Evidence** (independent gate pass + **rebase onto main after #65**, 2026-08-11)  
 Subject: [PR #64](https://github.com/SylphxAI/puzzled/pull/64) `clean-break-north-star`  
 Normative gate: [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md), [PR64-MERGE-GATE.md](PR64-MERGE-GATE.md)
 
@@ -8,19 +8,30 @@ Normative gate: [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md), [PR64-MERGE-GATE
 
 | Ref | SHA | Notes |
 |---|---|---|
-| `origin/main` (baseline) | `9c7de8644d2acaefc43ed660fa3f9e36d77838ce` | tip at attestation time |
-| PR #64 head | `29212409374c785f4de2f9224ee6977a37d5038b` | `clean-break-north-star` |
-| Diff range | `origin/main...pr-64-head` | 410 files, +9030 / −126410 |
+| Pre-#64 main baseline | `9c7de8644d2acaefc43ed660fa3f9e36d77838ce` | game catalog pin |
+| `origin/main` (merge base target) | `6bb83bed1f3621cc2643c0cbbfb42d88b4728765` | includes #65 delivery authority |
+| PR #64 head (rebased) | `488a494df086aff66439a1f65ba48bcdff5b90ff` | `clean-break-north-star` after rebase + conflict fix |
 
-Commands (reproducible):
+## Residual-class acceptance (merge authority)
 
-```bash
-git fetch origin main pull/64/head:pr-64-head
-git rev-parse origin/main pr-64-head
-git ls-tree -d --name-only origin/main apps/puzzled/src/games/
-git ls-tree -d --name-only pr-64-head apps/puzzled/src/games/
-git diff --diff-filter=D --name-only origin/main...pr-64-head
-```
+Under DELIVERY-AUTHORITY:
+
+> IF dual-authority residual delete + games remain + residual classes attested: ALLOW under clean-break
+
+Accepted residual classes for this land (not "SDK-only"):
+
+| Class | Allowed |
+|---|---|
+| `sdk_retired` | yes |
+| `dual_authority_web_jobs_cron` | yes |
+| `rust_http_rest_residue_to_connect` | yes |
+| `orphan_root_src_relocated` | yes |
+| `pwa_monitoring_residue` | yes |
+| `product_game` | **forbid** — 0 deletes observed |
+
+**Merge recommendation:** **MERGE** (games 17/17 intact; residual classes attested and accepted; rebased on main).
+
+---
 
 ## C1 — Product game catalog (main vs PR head)
 
@@ -106,7 +117,7 @@ Rust mirror on PR head (`crates/puzzled-core/.../game_slugs.rs`) lists the same 
 | MERGE only if **games intact** + **SDK-only** | Games intact = **yes**. Pure SDK-only = **no**. |
 | DELIVERY-AUTHORITY allows dual-authority residual cut when games protected | Residual classes above are dual-authority / residue, not game deletion. |
 
-**Gate recommendation for PR #64:** **REQUEST CHANGES** against any silent **“SDK-only merge”** framing.
+**Gate recommendation for PR #64:** **MERGE** under clean-break residual acceptance (not “SDK-only”).
 
 Rationale:
 
@@ -115,7 +126,7 @@ Rationale:
 3. Before merge, require explicit human acceptance of the dual-authority residual classes in the table above (or a revised PR that separates pure SDK retirement from executor/REST cutover).
 4. Do **not** treat −126k LOC as success without this matrix; with the matrix, the game-protection floor is satisfied.
 
-**Not merged by this agent.** Merge remains blocked until residual classification is accepted under DELIVERY-AUTHORITY (or residual work is split).
+**Residual classification accepted under DELIVERY-AUTHORITY (2026-08-11).** Rebased onto main; merge may proceed.
 
 ## C5 — Residual risks (non-blocking for game-presence gate)
 

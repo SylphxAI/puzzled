@@ -1,16 +1,13 @@
 /**
- * Puzzled API Module
+ * Puzzled API module — sole Connect authority (ADR-170).
  *
- * Exports API client, hooks, and provider for use throughout the app.
+ * Exports Connect-backed hooks, the error type, and the provider. The Hono
+ * REST client layer is deleted; there is no REST fallback anywhere.
  */
 
-export type { ApiError as ApiErrorType } from './client'
-// Client
-export { ApiError, api } from './client'
-
-// Hooks
+export type { ApiErrorType } from './errors'
 export * from './hooks'
-export { queryKeys } from './hooks'
+export { ApiError } from './hooks'
 
 // Provider
 export { ApiProvider } from './provider'

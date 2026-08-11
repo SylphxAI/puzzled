@@ -5,21 +5,19 @@ RUN apk add --no-cache libc6-compat
 # 1. Copy manifest files — bun install layer cached until lockfile changes
 COPY package.json bun.lock bunfig.toml turbo.json ./
 COPY apps/puzzled/package.json   ./apps/puzzled/
-COPY packages/sdk/package.json   ./packages/sdk/
 COPY packages/ui/package.json    ./packages/ui/
 
 # 2. Install deps
 RUN bun install --ignore-scripts
 
-# 3. Build SDK + UI (cached until package source changes)
-COPY packages/sdk ./packages/sdk
+# 3. Build UI (cached until package source changes)
 COPY packages/ui  ./packages/ui
-RUN cd packages/sdk && bun run build
+RUN cd packages/ui && bun run build
 
 # 4. Copy full source
 COPY apps/puzzled ./apps/puzzled
 
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 SKIP_ENV_VALIDATION=1
 
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_SYLPHX_APP_ID
@@ -47,3 +45,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
 EXPOSE 3000
 CMD ["node", "apps/puzzled/server.js"]
+
+# preview re-trigger 20260811T112206Z
+
+# preview re-trigger after residual fix 20260811T121343Z
+
+# dens re-trigger 20260811T122925Z
+
+# after dens 3/3 live 20260811T123322Z

@@ -2,6 +2,5 @@
 
 pub mod adapters;
 pub mod contract;
-pub mod interfaces;
 
 pub use contract::*;

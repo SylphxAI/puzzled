@@ -48,18 +48,15 @@ fn shell_depends_on_puzzled_core() {
 fn shell_capability_tree_exists() {
     let root = manifest_dir().join("src/capabilities");
     for rel in [
-        "puzzle_play/interfaces/games_api.rs",
-        "puzzle_play/adapters/game_sessions_db.rs",
+        "admin/adapters/admin_db.rs",
+        "gamification/interfaces/gamification_api.rs",
         "identity_access/adapters/platform_jwt.rs",
         "identity_access/contract.rs",
-        "identity_access/interfaces/auth_sessions.rs",
         "leaderboard/adapters/leaderboard_db.rs",
-        "leaderboard/interfaces/leaderboard.rs",
-        "preferences/interfaces/prefs_api.rs",
-        "gamification/interfaces/gamification_api.rs",
-        "stats/interfaces/stats_api.rs",
-        "generation_jobs/interfaces/generation_jobs.rs",
-        "generation_jobs/interfaces/platform_webhooks.rs",
+        "preferences/adapters/preferences_db.rs",
+        "puzzle_play/adapters/daily_puzzles_db.rs",
+        "puzzle_play/adapters/game_sessions_db.rs",
+        "stats/adapters/sessions_stats_db.rs",
     ] {
         let path = root.join(rel);
         assert!(path.is_file(), "missing shell module {}", path.display());
@@ -70,15 +67,19 @@ fn shell_capability_tree_exists() {
 fn router_registers_rust_api_prefixes() {
     let router = fs::read_to_string(manifest_dir().join("src/bootstrap/router.rs"))
         .unwrap_or_else(|e| panic!("read router: {e}"));
-    for route in [
-        "/healthz",
-        "/readyz",
-        "/api/leaderboard",
-        "/api/v1",
-        "/api/v1/jobs/plan",
-        "/api/v1/jobs/execute",
-    ] {
+    for route in ["/healthz", "/readyz"] {
         assert!(router.contains(route), "router missing {route}");
+    }
+    // Sole surface: Connect services only — no hand-rolled REST routes remain.
+    assert!(!router.contains("/api/v1"), "REST surface must be deleted");
+    for service in [
+        "admin_connect_service",
+        "gamification_connect_service",
+        "preferences_connect_service",
+        "puzzle_connect_service",
+        "stats_connect_service",
+    ] {
+        assert!(router.contains(service), "router missing {service}");
     }
 }
 
@@ -123,33 +124,23 @@ fn sql_adapters_exist_for_persisting_capabilities() {
 }
 
 #[test]
-fn web_residual_webhook_executes_jobs_until_rust_io_adapters_land() {
-    // Repo-root relative from crate manifest.
-    let route =
+fn jobs_executor_is_sole_rust() {
+    // The web residual executor is deleted (ADR-170): the webhook route must
+    // not exist and the api service must register JobsService.
+    let webhook =
         manifest_dir().join("../../apps/puzzled/src/app/api/webhooks/platform-jobs/route.ts");
-    let text =
-        fs::read_to_string(&route).unwrap_or_else(|e| panic!("read {}: {e}", route.display()));
     assert!(
-        text.contains("executeJob") && text.contains("web-residual-job-executor"),
-        "web residual webhook must execute JOB_HANDLERS until Rust I/O adapters land"
+        !webhook.exists(),
+        "web residual webhook must be deleted; JobsService is the sole executor"
     );
+    let router = fs::read_to_string(manifest_dir().join("src/bootstrap/router.rs"))
+        .unwrap_or_else(|e| panic!("read router: {e}"));
     assert!(
-        !text.contains("status: 410"),
-        "must not 410 the residual job executor while edge routes webhook to web"
+        router.contains("jobs_connect_service"),
+        "JobsService must be mounted"
     );
-
-    let manifest = fs::read_to_string(manifest_dir().join("../../sylphx.toml"))
-        .unwrap_or_else(|e| panic!("read sylphx.toml: {e}"));
-    // Only the path_prefixes array is binding for edge routing; comments may mention the path.
-    let prefixes = manifest
-        .split("path_prefixes")
-        .nth(1)
-        .and_then(|s| s.split(']').next())
-        .unwrap_or("");
-    assert!(
-        !prefixes.contains("/api/webhooks/platform-jobs"),
-        "api path_prefixes must not steal residual webhook from web until Rust owns full I/O"
-    );
+    let proto = manifest_dir().join("../../proto/puzzled/v1/jobs.proto");
+    assert!(proto.is_file(), "jobs.proto must exist");
 }
 
 #[test]

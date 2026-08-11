@@ -169,22 +169,26 @@ export function GameResultCard({
 									{t('perfectGame')}
 								</span>
 							)}
-							{percentileData && percentileData.percentile > 0 && (
-								<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
-									<Trophy className="h-3.5 w-3.5 text-amber-500" />
-									{percentileData.percentile >= 50
-										? t('beatPercent', { percent: percentileData.percentile })
-										: t('topPercent', {
-												percent: 100 - percentileData.percentile,
-											})}
-								</span>
-							)}
-							{percentileData && percentileData.totalPlayers >= 10 && (
-								<span className="flex items-center gap-1 text-xs text-muted-foreground/70">
-									<Users className="h-3 w-3" />
-									{t('playersToday', { count: percentileData.totalPlayers })}
-								</span>
-							)}
+							{percentileData &&
+								percentileData.percentile != null &&
+								percentileData.percentile > 0 && (
+									<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
+										<Trophy className="h-3.5 w-3.5 text-amber-500" />
+										{percentileData.percentile >= 50
+											? t('beatPercent', { percent: percentileData.percentile })
+											: t('topPercent', {
+													percent: 100 - percentileData.percentile,
+												})}
+									</span>
+								)}
+							{percentileData &&
+								percentileData.totalPlayers != null &&
+								percentileData.totalPlayers >= 10 && (
+									<span className="flex items-center gap-1 text-xs text-muted-foreground/70">
+										<Users className="h-3 w-3" />
+										{t('playersToday', { count: percentileData.totalPlayers })}
+									</span>
+								)}
 						</div>
 					)}
 				</div>

@@ -90,3 +90,106 @@ pub async fn upsert_notification_preferences(
     .map_err(|e| format!("notification prefs upsert failed: {e}"))?;
     Ok(())
 }
+
+/// Load a user's app-scoped profile/preferences row (if any).
+pub async fn fetch_user_preferences(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<Option<serde_json::Value>, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    type PrefRow = (
+        Option<String>,
+        Option<String>,
+        bool,
+        bool,
+        bool,
+        Option<String>,
+    );
+    let row: Option<PrefRow> = sqlx::query_as(
+        r#"
+        SELECT username, bio, is_public_profile, compact_mode, leaderboard_visible, locale
+        FROM user_preferences
+        WHERE user_id = $1
+        "#,
+    )
+    .bind(uid)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("prefs read failed: {e}"))?;
+    Ok(row.map(
+        |(username, bio, is_public_profile, compact_mode, leaderboard_visible, locale)| {
+            serde_json::json!({
+                "username": username,
+                "bio": bio,
+                "isPublicProfile": is_public_profile,
+                "compactMode": compact_mode,
+                "leaderboardVisible": leaderboard_visible,
+                "locale": locale,
+            })
+        },
+    ))
+}
+
+/// Load a user's notification preferences (defaults when absent).
+pub async fn fetch_notification_preferences(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<serde_json::Value, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    type NotifRow = (bool, bool, bool, bool, String, bool, bool, bool);
+    let row: Option<NotifRow> = sqlx::query_as(
+        r#"
+        SELECT push_enabled, push_daily_reminder, push_streak_alert, push_new_games,
+               daily_reminder_time, email_enabled, email_weekly_digest, email_marketing
+        FROM notification_preferences
+        WHERE user_id = $1
+        "#,
+    )
+    .bind(uid)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("notification prefs read failed: {e}"))?;
+    let (
+        push_enabled,
+        push_daily_reminder,
+        push_streak_alert,
+        push_new_games,
+        daily_reminder_time,
+        email_enabled,
+        email_weekly_digest,
+        email_marketing,
+    ) = row.unwrap_or((
+        true,
+        true,
+        true,
+        true,
+        "09:00".to_string(),
+        true,
+        true,
+        true,
+    ));
+    Ok(serde_json::json!({
+        "pushEnabled": push_enabled,
+        "pushDailyReminder": push_daily_reminder,
+        "pushStreakAlert": push_streak_alert,
+        "pushNewGames": push_new_games,
+        "dailyReminderTime": daily_reminder_time,
+        "emailEnabled": email_enabled,
+        "emailWeeklyDigest": email_weekly_digest,
+        "emailMarketing": email_marketing,
+    }))
+}
+
+/// True when the username is taken by another user.
+pub async fn username_taken(pool: &PgPool, user_id: &str, username: &str) -> Result<bool, String> {
+    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let row: Option<(String,)> = sqlx::query_as(
+        "SELECT user_id::text FROM user_preferences WHERE username = $1 AND user_id <> $2 LIMIT 1",
+    )
+    .bind(username)
+    .bind(uid)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("username check failed: {e}"))?;
+    Ok(row.is_some())
+}
