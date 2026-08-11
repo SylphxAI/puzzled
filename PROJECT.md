@@ -31,18 +31,11 @@ manifest, and application-specific game/user workflows.
 
 ## Delivery
 
-<<<<<<< HEAD
-CI declares `Lint & Type Check`, `Security Scan`, `Migration Integrity`, `Unit
-Tests`, and `Build`. The workflow currently path-filters to app/package/workflow
-changes, so docs-only project-control metadata may need central status fan-in or
-ruleset adjustment before the repo can claim full doctrine admission.
-
-## Delivery authority
-
-See [docs/north-star/DELIVERY-AUTHORITY.md](docs/north-star/DELIVERY-AUTHORITY.md).
-=======
 CI runs lint/typecheck, buf + platform-boundary gates, migration integrity,
 unit tests (app + Rust), and real builds (web `next build` + Rust release).
 Evidence is per layer: source / CI / deploy / live — a green check or a 200
 is not proof.
->>>>>>> a518392 (docs(adr): ADR-170 clean-break north star + proto naming conformance)
+
+## Delivery authority
+
+See [docs/north-star/DELIVERY-AUTHORITY.md](docs/north-star/DELIVERY-AUTHORITY.md).
