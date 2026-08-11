@@ -18,7 +18,8 @@ after SDK cleanup.
 | Difficulty / progress flows | Per-game UX |
 | Auth / settings | As product defines |
 | Admin games | Operator surface |
-| Analytics | Product-defined |
+| Analytics | Product-defined (no ellipsis jobs) |
+| All registry games playable | Every slug above |
 
 ## Engineering clean-break (allowed)
 
@@ -54,33 +55,40 @@ IF dual product authority remains after claim sole Rust: REJECT.
 
 ## Full game catalog (no ellipsis)
 
-Baseline main tip tag  (pin SHA at gate time).
+**Pinned baseline SHA (main before #64):**   
+Tag:  (must point at this SHA).
+
+Registry-facing game modules on baseline (17 directories under  excluding shared):
 
 | Game slug | Rule |
 |---|---|
-| arithmo | required |
-| block-slide | required |
-| crossword | required |
-| cryptogram | required |
-| killer-sudoku | required |
-| nonogram | required |
-| pattern-match | required |
-| quad-words | required |
-| queens | required |
-| shared | required |
-| sudoku | required |
-| tango | required |
-| word-box | required |
-| word-groups | required |
-| word-guess | required |
-| word-hive | required |
-| word-ladder | required |
-| word-search | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+|  | required |
+
+Do **not** list infrastructure files (registry.ts, shared/) as games.
 
 ## Attestation schema for #64 deletes
-For each material delete path group: path_glob | class (sdk_retired|dual_authority|product) | evidence | status (ok_delete|must_restore).
+For each material delete path group: .
+
+**Forbid:** claiming “SDK-only” if any  class path is deleted without must_restore.
 
 ## Golden journeys (floor)
+
 
 | ID | Journey |
 |---|---|
