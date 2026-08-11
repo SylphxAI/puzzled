@@ -11,6 +11,8 @@ COPY packages/ui/package.json    ./packages/ui/
 RUN bun install --ignore-scripts
 
 # 3. Build UI (cached until package source changes)
+# packages/ui/tsconfig.json extends tooling/typescript/base.json
+COPY tooling/typescript ./tooling/typescript
 COPY packages/ui  ./packages/ui
 RUN cd packages/ui && bun run build
 
