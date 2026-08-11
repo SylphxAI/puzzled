@@ -45,3 +45,5 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
 EXPOSE 3000
 CMD ["node", "apps/puzzled/server.js"]
+
+# preview re-trigger 20260811T112206Z
