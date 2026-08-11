@@ -23,3 +23,5 @@ ENV PUZZLED_HTTP_PORT=8080
 EXPOSE 8080
 USER 65532:65532
 CMD ["puzzled-server"]
+
+# post-dens-success re-trigger 20260811T123108Z
