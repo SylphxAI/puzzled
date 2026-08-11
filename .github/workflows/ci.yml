@@ -72,7 +72,15 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
 
       # bun 1.3.x --frozen-lockfile false-positives here; committed lock remains authority.
-      - run: bun install
+      # Retry for npm registry / tarball extract flakes (seen on next@16.2.6).
+      - name: Install dependencies (retried for registry flake)
+        run: |
+          for attempt in 1 2 3; do
+            bun install && exit 0
+            echo "bun install attempt ${attempt} failed (registry/tarball flake), retrying in 10s"
+            sleep 10
+          done
+          exit 1
 
       - name: Run Biome lint
         run: bun run lint
@@ -182,7 +190,14 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - name: Install dependencies (retried for registry flake)
+        run: |
+          for attempt in 1 2 3; do
+            bun install && exit 0
+            echo "bun install attempt ${attempt} failed (registry/tarball flake), retrying in 10s"
+            sleep 10
+          done
+          exit 1
 
       - name: Run unit tests
         run: bun run test:unit
@@ -226,7 +241,14 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
 
-      - run: bun install
+      - name: Install dependencies (retried for registry flake)
+        run: |
+          for attempt in 1 2 3; do
+            bun install && exit 0
+            echo "bun install attempt ${attempt} failed (registry/tarball flake), retrying in 10s"
+            sleep 10
+          done
+          exit 1
 
       # Removed discarded packaging: Build SDK — Platform builds once
       # Removed discarded packaging: Build Puzzled (type-safe next build) — Platform builds once
