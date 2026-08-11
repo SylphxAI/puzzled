@@ -1,6 +1,6 @@
 # Puzzled — Delivery Authority
 
-Status: **Normative candidate**  
+Status: **Normative** (player product outranks ADR-170 convenience on games)  
 Revision: 2026-08-11  
 Especially binding for: open **PR #64** clean-break
 
@@ -51,6 +51,34 @@ IF #64 removes a game without matrix: REJECT merge.
 IF only SDK delete + games remain: ALLOW (engineering clean-break).
 IF dual product authority remains after claim sole Rust: REJECT.
 ```
+
+## Full game catalog (no ellipsis)
+
+Baseline main tip tag  (pin SHA at gate time).
+
+| Game slug | Rule |
+|---|---|
+| arithmo | required |
+| block-slide | required |
+| crossword | required |
+| cryptogram | required |
+| killer-sudoku | required |
+| nonogram | required |
+| pattern-match | required |
+| quad-words | required |
+| queens | required |
+| shared | required |
+| sudoku | required |
+| tango | required |
+| word-box | required |
+| word-groups | required |
+| word-guess | required |
+| word-hive | required |
+| word-ladder | required |
+| word-search | required |
+
+## Attestation schema for #64 deletes
+For each material delete path group: path_glob | class (sdk_retired|dual_authority|product) | evidence | status (ok_delete|must_restore).
 
 ## Golden journeys (floor)
 
