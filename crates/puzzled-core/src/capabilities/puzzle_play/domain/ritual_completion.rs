@@ -448,13 +448,8 @@ mod tests {
 
     #[test]
     fn hrc_sql_recipe_is_present() {
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!(
-            "HAVING COUNT(*) >= {HABITUAL_MIN_DAYS}"
-        )));
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!(
-            "$1::date - {}",
-            HABITUAL_WINDOW_DAYS - 1
-        )));
+        assert!(HRC_RECOMPUTE_SQL.contains(&format!("HAVING COUNT(*) >= {HABITUAL_MIN_DAYS}")));
+        assert!(HRC_RECOMPUTE_SQL.contains(&format!("$1::date - {}", HABITUAL_WINDOW_DAYS - 1)));
         assert!(HRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
     }
 
