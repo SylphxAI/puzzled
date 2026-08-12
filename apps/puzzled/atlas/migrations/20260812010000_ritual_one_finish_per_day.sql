@@ -7,6 +7,9 @@
 -- Pre-clean: dogfood residual could insert multiple is_ritual rows for the same
 -- (user, game, day) when already_played was pid-gated. Demote extras so the
 -- unique index can apply; DRC (COUNT DISTINCT user_id) is unchanged.
+--
+-- CREATE UNIQUE INDEX IF NOT EXISTS: safe if a prior partial apply left the
+-- index while atlas_schema_revisions lagged.
 
 WITH ranked AS (
   SELECT id,
@@ -25,6 +28,6 @@ SET is_ritual = false,
 FROM ranked AS r
 WHERE gs.id = r.id AND r.rn > 1;
 
-CREATE UNIQUE INDEX "game_sessions_ritual_user_game_day_uidx"
+CREATE UNIQUE INDEX IF NOT EXISTS "game_sessions_ritual_user_game_day_uidx"
   ON "game_sessions" ("user_id", "game_slug", "day_key")
   WHERE "is_ritual" = true AND "day_key" IS NOT NULL;
