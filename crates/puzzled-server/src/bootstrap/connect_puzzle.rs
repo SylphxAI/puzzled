@@ -20,7 +20,9 @@ use tracing::warn;
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
-use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
+use puzzled_core::puzzle_play::crossword_generate::{
+    client_safe_puzzle_data, generate_crossword_puzzle,
+};
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
@@ -220,7 +222,7 @@ impl PuzzleService for PuzzleConnectService {
             game_slug: game_slug.to_string(),
             seed: req.seed,
             difficulty: difficulty_label(difficulty).to_string(),
-            puzzle_data_json: puzzle_data.to_string(),
+            puzzle_data_json: client_safe_puzzle_data(puzzle_data).to_string(),
             slice: SLICE_PUZZLE.to_string(),
             ..Default::default()
         })
@@ -338,7 +340,10 @@ impl PuzzleService for PuzzleConnectService {
                 mode: body.mode.to_string(),
                 slice: SLICE_DAILY.to_string(),
                 stub,
-                puzzle_data_json: puzzle_data.map(|v| v.to_string()).unwrap_or_default(),
+                puzzle_data_json: puzzle_data
+                    .map(client_safe_puzzle_data)
+                    .map(|v| v.to_string())
+                    .unwrap_or_default(),
                 ..Default::default()
             }),
             Err(404) => Err(ConnectError::new(ErrorCode::NotFound, "unknown_game")),

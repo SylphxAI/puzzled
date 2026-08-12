@@ -527,7 +527,6 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
         across.push(json!({
             "number": number,
             "clue": clue,
-            "answer": word,
             "row": row,
             "col": 0,
             "length": word.len(),
@@ -539,7 +538,6 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
         down.push(json!({
             "number": col + 1,
             "clue": clue,
-            "answer": word,
             "row": 0,
             "col": col,
             "length": word.len(),
@@ -554,7 +552,38 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
         },
     });
     let solution = json!({ "grid": solution_grid });
+    debug_assert!(
+        !puzzle_data.to_string().contains("\"answer\""),
+        "client puzzle_data must not include clue answers"
+    );
     (puzzle_data, solution)
+}
+
+/// Keys that must never appear on GetDaily/GetPuzzle `puzzle_data_json`.
+const CLIENT_LEAK_KEYS: &[&str] = &["answer", "solution", "solution_json", "solutionJson"];
+
+/// Strip solution fields from a stored or generated client payload.
+///
+/// Covers deterministic crossword clues and any content-store row that still
+/// embeds answers. Recursive so nested `clues.across[].answer` is removed.
+#[must_use]
+pub fn client_safe_puzzle_data(data: Value) -> Value {
+    match data {
+        Value::Object(map) => {
+            let mut out = serde_json::Map::with_capacity(map.len());
+            for (k, v) in map {
+                if CLIENT_LEAK_KEYS.contains(&k.as_str()) {
+                    continue;
+                }
+                out.insert(k, client_safe_puzzle_data(v));
+            }
+            Value::Object(out)
+        }
+        Value::Array(items) => {
+            Value::Array(items.into_iter().map(client_safe_puzzle_data).collect())
+        }
+        other => other,
+    }
 }
 
 #[cfg(test)]
@@ -588,5 +617,42 @@ mod tests {
     #[test]
     fn pool_nonempty() {
         assert!(word_square_count() >= 30);
+    }
+
+    #[test]
+    fn puzzle_data_does_not_include_clue_answers() {
+        let (pd, sol) = generate_crossword_puzzle(956);
+        let dumped = pd.to_string();
+        assert!(
+            !dumped.contains("\"answer\""),
+            "GetDaily payload must not leak answers: {dumped}"
+        );
+        assert!(
+            !dumped.to_ascii_lowercase().contains("steam"),
+            "solution letters must not appear in client puzzle_data: {dumped}"
+        );
+        let grid = sol
+            .get("grid")
+            .and_then(|g| g.as_array())
+            .expect("sol grid");
+        assert_eq!(grid[0][0], "S");
+    }
+
+    #[test]
+    fn client_safe_strips_stored_clue_answers() {
+        let leaked = json!({
+            "grid": [["", ""]],
+            "clues": {
+                "across": [{"number": 1, "clue": "Hot mist", "answer": "STEAM", "row": 0, "col": 0, "length": 5}],
+                "down": [{"number": 1, "clue": "Water vapor", "answer": "STEAM"}]
+            },
+            "solution": {"grid": [["S"]]}
+        });
+        let safe = client_safe_puzzle_data(leaked);
+        let dumped = safe.to_string();
+        assert!(!dumped.contains("\"answer\""));
+        assert!(!dumped.contains("solution"));
+        assert_eq!(safe["clues"]["across"][0]["clue"], "Hot mist");
+        assert_eq!(safe["clues"]["across"][0].get("answer"), None);
     }
 }
