@@ -20,7 +20,8 @@ export type GameResultInput = {
 	timeSpentMs: number
 	mode?: 'daily' | 'archive'
 	archiveDate?: string
-	puzzleId: string
+	/** Optional when free daily uses deterministic generation (e.g. sudoku). */
+	puzzleId?: string
 	/** Difficulty level for games that support it */
 	difficulty?: PuzzleDifficulty
 	/**
@@ -87,11 +88,8 @@ export function useSaveGameResult(gameSlug: string) {
 
 	const saveResult = useCallback(
 		async (input: GameResultInput): Promise<SaveResultResponse> => {
-			// Don't save if not logged in
-			if (!userId) {
-				return { success: false, error: 'Not logged in' }
-			}
-
+			// Logged-in Platform identity **or** guest free-ritual (stable day id
+			// attached by Connect transport). Server rejects guests on premium.
 			// Don't save twice - set flag BEFORE async operation to prevent race condition
 			if (savedRef.current) {
 				return { success: false, error: 'Already saved' }
@@ -126,9 +124,8 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleId: input.puzzleId,
 				})
 
-				// Record streak activity to Platform (only on win, if configured)
-				// This syncs Puzzled's play streak to the Platform engagement service
-				if (input.status === 'won') {
+				// Platform streak + leaderboards only for authenticated users.
+				if (userId && input.status === 'won') {
 					if (streakConfigured) {
 						try {
 							await recordActivity({

@@ -54,11 +54,19 @@ impl PuzzleConnectService {
     }
 
     fn identity(&self, ctx: &RequestContext) -> Result<Option<String>, ConnectError> {
-        use crate::bootstrap::identity::require_identity;
-        match require_identity(ctx) {
+        use crate::bootstrap::identity::require_identity_or_guest;
+        // Platform JWT/session or stable guest-day id (for has_completed).
+        // Pure anonymous (no JWT, no guest id) → None for free-floor reads.
+        match require_identity_or_guest(ctx) {
             Ok(identity) => Ok(Some(identity.user_id)),
-            Err(_) => Ok(None), // guest read; submits enforce identity separately
+            Err(_) => Ok(None),
         }
+    }
+
+    /// SubmitGuess identity: Platform JWT/session **or** guest-day id.
+    fn identity_for_submit(&self, ctx: &RequestContext) -> Result<String, ConnectError> {
+        use crate::bootstrap::identity::require_identity_or_guest;
+        Ok(require_identity_or_guest(ctx)?.user_id)
     }
 
     /// Enforce premium gating for a served puzzle (ADR-170).
@@ -333,12 +341,9 @@ impl PuzzleService for PuzzleConnectService {
                 "status_required_won_or_lost",
             ));
         };
-        let Some(uid) = self.identity(&ctx)? else {
-            return Err(ConnectError::new(
-                ErrorCode::Unauthenticated,
-                "identity_required_for_submit",
-            ));
-        };
+        // Platform auth **or** stable guest-day id (free-ritual protocol default).
+        // Premium/archive still fail closed via enforce_play_access.
+        let uid = self.identity_for_submit(&ctx)?;
 
         let data: Value = if req.submission_json.trim().is_empty() {
             Value::Null

@@ -43,10 +43,13 @@ clean-break end state that replaces all of it.
 - Puzzles are served from the content store (`daily_puzzles`) with solutions
   held server-side; sudoku additionally has deterministic on-server
   generation as a fallback.
-- `SubmitGuess` requires verified identity, derives the served puzzle
-  (`puzzle_id`/`puzzle_date`, never a client seed), validates the final
-  submission against the server's solution via the pure per-game dispatch
+- `SubmitGuess` requires verified identity **or** stable guest-day id
+  (`X-Puzzled-Guest-Id` / `puzzled_guest_id` → `guest_<uuid>`), derives the
+  served puzzle (`puzzle_id`/`puzzle_date`, never a client seed), validates the
+  final submission against the server's solution via the pure per-game dispatch
   (all 17 games), rejects already-played, and persists verified results.
+  Guests count toward DRC on free-rotation finishes; premium/archive remain
+  auth + entitlement gated.
 - Completion is server-derived; `has_completed` client input is deleted.
 
 ### 3. Services (Connect)

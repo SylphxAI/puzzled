@@ -327,6 +327,49 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn connect_submit_guess_accepts_guest_day_id_for_free_game() {
+        // Guest free-ritual path: X-Puzzled-Guest-Id → past identity gate.
+        // Empty submission is still invalid (server-authoritative validation).
+        let app = router(AppState::new(None));
+        let free_slug = today_free_slug();
+        let body = format!(
+            r#"{{"gameSlug":"{free_slug}","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{{}}"}}"#
+        );
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build guest submit: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(response) => response,
+            Err(error) => panic!("connect SubmitGuess guest: {error}"),
+        };
+        // Must not be identity 401 — guest day id is accepted.
+        assert_ne!(
+            response.status(),
+            StatusCode::UNAUTHORIZED,
+            "guest free path must not 401 identity_required"
+        );
+        if free_slug == "sudoku" {
+            // No DB: deterministic sudoku validates (empty grid → invalid verdict).
+            assert_eq!(response.status(), StatusCode::OK);
+            let json = body_json(response).await;
+            assert!(
+                json.get("valid")
+                    .map_or(true, |v| v == false || v.is_null()),
+                "expected invalid verdict for empty guest submit: {:?}",
+                json.get("valid")
+            );
+        }
+        // Non-sudoku free day without content: 404 unserved is fine; not 401.
+    }
+
+    #[tokio::test]
     async fn connect_submit_guess_validates_against_served_puzzle() {
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_01");

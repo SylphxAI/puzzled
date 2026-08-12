@@ -1,5 +1,6 @@
 //! Domain model and pure rules.
 
+pub mod guest_day_id;
 pub mod key_validation;
 pub mod oauth_providers;
 pub mod pkce;

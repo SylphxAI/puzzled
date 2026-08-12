@@ -8,10 +8,14 @@
  * - Server (SSR/node): API_INTERNAL_URL (platform-injected private web -> api).
  * - Explicit override: NEXT_PUBLIC_CONNECT_URL (public absolute URL).
  * - Local dev: http://127.0.0.1:3001 (puzzled-server).
+ *
+ * Guest free-ritual: interceptor attaches X-Puzzled-Guest-Id when a browser
+ * guest-day UUID exists (platform session cookie still preferred server-side).
  */
 
-import type { Transport } from '@connectrpc/connect'
+import type { Interceptor, Transport } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
+import { GUEST_ID_HEADER, getOrCreateGuestDayId } from '@/lib/guest-day-id'
 
 const DEV_DEFAULT_BASE = 'http://127.0.0.1:3001'
 
@@ -44,6 +48,14 @@ export function resolveConnectBaseUrl(
 	return DEV_DEFAULT_BASE
 }
 
+const guestDayIdInterceptor: Interceptor = (next) => async (req) => {
+	const guestId = getOrCreateGuestDayId()
+	if (guestId) {
+		req.header.set(GUEST_ID_HEADER, guestId)
+	}
+	return next(req)
+}
+
 let cachedBase: string | null = null
 let cachedTransport: Transport | null = null
 
@@ -54,6 +66,7 @@ export function getConnectTransport(baseUrl?: string): Transport {
 	cachedTransport = createConnectTransport({
 		baseUrl: base,
 		useBinaryFormat: false, // browserDefaultEncoding: protojson
+		interceptors: [guestDayIdInterceptor],
 		// Cookie-auth fetch credentials (cast: connect-web option surface varies by minor).
 		...({ credentials: 'include' } as Record<string, string>),
 	})

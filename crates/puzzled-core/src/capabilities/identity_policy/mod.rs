@@ -2,6 +2,7 @@
 
 pub mod domain;
 
+pub use domain::guest_day_id;
 pub use domain::key_validation;
 pub use domain::oauth_providers;
 pub use domain::pkce;

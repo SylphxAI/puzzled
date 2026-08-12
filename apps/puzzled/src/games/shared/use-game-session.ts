@@ -229,36 +229,38 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				triggerHaptic(celebrationHaptic || 'lose')
 			}
 
-			// Save result (daily mode only)
-			if (mode === 'daily' && puzzleId) {
-				if (isLoggedIn) {
-					// Save to database for logged-in users
-					// Server validates and calculates score
-					try {
-						const result = await saveResult({
-							status,
-							attempts: endData.attempts ?? 1,
-							timeSpentMs: finalTimeSpentMs,
-							puzzleId,
-							mode: 'daily' as const,
-							// Difficulty level (for games that support it)
-							difficulty,
-							// Game-specific submission data
-							data: endData.data,
-						})
-						// Store server-calculated score
-						if (result?.score !== undefined) {
-							setServerScore(result.score)
-						}
-					} catch (error) {
-						console.error(`[${gameSlug}] Failed to save result:`, error)
+			// Save result (daily mode). puzzleId optional for deterministic free
+			// games (e.g. sudoku) — server resolves content by day_key.
+			if (mode === 'daily') {
+				// Server-authoritative finish for **logged-in and guest** free ritual
+				// (guest day id via Connect interceptor). Platform streak/leaderboard
+				// only runs for authenticated users inside saveResult.
+				try {
+					const result = await saveResult({
+						status,
+						attempts: endData.attempts ?? 1,
+						timeSpentMs: finalTimeSpentMs,
+						puzzleId,
+						mode: 'daily' as const,
+						// Difficulty level (for games that support it)
+						difficulty,
+						// Game-specific submission data
+						data: endData.data,
+					})
+					// Store server-calculated score
+					if (result?.score !== undefined) {
+						setServerScore(result.score)
 					}
-				} else {
-					// Save to localStorage for guest users
+				} catch (error) {
+					console.error(`[${gameSlug}] Failed to save result:`, error)
+				}
+
+				if (!isLoggedIn) {
+					// Local cache for UX + onboarding (server is DRC authority).
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
-						// No score for guests - would need server validation
+						// Score comes from server when available
 					})
 
 					// Track guest game completion for onboarding
