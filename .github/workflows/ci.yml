@@ -141,8 +141,22 @@ jobs:
             aarch64|arm64) TH_ARCH=arm64 ;;
             *) echo "unsupported arch: $ARCH"; exit 1 ;;
           esac
-          curl -fsSL "https://github.com/trufflesecurity/trufflehog/releases/download/v${VER}/trufflehog_${VER}_linux_${TH_ARCH}.tar.gz" \
-            | tar -xz -C /tmp trufflehog
+          URL="https://github.com/trufflesecurity/trufflehog/releases/download/v${VER}/trufflehog_${VER}_linux_${TH_ARCH}.tar.gz"
+          TGZ=/tmp/trufflehog.tgz
+          for attempt in 1 2 3 4 5; do
+            if curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 -o "$TGZ" "$URL" \
+              && tar -tzf "$TGZ" >/dev/null \
+              && tar -xzf "$TGZ" -C /tmp trufflehog; then
+              break
+            fi
+            echo "trufflehog download attempt ${attempt} failed; retrying..."
+            rm -f "$TGZ" /tmp/trufflehog
+            if [ "$attempt" -eq 5 ]; then
+              echo "trufflehog download failed after retries"
+              exit 1
+            fi
+            sleep $((attempt * 3))
+          done
           chmod +x /tmp/trufflehog
           BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
           HEAD="${{ github.sha }}"
