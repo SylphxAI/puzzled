@@ -4,6 +4,7 @@ import { Button, Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
 import { cn, getBaseUrl } from '@/lib/utils'
@@ -18,18 +19,6 @@ function formatPuzzleDate(dateString: string, locale: string): string {
 	return new Intl.DateTimeFormat(locale, {
 		month: 'short',
 		day: 'numeric',
-	}).format(date)
-}
-
-/**
- * Format puzzle date for share text (e.g., "December 18, 2024")
- */
-function formatPuzzleDateLong(dateString: string, locale: string): string {
-	const date = new Date(`${dateString}T00:00:00Z`)
-	return new Intl.DateTimeFormat(locale, {
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric',
 	}).format(date)
 }
 
@@ -97,12 +86,18 @@ export function AlreadyCompletedView({
 	const difficultyLabel = difficulty ? tDifficulty(difficulty) : null
 
 	const handleShare = async () => {
-		const appUrl = getBaseUrl('origin').replace(/^https?:\/\//, '')
-		const emoji = isWin ? '🏆' : '❌'
-		const streakText = currentStreak > 0 ? `🔥 ${currentStreak} day streak\n` : ''
-		const dateText = formatPuzzleDateLong(puzzleDate, locale)
-		const difficultyText = difficultyLabel ? ` (${difficultyLabel})` : ''
-		const text = `${emoji} ${gameName}${difficultyText} • ${dateText}\n${isWin ? `✅ ${session.attempts} attempts` : '❌ Failed'}\n${streakText}\n${appUrl}`
+		// Non-spoiler card: module + day deep link only (no solution / grid).
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug,
+			gameName,
+			// Wire day_key for landings; long locale date stays in UI above.
+			puzzleDate,
+			status: session.status,
+			attempts: session.attempts,
+			difficultyLabel,
+			currentStreak,
+		})
 
 		try {
 			if (navigator.share) {
