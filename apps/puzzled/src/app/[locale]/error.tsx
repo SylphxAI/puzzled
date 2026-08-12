@@ -3,15 +3,14 @@
 /**
  * Error Boundary for Locale Routes
  *
- * Catches errors in all pages under [locale] and provides recovery UI.
- * This is a Client Component as required by Next.js error boundaries.
- * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
+ * Must not call Sylphx Monitoring hooks — that context is not guaranteed
+ * and masks the original throw (live crossword hydrate, 2026-08-12).
  */
 
-import { useErrorTracking } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { reportBoundaryError } from '@/lib/report-boundary-error'
 
 interface ErrorProps {
 	error: Error & { digest?: string }
@@ -19,19 +18,13 @@ interface ErrorProps {
 }
 
 export default function LocaleError({ error, reset }: ErrorProps) {
-	const { captureException } = useErrorTracking()
 	const reported = useRef(false)
 
 	useEffect(() => {
 		if (reported.current) return
 		reported.current = true
-
-		// DOGFOODING: Report error to Sylphx Platform via SDK
-		captureException(error, {
-			tags: { boundary: 'locale' },
-			extra: { digest: error.digest },
-		})
-	}, [error, captureException])
+		reportBoundaryError('locale', error)
+	}, [error])
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
@@ -45,15 +38,7 @@ export default function LocaleError({ error, reset }: ErrorProps) {
 					We encountered an unexpected error. Please try again or return to the home page.
 				</p>
 
-				{process.env.NODE_ENV === 'development' && (
-					<details className="mb-6 text-left bg-muted/50 rounded-lg p-4">
-						<summary className="cursor-pointer text-sm font-medium">Error details</summary>
-						<pre className="mt-2 text-xs overflow-auto whitespace-pre-wrap text-destructive">
-							{error.message}
-							{error.stack && `\n\n${error.stack}`}
-						</pre>
-					</details>
-				)}
+				<p className="mb-6 text-sm text-destructive break-words">{error.message}</p>
 
 				<div className="flex gap-3 justify-center">
 					<Button variant="outline" onClick={reset}>
