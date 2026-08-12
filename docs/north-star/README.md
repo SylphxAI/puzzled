@@ -44,6 +44,7 @@ Engineering stack (how we ship) lives in [ADR-170](../adr/ADR-170-clean-break-no
 | 1 | **[VISION.md](VISION.md)** | Ambition, category, jobs, competitors, agent-native catalog, what we are not |
 | 2 | **[NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md)** | HRC Polar, DRC atom, DFC split, oracles, anti-metrics, stages |
 | 3 | **[RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md)** | Day key, module, run, result card, entitlement — the five concepts |
+| 3a | **[CATALOG.md](CATALOG.md)** | Destination catalog (115 slugs); shipped floor vs dest; mark hygiene |
 | 4 | **[GROWTH-AND-VIRALITY.md](GROWTH-AND-VIRALITY.md)** | Share loop feeds new DRC; suite + return convert DRC into HRC |
 | 5 | **[MONETIZATION.md](MONETIZATION.md)** | Free floor, subscription value, fail-closed gating, HRC-density conversion |
 | 6 | **[METRICS-TREE.md](METRICS-TREE.md)** | Inputs under HRC, dashboards, kill signals |
@@ -76,6 +77,7 @@ One meaning per term. Do not invent parallel names in dashboards, comments, or A
 | **Five concepts** | Day key · game module · ritual run · result card · entitlement. |
 | **Layers** | source · CI · deploy · live. Evidence is per layer. |
 | **S0** | Both HRC and DRC are recomputable from production rows. HRC = 0 is a valid compute. |
+| **Destination catalog** | Every slug we will offer under the protocol. Listed in [CATALOG.md](CATALOG.md). A dest slug is not live. |
 
 Former informal name **“weekly ritualists”** is **HRC**. Do not keep both names in dashboards.
 
@@ -110,6 +112,7 @@ When principles conflict: **Correctness and Security do not yield.** Other confl
 | What is the daily atom? | Same file — DRC |
 | May we delete a game or gut play? | [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md) |
 | What is a legal game module? | [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md) |
+| What games will we offer? | [CATALOG.md](CATALOG.md) — destination; shipped floor stays in protocol + delivery |
 | Free vs paid? | [MONETIZATION.md](MONETIZATION.md) |
 | Sole API transport / play authority? | ADR-170 |
 
@@ -120,7 +123,7 @@ Stack clean-break may not hollow games or the free daily ritual.
 
 ## Change control
 
-Material changes to the **HRC definition**, the **DRC definition**, the **4-of-7 threshold**, the **free-tier ritual floor**, or the **module protocol** require:
+Material changes to the **HRC definition**, the **DRC definition**, the **4-of-7 threshold**, the **free-tier ritual floor**, the **module protocol**, or the **destination catalog families** require:
 
 1. Explicit PR description of metric/oracle delta, including worked examples  
 2. Update to this package in the same change set  

@@ -77,6 +77,8 @@ Protected catalog may already be larger than 3 (it is). S2 is about *protocol co
 
 ### Stage S4 — Catalog scale
 
+Destination slugs and waves: [CATALOG.md](CATALOG.md). S4 does not shrink that list.
+
 | Deliver | Done when |
 |---------|-----------|
 | Content pipeline SLA for `day_key` ahead | Reliability |

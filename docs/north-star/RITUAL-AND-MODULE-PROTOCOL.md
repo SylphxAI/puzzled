@@ -240,7 +240,10 @@ Protocol-level rules:
 
 ## 8. Catalog floor (shipped puzzle modules)
 
-Delivery authority pins the protected catalog. At this revision the **required** `puzzle_ritual` slugs (directories under `apps/puzzled/src/games/`, excluding `shared/`) are:
+**Destination** (every ritual we will offer, including not-yet-shipped): [CATALOG.md](CATALOG.md).  
+A destination slug is not playable until it is protocol-complete and added below.
+
+Delivery authority pins the **shipped** protected catalog. At this revision the **required** `puzzle_ritual` slugs (directories under `apps/puzzled/src/games/`, excluding `shared/`) are:
 
 | Slug | Notes |
 |------|--------|
@@ -254,8 +257,8 @@ Delivery authority pins the protected catalog. At this revision the **required**
 | arithmo | |
 | pattern-match | |
 | block-slide | |
-| queens | Free-rotation member |
-| tango | |
+| queens | Free-rotation member. Destination title **Crowns**; rename residual — [CATALOG.md](CATALOG.md) §3.3 |
+| tango | Destination title **Duo**; rename residual — [CATALOG.md](CATALOG.md) §3.3 |
 | word-box | |
 | quad-words | |
 | killer-sudoku | |
