@@ -5,12 +5,21 @@
 //! - the Platform session cookie `__sylphx_<namespace>_session` (HttpOnly JWT,
 //!   5-minute access token) which the browser sends same-origin to the
 //!   edge-routed api paths. This closes the browser -> Connect auth loop.
+//! - Guest free-ritual path: `X-Puzzled-Guest-Id` (UUID) or cookie
+//!   `puzzled_guest_id` — stable day identity for viral / unauthenticated
+//!   finishes (North Star protocol; counts toward DRC as distinct user key).
 
 use connectrpc::{ConnectError, ErrorCode, RequestContext};
+use puzzled_core::identity_policy::guest_day_id::normalize_guest_user_id;
 
 use crate::capabilities::identity_access::adapters::platform_jwt::{
     extract_bearer, verify_platform_jwt, VerifiedIdentity,
 };
+
+/// Request header for client-stable guest day id (UUID).
+pub const GUEST_ID_HEADER: &str = "x-puzzled-guest-id";
+/// Cookie name for the same guest id (browser same-origin).
+pub const GUEST_ID_COOKIE: &str = "puzzled_guest_id";
 
 /// Extract the Platform session JWT from the Cookie header, if present.
 fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String> {
@@ -32,6 +41,39 @@ fn extract_session_cookie_jwt(headers: &axum::http::HeaderMap) -> Option<String>
     None
 }
 
+fn extract_cookie_value(headers: &axum::http::HeaderMap, cookie_name: &str) -> Option<String> {
+    let cookie = headers.get(axum::http::header::COOKIE)?.to_str().ok()?;
+    for pair in cookie.split(';') {
+        let pair = pair.trim();
+        let Some((name, value)) = pair.split_once('=') else {
+            continue;
+        };
+        if name.trim() == cookie_name {
+            let value = value.trim();
+            if !value.is_empty() {
+                return Some(value.to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Resolve guest-day identity from header or cookie (UUID → `guest_<uuid>`).
+fn resolve_guest(headers: &axum::http::HeaderMap) -> Option<VerifiedIdentity> {
+    let raw = headers
+        .get(GUEST_ID_HEADER)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string)
+        .or_else(|| extract_cookie_value(headers, GUEST_ID_COOKIE))?;
+    let user_id = normalize_guest_user_id(&raw)?;
+    Some(VerifiedIdentity {
+        user_id,
+        display_name: Some("Guest".to_string()),
+        email: None,
+        is_admin: false,
+    })
+}
+
 fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectError> {
     if let Some(token) = extract_bearer(headers) {
         return verify_platform_jwt(&token)
@@ -48,8 +90,22 @@ fn verify(headers: &axum::http::HeaderMap) -> Result<VerifiedIdentity, ConnectEr
 }
 
 /// Verify the identity from Bearer or session cookie (fails closed when absent).
+///
+/// Does **not** accept guest headers — use [`require_identity_or_guest`] for
+/// free-ritual SubmitGuess.
 pub fn require_identity(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
     verify(ctx.headers())
+}
+
+/// Platform JWT/session **or** stable guest-day id (protocol default for free
+/// ritual finishes). Platform identity wins when both are present.
+pub fn require_identity_or_guest(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
+    match verify(ctx.headers()) {
+        Ok(identity) => Ok(identity),
+        Err(_) => resolve_guest(ctx.headers()).ok_or_else(|| {
+            ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
+        }),
+    }
 }
 
 /// Require identity with an exact admin scope claim.
@@ -91,5 +147,40 @@ mod tests {
         headers.insert(COOKIE, "foo=bar".parse().unwrap());
         assert!(extract_session_cookie_jwt(&headers).is_none());
         let _ = AUTHORIZATION; // keep import used in compile
+    }
+
+    #[test]
+    fn guest_header_normalizes_to_guest_user_id() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            GUEST_ID_HEADER,
+            "a1b2c3d4-e5f6-7890-abcd-ef1234567890".parse().unwrap(),
+        );
+        let identity = resolve_guest(&headers).expect("guest");
+        assert_eq!(
+            identity.user_id,
+            "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        );
+        assert!(!identity.is_admin);
+    }
+
+    #[test]
+    fn guest_cookie_accepted() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            COOKIE,
+            "puzzled_guest_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                .parse()
+                .unwrap(),
+        );
+        let identity = resolve_guest(&headers).expect("guest cookie");
+        assert!(identity.user_id.starts_with("guest_"));
+    }
+
+    #[test]
+    fn invalid_guest_rejected() {
+        let mut headers = HeaderMap::new();
+        headers.insert(GUEST_ID_HEADER, "not-a-uuid".parse().unwrap());
+        assert!(resolve_guest(&headers).is_none());
     }
 }

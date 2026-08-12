@@ -39,6 +39,8 @@ export const PWA_PROMPT_DISMISSED_KEY = 'puzzled:pwa:prompt-dismissed'
 // ==========================================
 export const GUEST_ONBOARDING_KEY = 'puzzled:guest:onboarding'
 export const GUEST_GAMES_KEY = 'puzzled:guest:games'
+/** Stable guest-day UUID (client-bound); sent as X-Puzzled-Guest-Id for free ritual finishes. */
+export const GUEST_DAY_ID_KEY = 'puzzled:guest:day-id'
 
 // ==========================================
 // Analytics & Session
