@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import type { ComponentType } from 'react'
 import type { GameProps, PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
+import { canonicalizeGameSlug } from '@/lib/game-slug'
 
 type GameRendererProps = {
 	slug: string
@@ -191,9 +192,9 @@ function getGameComponent(slug: string): DynamicGameComponent | null {
 		nonogram: NonogramGame as DynamicGameComponent,
 		'pattern-match': PatternMatchGame as DynamicGameComponent,
 		'quad-words': QuadWordsGame as DynamicGameComponent,
-		queens: QueensGame as DynamicGameComponent,
+		crowns: QueensGame as DynamicGameComponent,
 		sudoku: SudokuGame as DynamicGameComponent,
-		tango: TangoGame as DynamicGameComponent,
+		duo: TangoGame as DynamicGameComponent,
 		'word-box': WordBoxGame as DynamicGameComponent,
 		'word-groups': WordGroupsGame as DynamicGameComponent,
 		'word-guess': WordGuessGame as DynamicGameComponent,
@@ -201,5 +202,5 @@ function getGameComponent(slug: string): DynamicGameComponent | null {
 		'word-ladder': WordLadderGame as DynamicGameComponent,
 		'word-search': WordSearchGame as DynamicGameComponent,
 	}
-	return games[slug] ?? null
+	return games[canonicalizeGameSlug(slug)] ?? null
 }

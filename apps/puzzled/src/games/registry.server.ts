@@ -8,7 +8,7 @@
  */
 
 import { getLLMGenerator } from './llm-generators.server'
-import { GAME_CONFIGS, getAllGames, isValidGameSlug } from './registry'
+import { getAllGames, getGameConfig, isValidGameSlug } from './registry'
 import type { GenerationSummary, PuzzleDifficulty, PuzzleGenerationResult } from './types'
 
 // ==========================================
@@ -41,7 +41,10 @@ async function generatePuzzleWithLLM(
 	if (!isValidGameSlug(slug)) {
 		throw new Error(`Unknown game: ${slug}`)
 	}
-	const config = GAME_CONFIGS[slug]
+	const config = getGameConfig(slug)
+	if (!config) {
+		throw new Error(`Unknown game: ${slug}`)
+	}
 
 	// Seed is always derived from date for consistent audit trail
 	// For difficulty-enabled games, we add an offset to ensure different puzzles per difficulty
@@ -113,7 +116,18 @@ export async function generateGamePuzzle(
 			},
 		}
 	}
-	const config = GAME_CONFIGS[slug]
+	const config = getGameConfig(slug)
+	if (!config) {
+		return {
+			result: {
+				success: false,
+				gameSlug: slug,
+				gameName: slug,
+				strategy: 'seed',
+				error: `Game "${slug}" not found in registry`,
+			},
+		}
+	}
 
 	try {
 		const generated = await generatePuzzleWithLLM(slug, date, difficulty)

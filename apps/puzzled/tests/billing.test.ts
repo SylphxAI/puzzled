@@ -13,7 +13,7 @@ import { describe, expect, test } from 'bun:test'
 
 const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
 
-const FREE_GAME_ROTATION = ['word-guess', 'word-groups', 'queens', 'sudoku', 'crossword'] as const
+const FREE_GAME_ROTATION = ['word-guess', 'word-groups', 'crowns', 'sudoku', 'crossword'] as const
 
 function isPremiumPlan(planSlug: string | null | undefined): boolean {
 	if (!planSlug) return false
@@ -111,7 +111,7 @@ describe('Billing Logic', () => {
 			expect(rotation.length).toBe(5)
 			expect(rotation).toContain('word-guess')
 			expect(rotation).toContain('word-groups')
-			expect(rotation).toContain('queens')
+			expect(rotation).toContain('crowns')
 			expect(rotation).toContain('sudoku')
 			expect(rotation).toContain('crossword')
 		})

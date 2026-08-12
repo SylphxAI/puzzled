@@ -9,7 +9,7 @@ pub const PREMIUM_PLANS: &[&str] = &["premium", "lifetime", "pro"];
 
 /// Free-tier daily rotation (TS `FREE_GAME_ROTATION` order).
 pub const FREE_GAME_ROTATION: &[&str] =
-    &["word-guess", "word-groups", "queens", "sudoku", "crossword"];
+    &["word-guess", "word-groups", "crowns", "sudoku", "crossword"];
 
 const DAY_MS: i64 = 86_400_000;
 
@@ -92,7 +92,8 @@ pub fn todays_free_game(now_ms: i64, utc_year: i32) -> &'static str {
 /// True when game is today's free rotation entry (TS `isGameFreeToday`).
 #[must_use]
 pub fn is_game_free_today(game_slug: &str, free_today: &str) -> bool {
-    game_slug == free_today
+    crate::puzzle_play::game_slugs::canonicalize_game_slug(game_slug)
+        == crate::puzzle_play::game_slugs::canonicalize_game_slug(free_today)
 }
 
 /// Pure access gate dual-oracle of TS `canAccessGame` product half
@@ -138,7 +139,7 @@ mod tests {
         assert_eq!(FREE_GAME_ROTATION.len(), 5);
         assert_eq!(FREE_GAME_ROTATION[0], "word-guess");
         assert_eq!(FREE_GAME_ROTATION[1], "word-groups");
-        assert_eq!(FREE_GAME_ROTATION[2], "queens");
+        assert_eq!(FREE_GAME_ROTATION[2], "crowns");
         assert_eq!(FREE_GAME_ROTATION[3], "sudoku");
         assert_eq!(FREE_GAME_ROTATION[4], "crossword");
     }
@@ -163,8 +164,8 @@ mod tests {
     #[test]
     fn free_game_for_doy_mod() {
         assert_eq!(free_game_for_day_of_year(1), "word-groups");
-        assert_eq!(free_game_for_day_of_year(2), "queens");
-        assert_eq!(free_game_for_day_of_year(197), "queens"); // 197 % 5 = 2
+        assert_eq!(free_game_for_day_of_year(2), "crowns");
+        assert_eq!(free_game_for_day_of_year(197), "crowns"); // 197 % 5 = 2
         assert_eq!(free_game_for_day_of_year(365), "word-guess"); // 365 % 5 = 0
         assert_eq!(free_game_for_day_of_year(0), "word-guess");
         // Full path: 2024-01-01T00:00Z → word-groups

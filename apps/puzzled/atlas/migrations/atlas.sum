@@ -1,4 +1,5 @@
-h1:ZNTHaKkt3DylFmHHrMrgNLacVZm4EP9M7Sm9pQdSbCQ=
+h1:FtqHZw6AWQAjmRyoO1RshrFjOVQUWt+knk/312kEvsQ=
 20260222000000_baseline.sql h1:s1JJixhhZWCRAJEmnXzCswTzY2VTuTEhVJvqun+xTXk=
 20260812000000_ritual_completion_drc.sql h1:Xhu5TcrCf1UV6Zbxsj1/PYLpoIjLbz8KTjCsFpPA+98=
 20260812010000_ritual_one_finish_per_day.sql h1:B8dS3cJud3fZs0VIFBSmWLuBf6poa/s9sJMtoNMfWGE=
+20260812233000_canonicalize_crowns_duo_slugs.sql h1:qDxm14dM4whx4uSif/HjMp9VQnrUf9O8TlogU09D12U=
