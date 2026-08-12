@@ -297,13 +297,21 @@ mod tests {
         assert_eq!(json["canPlay"], true);
         assert!(json["puzzleNumber"].as_u64().unwrap_or(0) > 0);
         assert!(!json["puzzleDate"].as_str().unwrap_or("").is_empty());
-        // Without a DB, only sudoku has on-server generation; other games are
-        // served from the content store and report stub=true until populated.
-        if free_slug == "sudoku" {
+        // Without a DB, sudoku + crossword densify via on-server generators
+        // (free-floor guarantee). Other free-rotation modules still need content.
+        if free_slug == "sudoku" || free_slug == "crossword" {
             assert!(
                 json.get("stub").map_or(true, |v| v == false || v.is_null()),
-                "unexpected stub: {:?}",
+                "unexpected stub for densified free game {free_slug}: {:?}",
                 json.get("stub")
+            );
+            assert!(
+                json
+                    .get("puzzleDataJson")
+                    .and_then(|v| v.as_str())
+                    .map(|s| !s.is_empty() && s != "null")
+                    .unwrap_or(false),
+                "densified free game must serve puzzle data"
             );
         }
     }
@@ -355,8 +363,8 @@ mod tests {
             StatusCode::UNAUTHORIZED,
             "guest free path must not 401 identity_required"
         );
-        if free_slug == "sudoku" {
-            // No DB: deterministic sudoku validates (empty grid → invalid verdict).
+        if free_slug == "sudoku" || free_slug == "crossword" {
+            // No DB: deterministic generators validate (empty → invalid verdict).
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
@@ -366,7 +374,7 @@ mod tests {
                 json.get("valid")
             );
         }
-        // Non-sudoku free day without content: 404 unserved is fine; not 401.
+        // Other free-day modules without content: 404 unserved is fine; not 401.
     }
 
     #[tokio::test]
@@ -390,7 +398,7 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess: {error}"),
         };
-        if free_slug == "sudoku" {
+        if free_slug == "sudoku" || free_slug == "crossword" {
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
@@ -401,7 +409,7 @@ mod tests {
             );
             assert_eq!(json["slice"], "S2-puzzle-solution-connect");
         } else {
-            // Free today, but no content store in tests -> unserved puzzle.
+            // Free today, but no content store / generator in tests -> unserved.
             assert_eq!(response.status(), StatusCode::NOT_FOUND);
         }
     }
@@ -409,7 +417,7 @@ mod tests {
     #[tokio::test]
     async fn connect_submit_guess_rejects_unserved_puzzle() {
         // Free-rotation game passes the premium gate. Without a content DB:
-        // - sudoku may still densify via deterministic server generation
+        // - sudoku + crossword densify via deterministic server generation
         // - other modules must fail closed (404 unserved) — no accept-any.
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_02");
@@ -428,18 +436,69 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess non-sudoku: {error}"),
         };
-        if free_slug == "sudoku" {
+        if free_slug == "sudoku" || free_slug == "crossword" {
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
                 json.get("valid")
                     .map_or(true, |v| v == false || v.is_null()),
-                "expected invalid verdict for unsound sudoku submit, got: {:?}",
+                "expected invalid verdict for unsound densified submit, got: {:?}",
                 json.get("valid")
             );
         } else {
             assert_eq!(response.status(), StatusCode::NOT_FOUND);
         }
+    }
+
+    #[tokio::test]
+    async fn connect_crossword_free_floor_guest_can_finish_win() {
+        // Polaris free floor: crossword must be finishable without content store.
+        use chrono::Utc;
+        use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
+        use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+
+        // Premium gate: only free-rotation day can finish as guest.
+        if today_free_slug() != "crossword" {
+            return;
+        }
+
+        let app = router(AppState::new(None));
+        let today = product_day_key(Utc::now());
+        let seed = i64::from(get_puzzle_number(today, None));
+        let (_pd, sol) = generate_crossword_puzzle(seed);
+        let solution_grid = sol.get("grid").expect("solution grid");
+        // Client finalGrid: string letters (serde Option<String> accepts plain strings).
+        let submission = serde_json::json!({ "finalGrid": solution_grid });
+        let body = serde_json::json!({
+            "gameSlug": "crossword",
+            "status": "won",
+            "attempts": 1,
+            "timeSpentMs": "5000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "f1e2d3c4-b5a6-7890-abcd-ef1234567890")
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(
+            json["valid"], true,
+            "crossword free win must validate: {json}"
+        );
+        assert_eq!(json["status"], "won");
+        assert!(json["score"].as_i64().unwrap_or(0) > 0);
     }
 
     #[tokio::test]

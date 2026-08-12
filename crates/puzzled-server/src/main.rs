@@ -17,10 +17,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
+    // Cold-start + managed DNS: allow longer first connect so free-floor ritual
+    // persist is not permanently demoted to S0 on a transient 3s timeout.
     let pool = match select_database_url() {
         Some(url) => match PgPoolOptions::new()
             .max_connections(5)
-            .acquire_timeout(Duration::from_secs(3))
+            .acquire_timeout(Duration::from_secs(15))
             .test_before_acquire(true)
             .max_lifetime(Some(Duration::from_secs(600)))
             .connect(&url)
