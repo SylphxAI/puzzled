@@ -6,6 +6,7 @@
  */
 
 import { getSubscription } from '@sylphx/sdk'
+import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
 import { getSdkConfig } from '@/lib/sdk-server'
 
 // ==========================================
@@ -16,20 +17,6 @@ import { getSdkConfig } from '@/lib/sdk-server'
  * Premium plan slugs (paid plans)
  */
 const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
-
-/**
- * Game rotation for free tier
- * One game is free each day, rotates through the list
- *
- * NOTE: These must match actual game slugs from the games registry
- */
-const FREE_GAME_ROTATION = [
-	'word-guess', // Wordle-style word game
-	'word-groups', // Connections-style grouping
-	'queens', // N-Queens puzzle
-	'sudoku', // Classic sudoku
-	'crossword', // Daily crossword
-] as const
 
 // ==========================================
 // Plan Checking
@@ -54,20 +41,7 @@ function _isFreePlan(planSlug: string | null | undefined): boolean {
 // Free Game Rotation
 // ==========================================
 
-/**
- * Get today's free game based on day rotation
- *
- * Free users can play one game per day, rotating through the list.
- * Uses UTC date to ensure consistent rotation across timezones.
- */
-export function getTodaysFreeGame(): string {
-	const today = new Date()
-	// Use UTC date to ensure consistent rotation across timezones
-	const dayOfYear = Math.floor(
-		(today.getTime() - new Date(today.getUTCFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24),
-	)
-	return FREE_GAME_ROTATION[dayOfYear % FREE_GAME_ROTATION.length]
-}
+export { getTodaysFreeGame }
 
 /**
  * Check if a game is free today for free-tier users
