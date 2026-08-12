@@ -20,6 +20,7 @@ use tracing::warn;
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
+use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
@@ -152,6 +153,36 @@ fn sudoku_solution(seed: i64, difficulty: SudokuDifficulty) -> Value {
     serde_json::to_value(&generated.solution).unwrap_or(Value::Null)
 }
 
+/// Deterministic mini-crossword fallback when no stored row exists.
+/// Free rotation includes crossword; free floor must not depend on pre-seed.
+fn crossword_puzzle_data(seed: i64) -> Value {
+    generate_crossword_puzzle(seed).0
+}
+
+fn crossword_solution(seed: i64) -> Value {
+    generate_crossword_puzzle(seed).1
+}
+
+/// On-server deterministic fallback for free-floor modules that ship a pure generator.
+/// Content store remains preferred when a row exists.
+fn deterministic_daily(
+    game_slug: &str,
+    seed: i64,
+    difficulty: Option<&str>,
+) -> Option<(Value, Option<Value>)> {
+    match game_slug {
+        "sudoku" => {
+            let diff = parse_difficulty(difficulty.unwrap_or("medium"));
+            Some((
+                sudoku_puzzle_data(seed, diff),
+                Some(sudoku_solution(seed, diff)),
+            ))
+        }
+        "crossword" => Some((crossword_puzzle_data(seed), Some(crossword_solution(seed)))),
+        _ => None,
+    }
+}
+
 fn date_from_string(raw: Option<&str>) -> Option<NaiveDate> {
     let raw = raw?.trim();
     if raw.is_empty() {
@@ -230,7 +261,8 @@ impl PuzzleService for PuzzleConnectService {
         self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
             .await?;
 
-        // Resolve the served puzzle: stored row first, deterministic sudoku fallback.
+        // Resolve the served puzzle: stored row first, then documented
+        // deterministic generators (sudoku, crossword free-floor).
         let mut puzzle_data: Option<Value> = None;
         let mut puzzle_id: Option<String> = None;
         let mut stub = true;
@@ -245,11 +277,12 @@ impl PuzzleService for PuzzleConnectService {
                 Err(error) => warn!(%error, "get_daily puzzle lookup failed"),
             }
         }
-        if puzzle_data.is_none() && game_slug == "sudoku" {
+        if puzzle_data.is_none() {
             let seed = i64::from(get_puzzle_number(puzzle_date, None));
-            let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
-            puzzle_data = Some(sudoku_puzzle_data(seed, diff));
-            stub = false;
+            if let Some((data, _)) = deterministic_daily(game_slug, seed, difficulty.as_deref()) {
+                puzzle_data = Some(data);
+                stub = false;
+            }
         }
 
         // Completion is server-derived from the user's sessions.
@@ -375,7 +408,8 @@ impl PuzzleService for PuzzleConnectService {
         };
 
         // Resolve the served puzzle: stored row by id, else by date, else
-        // deterministic sudoku. The client's seed is never an authority input.
+        // deterministic free-floor generators. The client's seed is never authority.
+        let seed = i64::from(get_puzzle_number(date, None));
         let (puzzle_data, solution, resolved_id) = if let Some(pid) = req.puzzle_id.as_deref() {
             match &self.state.pool {
                 Some(pool) => match fetch_puzzle_by_id(pool, pid).await {
@@ -399,26 +433,22 @@ impl PuzzleService for PuzzleConnectService {
                         ));
                     }
                 },
-                None => {
-                    return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
-                }
+                None => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
+                    Some((data, sol)) => (data, sol, None),
+                    None => {
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+                    }
+                },
             }
         } else if let Some(pool) = &self.state.pool {
             match fetch_daily_puzzle(pool, game_slug, date, difficulty.as_deref()).await {
                 Ok(Some(p)) => (p.puzzle_data, p.solution, Some(p.id.to_string())),
-                Ok(None) => {
-                    if game_slug == "sudoku" {
-                        let seed = i64::from(get_puzzle_number(date, None));
-                        let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
-                        (
-                            sudoku_puzzle_data(seed, diff),
-                            Some(sudoku_solution(seed, diff)),
-                            None,
-                        )
-                    } else {
+                Ok(None) => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
+                    Some((data, sol)) => (data, sol, None),
+                    None => {
                         return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
-                }
+                },
                 Err(error) => {
                     warn!(%error, "submit puzzle lookup failed");
                     return Err(ConnectError::new(
@@ -427,16 +457,13 @@ impl PuzzleService for PuzzleConnectService {
                     ));
                 }
             }
-        } else if game_slug == "sudoku" {
-            let seed = i64::from(get_puzzle_number(date, None));
-            let diff = parse_difficulty(difficulty.as_deref().unwrap_or("medium"));
-            (
-                sudoku_puzzle_data(seed, diff),
-                Some(sudoku_solution(seed, diff)),
-                None,
-            )
         } else {
-            return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+            match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
+                Some((data, sol)) => (data, sol, None),
+                None => {
+                    return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
+                }
+            }
         };
 
         let Some(solution) = solution else {
