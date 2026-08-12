@@ -66,6 +66,22 @@ describe('formatRitualShareText', () => {
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 	})
 
+	test('crossword flagship includes module path and day_key', () => {
+		const text = formatRitualShareText({
+			origin: 'https://puzzled.gg',
+			gameSlug: 'crossword',
+			gameName: 'Crossword Mini',
+			puzzleDate: '2026-08-13',
+			status: 'won',
+			statLine: '⏱️ 1:23',
+		})
+		expect(text).toContain('🏆 Crossword Mini • 2026-08-13')
+		expect(text).toContain('puzzled.gg/games/crossword?date=2026-08-13')
+		expect(text).not.toContain('Play at puzzled.gg')
+		expect(shareTextLooksNonSpoiler(text)).toBe(true)
+		expect(text.toLowerCase()).not.toMatch(/steam|answer|solution/)
+	})
+
 	test('statLine override for time-based games', () => {
 		const text = formatRitualShareText({
 			origin: 'https://puzzled.gg',

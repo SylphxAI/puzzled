@@ -4,44 +4,9 @@
  */
 
 import { useCallback, useEffect, useReducer } from 'react'
-import type { CrosswordPuzzleClientData, CrosswordSolution } from './config'
+import type { CrosswordPuzzleClientData } from './config'
 import type { CrosswordClue, CrosswordDirection, CrosswordState } from './types'
-import { GRID_SIZE } from './types'
-
-// Inline helper functions to avoid circular imports
-function isClueCorrect(
-	userGrid: (string | null)[][],
-	solution: string[][],
-	clue: CrosswordClue,
-	direction: 'across' | 'down',
-): boolean {
-	for (let i = 0; i < clue.length; i++) {
-		const row = direction === 'across' ? clue.row : clue.row + i
-		const col = direction === 'across' ? clue.col + i : clue.col
-		if (userGrid[row]?.[col]?.toUpperCase() !== solution[row]?.[col]?.toUpperCase()) {
-			return false
-		}
-	}
-	return true
-}
-
-function isGridComplete(userGrid: (string | null)[][], solution: string[][]): boolean {
-	for (let row = 0; row < GRID_SIZE; row++) {
-		for (let col = 0; col < GRID_SIZE; col++) {
-			const solutionCell = solution[row]?.[col]
-			const userCell = userGrid[row]?.[col]
-
-			// Skip empty cells in solution
-			if (!solutionCell || solutionCell === '') continue
-
-			// Check if user cell matches solution
-			if (!userCell || userCell.toUpperCase() !== solutionCell.toUpperCase()) {
-				return false
-			}
-		}
-	}
-	return true
-}
+import { GRID_SIZE, isClueFilled, isGridFilled } from './types'
 
 // Actions for the reducer
 type CrosswordAction =
@@ -52,11 +17,8 @@ type CrosswordAction =
 	| { type: 'DELETE_LETTER' }
 	| { type: 'MOVE_NEXT' }
 	| { type: 'MOVE_PREV' }
-	| {
-			type: 'CHECK_COMPLETION'
-			solution: CrosswordSolution
-			puzzleData: CrosswordPuzzleClientData
-	  }
+	| { type: 'CHECK_PROGRESS'; puzzleData: CrosswordPuzzleClientData }
+	| { type: 'MARK_COMPLETE' }
 	| { type: 'RESET' }
 
 function createInitialState(puzzleData: CrosswordPuzzleClientData): CrosswordState {
@@ -84,6 +46,7 @@ function createInitialState(puzzleData: CrosswordPuzzleClientData): CrosswordSta
 		userGrid,
 		selectedCell: firstCell,
 		direction: 'across',
+		isFilled: false,
 		isComplete: false,
 		startTime: null,
 		endTime: null,
@@ -281,32 +244,35 @@ function crosswordReducer(
 			return state
 		}
 
-		case 'CHECK_COMPLETION': {
-			const { solution, puzzleData: puzzle } = action
-
-			// Check which clues are solved
+		case 'CHECK_PROGRESS': {
+			const { puzzleData: puzzle } = action
 			const solvedAcross: number[] = []
 			const solvedDown: number[] = []
 
 			for (const clue of puzzle.clues.across) {
-				if (isClueCorrect(state.userGrid, solution.grid, clue, 'across')) {
+				if (isClueFilled(state.userGrid, clue, 'across')) {
 					solvedAcross.push(clue.number)
 				}
 			}
-
 			for (const clue of puzzle.clues.down) {
-				if (isClueCorrect(state.userGrid, solution.grid, clue, 'down')) {
+				if (isClueFilled(state.userGrid, clue, 'down')) {
 					solvedDown.push(clue.number)
 				}
 			}
 
-			const isComplete = isGridComplete(state.userGrid, solution.grid)
-
 			return {
 				...state,
 				solvedClues: { across: solvedAcross, down: solvedDown },
-				isComplete,
-				endTime: isComplete && !state.endTime ? Date.now() : state.endTime,
+				isFilled: isGridFilled(state.userGrid, puzzle.grid),
+			}
+		}
+
+		case 'MARK_COMPLETE': {
+			if (state.isComplete) return state
+			return {
+				...state,
+				isComplete: true,
+				endTime: state.endTime ?? Date.now(),
 			}
 		}
 
@@ -329,15 +295,13 @@ export type UseCrosswordReturn = {
 	moveNext: () => void
 	movePrev: () => void
 	checkCompletion: () => void
+	markComplete: () => void
 	reset: () => void
 	getCurrentClue: () => CrosswordClue | null
 	getHighlightedCells: () => Set<string>
 }
 
-export function useCrossword(
-	puzzleData: CrosswordPuzzleClientData,
-	solution: CrosswordSolution,
-): UseCrosswordReturn {
+export function useCrossword(puzzleData: CrosswordPuzzleClientData): UseCrosswordReturn {
 	const [state, dispatch] = useReducer(
 		(s: CrosswordState, a: CrosswordAction) => crosswordReducer(s, a, puzzleData),
 		puzzleData,
@@ -384,12 +348,11 @@ export function useCrossword(
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [])
 
-	// Check completion when userGrid changes
-	// state.userGrid is intentionally in deps as a trigger - we want to check completion after each letter
+	// Recheck fill progress when the user grid changes (no solution compare).
 	// biome-ignore lint/correctness/useExhaustiveDependencies: userGrid is trigger, not used in callback
 	useEffect(() => {
-		dispatch({ type: 'CHECK_COMPLETION', solution, puzzleData })
-	}, [state.userGrid, puzzleData, solution])
+		dispatch({ type: 'CHECK_PROGRESS', puzzleData })
+	}, [state.userGrid, puzzleData])
 
 	const selectCell = useCallback((row: number, col: number) => {
 		dispatch({ type: 'SELECT_CELL', row, col })
@@ -420,8 +383,12 @@ export function useCrossword(
 	}, [])
 
 	const checkCompletion = useCallback(() => {
-		dispatch({ type: 'CHECK_COMPLETION', solution, puzzleData })
-	}, [solution, puzzleData])
+		dispatch({ type: 'CHECK_PROGRESS', puzzleData })
+	}, [puzzleData])
+
+	const markComplete = useCallback(() => {
+		dispatch({ type: 'MARK_COMPLETE' })
+	}, [])
 
 	const reset = useCallback(() => {
 		dispatch({ type: 'RESET' })
@@ -475,6 +442,7 @@ export function useCrossword(
 		moveNext,
 		movePrev,
 		checkCompletion,
+		markComplete,
 		reset,
 		getCurrentClue,
 		getHighlightedCells,
