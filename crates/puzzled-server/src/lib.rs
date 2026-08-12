@@ -421,20 +421,17 @@ mod tests {
         use puzzled_core::puzzle_play::daily_time::{
             product_day_key, product_day_key_string, DAY_KEY_TIMEZONE,
         };
+        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
         use puzzled_core::puzzle_play::ritual_completion::{
             compute_drc, qualifies_as_ritual, RitualCompletionRow, RitualQualifyInput,
             DRC_RECOMPUTE_SQL,
         };
-        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
 
         assert_eq!(DAY_KEY_TIMEZONE, "Asia/Hong_Kong");
         let now = chrono::Utc::now();
         let key = product_day_key_string(now);
         assert_eq!(key.len(), 10);
-        assert_eq!(
-            product_day_key(now).format("%Y-%m-%d").to_string(),
-            key
-        );
+        assert_eq!(product_day_key(now).format("%Y-%m-%d").to_string(), key);
         assert!(qualifies_as_ritual(RitualQualifyInput {
             game_module_id: "sudoku",
             mode: "daily",

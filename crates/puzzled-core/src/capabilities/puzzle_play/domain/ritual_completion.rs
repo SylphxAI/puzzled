@@ -227,8 +227,7 @@ mod tests {
         assert_eq!(ev.module_class, ModuleClass::PuzzleRitual);
         assert_eq!(ev.game_module_id, "sudoku");
 
-        let lost = build_ritual_completed("user-1", "sudoku", day, "lost", None, 0)
-            .expect("lost");
+        let lost = build_ritual_completed("user-1", "sudoku", day, "lost", None, 0).expect("lost");
         assert_eq!(lost.finish_kind, FinishKind::ExhaustedFail);
     }
 

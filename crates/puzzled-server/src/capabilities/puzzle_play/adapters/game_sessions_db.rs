@@ -146,7 +146,14 @@ pub async fn persist_validated_session(
         is_dry_run: false,
     }) {
         let dk = day_key.ok_or("day_key required for ritual completion")?;
-        build_ritual_completed(user_id, game_slug, dk, status, puzzle_id.map(str::to_string), at_ms)
+        build_ritual_completed(
+            user_id,
+            game_slug,
+            dk,
+            status,
+            puzzle_id.map(str::to_string),
+            at_ms,
+        )
     } else {
         None
     };
@@ -237,8 +244,8 @@ mod tests {
             status: "won",
             is_dry_run: false,
         }));
-        let ev = build_ritual_completed("u1", "sudoku", day, "won", Some("p1".into()), 0)
-            .expect("ev");
+        let ev =
+            build_ritual_completed("u1", "sudoku", day, "won", Some("p1".into()), 0).expect("ev");
         assert_eq!(ev.finish_kind, FinishKind::Success);
         assert_eq!(ev.day_key, "2026-08-12");
         assert!(ev.is_ritual);
