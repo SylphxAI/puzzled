@@ -128,9 +128,29 @@ jobs:
         run: bun audit --audit-level=high
 
       - name: Secret detection
-        uses: trufflesecurity/trufflehog@30d5bb91af1a771378349dbbb0c82129392acf70 # v3.95.6
-        with:
-          extra_args: --only-verified
+        # Binary install (not the GH Action docker path): self-hosted
+        # sylphx-linux-standard runners may lack a Docker daemon; docker-based
+        # trufflehog then exits 125 and blocks required Security Scan + Auto Deploy.
+        # Keep fail-closed verified secret scan semantics.
+        run: |
+          set -euo pipefail
+          VER=3.88.33
+          ARCH=$(uname -m)
+          case "$ARCH" in
+            x86_64|amd64) TH_ARCH=amd64 ;;
+            aarch64|arm64) TH_ARCH=arm64 ;;
+            *) echo "unsupported arch: $ARCH"; exit 1 ;;
+          esac
+          curl -fsSL "https://github.com/trufflesecurity/trufflehog/releases/download/v${VER}/trufflehog_${VER}_linux_${TH_ARCH}.tar.gz" \
+            | tar -xz -C /tmp trufflehog
+          chmod +x /tmp/trufflehog
+          BASE="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
+          HEAD="${{ github.sha }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="$(git rev-list --max-parents=0 HEAD | head -1)"
+          fi
+          echo "trufflehog scan base=$BASE head=$HEAD"
+          /tmp/trufflehog git file://. --since-commit "$BASE" --branch "$HEAD" --only-verified --fail --no-update
 
   # ==========================================
   # Database Migrations
