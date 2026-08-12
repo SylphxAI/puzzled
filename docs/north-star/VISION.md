@@ -17,7 +17,9 @@ That sentence has three load-bearing parts:
 2. **Light, positive, brain play** — minutes, not grind; honest fail, not humiliation; competence, not gambling arousal. Entertainment “oracle” formats are allowed as play and forbidden as science.
 3. **Most days of the week** — the economic and cultural unit is a **habit**, not a spike. A million people finishing one Wordle-shaped Monday and disappearing by Thursday is not winning. That is why the executive metric is [HRC](NORTH-STAR-METRIC.md), not same-day DRC.
 
-**Catalog ambition is unbounded:** every game that fits the *daily light brain ritual* class should eventually live here—word puzzles, logic grids, pattern games, mini crosswords, the sudoku family, spatial puzzles, and light entertainment oracle formats (horoscope-style, “who were you,” playful predictors). Entertainment modules are **fun, not authoritative**.
+**Catalog ambition is unbounded:** every game that fits the *daily light brain ritual* class should eventually live here—word puzzles, logic grids, pattern games, mini crosswords, the sudoku family, spatial puzzles, CJK rituals, and light entertainment oracle formats (horoscope-style, “who were you,” playful predictors). Entertainment modules are **fun, not authoritative**.
+
+The named destination list is [CATALOG.md](CATALOG.md) (~115 slugs). That file is the greedy end-state. Home still shows a small today-set. Slugs there are not live until protocol-complete.
 
 **Capability ambition is not unbounded feature sprawl.** The world is covered by a **single module protocol** (day key, run, finish, result card, entitlement), not by N independent apps. That is how “all the games of this type in the world” stays coherent (Simplicity × Depth).
 

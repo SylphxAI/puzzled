@@ -15,7 +15,7 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | | |
 |--|--|
 | **Promise** | Minutes a day, optional depth, shareable non-spoiler results |
-| **Catalog** | Unbounded *class* of light daily puzzles + honest entertainment oracles |
+| **Catalog** | Unbounded *class* listed in [docs/north-star/CATALOG.md](docs/north-star/CATALOG.md) (~115 destination slugs; 17 shipped) |
 | **Basis** | Day key · game module · ritual run · result card · entitlement |
 | **NSM** | Distinct users with a qualifying ritual on ≥ 4 of the last 7 product days (HRC) |
 | **Money** | Free daily finish floor; paid archive/suite/stats |
