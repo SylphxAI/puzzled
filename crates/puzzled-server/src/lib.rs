@@ -365,9 +365,9 @@ mod tests {
 
     #[tokio::test]
     async fn connect_submit_guess_rejects_unserved_puzzle() {
-        // Non-deterministic games without a stored puzzle must fail closed —
-        // no accept-any claims, no invented scores. The free-rotation game
-        // passes the premium gate and then hits the unserved-puzzle 404 (no DB).
+        // Free-rotation game passes the premium gate. Without a content DB:
+        // - sudoku may still densify via deterministic server generation
+        // - other modules must fail closed (404 unserved) — no accept-any.
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_02");
         let free_slug = today_free_slug();
@@ -385,7 +385,18 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess non-sudoku: {error}"),
         };
-        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        if free_slug == "sudoku" {
+            assert_eq!(response.status(), StatusCode::OK);
+            let json = body_json(response).await;
+            assert!(
+                json.get("valid")
+                    .map_or(true, |v| v == false || v.is_null()),
+                "expected invalid verdict for unsound sudoku submit, got: {:?}",
+                json.get("valid")
+            );
+        } else {
+            assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        }
     }
 
     #[tokio::test]
