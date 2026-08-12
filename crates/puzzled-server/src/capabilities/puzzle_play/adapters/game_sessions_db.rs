@@ -6,10 +6,16 @@
 
 use sqlx::PgPool;
 
+use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
 use puzzled_core::puzzle_play::game_flows::{GameMode, SaveResultPlan};
 use puzzled_core::puzzle_play::ritual_completion::{
     build_ritual_completed, qualifies_as_ritual, RitualQualifyInput, DRC_RECOMPUTE_SQL,
 };
+
+/// Parse Platform `sub` or logical `guest_<uuid>` into the uuid column value.
+fn parse_user_id(user_id: &str) -> Result<uuid::Uuid, String> {
+    user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))
+}
 
 #[derive(Debug, Clone)]
 pub struct PersistGameSessionInput<'a> {
@@ -23,7 +29,7 @@ pub async fn persist_game_session(
     pool: &PgPool,
     input: PersistGameSessionInput<'_>,
 ) -> Result<String, String> {
-    let uid = uuid::Uuid::parse_str(input.user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(input.user_id)?;
     // DB enum game_status: in_progress|won|lost|abandoned
     let status = input.plan.status.as_str();
     // DB enum game_mode: daily|archive (practice maps to daily for storage)
@@ -119,7 +125,7 @@ pub async fn has_completed_session(
     puzzle_date: Option<chrono::NaiveDate>,
     puzzle_id: Option<&str>,
 ) -> Result<bool, String> {
-    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let pid = match puzzle_id {
         Some(p) => Some(uuid::Uuid::parse_str(p).map_err(|e| format!("invalid puzzle id: {e}"))?),
         None => None,
@@ -165,7 +171,7 @@ pub async fn has_ritual_completion(
     game_slug: &str,
     day_key: chrono::NaiveDate,
 ) -> Result<bool, String> {
-    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let day = day_key.format("%Y-%m-%d").to_string();
     let exists: bool = sqlx::query_scalar(HAS_RITUAL_COMPLETION_SQL)
         .bind(uid)
@@ -197,7 +203,7 @@ pub async fn persist_validated_session(
     day_key: Option<chrono::NaiveDate>,
     at_ms: i64,
 ) -> Result<String, String> {
-    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let pid = match puzzle_id {
         Some(p) => Some(uuid::Uuid::parse_str(p).map_err(|e| format!("invalid puzzle id: {e}"))?),
         None => None,
@@ -299,7 +305,7 @@ fn is_unique_violation(err: &sqlx::Error) -> bool {
 
 /// Count a user's completed sessions (any game).
 pub async fn count_sessions(pool: &PgPool, user_id: &str) -> Result<u32, String> {
-    let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let row: (i64,) = sqlx::query_as(
         "SELECT COUNT(*) FROM game_sessions WHERE user_id = $1 AND status IN ('won','lost')",
     )
@@ -353,6 +359,17 @@ mod tests {
             std::stringify!(already_played).contains("already_played"),
             true
         );
+    }
+
+    /// Live tip b3abfd8/#76: guest SubmitGuess past identity gate then
+    /// `session_lookup_failed` because `guest_<uuid>` was parsed as a UUID.
+    #[test]
+    fn guest_logical_user_id_maps_to_storage_uuid() {
+        let uid = parse_user_id("guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890").expect("guest");
+        assert_eq!(uid.to_string(), "a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+        let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
+        assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
+        assert!(parse_user_id("not-a-uuid").is_err());
     }
 
     /// Live tip 626f40a: `SELECT 1` decoded as `i64` → INT4/INT8 mismatch →
