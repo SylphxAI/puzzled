@@ -6,6 +6,15 @@
   dual REST surface, "sole Connect" partial claims)
 - **Relates to:** ADR-168 (transport north star), ADR-169 (capability shape)
 
+## Product North Star (related)
+
+Engineering stack decisions in this ADR serve the product North Star package:
+
+- [docs/north-star/README.md](../north-star/README.md) — Daily Ritual Completers (DRC), free daily ritual floor, module protocol.
+- Player product floors outrank clean-break convenience: [DELIVERY-AUTHORITY.md](../north-star/DELIVERY-AUTHORITY.md).
+
+This ADR does **not** redefine the product NSM; it defines the sole play and transport authority required for honest finishes and entitlements.
+
 ## Context
 
 The strangler cutover left dual authorities: a hand-rolled REST `/api/v1`
