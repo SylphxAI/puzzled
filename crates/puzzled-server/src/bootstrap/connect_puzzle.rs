@@ -279,9 +279,7 @@ impl PuzzleService for PuzzleConnectService {
         }
         if puzzle_data.is_none() {
             let seed = i64::from(get_puzzle_number(puzzle_date, None));
-            if let Some((data, _)) =
-                deterministic_daily(game_slug, seed, difficulty.as_deref())
-            {
+            if let Some((data, _)) = deterministic_daily(game_slug, seed, difficulty.as_deref()) {
                 puzzle_data = Some(data);
                 stub = false;
             }
@@ -438,10 +436,7 @@ impl PuzzleService for PuzzleConnectService {
                 None => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
                     Some((data, sol)) => (data, sol, None),
                     None => {
-                        return Err(ConnectError::new(
-                            ErrorCode::NotFound,
-                            "puzzle_unavailable",
-                        ));
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
                 },
             }
@@ -451,10 +446,7 @@ impl PuzzleService for PuzzleConnectService {
                 Ok(None) => match deterministic_daily(game_slug, seed, difficulty.as_deref()) {
                     Some((data, sol)) => (data, sol, None),
                     None => {
-                        return Err(ConnectError::new(
-                            ErrorCode::NotFound,
-                            "puzzle_unavailable",
-                        ));
+                        return Err(ConnectError::new(ErrorCode::NotFound, "puzzle_unavailable"));
                     }
                 },
                 Err(error) => {

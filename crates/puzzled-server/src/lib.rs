@@ -306,8 +306,7 @@ mod tests {
                 json.get("stub")
             );
             assert!(
-                json
-                    .get("puzzleDataJson")
+                json.get("puzzleDataJson")
                     .and_then(|v| v.as_str())
                     .map(|s| !s.is_empty() && s != "null")
                     .unwrap_or(false),
