@@ -10,10 +10,10 @@
 
 Engineering stack decisions in this ADR serve the product North Star package:
 
-- [docs/north-star/README.md](../north-star/README.md) — Daily Ritual Completers (DRC), free daily ritual floor, module protocol.
+- [docs/north-star/README.md](../north-star/README.md) — Habitual Ritual Completers (HRC) is the executive North Star Metric; Daily Ritual Completers (DRC) is the atomic input; free daily ritual floor; module protocol.
 - Player product floors outrank clean-break convenience: [DELIVERY-AUTHORITY.md](../north-star/DELIVERY-AUTHORITY.md).
 
-This ADR does **not** redefine the product NSM; it defines the sole play and transport authority required for honest finishes and entitlements.
+This ADR does **not** redefine the product NSM; it defines the sole play and transport authority required for honest finishes and entitlements. Polar formulas live in the North Star package and in `puzzled_core::puzzle_play::ritual_completion`.
 
 ## Context
 
@@ -81,14 +81,18 @@ clean-break end state that replaces all of it.
   `Asia/Hong_Kong`, same SSOT as DRC) is playable by everyone, including guests.
   Legacy UTC dual-oracles in residual billing tests are not product authority.
 
-### 5.1 Ritual completion / DRC instrumentation (S0)
+### 5.1 Ritual completion / DRC + HRC instrumentation (S0)
 
 - After server-validated `SubmitGuess`, the api persists the finish on
   `game_sessions` with `day_key`, `module_class`, `is_ritual`, `finish_kind`
   when the finish qualifies as a daily `puzzle_ritual` (sole path — no client
   emission, no dual event bus).
 - \(\mathrm{DRC}(D)\) recomputes as distinct `user_id` where
-  `day_key = D AND is_ritual AND module_class = 'puzzle_ritual'`.
+  `day_key = D AND is_ritual AND module_class = 'puzzle_ritual'`
+  (`compute_drc`).
+- \(\mathrm{HRC}(D)\) (product North Star) recomputes as distinct `user_id`
+  with ≥ 4 distinct DRC days in the trailing 7 product days ending \(D\)
+  (`compute_hrc`). S0 is oracle existence; HRC may be 0.
 
 ### 6. Lifecycle and evidence
 

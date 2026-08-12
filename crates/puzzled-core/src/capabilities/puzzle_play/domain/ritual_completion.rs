@@ -1,8 +1,9 @@
-//! Ritual completion contract and DRC recompute oracle (North Star S0).
+//! Ritual completion contract and DRC / HRC recompute oracles (North Star S0).
 //!
 //! A qualifying finish is produced only after **server-side** play validation
 //! (ADR-170). Clients never assert completion. This module is pure: the shell
-//! persists the record and recomputes DRC from stored rows.
+//! persists the record and recomputes Daily Ritual Completers (atom) and
+//! Habitual Ritual Completers (Polar) from stored rows.
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -122,7 +123,7 @@ pub fn build_ritual_completed(
     })
 }
 
-/// Compact row shape for DRC recompute from warehouse / Postgres.
+/// Compact row shape for DRC / HRC recompute from warehouse / Postgres.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RitualCompletionRow {
     pub user_id: String,
@@ -130,6 +131,12 @@ pub struct RitualCompletionRow {
     pub module_class: ModuleClass,
     pub is_ritual: bool,
 }
+
+/// Trailing window length (product days) for Habitual Ritual Completers.
+pub const HABITUAL_WINDOW_DAYS: i64 = 7;
+
+/// Minimum distinct DRC days inside [`HABITUAL_WINDOW_DAYS`] to count as HRC.
+pub const HABITUAL_MIN_DAYS: u32 = 4;
 
 /// Recompute \(\mathrm{DRC}(D)\) = distinct users with ≥1 qualifying ritual finish on day \(D\).
 #[must_use]
@@ -158,6 +165,68 @@ WHERE day_key = $1
   AND is_ritual = true
   AND module_class = 'puzzle_ritual'
   AND status IN ('won', 'lost')
+"#;
+
+/// Recompute \(\mathrm{HRC}(D)\) = distinct users with ≥ [`HABITUAL_MIN_DAYS`]
+/// distinct DRC days in the trailing [`HABITUAL_WINDOW_DAYS`] ending on `end_day_key`.
+///
+/// Invalid `end_day_key` yields `0` (uncomputable is not a fake Polar win).
+#[must_use]
+pub fn compute_hrc(end_day_key: &str, rows: &[RitualCompletionRow]) -> u64 {
+    let Ok(end) = NaiveDate::parse_from_str(end_day_key, "%Y-%m-%d") else {
+        return 0;
+    };
+    let start = end - chrono::Duration::days(HABITUAL_WINDOW_DAYS - 1);
+    let mut pairs: Vec<(&str, &str)> = rows
+        .iter()
+        .filter(|r| r.is_ritual && matches!(r.module_class, ModuleClass::PuzzleRitual))
+        .filter(|r| {
+            NaiveDate::parse_from_str(&r.day_key, "%Y-%m-%d")
+                .ok()
+                .is_some_and(|d| d >= start && d <= end)
+        })
+        .map(|r| (r.user_id.as_str(), r.day_key.as_str()))
+        .collect();
+    pairs.sort_unstable();
+    pairs.dedup();
+    let mut hrc = 0_u64;
+    let mut i = 0;
+    while i < pairs.len() {
+        let user = pairs[i].0;
+        let mut j = i;
+        while j < pairs.len() && pairs[j].0 == user {
+            j += 1;
+        }
+        if (j - i) as u32 >= HABITUAL_MIN_DAYS {
+            hrc += 1;
+        }
+        i = j;
+    }
+    hrc
+}
+
+/// SQL recipe (documentation + live ops) for Postgres HRC recompute.
+///
+/// Bound `$1` = end day_key `YYYY-MM-DD`. Window is `$1-6` … `$1` inclusive;
+/// threshold is 4 distinct DRC days.
+pub const HRC_RECOMPUTE_SQL: &str = r#"
+WITH daily AS (
+  SELECT user_id, day_key
+  FROM game_sessions
+  WHERE is_ritual = true
+    AND module_class = 'puzzle_ritual'
+    AND status IN ('won', 'lost')
+    AND day_key >= to_char(($1::date - 6), 'YYYY-MM-DD')
+    AND day_key <= $1
+  GROUP BY user_id, day_key
+)
+SELECT COUNT(*)::bigint AS hrc
+FROM (
+  SELECT user_id
+  FROM daily
+  GROUP BY user_id
+  HAVING COUNT(*) >= 4
+) t
 "#;
 
 /// Product floor: free daily ritual admits **one** terminal finish per
@@ -326,6 +395,67 @@ mod tests {
         assert!(DRC_RECOMPUTE_SQL.contains("day_key"));
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
         assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
+    }
+
+    fn row(user: &str, day: &str, class: ModuleClass, is_ritual: bool) -> RitualCompletionRow {
+        RitualCompletionRow {
+            user_id: user.into(),
+            day_key: day.into(),
+            module_class: class,
+            is_ritual,
+        }
+    }
+
+    #[test]
+    fn hrc_counts_users_with_four_distinct_drc_days_in_window() {
+        let rows = vec![
+            row("a", "2026-08-08", ModuleClass::PuzzleRitual, true),
+            row("a", "2026-08-09", ModuleClass::PuzzleRitual, true),
+            row("a", "2026-08-10", ModuleClass::PuzzleRitual, true),
+            row("a", "2026-08-11", ModuleClass::PuzzleRitual, true),
+            // b has only 3 days
+            row("b", "2026-08-10", ModuleClass::PuzzleRitual, true),
+            row("b", "2026-08-11", ModuleClass::PuzzleRitual, true),
+            row("b", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            // c has 4 finishes on the SAME day — one DRC day
+            row("c", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            row("c", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            row("c", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            row("c", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            // d's fourth day is outside the window ending 2026-08-12
+            row("d", "2026-08-05", ModuleClass::PuzzleRitual, true),
+            row("d", "2026-08-10", ModuleClass::PuzzleRitual, true),
+            row("d", "2026-08-11", ModuleClass::PuzzleRitual, true),
+            row("d", "2026-08-12", ModuleClass::PuzzleRitual, true),
+            // e is entertainment only
+            row("e", "2026-08-09", ModuleClass::EntertainmentOracle, true),
+            row("e", "2026-08-10", ModuleClass::EntertainmentOracle, true),
+            row("e", "2026-08-11", ModuleClass::EntertainmentOracle, true),
+            row("e", "2026-08-12", ModuleClass::EntertainmentOracle, true),
+            // f has 4 days including non-contiguous skips
+            row("f", "2026-08-06", ModuleClass::PuzzleRitual, true),
+            row("f", "2026-08-08", ModuleClass::PuzzleRitual, true),
+            row("f", "2026-08-10", ModuleClass::PuzzleRitual, true),
+            row("f", "2026-08-12", ModuleClass::PuzzleRitual, true),
+        ];
+        // Window ending 12th: 6..12. a (8-11)=4, f (6,8,10,12)=4. b=3, c=1, d=3 in-window, e=0.
+        assert_eq!(compute_hrc("2026-08-12", &rows), 2);
+        assert_eq!(compute_hrc("2026-08-11", &rows), 1); // only a; f has 6,8,10 = 3 in [5..11]
+        assert_eq!(compute_hrc("not-a-date", &rows), 0);
+        assert_eq!(HABITUAL_MIN_DAYS, 4);
+        assert_eq!(HABITUAL_WINDOW_DAYS, 7);
+    }
+
+    #[test]
+    fn hrc_sql_recipe_is_present() {
+        assert!(HRC_RECOMPUTE_SQL.contains(&format!(
+            "HAVING COUNT(*) >= {HABITUAL_MIN_DAYS}"
+        )));
+        assert!(HRC_RECOMPUTE_SQL.contains(&format!(
+            "$1::date - {}",
+            HABITUAL_WINDOW_DAYS - 1
+        )));
+        assert!(HRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
     }
 
     /// Dogfood residual: first free-daily win with null content_id must still

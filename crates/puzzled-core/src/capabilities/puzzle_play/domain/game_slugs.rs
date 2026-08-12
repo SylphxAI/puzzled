@@ -26,11 +26,11 @@ const VALID_SLUGS: &[&str] = &[
     "word-search",
 ];
 
-/// North Star module class (DRC vs DFC).
+/// North Star module class (`puzzle_ritual` feeds DRC/HRC; oracles feed DFC).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModuleClass {
-    /// Contributes to Daily Ritual Completers (DRC).
+    /// Contributes to Daily Ritual Completers (DRC) and therefore to HRC.
     PuzzleRitual,
     /// Contributes only to Daily Fun Completers (DFC); never DRC.
     EntertainmentOracle,
