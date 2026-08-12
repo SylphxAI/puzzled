@@ -15,6 +15,7 @@ pub mod quad_words;
 pub mod queens_conflict;
 pub mod random;
 pub mod random_lcg;
+pub mod ritual_completion;
 pub mod scoring;
 pub mod share_squares;
 pub mod sudoku;

@@ -269,6 +269,21 @@ export const gameSessions = pgTable(
 
 		startedAt: timestamp('started_at').defaultNow().notNull(),
 		completedAt: timestamp('completed_at'),
+
+		/**
+		 * Product day key (YYYY-MM-DD in Asia/Hong_Kong) for ritual finishes.
+		 * Sole instrumentation path for DRC recompute — server-authored only.
+		 */
+		dayKey: text('day_key'),
+
+		/** Module class: puzzle_ritual | entertainment_oracle */
+		moduleClass: text('module_class'),
+
+		/** True when this row is a qualifying ritual.completed equivalent */
+		isRitual: boolean('is_ritual').default(false).notNull(),
+
+		/** success | exhausted_fail | other_terminal */
+		finishKind: text('finish_kind'),
 	},
 	(table) => [
 		index('game_sessions_user_idx').on(table.userId),
@@ -291,6 +306,8 @@ export const gameSessions = pgTable(
 			table.completedAt,
 		),
 		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
+		// DRC recompute: day_key + is_ritual + module_class
+		index('game_sessions_drc_day_key_idx').on(table.dayKey, table.isRitual, table.moduleClass),
 	],
 )
 

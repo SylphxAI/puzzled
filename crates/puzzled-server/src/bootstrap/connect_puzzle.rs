@@ -20,7 +20,7 @@ use tracing::warn;
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
-use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, get_today_utc};
+use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{is_game_free_today, is_valid_game_slug};
@@ -72,7 +72,8 @@ impl PuzzleConnectService {
         game_slug: &str,
         date: chrono::NaiveDate,
     ) -> Result<(), ConnectError> {
-        let today = get_today_utc(Utc::now());
+        // Product day-key SSOT (Asia/Hong_Kong) — not client local, not legacy UTC.
+        let today = product_day_key(Utc::now());
         if date != today {
             // Archive access is a premium feature.
             return self.require_premium(user_id).await;
@@ -212,8 +213,8 @@ impl PuzzleService for PuzzleConnectService {
                 Some(d.to_string())
             }
         };
-        let today = get_today_utc(Utc::now());
-        // Archive reads: puzzle_date (YYYY-MM-DD), default = today.
+        let today = product_day_key(Utc::now());
+        // Archive reads: puzzle_date (YYYY-MM-DD), default = product day key.
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
 
@@ -353,7 +354,8 @@ impl PuzzleService for PuzzleConnectService {
             }
         };
 
-        let today = get_today_utc(Utc::now());
+        let now = Utc::now();
+        let today = product_day_key(now);
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         // Server-enforced premium gating (archive + non-rotation games).
         self.enforce_play_access(Some(&uid), game_slug, date)
@@ -484,6 +486,8 @@ impl PuzzleService for PuzzleConnectService {
 
         let score = verdict.score.unwrap_or(0);
         let mode = if date == today { "daily" } else { "archive" };
+        // Ritual day_key: for daily mode use product day key; archive is not ritual.
+        let ritual_day_key = if mode == "daily" { Some(today) } else { None };
         if let Some(pool) = &self.state.pool {
             match persist_validated_session(
                 pool,
@@ -497,6 +501,8 @@ impl PuzzleService for PuzzleConnectService {
                 req.time_spent_ms,
                 resolved_id.as_deref(),
                 Some(date),
+                ritual_day_key,
+                now.timestamp_millis(),
             )
             .await
             {

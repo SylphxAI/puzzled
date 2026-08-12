@@ -1,18 +1,48 @@
-//! UTC daily puzzle time helpers — parity with
-//! `apps/puzzled/src/features/daily/lib/puzzle-utils.ts`.
+//! Product day-key and daily puzzle time helpers.
 //!
-//! Pure product kernel used by games/stats/gamification residual paths.
-//! Launch date default matches TS `DEFAULT_LAUNCH_DATE` (2024-01-01).
+//! **Day-key SSOT** (North Star / ritual protocol): calendar date in
+//! `Asia/Hong_Kong` (UTC+8 fixed offset; Hong Kong has no DST). Clients must
+//! not choose `day_key` for ritual authority — only the server clock path.
+//!
+//! Legacy UTC helpers remain for residual dual-oracles and tests; product
+//! ritual, free rotation, and DRC use [`product_day_key`].
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Utc};
 
-/// Default launch date for games without an explicit override (UTC).
+/// Default launch date for games without an explicit override.
 pub const DEFAULT_LAUNCH_DATE: NaiveDate = match NaiveDate::from_ymd_opt(2024, 1, 1) {
     Some(d) => d,
     None => unreachable!(),
 };
 
-/// Calendar date (UTC) for an explicit instant — clock stays in the shell.
+/// Product day-key timezone name (normative; keep in lockstep with NORTH-STAR-METRIC.md).
+pub const DAY_KEY_TIMEZONE: &str = "Asia/Hong_Kong";
+
+/// Fixed UTC+8 offset for Asia/Hong_Kong (no DST — correct forever for HKT).
+const HKT_OFFSET_SECS: i64 = 8 * 3600;
+
+/// Product day key for an explicit instant — **SSOT for ritual / free rotation / DRC**.
+///
+/// Returns the calendar date in [`DAY_KEY_TIMEZONE`] by shifting UTC by the
+/// fixed HKT offset (Hong Kong has never observed DST).
+#[must_use]
+pub fn product_day_key(now: DateTime<Utc>) -> NaiveDate {
+    (now + Duration::seconds(HKT_OFFSET_SECS)).date_naive()
+}
+
+/// Format product day key as `YYYY-MM-DD`.
+#[must_use]
+pub fn product_day_key_string(now: DateTime<Utc>) -> String {
+    day_key_string(product_day_key(now))
+}
+
+/// Format a calendar date as `YYYY-MM-DD` (day_key wire form).
+#[must_use]
+pub fn day_key_string(date: NaiveDate) -> String {
+    date.format("%Y-%m-%d").to_string()
+}
+
+/// Calendar date (UTC) for an explicit instant — **legacy**; prefer [`product_day_key`].
 #[must_use]
 pub fn get_today_utc(now: DateTime<Utc>) -> NaiveDate {
     now.date_naive()
@@ -27,7 +57,7 @@ pub fn get_yesterday_utc(now: DateTime<Utc>) -> NaiveDate {
 /// Format a date as `YYYY-MM-DD` (parity: `getPuzzleDateStringUTC`).
 #[must_use]
 pub fn puzzle_date_string_utc(date: NaiveDate) -> String {
-    date.format("%Y-%m-%d").to_string()
+    day_key_string(date)
 }
 
 /// Parse `YYYY-MM-DD` into a [`NaiveDate`].
@@ -184,5 +214,33 @@ mod tests {
         assert_eq!(ms, 3 * 60 * 60 * 1000);
         assert_eq!(time_until_next_utc_midnight(ms), (3, 0, 0));
         assert_eq!(time_until_next_utc_midnight(3_661_000), (1, 1, 1));
+    }
+
+    #[test]
+    fn product_day_key_is_hkt_not_utc_near_boundary() {
+        // 2026-08-12 02:00 UTC = 2026-08-12 10:00 HKT → same calendar day.
+        let mid = DateTime::parse_from_rfc3339("2026-08-12T02:00:00Z")
+            .expect("ts")
+            .with_timezone(&Utc);
+        assert_eq!(
+            product_day_key(mid),
+            NaiveDate::from_ymd_opt(2026, 8, 12).expect("d")
+        );
+        assert_eq!(get_today_utc(mid), product_day_key(mid));
+
+        // 2026-08-11 20:00 UTC = 2026-08-12 04:00 HKT → HKT rolled; UTC still 11th.
+        let boundary = DateTime::parse_from_rfc3339("2026-08-11T20:00:00Z")
+            .expect("ts")
+            .with_timezone(&Utc);
+        assert_eq!(
+            product_day_key(boundary),
+            NaiveDate::from_ymd_opt(2026, 8, 12).expect("d")
+        );
+        assert_eq!(
+            get_today_utc(boundary),
+            NaiveDate::from_ymd_opt(2026, 8, 11).expect("d")
+        );
+        assert_eq!(product_day_key_string(boundary), "2026-08-12");
+        assert_eq!(DAY_KEY_TIMEZONE, "Asia/Hong_Kong");
     }
 }

@@ -74,8 +74,18 @@ clean-break end state that replaces all of it.
 
 - Archive reads and non-rotation games require an active premium subscription
   (Platform `/billing/subscription`, app-secret auth, fail-closed to free).
-- The daily free-rotation game (UTC day-of-year rotation) is playable by
-  everyone, including guests.
+- The daily free-rotation game (**product day-key** day-of-year rotation in
+  `Asia/Hong_Kong`, same SSOT as DRC) is playable by everyone, including guests.
+  Legacy UTC dual-oracles in residual billing tests are not product authority.
+
+### 5.1 Ritual completion / DRC instrumentation (S0)
+
+- After server-validated `SubmitGuess`, the api persists the finish on
+  `game_sessions` with `day_key`, `module_class`, `is_ritual`, `finish_kind`
+  when the finish qualifies as a daily `puzzle_ritual` (sole path — no client
+  emission, no dual event bus).
+- \(\mathrm{DRC}(D)\) recomputes as distinct `user_id` where
+  `day_key = D AND is_ritual AND module_class = 'puzzle_ritual'`.
 
 ### 6. Lifecycle and evidence
 
