@@ -188,6 +188,25 @@ fn test_decoding_key() -> Option<DecodingKey> {
     DecodingKey::from_rsa_pem(pem.as_bytes()).ok()
 }
 
+/// Parse `PLATFORM_JWT_PUBLIC_KEY_PEM`, tolerating JSON-escaped newlines.
+///
+/// Returns `None` when the value is not a loadable RSA PEM so callers can fall
+/// through to JWKS instead of failing closed on a corrupted env secret.
+fn decoding_key_from_pem_env(pem: &str) -> Option<DecodingKey> {
+    let trimmed = pem.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    // Prefer real newlines; also accept literal `\n` sequences from secret JSON.
+    let candidates = [trimmed.to_string(), trimmed.replace("\\n", "\n")];
+    for candidate in candidates {
+        if let Ok(key) = DecodingKey::from_rsa_pem(candidate.as_bytes()) {
+            return Some(key);
+        }
+    }
+    None
+}
+
 /// Extract Bearer token from Authorization header only (cookies may be opaque
 /// session ids — those are not Platform JWTs and fail closed here).
 #[must_use]
@@ -369,17 +388,21 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
     }
 
     // Optional static PEM via env for single-tenant / offline.
+    // Platform secret injection may store PEM with literal `\n` (JSON-escaped).
+    // Accept real newlines and escaped form. On parse failure, fall through to
+    // JWKS — a broken PEM must not mask a working key set (live residual:
+    // literal `\n` PEM → identity_required_for_submit for all Bearer JWTs).
     if let Ok(pem) = std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM") {
         if !pem.trim().is_empty() {
-            let key = DecodingKey::from_rsa_pem(pem.as_bytes())
-                .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?;
-            let claims = decode_with_key(token, &key)?;
-            return Ok(VerifiedIdentity {
-                user_id: claims.sub.trim().to_string(),
-                display_name: claims.name.clone(),
-                email: claims.email.clone(),
-                is_admin: is_admin_from_claims(&claims),
-            });
+            if let Some(key) = decoding_key_from_pem_env(&pem) {
+                let claims = decode_with_key(token, &key)?;
+                return Ok(VerifiedIdentity {
+                    user_id: claims.sub.trim().to_string(),
+                    display_name: claims.name.clone(),
+                    email: claims.email.clone(),
+                    is_admin: is_admin_from_claims(&claims),
+                });
+            }
         }
     }
 
@@ -431,7 +454,6 @@ pub fn resolve_verified_identity(headers: &HeaderMap) -> Result<VerifiedIdentity
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
-    use std::sync::Mutex;
     fn lock() -> std::sync::MutexGuard<'static, ()> {
         super::test_key_lock()
             .lock()
@@ -541,5 +563,33 @@ mod tests {
         let err = verify_platform_jwt("not-a-jwt").unwrap_err();
         assert_eq!(err, JwtError::MalformedToken);
         clear_test_decoding_key();
+    }
+
+    #[test]
+    fn pem_env_accepts_literal_backslash_n() {
+        let _g = lock();
+        clear_test_decoding_key();
+        let escaped = TEST_PUB_PEM.replace('\n', "\\n");
+        assert!(
+            escaped.contains("\\n") && !escaped.contains('\n'),
+            "fixture must be single-line escaped form"
+        );
+        let key = decoding_key_from_pem_env(&escaped).expect("escaped PEM must load");
+        let token = {
+            install_test_decoding_key_pem(TEST_PUB_PEM).expect("install");
+            let claims = MintClaims {
+                sub: "escaped_pem_user".into(),
+                name: "Escaped".into(),
+                exp: chrono::Utc::now().timestamp() + 3600,
+                scope: None,
+            };
+            let enc = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc");
+            encode(&JwtHeader::new(Algorithm::RS256), &claims, &enc).expect("mint")
+        };
+        clear_test_decoding_key();
+        let claims = decode_with_key(&token, &key).expect("decode with escaped PEM key");
+        assert_eq!(claims.sub, "escaped_pem_user");
+        // Garbage PEM falls through (None) rather than panicking.
+        assert!(decoding_key_from_pem_env("not-a-pem").is_none());
     }
 }
