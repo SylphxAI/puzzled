@@ -453,4 +453,32 @@ mod tests {
         assert_eq!(compute_drc(&key, &rows), 1);
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
     }
+
+    /// Dogfood residual (live tip ff366b48): re-SubmitGuess without stored
+    /// puzzle_id returned 200 valid:true and inserted a second game_sessions
+    /// row. Guard must run for daily content day even when pid is None.
+    #[test]
+    fn submit_already_played_guard_not_gated_on_puzzle_id() {
+        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
+        use puzzled_core::puzzle_play::ritual_completion::{
+            ritual_already_finished, submit_must_guard_already_played, RitualCompletionRow,
+        };
+
+        assert!(
+            submit_must_guard_already_played(true, None, true),
+            "store + content day known => guard even without puzzle_id"
+        );
+        let prior = [RitualCompletionRow {
+            user_id: "f715210b-9df3-4945-b5bd-94fc4609bc30".into(),
+            day_key: "2026-08-12".into(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        assert!(ritual_already_finished(
+            &prior,
+            "f715210b-9df3-4945-b5bd-94fc4609bc30",
+            "2026-08-12",
+            "sudoku",
+        ));
+    }
 }

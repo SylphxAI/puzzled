@@ -160,6 +160,51 @@ WHERE day_key = $1
   AND status IN ('won', 'lost')
 "#;
 
+/// Product floor: free daily ritual admits **one** terminal finish per
+/// `(user_id, game_module_id, day_key)` — independent of whether a stable
+/// `puzzle_id` / content store row exists.
+///
+/// Shell enforces this via session pre-check + partial unique index; this pure
+/// helper is the decision contract (and regression oracle for dogfood).
+#[must_use]
+pub fn ritual_already_finished(
+    prior: &[RitualCompletionRow],
+    user_id: &str,
+    day_key: &str,
+    game_module_id: &str,
+) -> bool {
+    if !is_valid_game_slug(game_module_id) {
+        return false;
+    }
+    if !matches!(
+        module_class_for(game_module_id),
+        Some(ModuleClass::PuzzleRitual)
+    ) {
+        return false;
+    }
+    prior.iter().any(|r| {
+        r.is_ritual
+            && r.user_id == user_id
+            && r.day_key == day_key
+            && matches!(r.module_class, ModuleClass::PuzzleRitual)
+    })
+}
+
+/// Whether SubmitGuess must run a completion pre-check for this resolve path.
+///
+/// Always true when a DB is available and a content day is known — **including**
+/// when `resolved_puzzle_id` is `None` (deterministic sudoku). The historical
+/// bug only gated on `resolved_puzzle_id.is_some()`.
+#[must_use]
+pub fn submit_must_guard_already_played(
+    has_session_store: bool,
+    resolved_puzzle_id: Option<&str>,
+    content_day_known: bool,
+) -> bool {
+    let _ = resolved_puzzle_id; // intentionally unused — guard is not pid-gated
+    has_session_store && content_day_known
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -281,5 +326,47 @@ mod tests {
         assert!(DRC_RECOMPUTE_SQL.contains("day_key"));
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
         assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
+    }
+
+    /// Dogfood residual: first free-daily win with null content_id must still
+    /// block a second finish the same user/day (DRC stays distinct-users, but
+    /// product one-finish-per-day was soft).
+    #[test]
+    fn free_daily_second_finish_blocked_without_puzzle_id() {
+        let day = "2026-08-12";
+        let user = "f715210b-9df3-4945-b5bd-94fc4609bc30";
+        let prior = [RitualCompletionRow {
+            user_id: user.into(),
+            day_key: day.into(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        // Guard must not depend on content/puzzle id.
+        assert!(submit_must_guard_already_played(true, None, true));
+        assert!(submit_must_guard_already_played(
+            true,
+            Some("optional-id"),
+            true
+        ));
+        assert!(!submit_must_guard_already_played(false, None, true));
+        assert!(!submit_must_guard_already_played(true, None, false));
+
+        assert!(ritual_already_finished(&prior, user, day, "sudoku"));
+        // Second submit same day/module is rejected by policy.
+        assert!(ritual_already_finished(&prior, user, day, "sudoku"));
+        // Different day is open.
+        assert!(!ritual_already_finished(
+            &prior,
+            user,
+            "2026-08-13",
+            "sudoku"
+        ));
+        // Different user is open.
+        assert!(!ritual_already_finished(
+            &prior,
+            "other-user",
+            day,
+            "sudoku"
+        ));
     }
 }

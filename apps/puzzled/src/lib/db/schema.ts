@@ -8,7 +8,7 @@
  * Platform is source of truth for user data.
  */
 
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
 	boolean,
 	index,
@@ -308,6 +308,10 @@ export const gameSessions = pgTable(
 		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
 		// DRC recompute: day_key + is_ritual + module_class
 		index('game_sessions_drc_day_key_idx').on(table.dayKey, table.isRitual, table.moduleClass),
+		// One ritual finish per user/module/product day (null puzzle_id safe)
+		uniqueIndex('game_sessions_ritual_user_game_day_uidx')
+			.on(table.userId, table.gameSlug, table.dayKey)
+			.where(sql`${table.isRitual} = true AND ${table.dayKey} IS NOT NULL`),
 	],
 )
 
