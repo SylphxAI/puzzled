@@ -1,8 +1,10 @@
+> **HISTORICAL.** Not living North Star. See [../README.md](../README.md).
+
 # PR #64 attestation — product games vs residual deletes
 
 Status: **Evidence** (independent gate pass + **rebase onto main after #65**, 2026-08-11)  
 Subject: [PR #64](https://github.com/SylphxAI/puzzled/pull/64) `clean-break-north-star`  
-Normative gate: [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md), [PR64-MERGE-GATE.md](PR64-MERGE-GATE.md)
+Normative gate: [DELIVERY-AUTHORITY.md](../DELIVERY-AUTHORITY.md), [PR64-MERGE-GATE.md](PR64-MERGE-GATE.md)
 
 ## Revisions compared
 

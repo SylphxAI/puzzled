@@ -1,114 +1,162 @@
-# Puzzled — Delivery Authority
+# Delivery authority — product floors vs engineering clean-break
 
-Status: **Normative** (player product outranks ADR-170 convenience on games)  
-Revision: 2026-08-11  
-Especially binding for: open **PR #64** clean-break
+**Status:** Normative  
+**Revision:** 2026-08-12  
+**Supersedes:** 2026-08-11 PR #64–centric wording (historical gate materials under [history/](history/))
 
-## Product ambition
+---
 
-**Puzzled is a production puzzle-game application:** many real games, user
-accounts/settings, analytics, admin, and reliable deploy — not an empty shell
-after SDK cleanup.
+## 1. Purpose
 
-### Required user jobs (floor)
+This document decides **what may land on `main`** when engineering ambition (sole Connect, sole Rust, deletions) collides with **player product** and **North Star** (DRC, free daily ritual, catalog).
 
-| Job | Notes |
-|---|---|
-| Play each shipped game | Full 17-slug catalog on main (see table below) |
-| Difficulty / progress flows | Per-game UX |
-| Auth / settings | As product defines |
-| Admin games | Operator surface |
-| Analytics | Product-defined (no ellipsis jobs) |
-| All registry games playable | Every slug above |
+**Hierarchy:**
 
-## Engineering clean-break (allowed)
+1. Security / data integrity floors  
+2. **Player product floors** (this file + VISION + NSM)  
+3. Engineering clean-break (ADR-170)  
+4. Convenience, line-count reduction, “looks clean”
 
-PR #64-class work may:
+---
 
-- Sole Connect + sole Rust executor  
-- Delete **retired private** local SDK (`packages/sdk` / private workspace) when product uses formal `@sylphx/sdk`  
-- Remove dual authority residuals (web jobs/cron/REST dual surface)
+## 2. Product floors (non-negotiable)
 
-Must **not**:
+A change **must not** merge if it:
 
-- Delete games or main player journeys  
-- Treat 126k LOC deletion as success without product-work matrix  
-- Merge if games/pages regress vs main tip before the PR  
+| # | Floor |
+|---|--------|
+| F1 | Deletes or hollows a **catalog game** without DELIVERY exception (see §4) |
+| F2 | Removes the **free daily ritual finish** for non-premium users |
+| F3 | Restores **client-trusted** solutions, scores, or completion flags |
+| F4 | Reintroduces a **second play authority** (e.g. dual REST submit path) while claiming sole api |
+| F5 | Breaks golden journeys **P1–P7** without a successor oracle ([EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md)) |
+| F6 | Ships a new module without **server validator + registry + result-card mapping** |
+| F7 | Counts entertainment oracles as engineering success while claiming DRC without instrumentation path |
 
-## Gate for PR #64 (and successors)
+Engineering clean-break **may**:
 
-Before merge:
+- Delete retired dual surfaces (REST/Hono dual client, residual job executors) when residual classes are attested  
+- Delete private retired SDK forks when product uses Platform SDK  
+- Refactor internals aggressively  
 
-1. **Product-work matrix** (or explicit statement): every main-tip game slug still playable; page routes preserved or parity successor.  
-2. No AgentAppConsole-style hollow replacement for games.  
-3. Independent review of “retired SDK only” claim with path list.  
-4. CI: web build + Rust + real game unit paths green.
+Engineering clean-break **may not** treat “LOC deleted” as success without product matrix.
 
-Baseline for regressions: **current `main` before merge** (tip at writing:
-`9c7de8644d2acaefc43ed660fa3f9e36d77838ce`). Optional tag of pre-merge main when #64 merges.
+---
+
+## 3. Relationship to North Star Metric
+
+Landing code that cannot emit or recompute **DRC** eventually fails product success—even if CI is green.  
+New play paths must preserve a path to `ritual.completed` (or equivalent server tables).
+
+---
+
+## 4. Game catalog floor
+
+### 4.1 Protected slugs
+
+The following **puzzle_ritual** modules are protected (directories under `apps/puzzled/src/games/`, excluding `shared/`):
+
+| Slug |
+|------|
+| word-guess |
+| word-groups |
+| word-hive |
+| crossword |
+| sudoku |
+| nonogram |
+| word-ladder |
+| arithmo |
+| pattern-match |
+| block-slide |
+| queens |
+| tango |
+| word-box |
+| quad-words |
+| killer-sudoku |
+| cryptogram |
+| word-search |
+
+### 4.2 Add
+
+Allowed when protocol-complete (see [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md)) + tests + this table updated in the same PR if the floor list is meant to expand as protected.
+
+### 4.3 Remove or replace
+
+Requires:
+
+1. Explicit PR section: user migration, redirects, data retention  
+2. Update to this catalog and module registry  
+3. Acceptance that DRC may drop; mitigation plan  
+4. Human product owner ack in PR (not silent agent merge)
+
+---
+
+## 5. Merge decision procedure
+
+For any material PR:
 
 ```text
-IF #64 removes a game without matrix: REJECT merge.
-IF only SDK delete + games remain: ALLOW (engineering clean-break).
-IF dual-authority residual delete + games remain + residual classes attested: ALLOW under clean-break (not "SDK-only").
-IF dual product authority remains after claim sole Rust: REJECT.
-IF claim is "SDK-only" but non-SDK product paths deleted without residual attestation: REJECT.
+IF product game deleted without §4.3: REJECT
+IF free daily finish removed: REJECT
+IF client-trusted play returns: REJECT
+IF dual play authority claimed sole: REJECT
+IF residual deletes lack attestation when non-obvious: REJECT
+IF CI required checks fail: REJECT
+IF product matrix shows playable catalog + P1 path: ALLOW (subject to review)
 ```
 
-## Full game catalog (no ellipsis)
+### 5.1 Residual attestation (when deleting large trees)
 
-**Pinned baseline SHA (main before #64):** `9c7de8644d2acaefc43ed660fa3f9e36d77838ce`  
-Tag: (optional) `pre-pr64-main` must point at this SHA when cut.
+For material delete groups, classify each path group:
 
-Registry-facing game modules on baseline (17 directories under
-`apps/puzzled/src/games/` excluding `shared/`):
+`sdk_retired` | `dual_authority` | `rest_residue` | `orphan_relocated` | `pwa_residue` | `product_game` | `other`
 
-| Game slug | Rule |
-|---|---|
-| word-guess | required |
-| word-groups | required |
-| word-hive | required |
-| crossword | required |
-| sudoku | required |
-| nonogram | required |
-| word-ladder | required |
-| arithmo | required |
-| pattern-match | required |
-| block-slide | required |
-| queens | required |
-| tango | required |
-| word-box | required |
-| quad-words | required |
-| killer-sudoku | required |
-| cryptogram | required |
-| word-search | required |
+- **Forbid** `product_game` without §4.3  
+- **Forbid** claiming “SDK-only” if non-`sdk_retired` paths deleted without classes listed  
 
-Do **not** list infrastructure files (`registry.ts`, `shared/`) as games.
+Historical example: [history/pr64-attestation.md](history/pr64-attestation.md).
 
-## Attestation schema for #64 deletes
+---
 
-For each material delete path group: class ∈
-`{sdk_retired, dual_authority_web_jobs_cron, rust_http_rest_residue_to_connect,
-orphan_root_src_relocated, pwa_monitoring_residue, product_game, other}` +
-count + sample paths + allow/forbid.
+## 6. Golden journeys (gate)
 
-**Forbid:** claiming “SDK-only” if any non-`sdk_retired` class path is deleted
-without residual attestation.  
-**Forbid:** any `product_game` class delete without must_restore.
+| ID | Must remain possible on main after merge |
+|----|------------------------------------------|
+| P1 | Free today play → terminal → card |
+| P2 | Share land → play |
+| P3 | Multi-module same day (if suite claims multi) |
+| P4 | Auth history/streak path |
+| P5 | Premium archive fail-closed / allow when entitled |
+| P6 | api health + web serve |
+| P7 | Admin games list (if admin ships) |
 
-See filled evidence: [pr64-attestation.md](pr64-attestation.md).
+---
 
-## Golden journeys (floor)
+## 7. Evidence layers for “done”
 
-| ID | Journey |
-|---|---|
-| P1 | Open game slug → play → complete/fail honestly |
-| P2 | Difficulty selection works |
-| P3 | Auth session if required for progress |
-| P4 | Admin list games |
-| P5 | Deploy health for web+api |
+See [EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md).
 
-## Relationship to ADR-168/169/170
+**Merged ≠ done.**  
+**Deployed ≠ done.**  
+**Done for a product change** means the relevant layer oracles pass—including live when the claim is live.
 
-Rust/Connect north star is engineering. Delivery authority protects **player
-product** from clean-break overclaim.
+Path: **PR → Merge Queue → main → auto deploy → live proof** as configured for the env.
+
+---
+
+## 8. Domains and public hostname
+
+Public custom domains are not “done” because `customDomains` contains a string.  
+Serving requires Platform **domain_hostnames** verification and gateway routes.  
+Do not substitute manual cluster hacks for the product domain path.
+
+---
+
+## 9. History
+
+| Artifact | Role |
+|----------|------|
+| [history/PR64-MERGE-GATE.md](history/PR64-MERGE-GATE.md) | One-time merge checklist for clean-break PR #64 |
+| [history/pr64-attestation.md](history/pr64-attestation.md) | Evidence for #64 residual classes |
+
+These are **not** living product North Star; they remain for audit.
