@@ -105,7 +105,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.words.length, startTime])
+	}, [game.state.endTime, startTime])
 
 	// Keyboard handler
 	useEffect(() => {

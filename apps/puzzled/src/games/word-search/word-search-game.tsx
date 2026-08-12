@@ -140,7 +140,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzle.puzzleData.theme, progress.found, progress.total])
+	}, [game.state.endTime, startTime])
 
 	// Check if a cell is part of the current selection
 	const isInSelection = useCallback(

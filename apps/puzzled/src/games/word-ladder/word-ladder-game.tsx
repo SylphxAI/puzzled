@@ -135,13 +135,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${steps} steps`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [
-		game.state.endTime,
-		game.state.path.length,
-		startTime,
-		puzzle.puzzleData.startWord,
-		puzzle.puzzleData.endWord,
-	])
+	}, [game.state.endTime, game.state.path.length, startTime])
 
 	// Get error message
 	const getErrorMessage = () => {

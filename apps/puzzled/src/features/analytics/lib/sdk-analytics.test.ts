@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
+import { readFileSync } from 'node:fs'
 
 describe('useGameAnalytics analytics hook', () => {
 	test('does not import throwing useAnalytics (dynamic game chunks)', () => {

@@ -1,6 +1,6 @@
+import { describe, expect, test } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, test } from 'bun:test'
 
 function walk(dir: string, acc: string[] = []): string[] {
 	for (const name of readdirSync(dir)) {

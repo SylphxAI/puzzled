@@ -17,8 +17,7 @@ import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
-import { cn } from '@/lib/utils'
+import { cn, getBaseUrl } from '@/lib/utils'
 import type { TangoPuzzleData, TangoSolution } from './types'
 import { useTango } from './use-tango'
 
@@ -171,11 +170,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				{conflicts.length > 0 && <p className="text-sm text-red-500">{t('hasConflicts')}</p>}
 			</div>
 
-			<HowToPlayModal
-				open={showHelpModal}
-				onClose={() => setShowHelpModal(false)}
-				gameSlug="duo"
-			/>
+			<HowToPlayModal open={showHelpModal} onClose={() => setShowHelpModal(false)} gameSlug="duo" />
 
 			<GameResultModal
 				open={showResultModal}

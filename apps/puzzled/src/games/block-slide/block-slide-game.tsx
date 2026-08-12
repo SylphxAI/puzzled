@@ -111,7 +111,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${game.moveCount} moves`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, game.moveCount, game.minMoves, startTime])
+	}, [game.status, game.endTime, game.moveCount, startTime])
 
 	// Reset game
 	const handleReset = useCallback(() => {
