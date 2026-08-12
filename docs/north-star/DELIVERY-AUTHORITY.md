@@ -63,7 +63,7 @@ Missing `compute_hrc` after this revision **is** a merge reject for changes that
 ## 4. Game catalog floor
 
 Destination (not yet a delete-protection list): [CATALOG.md](CATALOG.md).  
-`queens` / `tango` remain protected until the Crowns / Duo rename ships with redirects.
+Canonical protected slugs are `crowns` and `duo`. `queens` / `tango` are inbound aliases only ([CUTOVER.md](CUTOVER.md)).
 
 ### 4.1 Protected slugs
 
@@ -81,8 +81,8 @@ The following **`puzzle_ritual`** modules are protected (directories under `apps
 | arithmo |
 | pattern-match |
 | block-slide |
-| queens |
-| tango |
+| crowns |
+| duo |
 | word-box |
 | quad-words |
 | killer-sudoku |

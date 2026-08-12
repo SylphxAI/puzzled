@@ -19,7 +19,8 @@
 
 **Fact ≠ inference.** “Users will love it” is not live evidence.  
 **Green ≠ proof.** CI green without ritual finish rows is incomplete.  
-**HRC = 0 ≠ oracle missing.** Zero can be the true count. Missing SQL is the defect.
+**HRC = 0 ≠ oracle missing.** Zero can be the true count. Missing SQL is the defect.  
+**`GetTodayOverview.playerCount` is not DRC.** UTC / unfiltered chrome. Polar is `compute_drc` / `compute_hrc` only ([CUTOVER.md](CUTOVER.md)).
 
 Keep source / CI / deploy / live distinct in every status report.
 

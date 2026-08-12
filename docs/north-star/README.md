@@ -51,6 +51,7 @@ Engineering stack (how we ship) lives in [ADR-170](../adr/ADR-170-clean-break-no
 | 7 | **[STRATEGY-ROADMAP.md](STRATEGY-ROADMAP.md)** | Capability order S0–S5; S0 is instrumentation, not a seven-day wait |
 | 8 | **[EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md)** | Layers; golden journeys; recomputable HRC/DRC |
 | 9 | **[DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md)** | Merge gates, catalog floor, clean-break vs product |
+| 9a | **[CUTOVER.md](CUTOVER.md)** | Sole-writer cut: aliases, Polar false twins, share, titles |
 | 10 | **[history/](history/)** | PR #64 attestation (frozen; not living Polar) |
 
 **Engineering stack north star** (Connect / Rust / content tool):  
