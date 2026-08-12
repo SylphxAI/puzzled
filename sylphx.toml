@@ -15,25 +15,24 @@ preview_deploys = true
 
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:
-# web runtime image has no atlas binary, so api-only deploys (crates/**) left
+# web runtime image has no atlas binary, so api-only crate deploys left
 # migration 20260812010000 unapplied on live tip 626f40a.
+#
+# image=api: atlas + migrations are baked into crates/puzzled-server/Dockerfile
+# (no third build-only worker service — dens counted migrator against readiness).
 [database.migrations]
 engine = "atlas"
 dir = "apps/puzzled/atlas/migrations"
-image = "migrator"
+image = "api"
 # Pure atlas argv only (Platform migration gate rejects shell wrappers).
 command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public --baseline 20260222000000"
 timeout = "10m"
 watch_paths = [
   "apps/puzzled/atlas/migrations/**",
   "apps/puzzled/atlas.hcl",
-  "apps/puzzled/Dockerfile.migrator",
+  "crates/puzzled-server/Dockerfile",
   "sylphx.toml",
 ]
-
-[database.migrations.build]
-dockerfile = "apps/puzzled/Dockerfile.migrator"
-context = "."
 
 [[services]]
 name = "web"
@@ -66,6 +65,7 @@ path_prefixes = [
 watch_paths = [
   "crates/puzzled-server/**",
   "crates/puzzled-core/**",
+  "apps/puzzled/atlas/migrations/**",
   "Cargo.toml",
   "Cargo.lock",
   "sylphx.toml",
@@ -79,19 +79,4 @@ path = "/healthz"
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"
-context = "."
-
-# Build-only migrator image for [database.migrations] Job (never serves traffic).
-[[services]]
-name = "migrator"
-type = "worker"
-build_only = true
-network_exposure = "private"
-min_instances = 0
-max_instances = 1
-scale_to_zero = true
-
-[services.build]
-strategy = "dockerfile"
-dockerfile = "apps/puzzled/Dockerfile.migrator"
 context = "."
