@@ -25,7 +25,9 @@ import {
 	GetUserStatsRequestSchema,
 	StatsService,
 } from '@/gen/connect/puzzled/v1/stats_pb'
+import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
 import { resolveConnectBaseUrl } from '@/lib/connect/transport'
+import { servedPuzzleId } from '@/lib/product-day'
 
 // ==========================================
 // Response types (unchanged public shapes)
@@ -93,13 +95,7 @@ async function getServerTransport() {
 		baseUrl,
 		useBinaryFormat: false,
 		fetch: ((input: RequestInfo | URL, init?: RequestInit) =>
-			fetch(input, {
-				...init,
-				headers: {
-					...(init?.headers as Record<string, string> | undefined),
-					cookie,
-				},
-			})) as typeof fetch,
+			fetch(input, mergeServerConnectInit(init, cookie))) as typeof fetch,
 	})
 }
 
@@ -137,7 +133,7 @@ export const getServerDailyStatus = cache(
 				? { status: 'won', score: null, attempts: null, completedAt: new Date() }
 				: null,
 			puzzle: {
-				id: res.puzzleId?.trim() || String(res.puzzleNumber),
+				id: servedPuzzleId(res.puzzleId) || '',
 				puzzleNumber: Number(res.puzzleNumber),
 				puzzleDate: res.puzzleDate,
 				puzzleData: parsePuzzleData(res.puzzleDataJson),
@@ -160,7 +156,7 @@ export const getServerTodaysPuzzle = cache(
 			}),
 		)
 		return {
-			puzzleId: res.puzzleId?.trim() || String(res.puzzleNumber),
+			puzzleId: servedPuzzleId(res.puzzleId) || '',
 			puzzleNumber: Number(res.puzzleNumber),
 			puzzleDate: res.puzzleDate,
 			puzzleData: parsePuzzleData(res.puzzleDataJson),

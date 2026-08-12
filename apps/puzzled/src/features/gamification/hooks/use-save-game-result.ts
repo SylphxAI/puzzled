@@ -22,6 +22,8 @@ export type GameResultInput = {
 	archiveDate?: string
 	/** Optional when free daily uses deterministic generation (e.g. sudoku). */
 	puzzleId?: string
+	/** Product day key when the served row has no UUID. */
+	puzzleDate?: string
 	/** Difficulty level for games that support it */
 	difficulty?: PuzzleDifficulty
 	/**
@@ -108,6 +110,7 @@ export function useSaveGameResult(gameSlug: string) {
 					mode: input.mode,
 					archiveDate: input.archiveDate,
 					puzzleId: input.puzzleId,
+					puzzleDate: input.puzzleDate,
 					difficulty: input.difficulty,
 					data: input.data,
 				})
