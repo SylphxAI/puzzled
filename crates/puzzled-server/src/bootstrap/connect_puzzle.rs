@@ -31,7 +31,7 @@ use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
     fetch_daily_puzzle, fetch_puzzle_by_id,
 };
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
-    has_completed_session, persist_validated_session,
+    has_completed_session, has_ritual_completion, persist_validated_session,
 };
 use crate::proto::puzzled::v1::{
     GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, PuzzleService,
@@ -441,16 +441,21 @@ impl PuzzleService for PuzzleConnectService {
             ));
         };
 
-        // One verified result per served puzzle.
-        if let (Some(pool), Some(pid)) = (&self.state.pool, resolved_id.as_deref()) {
-            match has_completed_session(pool, &uid, game_slug, None, Some(pid)).await {
-                Ok(true) => {
-                    return Err(ConnectError::new(
-                        ErrorCode::AlreadyExists,
-                        "already_played",
-                    ));
-                }
-                Ok(false) => {}
+        // One verified finish per served puzzle **and** per free-daily
+        // (user, game_slug, product day). Must not require resolved puzzle_id:
+        // deterministic sudoku has no store row and sessions may store null
+        // puzzle_id — dogfood residual double-finish when guard was pid-only.
+        if let Some(pool) = &self.state.pool {
+            let already = match has_completed_session(
+                pool,
+                &uid,
+                game_slug,
+                Some(date),
+                resolved_id.as_deref(),
+            )
+            .await
+            {
+                Ok(v) => v,
                 Err(error) => {
                     warn!(%error, "submit completion lookup failed");
                     return Err(ConnectError::new(
@@ -458,6 +463,28 @@ impl PuzzleService for PuzzleConnectService {
                         "session_lookup_failed",
                     ));
                 }
+            };
+            // Ritual path: also key on day_key so a prior null-puzzle_id win
+            // blocks re-submit even if puzzle_date/id wiring diverges.
+            let already_ritual = if date == today {
+                match has_ritual_completion(pool, &uid, game_slug, today).await {
+                    Ok(v) => v,
+                    Err(error) => {
+                        warn!(%error, "submit ritual completion lookup failed");
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "session_lookup_failed",
+                        ));
+                    }
+                }
+            } else {
+                false
+            };
+            if already || already_ritual {
+                return Err(ConnectError::new(
+                    ErrorCode::AlreadyExists,
+                    "already_played",
+                ));
             }
         }
 
@@ -507,6 +534,12 @@ impl PuzzleService for PuzzleConnectService {
             .await
             {
                 Ok(_) => {}
+                Err(error) if error == "already_played" => {
+                    return Err(ConnectError::new(
+                        ErrorCode::AlreadyExists,
+                        "already_played",
+                    ));
+                }
                 Err(error) => {
                     warn!(%error, "submit session persist failed");
                     return Err(ConnectError::new(
