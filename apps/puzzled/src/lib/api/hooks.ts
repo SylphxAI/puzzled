@@ -32,6 +32,7 @@ import {
 	updateAnnouncement,
 	updateSetting,
 } from '@/lib/connect/admin-client'
+import { isAlreadyPlayedError } from '@/lib/connect/already-played'
 import {
 	checkUsername,
 	getNotificationPreferences,
@@ -46,6 +47,7 @@ import {
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
+import { servedPuzzleId } from '@/lib/product-day'
 
 // ==========================================
 // Errors
@@ -119,7 +121,7 @@ export function useDailyStatus(
 					hasCompleted: r.hasCompleted,
 					completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
 					puzzle: {
-						id: r.puzzleId?.trim() || String(r.puzzleNumber),
+						id: servedPuzzleId(r.puzzleId) || '',
 						puzzleNumber: r.puzzleNumber,
 						puzzleDate: r.puzzleDate,
 						puzzleData: r.puzzleDataJson
@@ -160,7 +162,7 @@ export function useTodaysPuzzle(
 			if (admit.ok) {
 				const r = admit.response
 				return {
-					puzzleId: r.puzzleId?.trim() || String(r.puzzleNumber),
+					puzzleId: servedPuzzleId(r.puzzleId) || '',
 					puzzleNumber: r.puzzleNumber,
 					puzzleDate: r.puzzleDate,
 					puzzleData: r.puzzleDataJson
@@ -194,6 +196,7 @@ export type SaveResultInput = {
 	mode?: 'daily' | 'archive'
 	archiveDate?: string
 	puzzleId?: string
+	puzzleDate?: string
 	puzzleNumber?: number
 	difficulty?: string
 	gameSlug: string
@@ -236,8 +239,8 @@ export function useSaveResult(
 				attempts: input.attempts,
 				timeSpentMs: input.timeSpentMs,
 				submission: input.data,
-				puzzleId: input.puzzleId || undefined,
-				puzzleDate: input.mode === 'archive' ? input.archiveDate : undefined,
+				puzzleId: servedPuzzleId(input.puzzleId),
+				puzzleDate: input.mode === 'archive' ? input.archiveDate : input.puzzleDate || undefined,
 			})
 			if (admit.ok) {
 				const r = admit.response
@@ -249,6 +252,16 @@ export function useSaveResult(
 					slice: r.slice || 'S2-puzzle-solution-connect',
 					authority: 'connect' as const,
 					error: r.error,
+				}
+			}
+			if (isAlreadyPlayedError(admit.error)) {
+				return {
+					success: true,
+					session: undefined,
+					mode: input.mode ?? 'daily',
+					slice: 'S2-puzzle-solution-connect',
+					authority: 'connect' as const,
+					error: 'already_played',
 				}
 			}
 			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {

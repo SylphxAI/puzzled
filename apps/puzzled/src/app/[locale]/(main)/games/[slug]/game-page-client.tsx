@@ -59,6 +59,7 @@ export function GamePageClient({
 					slug={slug}
 					puzzleId={puzzleId}
 					puzzleData={puzzleData}
+					puzzleDate={puzzleDate}
 					mode={mode}
 					difficulty={difficulty}
 				/>

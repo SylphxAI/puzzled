@@ -171,11 +171,13 @@ describe('generateCrosswordPuzzle', () => {
 				const puzzle = generateCrosswordPuzzle(seed)
 
 				for (const clue of puzzle.clues.across) {
-					expect(clue.length).toBe(clue.answer.length)
+					expect(clue.answer).toBeDefined()
+					expect(clue.length).toBe(clue.answer!.length)
 				}
 
 				for (const clue of puzzle.clues.down) {
-					expect(clue.length).toBe(clue.answer.length)
+					expect(clue.answer).toBeDefined()
+					expect(clue.length).toBe(clue.answer!.length)
 				}
 			}
 		})

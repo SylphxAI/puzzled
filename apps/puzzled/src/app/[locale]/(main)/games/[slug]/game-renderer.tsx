@@ -9,6 +9,7 @@ type GameRendererProps = {
 	slug: string
 	puzzleId: string
 	puzzleData: unknown
+	puzzleDate?: string
 	mode?: GameMode
 	difficulty?: PuzzleDifficulty
 }
@@ -31,6 +32,7 @@ export function GameRenderer({
 	slug,
 	puzzleId,
 	puzzleData,
+	puzzleDate,
 	mode = 'daily',
 	difficulty,
 }: GameRendererProps) {
@@ -51,6 +53,7 @@ export function GameRenderer({
 			<GameComponent
 				puzzleId={puzzleId}
 				puzzleData={puzzleData}
+				puzzleDate={puzzleDate}
 				mode={mode}
 				difficulty={difficulty}
 			/>

@@ -13,27 +13,27 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { CrosswordIcon } from '@/shared/components/ui/game-icons'
 import { ClueList, CrosswordGrid, CrosswordKeyboard, CurrentClueDisplay } from './components'
-import type { CrosswordDirection, CrosswordPuzzleClientData, CrosswordSolution } from './types'
+import { parseCrosswordClientPayload } from './parse-client'
+import type { CrosswordDirection } from './types'
 import { useCrossword } from './use-crossword'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.crossword')
 
-	// Get puzzle from server data
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<CrosswordPuzzleClientData, CrosswordSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseCrosswordClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -49,16 +49,18 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'crossword',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
+		requireServerAccept: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 
-	// Game hook
-	const game = useCrossword(puzzle.puzzleData, puzzle.solution)
+	const game = useCrossword(puzzle)
+	const { markComplete } = game
 
-	// Handle clue click
 	const handleClueClick = useCallback(
 		(clue: { row: number; col: number }, direction: CrosswordDirection) => {
 			game.setDirection(direction)
@@ -67,31 +69,45 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		[game],
 	)
 
-	// Track game completion - in useEffect to avoid render-phase side effects
-	const gameEndedRef = useRef(false)
+	const submitLock = useRef(false)
+	const filled = game.state.isFilled
+	const complete = game.state.isComplete
+	const userGrid = game.state.userGrid
 	useEffect(() => {
-		if (game.state.isComplete && !gameEndedRef.current) {
-			gameEndedRef.current = true
-			endGame({
+		if (!filled || complete || submitLock.current) return
+		submitLock.current = true
+		void (async () => {
+			const result = await endGame({
 				status: 'won',
 				attempts: 1,
 				maxAttempts: 1,
 				data: {
-					finalGrid: game.state.userGrid,
+					finalGrid: userGrid,
 				},
 			})
-		}
-	}, [game.state.isComplete, game.state.userGrid, endGame])
+			if (result.success) {
+				markComplete()
+				setSubmitError(null)
+				return
+			}
+			submitLock.current = false
+			setSubmitError(result.error || 'Not quite — keep editing')
+		})()
+	}, [filled, complete, userGrid, endGame, markComplete])
 
-	// Share result
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'crossword',
+			gameName: 'Crossword Mini',
+			puzzleDate,
+			status: 'won',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
+		void navigator.clipboard.writeText(text)
+	}, [game.state.endTime, startTime, puzzleDate])
 
-		const text = `📝 Crossword Mini\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
-		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
-
-	// Ready screen
 	if (isReady) {
 		return (
 			<Card className="mx-auto w-full max-w-md">
@@ -103,7 +119,6 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 					<p className="text-sm text-muted-foreground">{t('description')}</p>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					{/* Rules */}
 					<div className="rounded-lg bg-muted/50 p-4">
 						<h3 className="mb-2 flex items-center gap-2 font-medium">
 							<HelpCircle className="h-4 w-4" />
@@ -130,10 +145,8 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 
 	return (
 		<div className="relative flex w-full max-w-md flex-col items-center gap-4 px-2 sm:px-0">
-			{/* Celebration */}
 			<Celebration show={showCelebration} />
 
-			{/* Header with help button */}
 			<div className="flex w-full items-center justify-between">
 				<div className="text-sm text-muted-foreground">{t('name')}</div>
 				<Button
@@ -146,14 +159,12 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				</Button>
 			</div>
 
-			{/* Current clue display */}
 			<div className="w-full">
 				<CurrentClueDisplay clue={currentClue} direction={game.state.direction} />
 			</div>
 
-			{/* Grid */}
 			<CrosswordGrid
-				puzzleData={puzzle.puzzleData}
+				puzzleData={puzzle}
 				userGrid={game.state.userGrid}
 				selectedCell={game.state.selectedCell}
 				highlightedCells={highlightedCells}
@@ -161,17 +172,19 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				onCellClick={game.selectCell}
 			/>
 
-			{/* Mobile keyboard */}
 			<CrosswordKeyboard
 				onLetterPress={game.inputLetter}
 				onDelete={game.deleteLetter}
 				disabled={game.state.isComplete}
 			/>
 
-			{/* Clue lists */}
+			{submitError ? (
+				<output className="text-center text-sm text-destructive">{submitError}</output>
+			) : null}
+
 			<div className="w-full">
 				<ClueList
-					clues={puzzle.puzzleData.clues}
+					clues={puzzle.clues}
 					currentClue={currentClue}
 					direction={game.state.direction}
 					solvedClues={game.state.solvedClues}
@@ -179,14 +192,12 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				/>
 			</div>
 
-			{/* Help Modal */}
 			<HowToPlayModal
 				open={showHelpModal}
 				onClose={() => setShowHelpModal(false)}
 				gameSlug="crossword"
 			/>
 
-			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
@@ -201,7 +212,6 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				onShare={handleShare}
 			/>
 
-			{/* Guest signup prompt */}
 			<GuestSignupPrompt
 				open={showGuestSignupPrompt}
 				onClose={handleCloseGuestPrompt}

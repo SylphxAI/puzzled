@@ -6,7 +6,8 @@
 export type CrosswordClue = {
 	number: number
 	clue: string
-	answer: string
+	/** Present only in generator/test fixtures — never on GetDaily. */
+	answer?: string
 	row: number
 	col: number
 	length: number
@@ -64,7 +65,8 @@ export type CrosswordState = {
 	selectedCell: { row: number; col: number } | null
 	direction: CrosswordDirection
 
-	// Game progress
+	// Game progress (isComplete is server-accepted; isFilled is local)
+	isFilled: boolean
 	isComplete: boolean
 	startTime: number | null
 	endTime: number | null
@@ -79,9 +81,10 @@ export type CrosswordState = {
 export const GRID_SIZE = 5
 
 /**
- * Check if a clue is fully filled (all cells have letters)
+ * Check if a clue is fully filled (all cells have letters).
+ * Does not consult a solution — fill is not correctness.
  */
-function _isClueFilledIn(
+export function isClueFilled(
 	userGrid: (string | null)[][],
 	clue: CrosswordClue,
 	direction: CrosswordDirection,
@@ -89,7 +92,8 @@ function _isClueFilledIn(
 	for (let i = 0; i < clue.length; i++) {
 		const row = direction === 'across' ? clue.row : clue.row + i
 		const col = direction === 'across' ? clue.col + i : clue.col
-		if (!userGrid[row]?.[col]) return false
+		const cell = userGrid[row]?.[col]
+		if (!cell || cell.trim() === '') return false
 	}
 	return true
 }
@@ -114,7 +118,25 @@ function _isClueCorrect(
 }
 
 /**
- * Check if the entire grid is correctly solved
+ * True when every letter cell (non-null in the structure grid) has a letter.
+ * Empty solution grids must NOT count as complete (leak-strip regression).
+ */
+export function isGridFilled(
+	userGrid: (string | null)[][],
+	structureGrid: (string | null)[][],
+): boolean {
+	for (let row = 0; row < GRID_SIZE; row++) {
+		for (let col = 0; col < GRID_SIZE; col++) {
+			if (structureGrid[row]?.[col] === null) continue
+			const userCell = userGrid[row]?.[col]
+			if (!userCell || userCell.trim() === '') return false
+		}
+	}
+	return true
+}
+
+/**
+ * Check if the entire grid is correctly solved (server / test oracle only).
  */
 export function isGridComplete(userGrid: (string | null)[][], solution: string[][]): boolean {
 	for (let row = 0; row < GRID_SIZE; row++) {

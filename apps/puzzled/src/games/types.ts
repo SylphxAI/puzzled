@@ -208,6 +208,8 @@ export interface GameProps {
 	puzzleId?: string
 	/** Puzzle data (game-specific, always provided by GameRenderer) */
 	puzzleData?: unknown
+	/** Product day key (YYYY-MM-DD) when known — used for ritual share deep links */
+	puzzleDate?: string
 	/** Game mode (default: 'daily') */
 	mode?: 'daily' | 'archive'
 	/** Difficulty level for games that support it (provided by GameRenderer) */

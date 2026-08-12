@@ -17,6 +17,7 @@ import {
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
+import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GamePageClient } from './game-page-client'
 
@@ -232,7 +233,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 	}
 
 	// If no puzzle found, show error
-	if (!puzzle) {
+	if (!puzzle?.puzzleData) {
 		return (
 			<div className="flex flex-1 flex-col">
 				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
@@ -252,7 +253,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 	}
 
 	// Use puzzle data from server
-	const puzzleDate = puzzle.puzzleDate ?? new Date().toISOString().split('T')[0]
+	const puzzleDate = puzzle.puzzleDate || productDayKey()
 	const currentStreak = streakInfo?.currentStreak ?? 0
 
 	// Check if user has already completed today's daily puzzle (only applies to daily mode)
