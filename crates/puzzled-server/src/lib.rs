@@ -95,7 +95,7 @@ mod tests {
     }
 
     fn today_free_slug() -> String {
-        let today = puzzled_core::puzzle_play::daily_time::get_today_utc(chrono::Utc::now());
+        let today = puzzled_core::puzzle_play::daily_time::product_day_key(chrono::Utc::now());
         puzzled_core::puzzle_play::game_slugs::todays_free_game(today).to_string()
     }
 
@@ -414,5 +414,43 @@ mod tests {
         assert_eq!(json["status"], "not_ready");
         assert_eq!(json["dependencies"][0]["ok"], false);
         assert_eq!(json["dependencies"][0]["required"], true);
+    }
+
+    #[test]
+    fn product_day_key_ssot_and_drc_oracle_recipe() {
+        use puzzled_core::puzzle_play::daily_time::{
+            product_day_key, product_day_key_string, DAY_KEY_TIMEZONE,
+        };
+        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
+        use puzzled_core::puzzle_play::ritual_completion::{
+            compute_drc, qualifies_as_ritual, RitualCompletionRow, RitualQualifyInput,
+            DRC_RECOMPUTE_SQL,
+        };
+
+        assert_eq!(DAY_KEY_TIMEZONE, "Asia/Hong_Kong");
+        let now = chrono::Utc::now();
+        let key = product_day_key_string(now);
+        assert_eq!(key.len(), 10);
+        assert_eq!(product_day_key(now).format("%Y-%m-%d").to_string(), key);
+        assert!(qualifies_as_ritual(RitualQualifyInput {
+            game_module_id: "sudoku",
+            mode: "daily",
+            status: "won",
+            is_dry_run: false,
+        }));
+        assert!(!qualifies_as_ritual(RitualQualifyInput {
+            game_module_id: "sudoku",
+            mode: "archive",
+            status: "won",
+            is_dry_run: false,
+        }));
+        let rows = [RitualCompletionRow {
+            user_id: "u1".into(),
+            day_key: key.clone(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        assert_eq!(compute_drc(&key, &rows), 1);
+        assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
     }
 }

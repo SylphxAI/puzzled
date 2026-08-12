@@ -19,6 +19,7 @@ pub use domain::quad_words;
 pub use domain::queens_conflict;
 pub use domain::random;
 pub use domain::random_lcg;
+pub use domain::ritual_completion;
 pub use domain::scoring;
 pub use domain::share_squares;
 pub use domain::sudoku;

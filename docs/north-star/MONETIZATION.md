@@ -59,7 +59,7 @@ Exact matrix per module is declared in registry metadata; **server enforces**.
 ### ADR-170 alignment
 
 - Archive reads and non-rotation games may require premium.  
-- Daily free-rotation game (UTC or product day-key rotation—**must match day_key SSOT**; if code uses UTC today, migrate carefully to `Asia/Hong_Kong` with an explicit change) remains free for everyone including guests.  
+- Daily free-rotation game uses **product day-key** rotation (`Asia/Hong_Kong`, same SSOT as DRC; free game flips at HKT midnight, not UTC). Remains free for everyone including guests.  
 - Subscription lookup: Platform billing; **fail-closed to free** on uncertainty (Security × Correctness: do not grant premium on errors; do not block free floor on billing outages—billing outage degrades *premium only*).
 
 ---

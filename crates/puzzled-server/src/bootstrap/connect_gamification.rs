@@ -22,7 +22,7 @@ use crate::proto::puzzled::v1::{
     TryAutoFreezeRequest, TryAutoFreezeResponse,
 };
 use chrono::Utc;
-use puzzled_core::puzzle_play::daily_time::get_today_utc;
+use puzzled_core::puzzle_play::daily_time::product_day_key;
 
 #[derive(Clone)]
 pub struct GamificationConnectService {
@@ -71,7 +71,7 @@ impl GamificationService for GamificationConnectService {
         _request: ServiceRequest<'_, GetStreakInfoRequest>,
     ) -> ServiceResult<GetStreakInfoResponse> {
         let identity = require_identity(&ctx)?;
-        let today = get_today_utc(Utc::now());
+        let today = product_day_key(Utc::now());
         let (played_today, total) = match &self.state.pool {
             Some(pool) => {
                 let played = match has_completed_session(

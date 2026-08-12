@@ -31,6 +31,19 @@ Given day \(D\):
 2. Distinct user/guest keys → \(\mathrm{DRC}(D)\).  
 3. Dashboard must match within agreed lag.
 
+**Postgres equivalent (S0 sole path):** `game_sessions` rows written by `PuzzleService.SubmitGuess` after server validation:
+
+```sql
+SELECT COUNT(DISTINCT user_id)::bigint AS drc
+FROM game_sessions
+WHERE day_key = $1          -- YYYY-MM-DD in Asia/Hong_Kong
+  AND is_ritual = true
+  AND module_class = 'puzzle_ritual'
+  AND status IN ('won', 'lost');
+```
+
+Pure recompute of the same definition: `puzzled_core::puzzle_play::ritual_completion::compute_drc`.
+
 ### 2.2 Play correctness oracle
 
 For each shipped module:
