@@ -102,7 +102,6 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props
 	const handleShare = useCallback(() => {
 		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0
 
-		const emoji = game.status === 'won' ? '🎉' : '😔'
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'pattern-match',
@@ -111,7 +110,7 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, game.foundSets.length, game.totalSets, startTime])
+	}, [game.status, game.endTime, startTime])
 
 	const isComplete = game.status === 'won' || game.status === 'gave_up'
 

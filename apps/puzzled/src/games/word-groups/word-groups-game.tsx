@@ -168,33 +168,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 
 		// Generate engaging share text with personality
 		const status = gameStatus as 'won' | 'lost'
-		const emoji =
-			status === 'won'
-				? mistakes === 0
-					? '🤯'
-					: mistakes === 1
-						? '🔥'
-						: mistakes <= 2
-							? '💪'
-							: '😮‍💨'
-				: '😅'
-		const message =
-			status === 'won'
-				? mistakes === 0
-					? 'Perfect game!'
-					: mistakes === 1
-						? 'Almost perfect!'
-						: mistakes <= 2
-							? 'Solved it!'
-							: 'Scraped through!'
-				: 'This puzzle broke me!'
-		const result = `${solvedCategories.length}/4`
-		const challenge =
-			status === 'won'
-				? mistakes === 0
-					? 'Try to match my perfect game!'
-					: 'Can you beat me?'
-				: 'Can you solve it?'
 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),

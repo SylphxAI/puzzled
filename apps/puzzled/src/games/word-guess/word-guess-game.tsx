@@ -163,32 +163,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		// Generate engaging share text with personality
 		const status = gameStatus as 'won' | 'lost'
 		const attempts = guesses.length
-		const emoji =
-			status === 'won'
-				? attempts === 1
-					? '🤯'
-					: attempts === 2
-						? '🔥'
-						: attempts <= 3
-							? '💪'
-							: attempts <= 4
-								? '👍'
-								: '😮‍💨'
-				: '😅'
-		const message =
-			status === 'won'
-				? attempts === 1
-					? 'First try!'
-					: attempts === 2
-						? 'Crushed it!'
-						: attempts <= 3
-							? 'Not bad!'
-							: attempts <= 4
-								? 'Got it!'
-								: 'Close call!'
-				: 'This one got me...'
-		const result = status === 'won' ? `${attempts}/6` : 'X/6'
-		const challenge = status === 'won' ? 'Can you beat me?' : 'Can you solve it?'
 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),

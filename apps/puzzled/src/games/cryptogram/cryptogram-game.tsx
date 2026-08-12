@@ -101,7 +101,6 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const hintsText = game.state.hintsUsed > 0 ? ` (${game.state.hintsUsed} hints)` : ''
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'cryptogram',
@@ -110,7 +109,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.hintsUsed, startTime, puzzle.puzzleData.author])
+	}, [game.state.endTime, startTime])
 
 	// Parse the encrypted text into words for display
 	const words = puzzle.puzzleData.encryptedText.split(' ')

@@ -103,8 +103,6 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 	const handleShare = useCallback(() => {
 		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0
 
-		const emoji = game.status === 'won' ? '🎉' : '😔'
-		const efficiency = game.minMoves > 0 ? Math.round((game.minMoves / game.moveCount) * 100) : 0
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'block-slide',

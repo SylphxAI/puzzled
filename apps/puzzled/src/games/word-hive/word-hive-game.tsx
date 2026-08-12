@@ -151,17 +151,6 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	}
 
 	const handleShare = async () => {
-		const rankEmoji =
-			game.rank === 'queen-bee'
-				? '👑'
-				: game.rank === 'genius'
-					? '🧠'
-					: game.rank === 'amazing'
-						? '🤩'
-						: game.rank === 'great'
-							? '💪'
-							: '🐝'
-
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-hive',

@@ -143,8 +143,6 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
-		const solved = game.getSolvedCount()
-
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'quad-words',
@@ -153,7 +151,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game, startTime])
+	}, [game.state.endTime, startTime])
 
 	// Ready screen
 	if (isReady) {
