@@ -8,7 +8,9 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { getBaseUrl } from '@/lib/utils'
 import { parsePuzzleDataClient } from '@/games/types'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
@@ -160,12 +162,13 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 							? '💪'
 							: '🐝'
 
-		const text = `${rankEmoji} Puzzled Spelling Bee
-${game.score}/${game.maxScore} points
-${game.foundWords.length}/${game.totalWords} words
-${game.foundPangrams.length}/${game.totalPangrams} pangrams
-
-puzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'word-hive',
+			gameName: 'Hive',
+			status: 'won',
+			statLine: `${game.score} points`,
+		})
 
 		try {
 			if (navigator.share) {

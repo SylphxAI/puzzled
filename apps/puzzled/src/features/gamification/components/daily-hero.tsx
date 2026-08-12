@@ -107,7 +107,7 @@ const GAME_DECORATIONS: Record<string, React.ReactNode> = {
 			<div className="h-6 w-4 rounded bg-current" />
 		</div>
 	),
-	queens: (
+	crowns: (
 		<div className="absolute -right-3 -top-3 grid grid-cols-3 gap-1 opacity-10">
 			{Array.from({ length: 9 }).map((_, i) => (
 				<div key={i} className={`h-3 w-3 rounded-sm ${i % 4 === 0 ? 'bg-current' : ''}`} />
@@ -121,7 +121,7 @@ const GAME_DECORATIONS: Record<string, React.ReactNode> = {
 			))}
 		</div>
 	),
-	tango: (
+	duo: (
 		<div className="absolute -right-3 -top-3 grid grid-cols-2 gap-1 opacity-10">
 			<div className="h-5 w-5 rounded-full bg-current" />
 			<div className="h-5 w-5 rounded-full border-2 border-current" />

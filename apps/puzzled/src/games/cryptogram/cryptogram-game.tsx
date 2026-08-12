@@ -13,6 +13,7 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
@@ -101,7 +102,13 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
 		const hintsText = game.state.hintsUsed > 0 ? ` (${game.state.hintsUsed} hints)` : ''
-		const text = `Cryptogram\n"${puzzle.puzzleData.author}"\n${formatTimer(timeMs)}${hintsText}\n\npuzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'cryptogram',
+			gameName: 'Cipher',
+			status: 'won',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
 		navigator.clipboard.writeText(text)
 	}, [game.state.endTime, game.state.hintsUsed, startTime, puzzle.puzzleData.author])
 

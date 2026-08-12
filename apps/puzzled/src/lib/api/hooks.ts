@@ -850,23 +850,23 @@ export type GamesOverviewEntry = {
 export type GamesOverviewResponse = GamesOverviewEntry[]
 
 const GAME_NAMES: Record<string, string> = {
-	'word-guess': 'Word Guess',
-	'word-groups': 'Word Groups',
-	'word-hive': 'Word Hive',
-	crossword: 'Crossword',
+	'word-guess': 'Five',
+	'word-groups': 'Threads',
+	'word-hive': 'Hive',
+	crossword: 'Mini Grid',
 	sudoku: 'Sudoku',
-	nonogram: 'Nonogram',
-	'word-ladder': 'Word Ladder',
+	nonogram: 'Paint',
+	'word-ladder': 'Rungs',
 	arithmo: 'Arithmo',
-	'pattern-match': 'Pattern Match',
-	'block-slide': 'Block Slide',
-	queens: 'Queens',
-	tango: 'Tango',
-	'word-box': 'Letter Boxed',
-	'quad-words': 'Quad Words',
-	'killer-sudoku': 'Killer Sudoku',
-	cryptogram: 'Cryptogram',
-	'word-search': 'Word Search',
+	'pattern-match': 'Match',
+	'block-slide': 'Slides',
+	crowns: 'Crowns',
+	duo: 'Duo',
+	'word-box': 'Frame',
+	'quad-words': 'Quad',
+	'killer-sudoku': 'Cage Sudoku',
+	cryptogram: 'Cipher',
+	'word-search': 'Hunt',
 }
 
 export function useGamesOverview(

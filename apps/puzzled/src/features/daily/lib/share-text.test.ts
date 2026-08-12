@@ -23,6 +23,11 @@ describe('ritualSharePath', () => {
 		expect(ritualSharePath('sudoku', '2026-08-12')).toBe('/games/sudoku?date=2026-08-12')
 	})
 
+	test('canonicalizes retired slugs', () => {
+		expect(ritualSharePath('queens', '2026-08-13')).toBe('/games/crowns?date=2026-08-13')
+		expect(ritualSharePath('tango')).toBe('/games/duo')
+	})
+
 	test('ignores invalid date', () => {
 		expect(ritualSharePath('sudoku', 'not-a-date')).toBe('/games/sudoku')
 	})

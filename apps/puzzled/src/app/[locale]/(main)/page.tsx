@@ -53,14 +53,14 @@ export default async function HomePage({ params }: Props) {
 
 	// Slug to readable name mapping (for tomorrow's preview)
 	const gameNameMap: Record<string, string> = {
-		'word-guess': 'Word Guess',
-		'word-groups': 'Word Groups',
-		queens: 'Queens',
+		'word-guess': 'Five',
+		'word-groups': 'Threads',
+		crowns: 'Crowns',
 		sudoku: 'Sudoku',
-		crossword: 'Crossword',
-		'word-hive': 'Word Hive',
+		crossword: 'Mini Grid',
+		'word-hive': 'Hive',
 		arithmo: 'Arithmo',
-		tango: 'Tango',
+		duo: 'Duo',
 	}
 	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
@@ -70,7 +70,7 @@ export default async function HomePage({ params }: Props) {
 	let todayPlayerCount = 0
 
 	try {
-		// Always fetch public today overview (player count + completions)
+		// Chrome only — not DRC (UTC / unfiltered). Polar is compute_drc / compute_hrc.
 		const overview = await getServerTodayOverview()
 		todayPlayerCount = overview.playerCount
 		todayCompletions = overview.completions.map((c) => ({

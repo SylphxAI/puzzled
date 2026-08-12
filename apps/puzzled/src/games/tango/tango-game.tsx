@@ -13,9 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { TangoPuzzleData, TangoSolution } from './types'
 import { useTango } from './use-tango'
@@ -44,7 +46,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: 'tango',
+		gameSlug: 'duo',
 		mode,
 		puzzleId,
 		enableStarBurst: false,
@@ -74,8 +76,14 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const text = `☀️🌙 Tango\n⏱️ ${formatTimer(timeMs)}\n\npuzzled.gg`
-		navigator.clipboard.writeText(text)
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'duo',
+			gameName: 'Duo',
+			status: 'won',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
+		void navigator.clipboard.writeText(text)
 	}, [game.state.endTime, startTime])
 
 	// Ready screen
@@ -166,13 +174,13 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			<HowToPlayModal
 				open={showHelpModal}
 				onClose={() => setShowHelpModal(false)}
-				gameSlug="tango"
+				gameSlug="duo"
 			/>
 
 			<GameResultModal
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
-				gameType="tango"
+				gameType="duo"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

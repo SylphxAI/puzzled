@@ -13,9 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { BlockSlideIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { Board } from './components/board'
@@ -103,7 +105,13 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 
 		const emoji = game.status === 'won' ? '🎉' : '😔'
 		const efficiency = game.minMoves > 0 ? Math.round((game.minMoves / game.moveCount) * 100) : 0
-		const text = `🧊 Block Slide\n${emoji} ${game.moveCount} moves (min: ${game.minMoves}) • ${efficiency}% efficiency\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'block-slide',
+			gameName: 'Slides',
+			status: game.status === 'won' ? 'won' : 'lost',
+			statLine: `⏱️ ${formatTimer(timeMs)} • ${game.moveCount} moves`,
+		})
 		navigator.clipboard.writeText(text)
 	}, [game.status, game.endTime, game.moveCount, game.minMoves, startTime])
 

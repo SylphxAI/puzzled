@@ -13,9 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import type { QueensPuzzleData, QueensSolution } from './types'
 import { REGION_COLORS } from './types'
@@ -49,7 +51,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		showGuestSignupPrompt,
 		handleCloseGuestPrompt,
 	} = useGameSession({
-		gameSlug: 'queens',
+		gameSlug: 'crowns',
 		mode,
 		puzzleId,
 	})
@@ -80,9 +82,15 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const text = `👑 Queens ${puzzle.puzzleData.size}×${puzzle.puzzleData.size}\n⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
-		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzle.puzzleData.size])
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'crowns',
+			gameName: 'Crowns',
+			status: 'won',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
+		void navigator.clipboard.writeText(text)
+	}, [game.state.endTime, startTime])
 
 	// Reset game
 	const handleReset = useCallback(() => {
@@ -213,14 +221,14 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			<HowToPlayModal
 				open={showHelpModal}
 				onClose={() => setShowHelpModal(false)}
-				gameSlug="queens"
+				gameSlug="crowns"
 			/>
 
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
 				onClose={() => setShowResultModal(false)}
-				gameType="queens"
+				gameType="crowns"
 				status="won"
 				stats={{
 					attempts: 1,

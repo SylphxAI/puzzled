@@ -28,8 +28,8 @@ export const tangoConfig: GameConfig<
 	TangoGuessInput,
 	TangoGuessResult
 > = {
-	slug: 'tango',
-	name: 'Binary',
+	slug: 'duo',
+	name: 'Duo',
 	description: 'Balance suns and moons',
 	IconComponent: TangoIcon,
 	sortOrder: 13,

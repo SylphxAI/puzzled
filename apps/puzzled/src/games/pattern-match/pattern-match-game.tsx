@@ -13,9 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { PatternMatchIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { PatternBoard } from './components/board'
@@ -101,7 +103,13 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props
 		const timeMs = game.endTime && startTime ? game.endTime - startTime : 0
 
 		const emoji = game.status === 'won' ? '🎉' : '😔'
-		const text = `🔷 Pattern Match\n${emoji} ${game.foundSets.length}/${game.totalSets} sets • ⏱️ ${formatTimer(timeMs)}\n\nPlay at puzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'pattern-match',
+			gameName: 'Match',
+			status: game.status === 'won' ? 'won' : 'lost',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
 		navigator.clipboard.writeText(text)
 	}, [game.status, game.endTime, game.foundSets.length, game.totalSets, startTime])
 
