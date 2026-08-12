@@ -459,10 +459,10 @@ mod tests {
     /// row. Guard must run for daily content day even when pid is None.
     #[test]
     fn submit_already_played_guard_not_gated_on_puzzle_id() {
+        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
         use puzzled_core::puzzle_play::ritual_completion::{
             ritual_already_finished, submit_must_guard_already_played, RitualCompletionRow,
         };
-        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
 
         assert!(
             submit_must_guard_already_played(true, None, true),

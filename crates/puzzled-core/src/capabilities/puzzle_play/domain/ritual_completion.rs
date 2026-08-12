@@ -355,8 +355,18 @@ mod tests {
         // Second submit same day/module is rejected by policy.
         assert!(ritual_already_finished(&prior, user, day, "sudoku"));
         // Different day is open.
-        assert!(!ritual_already_finished(&prior, user, "2026-08-13", "sudoku"));
+        assert!(!ritual_already_finished(
+            &prior,
+            user,
+            "2026-08-13",
+            "sudoku"
+        ));
         // Different user is open.
-        assert!(!ritual_already_finished(&prior, "other-user", day, "sudoku"));
+        assert!(!ritual_already_finished(
+            &prior,
+            "other-user",
+            day,
+            "sudoku"
+        ));
     }
 }
