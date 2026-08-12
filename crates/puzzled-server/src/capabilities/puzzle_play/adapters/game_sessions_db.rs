@@ -60,6 +60,48 @@ pub async fn persist_game_session(
     Ok(row.0.to_string())
 }
 
+// Completion existence probes. Postgres types bare `SELECT 1` as INT4; decoding
+// that as Rust `i64` (INT8) fails with session_lookup_failed (live dogfood on
+// tip 626f40a). Use EXISTS → bool (preferred) or `1::bigint` if a scalar int is
+// required. These SQL strings are the regression oracle for that mismatch.
+const HAS_COMPLETED_BY_PID_AND_DATE_SQL: &str = r#"
+SELECT EXISTS (
+  SELECT 1 FROM game_sessions
+  WHERE user_id = $1
+    AND status IN ('won','lost')
+    AND (
+      puzzle_id = $2
+      OR (game_slug = $3 AND puzzle_date = $4)
+    )
+)
+"#;
+
+const HAS_COMPLETED_BY_PID_SQL: &str = r#"
+SELECT EXISTS (
+  SELECT 1 FROM game_sessions
+  WHERE user_id = $1 AND puzzle_id = $2 AND status IN ('won','lost')
+)
+"#;
+
+const HAS_COMPLETED_BY_DATE_SQL: &str = r#"
+SELECT EXISTS (
+  SELECT 1 FROM game_sessions
+  WHERE user_id = $1 AND game_slug = $2 AND puzzle_date = $3
+    AND status IN ('won','lost')
+)
+"#;
+
+const HAS_RITUAL_COMPLETION_SQL: &str = r#"
+SELECT EXISTS (
+  SELECT 1 FROM game_sessions
+  WHERE user_id = $1
+    AND game_slug = $2
+    AND day_key = $3
+    AND is_ritual = true
+    AND status IN ('won','lost')
+)
+"#;
+
 /// True when the user has a completed session for the given puzzle and/or date.
 ///
 /// Lookup is **OR** of:
@@ -86,55 +128,31 @@ pub async fn has_completed_session(
         Some(d) => Some(d.and_hms_opt(0, 0, 0).ok_or("invalid date")?),
         None => None,
     };
-    let row: Option<(i64,)> = match (pid, date) {
-        (Some(pid), Some(date)) => sqlx::query_as(
-            r#"
-            SELECT 1 FROM game_sessions
-            WHERE user_id = $1
-              AND status IN ('won','lost')
-              AND (
-                puzzle_id = $2
-                OR (game_slug = $3 AND puzzle_date = $4)
-              )
-            LIMIT 1
-            "#,
-        )
-        .bind(uid)
-        .bind(pid)
-        .bind(game_slug)
-        .bind(date)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| format!("game_sessions query failed: {e}"))?,
-        (Some(pid), None) => sqlx::query_as(
-            r#"
-            SELECT 1 FROM game_sessions
-            WHERE user_id = $1 AND puzzle_id = $2 AND status IN ('won','lost')
-            LIMIT 1
-            "#,
-        )
-        .bind(uid)
-        .bind(pid)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| format!("game_sessions query failed: {e}"))?,
-        (None, Some(date)) => sqlx::query_as(
-            r#"
-            SELECT 1 FROM game_sessions
-            WHERE user_id = $1 AND game_slug = $2 AND puzzle_date = $3
-              AND status IN ('won','lost')
-            LIMIT 1
-            "#,
-        )
-        .bind(uid)
-        .bind(game_slug)
-        .bind(date)
-        .fetch_optional(pool)
-        .await
-        .map_err(|e| format!("game_sessions query failed: {e}"))?,
-        (None, None) => None,
+    let exists: bool = match (pid, date) {
+        (Some(pid), Some(date)) => sqlx::query_scalar(HAS_COMPLETED_BY_PID_AND_DATE_SQL)
+            .bind(uid)
+            .bind(pid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("game_sessions query failed: {e}"))?,
+        (Some(pid), None) => sqlx::query_scalar(HAS_COMPLETED_BY_PID_SQL)
+            .bind(uid)
+            .bind(pid)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("game_sessions query failed: {e}"))?,
+        (None, Some(date)) => sqlx::query_scalar(HAS_COMPLETED_BY_DATE_SQL)
+            .bind(uid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("game_sessions query failed: {e}"))?,
+        (None, None) => false,
     };
-    Ok(row.is_some())
+    Ok(exists)
 }
 
 /// True when the user already has a ritual finish for this module on `day_key`.
@@ -149,24 +167,14 @@ pub async fn has_ritual_completion(
 ) -> Result<bool, String> {
     let uid = uuid::Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
     let day = day_key.format("%Y-%m-%d").to_string();
-    let row: Option<(i64,)> = sqlx::query_as(
-        r#"
-        SELECT 1 FROM game_sessions
-        WHERE user_id = $1
-          AND game_slug = $2
-          AND day_key = $3
-          AND is_ritual = true
-          AND status IN ('won','lost')
-        LIMIT 1
-        "#,
-    )
-    .bind(uid)
-    .bind(game_slug)
-    .bind(day)
-    .fetch_optional(pool)
-    .await
-    .map_err(|e| format!("game_sessions ritual query failed: {e}"))?;
-    Ok(row.is_some())
+    let exists: bool = sqlx::query_scalar(HAS_RITUAL_COMPLETION_SQL)
+        .bind(uid)
+        .bind(game_slug)
+        .bind(day)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| format!("game_sessions ritual query failed: {e}"))?;
+    Ok(exists)
 }
 
 /// Persist a server-validated result (authoritative path from Connect submit).
@@ -345,5 +353,39 @@ mod tests {
             std::stringify!(already_played).contains("already_played"),
             true
         );
+    }
+
+    /// Live tip 626f40a: `SELECT 1` decoded as `i64` → INT4/INT8 mismatch →
+    /// HTTP 500 `session_lookup_failed` on second free-daily SubmitGuess (and
+    /// false `canPlay:true` on GetDaily). Completion probes must return bool
+    /// (EXISTS) — never a bare integer literal decoded as INT8.
+    #[test]
+    fn completion_lookup_sql_is_bool_exists_not_int_literal() {
+        for sql in [
+            HAS_COMPLETED_BY_PID_AND_DATE_SQL,
+            HAS_COMPLETED_BY_PID_SQL,
+            HAS_COMPLETED_BY_DATE_SQL,
+            HAS_RITUAL_COMPLETION_SQL,
+        ] {
+            let normalized = sql.split_whitespace().collect::<Vec<_>>().join(" ");
+            let upper = normalized.to_ascii_uppercase();
+            // Outer projection must be EXISTS (bool), not a bare integer row.
+            assert!(
+                upper.starts_with("SELECT EXISTS ("),
+                "expected EXISTS scalar bool, got: {normalized}"
+            );
+            // Dogfood-broken shape was top-level `SELECT 1 FROM …` decoded as i64.
+            assert!(
+                !upper.starts_with("SELECT 1 ") && !upper.starts_with("SELECT 1::"),
+                "top-level SELECT 1 is INT4 and must not be decoded as i64: {normalized}"
+            );
+        }
+        // Unique-index race path still maps to product rejection, not 500.
+        assert!(is_unique_violation_code("23505"));
+        assert!(!is_unique_violation_code("42P01"));
+    }
+
+    fn is_unique_violation_code(code: &str) -> bool {
+        code == "23505"
     }
 }
