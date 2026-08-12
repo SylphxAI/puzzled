@@ -3,14 +3,15 @@
 /**
  * Error Boundary for Game Pages
  *
- * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
+ * Must not call useErrorTracking — Monitoring context is not guaranteed
+ * and would replace the real play error with a provider message.
  */
 
-import { useErrorTracking } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
+import { reportBoundaryError } from '@/lib/report-boundary-error'
 
 type ErrorProps = {
 	error: Error & { digest?: string }
@@ -19,25 +20,13 @@ type ErrorProps = {
 
 export default function GameError({ error, reset }: ErrorProps) {
 	const t = useTranslations('common')
-	const { captureException, addBreadcrumb } = useErrorTracking()
 	const reported = useRef(false)
 
 	useEffect(() => {
 		if (reported.current) return
 		reported.current = true
-
-		// DOGFOODING: Report error to Sylphx Platform via SDK
-		addBreadcrumb({
-			category: 'game',
-			message: 'Error in game page',
-			level: 'error',
-		})
-
-		captureException(error, {
-			tags: { location: 'game-page' },
-			extra: { digest: error.digest },
-		})
-	}, [error, captureException, addBreadcrumb])
+		reportBoundaryError('game-page', error)
+	}, [error])
 
 	return (
 		<div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-8 text-center">
@@ -50,6 +39,7 @@ export default function GameError({ error, reset }: ErrorProps) {
 				<p className="mt-2 max-w-sm text-sm text-muted-foreground">
 					Something went wrong while loading the game. Please try again.
 				</p>
+				<p className="mt-2 max-w-sm text-sm text-destructive break-words">{error.message}</p>
 			</div>
 
 			<Button onClick={reset} className="gap-2">

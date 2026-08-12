@@ -4,13 +4,13 @@
  * Error Boundary for Admin Routes
  *
  * Catches errors in admin panel pages.
- * DOGFOODING: Uses SDK's useErrorTracking for error reporting.
+ * Must not call useErrorTracking (Monitoring context is not guaranteed).
  */
 
-import { useErrorTracking } from '@sylphx/sdk/react'
 import { Button } from '@sylphx/ui'
 import { AlertTriangle, LayoutDashboard, RefreshCw } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { reportBoundaryError } from '@/lib/report-boundary-error'
 
 interface ErrorProps {
 	error: Error & { digest?: string }
@@ -18,18 +18,13 @@ interface ErrorProps {
 }
 
 export default function AdminError({ error, reset }: ErrorProps) {
-	const { captureException } = useErrorTracking()
 	const reported = useRef(false)
 
 	useEffect(() => {
 		if (reported.current) return
 		reported.current = true
-
-		captureException(error, {
-			tags: { boundary: 'admin' },
-			extra: { digest: error.digest },
-		})
-	}, [error, captureException])
+		reportBoundaryError('admin', error)
+	}, [error])
 
 	return (
 		<div className="flex min-h-[60vh] items-center justify-center p-4">

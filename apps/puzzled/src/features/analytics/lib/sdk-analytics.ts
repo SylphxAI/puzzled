@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useAnalytics } from '@sylphx/sdk/react'
+import { useSafeAnalytics } from '@sylphx/sdk/react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { canTrackAnalytics } from './consent'
@@ -499,7 +499,10 @@ interface UseGameAnalyticsOptions {
  */
 export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 	const { journeyStage = 'new' } = options
-	const { track, error: analyticsError } = useAnalytics()
+	// Safe: CrosswordGame is a dynamic `ssr:false` chunk. A second SDK
+	// context copy would make useAnalytics() throw "Platform hooks must be
+	// used within a SylphxProvider" and take down the flagship play path.
+	const { track } = useSafeAnalytics()
 
 	const queueManagerRef = useRef<QueueManager | null>(null)
 
@@ -638,7 +641,7 @@ export function useGameAnalytics(options: UseGameAnalyticsOptions = {}) {
 		trackSubscription,
 		trackFeatureUsed,
 		flushEvents,
-		analyticsError,
+		analyticsError: null,
 	}
 }
 
