@@ -13,6 +13,28 @@ context = "."
 # labels, and capacity gates still apply on the platform side.
 preview_deploys = true
 
+# Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
+# per push BEFORE writer services roll. Supersedes web-only release_command:
+# web runtime image has no atlas binary, so api-only deploys (crates/**) left
+# migration 20260812010000 unapplied on live tip 626f40a.
+[database.migrations]
+engine = "atlas"
+dir = "apps/puzzled/atlas/migrations"
+image = "migrator"
+# Pure atlas argv only (Platform migration gate rejects shell wrappers).
+command = "atlas migrate apply --dir file:///app/apps/puzzled/atlas/migrations --url $MIGRATOR_DATABASE_URL --revisions-schema public --baseline 20260222000000"
+timeout = "10m"
+watch_paths = [
+  "apps/puzzled/atlas/migrations/**",
+  "apps/puzzled/atlas.hcl",
+  "apps/puzzled/Dockerfile.migrator",
+  "sylphx.toml",
+]
+
+[database.migrations.build]
+dockerfile = "apps/puzzled/Dockerfile.migrator"
+context = "."
+
 [[services]]
 name = "web"
 type = "web"
@@ -20,7 +42,7 @@ port = 3000
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
 # web → api calls (connect graph). The web service has no backend authority.
 connect = { services = ["api"] }
-release_command = "atlas migrate apply --env production --baseline 20260222000000"
+# Schema apply is [database.migrations] only — no dual residual release_command.
 
 # Rust owns the product API (sole backend). Next.js owns presentation only.
 [[services]]
@@ -57,4 +79,19 @@ path = "/healthz"
 [services.build]
 strategy = "dockerfile"
 dockerfile = "crates/puzzled-server/Dockerfile"
+context = "."
+
+# Build-only migrator image for [database.migrations] Job (never serves traffic).
+[[services]]
+name = "migrator"
+type = "worker"
+build_only = true
+network_exposure = "private"
+min_instances = 0
+max_instances = 1
+scale_to_zero = true
+
+[services.build]
+strategy = "dockerfile"
+dockerfile = "apps/puzzled/Dockerfile.migrator"
 context = "."

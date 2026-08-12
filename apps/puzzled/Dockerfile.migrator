@@ -1,0 +1,26 @@
+# Puzzled schema migrator — Platform [database.migrations] Job image.
+# Atlas + SQL migrations only (no Next.js / no Rust runtime).
+# Multi-arch: matches dens BuildKit node architecture.
+FROM debian:bookworm-slim
+
+ARG ATLAS_VERSION=1.2.0
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl \
+  && case "$(dpkg --print-architecture)" in \
+       amd64) ATLAS_ARCH=amd64 ;; \
+       arm64) ATLAS_ARCH=arm64 ;; \
+       *) echo "unsupported arch: $(dpkg --print-architecture)" >&2; exit 1 ;; \
+     esac \
+  && curl --retry 5 --retry-all-errors --connect-timeout 10 -fsSL \
+       "https://release.ariga.io/atlas/atlas-community-linux-${ATLAS_ARCH}-v${ATLAS_VERSION}" \
+       -o /usr/local/bin/atlas \
+  && chmod +x /usr/local/bin/atlas \
+  && atlas version \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY apps/puzzled/atlas/migrations /app/apps/puzzled/atlas/migrations
+
+# Platform Job overrides command via sylphx.toml [database.migrations].command.
+CMD ["atlas", "version"]
