@@ -8,8 +8,7 @@ const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build'
 
 if (!REDIS_URL && !IS_BUILD) {
 	throw new Error(
-		'[Redis] Missing required environment variable REDIS_URL. ' +
-			'Format: redis://:password@host:6379',
+		'[Redis] REDIS_URL is required. Platform injects the product URL; do not compose host or port.',
 	)
 }
 

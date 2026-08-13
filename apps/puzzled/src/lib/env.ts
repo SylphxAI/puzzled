@@ -33,14 +33,10 @@ const SERVER_REQUIRED: EnvVar[] = [
 		runtimes: ['nodejs'],
 	},
 	{
-		name: 'KV_REST_API_URL',
-		required: false, // Has UPSTASH_REDIS_REST_URL fallback
-		description: 'Redis/KV store URL (or UPSTASH_REDIS_REST_URL)',
-	},
-	{
-		name: 'KV_REST_API_TOKEN',
-		required: false, // Has UPSTASH_REDIS_REST_TOKEN fallback
-		description: 'Redis/KV store token (or UPSTASH_REDIS_REST_TOKEN)',
+		name: 'REDIS_URL',
+		required: true,
+		description: 'Platform-injected Redis/KV URL',
+		runtimes: ['nodejs'],
 	},
 ]
 
@@ -82,13 +78,6 @@ export function validateEnv(): void {
 		if (envVar.required && !value) {
 			missing.push(`${envVar.name} - ${envVar.description}`)
 		}
-	}
-
-	// Check Redis - needs either KV_* or UPSTASH_* vars
-	const hasRedis = !!process.env.REDIS_URL
-
-	if (!hasRedis && runtime === 'nodejs') {
-		missing.push('REDIS_URL - Redis connection string (e.g., redis://:password@redis:6379)')
 	}
 
 	// Warn about missing feature variables (don't fail)
