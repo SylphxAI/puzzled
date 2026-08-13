@@ -2,7 +2,7 @@
 
 **Status:** Normative  
 **Revision:** 2026-08-12  
-**Cut:** predecessor duals → five protocol concepts + HRC Polar  
+**Cut:** predecessor duals → five protocol concepts + daily puzzle completers  
 **Terminal:** destination is the only writer on each named surface; predecessors deleted or inbound-alias only.
 
 This is the living cut list for the model already declared in
@@ -17,7 +17,7 @@ concept.
 | Surface | Predecessor (retire) | Destination (sole writer) |
 |---------|----------------------|---------------------------|
 | Day clock | UTC day-of-year, client locale, `CURRENT_DATE` | `product_day_key` / `Asia/Hong_Kong` |
-| Polar quantity | `GetTodayOverview.playerCount`, DAU, raw finish counts | `compute_drc` / `compute_hrc` on `game_sessions` |
+| North Star quantity | `GetTodayOverview.playerCount`, DAU, raw finish counts | `compute_drc` / `compute_hrc` (weekly ritualists) on `game_sessions` |
 | Share / card | `Play at puzzled.gg`, origin-only, per-game ad-hoc text as a second stack | `formatRitualShareText` + module+`date=` deep link |
 | Finish | Client `isComplete` vs leaked solution | Server `SubmitGuess` after validation |
 | Module identity (player) | LinkedIn **Queens** / **Tango**; NYT **Wordle** / **Connections** / **Quordle** / **Spelling Bee** / **Letter Boxed** as titles | CATALOG player titles; slugs `crowns` / `duo` |
@@ -36,7 +36,7 @@ On apply:
 2. `UPDATE game_sessions SET game_slug = 'crowns' WHERE game_slug = 'queens'` (and `tango`→`duo`).  
 3. Same rewrite on `daily_puzzles.game_slug`.
 
-DRC/HRC are `COUNT DISTINCT user_id` — collapsing alias/canonical pairs must not invent users.
+daily puzzle completers / weekly ritualists are `COUNT DISTINCT user_id` — collapsing alias/canonical pairs must not invent users.
 
 ---
 
@@ -60,7 +60,7 @@ region; two-symbol balance) are not those marks. CATALOG §3.2–3.3 is the
 player-title law.
 
 `GetTodayOverview` may remain **chrome** (how many people touched something
-today). It is **not** DRC and must not be labeled as Polar.
+today). It is **not** daily puzzle completers and must not be labeled as the North Star.
 
 ---
 

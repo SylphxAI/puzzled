@@ -68,8 +68,8 @@ The following **puzzle_ritual** modules are protected (directories under `apps/p
 | arithmo |
 | pattern-match |
 | block-slide |
-| queens |
-| tango |
+| crowns |
+| duo |
 | word-box |
 | quad-words |
 | killer-sudoku |

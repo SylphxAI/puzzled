@@ -52,8 +52,11 @@ A finish **qualifies** for daily puzzle completers if and only if **all** of the
 | 3 | Module is classified **`puzzle_ritual`** (not pure `entertainment_oracle`) | Module registry |
 | 4 | Outcome is a **terminal success or honest terminal fail** that the product treats as “today’s attempt resolved” (see protocol: fail-complete may count if the module defines a single daily attempt) | Per-module finish contract |
 | 5 | Not a dry-run, admin inject, or load-test marker | Event flags |
+| 6 | Mode is **daily ritual**, not archive, not practice | `qualifies_as_ritual` in core |
 
 **Guests:** If the product allows guest finish, guest identity must be **stable for the day** (device/session bound as implemented) and documented; otherwise only authenticated users enter daily puzzle completers. **Default:** authenticated + guest-with-stable-day-id both allowed; report daily puzzle completers total and authenticated split.
+
+**One finish per `(user, module, day_key)`:** re-entry is review, not a second daily-puzzle-completer tick. The product floor is already-played rejection (409 or equivalent), not silent double count.
 
 **Non-qualifying (explicit):**
 
@@ -77,6 +80,12 @@ ritual.completed
 ```
 
 **Oracle re-run:** Given warehouse or Postgres, recompute \(\texttt{daily\_puzzle\_completers}(D)\) from raw events and match the dashboard within rounding of late events (document lag SLA, default 15 minutes).
+
+### Supporting habit oracle (not the executive NSM)
+
+**weekly ritualists** (public field `weekly_ritualists`): distinct users with daily puzzle completers on ≥ `HABITUAL_MIN_DAYS` (4) distinct days in the trailing `HABITUAL_WINDOW_DAYS` (7) ending on \(D\). Consecutive days are not required.
+
+Pure helper: `compute_hrc` (English alias `compute_weekly_ritualists`). SQL: `HRC_RECOMPUTE_SQL`. See [METRICS-TREE.md](METRICS-TREE.md) §2.2. Do not invent a house acronym (including DPC) for this quantity.
 
 ---
 
