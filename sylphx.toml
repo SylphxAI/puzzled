@@ -38,10 +38,7 @@ watch_paths = [
 name = "web"
 type = "web"
 port = 3000
-# dens STZ: env Production already has enable_scale_to_zero=true. Manifest
-# keys are SSOT — without them tip recovery strips management-set STZ and
-# leaves dual classic+ksvc NotOwned residual (live 2026-08-12 puzzled-prod).
-# Presentation root is HTTP-ready for Knative readiness (no separate /health).
+# Presentation root is HTTP-ready (no separate /health).
 health = { path = "/" }
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
 # web → api calls (connect graph). The web service has no backend authority.
@@ -53,7 +50,6 @@ connect = { services = ["api"] }
 name = "api"
 type = "web"
 port = 8080
-# dens STZ: durable with env enable_scale_to_zero (parity tryit/viral).
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [
   "/puzzled.v1.AdminService",
