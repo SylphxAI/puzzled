@@ -28,7 +28,7 @@ If a proposed feature cannot name which of the five concepts it extends, it is n
 | **Result card** | Shareable, non-spoiler summary of the run | One chrome system; per-module fields only |
 | **Entitlement** | Free vs premium access to content and modes | One billing authority (Platform); fail-closed |
 
-Everything else (themes, cosmetics, optional multiplayer, oracles, stats, streaks) **composes** on these five. A sixth independent “progress product,” a second share stack, or a second day clock is a protocol breach.
+Everything else (themes, cosmetics, optional multiplayer, oracles, stats, streaks) **composes** on these five. A sixth independent “progress product,” a second share stack, or a second day clock is a protocol breach. Share text is a **result-card** projection (`formatRitualShareText`), not a second stack. Day authority is `product_day_key` only. See [CUTOVER.md](CUTOVER.md).
 
 **Simplicity test:** adding a module must not add a concept. Adding a concept requires a versioned protocol upgrade and a North Star package amendment.
 

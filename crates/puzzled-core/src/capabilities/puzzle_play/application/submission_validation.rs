@@ -74,7 +74,7 @@ pub fn validate_submission(
     solution: &Value,
     env: &SubmissionEnvelope,
 ) -> SubmissionVerdict {
-    match game_slug {
+    match crate::capabilities::puzzle_play::domain::game_slugs::canonicalize_game_slug(game_slug) {
         "word-guess" => word_guess(puzzle_data, solution, env),
         "word-groups" => word_groups(puzzle_data, solution, env),
         "word-hive" => word_hive(puzzle_data, solution, env),
@@ -85,8 +85,8 @@ pub fn validate_submission(
         "arithmo" => arithmo(puzzle_data, solution, env),
         "pattern-match" => pattern_match(puzzle_data, solution, env),
         "block-slide" => block_slide(puzzle_data, solution, env),
-        "queens" => queens(puzzle_data, solution, env),
-        "tango" => tango(puzzle_data, solution, env),
+        "crowns" | "queens" => queens(puzzle_data, solution, env),
+        "duo" | "tango" => tango(puzzle_data, solution, env),
         "word-box" => word_box(puzzle_data, solution, env),
         "quad-words" => quad_words(puzzle_data, solution, env),
         "killer-sudoku" => killer_sudoku(puzzle_data, solution, env),

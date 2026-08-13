@@ -16,6 +16,7 @@
  * - All other game-aware components
  */
 
+import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { arithmoConfig } from './arithmo/config'
 import { blockSlideConfig } from './block-slide/config'
 import { crosswordConfig } from './crossword/config'
@@ -63,8 +64,8 @@ export const GAME_CONFIGS = {
 	arithmo: arithmoConfig,
 	'pattern-match': patternMatchConfig,
 	'block-slide': blockSlideConfig,
-	queens: queensConfig,
-	tango: tangoConfig,
+	crowns: queensConfig,
+	duo: tangoConfig,
 	'word-box': wordBoxConfig,
 	'quad-words': quadWordsConfig,
 	'killer-sudoku': killerSudokuConfig,
@@ -78,6 +79,11 @@ export const GAME_CONFIGS = {
  */
 export type GameSlug = keyof typeof GAME_CONFIGS
 
+function catalogSlug(slug: string): GameSlug | undefined {
+	const canonical = canonicalizeGameSlug(slug)
+	return canonical in GAME_CONFIGS ? (canonical as GameSlug) : undefined
+}
+
 /**
  * Get list of all registered game slugs
  */
@@ -90,15 +96,16 @@ export function getGameSlugs(): string[] {
  */
 // biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
 export function getGameConfig(slug: string): GameConfig<any, any, any, any> | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	return GAME_CONFIGS[slug]
+	const key = catalogSlug(slug)
+	if (!key) return undefined
+	return GAME_CONFIGS[key]
 }
 
 /**
  * Check if a game slug is registered
  */
 export function isValidGameSlug(slug: string): slug is GameSlug {
-	return slug in GAME_CONFIGS
+	return catalogSlug(slug) !== undefined
 }
 
 /**
@@ -143,8 +150,8 @@ export type GameMetadata = {
  * Get game metadata (without functions) for client use
  */
 export function getGameMetadata(slug: string): GameMetadata | null {
-	if (!isValidGameSlug(slug)) return null
-	const config = GAME_CONFIGS[slug]
+	const config = getGameConfig(slug)
+	if (!config) return null
 
 	return {
 		slug: config.slug,
@@ -190,8 +197,7 @@ function _getGamesWithDifficulty(): GameMetadata[] {
  * Check if a game supports difficulty selection
  */
 export function gameSupportsDifficulty(slug: string): boolean {
-	if (!isValidGameSlug(slug)) return false
-	return GAME_CONFIGS[slug].supportsDifficulty ?? false
+	return getGameConfig(slug)?.supportsDifficulty ?? false
 }
 
 /**
@@ -199,9 +205,8 @@ export function gameSupportsDifficulty(slug: string): boolean {
  * Returns undefined if game doesn't support difficulty
  */
 function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	const config = GAME_CONFIGS[slug]
-	if (!config.supportsDifficulty) return undefined
+	const config = getGameConfig(slug)
+	if (!config?.supportsDifficulty) return undefined
 	return config.difficultyLevels
 }
 
@@ -211,8 +216,7 @@ function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undef
 export function getGameIconComponent(
 	slug: string,
 ): React.ComponentType<{ size?: number; className?: string }> | undefined {
-	if (!isValidGameSlug(slug)) return undefined
-	return GAME_CONFIGS[slug].IconComponent
+	return getGameConfig(slug)?.IconComponent
 }
 
 // ==========================================
@@ -255,10 +259,10 @@ export function validateAndScore(
 	puzzleData: unknown,
 	submission: GameSubmission,
 ): GameResult {
-	if (!isValidGameSlug(slug)) {
+	const config = getGameConfig(slug)
+	if (!config) {
 		return { valid: false, error: `Unknown game: ${slug}` }
 	}
-	const config = GAME_CONFIGS[slug]
 	// biome-ignore lint/suspicious/noExplicitAny: Runtime validated slug guarantees matching types
 	return config.validateAndScore(solution as any, puzzleData as any, submission)
 }

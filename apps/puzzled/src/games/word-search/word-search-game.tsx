@@ -13,10 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { cn } from '@/lib/utils'
+import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
 import type { Position, WordSearchPuzzleData, WordSearchSolution } from './types'
 import { useWordSearch } from './use-word-search'
@@ -131,9 +132,15 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const text = `Word Hunt - ${puzzle.puzzleData.theme}\n${progress.found}/${progress.total} words\n${formatTimer(timeMs)}\n\npuzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'word-search',
+			gameName: 'Hunt',
+			status: 'won',
+			statLine: `⏱️ ${formatTimer(timeMs)}`,
+		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzle.puzzleData.theme, progress.found, progress.total])
+	}, [game.state.endTime, startTime])
 
 	// Check if a cell is part of the current selection
 	const isInSelection = useCallback(

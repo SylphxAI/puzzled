@@ -7,6 +7,8 @@
  * - Host is origin without scheme for compact clipboard paste.
  */
 
+import { canonicalizeGameSlug } from '@/lib/game-slug'
+
 export type RitualShareInput = {
 	/** Absolute origin, e.g. https://puzzled.gg or window.location.origin */
 	origin: string
@@ -32,7 +34,7 @@ export function shareHost(origin: string): string {
  * Includes `date=` when day_key is known so landings stay on the shared day.
  */
 export function ritualSharePath(gameSlug: string, puzzleDate?: string): string {
-	const slug = gameSlug.trim()
+	const slug = canonicalizeGameSlug(gameSlug.trim())
 	if (!slug) return '/'
 	const base = `/games/${slug}`
 	if (puzzleDate && /^\d{4}-\d{2}-\d{2}$/.test(puzzleDate)) {

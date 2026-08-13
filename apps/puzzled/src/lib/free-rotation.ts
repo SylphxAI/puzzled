@@ -3,12 +3,13 @@
  * (`game_slugs::todays_free_game`), not UTC day-of-year.
  */
 
+import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { ordinal0FromDayKey, productDayKey } from '@/lib/product-day'
 
 export const FREE_GAME_ROTATION = [
 	'word-guess',
 	'word-groups',
-	'queens',
+	'crowns',
 	'sudoku',
 	'crossword',
 ] as const
@@ -26,5 +27,5 @@ export function getTodaysFreeGame(now: Date = new Date()): FreeRotationSlug {
 }
 
 export function isGameFreeOnDay(gameSlug: string, dayKey: string): boolean {
-	return gameSlug === freeGameForDayKey(dayKey)
+	return canonicalizeGameSlug(gameSlug) === freeGameForDayKey(dayKey)
 }

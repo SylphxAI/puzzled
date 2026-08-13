@@ -72,6 +72,26 @@ const nextConfig: NextConfig = {
 				destination: '/:locale/games/word-box',
 				permanent: true,
 			},
+			{
+				source: '/games/queens',
+				destination: '/games/crowns',
+				permanent: true,
+			},
+			{
+				source: '/:locale/games/queens',
+				destination: '/:locale/games/crowns',
+				permanent: true,
+			},
+			{
+				source: '/games/tango',
+				destination: '/games/duo',
+				permanent: true,
+			},
+			{
+				source: '/:locale/games/tango',
+				destination: '/:locale/games/duo',
+				permanent: true,
+			},
 		]
 	},
 

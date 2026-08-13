@@ -50,6 +50,10 @@ describe('isValidGameSlug', () => {
 	test('returns true for valid game slug', () => {
 		expect(isValidGameSlug('word-guess')).toBe(true)
 		expect(isValidGameSlug('word-groups')).toBe(true)
+		expect(isValidGameSlug('crowns')).toBe(true)
+		expect(isValidGameSlug('queens')).toBe(true)
+		expect(isValidGameSlug('duo')).toBe(true)
+		expect(isValidGameSlug('tango')).toBe(true)
 	})
 
 	test('returns false for invalid game slug', () => {

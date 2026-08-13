@@ -8,8 +8,10 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
+import { getBaseUrl } from '@/lib/utils'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
@@ -166,35 +168,14 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 
 		// Generate engaging share text with personality
 		const status = gameStatus as 'won' | 'lost'
-		const emoji =
-			status === 'won'
-				? mistakes === 0
-					? '🤯'
-					: mistakes === 1
-						? '🔥'
-						: mistakes <= 2
-							? '💪'
-							: '😮‍💨'
-				: '😅'
-		const message =
-			status === 'won'
-				? mistakes === 0
-					? 'Perfect game!'
-					: mistakes === 1
-						? 'Almost perfect!'
-						: mistakes <= 2
-							? 'Solved it!'
-							: 'Scraped through!'
-				: 'This puzzle broke me!'
-		const result = `${solvedCategories.length}/4`
-		const challenge =
-			status === 'won'
-				? mistakes === 0
-					? 'Try to match my perfect game!'
-					: 'Can you beat me?'
-				: 'Can you solve it?'
 
-		const text = `${emoji} Puzzled Word Groups\n${result} - ${message}\n\n${emojiGrid}\n\n${challenge}\npuzzled.gg`
+		const text = formatRitualShareText({
+			origin: getBaseUrl('origin'),
+			gameSlug: 'word-groups',
+			gameName: 'Threads',
+			status,
+			statLine: emojiGrid,
+		})
 
 		try {
 			if (navigator.share) {

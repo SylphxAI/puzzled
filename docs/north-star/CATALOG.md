@@ -64,14 +64,9 @@ Wordle · Connections · Strands · Spelling Bee · Letter Boxed · Pips · The 
 
 **Sudoku**, **Kakuro**, **crossword** (generic type), **cryptogram**, **nonogram**, **word search**, **word ladder** are treated as generic type names unless counsel says otherwise.
 
-### 3.3 Shipped rename residual
+### 3.3 Shipped rename (cut)
 
-| Current slug | Required player title | Required future slug | Why |
-|--------------|----------------------|----------------------|-----|
-| `queens` | Crowns | `crowns` (redirect old slug) | LinkedIn product name |
-| `tango` | Duo | `duo` (redirect old slug) | LinkedIn product name |
-
-Until the rename PR: slugs stay protected so we do not hollow games. **New copy must not say Queens or Tango.**
+Canonical slugs are `crowns` and `duo`. `queens` / `tango` are **inbound aliases only** (redirect + canonicalize). New writes use the canonical slug. Player titles are Crowns and Duo. See [CUTOVER.md](CUTOVER.md).
 
 ### 3.4 Content and media
 
@@ -149,7 +144,7 @@ Industry analog is **research only**. Never a player-facing name.
 | futoshiki | Unequal | Inequalities | Futoshiki | ritual | dest |
 | skyscrapers | Towers | Visibility counts | skyscrapers | ritual | dest |
 | kropki | Dots | Black/white adjacency dots | Kropki | ritual | dest |
-| duo | Duo | Two symbols, no triple, balance | Tango / Binairo | ritual | rename (`tango`) |
+| duo | Duo | Two symbols, no triple, balance | Tango / Binairo | ritual | shipped (alias `tango`) |
 | equals | Equals | Guess a true equation | Nerdle | ritual | dest |
 | target-six | Target | Six numbers, hit a target | Countdown / Digits | ritual | dest |
 | twenty-four | Twenty-Four | Four numbers make 24 | 24-point | ritual | dest |
@@ -188,7 +183,7 @@ Descriptive English titles. Japanese genre names may appear in How-to as **type 
 
 | Slug | Player title | Mechanic | Analog (do not use) | Class | Status |
 |------|--------------|----------|---------------------|-------|--------|
-| crowns | Crowns | One mark per row, column, color region | Queens | ritual | rename (`queens`) |
+| crowns | Crowns | One mark per row, column, color region | Queens | ritual | shipped (alias `queens`) |
 | number-path | Path | Visit 1…n, no crossing | Zip | ritual | dest |
 | pip-place | Pips | Place dominoes to satisfy regions | Pips | ritual | dest |
 | nonogram | Paint | Row/column paint clues | nonogram (not Picross) | ritual | shipped |

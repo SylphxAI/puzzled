@@ -51,9 +51,9 @@ export const queensConfig: GameConfig<
 	QueensGuess,
 	QueensGuessResult
 > = {
-	slug: 'queens',
-	name: 'Queens',
-	description: 'Place queens so none can attack each other',
+	slug: 'crowns',
+	name: 'Crowns',
+	description: 'Place one crown per row, column, and color region',
 	IconComponent: QueensIcon,
 	sortOrder: 11,
 	category: 'logic',

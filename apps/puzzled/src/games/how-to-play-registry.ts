@@ -14,6 +14,7 @@
 
 import type { ComponentType } from 'react'
 import { MINUTE_MS } from '@/lib/constants/time'
+import { canonicalizeGameSlug } from '@/lib/game-slug'
 // ==========================================
 // HowToPlay components (client-safe - just UI)
 // ==========================================
@@ -103,7 +104,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'block-slide': {
 		slug: 'block-slide',
-		name: 'Block Slide',
+		name: 'Slides',
 		IconComponent: BlockSlideIcon,
 		HowToPlayContent: BlockSlideHowToPlay,
 		display: { theme: 'slate' },
@@ -111,7 +112,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	crossword: {
 		slug: 'crossword',
-		name: 'Crossword',
+		name: 'Mini Grid',
 		IconComponent: CrosswordIcon,
 		HowToPlayContent: CrosswordHowToPlay,
 		display: { theme: 'blue' },
@@ -119,7 +120,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	cryptogram: {
 		slug: 'cryptogram',
-		name: 'Cryptogram',
+		name: 'Cipher',
 		IconComponent: CryptogramIcon,
 		HowToPlayContent: CryptogramHowToPlay,
 		display: { theme: 'violet' },
@@ -127,7 +128,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'killer-sudoku': {
 		slug: 'killer-sudoku',
-		name: 'Killer Sudoku',
+		name: 'Cage Sudoku',
 		IconComponent: KillerSudokuIcon,
 		HowToPlayContent: KillerSudokuHowToPlay,
 		display: { theme: 'rose' },
@@ -135,7 +136,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	nonogram: {
 		slug: 'nonogram',
-		name: 'Nonogram',
+		name: 'Paint',
 		IconComponent: NonogramIcon,
 		HowToPlayContent: NonogramHowToPlay,
 		display: { theme: 'pink' },
@@ -143,7 +144,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'pattern-match': {
 		slug: 'pattern-match',
-		name: 'Pattern Match',
+		name: 'Match',
 		IconComponent: PatternMatchIcon,
 		HowToPlayContent: PatternMatchHowToPlay,
 		display: { theme: 'sky' },
@@ -151,15 +152,15 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'quad-words': {
 		slug: 'quad-words',
-		name: 'Quordle',
+		name: 'Quad',
 		IconComponent: QuadWordsIcon,
 		HowToPlayContent: QuordleHowToPlay,
 		display: { theme: 'amber' },
 		isPerfectGame: (stats) => stats.status === 'won' && (stats.attempts ?? 0) <= 5,
 	},
-	queens: {
-		slug: 'queens',
-		name: 'Queens',
+	crowns: {
+		slug: 'crowns',
+		name: 'Crowns',
 		IconComponent: QueensIcon,
 		HowToPlayContent: QueensHowToPlay,
 		display: { theme: 'violet' },
@@ -173,9 +174,9 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 		display: { theme: 'cyan' },
 		isPerfectGame: standardIsPerfectGame,
 	},
-	tango: {
-		slug: 'tango',
-		name: 'Tango',
+	duo: {
+		slug: 'duo',
+		name: 'Duo',
 		IconComponent: TangoIcon,
 		HowToPlayContent: TangoHowToPlay,
 		display: { theme: 'amber' },
@@ -183,7 +184,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-box': {
 		slug: 'word-box',
-		name: 'Letter Boxed',
+		name: 'Frame',
 		IconComponent: WordBoxIcon,
 		HowToPlayContent: LetterBoxedHowToPlay,
 		display: { theme: 'cyan' },
@@ -191,7 +192,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-groups': {
 		slug: 'word-groups',
-		name: 'Connections',
+		name: 'Threads',
 		IconComponent: WordGroupsIcon,
 		HowToPlayContent: ConnectionsHowToPlay,
 		display: { theme: 'violet' },
@@ -199,7 +200,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-guess': {
 		slug: 'word-guess',
-		name: 'Wordle',
+		name: 'Five',
 		IconComponent: WordGuessIcon,
 		HowToPlayContent: WordleHowToPlay,
 		display: { theme: 'emerald' },
@@ -207,7 +208,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-hive': {
 		slug: 'word-hive',
-		name: 'Spelling Bee',
+		name: 'Hive',
 		IconComponent: WordHiveIcon,
 		HowToPlayContent: SpellingBeeHowToPlay,
 		display: { theme: 'amber' },
@@ -215,7 +216,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-ladder': {
 		slug: 'word-ladder',
-		name: 'Word Ladder',
+		name: 'Rungs',
 		IconComponent: WordLadderIcon,
 		HowToPlayContent: WordLadderHowToPlay,
 		display: { theme: 'orange' },
@@ -223,7 +224,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
 	},
 	'word-search': {
 		slug: 'word-search',
-		name: 'Word Search',
+		name: 'Hunt',
 		IconComponent: WordSearchIcon,
 		HowToPlayContent: WordSearchHowToPlay,
 		display: { theme: 'cyan' },
@@ -240,7 +241,7 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
  * Get HowToPlay config by slug
  */
 export function getHowToPlayConfig(slug: string): HowToPlayConfig | undefined {
-	return HOW_TO_PLAY_CONFIGS[slug]
+	return HOW_TO_PLAY_CONFIGS[canonicalizeGameSlug(slug)]
 }
 
 /**

@@ -26,7 +26,9 @@ use puzzled_core::puzzle_play::crossword_generate::{
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::{is_game_free_today, is_valid_game_slug};
+use puzzled_core::puzzle_play::game_slugs::{
+    canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
+};
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -234,7 +236,7 @@ impl PuzzleService for PuzzleConnectService {
         request: ServiceRequest<'_, GetDailyRequest>,
     ) -> ServiceResult<GetDailyResponse> {
         let req = request.to_owned_message();
-        let game_slug = req.game_slug.trim();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
         if game_slug.is_empty() {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
@@ -360,7 +362,7 @@ impl PuzzleService for PuzzleConnectService {
         request: ServiceRequest<'_, SubmitGuessRequest>,
     ) -> ServiceResult<SubmitGuessResponse> {
         let req = request.to_owned_message();
-        let game_slug = req.game_slug.trim();
+        let game_slug = canonicalize_game_slug(req.game_slug.trim());
         if game_slug.is_empty() {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
