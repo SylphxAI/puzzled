@@ -1,7 +1,7 @@
 # Destination catalog — every daily ritual we will offer
 
 **Status:** Normative destination catalog (2026-08-12)  
-**Does not change:** [HRC Polar](NORTH-STAR-METRIC.md), DRC atom, five protocol concepts  
+**Does not change:** [daily puzzle completers](NORTH-STAR-METRIC.md), daily entertainment completers, five protocol concepts  
 **Does not ship games:** this file is doctrine. A slug here is not live until protocol-complete.  
 **Shipped floor (may not delete):** [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md) §8 and [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md) §4.
 
@@ -38,7 +38,7 @@ A destination slug **may** enter the shipped floor only when all of the followin
 6. Content is original or public-domain. Never another publisher’s daily.  
 7. No real-money gambling, no scientific / medical / IQ / destiny claims.  
 8. Disable switch without bricking home.  
-9. Expected HRC lift, DFC-to-DRC crossover, or protocol proof clears content + verification + attention + runtime + reversal ([MONETIZATION.md](MONETIZATION.md) §8).
+9. Expected weekly-ritualist lift, daily-entertainment-to-daily-puzzle-completer crossover, or protocol proof clears content + verification + attention + runtime + reversal ([MONETIZATION.md](MONETIZATION.md) §8).
 
 Fail any row → not a Puzzled module.
 
@@ -245,9 +245,9 @@ Descriptive English titles. Japanese genre names may appear in How-to as **type 
 | hanzi-search | 尋字 | Character search | ritual | dest |
 | riddle-lantern | 燈謎 | Daily riddle, closed answers | ritual | dest |
 
-### 5.8 Entertainment oracles (DFC only)
+### 5.8 Entertainment oracles (daily entertainment completers only)
 
-Copy: **entertainment only**. Never science, destiny, diagnosis, or finance advice. Never HRC.
+Copy: **entertainment only**. Never science, destiny, diagnosis, or finance advice. Never daily puzzle completers.
 
 | Slug | Player title | Mechanic | Status |
 |------|--------------|----------|--------|
@@ -268,14 +268,14 @@ Copy: **entertainment only**. Never science, destiny, diagnosis, or finance advi
 |------|---------|
 | Heardle / Framed / clip-ID | Third-party audio/video rights |
 | Franchise skins (Pokémon, MCU, …) | License |
-| Full chess platform / ranked ladder | Wrong Polar and tone ([VISION.md](VISION.md) §6) |
+| Full chess platform / ranked ladder | Wrong North Star and tone ([VISION.md](VISION.md) §6) |
 | Scrabble-named or WWF-named tile scoring as a title | Marks; optional later mode under a new name, S5 |
 | Gacha, loot, real-money wager | Security / brand / law |
 | “Scientifically validated IQ / brain age” | Ethics + Correctness |
 | Infinite SEO quiz farm | Economy of attention |
 | Open-ended LLM couplet/poem as *authority* without a closed grader | Cannot oracle a finish honestly |
 
-S5 social (compare, light co-op, family profiles) is a **mode on existing slugs**, not a second catalog and not a second Polar.
+S5 social (compare, light co-op, family profiles) is a **mode on existing slugs**, not a second catalog and not a second North Star.
 
 ---
 
@@ -293,7 +293,7 @@ S5 social (compare, light co-op, family profiles) is a **mode on existing slugs*
 | Entertainment oracles | 8 |
 | **Total** | **115** |
 
-Of those, **17 are shipped** (two pending rename). Adding a `dest` slug does not change HRC or DRC.
+Of those, **17 are shipped** (two pending rename). Adding a `dest` slug does not change daily puzzle completers.
 
 ---
 
@@ -307,10 +307,10 @@ Order protects the basis ([STRATEGY-ROADMAP.md](STRATEGY-ROADMAP.md)). Destinati
 | **W1** | Theme Path, Frame depth, Clue Climb, Pin, Cages, Path, Pips | Table-stakes gaps vs NYT + LinkedIn *mechanics* |
 | **W2** | Fences, Bridges, Islands, Lamps, Mini Sudoku | Generator-friendly logic breadth |
 | **W3** | Cantonese / idiom family | Product day is HKT; locales already exist |
-| **W4** | First 2–3 oracles (DFC instrumented) | Fun without Polar pollution |
+| **W4** | First 2–3 oracles (daily entertainment completers instrumented) | Fun without North Star pollution |
 | **W5** | Midi/Daily Grid, knowledge maps, remaining Nikoli-class | Depth after protocol is boring |
 
-Kill signal (unchanged): DRC flat while slugs grow, or HRC flat while DRC grows → stop adding modules.
+Kill signal (unchanged): daily puzzle completers flat while slugs grow, or weekly ritualists flat while daily puzzle completers grow → stop adding modules.
 
 ---
 
@@ -318,7 +318,7 @@ Kill signal (unchanged): DRC flat while slugs grow, or HRC flat while DRC grows 
 
 | Change | Same PR must also |
 |--------|-------------------|
-| Add/remove a **destination** slug | Edit this file; no Polar change |
+| Add/remove a **destination** slug | Edit this file; no North Star change |
 | Promote `dest` → shipped protected | Protocol §8 + DELIVERY §4 + registry + validators + card |
 | Rename `queens` / `tango` | This file + redirects + registry + core slug list |
 | New `module_class` | North Star package amendment first |

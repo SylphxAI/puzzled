@@ -70,7 +70,8 @@ export default async function HomePage({ params }: Props) {
 	let todayPlayerCount = 0
 
 	try {
-		// Chrome only — not DRC (UTC / unfiltered). Polar is compute_drc / compute_hrc.
+		// Chrome only — not daily puzzle completers (UTC / unfiltered).
+		// NSM oracles: compute_drc / compute_hrc (weekly ritualists).
 		const overview = await getServerTodayOverview()
 		todayPlayerCount = overview.playerCount
 		todayCompletions = overview.completions.map((c) => ({
