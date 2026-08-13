@@ -316,7 +316,7 @@ pub async fn count_sessions(pool: &PgPool, user_id: &str) -> Result<u32, String>
     Ok(row.0.max(0) as u32)
 }
 
-/// Recompute DRC for a product day_key from `game_sessions` (live oracle).
+/// Recompute daily puzzle completers for a product day_key from `game_sessions` (live oracle).
 pub async fn recompute_drc(pool: &PgPool, day_key: &str) -> Result<u64, String> {
     let row: (i64,) = sqlx::query_as(DRC_RECOMPUTE_SQL)
         .bind(day_key)

@@ -17,8 +17,8 @@ const VALID_SLUGS: &[&str] = &[
     "arithmo",
     "pattern-match",
     "block-slide",
-    "crowns",
-    "duo",
+    "queens",
+    "tango",
     "word-box",
     "quad-words",
     "killer-sudoku",
@@ -26,28 +26,13 @@ const VALID_SLUGS: &[&str] = &[
     "word-search",
 ];
 
-/// Retired public slugs. Inbound only; writes persist [`canonicalize_game_slug`].
-const SLUG_ALIASES: &[(&str, &str)] = &[("queens", "crowns"), ("tango", "duo")];
-
-/// Map inbound alias → canonical catalog slug. Unknown strings pass through.
-#[must_use]
-pub fn canonicalize_game_slug(slug: &str) -> &str {
-    let trimmed = slug.trim();
-    for (from, to) in SLUG_ALIASES {
-        if trimmed == *from {
-            return to;
-        }
-    }
-    trimmed
-}
-
-/// North Star module class (`puzzle_ritual` feeds DRC/HRC; oracles feed DFC).
+/// North Star module class (daily puzzle completers vs daily entertainment completers).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModuleClass {
-    /// Contributes to Daily Ritual Completers (DRC) and therefore to HRC.
+    /// Contributes to daily puzzle completers.
     PuzzleRitual,
-    /// Contributes only to Daily Fun Completers (DFC); never DRC.
+    /// Contributes only to daily entertainment completers; never daily puzzle completers.
     EntertainmentOracle,
 }
 
@@ -70,11 +55,10 @@ impl ModuleClass {
     }
 }
 
-/// Returns true when `slug` is a registered game identifier (or a retired alias).
+/// Returns true when `slug` is a registered game identifier.
 #[must_use]
 pub fn is_valid_game_slug(slug: &str) -> bool {
-    let canonical = canonicalize_game_slug(slug);
-    VALID_SLUGS.contains(&canonical)
+    VALID_SLUGS.contains(&slug)
 }
 
 /// Frozen catalog of registered game slugs (order matches registry keys).
@@ -96,9 +80,9 @@ pub fn module_class_for(slug: &str) -> Option<ModuleClass> {
     }
 }
 
-/// Premium-free daily rotation (canonical slugs; mirrors TS `FREE_GAME_ROTATION`).
-pub const FREE_GAME_ROTATION: [&str; 5] =
-    ["word-guess", "word-groups", "crowns", "sudoku", "crossword"];
+/// Premium-free daily rotation (mirrors apps/puzzled/src/lib/billing/server.ts).
+const FREE_GAME_ROTATION: [&str; 5] =
+    ["word-guess", "word-groups", "queens", "sudoku", "crossword"];
 
 /// Today's free game for a **product day-key** calendar date (day-of-year rotation).
 ///
@@ -113,7 +97,7 @@ pub fn todays_free_game(date: chrono::NaiveDate) -> &'static str {
 /// True when a game is playable by free users on the given product day-key date.
 #[must_use]
 pub fn is_game_free_today(game_slug: &str, date: chrono::NaiveDate) -> bool {
-    canonicalize_game_slug(game_slug) == todays_free_game(date)
+    game_slug == todays_free_game(date)
 }
 
 #[cfg(test)]
@@ -124,11 +108,6 @@ mod tests {
     fn accepts_known_slugs() {
         assert!(is_valid_game_slug("sudoku"));
         assert!(is_valid_game_slug("word-guess"));
-        assert!(is_valid_game_slug("crowns"));
-        assert!(is_valid_game_slug("queens"));
-        assert_eq!(canonicalize_game_slug("queens"), "crowns");
-        assert_eq!(canonicalize_game_slug("tango"), "duo");
-        assert_eq!(canonicalize_game_slug("crowns"), "crowns");
     }
 
     #[test]

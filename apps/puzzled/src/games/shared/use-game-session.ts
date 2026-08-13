@@ -105,22 +105,6 @@ export interface UseGameSessionOptions {
 	 * @default 2000
 	 */
 	guestPromptDelay?: number
-
-	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
-	puzzleDate?: string
-
-	/**
-	 * When true, celebration / result card wait for a server-accepted
-	 * finish. Invalid grids stay playable. already_played counts as accept.
-	 */
-	requireServerAccept?: boolean
-}
-
-export type GameEndResult = {
-	success: boolean
-	score?: number
-	error?: string
-	alreadyPlayed?: boolean
 }
 
 export interface UseGameSessionReturn {
@@ -132,7 +116,7 @@ export interface UseGameSessionReturn {
 
 	// Game lifecycle
 	startGame: () => void
-	endGame: (data: GameEndData) => Promise<GameEndResult>
+	endGame: (data: GameEndData) => void
 
 	// Timer
 	startTime: number | null
@@ -168,8 +152,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		isPerfectWin,
 		resultModalDelay,
 		guestPromptDelay = 2000,
-		puzzleDate,
-		requireServerAccept = false,
 	} = options
 
 	const storageKey = getGameSessionKey(gameSlug)
@@ -218,12 +200,22 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	 *
 	 * IMPORTANT: No score is sent to server - server calculates it
 	 */
-	const celebrate = useCallback(
-		(endData: GameEndData) => {
+	const endGame = useCallback(
+		async (endData: GameEndData) => {
+			if (savedRef.current) return
+
+			savedRef.current = true
+			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
+
+			// Determine celebration type
 			const isPerfect = enableStarBurst && isPerfectWin?.(endData)
+
 			if (status === 'won') {
+				// Show celebration
 				setShowCelebration(true)
+
+				// Perfect win gets star burst
 				if (isPerfect) {
 					setShowStarBurst(true)
 					triggerSound(celebrationSound || 'perfectWin')
@@ -236,94 +228,66 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				triggerSound(celebrationSound || 'lose')
 				triggerHaptic(celebrationHaptic || 'lose')
 			}
-			const delay = resultModalDelay ?? (status === 'won' ? 1500 : 1000)
-			setTimeout(() => {
-				setShowCelebration(false)
-				setShowStarBurst(false)
-				setShowResultModal(true)
-			}, delay)
-		},
-		[enableStarBurst, isPerfectWin, celebrationSound, celebrationHaptic, resultModalDelay],
-	)
-
-	const endGame = useCallback(
-		async (endData: GameEndData): Promise<GameEndResult> => {
-			if (savedRef.current) return { success: false, error: 'already_saving' }
-
-			savedRef.current = true
-			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
-			const { status } = endData
-
-			if (!requireServerAccept) {
-				celebrate(endData)
-			}
-
-			let finish: GameEndResult = { success: true }
 
 			// Save result (daily mode). puzzleId optional for deterministic free
-			// games — server resolves content by day_key.
+			// games (e.g. sudoku) — server resolves content by day_key.
 			if (mode === 'daily') {
+				// Server-authoritative finish for **logged-in and guest** free ritual
+				// (guest day id via Connect interceptor). Platform streak/leaderboard
+				// only runs for authenticated users inside saveResult.
 				try {
 					const result = await saveResult({
 						status,
 						attempts: endData.attempts ?? 1,
 						timeSpentMs: finalTimeSpentMs,
 						puzzleId,
-						puzzleDate,
 						mode: 'daily' as const,
+						// Difficulty level (for games that support it)
 						difficulty,
+						// Game-specific submission data
 						data: endData.data,
 					})
+					// Store server-calculated score
 					if (result?.score !== undefined) {
 						setServerScore(result.score)
 					}
-					const alreadyPlayed = result.error === 'already_played'
-					finish = {
-						success: result.success || alreadyPlayed,
-						score: result.score,
-						error: result.error,
-						alreadyPlayed,
-					}
 				} catch (error) {
 					console.error(`[${gameSlug}] Failed to save result:`, error)
-					finish = {
-						success: false,
-						error: error instanceof Error ? error.message : 'save_failed',
-					}
-				}
-
-				if (requireServerAccept && !finish.success) {
-					savedRef.current = false
-					return finish
-				}
-
-				if (requireServerAccept) {
-					celebrate(endData)
 				}
 
 				if (!isLoggedIn) {
+					// Local cache for UX + onboarding (server is daily-puzzle-completer authority).
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
+						// Score comes from server when available
 					})
+
+					// Track guest game completion for onboarding
 					incrementGuestGames()
+
+					// Show signup prompt if appropriate
 					if (shouldShowSignupPrompt) {
 						setTimeout(() => {
 							setShowGuestSignupPrompt(true)
 						}, guestPromptDelay)
 					}
 				}
-			} else if (requireServerAccept) {
-				celebrate(endData)
 			}
 
-			return finish
+			// Show result modal after celebration
+			const delay = resultModalDelay ?? (status === 'won' ? 1500 : 1000)
+
+			setTimeout(() => {
+				setShowCelebration(false)
+				setShowStarBurst(false)
+				setShowResultModal(true)
+			}, delay)
 		},
 		[
 			startTime,
 			mode,
 			puzzleId,
-			puzzleDate,
 			difficulty,
 			gameSlug,
 			isLoggedIn,
@@ -331,9 +295,12 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			saveGuestCompletion,
 			incrementGuestGames,
 			shouldShowSignupPrompt,
+			enableStarBurst,
+			isPerfectWin,
+			celebrationSound,
+			celebrationHaptic,
+			resultModalDelay,
 			guestPromptDelay,
-			requireServerAccept,
-			celebrate,
 		],
 	)
 

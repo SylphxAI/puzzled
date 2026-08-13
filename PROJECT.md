@@ -5,7 +5,7 @@ expandable catalog under one module protocol, habit-first growth, and
 subscription monetization in the NYT Games structural class.
 
 **Product North Star (what winning means):**  
-[docs/north-star/README.md](docs/north-star/README.md) — metric **Habitual Ritual Completers (HRC)** (≥ 4 of the last 7 product days). **Daily Ritual Completers (DRC)** is the atomic input, not a second Polar.
+[docs/north-star/README.md](docs/north-star/README.md) — metric **daily puzzle completers**.
 
 This repo owns the Puzzled Next.js app, repo-local UI package, Atlas migrations,
 Sylphx deployment manifest, pure game rules, and application workflows.
@@ -15,9 +15,9 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | | |
 |--|--|
 | **Promise** | Minutes a day, optional depth, shareable non-spoiler results |
-| **Catalog** | Unbounded *class* listed in [docs/north-star/CATALOG.md](docs/north-star/CATALOG.md) (~115 destination slugs; 17 shipped) |
+| **Catalog** | Unbounded *class* of light daily puzzles + honest entertainment oracles |
 | **Basis** | Day key · game module · ritual run · result card · entitlement |
-| **NSM** | Distinct users with a qualifying ritual on ≥ 4 of the last 7 product days (HRC) |
+| **NSM** | Distinct users who complete ≥1 puzzle ritual per product day |
 | **Money** | Free daily finish floor; paid archive/suite/stats |
 
 Full doctrine: [docs/north-star/VISION.md](docs/north-star/VISION.md).
