@@ -451,7 +451,7 @@ mod tests {
 
     #[tokio::test]
     async fn connect_crossword_free_floor_guest_can_finish_win() {
-        // Polaris free floor: crossword must be finishable without content store.
+        // Product free floor: crossword must be finishable without content store.
         use chrono::Utc;
         use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
