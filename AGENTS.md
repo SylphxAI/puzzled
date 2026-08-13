@@ -7,6 +7,8 @@ be loaded as current instruction authority.
 
 Local truth: `PROJECT.md`, `docs/adr/`, `.doctrine/project.json` when present.
 
+Product NSM: **daily puzzle completers** (English quantity; do not invent a house score acronym). Secondary entertainment metric: **daily entertainment completers**.
+
 Architecture SSOT: binding Skills `engineering-standard` + `docs/adr/ADR-170-clean-break-north-star.md`
 (sole Connect, sole Rust executor, content tool). Rust layout:
 `crates/puzzled-core` (functional core) + `crates/puzzled-server` (imperative shell).

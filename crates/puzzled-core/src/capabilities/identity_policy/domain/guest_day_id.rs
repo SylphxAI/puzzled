@@ -1,7 +1,7 @@
 //! Stable guest-day identity for free-ritual play (North Star protocol).
 //!
 //! Guests are encouraged for viral landing. Identity is stable enough for
-//! one-day anti-cheat + DRC: a UUID bound by the client (device/session) and
+//! one-day anti-cheat + daily puzzle completers: a UUID bound by the client (device/session) and
 //! normalized server-side to `guest_<uuid>` so it never collides with Platform
 //! `sub` *string* forms in logs/metrics.
 //!

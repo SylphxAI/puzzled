@@ -41,13 +41,13 @@ pub fn canonicalize_game_slug(slug: &str) -> &str {
     trimmed
 }
 
-/// North Star module class (`puzzle_ritual` feeds DRC/HRC; oracles feed DFC).
+/// North Star module class (daily puzzle completers vs daily entertainment completers).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModuleClass {
-    /// Contributes to Daily Ritual Completers (DRC) and therefore to HRC.
+    /// Contributes to daily puzzle completers.
     PuzzleRitual,
-    /// Contributes only to Daily Fun Completers (DFC); never DRC.
+    /// Contributes only to daily entertainment completers; never daily puzzle completers.
     EntertainmentOracle,
 }
 
