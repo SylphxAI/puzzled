@@ -19,6 +19,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'sylphx.toml'
+      - 'scripts/**'
       - '.github/workflows/ci.yml'
   push:
     branches: [main, dev]
@@ -31,6 +32,7 @@ on:
       - 'Cargo.toml'
       - 'Cargo.lock'
       - 'sylphx.toml'
+      - 'scripts/**'
       - '.github/workflows/ci.yml'
   workflow_dispatch:
 
