@@ -2,7 +2,7 @@
 
 /**
  * Connect-Query primary product probe for Stats.GetLeaderboard.
- * Complements server admitLeaderboardViaConnect generated Connect path path.
+ * Complements server admitLeaderboardViaConnect generated Connect path.
  */
 import { useGetLeaderboardQuery } from '@/lib/connect/stats-query'
 

@@ -451,7 +451,7 @@ mod tests {
 
     #[tokio::test]
     async fn connect_crossword_free_floor_guest_can_finish_win() {
-        // Polaris free floor: crossword must be finishable without content store.
+        // Product free floor: crossword must be finishable without content store.
         use chrono::Utc;
         use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
@@ -524,8 +524,8 @@ mod tests {
         };
         use puzzled_core::puzzle_play::game_slugs::ModuleClass;
         use puzzled_core::puzzle_play::ritual_completion::{
-            compute_drc, qualifies_as_ritual, RitualCompletionRow, RitualQualifyInput,
-            DRC_RECOMPUTE_SQL,
+            compute_drc, compute_hrc, qualifies_as_ritual, RitualCompletionRow, RitualQualifyInput,
+            DRC_RECOMPUTE_SQL, HABITUAL_MIN_DAYS, HABITUAL_WINDOW_DAYS, HRC_RECOMPUTE_SQL,
         };
 
         assert_eq!(DAY_KEY_TIMEZONE, "Asia/Hong_Kong");
@@ -552,8 +552,13 @@ mod tests {
             is_ritual: true,
         }];
         assert_eq!(compute_drc(&key, &rows), 1);
+        assert_eq!(compute_hrc(&key, &rows), 0);
+        assert_eq!(HABITUAL_MIN_DAYS, 4);
+        assert_eq!(HABITUAL_WINDOW_DAYS, 7);
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
         assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
+        assert!(HRC_RECOMPUTE_SQL.contains("AS weekly_ritualists"));
+        assert!(!HRC_RECOMPUTE_SQL.contains("dpc"));
     }
 
     /// Dogfood residual (live tip ff366b48): re-SubmitGuess without stored

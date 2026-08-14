@@ -45,7 +45,8 @@ Shared conversation (“today’s puzzle”) collapses if every user has a priva
 ### 3.3 Content binding
 
 For each `(game_module_id, day_key)` there is at most one **primary ritual content** row in the content store (or a documented deterministic server generator fallback, e.g. sudoku).  
-Practice content is either undated or tagged `mode=practice` and excluded from daily puzzle completers.
+Practice content is either undated or tagged `mode=practice` and excluded from daily puzzle completers.  
+Archive content is dated but `mode=archive` and excluded from daily puzzle completers for day \(D\) (it may still be valuable play).
 
 ---
 
@@ -69,7 +70,8 @@ A module **must**:
 4. **Emit** `ritual.completed` only through api success paths.  
 5. **Map** terminal state → **result card** fields (no solution text by default).  
 6. **Declare** free vs premium access (see [MONETIZATION.md](MONETIZATION.md)).  
-7. **Complete in spirit under ~5–15 minutes** for the daily ritual mode (soft product bar; hardcore marathon modes must be non-default).
+7. **Complete in spirit under ~5–15 minutes** for the daily ritual mode (soft product bar; hardcore marathon modes must be non-default).  
+8. **Honor already-played** for `(user, module, day_key)` — review, not a second terminal write.
 
 A module **must not**:
 
@@ -110,11 +112,18 @@ Shipping a module without registry + server validator is a **delivery reject**.
 2. **Play** — guesses/moves validated as needed.  
 3. **Terminal** — success or honest failure per rules.  
 4. **Persist** — server stores outcome; emits ritual event if qualifying.  
-5. **Card** — user may share.
+5. **Card** — user may share.  
+6. **Re-entry** — results / review; **already played**; no second daily-puzzle-completer tick.
 
-**Already played:** re-entry shows results / review; does not double-count daily puzzle completers.
+### 5.3 Already played
 
-### 5.3 Guests
+The free daily ritual admits **one** terminal finish per `(user, module, day_key)`, independent of whether a stable `puzzle_id` exists (deterministic generators included).
+
+Shell enforces via session pre-check + uniqueness. Submit must still guard already-played when a content day is known **even if** `puzzle_id` is null (`submit_must_guard_already_played` — do not re-gate that helper on `puzzle_id`). Recompute rows (`RitualCompletionRow`) do not need `game_module_id`; uniqueness is a write-path concern.
+
+Cross-module: finishing sudoku does **not** consume word-guess. Same-day second module is allowed and is how suite depth happens. It still counts as one daily-puzzle-completer day.
+
+### 5.4 Guests
 
 Guest play is encouraged for viral landing.  
 Identity: stable enough for one day of anti-cheat and daily puzzle completers; upgrade to account preserves day history where implemented.
@@ -169,8 +178,8 @@ Delivery authority pins the protected catalog. At North Star revision 2026-08-12
 | arithmo |
 | pattern-match |
 | block-slide |
-| queens |
-| tango |
+| crowns |
+| duo |
 | word-box |
 | quad-words |
 | killer-sudoku |
