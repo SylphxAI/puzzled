@@ -2,7 +2,7 @@
 
 /**
  * Connect-Query primary product probe for Stats.GetLeaderboard.
- * Complements server admitLeaderboardViaConnect densify path.
+ * Complements server admitLeaderboardViaConnect generated Connect path path.
  */
 import { useGetLeaderboardQuery } from '@/lib/connect/stats-query'
 
@@ -27,7 +27,7 @@ export function ConnectLeaderboardProbe({
 	if (q.isError || !q.data) {
 		return (
 			<p className="text-xs text-muted-foreground" data-connect-query="residual">
-				Connect-Query residual (server admit remains densify authority)
+				Connect-Query residual (server admit remains generated Connect authority)
 			</p>
 		)
 	}

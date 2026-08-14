@@ -1,5 +1,5 @@
 /**
- * Product-authority admission shell for PuzzleService densify.
+ * Product-authority admission shell for PuzzleService generated Connect path.
  * HARD PATH: sole Connect — no REST dual residual skip path.
  */
 import { getDaily, getPuzzle, submitGuess } from './puzzle-client'

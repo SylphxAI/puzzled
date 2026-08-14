@@ -101,7 +101,6 @@ Thresholds are set in ops dashboards; **existence** of alerts is required (Obser
 ## 5. Implementation notes
 
 - Prefer server-emitted events over client analytics alone for daily puzzle completers / finish.  
-- Weekly ritualists: `compute_hrc` / `HRC_RECOMPUTE_SQL` (public field `weekly_ritualists`). Do not invent DPC.  
 - Client analytics may enrich UX funnels (TTFF, rage clicks).  
 - Day_key and user_id joins must be documented for warehouse jobs.  
 - Privacy: aggregate by default; raw event retention per policy.
