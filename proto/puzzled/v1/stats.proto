@@ -38,7 +38,7 @@ message GetLeaderboardResponse {
 }
 
 
-// Today percentile densify — parity with GET /api/v1/stats/today-percentile.
+// Today percentile generated Connect path — parity with GET /api/v1/stats/today-percentile.
 message GetTodayPercentileRequest {
   string game_slug = 1;
   string status = 2;
