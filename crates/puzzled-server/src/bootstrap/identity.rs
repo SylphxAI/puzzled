@@ -7,7 +7,7 @@
 //!   edge-routed api paths. This closes the browser -> Connect auth loop.
 //! - Guest free-ritual path: `X-Puzzled-Guest-Id` (UUID) or cookie
 //!   `puzzled_guest_id` — stable day identity for viral / unauthenticated
-//!   finishes (North Star protocol; counts toward DRC as distinct user key).
+//!   finishes (North Star protocol; counts toward daily puzzle completers as distinct user key).
 
 use connectrpc::{ConnectError, ErrorCode, RequestContext};
 use puzzled_core::identity_policy::guest_day_id::normalize_guest_user_id;

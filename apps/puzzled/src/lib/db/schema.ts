@@ -272,7 +272,7 @@ export const gameSessions = pgTable(
 
 		/**
 		 * Product day key (YYYY-MM-DD in Asia/Hong_Kong) for ritual finishes.
-		 * Sole instrumentation path for DRC recompute — server-authored only.
+		 * Sole instrumentation path for daily puzzle completers recompute — server-authored only.
 		 */
 		dayKey: text('day_key'),
 
@@ -306,7 +306,7 @@ export const gameSessions = pgTable(
 			table.completedAt,
 		),
 		index('game_sessions_game_slug_completed_idx').on(table.gameSlug, table.completedAt),
-		// DRC recompute: day_key + is_ritual + module_class
+		// daily puzzle completers recompute: day_key + is_ritual + module_class
 		index('game_sessions_drc_day_key_idx').on(table.dayKey, table.isRitual, table.moduleClass),
 		// One ritual finish per user/module/product day (null puzzle_id safe)
 		uniqueIndex('game_sessions_ritual_user_game_day_uidx')

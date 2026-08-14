@@ -256,7 +256,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				}
 
 				if (!isLoggedIn) {
-					// Local cache for UX + onboarding (server is DRC authority).
+					// Local cache for UX + onboarding (server is daily-puzzle-completer authority).
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,

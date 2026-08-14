@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
+# Deep-scan live teaching of banned house slang. Enforced by default.
 set -euo pipefail
-cd "$(cd "$(dirname "$0")/.." && pwd)"
-tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
-while IFS= read -r -d '' file; do
-  case "$file" in scripts/check-language-hygiene.sh) continue ;; esac
-  if grep -nEi '(^|[^[:alnum:]_])(dens|densed|fleet)([^[:alnum:]_]|$)' -- "$file" >>"$tmp" 2>/dev/null; then :; fi
-done < <(git ls-files -z)
-if [[ -s "$tmp" ]]; then echo "ERROR dens/fleet pollution:" >&2; cat "$tmp" >&2; exit 1; fi
-echo "OK: language hygiene"
+root="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root"
+if [[ "${LANGUAGE_HYGIENE_ENFORCE:-1}" != "1" ]]; then
+  echo "OK: language hygiene skipped (LANGUAGE_HYGIENE_ENFORCE=0)"
+  exit 0
+fi
+here="$(cd "$(dirname "$0")" && pwd)"
+python3 "$here/scan_deep.py" --self-test
+exec python3 "$here/scan_deep.py" "$root" --name "$(basename "$root")"

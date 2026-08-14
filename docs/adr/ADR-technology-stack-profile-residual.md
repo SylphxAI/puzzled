@@ -1,18 +1,18 @@
 # ADR: technology-stack-profile residual honesty
 
-- **Status:** Accepted (clean migrate — sole createClient product densify)
+- **Status:** Accepted (clean migrate — sole createClient generated Connect client)
 - **Date:** 2026-07-30
 - **Profile:** SylphxAI/skills `technology-stack-profile`
 
 ## Context
 
-Puzzled is **dev-phase / non-public-serving**. Product RPC densify uses
+Puzzled is **dev-phase / non-public-serving**. Product RPC generated Connect path uses
 buffa + connectrpc + createClient (`puzzle-client` / `stats-client`).
 
 ## Decision
 
 1. Product RPC authority is buffa + connectrpc on Rust product services.
-2. Web densify uses createClient only under default connect (no hand-JSON dual).
+2. Web generated Connect path uses createClient only under default connect (no hand-JSON dual).
 3. Pure residual authority opt-out remains for offline fixtures only.
 
 ## Residual inventory

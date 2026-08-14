@@ -26,13 +26,13 @@ const VALID_SLUGS: &[&str] = &[
     "word-search",
 ];
 
-/// North Star module class (DRC vs DFC).
+/// North Star module class (daily puzzle completers vs daily entertainment completers).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModuleClass {
-    /// Contributes to Daily Ritual Completers (DRC).
+    /// Contributes to daily puzzle completers.
     PuzzleRitual,
-    /// Contributes only to Daily Fun Completers (DFC); never DRC.
+    /// Contributes only to daily entertainment completers; never daily puzzle completers.
     EntertainmentOracle,
 }
 

@@ -92,7 +92,7 @@ export async function getLeaderboard(
 	)
 }
 
-/** Sole Connect GetTodayPercentile densify (beyond leaderboard). */
+/** sole generated Connect client (beyond leaderboard). */
 export async function getTodayPercentile(
 	input: GetTodayPercentileInput,
 	client?: StatsServiceClient,

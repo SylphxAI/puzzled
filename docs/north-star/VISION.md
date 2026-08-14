@@ -1,7 +1,7 @@
 # Product vision — Puzzled
 
 **Status:** Normative  
-**Revision:** 2026-08-12
+**Revision:** 2026-08-13
 
 ---
 
@@ -104,7 +104,7 @@ Engineering (ADR-170) delivers:
 - Server-side solutions and validation  
 - Content store for day-keyed puzzles  
 
-Product North Star demands those properties **because** DRC and premium gating must be honest.  
+Product North Star demands those properties **because** daily puzzle completers and premium gating must be honest.  
 Clean-break **must not** delete the catalog or the free daily ritual to “finish” architecture.
 
 ---
@@ -116,6 +116,6 @@ When Puzzled is “there”:
 - A non-technical friend opens the site on a phone, finishes today’s featured puzzle in under five minutes, shares a card, and comes back tomorrow without a push campaign.  
 - A paying subscriber uses archive and stats because they *already* care about the habit.  
 - Adding a new module does not invent a new login, a new share system, or a new billing product.  
-- Operators can see DRC, ritual retention, and share conversion in minutes when something breaks.
+- Operators can see daily puzzle completers, ritual retention, and share conversion in minutes when something breaks.
 
 Quantitative success is owned by [NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md) and [METRICS-TREE.md](METRICS-TREE.md).

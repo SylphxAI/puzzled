@@ -518,7 +518,7 @@ mod tests {
     }
 
     #[test]
-    fn product_day_key_ssot_and_drc_oracle_recipe() {
+    fn product_day_key_ssot_and_daily_puzzle_completers_oracle_recipe() {
         use puzzled_core::puzzle_play::daily_time::{
             product_day_key, product_day_key_string, DAY_KEY_TIMEZONE,
         };
@@ -553,6 +553,7 @@ mod tests {
         }];
         assert_eq!(compute_drc(&key, &rows), 1);
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
+        assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
     }
 
     /// Dogfood residual (live tip ff366b48): re-SubmitGuess without stored

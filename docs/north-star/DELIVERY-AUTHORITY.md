@@ -1,14 +1,14 @@
 # Delivery authority — product floors vs engineering clean-break
 
 **Status:** Normative  
-**Revision:** 2026-08-12  
+**Revision:** 2026-08-13  
 **Supersedes:** 2026-08-11 PR #64–centric wording (historical gate materials under [history/](history/))
 
 ---
 
 ## 1. Purpose
 
-This document decides **what may land on `main`** when engineering ambition (sole Connect, sole Rust, deletions) collides with **player product** and **North Star** (DRC, free daily ritual, catalog).
+This document decides **what may land on `main`** when engineering ambition (sole Connect, sole Rust, deletions) collides with **player product** and **North Star** (daily puzzle completers, free daily ritual, catalog).
 
 **Hierarchy:**
 
@@ -31,7 +31,7 @@ A change **must not** merge if it:
 | F4 | Reintroduces a **second play authority** (e.g. dual REST submit path) while claiming sole api |
 | F5 | Breaks golden journeys **P1–P7** without a successor oracle ([EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md)) |
 | F6 | Ships a new module without **server validator + registry + result-card mapping** |
-| F7 | Counts entertainment oracles as engineering success while claiming DRC without instrumentation path |
+| F7 | Counts entertainment oracles as engineering success while claiming daily puzzle completers without instrumentation path |
 
 Engineering clean-break **may**:
 
@@ -45,7 +45,7 @@ Engineering clean-break **may not** treat “LOC deleted” as success without p
 
 ## 3. Relationship to North Star Metric
 
-Landing code that cannot emit or recompute **DRC** eventually fails product success—even if CI is green.  
+Landing code that cannot emit or recompute **daily puzzle completers** eventually fails product success—even if CI is green.  
 New play paths must preserve a path to `ritual.completed` (or equivalent server tables).
 
 ---
@@ -86,7 +86,7 @@ Requires:
 
 1. Explicit PR section: user migration, redirects, data retention  
 2. Update to this catalog and module registry  
-3. Acceptance that DRC may drop; mitigation plan  
+3. Acceptance that daily puzzle completers may drop; mitigation plan  
 4. Human product owner ack in PR (not silent agent merge)
 
 ---

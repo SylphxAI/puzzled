@@ -1,15 +1,15 @@
 # Strategy roadmap (capability order)
 
 **Status:** Normative sequencing guidance (not a calendar commitment)  
-**Revision:** 2026-08-12  
-**Rule:** Ambition stays full; **order** protects the basis (DRC → suite → paid).
+**Revision:** 2026-08-13  
+**Rule:** Ambition stays full; **order** protects the basis (daily puzzle completers → suite → paid).
 
 ---
 
 ## 1. Why sequence matters
 
 Building “all games of this type” without a working **daily finish + share + event** basis produces a museum of half-wired titles.  
-Building paywalls before DRC produces a quiet store.
+Building paywalls before daily puzzle completers produces a quiet store.
 
 This roadmap is the **evolvability path**: each stage unlocks the next without dual systems.
 
@@ -22,7 +22,7 @@ This roadmap is the **evolvability path**: each stage unlocks the next without d
 | Deliver | Done when |
 |---------|-----------|
 | Day key SSOT in api | Documented + single implementation |
-| `ritual.completed` (or table equivalent) | Recomputable DRC for 7 days |
+| `ritual.completed` (or table equivalent) | Recomputable daily puzzle completers for 7 days |
 | One flagship free daily | P1 golden journey live |
 | Result card v1 | Non-spoiler share works |
 
@@ -44,7 +44,7 @@ This roadmap is the **evolvability path**: each stage unlocks the next without d
 |---------|-----------|
 | ≥3 puzzle_ritual modules fully protocol-compliant | Each has server validate + card |
 | Module registry metadata for free/premium | Server enforced |
-| Entertainment oracles optional (DFC only) | DRC unpolluted |
+| Entertainment oracles optional (daily entertainment completers only) | daily puzzle completers unpolluted |
 
 **Exit:** New module can ship without changing auth/share/billing cores.
 
@@ -54,9 +54,9 @@ This roadmap is the **evolvability path**: each stage unlocks the next without d
 |---------|-----------|
 | Archive / depth gates | Fail-closed; free floor intact |
 | Platform billing wired | Entitlement oracle green |
-| Conversion cohorts by DRC density | Reviewable monthly |
+| Conversion cohorts by daily-puzzle-completer density | Reviewable monthly |
 
-**Exit:** Monetization does not reduce free DRC floor.
+**Exit:** Monetization does not reduce the free daily-puzzle-completer floor.
 
 ### Stage S4 — Catalog scale
 
@@ -71,7 +71,7 @@ This roadmap is the **evolvability path**: each stage unlocks the next without d
 ### Stage S5 — Social depth (optional)
 
 Parallel compare, light co-op, clubs — only after S1–S2.  
-Must not redefine DRC.
+Must not redefine daily puzzle completers.
 
 ---
 
@@ -79,7 +79,7 @@ Must not redefine DRC.
 
 | Track | Notes |
 |-------|-------|
-| Custom domain serving | Platform domain_hostnames + DNS verify; not a substitute for DRC |
+| Custom domain serving | Platform domain_hostnames + DNS verify; not a substitute for daily puzzle completers |
 | Performance budgets | Finish path SLO under load tests |
 | Localization | After protocol stable; day_key remains SSOT |
 
@@ -90,8 +90,8 @@ Must not redefine DRC.
 | Signal | Response |
 |--------|----------|
 | Cannot get free users to first finish | Fix land/TTFF before any new modules |
-| DRC flat while catalog grows | Protocol or UX broken—stop adding modules |
-| Paid users’ DRC collapses | Reverse toxic gates |
+| daily puzzle completers flat while catalog grows | Protocol or UX broken—stop adding modules |
+| Paid users’ daily puzzle completers collapse | Reverse toxic gates |
 | Share converts to zero landings | Card/deep link broken—Sev-2 growth |
 
 ---

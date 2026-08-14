@@ -1,42 +1,42 @@
-# Metrics tree under DRC
+# Metrics tree under daily puzzle completers
 
 **Status:** Normative instrumentation targets  
-**Revision:** 2026-08-12  
-**Root:** [Daily Ritual Completers (DRC)](NORTH-STAR-METRIC.md)
+**Revision:** 2026-08-13  
+**Root:** [daily puzzle completers](NORTH-STAR-METRIC.md)
 
 ---
 
 ## 1. Tree
 
 ```
-DRC(D)                          ← North Star
+daily_puzzle_completers(D)      ← North Star
 │
 ├── HABIT
 │   ├── Ritual retention D1 / D7 / D28
-│   │     cohort = users with first DRC on day 0
-│   │     success = DRC again on day N
+│   │     cohort = users whose first daily-puzzle-completer day is day 0
+│   │     success = daily puzzle completers again on day N
 │   ├── Weekly ritualists
-│   │     users with DRC on ≥4 distinct days in trailing 7
+│   │     users with daily puzzle completers on ≥4 distinct days in trailing 7
 │   ├── Streak distribution
-│   │     share of DRC users with streak ≥3, ≥7 (gentle product)
+│   │     share of daily puzzle completers with streak ≥3, ≥7 (gentle product)
 │   └── Time-to-first-finish (TTFF)
 │         for new users; p50/p90
 │
 ├── DEPTH (suite, not grind)
-│   ├── Modules per DRC user per day (p50/p90)
+│   ├── Modules per daily puzzle completer per day (p50/p90)
 │   ├── Featured-module finish rate
 │   └── Module contribution
-│         DRC attributed by first finish module that day
+│         daily puzzle completers attributed by first finish module that day
 │
 ├── FUN (secondary)
-│   ├── DFC — Daily Fun Completers (entertainment_oracle)
+│   ├── daily entertainment completers (entertainment_oracle)
 │   └── Oracle→puzzle crossover
-│         DFC users who become DRC within 7 days
+│         daily entertainment completers who become daily puzzle completers within 7 days
 │
 ├── GROWTH
 │   ├── Share rate = shares / ritual finishes
 │   ├── Share landings (ref)
-│   ├── New DRC from share landings
+│   ├── New daily puzzle completers from share landings
 │   └── Viral coefficient (product of rates; diagnostic)
 │
 ├── QUALITY / RELIABILITY
@@ -46,8 +46,8 @@ DRC(D)                          ← North Star
 │   └── Client JS error rate on play surfaces
 │
 └── REVENUE (lagging)
-    ├── Free→paid conversion (by DRC density cohorts)
-    ├── Paid DRC (should not collapse)
+    ├── Free→paid conversion (by daily-puzzle-completer density cohorts)
+    ├── Paid daily puzzle completers (should not collapse)
     ├── Churn / reactivation
     └── Archive-gate conversion (intent→subscribe)
 ```
@@ -58,18 +58,18 @@ DRC(D)                          ← North Star
 
 ### 2.1 Ritual retention Dn
 
-Among users whose **first-ever** qualifying DRC day is \(D_0\), the fraction with a qualifying DRC on calendar day \(D_0+n\) (same TZ).
+Among users whose **first-ever** qualifying daily-puzzle-completer day is \(D_0\), the fraction with a qualifying daily-puzzle-completer finish on calendar day \(D_0+n\) (same TZ).
 
 Not “opened the app.” **Completed a ritual.**
 
 ### 2.2 Weekly ritualists
 
-Users with \(\ge 4\) distinct day_keys with DRC in the trailing 7-day window ending \(D\).  
+Users with \(\ge 4\) distinct day_keys with daily puzzle completers in the trailing 7-day window ending \(D\).  
 Leading indicator of subscription readiness.
 
-### 2.3 Modules per DRC user
+### 2.3 Modules per daily puzzle completer
 
-For users in \(\mathrm{DRC}(D)\), count distinct `game_module_id` with a finish that day; report distribution.  
+For users in \(\texttt{daily\_puzzle\_completers}(D)\), count distinct `game_module_id` with a finish that day; report distribution.  
 
 **Healthy band (hypothesis):** p50 ∈ {1, 2, 3}; extreme p90 grind may signal unhealthy pressure—investigate UX.
 
@@ -79,11 +79,11 @@ For users in \(\mathrm{DRC}(D)\), count distinct `game_module_id` with a finish 
 
 | Signal | Why |
 |--------|-----|
-| DRC day-over-day drop > threshold without deploy/content explanation | Habit regression |
+| daily puzzle completers day-over-day drop > threshold without deploy/content explanation | Habit regression |
 | Free daily finish error rate spike | Reliability incident |
 | Share rate collapse after card change | Growth regression |
-| Paid users’ DRC << free DRC | Monetization toxicity |
-| Entertainment DFC ≫ DRC while product claims “brain training” | Positioning drift |
+| Paid users’ daily puzzle completers << free daily puzzle completers | Monetization toxicity |
+| daily entertainment completers ≫ daily puzzle completers while product claims “brain training” | Positioning drift |
 
 Thresholds are set in ops dashboards; **existence** of alerts is required (Observability floor).
 
@@ -100,7 +100,7 @@ Thresholds are set in ops dashboards; **existence** of alerts is required (Obser
 
 ## 5. Implementation notes
 
-- Prefer server-emitted events over client analytics alone for DRC/finish.  
+- Prefer server-emitted events over client analytics alone for daily puzzle completers / finish.  
 - Client analytics may enrich UX funnels (TTFF, rage clicks).  
 - Day_key and user_id joins must be documented for warehouse jobs.  
 - Privacy: aggregate by default; raw event retention per policy.
@@ -111,6 +111,6 @@ Thresholds are set in ops dashboards; **existence** of alerts is required (Obser
 
 | Cadence | Review |
 |---------|--------|
-| Daily | DRC, free-finish errors |
+| Daily | daily puzzle completers, free-finish errors |
 | Weekly | Retention, share funnel, module mix |
 | Monthly | Monetization cohorts, catalog ROI (Economy) |

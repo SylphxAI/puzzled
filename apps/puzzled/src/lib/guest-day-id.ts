@@ -2,7 +2,7 @@
  * Stable guest-day identity for free-ritual SubmitGuess (P2 / North Star).
  *
  * Protocol: guests are encouraged; identity is stable enough for one day of
- * anti-cheat + DRC. Server normalizes to `guest_<uuid>` and never collides with
+ * anti-cheat + daily puzzle completers. Server normalizes to `guest_<uuid>` and never collides with
  * Platform `sub` values.
  */
 

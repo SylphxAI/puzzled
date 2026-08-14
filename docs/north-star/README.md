@@ -1,6 +1,6 @@
 # Puzzled North Star package
 
-**Status:** Normative product + delivery doctrine (2026-08-12)  
+**Status:** Normative product + delivery doctrine (2026-08-13)  
 **Scope:** What Puzzled *is*, what success *is*, and what must never be traded away.  
 **Not this package:** Sylphx Platform infra runbooks; ephemeral PR checklists (see [history/](history/)).
 
@@ -10,7 +10,7 @@
 
 **Puzzled is a light, positive, daily ritual of brain games—minutes a day, optional depth, unlimited catalog under one protocol—habit first, subscription second, shareable results without spoilers.**
 
-**North Star Metric:** [Daily Ritual Completers (DRC)](NORTH-STAR-METRIC.md).
+**North Star Metric:** [daily puzzle completers](NORTH-STAR-METRIC.md).
 
 ---
 
@@ -19,7 +19,7 @@
 | # | Document | Role |
 |---|----------|------|
 | 1 | **[VISION.md](VISION.md)** | Ambition, category, competitors, what we are not |
-| 2 | **[NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md)** | DRC definition, oracle, anti-metrics, stages |
+| 2 | **[NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md)** | daily puzzle completers definition, oracle, anti-metrics, stages |
 | 3 | **[RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md)** | Day key, game modules, finish, result cards, entertainment vs puzzle |
 | 4 | **[GROWTH-AND-VIRALITY.md](GROWTH-AND-VIRALITY.md)** | Share loop, invite, social without hardcore PvP |
 | 5 | **[MONETIZATION.md](MONETIZATION.md)** | Free floor, subscription value, fail-closed gating |
@@ -45,7 +45,7 @@ Depth · Correctness · Simplicity · Evolvability · Observability · Performan
 | Principle | Product binding |
 |-----------|-----------------|
 | Depth | Root cause of viral daily games = shared day + finish + non-spoiler card—not “more games.” |
-| Correctness | DRC and play outcomes are server-oracled; green CI ≠ live habit. |
+| Correctness | daily puzzle completers and play outcomes are server-oracled; green CI ≠ live habit. |
 | Simplicity | Five concepts carry an unbounded catalog; shrinking ambition is not simplicity. |
 | Evolvability | New game = module under protocol; one authority for finish/share/entitlement. |
 | Observability | `ritual.completed` and share/pay events must be queryable in minutes. |
@@ -73,7 +73,7 @@ Stack clean-break may not hollow games or the free daily ritual.
 
 ## Change control
 
-Material changes to DRC definition, free-tier ritual floor, or module protocol require:
+Material changes to the daily-puzzle-completer definition, free-tier ritual floor, or module protocol require:
 
 1. Explicit PR description of metric/oracle delta  
 2. Update to this package in the same change set  

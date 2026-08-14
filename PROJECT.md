@@ -5,7 +5,7 @@ expandable catalog under one module protocol, habit-first growth, and
 subscription monetization in the NYT Games structural class.
 
 **Product North Star (what winning means):**  
-[docs/north-star/README.md](docs/north-star/README.md) — metric **Daily Ritual Completers (DRC)**.
+[docs/north-star/README.md](docs/north-star/README.md) — metric **daily puzzle completers**.
 
 This repo owns the Puzzled Next.js app, repo-local UI package, Atlas migrations,
 Sylphx deployment manifest, pure game rules, and application workflows.

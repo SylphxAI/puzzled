@@ -5,7 +5,7 @@
 //! not choose `day_key` for ritual authority — only the server clock path.
 //!
 //! Legacy UTC helpers remain for residual dual-oracles and tests; product
-//! ritual, free rotation, and DRC use [`product_day_key`].
+//! ritual, free rotation, and daily puzzle completers use [`product_day_key`].
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, Utc};
 
@@ -21,7 +21,7 @@ pub const DAY_KEY_TIMEZONE: &str = "Asia/Hong_Kong";
 /// Fixed UTC+8 offset for Asia/Hong_Kong (no DST — correct forever for HKT).
 const HKT_OFFSET_SECS: i64 = 8 * 3600;
 
-/// Product day key for an explicit instant — **SSOT for ritual / free rotation / DRC**.
+/// Product day key for an explicit instant — **SSOT for ritual / free rotation / daily puzzle completers**.
 ///
 /// Returns the calendar date in [`DAY_KEY_TIMEZONE`] by shifting UTC by the
 /// fixed HKT offset (Hong Kong has never observed DST).

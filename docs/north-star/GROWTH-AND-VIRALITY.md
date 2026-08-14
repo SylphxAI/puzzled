@@ -1,8 +1,8 @@
 # Growth and virality
 
 **Status:** Normative product doctrine  
-**Revision:** 2026-08-12  
-**North Star link:** Growth *feeds* [DRC](NORTH-STAR-METRIC.md); it does not replace it.
+**Revision:** 2026-08-13  
+**North Star link:** Growth *feeds* [daily puzzle completers](NORTH-STAR-METRIC.md); it does not replace it.
 
 ---
 
@@ -14,7 +14,7 @@ They grow because **completing today creates a social object** (the result card)
 Puzzled’s growth system optimizes:
 
 \[
-\text{Finish} \rightarrow \text{Share} \rightarrow \text{Land} \rightarrow \text{First finish (new DRC)}
+\text{Finish} \rightarrow \text{Share} \rightarrow \text{Land} \rightarrow \text{First finish (new daily puzzle completers)}
 \]
 
 Not:
@@ -47,7 +47,7 @@ Track:
 
 - **Share rate** = shares / ritual finishes  
 - **Land rate** = distinct landings from share UTM/ref / shares  
-- **Convert rate** = new DRC / landings from share  
+- **Convert rate** = new daily puzzle completers / landings from share  
 
 Product wins when the product of these is healthy—not when any single vanity spikes.
 
@@ -74,7 +74,7 @@ Inherited and expanded from [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PR
 |----------|------|-------|
 | P0 | Parallel solo + share | NYT Wordle pattern; required |
 | P1 | Compare with friends (opt-in) | Same day scores; no public shame board by default |
-| P2 | Light co-op / two-player | e.g. future Crossplay-like; must not block solo DRC |
+| P2 | Light co-op / two-player | e.g. future Crossplay-like; must not block solo daily puzzle completers |
 | P3 | Clubs / async groups | After P0–P1 proven |
 
 **Hardcore global leaderboards** as the primary social surface are **non-goals** for brand tone. Optional ranked views may exist for power users behind clear navigation—not the home ritual.
@@ -91,7 +91,7 @@ Inherited and expanded from [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PR
 | Offer second module only after first finish | Dump full catalog on cold users |
 
 **Aha moment (product hypothesis):** *First ritual finish + optional share.*  
-Instrument; do not change DRC definition if aha metrics evolve.
+Instrument; do not change the daily-puzzle-completer definition if aha metrics evolve.
 
 ---
 
@@ -107,7 +107,7 @@ Instrument; do not change DRC definition if aha metrics evolve.
 ## 7. SEO and content farms
 
 - Evergreen explainers and fair “what is X puzzle” pages are fine.  
-- **Do not** build mass generated “quiz SEO” that contradicts entertainment honesty or floods DFC.  
+- **Do not** build mass generated “quiz SEO” that contradicts entertainment honesty or floods daily entertainment completers.  
 - Canonical daily play URLs should remain stable for sharing.
 
 ---
@@ -117,7 +117,7 @@ Instrument; do not change DRC definition if aha metrics evolve.
 | Threat | Direction |
 |--------|-----------|
 | Share bots | Rate limits; anomaly on share rate |
-| Multi-account DRC farming | Guest + auth signals; don’t over-block real users |
+| Multi-account daily-puzzle-completer farming | Guest + auth signals; don’t over-block real users |
 | Spoiler accounts | Report + mod tools later; card design reduces damage |
 | Scraping solutions | Server never ships solutions; watch for side channels |
 
@@ -128,4 +128,4 @@ Security floor: no secret leakage in cards or client bundles.
 ## 9. What “viral success” means for Puzzled
 
 Not: one spike week and silence.  
-Yes: **sustained DRC** with a measurable organic contribution and improving D7 ritual retention—while users still describe the product as *fun and light*.
+Yes: **sustained daily puzzle completers** with a measurable organic contribution and improving D7 ritual retention—while users still describe the product as *fun and light*.

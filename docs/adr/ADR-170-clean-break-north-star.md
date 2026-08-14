@@ -10,7 +10,7 @@
 
 Engineering stack decisions in this ADR serve the product North Star package:
 
-- [docs/north-star/README.md](../north-star/README.md) — Daily Ritual Completers (DRC), free daily ritual floor, module protocol.
+- [docs/north-star/README.md](../north-star/README.md) — daily puzzle completers, free daily ritual floor, module protocol.
 - Player product floors outrank clean-break convenience: [DELIVERY-AUTHORITY.md](../north-star/DELIVERY-AUTHORITY.md).
 
 This ADR does **not** redefine the product NSM; it defines the sole play and transport authority required for honest finishes and entitlements.
@@ -48,7 +48,7 @@ clean-break end state that replaces all of it.
   served puzzle (`puzzle_id`/`puzzle_date`, never a client seed), validates the
   final submission against the server's solution via the pure per-game dispatch
   (all 17 games), rejects already-played, and persists verified results.
-  Guests count toward DRC on free-rotation finishes; premium/archive remain
+  Guests count toward daily puzzle completers on free-rotation finishes; premium/archive remain
   auth + entitlement gated.
 - Completion is server-derived; `has_completed` client input is deleted.
 
@@ -78,16 +78,16 @@ clean-break end state that replaces all of it.
 - Archive reads and non-rotation games require an active premium subscription
   (Platform `/billing/subscription`, app-secret auth, fail-closed to free).
 - The daily free-rotation game (**product day-key** day-of-year rotation in
-  `Asia/Hong_Kong`, same SSOT as DRC) is playable by everyone, including guests.
+  `Asia/Hong_Kong`, same SSOT as daily puzzle completers) is playable by everyone, including guests.
   Legacy UTC dual-oracles in residual billing tests are not product authority.
 
-### 5.1 Ritual completion / DRC instrumentation (S0)
+### 5.1 Ritual completion / daily puzzle completers instrumentation (S0)
 
 - After server-validated `SubmitGuess`, the api persists the finish on
   `game_sessions` with `day_key`, `module_class`, `is_ritual`, `finish_kind`
   when the finish qualifies as a daily `puzzle_ritual` (sole path — no client
   emission, no dual event bus).
-- \(\mathrm{DRC}(D)\) recomputes as distinct `user_id` where
+- \(\texttt{daily\_puzzle\_completers}(D)\) recomputes as distinct `user_id` where
   `day_key = D AND is_ritual AND module_class = 'puzzle_ritual'`.
 
 ### 6. Lifecycle and evidence

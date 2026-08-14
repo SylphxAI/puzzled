@@ -1,8 +1,8 @@
-//! Ritual completion contract and DRC recompute oracle (North Star S0).
+//! Ritual completion contract and daily puzzle completers recompute oracle (North Star S0).
 //!
 //! A qualifying finish is produced only after **server-side** play validation
 //! (ADR-170). Clients never assert completion. This module is pure: the shell
-//! persists the record and recomputes DRC from stored rows.
+//! persists the record and recomputes daily puzzle completers from stored rows.
 
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,7 @@ pub struct RitualQualifyInput<'a> {
     pub mode: &'a str,
     /// Server session status after validation (`won` | `lost` | …).
     pub status: &'a str,
-    /// True for dry-run / admin inject / load-test markers (never DRC).
+    /// True for dry-run / admin inject / load-test markers (never daily puzzle completers).
     pub is_dry_run: bool,
 }
 
@@ -122,7 +122,7 @@ pub fn build_ritual_completed(
     })
 }
 
-/// Compact row shape for DRC recompute from warehouse / Postgres.
+/// Compact row shape for daily puzzle completers recompute from warehouse / Postgres.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RitualCompletionRow {
     pub user_id: String,
@@ -131,7 +131,7 @@ pub struct RitualCompletionRow {
     pub is_ritual: bool,
 }
 
-/// Recompute \(\mathrm{DRC}(D)\) = distinct users with ≥1 qualifying ritual finish on day \(D\).
+/// Recompute `daily_puzzle_completers(D)` = distinct users with ≥1 qualifying ritual finish on day `D`.
 #[must_use]
 pub fn compute_drc(day_key: &str, rows: &[RitualCompletionRow]) -> u64 {
     let mut users: Vec<&str> = rows
@@ -148,11 +148,11 @@ pub fn compute_drc(day_key: &str, rows: &[RitualCompletionRow]) -> u64 {
     users.len() as u64
 }
 
-/// SQL recipe (documentation + live ops) for Postgres DRC recompute.
+/// SQL recipe (documentation + live ops) for Postgres daily puzzle completers recompute.
 ///
-/// Bound `$1` = day_key `YYYY-MM-DD`.
+/// Bound `$1` = day_key `YYYY-MM-DD`. Public metric field: `daily_puzzle_completers`.
 pub const DRC_RECOMPUTE_SQL: &str = r#"
-SELECT COUNT(DISTINCT user_id)::bigint AS drc
+SELECT COUNT(DISTINCT user_id)::bigint AS daily_puzzle_completers
 FROM game_sessions
 WHERE day_key = $1
   AND is_ritual = true
@@ -277,7 +277,7 @@ mod tests {
     }
 
     #[test]
-    fn drc_counts_distinct_users_once() {
+    fn daily_puzzle_completers_counts_distinct_users_once() {
         let rows = vec![
             RitualCompletionRow {
                 user_id: "a".into(),
@@ -322,14 +322,16 @@ mod tests {
     }
 
     #[test]
-    fn drc_sql_recipe_is_present() {
+    fn daily_puzzle_completers_sql_recipe_is_present() {
         assert!(DRC_RECOMPUTE_SQL.contains("day_key"));
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
         assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
+        assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
+        assert!(!DRC_RECOMPUTE_SQL.to_ascii_lowercase().contains(" as drc"));
     }
 
     /// Dogfood residual: first free-daily win with null content_id must still
-    /// block a second finish the same user/day (DRC stays distinct-users, but
+    /// block a second finish the same user/day (daily puzzle completers stay distinct-users, but
     /// product one-finish-per-day was soft).
     #[test]
     fn free_daily_second_finish_blocked_without_puzzle_id() {

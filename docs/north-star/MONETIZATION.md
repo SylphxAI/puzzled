@@ -1,7 +1,7 @@
 # Monetization — free floor and subscription
 
 **Status:** Normative  
-**Revision:** 2026-08-12  
+**Revision:** 2026-08-13  
 **Model:** SaaS subscription (Games-class), habit before wall  
 **Billing authority:** Sylphx Platform billing; app fail-closed on entitlement checks (ADR-170)
 
@@ -14,8 +14,8 @@ They pay for **continuity of a habit they already love**: history, depth, breadt
 
 Therefore:
 
-1. **Free path must create DRC** without payment.  
-2. **Paid path multiplies value for DRC-habituated users.**  
+1. **Free path must create daily puzzle completers** without payment.  
+2. **Paid path multiplies value for users habituated to daily puzzle completion.**  
 3. **Never sell the solution** or charge mid-failure of the free daily attempt.
 
 ---
@@ -59,7 +59,7 @@ Exact matrix per module is declared in registry metadata; **server enforces**.
 ### ADR-170 alignment
 
 - Archive reads and non-rotation games may require premium.  
-- Daily free-rotation game uses **product day-key** rotation (`Asia/Hong_Kong`, same SSOT as DRC; free game flips at HKT midnight, not UTC). Remains free for everyone including guests.  
+- Daily free-rotation game uses **product day-key** rotation (`Asia/Hong_Kong`, same SSOT as daily puzzle completers; free game flips at HKT midnight, not UTC). Remains free for everyone including guests.  
 - Subscription lookup: Platform billing; **fail-closed to free** on uncertainty (Security × Correctness: do not grant premium on errors; do not block free floor on billing outages—billing outage degrades *premium only*).
 
 ---
@@ -81,7 +81,7 @@ Pricing: set commercially; document live price in ops, not in this doctrine file
 
 Preferred:
 
-- After several DRC days: “Unlock your history.”  
+- After several daily-puzzle-completer days: “Unlock your history.”  
 - On archive tap: soft gate with preview.  
 - On advanced stats: soft gate.
 
@@ -97,11 +97,11 @@ Disallowed:
 
 See [METRICS-TREE.md](METRICS-TREE.md):
 
-- Free → trial/paid conversion among users with high DRC density  
+- Free → trial/paid conversion among users with high daily-puzzle-completer density  
 - Paid retention / churn  
 - Premium attach rate on archive intents  
 
-**Do not** make revenue the North Star while DRC is unproven.
+**Do not** make revenue the North Star while daily puzzle completers are unproven.
 
 ---
 
@@ -117,7 +117,7 @@ Each new module incurs:
 | Runtime | API/DB load |
 | Reversal | Ability to disable module without bricking app |
 
-Ship modules when expected **DRC lift or paid lift** justifies those budgets—or when they are strategic protocol proofs.  
+Ship modules when expected **daily-puzzle-completer lift or paid lift** justifies those budgets—or when they are strategic protocol proofs.  
 “We can build it in a day” is not a cost story.
 
 ---

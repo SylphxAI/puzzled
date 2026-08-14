@@ -1,7 +1,7 @@
 # Ritual and game module protocol
 
 **Status:** Normative product contract for all shipped and future games  
-**Revision:** 2026-08-12  
+**Revision:** 2026-08-13  
 **Implements ambition:** unbounded catalog under minimal concepts
 
 ---
@@ -40,12 +40,12 @@ Everything else (themes, cosmetics, optional multiplayer, oracles) composes on t
 
 ### 3.2 Why a single TZ (for now)
 
-Shared conversation (“today’s puzzle”) collapses if every user has a private day boundary without product design. Multi-TZ is allowed only as a **versioned protocol upgrade** with migration of DRC definitions—not as ad hoc client behavior.
+Shared conversation (“today’s puzzle”) collapses if every user has a private day boundary without product design. Multi-TZ is allowed only as a **versioned protocol upgrade** with migration of daily-puzzle-completer definitions—not as ad hoc client behavior.
 
 ### 3.3 Content binding
 
 For each `(game_module_id, day_key)` there is at most one **primary ritual content** row in the content store (or a documented deterministic server generator fallback, e.g. sudoku).  
-Practice content is either undated or tagged `mode=practice` and excluded from DRC.
+Practice content is either undated or tagged `mode=practice` and excluded from daily puzzle completers.
 
 ---
 
@@ -55,8 +55,8 @@ Practice content is either undated or tagged `mode=practice` and excluded from D
 
 - **Slug:** stable string (e.g. `word-guess`, `sudoku`) — URL and registry key.  
 - **module_class:**  
-  - `puzzle_ritual` — contributes to **DRC**  
-  - `entertainment_oracle` — contributes to **DFC** only  
+  - `puzzle_ritual` — contributes to **daily puzzle completers**  
+  - `entertainment_oracle` — contributes to **daily entertainment completers** only  
   - (future classes require a North Star package amendment)
 
 ### 4.2 Required capabilities (puzzle_ritual)
@@ -85,9 +85,9 @@ Allowed: random or lightweight deterministic “fun” outcomes (future baby, pa
 Required:
 
 - UI copy: **entertainment only**, not advice or science.  
-- Finish still server-recorded if counted in DFC.  
+- Finish still server-recorded if counted in daily entertainment completers.  
 - Result card may be flashy; still avoid harmful claims.  
-- **Never** pollute DRC.
+- **Never** pollute daily puzzle completers.
 
 ### 4.4 Registration
 
@@ -112,12 +112,12 @@ Shipping a module without registry + server validator is a **delivery reject**.
 4. **Persist** — server stores outcome; emits ritual event if qualifying.  
 5. **Card** — user may share.
 
-**Already played:** re-entry shows results / review; does not double-count DRC.
+**Already played:** re-entry shows results / review; does not double-count daily puzzle completers.
 
 ### 5.3 Guests
 
 Guest play is encouraged for viral landing.  
-Identity: stable enough for one day of anti-cheat and DRC; upgrade to account preserves day history where implemented.
+Identity: stable enough for one day of anti-cheat and daily puzzle completers; upgrade to account preserves day history where implemented.
 
 ---
 
@@ -177,7 +177,7 @@ Delivery authority pins the protected catalog. At North Star revision 2026-08-12
 | cryptogram |
 | word-search |
 
-**Adding a module:** implement protocol + registry + tests; no change to DRC definition.  
+**Adding a module:** implement protocol + registry + tests; no change to the daily-puzzle-completer definition.  
 **Removing a module:** forbidden without DELIVERY-AUTHORITY exception and migration of users.
 
 ---
@@ -196,7 +196,7 @@ Delivery authority pins the protected catalog. At North Star revision 2026-08-12
 New cross-cutting needs (multiplayer, clubs, leagues) must answer:
 
 1. Which of the five concepts extends?  
-2. Does DRC still recompute cleanly?  
+2. Do daily puzzle completers still recompute cleanly?  
 3. Is there still one finish authority?
 
 If the answer requires a second parallel product, stop and redesign.
