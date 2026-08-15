@@ -5,7 +5,7 @@ Static engineering and delivery standards load from the active Skills runtime
 SSOT). Doctrine and Mission Control are retired historical lineage and must not
 be loaded as current instruction authority.
 
-Local truth: `PROJECT.md`, `docs/adr/`, `.doctrine/project.json` when present.
+Local truth: `PROJECT.md`, `docs/adr/`.
 
 Product NSM: **daily puzzle completers** (English quantity; do not invent a house score acronym). Secondary entertainment metric: **daily entertainment completers**.
 
