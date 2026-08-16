@@ -106,7 +106,7 @@ export interface UseGameSessionOptions {
 	 */
 	guestPromptDelay?: number
 
-	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
+	/** Product day key for daily play, or the archive date for opted-in archive validation. */
 	puzzleDate?: string
 
 	/** Opt a solution-safe module into server validation for premium archive play. */
