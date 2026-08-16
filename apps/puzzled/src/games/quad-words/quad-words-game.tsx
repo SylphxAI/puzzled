@@ -16,11 +16,12 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { LetterStatus, QuordlePuzzleData, QuordleSolution } from './types'
-import { evaluateGuess, MAX_GUESSES } from './types'
+import { parseQuadWordsClientPayload } from './parse-client'
+import type { LetterStatus } from './types'
+import { MAX_GUESSES } from './types'
 import { useQuadWords } from './use-quad-words'
 
 type Props = {
@@ -40,9 +41,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const t = useTranslations('games.quadWords')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<QuordlePuzzleData, QuordleSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseQuadWordsClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -63,6 +62,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 	})
 
 	// Game-specific state
@@ -70,16 +70,19 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
 	const gameEndedRef = useRef(false)
+	const submitInFlight = useRef(false)
 
-	const game = useQuadWords(puzzle.puzzleData, puzzle.solution)
+	const game = useQuadWords(puzzle)
 
-	// Handle game completion - delegate to useGameSession
-	if (
-		(game.state.gameStatus === 'won' || game.state.gameStatus === 'lost') &&
-		!gameEndedRef.current
-	) {
+	useEffect(() => {
+		if (
+			(game.state.gameStatus !== 'won' && game.state.gameStatus !== 'lost') ||
+			gameEndedRef.current
+		) {
+			return
+		}
 		gameEndedRef.current = true
-		endGame({
+		void endGame({
 			status: game.state.gameStatus,
 			attempts: game.state.guessHistory.length,
 			data: {
@@ -87,7 +90,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				solvedBoards: game.state.boards.map((b) => b.solved),
 			},
 		})
-	}
+	}, [endGame, game.state.boards, game.state.gameStatus, game.state.guessHistory])
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
@@ -96,14 +99,84 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	}, [])
 
 	const handleSubmit = useCallback(() => {
-		// For now, accept any 5-letter word. In production, validate against dictionary.
-		const result = game.submitGuess(game.state.currentGuess.length === 5)
-		if (!result.success) {
-			showToastMsg(result.error || 'Invalid word')
+		if (game.state.currentGuess.length !== 5) {
+			showToastMsg('Not enough letters')
 			triggerSound('error')
 			triggerHaptic('error')
+			return
 		}
-	}, [game, showToastMsg])
+		if (submitInFlight.current) return
+		submitInFlight.current = true
+		void (async () => {
+			try {
+				const guesses = [...game.state.guessHistory, game.state.currentGuess]
+				const admit = await admitSubmitGuessViaConnect({
+					gameSlug: 'quad-words',
+					status: 'playing',
+					attempts: guesses.length,
+					timeSpentMs: startTime ? Date.now() - startTime : 0,
+					submission: { guesses },
+					puzzleId,
+					puzzleDate,
+				})
+				if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
+					showToastMsg('Could not check that guess')
+					triggerSound('error')
+					triggerHaptic('error')
+					return
+				}
+				const parsed = JSON.parse(admit.response.evaluationJson) as {
+					boards?: unknown
+					solved?: unknown
+					won?: unknown
+					terminal?: unknown
+					reveal?: unknown
+				}
+				if (!Array.isArray(parsed.boards) || parsed.boards.length !== 4) {
+					showToastMsg('Could not check that guess')
+					triggerSound('error')
+					triggerHaptic('error')
+					return
+				}
+				const boards = parsed.boards.map((board) => {
+					if (!Array.isArray(board) || board.length !== 5) return null
+					if (
+						board.some(
+							(letter) => letter !== 'correct' && letter !== 'present' && letter !== 'absent',
+						)
+					) {
+						return null
+					}
+					return board as LetterStatus[]
+				})
+				if (boards.some((board) => board === null)) {
+					showToastMsg('Could not check that guess')
+					triggerSound('error')
+					triggerHaptic('error')
+					return
+				}
+				const solved = Array.isArray(parsed.solved)
+					? parsed.solved.map((value) => value === true)
+					: [false, false, false, false]
+				game.applyEvaluation({
+					guess: game.state.currentGuess,
+					boards: boards as LetterStatus[][],
+					solved,
+					won: parsed.won === true,
+					terminal: parsed.terminal === true,
+					reveal: Array.isArray(parsed.reveal)
+						? parsed.reveal.filter((word): word is string => typeof word === 'string')
+						: undefined,
+				})
+			} catch {
+				showToastMsg('Could not check that guess')
+				triggerSound('error')
+				triggerHaptic('error')
+			} finally {
+				submitInFlight.current = false
+			}
+		})()
+	}, [game, puzzleDate, puzzleId, showToastMsg, startTime])
 
 	const handleKeyPress = useCallback(
 		(key: string) => {
@@ -294,10 +367,11 @@ function QuordleBoard({
 	isActive,
 }: {
 	board: {
-		targetWord: string
 		guesses: string[]
+		results: LetterStatus[][]
 		solved: boolean
 		solvedOnGuess: number | null
+		reveal?: string
 	}
 	currentGuess: string
 	guessHistory: string[]
@@ -329,7 +403,7 @@ function QuordleBoard({
 					if (rowIndex < boardGuesses.length) {
 						// Past guess
 						word = boardGuesses[rowIndex]
-						results = evaluateGuess(word, board.targetWord)
+						results = board.results[rowIndex] ?? []
 					} else if (rowIndex === currentRow && isActive && !board.solved) {
 						// Current input row
 						word = currentGuess
@@ -371,9 +445,7 @@ function QuordleBoard({
 
 			{/* Lost indicator */}
 			{!board.solved && guessHistory.length >= MAX_GUESSES && (
-				<div className="mt-1 text-center text-xs font-medium text-destructive">
-					{board.targetWord}
-				</div>
+				<div className="mt-1 text-center text-xs font-medium text-destructive">{board.reveal}</div>
 			)}
 		</div>
 	)

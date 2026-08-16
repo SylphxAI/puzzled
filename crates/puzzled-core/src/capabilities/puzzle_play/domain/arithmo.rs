@@ -73,6 +73,47 @@ pub fn get_guess_result(guess: &str, solution: &str) -> Option<Vec<CharStatus>> 
     Some(result.to_vec())
 }
 
+impl CharStatus {
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Correct => "correct",
+            Self::Present => "present",
+            Self::Absent => "absent",
+        }
+    }
+}
+
+/// Live coloring for the latest equation guess. Does not persist.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EquationEvaluation {
+    pub letters: Vec<CharStatus>,
+    pub won: bool,
+    pub terminal: bool,
+    pub reveal: Option<String>,
+}
+
+#[must_use]
+pub fn evaluate_latest_equation(equation: &str, guesses: &[String]) -> Option<EquationEvaluation> {
+    let last = guesses.last()?;
+    if !is_valid_equation(last) {
+        return None;
+    }
+    let letters = get_guess_result(last, equation)?;
+    let won = last == equation;
+    let terminal = won || guesses.len() as u32 >= MAX_ATTEMPTS;
+    Some(EquationEvaluation {
+        letters,
+        won,
+        terminal,
+        reveal: if terminal {
+            Some(equation.to_string())
+        } else {
+            None
+        },
+    })
+}
+
 fn is_digit(c: char) -> bool {
     c.is_ascii_digit()
 }
@@ -383,5 +424,35 @@ mod tests {
         assert!(!bad.is_valid());
         let missing = validate_and_score(sol, None, SubmissionStatus::Won);
         assert!(!missing.is_valid());
+    }
+
+    #[test]
+    fn latest_equation_colors_without_reveal() {
+        let eval = evaluate_latest_equation("12+34=46", &["56-32=24".into()]).expect("eval");
+        assert!(!eval.won);
+        assert!(!eval.terminal);
+        assert!(eval.reveal.is_none());
+        assert_eq!(eval.letters.len(), EQUATION_LENGTH);
+        assert!(eval
+            .letters
+            .iter()
+            .any(|status| *status != CharStatus::Correct));
+    }
+
+    #[test]
+    fn latest_equation_rejects_invalid_guess() {
+        assert!(evaluate_latest_equation("12+34=46", &["notanequ".into()]).is_none());
+    }
+
+    #[test]
+    fn latest_equation_reveals_on_win() {
+        let eval = evaluate_latest_equation("12+34=46", &["12+34=46".into()]).expect("eval");
+        assert!(eval.won);
+        assert!(eval.terminal);
+        assert_eq!(eval.reveal.as_deref(), Some("12+34=46"));
+        assert!(eval
+            .letters
+            .iter()
+            .all(|status| *status == CharStatus::Correct));
     }
 }

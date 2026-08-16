@@ -482,8 +482,11 @@ fn arithmo(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> 
     let Some(equation) = solution.get("equation").and_then(Value::as_str) else {
         return SubmissionVerdict::invalid("Missing solution equation");
     };
-    let result =
-        arithmo::validate_and_score(equation, Some(&sub.guesses), arithmo::SubmissionStatus::Won);
+    let claimed = match env.status {
+        SubmissionStatus::Won => arithmo::SubmissionStatus::Won,
+        SubmissionStatus::Lost => arithmo::SubmissionStatus::Lost,
+    };
+    let result = arithmo::validate_and_score(equation, Some(&sub.guesses), claimed);
     match result {
         arithmo::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         arithmo::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -813,11 +816,12 @@ fn quad_words(
             return SubmissionVerdict::invalid("Solved-board claim does not match guess history");
         }
     }
-    let result = quad_words::validate_and_score(
-        Some(solved_count),
-        Some(history.len() as u32),
-        quad_words::SubmissionStatus::Won,
-    );
+    let claimed = match env.status {
+        SubmissionStatus::Won => quad_words::SubmissionStatus::Won,
+        SubmissionStatus::Lost => quad_words::SubmissionStatus::Lost,
+    };
+    let result =
+        quad_words::validate_and_score(Some(solved_count), Some(history.len() as u32), claimed);
     match result {
         quad_words::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         quad_words::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -992,8 +996,12 @@ mod tests {
     use serde_json::json;
 
     fn env(data: Value) -> SubmissionEnvelope {
+        env_status(SubmissionStatus::Won, data)
+    }
+
+    fn env_status(status: SubmissionStatus, data: Value) -> SubmissionEnvelope {
         SubmissionEnvelope {
-            status: SubmissionStatus::Won,
+            status,
             attempts: 1,
             time_spent_ms: 1000,
             data,
@@ -1050,6 +1058,45 @@ mod tests {
         );
         let v = validate_submission("quad-words", &json!({}), &solution, &data);
         assert!(!v.valid);
+    }
+
+    #[test]
+    fn arithmo_accepts_loss() {
+        let solution = json!({ "equation": "12+34=46" });
+        let data = env_status(
+            SubmissionStatus::Lost,
+            json!({
+                "guesses": ["56-32=24", "10+20=30", "99-11=88", "15+25=40", "80-40=40", "11+22=33"]
+            }),
+        );
+        let v = validate_submission("arithmo", &json!({}), &solution, &data);
+        assert!(v.valid, "expected valid loss: {v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    #[test]
+    fn arithmo_rejects_false_win() {
+        let solution = json!({ "equation": "12+34=46" });
+        let data = env(json!({ "guesses": ["56-32=24"] }));
+        let v = validate_submission("arithmo", &json!({}), &solution, &data);
+        assert!(!v.valid);
+    }
+
+    #[test]
+    fn quad_words_accepts_loss() {
+        let solution = json!({ "words": ["CRANE", "SLATE", "WORLD", "HELLO"] });
+        let data = env_status(
+            SubmissionStatus::Lost,
+            json!({
+                "guessHistory": ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE", "FFFFF", "GGGGG", "HHHHH", "IIIII"],
+                "solvedBoards": [false, false, false, false]
+            }),
+        );
+        let v = validate_submission("quad-words", &json!({}), &solution, &data);
+        assert!(v.valid, "expected valid loss: {v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
     }
 
     #[test]

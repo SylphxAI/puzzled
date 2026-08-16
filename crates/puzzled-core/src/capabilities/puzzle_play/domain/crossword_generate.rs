@@ -560,7 +560,13 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
 }
 
 /// Keys that must never appear on GetDaily/GetPuzzle `puzzle_data_json`.
-const CLIENT_LEAK_KEYS: &[&str] = &["answer", "solution", "solution_json", "solutionJson"];
+const CLIENT_LEAK_KEYS: &[&str] = &[
+    "answer",
+    "equation",
+    "solution",
+    "solution_json",
+    "solutionJson",
+];
 
 /// Strip solution fields from a stored or generated client payload.
 ///
@@ -654,5 +660,16 @@ mod tests {
         assert!(!dumped.contains("solution"));
         assert_eq!(safe["clues"]["across"][0]["clue"], "Hot mist");
         assert_eq!(safe["clues"]["across"][0].get("answer"), None);
+    }
+
+    #[test]
+    fn client_safe_strips_stored_arithmo_equation() {
+        let leaked = json!({
+            "length": 8,
+            "equation": "12+34=46"
+        });
+        let safe = client_safe_puzzle_data(leaked);
+        assert_eq!(safe["length"], 8);
+        assert_eq!(safe.get("equation"), None);
     }
 }

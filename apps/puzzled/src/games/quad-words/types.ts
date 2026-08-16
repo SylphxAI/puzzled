@@ -5,10 +5,11 @@
 
 // A single board's state
 export type BoardState = {
-	targetWord: string
 	guesses: string[]
+	results: GuessResult[]
 	solved: boolean
 	solvedOnGuess: number | null
+	reveal?: string
 }
 
 // Letter status for a single position
@@ -19,8 +20,12 @@ export type GuessResult = LetterStatus[]
 
 // Full puzzle data
 export type QuordlePuzzleData = {
-	words: [string, string, string, string] // 4 target words
+	wordLength: number
+	maxGuesses: number
 }
+
+/** Client-side puzzle data (target words hidden). */
+export type QuordlePuzzleClientData = QuordlePuzzleData
 
 // Solution data
 export type QuordleSolution = {

@@ -15,13 +15,13 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { getBaseUrl } from '@/lib/utils'
 import { ArithmoIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { ArithmoGrid, ArithmoKeyboard } from './components'
-import type { ArithmoPuzzleData, ArithmoSolution } from './types'
-import { MAX_ATTEMPTS } from './types'
+import { parseArithmoClientPayload } from './parse-client'
+import { EQUATION_LENGTH, isValidEquation, MAX_ATTEMPTS } from './types'
 import { useArithmo } from './use-arithmo'
 
 type Props = {
@@ -35,9 +35,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const t = useTranslations('games.arithmo')
 
 	// Get puzzle from server data
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<ArithmoPuzzleData, ArithmoSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseArithmoClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -55,11 +53,13 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const submitInFlight = useRef(false)
 
 	// Game hook
 	const game = useArithmo()
@@ -67,21 +67,72 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.solution.equation)
+			game.init()
 		}
-	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [puzzle, isReady, game.init])
 
-	// Handle submit
 	const handleSubmit = useCallback(() => {
-		if (!puzzle) return
-
-		game.submitGuess(puzzle.solution.equation)
-
-		if (game.state.error) {
+		if (game.state.currentGuess.length !== EQUATION_LENGTH) {
 			triggerHaptic('error')
 			triggerSound('error')
+			return
 		}
-	}, [game, puzzle])
+		if (!isValidEquation(game.state.currentGuess)) {
+			triggerHaptic('error')
+			triggerSound('error')
+			return
+		}
+		if (submitInFlight.current) return
+		submitInFlight.current = true
+		void (async () => {
+			try {
+				const guesses = [...game.state.guesses, game.state.currentGuess]
+				const admit = await admitSubmitGuessViaConnect({
+					gameSlug: 'arithmo',
+					status: 'playing',
+					attempts: guesses.length,
+					timeSpentMs: startTime ? Date.now() - startTime : 0,
+					submission: { guesses },
+					puzzleId,
+					puzzleDate,
+				})
+				if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
+					triggerHaptic('error')
+					triggerSound('error')
+					return
+				}
+				const parsed = JSON.parse(admit.response.evaluationJson) as {
+					letters?: unknown
+					won?: unknown
+					terminal?: unknown
+					reveal?: unknown
+				}
+				if (
+					!Array.isArray(parsed.letters) ||
+					parsed.letters.length !== EQUATION_LENGTH ||
+					parsed.letters.some(
+						(letter) => letter !== 'correct' && letter !== 'present' && letter !== 'absent',
+					)
+				) {
+					triggerHaptic('error')
+					triggerSound('error')
+					return
+				}
+				game.applyEvaluation({
+					guess: game.state.currentGuess,
+					letters: parsed.letters,
+					won: parsed.won === true,
+					terminal: parsed.terminal === true,
+					reveal: typeof parsed.reveal === 'string' ? parsed.reveal : undefined,
+				})
+			} catch {
+				triggerHaptic('error')
+				triggerSound('error')
+			} finally {
+				submitInFlight.current = false
+			}
+		})()
+	}, [game, puzzleDate, puzzleId, startTime])
 
 	// Keyboard event listener
 	useEffect(() => {
@@ -106,11 +157,11 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [isReady, game.state.isComplete, game.addChar, game.deleteChar, handleSubmit]) // eslint-disable-line react-hooks/exhaustive-deps
 
-	// Track game completion
 	const gameEndedRef = useRef(false)
-	if (game.state.isComplete && !gameEndedRef.current) {
+	useEffect(() => {
+		if (!game.state.isComplete || gameEndedRef.current) return
 		gameEndedRef.current = true
-		endGame({
+		void endGame({
 			status: game.state.isWon ? 'won' : 'lost',
 			attempts: game.state.guesses.length,
 			maxAttempts: MAX_ATTEMPTS,
@@ -118,7 +169,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 				guesses: game.state.guesses,
 			},
 		})
-	}
+	}, [endGame, game.state.guesses, game.state.isComplete, game.state.isWon])
 
 	// Share result
 	const handleShare = useCallback(() => {
@@ -238,7 +289,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 				onClose={() => setShowResultModal(false)}
 				gameType="arithmo"
 				status={game.state.isWon ? 'won' : 'lost'}
-				solution={game.state.isWon ? undefined : puzzle.solution.equation}
+				solution={game.state.isWon ? undefined : game.state.reveal}
 				stats={{
 					score: serverScore ?? undefined,
 					attempts: game.state.guesses.length,

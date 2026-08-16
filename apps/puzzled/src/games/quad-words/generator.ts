@@ -642,6 +642,8 @@ const QUORDLE_WORDS = [
 	'ZIPPY',
 ]
 
+const QUORDLE_WORD_POOL = QUORDLE_WORDS.filter((word) => word.length === 5)
+
 /**
  * Generate a Quordle puzzle from a seed
  */
@@ -652,11 +654,11 @@ export function generateQuordlePuzzle(seed: number): {
 	const random = seededRandom(seed)
 
 	// Shuffle and pick 4 unique words
-	const shuffled = shuffleArray(QUORDLE_WORDS, random)
+	const shuffled = shuffleArray(QUORDLE_WORD_POOL, random)
 	const words = shuffled.slice(0, 4) as [string, string, string, string]
 
 	return {
-		puzzleData: { words },
+		puzzleData: { wordLength: 5, maxGuesses: 9 },
 		solution: { words },
 	}
 }

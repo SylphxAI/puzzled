@@ -9,6 +9,9 @@ export type ArithmoPuzzleData = {
 	length: number // Equation length (always 8)
 }
 
+/** Client-side puzzle data (equation hidden). */
+export type ArithmoPuzzleClientData = ArithmoPuzzleData
+
 export type ArithmoSolution = {
 	equation: string // e.g., "12+34=46"
 }

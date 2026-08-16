@@ -6,26 +6,27 @@
 import { useCallback, useReducer } from 'react'
 
 import type { ArithmoState, CharStatus } from './types'
-import {
-	EQUATION_LENGTH,
-	getGuessResult,
-	isValidEquation,
-	MAX_ATTEMPTS,
-	VALID_CHARS,
-} from './types'
+import { EQUATION_LENGTH, VALID_CHARS } from './types'
 
 // Actions
 type ArithmoAction =
-	| { type: 'INIT'; solution: string }
+	| { type: 'INIT' }
 	| { type: 'ADD_CHAR'; char: string }
 	| { type: 'DELETE_CHAR' }
-	| { type: 'SUBMIT_GUESS'; solution: string }
-	| { type: 'RESET'; solution: string }
+	| {
+			type: 'APPLY_EVALUATION'
+			guess: string
+			letters: CharStatus[]
+			won: boolean
+			terminal: boolean
+			reveal?: string
+	  }
+	| { type: 'RESET' }
 
 type ArithmoReducerState = ArithmoState & {
-	solution: string | null
 	error: string | null
 	keyboardStatus: Record<string, CharStatus>
+	reveal?: string
 }
 
 const initialState: ArithmoReducerState = {
@@ -37,7 +38,6 @@ const initialState: ArithmoReducerState = {
 	currentRow: 0,
 	startTime: null,
 	endTime: null,
-	solution: null,
 	error: null,
 	keyboardStatus: {},
 }
@@ -47,7 +47,6 @@ function arithmoReducer(state: ArithmoReducerState, action: ArithmoAction): Arit
 		case 'INIT': {
 			return {
 				...initialState,
-				solution: action.solution,
 				startTime: Date.now(),
 			}
 		}
@@ -75,30 +74,13 @@ function arithmoReducer(state: ArithmoReducerState, action: ArithmoAction): Arit
 			}
 		}
 
-		case 'SUBMIT_GUESS': {
-			if (state.isComplete || !state.solution) return state
-			if (state.currentGuess.length !== EQUATION_LENGTH) {
-				return { ...state, error: 'notComplete' }
-			}
-
-			// Validate equation
-			if (!isValidEquation(state.currentGuess)) {
-				return { ...state, error: 'invalid' }
-			}
-
-			// Get result
-			const result = getGuessResult(state.currentGuess, state.solution)
-			const isCorrect = state.currentGuess === state.solution
-			const isLastAttempt = state.currentRow >= MAX_ATTEMPTS - 1
-
-			// Update keyboard status
+		case 'APPLY_EVALUATION': {
+			if (state.isComplete) return state
 			const newKeyboardStatus = { ...state.keyboardStatus }
-			for (let i = 0; i < state.currentGuess.length; i++) {
-				const char = state.currentGuess[i]
-				const status = result[i]
+			for (let i = 0; i < action.guess.length; i++) {
+				const char = action.guess[i]
+				const status = action.letters[i]
 				const currentStatus = newKeyboardStatus[char]
-
-				// Only upgrade status (correct > present > absent)
 				if (status === 'correct') {
 					newKeyboardStatus[char] = 'correct'
 				} else if (status === 'present' && currentStatus !== 'correct') {
@@ -107,25 +89,24 @@ function arithmoReducer(state: ArithmoReducerState, action: ArithmoAction): Arit
 					newKeyboardStatus[char] = status
 				}
 			}
-
 			return {
 				...state,
-				guesses: [...state.guesses, state.currentGuess],
-				results: [...state.results, result],
+				guesses: [...state.guesses, action.guess],
+				results: [...state.results, action.letters],
 				currentGuess: '',
 				currentRow: state.currentRow + 1,
-				isComplete: isCorrect || isLastAttempt,
-				isWon: isCorrect,
-				endTime: isCorrect || isLastAttempt ? Date.now() : null,
+				isComplete: action.terminal,
+				isWon: action.won,
+				endTime: action.terminal ? Date.now() : null,
 				error: null,
 				keyboardStatus: newKeyboardStatus,
+				reveal: action.reveal,
 			}
 		}
 
 		case 'RESET': {
 			return {
 				...initialState,
-				solution: action.solution,
 				startTime: Date.now(),
 			}
 		}
@@ -138,8 +119,8 @@ function arithmoReducer(state: ArithmoReducerState, action: ArithmoAction): Arit
 export function useArithmo() {
 	const [state, dispatch] = useReducer(arithmoReducer, initialState)
 
-	const init = useCallback((solution: string) => {
-		dispatch({ type: 'INIT', solution })
+	const init = useCallback(() => {
+		dispatch({ type: 'INIT' })
 	}, [])
 
 	const addChar = useCallback((char: string) => {
@@ -150,12 +131,21 @@ export function useArithmo() {
 		dispatch({ type: 'DELETE_CHAR' })
 	}, [])
 
-	const submitGuess = useCallback((solution: string) => {
-		dispatch({ type: 'SUBMIT_GUESS', solution })
-	}, [])
+	const applyEvaluation = useCallback(
+		(input: {
+			guess: string
+			letters: CharStatus[]
+			won: boolean
+			terminal: boolean
+			reveal?: string
+		}) => {
+			dispatch({ type: 'APPLY_EVALUATION', ...input })
+		},
+		[],
+	)
 
-	const reset = useCallback((solution: string) => {
-		dispatch({ type: 'RESET', solution })
+	const reset = useCallback(() => {
+		dispatch({ type: 'RESET' })
 	}, [])
 
 	return {
@@ -163,7 +153,7 @@ export function useArithmo() {
 		init,
 		addChar,
 		deleteChar,
-		submitGuess,
+		applyEvaluation,
 		reset,
 	}
 }
