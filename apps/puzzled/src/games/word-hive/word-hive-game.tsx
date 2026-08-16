@@ -10,12 +10,11 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { CurrentWord, Honeycomb, RankDisplay, WordList } from './components'
-import type { SpellingBeePuzzleClientData } from './types'
+import { parseWordHiveClientPayload } from './parse-client'
 import { type SubmitResult, useWordHive } from './use-word-hive'
 
 type Props = {
@@ -31,10 +30,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	const tShare = useTranslations('share')
 
 	// Parse puzzle data from server using client-safe parser
-	const [initialPuzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<SpellingBeePuzzleClientData, unknown>(puzzleData)
-		return parsed.puzzleData
-	})
+	const [initialPuzzle] = useState(() => parseWordHiveClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -53,6 +49,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Queen Bee = all words
 	})

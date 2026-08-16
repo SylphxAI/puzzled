@@ -19,6 +19,7 @@
 	"messages": {
 		"correct": "Valid set!",
 		"notASet": "Not a valid set",
-		"alreadyFound": "Set already found"
+		"alreadyFound": "Set already found",
+		"submitRejected": "The server could not accept this board. Check the sets and try again."
 	}
 }

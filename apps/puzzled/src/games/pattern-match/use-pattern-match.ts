@@ -29,6 +29,7 @@ type Action =
 	| { type: 'CLEAR_SELECTION' }
 	| { type: 'CLEAR_MESSAGE' }
 	| { type: 'GIVE_UP' }
+	| { type: 'REOPEN' }
 
 function reducer(state: State, action: Action): State {
 	switch (action.type) {
@@ -167,6 +168,13 @@ function reducer(state: State, action: Action): State {
 				endTime: Date.now(),
 			}
 
+		case 'REOPEN':
+			return {
+				...state,
+				status: 'playing',
+				endTime: null,
+			}
+
 		default:
 			return state
 	}
@@ -227,6 +235,10 @@ export function usePatternMatch(puzzleData: PatternMatchData) {
 		dispatch({ type: 'GIVE_UP' })
 	}, [])
 
+	const reopen = useCallback(() => {
+		dispatch({ type: 'REOPEN' })
+	}, [])
+
 	return {
 		...state,
 		selectCard,
@@ -236,5 +248,6 @@ export function usePatternMatch(puzzleData: PatternMatchData) {
 		clearSelection,
 		clearMessage,
 		giveUp,
+		reopen,
 	}
 }

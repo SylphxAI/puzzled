@@ -14,6 +14,7 @@ type WordLadderAction =
 	| { type: 'SET_INPUT'; word: string }
 	| { type: 'SUBMIT_WORD' }
 	| { type: 'UNDO' }
+	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
 type WordLadderReducerState = WordLadderState & {
@@ -118,6 +119,14 @@ function wordLadderReducer(
 			}
 		}
 
+		case 'REOPEN': {
+			return {
+				...state,
+				isComplete: false,
+				endTime: null,
+			}
+		}
+
 		case 'RESET': {
 			if (!state.puzzle) return state
 			return {
@@ -159,6 +168,10 @@ export function useWordLadder() {
 		dispatch({ type: 'RESET' })
 	}, [])
 
+	const reopen = useCallback(() => {
+		dispatch({ type: 'REOPEN' })
+	}, [])
+
 	return {
 		state,
 		init,
@@ -166,5 +179,6 @@ export function useWordLadder() {
 		submitWord,
 		undo,
 		reset,
+		reopen,
 	}
 }

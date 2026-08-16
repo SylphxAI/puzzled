@@ -30,6 +30,7 @@ type Action =
 	| { type: 'MOVE'; direction: Direction }
 	| { type: 'DRAG_MOVE'; blockId: string; direction: Direction }
 	| { type: 'RESET'; puzzle: BlockSlidePuzzle }
+	| { type: 'REOPEN' }
 	| { type: 'GIVE_UP' }
 	| { type: 'CLEAR_MESSAGE' }
 
@@ -121,6 +122,15 @@ function reducer(state: State, action: Action): State {
 			}
 		}
 
+		case 'REOPEN': {
+			return {
+				...state,
+				status: 'playing',
+				endTime: null,
+				message: null,
+			}
+		}
+
 		case 'RESET': {
 			return createInitialState(action.puzzle)
 		}
@@ -166,6 +176,10 @@ export function useBlockSlide(puzzle: BlockSlidePuzzle) {
 		dispatch({ type: 'RESET', puzzle })
 	}, [puzzle])
 
+	const reopen = useCallback(() => {
+		dispatch({ type: 'REOPEN' })
+	}, [])
+
 	const giveUp = useCallback(() => {
 		dispatch({ type: 'GIVE_UP' })
 	}, [])
@@ -194,6 +208,7 @@ export function useBlockSlide(puzzle: BlockSlidePuzzle) {
 		move,
 		dragMove,
 		reset,
+		reopen,
 		giveUp,
 		clearMessage,
 	}
