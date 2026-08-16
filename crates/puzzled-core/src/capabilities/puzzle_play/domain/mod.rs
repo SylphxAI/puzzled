@@ -35,6 +35,8 @@ pub mod sudoku_scoring;
 pub mod tango;
 pub mod tango_generate;
 pub mod word_box;
+pub mod word_box_generate;
+pub mod word_box_words;
 pub mod word_groups;
 pub mod word_groups_generate;
 pub mod word_groups_puzzles;

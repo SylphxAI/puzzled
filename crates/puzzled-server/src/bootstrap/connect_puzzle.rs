@@ -40,6 +40,7 @@ use puzzled_core::puzzle_play::quad_words;
 use puzzled_core::puzzle_play::quad_words_generate::generate_quad_words_puzzle;
 use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
 use puzzled_core::puzzle_play::tango_generate::generate_duo_puzzle;
+use puzzled_core::puzzle_play::word_box_generate::generate_word_box_puzzle;
 use puzzled_core::puzzle_play::word_groups;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
@@ -644,6 +645,10 @@ fn deterministic_daily(
         }
         "word-ladder" => {
             let (data, solution) = generate_word_ladder_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "word-box" => {
+            let (data, solution) = generate_word_box_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,

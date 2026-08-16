@@ -36,6 +36,7 @@ pub use domain::sudoku_scoring;
 pub use domain::tango;
 pub use domain::tango_generate;
 pub use domain::word_box;
+pub use domain::word_box_generate;
 pub use domain::word_groups;
 pub use domain::word_groups_generate;
 pub use domain::word_guess_generate;
