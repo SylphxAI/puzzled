@@ -10,12 +10,13 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { getBaseUrl } from '@/lib/utils'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
-import type { WordlePuzzleData, WordleSolution } from './types'
+import { parseWordGuessClientPayload } from './parse-client'
+import type { WordGuessServerEvaluation } from './types'
 import { WORD_LENGTH } from './types'
 import { type SubmitResult, useWordGuess } from './use-word-guess'
 
@@ -31,10 +32,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	// Get puzzle from server data (client-safe - no config import)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<WordlePuzzleData, WordleSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseWordGuessClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -56,6 +54,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: true,
 		isPerfectWin: (data) => data.attempts === 1,
 	})
@@ -72,6 +71,49 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 	const gameEndedRef = useRef(false)
 
+	const evaluateGuesses = useCallback(
+		async (guesses: string[]): Promise<WordGuessServerEvaluation | null> => {
+			const admit = await admitSubmitGuessViaConnect({
+				gameSlug: 'word-guess',
+				status: 'playing',
+				attempts: guesses.length,
+				timeSpentMs: startTime ? Date.now() - startTime : 0,
+				submission: { guesses },
+				puzzleId,
+				puzzleDate,
+			})
+			if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
+				return null
+			}
+			try {
+				const parsed = JSON.parse(admit.response.evaluationJson) as {
+					letters?: unknown
+					won?: unknown
+					terminal?: unknown
+					reveal?: unknown
+				}
+				if (
+					!Array.isArray(parsed.letters) ||
+					parsed.letters.length !== WORD_LENGTH ||
+					parsed.letters.some(
+						(letter) => letter !== 'correct' && letter !== 'present' && letter !== 'absent',
+					)
+				) {
+					return null
+				}
+				return {
+					letters: parsed.letters,
+					won: parsed.won === true,
+					terminal: parsed.terminal === true,
+					reveal: typeof parsed.reveal === 'string' ? parsed.reveal : undefined,
+				}
+			} catch {
+				return null
+			}
+		},
+		[puzzleDate, puzzleId, startTime],
+	)
+
 	const {
 		guesses,
 		evaluations,
@@ -79,11 +121,11 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		currentRow,
 		gameStatus,
 		keyboardState,
-		solution,
+		reveal,
 		addLetter,
 		deleteLetter,
 		trySubmitGuess,
-	} = useWordGuess(puzzle.solution.word, (result) => submitResultHandlerRef.current(result))
+	} = useWordGuess(evaluateGuesses, (result) => submitResultHandlerRef.current(result))
 
 	// Help click handler for header
 	const handleHelpClick = useCallback(() => {
@@ -116,6 +158,11 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				triggerSound('error')
 				triggerHaptic('error')
 				triggerShake()
+			} else if (result === 'rejected') {
+				showToastMsg(t('messages.submitRejected'))
+				triggerSound('error')
+				triggerHaptic('error')
+				triggerShake()
 			}
 		},
 		[t, showToastMsg, triggerShake],
@@ -126,22 +173,21 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 
 	// Submit guess with validation feedback (for on-screen keyboard)
 	const handleSubmitGuess = useCallback(() => {
-		const result = trySubmitGuess()
-		handleSubmitResult(result)
+		void trySubmitGuess().then(handleSubmitResult)
 	}, [trySubmitGuess, handleSubmitResult])
 
 	// Handle game end - in useEffect to avoid render-phase side effects
 	useEffect(() => {
 		if (gameStatus !== 'playing' && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			endGame({
+			void endGame({
 				status: gameStatus,
 				attempts: guesses.length,
-				maxAttempts: 6,
+				maxAttempts: puzzle.maxAttempts,
 				data: { guesses },
 			})
 		}
-	}, [gameStatus, guesses, endGame])
+	}, [endGame, gameStatus, guesses, puzzle.maxAttempts])
 
 	const handleShare = async () => {
 		// Build emoji grid from evaluations
@@ -287,10 +333,10 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				stats={{
 					score: serverScore ?? undefined,
 					attempts: guesses.length,
-					maxAttempts: 6,
+					maxAttempts: puzzle.maxAttempts,
 					timeSpentMs: startTime ? Date.now() - startTime : 0,
 				}}
-				solution={solution}
+				solution={reveal}
 				mode={mode}
 				onShare={handleShare}
 			/>

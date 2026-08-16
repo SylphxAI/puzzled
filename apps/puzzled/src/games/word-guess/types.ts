@@ -10,6 +10,9 @@ export type WordlePuzzleData = {
 	maxAttempts: number
 }
 
+/** Client-side puzzle data (answer hidden). */
+export type WordlePuzzleClientData = WordlePuzzleData
+
 /**
  * Solution stored server-side only
  */
@@ -31,20 +34,27 @@ export type TileState = {
 export type GameStatus = 'playing' | 'won' | 'lost'
 
 export type WordleState = {
-	solution: string
 	guesses: string[]
 	currentGuess: string
 	gameStatus: GameStatus
 	currentRow: number
 	evaluations: TileState[][]
 	keyboardState: Record<string, LetterStatus>
+	reveal?: string
+}
+
+export type WordGuessServerEvaluation = {
+	letters: Array<Extract<LetterStatus, 'correct' | 'present' | 'absent'>>
+	won: boolean
+	terminal: boolean
+	reveal?: string
 }
 
 export type WordleAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }
-	| { type: 'SUBMIT_GUESS' }
-	| { type: 'RESET'; solution: string }
+	| { type: 'APPLY_EVALUATION'; guess: string; evaluation: WordGuessServerEvaluation }
+	| { type: 'RESET' }
 
 export const WORD_LENGTH = 5
 export const MAX_GUESSES = 6

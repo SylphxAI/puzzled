@@ -74,9 +74,8 @@ function updateKeyboardState(
 	return updated
 }
 
-function createInitialState(solution: string): WordleState {
+function createInitialState(): WordleState {
 	return {
-		solution,
 		guesses: [],
 		currentGuess: '',
 		gameStatus: 'playing',
@@ -293,8 +292,7 @@ describe('updateKeyboardState', () => {
 
 describe('createInitialState', () => {
 	test('creates state with correct initial values', () => {
-		const state = createInitialState('crane')
-		expect(state.solution).toBe('crane')
+		const state = createInitialState()
 		expect(state.guesses).toEqual([])
 		expect(state.currentGuess).toBe('')
 		expect(state.gameStatus).toBe('playing')
@@ -306,11 +304,10 @@ describe('createInitialState', () => {
 
 describe('game flow scenarios', () => {
 	test('winning on first guess', () => {
-		const state = createInitialState('crane')
 		const guess = 'crane'
-		const evaluation = evaluateGuess(guess, state.solution)
+		const evaluation = evaluateGuess(guess, 'crane')
 
-		const isWin = guess === state.solution
+		const isWin = guess === 'crane'
 		expect(isWin).toBe(true)
 		expect(evaluation.every((t) => t.status === 'correct')).toBe(true)
 	})

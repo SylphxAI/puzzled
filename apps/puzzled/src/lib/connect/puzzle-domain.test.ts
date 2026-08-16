@@ -35,6 +35,14 @@ describe('puzzle domain pure (puzzled.v1.PuzzleService)', () => {
 				timeSpentMs: 10,
 			}),
 		).toBe('status_required_won_or_lost')
+		expect(
+			validateSubmitGuessInput({
+				gameSlug: 'word-guess',
+				status: 'playing',
+				attempts: 1,
+				timeSpentMs: 0,
+			}),
+		).toBeNull()
 	})
 
 	test('encodeSubmissionJson', () => {
