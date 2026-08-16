@@ -176,12 +176,12 @@ async function HomeContent({
 							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
 						</div>
 
-						<Link href="/settings">
-							<Button variant="ghost" size="icon" className="h-9 w-9">
+						<Button asChild variant="ghost" size="icon" className="h-9 w-9">
+							<Link href="/settings">
 								<Settings className="h-5 w-5" />
 								<span className="sr-only">{t('common.settings')}</span>
-							</Button>
-						</Link>
+							</Link>
+						</Button>
 					</div>
 				</div>
 			</header>

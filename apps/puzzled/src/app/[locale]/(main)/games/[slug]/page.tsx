@@ -137,18 +137,16 @@ export default async function GamePage({ params, searchParams }: Props) {
 					{/* Actions */}
 					<div className="flex flex-col gap-3 sm:flex-row">
 						{!user && (
-							<Link href={`/login?callbackUrl=/games/${slug}`}>
-								<Button variant="outline" className="w-full sm:w-auto">
-									Sign In
-								</Button>
-							</Link>
+							<Button asChild variant="outline" className="w-full sm:w-auto">
+								<Link href={`/login?callbackUrl=/games/${slug}`}>Sign In</Link>
+							</Button>
 						)}
-						<Link href="/pricing">
-							<Button className="w-full gap-2 sm:w-auto">
+						<Button asChild className="w-full gap-2 sm:w-auto">
+							<Link href="/pricing">
 								<Crown className="h-4 w-4" />
 								Unlock All Games
-							</Button>
-						</Link>
+							</Link>
+						</Button>
 					</div>
 
 					{/* Back to home */}

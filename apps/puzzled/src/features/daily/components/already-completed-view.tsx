@@ -249,36 +249,38 @@ export function AlreadyCompletedView({
 			</Button>
 
 			{/* Continue the daily ritual from a completed module. */}
-			<Link href="/" className="w-full">
-				<Button
-					variant="outline"
-					size="lg"
-					className={cn(
-						'w-full gap-2 border-primary/30 text-base text-primary hover:bg-primary/5',
-						animate && 'animate-slide-up-fade opacity-0 stagger-3',
-					)}
-				>
+			<Button
+				asChild
+				variant="outline"
+				size="lg"
+				className={cn(
+					'w-full gap-2 border-primary/30 text-base text-primary hover:bg-primary/5',
+					animate && 'animate-slide-up-fade opacity-0 stagger-3',
+				)}
+			>
+				<Link href="/">
 					{t('backToGames')}
 					<ChevronRight className="ml-auto h-5 w-5" />
-				</Button>
-			</Link>
+				</Link>
+			</Button>
 
 			{/* Play Other Difficulties - For games with difficulty support */}
 			{supportsDifficulty && (
-				<Link href={`/games/${gameSlug}`} className="w-full">
-					<Button
-						variant="outline"
-						size="lg"
-						className={cn(
-							'w-full gap-2 text-base',
-							animate && 'animate-slide-up-fade opacity-0 stagger-3',
-						)}
-					>
+				<Button
+					asChild
+					variant="outline"
+					size="lg"
+					className={cn(
+						'w-full gap-2 text-base',
+						animate && 'animate-slide-up-fade opacity-0 stagger-3',
+					)}
+				>
+					<Link href={`/games/${gameSlug}`}>
 						<Gauge className="h-5 w-5" />
 						{tDifficulty('playOtherDifficulties')}
 						<ChevronRight className="ml-auto h-4 w-4" />
-					</Button>
-				</Link>
+					</Link>
+				</Button>
 			)}
 
 			{/* Countdown Card */}
