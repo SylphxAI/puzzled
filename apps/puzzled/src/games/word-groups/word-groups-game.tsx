@@ -10,12 +10,13 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
+import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { getBaseUrl } from '@/lib/utils'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
-import type { ConnectionsPuzzleData, ConnectionsSolution } from './types'
+import { parseWordGroupsClientPayload } from './parse-client'
+import type { WordGroupsServerEvaluation } from './types'
 import { useWordGroups } from './use-word-groups'
 
 type Props = {
@@ -30,21 +31,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	// Type-safe puzzle parsing via config - no type assertions needed
-	const [initialPuzzle] = useState(() => {
-		const parsed = parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData)
-		// Convert to ConnectionsPuzzle format for useWordGroups hook
-		return {
-			id: puzzleId ?? '',
-			date: puzzleDate ?? '',
-			categories: parsed.solution.categories as [
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
-			],
-		}
-	})
+	const [puzzle] = useState(() => parseWordGroupsClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -66,12 +53,50 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.mistakes === 0,
 	})
 
+	const evaluateGuess = useCallback(
+		async (
+			guess: string[],
+			foundNames: string[],
+			mistakesSoFar: number,
+		): Promise<WordGroupsServerEvaluation | null> => {
+			const admit = await admitSubmitGuessViaConnect({
+				gameSlug: 'word-groups',
+				status: 'playing',
+				attempts: 1,
+				timeSpentMs: startTime ? Date.now() - startTime : 0,
+				submission: { guess, foundNames, mistakes: mistakesSoFar },
+				puzzleId,
+				puzzleDate,
+			})
+			if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
+				return null
+			}
+			try {
+				const parsed = JSON.parse(admit.response.evaluationJson) as {
+					correct?: unknown
+					oneAway?: unknown
+					category?: WordGroupsServerEvaluation['category']
+					remaining?: WordGroupsServerEvaluation['remaining']
+				}
+				return {
+					correct: parsed.correct === true,
+					oneAway: parsed.oneAway === true,
+					category: parsed.category,
+					remaining: parsed.remaining,
+				}
+			} catch {
+				return null
+			}
+		},
+		[puzzleDate, puzzleId, startTime],
+	)
+
 	const {
-		puzzle,
 		selectedWords,
 		solvedCategories,
 		remainingWords,
@@ -79,12 +104,13 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		gameStatus,
 		guessHistory,
 		lastGuessWasOneAway,
+		missedCategories,
 		toggleWord,
 		clearSelection,
 		submitGuess,
 		shuffle,
 		canSubmit,
-	} = useWordGroups(initialPuzzle)
+	} = useWordGroups(puzzle.words, evaluateGuess)
 
 	// ==========================================
 	// Game-specific state (not consolidated)
@@ -133,7 +159,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}
 
 	const handleSubmit = () => {
-		submitGuess()
+		void submitGuess()
 	}
 
 	const handleShuffle = useCallback(() => {
@@ -151,16 +177,14 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [isShuffling, shuffle])
 
 	const handleShare = async () => {
+		const revealed = [...solvedCategories, ...missedCategories]
 		const emojiGrid = guessHistory
 			.map((guess) => {
-				// Find which category each guess word belongs to
 				return guess
 					.map((word) => {
-						for (const category of puzzle.categories) {
+						for (const category of revealed) {
 							if (category.words.includes(word)) {
-								const level = category.level
-								// Distinctive Puzzled colors: Rose, Teal, Amber, Fuchsia
-								return ['🟥', '🩵', '🟨', '🟪'][level]
+								return ['🟥', '🩵', '🟨', '🟪'][category.level]
 							}
 						}
 						return '⬛'
@@ -293,11 +317,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				}}
 				mode={mode}
 				onShare={handleShare}
-				missedCategories={
-					gameStatus === 'lost'
-						? puzzle.categories.filter((cat) => !solvedCategories.some((s) => s.name === cat.name))
-						: undefined
-				}
+				missedCategories={gameStatus === 'lost' ? missedCategories : undefined}
 			/>
 
 			{/* Action Buttons (playing state only) */}
