@@ -3,7 +3,7 @@
 import { Button } from '@sylphx/ui'
 import { Delete, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration, StarBurst } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
@@ -185,9 +185,11 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 
 	// Track game completion (Genius or Queen Bee)
 	const gameEndedRef = useRef(false)
-	if ((game.rank === 'genius' || game.gameStatus === 'won') && !gameEndedRef.current) {
+	useEffect(() => {
+		if ((game.rank !== 'genius' && game.gameStatus !== 'won') || gameEndedRef.current) return
+
 		gameEndedRef.current = true
-		endGame({
+		void endGame({
 			status: 'won',
 			attempts: game.foundWords.length,
 			maxAttempts: game.totalWords,
@@ -195,7 +197,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				foundWords: game.foundWords,
 			},
 		})
-	}
+	}, [endGame, game.foundWords, game.gameStatus, game.rank, game.totalWords])
 
 	const handleShare = async () => {
 		const text = formatRitualShareText({

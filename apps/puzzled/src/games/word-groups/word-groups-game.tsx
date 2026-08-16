@@ -144,9 +144,11 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [lastGuessWasOneAway, t])
 
 	// Handle game end - delegate to useGameSession
-	if (gameStatus !== 'playing' && !gameEndedRef.current) {
+	useEffect(() => {
+		if (gameStatus === 'playing' || gameEndedRef.current) return
+
 		gameEndedRef.current = true
-		endGame({
+		void endGame({
 			status: gameStatus,
 			attempts: guessHistory.length,
 			maxAttempts: 8, // 4 categories + 4 mistakes allowed
@@ -156,7 +158,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				mistakes,
 			},
 		})
-	}
+	}, [endGame, gameStatus, guessHistory.length, mistakes, solvedCategories])
 
 	const handleSubmit = () => {
 		void submitGuess()
