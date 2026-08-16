@@ -7,10 +7,10 @@ import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
 import {
+	getServerPersonalDailyCompletions,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	type StreakInfo,
-	type TodayCompletion,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
@@ -66,7 +66,6 @@ export default async function HomePage({ params }: Props) {
 
 	// Fetch user's streak info, today's completions, and player count
 	let streakInfo: StreakInfo | null = null
-	let todayCompletions: TodayCompletion[] = []
 	let todayPlayerCount = 0
 
 	try {
@@ -74,11 +73,6 @@ export default async function HomePage({ params }: Props) {
 		// NSM oracles: compute_drc / compute_hrc (weekly ritualists).
 		const overview = await getServerTodayOverview()
 		todayPlayerCount = overview.playerCount
-		todayCompletions = overview.completions.map((c) => ({
-			slug: c.gameSlug,
-			name: c.gameSlug,
-			completed: c.count > 0,
-		}))
 
 		// Fetch user-specific streak info if logged in
 		if (user) {
@@ -94,7 +88,6 @@ export default async function HomePage({ params }: Props) {
 		<HomeContent
 			isGuest={!user}
 			streakInfo={streakInfo}
-			todayCompletions={todayCompletions}
 			locale={locale}
 			todaysFreeGame={todaysFreeGame}
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
@@ -107,12 +100,6 @@ export default async function HomePage({ params }: Props) {
 type HomeContentProps = {
 	isGuest: boolean
 	streakInfo: StreakInfo | null
-	todayCompletions: {
-		slug: string
-		name: string
-		completed: boolean
-		score?: string
-	}[]
 	locale: string
 	todaysFreeGame: string
 	tomorrowsFreeGameName: string
@@ -123,7 +110,6 @@ type HomeContentProps = {
 async function HomeContent({
 	isGuest,
 	streakInfo,
-	todayCompletions,
 	locale,
 	todaysFreeGame,
 	tomorrowsFreeGameName,
@@ -136,6 +122,12 @@ async function HomeContent({
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
+	const personalCompletions = await getServerPersonalDailyCompletions({
+		gameSlugs: gameMetadata.map((game) => game.slug),
+		isGuest,
+		isPremium,
+		freeGameSlug: todaysFreeGame,
+	})
 
 	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
 	const slugToCamelCase = (slug: string) =>
@@ -153,14 +145,12 @@ async function HomeContent({
 
 	// Merge game info with completion status and free/locked status
 	const gamesWithCompletion = gameMetadata.map((game) => {
-		const completion = todayCompletions.find((c) => c.slug === game.slug)
 		const isFreeToday = game.slug === todaysFreeGame
 		return {
 			slug: game.slug,
 			name: t(`games.${slugToCamelCase(game.slug)}.name`),
 			display: game.display,
-			completed: completion?.completed ?? false,
-			score: completion?.score,
+			completed: personalCompletions[game.slug] ?? false,
 			// Free game is unlocked for everyone, other games locked for non-premium
 			locked: !isPremium && !isFreeToday,
 			isFreeToday,

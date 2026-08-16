@@ -14,7 +14,7 @@ import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
-
+import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
@@ -144,6 +144,30 @@ export const getServerDailyStatus = cache(
 		}
 	},
 )
+
+/**
+ * Personal home progress. GetTodayOverview is a public aggregate for social
+ * proof, not a user's completion state; use each module's server-derived
+ * GetDaily.has_completed instead.
+ */
+export async function getServerPersonalDailyCompletions(input: {
+	gameSlugs: readonly string[]
+	isGuest: boolean
+	isPremium: boolean
+	freeGameSlug: string
+}): Promise<Record<string, boolean>> {
+	return loadDailyCompletionMap({
+		...input,
+		read: async (gameSlug) => {
+			try {
+				return (await getServerDailyStatus({ gameSlug })).hasCompleted
+			} catch (error) {
+				console.error(`[HomePage] Failed to read personal daily status for ${gameSlug}:`, error)
+				throw error
+			}
+		},
+	})
+}
 
 export const getServerTodaysPuzzle = cache(
 	async (input: { gameSlug: string; difficulty?: string }): Promise<TodaysPuzzle> => {
