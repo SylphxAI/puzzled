@@ -229,10 +229,3 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
-
-/**
- * Back-compat shim deleted: no Hono clients exist. Use the typed accessors
- * above (getServerDailyStatus / getServerTodaysPuzzle / getServerStreakInfo /
- * getServerUserStats) from server components.
- */
-export const createServerApi = null as never

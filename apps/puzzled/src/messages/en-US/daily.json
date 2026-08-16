@@ -12,7 +12,7 @@
 	"alreadyCompleted": "Already Completed!",
 	"youSolvedTodays": "You solved today's {game}",
 	"youTriedTodays": "You already tried today's {game}",
-	"comeBackTomorrow": "A new puzzle unlocks at midnight UTC",
+	"comeBackTomorrow": "A new puzzle unlocks at the next daily reset",
 	"wantMore": "Want to keep playing?",
 	"upgrade": "Upgrade",
 	"backToGames": "Back to all games",

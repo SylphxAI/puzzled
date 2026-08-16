@@ -3,7 +3,6 @@ syntax = "proto3";
 package puzzled.v1;
 
 // Stats and leaderboard read contracts (ADR-168 S1).
-// HTTP transitional path: GET /api/v1/stats/leaderboard
 
 enum LeaderboardType {
   LEADERBOARD_TYPE_UNSPECIFIED = 0;
@@ -38,7 +37,7 @@ message GetLeaderboardResponse {
 }
 
 
-// Today percentile generated Connect path — parity with GET /api/v1/stats/today-percentile.
+// Today percentile generated Connect path.
 message GetTodayPercentileRequest {
   string game_slug = 1;
   string status = 2;

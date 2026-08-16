@@ -3,7 +3,6 @@ import {
 	planPuzzleGetDailyProduct,
 	planPuzzleGetPuzzleProduct,
 	resolvePuzzleProductAuthorityMode,
-	shouldUseRestPlayResidual,
 } from './puzzle-product-authority'
 
 describe('Puzzle product authority', () => {
@@ -38,12 +37,5 @@ describe('Puzzle product authority', () => {
 		expect(plan.mode).toBe('connect')
 		expect(plan.connect.ok).toBe(false)
 		expect(plan.failClosed).toBe(true)
-	})
-
-	test('dual REST residual always blocked', () => {
-		expect(shouldUseRestPlayResidual({ mode: 'connect', ok: true, failClosed: true })).toBe(false)
-		expect(shouldUseRestPlayResidual({ mode: 'connect', ok: false, failClosed: true })).toBe(false)
-		expect(shouldUseRestPlayResidual({ mode: 'rest', skipped: true })).toBe(false)
-		expect(shouldUseRestPlayResidual(null)).toBe(false)
 	})
 })

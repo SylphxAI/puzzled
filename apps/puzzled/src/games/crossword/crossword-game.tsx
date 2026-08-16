@@ -52,7 +52,6 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
-		requireServerAccept: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)

@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	isServedPuzzleId,
+	millisecondsUntilNextProductDay,
+	nextProductDayStart,
 	ordinal0FromDayKey,
 	PRODUCT_DAY_TZ,
 	productDayKey,
@@ -22,6 +24,17 @@ describe('productDayKey', () => {
 		expect(productDayKey(new Date('2026-08-12T16:00:00Z'))).toBe('2026-08-13')
 		expect(productDayKey(new Date('2026-08-12T20:07:00Z'))).toBe('2026-08-13')
 		expect(productDayKey(new Date('2026-08-13T00:00:00Z'))).toBe('2026-08-13')
+	})
+})
+
+describe('nextProductDayStart', () => {
+	test('resets at HKT midnight, not UTC midnight', () => {
+		const beforeReset = new Date('2026-08-12T15:59:59Z')
+		expect(nextProductDayStart(beforeReset).toISOString()).toBe('2026-08-12T16:00:00.000Z')
+		expect(millisecondsUntilNextProductDay(beforeReset)).toBe(1_000)
+
+		const afterReset = new Date('2026-08-12T16:00:00Z')
+		expect(nextProductDayStart(afterReset).toISOString()).toBe('2026-08-13T16:00:00.000Z')
 	})
 })
 

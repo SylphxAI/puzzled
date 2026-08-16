@@ -144,6 +144,63 @@ fn jobs_executor_is_sole_rust() {
 }
 
 #[test]
+fn web_has_no_deleted_local_rest_authorities() {
+    let web = manifest_dir().join("../../apps/puzzled/src/app/api");
+    for rel in [
+        "flags/route.ts",
+        "admin/models/route.ts",
+        "email/unsubscribe/route.ts",
+    ] {
+        let path = web.join(rel);
+        assert!(
+            !path.exists(),
+            "deleted local REST authority must not return: {}",
+            path.display()
+        );
+    }
+}
+
+#[test]
+fn manifest_delegates_serverless_effects_and_database_bindings_to_platform() {
+    let manifest = fs::read_to_string(manifest_dir().join("../../sylphx.toml"))
+        .unwrap_or_else(|e| panic!("read sylphx.toml: {e}"));
+
+    // The product has exactly two runtime services: presentation web and the
+    // Rust API. JobsService is an RPC on api and migrations are an ephemeral
+    // Platform job, not a third product worker.
+    assert_eq!(
+        manifest.matches("[[services]]").count(),
+        2,
+        "Puzzled must not grow a product-owned worker service"
+    );
+    assert!(manifest.contains("name = \"web\"\ntype = \"web\""));
+    assert!(manifest.contains("name = \"api\"\ntype = \"web\""));
+    assert!(!manifest.contains("type = \"worker\""));
+
+    // Database provisioning and URL materialization are Platform-owned.
+    assert!(manifest.contains("[resources.database]"));
+    assert!(manifest
+        .contains("DATABASE_URL = { from_resource = \"database\", attr = \"database_url\" }"));
+
+    // Availability and cluster topology are not customer knobs. Platform
+    // resolves wake/scale policy from the declared HTTP service shape.
+    for forbidden in [
+        "min_instances =",
+        "max_instances =",
+        "scale_to_zero =",
+        "idle_timeout_seconds =",
+        "replicas =",
+        "hpa =",
+        "kubernetes =",
+    ] {
+        assert!(
+            !manifest.contains(forbidden),
+            "manifest must not own Platform availability/effect knob `{forbidden}`"
+        );
+    }
+}
+
+#[test]
 fn retired_web_server_directory_cannot_reintroduce_executable_backend_source() {
     // This directory contained unmounted legacy TypeScript only. Keeping it
     // executable would recreate the false-authority trap this cutover removes.

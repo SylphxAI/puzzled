@@ -5,8 +5,10 @@ import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap }
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import { useGuestDailySummary } from '@/features/daily/hooks/use-guest-game-state'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
+import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -29,6 +31,8 @@ type DailyHeroProps = {
 	tomorrowsFreeGameName?: string
 	/** User's current streak for personalized messaging */
 	currentStreak?: number
+	/** Anonymous visitors use the server-accepted guest-day projection. */
+	isGuest?: boolean
 	className?: string
 }
 
@@ -210,11 +214,21 @@ export function DailyHero({
 	dateString,
 	tomorrowsFreeGameName,
 	currentStreak = 0,
+	isGuest = false,
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
-	const completedCount = games.filter((g) => g.completed).length
-	const allCompleted = completedCount === games.length
+	const guestSummary = useGuestDailySummary()
+	const guestCompleted = new Set(guestSummary.completedSlugs)
+	const displayGames = isGuest
+		? games.map((game) => ({
+				...game,
+				completed: game.completed || guestCompleted.has(canonicalizeGameSlug(game.slug)),
+			}))
+		: games
+	const completedCount = displayGames.filter((g) => g.completed).length
+	const allCompleted = completedCount === displayGames.length
+	const displayStreak = isGuest ? guestSummary.currentStreak : currentStreak
 
 	// Use static greeting on server, update on client to avoid hydration mismatch
 	const [timeGreeting, setTimeGreeting] = useState<TimeGreeting>('morning')
@@ -223,7 +237,7 @@ export function DailyHero({
 		setTimeGreeting(getTimeGreetingFromHour(new Date().getHours()))
 	}, [])
 
-	const streakMessage = getStreakMessageKey(currentStreak)
+	const streakMessage = getStreakMessageKey(displayStreak)
 
 	return (
 		<div className={cn('space-y-4', className)}>
@@ -241,7 +255,7 @@ export function DailyHero({
 									<Calendar className="h-4 w-4 shrink-0" />
 									<span>{dateString}</span>
 								</span>
-								{currentStreak > 0 && (
+								{displayStreak > 0 && (
 									<span className="font-medium text-stat-streak">
 										• {t(`home.streakMessage.${streakMessage}`)}
 									</span>
@@ -286,7 +300,7 @@ export function DailyHero({
 
 			{/* Game Cards Grid */}
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				{games.map((game) => {
+				{displayGames.map((game) => {
 					// Get display info from props (SSOT from registry)
 					const { display } = game
 					const colors = display.theme ? getGameColors(display.theme) : DEFAULT_GAME_COLORS

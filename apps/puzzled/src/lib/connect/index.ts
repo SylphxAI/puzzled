@@ -18,7 +18,6 @@ export {
 	planPuzzleGetPuzzleProduct,
 	planPuzzleSubmitGuessProduct,
 	resolvePuzzleProductAuthorityMode,
-	shouldUseRestPlayResidual,
 } from './puzzle-product-authority'
 export { isServingOk, type ServingStatusLabel, servingStatusLabel } from './serving-status'
 export {
@@ -27,10 +26,7 @@ export {
 	type StatePlacementDecision,
 	zustandForbiddenForServerState,
 } from './state-classification'
-export {
-	admitLeaderboardViaConnect,
-	shouldUseSdkLeaderboardResidual,
-} from './stats-admission'
+export { admitLeaderboardViaConnect } from './stats-admission'
 export * from './stats-client'
 export * from './stats-domain'
 export {

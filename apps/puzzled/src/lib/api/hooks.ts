@@ -41,11 +41,7 @@ import {
 	updateProfile,
 	updatePushPreferences,
 } from '@/lib/connect/preferences-client'
-import {
-	admitGetDailyViaConnect,
-	admitSubmitGuessViaConnect,
-	shouldUseRestPlayResidual,
-} from '@/lib/connect/puzzle-admission'
+import { admitGetDailyViaConnect, admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
 import { servedPuzzleId } from '@/lib/product-day'
 
@@ -1021,6 +1017,3 @@ export function useCheckUsername() {
 		},
 	})
 }
-
-// Kept as a fail-closed fence: no REST residual exists (sole Connect).
-export { shouldUseRestPlayResidual }

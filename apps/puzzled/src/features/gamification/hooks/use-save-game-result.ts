@@ -44,6 +44,7 @@ export type SaveResultResponse = {
 	success: boolean
 	score?: number
 	error?: string
+	alreadyPlayed?: boolean
 }
 
 export function useSaveGameResult(gameSlug: string) {
@@ -114,6 +115,18 @@ export function useSaveGameResult(gameSlug: string) {
 					difficulty: input.difficulty,
 					data: input.data,
 				})
+
+				// An already-played response is an accepted review state, not a
+				// new finish. Invalid submissions are not finishes at all: release
+				// the retry lock and stop before analytics, streaks, or leaderboards.
+				if (response.error === 'already_played') {
+					savedRef.current = false
+					return { success: true, alreadyPlayed: true, error: response.error }
+				}
+				if (!response.success) {
+					savedRef.current = false
+					return { success: false, error: response.error || 'finish_rejected' }
+				}
 
 				// Track game completion via SDK analytics
 				trackGameComplete({
@@ -190,7 +203,7 @@ export function useSaveGameResult(gameSlug: string) {
 
 				// Return server-calculated score
 				return {
-					success: response.success,
+					success: true,
 					score: response.score,
 				}
 			} catch (err) {

@@ -27,6 +27,18 @@ export function productDayKey(now: Date = new Date()): string {
 	return formatDayKey(hkt.getUTCFullYear(), hkt.getUTCMonth() + 1, hkt.getUTCDate())
 }
 
+/** Instant when the next Asia/Hong_Kong product day begins. */
+export function nextProductDayStart(now: Date = new Date()): Date {
+	const hkt = new Date(now.getTime() + HKT_OFFSET_MS)
+	const nextHktMidnight = Date.UTC(hkt.getUTCFullYear(), hkt.getUTCMonth(), hkt.getUTCDate() + 1)
+	return new Date(nextHktMidnight - HKT_OFFSET_MS)
+}
+
+/** Milliseconds remaining until the next product-day boundary. */
+export function millisecondsUntilNextProductDay(now: Date = new Date()): number {
+	return Math.max(0, nextProductDayStart(now).getTime() - now.getTime())
+}
+
 /** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
 export function ordinal0FromDayKey(dayKey: string): number {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dayKey.trim())

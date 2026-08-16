@@ -3,6 +3,7 @@
 import { Clock } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { millisecondsUntilNextProductDay } from '@/lib/product-day'
 import { cn } from '@/lib/utils'
 
 type NextPuzzleCountdownProps = {
@@ -11,17 +12,9 @@ type NextPuzzleCountdownProps = {
 	showLabel?: boolean
 }
 
-/**
- * Calculate time until next UTC midnight
- * All users worldwide see the same countdown to the same new puzzle
- */
-function calculateTimeUntilUTCMidnight() {
-	const now = new Date()
-	// Get tomorrow at UTC midnight
-	const tomorrow = new Date(
-		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0),
-	)
-	const diff = tomorrow.getTime() - now.getTime()
+/** Calculate time until the next Asia/Hong_Kong product-day reset. */
+function calculateTimeUntilNextProductDay() {
+	const diff = millisecondsUntilNextProductDay()
 
 	return {
 		hours: Math.floor(diff / (1000 * 60 * 60)),
@@ -43,9 +36,9 @@ export function NextPuzzleCountdown({
 	})
 
 	useEffect(() => {
-		setTimeLeft(calculateTimeUntilUTCMidnight())
+		setTimeLeft(calculateTimeUntilNextProductDay())
 		const interval = setInterval(() => {
-			setTimeLeft(calculateTimeUntilUTCMidnight())
+			setTimeLeft(calculateTimeUntilNextProductDay())
 		}, 1000)
 
 		return () => clearInterval(interval)

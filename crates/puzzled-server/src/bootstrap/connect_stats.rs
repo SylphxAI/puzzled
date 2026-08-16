@@ -168,7 +168,7 @@ impl StatsService for StatsConnectService {
             });
         }
 
-        // Without sessions/DB generated Connect path: honest stub residual (parity with REST null path).
+        // Without sessions/DB, return the honest empty Connect response.
         Response::ok(GetTodayPercentileResponse {
             percentile: None,
             total_players: 0,

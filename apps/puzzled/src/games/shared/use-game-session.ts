@@ -108,12 +108,6 @@ export interface UseGameSessionOptions {
 
 	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
 	puzzleDate?: string
-
-	/**
-	 * When true, celebration / result card wait for a server-accepted
-	 * finish. Invalid grids stay playable. already_played counts as accept.
-	 */
-	requireServerAccept?: boolean
 }
 
 export type GameEndResult = {
@@ -169,7 +163,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		resultModalDelay,
 		guestPromptDelay = 2000,
 		puzzleDate,
-		requireServerAccept = false,
 	} = options
 
 	const storageKey = getGameSessionKey(gameSlug)
@@ -254,10 +247,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
 
-			if (!requireServerAccept) {
-				celebrate(endData)
-			}
-
 			let finish: GameEndResult = { success: true }
 
 			// Save result (daily mode). puzzleId optional for deterministic free
@@ -292,16 +281,17 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					}
 				}
 
-				if (requireServerAccept && !finish.success) {
+				if (!finish.success) {
 					savedRef.current = false
 					return finish
 				}
 
-				if (requireServerAccept) {
-					celebrate(endData)
-				}
+				// Daily result cards and guest projections follow the sole
+				// server-accepted SubmitGuess finish. already_played is an
+				// accepted terminal state and is handled by saveResult.
+				celebrate(endData)
 
-				if (!isLoggedIn) {
+				if (!isLoggedIn && !finish.alreadyPlayed) {
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
@@ -313,7 +303,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						}, guestPromptDelay)
 					}
 				}
-			} else if (requireServerAccept) {
+			} else {
 				celebrate(endData)
 			}
 
@@ -332,7 +322,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			incrementGuestGames,
 			shouldShowSignupPrompt,
 			guestPromptDelay,
-			requireServerAccept,
 			celebrate,
 		],
 	)

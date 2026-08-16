@@ -4,7 +4,7 @@
  * API Provider
  *
  * Wraps the app with React Query provider.
- * React Query provider for the Hono API client.
+ * React Query provider for Connect-backed application queries.
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'

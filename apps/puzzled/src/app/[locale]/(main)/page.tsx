@@ -92,6 +92,7 @@ export default async function HomePage({ params }: Props) {
 
 	return (
 		<HomeContent
+			isGuest={!user}
 			streakInfo={streakInfo}
 			todayCompletions={todayCompletions}
 			locale={locale}
@@ -104,6 +105,7 @@ export default async function HomePage({ params }: Props) {
 }
 
 type HomeContentProps = {
+	isGuest: boolean
 	streakInfo: StreakInfo | null
 	todayCompletions: {
 		slug: string
@@ -119,6 +121,7 @@ type HomeContentProps = {
 }
 
 async function HomeContent({
+	isGuest,
 	streakInfo,
 	todayCompletions,
 	locale,
@@ -207,6 +210,7 @@ async function HomeContent({
 						dateString={dateString}
 						tomorrowsFreeGameName={tomorrowsFreeGameName}
 						currentStreak={currentStreak}
+						isGuest={isGuest}
 					/>
 				</div>
 			</section>

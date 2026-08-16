@@ -10,8 +10,6 @@ import {
 	planPuzzleSubmitGuessProduct,
 } from './puzzle-product-authority'
 
-export { shouldUseRestPlayResidual } from './puzzle-product-authority'
-
 export type PuzzleAdmitOk<T> = {
 	mode: 'connect'
 	ok: true
