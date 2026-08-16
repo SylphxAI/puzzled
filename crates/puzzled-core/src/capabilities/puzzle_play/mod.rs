@@ -7,6 +7,7 @@ pub use application::game_flows;
 pub use domain::arithmo;
 pub use domain::arithmo_generate;
 pub use domain::block_slide;
+pub use domain::block_slide_generate;
 pub use domain::crossword_generate;
 pub use domain::crossword_grid;
 pub use domain::cryptogram;

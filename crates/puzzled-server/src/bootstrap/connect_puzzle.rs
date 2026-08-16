@@ -22,6 +22,7 @@ use puzzled_core::puzzle_play::application::submission_validation::{
 };
 use puzzled_core::puzzle_play::arithmo;
 use puzzled_core::puzzle_play::arithmo_generate::generate_arithmo_puzzle;
+use puzzled_core::puzzle_play::block_slide_generate::generate_block_slide_puzzle;
 use puzzled_core::puzzle_play::crossword_generate::{
     client_safe_puzzle_data, generate_crossword_puzzle,
 };
@@ -545,6 +546,10 @@ fn deterministic_daily(
         }
         "killer-sudoku" => {
             let (data, solution) = generate_killer_sudoku_puzzle(seed, difficulty);
+            Some((data, Some(solution)))
+        }
+        "block-slide" => {
+            let (data, solution) = generate_block_slide_puzzle(seed, difficulty);
             Some((data, Some(solution)))
         }
         _ => None,

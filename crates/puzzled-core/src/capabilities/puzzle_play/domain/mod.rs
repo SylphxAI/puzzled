@@ -3,6 +3,7 @@
 pub mod arithmo;
 pub mod arithmo_generate;
 pub mod block_slide;
+pub mod block_slide_generate;
 pub mod crossword_generate;
 pub mod crossword_grid;
 pub mod cryptogram;
