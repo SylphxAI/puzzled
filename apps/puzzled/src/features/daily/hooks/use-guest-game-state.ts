@@ -127,6 +127,7 @@ export function useGuestGameState(gameSlug: string) {
 		isLoaded,
 		hasCompletedToday: hasCompletedToday(),
 		todaySession: getTodaySession(),
+		currentStreak: summarizeGuestCompletions(store.games).currentStreak,
 		saveCompletion,
 		getGamesForDate,
 		clearAllData,

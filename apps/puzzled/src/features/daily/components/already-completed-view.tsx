@@ -237,6 +237,21 @@ export function AlreadyCompletedView({
 				{tCommon('share')} Your Result
 			</Button>
 
+			{/* Continue the daily ritual from a completed module. */}
+			<Link href="/" className="w-full">
+				<Button
+					variant="outline"
+					size="lg"
+					className={cn(
+						'w-full gap-2 border-primary/30 text-base text-primary hover:bg-primary/5',
+						animate && 'animate-slide-up-fade opacity-0 stagger-3',
+					)}
+				>
+					{t('backToGames')}
+					<ChevronRight className="ml-auto h-5 w-5" />
+				</Button>
+			</Link>
+
 			{/* Play Other Difficulties - For games with difficulty support */}
 			{supportsDifficulty && (
 				<Link href={`/games/${gameSlug}`} className="w-full">
