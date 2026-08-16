@@ -33,6 +33,7 @@ import {
 	updateSetting,
 } from '@/lib/connect/admin-client'
 import { isAlreadyPlayedError } from '@/lib/connect/already-played'
+import { getStreakInfo, type StreakInfo } from '@/lib/connect/gamification-client'
 import {
 	checkUsername,
 	getNotificationPreferences,
@@ -193,6 +194,22 @@ export function useTodaysPuzzle(
 				code: 'CONNECT_PLAY_FAIL_CLOSED',
 				message: admit.error || 'connect_play_fail_closed',
 			})
+		},
+		...options,
+	})
+}
+
+export function useStreakInfo(
+	options?: Omit<UseQueryOptions<StreakInfo, ApiError>, 'queryKey' | 'queryFn'>,
+) {
+	return useQuery({
+		queryKey: queryKeys.streakInfo(),
+		queryFn: async () => {
+			try {
+				return await getStreakInfo()
+			} catch (e) {
+				throw toApiError(e, 'STREAK_INFO_FAILED')
+			}
 		},
 		...options,
 	})
