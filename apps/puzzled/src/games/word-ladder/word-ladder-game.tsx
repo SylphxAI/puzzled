@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordLadder')
 
 	// Get puzzle from server data or generate from seed (deterministic)
@@ -43,6 +44,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,6 +54,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'word-ladder',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Optimal path
 	})
@@ -131,11 +134,12 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-ladder',
 			gameName: 'Rungs',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${steps} steps`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.path.length, startTime])
+	}, [game.state.endTime, game.state.path.length, startTime, puzzleDate])
 
 	// Get error message
 	const getErrorMessage = () => {
@@ -277,6 +281,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 				gameType="word-ladder"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: game.state.path.length - 1,
 					maxAttempts: puzzle.puzzleData.minSteps,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

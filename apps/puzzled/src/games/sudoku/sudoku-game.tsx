@@ -27,9 +27,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.sudoku')
 
 	// Type-safe puzzle parsing - no config import needed
@@ -45,6 +46,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -54,6 +56,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'sudoku',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -85,12 +88,13 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'sudoku',
 			gameName: 'Sudoku',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 			difficultyLabel: puzzle.puzzleData.difficulty,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzle.puzzleData.difficulty])
+	}, [game.state.endTime, startTime, puzzle.puzzleData.difficulty, puzzleDate])
 
 	// Ready screen
 	if (isReady) {
@@ -175,6 +179,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="sudoku"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: 1,
 					maxAttempts: 1,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

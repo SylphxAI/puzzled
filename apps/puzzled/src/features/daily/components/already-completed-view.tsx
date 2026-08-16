@@ -210,6 +210,17 @@ export function AlreadyCompletedView({
 							</div>
 							<span className="text-xl font-bold tabular-nums">{session.attempts}</span>
 						</div>
+
+						{/* Score is read from the Rust-owned completed session. */}
+						{session.score !== null && (
+							<div className="flex flex-col items-center rounded-xl bg-muted/50 p-4">
+								<div className="mb-2 flex items-center gap-1.5 text-muted-foreground">
+									<Trophy className="h-4 w-4" />
+									<span className="text-xs font-medium">{tResult('score')}</span>
+								</div>
+								<span className="text-xl font-bold tabular-nums">{session.score}</span>
+							</div>
+						)}
 					</div>
 
 					{/* Streak indicator (if streak > 0) */}

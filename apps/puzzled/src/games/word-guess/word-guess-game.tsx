@@ -23,9 +23,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGuess')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -43,6 +44,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showStarBurst,
 		showResultModal,
@@ -53,6 +55,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-guess',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (data) => data.attempts === 1,
 	})
@@ -168,6 +171,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-guess',
 			gameName: 'Five',
+			puzzleDate,
 			status,
 			attempts: status === 'won' ? attempts : undefined,
 			statLine: emojiGrid,
@@ -281,6 +285,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="word-guess"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: guesses.length,
 					maxAttempts: 6,
 					timeSpentMs: startTime ? Date.now() - startTime : 0,

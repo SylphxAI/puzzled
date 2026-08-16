@@ -26,9 +26,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
@@ -44,6 +45,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -53,6 +55,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'crowns',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -85,11 +88,12 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'crowns',
 			gameName: 'Crowns',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Reset game
 	const handleReset = useCallback(() => {
@@ -230,6 +234,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="crowns"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: 1,
 					maxAttempts: 1,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

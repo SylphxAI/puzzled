@@ -40,6 +40,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -203,6 +204,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				gameType="crossword"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: 1,
 					maxAttempts: 1,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

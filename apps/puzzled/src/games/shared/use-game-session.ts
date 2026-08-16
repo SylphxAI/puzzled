@@ -295,6 +295,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
+						score: finish.score,
 					})
 					incrementGuestGames()
 					if (shouldShowSignupPrompt) {

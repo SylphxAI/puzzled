@@ -26,9 +26,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordBox')
 	const tCommon = useTranslations('common')
 
@@ -45,6 +46,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -54,6 +56,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-box',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -101,11 +104,12 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-box',
 			gameName: 'Frame',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Keyboard handler
 	useEffect(() => {
@@ -335,6 +339,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="word-box"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: game.state.words.length,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}

@@ -27,6 +27,7 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
 const KEYBOARD_ROWS = [
@@ -35,7 +36,7 @@ const KEYBOARD_ROWS = [
 	['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL'],
 ]
 
-export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.quadWords')
 	const tCommon = useTranslations('common')
 
@@ -51,6 +52,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -60,6 +62,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'quad-words',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -147,11 +150,12 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'quad-words',
 			gameName: 'Quad',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {
@@ -268,6 +272,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="quad-words"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: game.state.guessHistory.length,
 					maxAttempts: MAX_GUESSES,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

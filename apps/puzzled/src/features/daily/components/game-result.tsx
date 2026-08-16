@@ -216,6 +216,16 @@ export function GameResultCard({
 						/>
 					)}
 
+					{/* Server-accepted score (never client-calculated) */}
+					{stats.score !== undefined && (
+						<StatBox
+							icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
+							label={t('score')}
+							value={stats.score.toString()}
+							highlight={isWin}
+						/>
+					)}
+
 					{/* Time */}
 					{stats.timeSpentMs !== undefined && (
 						<StatBox

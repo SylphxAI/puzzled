@@ -22,9 +22,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordHive')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -40,6 +41,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showStarBurst,
 		showResultModal,
@@ -50,6 +52,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-hive',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Queen Bee = all words
 	})
@@ -155,8 +158,9 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-hive',
 			gameName: 'Hive',
+			puzzleDate,
 			status: 'won',
-			statLine: `${game.score} points`,
+			statLine: serverScore === null ? undefined : `${serverScore} points`,
 		})
 
 		try {
@@ -292,11 +296,11 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="word-hive"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: game.foundWords.length,
 					maxAttempts: game.totalWords,
 					timeSpentMs: startTime ? Date.now() - startTime : 0,
 				}}
-				solution={`${game.score} points`}
 				mode={mode}
 				onShare={handleShare}
 			/>

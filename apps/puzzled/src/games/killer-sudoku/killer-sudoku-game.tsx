@@ -25,9 +25,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
@@ -43,6 +44,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,6 +54,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props
 		gameSlug: 'killer-sudoku',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -115,11 +118,12 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props
 			origin: getBaseUrl('origin'),
 			gameSlug: 'killer-sudoku',
 			gameName: 'Cage Sudoku',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Build cage border map for visual rendering
 	const cageBorders = useMemo(() => {
@@ -343,6 +347,7 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props
 				gameType="killer-sudoku"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}

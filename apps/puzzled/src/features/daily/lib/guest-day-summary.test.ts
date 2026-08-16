@@ -10,6 +10,7 @@ const completion = (date: string, gameSlug: string, completedAt = `${date}T04:00
 	date,
 	status: 'won' as const,
 	attempts: 1,
+	score: 87,
 	completedAt,
 })
 
@@ -23,6 +24,7 @@ describe('guest day summary', () => {
 		expect(store.version).toBe(2)
 		expect(store.games[0]?.date).toBe('2026-08-13')
 		expect(store.games[0]?.gameSlug).toBe('duo')
+		expect(store.games[0]?.score).toBe(87)
 	})
 
 	test('derives modules and a consecutive guest streak', () => {

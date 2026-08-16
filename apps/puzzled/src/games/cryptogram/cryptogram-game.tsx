@@ -27,9 +27,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
 	const [puzzle] = useState(() =>
@@ -42,6 +43,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -51,6 +53,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'cryptogram',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 	})
 
@@ -105,11 +108,12 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			origin: getBaseUrl('origin'),
 			gameSlug: 'cryptogram',
 			gameName: 'Cipher',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Parse the encrypted text into words for display
 	const words = puzzle.puzzleData.encryptedText.split(' ')
@@ -301,6 +305,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 				gameType="cryptogram"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
+					score: serverScore ?? undefined,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 					hintsUsed: game.state.hintsUsed,
 				}}

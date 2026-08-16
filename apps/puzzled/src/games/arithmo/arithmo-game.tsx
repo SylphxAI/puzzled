@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.arithmo')
 
 	// Get puzzle from server data
@@ -43,6 +44,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,6 +54,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'arithmo',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
@@ -132,12 +135,13 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'arithmo',
 			gameName: 'Arithmo',
+			puzzleDate,
 			status: game.state.isWon ? 'won' : 'lost',
 			attempts: typeof attempts === 'number' ? attempts : undefined,
 			statLine: emojis,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.results, game.state.guesses.length, game.state.isWon])
+	}, [game.state.results, game.state.guesses.length, game.state.isWon, puzzleDate])
 
 	// Get error message
 	const getErrorMessage = () => {
@@ -236,6 +240,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				status={game.state.isWon ? 'won' : 'lost'}
 				solution={game.state.isWon ? undefined : puzzle.solution.equation}
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: game.state.guesses.length,
 					maxAttempts: MAX_ATTEMPTS,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

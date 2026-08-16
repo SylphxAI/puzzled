@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
@@ -45,6 +46,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -54,6 +56,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'block-slide',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -107,11 +110,12 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			origin: getBaseUrl('origin'),
 			gameSlug: 'block-slide',
 			gameName: 'Slides',
+			puzzleDate,
 			status: game.status === 'won' ? 'won' : 'lost',
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${game.moveCount} moves`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, game.moveCount, startTime])
+	}, [game.status, game.endTime, game.moveCount, startTime, puzzleDate])
 
 	// Reset game
 	const handleReset = useCallback(() => {
@@ -220,7 +224,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 				gameType="block-slide"
 				status={game.status === 'won' ? 'won' : 'lost'}
 				stats={{
-					score: game.moveCount,
+					score: serverScore ?? undefined,
 					mistakes: Math.max(0, game.moveCount - game.minMoves),
 					timeSpentMs: game.endTime && startTime ? game.endTime - startTime : 0,
 				}}

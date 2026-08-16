@@ -22,9 +22,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGroups')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -34,8 +35,8 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const parsed = parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData)
 		// Convert to ConnectionsPuzzle format for useWordGroups hook
 		return {
-			id: puzzleId || `daily-${new Date().toISOString().split('T')[0]}`,
-			date: new Date().toISOString().split('T')[0],
+			id: puzzleId ?? '',
+			date: puzzleDate ?? '',
 			categories: parsed.solution.categories as [
 				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
 				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
@@ -53,6 +54,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showStarBurst,
 		showResultModal,
@@ -63,6 +65,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'word-groups',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.mistakes === 0,
 	})
@@ -173,6 +176,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-groups',
 			gameName: 'Threads',
+			puzzleDate,
 			status,
 			statLine: emojiGrid,
 		})
@@ -281,6 +285,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 				gameType="word-groups"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: guessHistory.length,
 					maxAttempts: 8, // 4 categories + 4 mistakes allowed
 					mistakes: mistakes,

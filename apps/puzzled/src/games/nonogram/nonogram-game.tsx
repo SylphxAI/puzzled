@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.nonogram')
 
 	// Get puzzle from server data or generate from seed (deterministic)
@@ -43,6 +44,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		startGame,
 		endGame,
 		startTime,
+		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,6 +54,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'nonogram',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
@@ -134,11 +137,12 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 			origin: getBaseUrl('origin'),
 			gameSlug: 'nonogram',
 			gameName: 'Paint',
+			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {
@@ -245,6 +249,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 				gameType="nonogram"
 				status="won"
 				stats={{
+					score: serverScore ?? undefined,
 					attempts: 1,
 					maxAttempts: 1,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
