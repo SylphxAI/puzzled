@@ -24,7 +24,7 @@ use puzzled_core::puzzle_play::arithmo;
 use puzzled_core::puzzle_play::arithmo_generate::generate_arithmo_puzzle;
 use puzzled_core::puzzle_play::block_slide_generate::generate_block_slide_puzzle;
 use puzzled_core::puzzle_play::crossword_generate::{
-    client_safe_puzzle_data, generate_crossword_puzzle,
+    client_safe_puzzle_data, client_safe_served_puzzle, generate_crossword_puzzle,
 };
 use puzzled_core::puzzle_play::cryptogram_generate::generate_cryptogram_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
@@ -43,6 +43,7 @@ use puzzled_core::puzzle_play::tango_generate::generate_duo_puzzle;
 use puzzled_core::puzzle_play::word_groups;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
+use puzzled_core::puzzle_play::word_hive;
 use puzzled_core::puzzle_play::word_search_generate::generate_word_search_puzzle;
 use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
@@ -477,6 +478,94 @@ fn word_groups_playing_response(
     })
 }
 
+fn word_hive_playing_response(
+    game_slug: &str,
+    solution: &Value,
+    data: &Value,
+) -> ServiceResult<SubmitGuessResponse> {
+    let mut valid_words = std::collections::HashSet::new();
+    let mut pangrams = std::collections::HashSet::new();
+    if let Some(list) = solution.get("validWords").and_then(Value::as_array) {
+        for word in list.iter().filter_map(Value::as_str) {
+            valid_words.insert(word.to_ascii_uppercase());
+        }
+    }
+    if let Some(list) = solution.get("pangrams").and_then(Value::as_array) {
+        for word in list.iter().filter_map(Value::as_str) {
+            pangrams.insert(word.to_ascii_uppercase());
+        }
+    }
+    if valid_words.is_empty() {
+        return Err(ConnectError::new(
+            ErrorCode::InvalidArgument,
+            "missing_hive_solution",
+        ));
+    }
+    let Some(found) = data
+        .get("foundWords")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect::<Vec<_>>()
+        })
+    else {
+        return Response::ok(SubmitGuessResponse {
+            valid: false,
+            status: String::new(),
+            score: None,
+            game_slug: game_slug.to_string(),
+            error: Some("Missing found words data".to_string()),
+            slice: SLICE_SUBMIT.to_string(),
+            ..Default::default()
+        });
+    };
+    let Some(eval) = word_hive::evaluate_latest_word(&valid_words, &pangrams, &found) else {
+        return Response::ok(SubmitGuessResponse {
+            valid: false,
+            status: String::new(),
+            score: None,
+            game_slug: game_slug.to_string(),
+            error: Some("invalid_guess".to_string()),
+            slice: SLICE_SUBMIT.to_string(),
+            ..Default::default()
+        });
+    };
+    if !eval.accepted {
+        return Response::ok(SubmitGuessResponse {
+            valid: false,
+            status: String::new(),
+            score: None,
+            game_slug: game_slug.to_string(),
+            error: Some(eval.error.unwrap_or("not_in_list").to_string()),
+            slice: SLICE_SUBMIT.to_string(),
+            ..Default::default()
+        });
+    }
+    Response::ok(SubmitGuessResponse {
+        valid: true,
+        status: if eval.terminal { "won" } else { "playing" }.to_string(),
+        score: None,
+        game_slug: game_slug.to_string(),
+        error: None,
+        slice: SLICE_SUBMIT.to_string(),
+        evaluation_json: Some(
+            serde_json::json!({
+                "word": eval.word,
+                "wordScore": eval.word_score,
+                "isPangram": eval.is_pangram,
+                "foundCount": eval.found_count,
+                "totalWords": eval.total_words,
+                "terminal": eval.terminal,
+            })
+            .to_string(),
+        ),
+        ..Default::default()
+    })
+}
+
 fn word_guess_guesses(data: &Value) -> Option<Vec<String>> {
     data.get("guesses").and_then(Value::as_array).map(|items| {
         items
@@ -716,7 +805,7 @@ impl PuzzleService for PuzzleConnectService {
                 slice: SLICE_DAILY.to_string(),
                 stub,
                 puzzle_data_json: puzzle_data
-                    .map(client_safe_puzzle_data)
+                    .map(|data| client_safe_served_puzzle(game_slug, data))
                     .map(|v| v.to_string())
                     .unwrap_or_default(),
                 completed_session: completed_session
@@ -772,6 +861,7 @@ impl PuzzleService for PuzzleConnectService {
             && game_slug != "word-groups"
             && game_slug != "arithmo"
             && game_slug != "quad-words"
+            && game_slug != "word-hive"
         {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
@@ -933,6 +1023,9 @@ impl PuzzleService for PuzzleConnectService {
             }
             if game_slug == "quad-words" {
                 return quad_words_playing_response(game_slug, &solution, &data);
+            }
+            if game_slug == "word-hive" {
+                return word_hive_playing_response(game_slug, &solution, &data);
             }
             let Some(word) = solution.get("word").and_then(Value::as_str) else {
                 return Err(ConnectError::new(

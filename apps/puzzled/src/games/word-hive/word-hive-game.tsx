@@ -10,12 +10,13 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
 import { getBaseUrl } from '@/lib/utils'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { CurrentWord, Honeycomb, RankDisplay, WordList } from './components'
 import { parseWordHiveClientPayload } from './parse-client'
-import { type SubmitResult, useWordHive } from './use-word-hive'
+import { type HiveServerEvaluation, type SubmitResult, useWordHive } from './use-word-hive'
 
 type Props = {
 	mode?: 'daily' | 'archive'
@@ -61,8 +62,48 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	const [showPangramBurst, setShowPangramBurst] = useState(false)
 
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
+	const submitInFlight = useRef(false)
 
-	const game = useWordHive(initialPuzzle, (result) => submitResultHandlerRef.current(result))
+	const evaluateWord = useCallback(
+		async (foundWords: string[]): Promise<HiveServerEvaluation | null> => {
+			const admit = await admitSubmitGuessViaConnect({
+				gameSlug: 'word-hive',
+				status: 'playing',
+				attempts: foundWords.length,
+				timeSpentMs: startTime ? Date.now() - startTime : 0,
+				submission: { foundWords },
+				puzzleId,
+				puzzleDate,
+			})
+			if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
+				return null
+			}
+			try {
+				const parsed = JSON.parse(admit.response.evaluationJson) as {
+					word?: unknown
+					wordScore?: unknown
+					isPangram?: unknown
+					terminal?: unknown
+				}
+				if (typeof parsed.word !== 'string' || typeof parsed.wordScore !== 'number') {
+					return null
+				}
+				return {
+					word: parsed.word,
+					wordScore: parsed.wordScore,
+					isPangram: parsed.isPangram === true,
+					terminal: parsed.terminal === true,
+				}
+			} catch {
+				return null
+			}
+		},
+		[puzzleDate, puzzleId, startTime],
+	)
+
+	const game = useWordHive(initialPuzzle, evaluateWord, (result) =>
+		submitResultHandlerRef.current(result),
+	)
 
 	const handleHelpClick = useCallback(() => {
 		setShowHelpModal(true)
@@ -131,9 +172,15 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	submitResultHandlerRef.current = handleSubmitResult
 
 	const handleSubmit = useCallback(() => {
+		if (submitInFlight.current) return
+		submitInFlight.current = true
 		triggerHaptic('submit')
-		const result = game.trySubmitWord()
-		handleSubmitResult(result)
+		void game
+			.trySubmitWord()
+			.then((result) => handleSubmitResult(result))
+			.finally(() => {
+				submitInFlight.current = false
+			})
 	}, [game, handleSubmitResult])
 
 	// Track game completion (Genius or Queen Bee)
@@ -282,7 +329,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				<WordList
 					foundWords={game.foundWords}
 					totalWords={game.totalWords}
-					pangrams={game.pangrams}
+					pangrams={game.foundPangrams}
 				/>
 			</div>
 

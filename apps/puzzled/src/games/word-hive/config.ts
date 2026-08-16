@@ -12,10 +12,10 @@ import {
 import { SpellingBeeHowToPlay } from './components/how-to-play'
 import { WordHiveIcon } from './icon'
 import { calculateMaxScore, getPuzzleFromSeed } from './puzzles'
-import type { SpellingBeePuzzleClientData } from './types'
+import type { SpellingBeePuzzleClientData, SpellingBeeStoredPuzzleData } from './types'
 import { calculateWordScore, MIN_WORD_LENGTH } from './types'
 
-export type { SpellingBeePuzzleClientData }
+export type { SpellingBeePuzzleClientData, SpellingBeeStoredPuzzleData }
 
 /**
  * Solution stored server-side (same as puzzleData for Spelling Bee)
@@ -73,7 +73,7 @@ function _isPangram(word: string, allLetters: string[]): boolean {
 // ==========================================
 
 export const wordHiveConfig: GameConfig<
-	SpellingBeePuzzleClientData,
+	SpellingBeeStoredPuzzleData,
 	SpellingBeeSolution,
 	SpellingBeeGuess,
 	SpellingBeeGuessResult
@@ -200,7 +200,7 @@ export const wordHiveConfig: GameConfig<
 	 */
 	validateAndScore: (
 		solution: SpellingBeeSolution,
-		_puzzleData: SpellingBeePuzzleClientData,
+		_puzzleData: SpellingBeeStoredPuzzleData,
 		submission: GameSubmission,
 	): GameResult => {
 		const data = submission.data as { foundWords?: string[] } | undefined

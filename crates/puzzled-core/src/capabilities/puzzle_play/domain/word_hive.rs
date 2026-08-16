@@ -131,6 +131,69 @@ pub fn validate_and_score(
     }
 }
 
+/// Live check for the latest found word. Does not persist.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HiveWordEvaluation {
+    pub accepted: bool,
+    pub error: Option<&'static str>,
+    pub word: String,
+    pub word_score: u32,
+    pub is_pangram: bool,
+    pub found_count: usize,
+    pub total_words: usize,
+    pub terminal: bool,
+}
+
+#[must_use]
+pub fn evaluate_latest_word(
+    valid_words: &HashSet<String>,
+    pangrams: &HashSet<String>,
+    found_words: &[String],
+) -> Option<HiveWordEvaluation> {
+    let last = found_words.last()?.to_ascii_uppercase();
+    let prior: HashSet<String> = found_words
+        .iter()
+        .take(found_words.len().saturating_sub(1))
+        .map(|word| word.to_ascii_uppercase())
+        .collect();
+    if prior.contains(&last) {
+        return Some(HiveWordEvaluation {
+            accepted: false,
+            error: Some("already_found"),
+            word: last,
+            word_score: 0,
+            is_pangram: false,
+            found_count: prior.len(),
+            total_words: valid_words.len(),
+            terminal: false,
+        });
+    }
+    if !valid_words.contains(&last) {
+        return Some(HiveWordEvaluation {
+            accepted: false,
+            error: Some("not_in_list"),
+            word: last,
+            word_score: 0,
+            is_pangram: false,
+            found_count: prior.len(),
+            total_words: valid_words.len(),
+            terminal: false,
+        });
+    }
+    let is_pangram = pangrams.contains(&last);
+    let found_count = prior.len() + 1;
+    Some(HiveWordEvaluation {
+        accepted: true,
+        error: None,
+        word: last.clone(),
+        word_score: calculate_word_score(&last, is_pangram),
+        is_pangram,
+        found_count,
+        total_words: valid_words.len(),
+        terminal: found_count == valid_words.len() && !valid_words.is_empty(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,5 +252,28 @@ mod tests {
         assert!(!bad.is_valid());
         let missing = validate_and_score(&valid, &pangrams, None);
         assert!(!missing.is_valid());
+    }
+
+    #[test]
+    fn latest_word_accepts_pangram_and_rejects_unknown() {
+        let valid: HashSet<String> = ["TEST", "TESTING"]
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        let pangrams: HashSet<String> = ["TESTING"].into_iter().map(str::to_string).collect();
+        let accepted = evaluate_latest_word(&valid, &pangrams, &["testing".into()]).expect("eval");
+        assert!(accepted.accepted);
+        assert!(accepted.is_pangram);
+        assert_eq!(accepted.word_score, 14);
+        assert!(!accepted.terminal);
+
+        let rejected = evaluate_latest_word(&valid, &pangrams, &["nope".into()]).expect("eval");
+        assert!(!rejected.accepted);
+        assert_eq!(rejected.error, Some("not_in_list"));
+
+        let done = evaluate_latest_word(&valid, &pangrams, &["test".into(), "testing".into()])
+            .expect("eval");
+        assert!(done.terminal);
+        assert_eq!(done.found_count, 2);
     }
 }

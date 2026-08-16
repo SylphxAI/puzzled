@@ -563,9 +563,11 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
 const CLIENT_LEAK_KEYS: &[&str] = &[
     "answer",
     "equation",
+    "pangrams",
     "solution",
     "solution_json",
     "solutionJson",
+    "validWords",
 ];
 
 /// Strip solution fields from a stored or generated client payload.
@@ -590,6 +592,47 @@ pub fn client_safe_puzzle_data(data: Value) -> Value {
         }
         other => other,
     }
+}
+
+/// Hive keeps letters + counts on the client; the word list stays in Rust.
+#[must_use]
+pub fn hive_client_puzzle_data(data: &Value) -> Value {
+    let word_count = data
+        .get("validWords")
+        .and_then(Value::as_array)
+        .map(Vec::len)
+        .or_else(|| {
+            data.get("wordCount")
+                .and_then(Value::as_u64)
+                .map(|count| count as usize)
+        })
+        .unwrap_or(0);
+    let pangram_count = data
+        .get("pangrams")
+        .and_then(Value::as_array)
+        .map(Vec::len)
+        .or_else(|| {
+            data.get("pangramCount")
+                .and_then(Value::as_u64)
+                .map(|count| count as usize)
+        })
+        .unwrap_or(0);
+    json!({
+        "centerLetter": data.get("centerLetter"),
+        "outerLetters": data.get("outerLetters"),
+        "maxScore": data.get("maxScore"),
+        "wordCount": word_count,
+        "pangramCount": pangram_count,
+    })
+}
+
+/// Slug-aware GetDaily sanitizer.
+#[must_use]
+pub fn client_safe_served_puzzle(game_slug: &str, data: Value) -> Value {
+    if game_slug == "word-hive" {
+        return hive_client_puzzle_data(&data);
+    }
+    client_safe_puzzle_data(data)
 }
 
 #[cfg(test)]
@@ -671,5 +714,22 @@ mod tests {
         let safe = client_safe_puzzle_data(leaked);
         assert_eq!(safe["length"], 8);
         assert_eq!(safe.get("equation"), None);
+    }
+
+    #[test]
+    fn hive_client_payload_keeps_counts_not_words() {
+        let leaked = json!({
+            "centerLetter": "A",
+            "outerLetters": ["B", "C"],
+            "maxScore": 12,
+            "validWords": ["ABBA", "CABB"],
+            "pangrams": ["ABBA"]
+        });
+        let safe = client_safe_served_puzzle("word-hive", leaked);
+        assert_eq!(safe["wordCount"], 2);
+        assert_eq!(safe["pangramCount"], 1);
+        assert_eq!(safe.get("validWords"), None);
+        assert_eq!(safe.get("pangrams"), None);
+        assert_eq!(safe["maxScore"], 12);
     }
 }

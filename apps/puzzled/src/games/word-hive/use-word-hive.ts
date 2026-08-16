@@ -3,30 +3,24 @@
 import { useCallback, useEffect, useReducer } from 'react'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import {
-	calculateWordScore,
 	getRankForScore,
 	MIN_WORD_LENGTH,
+	type SpellingBeePuzzleClientData,
 	type SpellingBeeState,
 } from './types'
-
-// ==========================================
-// Types
-// ==========================================
 
 type SpellingBeeAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }
-	| { type: 'SUBMIT_WORD' }
+	| {
+			type: 'APPLY_EVALUATION'
+			word: string
+			wordScore: number
+			isPangram: boolean
+			terminal: boolean
+	  }
 	| { type: 'SHUFFLE' }
-	| { type: 'RESET'; puzzle: PuzzleData }
-
-type PuzzleData = {
-	centerLetter: string
-	outerLetters: string[]
-	validWords: string[]
-	pangrams: string[]
-	maxScore: number
-}
+	| { type: 'RESET'; puzzle: SpellingBeePuzzleClientData }
 
 export type SubmitResult =
 	| 'success'
@@ -37,9 +31,12 @@ export type SubmitResult =
 	| 'not_in_list'
 	| 'already_found'
 
-// ==========================================
-// Reducer
-// ==========================================
+export type HiveServerEvaluation = {
+	word: string
+	wordScore: number
+	isPangram: boolean
+	terminal: boolean
+}
 
 function spellingBeeReducer(state: SpellingBeeState, action: SpellingBeeAction): SpellingBeeState {
 	switch (action.type) {
@@ -60,42 +57,26 @@ function spellingBeeReducer(state: SpellingBeeState, action: SpellingBeeAction):
 			}
 		}
 
-		case 'SUBMIT_WORD': {
+		case 'APPLY_EVALUATION': {
 			if (state.gameStatus !== 'playing') return state
-
-			const word = state.currentWord.toUpperCase()
-
-			// Check if word is valid
-			if (!state.validWords.includes(word)) {
-				return state
-			}
-
-			// Check if already found
-			if (state.foundWords.includes(word)) {
-				return state
-			}
-
-			const isPangram = state.pangrams.includes(word)
-			const wordScore = calculateWordScore(word, isPangram)
-			const newScore = state.score + wordScore
-			const newFoundWords = [...state.foundWords, word]
-			const newRank = getRankForScore(newScore, state.maxScore)
-
-			// Check if all words found (Queen Bee!)
-			const isComplete = newFoundWords.length === state.validWords.length
-
+			if (state.foundWords.includes(action.word)) return state
+			const newScore = state.score + action.wordScore
+			const newFoundWords = [...state.foundWords, action.word]
+			const newFoundPangrams = action.isPangram
+				? [...state.foundPangrams, action.word]
+				: state.foundPangrams
 			return {
 				...state,
 				foundWords: newFoundWords,
+				foundPangrams: newFoundPangrams,
 				score: newScore,
 				currentWord: '',
-				rank: newRank,
-				gameStatus: isComplete ? 'won' : 'playing',
+				rank: getRankForScore(newScore, state.maxScore),
+				gameStatus: action.terminal ? 'won' : 'playing',
 			}
 		}
 
 		case 'SHUFFLE': {
-			// Randomly shuffle outer letters
 			const shuffled = [...state.outerLetters].sort(() => Math.random() - 0.5)
 			return {
 				...state,
@@ -112,27 +93,25 @@ function spellingBeeReducer(state: SpellingBeeState, action: SpellingBeeAction):
 	}
 }
 
-function createInitialState(puzzle: PuzzleData): SpellingBeeState {
+function createInitialState(puzzle: SpellingBeePuzzleClientData): SpellingBeeState {
 	return {
 		centerLetter: puzzle.centerLetter,
 		outerLetters: puzzle.outerLetters,
 		currentWord: '',
 		foundWords: [],
+		foundPangrams: [],
 		score: 0,
 		maxScore: puzzle.maxScore,
-		pangrams: puzzle.pangrams,
-		validWords: puzzle.validWords,
+		wordCount: puzzle.wordCount,
+		pangramCount: puzzle.pangramCount,
 		gameStatus: 'playing',
 		rank: 'beginner',
 	}
 }
 
-// ==========================================
-// Hook
-// ==========================================
-
 export function useWordHive(
-	initialPuzzle: PuzzleData,
+	initialPuzzle: SpellingBeePuzzleClientData,
+	evaluateWord: (foundWords: string[]) => Promise<HiveServerEvaluation | null>,
 	onSubmitResult?: (result: SubmitResult) => void,
 ) {
 	const [state, dispatch] = useReducer(spellingBeeReducer, initialPuzzle, createInitialState)
@@ -152,57 +131,30 @@ export function useWordHive(
 		dispatch({ type: 'SHUFFLE' })
 	}, [])
 
-	// Try to submit current word with validation feedback
-	const trySubmitWord = useCallback((): SubmitResult => {
+	const trySubmitWord = useCallback(async (): Promise<SubmitResult> => {
 		const word = state.currentWord.toUpperCase()
-
-		// Check minimum length
-		if (word.length < MIN_WORD_LENGTH) {
-			return 'too_short'
-		}
-
-		// Check center letter is included
-		if (!word.includes(state.centerLetter)) {
-			return 'missing_center'
-		}
-
-		// Check all letters are valid
+		if (word.length < MIN_WORD_LENGTH) return 'too_short'
+		if (!word.includes(state.centerLetter)) return 'missing_center'
 		for (const letter of word) {
-			if (!validLettersSet.has(letter)) {
-				return 'invalid_letter'
-			}
+			if (!validLettersSet.has(letter)) return 'invalid_letter'
 		}
+		if (state.foundWords.includes(word)) return 'already_found'
+		const evaled = await evaluateWord([...state.foundWords, word])
+		if (!evaled || evaled.word !== word) return 'not_in_list'
+		dispatch({
+			type: 'APPLY_EVALUATION',
+			word: evaled.word,
+			wordScore: evaled.wordScore,
+			isPangram: evaled.isPangram,
+			terminal: evaled.terminal,
+		})
+		return evaled.isPangram ? 'pangram' : 'success'
+	}, [evaluateWord, state.centerLetter, state.currentWord, state.foundWords, validLettersSet])
 
-		// Check if already found
-		if (state.foundWords.includes(word)) {
-			return 'already_found'
-		}
-
-		// Check if in valid word list
-		if (!state.validWords.includes(word)) {
-			return 'not_in_list'
-		}
-
-		// Valid word - submit it
-		dispatch({ type: 'SUBMIT_WORD' })
-
-		// Check if pangram
-		const isPangram = state.pangrams.includes(word)
-		return isPangram ? 'pangram' : 'success'
-	}, [
-		state.currentWord,
-		state.centerLetter,
-		state.foundWords,
-		state.validWords,
-		state.pangrams,
-		validLettersSet,
-	])
-
-	const reset = useCallback((puzzle: PuzzleData) => {
+	const reset = useCallback((puzzle: SpellingBeePuzzleClientData) => {
 		dispatch({ type: 'RESET', puzzle })
 	}, [])
 
-	// Handle keyboard input
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.ctrlKey || e.metaKey || e.altKey) return
@@ -212,8 +164,7 @@ export function useWordHive(
 				e.preventDefault()
 				triggerHaptic('submit')
 				triggerSound('submit')
-				const result = trySubmitWord()
-				onSubmitResult?.(result)
+				void trySubmitWord().then((result) => onSubmitResult?.(result))
 			} else if (e.key === 'Backspace') {
 				e.preventDefault()
 				triggerHaptic('keyPress')
@@ -222,7 +173,6 @@ export function useWordHive(
 				e.preventDefault()
 				shuffle()
 			} else if (/^[a-zA-Z]$/.test(e.key)) {
-				// Only accept letters that are in the puzzle
 				const upperKey = e.key.toUpperCase()
 				if (validLettersSet.has(upperKey)) {
 					e.preventDefault()
@@ -230,7 +180,6 @@ export function useWordHive(
 					triggerSound('keyPress')
 					addLetter(e.key)
 				}
-				// Ignore invalid letters silently (no feedback)
 			}
 		}
 
@@ -246,9 +195,6 @@ export function useWordHive(
 		validLettersSet,
 	])
 
-	// Calculate found pangrams count
-	const foundPangrams = state.foundWords.filter((w) => state.pangrams.includes(w))
-
 	return {
 		...state,
 		addLetter,
@@ -256,8 +202,8 @@ export function useWordHive(
 		shuffle,
 		trySubmitWord,
 		reset,
-		foundPangrams,
-		totalPangrams: state.pangrams.length,
-		totalWords: state.validWords.length,
+		foundPangrams: state.foundPangrams,
+		totalPangrams: state.pangramCount,
+		totalWords: state.wordCount,
 	}
 }
