@@ -25,6 +25,7 @@ use puzzled_core::puzzle_play::arithmo_generate::generate_arithmo_puzzle;
 use puzzled_core::puzzle_play::crossword_generate::{
     client_safe_puzzle_data, generate_crossword_puzzle,
 };
+use puzzled_core::puzzle_play::cryptogram_generate::generate_cryptogram_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
@@ -520,6 +521,10 @@ fn deterministic_daily(
         }
         "pattern-match" => {
             let (data, solution) = generate_pattern_match_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "cryptogram" => {
+            let (data, solution) = generate_cryptogram_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,
