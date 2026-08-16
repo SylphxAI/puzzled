@@ -69,12 +69,14 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
+	const [finishError, setFinishError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
+	const terminalAutoSubmitRef = useRef(false)
 	const submitInFlight = useRef(false)
 
 	const game = useQuadWords(puzzle)
 
-	useEffect(() => {
+	const submitTerminalFinish = useCallback(async () => {
 		if (
 			(game.state.gameStatus !== 'won' && game.state.gameStatus !== 'lost') ||
 			gameEndedRef.current
@@ -82,7 +84,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			return
 		}
 		gameEndedRef.current = true
-		void endGame({
+		const result = await endGame({
 			status: game.state.gameStatus,
 			attempts: game.state.guessHistory.length,
 			data: {
@@ -90,7 +92,23 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				solvedBoards: game.state.boards.map((b) => b.solved),
 			},
 		})
+		if (result.success) {
+			setFinishError(null)
+			return
+		}
+		gameEndedRef.current = false
+		setFinishError(result.error || 'finish_rejected')
 	}, [endGame, game.state.boards, game.state.gameStatus, game.state.guessHistory])
+
+	useEffect(() => {
+		if (
+			(game.state.gameStatus !== 'won' && game.state.gameStatus !== 'lost') ||
+			terminalAutoSubmitRef.current
+		)
+			return
+		terminalAutoSubmitRef.current = true
+		void submitTerminalFinish()
+	}, [game.state.gameStatus, submitTerminalFinish])
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
@@ -325,6 +343,15 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 					))}
 				</div>
 			</div>
+
+			{finishError && (
+				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
+					<span>{tCommon('errorDescription')}</span>
+					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Toast */}
 			{showToast && (

@@ -33,6 +33,7 @@ type Props = {
 
 export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.arithmo')
+	const tCommon = useTranslations('common')
 
 	// Get puzzle from server data
 	const [puzzle] = useState(() => parseArithmoClientPayload(puzzleData))
@@ -59,6 +60,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [finishError, setFinishError] = useState<string | null>(null)
 	const submitInFlight = useRef(false)
 
 	// Game hook
@@ -158,18 +160,29 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	}, [isReady, game.state.isComplete, game.addChar, game.deleteChar, handleSubmit]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	const gameEndedRef = useRef(false)
-	useEffect(() => {
+	const terminalAutoSubmitRef = useRef(false)
+	const submitTerminalFinish = useCallback(async () => {
 		if (!game.state.isComplete || gameEndedRef.current) return
 		gameEndedRef.current = true
-		void endGame({
+		const result = await endGame({
 			status: game.state.isWon ? 'won' : 'lost',
 			attempts: game.state.guesses.length,
 			maxAttempts: MAX_ATTEMPTS,
-			data: {
-				guesses: game.state.guesses,
-			},
+			data: { guesses: game.state.guesses },
 		})
+		if (result.success) {
+			setFinishError(null)
+			return
+		}
+		gameEndedRef.current = false
+		setFinishError(result.error || 'finish_rejected')
 	}, [endGame, game.state.guesses, game.state.isComplete, game.state.isWon])
+
+	useEffect(() => {
+		if (!game.state.isComplete || terminalAutoSubmitRef.current) return
+		terminalAutoSubmitRef.current = true
+		void submitTerminalFinish()
+	}, [game.state.isComplete, submitTerminalFinish])
 
 	// Share result
 	const handleShare = useCallback(() => {
@@ -275,6 +288,15 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 				keyboardStatus={game.state.keyboardStatus}
 				disabled={game.state.isComplete}
 			/>
+
+			{finishError && (
+				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
+					<span>{tCommon('errorDescription')}</span>
+					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Help Modal */}
 			<HowToPlayModal
