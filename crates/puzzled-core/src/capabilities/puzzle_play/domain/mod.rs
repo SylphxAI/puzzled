@@ -14,6 +14,7 @@ pub mod pattern_match;
 pub mod placement;
 pub mod quad_words;
 pub mod queens_conflict;
+pub mod queens_generate;
 pub mod random;
 pub mod random_lcg;
 pub mod ritual_completion;

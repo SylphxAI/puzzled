@@ -18,6 +18,7 @@ pub use domain::pattern_match;
 pub use domain::placement;
 pub use domain::quad_words;
 pub use domain::queens_conflict;
+pub use domain::queens_generate;
 pub use domain::random;
 pub use domain::random_lcg;
 pub use domain::ritual_completion;

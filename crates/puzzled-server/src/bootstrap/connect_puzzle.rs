@@ -29,6 +29,7 @@ use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
+use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -167,8 +168,19 @@ fn crossword_solution(seed: i64) -> Value {
     generate_crossword_puzzle(seed).1
 }
 
+fn crowns_puzzle_data(seed: i64, difficulty: Option<&str>) -> Value {
+    let generated = generate_queens_puzzle(seed, queens_board_size(difficulty));
+    serde_json::to_value(&generated.puzzle_data).unwrap_or(Value::Null)
+}
+
+fn crowns_solution(seed: i64, difficulty: Option<&str>) -> Value {
+    let generated = generate_queens_puzzle(seed, queens_board_size(difficulty));
+    serde_json::to_value(&generated.solution).unwrap_or(Value::Null)
+}
+
 /// On-server deterministic fallback for free-floor modules that ship a pure generator.
-/// Content store remains preferred when a row exists.
+/// Content store remains preferred when a row exists. Crowns is in the free
+/// rotation; the floor must not depend on a pre-seeded row.
 fn deterministic_daily(
     game_slug: &str,
     seed: i64,
@@ -183,6 +195,10 @@ fn deterministic_daily(
             ))
         }
         "crossword" => Some((crossword_puzzle_data(seed), Some(crossword_solution(seed)))),
+        "crowns" => Some((
+            crowns_puzzle_data(seed, difficulty),
+            Some(crowns_solution(seed, difficulty)),
+        )),
         _ => None,
     }
 }
