@@ -56,6 +56,58 @@ pub fn find_matching_category<'a>(
     })
 }
 
+/// Live coloring for one four-word guess. Does not score or persist.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GroupGuessEvaluation {
+    pub correct: bool,
+    pub category: Option<Category>,
+    pub one_away: bool,
+}
+
+/// Evaluate one guess against remaining (not-yet-found) categories.
+#[must_use]
+pub fn evaluate_group_guess(
+    guess: &[String],
+    categories: &[Category],
+    found_names: &[String],
+) -> GroupGuessEvaluation {
+    let found: std::collections::HashSet<String> = found_names
+        .iter()
+        .map(|name| name.to_ascii_uppercase())
+        .collect();
+    let remaining: Vec<Category> = categories
+        .iter()
+        .filter(|category| !found.contains(&category.name.to_ascii_uppercase()))
+        .cloned()
+        .collect();
+    if let Some(category) = find_matching_category(guess, &remaining) {
+        return GroupGuessEvaluation {
+            correct: true,
+            category: Some(category.clone()),
+            one_away: false,
+        };
+    }
+
+    let guess_set: std::collections::HashSet<String> =
+        guess.iter().map(|word| word.to_ascii_uppercase()).collect();
+    let one_away = categories.iter().any(|category| {
+        if found.contains(&category.name.to_ascii_uppercase()) {
+            return false;
+        }
+        let matching = category
+            .words
+            .iter()
+            .filter(|word| guess_set.contains(&word.to_ascii_uppercase()))
+            .count();
+        matching == 3
+    });
+    GroupGuessEvaluation {
+        correct: false,
+        category: None,
+        one_away,
+    }
+}
+
 /// Mistake-based score for a won game: `max(0, 100 - mistakes * 25)`.
 #[must_use]
 pub fn word_groups_score(mistakes: u32) -> u32 {

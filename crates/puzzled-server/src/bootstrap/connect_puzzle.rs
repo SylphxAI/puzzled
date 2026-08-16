@@ -30,6 +30,8 @@ use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
 use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
+use puzzled_core::puzzle_play::word_groups;
+use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
 use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
@@ -198,6 +200,115 @@ fn word_guess_evaluation_json(eval: &wordle_eval::GuessEvaluation) -> String {
     .to_string()
 }
 
+fn parse_word_groups_categories(solution: &Value) -> Option<Vec<word_groups::Category>> {
+    let cats = solution.get("categories")?.as_array()?;
+    let mut categories = Vec::with_capacity(cats.len());
+    for category in cats {
+        categories.push(word_groups::Category {
+            name: category.get("name")?.as_str()?.to_string(),
+            words: category
+                .get("words")?
+                .as_array()?
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect(),
+            level: u8::try_from(category.get("level").and_then(Value::as_u64).unwrap_or(0))
+                .unwrap_or(0),
+        });
+    }
+    Some(categories)
+}
+
+fn word_groups_playing_response(
+    game_slug: &str,
+    solution: &Value,
+    data: &Value,
+) -> ServiceResult<SubmitGuessResponse> {
+    let Some(categories) = parse_word_groups_categories(solution) else {
+        return Err(ConnectError::new(
+            ErrorCode::InvalidArgument,
+            "missing_categories_solution",
+        ));
+    };
+    let Some(guess) = data.get("guess").and_then(Value::as_array).map(|items| {
+        items
+            .iter()
+            .filter_map(Value::as_str)
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>()
+    }) else {
+        return Response::ok(SubmitGuessResponse {
+            valid: false,
+            status: String::new(),
+            score: None,
+            game_slug: game_slug.to_string(),
+            error: Some("Missing guess data".to_string()),
+            slice: SLICE_SUBMIT.to_string(),
+            ..Default::default()
+        });
+    };
+    let found_names = data
+        .get("foundNames")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let eval = word_groups::evaluate_group_guess(&guess, &categories, &found_names);
+    let category = eval.category.as_ref().map(|category| {
+        serde_json::json!({
+            "name": category.name,
+            "words": category.words,
+            "level": category.level,
+        })
+    });
+    let mistakes = data.get("mistakes").and_then(Value::as_u64).unwrap_or(0);
+    let remaining = if !eval.correct && mistakes + 1 >= u64::from(word_groups::MAX_MISTAKES) {
+        Some(
+            categories
+                .iter()
+                .filter(|category| {
+                    !found_names
+                        .iter()
+                        .any(|name| name.eq_ignore_ascii_case(&category.name))
+                })
+                .map(|category| {
+                    serde_json::json!({
+                        "name": category.name,
+                        "words": category.words,
+                        "level": category.level,
+                    })
+                })
+                .collect::<Vec<_>>(),
+        )
+    } else {
+        None
+    };
+    Response::ok(SubmitGuessResponse {
+        valid: true,
+        status: "playing".to_string(),
+        score: None,
+        game_slug: game_slug.to_string(),
+        error: None,
+        slice: SLICE_SUBMIT.to_string(),
+        evaluation_json: Some(
+            serde_json::json!({
+                "correct": eval.correct,
+                "oneAway": eval.one_away,
+                "category": category,
+                "remaining": remaining,
+            })
+            .to_string(),
+        ),
+        ..Default::default()
+    })
+}
+
 fn word_guess_guesses(data: &Value) -> Option<Vec<String>> {
     data.get("guesses").and_then(Value::as_array).map(|items| {
         items
@@ -232,6 +343,10 @@ fn deterministic_daily(
         "word-guess" => Some((
             word_guess_puzzle_data(seed),
             Some(word_guess_solution(seed)),
+        )),
+        "word-groups" => Some((
+            generate_word_groups_puzzle(seed).0,
+            Some(generate_word_groups_puzzle(seed).1),
         )),
         _ => None,
     }
@@ -448,7 +563,7 @@ impl PuzzleService for PuzzleConnectService {
                 "status_required_won_or_lost",
             ));
         }
-        if playing && game_slug != "word-guess" {
+        if playing && game_slug != "word-guess" && game_slug != "word-groups" {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
                 "status_required_won_or_lost",
@@ -601,6 +716,9 @@ impl PuzzleService for PuzzleConnectService {
         }
 
         if playing {
+            if game_slug == "word-groups" {
+                return word_groups_playing_response(game_slug, &solution, &data);
+            }
             let Some(word) = solution.get("word").and_then(Value::as_str) else {
                 return Err(ConnectError::new(
                     ErrorCode::InvalidArgument,
