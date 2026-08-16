@@ -44,6 +44,7 @@ use puzzled_core::puzzle_play::word_groups;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
 use puzzled_core::puzzle_play::word_hive;
+use puzzled_core::puzzle_play::word_ladder_generate::generate_word_ladder_puzzle;
 use puzzled_core::puzzle_play::word_search_generate::generate_word_search_puzzle;
 use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
@@ -639,6 +640,10 @@ fn deterministic_daily(
         }
         "block-slide" => {
             let (data, solution) = generate_block_slide_puzzle(seed, difficulty);
+            Some((data, Some(solution)))
+        }
+        "word-ladder" => {
+            let (data, solution) = generate_word_ladder_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,

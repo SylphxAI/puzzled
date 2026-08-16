@@ -42,6 +42,7 @@ pub use domain::word_guess_generate;
 pub use domain::word_guess_words;
 pub use domain::word_hive;
 pub use domain::word_ladder;
+pub use domain::word_ladder_generate;
 pub use domain::word_search;
 pub use domain::word_search_generate;
 pub use domain::wordle_eval;

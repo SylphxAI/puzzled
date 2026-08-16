@@ -42,6 +42,8 @@ pub mod word_guess_generate;
 pub mod word_guess_words;
 pub mod word_hive;
 pub mod word_ladder;
+pub mod word_ladder_generate;
+pub mod word_ladder_words;
 pub mod word_search;
 pub mod word_search_generate;
 pub mod word_search_themes;
