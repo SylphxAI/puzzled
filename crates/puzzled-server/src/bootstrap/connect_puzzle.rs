@@ -29,10 +29,11 @@ use puzzled_core::puzzle_play::cryptogram_generate::generate_cryptogram_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::nonogram_generate::generate_nonogram_puzzle;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
+use puzzled_core::puzzle_play::killer_sudoku_generate::generate_killer_sudoku_puzzle;
+use puzzled_core::puzzle_play::nonogram_generate::generate_nonogram_puzzle;
 use puzzled_core::puzzle_play::pattern_match_generate::generate_pattern_match_puzzle;
 use puzzled_core::puzzle_play::quad_words;
 use puzzled_core::puzzle_play::quad_words_generate::generate_quad_words_puzzle;
@@ -540,6 +541,10 @@ fn deterministic_daily(
         }
         "word-search" => {
             let (data, solution) = generate_word_search_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "killer-sudoku" => {
+            let (data, solution) = generate_killer_sudoku_puzzle(seed, difficulty);
             Some((data, Some(solution)))
         }
         _ => None,

@@ -12,6 +12,7 @@ pub mod daily_time;
 pub mod game_format;
 pub mod game_slugs;
 pub mod killer_sudoku;
+pub mod killer_sudoku_generate;
 pub mod nonogram_clues;
 pub mod nonogram_generate;
 pub mod nonogram_patterns;
