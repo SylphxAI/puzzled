@@ -12,7 +12,7 @@ import { fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf/codegenv2
 export const file_puzzled_v1_puzzle: GenFile =
 	/*@__PURE__*/
 	fileDesc(
-		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGIo4BCg9HZXREYWlseVJlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAiABKAkSFgoJcHV6emxlX2lkGAMgASgJSACIAQESGAoLcHV6emxlX2RhdGUYBSABKAlIAYgBAUIMCgpfcHV6emxlX2lkQg4KDF9wdXp6bGVfZGF0ZUoECAQQBSL5AQoQR2V0RGFpbHlSZXNwb25zZRIRCglnYW1lX3NsdWcYASABKAkSFQoNcHV6emxlX251bWJlchgCIAEoDRITCgtwdXp6bGVfZGF0ZRgDIAEoCRIWCglwdXp6bGVfaWQYBCABKAlIAIgBARISCgpkaWZmaWN1bHR5GAUgASgJEhUKDWhhc19jb21wbGV0ZWQYBiABKAgSEAoIY2FuX3BsYXkYByABKAgSDAoEbW9kZRgIIAEoCRINCgVzbGljZRgJIAEoCRIMCgRzdHViGAogASgIEhgKEHB1enpsZV9kYXRhX2pzb24YCyABKAlCDAoKX3B1enpsZV9pZCLjAQoSU3VibWl0R3Vlc3NSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRISCgpkaWZmaWN1bHR5GAMgASgJEg4KBnN0YXR1cxgEIAEoCRIQCghhdHRlbXB0cxgFIAEoDRIVCg10aW1lX3NwZW50X21zGAYgASgEEhcKD3N1Ym1pc3Npb25fanNvbhgHIAEoCRIWCglwdXp6bGVfaWQYCCABKAlIAIgBARIYCgtwdXp6bGVfZGF0ZRgJIAEoCUgBiAEBQgwKCl9wdXp6bGVfaWRCDgoMX3B1enpsZV9kYXRlSgQIAhADIpgBChNTdWJtaXRHdWVzc1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBnN0YXR1cxgCIAEoCRISCgVzY29yZRgDIAEoDUgAiAEBEhEKCWdhbWVfc2x1ZxgEIAEoCRISCgVlcnJvchgGIAEoCUgBiAEBEg0KBXNsaWNlGAcgASgJQggKBl9zY29yZUIICgZfZXJyb3JKBAgFEAYy8AEKDVB1enpsZVNlcnZpY2USSAoJR2V0UHV6emxlEhwucHV6emxlZC52MS5HZXRQdXp6bGVSZXF1ZXN0Gh0ucHV6emxlZC52MS5HZXRQdXp6bGVSZXNwb25zZRJFCghHZXREYWlseRIbLnB1enpsZWQudjEuR2V0RGFpbHlSZXF1ZXN0GhwucHV6emxlZC52MS5HZXREYWlseVJlc3BvbnNlEk4KC1N1Ym1pdEd1ZXNzEh4ucHV6emxlZC52MS5TdWJtaXRHdWVzc1JlcXVlc3QaHy5wdXp6bGVkLnYxLlN1Ym1pdEd1ZXNzUmVzcG9uc2ViBnByb3RvMw',
+		'ChdwdXp6bGVkL3YxL3B1enpsZS5wcm90bxIKcHV6emxlZC52MSJHChBHZXRQdXp6bGVSZXF1ZXN0EhEKCWdhbWVfc2x1ZxgBIAEoCRIMCgRzZWVkGAIgASgDEhIKCmRpZmZpY3VsdHkYAyABKAkidwoRR2V0UHV6emxlUmVzcG9uc2USEQoJZ2FtZV9zbHVnGAEgASgJEgwKBHNlZWQYAiABKAMSEgoKZGlmZmljdWx0eRgDIAEoCRIYChBwdXp6bGVfZGF0YV9qc29uGAQgASgJEg0KBXNsaWNlGAYgASgJSgQIBRAGIo4BCg9HZXREYWlseVJlcXVlc3QSEQoJZ2FtZV9zbHVnGAEgASgJEhIKCmRpZmZpY3VsdHkYAiABKAkSFgoJcHV6emxlX2lkGAMgASgJSACIAQESGAoLcHV6emxlX2RhdGUYBSABKAlIAYgBAUIMCgpfcHV6emxlX2lkQg4KDF9wdXp6bGVfZGF0ZUoECAQQBSKVAQoPRGFpbHlDb21wbGV0aW9uEg4KBnN0YXR1cxgBIAEoCRISCgVzY29yZRgCIAEoDUgAiAEBEhUKCGF0dGVtcHRzGAMgASgNSAGIAQESHAoPY29tcGxldGVkX2F0X21zGAQgASgDSAKIAQFCCAoGX3Njb3JlQgsKCV9hdHRlbXB0c0ISChBfY29tcGxldGVkX2F0X21zIrECChBHZXREYWlseVJlc3BvbnNlEhEKCWdhbWVfc2x1ZxgBIAEoCRIVCg1wdXp6bGVfbnVtYmVyGAIgASgNEhMKC3B1enpsZV9kYXRlGAMgASgJEhYKCXB1enpsZV9pZBgEIAEoCUgAiAEBEhIKCmRpZmZpY3VsdHkYBSABKAkSFQoNaGFzX2NvbXBsZXRlZBgGIAEoCBIQCghjYW5fcGxheRgHIAEoCBIMCgRtb2RlGAggASgJEg0KBXNsaWNlGAkgASgJEgwKBHN0dWIYCiABKAgSGAoQcHV6emxlX2RhdGFfanNvbhgLIAEoCRI2ChFjb21wbGV0ZWRfc2Vzc2lvbhgMIAEoCzIbLnB1enpsZWQudjEuRGFpbHlDb21wbGV0aW9uQgwKCl9wdXp6bGVfaWQi4wEKElN1Ym1pdEd1ZXNzUmVxdWVzdBIRCglnYW1lX3NsdWcYASABKAkSEgoKZGlmZmljdWx0eRgDIAEoCRIOCgZzdGF0dXMYBCABKAkSEAoIYXR0ZW1wdHMYBSABKA0SFQoNdGltZV9zcGVudF9tcxgGIAEoBBIXCg9zdWJtaXNzaW9uX2pzb24YByABKAkSFgoJcHV6emxlX2lkGAggASgJSACIAQESGAoLcHV6emxlX2RhdGUYCSABKAlIAYgBAUIMCgpfcHV6emxlX2lkQg4KDF9wdXp6bGVfZGF0ZUoECAIQAyKYAQoTU3VibWl0R3Vlc3NSZXNwb25zZRINCgV2YWxpZBgBIAEoCBIOCgZzdGF0dXMYAiABKAkSEgoFc2NvcmUYAyABKA1IAIgBARIRCglnYW1lX3NsdWcYBCABKAkSEgoFZXJyb3IYBiABKAlIAYgBARINCgVzbGljZRgHIAEoCUIICgZfc2NvcmVCCAoGX2Vycm9ySgQIBRAGMvABCg1QdXp6bGVTZXJ2aWNlEkgKCUdldFB1enpsZRIcLnB1enpsZWQudjEuR2V0UHV6emxlUmVxdWVzdBodLnB1enpsZWQudjEuR2V0UHV6emxlUmVzcG9uc2USRQoIR2V0RGFpbHkSGy5wdXp6bGVkLnYxLkdldERhaWx5UmVxdWVzdBocLnB1enpsZWQudjEuR2V0RGFpbHlSZXNwb25zZRJOCgtTdWJtaXRHdWVzcxIeLnB1enpsZWQudjEuU3VibWl0R3Vlc3NSZXF1ZXN0Gh8ucHV6emxlZC52MS5TdWJtaXRHdWVzc1Jlc3BvbnNlYgZwcm90bzM',
 	)
 
 /**
@@ -120,6 +120,39 @@ export const GetDailyRequestSchema: GenMessage<GetDailyRequest> =
 	messageDesc(file_puzzled_v1_puzzle, 2)
 
 /**
+ * @generated from message puzzled.v1.DailyCompletion
+ */
+export type DailyCompletion = Message<'puzzled.v1.DailyCompletion'> & {
+	/**
+	 * @generated from field: string status = 1;
+	 */
+	status: string
+
+	/**
+	 * @generated from field: optional uint32 score = 2;
+	 */
+	score?: number | undefined
+
+	/**
+	 * @generated from field: optional uint32 attempts = 3;
+	 */
+	attempts?: number | undefined
+
+	/**
+	 * @generated from field: optional int64 completed_at_ms = 4;
+	 */
+	completedAtMs?: bigint | undefined
+}
+
+/**
+ * Describes the message puzzled.v1.DailyCompletion.
+ * Use `create(DailyCompletionSchema)` to create a new message.
+ */
+export const DailyCompletionSchema: GenMessage<DailyCompletion> =
+	/*@__PURE__*/
+	messageDesc(file_puzzled_v1_puzzle, 3)
+
+/**
  * @generated from message puzzled.v1.GetDailyResponse
  */
 export type GetDailyResponse = Message<'puzzled.v1.GetDailyResponse'> & {
@@ -177,6 +210,15 @@ export type GetDailyResponse = Message<'puzzled.v1.GetDailyResponse'> & {
 	 * @generated from field: string puzzle_data_json = 11;
 	 */
 	puzzleDataJson: string
+
+	/**
+	 * Present only when the authenticated identity has an accepted finish.
+	 * Details are read from the same Rust-owned game_sessions row as the
+	 * completion guard; the client never reconstructs a result.
+	 *
+	 * @generated from field: puzzled.v1.DailyCompletion completed_session = 12;
+	 */
+	completedSession?: DailyCompletion | undefined
 }
 
 /**
@@ -185,7 +227,7 @@ export type GetDailyResponse = Message<'puzzled.v1.GetDailyResponse'> & {
  */
 export const GetDailyResponseSchema: GenMessage<GetDailyResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_puzzle, 3)
+	messageDesc(file_puzzled_v1_puzzle, 4)
 
 /**
  * @generated from message puzzled.v1.SubmitGuessRequest
@@ -242,7 +284,7 @@ export type SubmitGuessRequest = Message<'puzzled.v1.SubmitGuessRequest'> & {
  */
 export const SubmitGuessRequestSchema: GenMessage<SubmitGuessRequest> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_puzzle, 4)
+	messageDesc(file_puzzled_v1_puzzle, 5)
 
 /**
  * @generated from message puzzled.v1.SubmitGuessResponse
@@ -285,7 +327,7 @@ export type SubmitGuessResponse = Message<'puzzled.v1.SubmitGuessResponse'> & {
  */
 export const SubmitGuessResponseSchema: GenMessage<SubmitGuessResponse> =
 	/*@__PURE__*/
-	messageDesc(file_puzzled_v1_puzzle, 5)
+	messageDesc(file_puzzled_v1_puzzle, 6)
 
 /**
  * @generated from service puzzled.v1.PuzzleService

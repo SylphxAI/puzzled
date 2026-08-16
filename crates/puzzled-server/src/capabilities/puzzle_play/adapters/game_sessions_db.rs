@@ -119,6 +119,48 @@ WHERE user_id = $1
 ORDER BY day_key ASC
 "#;
 
+const COMPLETED_SESSION_BY_PID_AND_DATE_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND status IN ('won','lost')
+  AND (
+    puzzle_id = $2
+    OR (game_slug = $3 AND puzzle_date = $4)
+  )
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+const COMPLETED_SESSION_BY_PID_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND puzzle_id = $2
+  AND status IN ('won','lost')
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+const COMPLETED_SESSION_BY_DATE_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND game_slug = $2
+  AND puzzle_date = $3
+  AND status IN ('won','lost')
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompletedSession {
+    pub status: String,
+    pub score: Option<i32>,
+    pub attempts: i32,
+    pub completed_at: Option<chrono::NaiveDateTime>,
+}
+
 /// True when the user has a completed session for the given puzzle and/or date.
 ///
 /// Lookup is **OR** of:
@@ -170,6 +212,64 @@ pub async fn has_completed_session(
         (None, None) => false,
     };
     Ok(exists)
+}
+
+/// Load the accepted result for a served daily puzzle.
+///
+/// This is deliberately the same identity/date-or-puzzle lookup as
+/// [`has_completed_session`]. The result card must reflect the Rust-accepted
+/// `game_sessions` row; it must never be inferred from the completion boolean
+/// or filled with client/current-time defaults.
+pub async fn load_completed_session(
+    pool: &PgPool,
+    user_id: &str,
+    game_slug: &str,
+    puzzle_date: Option<chrono::NaiveDate>,
+    puzzle_id: Option<&str>,
+) -> Result<Option<CompletedSession>, String> {
+    let uid = parse_user_id(user_id)?;
+    let pid = match puzzle_id {
+        Some(p) => Some(uuid::Uuid::parse_str(p).map_err(|e| format!("invalid puzzle id: {e}"))?),
+        None => None,
+    };
+    let date = match puzzle_date {
+        Some(d) => Some(d.and_hms_opt(0, 0, 0).ok_or("invalid date")?),
+        None => None,
+    };
+
+    let row: Option<(String, Option<i32>, i32, Option<chrono::NaiveDateTime>)> = match (pid, date) {
+        (Some(pid), Some(date)) => sqlx::query_as(COMPLETED_SESSION_BY_PID_AND_DATE_SQL)
+            .bind(uid)
+            .bind(pid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (Some(pid), None) => sqlx::query_as(COMPLETED_SESSION_BY_PID_SQL)
+            .bind(uid)
+            .bind(pid)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (None, Some(date)) => sqlx::query_as(COMPLETED_SESSION_BY_DATE_SQL)
+            .bind(uid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (None, None) => None,
+    };
+
+    Ok(
+        row.map(|(status, score, attempts, completed_at)| CompletedSession {
+            status,
+            score,
+            attempts,
+            completed_at,
+        }),
+    )
 }
 
 /// True when the user already has a ritual finish for this module on `day_key`.
@@ -445,6 +545,25 @@ mod tests {
         assert!(normalized.contains("module_class = 'puzzle_ritual'"));
         assert!(normalized.contains("status in ('won', 'lost')"));
         assert!(normalized.contains("select distinct day_key"));
+    }
+
+    #[test]
+    fn completed_session_queries_return_the_authoritative_result_shape() {
+        for sql in [
+            COMPLETED_SESSION_BY_PID_AND_DATE_SQL,
+            COMPLETED_SESSION_BY_PID_SQL,
+            COMPLETED_SESSION_BY_DATE_SQL,
+        ] {
+            let normalized = sql
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ")
+                .to_ascii_lowercase();
+            assert!(normalized.starts_with("select status::text, score, attempts, completed_at"));
+            assert!(normalized.contains("status in ('won','lost')"));
+            assert!(normalized.contains("order by completed_at desc nulls last"));
+            assert!(normalized.contains("limit 1"));
+        }
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

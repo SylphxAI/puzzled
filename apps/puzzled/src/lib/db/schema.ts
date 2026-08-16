@@ -323,8 +323,9 @@ export const gameSessions = pgTable(
  * Premium streak freeze feature.
  * Allows users to "freeze" their streak when they miss a day.
  *
- * NOTE: Streak tracking itself is handled by Platform SDK useStreak().
- * This table ONLY stores the app-specific freeze feature (premium perk).
+ * NOTE: Streak tracking itself is derived by Rust Connect from accepted
+ * game_sessions rows. This table ONLY stores the app-specific freeze feature
+ * (premium perk).
  */
 export const userFreezeData = pgTable(
 	'user_freeze_data',

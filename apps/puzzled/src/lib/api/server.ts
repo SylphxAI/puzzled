@@ -19,7 +19,11 @@ import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
-import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
+import {
+	GetDailyRequestSchema,
+	type GetDailyResponse,
+	PuzzleService,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
 	GetTodayOverviewRequestSchema,
 	GetUserStatsRequestSchema,
@@ -48,7 +52,7 @@ export type DailyStatus = {
 		status: 'won' | 'lost'
 		score: number | null
 		attempts: number | null
-		completedAt: Date
+		completedAt: Date | null
 	} | null
 	puzzle: {
 		id: string
@@ -108,6 +112,21 @@ function parsePuzzleData(json: string): unknown {
 	}
 }
 
+function parseCompletedSession(res: GetDailyResponse): DailyStatus['completedSession'] {
+	const completion = res.completedSession
+	if (!res.hasCompleted || !completion) return null
+	if (completion.status !== 'won' && completion.status !== 'lost') return null
+
+	const completedAt =
+		completion.completedAtMs === undefined ? null : new Date(Number(completion.completedAtMs))
+	return {
+		status: completion.status,
+		score: completion.score ?? null,
+		attempts: completion.attempts ?? null,
+		completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
+	}
+}
+
 // ==========================================
 // Server data accessors (sole Connect)
 // ==========================================
@@ -127,11 +146,10 @@ export const getServerDailyStatus = cache(
 				puzzleDate: input.puzzleDate?.trim() || undefined,
 			}),
 		)
+		const completedSession = parseCompletedSession(res)
 		return {
 			hasCompleted: res.hasCompleted,
-			completedSession: res.hasCompleted
-				? { status: 'won', score: null, attempts: null, completedAt: new Date() }
-				: null,
+			completedSession,
 			puzzle: {
 				id: servedPuzzleId(res.puzzleId) || '',
 				puzzleNumber: Number(res.puzzleNumber),

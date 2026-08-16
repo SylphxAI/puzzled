@@ -113,9 +113,22 @@ export function useDailyStatus(
 			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
 			if (admit.ok) {
 				const r = admit.response
+				const completion = r.completedSession
+				const completedSession =
+					completion && (completion.status === 'won' || completion.status === 'lost')
+						? {
+								status: completion.status,
+								score: completion.score ?? null,
+								attempts: completion.attempts ?? null,
+								completedAt:
+									completion.completedAtMs === undefined
+										? null
+										: new Date(Number(completion.completedAtMs)),
+							}
+						: null
 				return {
 					hasCompleted: r.hasCompleted,
-					completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
+					completedSession,
 					puzzle: {
 						id: servedPuzzleId(r.puzzleId) || '',
 						puzzleNumber: r.puzzleNumber,

@@ -260,6 +260,22 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const hasCompletedToday = mode === 'daily' && (puzzleStatus?.hasCompleted ?? false)
 	const completedSession = puzzleStatus?.completedSession
 
+	// A completion without a result payload is still non-playable. This is a
+	// fail-closed boundary for an older/mismatched API response; never reopen a
+	// server-accepted daily or invent a status to fill the card.
+	if (hasCompletedToday && !completedSession) {
+		return (
+			<div className="flex flex-1 flex-col">
+				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+					<p className="text-lg font-medium">{t('alreadyCompleted')}</p>
+					<Link href="/" className="text-sm text-primary underline">
+						{t('backToGames')}
+					</Link>
+				</main>
+			</div>
+		)
+	}
+
 	// Already completed view (server rendered, no game interaction needed)
 	if (hasCompletedToday && completedSession) {
 		return (
