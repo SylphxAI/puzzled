@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
+	dayKeyUtcDate,
 	isServedPuzzleId,
 	millisecondsUntilNextProductDay,
 	nextProductDayStart,
@@ -7,6 +8,7 @@ import {
 	PRODUCT_DAY_TZ,
 	productDayKey,
 	servedPuzzleId,
+	shiftDayKey,
 } from './product-day'
 
 describe('productDayKey', () => {
@@ -50,6 +52,19 @@ describe('ordinal0FromDayKey', () => {
 
 	test('rejects invalid keys', () => {
 		expect(() => ordinal0FromDayKey('nope')).toThrow('invalid_day_key')
+	})
+})
+
+describe('shiftDayKey', () => {
+	test('includes today and rolls across month bounds', () => {
+		expect(shiftDayKey('2026-08-12', 0)).toBe('2026-08-12')
+		expect(shiftDayKey('2026-08-12', 1)).toBe('2026-08-13')
+		expect(shiftDayKey('2026-08-31', 1)).toBe('2026-09-01')
+		expect(shiftDayKey('2026-08-12', -1)).toBe('2026-08-11')
+	})
+
+	test('dayKeyUtcDate is midnight UTC of the civil key', () => {
+		expect(dayKeyUtcDate('2026-08-12').toISOString()).toBe('2026-08-12T00:00:00.000Z')
 	})
 })
 

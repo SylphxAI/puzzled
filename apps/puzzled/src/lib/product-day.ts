@@ -39,18 +39,37 @@ export function millisecondsUntilNextProductDay(now: Date = new Date()): number 
 	return Math.max(0, nextProductDayStart(now).getTime() - now.getTime())
 }
 
-/** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
-export function ordinal0FromDayKey(dayKey: string): number {
+function parseDayKey(dayKey: string): { year: number; month: number; day: number } {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dayKey.trim())
 	if (!match) {
 		throw new Error(`invalid_day_key:${dayKey}`)
 	}
-	const year = Number(match[1])
-	const month = Number(match[2])
-	const day = Number(match[3])
+	return {
+		year: Number(match[1]),
+		month: Number(match[2]),
+		day: Number(match[3]),
+	}
+}
+
+/** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
+export function ordinal0FromDayKey(dayKey: string): number {
+	const { year, month, day } = parseDayKey(dayKey)
 	const utc = Date.UTC(year, month - 1, day)
 	const start = Date.UTC(year, 0, 1)
 	return Math.round((utc - start) / DAY_MS)
+}
+
+/** Shift a product-day key by whole civil days. */
+export function shiftDayKey(dayKey: string, offsetDays: number): string {
+	const { year, month, day } = parseDayKey(dayKey)
+	const shifted = new Date(Date.UTC(year, month - 1, day + offsetDays))
+	return formatDayKey(shifted.getUTCFullYear(), shifted.getUTCMonth() + 1, shifted.getUTCDate())
+}
+
+/** UTC midnight Date for a product-day key (Postgres `date` storage). */
+export function dayKeyUtcDate(dayKey: string): Date {
+	const { year, month, day } = parseDayKey(dayKey)
+	return new Date(Date.UTC(year, month - 1, day))
 }
 
 /** True when `value` looks like a served daily_puzzles UUID (not a puzzle number). */
