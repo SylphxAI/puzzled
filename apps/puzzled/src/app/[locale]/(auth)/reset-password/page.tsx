@@ -96,9 +96,9 @@ function ResetPasswordContent() {
 						<h1 className="text-2xl font-bold">{t('invalidResetLink')}</h1>
 						<p className="mt-2 text-muted-foreground">{t('invalidResetLinkDescription')}</p>
 					</div>
-					<Link href="/forgot-password">
-						<Button className="w-full">{t('requestNewLink')}</Button>
-					</Link>
+					<Button asChild className="w-full">
+						<Link href="/forgot-password">{t('requestNewLink')}</Link>
+					</Button>
 				</div>
 			</div>
 		)
@@ -124,9 +124,9 @@ function ResetPasswordContent() {
 						<h1 className="text-2xl font-bold">{t('passwordResetSuccess')}</h1>
 						<p className="mt-2 text-muted-foreground">{t('passwordResetSuccessDescription')}</p>
 					</div>
-					<Link href="/login">
-						<Button className="w-full">{t('backToLogin')}</Button>
-					</Link>
+					<Button asChild className="w-full">
+						<Link href="/login">{t('backToLogin')}</Link>
+					</Button>
 				</div>
 			</div>
 		)

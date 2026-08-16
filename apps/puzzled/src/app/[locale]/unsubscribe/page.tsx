@@ -29,14 +29,12 @@ export default function UnsubscribePage() {
 						</p>
 					</div>
 					<div className="space-y-2">
-						<Link href="/settings">
-							<Button className="w-full">Manage Email Preferences</Button>
-						</Link>
-						<Link href="/">
-							<Button variant="outline" className="w-full">
-								Return to Puzzled
-							</Button>
-						</Link>
+						<Button asChild className="w-full">
+							<Link href="/settings">Manage Email Preferences</Link>
+						</Button>
+						<Button asChild variant="outline" className="w-full">
+							<Link href="/">Return to Puzzled</Link>
+						</Button>
 					</div>
 				</div>
 			</div>

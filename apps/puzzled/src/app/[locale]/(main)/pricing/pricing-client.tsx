@@ -37,9 +37,9 @@ function PricingAvailabilityState({
 				<p className="text-muted-foreground">{description}</p>
 			</div>
 			{actionLabel && (
-				<Link href="/">
-					<Button variant="outline">{actionLabel}</Button>
-				</Link>
+				<Button asChild variant="outline">
+					<Link href="/">{actionLabel}</Link>
+				</Button>
 			)}
 		</div>
 	)
