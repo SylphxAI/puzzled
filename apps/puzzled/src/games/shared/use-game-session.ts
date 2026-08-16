@@ -108,6 +108,9 @@ export interface UseGameSessionOptions {
 
 	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
 	puzzleDate?: string
+
+	/** Opt a solution-safe module into server validation for premium archive play. */
+	validateArchive?: boolean
 }
 
 export type GameEndResult = {
@@ -163,6 +166,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		resultModalDelay,
 		guestPromptDelay = 2000,
 		puzzleDate,
+		validateArchive = false,
 	} = options
 
 	const storageKey = getGameSessionKey(gameSlug)
@@ -249,17 +253,19 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 
 			let finish: GameEndResult = { success: true }
 
-			// Save result (daily mode). puzzleId optional for deterministic free
-			// games — server resolves content by day_key.
-			if (mode === 'daily') {
+			// Save result through Connect for daily mode and for modules that use
+			// the solution-safe archive path. The server resolves the solution and
+			// remains the only completion authority in both cases.
+			if (mode === 'daily' || (mode === 'archive' && validateArchive)) {
 				try {
 					const result = await saveResult({
 						status,
 						attempts: endData.attempts ?? 1,
 						timeSpentMs: finalTimeSpentMs,
 						puzzleId,
-						puzzleDate,
-						mode: 'daily' as const,
+						puzzleDate: mode === 'daily' ? puzzleDate : undefined,
+						archiveDate: mode === 'archive' ? puzzleDate : undefined,
+						mode,
 						difficulty,
 						data: endData.data,
 					})
@@ -286,12 +292,12 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					return finish
 				}
 
-				// Daily result cards and guest projections follow the sole
+				// Result cards and guest projections follow the sole
 				// server-accepted SubmitGuess finish. already_played is an
 				// accepted terminal state and is handled by saveResult.
 				celebrate(endData)
 
-				if (!isLoggedIn && !finish.alreadyPlayed) {
+				if (mode === 'daily' && !isLoggedIn && !finish.alreadyPlayed) {
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
@@ -315,6 +321,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			mode,
 			puzzleId,
 			puzzleDate,
+			validateArchive,
 			difficulty,
 			gameSlug,
 			isLoggedIn,

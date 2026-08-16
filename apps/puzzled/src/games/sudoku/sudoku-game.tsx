@@ -16,11 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { SudokuIcon } from '@/shared/components/ui/game-icons'
 import { SudokuGrid, SudokuNumberPad } from './components'
-import type { SudokuPuzzleClientData, SudokuSolution } from './types'
+import { parseSudokuClientPayload } from './parse-client'
 import { useSudoku } from './use-sudoku'
 
 type Props = {
@@ -34,9 +33,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	const t = useTranslations('games.sudoku')
 
 	// Type-safe puzzle parsing - no config import needed
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<SudokuPuzzleClientData, SudokuSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseSudokuClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -57,29 +54,41 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
 
 	// Game hook
-	const game = useSudoku(puzzle.puzzleData, puzzle.solution)
+	const game = useSudoku(puzzle)
 	const conflictingCells = game.getConflictingCells()
+	const { reopen } = game
 
 	// Handle game completion - in useEffect to avoid render-phase side effects
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			endGame({
-				status: 'won',
-				attempts: 1,
-				data: {
-					finalGrid: game.state.userGrid.map((row) => row.map((cell) => cell.value)),
-				},
-			})
+			void (async () => {
+				const result = await endGame({
+					status: 'won',
+					attempts: 1,
+					data: {
+						finalGrid: game.state.userGrid.map((row) => row.map((cell) => cell.value)),
+					},
+				})
+				if (result.success) {
+					setSubmitError(null)
+					return
+				}
+				reopen()
+				gameEndedRef.current = false
+				setSubmitError(result.error || t('messages.submitRejected'))
+			})()
 		}
-	}, [game.state.isComplete, game.state.userGrid, endGame])
+	}, [endGame, game.state.isComplete, game.state.userGrid, reopen, t])
 
 	// Share result — non-spoiler; deep-links free module (day key on already-completed path).
 	const handleShare = useCallback(() => {
@@ -91,10 +100,10 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
-			difficultyLabel: puzzle.puzzleData.difficulty,
+			difficultyLabel: puzzle.difficulty,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzle.puzzleData.difficulty, puzzleDate])
+	}, [game.state.endTime, startTime, puzzle.difficulty, puzzleDate])
 
 	// Ready screen
 	if (isReady) {
@@ -140,7 +149,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				{/* Header with help button */}
 				<div className="flex w-full items-center justify-between">
 					<div className="text-sm text-muted-foreground">
-						{t('name')} ({t(`difficulty.${puzzle.puzzleData.difficulty}`)})
+						{t('name')} ({t(`difficulty.${puzzle.difficulty}`)})
 					</div>
 					<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 						<HelpCircle className="h-4 w-4" />
@@ -163,6 +172,12 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 					isNotesMode={game.state.isNotesMode}
 					disabled={game.state.isComplete}
 				/>
+
+				{submitError ? (
+					<output className="text-center text-sm text-destructive" role="alert">
+						{submitError}
+					</output>
+				) : null}
 			</div>
 
 			{/* Help Modal */}

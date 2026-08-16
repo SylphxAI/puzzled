@@ -102,6 +102,21 @@ export function isGridComplete(userGrid: SudokuCell[][], solution: number[][]): 
 }
 
 /**
+ * True when every Sudoku cell has an entry. Correctness belongs to Rust's
+ * SubmitGuess validator; this helper only decides when the client may submit.
+ */
+export function isGridFilled(userGrid: SudokuCell[][]): boolean {
+	for (let row = 0; row < GRID_SIZE; row++) {
+		for (let col = 0; col < GRID_SIZE; col++) {
+			if (userGrid[row]?.[col]?.value === null || userGrid[row]?.[col]?.value === undefined) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+/**
  * Check if user's current entry at a cell is correct
  */
 function _isCellCorrect(
