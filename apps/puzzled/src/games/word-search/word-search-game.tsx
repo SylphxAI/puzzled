@@ -8,7 +8,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { Check, HelpCircle, Play, RotateCcw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
@@ -16,10 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
-import type { Position, WordSearchPuzzleData, WordSearchSolution } from './types'
+import { parseWordSearchClientPayload } from './parse-client'
+import type { Position } from './types'
 import { useWordSearch } from './use-word-search'
 
 type Props = {
@@ -32,9 +32,7 @@ type Props = {
 export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<WordSearchPuzzleData, WordSearchSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseWordSearchClientPayload(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -53,27 +51,33 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useWordSearch(puzzle.puzzleData, puzzle.solution)
+	const game = useWordSearch(puzzle)
 	const progress = game.getProgress()
 	const foundPlacements = game.getWordPlacements()
 	const gameEndedRef = useRef(false)
 	const gridRef = useRef<HTMLDivElement>(null)
 
-	// Handle game end - delegate to useGameSession
-	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {
+	useEffect(() => {
+		if (game.state.gameStatus !== 'won' || gameEndedRef.current) return
 		gameEndedRef.current = true
-		endGame({
-			status: 'won',
-			data: {
-				foundWords: game.state.foundWords,
-			},
-		})
-	}
+		void (async () => {
+			const result = await endGame({
+				status: 'won',
+				data: {
+					foundWords: game.state.foundWords,
+				},
+			})
+			if (result.success) return
+			game.reopen()
+			gameEndedRef.current = false
+		})()
+	}, [endGame, game.reopen, game.state.foundWords, game.state.gameStatus])
 
 	// Touch/mouse handling for selection
 	const getPositionFromEvent = useCallback(
@@ -81,7 +85,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			if (!gridRef.current) return null
 
 			const rect = gridRef.current.getBoundingClientRect()
-			const cellSize = rect.width / puzzle.puzzleData.grid.length
+			const cellSize = rect.width / puzzle.grid.length
 
 			let clientX: number
 			let clientY: number
@@ -98,12 +102,12 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			const col = Math.floor((clientX - rect.left) / cellSize)
 			const row = Math.floor((clientY - rect.top) / cellSize)
 
-			if (row < 0 || row >= puzzle.puzzleData.grid.length) return null
-			if (col < 0 || col >= puzzle.puzzleData.grid[0].length) return null
+			if (row < 0 || row >= puzzle.grid.length) return null
+			if (col < 0 || col >= puzzle.grid[0].length) return null
 
 			return { row, col }
 		},
-		[puzzle.puzzleData.grid.length, puzzle.puzzleData.grid],
+		[puzzle.grid.length, puzzle.grid],
 	)
 
 	const handlePointerDown = useCallback(
@@ -248,7 +252,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				<div className="flex w-full items-center justify-between px-2">
 					<div className="flex flex-col">
 						<span className="text-sm font-medium">Word Hunt</span>
-						<span className="text-xs text-muted-foreground">Theme: {puzzle.puzzleData.theme}</span>
+						<span className="text-xs text-muted-foreground">Theme: {puzzle.theme}</span>
 					</div>
 					<div className="flex gap-2">
 						<div className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1">
@@ -270,7 +274,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					ref={gridRef}
 					className="grid aspect-square w-full max-w-sm touch-none select-none rounded-lg border-2 border-border bg-background p-1"
 					style={{
-						gridTemplateColumns: `repeat(${puzzle.puzzleData.grid.length}, 1fr)`,
+						gridTemplateColumns: `repeat(${puzzle.grid.length}, 1fr)`,
 					}}
 					onMouseDown={handlePointerDown}
 					onMouseMove={handlePointerMove}
@@ -280,7 +284,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					onTouchMove={handlePointerMove}
 					onTouchEnd={handlePointerUp}
 				>
-					{puzzle.puzzleData.grid.map((row, r) =>
+					{puzzle.grid.map((row, r) =>
 						row.map((letter, c) => {
 							const inSelection = isInSelection(r, c)
 							const found = isFound(r, c)
@@ -306,7 +310,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				{/* Word list */}
 				<div className="w-full max-w-sm px-2">
 					<div className="flex flex-wrap justify-center gap-2">
-						{puzzle.solution.words.map((word) => {
+						{puzzle.words.map((word) => {
 							const found = game.state.foundWords.includes(word)
 							return (
 								<div

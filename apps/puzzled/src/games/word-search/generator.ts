@@ -460,6 +460,7 @@ export function generateWordSearchPuzzle(seed: number): {
 			grid,
 			theme: theme.name,
 			wordCount: words.length,
+			words,
 		},
 		solution: {
 			words,

@@ -16,10 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
-import type { CryptogramPuzzleData, CryptogramSolution } from './types'
+import { parseCryptogramClientPayload } from './parse-client'
 import { ALPHABET, MAX_HINTS } from './types'
 import { useCryptogram } from './use-cryptogram'
 
@@ -33,9 +32,7 @@ type Props = {
 export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<CryptogramPuzzleData, CryptogramSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseCryptogramClientPayload(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -54,27 +51,34 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = useCryptogram(puzzle.puzzleData, puzzle.solution)
+	const game = useCryptogram(puzzle)
 	const progress = game.getProgress()
 	const gameEndedRef = useRef(false)
 
-	// Handle game end - delegate to useGameSession
-	if (game.state.gameStatus !== 'playing' && !gameEndedRef.current) {
+	useEffect(() => {
+		if (game.state.gameStatus === 'playing' || gameEndedRef.current) return
+		const status = game.state.gameStatus
 		gameEndedRef.current = true
-		endGame({
-			status: game.state.gameStatus,
-			hintsUsed: game.state.hintsUsed,
-			data: {
-				guesses: game.state.guesses,
+		void (async () => {
+			const result = await endGame({
+				status,
 				hintsUsed: game.state.hintsUsed,
-			},
-		})
-	}
+				data: {
+					guesses: game.state.guesses,
+					hintsUsed: game.state.hintsUsed,
+				},
+			})
+			if (result.success) return
+			game.reopen()
+			gameEndedRef.current = false
+		})()
+	}, [endGame, game.reopen, game.state.gameStatus, game.state.guesses, game.state.hintsUsed])
 
 	// Handle keyboard input
 	useEffect(() => {
@@ -116,7 +120,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Parse the encrypted text into words for display
-	const words = puzzle.puzzleData.encryptedText.split(' ')
+	const words = puzzle.encryptedText.split(' ')
 
 	// Ready screen
 	if (isReady) {
@@ -185,7 +189,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				{/* Quote author hint */}
 				<div className="rounded-lg bg-muted/30 px-4 py-2 text-center">
 					<span className="text-sm text-muted-foreground">Quote by </span>
-					<span className="text-sm font-medium">{puzzle.puzzleData.author}</span>
+					<span className="text-sm font-medium">{puzzle.author}</span>
 				</div>
 
 				{/* Encrypted text display */}

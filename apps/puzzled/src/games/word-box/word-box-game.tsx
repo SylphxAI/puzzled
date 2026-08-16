@@ -16,10 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import type { LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
+import { parseWordBoxClientPayload } from './parse-client'
 import { useWordBox } from './use-word-box'
 
 type Props = {
@@ -34,9 +33,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const tCommon = useTranslations('common')
 
 	// Get puzzle from server data (client-safe - no config import)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<LetterBoxedPuzzleData, LetterBoxedSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseWordBoxClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -57,6 +54,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 	})
 
 	// Game-specific state
@@ -65,20 +63,25 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const [toastMessage, setToastMessage] = useState('')
 	const gameEndedRef = useRef(false)
 
-	const game = useWordBox(puzzle.puzzleData, puzzle.solution)
-	const box = puzzle.puzzleData.box
+	const game = useWordBox(puzzle)
+	const box = puzzle.box
 
-	// Handle game completion - delegate to useGameSession
-	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {
+	useEffect(() => {
+		if (game.state.gameStatus !== 'won' || gameEndedRef.current) return
 		gameEndedRef.current = true
-		endGame({
-			status: 'won',
-			attempts: game.state.words.length,
-			data: {
-				words: game.state.words,
-			},
-		})
-	}
+		void (async () => {
+			const result = await endGame({
+				status: 'won',
+				attempts: game.state.words.length,
+				data: {
+					words: game.state.words,
+				},
+			})
+			if (result.success) return
+			game.reopen()
+			gameEndedRef.current = false
+		})()
+	}, [endGame, game.reopen, game.state.gameStatus, game.state.words])
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
