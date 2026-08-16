@@ -190,7 +190,11 @@ async function HomeContent({
 			{streakInfo && currentStreak > 0 && !hasPlayedToday && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
-						<StreakWarning currentStreak={currentStreak} hasPlayedToday={hasPlayedToday} />
+						<StreakWarning
+							currentStreak={currentStreak}
+							hasPlayedToday={hasPlayedToday}
+							game={todaysFreeGame}
+						/>
 					</div>
 				</section>
 			)}
