@@ -37,6 +37,8 @@ describe('guest day summary', () => {
 		const summary = summarizeGuestCompletions(games, '2026-08-13')
 
 		expect(summary.completedSlugs).toEqual(['sudoku', 'word-guess'])
+		expect(summary.todaySessions).toHaveLength(2)
+		expect(summary.todaySessions.find((game) => game.gameSlug === 'word-guess')?.score).toBe(87)
 		expect(summary.completedCount).toBe(2)
 		expect(summary.currentStreak).toBe(3)
 		expect(summary.hasPlayedToday).toBe(true)

@@ -19,6 +19,7 @@ export type GuestGameStore = {
 export type GuestDaySummary = {
 	today: string
 	completedSlugs: string[]
+	todaySessions: GuestCompletedGame[]
 	completedCount: number
 	currentStreak: number
 	hasPlayedToday: boolean
@@ -123,6 +124,7 @@ export function summarizeGuestCompletions(
 	return {
 		today,
 		completedSlugs,
+		todaySessions: games.filter((game) => game.date === today),
 		completedCount: completedSlugs.length,
 		currentStreak,
 		hasPlayedToday,

@@ -174,17 +174,57 @@ export async function getServerPersonalDailyCompletions(input: {
 	isPremium: boolean
 	freeGameSlug: string
 }): Promise<Record<string, boolean>> {
-	return loadDailyCompletionMap({
+	const results = await getServerPersonalDailyResults(input)
+	return Object.fromEntries(
+		Object.entries(results).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
+	)
+}
+
+export type PersonalDailyResult = {
+	hasCompleted: boolean
+	completedSession: DailyStatus['completedSession']
+}
+
+/**
+ * Personal daily result details for the home return journey.
+ *
+ * GetDaily remains the sole result authority. The completion loader still
+ * controls guest, entitlement, and fail-closed targeting; a missing payload
+ * never becomes a fabricated score or status.
+ */
+export async function getServerPersonalDailyResults(input: {
+	gameSlugs: readonly string[]
+	isGuest: boolean
+	isPremium: boolean
+	freeGameSlug: string
+}): Promise<Record<string, PersonalDailyResult>> {
+	const statuses = new Map<string, DailyStatus>()
+	await loadDailyCompletionMap({
 		...input,
 		read: async (gameSlug) => {
 			try {
-				return (await getServerDailyStatus({ gameSlug })).hasCompleted
+				const status = await getServerDailyStatus({ gameSlug })
+				statuses.set(gameSlug, status)
+				return status.hasCompleted
 			} catch (error) {
-				console.error(`[HomePage] Failed to read personal daily status for ${gameSlug}:`, error)
+				console.error(`[HomePage] Failed to read personal daily result for ${gameSlug}:`, error)
 				throw error
 			}
 		},
 	})
+
+	return Object.fromEntries(
+		input.gameSlugs.map((gameSlug) => {
+			const status = statuses.get(gameSlug)
+			return [
+				gameSlug,
+				{
+					hasCompleted: status?.hasCompleted ?? false,
+					completedSession: status?.completedSession ?? null,
+				},
+			] as const
+		}),
+	)
 }
 
 export const getServerTodaysPuzzle = cache(

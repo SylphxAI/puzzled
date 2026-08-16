@@ -7,7 +7,7 @@ import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
 import {
-	getServerPersonalDailyCompletions,
+	getServerPersonalDailyResults,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	type StreakInfo,
@@ -122,7 +122,7 @@ async function HomeContent({
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
-	const personalCompletions = await getServerPersonalDailyCompletions({
+	const personalResults = await getServerPersonalDailyResults({
 		gameSlugs: gameMetadata.map((game) => game.slug),
 		isGuest,
 		isPremium,
@@ -146,11 +146,14 @@ async function HomeContent({
 	// Merge game info with completion status and free/locked status
 	const gamesWithCompletion = gameMetadata.map((game) => {
 		const isFreeToday = game.slug === todaysFreeGame
+		const result = personalResults[game.slug]
+		const score = result?.completedSession?.score
 		return {
 			slug: game.slug,
 			name: t(`games.${slugToCamelCase(game.slug)}.name`),
 			display: game.display,
-			completed: personalCompletions[game.slug] ?? false,
+			completed: personalResults[game.slug]?.hasCompleted ?? false,
+			score: score === null || score === undefined ? undefined : String(score),
 			// Free game is unlocked for everyone, other games locked for non-premium
 			locked: !isPremium && !isFreeToday,
 			isFreeToday,

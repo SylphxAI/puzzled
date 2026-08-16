@@ -221,11 +221,20 @@ export function DailyHero({
 	const t = useTranslations()
 	const guestSummary = useGuestDailySummary()
 	const guestCompleted = new Set(guestSummary.completedSlugs)
+	const guestResults = new Map(
+		guestSummary.todaySessions.map((session) => [canonicalizeGameSlug(session.gameSlug), session]),
+	)
 	const displayGames = isGuest
-		? games.map((game) => ({
-				...game,
-				completed: game.completed || guestCompleted.has(canonicalizeGameSlug(game.slug)),
-			}))
+		? games.map((game) => {
+				const guestResult = guestResults.get(canonicalizeGameSlug(game.slug))
+				return {
+					...game,
+					completed: game.completed || guestCompleted.has(canonicalizeGameSlug(game.slug)),
+					score:
+						game.score ??
+						(guestResult?.score === undefined ? undefined : String(guestResult.score)),
+				}
+			})
 		: games
 	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(displayGames)
 	const progressPercent = availableCount > 0 ? (completedCount / availableCount) * 100 : 0
@@ -374,7 +383,9 @@ export function DailyHero({
 										{game.completed && game.score ? (
 											<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
 												<TrendingUp className="h-4 w-4" />
-												<span>{game.score}</span>
+												<span>
+													{t('gameResult.score')}: {game.score}
+												</span>
 											</div>
 										) : (
 											<>
