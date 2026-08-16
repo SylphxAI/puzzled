@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { useGuestDailySummary } from '@/features/daily/hooks/use-guest-game-state'
-import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
+import { prioritizeDailyGames, summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { canonicalizeGameSlug } from '@/lib/game-slug'
@@ -381,18 +381,7 @@ export function DailyHero({
 	}, [])
 
 	const streakMessage = getStreakMessageKey(displayStreak)
-	const featuredGame = displayGames.find((game) => game.isFreeToday)
-	const otherGames = displayGames
-		.filter((game) => game.slug !== featuredGame?.slug)
-		.slice()
-		.sort((left, right) => {
-			const rank = (game: GameInfo) => {
-				if (!game.completed && !game.locked) return 0
-				if (game.completed) return 1
-				return 2
-			}
-			return rank(left) - rank(right)
-		})
+	const { featuredGame, otherGames } = prioritizeDailyGames(displayGames)
 
 	return (
 		<div className={cn('space-y-4', className)}>
