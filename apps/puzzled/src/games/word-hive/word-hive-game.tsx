@@ -60,9 +60,11 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [shakeWord, setShakeWord] = useState(false)
 	const [showPangramBurst, setShowPangramBurst] = useState(false)
+	const [finishError, setFinishError] = useState<string | null>(null)
 
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 	const submitInFlight = useRef(false)
+	const terminalAutoSubmitRef = useRef(false)
 
 	const evaluateWord = useCallback(
 		async (foundWords: string[]): Promise<HiveServerEvaluation | null> => {
@@ -183,13 +185,11 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			})
 	}, [game, handleSubmitResult])
 
-	// Track game completion (Genius or Queen Bee)
 	const gameEndedRef = useRef(false)
-	useEffect(() => {
+	const submitTerminalFinish = useCallback(async () => {
 		if ((game.rank !== 'genius' && game.gameStatus !== 'won') || gameEndedRef.current) return
-
 		gameEndedRef.current = true
-		void endGame({
+		const result = await endGame({
 			status: 'won',
 			attempts: game.foundWords.length,
 			maxAttempts: game.totalWords,
@@ -197,7 +197,21 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 				foundWords: game.foundWords,
 			},
 		})
+		if (result.success) {
+			setFinishError(null)
+			return
+		}
+		gameEndedRef.current = false
+		setFinishError(result.error || 'finish_rejected')
 	}, [endGame, game.foundWords, game.gameStatus, game.rank, game.totalWords])
+
+	useEffect(() => {
+		if ((game.rank !== 'genius' && game.gameStatus !== 'won') || terminalAutoSubmitRef.current) {
+			return
+		}
+		terminalAutoSubmitRef.current = true
+		void submitTerminalFinish()
+	}, [game.gameStatus, game.rank, submitTerminalFinish])
 
 	const handleShare = async () => {
 		const text = formatRitualShareText({
@@ -282,6 +296,15 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			<div className="w-full max-w-sm px-2 sm:px-0">
 				<RankDisplay rank={game.rank} score={game.score} maxScore={game.maxScore} />
 			</div>
+
+			{finishError && (
+				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
+					<span>{tCommon('errorDescription')}</span>
+					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Current Word Input */}
 			<CurrentWord word={game.currentWord} centerLetter={game.centerLetter} shake={shakeWord} />

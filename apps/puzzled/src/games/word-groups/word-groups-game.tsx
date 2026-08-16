@@ -119,7 +119,9 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const [toastMessage, setToastMessage] = useState('')
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [isShuffling, setIsShuffling] = useState(false)
+	const [finishError, setFinishError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
+	const terminalAutoSubmitRef = useRef(false)
 
 	// Help click handler
 	const handleHelpClick = useCallback(() => {
@@ -143,12 +145,10 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		}
 	}, [lastGuessWasOneAway, t])
 
-	// Handle game end - delegate to useGameSession
-	useEffect(() => {
+	const submitTerminalFinish = useCallback(async () => {
 		if (gameStatus === 'playing' || gameEndedRef.current) return
-
 		gameEndedRef.current = true
-		void endGame({
+		const result = await endGame({
 			status: gameStatus,
 			attempts: guessHistory.length,
 			maxAttempts: 8, // 4 categories + 4 mistakes allowed
@@ -158,7 +158,19 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				mistakes,
 			},
 		})
+		if (result.success) {
+			setFinishError(null)
+			return
+		}
+		gameEndedRef.current = false
+		setFinishError(result.error || 'finish_rejected')
 	}, [endGame, gameStatus, guessHistory.length, mistakes, solvedCategories])
+
+	useEffect(() => {
+		if (gameStatus === 'playing' || terminalAutoSubmitRef.current) return
+		terminalAutoSubmitRef.current = true
+		void submitTerminalFinish()
+	}, [gameStatus, submitTerminalFinish])
 
 	const handleSubmit = () => {
 		void submitGuess()
@@ -351,6 +363,15 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						className="min-h-[44px] px-4 text-xs sm:px-6 sm:text-sm"
 					>
 						{t('submit')}
+					</Button>
+				</div>
+			)}
+
+			{finishError && (
+				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
+					<span>{tCommon('errorDescription')}</span>
+					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
+						{tCommon('retry')}
 					</Button>
 				</div>
 			)}

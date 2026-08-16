@@ -66,10 +66,12 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const [toastMessage, setToastMessage] = useState('')
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [shakeRow, setShakeRow] = useState(false)
+	const [finishError, setFinishError] = useState<string | null>(null)
 
 	// Ref to store submit result handler (avoids circular dependency with useWordGuess)
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 	const gameEndedRef = useRef(false)
+	const terminalAutoSubmitRef = useRef(false)
 
 	const evaluateGuesses = useCallback(
 		async (guesses: string[]): Promise<WordGuessServerEvaluation | null> => {
@@ -176,18 +178,29 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		void trySubmitGuess().then(handleSubmitResult)
 	}, [trySubmitGuess, handleSubmitResult])
 
-	// Handle game end - in useEffect to avoid render-phase side effects
-	useEffect(() => {
-		if (gameStatus !== 'playing' && !gameEndedRef.current) {
-			gameEndedRef.current = true
-			void endGame({
-				status: gameStatus,
-				attempts: guesses.length,
-				maxAttempts: puzzle.maxAttempts,
-				data: { guesses },
-			})
+	const submitTerminalFinish = useCallback(async () => {
+		if (gameStatus === 'playing' || gameEndedRef.current) return
+		gameEndedRef.current = true
+		const result = await endGame({
+			status: gameStatus,
+			attempts: guesses.length,
+			maxAttempts: puzzle.maxAttempts,
+			data: { guesses },
+		})
+		if (result.success) {
+			setFinishError(null)
+			return
 		}
+		gameEndedRef.current = false
+		setFinishError(result.error || 'finish_rejected')
 	}, [endGame, gameStatus, guesses, puzzle.maxAttempts])
+
+	// Persist only after render; a rejected terminal remains explicitly retryable.
+	useEffect(() => {
+		if (gameStatus === 'playing' || terminalAutoSubmitRef.current) return
+		terminalAutoSubmitRef.current = true
+		void submitTerminalFinish()
+	}, [gameStatus, submitTerminalFinish])
 
 	const handleShare = async () => {
 		// Build emoji grid from evaluations
@@ -349,6 +362,15 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				onDelete={deleteLetter}
 				canSubmit={currentGuess.length === WORD_LENGTH}
 			/>
+
+			{finishError && (
+				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
+					<span>{tCommon('errorDescription')}</span>
+					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
+						{tCommon('retry')}
+					</Button>
+				</div>
+			)}
 
 			{/* Toast */}
 			{showToast && (
