@@ -21,6 +21,7 @@ use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
 use puzzled_core::puzzle_play::arithmo;
+use puzzled_core::puzzle_play::arithmo_generate::generate_arithmo_puzzle;
 use puzzled_core::puzzle_play::crossword_generate::{
     client_safe_puzzle_data, generate_crossword_puzzle,
 };
@@ -31,6 +32,7 @@ use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
 use puzzled_core::puzzle_play::quad_words;
+use puzzled_core::puzzle_play::quad_words_generate::generate_quad_words_puzzle;
 use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
 use puzzled_core::puzzle_play::word_groups;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
@@ -507,6 +509,14 @@ fn deterministic_daily(
             generate_word_groups_puzzle(seed).0,
             Some(generate_word_groups_puzzle(seed).1),
         )),
+        "arithmo" => {
+            let (data, solution) = generate_arithmo_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "quad-words" => {
+            let (data, solution) = generate_quad_words_puzzle(seed);
+            Some((data, Some(solution)))
+        }
         _ => None,
     }
 }

@@ -1,6 +1,7 @@
 //! Domain model and pure rules.
 
 pub mod arithmo;
+pub mod arithmo_generate;
 pub mod block_slide;
 pub mod crossword_generate;
 pub mod crossword_grid;
@@ -13,6 +14,8 @@ pub mod nonogram_clues;
 pub mod pattern_match;
 pub mod placement;
 pub mod quad_words;
+pub mod quad_words_generate;
+pub mod quad_words_words;
 pub mod queens_conflict;
 pub mod queens_generate;
 pub mod random;

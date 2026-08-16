@@ -5,6 +5,7 @@ pub mod domain;
 
 pub use application::game_flows;
 pub use domain::arithmo;
+pub use domain::arithmo_generate;
 pub use domain::block_slide;
 pub use domain::crossword_generate;
 pub use domain::crossword_grid;
@@ -17,6 +18,7 @@ pub use domain::nonogram_clues;
 pub use domain::pattern_match;
 pub use domain::placement;
 pub use domain::quad_words;
+pub use domain::quad_words_generate;
 pub use domain::queens_conflict;
 pub use domain::queens_generate;
 pub use domain::random;
