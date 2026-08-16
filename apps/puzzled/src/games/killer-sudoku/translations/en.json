@@ -13,5 +13,8 @@
 	"startGame": "Start Game",
 	"complete": "Puzzle Complete!",
 	"notes": "Notes",
-	"notesMode": "Notes Mode"
+	"notesMode": "Notes Mode",
+	"messages": {
+		"submitRejected": "The server could not accept this grid. Check the cages and try again."
+	}
 }

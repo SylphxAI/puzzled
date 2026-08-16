@@ -23,6 +23,9 @@ export type KillerSudokuPuzzleData = {
 	cages: Cage[]
 }
 
+/** Client-side puzzle data (completed grid hidden). */
+export type KillerSudokuPuzzleClientData = KillerSudokuPuzzleData
+
 // Solution data
 export type KillerSudokuSolution = {
 	grid: number[][] // Complete solution
