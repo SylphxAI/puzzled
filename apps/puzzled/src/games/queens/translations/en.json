@@ -13,5 +13,8 @@
 	},
 	"startGame": "Start Game",
 	"hasConflicts": "Some queens are in conflict",
-	"complete": "Puzzle Complete!"
+	"complete": "Puzzle Complete!",
+	"messages": {
+		"submitRejected": "The server could not accept this board. Check the crowns and try again."
+	}
 }

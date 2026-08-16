@@ -19,6 +19,9 @@ export type QueensPuzzleData = {
 	regions: number[][] // Grid of region indices
 }
 
+/** Client-side puzzle data (crown positions hidden). */
+export type QueensPuzzleClientData = QueensPuzzleData
+
 export type QueensSolution = {
 	queens: [number, number][] // Array of [row, col] positions
 }
