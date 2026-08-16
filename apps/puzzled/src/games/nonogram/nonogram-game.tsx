@@ -16,12 +16,11 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { NonogramIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic } from '@/shared/hooks'
 import { NonogramGrid } from './components'
-import type { NonogramPuzzleData, NonogramSolution } from './types'
+import { parseNonogramClientPayload } from './parse-client'
 import { useNonogram } from './use-nonogram'
 
 type Props = {
@@ -35,9 +34,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	const t = useTranslations('games.nonogram')
 
 	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<NonogramPuzzleData, NonogramSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseNonogramClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -55,11 +52,13 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 
 	// Game hook
 	const game = useNonogram()
@@ -67,18 +66,18 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle.puzzleData, puzzle.solution.grid)
+			game.init(puzzle)
 		}
-	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [puzzle, isReady, game.init])
 
 	// Track game completion - in useEffect to avoid render-phase side effects
 	const gameEndedRef = useRef(false)
 	useEffect(() => {
-		if (game.state.isComplete && !gameEndedRef.current) {
-			gameEndedRef.current = true
-			// Convert CellState[][] to boolean[][] for server
-			const finalGrid = game.state.userGrid.map((row) => row.map((cell) => cell === 'filled'))
-			endGame({
+		if (!game.state.isComplete || gameEndedRef.current) return
+		gameEndedRef.current = true
+		const finalGrid = game.state.userGrid.map((row) => row.map((cell) => cell === 'filled'))
+		void (async () => {
+			const result = await endGame({
 				status: 'won',
 				attempts: 1,
 				maxAttempts: 1,
@@ -86,8 +85,15 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 					finalGrid,
 				},
 			})
-		}
-	}, [game.state.isComplete, game.state.userGrid, endGame])
+			if (result.success) {
+				setSubmitError(null)
+				return
+			}
+			game.reopen()
+			gameEndedRef.current = false
+			setSubmitError(result.error || t('messages.submitRejected'))
+		})()
+	}, [endGame, game.reopen, game.state.isComplete, game.state.userGrid, t])
 
 	// Handle cell click - toggle based on fill mode
 	const handleCellClick = useCallback(
@@ -186,7 +192,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			{/* Header with help button */}
 			<div className="flex w-full max-w-sm items-center justify-between">
 				<div className="text-sm text-muted-foreground">
-					{t('name')} {puzzle.puzzleData.theme && `• ${puzzle.puzzleData.theme}`}
+					{t('name')} {puzzle.theme && `• ${puzzle.theme}`}
 				</div>
 				<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 					<HelpCircle className="h-4 w-4" />
@@ -234,6 +240,12 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			{game.state.errors > 0 && (
 				<div className="text-sm text-destructive">{t('errors', { count: game.state.errors })}</div>
 			)}
+
+			{submitError ? (
+				<output className="text-center text-sm text-destructive" role="alert">
+					{submitError}
+				</output>
+			) : null}
 
 			{/* Help Modal */}
 			<HowToPlayModal
