@@ -12,6 +12,7 @@ pub mod game_slugs;
 pub mod killer_sudoku;
 pub mod nonogram_clues;
 pub mod pattern_match;
+pub mod pattern_match_generate;
 pub mod placement;
 pub mod quad_words;
 pub mod quad_words_generate;

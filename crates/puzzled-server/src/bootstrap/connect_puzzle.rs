@@ -31,6 +31,7 @@ use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
+use puzzled_core::puzzle_play::pattern_match_generate::generate_pattern_match_puzzle;
 use puzzled_core::puzzle_play::quad_words;
 use puzzled_core::puzzle_play::quad_words_generate::generate_quad_words_puzzle;
 use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
@@ -515,6 +516,10 @@ fn deterministic_daily(
         }
         "quad-words" => {
             let (data, solution) = generate_quad_words_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "pattern-match" => {
+            let (data, solution) = generate_pattern_match_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,

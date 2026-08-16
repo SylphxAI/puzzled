@@ -16,6 +16,7 @@ pub use domain::game_slugs;
 pub use domain::killer_sudoku;
 pub use domain::nonogram_clues;
 pub use domain::pattern_match;
+pub use domain::pattern_match_generate;
 pub use domain::placement;
 pub use domain::quad_words;
 pub use domain::quad_words_generate;
