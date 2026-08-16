@@ -41,6 +41,7 @@ use puzzled_core::puzzle_play::tango_generate::generate_duo_puzzle;
 use puzzled_core::puzzle_play::word_groups;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
+use puzzled_core::puzzle_play::word_search_generate::generate_word_search_puzzle;
 use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
@@ -535,6 +536,10 @@ fn deterministic_daily(
         }
         "nonogram" => {
             let (data, solution) = generate_nonogram_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "word-search" => {
+            let (data, solution) = generate_word_search_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,
