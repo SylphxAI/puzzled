@@ -13,15 +13,18 @@ use crate::capabilities::gamification::adapters::freezes_db::{
     load_freezes_available, upsert_freeze_data,
 };
 use crate::capabilities::gamification::interfaces::gamification_api::{
-    add_streak_freezes, try_auto_freeze, FreezeData, FreezeReason,
+    add_streak_freezes, build_streak_info, try_auto_freeze, FreezeData, FreezeReason,
 };
-use crate::capabilities::puzzle_play::adapters::game_sessions_db::has_completed_session;
+use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
+    count_sessions, load_ritual_days,
+};
 use crate::proto::puzzled::v1::{
     AddStreakFreezesRequest, AddStreakFreezesResponse, GamificationService, GetStreakInfoRequest,
     GetStreakInfoResponse, StreakInfo, ToggleAutoFreezeRequest, ToggleAutoFreezeResponse,
     TryAutoFreezeRequest, TryAutoFreezeResponse,
 };
-use chrono::Utc;
+use chrono::{NaiveDate, Utc};
+use puzzled_core::gamification::streak::{summarize_streak, StreakSummary};
 use puzzled_core::puzzle_play::daily_time::product_day_key;
 
 #[derive(Clone)]
@@ -45,19 +48,46 @@ impl GamificationConnectService {
         data
     }
 
-    fn to_info(
-        &self,
-        freeze: &FreezeData,
-        has_played_today: bool,
-        total_played: u32,
-    ) -> StreakInfo {
+    async fn load_streak(&self, user_id: &str, today: NaiveDate) -> (StreakSummary, u32) {
+        let Some(pool) = &self.state.pool else {
+            return (StreakSummary::default(), 0);
+        };
+
+        let days = match load_ritual_days(pool, user_id).await {
+            Ok(days) => days,
+            Err(error) => {
+                tracing::warn!(%error, "streak ritual-day lookup failed");
+                Vec::new()
+            }
+        };
+        let total = match count_sessions(pool, user_id).await {
+            Ok(total) => total,
+            Err(error) => {
+                tracing::warn!(%error, "streak total lookup failed");
+                0
+            }
+        };
+
+        (summarize_streak(today, &days), total)
+    }
+
+    async fn current_info(&self, user_id: &str, freeze: &FreezeData) -> StreakInfo {
+        let today = product_day_key(Utc::now());
+        let (summary, total) = self.load_streak(user_id, today).await;
+        let view = build_streak_info(
+            i32::try_from(summary.current_streak).unwrap_or(i32::MAX),
+            i32::try_from(summary.max_streak).unwrap_or(i32::MAX),
+            summary.has_played_today,
+            i32::try_from(total).unwrap_or(i32::MAX),
+            freeze,
+        );
         StreakInfo {
-            current_streak: 0,
-            max_streak: 0,
-            has_played_today,
-            total_games_played: total_played,
-            freezes_available: freeze.freezes_available.max(0) as u32,
-            auto_freeze_enabled: freeze.auto_freeze_enabled,
+            current_streak: u32::try_from(view.current_streak).unwrap_or_default(),
+            max_streak: u32::try_from(view.max_streak).unwrap_or_default(),
+            has_played_today: view.has_played_today,
+            total_games_played: u32::try_from(view.total_games_played).unwrap_or_default(),
+            freezes_available: u32::try_from(view.freezes_available).unwrap_or_default(),
+            auto_freeze_enabled: view.auto_freeze_enabled,
             ..Default::default()
         }
     }
@@ -71,43 +101,9 @@ impl GamificationService for GamificationConnectService {
         _request: ServiceRequest<'_, GetStreakInfoRequest>,
     ) -> ServiceResult<GetStreakInfoResponse> {
         let identity = require_identity(&ctx)?;
-        let today = product_day_key(Utc::now());
-        let (played_today, total) = match &self.state.pool {
-            Some(pool) => {
-                let played = match has_completed_session(
-                    pool,
-                    &identity.user_id,
-                    "word-guess",
-                    Some(today),
-                    None,
-                )
-                .await
-                {
-                    Ok(v) => v,
-                    Err(error) => {
-                        tracing::warn!(%error, "streak played-today lookup failed");
-                        false
-                    }
-                };
-                let total = match crate::capabilities::puzzle_play::adapters::game_sessions_db::count_sessions(
-                    pool,
-                    &identity.user_id,
-                )
-                .await
-                {
-                    Ok(v) => v,
-                    Err(error) => {
-                        tracing::warn!(%error, "streak total lookup failed");
-                        0
-                    }
-                };
-                (played, total)
-            }
-            None => (false, 0),
-        };
         let freeze = self.load_freeze(&identity.user_id).await;
         Response::ok(GetStreakInfoResponse {
-            info: self.to_info(&freeze, played_today, total).into(),
+            info: self.current_info(&identity.user_id, &freeze).await.into(),
             ..Default::default()
         })
     }
@@ -138,8 +134,9 @@ impl GamificationService for GamificationConnectService {
                 ));
             }
         }
+        let info = self.current_info(&identity.user_id, &freeze).await;
         Response::ok(ToggleAutoFreezeResponse {
-            info: self.to_info(&freeze, false, 0).into(),
+            info: info.into(),
             ..Default::default()
         })
     }
@@ -173,9 +170,10 @@ impl GamificationService for GamificationConnectService {
                 }
             }
         }
+        let info = self.current_info(&identity.user_id, &freeze).await;
         Response::ok(TryAutoFreezeResponse {
             used_freeze: used,
-            info: self.to_info(&freeze, false, 0).into(),
+            info: info.into(),
             ..Default::default()
         })
     }
@@ -211,8 +209,9 @@ impl GamificationService for GamificationConnectService {
                 ));
             }
         }
+        let info = self.current_info(&req.user_id, &freeze).await;
         Response::ok(AddStreakFreezesResponse {
-            info: self.to_info(&freeze, false, 0).into(),
+            info: info.into(),
             ..Default::default()
         })
     }

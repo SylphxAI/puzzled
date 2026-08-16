@@ -108,6 +108,17 @@ SELECT EXISTS (
 )
 "#;
 
+const RITUAL_DAYS_SQL: &str = r#"
+SELECT DISTINCT day_key
+FROM game_sessions
+WHERE user_id = $1
+  AND day_key IS NOT NULL
+  AND is_ritual = true
+  AND module_class = 'puzzle_ritual'
+  AND status IN ('won', 'lost')
+ORDER BY day_key ASC
+"#;
+
 /// True when the user has a completed session for the given puzzle and/or date.
 ///
 /// Lookup is **OR** of:
@@ -181,6 +192,27 @@ pub async fn has_ritual_completion(
         .await
         .map_err(|e| format!("game_sessions ritual query failed: {e}"))?;
     Ok(exists)
+}
+
+/// Load product days that contain a server-accepted ritual finish.
+///
+/// This is a read of the same `game_sessions` rows written by Connect
+/// `SubmitGuess`; it is not a second streak store or completion writer.
+pub async fn load_ritual_days(
+    pool: &PgPool,
+    user_id: &str,
+) -> Result<Vec<chrono::NaiveDate>, String> {
+    let uid = parse_user_id(user_id)?;
+    let rows: Vec<String> = sqlx::query_scalar(RITUAL_DAYS_SQL)
+        .bind(uid)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("ritual day query failed: {e}"))?;
+
+    Ok(rows
+        .into_iter()
+        .filter_map(|day| chrono::NaiveDate::parse_from_str(&day, "%Y-%m-%d").ok())
+        .collect())
 }
 
 /// Persist a server-validated result (authoritative path from Connect submit).
@@ -400,6 +432,19 @@ mod tests {
         // Unique-index race path still maps to product rejection, not 500.
         assert!(is_unique_violation_code("23505"));
         assert!(!is_unique_violation_code("42P01"));
+    }
+
+    #[test]
+    fn ritual_days_query_reads_only_server_accepted_ritual_rows() {
+        let normalized = RITUAL_DAYS_SQL
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase();
+        assert!(normalized.contains("is_ritual = true"));
+        assert!(normalized.contains("module_class = 'puzzle_ritual'"));
+        assert!(normalized.contains("status in ('won', 'lost')"));
+        assert!(normalized.contains("select distinct day_key"));
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

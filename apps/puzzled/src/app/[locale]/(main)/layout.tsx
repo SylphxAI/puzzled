@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic'
 
+import { currentUser } from '@sylphx/sdk/nextjs'
+import { getServerStreakInfo } from '@/lib/api/server'
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -20,13 +22,23 @@ function SkipNavigation() {
 	)
 }
 
-export default function MainLayout({ children }: Props) {
+export default async function MainLayout({ children }: Props) {
+	const user = await currentUser()
+	let currentStreak = 0
+	if (user) {
+		try {
+			currentStreak = (await getServerStreakInfo()).currentStreak
+		} catch (error) {
+			console.error('[MainLayout] Failed to fetch streak info:', error)
+		}
+	}
+
 	return (
 		<div className="relative flex min-h-screen flex-col">
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}
-			<LayoutTopNav />
+			<LayoutTopNav currentStreak={currentStreak} />
 
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}

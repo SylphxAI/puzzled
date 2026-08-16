@@ -120,7 +120,7 @@ pub fn try_auto_freeze(mut data: FreezeData, is_premium: bool) -> (bool, FreezeD
     (true, data)
 }
 
-/// Streak-info envelope (Platform streak residual = 0).
+/// Streak-info envelope derived from server-accepted ritual rows.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StreakInfo {
@@ -135,13 +135,15 @@ pub struct StreakInfo {
 /// Build streak-info response (pure).
 #[must_use]
 pub fn build_streak_info(
+    current_streak: i32,
+    max_streak: i32,
     has_played_today: bool,
     total_games_played: i32,
     freeze: &FreezeData,
 ) -> StreakInfo {
     StreakInfo {
-        current_streak: 0,
-        max_streak: 0,
+        current_streak: current_streak.max(0),
+        max_streak: max_streak.max(0),
         has_played_today,
         total_games_played,
         freezes_available: freeze.freezes_available,
@@ -192,16 +194,16 @@ mod tests {
     }
 
     #[test]
-    fn streak_info_platform_placeholder() {
+    fn streak_info_carries_server_accepted_streak_values() {
         let d = FreezeData {
             user_id: "u".into(),
             freezes_available: 1,
             freezes_used: 0,
             auto_freeze_enabled: true,
         };
-        let info = build_streak_info(true, 42, &d);
-        assert_eq!(info.current_streak, 0);
-        assert_eq!(info.max_streak, 0);
+        let info = build_streak_info(4, 9, true, 42, &d);
+        assert_eq!(info.current_streak, 4);
+        assert_eq!(info.max_streak, 9);
         assert!(info.has_played_today);
         assert_eq!(info.total_games_played, 42);
     }
