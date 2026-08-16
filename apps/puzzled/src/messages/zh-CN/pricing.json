@@ -1,6 +1,6 @@
 {
-	"title": "选择方案",
-	"subtitle": "解锁无限练习、谜题历史和连胜保护",
+	"title": "解锁完整 Puzzled 谜题套装",
+	"subtitle": "畅玩所有可用每日谜题、重温谜题历史并查看高级统计。可随时取消。",
 	"socialProof": "Join 10,000+ daily puzzlers",
 	"valueProp1Title": "连胜冻结",
 	"valueProp1Desc": "保护你的连胜",
@@ -50,5 +50,9 @@
 	"checkoutFailed": "Something went wrong",
 	"tryAgainLater": "Unable to start checkout. Please try again later.",
 	"valueProp3Title": "All Games",
-	"valueProp3Desc": "Unlimited access"
+	"valueProp3Desc": "Unlimited access",
+	"plansLoading": "正在加载方案…",
+	"plansUnavailableTitle": "Premium 方案目前无法提供",
+	"plansUnavailableDescription": "你的每日免费谜题仍然可用，请稍后再试。",
+	"plansUnavailableAction": "继续今日免费谜题"
 }

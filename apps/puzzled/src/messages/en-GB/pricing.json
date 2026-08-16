@@ -1,6 +1,6 @@
 {
-	"title": "Try Premium Free for 7 Days",
-	"subtitle": "Full access to all games, streak freezes, and archive. Cancel anytime.",
+	"title": "Unlock the full Puzzled suite",
+	"subtitle": "Play every available daily module, revisit the archive, and see deeper stats. Cancel anytime.",
 	"socialProof": "Join 10,000+ daily puzzlers",
 	"valueProp1Title": "Streak Freeze",
 	"valueProp1Desc": "Protect your streak",
@@ -50,5 +50,9 @@
 	"checkoutFailed": "Something went wrong",
 	"tryAgainLater": "Unable to start checkout. Please try again later.",
 	"valueProp3Title": "All Games",
-	"valueProp3Desc": "Unlimited access"
+	"valueProp3Desc": "Unlimited access",
+	"plansLoading": "Loading plans...",
+	"plansUnavailableTitle": "Premium plans are not available right now",
+	"plansUnavailableDescription": "Your free daily puzzle is still available. Please check back later.",
+	"plansUnavailableAction": "Continue with today's free puzzle"
 }
