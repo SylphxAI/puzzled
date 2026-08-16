@@ -30,6 +30,8 @@ use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
 use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
+use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
+use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -178,6 +180,34 @@ fn crowns_solution(seed: i64, difficulty: Option<&str>) -> Value {
     serde_json::to_value(&generated.solution).unwrap_or(Value::Null)
 }
 
+fn word_guess_puzzle_data(seed: i64) -> Value {
+    generate_word_guess_puzzle(seed).0
+}
+
+fn word_guess_solution(seed: i64) -> Value {
+    generate_word_guess_puzzle(seed).1
+}
+
+fn word_guess_evaluation_json(eval: &wordle_eval::GuessEvaluation) -> String {
+    serde_json::json!({
+        "letters": eval.letters.iter().map(|status| status.as_str()).collect::<Vec<_>>(),
+        "won": eval.won,
+        "terminal": eval.terminal,
+        "reveal": eval.reveal,
+    })
+    .to_string()
+}
+
+fn word_guess_guesses(data: &Value) -> Option<Vec<String>> {
+    data.get("guesses").and_then(Value::as_array).map(|items| {
+        items
+            .iter()
+            .filter_map(Value::as_str)
+            .map(ToOwned::to_owned)
+            .collect()
+    })
+}
+
 /// On-server deterministic fallback for free-floor modules that ship a pure generator.
 /// Content store remains preferred when a row exists. Crowns is in the free
 /// rotation; the floor must not depend on a pre-seeded row.
@@ -198,6 +228,10 @@ fn deterministic_daily(
         "crowns" => Some((
             crowns_puzzle_data(seed, difficulty),
             Some(crowns_solution(seed, difficulty)),
+        )),
+        "word-guess" => Some((
+            word_guess_puzzle_data(seed),
+            Some(word_guess_solution(seed)),
         )),
         _ => None,
     }
@@ -406,12 +440,20 @@ impl PuzzleService for PuzzleConnectService {
                 "unknown_game",
             ));
         }
-        let Some(status) = parse_status(&req.status) else {
+        let playing = req.status.trim().eq_ignore_ascii_case("playing");
+        let status = parse_status(&req.status);
+        if status.is_none() && !playing {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
                 "status_required_won_or_lost",
             ));
-        };
+        }
+        if playing && game_slug != "word-guess" {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "status_required_won_or_lost",
+            ));
+        }
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
         // Premium/archive still fail closed via enforce_play_access.
         let uid = self.identity_for_submit(&ctx)?;
@@ -558,11 +600,68 @@ impl PuzzleService for PuzzleConnectService {
             }
         }
 
+        if playing {
+            let Some(word) = solution.get("word").and_then(Value::as_str) else {
+                return Err(ConnectError::new(
+                    ErrorCode::InvalidArgument,
+                    "missing_solution_word",
+                ));
+            };
+            let Some(guesses) = word_guess_guesses(&data) else {
+                return Response::ok(SubmitGuessResponse {
+                    valid: false,
+                    status: String::new(),
+                    score: None,
+                    game_slug: game_slug.to_string(),
+                    error: Some("Missing guesses data".to_string()),
+                    slice: SLICE_SUBMIT.to_string(),
+                    ..Default::default()
+                });
+            };
+            let Some(eval) = wordle_eval::evaluate_latest_guess(word, &guesses) else {
+                return Response::ok(SubmitGuessResponse {
+                    valid: false,
+                    status: String::new(),
+                    score: None,
+                    game_slug: game_slug.to_string(),
+                    error: Some("invalid_guess".to_string()),
+                    slice: SLICE_SUBMIT.to_string(),
+                    ..Default::default()
+                });
+            };
+            return Response::ok(SubmitGuessResponse {
+                valid: true,
+                status: if eval.terminal {
+                    if eval.won {
+                        "won"
+                    } else {
+                        "lost"
+                    }
+                } else {
+                    "playing"
+                }
+                .to_string(),
+                score: None,
+                game_slug: game_slug.to_string(),
+                error: None,
+                slice: SLICE_SUBMIT.to_string(),
+                evaluation_json: Some(word_guess_evaluation_json(&eval)),
+                ..Default::default()
+            });
+        }
+
+        let Some(status) = status else {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "status_required_won_or_lost",
+            ));
+        };
+
         let envelope = SubmissionEnvelope {
             status,
             attempts: req.attempts,
             time_spent_ms: req.time_spent_ms,
-            data,
+            data: data.clone(),
         };
         let verdict = validate_submission(game_slug, &puzzle_data, &solution, &envelope);
 
@@ -620,6 +719,19 @@ impl PuzzleService for PuzzleConnectService {
             }
         }
 
+        let evaluation_json = if game_slug == "word-guess" {
+            solution
+                .get("word")
+                .and_then(Value::as_str)
+                .and_then(|word| {
+                    word_guess_guesses(&data)
+                        .and_then(|guesses| wordle_eval::evaluate_latest_guess(word, &guesses))
+                })
+                .map(|eval| word_guess_evaluation_json(&eval))
+        } else {
+            None
+        };
+
         Response::ok(SubmitGuessResponse {
             valid: true,
             status: status_label(verdict.status.unwrap_or(status)).to_string(),
@@ -627,6 +739,7 @@ impl PuzzleService for PuzzleConnectService {
             game_slug: game_slug.to_string(),
             error: None,
             slice: SLICE_SUBMIT.to_string(),
+            evaluation_json,
             ..Default::default()
         })
     }
