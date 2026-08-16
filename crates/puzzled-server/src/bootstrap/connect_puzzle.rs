@@ -29,6 +29,7 @@ use puzzled_core::puzzle_play::cryptogram_generate::generate_cryptogram_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
+use puzzled_core::puzzle_play::nonogram_generate::generate_nonogram_puzzle;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
@@ -530,6 +531,10 @@ fn deterministic_daily(
         }
         "duo" => {
             let (data, solution) = generate_duo_puzzle(seed);
+            Some((data, Some(solution)))
+        }
+        "nonogram" => {
+            let (data, solution) = generate_nonogram_puzzle(seed);
             Some((data, Some(solution)))
         }
         _ => None,
