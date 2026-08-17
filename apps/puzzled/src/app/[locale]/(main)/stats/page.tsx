@@ -131,6 +131,27 @@ export default async function StatsPage({ params }: Props) {
 		) as StatsData
 	}
 	if (streakResult.status === 'fulfilled') streakInfo = streakResult.value
+	if (userStatsResult.status === 'rejected' || streakResult.status === 'rejected') {
+		return (
+			<>
+				<Header />
+				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
+					<div className="mx-auto max-w-md text-center">
+						<div className="mb-6 flex justify-center">
+							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+								<BarChart3 className="h-10 w-10 text-muted-foreground" />
+							</div>
+						</div>
+						<h1 className="mb-2 text-2xl font-bold">{t('unavailableTitle')}</h1>
+						<p className="mb-6 text-muted-foreground">{t('unavailableDescription')}</p>
+						<Button asChild>
+							<Link href={`/${locale}/stats`}>{t('retry')}</Link>
+						</Button>
+					</div>
+				</main>
+			</>
+		)
+	}
 	try {
 		isPremium = await hasPremiumAccess(user.id)
 	} catch {
