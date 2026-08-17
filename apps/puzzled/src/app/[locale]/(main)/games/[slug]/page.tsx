@@ -234,18 +234,25 @@ export default async function GamePage({ params, searchParams }: Props) {
 			}
 		} else {
 			// Daily mode (default) - pass difficulty for games that support it
-			const [statusData, puzzleData, streakData] = await Promise.all([
+			const [statusResult, puzzleResult, streakResult] = await Promise.allSettled([
 				getServerDailyStatus({ gameSlug: slug, difficulty }),
 				getServerTodaysPuzzle({ gameSlug: slug, difficulty }),
 				user ? getServerStreakInfo() : null,
 			])
-			puzzleStatus = statusData
+			if (statusResult.status === 'rejected') throw statusResult.reason
+			if (puzzleResult.status === 'rejected') throw puzzleResult.reason
+
+			puzzleStatus = statusResult.value
 			puzzle = {
-				puzzleId: puzzleData.puzzleId,
-				puzzleData: puzzleData.puzzleData,
-				puzzleDate: puzzleData.puzzleDate,
+				puzzleId: puzzleResult.value.puzzleId,
+				puzzleData: puzzleResult.value.puzzleData,
+				puzzleDate: puzzleResult.value.puzzleDate,
 			}
-			streakInfo = streakData
+			if (streakResult.status === 'fulfilled') {
+				streakInfo = streakResult.value
+			} else {
+				console.error('[GamePage] Failed to load optional streak info:', streakResult.reason)
+			}
 		}
 	} catch (error) {
 		console.error('[GamePage] Failed to load puzzle data:', error)
