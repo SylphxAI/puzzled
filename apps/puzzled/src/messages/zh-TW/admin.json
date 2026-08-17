@@ -87,6 +87,12 @@
 	"dashboard": {
 		"title": "儀表板",
 		"subtitle": "平台概覽",
+		"loading": "正在載入管理資料……",
+		"error": "無法載入管理資料",
+		"errorHint": "無法連線 AdminService。請重試，不要將不可用資料誤認為零。",
+		"retry": "重試",
+		"unavailable": "不可用",
+		"source": "AdminService",
 		"totalUsers": "總用戶數",
 		"premiumUsers": "Premium 用戶",
 		"gameSessions": "遊戲會話",
@@ -113,6 +119,9 @@
 		"last7Days": "Last 7 days",
 		"newUsers": "New Users",
 		"gamesPlayed": "Games Played",
+		"gamesPlayedToday": "今日遊戲數",
+		"dlq": "死信佇列",
+		"failedJobs": "失敗工作",
 		"conversionRate": "Conversion Rate"
 	},
 	"users": {

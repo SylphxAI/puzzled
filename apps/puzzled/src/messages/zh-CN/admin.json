@@ -87,6 +87,12 @@
 	"dashboard": {
 		"title": "仪表板",
 		"subtitle": "平台概览",
+		"loading": "正在加载管理数据……",
+		"error": "无法加载管理数据",
+		"errorHint": "无法连接 AdminService。请重试，不要将不可用数据误认为零。",
+		"retry": "重试",
+		"unavailable": "不可用",
+		"source": "AdminService",
 		"totalUsers": "总用户数",
 		"premiumUsers": "Premium 用户",
 		"gameSessions": "游戏会话",
@@ -113,6 +119,9 @@
 		"last7Days": "Last 7 days",
 		"newUsers": "New Users",
 		"gamesPlayed": "Games Played",
+		"gamesPlayedToday": "今日游戏数",
+		"dlq": "死信队列",
+		"failedJobs": "失败任务",
 		"conversionRate": "Conversion Rate"
 	},
 	"users": {

@@ -87,6 +87,12 @@
 	"dashboard": {
 		"title": "Dashboard",
 		"subtitle": "Overview of your platform",
+		"loading": "Loading admin data...",
+		"error": "Unable to load admin data",
+		"errorHint": "AdminService could not be reached. Retry without treating unavailable data as zero.",
+		"retry": "Retry",
+		"unavailable": "Unavailable",
+		"source": "AdminService",
 		"totalUsers": "Total Users",
 		"premiumUsers": "Premium Users",
 		"gameSessions": "Game Sessions",
@@ -113,6 +119,9 @@
 		"last7Days": "Last 7 days",
 		"newUsers": "New Users",
 		"gamesPlayed": "Games Played",
+		"gamesPlayedToday": "Games played today",
+		"dlq": "DLQ",
+		"failedJobs": "Failed jobs",
 		"conversionRate": "Conversion Rate"
 	},
 	"users": {
