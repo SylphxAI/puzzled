@@ -61,6 +61,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
+	const [submitError, setSubmitError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
 
 	const game = useWordBox(puzzle)
@@ -77,11 +78,15 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 					words: game.state.words,
 				},
 			})
-			if (result.success) return
+			if (result.success) {
+				setSubmitError(null)
+				return
+			}
 			game.reopen()
 			gameEndedRef.current = false
+			setSubmitError(tCommon('errorDescription'))
 		})()
-	}, [endGame, game.reopen, game.state.gameStatus, game.state.words])
+	}, [endGame, game.reopen, game.state.gameStatus, game.state.words, tCommon])
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
@@ -90,6 +95,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	}, [])
 
 	const handleSubmit = useCallback(() => {
+		setSubmitError(null)
 		// In production, validate against a dictionary API
 		// For now, accept words 3+ letters that pass box rules
 		const result = game.submitWord(game.state.currentWord.length >= 3)
@@ -302,6 +308,15 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 						Enter
 					</Button>
 				</div>
+
+				{submitError && (
+					<output
+						className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive"
+						role="alert"
+					>
+						{submitError}
+					</output>
+				)}
 
 				{/* Previous words */}
 				{game.state.words.length > 0 && (

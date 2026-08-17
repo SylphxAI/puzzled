@@ -56,6 +56,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 
 	const game = useWordSearch(puzzle)
 	const progress = game.getProgress()
@@ -73,11 +74,15 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					foundWords: game.state.foundWords,
 				},
 			})
-			if (result.success) return
+			if (result.success) {
+				setSubmitError(null)
+				return
+			}
 			game.reopen()
 			gameEndedRef.current = false
+			setSubmitError(tCommon('errorDescription'))
 		})()
-	}, [endGame, game.reopen, game.state.foundWords, game.state.gameStatus])
+	}, [endGame, game.reopen, game.state.foundWords, game.state.gameStatus, tCommon])
 
 	// Touch/mouse handling for selection
 	const getPositionFromEvent = useCallback(
@@ -268,6 +273,15 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						</Button>
 					</div>
 				</div>
+
+				{submitError && (
+					<output
+						className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive"
+						role="alert"
+					>
+						{submitError}
+					</output>
+				)}
 
 				{/* Grid */}
 				<div

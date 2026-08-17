@@ -56,6 +56,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
+	const [submitError, setSubmitError] = useState<string | null>(null)
 
 	const game = useCryptogram(puzzle)
 	const progress = game.getProgress()
@@ -74,11 +75,22 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					hintsUsed: game.state.hintsUsed,
 				},
 			})
-			if (result.success) return
+			if (result.success) {
+				setSubmitError(null)
+				return
+			}
 			game.reopen()
 			gameEndedRef.current = false
+			setSubmitError(tCommon('errorDescription'))
 		})()
-	}, [endGame, game.reopen, game.state.gameStatus, game.state.guesses, game.state.hintsUsed])
+	}, [
+		endGame,
+		game.reopen,
+		game.state.gameStatus,
+		game.state.guesses,
+		game.state.hintsUsed,
+		tCommon,
+	])
 
 	// Handle keyboard input
 	useEffect(() => {
@@ -185,6 +197,15 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						</Button>
 					</div>
 				</div>
+
+				{submitError && (
+					<output
+						className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive"
+						role="alert"
+					>
+						{submitError}
+					</output>
+				)}
 
 				{/* Quote author hint */}
 				<div className="rounded-lg bg-muted/30 px-4 py-2 text-center">
