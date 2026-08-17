@@ -11,7 +11,6 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerStreakInfo,
-	getServerTodaysPuzzle,
 	type StreakInfo,
 } from '@/lib/api/server'
 import { getGameAccess, getTodaysFreeGame } from '@/lib/billing/server'
@@ -254,20 +253,20 @@ export default async function GamePage({ params, searchParams }: Props) {
 				puzzleDate: dateParam,
 			}
 		} else {
-			// Daily mode (default) - pass difficulty for games that support it
-			const [statusResult, puzzleResult, streakResult] = await Promise.allSettled([
+			// Daily mode (default) - keep admission and play on one GetDaily
+			// snapshot. Separate status/puzzle reads can straddle the HKT reset,
+			// pairing one day's completion state with another day's puzzle.
+			const [statusResult, streakResult] = await Promise.allSettled([
 				getServerDailyStatus({ gameSlug: slug, difficulty }),
-				getServerTodaysPuzzle({ gameSlug: slug, difficulty }),
 				user ? getServerStreakInfo() : null,
 			])
 			if (statusResult.status === 'rejected') throw statusResult.reason
-			if (puzzleResult.status === 'rejected') throw puzzleResult.reason
 
 			puzzleStatus = statusResult.value
 			puzzle = {
-				puzzleId: puzzleResult.value.puzzleId,
-				puzzleData: puzzleResult.value.puzzleData,
-				puzzleDate: puzzleResult.value.puzzleDate,
+				puzzleId: statusResult.value.puzzle.id,
+				puzzleData: statusResult.value.puzzle.puzzleData,
+				puzzleDate: statusResult.value.puzzle.puzzleDate,
 			}
 			if (streakResult.status === 'fulfilled') {
 				streakInfo = streakResult.value
