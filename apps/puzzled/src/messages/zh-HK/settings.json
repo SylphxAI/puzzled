@@ -620,6 +620,10 @@
 	"subscription": {
 		"title": "Subscription",
 		"description": "Manage your subscription plan and billing",
+		"statusLoading": "正在檢查您的訂閱狀態⋯",
+		"unavailableTitle": "暫時無法取得訂閱狀態",
+		"unavailableDescription": "目前無法確認您的方案。請先重試，再管理帳單或更改方案。",
+		"retry": "重試訂閱狀態",
 		"currentPlan": "Current Plan",
 		"currentPlanDescription": "View your current subscription plan and billing information",
 		"free": "Free",

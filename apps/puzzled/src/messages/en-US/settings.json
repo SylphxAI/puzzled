@@ -620,6 +620,10 @@
 	"subscription": {
 		"title": "Subscription",
 		"description": "Manage your subscription plan and billing",
+		"statusLoading": "Checking your subscription status...",
+		"unavailableTitle": "Subscription status is unavailable",
+		"unavailableDescription": "We could not confirm your plan right now. Retry before managing billing or changing plans.",
+		"retry": "Retry subscription status",
 		"currentPlan": "Current Plan",
 		"currentPlanDescription": "View your current subscription plan and billing information",
 		"free": "Free",
