@@ -89,6 +89,21 @@ export default async function GamePage({ params, searchParams }: Props) {
 		: undefined
 
 	const t = await getTranslations('games')
+	const tCommon = await getTranslations('common')
+	const renderRetryState = () => (
+		<div className="flex flex-1 flex-col">
+			<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+				<p className="text-lg font-medium">{tCommon('error')}</p>
+				<p className="text-sm text-muted-foreground">{tCommon('errorDescription')}</p>
+				<Link
+					href={`/games/${slug}`}
+					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+				>
+					{tCommon('retry')}
+				</Link>
+			</main>
+		</div>
+	)
 
 	// Get user
 	const user = await currentUser()
@@ -170,11 +185,18 @@ export default async function GamePage({ params, searchParams }: Props) {
 		// GetDaily resolves either the authenticated session or the stable guest
 		// cookie forwarded by the server transport. Guests must see their
 		// server-accepted completion before choosing another difficulty.
-		const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
-		])
+		let difficultyStatuses: [DailyStatus, DailyStatus, DailyStatus]
+		try {
+			difficultyStatuses = await Promise.all([
+				getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
+				getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
+				getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
+			])
+		} catch (error) {
+			console.error('[GamePage] Failed to load difficulty completion status:', error)
+			return renderRetryState()
+		}
+		const [easyStatus, mediumStatus, hardStatus] = difficultyStatuses
 		completionStatus.easy = easyStatus?.hasCompleted ?? false
 		completionStatus.medium = mediumStatus?.hasCompleted ?? false
 		completionStatus.hard = hardStatus?.hasCompleted ?? false
@@ -232,22 +254,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 	// If no puzzle found, show error
 	if (!puzzle?.puzzleData) {
-		return (
-			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-					<p className="text-lg font-medium">Puzzle not available</p>
-					<p className="text-sm text-muted-foreground">
-						Unable to load today's puzzle. Please try again later.
-					</p>
-					<a
-						href={`/games/${slug}`}
-						className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-					>
-						Retry
-					</a>
-				</main>
-			</div>
-		)
+		return renderRetryState()
 	}
 
 	// Use puzzle data from server
