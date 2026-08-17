@@ -54,5 +54,8 @@
 	"plansLoading": "正在加载方案…",
 	"plansUnavailableTitle": "Premium 方案目前无法提供",
 	"plansUnavailableDescription": "你的每日免费谜题仍然可用，请稍后再试。",
-	"plansUnavailableAction": "继续今日免费谜题"
+	"plansUnavailableAction": "继续今日免费谜题",
+	"subscriptionUnavailableTitle": "暂时无法获取您的订阅状态",
+	"subscriptionUnavailableDescription": "目前无法确认您的方案。请先重试，再开始结账。",
+	"subscriptionUnavailableRetry": "重试订阅状态"
 }

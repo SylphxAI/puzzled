@@ -54,5 +54,8 @@
 	"plansLoading": "Loading plans...",
 	"plansUnavailableTitle": "Premium plans are not available right now",
 	"plansUnavailableDescription": "Your free daily puzzle is still available. Please check back later.",
-	"plansUnavailableAction": "Continue with today's free puzzle"
+	"plansUnavailableAction": "Continue with today's free puzzle",
+	"subscriptionUnavailableTitle": "Your subscription status is unavailable",
+	"subscriptionUnavailableDescription": "We could not confirm your current plan. Retry before starting checkout.",
+	"subscriptionUnavailableRetry": "Retry subscription status"
 }

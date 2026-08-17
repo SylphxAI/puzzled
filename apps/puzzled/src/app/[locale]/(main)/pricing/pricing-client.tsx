@@ -1,8 +1,8 @@
 'use client'
 
-import { useBilling, usePlans } from '@sylphx/sdk/react'
+import { useBilling, usePlans, useSafeUser } from '@sylphx/sdk/react'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
-import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
+import { Calendar, Check, Crown, Flame, RefreshCw, Snowflake, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { buildUIPlans } from '@/features/billing/lib/pricing-plans'
@@ -22,10 +22,14 @@ function PricingAvailabilityState({
 	title,
 	description,
 	actionLabel,
+	onRetry,
+	retryLabel,
 }: {
 	title: string
 	description: string
 	actionLabel?: string
+	onRetry?: () => void
+	retryLabel?: string
 }) {
 	return (
 		<div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-6 py-16 text-center">
@@ -36,6 +40,12 @@ function PricingAvailabilityState({
 				<h1 className="text-3xl font-bold">{title}</h1>
 				<p className="text-muted-foreground">{description}</p>
 			</div>
+			{onRetry && retryLabel && (
+				<Button variant="outline" onClick={onRetry}>
+					<RefreshCw className="mr-2 h-4 w-4" />
+					{retryLabel}
+				</Button>
+			)}
 			{actionLabel && (
 				<Button asChild variant="outline">
 					<Link href="/">{actionLabel}</Link>
@@ -50,17 +60,38 @@ export function PricingContent({ locale }: { locale: string }) {
 	const tPricing = useTranslations('pricing')
 	const toast = useToast()
 	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
+	const { isSignedIn } = useSafeUser()
 
 	// Plans are now fetched server-side via getAppConfig() and available via usePlans()
 	const configPlans = usePlans()
-	const { isPremium, subscription, createCheckout, isLoading, plansLoading, plansError } =
-		useBilling()
+	const {
+		isPremium,
+		subscription,
+		createCheckout,
+		isLoading,
+		plansLoading,
+		plansError,
+		error: subscriptionError,
+		refresh: refreshSubscription,
+	} = useBilling()
 
 	if (plansLoading) {
 		return (
 			<PricingAvailabilityState
 				title={tPricing('plansLoading')}
 				description={tPricing('plansUnavailableDescription')}
+			/>
+		)
+	}
+
+	if (isSignedIn && subscriptionError) {
+		return (
+			<PricingAvailabilityState
+				title={tPricing('subscriptionUnavailableTitle')}
+				description={tPricing('subscriptionUnavailableDescription')}
+				onRetry={() => void refreshSubscription()}
+				retryLabel={tPricing('subscriptionUnavailableRetry')}
+				actionLabel={tPricing('plansUnavailableAction')}
 			/>
 		)
 	}
