@@ -20,8 +20,8 @@ type GuestSignupPromptProps = {
 }
 
 /**
- * Modal shown after guest completes their first puzzle
- * Encourages sign up to save progress and access features
+ * Modal shown after guest completes their first puzzle.
+ * Signup tracks future progress; it does not claim to migrate guest history.
  */
 export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignupPromptProps) {
 	const t = useTranslations('onboarding')
@@ -53,10 +53,10 @@ export function GuestSignupPrompt({ open, onClose, streakCount = 1 }: GuestSignu
 								✓
 							</div>
 							<div className="flex-1">
-								<p className="text-sm font-medium">{t('saveStreak')}</p>
+								<p className="text-sm font-medium">{t('trackFutureProgress')}</p>
 								{streakCount > 1 && (
 									<p className="text-xs text-muted-foreground">
-										{t('keepStreak', { days: streakCount })}
+										{t('guestRun', { days: streakCount })}
 									</p>
 								)}
 							</div>

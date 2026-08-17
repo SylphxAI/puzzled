@@ -40,8 +40,9 @@ function cleanOldEntries(games: GuestCompletedGame[]): GuestCompletedGame[] {
 }
 
 /**
- * Hook for managing guest (non-logged-in) user game state
- * Stores game completions in localStorage for 7 days
+ * Hook for managing guest (non-logged-in) user game state.
+ * Stores game completions in localStorage for 7 days; signup does not migrate
+ * these records into account history because that identity contract is not implemented.
  */
 export function useGuestGameState(gameSlug: string) {
 	const canonicalSlug = canonicalizeGameSlug(gameSlug)
@@ -111,18 +112,6 @@ export function useGuestGameState(gameSlug: string) {
 		[store.games],
 	)
 
-	// Clear all guest data (for migration when user signs up)
-	const clearAllData = useCallback(() => {
-		const emptyStore: GuestGameStore = { version: 2, games: [] }
-		setStore(emptyStore)
-		saveGuestStore(emptyStore)
-	}, [])
-
-	// Export data for migration to logged-in state
-	const exportData = useCallback((): GuestCompletedGame[] => {
-		return [...store.games]
-	}, [store.games])
-
 	return {
 		isLoaded,
 		hasCompletedToday: hasCompletedToday(),
@@ -130,8 +119,6 @@ export function useGuestGameState(gameSlug: string) {
 		currentStreak: summarizeGuestCompletions(store.games).currentStreak,
 		saveCompletion,
 		getGamesForDate,
-		clearAllData,
-		exportData,
 	}
 }
 
