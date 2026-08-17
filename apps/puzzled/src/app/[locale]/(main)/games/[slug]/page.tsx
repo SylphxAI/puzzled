@@ -308,7 +308,6 @@ export default async function GamePage({ params, searchParams }: Props) {
 			puzzleData={puzzle.puzzleData}
 			difficulty={difficulty}
 			supportsDifficulty={supportsDifficulty}
-			isGuest={!user}
 		/>
 	)
 }
