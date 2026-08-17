@@ -51,6 +51,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		mode,
 		puzzleId,
 		puzzleDate,
+		validateArchive: true,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
