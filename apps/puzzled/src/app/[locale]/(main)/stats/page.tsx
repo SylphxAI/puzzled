@@ -7,7 +7,7 @@ import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { getAllGameMetadata } from '@/games/registry'
 import {
-	getServerPersonalDailyCompletions,
+	getServerPersonalDailyResults,
 	getServerStreakInfo,
 	getServerUserStats,
 	type StreakInfo,
@@ -159,15 +159,23 @@ export default async function StatsPage({ params }: Props) {
 	}
 
 	let personalCompletions: Record<string, boolean> = {}
+	let personalCompletionsAvailable = true
 	try {
-		personalCompletions = await getServerPersonalDailyCompletions({
+		const personalResults = await getServerPersonalDailyResults({
 			gameSlugs: gameMetadata.map((game) => game.slug),
 			isGuest: false,
 			isPremium,
 			freeGameSlug: todaysFreeGame,
 		})
+		personalCompletions = Object.fromEntries(
+			Object.entries(personalResults).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
+		)
+		personalCompletionsAvailable = Object.values(personalResults).every(
+			(result) => result.statusAvailable,
+		)
 	} catch {
-		// Missing completion proof is not a completion.
+		// Missing completion proof is not a completion and remains visible as unknown.
+		personalCompletionsAvailable = false
 	}
 
 	const gameStats = gameMetadata.map((game) => ({
@@ -197,7 +205,11 @@ export default async function StatsPage({ params }: Props) {
 	const wordGroupsStats = stats['word-groups'] ?? emptyStats
 
 	// Show empty state if user hasn't played any games yet
-	if (totalGamesPlayed === 0 && dailyProgress.completedCount === 0) {
+	if (
+		personalCompletionsAvailable &&
+		totalGamesPlayed === 0 &&
+		dailyProgress.completedCount === 0
+	) {
 		return (
 			<>
 				<Header />
@@ -318,49 +330,66 @@ export default async function StatsPage({ params }: Props) {
 							<CardTitle>{tHome('todaysPuzzles')}</CardTitle>
 						</CardHeader>
 						<CardContent className="space-y-4">
-							<div className="flex items-end justify-between gap-3">
-								<div>
-									<p className="text-3xl font-bold tabular-nums">
-										{dailyProgress.completedCount}/{dailyProgress.availableCount}
-									</p>
-									<p className="text-sm text-muted-foreground">{tDaily('todaysProgress')}</p>
-								</div>
-								{dailyProgress.allCompleted && (
-									<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-										<Check className="h-4 w-4" />
-										{tDaily('completed')}
+							{personalCompletionsAvailable ? (
+								<>
+									<div className="flex items-end justify-between gap-3">
+										<div>
+											<p className="text-3xl font-bold tabular-nums">
+												{dailyProgress.completedCount}/{dailyProgress.availableCount}
+											</p>
+											<p className="text-sm text-muted-foreground">{tDaily('todaysProgress')}</p>
+										</div>
+										{dailyProgress.allCompleted && (
+											<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+												<Check className="h-4 w-4" />
+												{tDaily('completed')}
+											</div>
+										)}
 									</div>
-								)}
-							</div>
-							<div className="h-2 overflow-hidden rounded-full bg-muted">
+									<div className="h-2 overflow-hidden rounded-full bg-muted">
+										<div
+											className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all"
+											style={{
+												width: `${dailyProgress.availableCount > 0 ? (dailyProgress.completedCount / dailyProgress.availableCount) * 100 : 0}%`,
+											}}
+										/>
+									</div>
+									<div className="grid gap-2 sm:grid-cols-2">
+										{gameMetadata.map((game) => {
+											const locked = !isPremium && game.slug !== todaysFreeGame
+											if (locked) return null
+											const completed = personalCompletions[game.slug] ?? false
+											const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
+												defaultValue: game.name,
+											})
+											return (
+												<Link
+													key={game.slug}
+													href={`/${locale}/games/${game.slug}`}
+													className="flex items-center gap-2 rounded-lg bg-muted/40 p-2 text-sm hover:bg-muted"
+												>
+													<GameIcon slug={game.slug} size={20} aria-hidden="true" />
+													<span className="min-w-0 flex-1 truncate">{gameName}</span>
+													{completed && <Check className="h-4 w-4 text-emerald-500" />}
+												</Link>
+											)
+										})}
+									</div>
+								</>
+							) : (
 								<div
-									className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all"
-									style={{
-										width: `${dailyProgress.availableCount > 0 ? (dailyProgress.completedCount / dailyProgress.availableCount) * 100 : 0}%`,
-									}}
-								/>
-							</div>
-							<div className="grid gap-2 sm:grid-cols-2">
-								{gameMetadata.map((game) => {
-									const locked = !isPremium && game.slug !== todaysFreeGame
-									if (locked) return null
-									const completed = personalCompletions[game.slug] ?? false
-									const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
-										defaultValue: game.name,
-									})
-									return (
-										<Link
-											key={game.slug}
-											href={`/${locale}/games/${game.slug}`}
-											className="flex items-center gap-2 rounded-lg bg-muted/40 p-2 text-sm hover:bg-muted"
-										>
-											<GameIcon slug={game.slug} size={20} aria-hidden="true" />
-											<span className="min-w-0 flex-1 truncate">{gameName}</span>
-											{completed && <Check className="h-4 w-4 text-emerald-500" />}
-										</Link>
-									)
-								})}
-							</div>
+									className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4"
+									role="alert"
+								>
+									<p className="font-medium">{t('dailyStatusUnavailableTitle')}</p>
+									<p className="mt-1 text-sm text-muted-foreground">
+										{t('dailyStatusUnavailableDescription')}
+									</p>
+									<Button asChild variant="outline" size="sm" className="mt-3">
+										<Link href={`/${locale}/stats`}>{t('dailyStatusRetry')}</Link>
+									</Button>
+								</div>
+							)}
 						</CardContent>
 					</Card>
 
