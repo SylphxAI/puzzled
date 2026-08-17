@@ -211,6 +211,11 @@
 	"announcements": {
 		"title": "Title",
 		"subtitle": "Manage system-wide announcements and notifications",
+		"loading": "正在加载公告……",
+		"error": "无法加载公告",
+		"errorHint": "无法连接 AdminService。请重试，不要将此误认为没有公告。",
+		"refresh": "刷新",
+		"created": "创建时间",
 		"create": "Create Announcement",
 		"createTitle": "Create Announcement",
 		"editTitle": "Edit Announcement",

@@ -211,6 +211,11 @@
 	"announcements": {
 		"title": "Title",
 		"subtitle": "Manage system-wide announcements and notifications",
+		"loading": "Loading announcements...",
+		"error": "Unable to load announcements",
+		"errorHint": "The AdminService could not be reached. Retry without assuming there are no announcements.",
+		"refresh": "Refresh",
+		"created": "Created",
 		"create": "Create Announcement",
 		"createTitle": "Create Announcement",
 		"editTitle": "Edit Announcement",
