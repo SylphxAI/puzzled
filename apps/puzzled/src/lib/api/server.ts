@@ -183,6 +183,8 @@ export async function getServerPersonalDailyCompletions(input: {
 export type PersonalDailyResult = {
 	hasCompleted: boolean
 	completedSession: DailyStatus['completedSession']
+	/** False means the server could not prove this status; callers must not render Play. */
+	statusAvailable: boolean
 }
 
 /**
@@ -199,6 +201,7 @@ export async function getServerPersonalDailyResults(input: {
 	freeGameSlug: string
 }): Promise<Record<string, PersonalDailyResult>> {
 	const statuses = new Map<string, DailyStatus>()
+	const unavailableSlugs = new Set<string>()
 	await loadDailyCompletionMap({
 		...input,
 		read: async (gameSlug) => {
@@ -207,6 +210,7 @@ export async function getServerPersonalDailyResults(input: {
 				statuses.set(gameSlug, status)
 				return status.hasCompleted
 			} catch (error) {
+				unavailableSlugs.add(gameSlug)
 				console.error(`[HomePage] Failed to read personal daily result for ${gameSlug}:`, error)
 				throw error
 			}
@@ -221,6 +225,7 @@ export async function getServerPersonalDailyResults(input: {
 				{
 					hasCompleted: status?.hasCompleted ?? false,
 					completedSession: status?.completedSession ?? null,
+					statusAvailable: !unavailableSlugs.has(gameSlug),
 				},
 			] as const
 		}),

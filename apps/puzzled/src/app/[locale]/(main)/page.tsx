@@ -1,6 +1,6 @@
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button } from '@sylphx/ui'
-import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
+import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
@@ -128,6 +128,28 @@ async function HomeContent({
 		isPremium,
 		freeGameSlug: todaysFreeGame,
 	})
+	const completionStatusUnavailable = gameMetadata.some(
+		(game) => personalResults[game.slug]?.statusAvailable === false,
+	)
+
+	if (completionStatusUnavailable) {
+		return (
+			<main className="flex flex-1 items-center justify-center px-4 py-12">
+				<div className="mx-auto max-w-md text-center">
+					<div className="mb-6 flex justify-center">
+						<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+							<AlertCircle className="h-10 w-10 text-muted-foreground" />
+						</div>
+					</div>
+					<h1 className="mb-2 text-2xl font-bold">{t('home.statusUnavailableTitle')}</h1>
+					<p className="mb-6 text-muted-foreground">{t('home.statusUnavailableDescription')}</p>
+					<Button asChild>
+						<Link href="/">{t('common.retry')}</Link>
+					</Button>
+				</div>
+			</main>
+		)
+	}
 
 	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
 	const slugToCamelCase = (slug: string) =>

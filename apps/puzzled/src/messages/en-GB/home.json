@@ -28,6 +28,8 @@
 	"comeBackTomorrow": "Come back tomorrow for fresh puzzles",
 	"gamesPlayed": "Played",
 	"bestStreak": "Best",
+	"statusUnavailableTitle": "Today's progress is unavailable",
+	"statusUnavailableDescription": "We could not verify your puzzle status. Try again before starting so a completed ritual is not counted twice.",
 	"streakMilestone": "{days} Day Streak!",
 	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
 	"unlockAll": "Unlock All Games",
