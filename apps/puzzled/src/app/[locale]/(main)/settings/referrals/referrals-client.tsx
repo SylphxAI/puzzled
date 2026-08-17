@@ -64,6 +64,23 @@ export function ReferralsContent() {
 		)
 	}
 
+	if (error) {
+		return (
+			<div className="space-y-6">
+				<Card className="border-destructive/50 bg-destructive/10" role="alert">
+					<CardContent className="flex flex-col items-center gap-4 py-12 text-center">
+						<p className="font-medium text-destructive">{t('unavailableTitle')}</p>
+						<p className="max-w-md text-sm text-muted-foreground">{t('unavailableDescription')}</p>
+						<Button variant="outline" onClick={() => window.location.reload()}>
+							<RefreshCw className="mr-2 h-4 w-4" />
+							{t('retry')}
+						</Button>
+					</CardContent>
+				</Card>
+			</div>
+		)
+	}
+
 	return (
 		<div className="space-y-6">
 			{/* Header */}
@@ -71,15 +88,6 @@ export function ReferralsContent() {
 				<h2 className="text-xl font-semibold">{t('title')}</h2>
 				<p className="text-sm text-muted-foreground">{t('description')}</p>
 			</div>
-
-			{/* Error State */}
-			{error && (
-				<Card className="border-destructive/50 bg-destructive/10">
-					<CardContent className="py-4">
-						<p className="text-sm text-destructive">{error.message}</p>
-					</CardContent>
-				</Card>
-			)}
 
 			{/* Referral Code Card */}
 			<Card>
