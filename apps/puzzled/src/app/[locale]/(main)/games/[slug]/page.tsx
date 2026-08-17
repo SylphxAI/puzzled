@@ -167,17 +167,17 @@ export default async function GamePage({ params, searchParams }: Props) {
 			hard: false,
 		}
 
-		if (user) {
-			// Check completion status for each difficulty in parallel
-			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
-			])
-			completionStatus.easy = easyStatus?.hasCompleted ?? false
-			completionStatus.medium = mediumStatus?.hasCompleted ?? false
-			completionStatus.hard = hardStatus?.hasCompleted ?? false
-		}
+		// GetDaily resolves either the authenticated session or the stable guest
+		// cookie forwarded by the server transport. Guests must see their
+		// server-accepted completion before choosing another difficulty.
+		const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
+		])
+		completionStatus.easy = easyStatus?.hasCompleted ?? false
+		completionStatus.medium = mediumStatus?.hasCompleted ?? false
+		completionStatus.hard = hardStatus?.hasCompleted ?? false
 
 		return (
 			<DifficultySelectionView
@@ -213,7 +213,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 		} else {
 			// Daily mode (default) - pass difficulty for games that support it
 			const [statusData, puzzleData, streakData] = await Promise.all([
-				user ? getServerDailyStatus({ gameSlug: slug, difficulty }) : null,
+				getServerDailyStatus({ gameSlug: slug, difficulty }),
 				getServerTodaysPuzzle({ gameSlug: slug, difficulty }),
 				user ? getServerStreakInfo() : null,
 			])
