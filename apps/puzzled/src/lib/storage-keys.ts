@@ -48,17 +48,3 @@ export const GUEST_DAY_ID_KEY = 'puzzled:guest:day-id'
 export const ANALYTICS_OFFLINE_QUEUE_KEY = 'puzzled:analytics:offline-queue'
 export const SESSION_START_KEY = 'puzzled:session:start'
 export const SESSION_ID_KEY = 'puzzled:session:id'
-
-// ==========================================
-// Game Session (dynamic per game)
-// ==========================================
-/**
- * Get the localStorage key for tracking if a game was started today
- * @param gameSlug - The game identifier (e.g., 'word-guess', 'sudoku')
- * @param puzzleId - Optional puzzle ID for specific puzzle tracking
- */
-export function getGameSessionKey(gameSlug: string, puzzleId?: string): string {
-	return puzzleId
-		? `puzzled:game:${gameSlug}:${puzzleId}:started`
-		: `puzzled:game:${gameSlug}:started`
-}

@@ -3,7 +3,6 @@
  *
  * Consolidates common game session logic across all games:
  * - Phase state machine (ready -> playing)
- * - localStorage for played status
  * - Timer tracking
  * - Save result logic (score calculated server-side)
  * - Guest state management
@@ -19,7 +18,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
-import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 
 /** Final game outcome - what gets saved to database */
@@ -169,18 +167,15 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		validateArchive = false,
 	} = options
 
-	const storageKey = getGameSessionKey(gameSlug)
-
 	// Hooks
 	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
 	const { saveCompletion: saveGuestCompletion } = useGuestGameState(gameSlug)
 	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useGuestOnboarding()
 
 	// State
-	const [gamePhase, setGamePhase] = useState<GamePhase>(() => {
-		if (typeof window === 'undefined') return 'ready'
-		return localStorage.getItem(storageKey) ? 'playing' : 'ready'
-	})
+	// Game state is held by each module hook and is not persisted here. Always
+	// show the ready screen after a reload instead of implying a resumable run.
+	const [gamePhase, setGamePhase] = useState<GamePhase>('ready')
 
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [showCelebration, setShowCelebration] = useState(false)
@@ -200,15 +195,12 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const timeSpentMs = startTime ? Date.now() - startTime : 0
 
 	/**
-	 * Start game - mark as played and begin timer
+	 * Start game and begin timer
 	 */
 	const startGame = useCallback(() => {
-		if (typeof window !== 'undefined') {
-			localStorage.setItem(storageKey, 'true')
-		}
 		setStartTime(Date.now())
 		setGamePhase('playing')
-	}, [storageKey])
+	}, [])
 
 	/**
 	 * End game - save result (server calculates score), show celebration, show modal
