@@ -965,7 +965,6 @@ export function useGameAnalytics(
 
 export type SystemHealthResponse = {
 	database: boolean
-	redis: boolean
 	timestamp: string
 	uptime: string
 	databaseError?: string
@@ -981,9 +980,6 @@ export function useSystemHealth(
 				const h = await systemHealth()
 				return {
 					database: h.databaseOk,
-					// The api service does not manage Redis; it is not part of the
-					// api health contract (platform-owned infrastructure).
-					redis: true,
 					timestamp: new Date().toISOString(),
 					uptime: h.uptime,
 					databaseError: h.databaseError || undefined,

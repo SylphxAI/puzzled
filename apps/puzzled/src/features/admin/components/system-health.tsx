@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle, Database, HardDrive, RefreshCw, XCircle } from 'lucide-react'
+import { CheckCircle, Database, RefreshCw, XCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useSystemHealth } from '@/lib/api'
 
@@ -34,7 +34,7 @@ export function SystemHealthDashboard() {
 		)
 	}
 
-	const allHealthy = health.database && health.redis
+	const allHealthy = health.database
 	const overallStatus = allHealthy ? 'healthy' : 'unhealthy'
 
 	const formatTime = (isoString: string) => {
@@ -99,14 +99,6 @@ export function SystemHealthDashboard() {
 						icon={<Database className="h-5 w-5" />}
 						healthy={health.database}
 						delay={0}
-					/>
-
-					{/* Redis Status */}
-					<ServiceCard
-						name="Redis"
-						icon={<HardDrive className="h-5 w-5" />}
-						healthy={health.redis}
-						delay={1}
 					/>
 				</div>
 			</div>
