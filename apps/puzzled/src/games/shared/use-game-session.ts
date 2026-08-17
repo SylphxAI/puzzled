@@ -284,6 +284,15 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					return finish
 				}
 
+				// A concurrent tab may have won the one-finish race. Do not celebrate
+				// the losing tab's local submission or present its status as the
+				// server result; reload the route so the server-rendered completed
+				// session is the only result card shown.
+				if (finish.alreadyPlayed) {
+					if (typeof window !== 'undefined') window.location.reload()
+					return finish
+				}
+
 				// Result cards and guest projections follow the sole
 				// server-accepted SubmitGuess finish. already_played is an
 				// accepted terminal state and is handled by saveResult.
