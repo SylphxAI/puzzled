@@ -291,6 +291,7 @@ export type TodayCompletion = {
 }
 
 export type TodayPlayerCount = {
+	/** Server-derived daily puzzle completers for the current product day. */
 	count: number
 }
 

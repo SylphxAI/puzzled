@@ -69,8 +69,8 @@ export default async function HomePage({ params }: Props) {
 	let todayPlayerCount = 0
 
 	try {
-		// Chrome only — not daily puzzle completers (UTC / unfiltered).
-		// NSM oracles: compute_drc / compute_hrc (weekly ritualists).
+		// Server-derived daily puzzle completers; the Rust adapter applies the
+		// product-day and puzzle_ritual predicates before this reaches the UI.
 		const overview = await getServerTodayOverview()
 		todayPlayerCount = overview.playerCount
 

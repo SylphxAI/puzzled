@@ -109,30 +109,56 @@ pub async fn user_history(
         .collect())
 }
 
-/// Public today overview: distinct players + completions per game (today).
+/// Public today overview: daily puzzle completers + qualifying ritual finishes
+/// for the current product day. This is the same server-written authority as
+/// the North Star recompute; it must not fall back to wall-clock finish counts.
+const TODAY_OVERVIEW_PLAYERS_SQL: &str = r#"
+SELECT COUNT(DISTINCT user_id) FROM game_sessions
+WHERE is_ritual = true
+  AND module_class = 'puzzle_ritual'
+  AND status IN ('won','lost')
+  AND day_key = ((now() AT TIME ZONE 'Asia/Hong_Kong')::date)::text
+"#;
+
+const TODAY_OVERVIEW_COMPLETIONS_SQL: &str = r#"
+SELECT game_slug, COUNT(DISTINCT user_id) FROM game_sessions
+WHERE is_ritual = true
+  AND module_class = 'puzzle_ritual'
+  AND status IN ('won','lost')
+  AND day_key = ((now() AT TIME ZONE 'Asia/Hong_Kong')::date)::text
+GROUP BY game_slug ORDER BY game_slug
+"#;
+
 pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value>), String> {
-    let players: (i64,) = sqlx::query_as(
-        r#"
-        SELECT COUNT(DISTINCT user_id) FROM game_sessions
-        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
-        "#,
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|e| format!("today players failed: {e}"))?;
-    let rows: Vec<(String, i64)> = sqlx::query_as(
-        r#"
-        SELECT game_slug, COUNT(*) FROM game_sessions
-        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
-        GROUP BY game_slug ORDER BY game_slug
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(|e| format!("today completions failed: {e}"))?;
+    let players: (i64,) = sqlx::query_as(TODAY_OVERVIEW_PLAYERS_SQL)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| format!("today players failed: {e}"))?;
+    let rows: Vec<(String, i64)> = sqlx::query_as(TODAY_OVERVIEW_COMPLETIONS_SQL)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("today completions failed: {e}"))?;
     let completions = rows
         .into_iter()
         .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
         .collect();
     Ok((players.0.max(0) as u32, completions))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{TODAY_OVERVIEW_COMPLETIONS_SQL, TODAY_OVERVIEW_PLAYERS_SQL};
+
+    #[test]
+    fn today_overview_uses_product_day_ritual_authority() {
+        for query in [TODAY_OVERVIEW_PLAYERS_SQL, TODAY_OVERVIEW_COMPLETIONS_SQL] {
+            assert!(query.contains("is_ritual = true"));
+            assert!(query.contains("module_class = 'puzzle_ritual'"));
+            assert!(query.contains("day_key"));
+            assert!(query.contains("Asia/Hong_Kong"));
+            assert!(!query.contains("CURRENT_DATE"));
+            assert!(!query.contains("completed_at::date"));
+        }
+        assert!(TODAY_OVERVIEW_COMPLETIONS_SQL.contains("COUNT(DISTINCT user_id)"));
+    }
 }

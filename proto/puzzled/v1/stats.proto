@@ -116,6 +116,9 @@ message GameCompletionCount {
 }
 
 message GetTodayOverviewResponse {
+  // Distinct users with a server-accepted puzzle_ritual finish on the current
+  // Asia/Hong_Kong product day (daily_puzzle_completers).
   uint32 player_count = 1;
+  // Qualifying puzzle_ritual finishes grouped by canonical game slug.
   repeated GameCompletionCount completions = 2;
 }
