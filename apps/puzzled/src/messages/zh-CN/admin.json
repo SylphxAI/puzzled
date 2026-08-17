@@ -215,7 +215,10 @@
 		"noGamesRegistered": "No games registered",
 		"addGamesHint": "Add games to src/games/registry.ts to see them here",
 		"refresh": "Refresh",
-		"noDescription": "No description"
+		"noDescription": "No description",
+		"analyticsUnavailable": "游戏分析暂时不可用",
+		"analyticsUnavailableHint": "Connect 分析服务没有响应。请重试以获取最新记录。",
+		"retryAnalytics": "重试分析"
 	},
 	"announcements": {
 		"title": "Title",

@@ -215,7 +215,10 @@
 		"noGamesRegistered": "No games registered",
 		"addGamesHint": "Add games to src/games/registry.ts to see them here",
 		"refresh": "Refresh",
-		"noDescription": "No description"
+		"noDescription": "No description",
+		"analyticsUnavailable": "Game analytics are unavailable",
+		"analyticsUnavailableHint": "The Connect analytics service did not respond. Retry to request the current records.",
+		"retryAnalytics": "Retry analytics"
 	},
 	"announcements": {
 		"title": "Title",

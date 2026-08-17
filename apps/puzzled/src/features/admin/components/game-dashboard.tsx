@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertCircle, BarChart3, Gamepad2, RefreshCw, TrendingUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useGameAnalytics } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
@@ -15,6 +16,7 @@ type DateRange = '7d' | '14d' | '30d' | '90d'
  * Uses getSingleGameAnalytics which returns daily stats (date, gamesPlayed, wins, avgAttempts).
  */
 export function GameDashboard({ slug }: { slug: string }) {
+	const t = useTranslations('admin.games')
 	const [dateRange, setDateRange] = useState<DateRange>('30d')
 	const days = dateRange === '7d' ? 7 : dateRange === '14d' ? 14 : dateRange === '30d' ? 30 : 90
 
@@ -31,9 +33,21 @@ export function GameDashboard({ slug }: { slug: string }) {
 
 	if (!analytics) {
 		return (
-			<div className="admin-card p-8 text-center">
+			<div className="admin-card p-8 text-center" role="alert">
 				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
-				<p className="mt-2 text-[var(--admin-text-secondary)]">Failed to load game analytics</p>
+				<p className="mt-2 text-[var(--admin-text-secondary)]">{t('analyticsUnavailable')}</p>
+				<p className="mt-2 text-sm text-[var(--admin-text-muted)]">
+					{t('analyticsUnavailableHint')}
+				</p>
+				<button
+					type="button"
+					onClick={() => refetch()}
+					disabled={isRefetching}
+					className="admin-btn admin-btn-ghost mt-4"
+				>
+					<RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
+					{t('retryAnalytics')}
+				</button>
 			</div>
 		)
 	}
