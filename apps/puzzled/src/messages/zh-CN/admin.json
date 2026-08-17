@@ -263,6 +263,9 @@
 		"title": "死信队列",
 		"subtitle": "监控和管理失败的工作流执行",
 		"refresh": "Refresh",
+		"loading": "正在加载队列……",
+		"error": "无法加载队列",
+		"errorHint": "无法连接 AdminService。请重试，不要将此误认为队列为空。",
 		"stats": {
 			"total": "总计",
 			"pending": "待处理",

@@ -7,31 +7,26 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useDlqList, useDlqMarkFailed, useDlqResolve, useDlqRetry } from '@/lib/api'
 import { PAGINATION } from '@/lib/config/validation'
-import type { deadLetterQueue } from '@/lib/db/schema'
 
-type DLQItem = typeof deadLetterQueue.$inferSelect
-type DLQStats = {
-	total: number
-	pending: number
-	retrying: number
-	resolved: number
-	failed: number
-	byWorkflow: Record<string, number>
+type DLQItem = {
+	id: string
+	workflowName: string
+	workflowRunId: string | null
+	error: string
+	status: 'pending' | 'retrying' | 'resolved' | 'failed'
+	retryCount: number
+	maxRetries: number
+	createdAt: Date
 }
 
-type DLQDashboardProps = {
-	initialStats: DLQStats
-	initialItems: DLQItem[]
-}
-
-export function DLQDashboard({ initialStats, initialItems }: DLQDashboardProps) {
+export function DLQDashboard() {
 	const t = useTranslations('admin.dlq')
 	const _locale = useLocale()
 	const router = useRouter()
 	const [filter, setFilter] = useState<string | undefined>(undefined)
 
 	// Use dlqList with includeStats
-	const { data, refetch } = useDlqList(
+	const { data, error, isLoading, refetch } = useDlqList(
 		{
 			status: filter as 'pending' | 'retrying' | 'resolved' | 'failed' | undefined,
 			limit: PAGINATION.ADMIN_MAX_LIMIT,
@@ -41,8 +36,38 @@ export function DLQDashboard({ initialStats, initialItems }: DLQDashboardProps) 
 		},
 	)
 
-	const items = data?.items ?? initialItems
-	const stats = data?.stats ?? initialStats
+	if (isLoading && !data) {
+		return (
+			<div className="admin-card flex items-center justify-center gap-3 p-12 text-[var(--admin-text-muted)]">
+				<Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+				<span>{t('loading')}</span>
+			</div>
+		)
+	}
+
+	if (error && !data) {
+		return (
+			<div className="admin-card p-12 text-center">
+				<XCircle className="mx-auto mb-4 h-12 w-12 text-[var(--admin-error)]" />
+				<h3 className="text-lg font-medium text-[var(--admin-text-primary)]">{t('error')}</h3>
+				<p className="mt-1 text-sm text-[var(--admin-text-muted)]">{t('errorHint')}</p>
+				<button type="button" className="admin-btn admin-btn-ghost mt-6" onClick={() => refetch()}>
+					<RefreshCw className="h-4 w-4" />
+					{t('refresh')}
+				</button>
+			</div>
+		)
+	}
+
+	const items = data?.items ?? []
+	const stats = data?.stats ?? {
+		total: 0,
+		pending: 0,
+		retrying: 0,
+		resolved: 0,
+		failed: 0,
+		byWorkflow: {},
+	}
 
 	const handleRefresh = () => {
 		refetch()

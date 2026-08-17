@@ -263,6 +263,9 @@
 		"title": "死信佇列",
 		"subtitle": "監控和管理失敗的工作流程執行",
 		"refresh": "Refresh",
+		"loading": "正在載入佇列……",
+		"error": "無法載入佇列",
+		"errorHint": "無法連接 AdminService。請重試，不要將此誤認為佇列為空。",
 		"stats": {
 			"total": "總計",
 			"pending": "待處理",

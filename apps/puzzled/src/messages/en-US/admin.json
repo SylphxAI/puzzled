@@ -263,6 +263,9 @@
 		"title": "Dead Letter Queue",
 		"subtitle": "Monitor and manage failed workflow executions",
 		"refresh": "Refresh",
+		"loading": "Loading queue...",
+		"error": "Unable to load the queue",
+		"errorHint": "The AdminService could not be reached. Retry without assuming the queue is empty.",
 		"stats": {
 			"total": "Total",
 			"pending": "Pending",
