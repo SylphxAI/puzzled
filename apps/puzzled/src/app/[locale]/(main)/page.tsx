@@ -67,21 +67,27 @@ export default async function HomePage({ params }: Props) {
 	// Fetch user's streak info, today's completions, and player count
 	let streakInfo: StreakInfo | null = null
 	let todayPlayerCount = 0
-
-	try {
+	let todayOverviewAvailable = true
+	let streakInfoAvailable = !user
+	const [overviewResult, streakResult] = await Promise.allSettled([
 		// Server-derived daily puzzle completers; the Rust adapter applies the
 		// product-day and puzzle_ritual predicates before this reaches the UI.
-		const overview = await getServerTodayOverview()
-		todayPlayerCount = overview.playerCount
+		getServerTodayOverview(),
+		user ? getServerStreakInfo() : Promise.resolve(null),
+	])
 
-		// Fetch user-specific streak info if logged in
-		if (user) {
-			streakInfo = await getServerStreakInfo()
-		}
-	} catch (error) {
-		// Log error for debugging but continue with defaults
-		// This is a non-critical path - user can still access games
-		console.error('[HomePage] Failed to fetch stats:', error)
+	if (overviewResult.status === 'fulfilled') {
+		todayPlayerCount = overviewResult.value.playerCount
+	} else {
+		todayOverviewAvailable = false
+		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
+	}
+
+	if (streakResult.status === 'fulfilled') {
+		streakInfo = streakResult.value
+		streakInfoAvailable = true
+	} else {
+		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
 	}
 
 	return (
@@ -93,6 +99,8 @@ export default async function HomePage({ params }: Props) {
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
 			isPremium={isPremium}
 			todayPlayerCount={todayPlayerCount}
+			todayOverviewAvailable={todayOverviewAvailable}
+			streakInfoAvailable={streakInfoAvailable}
 		/>
 	)
 }
@@ -105,6 +113,8 @@ type HomeContentProps = {
 	tomorrowsFreeGameName: string
 	isPremium: boolean
 	todayPlayerCount: number
+	todayOverviewAvailable: boolean
+	streakInfoAvailable: boolean
 }
 
 async function HomeContent({
@@ -115,6 +125,8 @@ async function HomeContent({
 	tomorrowsFreeGameName,
 	isPremium,
 	todayPlayerCount,
+	todayOverviewAvailable,
+	streakInfoAvailable,
 }: HomeContentProps) {
 	const t = await getTranslations()
 	const today = new Date()
@@ -195,7 +207,9 @@ async function HomeContent({
 						{/* Streak indicator */}
 						<div className="flex items-center gap-1 rounded-full bg-stat-streak/10 px-2.5 py-1">
 							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
+							<span className="text-sm font-semibold text-stat-streak">
+								{streakInfoAvailable ? currentStreak : '—'}
+							</span>
 						</div>
 
 						<Button asChild variant="ghost" size="icon" className="h-9 w-9">
@@ -221,6 +235,26 @@ async function HomeContent({
 				</section>
 			)}
 
+			{!isGuest && !streakInfoAvailable && (
+				<section className="px-4 pt-4">
+					<div
+						className="mx-auto flex max-w-4xl items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
+						role="alert"
+					>
+						<AlertCircle className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+						<div className="min-w-0 flex-1">
+							<p className="font-medium">{t('home.streakUnavailableTitle')}</p>
+							<p className="text-sm text-muted-foreground">
+								{t('home.streakUnavailableDescription')}
+							</p>
+						</div>
+						<Button asChild size="sm" variant="outline">
+							<Link href="/">{t('common.retry')}</Link>
+						</Button>
+					</div>
+				</section>
+			)}
+
 			{/* Daily Hero - Today's Challenge */}
 			<section className="px-4 pt-6 md:pt-8">
 				<div className="mx-auto max-w-4xl">
@@ -237,7 +271,25 @@ async function HomeContent({
 			{/* Social Proof */}
 			<section className="px-4 pt-4">
 				<div className="mx-auto max-w-4xl">
-					<SocialProof playerCount={todayPlayerCount} locale={locale} variant="banner" />
+					{todayOverviewAvailable ? (
+						<SocialProof playerCount={todayPlayerCount} locale={locale} variant="banner" />
+					) : (
+						<div
+							className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2.5"
+							role="alert"
+						>
+							<AlertCircle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
+							<div className="min-w-0 flex-1">
+								<p className="text-sm font-medium">{t('home.socialProofUnavailableTitle')}</p>
+								<p className="text-xs text-muted-foreground">
+									{t('home.socialProofUnavailableDescription')}
+								</p>
+							</div>
+							<Button asChild size="sm" variant="outline">
+								<Link href="/">{t('common.retry')}</Link>
+							</Button>
+						</div>
+					)}
 				</div>
 			</section>
 
