@@ -34,6 +34,8 @@
 	"streakUnavailableDescription": "We could not load your server-verified streak. Retry to see your current progress.",
 	"socialProofUnavailableTitle": "Community progress is unavailable",
 	"socialProofUnavailableDescription": "We could not load today's server-verified completion count. Retry to see the current total.",
+	"billingUnavailableTitle": "Subscription access is unavailable",
+	"billingUnavailableDescription": "We could not confirm your subscription. Retry before unlocking premium games.",
 	"streakMilestone": "{days} Day Streak!",
 	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
 	"unlockAll": "Unlock All Games",

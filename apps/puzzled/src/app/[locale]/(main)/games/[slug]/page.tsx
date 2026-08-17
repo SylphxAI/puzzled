@@ -14,7 +14,7 @@ import {
 	getServerTodaysPuzzle,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
+import { getGameAccess, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
@@ -104,6 +104,23 @@ export default async function GamePage({ params, searchParams }: Props) {
 			</main>
 		</div>
 	)
+	const renderBillingRetryState = () => (
+		<div className="flex flex-1 flex-col">
+			<main
+				className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center"
+				role="alert"
+			>
+				<p className="text-lg font-medium">{tCommon('billingUnavailableTitle')}</p>
+				<p className="text-sm text-muted-foreground">{tCommon('billingUnavailableDescription')}</p>
+				<Link
+					href={`/games/${slug}`}
+					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+				>
+					{tCommon('billingUnavailableRetry')}
+				</Link>
+			</main>
+		</div>
+	)
 
 	// Get user
 	const user = await currentUser()
@@ -113,11 +130,15 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const gameName = t(`${translationKey}.name`)
 
 	// Check if user has access to this game
-	const hasAccess = await canAccessGame(user?.id ?? null, slug)
 	const todaysFreeGame = getTodaysFreeGame()
+	const access = await getGameAccess(user?.id ?? null, slug)
+
+	if (!access.allowed && access.billingStatus === 'unavailable') {
+		return renderBillingRetryState()
+	}
 
 	// Show paywall if user doesn't have access
-	if (!hasAccess) {
+	if (!access.allowed) {
 		return (
 			<div className="flex flex-1 flex-col">
 				<main className="flex flex-1 flex-col items-center justify-center gap-6 p-4 text-center">

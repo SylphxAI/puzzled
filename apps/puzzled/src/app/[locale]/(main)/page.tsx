@@ -12,7 +12,11 @@ import {
 	getServerTodayOverview,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import {
+	getFreeGameRotation,
+	getPremiumAccessStatus,
+	getTodaysFreeGame,
+} from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
 
@@ -41,7 +45,9 @@ export default async function HomePage({ params }: Props) {
 	const user = await currentUser()
 
 	// Get user's premium status from platform
-	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+	const premiumAccessStatus = user?.id ? await getPremiumAccessStatus(user.id) : 'free'
+	const isPremium = premiumAccessStatus === 'premium'
+	const billingStatusAvailable = premiumAccessStatus !== 'unavailable'
 
 	// Get today's free game from rotation
 	const todaysFreeGame = getTodaysFreeGame()
@@ -98,6 +104,7 @@ export default async function HomePage({ params }: Props) {
 			todaysFreeGame={todaysFreeGame}
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
 			isPremium={isPremium}
+			billingStatusAvailable={billingStatusAvailable}
 			todayPlayerCount={todayPlayerCount}
 			todayOverviewAvailable={todayOverviewAvailable}
 			streakInfoAvailable={streakInfoAvailable}
@@ -112,6 +119,7 @@ type HomeContentProps = {
 	todaysFreeGame: string
 	tomorrowsFreeGameName: string
 	isPremium: boolean
+	billingStatusAvailable: boolean
 	todayPlayerCount: number
 	todayOverviewAvailable: boolean
 	streakInfoAvailable: boolean
@@ -124,6 +132,7 @@ async function HomeContent({
 	todaysFreeGame,
 	tomorrowsFreeGameName,
 	isPremium,
+	billingStatusAvailable,
 	todayPlayerCount,
 	todayOverviewAvailable,
 	streakInfoAvailable,
@@ -255,6 +264,26 @@ async function HomeContent({
 				</section>
 			)}
 
+			{!isGuest && !billingStatusAvailable && (
+				<section className="px-4 pt-4">
+					<div
+						className="mx-auto flex max-w-4xl items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
+						role="alert"
+					>
+						<AlertCircle className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
+						<div className="min-w-0 flex-1">
+							<p className="font-medium">{t('home.billingUnavailableTitle')}</p>
+							<p className="text-sm text-muted-foreground">
+								{t('home.billingUnavailableDescription')}
+							</p>
+						</div>
+						<Button asChild size="sm" variant="outline">
+							<Link href="/">{t('common.retry')}</Link>
+						</Button>
+					</div>
+				</section>
+			)}
+
 			{/* Daily Hero - Today's Challenge */}
 			<section className="px-4 pt-6 md:pt-8">
 				<div className="mx-auto max-w-4xl">
@@ -353,7 +382,7 @@ async function HomeContent({
 			)}
 
 			{/* Premium Upsell - for free users */}
-			{!isPremium && totalGamesPlayed >= 3 && (
+			{billingStatusAvailable && !isPremium && totalGamesPlayed >= 3 && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
 						<Link href="/pricing">

@@ -36,6 +36,9 @@
 	"optionsAvailable": "options available",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
+	"billingUnavailableTitle": "Subscription access is temporarily unavailable",
+	"billingUnavailableDescription": "We could not confirm your subscription. Retry before opening premium games.",
+	"billingUnavailableRetry": "Retry subscription access",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

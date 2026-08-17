@@ -34,6 +34,8 @@
 	"streakUnavailableDescription": "我们无法加载服务器验证的连胜数据。请重试以查看当前进度。",
 	"socialProofUnavailableTitle": "社区进度暂时不可用",
 	"socialProofUnavailableDescription": "我们无法加载今天由服务器验证的完成数。请重试以查看最新总数。",
+	"billingUnavailableTitle": "订阅访问暂时不可用",
+	"billingUnavailableDescription": "目前无法确认您的订阅。请先重试，再解锁高级游戏。",
 	"streakMilestone": "{days} Day Streak!",
 	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
 	"unlockAll": "Unlock All Games",

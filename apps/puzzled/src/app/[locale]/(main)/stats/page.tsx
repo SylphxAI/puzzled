@@ -13,7 +13,7 @@ import {
 	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
-import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { getPremiumAccessStatus, getTodaysFreeGame } from '@/lib/billing/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -116,7 +116,6 @@ export default async function StatsPage({ params }: Props) {
 	// All personal stats and completion state remain server-derived through Connect.
 	let stats: StatsData = {}
 	let streakInfo: StreakInfo | null = null
-	let isPremium = false
 	const [userStatsResult, streakResult] = await Promise.allSettled([
 		getServerUserStats(),
 		getServerStreakInfo(),
@@ -152,11 +151,9 @@ export default async function StatsPage({ params }: Props) {
 			</>
 		)
 	}
-	try {
-		isPremium = await hasPremiumAccess(user.id)
-	} catch {
-		// Billing uncertainty fails closed to the free suite.
-	}
+	const premiumAccessStatus = await getPremiumAccessStatus(user.id)
+	const isPremium = premiumAccessStatus === 'premium'
+	const billingStatusAvailable = premiumAccessStatus !== 'unavailable'
 
 	let personalCompletions: Record<string, boolean> = {}
 	let personalCompletionsAvailable = true
@@ -247,6 +244,23 @@ export default async function StatsPage({ params }: Props) {
 			<main className="flex flex-1 flex-col px-4 py-6">
 				<div className="mx-auto w-full max-w-2xl space-y-6">
 					<h1 className="text-2xl font-bold">{t('title')}</h1>
+
+					{!billingStatusAvailable && (
+						<div
+							className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
+							role="alert"
+						>
+							<div className="min-w-0 flex-1">
+								<p className="font-medium">{t('billingUnavailableTitle')}</p>
+								<p className="text-sm text-muted-foreground">
+									{t('billingUnavailableDescription')}
+								</p>
+							</div>
+							<Button asChild variant="outline" size="sm">
+								<Link href={`/${locale}/stats`}>{t('billingUnavailableRetry')}</Link>
+							</Button>
+						</div>
+					)}
 
 					{/* Featured Hero Stat */}
 					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 text-center">

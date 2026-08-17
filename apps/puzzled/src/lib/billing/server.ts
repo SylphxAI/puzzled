@@ -67,14 +67,16 @@ export function getFreeGameRotation(): readonly string[] {
  * Uses Platform SDK to check the user's subscription status.
  *
  * @param userId - Platform user ID
- * @returns true if user has an active premium subscription
+ * @returns the authoritative premium/free/unavailable status
  */
-export async function hasPremiumAccess(userId: string): Promise<boolean> {
+export type PremiumAccessStatus = 'premium' | 'free' | 'unavailable'
+
+export async function getPremiumAccessStatus(userId: string): Promise<PremiumAccessStatus> {
 	try {
 		const config = getSdkConfig()
 		const subscription = await getSubscription(config, userId)
 
-		if (!subscription) return false
+		if (!subscription) return 'free'
 
 		// Check if subscription is active and on a premium plan
 		const isActive = subscription.status === 'active' || subscription.status === 'trialing'
@@ -82,11 +84,11 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
 			subscription.planSlug as (typeof PREMIUM_PLANS)[number],
 		)
 
-		return isActive && isPremium
+		return isActive && isPremium ? 'premium' : 'free'
 	} catch (error) {
-		// Log error but don't block - default to free tier
+		// Preserve billing uncertainty instead of presenting a false free plan.
 		console.error('[Billing] Failed to check premium access:', error)
-		return false
+		return 'unavailable'
 	}
 }
 
@@ -99,20 +101,31 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
  * @param userId - Platform user ID (null for anonymous)
  * @param gameSlug - Game to check access for
  */
-export async function canAccessGame(userId: string | null, gameSlug: string): Promise<boolean> {
+export type GameAccessDecision = {
+	allowed: boolean
+	billingStatus: 'anonymous' | 'available' | 'unavailable'
+}
+
+export async function getGameAccess(
+	userId: string | null,
+	gameSlug: string,
+): Promise<GameAccessDecision> {
 	// Anonymous users can only play the free game
 	if (!userId) {
-		return isGameFreeToday(gameSlug)
+		return { allowed: isGameFreeToday(gameSlug), billingStatus: 'anonymous' }
 	}
 
-	// Check if user has premium
-	const hasPremium = await hasPremiumAccess(userId)
-	if (hasPremium) {
-		return true
+	const premiumStatus = await getPremiumAccessStatus(userId)
+	if (premiumStatus === 'premium') {
+		return { allowed: true, billingStatus: 'available' }
 	}
 
-	// Free user - can only play today's free game
-	return isGameFreeToday(gameSlug)
+	// Billing uncertainty still permits the server-independent daily free game,
+	// but premium routes must render an explicit recovery state.
+	return {
+		allowed: isGameFreeToday(gameSlug),
+		billingStatus: premiumStatus === 'unavailable' ? 'unavailable' : 'available',
+	}
 }
 
 // Re-export for convenience (alias)
