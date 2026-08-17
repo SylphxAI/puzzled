@@ -179,6 +179,11 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 							entries={game.entries}
 							metricLabel={tLeaderboard('score')}
 							emptyMessage={tLeaderboard('noData')}
+							unavailable={game.authority === 'connect_empty'}
+							unavailableMessage={tLeaderboard('unavailable')}
+							unavailableHint={tLeaderboard('unavailableHint')}
+							retryLabel={tLeaderboard('retry')}
+							retryHref={`/leaderboard${period === 'all' ? '' : `?period=${period}`}`}
 							locale={locale}
 							userRank={game.userRank}
 							yourRankLabel={tLeaderboard('yourRank')}
@@ -203,6 +208,11 @@ function LeaderboardSection({
 	entries,
 	metricLabel,
 	emptyMessage,
+	unavailable,
+	unavailableMessage,
+	unavailableHint,
+	retryLabel,
+	retryHref,
 	locale,
 	userRank,
 	yourRankLabel,
@@ -212,6 +222,11 @@ function LeaderboardSection({
 	entries: LeaderboardEntry[]
 	metricLabel: string
 	emptyMessage: string
+	unavailable: boolean
+	unavailableMessage: string
+	unavailableHint: string
+	retryLabel: string
+	retryHref: string
 	locale: string
 	userRank?: UserRankData | null
 	yourRankLabel?: string
@@ -223,7 +238,15 @@ function LeaderboardSection({
 				<h2 className="font-semibold">{title}</h2>
 			</div>
 
-			{entries.length === 0 ? (
+			{unavailable ? (
+				<div className="space-y-2 p-6 text-center text-sm">
+					<p className="font-medium text-destructive">{unavailableMessage}</p>
+					<p className="text-muted-foreground">{unavailableHint}</p>
+					<Link href={retryHref} className="inline-block text-primary underline">
+						{retryLabel}
+					</Link>
+				</div>
+			) : entries.length === 0 ? (
 				<div className="p-6 text-center text-sm text-muted-foreground">{emptyMessage}</div>
 			) : (
 				<div className="divide-y">
