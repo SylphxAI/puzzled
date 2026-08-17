@@ -27,11 +27,12 @@ export default function AdminAuditLogsPage() {
 		? new Date(new Date(filters.endDate).setHours(23, 59, 59, 999))
 		: undefined
 
-	const { data, isLoading, refetch } = useAuditLogs({
+	const { data, error, isLoading, isRefetching, refetch } = useAuditLogs({
 		limit,
 		offset,
 		action: filters.action,
 		resourceType: filters.resourceType,
+		search: filters.search,
 		dateFrom: dateFrom?.toISOString(),
 		dateTo: dateTo?.toISOString(),
 	})
@@ -97,8 +98,27 @@ export default function AdminAuditLogsPage() {
 				</div>
 			)}
 
+			{!isLoading && error && (
+				<div className="admin-card p-8 text-center" role="alert">
+					<div className="text-lg font-medium text-[var(--admin-text-primary)]">
+						{t('error.title')}
+					</div>
+					<p className="mt-2 text-sm text-[var(--admin-text-secondary)]">
+						{t('error.description')}
+					</p>
+					<Button
+						className="mt-4"
+						variant="outline"
+						onClick={() => refetch()}
+						disabled={isRefetching}
+					>
+						{t('error.retry')}
+					</Button>
+				</div>
+			)}
+
 			{/* Audit Logs Table */}
-			{!isLoading && data && (
+			{!isLoading && !error && data && (
 				<>
 					<AuditLogTable logs={data.logs} onRefresh={handleRefresh} />
 

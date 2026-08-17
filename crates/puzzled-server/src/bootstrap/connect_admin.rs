@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use chrono::{DateTime, Utc};
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
@@ -114,6 +115,19 @@ fn audit_from_json(v: &Value) -> AuditLogEntry {
             .to_string(),
         ..Default::default()
     }
+}
+
+fn parse_audit_filter_timestamp(
+    value: &str,
+    field: &str,
+) -> Result<Option<DateTime<Utc>>, ConnectError> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Ok(None);
+    }
+    DateTime::parse_from_rfc3339(value)
+        .map(|parsed| Some(parsed.with_timezone(&Utc)))
+        .map_err(|_| ConnectError::new(ErrorCode::InvalidArgument, format!("invalid_{field}")))
 }
 
 fn dlq_from_json(v: &Value) -> DlqEntry {
@@ -334,11 +348,20 @@ impl AdminService for AdminConnectService {
         let pool = self.pool()?;
         let req = request.to_owned_message();
         let limit = req.limit.clamp(1, 200);
+        let date_from = parse_audit_filter_timestamp(&req.date_from, "date_from")?;
+        let date_to = parse_audit_filter_timestamp(&req.date_to, "date_to")?;
         let (rows, total) = admin_db::list_audit_logs(
             pool,
             limit,
             req.offset,
-            (!req.action.is_empty()).then_some(req.action.as_str()),
+            admin_db::AuditLogFilters {
+                action: (!req.action.is_empty()).then_some(req.action.as_str()),
+                resource_type: (!req.resource_type.is_empty())
+                    .then_some(req.resource_type.as_str()),
+                search: (!req.search.is_empty()).then_some(req.search.as_str()),
+                date_from,
+                date_to,
+            },
         )
         .await
         .map_err(|e| ConnectError::new(ErrorCode::Internal, e))?;

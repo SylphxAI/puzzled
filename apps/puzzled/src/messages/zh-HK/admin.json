@@ -325,6 +325,11 @@
 		"title": "稽核日誌",
 		"subtitle": "追蹤所有管理操作和系統事件",
 		"loading": "正在載入稽核日誌...",
+		"error": {
+			"title": "稽核日誌暫時無法使用",
+			"description": "Connect 稽核日誌服務沒有回應。請重試以取得最新記錄。",
+			"retry": "重試稽核日誌"
+		},
 		"stats": {
 			"totalLogs": "總日誌數",
 			"onThisPage": "本頁",

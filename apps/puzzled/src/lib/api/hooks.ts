@@ -573,6 +573,7 @@ export function useAuditLogs(
 		offset?: number
 		action?: string
 		resourceType?: string
+		search?: string
 		dateFrom?: string
 		dateTo?: string
 	},
@@ -586,6 +587,10 @@ export function useAuditLogs(
 					limit: params?.limit ?? 50,
 					offset: params?.offset ?? 0,
 					action: params?.action ?? '',
+					resourceType: params?.resourceType ?? '',
+					search: params?.search ?? '',
+					dateFrom: params?.dateFrom ?? '',
+					dateTo: params?.dateTo ?? '',
 				})
 				return {
 					logs: res.entries.map(mapAuditEntry),

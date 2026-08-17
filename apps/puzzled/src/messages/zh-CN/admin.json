@@ -325,6 +325,11 @@
 		"title": "审计日志",
 		"subtitle": "追踪所有管理操作和系统事件",
 		"loading": "正在加载审计日志...",
+		"error": {
+			"title": "审计日志暂时不可用",
+			"description": "Connect 审计日志服务没有响应。请重试以获取最新记录。",
+			"retry": "重试审计日志"
+		},
 		"stats": {
 			"totalLogs": "总日志数",
 			"onThisPage": "本页",

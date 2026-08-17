@@ -80,6 +80,10 @@ message ListAuditLogsRequest {
   uint32 limit = 1;
   uint32 offset = 2;
   string action = 3;
+  string resource_type = 4;
+  string search = 5;
+  string date_from = 6;
+  string date_to = 7;
 }
 message ListAuditLogsResponse {
   repeated AuditLogEntry entries = 1;

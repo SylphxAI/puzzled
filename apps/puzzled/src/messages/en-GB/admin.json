@@ -325,6 +325,11 @@
 		"title": "Audit Logs",
 		"subtitle": "Track all administrative actions and system events",
 		"loading": "Loading audit logs...",
+		"error": {
+			"title": "Audit logs are unavailable",
+			"description": "The Connect audit-log service did not respond. Retry to request the current records.",
+			"retry": "Retry audit logs"
+		},
 		"stats": {
 			"totalLogs": "Total Logs",
 			"onThisPage": "On This Page",
