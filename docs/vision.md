@@ -71,5 +71,6 @@ journey:
 The durable decomposition and acceptance oracles are in
 [Capability DAG](capabilities.md). Exact transport and decision contracts live
 in protobuf, tests, and accepted product ADRs; this vision does not replace
-them. The earlier [North Star vision](north-star/VISION.md) is supporting
-product research and detail; this file is the canonical destination.
+them. The former [North Star vision path](north-star/VISION.md) is now a
+non-authoritative pointer to this canonical destination; historical research
+and superseded wording remain in Git history.
