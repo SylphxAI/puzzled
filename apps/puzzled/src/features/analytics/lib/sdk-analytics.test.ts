@@ -1,10 +1,15 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import React from 'react'
+import { renderToString } from 'react-dom/server'
+import { useGameAnalytics } from './sdk-analytics'
 
 describe('useGameAnalytics analytics hook', () => {
-	test('does not import throwing useAnalytics (dynamic game chunks)', () => {
-		const src = readFileSync(new URL('./sdk-analytics.ts', import.meta.url), 'utf8')
-		expect(src).toContain('useSafeAnalytics')
-		expect(src).not.toMatch(/import\s*\{[^}]*\buseAnalytics\b/)
+	test('renders without an SDK provider for dynamic game chunks', () => {
+		function Probe() {
+			const analytics = useGameAnalytics()
+			return React.createElement('output', null, String(Boolean(analytics.trackGameStart)))
+		}
+
+		expect(() => renderToString(React.createElement(Probe))).not.toThrow()
 	})
 })
