@@ -15,6 +15,11 @@ const sessions = new URL(
 	'../../../../crates/puzzled-server/src/capabilities/puzzle_play/adapters/game_sessions_db.rs',
 	import.meta.url,
 )
+const bootstrap = new URL(
+	'../features/daily/components/guest-identity-bootstrap.tsx',
+	import.meta.url,
+)
+const guestDayId = new URL('./guest-day-id.ts', import.meta.url)
 
 describe('guest completion authority boundary', () => {
 	test('does not let mutable guest storage block play without server status', () => {
@@ -25,6 +30,21 @@ describe('guest completion authority boundary', () => {
 		expect(clientSource).not.toContain('todaySession')
 		expect(serverSource).toContain('getServerDailyStatus')
 		expect(serverSource).toContain('hasCompletedToday && !completedSession')
+		expect(serverSource).not.toMatch(/user \? getServerDailyStatus/)
+		expect(serverSource).not.toContain('getServerTodaysPuzzle')
+		expect(serverSource).toContain('getServerDailyStatus({ gameSlug: slug, difficulty })')
+	})
+
+	test('guest SSR identity cookie is written for existing localStorage ids', () => {
+		const bootstrapSource = readFileSync(bootstrap, 'utf8')
+		const guestDayIdSource = readFileSync(guestDayId, 'utf8')
+
+		expect(bootstrapSource).toContain('getOrCreateGuestDayId')
+		expect(bootstrapSource).toContain('readGuestIdCookie')
+		expect(bootstrapSource).toContain('router.refresh()')
+		expect(guestDayIdSource).toMatch(
+			/if \(existing && UUID_RE\.test\(existing\)\)[\s\S]*persistGuestIdCookie\(existing\)/,
+		)
 	})
 
 	test('guest projections are written only after server acceptance', () => {

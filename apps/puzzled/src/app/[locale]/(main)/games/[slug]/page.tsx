@@ -11,7 +11,6 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerStreakInfo,
-	getServerTodaysPuzzle,
 	type StreakInfo,
 } from '@/lib/api/server'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
@@ -160,17 +159,33 @@ export default async function GamePage({ params, searchParams }: Props) {
 		)
 	}
 
+	const retryState = (
+		<div className="flex flex-1 flex-col">
+			<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+				<p className="text-lg font-medium">Puzzle not available</p>
+				<p className="text-sm text-muted-foreground">
+					Unable to load today's puzzle. Please try again later.
+				</p>
+				<a
+					href={`/games/${slug}`}
+					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+				>
+					Retry
+				</a>
+			</main>
+		</div>
+	)
+
 	// For games with difficulty support, if no difficulty selected, show difficulty selection
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
-		// Fetch completion status for all difficulties to show in selector
 		const completionStatus: Record<PuzzleDifficulty, boolean> = {
 			easy: false,
 			medium: false,
 			hard: false,
 		}
 
-		if (user) {
-			// Check completion status for each difficulty in parallel
+		try {
+			// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
 			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
 				getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
 				getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
@@ -179,6 +194,9 @@ export default async function GamePage({ params, searchParams }: Props) {
 			completionStatus.easy = easyStatus?.hasCompleted ?? false
 			completionStatus.medium = mediumStatus?.hasCompleted ?? false
 			completionStatus.hard = hardStatus?.hasCompleted ?? false
+		} catch (error) {
+			console.error('[GamePage] Failed to load difficulty completion status:', error)
+			return retryState
 		}
 
 		return (
@@ -213,17 +231,17 @@ export default async function GamePage({ params, searchParams }: Props) {
 				puzzleDate: dateParam,
 			}
 		} else {
-			// Daily mode (default) - pass difficulty for games that support it
-			const [statusData, puzzleData, streakData] = await Promise.all([
-				user ? getServerDailyStatus({ gameSlug: slug, difficulty }) : null,
-				getServerTodaysPuzzle({ gameSlug: slug, difficulty }),
+			// One GetDaily snapshot for guests and accounts so admission and play
+			// cannot straddle the product-day reset or reopen a completed board.
+			const [statusData, streakData] = await Promise.all([
+				getServerDailyStatus({ gameSlug: slug, difficulty }),
 				user ? getServerStreakInfo() : null,
 			])
 			puzzleStatus = statusData
 			puzzle = {
-				puzzleId: puzzleData.puzzleId,
-				puzzleData: puzzleData.puzzleData,
-				puzzleDate: puzzleData.puzzleDate,
+				puzzleId: statusData.puzzle.id,
+				puzzleData: statusData.puzzle.puzzleData,
+				puzzleDate: statusData.puzzle.puzzleDate,
 			}
 			streakInfo = streakData
 		}
@@ -232,24 +250,8 @@ export default async function GamePage({ params, searchParams }: Props) {
 		// puzzle will remain null, showing error message
 	}
 
-	// If no puzzle found, show error
 	if (!puzzle?.puzzleData) {
-		return (
-			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-					<p className="text-lg font-medium">Puzzle not available</p>
-					<p className="text-sm text-muted-foreground">
-						Unable to load today's puzzle. Please try again later.
-					</p>
-					<a
-						href={`/games/${slug}`}
-						className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-					>
-						Retry
-					</a>
-				</main>
-			</div>
-		)
+		return retryState
 	}
 
 	// Use puzzle data from server
