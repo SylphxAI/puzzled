@@ -10,19 +10,7 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import type { Category, ConnectionsPuzzle } from './types'
-
-type TestState = {
-	puzzle: ConnectionsPuzzle
-	selectedWords: string[]
-	solvedCategories: Category[]
-	remainingWords: string[]
-	mistakes: number
-	gameStatus: 'playing' | 'won' | 'lost'
-	guessHistory: string[][]
-	lastGuessWasOneAway: boolean
-}
-
+import type { Category, ConnectionsPuzzle, ConnectionsState } from './types'
 import { MAX_MISTAKES, WORDS_PER_CATEGORY } from './types'
 
 // ==========================================
@@ -70,7 +58,7 @@ function countMatchingWords(
 	return maxMatching
 }
 
-function createInitialState(puzzle: ConnectionsPuzzle): TestState {
+function createInitialState(puzzle: ConnectionsPuzzle): ConnectionsState {
 	const allWords = puzzle.categories.flatMap((c) => c.words)
 	return {
 		puzzle,
@@ -96,7 +84,7 @@ type ConnectionsAction =
 	| { type: 'SHUFFLE' }
 	| { type: 'RESET'; puzzle: ConnectionsPuzzle }
 
-function connectionsReducer(state: TestState, action: ConnectionsAction): TestState {
+function connectionsReducer(state: ConnectionsState, action: ConnectionsAction): ConnectionsState {
 	switch (action.type) {
 		case 'SELECT_WORD': {
 			if (state.gameStatus !== 'playing') return state

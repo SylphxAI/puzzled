@@ -8,11 +8,6 @@ strategy = "dockerfile"
 dockerfile = "apps/puzzled/Dockerfile"
 context = "."
 
-# Platform-owned serverless boundary: this manifest declares the product's
-# HTTP service shape and managed bindings only. Platform owns runner, build,
-# database binding, wake, scale-to-zero, deployment, and Kubernetes effects;
-# Puzzled does not declare customer replica, HA, or cluster controls.
-
 [ci]
 # PR previews are admitted (ADR-170 deploy-layer proof); project policy,
 # labels, and capacity gates still apply on the platform side.
@@ -20,8 +15,8 @@ preview_deploys = true
 
 # Project-level schema gate (ADR-089 / DEPLOY-GUIDE). Ephemeral Job runs once
 # per push BEFORE writer services roll. Supersedes web-only release_command:
-# the web runtime image has no atlas binary, so migrations must be applied by
-# this Platform-managed job before writer services roll.
+# web runtime image has no atlas binary, so api-only crate deploys left
+# migration 20260812010000 unapplied on live tip 626f40a.
 #
 # image=api: atlas + migrations are baked into crates/puzzled-server/Dockerfile
 # (no third build-only worker service — dens counted migrator against readiness).
@@ -39,23 +34,10 @@ watch_paths = [
   "sylphx.toml",
 ]
 
-[env]
-# The database URL is a Platform-managed resource output, not a product secret
-# or hand-maintained deployment value. MIGRATOR_DATABASE_URL is projected by
-# the same binding for the ephemeral migration job.
-DATABASE_URL = { from_resource = "database", attr = "database_url" }
-
-[resources.database]
-# The app owns the database capability intent; Platform owns provisioning,
-# credentials, binding materialization, and runtime placement.
-tier = "standard"
-branch_on_preview = false
-
 [[services]]
 name = "web"
 type = "web"
 port = 3000
-env = ["DATABASE_URL"]
 # Presentation root is HTTP-ready (no separate /health).
 health = { path = "/" }
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
@@ -68,7 +50,6 @@ connect = { services = ["api"] }
 name = "api"
 type = "web"
 port = 8080
-env = ["DATABASE_URL"]
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [
   "/puzzled.v1.AdminService",

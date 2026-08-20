@@ -4,8 +4,9 @@
  */
 
 import { useCallback, useEffect, useReducer } from 'react'
-import type { SudokuCell, SudokuPuzzleClientData, SudokuState } from './types'
-import { GRID_SIZE, isGridFilled } from './types'
+import type { SudokuPuzzleClientData, SudokuSolution } from './config'
+import type { SudokuCell, SudokuState } from './types'
+import { GRID_SIZE, isGridComplete } from './types'
 
 // Actions for the reducer
 type SudokuAction =
@@ -16,8 +17,7 @@ type SudokuAction =
 	| { type: 'ADD_NOTE'; value: number }
 	| { type: 'REMOVE_NOTE'; value: number }
 	| { type: 'MOVE'; direction: 'up' | 'down' | 'left' | 'right' }
-	| { type: 'CHECK_COMPLETION' }
-	| { type: 'REOPEN' }
+	| { type: 'CHECK_COMPLETION'; solution: SudokuSolution }
 	| { type: 'RESET' }
 
 function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
@@ -50,6 +50,7 @@ function sudokuReducer(
 	state: SudokuState,
 	action: SudokuAction,
 	puzzleData: SudokuPuzzleClientData,
+	solution: SudokuSolution,
 ): SudokuState {
 	switch (action.type) {
 		case 'SELECT_CELL': {
@@ -122,8 +123,8 @@ function sudokuReducer(
 				}
 			}
 
-			// Filled is only a submission trigger. Rust remains the completion authority.
-			const isNowComplete = isGridFilled(newGrid)
+			// Check completion after setting a value
+			const isNowComplete = isGridComplete(newGrid, solution.grid)
 
 			return {
 				...state,
@@ -225,20 +226,12 @@ function sudokuReducer(
 		}
 
 		case 'CHECK_COMPLETION': {
-			const isComplete = isGridFilled(state.userGrid)
+			const isComplete = isGridComplete(state.userGrid, action.solution.grid)
 
 			return {
 				...state,
 				isComplete,
 				endTime: isComplete && !state.endTime ? Date.now() : state.endTime,
-			}
-		}
-
-		case 'REOPEN': {
-			return {
-				...state,
-				isComplete: false,
-				endTime: null,
 			}
 		}
 
@@ -259,14 +252,16 @@ export type UseSudokuReturn = {
 	toggleNotesMode: () => void
 	move: (direction: 'up' | 'down' | 'left' | 'right') => void
 	checkCompletion: () => void
-	reopen: () => void
 	reset: () => void
 	getConflictingCells: () => Set<string>
 }
 
-export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
+export function useSudoku(
+	puzzleData: SudokuPuzzleClientData,
+	solution: SudokuSolution,
+): UseSudokuReturn {
 	const [state, dispatch] = useReducer(
-		(s: SudokuState, a: SudokuAction) => sudokuReducer(s, a, puzzleData),
+		(s: SudokuState, a: SudokuAction) => sudokuReducer(s, a, puzzleData, solution),
 		puzzleData,
 		createInitialState,
 	)
@@ -331,12 +326,8 @@ export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 	}, [])
 
 	const checkCompletion = useCallback(() => {
-		dispatch({ type: 'CHECK_COMPLETION' })
-	}, [])
-
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
+		dispatch({ type: 'CHECK_COMPLETION', solution })
+	}, [solution])
 
 	const reset = useCallback(() => {
 		dispatch({ type: 'RESET' })
@@ -393,7 +384,6 @@ export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 		toggleNotesMode,
 		move,
 		checkCompletion,
-		reopen,
 		reset,
 		getConflictingCells,
 	}

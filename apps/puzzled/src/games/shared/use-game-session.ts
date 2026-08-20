@@ -3,6 +3,7 @@
  *
  * Consolidates common game session logic across all games:
  * - Phase state machine (ready -> playing)
+ * - localStorage for played status
  * - Timer tracking
  * - Save result logic (score calculated server-side)
  * - Guest state management
@@ -18,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
+import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 
 /** Final game outcome - what gets saved to database */
@@ -104,11 +106,14 @@ export interface UseGameSessionOptions {
 	 */
 	guestPromptDelay?: number
 
-	/** Product day key for daily play, or the archive date for opted-in archive validation. */
+	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
 	puzzleDate?: string
 
-	/** Opt a solution-safe module into server validation for premium archive play. */
-	validateArchive?: boolean
+	/**
+	 * When true, celebration / result card wait for a server-accepted
+	 * finish. Invalid grids stay playable. already_played counts as accept.
+	 */
+	requireServerAccept?: boolean
 }
 
 export type GameEndResult = {
@@ -164,8 +169,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 		resultModalDelay,
 		guestPromptDelay = 2000,
 		puzzleDate,
-		validateArchive = false,
+		requireServerAccept = false,
 	} = options
+
+	const storageKey = getGameSessionKey(gameSlug)
 
 	// Hooks
 	const { saveResult, isLoggedIn } = useSaveGameResult(gameSlug)
@@ -173,9 +180,10 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const { incrementGuestGames, shouldShowSignupPrompt, dismissSignupPrompt } = useGuestOnboarding()
 
 	// State
-	// Game state is held by each module hook and is not persisted here. Always
-	// show the ready screen after a reload instead of implying a resumable run.
-	const [gamePhase, setGamePhase] = useState<GamePhase>('ready')
+	const [gamePhase, setGamePhase] = useState<GamePhase>(() => {
+		if (typeof window === 'undefined') return 'ready'
+		return localStorage.getItem(storageKey) ? 'playing' : 'ready'
+	})
 
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [showCelebration, setShowCelebration] = useState(false)
@@ -195,12 +203,15 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 	const timeSpentMs = startTime ? Date.now() - startTime : 0
 
 	/**
-	 * Start game and begin timer
+	 * Start game - mark as played and begin timer
 	 */
 	const startGame = useCallback(() => {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(storageKey, 'true')
+		}
 		setStartTime(Date.now())
 		setGamePhase('playing')
-	}, [])
+	}, [storageKey])
 
 	/**
 	 * End game - save result (server calculates score), show celebration, show modal
@@ -243,21 +254,23 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			const finalTimeSpentMs = startTime ? Date.now() - startTime : 0
 			const { status } = endData
 
+			if (!requireServerAccept) {
+				celebrate(endData)
+			}
+
 			let finish: GameEndResult = { success: true }
 
-			// Save result through Connect for daily mode and for modules that use
-			// the solution-safe archive path. The server resolves the solution and
-			// remains the only completion authority in both cases.
-			if (mode === 'daily' || (mode === 'archive' && validateArchive)) {
+			// Save result (daily mode). puzzleId optional for deterministic free
+			// games — server resolves content by day_key.
+			if (mode === 'daily') {
 				try {
 					const result = await saveResult({
 						status,
 						attempts: endData.attempts ?? 1,
 						timeSpentMs: finalTimeSpentMs,
 						puzzleId,
-						puzzleDate: mode === 'daily' ? puzzleDate : undefined,
-						archiveDate: mode === 'archive' ? puzzleDate : undefined,
-						mode,
+						puzzleDate,
+						mode: 'daily' as const,
 						difficulty,
 						data: endData.data,
 					})
@@ -279,30 +292,19 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 					}
 				}
 
-				if (!finish.success) {
+				if (requireServerAccept && !finish.success) {
 					savedRef.current = false
 					return finish
 				}
 
-				// A concurrent tab may have won the one-finish race. Do not celebrate
-				// the losing tab's local submission or present its status as the
-				// server result; reload the route so the server-rendered completed
-				// session is the only result card shown.
-				if (finish.alreadyPlayed) {
-					if (typeof window !== 'undefined') window.location.reload()
-					return finish
+				if (requireServerAccept) {
+					celebrate(endData)
 				}
 
-				// Result cards and guest projections follow the sole
-				// server-accepted SubmitGuess finish. already_played is an
-				// accepted terminal state and is handled by saveResult.
-				celebrate(endData)
-
-				if (mode === 'daily' && !isLoggedIn && !finish.alreadyPlayed) {
+				if (!isLoggedIn) {
 					saveGuestCompletion({
 						status,
 						attempts: endData.attempts ?? 1,
-						score: finish.score,
 					})
 					incrementGuestGames()
 					if (shouldShowSignupPrompt) {
@@ -311,7 +313,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						}, guestPromptDelay)
 					}
 				}
-			} else {
+			} else if (requireServerAccept) {
 				celebrate(endData)
 			}
 
@@ -322,7 +324,6 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			mode,
 			puzzleId,
 			puzzleDate,
-			validateArchive,
 			difficulty,
 			gameSlug,
 			isLoggedIn,
@@ -331,6 +332,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 			incrementGuestGames,
 			shouldShowSignupPrompt,
 			guestPromptDelay,
+			requireServerAccept,
 			celebrate,
 		],
 	)

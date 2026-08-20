@@ -19,7 +19,7 @@ export type SpellingBeePuzzleData = {
 /**
  * Puzzle data sent to client (includes maxScore for rank display)
  */
-export type SpellingBeeStoredPuzzleData = {
+export type SpellingBeePuzzleClientData = {
 	centerLetter: string
 	outerLetters: string[]
 	maxScore: number
@@ -27,24 +27,15 @@ export type SpellingBeeStoredPuzzleData = {
 	pangrams: string[]
 }
 
-export type SpellingBeePuzzleClientData = {
-	centerLetter: string
-	outerLetters: string[]
-	maxScore: number
-	wordCount: number
-	pangramCount: number
-}
-
 export type SpellingBeeState = {
 	centerLetter: string
 	outerLetters: string[]
 	currentWord: string
 	foundWords: string[]
-	foundPangrams: string[]
 	score: number
 	maxScore: number
-	wordCount: number
-	pangramCount: number
+	pangrams: string[]
+	validWords: string[]
 	gameStatus: GameStatus
 	rank: SpellingBeeRank
 }

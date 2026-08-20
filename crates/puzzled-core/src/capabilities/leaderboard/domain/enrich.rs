@@ -1,5 +1,5 @@
 //! Pure leaderboard entry enrichment — mirrors
-//! Connect StatsService leaderboard mapping after DB rank.
+//! `apps/puzzled/src/server/api/routes/stats.ts` GET /leaderboard mapping after DB rank.
 //! PORTFOLIO-PRODUCTS pure residual. NO authority_rust / ts_deleted.
 //!
 //! DB IO stays in `leaderboard_db`; this module owns only pure shape + display fallbacks.

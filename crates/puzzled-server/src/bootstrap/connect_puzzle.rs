@@ -20,34 +20,15 @@ use tracing::warn;
 use puzzled_core::puzzle_play::application::submission_validation::{
     validate_submission, SubmissionEnvelope,
 };
-use puzzled_core::puzzle_play::arithmo;
-use puzzled_core::puzzle_play::arithmo_generate::generate_arithmo_puzzle;
-use puzzled_core::puzzle_play::block_slide_generate::generate_block_slide_puzzle;
 use puzzled_core::puzzle_play::crossword_generate::{
-    client_safe_puzzle_data, client_safe_served_puzzle, generate_crossword_puzzle,
+    client_safe_puzzle_data, generate_crossword_puzzle,
 };
-use puzzled_core::puzzle_play::cryptogram_generate::generate_cryptogram_puzzle;
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
-use puzzled_core::puzzle_play::killer_sudoku_generate::generate_killer_sudoku_puzzle;
-use puzzled_core::puzzle_play::nonogram_generate::generate_nonogram_puzzle;
-use puzzled_core::puzzle_play::pattern_match_generate::generate_pattern_match_puzzle;
-use puzzled_core::puzzle_play::quad_words;
-use puzzled_core::puzzle_play::quad_words_generate::generate_quad_words_puzzle;
-use puzzled_core::puzzle_play::queens_generate::{generate_queens_puzzle, queens_board_size};
-use puzzled_core::puzzle_play::tango_generate::generate_duo_puzzle;
-use puzzled_core::puzzle_play::word_box_generate::generate_word_box_puzzle;
-use puzzled_core::puzzle_play::word_groups;
-use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
-use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
-use puzzled_core::puzzle_play::word_hive;
-use puzzled_core::puzzle_play::word_ladder_generate::generate_word_ladder_puzzle;
-use puzzled_core::puzzle_play::word_search_generate::generate_word_search_puzzle;
-use puzzled_core::puzzle_play::wordle_eval;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -55,7 +36,8 @@ use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
     fetch_daily_puzzle, fetch_puzzle_by_id,
 };
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
-    has_completed_session, has_ritual_completion, load_completed_session, persist_validated_session,
+    adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
+    persist_validated_session,
 };
 use crate::proto::puzzled::v1::{
     DailyCompletion, GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse,
@@ -91,6 +73,29 @@ impl PuzzleConnectService {
     fn identity_for_submit(&self, ctx: &RequestContext) -> Result<String, ConnectError> {
         use crate::bootstrap::identity::require_identity_or_guest;
         Ok(require_identity_or_guest(ctx)?.user_id)
+    }
+
+    /// Reassign accepted guest rows onto the Platform account before a personal
+    /// read or write. Fail closed so a missed merge cannot accept a second finish.
+    async fn adopt_guest_progress_if_needed(
+        &self,
+        ctx: &RequestContext,
+    ) -> Result<(), ConnectError> {
+        use crate::bootstrap::identity::resolve_request_identities;
+        let Some(pool) = &self.state.pool else {
+            return Ok(());
+        };
+        let identities = resolve_request_identities(ctx);
+        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
+            return Ok(());
+        };
+        adopt_guest_sessions(pool, account_user_id, guest_user_id)
+            .await
+            .map_err(|error| {
+                warn!(%error, "guest progress adoption failed");
+                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
+            })?;
+        Ok(())
     }
 
     /// Enforce premium gating for a served puzzle (ADR-170).
@@ -186,401 +191,8 @@ fn crossword_solution(seed: i64) -> Value {
     generate_crossword_puzzle(seed).1
 }
 
-fn crowns_puzzle_data(seed: i64, difficulty: Option<&str>) -> Value {
-    let generated = generate_queens_puzzle(seed, queens_board_size(difficulty));
-    serde_json::to_value(&generated.puzzle_data).unwrap_or(Value::Null)
-}
-
-fn crowns_solution(seed: i64, difficulty: Option<&str>) -> Value {
-    let generated = generate_queens_puzzle(seed, queens_board_size(difficulty));
-    serde_json::to_value(&generated.solution).unwrap_or(Value::Null)
-}
-
-fn word_guess_puzzle_data(seed: i64) -> Value {
-    generate_word_guess_puzzle(seed).0
-}
-
-fn word_guess_solution(seed: i64) -> Value {
-    generate_word_guess_puzzle(seed).1
-}
-
-fn word_guess_evaluation_json(eval: &wordle_eval::GuessEvaluation) -> String {
-    serde_json::json!({
-        "letters": eval.letters.iter().map(|status| status.as_str()).collect::<Vec<_>>(),
-        "won": eval.won,
-        "terminal": eval.terminal,
-        "reveal": eval.reveal,
-    })
-    .to_string()
-}
-
-fn parse_word_groups_categories(solution: &Value) -> Option<Vec<word_groups::Category>> {
-    let cats = solution.get("categories")?.as_array()?;
-    let mut categories = Vec::with_capacity(cats.len());
-    for category in cats {
-        categories.push(word_groups::Category {
-            name: category.get("name")?.as_str()?.to_string(),
-            words: category
-                .get("words")?
-                .as_array()?
-                .iter()
-                .filter_map(Value::as_str)
-                .map(ToOwned::to_owned)
-                .collect(),
-            level: u8::try_from(category.get("level").and_then(Value::as_u64).unwrap_or(0))
-                .unwrap_or(0),
-        });
-    }
-    Some(categories)
-}
-
-fn arithmo_playing_response(
-    game_slug: &str,
-    solution: &Value,
-    data: &Value,
-) -> ServiceResult<SubmitGuessResponse> {
-    let Some(equation) = solution.get("equation").and_then(Value::as_str) else {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "missing_solution_equation",
-        ));
-    };
-    let Some(guesses) = word_guess_guesses(data) else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("Missing guesses data".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    let Some(eval) = arithmo::evaluate_latest_equation(equation, &guesses) else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("invalid_guess".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    Response::ok(SubmitGuessResponse {
-        valid: true,
-        status: if eval.terminal {
-            if eval.won {
-                "won"
-            } else {
-                "lost"
-            }
-        } else {
-            "playing"
-        }
-        .to_string(),
-        score: None,
-        game_slug: game_slug.to_string(),
-        error: None,
-        slice: SLICE_SUBMIT.to_string(),
-        evaluation_json: Some(
-            serde_json::json!({
-                "letters": eval.letters.iter().map(|status| status.as_str()).collect::<Vec<_>>(),
-                "won": eval.won,
-                "terminal": eval.terminal,
-                "reveal": eval.reveal,
-            })
-            .to_string(),
-        ),
-        ..Default::default()
-    })
-}
-
-fn quad_words_playing_response(
-    game_slug: &str,
-    solution: &Value,
-    data: &Value,
-) -> ServiceResult<SubmitGuessResponse> {
-    let Some(words) = solution.get("words").and_then(Value::as_array) else {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "missing_quad_words_solution",
-        ));
-    };
-    let targets: Vec<String> = words
-        .iter()
-        .filter_map(Value::as_str)
-        .map(ToOwned::to_owned)
-        .collect();
-    if targets.len() != 4 {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "invalid_quad_words_solution",
-        ));
-    }
-    let Some(guesses) = word_guess_guesses(data) else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("Missing guesses data".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    let target_refs = [
-        targets[0].as_str(),
-        targets[1].as_str(),
-        targets[2].as_str(),
-        targets[3].as_str(),
-    ];
-    let mut previously_solved = [false; 4];
-    if guesses.len() > 1 {
-        for guess in &guesses[..guesses.len() - 1] {
-            if let Some(boards) = quad_words::evaluate_four(guess, &target_refs) {
-                for (index, letters) in boards.iter().enumerate() {
-                    if wordle_eval::is_winning_guess(letters) {
-                        previously_solved[index] = true;
-                    }
-                }
-            }
-        }
-    }
-    let Some(eval) = quad_words::evaluate_latest_quad(&target_refs, &guesses, previously_solved)
-    else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("invalid_guess".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    Response::ok(SubmitGuessResponse {
-        valid: true,
-        status: if eval.terminal {
-            if eval.won {
-                "won"
-            } else {
-                "lost"
-            }
-        } else {
-            "playing"
-        }
-        .to_string(),
-        score: None,
-        game_slug: game_slug.to_string(),
-        error: None,
-        slice: SLICE_SUBMIT.to_string(),
-        evaluation_json: Some(
-            serde_json::json!({
-                "boards": eval.boards.iter().map(|board| {
-                    board.iter().map(|status| status.as_str()).collect::<Vec<_>>()
-                }).collect::<Vec<_>>(),
-                "solved": eval.solved,
-                "won": eval.won,
-                "terminal": eval.terminal,
-                "reveal": eval.reveal,
-            })
-            .to_string(),
-        ),
-        ..Default::default()
-    })
-}
-
-fn word_groups_playing_response(
-    game_slug: &str,
-    solution: &Value,
-    data: &Value,
-) -> ServiceResult<SubmitGuessResponse> {
-    let Some(categories) = parse_word_groups_categories(solution) else {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "missing_categories_solution",
-        ));
-    };
-    let Some(guess) = data.get("guess").and_then(Value::as_array).map(|items| {
-        items
-            .iter()
-            .filter_map(Value::as_str)
-            .map(ToOwned::to_owned)
-            .collect::<Vec<_>>()
-    }) else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("Missing guess data".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    let found_names = data
-        .get("foundNames")
-        .and_then(Value::as_array)
-        .map(|items| {
-            items
-                .iter()
-                .filter_map(Value::as_str)
-                .map(ToOwned::to_owned)
-                .collect::<Vec<_>>()
-        })
-        .unwrap_or_default();
-    let eval = word_groups::evaluate_group_guess(&guess, &categories, &found_names);
-    let category = eval.category.as_ref().map(|category| {
-        serde_json::json!({
-            "name": category.name,
-            "words": category.words,
-            "level": category.level,
-        })
-    });
-    let mistakes = data.get("mistakes").and_then(Value::as_u64).unwrap_or(0);
-    let remaining = if !eval.correct && mistakes + 1 >= u64::from(word_groups::MAX_MISTAKES) {
-        Some(
-            categories
-                .iter()
-                .filter(|category| {
-                    !found_names
-                        .iter()
-                        .any(|name| name.eq_ignore_ascii_case(&category.name))
-                })
-                .map(|category| {
-                    serde_json::json!({
-                        "name": category.name,
-                        "words": category.words,
-                        "level": category.level,
-                    })
-                })
-                .collect::<Vec<_>>(),
-        )
-    } else {
-        None
-    };
-    Response::ok(SubmitGuessResponse {
-        valid: true,
-        status: "playing".to_string(),
-        score: None,
-        game_slug: game_slug.to_string(),
-        error: None,
-        slice: SLICE_SUBMIT.to_string(),
-        evaluation_json: Some(
-            serde_json::json!({
-                "correct": eval.correct,
-                "oneAway": eval.one_away,
-                "category": category,
-                "remaining": remaining,
-            })
-            .to_string(),
-        ),
-        ..Default::default()
-    })
-}
-
-fn word_hive_playing_response(
-    game_slug: &str,
-    solution: &Value,
-    data: &Value,
-) -> ServiceResult<SubmitGuessResponse> {
-    let mut valid_words = std::collections::HashSet::new();
-    let mut pangrams = std::collections::HashSet::new();
-    if let Some(list) = solution.get("validWords").and_then(Value::as_array) {
-        for word in list.iter().filter_map(Value::as_str) {
-            valid_words.insert(word.to_ascii_uppercase());
-        }
-    }
-    if let Some(list) = solution.get("pangrams").and_then(Value::as_array) {
-        for word in list.iter().filter_map(Value::as_str) {
-            pangrams.insert(word.to_ascii_uppercase());
-        }
-    }
-    if valid_words.is_empty() {
-        return Err(ConnectError::new(
-            ErrorCode::InvalidArgument,
-            "missing_hive_solution",
-        ));
-    }
-    let Some(found) = data
-        .get("foundWords")
-        .and_then(Value::as_array)
-        .map(|items| {
-            items
-                .iter()
-                .filter_map(Value::as_str)
-                .map(ToOwned::to_owned)
-                .collect::<Vec<_>>()
-        })
-    else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("Missing found words data".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    let Some(eval) = word_hive::evaluate_latest_word(&valid_words, &pangrams, &found) else {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some("invalid_guess".to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    };
-    if !eval.accepted {
-        return Response::ok(SubmitGuessResponse {
-            valid: false,
-            status: String::new(),
-            score: None,
-            game_slug: game_slug.to_string(),
-            error: Some(eval.error.unwrap_or("not_in_list").to_string()),
-            slice: SLICE_SUBMIT.to_string(),
-            ..Default::default()
-        });
-    }
-    Response::ok(SubmitGuessResponse {
-        valid: true,
-        status: if eval.terminal { "won" } else { "playing" }.to_string(),
-        score: None,
-        game_slug: game_slug.to_string(),
-        error: None,
-        slice: SLICE_SUBMIT.to_string(),
-        evaluation_json: Some(
-            serde_json::json!({
-                "word": eval.word,
-                "wordScore": eval.word_score,
-                "isPangram": eval.is_pangram,
-                "foundCount": eval.found_count,
-                "totalWords": eval.total_words,
-                "terminal": eval.terminal,
-            })
-            .to_string(),
-        ),
-        ..Default::default()
-    })
-}
-
-fn word_guess_guesses(data: &Value) -> Option<Vec<String>> {
-    data.get("guesses").and_then(Value::as_array).map(|items| {
-        items
-            .iter()
-            .filter_map(Value::as_str)
-            .map(ToOwned::to_owned)
-            .collect()
-    })
-}
-
 /// On-server deterministic fallback for free-floor modules that ship a pure generator.
-/// Content store remains preferred when a row exists. Crowns is in the free
-/// rotation; the floor must not depend on a pre-seeded row.
+/// Content store remains preferred when a row exists.
 fn deterministic_daily(
     game_slug: &str,
     seed: i64,
@@ -595,62 +207,6 @@ fn deterministic_daily(
             ))
         }
         "crossword" => Some((crossword_puzzle_data(seed), Some(crossword_solution(seed)))),
-        "crowns" => Some((
-            crowns_puzzle_data(seed, difficulty),
-            Some(crowns_solution(seed, difficulty)),
-        )),
-        "word-guess" => Some((
-            word_guess_puzzle_data(seed),
-            Some(word_guess_solution(seed)),
-        )),
-        "word-groups" => Some((
-            generate_word_groups_puzzle(seed).0,
-            Some(generate_word_groups_puzzle(seed).1),
-        )),
-        "arithmo" => {
-            let (data, solution) = generate_arithmo_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "quad-words" => {
-            let (data, solution) = generate_quad_words_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "pattern-match" => {
-            let (data, solution) = generate_pattern_match_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "cryptogram" => {
-            let (data, solution) = generate_cryptogram_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "duo" => {
-            let (data, solution) = generate_duo_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "nonogram" => {
-            let (data, solution) = generate_nonogram_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "word-search" => {
-            let (data, solution) = generate_word_search_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "killer-sudoku" => {
-            let (data, solution) = generate_killer_sudoku_puzzle(seed, difficulty);
-            Some((data, Some(solution)))
-        }
-        "block-slide" => {
-            let (data, solution) = generate_block_slide_puzzle(seed, difficulty);
-            Some((data, Some(solution)))
-        }
-        "word-ladder" => {
-            let (data, solution) = generate_word_ladder_puzzle(seed);
-            Some((data, Some(solution)))
-        }
-        "word-box" => {
-            let (data, solution) = generate_word_box_puzzle(seed);
-            Some((data, Some(solution)))
-        }
         _ => None,
     }
 }
@@ -715,6 +271,7 @@ impl PuzzleService for PuzzleConnectService {
             return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
         }
 
+        self.adopt_guest_progress_if_needed(&ctx).await?;
         let identity = self.identity(&ctx)?;
         let difficulty = {
             let d = req.difficulty.trim();
@@ -815,7 +372,7 @@ impl PuzzleService for PuzzleConnectService {
                 slice: SLICE_DAILY.to_string(),
                 stub,
                 puzzle_data_json: puzzle_data
-                    .map(|data| client_safe_served_puzzle(game_slug, data))
+                    .map(client_safe_puzzle_data)
                     .map(|v| v.to_string())
                     .unwrap_or_default(),
                 completed_session: completed_session
@@ -858,28 +415,15 @@ impl PuzzleService for PuzzleConnectService {
                 "unknown_game",
             ));
         }
-        let playing = req.status.trim().eq_ignore_ascii_case("playing");
-        let status = parse_status(&req.status);
-        if status.is_none() && !playing {
+        let Some(status) = parse_status(&req.status) else {
             return Err(ConnectError::new(
                 ErrorCode::InvalidArgument,
                 "status_required_won_or_lost",
             ));
-        }
-        if playing
-            && game_slug != "word-guess"
-            && game_slug != "word-groups"
-            && game_slug != "arithmo"
-            && game_slug != "quad-words"
-            && game_slug != "word-hive"
-        {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "status_required_won_or_lost",
-            ));
-        }
+        };
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
         // Premium/archive still fail closed via enforce_play_access.
+        self.adopt_guest_progress_if_needed(&ctx).await?;
         let uid = self.identity_for_submit(&ctx)?;
 
         let data: Value = if req.submission_json.trim().is_empty() {
@@ -1024,80 +568,11 @@ impl PuzzleService for PuzzleConnectService {
             }
         }
 
-        if playing {
-            if game_slug == "word-groups" {
-                return word_groups_playing_response(game_slug, &solution, &data);
-            }
-            if game_slug == "arithmo" {
-                return arithmo_playing_response(game_slug, &solution, &data);
-            }
-            if game_slug == "quad-words" {
-                return quad_words_playing_response(game_slug, &solution, &data);
-            }
-            if game_slug == "word-hive" {
-                return word_hive_playing_response(game_slug, &solution, &data);
-            }
-            let Some(word) = solution.get("word").and_then(Value::as_str) else {
-                return Err(ConnectError::new(
-                    ErrorCode::InvalidArgument,
-                    "missing_solution_word",
-                ));
-            };
-            let Some(guesses) = word_guess_guesses(&data) else {
-                return Response::ok(SubmitGuessResponse {
-                    valid: false,
-                    status: String::new(),
-                    score: None,
-                    game_slug: game_slug.to_string(),
-                    error: Some("Missing guesses data".to_string()),
-                    slice: SLICE_SUBMIT.to_string(),
-                    ..Default::default()
-                });
-            };
-            let Some(eval) = wordle_eval::evaluate_latest_guess(word, &guesses) else {
-                return Response::ok(SubmitGuessResponse {
-                    valid: false,
-                    status: String::new(),
-                    score: None,
-                    game_slug: game_slug.to_string(),
-                    error: Some("invalid_guess".to_string()),
-                    slice: SLICE_SUBMIT.to_string(),
-                    ..Default::default()
-                });
-            };
-            return Response::ok(SubmitGuessResponse {
-                valid: true,
-                status: if eval.terminal {
-                    if eval.won {
-                        "won"
-                    } else {
-                        "lost"
-                    }
-                } else {
-                    "playing"
-                }
-                .to_string(),
-                score: None,
-                game_slug: game_slug.to_string(),
-                error: None,
-                slice: SLICE_SUBMIT.to_string(),
-                evaluation_json: Some(word_guess_evaluation_json(&eval)),
-                ..Default::default()
-            });
-        }
-
-        let Some(status) = status else {
-            return Err(ConnectError::new(
-                ErrorCode::InvalidArgument,
-                "status_required_won_or_lost",
-            ));
-        };
-
         let envelope = SubmissionEnvelope {
             status,
             attempts: req.attempts,
             time_spent_ms: req.time_spent_ms,
-            data: data.clone(),
+            data,
         };
         let verdict = validate_submission(game_slug, &puzzle_data, &solution, &envelope);
 
@@ -1155,19 +630,6 @@ impl PuzzleService for PuzzleConnectService {
             }
         }
 
-        let evaluation_json = if game_slug == "word-guess" {
-            solution
-                .get("word")
-                .and_then(Value::as_str)
-                .and_then(|word| {
-                    word_guess_guesses(&data)
-                        .and_then(|guesses| wordle_eval::evaluate_latest_guess(word, &guesses))
-                })
-                .map(|eval| word_guess_evaluation_json(&eval))
-        } else {
-            None
-        };
-
         Response::ok(SubmitGuessResponse {
             valid: true,
             status: status_label(verdict.status.unwrap_or(status)).to_string(),
@@ -1175,7 +637,6 @@ impl PuzzleService for PuzzleConnectService {
             game_slug: game_slug.to_string(),
             error: None,
             slice: SLICE_SUBMIT.to_string(),
-            evaluation_json,
             ..Default::default()
         })
     }

@@ -18,6 +18,7 @@ export {
 export {
 	planPuzzleGetDailyProduct,
 	resolvePuzzleProductAuthorityMode,
+	shouldUseRestPlayResidual,
 } from './puzzle-product-authority'
 export { createStatsServiceClient, getLeaderboard, statsQueryKeys } from './stats-client'
 export {

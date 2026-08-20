@@ -16,24 +16,26 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import { parseWordBoxClientPayload } from './parse-client'
+import type { LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
 import { useWordBox } from './use-word-box'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.wordBox')
 	const tCommon = useTranslations('common')
 
 	// Get puzzle from server data (client-safe - no config import)
-	const [puzzle] = useState(() => parseWordBoxClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<LetterBoxedPuzzleData, LetterBoxedSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -43,7 +45,6 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -53,40 +54,28 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 		gameSlug: 'word-box',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
-	const [submitError, setSubmitError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
 
-	const game = useWordBox(puzzle)
-	const box = puzzle.box
+	const game = useWordBox(puzzle.puzzleData, puzzle.solution)
+	const box = puzzle.puzzleData.box
 
-	useEffect(() => {
-		if (game.state.gameStatus !== 'won' || gameEndedRef.current) return
+	// Handle game completion - delegate to useGameSession
+	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {
 		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
-				status: 'won',
-				attempts: game.state.words.length,
-				data: {
-					words: game.state.words,
-				},
-			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			game.reopen()
-			gameEndedRef.current = false
-			setSubmitError(tCommon('errorDescription'))
-		})()
-	}, [endGame, game.reopen, game.state.gameStatus, game.state.words, tCommon])
+		endGame({
+			status: 'won',
+			attempts: game.state.words.length,
+			data: {
+				words: game.state.words,
+			},
+		})
+	}
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
@@ -95,7 +84,6 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	}, [])
 
 	const handleSubmit = useCallback(() => {
-		setSubmitError(null)
 		// In production, validate against a dictionary API
 		// For now, accept words 3+ letters that pass box rules
 		const result = game.submitWord(game.state.currentWord.length >= 3)
@@ -113,12 +101,11 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-box',
 			gameName: 'Frame',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Keyboard handler
 	useEffect(() => {
@@ -309,15 +296,6 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 					</Button>
 				</div>
 
-				{submitError && (
-					<output
-						className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive"
-						role="alert"
-					>
-						{submitError}
-					</output>
-				)}
-
 				{/* Previous words */}
 				{game.state.words.length > 0 && (
 					<div className="flex flex-wrap justify-center gap-2">
@@ -357,7 +335,6 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 				gameType="word-box"
 				status="won"
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: game.state.words.length,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}

@@ -3,6 +3,7 @@ syntax = "proto3";
 package puzzled.v1;
 
 // Stats and leaderboard read contracts (ADR-168 S1).
+// HTTP transitional path: GET /api/v1/stats/leaderboard
 
 enum LeaderboardType {
   LEADERBOARD_TYPE_UNSPECIFIED = 0;
@@ -37,7 +38,7 @@ message GetLeaderboardResponse {
 }
 
 
-// Today percentile generated Connect path.
+// Today percentile generated Connect path — parity with GET /api/v1/stats/today-percentile.
 message GetTodayPercentileRequest {
   string game_slug = 1;
   string status = 2;
@@ -116,9 +117,6 @@ message GameCompletionCount {
 }
 
 message GetTodayOverviewResponse {
-  // Distinct users with a server-accepted puzzle_ritual finish on the current
-  // Asia/Hong_Kong product day (daily_puzzle_completers).
   uint32 player_count = 1;
-  // Qualifying puzzle_ritual finishes grouped by canonical game slug.
   repeated GameCompletionCount completions = 2;
 }

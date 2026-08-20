@@ -16,25 +16,28 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { PatternMatchIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { PatternBoard } from './components/board'
-import { parsePatternMatchClientPayload } from './parse-client'
+import type { PatternMatchClientData, PatternMatchSolution } from './types'
 import { usePatternMatch } from './use-pattern-match'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.patternMatch')
 
 	// Parse puzzle data from server (no client-side fallback)
-	const [puzzle] = useState(() => parsePatternMatchClientPayload(puzzleData))
+	const [puzzle] = useState(() => {
+		const parsed = parsePuzzleDataClient<PatternMatchClientData, PatternMatchSolution>(puzzleData)
+		return parsed.puzzleData
+	})
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -42,7 +45,6 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,13 +54,10 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		gameSlug: 'pattern-match',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: false,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 
 	// Game hook
 	const game = usePatternMatch(puzzle)
@@ -87,27 +86,17 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 	const gameEndedRef = useRef(false)
 
 	// Handle game end - delegate to useGameSession
-	useEffect(() => {
-		if ((game.status !== 'won' && game.status !== 'gave_up') || gameEndedRef.current) return
+	if ((game.status === 'won' || game.status === 'gave_up') && !gameEndedRef.current) {
 		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
-				status: game.status === 'won' ? 'won' : 'lost',
-				attempts: game.mistakes,
-				data: {
-					foundSets: game.foundSets,
-					mistakes: game.mistakes,
-				},
-			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			game.reopen()
-			gameEndedRef.current = false
-			setSubmitError(result.error || t('messages.submitRejected'))
-		})()
-	}, [endGame, game.foundSets, game.mistakes, game.reopen, game.status, t])
+		endGame({
+			status: game.status === 'won' ? 'won' : 'lost',
+			attempts: game.mistakes,
+			data: {
+				foundSets: game.foundSets,
+				mistakes: game.mistakes,
+			},
+		})
+	}
 
 	// Share result
 	const handleShare = useCallback(() => {
@@ -117,12 +106,11 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 			origin: getBaseUrl('origin'),
 			gameSlug: 'pattern-match',
 			gameName: 'Match',
-			puzzleDate,
 			status: game.status === 'won' ? 'won' : 'lost',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, startTime, puzzleDate])
+	}, [game.status, game.endTime, startTime])
 
 	const isComplete = game.status === 'won' || game.status === 'gave_up'
 
@@ -220,12 +208,6 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 			{/* Rules hint */}
 			{!isComplete && <p className="text-center text-xs text-muted-foreground">{t('hint')}</p>}
 
-			{submitError ? (
-				<output className="text-center text-sm text-destructive" role="alert">
-					{submitError}
-				</output>
-			) : null}
-
 			{/* Modals */}
 			<HowToPlayModal
 				open={showHelpModal}
@@ -239,7 +221,7 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 				gameType="pattern-match"
 				status={game.status === 'won' ? 'won' : 'lost'}
 				stats={{
-					score: serverScore ?? undefined,
+					score: game.foundSets.length,
 					mistakes: game.mistakes,
 					timeSpentMs: game.endTime && startTime ? game.endTime - startTime : 0,
 				}}

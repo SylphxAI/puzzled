@@ -5,11 +5,9 @@ import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap }
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
-import { useGuestDailySummary } from '@/features/daily/hooks/use-guest-game-state'
-import { prioritizeDailyGames, summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
+import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
-import { canonicalizeGameSlug } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -32,8 +30,6 @@ type DailyHeroProps = {
 	tomorrowsFreeGameName?: string
 	/** User's current streak for personalized messaging */
 	currentStreak?: number
-	/** Anonymous visitors use the server-accepted guest-day projection. */
-	isGuest?: boolean
 	className?: string
 }
 
@@ -178,145 +174,12 @@ const GAME_DECORATIONS: Record<string, React.ReactNode> = {
 	),
 }
 
-type Translate = ReturnType<typeof useTranslations>
-
-function GameCard({
-	game,
-	featured = false,
-	t,
-}: {
-	game: GameInfo
-	featured?: boolean
-	t: Translate
-}) {
-	const { display } = game
-	const colors = display.theme ? getGameColors(display.theme) : DEFAULT_GAME_COLORS
-	const decoration = GAME_DECORATIONS[game.slug]
-	const playLabel =
-		featured && !game.completed && !game.locked ? t('streak.playToday') : t('common.play')
-
-	return (
-		<Link
-			href={`/games/${game.slug}`}
-			className={cn('group block', featured && 'sm:col-span-2 lg:col-span-3')}
-		>
-			<Card
-				className={cn(
-					'relative h-full overflow-hidden transition-all duration-200',
-					'hover:shadow-lg hover:scale-[1.02]',
-					game.completed
-						? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent'
-						: featured
-							? 'border-primary/40 shadow-md'
-							: 'hover:border-primary/40',
-				)}
-			>
-				<div className={cn('absolute inset-0', colors.pattern)} />
-				<div className={colors.text}>{decoration}</div>
-				<div className={cn('relative p-4', featured && 'sm:p-6')}>
-					<div className="mb-3 flex items-start justify-between">
-						<div
-							className={cn(
-								'flex items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg',
-								featured ? 'h-16 w-16' : 'h-14 w-14',
-								colors.gradient,
-								game.completed && 'opacity-70',
-							)}
-						>
-							<GameIcon slug={game.slug} size={featured ? 32 : 28} className="text-white" />
-						</div>
-						{game.completed ? (
-							<div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-								<Check className="h-3.5 w-3.5" />
-								<span>{t('daily.completed')}</span>
-							</div>
-						) : game.isFreeToday ? (
-							<div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-								<Sparkles className="h-3 w-3" />
-								<span>{t('daily.freeToday')}</span>
-							</div>
-						) : game.locked ? (
-							<div className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-								<Lock className="h-3 w-3" />
-								<span>Premium</span>
-							</div>
-						) : null}
-					</div>
-					<h3
-						className={cn(
-							'font-bold',
-							featured ? 'text-xl sm:text-2xl' : 'text-lg',
-							game.completed ? 'text-muted-foreground' : 'text-foreground',
-						)}
-					>
-						{game.name}
-					</h3>
-					<p className="mt-1 text-sm text-muted-foreground">{t(display.taglineKey)}</p>
-					<div className="mt-3 flex items-center gap-3">
-						{game.completed && game.score ? (
-							<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-								<TrendingUp className="h-4 w-4" />
-								<span>
-									{t('gameResult.score')}: {game.score}
-								</span>
-							</div>
-						) : (
-							<>
-								<div className="flex items-center gap-1 text-xs text-muted-foreground">
-									<Clock className="h-3.5 w-3.5" />
-									<span>{display.duration}</span>
-								</div>
-								<div className="flex items-center gap-1 text-xs text-muted-foreground">
-									<Target className="h-3.5 w-3.5" />
-									<span>{t(display.highlightKey)}</span>
-								</div>
-							</>
-						)}
-					</div>
-					{!game.completed && !game.locked && (
-						<div className="mt-4">
-							<div
-								className={cn(
-									'flex items-center justify-center gap-2 rounded-xl font-semibold text-white transition-all',
-									'bg-gradient-to-r shadow-md',
-									colors.gradient,
-									featured ? 'py-3 text-base' : 'py-2.5',
-									'group-hover:shadow-lg group-hover:scale-[1.02]',
-								)}
-							>
-								<Play className="h-4 w-4" />
-								<span>{playLabel}</span>
-							</div>
-						</div>
-					)}
-					{game.locked && (
-						<div className="mt-4">
-							<div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/50 py-2.5 text-sm text-muted-foreground">
-								<Zap className="h-4 w-4" />
-								<span>{t('daily.unlockWithPremium')}</span>
-							</div>
-						</div>
-					)}
-					{game.completed && (
-						<div className="mt-4">
-							<div className="flex items-center justify-center gap-2 rounded-xl bg-muted/50 py-2.5 text-sm text-muted-foreground transition-colors group-hover:bg-muted">
-								<Check className="h-4 w-4 text-emerald-500" />
-								<span>{t('daily.viewResult')}</span>
-							</div>
-						</div>
-					)}
-				</div>
-			</Card>
-		</Link>
-	)
-}
-
 /**
  * DailyHero - Featured daily challenge card
  *
  * Shows:
  * - Today's date and puzzle number
- * - Today's free ritual first, then the rest of the catalog
+ * - All available games with completion status
  * - Quick access to play uncompleted games
  * - Countdown to next puzzle
  */
@@ -348,30 +211,11 @@ export function DailyHero({
 	dateString,
 	tomorrowsFreeGameName,
 	currentStreak = 0,
-	isGuest = false,
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
-	const guestSummary = useGuestDailySummary()
-	const guestCompleted = new Set(guestSummary.completedSlugs)
-	const guestResults = new Map(
-		guestSummary.todaySessions.map((session) => [canonicalizeGameSlug(session.gameSlug), session]),
-	)
-	const displayGames = isGuest
-		? games.map((game) => {
-				const guestResult = guestResults.get(canonicalizeGameSlug(game.slug))
-				return {
-					...game,
-					completed: game.completed || guestCompleted.has(canonicalizeGameSlug(game.slug)),
-					score:
-						game.score ??
-						(guestResult?.score === undefined ? undefined : String(guestResult.score)),
-				}
-			})
-		: games
-	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(displayGames)
+	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(games)
 	const progressPercent = availableCount > 0 ? (completedCount / availableCount) * 100 : 0
-	const displayStreak = isGuest ? guestSummary.currentStreak : currentStreak
 
 	// Use static greeting on server, update on client to avoid hydration mismatch
 	const [timeGreeting, setTimeGreeting] = useState<TimeGreeting>('morning')
@@ -380,8 +224,7 @@ export function DailyHero({
 		setTimeGreeting(getTimeGreetingFromHour(new Date().getHours()))
 	}, [])
 
-	const streakMessage = getStreakMessageKey(displayStreak)
-	const { featuredGame, otherGames } = prioritizeDailyGames(displayGames)
+	const streakMessage = getStreakMessageKey(currentStreak)
 
 	return (
 		<div className={cn('space-y-4', className)}>
@@ -399,7 +242,7 @@ export function DailyHero({
 									<Calendar className="h-4 w-4 shrink-0" />
 									<span>{dateString}</span>
 								</span>
-								{displayStreak > 0 && (
+								{currentStreak > 0 && (
 									<span className="font-medium text-stat-streak">
 										• {t(`home.streakMessage.${streakMessage}`)}
 									</span>
@@ -442,13 +285,138 @@ export function DailyHero({
 				</div>
 			</Card>
 
-			{featuredGame && <GameCard game={featuredGame} featured t={t} />}
-
 			{/* Game Cards Grid */}
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-				{otherGames.map((game) => (
-					<GameCard key={game.slug} game={game} t={t} />
-				))}
+				{games.map((game) => {
+					// Get display info from props (SSOT from registry)
+					const { display } = game
+					const colors = display.theme ? getGameColors(display.theme) : DEFAULT_GAME_COLORS
+					const decoration = GAME_DECORATIONS[game.slug]
+
+					return (
+						<Link key={game.slug} href={`/games/${game.slug}`} className="group block">
+							<Card
+								className={cn(
+									'relative h-full overflow-hidden transition-all duration-200',
+									'hover:shadow-lg hover:scale-[1.02]',
+									game.completed
+										? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent'
+										: 'hover:border-primary/40',
+								)}
+							>
+								{/* Background pattern */}
+								<div className={cn('absolute inset-0', colors.pattern)} />
+
+								{/* Decoration */}
+								<div className={colors.text}>{decoration}</div>
+
+								<div className="relative p-4">
+									{/* Header row: Icon + Badge */}
+									<div className="mb-3 flex items-start justify-between">
+										<div
+											className={cn(
+												'flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg',
+												colors.gradient,
+												game.completed && 'opacity-70',
+											)}
+										>
+											<GameIcon slug={game.slug} size={28} className="text-white" />
+										</div>
+
+										{/* Status Badge */}
+										{game.completed ? (
+											<div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+												<Check className="h-3.5 w-3.5" />
+												<span>{t('daily.completed')}</span>
+											</div>
+										) : game.isFreeToday ? (
+											<div className="flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+												<Sparkles className="h-3 w-3" />
+												<span>{t('daily.freeToday')}</span>
+											</div>
+										) : game.locked ? (
+											<div className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+												<Lock className="h-3 w-3" />
+												<span>Premium</span>
+											</div>
+										) : null}
+									</div>
+
+									{/* Game name */}
+									<h3
+										className={cn(
+											'text-lg font-bold',
+											game.completed ? 'text-muted-foreground' : 'text-foreground',
+										)}
+									>
+										{game.name}
+									</h3>
+
+									{/* Tagline */}
+									<p className="mt-1 text-sm text-muted-foreground">{t(display.taglineKey)}</p>
+
+									{/* Stats row or Score */}
+									<div className="mt-3 flex items-center gap-3">
+										{game.completed && game.score ? (
+											<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+												<TrendingUp className="h-4 w-4" />
+												<span>{game.score}</span>
+											</div>
+										) : (
+											<>
+												<div className="flex items-center gap-1 text-xs text-muted-foreground">
+													<Clock className="h-3.5 w-3.5" />
+													<span>{display.duration}</span>
+												</div>
+												<div className="flex items-center gap-1 text-xs text-muted-foreground">
+													<Target className="h-3.5 w-3.5" />
+													<span>{t(display.highlightKey)}</span>
+												</div>
+											</>
+										)}
+									</div>
+
+									{/* Play button */}
+									{!game.completed && !game.locked && (
+										<div className="mt-4">
+											<div
+												className={cn(
+													'flex items-center justify-center gap-2 rounded-xl py-2.5 font-semibold text-white transition-all',
+													'bg-gradient-to-r shadow-md',
+													colors.gradient,
+													'group-hover:shadow-lg group-hover:scale-[1.02]',
+												)}
+											>
+												<Play className="h-4 w-4" />
+												<span>{t('common.play')}</span>
+											</div>
+										</div>
+									)}
+
+									{/* Locked overlay hint */}
+									{game.locked && (
+										<div className="mt-4">
+											<div className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-muted-foreground/30 bg-muted/50 py-2.5 text-sm text-muted-foreground">
+												<Zap className="h-4 w-4" />
+												<span>{t('daily.unlockWithPremium')}</span>
+											</div>
+										</div>
+									)}
+
+									{/* Completed: Play again hint */}
+									{game.completed && (
+										<div className="mt-4">
+											<div className="flex items-center justify-center gap-2 rounded-xl bg-muted/50 py-2.5 text-sm text-muted-foreground transition-colors group-hover:bg-muted">
+												<Check className="h-4 w-4 text-emerald-500" />
+												<span>{t('daily.viewResult')}</span>
+											</div>
+										</div>
+									)}
+								</div>
+							</Card>
+						</Link>
+					)
+				})}
 			</div>
 
 			{/* Footer - Countdown + Tomorrow's Free Game Teaser */}

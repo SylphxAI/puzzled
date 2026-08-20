@@ -11,9 +11,10 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerStreakInfo,
+	getServerTodaysPuzzle,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { getGameAccess, getTodaysFreeGame } from '@/lib/billing/server'
+import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
@@ -88,38 +89,6 @@ export default async function GamePage({ params, searchParams }: Props) {
 		: undefined
 
 	const t = await getTranslations('games')
-	const tCommon = await getTranslations('common')
-	const renderRetryState = () => (
-		<div className="flex flex-1 flex-col">
-			<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-				<p className="text-lg font-medium">{tCommon('error')}</p>
-				<p className="text-sm text-muted-foreground">{tCommon('errorDescription')}</p>
-				<Link
-					href={`/games/${slug}`}
-					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-				>
-					{tCommon('retry')}
-				</Link>
-			</main>
-		</div>
-	)
-	const renderBillingRetryState = () => (
-		<div className="flex flex-1 flex-col">
-			<main
-				className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center"
-				role="alert"
-			>
-				<p className="text-lg font-medium">{tCommon('billingUnavailableTitle')}</p>
-				<p className="text-sm text-muted-foreground">{tCommon('billingUnavailableDescription')}</p>
-				<Link
-					href={`/games/${slug}`}
-					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-				>
-					{tCommon('billingUnavailableRetry')}
-				</Link>
-			</main>
-		</div>
-	)
 
 	// Get user
 	const user = await currentUser()
@@ -129,15 +98,11 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const gameName = t(`${translationKey}.name`)
 
 	// Check if user has access to this game
+	const hasAccess = await canAccessGame(user?.id ?? null, slug)
 	const todaysFreeGame = getTodaysFreeGame()
-	const access = await getGameAccess(user?.id ?? null, slug)
-
-	if (!access.allowed && access.billingStatus === 'unavailable') {
-		return renderBillingRetryState()
-	}
 
 	// Show paywall if user doesn't have access
-	if (!access.allowed) {
+	if (!hasAccess) {
 		return (
 			<div className="flex flex-1 flex-col">
 				<main className="flex flex-1 flex-col items-center justify-center gap-6 p-4 text-center">
@@ -172,16 +137,18 @@ export default async function GamePage({ params, searchParams }: Props) {
 					{/* Actions */}
 					<div className="flex flex-col gap-3 sm:flex-row">
 						{!user && (
-							<Button asChild variant="outline" className="w-full sm:w-auto">
-								<Link href={`/login?callbackUrl=/games/${slug}`}>Sign In</Link>
-							</Button>
+							<Link href={`/login?callbackUrl=/games/${slug}`}>
+								<Button variant="outline" className="w-full sm:w-auto">
+									Sign In
+								</Button>
+							</Link>
 						)}
-						<Button asChild className="w-full gap-2 sm:w-auto">
-							<Link href="/pricing">
+						<Link href="/pricing">
+							<Button className="w-full gap-2 sm:w-auto">
 								<Crown className="h-4 w-4" />
 								Unlock All Games
-							</Link>
-						</Button>
+							</Button>
+						</Link>
 					</div>
 
 					{/* Back to home */}
@@ -202,24 +169,17 @@ export default async function GamePage({ params, searchParams }: Props) {
 			hard: false,
 		}
 
-		// GetDaily resolves either the authenticated session or the stable guest
-		// cookie forwarded by the server transport. Guests must see their
-		// server-accepted completion before choosing another difficulty.
-		let difficultyStatuses: [DailyStatus, DailyStatus, DailyStatus]
-		try {
-			difficultyStatuses = await Promise.all([
+		if (user) {
+			// Check completion status for each difficulty in parallel
+			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
 				getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
 				getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
 				getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
 			])
-		} catch (error) {
-			console.error('[GamePage] Failed to load difficulty completion status:', error)
-			return renderRetryState()
+			completionStatus.easy = easyStatus?.hasCompleted ?? false
+			completionStatus.medium = mediumStatus?.hasCompleted ?? false
+			completionStatus.hard = hardStatus?.hasCompleted ?? false
 		}
-		const [easyStatus, mediumStatus, hardStatus] = difficultyStatuses
-		completionStatus.easy = easyStatus?.hasCompleted ?? false
-		completionStatus.medium = mediumStatus?.hasCompleted ?? false
-		completionStatus.hard = hardStatus?.hasCompleted ?? false
 
 		return (
 			<DifficultySelectionView
@@ -253,26 +213,19 @@ export default async function GamePage({ params, searchParams }: Props) {
 				puzzleDate: dateParam,
 			}
 		} else {
-			// Daily mode (default) - keep admission and play on one GetDaily
-			// snapshot. Separate status/puzzle reads can straddle the HKT reset,
-			// pairing one day's completion state with another day's puzzle.
-			const [statusResult, streakResult] = await Promise.allSettled([
-				getServerDailyStatus({ gameSlug: slug, difficulty }),
+			// Daily mode (default) - pass difficulty for games that support it
+			const [statusData, puzzleData, streakData] = await Promise.all([
+				user ? getServerDailyStatus({ gameSlug: slug, difficulty }) : null,
+				getServerTodaysPuzzle({ gameSlug: slug, difficulty }),
 				user ? getServerStreakInfo() : null,
 			])
-			if (statusResult.status === 'rejected') throw statusResult.reason
-
-			puzzleStatus = statusResult.value
+			puzzleStatus = statusData
 			puzzle = {
-				puzzleId: statusResult.value.puzzle.id,
-				puzzleData: statusResult.value.puzzle.puzzleData,
-				puzzleDate: statusResult.value.puzzle.puzzleDate,
+				puzzleId: puzzleData.puzzleId,
+				puzzleData: puzzleData.puzzleData,
+				puzzleDate: puzzleData.puzzleDate,
 			}
-			if (streakResult.status === 'fulfilled') {
-				streakInfo = streakResult.value
-			} else {
-				console.error('[GamePage] Failed to load optional streak info:', streakResult.reason)
-			}
+			streakInfo = streakData
 		}
 	} catch (error) {
 		console.error('[GamePage] Failed to load puzzle data:', error)
@@ -281,7 +234,22 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 	// If no puzzle found, show error
 	if (!puzzle?.puzzleData) {
-		return renderRetryState()
+		return (
+			<div className="flex flex-1 flex-col">
+				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+					<p className="text-lg font-medium">Puzzle not available</p>
+					<p className="text-sm text-muted-foreground">
+						Unable to load today's puzzle. Please try again later.
+					</p>
+					<a
+						href={`/games/${slug}`}
+						className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+					>
+						Retry
+					</a>
+				</main>
+			</div>
+		)
 	}
 
 	// Use puzzle data from server
@@ -292,16 +260,15 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const hasCompletedToday = mode === 'daily' && (puzzleStatus?.hasCompleted ?? false)
 	const completedSession = puzzleStatus?.completedSession
 
-	// A completion without a result payload is still non-playable. This is a
-	// fail-closed boundary for an older/mismatched API response; never reopen a
+	// A completion without a result payload is still non-playable. Never reopen a
 	// server-accepted daily or invent a status to fill the card.
 	if (hasCompletedToday && !completedSession) {
 		return (
 			<div className="flex flex-1 flex-col">
 				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-					<p className="text-lg font-medium">{t('alreadyCompleted')}</p>
+					<p className="text-lg font-medium">Already completed</p>
 					<Link href="/" className="text-sm text-primary underline">
-						{t('backToGames')}
+						Back to all games
 					</Link>
 				</main>
 			</div>
@@ -341,7 +308,6 @@ export default async function GamePage({ params, searchParams }: Props) {
 			puzzleId={puzzle.puzzleId}
 			puzzleData={puzzle.puzzleData}
 			difficulty={difficulty}
-			supportsDifficulty={supportsDifficulty}
 		/>
 	)
 }

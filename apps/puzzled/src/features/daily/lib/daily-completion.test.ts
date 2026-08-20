@@ -4,22 +4,23 @@ import { loadDailyCompletionMap } from './daily-completion'
 const games = ['word-guess', 'sudoku', 'crossword'] as const
 
 describe('daily completion map', () => {
-	test('guests make no server status reads', async () => {
-		const read = async (slug: string) => {
-			throw new Error(`unexpected:${slug}`)
-		}
+	test('guests read the free module from GetDaily', async () => {
+		const reads: string[] = []
+		const result = await loadDailyCompletionMap({
+			gameSlugs: games,
+			isGuest: true,
+			isPremium: false,
+			freeGameSlug: 'sudoku',
+			read: async (slug) => {
+				reads.push(slug)
+				return true
+			},
+		})
 
-		await expect(
-			loadDailyCompletionMap({
-				gameSlugs: games,
-				isGuest: true,
-				isPremium: false,
-				freeGameSlug: 'sudoku',
-				read,
-			}),
-		).resolves.toEqual({
+		expect(reads).toEqual(['sudoku'])
+		expect(result).toEqual({
 			'word-guess': false,
-			sudoku: false,
+			sudoku: true,
 			crossword: false,
 		})
 	})

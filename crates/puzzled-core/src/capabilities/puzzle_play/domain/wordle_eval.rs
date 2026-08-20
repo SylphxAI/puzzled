@@ -92,35 +92,6 @@ pub fn evaluate_guess(guess: &str, solution: &str) -> Option<Vec<LetterStatus>> 
     Some(result)
 }
 
-/// Live coloring for one guess list. Does not score or persist.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GuessEvaluation {
-    pub letters: Vec<LetterStatus>,
-    pub won: bool,
-    pub terminal: bool,
-    pub reveal: Option<String>,
-}
-
-/// Evaluate the latest guess against the solution for live tile coloring.
-#[must_use]
-pub fn evaluate_latest_guess(solution: &str, guesses: &[String]) -> Option<GuessEvaluation> {
-    let last = guesses.last()?;
-    let letters = evaluate_guess(last, solution)?;
-    let won = is_winning_guess(&letters);
-    let terminal = won || guesses.len() as u32 >= MAX_GUESSES;
-    let reveal = if terminal {
-        Some(solution.to_ascii_uppercase())
-    } else {
-        None
-    };
-    Some(GuessEvaluation {
-        letters,
-        won,
-        terminal,
-        reveal,
-    })
-}
-
 /// Whether the guess is fully correct.
 #[must_use]
 pub fn is_winning_guess(statuses: &[LetterStatus]) -> bool {
@@ -237,23 +208,6 @@ mod tests {
 
     fn dict(xs: &[&str]) -> HashSet<String> {
         xs.iter().map(|s| s.to_ascii_uppercase()).collect()
-    }
-
-    #[test]
-    fn latest_guess_is_not_terminal_until_win_or_max() {
-        let eval = evaluate_latest_guess("CRANE", &["trace".into()]).expect("eval");
-        assert!(!eval.won);
-        assert!(!eval.terminal);
-        assert!(eval.reveal.is_none());
-        assert_eq!(eval.letters[1], LetterStatus::Correct);
-    }
-
-    #[test]
-    fn latest_guess_reveals_on_win() {
-        let eval = evaluate_latest_guess("CRANE", &["crane".into()]).expect("eval");
-        assert!(eval.won);
-        assert!(eval.terminal);
-        assert_eq!(eval.reveal.as_deref(), Some("CRANE"));
     }
 
     #[test]

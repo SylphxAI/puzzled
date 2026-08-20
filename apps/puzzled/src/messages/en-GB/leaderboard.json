@@ -10,9 +10,6 @@
 		"all": "All Time"
 	},
 	"noData": "No players yet. Be the first!",
-	"unavailable": "Leaderboard unavailable",
-	"unavailableHint": "The Stats service could not be reached. Retry before assuming there are no players.",
-	"retry": "Retry",
 	"yourRank": "Your Rank",
 	"topPlayers": "Top Players"
 }

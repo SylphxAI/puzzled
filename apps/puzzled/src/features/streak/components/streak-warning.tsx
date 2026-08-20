@@ -12,11 +12,6 @@ type StreakWarningProps = {
 	game?: string // Optional: specific game with streak at risk
 }
 
-/** Route the return CTA to the known daily ritual instead of the catalog. */
-export function streakWarningHref(game?: string): string {
-	return game ? `/games/${game}` : '/games'
-}
-
 export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWarningProps) {
 	const t = useTranslations('streak')
 	const [dismissed, setDismissed] = useState(false)
@@ -84,7 +79,7 @@ export function StreakWarning({ currentStreak, hasPlayedToday, game }: StreakWar
 			</div>
 
 			<Link
-				href={streakWarningHref(game)}
+				href={game ? `/games/${game}` : '/games'}
 				className={cn(
 					'shrink-0 rounded-lg px-4 py-2 text-sm font-medium text-white',
 					isLegendaryStreak

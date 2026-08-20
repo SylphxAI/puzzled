@@ -20,7 +20,6 @@
 	"messages": {
 		"notEnoughLetters": "Not enough letters",
 		"notInWordList": "Not in word list",
-		"submitRejected": "Could not check that guess. Try again.",
 		"correct": "Excellent!",
 		"gameOver": "The word was {word}"
 	}

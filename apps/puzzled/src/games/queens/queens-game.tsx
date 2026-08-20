@@ -16,8 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
-import { parseCrownsClientPayload } from './parse-client'
+import type { QueensPuzzleData, QueensSolution } from './types'
 import { REGION_COLORS } from './types'
 import { useQueens } from './use-queens'
 
@@ -25,14 +26,15 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function QueensGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parseCrownsClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<QueensPuzzleData, QueensSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -42,7 +44,6 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -52,42 +53,29 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		gameSlug: 'crowns',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
 
 	// Game hook
-	const game = useQueens(puzzle)
+	const game = useQueens(puzzle.puzzleData, puzzle.solution)
 	const conflictingCells = game.getConflictingCells()
-	const { reopen } = game
 
 	// Handle game completion - in useEffect to avoid render-phase side effects
 	useEffect(() => {
 		if (game.state.isComplete && !gameEndedRef.current) {
 			gameEndedRef.current = true
-			void (async () => {
-				const result = await endGame({
-					status: 'won',
-					attempts: 1,
-					data: {
-						finalGrid: game.state.grid,
-					},
-				})
-				if (result.success) {
-					setSubmitError(null)
-					return
-				}
-				reopen()
-				gameEndedRef.current = false
-				setSubmitError(result.error || t('messages.submitRejected'))
-			})()
+			endGame({
+				status: 'won',
+				attempts: 1,
+				data: {
+					finalGrid: game.state.grid,
+				},
+			})
 		}
-	}, [endGame, game.state.isComplete, game.state.grid, reopen, t])
+	}, [game.state.isComplete, game.state.grid, endGame])
 
 	// Share result
 	const handleShare = useCallback(() => {
@@ -97,12 +85,11 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			origin: getBaseUrl('origin'),
 			gameSlug: 'crowns',
 			gameName: 'Crowns',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Reset game
 	const handleReset = useCallback(() => {
@@ -146,7 +133,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		)
 	}
 
-	const size = puzzle.size
+	const size = puzzle.puzzleData.size
 	const cellSize = size <= 6 ? 'w-12 h-12' : size <= 7 ? 'w-10 h-10' : 'w-9 h-9'
 
 	return (
@@ -178,7 +165,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				>
 					{Array.from({ length: size }, (_, row) =>
 						Array.from({ length: size }, (_, col) => {
-							const region = puzzle.regions[row][col]
+							const region = puzzle.puzzleData.regions[row][col]
 							const hasQueen = game.state.grid[row][col]
 							const isSelected =
 								game.state.selectedCell?.row === row && game.state.selectedCell?.col === col
@@ -227,12 +214,6 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				{conflictingCells.size > 0 && !game.state.isComplete && (
 					<p className="text-sm text-red-500">{t('hasConflicts')}</p>
 				)}
-
-				{submitError ? (
-					<output className="text-center text-sm text-destructive" role="alert">
-						{submitError}
-					</output>
-				) : null}
 			</div>
 
 			{/* Help Modal */}
@@ -249,7 +230,6 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				gameType="crowns"
 				status="won"
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: 1,
 					maxAttempts: 1,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,

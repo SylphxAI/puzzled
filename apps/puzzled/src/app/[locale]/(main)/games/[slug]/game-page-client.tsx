@@ -18,7 +18,6 @@ type GamePageClientProps = {
 	puzzleId: string
 	puzzleData: unknown
 	difficulty?: PuzzleDifficulty
-	supportsDifficulty: boolean
 }
 
 export function GamePageClient({
@@ -31,7 +30,6 @@ export function GamePageClient({
 	puzzleId,
 	puzzleData,
 	difficulty,
-	supportsDifficulty,
 }: GamePageClientProps) {
 	const [showHelpModal, setShowHelpModal] = useState(false)
 

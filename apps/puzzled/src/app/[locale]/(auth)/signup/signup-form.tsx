@@ -96,9 +96,11 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 						<h1 className="text-2xl font-bold">{t('checkYourEmail')}</h1>
 						<p className="mt-2 text-muted-foreground">{t('verificationSent')}</p>
 					</div>
-					<Button asChild variant="outline" className="w-full">
-						<Link href="/login">{t('backToLogin')}</Link>
-					</Button>
+					<Link href="/login">
+						<Button variant="outline" className="w-full">
+							{t('backToLogin')}
+						</Button>
+					</Link>
 				</div>
 			</div>
 		)

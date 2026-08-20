@@ -1,13 +1,135 @@
 'use client'
 
-import { useBilling, usePlans, useSafeUser } from '@sylphx/sdk/react'
+import type { Plan } from '@sylphx/sdk/react'
+import { useBilling, usePlans } from '@sylphx/sdk/react'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
-import { Calendar, Check, Crown, Flame, RefreshCw, Snowflake, Sparkles } from 'lucide-react'
+import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { buildUIPlans } from '@/features/billing/lib/pricing-plans'
-import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+
+/** Plan shape returned by the SDK config */
+type PlatformPlan = Plan
+
+/** UI plan representation derived from platform plans */
+interface UIPlan {
+	id: string
+	slug: string
+	price: number
+	currency: string
+	period: 'perMonth' | 'perYear' | null
+	interval: 'monthly' | 'annual'
+	highlight: boolean
+	badge: string | null
+	badgeColor: string | null
+	trialDays?: number
+	savings?: string
+	features: string[]
+}
+
+/**
+ * Map platform plans to UI plan cards.
+ *
+ * Generates free + monthly + annual cards from the platform plan data.
+ * Falls back to hardcoded structure if no plans are available.
+ */
+function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
+	const plans: UIPlan[] = []
+
+	// Always show a free tier
+	plans.push({
+		id: 'free',
+		slug: 'free',
+		price: 0,
+		currency: 'usd',
+		period: null,
+		interval: 'monthly',
+		highlight: false,
+		badge: null,
+		badgeColor: null,
+		features: ['dailyPuzzle', 'basicStats'],
+	})
+
+	// Find the premium plan (first non-free plan with a monthly price)
+	const premiumPlan = platformPlans.find(
+		(p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0,
+	)
+
+	if (premiumPlan) {
+		const features = premiumPlan.features ?? [
+			'allGames',
+			'streakFreeze',
+			'advancedStats',
+			'noAds',
+			'archive',
+		]
+
+		// Monthly card
+		plans.push({
+			id: 'premium',
+			slug: premiumPlan.slug,
+			price: premiumPlan.monthlyPrice!,
+			currency: 'usd',
+			period: 'perMonth',
+			interval: 'monthly',
+			highlight: true,
+			badge: 'popular',
+			badgeColor: 'bg-primary',
+			trialDays: 7,
+			features: [...features] as string[],
+		})
+
+		// Annual card (if annual price exists)
+		if (premiumPlan.annualPrice && premiumPlan.annualPrice > 0) {
+			plans.push({
+				id: 'annual',
+				slug: premiumPlan.slug,
+				price: premiumPlan.annualPrice,
+				currency: 'usd',
+				period: 'perYear',
+				interval: 'annual',
+				highlight: false,
+				badge: 'bestValue',
+				badgeColor: 'bg-emerald-500',
+				trialDays: 7,
+				savings: 'savePercent',
+				features: [...features] as string[],
+			})
+		}
+	} else {
+		// Fallback: hardcoded premium plans if platform returns nothing
+		const defaultFeatures = ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive']
+		plans.push({
+			id: 'premium',
+			slug: 'premium',
+			price: 499,
+			currency: 'usd',
+			period: 'perMonth',
+			interval: 'monthly',
+			highlight: true,
+			badge: 'popular',
+			badgeColor: 'bg-primary',
+			trialDays: 7,
+			features: defaultFeatures,
+		})
+		plans.push({
+			id: 'annual',
+			slug: 'premium',
+			price: 3999,
+			currency: 'usd',
+			period: 'perYear',
+			interval: 'annual',
+			highlight: false,
+			badge: 'bestValue',
+			badgeColor: 'bg-emerald-500',
+			trialDays: 7,
+			savings: 'savePercent',
+			features: defaultFeatures,
+		})
+	}
+
+	return plans
+}
 
 function formatCurrency(amount: number, currency: string, locale: string): string {
 	return new Intl.NumberFormat(locale, {
@@ -18,100 +140,17 @@ function formatCurrency(amount: number, currency: string, locale: string): strin
 	}).format(amount / 100)
 }
 
-function PricingAvailabilityState({
-	title,
-	description,
-	actionLabel,
-	onRetry,
-	retryLabel,
-}: {
-	title: string
-	description: string
-	actionLabel?: string
-	onRetry?: () => void
-	retryLabel?: string
-}) {
-	return (
-		<div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-6 py-16 text-center">
-			<div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-				<Crown className="h-8 w-8 text-primary" />
-			</div>
-			<div className="space-y-2">
-				<h1 className="text-3xl font-bold">{title}</h1>
-				<p className="text-muted-foreground">{description}</p>
-			</div>
-			{onRetry && retryLabel && (
-				<Button variant="outline" onClick={onRetry}>
-					<RefreshCw className="mr-2 h-4 w-4" />
-					{retryLabel}
-				</Button>
-			)}
-			{actionLabel && (
-				<Button asChild variant="outline">
-					<Link href="/">{actionLabel}</Link>
-				</Button>
-			)}
-		</div>
-	)
-}
-
 export function PricingContent({ locale }: { locale: string }) {
 	const t = useTranslations('subscription')
 	const tPricing = useTranslations('pricing')
 	const toast = useToast()
 	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
-	const { isSignedIn } = useSafeUser()
 
 	// Plans are now fetched server-side via getAppConfig() and available via usePlans()
 	const configPlans = usePlans()
-	const {
-		isPremium,
-		subscription,
-		createCheckout,
-		isLoading,
-		plansLoading,
-		plansError,
-		error: subscriptionError,
-		refresh: refreshSubscription,
-	} = useBilling()
-
-	if (plansLoading) {
-		return (
-			<PricingAvailabilityState
-				title={tPricing('plansLoading')}
-				description={tPricing('plansUnavailableDescription')}
-			/>
-		)
-	}
-
-	if (isSignedIn && subscriptionError) {
-		return (
-			<PricingAvailabilityState
-				title={tPricing('subscriptionUnavailableTitle')}
-				description={tPricing('subscriptionUnavailableDescription')}
-				onRetry={() => void refreshSubscription()}
-				retryLabel={tPricing('subscriptionUnavailableRetry')}
-				actionLabel={tPricing('plansUnavailableAction')}
-			/>
-		)
-	}
+	const { isPremium, subscription, createCheckout, isLoading } = useBilling()
 
 	const PLANS = buildUIPlans(configPlans)
-	const hasPaidPlan = PLANS.some((plan) => plan.id !== 'free')
-	const hasStreakProtection = PLANS.some(
-		(plan) =>
-			plan.id !== 'free' && plan.features.some((feature) => feature.startsWith('streakFreeze')),
-	)
-
-	if (plansError || !hasPaidPlan) {
-		return (
-			<PricingAvailabilityState
-				title={tPricing('plansUnavailableTitle')}
-				description={tPricing('plansUnavailableDescription')}
-				actionLabel={tPricing('plansUnavailableAction')}
-			/>
-		)
-	}
 
 	const handleCheckout = async (planSlug: string, interval: 'monthly' | 'annual' = 'monthly') => {
 		const planKey = interval === 'annual' ? `${planSlug}-annual` : planSlug
@@ -149,6 +188,7 @@ export function PricingContent({ locale }: { locale: string }) {
 				</div>
 				<h1 className="text-3xl font-bold sm:text-4xl">{tPricing('title')}</h1>
 				<p className="mt-3 text-lg text-muted-foreground">{tPricing('subtitle')}</p>
+				<p className="mt-2 text-sm text-muted-foreground">Join thousands of daily puzzlers</p>
 			</div>
 
 			{/* Value Props */}
@@ -206,6 +246,11 @@ export function PricingContent({ locale }: { locale: string }) {
 									<h3 className="text-xl font-bold">
 										{t(plan.id as 'free' | 'premium' | 'annual')}
 									</h3>
+									{plan.savings && (
+										<span className="inline-block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+											{tPricing(plan.savings)}
+										</span>
+									)}
 								</div>
 
 								<div className="mb-6">
@@ -217,6 +262,11 @@ export function PricingContent({ locale }: { locale: string }) {
 											<span className="text-base text-muted-foreground">{t(plan.period)}</span>
 										)}
 									</div>
+									{plan.trialDays && (
+										<p className="mt-2 text-sm font-medium text-primary">
+											{tPricing('trialDays', { days: plan.trialDays })}
+										</p>
+									)}
 								</div>
 
 								{/* Feature list */}
@@ -249,7 +299,7 @@ export function PricingContent({ locale }: { locale: string }) {
 												? t('currentPlan')
 												: isPremium
 													? t('switchPlan')
-													: t('subscribe')}
+													: tPricing('startFreeTrial')}
 								</Button>
 							</CardContent>
 						</Card>
@@ -258,28 +308,24 @@ export function PricingContent({ locale }: { locale: string }) {
 			</div>
 
 			{/* Streak Protection Callout */}
-			{hasStreakProtection && (
-				<Card className="overflow-hidden border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent">
-					<CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
-						<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500/20">
-							<Flame className="h-7 w-7 text-orange-500" />
-						</div>
-						<div className="flex-1">
-							<h3 className="text-lg font-bold">{tPricing('streakProtectionTitle')}</h3>
-							<p className="mt-1 text-sm text-muted-foreground">
-								{tPricing('streakProtectionDesc')}
-							</p>
-						</div>
-						<Button
-							variant="outline"
-							className="shrink-0 gap-2 border-orange-500/30 text-orange-600 hover:bg-orange-500/10 dark:text-orange-400"
-						>
-							<Snowflake className="h-4 w-4" />
-							{tPricing('learnAboutFreezes')}
-						</Button>
-					</CardContent>
-				</Card>
-			)}
+			<Card className="overflow-hidden border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent">
+				<CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
+					<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500/20">
+						<Flame className="h-7 w-7 text-orange-500" />
+					</div>
+					<div className="flex-1">
+						<h3 className="text-lg font-bold">{tPricing('streakProtectionTitle')}</h3>
+						<p className="mt-1 text-sm text-muted-foreground">{tPricing('streakProtectionDesc')}</p>
+					</div>
+					<Button
+						variant="outline"
+						className="shrink-0 gap-2 border-orange-500/30 text-orange-600 hover:bg-orange-500/10 dark:text-orange-400"
+					>
+						<Snowflake className="h-4 w-4" />
+						{tPricing('learnAboutFreezes')}
+					</Button>
+				</CardContent>
+			</Card>
 
 			{/* FAQ */}
 			<div className="rounded-xl bg-muted/50 p-6 text-center">

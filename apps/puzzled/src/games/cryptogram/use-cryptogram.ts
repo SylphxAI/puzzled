@@ -4,18 +4,25 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type { CryptogramGameState, CryptogramPuzzleData, PlayerGuesses } from './types'
-import { getUniqueLetters, isFullyMapped } from './types'
+import type {
+	CryptogramGameState,
+	CryptogramPuzzleData,
+	CryptogramSolution,
+	PlayerGuesses,
+} from './types'
+import { countCorrect, getUniqueLetters, isSolved, MAX_HINTS } from './types'
 
 type CryptogramAction =
 	| { type: 'SET_GUESS'; encryptedLetter: string; guessedLetter: string }
 	| { type: 'CLEAR_GUESS'; encryptedLetter: string }
 	| { type: 'USE_HINT' }
 	| { type: 'SELECT_LETTER'; encryptedLetter: string | null }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
-function createInitialState(puzzleData: CryptogramPuzzleData): CryptogramGameState {
+function createInitialState(
+	puzzleData: CryptogramPuzzleData,
+	_solution: CryptogramSolution,
+): CryptogramGameState {
 	const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
 	const guesses: PlayerGuesses = {}
 
@@ -39,6 +46,7 @@ function cryptogramReducer(
 	state: CryptogramGameState,
 	action: CryptogramAction,
 	puzzleData: CryptogramPuzzleData,
+	solution: CryptogramSolution,
 ): CryptogramGameState {
 	switch (action.type) {
 		case 'SET_GUESS': {
@@ -67,7 +75,8 @@ function cryptogramReducer(
 
 			newGuesses[encrypted] = guessed
 
-			const isWin = isFullyMapped(puzzleData.encryptedText, newGuesses)
+			// Check win condition
+			const isWin = isSolved(puzzleData.encryptedText, newGuesses, solution.reverseCipher)
 
 			return {
 				...state,
@@ -95,9 +104,36 @@ function cryptogramReducer(
 		}
 
 		case 'USE_HINT': {
-			// Hints would require the cipher. Keep the count closed until
-			// a server hint path exists.
-			return state
+			if (state.gameStatus !== 'playing') return state
+			if (state.hintsUsed >= MAX_HINTS) return state
+
+			// Find an encrypted letter that hasn't been correctly guessed or revealed
+			const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
+			const unsolvedLetter = uniqueLetters.find((encrypted) => {
+				const correct = solution.reverseCipher[encrypted]
+				const current = state.guesses[encrypted]
+				return current !== correct && !state.revealedLetters.includes(encrypted)
+			})
+
+			if (!unsolvedLetter) return state
+
+			// Reveal this letter
+			const correctLetter = solution.reverseCipher[unsolvedLetter]
+			const newGuesses = { ...state.guesses, [unsolvedLetter]: correctLetter }
+			const newRevealed = [...state.revealedLetters, unsolvedLetter]
+
+			// Check win condition
+			const isWin = isSolved(puzzleData.encryptedText, newGuesses, solution.reverseCipher)
+
+			return {
+				...state,
+				guesses: newGuesses,
+				revealedLetters: newRevealed,
+				hintsUsed: state.hintsUsed + 1,
+				startTime: state.startTime ?? Date.now(),
+				gameStatus: isWin ? 'won' : 'playing',
+				endTime: isWin ? Date.now() : state.endTime,
+			}
 		}
 
 		case 'SELECT_LETTER': {
@@ -107,16 +143,8 @@ function cryptogramReducer(
 			}
 		}
 
-		case 'REOPEN': {
-			return {
-				...state,
-				gameStatus: 'playing',
-				endTime: null,
-			}
-		}
-
 		case 'RESET': {
-			return createInitialState(puzzleData)
+			return createInitialState(puzzleData, solution)
 		}
 
 		default:
@@ -131,16 +159,18 @@ export type UseCryptogramReturn = {
 	useHint: () => void
 	selectLetter: (encryptedLetter: string | null) => void
 	reset: () => void
-	reopen: () => void
 	getProgress: () => { correct: number; total: number }
 	canUseHint: boolean
 }
 
-export function useCryptogram(puzzleData: CryptogramPuzzleData): UseCryptogramReturn {
+export function useCryptogram(
+	puzzleData: CryptogramPuzzleData,
+	solution: CryptogramSolution,
+): UseCryptogramReturn {
 	const [state, dispatch] = useReducer(
-		(s: CryptogramGameState, a: CryptogramAction) => cryptogramReducer(s, a, puzzleData),
-		puzzleData,
-		createInitialState,
+		(s: CryptogramGameState, a: CryptogramAction) => cryptogramReducer(s, a, puzzleData, solution),
+		{ puzzleData, solution },
+		({ puzzleData, solution }) => createInitialState(puzzleData, solution),
 	)
 
 	const setGuess = useCallback((encryptedLetter: string, guessedLetter: string) => {
@@ -163,17 +193,13 @@ export function useCryptogram(puzzleData: CryptogramPuzzleData): UseCryptogramRe
 		dispatch({ type: 'RESET' })
 	}, [])
 
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
-
 	const getProgress = useCallback(() => {
 		const uniqueLetters = getUniqueLetters(puzzleData.encryptedText)
-		const filled = uniqueLetters.filter((letter) => state.guesses[letter]).length
-		return { correct: filled, total: uniqueLetters.length }
-	}, [puzzleData.encryptedText, state.guesses])
+		const correct = countCorrect(puzzleData.encryptedText, state.guesses, solution.reverseCipher)
+		return { correct, total: uniqueLetters.length }
+	}, [puzzleData.encryptedText, state.guesses, solution.reverseCipher])
 
-	const canUseHint = false
+	const canUseHint = state.hintsUsed < MAX_HINTS && state.gameStatus === 'playing'
 
 	return {
 		state,
@@ -182,7 +208,6 @@ export function useCryptogram(puzzleData: CryptogramPuzzleData): UseCryptogramRe
 		useHint,
 		selectLetter,
 		reset,
-		reopen,
 		getProgress,
 		canUseHint,
 	}

@@ -3,7 +3,6 @@
 // ============================================
 
 import { getGameConfig } from '@/games/registry'
-import { PRODUCT_DAY_TZ } from '@/lib/product-day'
 
 // Default launch date for games without explicit launchDate in config
 const DEFAULT_LAUNCH_DATE = new Date('2024-01-01')
@@ -35,7 +34,6 @@ export function getPuzzleNumber(gameSlug: string, date: Date = new Date()): numb
  */
 export function getPuzzleDateString(date: Date = new Date(), locale = 'en'): string {
 	return new Intl.DateTimeFormat(locale, {
-		timeZone: PRODUCT_DAY_TZ,
 		weekday: 'long',
 		year: 'numeric',
 		month: 'long',

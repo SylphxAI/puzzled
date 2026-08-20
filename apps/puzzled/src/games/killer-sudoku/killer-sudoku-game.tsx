@@ -16,22 +16,24 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
-import { parseKillerSudokuClientPayload } from './parse-client'
+import type { KillerSudokuPuzzleData, KillerSudokuSolution } from './types'
 import { useKillerSudoku } from './use-killer-sudoku'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.killerSudoku')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parseKillerSudokuClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<KillerSudokuPuzzleData, KillerSudokuSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -41,7 +43,6 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -51,39 +52,26 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 		gameSlug: 'killer-sudoku',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
 
-	const game = useKillerSudoku(puzzle)
-	const { reopen } = game
+	const game = useKillerSudoku(puzzle.puzzleData, puzzle.solution)
 
-	useEffect(() => {
-		if (game.state.gameStatus !== 'won' || gameEndedRef.current) return
+	// Handle game completion - delegate to useGameSession
+	if (game.state.gameStatus === 'won' && !gameEndedRef.current) {
 		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
-				status: 'won',
-				attempts: 1,
-				data: {
-					finalGrid: game.state.cells.map((row) => row.map((cell) => cell.value)),
-					mistakes: game.state.mistakes,
-				},
-			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			reopen()
-			gameEndedRef.current = false
-			setSubmitError(result.error || t('messages.submitRejected'))
-		})()
-	}, [endGame, game.state.cells, game.state.gameStatus, game.state.mistakes, reopen, t])
+		endGame({
+			status: 'won',
+			attempts: 1,
+			data: {
+				finalGrid: game.state.cells.map((row) => row.map((cell) => cell.value)),
+				mistakes: game.state.mistakes,
+			},
+		})
+	}
 
 	// Keyboard handler
 	useEffect(() => {
@@ -127,12 +115,11 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 			origin: getBaseUrl('origin'),
 			gameSlug: 'killer-sudoku',
 			gameName: 'Cage Sudoku',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Build cage border map for visual rendering
 	const cageBorders = useMemo(() => {
@@ -342,12 +329,6 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 				{game.state.notesMode && (
 					<div className="text-xs text-muted-foreground">Notes Mode (Press N to toggle)</div>
 				)}
-
-				{submitError ? (
-					<output className="text-center text-sm text-destructive" role="alert">
-						{submitError}
-					</output>
-				) : null}
 			</div>
 
 			<HowToPlayModal
@@ -362,7 +343,6 @@ export function KillerSudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 				gameType="killer-sudoku"
 				status="won"
 				stats={{
-					score: serverScore ?? undefined,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}

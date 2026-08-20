@@ -10,9 +10,6 @@
 		"all": "全部"
 	},
 	"noData": "尚無玩家，成為第一個吧！",
-	"unavailable": "排行榜暫時無法使用",
-	"unavailableHint": "無法連線 Stats 服務。請重試，不要將其誤認為沒有玩家。",
-	"retry": "重試",
 	"yourRank": "Your Rank",
 	"topPlayers": "Top Players"
 }

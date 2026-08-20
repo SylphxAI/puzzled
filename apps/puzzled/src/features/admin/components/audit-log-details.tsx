@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertCircle, Loader2, RefreshCw } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useAuditLogDetails } from '@/lib/api'
 
@@ -21,33 +21,12 @@ type AuditLogDetailsProps = {
 export function AuditLogDetails({ logId }: AuditLogDetailsProps) {
 	const t = useTranslations('admin.auditLogs')
 	const locale = useLocale()
-	const { data: log, error, isLoading, isRefetching, refetch } = useAuditLogDetails(logId)
+	const { data: log, isLoading } = useAuditLogDetails(logId)
 
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center p-8">
 				<Loader2 className="h-6 w-6 animate-spin text-[var(--admin-text-muted)]" />
-			</div>
-		)
-	}
-
-	if (error) {
-		return (
-			<div className="p-8 text-center" role="alert">
-				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
-				<p className="mt-2 text-[var(--admin-text-primary)]">{t('details.errorTitle')}</p>
-				<p className="mt-1 text-sm text-[var(--admin-text-secondary)]">
-					{t('details.errorDescription')}
-				</p>
-				<button
-					type="button"
-					onClick={() => refetch()}
-					disabled={isRefetching}
-					className="admin-btn admin-btn-ghost mt-6"
-				>
-					<RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-					{t('details.retry')}
-				</button>
 			</div>
 		)
 	}

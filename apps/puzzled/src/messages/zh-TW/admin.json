@@ -87,12 +87,6 @@
 	"dashboard": {
 		"title": "儀表板",
 		"subtitle": "平台概覽",
-		"loading": "正在載入管理資料……",
-		"error": "無法載入管理資料",
-		"errorHint": "無法連線 AdminService。請重試，不要將不可用資料誤認為零。",
-		"retry": "重試",
-		"unavailable": "不可用",
-		"source": "AdminService",
 		"totalUsers": "總用戶數",
 		"premiumUsers": "Premium 用戶",
 		"gameSessions": "遊戲會話",
@@ -119,9 +113,6 @@
 		"last7Days": "Last 7 days",
 		"newUsers": "New Users",
 		"gamesPlayed": "Games Played",
-		"gamesPlayedToday": "今日遊戲數",
-		"dlq": "死信佇列",
-		"failedJobs": "失敗工作",
 		"conversionRate": "Conversion Rate"
 	},
 	"users": {
@@ -215,22 +206,11 @@
 		"noGamesRegistered": "No games registered",
 		"addGamesHint": "Add games to src/games/registry.ts to see them here",
 		"refresh": "Refresh",
-		"error": "無法載入遊戲資料",
-		"errorHint": "無法連線 AdminService。請重試，不要將不可用資料誤認為遊戲註冊表為空。",
-		"retry": "重試遊戲資料",
-		"noDescription": "No description",
-		"analyticsUnavailable": "遊戲分析暫時無法使用",
-		"analyticsUnavailableHint": "Connect 分析服務沒有回應。請重試以取得最新記錄。",
-		"retryAnalytics": "重試分析"
+		"noDescription": "No description"
 	},
 	"announcements": {
 		"title": "Title",
 		"subtitle": "Manage system-wide announcements and notifications",
-		"loading": "正在載入公告……",
-		"error": "無法載入公告",
-		"errorHint": "無法連線 AdminService。請重試，不要將此誤認為沒有公告。",
-		"refresh": "重新整理",
-		"created": "建立時間",
 		"create": "Create Announcement",
 		"createTitle": "Create Announcement",
 		"editTitle": "Edit Announcement",
@@ -283,9 +263,6 @@
 		"title": "死信佇列",
 		"subtitle": "監控和管理失敗的工作流程執行",
 		"refresh": "Refresh",
-		"loading": "正在載入佇列……",
-		"error": "無法載入佇列",
-		"errorHint": "無法連線 AdminService。請重試，不要將此誤認為佇列為空。",
 		"stats": {
 			"total": "總計",
 			"pending": "待處理",
@@ -331,11 +308,6 @@
 		"title": "稽核日誌",
 		"subtitle": "追蹤所有管理操作和系統事件",
 		"loading": "正在載入稽核日誌...",
-		"error": {
-			"title": "稽核日誌暫時無法使用",
-			"description": "Connect 稽核日誌服務沒有回應。請重試以取得最新記錄。",
-			"retry": "重試稽核日誌"
-		},
 		"stats": {
 			"totalLogs": "總日誌數",
 			"onThisPage": "本頁",
@@ -377,9 +349,6 @@
 			"title": "稽核日誌詳情",
 			"subtitle": "關於此事件的完整資訊",
 			"notFound": "未找到稽核日誌",
-			"errorTitle": "稽核日誌詳情暫時無法使用",
-			"errorDescription": "Connect 稽核日誌服務沒有回應。請重試以再次取得此事件。",
-			"retry": "重試詳情",
 			"user": "用戶",
 			"actor": "執行者（管理員）",
 			"resource": "資源",

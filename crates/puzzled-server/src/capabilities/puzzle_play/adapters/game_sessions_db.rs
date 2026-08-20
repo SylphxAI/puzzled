@@ -108,17 +108,6 @@ SELECT EXISTS (
 )
 "#;
 
-const RITUAL_DAYS_SQL: &str = r#"
-SELECT DISTINCT day_key
-FROM game_sessions
-WHERE user_id = $1
-  AND day_key IS NOT NULL
-  AND is_ritual = true
-  AND module_class = 'puzzle_ritual'
-  AND status IN ('won', 'lost')
-ORDER BY day_key ASC
-"#;
-
 const COMPLETED_SESSION_BY_PID_AND_DATE_SQL: &str = r#"
 SELECT status::text, score, attempts, completed_at
 FROM game_sessions
@@ -153,13 +142,37 @@ ORDER BY completed_at DESC NULLS LAST, id DESC
 LIMIT 1
 "#;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CompletedSession {
-    pub status: String,
-    pub score: Option<i32>,
-    pub attempts: i32,
-    pub completed_at: Option<chrono::NaiveDateTime>,
-}
+const ADOPT_GUEST_COLLISION_DELETE_SQL: &str = r#"
+DELETE FROM game_sessions AS guest
+WHERE guest.user_id = $1
+  AND (
+    (
+      guest.puzzle_id IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM game_sessions AS account
+        WHERE account.user_id = $2
+          AND account.puzzle_id = guest.puzzle_id
+      )
+    )
+    OR (
+      guest.is_ritual = true
+      AND guest.day_key IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM game_sessions AS account
+        WHERE account.user_id = $2
+          AND account.is_ritual = true
+          AND account.game_slug = guest.game_slug
+          AND account.day_key = guest.day_key
+      )
+    )
+  )
+"#;
+
+const ADOPT_GUEST_REASSIGN_SQL: &str = r#"
+UPDATE game_sessions
+SET user_id = $2
+WHERE user_id = $1
+"#;
 
 /// True when the user has a completed session for the given puzzle and/or date.
 ///
@@ -212,6 +225,14 @@ pub async fn has_completed_session(
         (None, None) => false,
     };
     Ok(exists)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompletedSession {
+    pub status: String,
+    pub score: Option<i32>,
+    pub attempts: i32,
+    pub completed_at: Option<chrono::NaiveDateTime>,
 }
 
 /// Load the accepted result for a served daily puzzle.
@@ -272,6 +293,39 @@ pub async fn load_completed_session(
     )
 }
 
+/// Move accepted guest rows onto the Platform account without duplicating a
+/// finish for the same puzzle or ritual (user, module, product day).
+///
+/// Colliding guest rows are dropped so the account keeps its existing
+/// canonical result. Remaining guest rows are reassigned to the account.
+pub async fn adopt_guest_sessions(
+    pool: &PgPool,
+    account_user_id: &str,
+    guest_user_id: &str,
+) -> Result<u64, String> {
+    let account = parse_user_id(account_user_id)?;
+    let guest = parse_user_id(guest_user_id)?;
+    if account == guest {
+        return Ok(0);
+    }
+
+    sqlx::query(ADOPT_GUEST_COLLISION_DELETE_SQL)
+        .bind(guest)
+        .bind(account)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("guest collision delete failed: {e}"))?;
+
+    let updated = sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
+        .bind(guest)
+        .bind(account)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("guest reassign failed: {e}"))?;
+
+    Ok(updated.rows_affected())
+}
+
 /// True when the user already has a ritual finish for this module on `day_key`.
 ///
 /// Complements [`has_completed_session`] for the free-daily path when sessions
@@ -292,27 +346,6 @@ pub async fn has_ritual_completion(
         .await
         .map_err(|e| format!("game_sessions ritual query failed: {e}"))?;
     Ok(exists)
-}
-
-/// Load product days that contain a server-accepted ritual finish.
-///
-/// This is a read of the same `game_sessions` rows written by Connect
-/// `SubmitGuess`; it is not a second streak store or completion writer.
-pub async fn load_ritual_days(
-    pool: &PgPool,
-    user_id: &str,
-) -> Result<Vec<chrono::NaiveDate>, String> {
-    let uid = parse_user_id(user_id)?;
-    let rows: Vec<String> = sqlx::query_scalar(RITUAL_DAYS_SQL)
-        .bind(uid)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| format!("ritual day query failed: {e}"))?;
-
-    Ok(rows
-        .into_iter()
-        .filter_map(|day| chrono::NaiveDate::parse_from_str(&day, "%Y-%m-%d").ok())
-        .collect())
 }
 
 /// Persist a server-validated result (authoritative path from Connect submit).
@@ -535,19 +568,6 @@ mod tests {
     }
 
     #[test]
-    fn ritual_days_query_reads_only_server_accepted_ritual_rows() {
-        let normalized = RITUAL_DAYS_SQL
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_ascii_lowercase();
-        assert!(normalized.contains("is_ritual = true"));
-        assert!(normalized.contains("module_class = 'puzzle_ritual'"));
-        assert!(normalized.contains("status in ('won', 'lost')"));
-        assert!(normalized.contains("select distinct day_key"));
-    }
-
-    #[test]
     fn completed_session_queries_return_the_authoritative_result_shape() {
         for sql in [
             COMPLETED_SESSION_BY_PID_AND_DATE_SQL,
@@ -564,6 +584,30 @@ mod tests {
             assert!(normalized.contains("order by completed_at desc nulls last"));
             assert!(normalized.contains("limit 1"));
         }
+    }
+
+    #[test]
+    fn guest_adoption_sql_drops_collisions_then_reassigns() {
+        let delete_sql = ADOPT_GUEST_COLLISION_DELETE_SQL
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase();
+        assert!(delete_sql.starts_with("delete from game_sessions as guest"));
+        assert!(delete_sql.contains("account.puzzle_id = guest.puzzle_id"));
+        assert!(delete_sql.contains("account.is_ritual = true"));
+        assert!(delete_sql.contains("account.game_slug = guest.game_slug"));
+        assert!(delete_sql.contains("account.day_key = guest.day_key"));
+
+        let update_sql = ADOPT_GUEST_REASSIGN_SQL
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase();
+        assert_eq!(
+            update_sql,
+            "update game_sessions set user_id = $2 where user_id = $1"
+        );
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

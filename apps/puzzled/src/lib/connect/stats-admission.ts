@@ -6,6 +6,8 @@ import { getLeaderboard } from './stats-client'
 import type { LeaderboardPeriodInput, LeaderboardTypeInput } from './stats-domain'
 import { planStatsLeaderboardProduct } from './stats-product-authority'
 
+export { shouldUseSdkLeaderboardResidual } from './stats-product-authority'
+
 export async function admitLeaderboardViaConnect(input: {
 	gameSlug: string
 	type?: LeaderboardTypeInput

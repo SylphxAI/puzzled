@@ -16,32 +16,33 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { WordLadderIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { WordLadderDisplay } from './components'
-import { parseWordLadderClientPayload } from './parse-client'
+import type { WordLadderPuzzleData, WordLadderSolution } from './types'
 import { useWordLadder } from './use-word-ladder'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.wordLadder')
 
 	// Get puzzle from server data or generate from seed (deterministic)
-	const [puzzle] = useState(() => parseWordLadderClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<WordLadderPuzzleData, WordLadderSolution>(puzzleData),
+	)
 
 	const {
 		isReady,
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -51,14 +52,11 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		gameSlug: 'word-ladder',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Optimal path
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	// Game hook
@@ -67,7 +65,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	// Initialize game when puzzle is ready
 	useEffect(() => {
 		if (puzzle && !isReady) {
-			game.init(puzzle)
+			game.init(puzzle.puzzleData)
 		}
 	}, [puzzle, isReady, game.init]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,26 +79,18 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	// Track game completion - in useEffect to avoid render-phase side effects
 	const gameEndedRef = useRef(false)
 	useEffect(() => {
-		if (!game.state.isComplete || gameEndedRef.current) return
-		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
+		if (game.state.isComplete && !gameEndedRef.current) {
+			gameEndedRef.current = true
+			endGame({
 				status: 'won',
 				attempts: game.state.path.length - 1,
-				maxAttempts: puzzle.minSteps,
+				maxAttempts: puzzle.puzzleData.minSteps,
 				data: {
 					path: game.state.path,
 				},
 			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			game.reopen()
-			gameEndedRef.current = false
-			setSubmitError(result.error || t('messages.submitRejected'))
-		})()
-	}, [endGame, game.reopen, game.state.isComplete, game.state.path, puzzle.minSteps, t])
+		}
+	}, [game.state.isComplete, game.state.path, puzzle.puzzleData.minSteps, endGame])
 
 	// Track previous path length to detect successful submission
 	const prevPathLengthRef = useRef(game.state.path.length)
@@ -141,12 +131,11 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-ladder',
 			gameName: 'Rungs',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${steps} steps`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.path.length, startTime, puzzleDate])
+	}, [game.state.endTime, game.state.path.length, startTime])
 
 	// Get error message
 	const getErrorMessage = () => {
@@ -180,11 +169,11 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					{/* Preview */}
 					<div className="flex items-center justify-center gap-2 text-lg font-bold">
 						<span className="rounded bg-primary px-3 py-1 text-primary-foreground">
-							{puzzle.startWord.toUpperCase()}
+							{puzzle.puzzleData.startWord.toUpperCase()}
 						</span>
 						<span>→</span>
 						<span className="rounded bg-correct px-3 py-1 text-white">
-							{puzzle.endWord.toUpperCase()}
+							{puzzle.puzzleData.endWord.toUpperCase()}
 						</span>
 					</div>
 
@@ -246,7 +235,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						value={game.state.currentWord}
 						onChange={(e) => game.setInput(e.target.value)}
 						placeholder={t('enterWord')}
-						maxLength={puzzle.wordLength}
+						maxLength={puzzle.puzzleData.wordLength}
 						className="min-h-[44px] text-center text-base font-bold uppercase sm:text-lg"
 						autoComplete="off"
 						autoCapitalize="characters"
@@ -259,12 +248,6 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 			{/* Error message */}
 			{game.state.error && <div className="text-sm text-destructive">{getErrorMessage()}</div>}
-
-			{submitError ? (
-				<output className="text-center text-sm text-destructive" role="alert">
-					{submitError}
-				</output>
-			) : null}
 
 			{/* Controls */}
 			<div className="flex gap-2">
@@ -294,9 +277,8 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				gameType="word-ladder"
 				status="won"
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: game.state.path.length - 1,
-					maxAttempts: puzzle.minSteps,
+					maxAttempts: puzzle.puzzleData.minSteps,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}

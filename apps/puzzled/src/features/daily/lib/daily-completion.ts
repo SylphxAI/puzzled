@@ -9,22 +9,20 @@ export type DailyCompletionMapInput = {
 }
 
 /**
- * Read personal daily completion state without mistaking public aggregate
- * counts for a user's own finishes.
+ * Read personal daily completion from Connect GetDaily.
  *
- * Guests use the browser projection after an accepted SubmitGuess. Anonymous
- * server reads therefore make no completion requests. Non-premium accounts
- * only need the free rotation; premium accounts can read the full suite.
+ * Guests and accounts use the same server records. Anonymous server reads
+ * still go through GetDaily when a guest cookie is present; missing proof
+ * is not treated as completion. Non-premium identities only need the free
+ * rotation; premium accounts can read the full suite.
  */
 export async function loadDailyCompletionMap(
 	input: DailyCompletionMapInput,
 ): Promise<Record<string, boolean>> {
 	const gameSlugs = [...new Set(input.gameSlugs)]
-	const targets = input.isGuest
-		? []
-		: input.isPremium
-			? gameSlugs
-			: gameSlugs.filter((slug) => slug === input.freeGameSlug)
+	const targets = input.isPremium
+		? gameSlugs
+		: gameSlugs.filter((slug) => slug === input.freeGameSlug)
 
 	const entries = await Promise.all(
 		targets.map(async (slug) => {

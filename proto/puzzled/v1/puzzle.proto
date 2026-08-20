@@ -51,7 +51,7 @@ message GetDailyResponse {
   string slice = 9;
   bool stub = 10;
   string puzzle_data_json = 11;
-  // Present only when the authenticated identity has an accepted finish.
+  // Present only when the request identity has an accepted finish.
   // Details are read from the same Rust-owned game_sessions row as the
   // completion guard; the client never reconstructs a result.
   DailyCompletion completed_session = 12;
@@ -80,9 +80,6 @@ message SubmitGuessResponse {
   optional string error = 6;
   string slice = 7;
   reserved 5; // seed removed with the request field
-  // Per-guess coloring for modules that cannot leak the answer (word-guess).
-  // Intermediate evaluations do not persist a finish.
-  optional string evaluation_json = 8;
 }
 
 service PuzzleService {

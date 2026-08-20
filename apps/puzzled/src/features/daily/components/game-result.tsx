@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { ArrowRight, BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
+import { BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
@@ -52,7 +52,6 @@ export function GameResultCard({
 }: GameResultProps) {
 	const _locale = useLocale()
 	const t = useTranslations('gameResult')
-	const tDaily = useTranslations('daily')
 	const tCommon = useTranslations('common')
 
 	const isWin = status === 'won'
@@ -216,16 +215,6 @@ export function GameResultCard({
 						/>
 					)}
 
-					{/* Server-accepted score (never client-calculated) */}
-					{stats.score !== undefined && (
-						<StatBox
-							icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
-							label={t('score')}
-							value={stats.score.toString()}
-							highlight={isWin}
-						/>
-					)}
-
 					{/* Time */}
 					{stats.timeSpentMs !== undefined && (
 						<StatBox
@@ -243,16 +232,6 @@ export function GameResultCard({
 						<Share2 className="h-4 w-4" />
 						{tCommon('share')}
 					</Button>
-
-					{mode === 'daily' && (
-						<Link
-							href="/"
-							className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
-						>
-							{tDaily('backToGames')}
-							<ArrowRight className="h-4 w-4" />
-						</Link>
-					)}
 
 					<Link
 						href="/"

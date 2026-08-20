@@ -16,9 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic } from '@/shared/hooks'
-import { parseCryptogramClientPayload } from './parse-client'
+import type { CryptogramPuzzleData, CryptogramSolution } from './types'
 import { ALPHABET, MAX_HINTS } from './types'
 import { useCryptogram } from './use-cryptogram'
 
@@ -26,13 +27,14 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parseCryptogramClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<CryptogramPuzzleData, CryptogramSolution>(puzzleData),
+	)
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -40,7 +42,6 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -50,47 +51,27 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		gameSlug: 'cryptogram',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: true,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 
-	const game = useCryptogram(puzzle)
+	const game = useCryptogram(puzzle.puzzleData, puzzle.solution)
 	const progress = game.getProgress()
 	const gameEndedRef = useRef(false)
 
-	useEffect(() => {
-		if (game.state.gameStatus === 'playing' || gameEndedRef.current) return
-		const status = game.state.gameStatus
+	// Handle game end - delegate to useGameSession
+	if (game.state.gameStatus !== 'playing' && !gameEndedRef.current) {
 		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
-				status,
+		endGame({
+			status: game.state.gameStatus,
+			hintsUsed: game.state.hintsUsed,
+			data: {
+				guesses: game.state.guesses,
 				hintsUsed: game.state.hintsUsed,
-				data: {
-					guesses: game.state.guesses,
-					hintsUsed: game.state.hintsUsed,
-				},
-			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			game.reopen()
-			gameEndedRef.current = false
-			setSubmitError(tCommon('errorDescription'))
-		})()
-	}, [
-		endGame,
-		game.reopen,
-		game.state.gameStatus,
-		game.state.guesses,
-		game.state.hintsUsed,
-		tCommon,
-	])
+			},
+		})
+	}
 
 	// Handle keyboard input
 	useEffect(() => {
@@ -124,15 +105,14 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			origin: getBaseUrl('origin'),
 			gameSlug: 'cryptogram',
 			gameName: 'Cipher',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Parse the encrypted text into words for display
-	const words = puzzle.encryptedText.split(' ')
+	const words = puzzle.puzzleData.encryptedText.split(' ')
 
 	// Ready screen
 	if (isReady) {
@@ -198,19 +178,10 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 					</div>
 				</div>
 
-				{submitError && (
-					<output
-						className="w-full rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-center text-sm text-destructive"
-						role="alert"
-					>
-						{submitError}
-					</output>
-				)}
-
 				{/* Quote author hint */}
 				<div className="rounded-lg bg-muted/30 px-4 py-2 text-center">
 					<span className="text-sm text-muted-foreground">Quote by </span>
-					<span className="text-sm font-medium">{puzzle.author}</span>
+					<span className="text-sm font-medium">{puzzle.puzzleData.author}</span>
 				</div>
 
 				{/* Encrypted text display */}
@@ -330,7 +301,6 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				gameType="cryptogram"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
-					score: serverScore ?? undefined,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 					hintsUsed: game.state.hintsUsed,
 				}}

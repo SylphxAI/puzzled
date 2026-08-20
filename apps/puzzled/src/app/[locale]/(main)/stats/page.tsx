@@ -1,19 +1,20 @@
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
-import { BarChart3, Check, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-react'
+import { BarChart3, Check, Flame, Star, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { Achievements } from '@/features/gamification/components/achievements'
 import { getAllGameMetadata } from '@/games/registry'
 import {
+	getServerHistory,
 	getServerPersonalDailyResults,
-	getServerStreakInfo,
 	getServerUserStats,
-	type StreakInfo,
+	type HistoryEntry,
+	hasServerProgressIdentity,
 	type UserStats,
 } from '@/lib/api/server'
-import { getPremiumAccessStatus, getTodaysFreeGame } from '@/lib/billing/server'
+import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
@@ -42,7 +43,6 @@ type GameStats = {
 	perfectGames: number
 }
 
-// Empty stats for new users or games not played
 const emptyStats: GameStats = {
 	gamesPlayed: 0,
 	gamesWon: 0,
@@ -52,10 +52,6 @@ const emptyStats: GameStats = {
 	averageAttempts: null,
 	guessDistribution: null,
 	perfectGames: 0,
-}
-
-type StatsData = {
-	[gameSlug: string]: GameStats
 }
 
 const slugToCamelCase = (slug: string) => slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
@@ -83,54 +79,40 @@ export default async function StatsPage({ params }: Props) {
 	const tGames = await getTranslations('games')
 	const tHome = await getTranslations('home')
 	const user = await currentUser()
-
-	// Logged-out users see login prompt, not fake data
-	if (!user) {
-		return (
-			<>
-				<Header />
-				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-					<div className="mx-auto max-w-md text-center">
-						<div className="mb-6 flex justify-center">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-								<BarChart3 className="h-10 w-10 text-muted-foreground" />
-							</div>
-						</div>
-						<h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-						<p className="mb-6 text-muted-foreground">{t('signInToSeeStats')}</p>
-						<Button asChild>
-							<Link href={`/${locale}/login?callbackUrl=/${locale}/stats`}>
-								<LogIn className="mr-2 h-4 w-4" />
-								{t('signIn')}
-							</Link>
-						</Button>
-					</div>
-				</main>
-			</>
-		)
-	}
-
 	const gameMetadata = getAllGameMetadata()
 	const todaysFreeGame = getTodaysFreeGame()
+	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
 
-	// All personal stats and completion state remain server-derived through Connect.
-	let stats: StatsData = {}
-	let streakInfo: StreakInfo | null = null
-	const [userStatsResult, streakResult] = await Promise.allSettled([
-		getServerUserStats(),
-		getServerStreakInfo(),
-	])
-	if (userStatsResult.status === 'fulfilled') {
-		const userStats = userStatsResult.value
-		stats = Object.fromEntries(
-			(Object.entries(userStats) as [string, UserStats[string]][]).map(([gameSlug, gameStats]) => [
-				gameSlug,
-				toGameStats(gameStats),
-			]),
-		) as StatsData
-	}
-	if (streakResult.status === 'fulfilled') streakInfo = streakResult.value
-	if (userStatsResult.status === 'rejected' || streakResult.status === 'rejected') {
+	const [userStatsResult, historyResult, personalResult] = await Promise.allSettled(
+		hasProgressIdentity
+			? [
+					getServerUserStats(),
+					getServerHistory({ limit: 20 }),
+					getServerPersonalDailyResults({
+						gameSlugs: gameMetadata.map((game) => game.slug),
+						isGuest: !user,
+						isPremium,
+						freeGameSlug: todaysFreeGame,
+					}),
+				]
+			: [
+					Promise.resolve({} as UserStats),
+					Promise.resolve([] as HistoryEntry[]),
+					getServerPersonalDailyResults({
+						gameSlugs: gameMetadata.map((game) => game.slug),
+						isGuest: true,
+						isPremium: false,
+						freeGameSlug: todaysFreeGame,
+					}),
+				],
+	)
+
+	if (
+		userStatsResult.status === 'rejected' ||
+		historyResult.status === 'rejected' ||
+		personalResult.status === 'rejected'
+	) {
 		return (
 			<>
 				<Header />
@@ -151,29 +133,23 @@ export default async function StatsPage({ params }: Props) {
 			</>
 		)
 	}
-	const premiumAccessStatus = await getPremiumAccessStatus(user.id)
-	const isPremium = premiumAccessStatus === 'premium'
-	const billingStatusAvailable = premiumAccessStatus !== 'unavailable'
 
-	let personalCompletions: Record<string, boolean> = {}
-	let personalCompletionsAvailable = true
-	try {
-		const personalResults = await getServerPersonalDailyResults({
-			gameSlugs: gameMetadata.map((game) => game.slug),
-			isGuest: false,
-			isPremium,
-			freeGameSlug: todaysFreeGame,
-		})
-		personalCompletions = Object.fromEntries(
-			Object.entries(personalResults).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
-		)
-		personalCompletionsAvailable = Object.values(personalResults).every(
-			(result) => result.statusAvailable,
-		)
-	} catch {
-		// Missing completion proof is not a completion and remains visible as unknown.
-		personalCompletionsAvailable = false
-	}
+	const userStats = userStatsResult.value
+	const history: HistoryEntry[] = historyResult.value
+	const personalResults = personalResult.value
+	const personalCompletions = Object.fromEntries(
+		Object.entries(personalResults).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
+	)
+	const personalCompletionsAvailable = Object.values(personalResults).every(
+		(result) => result.statusAvailable,
+	)
+
+	const stats = Object.fromEntries(
+		(Object.entries(userStats) as [string, UserStats[string]][]).map(([gameSlug, gameStats]) => [
+			gameSlug,
+			toGameStats(gameStats),
+		]),
+	) as Record<string, GameStats>
 
 	const gameStats = gameMetadata.map((game) => ({
 		game,
@@ -185,13 +161,7 @@ export default async function StatsPage({ params }: Props) {
 		0,
 	)
 	const totalGamesWon = gameStats.reduce((sum, { stats: gameStat }) => sum + gameStat.gamesWon, 0)
-	const currentStreak = streakInfo?.currentStreak ?? 0
-	const bestStreak = streakInfo?.maxStreak ?? 0
 	const winRate = totalGamesPlayed > 0 ? Math.round((totalGamesWon / totalGamesPlayed) * 100) : 0
-	const totalPerfectGames = gameStats.reduce(
-		(sum, { stats: gameStat }) => sum + gameStat.perfectGames,
-		0,
-	)
 	const dailyProgress = summarizeDailyProgress(
 		gameMetadata.map((game) => ({
 			completed: personalCompletions[game.slug] ?? false,
@@ -201,11 +171,11 @@ export default async function StatsPage({ params }: Props) {
 	const wordGuessStats = stats['word-guess'] ?? emptyStats
 	const wordGroupsStats = stats['word-groups'] ?? emptyStats
 
-	// Show empty state if user hasn't played any games yet
 	if (
 		personalCompletionsAvailable &&
 		totalGamesPlayed === 0 &&
-		dailyProgress.completedCount === 0
+		dailyProgress.completedCount === 0 &&
+		history.length === 0
 	) {
 		return (
 			<>
@@ -228,14 +198,13 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	// Determine which stat to feature based on what's impressive
 	const featuredStat =
-		currentStreak >= 7
-			? 'streak'
-			: winRate >= 80
-				? 'winRate'
-				: totalPerfectGames >= 3
-					? 'perfect'
+		winRate >= 80
+			? 'winRate'
+			: totalGamesPlayed >= 3
+				? 'games'
+				: dailyProgress.completedCount > 0
+					? 'today'
 					: 'games'
 
 	return (
@@ -245,61 +214,21 @@ export default async function StatsPage({ params }: Props) {
 				<div className="mx-auto w-full max-w-2xl space-y-6">
 					<h1 className="text-2xl font-bold">{t('title')}</h1>
 
-					{!billingStatusAvailable && (
-						<div
-							className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
-							role="alert"
-						>
-							<div className="min-w-0 flex-1">
-								<p className="font-medium">{t('billingUnavailableTitle')}</p>
-								<p className="text-sm text-muted-foreground">
-									{t('billingUnavailableDescription')}
-								</p>
-							</div>
-							<Button asChild variant="outline" size="sm">
-								<Link href={`/${locale}/stats`}>{t('billingUnavailableRetry')}</Link>
-							</Button>
-						</div>
-					)}
-
-					{/* Featured Hero Stat */}
 					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 text-center">
-						<div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-						<div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-primary/5 blur-xl" />
-
-						{featuredStat === 'streak' && (
-							<>
-								<Flame className="mx-auto h-10 w-10 text-stat-streak animate-pulse" />
-								<div className="mt-2 text-5xl font-bold text-stat-streak">{currentStreak}</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('dayStreak')}</div>
-								{currentStreak >= 7 && (
-									<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-stat-streak/10 px-3 py-1 text-xs font-medium text-stat-streak">
-										<Sparkles className="h-3 w-3" />
-										{t('onFire')}
-									</div>
-								)}
-							</>
-						)}
 						{featuredStat === 'winRate' && (
 							<>
 								<Target className="mx-auto h-10 w-10 text-stat-winrate" />
 								<div className="mt-2 text-5xl font-bold text-stat-winrate">{winRate}%</div>
 								<div className="mt-1 text-sm text-muted-foreground">{t('winRate')}</div>
-								<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-stat-winrate/10 px-3 py-1 text-xs font-medium text-stat-winrate">
-									<Star className="h-3 w-3" />
-									{t('sharpshooter')}
-								</div>
 							</>
 						)}
-						{featuredStat === 'perfect' && (
+						{featuredStat === 'today' && (
 							<>
-								<Trophy className="mx-auto h-10 w-10 text-amber-500" />
-								<div className="mt-2 text-5xl font-bold text-amber-500">{totalPerfectGames}</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('perfectGames')}</div>
-								<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-									<Sparkles className="h-3 w-3" />
-									{t('perfectionist')}
+								<Check className="mx-auto h-10 w-10 text-emerald-500" />
+								<div className="mt-2 text-5xl font-bold">
+									{dailyProgress.completedCount}/{dailyProgress.availableCount}
 								</div>
+								<div className="mt-1 text-sm text-muted-foreground">{tDaily('todaysProgress')}</div>
 							</>
 						)}
 						{featuredStat === 'games' && (
@@ -311,34 +240,29 @@ export default async function StatsPage({ params }: Props) {
 						)}
 					</div>
 
-					{/* Secondary Stats Grid */}
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
 						<StatCard
 							icon={<Trophy className="h-4 w-4" />}
 							label={t('played')}
 							value={totalGamesPlayed}
-							variant={featuredStat !== 'games' ? 'default' : 'muted'}
 						/>
 						<StatCard
 							icon={<BarChart3 className="h-4 w-4" />}
 							label={t('winRate')}
 							value={`${winRate}%`}
-							variant={featuredStat !== 'winRate' ? 'default' : 'muted'}
 						/>
 						<StatCard
 							icon={<Flame className="h-4 w-4 text-stat-streak" />}
 							label={t('streak')}
-							value={currentStreak}
-							variant={featuredStat !== 'streak' ? 'default' : 'muted'}
+							value={wordGuessStats.currentStreak}
 						/>
 						<StatCard
 							icon={<Star className="h-4 w-4 text-amber-500" />}
 							label={t('best')}
-							value={bestStreak}
+							value={wordGuessStats.maxStreak}
 						/>
 					</div>
 
-					{/* Today's personal suite depth */}
 					<Card>
 						<CardHeader>
 							<CardTitle>{tHome('todaysPuzzles')}</CardTitle>
@@ -359,14 +283,6 @@ export default async function StatsPage({ params }: Props) {
 												{tDaily('completed')}
 											</div>
 										)}
-									</div>
-									<div className="h-2 overflow-hidden rounded-full bg-muted">
-										<div
-											className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70 transition-all"
-											style={{
-												width: `${dailyProgress.availableCount > 0 ? (dailyProgress.completedCount / dailyProgress.availableCount) * 100 : 0}%`,
-											}}
-										/>
 									</div>
 									<div className="grid gap-2 sm:grid-cols-2">
 										{gameMetadata.map((game) => {
@@ -407,7 +323,6 @@ export default async function StatsPage({ params }: Props) {
 						</CardContent>
 					</Card>
 
-					{/* Current registry module stats */}
 					{playedGameStats.map(({ game, stats: gameStat }) => {
 						const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
 							defaultValue: game.name,
@@ -441,13 +356,44 @@ export default async function StatsPage({ params }: Props) {
 						)
 					})}
 
-					{/* Achievements */}
+					<Card>
+						<CardHeader>
+							<CardTitle>{t('historyTitle')}</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{history.length === 0 ? (
+								<p className="text-sm text-muted-foreground">{t('historyEmpty')}</p>
+							) : (
+								history.map((session) => {
+									const gameName = tGames(`${slugToCamelCase(session.gameSlug)}.name`, {
+										defaultValue: session.gameSlug,
+									})
+									return (
+										<div
+											key={`${session.gameSlug}-${session.puzzleId}-${session.puzzleDate}-${session.attempts}`}
+											className="flex items-center gap-3 rounded-lg bg-muted/40 p-2 text-sm"
+										>
+											<GameIcon slug={session.gameSlug} size={20} aria-hidden="true" />
+											<div className="min-w-0 flex-1">
+												<p className="truncate font-medium">{gameName}</p>
+												<p className="text-xs text-muted-foreground">
+													{session.puzzleDate} · {session.status} · {session.mode}
+												</p>
+											</div>
+											<span className="tabular-nums">{session.score}</span>
+										</div>
+									)
+								})
+							)}
+						</CardContent>
+					</Card>
+
 					<Card>
 						<CardContent className="pt-6">
 							<Achievements
 								stats={{
 									totalWins: totalGamesWon,
-									maxStreak: bestStreak,
+									maxStreak: Math.max(wordGuessStats.maxStreak, wordGroupsStats.maxStreak),
 									wordleWins: wordGuessStats.gamesWon,
 									connectionsWins: wordGroupsStats.gamesWon,
 									wordleBestAttempts: wordGuessStats.guessDistribution?.['1']

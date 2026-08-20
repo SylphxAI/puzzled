@@ -1,8 +1,13 @@
 //! SQL adapters for user stats and history (server-authoritative sessions).
 
+use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
+
+fn parse_user_id(user_id: &str) -> Result<Uuid, String> {
+    user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))
+}
 
 type HistoryRow = (
     Option<Uuid>,
@@ -17,7 +22,7 @@ type HistoryRow = (
 
 /// Per-game aggregates for a user.
 pub async fn user_stats(pool: &PgPool, user_id: &str) -> Result<(Vec<Value>, u32, u32), String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let rows: Vec<(String, i64, i64, Option<i32>)> = sqlx::query_as(
         r#"
         SELECT game_slug,
@@ -59,7 +64,7 @@ pub async fn user_history(
     game_slug: Option<&str>,
     limit: u32,
 ) -> Result<Vec<Value>, String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let limit = limit.clamp(1, 100) as i64;
     let rows: Vec<HistoryRow> = match game_slug {
         Some(slug) => sqlx::query_as(
@@ -109,35 +114,27 @@ pub async fn user_history(
         .collect())
 }
 
-/// Public today overview: daily puzzle completers + qualifying ritual finishes
-/// for the current product day. This is the same server-written authority as
-/// the North Star recompute; it must not fall back to wall-clock finish counts.
-const TODAY_OVERVIEW_PLAYERS_SQL: &str = r#"
-SELECT COUNT(DISTINCT user_id) FROM game_sessions
-WHERE is_ritual = true
-  AND module_class = 'puzzle_ritual'
-  AND status IN ('won','lost')
-  AND day_key = ((now() AT TIME ZONE 'Asia/Hong_Kong')::date)::text
-"#;
-
-const TODAY_OVERVIEW_COMPLETIONS_SQL: &str = r#"
-SELECT game_slug, COUNT(DISTINCT user_id) FROM game_sessions
-WHERE is_ritual = true
-  AND module_class = 'puzzle_ritual'
-  AND status IN ('won','lost')
-  AND day_key = ((now() AT TIME ZONE 'Asia/Hong_Kong')::date)::text
-GROUP BY game_slug ORDER BY game_slug
-"#;
-
+/// Public today overview: distinct players + completions per game (today).
 pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value>), String> {
-    let players: (i64,) = sqlx::query_as(TODAY_OVERVIEW_PLAYERS_SQL)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| format!("today players failed: {e}"))?;
-    let rows: Vec<(String, i64)> = sqlx::query_as(TODAY_OVERVIEW_COMPLETIONS_SQL)
-        .fetch_all(pool)
-        .await
-        .map_err(|e| format!("today completions failed: {e}"))?;
+    let players: (i64,) = sqlx::query_as(
+        r#"
+        SELECT COUNT(DISTINCT user_id) FROM game_sessions
+        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
+        "#,
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("today players failed: {e}"))?;
+    let rows: Vec<(String, i64)> = sqlx::query_as(
+        r#"
+        SELECT game_slug, COUNT(*) FROM game_sessions
+        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
+        GROUP BY game_slug ORDER BY game_slug
+        "#,
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("today completions failed: {e}"))?;
     let completions = rows
         .into_iter()
         .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
@@ -147,18 +144,14 @@ pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value
 
 #[cfg(test)]
 mod tests {
-    use super::{TODAY_OVERVIEW_COMPLETIONS_SQL, TODAY_OVERVIEW_PLAYERS_SQL};
+    use super::parse_user_id;
 
     #[test]
-    fn today_overview_uses_product_day_ritual_authority() {
-        for query in [TODAY_OVERVIEW_PLAYERS_SQL, TODAY_OVERVIEW_COMPLETIONS_SQL] {
-            assert!(query.contains("is_ritual = true"));
-            assert!(query.contains("module_class = 'puzzle_ritual'"));
-            assert!(query.contains("day_key"));
-            assert!(query.contains("Asia/Hong_Kong"));
-            assert!(!query.contains("CURRENT_DATE"));
-            assert!(!query.contains("completed_at::date"));
-        }
-        assert!(TODAY_OVERVIEW_COMPLETIONS_SQL.contains("COUNT(DISTINCT user_id)"));
+    fn guest_logical_user_id_maps_to_storage_uuid() {
+        let uid = parse_user_id("guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890").expect("guest");
+        assert_eq!(uid.to_string(), "a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+        let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
+        assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
+        assert!(parse_user_id("not-a-uuid").is_err());
     }
 }

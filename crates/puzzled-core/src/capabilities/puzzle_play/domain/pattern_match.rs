@@ -8,17 +8,6 @@ pub enum Shape {
     Squiggle,
 }
 
-impl Shape {
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Diamond => "diamond",
-            Self::Oval => "oval",
-            Self::Squiggle => "squiggle",
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color {
     Red,
@@ -26,33 +15,11 @@ pub enum Color {
     Purple,
 }
 
-impl Color {
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Red => "red",
-            Self::Green => "green",
-            Self::Purple => "purple",
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Fill {
     Solid,
     Striped,
     Empty,
-}
-
-impl Fill {
-    #[must_use]
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Solid => "solid",
-            Self::Striped => "striped",
-            Self::Empty => "empty",
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -4,7 +4,8 @@
  */
 
 import { useCallback, useEffect, useReducer } from 'react'
-import type { QueensGameState, QueensPuzzleClientData } from './types'
+import type { QueensPuzzleData, QueensSolution } from './config'
+import type { QueensGameState } from './types'
 import { getConflicts, isSolved } from './types'
 
 // Actions for the reducer
@@ -14,10 +15,9 @@ type QueensAction =
 	| { type: 'CLEAR_CELL' }
 	| { type: 'MOVE'; direction: 'up' | 'down' | 'left' | 'right' }
 	| { type: 'CHECK_COMPLETION' }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
-function createInitialState(puzzleData: QueensPuzzleClientData): QueensGameState {
+function createInitialState(puzzleData: QueensPuzzleData): QueensGameState {
 	const size = puzzleData.size
 
 	return {
@@ -32,7 +32,7 @@ function createInitialState(puzzleData: QueensPuzzleClientData): QueensGameState
 function queensReducer(
 	state: QueensGameState,
 	action: QueensAction,
-	puzzleData: QueensPuzzleClientData,
+	puzzleData: QueensPuzzleData,
 ): QueensGameState {
 	const size = puzzleData.size
 
@@ -46,7 +46,7 @@ function queensReducer(
 			const newGrid = state.grid.map((r) => [...r])
 			newGrid[row][col] = !newGrid[row][col]
 
-			// Filled-correct is only a submission trigger. Rust remains the completion authority.
+			// Check if puzzle is solved
 			const isComplete = isSolved(newGrid, puzzleData.regions, size)
 
 			return {
@@ -128,14 +128,6 @@ function queensReducer(
 			}
 		}
 
-		case 'REOPEN': {
-			return {
-				...state,
-				isComplete: false,
-				endTime: null,
-			}
-		}
-
 		case 'RESET': {
 			return createInitialState(puzzleData)
 		}
@@ -147,19 +139,21 @@ function queensReducer(
 
 export type UseQueensReturn = {
 	state: QueensGameState
-	puzzleData: QueensPuzzleClientData
+	puzzleData: QueensPuzzleData
 	toggleQueen: (row: number, col: number) => void
 	selectCell: (row: number, col: number) => void
 	clearCell: () => void
 	move: (direction: 'up' | 'down' | 'left' | 'right') => void
 	checkCompletion: () => void
-	reopen: () => void
 	reset: () => void
 	getConflictingCells: () => Set<string>
 	queenCount: number
 }
 
-export function useQueens(puzzleData: QueensPuzzleClientData): UseQueensReturn {
+export function useQueens(
+	puzzleData: QueensPuzzleData,
+	_solution: QueensSolution,
+): UseQueensReturn {
 	const [state, dispatch] = useReducer(
 		(s: QueensGameState, a: QueensAction) => queensReducer(s, a, puzzleData),
 		puzzleData,
@@ -225,10 +219,6 @@ export function useQueens(puzzleData: QueensPuzzleClientData): UseQueensReturn {
 		dispatch({ type: 'CHECK_COMPLETION' })
 	}, [])
 
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
-
 	const reset = useCallback(() => {
 		dispatch({ type: 'RESET' })
 	}, [])
@@ -266,7 +256,6 @@ export function useQueens(puzzleData: QueensPuzzleClientData): UseQueensReturn {
 		clearCell,
 		move,
 		checkCompletion,
-		reopen,
 		reset,
 		getConflictingCells,
 		queenCount,

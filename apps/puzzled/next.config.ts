@@ -114,9 +114,44 @@ const nextConfig: NextConfig = {
 		],
 	},
 
-	// Global security headers
+	// Headers for security and PWA
 	async headers() {
 		return [
+			// Cache-Control for sensitive API routes (per spec: no caching of personalized/auth content)
+			{
+				source: '/api/auth/:path*',
+				headers: [
+					{
+						key: 'Cache-Control',
+						value: 'no-store, no-cache, must-revalidate, private',
+					},
+					{ key: 'Pragma', value: 'no-cache' },
+					{ key: 'Expires', value: '0' },
+				],
+			},
+			{
+				source: '/api/admin/:path*',
+				headers: [
+					{
+						key: 'Cache-Control',
+						value: 'no-store, no-cache, must-revalidate, private',
+					},
+					{ key: 'Pragma', value: 'no-cache' },
+					{ key: 'Expires', value: '0' },
+				],
+			},
+			{
+				source: '/api/webhooks/:path*',
+				headers: [
+					{
+						key: 'Cache-Control',
+						value: 'no-store, no-cache, must-revalidate, private',
+					},
+					{ key: 'Pragma', value: 'no-cache' },
+					{ key: 'Expires', value: '0' },
+				],
+			},
+			// Global security headers
 			{
 				source: '/:path*',
 				headers: [

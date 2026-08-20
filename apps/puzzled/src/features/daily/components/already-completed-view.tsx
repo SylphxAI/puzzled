@@ -210,17 +210,6 @@ export function AlreadyCompletedView({
 							</div>
 							<span className="text-xl font-bold tabular-nums">{session.attempts}</span>
 						</div>
-
-						{/* Score is read from the Rust-owned completed session. */}
-						{session.score !== null && (
-							<div className="flex flex-col items-center rounded-xl bg-muted/50 p-4">
-								<div className="mb-2 flex items-center gap-1.5 text-muted-foreground">
-									<Trophy className="h-4 w-4" />
-									<span className="text-xs font-medium">{tResult('score')}</span>
-								</div>
-								<span className="text-xl font-bold tabular-nums">{session.score}</span>
-							</div>
-						)}
 					</div>
 
 					{/* Streak indicator (if streak > 0) */}
@@ -248,39 +237,22 @@ export function AlreadyCompletedView({
 				{tCommon('share')} Your Result
 			</Button>
 
-			{/* Continue the daily ritual from a completed module. */}
-			<Button
-				asChild
-				variant="outline"
-				size="lg"
-				className={cn(
-					'w-full gap-2 border-primary/30 text-base text-primary hover:bg-primary/5',
-					animate && 'animate-slide-up-fade opacity-0 stagger-3',
-				)}
-			>
-				<Link href="/">
-					{t('backToGames')}
-					<ChevronRight className="ml-auto h-5 w-5" />
-				</Link>
-			</Button>
-
 			{/* Play Other Difficulties - For games with difficulty support */}
 			{supportsDifficulty && (
-				<Button
-					asChild
-					variant="outline"
-					size="lg"
-					className={cn(
-						'w-full gap-2 text-base',
-						animate && 'animate-slide-up-fade opacity-0 stagger-3',
-					)}
-				>
-					<Link href={`/games/${gameSlug}`}>
+				<Link href={`/games/${gameSlug}`} className="w-full">
+					<Button
+						variant="outline"
+						size="lg"
+						className={cn(
+							'w-full gap-2 text-base',
+							animate && 'animate-slide-up-fade opacity-0 stagger-3',
+						)}
+					>
 						<Gauge className="h-5 w-5" />
 						{tDifficulty('playOtherDifficulties')}
 						<ChevronRight className="ml-auto h-4 w-4" />
-					</Link>
-				</Button>
+					</Button>
+				</Link>
 			)}
 
 			{/* Countdown Card */}

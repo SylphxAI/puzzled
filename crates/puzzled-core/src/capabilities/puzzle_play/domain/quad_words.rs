@@ -66,50 +66,6 @@ pub fn evaluate_four(guess: &str, targets: &[&str; 4]) -> Option<[Vec<LetterStat
     Some([a, b, c, d])
 }
 
-/// Live coloring for one guess against four hidden targets.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct QuadGuessEvaluation {
-    pub boards: [Vec<LetterStatus>; 4],
-    pub solved: [bool; 4],
-    pub won: bool,
-    pub terminal: bool,
-    pub reveal: Option<[String; 4]>,
-}
-
-#[must_use]
-pub fn evaluate_latest_quad(
-    targets: &[&str; 4],
-    guesses: &[String],
-    previously_solved: [bool; 4],
-) -> Option<QuadGuessEvaluation> {
-    let last = guesses.last()?;
-    let boards = evaluate_four(last, targets)?;
-    let mut solved = previously_solved;
-    for (index, letters) in boards.iter().enumerate() {
-        if is_winning_guess(letters) {
-            solved[index] = true;
-        }
-    }
-    let won = solved.iter().all(|board| *board);
-    let terminal = won || guesses.len() as u32 >= MAX_GUESSES;
-    Some(QuadGuessEvaluation {
-        boards,
-        solved,
-        won,
-        terminal,
-        reveal: if terminal {
-            Some([
-                targets[0].to_ascii_uppercase(),
-                targets[1].to_ascii_uppercase(),
-                targets[2].to_ascii_uppercase(),
-                targets[3].to_ascii_uppercase(),
-            ])
-        } else {
-            None
-        },
-    })
-}
-
 /// Score: `max(40, 100 - (guesses - 5) * 10)` for a win.
 #[must_use]
 pub fn quad_words_score(guess_count: u32) -> u32 {
@@ -242,34 +198,5 @@ mod tests {
         assert!(!is_winning_guess(&results[1]));
         assert_eq!(results[0].len(), WORD_LENGTH);
         assert!(guess_solves_target("hello", "hello"));
-    }
-
-    #[test]
-    fn latest_quad_marks_solved_without_reveal() {
-        let targets = ["crane", "slate", "world", "hello"];
-        let eval = evaluate_latest_quad(&targets, &["crane".into()], [false; 4]).expect("eval");
-        assert!(eval.solved[0]);
-        assert!(!eval.solved[1]);
-        assert!(!eval.won);
-        assert!(!eval.terminal);
-        assert!(eval.reveal.is_none());
-    }
-
-    #[test]
-    fn latest_quad_reveals_on_loss() {
-        let targets = ["crane", "slate", "world", "hello"];
-        let guesses: Vec<String> = (0..MAX_GUESSES).map(|_| "zzzzz".into()).collect();
-        let eval = evaluate_latest_quad(&targets, &guesses, [false; 4]).expect("eval");
-        assert!(eval.terminal);
-        assert!(!eval.won);
-        assert_eq!(
-            eval.reveal,
-            Some([
-                "CRANE".to_string(),
-                "SLATE".to_string(),
-                "WORLD".to_string(),
-                "HELLO".to_string(),
-            ])
-        );
     }
 }

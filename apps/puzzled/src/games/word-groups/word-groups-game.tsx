@@ -10,28 +10,40 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
+import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
-import { parseWordGroupsClientPayload } from './parse-client'
-import type { WordGroupsServerEvaluation } from './types'
+import type { ConnectionsPuzzleData, ConnectionsSolution } from './types'
 import { useWordGroups } from './use-word-groups'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.wordGroups')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	const [puzzle] = useState(() => parseWordGroupsClientPayload(puzzleData))
+	// Type-safe puzzle parsing via config - no type assertions needed
+	const [initialPuzzle] = useState(() => {
+		const parsed = parsePuzzleDataClient<ConnectionsPuzzleData, ConnectionsSolution>(puzzleData)
+		// Convert to ConnectionsPuzzle format for useWordGroups hook
+		return {
+			id: puzzleId || `daily-${new Date().toISOString().split('T')[0]}`,
+			date: new Date().toISOString().split('T')[0],
+			categories: parsed.solution.categories as [
+				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
+				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
+				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
+				{ name: string; words: string[]; level: 0 | 1 | 2 | 3 },
+			],
+		}
+	})
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -41,7 +53,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showStarBurst,
 		showResultModal,
@@ -52,51 +63,12 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		gameSlug: 'word-groups',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.mistakes === 0,
 	})
 
-	const evaluateGuess = useCallback(
-		async (
-			guess: string[],
-			foundNames: string[],
-			mistakesSoFar: number,
-		): Promise<WordGroupsServerEvaluation | null> => {
-			const admit = await admitSubmitGuessViaConnect({
-				gameSlug: 'word-groups',
-				status: 'playing',
-				attempts: 1,
-				timeSpentMs: startTime ? Date.now() - startTime : 0,
-				submission: { guess, foundNames, mistakes: mistakesSoFar },
-				puzzleId,
-				puzzleDate,
-			})
-			if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
-				return null
-			}
-			try {
-				const parsed = JSON.parse(admit.response.evaluationJson) as {
-					correct?: unknown
-					oneAway?: unknown
-					category?: WordGroupsServerEvaluation['category']
-					remaining?: WordGroupsServerEvaluation['remaining']
-				}
-				return {
-					correct: parsed.correct === true,
-					oneAway: parsed.oneAway === true,
-					category: parsed.category,
-					remaining: parsed.remaining,
-				}
-			} catch {
-				return null
-			}
-		},
-		[puzzleDate, puzzleId, startTime],
-	)
-
 	const {
+		puzzle,
 		selectedWords,
 		solvedCategories,
 		remainingWords,
@@ -104,13 +76,12 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		gameStatus,
 		guessHistory,
 		lastGuessWasOneAway,
-		missedCategories,
 		toggleWord,
 		clearSelection,
 		submitGuess,
 		shuffle,
 		canSubmit,
-	} = useWordGroups(puzzle.words, evaluateGuess)
+	} = useWordGroups(initialPuzzle)
 
 	// ==========================================
 	// Game-specific state (not consolidated)
@@ -119,9 +90,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	const [toastMessage, setToastMessage] = useState('')
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [isShuffling, setIsShuffling] = useState(false)
-	const [finishError, setFinishError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
-	const terminalAutoSubmitRef = useRef(false)
 
 	// Help click handler
 	const handleHelpClick = useCallback(() => {
@@ -145,10 +114,10 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		}
 	}, [lastGuessWasOneAway, t])
 
-	const submitTerminalFinish = useCallback(async () => {
-		if (gameStatus === 'playing' || gameEndedRef.current) return
+	// Handle game end - delegate to useGameSession
+	if (gameStatus !== 'playing' && !gameEndedRef.current) {
 		gameEndedRef.current = true
-		const result = await endGame({
+		endGame({
 			status: gameStatus,
 			attempts: guessHistory.length,
 			maxAttempts: 8, // 4 categories + 4 mistakes allowed
@@ -158,22 +127,10 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				mistakes,
 			},
 		})
-		if (result.success) {
-			setFinishError(null)
-			return
-		}
-		gameEndedRef.current = false
-		setFinishError(result.error || 'finish_rejected')
-	}, [endGame, gameStatus, guessHistory.length, mistakes, solvedCategories])
-
-	useEffect(() => {
-		if (gameStatus === 'playing' || terminalAutoSubmitRef.current) return
-		terminalAutoSubmitRef.current = true
-		void submitTerminalFinish()
-	}, [gameStatus, submitTerminalFinish])
+	}
 
 	const handleSubmit = () => {
-		void submitGuess()
+		submitGuess()
 	}
 
 	const handleShuffle = useCallback(() => {
@@ -191,14 +148,16 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 	}, [isShuffling, shuffle])
 
 	const handleShare = async () => {
-		const revealed = [...solvedCategories, ...missedCategories]
 		const emojiGrid = guessHistory
 			.map((guess) => {
+				// Find which category each guess word belongs to
 				return guess
 					.map((word) => {
-						for (const category of revealed) {
+						for (const category of puzzle.categories) {
 							if (category.words.includes(word)) {
-								return ['🟥', '🩵', '🟨', '🟪'][category.level]
+								const level = category.level
+								// Distinctive Puzzled colors: Rose, Teal, Amber, Fuchsia
+								return ['🟥', '🩵', '🟨', '🟪'][level]
 							}
 						}
 						return '⬛'
@@ -214,7 +173,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-groups',
 			gameName: 'Threads',
-			puzzleDate,
 			status,
 			statLine: emojiGrid,
 		})
@@ -323,7 +281,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				gameType="word-groups"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: guessHistory.length,
 					maxAttempts: 8, // 4 categories + 4 mistakes allowed
 					mistakes: mistakes,
@@ -331,7 +288,11 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 				}}
 				mode={mode}
 				onShare={handleShare}
-				missedCategories={gameStatus === 'lost' ? missedCategories : undefined}
+				missedCategories={
+					gameStatus === 'lost'
+						? puzzle.categories.filter((cat) => !solvedCategories.some((s) => s.name === cat.name))
+						: undefined
+				}
 			/>
 
 			{/* Action Buttons (playing state only) */}
@@ -363,15 +324,6 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 						className="min-h-[44px] px-4 text-xs sm:px-6 sm:text-sm"
 					>
 						{t('submit')}
-					</Button>
-				</div>
-			)}
-
-			{finishError && (
-				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
-					<span>{tCommon('errorDescription')}</span>
-					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
-						{tCommon('retry')}
 					</Button>
 				</div>
 			)}

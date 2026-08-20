@@ -1,4 +1,4 @@
-//! Score leaderboard read adapter for the Connect StatsService.
+//! Score leaderboard read — parity with `server/api/routes/stats.ts` GET /leaderboard.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;

@@ -4,16 +4,15 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type { CellValue, TangoCell, TangoGameState, TangoPuzzleClientData } from './types'
+import type { CellValue, TangoCell, TangoGameState, TangoPuzzleData, TangoSolution } from './types'
 import { getConflicts, isSolved } from './types'
 
 type TangoAction =
 	| { type: 'SET_CELL'; row: number; col: number; value: CellValue }
 	| { type: 'TOGGLE_CELL'; row: number; col: number }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
-function createInitialState(puzzleData: TangoPuzzleClientData): TangoGameState {
+function createInitialState(puzzleData: TangoPuzzleData): TangoGameState {
 	const grid: TangoCell[][] = puzzleData.initialGrid.map((row) =>
 		row.map((value) => ({
 			value,
@@ -33,7 +32,7 @@ function createInitialState(puzzleData: TangoPuzzleClientData): TangoGameState {
 function tangoReducer(
 	state: TangoGameState,
 	action: TangoAction,
-	puzzleData: TangoPuzzleClientData,
+	puzzleData: TangoPuzzleData,
 ): TangoGameState {
 	switch (action.type) {
 		case 'SET_CELL': {
@@ -94,14 +93,6 @@ function tangoReducer(
 			}
 		}
 
-		case 'REOPEN': {
-			return {
-				...state,
-				gameStatus: 'playing',
-				endTime: null,
-			}
-		}
-
 		case 'RESET': {
 			return createInitialState(puzzleData)
 		}
@@ -116,11 +107,10 @@ export type UseTangoReturn = {
 	setCell: (row: number, col: number, value: CellValue) => void
 	toggleCell: (row: number, col: number) => void
 	reset: () => void
-	reopen: () => void
 	getConflicts: () => { row: number; col: number }[]
 }
 
-export function useTango(puzzleData: TangoPuzzleClientData): UseTangoReturn {
+export function useTango(puzzleData: TangoPuzzleData, _solution: TangoSolution): UseTangoReturn {
 	const [state, dispatch] = useReducer(
 		(s: TangoGameState, a: TangoAction) => tangoReducer(s, a, puzzleData),
 		puzzleData,
@@ -133,10 +123,6 @@ export function useTango(puzzleData: TangoPuzzleClientData): UseTangoReturn {
 
 	const toggleCell = useCallback((row: number, col: number) => {
 		dispatch({ type: 'TOGGLE_CELL', row, col })
-	}, [])
-
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
 	}, [])
 
 	const reset = useCallback(() => {
@@ -152,7 +138,6 @@ export function useTango(puzzleData: TangoPuzzleClientData): UseTangoReturn {
 		setCell,
 		toggleCell,
 		reset,
-		reopen,
 		getConflicts: getConflictsCallback,
 	}
 }

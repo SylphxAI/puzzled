@@ -45,3 +45,18 @@ export function planStatsLeaderboardProduct(
 	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
 	return { mode, connect: { ok: true, value }, failClosed: true }
 }
+
+/**
+ * Dual SDK leaderboard residual permanently deleted under sole Connect.
+ * Always false — fail-closed fence for call sites.
+ */
+export function shouldUseSdkLeaderboardResidual(
+	_admit: null | {
+		mode: string
+		ok?: boolean
+		failClosed?: boolean
+		skipped?: boolean
+	},
+): boolean {
+	return false
+}

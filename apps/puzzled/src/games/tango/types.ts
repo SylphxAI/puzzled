@@ -22,9 +22,6 @@ export type TangoPuzzleData = {
 	initialGrid: CellValue[][] // Pre-filled cells
 }
 
-/** Client-side puzzle data (completed grid hidden). */
-export type TangoPuzzleClientData = TangoPuzzleData
-
 export type TangoSolution = {
 	grid: ('sun' | 'moon')[][]
 }

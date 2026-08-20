@@ -5,22 +5,22 @@
 
 import { useCallback, useReducer } from 'react'
 
-import type { CellState, NonogramPuzzleClientData, NonogramState } from './types'
-import { isColCluesSatisfied, isGridCluesSatisfied, isRowCluesSatisfied } from './types'
+import type { CellState, NonogramPuzzleData, NonogramState } from './types'
+import { isColCorrect, isGridComplete, isRowCorrect } from './types'
 
 // Actions
 type NonogramAction =
-	| { type: 'INIT'; puzzle: NonogramPuzzleClientData }
+	| { type: 'INIT'; puzzle: NonogramPuzzleData; solution: boolean[][] }
 	| { type: 'SELECT_CELL'; row: number; col: number }
 	| { type: 'TOGGLE_CELL'; row: number; col: number }
 	| { type: 'SET_CELL'; row: number; col: number; state: CellState }
 	| { type: 'TOGGLE_MODE' }
 	| { type: 'CLEAR_CELL'; row: number; col: number }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
 type NonogramReducerState = NonogramState & {
-	puzzle: NonogramPuzzleClientData | null
+	puzzle: NonogramPuzzleData | null
+	solution: boolean[][] | null
 	completedRows: Set<number>
 	completedCols: Set<number>
 }
@@ -34,6 +34,7 @@ const initialState: NonogramReducerState = {
 	endTime: null,
 	fillMode: 'fill',
 	puzzle: null,
+	solution: null,
 	completedRows: new Set(),
 	completedCols: new Set(),
 }
@@ -50,10 +51,11 @@ function nonogramReducer(
 ): NonogramReducerState {
 	switch (action.type) {
 		case 'INIT': {
-			const { puzzle } = action
+			const { puzzle, solution } = action
 			return {
 				...initialState,
 				puzzle,
+				solution,
 				userGrid: createEmptyGrid(puzzle.width, puzzle.height),
 				startTime: Date.now(),
 			}
@@ -68,7 +70,7 @@ function nonogramReducer(
 		}
 
 		case 'TOGGLE_CELL': {
-			if (state.isComplete || !state.puzzle) return state
+			if (state.isComplete || !state.solution) return state
 
 			const { row, col } = action
 			const currentState = state.userGrid[row]?.[col]
@@ -90,27 +92,39 @@ function nonogramReducer(
 				ri === row ? r.map((c, ci) => (ci === col ? newState : c)) : r,
 			)
 
+			// Check if row/column is complete
 			const completedRows = new Set(state.completedRows)
 			const completedCols = new Set(state.completedCols)
 
-			if (isRowCluesSatisfied(newGrid, state.puzzle.rowClues, row)) {
+			if (isRowCorrect(newGrid, state.solution, row)) {
 				completedRows.add(row)
 			} else {
 				completedRows.delete(row)
 			}
 
-			if (isColCluesSatisfied(newGrid, state.puzzle.colClues, col)) {
+			if (isColCorrect(newGrid, state.solution, col)) {
 				completedCols.add(col)
 			} else {
 				completedCols.delete(col)
 			}
 
-			const isComplete = isGridCluesSatisfied(newGrid, state.puzzle.rowClues, state.puzzle.colClues)
+			// Check for errors - only count filled cells that shouldn't be
+			let errors = 0
+			for (let r = 0; r < newGrid.length; r++) {
+				for (let c = 0; c < newGrid[0].length; c++) {
+					if (newGrid[r][c] === 'filled' && !state.solution[r][c]) {
+						errors++
+					}
+				}
+			}
+
+			// Check if complete
+			const isComplete = isGridComplete(newGrid, state.solution)
 
 			return {
 				...state,
 				userGrid: newGrid,
-				errors: 0,
+				errors,
 				completedRows,
 				completedCols,
 				isComplete,
@@ -119,7 +133,7 @@ function nonogramReducer(
 		}
 
 		case 'SET_CELL': {
-			if (state.isComplete || !state.puzzle) return state
+			if (state.isComplete || !state.solution) return state
 
 			const { row, col, state: cellState } = action
 
@@ -127,27 +141,39 @@ function nonogramReducer(
 				ri === row ? r.map((c, ci) => (ci === col ? cellState : c)) : r,
 			)
 
+			// Check if row/column is complete
 			const completedRows = new Set(state.completedRows)
 			const completedCols = new Set(state.completedCols)
 
-			if (isRowCluesSatisfied(newGrid, state.puzzle.rowClues, row)) {
+			if (isRowCorrect(newGrid, state.solution, row)) {
 				completedRows.add(row)
 			} else {
 				completedRows.delete(row)
 			}
 
-			if (isColCluesSatisfied(newGrid, state.puzzle.colClues, col)) {
+			if (isColCorrect(newGrid, state.solution, col)) {
 				completedCols.add(col)
 			} else {
 				completedCols.delete(col)
 			}
 
-			const isComplete = isGridCluesSatisfied(newGrid, state.puzzle.rowClues, state.puzzle.colClues)
+			// Check for errors
+			let errors = 0
+			for (let r = 0; r < newGrid.length; r++) {
+				for (let c = 0; c < newGrid[0].length; c++) {
+					if (newGrid[r][c] === 'filled' && !state.solution[r][c]) {
+						errors++
+					}
+				}
+			}
+
+			// Check if complete
+			const isComplete = isGridComplete(newGrid, state.solution)
 
 			return {
 				...state,
 				userGrid: newGrid,
-				errors: 0,
+				errors,
 				completedRows,
 				completedCols,
 				isComplete,
@@ -163,23 +189,24 @@ function nonogramReducer(
 		}
 
 		case 'CLEAR_CELL': {
-			if (state.isComplete || !state.puzzle) return state
+			if (state.isComplete || !state.solution) return state
 
 			const { row, col } = action
 			const newGrid = state.userGrid.map((r, ri) =>
 				ri === row ? r.map((c, ci) => (ci === col ? 'empty' : c)) : r,
 			)
 
+			// Recalculate completed rows/cols
 			const completedRows = new Set(state.completedRows)
 			const completedCols = new Set(state.completedCols)
 
-			if (isRowCluesSatisfied(newGrid, state.puzzle.rowClues, row)) {
+			if (isRowCorrect(newGrid, state.solution, row)) {
 				completedRows.add(row)
 			} else {
 				completedRows.delete(row)
 			}
 
-			if (isColCluesSatisfied(newGrid, state.puzzle.colClues, col)) {
+			if (isColCorrect(newGrid, state.solution, col)) {
 				completedCols.add(col)
 			} else {
 				completedCols.delete(col)
@@ -190,15 +217,6 @@ function nonogramReducer(
 				userGrid: newGrid,
 				completedRows,
 				completedCols,
-				isComplete: false,
-			}
-		}
-
-		case 'REOPEN': {
-			return {
-				...state,
-				isComplete: false,
-				endTime: null,
 			}
 		}
 
@@ -225,8 +243,8 @@ function nonogramReducer(
 export function useNonogram() {
 	const [state, dispatch] = useReducer(nonogramReducer, initialState)
 
-	const init = useCallback((puzzle: NonogramPuzzleClientData) => {
-		dispatch({ type: 'INIT', puzzle })
+	const init = useCallback((puzzle: NonogramPuzzleData, solution: boolean[][]) => {
+		dispatch({ type: 'INIT', puzzle, solution })
 	}, [])
 
 	const selectCell = useCallback((row: number, col: number) => {
@@ -253,10 +271,6 @@ export function useNonogram() {
 		dispatch({ type: 'RESET' })
 	}, [])
 
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
-
 	return {
 		state,
 		init,
@@ -266,6 +280,5 @@ export function useNonogram() {
 		toggleMode,
 		clearCell,
 		reset,
-		reopen,
 	}
 }

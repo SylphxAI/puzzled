@@ -105,7 +105,7 @@ export const GetLeaderboardResponseSchema: GenMessage<GetLeaderboardResponse> =
 	messageDesc(file_puzzled_v1_stats, 2)
 
 /**
- * Today percentile generated Connect path.
+ * Today percentile generated Connect path — parity with GET /api/v1/stats/today-percentile.
  *
  * @generated from message puzzled.v1.GetTodayPercentileRequest
  */

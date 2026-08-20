@@ -4,8 +4,8 @@ import { Plus, Save, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
-import type { Announcement } from '@/gen/connect/puzzled/v1/admin_pb'
 import { useCreateAnnouncement, useDeleteAnnouncement, useUpdateAnnouncement } from '@/lib/api'
+import type { Announcement, AnnouncementType } from '@/lib/db/schema'
 import {
 	AdminDialog,
 	AdminDialogBody,
@@ -17,16 +17,28 @@ import {
 
 type AnnouncementFormData = {
 	title: string
-	body: string
-	type: 'info' | 'warning' | 'success' | 'maintenance'
-	active: boolean
+	content: string
+	type: AnnouncementType
+	isActive: boolean
+	targetAllUsers: boolean
+	targetPremiumOnly: boolean
+	dismissible: boolean
+	showOnce: boolean
+	startsAt: string
+	endsAt: string
 }
 
 const emptyAnnouncement: AnnouncementFormData = {
 	title: '',
-	body: '',
+	content: '',
 	type: 'info',
-	active: true,
+	isActive: true,
+	targetAllUsers: true,
+	targetPremiumOnly: false,
+	dismissible: true,
+	showOnce: false,
+	startsAt: '',
+	endsAt: '',
 }
 
 export function CreateAnnouncementButton() {
@@ -76,9 +88,15 @@ function AnnouncementEditorModal({
 		if (announcement) {
 			return {
 				title: announcement.title,
-				body: announcement.body,
-				type: announcement.type as AnnouncementFormData['type'],
-				active: announcement.active,
+				content: announcement.content,
+				type: announcement.type,
+				isActive: announcement.isActive,
+				targetAllUsers: announcement.targetAllUsers,
+				targetPremiumOnly: announcement.targetPremiumOnly,
+				dismissible: announcement.dismissible,
+				showOnce: announcement.showOnce,
+				startsAt: announcement.startsAt?.toISOString().slice(0, 16) || '',
+				endsAt: announcement.endsAt?.toISOString().slice(0, 16) || '',
 			}
 		}
 		return emptyAnnouncement
@@ -96,15 +114,21 @@ function AnnouncementEditorModal({
 		(e: React.FormEvent) => {
 			e.preventDefault()
 
+			const data = {
+				...formData,
+				startsAt: formData.startsAt ? new Date(formData.startsAt).toISOString() : undefined,
+				endsAt: formData.endsAt ? new Date(formData.endsAt).toISOString() : undefined,
+			}
+
 			const onSuccess = () => {
 				router.refresh()
 				onClose()
 			}
 
 			if (isEditing && announcement) {
-				updateMutation.mutate({ id: announcement.id, ...formData }, { onSuccess })
+				updateMutation.mutate({ id: announcement.id, ...data }, { onSuccess })
 			} else {
-				createMutation.mutate(formData, { onSuccess })
+				createMutation.mutate(data, { onSuccess })
 			}
 		},
 		[formData, isEditing, announcement, createMutation, updateMutation, router, onClose],
@@ -154,13 +178,13 @@ function AnnouncementEditorModal({
 					</div>
 
 					<div>
-						<label htmlFor="body" className="admin-label">
+						<label htmlFor="content" className="admin-label">
 							{t('content')}
 						</label>
 						<textarea
-							id="body"
-							value={formData.body}
-							onChange={(e) => updateField('body', e.target.value)}
+							id="content"
+							value={formData.content}
+							onChange={(e) => updateField('content', e.target.value)}
 							className="admin-input w-full"
 							rows={4}
 							required
@@ -175,9 +199,7 @@ function AnnouncementEditorModal({
 							<select
 								id="type"
 								value={formData.type}
-								onChange={(e) =>
-									updateField('type', e.target.value as AnnouncementFormData['type'])
-								}
+								onChange={(e) => updateField('type', e.target.value as AnnouncementType)}
 								className="admin-select w-full"
 							>
 								<option value="info">{t('typeInfo')}</option>
@@ -188,18 +210,86 @@ function AnnouncementEditorModal({
 						</div>
 					</div>
 
+					{/* Toggles */}
 					<div className="space-y-3">
 						<div className="flex items-center gap-3">
 							<input
-								id="active"
+								id="isActive"
 								type="checkbox"
-								checked={formData.active}
-								onChange={(e) => updateField('active', e.target.checked)}
+								checked={formData.isActive}
+								onChange={(e) => updateField('isActive', e.target.checked)}
 								className="admin-checkbox"
 							/>
-							<label htmlFor="active" className="admin-label mb-0">
+							<label htmlFor="isActive" className="admin-label mb-0">
 								{t('active')}
 							</label>
+						</div>
+
+						<div className="flex items-center gap-3">
+							<input
+								id="dismissible"
+								type="checkbox"
+								checked={formData.dismissible}
+								onChange={(e) => updateField('dismissible', e.target.checked)}
+								className="admin-checkbox"
+							/>
+							<label htmlFor="dismissible" className="admin-label mb-0">
+								{t('dismissible')}
+							</label>
+						</div>
+
+						<div className="flex items-center gap-3">
+							<input
+								id="showOnce"
+								type="checkbox"
+								checked={formData.showOnce}
+								onChange={(e) => updateField('showOnce', e.target.checked)}
+								className="admin-checkbox"
+							/>
+							<label htmlFor="showOnce" className="admin-label mb-0">
+								{t('showOnce')}
+							</label>
+						</div>
+
+						<div className="flex items-center gap-3">
+							<input
+								id="targetPremiumOnly"
+								type="checkbox"
+								checked={formData.targetPremiumOnly}
+								onChange={(e) => updateField('targetPremiumOnly', e.target.checked)}
+								className="admin-checkbox"
+							/>
+							<label htmlFor="targetPremiumOnly" className="admin-label mb-0">
+								{t('premiumOnly')}
+							</label>
+						</div>
+					</div>
+
+					{/* Scheduling */}
+					<div className="grid gap-4 md:grid-cols-2">
+						<div>
+							<label htmlFor="startsAt" className="admin-label">
+								{t('startsAt')}
+							</label>
+							<input
+								id="startsAt"
+								type="datetime-local"
+								value={formData.startsAt}
+								onChange={(e) => updateField('startsAt', e.target.value)}
+								className="admin-input w-full"
+							/>
+						</div>
+						<div>
+							<label htmlFor="endsAt" className="admin-label">
+								{t('endsAt')}
+							</label>
+							<input
+								id="endsAt"
+								type="datetime-local"
+								value={formData.endsAt}
+								onChange={(e) => updateField('endsAt', e.target.value)}
+								className="admin-input w-full"
+							/>
 						</div>
 					</div>
 

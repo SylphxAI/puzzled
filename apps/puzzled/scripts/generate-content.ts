@@ -7,9 +7,6 @@
  *
  *   bun run scripts/generate-content.ts -- --days 7 [--game sudoku]
  *
- * Dates are Asia/Hong_Kong product days. `--days 7` covers today plus the
- * next 7 civil days. Existing rows are never overwritten.
- *
  * Idempotent: existing rows for a game/date/difficulty are never overwritten.
  */
 
@@ -18,7 +15,6 @@ import { getAllGames } from '../src/games/registry'
 import { generateGamePuzzle } from '../src/games/registry.server'
 import { PUZZLE_DIFFICULTY_VALUES } from '../src/games/types'
 import { dailyPuzzles, db } from '../src/lib/db'
-import { dayKeyUtcDate, productDayKey, shiftDayKey } from '../src/lib/product-day'
 
 function parseArgs(argv: string[]): { days: number; game?: string } {
 	let days = 7
@@ -30,9 +26,11 @@ function parseArgs(argv: string[]): { days: number; game?: string } {
 	return { days: Number.isFinite(days) && days > 0 ? days : 7, game }
 }
 
-function dateForOffset(offset: number, now = new Date()): { date: Date; dateString: string } {
-	const dateString = shiftDayKey(productDayKey(now), offset)
-	return { date: dayKeyUtcDate(dateString), dateString }
+function dateForOffset(offset: number): Date {
+	const d = new Date()
+	d.setUTCDate(d.getUTCDate() + offset)
+	d.setUTCHours(0, 0, 0, 0)
+	return d
 }
 
 async function exists(slug: string, date: Date, difficulty: string | null): Promise<boolean> {
@@ -60,9 +58,9 @@ async function main() {
 	let generated = 0
 	let skipped = 0
 	let failed = 0
-	// Include today's product day (HKT) plus the next `days` civil days.
-	for (let offset = 0; offset <= days; offset++) {
-		const { date, dateString } = dateForOffset(offset)
+	for (let offset = 1; offset <= days; offset++) {
+		const date = dateForOffset(offset)
+		const dateString = date.toISOString().split('T')[0]!
 		for (const config of games) {
 			const difficulties: (string | null)[] = config.supportsDifficulty
 				? [...PUZZLE_DIFFICULTY_VALUES]

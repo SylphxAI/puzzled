@@ -16,19 +16,17 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
-import { parseQuadWordsClientPayload } from './parse-client'
-import type { LetterStatus } from './types'
-import { MAX_GUESSES } from './types'
+import type { LetterStatus, QuordlePuzzleData, QuordleSolution } from './types'
+import { evaluateGuess, MAX_GUESSES } from './types'
 import { useQuadWords } from './use-quad-words'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
 const KEYBOARD_ROWS = [
@@ -37,11 +35,13 @@ const KEYBOARD_ROWS = [
 	['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL'],
 ]
 
-export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.quadWords')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parseQuadWordsClientPayload(puzzleData))
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<QuordlePuzzleData, QuordleSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -51,7 +51,6 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -61,30 +60,23 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		gameSlug: 'quad-words',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 	})
 
 	// Game-specific state
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [showToast, setShowToast] = useState(false)
 	const [toastMessage, setToastMessage] = useState('')
-	const [finishError, setFinishError] = useState<string | null>(null)
 	const gameEndedRef = useRef(false)
-	const terminalAutoSubmitRef = useRef(false)
-	const submitInFlight = useRef(false)
 
-	const game = useQuadWords(puzzle)
+	const game = useQuadWords(puzzle.puzzleData, puzzle.solution)
 
-	const submitTerminalFinish = useCallback(async () => {
-		if (
-			(game.state.gameStatus !== 'won' && game.state.gameStatus !== 'lost') ||
-			gameEndedRef.current
-		) {
-			return
-		}
+	// Handle game completion - delegate to useGameSession
+	if (
+		(game.state.gameStatus === 'won' || game.state.gameStatus === 'lost') &&
+		!gameEndedRef.current
+	) {
 		gameEndedRef.current = true
-		const result = await endGame({
+		endGame({
 			status: game.state.gameStatus,
 			attempts: game.state.guessHistory.length,
 			data: {
@@ -92,23 +84,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				solvedBoards: game.state.boards.map((b) => b.solved),
 			},
 		})
-		if (result.success) {
-			setFinishError(null)
-			return
-		}
-		gameEndedRef.current = false
-		setFinishError(result.error || 'finish_rejected')
-	}, [endGame, game.state.boards, game.state.gameStatus, game.state.guessHistory])
-
-	useEffect(() => {
-		if (
-			(game.state.gameStatus !== 'won' && game.state.gameStatus !== 'lost') ||
-			terminalAutoSubmitRef.current
-		)
-			return
-		terminalAutoSubmitRef.current = true
-		void submitTerminalFinish()
-	}, [game.state.gameStatus, submitTerminalFinish])
+	}
 
 	const showToastMsg = useCallback((message: string) => {
 		setToastMessage(message)
@@ -117,84 +93,14 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	}, [])
 
 	const handleSubmit = useCallback(() => {
-		if (game.state.currentGuess.length !== 5) {
-			showToastMsg('Not enough letters')
+		// For now, accept any 5-letter word. In production, validate against dictionary.
+		const result = game.submitGuess(game.state.currentGuess.length === 5)
+		if (!result.success) {
+			showToastMsg(result.error || 'Invalid word')
 			triggerSound('error')
 			triggerHaptic('error')
-			return
 		}
-		if (submitInFlight.current) return
-		submitInFlight.current = true
-		void (async () => {
-			try {
-				const guesses = [...game.state.guessHistory, game.state.currentGuess]
-				const admit = await admitSubmitGuessViaConnect({
-					gameSlug: 'quad-words',
-					status: 'playing',
-					attempts: guesses.length,
-					timeSpentMs: startTime ? Date.now() - startTime : 0,
-					submission: { guesses },
-					puzzleId,
-					puzzleDate,
-				})
-				if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
-					showToastMsg('Could not check that guess')
-					triggerSound('error')
-					triggerHaptic('error')
-					return
-				}
-				const parsed = JSON.parse(admit.response.evaluationJson) as {
-					boards?: unknown
-					solved?: unknown
-					won?: unknown
-					terminal?: unknown
-					reveal?: unknown
-				}
-				if (!Array.isArray(parsed.boards) || parsed.boards.length !== 4) {
-					showToastMsg('Could not check that guess')
-					triggerSound('error')
-					triggerHaptic('error')
-					return
-				}
-				const boards = parsed.boards.map((board) => {
-					if (!Array.isArray(board) || board.length !== 5) return null
-					if (
-						board.some(
-							(letter) => letter !== 'correct' && letter !== 'present' && letter !== 'absent',
-						)
-					) {
-						return null
-					}
-					return board as LetterStatus[]
-				})
-				if (boards.some((board) => board === null)) {
-					showToastMsg('Could not check that guess')
-					triggerSound('error')
-					triggerHaptic('error')
-					return
-				}
-				const solved = Array.isArray(parsed.solved)
-					? parsed.solved.map((value) => value === true)
-					: [false, false, false, false]
-				game.applyEvaluation({
-					guess: game.state.currentGuess,
-					boards: boards as LetterStatus[][],
-					solved,
-					won: parsed.won === true,
-					terminal: parsed.terminal === true,
-					reveal: Array.isArray(parsed.reveal)
-						? parsed.reveal.filter((word): word is string => typeof word === 'string')
-						: undefined,
-				})
-			} catch {
-				showToastMsg('Could not check that guess')
-				triggerSound('error')
-				triggerHaptic('error')
-			} finally {
-				submitInFlight.current = false
-			}
-		})()
-	}, [game, puzzleDate, puzzleId, showToastMsg, startTime])
+	}, [game, showToastMsg])
 
 	const handleKeyPress = useCallback(
 		(key: string) => {
@@ -241,12 +147,11 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			origin: getBaseUrl('origin'),
 			gameSlug: 'quad-words',
 			gameName: 'Quad',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Ready screen
 	if (isReady) {
@@ -344,15 +249,6 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				</div>
 			</div>
 
-			{finishError && (
-				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
-					<span>{tCommon('errorDescription')}</span>
-					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
-						{tCommon('retry')}
-					</Button>
-				</div>
-			)}
-
 			{/* Toast */}
 			{showToast && (
 				<div className="fixed bottom-24 left-1/2 -translate-x-1/2 animate-slide-up rounded-lg bg-foreground px-4 py-2 text-sm text-background shadow-lg">
@@ -372,7 +268,6 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				gameType="quad-words"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: game.state.guessHistory.length,
 					maxAttempts: MAX_GUESSES,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
@@ -394,11 +289,10 @@ function QuordleBoard({
 	isActive,
 }: {
 	board: {
+		targetWord: string
 		guesses: string[]
-		results: LetterStatus[][]
 		solved: boolean
 		solvedOnGuess: number | null
-		reveal?: string
 	}
 	currentGuess: string
 	guessHistory: string[]
@@ -430,7 +324,7 @@ function QuordleBoard({
 					if (rowIndex < boardGuesses.length) {
 						// Past guess
 						word = boardGuesses[rowIndex]
-						results = board.results[rowIndex] ?? []
+						results = evaluateGuess(word, board.targetWord)
 					} else if (rowIndex === currentRow && isActive && !board.solved) {
 						// Current input row
 						word = currentGuess
@@ -472,7 +366,9 @@ function QuordleBoard({
 
 			{/* Lost indicator */}
 			{!board.solved && guessHistory.length >= MAX_GUESSES && (
-				<div className="mt-1 text-center text-xs font-medium text-destructive">{board.reveal}</div>
+				<div className="mt-1 text-center text-xs font-medium text-destructive">
+					{board.targetWord}
+				</div>
 			)}
 		</div>
 	)

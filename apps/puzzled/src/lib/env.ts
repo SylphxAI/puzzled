@@ -32,6 +32,12 @@ const SERVER_REQUIRED: EnvVar[] = [
 		description: 'Sylphx Platform Secret Key (identifies the app)',
 		runtimes: ['nodejs'],
 	},
+	{
+		name: 'REDIS_URL',
+		required: true,
+		description: 'Platform-injected Redis/KV URL',
+		runtimes: ['nodejs'],
+	},
 ]
 
 // Feature-specific variables (validated when feature is used)
@@ -159,6 +165,10 @@ export const env = {
 	/** Platform SDK Secret Key — identifies the app (server-side only) */
 	get SYLPHX_SECRET_KEY() {
 		return getRequiredEnv('SYLPHX_SECRET_KEY')
+	},
+	/** Database URL */
+	get DATABASE_URL() {
+		return getRequiredEnv('DATABASE_URL')
 	},
 	/** Node environment */
 	get NODE_ENV() {

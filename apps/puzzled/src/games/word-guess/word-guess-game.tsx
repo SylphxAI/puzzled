@@ -10,13 +10,12 @@ import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prom
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
+import { parsePuzzleDataClient } from '@/games/types'
 import { getBaseUrl } from '@/lib/utils'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
-import { parseWordGuessClientPayload } from './parse-client'
-import type { WordGuessServerEvaluation } from './types'
+import type { WordlePuzzleData, WordleSolution } from './types'
 import { WORD_LENGTH } from './types'
 import { type SubmitResult, useWordGuess } from './use-word-guess'
 
@@ -24,15 +23,17 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.wordGuess')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
 
-	const [puzzle] = useState(() => parseWordGuessClientPayload(puzzleData))
+	// Get puzzle from server data (client-safe - no config import)
+	const [puzzle] = useState(() =>
+		parsePuzzleDataClient<WordlePuzzleData, WordleSolution>(puzzleData),
+	)
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -42,7 +43,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showStarBurst,
 		showResultModal,
@@ -53,8 +53,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		gameSlug: 'word-guess',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: true,
 		isPerfectWin: (data) => data.attempts === 1,
 	})
@@ -66,55 +64,10 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 	const [toastMessage, setToastMessage] = useState('')
 	const [showHelpModal, setShowHelpModal] = useState(false)
 	const [shakeRow, setShakeRow] = useState(false)
-	const [finishError, setFinishError] = useState<string | null>(null)
 
 	// Ref to store submit result handler (avoids circular dependency with useWordGuess)
 	const submitResultHandlerRef = useRef<(result: SubmitResult) => void>(() => {})
 	const gameEndedRef = useRef(false)
-	const terminalAutoSubmitRef = useRef(false)
-
-	const evaluateGuesses = useCallback(
-		async (guesses: string[]): Promise<WordGuessServerEvaluation | null> => {
-			const admit = await admitSubmitGuessViaConnect({
-				gameSlug: 'word-guess',
-				status: 'playing',
-				attempts: guesses.length,
-				timeSpentMs: startTime ? Date.now() - startTime : 0,
-				submission: { guesses },
-				puzzleId,
-				puzzleDate,
-			})
-			if (!admit.ok || !admit.response.valid || !admit.response.evaluationJson) {
-				return null
-			}
-			try {
-				const parsed = JSON.parse(admit.response.evaluationJson) as {
-					letters?: unknown
-					won?: unknown
-					terminal?: unknown
-					reveal?: unknown
-				}
-				if (
-					!Array.isArray(parsed.letters) ||
-					parsed.letters.length !== WORD_LENGTH ||
-					parsed.letters.some(
-						(letter) => letter !== 'correct' && letter !== 'present' && letter !== 'absent',
-					)
-				) {
-					return null
-				}
-				return {
-					letters: parsed.letters,
-					won: parsed.won === true,
-					terminal: parsed.terminal === true,
-					reveal: typeof parsed.reveal === 'string' ? parsed.reveal : undefined,
-				}
-			} catch {
-				return null
-			}
-		},
-		[puzzleDate, puzzleId, startTime],
-	)
 
 	const {
 		guesses,
@@ -123,11 +76,11 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		currentRow,
 		gameStatus,
 		keyboardState,
-		reveal,
+		solution,
 		addLetter,
 		deleteLetter,
 		trySubmitGuess,
-	} = useWordGuess(evaluateGuesses, (result) => submitResultHandlerRef.current(result))
+	} = useWordGuess(puzzle.solution.word, (result) => submitResultHandlerRef.current(result))
 
 	// Help click handler for header
 	const handleHelpClick = useCallback(() => {
@@ -160,11 +113,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				triggerSound('error')
 				triggerHaptic('error')
 				triggerShake()
-			} else if (result === 'rejected') {
-				showToastMsg(t('messages.submitRejected'))
-				triggerSound('error')
-				triggerHaptic('error')
-				triggerShake()
 			}
 		},
 		[t, showToastMsg, triggerShake],
@@ -175,32 +123,22 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 
 	// Submit guess with validation feedback (for on-screen keyboard)
 	const handleSubmitGuess = useCallback(() => {
-		void trySubmitGuess().then(handleSubmitResult)
+		const result = trySubmitGuess()
+		handleSubmitResult(result)
 	}, [trySubmitGuess, handleSubmitResult])
 
-	const submitTerminalFinish = useCallback(async () => {
-		if (gameStatus === 'playing' || gameEndedRef.current) return
-		gameEndedRef.current = true
-		const result = await endGame({
-			status: gameStatus,
-			attempts: guesses.length,
-			maxAttempts: puzzle.maxAttempts,
-			data: { guesses },
-		})
-		if (result.success) {
-			setFinishError(null)
-			return
-		}
-		gameEndedRef.current = false
-		setFinishError(result.error || 'finish_rejected')
-	}, [endGame, gameStatus, guesses, puzzle.maxAttempts])
-
-	// Persist only after render; a rejected terminal remains explicitly retryable.
+	// Handle game end - in useEffect to avoid render-phase side effects
 	useEffect(() => {
-		if (gameStatus === 'playing' || terminalAutoSubmitRef.current) return
-		terminalAutoSubmitRef.current = true
-		void submitTerminalFinish()
-	}, [gameStatus, submitTerminalFinish])
+		if (gameStatus !== 'playing' && !gameEndedRef.current) {
+			gameEndedRef.current = true
+			endGame({
+				status: gameStatus,
+				attempts: guesses.length,
+				maxAttempts: 6,
+				data: { guesses },
+			})
+		}
+	}, [gameStatus, guesses, endGame])
 
 	const handleShare = async () => {
 		// Build emoji grid from evaluations
@@ -230,7 +168,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-guess',
 			gameName: 'Five',
-			puzzleDate,
 			status,
 			attempts: status === 'won' ? attempts : undefined,
 			statLine: emojiGrid,
@@ -344,12 +281,11 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				gameType="word-guess"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}
 				stats={{
-					score: serverScore ?? undefined,
 					attempts: guesses.length,
-					maxAttempts: puzzle.maxAttempts,
+					maxAttempts: 6,
 					timeSpentMs: startTime ? Date.now() - startTime : 0,
 				}}
-				solution={reveal}
+				solution={solution}
 				mode={mode}
 				onShare={handleShare}
 			/>
@@ -362,15 +298,6 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				onDelete={deleteLetter}
 				canSubmit={currentGuess.length === WORD_LENGTH}
 			/>
-
-			{finishError && (
-				<div role="alert" className="flex flex-col items-center gap-2 text-sm text-destructive">
-					<span>{tCommon('errorDescription')}</span>
-					<Button variant="outline" onClick={() => void submitTerminalFinish()}>
-						{tCommon('retry')}
-					</Button>
-				</div>
-			)}
 
 			{/* Toast */}
 			{showToast && (

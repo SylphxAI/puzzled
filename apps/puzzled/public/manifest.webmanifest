@@ -89,23 +89,23 @@
 	"shortcuts": [
 		{
 			"name": "Word Guess",
-			"short_name": "Five",
+			"short_name": "Wordle",
 			"description": "Play today's word puzzle",
-			"url": "/games/word-guess",
+			"url": "/games/wordle",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		},
 		{
 			"name": "Word Groups",
-			"short_name": "Threads",
-			"description": "Find today's word groups",
-			"url": "/games/word-groups",
+			"short_name": "Groups",
+			"description": "Find the word connections",
+			"url": "/games/connections",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		},
 		{
-			"name": "Daily Puzzles",
-			"short_name": "Daily",
-			"description": "Open today's free puzzle",
-			"url": "/",
+			"name": "Daily Quiz",
+			"short_name": "Quiz",
+			"description": "Test your knowledge",
+			"url": "/games/daily-quiz",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		}
 	],

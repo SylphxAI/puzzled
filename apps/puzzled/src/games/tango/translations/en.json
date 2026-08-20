@@ -12,8 +12,5 @@
 	},
 	"startGame": "Start Game",
 	"hasConflicts": "Some cells violate the rules",
-	"complete": "Puzzle Complete!",
-	"messages": {
-		"submitRejected": "The server could not accept this board. Check the cells and try again."
-	}
+	"complete": "Puzzle Complete!"
 }

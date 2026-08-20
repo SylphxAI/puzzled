@@ -8,8 +8,8 @@ import type {
 	Cage,
 	KillerCell,
 	KillerSudokuGameState,
-	KillerSudokuPuzzleClientData,
 	KillerSudokuPuzzleData,
+	KillerSudokuSolution,
 } from './types'
 import { getCellConflicts, isSolved } from './types'
 
@@ -19,7 +19,6 @@ type KillerSudokuAction =
 	| { type: 'CLEAR_CELL' }
 	| { type: 'TOGGLE_NOTE'; value: number }
 	| { type: 'TOGGLE_NOTES_MODE' }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
 function createInitialState(puzzleData: KillerSudokuPuzzleData): KillerSudokuGameState {
@@ -168,14 +167,6 @@ function killerSudokuReducer(
 			return { ...state, notesMode: !state.notesMode }
 		}
 
-		case 'REOPEN': {
-			return {
-				...state,
-				gameStatus: 'playing',
-				endTime: null,
-			}
-		}
-
 		case 'RESET': {
 			return createInitialState(puzzleData)
 		}
@@ -194,12 +185,14 @@ export type UseKillerSudokuReturn = {
 	toggleNote: (value: number) => void
 	toggleNotesMode: () => void
 	reset: () => void
-	reopen: () => void
 	getCellConflicts: (row: number, col: number) => Set<string>
 	getCageForCell: (row: number, col: number) => Cage | undefined
 }
 
-export function useKillerSudoku(puzzleData: KillerSudokuPuzzleClientData): UseKillerSudokuReturn {
+export function useKillerSudoku(
+	puzzleData: KillerSudokuPuzzleData,
+	_solution: KillerSudokuSolution,
+): UseKillerSudokuReturn {
 	const [state, dispatch] = useReducer(
 		(s: KillerSudokuGameState, a: KillerSudokuAction) => killerSudokuReducer(s, a, puzzleData),
 		puzzleData,
@@ -230,10 +223,6 @@ export function useKillerSudoku(puzzleData: KillerSudokuPuzzleClientData): UseKi
 		dispatch({ type: 'RESET' })
 	}, [])
 
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
-
 	const getConflicts = useCallback(
 		(row: number, col: number) => getCellConflicts(state.cells, puzzleData.cages, row, col),
 		[state.cells, puzzleData.cages],
@@ -256,7 +245,6 @@ export function useKillerSudoku(puzzleData: KillerSudokuPuzzleClientData): UseKi
 		toggleNote,
 		toggleNotesMode,
 		reset,
-		reopen,
 		getCellConflicts: getConflicts,
 		getCageForCell,
 	}

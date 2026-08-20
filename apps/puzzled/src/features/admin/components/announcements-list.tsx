@@ -1,59 +1,31 @@
 'use client'
 
-import { Bell, Clock, Loader2, RefreshCw, XCircle } from 'lucide-react'
-import { useLocale, useTranslations } from 'next-intl'
-import type { Announcement } from '@/gen/connect/puzzled/v1/admin_pb'
-import { useAnnouncements } from '@/lib/api'
+import { Bell, Calendar, Clock, Crown, Users } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import type { Announcement } from '@/lib/db/schema'
 import { EditAnnouncementButton } from './announcement-editor'
 
 const typeStyles: Record<string, { bg: string; text: string; label: string }> = {
-	info: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'typeInfo' },
+	info: { bg: 'bg-blue-500/10', text: 'text-blue-400', label: 'Info' },
 	warning: {
 		bg: 'bg-amber-500/10',
 		text: 'text-amber-400',
-		label: 'typeWarning',
+		label: 'Warning',
 	},
 	success: {
 		bg: 'bg-emerald-500/10',
 		text: 'text-emerald-400',
-		label: 'typeSuccess',
+		label: 'Success',
 	},
 	maintenance: {
 		bg: 'bg-purple-500/10',
 		text: 'text-purple-400',
-		label: 'typeMaintenance',
+		label: 'Maintenance',
 	},
 }
 
-export function AnnouncementsList() {
+export function AnnouncementsList({ announcements }: { announcements: Announcement[] }) {
 	const t = useTranslations('admin.announcements')
-	const locale = useLocale()
-	const { data, error, isLoading, refetch } = useAnnouncements()
-
-	if (isLoading && !data) {
-		return (
-			<div className="admin-card flex items-center justify-center gap-3 p-12 text-[var(--admin-text-muted)]">
-				<Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-				<span>{t('loading')}</span>
-			</div>
-		)
-	}
-
-	if (error && !data) {
-		return (
-			<div className="admin-card p-12 text-center">
-				<XCircle className="mx-auto mb-4 h-12 w-12 text-[var(--admin-error)]" />
-				<h3 className="text-lg font-medium text-[var(--admin-text-primary)]">{t('error')}</h3>
-				<p className="mt-1 text-sm text-[var(--admin-text-muted)]">{t('errorHint')}</p>
-				<button type="button" className="admin-btn admin-btn-ghost mt-6" onClick={() => refetch()}>
-					<RefreshCw className="h-4 w-4" />
-					{t('refresh')}
-				</button>
-			</div>
-		)
-	}
-
-	const announcements = data ?? []
 
 	if (announcements.length === 0) {
 		return (
@@ -70,12 +42,7 @@ export function AnnouncementsList() {
 	return (
 		<div className="space-y-4">
 			{announcements.map((announcement, index) => (
-				<AnnouncementCard
-					key={announcement.id}
-					announcement={announcement}
-					delay={index}
-					locale={locale}
-				/>
+				<AnnouncementCard key={announcement.id} announcement={announcement} delay={index} />
 			))}
 		</div>
 	)
@@ -84,18 +51,16 @@ export function AnnouncementsList() {
 function AnnouncementCard({
 	announcement,
 	delay = 0,
-	locale,
 }: {
 	announcement: Announcement
 	delay?: number
-	locale: string
 }) {
 	const t = useTranslations('admin.announcements')
 	const typeStyle = typeStyles[announcement.type] || typeStyles.info
 
-	const formatDate = (date: string) => {
+	const formatDate = (date: Date | null) => {
 		if (!date) return null
-		return new Date(date).toLocaleDateString(locale, {
+		return new Date(date).toLocaleDateString('en-US', {
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric',
@@ -113,14 +78,14 @@ function AnnouncementCard({
 						{announcement.title}
 					</h3>
 					<span
-						className={`admin-badge ${announcement.active ? 'admin-badge-success' : 'admin-badge-default'}`}
+						className={`admin-badge ${announcement.isActive ? 'admin-badge-success' : 'admin-badge-default'}`}
 					>
-						{announcement.active ? t('active') : t('inactive')}
+						{announcement.isActive ? t('active') : t('inactive')}
 					</span>
 					<span
 						className={`rounded-md px-2 py-0.5 text-xs font-medium ${typeStyle.bg} ${typeStyle.text}`}
 					>
-						{t(typeStyle.label)}
+						{typeStyle.label}
 					</span>
 				</div>
 				<EditAnnouncementButton announcement={announcement} />
@@ -128,16 +93,53 @@ function AnnouncementCard({
 
 			{/* Content */}
 			<div className="p-6">
-				<p className="mb-4 text-sm text-[var(--admin-text-secondary)]">{announcement.body}</p>
+				<p className="mb-4 text-sm text-[var(--admin-text-secondary)]">{announcement.content}</p>
 
 				{/* Metadata */}
 				<div className="flex flex-wrap gap-4 text-xs text-[var(--admin-text-muted)]">
+					{/* Targeting */}
+					<div className="flex items-center gap-1.5">
+						{announcement.targetPremiumOnly ? (
+							<>
+								<Crown className="h-3.5 w-3.5" />
+								<span>{t('premiumOnly')}</span>
+							</>
+						) : (
+							<>
+								<Users className="h-3.5 w-3.5" />
+								<span>{t('allUsers')}</span>
+							</>
+						)}
+					</div>
+
+					{/* Dismissible */}
+					{announcement.dismissible && (
+						<div className="flex items-center gap-1.5">
+							<span className="admin-badge admin-badge-default text-xs">{t('dismissible')}</span>
+						</div>
+					)}
+
+					{/* Show once */}
+					{announcement.showOnce && (
+						<div className="flex items-center gap-1.5">
+							<span className="admin-badge admin-badge-default text-xs">{t('showOnce')}</span>
+						</div>
+					)}
+
+					{/* Schedule */}
+					{(announcement.startsAt || announcement.endsAt) && (
+						<div className="flex items-center gap-1.5">
+							<Calendar className="h-3.5 w-3.5" />
+							{announcement.startsAt && <span>{formatDate(announcement.startsAt)}</span>}
+							{announcement.startsAt && announcement.endsAt && <span>→</span>}
+							{announcement.endsAt && <span>{formatDate(announcement.endsAt)}</span>}
+						</div>
+					)}
+
 					{/* Created */}
-					<div className="ml-auto flex items-center gap-1.5">
+					<div className="flex items-center gap-1.5 ml-auto">
 						<Clock className="h-3.5 w-3.5" />
-						<span>
-							{t('created')}: {formatDate(announcement.createdAt)}
-						</span>
+						<span>Created {formatDate(announcement.createdAt)}</span>
 					</div>
 				</div>
 			</div>

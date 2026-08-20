@@ -61,3 +61,18 @@ export function planPuzzleSubmitGuessProduct(
 	if (err) return { mode, connect: { ok: false, error: err }, failClosed: true }
 	return { mode, connect: { ok: true, value: input }, failClosed: true }
 }
+
+/**
+ * Dual REST play residual permanently deleted under sole Connect.
+ * Always false — kept as a named fail-closed fence for call sites.
+ */
+export function shouldUseRestPlayResidual(
+	_admit: null | {
+		mode: string
+		ok?: boolean
+		failClosed?: boolean
+		skipped?: boolean
+	},
+): boolean {
+	return false
+}

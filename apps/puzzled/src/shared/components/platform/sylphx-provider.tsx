@@ -14,9 +14,9 @@
  */
 
 import type { AppConfig } from '@sylphx/sdk/react'
-import { FeatureFlagProvider, SylphxProvider } from '@sylphx/sdk/react'
+import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
 import type * as React from 'react'
-import { toInitialFeatureFlags } from './feature-flags'
+import { MINUTE_MS } from '@/lib/constants/time'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
@@ -28,23 +28,30 @@ interface PlatformProviderProps {
 	platformUrl?: string
 }
 
-function FeatureFlagWrapper({
-	children,
-	config,
-}: {
-	children: React.ReactNode
-	config: AppConfig
-}) {
-	// An empty Platform catalog is a valid fail-closed state. The SDK's legacy
-	// provider fetches its default local endpoint when initialFlags is empty,
-	// which would recreate the deleted local REST authority.
-	if (config.featureFlags.length === 0) return <>{children}</>
+/**
+ * Inner component that has access to user context for feature flags
+ */
+function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
+	const { user } = useSafeUser()
+	const { subscription, isPremium } = useSafeBilling()
 
 	return (
 		<FeatureFlagProvider
-			initialFlags={toInitialFeatureFlags(config)}
-			refreshInterval={0}
-			enableCache={false}
+			endpoint="/api/flags"
+			userContext={
+				user
+					? {
+							userId: user.id,
+							email: user.email ?? undefined,
+							attributes: {
+								isPremium,
+								plan: subscription?.planSlug,
+							},
+						}
+					: undefined
+			}
+			refreshInterval={5 * MINUTE_MS}
+			enableCache
 		>
 			{children}
 		</FeatureFlagProvider>
@@ -59,7 +66,7 @@ export function PlatformProvider({ children, appId, config, platformUrl }: Platf
 			platformUrl={platformUrl}
 			afterSignOutUrl="/login"
 		>
-			<FeatureFlagWrapper config={config}>{children}</FeatureFlagWrapper>
+			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
 		</SylphxProvider>
 	)
 }

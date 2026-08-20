@@ -1,5 +1,6 @@
 'use client'
 
+import { useSafeUser } from '@sylphx/sdk/react'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
@@ -22,6 +23,10 @@ type Props = {
  */
 export function Header({ showBack = false, backHref = '/', title }: Props) {
 	const t = useTranslations()
+	const { user } = useSafeUser()
+
+	// User ID available for guest data migration if needed
+	void user?.id
 
 	return (
 		<header className="sticky top-0 z-header border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:hidden">

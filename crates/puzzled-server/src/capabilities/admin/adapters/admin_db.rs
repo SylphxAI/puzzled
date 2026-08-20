@@ -1,7 +1,7 @@
 //! SQL adapters for the admin operations surface.
 
 use serde_json::Value;
-use sqlx::{PgPool, Postgres, QueryBuilder};
+use sqlx::PgPool;
 use uuid::Uuid;
 
 type AnnouncementRow = (
@@ -44,14 +44,6 @@ type AuditGetRow = (
     Option<String>,
     chrono::DateTime<chrono::Utc>,
 );
-
-pub struct AuditLogFilters<'a> {
-    pub action: Option<&'a str>,
-    pub resource_type: Option<&'a str>,
-    pub search: Option<&'a str>,
-    pub date_from: Option<chrono::DateTime<chrono::Utc>>,
-    pub date_to: Option<chrono::DateTime<chrono::Utc>>,
-}
 type DlqRow = (
     Uuid,
     String,
@@ -228,59 +220,45 @@ pub async fn list_audit_logs(
     pool: &PgPool,
     limit: u32,
     offset: u32,
-    filters: AuditLogFilters<'_>,
+    action: Option<&str>,
 ) -> Result<(Vec<Value>, u32), String> {
-    let mut count_query =
-        QueryBuilder::<Postgres>::new("SELECT COUNT(*) FROM audit_logs WHERE 1 = 1");
-    let mut rows_query = QueryBuilder::<Postgres>::new(
-        "SELECT id, user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at FROM audit_logs WHERE 1 = 1",
-    );
-
-    macro_rules! push_filters {
-        ($query:ident) => {
-            if let Some(action) = filters.action {
-                $query.push(" AND action::text = ").push_bind(action);
-            }
-            if let Some(resource_type) = filters.resource_type {
-                $query
-                    .push(" AND resource_type = ")
-                    .push_bind(resource_type);
-            }
-            if let Some(search) = filters.search {
-                $query
-                    .push(" AND (resource_id ILIKE '%' || ")
-                    .push_bind(search)
-                    .push(" || '%' OR ip_address ILIKE '%' || ")
-                    .push_bind(search)
-                    .push(" || '%')");
-            }
-            if let Some(date_from) = filters.date_from.as_ref() {
-                $query.push(" AND created_at >= ").push_bind(date_from);
-            }
-            if let Some(date_to) = filters.date_to.as_ref() {
-                $query.push(" AND created_at <= ").push_bind(date_to);
-            }
-        };
-    }
-
-    push_filters!(count_query);
-    let total: (i64,) = count_query
-        .build_query_as()
-        .fetch_one(pool)
-        .await
-        .map_err(|e| format!("audit count failed: {e}"))?;
-
-    push_filters!(rows_query);
-    rows_query
-        .push(" ORDER BY created_at DESC LIMIT ")
-        .push_bind(i64::from(limit))
-        .push(" OFFSET ")
-        .push_bind(i64::from(offset));
-    let rows: Vec<AuditRow> = rows_query
-        .build_query_as()
+    let total: (i64,) = match action {
+        Some(action) => sqlx::query_as("SELECT COUNT(*) FROM audit_logs WHERE action::text = $1")
+            .bind(action)
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("audit count failed: {e}"))?,
+        None => sqlx::query_as("SELECT COUNT(*) FROM audit_logs")
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("audit count failed: {e}"))?,
+    };
+    let rows: Vec<AuditRow> = match action {
+        Some(action) => sqlx::query_as(
+            r#"
+            SELECT id, user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at
+            FROM audit_logs WHERE action::text = $1
+            ORDER BY created_at DESC LIMIT $2 OFFSET $3
+            "#,
+        )
+        .bind(action)
+        .bind(i64::from(limit))
+        .bind(i64::from(offset))
         .fetch_all(pool)
         .await
-        .map_err(|e| format!("audit list failed: {e}"))?;
+        .map_err(|e| format!("audit list failed: {e}"))?,
+        None => sqlx::query_as(
+            r#"
+            SELECT id, user_id, actor_id, action::text, resource_type, resource_id, metadata, ip_address, user_agent, created_at
+            FROM audit_logs ORDER BY created_at DESC LIMIT $1 OFFSET $2
+            "#,
+        )
+        .bind(i64::from(limit))
+        .bind(i64::from(offset))
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("audit list failed: {e}"))?,
+    };
     let entries = rows
         .into_iter()
         .map(

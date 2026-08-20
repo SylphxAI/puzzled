@@ -1,6 +1,6 @@
 //! Pure queens region-color + API play-enum residual —
 //! dual-oracle of `apps/puzzled/src/games/queens/types.ts` `REGION_COLORS`
-//! and the Connect play-surface enum contract.
+//! and `apps/puzzled/src/server/api/schemas/common.ts` play-surface enums.
 //!
 //! Complements schema-layer `domain_enums_pure` (DB enums without practice/expert).
 //! FE render / DB I/O remain product residual.

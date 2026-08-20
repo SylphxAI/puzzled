@@ -118,9 +118,11 @@ function VerifyEmailContent() {
 									{resent ? t('emailSent') : t('resendEmail')}
 								</Button>
 							)}
-							<Button asChild variant="outline" className="w-full">
-								<Link href="/login">{tCommon('signIn')}</Link>
-							</Button>
+							<Link href="/login">
+								<Button variant="outline" className="w-full">
+									{tCommon('signIn')}
+								</Button>
+							</Link>
 						</div>
 					</div>
 				)}
@@ -155,9 +157,11 @@ function VerifyEmailContent() {
 								</Button>
 							)}
 							{resent && <p className="text-sm text-correct">{t('emailSent')}</p>}
-							<Button asChild variant="ghost" className="w-full">
-								<Link href="/login">{tCommon('back')}</Link>
-							</Button>
+							<Link href="/login">
+								<Button variant="ghost" className="w-full">
+									{tCommon('back')}
+								</Button>
+							</Link>
 						</div>
 					</div>
 				)}

@@ -87,12 +87,6 @@
 	"dashboard": {
 		"title": "Dashboard",
 		"subtitle": "Overview of your platform",
-		"loading": "Loading admin data...",
-		"error": "Unable to load admin data",
-		"errorHint": "AdminService could not be reached. Retry without treating unavailable data as zero.",
-		"retry": "Retry",
-		"unavailable": "Unavailable",
-		"source": "AdminService",
 		"totalUsers": "Total Users",
 		"premiumUsers": "Premium Users",
 		"gameSessions": "Game Sessions",
@@ -119,9 +113,6 @@
 		"last7Days": "Last 7 days",
 		"newUsers": "New Users",
 		"gamesPlayed": "Games Played",
-		"gamesPlayedToday": "Games played today",
-		"dlq": "DLQ",
-		"failedJobs": "Failed jobs",
 		"conversionRate": "Conversion Rate"
 	},
 	"users": {
@@ -215,22 +206,11 @@
 		"noGamesRegistered": "No games registered",
 		"addGamesHint": "Add games to src/games/registry.ts to see them here",
 		"refresh": "Refresh",
-		"error": "Unable to load games data",
-		"errorHint": "The AdminService could not be reached. Retry without treating unavailable data as an empty registry.",
-		"retry": "Retry games data",
-		"noDescription": "No description",
-		"analyticsUnavailable": "Game analytics are unavailable",
-		"analyticsUnavailableHint": "The Connect analytics service did not respond. Retry to request the current records.",
-		"retryAnalytics": "Retry analytics"
+		"noDescription": "No description"
 	},
 	"announcements": {
 		"title": "Title",
 		"subtitle": "Manage system-wide announcements and notifications",
-		"loading": "Loading announcements...",
-		"error": "Unable to load announcements",
-		"errorHint": "The AdminService could not be reached. Retry without assuming there are no announcements.",
-		"refresh": "Refresh",
-		"created": "Created",
 		"create": "Create Announcement",
 		"createTitle": "Create Announcement",
 		"editTitle": "Edit Announcement",
@@ -283,9 +263,6 @@
 		"title": "Dead Letter Queue",
 		"subtitle": "Monitor and manage failed workflow executions",
 		"refresh": "Refresh",
-		"loading": "Loading queue...",
-		"error": "Unable to load the queue",
-		"errorHint": "The AdminService could not be reached. Retry without assuming the queue is empty.",
 		"stats": {
 			"total": "Total",
 			"pending": "Pending",
@@ -331,11 +308,6 @@
 		"title": "Audit Logs",
 		"subtitle": "Track all administrative actions and system events",
 		"loading": "Loading audit logs...",
-		"error": {
-			"title": "Audit logs are unavailable",
-			"description": "The Connect audit-log service did not respond. Retry to request the current records.",
-			"retry": "Retry audit logs"
-		},
 		"stats": {
 			"totalLogs": "Total Logs",
 			"onThisPage": "On This Page",
@@ -377,9 +349,6 @@
 			"title": "Audit Log Details",
 			"subtitle": "Complete information about this event",
 			"notFound": "Audit log not found",
-			"errorTitle": "Audit log details are unavailable",
-			"errorDescription": "The Connect audit-log service did not respond. Retry to request this event again.",
-			"retry": "Retry details",
 			"user": "User",
 			"actor": "Actor (Admin)",
 			"resource": "Resource",

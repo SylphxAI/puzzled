@@ -21,7 +21,6 @@
 	"clear": "Clear",
 	"complete": "Puzzle Complete!",
 	"messages": {
-		"conflict": "This number conflicts with another cell",
-		"submitRejected": "The server could not accept this grid. Check the entries and try again."
+		"conflict": "This number conflicts with another cell"
 	}
 }

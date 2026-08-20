@@ -3,4 +3,3 @@
 pub mod domain;
 
 pub use domain::achievement_tier;
-pub use domain::streak;

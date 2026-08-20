@@ -36,9 +36,6 @@
 	"optionsAvailable": "個選項可選",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
-	"billingUnavailableTitle": "訂閱存取暫時無法使用",
-	"billingUnavailableDescription": "目前無法確認您的訂閱。請先重試，再開啟進階遊戲。",
-	"billingUnavailableRetry": "重試訂閱存取",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

@@ -25,6 +25,7 @@ import {
 	PuzzleService,
 } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
+	GetHistoryRequestSchema,
 	GetTodayOverviewRequestSchema,
 	GetUserStatsRequestSchema,
 	StatsService,
@@ -103,6 +104,20 @@ async function getServerTransport() {
 	})
 }
 
+/** True when SSR can attach a guest or Platform identity to Connect reads. */
+export async function hasServerProgressIdentity(): Promise<boolean> {
+	const cookieStore = await cookies()
+	if (cookieStore.get('puzzled_guest_id')?.value) return true
+	return cookieStore
+		.getAll()
+		.some(
+			(cookie) =>
+				cookie.name.startsWith('__sylphx_') &&
+				cookie.name.endsWith('_session') &&
+				Boolean(cookie.value),
+		)
+}
+
 function parsePuzzleData(json: string): unknown {
 	if (!json) return null
 	try {
@@ -163,22 +178,40 @@ export const getServerDailyStatus = cache(
 	},
 )
 
-/**
- * Personal home progress. GetTodayOverview is a public aggregate for social
- * proof, not a user's completion state; use each module's server-derived
- * GetDaily.has_completed instead.
- */
-export async function getServerPersonalDailyCompletions(input: {
-	gameSlugs: readonly string[]
-	isGuest: boolean
-	isPremium: boolean
-	freeGameSlug: string
-}): Promise<Record<string, boolean>> {
-	const results = await getServerPersonalDailyResults(input)
-	return Object.fromEntries(
-		Object.entries(results).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
-	)
-}
+export const getServerTodaysPuzzle = cache(
+	async (input: { gameSlug: string; difficulty?: string }): Promise<TodaysPuzzle> => {
+		const transport = await getServerTransport()
+		const client = createClient(PuzzleService, transport)
+		const res = await client.getDaily(
+			create(GetDailyRequestSchema, {
+				gameSlug: input.gameSlug.trim(),
+				difficulty: (input.difficulty ?? '').trim(),
+			}),
+		)
+		return {
+			puzzleId: servedPuzzleId(res.puzzleId) || '',
+			puzzleNumber: Number(res.puzzleNumber),
+			puzzleDate: res.puzzleDate,
+			puzzleData: parsePuzzleData(res.puzzleDataJson),
+			difficulty: res.difficulty || input.difficulty || null,
+		}
+	},
+)
+
+export const getServerStreakInfo = cache(async (): Promise<StreakInfo> => {
+	const transport = await getServerTransport()
+	const client = createClient(GamificationService, transport)
+	const res = await client.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
+	const info = res.info
+	return {
+		currentStreak: info ? Number(info.currentStreak) : 0,
+		maxStreak: info ? Number(info.maxStreak) : 0,
+		hasPlayedToday: info ? info.hasPlayedToday : false,
+		totalGamesPlayed: info ? Number(info.totalGamesPlayed) : 0,
+		freezesAvailable: info ? Number(info.freezesAvailable) : 0,
+		autoFreezeEnabled: info ? info.autoFreezeEnabled : false,
+	}
+})
 
 export type PersonalDailyResult = {
 	hasCompleted: boolean
@@ -188,11 +221,9 @@ export type PersonalDailyResult = {
 }
 
 /**
- * Personal daily result details for the home return journey.
- *
- * GetDaily remains the sole result authority. The completion loader still
- * controls guest, entitlement, and fail-closed targeting; a missing payload
- * never becomes a fabricated score or status.
+ * Personal home/progress today-state. GetTodayOverview is a public aggregate
+ * for social proof, not a user's completion state; guests and accounts both
+ * read GetDaily.has_completed / completed_session.
  */
 export async function getServerPersonalDailyResults(input: {
 	gameSlugs: readonly string[]
@@ -232,40 +263,39 @@ export async function getServerPersonalDailyResults(input: {
 	)
 }
 
-export const getServerTodaysPuzzle = cache(
-	async (input: { gameSlug: string; difficulty?: string }): Promise<TodaysPuzzle> => {
+export type HistoryEntry = {
+	gameSlug: string
+	puzzleId: string
+	puzzleDate: string
+	status: string
+	score: number
+	attempts: number
+	timeSpentMs: number
+	mode: string
+}
+
+export const getServerHistory = cache(
+	async (input?: { gameSlug?: string; limit?: number }): Promise<HistoryEntry[]> => {
 		const transport = await getServerTransport()
-		const client = createClient(PuzzleService, transport)
-		const res = await client.getDaily(
-			create(GetDailyRequestSchema, {
-				gameSlug: input.gameSlug.trim(),
-				difficulty: (input.difficulty ?? '').trim(),
+		const client = createClient(StatsService, transport)
+		const res = await client.getHistory(
+			create(GetHistoryRequestSchema, {
+				gameSlug: input?.gameSlug?.trim() ?? '',
+				limit: input?.limit ?? 20,
 			}),
 		)
-		return {
-			puzzleId: servedPuzzleId(res.puzzleId) || '',
-			puzzleNumber: Number(res.puzzleNumber),
-			puzzleDate: res.puzzleDate,
-			puzzleData: parsePuzzleData(res.puzzleDataJson),
-			difficulty: res.difficulty || input.difficulty || null,
-		}
+		return res.sessions.map((session) => ({
+			gameSlug: session.gameSlug,
+			puzzleId: session.puzzleId,
+			puzzleDate: session.puzzleDate,
+			status: session.status,
+			score: Number(session.score),
+			attempts: Number(session.attempts),
+			timeSpentMs: Number(session.timeSpentMs),
+			mode: session.mode,
+		}))
 	},
 )
-
-export const getServerStreakInfo = cache(async (): Promise<StreakInfo> => {
-	const transport = await getServerTransport()
-	const client = createClient(GamificationService, transport)
-	const res = await client.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
-	const info = res.info
-	return {
-		currentStreak: info ? Number(info.currentStreak) : 0,
-		maxStreak: info ? Number(info.maxStreak) : 0,
-		hasPlayedToday: info ? info.hasPlayedToday : false,
-		totalGamesPlayed: info ? Number(info.totalGamesPlayed) : 0,
-		freezesAvailable: info ? Number(info.freezesAvailable) : 0,
-		autoFreezeEnabled: info ? info.autoFreezeEnabled : false,
-	}
-})
 
 export const getServerUserStats = cache(async (): Promise<UserStats> => {
 	const transport = await getServerTransport()
@@ -296,7 +326,6 @@ export type TodayCompletion = {
 }
 
 export type TodayPlayerCount = {
-	/** Server-derived daily puzzle completers for the current product day. */
 	count: number
 }
 
@@ -317,3 +346,10 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
+
+/**
+ * Back-compat shim deleted: no Hono clients exist. Use the typed accessors
+ * above (getServerDailyStatus / getServerTodaysPuzzle / getServerStreakInfo /
+ * getServerUserStats) from server components.
+ */
+export const createServerApi = null as never

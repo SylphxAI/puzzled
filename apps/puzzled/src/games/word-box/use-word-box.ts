@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useReducer } from 'react'
-import type { LetterBoxedGameState, LetterBoxedPuzzleData } from './types'
+import type { LetterBoxedGameState, LetterBoxedPuzzleData, LetterBoxedSolution } from './types'
 import {
 	allLettersUsed,
 	getUsedLetters,
@@ -17,7 +17,6 @@ type LetterBoxedAction =
 	| { type: 'ADD_LETTER'; letter: string }
 	| { type: 'DELETE_LETTER' }
 	| { type: 'SUBMIT_WORD'; isValidWord: boolean }
-	| { type: 'REOPEN' }
 	| { type: 'RESET' }
 
 function createInitialState(_puzzleData: LetterBoxedPuzzleData): LetterBoxedGameState {
@@ -91,14 +90,6 @@ function letterBoxedReducer(
 			}
 		}
 
-		case 'REOPEN': {
-			return {
-				...state,
-				gameStatus: 'playing',
-				endTime: null,
-			}
-		}
-
 		case 'RESET': {
 			return createInitialState(puzzleData)
 		}
@@ -114,13 +105,15 @@ export type UseLetterBoxedReturn = {
 	deleteLetter: () => void
 	submitWord: (isValidWord: boolean) => { success: boolean; error?: string }
 	reset: () => void
-	reopen: () => void
 	canSubmit: () => boolean
 	getLastLetter: () => string | null
 	getRemainingLetters: () => string[]
 }
 
-export function useWordBox(puzzleData: LetterBoxedPuzzleData): UseLetterBoxedReturn {
+export function useWordBox(
+	puzzleData: LetterBoxedPuzzleData,
+	_solution: LetterBoxedSolution,
+): UseLetterBoxedReturn {
 	const [state, dispatch] = useReducer(
 		(s: LetterBoxedGameState, a: LetterBoxedAction) => letterBoxedReducer(s, a, puzzleData),
 		puzzleData,
@@ -166,10 +159,6 @@ export function useWordBox(puzzleData: LetterBoxedPuzzleData): UseLetterBoxedRet
 		dispatch({ type: 'RESET' })
 	}, [])
 
-	const reopen = useCallback(() => {
-		dispatch({ type: 'REOPEN' })
-	}, [])
-
 	const canSubmit = useCallback(() => {
 		if (state.currentWord.length < 3) return false
 		if (!hasValidSideTransitions(box, state.currentWord)) return false
@@ -197,7 +186,6 @@ export function useWordBox(puzzleData: LetterBoxedPuzzleData): UseLetterBoxedRet
 		deleteLetter,
 		submitWord,
 		reset,
-		reopen,
 		canSubmit,
 		getLastLetter,
 		getRemainingLetters,

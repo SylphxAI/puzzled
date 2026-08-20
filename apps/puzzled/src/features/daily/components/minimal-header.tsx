@@ -69,12 +69,12 @@ export function MinimalHeader({
 			<div className="mx-auto flex h-12 max-w-3xl items-center justify-between px-3 sm:h-14 sm:px-4">
 				{/* Left: Back + Game Info */}
 				<div className="flex items-center gap-2 sm:gap-3">
-					<Button asChild variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
-						<Link href="/">
+					<Link href="/" className="flex items-center">
+						<Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
 							<ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
 							<span className="sr-only">{t('back')}</span>
-						</Link>
-					</Button>
+						</Button>
+					</Link>
 
 					<div className="flex items-center gap-1.5 sm:gap-2">
 						<h1 className="text-sm font-semibold sm:text-base">{gameName}</h1>

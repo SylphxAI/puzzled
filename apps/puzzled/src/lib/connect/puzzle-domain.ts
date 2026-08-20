@@ -17,7 +17,7 @@ export type GetDailyInput = {
 export type SubmitGuessInput = {
 	gameSlug: string
 	difficulty?: string
-	status: 'won' | 'lost' | 'playing'
+	status: 'won' | 'lost'
 	attempts: number
 	timeSpentMs: number
 	/** JSON-serialisable submission payload (e.g. { finalGrid: number[][] }). */
@@ -50,9 +50,7 @@ export function validateGetDailyInput(input: GetDailyInput): string | null {
 export function validateSubmitGuessInput(input: SubmitGuessInput): string | null {
 	if (!input.gameSlug.trim()) return 'game_slug_required'
 	if (input.gameSlug.length > 64) return 'game_slug_too_long'
-	if (input.status !== 'won' && input.status !== 'lost' && input.status !== 'playing') {
-		return 'status_required_won_or_lost'
-	}
+	if (input.status !== 'won' && input.status !== 'lost') return 'status_required_won_or_lost'
 	if (!Number.isFinite(input.attempts) || input.attempts < 0) return 'attempts_invalid'
 	if (!Number.isFinite(input.timeSpentMs) || input.timeSpentMs < 0) return 'time_spent_ms_invalid'
 	return null

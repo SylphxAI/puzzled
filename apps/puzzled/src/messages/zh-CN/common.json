@@ -36,9 +36,6 @@
 	"optionsAvailable": "个选项可选",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
-	"billingUnavailableTitle": "订阅访问暂时不可用",
-	"billingUnavailableDescription": "目前无法确认您的订阅。请先重试，再打开高级游戏。",
-	"billingUnavailableRetry": "重试订阅访问",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

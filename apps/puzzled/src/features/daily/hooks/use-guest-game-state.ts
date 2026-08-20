@@ -1,27 +1,45 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { canonicalizeGameSlug } from '@/lib/game-slug'
-import { productDayKey } from '@/lib/product-day'
 import { GUEST_GAMES_KEY } from '@/lib/storage-keys'
-import {
-	cleanGuestCompletions,
-	type GuestCompletedGame,
-	type GuestGameStore,
-	normalizeGuestGameStore,
-	summarizeGuestCompletions,
-} from '../lib/guest-day-summary'
+
+const RETENTION_DAYS = 7
+
+type GuestCompletedGame = {
+	gameSlug: string
+	date: string // YYYY-MM-DD
+	status: 'won' | 'lost'
+	attempts: number
+	score?: number
+	completedAt: string // ISO string
+}
+
+type GuestGameStore = {
+	version: 1
+	games: GuestCompletedGame[]
+}
+
+function getTodayDateString(): string {
+	const now = new Date()
+	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+		.toISOString()
+		.split('T')[0]
+}
 
 function loadGuestStore(): GuestGameStore {
 	if (typeof window === 'undefined') {
-		return { version: 2, games: [] }
+		return { version: 1, games: [] }
 	}
 
 	try {
 		const stored = localStorage.getItem(GUEST_GAMES_KEY)
-		return normalizeGuestGameStore(stored ? JSON.parse(stored) : null)
+		if (!stored) {
+			return { version: 1, games: [] }
+		}
+		const parsed = JSON.parse(stored) as GuestGameStore
+		return parsed
 	} catch {
-		return { version: 2, games: [] }
+		return { version: 1, games: [] }
 	}
 }
 
@@ -36,17 +54,19 @@ function saveGuestStore(store: GuestGameStore): void {
 }
 
 function cleanOldEntries(games: GuestCompletedGame[]): GuestCompletedGame[] {
-	return cleanGuestCompletions(games)
+	const cutoffDate = new Date()
+	cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS)
+	const cutoffStr = cutoffDate.toISOString().split('T')[0]
+
+	return games.filter((game) => game.date >= cutoffStr)
 }
 
 /**
- * Hook for managing guest (non-logged-in) user game state.
- * Stores game completions in localStorage for 7 days; signup does not migrate
- * these records into account history because that identity contract is not implemented.
+ * Hook for managing guest (non-logged-in) user game state
+ * Stores game completions in localStorage for 7 days
  */
 export function useGuestGameState(gameSlug: string) {
-	const canonicalSlug = canonicalizeGameSlug(gameSlug)
-	const [store, setStore] = useState<GuestGameStore>({ version: 2, games: [] })
+	const [store, setStore] = useState<GuestGameStore>({ version: 1, games: [] })
 	const [isLoaded, setIsLoaded] = useState(false)
 
 	// Load store on mount
@@ -64,20 +84,20 @@ export function useGuestGameState(gameSlug: string) {
 
 	// Check if user has completed today's puzzle for this game
 	const hasCompletedToday = useCallback(() => {
-		const today = productDayKey()
-		return store.games.some((g) => g.gameSlug === canonicalSlug && g.date === today)
-	}, [store.games, canonicalSlug])
+		const today = getTodayDateString()
+		return store.games.some((g) => g.gameSlug === gameSlug && g.date === today)
+	}, [store.games, gameSlug])
 
 	// Get today's completed session if exists
 	const getTodaySession = useCallback((): GuestCompletedGame | null => {
-		const today = productDayKey()
-		return store.games.find((g) => g.gameSlug === canonicalSlug && g.date === today) ?? null
-	}, [store.games, canonicalSlug])
+		const today = getTodayDateString()
+		return store.games.find((g) => g.gameSlug === gameSlug && g.date === today) ?? null
+	}, [store.games, gameSlug])
 
 	// Save a completed game
 	const saveCompletion = useCallback(
 		(result: { status: 'won' | 'lost'; attempts: number; score?: number }): void => {
-			const today = productDayKey()
+			const today = getTodayDateString()
 
 			// Don't save if already completed today
 			if (hasCompletedToday()) {
@@ -85,7 +105,7 @@ export function useGuestGameState(gameSlug: string) {
 			}
 
 			const newGame: GuestCompletedGame = {
-				gameSlug: canonicalSlug,
+				gameSlug,
 				date: today,
 				status: result.status,
 				attempts: result.attempts,
@@ -101,7 +121,7 @@ export function useGuestGameState(gameSlug: string) {
 			setStore(newStore)
 			saveGuestStore(newStore)
 		},
-		[canonicalSlug, store, hasCompletedToday],
+		[gameSlug, store, hasCompletedToday],
 	)
 
 	// Get all games completed on a specific date
@@ -112,31 +132,70 @@ export function useGuestGameState(gameSlug: string) {
 		[store.games],
 	)
 
+	// Clear all guest data (for migration when user signs up)
+	const clearAllData = useCallback(() => {
+		const emptyStore: GuestGameStore = { version: 1, games: [] }
+		setStore(emptyStore)
+		saveGuestStore(emptyStore)
+	}, [])
+
+	// Export data for migration to logged-in state
+	const exportData = useCallback((): GuestCompletedGame[] => {
+		return [...store.games]
+	}, [store.games])
+
 	return {
 		isLoaded,
 		hasCompletedToday: hasCompletedToday(),
 		todaySession: getTodaySession(),
-		currentStreak: summarizeGuestCompletions(store.games).currentStreak,
 		saveCompletion,
 		getGamesForDate,
+		clearAllData,
+		exportData,
 	}
 }
 
 /**
- * Guest-facing day/module projection for the home ritual entry.
- * It is derived from local records written only after server acceptance.
+ * Hook to check guest completion status for all games
+ * Used on home page to show completion indicators
  */
-export function useGuestDailySummary() {
-	const [store, setStore] = useState<GuestGameStore>({ version: 2, games: [] })
+function _useGuestCompletionStatus() {
+	const [completions, setCompletions] = useState<Record<string, GuestCompletedGame>>({})
 	const [isLoaded, setIsLoaded] = useState(false)
 
 	useEffect(() => {
-		const loaded = loadGuestStore()
-		const cleaned = { ...loaded, games: cleanOldEntries(loaded.games) }
-		setStore(cleaned)
-		saveGuestStore(cleaned)
+		const store = loadGuestStore()
+		const today = getTodayDateString()
+
+		const todaysGames: Record<string, GuestCompletedGame> = {}
+		for (const game of store.games) {
+			if (game.date === today) {
+				todaysGames[game.gameSlug] = game
+			}
+		}
+
+		setCompletions(todaysGames)
 		setIsLoaded(true)
 	}, [])
 
-	return { isLoaded, ...summarizeGuestCompletions(store.games) }
+	const isCompleted = useCallback(
+		(gameSlug: string): boolean => {
+			return gameSlug in completions
+		},
+		[completions],
+	)
+
+	const getCompletion = useCallback(
+		(gameSlug: string): GuestCompletedGame | null => {
+			return completions[gameSlug] ?? null
+		},
+		[completions],
+	)
+
+	return {
+		isLoaded,
+		isCompleted,
+		getCompletion,
+		completions,
+	}
 }

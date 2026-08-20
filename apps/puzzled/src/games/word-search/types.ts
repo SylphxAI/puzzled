@@ -56,12 +56,7 @@ export type WordSearchPuzzleData = {
 	theme: string
 	/** Number of words to find */
 	wordCount: number
-	/** Player-facing word list. Placements stay server-side. */
-	words: string[]
 }
-
-/** Client-side puzzle data (placements hidden). */
-export type WordSearchPuzzleClientData = WordSearchPuzzleData
 
 /**
  * Solution stored server-side
@@ -101,8 +96,6 @@ export type WordSearchGuessResult = {
 export type WordSearchGameState = {
 	/** Words found by the player */
 	foundWords: string[]
-	/** Selections used to highlight found words (no leaked placements). */
-	foundPlacements: PlacedWord[]
 	/** Current selection start (while dragging) */
 	selectionStart: Position | null
 	/** Current selection end (while dragging) */

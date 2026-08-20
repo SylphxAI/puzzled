@@ -12,11 +12,7 @@ import {
 	getServerTodayOverview,
 	type StreakInfo,
 } from '@/lib/api/server'
-import {
-	getFreeGameRotation,
-	getPremiumAccessStatus,
-	getTodaysFreeGame,
-} from '@/lib/billing/server'
+import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { Logo } from '@/shared/components/layout'
 
@@ -45,9 +41,7 @@ export default async function HomePage({ params }: Props) {
 	const user = await currentUser()
 
 	// Get user's premium status from platform
-	const premiumAccessStatus = user?.id ? await getPremiumAccessStatus(user.id) : 'free'
-	const isPremium = premiumAccessStatus === 'premium'
-	const billingStatusAvailable = premiumAccessStatus !== 'unavailable'
+	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
 
 	// Get today's free game from rotation
 	const todaysFreeGame = getTodaysFreeGame()
@@ -70,28 +64,20 @@ export default async function HomePage({ params }: Props) {
 	}
 	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
-	// Fetch user's streak info, today's completions, and player count
+	// Social proof is the public aggregate. Personal today-state is GetDaily.
 	let streakInfo: StreakInfo | null = null
 	let todayPlayerCount = 0
-	let todayOverviewAvailable = true
-	let streakInfoAvailable = !user
 	const [overviewResult, streakResult] = await Promise.allSettled([
-		// Server-derived daily puzzle completers; the Rust adapter applies the
-		// product-day and puzzle_ritual predicates before this reaches the UI.
 		getServerTodayOverview(),
 		user ? getServerStreakInfo() : Promise.resolve(null),
 	])
-
 	if (overviewResult.status === 'fulfilled') {
 		todayPlayerCount = overviewResult.value.playerCount
 	} else {
-		todayOverviewAvailable = false
 		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
 	}
-
 	if (streakResult.status === 'fulfilled') {
 		streakInfo = streakResult.value
-		streakInfoAvailable = true
 	} else {
 		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
 	}
@@ -104,10 +90,7 @@ export default async function HomePage({ params }: Props) {
 			todaysFreeGame={todaysFreeGame}
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
 			isPremium={isPremium}
-			billingStatusAvailable={billingStatusAvailable}
 			todayPlayerCount={todayPlayerCount}
-			todayOverviewAvailable={todayOverviewAvailable}
-			streakInfoAvailable={streakInfoAvailable}
 		/>
 	)
 }
@@ -119,10 +102,7 @@ type HomeContentProps = {
 	todaysFreeGame: string
 	tomorrowsFreeGameName: string
 	isPremium: boolean
-	billingStatusAvailable: boolean
 	todayPlayerCount: number
-	todayOverviewAvailable: boolean
-	streakInfoAvailable: boolean
 }
 
 async function HomeContent({
@@ -132,10 +112,7 @@ async function HomeContent({
 	todaysFreeGame,
 	tomorrowsFreeGameName,
 	isPremium,
-	billingStatusAvailable,
 	todayPlayerCount,
-	todayOverviewAvailable,
-	streakInfoAvailable,
 }: HomeContentProps) {
 	const t = await getTranslations()
 	const today = new Date()
@@ -195,7 +172,7 @@ async function HomeContent({
 			slug: game.slug,
 			name: t(`games.${slugToCamelCase(game.slug)}.name`),
 			display: game.display,
-			completed: personalResults[game.slug]?.hasCompleted ?? false,
+			completed: result?.hasCompleted ?? false,
 			score: score === null || score === undefined ? undefined : String(score),
 			// Free game is unlocked for everyone, other games locked for non-premium
 			locked: !isPremium && !isFreeToday,
@@ -216,17 +193,15 @@ async function HomeContent({
 						{/* Streak indicator */}
 						<div className="flex items-center gap-1 rounded-full bg-stat-streak/10 px-2.5 py-1">
 							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">
-								{streakInfoAvailable ? currentStreak : '—'}
-							</span>
+							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
 						</div>
 
-						<Button asChild variant="ghost" size="icon" className="h-9 w-9">
-							<Link href="/settings">
+						<Link href="/settings">
+							<Button variant="ghost" size="icon" className="h-9 w-9">
 								<Settings className="h-5 w-5" />
 								<span className="sr-only">{t('common.settings')}</span>
-							</Link>
-						</Button>
+							</Button>
+						</Link>
 					</div>
 				</div>
 			</header>
@@ -235,51 +210,7 @@ async function HomeContent({
 			{streakInfo && currentStreak > 0 && !hasPlayedToday && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
-						<StreakWarning
-							currentStreak={currentStreak}
-							hasPlayedToday={hasPlayedToday}
-							game={todaysFreeGame}
-						/>
-					</div>
-				</section>
-			)}
-
-			{!isGuest && !streakInfoAvailable && (
-				<section className="px-4 pt-4">
-					<div
-						className="mx-auto flex max-w-4xl items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
-						role="alert"
-					>
-						<AlertCircle className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-						<div className="min-w-0 flex-1">
-							<p className="font-medium">{t('home.streakUnavailableTitle')}</p>
-							<p className="text-sm text-muted-foreground">
-								{t('home.streakUnavailableDescription')}
-							</p>
-						</div>
-						<Button asChild size="sm" variant="outline">
-							<Link href="/">{t('common.retry')}</Link>
-						</Button>
-					</div>
-				</section>
-			)}
-
-			{!isGuest && !billingStatusAvailable && (
-				<section className="px-4 pt-4">
-					<div
-						className="mx-auto flex max-w-4xl items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4"
-						role="alert"
-					>
-						<AlertCircle className="h-5 w-5 shrink-0 text-amber-600" aria-hidden="true" />
-						<div className="min-w-0 flex-1">
-							<p className="font-medium">{t('home.billingUnavailableTitle')}</p>
-							<p className="text-sm text-muted-foreground">
-								{t('home.billingUnavailableDescription')}
-							</p>
-						</div>
-						<Button asChild size="sm" variant="outline">
-							<Link href="/">{t('common.retry')}</Link>
-						</Button>
+						<StreakWarning currentStreak={currentStreak} hasPlayedToday={hasPlayedToday} />
 					</div>
 				</section>
 			)}
@@ -292,7 +223,6 @@ async function HomeContent({
 						dateString={dateString}
 						tomorrowsFreeGameName={tomorrowsFreeGameName}
 						currentStreak={currentStreak}
-						isGuest={isGuest}
 					/>
 				</div>
 			</section>
@@ -300,25 +230,7 @@ async function HomeContent({
 			{/* Social Proof */}
 			<section className="px-4 pt-4">
 				<div className="mx-auto max-w-4xl">
-					{todayOverviewAvailable ? (
-						<SocialProof playerCount={todayPlayerCount} locale={locale} variant="banner" />
-					) : (
-						<div
-							className="flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2.5"
-							role="alert"
-						>
-							<AlertCircle className="h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-							<div className="min-w-0 flex-1">
-								<p className="text-sm font-medium">{t('home.socialProofUnavailableTitle')}</p>
-								<p className="text-xs text-muted-foreground">
-									{t('home.socialProofUnavailableDescription')}
-								</p>
-							</div>
-							<Button asChild size="sm" variant="outline">
-								<Link href="/">{t('common.retry')}</Link>
-							</Button>
-						</div>
-					)}
+					<SocialProof playerCount={todayPlayerCount} locale={locale} variant="banner" />
 				</div>
 			</section>
 
@@ -382,7 +294,7 @@ async function HomeContent({
 			)}
 
 			{/* Premium Upsell - for free users */}
-			{billingStatusAvailable && !isPremium && totalGamesPlayed >= 3 && (
+			{!isPremium && totalGamesPlayed >= 3 && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
 						<Link href="/pricing">

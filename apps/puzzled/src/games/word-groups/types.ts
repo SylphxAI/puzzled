@@ -15,6 +15,7 @@ export type ConnectionsPuzzle = {
 export type GameStatus = 'playing' | 'won' | 'lost'
 
 export type ConnectionsState = {
+	puzzle: ConnectionsPuzzle
 	selectedWords: string[]
 	solvedCategories: Category[]
 	remainingWords: string[]
@@ -23,16 +24,15 @@ export type ConnectionsState = {
 	guessHistory: string[][]
 	/** True if the last wrong guess had 3 of 4 words from a category */
 	lastGuessWasOneAway: boolean
-	missedCategories: Category[]
 }
 
 export type ConnectionsAction =
 	| { type: 'SELECT_WORD'; word: string }
 	| { type: 'DESELECT_WORD'; word: string }
 	| { type: 'CLEAR_SELECTION' }
-	| { type: 'APPLY_EVALUATION'; guess: string[]; evaluation: WordGroupsServerEvaluation }
+	| { type: 'SUBMIT_GUESS' }
 	| { type: 'SHUFFLE' }
-	| { type: 'RESET'; words: string[] }
+	| { type: 'RESET'; puzzle: ConnectionsPuzzle }
 
 export const MAX_MISTAKES = 4
 export const WORDS_PER_CATEGORY = 4
@@ -46,16 +46,6 @@ export type ConnectionsPuzzleData = {
 	maxMistakes: number
 	wordsPerCategory: number
 	totalCategories: number
-}
-
-/** Client-side puzzle data (category groupings hidden). */
-export type ConnectionsPuzzleClientData = ConnectionsPuzzleData
-
-export type WordGroupsServerEvaluation = {
-	correct: boolean
-	oneAway: boolean
-	category?: Category
-	remaining?: Category[]
 }
 
 /**

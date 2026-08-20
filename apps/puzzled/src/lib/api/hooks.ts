@@ -33,7 +33,6 @@ import {
 	updateSetting,
 } from '@/lib/connect/admin-client'
 import { isAlreadyPlayedError } from '@/lib/connect/already-played'
-import { getStreakInfo, type StreakInfo } from '@/lib/connect/gamification-client'
 import {
 	checkUsername,
 	getNotificationPreferences,
@@ -42,7 +41,11 @@ import {
 	updateProfile,
 	updatePushPreferences,
 } from '@/lib/connect/preferences-client'
-import { admitGetDailyViaConnect, admitSubmitGuessViaConnect } from '@/lib/connect/puzzle-admission'
+import {
+	admitGetDailyViaConnect,
+	admitSubmitGuessViaConnect,
+	shouldUseRestPlayResidual,
+} from '@/lib/connect/puzzle-admission'
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
 import { servedPuzzleId } from '@/lib/product-day'
 
@@ -114,22 +117,9 @@ export function useDailyStatus(
 			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
 			if (admit.ok) {
 				const r = admit.response
-				const completion = r.completedSession
-				const completedSession =
-					completion && (completion.status === 'won' || completion.status === 'lost')
-						? {
-								status: completion.status,
-								score: completion.score ?? null,
-								attempts: completion.attempts ?? null,
-								completedAt:
-									completion.completedAtMs === undefined
-										? null
-										: new Date(Number(completion.completedAtMs)),
-							}
-						: null
 				return {
 					hasCompleted: r.hasCompleted,
-					completedSession,
+					completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
 					puzzle: {
 						id: servedPuzzleId(r.puzzleId) || '',
 						puzzleNumber: r.puzzleNumber,
@@ -194,22 +184,6 @@ export function useTodaysPuzzle(
 				code: 'CONNECT_PLAY_FAIL_CLOSED',
 				message: admit.error || 'connect_play_fail_closed',
 			})
-		},
-		...options,
-	})
-}
-
-export function useStreakInfo(
-	options?: Omit<UseQueryOptions<StreakInfo, ApiError>, 'queryKey' | 'queryFn'>,
-) {
-	return useQuery({
-		queryKey: queryKeys.streakInfo(),
-		queryFn: async () => {
-			try {
-				return await getStreakInfo()
-			} catch (e) {
-				throw toApiError(e, 'STREAK_INFO_FAILED')
-			}
 		},
 		...options,
 	})
@@ -573,7 +547,6 @@ export function useAuditLogs(
 		offset?: number
 		action?: string
 		resourceType?: string
-		search?: string
 		dateFrom?: string
 		dateTo?: string
 	},
@@ -587,10 +560,6 @@ export function useAuditLogs(
 					limit: params?.limit ?? 50,
 					offset: params?.offset ?? 0,
 					action: params?.action ?? '',
-					resourceType: params?.resourceType ?? '',
-					search: params?.search ?? '',
-					dateFrom: params?.dateFrom ?? '',
-					dateTo: params?.dateTo ?? '',
 				})
 				return {
 					logs: res.entries.map(mapAuditEntry),
@@ -965,6 +934,7 @@ export function useGameAnalytics(
 
 export type SystemHealthResponse = {
 	database: boolean
+	redis: boolean
 	timestamp: string
 	uptime: string
 	databaseError?: string
@@ -980,6 +950,9 @@ export function useSystemHealth(
 				const h = await systemHealth()
 				return {
 					database: h.databaseOk,
+					// The api service does not manage Redis; it is not part of the
+					// api health contract (platform-owned infrastructure).
+					redis: true,
 					timestamp: new Date().toISOString(),
 					uptime: h.uptime,
 					databaseError: h.databaseError || undefined,
@@ -1048,3 +1021,6 @@ export function useCheckUsername() {
 		},
 	})
 }
+
+// Kept as a fail-closed fence: no REST residual exists (sole Connect).
+export { shouldUseRestPlayResidual }

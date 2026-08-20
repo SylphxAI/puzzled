@@ -16,22 +16,22 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
+import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
-import { parseDuoClientPayload } from './parse-client'
+import type { TangoPuzzleData, TangoSolution } from './types'
 import { useTango } from './use-tango'
 
 type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
-	puzzleDate?: string
 }
 
-export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
+export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.tango')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() => parseDuoClientPayload(puzzleData))
+	const [puzzle] = useState(() => parsePuzzleDataClient<TangoPuzzleData, TangoSolution>(puzzleData))
 
 	// useGameSession: Consolidates session, save, and celebration logic
 	const {
@@ -39,7 +39,6 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 		startGame,
 		endGame,
 		startTime,
-		serverScore,
 		showCelebration,
 		showResultModal,
 		setShowResultModal,
@@ -49,42 +48,29 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 		gameSlug: 'duo',
 		mode,
 		puzzleId,
-		puzzleDate,
-		validateArchive: true,
 		enableStarBurst: false,
 	})
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
-	const [submitError, setSubmitError] = useState<string | null>(null)
 
-	const game = useTango(puzzle)
+	const game = useTango(puzzle.puzzleData, puzzle.solution)
 	const conflicts = game.getConflicts()
 	const conflictSet = new Set(conflicts.map((c) => `${c.row},${c.col}`))
 	const gameEndedRef = useRef(false)
-	const { reopen } = game
 
 	// Handle game end - in useEffect to avoid render-phase side effects
 	useEffect(() => {
-		const status = game.state.gameStatus
-		if (status === 'playing' || gameEndedRef.current) return
-		gameEndedRef.current = true
-		void (async () => {
-			const result = await endGame({
-				status,
+		if (game.state.gameStatus !== 'playing' && !gameEndedRef.current) {
+			gameEndedRef.current = true
+			endGame({
+				status: game.state.gameStatus,
 				attempts: 1,
 				data: {
 					grid: game.state.grid.map((row) => row.map((cell) => cell.value)),
 				},
 			})
-			if (result.success) {
-				setSubmitError(null)
-				return
-			}
-			reopen()
-			gameEndedRef.current = false
-			setSubmitError(result.error || t('messages.submitRejected'))
-		})()
-	}, [endGame, game.state.gameStatus, game.state.grid, reopen, t])
+		}
+	}, [game.state.gameStatus, game.state.grid, endGame])
 
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
@@ -93,12 +79,11 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 			origin: getBaseUrl('origin'),
 			gameSlug: 'duo',
 			gameName: 'Duo',
-			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [game.state.endTime, startTime])
 
 	// Ready screen
 	if (isReady) {
@@ -138,9 +123,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 			<div className="flex w-full max-w-md flex-col items-center gap-4">
 				{/* Header */}
 				<div className="flex w-full items-center justify-between px-2">
-					<div className="text-sm text-muted-foreground">
-						{t('name')} ({puzzle.size}×{puzzle.size})
-					</div>
+					<div className="text-sm text-muted-foreground">{t('name')}</div>
 					<div className="flex gap-2">
 						<Button variant="ghost" size="sm" onClick={game.reset}>
 							<RotateCcw className="h-4 w-4" />
@@ -185,12 +168,6 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 
 				{/* Instructions */}
 				{conflicts.length > 0 && <p className="text-sm text-red-500">{t('hasConflicts')}</p>}
-
-				{submitError ? (
-					<output className="text-center text-sm text-destructive" role="alert">
-						{submitError}
-					</output>
-				) : null}
 			</div>
 
 			<HowToPlayModal open={showHelpModal} onClose={() => setShowHelpModal(false)} gameSlug="duo" />
@@ -201,7 +178,6 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 				gameType="duo"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
 				stats={{
-					score: serverScore ?? undefined,
 					timeSpentMs: game.state.endTime && startTime ? game.state.endTime - startTime : 0,
 				}}
 				mode={mode}

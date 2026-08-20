@@ -1,17 +1,17 @@
 'use client'
 
-import { useSafeAchievements, useSafeUser } from '@sylphx/sdk/react'
+import { useSafeAchievements, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useEffect, useRef } from 'react'
-import { useStreakInfo, useUserStats } from '@/lib/api'
+import { useUserStats } from '@/lib/api'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
 
 const CHECK_INTERVAL_MS = 5000 // Don't check more than once per 5 seconds
 
 /**
- * Component that checks for new achievements after game completions.
- * Rust Connect owns daily completion and streak state; Platform achievements
- * remain a projection used for unlock storage and toast delivery.
+ * Component that checks for new achievements after game completions
+ * Uses SDK's useSafeAchievements and useSafeStreak hooks for Platform-managed tracking.
+ * Safe versions handle SSR/prerendering gracefully.
  * Mount this once in the layout to enable achievement toasts.
  */
 export function AchievementChecker() {
@@ -30,11 +30,18 @@ export function AchievementChecker() {
 		isConfigured: achievementsConfigured,
 	} = useSafeAchievements()
 
-	// Rust Connect is the sole streak authority. This query is invalidated after
-	// SubmitGuess, so achievement thresholds follow accepted daily sessions.
-	const { data: streakInfo, isLoading: streakLoading } = useStreakInfo({
-		enabled: !!user,
-		staleTime: 10000,
+	// SDK streak hook - Platform-managed streak tracking (SSR-safe)
+	const {
+		longest: maxStreak,
+		isLoading: streakLoading,
+		isConfigured: streakConfigured,
+	} = useSafeStreak('daily-play', {
+		defaults: {
+			name: 'Daily Play Streak',
+			description: 'Play at least one game daily to maintain your streak',
+			frequency: 'daily',
+			gracePeriodHours: 12,
+		},
 	})
 
 	// Fetch per-game stats (game stats are Puzzled-specific)
@@ -58,7 +65,7 @@ export function AchievementChecker() {
 	// Check for new achievements when stats update
 	useEffect(() => {
 		// Skip if not configured (SSR/prerendering) or still loading
-		if (!user || !userStats || !streakInfo || !achievementsConfigured) return
+		if (!user || !userStats || !achievementsConfigured || !streakConfigured) return
 		if (achievementsLoading || streakLoading) return
 
 		// Throttle checks
@@ -78,12 +85,10 @@ export function AchievementChecker() {
 		)
 
 		// Calculate stats
-		const wordGuessStats = userStats['word-guess']
-		const wordGroupsStats = userStats['word-groups']
-		const totalWins = (wordGuessStats?.gamesWon ?? 0) + (wordGroupsStats?.gamesWon ?? 0)
+		const totalWins = (userStats.wordle?.gamesWon ?? 0) + (userStats.connections?.gamesWon ?? 0)
 
 		// Get best attempts from guess distribution
-		const wordleDistribution = wordGuessStats?.guessDistribution as
+		const wordleDistribution = userStats.wordle?.guessDistribution as
 			| Record<string, number>
 			| null
 			| undefined
@@ -95,9 +100,9 @@ export function AchievementChecker() {
 				)
 			: undefined
 
-		const wordleWins = wordGuessStats?.gamesWon ?? 0
-		const connectionsWins = wordGroupsStats?.gamesWon ?? 0
-		const connectionsPerfectGames = wordGroupsStats?.perfectGames ?? undefined
+		const wordleWins = userStats.wordle?.gamesWon ?? 0
+		const connectionsWins = userStats.connections?.gamesWon ?? 0
+		const connectionsPerfectGames = userStats.connections?.perfectGames ?? undefined
 
 		// Check and unlock achievements via SDK
 		const checkAndUnlock = async (
@@ -122,10 +127,10 @@ export function AchievementChecker() {
 		const streak30 = ACHIEVEMENTS.find((a) => a.id === 'streak-30')!
 		const streak100 = ACHIEVEMENTS.find((a) => a.id === 'streak-100')!
 
-		checkAndUnlock('streak-3', streakInfo.maxStreak >= 3, streak3)
-		checkAndUnlock('streak-7', streakInfo.maxStreak >= 7, streak7)
-		checkAndUnlock('streak-30', streakInfo.maxStreak >= 30, streak30)
-		checkAndUnlock('streak-100', streakInfo.maxStreak >= 100, streak100)
+		checkAndUnlock('streak-3', maxStreak >= 3, streak3)
+		checkAndUnlock('streak-7', maxStreak >= 7, streak7)
+		checkAndUnlock('streak-30', maxStreak >= 30, streak30)
+		checkAndUnlock('streak-100', maxStreak >= 100, streak100)
 
 		// Win count achievements
 		const wins10 = ACHIEVEMENTS.find((a) => a.id === 'wins-10')!
@@ -161,8 +166,9 @@ export function AchievementChecker() {
 		userStats,
 		achievementsLoading,
 		streakLoading,
-		streakInfo,
 		achievementsConfigured,
+		streakConfigured,
+		maxStreak,
 		sdkAchievements,
 		unlock,
 	])

@@ -39,12 +39,12 @@ export default async function AdminSettingsPage() {
 			{/* Quick Links */}
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				<a
-					href="/admin/experiments"
+					href="/admin/feature-flags"
 					className="admin-card p-4 transition-colors hover:border-[var(--admin-accent)]"
 				>
-					<h4 className="font-medium text-[var(--admin-text-primary)]">Experiments</h4>
+					<h4 className="font-medium text-[var(--admin-text-primary)]">Feature Flags</h4>
 					<p className="mt-1 text-sm text-[var(--admin-text-muted)]">
-						Review experiment definitions; manage rollouts in the Platform Console
+						Control feature rollouts and experiments
 					</p>
 				</a>
 				<a

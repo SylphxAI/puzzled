@@ -67,9 +67,7 @@ fn is_valid_placement(grid: &[Vec<u8>], row: usize, col: usize, value: u8) -> bo
     true
 }
 
-/// Solved 9×9 grid from the frozen backtracker. Shared by Sudoku and Killer.
-#[must_use]
-pub fn generate_complete_grid(random: &mut SeededRandom) -> Vec<Vec<u8>> {
+fn generate_complete_grid(random: &mut SeededRandom) -> Vec<Vec<u8>> {
     let mut grid = vec![vec![0_u8; GRID_SIZE]; GRID_SIZE];
 
     fn solve(grid: &mut [Vec<u8>], row: usize, col: usize, random: &mut SeededRandom) -> bool {
@@ -268,13 +266,6 @@ mod tests {
 
     /// Regression: TS object-literal removeCount evaluates three random() draws.
     /// Seed 0 easy puzzleData.grid[0] must keep cells 1 and 9 (TS oracle).
-    #[test]
-    fn seed_one_complete_grid_matches_killer_ts() {
-        let mut random = seeded_random(1);
-        let grid = generate_complete_grid(&mut random);
-        assert_eq!(grid[0], vec![3, 7, 8, 9, 1, 4, 5, 2, 6]);
-    }
-
     #[test]
     fn seed_zero_easy_matches_ts_oracle_row0() {
         let puzzle = generate_sudoku_puzzle(0, SudokuDifficulty::Easy);

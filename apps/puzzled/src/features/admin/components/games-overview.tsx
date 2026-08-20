@@ -26,7 +26,6 @@ export function GamesOverview() {
 
 	const {
 		data: games,
-		error,
 		isLoading,
 		refetch,
 		isRefetching,
@@ -38,31 +37,11 @@ export function GamesOverview() {
 		return <GamesOverviewSkeleton />
 	}
 
-	if (error) {
-		return (
-			<div className="admin-card p-8 text-center" role="alert">
-				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
-				<p className="mt-2 text-[var(--admin-text-primary)]">{t('error')}</p>
-				<p className="mt-1 text-sm text-[var(--admin-text-secondary)]">{t('errorHint')}</p>
-				<button
-					type="button"
-					onClick={() => refetch()}
-					disabled={isRefetching}
-					className="admin-btn admin-btn-ghost mt-6"
-				>
-					<RefreshCw className={`h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-					{t('retry')}
-				</button>
-			</div>
-		)
-	}
-
 	if (!games || games.length === 0) {
 		return (
 			<div className="admin-card p-8 text-center">
-				<Gamepad2 className="mx-auto h-8 w-8 text-[var(--admin-text-muted)]" />
-				<p className="mt-2 text-[var(--admin-text-primary)]">{t('noGamesRegistered')}</p>
-				<p className="mt-1 text-sm text-[var(--admin-text-secondary)]">{t('addGamesHint')}</p>
+				<AlertCircle className="mx-auto h-8 w-8 text-[var(--admin-error)]" />
+				<p className="mt-2 text-[var(--admin-text-secondary)]">Failed to load games data</p>
 			</div>
 		)
 	}

@@ -100,15 +100,7 @@ export async function updateSetting(
 }
 
 export async function listAuditLogs(
-	input: {
-		limit?: number
-		offset?: number
-		action?: string
-		resourceType?: string
-		search?: string
-		dateFrom?: string
-		dateTo?: string
-	},
+	input: { limit?: number; offset?: number; action?: string },
 	client?: AdminServiceClient,
 ): Promise<{ entries: AuditLogEntry[]; total: number }> {
 	const c = client ?? createAdminServiceClient()
@@ -117,10 +109,6 @@ export async function listAuditLogs(
 			limit: input.limit ?? 50,
 			offset: input.offset ?? 0,
 			action: input.action ?? '',
-			resourceType: input.resourceType ?? '',
-			search: input.search ?? '',
-			dateFrom: input.dateFrom ?? '',
-			dateTo: input.dateTo ?? '',
 		}),
 	)
 	return { entries: res.entries, total: res.total }

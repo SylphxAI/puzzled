@@ -157,14 +157,6 @@ export function getUniqueLetters(text: string): string[] {
 	return Array.from(letters).sort()
 }
 
-/** Submit trigger: every encrypted letter has a guess. Correctness is server-side. */
-export function isFullyMapped(encryptedText: string, playerGuesses: PlayerGuesses): boolean {
-	return getUniqueLetters(encryptedText).every((letter) => {
-		const guess = playerGuesses[letter]
-		return typeof guess === 'string' && guess.length === 1
-	})
-}
-
 /**
  * Check if puzzle is solved
  */

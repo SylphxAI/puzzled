@@ -19,7 +19,6 @@
 		"notInList": "Not a valid word",
 		"wrongLength": "Word must be the same length",
 		"notOneChange": "Change exactly one letter",
-		"alreadyUsed": "Already used this word",
-		"submitRejected": "The server could not accept this ladder. Check the path and try again."
+		"alreadyUsed": "Already used this word"
 	}
 }

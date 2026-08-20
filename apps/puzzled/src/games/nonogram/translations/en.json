@@ -16,7 +16,6 @@
 	"errors": "{count} errors",
 	"complete": "Picture Complete!",
 	"messages": {
-		"incorrect": "That cell should not be filled",
-		"submitRejected": "The server could not accept this picture. Check the clues and try again."
+		"incorrect": "That cell should not be filled"
 	}
 }

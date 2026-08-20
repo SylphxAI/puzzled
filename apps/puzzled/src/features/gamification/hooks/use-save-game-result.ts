@@ -1,6 +1,6 @@
 'use client'
 
-import { PlatformContext, useSafeUser } from '@sylphx/sdk/react'
+import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -44,7 +44,6 @@ export type SaveResultResponse = {
 	success: boolean
 	score?: number
 	error?: string
-	alreadyPlayed?: boolean
 }
 
 export function useSaveGameResult(gameSlug: string) {
@@ -56,6 +55,16 @@ export function useSaveGameResult(gameSlug: string) {
 
 	// SDK Platform context for leaderboard score submission
 	const platformContext = useContext(PlatformContext)
+
+	// SDK streak hook for Platform-managed streak tracking (SSR-safe)
+	const { recordActivity, isConfigured: streakConfigured } = useSafeStreak('daily-play', {
+		defaults: {
+			name: 'Daily Play Streak',
+			description: 'Play at least one game daily to maintain your streak',
+			frequency: 'daily',
+			gracePeriodHours: 12,
+		},
+	})
 
 	// Save result mutation (uses the hook which handles invalidation)
 	const mutation = useSaveResult({
@@ -106,18 +115,6 @@ export function useSaveGameResult(gameSlug: string) {
 					data: input.data,
 				})
 
-				// An already-played response is an accepted review state, not a
-				// new finish. Invalid submissions are not finishes at all: release
-				// the retry lock and stop before analytics or leaderboards.
-				if (response.error === 'already_played') {
-					savedRef.current = false
-					return { success: true, alreadyPlayed: true, error: response.error }
-				}
-				if (!response.success) {
-					savedRef.current = false
-					return { success: false, error: response.error || 'finish_rejected' }
-				}
-
 				// Track game completion via SDK analytics
 				trackGameComplete({
 					game: gameSlug,
@@ -130,9 +127,21 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleId: input.puzzleId,
 				})
 
-				// Leaderboards are social projections only; completion and streak
-				// authority remain the Rust-owned game_sessions rows.
+				// Platform streak + leaderboards only for authenticated users.
 				if (userId && input.status === 'won') {
+					if (streakConfigured) {
+						try {
+							await recordActivity({
+								gameSlug,
+								score: response.score,
+								puzzleId: input.puzzleId,
+							})
+						} catch {
+							// Don't fail the save if streak sync fails
+							// Platform will eventually be consistent via next activity
+						}
+					}
+
 					// Submit score to Platform leaderboards (daily, weekly, all-time)
 					// Each game has separate leaderboards for different time periods
 					if (platformContext && response.score !== undefined) {
@@ -181,7 +190,7 @@ export function useSaveGameResult(gameSlug: string) {
 
 				// Return server-calculated score
 				return {
-					success: true,
+					success: response.success,
 					score: response.score,
 				}
 			} catch (err) {
@@ -191,7 +200,15 @@ export function useSaveGameResult(gameSlug: string) {
 				return { success: false, error: errorMessage }
 			}
 		},
-		[userId, gameSlug, mutation, trackGameComplete, platformContext],
+		[
+			userId,
+			gameSlug,
+			mutation,
+			streakConfigured,
+			recordActivity,
+			trackGameComplete,
+			platformContext,
+		],
 	)
 
 	const reset = useCallback(() => {
