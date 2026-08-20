@@ -68,8 +68,8 @@ journey:
 5. A tampered, duplicated, stale-day, wrong-module, or unauthorized submission
    cannot create completion, progress, score, entitlement, or North Star value.
 
-The durable decomposition and acceptance oracles are in
-[Capability DAG](capabilities.md). Exact transport and decision contracts live
+The durable identities, fates, dependencies, and acceptance oracles are in the
+[identity graph](capabilities.md). Exact transport and decision contracts live
 in protobuf, tests, and accepted product ADRs; this vision does not replace
 them. The former [North Star vision path](north-star/VISION.md) is now a
 non-authoritative pointer to this canonical destination; historical research
