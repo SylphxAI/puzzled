@@ -120,7 +120,37 @@ pub fn try_auto_freeze(mut data: FreezeData, is_premium: bool) -> (bool, FreezeD
     (true, data)
 }
 
-/// Streak-info envelope (Platform streak residual = 0).
+/// Why a personal streak payload cannot be returned.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StreakReadError {
+    StoreUnavailable,
+    ReadFailed,
+}
+
+/// Map a store read into a personal streak, or fail closed.
+pub fn project_personal_streak(
+    today: chrono::NaiveDate,
+    read: Result<(Vec<chrono::NaiveDate>, u32), String>,
+) -> Result<
+    (
+        puzzled_core::gamification::personal_streak::PersonalStreak,
+        u32,
+    ),
+    StreakReadError,
+> {
+    let (days, total_games_played) = read.map_err(|_| StreakReadError::ReadFailed)?;
+    Ok((
+        puzzled_core::gamification::personal_streak::compute_personal_streak(today, &days),
+        total_games_played,
+    ))
+}
+
+/// Missing session store cannot be reported as a zero streak.
+pub fn require_streak_store<T>(store: Option<T>) -> Result<T, StreakReadError> {
+    store.ok_or(StreakReadError::StoreUnavailable)
+}
+
+/// Streak-info envelope derived from accepted ritual days plus freeze residual.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StreakInfo {
@@ -132,17 +162,21 @@ pub struct StreakInfo {
     pub auto_freeze_enabled: bool,
 }
 
-/// Build streak-info response (pure).
+fn u32_to_i32(value: u32) -> i32 {
+    i32::try_from(value).unwrap_or(i32::MAX)
+}
+
+/// Build streak-info response from an already computed personal streak.
 #[must_use]
 pub fn build_streak_info(
-    has_played_today: bool,
+    streak: puzzled_core::gamification::personal_streak::PersonalStreak,
     total_games_played: i32,
     freeze: &FreezeData,
 ) -> StreakInfo {
     StreakInfo {
-        current_streak: 0,
-        max_streak: 0,
-        has_played_today,
+        current_streak: u32_to_i32(streak.current_streak),
+        max_streak: u32_to_i32(streak.max_streak),
+        has_played_today: streak.has_played_today,
         total_games_played,
         freezes_available: freeze.freezes_available,
         auto_freeze_enabled: freeze.auto_freeze_enabled,
@@ -192,17 +226,48 @@ mod tests {
     }
 
     #[test]
-    fn streak_info_platform_placeholder() {
-        let d = FreezeData {
+    fn streak_info_uses_computed_personal_streak() {
+        use chrono::NaiveDate;
+        use puzzled_core::gamification::personal_streak::compute_personal_streak;
+
+        let freeze = FreezeData {
             user_id: "u".into(),
             freezes_available: 1,
             freezes_used: 0,
             auto_freeze_enabled: true,
         };
-        let info = build_streak_info(true, 42, &d);
-        assert_eq!(info.current_streak, 0);
-        assert_eq!(info.max_streak, 0);
+        let today = NaiveDate::from_ymd_opt(2026, 8, 22).expect("day");
+        let days = [
+            NaiveDate::from_ymd_opt(2026, 8, 20).expect("d"),
+            NaiveDate::from_ymd_opt(2026, 8, 21).expect("d"),
+            NaiveDate::from_ymd_opt(2026, 8, 22).expect("d"),
+        ];
+        let streak = compute_personal_streak(today, &days);
+        let info = build_streak_info(streak, 42, &freeze);
+        assert_eq!(info.current_streak, 3);
+        assert_eq!(info.max_streak, 3);
         assert!(info.has_played_today);
         assert_eq!(info.total_games_played, 42);
+        assert_eq!(info.freezes_available, 1);
+        assert!(info.auto_freeze_enabled);
+    }
+
+    #[test]
+    fn missing_store_or_read_fails_closed() {
+        use chrono::NaiveDate;
+        let today = NaiveDate::from_ymd_opt(2026, 8, 22).expect("day");
+        assert_eq!(
+            require_streak_store::<()>(None),
+            Err(StreakReadError::StoreUnavailable)
+        );
+        assert_eq!(
+            project_personal_streak(today, Err("db down".into())),
+            Err(StreakReadError::ReadFailed)
+        );
+        let (streak, total) =
+            project_personal_streak(today, Ok((vec![today], 4))).expect("payload");
+        assert_eq!(streak.current_streak, 1);
+        assert!(streak.has_played_today);
+        assert_eq!(total, 4);
     }
 }

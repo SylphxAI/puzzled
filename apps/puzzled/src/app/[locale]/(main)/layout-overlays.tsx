@@ -4,10 +4,10 @@ import { AchievementChecker, AchievementToastProvider } from '@/features/gamific
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { PWAInstallPrompt } from '@/shared/components/pwa-install-prompt'
 
-export function LayoutOverlays() {
+export function LayoutOverlays({ maxStreak }: { maxStreak?: number | null }) {
 	return (
 		<AchievementToastProvider>
-			<AchievementChecker />
+			<AchievementChecker maxStreak={maxStreak} />
 			<PWAInstallPrompt />
 			{/* SDK CookieBanner with localStorage sync for client-side scripts */}
 			<ConsentBanner />

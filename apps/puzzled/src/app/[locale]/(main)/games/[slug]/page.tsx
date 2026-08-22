@@ -11,6 +11,7 @@ import {
 	type DailyStatus,
 	getServerDailyStatus,
 	getServerStreakInfo,
+	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
@@ -233,17 +234,24 @@ export default async function GamePage({ params, searchParams }: Props) {
 		} else {
 			// One GetDaily snapshot for guests and accounts so admission and play
 			// cannot straddle the product-day reset or reopen a completed board.
-			const [statusData, streakData] = await Promise.all([
+			// Streak is a separate read: a missing streak payload must not reopen
+			// or block the puzzle.
+			const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
+			const [statusResult, streakResult] = await Promise.allSettled([
 				getServerDailyStatus({ gameSlug: slug, difficulty }),
-				user ? getServerStreakInfo() : null,
+				hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
 			])
+			if (statusResult.status === 'rejected') {
+				throw statusResult.reason
+			}
+			const statusData = statusResult.value
 			puzzleStatus = statusData
 			puzzle = {
 				puzzleId: statusData.puzzle.id,
 				puzzleData: statusData.puzzle.puzzleData,
 				puzzleDate: statusData.puzzle.puzzleDate,
 			}
-			streakInfo = streakData
+			streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
 		}
 	} catch (error) {
 		console.error('[GamePage] Failed to load puzzle data:', error)

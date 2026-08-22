@@ -9,9 +9,11 @@ import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerHistory,
 	getServerPersonalDailyResults,
+	getServerStreakInfo,
 	getServerUserStats,
 	type HistoryEntry,
 	hasServerProgressIdentity,
+	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
 import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
@@ -84,7 +86,7 @@ export default async function StatsPage({ params }: Props) {
 	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
 	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
 
-	const [userStatsResult, historyResult, personalResult] = await Promise.allSettled(
+	const [userStatsResult, historyResult, personalResult, streakResult] = await Promise.allSettled(
 		hasProgressIdentity
 			? [
 					getServerUserStats(),
@@ -95,6 +97,7 @@ export default async function StatsPage({ params }: Props) {
 						isPremium,
 						freeGameSlug: todaysFreeGame,
 					}),
+					getServerStreakInfo(),
 				]
 			: [
 					Promise.resolve({} as UserStats),
@@ -105,6 +108,7 @@ export default async function StatsPage({ params }: Props) {
 						isPremium: false,
 						freeGameSlug: todaysFreeGame,
 					}),
+					Promise.resolve(null as StreakInfo | null),
 				],
 	)
 
@@ -170,6 +174,9 @@ export default async function StatsPage({ params }: Props) {
 	)
 	const wordGuessStats = stats['word-guess'] ?? emptyStats
 	const wordGroupsStats = stats['word-groups'] ?? emptyStats
+	const streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
+	const currentStreak = streakInfo?.currentStreak ?? 0
+	const maxStreak = streakInfo?.maxStreak ?? 0
 
 	if (
 		personalCompletionsAvailable &&
@@ -254,12 +261,12 @@ export default async function StatsPage({ params }: Props) {
 						<StatCard
 							icon={<Flame className="h-4 w-4 text-stat-streak" />}
 							label={t('streak')}
-							value={wordGuessStats.currentStreak}
+							value={currentStreak}
 						/>
 						<StatCard
 							icon={<Star className="h-4 w-4 text-amber-500" />}
 							label={t('best')}
-							value={wordGuessStats.maxStreak}
+							value={maxStreak}
 						/>
 					</div>
 
@@ -393,7 +400,7 @@ export default async function StatsPage({ params }: Props) {
 							<Achievements
 								stats={{
 									totalWins: totalGamesWon,
-									maxStreak: Math.max(wordGuessStats.maxStreak, wordGroupsStats.maxStreak),
+									maxStreak,
 									wordleWins: wordGuessStats.gamesWon,
 									connectionsWins: wordGroupsStats.gamesWon,
 									wordleBestAttempts: wordGuessStats.guessDistribution?.['1']

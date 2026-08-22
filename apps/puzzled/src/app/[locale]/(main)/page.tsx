@@ -10,6 +10,7 @@ import {
 	getServerPersonalDailyResults,
 	getServerStreakInfo,
 	getServerTodayOverview,
+	hasServerProgressIdentity,
 	type StreakInfo,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
@@ -65,11 +66,13 @@ export default async function HomePage({ params }: Props) {
 	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
 	// Social proof is the public aggregate. Personal today-state is GetDaily.
+	// Personal streak is GetStreakInfo from accepted ritual sessions.
+	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
 	let streakInfo: StreakInfo | null = null
 	let todayPlayerCount = 0
 	const [overviewResult, streakResult] = await Promise.allSettled([
 		getServerTodayOverview(),
-		user ? getServerStreakInfo() : Promise.resolve(null),
+		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
 	])
 	if (overviewResult.status === 'fulfilled') {
 		todayPlayerCount = overviewResult.value.playerCount
@@ -153,7 +156,9 @@ async function HomeContent({
 	const slugToCamelCase = (slug: string) =>
 		slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
 
-	// Get current streak and whether user has played today
+	// Get current streak and whether user has played today.
+	// A missing payload is not a zero streak.
+	const streakKnown = streakInfo !== null
 	const currentStreak = streakInfo?.currentStreak ?? 0
 	const bestStreak = streakInfo?.maxStreak ?? 0
 	const hasPlayedToday = streakInfo?.hasPlayedToday ?? false
@@ -191,10 +196,12 @@ async function HomeContent({
 					{/* Right: Streak + Settings */}
 					<div className="flex items-center gap-2">
 						{/* Streak indicator */}
-						<div className="flex items-center gap-1 rounded-full bg-stat-streak/10 px-2.5 py-1">
-							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
-						</div>
+						{streakKnown && (
+							<div className="flex items-center gap-1 rounded-full bg-stat-streak/10 px-2.5 py-1">
+								<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
+								<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
+							</div>
+						)}
 
 						<Link href="/settings">
 							<Button variant="ghost" size="icon" className="h-9 w-9">
@@ -235,7 +242,7 @@ async function HomeContent({
 			</section>
 
 			{/* Streak Milestone Celebration */}
-			{recentMilestone && (
+			{streakKnown && recentMilestone && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
 						<div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-stat-streak/20 via-orange-500/10 to-stat-streak/20 p-4 text-center">
@@ -257,7 +264,7 @@ async function HomeContent({
 			)}
 
 			{/* Quick Stats Row */}
-			{totalGamesPlayed > 0 && (
+			{streakKnown && totalGamesPlayed > 0 && (
 				<section className="px-4 pt-4">
 					<div className="mx-auto max-w-4xl">
 						<div className="grid grid-cols-3 gap-3">

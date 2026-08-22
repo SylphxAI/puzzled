@@ -191,6 +191,85 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn connect_get_streak_info_requires_identity() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.GamificationService/GetStreakInfo",
+                Body::from("{}"),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetStreakInfo: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn connect_get_streak_info_fails_closed_without_store() {
+        let app = router(AppState::new(None));
+        let token = mint_test_token("f715210b-9df3-4945-b5bd-94fc4609bc30");
+        let response = match app
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.GamificationService/GetStreakInfo",
+                Body::from("{}"),
+                &token,
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetStreakInfo store: {error}"),
+        };
+        assert_ne!(
+            response.status(),
+            StatusCode::OK,
+            "missing store must not return a fabricated zero streak"
+        );
+        assert!(
+            response.status().is_server_error(),
+            "expected fail-closed server error, got {}",
+            response.status()
+        );
+        let json = body_json(response).await;
+        assert!(
+            json.get("info").is_none(),
+            "missing store must not include streak info: {json}"
+        );
+        let message = json.get("message").and_then(|v| v.as_str()).unwrap_or("");
+        assert!(
+            message.contains("streak_store_unavailable") || message.contains("unavailable"),
+            "unexpected error payload: {json}"
+        );
+    }
+
+    #[tokio::test]
+    async fn connect_get_streak_info_guest_fails_closed_without_store() {
+        let app = router(AppState::new(None));
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.GamificationService/GetStreakInfo")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .body(Body::from("{}"))
+        {
+            Ok(request) => request,
+            Err(error) => panic!("build guest GetStreakInfo: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetStreakInfo guest: {error}"),
+        };
+        assert_ne!(response.status(), StatusCode::UNAUTHORIZED);
+        assert_ne!(
+            response.status(),
+            StatusCode::OK,
+            "guest missing store must not fabricate current_streak=0"
+        );
+        assert!(response.status().is_server_error());
+    }
+
+    #[tokio::test]
     async fn connect_get_daily_denies_non_rotation_game_without_premium() {
         // Platform billing is unreachable in tests -> non-premium; only the
         // free-rotation game is playable (fail-closed gate).
