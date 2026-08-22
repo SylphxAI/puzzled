@@ -1,8 +1,13 @@
 //! SQL adapters for user stats and history (server-authoritative sessions).
 
+use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
+
+fn parse_user_id(user_id: &str) -> Result<Uuid, String> {
+    user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))
+}
 
 type HistoryRow = (
     Option<Uuid>,
@@ -17,7 +22,7 @@ type HistoryRow = (
 
 /// Per-game aggregates for a user.
 pub async fn user_stats(pool: &PgPool, user_id: &str) -> Result<(Vec<Value>, u32, u32), String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let rows: Vec<(String, i64, i64, Option<i32>)> = sqlx::query_as(
         r#"
         SELECT game_slug,
@@ -59,7 +64,7 @@ pub async fn user_history(
     game_slug: Option<&str>,
     limit: u32,
 ) -> Result<Vec<Value>, String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| format!("invalid user id: {e}"))?;
+    let uid = parse_user_id(user_id)?;
     let limit = limit.clamp(1, 100) as i64;
     let rows: Vec<HistoryRow> = match game_slug {
         Some(slug) => sqlx::query_as(
@@ -135,4 +140,18 @@ pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value
         .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
         .collect();
     Ok((players.0.max(0) as u32, completions))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_user_id;
+
+    #[test]
+    fn guest_logical_user_id_maps_to_storage_uuid() {
+        let uid = parse_user_id("guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890").expect("guest");
+        assert_eq!(uid.to_string(), "a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+        let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
+        assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
+        assert!(parse_user_id("not-a-uuid").is_err());
+    }
 }

@@ -28,6 +28,8 @@
 	"comeBackTomorrow": "Come back tomorrow for fresh puzzles",
 	"gamesPlayed": "Played",
 	"bestStreak": "Best",
+	"statusUnavailableTitle": "今日进度暂不可用",
+	"statusUnavailableDescription": "无法确认你的谜题状态。请重试后再开始，以免重复计算已完成的仪式。",
 	"streakMilestone": "{days} Day Streak!",
 	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
 	"unlockAll": "Unlock All Games",

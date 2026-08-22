@@ -20,5 +20,13 @@
 	"onFire": "You're on fire!",
 	"sharpshooter": "Sharpshooter",
 	"perfectGames": "Perfect Games",
-	"perfectionist": "Perfectionist"
+	"perfectionist": "Perfectionist",
+	"unavailableTitle": "进度暂不可用",
+	"unavailableDescription": "无法加载已接受的成绩。请重试以查看今日完成、合计与历史。",
+	"retry": "重试",
+	"historyTitle": "历史",
+	"historyEmpty": "还没有已接受的完成记录。",
+	"dailyStatusUnavailableTitle": "今日完成状态暂不可用",
+	"dailyStatusUnavailableDescription": "无法确认今日个人进度。请重试后再把模块视为未完成。",
+	"dailyStatusRetry": "重试"
 }

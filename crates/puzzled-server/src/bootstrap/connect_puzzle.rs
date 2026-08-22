@@ -36,11 +36,12 @@ use crate::capabilities::puzzle_play::adapters::daily_puzzles_db::{
     fetch_daily_puzzle, fetch_puzzle_by_id,
 };
 use crate::capabilities::puzzle_play::adapters::game_sessions_db::{
-    has_completed_session, has_ritual_completion, persist_validated_session,
+    adopt_guest_sessions, has_completed_session, has_ritual_completion, load_completed_session,
+    persist_validated_session,
 };
 use crate::proto::puzzled::v1::{
-    GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse, PuzzleService,
-    SubmitGuessRequest, SubmitGuessResponse,
+    DailyCompletion, GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse,
+    PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
 };
 use crate::shared::platform_billing::is_premium;
 
@@ -72,6 +73,29 @@ impl PuzzleConnectService {
     fn identity_for_submit(&self, ctx: &RequestContext) -> Result<String, ConnectError> {
         use crate::bootstrap::identity::require_identity_or_guest;
         Ok(require_identity_or_guest(ctx)?.user_id)
+    }
+
+    /// Reassign accepted guest rows onto the Platform account before a personal
+    /// read or write. Fail closed so a missed merge cannot accept a second finish.
+    async fn adopt_guest_progress_if_needed(
+        &self,
+        ctx: &RequestContext,
+    ) -> Result<(), ConnectError> {
+        use crate::bootstrap::identity::resolve_request_identities;
+        let Some(pool) = &self.state.pool else {
+            return Ok(());
+        };
+        let identities = resolve_request_identities(ctx);
+        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
+            return Ok(());
+        };
+        adopt_guest_sessions(pool, account_user_id, guest_user_id)
+            .await
+            .map_err(|error| {
+                warn!(%error, "guest progress adoption failed");
+                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
+            })?;
+        Ok(())
     }
 
     /// Enforce premium gating for a served puzzle (ADR-170).
@@ -247,6 +271,7 @@ impl PuzzleService for PuzzleConnectService {
             return Err(ConnectError::new(ErrorCode::NotFound, "unknown_game"));
         }
 
+        self.adopt_guest_progress_if_needed(&ctx).await?;
         let identity = self.identity(&ctx)?;
         let difficulty = {
             let d = req.difficulty.trim();
@@ -290,9 +315,9 @@ impl PuzzleService for PuzzleConnectService {
         }
 
         // Completion is server-derived from the user's sessions.
-        let has_completed = match (identity.as_deref(), &self.state.pool) {
+        let completed_session = match (identity.as_deref(), &self.state.pool) {
             (Some(uid), Some(pool)) => {
-                match has_completed_session(
+                match load_completed_session(
                     pool,
                     uid,
                     game_slug,
@@ -303,13 +328,17 @@ impl PuzzleService for PuzzleConnectService {
                 {
                     Ok(v) => v,
                     Err(error) => {
-                        warn!(%error, "get_daily completion lookup failed");
-                        false
+                        warn!(%error, "get_daily completed session lookup failed");
+                        return Err(ConnectError::new(
+                            ErrorCode::Internal,
+                            "session_lookup_failed",
+                        ));
                     }
                 }
             }
-            _ => false,
+            _ => None,
         };
+        let has_completed = completed_session.is_some();
 
         let puzzle_data_value = puzzle_data.clone();
         match build_daily_status(
@@ -346,6 +375,17 @@ impl PuzzleService for PuzzleConnectService {
                     .map(client_safe_puzzle_data)
                     .map(|v| v.to_string())
                     .unwrap_or_default(),
+                completed_session: completed_session
+                    .map(|session| DailyCompletion {
+                        status: session.status,
+                        score: session.score.and_then(|score| u32::try_from(score).ok()),
+                        attempts: u32::try_from(session.attempts).ok(),
+                        completed_at_ms: session
+                            .completed_at
+                            .map(|completed_at| completed_at.and_utc().timestamp_millis()),
+                        ..Default::default()
+                    })
+                    .into(),
                 ..Default::default()
             }),
             Err(404) => Err(ConnectError::new(ErrorCode::NotFound, "unknown_game")),
@@ -383,6 +423,7 @@ impl PuzzleService for PuzzleConnectService {
         };
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
         // Premium/archive still fail closed via enforce_play_access.
+        self.adopt_guest_progress_if_needed(&ctx).await?;
         let uid = self.identity_for_submit(&ctx)?;
 
         let data: Value = if req.submission_json.trim().is_empty() {

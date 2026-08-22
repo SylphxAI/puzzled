@@ -14,13 +14,18 @@ import { createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { cookies } from 'next/headers'
 import { cache } from 'react'
-
+import { loadDailyCompletionMap } from '@/features/daily/lib/daily-completion'
 import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
-import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
+	GetDailyRequestSchema,
+	type GetDailyResponse,
+	PuzzleService,
+} from '@/gen/connect/puzzled/v1/puzzle_pb'
+import {
+	GetHistoryRequestSchema,
 	GetTodayOverviewRequestSchema,
 	GetUserStatsRequestSchema,
 	StatsService,
@@ -48,7 +53,7 @@ export type DailyStatus = {
 		status: 'won' | 'lost'
 		score: number | null
 		attempts: number | null
-		completedAt: Date
+		completedAt: Date | null
 	} | null
 	puzzle: {
 		id: string
@@ -99,12 +104,41 @@ async function getServerTransport() {
 	})
 }
 
+/** True when SSR can attach a guest or Platform identity to Connect reads. */
+export async function hasServerProgressIdentity(): Promise<boolean> {
+	const cookieStore = await cookies()
+	if (cookieStore.get('puzzled_guest_id')?.value) return true
+	return cookieStore
+		.getAll()
+		.some(
+			(cookie) =>
+				cookie.name.startsWith('__sylphx_') &&
+				cookie.name.endsWith('_session') &&
+				Boolean(cookie.value),
+		)
+}
+
 function parsePuzzleData(json: string): unknown {
 	if (!json) return null
 	try {
 		return JSON.parse(json)
 	} catch {
 		return null
+	}
+}
+
+function parseCompletedSession(res: GetDailyResponse): DailyStatus['completedSession'] {
+	const completion = res.completedSession
+	if (!res.hasCompleted || !completion) return null
+	if (completion.status !== 'won' && completion.status !== 'lost') return null
+
+	const completedAt =
+		completion.completedAtMs === undefined ? null : new Date(Number(completion.completedAtMs))
+	return {
+		status: completion.status,
+		score: completion.score ?? null,
+		attempts: completion.attempts ?? null,
+		completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
 	}
 }
 
@@ -127,11 +161,10 @@ export const getServerDailyStatus = cache(
 				puzzleDate: input.puzzleDate?.trim() || undefined,
 			}),
 		)
+		const completedSession = parseCompletedSession(res)
 		return {
 			hasCompleted: res.hasCompleted,
-			completedSession: res.hasCompleted
-				? { status: 'won', score: null, attempts: null, completedAt: new Date() }
-				: null,
+			completedSession,
 			puzzle: {
 				id: servedPuzzleId(res.puzzleId) || '',
 				puzzleNumber: Number(res.puzzleNumber),
@@ -179,6 +212,90 @@ export const getServerStreakInfo = cache(async (): Promise<StreakInfo> => {
 		autoFreezeEnabled: info ? info.autoFreezeEnabled : false,
 	}
 })
+
+export type PersonalDailyResult = {
+	hasCompleted: boolean
+	completedSession: DailyStatus['completedSession']
+	/** False means the server could not prove this status; callers must not render Play. */
+	statusAvailable: boolean
+}
+
+/**
+ * Personal home/progress today-state. GetTodayOverview is a public aggregate
+ * for social proof, not a user's completion state; guests and accounts both
+ * read GetDaily.has_completed / completed_session.
+ */
+export async function getServerPersonalDailyResults(input: {
+	gameSlugs: readonly string[]
+	isGuest: boolean
+	isPremium: boolean
+	freeGameSlug: string
+}): Promise<Record<string, PersonalDailyResult>> {
+	const statuses = new Map<string, DailyStatus>()
+	const unavailableSlugs = new Set<string>()
+	await loadDailyCompletionMap({
+		...input,
+		read: async (gameSlug) => {
+			try {
+				const status = await getServerDailyStatus({ gameSlug })
+				statuses.set(gameSlug, status)
+				return status.hasCompleted
+			} catch (error) {
+				unavailableSlugs.add(gameSlug)
+				console.error(`[HomePage] Failed to read personal daily result for ${gameSlug}:`, error)
+				throw error
+			}
+		},
+	})
+
+	return Object.fromEntries(
+		input.gameSlugs.map((gameSlug) => {
+			const status = statuses.get(gameSlug)
+			return [
+				gameSlug,
+				{
+					hasCompleted: status?.hasCompleted ?? false,
+					completedSession: status?.completedSession ?? null,
+					statusAvailable: !unavailableSlugs.has(gameSlug),
+				},
+			] as const
+		}),
+	)
+}
+
+export type HistoryEntry = {
+	gameSlug: string
+	puzzleId: string
+	puzzleDate: string
+	status: string
+	score: number
+	attempts: number
+	timeSpentMs: number
+	mode: string
+}
+
+export const getServerHistory = cache(
+	async (input?: { gameSlug?: string; limit?: number }): Promise<HistoryEntry[]> => {
+		const transport = await getServerTransport()
+		const client = createClient(StatsService, transport)
+		const res = await client.getHistory(
+			create(GetHistoryRequestSchema, {
+				gameSlug: input?.gameSlug?.trim() ?? '',
+				limit: input?.limit ?? 20,
+			}),
+		)
+		return res.sessions.map((session) => ({
+			gameSlug: session.gameSlug,
+			puzzleId: session.puzzleId,
+			puzzleDate: session.puzzleDate,
+			status: session.status,
+			score: Number(session.score),
+			attempts: Number(session.attempts),
+			timeSpentMs: Number(session.timeSpentMs),
+			mode: session.mode,
+		}))
+	},
+)
 
 export const getServerUserStats = cache(async (): Promise<UserStats> => {
 	const transport = await getServerTransport()

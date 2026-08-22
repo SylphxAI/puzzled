@@ -1,16 +1,16 @@
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button } from '@sylphx/ui'
-import { BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
+import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
 import { getAllGameMetadata } from '@/games/registry'
 import {
+	getServerPersonalDailyResults,
 	getServerStreakInfo,
 	getServerTodayOverview,
 	type StreakInfo,
-	type TodayCompletion,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
@@ -64,36 +64,28 @@ export default async function HomePage({ params }: Props) {
 	}
 	const tomorrowsFreeGameName = gameNameMap[tomorrowsFreeGame] ?? tomorrowsFreeGame
 
-	// Fetch user's streak info, today's completions, and player count
+	// Social proof is the public aggregate. Personal today-state is GetDaily.
 	let streakInfo: StreakInfo | null = null
-	let todayCompletions: TodayCompletion[] = []
 	let todayPlayerCount = 0
-
-	try {
-		// Chrome only — not daily puzzle completers (UTC / unfiltered).
-		// NSM oracles: compute_drc / compute_hrc (weekly ritualists).
-		const overview = await getServerTodayOverview()
-		todayPlayerCount = overview.playerCount
-		todayCompletions = overview.completions.map((c) => ({
-			slug: c.gameSlug,
-			name: c.gameSlug,
-			completed: c.count > 0,
-		}))
-
-		// Fetch user-specific streak info if logged in
-		if (user) {
-			streakInfo = await getServerStreakInfo()
-		}
-	} catch (error) {
-		// Log error for debugging but continue with defaults
-		// This is a non-critical path - user can still access games
-		console.error('[HomePage] Failed to fetch stats:', error)
+	const [overviewResult, streakResult] = await Promise.allSettled([
+		getServerTodayOverview(),
+		user ? getServerStreakInfo() : Promise.resolve(null),
+	])
+	if (overviewResult.status === 'fulfilled') {
+		todayPlayerCount = overviewResult.value.playerCount
+	} else {
+		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
+	}
+	if (streakResult.status === 'fulfilled') {
+		streakInfo = streakResult.value
+	} else {
+		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
 	}
 
 	return (
 		<HomeContent
+			isGuest={!user}
 			streakInfo={streakInfo}
-			todayCompletions={todayCompletions}
 			locale={locale}
 			todaysFreeGame={todaysFreeGame}
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
@@ -104,13 +96,8 @@ export default async function HomePage({ params }: Props) {
 }
 
 type HomeContentProps = {
+	isGuest: boolean
 	streakInfo: StreakInfo | null
-	todayCompletions: {
-		slug: string
-		name: string
-		completed: boolean
-		score?: string
-	}[]
 	locale: string
 	todaysFreeGame: string
 	tomorrowsFreeGameName: string
@@ -119,8 +106,8 @@ type HomeContentProps = {
 }
 
 async function HomeContent({
+	isGuest,
 	streakInfo,
-	todayCompletions,
 	locale,
 	todaysFreeGame,
 	tomorrowsFreeGameName,
@@ -133,6 +120,34 @@ async function HomeContent({
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
+	const personalResults = await getServerPersonalDailyResults({
+		gameSlugs: gameMetadata.map((game) => game.slug),
+		isGuest,
+		isPremium,
+		freeGameSlug: todaysFreeGame,
+	})
+	const completionStatusUnavailable = gameMetadata.some(
+		(game) => personalResults[game.slug]?.statusAvailable === false,
+	)
+
+	if (completionStatusUnavailable) {
+		return (
+			<main className="flex flex-1 items-center justify-center px-4 py-12">
+				<div className="mx-auto max-w-md text-center">
+					<div className="mb-6 flex justify-center">
+						<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+							<AlertCircle className="h-10 w-10 text-muted-foreground" />
+						</div>
+					</div>
+					<h1 className="mb-2 text-2xl font-bold">{t('home.statusUnavailableTitle')}</h1>
+					<p className="mb-6 text-muted-foreground">{t('home.statusUnavailableDescription')}</p>
+					<Button asChild>
+						<Link href="/">{t('common.retry')}</Link>
+					</Button>
+				</div>
+			</main>
+		)
+	}
 
 	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
 	const slugToCamelCase = (slug: string) =>
@@ -150,14 +165,15 @@ async function HomeContent({
 
 	// Merge game info with completion status and free/locked status
 	const gamesWithCompletion = gameMetadata.map((game) => {
-		const completion = todayCompletions.find((c) => c.slug === game.slug)
 		const isFreeToday = game.slug === todaysFreeGame
+		const result = personalResults[game.slug]
+		const score = result?.completedSession?.score
 		return {
 			slug: game.slug,
 			name: t(`games.${slugToCamelCase(game.slug)}.name`),
 			display: game.display,
-			completed: completion?.completed ?? false,
-			score: completion?.score,
+			completed: result?.hasCompleted ?? false,
+			score: score === null || score === undefined ? undefined : String(score),
 			// Free game is unlocked for everyone, other games locked for non-premium
 			locked: !isPremium && !isFreeToday,
 			isFreeToday,
