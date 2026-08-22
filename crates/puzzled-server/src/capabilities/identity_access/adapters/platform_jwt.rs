@@ -557,6 +557,25 @@ mod tests {
     }
 
     #[test]
+    fn rejects_string_typed_exp_claim() {
+        let _g = lock();
+        install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
+        let claims = serde_json::json!({
+            "sub": "user_string_exp",
+            "name": "Test User",
+            "exp": "9999999999",
+        });
+        let key = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc key");
+        let token = encode(&JwtHeader::new(Algorithm::RS256), &claims, &key).expect("mint");
+        let err = verify_platform_jwt(&token).unwrap_err();
+        assert!(
+            matches!(err, JwtError::VerificationFailed(_)),
+            "string-typed exp must fail closed for GHSA-h395, got {err:?}"
+        );
+        clear_test_decoding_key();
+    }
+
+    #[test]
     fn rejects_garbage_token() {
         let _g = lock();
         install_test_decoding_key_pem(TEST_PUB_PEM).expect("install key");
