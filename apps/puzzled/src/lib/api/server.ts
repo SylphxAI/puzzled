@@ -33,19 +33,13 @@ import {
 import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
 import { resolveConnectBaseUrl } from '@/lib/connect/transport'
 import { servedPuzzleId } from '@/lib/product-day'
+import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
 // ==========================================
 // Response types (unchanged public shapes)
 // ==========================================
 
-export type StreakInfo = {
-	currentStreak: number
-	maxStreak: number
-	hasPlayedToday: boolean
-	totalGamesPlayed: number
-	freezesAvailable: number
-	autoFreezeEnabled: boolean
-}
+export type { StreakInfo }
 
 export type DailyStatus = {
 	hasCompleted: boolean
@@ -202,15 +196,7 @@ export const getServerStreakInfo = cache(async (): Promise<StreakInfo> => {
 	const transport = await getServerTransport()
 	const client = createClient(GamificationService, transport)
 	const res = await client.getStreakInfo(create(GetStreakInfoRequestSchema, {}))
-	const info = res.info
-	return {
-		currentStreak: info ? Number(info.currentStreak) : 0,
-		maxStreak: info ? Number(info.maxStreak) : 0,
-		hasPlayedToday: info ? info.hasPlayedToday : false,
-		totalGamesPlayed: info ? Number(info.totalGamesPlayed) : 0,
-		freezesAvailable: info ? Number(info.freezesAvailable) : 0,
-		autoFreezeEnabled: info ? info.autoFreezeEnabled : false,
-	}
+	return projectStreakInfo(res.info)
 })
 
 export type PersonalDailyResult = {

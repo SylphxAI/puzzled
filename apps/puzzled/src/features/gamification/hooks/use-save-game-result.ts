@@ -1,6 +1,6 @@
 'use client'
 
-import { PlatformContext, useSafeStreak, useSafeUser } from '@sylphx/sdk/react'
+import { PlatformContext, useSafeUser } from '@sylphx/sdk/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
@@ -55,16 +55,6 @@ export function useSaveGameResult(gameSlug: string) {
 
 	// SDK Platform context for leaderboard score submission
 	const platformContext = useContext(PlatformContext)
-
-	// SDK streak hook for Platform-managed streak tracking (SSR-safe)
-	const { recordActivity, isConfigured: streakConfigured } = useSafeStreak('daily-play', {
-		defaults: {
-			name: 'Daily Play Streak',
-			description: 'Play at least one game daily to maintain your streak',
-			frequency: 'daily',
-			gracePeriodHours: 12,
-		},
-	})
 
 	// Save result mutation (uses the hook which handles invalidation)
 	const mutation = useSaveResult({
@@ -127,21 +117,9 @@ export function useSaveGameResult(gameSlug: string) {
 					puzzleId: input.puzzleId,
 				})
 
-				// Platform streak + leaderboards only for authenticated users.
+				// Leaderboards only for authenticated users. Streak is a Rust
+				// GetStreakInfo read of accepted sessions, not a Platform write.
 				if (userId && input.status === 'won') {
-					if (streakConfigured) {
-						try {
-							await recordActivity({
-								gameSlug,
-								score: response.score,
-								puzzleId: input.puzzleId,
-							})
-						} catch {
-							// Don't fail the save if streak sync fails
-							// Platform will eventually be consistent via next activity
-						}
-					}
-
 					// Submit score to Platform leaderboards (daily, weekly, all-time)
 					// Each game has separate leaderboards for different time periods
 					if (platformContext && response.score !== undefined) {
@@ -200,15 +178,7 @@ export function useSaveGameResult(gameSlug: string) {
 				return { success: false, error: errorMessage }
 			}
 		},
-		[
-			userId,
-			gameSlug,
-			mutation,
-			streakConfigured,
-			recordActivity,
-			trackGameComplete,
-			platformContext,
-		],
+		[userId, gameSlug, mutation, trackGameComplete, platformContext],
 	)
 
 	const reset = useCallback(() => {

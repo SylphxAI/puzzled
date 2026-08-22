@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic'
 
+import { currentUser } from '@sylphx/sdk/nextjs'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
+import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -21,14 +23,28 @@ function SkipNavigation() {
 	)
 }
 
-export default function MainLayout({ children }: Props) {
+export default async function MainLayout({ children }: Props) {
+	const user = await currentUser()
+	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
+	let currentStreak: number | null = null
+	let maxStreak: number | null = null
+	if (hasIdentity) {
+		try {
+			const streakInfo = await getServerStreakInfo()
+			currentStreak = streakInfo.currentStreak
+			maxStreak = streakInfo.maxStreak
+		} catch {
+			// Fail closed: do not fabricate a zero streak for an unread payload.
+		}
+	}
+
 	return (
 		<div className="relative flex min-h-screen flex-col">
 			<GuestIdentityBootstrap />
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}
-			<LayoutTopNav />
+			<LayoutTopNav currentStreak={currentStreak} />
 
 			{/* Main scrollable content */}
 			{/* pb-nav on mobile only (bottom nav), md:pb-0 on desktop */}
@@ -38,7 +54,7 @@ export default function MainLayout({ children }: Props) {
 			</div>
 
 			{/* Fixed overlays - proper z-index stacking */}
-			<LayoutOverlays />
+			<LayoutOverlays maxStreak={maxStreak} />
 
 			{/* Mobile: Bottom navigation */}
 			<BottomNav />

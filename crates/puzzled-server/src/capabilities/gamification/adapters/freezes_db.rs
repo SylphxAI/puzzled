@@ -1,11 +1,12 @@
 //! SQL adapters for streak freeze persistence.
 
+use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
 use sqlx::PgPool;
-use uuid::Uuid;
 
 /// Load freezes available for a user (0 when missing).
 pub async fn load_freezes_available(pool: &PgPool, user_id: &str) -> Result<i32, String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| e.to_string())?;
+    let uid =
+        user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))?;
     let row: Option<(i32,)> =
         sqlx::query_as("SELECT freezes_available FROM user_freeze_data WHERE user_id = $1 LIMIT 1")
             .bind(uid)
@@ -23,7 +24,8 @@ pub async fn upsert_freeze_data(
     freezes_used: i32,
     auto_freeze_enabled: bool,
 ) -> Result<(), String> {
-    let uid = Uuid::parse_str(user_id).map_err(|e| e.to_string())?;
+    let uid =
+        user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))?;
     sqlx::query(
         r#"
         INSERT INTO user_freeze_data (user_id, freezes_available, freezes_used, auto_freeze_enabled, updated_at)
