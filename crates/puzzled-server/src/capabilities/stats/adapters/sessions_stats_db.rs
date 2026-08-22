@@ -1,6 +1,7 @@
 //! SQL adapters for user stats and history (server-authoritative sessions).
 
 use puzzled_core::identity_policy::guest_day_id::user_id_to_storage_uuid;
+use puzzled_core::puzzle_play::ritual_completion::{DRC_MODULE_COMPLETIONS_SQL, DRC_RECOMPUTE_SQL};
 use serde_json::Value;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -114,27 +115,22 @@ pub async fn user_history(
         .collect())
 }
 
-/// Public today overview: distinct players + completions per game (today).
-pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value>), String> {
-    let players: (i64,) = sqlx::query_as(
-        r#"
-        SELECT COUNT(DISTINCT user_id) FROM game_sessions
-        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
-        "#,
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|e| format!("today players failed: {e}"))?;
-    let rows: Vec<(String, i64)> = sqlx::query_as(
-        r#"
-        SELECT game_slug, COUNT(*) FROM game_sessions
-        WHERE status IN ('won','lost') AND completed_at::date = CURRENT_DATE
-        GROUP BY game_slug ORDER BY game_slug
-        "#,
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(|e| format!("today completions failed: {e}"))?;
+/// Public today overview: daily puzzle completers + qualifying ritual
+/// finishes for the bound product `day_key`. Same authority as `compute_drc`.
+pub async fn today_overview(
+    pool: &PgPool,
+    day_key: &str,
+) -> Result<(u32, Vec<serde_json::Value>), String> {
+    let players: (i64,) = sqlx::query_as(DRC_RECOMPUTE_SQL)
+        .bind(day_key)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| format!("today players failed: {e}"))?;
+    let rows: Vec<(String, i64)> = sqlx::query_as(DRC_MODULE_COMPLETIONS_SQL)
+        .bind(day_key)
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("today completions failed: {e}"))?;
     let completions = rows
         .into_iter()
         .map(|(slug, count)| serde_json::json!({ "gameSlug": slug, "count": count }))
@@ -145,6 +141,11 @@ pub async fn today_overview(pool: &PgPool) -> Result<(u32, Vec<serde_json::Value
 #[cfg(test)]
 mod tests {
     use super::parse_user_id;
+    use puzzled_core::puzzle_play::game_slugs::ModuleClass;
+    use puzzled_core::puzzle_play::ritual_completion::{
+        compute_drc, compute_today_overview, RitualCompletionRow, RitualOverviewRow,
+        DRC_MODULE_COMPLETIONS_SQL, DRC_RECOMPUTE_SQL,
+    };
 
     #[test]
     fn guest_logical_user_id_maps_to_storage_uuid() {
@@ -153,5 +154,33 @@ mod tests {
         let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
         assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
         assert!(parse_user_id("not-a-uuid").is_err());
+    }
+
+    #[test]
+    fn today_overview_sql_is_the_drc_recompute() {
+        assert!(DRC_RECOMPUTE_SQL.contains("day_key = $1"));
+        assert!(DRC_RECOMPUTE_SQL.contains("is_ritual = true"));
+        assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
+        assert!(!DRC_RECOMPUTE_SQL.contains("CURRENT_DATE"));
+        assert!(!DRC_RECOMPUTE_SQL.contains("completed_at::date"));
+        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
+        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
+        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("completed_at::date"));
+    }
+
+    #[test]
+    fn today_overview_player_count_equals_compute_drc() {
+        let rows = [RitualOverviewRow {
+            user_id: "a".into(),
+            day_key: "2026-08-22".into(),
+            game_module_id: "sudoku".into(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        let overview = compute_today_overview("2026-08-22", &rows);
+        let drc_rows: Vec<RitualCompletionRow> =
+            rows.iter().map(RitualOverviewRow::completion_row).collect();
+        assert_eq!(overview.player_count, compute_drc("2026-08-22", &drc_rows));
+        assert_eq!(overview.player_count, 1);
     }
 }

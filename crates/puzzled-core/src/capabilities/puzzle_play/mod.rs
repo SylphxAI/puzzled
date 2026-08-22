@@ -13,6 +13,7 @@ pub use domain::daily_time;
 pub use domain::game_format;
 pub use domain::game_slugs;
 pub use domain::killer_sudoku;
+pub use domain::module_conformance;
 pub use domain::nonogram_clues;
 pub use domain::pattern_match;
 pub use domain::placement;

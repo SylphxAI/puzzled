@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import type { ComponentType } from 'react'
+import { type InteractionSlug, isInteractionSlug } from '@/games/interaction-slugs'
 import type { GameProps, PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { canonicalizeGameSlug } from '@/lib/game-slug'
@@ -183,7 +184,7 @@ const WordSearchGame = dynamic(
 function getGameComponent(slug: string): DynamicGameComponent | null {
 	// All games accept GameProps (puzzleId, puzzleData, mode, difficulty)
 	// Games that don't support difficulty simply ignore it
-	const games: Record<string, DynamicGameComponent> = {
+	const games: Record<InteractionSlug, DynamicGameComponent> = {
 		arithmo: ArithmoGame as DynamicGameComponent,
 		'block-slide': BlockSlideGame as DynamicGameComponent,
 		crossword: CrosswordGame as DynamicGameComponent,
@@ -202,5 +203,6 @@ function getGameComponent(slug: string): DynamicGameComponent | null {
 		'word-ladder': WordLadderGame as DynamicGameComponent,
 		'word-search': WordSearchGame as DynamicGameComponent,
 	}
-	return games[canonicalizeGameSlug(slug)] ?? null
+	const canonical = canonicalizeGameSlug(slug)
+	return isInteractionSlug(canonical) ? games[canonical] : null
 }

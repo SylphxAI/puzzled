@@ -4,6 +4,7 @@
 use std::sync::Arc;
 
 use buffa::EnumValue;
+use chrono::Utc;
 use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
@@ -24,6 +25,7 @@ use crate::proto::puzzled::v1::{
     GetTodayPercentileResponse, GetUserStatsRequest, GetUserStatsResponse, LeaderboardEntry,
     LeaderboardPeriod, LeaderboardType, SessionEntry, StatsService, UserGameStats,
 };
+use puzzled_core::puzzle_play::daily_time::product_day_key_string;
 use puzzled_core::puzzle_play::game_slugs::is_valid_game_slug;
 
 #[derive(Clone)]
@@ -214,8 +216,9 @@ impl StatsService for StatsConnectService {
         _ctx: RequestContext,
         _request: ServiceRequest<'_, GetTodayOverviewRequest>,
     ) -> ServiceResult<GetTodayOverviewResponse> {
+        let day_key = product_day_key_string(Utc::now());
         let (player_count, completions) = match &self.state.pool {
-            Some(pool) => today_overview(pool).await.map_err(|e| {
+            Some(pool) => today_overview(pool, &day_key).await.map_err(|e| {
                 tracing::warn!(%e, "today overview failed");
                 ConnectError::new(ErrorCode::Internal, "today_overview_failed")
             })?,

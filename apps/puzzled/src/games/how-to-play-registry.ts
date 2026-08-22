@@ -29,6 +29,7 @@ import { CrosswordHowToPlay } from './crossword/components/how-to-play'
 import { CrosswordIcon } from './crossword/icon'
 import { CryptogramHowToPlay } from './cryptogram/components/how-to-play'
 import { CryptogramIcon } from './cryptogram/icon'
+import { type InteractionSlug, isInteractionSlug } from './interaction-slugs'
 import { KillerSudokuHowToPlay } from './killer-sudoku/components/how-to-play'
 import { KillerSudokuIcon } from './killer-sudoku/icon'
 import { NonogramHowToPlay } from './nonogram/components/how-to-play'
@@ -93,7 +94,7 @@ export interface HowToPlayConfig {
 const standardIsPerfectGame = (stats: GameCompletionStats): boolean =>
 	stats.status === 'won' && (stats.mistakes ?? 0) === 0
 
-const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
+const HOW_TO_PLAY_CONFIGS: Record<InteractionSlug, HowToPlayConfig> = {
 	arithmo: {
 		slug: 'arithmo',
 		name: 'Arithmo',
@@ -241,7 +242,8 @@ const HOW_TO_PLAY_CONFIGS: Record<string, HowToPlayConfig> = {
  * Get HowToPlay config by slug
  */
 export function getHowToPlayConfig(slug: string): HowToPlayConfig | undefined {
-	return HOW_TO_PLAY_CONFIGS[canonicalizeGameSlug(slug)]
+	const canonical = canonicalizeGameSlug(slug)
+	return isInteractionSlug(canonical) ? HOW_TO_PLAY_CONFIGS[canonical] : undefined
 }
 
 /**

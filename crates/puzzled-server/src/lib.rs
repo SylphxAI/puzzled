@@ -603,7 +603,8 @@ mod tests {
         };
         use puzzled_core::puzzle_play::game_slugs::ModuleClass;
         use puzzled_core::puzzle_play::ritual_completion::{
-            compute_drc, compute_hrc, qualifies_as_ritual, RitualCompletionRow, RitualQualifyInput,
+            compute_drc, compute_hrc, compute_today_overview, qualifies_as_ritual,
+            RitualCompletionRow, RitualOverviewRow, RitualQualifyInput, DRC_MODULE_COMPLETIONS_SQL,
             DRC_RECOMPUTE_SQL, HABITUAL_MIN_DAYS, HABITUAL_WINDOW_DAYS, HRC_RECOMPUTE_SQL,
         };
 
@@ -632,6 +633,18 @@ mod tests {
         }];
         assert_eq!(compute_drc(&key, &rows), 1);
         assert_eq!(compute_hrc(&key, &rows), 0);
+        let overview_rows = [RitualOverviewRow {
+            user_id: "u1".into(),
+            day_key: key.clone(),
+            game_module_id: "sudoku".into(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        let overview = compute_today_overview(&key, &overview_rows);
+        assert_eq!(overview.player_count, compute_drc(&key, &rows));
+        assert_eq!(overview.completions, vec![("sudoku".into(), 1)]);
+        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
+        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
         assert_eq!(HABITUAL_MIN_DAYS, 4);
         assert_eq!(HABITUAL_WINDOW_DAYS, 7);
         assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));

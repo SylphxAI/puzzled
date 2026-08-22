@@ -64,6 +64,37 @@ fn status_from_wl(
     }
 }
 
+type ModuleValidator = fn(&Value, &Value, &SubmissionEnvelope) -> SubmissionVerdict;
+
+fn validator_for(game_slug: &str) -> Option<ModuleValidator> {
+    match crate::capabilities::puzzle_play::domain::game_slugs::canonicalize_game_slug(game_slug) {
+        "word-guess" => Some(word_guess),
+        "word-groups" => Some(word_groups),
+        "word-hive" => Some(word_hive),
+        "crossword" => Some(crossword),
+        "sudoku" => Some(sudoku),
+        "nonogram" => Some(nonogram),
+        "word-ladder" => Some(word_ladder),
+        "arithmo" => Some(arithmo),
+        "pattern-match" => Some(pattern_match),
+        "block-slide" => Some(block_slide),
+        "crowns" | "queens" => Some(queens),
+        "duo" | "tango" => Some(tango),
+        "word-box" => Some(word_box),
+        "quad-words" => Some(quad_words),
+        "killer-sudoku" => Some(killer_sudoku),
+        "cryptogram" => Some(cryptogram),
+        "word-search" => Some(word_search),
+        _ => None,
+    }
+}
+
+/// True when SubmitGuess has a server validator for this slug (or inbound alias).
+#[must_use]
+pub fn has_server_validator(game_slug: &str) -> bool {
+    validator_for(game_slug).is_some()
+}
+
 /// Validate a final submission for a served puzzle.
 ///
 /// `puzzle_data` and `solution` are the JSON the server holds for the served
@@ -74,25 +105,15 @@ pub fn validate_submission(
     solution: &Value,
     env: &SubmissionEnvelope,
 ) -> SubmissionVerdict {
-    match crate::capabilities::puzzle_play::domain::game_slugs::canonicalize_game_slug(game_slug) {
-        "word-guess" => word_guess(puzzle_data, solution, env),
-        "word-groups" => word_groups(puzzle_data, solution, env),
-        "word-hive" => word_hive(puzzle_data, solution, env),
-        "crossword" => crossword(puzzle_data, solution, env),
-        "sudoku" => sudoku(puzzle_data, solution, env),
-        "nonogram" => nonogram(puzzle_data, solution, env),
-        "word-ladder" => word_ladder(puzzle_data, solution, env),
-        "arithmo" => arithmo(puzzle_data, solution, env),
-        "pattern-match" => pattern_match(puzzle_data, solution, env),
-        "block-slide" => block_slide(puzzle_data, solution, env),
-        "crowns" | "queens" => queens(puzzle_data, solution, env),
-        "duo" | "tango" => tango(puzzle_data, solution, env),
-        "word-box" => word_box(puzzle_data, solution, env),
-        "quad-words" => quad_words(puzzle_data, solution, env),
-        "killer-sudoku" => killer_sudoku(puzzle_data, solution, env),
-        "cryptogram" => cryptogram(puzzle_data, solution, env),
-        "word-search" => word_search(puzzle_data, solution, env),
-        other => SubmissionVerdict::invalid(format!("unsupported game slug: {other}")),
+    match validator_for(game_slug) {
+        Some(validate) => validate(puzzle_data, solution, env),
+        None => {
+            let other =
+                crate::capabilities::puzzle_play::domain::game_slugs::canonicalize_game_slug(
+                    game_slug,
+                );
+            SubmissionVerdict::invalid(format!("unsupported game slug: {other}"))
+        }
     }
 }
 
@@ -1056,5 +1077,27 @@ mod tests {
     fn unknown_game_fails_closed() {
         let v = validate_submission("no-such-game", &json!({}), &json!({}), &env(json!({})));
         assert!(!v.valid);
+        assert!(!has_server_validator("no-such-game"));
+        assert!(!has_server_validator("brand-new-module"));
+    }
+
+    #[test]
+    fn every_catalog_slug_has_a_server_validator() {
+        use crate::capabilities::puzzle_play::domain::game_slugs::all_game_slugs;
+        for slug in all_game_slugs() {
+            assert!(
+                has_server_validator(slug),
+                "{slug} is customer-catalogued without a server validator"
+            );
+            let v = validate_submission(slug, &json!({}), &json!({}), &env(json!({})));
+            assert!(
+                v.error
+                    .as_deref()
+                    .is_none_or(|e| !e.starts_with("unsupported game slug:")),
+                "{slug} dispatch must not be unsupported: {v:?}"
+            );
+        }
+        assert!(has_server_validator("queens"));
+        assert!(has_server_validator("tango"));
     }
 }
