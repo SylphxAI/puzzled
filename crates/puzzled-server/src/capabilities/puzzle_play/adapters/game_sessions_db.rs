@@ -108,6 +108,72 @@ SELECT EXISTS (
 )
 "#;
 
+const COMPLETED_SESSION_BY_PID_AND_DATE_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND status IN ('won','lost')
+  AND (
+    puzzle_id = $2
+    OR (game_slug = $3 AND puzzle_date = $4)
+  )
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+const COMPLETED_SESSION_BY_PID_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND puzzle_id = $2
+  AND status IN ('won','lost')
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+const COMPLETED_SESSION_BY_DATE_SQL: &str = r#"
+SELECT status::text, score, attempts, completed_at
+FROM game_sessions
+WHERE user_id = $1
+  AND game_slug = $2
+  AND puzzle_date = $3
+  AND status IN ('won','lost')
+ORDER BY completed_at DESC NULLS LAST, id DESC
+LIMIT 1
+"#;
+
+const ADOPT_GUEST_COLLISION_DELETE_SQL: &str = r#"
+DELETE FROM game_sessions AS guest
+WHERE guest.user_id = $1
+  AND (
+    (
+      guest.puzzle_id IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM game_sessions AS account
+        WHERE account.user_id = $2
+          AND account.puzzle_id = guest.puzzle_id
+      )
+    )
+    OR (
+      guest.is_ritual = true
+      AND guest.day_key IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM game_sessions AS account
+        WHERE account.user_id = $2
+          AND account.is_ritual = true
+          AND account.game_slug = guest.game_slug
+          AND account.day_key = guest.day_key
+      )
+    )
+  )
+"#;
+
+const ADOPT_GUEST_REASSIGN_SQL: &str = r#"
+UPDATE game_sessions
+SET user_id = $2
+WHERE user_id = $1
+"#;
+
 /// True when the user has a completed session for the given puzzle and/or date.
 ///
 /// Lookup is **OR** of:
@@ -159,6 +225,105 @@ pub async fn has_completed_session(
         (None, None) => false,
     };
     Ok(exists)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompletedSession {
+    pub status: String,
+    pub score: Option<i32>,
+    pub attempts: i32,
+    pub completed_at: Option<chrono::NaiveDateTime>,
+}
+
+/// Load the accepted result for a served daily puzzle.
+///
+/// This is deliberately the same identity/date-or-puzzle lookup as
+/// [`has_completed_session`]. The result card must reflect the Rust-accepted
+/// `game_sessions` row; it must never be inferred from the completion boolean
+/// or filled with client/current-time defaults.
+pub async fn load_completed_session(
+    pool: &PgPool,
+    user_id: &str,
+    game_slug: &str,
+    puzzle_date: Option<chrono::NaiveDate>,
+    puzzle_id: Option<&str>,
+) -> Result<Option<CompletedSession>, String> {
+    let uid = parse_user_id(user_id)?;
+    let pid = match puzzle_id {
+        Some(p) => Some(uuid::Uuid::parse_str(p).map_err(|e| format!("invalid puzzle id: {e}"))?),
+        None => None,
+    };
+    let date = match puzzle_date {
+        Some(d) => Some(d.and_hms_opt(0, 0, 0).ok_or("invalid date")?),
+        None => None,
+    };
+
+    let row: Option<(String, Option<i32>, i32, Option<chrono::NaiveDateTime>)> = match (pid, date) {
+        (Some(pid), Some(date)) => sqlx::query_as(COMPLETED_SESSION_BY_PID_AND_DATE_SQL)
+            .bind(uid)
+            .bind(pid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (Some(pid), None) => sqlx::query_as(COMPLETED_SESSION_BY_PID_SQL)
+            .bind(uid)
+            .bind(pid)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (None, Some(date)) => sqlx::query_as(COMPLETED_SESSION_BY_DATE_SQL)
+            .bind(uid)
+            .bind(game_slug)
+            .bind(date)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| format!("completed session query failed: {e}"))?,
+        (None, None) => None,
+    };
+
+    Ok(
+        row.map(|(status, score, attempts, completed_at)| CompletedSession {
+            status,
+            score,
+            attempts,
+            completed_at,
+        }),
+    )
+}
+
+/// Move accepted guest rows onto the Platform account without duplicating a
+/// finish for the same puzzle or ritual (user, module, product day).
+///
+/// Colliding guest rows are dropped so the account keeps its existing
+/// canonical result. Remaining guest rows are reassigned to the account.
+pub async fn adopt_guest_sessions(
+    pool: &PgPool,
+    account_user_id: &str,
+    guest_user_id: &str,
+) -> Result<u64, String> {
+    let account = parse_user_id(account_user_id)?;
+    let guest = parse_user_id(guest_user_id)?;
+    if account == guest {
+        return Ok(0);
+    }
+
+    sqlx::query(ADOPT_GUEST_COLLISION_DELETE_SQL)
+        .bind(guest)
+        .bind(account)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("guest collision delete failed: {e}"))?;
+
+    let updated = sqlx::query(ADOPT_GUEST_REASSIGN_SQL)
+        .bind(guest)
+        .bind(account)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("guest reassign failed: {e}"))?;
+
+    Ok(updated.rows_affected())
 }
 
 /// True when the user already has a ritual finish for this module on `day_key`.
@@ -400,6 +565,49 @@ mod tests {
         // Unique-index race path still maps to product rejection, not 500.
         assert!(is_unique_violation_code("23505"));
         assert!(!is_unique_violation_code("42P01"));
+    }
+
+    #[test]
+    fn completed_session_queries_return_the_authoritative_result_shape() {
+        for sql in [
+            COMPLETED_SESSION_BY_PID_AND_DATE_SQL,
+            COMPLETED_SESSION_BY_PID_SQL,
+            COMPLETED_SESSION_BY_DATE_SQL,
+        ] {
+            let normalized = sql
+                .split_whitespace()
+                .collect::<Vec<_>>()
+                .join(" ")
+                .to_ascii_lowercase();
+            assert!(normalized.starts_with("select status::text, score, attempts, completed_at"));
+            assert!(normalized.contains("status in ('won','lost')"));
+            assert!(normalized.contains("order by completed_at desc nulls last"));
+            assert!(normalized.contains("limit 1"));
+        }
+    }
+
+    #[test]
+    fn guest_adoption_sql_drops_collisions_then_reassigns() {
+        let delete_sql = ADOPT_GUEST_COLLISION_DELETE_SQL
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase();
+        assert!(delete_sql.starts_with("delete from game_sessions as guest"));
+        assert!(delete_sql.contains("account.puzzle_id = guest.puzzle_id"));
+        assert!(delete_sql.contains("account.is_ritual = true"));
+        assert!(delete_sql.contains("account.game_slug = guest.game_slug"));
+        assert!(delete_sql.contains("account.day_key = guest.day_key"));
+
+        let update_sql = ADOPT_GUEST_REASSIGN_SQL
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase();
+        assert_eq!(
+            update_sql,
+            "update game_sessions set user_id = $2 where user_id = $1"
+        );
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

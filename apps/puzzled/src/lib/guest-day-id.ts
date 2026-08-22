@@ -9,6 +9,8 @@
 import { GUEST_DAY_ID_KEY } from '@/lib/storage-keys'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const GUEST_ID_COOKIE = 'puzzled_guest_id'
+const GUEST_ID_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30
 
 function mintUuid(): string {
 	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -22,23 +24,39 @@ function mintUuid(): string {
 	})
 }
 
+function persistGuestIdCookie(id: string): void {
+	if (typeof document === 'undefined') return
+	// biome-ignore lint/suspicious/noDocumentCookie: SSR GetDaily reads this cookie
+	document.cookie = `${GUEST_ID_COOKIE}=${id}; Path=/; Max-Age=${GUEST_ID_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`
+}
+
+/** Current `puzzled_guest_id` cookie, if it is a UUID. */
+export function readGuestIdCookie(): string | null {
+	if (typeof document === 'undefined') return null
+	const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${GUEST_ID_COOKIE}=([^;]*)`))
+	const value = match?.[1]?.trim()
+	return value && UUID_RE.test(value) ? value : null
+}
+
 /**
  * Return the browser-stable guest UUID, creating + persisting one if needed.
  * SSR-safe: returns null when window/localStorage is unavailable.
+ *
+ * Existing localStorage ids must still be mirrored onto `puzzled_guest_id`.
+ * SSR GetDaily / GetUserStats / GetHistory have no localStorage; without the
+ * cookie they run anonymous and disagree with client Connect.
  */
 export function getOrCreateGuestDayId(): string | null {
 	if (typeof window === 'undefined') return null
 	try {
 		const existing = localStorage.getItem(GUEST_DAY_ID_KEY)?.trim()
 		if (existing && UUID_RE.test(existing)) {
+			persistGuestIdCookie(existing)
 			return existing
 		}
 		const id = mintUuid()
 		localStorage.setItem(GUEST_DAY_ID_KEY, id)
-		// Mirror as non-HttpOnly cookie so same-origin Connect can also read it
-		// if the interceptor path is skipped (defense in depth with header).
-		// biome-ignore lint/suspicious/noDocumentCookie: intentional guest id mirror
-		document.cookie = `puzzled_guest_id=${id}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`
+		persistGuestIdCookie(id)
 		return id
 	} catch {
 		return null

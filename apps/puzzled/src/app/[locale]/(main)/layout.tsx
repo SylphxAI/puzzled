@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -23,6 +24,7 @@ function SkipNavigation() {
 export default function MainLayout({ children }: Props) {
 	return (
 		<div className="relative flex min-h-screen flex-col">
+			<GuestIdentityBootstrap />
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}

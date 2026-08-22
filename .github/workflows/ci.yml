@@ -10,17 +10,6 @@ on:
   merge_group:
   pull_request:
     branches: [main, dev]
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'crates/**'
-      - 'docs/**'
-      - 'AGENTS.md'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'sylphx.toml'
-      - 'scripts/**'
-      - '.github/workflows/ci.yml'
   push:
     branches: [main, dev]
     paths:

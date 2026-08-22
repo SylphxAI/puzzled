@@ -97,15 +97,55 @@ pub fn require_identity(ctx: &RequestContext) -> Result<VerifiedIdentity, Connec
     verify(ctx.headers())
 }
 
+/// Platform and guest identities present on one request.
+///
+/// Platform still wins as the write identity. The guest id is retained so
+/// accepted `guest_<uuid>` rows can be adopted onto the account without a
+/// second finish for the same module/day.
+#[derive(Debug, Clone, Default)]
+pub struct RequestIdentities {
+    pub platform: Option<VerifiedIdentity>,
+    pub guest: Option<VerifiedIdentity>,
+}
+
+impl RequestIdentities {
+    /// Platform identity when present, otherwise the guest day id.
+    #[must_use]
+    pub fn primary(&self) -> Option<&VerifiedIdentity> {
+        self.platform.as_ref().or(self.guest.as_ref())
+    }
+
+    /// Account/guest pair that must be merged. None when adoption is a no-op.
+    #[must_use]
+    pub fn adoption_pair(&self) -> Option<(&str, &str)> {
+        match (&self.platform, &self.guest) {
+            (Some(platform), Some(guest)) if platform.user_id != guest.user_id => {
+                Some((platform.user_id.as_str(), guest.user_id.as_str()))
+            }
+            _ => None,
+        }
+    }
+}
+
+/// Resolve both request identities without dropping the guest cookie when a
+/// Platform JWT is also present.
+#[must_use]
+pub fn resolve_request_identities(ctx: &RequestContext) -> RequestIdentities {
+    RequestIdentities {
+        platform: verify(ctx.headers()).ok(),
+        guest: resolve_guest(ctx.headers()),
+    }
+}
+
 /// Platform JWT/session **or** stable guest-day id (protocol default for free
 /// ritual finishes). Platform identity wins when both are present.
 pub fn require_identity_or_guest(ctx: &RequestContext) -> Result<VerifiedIdentity, ConnectError> {
-    match verify(ctx.headers()) {
-        Ok(identity) => Ok(identity),
-        Err(_) => resolve_guest(ctx.headers()).ok_or_else(|| {
+    resolve_request_identities(ctx)
+        .primary()
+        .cloned()
+        .ok_or_else(|| {
             ConnectError::new(ErrorCode::Unauthenticated, "identity_required_for_submit")
-        }),
-    }
+        })
 }
 
 /// Require identity with an exact admin scope claim.
@@ -182,5 +222,36 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert(GUEST_ID_HEADER, "not-a-uuid".parse().unwrap());
         assert!(resolve_guest(&headers).is_none());
+    }
+
+    #[test]
+    fn adoption_pair_keeps_guest_when_platform_wins() {
+        let identities = RequestIdentities {
+            platform: Some(VerifiedIdentity {
+                user_id: "f715210b-9df3-4945-b5bd-94fc4609bc30".to_string(),
+                display_name: Some("Ada".to_string()),
+                email: None,
+                is_admin: false,
+            }),
+            guest: Some(VerifiedIdentity {
+                user_id: "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890".to_string(),
+                display_name: Some("Guest".to_string()),
+                email: None,
+                is_admin: false,
+            }),
+        };
+        assert_eq!(
+            identities
+                .primary()
+                .map(|identity| identity.user_id.as_str()),
+            Some("f715210b-9df3-4945-b5bd-94fc4609bc30")
+        );
+        assert_eq!(
+            identities.adoption_pair(),
+            Some((
+                "f715210b-9df3-4945-b5bd-94fc4609bc30",
+                "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+            ))
+        );
     }
 }

@@ -32,6 +32,13 @@ message GetDailyRequest {
   reserved 4; // has_completed removed: completion is server-derived
 }
 
+message DailyCompletion {
+  string status = 1;
+  optional uint32 score = 2;
+  optional uint32 attempts = 3;
+  optional int64 completed_at_ms = 4;
+}
+
 message GetDailyResponse {
   string game_slug = 1;
   uint32 puzzle_number = 2;
@@ -44,6 +51,10 @@ message GetDailyResponse {
   string slice = 9;
   bool stub = 10;
   string puzzle_data_json = 11;
+  // Present only when the request identity has an accepted finish.
+  // Details are read from the same Rust-owned game_sessions row as the
+  // completion guard; the client never reconstructs a result.
+  DailyCompletion completed_session = 12;
 }
 
 message SubmitGuessRequest {

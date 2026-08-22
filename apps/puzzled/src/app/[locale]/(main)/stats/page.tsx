@@ -1,13 +1,23 @@
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
-import { BarChart3, Flame, LogIn, Sparkles, Star, Target, Trophy } from 'lucide-react'
+import { BarChart3, Check, Flame, Star, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { Achievements } from '@/features/gamification/components/achievements'
-import { getServerUserStats } from '@/lib/api/server'
+import { getAllGameMetadata } from '@/games/registry'
+import {
+	getServerHistory,
+	getServerPersonalDailyResults,
+	getServerUserStats,
+	type HistoryEntry,
+	hasServerProgressIdentity,
+	type UserStats,
+} from '@/lib/api/server'
+import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
-import { ConnectionsIcon, WordleIcon } from '@/shared/components/ui/game-icons'
+import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -33,7 +43,6 @@ type GameStats = {
 	perfectGames: number
 }
 
-// Empty stats for new users or games not played
 const emptyStats: GameStats = {
 	gamesPlayed: 0,
 	gamesWon: 0,
@@ -45,9 +54,20 @@ const emptyStats: GameStats = {
 	perfectGames: 0,
 }
 
-type StatsData = {
-	wordle: GameStats
-	connections: GameStats
+const slugToCamelCase = (slug: string) => slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
+
+function toGameStats(stats: UserStats[string] | undefined): GameStats {
+	if (!stats) return emptyStats
+	return {
+		gamesPlayed: stats.gamesPlayed,
+		gamesWon: stats.gamesWon,
+		currentStreak: stats.currentStreak,
+		maxStreak: stats.maxStreak,
+		totalScore: stats.totalScore,
+		averageAttempts: stats.averageAttempts,
+		guessDistribution: stats.guessDistribution as Record<string, number> | null,
+		perfectGames: stats.perfectGames,
+	}
 }
 
 export default async function StatsPage({ params }: Props) {
@@ -55,10 +75,44 @@ export default async function StatsPage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const t = await getTranslations('stats')
+	const tDaily = await getTranslations('daily')
+	const tGames = await getTranslations('games')
+	const tHome = await getTranslations('home')
 	const user = await currentUser()
+	const gameMetadata = getAllGameMetadata()
+	const todaysFreeGame = getTodaysFreeGame()
+	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
 
-	// Logged-out users see login prompt, not fake data
-	if (!user) {
+	const [userStatsResult, historyResult, personalResult] = await Promise.allSettled(
+		hasProgressIdentity
+			? [
+					getServerUserStats(),
+					getServerHistory({ limit: 20 }),
+					getServerPersonalDailyResults({
+						gameSlugs: gameMetadata.map((game) => game.slug),
+						isGuest: !user,
+						isPremium,
+						freeGameSlug: todaysFreeGame,
+					}),
+				]
+			: [
+					Promise.resolve({} as UserStats),
+					Promise.resolve([] as HistoryEntry[]),
+					getServerPersonalDailyResults({
+						gameSlugs: gameMetadata.map((game) => game.slug),
+						isGuest: true,
+						isPremium: false,
+						freeGameSlug: todaysFreeGame,
+					}),
+				],
+	)
+
+	if (
+		userStatsResult.status === 'rejected' ||
+		historyResult.status === 'rejected' ||
+		personalResult.status === 'rejected'
+	) {
 		return (
 			<>
 				<Header />
@@ -69,13 +123,10 @@ export default async function StatsPage({ params }: Props) {
 								<BarChart3 className="h-10 w-10 text-muted-foreground" />
 							</div>
 						</div>
-						<h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
-						<p className="mb-6 text-muted-foreground">{t('signInToSeeStats')}</p>
+						<h1 className="mb-2 text-2xl font-bold">{t('unavailableTitle')}</h1>
+						<p className="mb-6 text-muted-foreground">{t('unavailableDescription')}</p>
 						<Button asChild>
-							<Link href={`/${locale}/login?callbackUrl=/${locale}/stats`}>
-								<LogIn className="mr-2 h-4 w-4" />
-								{t('signIn')}
-							</Link>
+							<Link href={`/${locale}/stats`}>{t('retry')}</Link>
 						</Button>
 					</div>
 				</main>
@@ -83,53 +134,49 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	// Get user's real stats (sole Connect)
-	let stats: StatsData = { wordle: emptyStats, connections: emptyStats }
+	const userStats = userStatsResult.value
+	const history: HistoryEntry[] = historyResult.value
+	const personalResults = personalResult.value
+	const personalCompletions = Object.fromEntries(
+		Object.entries(personalResults).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
+	)
+	const personalCompletionsAvailable = Object.values(personalResults).every(
+		(result) => result.statusAvailable,
+	)
 
-	try {
-		const userStats = await getServerUserStats()
-		stats = {
-			wordle: userStats.wordle
-				? {
-						gamesPlayed: userStats.wordle.gamesPlayed,
-						gamesWon: userStats.wordle.gamesWon,
-						currentStreak: userStats.wordle.currentStreak,
-						maxStreak: userStats.wordle.maxStreak,
-						totalScore: userStats.wordle.totalScore,
-						averageAttempts: userStats.wordle.averageAttempts,
-						guessDistribution: userStats.wordle.guessDistribution as Record<string, number> | null,
-						perfectGames: userStats.wordle.perfectGames,
-					}
-				: emptyStats,
-			connections: userStats.connections
-				? {
-						gamesPlayed: userStats.connections.gamesPlayed,
-						gamesWon: userStats.connections.gamesWon,
-						currentStreak: userStats.connections.currentStreak,
-						maxStreak: userStats.connections.maxStreak,
-						totalScore: userStats.connections.totalScore,
-						averageAttempts: userStats.connections.averageAttempts,
-						guessDistribution: userStats.connections.guessDistribution as Record<
-							string,
-							number
-						> | null,
-						perfectGames: userStats.connections.perfectGames,
-					}
-				: emptyStats,
-		}
-	} catch {
-		// Use empty stats on error
-	}
+	const stats = Object.fromEntries(
+		(Object.entries(userStats) as [string, UserStats[string]][]).map(([gameSlug, gameStats]) => [
+			gameSlug,
+			toGameStats(gameStats),
+		]),
+	) as Record<string, GameStats>
 
-	const totalGamesPlayed = stats.wordle.gamesPlayed + stats.connections.gamesPlayed
-	const totalGamesWon = stats.wordle.gamesWon + stats.connections.gamesWon
-	const currentStreak = Math.max(stats.wordle.currentStreak, stats.connections.currentStreak)
-	const bestStreak = Math.max(stats.wordle.maxStreak, stats.connections.maxStreak)
+	const gameStats = gameMetadata.map((game) => ({
+		game,
+		stats: stats[game.slug] ?? emptyStats,
+	}))
+	const playedGameStats = gameStats.filter(({ stats: gameStat }) => gameStat.gamesPlayed > 0)
+	const totalGamesPlayed = gameStats.reduce(
+		(sum, { stats: gameStat }) => sum + gameStat.gamesPlayed,
+		0,
+	)
+	const totalGamesWon = gameStats.reduce((sum, { stats: gameStat }) => sum + gameStat.gamesWon, 0)
 	const winRate = totalGamesPlayed > 0 ? Math.round((totalGamesWon / totalGamesPlayed) * 100) : 0
-	const totalPerfectGames = stats.wordle.perfectGames + stats.connections.perfectGames
+	const dailyProgress = summarizeDailyProgress(
+		gameMetadata.map((game) => ({
+			completed: personalCompletions[game.slug] ?? false,
+			locked: !isPremium && game.slug !== todaysFreeGame,
+		})),
+	)
+	const wordGuessStats = stats['word-guess'] ?? emptyStats
+	const wordGroupsStats = stats['word-groups'] ?? emptyStats
 
-	// Show empty state if user hasn't played any games yet
-	if (totalGamesPlayed === 0) {
+	if (
+		personalCompletionsAvailable &&
+		totalGamesPlayed === 0 &&
+		dailyProgress.completedCount === 0 &&
+		history.length === 0
+	) {
 		return (
 			<>
 				<Header />
@@ -151,14 +198,13 @@ export default async function StatsPage({ params }: Props) {
 		)
 	}
 
-	// Determine which stat to feature based on what's impressive
 	const featuredStat =
-		currentStreak >= 7
-			? 'streak'
-			: winRate >= 80
-				? 'winRate'
-				: totalPerfectGames >= 3
-					? 'perfect'
+		winRate >= 80
+			? 'winRate'
+			: totalGamesPlayed >= 3
+				? 'games'
+				: dailyProgress.completedCount > 0
+					? 'today'
 					: 'games'
 
 	return (
@@ -168,44 +214,21 @@ export default async function StatsPage({ params }: Props) {
 				<div className="mx-auto w-full max-w-2xl space-y-6">
 					<h1 className="text-2xl font-bold">{t('title')}</h1>
 
-					{/* Featured Hero Stat */}
 					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 text-center">
-						<div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-						<div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-primary/5 blur-xl" />
-
-						{featuredStat === 'streak' && (
-							<>
-								<Flame className="mx-auto h-10 w-10 text-stat-streak animate-pulse" />
-								<div className="mt-2 text-5xl font-bold text-stat-streak">{currentStreak}</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('dayStreak')}</div>
-								{currentStreak >= 7 && (
-									<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-stat-streak/10 px-3 py-1 text-xs font-medium text-stat-streak">
-										<Sparkles className="h-3 w-3" />
-										{t('onFire')}
-									</div>
-								)}
-							</>
-						)}
 						{featuredStat === 'winRate' && (
 							<>
 								<Target className="mx-auto h-10 w-10 text-stat-winrate" />
 								<div className="mt-2 text-5xl font-bold text-stat-winrate">{winRate}%</div>
 								<div className="mt-1 text-sm text-muted-foreground">{t('winRate')}</div>
-								<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-stat-winrate/10 px-3 py-1 text-xs font-medium text-stat-winrate">
-									<Star className="h-3 w-3" />
-									{t('sharpshooter')}
-								</div>
 							</>
 						)}
-						{featuredStat === 'perfect' && (
+						{featuredStat === 'today' && (
 							<>
-								<Trophy className="mx-auto h-10 w-10 text-amber-500" />
-								<div className="mt-2 text-5xl font-bold text-amber-500">{totalPerfectGames}</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('perfectGames')}</div>
-								<div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-									<Sparkles className="h-3 w-3" />
-									{t('perfectionist')}
+								<Check className="mx-auto h-10 w-10 text-emerald-500" />
+								<div className="mt-2 text-5xl font-bold">
+									{dailyProgress.completedCount}/{dailyProgress.availableCount}
 								</div>
+								<div className="mt-1 text-sm text-muted-foreground">{tDaily('todaysProgress')}</div>
 							</>
 						)}
 						{featuredStat === 'games' && (
@@ -217,158 +240,168 @@ export default async function StatsPage({ params }: Props) {
 						)}
 					</div>
 
-					{/* Secondary Stats Grid */}
 					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
 						<StatCard
 							icon={<Trophy className="h-4 w-4" />}
 							label={t('played')}
 							value={totalGamesPlayed}
-							variant={featuredStat !== 'games' ? 'default' : 'muted'}
 						/>
 						<StatCard
 							icon={<BarChart3 className="h-4 w-4" />}
 							label={t('winRate')}
 							value={`${winRate}%`}
-							variant={featuredStat !== 'winRate' ? 'default' : 'muted'}
 						/>
 						<StatCard
 							icon={<Flame className="h-4 w-4 text-stat-streak" />}
 							label={t('streak')}
-							value={currentStreak}
-							variant={featuredStat !== 'streak' ? 'default' : 'muted'}
+							value={wordGuessStats.currentStreak}
 						/>
 						<StatCard
 							icon={<Star className="h-4 w-4 text-amber-500" />}
 							label={t('best')}
-							value={bestStreak}
+							value={wordGuessStats.maxStreak}
 						/>
 					</div>
 
-					{/* Wordle Stats */}
-					{stats.wordle.gamesPlayed > 0 && (
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<WordleIcon size={24} className="text-game-wordle" aria-hidden="true" />
-									Wordle
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-									<div>
-										<div className="text-2xl font-bold">{stats.wordle.gamesPlayed}</div>
-										<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
-									</div>
-									<div>
-										<div className="text-2xl font-bold">
-											{stats.wordle.gamesPlayed > 0
-												? Math.round((stats.wordle.gamesWon / stats.wordle.gamesPlayed) * 100)
-												: 0}
-											%
+					<Card>
+						<CardHeader>
+							<CardTitle>{tHome('todaysPuzzles')}</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							{personalCompletionsAvailable ? (
+								<>
+									<div className="flex items-end justify-between gap-3">
+										<div>
+											<p className="text-3xl font-bold tabular-nums">
+												{dailyProgress.completedCount}/{dailyProgress.availableCount}
+											</p>
+											<p className="text-sm text-muted-foreground">{tDaily('todaysProgress')}</p>
 										</div>
-										<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+										{dailyProgress.allCompleted && (
+											<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+												<Check className="h-4 w-4" />
+												{tDaily('completed')}
+											</div>
+										)}
 									</div>
-									<div>
-										<div className="text-2xl font-bold">{stats.wordle.currentStreak}</div>
-										<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
+									<div className="grid gap-2 sm:grid-cols-2">
+										{gameMetadata.map((game) => {
+											const locked = !isPremium && game.slug !== todaysFreeGame
+											if (locked) return null
+											const completed = personalCompletions[game.slug] ?? false
+											const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
+												defaultValue: game.name,
+											})
+											return (
+												<Link
+													key={game.slug}
+													href={`/${locale}/games/${game.slug}`}
+													className="flex items-center gap-2 rounded-lg bg-muted/40 p-2 text-sm hover:bg-muted"
+												>
+													<GameIcon slug={game.slug} size={20} aria-hidden="true" />
+													<span className="min-w-0 flex-1 truncate">{gameName}</span>
+													{completed && <Check className="h-4 w-4 text-emerald-500" />}
+												</Link>
+											)
+										})}
 									</div>
-									<div>
-										<div className="text-2xl font-bold">{stats.wordle.maxStreak}</div>
-										<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
-									</div>
+								</>
+							) : (
+								<div
+									className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4"
+									role="alert"
+								>
+									<p className="font-medium">{t('dailyStatusUnavailableTitle')}</p>
+									<p className="mt-1 text-sm text-muted-foreground">
+										{t('dailyStatusUnavailableDescription')}
+									</p>
+									<Button asChild variant="outline" size="sm" className="mt-3">
+										<Link href={`/${locale}/stats`}>{t('dailyStatusRetry')}</Link>
+									</Button>
 								</div>
+							)}
+						</CardContent>
+					</Card>
 
-								{/* Guess Distribution */}
-								{stats.wordle.guessDistribution && (
-									<div>
-										<h4 className="mb-2 text-sm font-medium">{t('guessDistribution')}</h4>
-										<div className="space-y-1">
-											{Object.entries(stats.wordle.guessDistribution).map(([guess, count]) => {
-												const maxCount = Math.max(
-													...Object.values(
-														stats.wordle.guessDistribution as Record<string, number>,
-													),
-												)
-												const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0
-												return (
-													<div key={guess} className="flex items-center gap-2">
-														<span className="w-4 text-sm font-medium">{guess}</span>
-														<div className="flex-1">
-															<div
-																className="flex h-5 items-center rounded bg-primary px-2"
-																style={{
-																	width: `${Math.max(percentage, 10)}%`,
-																}}
-															>
-																<span className="text-xs font-medium text-primary-foreground">
-																	{count}
-																</span>
-															</div>
-														</div>
-													</div>
-												)
-											})}
+					{playedGameStats.map(({ game, stats: gameStat }) => {
+						const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
+							defaultValue: game.name,
+						})
+						const moduleWinRate = Math.round((gameStat.gamesWon / gameStat.gamesPlayed) * 100)
+						return (
+							<Card key={game.slug}>
+								<CardHeader>
+									<CardTitle className="flex items-center gap-2">
+										<GameIcon slug={game.slug} size={24} aria-hidden="true" />
+										{gameName}
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
+										<div>
+											<div className="text-2xl font-bold">{gameStat.gamesPlayed}</div>
+											<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
+										</div>
+										<div>
+											<div className="text-2xl font-bold">{moduleWinRate}%</div>
+											<div className="text-xs text-muted-foreground">{t('winRate')}</div>
+										</div>
+										<div>
+											<div className="text-2xl font-bold">{gameStat.totalScore}</div>
+											<div className="text-xs text-muted-foreground">{t('best')}</div>
 										</div>
 									</div>
-								)}
-							</CardContent>
-						</Card>
-					)}
+								</CardContent>
+							</Card>
+						)
+					})}
 
-					{/* Connections Stats */}
-					{stats.connections.gamesPlayed > 0 && (
-						<Card>
-							<CardHeader>
-								<CardTitle className="flex items-center gap-2">
-									<ConnectionsIcon size={24} className="text-game-connections" aria-hidden="true" />
-									Connections
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-									<div>
-										<div className="text-2xl font-bold">{stats.connections.gamesPlayed}</div>
-										<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
-									</div>
-									<div>
-										<div className="text-2xl font-bold">
-											{stats.connections.gamesPlayed > 0
-												? Math.round(
-														(stats.connections.gamesWon / stats.connections.gamesPlayed) * 100,
-													)
-												: 0}
-											%
+					<Card>
+						<CardHeader>
+							<CardTitle>{t('historyTitle')}</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							{history.length === 0 ? (
+								<p className="text-sm text-muted-foreground">{t('historyEmpty')}</p>
+							) : (
+								history.map((session) => {
+									const gameName = tGames(`${slugToCamelCase(session.gameSlug)}.name`, {
+										defaultValue: session.gameSlug,
+									})
+									return (
+										<div
+											key={`${session.gameSlug}-${session.puzzleId}-${session.puzzleDate}-${session.attempts}`}
+											className="flex items-center gap-3 rounded-lg bg-muted/40 p-2 text-sm"
+										>
+											<GameIcon slug={session.gameSlug} size={20} aria-hidden="true" />
+											<div className="min-w-0 flex-1">
+												<p className="truncate font-medium">{gameName}</p>
+												<p className="text-xs text-muted-foreground">
+													{session.puzzleDate} · {session.status} · {session.mode}
+												</p>
+											</div>
+											<span className="tabular-nums">{session.score}</span>
 										</div>
-										<div className="text-xs text-muted-foreground">{t('winRate')}</div>
-									</div>
-									<div>
-										<div className="text-2xl font-bold">{stats.connections.currentStreak}</div>
-										<div className="text-xs text-muted-foreground">{t('currentStreak')}</div>
-									</div>
-									<div>
-										<div className="text-2xl font-bold">{stats.connections.maxStreak}</div>
-										<div className="text-xs text-muted-foreground">{t('maxStreak')}</div>
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-					)}
+									)
+								})
+							)}
+						</CardContent>
+					</Card>
 
-					{/* Achievements */}
 					<Card>
 						<CardContent className="pt-6">
 							<Achievements
 								stats={{
 									totalWins: totalGamesWon,
-									maxStreak: Math.max(stats.wordle.maxStreak, stats.connections.maxStreak),
-									wordleWins: stats.wordle.gamesWon,
-									connectionsWins: stats.connections.gamesWon,
-									wordleBestAttempts: stats.wordle.guessDistribution?.['1']
+									maxStreak: Math.max(wordGuessStats.maxStreak, wordGroupsStats.maxStreak),
+									wordleWins: wordGuessStats.gamesWon,
+									connectionsWins: wordGroupsStats.gamesWon,
+									wordleBestAttempts: wordGuessStats.guessDistribution?.['1']
 										? 1
-										: stats.wordle.guessDistribution?.['2']
+										: wordGuessStats.guessDistribution?.['2']
 											? 2
 											: undefined,
-									connectionsPerfectGames: stats.connections.perfectGames,
+									connectionsPerfectGames: wordGroupsStats.perfectGames,
 								}}
 							/>
 						</CardContent>

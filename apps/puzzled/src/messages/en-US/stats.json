@@ -20,5 +20,13 @@
 	"onFire": "You're on fire!",
 	"sharpshooter": "Sharpshooter",
 	"perfectGames": "Perfect Games",
-	"perfectionist": "Perfectionist"
+	"perfectionist": "Perfectionist",
+	"unavailableTitle": "Progress is unavailable",
+	"unavailableDescription": "We could not load your accepted results. Retry to see today's completion, totals, and history.",
+	"retry": "Try again",
+	"historyTitle": "History",
+	"historyEmpty": "No accepted finishes yet.",
+	"dailyStatusUnavailableTitle": "Today's completion is unavailable",
+	"dailyStatusUnavailableDescription": "We could not verify today's personal progress. Retry before treating a module as unfinished.",
+	"dailyStatusRetry": "Try again"
 }

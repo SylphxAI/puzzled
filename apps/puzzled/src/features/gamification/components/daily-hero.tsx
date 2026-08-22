@@ -5,6 +5,7 @@ import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap }
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
@@ -213,8 +214,8 @@ export function DailyHero({
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
-	const completedCount = games.filter((g) => g.completed).length
-	const allCompleted = completedCount === games.length
+	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(games)
+	const progressPercent = availableCount > 0 ? (completedCount / availableCount) * 100 : 0
 
 	// Use static greeting on server, update on client to avoid hydration mismatch
 	const [timeGreeting, setTimeGreeting] = useState<TimeGreeting>('morning')
@@ -260,7 +261,7 @@ export function DailyHero({
 								)}
 							>
 								<span className="text-base font-bold text-white">
-									{completedCount}/{games.length}
+									{completedCount}/{availableCount}
 								</span>
 							</div>
 							<p className="mt-1 whitespace-nowrap text-[10px] text-muted-foreground">
@@ -278,7 +279,7 @@ export function DailyHero({
 									? 'bg-gradient-to-r from-emerald-400 to-emerald-600'
 									: 'bg-gradient-to-r from-primary to-primary/70',
 							)}
-							style={{ width: `${(completedCount / games.length) * 100}%` }}
+							style={{ width: `${progressPercent}%` }}
 						/>
 					</div>
 				</div>

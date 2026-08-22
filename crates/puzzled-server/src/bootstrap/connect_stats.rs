@@ -8,12 +8,13 @@ use connectrpc::{
     ConnectError, ErrorCode, RequestContext, Response, ServiceRequest, ServiceResult,
 };
 
-use super::identity::require_identity;
+use super::identity::{require_identity_or_guest, resolve_request_identities};
 use super::state::AppState;
 use crate::capabilities::leaderboard::adapters::leaderboard_db::{
     fetch_score_leaderboard, LeaderboardPeriod as DbPeriod, LeaderboardQuery,
     LeaderboardType as DbType,
 };
+use crate::capabilities::puzzle_play::adapters::game_sessions_db::adopt_guest_sessions;
 use crate::capabilities::stats::adapters::sessions_stats_db::{
     today_overview, user_history, user_stats,
 };
@@ -33,6 +34,26 @@ pub struct StatsConnectService {
 impl StatsConnectService {
     pub fn new(state: AppState) -> Self {
         Self { state }
+    }
+
+    async fn adopt_guest_progress_if_needed(
+        &self,
+        ctx: &RequestContext,
+    ) -> Result<(), ConnectError> {
+        let Some(pool) = &self.state.pool else {
+            return Ok(());
+        };
+        let identities = resolve_request_identities(ctx);
+        let Some((account_user_id, guest_user_id)) = identities.adoption_pair() else {
+            return Ok(());
+        };
+        adopt_guest_sessions(pool, account_user_id, guest_user_id)
+            .await
+            .map_err(|error| {
+                tracing::warn!(%error, "guest progress adoption failed");
+                ConnectError::new(ErrorCode::Internal, "guest_progress_adopt_failed")
+            })?;
+        Ok(())
     }
 }
 
@@ -224,7 +245,8 @@ impl StatsService for StatsConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, GetUserStatsRequest>,
     ) -> ServiceResult<GetUserStatsResponse> {
-        let identity = require_identity(&ctx)?;
+        self.adopt_guest_progress_if_needed(&ctx).await?;
+        let identity = require_identity_or_guest(&ctx)?;
         let req = request.to_owned_message();
         let (games, total_played, total_won) = match &self.state.pool {
             Some(pool) => user_stats(pool, &identity.user_id).await.map_err(|e| {
@@ -261,7 +283,8 @@ impl StatsService for StatsConnectService {
         ctx: RequestContext,
         request: ServiceRequest<'_, GetHistoryRequest>,
     ) -> ServiceResult<GetHistoryResponse> {
-        let identity = require_identity(&ctx)?;
+        self.adopt_guest_progress_if_needed(&ctx).await?;
+        let identity = require_identity_or_guest(&ctx)?;
         let req = request.to_owned_message();
         let slug = (!req.game_slug.trim().is_empty()).then(|| req.game_slug.trim().to_string());
         let rows = match &self.state.pool {
