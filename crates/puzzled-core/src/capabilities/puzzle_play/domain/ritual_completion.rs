@@ -6,6 +6,8 @@
 //! supporting habit oracle **weekly ritualists** (`compute_hrc`, 4-of-7).
 //! Do not mint a house score acronym (including DPC) for either quantity.
 
+use std::collections::BTreeMap;
+
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
@@ -170,6 +172,74 @@ WHERE day_key = $1
   AND module_class = 'puzzle_ritual'
   AND status IN ('won', 'lost')
 "#;
+
+/// Per-module qualifying ritual finish counts for a product day.
+///
+/// Bound `$1` = day_key `YYYY-MM-DD`. Same qualification as [`DRC_RECOMPUTE_SQL`].
+pub const DRC_MODULE_COMPLETIONS_SQL: &str = r#"
+SELECT game_slug, COUNT(*)::bigint AS count
+FROM game_sessions
+WHERE day_key = $1
+  AND is_ritual = true
+  AND module_class = 'puzzle_ritual'
+  AND status IN ('won', 'lost')
+GROUP BY game_slug
+ORDER BY game_slug
+"#;
+
+/// Compact row shape for the product-day overview read model.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RitualOverviewRow {
+    pub user_id: String,
+    pub day_key: String,
+    pub game_module_id: String,
+    pub module_class: ModuleClass,
+    pub is_ritual: bool,
+}
+
+impl RitualOverviewRow {
+    #[must_use]
+    pub fn completion_row(&self) -> RitualCompletionRow {
+        RitualCompletionRow {
+            user_id: self.user_id.clone(),
+            day_key: self.day_key.clone(),
+            module_class: self.module_class,
+            is_ritual: self.is_ritual,
+        }
+    }
+}
+
+/// Product read model for today's ritual: daily puzzle completers plus
+/// per-module qualifying finish counts on the same product day.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TodayOverview {
+    pub player_count: u64,
+    pub completions: Vec<(String, u64)>,
+}
+
+/// Recompute `GetTodayOverview` from canonical qualifying ritual rows.
+///
+/// `player_count` is [`compute_drc`] for `day_key`. Archive, practice,
+/// entertainment, dry-run, and non-ritual won-lost rows do not count.
+#[must_use]
+pub fn compute_today_overview(day_key: &str, rows: &[RitualOverviewRow]) -> TodayOverview {
+    let completion_rows: Vec<RitualCompletionRow> =
+        rows.iter().map(RitualOverviewRow::completion_row).collect();
+    let player_count = compute_drc(day_key, &completion_rows);
+    let mut counts: BTreeMap<String, u64> = BTreeMap::new();
+    for row in rows {
+        if row.is_ritual
+            && row.day_key == day_key
+            && matches!(row.module_class, ModuleClass::PuzzleRitual)
+        {
+            *counts.entry(row.game_module_id.clone()).or_insert(0) += 1;
+        }
+    }
+    TodayOverview {
+        player_count,
+        completions: counts.into_iter().collect(),
+    }
+}
 
 /// Recompute weekly ritualists ending on `end_day_key`.
 ///
@@ -413,6 +483,69 @@ mod tests {
         assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
         assert!(!DRC_RECOMPUTE_SQL.to_ascii_lowercase().contains(" as drc"));
         assert!(!DRC_RECOMPUTE_SQL.contains("dpc"));
+        assert!(DRC_RECOMPUTE_SQL.contains("day_key = $1"));
+        assert!(!DRC_RECOMPUTE_SQL.contains("CURRENT_DATE"));
+        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
+        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
+        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("is_ritual = true"));
+        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("puzzle_ritual"));
+    }
+
+    fn overview_row(
+        user: &str,
+        day: &str,
+        module: &str,
+        class: ModuleClass,
+        is_ritual: bool,
+    ) -> RitualOverviewRow {
+        RitualOverviewRow {
+            user_id: user.into(),
+            day_key: day.into(),
+            game_module_id: module.into(),
+            module_class: class,
+            is_ritual,
+        }
+    }
+
+    #[test]
+    fn today_overview_matches_drc_on_ritual_product_day() {
+        let rows = vec![
+            overview_row("a", "2026-08-12", "sudoku", ModuleClass::PuzzleRitual, true),
+            overview_row(
+                "a",
+                "2026-08-12",
+                "crossword",
+                ModuleClass::PuzzleRitual,
+                true,
+            ),
+            overview_row("b", "2026-08-12", "sudoku", ModuleClass::PuzzleRitual, true),
+            overview_row("c", "2026-08-11", "sudoku", ModuleClass::PuzzleRitual, true),
+            overview_row(
+                "d",
+                "2026-08-12",
+                "oracle",
+                ModuleClass::EntertainmentOracle,
+                true,
+            ),
+            // Calendar CURRENT_DATE won-lost residue: not ritual, must not count.
+            overview_row(
+                "e",
+                "2026-08-12",
+                "sudoku",
+                ModuleClass::PuzzleRitual,
+                false,
+            ),
+        ];
+        let overview = compute_today_overview("2026-08-12", &rows);
+        let drc_rows: Vec<RitualCompletionRow> =
+            rows.iter().map(RitualOverviewRow::completion_row).collect();
+        assert_eq!(overview.player_count, compute_drc("2026-08-12", &drc_rows));
+        assert_eq!(overview.player_count, 2);
+        assert_eq!(
+            overview.completions,
+            vec![("crossword".into(), 1), ("sudoku".into(), 2)]
+        );
+        assert_eq!(compute_today_overview("2026-08-10", &rows).player_count, 0);
     }
 
     fn row(user: &str, day: &str, class: ModuleClass, is_ritual: bool) -> RitualCompletionRow {
