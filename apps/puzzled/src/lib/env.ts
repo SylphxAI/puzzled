@@ -1,13 +1,14 @@
 /**
  * Environment Variable Validation (SSOT)
  *
- * Centralized validation for all environment variables.
- * Import this module early to catch configuration errors at startup.
+ * Presentation (Next.js web) boot must not own api secrets.
+ * Platform injects API_INTERNAL_URL from sylphx.toml connect.services = ["api"]
+ * (same class as Epiow). DATABASE_URL / REDIS_URL belong to the Rust api.
  *
  * Categories:
- * - REQUIRED: App won't function without these
- * - FEATURE: Required when specific feature is used
- * - OPTIONAL: Has sensible defaults or degrades gracefully
+ * - REQUIRED: process will not listen without these
+ * - FEATURE: required when that feature is used
+ * - OPTIONAL: defaults or degrades
  */
 
 type EnvVar = {
@@ -18,24 +19,15 @@ type EnvVar = {
 	runtimes?: ('nodejs' | 'edge')[]
 }
 
-// Server-side required variables
+type EnvSource = Record<string, string | undefined>
+
+// Server-side required variables for presentation boot.
+// Do not add DATABASE_URL or REDIS_URL: web is not the durable writer.
 const SERVER_REQUIRED: EnvVar[] = [
-	{
-		name: 'DATABASE_URL',
-		required: true,
-		description: 'PostgreSQL connection string',
-		runtimes: ['nodejs'],
-	},
 	{
 		name: 'SYLPHX_SECRET_KEY',
 		required: true,
 		description: 'Sylphx Platform Secret Key (identifies the app)',
-		runtimes: ['nodejs'],
-	},
-	{
-		name: 'REDIS_URL',
-		required: true,
-		description: 'Platform-injected Redis/KV URL',
 		runtimes: ['nodejs'],
 	},
 ]
@@ -61,8 +53,8 @@ const PRODUCTION_SECURITY_VARS: string[] = []
  *
  * @throws Error if required variables are missing
  */
-export function validateEnv(): void {
-	const runtime = process.env.NEXT_RUNTIME as 'nodejs' | 'edge' | undefined
+export function validateEnv(env: EnvSource = process.env): void {
+	const runtime = env.NEXT_RUNTIME as 'nodejs' | 'edge' | undefined
 	const missing: string[] = []
 	const warnings: string[] = []
 
@@ -73,7 +65,7 @@ export function validateEnv(): void {
 			continue
 		}
 
-		const value = process.env[envVar.name]
+		const value = env[envVar.name]
 
 		if (envVar.required && !value) {
 			missing.push(`${envVar.name} - ${envVar.description}`)
@@ -82,14 +74,14 @@ export function validateEnv(): void {
 
 	// Warn about missing feature variables (don't fail)
 	for (const envVar of FEATURE_VARS) {
-		const value = process.env[envVar.name]
+		const value = env[envVar.name]
 		if (!value) {
 			warnings.push(`${envVar.name} not set - ${envVar.description}`)
 		}
 	}
 
 	// Log warnings in development
-	if (warnings.length > 0 && process.env.NODE_ENV === 'development') {
+	if (warnings.length > 0 && env.NODE_ENV === 'development') {
 		console.warn('[ENV] Optional variables not configured:')
 		for (const warning of warnings) {
 			console.warn(`  - ${warning}`)
@@ -97,9 +89,9 @@ export function validateEnv(): void {
 	}
 
 	// SECURITY: Warn about missing security-critical vars in production
-	if (process.env.NODE_ENV === 'production') {
+	if (env.NODE_ENV === 'production') {
 		for (const varName of PRODUCTION_SECURITY_VARS) {
-			if (!process.env[varName]) {
+			if (!env[varName]) {
 				console.warn(
 					`[ENV] SECURITY WARNING: ${varName} not set in production - endpoints may be vulnerable`,
 				)
@@ -134,41 +126,12 @@ export function getRequiredEnv(name: string): string {
 }
 
 /**
- * Get optional environment variable with default
- */
-function _getOptionalEnv(name: string, defaultValue: string): string {
-	return process.env[name] || defaultValue
-}
-
-/**
- * Check if a feature is configured (has required env vars)
- * Note: Billing/Stripe is handled by Sylphx Platform SDK
- */
-function _isFeatureConfigured(feature: 'email' | 'push' | 'ai'): boolean {
-	switch (feature) {
-		case 'email':
-			return !!process.env.RESEND_API_KEY
-		case 'push':
-			return !!process.env.VAPID_PRIVATE_KEY && !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-		case 'ai':
-			// AI goes through Sylphx Platform SDK
-			return !!process.env.SYLPHX_SECRET_KEY
-		default:
-			return false
-	}
-}
-
-/**
  * Typed environment object for platform SDK and common config
  */
 export const env = {
 	/** Platform SDK Secret Key — identifies the app (server-side only) */
 	get SYLPHX_SECRET_KEY() {
 		return getRequiredEnv('SYLPHX_SECRET_KEY')
-	},
-	/** Database URL */
-	get DATABASE_URL() {
-		return getRequiredEnv('DATABASE_URL')
 	},
 	/** Node environment */
 	get NODE_ENV() {

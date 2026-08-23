@@ -41,7 +41,8 @@ port = 3000
 # Presentation root is HTTP-ready (no separate /health).
 health = { path = "/" }
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
-# web → api calls (connect graph). The web service has no backend authority.
+# web → api calls (connect graph). The web service has no backend authority
+# and must boot without DATABASE_URL / REDIS_URL (api owns those bindings).
 connect = { services = ["api"] }
 # Schema apply is [database.migrations] only — no dual residual release_command.
 
