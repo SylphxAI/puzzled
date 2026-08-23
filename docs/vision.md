@@ -1,76 +1,33 @@
-# Puzzled product vision
+# Puzzled Vision
+
+**Status:** Canonical product destination
+**Identity graph:** [`capabilities.md`](capabilities.md)
+**North Star package:** [`north-star/README.md`](north-star/README.md) (normative 2026-08-13), [`north-star/VISION.md`](north-star/VISION.md), [`north-star/NORTH-STAR-METRIC.md`](north-star/NORTH-STAR-METRIC.md)
+**Architecture law:** [`adr/ADR-170-clean-break-north-star.md`](adr/ADR-170-clean-break-north-star.md), [`adr/ADR-169-capability-first-modular-ddd.md`](adr/ADR-169-capability-first-modular-ddd.md)
+
+This document owns the long-term product destination. It does not claim the destination is landed or live.
 
 ## Destination
 
-Puzzled is the daily home for people who want a short, positive mental break.
-On a phone or the web, a player can open one shared product day, choose a light
-brain puzzle, finish in a few minutes, understand the result, and leave with a
-clean stopping point. Returning players build a trustworthy personal record of
-what they completed and can choose more depth without turning the ritual into
-grind or obligation.
+Puzzled is the default daily home for light, positive, brain-training play — minutes a day, optional depth, unlimited catalog under one protocol — habit first, subscription second, shareable results without spoilers.
 
-The catalog is one product, not a collection of unrelated mini-apps. Every game
-composes the same durable concepts: product day, module, admitted run,
-server-accepted result, personal progress, result card, and entitlement. New
-modules deepen that system without creating another identity, completion,
-progress, sharing, or billing authority.
+Catalog ambition is unbounded: every game that fits the daily light brain ritual (word, logic, pattern, mini crossword, sudoku family, spatial, and light entertainment oracle formats labeled as play) should eventually live here under the single module protocol (day key in `Asia/Hong_Kong`, run, finish, result card, entitlement). Capability ambition is not unbounded sprawl.
 
-## Product promise
+## Users and their jobs
 
-- Today's free ritual is quick to find and playable without an account.
-- Rules, feedback, failure, and completion are understandable on the supported
-  device; replay or review never pretends to be a second completion.
-- Results and personal progress are earned from server-authoritative puzzle
-  content and validation, not client claims.
-- A returning player can recognize today's state and their longer-term history
-  consistently across entry, play, result, and progress surfaces.
-- Paid archive and suite depth extend a valued habit while the daily free finish
-  remains intact.
-- Sharing carries a non-spoiler account of the player's result and brings the
-  recipient to the same module and product day.
+- **Daily player** who wants a short uplifting mental break in minutes and to share a non-spoiler result.
+- **Weekly ritualist** who returns daily, uses archive/stats, and optionally subscribes when the habit warrants it.
+- **Virality loop:** one shared day, minutes-to-complete, soft failure, non-spoiler card, zero-install first play.
 
-## Boundaries
+## Not doing
 
-Puzzled does not become a ranked-esports ladder, an infinite engagement grind,
-a gambling or loot-box economy, or a streak system that shames absence. It does
-not sell relief from manufactured frustration or make the only daily finish
-paid. Entertainment-oracle modules are clearly play rather than scientific,
-medical, financial, or destiny claims, and never count as brain-puzzle
-completion.
+- Hardcore esports/ranked ladders as core, gambling/loot-box, scientific/medical/IQ/destiny claims.
+- Infinite content-farm SEO spam or dark-pattern streak punishment.
+- Shrinking catalog to look minimal — unbounded catalog is the destination.
+- A second play authority behind a different transport (Connect `PuzzleService` is sole authority).
 
-The browser may render and retain recoverable interaction state, but it does
-not author solutions, accepted completion, score, day identity, entitlement, or
-the durable personal record. Those decisions have one server authority through
-the product's Connect and Rust path.
+## Product oracle
 
-## North Star Metric
+The destination is true only when a non-technical player on a phone can finish today's featured ritual in minutes, share a non-spoiler card with a `?date=` deep link, and return the next product day without push, with server-authoritative serve+validate, one finish per `(user, module, day_key)`, and with empty-catalog and mute-blog never presented as live, at the live layer.
 
-The single customer-value metric is **daily puzzle completers**: distinct
-players with at least one server-accepted qualifying daily puzzle finish on a
-product day. Its exact definition and exclusions remain in
-[North Star Metric](north-star/NORTH-STAR-METRIC.md).
-
-## Finished-product oracle
-
-The destination is falsified if any supported daily module cannot complete this
-journey:
-
-1. A new guest opens Puzzled, finds the correct free puzzle for the server's
-   product day, and starts without receiving its solution.
-2. The player reaches an honest terminal state; the server independently
-   validates the submitted play against the served puzzle and either rejects it
-   or records one canonical result.
-3. The accepted result survives refresh and re-entry, produces a non-spoiler
-   share, and contributes once to the player's visible day progress.
-4. After sign-in, the returning player sees the same accepted history and
-   progress across devices; an entitled player can use archive depth through
-   the same validation and record path.
-5. A tampered, duplicated, stale-day, wrong-module, or unauthorized submission
-   cannot create completion, progress, score, entitlement, or North Star value.
-
-The durable identities, fates, dependencies, and acceptance oracles are in the
-[identity graph](capabilities.md). Exact transport and decision contracts live
-in protobuf, tests, and accepted product ADRs; this vision does not replace
-them. The former [North Star vision path](north-star/VISION.md) is now a
-non-authoritative pointer to this canonical destination; historical research
-and superseded wording remain in Git history.
+Source green and `GET /healthz` 200 are not this oracle. North Star Metric is daily puzzle completers.
