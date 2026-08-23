@@ -38,18 +38,26 @@ function secureCompare(a: string, b: string): boolean {
 	return result === 0
 }
 
-// Strict rate limiting for admin secret attempts (3 per hour per IP)
-const _adminSecretLimiter = new RateLimiterRedis({
-	storeClient: redis,
-	keyPrefix: 'puzzled:admin-secret',
-	points: 3,
-	duration: 3600, // 1 hour
-})
+// Strict rate limiting for admin secret attempts (3 per hour per IP).
+// Construct on first use so importing this module does not require REDIS_URL at web boot.
+let _adminSecretLimiter: RateLimiterRedis | null = null
+
+function getAdminSecretLimiter(): RateLimiterRedis {
+	if (!_adminSecretLimiter) {
+		_adminSecretLimiter = new RateLimiterRedis({
+			storeClient: redis,
+			keyPrefix: 'puzzled:admin-secret',
+			points: 3,
+			duration: 3600, // 1 hour
+		})
+	}
+	return _adminSecretLimiter
+}
 
 const adminSecretRatelimit = {
 	async limit(identifier: string): Promise<{ success: boolean }> {
 		try {
-			await _adminSecretLimiter.consume(identifier)
+			await getAdminSecretLimiter().consume(identifier)
 			return { success: true }
 		} catch {
 			return { success: false }

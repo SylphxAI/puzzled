@@ -1,38 +1,56 @@
 import IORedis from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
 
-// Validate environment variables at module load - fail fast
-// Skip during Next.js build phase (NEXT_PHASE is set during `next build`)
-const REDIS_URL = process.env.REDIS_URL
+// Redis is residual admin rate-limit I/O, not presentation boot.
+// Do not throw at import: web must listen without REDIS_URL (api owns KV).
 const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build'
 
-if (!REDIS_URL && !IS_BUILD) {
-	throw new Error(
-		'[Redis] REDIS_URL is required. Platform injects the product URL; do not compose host or port.',
-	)
+let _redis: IORedis | null = null
+
+function getRedis(): IORedis {
+	if (_redis) return _redis
+	const url = process.env.REDIS_URL
+	if (!url) {
+		throw new Error(
+			'[Redis] REDIS_URL is required for residual admin rate-limit I/O. Platform injects the product URL; do not compose host or port. Presentation boot must not import this module.',
+		)
+	}
+	_redis = new IORedis(url, {
+		maxRetriesPerRequest: 3,
+		lazyConnect: IS_BUILD,
+		enableReadyCheck: false,
+	})
+	_redis.on('error', (err: Error) => {
+		console.error('[Redis] Connection error:', err.message)
+	})
+	return _redis
 }
 
-// Create Redis client (use placeholder URL during build so module loads without error)
-export const redis = new IORedis(REDIS_URL ?? 'redis://localhost:6379', {
-	maxRetriesPerRequest: 3,
-	lazyConnect: IS_BUILD,
-	enableReadyCheck: false,
-})
-
-redis.on('error', (err: Error) => {
-	console.error('[Redis] Connection error:', err.message)
+export const redis = new Proxy({} as IORedis, {
+	get(_target, prop, receiver) {
+		const instance = getRedis()
+		const value = Reflect.get(instance, prop, receiver)
+		return typeof value === 'function' ? value.bind(instance) : value
+	},
 })
 
 // ==========================================
 // Rate Limiter
 // ==========================================
 
-const _rateLimiter = new RateLimiterRedis({
-	storeClient: redis,
-	keyPrefix: 'puzzled:ratelimit',
-	points: 10, // max requests
-	duration: 10, // per 10 seconds
-})
+let _rateLimiter: RateLimiterRedis | null = null
+
+function getRateLimiter(): RateLimiterRedis {
+	if (!_rateLimiter) {
+		_rateLimiter = new RateLimiterRedis({
+			storeClient: redis,
+			keyPrefix: 'puzzled:ratelimit',
+			points: 10, // max requests
+			duration: 10, // per 10 seconds
+		})
+	}
+	return _rateLimiter
+}
 
 export const ratelimit = {
 	async limit(identifier: string): Promise<{
@@ -42,7 +60,7 @@ export const ratelimit = {
 		reset: number
 	}> {
 		try {
-			const result = await _rateLimiter.consume(identifier)
+			const result = await getRateLimiter().consume(identifier)
 			return {
 				success: true,
 				remaining: result.remainingPoints,

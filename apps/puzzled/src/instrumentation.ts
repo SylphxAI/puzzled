@@ -1,7 +1,7 @@
 import { validateEnv } from '@/lib/env'
 
 export async function register() {
-	// Validate environment variables at startup
-	// Fails fast with clear error if required vars missing
+	// Presentation boot: fail only on web-owned required vars.
+	// DATABASE_URL / REDIS_URL are api-owned and must not crash this process.
 	validateEnv()
 }
