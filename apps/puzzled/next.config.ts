@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
+import { inboundModuleRedirects } from './src/lib/module-routes'
 
 const withNextIntl = createNextIntlPlugin('./src/lib/i18n/request.ts')
 
@@ -92,6 +93,7 @@ const nextConfig: NextConfig = {
 				destination: '/:locale/games/duo',
 				permanent: true,
 			},
+			...inboundModuleRedirects(),
 		]
 	},
 

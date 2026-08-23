@@ -17,6 +17,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
+import { inboundModulePublicRoutes } from '@/lib/module-routes'
 
 // =============================================================================
 // i18n Middleware
@@ -47,6 +48,7 @@ const sylphxMiddleware = createSylphxMiddleware({
 		'/pricing',
 		'/blog/*',
 		'/games/*',
+		...inboundModulePublicRoutes(locales),
 		// i18n prefixed routes
 		...locales.flatMap((locale) => [
 			`/${locale}`,
@@ -56,7 +58,7 @@ const sylphxMiddleware = createSylphxMiddleware({
 			`/${locale}/games/*`,
 		]),
 	],
-	ignoredRoutes: ['/api/*', '/monitoring'],
+	ignoredRoutes: ['/api/*', '/monitoring', '/healthz', '/readyz'],
 	signInUrl: '/login',
 	afterSignInUrl: '/dashboard',
 	afterSignOutUrl: '/',
@@ -80,7 +82,9 @@ export async function proxy(request: NextRequest) {
 		pathname.includes('.') ||
 		pathname.startsWith('/_next') ||
 		pathname.startsWith('/api') ||
-		pathname.startsWith('/monitoring')
+		pathname.startsWith('/monitoring') ||
+		pathname === '/healthz' ||
+		pathname === '/readyz'
 	) {
 		return NextResponse.next()
 	}

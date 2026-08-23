@@ -1,4 +1,4 @@
-import { getOAuthProviders } from '@sylphx/sdk/server'
+import { loadOAuthProviders } from '@/lib/oauth-providers'
 import { LoginForm } from './login-form'
 
 // Auth pages must SSR on every request to reflect admin config changes
@@ -6,9 +6,7 @@ import { LoginForm } from './login-form'
 export const dynamic = 'force-dynamic'
 
 export default async function LoginPage() {
-	const providers = await getOAuthProviders({
-		appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID!,
-	})
+	const providers = await loadOAuthProviders()
 
 	return <LoginForm providers={providers} />
 }
