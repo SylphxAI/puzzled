@@ -8,10 +8,15 @@ const envPath = new URL('./env.ts', import.meta.url)
 const redisPath = new URL('./redis.ts', import.meta.url)
 const manifestPath = new URL('../../../../sylphx.toml', import.meta.url)
 
+function processEnv(): Record<string, string | undefined> {
+	return process.env as Record<string, string | undefined>
+}
+
 function restoreEnv(previous: Record<string, string | undefined>) {
+	const env = processEnv()
 	for (const [key, value] of Object.entries(previous)) {
-		if (value === undefined) delete process.env[key]
-		else process.env[key] = value
+		if (value === undefined) delete env[key]
+		else env[key] = value
 	}
 }
 
@@ -26,20 +31,21 @@ describe('web presentation boot env', () => {
 	})
 
 	test('register() does not fail-close web boot without Platform root secret', async () => {
+		const env = processEnv()
 		const previous = {
-			SYLPHX_SECRET_KEY: process.env.SYLPHX_SECRET_KEY,
-			SYLPHX_SECRET_URL: process.env.SYLPHX_SECRET_URL,
-			DATABASE_URL: process.env.DATABASE_URL,
-			REDIS_URL: process.env.REDIS_URL,
-			NODE_ENV: process.env.NODE_ENV,
-			NEXT_RUNTIME: process.env.NEXT_RUNTIME,
+			SYLPHX_SECRET_KEY: env.SYLPHX_SECRET_KEY,
+			SYLPHX_SECRET_URL: env.SYLPHX_SECRET_URL,
+			DATABASE_URL: env.DATABASE_URL,
+			REDIS_URL: env.REDIS_URL,
+			NODE_ENV: env.NODE_ENV,
+			NEXT_RUNTIME: env.NEXT_RUNTIME,
 		}
-		delete process.env.SYLPHX_SECRET_KEY
-		delete process.env.SYLPHX_SECRET_URL
-		delete process.env.DATABASE_URL
-		delete process.env.REDIS_URL
-		process.env.NODE_ENV = 'production'
-		process.env.NEXT_RUNTIME = 'nodejs'
+		delete env.SYLPHX_SECRET_KEY
+		delete env.SYLPHX_SECRET_URL
+		delete env.DATABASE_URL
+		delete env.REDIS_URL
+		env.NODE_ENV = 'production'
+		env.NEXT_RUNTIME = 'nodejs'
 		try {
 			await expect(register()).resolves.toBeUndefined()
 		} finally {

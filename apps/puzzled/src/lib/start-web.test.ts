@@ -54,10 +54,10 @@ describe('puzzled web listen bind', () => {
 				'process.stdout.write(process.env.HOSTNAME + "\\n" + process.env.PORT)\n',
 			)
 			copyFileSync(startWebPath, join(root, 'start-web.cjs'))
-			const result = spawnSync('node', ['start-web.cjs'], {
+			const result = spawnSync(process.execPath, ['start-web.cjs'], {
 				cwd: root,
 				env: {
-					PATH: process.env.PATH,
+					...process.env,
 					HOSTNAME: 'web-00035-deployment-abcde',
 					PORT: '8080',
 				},
