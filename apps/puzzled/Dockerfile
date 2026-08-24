@@ -42,16 +42,13 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 USER nextjs
 
+# Nested (monorepo tracing root) and flattened standalone layouts.
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/public ./apps/puzzled/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./apps/puzzled/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/puzzled/.next/static ./.next/static
+COPY --chown=nextjs:nodejs apps/puzzled/start-web.cjs ./start-web.cjs
 EXPOSE 3000
-CMD ["node", "apps/puzzled/server.js"]
-
-# preview re-trigger 20260811T112206Z
-
-# preview re-trigger after residual fix 20260811T121343Z
-
-# dens re-trigger 20260811T122925Z
-
-# after dens 3/3 live 20260811T123322Z
+# start-web.cjs binds HOSTNAME=0.0.0.0 and honors Knative PORT.
+CMD ["node", "start-web.cjs"]

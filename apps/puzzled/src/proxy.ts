@@ -18,6 +18,7 @@ import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 import { inboundModulePublicRoutes } from '@/lib/module-routes'
+import { sylphxAuthConfigured } from '@/lib/presentation-boot'
 
 // =============================================================================
 // i18n Middleware
@@ -42,6 +43,8 @@ function getLocaleFromPath(pathname: string): Locale | null {
 
 // Create Sylphx middleware (handles auth routes, token refresh, route protection)
 const sylphxMiddleware = createSylphxMiddleware({
+	secretKey: process.env.SYLPHX_SECRET_KEY,
+	secretUrl: process.env.SYLPHX_SECRET_URL,
 	publicRoutes: [
 		'/',
 		'/about',
@@ -126,8 +129,7 @@ export async function proxy(request: NextRequest) {
 	// Check if Sylphx is enabled
 	// =========================================================================
 
-	const sylphxEnabled = Boolean(process.env.SYLPHX_SECRET_KEY)
-	if (!sylphxEnabled) {
+	if (!sylphxAuthConfigured()) {
 		return intlMiddleware(request)
 	}
 
@@ -135,8 +137,15 @@ export async function proxy(request: NextRequest) {
 	// Token Refresh + Route Protection (Sylphx handles this)
 	// =========================================================================
 
-	// Run Sylphx middleware to handle token refresh and route protection
-	const sylphxResponse = await sylphxMiddleware(request)
+	// Run Sylphx middleware to handle token refresh and route protection.
+	// Invalid/partial Platform credentials must not 500 GET `/` (Knative health).
+	let sylphxResponse: Awaited<ReturnType<typeof sylphxMiddleware>>
+	try {
+		sylphxResponse = await sylphxMiddleware(request)
+	} catch (error) {
+		console.error('[proxy] Sylphx middleware failed; serving presentation', error)
+		return intlMiddleware(request)
+	}
 
 	// If Sylphx wants to redirect (e.g., to login), respect that
 	if (sylphxResponse.status >= 300 && sylphxResponse.status < 400) {

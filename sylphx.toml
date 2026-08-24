@@ -42,7 +42,9 @@ port = 3000
 health = { path = "/" }
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
 # web → api calls (connect graph). The web service has no backend authority
-# and must boot without DATABASE_URL / REDIS_URL (api owns those bindings).
+# and must boot without DATABASE_URL / REDIS_URL / SYLPHX_SECRET_KEY
+# (api owns Postgres/KV; ADR-3418 strips the Platform root secret without
+# an explicit BaaS binding).
 connect = { services = ["api"] }
 # Schema apply is [database.migrations] only — no dual residual release_command.
 
