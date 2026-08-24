@@ -37,4 +37,13 @@ describe('GET / presentation document', () => {
 		expect(PRESENTATION_DOCUMENT_TIMEOUT_MS).toBe(SERVER_CONNECT_TIMEOUT_MS)
 		expect(PRESENTATION_DOCUMENT_TIMEOUT_MS).toBeLessThanOrEqual(2000)
 	})
+
+	test('document-route pin loads as ESM so CI can probe GET /', async () => {
+		const mod = await import('../../scripts/assert-document-route.mjs')
+		expect(typeof mod.isHtmlDocument).toBe('function')
+		expect(mod.isHtmlDocument('text/html', '')).toBe(false)
+		expect(
+			mod.isHtmlDocument('text/html', '<!DOCTYPE html><html><body>Puzzled</body></html>'),
+		).toBe(true)
+	})
 })

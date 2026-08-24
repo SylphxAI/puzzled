@@ -1,16 +1,18 @@
 #!/usr/bin/env node
+
 /**
  * Source pin: GET `/` must return an HTML document even when Connect never
  * answers. Do not green from `/healthz`.
  */
 
-const http = require('node:http')
-const { spawn } = require('node:child_process')
-const { setTimeout: delay } = require('node:timers/promises')
-const net = require('node:net')
-const path = require('node:path')
+import { spawn } from 'node:child_process'
+import http from 'node:http'
+import net from 'node:net'
+import path from 'node:path'
+import { setTimeout as delay } from 'node:timers/promises'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
-const APP_ROOT = path.resolve(__dirname, '..')
+const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const GET_BUDGET_MS = 8000
 const LISTEN_BUDGET_MS = 30000
 
@@ -148,7 +150,14 @@ async function main() {
 	}
 }
 
-main().catch((error) => {
-	console.error('[assert-document-route]', error)
-	process.exit(1)
-})
+const isDirectRun =
+	Boolean(process.argv[1]) && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url
+
+if (isDirectRun) {
+	main().catch((error) => {
+		console.error('[assert-document-route]', error)
+		process.exit(1)
+	})
+}
+
+export { isHtmlDocument, main }
