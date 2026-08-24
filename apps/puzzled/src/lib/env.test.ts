@@ -1,11 +1,19 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
+import { register } from '../instrumentation'
 import { validateEnv } from './env'
 
 const instrumentationPath = new URL('../instrumentation.ts', import.meta.url)
 const envPath = new URL('./env.ts', import.meta.url)
 const redisPath = new URL('./redis.ts', import.meta.url)
 const manifestPath = new URL('../../../../sylphx.toml', import.meta.url)
+
+function restoreEnv(previous: Record<string, string | undefined>) {
+	for (const [key, value] of Object.entries(previous)) {
+		if (value === undefined) delete process.env[key]
+		else process.env[key] = value
+	}
+}
 
 describe('web presentation boot env', () => {
 	test('validateEnv listens without DATABASE_URL, REDIS_URL, or SYLPHX_SECRET_KEY', () => {
@@ -15,6 +23,28 @@ describe('web presentation boot env', () => {
 				NEXT_RUNTIME: 'nodejs',
 			}),
 		).not.toThrow()
+	})
+
+	test('register() does not fail-close web boot without Platform root secret', async () => {
+		const previous = {
+			SYLPHX_SECRET_KEY: process.env.SYLPHX_SECRET_KEY,
+			SYLPHX_SECRET_URL: process.env.SYLPHX_SECRET_URL,
+			DATABASE_URL: process.env.DATABASE_URL,
+			REDIS_URL: process.env.REDIS_URL,
+			NODE_ENV: process.env.NODE_ENV,
+			NEXT_RUNTIME: process.env.NEXT_RUNTIME,
+		}
+		delete process.env.SYLPHX_SECRET_KEY
+		delete process.env.SYLPHX_SECRET_URL
+		delete process.env.DATABASE_URL
+		delete process.env.REDIS_URL
+		process.env.NODE_ENV = 'production'
+		process.env.NEXT_RUNTIME = 'nodejs'
+		try {
+			await expect(register()).resolves.toBeUndefined()
+		} finally {
+			restoreEnv(previous)
+		}
 	})
 
 	test('validateEnv still does not require api-owned secrets when a platform key is present', () => {

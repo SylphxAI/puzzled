@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const require = createRequire(import.meta.url)
 const startWeb = require('../../start-web.cjs') as {
@@ -13,6 +16,7 @@ const startWeb = require('../../start-web.cjs') as {
 
 const dockerfilePath = new URL('../../Dockerfile', import.meta.url)
 const nextConfigPath = new URL('../../next.config.ts', import.meta.url)
+const startWebPath = new URL('../../start-web.cjs', import.meta.url)
 
 describe('puzzled web listen bind', () => {
 	test('overrides Kubernetes HOSTNAME and honors Knative PORT', () => {
@@ -39,6 +43,33 @@ describe('puzzled web listen bind', () => {
 		expect(nested).toBe('/app/apps/puzzled/server.js')
 		expect(flat).toBe('/app/server.js')
 		expect(startWeb.resolveStandaloneServer('/app', () => false)).toBeNull()
+	})
+
+	test('entrypoint overrides Kubernetes HOSTNAME before loading standalone server', () => {
+		const root = mkdtempSync(join(tmpdir(), 'puzzled-web-listen-'))
+		try {
+			mkdirSync(join(root, 'apps/puzzled'), { recursive: true })
+			writeFileSync(
+				join(root, 'apps/puzzled/server.js'),
+				'process.stdout.write(process.env.HOSTNAME + "\\n" + process.env.PORT)\n',
+			)
+			copyFileSync(startWebPath, join(root, 'start-web.cjs'))
+			const result = spawnSync('node', ['start-web.cjs'], {
+				cwd: root,
+				env: {
+					PATH: process.env.PATH,
+					HOSTNAME: 'web-00035-deployment-abcde',
+					PORT: '8080',
+				},
+				encoding: 'utf8',
+			})
+			expect(result.error).toBeUndefined()
+			expect(result.status).toBe(0)
+			expect(result.stderr).toBe('')
+			expect(result.stdout).toBe('0.0.0.0\n8080')
+		} finally {
+			rmSync(root, { recursive: true, force: true })
+		}
 	})
 
 	test('image starts through start-web.cjs and pins monorepo tracing root', () => {
