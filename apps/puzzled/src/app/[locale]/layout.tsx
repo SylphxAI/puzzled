@@ -9,6 +9,7 @@ import { WebVitalsReporter } from '@/features/analytics'
 import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
 import { ApiProvider } from '@/lib/api/provider'
 import { routing } from '@/lib/i18n/routing'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getServerBaseUrl } from '@/lib/utils'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
@@ -173,9 +174,10 @@ export default async function LocaleLayout({ children, params }: Props) {
 
 	const [messages, config] = await Promise.all([
 		getMessages(),
-		// Only fetch config if credentials are configured
+		// Only fetch config if credentials are configured. Bound so GET `/`
+		// cannot hang on Platform while Knative probes the document.
 		appId && secretKey
-			? getAppConfig({ secretKey, appId, platformUrl })
+			? withPresentationDeadline(getAppConfig({ secretKey, appId, platformUrl }), undefined)
 			: Promise.resolve(undefined),
 	])
 

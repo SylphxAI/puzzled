@@ -29,23 +29,48 @@ export function normalizeConnectBaseUrl(raw: string): string {
 	return `http://${trimmed}`
 }
 
+export type ConnectRuntime = { isServer: boolean }
+
 export function resolveConnectBaseUrl(
 	env: Record<string, string | undefined> = IS_SERVER ? process.env : {},
+	runtime: ConnectRuntime = { isServer: IS_SERVER },
 ): string {
 	// Server-side private web -> api URL injected by the platform (sylphx.toml connect graph).
-	if (IS_SERVER && env.API_INTERNAL_URL?.trim()) {
+	if (runtime.isServer && env.API_INTERNAL_URL?.trim()) {
 		return normalizeConnectBaseUrl(env.API_INTERNAL_URL)
 	}
-	// Explicit public override (browser or server).
-	if (env.NEXT_PUBLIC_CONNECT_URL?.trim()) {
+	// Explicit public override for the browser. Server SSR must not use it:
+	// fetching puzzled.gg from GET `/` deadlocks a not-Ready Knative revision.
+	if (!runtime.isServer && env.NEXT_PUBLIC_CONNECT_URL?.trim()) {
 		return normalizeConnectBaseUrl(env.NEXT_PUBLIC_CONNECT_URL)
 	}
-	// Production: same-origin — the edge routes /puzzled.v1.* path prefixes to api.
-	if (env.NODE_ENV === 'production') {
+	// Production browser: same-origin — the edge routes /puzzled.v1.* to api.
+	if (!runtime.isServer && env.NODE_ENV === 'production') {
 		return ''
+	}
+	if (runtime.isServer) {
+		// Transport construction during client-component SSR may hit this path.
+		// Actual SSR fetches use resolveServerConnectBaseUrl (never '' / public).
+		return DEV_DEFAULT_BASE
 	}
 	// Local development: puzzled-server default.
 	return DEV_DEFAULT_BASE
+}
+
+/**
+ * SSR Connect base URL. Same-origin `''` and the public site URL deadlock
+ * GET `/` while queue-proxy waits for that same request.
+ */
+export function resolveServerConnectBaseUrl(
+	env: Record<string, string | undefined> = process.env,
+): string {
+	const internal = env.API_INTERNAL_URL?.trim()
+	if (!internal) {
+		throw new Error(
+			'[puzzled-web] server Connect requires API_INTERNAL_URL; same-origin SSR deadlocks GET /',
+		)
+	}
+	return normalizeConnectBaseUrl(internal)
 }
 
 const guestDayIdInterceptor: Interceptor = (next) => async (req) => {

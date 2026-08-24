@@ -11,10 +11,12 @@ import {
 	getServerStreakInfo,
 	getServerTodayOverview,
 	hasServerProgressIdentity,
+	type PersonalDailyResult,
 	type StreakInfo,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { Logo } from '@/shared/components/layout'
 
 type Props = {
@@ -39,10 +41,12 @@ export default async function HomePage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
+	const user = await withPresentationDeadline(currentUser(), null)
 
 	// Get user's premium status from platform
-	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+	const isPremium = user?.id
+		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
+		: false
 
 	// Get today's free game from rotation
 	const todaysFreeGame = getTodaysFreeGame()
@@ -68,11 +72,18 @@ export default async function HomePage({ params }: Props) {
 	// Social proof is the public aggregate. Personal today-state is GetDaily.
 	// Personal streak is GetStreakInfo from accepted ritual sessions.
 	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
+	const gameMetadata = getAllGameMetadata()
 	let streakInfo: StreakInfo | null = null
 	let todayPlayerCount = 0
-	const [overviewResult, streakResult] = await Promise.allSettled([
+	const [overviewResult, streakResult, personalResult] = await Promise.allSettled([
 		getServerTodayOverview(),
 		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
+		getServerPersonalDailyResults({
+			gameSlugs: gameMetadata.map((game) => game.slug),
+			isGuest: !user,
+			isPremium,
+			freeGameSlug: todaysFreeGame,
+		}),
 	])
 	if (overviewResult.status === 'fulfilled') {
 		todayPlayerCount = overviewResult.value.playerCount
@@ -84,38 +95,50 @@ export default async function HomePage({ params }: Props) {
 	} else {
 		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
 	}
+	const personalResults: Record<string, PersonalDailyResult> =
+		personalResult.status === 'fulfilled'
+			? personalResult.value
+			: Object.fromEntries(
+					gameMetadata.map((game) => [
+						game.slug,
+						{ hasCompleted: false, completedSession: null, statusAvailable: false },
+					]),
+				)
+	if (personalResult.status === 'rejected') {
+		console.error('[HomePage] Failed to fetch personal daily results:', personalResult.reason)
+	}
 
 	return (
 		<HomeContent
-			isGuest={!user}
 			streakInfo={streakInfo}
 			locale={locale}
 			todaysFreeGame={todaysFreeGame}
 			tomorrowsFreeGameName={tomorrowsFreeGameName}
 			isPremium={isPremium}
 			todayPlayerCount={todayPlayerCount}
+			personalResults={personalResults}
 		/>
 	)
 }
 
 type HomeContentProps = {
-	isGuest: boolean
 	streakInfo: StreakInfo | null
 	locale: string
 	todaysFreeGame: string
 	tomorrowsFreeGameName: string
 	isPremium: boolean
 	todayPlayerCount: number
+	personalResults: Record<string, PersonalDailyResult>
 }
 
 async function HomeContent({
-	isGuest,
 	streakInfo,
 	locale,
 	todaysFreeGame,
 	tomorrowsFreeGameName,
 	isPremium,
 	todayPlayerCount,
+	personalResults,
 }: HomeContentProps) {
 	const t = await getTranslations()
 	const today = new Date()
@@ -123,12 +146,6 @@ async function HomeContent({
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
-	const personalResults = await getServerPersonalDailyResults({
-		gameSlugs: gameMetadata.map((game) => game.slug),
-		isGuest,
-		isPremium,
-		freeGameSlug: todaysFreeGame,
-	})
 	const completionStatusUnavailable = gameMetadata.some(
 		(game) => personalResults[game.slug]?.statusAvailable === false,
 	)

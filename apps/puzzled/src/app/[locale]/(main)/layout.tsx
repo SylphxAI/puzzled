@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { currentUser } from '@sylphx/sdk/nextjs'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -24,7 +25,7 @@ function SkipNavigation() {
 }
 
 export default async function MainLayout({ children }: Props) {
-	const user = await currentUser()
+	const user = await withPresentationDeadline(currentUser(), null)
 	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
 	let currentStreak: number | null = null
 	let maxStreak: number | null = null
