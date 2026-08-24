@@ -1,11 +1,16 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
 import { inboundModuleRedirects } from './src/lib/module-routes'
 
 const withNextIntl = createNextIntlPlugin('./src/lib/i18n/request.ts')
+const tracingRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 const nextConfig: NextConfig = {
 	output: 'standalone',
+	// Pin monorepo tracing so standalone server.js is apps/puzzled/server.js.
+	outputFileTracingRoot: tracingRoot,
 	transpilePackages: ['@sylphx/sdk'],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,

@@ -8,7 +8,16 @@ const redisPath = new URL('./redis.ts', import.meta.url)
 const manifestPath = new URL('../../../../sylphx.toml', import.meta.url)
 
 describe('web presentation boot env', () => {
-	test('validateEnv does not require DATABASE_URL or REDIS_URL', () => {
+	test('validateEnv listens without DATABASE_URL, REDIS_URL, or SYLPHX_SECRET_KEY', () => {
+		expect(() =>
+			validateEnv({
+				NODE_ENV: 'production',
+				NEXT_RUNTIME: 'nodejs',
+			}),
+		).not.toThrow()
+	})
+
+	test('validateEnv still does not require api-owned secrets when a platform key is present', () => {
 		expect(() =>
 			validateEnv({
 				NODE_ENV: 'production',
@@ -18,22 +27,7 @@ describe('web presentation boot env', () => {
 		).not.toThrow()
 	})
 
-	test('validateEnv still requires SYLPHX_SECRET_KEY on nodejs', () => {
-		const err = console.error
-		console.error = () => {}
-		try {
-			expect(() =>
-				validateEnv({
-					NODE_ENV: 'production',
-					NEXT_RUNTIME: 'nodejs',
-				}),
-			).toThrow(/SYLPHX_SECRET_KEY/)
-		} finally {
-			console.error = err
-		}
-	})
-
-	test('instrumentation and env source do not fail-close on api secrets', () => {
+	test('instrumentation and env source do not fail-close on api or platform root secrets', () => {
 		const instrumentation = readFileSync(instrumentationPath, 'utf8')
 		const envSource = readFileSync(envPath, 'utf8')
 		const redisSource = readFileSync(redisPath, 'utf8')
@@ -42,6 +36,7 @@ describe('web presentation boot env', () => {
 		expect(instrumentation).toContain('validateEnv()')
 		expect(envSource).not.toContain("name: 'DATABASE_URL'")
 		expect(envSource).not.toContain("name: 'REDIS_URL'")
+		expect(envSource).not.toContain("name: 'SYLPHX_SECRET_KEY'")
 		expect(redisSource).toContain('Do not throw at import')
 		expect(manifest).toContain('connect = { services = ["api"] }')
 		expect(manifest).toContain('API_INTERNAL_URL')

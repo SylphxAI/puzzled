@@ -1,9 +1,12 @@
 /**
  * Environment Variable Validation (SSOT)
  *
- * Presentation (Next.js web) boot must not own api secrets.
- * Platform injects API_INTERNAL_URL from sylphx.toml connect.services = ["api"]
- * (same class as Epiow). DATABASE_URL / REDIS_URL belong to the Rust api.
+ * Presentation (Next.js web) boot must listen without owning api or Platform
+ * root secrets. Platform injects API_INTERNAL_URL from sylphx.toml
+ * connect.services = ["api"] (same class as Epiow). DATABASE_URL / REDIS_URL
+ * belong to the Rust api. SYLPHX_SECRET_KEY / SYLPHX_SECRET_URL are injected
+ * only when the workload has an explicit BaaS/resource binding (ADR-3418);
+ * presentation web does not, and must not die at register() without them.
  *
  * Categories:
  * - REQUIRED: process will not listen without these
@@ -21,16 +24,9 @@ type EnvVar = {
 
 type EnvSource = Record<string, string | undefined>
 
-// Server-side required variables for presentation boot.
-// Do not add DATABASE_URL or REDIS_URL: web is not the durable writer.
-const SERVER_REQUIRED: EnvVar[] = [
-	{
-		name: 'SYLPHX_SECRET_KEY',
-		required: true,
-		description: 'Sylphx Platform Secret Key (identifies the app)',
-		runtimes: ['nodejs'],
-	},
-]
+// Presentation listen has no required secrets. Do not add DATABASE_URL,
+// REDIS_URL, or SYLPHX_SECRET_KEY: missing names must not prevent HTTP bind.
+const SERVER_REQUIRED: EnvVar[] = []
 
 // Feature-specific variables (validated when feature is used)
 // Note: Stripe/billing is handled by Sylphx Platform SDK
@@ -51,7 +47,7 @@ const PRODUCTION_SECURITY_VARS: string[] = []
  * Validate environment variables at startup
  * Called from instrumentation.ts
  *
- * @throws Error if required variables are missing
+ * Presentation boot does not throw on missing Platform/api secrets.
  */
 export function validateEnv(env: EnvSource = process.env): void {
 	const runtime = env.NEXT_RUNTIME as 'nodejs' | 'edge' | undefined
