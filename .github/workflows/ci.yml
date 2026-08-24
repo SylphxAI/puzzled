@@ -300,6 +300,13 @@ jobs:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
 
+      - name: GET / document returns HTML while Connect hangs
+        run: node scripts/assert-document-route.mjs
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:

@@ -44,4 +44,5 @@ export {
 	normalizeConnectBaseUrl,
 	resetConnectTransportCache,
 	resolveConnectBaseUrl,
+	resolveServerConnectBaseUrl,
 } from './transport'

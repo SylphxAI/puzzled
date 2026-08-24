@@ -31,7 +31,7 @@ import {
 	StatsService,
 } from '@/gen/connect/puzzled/v1/stats_pb'
 import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
-import { resolveConnectBaseUrl } from '@/lib/connect/transport'
+import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { servedPuzzleId } from '@/lib/product-day'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -89,7 +89,7 @@ export type UserStats = {
 async function getServerTransport() {
 	const cookieStore = await cookies()
 	const cookie = cookieStore.toString()
-	const baseUrl = resolveConnectBaseUrl()
+	const baseUrl = resolveServerConnectBaseUrl()
 	return createConnectTransport({
 		baseUrl,
 		useBinaryFormat: false,
