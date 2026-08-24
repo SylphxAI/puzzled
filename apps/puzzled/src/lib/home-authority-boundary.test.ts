@@ -15,7 +15,7 @@ describe('home completion authority boundary', () => {
 		expect(serverSource).toContain('statusAvailable: !unavailableSlugs.has(gameSlug)')
 		expect(serverSource).not.toContain('completedAt: new Date()')
 		expect(pageSource).toContain('getServerPersonalDailyResults')
-		expect(pageSource).toContain('isGuest={!user}')
+		expect(pageSource).toContain('isGuest: !user')
 		expect(pageSource).toContain('completionStatusUnavailable')
 		expect(pageSource).not.toContain('overview.completions')
 		expect(heroSource).not.toContain('useGuestDailySummary')
