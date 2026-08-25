@@ -25,6 +25,7 @@ pub mod sudoku_scoring;
 pub mod tango;
 pub mod word_box;
 pub mod word_groups;
+pub mod word_groups_generate;
 pub mod word_hive;
 pub mod word_ladder;
 pub mod word_search;

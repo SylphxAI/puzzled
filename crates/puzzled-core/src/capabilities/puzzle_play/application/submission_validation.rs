@@ -208,11 +208,15 @@ fn word_groups(
             level,
         });
     }
+    let claimed = match env.status {
+        SubmissionStatus::Won => word_groups::SubmissionStatus::Won,
+        SubmissionStatus::Lost => word_groups::SubmissionStatus::Lost,
+    };
     let result = word_groups::validate_and_score(
         &categories,
         sub.found_categories.as_deref(),
         sub.mistakes,
-        word_groups::SubmissionStatus::Won,
+        claimed,
     );
     match result {
         word_groups::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -1043,6 +1047,73 @@ mod tests {
     fn word_guess_rejects_missing_guesses() {
         let solution = json!({ "word": "HELLO" });
         let v = validate_submission("word-guess", &json!({}), &solution, &env(json!({})));
+        assert!(!v.valid);
+    }
+
+    fn word_groups_solution() -> Value {
+        json!({
+            "categories": [
+                {"name": "Fruits", "words": ["APPLE", "BANANA", "CHERRY", "DATE"], "level": 0},
+                {"name": "Colors", "words": ["RED", "BLUE", "GREEN", "YELLOW"], "level": 1},
+                {"name": "Animals", "words": ["DOG", "CAT", "BIRD", "FISH"], "level": 2},
+                {"name": "Numbers", "words": ["ONE", "TWO", "THREE", "FOUR"], "level": 3}
+            ]
+        })
+    }
+
+    #[test]
+    fn word_groups_accepts_win_from_found_categories() {
+        let found = json!({
+            "foundCategories": [
+                ["APPLE", "BANANA", "CHERRY", "DATE"],
+                ["RED", "BLUE", "GREEN", "YELLOW"],
+                ["DOG", "CAT", "BIRD", "FISH"],
+                ["ONE", "TWO", "THREE", "FOUR"]
+            ],
+            "mistakes": 1
+        });
+        let v = validate_submission(
+            "word-groups",
+            &json!({}),
+            &word_groups_solution(),
+            &env(found),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Won));
+        assert_eq!(v.score, Some(75));
+    }
+
+    #[test]
+    fn word_groups_accepts_loss_when_not_all_found() {
+        let mut envelope = env(json!({
+            "foundCategories": [
+                ["APPLE", "BANANA", "CHERRY", "DATE"]
+            ],
+            "mistakes": 4
+        }));
+        envelope.status = SubmissionStatus::Lost;
+        let v = validate_submission(
+            "word-groups",
+            &json!({}),
+            &word_groups_solution(),
+            &envelope,
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    #[test]
+    fn word_groups_rejects_false_win() {
+        let v = validate_submission(
+            "word-groups",
+            &json!({}),
+            &word_groups_solution(),
+            &env(json!({
+                "foundCategories": [["APPLE", "BANANA", "CHERRY", "DATE"]],
+                "mistakes": 0
+            })),
+        );
         assert!(!v.valid);
     }
 

@@ -29,6 +29,7 @@ use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
+use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -191,6 +192,16 @@ fn crossword_solution(seed: i64) -> Value {
     generate_crossword_puzzle(seed).1
 }
 
+/// Deterministic word-groups fallback when no stored row exists.
+/// Free rotation includes word-groups; free floor must not depend on pre-seed.
+fn word_groups_puzzle_data(seed: i64) -> Value {
+    generate_word_groups_puzzle(seed).0
+}
+
+fn word_groups_solution(seed: i64) -> Value {
+    generate_word_groups_puzzle(seed).1
+}
+
 /// On-server deterministic fallback for free-floor modules that ship a pure generator.
 /// Content store remains preferred when a row exists.
 fn deterministic_daily(
@@ -207,6 +218,10 @@ fn deterministic_daily(
             ))
         }
         "crossword" => Some((crossword_puzzle_data(seed), Some(crossword_solution(seed)))),
+        "word-groups" => Some((
+            word_groups_puzzle_data(seed),
+            Some(word_groups_solution(seed)),
+        )),
         _ => None,
     }
 }
@@ -291,7 +306,7 @@ impl PuzzleService for PuzzleConnectService {
             .await?;
 
         // Resolve the served puzzle: stored row first, then documented
-        // deterministic generators (sudoku, crossword free-floor).
+        // deterministic generators (sudoku, crossword, word-groups free-floor).
         let mut puzzle_data: Option<Value> = None;
         let mut puzzle_id: Option<String> = None;
         let mut stub = true;
