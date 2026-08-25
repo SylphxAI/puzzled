@@ -99,6 +99,10 @@ mod tests {
         puzzled_core::puzzle_play::game_slugs::todays_free_game(today).to_string()
     }
 
+    fn densifies_without_store(slug: &str) -> bool {
+        matches!(slug, "sudoku" | "crossword" | "word-groups")
+    }
+
     async fn body_json(response: Response) -> serde_json::Value {
         let body = match to_bytes(response.into_body(), usize::MAX).await {
             Ok(body) => body,
@@ -376,9 +380,9 @@ mod tests {
         assert_eq!(json["canPlay"], true);
         assert!(json["puzzleNumber"].as_u64().unwrap_or(0) > 0);
         assert!(!json["puzzleDate"].as_str().unwrap_or("").is_empty());
-        // Without a DB, sudoku + crossword densify via on-server generators
-        // (free-floor guarantee). Other free-rotation modules still need content.
-        if free_slug == "sudoku" || free_slug == "crossword" {
+        // Without a DB, sudoku + crossword + word-groups densify via on-server
+        // generators (free-floor guarantee). Other free-rotation modules still need content.
+        if densifies_without_store(&free_slug) {
             assert!(
                 json.get("stub").map_or(true, |v| v == false || v.is_null()),
                 "unexpected stub for densified free game {free_slug}: {:?}",
@@ -441,7 +445,7 @@ mod tests {
             StatusCode::UNAUTHORIZED,
             "guest free path must not 401 identity_required"
         );
-        if free_slug == "sudoku" || free_slug == "crossword" {
+        if densifies_without_store(&free_slug) {
             // No DB: deterministic generators validate (empty → invalid verdict).
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
@@ -476,7 +480,7 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess: {error}"),
         };
-        if free_slug == "sudoku" || free_slug == "crossword" {
+        if densifies_without_store(&free_slug) {
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
@@ -495,7 +499,7 @@ mod tests {
     #[tokio::test]
     async fn connect_submit_guess_rejects_unserved_puzzle() {
         // Free-rotation game passes the premium gate. Without a content DB:
-        // - sudoku + crossword densify via deterministic server generation
+        // - sudoku + crossword + word-groups densify via deterministic generation
         // - other modules must fail closed (404 unserved) — no accept-any.
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_02");
@@ -514,7 +518,7 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect SubmitGuess non-sudoku: {error}"),
         };
-        if free_slug == "sudoku" || free_slug == "crossword" {
+        if densifies_without_store(&free_slug) {
             assert_eq!(response.status(), StatusCode::OK);
             let json = body_json(response).await;
             assert!(
@@ -577,6 +581,221 @@ mod tests {
         );
         assert_eq!(json["status"], "won");
         assert!(json["score"].as_i64().unwrap_or(0) > 0);
+    }
+
+    fn word_groups_win_submission(seed: i64) -> String {
+        use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
+        let (_pd, sol) = generate_word_groups_puzzle(seed);
+        let cats = sol.get("categories").expect("categories");
+        let found: Vec<serde_json::Value> = cats
+            .as_array()
+            .expect("arr")
+            .iter()
+            .map(|c| c.get("words").cloned().unwrap_or(serde_json::Value::Null))
+            .collect();
+        let submission = serde_json::json!({ "foundCategories": found, "mistakes": 0 });
+        serde_json::json!({
+            "gameSlug": "word-groups",
+            "status": "won",
+            "attempts": 4,
+            "timeSpentMs": "8000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string()
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_word_groups_serves_non_stub_puzzle_data() {
+        if today_free_slug() != "word-groups" {
+            return;
+        }
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(r#"{"gameSlug":"word-groups"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily word-groups: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "word-groups");
+        assert_eq!(json["mode"], "daily");
+        assert_eq!(json["canPlay"], true);
+        assert!(
+            json.get("stub").map_or(true, |v| v == false || v.is_null()),
+            "word-groups GetDaily must not stub: {:?}",
+            json.get("stub")
+        );
+        let data = json["puzzleDataJson"].as_str().expect("puzzleDataJson");
+        assert!(!data.is_empty() && data != "null", "must serve puzzle data");
+        let payload: serde_json::Value = serde_json::from_str(data).expect("json");
+        let words = payload["words"].as_array().expect("words");
+        assert_eq!(words.len(), 16);
+        assert!(payload.get("categories").is_none());
+        assert!(
+            json.get("solutionJson").is_none(),
+            "solutions must never leave the server"
+        );
+        assert!(
+            !data.contains("\"categories\""),
+            "GetDaily must not leak category groupings: {data}"
+        );
+    }
+
+    #[tokio::test]
+    async fn connect_word_groups_free_floor_guest_can_finish_win() {
+        use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+
+        if today_free_slug() != "word-groups" {
+            return;
+        }
+
+        let app = router(AppState::new(None));
+        let today = product_day_key(chrono::Utc::now());
+        let seed = i64::from(get_puzzle_number(today, None));
+        let body = word_groups_win_submission(seed);
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "a1b2c3d4-e5f6-7890-abcd-ef1234567890")
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(
+            json["valid"], true,
+            "word-groups free win must validate: {json}"
+        );
+        assert_eq!(json["status"], "won");
+        assert!(json["score"].as_i64().unwrap_or(0) > 0);
+    }
+
+    #[tokio::test]
+    async fn connect_word_groups_free_floor_guest_can_finish_loss() {
+        use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+        use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
+
+        if today_free_slug() != "word-groups" {
+            return;
+        }
+
+        let app = router(AppState::new(None));
+        let today = product_day_key(chrono::Utc::now());
+        let seed = i64::from(get_puzzle_number(today, None));
+        let (_pd, sol) = generate_word_groups_puzzle(seed);
+        let first = sol["categories"][0]["words"].clone();
+        let submission = serde_json::json!({
+            "foundCategories": [first],
+            "mistakes": 4
+        });
+        let body = serde_json::json!({
+            "gameSlug": "word-groups",
+            "status": "lost",
+            "attempts": 5,
+            "timeSpentMs": "9000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "b2c3d4e5-f6a7-8901-bcde-f12345678901")
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(
+            json["valid"], true,
+            "word-groups free loss must validate: {json}"
+        );
+        assert_eq!(json["status"], "lost");
+        assert_eq!(json["score"].as_i64().unwrap_or(-1), 0);
+    }
+
+    #[tokio::test]
+    async fn connect_word_groups_rejects_false_win() {
+        if today_free_slug() != "word-groups" {
+            return;
+        }
+        let app = router(AppState::new(None));
+        let submission = serde_json::json!({
+            "foundCategories": [["APPLE", "BANANA", "CHERRY", "DATE"]],
+            "mistakes": 0
+        });
+        let body = serde_json::json!({
+            "gameSlug": "word-groups",
+            "status": "won",
+            "attempts": 1,
+            "timeSpentMs": "1000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let request = match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", "c3d4e5f6-a7b8-9012-cdef-123456789012")
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build: {error}"),
+        };
+        let response = match app.oneshot(request).await {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert!(
+            json.get("valid")
+                .map_or(true, |v| v == false || v.is_null()),
+            "false win must be invalid: {json}"
+        );
+    }
+
+    #[test]
+    fn word_groups_one_finish_guard_keys_guest_module_day() {
+        use puzzled_core::puzzle_play::game_slugs::ModuleClass;
+        use puzzled_core::puzzle_play::ritual_completion::{
+            ritual_already_finished, submit_must_guard_already_played, RitualCompletionRow,
+        };
+
+        assert!(
+            submit_must_guard_already_played(true, None, true),
+            "store + content day known => guard even without puzzle_id"
+        );
+        let prior = [RitualCompletionRow {
+            user_id: "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890".into(),
+            day_key: "2026-08-25".into(),
+            module_class: ModuleClass::PuzzleRitual,
+            is_ritual: true,
+        }];
+        assert!(ritual_already_finished(
+            &prior,
+            "guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "2026-08-25",
+            "word-groups",
+        ));
     }
 
     #[tokio::test]
