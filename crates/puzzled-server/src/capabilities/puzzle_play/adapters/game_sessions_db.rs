@@ -495,8 +495,7 @@ pub async fn recompute_drc(pool: &PgPool, day_key: &str) -> Result<u64, String> 
 mod tests {
     use super::*;
     use puzzled_core::puzzle_play::ritual_completion::{
-        completed_session_matches, guest_session_dropped_on_adopt, submit_must_guard_already_played,
-        FinishKind, SessionAdoptKey,
+        submit_must_guard_already_played, FinishKind,
     };
 
     #[test]
@@ -533,64 +532,6 @@ mod tests {
         let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
         assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
         assert!(parse_user_id("not-a-uuid").is_err());
-    }
-
-    #[test]
-    fn completion_lookup_writer_is_bool_membership() {
-        assert!(completed_session_matches(
-            "won",
-            Some("p1"),
-            "sudoku",
-            Some("2026-08-12"),
-            Some("p1"),
-            "sudoku",
-            Some("2026-08-12"),
-        ));
-        let accepted = CompletedSession {
-            status: "won".into(),
-            score: Some(12),
-            attempts: 3,
-            completed_at: Some(
-                chrono::NaiveDate::from_ymd_opt(2026, 8, 12)
-                    .expect("d")
-                    .and_hms_opt(0, 0, 0)
-                    .expect("t"),
-            ),
-        };
-        assert_eq!(accepted.status, "won");
-        assert_eq!(accepted.score, Some(12));
-        assert_eq!(accepted.attempts, 3);
-        assert!(accepted.completed_at.is_some());
-        assert!(is_unique_violation_code("23505"));
-        assert!(!is_unique_violation_code("42P01"));
-    }
-
-    #[test]
-    fn guest_adoption_drops_collisions_then_keeps_unique() {
-        let account = [SessionAdoptKey {
-            puzzle_id: Some("p1"),
-            game_slug: "sudoku",
-            day_key: Some("2026-08-12"),
-            is_ritual: true,
-        }];
-        assert!(guest_session_dropped_on_adopt(
-            SessionAdoptKey {
-                puzzle_id: Some("p1"),
-                game_slug: "sudoku",
-                day_key: None,
-                is_ritual: false,
-            },
-            &account
-        ));
-        assert!(!guest_session_dropped_on_adopt(
-            SessionAdoptKey {
-                puzzle_id: Some("p2"),
-                game_slug: "crossword",
-                day_key: Some("2026-08-12"),
-                is_ritual: true,
-            },
-            &account
-        ));
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

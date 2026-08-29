@@ -9,16 +9,34 @@ use puzzled_core::presentation_policy::reduced_motion::prefers_reduced_from_matc
 use puzzled_core::privacy::pii_scrub::looks_like_email;
 use puzzled_core::product_policy::error_codes::ERROR_CODES;
 use puzzled_core::puzzle_play::ritual_completion::{
-    guest_session_dropped_on_adopt, SessionAdoptKey,
+    qualifies_as_ritual, submit_must_guard_already_played, RitualQualifyInput,
 };
-use puzzled_core::{generate_sudoku_puzzle, seeded_random, validate_and_score_sudoku};
+use puzzled_core::{
+    generate_sudoku_puzzle, seeded_random, validate_and_score_sudoku, GameSubmission,
+    ScoringResult, SubmissionStatus,
+};
 
 #[test]
 fn core_generates_and_scores_sudoku_without_shell() {
     let puzzle = generate_sudoku_puzzle(42, puzzled_core::SudokuDifficulty::Easy);
     assert_eq!(puzzle.puzzle_data.grid.len(), 9);
     let _ = seeded_random(1);
-    let _ = validate_and_score_sudoku;
+    let final_grid: Vec<Vec<u64>> = puzzle
+        .solution
+        .grid
+        .iter()
+        .map(|row| row.iter().copied().map(u64::from).collect())
+        .collect();
+    let result = validate_and_score_sudoku(
+        &puzzle.solution,
+        &GameSubmission {
+            status: SubmissionStatus::Won,
+            attempts: 1,
+            time_spent_ms: 0,
+            data: Some(serde_json::json!({ "finalGrid": final_grid, "mistakes": 0 })),
+        },
+    );
+    assert_eq!(result, ScoringResult::valid(SubmissionStatus::Won, 1000));
 }
 
 #[test]
@@ -31,18 +49,12 @@ fn capability_domains_decide_on_fixture_facts() {
     assert!(ERROR_CODES.contains(&"UNAUTHORIZED"));
     assert!(!prefers_reduced_from_matches(false));
     assert!(parse_day_key("2026-08-12").is_ok());
-    assert!(guest_session_dropped_on_adopt(
-        SessionAdoptKey {
-            puzzle_id: Some("p1"),
-            game_slug: "sudoku",
-            day_key: None,
-            is_ritual: false,
-        },
-        &[SessionAdoptKey {
-            puzzle_id: Some("p1"),
-            game_slug: "sudoku",
-            day_key: Some("2026-08-12"),
-            is_ritual: true,
-        }]
-    ));
+    assert!(qualifies_as_ritual(RitualQualifyInput {
+        game_module_id: "sudoku",
+        mode: "daily",
+        status: "won",
+        is_dry_run: false,
+    }));
+    assert!(submit_must_guard_already_played(true, None, true));
+    assert!(!submit_must_guard_already_played(true, None, false));
 }
