@@ -224,8 +224,9 @@ pub fn extract_bearer(headers: &HeaderMap) -> Option<String> {
 }
 
 fn is_admin_from_claims(claims: &PlatformClaims) -> bool {
-    // Exact scope tokens only — no prefix/suffix guessing.
-    let is_admin_scope = |s: &str| s == "admin" || s == "platform:admin";
+    // Product-issued exact `admin` only. Platform operator scopes are not
+    // Puzzled admin (100% dogfood: no first-party skip).
+    let is_admin_scope = |s: &str| s == "admin";
     if let Some(scope) = &claims.scope {
         if scope.split_whitespace().any(is_admin_scope) {
             return true;
@@ -525,9 +526,21 @@ mod tests {
     #[test]
     fn admin_scope_detected() {
         let _g = lock();
-        let token = mint_token("admin_1", Some("platform:admin"));
+        let token = mint_token("admin_1", Some("admin"));
         let id = verify_platform_jwt(&token).expect("verified");
         assert!(id.is_admin);
+        clear_test_decoding_key();
+    }
+
+    #[test]
+    fn platform_admin_scope_does_not_grant_product_admin() {
+        let _g = lock();
+        let token = mint_token("ops_1", Some("platform:admin"));
+        let id = verify_platform_jwt(&token).expect("verified");
+        assert!(
+            !id.is_admin,
+            "platform operator scope must not skip product admin"
+        );
         clear_test_decoding_key();
     }
 

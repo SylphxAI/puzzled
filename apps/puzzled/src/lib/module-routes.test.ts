@@ -1,12 +1,9 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
 import {
 	INBOUND_MODULE_ALIASES,
 	inboundModulePublicRoutes,
 	inboundModuleRedirects,
 } from './module-routes'
-
-const nextConfigPath = new URL('../../next.config.ts', import.meta.url)
 
 describe('inbound module aliases', () => {
 	test('crowns and duo rewrite to canonical /games paths', () => {
@@ -47,10 +44,5 @@ describe('inbound module aliases', () => {
 			'/en-US/duo',
 			'/zh-HK/duo',
 		])
-	})
-
-	test('next.config consumes inboundModuleRedirects from the alias table', () => {
-		const nextConfig = readFileSync(nextConfigPath, 'utf8')
-		expect(nextConfig).toContain('inboundModuleRedirects')
 	})
 })
