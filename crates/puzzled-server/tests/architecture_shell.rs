@@ -68,11 +68,6 @@ async fn identity_gate_uses_published_contract() {
         Ok(json) => json,
         Err(error) => panic!("parse json: {error}"),
     };
-    let message = json.get("message").and_then(|v| v.as_str()).unwrap_or("");
-    assert!(
-        message.contains("unauthenticated")
-            || message.contains("unauthorized")
-            || message.contains("identity"),
-        "unexpected identity error: {json}"
-    );
+    assert_eq!(json["code"], "unauthenticated");
+    assert_eq!(json["message"], "identity_required_for_submit");
 }
