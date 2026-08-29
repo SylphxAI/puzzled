@@ -16,6 +16,9 @@ import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
+import { inboundModulePublicRoutes } from '@/lib/module-routes'
+
+const inboundPublicRoutes = new Set(inboundModulePublicRoutes(locales))
 
 // =============================================================================
 // i18n Middleware
@@ -70,6 +73,12 @@ export async function proxy(request: NextRequest) {
 		const url = request.nextUrl.clone()
 		url.pathname = newPathname
 		return NextResponse.redirect(url, 308)
+	}
+
+	// Inbound aliases stay public presentation. Identity dest owns sessions;
+	// suite-door middleware must not send /crowns or /duo to /login.
+	if (inboundPublicRoutes.has(pathname)) {
+		return intlMiddleware(request)
 	}
 
 	// =========================================================================
