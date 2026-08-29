@@ -15,6 +15,7 @@ import {
 } from './dest'
 import {
 	createCheckout,
+	getBilling,
 	getLeaderboard,
 	getPlans,
 	getSubscription,
@@ -232,6 +233,24 @@ describe('Identity dest HTTP', () => {
 			body: { entitlement: { value: { enabled: true }, entitlement_code: 'custom' } },
 		})
 		expect(await isPremium('principal-a')).toBe(true)
+	})
+
+	test('chrome billing isPremium is EvaluateEntitlement enabled, not plan slug', async () => {
+		process.env.COMMERCE_API_KEY = 'commerce_key_a'
+		mockFetch({
+			ok: true,
+			body: { entitlement: { value: { enabled: true }, entitlement_code: 'custom' } },
+		})
+		const billing = await getBilling({}, 'principal-a')
+		expect(billing.isPremium).toBe(true)
+		expect(billing.subscription).toEqual({ planSlug: 'custom', status: 'active' })
+		mockFetch({
+			ok: true,
+			body: { entitlement: { value: { enabled: false }, entitlement_code: 'premium' } },
+		})
+		const free = await getBilling({}, 'principal-a')
+		expect(free.isPremium).toBe(false)
+		expect(free.subscription).toEqual({ planSlug: 'free', status: 'inactive' })
 	})
 
 	test('each dest product uses its own credential without sibling fallback', () => {

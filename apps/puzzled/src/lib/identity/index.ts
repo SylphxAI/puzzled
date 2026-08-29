@@ -140,48 +140,36 @@ export async function getLeaderboard(
 	}
 }
 
-export async function getSubscription(
-	config: unknown,
-	userId?: string,
-): Promise<{ planSlug?: string; status?: string } | null> {
-	if (!userId) return null
-	const destConfig = (config ?? {}) as DestPeelConfig
-	const policyId = process.env.COMMERCE_ENTITLEMENT_POLICY_ID?.trim() || 'premium'
-	const body = await destJson<{
-		entitlement?: {
-			value?: { enabled?: boolean }
-			policy_id?: string
-			policyId?: string
-		}
-	}>(commerceOrigin(destConfig), '/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement', {
-		method: 'POST',
-		credential: commerceCredential(destConfig),
-		body: {
-			policy_id: policyId,
-			subject_id: userId,
-			as_of: new Date().toISOString(),
-		},
-	})
-	const entitlement = asRecord(body.entitlement) ?? asRecord(body)
-	if (!entitlement) return null
-	const enabled = destEntitlementEnabled(body)
-	return {
-		planSlug: enabled
-			? (readText(entitlement, ['entitlement_code', 'entitlementCode', 'planSlug']) ?? 'premium')
-			: 'free',
-		status: enabled ? 'active' : 'inactive',
-	}
+type CommerceSubscription = { planSlug?: string; status?: string }
+
+type CommercePremium = {
+	isPremium: boolean
+	subscription: CommerceSubscription | null
 }
 
-/** One premium writer: dest Commerce EvaluateEntitlement `enabled`. */
-export async function isPremium(userId?: string, config?: unknown): Promise<boolean> {
-	if (!userId) return false
+async function evaluateCommerceEntitlement(
+	userId: string,
+	config: unknown | undefined,
+	mode: 'throw' | 'fail-closed',
+): Promise<CommercePremium> {
 	const destConfig = (config ?? {}) as DestPeelConfig
-	const credential = destConfig.credential ?? destCommerceCredential()
-	if (!credential) return false
+	const credential =
+		mode === 'throw'
+			? commerceCredential(destConfig)
+			: (destConfig.credential ?? destCommerceCredential())
+	if (!credential) {
+		return { isPremium: false, subscription: null }
+	}
 	const policyId = process.env.COMMERCE_ENTITLEMENT_POLICY_ID?.trim() || 'premium'
-	try {
-		const body = await destJson(
+	const run = async (): Promise<CommercePremium> => {
+		const body = await destJson<{
+			entitlement?: {
+				value?: { enabled?: boolean }
+				entitlement_code?: string
+				entitlementCode?: string
+				planSlug?: string
+			}
+		}>(
 			commerceOrigin(destConfig),
 			'/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement',
 			{
@@ -194,10 +182,47 @@ export async function isPremium(userId?: string, config?: unknown): Promise<bool
 				},
 			},
 		)
-		return destEntitlementEnabled(body)
-	} catch {
-		return false
+		const enabled = destEntitlementEnabled(body)
+		const entitlement = asRecord(body.entitlement) ?? asRecord(body)
+		return {
+			isPremium: enabled,
+			subscription: entitlement
+				? {
+						planSlug: enabled
+							? (readText(entitlement, ['entitlement_code', 'entitlementCode', 'planSlug']) ??
+								'premium')
+							: 'free',
+						status: enabled ? 'active' : 'inactive',
+					}
+				: null,
+		}
 	}
+	if (mode === 'throw') return run()
+	try {
+		return await run()
+	} catch {
+		return { isPremium: false, subscription: null }
+	}
+}
+
+export async function getSubscription(
+	config: unknown,
+	userId?: string,
+): Promise<CommerceSubscription | null> {
+	if (!userId) return null
+	return (await evaluateCommerceEntitlement(userId, config, 'throw')).subscription
+}
+
+/** Chrome + server premium: dest Commerce EvaluateEntitlement `enabled`. */
+export async function getBilling(config: unknown, userId?: string): Promise<CommercePremium> {
+	if (!userId) return { isPremium: false, subscription: null }
+	return evaluateCommerceEntitlement(userId, config, 'fail-closed')
+}
+
+/** One premium writer: dest Commerce EvaluateEntitlement `enabled`. */
+export async function isPremium(userId?: string, config?: unknown): Promise<boolean> {
+	if (!userId) return false
+	return (await evaluateCommerceEntitlement(userId, config, 'fail-closed')).isPremium
 }
 
 export type { Plan } from './dest'

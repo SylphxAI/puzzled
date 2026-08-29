@@ -1,28 +1,13 @@
 /**
  * Billing Logic Tests
  *
- * Tests the premium access checking and free game rotation.
- * Uses mocked platform SDK calls.
+ * Premium is dest Commerce EvaluateEntitlement `enabled`.
+ * These tests cover free-game rotation only.
  */
 
 import { describe, expect, test } from 'bun:test'
 
-// ==========================================
-// Mock implementations (extracted from billing/server.ts)
-// ==========================================
-
-const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
-
 const FREE_GAME_ROTATION = ['word-guess', 'word-groups', 'crowns', 'sudoku', 'crossword'] as const
-
-function isPremiumPlan(planSlug: string | null | undefined): boolean {
-	if (!planSlug) return false
-	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
-}
-
-function isFreePlan(planSlug: string | null | undefined): boolean {
-	return !planSlug || planSlug === 'free'
-}
 
 function getTodaysFreeGame(now = new Date()): string {
 	// Dual-oracle of src/lib/free-rotation.ts (HKT product day, ordinal0).
@@ -46,42 +31,6 @@ function getFreeGameRotation(): readonly string[] {
 // ==========================================
 
 describe('Billing Logic', () => {
-	describe('isPremiumPlan', () => {
-		test('identifies premium plans correctly', () => {
-			expect(isPremiumPlan('premium')).toBe(true)
-			expect(isPremiumPlan('lifetime')).toBe(true)
-			expect(isPremiumPlan('pro')).toBe(true)
-		})
-
-		test('rejects free and null plans', () => {
-			expect(isPremiumPlan('free')).toBe(false)
-			expect(isPremiumPlan(null)).toBe(false)
-			expect(isPremiumPlan(undefined)).toBe(false)
-			expect(isPremiumPlan('')).toBe(false)
-		})
-
-		test('rejects unknown plans', () => {
-			expect(isPremiumPlan('basic')).toBe(false)
-			expect(isPremiumPlan('enterprise')).toBe(false)
-			expect(isPremiumPlan('PREMIUM')).toBe(false) // case sensitive
-		})
-	})
-
-	describe('isFreePlan', () => {
-		test('identifies free plan correctly', () => {
-			expect(isFreePlan('free')).toBe(true)
-			expect(isFreePlan(null)).toBe(true)
-			expect(isFreePlan(undefined)).toBe(true)
-			expect(isFreePlan('')).toBe(true)
-		})
-
-		test('rejects premium plans', () => {
-			expect(isFreePlan('premium')).toBe(false)
-			expect(isFreePlan('lifetime')).toBe(false)
-			expect(isFreePlan('pro')).toBe(false)
-		})
-	})
-
 	describe('Free Game Rotation', () => {
 		test('returns a valid game slug', () => {
 			const todaysGame = getTodaysFreeGame()
@@ -148,28 +97,5 @@ describe('Billing Logic', () => {
 				expect(isGameFreeToday(game)).toBe(false)
 			}
 		})
-
-		test('premium plan grants access to all games', () => {
-			// If user has premium plan, they can access any game
-			expect(isPremiumPlan('premium')).toBe(true)
-			expect(isPremiumPlan('lifetime')).toBe(true)
-			expect(isPremiumPlan('pro')).toBe(true)
-		})
-	})
-})
-
-describe('Subscription Status', () => {
-	test('active status grants access', () => {
-		const statuses = ['active', 'trialing']
-		for (const status of statuses) {
-			expect(['active', 'trialing'].includes(status)).toBe(true)
-		}
-	})
-
-	test('inactive statuses deny access', () => {
-		const inactiveStatuses = ['cancelled', 'past_due', 'paused']
-		for (const status of inactiveStatuses) {
-			expect(['active', 'trialing'].includes(status)).toBe(false)
-		}
 	})
 })
