@@ -1,18 +1,34 @@
 const IDENTITY_API_ORIGIN = 'https://api.identity.sylphx.com'
-const DATA_API_ORIGIN = 'https://api.data.sylphx.com'
-const COMPUTE_API_ORIGIN = 'https://api.compute.sylphx.com'
 const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
 const COMMERCE_API_ORIGIN = 'https://api.commerce.sylphx.com'
+const OBSERVABILITY_API_ORIGIN = 'https://api.observability.sylphx.com'
 const AI_API_ORIGIN = 'https://api.sylphx.ai/v1'
 
 export const DEST_PEELS = {
 	identity: IDENTITY_API_ORIGIN,
-	data: DATA_API_ORIGIN,
-	compute: COMPUTE_API_ORIGIN,
 	events: EVENTS_API_ORIGIN,
 	commerce: COMMERCE_API_ORIGIN,
+	observability: OBSERVABILITY_API_ORIGIN,
 	ai: AI_API_ORIGIN,
 } as const
+
+export const DEST_CONSENT_PURPOSES = [
+	'necessary',
+	'analytics',
+	'marketing',
+	'functional',
+	'preferences',
+] as const
+
+export type DestConsentPurpose = (typeof DEST_CONSENT_PURPOSES)[number]
+
+export type Plan = {
+	slug: string
+	name: string
+	monthlyPrice?: number
+	annualPrice?: number
+	features?: string[]
+}
 
 export type IdentityPrincipal = {
 	principalId: string
@@ -32,12 +48,19 @@ export type IdentityUser = {
 }
 
 export type AppConfig = {
-	plans: never[]
-	consentTypes: never[]
+	plans: Plan[]
+	consentTypes: DestConsentPurpose[]
 	oauthProviders: string[]
-	featureFlags: never[]
 	app: { id: string; name: string; slug: string }
 	fetchedAt: string
+}
+
+export const EMPTY_APP_CONFIG: AppConfig = {
+	plans: [],
+	consentTypes: [...DEST_CONSENT_PURPOSES],
+	oauthProviders: [],
+	app: { id: 'puzzled', name: 'Puzzled', slug: 'puzzled' },
+	fetchedAt: new Date(0).toISOString(),
 }
 
 export type IdentitySession = {
@@ -69,20 +92,16 @@ export function destIdentityOrigin(raw?: string | null): string {
 	return destPeelOrigin(IDENTITY_API_ORIGIN, raw)
 }
 
-export function destDataOrigin(raw?: string | null): string {
-	return destPeelOrigin(DATA_API_ORIGIN, raw)
-}
-
-export function destComputeOrigin(raw?: string | null): string {
-	return destPeelOrigin(COMPUTE_API_ORIGIN, raw)
-}
-
 export function destEventsOrigin(raw?: string | null): string {
 	return destPeelOrigin(EVENTS_API_ORIGIN, raw)
 }
 
 export function destCommerceOrigin(raw?: string | null): string {
 	return destPeelOrigin(COMMERCE_API_ORIGIN, raw)
+}
+
+export function destObservabilityOrigin(raw?: string | null): string {
+	return destPeelOrigin(OBSERVABILITY_API_ORIGIN, raw)
 }
 
 function readText(value: unknown, keys: string[]): string | undefined {

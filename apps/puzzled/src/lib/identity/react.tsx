@@ -9,7 +9,7 @@ import {
 	useMemo,
 	useState,
 } from 'react'
-import type { AppConfig, IdentityUser } from './dest'
+import { DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type AppConfig, type IdentityUser, type Plan } from './dest'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -30,12 +30,15 @@ const AuthContext = createContext<AuthState>({
 	signOut: async () => undefined,
 })
 
+const AppConfigContext = createContext<AppConfig>(EMPTY_APP_CONFIG)
+
 async function readJson(response: Response): Promise<Record<string, unknown>> {
 	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
 }
 
 export function SylphxProvider({
 	children,
+	config,
 }: {
 	children: ReactNode
 	appId?: string
@@ -103,19 +106,11 @@ export function SylphxProvider({
 		}),
 		[user, isLoading, isLoaded, signOut, signInWithOAuth],
 	)
-	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function FeatureFlagProvider({
-	children,
-}: {
-	children: ReactNode
-	endpoint?: string
-	userContext?: unknown
-	refreshInterval?: number
-	enableCache?: boolean
-}) {
-	return <>{children}</>
+	return (
+		<AppConfigContext.Provider value={config ?? EMPTY_APP_CONFIG}>
+			<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+		</AppConfigContext.Provider>
+	)
 }
 
 export function PlatformProvider(props: {
@@ -340,13 +335,7 @@ export function useResetPasswordForm(opts?: {
 	}
 }
 
-export type Plan = {
-	slug: string
-	name: string
-	monthlyPrice?: number
-	annualPrice?: number
-	features?: string[]
-}
+export type { Plan }
 
 type BillingState = {
 	subscription: { planSlug?: string; status?: string } | null
@@ -381,13 +370,36 @@ export function useBilling() {
 	}, [])
 	return {
 		...state,
-		openPortal: async () => undefined,
-		createCheckout: async (_plan?: unknown, _interval?: unknown) => '',
+		openPortal: async () => {
+			const response = await fetch('/api/identity/billing/portal', {
+				method: 'POST',
+				credentials: 'same-origin',
+			})
+			const body = await readJson(response)
+			const url = typeof body.portalUrl === 'string' ? body.portalUrl : ''
+			if (!response.ok || !url) throw new Error('commerce_portal_failed')
+			window.location.assign(url)
+			return url
+		},
+		createCheckout: async (plan?: unknown, interval?: unknown) => {
+			const response = await fetch('/api/identity/billing/checkout', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ planSlug: plan, interval }),
+			})
+			const body = await readJson(response)
+			const url = typeof body.checkoutUrl === 'string' ? body.checkoutUrl : ''
+			if (!response.ok || !url) {
+				throw new Error(typeof body.error === 'string' ? body.error : 'checkout_failed')
+			}
+			return url
+		},
 	}
 }
 
 export function usePlans() {
-	return [] as Plan[]
+	return useContext(AppConfigContext).plans
 }
 export function useSafeBilling() {
 	return useBilling()
@@ -406,33 +418,131 @@ export function useReferral() {
 	}
 }
 export function useAnalytics() {
-	return { track: async (_event?: string, _props?: Record<string, unknown>) => undefined }
+	return {
+		track: async (event?: string, props?: Record<string, unknown>) => {
+			if (!event?.trim()) return
+			await fetch('/api/observability/analytics', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ event, properties: props }),
+			})
+		},
+	}
 }
 export function useSafeAnalytics() {
 	return useAnalytics()
 }
-export function useFeatureFlag(_name: string) {
-	return { enabled: false, variant: 'control' as string, isLoading: false }
-}
 export function useSafeConsent() {
+	const [consent, setConsent] = useState<Record<string, boolean>>({})
+	const [hasConsented, setHasConsented] = useState(false)
+	const [isLoading, setIsLoading] = useState(true)
+	useEffect(() => {
+		const stored =
+			typeof window === 'undefined' ? null : window.localStorage.getItem('puzzled-consent')
+		if (stored) {
+			try {
+				setConsent(JSON.parse(stored) as Record<string, boolean>)
+				setHasConsented(true)
+			} catch {
+				setConsent({})
+			}
+		}
+		setIsLoading(false)
+	}, [])
 	return {
-		consent: {} as Record<string, boolean>,
-		hasConsent: (_kind?: string) => false,
-		hasConsented: false,
-		isLoading: false,
+		consent,
+		hasConsent: (kind?: string) => (kind ? consent[kind] === true : hasConsented),
+		hasConsented,
+		isLoading,
 		isConfigured: true,
+		setConsent: async (next: Record<string, boolean>) => {
+			setConsent(next)
+			setHasConsented(true)
+			if (typeof window !== 'undefined') {
+				window.localStorage.setItem('puzzled-consent', JSON.stringify(next))
+			}
+			await Promise.all(
+				DEST_CONSENT_PURPOSES.filter((purpose) => purpose !== 'necessary').map((purpose) =>
+					fetch('/api/identity/consent', {
+						method: 'POST',
+						headers: { 'content-type': 'application/json' },
+						credentials: 'same-origin',
+						body: JSON.stringify({
+							purpose,
+							state: next[purpose] ? 'granted' : 'denied',
+						}),
+					}),
+				),
+			)
+		},
 	}
 }
 export function useNotifications() {
+	const [permission, setPermission] = useState<NotificationPermission>(
+		typeof Notification === 'undefined' ? 'denied' : Notification.permission,
+	)
+	const [deviceId, setDeviceId] = useState<string | null>(null)
+	const [error, setError] = useState<{ message?: string } | null>(null)
+	const [preferences, setPreferences] = useState<Record<string, unknown>>({})
+	useEffect(() => {
+		fetch('/api/events/inbox', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				setPreferences({ messages: body.messages ?? [] })
+			})
+			.catch(() => undefined)
+	}, [])
 	return {
-		permission: 'default' as NotificationPermission,
-		isSupported: false,
-		isSubscribed: false,
-		subscribe: async () => false,
-		unsubscribe: async () => undefined,
-		error: null as { message?: string } | null,
-		preferences: {} as Record<string, unknown>,
+		permission,
+		isSupported: typeof Notification !== 'undefined',
+		isSubscribed: Boolean(deviceId),
+		subscribe: async () => {
+			if (typeof Notification === 'undefined') return false
+			const next = await Notification.requestPermission()
+			setPermission(next)
+			if (next !== 'granted') return false
+			const registration = await navigator.serviceWorker?.ready.catch(() => undefined)
+			const push = await registration?.pushManager
+				.subscribe({ userVisibleOnly: true })
+				.catch(() => undefined)
+			const response = await fetch('/api/events/devices', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({
+					token: push?.endpoint ?? `web-push-${crypto.randomUUID()}`,
+					p256dh: push ? arrayBufferToB64(push.getKey('p256dh')) : '',
+					auth: push ? arrayBufferToB64(push.getKey('auth')) : '',
+				}),
+			})
+			const body = await readJson(response)
+			if (!response.ok) {
+				setError({ message: typeof body.error === 'string' ? body.error : 'subscribe_failed' })
+				return false
+			}
+			setDeviceId(typeof body.deviceId === 'string' ? body.deviceId : 'events-device')
+			setError(null)
+			return true
+		},
+		unsubscribe: async () => {
+			if (!deviceId) return
+			await fetch('/api/events/devices', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ unregister: true, deviceId }),
+			})
+			setDeviceId(null)
+		},
+		error,
+		preferences,
 	}
+}
+
+function arrayBufferToB64(value: ArrayBuffer | null): string {
+	if (!value) return ''
+	return btoa(String.fromCharCode(...new Uint8Array(value)))
 }
 export function useSafeAchievements() {
 	return {
@@ -448,38 +558,125 @@ export function useSafeAchievements() {
 		isConfigured: true,
 	}
 }
-export function useGlobalErrorHandler(_opts?: {
+export function useGlobalErrorHandler(opts?: {
 	handleErrors?: boolean
 	handleRejections?: boolean
 	onCapture?: (eventId?: string) => void
 }) {
-	return
+	useEffect(() => {
+		if (opts?.handleErrors === false && opts.handleRejections === false) return
+		const capture = (message: string) => {
+			void fetch('/api/observability/error-events', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ message, service: 'puzzled-web' }),
+			})
+				.then(async (response) => {
+					const body = await readJson(response)
+					opts?.onCapture?.(typeof body.eventId === 'string' ? body.eventId : undefined)
+				})
+				.catch(() => undefined)
+		}
+		const onError = (event: ErrorEvent) => capture(event.message)
+		const onRejection = (event: PromiseRejectionEvent) =>
+			capture(event.reason instanceof Error ? event.reason.message : String(event.reason))
+		if (opts?.handleErrors !== false) window.addEventListener('error', onError)
+		if (opts?.handleRejections !== false) window.addEventListener('unhandledrejection', onRejection)
+		return () => {
+			window.removeEventListener('error', onError)
+			window.removeEventListener('unhandledrejection', onRejection)
+		}
+	}, [opts])
 }
-export function useSessionReplay(_opts?: {
+export function useSessionReplay(opts?: {
 	onError?: (error: { message: string }) => void
+	autoStart?: boolean
+	userId?: string
 	[key: string]: unknown
 }) {
+	const [sessionId, setSessionId] = useState<string | null>(null)
+	const [isRecording, setIsRecording] = useState(false)
+	const start = useCallback(async () => {
+		const nextId = sessionId ?? crypto.randomUUID()
+		const response = await fetch('/api/observability/session-replays', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			credentials: 'same-origin',
+			body: JSON.stringify({ sessionId: nextId, consent: true, masked: true }),
+		})
+		if (!response.ok) {
+			opts?.onError?.({ message: 'observability_replay_failed' })
+			return
+		}
+		setSessionId(nextId)
+		setIsRecording(true)
+	}, [opts, sessionId])
+	const stop = useCallback(() => {
+		setIsRecording(false)
+	}, [])
+	useEffect(() => {
+		if (opts?.autoStart) void start()
+	}, [opts?.autoStart, start])
+	const mark = useCallback(
+		async (kind: string, payload?: unknown) => {
+			if (!sessionId) return
+			await fetch('/api/observability/session-replays', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({
+					sessionId,
+					chunk: { sequence: Date.now(), payload: JSON.stringify({ kind, payload }) },
+				}),
+			}).catch((error) => {
+				opts?.onError?.({
+					message: error instanceof Error ? error.message : 'observability_replay_failed',
+				})
+			})
+		},
+		[opts, sessionId],
+	)
 	return {
-		start: () => undefined,
-		stop: () => undefined,
-		sessionId: null as string | null,
-		isRecording: false,
-		markError: (..._args: unknown[]) => undefined,
-		markNavigation: (..._args: unknown[]) => undefined,
-		markConversion: (..._args: unknown[]) => undefined,
+		start,
+		stop,
+		sessionId,
+		isRecording,
+		markError: (...args: unknown[]) => void mark('error', args),
+		markNavigation: (...args: unknown[]) => void mark('navigation', args),
+		markConversion: (...args: unknown[]) => void mark('conversion', args),
 	}
 }
 export const PlatformContext = createContext({
 	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
 		undefined,
 })
-export function CookieBanner(_props: {
+export function CookieBanner(props: {
 	position?: string
 	privacyPolicyUrl?: string
 	variant?: string
 	onSave?: () => void
 }) {
-	return null
+	const { hasConsented, setConsent } = useSafeConsent()
+	if (hasConsented) return null
+	return (
+		<div className={props.position === 'bottom' ? 'fixed inset-x-0 bottom-0 z-50 p-4' : undefined}>
+			<div className="mx-auto flex max-w-3xl items-center justify-between gap-4 rounded-lg border bg-background p-4">
+				<p>
+					Puzzled uses Identity dest consent for analytics.{' '}
+					{props.privacyPolicyUrl ? <a href={props.privacyPolicyUrl}>Privacy</a> : null}
+				</p>
+				<button
+					type="button"
+					onClick={() => {
+						void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
+					}}
+				>
+					Accept
+				</button>
+			</div>
+		</div>
+	)
 }
 export function AccountSection() {
 	const { user, isLoading } = useSafeUser()

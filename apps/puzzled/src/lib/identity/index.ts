@@ -83,13 +83,25 @@ function readNumber(value: unknown, keys: string[]): number | undefined {
 	return undefined
 }
 
+function destAsOf(): string {
+	return new Date().toISOString()
+}
+
+function destPage(limit: number) {
+	return { page_size: limit, limit }
+}
+
 export async function getLeaderboard(
 	config: unknown,
-	_board: string,
+	board: string,
 	userId?: string | null,
 	opts?: { limit?: number },
 ): Promise<EngagementLeaderboardResult> {
 	const destConfig = (config ?? {}) as DestPeelConfig
+	const activityKind = board.trim()
+	if (!activityKind) {
+		throw new Error('commerce_leaderboard_board_required')
+	}
 	const body = await destJson<{ entries?: unknown[] }>(
 		commerceOrigin(destConfig),
 		'/v1/sylphx.commerce.v1.EngagementService/ListEngagementLeaderboard',
@@ -97,8 +109,9 @@ export async function getLeaderboard(
 			method: 'POST',
 			credential: commerceCredential(destConfig),
 			body: {
-				as_of: new Date().toISOString(),
-				page: { limit: opts?.limit ?? 10 },
+				as_of: destAsOf(),
+				page: destPage(opts?.limit ?? 10),
+				activity_kind: activityKind,
 			},
 		},
 	)
@@ -160,9 +173,104 @@ export async function getSubscription(
 	}
 }
 
-export function createSylphxMiddleware(_opts: Record<string, unknown>) {
-	return async () => {
-		const { NextResponse } = await import('next/server')
-		return NextResponse.next()
+export type { Plan } from './dest'
+
+function cadenceUnit(value: unknown): string {
+	const record = asRecord(value)
+	const unit = record?.unit ?? record?.cadence
+	if (typeof unit === 'string') return unit.toUpperCase()
+	if (typeof unit === 'number') {
+		if (unit === 4) return 'MONTH'
+		if (unit === 5) return 'YEAR'
 	}
+	return ''
+}
+
+function rationalMinor(value: unknown): number | undefined {
+	if (typeof value === 'number' && Number.isFinite(value)) return value
+	const record = asRecord(value)
+	if (!record) return undefined
+	const numerator = readNumber(record, ['numerator'])
+	const denominator = readNumber(record, ['denominator']) ?? 1
+	if (numerator === undefined || denominator === 0) return undefined
+	return numerator / denominator
+}
+
+function priceMinor(price: Record<string, unknown>): number | undefined {
+	const tiers = price.tiers
+	if (!Array.isArray(tiers) || tiers.length === 0) {
+		return readNumber(price, ['unit_minor', 'unitMinor', 'amount_minor', 'amountMinor'])
+	}
+	const first = asRecord(tiers[0])
+	if (!first) return undefined
+	return (
+		rationalMinor(first.unit_minor ?? first.unitMinor) ??
+		readNumber(first, ['flat_minor', 'flatMinor'])
+	)
+}
+
+export async function getPlans(config?: unknown): Promise<import('./dest').Plan[]> {
+	const destConfig = (config ?? {}) as DestPeelConfig
+	const body = await destJson<{ prices?: unknown[]; products?: unknown[] }>(
+		commerceOrigin(destConfig),
+		'/v1/sylphx.commerce.v1.InvoicingService/ListPrices',
+		{
+			method: 'POST',
+			credential: commerceCredential(destConfig),
+			body: {
+				as_of: destAsOf(),
+				page: destPage(50),
+			},
+		},
+	)
+	const grouped = new Map<string, import('./dest').Plan>()
+	for (const raw of body.prices ?? []) {
+		const price = asRecord(raw)
+		if (!price) continue
+		const slug =
+			readText(price, ['price_code', 'priceCode', 'product_code', 'productCode', 'slug']) ?? ''
+		if (!slug) continue
+		const current = grouped.get(slug) ?? {
+			slug,
+			name: readText(price, ['display_name', 'displayName', 'name']) ?? slug,
+		}
+		const minor = priceMinor(price)
+		const unit = cadenceUnit(asRecord(price.cadence) ?? price)
+		if (minor !== undefined) {
+			if (unit.includes('YEAR')) current.annualPrice = minor
+			else current.monthlyPrice = minor
+		}
+		grouped.set(slug, current)
+	}
+	return [...grouped.values()]
+}
+
+export async function createCheckout(
+	config: unknown,
+	input: { planSlug: string; interval?: string; userId?: string },
+): Promise<string> {
+	const plans = await getPlans(config)
+	const plan = plans.find((candidate) => candidate.slug === input.planSlug)
+	if (!plan) {
+		throw new Error('commerce_plan_not_found')
+	}
+	throw new Error('commerce_checkout_unconfigured')
+}
+
+export async function openPortal(config: unknown, userId?: string): Promise<string> {
+	const destConfig = (config ?? {}) as DestPeelConfig
+	await destJson(
+		commerceOrigin(destConfig),
+		'/v1/sylphx.commerce.v1.InvoicingService/ListInvoices',
+		{
+			method: 'POST',
+			credential: commerceCredential(destConfig),
+			body: {
+				billing_account_id: userId ?? '',
+				as_of: destAsOf(),
+				page: destPage(20),
+			},
+		},
+	)
+	return '/settings/subscription'
 }

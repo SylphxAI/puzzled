@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { inboundModulePublicRoutes } from './lib/module-routes'
 import { locales } from './lib/i18n/config'
+import { inboundModulePublicRoutes } from './lib/module-routes'
 import { isInboundPublicPath, isProxySkippedPath } from './lib/proxy-paths'
 
 describe('dest proxy inbound public routes', () => {

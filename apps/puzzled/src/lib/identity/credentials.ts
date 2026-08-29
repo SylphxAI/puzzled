@@ -30,22 +30,16 @@ export function destCommerceCredential(
 	return destProductCredential(['COMMERCE_API_KEY', 'IDENTITY_API_KEY'], env)
 }
 
-export function destDataCredential(
-	env: Record<string, string | undefined> = process.env,
-): string | undefined {
-	return destProductCredential(['DATA_API_KEY', 'IDENTITY_API_KEY'], env)
-}
-
-export function destComputeCredential(
-	env: Record<string, string | undefined> = process.env,
-): string | undefined {
-	return destProductCredential(['COMPUTE_API_KEY', 'IDENTITY_API_KEY'], env)
-}
-
 export function destEventsCredential(
 	env: Record<string, string | undefined> = process.env,
 ): string | undefined {
 	return destProductCredential(['EVENTS_API_KEY', 'IDENTITY_API_KEY'], env)
+}
+
+export function destObservabilityCredential(
+	env: Record<string, string | undefined> = process.env,
+): string | undefined {
+	return destProductCredential(['OBSERVABILITY_API_KEY', 'IDENTITY_API_KEY'], env)
 }
 
 export function requireDestIdentityCredential(

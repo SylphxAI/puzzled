@@ -11,7 +11,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef } from 'react'
-import { useAnalytics, useFeatureFlag } from '@/lib/identity/react'
+import { useAnalytics } from '@/lib/identity/react'
 
 // ==========================================
 // Experiment Hook (Client-side)
@@ -28,25 +28,19 @@ import { useAnalytics, useFeatureFlag } from '@/lib/identity/react'
  * // Returns: 'start_trial' | 'get_premium' | 'upgrade_now' | 'control'
  */
 function _useExperiment(experimentKey: string): string {
-	const { variant, isLoading } = useFeatureFlag(experimentKey)
 	const { track } = useAnalytics()
 	const hasTrackedRef = useRef(false)
 
-	// Track exposure once when variant is determined
 	useEffect(() => {
-		if (isLoading || hasTrackedRef.current) return
+		if (hasTrackedRef.current) return
+		track('experiment_exposure', {
+			experiment: experimentKey,
+			variant: 'control',
+		})
+		hasTrackedRef.current = true
+	}, [experimentKey, track])
 
-		const variantValue = variant ?? 'control'
-		if (variantValue !== 'control') {
-			track('experiment_exposure', {
-				experiment: experimentKey,
-				variant: variantValue,
-			})
-			hasTrackedRef.current = true
-		}
-	}, [variant, isLoading, experimentKey, track])
-
-	return variant ?? 'control'
+	return 'control'
 }
 
 // ==========================================
