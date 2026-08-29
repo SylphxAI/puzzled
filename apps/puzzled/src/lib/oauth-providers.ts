@@ -1,4 +1,4 @@
-import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/server'
+import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/app-config'
 
 /**
  * Load enabled OAuth providers for auth pages.

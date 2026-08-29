@@ -31,11 +31,3 @@ Catalog ambition is unbounded: every game that fits the daily light brain ritual
 The destination is true only when a non-technical player on a phone can finish today's featured ritual in minutes, share a non-spoiler card with a `?date=` deep link, and return the next product day without push, with server-authoritative serve+validate, one finish per `(user, module, day_key)`, and with empty-catalog and mute-blog never presented as live, at the live layer.
 
 Source green and `GET /healthz` 200 are not this oracle. North Star Metric is daily puzzle completers.
-
-## Clients (company dest)
-
-Consume owner ADR-038. This product calls peer public APIs with those
-products' credentials and their generated Rust or TypeScript SDKs. It
-does not implement Backend-as-a-Service, compile a mega-client, or use
-`{project}.api.sylphx.com` as dest.
-

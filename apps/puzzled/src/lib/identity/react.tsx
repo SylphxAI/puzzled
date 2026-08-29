@@ -1,7 +1,15 @@
 'use client'
 
-import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
-import type { AppConfig, IdentityUser } from './server'
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useState,
+} from 'react'
+import type { AppConfig, IdentityUser } from './dest'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -15,12 +23,16 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState>({
 	user: null,
-	isLoading: false,
-	isLoaded: true,
+	isLoading: true,
+	isLoaded: false,
 	isSignedIn: false,
 	isConfigured: true,
 	signOut: async () => undefined,
 })
+
+async function readJson(response: Response): Promise<Record<string, unknown>> {
+	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
+}
 
 export function SylphxProvider({
 	children,
@@ -31,23 +43,65 @@ export function SylphxProvider({
 	platformUrl?: string
 	afterSignOutUrl?: string
 }) {
+	const [user, setUser] = useState<IdentityUser | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+	const [isLoaded, setIsLoaded] = useState(false)
+
+	useEffect(() => {
+		let cancelled = false
+		setIsLoading(true)
+		fetch('/api/identity/session', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				const next = (body.user as IdentityUser | null) ?? null
+				if (!cancelled) setUser(next)
+			})
+			.catch(() => {
+				if (!cancelled) setUser(null)
+			})
+			.finally(() => {
+				if (!cancelled) {
+					setIsLoading(false)
+					setIsLoaded(true)
+				}
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [])
+
+	const signOut = useCallback(async () => {
+		await fetch('/api/identity/logout', { method: 'POST', credentials: 'same-origin' })
+		setUser(null)
+	}, [])
+
+	const signInWithOAuth = useCallback(
+		async ({ provider, redirectUrl }: { provider: string; redirectUrl?: string }) => {
+			const response = await fetch('/api/identity/oidc/begin', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ provider, redirectUrl: redirectUrl ?? '/' }),
+			})
+			const body = await readJson(response)
+			const url = typeof body.authorizationUrl === 'string' ? body.authorizationUrl : ''
+			if (!response.ok || !url) throw new Error('oidc_begin_failed')
+			window.location.assign(url)
+		},
+		[],
+	)
+
 	const value = useMemo<AuthState>(
 		() => ({
-			user: null,
-			isLoading: false,
-			isLoaded: true,
-			isSignedIn: false,
+			user,
+			isLoading,
+			isLoaded,
+			isSignedIn: Boolean(user),
 			isConfigured: true,
-			signOut: async () => {
-				document.cookie = 'sylphx_identity_session=; Max-Age=0; path=/'
-			},
-			signInWithOAuth: async ({ provider, redirectUrl }) => {
-				window.location.assign(
-					`https://api.identity.sylphx.com/v1/oidc/begin?provider=${encodeURIComponent(provider)}&redirect_to=${encodeURIComponent(redirectUrl ?? '/')}`,
-				)
-			},
+			signOut,
+			signInWithOAuth,
 		}),
-		[],
+		[user, isLoading, isLoaded, signOut, signInWithOAuth],
 	)
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
@@ -103,7 +157,21 @@ export function useAuth() {
 	return useSafeAuth()
 }
 
-export function useSignInForm(opts: any = {}): any {
+export function useSignInForm(opts: {
+	afterSignInUrl?: string
+	oauthHandler?: (provider: string) => Promise<void>
+	providers?: unknown
+	methods?: unknown
+} = {}): {
+	form: { email: string; password: string; name: string }
+	setEmail: (value: string) => void
+	setPassword: (value: string) => void
+	isLoading: boolean
+	loadingProvider: string | null
+	error: { message?: string } | null
+	handlePasswordSubmit: (event?: { preventDefault?: () => void }) => Promise<void>
+	handleOAuthSignIn: (provider: string) => Promise<void>
+} {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
@@ -113,7 +181,7 @@ export function useSignInForm(opts: any = {}): any {
 		setEmail,
 		setPassword,
 		isLoading,
-		loadingProvider: null as string | null,
+		loadingProvider: null,
 		error: error ? { message: error } : null,
 		handlePasswordSubmit: async (event?: { preventDefault?: () => void }) => {
 			event?.preventDefault?.()
@@ -123,6 +191,7 @@ export function useSignInForm(opts: any = {}): any {
 				const response = await fetch('/api/identity/login', {
 					method: 'POST',
 					headers: { 'content-type': 'application/json' },
+					credentials: 'same-origin',
 					body: JSON.stringify({ email, password }),
 				})
 				if (!response.ok) throw new Error('sign-in failed')
@@ -139,45 +208,135 @@ export function useSignInForm(opts: any = {}): any {
 	}
 }
 
-export function useSignUpForm(opts: any = {}): any {
-	return {
-		...useSignInForm(opts),
-		setName: () => undefined,
-		step: 1,
-		passwordValid: true,
-		handleSubmit: async () => undefined,
-		handleOAuthSignUp: async () => undefined,
-	}
-}
-
-export function useForgotPasswordForm(_opts?: unknown): any {
+export function useSignUpForm(opts: {
+	afterSignUpUrl?: string
+	minPasswordLength?: number
+	oauthHandler?: (provider: string) => Promise<void>
+	providers?: unknown
+} = {}) {
 	const [email, setEmail] = useState('')
+	const [password, setPassword] = useState('')
+	const [name, setName] = useState('')
+	const [step, setStep] = useState<number | 'verify-email'>(1)
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const minLength = opts.minPasswordLength ?? 8
 	return {
-		email,
+		form: { email, password, name },
 		setEmail,
-		isLoading: false,
-		error: null as string | null,
+		setPassword,
+		setName,
+		step,
+		isLoading,
+		loadingProvider: null as string | null,
+		error: error ? { message: error } : null,
+		passwordValid: password.length >= minLength,
 		handleSubmit: async (event?: { preventDefault?: () => void }) => {
 			event?.preventDefault?.()
-			await fetch('/api/identity/recovery', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ email }),
-			})
+			setIsLoading(true)
+			setError(null)
+			try {
+				const response = await fetch('/api/identity/signup', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					credentials: 'same-origin',
+					body: JSON.stringify({ email, password, name }),
+				})
+				if (!response.ok) throw new Error('sign-up failed')
+				setStep('verify-email')
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'sign-up failed')
+			} finally {
+				setIsLoading(false)
+			}
+		},
+		handleOAuthSignUp: async (provider: string) => {
+			await opts.oauthHandler?.(provider)
 		},
 	}
 }
 
-export function useResetPasswordForm(_opts?: unknown): any {
+export function useForgotPasswordForm(_opts?: unknown) {
+	const [email, setEmail] = useState('')
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const [success, setSuccess] = useState(false)
 	return {
-		...useForgotPasswordForm(),
-		setConfirmPassword: () => undefined,
-		showPassword: false,
-		toggleShowPassword: () => undefined,
-		passwordsMatch: true,
-		isValid: true,
-		success: false,
-		setPassword: () => undefined,
+		form: { email },
+		email,
+		setEmail,
+		isLoading,
+		error,
+		success,
+		handleSubmit: async (event?: { preventDefault?: () => void }) => {
+			event?.preventDefault?.()
+			setIsLoading(true)
+			setError(null)
+			try {
+				const response = await fetch('/api/identity/recovery', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					credentials: 'same-origin',
+					body: JSON.stringify({ email }),
+				})
+				if (!response.ok) throw new Error('recovery failed')
+				setSuccess(true)
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'recovery failed')
+			} finally {
+				setIsLoading(false)
+			}
+		},
+	}
+}
+
+export function useResetPasswordForm(opts?: {
+	token?: string
+	minPasswordLength?: number
+	afterResetUrl?: string
+}) {
+	const [password, setPassword] = useState('')
+	const [confirmPassword, setConfirmPassword] = useState('')
+	const [showPassword, setShowPassword] = useState(false)
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+	const [success, setSuccess] = useState(false)
+	const minLength = opts?.minPasswordLength ?? 8
+	const passwordsMatch = password === confirmPassword
+	return {
+		form: { password, email: '' },
+		setPassword,
+		setConfirmPassword,
+		showPassword,
+		toggleShowPassword: () => setShowPassword((value) => !value),
+		passwordsMatch,
+		isValid: passwordsMatch && password.length >= minLength,
+		isLoading,
+		error,
+		success,
+		handleSubmit: async (event?: { preventDefault?: () => void }) => {
+			event?.preventDefault?.()
+			setIsLoading(true)
+			setError(null)
+			try {
+				const response = await fetch('/api/identity/recovery/complete', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					credentials: 'same-origin',
+					body: JSON.stringify({
+						token: opts?.token,
+						secret: opts?.token,
+						password,
+					}),
+				})
+				if (!response.ok) throw new Error('reset failed')
+				setSuccess(true)
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'reset failed')
+			} finally {
+				setIsLoading(false)
+			}
+		},
 	}
 }
 
@@ -188,15 +347,45 @@ export type Plan = {
 	annualPrice?: number
 	features?: string[]
 }
+
+type BillingState = {
+	subscription: { planSlug?: string; status?: string } | null
+	isPremium: boolean
+	isLoading: boolean
+}
+
 export function useBilling() {
-	return {
-		subscription: null as { planSlug?: string } | null,
+	const [state, setState] = useState<BillingState>({
+		subscription: null,
 		isPremium: false,
+		isLoading: true,
+	})
+	useEffect(() => {
+		let cancelled = false
+		fetch('/api/identity/billing', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				if (cancelled) return
+				setState({
+					subscription: (body.subscription as BillingState['subscription']) ?? null,
+					isPremium: body.isPremium === true,
+					isLoading: false,
+				})
+			})
+			.catch(() => {
+				if (!cancelled) setState({ subscription: null, isPremium: false, isLoading: false })
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [])
+	return {
+		...state,
 		openPortal: async () => undefined,
 		createCheckout: async (_plan?: unknown, _interval?: unknown) => '',
-		isLoading: false,
 	}
 }
+
 export function usePlans() {
 	return [] as Plan[]
 }
@@ -204,10 +393,11 @@ export function useSafeBilling() {
 	return useBilling()
 }
 export function useReferral() {
+	const { user } = useSafeUser()
 	return {
-		code: null as string | null,
+		code: user?.id ?? null,
 		stats: { referrals: 0, conversions: 0 } as Record<string, ReactNode>,
-		link: '',
+		link: user?.id ? `/signup?ref=${encodeURIComponent(user.id)}` : '',
 		isLoading: false,
 		error: null as { message?: string } | null,
 		copyCode: async () => undefined,
@@ -292,18 +482,63 @@ export function CookieBanner(_props: {
 	return null
 }
 export function AccountSection() {
-	return null
+	const { user, isLoading } = useSafeUser()
+	if (isLoading) return <p>Loading account…</p>
+	if (!user) return <p>Sign in to manage your Identity dest account.</p>
+	return (
+		<div>
+			<p>{user.name || 'Puzzled player'}</p>
+			<p>{user.email}</p>
+			<p>Identity principal {user.id}</p>
+		</div>
+	)
 }
 export function SecuritySettings() {
-	return null
+	const [sessions, setSessions] = useState<unknown[]>([])
+	useEffect(() => {
+		fetch('/api/identity/sessions', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				setSessions(Array.isArray(body.sessions) ? body.sessions : [])
+			})
+			.catch(() => setSessions([]))
+	}, [])
+	return (
+		<div>
+			<p>Active Identity dest sessions: {sessions.length}</p>
+		</div>
+	)
 }
 export function UserProfile(_props: Record<string, unknown>) {
-	return null
+	return <AccountSection />
 }
 export function BillingSection() {
-	return null
+	const { subscription, isPremium, isLoading } = useBilling()
+	if (isLoading) return <p>Loading billing…</p>
+	return (
+		<div>
+			<p>{isPremium ? 'Premium' : 'Free Plan'}</p>
+			{subscription?.planSlug ? <p>Plan {subscription.planSlug}</p> : null}
+		</div>
+	)
 }
-export const OAuthIcons: Record<string, (props: { className?: string }) => ReactNode> = {}
+
+function OAuthIcon({ className }: { className?: string }) {
+	return <span className={className} aria-hidden />
+}
+const namedOAuthIcons: Record<string, (props: { className?: string }) => ReactNode> = {
+	google: OAuthIcon,
+	github: OAuthIcon,
+	apple: OAuthIcon,
+	discord: OAuthIcon,
+}
+export const OAuthIcons: Record<string, (props: { className?: string }) => ReactNode> = new Proxy(
+	namedOAuthIcons,
+	{
+		get: (target, prop) =>
+			typeof prop === 'string' ? (target[prop] ?? OAuthIcon) : OAuthIcon,
+	},
+)
 export type OAuthProvider = string
 export type PrivacyMode = string
 export type SessionReplayConfig = {

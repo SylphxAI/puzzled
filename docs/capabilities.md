@@ -1,7 +1,5 @@
 # Puzzled identity graph
 
-Clients consume owner ADR-038: peer generated SDKs and peer credentials on dest peels. Mega-clients and `{project}.api.sylphx.com` are not dest.
-
 **Status:** Identity registry. Not live proof.
 **Scope:** Puzzled — daily light brain-ritual suite (Connect Rust authority + content store).
 **North Star package:** [`north-star/README.md`](north-star/README.md) + [`north-star/RITUAL-AND-MODULE-PROTOCOL.md`](north-star/RITUAL-AND-MODULE-PROTOCOL.md)

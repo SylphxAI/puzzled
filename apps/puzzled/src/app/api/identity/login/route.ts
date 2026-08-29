@@ -1,50 +1,64 @@
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { destIdentityJson, type IdentitySession } from '@/lib/identity/dest'
-import { IDENTITY_API_ORIGIN } from '@/lib/identity/server'
+import {
+	destAdmissionResponse,
+	destDevice,
+	destIdentityCall,
+	destSessionChallengeId,
+	identityFail,
+	issueSessionCookie,
+} from '@/lib/identity/http'
 
 export async function POST(request: Request) {
 	const body = (await request.json().catch(() => null)) as {
 		email?: string
 		password?: string
 	} | null
-	if (!body?.email || !body.password) {
-		return NextResponse.json({ error: 'invalid_login' }, { status: 400 })
+	const email = body?.email?.trim()
+	const password = body?.password?.trim()
+	if (!email || !password) {
+		return identityFail(400, 'invalid_login')
 	}
-	const binding = process.env.SYLPHX_PROJECT_BINDING
-	if (!binding) {
-		return NextResponse.json({ error: 'identity_binding_required' }, { status: 503 })
-	}
-	const begun = await destIdentityJson<{
-		challenge?: { challengeId?: string }
-		challengeId?: string
-	}>(IDENTITY_API_ORIGIN, '/v1/authentication/begin', {
-		method: 'POST',
-		projectBinding: binding,
-		body: { principalHint: body.email },
-	})
-	const completed = await destIdentityJson<{ session?: IdentitySession }>(
-		IDENTITY_API_ORIGIN,
-		'/v1/authentication/complete',
-		{
+	const admission = destAdmissionResponse()
+	if (!admission.ok) return admission.response
+	let begun: unknown
+	try {
+		begun = await destIdentityCall('/v1/authentication/begin', {
 			method: 'POST',
-			projectBinding: binding,
+			credential: admission.credential,
 			body: {
-				challengeId: begun.challenge?.challengeId ?? begun.challengeId ?? '',
-				secret: body.password,
+				project_id: admission.projectId,
+				principal_hint: email,
+				purpose: 'login',
+				device: destDevice(request),
 			},
-		},
-	)
-	const token = completed.session?.accessToken
-	if (!token) {
-		return NextResponse.json({ error: 'identity_rejected' }, { status: 401 })
+		})
+	} catch {
+		return identityFail(401, 'identity_begin_failed')
 	}
-	const jar = await cookies()
-	jar.set('sylphx_identity_session', token, {
-		httpOnly: true,
-		sameSite: 'lax',
-		path: '/',
-		secure: process.env.NODE_ENV === 'production',
-	})
-	return NextResponse.json({ authority: 'sylphx-identity' })
+	const challengeId = destSessionChallengeId(begun)
+	if (!challengeId) {
+		return identityFail(401, 'identity_begin_failed')
+	}
+	try {
+		const completed = await destIdentityCall('/v1/authentication/complete', {
+			method: 'POST',
+			credential: admission.credential,
+			body: {
+				idempotency_key: crypto.randomUUID(),
+				challenge_id: challengeId,
+				factor_proofs: [
+					{
+						factor_type: 'password',
+						factor_id: '',
+						response: password,
+					},
+				],
+			},
+		})
+		const token = await issueSessionCookie(completed)
+		if (!token) return identityFail(401, 'identity_rejected')
+		return NextResponse.json({ authority: 'sylphx-identity' })
+	} catch {
+		return identityFail(401, 'identity_rejected')
+	}
 }

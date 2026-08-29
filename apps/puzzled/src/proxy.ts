@@ -16,9 +16,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
-import { inboundModulePublicRoutes } from '@/lib/module-routes'
-
-const inboundPublicRoutes = new Set(inboundModulePublicRoutes(locales))
+import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
 
 // =============================================================================
 // i18n Middleware
@@ -53,14 +51,7 @@ export async function proxy(request: NextRequest) {
 	// =========================================================================
 
 	// Skip files with extensions, Next.js internals, API routes
-	if (
-		pathname.includes('.') ||
-		pathname.startsWith('/_next') ||
-		pathname.startsWith('/api') ||
-		pathname.startsWith('/monitoring') ||
-		pathname === '/healthz' ||
-		pathname === '/readyz'
-	) {
+	if (isProxySkippedPath(pathname)) {
 		return NextResponse.next()
 	}
 
@@ -77,7 +68,7 @@ export async function proxy(request: NextRequest) {
 
 	// Inbound aliases stay public presentation. Identity dest owns sessions;
 	// suite-door middleware must not send /crowns or /duo to /login.
-	if (inboundPublicRoutes.has(pathname)) {
+	if (isInboundPublicPath(pathname)) {
 		return intlMiddleware(request)
 	}
 

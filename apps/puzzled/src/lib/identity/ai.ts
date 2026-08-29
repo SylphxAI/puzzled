@@ -1,35 +1,31 @@
-const AI_API_ORIGIN = 'https://api.sylphx.ai/v1'
+import { destPeelOrigin, destJson, DEST_PEELS } from './dest'
 
 export function getAI() {
-	const origin = process.env.AI_API_ORIGIN?.trim() || AI_API_ORIGIN
-	const key = process.env.AI_API_KEY || process.env.SYLPHX_SECRET_KEY || ''
+	const origin = destPeelOrigin(DEST_PEELS.ai, process.env.AI_API_ORIGIN)
+	const key = process.env.AI_API_KEY?.trim() || process.env.IDENTITY_API_KEY?.trim() || ''
 	const create = async (body: unknown) => {
-		const response = await fetch(`${origin.replace(/\/+$/, '')}/chat/completions`, {
+		return destJson(`${origin}`, '/chat/completions', {
 			method: 'POST',
-			headers: {
-				'content-type': 'application/json',
-				authorization: key ? `Bearer ${key}` : '',
-			},
-			body: JSON.stringify(body),
+			credential: key,
+			body,
 		})
-		if (!response.ok) {
-			throw new Error(`AI dest ${response.status}`)
-		}
-		return response.json()
 	}
 	const chat = Object.assign(create, {
 		completions: { create },
 	})
 	return {
 		chat,
-		listModels: async (_opts?: { search?: string }) => ({
-			data: [] as Array<{
-				id: string
-				name: string
-				context_length: number
-				pricing: { prompt: string; completion: string }
-				capabilities: unknown
-			}>,
-		}),
+		listModels: async (_opts?: { search?: string }) =>
+			destJson<{
+				data: Array<{
+					id: string
+					name: string
+					context_length: number
+					pricing: { prompt: string; completion: string }
+					capabilities: unknown
+				}>
+			}>(origin, '/models', {
+				credential: key,
+			}),
 	}
 }
