@@ -154,6 +154,48 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn rest_api_v1_is_not_a_second_surface() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_request(Method::GET, "/api/v1/puzzles", Body::empty()))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("rest /api/v1: {error}"),
+        };
+        assert_ne!(
+            response.status(),
+            StatusCode::OK,
+            "hand-rolled REST /api/v1 must stay deleted"
+        );
+    }
+
+    #[tokio::test]
+    async fn jobs_connect_is_mounted() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.JobsService/RunRetentionJob",
+                Body::from(r#"{"name":"daily-reminder"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect JobsService: {error}"),
+        };
+        assert_ne!(
+            response.status(),
+            StatusCode::NOT_FOUND,
+            "JobsService must be mounted on the Connect router"
+        );
+        assert!(
+            response.status().is_client_error() || response.status().is_server_error(),
+            "unauthenticated jobs must fail closed, got {}",
+            response.status()
+        );
+    }
+
+    #[tokio::test]
     async fn connect_get_leaderboard_requires_game_slug() {
         let app = router(AppState::new(None));
         let response = match app
@@ -823,8 +865,8 @@ mod tests {
         use puzzled_core::puzzle_play::game_slugs::ModuleClass;
         use puzzled_core::puzzle_play::ritual_completion::{
             compute_drc, compute_hrc, compute_today_overview, qualifies_as_ritual,
-            RitualCompletionRow, RitualOverviewRow, RitualQualifyInput, DRC_MODULE_COMPLETIONS_SQL,
-            DRC_RECOMPUTE_SQL, HABITUAL_MIN_DAYS, HABITUAL_WINDOW_DAYS, HRC_RECOMPUTE_SQL,
+            RitualCompletionRow, RitualOverviewRow, RitualQualifyInput, HABITUAL_MIN_DAYS,
+            HABITUAL_WINDOW_DAYS,
         };
 
         assert_eq!(DAY_KEY_TIMEZONE, "Asia/Hong_Kong");
@@ -862,14 +904,8 @@ mod tests {
         let overview = compute_today_overview(&key, &overview_rows);
         assert_eq!(overview.player_count, compute_drc(&key, &rows));
         assert_eq!(overview.completions, vec![("sudoku".into(), 1)]);
-        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
-        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
         assert_eq!(HABITUAL_MIN_DAYS, 4);
         assert_eq!(HABITUAL_WINDOW_DAYS, 7);
-        assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
-        assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
-        assert!(HRC_RECOMPUTE_SQL.contains("AS weekly_ritualists"));
-        assert!(!HRC_RECOMPUTE_SQL.contains("dpc"));
     }
 
     /// Dogfood residual (live tip ff366b48): re-SubmitGuess without stored

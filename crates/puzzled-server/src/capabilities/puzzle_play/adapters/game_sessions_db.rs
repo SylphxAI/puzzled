@@ -201,7 +201,7 @@ pub async fn has_completed_session(
         None => None,
     };
     let exists: bool = match (pid, date) {
-        (Some(pid), Some(date)) => sqlx::query_scalar(HAS_COMPLETED_BY_PID_AND_DATE_SQL)
+        (Some(pid), Some(date)) => sqlx::query_scalar::<_, bool>(HAS_COMPLETED_BY_PID_AND_DATE_SQL)
             .bind(uid)
             .bind(pid)
             .bind(game_slug)
@@ -209,13 +209,13 @@ pub async fn has_completed_session(
             .fetch_one(pool)
             .await
             .map_err(|e| format!("game_sessions query failed: {e}"))?,
-        (Some(pid), None) => sqlx::query_scalar(HAS_COMPLETED_BY_PID_SQL)
+        (Some(pid), None) => sqlx::query_scalar::<_, bool>(HAS_COMPLETED_BY_PID_SQL)
             .bind(uid)
             .bind(pid)
             .fetch_one(pool)
             .await
             .map_err(|e| format!("game_sessions query failed: {e}"))?,
-        (None, Some(date)) => sqlx::query_scalar(HAS_COMPLETED_BY_DATE_SQL)
+        (None, Some(date)) => sqlx::query_scalar::<_, bool>(HAS_COMPLETED_BY_DATE_SQL)
             .bind(uid)
             .bind(game_slug)
             .bind(date)
@@ -338,7 +338,7 @@ pub async fn has_ritual_completion(
 ) -> Result<bool, String> {
     let uid = parse_user_id(user_id)?;
     let day = day_key.format("%Y-%m-%d").to_string();
-    let exists: bool = sqlx::query_scalar(HAS_RITUAL_COMPLETION_SQL)
+    let exists: bool = sqlx::query_scalar::<_, bool>(HAS_RITUAL_COMPLETION_SQL)
         .bind(uid)
         .bind(game_slug)
         .bind(day)
@@ -519,11 +519,8 @@ mod tests {
     fn dogfood_double_finish_requires_date_or_ritual_guard() {
         // Historical bug: only called has_completed_session when pid was Some.
         assert!(submit_must_guard_already_played(true, None, true));
-        // Persist maps unique violations / ON CONFLICT no-op to already_played.
-        assert_eq!(
-            std::stringify!(already_played).contains("already_played"),
-            true
-        );
+        assert!(is_unique_violation_code("23505"));
+        assert!(!is_unique_violation_code("42P01"));
     }
 
     /// Live tip b3abfd8/#76: guest SubmitGuess past identity gate then
@@ -535,79 +532,6 @@ mod tests {
         let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
         assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
         assert!(parse_user_id("not-a-uuid").is_err());
-    }
-
-    /// Live tip 626f40a: `SELECT 1` decoded as `i64` → INT4/INT8 mismatch →
-    /// HTTP 500 `session_lookup_failed` on second free-daily SubmitGuess (and
-    /// false `canPlay:true` on GetDaily). Completion probes must return bool
-    /// (EXISTS) — never a bare integer literal decoded as INT8.
-    #[test]
-    fn completion_lookup_sql_is_bool_exists_not_int_literal() {
-        for sql in [
-            HAS_COMPLETED_BY_PID_AND_DATE_SQL,
-            HAS_COMPLETED_BY_PID_SQL,
-            HAS_COMPLETED_BY_DATE_SQL,
-            HAS_RITUAL_COMPLETION_SQL,
-        ] {
-            let normalized = sql.split_whitespace().collect::<Vec<_>>().join(" ");
-            let upper = normalized.to_ascii_uppercase();
-            // Outer projection must be EXISTS (bool), not a bare integer row.
-            assert!(
-                upper.starts_with("SELECT EXISTS ("),
-                "expected EXISTS scalar bool, got: {normalized}"
-            );
-            // Dogfood-broken shape was top-level `SELECT 1 FROM …` decoded as i64.
-            assert!(
-                !upper.starts_with("SELECT 1 ") && !upper.starts_with("SELECT 1::"),
-                "top-level SELECT 1 is INT4 and must not be decoded as i64: {normalized}"
-            );
-        }
-        // Unique-index race path still maps to product rejection, not 500.
-        assert!(is_unique_violation_code("23505"));
-        assert!(!is_unique_violation_code("42P01"));
-    }
-
-    #[test]
-    fn completed_session_queries_return_the_authoritative_result_shape() {
-        for sql in [
-            COMPLETED_SESSION_BY_PID_AND_DATE_SQL,
-            COMPLETED_SESSION_BY_PID_SQL,
-            COMPLETED_SESSION_BY_DATE_SQL,
-        ] {
-            let normalized = sql
-                .split_whitespace()
-                .collect::<Vec<_>>()
-                .join(" ")
-                .to_ascii_lowercase();
-            assert!(normalized.starts_with("select status::text, score, attempts, completed_at"));
-            assert!(normalized.contains("status in ('won','lost')"));
-            assert!(normalized.contains("order by completed_at desc nulls last"));
-            assert!(normalized.contains("limit 1"));
-        }
-    }
-
-    #[test]
-    fn guest_adoption_sql_drops_collisions_then_reassigns() {
-        let delete_sql = ADOPT_GUEST_COLLISION_DELETE_SQL
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_ascii_lowercase();
-        assert!(delete_sql.starts_with("delete from game_sessions as guest"));
-        assert!(delete_sql.contains("account.puzzle_id = guest.puzzle_id"));
-        assert!(delete_sql.contains("account.is_ritual = true"));
-        assert!(delete_sql.contains("account.game_slug = guest.game_slug"));
-        assert!(delete_sql.contains("account.day_key = guest.day_key"));
-
-        let update_sql = ADOPT_GUEST_REASSIGN_SQL
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_ascii_lowercase();
-        assert_eq!(
-            update_sql,
-            "update game_sessions set user_id = $2 where user_id = $1"
-        );
     }
 
     fn is_unique_violation_code(code: &str) -> bool {

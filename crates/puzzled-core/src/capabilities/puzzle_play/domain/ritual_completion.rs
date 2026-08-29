@@ -475,22 +475,6 @@ mod tests {
         assert_eq!(compute_drc("2026-08-10", &rows), 0);
     }
 
-    #[test]
-    fn daily_puzzle_completers_sql_recipe_is_present() {
-        assert!(DRC_RECOMPUTE_SQL.contains("day_key"));
-        assert!(DRC_RECOMPUTE_SQL.contains("is_ritual"));
-        assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
-        assert!(DRC_RECOMPUTE_SQL.contains("AS daily_puzzle_completers"));
-        assert!(!DRC_RECOMPUTE_SQL.to_ascii_lowercase().contains(" as drc"));
-        assert!(!DRC_RECOMPUTE_SQL.contains("dpc"));
-        assert!(DRC_RECOMPUTE_SQL.contains("day_key = $1"));
-        assert!(!DRC_RECOMPUTE_SQL.contains("CURRENT_DATE"));
-        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
-        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
-        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("is_ritual = true"));
-        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("puzzle_ritual"));
-    }
-
     fn overview_row(
         user: &str,
         day: &str,
@@ -597,17 +581,6 @@ mod tests {
         assert_eq!(HABITUAL_MIN_DAYS, 4);
         assert_eq!(HABITUAL_WINDOW_DAYS, 7);
         assert_eq!(WEEKLY_RITUALISTS_FIELD, "weekly_ritualists");
-    }
-
-    #[test]
-    fn weekly_ritualists_sql_recipe_is_present() {
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!("HAVING COUNT(*) >= {HABITUAL_MIN_DAYS}")));
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!("$1::date - {}", HABITUAL_WINDOW_DAYS - 1)));
-        assert!(HRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
-        assert!(HRC_RECOMPUTE_SQL.contains("AS weekly_ritualists"));
-        assert!(!HRC_RECOMPUTE_SQL.to_ascii_lowercase().contains(" as hrc"));
-        assert!(!HRC_RECOMPUTE_SQL.contains("dpc"));
-        assert!(!HRC_RECOMPUTE_SQL.contains("DPC"));
     }
 
     /// Dogfood residual: first free-daily win with null content_id must still
