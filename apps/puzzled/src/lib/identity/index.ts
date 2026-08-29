@@ -37,7 +37,7 @@ export function createConfig(opts: { secretKey?: string; platformUrl?: string })
 	return {
 		identityOrigin: destIdentityOrigin(opts.platformUrl ?? process.env.IDENTITY_API_ORIGIN),
 		commerceOrigin: destCommerceOrigin(process.env.COMMERCE_API_ORIGIN),
-		credential: destCommerceCredential() ?? opts.secretKey,
+		credential: destCommerceCredential(),
 	}
 }
 
@@ -50,7 +50,7 @@ function commerceOrigin(config?: DestPeelConfig): string {
 function commerceCredential(config?: DestPeelConfig): string {
 	const credential = config?.credential ?? destCommerceCredential()
 	if (!credential) {
-		throw new Error('Commerce dest requires COMMERCE_API_KEY or IDENTITY_API_KEY')
+		throw new Error('Commerce dest requires COMMERCE_API_KEY')
 	}
 	return credential
 }

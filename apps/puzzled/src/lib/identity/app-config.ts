@@ -14,7 +14,7 @@ export async function getAppConfig(_opts?: {
 	platformUrl?: string
 }): Promise<AppConfig> {
 	const identityOrigin = destIdentityOrigin(_opts?.platformUrl ?? process.env.IDENTITY_API_ORIGIN)
-	const identityCredential = destIdentityCredential() ?? _opts?.secretKey
+	const identityCredential = destIdentityCredential()
 	const oauthProviders = identityCredential
 		? await destIdentityJson<{
 				providers?: unknown[]

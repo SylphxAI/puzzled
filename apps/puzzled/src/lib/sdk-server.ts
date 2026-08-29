@@ -24,8 +24,7 @@ let cachedConfig: SylphxConfig | null = null
 export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
-			secretKey: process.env.COMMERCE_API_KEY || process.env.IDENTITY_API_KEY,
-			platformUrl: process.env.IDENTITY_API_ORIGIN || 'https://api.identity.sylphx.com',
+			platformUrl: process.env.IDENTITY_API_ORIGIN,
 		})
 	}
 	return cachedConfig

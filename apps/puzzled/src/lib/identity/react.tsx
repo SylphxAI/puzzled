@@ -404,17 +404,104 @@ export function usePlans() {
 export function useSafeBilling() {
 	return useBilling()
 }
+type ReferralStats = {
+	totalReferrals: number
+	completedReferrals: number
+	pendingReferrals: number
+}
+
 export function useReferral() {
 	const { user } = useSafeUser()
+	const [code, setCode] = useState<string | null>(null)
+	const [stats, setStats] = useState<ReferralStats>({
+		totalReferrals: 0,
+		completedReferrals: 0,
+		pendingReferrals: 0,
+	})
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<{ message?: string } | null>(null)
+
+	const applyStats = useCallback((body: Record<string, unknown>) => {
+		const record =
+			body.stats && typeof body.stats === 'object'
+				? (body.stats as Record<string, unknown>)
+				: body
+		const nextCode =
+			(typeof record.active_code === 'string' && record.active_code.trim()) ||
+			(typeof record.code === 'string' && record.code.trim()) ||
+			null
+		const redemptions =
+			typeof record.redemption_count === 'number' ? record.redemption_count : 0
+		setCode(nextCode)
+		setStats({
+			totalReferrals: redemptions,
+			completedReferrals: redemptions,
+			pendingReferrals: 0,
+		})
+	}, [])
+
+	useEffect(() => {
+		if (!user) {
+			setIsLoading(false)
+			return
+		}
+		let cancelled = false
+		fetch('/api/commerce/referrals', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				if (cancelled) return
+				if (!response.ok) {
+					setError({
+						message: typeof body.error === 'string' ? body.error : 'commerce_referrals_failed',
+					})
+					setIsLoading(false)
+					return
+				}
+				applyStats(body)
+				setError(null)
+				setIsLoading(false)
+			})
+			.catch((caught) => {
+				if (cancelled) return
+				setError({
+					message: caught instanceof Error ? caught.message : 'commerce_referrals_failed',
+				})
+				setIsLoading(false)
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [applyStats, user])
+
+	const link = code ? `/signup?ref=${encodeURIComponent(code)}` : ''
+	const copy = async (value: string) => {
+		if (!value) return
+		await navigator.clipboard.writeText(value)
+	}
 	return {
-		code: user?.id ?? null,
-		stats: { referrals: 0, conversions: 0 } as Record<string, ReactNode>,
-		link: user?.id ? `/signup?ref=${encodeURIComponent(user.id)}` : '',
-		isLoading: false,
-		error: null as { message?: string } | null,
-		copyCode: async () => undefined,
-		copyLink: async () => undefined,
-		regenerateCode: async () => undefined,
+		code,
+		stats,
+		link,
+		isLoading,
+		error,
+		copyCode: async () => copy(code ?? ''),
+		copyLink: async () => copy(link),
+		regenerateCode: async () => {
+			const response = await fetch('/api/commerce/referrals', {
+				method: 'POST',
+				credentials: 'same-origin',
+			})
+			const body = await readJson(response)
+			if (!response.ok) {
+				setError({
+					message: typeof body.error === 'string' ? body.error : 'commerce_referrals_failed',
+				})
+				return
+			}
+			const next = typeof body.code === 'string' ? body.code.trim() : ''
+			if (next) setCode(next)
+			setError(null)
+		},
 	}
 }
 export function useAnalytics() {
@@ -544,17 +631,80 @@ function arrayBufferToB64(value: ArrayBuffer | null): string {
 	if (!value) return ''
 	return btoa(String.fromCharCode(...new Uint8Array(value)))
 }
+type DestAchievement = {
+	unlocked: boolean
+	achievementId: string
+	achievement: { id: string }
+}
+
+function destUnlocks(raw: unknown): DestAchievement[] {
+	if (!Array.isArray(raw)) return []
+	return raw.flatMap((entry) => {
+		if (!entry || typeof entry !== 'object') return []
+		const record = entry as Record<string, unknown>
+		const id =
+			(typeof record.achievement_id === 'string' && record.achievement_id.trim()) ||
+			(typeof record.achievement_code === 'string' && record.achievement_code.trim()) ||
+			(typeof record.achievementId === 'string' && record.achievementId.trim()) ||
+			''
+		if (!id) return []
+		return [{ unlocked: true, achievementId: id, achievement: { id } }]
+	})
+}
+
 export function useSafeAchievements() {
+	const { user } = useSafeUser()
+	const [achievements, setAchievements] = useState<DestAchievement[]>([])
+	const [recentUnlock, setRecentUnlock] = useState<{ achievement: { id: string } } | null>(null)
+	const [isLoading, setIsLoading] = useState(true)
+
+	useEffect(() => {
+		if (!user) {
+			setAchievements([])
+			setIsLoading(false)
+			return
+		}
+		let cancelled = false
+		fetch('/api/commerce/achievements', { credentials: 'same-origin' })
+			.then(async (response) => {
+				const body = await readJson(response)
+				if (cancelled) return
+				setAchievements(destUnlocks(body.unlocks))
+				setIsLoading(false)
+			})
+			.catch(() => {
+				if (!cancelled) setIsLoading(false)
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [user])
+
 	return {
-		achievements: [] as Array<{
-			unlocked: boolean
-			achievementId: string
-			achievement: { id: string }
-		}>,
-		unlock: async (_id?: string, _meta?: unknown) => undefined,
-		recentUnlock: null as { achievement: { id: string } } | null,
-		dismissRecentUnlock: () => undefined,
-		isLoading: false,
+		achievements,
+		unlock: async (id?: string, _meta?: unknown) => {
+			const activityKind = id?.trim()
+			if (!activityKind) return
+			const response = await fetch('/api/commerce/achievements', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				credentials: 'same-origin',
+				body: JSON.stringify({ activityKind }),
+			})
+			const body = await readJson(response)
+			if (!response.ok) return
+			const next = destUnlocks(body.unlocks)
+			if (next.length > 0) {
+				setAchievements((current) => {
+					const seen = new Set(current.map((item) => item.achievementId))
+					return [...current, ...next.filter((item) => !seen.has(item.achievementId))]
+				})
+				setRecentUnlock({ achievement: { id: next[0]?.achievementId ?? activityKind } })
+			}
+		},
+		recentUnlock,
+		dismissRecentUnlock: () => setRecentUnlock(null),
+		isLoading,
 		isConfigured: true,
 	}
 }

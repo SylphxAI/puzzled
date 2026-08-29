@@ -1,13 +1,19 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { getAppConfig } from './app-config'
 import {
+	destCommerceCredential,
+	destEventsCredential,
+	destIdentityProjectId,
+	destObservabilityCredential,
+} from './credentials'
+import {
 	destIdentityJson,
 	destIdentityOrigin,
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
 import { createCheckout, getLeaderboard, getPlans, getSubscription, openPortal } from './index'
-import { destEventsJson, destObservabilityJson } from './peels'
+import { destEventsJson, destObservabilityJson, destSessionReplayChunksPath } from './peels'
 
 const originalFetch = globalThis.fetch
 
@@ -185,12 +191,34 @@ describe('Identity dest HTTP', () => {
 
 	test('getSubscription evaluates Commerce dest entitlement', async () => {
 		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		mockFetch({
+		const fetchMock = mockFetch({
 			ok: true,
 			body: { entitlement: { value: { enabled: true }, entitlement_code: 'premium' } },
 		})
 		const subscription = await getSubscription({}, 'principal-a')
+		expect(fetchMock.mock.calls[0]?.[0]).toBe(
+			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement',
+		)
 		expect(subscription).toEqual({ planSlug: 'premium', status: 'active' })
+	})
+
+	test('each dest product uses its own credential without sibling fallback', () => {
+		const sibling = {
+			IDENTITY_API_KEY: 'identity_org_key_a',
+			SYLPHX_PROJECT_ID: 'proj_x',
+			SYLPHX_SECRET_KEY: 'sk_prod_x',
+		}
+		expect(destCommerceCredential(sibling)).toBeUndefined()
+		expect(destEventsCredential(sibling)).toBeUndefined()
+		expect(destObservabilityCredential(sibling)).toBeUndefined()
+		expect(destIdentityProjectId(sibling)).toBeUndefined()
+		expect(destIdentityProjectId({ IDENTITY_ORGANIZATION_ID: 'org_x' })).toBe('org_x')
+		expect(destSessionReplayChunksPath('session-a')).toBe('/v1/session-replays/session-a:chunks')
+	})
+
+	test('commerce dest does not fall back to IDENTITY_API_KEY', async () => {
+		process.env.IDENTITY_API_KEY = 'identity_org_key_a'
+		await expect(getPlans({})).rejects.toThrow('COMMERCE_API_KEY')
 	})
 })
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { destObservabilityJson } from '@/lib/identity/peels'
+import { destObservabilityJson, destSessionReplayChunksPath } from '@/lib/identity/peels'
 import { currentUser } from '@/lib/identity/server'
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 	}
 	try {
 		if (body?.chunk?.payload) {
-			await destObservabilityJson(`/v1/session-replays/${encodeURIComponent(sessionId)}/chunks`, {
+			await destObservabilityJson(destSessionReplayChunksPath(sessionId), {
 				method: 'POST',
 				body: {
 					session_id: sessionId,
