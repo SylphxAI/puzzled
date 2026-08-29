@@ -8,8 +8,8 @@
  * that need synchronous consent checks before SDK hydration.
  */
 
-import { CookieBanner, useSafeConsent } from '@sylphx/sdk/react'
 import { useEffect } from 'react'
+import { CookieBanner, useSafeConsent } from '@/lib/identity/react'
 import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
 /**

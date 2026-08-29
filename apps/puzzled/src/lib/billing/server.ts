@@ -1,45 +1,12 @@
 /**
  * Server-side Billing Utilities
  *
- * Single source of truth for all billing logic.
- * Uses Platform SDK for subscription checks.
+ * Premium access is dest Commerce EvaluateEntitlement (`enabled`).
  */
 
-import { getSubscription } from '@sylphx/sdk'
 import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
+import { isPremium } from '@/lib/identity'
 import { getSdkConfig } from '@/lib/sdk-server'
-
-// ==========================================
-// Plan Constants
-// ==========================================
-
-/**
- * Premium plan slugs (paid plans)
- */
-const PREMIUM_PLANS = ['premium', 'lifetime', 'pro'] as const
-
-// ==========================================
-// Plan Checking
-// ==========================================
-
-/**
- * Check if a plan slug represents a premium (paid) plan
- */
-function _isPremiumPlan(planSlug: string | null | undefined): boolean {
-	if (!planSlug) return false
-	return PREMIUM_PLANS.includes(planSlug as (typeof PREMIUM_PLANS)[number])
-}
-
-/**
- * Check if a plan slug is the free plan
- */
-function _isFreePlan(planSlug: string | null | undefined): boolean {
-	return !planSlug || planSlug === 'free'
-}
-
-// ==========================================
-// Free Game Rotation
-// ==========================================
 
 export { getTodaysFreeGame }
 
@@ -57,37 +24,12 @@ export function getFreeGameRotation(): readonly string[] {
 	return FREE_GAME_ROTATION
 }
 
-// ==========================================
-// Platform SDK Integration
-// ==========================================
-
 /**
- * Check if a user has premium access
- *
- * Uses Platform SDK to check the user's subscription status.
- *
- * @param userId - Platform user ID
- * @returns true if user has an active premium subscription
+ * Check if a user has premium access.
+ * One writer: dest Commerce EvaluateEntitlement enabled.
  */
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
-	try {
-		const config = getSdkConfig()
-		const subscription = await getSubscription(config, userId)
-
-		if (!subscription) return false
-
-		// Check if subscription is active and on a premium plan
-		const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-		const isPremium = PREMIUM_PLANS.includes(
-			subscription.planSlug as (typeof PREMIUM_PLANS)[number],
-		)
-
-		return isActive && isPremium
-	} catch (error) {
-		// Log error but don't block - default to free tier
-		console.error('[Billing] Failed to check premium access:', error)
-		return false
-	}
+	return isPremium(userId, getSdkConfig())
 }
 
 /**
@@ -114,5 +56,3 @@ export async function canAccessGame(userId: string | null, gameSlug: string): Pr
 	// Free user - can only play today's free game
 	return isGameFreeToday(gameSlug)
 }
-
-// Re-export for convenience (alias)

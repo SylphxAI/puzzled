@@ -1,7 +1,7 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { ExternalLink, Shield } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@/lib/identity/server'
 
 type Props = {
 	params: Promise<{ locale: string }>

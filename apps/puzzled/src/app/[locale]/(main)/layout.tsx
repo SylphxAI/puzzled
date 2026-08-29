@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
+import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { BottomNav, Footer } from '@/shared/components/layout'
 import { LayoutTopNav } from './layout-nav'

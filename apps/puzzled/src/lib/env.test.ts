@@ -73,6 +73,7 @@ describe('web presentation boot env', () => {
 		expect(envSource).not.toContain("name: 'DATABASE_URL'")
 		expect(envSource).not.toContain("name: 'REDIS_URL'")
 		expect(envSource).not.toContain("name: 'SYLPHX_SECRET_KEY'")
+		expect(envSource).not.toContain('get SYLPHX_SECRET_KEY')
 		expect(redisSource).toContain('Do not throw at import')
 		expect(manifest).toContain('connect = { services = ["api"] }')
 		expect(manifest).toContain('API_INTERNAL_URL')

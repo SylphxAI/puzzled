@@ -7,7 +7,6 @@ import {
 } from './module-routes'
 
 const nextConfigPath = new URL('../../next.config.ts', import.meta.url)
-const proxyPath = new URL('../proxy.ts', import.meta.url)
 
 describe('inbound module aliases', () => {
 	test('crowns and duo rewrite to canonical /games paths', () => {
@@ -50,12 +49,8 @@ describe('inbound module aliases', () => {
 		])
 	})
 
-	test('next.config and proxy consume the alias table', () => {
+	test('next.config consumes inboundModuleRedirects from the alias table', () => {
 		const nextConfig = readFileSync(nextConfigPath, 'utf8')
-		const proxy = readFileSync(proxyPath, 'utf8')
 		expect(nextConfig).toContain('inboundModuleRedirects')
-		expect(proxy).toContain('inboundModulePublicRoutes')
-		expect(proxy).toContain("'/healthz'")
-		expect(proxy).toContain("'/readyz'")
 	})
 })

@@ -1,11 +1,11 @@
 'use client'
 
-import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignUpForm } from '@sylphx/sdk/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useMemo, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 
 type OAuthSignInProvider = NonNullable<
 	Parameters<NonNullable<ReturnType<typeof useSafeAuth>['signInWithOAuth']>>[0]
@@ -69,7 +69,7 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		// OAuth handler: direct OAuth flow (Firebase/Supabase pattern)
 		// Goes directly to provider (Google, GitHub, etc.) - no platform UI
 		// Note: OAuth signup and login use the same flow - provider creates account if needed
-		oauthHandler: async (provider) => {
+		oauthHandler: async (provider: string) => {
 			await signInWithOAuth?.({ provider: provider as OAuthSignInProvider, redirectUrl: '/' })
 		},
 	})
@@ -271,9 +271,9 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 					</div>
 
 					{/* Error Message (form error or OAuth error) */}
-					{(error || oauthError) && (
+					{(error?.message || oauthError?.message) && (
 						<div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-							{error || oauthError?.message}
+							{error?.message || oauthError?.message}
 						</div>
 					)}
 

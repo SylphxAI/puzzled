@@ -5,8 +5,7 @@
  * Platform SDK functions (leaderboards, achievements, etc.)
  */
 
-import { createConfig, type SylphxConfig } from '@sylphx/sdk'
-import { env } from './env'
+import { createConfig, type SylphxConfig } from '@/lib/identity'
 
 let cachedConfig: SylphxConfig | null = null
 
@@ -16,7 +15,7 @@ let cachedConfig: SylphxConfig | null = null
  * @example
  * ```ts
  * import { getSdkConfig } from '@/lib/sdk-server'
- * import { getLeaderboard } from '@sylphx/sdk'
+ * import { getLeaderboard } from '@/lib/identity'
  *
  * const config = getSdkConfig()
  * const leaderboard = await getLeaderboard(config, 'daily-scores', userId, { limit: 10 })
@@ -25,8 +24,7 @@ let cachedConfig: SylphxConfig | null = null
 export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
-			secretKey: env.SYLPHX_SECRET_KEY,
-			platformUrl: process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL || 'https://sylphx.com',
+			platformUrl: process.env.IDENTITY_API_ORIGIN,
 		})
 	}
 	return cachedConfig

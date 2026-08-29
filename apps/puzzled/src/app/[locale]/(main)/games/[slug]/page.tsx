@@ -1,4 +1,3 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button } from '@sylphx/ui'
 import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'
@@ -17,6 +16,7 @@ import {
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
+import { currentUser } from '@/lib/identity/server'
 import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GamePageClient } from './game-page-client'

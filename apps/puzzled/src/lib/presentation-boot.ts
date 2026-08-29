@@ -8,5 +8,5 @@
 export type EnvSource = Record<string, string | undefined>
 
 export function sylphxAuthConfigured(env: EnvSource = process.env): boolean {
-	return Boolean(env.SYLPHX_SECRET_KEY?.trim() || env.SYLPHX_SECRET_URL?.trim())
+	return Boolean(env.IDENTITY_API_KEY?.trim() || env.IDENTITY_ORGANIZATION_ID?.trim())
 }

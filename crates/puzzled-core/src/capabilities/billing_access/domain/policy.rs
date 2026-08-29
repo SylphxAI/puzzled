@@ -1,26 +1,13 @@
 //! Pure billing / free-game access policy —
-//! dual-oracle residual of `apps/puzzled/src/lib/billing/server.ts`
-//! (plan slugs + FREE_GAME_ROTATION + day-of-year free game + access gate).
-//! Platform SDK subscription I/O stays FE-TS residual.
+//! FREE_GAME_ROTATION + day-of-year free game + access gate.
+//! Premium is dest Commerce EvaluateEntitlement `enabled` at the shell.
 //! NO authority_rust / ts_deleted.
-
-/// Premium plan slugs (TS `PREMIUM_PLANS`).
-pub const PREMIUM_PLANS: &[&str] = &["premium", "lifetime", "pro"];
 
 /// Free-tier daily rotation (TS `FREE_GAME_ROTATION` order).
 pub const FREE_GAME_ROTATION: &[&str] =
     &["word-guess", "word-groups", "crowns", "sudoku", "crossword"];
 
 const DAY_MS: i64 = 86_400_000;
-
-/// True when plan slug is a paid premium plan (TS `_isPremiumPlan`).
-#[must_use]
-pub fn is_premium_plan(plan_slug: Option<&str>) -> bool {
-    match plan_slug {
-        Some(s) if !s.is_empty() => PREMIUM_PLANS.contains(&s),
-        _ => false,
-    }
-}
 
 /// True when plan is free / unset (TS `_isFreePlan`).
 #[must_use]
@@ -97,7 +84,7 @@ pub fn is_game_free_today(game_slug: &str, free_today: &str) -> bool {
 }
 
 /// Pure access gate dual-oracle of TS `canAccessGame` product half
-/// (SDK premium resolution injected as `is_premium`).
+/// (Commerce EvaluateEntitlement `enabled` injected as `is_premium`).
 ///
 /// - premium → all games
 /// - free / anonymous → only today's free game
@@ -109,25 +96,12 @@ pub fn can_access_game(is_premium: bool, game_slug: &str, free_today: &str) -> b
     is_game_free_today(game_slug, free_today)
 }
 
-/// Active+premium subscription gate (TS `hasPremiumAccess` pure half).
-/// `status` is subscription status wire; `plan_slug` is plan.
-#[must_use]
-pub fn has_premium_access(status: Option<&str>, plan_slug: Option<&str>) -> bool {
-    let active = matches!(status, Some("active") | Some("trialing"));
-    active && is_premium_plan(plan_slug)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn plan_tables() {
-        assert!(is_premium_plan(Some("premium")));
-        assert!(is_premium_plan(Some("lifetime")));
-        assert!(is_premium_plan(Some("pro")));
-        assert!(!is_premium_plan(Some("free")));
-        assert!(!is_premium_plan(None));
         assert!(is_free_plan(None));
         assert!(is_free_plan(Some("free")));
         assert!(is_free_plan(Some("")));
@@ -179,11 +153,6 @@ mod tests {
         assert!(can_access_game(true, "sudoku", "word-guess"));
         assert!(can_access_game(false, "word-guess", "word-guess"));
         assert!(!can_access_game(false, "sudoku", "word-guess"));
-        assert!(has_premium_access(Some("active"), Some("premium")));
-        assert!(has_premium_access(Some("trialing"), Some("pro")));
-        assert!(!has_premium_access(Some("canceled"), Some("premium")));
-        assert!(!has_premium_access(Some("active"), Some("free")));
-        assert!(!has_premium_access(None, Some("premium")));
     }
 
     #[test]

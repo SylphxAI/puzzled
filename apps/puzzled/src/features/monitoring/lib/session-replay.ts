@@ -11,8 +11,8 @@
  * - Conservative sampling rate
  */
 
-import type { PrivacyMode, SessionReplayConfig } from '@sylphx/sdk/react'
 import { MINUTE_MS } from '@/lib/constants/time'
+import type { PrivacyMode, SessionReplayConfig } from '@/lib/identity/react'
 
 /**
  * Default session replay configuration for Puzzled app

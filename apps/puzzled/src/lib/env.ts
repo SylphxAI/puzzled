@@ -29,15 +29,12 @@ type EnvSource = Record<string, string | undefined>
 const SERVER_REQUIRED: EnvVar[] = []
 
 // Feature-specific variables (validated when feature is used)
-// Note: Stripe/billing is handled by Sylphx Platform SDK
 const FEATURE_VARS: EnvVar[] = [
 	{
 		name: 'RESEND_API_KEY',
 		required: false, // Checked at runtime by email.ts
 		description: 'Resend API key for email',
 	},
-	// Note: AI/LLM goes through Sylphx Platform SDK (uses SYLPHX_SECRET_KEY).
-	// Email/push delivery is platform-owned; no local provider keys are needed.
 ]
 
 // Security-critical vars that should be set in production
@@ -122,13 +119,9 @@ export function getRequiredEnv(name: string): string {
 }
 
 /**
- * Typed environment object for platform SDK and common config
+ * Typed environment object for presentation config
  */
 export const env = {
-	/** Platform SDK Secret Key — identifies the app (server-side only) */
-	get SYLPHX_SECRET_KEY() {
-		return getRequiredEnv('SYLPHX_SECRET_KEY')
-	},
 	/** Node environment */
 	get NODE_ENV() {
 		return process.env.NODE_ENV || 'development'

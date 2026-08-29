@@ -1,6 +1,5 @@
 'use client'
 
-import { useSafeAuth, useSafeUser } from '@sylphx/sdk/react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -14,6 +13,7 @@ import { LogIn, LogOut, Settings, User } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
+import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 import { cn } from '@/lib/utils'
 
 type UserMenuProps = {

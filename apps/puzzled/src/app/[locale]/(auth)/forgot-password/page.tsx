@@ -1,10 +1,10 @@
 'use client'
 
-import { useForgotPasswordForm } from '@sylphx/sdk/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'
+import { useForgotPasswordForm } from '@/lib/identity/react'
 
 export default function ForgotPasswordPage() {
 	const t = useTranslations('auth')

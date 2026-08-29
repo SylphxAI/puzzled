@@ -13,10 +13,9 @@
  * - App contains business logic only (games, streaks, achievements)
  */
 
-import type { AppConfig } from '@sylphx/sdk/react'
-import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
 import type * as React from 'react'
-import { MINUTE_MS } from '@/lib/constants/time'
+import type { AppConfig } from '@/lib/identity/react'
+import { SylphxProvider } from '@/lib/identity/react'
 
 interface PlatformProviderProps {
 	children: React.ReactNode
@@ -28,36 +27,6 @@ interface PlatformProviderProps {
 	platformUrl?: string
 }
 
-/**
- * Inner component that has access to user context for feature flags
- */
-function FeatureFlagWrapper({ children }: { children: React.ReactNode }) {
-	const { user } = useSafeUser()
-	const { subscription, isPremium } = useSafeBilling()
-
-	return (
-		<FeatureFlagProvider
-			endpoint="/api/flags"
-			userContext={
-				user
-					? {
-							userId: user.id,
-							email: user.email ?? undefined,
-							attributes: {
-								isPremium,
-								plan: subscription?.planSlug,
-							},
-						}
-					: undefined
-			}
-			refreshInterval={5 * MINUTE_MS}
-			enableCache
-		>
-			{children}
-		</FeatureFlagProvider>
-	)
-}
-
 export function PlatformProvider({ children, appId, config, platformUrl }: PlatformProviderProps) {
 	return (
 		<SylphxProvider
@@ -66,7 +35,7 @@ export function PlatformProvider({ children, appId, config, platformUrl }: Platf
 			platformUrl={platformUrl}
 			afterSignOutUrl="/login"
 		>
-			<FeatureFlagWrapper>{children}</FeatureFlagWrapper>
+			{children}
 		</SylphxProvider>
 	)
 }

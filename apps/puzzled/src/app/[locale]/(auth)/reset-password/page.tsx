@@ -1,12 +1,12 @@
 'use client'
 
-import { useResetPasswordForm } from '@sylphx/sdk/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Suspense, useMemo } from 'react'
 import { Link } from '@/lib/i18n/routing'
+import { useResetPasswordForm } from '@/lib/identity/react'
 
 // Password strength calculation (reused from signup)
 function calculatePasswordStrength(password: string): {

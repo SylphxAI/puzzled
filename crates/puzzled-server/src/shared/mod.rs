@@ -2,4 +2,5 @@
 
 pub mod db_config;
 
+pub mod dest_http;
 pub mod platform_billing;

@@ -1,4 +1,3 @@
-import { getAppConfig } from '@sylphx/sdk/server'
 import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
@@ -9,6 +8,8 @@ import { WebVitalsReporter } from '@/features/analytics'
 import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
 import { ApiProvider } from '@/lib/api/provider'
 import { routing } from '@/lib/i18n/routing'
+import { getAppConfig } from '@/lib/identity/app-config'
+import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getServerBaseUrl } from '@/lib/utils'
 import { PlatformProvider } from '@/shared/components/platform'
@@ -167,18 +168,15 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// Enable static rendering
 	setRequestLocale(locale)
 
-	// Fetch platform config and messages in parallel
-	const appId = process.env.NEXT_PUBLIC_SYLPHX_APP_ID
-	const secretKey = process.env.SYLPHX_SECRET_KEY
-	const platformUrl = process.env.NEXT_PUBLIC_SYLPHX_PLATFORM_URL
-
 	const [messages, config] = await Promise.all([
 		getMessages(),
-		// Only fetch config if credentials are configured. Bound so GET `/`
-		// cannot hang on Platform while Knative probes the document.
-		appId && secretKey
-			? withPresentationDeadline(getAppConfig({ secretKey, appId, platformUrl }), undefined)
-			: Promise.resolve(undefined),
+		withPresentationDeadline(
+			getAppConfig({
+				appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID,
+				platformUrl: process.env.IDENTITY_API_ORIGIN,
+			}),
+			EMPTY_APP_CONFIG,
+		),
 	])
 
 	return (
@@ -224,26 +222,18 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>
-					{appId && config ? (
-						<PlatformProvider appId={appId} config={config} platformUrl={platformUrl}>
-							<GlobalErrorHandler>
-								<SessionReplayProvider>
-									<WebVitalsReporter />
-									<ApiProvider>
-										<NextIntlClientProvider messages={messages}>
-											<ToastProvider>{children}</ToastProvider>
-										</NextIntlClientProvider>
-									</ApiProvider>
-								</SessionReplayProvider>
-							</GlobalErrorHandler>
-						</PlatformProvider>
-					) : (
-						<ApiProvider>
-							<NextIntlClientProvider messages={messages}>
-								<ToastProvider>{children}</ToastProvider>
-							</NextIntlClientProvider>
-						</ApiProvider>
-					)}
+					<PlatformProvider appId={config.app.id} config={config}>
+						<GlobalErrorHandler>
+							<SessionReplayProvider>
+								<WebVitalsReporter />
+								<ApiProvider>
+									<NextIntlClientProvider messages={messages}>
+										<ToastProvider>{children}</ToastProvider>
+									</NextIntlClientProvider>
+								</ApiProvider>
+							</SessionReplayProvider>
+						</GlobalErrorHandler>
+					</PlatformProvider>
 				</ThemeProvider>
 			</body>
 		</html>

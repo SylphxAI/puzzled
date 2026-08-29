@@ -1,4 +1,3 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { BarChart3, Check, Flame, Star, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'
@@ -17,6 +16,7 @@ import {
 	type UserStats,
 } from '@/lib/api/server'
 import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { currentUser } from '@/lib/identity/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
