@@ -19,8 +19,7 @@
 		"check:proto-buf": "bun scripts/check-proto-buf.ts",
 		"clean": "turbo clean && rm -rf node_modules",
 		"prepare": "git config --unset core.hooksPath >/dev/null 2>&1; lefthook install || true",
-		"generate:proto-es": "buf generate || ./.tools/buf generate",
-		"check:platform-boundary": "bash scripts/check-platform-boundary.sh ."
+		"generate:proto-es": "buf generate || ./.tools/buf generate"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.12",

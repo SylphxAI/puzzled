@@ -41,9 +41,11 @@ buffa-types = { workspace = true }
 connectrpc-build = { workspace = true }
 
 [dev-dependencies]
+axum = "0.8"
 puzzled-core = { path = "../puzzled-core" }
 rand = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 rsa = { version = "0.9", features = ["pem"] }
+serde_json = "1"
 tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "time"] }
 tower = "0.5"

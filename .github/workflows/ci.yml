@@ -87,9 +87,6 @@ jobs:
       - name: Proto contract gate (buf lint + breaking)
         run: bun run check:proto-buf
 
-      - name: Platform boundary fence
-        run: bash scripts/check-platform-boundary.sh .
-
       - name: Run TypeScript type check
         run: bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1
         env:

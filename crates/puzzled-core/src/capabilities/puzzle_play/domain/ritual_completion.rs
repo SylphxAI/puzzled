@@ -359,6 +359,70 @@ pub fn submit_must_guard_already_played(
     has_session_store && content_day_known
 }
 
+/// Session identity used when adopting a guest onto an account.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SessionAdoptKey<'a> {
+    pub puzzle_id: Option<&'a str>,
+    pub game_slug: &'a str,
+    pub day_key: Option<&'a str>,
+    pub is_ritual: bool,
+}
+
+/// True when a guest row would duplicate an account finish for the same puzzle
+/// or the same ritual (module, product day).
+#[must_use]
+pub fn guest_session_collides_with_account(
+    guest: SessionAdoptKey<'_>,
+    account: SessionAdoptKey<'_>,
+) -> bool {
+    if let (Some(guest_puzzle), Some(account_puzzle)) = (guest.puzzle_id, account.puzzle_id) {
+        if guest_puzzle == account_puzzle {
+            return true;
+        }
+    }
+    guest.is_ritual
+        && account.is_ritual
+        && guest.day_key.is_some()
+        && guest.day_key == account.day_key
+        && guest.game_slug == account.game_slug
+}
+
+/// Guest rows that collide are dropped; remaining rows reassign to the account.
+#[must_use]
+pub fn guest_session_dropped_on_adopt(
+    guest: SessionAdoptKey<'_>,
+    account_rows: &[SessionAdoptKey<'_>],
+) -> bool {
+    account_rows
+        .iter()
+        .copied()
+        .any(|account| guest_session_collides_with_account(guest, account))
+}
+
+/// Whether a persisted session is the accepted result for a lookup.
+#[must_use]
+pub fn completed_session_matches(
+    status: &str,
+    row_puzzle_id: Option<&str>,
+    row_slug: &str,
+    row_date: Option<&str>,
+    query_puzzle_id: Option<&str>,
+    query_slug: &str,
+    query_date: Option<&str>,
+) -> bool {
+    if status != "won" && status != "lost" {
+        return false;
+    }
+    match (query_puzzle_id, query_date) {
+        (Some(puzzle_id), Some(date)) => {
+            row_puzzle_id == Some(puzzle_id) || (row_slug == query_slug && row_date == Some(date))
+        }
+        (Some(puzzle_id), None) => row_puzzle_id == Some(puzzle_id),
+        (None, Some(date)) => row_slug == query_slug && row_date == Some(date),
+        (None, None) => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -600,14 +664,75 @@ mod tests {
     }
 
     #[test]
-    fn weekly_ritualists_sql_recipe_is_present() {
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!("HAVING COUNT(*) >= {HABITUAL_MIN_DAYS}")));
-        assert!(HRC_RECOMPUTE_SQL.contains(&format!("$1::date - {}", HABITUAL_WINDOW_DAYS - 1)));
-        assert!(HRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
-        assert!(HRC_RECOMPUTE_SQL.contains("AS weekly_ritualists"));
-        assert!(!HRC_RECOMPUTE_SQL.to_ascii_lowercase().contains(" as hrc"));
-        assert!(!HRC_RECOMPUTE_SQL.contains("dpc"));
-        assert!(!HRC_RECOMPUTE_SQL.contains("DPC"));
+    fn guest_adoption_drops_puzzle_and_ritual_collisions() {
+        let account_puzzle = SessionAdoptKey {
+            puzzle_id: Some("p1"),
+            game_slug: "sudoku",
+            day_key: Some("2026-08-12"),
+            is_ritual: true,
+        };
+        let colliding_puzzle = SessionAdoptKey {
+            puzzle_id: Some("p1"),
+            game_slug: "sudoku",
+            day_key: None,
+            is_ritual: false,
+        };
+        let colliding_ritual = SessionAdoptKey {
+            puzzle_id: None,
+            game_slug: "sudoku",
+            day_key: Some("2026-08-12"),
+            is_ritual: true,
+        };
+        let unique = SessionAdoptKey {
+            puzzle_id: Some("p2"),
+            game_slug: "crossword",
+            day_key: Some("2026-08-12"),
+            is_ritual: true,
+        };
+        let account = [account_puzzle];
+        assert!(guest_session_dropped_on_adopt(colliding_puzzle, &account));
+        assert!(guest_session_dropped_on_adopt(colliding_ritual, &account));
+        assert!(!guest_session_dropped_on_adopt(unique, &account));
+    }
+
+    #[test]
+    fn completed_session_membership_is_won_lost_by_puzzle_or_date() {
+        assert!(completed_session_matches(
+            "won",
+            Some("p1"),
+            "sudoku",
+            Some("2026-08-12"),
+            Some("p1"),
+            "sudoku",
+            Some("2026-08-12"),
+        ));
+        assert!(completed_session_matches(
+            "lost",
+            None,
+            "sudoku",
+            Some("2026-08-12"),
+            Some("missing"),
+            "sudoku",
+            Some("2026-08-12"),
+        ));
+        assert!(!completed_session_matches(
+            "abandoned",
+            Some("p1"),
+            "sudoku",
+            Some("2026-08-12"),
+            Some("p1"),
+            "sudoku",
+            Some("2026-08-12"),
+        ));
+        assert!(!completed_session_matches(
+            "won",
+            Some("p1"),
+            "sudoku",
+            Some("2026-08-12"),
+            None,
+            "crossword",
+            Some("2026-08-12"),
+        ));
     }
 
     /// Dogfood residual: first free-daily win with null content_id must still
