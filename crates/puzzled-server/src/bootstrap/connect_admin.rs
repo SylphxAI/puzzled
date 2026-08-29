@@ -1,5 +1,5 @@
 //! Native Connect AdminService (ADR-170). Every method requires a verified
-//! identity with an exact admin scope claim.
+//! identity with this product's exact `admin` scope.
 
 use std::sync::Arc;
 

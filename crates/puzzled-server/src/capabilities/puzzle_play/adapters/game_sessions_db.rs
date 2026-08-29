@@ -519,8 +519,7 @@ mod tests {
     fn dogfood_double_finish_requires_date_or_ritual_guard() {
         // Historical bug: only called has_completed_session when pid was Some.
         assert!(submit_must_guard_already_played(true, None, true));
-        assert!(is_unique_violation_code("23505"));
-        assert!(!is_unique_violation_code("42P01"));
+        assert!(!submit_must_guard_already_played(false, None, true));
     }
 
     /// Live tip b3abfd8/#76: guest SubmitGuess past identity gate then
@@ -532,9 +531,5 @@ mod tests {
         let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
         assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
         assert!(parse_user_id("not-a-uuid").is_err());
-    }
-
-    fn is_unique_violation_code(code: &str) -> bool {
-        code == "23505"
     }
 }

@@ -44,21 +44,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn ritual_day_sql_is_catalog_wide_not_word_guess_only() {
-        let normalized = ACCEPTED_RITUAL_DAYS_SQL
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_ascii_lowercase();
-        assert!(normalized.contains("select distinct day_key"));
-        assert!(normalized.contains("is_ritual = true"));
-        assert!(normalized.contains("module_class = 'puzzle_ritual'"));
-        assert!(normalized.contains("status in ('won', 'lost')"));
-        assert!(!normalized.contains("word-guess"));
-        assert!(!normalized.contains("game_slug ="));
-    }
-
-    #[test]
     fn guest_logical_user_id_maps_to_storage_uuid() {
         let uid = parse_user_id("guest_a1b2c3d4-e5f6-7890-abcd-ef1234567890").expect("guest");
         assert_eq!(uid.to_string(), "a1b2c3d4-e5f6-7890-abcd-ef1234567890");

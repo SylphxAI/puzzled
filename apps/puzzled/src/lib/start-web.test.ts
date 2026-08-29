@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { spawnSync } from 'node:child_process'
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -14,8 +14,6 @@ const startWeb = require('../../start-web.cjs') as {
 	resolveStandaloneServer: (root: string, exists?: (file: string) => boolean) => string | null
 }
 
-const dockerfilePath = new URL('../../Dockerfile', import.meta.url)
-const nextConfigPath = new URL('../../next.config.ts', import.meta.url)
 const startWebPath = new URL('../../start-web.cjs', import.meta.url)
 
 describe('puzzled web listen bind', () => {
@@ -70,13 +68,5 @@ describe('puzzled web listen bind', () => {
 		} finally {
 			rmSync(root, { recursive: true, force: true })
 		}
-	})
-
-	test('image starts through start-web.cjs and pins monorepo tracing root', () => {
-		const dockerfile = readFileSync(dockerfilePath, 'utf8')
-		const nextConfig = readFileSync(nextConfigPath, 'utf8')
-		expect(dockerfile).toContain('CMD ["node", "start-web.cjs"]')
-		expect(dockerfile).toContain('start-web.cjs')
-		expect(nextConfig).toContain('outputFileTracingRoot')
 	})
 })

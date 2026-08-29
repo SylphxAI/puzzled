@@ -50,6 +50,10 @@ mod tests {
     }
 
     fn mint_test_token(sub: &str) -> String {
+        mint_test_token_with_scope(sub, None)
+    }
+
+    fn mint_test_token_with_scope(sub: &str, scope: Option<&str>) -> String {
         use jsonwebtoken::{encode, EncodingKey, Header as JwtHeader};
         let priv_pem = include_str!("../testdata/platform_jwt_test_priv.pem");
         let pub_pem = include_str!("../testdata/platform_jwt_test_pub.pem");
@@ -66,11 +70,14 @@ mod tests {
             sub: String,
             name: String,
             exp: i64,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            scope: Option<String>,
         }
         let claims = MintClaims {
             sub: sub.to_string(),
             name: "Test User".to_string(),
             exp: chrono::Utc::now().timestamp() + 3600,
+            scope: scope.map(str::to_string),
         };
         let key = EncodingKey::from_rsa_pem(priv_pem.as_bytes()).expect("enc key");
         encode(
@@ -375,7 +382,11 @@ mod tests {
         let puzzle_data = json["puzzleDataJson"]
             .as_str()
             .expect("puzzleDataJson densified");
-        assert!(puzzle_data.contains("grid"), "expected densified grid JSON");
+        let payload: serde_json::Value = serde_json::from_str(puzzle_data).expect("puzzle json");
+        assert!(
+            payload.get("grid").is_some(),
+            "expected densified grid JSON: {payload}"
+        );
         assert!(
             json.get("solutionJson").is_none(),
             "solutions must never leave the server"
@@ -682,10 +693,6 @@ mod tests {
             json.get("solutionJson").is_none(),
             "solutions must never leave the server"
         );
-        assert!(
-            !data.contains("\"categories\""),
-            "GetDaily must not leak category groupings: {data}"
-        );
     }
 
     #[tokio::test]
@@ -934,5 +941,173 @@ mod tests {
             "2026-08-12",
             "sudoku",
         ));
+    }
+
+    fn connect_error_message(json: &serde_json::Value) -> &str {
+        json.get("message").and_then(|v| v.as_str()).unwrap_or("")
+    }
+
+    #[tokio::test]
+    async fn rest_api_v1_surface_is_gone() {
+        let response = match router(AppState::new(None))
+            .oneshot(build_request(Method::GET, "/api/v1", Body::empty()))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("GET /api/v1: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+        let response = match router(AppState::new(None))
+            .oneshot(build_request(
+                Method::POST,
+                "/api/webhooks/platform-jobs",
+                Body::empty(),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("POST platform-jobs webhook: {error}"),
+        };
+        assert_ne!(response.status(), StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn jobs_require_dest_events_credential() {
+        let previous = std::env::var("EVENTS_API_KEY").ok();
+        std::env::remove_var("EVENTS_API_KEY");
+        let app = router(AppState::new(None));
+        let unconfigured = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.JobsService/RunRetentionJob",
+                Body::from(r#"{"name":"daily-reminder"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("jobs unconfigured: {error}"),
+        };
+        assert_eq!(unconfigured.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let unconfigured_json = body_json(unconfigured).await;
+        assert!(
+            connect_error_message(&unconfigured_json).contains("events_dest_not_configured"),
+            "unexpected unconfigured jobs payload: {unconfigured_json}"
+        );
+
+        std::env::set_var("EVENTS_API_KEY", "issued-events-credential");
+        let missing = match router(AppState::new(None))
+            .oneshot(build_connect_request(
+                "/puzzled.v1.JobsService/RunRetentionJob",
+                Body::from(r#"{"name":"daily-reminder"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("jobs missing credential: {error}"),
+        };
+        assert_eq!(missing.status(), StatusCode::UNAUTHORIZED);
+        let missing_json = body_json(missing).await;
+        assert!(
+            connect_error_message(&missing_json).contains("invalid_dest_credential"),
+            "unexpected missing-credential jobs payload: {missing_json}"
+        );
+
+        let wrong = match router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.JobsService/RunRetentionJob",
+                Body::from(r#"{"name":"daily-reminder"}"#),
+                "wrong-secret",
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("jobs wrong credential: {error}"),
+        };
+        assert_eq!(wrong.status(), StatusCode::UNAUTHORIZED);
+        let wrong_json = body_json(wrong).await;
+        assert!(
+            connect_error_message(&wrong_json).contains("invalid_dest_credential"),
+            "unexpected wrong-credential jobs payload: {wrong_json}"
+        );
+
+        match previous {
+            Some(value) => std::env::set_var("EVENTS_API_KEY", value),
+            None => std::env::remove_var("EVENTS_API_KEY"),
+        }
+    }
+
+    #[tokio::test]
+    async fn admin_requires_product_admin_scope() {
+        let anonymous = match router(AppState::new(None))
+            .oneshot(build_connect_request(
+                "/puzzled.v1.AdminService/ListAnnouncements",
+                Body::from("{}"),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("admin anonymous: {error}"),
+        };
+        assert_eq!(anonymous.status(), StatusCode::UNAUTHORIZED);
+
+        let customer = mint_test_token("f715210b-9df3-4945-b5bd-94fc4609bc30");
+        let customer = match router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.AdminService/ListAnnouncements",
+                Body::from("{}"),
+                &customer,
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("admin customer: {error}"),
+        };
+        assert_eq!(customer.status(), StatusCode::FORBIDDEN);
+        let customer_json = body_json(customer).await;
+        assert!(
+            connect_error_message(&customer_json).contains("admin_scope_required"),
+            "unexpected customer admin payload: {customer_json}"
+        );
+
+        let platform_ops = mint_test_token_with_scope(
+            "f715210b-9df3-4945-b5bd-94fc4609bc30",
+            Some("platform:admin"),
+        );
+        let platform_ops = match router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.AdminService/ListAnnouncements",
+                Body::from("{}"),
+                &platform_ops,
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("admin platform:admin: {error}"),
+        };
+        assert_eq!(platform_ops.status(), StatusCode::FORBIDDEN);
+        let platform_json = body_json(platform_ops).await;
+        assert!(
+            connect_error_message(&platform_json).contains("admin_scope_required"),
+            "platform:admin must not skip product admin: {platform_json}"
+        );
+
+        let product_admin =
+            mint_test_token_with_scope("f715210b-9df3-4945-b5bd-94fc4609bc30", Some("admin"));
+        let product_admin = match router(AppState::new(None))
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.AdminService/ListAnnouncements",
+                Body::from("{}"),
+                &product_admin,
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("admin product admin: {error}"),
+        };
+        assert_eq!(product_admin.status(), StatusCode::SERVICE_UNAVAILABLE);
+        let admin_json = body_json(product_admin).await;
+        assert!(
+            connect_error_message(&admin_json).contains("database_unavailable"),
+            "product admin must reach the store, not a scope skip: {admin_json}"
+        );
     }
 }

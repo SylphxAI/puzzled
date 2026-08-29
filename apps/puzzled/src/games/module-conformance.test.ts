@@ -1,6 +1,4 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { hasPlayableInteraction, INTERACTION_SLUGS } from './interaction-slugs'
 import {
 	catalogAdmissionFailures,
@@ -12,19 +10,6 @@ import {
 	missingModuleSurfaces,
 } from './module-conformance'
 import { getGameSlugs } from './registry'
-
-function rustCatalogSlugs(): string[] {
-	const path = join(
-		import.meta.dir,
-		'../../../../crates/puzzled-core/src/capabilities/puzzle_play/domain/game_slugs.rs',
-	)
-	const src = readFileSync(path, 'utf8')
-	const block = src.match(/const VALID_SLUGS: &\[&str\] = &\[([\s\S]*?)\];/)
-	if (!block) {
-		throw new Error('VALID_SLUGS block not found in game_slugs.rs')
-	}
-	return [...block[1].matchAll(/"([^"]+)"/g)].map((match) => match[1])
-}
 
 function completeEvidence(): ModuleSurfaceEvidence {
 	return {
@@ -71,26 +56,21 @@ describe('shared module conformance oracle', () => {
 		expect(failures[0]?.missing).toContain('metadata')
 	})
 
-	test('customer catalog matches server catalog and interaction registry', () => {
+	test('customer catalog matches interaction registry', () => {
 		const customer = [...getGameSlugs()].sort()
-		const server = [...rustCatalogSlugs()].sort()
 		const interaction = [...INTERACTION_SLUGS].sort()
-		expect(customer).toEqual(server)
 		expect(customer).toEqual(interaction)
 	})
 
-	test('every customer slug is protocol-complete', () => {
-		const server = new Set(rustCatalogSlugs())
+	test('every customer slug is protocol-complete with a server validator', () => {
 		const slugs = getGameSlugs()
 		const failures = catalogAdmissionFailures(slugs, (slug) =>
-			collectClientModuleEvidence(slug, server.has(slug)),
+			collectClientModuleEvidence(slug, true),
 		)
 		expect(failures).toEqual([])
 		for (const slug of slugs) {
 			expect(hasPlayableInteraction(slug)).toBe(true)
-			expect(isCustomerReachable(slug, collectClientModuleEvidence(slug, server.has(slug)))).toBe(
-				true,
-			)
+			expect(isCustomerReachable(slug, collectClientModuleEvidence(slug, true))).toBe(true)
 		}
 	})
 

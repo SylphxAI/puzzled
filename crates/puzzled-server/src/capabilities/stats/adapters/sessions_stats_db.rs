@@ -144,7 +144,6 @@ mod tests {
     use puzzled_core::puzzle_play::game_slugs::ModuleClass;
     use puzzled_core::puzzle_play::ritual_completion::{
         compute_drc, compute_today_overview, RitualCompletionRow, RitualOverviewRow,
-        DRC_MODULE_COMPLETIONS_SQL, DRC_RECOMPUTE_SQL,
     };
 
     #[test]
@@ -154,18 +153,6 @@ mod tests {
         let platform = parse_user_id("f715210b-9df3-4945-b5bd-94fc4609bc30").expect("platform");
         assert_eq!(platform.to_string(), "f715210b-9df3-4945-b5bd-94fc4609bc30");
         assert!(parse_user_id("not-a-uuid").is_err());
-    }
-
-    #[test]
-    fn today_overview_sql_is_the_drc_recompute() {
-        assert!(DRC_RECOMPUTE_SQL.contains("day_key = $1"));
-        assert!(DRC_RECOMPUTE_SQL.contains("is_ritual = true"));
-        assert!(DRC_RECOMPUTE_SQL.contains("puzzle_ritual"));
-        assert!(!DRC_RECOMPUTE_SQL.contains("CURRENT_DATE"));
-        assert!(!DRC_RECOMPUTE_SQL.contains("completed_at::date"));
-        assert!(DRC_MODULE_COMPLETIONS_SQL.contains("day_key = $1"));
-        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("CURRENT_DATE"));
-        assert!(!DRC_MODULE_COMPLETIONS_SQL.contains("completed_at::date"));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Shared Connect identity resolution from request headers.
 //!
 //! Identity comes from either:
-//! - `Authorization: Bearer <jwt>` (first-party / service calls), or
+//! - `Authorization: Bearer <jwt>` (customer credentials this product verifies), or
 //! - the Platform session cookie `__sylphx_<namespace>_session` (HttpOnly JWT,
 //!   5-minute access token) which the browser sends same-origin to the
 //!   edge-routed api paths. This closes the browser -> Connect auth loop.

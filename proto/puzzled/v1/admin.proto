@@ -2,8 +2,9 @@ syntax = "proto3";
 
 package puzzled.v1;
 
-// AdminService: internal operations surface. Every method requires a verified
-// identity with an exact admin scope claim (admin | platform:admin).
+// AdminService: product operator surface. Every method requires a verified
+// identity with this product's exact `admin` scope. Platform operator scopes
+// are not product admin.
 
 message Announcement {
   string id = 1;
