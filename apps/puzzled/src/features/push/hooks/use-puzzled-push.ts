@@ -1,6 +1,6 @@
 'use client'
 
-import { useAnalytics, useNotifications } from '@sylphx/sdk/react'
+import { useAnalytics, useNotifications } from '@/lib/identity/react'
 import { useCallback } from 'react'
 import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'

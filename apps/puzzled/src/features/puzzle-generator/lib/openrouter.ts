@@ -10,7 +10,7 @@
  * Model names use OpenRouter format: "provider/model"
  * e.g., "anthropic/claude-sonnet-4", "openai/gpt-4o"
  */
-import { getAI } from '@sylphx/sdk/server'
+import { getAI } from '@/lib/identity/ai'
 
 /**
  * AI client singleton for server-side usage

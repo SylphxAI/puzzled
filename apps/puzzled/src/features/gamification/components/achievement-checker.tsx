@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeAchievements, useSafeUser } from '@sylphx/sdk/react'
+import { useSafeAchievements, useSafeUser } from '@/lib/identity/react'
 import { useEffect, useRef } from 'react'
 import { useUserStats } from '@/lib/api'
 import { ACHIEVEMENTS } from '../lib/achievements'

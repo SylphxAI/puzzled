@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import { Globe, Palette, Sliders } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'

@@ -1,6 +1,6 @@
 'use client'
 
-import { UserProfile } from '@sylphx/sdk/react'
+import { UserProfile } from '@/lib/identity/react'
 import { UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { SettingsPageHeader } from '@/shared/components/layout'

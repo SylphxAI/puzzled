@@ -11,7 +11,7 @@
  * - Conservative sampling rate
  */
 
-import type { PrivacyMode, SessionReplayConfig } from '@sylphx/sdk/react'
+import type { PrivacyMode, SessionReplayConfig } from '@/lib/identity/react'
 import { MINUTE_MS } from '@/lib/constants/time'
 
 /**

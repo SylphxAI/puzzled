@@ -1,6 +1,6 @@
 'use client'
 
-import { SecuritySettings } from '@sylphx/sdk/react'
+import { SecuritySettings } from '@/lib/identity/react'
 import { Shield } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { SettingsPageHeader } from '@/shared/components/layout'

@@ -1,6 +1,6 @@
 'use client'
 
-import { BillingSection, useBilling } from '@sylphx/sdk/react'
+import { BillingSection, useBilling } from '@/lib/identity/react'
 import { Button } from '@sylphx/ui'
 import { Crown } from 'lucide-react'
 import Link from 'next/link'

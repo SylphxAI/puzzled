@@ -1,4 +1,4 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import { Button } from '@sylphx/ui'
 import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'

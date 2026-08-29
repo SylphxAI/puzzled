@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeAuth } from '@sylphx/sdk/react'
+import { useSafeAuth } from '@/lib/identity/react'
 import { Button, GamepadIcon } from '@sylphx/ui'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'

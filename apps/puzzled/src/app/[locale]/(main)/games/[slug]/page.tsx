@@ -1,4 +1,4 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import { Button } from '@sylphx/ui'
 import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'

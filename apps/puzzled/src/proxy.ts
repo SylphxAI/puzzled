@@ -12,13 +12,10 @@
  * No manual /api/auth/* routes needed.
  */
 
-import { createSylphxMiddleware } from '@sylphx/sdk/nextjs'
 import { type NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
-import { inboundModulePublicRoutes } from '@/lib/module-routes'
-import { sylphxAuthConfigured } from '@/lib/presentation-boot'
 
 // =============================================================================
 // i18n Middleware
@@ -41,36 +38,8 @@ function getLocaleFromPath(pathname: string): Locale | null {
 // Sylphx Auth Middleware
 // =============================================================================
 
-// Create Sylphx middleware (handles auth routes, token refresh, route protection)
-const sylphxMiddleware = createSylphxMiddleware({
-	secretKey: process.env.SYLPHX_SECRET_KEY,
-	secretUrl: process.env.SYLPHX_SECRET_URL,
-	publicRoutes: [
-		'/',
-		'/about',
-		'/pricing',
-		'/blog/*',
-		'/games/*',
-		...inboundModulePublicRoutes(locales),
-		// i18n prefixed routes
-		...locales.flatMap((locale) => [
-			`/${locale}`,
-			`/${locale}/about`,
-			`/${locale}/pricing`,
-			`/${locale}/blog/*`,
-			`/${locale}/games/*`,
-		]),
-	],
-	ignoredRoutes: ['/api/*', '/monitoring', '/healthz', '/readyz'],
-	signInUrl: '/login',
-	afterSignInUrl: '/dashboard',
-	afterSignOutUrl: '/',
-	authPrefix: '/auth',
-	debug: process.env.NODE_ENV === 'development',
-})
-
 // =============================================================================
-// Combined Proxy
+// Combined Proxy — Identity dest owns sessions; suite-door middleware is dead.
 // =============================================================================
 
 export async function proxy(request: NextRequest) {
@@ -121,59 +90,7 @@ export async function proxy(request: NextRequest) {
 	// Auth Routes: Let Sylphx handle /auth/*
 	// =========================================================================
 
-	if (pathname.startsWith('/auth/')) {
-		return sylphxMiddleware(request)
-	}
-
-	// =========================================================================
-	// Check if Sylphx is enabled
-	// =========================================================================
-
-	if (!sylphxAuthConfigured()) {
-		return intlMiddleware(request)
-	}
-
-	// =========================================================================
-	// Token Refresh + Route Protection (Sylphx handles this)
-	// =========================================================================
-
-	// Run Sylphx middleware to handle token refresh and route protection.
-	// Invalid/partial Platform credentials must not 500 GET `/` (Knative health).
-	let sylphxResponse: Awaited<ReturnType<typeof sylphxMiddleware>>
-	try {
-		sylphxResponse = await sylphxMiddleware(request)
-	} catch (error) {
-		console.error('[proxy] Sylphx middleware failed; serving presentation', error)
-		return intlMiddleware(request)
-	}
-
-	// If Sylphx wants to redirect (e.g., to login), respect that
-	if (sylphxResponse.status >= 300 && sylphxResponse.status < 400) {
-		return sylphxResponse
-	}
-
-	// =========================================================================
-	// i18n Routing
-	// =========================================================================
-
-	// Apply i18n middleware
-	const intlResponse = intlMiddleware(request)
-
-	// Merge cookies from Sylphx response (token refresh) into intl response
-	// This ensures refreshed tokens are sent to the browser
-	for (const cookie of sylphxResponse.cookies.getAll()) {
-		intlResponse.cookies.set(cookie.name, cookie.value, {
-			path: cookie.path,
-			domain: cookie.domain,
-			secure: cookie.secure,
-			httpOnly: cookie.httpOnly,
-			sameSite: cookie.sameSite,
-			maxAge: cookie.maxAge,
-			expires: cookie.expires,
-		})
-	}
-
-	return intlResponse
+	return intlMiddleware(request)
 }
 
 export const config = {

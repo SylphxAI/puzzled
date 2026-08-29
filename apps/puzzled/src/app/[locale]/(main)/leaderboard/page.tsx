@@ -1,5 +1,5 @@
-import { type EngagementLeaderboardResult, getLeaderboard } from '@sylphx/sdk'
-import { auth } from '@sylphx/sdk/nextjs'
+import { type EngagementLeaderboardResult, getLeaderboard } from '@/lib/identity'
+import { auth } from '@/lib/identity/server'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'

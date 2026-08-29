@@ -1,7 +1,7 @@
 'use client'
 
-import type { Plan } from '@sylphx/sdk/react'
-import { useBilling, usePlans } from '@sylphx/sdk/react'
+import type { Plan } from '@/lib/identity/react'
+import { useBilling, usePlans } from '@/lib/identity/react'
 import { Button, Card, CardContent, useToast } from '@sylphx/ui'
 import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
 import { useTranslations } from 'next-intl'

@@ -1,4 +1,4 @@
-import { getOAuthProviders, type OAuthProvider } from '@sylphx/sdk/server'
+import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/server'
 
 /**
  * Load enabled OAuth providers for auth pages.

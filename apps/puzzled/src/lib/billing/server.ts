@@ -5,7 +5,7 @@
  * Uses Platform SDK for subscription checks.
  */
 
-import { getSubscription } from '@sylphx/sdk'
+import { getSubscription } from '@/lib/identity'
 import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
 import { getSdkConfig } from '@/lib/sdk-server'
 

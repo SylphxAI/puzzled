@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeUser } from '@sylphx/sdk/react'
+import { useSafeUser } from '@/lib/identity/react'
 import { ArrowLeft } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/routing'

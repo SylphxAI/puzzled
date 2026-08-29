@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'

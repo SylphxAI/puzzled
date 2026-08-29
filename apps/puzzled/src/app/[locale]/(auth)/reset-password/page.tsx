@@ -1,6 +1,6 @@
 'use client'
 
-import { useResetPasswordForm } from '@sylphx/sdk/react'
+import { useResetPasswordForm } from '@/lib/identity/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'

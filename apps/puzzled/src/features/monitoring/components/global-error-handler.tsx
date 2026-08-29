@@ -10,7 +10,7 @@
  * to demonstrate real error tracking integration.
  */
 
-import { useGlobalErrorHandler } from '@sylphx/sdk/react'
+import { useGlobalErrorHandler } from '@/lib/identity/react'
 
 interface GlobalErrorHandlerProps {
 	children: React.ReactNode

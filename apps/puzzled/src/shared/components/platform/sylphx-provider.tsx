@@ -13,8 +13,8 @@
  * - App contains business logic only (games, streaks, achievements)
  */
 
-import type { AppConfig } from '@sylphx/sdk/react'
-import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@sylphx/sdk/react'
+import type { AppConfig } from '@/lib/identity/react'
+import { FeatureFlagProvider, SylphxProvider, useSafeBilling, useSafeUser } from '@/lib/identity/react'
 import type * as React from 'react'
 import { MINUTE_MS } from '@/lib/constants/time'
 

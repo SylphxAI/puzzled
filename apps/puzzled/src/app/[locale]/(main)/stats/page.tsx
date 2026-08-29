@@ -1,4 +1,4 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
 import { BarChart3, Check, Flame, Star, Target, Trophy } from 'lucide-react'
 import Link from 'next/link'

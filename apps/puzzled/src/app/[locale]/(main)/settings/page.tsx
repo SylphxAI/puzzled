@@ -1,4 +1,4 @@
-import { currentUser } from '@sylphx/sdk/nextjs'
+import { currentUser } from '@/lib/identity/server'
 import {
 	Bell,
 	CreditCard,

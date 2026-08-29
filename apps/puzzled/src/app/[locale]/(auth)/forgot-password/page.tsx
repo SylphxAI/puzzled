@@ -1,6 +1,6 @@
 'use client'
 
-import { useForgotPasswordForm } from '@sylphx/sdk/react'
+import { useForgotPasswordForm } from '@/lib/identity/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { ArrowLeft, Check, Loader2, Mail, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'

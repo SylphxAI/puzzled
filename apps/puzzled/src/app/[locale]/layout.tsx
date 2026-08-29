@@ -1,4 +1,4 @@
-import { getAppConfig } from '@sylphx/sdk/server'
+import { getAppConfig } from '@/lib/identity/server'
 import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useReferral } from '@sylphx/sdk/react'
+import { useReferral } from '@/lib/identity/react'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 import { Check, Clock, Copy, Gift, RefreshCw, Share2, UserCheck, Users } from 'lucide-react'
 import { useTranslations } from 'next-intl'

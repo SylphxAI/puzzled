@@ -1,6 +1,6 @@
 'use client'
 
-import { useSafeAuth, useSafeUser } from '@sylphx/sdk/react'
+import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,

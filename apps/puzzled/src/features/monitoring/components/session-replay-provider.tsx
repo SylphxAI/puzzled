@@ -12,7 +12,7 @@
  * Provides error correlation for debugging support issues.
  */
 
-import { useSafeBilling, useSafeUser, useSessionReplay } from '@sylphx/sdk/react'
+import { useSafeBilling, useSafeUser, useSessionReplay } from '@/lib/identity/react'
 import { useEffect, useRef } from 'react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'

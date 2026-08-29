@@ -4,7 +4,7 @@
  * Client-side consent state using localStorage.
  * Used by Web Vitals to check consent before tracking.
  *
- * For React components, prefer `useConsent` from '@sylphx/sdk/react'
+ * For React components, prefer `useConsent` from '@/lib/identity/react'
  * which uses server-side storage as SSOT.
  */
 

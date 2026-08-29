@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useSafeAnalytics } from '@sylphx/sdk/react'
+import { useSafeAnalytics } from '@/lib/identity/react'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { PuzzleDifficulty } from '@/games/types'
 import { canTrackAnalytics } from './consent'

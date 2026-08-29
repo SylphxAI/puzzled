@@ -1,6 +1,6 @@
 'use client'
 
-import { PlatformContext, useSafeUser } from '@sylphx/sdk/react'
+import { PlatformContext, useSafeUser } from '@/lib/identity/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'

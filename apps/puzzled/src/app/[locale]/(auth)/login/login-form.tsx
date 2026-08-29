@@ -1,6 +1,6 @@
 'use client'
 
-import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignInForm } from '@sylphx/sdk/react'
+import { OAuthIcons, type OAuthProvider, useSafeAuth, useSignInForm } from '@/lib/identity/react'
 import { Button, GamepadIcon, Input } from '@sylphx/ui'
 import { Eye, EyeOff, Loader2, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'

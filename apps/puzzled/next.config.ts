@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
 	output: 'standalone',
 	// Pin monorepo tracing so standalone server.js is apps/puzzled/server.js.
 	outputFileTracingRoot: tracingRoot,
-	transpilePackages: ['@sylphx/sdk'],
+	transpilePackages: ['@sylphx/identity', '@sylphx/data'],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
 

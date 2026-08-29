@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { auth } from '@sylphx/sdk/nextjs'
+import { auth } from '@/lib/identity/server'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'

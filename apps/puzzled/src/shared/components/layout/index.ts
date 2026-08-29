@@ -8,5 +8,5 @@ export { TopNav } from './top-nav'
 
 /**
  * Error Boundary - Use SDK's version directly
- * @example import { ErrorBoundary } from '@sylphx/sdk/react'
+ * @example import { ErrorBoundary } from '@/lib/identity/react'
  */

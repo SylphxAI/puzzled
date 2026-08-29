@@ -30,9 +30,7 @@
 		"lefthook": "2.1.9",
 		"turbo": "2.9.14"
 	},
-	"overrides": {
-		"@sylphx/sdk": "0.27.0"
-	},
+	"overrides": {},
 	"dependencies": {
 		"@bufbuild/protobuf": "^2.2.0",
 		"@connectrpc/connect": "^2.0.0",
