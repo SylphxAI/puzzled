@@ -1,10 +1,10 @@
 'use client'
 
-import { BillingSection, useBilling } from '@/lib/identity/react'
 import { Button } from '@sylphx/ui'
 import { Crown } from 'lucide-react'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
+import { BillingSection, useBilling } from '@/lib/identity/react'
 import { SettingsPageHeader } from '@/shared/components/layout'
 
 /**

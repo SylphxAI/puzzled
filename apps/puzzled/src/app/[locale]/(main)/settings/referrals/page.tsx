@@ -1,6 +1,6 @@
-import { currentUser } from '@/lib/identity/server'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@/lib/identity/server'
 import { ReferralsContent } from './referrals-client'
 
 type Props = {

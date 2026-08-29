@@ -1,17 +1,35 @@
 export type EngagementLeaderboardResult = {
-	entries: Array<{ userId: string; score: number; rank: number }>
+	entries: Array<{
+		userId: string
+		score: number
+		rank: number
+		displayName?: string
+		value: number
+		isCurrentUser?: boolean
+	}>
+	currentUserEntry?: {
+		userId: string
+		score: number
+		rank: number
+		displayName?: string
+		value: number
+		isCurrentUser?: boolean
+	} | null
 }
 
 export async function getLeaderboard(
 	_config: unknown,
 	_board: string,
-	_userId?: string,
+	_userId?: string | null,
 	_opts?: { limit?: number },
 ): Promise<EngagementLeaderboardResult> {
 	return { entries: [] }
 }
 
-export async function getSubscription(_config: unknown): Promise<{ planSlug?: string } | null> {
+export async function getSubscription(
+	_config: unknown,
+	_userId?: string,
+): Promise<{ planSlug?: string; status?: string } | null> {
 	return null
 }
 

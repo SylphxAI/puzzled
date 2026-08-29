@@ -1,4 +1,3 @@
-import { currentUser } from '@/lib/identity/server'
 import {
 	Bell,
 	CreditCard,
@@ -12,6 +11,7 @@ import {
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@/lib/identity/server'
 
 type Props = {
 	params: Promise<{ locale: string }>

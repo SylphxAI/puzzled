@@ -52,7 +52,15 @@ export function SylphxProvider({
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function FeatureFlagProvider({ children }: { children: ReactNode; endpoint?: string; userContext?: unknown; refreshInterval?: number; enableCache?: boolean }) {
+export function FeatureFlagProvider({
+	children,
+}: {
+	children: ReactNode
+	endpoint?: string
+	userContext?: unknown
+	refreshInterval?: number
+	enableCache?: boolean
+}) {
 	return <>{children}</>
 }
 
@@ -67,7 +75,13 @@ export function PlatformProvider(props: {
 
 export function useSafeUser() {
 	const ctx = useContext(AuthContext)
-	return { user: ctx.user, isLoading: ctx.isLoading, isLoaded: ctx.isLoaded, isSignedIn: ctx.isSignedIn, isConfigured: ctx.isConfigured }
+	return {
+		user: ctx.user,
+		isLoading: ctx.isLoading,
+		isLoaded: ctx.isLoaded,
+		isSignedIn: ctx.isSignedIn,
+		isConfigured: ctx.isConfigured,
+	}
 }
 
 export function useUser() {
@@ -76,30 +90,31 @@ export function useUser() {
 
 export function useSafeAuth() {
 	const ctx = useContext(AuthContext)
-	return { signOut: ctx.signOut, signInWithOAuth: ctx.signInWithOAuth, oauthError: null as string | null }
+	return {
+		signOut: ctx.signOut,
+		signInWithOAuth: ctx.signInWithOAuth,
+		oauthError: null as { message?: string } | null,
+		verifyEmail: async (_arg?: unknown) => undefined,
+		resendVerificationEmail: async (_arg?: unknown) => undefined,
+	}
 }
 
 export function useAuth() {
 	return useSafeAuth()
 }
 
-export function useSignInForm(opts: {
-	methods?: string[]
-	providers?: string[]
-	afterSignInUrl?: string
-	oauthHandler?: (provider: string) => Promise<void>
-}) {
+export function useSignInForm(opts: any = {}): any {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	return {
-		form: { email, password },
+		form: { email, password, name: '' },
 		setEmail,
 		setPassword,
 		isLoading,
 		loadingProvider: null as string | null,
-		error,
+		error: error ? { message: error } : null,
 		handlePasswordSubmit: async (event?: { preventDefault?: () => void }) => {
 			event?.preventDefault?.()
 			setIsLoading(true)
@@ -124,11 +139,18 @@ export function useSignInForm(opts: {
 	}
 }
 
-export function useSignUpForm(opts: Parameters<typeof useSignInForm>[0]) {
-	return useSignInForm(opts)
+export function useSignUpForm(opts: any = {}): any {
+	return {
+		...useSignInForm(opts),
+		setName: () => undefined,
+		step: 1,
+		passwordValid: true,
+		handleSubmit: async () => undefined,
+		handleOAuthSignUp: async () => undefined,
+	}
 }
 
-export function useForgotPasswordForm() {
+export function useForgotPasswordForm(_opts?: unknown): any {
 	const [email, setEmail] = useState('')
 	return {
 		email,
@@ -146,49 +168,127 @@ export function useForgotPasswordForm() {
 	}
 }
 
-export function useResetPasswordForm() {
-	return useForgotPasswordForm()
+export function useResetPasswordForm(_opts?: unknown): any {
+	return {
+		...useForgotPasswordForm(),
+		setConfirmPassword: () => undefined,
+		showPassword: false,
+		toggleShowPassword: () => undefined,
+		passwordsMatch: true,
+		isValid: true,
+		success: false,
+		setPassword: () => undefined,
+	}
 }
 
-export type Plan = { slug?: string; name?: string }
+export type Plan = {
+	slug: string
+	name: string
+	monthlyPrice?: number
+	annualPrice?: number
+	features?: string[]
+}
 export function useBilling() {
-	return { subscription: null as { planSlug?: string } | null, isPremium: false }
+	return {
+		subscription: null as { planSlug?: string } | null,
+		isPremium: false,
+		openPortal: async () => undefined,
+		createCheckout: async (_plan?: unknown, _interval?: unknown) => '',
+		isLoading: false,
+	}
 }
 export function usePlans() {
-	return { plans: [] as Plan[] }
+	return [] as Plan[]
 }
 export function useSafeBilling() {
 	return useBilling()
 }
 export function useReferral() {
-	return { code: null as string | null }
+	return {
+		code: null as string | null,
+		stats: { referrals: 0, conversions: 0 } as Record<string, ReactNode>,
+		link: '',
+		isLoading: false,
+		error: null as { message?: string } | null,
+		copyCode: async () => undefined,
+		copyLink: async () => undefined,
+		regenerateCode: async () => undefined,
+	}
 }
 export function useAnalytics() {
-	return { track: async () => undefined }
+	return { track: async (_event?: string, _props?: Record<string, unknown>) => undefined }
 }
 export function useSafeAnalytics() {
 	return useAnalytics()
 }
 export function useFeatureFlag(_name: string) {
-	return { enabled: false }
+	return { enabled: false, variant: 'control' as string, isLoading: false }
 }
 export function useSafeConsent() {
-	return { consent: {} as Record<string, boolean> }
+	return {
+		consent: {} as Record<string, boolean>,
+		hasConsent: (_kind?: string) => false,
+		hasConsented: false,
+		isLoading: false,
+		isConfigured: true,
+	}
 }
 export function useNotifications() {
-	return { permission: 'default' as NotificationPermission }
+	return {
+		permission: 'default' as NotificationPermission,
+		isSupported: false,
+		isSubscribed: false,
+		subscribe: async () => false,
+		unsubscribe: async () => undefined,
+		error: null as { message?: string } | null,
+		preferences: {} as Record<string, unknown>,
+	}
 }
 export function useSafeAchievements() {
-	return { achievements: [] as never[] }
+	return {
+		achievements: [] as Array<{
+			unlocked: boolean
+			achievementId: string
+			achievement: { id: string }
+		}>,
+		unlock: async (_id?: string, _meta?: unknown) => undefined,
+		recentUnlock: null as { achievement: { id: string } } | null,
+		dismissRecentUnlock: () => undefined,
+		isLoading: false,
+		isConfigured: true,
+	}
 }
-export function useGlobalErrorHandler() {
+export function useGlobalErrorHandler(_opts?: {
+	handleErrors?: boolean
+	handleRejections?: boolean
+	onCapture?: (eventId?: string) => void
+}) {
 	return
 }
-export function useSessionReplay() {
-	return { start: () => undefined, stop: () => undefined }
+export function useSessionReplay(_opts?: {
+	onError?: (error: { message: string }) => void
+	[key: string]: unknown
+}) {
+	return {
+		start: () => undefined,
+		stop: () => undefined,
+		sessionId: null as string | null,
+		isRecording: false,
+		markError: (..._args: unknown[]) => undefined,
+		markNavigation: (..._args: unknown[]) => undefined,
+		markConversion: (..._args: unknown[]) => undefined,
+	}
 }
-export const PlatformContext = createContext({})
-export function CookieBanner() {
+export const PlatformContext = createContext({
+	submitScore: async (_board?: string, _score?: number, _metadata?: unknown, _opts?: unknown) =>
+		undefined,
+})
+export function CookieBanner(_props: {
+	position?: string
+	privacyPolicyUrl?: string
+	variant?: string
+	onSave?: () => void
+}) {
 	return null
 }
 export function AccountSection() {
@@ -197,7 +297,7 @@ export function AccountSection() {
 export function SecuritySettings() {
 	return null
 }
-export function UserProfile() {
+export function UserProfile(_props: Record<string, unknown>) {
 	return null
 }
 export function BillingSection() {
@@ -206,5 +306,25 @@ export function BillingSection() {
 export const OAuthIcons: Record<string, (props: { className?: string }) => ReactNode> = {}
 export type OAuthProvider = string
 export type PrivacyMode = string
-export type SessionReplayConfig = Record<string, unknown>
+export type SessionReplayConfig = {
+	sampling?: { rate?: number; alwaysRecordErrors?: boolean }
+	privacyMode?: PrivacyMode
+	maskSelectors?: string[]
+	blockSelectors?: string[]
+	autoStart?: boolean
+	stopOnUnmount?: boolean
+	uploadEndpoint?: string
+	userId?: string
+	enabled?: boolean
+	errorCorrelation?: unknown
+	rageClickDetection?: boolean
+	deadClickDetection?: boolean
+	networkCapture?: boolean
+	consoleCapture?: boolean
+	maxDuration?: number
+	compress?: boolean
+	batchSize?: number
+	uploadInterval?: number
+	onError?: (error: { message: string }) => void
+}
 export type { AppConfig }

@@ -1,10 +1,10 @@
 'use client'
 
-import { PlatformContext, useSafeUser } from '@/lib/identity/react'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useGameAnalytics } from '@/features/analytics'
 import type { PuzzleDifficulty } from '@/games/types'
 import { useSaveResult } from '@/lib/api'
+import { PlatformContext, useSafeUser } from '@/lib/identity/react'
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 

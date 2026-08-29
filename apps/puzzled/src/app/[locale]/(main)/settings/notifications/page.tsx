@@ -1,7 +1,7 @@
-import { currentUser } from '@/lib/identity/server'
 import { Bell } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { currentUser } from '@/lib/identity/server'
 import { NotificationsClient } from './notifications-client'
 
 type Props = {

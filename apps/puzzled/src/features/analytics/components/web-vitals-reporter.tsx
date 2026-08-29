@@ -1,7 +1,7 @@
 'use client'
 
-import { useSafeAnalytics } from '@/lib/identity/react'
 import { useEffect, useState } from 'react'
+import { useSafeAnalytics } from '@/lib/identity/react'
 import { initWebVitals, setWebVitalsTracker } from '../lib/web-vitals'
 
 /**

@@ -1,6 +1,6 @@
-import { IdentityClient } from '@sylphx/identity'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { destIdentityJson, type IdentitySession } from '@/lib/identity/dest'
 import { IDENTITY_API_ORIGIN } from '@/lib/identity/server'
 
 export async function POST(request: Request) {
@@ -15,14 +15,26 @@ export async function POST(request: Request) {
 	if (!binding) {
 		return NextResponse.json({ error: 'identity_binding_required' }, { status: 503 })
 	}
-	const client = new IdentityClient(IDENTITY_API_ORIGIN, { projectBinding: binding })
-	const begun = await client.identityAuthenticationBegin({
-		principalHint: body.email,
-	} as never)
-	const completed = await client.identityAuthenticationComplete({
-		challengeId: (begun as { challengeId?: string }).challengeId ?? '',
-		secret: body.password,
-	} as never)
+	const begun = await destIdentityJson<{
+		challenge?: { challengeId?: string }
+		challengeId?: string
+	}>(IDENTITY_API_ORIGIN, '/v1/authentication/begin', {
+		method: 'POST',
+		projectBinding: binding,
+		body: { principalHint: body.email },
+	})
+	const completed = await destIdentityJson<{ session?: IdentitySession }>(
+		IDENTITY_API_ORIGIN,
+		'/v1/authentication/complete',
+		{
+			method: 'POST',
+			projectBinding: binding,
+			body: {
+				challengeId: begun.challenge?.challengeId ?? begun.challengeId ?? '',
+				secret: body.password,
+			},
+		},
+	)
 	const token = completed.session?.accessToken
 	if (!token) {
 		return NextResponse.json({ error: 'identity_rejected' }, { status: 401 })

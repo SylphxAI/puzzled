@@ -1,8 +1,8 @@
-import { currentUser } from '@/lib/identity/server'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
+import { currentUser } from '@/lib/identity/server'
 import { Header } from '@/shared/components/layout'
 
 type Props = {

@@ -1,9 +1,9 @@
 'use client'
 
-import { useAnalytics, useNotifications } from '@/lib/identity/react'
 import { useCallback } from 'react'
 import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
+import { useAnalytics, useNotifications } from '@/lib/identity/react'
 
 /**
  * Puzzled-specific notification types

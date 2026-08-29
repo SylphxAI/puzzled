@@ -1,4 +1,3 @@
-import { currentUser } from '@/lib/identity/server'
 import { Button } from '@sylphx/ui'
 import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -16,6 +15,7 @@ import {
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
+import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { Logo } from '@/shared/components/layout'
 

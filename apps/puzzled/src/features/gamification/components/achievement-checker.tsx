@@ -1,8 +1,8 @@
 'use client'
 
-import { useSafeAchievements, useSafeUser } from '@/lib/identity/react'
 import { useEffect, useRef } from 'react'
 import { useUserStats } from '@/lib/api'
+import { useSafeAchievements, useSafeUser } from '@/lib/identity/react'
 import { ACHIEVEMENTS } from '../lib/achievements'
 import { useAchievementToast } from './achievement-toast-provider'
 

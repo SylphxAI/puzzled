@@ -1,9 +1,9 @@
 'use client'
 
-import { useSafeUser } from '@/lib/identity/react'
 import { Flame } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
+import { useSafeUser } from '@/lib/identity/react'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
 import { UserMenu } from './user-menu'

@@ -1,10 +1,10 @@
 'use client'
 
-import { useReferral } from '@/lib/identity/react'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@sylphx/ui'
 import { Check, Clock, Copy, Gift, RefreshCw, Share2, UserCheck, Users } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
+import { useReferral } from '@/lib/identity/react'
 
 export function ReferralsContent() {
 	const t = useTranslations('referrals')

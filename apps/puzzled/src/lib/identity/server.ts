@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers'
-import { IdentityClient } from '@sylphx/identity'
+import { destIdentityJson, destIdentityOrigin, type IdentitySession } from './dest'
 
-export const IDENTITY_API_ORIGIN = 'https://api.identity.sylphx.com'
+export const IDENTITY_API_ORIGIN = destIdentityOrigin()
 const SESSION_COOKIE = 'sylphx_identity_session'
 
 export type IdentityUser = {
@@ -10,29 +10,26 @@ export type IdentityUser = {
 	name?: string | null
 	image?: string | null
 	emailVerified?: boolean
+	createdAt?: string
+	role?: string | null
 }
 
 function identityOrigin(): string {
-	const raw = process.env.IDENTITY_API_ORIGIN?.trim()
-	if (!raw) return IDENTITY_API_ORIGIN
-	try {
-		if (new URL(raw).hostname.toLowerCase().endsWith('.api.sylphx.com')) {
-			return IDENTITY_API_ORIGIN
-		}
-	} catch {
-		return IDENTITY_API_ORIGIN
-	}
-	return raw.replace(/\/+$/, '')
+	return destIdentityOrigin(process.env.IDENTITY_API_ORIGIN)
 }
 
 export async function currentUser(): Promise<IdentityUser | null> {
 	const token = (await cookies()).get(SESSION_COOKIE)?.value
 	if (!token) return null
 	try {
-		const current = await new IdentityClient(identityOrigin(), {
-			sessionToken: token,
-			projectBinding: process.env.SYLPHX_PROJECT_BINDING,
-		}).identitySessionCurrentGet({})
+		const current = await destIdentityJson<{ session: IdentitySession }>(
+			identityOrigin(),
+			'/v1/sessions/current',
+			{
+				sessionToken: token,
+				projectBinding: process.env.SYLPHX_PROJECT_BINDING,
+			},
+		)
 		const principal = current.session.principal
 		return {
 			id: principal.principalId,
@@ -45,10 +42,14 @@ export async function currentUser(): Promise<IdentityUser | null> {
 	}
 }
 
-export async function auth(): Promise<{ user: IdentityUser | null; sessionToken?: string }> {
+export async function auth(): Promise<{
+	user: IdentityUser | null
+	sessionToken?: string
+	userId?: string
+}> {
 	const user = await currentUser()
 	const sessionToken = (await cookies()).get(SESSION_COOKIE)?.value
-	return { user, sessionToken }
+	return { user, sessionToken, userId: user?.id }
 }
 
 export type AppConfig = {

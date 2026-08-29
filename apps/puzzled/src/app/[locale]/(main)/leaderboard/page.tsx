@@ -1,5 +1,3 @@
-import { type EngagementLeaderboardResult, getLeaderboard } from '@/lib/identity'
-import { auth } from '@/lib/identity/server'
 import { AvatarIcon, Podium } from '@sylphx/ui'
 import { Crown, Medal, Trophy, User } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -9,6 +7,8 @@ import {
 	shouldUseSdkLeaderboardResidual,
 } from '@/lib/connect/stats-admission'
 import { Link } from '@/lib/i18n/routing'
+import { type EngagementLeaderboardResult, getLeaderboard } from '@/lib/identity'
+import { auth } from '@/lib/identity/server'
 import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'

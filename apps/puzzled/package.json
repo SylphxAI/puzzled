@@ -33,8 +33,6 @@
 		"@connectrpc/connect-query": "^2.0.0",
 		"@connectrpc/connect-web": "^2.0.0",
 		"@iconify/react": "^5.2.0",
-		"@sylphx/identity": "github:SylphxAI/identity#adf41604ddbea55b8b88c4246a26ec4e498dd99a",
-		"@sylphx/data": "github:SylphxAI/data#816e9b6a8dd087bb96355caa0c95ca01b73dbc0c",
 		"@sylphx/ui": "workspace:*",
 		"@tanstack/react-query": "^5.90.20",
 		"clsx": "^2.1.1",

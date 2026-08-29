@@ -1,8 +1,8 @@
 'use client'
 
-import { SecuritySettings } from '@/lib/identity/react'
 import { Shield } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { SecuritySettings } from '@/lib/identity/react'
 import { SettingsPageHeader } from '@/shared/components/layout'
 
 /**
