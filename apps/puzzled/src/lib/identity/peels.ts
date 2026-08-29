@@ -3,12 +3,7 @@ import {
 	destObservabilityCredential,
 	requireDestCommerceCredential,
 } from './credentials'
-import {
-	destCommerceOrigin,
-	destEventsOrigin,
-	destJson,
-	destObservabilityOrigin,
-} from './dest'
+import { destCommerceOrigin, destEventsOrigin, destJson, destObservabilityOrigin } from './dest'
 
 export function commerceOrigin(): string {
 	return destCommerceOrigin(process.env.COMMERCE_API_ORIGIN)

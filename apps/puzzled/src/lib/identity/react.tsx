@@ -9,7 +9,13 @@ import {
 	useMemo,
 	useState,
 } from 'react'
-import { DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type AppConfig, type IdentityUser, type Plan } from './dest'
+import {
+	type AppConfig,
+	DEST_CONSENT_PURPOSES,
+	EMPTY_APP_CONFIG,
+	type IdentityUser,
+	type Plan,
+} from './dest'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -152,12 +158,14 @@ export function useAuth() {
 	return useSafeAuth()
 }
 
-export function useSignInForm(opts: {
-	afterSignInUrl?: string
-	oauthHandler?: (provider: string) => Promise<void>
-	providers?: unknown
-	methods?: unknown
-} = {}): {
+export function useSignInForm(
+	opts: {
+		afterSignInUrl?: string
+		oauthHandler?: (provider: string) => Promise<void>
+		providers?: unknown
+		methods?: unknown
+	} = {},
+): {
 	form: { email: string; password: string; name: string }
 	setEmail: (value: string) => void
 	setPassword: (value: string) => void
@@ -203,12 +211,14 @@ export function useSignInForm(opts: {
 	}
 }
 
-export function useSignUpForm(opts: {
-	afterSignUpUrl?: string
-	minPasswordLength?: number
-	oauthHandler?: (provider: string) => Promise<void>
-	providers?: unknown
-} = {}) {
+export function useSignUpForm(
+	opts: {
+		afterSignUpUrl?: string
+		minPasswordLength?: number
+		oauthHandler?: (provider: string) => Promise<void>
+		providers?: unknown
+	} = {},
+) {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [name, setName] = useState('')
@@ -299,7 +309,7 @@ export function useResetPasswordForm(opts?: {
 	const minLength = opts?.minPasswordLength ?? 8
 	const passwordsMatch = password === confirmPassword
 	return {
-		form: { password, email: '' },
+		form: { password, confirmPassword, email: '' },
 		setPassword,
 		setConfirmPassword,
 		showPassword,
@@ -423,15 +433,12 @@ export function useReferral() {
 
 	const applyStats = useCallback((body: Record<string, unknown>) => {
 		const record =
-			body.stats && typeof body.stats === 'object'
-				? (body.stats as Record<string, unknown>)
-				: body
+			body.stats && typeof body.stats === 'object' ? (body.stats as Record<string, unknown>) : body
 		const nextCode =
 			(typeof record.active_code === 'string' && record.active_code.trim()) ||
 			(typeof record.code === 'string' && record.code.trim()) ||
 			null
-		const redemptions =
-			typeof record.redemption_count === 'number' ? record.redemption_count : 0
+		const redemptions = typeof record.redemption_count === 'number' ? record.redemption_count : 0
 		setCode(nextCode)
 		setStats({
 			totalReferrals: redemptions,
@@ -882,8 +889,7 @@ const namedOAuthIcons: Record<string, (props: { className?: string }) => ReactNo
 export const OAuthIcons: Record<string, (props: { className?: string }) => ReactNode> = new Proxy(
 	namedOAuthIcons,
 	{
-		get: (target, prop) =>
-			typeof prop === 'string' ? (target[prop] ?? OAuthIcon) : OAuthIcon,
+		get: (target, prop) => (typeof prop === 'string' ? (target[prop] ?? OAuthIcon) : OAuthIcon),
 	},
 )
 export type OAuthProvider = string

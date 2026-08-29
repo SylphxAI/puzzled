@@ -8,28 +8,10 @@ use std::time::Duration;
 
 use serde_json::{json, Value};
 
-const DEST_COMMERCE_ORIGIN: &str = "https://api.commerce.sylphx.com";
+use super::dest_http::{dest_peel_origin, DEST_COMMERCE_ORIGIN};
+
 const DEST_EVALUATE_ENTITLEMENT: &str =
     "/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement";
-
-fn dest_peel_origin(fallback: &str, raw: Option<&str>) -> String {
-    let Some(value) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
-        return fallback.to_string();
-    };
-    match reqwest::Url::parse(value) {
-        Ok(url) => {
-            let forbidden = url
-                .host_str()
-                .is_some_and(|host| host.to_ascii_lowercase().ends_with(".api.sylphx.com"));
-            if forbidden {
-                fallback.to_string()
-            } else {
-                value.trim_end_matches('/').to_string()
-            }
-        }
-        Err(_) => fallback.to_string(),
-    }
-}
 
 fn dest_commerce_origin() -> String {
     dest_peel_origin(

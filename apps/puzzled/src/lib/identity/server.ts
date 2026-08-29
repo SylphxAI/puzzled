@@ -1,10 +1,10 @@
 import { cookies } from 'next/headers'
 import { destIdentityCredential, destIdentityProjectId } from './credentials'
 import {
+	type AppConfig,
 	destIdentityJson,
 	destIdentityOrigin,
 	destIdentityUser,
-	type AppConfig,
 	type IdentityUser,
 } from './dest'
 

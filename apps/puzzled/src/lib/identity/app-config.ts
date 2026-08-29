@@ -1,10 +1,10 @@
 import { destCommerceCredential, destIdentityCredential } from './credentials'
 import {
+	type AppConfig,
 	DEST_CONSENT_PURPOSES,
-	EMPTY_APP_CONFIG,
 	destIdentityJson,
 	destIdentityOrigin,
-	type AppConfig,
+	EMPTY_APP_CONFIG,
 } from './dest'
 import { getPlans } from './index'
 

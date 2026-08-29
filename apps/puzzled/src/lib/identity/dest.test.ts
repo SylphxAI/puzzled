@@ -7,12 +7,20 @@ import {
 	destObservabilityCredential,
 } from './credentials'
 import {
+	destEntitlementEnabled,
 	destIdentityJson,
 	destIdentityOrigin,
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
-import { createCheckout, getLeaderboard, getPlans, getSubscription, openPortal } from './index'
+import {
+	createCheckout,
+	getLeaderboard,
+	getPlans,
+	getSubscription,
+	isPremium,
+	openPortal,
+} from './index'
 import { destEventsJson, destObservabilityJson, destSessionReplayChunksPath } from './peels'
 
 const originalFetch = globalThis.fetch
@@ -67,9 +75,7 @@ describe('Identity dest HTTP', () => {
 		expect(url).toBe('https://identity.test/v1/sessions/current')
 		const headers = init.headers as Record<string, string>
 		expect(headers.Authorization).toBe('Bearer identity_org_session_a')
-		expect(Object.keys(headers).some((name) => name.toLowerCase().includes('binding'))).toBe(
-			false,
-		)
+		expect(Object.keys(headers).some((name) => name.toLowerCase().includes('binding'))).toBe(false)
 	})
 
 	test('destJson refuses Binding headers', async () => {
@@ -170,12 +176,19 @@ describe('Identity dest HTTP', () => {
 			method: 'POST',
 			body: {
 				idempotency_key: 'idem-device',
-				device: { platform: 'DEVICE_PLATFORM_WEB_PUSH', user_id: 'principal-a', token: 'endpoint-a' },
+				device: {
+					platform: 'DEVICE_PLATFORM_WEB_PUSH',
+					user_id: 'principal-a',
+					token: 'endpoint-a',
+				},
 			},
 		})
 		await destObservabilityJson('/v1/analytics:track', {
 			method: 'POST',
-			body: { idempotency_key: 'idem-track', event: { event: 'puzzle_complete', name: 'puzzle_complete' } },
+			body: {
+				idempotency_key: 'idem-track',
+				event: { event: 'puzzle_complete', name: 'puzzle_complete' },
+			},
 		})
 		expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
 			'https://api.events.sylphx.com/v1/devices',
@@ -200,6 +213,25 @@ describe('Identity dest HTTP', () => {
 			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement',
 		)
 		expect(subscription).toEqual({ planSlug: 'premium', status: 'active' })
+	})
+
+	test('premium writer is EvaluateEntitlement enabled, not plan slug', async () => {
+		expect(
+			destEntitlementEnabled({
+				entitlement: { value: { enabled: true }, entitlement_code: 'custom' },
+			}),
+		).toBe(true)
+		expect(
+			destEntitlementEnabled({
+				entitlement: { value: { enabled: false }, entitlement_code: 'premium' },
+			}),
+		).toBe(false)
+		process.env.COMMERCE_API_KEY = 'commerce_key_a'
+		mockFetch({
+			ok: true,
+			body: { entitlement: { value: { enabled: true }, entitlement_code: 'custom' } },
+		})
+		expect(await isPremium('principal-a')).toBe(true)
 	})
 
 	test('each dest product uses its own credential without sibling fallback', () => {

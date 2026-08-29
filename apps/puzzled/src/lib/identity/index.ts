@@ -1,6 +1,7 @@
 import { destCommerceCredential } from './credentials'
 import {
 	destCommerceOrigin,
+	destEntitlementEnabled,
 	destIdentityOrigin,
 	destJson,
 	type IdentityUser,
@@ -163,13 +164,39 @@ export async function getSubscription(
 	})
 	const entitlement = asRecord(body.entitlement) ?? asRecord(body)
 	if (!entitlement) return null
-	const value = asRecord(entitlement.value)
-	const enabled = value?.enabled === true
+	const enabled = destEntitlementEnabled(body)
 	return {
 		planSlug: enabled
 			? (readText(entitlement, ['entitlement_code', 'entitlementCode', 'planSlug']) ?? 'premium')
 			: 'free',
 		status: enabled ? 'active' : 'inactive',
+	}
+}
+
+/** One premium writer: dest Commerce EvaluateEntitlement `enabled`. */
+export async function isPremium(userId?: string, config?: unknown): Promise<boolean> {
+	if (!userId) return false
+	const destConfig = (config ?? {}) as DestPeelConfig
+	const credential = destConfig.credential ?? destCommerceCredential()
+	if (!credential) return false
+	const policyId = process.env.COMMERCE_ENTITLEMENT_POLICY_ID?.trim() || 'premium'
+	try {
+		const body = await destJson(
+			commerceOrigin(destConfig),
+			'/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement',
+			{
+				method: 'POST',
+				credential,
+				body: {
+					policy_id: policyId,
+					subject_id: userId,
+					as_of: new Date().toISOString(),
+				},
+			},
+		)
+		return destEntitlementEnabled(body)
+	} catch {
+		return false
 	}
 }
 

@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 import { DEST_CONSENT_PURPOSES } from '@/lib/identity/dest'
-import {
-	destAdmissionResponse,
-	destIdentityCall,
-	identityFail,
-} from '@/lib/identity/http'
+import { destAdmissionResponse, destIdentityCall, identityFail } from '@/lib/identity/http'
 import { currentUser } from '@/lib/identity/server'
 
 export async function POST(request: Request) {

@@ -1,11 +1,13 @@
 import { destAiCredential } from './credentials'
-import { destPeelOrigin, destJson, DEST_PEELS } from './dest'
+import { DEST_PEELS, destJson, destPeelOrigin } from './dest'
 
 export function getAI() {
 	const origin = destPeelOrigin(DEST_PEELS.ai, process.env.AI_API_ORIGIN)
 	const key = destAiCredential() ?? ''
 	const create = async (body: unknown) => {
-		return destJson(`${origin}`, '/chat/completions', {
+		return destJson<{
+			choices?: Array<{ message?: { content?: string } }>
+		}>(`${origin}`, '/chat/completions', {
 			method: 'POST',
 			credential: key,
 			body,

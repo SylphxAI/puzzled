@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 	} | null
 	const email = body?.email?.trim()
 	const password = body?.password?.trim()
-	if (!email || !password) {
+	if (!body || !email || !password) {
 		return identityFail(400, 'invalid_signup')
 	}
 	if (password.length < 12) {

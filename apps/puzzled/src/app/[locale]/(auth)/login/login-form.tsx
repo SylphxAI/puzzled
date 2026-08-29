@@ -159,9 +159,9 @@ export function LoginForm({ providers }: LoginFormProps) {
 					</div>
 
 					{/* Error Message (form error or OAuth error) */}
-					{(error || oauthError) && (
+					{(error?.message || oauthError?.message) && (
 						<div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-							{error || oauthError?.message}
+							{error?.message || oauthError?.message}
 						</div>
 					)}
 

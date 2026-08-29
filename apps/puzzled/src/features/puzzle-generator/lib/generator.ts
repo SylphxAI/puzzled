@@ -103,7 +103,7 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 				temperature: config.temperature,
 			})
 
-			const text = response.choices[0]?.message.content ?? ''
+			const text = response.choices?.[0]?.message?.content ?? ''
 
 			const parsed = config.parse(text)
 			if (!parsed) {

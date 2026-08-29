@@ -5,9 +5,7 @@ import { isInboundPublicPath, isProxySkippedPath } from './lib/proxy-paths'
 
 describe('dest proxy inbound public routes', () => {
 	test('alias table feeds public /crowns and /duo', () => {
-		expect(inboundModulePublicRoutes(locales)).toEqual(
-			expect.arrayContaining(['/crowns', '/duo']),
-		)
+		expect(inboundModulePublicRoutes(locales)).toEqual(expect.arrayContaining(['/crowns', '/duo']))
 		expect(isInboundPublicPath('/crowns')).toBe(true)
 		expect(isInboundPublicPath('/duo')).toBe(true)
 		expect(isInboundPublicPath('/login')).toBe(false)

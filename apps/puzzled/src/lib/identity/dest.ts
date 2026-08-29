@@ -158,6 +158,15 @@ export function destSessionChallengeId(raw: unknown): string | undefined {
 	return readText(challenge, ['challenge_id', 'challengeId'])
 }
 
+/** Commerce dest EvaluateEntitlement enabled gate (one premium writer). */
+export function destEntitlementEnabled(body: unknown): boolean {
+	const record = asRecord(body)
+	if (!record) return false
+	const entitlement = asRecord(record.entitlement) ?? record
+	const value = asRecord(entitlement.value)
+	return value?.enabled === true
+}
+
 export async function destJson<T>(
 	origin: string,
 	path: string,

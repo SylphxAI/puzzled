@@ -30,8 +30,7 @@ export async function POST(request: Request) {
 				device: destDevice(request),
 			},
 		})
-		const url =
-			begun.challenge?.authorization_url ?? begun.challenge?.authorizationUrl ?? ''
+		const url = begun.challenge?.authorization_url ?? begun.challenge?.authorizationUrl ?? ''
 		if (!url) return identityFail(502, 'identity_oidc_failed')
 		return NextResponse.json({ authority: 'sylphx-identity', authorizationUrl: url })
 	} catch {
