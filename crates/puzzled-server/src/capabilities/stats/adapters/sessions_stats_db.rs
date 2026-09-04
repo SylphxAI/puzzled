@@ -10,13 +10,16 @@ fn parse_user_id(user_id: &str) -> Result<Uuid, String> {
     user_id_to_storage_uuid(user_id).ok_or_else(|| format!("invalid user id: {user_id}"))
 }
 
+// HistoryRow mirrors game_sessions columns: score/time_spent_ms are INT4
+// nullable in Postgres. Decode as Option<i32> (never i64): bare INT4
+// decoded as INT8 fails with history_read_failed (live P1 observability).
 type HistoryRow = (
     Option<Uuid>,
     Option<chrono::NaiveDateTime>,
     String,
+    Option<i32>,
     i32,
-    i32,
-    i64,
+    Option<i32>,
     String,
     String,
 );
@@ -105,9 +108,9 @@ pub async fn user_history(
                     "puzzleId": puzzle_id.map(|p| p.to_string()),
                     "puzzleDate": puzzle_date.map(|d| d.format("%Y-%m-%d").to_string()),
                     "status": status,
-                    "score": score.max(0) as u32,
+                    "score": score.unwrap_or(0).max(0) as u32,
                     "attempts": attempts.max(0) as u32,
-                    "timeSpentMs": time_spent_ms.max(0) as u64,
+                    "timeSpentMs": time_spent_ms.unwrap_or(0).max(0) as u64,
                     "mode": mode,
                 })
             },
