@@ -38,6 +38,8 @@ import { NumberPathHowToPlay } from './number-path/components/how-to-play'
 import { NumberPathIcon } from './number-path/icon'
 import { PatternMatchHowToPlay } from './pattern-match/components/how-to-play'
 import { PatternMatchIcon } from './pattern-match/icon'
+import { PipPlaceHowToPlay } from './pip-place/components/how-to-play'
+import { PipPlaceIcon } from './pip-place/icon'
 import { QuordleHowToPlay } from './quad-words/components/how-to-play'
 import { QuadWordsIcon } from './quad-words/icon'
 import { QueensHowToPlay } from './queens/components/how-to-play'
@@ -159,6 +161,14 @@ const HOW_TO_PLAY_CONFIGS: Record<InteractionSlug, HowToPlayConfig> = {
 		IconComponent: PatternMatchIcon,
 		HowToPlayContent: PatternMatchHowToPlay,
 		display: { theme: 'sky' },
+		isPerfectGame: standardIsPerfectGame,
+	},
+	'pip-place': {
+		slug: 'pip-place',
+		name: 'Spots',
+		IconComponent: PipPlaceIcon,
+		HowToPlayContent: PipPlaceHowToPlay,
+		display: { theme: 'orange' },
 		isPerfectGame: standardIsPerfectGame,
 	},
 	'quad-words': {

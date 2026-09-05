@@ -868,6 +868,7 @@ const GAME_NAMES: Record<string, string> = {
 	cryptogram: 'Cipher',
 	'word-search': 'Hunt',
 	'number-path': 'Path',
+	'pip-place': 'Spots',
 }
 
 export function useGamesOverview(

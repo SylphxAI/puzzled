@@ -21,7 +21,7 @@ export type GameColorTheme =
 	| 'rose' // killer-sudoku
 	| 'blue' // crossword
 	| 'sky' // pattern-match
-	| 'orange' // word-ladder
+	| 'orange' // word-ladder, pip-place
 	| 'lime' // arithmo
 	| 'slate' // block-slide, number-path
 

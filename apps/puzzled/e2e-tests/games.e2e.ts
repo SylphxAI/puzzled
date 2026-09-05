@@ -33,6 +33,7 @@ const GAMES = [
 	{ slug: 'cryptogram', name: 'Cryptogram', hasKeyboard: true },
 	{ slug: 'word-search', name: 'Word Search', hasKeyboard: false },
 	{ slug: 'number-path', name: 'Path', hasKeyboard: false },
+	{ slug: 'pip-place', name: 'Spots', hasKeyboard: false },
 ]
 
 test.describe('Game Pages', () => {

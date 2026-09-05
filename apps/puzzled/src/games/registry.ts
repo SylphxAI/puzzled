@@ -25,6 +25,7 @@ import { killerSudokuConfig } from './killer-sudoku/config'
 import { nonogramConfig } from './nonogram/config'
 import { numberPathConfig } from './number-path/config'
 import { patternMatchConfig } from './pattern-match/config'
+import { pipPlaceConfig } from './pip-place/config'
 import { quadWordsConfig } from './quad-words/config'
 import { queensConfig } from './queens/config'
 import { sudokuConfig } from './sudoku/config'
@@ -73,6 +74,7 @@ export const GAME_CONFIGS = {
 	cryptogram: cryptogramConfig,
 	'word-search': wordSearchConfig,
 	'number-path': numberPathConfig,
+	'pip-place': pipPlaceConfig,
 } as const satisfies GameRegistry
 
 /**

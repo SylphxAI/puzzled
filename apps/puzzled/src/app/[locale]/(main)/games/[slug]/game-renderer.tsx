@@ -120,6 +120,13 @@ const PatternMatchGame = dynamic(
 		})),
 	{ ssr: false },
 )
+const PipPlaceGame = dynamic(
+	() =>
+		import('@/games/pip-place/pip-place-game').then((m) => ({
+			default: m.PipPlaceGame,
+		})),
+	{ ssr: false },
+)
 const QuadWordsGame = dynamic(
 	() =>
 		import('@/games/quad-words/quad-words-game').then((m) => ({
@@ -200,6 +207,7 @@ function getGameComponent(slug: string): DynamicGameComponent | null {
 		nonogram: NonogramGame as DynamicGameComponent,
 		'number-path': NumberPathGame as DynamicGameComponent,
 		'pattern-match': PatternMatchGame as DynamicGameComponent,
+		'pip-place': PipPlaceGame as DynamicGameComponent,
 		'quad-words': QuadWordsGame as DynamicGameComponent,
 		crowns: QueensGame as DynamicGameComponent,
 		sudoku: SudokuGame as DynamicGameComponent,

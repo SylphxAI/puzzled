@@ -17,6 +17,7 @@ pub use domain::module_conformance;
 pub use domain::nonogram_clues;
 pub use domain::number_path;
 pub use domain::pattern_match;
+pub use domain::pip_place;
 pub use domain::placement;
 pub use domain::quad_words;
 pub use domain::queens_conflict;
