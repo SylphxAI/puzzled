@@ -16,16 +16,10 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn, getBaseUrl } from '@/lib/utils'
 import { PipPlaceIcon } from './icon'
-import type {
-	Cell,
-	PipPlacePuzzleData,
-	PipPlaceRegion,
-	PipPlaceSolution,
-	PipPlaceTile,
-} from './types'
+import { parsePipPlaceClientPayload } from './parse-client'
+import type { Cell, PipPlaceRegion, PipPlaceTile } from './types'
 import { cellKey, cellsEqual } from './types'
 import { usePipPlace } from './use-pip-place'
 
@@ -148,9 +142,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 	const t = useTranslations('games.pipPlace')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<PipPlacePuzzleData, PipPlaceSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parsePipPlaceClientPayload(puzzleData))
 
 	const {
 		isReady,
@@ -171,9 +163,9 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 
 	const [showHelpModal, setShowHelpModal] = useState(false)
 
-	const game = usePipPlace(puzzle.puzzleData)
+	const game = usePipPlace(puzzle)
 	const gameEndedRef = useRef(false)
-	const { rows, cols, regionOf, regions } = puzzle.puzzleData
+	const { rows, cols, regionOf, regions } = puzzle
 	const playing = game.state.gameStatus === 'playing'
 
 	useEffect(() => {
