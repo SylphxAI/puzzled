@@ -13,6 +13,7 @@ import crosswordEn from '@/games/crossword/translations/en.json'
 import cryptogramEn from '@/games/cryptogram/translations/en.json'
 import killerSudokuEn from '@/games/killer-sudoku/translations/en.json'
 import nonogramEn from '@/games/nonogram/translations/en.json'
+import numberPathEn from '@/games/number-path/translations/en.json'
 import patternMatchEn from '@/games/pattern-match/translations/en.json'
 import quadWordsEn from '@/games/quad-words/translations/en.json'
 import queensEn from '@/games/queens/translations/en.json'
@@ -32,6 +33,7 @@ const GAME_TRANSLATIONS_EN: Record<string, Record<string, unknown>> = {
 	cryptogram: cryptogramEn,
 	killerSudoku: killerSudokuEn,
 	nonogram: nonogramEn,
+	numberPath: numberPathEn,
 	patternMatch: patternMatchEn,
 	quadWords: quadWordsEn,
 	queens: queensEn,

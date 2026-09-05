@@ -34,6 +34,8 @@ import { KillerSudokuHowToPlay } from './killer-sudoku/components/how-to-play'
 import { KillerSudokuIcon } from './killer-sudoku/icon'
 import { NonogramHowToPlay } from './nonogram/components/how-to-play'
 import { NonogramIcon } from './nonogram/icon'
+import { NumberPathHowToPlay } from './number-path/components/how-to-play'
+import { NumberPathIcon } from './number-path/icon'
 import { PatternMatchHowToPlay } from './pattern-match/components/how-to-play'
 import { PatternMatchIcon } from './pattern-match/icon'
 import { QuordleHowToPlay } from './quad-words/components/how-to-play'
@@ -141,6 +143,14 @@ const HOW_TO_PLAY_CONFIGS: Record<InteractionSlug, HowToPlayConfig> = {
 		IconComponent: NonogramIcon,
 		HowToPlayContent: NonogramHowToPlay,
 		display: { theme: 'pink' },
+		isPerfectGame: standardIsPerfectGame,
+	},
+	'number-path': {
+		slug: 'number-path',
+		name: 'Path',
+		IconComponent: NumberPathIcon,
+		HowToPlayContent: NumberPathHowToPlay,
+		display: { theme: 'slate' },
 		isPerfectGame: standardIsPerfectGame,
 	},
 	'pattern-match': {

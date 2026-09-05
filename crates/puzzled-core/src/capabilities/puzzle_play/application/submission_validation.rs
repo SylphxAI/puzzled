@@ -85,6 +85,7 @@ fn validator_for(game_slug: &str) -> Option<ModuleValidator> {
         "killer-sudoku" => Some(killer_sudoku),
         "cryptogram" => Some(cryptogram),
         "word-search" => Some(word_search),
+        "number-path" => Some(number_path),
         _ => None,
     }
 }
@@ -1011,6 +1012,79 @@ fn word_search(
     }
 }
 
+// ---------------------------------------------------------------------------
+// number-path (Path): puzzleData {clues}; submission {path: {row,col}[]}
+// Win is any Hamiltonian path that respects clues; stored seed path is ignored.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+struct NumberPathCell {
+    row: i32,
+    col: i32,
+}
+
+#[derive(Debug, Deserialize)]
+struct NumberPathSubmission {
+    path: Option<Vec<NumberPathCell>>,
+}
+
+fn parse_number_path_clues(puzzle_data: &Value) -> Option<Vec<Vec<Option<u32>>>> {
+    let clues = puzzle_data.get("clues")?.as_array()?;
+    let mut grid = Vec::with_capacity(clues.len());
+    for row in clues {
+        let cells = row.as_array()?;
+        let mut line = Vec::with_capacity(cells.len());
+        for cell in cells {
+            if cell.is_null() {
+                line.push(None);
+            } else {
+                line.push(Some(cell.as_u64()? as u32));
+            }
+        }
+        grid.push(line);
+    }
+    Some(grid)
+}
+
+fn number_path(
+    puzzle_data: &Value,
+    _solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
+    use crate::capabilities::puzzle_play::domain::number_path::{self, Cell};
+    let Ok(sub) = serde_json::from_value::<NumberPathSubmission>(env.data.clone()) else {
+        return SubmissionVerdict::invalid("Missing path");
+    };
+    let Some(path) = sub.path else {
+        return SubmissionVerdict::invalid("Missing path");
+    };
+    let Some(clues) = parse_number_path_clues(puzzle_data) else {
+        return SubmissionVerdict::invalid("Missing clues");
+    };
+    let cells: Vec<Cell> = path
+        .iter()
+        .map(|cell| Cell {
+            row: cell.row,
+            col: cell.col,
+        })
+        .collect();
+    let claimed = match env.status {
+        SubmissionStatus::Won => number_path::SubmissionStatus::Won,
+        SubmissionStatus::Lost => number_path::SubmissionStatus::Lost,
+    };
+    let result = number_path::validate_and_score(Some(&cells), &clues, env.time_spent_ms, claimed);
+    match result {
+        number_path::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
+        number_path::GameResult::Valid { status, score } => SubmissionVerdict::valid(
+            match status {
+                number_path::SubmissionStatus::Won => SubmissionStatus::Won,
+                number_path::SubmissionStatus::Lost => SubmissionStatus::Lost,
+            },
+            score,
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1142,6 +1216,124 @@ mod tests {
         );
         let v = validate_submission("quad-words", &json!({}), &solution, &data);
         assert!(!v.valid);
+    }
+
+    fn number_path_clues() -> Value {
+        json!({
+            "size": 3,
+            "clues": [
+                [1, null, null],
+                [null, null, null],
+                [null, null, 9]
+            ]
+        })
+    }
+
+    fn number_path_path_a() -> Value {
+        json!({
+            "path": [
+                {"row": 0, "col": 0},
+                {"row": 0, "col": 1},
+                {"row": 0, "col": 2},
+                {"row": 1, "col": 2},
+                {"row": 1, "col": 1},
+                {"row": 1, "col": 0},
+                {"row": 2, "col": 0},
+                {"row": 2, "col": 1},
+                {"row": 2, "col": 2}
+            ]
+        })
+    }
+
+    fn number_path_path_b() -> Value {
+        json!({
+            "path": [
+                {"row": 0, "col": 0},
+                {"row": 1, "col": 0},
+                {"row": 2, "col": 0},
+                {"row": 2, "col": 1},
+                {"row": 1, "col": 1},
+                {"row": 0, "col": 1},
+                {"row": 0, "col": 2},
+                {"row": 1, "col": 2},
+                {"row": 2, "col": 2}
+            ]
+        })
+    }
+
+    fn number_path_incomplete() -> Value {
+        json!({
+            "path": [
+                {"row": 0, "col": 0},
+                {"row": 0, "col": 1},
+                {"row": 0, "col": 2},
+                {"row": 1, "col": 2}
+            ]
+        })
+    }
+
+    #[test]
+    fn number_path_has_server_validator() {
+        assert!(has_server_validator("number-path"));
+    }
+
+    #[test]
+    fn number_path_accepts_alternate_hamiltonian_path() {
+        let v = validate_submission(
+            "number-path",
+            &number_path_clues(),
+            &number_path_path_a(),
+            &env(number_path_path_b()),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Won));
+        assert_eq!(v.score, Some(500));
+    }
+
+    #[test]
+    fn number_path_rejects_false_win() {
+        let v = validate_submission(
+            "number-path",
+            &number_path_clues(),
+            &number_path_path_a(),
+            &env(number_path_incomplete()),
+        );
+        assert!(!v.valid);
+        assert!(v
+            .error
+            .as_deref()
+            .is_some_and(|e| e.contains("not correctly solved")));
+    }
+
+    #[test]
+    fn number_path_missing_path_is_not_unsupported_slug() {
+        let v = validate_submission(
+            "number-path",
+            &number_path_clues(),
+            &json!({}),
+            &env(json!({})),
+        );
+        assert!(!v.valid);
+        assert_eq!(v.error.as_deref(), Some("Missing path"));
+        assert!(v
+            .error
+            .as_deref()
+            .is_none_or(|e| !e.starts_with("unsupported game slug:")));
+    }
+
+    #[test]
+    fn number_path_incomplete_claimed_lost_is_valid_zero() {
+        let mut envelope = env(number_path_incomplete());
+        envelope.status = SubmissionStatus::Lost;
+        let v = validate_submission(
+            "number-path",
+            &number_path_clues(),
+            &number_path_path_a(),
+            &envelope,
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
     }
 
     #[test]

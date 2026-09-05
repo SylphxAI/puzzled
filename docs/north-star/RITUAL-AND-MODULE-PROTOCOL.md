@@ -185,6 +185,7 @@ Delivery authority pins the protected catalog. At North Star revision 2026-08-12
 | killer-sudoku |
 | cryptogram |
 | word-search |
+| number-path |
 
 **Adding a module:** implement protocol + registry + tests; no change to the daily-puzzle-completer definition.  
 **Removing a module:** forbidden without DELIVERY-AUTHORITY exception and migration of users.

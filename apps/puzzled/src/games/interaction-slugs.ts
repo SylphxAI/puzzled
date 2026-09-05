@@ -23,6 +23,7 @@ export const INTERACTION_SLUGS = [
 	'killer-sudoku',
 	'cryptogram',
 	'word-search',
+	'number-path',
 ] as const
 
 export type InteractionSlug = (typeof INTERACTION_SLUGS)[number]

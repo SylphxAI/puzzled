@@ -23,7 +23,7 @@ export type GameColorTheme =
 	| 'sky' // pattern-match
 	| 'orange' // word-ladder
 	| 'lime' // arithmo
-	| 'slate' // block-slide
+	| 'slate' // block-slide, number-path
 
 /**
  * Complete set of Tailwind classes for a color theme

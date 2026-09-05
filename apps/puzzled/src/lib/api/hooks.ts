@@ -867,6 +867,7 @@ const GAME_NAMES: Record<string, string> = {
 	'killer-sudoku': 'Cage Sudoku',
 	cryptogram: 'Cipher',
 	'word-search': 'Hunt',
+	'number-path': 'Path',
 }
 
 export function useGamesOverview(

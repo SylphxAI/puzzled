@@ -1,6 +1,6 @@
 # Destination catalog — every daily ritual we will offer
 
-**Status:** Normative destination catalog (2026-08-12)  
+**Status:** Normative destination catalog (2026-09-04)  
 **Does not change:** [daily puzzle completers](NORTH-STAR-METRIC.md), daily entertainment completers, five protocol concepts  
 **Does not ship games:** this file is doctrine. A slug here is not live until protocol-complete.  
 **Shipped floor (may not delete):** [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md) §8 and [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md) §4.
@@ -184,7 +184,7 @@ Descriptive English titles. Japanese genre names may appear in How-to as **type 
 | Slug | Player title | Mechanic | Analog (do not use) | Class | Status |
 |------|--------------|----------|---------------------|-------|--------|
 | crowns | Crowns | One mark per row, column, color region | Queens | ritual | shipped (alias `queens`) |
-| number-path | Path | Visit 1…n, no crossing | Zip | ritual | dest |
+| number-path | Path | Visit 1…n, no crossing | Zip | ritual | shipped |
 | pip-place | Pips | Place dominoes to satisfy regions | Pips | ritual | dest |
 | nonogram | Paint | Row/column paint clues | nonogram (not Picross) | ritual | shipped |
 | fill-a-pix | Neighbors | Clue = adjacent shaded | Fill-a-Pix | ritual | dest |
@@ -293,7 +293,7 @@ S5 social (compare, light co-op, family profiles) is a **mode on existing slugs*
 | Entertainment oracles | 8 |
 | **Total** | **115** |
 
-Of those, **17 are shipped** (two pending rename). Adding a `dest` slug does not change daily puzzle completers.
+Of those, **18 are shipped** (two pending rename). Adding a `dest` slug does not change daily puzzle completers.
 
 ---
 

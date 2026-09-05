@@ -106,6 +106,13 @@ const NonogramGame = dynamic(
 		})),
 	{ ssr: false },
 )
+const NumberPathGame = dynamic(
+	() =>
+		import('@/games/number-path/number-path-game').then((m) => ({
+			default: m.NumberPathGame,
+		})),
+	{ ssr: false },
+)
 const PatternMatchGame = dynamic(
 	() =>
 		import('@/games/pattern-match/pattern-match-game').then((m) => ({
@@ -191,6 +198,7 @@ function getGameComponent(slug: string): DynamicGameComponent | null {
 		cryptogram: CryptogramGame as DynamicGameComponent,
 		'killer-sudoku': KillerSudokuGame as DynamicGameComponent,
 		nonogram: NonogramGame as DynamicGameComponent,
+		'number-path': NumberPathGame as DynamicGameComponent,
 		'pattern-match': PatternMatchGame as DynamicGameComponent,
 		'quad-words': QuadWordsGame as DynamicGameComponent,
 		crowns: QueensGame as DynamicGameComponent,

@@ -32,6 +32,7 @@ const GAMES = [
 	{ slug: 'killer-sudoku', name: 'Killer Sudoku', hasKeyboard: true },
 	{ slug: 'cryptogram', name: 'Cryptogram', hasKeyboard: true },
 	{ slug: 'word-search', name: 'Word Search', hasKeyboard: false },
+	{ slug: 'number-path', name: 'Path', hasKeyboard: false },
 ]
 
 test.describe('Game Pages', () => {

@@ -75,6 +75,7 @@ The following **puzzle_ritual** modules are protected (directories under `apps/p
 | killer-sudoku |
 | cryptogram |
 | word-search |
+| number-path |
 
 ### 4.2 Add
 

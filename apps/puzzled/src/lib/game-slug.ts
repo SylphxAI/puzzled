@@ -27,6 +27,7 @@ export const PLAYER_TITLE: Record<string, string> = {
 	'killer-sudoku': 'Cage Sudoku',
 	cryptogram: 'Cipher',
 	'word-search': 'Hunt',
+	'number-path': 'Path',
 }
 
 export function canonicalizeGameSlug(slug: string): string {

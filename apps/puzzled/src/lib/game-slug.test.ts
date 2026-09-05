@@ -19,8 +19,14 @@ describe('playerTitle', () => {
 		expect(playerTitle('quad-words')).toBe('Quad')
 		expect(playerTitle('word-hive')).toBe('Hive')
 		expect(playerTitle('word-box')).toBe('Frame')
-		for (const title of [playerTitle('queens'), playerTitle('tango'), playerTitle('word-guess')]) {
-			expect(title.toLowerCase()).not.toMatch(/queens|tango|wordle/)
+		expect(playerTitle('number-path')).toBe('Path')
+		for (const title of [
+			playerTitle('queens'),
+			playerTitle('tango'),
+			playerTitle('word-guess'),
+			playerTitle('number-path'),
+		]) {
+			expect(title.toLowerCase()).not.toMatch(/queens|tango|wordle|zip|hidato|numbrix/)
 		}
 	})
 })

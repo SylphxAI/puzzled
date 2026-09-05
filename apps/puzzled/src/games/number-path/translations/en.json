@@ -1,0 +1,15 @@
+{
+	"name": "Path",
+	"tagline": "Visit 1…n • No crossing",
+	"highlight": "Numbered path",
+	"description": "Draw a path through every cell from 1 to n",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Start at 1 and visit every cell exactly once, ending at the last number",
+		"rule2": "Consecutive cells must touch up, down, left, or right — no diagonals",
+		"rule3": "Numbered cells are locked clues; visit them in order"
+	},
+	"startGame": "Start Game",
+	"complete": "Path complete!"
+}

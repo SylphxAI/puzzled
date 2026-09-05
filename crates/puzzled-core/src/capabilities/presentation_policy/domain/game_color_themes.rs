@@ -86,7 +86,7 @@ pub fn theme_for_game_slug(slug: &str) -> Option<&'static str> {
         "pattern-match" => "sky",
         "word-ladder" => "orange",
         "arithmo" => "lime",
-        "block-slide" => "slate",
+        "block-slide" | "number-path" => "slate",
         _ => return None,
     })
 }
@@ -108,6 +108,7 @@ mod tests {
         assert_eq!(theme_for_game_slug("word-guess"), Some("emerald"));
         assert_eq!(theme_for_game_slug("tango"), Some("amber"));
         assert_eq!(theme_for_game_slug("block-slide"), Some("slate"));
+        assert_eq!(theme_for_game_slug("number-path"), Some("slate"));
         assert_eq!(theme_for_game_slug("nope"), None);
         for id in GAME_COLOR_THEME_IDS {
             assert!(is_game_color_theme(id));
