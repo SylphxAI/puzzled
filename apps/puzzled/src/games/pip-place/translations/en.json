@@ -1,0 +1,15 @@
+{
+	"name": "Spots",
+	"tagline": "Place every tile • Match the regions",
+	"highlight": "Domino regions",
+	"description": "Place every domino so each region’s rule is true",
+	"howToPlay": "How to Play",
+	"rules": {
+		"title": "How to Play",
+		"rule1": "Place the full set of tiles so every cell is covered exactly once",
+		"rule2": "A number is the region’s spot sum; = means all equal; ≠ means all different",
+		"rule3": "Tiles may only sit on two cells that share a side"
+	},
+	"startGame": "Start Game",
+	"complete": "Board complete!"
+}

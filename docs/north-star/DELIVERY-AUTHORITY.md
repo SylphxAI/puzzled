@@ -76,6 +76,7 @@ The following **puzzle_ritual** modules are protected (directories under `apps/p
 | cryptogram |
 | word-search |
 | number-path |
+| pip-place |
 
 ### 4.2 Add
 

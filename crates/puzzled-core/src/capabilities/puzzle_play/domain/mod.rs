@@ -13,6 +13,7 @@ pub mod module_conformance;
 pub mod nonogram_clues;
 pub mod number_path;
 pub mod pattern_match;
+pub mod pip_place;
 pub mod placement;
 pub mod quad_words;
 pub mod queens_conflict;

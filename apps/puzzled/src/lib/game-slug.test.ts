@@ -20,13 +20,15 @@ describe('playerTitle', () => {
 		expect(playerTitle('word-hive')).toBe('Hive')
 		expect(playerTitle('word-box')).toBe('Frame')
 		expect(playerTitle('number-path')).toBe('Path')
+		expect(playerTitle('pip-place')).toBe('Spots')
 		for (const title of [
 			playerTitle('queens'),
 			playerTitle('tango'),
 			playerTitle('word-guess'),
 			playerTitle('number-path'),
+			playerTitle('pip-place'),
 		]) {
-			expect(title.toLowerCase()).not.toMatch(/queens|tango|wordle|zip|hidato|numbrix/)
+			expect(title.toLowerCase()).not.toMatch(/queens|tango|wordle|zip|hidato|numbrix|pips/)
 		}
 	})
 })

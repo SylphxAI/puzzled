@@ -18,6 +18,7 @@ import { KillerSudokuIcon } from '@/games/killer-sudoku/icon'
 import { NonogramIcon } from '@/games/nonogram/icon'
 import { NumberPathIcon } from '@/games/number-path/icon'
 import { PatternMatchIcon } from '@/games/pattern-match/icon'
+import { PipPlaceIcon } from '@/games/pip-place/icon'
 import { QuadWordsIcon } from '@/games/quad-words/icon'
 import { QueensIcon } from '@/games/queens/icon'
 import { SudokuIcon } from '@/games/sudoku/icon'
@@ -51,6 +52,7 @@ const GAME_ICONS: Record<string, IconComponent> = {
 	nonogram: NonogramIcon,
 	'number-path': NumberPathIcon,
 	'pattern-match': PatternMatchIcon,
+	'pip-place': PipPlaceIcon,
 	'quad-words': QuadWordsIcon,
 	crowns: QueensIcon,
 	sudoku: SudokuIcon,
@@ -73,6 +75,7 @@ export {
 	NonogramIcon,
 	NumberPathIcon,
 	PatternMatchIcon,
+	PipPlaceIcon,
 	QuadWordsIcon,
 	QueensIcon,
 	SudokuIcon,

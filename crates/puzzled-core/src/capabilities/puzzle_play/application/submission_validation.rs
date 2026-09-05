@@ -86,6 +86,7 @@ fn validator_for(game_slug: &str) -> Option<ModuleValidator> {
         "cryptogram" => Some(cryptogram),
         "word-search" => Some(word_search),
         "number-path" => Some(number_path),
+        "pip-place" => Some(pip_place),
         _ => None,
     }
 }
@@ -1085,6 +1086,126 @@ fn number_path(
     }
 }
 
+// ---------------------------------------------------------------------------
+// pip-place (Spots): puzzleData {maxPip,rows,cols,regionOf,regions};
+// submission {tiles:[{a,b,pa,pb}]}.
+// Win is any covering that satisfies regions; stored seed tiles are ignored.
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+struct PipPlaceCellJson {
+    row: i32,
+    col: i32,
+}
+
+#[derive(Debug, Deserialize)]
+struct PipPlaceTileJson {
+    a: PipPlaceCellJson,
+    b: PipPlaceCellJson,
+    pa: i32,
+    pb: i32,
+}
+
+#[derive(Debug, Deserialize)]
+struct PipPlaceSubmission {
+    tiles: Option<Vec<PipPlaceTileJson>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PipPlaceRegionJson {
+    id: i32,
+    kind: String,
+    #[serde(default)]
+    value: Option<i32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PipPlacePuzzleJson {
+    max_pip: i32,
+    rows: i32,
+    cols: i32,
+    region_of: Vec<Vec<i32>>,
+    regions: Vec<PipPlaceRegionJson>,
+}
+
+fn parse_pip_place_puzzle(
+    puzzle_data: &Value,
+) -> Option<crate::capabilities::puzzle_play::domain::pip_place::Puzzle> {
+    use crate::capabilities::puzzle_play::domain::pip_place::{Puzzle, Region, RegionKind};
+    let parsed = serde_json::from_value::<PipPlacePuzzleJson>(puzzle_data.clone()).ok()?;
+    let mut regions = Vec::with_capacity(parsed.regions.len());
+    for region in parsed.regions {
+        let kind = match region.kind.as_str() {
+            "sum" => RegionKind::Sum,
+            "equal" => RegionKind::Equal,
+            "unequal" => RegionKind::Unequal,
+            "free" => RegionKind::Free,
+            _ => return None,
+        };
+        regions.push(Region {
+            id: region.id,
+            kind,
+            value: region.value,
+        });
+    }
+    Some(Puzzle {
+        max_pip: parsed.max_pip,
+        rows: parsed.rows,
+        cols: parsed.cols,
+        region_of: parsed.region_of,
+        regions,
+    })
+}
+
+fn pip_place(
+    puzzle_data: &Value,
+    _solution: &Value,
+    env: &SubmissionEnvelope,
+) -> SubmissionVerdict {
+    use crate::capabilities::puzzle_play::domain::pip_place::{self, Cell, Tile};
+    let Ok(sub) = serde_json::from_value::<PipPlaceSubmission>(env.data.clone()) else {
+        return SubmissionVerdict::invalid("Missing tiles");
+    };
+    let Some(tiles_json) = sub.tiles else {
+        return SubmissionVerdict::invalid("Missing tiles");
+    };
+    let Some(puzzle) = parse_pip_place_puzzle(puzzle_data) else {
+        return SubmissionVerdict::invalid("Missing puzzle data");
+    };
+    let tiles: Vec<Tile> = tiles_json
+        .iter()
+        .map(|tile| Tile {
+            a: Cell {
+                row: tile.a.row,
+                col: tile.a.col,
+            },
+            b: Cell {
+                row: tile.b.row,
+                col: tile.b.col,
+            },
+            pa: tile.pa,
+            pb: tile.pb,
+        })
+        .collect();
+    let claimed = match env.status {
+        SubmissionStatus::Won => pip_place::SubmissionStatus::Won,
+        SubmissionStatus::Lost => pip_place::SubmissionStatus::Lost,
+    };
+    let result = pip_place::validate_and_score(Some(&tiles), &puzzle, env.time_spent_ms, claimed);
+    match result {
+        pip_place::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
+        pip_place::GameResult::Valid { status, score } => SubmissionVerdict::valid(
+            match status {
+                pip_place::SubmissionStatus::Won => SubmissionStatus::Won,
+                pip_place::SubmissionStatus::Lost => SubmissionStatus::Lost,
+            },
+            score,
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1329,6 +1450,115 @@ mod tests {
             "number-path",
             &number_path_clues(),
             &number_path_path_a(),
+            &envelope,
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    fn pip_place_puzzle() -> Value {
+        json!({
+            "maxPip": 1,
+            "rows": 2,
+            "cols": 3,
+            "regionOf": [
+                [1, 1, 0],
+                [1, 1, 1]
+            ],
+            "regions": [
+                {"id": 0, "kind": "sum", "value": 0},
+                {"id": 1, "kind": "free", "value": null}
+            ]
+        })
+    }
+
+    fn pip_place_tiles_a() -> Value {
+        json!({
+            "tiles": [
+                {"a": {"row": 0, "col": 0}, "b": {"row": 1, "col": 0}, "pa": 0, "pb": 0},
+                {"a": {"row": 0, "col": 1}, "b": {"row": 1, "col": 1}, "pa": 1, "pb": 1},
+                {"a": {"row": 0, "col": 2}, "b": {"row": 1, "col": 2}, "pa": 0, "pb": 1}
+            ]
+        })
+    }
+
+    fn pip_place_tiles_b() -> Value {
+        json!({
+            "tiles": [
+                {"a": {"row": 0, "col": 0}, "b": {"row": 0, "col": 1}, "pa": 0, "pb": 0},
+                {"a": {"row": 1, "col": 0}, "b": {"row": 1, "col": 1}, "pa": 1, "pb": 1},
+                {"a": {"row": 0, "col": 2}, "b": {"row": 1, "col": 2}, "pa": 0, "pb": 1}
+            ]
+        })
+    }
+
+    fn pip_place_incomplete() -> Value {
+        json!({
+            "tiles": [
+                {"a": {"row": 0, "col": 0}, "b": {"row": 1, "col": 0}, "pa": 0, "pb": 0},
+                {"a": {"row": 0, "col": 1}, "b": {"row": 1, "col": 1}, "pa": 1, "pb": 1}
+            ]
+        })
+    }
+
+    #[test]
+    fn pip_place_has_server_validator() {
+        assert!(has_server_validator("pip-place"));
+    }
+
+    #[test]
+    fn pip_place_accepts_alternate_tiling() {
+        let v = validate_submission(
+            "pip-place",
+            &pip_place_puzzle(),
+            &pip_place_tiles_a(),
+            &env(pip_place_tiles_b()),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Won));
+        assert_eq!(v.score, Some(500));
+    }
+
+    #[test]
+    fn pip_place_rejects_false_win() {
+        let v = validate_submission(
+            "pip-place",
+            &pip_place_puzzle(),
+            &pip_place_tiles_a(),
+            &env(pip_place_incomplete()),
+        );
+        assert!(!v.valid);
+        assert!(v
+            .error
+            .as_deref()
+            .is_some_and(|e| e.contains("not correctly solved")));
+    }
+
+    #[test]
+    fn pip_place_missing_tiles_is_not_unsupported_slug() {
+        let v = validate_submission(
+            "pip-place",
+            &pip_place_puzzle(),
+            &json!({}),
+            &env(json!({})),
+        );
+        assert!(!v.valid);
+        assert_eq!(v.error.as_deref(), Some("Missing tiles"));
+        assert!(v
+            .error
+            .as_deref()
+            .is_none_or(|e| !e.starts_with("unsupported game slug:")));
+    }
+
+    #[test]
+    fn pip_place_incomplete_claimed_lost_is_valid_zero() {
+        let mut envelope = env(pip_place_incomplete());
+        envelope.status = SubmissionStatus::Lost;
+        let v = validate_submission(
+            "pip-place",
+            &pip_place_puzzle(),
+            &pip_place_tiles_a(),
             &envelope,
         );
         assert!(v.valid, "{v:?}");

@@ -84,7 +84,7 @@ pub fn theme_for_game_slug(slug: &str) -> Option<&'static str> {
         "killer-sudoku" => "rose",
         "crossword" => "blue",
         "pattern-match" => "sky",
-        "word-ladder" => "orange",
+        "word-ladder" | "pip-place" => "orange",
         "arithmo" => "lime",
         "block-slide" | "number-path" => "slate",
         _ => return None,
@@ -109,6 +109,7 @@ mod tests {
         assert_eq!(theme_for_game_slug("tango"), Some("amber"));
         assert_eq!(theme_for_game_slug("block-slide"), Some("slate"));
         assert_eq!(theme_for_game_slug("number-path"), Some("slate"));
+        assert_eq!(theme_for_game_slug("pip-place"), Some("orange"));
         assert_eq!(theme_for_game_slug("nope"), None);
         for id in GAME_COLOR_THEME_IDS {
             assert!(is_game_color_theme(id));

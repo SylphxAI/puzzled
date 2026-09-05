@@ -1,6 +1,6 @@
 # Destination catalog — every daily ritual we will offer
 
-**Status:** Normative destination catalog (2026-09-04)  
+**Status:** Normative destination catalog (2026-09-05)  
 **Does not change:** [daily puzzle completers](NORTH-STAR-METRIC.md), daily entertainment completers, five protocol concepts  
 **Does not ship games:** this file is doctrine. A slug here is not live until protocol-complete.  
 **Shipped floor (may not delete):** [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md) §8 and [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md) §4.
@@ -185,7 +185,7 @@ Descriptive English titles. Japanese genre names may appear in How-to as **type 
 |------|--------------|----------|---------------------|-------|--------|
 | crowns | Crowns | One mark per row, column, color region | Queens | ritual | shipped (alias `queens`) |
 | number-path | Path | Visit 1…n, no crossing | Zip | ritual | shipped |
-| pip-place | Pips | Place dominoes to satisfy regions | Pips | ritual | dest |
+| pip-place | Spots | Place dominoes to satisfy regions | Pips | ritual | shipped |
 | nonogram | Paint | Row/column paint clues | nonogram (not Picross) | ritual | shipped |
 | fill-a-pix | Neighbors | Clue = adjacent shaded | Fill-a-Pix | ritual | dest |
 | tents | Tents | Tent beside each tree | Tents | ritual | dest |
@@ -293,7 +293,7 @@ S5 social (compare, light co-op, family profiles) is a **mode on existing slugs*
 | Entertainment oracles | 8 |
 | **Total** | **115** |
 
-Of those, **18 are shipped** (two pending rename). Adding a `dest` slug does not change daily puzzle completers.
+Of those, **19 are shipped** (two pending rename). Adding a `dest` slug does not change daily puzzle completers.
 
 ---
 
@@ -304,7 +304,7 @@ Order protects the basis ([STRATEGY-ROADMAP.md](STRATEGY-ROADMAP.md)). Destinati
 | Wave | What | Why |
 |------|------|-----|
 | **W0** | Rename Crowns / Duo; keep play | Close shipped mark risk |
-| **W1** | Theme Path, Frame depth, Clue Climb, Pin, Cages, Path, Pips | Table-stakes gaps vs NYT + LinkedIn *mechanics* |
+| **W1** | Theme Path, Frame depth, Clue Climb, Pin, Cages, Path, Spots | Table-stakes gaps vs NYT + LinkedIn *mechanics* |
 | **W2** | Fences, Bridges, Islands, Lamps, Mini Sudoku | Generator-friendly logic breadth |
 | **W3** | Cantonese / idiom family | Product day is HKT; locales already exist |
 | **W4** | First 2–3 oracles (daily entertainment completers instrumented) | Fun without North Star pollution |

@@ -24,6 +24,7 @@ export const INTERACTION_SLUGS = [
 	'cryptogram',
 	'word-search',
 	'number-path',
+	'pip-place',
 ] as const
 
 export type InteractionSlug = (typeof INTERACTION_SLUGS)[number]

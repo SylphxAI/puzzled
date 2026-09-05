@@ -15,6 +15,7 @@ import killerSudokuEn from '@/games/killer-sudoku/translations/en.json'
 import nonogramEn from '@/games/nonogram/translations/en.json'
 import numberPathEn from '@/games/number-path/translations/en.json'
 import patternMatchEn from '@/games/pattern-match/translations/en.json'
+import pipPlaceEn from '@/games/pip-place/translations/en.json'
 import quadWordsEn from '@/games/quad-words/translations/en.json'
 import queensEn from '@/games/queens/translations/en.json'
 import sudokuEn from '@/games/sudoku/translations/en.json'
@@ -35,6 +36,7 @@ const GAME_TRANSLATIONS_EN: Record<string, Record<string, unknown>> = {
 	nonogram: nonogramEn,
 	numberPath: numberPathEn,
 	patternMatch: patternMatchEn,
+	pipPlace: pipPlaceEn,
 	quadWords: quadWordsEn,
 	queens: queensEn,
 	crowns: queensEn,
