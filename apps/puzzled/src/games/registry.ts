@@ -23,6 +23,7 @@ import { crosswordConfig } from './crossword/config'
 import { cryptogramConfig } from './cryptogram/config'
 import { killerSudokuConfig } from './killer-sudoku/config'
 import { nonogramConfig } from './nonogram/config'
+import { numberPathConfig } from './number-path/config'
 import { patternMatchConfig } from './pattern-match/config'
 import { quadWordsConfig } from './quad-words/config'
 import { queensConfig } from './queens/config'
@@ -71,6 +72,7 @@ export const GAME_CONFIGS = {
 	'killer-sudoku': killerSudokuConfig,
 	cryptogram: cryptogramConfig,
 	'word-search': wordSearchConfig,
+	'number-path': numberPathConfig,
 } as const satisfies GameRegistry
 
 /**

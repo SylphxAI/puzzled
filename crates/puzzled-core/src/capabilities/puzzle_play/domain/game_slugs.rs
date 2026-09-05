@@ -24,6 +24,7 @@ const VALID_SLUGS: &[&str] = &[
     "killer-sudoku",
     "cryptogram",
     "word-search",
+    "number-path",
 ];
 
 /// Retired public slugs. Inbound only; writes persist [`canonicalize_game_slug`].

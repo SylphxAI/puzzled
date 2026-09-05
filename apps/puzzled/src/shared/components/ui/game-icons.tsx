@@ -16,6 +16,7 @@ import { CrosswordIcon } from '@/games/crossword/icon'
 import { CryptogramIcon } from '@/games/cryptogram/icon'
 import { KillerSudokuIcon } from '@/games/killer-sudoku/icon'
 import { NonogramIcon } from '@/games/nonogram/icon'
+import { NumberPathIcon } from '@/games/number-path/icon'
 import { PatternMatchIcon } from '@/games/pattern-match/icon'
 import { QuadWordsIcon } from '@/games/quad-words/icon'
 import { QueensIcon } from '@/games/queens/icon'
@@ -48,6 +49,7 @@ const GAME_ICONS: Record<string, IconComponent> = {
 	cryptogram: CryptogramIcon,
 	'killer-sudoku': KillerSudokuIcon,
 	nonogram: NonogramIcon,
+	'number-path': NumberPathIcon,
 	'pattern-match': PatternMatchIcon,
 	'quad-words': QuadWordsIcon,
 	crowns: QueensIcon,
@@ -69,6 +71,7 @@ export {
 	CryptogramIcon,
 	KillerSudokuIcon,
 	NonogramIcon,
+	NumberPathIcon,
 	PatternMatchIcon,
 	QuadWordsIcon,
 	QueensIcon,
