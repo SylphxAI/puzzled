@@ -680,12 +680,16 @@ fn queens(puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> Su
     let Some(regions) = regions else {
         return SubmissionVerdict::invalid("Missing queens regions");
     };
+    let claimed = match env.status {
+        SubmissionStatus::Won => queens_conflict::SubmissionStatus::Won,
+        SubmissionStatus::Lost => queens_conflict::SubmissionStatus::Lost,
+    };
     let result = queens_conflict::validate_and_score(
         Some(&sub.final_grid),
         &regions,
         size,
         env.time_spent_ms,
-        queens_conflict::SubmissionStatus::Won,
+        claimed,
     );
     match result {
         queens_conflict::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -1561,6 +1565,33 @@ mod tests {
             &pip_place_tiles_a(),
             &envelope,
         );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    #[test]
+    fn crowns_incomplete_claimed_lost_is_valid_zero() {
+        let puzzle = json!({
+            "size": 4,
+            "regions": [
+                [0, 0, 1, 1],
+                [0, 0, 1, 1],
+                [2, 2, 3, 3],
+                [2, 2, 3, 3]
+            ]
+        });
+        let empty = json!({
+            "finalGrid": [
+                [false, false, false, false],
+                [false, false, false, false],
+                [false, false, false, false],
+                [false, false, false, false]
+            ]
+        });
+        let mut envelope = env(empty);
+        envelope.status = SubmissionStatus::Lost;
+        let v = validate_submission("crowns", &puzzle, &json!({ "queens": [] }), &envelope);
         assert!(v.valid, "{v:?}");
         assert_eq!(v.status, Some(SubmissionStatus::Lost));
         assert_eq!(v.score, Some(0));

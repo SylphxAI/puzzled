@@ -107,7 +107,10 @@ mod tests {
     }
 
     fn densifies_without_store(slug: &str) -> bool {
-        matches!(slug, "sudoku" | "crossword" | "word-groups")
+        matches!(
+            slug,
+            "sudoku" | "crossword" | "word-groups" | "word-guess" | "crowns" | "queens"
+        )
     }
 
     async fn body_json(response: Response) -> serde_json::Value {
@@ -433,8 +436,7 @@ mod tests {
         assert_eq!(json["canPlay"], true);
         assert!(json["puzzleNumber"].as_u64().unwrap_or(0) > 0);
         assert!(!json["puzzleDate"].as_str().unwrap_or("").is_empty());
-        // Without a DB, sudoku + crossword + word-groups densify via on-server
-        // generators (free-floor guarantee). Other free-rotation modules still need content.
+        // Without a DB, every free-rotation slug densifies via on-server generators.
         if densifies_without_store(&free_slug) {
             assert!(
                 json.get("stub").map_or(true, |v| v == false || v.is_null()),
@@ -552,8 +554,8 @@ mod tests {
     #[tokio::test]
     async fn connect_submit_guess_rejects_unserved_puzzle() {
         // Free-rotation game passes the premium gate. Without a content DB:
-        // - sudoku + crossword + word-groups densify via deterministic generation
-        // - other modules must fail closed (404 unserved) — no accept-any.
+        // - free-rotation slugs densify via deterministic generation
+        // - non-rotation modules must fail closed (404 unserved) — no accept-any.
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_02");
         let free_slug = today_free_slug();
@@ -845,6 +847,234 @@ mod tests {
             "2026-08-25",
             "word-groups",
         ));
+    }
+
+    fn guest_submit(body: String, guest: &str) -> Request<Body> {
+        match Request::builder()
+            .method(Method::POST)
+            .uri("/puzzled.v1.PuzzleService/SubmitGuess")
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .header("x-puzzled-guest-id", guest)
+            .body(Body::from(body))
+        {
+            Ok(r) => r,
+            Err(error) => panic!("build: {error}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_word_guess_guest_path() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(r#"{"gameSlug":"word-guess"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily word-guess: {error}"),
+        };
+        if today_free_slug() != "word-guess" {
+            assert_eq!(response.status(), StatusCode::FORBIDDEN);
+            let json = body_json(response).await;
+            assert!(
+                connect_error_message(&json).contains("premium_required"),
+                "non-free word-guess must be premium_required: {json}"
+            );
+            return;
+        }
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "word-guess");
+        assert_eq!(json["mode"], "daily");
+        assert_eq!(json["canPlay"], true);
+        assert!(
+            json.get("stub").map_or(true, |v| v == false || v.is_null()),
+            "word-guess GetDaily must not stub: {:?}",
+            json.get("stub")
+        );
+        let data = json["puzzleDataJson"].as_str().expect("puzzleDataJson");
+        assert!(!data.is_empty() && data != "null", "must serve puzzle data");
+        let payload: serde_json::Value = serde_json::from_str(data).expect("json");
+        assert_eq!(payload["wordLength"], 5);
+        assert_eq!(payload["maxAttempts"], 6);
+        assert!(payload.get("word").is_none());
+        assert!(
+            json.get("solutionJson").is_none(),
+            "solutions must never leave the server"
+        );
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_crowns_guest_path() {
+        let app = router(AppState::new(None));
+        let response = match app
+            .oneshot(build_connect_request(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(r#"{"gameSlug":"crowns"}"#),
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily crowns: {error}"),
+        };
+        if today_free_slug() != "crowns" {
+            assert_eq!(response.status(), StatusCode::FORBIDDEN);
+            let json = body_json(response).await;
+            assert!(
+                connect_error_message(&json).contains("premium_required"),
+                "non-free crowns must be premium_required: {json}"
+            );
+            return;
+        }
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["gameSlug"], "crowns");
+        assert_eq!(json["mode"], "daily");
+        assert_eq!(json["canPlay"], true);
+        assert!(
+            json.get("stub").map_or(true, |v| v == false || v.is_null()),
+            "crowns GetDaily must not stub: {:?}",
+            json.get("stub")
+        );
+        let data = json["puzzleDataJson"].as_str().expect("puzzleDataJson");
+        let payload: serde_json::Value = serde_json::from_str(data).expect("json");
+        assert_eq!(payload["size"], 6);
+        let regions = payload["regions"].as_array().expect("regions");
+        assert_eq!(regions.len(), 6);
+        assert!(payload.get("queens").is_none());
+        assert!(
+            json.get("solutionJson").is_none(),
+            "solutions must never leave the server"
+        );
+    }
+
+    #[tokio::test]
+    async fn connect_word_guess_free_floor_guest_can_finish_win() {
+        use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+        use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
+
+        if today_free_slug() != "word-guess" {
+            return;
+        }
+
+        let app = router(AppState::new(None));
+        let today = product_day_key(chrono::Utc::now());
+        let seed = i64::from(get_puzzle_number(today, None));
+        let (_pd, sol) = generate_word_guess_puzzle(seed);
+        let word = sol["word"].as_str().expect("word");
+        let submission = serde_json::json!({ "guesses": [word] });
+        let body = serde_json::json!({
+            "gameSlug": "word-guess",
+            "status": "won",
+            "attempts": 1,
+            "timeSpentMs": "4000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let response = match app
+            .oneshot(guest_submit(body, "d4e5f6a7-b8c9-0123-def0-123456789012"))
+            .await
+        {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(
+            json["valid"], true,
+            "word-guess free win must validate: {json}"
+        );
+        assert_eq!(json["status"], "won");
+        assert!(json["score"].as_i64().unwrap_or(0) > 0);
+    }
+
+    #[tokio::test]
+    async fn connect_crowns_free_floor_guest_can_finish_win() {
+        use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
+        use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle;
+
+        if today_free_slug() != "crowns" {
+            return;
+        }
+
+        let app = router(AppState::new(None));
+        let today = product_day_key(chrono::Utc::now());
+        let seed = i64::from(get_puzzle_number(today, None));
+        let (pd, sol) = generate_queens_puzzle(seed);
+        let size = pd["size"].as_u64().unwrap_or(0) as usize;
+        let mut grid = vec![vec![false; size]; size];
+        if let Some(queens) = sol["queens"].as_array() {
+            for pair in queens {
+                let cells = pair.as_array();
+                let row = cells
+                    .and_then(|c| c.first())
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(0) as usize;
+                let col = cells
+                    .and_then(|c| c.get(1))
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(0) as usize;
+                if row < size && col < size {
+                    grid[row][col] = true;
+                }
+            }
+        }
+        let submission = serde_json::json!({ "finalGrid": grid });
+        let body = serde_json::json!({
+            "gameSlug": "crowns",
+            "status": "won",
+            "attempts": 1,
+            "timeSpentMs": "8000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let response = match app
+            .oneshot(guest_submit(body, "e5f6a7b8-c9d0-1234-ef01-234567890123"))
+            .await
+        {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["valid"], true, "crowns free win must validate: {json}");
+        assert_eq!(json["status"], "won");
+        assert!(json["score"].as_i64().unwrap_or(0) > 0);
+    }
+
+    #[tokio::test]
+    async fn connect_crowns_free_floor_guest_can_finish_loss() {
+        if today_free_slug() != "crowns" {
+            return;
+        }
+        let app = router(AppState::new(None));
+        let empty = vec![vec![false; 6]; 6];
+        let submission = serde_json::json!({ "finalGrid": empty });
+        let body = serde_json::json!({
+            "gameSlug": "crowns",
+            "status": "lost",
+            "attempts": 1,
+            "timeSpentMs": "2000",
+            "submissionJson": submission.to_string(),
+        })
+        .to_string();
+        let response = match app
+            .oneshot(guest_submit(body, "f6a7b8c9-d0e1-2345-f012-345678901234"))
+            .await
+        {
+            Ok(r) => r,
+            Err(error) => panic!("submit: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(
+            json["valid"], true,
+            "crowns free loss must validate: {json}"
+        );
+        assert_eq!(json["status"], "lost");
+        assert_eq!(json["score"].as_i64().unwrap_or(-1), 0);
     }
 
     #[tokio::test]

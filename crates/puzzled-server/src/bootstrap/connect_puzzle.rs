@@ -29,7 +29,9 @@ use puzzled_core::puzzle_play::game_flows::build_daily_status;
 use puzzled_core::puzzle_play::game_slugs::{
     canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
 };
+use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle_with_size;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
+use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
 use puzzled_core::{generate_sudoku_puzzle, SudokuDifficulty};
 
 use super::state::AppState;
@@ -222,7 +224,23 @@ fn deterministic_daily(
             word_groups_puzzle_data(seed),
             Some(word_groups_solution(seed)),
         )),
+        "word-guess" => {
+            let (data, sol) = generate_word_guess_puzzle(seed);
+            Some((data, Some(sol)))
+        }
+        "crowns" | "queens" => {
+            let (data, sol) = generate_queens_puzzle_with_size(seed, queens_board_size(difficulty));
+            Some((data, Some(sol)))
+        }
         _ => None,
+    }
+}
+
+fn queens_board_size(difficulty: Option<&str>) -> usize {
+    match difficulty.map(str::trim).unwrap_or("medium") {
+        "easy" => 5,
+        "hard" => 8,
+        _ => 6,
     }
 }
 
@@ -306,7 +324,7 @@ impl PuzzleService for PuzzleConnectService {
             .await?;
 
         // Resolve the served puzzle: stored row first, then documented
-        // deterministic generators (sudoku, crossword, word-groups free-floor).
+        // deterministic generators (every FREE_GAME_ROTATION slug).
         let mut puzzle_data: Option<Value> = None;
         let mut puzzle_id: Option<String> = None;
         let mut stub = true;

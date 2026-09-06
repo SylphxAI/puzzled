@@ -8,6 +8,8 @@ describe('dest proxy inbound public routes', () => {
 		expect(inboundModulePublicRoutes(locales)).toEqual(expect.arrayContaining(['/crowns', '/duo']))
 		expect(isInboundPublicPath('/crowns')).toBe(true)
 		expect(isInboundPublicPath('/duo')).toBe(true)
+		expect(isInboundPublicPath('/zh-HK/crowns')).toBe(true)
+		expect(isInboundPublicPath('/zh-hk/crowns')).toBe(true)
 		expect(isInboundPublicPath('/login')).toBe(false)
 	})
 
