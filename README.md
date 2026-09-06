@@ -2,7 +2,7 @@
 
 Puzzled is a daily light brain-games platform: short, positive rituals under one module protocol.
 
-- Ordinary: https://puzzled.gg — named public customer domain on Sylphx Platform (`puzzled.gg`). DNS and TLS are active; HTTP GET timed out at observation. Reachability is not the product contract.
+- Ordinary: https://puzzled.gg — named public customer domain (`puzzled.gg`). DNS and TLS are active. A document GET `/` 200 is reachability of the web document, not the product contract.
 - Preview: none — no product-owned current preview URL. GitHub Pages is absent. `https://puzzled-gg.vercel.app` is leftover Vercel (`DEPLOYMENT_NOT_FOUND`) and is not production.
 - Vision: [`docs/vision.md`](docs/vision.md)
 - Capabilities: [`docs/capabilities.md`](docs/capabilities.md)
