@@ -1,16 +1,16 @@
 # Puzzled North Star package
 
-**Status:** Normative product + delivery doctrine (2026-08-13)  
-**Scope:** What Puzzled *is*, what success *is*, and what must never be traded away.  
-**Not this package:** Sylphx Platform infra runbooks; ephemeral PR checklists (see [history/](history/)).
+**Status:** Field contract subordinate to [`docs/vision.md`](../vision.md) (2026-09-06)
+**Scope:** What Puzzled *is*, what success *is*, and what must never be traded away — under dest-lock.
+**Not this package:** Sylphx Platform infra runbooks; ephemeral PR checklists (see [history/](history/)). Canonical destination is not this package.
 
 ---
 
 ## One line
 
-**Puzzled is a light, positive, daily ritual of brain games—minutes a day, optional depth, unlimited catalog under one protocol—habit first, subscription second, shareable results without spoilers.**
+**Puzzled is a light, positive, daily ritual of brain games—minutes a day, optional depth, unlimited catalog under one protocol—a free daily finish floor, habit first, subscription second, shareable results without spoilers.**
 
-**North Star Metric:** [daily puzzle completers](NORTH-STAR-METRIC.md).
+**North Star Metric:** [daily puzzle completers](NORTH-STAR-METRIC.md) (`PUZ-NSM`).
 
 ---
 
@@ -18,11 +18,11 @@
 
 | # | Document | Role |
 |---|----------|------|
-| 1 | **[VISION.md](VISION.md)** | Ambition, category, competitors, what we are not |
+| 1 | **[VISION.md](VISION.md)** | Pointer to canonical [`docs/vision.md`](../vision.md) |
 | 2 | **[NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md)** | daily puzzle completers definition, oracle, anti-metrics, stages |
 | 3 | **[RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md)** | Day key, game modules, finish, result cards, entertainment vs puzzle |
 | 4 | **[GROWTH-AND-VIRALITY.md](GROWTH-AND-VIRALITY.md)** | Share loop, invite, social without hardcore PvP |
-| 5 | **[MONETIZATION.md](MONETIZATION.md)** | Free floor, subscription value, fail-closed gating |
+| 5 | **[MONETIZATION.md](MONETIZATION.md)** | Free floor, subscription value, fail-closed gating (`PUZ-FREE`, `PUZ-PLUS`) |
 | 6 | **[METRICS-TREE.md](METRICS-TREE.md)** | Supporting metrics, dashboards, kill signals |
 | 7 | **[STRATEGY-ROADMAP.md](STRATEGY-ROADMAP.md)** | Capability order S0–S5; kill/pivot signals |
 | 8 | **[EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md)** | Layers: source / CI / deploy / live; golden journeys |
@@ -31,7 +31,7 @@
 
 **Engineering stack north star** (Connect / Rust / content tool):  
 [ADR-170](../adr/ADR-170-clean-break-north-star.md), [ADR-169](../adr/ADR-169-capability-first-modular-ddd.md), [ADR-168](../adr/ADR-168-portfolio-puzzled-rust-north-star.md).  
-Stack is *how we ship*; this package is *what winning means*.
+Stack is *how we ship*; [`docs/vision.md`](../vision.md) is *what finished product is dest*; this package is field contract under that dest-lock.
 
 **Repo entry:** [PROJECT.md](../../PROJECT.md).
 
@@ -58,25 +58,34 @@ Depth · Correctness · Simplicity · Evolvability · Observability · Performan
 
 ## Authority
 
+Canonical destination is [`docs/vision.md`](../vision.md). Identity graph is
+[`docs/capabilities.md`](../capabilities.md). This package is field contract
+subordinate to that dest-lock. If this package conflicts with vision or the
+graph, vision and the graph win.
+
 | Question | Authority |
 |----------|-----------|
-| What is the North Star Metric? | [NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md) |
+| What finished product is dest? | [`docs/vision.md`](../vision.md) |
+| What identities exist and when are they done? | [`docs/capabilities.md`](../capabilities.md) |
+| What is the North Star Metric quantity? | [NORTH-STAR-METRIC.md](NORTH-STAR-METRIC.md) (subordinate; `PUZ-NSM`) |
 | May we delete a game or gut play? | [DELIVERY-AUTHORITY.md](DELIVERY-AUTHORITY.md) |
 | What is a legal game module? | [RITUAL-AND-MODULE-PROTOCOL.md](RITUAL-AND-MODULE-PROTOCOL.md) |
-| Free vs paid? | [MONETIZATION.md](MONETIZATION.md) |
+| Free vs paid? | [MONETIZATION.md](MONETIZATION.md) (`PUZ-FREE`, `PUZ-PLUS`) |
 | Sole API transport / play authority? | ADR-170 |
 
-Conflicts: **player-facing product floors outrank engineering convenience.**  
+Conflicts: **player-facing product floors outrank engineering convenience.**
 Stack clean-break may not hollow games or the free daily ritual.
 
 ---
 
 ## Change control
 
-Material changes to the daily-puzzle-completer definition, free-tier ritual floor, or module protocol require:
+Material changes to the destination, identity graph, daily-puzzle-completer
+definition, free-tier ritual floor, or module protocol require:
 
-1. Explicit PR description of metric/oracle delta  
-2. Update to this package in the same change set  
-3. No silent dual definitions in app code comments alone  
+1. Dest-lock in [`docs/vision.md`](../vision.md) and [`docs/capabilities.md`](../capabilities.md) in the same change when destination or identities move
+2. Explicit PR description of metric/oracle delta
+3. Update to this package in the same change set when field contract moves
+4. No silent dual definitions in app code comments alone
 
 Revision history lives in git; bump the **Status** date line in this README when the package ships.

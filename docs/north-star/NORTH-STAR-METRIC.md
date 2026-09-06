@@ -1,8 +1,8 @@
 # North Star Metric — daily puzzle completers
 
-**Status:** Normative  
-**Revision:** 2026-08-13  
-**Single source of truth** for “are we winning at the product level?”
+**Status:** Field contract subordinate to [`docs/vision.md`](../vision.md) (`PUZ-NSM`)
+**Revision:** 2026-08-13
+**Quantity definition** for daily puzzle completers. Destination and identities stay in vision + capabilities; if this file conflicts, those win.
 
 ---
 

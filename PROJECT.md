@@ -4,8 +4,7 @@ Puzzled is a **daily light brain-games platform**: short, positive rituals, an
 expandable catalog under one module protocol, habit-first growth, and
 subscription monetization in the NYT Games structural class.
 
-**Product North Star (what winning means):**  
-[docs/north-star/README.md](docs/north-star/README.md) — metric **daily puzzle completers**.
+**Destination:** [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilities.md](docs/capabilities.md). Field contract: [docs/north-star/README.md](docs/north-star/README.md) — metric **daily puzzle completers**.
 
 This repo owns the Puzzled Next.js app, repo-local UI package, Atlas migrations,
 Sylphx deployment manifest, pure game rules, and application workflows.
@@ -20,7 +19,7 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | **NSM** | Distinct users who complete ≥1 puzzle ritual per product day |
 | **Money** | Free daily finish floor; paid archive/suite/stats |
 
-Full doctrine: [docs/north-star/VISION.md](docs/north-star/VISION.md).
+Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilities.md](docs/capabilities.md). Field contract: [docs/north-star/README.md](docs/north-star/README.md).
 
 ## Lifecycle
 
