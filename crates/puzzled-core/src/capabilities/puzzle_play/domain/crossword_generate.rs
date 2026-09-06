@@ -560,7 +560,14 @@ pub fn generate_crossword_puzzle(seed: i64) -> (Value, Value) {
 }
 
 /// Keys that must never appear on GetDaily/GetPuzzle `puzzle_data_json`.
-const CLIENT_LEAK_KEYS: &[&str] = &["answer", "solution", "solution_json", "solutionJson"];
+const CLIENT_LEAK_KEYS: &[&str] = &[
+    "answer",
+    "solution",
+    "solution_json",
+    "solutionJson",
+    "word",
+    "queens",
+];
 
 /// Strip solution fields from a stored or generated client payload.
 ///
