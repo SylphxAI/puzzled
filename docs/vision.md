@@ -3,7 +3,6 @@
 **Status:** Canonical product destination
 **Identity graph:** [`capabilities.md`](capabilities.md)
 **North Star package:** [`north-star/README.md`](north-star/README.md) (field contract subordinate to this destination), [`north-star/VISION.md`](north-star/VISION.md) (pointer), [`north-star/NORTH-STAR-METRIC.md`](north-star/NORTH-STAR-METRIC.md)
-**Architecture law:** [`adr/ADR-170-clean-break-north-star.md`](adr/ADR-170-clean-break-north-star.md), [`adr/ADR-169-capability-first-modular-ddd.md`](adr/ADR-169-capability-first-modular-ddd.md)
 
 This document owns the long-term product destination. It does not claim the destination is landed or live. If the north-star package or an ADR conflicts with this file or [`capabilities.md`](capabilities.md), this file and the identity graph win.
 
