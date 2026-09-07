@@ -8,10 +8,10 @@ license = "Proprietary"
 publish = false
 
 [workspace.dependencies]
-connectrpc = { version = "0.8", features = ["axum"] }
-buffa = { version = "0.8.1", features = ["json"] }
-buffa-types = { version = "0.8", features = ["json"] }
-connectrpc-build = "0.8"
+connectrpc = { version = "0.9", features = ["axum"] }
+buffa = { version = "0.9.1", features = ["json"] }
+buffa-types = { version = "0.9.1", features = ["json"] }
+connectrpc-build = "0.9"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
