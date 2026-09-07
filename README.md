@@ -6,7 +6,6 @@ Puzzled is a daily light brain-games platform: short, positive rituals under one
 - Preview: none — no product-owned current preview URL. GitHub Pages is absent. `https://puzzled-gg.vercel.app` is leftover Vercel (`DEPLOYMENT_NOT_FOUND`) and is not production.
 - Vision: [`docs/vision.md`](docs/vision.md)
 - Capabilities: [`docs/capabilities.md`](docs/capabilities.md)
-- Decisions: [`docs/adr/`](docs/adr/)
 
 ## Product
 

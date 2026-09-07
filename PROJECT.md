@@ -23,13 +23,12 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
 
 ## Lifecycle
 
-- Lifecycle: **dev-phase until live proof** (ADR-170 §6 and
+- Lifecycle: **dev-phase until live proof** (see
   [docs/north-star/EVIDENCE-AND-ORACLES.md](docs/north-star/EVIDENCE-AND-ORACLES.md)).
   No production *claim* without layered evidence (source / CI / deploy / live).
 - Layer: `application`
 - Instruction SSOT: binding Skills (`engineering-standard`).
-- Architecture (how we ship):
-  [ADR-170](docs/adr/ADR-170-clean-break-north-star.md) — sole Connect, sole
+- Architecture (how we ship): sole Connect, sole
   Rust executor, content tool, server-authoritative play.
 
 ## Architecture
@@ -60,4 +59,4 @@ Path: PR → Merge Queue → main → auto deploy → **live oracles** — not �
 
 Depth · Correctness · Simplicity · Evolvability · Observability · Performance ·
 Reliability · Security · Economy — applied to product in the North Star package;
-applied to stack in ADR-168/169/170.
+applied to stack in the North Star package.
