@@ -1,10 +1,18 @@
 # puzzled-server — Rust Connect dens product authority
 # Also carries Atlas + SQL migrations for [database.migrations] Job (image=api).
 FROM rust:1-bookworm AS builder
+# Pinned protoc 36.1: the Edition 2024 contract needs protoc >= 30.
+# Debian protobuf-compiler is older and fails closed on edition 2024.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends protobuf-compiler ca-certificates \
+  && apt-get install -y --no-install-recommends curl unzip ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
-  && protoc --version
+  && curl -fsSL -o /tmp/protoc-36.1-linux-x86_64.zip \
+    https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip \
+  && echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  /tmp/protoc-36.1-linux-x86_64.zip" | sha256sum -c - \
+  && unzip -q /tmp/protoc-36.1-linux-x86_64.zip -d /usr/local \
+  && rm /tmp/protoc-36.1-linux-x86_64.zip \
+  && protoc --version \
+  && test "$(protoc --version)" = "libprotoc 36.1"
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY proto proto

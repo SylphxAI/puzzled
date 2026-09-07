@@ -8,3 +8,6 @@ lint:
 breaking:
   use:
     - FILE
+  except:
+    - FILE_SAME_SYNTAX
+

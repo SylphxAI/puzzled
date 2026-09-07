@@ -30,7 +30,7 @@ for (const candidate of bufCandidates) {
 }
 
 if (!buf) {
-	const version = '1.50.0'
+	const version = '1.72.0'
 	const arch = process.arch === 'x64' ? 'x86_64' : process.arch
 	const platform =
 		process.platform === 'linux' ? 'Linux' : process.platform === 'darwin' ? 'Darwin' : ''

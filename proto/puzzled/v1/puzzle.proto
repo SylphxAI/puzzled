@@ -1,6 +1,19 @@
-syntax = "proto3";
+edition = "2024";
 
 package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
 
 // PuzzleService: server-authoritative play.
 // Solutions never leave the server. Submissions are validated against the
@@ -26,24 +39,24 @@ message GetPuzzleResponse {
 message GetDailyRequest {
   string game_slug = 1;
   string difficulty = 2;
-  optional string puzzle_id = 3;
+  string puzzle_id = 3 [features.field_presence = EXPLICIT];
   // Archive reads: YYYY-MM-DD (default = today).
-  optional string puzzle_date = 5;
+  string puzzle_date = 5 [features.field_presence = EXPLICIT];
   reserved 4; // has_completed removed: completion is server-derived
 }
 
 message DailyCompletion {
   string status = 1;
-  optional uint32 score = 2;
-  optional uint32 attempts = 3;
-  optional int64 completed_at_ms = 4;
+  uint32 score = 2 [features.field_presence = EXPLICIT];
+  uint32 attempts = 3 [features.field_presence = EXPLICIT];
+  int64 completed_at_ms = 4 [features.field_presence = EXPLICIT];
 }
 
 message GetDailyResponse {
   string game_slug = 1;
   uint32 puzzle_number = 2;
   string puzzle_date = 3;
-  optional string puzzle_id = 4;
+  string puzzle_id = 4 [features.field_presence = EXPLICIT];
   string difficulty = 5;
   bool has_completed = 6;
   bool can_play = 7;
@@ -67,17 +80,17 @@ message SubmitGuessRequest {
   // Served-puzzle identity: puzzle_id (stored content) or puzzle_date
   // (YYYY-MM-DD; default = today). The server derives the served puzzle
   // itself; client seeds are never trusted for authority.
-  optional string puzzle_id = 8;
-  optional string puzzle_date = 9;
+  string puzzle_id = 8 [features.field_presence = EXPLICIT];
+  string puzzle_date = 9 [features.field_presence = EXPLICIT];
   reserved 2; // seed removed: not an authority input
 }
 
 message SubmitGuessResponse {
   bool valid = 1;
   string status = 2;
-  optional uint32 score = 3;
+  uint32 score = 3 [features.field_presence = EXPLICIT];
   string game_slug = 4;
-  optional string error = 6;
+  string error = 6 [features.field_presence = EXPLICIT];
   string slice = 7;
   reserved 5; // seed removed with the request field
 }

@@ -1,6 +1,19 @@
-syntax = "proto3";
+edition = "2024";
 
 package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
 
 // PreferencesService: durable app-scoped user settings. Identity comes from
 // the verified Bearer JWT; the request body never carries a user id.
@@ -31,12 +44,12 @@ message GetProfileResponse {
 }
 
 message UpdateProfileRequest {
-  optional string username = 1;
-  optional string bio = 2;
-  optional bool is_public_profile = 3;
-  optional bool compact_mode = 4;
-  optional bool leaderboard_visible = 5;
-  optional string locale = 6;
+  string username = 1 [features.field_presence = EXPLICIT];
+  string bio = 2 [features.field_presence = EXPLICIT];
+  bool is_public_profile = 3 [features.field_presence = EXPLICIT];
+  bool compact_mode = 4 [features.field_presence = EXPLICIT];
+  bool leaderboard_visible = 5 [features.field_presence = EXPLICIT];
+  string locale = 6 [features.field_presence = EXPLICIT];
 }
 message UpdateProfileResponse {
   Profile profile = 1;
@@ -55,20 +68,20 @@ message GetNotificationPreferencesResponse {
 }
 
 message UpdatePushPreferencesRequest {
-  optional bool push_enabled = 1;
-  optional bool push_daily_reminder = 2;
-  optional bool push_streak_alert = 3;
-  optional bool push_new_games = 4;
-  optional string daily_reminder_time = 5;
+  bool push_enabled = 1 [features.field_presence = EXPLICIT];
+  bool push_daily_reminder = 2 [features.field_presence = EXPLICIT];
+  bool push_streak_alert = 3 [features.field_presence = EXPLICIT];
+  bool push_new_games = 4 [features.field_presence = EXPLICIT];
+  string daily_reminder_time = 5 [features.field_presence = EXPLICIT];
 }
 message UpdatePushPreferencesResponse {
   NotificationPreferences preferences = 1;
 }
 
 message UpdateEmailPreferencesRequest {
-  optional bool email_enabled = 1;
-  optional bool email_weekly_digest = 2;
-  optional bool email_marketing = 3;
+  bool email_enabled = 1 [features.field_presence = EXPLICIT];
+  bool email_weekly_digest = 2 [features.field_presence = EXPLICIT];
+  bool email_marketing = 3 [features.field_presence = EXPLICIT];
 }
 message UpdateEmailPreferencesResponse {
   NotificationPreferences preferences = 1;

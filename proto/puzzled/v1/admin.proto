@@ -1,6 +1,19 @@
-syntax = "proto3";
+edition = "2024";
 
 package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
 
 // AdminService: product operator surface. Every method requires a verified
 // identity with this product's exact `admin` scope. Platform operator scopes
@@ -33,10 +46,10 @@ message CreateAnnouncementResponse {
 
 message UpdateAnnouncementRequest {
   string id = 1;
-  optional string title = 2;
-  optional string body = 3;
-  optional string type = 4;
-  optional bool active = 5;
+  string title = 2 [features.field_presence = EXPLICIT];
+  string body = 3 [features.field_presence = EXPLICIT];
+  string type = 4 [features.field_presence = EXPLICIT];
+  bool active = 5 [features.field_presence = EXPLICIT];
 }
 message UpdateAnnouncementResponse {
   Announcement announcement = 1;
