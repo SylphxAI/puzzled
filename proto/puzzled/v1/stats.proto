@@ -1,6 +1,19 @@
-syntax = "proto3";
+edition = "2024";
 
 package puzzled.v1;
+
+// Proto3 -> Edition 2024 carries identical wire semantics: pin every proto3
+// default that moved between representations so the migration is a pure
+// edition cutover with no breaking findings and no consumer impact.
+option features.field_presence = IMPLICIT;
+option features.enum_type = OPEN;
+option features.repeated_field_encoding = PACKED;
+option features.utf8_validation = VERIFY;
+option features.message_encoding = LENGTH_PREFIXED;
+option features.json_format = ALLOW;
+option features.(pb.cpp).string_type = STRING;
+
+import "google/protobuf/cpp_features.proto";
 
 // Stats and leaderboard read contracts (ADR-168 S1).
 // HTTP transitional path: GET /api/v1/stats/leaderboard
@@ -21,8 +34,8 @@ enum LeaderboardPeriod {
 message LeaderboardEntry {
   int32 rank = 1;
   string user_id = 2;
-  optional string user_name = 3;
-  optional string user_image = 4;
+  string user_name = 3 [features.field_presence = EXPLICIT];
+  string user_image = 4 [features.field_presence = EXPLICIT];
   int32 value = 5;
 }
 
@@ -42,24 +55,24 @@ message GetLeaderboardResponse {
 message GetTodayPercentileRequest {
   string game_slug = 1;
   string status = 2;
-  optional int32 score = 3;
-  optional int32 attempts = 4;
-  optional int32 mistakes = 5;
-  optional int64 time_spent_ms = 6;
+  int32 score = 3 [features.field_presence = EXPLICIT];
+  int32 attempts = 4 [features.field_presence = EXPLICIT];
+  int32 mistakes = 5 [features.field_presence = EXPLICIT];
+  int64 time_spent_ms = 6 [features.field_presence = EXPLICIT];
   // Fixture residual for pure dual-oracle (no DB).
-  optional int32 total_players = 7;
-  optional int32 better_than = 8;
+  int32 total_players = 7 [features.field_presence = EXPLICIT];
+  int32 better_than = 8 [features.field_presence = EXPLICIT];
 }
 
 message GetTodayPercentileResponse {
-  optional int32 percentile = 1;
+  int32 percentile = 1 [features.field_presence = EXPLICIT];
   int32 total_players = 2;
   string game_slug = 3;
   string status = 4;
-  optional int32 score = 5;
-  optional int32 attempts = 6;
-  optional int32 mistakes = 7;
-  optional int64 time_spent_ms = 8;
+  int32 score = 5 [features.field_presence = EXPLICIT];
+  int32 attempts = 6 [features.field_presence = EXPLICIT];
+  int32 mistakes = 7 [features.field_presence = EXPLICIT];
+  int64 time_spent_ms = 8 [features.field_presence = EXPLICIT];
   bool stub = 9;
   string dispatch = 10;
 }

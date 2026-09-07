@@ -320,10 +320,14 @@ jobs:
       - name: Build Rust api binary (locked release)
         run: |
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
-          if ! command -v protoc >/dev/null 2>&1; then
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends protobuf-compiler
-          fi
+          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
+          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
+          unzip -qo protoc.zip -d "$HOME/.local"
+          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
+          export PATH="$HOME/.local/bin:${PATH}"
+          export PROTOC="$HOME/.local/bin/protoc"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
           cargo build --locked --release -p puzzled-server
   rust-api:
     name: Rust API
@@ -349,10 +353,14 @@ jobs:
       - name: Install protoc
         run: |
           set -euo pipefail
-          if ! command -v protoc >/dev/null 2>&1; then
-            sudo apt-get update -qq
-            sudo apt-get install -y --no-install-recommends protobuf-compiler
-          fi
+          curl -fsSL https://github.com/protocolbuffers/protobuf/releases/download/v36.1/protoc-36.1-linux-x86_64.zip -o protoc.zip
+          echo "c4bc672d9d49214dc8cafdceadf4df92182d6ca8e3ec65a56b2d7de5602669b4  protoc.zip" | sha256sum -c -
+          unzip -qo protoc.zip -d "$HOME/.local"
+          test "$("$HOME/.local/bin/protoc" --version)" = "libprotoc 36.1"
+          export PATH="$HOME/.local/bin:${PATH}"
+          export PROTOC="$HOME/.local/bin/protoc"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "PROTOC=$HOME/.local/bin/protoc" >> "$GITHUB_ENV"
           protoc --version
       - name: cargo fmt
         run: |
