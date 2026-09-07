@@ -36,7 +36,6 @@ watch_paths = [
 
 [[services]]
 name = "web"
-type = "web"
 port = 3000
 # Presentation root is HTTP-ready (no separate /health).
 health = { path = "/" }
@@ -51,7 +50,6 @@ connect = { services = ["api"] }
 # Rust owns the product API (sole backend). Next.js owns presentation only.
 [[services]]
 name = "api"
-type = "web"
 port = 8080
 # Complete public API namespace routes to Rust; no dual backend remains.
 path_prefixes = [
