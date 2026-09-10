@@ -127,6 +127,7 @@ type Options = {
 	guestProvided: boolean
 	json: boolean
 	timeoutMs: number
+	expectedSha: string | null
 }
 
 type HttpResult = {
@@ -172,6 +173,10 @@ Options:
   --play            perform the finish-loop write check (writes ONE guest
                     session row on the target; default is read-only)
   --guest <uuid>    stable guest UUID for the run (default: fresh random UUID)
+  --expected-sha <sha>
+                    assert the /healthz git_commit_sha (prefix match either
+                    direction). Default is a pure readback: without this flag
+                    the expected revision is unknown and not asserted.
   --json            print the stable JSON report on stdout (human lines on stderr)
   --timeout <ms>    per-request timeout (default ${DEFAULT_TIMEOUT_MS})
   -h, --help        show this help
@@ -192,6 +197,7 @@ function parseOptions(argv: string[]): Options | 'help' | { error: string } {
 		guestProvided: false,
 		json: false,
 		timeoutMs: DEFAULT_TIMEOUT_MS,
+		expectedSha: null,
 	}
 	for (let i = 0; i < argv.length; i += 1) {
 		const arg = argv[i]
@@ -209,6 +215,17 @@ function parseOptions(argv: string[]): Options | 'help' | { error: string } {
 				const value = argv[i + 1]
 				if (!value) return { error: '--base requires a URL' }
 				opts.base = value.replace(/\/+$/, '')
+				i += 1
+				break
+			}
+			case '--expected-sha': {
+				const value = argv[i + 1]
+				if (!value) return { error: '--expected-sha requires a commit SHA' }
+				const trimmed = value.trim().toLowerCase()
+				if (!/^[0-9a-f]{7,40}$/.test(trimmed)) {
+					return { error: `--expected-sha must be 7-40 hex characters: ${value}` }
+				}
+				opts.expectedSha = trimmed
 				i += 1
 				break
 			}
@@ -702,7 +719,22 @@ function buildEmptyStringGrid(puzzleData: unknown): (string | null)[][] {
 // Checks
 // ---------------------------------------------------------------------------
 
-async function checkHealthz(base: string, timeoutMs: number): Promise<Check> {
+/**
+ * Revision assertion: with `--expected-sha` set the reported `git_commit_sha`
+ * must match (prefix match either direction, so short SHAs work); without the
+ * flag the expected revision is unknown and stays a pure readback.
+ */
+function shaMatches(actual: string, expected: string): boolean {
+	const a = actual.trim().toLowerCase()
+	const e = expected.trim().toLowerCase()
+	return a === e || a.startsWith(e) || e.startsWith(a)
+}
+
+async function checkHealthz(
+	base: string,
+	timeoutMs: number,
+	expectedSha: string | null,
+): Promise<Check> {
 	const result = await httpRequest(`${base}/healthz`, { timeoutMs })
 	const body = asRecord(result.bodyJson)
 	const sha = asString(body?.git_commit_sha)
@@ -720,15 +752,41 @@ async function checkHealthz(base: string, timeoutMs: number): Promise<Check> {
 				: `git_commit_sha missing (body: ${excerpt(result.bodyText, 120)})`,
 		),
 	]
+	if (expectedSha) {
+		const matches = sha ? shaMatches(sha, expectedSha) : false
+		subResults.push(
+			sub(
+				'expected-revision',
+				matches ? 'pass' : 'fail',
+				matches
+					? `git_commit_sha=${sha} matches --expected-sha ${expectedSha}`
+					: `git_commit_sha=${sha ?? 'missing'} does NOT match --expected-sha ${expectedSha}`,
+			),
+		)
+	}
+	const revisionExpectation = expectedSha
+		? `asserted: ${expectedSha}`
+		: 'unknown (no --expected-sha; pure readback)'
 	return {
 		id: 'healthz',
 		title: 'api liveness + deployed revision identity',
 		status: combine(subResults),
 		required: true,
 		unknownReason: null,
-		summary: `GET /healthz → ${result.httpStatus ?? 'no response'}; git_commit_sha=${sha ?? 'missing'}`,
+		summary: `GET /healthz → ${result.httpStatus ?? 'no response'}; git_commit_sha=${sha ?? 'missing'}${
+			expectedSha
+				? sha && shaMatches(sha, expectedSha)
+					? ` (matches --expected-sha ${expectedSha})`
+					: ` (MISMATCH vs --expected-sha ${expectedSha})`
+				: ' (readback only)'
+		}`,
 		sub: subResults,
-		evidence: { ...httpEvidence(result), gitCommitSha: sha },
+		evidence: {
+			...httpEvidence(result),
+			gitCommitSha: sha,
+			expectedSha,
+			revisionExpectation,
+		},
 	}
 }
 
@@ -826,18 +884,35 @@ function classifySlugResult(result: ConnectResult): SlugVerdict {
 }
 
 async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult> {
-	const results: Array<{ slug: string; result: ConnectResult }> = []
+	type ProbedSlug = {
+		slug: string
+		result: ConnectResult
+		attempts: ConnectResult[]
+		retried: boolean
+	}
+	const results: ProbedSlug[] = []
 	for (const slug of FREE_ROTATION) {
-		const result = await connectUnary(
-			options.base,
-			'GetDaily',
-			{ gameSlug: slug },
-			{
-				guestId: options.guest,
-				timeoutMs: options.timeoutMs,
-			},
-		)
-		results.push({ slug, result })
+		const probe = () =>
+			connectUnary(
+				options.base,
+				'GetDaily',
+				{ gameSlug: slug },
+				{
+					guestId: options.guest,
+					timeoutMs: options.timeoutMs,
+				},
+			)
+		const attempts: ConnectResult[] = []
+		let result = await probe()
+		attempts.push(result)
+		// 5xx / transport failure is not evidence about the gate: retry once and
+		// keep both attempts. A retry that still fails stays indeterminate — a
+		// 5xx is never rounded to a pass.
+		if (result.httpStatus === null || result.httpStatus >= 500) {
+			result = await probe()
+			attempts.push(result)
+		}
+		results.push({ slug, result, attempts, retried: attempts.length > 1 })
 	}
 	const verdicts = results.map((entry) => ({
 		slug: entry.slug,
@@ -846,13 +921,24 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 		connectCode: entry.result.connectCode,
 		connectMessage: entry.result.connectMessage,
 		timeMs: entry.result.timeMs,
+		retried: entry.retried,
+		attempts: entry.attempts.length,
+		firstAttemptHttpStatus: entry.attempts[0]?.httpStatus ?? null,
+		firstAttemptError: entry.attempts[0]?.error ?? null,
 	}))
 	const free = verdicts.filter((entry) => entry.verdict === 'free')
 	const failClosed = verdicts.filter((entry) => entry.verdict === 'fail-closed')
 	const violations = verdicts.filter((entry) => entry.verdict === 'violation')
 	const indeterminate = verdicts.filter((entry) => entry.verdict === 'indeterminate')
 	const verdictText = verdicts
-		.map((entry) => `${entry.slug}=${entry.verdict}(${entry.httpStatus ?? 'no-response'})`)
+		.map(
+			(entry) =>
+				`${entry.slug}=${entry.verdict}(${entry.httpStatus ?? 'no-response'})${
+					entry.retried
+						? `[retried after ${entry.firstAttemptHttpStatus ?? entry.firstAttemptError ?? 'transport error'}]`
+						: ''
+				}`,
+		)
 		.join(' ')
 	const subResults: SubResult[] = []
 	subResults.push(
@@ -909,7 +995,12 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 				rotation: [...FREE_ROTATION],
 				requests: results.map((entry) => ({
 					slug: entry.slug,
-					...connectEvidence(entry.result),
+					verdict: classifySlugResult(entry.result),
+					retried: entry.retried,
+					attempts: entry.attempts.map((attempt, index) => ({
+						attempt: index + 1,
+						...connectEvidence(attempt),
+					})),
 				})),
 				verdicts,
 				freeSlug: freeEntry?.slug ?? null,
@@ -1838,7 +1929,7 @@ async function main(): Promise<number> {
 	const observedAt = new Date().toISOString()
 
 	const checks: Check[] = []
-	const healthz = await checkHealthz(options.base, options.timeoutMs)
+	const healthz = await checkHealthz(options.base, options.timeoutMs, options.expectedSha)
 	const healthzSha = asString(healthz.evidence.gitCommitSha)
 	const readyz = await checkReadyz(options.base, healthzSha, options.timeoutMs)
 	const discovery = await checkFreeSlugDiscovery(options)
@@ -1902,6 +1993,7 @@ async function main(): Promise<number> {
 		base: options.base,
 		observedAt,
 		liveRevision: healthzSha,
+		expectedRevision: options.expectedSha,
 		productDayKey: productDayKeyValue,
 		productDayKeySource,
 		mode: options.play ? 'play (writes one guest finish)' : 'read-only',
@@ -1917,6 +2009,11 @@ async function main(): Promise<number> {
 		console.log(`puzzled live verification — ${options.base}`)
 		console.log(`observedAt    ${observedAt}`)
 		console.log(`liveRevision  ${healthzSha ?? 'unknown'} (healthz git_commit_sha)`)
+		if (options.expectedSha) {
+			console.log(
+				`expectedSha   ${options.expectedSha} (${healthzSha && shaMatches(healthzSha, options.expectedSha) ? 'matched' : 'MISMATCH'})`,
+			)
+		}
 		console.log(`productDayKey ${productDayKeyValue} (${productDayKeySource})`)
 		console.log(
 			`guestId       ${options.guest}${options.guestProvided ? ' (provided)' : ' (fresh random)'}`,
