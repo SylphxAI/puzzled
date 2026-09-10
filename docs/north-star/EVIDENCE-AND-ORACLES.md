@@ -23,6 +23,10 @@
 
 ## 2. Product oracles (must be re-runnable)
 
+Re-runnable Live-layer subset for the capability graph (not the metric oracle
+below): `scripts/verify-live.ts` — see
+[live-verification.md](../reference/live-verification.md).
+
 ### 2.1 daily puzzle completers oracle
 
 Given day \(D\):
