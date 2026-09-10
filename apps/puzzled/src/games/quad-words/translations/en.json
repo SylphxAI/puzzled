@@ -1,8 +1,8 @@
 {
 	"name": "Quad",
 	"tagline": "4 words • 9 guesses",
-	"highlight": "4x Wordle",
-	"description": "Solve 4 Wordle puzzles at once",
+	"highlight": "One guess • four words",
+	"description": "Solve 4 hidden words at once",
 	"howToPlay": "How to Play",
 	"rules": {
 		"title": "How to Play",

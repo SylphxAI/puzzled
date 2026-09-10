@@ -11,7 +11,7 @@ import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { getServerBaseUrl } from '@/lib/utils'
+import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
 import '../globals.css'
@@ -28,64 +28,81 @@ const jetbrainsMono = JetBrains_Mono({
 	display: 'swap',
 })
 
-const baseUrl = getServerBaseUrl()
+const SITE_DESCRIPTION =
+	'Daily puzzles to challenge your mind. Play Five, Threads, Crowns, Duo, and more. Free every day.'
+const SITE_KEYWORDS = [
+	'games',
+	'puzzles',
+	'daily games',
+	'brain games',
+	'word puzzles',
+	'logic puzzles',
+]
 
-export const metadata: Metadata = {
-	title: {
-		default: 'Puzzled',
-		template: '%s | Puzzled',
-	},
-	description: 'Daily puzzles to challenge your mind. Play Wordle, Connections, and more!',
-	keywords: ['games', 'puzzles', 'wordle', 'connections', 'daily games', 'brain games'],
-	authors: [{ name: 'Puzzled' }],
-	creator: 'Puzzled',
-	publisher: 'Puzzled',
-	metadataBase: new URL(baseUrl),
-	alternates: {
-		canonical: baseUrl,
-		languages: {
-			// en-US is default (no prefix in URL)
-			'x-default': baseUrl,
-			'en-US': baseUrl,
-			'en-GB': `${baseUrl}/en-GB`,
-			// Chinese regional variants
-			'zh-HK': `${baseUrl}/zh-HK`,
-			'zh-TW': `${baseUrl}/zh-TW`,
-			'zh-CN': `${baseUrl}/zh-CN`,
+/**
+ * Metadata is request-scoped: canonical/OG/JSON-LD must use the origin actually
+ * serving the player (puzzled.gg in production, preview host on Cloud preview),
+ * never the localhost dev fallback.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+	const baseUrl = await getRequestSiteOrigin()
+	return {
+		title: {
+			default: 'Puzzled',
+			template: '%s | Puzzled',
 		},
-	},
-	openGraph: {
-		type: 'website',
-		locale: 'en_US',
-		alternateLocale: ['en_GB', 'zh_HK', 'zh_TW', 'zh_CN'],
-		url: baseUrl,
-		siteName: 'Puzzled',
-		title: 'Puzzled',
-		description: 'Daily puzzles to challenge your mind',
-		images: [
-			{
-				url: '/og-image.png',
-				width: 1200,
-				height: 630,
-				alt: 'Puzzled',
+		description: SITE_DESCRIPTION,
+		keywords: SITE_KEYWORDS,
+		authors: [{ name: 'Puzzled' }],
+		creator: 'Puzzled',
+		publisher: 'Puzzled',
+		metadataBase: new URL(baseUrl),
+		alternates: {
+			canonical: baseUrl,
+			languages: {
+				// en-US is default (no prefix in URL)
+				'x-default': baseUrl,
+				'en-US': baseUrl,
+				'en-GB': `${baseUrl}/en-GB`,
+				// Chinese regional variants
+				'zh-HK': `${baseUrl}/zh-HK`,
+				'zh-TW': `${baseUrl}/zh-TW`,
+				'zh-CN': `${baseUrl}/zh-CN`,
 			},
-		],
-	},
-	twitter: {
-		card: 'summary_large_image',
-		title: 'Puzzled',
-		description: 'Daily puzzles to challenge your mind',
-		images: ['/og-image.png'],
-	},
-	manifest: '/manifest.webmanifest',
-	appleWebApp: {
-		capable: true,
-		statusBarStyle: 'default',
-		title: 'Puzzled',
-	},
-	formatDetection: {
-		telephone: false,
-	},
+		},
+		openGraph: {
+			type: 'website',
+			locale: 'en_US',
+			alternateLocale: ['en_GB', 'zh_HK', 'zh_TW', 'zh_CN'],
+			url: baseUrl,
+			siteName: 'Puzzled',
+			title: 'Puzzled',
+			description: 'Daily puzzles to challenge your mind',
+			images: [
+				{
+					url: '/og-image.png',
+					width: 1200,
+					height: 630,
+					alt: 'Puzzled',
+				},
+			],
+		},
+		twitter: {
+			card: 'summary_large_image',
+			title: 'Puzzled',
+			description: 'Daily puzzles to challenge your mind',
+			images: ['/og-image.png'],
+		},
+		manifest: '/manifest.webmanifest',
+		appleWebApp: {
+			capable: true,
+			statusBarStyle: 'default',
+			title: 'Puzzled',
+		},
+		formatDetection: {
+			telephone: false,
+		},
+	}
 }
 
 export const viewport: Viewport = {
@@ -115,7 +132,7 @@ type Props = {
 }
 
 // JSON-LD structured data for SEO
-function JsonLd() {
+function JsonLd({ baseUrl }: { baseUrl: string }) {
 	const organizationSchema = {
 		'@context': 'https://schema.org',
 		'@type': 'Organization',
@@ -130,7 +147,7 @@ function JsonLd() {
 		'@type': 'WebSite',
 		name: 'Puzzled',
 		url: baseUrl,
-		description: 'Daily puzzles to challenge your mind. Play Wordle, Connections, and more!',
+		description: SITE_DESCRIPTION,
 		potentialAction: {
 			'@type': 'SearchAction',
 			target: {
@@ -159,6 +176,7 @@ function JsonLd() {
 
 export default async function LocaleLayout({ children, params }: Props) {
 	const { locale } = await params
+	const baseUrl = await getRequestSiteOrigin()
 
 	// Validate locale
 	if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
@@ -218,7 +236,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 						`,
 					}}
 				/>
-				<JsonLd />
+				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
 				<ThemeProvider>

@@ -63,49 +63,26 @@
 		}
 	],
 	"categories": ["games", "entertainment"],
-	"screenshots": [
-		{
-			"src": "/screenshots/wordle-narrow.png",
-			"sizes": "1080x1920",
-			"type": "image/png",
-			"form_factor": "narrow",
-			"label": "Play Word Guess - guess the 5-letter word"
-		},
-		{
-			"src": "/screenshots/connections-narrow.png",
-			"sizes": "1080x1920",
-			"type": "image/png",
-			"form_factor": "narrow",
-			"label": "Play Word Groups - find the connections"
-		},
-		{
-			"src": "/screenshots/stats-narrow.png",
-			"sizes": "1080x1920",
-			"type": "image/png",
-			"form_factor": "narrow",
-			"label": "Track your streaks and achievements"
-		}
-	],
 	"shortcuts": [
 		{
-			"name": "Word Guess",
-			"short_name": "Wordle",
-			"description": "Play today's word puzzle",
-			"url": "/games/wordle",
+			"name": "Five",
+			"short_name": "Five",
+			"description": "Guess today's five-letter word",
+			"url": "/games/word-guess",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		},
 		{
-			"name": "Word Groups",
-			"short_name": "Groups",
-			"description": "Find the word connections",
-			"url": "/games/connections",
+			"name": "Threads",
+			"short_name": "Threads",
+			"description": "Group today's words into hidden categories",
+			"url": "/games/word-groups",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		},
 		{
-			"name": "Daily Quiz",
-			"short_name": "Quiz",
-			"description": "Test your knowledge",
-			"url": "/games/daily-quiz",
+			"name": "Crowns",
+			"short_name": "Crowns",
+			"description": "Place one crown per row, column, and region",
+			"url": "/games/crowns",
 			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
 		}
 	],
