@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * verify-live.ts — re-runnable Live-layer readbacks for the Puzzled capability
  * graph (PUZ-MODULE / PUZ-DAILY / PUZ-FREE / PUZ-SHARE / PUZ-PLUS / PUZ-MARKS).
@@ -23,12 +24,17 @@
  *   bun scripts/verify-live.ts --base https://example.com --json
  */
 
+import type { IncomingHttpHeaders } from 'node:http'
+import { createServer } from 'node:http'
+
 // ---------------------------------------------------------------------------
 // Constants (contracts this harness asserts against)
 // ---------------------------------------------------------------------------
 
 const DEFAULT_BASE = 'https://puzzled.gg'
 const DEFAULT_TIMEOUT_MS = 20_000
+/** Hard cap on any response body read (defensive; product pages are ~150 KB). */
+const MAX_BODY_BYTES = 4 * 1024 * 1024
 const CONNECT_PREFIX = '/puzzled.v1.PuzzleService'
 
 /** Premium-free daily rotation (crates/puzzled-core …/game_slugs.rs FREE_GAME_ROTATION). */
@@ -82,19 +88,6 @@ const FORBIDDEN_MARKS: ReadonlyArray<{ mark: string; pattern: RegExp }> = [
 	{ mark: 'Connexions (misspelling)', pattern: /\bconnexions\b/ },
 ]
 
-/**
- * Spoiler tokens from `shareTextLooksNonSpoiler`
- * (apps/puzzled/src/features/daily/lib/share-text.ts).
- */
-const SHARE_SPOILER_TOKENS = [
-	'solution',
-	'answer is',
-	'the word was',
-	'grid:',
-	'"grid"',
-	'solved cells',
-]
-
 const LOCALHOST_RE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i
 
 // ---------------------------------------------------------------------------
@@ -128,6 +121,7 @@ type Options = {
 	json: boolean
 	timeoutMs: number
 	expectedSha: string | null
+	selfTest: boolean
 }
 
 type HttpResult = {
@@ -141,6 +135,9 @@ type HttpResult = {
 	bodyJson: unknown
 	bodyJsonError: string | null
 	bodySha256: string | null
+	bodySha256Scope: 'full' | 'truncated'
+	bodyTruncated: boolean
+	maxBodyBytes: number
 	location: string | null
 	middlewareRewrite: string | null
 	error: string | null
@@ -156,7 +153,28 @@ type TerminalPlan = {
 	status: 'won' | 'lost'
 	data: Record<string, unknown>
 	solver: Record<string, unknown>
-	solvedGrid: number[][] | null
+	/** Strings whose presence in a landing payload means the solution leaked. */
+	solutionSignatures: string[]
+}
+
+type Report = {
+	base: string
+	observedAt: string
+	liveRevision: string | null
+	expectedRevision: string | null
+	productDayKey: string
+	productDayKeySource: string
+	mode: 'read-only' | 'play (writes one guest finish)'
+	guestId: string
+	ok: boolean
+	summary: {
+		pass: number
+		fail: number
+		unknown: number
+		notAttempted: number
+		indeterminate: number
+	}
+	checks: Check[]
 }
 
 // ---------------------------------------------------------------------------
@@ -177,7 +195,9 @@ Options:
                     assert the /healthz git_commit_sha (prefix match either
                     direction). Default is a pure readback: without this flag
                     the expected revision is unknown and not asserted.
-  --json            print the stable JSON report on stdout (human lines on stderr)
+  --json            print only the stable JSON report on stdout (no human lines)
+  --self-test       run the synthetic stub scenarios (F1/F2/F3 regression proof)
+                    and exit 0 only when every scenario behaves as expected
   --timeout <ms>    per-request timeout (default ${DEFAULT_TIMEOUT_MS})
   -h, --help        show this help
 
@@ -198,6 +218,7 @@ function parseOptions(argv: string[]): Options | 'help' | { error: string } {
 		json: false,
 		timeoutMs: DEFAULT_TIMEOUT_MS,
 		expectedSha: null,
+		selfTest: false,
 	}
 	for (let i = 0; i < argv.length; i += 1) {
 		const arg = argv[i]
@@ -210,6 +231,9 @@ function parseOptions(argv: string[]): Options | 'help' | { error: string } {
 				break
 			case '--json':
 				opts.json = true
+				break
+			case '--self-test':
+				opts.selfTest = true
 				break
 			case '--base': {
 				const value = argv[i + 1]
@@ -332,6 +356,22 @@ function combine(sub: SubResult[]): CheckStatus {
 	return 'pass'
 }
 
+/**
+ * Normalize the check verdict before the run-level rollup (reviewer F1).
+ *
+ * An `unknown` check is run-failing unless it explicitly labels itself
+ * `not_attempted` (only the read-only finish loop does). A check that went
+ * unknown because evidence was missing is `indeterminate`, so `ok`/exit can
+ * never depend on a check forgetting its label.
+ */
+function finalizeCheck(check: Check): Check {
+	if (check.status !== 'unknown') return { ...check, unknownReason: null }
+	return {
+		...check,
+		unknownReason: check.unknownReason === 'not_attempted' ? 'not_attempted' : 'indeterminate',
+	}
+}
+
 function sub(id: string, status: CheckStatus, detail: string): SubResult {
 	return { id, status, detail }
 }
@@ -368,8 +408,13 @@ async function httpRequest(
 			headers,
 			signal: AbortSignal.timeout(init.timeoutMs),
 		})
-		const bodyText = await response.text()
 		const contentType = response.headers.get('content-type')
+		// Bound the body: a hostile or misbehaving --base must not be able to
+		// force unbounded memory before excerpt() truncates for display.
+		const { text: bodyText, truncated: bodyTruncated } = await readBoundedBody(
+			response,
+			MAX_BODY_BYTES,
+		)
 		const { value, error } = safeJsonParse(bodyText)
 		return {
 			url,
@@ -382,6 +427,9 @@ async function httpRequest(
 			bodyJson: value,
 			bodyJsonError: error,
 			bodySha256: await sha256Hex(bodyText),
+			bodySha256Scope: bodyTruncated ? 'truncated' : 'full',
+			bodyTruncated,
+			maxBodyBytes: MAX_BODY_BYTES,
 			location: response.headers.get('location'),
 			middlewareRewrite: response.headers.get('x-middleware-rewrite'),
 			error: null,
@@ -398,11 +446,52 @@ async function httpRequest(
 			bodyJson: null,
 			bodyJsonError: null,
 			bodySha256: null,
+			bodySha256Scope: 'full',
+			bodyTruncated: false,
+			maxBodyBytes: MAX_BODY_BYTES,
 			location: null,
 			middlewareRewrite: null,
 			error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
 		}
 	}
+}
+
+/** Read at most `maxBytes` of the response body; report whether it was cut. */
+async function readBoundedBody(
+	response: Response,
+	maxBytes: number,
+): Promise<{ text: string; truncated: boolean }> {
+	const reader = response.body?.getReader()
+	if (!reader) {
+		const text = await response.text()
+		if (text.length > maxBytes) return { text: text.slice(0, maxBytes), truncated: true }
+		return { text, truncated: false }
+	}
+	const chunks: Uint8Array[] = []
+	let received = 0
+	let truncated = false
+	while (true) {
+		const { done, value } = await reader.read()
+		if (done) break
+		if (!value) continue
+		received += value.byteLength
+		if (received > maxBytes) {
+			const keep = value.byteLength - (received - maxBytes)
+			if (keep > 0) chunks.push(value.subarray(0, keep))
+			truncated = true
+			await reader.cancel().catch(() => {})
+			break
+		}
+		chunks.push(value)
+	}
+	const total = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
+	const merged = new Uint8Array(total)
+	let offset = 0
+	for (const chunk of chunks) {
+		merged.set(chunk, offset)
+		offset += chunk.byteLength
+	}
+	return { text: new TextDecoder().decode(merged), truncated }
 }
 
 function httpEvidence(result: HttpResult): Record<string, unknown> {
@@ -413,7 +502,10 @@ function httpEvidence(result: HttpResult): Record<string, unknown> {
 		timeMs: result.timeMs,
 		contentType: result.contentType,
 		bodyBytes: result.bodyBytes,
+		maxBodyBytes: result.maxBodyBytes,
+		bodyTruncated: result.bodyTruncated,
 		bodySha256: result.bodySha256,
+		bodySha256Scope: result.bodySha256Scope,
 		bodyExcerpt: excerpt(result.bodyText),
 		middlewareRewrite: result.middlewareRewrite,
 		error: result.error,
@@ -569,13 +661,17 @@ export function buildSudokuPlan(puzzleData: unknown): TerminalPlan | null {
 		cells.push(parsedRow)
 	}
 	const emptyCount = cells.flat().filter((value) => value === 0).length
+	const sudokuSignatures = (grid: number[][]): string[] => [
+		grid.map((row) => row.join('')).join(''),
+		JSON.stringify(grid),
+	]
 	if (emptyCount === 0) {
 		return {
 			kind: 'win',
 			status: 'won',
 			data: { finalGrid: cells, mistakes: 0 },
 			solver: { kind: 'none', reason: 'served grid is already complete' },
-			solvedGrid: cells,
+			solutionSignatures: sudokuSignatures(cells),
 		}
 	}
 	const solutions = solveSudokuCells(cells, 2)
@@ -589,7 +685,7 @@ export function buildSudokuPlan(puzzleData: unknown): TerminalPlan | null {
 				solutionCountUpTo2: 1,
 				emptyCells: emptyCount,
 			},
-			solvedGrid: solutions[0],
+			solutionSignatures: sudokuSignatures(solutions[0]),
 		}
 	}
 	// Non-unique (or unsolved) puzzle: the server's stored solution cannot be
@@ -607,7 +703,7 @@ export function buildSudokuPlan(puzzleData: unknown): TerminalPlan | null {
 					? 'served grid has no completion found by the harness solver'
 					: 'served grid has ≥2 valid completions; server solution not determinable from served data',
 		},
-		solvedGrid: null,
+		solutionSignatures: [],
 	}
 }
 
@@ -634,12 +730,16 @@ export function buildCrownsPlan(puzzleData: unknown): TerminalPlan | null {
 			Array.from({ length: size }, (_, col) => columns[row] === col),
 		)
 	if (solutions.length === 1) {
+		const grid = toGrid(solutions[0])
 		return {
 			kind: 'win',
 			status: 'won',
-			data: { finalGrid: toGrid(solutions[0]) },
+			data: { finalGrid: grid },
 			solver: { kind: 'crowns-backtracking', solutionCountUpTo2: 1, size },
-			solvedGrid: null,
+			solutionSignatures: [
+				JSON.stringify(grid),
+				JSON.stringify(grid.map((row) => row.map((cell) => (cell ? 1 : 0)))),
+			],
 		}
 	}
 	return {
@@ -655,7 +755,7 @@ export function buildCrownsPlan(puzzleData: unknown): TerminalPlan | null {
 					? 'no completion found by the harness solver'
 					: 'served regions have ≥2 valid completions; server solution not determinable from served data',
 		},
-		solvedGrid: null,
+		solutionSignatures: [],
 	}
 }
 
@@ -679,7 +779,7 @@ export function buildTerminalPlan(slug: string, puzzleData: unknown): TerminalPl
 					kind: 'none',
 					reason: 'solution word never served; honest lost terminal with one non-winning guess',
 				},
-				solvedGrid: null,
+				solutionSignatures: [],
 			}
 		case 'word-groups':
 			return {
@@ -690,7 +790,7 @@ export function buildTerminalPlan(slug: string, puzzleData: unknown): TerminalPl
 					kind: 'none',
 					reason: 'category solution never served; honest lost terminal with no found categories',
 				},
-				solvedGrid: null,
+				solutionSignatures: [],
 			}
 		case 'crossword':
 			return {
@@ -701,7 +801,7 @@ export function buildTerminalPlan(slug: string, puzzleData: unknown): TerminalPl
 					kind: 'none',
 					reason: 'clue answers never served; honest lost terminal with an empty grid',
 				},
-				solvedGrid: null,
+				solutionSignatures: [],
 			}
 		default:
 			return null
@@ -738,11 +838,23 @@ async function checkHealthz(
 	const result = await httpRequest(`${base}/healthz`, { timeoutMs })
 	const body = asRecord(result.bodyJson)
 	const sha = asString(body?.git_commit_sha)
+	const bodyStatus = asString(body?.status)
 	const subResults: SubResult[] = [
 		sub(
 			'http-200',
 			result.httpStatus === 200 ? 'pass' : result.httpStatus === null ? 'unknown' : 'fail',
 			`GET /healthz → ${result.httpStatus ?? result.error} in ${result.timeMs}ms`,
+		),
+		sub(
+			'api-health-shape',
+			body && bodyStatus === 'ok'
+				? 'pass'
+				: result.httpStatus === null || result.bodyJsonError
+					? 'unknown'
+					: 'fail',
+			body
+				? `health body status=${bodyStatus ?? 'missing'} (expected the api health document, status "ok")`
+				: `health body is not the api JSON health document: ${excerpt(result.bodyText, 120)}`,
 		),
 		sub(
 			'git-commit-sha',
@@ -807,8 +919,9 @@ async function checkReadyz(
 			detail: asString(record?.detail),
 		}
 	})
+	// Fail closed: only an explicit `required: false` exempts a dependency.
 	const requiredUnhealthy = dependencyStates.filter(
-		(entry) => entry.required === true && entry.ok !== true,
+		(entry) => entry.required !== false && entry.ok !== true,
 	)
 	const stubValue = typeof body?.stub === 'boolean' ? String(body.stub) : 'absent(false)'
 	const bodySha = asString(body?.git_commit_sha)
@@ -930,6 +1043,12 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 	const failClosed = verdicts.filter((entry) => entry.verdict === 'fail-closed')
 	const violations = verdicts.filter((entry) => entry.verdict === 'violation')
 	const indeterminate = verdicts.filter((entry) => entry.verdict === 'indeterminate')
+	const freeEntry = free[0] ?? null
+	const freeResultEntry = results.find((entry) => entry.slug === freeEntry?.slug) ?? null
+	const freeBody = freeResultEntry ? asRecord(freeResultEntry.result.bodyJson) : null
+	const puzzleDate = asString(freeBody?.puzzleDate)
+	const localDayKey = productDayKey()
+	const serverDayKey = isDayKey(puzzleDate) ? puzzleDate : null
 	const verdictText = verdicts
 		.map(
 			(entry) =>
@@ -970,10 +1089,17 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 					}`,
 		),
 	)
-	const freeEntry = free[0] ?? null
-	const freeResultEntry = results.find((entry) => entry.slug === freeEntry?.slug) ?? null
-	const freeBody = freeResultEntry ? asRecord(freeResultEntry.result.bodyJson) : null
-	const puzzleDate = asString(freeBody?.puzzleDate)
+	subResults.push(
+		sub(
+			'product-day-key-matches-hkt',
+			serverDayKey === null ? 'unknown' : serverDayKey === localDayKey ? 'pass' : 'fail',
+			serverDayKey === null
+				? `server puzzleDate missing/unparseable; local Asia/Hong_Kong expectation=${localDayKey}`
+				: `server puzzleDate=${serverDayKey} local Asia/Hong_Kong=${localDayKey}${
+						serverDayKey === localDayKey ? ' (match)' : ' (MISMATCH — stale or wrong day key)'
+					}`,
+		),
+	)
 	let puzzleData: unknown = null
 	if (freeBody && typeof freeBody.puzzleDataJson === 'string') {
 		puzzleData = safeJsonParse(freeBody.puzzleDataJson).value
@@ -987,6 +1113,8 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 			unknownReason: null,
 			summary: `${freeEntry ? `free slug = ${freeEntry.slug}` : 'no free slug discovered'}; non-free fail-closed ${
 				failClosedOk ? 'ok' : 'NOT ok'
+			}; day key ${serverDayKey ?? 'missing'}${
+				serverDayKey && serverDayKey !== localDayKey ? ` MISMATCH vs local HKT ${localDayKey}` : ''
 			}`,
 			sub: subResults,
 			evidence: {
@@ -1005,7 +1133,7 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 				verdicts,
 				freeSlug: freeEntry?.slug ?? null,
 				freeSlugPuzzleDate: puzzleDate ?? null,
-				expectedLocalProductDayKey: productDayKey(),
+				expectedLocalProductDayKey: localDayKey,
 			},
 		},
 		freeSlug: freeEntry?.slug ?? null,
@@ -1069,6 +1197,7 @@ async function checkDailyServe(
 		hasCompleted === undefined ? 'absent (proto implicit presence = false)' : typeof hasCompleted
 	const canPlay = typeof body?.canPlay === 'boolean' ? body.canPlay : null
 	const stubText = typeof body?.stub === 'boolean' ? String(body.stub) : 'absent(false)'
+	const puzzleKeys = Object.keys(asRecord(puzzleParse.value) ?? {})
 	const leakFindings: Array<{ path: string; key: string; valuePreview: string }> = []
 	scanLeakKeys(result.bodyJson, '$', leakFindings)
 	const rawLeakMatches = Array.from(
@@ -1087,9 +1216,13 @@ async function checkDailyServe(
 		),
 		sub(
 			'puzzle-data-json',
-			puzzleDataJson && !puzzleParse.error ? 'pass' : 'fail',
+			// A payload with zero keys is not a served puzzle (reviewer F3):
+			// require a parseable object carrying at least one key.
+			puzzleDataJson && !puzzleParse.error && puzzleKeys.length >= 1 ? 'pass' : 'fail',
 			puzzleDataJson
-				? `puzzleDataJson ${puzzleDataJson.length}B parseError=${puzzleParse.error ?? 'none'} keys=${Object.keys(asRecord(puzzleParse.value) ?? {}).join(',')}`
+				? `puzzleDataJson ${puzzleDataJson.length}B parseError=${puzzleParse.error ?? 'none'} keys=${
+						puzzleKeys.join(',') || '(none)'
+					}${puzzleKeys.length === 0 ? ' — empty payload object is not a served puzzle' : ''}`
 				: 'puzzleDataJson empty',
 		),
 		sub(
@@ -1151,7 +1284,13 @@ async function checkDailyServe(
 async function checkWebDocument(
 	options: Options,
 	discovery: DiscoveryResult,
-): Promise<{ check: Check; html: string; canonical: string | null; canonicalLocalhost: boolean }> {
+): Promise<{
+	check: Check
+	html: string
+	canonical: string | null
+	canonicalLocalhost: boolean
+	result: HttpResult
+}> {
 	const result = await httpRequest(`${options.base}/`, {
 		headers: { accept: 'text/html,application/xhtml+xml' },
 		timeoutMs: options.timeoutMs,
@@ -1166,14 +1305,15 @@ async function checkWebDocument(
 	const canonicalLocalhost = Boolean(canonical && LOCALHOST_RE.test(canonical))
 	const hrefs = Array.from(html.matchAll(/href=["']([^"']+)["']/gi)).map((match) => match[1])
 	const gamesHrefs = hrefs.filter((href) => /\/games\//.test(href))
+	const targetHostWithPort = new URL(options.base).host
 	const freeGameHrefs = discovery.freeSlug
-		? hrefs.filter((href) => {
-				const path = href.split(/[?#]/)[0].replace(/\/+$/, '')
-				return (
-					path === `/games/${discovery.freeSlug}` || path.endsWith(`/games/${discovery.freeSlug}`)
-				)
-			})
+		? hrefs.filter((href) =>
+				ctaHrefMatches(href, discovery.freeSlug as string, options.base, targetHostWithPort),
+			)
 		: []
+	const rejectedGameHrefs = discovery.freeSlug
+		? gamesHrefs.filter((href) => !freeGameHrefs.includes(href))
+		: gamesHrefs
 	const htmlOk =
 		result.httpStatus === 200 && Boolean(result.contentType?.toLowerCase().includes('text/html'))
 	const textBody = html
@@ -1222,18 +1362,54 @@ async function checkWebDocument(
 				freeGameHrefs,
 				gamesHrefs: gamesHrefs.slice(0, 20),
 				gamesHrefCount: gamesHrefs.length,
+				rejectedGameHrefs: rejectedGameHrefs.slice(0, 10),
+				ctaMatcherNote:
+					'CTA hrefs must be same-origin and resolve to /games/<slug> (one optional locale prefix); nested or off-site paths do not count',
 				renderedTextExcerpt: excerpt(textBody, 300),
 			},
 		},
 		html,
 		canonical,
 		canonicalLocalhost,
+		result,
 	}
 }
 
 type ShareResult = {
 	check: Check
-	solvedGrid: number[][] | null
+}
+
+/**
+ * `/games/<slug>` path with an optional single locale prefix
+ * (`/en-US/games/sudoku`). Anything else (e.g. a login wall) is not the module.
+ */
+function pathIsModulePath(pathname: string, slug: string): boolean {
+	const segments = pathname.split('/').filter(Boolean)
+	if (segments.length === 2) return segments[0] === 'games' && segments[1] === slug
+	if (segments.length === 3) {
+		return (
+			/^[a-z]{2}(?:-[A-Za-z]{2,4})?$/.test(segments[0]) &&
+			segments[1] === 'games' &&
+			segments[2] === slug
+		)
+	}
+	return false
+}
+
+/**
+ * A daily-ritual CTA href must be same-origin and resolve to `/games/<slug>`
+ * (one optional locale prefix). Off-site or nested `…/games/<slug>` paths do
+ * not count as a link to today's module (reviewer disclosure).
+ */
+function ctaHrefMatches(href: string, slug: string, base: string, targetHost: string): boolean {
+	let url: URL
+	try {
+		url = new URL(href, base)
+	} catch {
+		return false
+	}
+	if (url.host !== targetHost) return false
+	return pathIsModulePath(url.pathname, slug)
 }
 
 async function checkShareDeepLink(
@@ -1257,7 +1433,6 @@ async function checkShareDeepLink(
 				],
 				evidence: { freeSlug: null },
 			},
-			solvedGrid: null,
 		}
 	}
 	const path = `/games/${discovery.freeSlug}?date=${productDayKeyValue}`
@@ -1288,14 +1463,29 @@ async function checkShareDeepLink(
 		]
 	}
 	const finalHtml = final.bodyText
+	const targetHost = new URL(options.base).host
+	const finalUrlParsed = (() => {
+		try {
+			return new URL(final.url)
+		} catch {
+			return null
+		}
+	})()
+	const finalPath = finalUrlParsed?.pathname ?? null
+	const finalHost = finalUrlParsed?.host ?? null
+	const onModulePath = finalPath !== null && pathIsModulePath(finalPath, discovery.freeSlug)
+	const sameOrigin = finalHost !== null && finalHost === targetHost
 	const finalOk =
-		final.httpStatus === 200 && Boolean(final.contentType?.toLowerCase().includes('text/html'))
-	const sharePathFormatOk =
+		final.httpStatus === 200 &&
+		Boolean(final.contentType?.toLowerCase().includes('text/html')) &&
+		onModulePath &&
+		sameOrigin
+	// Request-shape note only: the harness *chooses* the documented share path
+	// (module + ?date=, per apps/puzzled …/share-text.ts ritualSharePath). The
+	// app-side formatRitualShareText output is not observed here, so this is not
+	// asserted as product behavior.
+	const requestedPathShapeOk =
 		/^\/games\/[a-z0-9-]+\?date=\d{4}-\d{2}-\d{2}$/.test(path) && isDayKey(productDayKeyValue)
-	const expectedShareText = `🏆 ${discovery.freeSlug} • ${productDayKeyValue}\n✅ Completed\n\n${hostOf(options.base)}${path}`
-	const shareSpoilerHits = SHARE_SPOILER_TOKENS.filter((token) =>
-		expectedShareText.toLowerCase().includes(token),
-	)
 	const leakPatternFindings: string[] = []
 	for (const pattern of [/"solutionJson"\s*:/i, /"solution_json"\s*:/i, /"solution"\s*:\s*\[/i]) {
 		const match = finalHtml.match(pattern)
@@ -1308,36 +1498,44 @@ async function checkShareDeepLink(
 			)
 		}
 	}
-	const solvedGridFlattened = terminalPlan?.solvedGrid
-		? terminalPlan.solvedGrid.map((row) => row.join('')).join('')
-		: null
-	const solvedGridSha256 = solvedGridFlattened ? await sha256Hex(solvedGridFlattened) : null
-	const solvedGridLeaked = Boolean(solvedGridFlattened && finalHtml.includes(solvedGridFlattened))
+	const solutionSignatures = terminalPlan?.solutionSignatures ?? []
+	const solutionSignatureHits = solutionSignatures.filter((signature) =>
+		finalHtml.includes(signature),
+	)
+	const solutionSignatureSha256s = await Promise.all(
+		solutionSignatures.map((signature) => sha256Hex(signature)),
+	)
 	const subResults: SubResult[] = [
 		sub(
 			'deep-link-html',
-			first.httpStatus === null ? 'unknown' : finalOk ? 'pass' : 'fail',
+			first.httpStatus === null || final.httpStatus === null
+				? 'unknown'
+				: finalOk
+					? 'pass'
+					: 'fail',
 			`GET ${path} → ${first.httpStatus ?? first.error}${
 				first.location ? ` → ${first.location} → ${final.httpStatus}` : ''
-			}; content-type=${final.contentType ?? 'none'}; ${final.bodyBytes}B in ${final.timeMs}ms`,
+			}; final path=${finalPath ?? 'unparsed'} (module path=${onModulePath}, same origin=${sameOrigin}); content-type=${final.contentType ?? 'none'}; ${final.bodyBytes}B in ${final.timeMs}ms`,
 		),
 		sub(
-			'share-path-matches-formatRitualShareText',
-			sharePathFormatOk && shareSpoilerHits.length === 0 ? 'pass' : 'fail',
-			`path=${path} (module + ?date=); spoiler tokens in expected share text=${JSON.stringify(shareSpoilerHits)}`,
-		),
-		sub(
-			'landing-does-not-leak-solution',
+			'landing-no-solution-key-patterns',
+			finalHtml ? (leakPatternFindings.length === 0 ? 'pass' : 'fail') : 'unknown',
 			finalHtml
-				? solvedGridLeaked || leakPatternFindings.length > 0
-					? 'fail'
-					: 'pass'
-				: 'unknown',
-			finalHtml
-				? `solution-key patterns=${leakPatternFindings.length}; harness-solved 81-digit grid present=${solvedGridLeaked}${
-						solvedGridFlattened ? '' : ' (no locally solved grid to compare)'
-					}`
+				? `solution-shaped JSON key patterns in landing payload: ${leakPatternFindings.length}`
 				: 'no landing HTML observed',
+		),
+		sub(
+			'landing-no-solution-signature',
+			!finalHtml
+				? 'unknown'
+				: solutionSignatures.length === 0
+					? 'unknown'
+					: solutionSignatureHits.length === 0
+						? 'pass'
+						: 'fail',
+			solutionSignatures.length === 0
+				? `no locally solved signature for ${discovery.freeSlug} (harness cannot solve this module); grid-leak comparison NOT performed`
+				: `${solutionSignatures.length} locally solved signature(s) checked against the landing payload; hits=${solutionSignatureHits.length}`,
 		),
 	]
 	return {
@@ -1346,32 +1544,37 @@ async function checkShareDeepLink(
 			title: 'share / deep link (non-spoiler)',
 			status: combine(subResults),
 			required: true,
-			unknownReason: null,
+			unknownReason: combine(subResults) === 'unknown' ? 'indeterminate' : null,
 			summary: `GET ${path} → ${first.httpStatus ?? 'no response'}${
 				first.location ? ` → ${final.httpStatus}` : ''
-			}; product day key ${productDayKeyValue} (${productDayKeySource}); solution leak=${
-				solvedGridLeaked || leakPatternFindings.length > 0 ? 'YES' : 'no'
-			}`,
+			}; final path=${finalPath ?? 'unparsed'}(module=${onModulePath}); product day key ${productDayKeyValue} (${productDayKeySource}); solution-signature hits=${
+				solutionSignatureHits.length
+			}${solutionSignatures.length === 0 ? ' (signature unknown)' : ''}`,
 			sub: subResults,
 			evidence: {
 				requestedPath: path,
 				requestedUrl: url,
+				requestedPathShapeOk,
+				requestedPathNote:
+					'harness requested the documented module+?date= shape (share-text.ts ritualSharePath); formatRitualShareText output is app-side and not observed here',
 				productDayKey: productDayKeyValue,
 				productDayKeySource,
 				redirectChain,
 				finalUrl: final.url,
+				finalPath,
+				finalHost,
+				targetHost,
+				onModulePath,
+				sameOrigin,
 				...httpEvidence(final),
 				leakPatternFindings,
-				solvedGridSha256,
-				solvedGridLength: solvedGridFlattened?.length ?? null,
-				solvedGridNote:
-					'solved grid redacted (sha256 identifies it) so the harness does not publish a solution',
-				solvedGridLeaked,
-				expectedShareText,
-				shareSpoilerHits,
+				solutionSignatureCount: solutionSignatures.length,
+				solutionSignatureSha256s,
+				solutionSignatureHits: solutionSignatureHits.length,
+				solutionSignatureNote:
+					'signatures are redacted (sha256 identifies them) so the harness does not publish a solution',
 			},
 		},
-		solvedGrid: terminalPlan?.solvedGrid ?? null,
 	}
 }
 
@@ -1409,7 +1612,13 @@ async function checkPremiumFailClosed(
 	const subResults: SubResult[] = [
 		sub(
 			'archive-fails-closed-anonymous',
-			archive.httpStatus === null ? 'unknown' : archiveFailClosed ? 'pass' : 'fail',
+			// A 5xx/transport failure is not evidence about the archive gate
+			// (same rule as the rotation probes): unknown, never a pass.
+			archive.httpStatus === null || archive.httpStatus >= 500
+				? 'unknown'
+				: archiveFailClosed
+					? 'pass'
+					: 'fail',
 			`anonymous GetDaily(${archiveSlug}, puzzleDate=${pastDate}) → ${archive.httpStatus ?? archive.error}:${
 				archive.connectMessage ?? '?'
 			}`,
@@ -1528,7 +1737,7 @@ function scanMarks(html: string, zones: Zone[], maxWarnings = 10): MarksFindings
 async function checkMarksScan(
 	options: Options,
 	discovery: DiscoveryResult,
-	homeHtml: string | null,
+	homeResult: HttpResult | null,
 	homeCanonicalLocalhost: boolean,
 ): Promise<Check> {
 	const targets: Array<{
@@ -1541,20 +1750,19 @@ async function checkMarksScan(
 		bodySha256: string | null
 		error: string | null
 	}> = []
-	const home = await httpRequest(`${options.base}/`, {
-		headers: { accept: 'text/html,application/xhtml+xml' },
-		timeoutMs: options.timeoutMs,
-	})
-	targets.push({
-		url: `${options.base}/`,
-		label: 'home',
-		html: home.bodyText || null,
-		httpStatus: home.httpStatus,
-		contentType: home.contentType,
-		bodyBytes: home.bodyBytes,
-		bodySha256: home.bodySha256,
-		error: home.error,
-	})
+	const homeHtml = homeResult?.bodyText ?? null
+	if (homeResult) {
+		targets.push({
+			url: homeResult.url,
+			label: 'home',
+			html: homeResult.bodyText || null,
+			httpStatus: homeResult.httpStatus,
+			contentType: homeResult.contentType,
+			bodyBytes: homeResult.bodyBytes,
+			bodySha256: homeResult.bodySha256,
+			error: homeResult.error,
+		})
+	}
 	let gameHtml: string | null = null
 	if (discovery.freeSlug) {
 		const game = await httpRequest(`${options.base}/games/${discovery.freeSlug}`, {
@@ -1623,10 +1831,17 @@ async function checkMarksScan(
 		})
 	}
 	// The manifest is part of the player-facing identity surface (short_name).
+	// Not observing it is `unknown`, not a silent pass (reviewer disclosure).
+	let manifestState: 'scanned' | 'not-observed' = 'not-observed'
+	let manifestNotObservedReason: string | null = null
 	const manifestHref =
 		homeHtml?.match(/<link[^>]*rel=["']manifest["'][^>]*href=["']([^"']+)["']/i)?.[1] ?? null
 	let manifestEvidence: Record<string, unknown> = { url: null, httpStatus: null }
-	if (manifestHref) {
+	if (!homeHtml) {
+		manifestNotObservedReason = 'home HTML was not observed; manifest link could not be read'
+	} else if (!manifestHref) {
+		manifestNotObservedReason = 'served home HTML has no <link rel="manifest">'
+	} else {
 		const manifestUrl = new URL(manifestHref, options.base).toString()
 		const manifest = await httpRequest(manifestUrl, { timeoutMs: options.timeoutMs })
 		const manifestJson = asRecord(manifest.bodyJson)
@@ -1645,6 +1860,11 @@ async function checkMarksScan(
 			}
 		}
 		hardFailureCount += manifestHardFailures.length
+		if (manifest.httpStatus === 200 && manifestJson) {
+			manifestState = 'scanned'
+		} else {
+			manifestNotObservedReason = `manifest fetch/parse failed (HTTP ${manifest.httpStatus ?? manifest.error}; body ${excerpt(manifest.bodyText, 80)})`
+		}
 		manifestEvidence = {
 			url: manifestUrl,
 			httpStatus: manifest.httpStatus,
@@ -1666,6 +1886,18 @@ async function checkMarksScan(
 			productIdentityOk
 				? 'served home HTML identifies as the Puzzled web app (title/manifest reference)'
 				: 'served home HTML does not identify as the Puzzled web app; the mark scan is vacuous here',
+		),
+		sub(
+			'manifest-observed-and-scanned',
+			manifestState === 'scanned' ? 'pass' : 'unknown',
+			manifestState === 'scanned'
+				? `manifest scanned: ${String(manifestEvidence.url)} (${
+						Object.entries(asRecord(manifestEvidence.fields) ?? {})
+							.filter(([, value]) => typeof value === 'string' && value)
+							.map(([field]) => field)
+							.join(',') || 'no name/short_name/description fields'
+					})`
+				: `manifest not observed: ${manifestNotObservedReason ?? 'unknown reason'}`,
 		),
 		sub(
 			'no-forbidden-marks-in-title-meta-jsonld-manifest',
@@ -1911,6 +2143,358 @@ async function checkFinishLoop(
 }
 
 // ---------------------------------------------------------------------------
+// Self-test (synthetic stubs; regression proof for the reviewed fixes)
+// ---------------------------------------------------------------------------
+
+type StubResponse = { status: number; headers?: Record<string, string>; body: string }
+
+type StubConfig = {
+	/** Replaces the default api health document. */
+	healthz?: StubResponse
+	/** Returns this status for every rotation GetDaily probe (e.g. 525). */
+	rotationStatusAll?: number
+	/** Free module slug (default sudoku; set word-guess for the unsolvable day). */
+	freeSlug?: string
+	/** puzzleDataJson served for the free module (default a unique sudoku). */
+	puzzleDataJson?: string
+	/** Exact path overrides (e.g. a share landing that redirects to /login). */
+	routes?: Record<string, StubResponse>
+	homeHtml?: string
+}
+
+type StubRequest = {
+	method: string
+	path: string
+	headers: IncomingHttpHeaders
+	body: string
+}
+
+type StubHandler = (request: StubRequest) => StubResponse
+
+const STUB_SHA = '0123456789abcdef0123456789abcdef01234567'
+
+/** Known unique-solution puzzle (classic fixture; also used by solver tests). */
+const STUB_SUDOKU_GRID: Array<Array<number | null>> = [
+	[5, 3, null, null, 7, null, null, null, null],
+	[6, null, null, 1, 9, 5, null, null, null],
+	[null, 9, 8, null, null, null, null, 6, null],
+	[8, null, null, null, 6, null, null, null, 3],
+	[4, null, null, 8, null, 3, null, null, 1],
+	[7, null, null, null, 2, null, null, null, 6],
+	[null, 6, null, null, null, null, 2, 8, null],
+	[null, null, null, 4, 1, 9, null, null, 5],
+	[null, null, null, null, 8, null, null, 7, 9],
+]
+
+function jsonStub(body: unknown, status = 200): StubResponse {
+	return { status, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }
+}
+
+function htmlStub(body: string, status = 200): StubResponse {
+	return { status, headers: { 'content-type': 'text/html; charset=utf-8' }, body }
+}
+
+function defaultStubHomeHtml(origin: string, freeSlug: string): string {
+	return `<!doctype html><html><head><title>Puzzled</title><link rel="canonical" href="${origin}/"/><link rel="manifest" href="/manifest.webmanifest"/></head><body><a href="/games/${freeSlug}">Play today</a></body></html>`
+}
+
+/** Minimal fake puzzled surface: only the routes the read-only checks touch. */
+function makeStubConfigHandler(config: StubConfig): StubHandler {
+	return ({ path, headers, body }) => {
+		const host = headers.host ?? '127.0.0.1'
+		const origin = `http://${host}`
+		const freeSlug = config.freeSlug ?? 'sudoku'
+		const dayKey = productDayKey()
+		const override = config.routes?.[path]
+		if (override) return override
+		if (path === `${CONNECT_PREFIX}/GetDaily`) {
+			if (config.rotationStatusAll) {
+				return {
+					status: config.rotationStatusAll,
+					headers: { 'content-type': 'text/plain' },
+					body: `error code: ${config.rotationStatusAll}`,
+				}
+			}
+			const parsed = asRecord(safeJsonParse(body).value) ?? {}
+			const slug = asString(parsed.gameSlug) ?? ''
+			const requestedDate = asString(parsed.puzzleDate)
+			if (requestedDate && requestedDate !== dayKey) {
+				return jsonStub({ code: 'permission_denied', message: 'premium_required' }, 403)
+			}
+			if (slug === freeSlug) {
+				return jsonStub({
+					gameSlug: slug,
+					puzzleNumber: 1,
+					puzzleDate: dayKey,
+					canPlay: true,
+					mode: 'daily',
+					slice: 'S2-daily-connect',
+					puzzleDataJson:
+						config.puzzleDataJson ??
+						JSON.stringify({ difficulty: 'medium', grid: STUB_SUDOKU_GRID }),
+				})
+			}
+			return jsonStub({ code: 'permission_denied', message: 'premium_required' }, 403)
+		}
+		if (path === `${CONNECT_PREFIX}/SubmitGuess`) {
+			return jsonStub({ code: 'unimplemented', message: 'self-test is read-only' }, 501)
+		}
+		if (path === '/healthz') {
+			return config.healthz ?? jsonStub({ status: 'ok', git_commit_sha: STUB_SHA })
+		}
+		if (path === '/readyz') {
+			return jsonStub({
+				status: 'ok',
+				slice: 'S1',
+				stub: false,
+				git_commit_sha: STUB_SHA,
+				dependencies: [{ name: 'postgres', ok: true, required: true, detail: 'self-test stub' }],
+			})
+		}
+		if (path === '/') {
+			return htmlStub(config.homeHtml ?? defaultStubHomeHtml(origin, freeSlug))
+		}
+		if (path === `/games/${freeSlug}`) {
+			return htmlStub(`<!doctype html><html><body><h1>${freeSlug}</h1></body></html>`)
+		}
+		if (path.startsWith('/games/')) {
+			return htmlStub('<html><body><a href="/pricing">Upgrade</a></body></html>')
+		}
+		if (path === '/pricing') return htmlStub('<!doctype html><html><body>Pricing</body></html>')
+		if (path === '/login') return htmlStub('<!doctype html><html><body>Sign in</body></html>')
+		if (path === '/manifest.webmanifest') {
+			return jsonStub({ name: 'Puzzled', short_name: 'Puzzled', description: 'self-test stub' })
+		}
+		return jsonStub({ error: 'not_found', path }, 404)
+	}
+}
+
+async function startStub(
+	handler: StubHandler,
+): Promise<{ base: string; stop: () => Promise<void> }> {
+	const server = createServer((request, response) => {
+		const chunks: Buffer[] = []
+		request.on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)))
+		request.on('end', () => {
+			const url = new URL(request.url ?? '/', 'http://127.0.0.1')
+			let result: StubResponse
+			try {
+				result = handler({
+					method: request.method ?? 'GET',
+					path: url.pathname,
+					headers: request.headers,
+					body: Buffer.concat(chunks).toString('utf8'),
+				})
+			} catch (error) {
+				result = jsonStub({ error: String(error) }, 500)
+			}
+			response.writeHead(result.status, { 'content-type': 'application/json', ...result.headers })
+			response.end(result.body)
+		})
+	})
+	await new Promise<void>((resolve) => {
+		server.listen(0, '127.0.0.1', resolve)
+	})
+	const address = server.address()
+	if (!address || typeof address === 'string') throw new Error('self-test stub failed to listen')
+	return {
+		base: `http://127.0.0.1:${address.port}`,
+		stop: () =>
+			new Promise<void>((resolve) => {
+				server.close(() => resolve())
+			}),
+	}
+}
+
+type SelfTestCase = {
+	id: string
+	config: StubConfig
+	expect: (report: Report) => string[]
+}
+
+const SELF_TEST_CASES: SelfTestCase[] = [
+	{
+		id: 'control-healthy-stub-goes-green',
+		config: {},
+		expect: (report) => {
+			const problems: string[] = []
+			if (!report.ok) {
+				problems.push(`expected ok=true, got ok=false (${JSON.stringify(report.summary)})`)
+			}
+			for (const check of report.checks) {
+				if (check.status === 'fail') problems.push(`${check.id} unexpectedly failed`)
+				if (check.status === 'unknown' && check.unknownReason !== 'not_attempted') {
+					problems.push(`${check.id} unexpectedly indeterminate`)
+				}
+			}
+			return problems
+		},
+	},
+	{
+		// Reviewer F1 case 1: /healthz 200 without the api health document.
+		id: 'f1-healthz-not-the-api-health-document-is-not-green',
+		config: {
+			healthz: { status: 200, headers: { 'content-type': 'text/plain' }, body: 'ok' },
+		},
+		expect: (report) => {
+			const problems: string[] = []
+			if (report.ok) problems.push('run is green although the health identity is unknown')
+			if (report.liveRevision !== null) {
+				problems.push(`liveRevision should be null, got ${report.liveRevision}`)
+			}
+			for (const id of ['healthz', 'readyz']) {
+				const check = report.checks.find((entry) => entry.id === id)
+				if (!check || check.status === 'pass') problems.push(`${id} should not pass`)
+			}
+			if (report.summary.indeterminate < 1) {
+				problems.push('no indeterminate check recorded for the unknown health identity')
+			}
+			return problems
+		},
+	},
+	{
+		// Reviewer F1 case 2: every rotation probe 525 on both attempts.
+		id: 'f1-rotation-525-both-attempts-is-not-green',
+		config: { rotationStatusAll: 525 },
+		expect: (report) => {
+			const problems: string[] = []
+			if (report.ok) problems.push('run is green although the rotation gate was never observed')
+			const discovery = report.checks.find((entry) => entry.id === 'free-slug-discovery')
+			if (!discovery) {
+				problems.push('free-slug-discovery check missing')
+			} else {
+				if (discovery.status !== 'unknown') {
+					problems.push(`free-slug-discovery should be unknown, got ${discovery.status}`)
+				}
+				const requests = (discovery.evidence as { requests?: unknown }).requests
+				const first = Array.isArray(requests) ? requests[0] : null
+				const attemptList =
+					first && typeof first === 'object'
+						? (first as { attempts?: Array<{ httpStatus?: number | null }> }).attempts
+						: null
+				if (!attemptList || attemptList.length !== 2) {
+					problems.push(`expected 2 kept attempts per slug, got ${attemptList?.length ?? 'none'}`)
+				} else if (attemptList.some((attempt) => attempt.httpStatus !== 525)) {
+					problems.push('retry evidence does not record both 525 attempts')
+				}
+			}
+			if (report.summary.fail !== 0) {
+				const failing = report.checks
+					.filter((entry) => entry.status === 'fail')
+					.map((entry) => `${entry.id}(${entry.summary})`)
+				problems.push(
+					`expected no hard fails in this stub, got ${report.summary.fail}: ${failing.join('; ')}`,
+				)
+			}
+			if (report.summary.indeterminate < 1) {
+				problems.push('indeterminate count is 0 while the gate is unobserved')
+			}
+			return problems
+		},
+	},
+	{
+		// Reviewer F2 case 1: a deep link behind a login wall must not pass.
+		id: 'f2-share-redirect-to-login-fails',
+		config: {
+			routes: {
+				'/games/sudoku': { status: 302, headers: { location: '/login' }, body: '' },
+				'/login': htmlStub('<!doctype html><html><body>Sign in</body></html>'),
+			},
+		},
+		expect: (report) => {
+			const problems: string[] = []
+			const share = report.checks.find((entry) => entry.id === 'share-deep-link')
+			if (!share) return ['share-deep-link check missing']
+			if (share.status !== 'fail') problems.push(`share-deep-link should fail, got ${share.status}`)
+			const finalPath = (share.evidence as { finalPath?: string | null }).finalPath
+			if (finalPath !== '/login') problems.push(`expected finalPath /login, got ${finalPath}`)
+			if (report.ok) problems.push('run is green although the share landing was a login wall')
+			return problems
+		},
+	},
+	{
+		// Reviewer F2 case 2: no local solution => leak compare is unknown, not pass.
+		id: 'f2-share-leak-compare-unknown-without-solution',
+		config: {
+			freeSlug: 'word-guess',
+			puzzleDataJson: JSON.stringify({ wordLength: 5, maxAttempts: 6 }),
+		},
+		expect: (report) => {
+			const problems: string[] = []
+			const share = report.checks.find((entry) => entry.id === 'share-deep-link')
+			if (!share) return ['share-deep-link check missing']
+			if (share.status !== 'unknown') {
+				problems.push(`share-deep-link should be unknown, got ${share.status}`)
+			}
+			const signatureSub = share.sub.find((entry) => entry.id === 'landing-no-solution-signature')
+			if (signatureSub?.status !== 'unknown') {
+				problems.push(
+					`landing-no-solution-signature should be unknown, got ${signatureSub?.status}`,
+				)
+			}
+			if (report.ok) problems.push('run is green although the grid-leak compare was not performed')
+			return problems
+		},
+	},
+	{
+		// Reviewer F3: an empty puzzle payload is not a served puzzle.
+		id: 'f3-empty-puzzle-payload-fails',
+		config: { puzzleDataJson: '{}' },
+		expect: (report) => {
+			const problems: string[] = []
+			const serve = report.checks.find((entry) => entry.id === 'daily-serve')
+			if (!serve) return ['daily-serve check missing']
+			if (serve.status !== 'fail') problems.push(`daily-serve should fail, got ${serve.status}`)
+			const payloadSub = serve.sub.find((entry) => entry.id === 'puzzle-data-json')
+			if (payloadSub?.status !== 'fail') {
+				problems.push(`puzzle-data-json should fail, got ${payloadSub?.status}`)
+			}
+			if (report.ok) problems.push('run is green although the free module carried no puzzle')
+			return problems
+		},
+	},
+]
+
+async function runSelfTest(): Promise<number> {
+	console.log(`verify-live --self-test (${SELF_TEST_CASES.length} synthetic stub cases)`)
+	let failures = 0
+	for (const testCase of SELF_TEST_CASES) {
+		const stub = await startStub(makeStubConfigHandler(testCase.config))
+		try {
+			const options: Options = {
+				base: stub.base,
+				play: false,
+				guest: crypto.randomUUID(),
+				guestProvided: false,
+				json: true,
+				timeoutMs: 5_000,
+				expectedSha: null,
+				selfTest: false,
+			}
+			const { report } = await runReport(options)
+			const exitCode = report.ok ? 0 : 1
+			const problems = testCase.expect(report)
+			if (problems.length === 0) {
+				console.log(
+					`[selftest][pass] ${testCase.id} — ok=${report.ok} exit=${exitCode} ${JSON.stringify(report.summary)}`,
+				)
+			} else {
+				failures += 1
+				console.log(`[selftest][FAIL] ${testCase.id} — ${problems.join('; ')}`)
+			}
+		} finally {
+			await stub.stop()
+		}
+	}
+	console.log(
+		failures === 0
+			? `[selftest] all ${SELF_TEST_CASES.length} cases behaved as expected`
+			: `[selftest] ${failures}/${SELF_TEST_CASES.length} cases FAILED`,
+	)
+	return failures === 0 ? 0 : 1
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -1925,7 +2509,23 @@ async function main(): Promise<number> {
 		console.error('run with --help for usage')
 		return 2
 	}
-	const options = parsed
+	if (parsed.selfTest) {
+		return runSelfTest()
+	}
+	const { report } = await runReport(parsed)
+	printReport(report, parsed)
+	return report.ok ? 0 : 1
+}
+
+/**
+ * Run every check and derive the run verdict.
+ *
+ * Verdict rule (reviewer F1): an `unknown` check only leaves the run green when
+ * it explicitly labels itself `not_attempted` (the read-only finish loop). Any
+ * other unknown — including a check that went unknown because its evidence was
+ * missing — is indeterminate and fails the machine verdict.
+ */
+async function runReport(options: Options): Promise<{ report: Report }> {
 	const observedAt = new Date().toISOString()
 
 	const checks: Check[] = []
@@ -1952,7 +2552,7 @@ async function main(): Promise<number> {
 		terminalPlan,
 	)
 	const premium = await checkPremiumFailClosed(options, discovery, productDayKeyValue)
-	const marks = await checkMarksScan(options, discovery, web.html || null, web.canonicalLocalhost)
+	const marks = await checkMarksScan(options, discovery, web.result, web.canonicalLocalhost)
 	const finish = await checkFinishLoop(
 		options,
 		discovery,
@@ -1973,23 +2573,25 @@ async function main(): Promise<number> {
 		marks,
 		finish,
 	)
-
-	const failures = checks.filter((entry) => entry.status === 'fail')
-	const indeterminate = checks.filter(
-		(entry) => entry.status === 'unknown' && entry.unknownReason === 'indeterminate',
-	)
-	const notAttempted = checks.filter(
+	const finalized = checks.map(finalizeCheck)
+	const failures = finalized.filter((entry) => entry.status === 'fail')
+	const notAttempted = finalized.filter(
 		(entry) => entry.status === 'unknown' && entry.unknownReason === 'not_attempted',
+	)
+	// Derived from status, not from the optional label: a check that reports
+	// unknown without an explicit not-attempted exemption is indeterminate.
+	const indeterminate = finalized.filter(
+		(entry) => entry.status === 'unknown' && entry.unknownReason !== 'not_attempted',
 	)
 	const ok = failures.length === 0 && indeterminate.length === 0
 	const summary = {
-		pass: checks.filter((entry) => entry.status === 'pass').length,
+		pass: finalized.filter((entry) => entry.status === 'pass').length,
 		fail: failures.length,
-		unknown: checks.filter((entry) => entry.status === 'unknown').length,
+		unknown: finalized.filter((entry) => entry.status === 'unknown').length,
 		notAttempted: notAttempted.length,
 		indeterminate: indeterminate.length,
 	}
-	const report = {
+	const report: Report = {
 		base: options.base,
 		observedAt,
 		liveRevision: healthzSha,
@@ -2000,24 +2602,30 @@ async function main(): Promise<number> {
 		guestId: options.guest,
 		ok,
 		summary,
-		checks,
+		checks: finalized,
 	}
+	return { report }
+}
 
+function printReport(report: Report, options: Options): void {
+	const { checks } = report
 	if (options.json) {
 		console.log(JSON.stringify(report, null, 2))
 	} else {
-		console.log(`puzzled live verification — ${options.base}`)
-		console.log(`observedAt    ${observedAt}`)
-		console.log(`liveRevision  ${healthzSha ?? 'unknown'} (healthz git_commit_sha)`)
-		if (options.expectedSha) {
+		console.log(`puzzled live verification — ${report.base}`)
+		console.log(`observedAt    ${report.observedAt}`)
+		console.log(`liveRevision  ${report.liveRevision ?? 'unknown'} (healthz git_commit_sha)`)
+		if (report.expectedRevision) {
 			console.log(
-				`expectedSha   ${options.expectedSha} (${healthzSha && shaMatches(healthzSha, options.expectedSha) ? 'matched' : 'MISMATCH'})`,
+				`expectedSha   ${report.expectedRevision} (${
+					report.liveRevision && shaMatches(report.liveRevision, report.expectedRevision)
+						? 'matched'
+						: 'MISMATCH'
+				})`,
 			)
 		}
-		console.log(`productDayKey ${productDayKeyValue} (${productDayKeySource})`)
-		console.log(
-			`guestId       ${options.guest}${options.guestProvided ? ' (provided)' : ' (fresh random)'}`,
-		)
+		console.log(`productDayKey ${report.productDayKey} (${report.productDayKeySource})`)
+		console.log(`guestId       ${report.guestId}`)
 		console.log(`mode          ${report.mode}`)
 		console.log('')
 		for (const check of checks) {
@@ -2028,13 +2636,12 @@ async function main(): Promise<number> {
 		}
 		console.log('')
 		console.log(
-			`summary: ${summary.pass} pass, ${summary.fail} fail, ${summary.unknown} unknown (${summary.notAttempted} not attempted, ${summary.indeterminate} indeterminate) → exit ${ok ? 0 : 1}`,
+			`summary: ${report.summary.pass} pass, ${report.summary.fail} fail, ${report.summary.unknown} unknown (${report.summary.notAttempted} not attempted, ${report.summary.indeterminate} indeterminate) → exit ${report.ok ? 0 : 1}`,
 		)
 		console.log(
 			'evidence layer: Live (observed behavior of the target-reported revision); no Deployed/Released identity is claimed.',
 		)
 	}
-	return ok ? 0 : 1
 }
 
 if (import.meta.main) {
