@@ -12,6 +12,6 @@
 		"rule4": "Crowns cannot touch each other (including diagonally)"
 	},
 	"startGame": "Start Game",
-	"hasConflicts": "Some queens are in conflict",
+	"hasConflicts": "Some crowns are in conflict",
 	"complete": "Puzzle Complete!"
 }

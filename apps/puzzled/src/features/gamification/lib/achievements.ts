@@ -101,7 +101,7 @@ const ACHIEVEMENT_LIST: Achievement[] = [
 	{
 		id: 'wordle-perfect',
 		name: 'Lucky Guess',
-		description: 'Solve Wordle in 1 attempt',
+		description: 'Solve Five in 1 attempt',
 		icon: 'mdi:star-four-points',
 		tier: 'gold',
 		category: 'special',
@@ -109,7 +109,7 @@ const ACHIEVEMENT_LIST: Achievement[] = [
 	{
 		id: 'wordle-fast',
 		name: 'Quick Thinker',
-		description: 'Solve Wordle in 2 attempts',
+		description: 'Solve Five in 2 attempts',
 		icon: 'mdi:lightning-bolt',
 		tier: 'silver',
 		category: 'special',
@@ -118,8 +118,8 @@ const ACHIEVEMENT_LIST: Achievement[] = [
 	// Connections specific
 	{
 		id: 'connections-perfect',
-		name: 'Perfect Connection',
-		description: 'Solve Connections with no mistakes',
+		name: 'Perfect Threads',
+		description: 'Solve Threads with no mistakes',
 		icon: 'mdi:puzzle',
 		tier: 'gold',
 		category: 'special',

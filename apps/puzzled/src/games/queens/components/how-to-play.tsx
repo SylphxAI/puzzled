@@ -61,7 +61,7 @@ export function QueensHowToPlay() {
 				<p className="text-center text-xs text-muted-foreground">
 					Each row, column, and color region has exactly one 👑
 					<br />
-					<span className="text-[10px]">Queens cannot touch (including diagonally)</span>
+					<span className="text-[10px]">Crowns cannot touch (including diagonally)</span>
 				</p>
 			</div>
 
@@ -69,7 +69,7 @@ export function QueensHowToPlay() {
 			<div className="space-y-2">
 				<p className="text-sm font-medium">Controls</p>
 				<ul className="space-y-1 text-xs text-muted-foreground">
-					<li>• Click/tap a cell to place or remove a queen</li>
+					<li>• Click/tap a cell to place or remove a crown</li>
 					<li>• Use arrow keys to navigate, Space/Enter to toggle</li>
 					<li>• Red highlight shows conflicts</li>
 				</ul>

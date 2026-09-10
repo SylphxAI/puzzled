@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { resolveSiteOrigin } from './site-origin'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -25,7 +26,9 @@ export function generateId() {
  * - getBaseUrl('origin'): For absolute URLs that need the actual origin (auth, sharing)
  * - getServerBaseUrl(): For server-side only code (workflows, cron jobs)
  *
- * Priority: NEXT_PUBLIC_APP_URL > VERCEL_URL > localhost
+ * Non-request priority: NEXT_PUBLIC_APP_URL > VERCEL_URL > production origin
+ * > localhost (dev/test only). Request-scoped metadata should use
+ * getRequestSiteOrigin() so the served origin wins.
  */
 export function getBaseUrl(mode: 'relative' | 'origin' = 'relative'): string {
 	if (typeof window !== 'undefined') {
@@ -33,17 +36,8 @@ export function getBaseUrl(mode: 'relative' | 'origin' = 'relative'): string {
 		return mode === 'origin' ? window.location.origin : ''
 	}
 
-	// SSR/Server: use environment configuration
-	if (process.env.NEXT_PUBLIC_APP_URL) {
-		return process.env.NEXT_PUBLIC_APP_URL
-	}
-	if (process.env.VERCEL_URL) {
-		return `https://${process.env.VERCEL_URL}`
-	}
-
-	// Fallback for development
-	const port = process.env.PORT ?? '3000'
-	return `http://localhost:${port}`
+	// SSR/Server: environment configuration, never localhost in production
+	return getServerBaseUrl()
 }
 
 /**
@@ -51,13 +45,12 @@ export function getBaseUrl(mode: 'relative' | 'origin' = 'relative'): string {
  * Does not check for window - always returns absolute URL
  */
 export function getServerBaseUrl(): string {
-	if (process.env.NEXT_PUBLIC_APP_URL) {
-		return process.env.NEXT_PUBLIC_APP_URL
-	}
-	if (process.env.VERCEL_URL) {
-		return `https://${process.env.VERCEL_URL}`
-	}
-	return 'http://localhost:3000'
+	return resolveSiteOrigin({
+		configuredUrl: process.env.NEXT_PUBLIC_APP_URL,
+		vercelUrl: process.env.VERCEL_URL,
+		nodeEnv: process.env.NODE_ENV,
+		port: process.env.PORT,
+	})
 }
 
 /**
