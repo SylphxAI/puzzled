@@ -399,7 +399,7 @@ export const PUZZLES: ConnectionsPuzzle[] = [
 			},
 			{
 				name: 'BOARD GAMES',
-				words: ['CHESS', 'MONOPOLY', 'BACKGAMMON', 'CLUE'],
+				words: ['CHESS', 'CHECKERS', 'BACKGAMMON', 'DOMINOES'],
 				level: 1,
 			},
 			{

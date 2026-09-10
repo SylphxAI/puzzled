@@ -393,7 +393,7 @@ const BANK: &[BankPuzzle] = &[
             },
             BankCategory {
                 name: "BOARD GAMES",
-                words: ["CHESS", "MONOPOLY", "BACKGAMMON", "CLUE"],
+                words: ["CHESS", "CHECKERS", "BACKGAMMON", "DOMINOES"],
                 level: 1,
             },
             BankCategory {

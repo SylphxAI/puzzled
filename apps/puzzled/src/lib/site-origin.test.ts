@@ -1,15 +1,18 @@
 /**
  * Site-origin oracle — canonical / Open Graph / JSON-LD must never advertise
- * localhost from a production request.
+ * localhost (or an attacker-supplied host) from a production request.
  *
  * Live defect (2026-09-10): https://puzzled.gg emitted
  * `<link rel="canonical" href="http://localhost:3000">` and JSON-LD
  * `"url":"http://localhost:3000"` because the origin fell back to
  * http://localhost:3000 when NEXT_PUBLIC_APP_URL / VERCEL_URL were unset.
  *
- * Resolution order under test: request host (x-forwarded-host, then host, with
- * x-forwarded-proto) → NEXT_PUBLIC_APP_URL → VERCEL_URL → deterministic
- * production origin → localhost only for local dev/test.
+ * Resolution order under test: configured NEXT_PUBLIC_APP_URL → request host
+ * (x-forwarded-host, then host) only for product-owned hostnames
+ * (puzzled.gg / *.puzzled.gg / *.sylphx.app / loopback in dev) → VERCEL_URL →
+ * deterministic production origin → localhost only for local dev/test.
+ * Spoofed hosts (evil.com) and `x-forwarded-proto: http` on public hosts are
+ * ignored.
  */
 
 import { describe, expect, test } from 'bun:test'
@@ -42,10 +45,8 @@ function withEnv<T>(
 }
 
 describe('resolveSiteOrigin', () => {
-	test('uses the request host and forwarded proto when a request is served', () => {
-		expect(resolveSiteOrigin({ host: 'puzzled.gg', forwardedProto: 'https' })).toBe(
-			'https://puzzled.gg',
-		)
+	test('uses the request host for product-owned hosts', () => {
+		expect(resolveSiteOrigin({ host: 'puzzled.gg' })).toBe('https://puzzled.gg')
 		expect(resolveSiteOrigin({ host: 'puzzled.gg:443', forwardedProto: 'https' })).toBe(
 			'https://puzzled.gg',
 		)
@@ -56,14 +57,21 @@ describe('resolveSiteOrigin', () => {
 				forwardedProto: 'https',
 			}),
 		).toBe('https://puzzled.gg')
+		expect(resolveSiteOrigin({ host: 'puzzled-git-feature.sylphx.app' })).toBe(
+			'https://puzzled-git-feature.sylphx.app',
+		)
 	})
 
 	test('never returns localhost when the request host is a real production host', () => {
 		for (const host of ['puzzled.gg', 'www.puzzled.gg', 'puzzled-git-feature.sylphx.app']) {
 			const origin = resolveSiteOrigin({ host, forwardedProto: 'https', nodeEnv: 'production' })
 			expect(origin).not.toContain('localhost')
-			expect(origin).toBe(`https://${host}`)
+			expect(origin.startsWith('https://')).toBe(true)
 		}
+		// The www alias canonicalizes to the apex.
+		expect(resolveSiteOrigin({ host: 'www.puzzled.gg', nodeEnv: 'production' })).toBe(
+			PRODUCTION_SITE_ORIGIN,
+		)
 	})
 
 	test('returns the production origin for puzzled.gg', () => {
@@ -75,22 +83,63 @@ describe('resolveSiteOrigin', () => {
 		).toBe(PRODUCTION_SITE_ORIGIN)
 	})
 
-	test('falls back to configured env after request headers', () => {
+	test('ignores spoofed hosts and falls back to the production origin', () => {
+		expect(resolveSiteOrigin({ host: 'evil.com', nodeEnv: 'production' })).toBe(
+			PRODUCTION_SITE_ORIGIN,
+		)
+		expect(resolveSiteOrigin({ forwardedHost: 'evil.com', nodeEnv: 'production' })).toBe(
+			PRODUCTION_SITE_ORIGIN,
+		)
+		// A spoofed x-forwarded-host must not shadow a real product Host.
+		expect(
+			resolveSiteOrigin({ forwardedHost: 'evil.com', host: 'puzzled.gg', nodeEnv: 'production' }),
+		).toBe(PRODUCTION_SITE_ORIGIN)
+		expect(resolveSiteOrigin({ host: 'puzzled.gg.evil.com', nodeEnv: 'production' })).toBe(
+			PRODUCTION_SITE_ORIGIN,
+		)
+	})
+
+	test('public product hosts are always https (x-forwarded-proto cannot downgrade)', () => {
+		expect(
+			resolveSiteOrigin({ host: 'puzzled.gg', forwardedProto: 'http', nodeEnv: 'production' }),
+		).toBe('https://puzzled.gg')
+		expect(
+			resolveSiteOrigin({
+				host: 'puzzled-git-feature.sylphx.app',
+				forwardedProto: 'http',
+				nodeEnv: 'production',
+			}),
+		).toBe('https://puzzled-git-feature.sylphx.app')
+	})
+
+	test('configured origin wins over the request host', () => {
 		expect(
 			resolveSiteOrigin({
 				nodeEnv: 'production',
 				configuredUrl: 'https://app.puzzled.example/',
+				host: 'puzzled.gg',
 			}),
 		).toBe('https://app.puzzled.example')
+		expect(
+			resolveSiteOrigin({ nodeEnv: 'production', configuredUrl: 'https://www.puzzled.gg' }),
+		).toBe(PRODUCTION_SITE_ORIGIN)
+	})
+
+	test('falls back to VERCEL_URL when no origin is configured', () => {
 		expect(
 			resolveSiteOrigin({ nodeEnv: 'production', vercelUrl: 'puzzled-preview.vercel.app' }),
 		).toBe('https://puzzled-preview.vercel.app')
 	})
 
 	test('keeps localhost only for local dev', () => {
-		expect(resolveSiteOrigin({ host: 'localhost:3000' })).toBe('http://localhost:3000')
-		expect(resolveSiteOrigin({ host: '127.0.0.1:3000', forwardedProto: 'http' })).toBe(
-			'http://127.0.0.1:3000',
+		expect(resolveSiteOrigin({ host: 'localhost:3000', nodeEnv: 'development' })).toBe(
+			'http://localhost:3000',
+		)
+		expect(
+			resolveSiteOrigin({ host: '127.0.0.1:3000', forwardedProto: 'http', nodeEnv: 'development' }),
+		).toBe('http://127.0.0.1:3000')
+		expect(resolveSiteOrigin({ host: 'localhost:3000', nodeEnv: 'production' })).toBe(
+			PRODUCTION_SITE_ORIGIN,
 		)
 		expect(resolveSiteOrigin({ nodeEnv: 'development', port: '4000' })).toBe(
 			'http://localhost:4000',
