@@ -1519,23 +1519,33 @@ async function checkShareDeepLink(
 		),
 		sub(
 			'landing-no-solution-key-patterns',
-			finalHtml ? (leakPatternFindings.length === 0 ? 'pass' : 'fail') : 'unknown',
+			!finalHtml || final.bodyTruncated
+				? 'unknown'
+				: leakPatternFindings.length === 0
+					? 'pass'
+					: 'fail',
 			finalHtml
-				? `solution-shaped JSON key patterns in landing payload: ${leakPatternFindings.length}`
+				? `solution-shaped JSON key patterns in landing payload: ${leakPatternFindings.length}${
+						final.bodyTruncated
+							? ` — landing body truncated at ${final.bodyBytes}B cap; a pattern past the cap would not be seen`
+							: ''
+					}`
 				: 'no landing HTML observed',
 		),
 		sub(
 			'landing-no-solution-signature',
-			!finalHtml
+			!finalHtml || final.bodyTruncated
 				? 'unknown'
 				: solutionSignatures.length === 0
 					? 'unknown'
 					: solutionSignatureHits.length === 0
 						? 'pass'
 						: 'fail',
-			solutionSignatures.length === 0
-				? `no locally solved signature for ${discovery.freeSlug} (harness cannot solve this module); grid-leak comparison NOT performed`
-				: `${solutionSignatures.length} locally solved signature(s) checked against the landing payload; hits=${solutionSignatureHits.length}`,
+			final.bodyTruncated
+				? `landing body truncated at ${final.bodyBytes}B cap; the signature compare covers only the first bytes, so absence is not evidence`
+				: solutionSignatures.length === 0
+					? `no locally solved signature for ${discovery.freeSlug} (harness cannot solve this module); grid-leak comparison NOT performed`
+					: `${solutionSignatures.length} locally solved signature(s) checked against the landing payload; hits=${solutionSignatureHits.length}`,
 		),
 	]
 	return {
@@ -1549,7 +1559,9 @@ async function checkShareDeepLink(
 				first.location ? ` → ${final.httpStatus}` : ''
 			}; final path=${finalPath ?? 'unparsed'}(module=${onModulePath}); product day key ${productDayKeyValue} (${productDayKeySource}); solution-signature hits=${
 				solutionSignatureHits.length
-			}${solutionSignatures.length === 0 ? ' (signature unknown)' : ''}`,
+			}${solutionSignatures.length === 0 ? ' (signature unknown)' : ''}${
+				final.bodyTruncated ? '; landing body TRUNCATED (leak scans incomplete)' : ''
+			}`,
 			sub: subResults,
 			evidence: {
 				requestedPath: path,
@@ -1748,6 +1760,7 @@ async function checkMarksScan(
 		contentType: string | null
 		bodyBytes: number
 		bodySha256: string | null
+		bodyTruncated: boolean
 		error: string | null
 	}> = []
 	const homeHtml = homeResult?.bodyText ?? null
@@ -1760,6 +1773,7 @@ async function checkMarksScan(
 			contentType: homeResult.contentType,
 			bodyBytes: homeResult.bodyBytes,
 			bodySha256: homeResult.bodySha256,
+			bodyTruncated: homeResult.bodyTruncated,
 			error: homeResult.error,
 		})
 	}
@@ -1778,6 +1792,7 @@ async function checkMarksScan(
 			contentType: game.contentType,
 			bodyBytes: game.bodyBytes,
 			bodySha256: game.bodySha256,
+			bodyTruncated: game.bodyTruncated,
 			error: game.error,
 		})
 	}
@@ -1822,6 +1837,7 @@ async function checkMarksScan(
 			contentType: target.contentType,
 			bodyBytes: target.bodyBytes,
 			bodySha256: target.bodySha256,
+			bodyTruncated: target.bodyTruncated,
 			hardFailures: findings.hardFailures,
 			warnings: findings.warnings,
 			warningCount: findings.warningCount,
@@ -1879,6 +1895,10 @@ async function checkMarksScan(
 	const localhostFails = targetIsLocal ? [] : jsonLdLocalhost
 	const productIdentityOk =
 		/Puzzled/i.test(homeHtml ?? '') || /rel=["']manifest["']/i.test(homeHtml ?? '')
+	const truncatedTargets = targets
+		.filter((target) => target.bodyTruncated)
+		.map((target) => target.label)
+	const unobservedTargets = targets.filter((target) => !target.html).map((target) => target.label)
 	const subResults: SubResult[] = [
 		sub(
 			'target-identity',
@@ -1900,14 +1920,20 @@ async function checkMarksScan(
 				: `manifest not observed: ${manifestNotObservedReason ?? 'unknown reason'}`,
 		),
 		sub(
-			'no-forbidden-marks-in-title-meta-jsonld-manifest',
-			targets.every((target) => target.html)
-				? hardFailureCount === 0
-					? 'pass'
-					: 'fail'
-				: 'unknown',
+			// Renamed (reviewer wording nit): the manifest dimension has its own
+			// sub-check, so this one claims only title/meta/JSON-LD zones.
+			'no-forbidden-marks-in-title-meta-jsonld',
+			hardFailureCount > 0
+				? 'fail'
+				: unobservedTargets.length > 0 || truncatedTargets.length > 0
+					? 'unknown'
+					: 'pass',
 			hardFailureCount === 0
-				? `no CATALOG §3.2 mark in title/meta/JSON-LD/manifest across ${targets.length} target(s)`
+				? `no CATALOG §3.2 mark in title/meta/JSON-LD across ${targets.length} target(s)${
+						truncatedTargets.length > 0
+							? ` — body truncated at the cap for ${truncatedTargets.join(',')}; a mark past the cap would not be seen`
+							: ''
+					}${unobservedTargets.length > 0 ? ` — no body for ${unobservedTargets.join(',')}` : ''}`
 				: `${hardFailureCount} hard failure(s): ${JSON.stringify(
 						targetFindings.flatMap((entry) =>
 							Array.isArray(entry.hardFailures) ? entry.hardFailures : [],
@@ -1916,10 +1942,26 @@ async function checkMarksScan(
 		),
 		sub(
 			'no-localhost-origin-in-jsonld-or-canonical',
-			targetIsLocal ? 'pass' : localhostFails.length === 0 && !canonicalLocalhost ? 'pass' : 'fail',
 			targetIsLocal
-				? `target host ${targetHost} is local; localhost origins accepted`
-				: `json-ld localhost hits=${localhostFails.length}; canonical localhost=${canonicalLocalhost || homeCanonicalLocalhost}`,
+				? truncatedTargets.length > 0 || unobservedTargets.length > 0
+					? 'unknown'
+					: 'pass'
+				: localhostFails.length > 0 || canonicalLocalhost
+					? 'fail'
+					: truncatedTargets.length > 0 || unobservedTargets.length > 0
+						? 'unknown'
+						: 'pass',
+			targetIsLocal
+				? `target host ${targetHost} is local; localhost origins accepted${
+						truncatedTargets.length > 0
+							? ` — body truncated for ${truncatedTargets.join(',')}; negative scan incomplete`
+							: ''
+					}`
+				: `json-ld localhost hits=${localhostFails.length}; canonical localhost=${canonicalLocalhost || homeCanonicalLocalhost}${
+						truncatedTargets.length > 0 || unobservedTargets.length > 0
+							? `; negative scan incomplete (truncated=${truncatedTargets.join(',') || 'none'}, unobserved=${unobservedTargets.join(',') || 'none'})`
+							: ''
+					}`,
 		),
 	]
 	return {
@@ -1928,7 +1970,11 @@ async function checkMarksScan(
 		status: combine(subResults),
 		required: true,
 		unknownReason: combine(subResults) === 'unknown' ? 'indeterminate' : null,
-		summary: `targets=${targets.length}; hard failures=${hardFailureCount}; warnings=${warningCount}; json-ld localhost=${localhostFails.length}; canonical localhost=${canonicalLocalhost || homeCanonicalLocalhost}`,
+		summary: `targets=${targets.length}; hard failures=${hardFailureCount}; warnings=${warningCount}; json-ld localhost=${localhostFails.length}; canonical localhost=${canonicalLocalhost || homeCanonicalLocalhost}${
+			truncatedTargets.length > 0
+				? `; TRUNCATED bodies (negative scans incomplete): ${truncatedTargets.join(',')}`
+				: ''
+		}`,
 		sub: subResults,
 		evidence: {
 			targets: targetFindings,
@@ -2450,6 +2496,32 @@ const SELF_TEST_CASES: SelfTestCase[] = [
 				problems.push(`puzzle-data-json should fail, got ${payloadSub?.status}`)
 			}
 			if (report.ok) problems.push('run is green although the free module carried no puzzle')
+			return problems
+		},
+	},
+	{
+		// Reviewer F5: a >4 MiB page cannot green a whole-document negative scan
+		// (the forbidden mark sits past the body cap).
+		id: 'f5-truncated-body-cannot-green-negative-scans',
+		config: {
+			homeHtml: `<html><head><title>Puzzled</title><link rel="canonical" href="http://localhost/"/><link rel="manifest" href="/manifest.webmanifest"/></head><body><a href="/games/sudoku">Play</a>${'x'.repeat(
+				MAX_BODY_BYTES + 1024,
+			)}<meta name="keywords" content="wordle"></body></html>`,
+		},
+		expect: (report) => {
+			const problems: string[] = []
+			const marks = report.checks.find((entry) => entry.id === 'marks-scan')
+			if (!marks) return ['marks-scan check missing']
+			if (marks.status !== 'unknown') {
+				problems.push(`marks-scan should be unknown, got ${marks.status}`)
+			}
+			const targets = (marks.evidence as { targets?: Array<{ bodyTruncated?: boolean }> }).targets
+			if (!targets?.[0]?.bodyTruncated) {
+				problems.push('home target was not recorded as body-truncated')
+			}
+			if (report.ok) {
+				problems.push('run is green although the mark scan only saw a truncated body')
+			}
 			return problems
 		},
 	},

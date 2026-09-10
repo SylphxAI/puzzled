@@ -153,4 +153,14 @@ is not evidence about the premium gate). A non-product page makes the mark scan
 
 Response bodies are read with a hard 4 MiB cap (`bodyTruncated`,
 `bodySha256Scope`) so a hostile or misbehaving `--base` cannot force unbounded
-memory; `--timeout` bounds each request.
+memory; `--timeout` bounds each request. Whole-document **negative**
+assertions — the mark scan, the localhost-origin scan, the landing
+solution-key/signature scans — report `unknown` when the backing body was
+truncated, so a page cut off at the cap can never green a "no marks / no leak"
+claim.
+
+On days whose free module the harness cannot solve (`word-guess`,
+`word-groups`, `crossword`), the share signature compare has no local solution
+to check and reports `unknown`, so read-only runs are structurally non-green
+on those days. That is by design; run on a solvable free day (`sudoku`,
+`crowns`) or accept the `unknown`.
