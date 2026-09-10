@@ -12,7 +12,10 @@ type DifficultySelectionViewProps = {
 	gameSlug: string
 	gameName: string
 	locale: string
-	completionStatus: Record<PuzzleDifficulty, boolean>
+	/** null = the server could not prove this level's completion state. */
+	completionStatus: Record<PuzzleDifficulty, boolean | null>
+	/** False when at least one level's completion state is unknown. */
+	completionStatusVerified?: boolean
 }
 
 /**
@@ -26,6 +29,7 @@ export function DifficultySelectionView({
 	gameName,
 	locale: _locale,
 	completionStatus,
+	completionStatusVerified = true,
 }: DifficultySelectionViewProps) {
 	const t = useTranslations('common.difficulty')
 	const tDaily = useTranslations('daily')
@@ -67,12 +71,15 @@ export function DifficultySelectionView({
 		},
 	}
 
-	const allCompleted = completionStatus.easy && completionStatus.medium && completionStatus.hard
+	const allCompleted =
+		completionStatus.easy === true &&
+		completionStatus.medium === true &&
+		completionStatus.hard === true
 	const completedCount = [
 		completionStatus.easy,
 		completionStatus.medium,
 		completionStatus.hard,
-	].filter(Boolean).length
+	].filter((status) => status === true).length
 
 	return (
 		<div className="flex flex-1 flex-col">
@@ -89,6 +96,11 @@ export function DifficultySelectionView({
 							<p className="mt-2 text-xs text-muted-foreground">
 								{completedCount}/3 {tDaily('completed')}
 							</p>
+						)}
+						{!completionStatusVerified && (
+							<output className="mt-2 block text-xs text-muted-foreground">
+								{tDaily('difficultyStatusUnverified')}
+							</output>
 						)}
 					</div>
 
@@ -131,9 +143,14 @@ export function DifficultySelectionView({
 											<div className="flex-1">
 												<div className="flex items-center gap-2">
 													<span className={cn('font-semibold', config.color)}>{config.label}</span>
-													{isCompleted && (
+													{isCompleted === true && (
 														<span className="text-xs text-emerald-600 dark:text-emerald-400">
 															✓ Done
+														</span>
+													)}
+													{isCompleted === null && (
+														<span className="text-xs text-muted-foreground">
+															{tDaily('statusUnknown')}
 														</span>
 													)}
 												</div>

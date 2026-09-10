@@ -78,6 +78,7 @@ export async function getDaily(
 			gameSlug: input.gameSlug.trim(),
 			difficulty: (input.difficulty ?? '').trim(),
 			puzzleId: input.puzzleId?.trim() || undefined,
+			puzzleDate: input.puzzleDate?.trim() || undefined,
 		}),
 	)
 }

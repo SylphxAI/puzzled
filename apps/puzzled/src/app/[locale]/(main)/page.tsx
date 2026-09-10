@@ -1,6 +1,7 @@
 import { Button } from '@sylphx/ui'
 import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { deriveHomePlayState } from '@/features/daily/lib/home-play-state'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
@@ -146,28 +147,17 @@ async function HomeContent({
 
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
-	const completionStatusUnavailable = gameMetadata.some(
-		(game) => personalResults[game.slug]?.statusAvailable === false,
-	)
 
-	if (completionStatusUnavailable) {
-		return (
-			<main className="flex flex-1 items-center justify-center px-4 py-12">
-				<div className="mx-auto max-w-md text-center">
-					<div className="mb-6 flex justify-center">
-						<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-							<AlertCircle className="h-10 w-10 text-muted-foreground" />
-						</div>
-					</div>
-					<h1 className="mb-2 text-2xl font-bold">{t('home.statusUnavailableTitle')}</h1>
-					<p className="mb-6 text-muted-foreground">{t('home.statusUnavailableDescription')}</p>
-					<Button asChild>
-						<Link href="/">{t('common.retry')}</Link>
-					</Button>
-				</div>
-			</main>
-		)
-	}
+	// Personal completion is best-effort. An unverified status must not blank
+	// the ritual (the free rotation stays playable), and it never renders as a
+	// completed state or a score: deriveHomePlayState only marks completion
+	// from a server-proved read.
+	const playState = deriveHomePlayState({
+		gameSlugs: gameMetadata.map((game) => game.slug),
+		personalResults,
+		isPremium,
+		freeGameSlug: todaysFreeGame,
+	})
 
 	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
 	const slugToCamelCase = (slug: string) =>
@@ -186,20 +176,22 @@ async function HomeContent({
 	const recentMilestone = streakMilestones.find((m) => currentStreak === m)
 
 	// Merge game info with completion status and free/locked status
-	const gamesWithCompletion = gameMetadata.map((game) => {
-		const isFreeToday = game.slug === todaysFreeGame
-		const result = personalResults[game.slug]
-		const score = result?.completedSession?.score
-		return {
-			slug: game.slug,
-			name: t(`games.${slugToCamelCase(game.slug)}.name`),
-			display: game.display,
-			completed: result?.hasCompleted ?? false,
-			score: score === null || score === undefined ? undefined : String(score),
-			// Free game is unlocked for everyone, other games locked for non-premium
-			locked: !isPremium && !isFreeToday,
-			isFreeToday,
-		}
+	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
+	const gamesWithCompletion = playState.games.flatMap((game) => {
+		const metadata = metadataBySlug.get(game.slug)
+		if (!metadata) return []
+		return [
+			{
+				slug: game.slug,
+				name: t(`games.${slugToCamelCase(game.slug)}.name`),
+				display: metadata.display,
+				completed: game.completed,
+				score: game.score,
+				// Free game is unlocked for everyone, other games locked for non-premium
+				locked: game.locked,
+				isFreeToday: game.isFreeToday,
+			},
+		]
 	})
 
 	return (
@@ -247,9 +239,27 @@ async function HomeContent({
 						dateString={dateString}
 						tomorrowsFreeGameName={tomorrowsFreeGameName}
 						currentStreak={currentStreak}
+						progressUnverified={playState.hasUnverifiedStatus}
 					/>
 				</div>
 			</section>
+
+			{/* Completion status could not be verified: keep playing, stay honest */}
+			{playState.hasUnverifiedStatus && (
+				<section className="px-4 pt-3">
+					<div className="mx-auto max-w-4xl">
+						<div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-sm">
+							<AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden="true" />
+							<p className="text-muted-foreground">
+								<span className="font-medium text-foreground">
+									{t('home.progressUnverifiedTitle')}
+								</span>{' '}
+								{t('home.progressUnverifiedDescription')}
+							</p>
+						</div>
+					</div>
+				</section>
+			)}
 
 			{/* Social Proof */}
 			<section className="px-4 pt-4">

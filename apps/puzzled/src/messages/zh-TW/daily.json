@@ -20,5 +20,11 @@
 	"tomorrowsFreeGame": "Tomorrow: {game} is free",
 	"unlockWithPremium": "Unlock with Premium",
 	"viewResult": "View Result",
-	"backToHome": "Back to Home"
+	"backToHome": "Back to Home",
+	"loadingPuzzle": "正在載入今日謎題…",
+	"unavailableTitle": "謎題暫不可用",
+	"unavailableDescription": "無法載入今日謎題，請檢查網路後再試。",
+	"completedNoResult": "你已完成今日謎題，暫時無法顯示結果詳情。",
+	"statusUnknown": "狀態未確認",
+	"difficultyStatusUnverified": "無法確認你今日已完成哪些難度，系統會在你開始前核對。"
 }
