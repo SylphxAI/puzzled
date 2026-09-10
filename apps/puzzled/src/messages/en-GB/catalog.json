@@ -1,0 +1,15 @@
+{
+	"metaTitle": "All Games",
+	"metaDescription": "Browse every daily puzzle on Puzzled — today's free game plus the full catalogue of word, logic, and number rituals.",
+	"title": "All Games",
+	"subtitle": "Every daily ritual in one place. Today's free game is always open — no account needed.",
+	"searchPlaceholder": "Filter games by title…",
+	"searchLabel": "Filter games by title",
+	"freeToday": "Free today",
+	"premium": "Premium",
+	"open": "Open",
+	"showing": "Showing {count} of {total} games",
+	"clearFilter": "Clear filter",
+	"emptyTitle": "No games match that title",
+	"emptyDescription": "Try a different search or clear the filter to see the full catalogue."
+}

@@ -1,7 +1,18 @@
 'use client'
 
 import { Card } from '@sylphx/ui'
-import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap } from 'lucide-react'
+import {
+	Calendar,
+	Check,
+	ChevronRight,
+	Clock,
+	Lock,
+	Play,
+	Sparkles,
+	Target,
+	TrendingUp,
+	Zap,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
@@ -184,7 +195,7 @@ const GAME_DECORATIONS: Record<string, React.ReactNode> = {
  *
  * Shows:
  * - Today's date and puzzle number
- * - All available games with completion status
+ * - The bounded home exposure: free ritual, proved progress, day fill
  * - Quick access to play uncompleted games
  * - Countdown to next puzzle
  */
@@ -294,6 +305,18 @@ export function DailyHero({
 					</div>
 				</div>
 			</Card>
+
+			{/* Bounded exposure: the free ritual leads; the full catalog is /games */}
+			<div className="flex items-center justify-between gap-3">
+				<h2 className="text-sm font-semibold text-muted-foreground">{t('home.todaysPuzzles')}</h2>
+				<Link
+					href="/games"
+					className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+				>
+					{t('home.seeAllGames')}
+					<ChevronRight className="h-4 w-4" aria-hidden="true" />
+				</Link>
+			</div>
 
 			{/* Game Cards Grid */}
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

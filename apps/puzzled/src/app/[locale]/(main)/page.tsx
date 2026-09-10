@@ -1,6 +1,7 @@
 import { Button } from '@sylphx/ui'
 import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState } from '@/features/daily/lib/home-play-state'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
@@ -18,6 +19,7 @@ import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/
 import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
+import { productDayKey } from '@/lib/product-day'
 import { Logo } from '@/shared/components/layout'
 
 type Props = {
@@ -148,12 +150,23 @@ async function HomeContent({
 	// Get all games from registry (SSOT) - sorted by sortOrder
 	const gameMetadata = getAllGameMetadata()
 
+	// Home exposure stays small (CATALOG.md §1): today's free ritual leads,
+	// proved completions follow, and the remaining slots rotate per product
+	// day. Every other module stays reachable on /games.
+	const exposure = deriveHomeExposure({
+		modules: gameMetadata.map((game) => ({ slug: game.slug, sortOrder: game.sortOrder })),
+		freeGameSlug: todaysFreeGame,
+		completions: personalResults,
+		dayKey: productDayKey(),
+		limit: HOME_EXPOSURE_LIMIT,
+	})
+
 	// Personal completion is best-effort. An unverified status must not blank
 	// the ritual (the free rotation stays playable), and it never renders as a
 	// completed state or a score: deriveHomePlayState only marks completion
 	// from a server-proved read.
 	const playState = deriveHomePlayState({
-		gameSlugs: gameMetadata.map((game) => game.slug),
+		gameSlugs: exposure.slugs,
 		personalResults,
 		isPremium,
 		freeGameSlug: todaysFreeGame,
