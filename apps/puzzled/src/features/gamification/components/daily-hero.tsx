@@ -30,6 +30,11 @@ type DailyHeroProps = {
 	tomorrowsFreeGameName?: string
 	/** User's current streak for personalized messaging */
 	currentStreak?: number
+	/**
+	 * Today's completion status could not be verified: the progress badge shows
+	 * an unknown marker instead of claiming 0 done. Play stays available.
+	 */
+	progressUnverified?: boolean
 	className?: string
 }
 
@@ -206,11 +211,18 @@ function getStreakMessageKey(streak: number): 'none' | 'low' | 'medium' | 'high'
 	return 'legend'
 }
 
+function progressBarTone(allCompleted: boolean, progressUnverified: boolean): string {
+	if (progressUnverified) return 'bg-muted-foreground/30'
+	if (allCompleted) return 'bg-gradient-to-r from-emerald-400 to-emerald-600'
+	return 'bg-gradient-to-r from-primary to-primary/70'
+}
+
 export function DailyHero({
 	games,
 	dateString,
 	tomorrowsFreeGameName,
 	currentStreak = 0,
+	progressUnverified = false,
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
@@ -261,7 +273,7 @@ export function DailyHero({
 								)}
 							>
 								<span className="text-base font-bold text-white">
-									{completedCount}/{availableCount}
+									{progressUnverified ? '—' : `${completedCount}/${availableCount}`}
 								</span>
 							</div>
 							<p className="mt-1 whitespace-nowrap text-[10px] text-muted-foreground">
@@ -275,11 +287,9 @@ export function DailyHero({
 						<div
 							className={cn(
 								'h-full rounded-full transition-all duration-500',
-								allCompleted
-									? 'bg-gradient-to-r from-emerald-400 to-emerald-600'
-									: 'bg-gradient-to-r from-primary to-primary/70',
+								progressBarTone(allCompleted, progressUnverified),
 							)}
-							style={{ width: `${progressPercent}%` }}
+							style={{ width: progressUnverified ? '0%' : `${progressPercent}%` }}
 						/>
 					</div>
 				</div>

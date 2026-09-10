@@ -20,5 +20,11 @@
 	"tomorrowsFreeGame": "Tomorrow: {game} is free",
 	"unlockWithPremium": "Unlock with Premium",
 	"viewResult": "View Result",
-	"backToHome": "Back to Home"
+	"backToHome": "Back to Home",
+	"loadingPuzzle": "Loading today's puzzle…",
+	"unavailableTitle": "Puzzle not available",
+	"unavailableDescription": "We couldn't load today's puzzle. Check your connection and try again.",
+	"completedNoResult": "You already finished today's puzzle. Result details aren't available right now.",
+	"statusUnknown": "Status unknown",
+	"difficultyStatusUnverified": "We couldn't verify which levels you've finished today. The server checks before you start."
 }

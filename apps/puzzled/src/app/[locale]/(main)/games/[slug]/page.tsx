@@ -3,6 +3,7 @@ import { Crown, Lock } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
+import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
 import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
@@ -19,6 +20,7 @@ import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
+import { GameDailyFallback } from './game-daily-fallback'
 import { GamePageClient } from './game-page-client'
 
 // Force dynamic rendering - puzzle data must be fresh
@@ -160,52 +162,42 @@ export default async function GamePage({ params, searchParams }: Props) {
 		)
 	}
 
-	const retryState = (
-		<div className="flex flex-1 flex-col">
-			<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-				<p className="text-lg font-medium">Puzzle not available</p>
-				<p className="text-sm text-muted-foreground">
-					Unable to load today's puzzle. Please try again later.
-				</p>
-				<a
-					href={`/games/${slug}`}
-					className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-				>
-					Retry
-				</a>
-			</main>
-		</div>
-	)
-
 	// For games with difficulty support, if no difficulty selected, show difficulty selection
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
-		const completionStatus: Record<PuzzleDifficulty, boolean> = {
-			easy: false,
-			medium: false,
-			hard: false,
+		// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
+		// A read that cannot be verified stays unknown (null) instead of
+		// pretending "not completed": the client fetch after the player picks a
+		// difficulty re-checks completion server-side before serving a board.
+		const [easyStatus, mediumStatus, hardStatus] = await Promise.allSettled([
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
+			getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
+		])
+		for (const [level, result] of [
+			['easy', easyStatus],
+			['medium', mediumStatus],
+			['hard', hardStatus],
+		] as const) {
+			if (result.status === 'rejected') {
+				console.error(
+					`[GamePage] Failed to load difficulty completion status (${level}):`,
+					result.reason,
+				)
+			}
 		}
-
-		try {
-			// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
-			const [easyStatus, mediumStatus, hardStatus] = await Promise.all([
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
-				getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
-			])
-			completionStatus.easy = easyStatus?.hasCompleted ?? false
-			completionStatus.medium = mediumStatus?.hasCompleted ?? false
-			completionStatus.hard = hardStatus?.hasCompleted ?? false
-		} catch (error) {
-			console.error('[GamePage] Failed to load difficulty completion status:', error)
-			return retryState
-		}
+		const completionStatus = deriveDifficultyCompletionStatus({
+			easy: easyStatus.status === 'fulfilled' ? easyStatus.value : null,
+			medium: mediumStatus.status === 'fulfilled' ? mediumStatus.value : null,
+			hard: hardStatus.status === 'fulfilled' ? hardStatus.value : null,
+		})
 
 		return (
 			<DifficultySelectionView
 				gameSlug={slug}
 				gameName={gameName}
 				locale={locale}
-				completionStatus={completionStatus}
+				completionStatus={completionStatus.status}
+				completionStatusVerified={completionStatus.verified}
 			/>
 		)
 	}
@@ -218,18 +210,21 @@ export default async function GamePage({ params, searchParams }: Props) {
 		puzzleDate?: string
 	} | null = null
 	let streakInfo: StreakInfo | null = null
+	// Same archive admission the SSR read uses; the client fallback must not
+	// widen it (anonymous archive keeps reading today's board).
+	const archiveDate = mode === 'archive' && user && dateParam ? dateParam : undefined
 
 	try {
-		if (mode === 'archive' && user && dateParam) {
+		if (archiveDate) {
 			// Archive mode - get specific date's puzzle (premium only)
 			const archivePuzzle = await getServerDailyStatus({
 				gameSlug: slug,
-				puzzleDate: dateParam,
+				puzzleDate: archiveDate,
 			})
 			puzzle = {
 				puzzleId: archivePuzzle.puzzle.id,
 				puzzleData: archivePuzzle.puzzle.puzzleData,
-				puzzleDate: dateParam,
+				puzzleDate: archiveDate,
 			}
 		} else {
 			// One GetDaily snapshot for guests and accounts so admission and play
@@ -259,7 +254,20 @@ export default async function GamePage({ params, searchParams }: Props) {
 	}
 
 	if (!puzzle?.puzzleData) {
-		return retryState
+		// SSR Connect could not serve the board. The browser transport reaches the
+		// api through the public edge, so hand over to a client-side GetDaily
+		// instead of a retry link that repeats the same failing SSR request.
+		return (
+			<GameDailyFallback
+				slug={slug}
+				gameName={gameName}
+				locale={locale}
+				mode={mode}
+				difficulty={difficulty}
+				supportsDifficulty={supportsDifficulty}
+				puzzleDate={archiveDate}
+			/>
+		)
 	}
 
 	// Use puzzle data from server

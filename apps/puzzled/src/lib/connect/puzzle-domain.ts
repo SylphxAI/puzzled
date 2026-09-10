@@ -12,6 +12,8 @@ export type GetDailyInput = {
 	gameSlug: string
 	difficulty?: string
 	puzzleId?: string
+	/** Archive day key (YYYY-MM-DD). Defaults to the product day on the server. */
+	puzzleDate?: string
 }
 
 export type SubmitGuessInput = {
