@@ -38,10 +38,11 @@
  * A genuine generic English occurrence must be admitted explicitly with a
  * rationale via ALLOWED_GENERIC — never by weakening the matcher.
  *
- * Reviewed non-violations (2026-09-10, kept intentionally):
- *  - word-hive rank labels (Beginner…Genius/Queen Bee) mirror NYT Spelling Bee
- *    chrome but contain no CATALOG §3.2 mark ("Queen Bee" ≠ "Spelling Bee");
- *    kept pending a product naming decision.
+ * Reviewed non-violations (2026-09-11, kept intentionally):
+ *  - word-hive rank labels are Puzzled's own ladder (Start…Perfect Hive) since
+ *    the chrome rename; the guard lives in
+ *    `src/games/word-hive/rank-labels.test.ts` so another publisher's rank
+ *    names cannot come back as our display chrome.
  *  - generic type names (crossword / sudoku / …) and the product's own "Mini Grid".
  *  - inbound redirect *sources* in `next.config.ts` (bookmark compatibility).
  */
@@ -80,8 +81,8 @@ const FORBIDDEN_MARKS: readonly ForbiddenMark[] = [
 		],
 	},
 	{ label: 'Crossplay', patterns: [/\bcrossplay\b/i] },
-	// "Queens" plural is the mark; singular "queen" is generic English (chess,
-	// Queen Bee rank) and stays legal.
+	// "Queens" plural is the mark; singular "queen" is generic English (chess)
+	// and stays legal.
 	{ label: 'Queens', patterns: [/\bqueens(?:'s|’s)?\b/i] },
 	{ label: 'Tango', patterns: [/\btangos?\b/i] },
 	{ label: 'Zip', patterns: [/\bzip\b/i] },
@@ -418,7 +419,7 @@ describe('mark matching', () => {
 		expect(findMarks('crossword, sudoku, kakuro, nonogram, cryptogram')).toEqual([])
 		expect(findMarks('Mini Grid')).toEqual([])
 		expect(findMarks('Play the Mini Grid')).toEqual([])
-		expect(findMarks('Queen Bee rank')).toEqual([])
+		expect(findMarks('Spelling practice session')).toEqual([])
 	})
 
 	test('bans NYT product-title usages of The Mini / The Midi', () => {
