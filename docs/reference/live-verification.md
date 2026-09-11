@@ -164,3 +164,31 @@ On days whose free module the harness cannot solve (`word-guess`,
 to check and reports `unknown`, so read-only runs are structurally non-green
 on those days. That is by design; run on a solvable free day (`sudoku`,
 `crowns`) or accept the `unknown`.
+
+## Post-deploy expectations (2026-09-11 fix set)
+
+A deployed revision at or after `328009a` must flip these Live readbacks that
+the pinned 2026-08-25 revision fails. Treat any still-red row as an incomplete
+deploy, not as a harness problem:
+
+| Readback | Pinned 2026-08-25 revision | Expected after the deploy |
+|---|---|---|
+| canonical / JSON-LD / OG origin | `http://localhost:3000` | `https://puzzled.gg` |
+| served home HTML CTA | 0 free-game hrefs, "progress unavailable" | bounded hero (free module first) + `See all games` |
+| `/games` catalog | 404 | 200, every registry module with CATALOG player titles |
+| `/games/crowns` | 308 -> `/games/games/crowns` -> 404 | 200 on the canonical module path |
+| `/crowns`, `/duo` inbound aliases | alias hop breaks (double prefix) | 200/redirect to `/games/crowns` / `/games/duo` |
+| `/privacy`, `/terms` (anonymous) | 307 to `/login` | public 200 |
+| `number-path`, `pip-place` (anonymous) | `404 unknown_game` | `403 premium_required` (known module, fail-closed) |
+| marks scan on `/` and the free module | 8 hard hits (`Wordle`, `Connections` in meta/JSON-LD) | 0 hard hits |
+| finish loop (`--play`) | pass (server-authoritative) | still pass; one finish per `(user, module, day_key)` |
+
+After the deploy, run:
+
+```bash
+bun run verify:live --expected-sha <deployed-sha> --play
+```
+
+and record the whole JSON report with the PR or runtime record that claims the
+deploy; the harness output is the Live-layer evidence, not a screenshot or a
+200 on `/healthz`.
