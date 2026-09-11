@@ -59,6 +59,7 @@ import enGBAchievements from '@/messages/en-GB/achievements.json'
 import enGBAdmin from '@/messages/en-GB/admin.json'
 import enGBAuth from '@/messages/en-GB/auth.json'
 import enGBCalendar from '@/messages/en-GB/calendar.json'
+import enGBCatalog from '@/messages/en-GB/catalog.json'
 // en-GB namespaces
 import enGBCommon from '@/messages/en-GB/common.json'
 import enGBConsent from '@/messages/en-GB/consent.json'
@@ -89,6 +90,7 @@ import enUSAchievements from '@/messages/en-US/achievements.json'
 import enUSAdmin from '@/messages/en-US/admin.json'
 import enUSAuth from '@/messages/en-US/auth.json'
 import enUSCalendar from '@/messages/en-US/calendar.json'
+import enUSCatalog from '@/messages/en-US/catalog.json'
 // en-US namespaces
 import enUSCommon from '@/messages/en-US/common.json'
 import enUSConsent from '@/messages/en-US/consent.json'
@@ -119,6 +121,7 @@ import zhCNAchievements from '@/messages/zh-CN/achievements.json'
 import zhCNAdmin from '@/messages/zh-CN/admin.json'
 import zhCNAuth from '@/messages/zh-CN/auth.json'
 import zhCNCalendar from '@/messages/zh-CN/calendar.json'
+import zhCNCatalog from '@/messages/zh-CN/catalog.json'
 // zh-CN namespaces
 import zhCNCommon from '@/messages/zh-CN/common.json'
 import zhCNConsent from '@/messages/zh-CN/consent.json'
@@ -149,6 +152,7 @@ import zhHKAchievements from '@/messages/zh-HK/achievements.json'
 import zhHKAdmin from '@/messages/zh-HK/admin.json'
 import zhHKAuth from '@/messages/zh-HK/auth.json'
 import zhHKCalendar from '@/messages/zh-HK/calendar.json'
+import zhHKCatalog from '@/messages/zh-HK/catalog.json'
 // zh-HK namespaces
 import zhHKCommon from '@/messages/zh-HK/common.json'
 import zhHKConsent from '@/messages/zh-HK/consent.json'
@@ -179,6 +183,7 @@ import zhTWAchievements from '@/messages/zh-TW/achievements.json'
 import zhTWAdmin from '@/messages/zh-TW/admin.json'
 import zhTWAuth from '@/messages/zh-TW/auth.json'
 import zhTWCalendar from '@/messages/zh-TW/calendar.json'
+import zhTWCatalog from '@/messages/zh-TW/catalog.json'
 // zh-TW namespaces
 import zhTWCommon from '@/messages/zh-TW/common.json'
 import zhTWConsent from '@/messages/zh-TW/consent.json'
@@ -223,6 +228,7 @@ interface LocaleMessages {
 	pagination: Messages
 	achievements: Messages
 	calendar: Messages
+	catalog: Messages
 	consent: Messages
 	daily: Messages
 	footer: Messages
@@ -256,6 +262,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		pagination: enUSPagination,
 		achievements: enUSAchievements,
 		calendar: enUSCalendar,
+		catalog: enUSCatalog,
 		consent: enUSConsent,
 		daily: enUSDaily,
 		footer: enUSFooter,
@@ -287,6 +294,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		pagination: enGBPagination,
 		achievements: enGBAchievements,
 		calendar: enGBCalendar,
+		catalog: enGBCatalog,
 		consent: enGBConsent,
 		daily: enGBDaily,
 		footer: enGBFooter,
@@ -318,6 +326,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		pagination: zhHKPagination,
 		achievements: zhHKAchievements,
 		calendar: zhHKCalendar,
+		catalog: zhHKCatalog,
 		consent: zhHKConsent,
 		daily: zhHKDaily,
 		footer: zhHKFooter,
@@ -349,6 +358,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		pagination: zhTWPagination,
 		achievements: zhTWAchievements,
 		calendar: zhTWCalendar,
+		catalog: zhTWCatalog,
 		consent: zhTWConsent,
 		daily: zhTWDaily,
 		footer: zhTWFooter,
@@ -380,6 +390,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		pagination: zhCNPagination,
 		achievements: zhCNAchievements,
 		calendar: zhCNCalendar,
+		catalog: zhCNCatalog,
 		consent: zhCNConsent,
 		daily: zhCNDaily,
 		footer: zhCNFooter,

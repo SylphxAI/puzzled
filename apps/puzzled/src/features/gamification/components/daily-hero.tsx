@@ -1,11 +1,22 @@
 'use client'
 
 import { Card } from '@sylphx/ui'
-import { Calendar, Check, Clock, Lock, Play, Sparkles, Target, TrendingUp, Zap } from 'lucide-react'
+import {
+	Calendar,
+	Check,
+	ChevronRight,
+	Clock,
+	Lock,
+	Play,
+	Sparkles,
+	Target,
+	TrendingUp,
+	Zap,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
-import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
+import { type DailyProgressGame, summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
@@ -23,7 +34,16 @@ type GameInfo = {
 }
 
 type DailyHeroProps = {
+	/** Cards rendered in the grid; home passes only the bounded exposure. */
 	games: GameInfo[]
+	/**
+	 * Completion scope for the "Today's progress" badge and bar: every module
+	 * the player can play today. Defaults to `games`. Home passes the full
+	 * registry state so the bounded card grid (`CATALOG.md` §1) cannot re-base
+	 * the indicator — a premium viewer with 8 of 19 proved stays 8/19, never
+	 * "6/6 all complete".
+	 */
+	progressGames?: readonly DailyProgressGame[]
 	/** Display date string (e.g., "Wednesday, December 18, 2024") */
 	dateString: string
 	/** Tomorrow's free game name for teaser */
@@ -184,7 +204,7 @@ const GAME_DECORATIONS: Record<string, React.ReactNode> = {
  *
  * Shows:
  * - Today's date and puzzle number
- * - All available games with completion status
+ * - The bounded home exposure: free ritual, proved progress, day fill
  * - Quick access to play uncompleted games
  * - Countdown to next puzzle
  */
@@ -219,6 +239,7 @@ function progressBarTone(allCompleted: boolean, progressUnverified: boolean): st
 
 export function DailyHero({
 	games,
+	progressGames,
 	dateString,
 	tomorrowsFreeGameName,
 	currentStreak = 0,
@@ -226,7 +247,9 @@ export function DailyHero({
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
-	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(games)
+	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(
+		progressGames ?? games,
+	)
 	const progressPercent = availableCount > 0 ? (completedCount / availableCount) * 100 : 0
 
 	// Use static greeting on server, update on client to avoid hydration mismatch
@@ -294,6 +317,18 @@ export function DailyHero({
 					</div>
 				</div>
 			</Card>
+
+			{/* Bounded exposure: the free ritual leads; the full catalog is /games */}
+			<div className="flex items-center justify-between gap-3">
+				<h2 className="text-sm font-semibold text-muted-foreground">{t('home.todaysPuzzles')}</h2>
+				<Link
+					href="/games"
+					className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+				>
+					{t('home.seeAllGames')}
+					<ChevronRight className="h-4 w-4" aria-hidden="true" />
+				</Link>
+			</div>
 
 			{/* Game Cards Grid */}
 			<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

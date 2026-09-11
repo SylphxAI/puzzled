@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test'
-import { deriveHomePlayState, type HomePersonalResult, type HomePlayState } from './home-play-state'
+import { getAllGameMetadata } from '@/games/registry'
+import { summarizeDailyProgress } from './daily-progress'
+import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from './home-exposure'
+import {
+	deriveHomePlayState,
+	type HomePersonalResult,
+	type HomePlayState,
+	scopeHomePlayState,
+} from './home-play-state'
 
 const slugs = ['word-guess', 'word-groups', 'crowns', 'sudoku', 'crossword'] as const
 
@@ -141,5 +149,122 @@ describe('home play state', () => {
 
 		expect(state.games.every((entry) => !entry.locked)).toBe(true)
 		expect(game(state, 'sudoku').isFreeToday).toBe(true)
+	})
+})
+
+/**
+ * The home page renders only the bounded exposure, but the hero's progress
+ * indicator is scoped by `scopeHomePlayState` to the full registry. These
+ * tests reproduce the reviewer probe: 8 server-proved completions, 19 shipped
+ * modules, 6 exposed cards.
+ */
+describe('home play scopes (bounded grid, full progress)', () => {
+	const provedSlugs = [
+		'word-guess',
+		'word-groups',
+		'word-hive',
+		'crossword',
+		'sudoku',
+		'nonogram',
+		'word-ladder',
+		'arithmo',
+	] as const
+
+	const unverified: HomePersonalResult = {
+		hasCompleted: false,
+		completedSession: null,
+		statusAvailable: false,
+	}
+
+	function registryModules() {
+		return getAllGameMetadata().map((game) => ({ slug: game.slug, sortOrder: game.sortOrder }))
+	}
+
+	/** Every listed slug is server-proved complete on the pinned product day. */
+	function provedResults(slugs: readonly string[]): Record<string, HomePersonalResult> {
+		const entries: Array<[string, HomePersonalResult]> = slugs.map((slug) => [
+			slug,
+			{
+				hasCompleted: true,
+				completedSession: { score: 100 },
+				statusAvailable: true,
+			},
+		])
+		return Object.fromEntries(entries)
+	}
+
+	function exposureFor(dayKey: string, personalResults: Record<string, HomePersonalResult>) {
+		return deriveHomeExposure({
+			modules: registryModules(),
+			freeGameSlug: 'sudoku',
+			completions: personalResults,
+			dayKey,
+			limit: HOME_EXPOSURE_LIMIT,
+		})
+	}
+
+	test('premium viewer: the badge keeps the full-registry denominator', () => {
+		const registrySlugs = registryModules().map((module) => module.slug)
+		const personalResults = provedResults(provedSlugs)
+		const exposure = exposureFor('2026-09-11', personalResults)
+		const playState = deriveHomePlayState({
+			gameSlugs: registrySlugs,
+			personalResults,
+			isPremium: true,
+			freeGameSlug: 'sudoku',
+		})
+
+		const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
+
+		// The grid stays bounded and leads with the free ritual.
+		expect(renderedGames.map((entry) => entry.slug)).toEqual(exposure.slugs)
+		expect(renderedGames).toHaveLength(HOME_EXPOSURE_LIMIT)
+		expect(renderedGames[0]?.slug).toBe('sudoku')
+
+		// 8 proved of 19 must never be re-based to "6/6 all complete".
+		const progress = summarizeDailyProgress(progressGames)
+		expect(progress.completedCount).toBe(provedSlugs.length)
+		expect(progress.availableCount).toBe(registrySlugs.length)
+		expect(progress.allCompleted).toBe(false)
+	})
+
+	test('free viewer: the badge stays 1/1 and the grid stays bounded', () => {
+		const personalResults = provedResults(provedSlugs)
+		const exposure = exposureFor('2026-09-11', personalResults)
+		const playState = deriveHomePlayState({
+			gameSlugs: registryModules().map((module) => module.slug),
+			personalResults,
+			isPremium: false,
+			freeGameSlug: 'sudoku',
+		})
+
+		const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
+
+		expect(renderedGames).toHaveLength(HOME_EXPOSURE_LIMIT)
+		expect(summarizeDailyProgress(progressGames)).toEqual({
+			completedCount: 1,
+			availableCount: 1,
+			allCompleted: true,
+		})
+	})
+
+	test('a non-exposed unverified module still lifts the unverified banner', () => {
+		const personalResults: Record<string, HomePersonalResult> = {
+			...provedResults(provedSlugs),
+			'word-search': unverified,
+		}
+		const exposure = exposureFor('2026-09-11', personalResults)
+		const playState = deriveHomePlayState({
+			gameSlugs: registryModules().map((module) => module.slug),
+			personalResults,
+			isPremium: true,
+			freeGameSlug: 'sudoku',
+		})
+
+		const { renderedGames } = scopeHomePlayState(playState, exposure.slugs)
+
+		expect(exposure.slugs).not.toContain('word-search')
+		expect(renderedGames.map((entry) => entry.slug)).not.toContain('word-search')
+		expect(playState.hasUnverifiedStatus).toBe(true)
 	})
 })

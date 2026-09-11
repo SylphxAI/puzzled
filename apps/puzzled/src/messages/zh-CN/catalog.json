@@ -1,0 +1,15 @@
+{
+	"metaTitle": "所有游戏",
+	"metaDescription": "浏览 Puzzled 所有每日谜题 — 今日免费游戏，以及文字、逻辑与数字游戏的完整系列。",
+	"title": "所有游戏",
+	"subtitle": "所有每日游戏尽在此处。今日免费游戏始终开放，无需账户。",
+	"searchPlaceholder": "按名称筛选游戏…",
+	"searchLabel": "按名称筛选游戏",
+	"freeToday": "今日免费",
+	"premium": "高级版",
+	"open": "开始",
+	"showing": "显示 {count} / {total} 个游戏",
+	"clearFilter": "清除筛选",
+	"emptyTitle": "找不到匹配的游戏",
+	"emptyDescription": "请尝试其他名称，或清除筛选以查看完整目录。"
+}
