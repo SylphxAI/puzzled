@@ -420,6 +420,8 @@ describe('mark matching', () => {
 		expect(findMarks('Mini Grid')).toEqual([])
 		expect(findMarks('Play the Mini Grid')).toEqual([])
 		expect(findMarks('Spelling practice session')).toEqual([])
+		// Singular "queen" is generic English (chess) even though the plural is a mark.
+		expect(findMarks('Move the queen next to the king')).toEqual([])
 	})
 
 	test('bans NYT product-title usages of The Mini / The Midi', () => {

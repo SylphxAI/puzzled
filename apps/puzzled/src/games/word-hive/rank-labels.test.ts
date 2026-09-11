@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, test } from 'bun:test'
+import { readFileSync } from 'node:fs'
 import { RANK_LABELS } from './components/rank-display'
 import { RANK_THRESHOLDS } from './types'
 
@@ -54,5 +55,18 @@ describe('word-hive rank ladder', () => {
 				FOREIGN_RANK_NAMES.some((foreign) => normalized.startsWith(foreign.toLowerCase())),
 			).toBe(false)
 		}
+	})
+
+	test('translation block matches the rendered ladder (no drift)', () => {
+		const translations = JSON.parse(
+			readFileSync(new URL('./translations/en.json', import.meta.url), 'utf8'),
+		) as { ranks: Record<string, string> }
+		const toCamelKey = (rankId: string) =>
+			rankId.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())
+		const fromTranslations = Object.entries(RANK_LABELS).map(([rankId, label]) => {
+			expect(translations.ranks[toCamelKey(rankId)]).toBe(label)
+			return label
+		})
+		expect(fromTranslations).toEqual(GOLDEN_LADDER)
 	})
 })
