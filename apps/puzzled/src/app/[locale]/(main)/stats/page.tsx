@@ -16,6 +16,7 @@ import {
 	type UserStats,
 } from '@/lib/api/server'
 import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser } from '@/lib/identity/server'
 import { cn } from '@/lib/utils'
 import { Header } from '@/shared/components/layout'
@@ -55,8 +56,6 @@ const emptyStats: GameStats = {
 	guessDistribution: null,
 	perfectGames: 0,
 }
-
-const slugToCamelCase = (slug: string) => slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
 
 function toGameStats(stats: UserStats[string] | undefined): GameStats {
 	if (!stats) return emptyStats

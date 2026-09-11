@@ -40,3 +40,11 @@ export function playerTitle(slug: string): string {
 	const canonical = canonicalizeGameSlug(slug)
 	return PLAYER_TITLE[canonical] ?? canonical
 }
+
+/**
+ * `word-guess` -> `wordGuess`: the slug segment used by the `games` i18n
+ * namespace (`games.wordGuess.name`). One definition for every renderer.
+ */
+export function slugToCamelCase(slug: string): string {
+	return slug.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())
+}

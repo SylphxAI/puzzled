@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { getAllGameMetadata, getGameSlugs } from '@/games/registry'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { buildCatalogEntries, type CatalogEntry, filterCatalogEntries } from './catalog'
 
 /**
@@ -65,6 +66,11 @@ describe('buildCatalogEntries', () => {
 	test('derives i18n keys from the canonical slug, not alias config keys', () => {
 		const entries = build(false)
 
+		// Multi-word slugs are the interesting case; literal expectations keep
+		// the camelCase transform independently pinned from the shared helper.
+		expect(entryFor(entries, 'word-guess').titleKey).toBe('games.wordGuess.name')
+		expect(entryFor(entries, 'killer-sudoku').taglineKey).toBe('games.killerSudoku.tagline')
+
 		const crowns = entryFor(entries, 'crowns')
 		expect(crowns.titleKey).toBe('games.crowns.name')
 		expect(crowns.taglineKey).toBe('games.crowns.tagline')
@@ -74,7 +80,7 @@ describe('buildCatalogEntries', () => {
 		expect(duo.taglineKey).toBe('games.duo.tagline')
 
 		for (const entry of entries) {
-			const camel = entry.slug.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())
+			const camel = slugToCamelCase(entry.slug)
 			expect(entry.titleKey).toBe(`games.${camel}.name`)
 			expect(entry.taglineKey).toBe(`games.${camel}.tagline`)
 			expect(entry.duration.length).toBeGreaterThan(0)

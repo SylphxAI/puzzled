@@ -8,7 +8,7 @@
  */
 
 import type { GameMetadata } from '@/games/registry'
-import { canonicalizeGameSlug, playerTitle } from '@/lib/game-slug'
+import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
 
 export type CatalogEntry = {
 	/** Canonical registry slug (`/games/<slug>`). */
@@ -27,11 +27,6 @@ export type CatalogEntry = {
 	locked: boolean
 }
 
-/** `word-guess` -> `wordGuess` (game translation keys are camelCase). */
-function toTranslationSlug(slug: string): string {
-	return slug.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase())
-}
-
 /**
  * Map the registered modules to catalog entries. Input order is preserved
  * (the registry returns games sorted by sortOrder).
@@ -46,7 +41,7 @@ export function buildCatalogEntries(input: {
 	const freeSlug = canonicalizeGameSlug(input.freeGameSlug)
 
 	return input.modules.map((module) => {
-		const translationSlug = toTranslationSlug(module.slug)
+		const translationSlug = slugToCamelCase(module.slug)
 		const freeToday = module.slug === freeSlug
 
 		return {

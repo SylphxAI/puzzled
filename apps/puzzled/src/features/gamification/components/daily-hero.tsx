@@ -16,7 +16,7 @@ import {
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
-import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
+import { type DailyProgressGame, summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { DEFAULT_GAME_COLORS, getGameColors } from '@/games/theme-colors'
 import type { GameDisplayMeta } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
@@ -34,7 +34,16 @@ type GameInfo = {
 }
 
 type DailyHeroProps = {
+	/** Cards rendered in the grid; home passes only the bounded exposure. */
 	games: GameInfo[]
+	/**
+	 * Completion scope for the "Today's progress" badge and bar: every module
+	 * the player can play today. Defaults to `games`. Home passes the full
+	 * registry state so the bounded card grid (`CATALOG.md` §1) cannot re-base
+	 * the indicator — a premium viewer with 8 of 19 proved stays 8/19, never
+	 * "6/6 all complete".
+	 */
+	progressGames?: readonly DailyProgressGame[]
 	/** Display date string (e.g., "Wednesday, December 18, 2024") */
 	dateString: string
 	/** Tomorrow's free game name for teaser */
@@ -230,6 +239,7 @@ function progressBarTone(allCompleted: boolean, progressUnverified: boolean): st
 
 export function DailyHero({
 	games,
+	progressGames,
 	dateString,
 	tomorrowsFreeGameName,
 	currentStreak = 0,
@@ -237,7 +247,9 @@ export function DailyHero({
 	className,
 }: DailyHeroProps) {
 	const t = useTranslations()
-	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(games)
+	const { completedCount, availableCount, allCompleted } = summarizeDailyProgress(
+		progressGames ?? games,
+	)
 	const progressPercent = availableCount > 0 ? (completedCount / availableCount) * 100 : 0
 
 	// Use static greeting on server, update on client to avoid hydration mismatch

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { buildCatalogEntries } from '@/features/catalog/lib/catalog'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	deriveHomeExposure,
@@ -74,6 +75,71 @@ describe('deriveHomeExposure', () => {
 		})
 
 		expect(exposure.slugs).toEqual([freeSlug, 'module-07'])
+	})
+
+	test('fills the cap with the lowest-sortOrder proved completions and drops the surplus', () => {
+		// More proved completions than non-free slots: `sortOrder` decides which
+		// ones stay on home. The surplus must not displace lower-sortOrder ones.
+		const exposure = deriveHomeExposure({
+			modules: catalogOf(12),
+			freeGameSlug: freeSlug,
+			completions: {
+				'module-07': proved,
+				'module-03': proved,
+				'module-05': proved,
+				'module-02': proved,
+			},
+			dayKey: '2026-09-10',
+			limit: 4,
+		})
+
+		expect(exposure.slugs).toEqual([freeSlug, 'module-02', 'module-03', 'module-05'])
+		expect(exposure.slugs).not.toContain('module-07')
+	})
+
+	test('keeps surplus proved completions reachable on /games', () => {
+		const registry = getAllGameMetadata()
+		const modules = registry.map((game) => ({ slug: game.slug, sortOrder: game.sortOrder }))
+		// 8 proved completions for 6 home slots (reviewer probe, 2026-09-11).
+		const provedSlugs = [
+			'word-guess',
+			'word-groups',
+			'word-hive',
+			'crossword',
+			'sudoku',
+			'nonogram',
+			'word-ladder',
+			'arithmo',
+		]
+		const completions = Object.fromEntries(provedSlugs.map((slug) => [slug, proved]))
+
+		const exposure = deriveHomeExposure({
+			modules,
+			freeGameSlug: 'sudoku',
+			completions,
+			dayKey: '2026-09-11',
+			limit: HOME_EXPOSURE_LIMIT,
+		})
+
+		// The two highest-sortOrder completions are over the cap...
+		expect(exposure.slugs).toEqual([
+			'sudoku',
+			'word-guess',
+			'word-groups',
+			'word-hive',
+			'crossword',
+			'nonogram',
+		])
+		// ...but the whole registry, surplus included, stays listed on /games.
+		const catalogSlugs = buildCatalogEntries({
+			modules: registry,
+			freeGameSlug: 'sudoku',
+			isPremium: true,
+		}).map((entry) => entry.slug)
+		for (const slug of ['word-ladder', 'arithmo']) {
+			expect(exposure.slugs).not.toContain(slug)
+			expect(catalogSlugs).toContain(slug)
+		}
 	})
 
 	test('never treats unknown or unavailable status as completed', () => {
@@ -159,19 +225,6 @@ describe('deriveHomeExposure', () => {
 
 		expect(exposure.slugs).toHaveLength(modules.length)
 		expect(new Set(exposure.slugs)).toEqual(new Set(modules.map((module) => module.slug)))
-		expect(exposure.hiddenCount).toBe(0)
-	})
-
-	test('reports how many modules stay on the catalog page', () => {
-		const exposure = deriveHomeExposure({
-			modules: catalogOf(12),
-			freeGameSlug: freeSlug,
-			completions: {},
-			dayKey: '2026-09-10',
-			limit: 6,
-		})
-
-		expect(exposure.hiddenCount).toBe(6)
 	})
 
 	test('exposes nothing when the limit is not positive', () => {
@@ -184,7 +237,6 @@ describe('deriveHomeExposure', () => {
 		})
 
 		expect(exposure.slugs).toEqual([])
-		expect(exposure.hiddenCount).toBe(12)
 	})
 
 	test('fails closed for a non-finite limit', () => {
@@ -197,7 +249,6 @@ describe('deriveHomeExposure', () => {
 		})
 
 		expect(exposure.slugs).toEqual([])
-		expect(exposure.hiddenCount).toBe(12)
 	})
 
 	test('deduplicates repeated registrations', () => {
@@ -244,6 +295,5 @@ describe('deriveHomeExposure', () => {
 		expect(new Set(exposure.slugs).size).toBe(HOME_EXPOSURE_LIMIT)
 		expect(exposure.slugs[0]).toBe('sudoku')
 		expect(exposure.slugs).toContain('word-guess')
-		expect(exposure.hiddenCount).toBe(modules.length - HOME_EXPOSURE_LIMIT)
 	})
 })

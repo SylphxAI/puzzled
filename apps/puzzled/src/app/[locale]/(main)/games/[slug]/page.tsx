@@ -16,6 +16,7 @@ import {
 } from '@/lib/api/server'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { productDayKey } from '@/lib/product-day'
@@ -30,9 +31,6 @@ type Props = {
 	params: Promise<{ locale: string; slug: string }>
 	searchParams: Promise<{ mode?: string; date?: string; difficulty?: string }>
 }
-
-// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
-const slugToCamelCase = (slug: string) => slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
 
 export async function generateStaticParams() {
 	// Use all locales from config and all games from registry (SSOT)

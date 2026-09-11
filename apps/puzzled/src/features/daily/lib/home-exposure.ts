@@ -6,14 +6,18 @@
  * stays small."). This pure selector picks the bounded set the home hero may
  * render from the registered modules:
  *
- * - today's free-rotation module always leads, so the free ritual CTA is the
- *   first card and cannot be rotated away (free floor untouched);
- * - modules with a server-proved completion today stay visible, so returning
- *   players keep their progress in front of them;
- * - remaining slots rotate deterministically per product day key: stable
- *   within the day, different across days;
- * - unknown or unavailable completion status is never treated as completed
- *   (#130 semantics), so a failed read cannot mark a module done.
+ * Precedence is explicit, so the cap is never ambiguous:
+ *
+ * 1. today's free-rotation module always leads, so the free ritual CTA is the
+ *    first card and cannot be rotated away (free floor untouched);
+ * 2. modules with a server-proved completion fill the remaining slots in
+ *    registry `sortOrder` order. There can be more proved completions than
+ *    slots: only the lowest `sortOrder` fit, and the surplus is intentionally
+ *    not exposed on home — it stays reachable and playable on `/games`;
+ * 3. remaining slots rotate deterministically per product day key: stable
+ *    within the day, different across days;
+ * 4. unknown or unavailable completion status is never treated as completed
+ *    (#130 semantics), so a failed read cannot mark a module done.
  *
  * Everything not exposed here stays reachable through the `/games` catalog.
  */
@@ -47,10 +51,11 @@ export type HomeExposureInput = {
 }
 
 export type HomeExposure = {
-	/** Bounded, duplicate-free slugs: free module first, then proved completions, then day fill. */
+	/**
+	 * Bounded, duplicate-free slugs: free module first, then proved completions
+	 * by `sortOrder` up to the cap, then the deterministic day fill.
+	 */
 	slugs: string[]
-	/** Registered modules not shown on home; they stay reachable on /games. */
-	hiddenCount: number
 }
 
 /**
@@ -104,7 +109,9 @@ export function deriveHomeExposure(input: HomeExposureInput): HomeExposure {
 		push(input.freeGameSlug)
 	}
 
-	// 2. Server-proved completions (free module already placed first).
+	// 2. Server-proved completions, lowest sortOrder first (the free module is
+	// already placed). Surplus completions beyond the cap are dropped here and
+	// stay reachable on /games.
 	const completed = modules
 		.filter(
 			(module) =>
@@ -131,6 +138,5 @@ export function deriveHomeExposure(input: HomeExposureInput): HomeExposure {
 
 	return {
 		slugs,
-		hiddenCount: modules.length - slugs.length,
 	}
 }

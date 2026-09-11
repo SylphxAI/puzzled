@@ -2,7 +2,7 @@ import { Button } from '@sylphx/ui'
 import { AlertCircle, BarChart3, Crown, Flame, Settings, Sparkles, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
-import { deriveHomePlayState } from '@/features/daily/lib/home-play-state'
+import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
 import { getPuzzleDateString } from '@/features/daily/server'
 import { DailyHero, SocialProof } from '@/features/gamification/components'
 import { StreakWarning } from '@/features/streak/components/streak-warning'
@@ -16,6 +16,7 @@ import {
 	type StreakInfo,
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
@@ -166,15 +167,19 @@ async function HomeContent({
 	// completed state or a score: deriveHomePlayState only marks completion
 	// from a server-proved read.
 	const playState = deriveHomePlayState({
-		gameSlugs: exposure.slugs,
+		// Full registry, exactly as before the grid was bounded: the hero's
+		// "Today's progress" indicator counts every module the viewer can play
+		// today, so a premium viewer with 8 of 19 proved must not be re-based
+		// to the exposed six ("6/6 all complete").
+		gameSlugs: gameMetadata.map((game) => game.slug),
 		personalResults,
 		isPremium,
 		freeGameSlug: todaysFreeGame,
 	})
 
-	// Convert slug to camelCase for translation key (e.g., 'spelling-bee' → 'spellingBee')
-	const slugToCamelCase = (slug: string) =>
-		slug.replace(/-([a-z])/g, (_, char) => char.toUpperCase())
+	// Only the bounded exposure is rendered in the grid — in exposure order,
+	// so today's free ritual leads. The progress scope stays the full registry.
+	const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
 
 	// Get current streak and whether user has played today.
 	// A missing payload is not a zero streak.
@@ -190,7 +195,7 @@ async function HomeContent({
 
 	// Merge game info with completion status and free/locked status
 	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
-	const gamesWithCompletion = playState.games.flatMap((game) => {
+	const gamesWithCompletion = renderedGames.flatMap((game) => {
 		const metadata = metadataBySlug.get(game.slug)
 		if (!metadata) return []
 		return [
@@ -249,6 +254,7 @@ async function HomeContent({
 				<div className="mx-auto max-w-4xl">
 					<DailyHero
 						games={gamesWithCompletion}
+						progressGames={progressGames}
 						dateString={dateString}
 						tomorrowsFreeGameName={tomorrowsFreeGameName}
 						currentStreak={currentStreak}
