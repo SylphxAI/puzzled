@@ -9,17 +9,25 @@ type RankDisplayProps = {
 	maxScore: number
 }
 
-const RANK_LABELS: Record<SpellingBeeRank, string> = {
-	beginner: 'Beginner',
-	'good-start': 'Good Start',
-	'moving-up': 'Moving Up',
-	good: 'Good',
-	solid: 'Solid',
-	nice: 'Nice',
-	great: 'Great',
-	amazing: 'Amazing',
-	genius: 'Genius',
-	'queen-bee': 'Queen Bee 👑',
+/**
+ * Puzzled's own rank ladder (player-facing chrome).
+ *
+ * Deliberately not another publisher's rank names: the ladder is our chrome,
+ * so it must not clone a competitor's distinctive labels (CATALOG §3.1). The
+ * internal rank ids stay stable for analytics and stored sessions; only the
+ * player-facing label is product-owned.
+ */
+export const RANK_LABELS: Record<SpellingBeeRank, string> = {
+	beginner: 'Start',
+	'good-start': 'Warm Up',
+	'moving-up': 'Steady',
+	good: 'Sharp',
+	solid: 'Bright',
+	nice: 'Brilliant',
+	great: 'Dazzling',
+	amazing: 'Ace',
+	genius: 'Master',
+	'queen-bee': 'Perfect Hive 👑',
 }
 
 /**
