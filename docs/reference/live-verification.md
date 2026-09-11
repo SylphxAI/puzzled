@@ -174,7 +174,7 @@ harness problem:
 
 | Readback | Pinned 2026-08-25 revision | Expected after the deploy |
 |---|---|---|
-| canonical / JSON-LD origin | `http://localhost:3000` | `https://puzzled.gg` (OG: only `twitter:image` is emitted today) |
+| canonical / JSON-LD origin | `http://localhost:3000` | `https://puzzled.gg` (no `og:url`/`og:image`; the origin-bearing card field is `twitter:image` on `/` only) |
 | served home HTML CTA | 0 free-game hrefs, "today's progress unavailable" | bounded hero (free module first) + `See all games` |
 | `/games` catalog | 404 | 200, every registry module with CATALOG player titles |
 | `/games/crowns` | 308 -> `/games/games/crowns` -> 404 | 200 on the canonical module path |
@@ -197,8 +197,8 @@ curl -sS -o /dev/null -w 'games %{http_code} %{url_effective}\n' -L https://puzz
 curl -sS -o /dev/null -w 'crowns %{http_code} %{url_effective}\n' -L https://puzzled.gg/games/crowns
 curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/crowns
 curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/duo
-curl -sS -o /dev/null -w 'privacy %{http_code}\n' -L https://puzzled.gg/privacy
-curl -sS -o /dev/null -w 'terms %{http_code}\n' -L https://puzzled.gg/terms
+curl -sS -o /dev/null -w 'privacy %{http_code} -> %{redirect_url}\n' https://puzzled.gg/privacy
+curl -sS -o /dev/null -w 'terms %{http_code} -> %{redirect_url}\n' https://puzzled.gg/terms
 curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
   -H 'content-type: application/json' -d '{"gameSlug":"number-path"}'
 curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
