@@ -164,3 +164,50 @@ On days whose free module the harness cannot solve (`word-guess`,
 to check and reports `unknown`, so read-only runs are structurally non-green
 on those days. That is by design; run on a solvable free day (`sudoku`,
 `crowns`) or accept the `unknown`.
+
+## Post-deploy expectations (2026-09-11 fix set)
+
+A deployed revision at or after `328009a` must flip these Live readbacks that
+the pinned 2026-08-25 revision (`git_commit_sha=3675ab73…`, observed
+2026-09-11) fails. Treat any still-red row as an incomplete deploy, not as a
+harness problem:
+
+| Readback | Pinned 2026-08-25 revision | Expected after the deploy |
+|---|---|---|
+| canonical / JSON-LD origin | `http://localhost:3000` | `https://puzzled.gg` (no `og:url`/`og:image`; the origin-bearing card field is `twitter:image` on `/` only) |
+| served home HTML CTA | 0 free-game hrefs, "today's progress unavailable" | bounded hero (free module first) + `See all games` |
+| `/games` catalog | 404 | 200, every registry module with CATALOG player titles |
+| `/games/crowns` | 308 -> `/games/games/crowns` -> 404 | 200 on the canonical module path |
+| `/crowns`, `/duo` inbound aliases | alias hop breaks (double prefix) | redirect to `/games/crowns` / `/games/duo`, final 200 |
+| `/privacy`, `/terms` (anonymous) | 307 to `/login` | public 200 |
+| `number-path`, `pip-place` (anonymous) | `404 unknown_game` | `403 premium_required` (known module, fail-closed) |
+| marks scan on `/` and the free module | 8 hard hits (`Wordle`, `Connections` in meta/JSON-LD) | 0 hard hits |
+| finish loop (`--play`) | pass (server-authoritative) | still pass; one finish per `(user, module, day_key)` |
+
+Two different probe families cover the table. Run both and keep the raw
+output with the record that claims the deploy.
+
+```bash
+# 1) Harness (healthz/readyz, rotation fail-closed, daily serve, share deep
+#    link, premium fail-closed, marks scan, finish loop):
+bun run verify:live --expected-sha <deployed-sha> --play --json
+
+# 2) Surfaces the harness does not probe (compare each result to the table):
+curl -sS -o /dev/null -w 'games %{http_code} %{url_effective}\n' -L https://puzzled.gg/games
+curl -sS -o /dev/null -w 'crowns %{http_code} %{url_effective}\n' -L https://puzzled.gg/games/crowns
+curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/crowns
+curl -sS -o /dev/null -w 'alias %{http_code} %{url_effective}\n' -L https://puzzled.gg/duo
+curl -sS -o /dev/null -w 'privacy %{http_code} -> %{redirect_url}\n' https://puzzled.gg/privacy
+curl -sS -o /dev/null -w 'terms %{http_code} -> %{redirect_url}\n' https://puzzled.gg/terms
+curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
+  -H 'content-type: application/json' -d '{"gameSlug":"number-path"}'
+curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
+  -H 'content-type: application/json' -d '{"gameSlug":"pip-place"}'
+```
+
+A green harness run alone is not the deploy evidence for this table: the
+harness has no check for `/games`, the alias/legal routes, or the two new
+modules. And on days whose free module the harness cannot solve
+(`word-guess`, `word-groups`, `crossword`) the share signature compare is
+`unknown` by design (see above), so the command exits non-zero on a complete
+deploy — run it on a `sudoku`/`crowns` day or accept the documented `unknown`.
