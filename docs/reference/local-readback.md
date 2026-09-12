@@ -37,10 +37,10 @@ psql -h localhost -U postgres -c 'CREATE DATABASE puzzled_local_readback;'
 export DATABASE_URL="postgres://postgres:postgres@localhost:5432/puzzled_local_readback?sslmode=disable"
 atlas migrate apply --dir file://apps/puzzled/atlas/migrations --url "$DATABASE_URL"
 
-# 2. api — the Rust authority (owns Postgres). Build once, then run.
-cargo build -p puzzled-server
-PUZZLED_HTTP_PORT=8787 DATABASE_URL="$DATABASE_URL" \
-  ./target/debug/puzzled-server &   # or: cargo run -p puzzled-server
+# 2. api — the Rust authority (owns Postgres). GIT_COMMIT_SHA makes /healthz
+#    report the revision, which is what --expected-sha asserts against.
+GIT_COMMIT_SHA=$(git rev-parse HEAD) PUZZLED_HTTP_PORT=8787 DATABASE_URL="$DATABASE_URL" \
+  cargo run -p puzzled-server &
 
 # 3. web — presentation only; it must boot without DATABASE_URL and reach the
 #    api through API_INTERNAL_URL (the platform injects the same value).
@@ -51,31 +51,36 @@ PUZZLED_HTTP_PORT=8787 DATABASE_URL="$DATABASE_URL" \
 PUZZLED_API_PORT=8787 bun scripts/local-stack.ts
 ```
 
-To exercise the web-document checks (canonical origin, JSON-LD, marks scan) the
-request must carry a product hostname, because the canonical resolver refuses
-to advertise a spoofed or loopback origin. Map the host to loopback for the
-duration of the run and remove it afterwards:
+`--base http://127.0.0.1:9999` is enough to pass: the harness accepts a
+loopback canonical when the target host is loopback, and `marks-scan` accepts
+localhost origins for a local target.
+
+To rehearse the **public-host** path as well (the canonical / JSON-LD origin a
+real visitor gets), map the product hostname to loopback for the duration of
+the run and remove it afterwards:
 
 ```bash
-echo '127.0.0.1 puzzled.gg' | sudo tee -a /etc/hosts   # temporary
+echo '127.0.0.1 puzzled.gg' | sudo tee -a /etc/hosts   # temporary, optional
 bun run verify:live --base http://puzzled.gg:9999 --play --json
 sudo sed -i '/127\.0\.0\.1 puzzled\.gg/d' /etc/hosts   # then remove it
 ```
 
-Without the host mapping, run `--base http://127.0.0.1:9999` and expect the
-`web-document` canonical sub-check and the `marks-scan` origin sub-check to
-stay `fail`/`unknown`: that is the resolver refusing loopback, not a product
-defect.
+With that mapping the canonical resolves to `https://puzzled.gg` (public hosts
+are always https), which is what production must advertise. Without it the
+local run still passes; it just never exercises the non-loopback branch of the
+origin resolver. A production build ignores a loopback
+`NEXT_PUBLIC_APP_URL` and falls back to `https://puzzled.gg`, so a local
+*production* `next build` also does not need the mapping.
 
 ## What the local run can and cannot assert
 
 | Check | Locally | Why |
 | --- | --- | --- |
 | `free-slug-discovery`, `daily-serve`, `premium-fail-closed` | pass | Real GetDaily against the real schema and rotation. |
-| `finish-loop` | pass | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. |
-| `web-document`, `marks-scan` | pass with the web service + host mapping | The web layer is what renders canonical/JSON-LD/CTA. |
+| `finish-loop` | pass on a revision that records honest losses | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. On a revision that still hard-codes the win claim this check fails with `Invalid win claim …` — that failure is the point of the check, not a local artifact. |
+| `web-document`, `marks-scan` | pass | The web layer is what renders canonical/JSON-LD/CTA; loopback targets are accepted as-is. |
 | `share-deep-link` | `unknown` | The harness cannot solve the free module, so the solution signature stays unknown; the landing-page shape and non-spoiler checks still run. |
-| `healthz` `git-commit-sha` | `unknown` | A local build has no `GIT_COMMIT_SHA`; the api reports `git_commit_sha: null`. Only the deployed revision can satisfy this sub-check. |
+| `healthz` `git-commit-sha` | pass when launched with `GIT_COMMIT_SHA` | The api reads `SYLPHX_GIT_COMMIT_SHA`/`GIT_COMMIT_SHA`/`GIT_SHA`/`GITHUB_SHA` and omits the field when unset. Without it the sub-check is `fail` (200 + no sha), so step 2 sets it from `git rev-parse HEAD`. |
 
 ## What a green local `finish-loop` proves
 
