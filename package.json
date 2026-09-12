@@ -19,6 +19,7 @@
 		"check:proto-buf": "bun scripts/check-proto-buf.ts",
 		"verify:live": "bun scripts/verify-live.ts",
 		"verify:live:selftest": "bun scripts/verify-live.ts --self-test",
+		"local:stack": "bun scripts/local-stack.ts",
 		"clean": "turbo clean && rm -rf node_modules",
 		"prepare": "git config --unset core.hooksPath >/dev/null 2>&1; lefthook install || true",
 		"generate:proto-es": "buf generate || ./.tools/buf generate"

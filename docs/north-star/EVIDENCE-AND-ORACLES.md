@@ -27,6 +27,11 @@ Re-runnable Live-layer subset for the capability graph (not the metric oracle
 below): `scripts/verify-live.ts` — see
 [live-verification.md](../reference/live-verification.md).
 
+The same harness can be pointed at a local full stack (api + web + scratch
+Postgres, routed by `scripts/local-stack.ts`) to rehearse those assertions
+before a Promote. That run is **Local**-layer evidence and never upgrades a
+Live check — see [local-readback.md](../reference/local-readback.md).
+
 ### 2.1 daily puzzle completers oracle
 
 Given day \(D\):
