@@ -248,6 +248,14 @@ describe('daily load fallback', () => {
 		).rejects.toThrow()
 	})
 
+	test('a bare 403 without the product gate reason stays a retry, not an upsell', async () => {
+		stubConnectFetch(() => new Response('forbidden', { status: 403 }))
+
+		await expect(
+			loadDailySnapshot({ gameSlug: 'crossword' }, createPuzzleServiceClient(CONNECT_BASE)),
+		).rejects.toThrow()
+	})
+
 	test('a server-accepted finish reached by the fallback is rendered as completed', async () => {
 		stubConnectFetch(() =>
 			connectJson(

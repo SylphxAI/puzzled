@@ -106,10 +106,15 @@ export async function loadDailySnapshot(
 		)
 		return classifyDailyResponse(res)
 	} catch (error) {
-		// A refused read is not a transient failure: the server said this
-		// identity may not play this module (premium/archive gate), so the
-		// caller must show the upgrade path instead of a retry loop.
-		if (ConnectError.from(error).code === Code.PermissionDenied) {
+		// A refused read is not a transient failure — but only the product's own
+		// premium gate is an entitlement answer. Require the server's exact
+		// `premium_required` reason so an unrelated 403 (edge/WAF/other policy)
+		// stays a retry instead of being relabelled as an upsell.
+		const refused = ConnectError.from(error)
+		if (
+			refused.code === Code.PermissionDenied &&
+			refused.rawMessage.trim() === 'premium_required'
+		) {
 			return { kind: 'denied' }
 		}
 		throw error
