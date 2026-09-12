@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { RotateCw } from 'lucide-react'
+import { Lock, RotateCw } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useReducer } from 'react'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
@@ -25,6 +25,8 @@ type GameDailyFallbackProps = {
 	supportsDifficulty: boolean
 	/** Archive day key; only passed when the server already admitted that read. */
 	puzzleDate?: string
+	/** Today's free-rotation module, for the upgrade path's alternative. */
+	freeGameSlug?: string
 }
 
 /**
@@ -44,6 +46,7 @@ export function GameDailyFallback({
 	difficulty,
 	supportsDifficulty,
 	puzzleDate,
+	freeGameSlug,
 }: GameDailyFallbackProps) {
 	const t = useTranslations('daily')
 	const tCommon = useTranslations('common')
@@ -131,6 +134,38 @@ export function GameDailyFallback({
 				puzzleData={snapshot.puzzleData}
 				difficulty={difficulty}
 			/>
+		)
+	}
+
+	// Server refused the read (premium/archive gate): the honest answer is the
+	// upgrade path plus today's free module, never a retry loop.
+	if (snapshot?.kind === 'denied') {
+		return (
+			<div className="flex flex-1 flex-col">
+				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+					<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+						<Lock className="h-10 w-10 text-primary" aria-hidden="true" />
+					</div>
+					<div className="space-y-2">
+						<p className="text-lg font-medium">{t('deniedTitle', { game: gameName })}</p>
+						<p className="text-sm text-muted-foreground">{t('deniedDescription')}</p>
+					</div>
+					<Button asChild className="w-full sm:w-auto">
+						<Link href="/pricing">{t('unlockPremium')}</Link>
+					</Button>
+					{freeGameSlug ? (
+						<Link
+							href={`/games/${freeGameSlug}`}
+							className="text-sm font-medium text-primary underline"
+						>
+							{t('todaysFreeGame')}
+						</Link>
+					) : null}
+					<Link href="/" className="text-sm text-muted-foreground hover:underline">
+						← {t('backToGames')}
+					</Link>
+				</main>
+			</div>
 		)
 	}
 

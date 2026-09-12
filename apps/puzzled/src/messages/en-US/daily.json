@@ -26,5 +26,9 @@
 	"unavailableDescription": "We couldn't load today's puzzle. Check your connection and try again.",
 	"completedNoResult": "You already finished today's puzzle. Result details aren't available right now.",
 	"statusUnknown": "Status unknown",
-	"difficultyStatusUnverified": "We couldn't verify which levels you've finished today. The server checks before you start."
+	"difficultyStatusUnverified": "We couldn't verify which levels you've finished today. The server checks before you start.",
+	"deniedTitle": "{game} needs Puzzled Plus",
+	"deniedDescription": "Today's free puzzle is still open to everyone. Plus unlocks the full suite, the archive, and deeper stats.",
+	"unlockPremium": "Unlock with Premium",
+	"todaysFreeGame": "Play today's free puzzle"
 }
