@@ -264,6 +264,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 				difficulty={difficulty}
 				supportsDifficulty={supportsDifficulty}
 				puzzleDate={archiveDate}
+				freeGameSlug={todaysFreeGame}
 			/>
 		)
 	}

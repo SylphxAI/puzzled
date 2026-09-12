@@ -26,5 +26,9 @@
 	"unavailableDescription": "無法載入今日謎題，請檢查網路後再試。",
 	"completedNoResult": "你已完成今日謎題，暫時無法顯示結果詳情。",
 	"statusUnknown": "狀態未確認",
-	"difficultyStatusUnverified": "無法確認你今日已完成哪些難度，系統會在你開始前核對。"
+	"difficultyStatusUnverified": "無法確認你今日已完成哪些難度，系統會在你開始前核對。",
+	"deniedTitle": "{game} 需要 Puzzled Plus",
+	"deniedDescription": "每日免費謎題仍然人人可玩；Plus 解鎖全套遊戲、歷日存檔與更深入統計。",
+	"unlockPremium": "用 Premium 解鎖",
+	"todaysFreeGame": "玩今日免費謎題"
 }

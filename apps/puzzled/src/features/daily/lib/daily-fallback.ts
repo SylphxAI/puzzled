@@ -11,6 +11,7 @@
  * board is rendered only when the server served puzzle data.
  */
 
+import { Code, ConnectError } from '@connectrpc/connect'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GetDailyResponse } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import { getDaily, type PuzzleServiceClient } from '@/lib/connect/puzzle-client'
@@ -28,6 +29,8 @@ export type DailySnapshot =
 	| { kind: 'completed'; puzzleDate: string; session: DailySessionSnapshot }
 	/** Server-accepted finish without a result payload: non-playable, no invented result. */
 	| { kind: 'closed'; puzzleDate: string }
+	/** Server refused the read (premium/archive gate): show the upgrade path, not a retry. */
+	| { kind: 'denied' }
 	/** No puzzle was served. Honest retry, never a board. */
 	| { kind: 'unavailable' }
 
@@ -92,15 +95,25 @@ export async function loadDailySnapshot(
 	input: LoadDailySnapshotInput,
 	client?: PuzzleServiceClient,
 ): Promise<DailySnapshot> {
-	const res = await getDaily(
-		{
-			gameSlug: input.gameSlug,
-			difficulty: input.difficulty,
-			puzzleDate: input.puzzleDate,
-		},
-		client,
-	)
-	return classifyDailyResponse(res)
+	try {
+		const res = await getDaily(
+			{
+				gameSlug: input.gameSlug,
+				difficulty: input.difficulty,
+				puzzleDate: input.puzzleDate,
+			},
+			client,
+		)
+		return classifyDailyResponse(res)
+	} catch (error) {
+		// A refused read is not a transient failure: the server said this
+		// identity may not play this module (premium/archive gate), so the
+		// caller must show the upgrade path instead of a retry loop.
+		if (ConnectError.from(error).code === Code.PermissionDenied) {
+			return { kind: 'denied' }
+		}
+		throw error
+	}
 }
 
 export type DailyLoadState =

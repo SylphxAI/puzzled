@@ -26,5 +26,9 @@
 	"unavailableDescription": "无法加载今日谜题，请检查网络后重试。",
 	"completedNoResult": "你已完成今日谜题，暂时无法显示结果详情。",
 	"statusUnknown": "状态未确认",
-	"difficultyStatusUnverified": "无法确认你今日已完成哪些难度，系统会在你开始前核对。"
+	"difficultyStatusUnverified": "无法确认你今日已完成哪些难度，系统会在你开始前核对。",
+	"deniedTitle": "{game} 需要 Puzzled Plus",
+	"deniedDescription": "每日免费谜题依然人人可玩；Plus 解锁全套游戏、历史存档和更深入统计。",
+	"unlockPremium": "用 Premium 解锁",
+	"todaysFreeGame": "玩今日免费谜题"
 }
