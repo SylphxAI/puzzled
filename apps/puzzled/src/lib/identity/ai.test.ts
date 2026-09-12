@@ -136,16 +136,26 @@ describe('Models door AI client (official Responses document)', () => {
 	test('lists models from GET {origin}/models with the product credential', async () => {
 		process.env.AI_API_ORIGIN = MODELS_DOOR
 		process.env.AI_API_KEY = SERVICE_KEY
+		// Door document: {object:"list", data:[row...], models:[codex rows]}
 		const calls = stubFetch(200, {
+			object: 'list',
 			data: [
 				{
 					id: 'openai/gpt-5.5',
-					name: 'GPT-5.5',
-					context_length: 200000,
-					pricing: { prompt: '0.000001', completion: '0.000002' },
-					capabilities: {},
+					object: 'model',
+					display_name: 'GPT-5.5',
+					context_window: 400000,
+					max_context_window: 400000,
+					pricing: {
+						prompt: 1.25,
+						completion: 10,
+						currency: 'USD',
+						unit: 'usd_per_million_tokens',
+					},
+					supports_search_tool: true,
 				},
 			],
+			models: [],
 		})
 
 		const listed = await getAI().listModels()
@@ -155,5 +165,7 @@ describe('Models door AI client (official Responses document)', () => {
 			`Bearer ${SERVICE_KEY}`,
 		)
 		expect(listed.data[0]!.id).toBe('openai/gpt-5.5')
+		expect(listed.data[0]!.display_name).toBe('GPT-5.5')
+		expect(listed.data[0]!.context_window).toBe(400000)
 	})
 })

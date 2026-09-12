@@ -74,6 +74,42 @@ export function aiResponseText(response: AIResponse): string {
 	return parts.join('')
 }
 
+/**
+ * One `GET /models` row (authenticated Models catalog document):
+ * `{object:"list", data:[row...], models:[codex rows]}`. Pricing is USD per
+ * million tokens; the context window is `context_window`/`max_context_window`.
+ * Auxiliary (non-conversation) products are listed beside the conversation
+ * seats.
+ */
+export type AIModelRow = {
+	id: string
+	object?: string
+	owned_by?: string
+	display_name?: string | null
+	availability?: string
+	context_window?: number
+	max_context_window?: number
+	limits?: unknown
+	pricing?: {
+		prompt?: number
+		completion?: number
+		cache_read?: number
+		currency?: string
+		unit?: string
+	}
+	data_policy?: unknown
+	supports_search_tool?: boolean
+	supports_reasoning_summary_parameter?: boolean
+	supports_parallel_tool_calls?: boolean
+	web_search_tool_type?: string
+}
+
+export type AIModelList = {
+	object?: string
+	data: AIModelRow[]
+	models?: AIModelRow[]
+}
+
 export function getAI() {
 	const origin = destPeelOrigin(DEST_PEELS.ai, process.env.AI_API_ORIGIN)
 	const key = destAiCredential() ?? ''
@@ -87,15 +123,7 @@ export function getAI() {
 	return {
 		createResponse,
 		listModels: async (_opts?: { search?: string }) =>
-			destJson<{
-				data: Array<{
-					id: string
-					name: string
-					context_length: number
-					pricing: { prompt: string; completion: string }
-					capabilities: unknown
-				}>
-			}>(origin, '/models', {
+			destJson<AIModelList>(origin, '/models', {
 				credential: key,
 			}),
 	}
