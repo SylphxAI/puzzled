@@ -2,7 +2,7 @@ const IDENTITY_API_ORIGIN = 'https://api.identity.sylphx.com'
 const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
 const COMMERCE_API_ORIGIN = 'https://api.commerce.sylphx.com'
 const OBSERVABILITY_API_ORIGIN = 'https://api.observability.sylphx.com'
-const AI_API_ORIGIN = 'https://api.sylphx.ai/v1'
+const AI_API_ORIGIN = 'https://api.models.sylphx.ai/v1'
 
 export const DEST_PEELS = {
 	identity: IDENTITY_API_ORIGIN,
