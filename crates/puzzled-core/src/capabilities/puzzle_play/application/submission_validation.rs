@@ -518,8 +518,14 @@ fn arithmo(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> 
     let Some(equation) = solution.get("equation").and_then(Value::as_str) else {
         return SubmissionVerdict::invalid("Missing solution equation");
     };
-    let result =
-        arithmo::validate_and_score(equation, Some(&sub.guesses), arithmo::SubmissionStatus::Won);
+    let result = arithmo::validate_and_score(
+        equation,
+        Some(&sub.guesses),
+        match env.status {
+            SubmissionStatus::Won => arithmo::SubmissionStatus::Won,
+            SubmissionStatus::Lost => arithmo::SubmissionStatus::Lost,
+        },
+    );
     match result {
         arithmo::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         arithmo::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -598,10 +604,18 @@ fn pattern_match(
         .get("totalSets")
         .and_then(Value::as_u64)
         .unwrap_or(expected.len() as u64) as usize;
-    if found.len() != total {
-        return SubmissionVerdict::invalid("Not all sets found");
+    let found_all = found.len() == total;
+    // Mirrors `apps/puzzled/src/games/pattern-match/config.ts`: a give-up is an
+    // honest terminal scored 0, a "lost" claim with every set found is rejected,
+    // and a win still requires all sets.
+    match env.status {
+        SubmissionStatus::Won if !found_all => SubmissionVerdict::invalid("Not all sets found"),
+        SubmissionStatus::Lost if found_all => {
+            SubmissionVerdict::invalid("Invalid loss claim - all sets found")
+        }
+        SubmissionStatus::Won => SubmissionVerdict::valid(SubmissionStatus::Won, 100),
+        SubmissionStatus::Lost => SubmissionVerdict::valid(SubmissionStatus::Lost, 0),
     }
-    SubmissionVerdict::valid(SubmissionStatus::Won, 100)
 }
 
 // ---------------------------------------------------------------------------
@@ -630,7 +644,10 @@ fn block_slide(
         min_moves as u32,
         Some(sub.move_count),
         env.time_spent_ms,
-        block_slide::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => block_slide::SubmissionStatus::Won,
+            SubmissionStatus::Lost => block_slide::SubmissionStatus::Lost,
+        },
     );
     match result {
         block_slide::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -789,8 +806,14 @@ fn word_box(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) ->
         return SubmissionVerdict::invalid("Missing allLetters solution");
     };
     let letters: Vec<char> = all_letters.chars().collect();
-    let result =
-        word_box::validate_and_score(&letters, Some(&sub.words), word_box::SubmissionStatus::Won);
+    let result = word_box::validate_and_score(
+        &letters,
+        Some(&sub.words),
+        match env.status {
+            SubmissionStatus::Won => word_box::SubmissionStatus::Won,
+            SubmissionStatus::Lost => word_box::SubmissionStatus::Lost,
+        },
+    );
     match result {
         word_box::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
         word_box::GameResult::Valid { status, score } => SubmissionVerdict::valid(
@@ -859,7 +882,10 @@ fn quad_words(
     let result = quad_words::validate_and_score(
         Some(solved_count),
         Some(history.len() as u32),
-        quad_words::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => quad_words::SubmissionStatus::Won,
+            SubmissionStatus::Lost => quad_words::SubmissionStatus::Lost,
+        },
     );
     match result {
         quad_words::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -916,7 +942,10 @@ fn killer_sudoku(
         Some(&sub.final_grid),
         sub.mistakes.unwrap_or(0),
         env.time_spent_ms,
-        killer_sudoku::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => killer_sudoku::SubmissionStatus::Won,
+            SubmissionStatus::Lost => killer_sudoku::SubmissionStatus::Lost,
+        },
     );
     match result {
         killer_sudoku::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -965,7 +994,10 @@ fn cryptogram(
         Some(&sub.guesses),
         sub.hints_used,
         env.time_spent_ms,
-        cryptogram::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => cryptogram::SubmissionStatus::Won,
+            SubmissionStatus::Lost => cryptogram::SubmissionStatus::Lost,
+        },
     );
     match result {
         cryptogram::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -1460,6 +1492,137 @@ mod tests {
         );
         let v = validate_submission("quad-words", &json!({}), &solution, &data);
         assert!(!v.valid);
+    }
+
+    #[test]
+    fn arithmo_accepts_an_honest_loss() {
+        let solution = json!({ "equation": "12+34=46" });
+        let v = validate_submission(
+            "arithmo",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "guesses": ["56-32=24"] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn arithmo_still_rejects_a_false_win() {
+        let solution = json!({ "equation": "12+34=46" });
+        let v = validate_submission(
+            "arithmo",
+            &json!({}),
+            &solution,
+            &env(json!({ "guesses": ["56-32=24"] })),
+        );
+        assert!(!v.valid);
+    }
+
+    #[test]
+    fn block_slide_accepts_an_honest_loss() {
+        let solution = json!({ "minMoves": 10 });
+        let v = validate_submission(
+            "block-slide",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "moveCount": 4 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn word_box_accepts_an_honest_loss() {
+        let solution = json!({ "allLetters": "ABCDEFGHIJKL" });
+        let v = validate_submission(
+            "word-box",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "words": [] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn quad_words_accepts_an_honest_loss() {
+        let solution = json!({ "words": ["ABCD", "EFGH", "IJKL", "MNOP"] });
+        let v = validate_submission(
+            "quad-words",
+            &json!({}),
+            &solution,
+            &lost_env(
+                json!({ "guessHistory": ["ZZZZ"], "solvedBoards": [false, false, false, false] }),
+            ),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    #[test]
+    fn killer_sudoku_accepts_an_honest_loss() {
+        let solution = json!({ "grid": [[1]] });
+        let v = validate_submission(
+            "killer-sudoku",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "finalGrid": [[2]], "mistakes": 0 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn cryptogram_accepts_an_honest_loss() {
+        let solution = json!({ "reverseCipher": { "X": "A", "Y": "B" } });
+        let v = validate_submission(
+            "cryptogram",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "guesses": { "X": "A" }, "hintsUsed": 1 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn pattern_match_accepts_an_honest_loss() {
+        let solution = json!({ "validSets": [[0, 1, 2]], "totalSets": 1 });
+        let v = validate_submission(
+            "pattern-match",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "foundSets": [], "mistakes": 3 })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+        assert_eq!(v.score, Some(0));
+    }
+
+    #[test]
+    fn pattern_match_rejects_a_loss_claim_with_all_sets() {
+        let solution = json!({ "validSets": [[0, 1, 2]], "totalSets": 1 });
+        let v = validate_submission(
+            "pattern-match",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "foundSets": [[0, 1, 2]], "mistakes": 0 })),
+        );
+        assert!(!v.valid, "{v:?}");
+    }
+
+    #[test]
+    fn pattern_match_still_rejects_a_false_win() {
+        let solution = json!({ "validSets": [[0, 1, 2]], "totalSets": 1 });
+        let v = validate_submission(
+            "pattern-match",
+            &json!({}),
+            &solution,
+            &env(json!({ "foundSets": [], "mistakes": 0 })),
+        );
+        assert!(!v.valid, "{v:?}");
     }
 
     fn number_path_clues() -> Value {
