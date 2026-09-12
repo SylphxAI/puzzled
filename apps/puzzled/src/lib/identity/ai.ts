@@ -7,8 +7,9 @@ import { DEST_PEELS, destJson, destPeelOrigin } from './dest'
  * `POST {origin}/responses` is the only public conversation wire on the
  * Models product; `POST /chat/completions` is retired
  * (`chat_completions_retired`). Request and response shapes follow the
- * published product contract (`SylphxAI/models`
- * `contract/ai.product.openapi.json`; wire law in `docs/protocol.md` §4):
+ * published product contract (`SylphxAI/ai` — family-cut rename target
+ * `SylphxAI/models` — `contract/ai.product.openapi.json`; wire law in
+ * `docs/protocol.md` §4):
  *
  *   request  { model, input, instructions?, max_output_tokens?, temperature? }
  *   response { model, output[].content[] { type: "output_text", text }, usage }
@@ -122,7 +123,9 @@ export function getAI() {
 	}
 	return {
 		createResponse,
-		listModels: async (_opts?: { search?: string }) =>
+		// The door lists the whole admitted catalog; it ignores query params
+		// (callers filter client-side).
+		listModels: async () =>
 			destJson<AIModelList>(origin, '/models', {
 				credential: key,
 			}),

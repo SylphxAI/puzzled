@@ -9,3 +9,4 @@ export {
 	generateCrosswordPuzzle,
 	generateNonogramPuzzle,
 } from './lib/generator'
+export { type AdminModel, adminModelCatalog } from './lib/model-catalog'

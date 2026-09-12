@@ -30,7 +30,8 @@ export type AdminModel = {
 const PRIORITY_PROVIDERS = ['anthropic', 'openai', 'google', 'meta-llama']
 
 function providerOf(id: string): string {
-	return id.split('/')[0] ?? id
+	const slash = id.indexOf('/')
+	return slash === -1 ? id : id.slice(0, slash)
 }
 
 function toAdminModel(row: AIModelRow): AdminModel {

@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { adminCheckResponse, checkAdminWithMfa } from '@/features/admin'
-import { adminModelCatalog } from '@/features/puzzle-generator/lib/model-catalog'
-import { ai } from '@/features/puzzle-generator/server'
+import { adminModelCatalog, ai } from '@/features/puzzle-generator/server'
 
 export const runtime = 'nodejs' // Required for auth
 export const dynamic = 'force-dynamic' // Prevent static generation at build time
@@ -23,7 +22,7 @@ export async function GET(request: NextRequest) {
 	try {
 		// Models door `GET /models`: {object:"list", data:[row...]} with
 		// display_name / context_window / USD-per-1M pricing.
-		const response = await ai.listModels({ search: search ?? undefined })
+		const response = await ai.listModels()
 
 		let models = adminModelCatalog(response).filter((model) => {
 			// Filter out deprecated or test models
