@@ -318,7 +318,10 @@ fn crossword(
         &solution_grid,
         Some(&sub.final_grid),
         env.time_spent_ms,
-        crossword_grid::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => crossword_grid::SubmissionStatus::Won,
+            SubmissionStatus::Lost => crossword_grid::SubmissionStatus::Lost,
+        },
     );
     match result {
         crossword_grid::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -432,7 +435,10 @@ fn nonogram(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) ->
         Some(&sub.final_grid),
         errors,
         env.time_spent_ms,
-        nonogram_clues::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => nonogram_clues::SubmissionStatus::Won,
+            SubmissionStatus::Lost => nonogram_clues::SubmissionStatus::Lost,
+        },
     );
     match result {
         nonogram_clues::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -476,7 +482,10 @@ fn word_ladder(
     let result = word_ladder::validate_and_score(
         &solution_path,
         Some(&sub.path),
-        word_ladder::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => word_ladder::SubmissionStatus::Won,
+            SubmissionStatus::Lost => word_ladder::SubmissionStatus::Lost,
+        },
         None,
     );
     match result {
@@ -743,7 +752,10 @@ fn tango(_puzzle_data: &Value, solution: &Value, env: &SubmissionEnvelope) -> Su
         Some(&submitted_grid),
         Some(&solution_grid),
         env.time_spent_ms,
-        tango::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => tango::SubmissionStatus::Won,
+            SubmissionStatus::Lost => tango::SubmissionStatus::Lost,
+        },
     );
     match result {
         tango::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -1003,7 +1015,10 @@ fn word_search(
         &solution_words,
         Some(&found),
         env.time_spent_ms,
-        word_search::SubmissionStatus::Won,
+        match env.status {
+            SubmissionStatus::Won => word_search::SubmissionStatus::Won,
+            SubmissionStatus::Lost => word_search::SubmissionStatus::Lost,
+        },
     );
     match result {
         word_search::GameResult::Invalid { error } => SubmissionVerdict::invalid(error),
@@ -1330,6 +1345,110 @@ mod tests {
         let data = env(json!({ "grid": [["sun","moon"],["moon","sun"]] }));
         let v = validate_submission("tango", &json!({}), &solution, &data);
         assert!(v.valid, "expected valid: {v:?}");
+    }
+
+    fn lost_env(data: Value) -> SubmissionEnvelope {
+        let mut envelope = env(data);
+        envelope.status = SubmissionStatus::Lost;
+        envelope
+    }
+
+    fn crossword_solution() -> Value {
+        json!({ "grid": [
+            ["C","A","P","E","R"],
+            ["A","L","I","V","E"],
+            ["P","I","P","E","R"],
+            ["E","V","E","N","T"],
+            ["R","E","S","T","S"]
+        ] })
+    }
+
+    fn empty_crossword_grid() -> Value {
+        json!([
+            [null, null, null, null, null],
+            [null, null, null, null, null],
+            [null, null, null, null, null],
+            [null, null, null, null, null],
+            [null, null, null, null, null]
+        ])
+    }
+
+    /// Honest give-ups must be recordable terminals for every module whose
+    /// domain accepts a loss claim; the adapters previously hard-coded `Won`
+    /// and turned every give-up into "Invalid win claim".
+    #[test]
+    fn crossword_accepts_an_honest_loss() {
+        let v = validate_submission(
+            "crossword",
+            &json!({}),
+            &crossword_solution(),
+            &lost_env(json!({ "finalGrid": empty_crossword_grid() })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn crossword_still_rejects_a_false_win() {
+        let v = validate_submission(
+            "crossword",
+            &json!({}),
+            &crossword_solution(),
+            &env(json!({ "finalGrid": empty_crossword_grid() })),
+        );
+        assert!(!v.valid);
+    }
+
+    #[test]
+    fn nonogram_accepts_an_honest_loss() {
+        let solution = json!({ "grid": [[true, false], [false, true]] });
+        let v = validate_submission(
+            "nonogram",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "finalGrid": [[false, false], [false, false]] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn word_ladder_accepts_an_honest_loss() {
+        let solution = json!({ "path": ["CAT", "COT", "COG", "DOG"] });
+        let v = validate_submission(
+            "word-ladder",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "path": ["CAT"] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn tango_accepts_an_honest_loss() {
+        let solution = json!({ "grid": [["sun", "moon"], ["moon", "sun"]] });
+        let v = validate_submission(
+            "tango",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "grid": [[null, null], [null, null]] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
+    }
+
+    #[test]
+    fn word_search_accepts_an_honest_loss() {
+        let solution = json!({ "words": ["CAT", "DOG"] });
+        let v = validate_submission(
+            "word-search",
+            &json!({}),
+            &solution,
+            &lost_env(json!({ "foundWords": ["CAT"] })),
+        );
+        assert!(v.valid, "{v:?}");
+        assert_eq!(v.status, Some(SubmissionStatus::Lost));
     }
 
     #[test]
