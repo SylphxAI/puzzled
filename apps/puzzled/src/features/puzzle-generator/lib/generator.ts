@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { appSettings } from '@/lib/db/schema'
-import { ai } from './openrouter'
+import { aiResponseText } from '@/lib/identity/ai'
+import { ai } from './ai-client'
 import { CONNECTIONS_SYSTEM_PROMPT, CONNECTIONS_USER_PROMPT } from './prompts/connections'
 import { CROSSWORD_SYSTEM_PROMPT, CROSSWORD_USER_PROMPT } from './prompts/crossword'
 import { NONOGRAM_SYSTEM_PROMPT, NONOGRAM_USER_PROMPT } from './prompts/nonogram'
@@ -92,18 +93,18 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 		try {
 			console.log(`[${config.name}] Attempt ${attempt}/${maxRetries}`)
 
-			// Use SDK AI client which routes through Platform
-			const response = await ai.chat({
+			// Official Responses document on the Models door (system prompt ->
+			// `instructions`, user turn -> `input`, max_tokens ->
+			// `max_output_tokens`); `POST /chat/completions` is retired.
+			const response = await ai.createResponse({
 				model,
-				messages: [
-					{ role: 'system', content: config.systemPrompt },
-					{ role: 'user', content: config.userPrompt },
-				],
-				max_tokens: config.maxOutputTokens || 1000,
+				instructions: config.systemPrompt,
+				input: config.userPrompt,
+				max_output_tokens: config.maxOutputTokens || 1000,
 				temperature: config.temperature,
 			})
 
-			const text = response.choices?.[0]?.message?.content ?? ''
+			const text = aiResponseText(response)
 
 			const parsed = config.parse(text)
 			if (!parsed) {
