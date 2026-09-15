@@ -130,8 +130,9 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 			)}
 		>
 			<LogIn className="h-4 w-4" />
+			{/* Keeps an accessible name on mobile, where the label is hidden. */}
 			{size === 'md' && t('common.signIn')}
-			{size === 'sm' && <span className="hidden sm:inline">{t('common.signIn')}</span>}
+			{size === 'sm' && <span className="sr-only sm:not-sr-only">{t('common.signIn')}</span>}
 		</Link>
 	)
 }

@@ -80,13 +80,13 @@ export function GameTile({
 				</span>
 
 				{free && (
-					<span className="chip bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+					<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
 						<Sparkles className="h-3 w-3" aria-hidden="true" />
 						{labels.freeToday}
 					</span>
 				)}
 				{solved && (
-					<span className="chip bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+					<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
 						<Check className="h-3 w-3" aria-hidden="true" />
 						{score ? score : labels.playAgain}
 					</span>
@@ -108,9 +108,7 @@ export function GameTile({
 			<p className="relative mt-1 line-clamp-2 flex-1 text-sm text-muted-foreground">{tagline}</p>
 
 			<div className="relative mt-3 flex items-center justify-between gap-2 text-xs">
-				<span className={cn('font-medium', solved ? colors.text : 'text-muted-foreground')}>
-					{meta}
-				</span>
+				<span className="font-medium text-muted-foreground">{meta}</span>
 				{free || solved ? (
 					<span className="font-semibold text-primary">
 						{solved ? labels.playAgain : labels.play} →

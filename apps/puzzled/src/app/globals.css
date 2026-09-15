@@ -125,9 +125,11 @@
 	/* -----------------------------------------
 	   Colors - Brand
 	   ----------------------------------------- */
-	--color-primary: #6366f1;
-	--color-primary-hover: #4f46e5;
+	/* indigo-600 passes AA as both a fill (white text) and as text on white. */
+	--color-primary: #4f46e5;
+	--color-primary-hover: #4338ca;
 	--color-primary-foreground: #ffffff;
+	--color-ring: #4f46e5;
 	--color-secondary: #8b5cf6;
 	/* Warm accent used for delight moments (streaks, celebration, highlights) */
 	--color-accent-warm: #f97316;
@@ -189,7 +191,6 @@
 	--color-muted: #f1f5f9;
 	--color-muted-foreground: #475569;
 	--color-border: #e2e8f0;
-	--color-ring: #6366f1;
 	--color-input: #e2e8f0;
 
 	/* -----------------------------------------
@@ -221,6 +222,14 @@
 	--color-ring: #818cf8;
 	--color-key: #374151;
 	--color-key-text: #f9fafb;
+	/*
+	 * On dark surfaces the brand colour must be legible as text, so the fill
+	 * turns light and its label turns dark ink (7.3:1 / 8.0:1).
+	 */
+	--color-primary: #a5b4fc;
+	--color-primary-hover: #c7d2fe;
+	--color-primary-foreground: #1e1b4b;
+	--color-ring: #a5b4fc;
 	--color-accent-warm: #fb923c;
 	--color-accent-warm-soft: rgb(124 45 18 / 0.25);
 	--color-accent-warm-foreground: #ffedd5;

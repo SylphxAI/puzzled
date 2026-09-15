@@ -176,12 +176,12 @@ export async function HomeHero({
 									{freeGame.duration}
 								</span>
 								{freeGame.difficultyLabels.map((level) => (
-									<span key={level} className={cn('chip bg-background/80', colors.text)}>
+									<span key={level} className="chip bg-background/80 text-muted-foreground">
 										{level}
 									</span>
 								))}
 								{freeGame.difficultyLabels.length === 0 && (
-									<span className={cn('chip bg-background/80', colors.text)}>
+									<span className="chip bg-background/80 text-muted-foreground">
 										{freeGame.highlight}
 									</span>
 								)}
@@ -189,10 +189,12 @@ export async function HomeHero({
 
 							<Link
 								href={`/games/${freeGame.slug}`}
-								className={cn(
-									'relative mt-5 flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br font-semibold text-white shadow-md transition-transform hover:-translate-y-0.5 active:scale-[0.99]',
-									colors.gradient,
-								)}
+								/*
+								 * Solid brand fill: the module gradient stays on the icon tile
+								 * where no text sits on it, so the CTA keeps AA contrast in both
+								 * themes instead of white-on-light-gradient.
+								 */
+								className="relative mt-5 flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary font-semibold text-primary-foreground shadow-md transition-transform hover:-translate-y-0.5 hover:bg-primary-hover active:scale-[0.99]"
 							>
 								<Play className="h-4 w-4" aria-hidden="true" />
 								{t('hero.playCta', { game: freeGame.name })}

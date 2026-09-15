@@ -820,7 +820,13 @@ export function CookieBanner(props: {
 	if (hasConsented) return null
 	return (
 		<div
-			className={props.position === 'bottom' ? 'fixed inset-x-0 bottom-0 z-toast p-4' : undefined}
+			// Sits above the mobile bottom bar: overlapping it made the navigation
+			// unusable until consent was given.
+			className={
+				props.position === 'bottom'
+					? 'fixed inset-x-0 z-toast p-4 bottom-[calc(var(--spacing-bottom-nav-height)+env(safe-area-inset-bottom,0px))] md:bottom-0'
+					: undefined
+			}
 		>
 			<section
 				aria-label={t('title')}
