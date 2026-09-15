@@ -5,6 +5,13 @@
 	"errorDescription": "Something went wrong. Please try again.",
 	"retry": "Try again",
 	"refresh": "Refresh",
+	"notFound": {
+		"eyebrow": "404",
+		"title": "This page is missing — the puzzle is not",
+		"description": "The page you asked for does not exist. Today's free puzzle is still open, and every daily game is one tap away.",
+		"playCta": "Play {game} — today's free puzzle",
+		"browseCta": "Browse all games"
+	},
 	"save": "Save",
 	"cancel": "Cancel",
 	"confirm": "Confirm",

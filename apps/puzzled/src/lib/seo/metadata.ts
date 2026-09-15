@@ -37,6 +37,30 @@ export function localizedPath(locale: Locale | string, path = '/'): string {
 	return `/${locale}${normalized}`
 }
 
+/** Absolute self-referencing URL for one page. */
+export function canonicalUrl(baseUrl: string, locale: Locale | string, path = '/'): string {
+	const localized = localizedPath(locale, path)
+	// The site root is the bare origin: `https://puzzled.gg` and
+	// `https://puzzled.gg/` are one URL to a crawler, and the served canonical
+	// for the home page is the origin itself.
+	return localized === '/' ? baseUrl : `${baseUrl}${localized}`
+}
+
+/**
+ * The hreflang cluster for one locale-agnostic path: every supported locale
+ * plus `x-default` pointing at the default-locale URL.
+ *
+ * Canonical and cluster are always derived from the same base URL + path, so a
+ * page can never advertise alternates that point at a different route — and
+ * the sitemap can reuse the exact cluster the HTML emits.
+ */
+export function hreflangLanguages(baseUrl: string, path = '/'): Record<string, string> {
+	return Object.fromEntries([
+		['x-default', canonicalUrl(baseUrl, defaultLocale, path)],
+		...locales.map((entry) => [HREFLANG[entry], canonicalUrl(baseUrl, entry, path)]),
+	])
+}
+
 export type BuildPageMetadataInput = {
 	locale: Locale | string
 	/** Route path without locale prefix, e.g. `/games/sudoku`. */
@@ -52,6 +76,8 @@ export type BuildPageMetadataInput = {
 	noindex?: boolean
 	/** Set false for post-auth or utility routes that need no language cluster. */
 	withAlternates?: boolean
+	/** Override the request origin (tests, cron-built artifacts). */
+	baseUrl?: string
 }
 
 /**
@@ -68,18 +94,18 @@ export async function buildPageMetadata({
 	type = 'website',
 	noindex = false,
 	withAlternates = true,
+	baseUrl: baseUrlOverride,
 }: BuildPageMetadataInput): Promise<Metadata> {
-	const baseUrl = await getRequestSiteOrigin()
-	const canonical = `${baseUrl}${localizedPath(locale, path)}`
-	const image = imagePath?.startsWith('http') ? imagePath : `${baseUrl}${imagePath ?? '/og'}`
+	const baseUrl = baseUrlOverride ?? (await getRequestSiteOrigin())
+	const canonical = canonicalUrl(baseUrl, locale, path)
+	// Default to a card carrying this page's own title: a shared static banner
+	// makes every shared link look the same.
+	const image = imagePath?.startsWith('http')
+		? imagePath
+		: `${baseUrl}${imagePath ?? ogImagePath({ title })}`
 	const alt = imageAlt ?? title
 
-	const languages = withAlternates
-		? Object.fromEntries([
-				['x-default', `${baseUrl}${localizedPath(defaultLocale, path)}`],
-				...locales.map((entry) => [HREFLANG[entry], `${baseUrl}${localizedPath(entry, path)}`]),
-			])
-		: undefined
+	const languages = withAlternates ? hreflangLanguages(baseUrl, path) : undefined
 
 	return {
 		title,
