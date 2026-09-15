@@ -1,15 +1,428 @@
 {
-	"metaTitle": "All Games",
+	"metaTitle": "All games",
 	"metaDescription": "Browse every daily puzzle on Puzzled — today's free game plus the full suite of word, logic, and number rituals.",
-	"title": "All Games",
-	"subtitle": "Every daily ritual in one place. Today's free game is always open — no account needed.",
-	"searchPlaceholder": "Filter games by title…",
+	"title": "All games",
+	"subtitle": "{count} daily modules under one ritual. One is free every day, and everyone plays the same set — refreshed at midnight Hong Kong time.",
+	"heroEyebrow": "Daily puzzle suite",
 	"searchLabel": "Filter games by title",
+	"searchPlaceholder": "Filter games by title…",
+	"searchSubmit": "Filter",
+	"filterLabel": "Filter games by category",
+	"filterAll": "All",
+	"category": {
+		"word": "Word",
+		"logic": "Logic",
+		"math": "Numbers",
+		"spatial": "Spatial"
+	},
 	"freeToday": "Free today",
 	"premium": "Premium",
 	"open": "Open",
+	"play": "Play",
+	"unlock": "Unlock with Premium",
 	"showing": "Showing {count} of {total} games",
-	"clearFilter": "Clear filter",
-	"emptyTitle": "No games match that title",
-	"emptyDescription": "Try a different search or clear the filter to see the full catalog."
+	"clearFilter": "Clear filters",
+	"emptyTitle": "No modules match those filters",
+	"emptyDescription": "Try a different title, or clear the filters to see the whole suite.",
+	"featuredPlay": "Play {game}",
+	"featuredNote": "Open to everyone today — no account needed. Tomorrow another module takes its place.",
+	"suiteTitle": "The whole suite",
+	"suiteBody": "The free rotation covers one module a day. Premium opens the other {count} modules, plus the archive, deeper stats and streak freezes.",
+	"suiteBodyPremium": "Every module is open with your Premium, plus the archive, deeper stats and streak freezes.",
+	"ritual": {
+		"title": "How a Puzzled day works",
+		"body": "One product day, one shared set. The ritual is identical for a free player and a member; only the number of open modules changes.",
+		"step1Title": "Pick today's module",
+		"step1Body": "The free rotation opens one module for everyone. Premium opens all {count} modules on the same daily set.",
+		"step2Title": "Solve at your own pace",
+		"step2Body": "Most modules take two to ten minutes, and the ones with difficulty levels let you warm up or push harder.",
+		"step3Title": "Keep the habit",
+		"step3Body": "One finish a day extends your streak, and every finished attempt is verified on the server before it counts."
+	},
+	"premiumPanel": {
+		"eyebrow": "Premium",
+		"title": "What Premium adds",
+		"body": "The free module stays free forever. Premium is for players who want the whole suite open on the same day.",
+		"item1": "All {count} modules, every day",
+		"item2": "The archive of past daily sets",
+		"item3": "Deeper stats and history",
+		"item4": "Streak freezes for days away",
+		"cta": "See plans and pricing",
+		"note": "One module stays free for everyone, every day, with no account required."
+	},
+	"faq": {
+		"title": "Before you start",
+		"body": "The short version of how this catalog works.",
+		"start": {
+			"question": "Where should I start?",
+			"answer": "Open today's free module — it needs no account and no payment. The rest of the suite opens with Premium."
+		},
+		"rotation": {
+			"question": "How does the free module rotate?",
+			"answer": "One module is free each day and the rotation flips at midnight, Hong Kong time. Everyone gets the same module on the same day."
+		},
+		"premium": {
+			"question": "What does Premium include?",
+			"answer": "Every module in the suite on the same daily set, the archive of past days, deeper stats and streak freezes."
+		},
+		"account": {
+			"question": "Do I need an account?",
+			"answer": "No. The free module is playable as a guest; an account keeps your streak, results and stats across devices."
+		},
+		"share": {
+			"question": "Can I share a result without spoiling it?",
+			"answer": "Yes. Result cards show the module, the day and your solving pattern — never the solution."
+		}
+	},
+	"closing": {
+		"title": "Today's module is waiting",
+		"body": "One free puzzle every day, plus the whole suite when you want more of the same ritual.",
+		"play": "Play {game}",
+		"home": "Back to home",
+		"pricing": "Compare plans"
+	},
+	"breadcrumbLabel": "Breadcrumb",
+	"gamePage": {
+		"playCta": "Play today's puzzle",
+		"freeNote": "Free today — no account needed.",
+		"includedNote": "Included in your Premium.",
+		"guestNote": "No account needed to play.",
+		"guestSignIn": "Sign in to keep your streak.",
+		"lockedNote": "Premium opens the whole suite on the same daily set, along with the archive, deeper stats and streak freezes.",
+		"lockedTitle": "Part of Premium",
+		"lockedBody": "Premium opens all {count} modules every day, plus the archive, deeper stats and streak freezes. One module stays free for everyone.",
+		"lockedCta": "See what Premium adds",
+		"lockedSignIn": "Sign in",
+		"todaysFree": "Today's free module:",
+		"howToPlayTitle": "How to play {game}",
+		"tipsTitle": "Tips and strategy for {game}",
+		"faqTitle": "Questions about {game}",
+		"relatedTitle": "More modules to try",
+		"relatedAll": "See all games"
+	},
+	"game": {
+		"word-guess": {
+			"tips": [
+				"Try an opening guess with no repeated letters so each tile teaches you something new.",
+				"Treat a gray letter as spent and save the remaining guesses for untested letters.",
+				"Move a yellow letter to a different slot before adding new letters to the row."
+			],
+			"faq": [
+				{
+					"question": "How does a round of Five end?",
+					"answer": "You have six guesses. The round closes when the word is solved or the last guess is used, and finished attempts are verified on the server."
+				},
+				{
+					"question": "Is the daily Five word the same for every player?",
+					"answer": "Yes. Everyone plays the same word on the same day, and the set flips at midnight Hong Kong time."
+				}
+			]
+		},
+		"word-groups": {
+			"tips": [
+				"Read all sixteen words before submitting anything, and note the ones that fit two themes.",
+				"One away means three of your four picks are right, so swap a single word.",
+				"Leftover words that fit nowhere at first often turn out to be the final thread."
+			],
+			"faq": [
+				{
+					"question": "How many mistakes does Threads allow?",
+					"answer": "Four. Each rejected group of four costs one mistake, and the round ends when they are gone."
+				},
+				{
+					"question": "What does one away mean in Threads?",
+					"answer": "Three of the four words you picked belong to a real thread and one does not, so change a single word."
+				}
+			]
+		},
+		"word-hive": {
+			"tips": [
+				"List the shortest words you can build with the center letter before reaching for longer finds.",
+				"Repeat letters freely; a hive letter can appear more than once in a word.",
+				"Chase the pangram last, since using all seven letters adds a seven-point bonus."
+			],
+			"faq": [
+				{
+					"question": "What counts as a pangram in Hive?",
+					"answer": "A word that uses all seven hive letters. Each one adds seven points on top of its letter count."
+				},
+				{
+					"question": "How long does a Hive round take?",
+					"answer": "The catalog estimate is about five minutes, and the rank scale grows with every word you find."
+				}
+			]
+		},
+		"crossword": {
+			"tips": [
+				"Fill the shortest across entries first; their letters give the down clues a head start.",
+				"Tap the same square twice to flip from across to down when a clue stalls.",
+				"Leave a stubborn clue for later and let the crossing letters narrow the options."
+			],
+			"faq": [
+				{
+					"question": "How do I switch between across and down in Mini Grid?",
+					"answer": "Tap a square to select it and tap again to change direction, so one cell can serve two clues."
+				},
+				{
+					"question": "How long does a Mini Grid puzzle take?",
+					"answer": "The estimate is about five minutes, and the grid is small enough for one sitting."
+				}
+			]
+		},
+		"sudoku": {
+			"tips": [
+				"Look for a digit whose possible squares inside one box have shrunk to a single cell.",
+				"Use notes mode to list candidates, then clear them as soon as a placement rules them out.",
+				"When two cells in a box share the same pair of candidates, no other cell there can take them."
+			],
+			"faq": [
+				{
+					"question": "How do I know a Sudoku grid is finished?",
+					"answer": "Every row, column and 3×3 box holds the digits 1 to 9 once, and a complete grid with no conflicts closes the puzzle."
+				},
+				{
+					"question": "Does Sudoku offer difficulty settings?",
+					"answer": "Yes. Easy, medium and hard change how many cells start filled in, so harder boards leave more of the work to you."
+				}
+			]
+		},
+		"nonogram": {
+			"tips": [
+				"Begin with the longest run in a line and test every position it can occupy.",
+				"Blocks longer than half the line have a middle section that must be filled in.",
+				"Mark squares you can rule out; fewer blanks make the crossing clues easier to read."
+			],
+			"faq": [
+				{
+					"question": "How does Paint handle a wrong cell?",
+					"answer": "A filled square that cannot belong to the picture is rejected and added to the error count shown above the grid."
+				},
+				{
+					"question": "How long does a Paint puzzle take?",
+					"answer": "The catalog estimate is around eight minutes for the 10×10 grid, and the clues get easier as the picture fills in."
+				}
+			]
+		},
+		"word-ladder": {
+			"tips": [
+				"Change exactly one letter per step, and check that the new word sounds real before sending it.",
+				"Work backwards from the target word when the start has no obvious neighbor.",
+				"Plan the whole chain, because a word you have used cannot appear again."
+			],
+			"faq": [
+				{
+					"question": "What counts as a valid step in Rungs?",
+					"answer": "Each step changes exactly one letter and must form a real word of the same length, or the game rejects the move."
+				},
+				{
+					"question": "How long does a Rungs puzzle take?",
+					"answer": "The estimate is about three minutes, and the goal is the fewest steps rather than the fastest typing."
+				}
+			]
+		},
+		"arithmo": {
+			"tips": [
+				"Balance both sides before submitting; a guess that does not evaluate is rejected.",
+				"Lock the characters already in the right place and rebuild the equation around them.",
+				"Vary the operators you test early; the equation can use plus, minus, times or divide."
+			],
+			"faq": [
+				{
+					"question": "How long is the hidden equation in Arithmo?",
+					"answer": "Eight characters, counting the digits, the operators and the single equals sign."
+				},
+				{
+					"question": "How many tries does Arithmo allow?",
+					"answer": "Six guesses. Green marks a character in the right place, yellow means it appears elsewhere in the equation and gray means it is not used."
+				}
+			]
+		},
+		"pattern-match": {
+			"tips": [
+				"Compare one property at a time, starting with the number of shapes on each card.",
+				"If two cards match on a property, the third card must match them too or the trio fails.",
+				"Cards inside a set you have already found are locked, so scan the untouched cards next."
+			],
+			"faq": [
+				{
+					"question": "What makes three cards a set in Match?",
+					"answer": "For all four properties, shape, color, fill and count, the three cards must be either all the same or all different."
+				},
+				{
+					"question": "How long does a Match board take?",
+					"answer": "The estimate is about four minutes, and the board holds twelve cards with several sets hidden among them."
+				}
+			]
+		},
+		"block-slide": {
+			"tips": [
+				"Clear the space under the target before nudging it toward the exit row.",
+				"Keep your move total low; a piece pushed into a corner is slow to rescue.",
+				"Reset a jammed board rather than testing moves at random; the minimum is shown for scale."
+			],
+			"faq": [
+				{
+					"question": "How do I win a Slides puzzle?",
+					"answer": "Slide the red target block to the exit at the bottom edge; the round ends as soon as it reaches the gap."
+				},
+				{
+					"question": "Does Slides offer difficulty settings?",
+					"answer": "Yes. Easy, medium and hard boards need more moves to solve as the level rises, from a short route to a long one."
+				}
+			]
+		},
+		"crowns": {
+			"tips": [
+				"Eliminate the eight neighbors of every crown, since those squares can never hold another.",
+				"Small regions are quickest to pin down, so start with the tightest ones.",
+				"Once a row or column has its crown, treat every other square in it as unavailable."
+			],
+			"faq": [
+				{
+					"question": "What is the aim in Crowns?",
+					"answer": "One crown in every row, column and colored region, with no two crowns touching, not even at a corner."
+				},
+				{
+					"question": "Does Crowns offer difficulty settings?",
+					"answer": "Yes. Easy uses a 5×5 board, medium 6×6 and hard 8×8, so larger boards ask for more deduction."
+				}
+			]
+		},
+		"duo": {
+			"tips": [
+				"Two matching symbols side by side force the squares around them to hold the opposite one.",
+				"Tally each line as it grows: a row of six needs three suns and three moons.",
+				"Test a coin-flip square against the uniqueness rule, since no two rows may match."
+			],
+			"faq": [
+				{
+					"question": "What are the rules of Duo?",
+					"answer": "Every row and column holds equal suns and moons, no line shows three matching symbols together, and no two lines repeat."
+				},
+				{
+					"question": "How long does a Duo board take?",
+					"answer": "The estimate is about five minutes, and the 6×6 grid usually falls to a careful pass."
+				}
+			]
+		},
+		"word-box": {
+			"tips": [
+				"End each word on a letter that opens a good next word, because the chain only moves forward.",
+				"Alternate sides inside every word; letters from the same side cannot sit next to each other.",
+				"Note the letters you still owe the box, as the final word tends to gather leftovers."
+			],
+			"faq": [
+				{
+					"question": "How does the word chain work in Frame?",
+					"answer": "Each new word begins with the last letter of the previous word, and neighboring letters inside a word must come from different sides."
+				},
+				{
+					"question": "When is a Frame puzzle solved?",
+					"answer": "When the chain has used every one of the twelve letters on the box; a shorter chain is the tidier result."
+				}
+			]
+		},
+		"quad-words": {
+			"tips": [
+				"Open with a spread of common letters, because one guess is scored across all four boards.",
+				"Track each yellow letter per board; it can occupy different spots in different words.",
+				"After a board is solved, save the remaining guesses for the words still open."
+			],
+			"faq": [
+				{
+					"question": "How many guesses do I get in Quad?",
+					"answer": "Nine in total, and each guess is checked against all four boards at once."
+				},
+				{
+					"question": "Does everyone play the same four words each day?",
+					"answer": "Yes. Everyone plays the same four words on the same day, and the set changes at midnight Hong Kong time."
+				}
+			]
+		},
+		"killer-sudoku": {
+			"tips": [
+				"Find cages with only one possible split, such as two cells adding up to three.",
+				"Cage digits still obey Sudoku rows, columns and boxes, so cross off what the grid already holds.",
+				"Subtract a finished cage from the row, column and box it crosses to narrow other cells."
+			],
+			"faq": [
+				{
+					"question": "What do the cages add to Cage Sudoku?",
+					"answer": "Each cage has a total: its digits must add up to that number, and no digit can repeat inside the cage."
+				},
+				{
+					"question": "Does Cage Sudoku offer difficulty settings?",
+					"answer": "Yes. Easy, medium and hard differ in how many digits start filled in, and hard gives none at all."
+				}
+			]
+		},
+		"cryptogram": {
+			"tips": [
+				"Start with a single-letter word, which can only stand for a or i in plain English.",
+				"Double letters leave fingerprints, so a repeated pair narrows the options quickly.",
+				"Update every occurrence of a letter once you decide it, keeping the mapping consistent."
+			],
+			"faq": [
+				{
+					"question": "How do I know a Cipher quote is solved?",
+					"answer": "When the substitution is right, the decoded text reads as normal English and the puzzle reports the quote as solved."
+				},
+				{
+					"question": "How long does a Cipher puzzle take?",
+					"answer": "The estimate is about five minutes, though longer quotes take more letters to place."
+				}
+			]
+		},
+		"word-search": {
+			"tips": [
+				"Scan the theme first; the grid hides six to ten words that share a topic.",
+				"Check diagonals in both directions and rows read backwards, not just left to right.",
+				"Trace from the last letter back to the first when a long word is hard to spot."
+			],
+			"faq": [
+				{
+					"question": "Which directions do hidden words run in Hunt?",
+					"answer": "Horizontal, vertical and diagonal, forwards or backwards, and always in a straight line."
+				},
+				{
+					"question": "Does everyone get the same Hunt grid?",
+					"answer": "Yes. The daily grid and its theme are identical for every player and refresh at midnight Hong Kong time."
+				}
+			]
+		},
+		"number-path": {
+			"tips": [
+				"Handle corner clues early, since a numbered corner cell has only two neighbors.",
+				"Count the squares between two known numbers; when the total matches, that route is forced.",
+				"Split the board at the numbered clues and solve each stretch separately."
+			],
+			"faq": [
+				{
+					"question": "What counts as a finished Path?",
+					"answer": "A line that starts at 1, visits every cell exactly once, moves only between side-by-side cells and ends on the last number."
+				},
+				{
+					"question": "How long does a Path puzzle take?",
+					"answer": "The estimate is about five minutes on a 6×6 board, and the printed clues handle much of the early deduction."
+				}
+			]
+		},
+		"pip-place": {
+			"tips": [
+				"Study the region labels first; a sum of zero pins that whole region to blank ends.",
+				"Regions marked with = take matching numbers, so place tiles that repeat a value there.",
+				"Remember that each tile covers two cells sharing a side, never a diagonal pair."
+			],
+			"faq": [
+				{
+					"question": "How do the region rules work in Spots?",
+					"answer": "A number is that region's total of spots, = means every spot there matches and ≠ means they are all different."
+				},
+				{
+					"question": "What has to be true when a Spots board is finished?",
+					"answer": "Every cell is covered once by the full set of tiles, each tile joins two cells that share a side, and every region rule holds."
+				}
+			]
+		}
+	}
 }

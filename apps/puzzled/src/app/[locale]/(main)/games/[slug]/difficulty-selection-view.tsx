@@ -83,13 +83,13 @@ export function DifficultySelectionView({
 
 	return (
 		<div className="flex flex-1 flex-col">
-			<main className="flex flex-1 flex-col items-center justify-center px-4 py-8">
+			<div className="flex flex-1 flex-col items-center justify-center">
 				<div className="w-full max-w-md">
 					{/* Header */}
 					<div className="mb-6 text-center">
 						<div className="mb-3 flex items-center justify-center gap-2">
 							<Gauge className="h-6 w-6 text-primary" />
-							<h1 className="text-xl font-bold">{gameName}</h1>
+							<h2 className="font-display text-xl font-extrabold tracking-tight">{gameName}</h2>
 						</div>
 						<p className="text-sm text-muted-foreground">{t('chooseDifficulty')}</p>
 						{completedCount > 0 && (
@@ -191,7 +191,7 @@ export function DifficultySelectionView({
 						</Link>
 					</div>
 				</div>
-			</main>
+			</div>
 		</div>
 	)
 }
