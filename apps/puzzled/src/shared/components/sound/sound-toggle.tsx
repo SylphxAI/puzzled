@@ -30,12 +30,13 @@ function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
 			<button
 				type="button"
 				className={cn(
-					'flex h-10 items-center justify-center gap-1.5 rounded-full px-2 transition-colors',
+					'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 transition-colors',
 					className,
 				)}
 				disabled
+				aria-label={showLabel ? 'Sound' : 'Sound toggle (loading)'}
 			>
-				<Volume2 className="h-5 w-5" />
+				<Volume2 className="h-5 w-5" aria-hidden="true" />
 				{showLabel && <span className="text-sm">Sound</span>}
 			</button>
 		)
@@ -53,14 +54,14 @@ function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
 			type="button"
 			onClick={toggleSound}
 			className={cn(
-				'flex h-10 items-center justify-center gap-1.5 rounded-full px-2 transition-colors hover:bg-muted',
+				'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 transition-colors hover:bg-muted',
 				className,
 			)}
 			title={label}
 			aria-label={label}
 			aria-pressed={!isMuted}
 		>
-			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} />
+			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} aria-hidden="true" />
 			{showLabel && <span className="text-sm">{isMuted ? 'Off' : 'On'}</span>}
 		</button>
 	)
@@ -81,10 +82,11 @@ export function SoundToggleCompact({ className }: { className?: string }) {
 		return (
 			<button
 				type="button"
-				className={cn('flex h-10 w-10 items-center justify-center rounded-full', className)}
+				className={cn('flex h-11 w-11 items-center justify-center rounded-full', className)}
 				disabled
+				aria-label="Sound toggle (loading)"
 			>
-				<Volume2 className="h-5 w-5" />
+				<Volume2 className="h-5 w-5" aria-hidden="true" />
 			</button>
 		)
 	}
@@ -101,14 +103,14 @@ export function SoundToggleCompact({ className }: { className?: string }) {
 			type="button"
 			onClick={toggleSound}
 			className={cn(
-				'flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted',
+				'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-muted',
 				className,
 			)}
 			title={label}
 			aria-label={label}
 			aria-pressed={!isMuted}
 		>
-			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} />
+			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} aria-hidden="true" />
 		</button>
 	)
 }

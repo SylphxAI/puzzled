@@ -63,7 +63,7 @@ export function LanguageSwitcher({
 						variant="ghost"
 						size="icon"
 						className={cn(
-							'relative h-10 w-10 rounded-full',
+							'relative h-11 w-11 rounded-full',
 							'hover:bg-muted',
 							isPending && 'pointer-events-none opacity-50',
 							className,
@@ -126,7 +126,7 @@ export function LanguageSwitcher({
 				<button
 					type="button"
 					className={cn(
-						'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium',
+						'inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium',
 						'text-primary underline-offset-4 hover:underline',
 						'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
 						isPending && 'pointer-events-none opacity-50',

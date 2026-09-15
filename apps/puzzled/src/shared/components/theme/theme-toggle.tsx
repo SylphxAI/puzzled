@@ -35,7 +35,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 					<button
 						type="button"
 						key={value}
-						className="flex h-8 w-8 items-center justify-center rounded-md"
+						className="flex h-11 min-w-11 items-center justify-center rounded-md"
 						disabled
 						aria-label={`${label} theme (loading)`}
 					>
@@ -59,7 +59,8 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 						key={value}
 						onClick={() => setTheme(value)}
 						className={cn(
-							'flex h-8 items-center justify-center gap-1.5 rounded-md px-2 transition-colors',
+							// 44px targets: the segmented control sits in a padded track.
+							'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-2 transition-colors',
 							isActive
 								? 'bg-background text-foreground shadow-sm'
 								: 'text-muted-foreground hover:text-foreground',
@@ -89,7 +90,7 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 		return (
 			<button
 				type="button"
-				className={cn('flex h-10 w-10 items-center justify-center rounded-full', className)}
+				className={cn('flex h-11 w-11 items-center justify-center rounded-full', className)}
 				disabled
 				aria-label="Theme toggle (loading)"
 			>
@@ -115,7 +116,7 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 			type="button"
 			onClick={cycleTheme}
 			className={cn(
-				'flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted',
+				'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-muted',
 				className,
 			)}
 			aria-label={`Toggle theme (current: ${currentLabel})`}

@@ -41,15 +41,22 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 	}
 
 	const avatarSize = size === 'sm' ? 'h-7 w-7' : 'h-8 w-8'
-	const buttonSize = size === 'sm' ? 'h-10 w-10' : 'h-11 w-11'
+	// Both variants are 44px targets (company bar) in every shell bar.
+	const buttonSize = 'h-11 w-11'
 	const menuWidth = size === 'sm' ? 'w-48' : 'w-56'
 
 	// Loading state
 	if (isLoading) {
 		return (
-			<div className={cn('flex items-center justify-center', buttonSize)}>
-				<div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-			</div>
+			// `<output>` carries the implicit status role, so the placeholder is
+			// announced instead of appearing as an empty box.
+			<output className={cn('flex items-center justify-center', buttonSize)}>
+				<span className="sr-only">{t('common.loading')}</span>
+				<div
+					className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent"
+					aria-hidden="true"
+				/>
+			</output>
 		)
 	}
 
@@ -125,7 +132,7 @@ export function UserMenu({ size = 'md', showSignIn = true, signInClassName }: Us
 			href="/login"
 			className={cn(
 				'flex items-center gap-2 rounded-lg bg-primary font-medium text-primary-foreground transition-colors hover:bg-primary/90',
-				size === 'sm' ? 'h-10 gap-1.5 rounded-full px-3 text-sm' : 'h-10 px-4 text-sm',
+				size === 'sm' ? 'h-11 gap-1.5 rounded-full px-3 text-sm' : 'h-11 px-4 text-sm',
 				signInClassName,
 			)}
 		>
