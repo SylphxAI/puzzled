@@ -1,38 +1,105 @@
 {
-	"metaTitle": "每日益智遊戲 - 猜單字、詞語分組、問答",
-	"metaDescription": "免費玩每日益智遊戲，包括猜單字、詞語分組和知識問答。追蹤連勝紀錄，參與排行榜競爭，每天挑戰你的頭腦。",
-	"welcome": "歡迎來到 Puzzled",
-	"tagline": "每日益智挑戰",
-	"todaysPuzzles": "今日謎題",
-	"allGames": "所有遊戲",
-	"seeAllGames": "查看所有遊戲",
-	"yourStats": "你的統計",
-	"streak": "連勝紀錄",
-	"playersToday": "位玩家今日",
-	"playersCompletedToday": "位玩家已完成今日挑戰",
+	"metaTitle": "免費每日腦力遊戲與謎題",
+	"metaDescription": "每日一款免費腦力遊戲：文字、邏輯、數字與空間謎題，玩完仲想繼續。日日有免費謎題，毋須註冊。",
 	"greeting": {
-		"morning": "Good morning",
-		"afternoon": "Good afternoon",
-		"evening": "Good evening",
-		"night": "Late night puzzling?",
-		"default": "Ready to play"
+		"morning": "早晨",
+		"afternoon": "午安",
+		"evening": "晚上好",
+		"night": "夜闌人靜，嚟解一題？",
+		"default": "準備好未？"
 	},
-	"streakMessage": {
-		"none": "Start your streak today!",
-		"low": "Keep it going!",
-		"medium": "You're on fire!",
-		"high": "Incredible streak!",
-		"legend": "Legendary status!"
+	"hero": {
+		"guestTitle": "每日一題，免費任玩",
+		"memberReadyTitle": "今日謎題已經準備好",
+		"memberStreakTitle": "你嘅 {days} 日連續紀錄等緊你",
+		"memberDoneTitle": "今日全部完成，好嘢！",
+		"guestSubtitle": "今日免費謎題係 {game}，今日已有 {count} 位玩家完成。毋須註冊、毋須下載，幾分鐘就玩完。",
+		"memberSubtitle": "繼續你嘅節奏：連續紀錄、統計數據同今日陣容都喺度。",
+		"playCta": "玩 {game}",
+		"browseCta": "睇全部遊戲",
+		"freeChip": "今日免費",
+		"streakChip": "連續 {days} 日",
+		"featuredLabel": "今日免費謎題",
+		"trustFree": "每日都有免費謎題",
+		"trustAccount": "毋須註冊",
+		"trustReset": "香港時間午夜更新",
+		"playersToday": "今日已有 {count} 位玩家完成",
+		"playersTodayNone": "成為今日第一位完成嘅玩家",
+		"progressRingLabel": "今日已完成 {done} / {total} 題",
+		"progressUnverified": "暫時讀取唔到你嘅進度。你仍然可以玩，提交時我哋會核對你嘅完成紀錄。",
+		"guestSubtitleNew": "今日免費謎題係 {game}。毋須註冊、毋須下載，幾分鐘就玩完。"
 	},
-	"dailyChallenge": "Daily Challenge",
-	"completedAll": "All done for today!",
-	"comeBackTomorrow": "Come back tomorrow for fresh puzzles",
-	"gamesPlayed": "Played",
-	"bestStreak": "Best",
-	"progressUnverifiedTitle": "無法確認今日進度",
-	"progressUnverifiedDescription": "你仍可開始遊玩，系統會在你開始前核對完成狀態。",
-	"streakMilestone": "{days} Day Streak!",
-	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
-	"unlockAll": "Unlock All Games",
-	"premiumBenefits": "Play unlimited puzzles, protect your streak & more"
+	"lineup": {
+		"title": "今日陣容",
+		"subtitle": "每日輪換，日日新鮮。完整目錄請到遊戲頁。",
+		"seeAll": "睇全部遊戲",
+		"play": "開始玩",
+		"playAgain": "再玩一次",
+		"unlock": "解鎖",
+		"freeToday": "今日免費",
+		"premium": "Premium"
+	},
+	"value": {
+		"dailyTitle": "每日全新題目",
+		"dailyBody": "香港時間午夜更新，全球玩家同一日玩同一套，成績先可以公平比較。",
+		"honestTitle": "真實可信嘅成績",
+		"honestBody": "每次完成都由伺服器核對，連續紀錄、時間同排名都真係有意義。",
+		"shareTitle": "分享唔會劇透",
+		"shareBody": "成績卡只顯示你嘅解題圖案同時間，唔會顯示答案，分享都唔怕掃興。"
+	},
+	"member": {
+		"currentStreak": "目前連續",
+		"bestStreak": "最長連續",
+		"gamesPlayed": "完成題數",
+		"viewStats": "睇你嘅統計"
+	},
+	"tomorrow": {
+		"title": "聽日 {game} 免費。",
+		"body": "同樣儀式，全新題目。",
+		"cta": "睇目錄"
+	},
+	"how": {
+		"title": "Puzzled 點運作",
+		"subtitle": "每日一題免費，想深入玩就有完整陣容。每個模組都跟同一個儀式：今日題目、一次完成、可以分享嘅成績。",
+		"step1Title": "打開今日謎題",
+		"step1Body": "每日有一個模組免費，毋須註冊。登入只係為咗保存連續紀錄同統計。",
+		"step2Title": "按自己節奏解題",
+		"step2Body": "大部分謎題兩至十五分鐘玩完。想熱身或者挑戰，可以揀難度。",
+		"step3Title": "養成習慣，順手分享",
+		"step3Body": "完成即可延續連續紀錄，再發一張無劇透成績卡畀朋友挑機。"
+	},
+	"faq": {
+		"title": "常見問題",
+		"subtitle": "用最短篇幅講清楚 Puzzled。",
+		"free": {
+			"question": "Puzzled 免費嗎？",
+			"answer": "是。每日有一題免費，毋須付款或註冊。Premium 會加入完整陣容、舊題庫、進階統計同連續紀錄保護。"
+		},
+		"account": {
+			"question": "玩遊戲需要註冊帳戶嗎？",
+			"answer": "唔需要。你可以以訪客身分完成今日免費謎題。註冊帳戶就可以跨裝置保存連續紀錄、成績同統計。"
+		},
+		"schedule": {
+			"question": "新謎題幾時更新？",
+			"answer": "每日香港時間午夜更新。全球玩家同一日玩同一套題目，所以成績可以互相對比。"
+		},
+		"streak": {
+			"question": "連續紀錄點計？",
+			"answer": "每個產品日完成至少一題合格謎題，就會延續你嘅連續紀錄。偶爾錯過一日唔會清空歷史，Premium 連續紀錄保護仲可以幫你補一日。"
+		},
+		"share": {
+			"question": "分享成績會唔會劇透？",
+			"answer": "唔會。成績卡只顯示解題圖案、模組同日期，唔會顯示答案；朋友打開之後玩同一日嘅謎題。"
+		},
+		"catalog": {
+			"question": "有咩謎題可以玩？",
+			"answer": "十九個每日模組，涵蓋文字、邏輯、數字、空間同輕鬆娛樂，全部跟同一個每日儀式。"
+		}
+	},
+	"final": {
+		"title": "下一段五分鐘嘅解謎時光",
+		"body": "今日免費謎題已經開放。想玩多啲，仲有 {count} 個模組等緊你。",
+		"play": "玩 {game}",
+		"explore": "探索目錄"
+	}
 }

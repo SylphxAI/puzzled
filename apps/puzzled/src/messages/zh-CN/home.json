@@ -1,38 +1,105 @@
 {
-	"metaTitle": "每日益智游戏 - 猜单词、词语分组、问答",
-	"metaDescription": "免费玩每日益智游戏，包括猜单词、词语分组和知识问答。追踪连胜记录，参与排行榜竞争，每天挑战你的头脑。",
-	"welcome": "欢迎来到 Puzzled",
-	"tagline": "每日益智挑战",
-	"todaysPuzzles": "今日谜题",
-	"allGames": "所有游戏",
-	"seeAllGames": "查看所有游戏",
-	"yourStats": "你的统计",
-	"streak": "连胜记录",
-	"playersToday": "位玩家今日",
-	"playersCompletedToday": "位玩家已完成今日挑战",
+	"metaTitle": "免费每日脑力游戏与谜题",
+	"metaDescription": "每天一款免费脑力游戏：文字、逻辑、数字与空间谜题，玩完还想继续。天天有免费谜题，无需注册。",
 	"greeting": {
-		"morning": "Good morning",
-		"afternoon": "Good afternoon",
-		"evening": "Good evening",
-		"night": "Late night puzzling?",
-		"default": "Ready to play"
+		"morning": "早上好",
+		"afternoon": "下午好",
+		"evening": "晚上好",
+		"night": "夜深了，来解一题？",
+		"default": "准备好了吗？"
 	},
-	"streakMessage": {
-		"none": "Start your streak today!",
-		"low": "Keep it going!",
-		"medium": "You're on fire!",
-		"high": "Incredible streak!",
-		"legend": "Legendary status!"
+	"hero": {
+		"guestTitle": "每天一题，免费开玩",
+		"memberReadyTitle": "今天的谜题已经准备好",
+		"memberStreakTitle": "你的 {days} 天连续纪录在等你",
+		"memberDoneTitle": "今天全部完成，漂亮！",
+		"guestSubtitle": "今天的免费谜题是 {game}，今天已有 {count} 位玩家完成。无需注册、不用下载，几分钟就能玩完。",
+		"memberSubtitle": "继续你的节奏：连续纪录、统计数据都在这里，今天的阵容也已备好。",
+		"playCta": "玩 {game}",
+		"browseCta": "查看全部游戏",
+		"freeChip": "今天免费",
+		"streakChip": "连续 {days} 天",
+		"featuredLabel": "今天的免费谜题",
+		"trustFree": "每天都有免费谜题",
+		"trustAccount": "无需注册",
+		"trustReset": "香港时间午夜更新",
+		"playersToday": "今天已有 {count} 位玩家完成",
+		"playersTodayNone": "成为今天第一位完成的玩家",
+		"progressRingLabel": "今天已完成 {done} / {total} 题",
+		"progressUnverified": "暂时读不到你的进度。你仍然可以玩，提交时我们会核对你的完成记录。",
+		"guestSubtitleNew": "今天的免费谜题是 {game}。无需注册、不用下载，几分钟就能玩完。"
 	},
-	"dailyChallenge": "Daily Challenge",
-	"completedAll": "All done for today!",
-	"comeBackTomorrow": "Come back tomorrow for fresh puzzles",
-	"gamesPlayed": "Played",
-	"bestStreak": "Best",
-	"progressUnverifiedTitle": "无法确认今日进度",
-	"progressUnverifiedDescription": "你仍可开始游玩，系统会在你开始前核对完成状态。",
-	"streakMilestone": "{days} Day Streak!",
-	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
-	"unlockAll": "Unlock All Games",
-	"premiumBenefits": "Play unlimited puzzles, protect your streak & more"
+	"lineup": {
+		"title": "今天的阵容",
+		"subtitle": "每日轮换，天天新鲜。完整目录请到游戏页。",
+		"seeAll": "查看全部游戏",
+		"play": "开始玩",
+		"playAgain": "再玩一次",
+		"unlock": "解锁",
+		"freeToday": "今天免费",
+		"premium": "Premium"
+	},
+	"value": {
+		"dailyTitle": "每天全新题目",
+		"dailyBody": "香港时间午夜更新，全球玩家同一天玩同一套，成绩才能公平比较。",
+		"honestTitle": "真实可信的成绩",
+		"honestBody": "每次完成都由服务器核对，连续纪录、时间和排名都真的有意义。",
+		"shareTitle": "分享不会剧透",
+		"shareBody": "成绩卡只显示你的解题图案和时间，不显示答案，分享也不扫兴。"
+	},
+	"member": {
+		"currentStreak": "当前连续",
+		"bestStreak": "最长连续",
+		"gamesPlayed": "完成题数",
+		"viewStats": "查看统计"
+	},
+	"tomorrow": {
+		"title": "明天 {game} 免费。",
+		"body": "同样的仪式，全新的题目。",
+		"cta": "查看目录"
+	},
+	"how": {
+		"title": "Puzzled 怎么运作",
+		"subtitle": "每天一题免费，想深入玩还有完整阵容。每个模块都遵循同一个仪式：当天题目、一次完成、可以分享的成绩。",
+		"step1Title": "打开今天的谜题",
+		"step1Body": "每天有一个模块免费，无需注册。登录只是为了保存连续纪录和统计。",
+		"step2Title": "按自己的节奏解题",
+		"step2Body": "大多数谜题两到十五分钟完成。想热身或挑战，可以选择难度。",
+		"step3Title": "养成习惯，顺手分享",
+		"step3Body": "完成即可延续连续纪录，再发一张无剧透成绩卡给朋友较量。"
+	},
+	"faq": {
+		"title": "常见问题",
+		"subtitle": "用最短篇幅说清楚 Puzzled。",
+		"free": {
+			"question": "Puzzled 免费吗？",
+			"answer": "是。每天有一题免费，无需付款或注册。Premium 会加入完整阵容、旧题库、进阶统计和连续纪录保护。"
+		},
+		"account": {
+			"question": "玩游戏需要注册账号吗？",
+			"answer": "不需要。你可以用访客身份完成今天的免费谜题。注册账号可以跨设备保存连续纪录、成绩和统计。"
+		},
+		"schedule": {
+			"question": "新谜题什么时候更新？",
+			"answer": "每天香港时间午夜更新。全球玩家同一天玩同一套题目，所以成绩可以互相比较。"
+		},
+		"streak": {
+			"question": "连续纪录怎么算？",
+			"answer": "每个产品日完成至少一题合格谜题，就能延续连续纪录。偶尔错过一天不会清空历史，Premium 连续纪录保护还能帮你补一天。"
+		},
+		"share": {
+			"question": "分享成绩会剧透吗？",
+			"answer": "不会。成绩卡只显示解题图案、模块和日期，不显示答案；朋友打开后玩同一天的谜题。"
+		},
+		"catalog": {
+			"question": "有哪些谜题可以玩？",
+			"answer": "十九个每日模块，涵盖文字、逻辑、数字、空间和轻松娱乐，全部遵循同一个每日仪式。"
+		}
+	},
+	"final": {
+		"title": "下一段五分钟的解谜时光",
+		"body": "今天的免费谜题已经开放。想玩更多，还有 {count} 个模块等你。",
+		"play": "玩 {game}",
+		"explore": "探索目录"
+	}
 }
