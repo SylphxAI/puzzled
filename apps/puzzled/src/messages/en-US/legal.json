@@ -2,6 +2,17 @@
 	"privacy": {
 		"title": "Privacy Policy",
 		"lastUpdated": "Last Updated",
+		"revision": "2024-12-15",
+		"eyebrow": "Legal",
+		"lead": "This policy explains what data Puzzled collects, why it is collected, and how to contact us about it.",
+		"toc": {
+			"title": "On this page"
+		},
+		"cta": {
+			"title": "Other pages you may need",
+			"body": "The Terms of Service cover accounts, subscriptions, and conduct. Support helps with account and billing questions.",
+			"support": "Go to support"
+		},
 		"sections": {
 			"intro": {
 				"title": "Introduction",
@@ -57,6 +68,17 @@
 	"terms": {
 		"title": "Terms of Service",
 		"lastUpdated": "Last Updated",
+		"revision": "2024-12-15",
+		"eyebrow": "Legal",
+		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, subscriptions, and conduct.",
+		"toc": {
+			"title": "On this page"
+		},
+		"cta": {
+			"title": "Other pages you may need",
+			"body": "The Privacy Policy explains what data is collected and how it is used. Support helps with account and billing questions.",
+			"support": "Go to support"
+		},
 		"sections": {
 			"acceptance": {
 				"title": "Acceptance of Terms",

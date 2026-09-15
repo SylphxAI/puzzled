@@ -1,0 +1,6 @@
+export { LegalDocument, type LegalSection } from './legal-document'
+export { MarketingCta } from './marketing-cta'
+export { MarketingFaq, type MarketingFaqItem } from './marketing-faq'
+export { MarketingHero } from './marketing-hero'
+export { MarketingSection } from './marketing-section'
+export { PricingBillingFacts, PricingComparison } from './pricing-sections'

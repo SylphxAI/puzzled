@@ -1,101 +1,140 @@
+import { ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
-import { useTranslations } from 'next-intl'
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { MarketingCta, MarketingHero } from '@/features/marketing/components'
+import { LegalDocument, type LegalSection } from '@/features/marketing/components/legal-document'
 import { LEGAL_EMAIL } from '@/lib/config/app'
+import { Link } from '@/lib/i18n/routing'
+import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 
-export async function generateMetadata(): Promise<Metadata> {
-	const t = await getTranslations('legal.terms')
-	return {
-		title: t('title'),
-	}
+type Props = {
+	params: Promise<{ locale: string }>
 }
 
-export default function TermsPage() {
-	const t = useTranslations('legal.terms')
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	const { locale } = await params
+	const t = await getTranslations({ locale, namespace: 'legal.terms' })
+
+	return buildPageMetadata({
+		locale,
+		path: '/terms',
+		title: t('title'),
+		description: t('lead'),
+		imagePath: ogImagePath({
+			title: t('title'),
+			subtitle: t('lead'),
+			eyebrow: t('eyebrow'),
+		}),
+	})
+}
+
+export default async function TermsPage({ params }: Props) {
+	const { locale } = await params
+	setRequestLocale(locale)
+
+	const t = await getTranslations('legal.terms')
+	const tPrivacy = await getTranslations('legal.privacy')
+	// The revision is published data; without it the page shows no date at all.
+	const revision = t.has('revision') ? t('revision') : undefined
+
+	// Published section order; every sentence comes from legal.json.
+	const sections: LegalSection[] = [
+		{
+			id: 'acceptance',
+			title: t('sections.acceptance.title'),
+			paragraphs: [t('sections.acceptance.content')],
+		},
+		{
+			id: 'service',
+			title: t('sections.service.title'),
+			paragraphs: [t('sections.service.content')],
+		},
+		{
+			id: 'accounts',
+			title: t('sections.accounts.title'),
+			paragraphs: [t('sections.accounts.content')],
+			bullets: [
+				t('sections.accounts.items.accurate'),
+				t('sections.accounts.items.secure'),
+				t('sections.accounts.items.responsible'),
+			],
+		},
+		{
+			id: 'subscription',
+			title: t('sections.subscription.title'),
+			paragraphs: [t('sections.subscription.content')],
+			bullets: [
+				t('sections.subscription.items.billing'),
+				t('sections.subscription.items.cancel'),
+				t('sections.subscription.items.refund'),
+			],
+		},
+		{
+			id: 'conduct',
+			title: t('sections.conduct.title'),
+			paragraphs: [t('sections.conduct.content')],
+			bullets: [
+				t('sections.conduct.items.legal'),
+				t('sections.conduct.items.respect'),
+				t('sections.conduct.items.noCheat'),
+			],
+		},
+		{
+			id: 'ip',
+			title: t('sections.ip.title'),
+			paragraphs: [t('sections.ip.content')],
+		},
+		{
+			id: 'disclaimer',
+			title: t('sections.disclaimer.title'),
+			paragraphs: [t('sections.disclaimer.content')],
+		},
+		{
+			id: 'liability',
+			title: t('sections.liability.title'),
+			paragraphs: [t('sections.liability.content')],
+		},
+		{
+			id: 'changes',
+			title: t('sections.changes.title'),
+			paragraphs: [t('sections.changes.content')],
+		},
+		{
+			id: 'contact',
+			title: t('sections.contact.title'),
+			paragraphs: [t('sections.contact.content')],
+			contactEmail: LEGAL_EMAIL,
+		},
+	]
 
 	return (
-		<div className="flex flex-1 flex-col">
-			<div className="border-b px-4 py-3">
-				<h1 className="text-lg font-bold">{t('title')}</h1>
-			</div>
+		<main className="flex-1">
+			<MarketingHero eyebrow={t('eyebrow')} title={t('title')} lead={t('lead')} />
 
-			<div className="flex-1 overflow-y-auto px-4 py-6">
-				<div className="mx-auto max-w-2xl space-y-6">
-					<p className="text-sm text-muted-foreground">{t('lastUpdated')}: December 15, 2024</p>
+			<LegalDocument
+				locale={locale}
+				revision={revision}
+				lastUpdatedLabel={t('lastUpdated')}
+				tocTitle={t('toc.title')}
+				sections={sections}
+			/>
 
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.acceptance.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.acceptance.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.service.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.service.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.accounts.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.accounts.content')}</p>
-						<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-							<li>{t('sections.accounts.items.accurate')}</li>
-							<li>{t('sections.accounts.items.secure')}</li>
-							<li>{t('sections.accounts.items.responsible')}</li>
-						</ul>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.subscription.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">
-							{t('sections.subscription.content')}
-						</p>
-						<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-							<li>{t('sections.subscription.items.billing')}</li>
-							<li>{t('sections.subscription.items.cancel')}</li>
-							<li>{t('sections.subscription.items.refund')}</li>
-						</ul>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.conduct.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.conduct.content')}</p>
-						<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-							<li>{t('sections.conduct.items.legal')}</li>
-							<li>{t('sections.conduct.items.respect')}</li>
-							<li>{t('sections.conduct.items.noCheat')}</li>
-						</ul>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.ip.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.ip.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.disclaimer.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.disclaimer.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.liability.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.liability.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.changes.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.changes.content')}</p>
-					</section>
-
-					<section>
-						<h2 className="text-base font-semibold">{t('sections.contact.title')}</h2>
-						<p className="mt-2 text-sm text-muted-foreground">{t('sections.contact.content')}</p>
-						<p className="mt-2 text-sm">
-							<a href={`mailto:${LEGAL_EMAIL}`} className="text-primary hover:underline">
-								{LEGAL_EMAIL}
-							</a>
-						</p>
-					</section>
-				</div>
-			</div>
-		</div>
+			<MarketingCta title={t('cta.title')} body={t('cta.body')}>
+				<Link
+					href="/support"
+					className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-white px-6 font-semibold text-ink transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.98]"
+				>
+					{t('cta.support')}
+					<ArrowRight className="h-4 w-4" aria-hidden="true" />
+				</Link>
+				<Link
+					href="/privacy"
+					className="inline-flex min-h-12 items-center gap-2 rounded-2xl border border-white/25 px-5 font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					{tPrivacy('title')}
+					<ArrowRight className="h-4 w-4" aria-hidden="true" />
+				</Link>
+			</MarketingCta>
+		</main>
 	)
 }

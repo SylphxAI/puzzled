@@ -2,6 +2,17 @@
 	"privacy": {
 		"title": "隐私政策",
 		"lastUpdated": "最后更新",
+		"revision": "2024-12-15",
+		"eyebrow": "法律文件",
+		"lead": "本政策说明 Puzzled 收集哪些数据、为何收集，以及你可以如何就此联系我们。",
+		"toc": {
+			"title": "本页内容"
+		},
+		"cta": {
+			"title": "你可能需要的其他页面",
+			"body": "《服务条款》涵盖账户、订阅与行为规范；支持页面可协助处理账户与账单问题。",
+			"support": "前往支持页面"
+		},
 		"sections": {
 			"intro": {
 				"title": "简介",
@@ -57,6 +68,17 @@
 	"terms": {
 		"title": "服务条款",
 		"lastUpdated": "最后更新",
+		"revision": "2024-12-15",
+		"eyebrow": "法律文件",
+		"lead": "本条款列出使用 Puzzled 时适用的规则，包括账户、订阅与行为规范。",
+		"toc": {
+			"title": "本页内容"
+		},
+		"cta": {
+			"title": "你可能需要的其他页面",
+			"body": "《隐私政策》说明会收集哪些数据及其用途；支持页面可协助处理账户与账单问题。",
+			"support": "前往支持页面"
+		},
 		"sections": {
 			"acceptance": {
 				"title": "条款接受",
