@@ -112,11 +112,13 @@ export function ogImagePath(params: {
 	title: string
 	subtitle?: string
 	eyebrow?: string
+	badge?: string
 	theme?: string
 }): string {
 	const search = new URLSearchParams({ title: params.title })
 	if (params.subtitle) search.set('subtitle', params.subtitle)
 	if (params.eyebrow) search.set('eyebrow', params.eyebrow)
+	if (params.badge) search.set('badge', params.badge)
 	if (params.theme) search.set('theme', params.theme)
 	return `/og?${search.toString()}`
 }

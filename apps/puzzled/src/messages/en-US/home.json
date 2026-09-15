@@ -27,7 +27,9 @@
 		"playersTodayNone": "Be the first to finish today",
 		"progressRingLabel": "{done} of {total} puzzles finished today",
 		"progressUnverified": "We could not load your saved progress just now. You can still play — we check your finish when you submit.",
-		"guestSubtitleNew": "Today's free ritual is {game}. No signup, no download — just a few minutes of real puzzling."
+		"guestSubtitleNew": "Today's free ritual is {game}. No signup, no download — just a few minutes of real puzzling.",
+		"ogEyebrow": "Free daily puzzle",
+		"ogBadge": "Free puzzle every day"
 	},
 	"lineup": {
 		"title": "Today's lineup",
@@ -101,5 +103,6 @@
 		"body": "Today's free puzzle is open now. {count} modules are waiting when you want more.",
 		"play": "Play {game}",
 		"explore": "Explore the catalog"
-	}
+	},
+	"todaysPuzzles": "Today's Puzzles"
 }

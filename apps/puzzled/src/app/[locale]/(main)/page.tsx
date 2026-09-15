@@ -44,7 +44,8 @@ export async function generateMetadata({ params }: Props) {
 		imagePath: ogImagePath({
 			title: t('metaTitle'),
 			subtitle: t('hero.guestTitle'),
-			eyebrow: 'Free daily puzzle',
+			eyebrow: t('hero.ogEyebrow'),
+			badge: t('hero.ogBadge'),
 		}),
 	})
 }
@@ -64,6 +65,7 @@ export default async function HomePage({ params }: Props) {
 	setRequestLocale(locale)
 
 	const t = await getTranslations()
+	const tHome = await getTranslations('home')
 	const user = await withPresentationDeadline(currentUser(), null)
 
 	// Entitlement comes from the billing authority; a read failure stays free.
@@ -147,7 +149,7 @@ export default async function HomePage({ params }: Props) {
 		name: freeGameName,
 		tagline: freeGameMeta
 			? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`)
-			: t('lineup.premium'),
+			: tHome('lineup.premium'),
 		duration: freeGameMeta?.display.duration ?? '',
 		highlight: freeGameMeta ? t(freeGameMeta.display.highlightKey) : '',
 		theme: freeGameMeta?.display.theme ?? 'violet',

@@ -1,7 +1,6 @@
 {
 	"title": "Analytics consent",
 	"message": "Puzzled uses privacy-friendly analytics to understand how the puzzles are played. No ads, no selling data, and you can change this any time in Settings.",
-	"details": "Analytics help us see which puzzles work and where play breaks down.",
 	"accept": "Accept",
 	"decline": "Decline",
 	"learnMore": "Privacy policy"

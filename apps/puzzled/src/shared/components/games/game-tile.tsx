@@ -119,7 +119,7 @@ export function GameTile({
 			{showUnlock && status === 'premium' && (
 				<Link
 					href="/pricing"
-					className="relative z-10 mt-3 inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+					className="relative z-10 mt-3 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
 				>
 					<Crown className="h-3.5 w-3.5" aria-hidden="true" />
 					{labels.unlock}

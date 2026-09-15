@@ -27,7 +27,9 @@
 		"playersTodayNone": "成为今天第一位完成的玩家",
 		"progressRingLabel": "今天已完成 {done} / {total} 题",
 		"progressUnverified": "暂时读不到你的进度。你仍然可以玩，提交时我们会核对你的完成记录。",
-		"guestSubtitleNew": "今天的免费谜题是 {game}。无需注册、不用下载，几分钟就能玩完。"
+		"guestSubtitleNew": "今天的免费谜题是 {game}。无需注册、不用下载，几分钟就能玩完。",
+		"ogEyebrow": "每日免费谜题",
+		"ogBadge": "每天一题免费"
 	},
 	"lineup": {
 		"title": "今天的阵容",
@@ -101,5 +103,6 @@
 		"body": "今天的免费谜题已经开放。想玩更多，还有 {count} 个模块等你。",
 		"play": "玩 {game}",
 		"explore": "探索目录"
-	}
+	},
+	"todaysPuzzles": "今日谜题"
 }

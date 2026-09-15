@@ -40,7 +40,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 								href={href}
 								aria-current={isActive ? 'page' : undefined}
 								className={cn(
-									'rounded-full px-3.5 py-2 text-sm font-semibold transition-colors',
+									'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-semibold transition-colors',
 									isActive
 										? 'bg-primary/10 text-primary'
 										: 'text-muted-foreground hover:bg-muted hover:text-foreground',

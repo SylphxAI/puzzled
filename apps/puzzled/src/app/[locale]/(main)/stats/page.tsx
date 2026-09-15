@@ -19,7 +19,6 @@ import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser } from '@/lib/identity/server'
 import { cn } from '@/lib/utils'
-import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
@@ -118,7 +117,6 @@ export default async function StatsPage({ params }: Props) {
 	) {
 		return (
 			<>
-				<Header />
 				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
 					<div className="mx-auto max-w-md text-center">
 						<div className="mb-6 flex justify-center">
@@ -185,7 +183,6 @@ export default async function StatsPage({ params }: Props) {
 	) {
 		return (
 			<>
-				<Header />
 				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
 					<div className="mx-auto max-w-md text-center">
 						<div className="mb-6 flex justify-center">
@@ -215,7 +212,6 @@ export default async function StatsPage({ params }: Props) {
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-6">
 				<div className="mx-auto w-full max-w-2xl space-y-6">
 					<h1 className="text-2xl font-bold">{t('title')}</h1>

@@ -33,6 +33,7 @@ export function GET(request: NextRequest) {
 	const title = clamp(params.get('title'), 64) || 'Puzzled'
 	const subtitle = clamp(params.get('subtitle'), 96)
 	const eyebrow = clamp(params.get('eyebrow'), 32)
+	const badge = clamp(params.get('badge'), 32) || 'Free puzzle every day'
 	const [from, to] = THEMES[params.get('theme') ?? ''] ?? THEMES.violet
 
 	return new ImageResponse(
@@ -115,7 +116,7 @@ export function GET(request: NextRequest) {
 						fontWeight: 600,
 					}}
 				>
-					Free puzzle every day
+					{badge}
 				</span>
 				<span style={{ color: 'rgba(255,255,255,0.7)' }}>puzzled.gg</span>
 			</div>
@@ -126,6 +127,8 @@ export function GET(request: NextRequest) {
 			headers: {
 				// Cards are immutable per query string and safe to cache at the edge.
 				'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
+				// Social images are not search content.
+				'x-robots-tag': 'noindex',
 			},
 		},
 	)

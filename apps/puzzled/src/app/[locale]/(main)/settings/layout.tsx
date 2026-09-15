@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { currentUser } from '@/lib/identity/server'
-import { Header } from '@/shared/components/layout'
 
 type Props = {
 	children: ReactNode
@@ -44,7 +43,6 @@ export default async function SettingsLayout({ children, params }: Props) {
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-6">
 				<div className="mx-auto w-full max-w-6xl">
 					<div className="mb-6">

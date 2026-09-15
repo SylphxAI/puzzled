@@ -28,5 +28,6 @@
 	"historyEmpty": "還沒有已接受的完成記錄。",
 	"dailyStatusUnavailableTitle": "今日完成狀態暫不可用",
 	"dailyStatusUnavailableDescription": "無法確認今日個人進度。請重試後再把模組視為未完成。",
-	"dailyStatusRetry": "重試"
+	"dailyStatusRetry": "重試",
+	"streakLabel": "目前連續 {days} 日"
 }

@@ -168,9 +168,10 @@
 	/* -----------------------------------------
 	   Colors - Stats
 	   ----------------------------------------- */
-	--color-stat-winrate: #22c55e;
-	--color-stat-streak: #f97316;
-	--color-stat-best: #eab308;
+	/* Stat colours are used as small text, so they carry AA contrast on white. */
+	--color-stat-winrate: #15803d;
+	--color-stat-streak: #c2410c;
+	--color-stat-best: #b45309;
 
 	/* -----------------------------------------
 	   Colors - Rankings
@@ -229,7 +230,9 @@
 	--color-primary: #a5b4fc;
 	--color-primary-hover: #c7d2fe;
 	--color-primary-foreground: #1e1b4b;
-	--color-ring: #a5b4fc;
+	--color-stat-winrate: #4ade80;
+	--color-stat-streak: #fb923c;
+	--color-stat-best: #fbbf24;
 	--color-accent-warm: #fb923c;
 	--color-accent-warm-soft: rgb(124 45 18 / 0.25);
 	--color-accent-warm-foreground: #ffedd5;

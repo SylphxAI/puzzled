@@ -28,5 +28,6 @@
 	"historyEmpty": "还没有已接受的完成记录。",
 	"dailyStatusUnavailableTitle": "今日完成状态暂不可用",
 	"dailyStatusUnavailableDescription": "无法确认今日个人进度。请重试后再把模块视为未完成。",
-	"dailyStatusRetry": "重试"
+	"dailyStatusRetry": "重试",
+	"streakLabel": "当前连续 {days} 天"
 }

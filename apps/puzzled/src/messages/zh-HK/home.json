@@ -27,7 +27,9 @@
 		"playersTodayNone": "成為今日第一位完成嘅玩家",
 		"progressRingLabel": "今日已完成 {done} / {total} 題",
 		"progressUnverified": "暫時讀取唔到你嘅進度。你仍然可以玩，提交時我哋會核對你嘅完成紀錄。",
-		"guestSubtitleNew": "今日免費謎題係 {game}。毋須註冊、毋須下載，幾分鐘就玩完。"
+		"guestSubtitleNew": "今日免費謎題係 {game}。毋須註冊、毋須下載，幾分鐘就玩完。",
+		"ogEyebrow": "每日免費謎題",
+		"ogBadge": "每日一題免費"
 	},
 	"lineup": {
 		"title": "今日陣容",
@@ -101,5 +103,6 @@
 		"body": "今日免費謎題已經開放。想玩多啲，仲有 {count} 個模組等緊你。",
 		"play": "玩 {game}",
 		"explore": "探索目錄"
-	}
+	},
+	"todaysPuzzles": "今日謎題"
 }

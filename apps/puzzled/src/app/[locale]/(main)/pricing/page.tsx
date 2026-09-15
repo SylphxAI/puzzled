@@ -1,5 +1,4 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Header } from '@/shared/components/layout'
 import { PricingContent } from './pricing-client'
 
 type Props = {
@@ -24,7 +23,6 @@ export default async function PricingPage({ params }: Props) {
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-8 pb-nav">
 				<PricingContent locale={locale} />
 			</main>

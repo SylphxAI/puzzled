@@ -12,16 +12,22 @@ type NextPuzzleCountdownProps = {
 }
 
 /**
- * Calculate time until next UTC midnight
- * All users worldwide see the same countdown to the same new puzzle
+ * Milliseconds until the next product day (midnight in Asia/Hong_Kong).
+ *
+ * The daily set, the free rotation and the day key all flip on that boundary
+ * (16:00 UTC), so a UTC-midnight countdown was eight hours out.
  */
-function calculateTimeUntilUTCMidnight() {
+const HKT_OFFSET_MS = 8 * 60 * 60 * 1000
+
+function calculateTimeUntilNextProductDay() {
 	const now = new Date()
-	// Get tomorrow at UTC midnight
-	const tomorrow = new Date(
-		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0),
+	const hktNow = new Date(now.getTime() + HKT_OFFSET_MS)
+	const nextProductDay = Date.UTC(
+		hktNow.getUTCFullYear(),
+		hktNow.getUTCMonth(),
+		hktNow.getUTCDate() + 1,
 	)
-	const diff = tomorrow.getTime() - now.getTime()
+	const diff = nextProductDay - hktNow.getTime()
 
 	return {
 		hours: Math.floor(diff / (1000 * 60 * 60)),
@@ -43,9 +49,9 @@ export function NextPuzzleCountdown({
 	})
 
 	useEffect(() => {
-		setTimeLeft(calculateTimeUntilUTCMidnight())
+		setTimeLeft(calculateTimeUntilNextProductDay())
 		const interval = setInterval(() => {
-			setTimeLeft(calculateTimeUntilUTCMidnight())
+			setTimeLeft(calculateTimeUntilNextProductDay())
 		}, 1000)
 
 		return () => clearInterval(interval)
