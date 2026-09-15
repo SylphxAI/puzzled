@@ -1,14 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSafeAnalytics } from '@/lib/identity/react'
-import { initWebVitals, setWebVitalsTracker } from '../lib/web-vitals'
+import { initWebVitals } from '../lib/web-vitals'
 
 /**
  * Web Vitals Reporter Component
  *
- * Initializes web vitals reporting and connects to SDK analytics.
- * Only runs in production with user consent.
+ * Initializes web vitals reporting. Only runs in production with user consent;
+ * the batched delivery is owned by `../lib/web-vitals`.
  */
 export function WebVitalsReporter() {
 	const [isMounted, setIsMounted] = useState(false)
@@ -30,15 +29,10 @@ export function WebVitalsReporter() {
  * Only rendered client-side after mount
  */
 function WebVitalsReporterInner() {
-	const { track } = useSafeAnalytics()
-
 	useEffect(() => {
 		// Initialize web vitals listeners
 		initWebVitals()
-
-		// Connect to SDK analytics for reporting
-		setWebVitalsTracker(track)
-	}, [track])
+	}, [])
 
 	return null
 }
