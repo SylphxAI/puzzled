@@ -43,6 +43,8 @@
 	"optionsAvailable": "個選項可選",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
+	"cellRow": "第 {index} 行",
+	"cellColumn": "第 {index} 列",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

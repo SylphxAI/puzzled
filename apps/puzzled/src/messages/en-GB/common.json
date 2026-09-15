@@ -43,6 +43,8 @@
 	"optionsAvailable": "options available",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
+	"cellRow": "Row {index}",
+	"cellColumn": "Column {index}",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",
