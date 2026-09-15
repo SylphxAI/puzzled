@@ -76,13 +76,14 @@
 	   Duration Scale (aligned with ui/motion/config.ts)
 	   Use semantic tokens: duration-fast, duration-normal, etc.
 	   ----------------------------------------- */
-	--duration-instant: 0ms;
-	--duration-fast: 100ms; /* micro-interactions: hover, focus */
-	--duration-normal: 150ms; /* standard transitions */
-	--duration-medium: 200ms; /* slightly longer transitions */
-	--duration-slow: 300ms; /* modals, page transitions */
-	--duration-slower: 400ms; /* complex choreography */
-	--duration-slowest: 500ms; /* dramatic reveals */
+	/* Tailwind v4 reads named durations from --transition-duration-*. */
+	--transition-duration-instant: 0ms;
+	--transition-duration-fast: 100ms; /* micro-interactions: hover, focus */
+	--transition-duration-normal: 150ms; /* standard transitions */
+	--transition-duration-medium: 200ms; /* slightly longer transitions */
+	--transition-duration-slow: 300ms; /* modals, page transitions */
+	--transition-duration-slower: 400ms; /* complex choreography */
+	--transition-duration-slowest: 500ms; /* dramatic reveals */
 
 	/* -----------------------------------------
 	   Spacing (Layout)
@@ -106,21 +107,26 @@
 	--animate-streak-pulse: streak-pulse 2s ease-in-out infinite;
 	--animate-milestone-glow: milestone-glow 3s ease-in-out infinite;
 	--animate-progress-fill: progress-fill 0.5s ease-out forwards;
+	--animate-progress-indeterminate: progress-indeterminate 1.4s ease-in-out infinite;
 	--animate-fade-in: fade-in 0.2s ease-out;
 	--animate-slide-up: slide-up 0.3s ease-out;
 	--animate-flip: flip 0.5s ease-in-out;
 	--animate-bounce: bounce 0.6s ease-in-out;
 	--animate-shake: shake 0.5s ease-in-out;
 	--animate-shimmer: shimmer 2s infinite;
+	--animate-checkmark: checkmark 0.3s ease-out forwards;
+	--animate-status-pulse: status-pulse 2s ease-in-out infinite;
 	--animate-collapsible-down: collapsible-down 0.2s ease-out;
 	--animate-collapsible-up: collapsible-up 0.2s ease-out;
+	/* Base UI disclosure states reuse the collapsible timing. */
+	--animate-accordion-down: collapsible-down 0.2s ease-out;
+	--animate-accordion-up: collapsible-up 0.2s ease-out;
 
 	/* -----------------------------------------
 	   Colors - Brand
 	   ----------------------------------------- */
 	--color-primary: #6366f1;
 	--color-primary-hover: #4f46e5;
-	--color-primary-light: #818cf8;
 	--color-primary-foreground: #ffffff;
 	--color-secondary: #8b5cf6;
 	/* Warm accent used for delight moments (streaks, celebration, highlights) */
@@ -158,27 +164,11 @@
 	--color-wrong: #ef4444;
 
 	/* -----------------------------------------
-	   Colors - Word Groups Categories
-	   ----------------------------------------- */
-	--color-category-1: #fb7185;
-	--color-category-2: #2dd4bf;
-	--color-category-3: #fbbf24;
-	--color-category-4: #e879f9;
-
-	/* -----------------------------------------
 	   Colors - Stats
 	   ----------------------------------------- */
-	--color-stat-games: #3b82f6;
 	--color-stat-winrate: #22c55e;
 	--color-stat-streak: #f97316;
 	--color-stat-best: #eab308;
-
-	/* -----------------------------------------
-	   Colors - Game Brands
-	   ----------------------------------------- */
-	--color-game-wordle: #22c55e;
-	--color-game-connections: #a855f7;
-	--color-game-quiz: #3b82f6;
 
 	/* -----------------------------------------
 	   Colors - Rankings
@@ -194,8 +184,6 @@
 	--color-foreground: #0f172a;
 	--color-card: #ffffff;
 	--color-card-foreground: #0f172a;
-	--color-popover: #ffffff;
-	--color-popover-foreground: #0f172a;
 	--color-accent: #f1f5f9;
 	--color-accent-foreground: #0f172a;
 	--color-muted: #f1f5f9;
@@ -224,8 +212,6 @@
 	--color-foreground: #f8fafc;
 	--color-card: #1e293b;
 	--color-card-foreground: #f8fafc;
-	--color-popover: #1e293b;
-	--color-popover-foreground: #f8fafc;
 	--color-accent: #334155;
 	--color-accent-foreground: #f8fafc;
 	--color-muted: #334155;
@@ -795,6 +781,37 @@ select:focus-visible {
 	}
 }
 
+@keyframes progress-indeterminate {
+	0% {
+		transform: translateX(-100%);
+	}
+	50% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+@keyframes checkmark {
+	from {
+		stroke-dashoffset: 24;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes status-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
+	}
+}
+
 @keyframes collapsible-down {
 	from {
 		height: 0;
@@ -1331,8 +1348,19 @@ html[data-transition-type="fade"] {
 	.animate-tile-press,
 	.animate-success-burst,
 	.animate-float,
-	.animate-heartbeat {
+	.animate-heartbeat,
+	.animate-accordion-down,
+	.animate-accordion-up,
+	.animate-checkmark,
+	.animate-status-pulse,
+	.animate-progress-indeterminate {
 		animation: none !important;
+	}
+
+	/* Podium/celebration chrome is decorative motion only */
+	[class*="podium-"] {
+		animation: none !important;
+		transition: none !important;
 	}
 
 	/* Disable Tailwind built-in animations */
