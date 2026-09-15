@@ -1,8 +1,10 @@
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
+import { ConsoleHeader } from '@/features/console/components/console-chrome'
+import { SettingsNav } from '@/features/console/components/settings-nav'
+import { redirect } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 
 type Props = {
 	children: ReactNode
@@ -11,67 +13,44 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'common' })
+	const t = await getTranslations({ locale, namespace: 'settings' })
 
-	return {
-		title: t('settings'),
-	}
+	return buildPageMetadata({
+		locale,
+		path: '/settings',
+		title: t('title'),
+		description: t('subtitle'),
+		// Account surfaces stay out of search.
+		noindex: true,
+	})
 }
 
-const settingsLinks = [
-	{ href: '/settings', label: 'Overview' },
-	{ href: '/settings/profile', label: 'Profile' },
-	{ href: '/settings/account', label: 'Account' },
-	{ href: '/settings/preferences', label: 'Preferences' },
-	{ href: '/settings/notifications', label: 'Notifications' },
-	{ href: '/settings/security', label: 'Security' },
-	{ href: '/settings/subscription', label: 'Subscription' },
-	{ href: '/settings/referrals', label: 'Referrals' },
-	{ href: '/settings/privacy', label: 'Privacy' },
-]
-
+/**
+ * Account settings frame: one h1, one section rail, and the section the URL
+ * names. Signed-in only — visitors without a session go to sign-in and come
+ * back here afterwards.
+ */
 export default async function SettingsLayout({ children, params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
 	const user = await currentUser()
-
-	// Redirect to login if not authenticated
 	if (!user) {
-		redirect(`/${locale}/login`)
+		redirect({ href: { pathname: '/login', query: { callbackUrl: '/settings' } }, locale })
 	}
 
+	const t = await getTranslations('settings')
+
 	return (
-		<>
-			<main className="flex flex-1 flex-col px-4 py-6">
-				<div className="mx-auto w-full max-w-6xl">
-					<div className="mb-6">
-						<h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-						<p className="text-muted-foreground">Manage your account settings and preferences</p>
-					</div>
+		<main className="page-shell-wide py-8 md:py-10">
+			<ConsoleHeader eyebrow={t('eyebrow')} title={t('title')} description={t('subtitle')} />
 
-					<div className="flex flex-col gap-6 md:flex-row md:gap-8">
-						{/* Sidebar */}
-						<nav className="w-full shrink-0 md:w-48">
-							<ul className="flex flex-row gap-2 overflow-x-auto md:flex-col md:gap-1">
-								{settingsLinks.map((link) => (
-									<li key={link.href}>
-										<Link
-											href={`/${locale}${link.href}`}
-											className="block whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-										>
-											{link.label}
-										</Link>
-									</li>
-								))}
-							</ul>
-						</nav>
-
-						{/* Main Content Area */}
-						<div className="w-full flex-1 space-y-6 md:max-w-[800px]">{children}</div>
-					</div>
+			<div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
+				<div className="md:w-56 md:shrink-0">
+					<SettingsNav />
 				</div>
-			</main>
-		</>
+				<div className="min-w-0 flex-1 space-y-6">{children}</div>
+			</div>
+		</main>
 	)
 }

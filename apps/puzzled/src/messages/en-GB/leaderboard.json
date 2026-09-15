@@ -1,15 +1,51 @@
 {
-	"streak": "Streak",
-	"score": "Score",
-	"wins": "Wins",
-	"wantToCompete": "Want to compete?",
-	"premiumPrompt": "Sign in and upgrade to Premium to appear on leaderboards!",
 	"period": {
 		"today": "Today",
 		"week": "This Week",
 		"all": "All Time"
 	},
-	"noData": "No players yet. Be the first!",
-	"yourRank": "Your Rank",
-	"topPlayers": "Top Players"
+	"title": "Leaderboard",
+	"metaDescription": "Module leaderboards for today, this week and all time — who finished what, and where your own score sits.",
+	"eyebrow": "Puzzled boards",
+	"description": "One module and one period at a time, exactly as scores are counted. Only players who chose to appear publicly are listed.",
+	"chip": "Board: {module}",
+	"anonymous": "Anonymous player",
+	"scopeLabel": "Leaderboard period",
+	"moduleLabel": "Module",
+	"loadingBoard": "Loading board…",
+	"boardTitle": "{module} board",
+	"boardDescription": "Scope: {period}. Each row is a player's accepted total for this period.",
+	"columns": {
+		"rank": "Rank",
+		"player": "Player",
+		"score": "Score"
+	},
+	"tableCaption": "{module} leaderboard for {period}: rank, player and score",
+	"you": "You",
+	"empty": {
+		"title": "No finished scores on this board yet",
+		"body": "{module} has no accepted scores in this period. Play it and the first score could be yours.",
+		"play": "Play {module}"
+	},
+	"notes": {
+		"top": "Showing the top {count} for {module}.",
+		"policy": "Only players who chose to appear publicly are listed.",
+		"viewerAway": "You are not in the top {count} for this period yet.",
+		"guest": "Guest play counts towards your own record but does not appear on boards.",
+		"signIn": "Sign in to take a place"
+	},
+	"unavailable": {
+		"title": "This board did not load",
+		"body": "The leaderboard read did not come back, so no rows are shown instead of an empty table.",
+		"footnote": "Try again in a moment.",
+		"retry": "Try this board again"
+	},
+	"how": {
+		"title": "How boards work",
+		"description": "The rules behind these numbers.",
+		"scores": "A board adds up every accepted score you set on that module during the selected period.",
+		"visibility": "Your name and score appear only while your public visibility setting is on.",
+		"boards": "Score boards run for every module: today, this week, and all time.",
+		"visibilityCta": "Review your visibility"
+	}
 }

@@ -3,19 +3,11 @@
 import { NotificationPreferences } from '@/features/push'
 
 /**
- * Client-side notification settings
+ * Push and email preferences.
  *
- * Wraps the push notification preferences component
- * for the settings page.
+ * The panel owns its own save flow; this surface only gives it a home inside
+ * the settings frame.
  */
 export function NotificationsClient() {
-	return (
-		<NotificationPreferences
-			variant="panel"
-			onSave={(prefs) => {
-				// Preferences are saved via the hook
-				console.log('[NotificationsClient] Preferences saved:', prefs)
-			}}
-		/>
-	)
+	return <NotificationPreferences variant="panel" />
 }

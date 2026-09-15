@@ -20,7 +20,8 @@
 		"privacy": "Privacy",
 		"privacyDesc": "Data & visibility",
 		"helpText": "Need help with your account?",
-		"helpLink": "Visit Help Centre"
+		"helpLink": "Visit Help Centre",
+		"sections": "Settings sections"
 	},
 	"search": {
 		"placeholder": "Search settings...",
@@ -127,6 +128,17 @@
 			"push": "Push",
 			"email": "Email",
 			"manageAll": "Manage all notifications"
+		},
+		"signedInAs": "Signed in as {name}",
+		"groups": {
+			"player": "Your player",
+			"playerDesc": "Who you are on Puzzled.",
+			"play": "Play and alerts",
+			"playDesc": "How the games look and when we contact you.",
+			"plan": "Plan and perks",
+			"planDesc": "Your subscription, and rewards for inviting friends.",
+			"safety": "Privacy and safety",
+			"safetyDesc": "What others can see, and how your account is protected."
 		}
 	},
 	"playerCard": {
@@ -160,7 +172,24 @@
 			"showcaseHint": "Featured on your profile",
 			"more": "+{count} more"
 		},
-		"securityBadge": "Security: {score}%"
+		"securityBadge": "Security: {score}%",
+		"pageTitle": "Your profile",
+		"pageDescription": "Your identity on Puzzled, and where your progress lives.",
+		"eyebrow": "Player card",
+		"nameFallback": "Puzzled player",
+		"identityTitle": "Identity",
+		"identityDescription": "The name and address your account signs in with.",
+		"progressTitle": "Your record",
+		"progressDescription": "Totals straight from the modules you finished.",
+		"linksTitle": "Where to next",
+		"linksDescription": "The surfaces that use this identity.",
+		"recordLink": "Open your stats",
+		"boardLink": "See the leaderboard",
+		"settingsLink": "Manage account settings",
+		"privacyLink": "Control who sees your name",
+		"notLoaded": "Not loaded",
+		"noFinishes": "No finishes yet",
+		"progressNote": "Part of your record did not load, so those figures stay blank rather than showing a zero."
 	},
 	"achievements": {
 		"title": "Achievement Showcase",
@@ -358,7 +387,17 @@
 		"saving": "Saving...",
 		"saved": "Profile updated",
 		"savedDescription": "Your changes have been saved",
-		"updateFailed": "Update failed"
+		"updateFailed": "Update failed",
+		"identityTitle": "Display name and avatar",
+		"identityDescription": "How you appear to other players.",
+		"editCta": "Edit in account centre",
+		"identityNote": "Your display name and avatar come from your account profile, and changing them there updates every Puzzled surface.",
+		"visibilityTitle": "Public visibility",
+		"visibilityDescription": "Decide whether your name appears on leaderboards.",
+		"visibilityCta": "Review visibility settings",
+		"boardsTitle": "Your place on the boards",
+		"boardsDescription": "See how your scores compare for each module.",
+		"boardsCta": "Open the leaderboard"
 	},
 	"account": {
 		"title": "Account",
@@ -400,7 +439,22 @@
 			"github": "GitHub",
 			"microsoft": "Microsoft",
 			"facebook": "Facebook"
-		}
+		},
+		"signedInTitle": "Signed in",
+		"signedInDescription": "The account this device is using.",
+		"loading": "Loading your account…",
+		"signedOut": "This device is signed out. Sign in to manage your account.",
+		"centreTitle": "Email, password and sign-in methods",
+		"centreDescription": "These belong to your account centre, one place for every Sylphx app you use.",
+		"centreCta": "Open account centre",
+		"centreEmail": "Change your email address and re-verify it",
+		"centrePassword": "Set or change your password",
+		"centreDeletion": "Delete your account and its data",
+		"centreNote": "Opens in a new tab.",
+		"signOutTitle": "Sign out",
+		"signOutDescription": "Ends the session on this device. Your progress stays with your account.",
+		"signOut": "Sign out of this device",
+		"signingOut": "Signing out…"
 	},
 	"connectedAccounts": {
 		"title": "Connected Accounts",
@@ -562,7 +616,19 @@
 		"sessions": {
 			"title": "Active Sessions",
 			"description": "Manage your active sessions across devices"
-		}
+		},
+		"protectionTitle": "Sign-in protection",
+		"protectionDescription": "Passwords, two-factor, passkeys and recovery codes live in your account centre.",
+		"protectionCta": "Open account centre",
+		"protectionPassword": "Password and passkey changes",
+		"protectionTwoFactor": "Two-factor authentication setup",
+		"protectionRecovery": "Recovery codes for locked-out days",
+		"sessionsDescription": "What your account centre reports for this account.",
+		"sessionsLoading": "Checking your sessions…",
+		"sessionsCount": "{count, plural, =1 {Your account has 1 active session.} other {Your account has # active sessions.}}",
+		"sessionsUnavailableTitle": "Sessions did not load",
+		"sessionsUnavailableBody": "The session list did not come back, so no count is shown.",
+		"signOutHere": "Sign out of this device"
 	},
 	"securityAlerts": {
 		"title": "Security Alerts",
@@ -750,7 +816,9 @@
 			"streak": "Streak",
 			"digest": "Digest",
 			"mute": "Mute All"
-		}
+		},
+		"channelTitle": "Push and email",
+		"channelDescription": "Turn reminders on or off, and choose which ones you want."
 	},
 	"pushNotifications": "Push Notifications",
 	"pushNotificationsDescription": "Manage your push notification preferences",
@@ -857,7 +925,18 @@
 			"permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased.",
 			"verifyTitle": "Verify Your Identity",
 			"verifyDescription": "For your security, please verify your identity before deleting your account."
-		}
+		},
+		"centreTitle": "Your account centre",
+		"centreDescription": "Privacy and data controls are shared across every Sylphx app, so they are managed in one place.",
+		"centreCta": "Open privacy controls",
+		"centreVisibility": "Profile visibility: who can find you",
+		"centreData": "Download a copy of your data",
+		"centreDeletion": "Delete your account and its data",
+		"centreNote": "Opens in a new tab.",
+		"boardsTitle": "Your name on the boards",
+		"boardsDescription": "What other players see when they open a leaderboard.",
+		"boardsBody": "Your display name and score appear on a board only while your public visibility setting is on. Switch it off and you drop off the boards without losing any progress.",
+		"boardsCta": "See the boards"
 	},
 	"sessions": {
 		"title": "Active Sessions",
@@ -888,5 +967,7 @@
 		"unknownDevice": "Unknown device",
 		"unknownBrowser": "Unknown browser",
 		"unknownLocation": "Unknown location"
-	}
+	},
+	"eyebrow": "Your account",
+	"subtitle": "Your player identity, your play preferences, and the controls behind them."
 }
