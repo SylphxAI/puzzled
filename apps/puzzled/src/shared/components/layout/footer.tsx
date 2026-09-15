@@ -1,59 +1,120 @@
-'use client'
-
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
-import { APP_NAME, SUPPORT_EMAIL } from '@/lib/config/app'
+import { getTranslations } from 'next-intl/server'
+import { getAllGameMetadata } from '@/games/registry'
+import { SUPPORT_EMAIL } from '@/lib/config/app'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
+import { LanguageSwitcher } from './language-switcher'
+import { Logo } from './logo'
 
-export function Footer() {
-	const t = useTranslations('footer')
-	const pathname = usePathname()
-	// Use static year on server, update on client to avoid hydration mismatch
-	const [currentYear, setCurrentYear] = useState(2025)
+const FOOTER_GAME_LIMIT = 8
 
-	useEffect(() => {
-		setCurrentYear(new Date().getFullYear())
-	}, [])
+/**
+ * Site footer.
+ *
+ * Server rendered: it carries the internal link graph search engines follow
+ * (every game, the catalog, pricing, support, legal) and the language entry
+ * point, so it stays on every crawled page.
+ */
+export async function Footer() {
+	const t = await getTranslations('footer')
+	const tNav = await getTranslations('nav')
+	const tGame = await getTranslations()
+	const games = getAllGameMetadata().slice(0, FOOTER_GAME_LIMIT)
+	const currentYear = new Date().getFullYear()
 
-	// Hide footer on game pages - games are full-screen experiences
-	if (pathname?.includes('/games/')) {
-		return null
-	}
-
-	// Mobile: hidden (bottom nav is used)
-	// Desktop: visible
 	return (
-		<footer className="mt-auto hidden border-t bg-muted/30 md:block">
-			<div className="mx-auto max-w-4xl px-4 py-6">
-				<div className="flex flex-col items-center gap-4 text-center">
-					{/* Logo */}
-					<div className="text-sm font-semibold text-foreground">{APP_NAME}</div>
+		<footer className="mt-auto surface-ink">
+			<div className="page-shell-wide py-12 md:py-16">
+				<div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
+					<div>
+						<Logo size="md" tone="inverse" />
+						<p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{t('tagline')}</p>
+						<div className="mt-5">
+							<LanguageSwitcher variant="button" className="border-white/20 text-white/90" />
+						</div>
+					</div>
 
-					{/* Links */}
-					<nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-						<Link
-							href="/privacy"
-							className="text-muted-foreground transition-colors hover:text-foreground"
-						>
-							{t('privacy')}
-						</Link>
-						<Link
-							href="/terms"
-							className="text-muted-foreground transition-colors hover:text-foreground"
-						>
-							{t('terms')}
-						</Link>
-						<a
-							href={`mailto:${SUPPORT_EMAIL}`}
-							className="text-muted-foreground transition-colors hover:text-foreground"
-						>
-							{t('contact')}
-						</a>
+					<nav aria-label={t('playHeading')} className="text-sm">
+						<h2 className="font-display text-sm font-bold text-white">{t('playHeading')}</h2>
+						<ul className="mt-4 space-y-2.5">
+							{games.map((game) => (
+								<li key={game.slug}>
+									<Link
+										href={`/games/${game.slug}`}
+										className="text-white/70 transition-colors hover:text-white"
+									>
+										{tGame(`games.${slugToCamelCase(game.slug)}.name`)}
+									</Link>
+								</li>
+							))}
+							<li>
+								<Link
+									href="/games"
+									className="font-semibold text-white/90 transition-colors hover:text-white"
+								>
+									{t('allGames')} →
+								</Link>
+							</li>
+						</ul>
 					</nav>
 
-					{/* Copyright */}
-					<p className="text-xs text-muted-foreground">{t('copyright', { year: currentYear })}</p>
+					<nav aria-label={t('productHeading')} className="text-sm">
+						<h2 className="font-display text-sm font-bold text-white">{t('productHeading')}</h2>
+						<ul className="mt-4 space-y-2.5">
+							<li>
+								<Link href="/pricing" className="text-white/70 transition-colors hover:text-white">
+									{tNav('pricing')}
+								</Link>
+							</li>
+							<li>
+								<Link href="/stats" className="text-white/70 transition-colors hover:text-white">
+									{tNav('stats')}
+								</Link>
+							</li>
+							<li>
+								<Link
+									href="/leaderboard"
+									className="text-white/70 transition-colors hover:text-white"
+								>
+									{tNav('leaderboard')}
+								</Link>
+							</li>
+							<li>
+								<Link href="/support" className="text-white/70 transition-colors hover:text-white">
+									{tNav('support')}
+								</Link>
+							</li>
+						</ul>
+					</nav>
+
+					<nav aria-label={t('legalHeading')} className="text-sm">
+						<h2 className="font-display text-sm font-bold text-white">{t('legalHeading')}</h2>
+						<ul className="mt-4 space-y-2.5">
+							<li>
+								<Link href="/privacy" className="text-white/70 transition-colors hover:text-white">
+									{t('privacy')}
+								</Link>
+							</li>
+							<li>
+								<Link href="/terms" className="text-white/70 transition-colors hover:text-white">
+									{t('terms')}
+								</Link>
+							</li>
+							<li>
+								<a
+									href={`mailto:${SUPPORT_EMAIL}`}
+									className="text-white/70 transition-colors hover:text-white"
+								>
+									{t('contact')}
+								</a>
+							</li>
+						</ul>
+					</nav>
+				</div>
+
+				<div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs text-white/60 md:flex-row md:items-center md:justify-between">
+					<p>{t('copyright', { year: currentYear })}</p>
+					<p>{t('resetNote')}</p>
 				</div>
 			</div>
 		</footer>

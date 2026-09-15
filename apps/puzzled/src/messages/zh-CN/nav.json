@@ -5,5 +5,9 @@
 	"leaderboard": "排行榜",
 	"pricing": "订阅",
 	"profile": "个人资料",
-	"main": "主导航"
+	"main": "主导航",
+	"support": "支持",
+	"menuTitle": "菜单",
+	"openMenu": "打开导航菜单",
+	"closeMenu": "关闭导航菜单"
 }

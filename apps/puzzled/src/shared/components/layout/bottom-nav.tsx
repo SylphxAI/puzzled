@@ -1,29 +1,30 @@
 'use client'
 
-import { BarChart3, Home, Trophy, User } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+import { isActivePath, NAV_ITEMS } from './nav-items'
 
-const navItems = [
-	{ href: '/', icon: Home, labelKey: 'nav.home' },
-	{ href: '/stats', icon: BarChart3, labelKey: 'nav.stats' },
-	{ href: '/leaderboard', icon: Trophy, labelKey: 'nav.leaderboard' },
-	{ href: '/profile', icon: User, labelKey: 'nav.profile' },
-] as const
-
+/**
+ * Mobile bottom bar. Four destinations keep every target at least 44px wide
+ * on the narrowest supported viewport.
+ */
 export function BottomNav() {
 	const t = useTranslations()
 	const pathname = usePathname()
+	const navItems = NAV_ITEMS.filter((item) => item.showInBottomNav)
 
 	return (
 		<nav
-			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t bg-background/95 pb-safe backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:hidden"
+			className="fixed inset-x-0 bottom-0 z-bottom-nav border-t border-border/70 bg-background/85 pb-safe backdrop-blur-xl md:hidden"
 			aria-label={t('nav.main')}
 		>
-			<div className="mx-auto grid h-16 max-w-md grid-cols-4">
+			<div
+				className="mx-auto grid h-16 max-w-md"
+				style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+			>
 				{navItems.map(({ href, icon: Icon, labelKey }) => {
-					const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
+					const isActive = isActivePath(pathname, href)
 
 					return (
 						<Link
@@ -31,25 +32,24 @@ export function BottomNav() {
 							href={href}
 							aria-current={isActive ? 'page' : undefined}
 							className={cn(
-								'relative flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-all',
+								'flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors',
 								isActive
 									? 'text-primary'
-									: 'text-muted-foreground hover:text-foreground active:text-foreground active:scale-95',
+									: 'text-muted-foreground hover:text-foreground active:scale-95',
 							)}
 						>
-							<Icon
-								className={cn('h-5 w-5 transition-transform', isActive && 'text-primary scale-110')}
-								strokeWidth={isActive ? 2.5 : 2}
-								aria-hidden="true"
-							/>
-							<span>{t(labelKey)}</span>
-							{/* Active indicator dot */}
-							{isActive && (
-								<span
-									className="absolute -bottom-0.5 h-1 w-1 rounded-full bg-primary"
+							<span
+								className={cn(
+									'flex h-8 w-14 items-center justify-center rounded-full transition-colors',
+									isActive && 'bg-primary/12',
+								)}
+							>
+								<Icon
+									className={cn('h-5 w-5 transition-transform', isActive && 'scale-105')}
 									aria-hidden="true"
 								/>
-							)}
+							</span>
+							<span>{t(`nav.${labelKey}`)}</span>
 						</Link>
 					)
 				})}

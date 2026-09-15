@@ -9,6 +9,7 @@
  * server-only code (node:fs via puzzle generators). Icons are client-safe.
  */
 
+import { Puzzle } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { ArithmoIcon } from '@/games/arithmo/icon'
 import { BlockSlideIcon } from '@/games/block-slide/icon'
@@ -29,7 +30,6 @@ import { WordGuessIcon } from '@/games/word-guess/icon'
 import { WordHiveIcon } from '@/games/word-hive/icon'
 import { WordLadderIcon } from '@/games/word-ladder/icon'
 import { WordSearchIcon } from '@/games/word-search/icon'
-import { Icon } from './icon'
 
 type GameIconProps = {
 	className?: string
@@ -110,36 +110,7 @@ export function GameIcon({
 	}
 
 	// Fallback: generic puzzle icon
-	return <Icon icon="mdi:puzzle" className={className} width={size} height={size} {...props} />
-}
-
-// ==========================================
-// Branding Icons (used in auth pages)
-// ==========================================
-
-function _GamepadIcon({ className, size = 24, ...props }: GameIconProps) {
-	return (
-		<Icon icon="mdi:gamepad-variant" className={className} width={size} height={size} {...props} />
-	)
-}
-
-// Leaderboard Avatar Icons
-const AVATAR_ICONS = [
-	'mdi:trophy',
-	'mdi:medal',
-	'mdi:star',
-	'mdi:target',
-	'mdi:fire',
-	'mdi:crown',
-	'mdi:lightning-bolt',
-	'mdi:brain',
-	'mdi:book-open-variant',
-	'mdi:school',
-] as const
-
-function _AvatarIcon({ index, className, size = 24, ...props }: GameIconProps & { index: number }) {
-	const iconName = AVATAR_ICONS[index % AVATAR_ICONS.length]
-	return <Icon icon={iconName} className={className} width={size} height={size} {...props} />
+	return <Puzzle className={className} width={size} height={size} {...props} />
 }
 
 // Category Colors for Word Groups (text representation for share)

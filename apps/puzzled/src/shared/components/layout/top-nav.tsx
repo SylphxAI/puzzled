@@ -3,73 +3,77 @@
 import { Flame } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
-import { useSafeUser } from '@/lib/identity/react'
 import { cn } from '@/lib/utils'
+import { ThemeToggleCompact } from '@/shared/components/theme'
+import { LanguageSwitcher } from './language-switcher'
 import { Logo } from './logo'
+import { MobileNavSheet } from './mobile-nav-sheet'
+import { isActivePath, NAV_ITEMS } from './nav-items'
 import { UserMenu } from './user-menu'
-
-const navItems = [
-	{ href: '/', labelKey: 'nav.home' },
-	{ href: '/stats', labelKey: 'nav.stats' },
-	{ href: '/leaderboard', labelKey: 'nav.leaderboard' },
-] as const
 
 type TopNavProps = {
 	currentStreak?: number
 }
 
 /**
- * Desktop top navigation - hidden on mobile, shown on md+ screens
+ * The single shell header.
+ *
+ * It replaces the previous split model (desktop-only top nav plus a
+ * page-local mobile header) so every surface shares one navigation, one
+ * focus order, and one set of account controls.
  */
 export function TopNav({ currentStreak = 0 }: TopNavProps) {
 	const t = useTranslations()
 	const pathname = usePathname()
-	const { user } = useSafeUser()
-
-	// User ID available for guest data migration if needed
-	void user?.id
 
 	return (
-		<header className="sticky top-0 z-header hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:block">
-			<div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-				{/* Left: Logo + Nav Links */}
-				<div className="flex items-center gap-8">
-					<Logo size="md" />
+		<header className="sticky top-0 z-header border-b border-border/70 bg-background/80 backdrop-blur-xl">
+			<div className="page-shell-wide flex h-16 items-center gap-3">
+				<Logo size="md" />
 
-					<nav className="flex items-center gap-1" aria-label={t('nav.main')}>
-						{navItems.map(({ href, labelKey }) => {
-							const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
+				<nav className="ml-2 hidden items-center gap-0.5 md:flex" aria-label={t('nav.main')}>
+					{NAV_ITEMS.filter((item) => item.showInTopNav).map(({ href, labelKey }) => {
+						const isActive = isActivePath(pathname, href)
+						return (
+							<Link
+								key={href}
+								href={href}
+								aria-current={isActive ? 'page' : undefined}
+								className={cn(
+									'rounded-full px-3.5 py-2 text-sm font-semibold transition-colors',
+									isActive
+										? 'bg-primary/10 text-primary'
+										: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+								)}
+							>
+								{t(`nav.${labelKey}`)}
+							</Link>
+						)
+					})}
+				</nav>
 
-							return (
-								<Link
-									key={href}
-									href={href}
-									aria-current={isActive ? 'page' : undefined}
-									className={cn(
-										'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-										isActive
-											? 'bg-muted text-foreground'
-											: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-									)}
-								>
-									{t(labelKey)}
-								</Link>
-							)
-						})}
-					</nav>
-				</div>
-
-				{/* Right: Streak + User Menu */}
-				<div className="flex items-center gap-4">
-					{/* Streak indicator */}
+				<div className="ml-auto flex items-center gap-1.5">
 					{currentStreak > 0 && (
-						<div className="flex items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 py-1.5">
-							<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
-							<span className="text-sm font-semibold text-stat-streak">{currentStreak}</span>
-						</div>
+						<Link
+							href="/stats"
+							className="flex h-9 items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 text-sm font-semibold text-stat-streak transition-colors hover:bg-stat-streak/15"
+							aria-label={t('stats.streakLabel', { days: currentStreak })}
+						>
+							<Flame className="h-4 w-4" aria-hidden="true" />
+							<span className="tnum">{currentStreak}</span>
+						</Link>
 					)}
 
-					<UserMenu size="md" />
+					<div className="hidden items-center gap-1 md:flex">
+						<ThemeToggleCompact />
+						<LanguageSwitcher />
+					</div>
+
+					<div className="hidden md:block">
+						<UserMenu size="md" />
+					</div>
+
+					<MobileNavSheet currentStreak={currentStreak} />
 				</div>
 			</div>
 		</header>

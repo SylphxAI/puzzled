@@ -1,6 +1,6 @@
 import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -17,15 +17,28 @@ import { ThemeProvider } from '@/shared/components/theme'
 import '../globals.css'
 
 const inter = Inter({
-	variable: '--font-sans',
+	variable: '--font-sans-family',
 	subsets: ['latin'],
 	display: 'swap',
 })
 
-const jetbrainsMono = JetBrains_Mono({
-	variable: '--font-mono',
+/**
+ * Display face for headings, the wordmark and hero copy.
+ * Friendlier geometry than the body face without hurting legibility.
+ */
+const plusJakarta = Plus_Jakarta_Sans({
+	variable: '--font-display-family',
 	subsets: ['latin'],
 	display: 'swap',
+	weight: ['600', '700', '800'],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+	variable: '--font-mono-family',
+	subsets: ['latin'],
+	display: 'swap',
+	// Only game rule snippets use the mono face; never block first paint for it.
+	preload: false,
 })
 
 const SITE_DESCRIPTION =
@@ -57,42 +70,11 @@ export async function generateMetadata(): Promise<Metadata> {
 		creator: 'Puzzled',
 		publisher: 'Puzzled',
 		metadataBase: new URL(baseUrl),
-		alternates: {
-			canonical: baseUrl,
-			languages: {
-				// en-US is default (no prefix in URL)
-				'x-default': baseUrl,
-				'en-US': baseUrl,
-				'en-GB': `${baseUrl}/en-GB`,
-				// Chinese regional variants
-				'zh-HK': `${baseUrl}/zh-HK`,
-				'zh-TW': `${baseUrl}/zh-TW`,
-				'zh-CN': `${baseUrl}/zh-CN`,
-			},
-		},
-		openGraph: {
-			type: 'website',
-			locale: 'en_US',
-			alternateLocale: ['en_GB', 'zh_HK', 'zh_TW', 'zh_CN'],
-			url: baseUrl,
-			siteName: 'Puzzled',
-			title: 'Puzzled',
-			description: 'Daily puzzles to challenge your mind',
-			images: [
-				{
-					url: '/og-image.png',
-					width: 1200,
-					height: 630,
-					alt: 'Puzzled',
-				},
-			],
-		},
-		twitter: {
-			card: 'summary_large_image',
-			title: 'Puzzled',
-			description: 'Daily puzzles to challenge your mind',
-			images: ['/og-image.png'],
-		},
+		// Canonical, hreflang and social cards are per page: Next replaces these
+		// objects wholesale, so a route that only sets a title would otherwise
+		// drop the layout's hreflang cluster. Every page calls
+		// `buildPageMetadata` instead.
+		applicationName: 'Puzzled',
 		manifest: '/manifest.webmanifest',
 		appleWebApp: {
 			capable: true,
@@ -138,8 +120,8 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 		'@type': 'Organization',
 		name: 'Puzzled',
 		url: baseUrl,
-		logo: `${baseUrl}/og-image.png`,
-		sameAs: [],
+		logo: `${baseUrl}/icons/icon-512.png`,
+		description: SITE_DESCRIPTION,
 	}
 
 	const websiteSchema = {
@@ -198,19 +180,24 @@ export default async function LocaleLayout({ children, params }: Props) {
 	])
 
 	return (
-		<html lang={locale} suppressHydrationWarning>
+		<html
+			lang={locale}
+			suppressHydrationWarning
+			className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable}`}
+		>
 			<head>
 				{/* Color scheme for proper dark mode handling */}
 				<meta name="color-scheme" content="light dark" />
 				{/* Favicon icons */}
 				<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 				<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
+				<link rel="icon" href="/favicon.ico" sizes="48x48" />
 				<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-				{/* Preconnect to critical third-party origins for performance */}
-				<link rel="preconnect" href="https://fonts.googleapis.com" />
-				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+				{/*
+				 * Fonts are self-hosted by next/font, so no Google Fonts preconnect
+				 * is needed. Stripe is only contacted when checkout opens.
+				 */}
 				<link rel="dns-prefetch" href="https://js.stripe.com" />
-				<link rel="dns-prefetch" href="https://api.iconify.design" />
 				{/* FOUC prevention: Apply theme class before React hydration */}
 				<script
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: Theme script with trusted static code
@@ -238,7 +225,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				/>
 				<JsonLd baseUrl={baseUrl} />
 			</head>
-			<body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+			<body className="antialiased">
 				<ThemeProvider>
 					<PlatformProvider appId={config.app.id} config={config}>
 						<GlobalErrorHandler>

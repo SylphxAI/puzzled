@@ -5,5 +5,9 @@
 	"leaderboard": "排行榜",
 	"pricing": "訂閱",
 	"profile": "個人檔案",
-	"main": "主導覽"
+	"main": "主導覽",
+	"support": "支援",
+	"menuTitle": "選單",
+	"openMenu": "開啟導覽選單",
+	"closeMenu": "關閉導覽選單"
 }
