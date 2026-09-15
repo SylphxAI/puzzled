@@ -61,6 +61,30 @@ async function TopNavChrome() {
 	return <LayoutTopNav currentStreak={currentStreak} />
 }
 
+/**
+ * Static header placeholder.
+ *
+ * Rendering the interactive `TopNav` as the Suspense fallback would mount it
+ * twice (double effects, and the nav re-renders when the streak chip lands).
+ * This reserves the exact geometry instead — sticky bar, one 64px row, control
+ * slots — so the real header replaces it without moving the page.
+ */
+function TopNavSkeleton() {
+	return (
+		<header className="sticky top-0 z-header border-b border-border/70 bg-background/80 backdrop-blur-xl">
+			<div className="page-shell-wide flex h-16 items-center gap-3">
+				<div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
+				<div className="ml-auto flex items-center gap-1.5">
+					<div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
+					<div className="h-9 w-9 animate-pulse rounded-full bg-muted" />
+					<div className="hidden h-9 w-24 animate-pulse rounded-full bg-muted sm:block" />
+					<div className="h-9 w-9 animate-pulse rounded-full bg-muted md:hidden" />
+				</div>
+			</div>
+		</header>
+	)
+}
+
 async function OverlaysChrome() {
 	const { maxStreak } = await readChromeIdentity()
 	return <LayoutOverlays maxStreak={maxStreak} />
@@ -73,7 +97,7 @@ export default function MainLayout({ children }: Props) {
 			<SkipNavigation />
 
 			{/* Desktop: Top navigation */}
-			<Suspense fallback={<LayoutTopNav currentStreak={null} />}>
+			<Suspense fallback={<TopNavSkeleton />}>
 				<TopNavChrome />
 			</Suspense>
 

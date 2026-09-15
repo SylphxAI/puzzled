@@ -252,10 +252,20 @@ const nextConfig: NextConfig = {
 		serverActions: {
 			bodySizeLimit: '2mb',
 		},
-		// Load only the UI-kit modules a route actually imports. Without this the
-		// `@sylphx/ui` barrel (`packages/ui/src/index.ts`, 36 `export *`) pulls the
-		// whole component set — sonner toasts, Base UI primitives and motion — into
-		// the shared client chunk of every route.
+		// UI-kit barrel: load only the modules a route imports.
+		//
+		// Measured on Turbopack 16.2.11: this flag ALONE produced byte-identical
+		// chunks for the workspace `@sylphx/ui` source package — it resolves subpaths
+		// through the package `exports`, and that package ships `src/*.tsx`, not a
+		// `dist` index. What actually removed the barrel closure from every route was
+		// `"sideEffects": false` in `packages/ui/package.json`, which lets the bundler
+		// drop the 36 `export *` re-exports a route never imports. The flag stays
+		// because it is the documented upstream mechanism and becomes the effective
+		// lever as soon as the package is consumed from `dist`.
+		//
+		// Regression guard: the first-load byte inventory in this PR (curl every
+		// `<script src>`, sum gzip bytes, fail on a budget). Manual today; the CI step
+		// that would make it automatic is proposed in the PR body.
 		optimizePackageImports: ['@sylphx/ui', '@base-ui/react'],
 	},
 }

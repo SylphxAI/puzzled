@@ -74,3 +74,30 @@ export async function TodayLineup({ games, showUnlock }: TodayLineupProps) {
 		</section>
 	)
 }
+
+/**
+ * Reserved space for the lineup while personal completion is unread.
+ *
+ * No copy, no status chips, no unlock call to action: every tile here would be
+ * a claim about this viewer, and the shell has not read any of them yet. The
+ * card geometry matches `GameTile` so the real lineup lands without moving the
+ * page.
+ */
+export function TodayLineupSkeleton() {
+	return (
+		<section className="section-block" aria-busy="true">
+			<div className="page-shell-wide">
+				<div className="h-8 w-56 animate-pulse rounded-lg bg-muted" />
+				<div className="mt-3 h-4 w-72 animate-pulse rounded bg-muted" />
+				<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+					{Array.from({ length: 6 }, (_, index) => (
+						<li
+							key={index}
+							className="h-48 animate-pulse rounded-2xl border border-border bg-card"
+						/>
+					))}
+				</ul>
+			</div>
+		</section>
+	)
+}

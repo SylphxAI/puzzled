@@ -8,6 +8,11 @@
  * `/api/observability/analytics` forwards properties as `{key, string_value}`
  * pairs to the observability authority.
  *
+ * The single-event shape also keeps the pre-batching keys (`metric_name`,
+ * `value`, `rating`, `delta`, `id`, `navigation_type`) for one primary metric —
+ * LCP when present, otherwise the last one recorded — so a consumer that reads
+ * those keys keeps seeing a value while the per-metric keys are adopted.
+ *
  * Consent is checked when a metric is recorded *and* again when the batch is
  * delivered, so a revocation drops anything still buffered and nothing is
  * reported before an explicit opt-in.
@@ -48,6 +53,16 @@ export function buildWebVitalsEvent(records: readonly WebVitalRecord[]): WebVita
 	const navigationType = records.find((record) => record.navigationType)?.navigationType
 	if (navigationType) {
 		properties.navigation_type = navigationType
+	}
+
+	// Pre-batching shape, kept for compatibility with existing consumers.
+	const primary = records.find((record) => record.name === 'LCP') ?? records[records.length - 1]
+	if (primary) {
+		properties.metric_name = primary.name
+		properties.value = round(primary.value)
+		properties.rating = primary.rating
+		properties.delta = round(primary.delta)
+		properties.id = primary.id
 	}
 	return { event: 'web_vital', properties }
 }

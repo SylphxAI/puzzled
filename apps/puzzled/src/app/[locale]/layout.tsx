@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
+import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { ApiProvider } from '@/lib/api/provider'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
@@ -232,6 +233,12 @@ export default async function LocaleLayout({ children, params }: Props) {
 						<ApiProvider>
 							<NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
 						</ApiProvider>
+						{/*
+						 * Attached at first paint, not on idle: Event Timing only reports the
+						 * interactions it observed, and INP would be biased by a late mount.
+						 * Delivery is still batched and only leaves on page hide.
+						 */}
+						<WebVitalsReporter />
 						{/* Off the first paint: hosted toasts and the observability client */}
 						<DeferredToaster />
 						<DeferredMonitoring />

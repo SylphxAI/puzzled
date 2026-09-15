@@ -10,7 +10,6 @@
  */
 
 import { Toaster } from '@sylphx/ui'
-import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { AchievementChecker, AchievementToastProvider } from '@/features/gamification'
 import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
 import { ConsentBanner } from '@/shared/components/layout/consent-banner'
@@ -25,9 +24,7 @@ export function DeferredMonitoring() {
 	// children only installs their listeners.
 	return (
 		<GlobalErrorHandler>
-			<SessionReplayProvider>
-				<WebVitalsReporter />
-			</SessionReplayProvider>
+			<SessionReplayProvider>{null}</SessionReplayProvider>
 		</GlobalErrorHandler>
 	)
 }
