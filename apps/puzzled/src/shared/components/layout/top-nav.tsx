@@ -40,6 +40,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 								href={href}
 								aria-current={isActive ? 'page' : undefined}
 								className={cn(
+									// min-h-11 keeps the primary nav at the 44px company target.
 									'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-semibold transition-colors',
 									isActive
 										? 'bg-primary/10 text-primary'

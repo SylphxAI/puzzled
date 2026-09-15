@@ -182,7 +182,7 @@ test.describe('Company target size (44px effective hit area)', () => {
 })
 
 test.describe('Reduced motion', () => {
-	test.use({ viewport: DESKTOP, reducedMotion: 'reduce' })
+	test.use({ viewport: DESKTOP, colorScheme: 'light', contextOptions: { reducedMotion: 'reduce' } })
 
 	test('stops transform animation on shell surfaces', async ({ page }) => {
 		await page.goto('/')
@@ -193,7 +193,7 @@ test.describe('Reduced motion', () => {
 			document
 				.getAnimations()
 				.filter((animation) => {
-					const effect = animation.effect
+					const effect = animation.effect as KeyframeEffect | null
 					if (!effect || typeof effect.getKeyframes !== 'function') return false
 					return effect.getKeyframes().some((frame) => 'transform' in frame)
 				})
@@ -217,7 +217,11 @@ test.describe('Reduced motion', () => {
 })
 
 test.describe('Motion for users without the preference', () => {
-	test.use({ viewport: DESKTOP, reducedMotion: 'no-preference' })
+	test.use({
+		viewport: DESKTOP,
+		colorScheme: 'light',
+		contextOptions: { reducedMotion: 'no-preference' },
+	})
 
 	test('keeps the language menu popup animation', async ({ page }) => {
 		await page.goto('/')

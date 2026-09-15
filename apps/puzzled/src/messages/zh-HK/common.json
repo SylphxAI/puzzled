@@ -45,6 +45,10 @@
 	"collapseSection": "Collapse section",
 	"cellRow": "第 {index} 行",
 	"cellColumn": "第 {index} 列",
+	"sound": "音效",
+	"soundOn": "音效開（按一下靜音）",
+	"soundOff": "音效關（按一下開啟）",
+	"soundToggleLoading": "音效開關（載入中）",
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

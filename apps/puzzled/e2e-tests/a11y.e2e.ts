@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, type TestInfo, test } from '@playwright/test'
+import { settle } from './a11y-support'
 
 /**
  * WCAG 2.2 A/AA conformance gate for the Puzzled web app.
@@ -23,15 +24,28 @@ import { expect, type Page, type TestInfo, test } from '@playwright/test'
 
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa']
 
+/**
+ * A finding this branch routes to the workstream owning the page file.
+ *
+ * The allowance is node-scoped on purpose: `selector` must still match, so a new
+ * violation inside the shared shell — or one that moved to another element —
+ * fails even when its rule id is listed here.
+ */
+type OwnedFinding = {
+	rule: string
+	/** Substring at least one reported node target must contain. */
+	selector: string
+	/** File (and workstream) that must close it. */
+	owner: string
+}
+
 type PageCase = {
 	name: string
 	path: string
 	/** Rendered by the shared shell (top nav, bottom nav, footer). */
 	shell: boolean
-	/** axe rule ids a parallel workstream still owns on this route. */
-	owned?: readonly string[]
-	/** File that must close the owned rules. */
-	owner?: string
+	/** Findings a parallel workstream still owns on this route. */
+	owned?: readonly OwnedFinding[]
 }
 
 const PAGES: readonly PageCase[] = [
@@ -41,31 +55,74 @@ const PAGES: readonly PageCase[] = [
 		name: 'sudoku',
 		path: '/games/sudoku',
 		shell: true,
-		owned: ['color-contrast'],
-		owner:
-			'difficulty badge tints in app/[locale]/(main)/games/[slug]/difficulty-selection-view.tsx and features/daily/components/difficulty-selector.tsx',
+		owned: [
+			{
+				rule: 'color-contrast',
+				selector: 'difficulty',
+				owner:
+					'difficulty badge tints + the "Status unknown" link name: app/[locale]/(main)/games/[slug]/difficulty-selection-view.tsx, features/daily/components/difficulty-selector.tsx (PR #147)',
+			},
+		],
 	},
 	{ name: 'word-guess', path: '/games/word-guess', shell: true },
 	{
 		name: 'pricing',
 		path: '/pricing',
 		shell: true,
-		owned: ['color-contrast', 'heading-order'],
-		owner: 'app/[locale]/(main)/pricing/pricing-client.tsx',
+		owned: [
+			{
+				rule: 'color-contrast',
+				selector: 'pricing-client',
+				owner:
+					'plan ribbon + badge tints: app/[locale]/(main)/pricing/pricing-client.tsx (PR #146)',
+			},
+			{
+				rule: 'heading-order',
+				selector: 'h3',
+				owner: 'plan card titles: app/[locale]/(main)/pricing/pricing-client.tsx (PR #146)',
+			},
+		],
 	},
 	{
 		name: 'login',
 		path: '/login',
 		shell: false,
-		owned: ['button-name', 'landmark-one-main', 'region'],
-		owner: 'app/[locale]/(auth)/login/login-form.tsx, app/[locale]/(auth)/layout.tsx',
+		owned: [
+			{
+				rule: 'button-name',
+				selector: 'button',
+				owner: 'app/[locale]/(auth)/_components/auth-fields.tsx (fixed in PR #145)',
+			},
+			{
+				rule: 'landmark-one-main',
+				selector: 'html',
+				owner: 'app/[locale]/(auth)/_components/auth-shell.tsx (fixed in PR #145)',
+			},
+			{ rule: 'region', selector: 'main', owner: 'auth shell regions (fixed in PR #145)' },
+		],
 	},
 	{
 		name: 'signup',
 		path: '/signup',
 		shell: false,
-		owned: ['button-name', 'landmark-one-main', 'link-in-text-block', 'region'],
-		owner: 'app/[locale]/(auth)/signup/signup-form.tsx',
+		owned: [
+			{
+				rule: 'button-name',
+				selector: 'button',
+				owner: 'app/[locale]/(auth)/_components/auth-fields.tsx (fixed in PR #145)',
+			},
+			{
+				rule: 'landmark-one-main',
+				selector: 'html',
+				owner: 'app/[locale]/(auth)/_components/auth-shell.tsx (fixed in PR #145)',
+			},
+			{
+				rule: 'link-in-text-block',
+				selector: 'signup-form',
+				owner: 'app/[locale]/(auth)/signup/signup-form.tsx (PR #145)',
+			},
+			{ rule: 'region', selector: 'main', owner: 'auth shell regions (fixed in PR #145)' },
+		],
 	},
 	{ name: 'stats', path: '/stats', shell: true },
 	{ name: 'leaderboard', path: '/leaderboard', shell: true },
@@ -73,29 +130,71 @@ const PAGES: readonly PageCase[] = [
 		name: 'support',
 		path: '/support',
 		shell: true,
-		owned: ['heading-order', 'landmark-no-duplicate-contentinfo', 'landmark-unique'],
-		owner: 'app/[locale]/(main)/support/page.tsx',
+		owned: [
+			{
+				rule: 'heading-order',
+				selector: 'h2',
+				owner: 'FAQ headings: app/[locale]/(main)/support/page.tsx (PR #146)',
+			},
+			{
+				rule: 'landmark-no-duplicate-contentinfo',
+				selector: 'footer',
+				owner: 'page-local footer: app/[locale]/(main)/support/page.tsx (PR #146)',
+			},
+			{
+				rule: 'landmark-unique',
+				selector: 'footer',
+				owner: 'page-local footer: app/[locale]/(main)/support/page.tsx (PR #146)',
+			},
+		],
 	},
 	{
 		name: 'settings',
 		path: '/settings',
 		shell: false,
-		owned: ['button-name', 'landmark-one-main', 'region'],
-		owner: 'app/[locale]/(main)/settings/**',
+		owned: [
+			{
+				rule: 'button-name',
+				selector: 'button',
+				owner: 'app/[locale]/(auth)/_components/auth-fields.tsx (fixed in PR #145)',
+			},
+			{ rule: 'landmark-one-main', selector: 'html', owner: 'console shell (fixed in PR #145)' },
+			{ rule: 'region', selector: 'main', owner: 'console shell regions (fixed in PR #145)' },
+		],
 	},
 	{
 		name: 'privacy',
 		path: '/privacy',
 		shell: true,
-		owned: ['landmark-one-main', 'region'],
-		owner: 'app/[locale]/(main)/privacy/page.tsx',
+		owned: [
+			{
+				rule: 'landmark-one-main',
+				selector: 'html',
+				owner: 'app/[locale]/(main)/privacy/page.tsx (PR #146)',
+			},
+			{
+				rule: 'region',
+				selector: 'main-content',
+				owner: 'app/[locale]/(main)/privacy/page.tsx (PR #146)',
+			},
+		],
 	},
 	{
 		name: 'terms',
 		path: '/terms',
 		shell: true,
-		owned: ['landmark-one-main', 'region'],
-		owner: 'app/[locale]/(main)/terms/page.tsx',
+		owned: [
+			{
+				rule: 'landmark-one-main',
+				selector: 'html',
+				owner: 'app/[locale]/(main)/terms/page.tsx (PR #146)',
+			},
+			{
+				rule: 'region',
+				selector: 'main-content',
+				owner: 'app/[locale]/(main)/terms/page.tsx (PR #146)',
+			},
+		],
 	},
 	{ name: 'challenge', path: '/challenge', shell: true },
 ]
@@ -138,7 +237,22 @@ for (const mode of MODES) {
 
 				const results = await auditPage(page, testInfo)
 				const owned = pageCase.owned ?? []
-				const unexpected = results.violations.filter((violation) => !owned.includes(violation.id))
+
+				// Allow only the exact nodes a routed finding explains: the rule id
+				// must match AND the node target must still look like the element the
+				// routing table names, so a new violation inside the shared shell —
+				// or one that moved to another element — still fails.
+				const unexpected = results.violations
+					.map((violation) => {
+						const allowances = owned.filter((finding) => finding.rule === violation.id)
+						if (allowances.length === 0) return violation
+						const nodes = violation.nodes.filter(
+							(node) =>
+								!allowances.some((finding) => node.target.join(' ').includes(finding.selector)),
+						)
+						return nodes.length === 0 ? null : { ...violation, nodes }
+					})
+					.filter((violation) => violation !== null)
 
 				expect(
 					unexpected,
@@ -152,25 +266,28 @@ for (const mode of MODES) {
 }
 
 test.describe('Shared shell invariants', () => {
-	test.use({ viewport: MODES[0].viewport, colorScheme: 'light' })
+	// Both widths: the page-local mobile bar is `display:none` at 1440px, so a
+	// duplicate banner can only show up at 390px.
+	for (const mode of MODES) {
+		test(`${mode.name}: at most one banner and one main landmark per route`, async ({ page }) => {
+			await page.setViewportSize(mode.viewport)
 
-	for (const pageCase of PAGES) {
-		test(`${pageCase.name} has at most one banner and one main landmark`, async ({ page }) => {
-			await page.goto(pageCase.path)
-			await settle(page)
+			for (const pageCase of PAGES) {
+				await page.goto(pageCase.path)
+				await settle(page)
 
-			const counts = await page.evaluate(() => ({
-				banners: document.querySelectorAll('header, [role="banner"]').length,
-				mains: document.querySelectorAll('main, [role="main"]').length,
-			}))
+				const counts = await page.evaluate(() => ({
+					banners: document.querySelectorAll('header, [role="banner"]').length,
+					mains: document.querySelectorAll('main, [role="main"]').length,
+				}))
 
-			expect(counts.banners, `${pageCase.name}: more than one banner landmark`).toBeLessThanOrEqual(
-				1,
-			)
-			expect(counts.mains, `${pageCase.name}: more than one main landmark`).toBeLessThanOrEqual(1)
+				const where = `${pageCase.name} (${mode.name})`
+				expect(counts.banners, `${where}: more than one banner landmark`).toBeLessThanOrEqual(1)
+				expect(counts.mains, `${where}: more than one main landmark`).toBeLessThanOrEqual(1)
 
-			if (pageCase.shell) {
-				expect(counts.banners, `${pageCase.name}: shell routes render exactly one banner`).toBe(1)
+				if (pageCase.shell) {
+					expect(counts.banners, `${where}: shell routes render exactly one banner`).toBe(1)
+				}
 			}
 		})
 	}

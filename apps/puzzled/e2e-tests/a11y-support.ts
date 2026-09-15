@@ -16,7 +16,7 @@ export async function settle(page: Page) {
 	await page.waitForLoadState('networkidle')
 }
 
-export type TabStop = {
+export type Stop = {
 	tag: string
 	name: string
 	width: number
@@ -24,7 +24,7 @@ export type TabStop = {
 	inHeader: boolean
 }
 
-export async function readActiveElement(page: Page): Promise<TabStop> {
+export async function readActiveElement(page: Page): Promise<Stop> {
 	return page.evaluate(() => {
 		const element = document.activeElement
 		if (!element) return { tag: 'none', name: '', width: 0, height: 0, inHeader: false }

@@ -75,10 +75,12 @@ test.describe('Game catalog responsiveness', () => {
 					false,
 				)
 
+				// No catch-all: a measurement failure must fail the test rather than
+				// looking like "no offenders".
 				const offenders = await targetOffenders(
 					page,
 					'main button, main a[href], main [role="button"]',
-				).catch(() => [])
+				)
 				expect(
 					offenders,
 					`${slug} at ${viewport.name}: ${offenders

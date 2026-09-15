@@ -1,4 +1,22 @@
+import { existsSync } from 'node:fs'
 import { defineConfig, devices } from '@playwright/test'
+
+/**
+ * Where the Chromium binary lives.
+ *
+ * CI and most dev machines use Playwright's bundled browser (leave this
+ * unset). Hosts that ship a system Chromium — and environments that stage
+ * browsers outside the Playwright cache — can point at it explicitly instead of
+ * downloading a second copy.
+ */
+function chromiumExecutable(): string | undefined {
+	const override = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?.trim()
+	if (override) return override
+	if (existsSync('/usr/bin/chromium')) return '/usr/bin/chromium'
+	return undefined
+}
+
+const executablePath = chromiumExecutable()
 
 /**
  * Playwright configuration for E2E and accessibility testing
@@ -32,6 +50,7 @@ export default defineConfig({
 		trace: 'on-first-retry',
 		// Screenshot on failure
 		screenshot: 'only-on-failure',
+		...(executablePath ? { launchOptions: { executablePath } } : {}),
 	},
 
 	// Configure projects for major browsers
