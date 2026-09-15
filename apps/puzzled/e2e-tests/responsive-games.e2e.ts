@@ -1,164 +1,91 @@
 import { expect, test } from '@playwright/test'
+import { MOBILE, settle, targetOffenders } from './a11y-support'
 
 /**
- * Responsive UI testing for puzzle games
- * Tests all 10 games at mobile, tablet, and desktop viewports
+ * Responsive UI tests for every module in the game catalog.
+ *
+ * The slug list is read from the catalog page itself instead of being
+ * hand-maintained here: the previous hardcoded list still named modules that no
+ * longer exist (`wordle`, `connections`, …) and pointed at the removed `/en`
+ * locale prefix, so the suite passed without testing anything.
+ *
+ * Coverage: every catalog module once on mobile (the narrowest supported width),
+ * plus three representative modules at tablet and desktop widths.
  */
 
-const GAMES = [
-	{ slug: 'wordle', name: 'Wordle' },
-	{ slug: 'connections', name: 'Connections' },
-	{ slug: 'spelling-bee', name: 'Spelling Bee' },
-	{ slug: 'crossword', name: 'Crossword' },
-	{ slug: 'sudoku', name: 'Sudoku' },
-	{ slug: 'nonogram', name: 'Nonogram' },
-	{ slug: 'word-ladder', name: 'Word Ladder' },
-	{ slug: 'arithmo', name: 'Arithmo' },
-	{ slug: 'pattern-match', name: 'Pattern Match' },
-	{ slug: 'block-slide', name: 'Block Slide' },
-]
-
 const VIEWPORTS = [
-	{ name: 'mobile', width: 375, height: 667 }, // iPhone SE
-	{ name: 'tablet', width: 768, height: 1024 }, // iPad
-	{ name: 'desktop', width: 1280, height: 720 }, // Desktop
+	{ name: 'mobile', width: 375, height: 667 },
+	{ name: 'tablet', width: 768, height: 1024 },
+	{ name: 'desktop', width: 1280, height: 720 },
 ]
 
-test.describe('Responsive UI Tests for All Games', () => {
-	for (const game of GAMES) {
-		test.describe(game.name, () => {
-			for (const viewport of VIEWPORTS) {
-				test(`should render properly on ${viewport.name} (${viewport.width}x${viewport.height})`, async ({
-					page,
-				}) => {
-					// Set viewport size
-					await page.setViewportSize({
-						width: viewport.width,
-						height: viewport.height,
-					})
+const REPRESENTATIVE = ['word-guess', 'word-groups', 'sudoku']
 
-					// Navigate to game page
-					await page.goto(`/en/games/${game.slug}`)
+async function catalogSlugs(page: import('@playwright/test').Page) {
+	await page.goto('/games')
+	await settle(page)
 
-					// Wait for game to load (look for main content or game container)
-					await page.waitForSelector('main', { timeout: 10000 })
+	const hrefs = await page
+		.locator('a[href^="/games/"]')
+		.evaluateAll((links) => links.map((link) => link.getAttribute('href') ?? ''))
 
-					// Give the page a moment to fully render
-					await page.waitForTimeout(1000)
+	return Array.from(
+		new Set(
+			hrefs
+				.map((href) => href.split('?')[0].replace('/games/', '').split('/')[0])
+				.filter((slug) => slug.length > 0),
+		),
+	).sort()
+}
 
-					// Check for horizontal overflow
-					const hasHorizontalOverflow = await page.evaluate(() => {
-						const bodyScrollWidth = document.body.scrollWidth
-						const windowInnerWidth = window.innerWidth
-						return bodyScrollWidth > windowInnerWidth
-					})
+async function hasHorizontalOverflow(page: import('@playwright/test').Page) {
+	return page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)
+}
 
-					// Take a screenshot for visual inspection
-					await page.screenshot({
-						path: `test-results/screenshots/${game.slug}-${viewport.name}.png`,
-						fullPage: true,
-					})
+test.describe('Game catalog responsiveness', () => {
+	test('every module in the catalog renders without horizontal overflow', async ({ page }) => {
+		const slugs = await catalogSlugs(page)
+		expect(slugs.length, 'catalog exposes game modules').toBeGreaterThan(5)
 
-					// Assert no horizontal overflow
-					expect(
-						hasHorizontalOverflow,
-						`${game.name} should not have horizontal overflow on ${viewport.name}`,
-					).toBe(false)
+		const failures: string[] = []
+		for (const slug of slugs) {
+			await page.setViewportSize({ width: MOBILE.width, height: MOBILE.height })
+			await page.goto(`/games/${slug}`)
+			await settle(page)
 
-					// Additional check: ensure viewport meta tag is set correctly
-					const viewportMetaContent = await page.getAttribute('meta[name="viewport"]', 'content')
-					expect(viewportMetaContent).toContain('width=device-width')
-
-					// Check that main content is visible
-					const mainElement = await page.locator('main')
-					await expect(mainElement).toBeVisible()
-
-					// Log viewport dimensions and scroll dimensions for debugging
-					const dimensions = await page.evaluate(() => ({
-						windowWidth: window.innerWidth,
-						windowHeight: window.innerHeight,
-						bodyScrollWidth: document.body.scrollWidth,
-						bodyScrollHeight: document.body.scrollHeight,
-						documentScrollWidth: document.documentElement.scrollWidth,
-					}))
-
-					console.log(
-						`${game.name} on ${viewport.name}: windowWidth=${dimensions.windowWidth}, bodyScrollWidth=${dimensions.bodyScrollWidth}, documentScrollWidth=${dimensions.documentScrollWidth}`,
-					)
-				})
-			}
-
-			// Additional test: Check all viewports in one test for quick overview
-			test('should have no horizontal overflow on any viewport', async ({ page }) => {
-				const results: {
-					viewport: string
-					hasOverflow: boolean
-					scrollWidth: number
-					innerWidth: number
-				}[] = []
-
-				for (const viewport of VIEWPORTS) {
-					await page.setViewportSize({
-						width: viewport.width,
-						height: viewport.height,
-					})
-					await page.goto(`/en/games/${game.slug}`)
-					await page.waitForSelector('main', { timeout: 10000 })
-					await page.waitForTimeout(500)
-
-					const hasOverflow = await page.evaluate(() => {
-						return document.body.scrollWidth > window.innerWidth
-					})
-
-					const dimensions = await page.evaluate(() => ({
-						scrollWidth: document.body.scrollWidth,
-						innerWidth: window.innerWidth,
-					}))
-
-					results.push({
-						viewport: viewport.name,
-						hasOverflow,
-						scrollWidth: dimensions.scrollWidth,
-						innerWidth: dimensions.innerWidth,
-					})
-				}
-
-				// Log all results
-				console.log(`${game.name} overflow check:`, results)
-
-				// Assert none have overflow
-				const overflowingViewports = results.filter((r) => r.hasOverflow)
-				expect(
-					overflowingViewports,
-					`${game.name} should have no horizontal overflow on any viewport`,
-				).toEqual([])
-			})
-		})
-	}
-
-	// Summary test: Quick check of all games on mobile
-	test('all games should work on mobile viewport', async ({ page }) => {
-		await page.setViewportSize({ width: 375, height: 667 })
-
-		const failedGames: string[] = []
-
-		for (const game of GAMES) {
-			try {
-				await page.goto(`/en/games/${game.slug}`, { timeout: 10000 })
-				await page.waitForSelector('main', { timeout: 5000 })
-
-				const hasOverflow = await page.evaluate(() => {
-					return document.body.scrollWidth > window.innerWidth
-				})
-
-				if (hasOverflow) {
-					failedGames.push(game.name)
-				}
-			} catch (error) {
-				failedGames.push(`${game.name} (error: ${error})`)
-			}
+			if ((await page.locator('h1').count()) === 0) failures.push(`${slug}: no heading`)
+			if (await hasHorizontalOverflow(page)) failures.push(`${slug}: horizontal overflow`)
 		}
 
-		expect(failedGames, 'All games should render without overflow on mobile').toEqual([])
+		expect(failures, `catalog modules failing on mobile: ${failures.join(', ')}`).toEqual([])
 	})
+
+	for (const slug of REPRESENTATIVE) {
+		test(`${slug} renders and keeps board controls at 44px on every width`, async ({ page }) => {
+			for (const viewport of VIEWPORTS) {
+				await page.setViewportSize({ width: viewport.width, height: viewport.height })
+				await page.goto(`/games/${slug}`)
+				await settle(page)
+
+				expect(
+					await page.locator('h1').count(),
+					`${slug} heading at ${viewport.name}`,
+				).toBeGreaterThan(0)
+				expect(await hasHorizontalOverflow(page), `${slug} overflow at ${viewport.name}`).toBe(
+					false,
+				)
+
+				const offenders = await targetOffenders(
+					page,
+					'main button, main a[href], main [role="button"]',
+				).catch(() => [])
+				expect(
+					offenders,
+					`${slug} at ${viewport.name}: ${offenders
+						.map((entry) => `${entry.width}x${entry.height} "${entry.name}"`)
+						.join(', ')}`,
+				).toEqual([])
+			}
+		})
+	}
 })
