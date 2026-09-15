@@ -132,6 +132,7 @@ const NOT_FOUND_STYLES = `
 	background: #ffffff;
 	color: #0f172a;
 	font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+	-webkit-font-smoothing: antialiased;
 }
 .nf-card { width: 100%; max-width: 34rem; text-align: center; }
 .nf-mark {

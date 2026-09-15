@@ -44,10 +44,39 @@ export const GAME_PAGE_ROUTE = {
 } as const satisfies Omit<PublicRoute, 'path'>
 
 /**
- * Surfaces that must never be crawled: per-user areas, auth flows,
- * transactional links, the operator console and route handlers. `/api` is
- * reachable but never HTML, so it is disallowed without a noindex contract.
+ * Crawling must not happen here at all: JSON route handlers (never HTML) and
+ * the operator console. `/admin` also carries `robots: noindex` itself, as a
+ * second layer for the day a link leaks the URL.
  */
+export const CRAWL_BLOCKED_ROUTE_PREFIXES = ['/api', '/admin'] as const
+
+/**
+ * Surfaces that are served as HTML but must never be indexed: per-user areas,
+ * auth flows, transactional links and the step-up gate.
+ *
+ * These stay **crawlable on purpose**. A `Disallow` hides the page from the
+ * crawler and hides the `noindex` that is supposed to control it, so the URL
+ * can still be indexed from an inbound link with no content behind it. The
+ * directive — not the block — is what keeps them out of the index, and
+ * `/stats`, `/leaderboard` and `/login` are real navigation destinations whose
+ * links have to resolve for visitors.
+ */
+export const NOINDEX_ROUTE_PREFIXES = [
+	'/admin',
+	'/settings',
+	'/profile',
+	'/stats',
+	'/leaderboard',
+	'/login',
+	'/signup',
+	'/forgot-password',
+	'/reset-password',
+	'/verify-email',
+	'/unsubscribe',
+	'/challenge',
+] as const
+
+/** Everything that must stay out of the sitemap: blocked plus noindexed. */
 export const PRIVATE_ROUTE_PREFIXES = [
 	'/api',
 	'/admin',
@@ -63,13 +92,6 @@ export const PRIVATE_ROUTE_PREFIXES = [
 	'/unsubscribe',
 	'/challenge',
 ] as const
-
-/**
- * Private surfaces that are served as HTML and therefore must carry
- * `robots: noindex` themselves (a disallow alone hides the directive from
- * crawlers and lets the URL be indexed without content).
- */
-export const NOINDEX_ROUTE_PREFIXES = PRIVATE_ROUTE_PREFIXES.filter((prefix) => prefix !== '/api')
 
 /** Strip a known locale prefix so path matching works for every locale. */
 export function stripLocalePrefix(pathname: string): string {
@@ -88,13 +110,13 @@ export function isPrivateRoutePath(pathname: string): boolean {
 }
 
 /**
- * `robots.txt` disallow entries: every private prefix under every locale
- * prefix. Wildcards are avoided on purpose — not every crawler treats `/*`
- * the way Google does, and the locale set is small and known.
+ * `robots.txt` disallow entries: the crawl-blocked prefixes under every locale
+ * prefix. Wildcards are avoided on purpose — not every crawler treats `/*` the
+ * way Google does, and the locale set is small and known.
  */
 export function robotsDisallowPaths(): string[] {
 	const disallow: string[] = ['/api/']
-	for (const prefix of PRIVATE_ROUTE_PREFIXES) {
+	for (const prefix of CRAWL_BLOCKED_ROUTE_PREFIXES) {
 		if (prefix === '/api') continue
 		disallow.push(prefix)
 		for (const locale of locales) {

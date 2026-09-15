@@ -38,7 +38,7 @@ export default async function RootNotFound() {
 
 	return (
 		<html lang={locale}>
-			<body className="antialiased">
+			<body>
 				<NotFoundView locale={locale} labels={labels} freeGame={freeGame} />
 			</body>
 		</html>

@@ -18,7 +18,9 @@ import {
 	ogImagePath,
 } from '@/lib/seo/metadata'
 import {
+	CRAWL_BLOCKED_ROUTE_PREFIXES,
 	isPrivateRoutePath,
+	NOINDEX_ROUTE_PREFIXES,
 	PRIVATE_ROUTE_PREFIXES,
 	PUBLIC_ROUTES,
 	robotsDisallowPaths,
@@ -63,6 +65,14 @@ describe('route truth table', () => {
 			'/challenge',
 		]) {
 			expect(PRIVATE_ROUTE_PREFIXES).toContain(prefix as (typeof PRIVATE_ROUTE_PREFIXES)[number])
+		}
+	})
+
+	test('crawl blocks are limited to surfaces that must not be crawled', () => {
+		expect([...CRAWL_BLOCKED_ROUTE_PREFIXES]).toEqual(['/api', '/admin'])
+		// User-facing destinations stay crawlable; `noindex` controls the index.
+		for (const prefix of ['/settings', '/profile', '/stats', '/leaderboard', '/login', '/signup']) {
+			expect(robotsDisallowPaths()).not.toContain(prefix)
 		}
 	})
 
@@ -162,9 +172,9 @@ describe('robots', () => {
 		}
 	})
 
-	test('disallows every private prefix under every locale', () => {
+	test('disallows the crawl-blocked prefixes under every locale', () => {
 		expect(new Set(disallow)).toEqual(new Set(robotsDisallowPaths()))
-		for (const prefix of PRIVATE_ROUTE_PREFIXES) {
+		for (const prefix of CRAWL_BLOCKED_ROUTE_PREFIXES) {
 			if (prefix === '/api') continue
 			expect(disallow).toContain(prefix)
 			for (const locale of locales) {
@@ -178,6 +188,18 @@ describe('robots', () => {
 		for (const route of PUBLIC_ROUTES) {
 			if (route.path === '/') continue
 			expect(disallow).not.toContain(route.path)
+		}
+	})
+
+	test('does not block a crawled-and-noindexed surface', () => {
+		for (const entry of NOINDEX_ROUTE_PREFIXES) {
+			// `/admin` is blocked *and* noindexed on purpose.
+			if ((CRAWL_BLOCKED_ROUTE_PREFIXES as readonly string[]).includes(entry)) continue
+			expect(disallow).not.toContain(entry)
+			for (const locale of locales) {
+				if (locale === defaultLocale) continue
+				expect(disallow).not.toContain(`/${locale}${entry}`)
+			}
 		}
 	})
 })

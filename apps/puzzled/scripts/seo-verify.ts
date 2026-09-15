@@ -9,11 +9,14 @@
  *   bun run verify:seo --base http://localhost:3014
  *
  * What it asserts, from real HTTP responses only:
- *   1. `/robots.txt` disallows exactly the private prefixes of `lib/seo/routes.ts`
- *      for every locale, allows crawling, and points at the sitemap.
- *   2. `/sitemap.xml` lists one URL per locale per public path, keeps the
- *      default locale un-prefixed, has no trailing-slash roots, publishes no
- *      `lastmod`, and carries a reciprocal `xhtml:link` cluster per entry.
+ *   1. `/robots.txt` disallows exactly the crawl-blocked prefixes of
+ *      `lib/seo/routes.ts` (route handlers and the operator console) for every
+ *      locale, leaves every user-facing route crawlable, and points at the
+ *      sitemap.
+ *   2. `/sitemap.xml` lists exactly one URL per locale for the expected public
+ *      path set, keeps the default locale un-prefixed, has no trailing-slash
+ *      roots, publishes no `lastmod`, and carries a reciprocal `xhtml:link`
+ *      cluster per entry.
  *   3. Every sitemap URL answers 200 and canonicalises to itself.
  *   4. Every page's hreflang cluster equals the sitemap cluster of its own path
  *      (so alternates are reciprocal by construction) and `x-default` points at
@@ -27,8 +30,9 @@
  * Exit code 0 = every check passed; failures name the URL that broke.
  */
 
+import { getGameSlugs } from '@/games/registry'
 import { defaultLocale, locales } from '@/lib/i18n/config'
-import { NOINDEX_ROUTE_PREFIXES, robotsDisallowPaths } from '@/lib/seo/routes'
+import { NOINDEX_ROUTE_PREFIXES, PUBLIC_ROUTES, robotsDisallowPaths } from '@/lib/seo/routes'
 
 const args = process.argv.slice(2)
 const baseFlag = args.indexOf('--base')
@@ -205,6 +209,19 @@ async function main(): Promise<void> {
 		return `${actual.size} rules match lib/seo/routes.ts`
 	})
 
+	await check('robots.txt leaves every user-facing route crawlable', async () => {
+		const blocked = new Set(disallowRules)
+		const wronglyBlocked = NOINDEX_ROUTE_PREFIXES.filter((prefix) => {
+			if (prefix === '/admin') return false // blocked on purpose, noindexed too
+			return blocked.has(prefix) || locales.some((locale) => blocked.has(`/${locale}${prefix}`))
+		})
+		assert(
+			wronglyBlocked.length === 0,
+			`crawlable surfaces are disallowed (their noindex can never be read): ${wronglyBlocked.join(', ')}`,
+		)
+		return `${NOINDEX_ROUTE_PREFIXES.length - 1} noindex surfaces stay crawlable, /admin is blocked and noindexed`
+	})
+
 	await check('robots.txt allows crawling and advertises the sitemap', async () => {
 		assert(robots.html.includes('User-Agent: *'), 'no User-Agent: * group')
 		assert(robots.html.includes('Allow: /'), 'no Allow: /')
@@ -224,13 +241,21 @@ async function main(): Promise<void> {
 	const origin = new URL(locs[0]).origin
 	const locSet = new Set(locs)
 
-	await check('sitemap lists one URL per locale per public path', async () => {
-		const distinctPaths = new Set(locs.map(localeAgnosticPath))
+	await check('sitemap lists exactly the expected public path set', async () => {
+		const expectedPaths = [...PUBLIC_ROUTES.map((route) => route.path)]
+		for (const slug of getGameSlugs()) {
+			expectedPaths.push(`/games/${slug}`)
+		}
+		const servedPaths = new Set(locs.map(localeAgnosticPath))
+		const missing = expectedPaths.filter((path) => !servedPaths.has(path))
+		const unexpected = [...servedPaths].filter((path) => !expectedPaths.includes(path))
+		assert(missing.length === 0, `routes missing from the sitemap: ${missing.join(', ')}`)
+		assert(unexpected.length === 0, `unexpected paths in the sitemap: ${unexpected.join(', ')}`)
 		assert(
-			locs.length === distinctPaths.size * locales.length,
-			`${locs.length} locs for ${distinctPaths.size} paths x ${locales.length} locales`,
+			locs.length === expectedPaths.length * locales.length,
+			`${locs.length} locs for ${expectedPaths.length} paths x ${locales.length} locales`,
 		)
-		return `${locs.length} URLs = ${distinctPaths.size} paths × ${locales.length} locales`
+		return `${locs.length} URLs = ${expectedPaths.length} paths × ${locales.length} locales, exactly`
 	})
 
 	await check('sitemap lists no private or malformed surface', async () => {
@@ -379,6 +404,8 @@ async function main(): Promise<void> {
 		'/zh-HK/no-such-page-xyz',
 		'/zh-CN/no-such-page-xyz',
 		'/en-CA/games',
+		'/index.html',
+		'/not-a-real-document.txt',
 	]
 
 	await check('unknown paths answer 404 with the branded, noindex body', async () => {
@@ -455,6 +482,38 @@ async function main(): Promise<void> {
 			}
 		}
 		return `${structuredSample.length} pages, types: ${[...types].sort().join(', ')}`
+	})
+
+	await check('per-page JSON-LD is complete whenever a page emits it', async () => {
+		const gamePath = localPath(gameLoc ?? `${origin}/games`)
+		const { html } = await fetchHtml(gamePath)
+		const blocks = jsonLdOf(html).filter(
+			(block): block is Record<string, unknown> => typeof block === 'object' && block !== null,
+		)
+		const game = blocks.find((block) => block['@type'] === 'VideoGame')
+		const breadcrumbs = blocks.find((block) => block['@type'] === 'BreadcrumbList')
+		if (game === undefined && breadcrumbs === undefined) {
+			return `${gamePath} emits no per-game schema yet (page owner); the site-level blocks are asserted above`
+		}
+		if (game !== undefined) {
+			assert(
+				typeof game.name === 'string' && game.name.length > 0,
+				`${gamePath} VideoGame has no name`,
+			)
+			assert(
+				typeof game.url === 'string' && game.url.startsWith(origin),
+				`${gamePath} VideoGame.url is not on this origin`,
+			)
+		}
+		if (breadcrumbs !== undefined) {
+			const items = breadcrumbs.itemListElement
+			assert(
+				Array.isArray(items) && items.length > 0,
+				`${gamePath} BreadcrumbList has no itemListElement`,
+			)
+		}
+		const declared = [game && 'VideoGame', breadcrumbs && 'BreadcrumbList'].filter(Boolean)
+		return `${gamePath} declares ${declared.join(' + ')}`
 	})
 
 	await check('the SearchAction target resolves', async () => {
