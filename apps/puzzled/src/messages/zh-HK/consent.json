@@ -1,8 +1,8 @@
 {
-	"title": "Cookie Preferences",
-	"message": "我們使用必要的 Cookie 來確保網站正常運作。",
-	"details": "這些 Cookie 用於維護您的工作階段和偏好設定。",
-	"accept": "接受",
+	"title": "分析同意",
+	"message": "Puzzled 使用注重私隱嘅分析工具，了解大家點樣玩謎題。無廣告、唔會出售資料，你亦可以隨時在設定更改。",
+	"details": "分析數據幫助我們了解哪些謎題受歡迎，以及玩法邊度出問題。",
+	"accept": "同意",
 	"decline": "拒絕",
-	"learnMore": "瞭解更多"
+	"learnMore": "私隱政策"
 }

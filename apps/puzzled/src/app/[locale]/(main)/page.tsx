@@ -198,7 +198,9 @@ export default async function HomePage({ params }: Props) {
 				completedCount={progress.completedCount}
 				availableCount={progress.availableCount}
 				playerCount={todayPlayerCount}
-				progressUnverified={playState.hasUnverifiedStatus}
+				// Only warn about unread progress when this viewer has progress to
+				// read: a brand-new guest has none, and a warning would be noise.
+				progressUnverified={playState.hasUnverifiedStatus && hasIdentity}
 			/>
 
 			<div

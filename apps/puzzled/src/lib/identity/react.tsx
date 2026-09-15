@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
 	createContext,
 	type ReactNode,
@@ -815,23 +816,48 @@ export function CookieBanner(props: {
 	onSave?: () => void
 }) {
 	const { hasConsented, setConsent } = useSafeConsent()
+	const t = useTranslations('consent')
 	if (hasConsented) return null
 	return (
-		<div className={props.position === 'bottom' ? 'fixed inset-x-0 bottom-0 z-50 p-4' : undefined}>
-			<div className="mx-auto flex max-w-3xl items-center justify-between gap-4 rounded-lg border bg-background p-4">
-				<p>
-					Puzzled uses Identity dest consent for analytics.{' '}
-					{props.privacyPolicyUrl ? <a href={props.privacyPolicyUrl}>Privacy</a> : null}
+		<div
+			className={props.position === 'bottom' ? 'fixed inset-x-0 bottom-0 z-toast p-4' : undefined}
+		>
+			<section
+				aria-label={t('title')}
+				className="mx-auto flex max-w-3xl flex-col gap-3 rounded-2xl border bg-background/95 p-4 text-sm shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+			>
+				<p className="text-muted-foreground">
+					{t('message')}{' '}
+					{props.privacyPolicyUrl ? (
+						<a
+							href={props.privacyPolicyUrl}
+							className="font-medium text-primary underline underline-offset-4"
+						>
+							{t('learnMore')}
+						</a>
+					) : null}
 				</p>
-				<button
-					type="button"
-					onClick={() => {
-						void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
-					}}
-				>
-					Accept
-				</button>
-			</div>
+				<div className="flex shrink-0 items-center gap-2">
+					<button
+						type="button"
+						className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 font-medium text-foreground transition-colors hover:bg-muted"
+						onClick={() => {
+							void setConsent({ analytics: false, marketing: false }).then(() => props.onSave?.())
+						}}
+					>
+						{t('decline')}
+					</button>
+					<button
+						type="button"
+						className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-4 font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
+						onClick={() => {
+							void setConsent({ analytics: true, marketing: false }).then(() => props.onSave?.())
+						}}
+					>
+						{t('accept')}
+					</button>
+				</div>
+			</section>
 		</div>
 	)
 }
