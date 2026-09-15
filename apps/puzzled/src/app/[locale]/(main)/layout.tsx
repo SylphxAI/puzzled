@@ -4,7 +4,8 @@ import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identi
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { BottomNav, Footer } from '@/shared/components/layout'
+import { BottomNav } from '@/shared/components/layout'
+import { Footer } from '@/shared/components/layout/footer'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
 
