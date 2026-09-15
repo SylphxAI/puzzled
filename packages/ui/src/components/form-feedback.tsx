@@ -3,6 +3,7 @@
 import { AlertCircle, CheckCircle2, Info, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 
 type FeedbackVariant = "error" | "success" | "warning" | "info";
@@ -87,34 +88,36 @@ export function FormFeedback({
 
 	return (
 		<div className={cn("space-y-2", className)}>
-			<AnimatePresence mode="popLayout">
-				{messages.map(({ variant, message }) => {
-					const config = variantConfig[variant];
-					const Icon = config.icon;
+			<MotionPreferences>
+				<AnimatePresence mode="popLayout">
+					{messages.map(({ variant, message }) => {
+						const config = variantConfig[variant];
+						const Icon = config.icon;
 
-					return (
-						<motion.div
-							key={`${variant}-${message}`}
-							initial={{ opacity: 0, y: -8, height: 0 }}
-							animate={{ opacity: 1, y: 0, height: "auto" }}
-							exit={{ opacity: 0, y: -8, height: 0 }}
-							transition={{ duration: duration.normal, ease: easing.easeOut }}
-							className={cn(
-								"flex items-start gap-2 rounded-lg border p-3 text-sm overflow-hidden",
-								config.containerClass,
-							)}
-							role={variant === "error" ? "alert" : "status"}
-							aria-live={variant === "error" ? "assertive" : "polite"}
-						>
-							<Icon
-								className={cn("mt-0.5 h-4 w-4 shrink-0", config.textClass)}
-								aria-hidden="true"
-							/>
-							<p className={config.textClass}>{message}</p>
-						</motion.div>
-					);
-				})}
-			</AnimatePresence>
+						return (
+							<motion.div
+								key={`${variant}-${message}`}
+								initial={{ opacity: 0, y: -8, height: 0 }}
+								animate={{ opacity: 1, y: 0, height: "auto" }}
+								exit={{ opacity: 0, y: -8, height: 0 }}
+								transition={{ duration: duration.normal, ease: easing.easeOut }}
+								className={cn(
+									"flex items-start gap-2 rounded-lg border p-3 text-sm overflow-hidden",
+									config.containerClass,
+								)}
+								role={variant === "error" ? "alert" : "status"}
+								aria-live={variant === "error" ? "assertive" : "polite"}
+							>
+								<Icon
+									className={cn("mt-0.5 h-4 w-4 shrink-0", config.textClass)}
+									aria-hidden="true"
+								/>
+								<p className={config.textClass}>{message}</p>
+							</motion.div>
+						);
+					})}
+				</AnimatePresence>
+			</MotionPreferences>
 		</div>
 	);
 }

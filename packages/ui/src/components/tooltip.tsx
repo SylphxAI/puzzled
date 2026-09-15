@@ -4,6 +4,7 @@ import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
 import { motion } from "motion/react";
 import { forwardRef } from "react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 
 // ==================
@@ -111,14 +112,16 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
 						className,
 					)}
 				>
-					<MotionDiv
-						initial={{ opacity: 0, scale: 0.96 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="px-3 py-1.5"
-					>
-						{children}
-					</MotionDiv>
+					<MotionPreferences>
+						<MotionDiv
+							initial={{ opacity: 0, scale: 0.96 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="px-3 py-1.5"
+						>
+							{children}
+						</MotionDiv>
+					</MotionPreferences>
 				</BaseTooltip.Popup>
 			</BaseTooltip.Positioner>
 		</BaseTooltip.Portal>

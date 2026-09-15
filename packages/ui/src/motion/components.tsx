@@ -31,6 +31,9 @@ import {
 	useState,
 } from "react";
 import { duration, easing, spring, stagger } from "./config";
+import { entranceStyle } from "./entrance-style";
+import { MotionPreferences } from "./motion-preferences";
+import { getReducedMotionTransition, useReducedMotion } from "./use-reduced-motion";
 import {
 	scaleSpringVariants,
 	scaleVariants,
@@ -40,35 +43,6 @@ import {
 	slideRightVariants,
 	slideUpVariants,
 } from "./variants";
-
-// ============================================================================
-// Shared CSS Transition Helpers
-// ============================================================================
-
-/** Pre-computed cubic-bezier string for easeOut */
-const EASE_OUT = `cubic-bezier(${easing.easeOut.join(",")})`;
-
-/** Build a CSS transition string for opacity + transform */
-function cssTransition(dur: number) {
-	return `opacity ${dur}s ${EASE_OUT}, transform ${dur}s ${EASE_OUT}`;
-}
-
-/** CSS entrance style: hidden state or visible state */
-function entranceStyle(
-	inView: boolean,
-	opts: {
-		duration: number;
-		delay?: number;
-		translate?: string;
-	},
-) {
-	return {
-		opacity: inView ? 1 : 0,
-		transform: inView ? "none" : (opts.translate ?? "translateY(8px)"),
-		transition: cssTransition(opts.duration),
-		transitionDelay: inView ? `${opts.delay ?? 0}s` : "0s",
-	} as const;
-}
 
 // ============================================================================
 // Types
@@ -167,16 +141,21 @@ export function Fade({
 	const ref = useRef<HTMLDivElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-32px" });
 	const dir = direction ?? "none";
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div
 			ref={ref}
 			className={className}
-			style={entranceStyle(inView, {
-				duration: customDuration ?? duration.medium,
-				delay,
-				translate: fadeTranslates[dir],
-			})}
+			style={entranceStyle(
+				inView,
+				{
+					duration: customDuration ?? duration.medium,
+					delay,
+					translate: fadeTranslates[dir],
+				},
+				prefersReduced,
+			)}
 		>
 			{children}
 		</div>
@@ -199,16 +178,18 @@ export function Fade({
 export const Scale = forwardRef<HTMLDivElement, ScaleProps>(
 	({ spring: useSpring, children, ...props }, ref) => {
 		return (
-			<motion.div
-				ref={ref}
-				variants={useSpring ? scaleSpringVariants : scaleVariants}
-				initial="initial"
-				animate="animate"
-				exit="exit"
-				{...props}
-			>
-				{children}
-			</motion.div>
+			<MotionPreferences>
+				<motion.div
+					ref={ref}
+					variants={useSpring ? scaleSpringVariants : scaleVariants}
+					initial="initial"
+					animate="animate"
+					exit="exit"
+					{...props}
+				>
+					{children}
+				</motion.div>
+			</MotionPreferences>
 		);
 	},
 );
@@ -236,16 +217,18 @@ const slideDirectionVariants = {
 export const Slide = forwardRef<HTMLDivElement, SlideProps>(
 	({ direction, children, ...props }, ref) => {
 		return (
-			<motion.div
-				ref={ref}
-				variants={slideDirectionVariants[direction]}
-				initial="initial"
-				animate="animate"
-				exit="exit"
-				{...props}
-			>
-				{children}
-			</motion.div>
+			<MotionPreferences>
+				<motion.div
+					ref={ref}
+					variants={slideDirectionVariants[direction]}
+					initial="initial"
+					animate="animate"
+					exit="exit"
+					{...props}
+				>
+					{children}
+				</motion.div>
+			</MotionPreferences>
 		);
 	},
 );
@@ -337,15 +320,20 @@ export function StaggerItem({
 	const { inView, step, nextIndex } = useContext(StaggerContext);
 	const [index] = useState(() => nextIndex());
 	const dur = type === "fade" ? duration.normal : duration.medium;
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div
 			className={className}
-			style={entranceStyle(inView, {
-				duration: dur,
-				delay: index * step,
-				translate: staggerItemTranslates[type],
-			})}
+			style={entranceStyle(
+				inView,
+				{
+					duration: dur,
+					delay: index * step,
+					translate: staggerItemTranslates[type],
+				},
+				prefersReduced,
+			)}
 		>
 			{children}
 		</div>
@@ -371,9 +359,11 @@ export function Presence({
 	initial = false,
 }: PresenceProps) {
 	return (
-		<AnimatePresence mode={mode} initial={initial}>
-			{children}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence mode={mode} initial={initial}>
+				{children}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 }
 
@@ -404,17 +394,19 @@ interface SidebarContentProps
 export const SidebarContent = forwardRef<HTMLDivElement, SidebarContentProps>(
 	({ contentKey, children, ...props }, ref) => {
 		return (
-			<motion.div
-				ref={ref}
-				key={contentKey}
-				variants={sidebarContentVariants}
-				initial="initial"
-				animate="animate"
-				exit="exit"
-				{...props}
-			>
-				{children}
-			</motion.div>
+			<MotionPreferences>
+				<motion.div
+					ref={ref}
+					key={contentKey}
+					variants={sidebarContentVariants}
+					initial="initial"
+					animate="animate"
+					exit="exit"
+					{...props}
+				>
+					{children}
+				</motion.div>
+			</MotionPreferences>
 		);
 	},
 );
@@ -453,31 +445,33 @@ export function LoadingTransition({
 }: LoadingTransitionProps) {
 	return (
 		<div className={className}>
-			<AnimatePresence mode="wait">
-				{isLoading ? (
-					<motion.div
-						key="skeleton"
-						initial={{ opacity: 1 }}
-						exit={{
-							opacity: 0,
-							transition: { duration: duration.normal, ease: easing.easeIn },
-						}}
-					>
-						{skeleton}
-					</motion.div>
-				) : (
-					<motion.div
-						key="content"
-						initial={{ opacity: 0 }}
-						animate={{
-							opacity: 1,
-							transition: { duration: duration.medium, ease: easing.easeOut },
-						}}
-					>
-						{children}
-					</motion.div>
-				)}
-			</AnimatePresence>
+			<MotionPreferences>
+				<AnimatePresence mode="wait">
+					{isLoading ? (
+						<motion.div
+							key="skeleton"
+							initial={{ opacity: 1 }}
+							exit={{
+								opacity: 0,
+								transition: { duration: duration.normal, ease: easing.easeIn },
+							}}
+						>
+							{skeleton}
+						</motion.div>
+					) : (
+						<motion.div
+							key="content"
+							initial={{ opacity: 0 }}
+							animate={{
+								opacity: 1,
+								transition: { duration: duration.medium, ease: easing.easeOut },
+							}}
+						>
+							{children}
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</MotionPreferences>
 		</div>
 	);
 }
@@ -553,15 +547,20 @@ export function AnimatedListItem({
 }: AnimatedListItemProps) {
 	const { inView, step, nextIndex } = useContext(StaggerContext);
 	const [index] = useState(() => nextIndex());
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div
 			className={className}
-			style={entranceStyle(inView, {
-				duration: duration.normal,
-				delay: index * step,
-				translate: "none",
-			})}
+			style={entranceStyle(
+				inView,
+				{
+					duration: duration.normal,
+					delay: index * step,
+					translate: "none",
+				},
+				prefersReduced,
+			)}
 		>
 			{children}
 		</div>
@@ -593,20 +592,22 @@ interface CollapseProps {
  */
 export function Collapse({ isOpen, children, className }: CollapseProps) {
 	return (
-		<AnimatePresence initial={false}>
-			{isOpen && (
-				<motion.div
-					initial={{ height: 0, opacity: 0 }}
-					animate={{ height: "auto", opacity: 1 }}
-					exit={{ height: 0, opacity: 0 }}
-					transition={{ duration: duration.medium, ease: easing.easeInOut }}
-					className={className}
-					style={{ overflow: "hidden" }}
-				>
-					{children}
-				</motion.div>
-			)}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence initial={false}>
+				{isOpen && (
+					<motion.div
+						initial={{ height: 0, opacity: 0 }}
+						animate={{ height: "auto", opacity: 1 }}
+						exit={{ height: 0, opacity: 0 }}
+						transition={{ duration: duration.medium, ease: easing.easeInOut }}
+						className={className}
+						style={{ overflow: "hidden" }}
+					>
+						{children}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 }
 
@@ -635,15 +636,20 @@ interface AnimatedPageProps {
 export function AnimatedPage({ children, className }: AnimatedPageProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const inView = useInView(ref, { once: true });
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div
 			ref={ref}
 			className={className}
-			style={entranceStyle(inView, {
-				duration: duration.medium,
-				translate: "translateY(8px)",
-			})}
+			style={entranceStyle(
+				inView,
+				{
+					duration: duration.medium,
+					translate: "translateY(8px)",
+				},
+				prefersReduced,
+			)}
 		>
 			{children}
 		</div>
@@ -685,17 +691,22 @@ export function AnimatedGrid({
 	const ref = useRef<HTMLDivElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-32px" });
 	const step = resolveStep(speed);
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div ref={ref} className={className}>
 			{Children.map(children, (child, i) =>
 				child != null ? (
 					<div
-						style={entranceStyle(inView, {
-							duration: duration.slower,
-							delay: i * step,
-							translate: "translateY(8px)",
-						})}
+						style={entranceStyle(
+							inView,
+							{
+								duration: duration.slower,
+								delay: i * step,
+								translate: "translateY(8px)",
+							},
+							prefersReduced,
+						)}
 					>
 						{child}
 					</div>
@@ -733,16 +744,21 @@ export function AnimatedSection({
 }: AnimatedSectionProps) {
 	const ref = useRef<HTMLElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-32px" });
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<section
 			ref={ref}
 			className={className}
-			style={entranceStyle(inView, {
-				duration: duration.medium,
-				delay,
-				translate: "translateY(12px)",
-			})}
+			style={entranceStyle(
+				inView,
+				{
+					duration: duration.medium,
+					delay,
+					translate: "translateY(12px)",
+				},
+				prefersReduced,
+			)}
 		>
 			{children}
 		</section>
@@ -786,13 +802,18 @@ export function AnimatedEmptyState({
 	const ref = useRef<HTMLDivElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-32px" });
 	const step = stagger.fast;
+	const prefersReduced = useReducedMotion();
 
 	const itemStyle = (i: number) =>
-		entranceStyle(inView, {
-			duration: duration.medium,
-			delay: i * step,
-			translate: "translateY(10px)",
-		});
+		entranceStyle(
+			inView,
+			{
+				duration: duration.medium,
+				delay: i * step,
+				translate: "translateY(10px)",
+			},
+			prefersReduced,
+		);
 
 	let idx = 0;
 	return (
@@ -849,123 +870,130 @@ export function AnimatedButtonContent({
 	errorText = "Error",
 	className,
 }: AnimatedButtonContentProps) {
+	const prefersReduced = useReducedMotion();
+
 	return (
 		<span
 			className={`relative inline-flex items-center justify-center gap-2 ${className ?? ""}`}
 		>
-			<AnimatePresence mode="wait">
-				{state === "idle" && (
-					<motion.span
-						key="idle"
-						initial={{ opacity: 0, y: 8 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -8 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="inline-flex items-center gap-2"
-					>
-						{children}
-					</motion.span>
-				)}
-				{state === "loading" && (
-					<motion.span
-						key="loading"
-						initial={{ opacity: 0, y: 8 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -8 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="inline-flex items-center gap-2"
-					>
+			<MotionPreferences>
+				<AnimatePresence mode="wait">
+					{state === "idle" && (
 						<motion.span
-							animate={{ rotate: 360 }}
-							transition={{
-								duration: 1,
-								repeat: Number.POSITIVE_INFINITY,
-								ease: "linear",
-							}}
-							className="inline-block"
+							key="idle"
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -8 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="inline-flex items-center gap-2"
 						>
-							<svg
-								className="h-4 w-4"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path
-									d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
-									strokeLinecap="round"
-								/>
-							</svg>
+							{children}
 						</motion.span>
-						{loadingText}
-					</motion.span>
-				)}
-				{state === "success" && (
-					<motion.span
-						key="success"
-						initial={{ opacity: 0, scale: 0.8 }}
-						animate={{ opacity: 1, scale: 1 }}
-						exit={{ opacity: 0, scale: 0.8 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="inline-flex items-center gap-2"
-					>
+					)}
+					{state === "loading" && (
 						<motion.span
-							initial={{ scale: 0 }}
-							animate={{ scale: 1 }}
-							transition={{
-								type: "spring",
-								stiffness: 400,
-								damping: 15,
-								delay: 0.1,
-							}}
+							key="loading"
+							initial={{ opacity: 0, y: 8 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -8 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="inline-flex items-center gap-2"
 						>
-							<svg
-								className="h-4 w-4"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2.5"
+							<motion.span
+								animate={{ rotate: 360 }}
+								transition={{
+									duration: 1,
+									repeat: Number.POSITIVE_INFINITY,
+									ease: "linear",
+								}}
+								className="inline-block"
 							>
-								<motion.path
-									d="M5 13l4 4L19 7"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									initial={{ pathLength: 0 }}
-									animate={{ pathLength: 1 }}
-									transition={{ duration: 0.3, delay: 0.1 }}
-								/>
-							</svg>
+								<svg
+									className="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+								>
+									<path
+										d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"
+										strokeLinecap="round"
+									/>
+								</svg>
+							</motion.span>
+							{loadingText}
 						</motion.span>
-						{successText}
-					</motion.span>
-				)}
-				{state === "error" && (
-					<motion.span
-						key="error"
-						initial={{ opacity: 0, x: -8 }}
-						animate={{ opacity: 1, x: 0 }}
-						exit={{ opacity: 0, x: 8 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="inline-flex items-center gap-2"
-					>
+					)}
+					{state === "success" && (
 						<motion.span
-							animate={{ x: [0, -3, 3, -3, 3, 0] }}
-							transition={{ duration: 0.4 }}
+							key="success"
+							initial={{ opacity: 0, scale: 0.8 }}
+							animate={{ opacity: 1, scale: 1 }}
+							exit={{ opacity: 0, scale: 0.8 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="inline-flex items-center gap-2"
 						>
-							<svg
-								className="h-4 w-4"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2.5"
+							<motion.span
+								initial={{ scale: 0 }}
+								animate={{ scale: 1 }}
+								transition={{
+									type: "spring",
+									stiffness: 400,
+									damping: 15,
+									delay: 0.1,
+								}}
 							>
-								<path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-							</svg>
+								<svg
+									className="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2.5"
+								>
+									<motion.path
+										d="M5 13l4 4L19 7"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										initial={{ pathLength: 0 }}
+										animate={{ pathLength: 1 }}
+										transition={getReducedMotionTransition(
+											{ duration: 0.3, delay: 0.1 } as const,
+											prefersReduced,
+										)}
+									/>
+								</svg>
+							</motion.span>
+							{successText}
 						</motion.span>
-						{errorText}
-					</motion.span>
-				)}
-			</AnimatePresence>
+					)}
+					{state === "error" && (
+						<motion.span
+							key="error"
+							initial={{ opacity: 0, x: -8 }}
+							animate={{ opacity: 1, x: 0 }}
+							exit={{ opacity: 0, x: 8 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="inline-flex items-center gap-2"
+						>
+							<motion.span
+								animate={{ x: [0, -3, 3, -3, 3, 0] }}
+								transition={{ duration: 0.4 }}
+							>
+								<svg
+									className="h-4 w-4"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2.5"
+								>
+									<path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+								</svg>
+							</motion.span>
+							{errorText}
+						</motion.span>
+					)}
+				</AnimatePresence>
+			</MotionPreferences>
 		</span>
 	);
 }
@@ -1006,17 +1034,22 @@ export function AnimatedRow({
 }: AnimatedRowProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-64px" });
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<div
 			ref={ref}
 			className={className}
 			style={{
-				...entranceStyle(inView, {
-					duration: duration.fast,
-					delay: baseDelay + index * stagger.fast,
-					translate: "translateY(8px)",
-				}),
+				...entranceStyle(
+					inView,
+					{
+						duration: duration.fast,
+						delay: baseDelay + index * stagger.fast,
+						translate: "translateY(8px)",
+					},
+					prefersReduced,
+				),
 				...style,
 			}}
 			{...props}
@@ -1064,17 +1097,22 @@ export function AnimatedTableRow({
 }: AnimatedTableRowProps) {
 	const ref = useRef<HTMLTableRowElement>(null);
 	const inView = useInView(ref, { once: true, margin: "-64px" });
+	const prefersReduced = useReducedMotion();
 
 	return (
 		<tr
 			ref={ref}
 			className={className}
 			style={{
-				...entranceStyle(inView, {
-					duration: duration.fast,
-					delay: baseDelay + index * stagger.fast,
-					translate: "translateY(8px)",
-				}),
+				...entranceStyle(
+					inView,
+					{
+						duration: duration.fast,
+						delay: baseDelay + index * stagger.fast,
+						translate: "translateY(8px)",
+					},
+					prefersReduced,
+				),
 				...style,
 			}}
 			{...props}
@@ -1110,19 +1148,21 @@ interface ShakeProps extends Omit<HTMLMotionProps<"div">, "animate"> {
 export const Shake = forwardRef<HTMLDivElement, ShakeProps>(
 	({ children, shake = false, onShakeComplete, ...props }, ref) => {
 		return (
-			<motion.div
-				ref={ref}
-				animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
-				transition={{ duration: 0.4, ease: "easeInOut" }}
-				onAnimationComplete={() => {
-					if (shake && onShakeComplete) {
-						onShakeComplete();
-					}
-				}}
-				{...props}
-			>
-				{children}
-			</motion.div>
+			<MotionPreferences>
+				<motion.div
+					ref={ref}
+					animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : { x: 0 }}
+					transition={{ duration: 0.4, ease: "easeInOut" }}
+					onAnimationComplete={() => {
+						if (shake && onShakeComplete) {
+							onShakeComplete();
+						}
+					}}
+					{...props}
+				>
+					{children}
+				</motion.div>
+			</MotionPreferences>
 		);
 	},
 );
@@ -1154,41 +1194,51 @@ export function SuccessCheck({
 	size = 24,
 	className,
 }: SuccessCheckProps) {
+	const prefersReduced = useReducedMotion();
+
 	return (
-		<AnimatePresence>
-			{show && (
-				<motion.svg
-					initial={{ opacity: 0, scale: 0.5 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.5 }}
-					transition={{ type: "spring", stiffness: 400, damping: 15 }}
-					className={className}
-					width={size}
-					height={size}
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2.5"
-				>
-					<motion.circle
-						cx="12"
-						cy="12"
-						r="10"
-						initial={{ pathLength: 0 }}
-						animate={{ pathLength: 1 }}
-						transition={{ duration: 0.4, ease: "easeOut" }}
-					/>
-					<motion.path
-						d="M8 12l3 3 5-6"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						initial={{ pathLength: 0 }}
-						animate={{ pathLength: 1 }}
-						transition={{ duration: 0.3, delay: 0.3 }}
-					/>
-				</motion.svg>
-			)}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence>
+				{show && (
+					<motion.svg
+						initial={{ opacity: 0, scale: 0.5 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.5 }}
+						transition={{ type: "spring", stiffness: 400, damping: 15 }}
+						className={className}
+						width={size}
+						height={size}
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2.5"
+					>
+						<motion.circle
+							cx="12"
+							cy="12"
+							r="10"
+							initial={{ pathLength: 0 }}
+							animate={{ pathLength: 1 }}
+							transition={getReducedMotionTransition(
+								{ duration: 0.4, ease: "easeOut" } as const,
+								prefersReduced,
+							)}
+						/>
+						<motion.path
+							d="M8 12l3 3 5-6"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							initial={{ pathLength: 0 }}
+							animate={{ pathLength: 1 }}
+							transition={getReducedMotionTransition(
+								{ duration: 0.3, delay: 0.3 } as const,
+								prefersReduced,
+							)}
+						/>
+					</motion.svg>
+				)}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 }
 

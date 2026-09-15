@@ -25,6 +25,9 @@ export {
 	getReducedMotionTransition,
 } from "./use-reduced-motion";
 
+// Preferences
+export { MotionPreferences } from "./motion-preferences";
+
 // Variants
 export {
 	// Fade
