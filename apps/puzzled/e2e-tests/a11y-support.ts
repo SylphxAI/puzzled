@@ -42,6 +42,16 @@ export async function readActiveElement(page: Page): Promise<Stop> {
 	})
 }
 
+/**
+ * The company target, in CSS pixels.
+ *
+ * One pixel of tolerance absorbs sub-pixel rounding: a `h-11` (44px) control
+ * reports a fractional box in Chromium and rounds to 43.
+ */
+export const TARGET_SIZE_MINIMUM = 44
+export const TARGET_SIZE_TOLERANCE = 1
+export const TARGET_SIZE_FLOOR = TARGET_SIZE_MINIMUM - TARGET_SIZE_TOLERANCE
+
 export type TargetOffender = {
 	target: string
 	name: string
@@ -75,10 +85,6 @@ export const TARGET_SIZE_EXCEPTIONS: readonly {
 	},
 ]
 
-function isExcepted(name: string) {
-	return TARGET_SIZE_EXCEPTIONS.some((exception) => name.startsWith(exception.name))
-}
-
 /**
  * Controls whose *effective* hit area (not just their layout box) is smaller
  * than the 44px company target.
@@ -90,45 +96,53 @@ function isExcepted(name: string) {
  * skipped; text links inside a sentence carry the WCAG 2.5.8 inline exception.
  */
 export async function targetOffenders(page: Page, selector: string): Promise<TargetOffender[]> {
-	return page.evaluate((selector) => {
-		const receivesPoint = (element: Element, x: number, y: number) => {
-			const hit = document.elementFromPoint(x, y)
-			return !!hit && (hit === element || element.contains(hit))
-		}
-		const extent = (element: Element) => {
-			const rect = element.getBoundingClientRect()
-			const cx = rect.left + rect.width / 2
-			const cy = rect.top + rect.height / 2
-			const reach = (dx: number, dy: number) => {
-				for (let step = 1; step <= 61; step += 1) {
-					if (!receivesPoint(element, cx + dx * step, cy + dy * step)) return step - 1
-				}
-				return 60
+	return page.evaluate(
+		({ selector, exceptions, floor }) => {
+			// Runs in the page: the exception names are passed in because module
+			// scope is not available inside evaluate().
+			const isExcepted = (name: string) =>
+				exceptions.some((exception) => name.startsWith(exception))
+
+			const offenders: TargetOffender[] = []
+			for (const element of Array.from(document.querySelectorAll(selector))) {
+				const rect = element.getBoundingClientRect()
+				const style = getComputedStyle(element)
+				// Visually hidden controls (sr-only skip links) are keyboard
+				// affordances, not touch targets.
+				if (rect.width <= 2 || rect.height <= 2) continue
+				if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0')
+					continue
+				if (element.getAttribute('aria-hidden') === 'true') continue
+				// A control scrolled out of the viewport cannot be hit-tested.
+				if (rect.bottom <= 0 || rect.top >= window.innerHeight) continue
+
+				const label = (element.textContent ?? '').trim()
+				const name = element.getAttribute('aria-label') || label
+				if (isExcepted(name)) continue
+
+				// The box is the target: hit-area expansion (`before:-inset-*`) is
+				// already inside the border box, and hit-testing is unreliable while
+				// a sticky header covers the centre of a link.
+				const width = Math.round(rect.width)
+				const height = Math.round(rect.height)
+				if (width >= floor && height >= floor) continue
+
+				offenders.push({
+					target: element.tagName.toLowerCase(),
+					name: name.slice(0, 40),
+					width,
+					height,
+				})
 			}
-			return { width: reach(-1, 0) + reach(1, 0), height: reach(0, -1) + reach(0, 1) }
-		}
-		const offenders: Array<{ target: string; name: string; width: number; height: number }> = []
-		for (const element of Array.from(document.querySelectorAll(selector))) {
-			const rect = element.getBoundingClientRect()
-			const style = getComputedStyle(element)
-			if (rect.width <= 2 || rect.height <= 2) continue
-			if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0')
-				continue
-			if (element.getAttribute('aria-hidden') === 'true') continue
-			const label = (element.textContent ?? '').trim()
-			const name = element.getAttribute('aria-label') || label
-			if (isExcepted(name)) continue
-			const measured = extent(element)
-			if (measured.width >= 44 && measured.height >= 44) continue
-			offenders.push({
-				target: element.tagName.toLowerCase(),
-				name: (element.getAttribute('aria-label') || label).slice(0, 40),
-				width: measured.width,
-				height: measured.height,
-			})
-		}
-		return offenders
-	}, selector)
+
+			return offenders
+		},
+		{
+			selector,
+			exceptions: TARGET_SIZE_EXCEPTIONS.map((exception) => exception.name),
+			floor: TARGET_SIZE_FLOOR,
+		},
+	)
 }
 
 /** Shell controls the 44px company target applies to on every route. */

@@ -25,8 +25,11 @@ const executablePath = chromiumExecutable()
 export default defineConfig({
 	testDir: './e2e-tests',
 	testMatch: '*.e2e.ts',
-	// Maximum time one test can run
-	timeout: 30 * 1000,
+	// Maximum time one test can run. The a11y suite walks 14 routes x 4 modes
+	// against a dev server that compiles on first request, so the budget has to
+	// cover a slow cold start; CI runs against a built server and finishes far
+	// inside it.
+	timeout: 120 * 1000,
 	expect: {
 		// Maximum time expect() should wait for the condition to be met
 		timeout: 5000,
