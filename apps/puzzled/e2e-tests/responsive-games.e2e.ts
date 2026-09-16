@@ -22,7 +22,7 @@ const VIEWPORTS = [
 const REPRESENTATIVE = ['word-guess', 'word-groups', 'sudoku']
 
 async function catalogSlugs(page: import('@playwright/test').Page) {
-	await page.goto('/games')
+	await page.goto('/games', { waitUntil: 'domcontentloaded' })
 	await settle(page)
 
 	const hrefs = await page
@@ -50,7 +50,7 @@ test.describe('Game catalog responsiveness', () => {
 		const failures: string[] = []
 		for (const slug of slugs) {
 			await page.setViewportSize({ width: MOBILE.width, height: MOBILE.height })
-			await page.goto(`/games/${slug}`)
+			await page.goto(`/games/${slug}`, { waitUntil: 'domcontentloaded' })
 			await settle(page)
 
 			if ((await page.locator('h1').count()) === 0) failures.push(`${slug}: no heading`)
@@ -64,7 +64,7 @@ test.describe('Game catalog responsiveness', () => {
 		test(`${slug} renders and keeps board controls at 44px on every width`, async ({ page }) => {
 			for (const viewport of VIEWPORTS) {
 				await page.setViewportSize({ width: viewport.width, height: viewport.height })
-				await page.goto(`/games/${slug}`)
+				await page.goto(`/games/${slug}`, { waitUntil: 'domcontentloaded' })
 				await settle(page)
 
 				expect(

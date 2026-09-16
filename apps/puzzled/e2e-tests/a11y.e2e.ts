@@ -232,7 +232,7 @@ for (const mode of MODES) {
 
 		for (const pageCase of PAGES) {
 			test(`${pageCase.name} (${pageCase.path})`, async ({ page }, testInfo) => {
-				await page.goto(pageCase.path)
+				await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
 				await settle(page)
 
 				const results = await auditPage(page, testInfo)
@@ -273,7 +273,7 @@ test.describe('Shared shell invariants', () => {
 			await page.setViewportSize(mode.viewport)
 
 			for (const pageCase of PAGES) {
-				await page.goto(pageCase.path)
+				await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
 				await settle(page)
 
 				const counts = await page.evaluate(() => ({
@@ -294,7 +294,7 @@ test.describe('Shared shell invariants', () => {
 
 	test('every shell route exposes one skip link that targets the main region', async ({ page }) => {
 		for (const pageCase of PAGES.filter((candidate) => candidate.shell)) {
-			await page.goto(pageCase.path)
+			await page.goto(pageCase.path, { waitUntil: 'domcontentloaded' })
 			await settle(page)
 
 			expect(
@@ -308,7 +308,7 @@ test.describe('Shared shell invariants', () => {
 
 test.describe('Localised routes', () => {
 	test('zh-HK root renders with a matching document language', async ({ page }, testInfo) => {
-		await page.goto('/zh-HK')
+		await page.goto('/zh-HK', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		expect(page.url()).not.toContain('/zh-HK/zh-HK')
@@ -321,7 +321,7 @@ test.describe('Localised routes', () => {
 	})
 
 	test('en-GB root renders with a matching document language', async ({ page }, testInfo) => {
-		await page.goto('/en-GB')
+		await page.goto('/en-GB', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		expect(await page.locator('html').getAttribute('lang')).toBe('en-GB')
@@ -338,7 +338,7 @@ test.describe('Game board once a puzzle is on screen', () => {
 	test('sudoku board names every cell and stays free of WCAG 2.2 A/AA violations', async ({
 		page,
 	}, testInfo) => {
-		await page.goto('/games/sudoku')
+		await page.goto('/games/sudoku', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		// Free-today module: the picker links straight into a puzzle.

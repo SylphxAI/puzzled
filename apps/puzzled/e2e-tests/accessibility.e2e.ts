@@ -30,7 +30,7 @@ test.describe('Skip link', () => {
 	test.use({ viewport: DESKTOP })
 
 	test('is the first tab stop and moves focus into the main region', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		await page.keyboard.press('Tab')
@@ -49,7 +49,7 @@ test.describe('Tab order through the shell', () => {
 	test('reaches shell controls, navigation and page content without empty stops', async ({
 		page,
 	}) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const stops: Stop[] = []
@@ -73,7 +73,7 @@ test.describe('Tab order through the shell', () => {
 	})
 
 	test('keeps a visible focus indicator on the first shell controls', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const indicators: Array<{ name: string; visible: boolean }> = []
@@ -108,7 +108,7 @@ test.describe('Overlay focus management', () => {
 	test.use({ viewport: MOBILE })
 
 	test('Escape closes the mobile nav sheet and restores focus to its trigger', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const trigger = page.getByRole('button', { name: /open menu/i })
@@ -130,7 +130,7 @@ test.describe('Overlay focus management', () => {
 
 	test('Escape closes the game rules dialog and restores focus', async ({ page }) => {
 		await page.setViewportSize(DESKTOP)
-		await page.goto('/games/sudoku')
+		await page.goto('/games/sudoku', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const trigger = page.getByRole('button', { name: /how to play/i }).first()
@@ -146,7 +146,7 @@ test.describe('Overlay focus management', () => {
 
 	test('Escape closes the language menu and restores focus to its trigger', async ({ page }) => {
 		await page.setViewportSize(DESKTOP)
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const trigger = page.getByRole('button', { name: /change language/i }).first()
@@ -167,7 +167,7 @@ test.describe('Company target size (44px effective hit area)', () => {
 	] as const) {
 		test(`${name} shell controls`, async ({ page }) => {
 			await page.setViewportSize(viewport)
-			await page.goto('/')
+			await page.goto('/', { waitUntil: 'domcontentloaded' })
 			await settle(page)
 
 			const offenders = await targetOffenders(page, SHELL_TARGET_SELECTOR)
@@ -185,7 +185,7 @@ test.describe('Reduced motion', () => {
 	test.use({ viewport: DESKTOP, colorScheme: 'light', contextOptions: { reducedMotion: 'reduce' } })
 
 	test('stops transform animation on shell surfaces', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 		await page.waitForTimeout(400)
 
@@ -203,7 +203,7 @@ test.describe('Reduced motion', () => {
 	})
 
 	test('keeps the language menu popup static', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const trigger = page.getByRole('button', { name: /change language/i }).first()
@@ -224,7 +224,7 @@ test.describe('Motion for users without the preference', () => {
 	})
 
 	test('keeps the language menu popup animation', async ({ page }) => {
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 
 		const trigger = page.getByRole('button', { name: /change language/i }).first()

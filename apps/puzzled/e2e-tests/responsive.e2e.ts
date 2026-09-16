@@ -43,7 +43,7 @@ test.describe('Responsive Design - Core Pages', () => {
 			for (const viewport of VIEWPORTS) {
 				test(`renders without horizontal overflow on ${viewport.name}`, async ({ page }) => {
 					await page.setViewportSize({ width: viewport.width, height: viewport.height })
-					await page.goto(path)
+					await page.goto(path, { waitUntil: 'domcontentloaded' })
 					await settle(page)
 
 					expect(await hasHorizontalOverflow(page), `${name} overflows at ${viewport.name}`).toBe(
@@ -60,12 +60,12 @@ test.describe('Responsive Design - Shell navigation', () => {
 		const bottomNav = page.locator('nav[aria-label]').filter({ has: page.locator('a[href="/"]') })
 
 		await page.setViewportSize({ width: 375, height: 667 })
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 		await expect(bottomNav.last()).toBeVisible()
 
 		await page.setViewportSize({ width: 1280, height: 720 })
-		await page.goto('/')
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
 		await settle(page)
 		await expect(bottomNav.last()).toBeHidden()
 	})
@@ -73,7 +73,7 @@ test.describe('Responsive Design - Shell navigation', () => {
 	test('keeps shell navigation at the 44px company target on every width', async ({ page }) => {
 		for (const viewport of VIEWPORTS) {
 			await page.setViewportSize({ width: viewport.width, height: viewport.height })
-			await page.goto('/')
+			await page.goto('/', { waitUntil: 'domcontentloaded' })
 			await settle(page)
 
 			const offenders = await targetOffenders(
@@ -99,7 +99,7 @@ test.describe('Responsive Design - Game pages', () => {
 
 			for (const viewport of VIEWPORTS) {
 				await page.setViewportSize({ width: viewport.width, height: viewport.height })
-				await page.goto(`/games/${game}`)
+				await page.goto(`/games/${game}`, { waitUntil: 'domcontentloaded' })
 				await settle(page)
 
 				expect(await page.locator('h1').count(), `${game} renders a heading`).toBeGreaterThan(0)
@@ -116,7 +116,7 @@ test.describe('Responsive Design - Forms', () => {
 		test(`${path} fits every viewport`, async ({ page }) => {
 			for (const viewport of VIEWPORTS) {
 				await page.setViewportSize({ width: viewport.width, height: viewport.height })
-				await page.goto(path)
+				await page.goto(path, { waitUntil: 'domcontentloaded' })
 				await page.waitForSelector('form', { timeout: 10000 })
 
 				expect(await hasHorizontalOverflow(page), `${path} overflows at ${viewport.name}`).toBe(
