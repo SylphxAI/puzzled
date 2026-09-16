@@ -193,7 +193,8 @@ export type ModuleStatRow = {
 	played: number
 	won: number
 	winRate: number | null
-	bestScore: number
+	/** Null when the payload did not carry a best score. */
+	bestScore: number | null
 }
 
 /**
@@ -216,7 +217,9 @@ export function moduleStatRows(
 				played,
 				won,
 				winRate: winRatePercent(played, won),
-				bestScore: entry?.totalScore ?? 0,
+				// Connect reports `GetUserStats` without a best score for some modules;
+				// an absent value stays null rather than posing as a real zero.
+				bestScore: entry?.totalScore ?? null,
 			}
 		})
 		.filter((row): row is ModuleStatRow => row !== null)

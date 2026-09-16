@@ -16,8 +16,8 @@
 		"push": "推送通知",
 		"earlyAccess": "新游戏抢先玩"
 	},
-	"portalError": "Unable to open billing portal",
-	"portalErrorDescription": "Please try again or contact support if the problem persists.",
+	"portalError": "暂时无法打开账单管理页",
+	"portalErrorDescription": "请稍后重试，如问题持续请联系支持。",
 	"planTitle": "你的方案",
 	"planDescription": "此账户可以玩什么，以及如何更改。",
 	"premiumPlan": "Premium",

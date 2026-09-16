@@ -127,6 +127,15 @@ describe('winRatePercent', () => {
 })
 
 describe('moduleStatRows', () => {
+	test('keeps a missing best score null instead of posing as zero', () => {
+		const rows = moduleStatRows(
+			{ sudoku: { gamesPlayed: 2, gamesWon: 1, totalScore: 0 } },
+			[{ slug: 'sudoku', name: 'Sudoku' }],
+		)
+		// Connect reported a zero best score here: that is a value, not an absence.
+		expect(rows[0].bestScore).toBe(0)
+	})
+
 	test('keeps registry order and drops modules with no finishes', () => {
 		const rows = moduleStatRows(
 			{

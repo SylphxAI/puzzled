@@ -3,7 +3,7 @@
 import { ArrowLeft, MailCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { useForgotPasswordForm } from '@/lib/identity/react'
 import { AuthField, AuthSubmit, emailProblem, FormAlert } from '../_components/auth-fields'
@@ -12,6 +12,10 @@ export function ForgotPasswordForm() {
 	const t = useTranslations('auth')
 	const [touched, setTouched] = useState(false)
 	const [attempted, setAttempted] = useState(false)
+	// Submission guard that survives two clicks in the same tick: `isLoading`
+	// only flips after a re-render, so the ref is what actually blocks the
+	// second submit while the first request is in flight.
+	const submittingRef = useRef(false)
 
 	const { form, setEmail, isLoading, error, success, handleSubmit } = useForgotPasswordForm({
 		redirectTo: '/reset-password',
@@ -43,10 +47,13 @@ export function ForgotPasswordForm() {
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
-		if (isLoading) return
+		if (submittingRef.current || isLoading) return
 		setAttempted(true)
 		if (emailIssue) return
-		void handleSubmit(event)
+		submittingRef.current = true
+		void handleSubmit(event).finally(() => {
+			submittingRef.current = false
+		})
 	}
 
 	return (

@@ -168,39 +168,32 @@ export function ReferralsContent() {
 			</ConsoleCard>
 
 			<ConsoleCard title={t('yourReferrals')} description={t('referralProgress')}>
-				<dl className="grid grid-cols-3 gap-3 text-center">
+				<dl className="grid grid-cols-2 gap-3 text-center">
 					<div className="rounded-2xl border border-border/70 bg-surface-muted/60 p-3">
 						<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-							{t('totalReferrals')}
+							{t('redemptions')}
 						</dt>
 						<dd className="mt-1 flex flex-col items-center font-display text-2xl font-extrabold tnum">
 							<Users className="mb-1 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-							{stats.totalReferrals}
+							{stats.redemptions === null ? t('notReported') : stats.redemptions}
 						</dd>
 					</div>
 					<div className="rounded-2xl border border-border/70 bg-surface-muted/60 p-3">
 						<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-							{t('completed')}
+							{t('rewardsEarned')}
 						</dt>
 						<dd className="mt-1 flex flex-col items-center font-display text-2xl font-extrabold tnum">
 							<UserCheck
 								className="mb-1 h-4 w-4 text-emerald-600 dark:text-emerald-400"
 								aria-hidden="true"
 							/>
-							{stats.completedReferrals}
-						</dd>
-					</div>
-					<div className="rounded-2xl border border-border/70 bg-surface-muted/60 p-3">
-						<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-							{t('pending')}
-						</dt>
-						<dd className="mt-1 font-display text-2xl font-extrabold tnum">
-							{stats.pendingReferrals}
+							{stats.redemptions === null ? t('notReported') : stats.redemptions}
 						</dd>
 					</div>
 				</dl>
-				{stats.totalReferrals === 0 ? (
-					<p className="mt-3 text-sm text-muted-foreground">{t('noReferralsYet')}</p>
+				<p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t('figuresNote')}</p>
+				{stats.redemptions === 0 ? (
+					<p className="mt-2 text-sm text-muted-foreground">{t('noReferralsYet')}</p>
 				) : null}
 			</ConsoleCard>
 

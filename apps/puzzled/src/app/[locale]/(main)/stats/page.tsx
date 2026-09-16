@@ -129,7 +129,11 @@ export default async function StatsPage({ params }: Props) {
 	const history = historyRead ?? []
 	const calendar = buildFinishCalendar({ sessions: history, todayKey: productDayKey() })
 
-	const milestones: Milestone[] = statsKnown
+	// A ring needs both readings: totals for the win milestones and the streak
+	// payload for the streak one. Without the streak number a ring would paint a
+	// fabricated 0-day best, so the card states that it is unavailable instead.
+	const milestonesReadable = statsKnown && streakKnown
+	const milestones: Milestone[] = milestonesReadable
 		? getNextAchievements({
 				totalWins: moduleRows.length > 0 ? totalWon : 0,
 				maxStreak: streakRead?.maxStreak ?? 0,
@@ -404,7 +408,7 @@ export default async function StatsPage({ params }: Props) {
 							</ConsoleCard>
 						)}
 
-						<MilestoneRingsCard milestones={milestones} unavailable={!statsKnown} />
+						<MilestoneRingsCard milestones={milestones} unavailable={!milestonesReadable} />
 
 						{historyKnown ? (
 							<FinishHistoryCard

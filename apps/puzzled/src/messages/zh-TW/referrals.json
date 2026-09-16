@@ -1,11 +1,11 @@
 {
 	"title": "推薦好友",
 	"description": "邀請朋友，一起贏取獎勵",
-	"inviteFriends": "Invite Friends",
-	"inviteDescription": "Share Puzzled with friends and both earn rewards",
-	"earnRewards": "Earn Streak Freezes",
-	"streakFreezeReward": "Get 2 free streak freezes when a friend joins",
-	"viewReferrals": "View Referrals",
+	"inviteFriends": "邀請好友",
+	"inviteDescription": "分享 Puzzled，雙方都可獲得獎勵",
+	"earnRewards": "賺取連勝保護",
+	"streakFreezeReward": "好友加入後可獲得 2 個連勝保護",
+	"viewReferrals": "查看推薦紀錄",
 	"yourReferralCode": "您的推薦碼",
 	"shareWithFriends": "與朋友分享以賺取獎勵",
 	"referralLink": "推薦連結",
@@ -19,9 +19,6 @@
 	"rewardInfo": "當您的朋友註冊時，您和朋友都會獲得連勝凍結！",
 	"yourReferrals": "您的推薦",
 	"referralProgress": "追蹤您的推薦進度",
-	"totalReferrals": "總計",
-	"completed": "已完成",
-	"pending": "待處理",
 	"expired": "已過期",
 	"recentReferrals": "最近的推薦",
 	"noReferralsYet": "還沒有推薦。分享您的代碼開始吧！",
@@ -37,5 +34,9 @@
 	"regenerate": "新推薦碼",
 	"unavailableTitle": "推薦資料無法載入",
 	"unavailableBody": "推薦讀取沒有回應，因此不顯示推薦碼或數字。",
-	"retry": "重試"
+	"retry": "重試",
+	"redemptions": "已兌換次數",
+	"rewardsEarned": "已獲得獎勵",
+	"notReported": "未回報",
+	"figuresNote": "這兩個數字是帳戶回報的兌換次數，我們不會自行拆成「已完成」與「待處理」。"
 }

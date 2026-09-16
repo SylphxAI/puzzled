@@ -68,7 +68,9 @@ export async function ModuleBreakdownCard({ rows }: { rows: readonly ModuleStatR
 								<td className="px-3 py-3 text-right tnum">
 									{row.winRate === null ? t('notRecorded') : `${row.winRate}%`}
 								</td>
-								<td className="px-4 py-3 text-right tnum md:px-5">{row.bestScore}</td>
+								<td className="px-4 py-3 text-right tnum md:px-5">
+									{row.bestScore === null ? t('notRecorded') : row.bestScore}
+								</td>
 							</tr>
 						))}
 					</tbody>

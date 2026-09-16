@@ -32,7 +32,9 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 	// Public aggregate for today; an unreadable payload simply drops the line
 	// rather than claiming a number we did not receive.
 	const overview = await withPresentationDeadline(getServerTodayOverview(), null)
-	const playersToday = overview && overview.playerCount > 0 ? overview.playerCount : null
+	// Three distinct states: a real count, a real zero ("be the first"), and an
+	// unread aggregate. Folding zero into "no count" would invent a number.
+	const playersToday = overview === null ? null : overview.playerCount
 
 	const trustPoints = [
 		t('brandPanel.trustFree'),
@@ -69,9 +71,11 @@ export async function AuthShell({ locale, children }: AuthShellProps) {
 							<p className="mt-1 text-sm text-indigo-100/80">
 								{playersToday === null
 									? t('brandPanel.proofNoCount')
-									: t('brandPanel.proofPlayers', {
-											count: new Intl.NumberFormat(locale).format(playersToday),
-										})}
+									: playersToday === 0
+										? t('brandPanel.proofPlayersNone')
+										: t('brandPanel.proofPlayers', {
+												count: new Intl.NumberFormat(locale).format(playersToday),
+											})}
 							</p>
 							<Link
 								href={`/games/${freeGameSlug}`}

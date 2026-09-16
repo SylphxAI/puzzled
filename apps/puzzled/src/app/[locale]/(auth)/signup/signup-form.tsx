@@ -3,7 +3,7 @@
 import { MailCheck } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 import { type OAuthProvider, useSafeAuth, useSignUpForm } from '@/lib/identity/react'
 import {
@@ -31,6 +31,10 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 		{},
 	)
 	const [attempted, setAttempted] = useState(false)
+	// Submission guard that survives two clicks in the same tick: `isLoading`
+	// only flips after a re-render, so the ref is what actually blocks the
+	// second submit while the first request is in flight.
+	const submittingRef = useRef(false)
 	const { signInWithOAuth } = useSafeAuth()
 
 	const {
@@ -84,10 +88,13 @@ export function SignUpForm({ providers }: SignUpFormProps) {
 
 	function onSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault()
-		if (isLoading) return
+		if (submittingRef.current || isLoading) return
 		setAttempted(true)
 		if (nameIssue || emailIssue || passwordIssue) return
-		void handleSubmit(event)
+		submittingRef.current = true
+		void handleSubmit(event).finally(() => {
+			submittingRef.current = false
+		})
 	}
 
 	return (
