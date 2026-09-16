@@ -168,9 +168,13 @@
 	/* -----------------------------------------
 	   Colors - Stats
 	   ----------------------------------------- */
-	/* Stat colours are used as small text, so they carry AA contrast on white. */
+	/*
+	 * Stat colours are used as small text, so they carry AA contrast both on the
+	 * page surface and on their own 10% tint (the streak chip is
+	 * `bg-stat-streak/10 text-stat-streak`): #9a3412 is 6.2:1 on the tint.
+	 */
 	--color-stat-winrate: #15803d;
-	--color-stat-streak: #c2410c;
+	--color-stat-streak: #9a3412;
 	--color-stat-best: #b45309;
 
 	/* -----------------------------------------

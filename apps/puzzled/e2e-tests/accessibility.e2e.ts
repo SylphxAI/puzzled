@@ -161,6 +161,8 @@ test.describe('Overlay focus management', () => {
 })
 
 test.describe('Company target size (44px effective hit area)', () => {
+	const OVERLAY_SELECTOR = '[role="dialog"] a[href], [role="dialog"] button'
+
 	for (const [name, viewport] of [
 		['desktop', DESKTOP],
 		['mobile', MOBILE],
@@ -179,6 +181,26 @@ test.describe('Company target size (44px effective hit area)', () => {
 			).toEqual([])
 		})
 	}
+
+	test('shell controls inside the open mobile drawer', async ({ page }) => {
+		await page.setViewportSize(MOBILE)
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
+
+		// The drawer's destinations, appearance controls and account entry only
+		// exist in the DOM (and only in the tab order) while it is open.
+		await page.getByRole('button', { name: /open menu/i }).click()
+		await expect(page.getByRole('dialog')).toBeVisible()
+		await settle(page)
+
+		const offenders = await targetOffenders(page, OVERLAY_SELECTOR)
+		expect(
+			offenders,
+			`drawer controls below 44px effective target:\n${offenders
+				.map((entry) => `  ${entry.width}x${entry.height} ${entry.target} "${entry.name}"`)
+				.join('\n')}`,
+		).toEqual([])
+	})
 })
 
 test.describe('Reduced motion', () => {

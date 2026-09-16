@@ -49,6 +49,17 @@
 	"soundOff": "Sound off (click to enable)",
 	"sound": "Sound",
 	"soundToggleLoading": "Sound toggle (loading)",
+	"theme": {
+		"title": "Theme selection",
+		"system": "System",
+		"light": "Light",
+		"dark": "Dark",
+		"loading": "Theme toggle (loading)",
+		"selectionLoading": "{theme} theme (loading)",
+		"setTo": "Set theme to {theme}",
+		"toggle": "Toggle theme (current: {theme})",
+		"current": "Current theme: {theme}"
+	},
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

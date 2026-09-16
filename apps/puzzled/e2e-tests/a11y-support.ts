@@ -13,7 +13,7 @@ export const DESKTOP = { width: 1440, height: 900 }
 export const MOBILE = { width: 390, height: 844 }
 
 export async function settle(page: Page) {
-	await page.waitForLoadState('networkidle')
+	await page.waitForLoadState('domcontentloaded')
 }
 
 export type Stop = {
@@ -47,6 +47,36 @@ export type TargetOffender = {
 	name: string
 	width: number
 	height: number
+}
+
+/**
+ * Controls that deliberately sit below the 44px company target, with the reason.
+ *
+ * Everything else in the measured selection must reach 44px. Each entry has to
+ * point at a control whose rendered box is smaller by design; if the control
+ * grows past 44px the exception simply stops applying (it is not a blanket
+ * allowance for the selector).
+ */
+export const TARGET_SIZE_EXCEPTIONS: readonly {
+	/** Accessible name (or prefix) of the control. */
+	name: string
+	/** Why it is allowed to stay below 44px. */
+	reason: string
+}[] = [
+	{
+		name: 'Skip to main content',
+		reason:
+			'visually hidden until focused (sr-only): it is a keyboard affordance, not a touch target',
+	},
+	{
+		name: 'Puzzled',
+		reason:
+			'the wordmark is 44px high at its touch area but its text box is narrower on desktop; the logo link is a brand mark, never the only route to a destination',
+	},
+]
+
+function isExcepted(name: string) {
+	return TARGET_SIZE_EXCEPTIONS.some((exception) => name.startsWith(exception.name))
 }
 
 /**
@@ -86,7 +116,8 @@ export async function targetOffenders(page: Page, selector: string): Promise<Tar
 				continue
 			if (element.getAttribute('aria-hidden') === 'true') continue
 			const label = (element.textContent ?? '').trim()
-			if (label.length > 40) continue
+			const name = element.getAttribute('aria-label') || label
+			if (isExcepted(name)) continue
 			const measured = extent(element)
 			if (measured.width >= 44 && measured.height >= 44) continue
 			offenders.push({
@@ -110,11 +141,13 @@ export const SHELL_TARGET_SELECTOR =
  * `prefers-reduced-motion` stops transform animation.
  */
 export async function sampleTransform(page: Page, selector: string, frames = 14, delayMs = 12) {
-	return page.evaluate(
+	const samples = await page.evaluate(
 		async ({ selector, frames, delayMs }) => {
 			const samples: string[] = []
 			const element = document.querySelector(selector)
-			if (!element) return samples
+			// A missing element is a failure, not "no animation": returning an
+			// empty list would make every transform assertion pass vacuously.
+			if (!element) return null
 			for (let frame = 0; frame < frames; frame += 1) {
 				await new Promise((resolve) => {
 					requestAnimationFrame(() => resolve(null))
@@ -126,4 +159,10 @@ export async function sampleTransform(page: Page, selector: string, frames = 14,
 		},
 		{ selector, frames, delayMs },
 	)
+
+	if (samples === null) {
+		throw new Error(`sampleTransform: no element matches "${selector}"`)
+	}
+
+	return samples
 }
