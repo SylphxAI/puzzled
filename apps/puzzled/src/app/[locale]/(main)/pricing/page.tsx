@@ -8,7 +8,6 @@ import {
 	PricingBillingFacts,
 	PricingComparison,
 } from '@/features/marketing/components'
-import { PREMIUM_TRIAL_DAYS } from '@/features/marketing/lib/pricing-facts'
 import { getAllGameMetadata } from '@/games/registry'
 import { getServerTodayOverview } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame } from '@/lib/billing/server'
@@ -77,10 +76,7 @@ export default async function PricingPage({ params }: Props) {
 
 	const faqItems = [
 		{ question: t('faq.cancel.question'), answer: t('faq.cancel.answer') },
-		{
-			question: t('faq.trial.question', { days: PREMIUM_TRIAL_DAYS }),
-			answer: t('faq.trial.answer', { days: PREMIUM_TRIAL_DAYS }),
-		},
+		{ question: t('faq.trial.question'), answer: t('faq.trial.answer') },
 		{ question: t('faq.price.question'), answer: t('faq.price.answer') },
 		{
 			question: t('faq.refund.question'),

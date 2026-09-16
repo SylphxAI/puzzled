@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { cn } from '@/lib/utils'
 
 export type MarketingFaqItem = {
@@ -6,17 +7,45 @@ export type MarketingFaqItem = {
 	answer: string
 }
 
-type MarketingFaqProps = {
+/**
+ * What a page hands the FAQ when it composes the item array in the page.
+ *
+ * The two branches are deliberately exclusive: a page either supplies finished
+ * `items`, or it supplies a `namespace` plus the `keys` to read from it. A
+ * `namespace` on its own is ambiguous — `useTranslations('home')` would also
+ * resolve `title` — so a page that wants the namespace form must list keys.
+ */
+type MarketingFaqItemsProps = {
 	/** Anchor id shared by the section and its heading. */
 	id: string
+	items: readonly MarketingFaqItem[]
+	itemsFrom?: never
+	keys?: never
+	namespace?: never
+}
+
+type MarketingFaqNamespaceProps = {
+	id: string
+	items?: never
+	/** Selects the namespace form, e.g. `namespace` + `keys`. */
+	itemsFrom: 'namespace'
+	/** Message namespace holding the items, e.g. `home`. */
+	namespace: string
+	/** Dotted item keys inside the namespace, each with `.question`/`.answer`. */
+	keys: readonly string[]
+}
+
+type MarketingFaqCommonProps = {
 	/** Section heading; omit when the FAQ sits under an existing heading. */
 	title?: string
 	subtitle?: string
-	items: readonly MarketingFaqItem[]
 	/** Two columns on desktop for short answers; one column for long prose. */
 	columns?: 1 | 2
 	className?: string
 }
+
+type MarketingFaqProps = (MarketingFaqItemsProps | MarketingFaqNamespaceProps) &
+	MarketingFaqCommonProps
 
 /**
  * Accessible FAQ list.
@@ -25,21 +54,31 @@ type MarketingFaqProps = {
  * and no-JS readers see them), gives keyboard operation for free, and the same
  * copy feeds the FAQPage structured data so the two can never drift. The
  * chevron is decorative: the open state is conveyed by the native disclosure,
- * never by colour alone.
+ * never by colour alone. The 44px summary target and the focus ring are part
+ * of the component so no caller can drop them.
+ *
+ * Every FAQ on the site renders through this component: it is the one home for
+ * the disclosure behaviour and the structured data, so a page cannot ship an
+ * FAQ with a different target size or a missing JSON-LD block.
  */
-export function MarketingFaq({
+export async function MarketingFaq({
 	id,
 	title,
 	subtitle,
 	items,
+	namespace,
+	keys,
 	columns = 2,
 	className,
 }: MarketingFaqProps) {
 	const headingId = `${id}-heading`
+	const resolvedItems: readonly MarketingFaqItem[] = items
+		? items
+		: await resolveNamespaceItems(namespace as string, keys as readonly string[])
 	const structuredData = {
 		'@context': 'https://schema.org',
 		'@type': 'FAQPage',
-		mainEntity: items.map((item) => ({
+		mainEntity: resolvedItems.map((item) => ({
 			'@type': 'Question',
 			name: item.question,
 			acceptedAnswer: { '@type': 'Answer', text: item.answer },
@@ -72,7 +111,7 @@ export function MarketingFaq({
 						columns === 2 && 'md:grid-cols-2',
 					)}
 				>
-					{items.map((item) => (
+					{resolvedItems.map((item) => (
 						<details
 							key={item.question}
 							className="group rounded-2xl border border-border/70 bg-card px-4 py-1 open:shadow-card"
@@ -99,4 +138,16 @@ export function MarketingFaq({
 			/>
 		</section>
 	)
+}
+
+/** Reads `keys` out of one message namespace in the current request locale. */
+async function resolveNamespaceItems(
+	namespace: string,
+	keys: readonly string[],
+): Promise<readonly MarketingFaqItem[]> {
+	const t = await getTranslations(namespace)
+	return keys.map((key) => ({
+		question: t(`${key}.question`),
+		answer: t(`${key}.answer`),
+	}))
 }

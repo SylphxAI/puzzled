@@ -22,8 +22,7 @@
 		"priceAtCheckoutNote": "价格来自我们的付款服务供应商，并在结账时以您的货币确认。我们不会印出账务系统没有回传的数字。",
 		"billedYearly": "{amount}/月，按年收费",
 		"savingVsMonthly": "比月费节省 {percent}%",
-		"trial": "{days} 天免费试用",
-		"trialNote": "在试用结束前取消，无需付款。",
+		"cancelNote": "随时可在控制台取消；使用权至已付款期间结束。",
 		"freeSubtitle": "每天一个模块，无需账户",
 		"monthlySubtitle": "Premium，按月收费",
 		"annualSubtitle": "Premium，按年收费",
@@ -77,8 +76,8 @@
 			"answer": "打开「设置 → 订阅」，使用「管理订阅」。您可随时取消，使用权会维持至已付款期间结束。"
 		},
 		"trial": {
-			"question": "{days} 天试用如何运作？",
-			"answer": "Premium 首 {days} 天免费。在试用结束前取消即不会收费；如继续使用，则按结账时显示的价格收费。"
+			"question": "有提供免费试用吗？",
+			"answer": "目前没有。Free 是正式方案而非试用：每天都有一款模块免费，人人可用，无需账户和信用卡。Premium 是付费方案（月付或年付），可随时取消，使用权至已付款期间结束。"
 		},
 		"price": {
 			"question": "价格从何而来？",
@@ -103,7 +102,7 @@
 		"play": "玩 {game}",
 		"browse": "查看全部 {count} 个模块"
 	},
-	"startFreeTrial": "开始免费试用",
+	"subscribeCta": "订阅",
 	"processing": "处理中…",
 	"redirectingToCheckout": "正在前往结账",
 	"securePaymentMessage": "您将前往我们的安全付款页面",

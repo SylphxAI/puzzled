@@ -128,7 +128,6 @@ export default async function SupportPage({ params }: Props) {
 						<a href={mailto} className={PRIMARY_CTA}>
 							<Mail className="h-4 w-4" aria-hidden="true" />
 							{t('hero.emailCta')}
-
 						</a>
 						<a href="#faq" className={SECONDARY_CTA}>
 							{t('hero.faqCta')}

@@ -22,8 +22,7 @@
 		"priceAtCheckoutNote": "The price comes from our payment provider and is confirmed in your currency at checkout. We do not print a figure the billing system has not returned.",
 		"billedYearly": "{amount} a month, billed yearly",
 		"savingVsMonthly": "Save {percent}% against monthly",
-		"trial": "{days}-day free trial",
-		"trialNote": "Cancel before the trial ends and you pay nothing.",
+		"cancelNote": "Cancel any time in the console; access runs to the end of the period you paid for.",
 		"freeSubtitle": "One module every day, no account",
 		"monthlySubtitle": "Premium, billed monthly",
 		"annualSubtitle": "Premium, billed yearly",
@@ -77,8 +76,8 @@
 			"answer": "Open Settings → Subscription and use Manage Subscription. You can cancel any time, and your access continues until the end of the period you already paid for."
 		},
 		"trial": {
-			"question": "How does the {days}-day trial work?",
-			"answer": "Premium starts with {days} days free. Cancel before they end and nothing is charged; if you keep it, billing continues at the price shown at checkout."
+			"question": "Do you offer a free trial?",
+			"answer": "Not at the moment. Free is a tier rather than a trial: one module stays free every day for everyone, with no account and no card. Premium is the paid plan (monthly or yearly), and you can cancel it at any time — access runs to the end of the period you paid for."
 		},
 		"price": {
 			"question": "Where do the prices come from?",
@@ -103,7 +102,7 @@
 		"play": "Play {game}",
 		"browse": "See all {count} modules"
 	},
-	"startFreeTrial": "Start free trial",
+	"subscribeCta": "Subscribe",
 	"processing": "Processing...",
 	"redirectingToCheckout": "Redirecting to checkout",
 	"securePaymentMessage": "You'll be taken to our secure payment page",

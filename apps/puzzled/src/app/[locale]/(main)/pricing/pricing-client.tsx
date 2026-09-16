@@ -4,7 +4,6 @@ import { useToast } from '@sylphx/ui'
 import { Check, ExternalLink, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import { PREMIUM_TRIAL_DAYS } from '@/features/marketing/lib/pricing-facts'
 import {
 	annualSavingsPercent,
 	formatAmount,
@@ -27,7 +26,6 @@ type PlanCardModel = {
 	rate: string | null
 	/** A saving computed from both authoritative prices. */
 	saving: string | null
-	trial: string | null
 	features: readonly string[]
 	footnote: string | null
 	interval: Interval | null
@@ -88,7 +86,6 @@ export function PricingContent({
 			cadence: null,
 			rate: null,
 			saving: null,
-			trial: null,
 			features: [
 				t('plans.freeFeatureDaily'),
 				t('plans.freeFeatureAccount'),
@@ -107,11 +104,11 @@ export function PricingContent({
 			cadence: monthlyPrice ? tPlans('perMonth') : null,
 			rate: null,
 			saving: null,
-			// The trial belongs to the plan the authority published: without a
-			// published plan there is nothing for a trial to attach to.
-			trial: monthlyPrice ? t('plans.trial', { days: PREMIUM_TRIAL_DAYS }) : null,
+			// No trial chip: nothing in checkout starts a trial today
+			// (`createCheckout` throws `commerce_checkout_unconfigured` and no trial
+			// is created anywhere), so promising one would be a claim we cannot keep.
 			features: premiumFeatures,
-			footnote: monthlyPrice ? t('plans.trialNote') : null,
+			footnote: monthlyPrice ? t('plans.cancelNote') : null,
 			interval: 'monthly',
 			slug: monthly?.slug ?? null,
 			isFree: false,
@@ -127,7 +124,6 @@ export function PricingContent({
 				: null,
 			saving:
 				savingsPercent !== null ? t('plans.savingVsMonthly', { percent: savingsPercent }) : null,
-			trial: annualPrice ? t('plans.trial', { days: PREMIUM_TRIAL_DAYS }) : null,
 			features: premiumFeatures,
 			footnote: annualPrice ? t('plans.annualNote') : null,
 			interval: 'annual',
@@ -195,16 +191,12 @@ export function PricingContent({
 
 							{card.rate && <p className="mt-1 text-sm tnum text-muted-foreground">{card.rate}</p>}
 
-							{(card.saving || card.trial) && (
-								<p className="mt-3 flex flex-wrap gap-2">
-									{card.saving && (
-										<span className="chip bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-											{card.saving}
-										</span>
-									)}
-									{card.trial && (
-										<span className="chip bg-primary/10 text-primary">{card.trial}</span>
-									)}
+							{card.saving && (
+								<p className="mt-3">
+									{/* emerald-800 on the raised surface keeps the label past 4.5:1. */}
+									<span className="chip bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200">
+										{card.saving}
+									</span>
 								</p>
 							)}
 
@@ -258,7 +250,7 @@ export function PricingContent({
 											? tPlans('currentPlan')
 											: isPremium
 												? tPlans('switchPlan')
-												: t('startFreeTrial')}
+												: t('subscribeCta')}
 									<ExternalLink className="h-4 w-4" aria-hidden="true" />
 								</button>
 							)}
