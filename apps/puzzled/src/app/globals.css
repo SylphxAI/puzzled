@@ -22,8 +22,10 @@
 	/* -----------------------------------------
 	   Font Families
 	   ----------------------------------------- */
-	--font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-	--font-mono: var(--font-geist-mono), ui-monospace, monospace;
+	--font-display: var(--font-display-family), var(--font-sans-family), ui-sans-serif, system-ui,
+		sans-serif;
+	--font-sans: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
+	--font-mono: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
 
 	/* -----------------------------------------
 	   Border Radius (Playful, rounded - Puzzled signature)
@@ -34,6 +36,7 @@
 	--radius-xl: 0.875rem;
 	--radius-2xl: 1rem;
 	--radius-3xl: 1.5rem;
+	--radius-4xl: 2rem;
 
 	/* -----------------------------------------
 	   Shadows (Brand-tinted - Puzzled signature)
@@ -48,6 +51,10 @@
 		rgb(0 0 0 / 0.04);
 	--shadow-card-hover: 0 8px 24px -4px rgb(99 102 241 / 0.15), 0 6px 12px -4px
 		rgb(0 0 0 / 0.08);
+	--shadow-lift: 0 18px 40px -18px rgb(79 70 229 / 0.35), 0 8px 16px -12px
+		rgb(15 23 42 / 0.18);
+	--shadow-glow: 0 0 0 1px rgb(99 102 241 / 0.08), 0 24px 60px -28px
+		rgb(99 102 241 / 0.45);
 
 	/* -----------------------------------------
 	   Z-Index System
@@ -69,13 +76,14 @@
 	   Duration Scale (aligned with ui/motion/config.ts)
 	   Use semantic tokens: duration-fast, duration-normal, etc.
 	   ----------------------------------------- */
-	--duration-instant: 0ms;
-	--duration-fast: 100ms; /* micro-interactions: hover, focus */
-	--duration-normal: 150ms; /* standard transitions */
-	--duration-medium: 200ms; /* slightly longer transitions */
-	--duration-slow: 300ms; /* modals, page transitions */
-	--duration-slower: 400ms; /* complex choreography */
-	--duration-slowest: 500ms; /* dramatic reveals */
+	/* Tailwind v4 reads named durations from --transition-duration-*. */
+	--transition-duration-instant: 0ms;
+	--transition-duration-fast: 100ms; /* micro-interactions: hover, focus */
+	--transition-duration-normal: 150ms; /* standard transitions */
+	--transition-duration-medium: 200ms; /* slightly longer transitions */
+	--transition-duration-slow: 300ms; /* modals, page transitions */
+	--transition-duration-slower: 400ms; /* complex choreography */
+	--transition-duration-slowest: 500ms; /* dramatic reveals */
 
 	/* -----------------------------------------
 	   Spacing (Layout)
@@ -99,23 +107,41 @@
 	--animate-streak-pulse: streak-pulse 2s ease-in-out infinite;
 	--animate-milestone-glow: milestone-glow 3s ease-in-out infinite;
 	--animate-progress-fill: progress-fill 0.5s ease-out forwards;
+	--animate-progress-indeterminate: progress-indeterminate 1.4s ease-in-out infinite;
 	--animate-fade-in: fade-in 0.2s ease-out;
 	--animate-slide-up: slide-up 0.3s ease-out;
 	--animate-flip: flip 0.5s ease-in-out;
 	--animate-bounce: bounce 0.6s ease-in-out;
 	--animate-shake: shake 0.5s ease-in-out;
 	--animate-shimmer: shimmer 2s infinite;
+	--animate-checkmark: checkmark 0.3s ease-out forwards;
+	--animate-status-pulse: status-pulse 2s ease-in-out infinite;
 	--animate-collapsible-down: collapsible-down 0.2s ease-out;
 	--animate-collapsible-up: collapsible-up 0.2s ease-out;
+	/* Base UI disclosure states reuse the collapsible timing. */
+	--animate-accordion-down: collapsible-down 0.2s ease-out;
+	--animate-accordion-up: collapsible-up 0.2s ease-out;
 
 	/* -----------------------------------------
 	   Colors - Brand
 	   ----------------------------------------- */
-	--color-primary: #6366f1;
-	--color-primary-hover: #4f46e5;
-	--color-primary-light: #818cf8;
+	/* indigo-600 passes AA as both a fill (white text) and as text on white. */
+	--color-primary: #4f46e5;
+	--color-primary-hover: #4338ca;
 	--color-primary-foreground: #ffffff;
+	--color-ring: #4f46e5;
 	--color-secondary: #8b5cf6;
+	/* Warm accent used for delight moments (streaks, celebration, highlights) */
+	--color-accent-warm: #f97316;
+	--color-accent-warm-soft: #fff7ed;
+	--color-accent-warm-foreground: #7c2d12;
+	/* Deep brand ink used by marketing bands and the footer */
+	--color-ink: #1e1b4b;
+	--color-ink-muted: #4338ca;
+	--color-ink-foreground: #eef2ff;
+	--color-surface: #ffffff;
+	--color-surface-muted: #f8fafc;
+	--color-surface-raised: #ffffff;
 
 	/* -----------------------------------------
 	   Colors - Semantic
@@ -140,27 +166,12 @@
 	--color-wrong: #ef4444;
 
 	/* -----------------------------------------
-	   Colors - Word Groups Categories
-	   ----------------------------------------- */
-	--color-category-1: #fb7185;
-	--color-category-2: #2dd4bf;
-	--color-category-3: #fbbf24;
-	--color-category-4: #e879f9;
-
-	/* -----------------------------------------
 	   Colors - Stats
 	   ----------------------------------------- */
-	--color-stat-games: #3b82f6;
-	--color-stat-winrate: #22c55e;
-	--color-stat-streak: #f97316;
-	--color-stat-best: #eab308;
-
-	/* -----------------------------------------
-	   Colors - Game Brands
-	   ----------------------------------------- */
-	--color-game-wordle: #22c55e;
-	--color-game-connections: #a855f7;
-	--color-game-quiz: #3b82f6;
+	/* Stat colours are used as small text, so they carry AA contrast on white. */
+	--color-stat-winrate: #15803d;
+	--color-stat-streak: #c2410c;
+	--color-stat-best: #b45309;
 
 	/* -----------------------------------------
 	   Colors - Rankings
@@ -176,14 +187,11 @@
 	--color-foreground: #0f172a;
 	--color-card: #ffffff;
 	--color-card-foreground: #0f172a;
-	--color-popover: #ffffff;
-	--color-popover-foreground: #0f172a;
 	--color-accent: #f1f5f9;
 	--color-accent-foreground: #0f172a;
 	--color-muted: #f1f5f9;
 	--color-muted-foreground: #475569;
 	--color-border: #e2e8f0;
-	--color-ring: #6366f1;
 	--color-input: #e2e8f0;
 
 	/* -----------------------------------------
@@ -206,8 +214,6 @@
 	--color-foreground: #f8fafc;
 	--color-card: #1e293b;
 	--color-card-foreground: #f8fafc;
-	--color-popover: #1e293b;
-	--color-popover-foreground: #f8fafc;
 	--color-accent: #334155;
 	--color-accent-foreground: #f8fafc;
 	--color-muted: #334155;
@@ -217,6 +223,25 @@
 	--color-ring: #818cf8;
 	--color-key: #374151;
 	--color-key-text: #f9fafb;
+	/*
+	 * On dark surfaces the brand colour must be legible as text, so the fill
+	 * turns light and its label turns dark ink (7.3:1 / 8.0:1).
+	 */
+	--color-primary: #a5b4fc;
+	--color-primary-hover: #c7d2fe;
+	--color-primary-foreground: #1e1b4b;
+	--color-stat-winrate: #4ade80;
+	--color-stat-streak: #fb923c;
+	--color-stat-best: #fbbf24;
+	--color-accent-warm: #fb923c;
+	--color-accent-warm-soft: rgb(124 45 18 / 0.25);
+	--color-accent-warm-foreground: #ffedd5;
+	--color-ink: #0b1020;
+	--color-ink-muted: #1e1b4b;
+	--color-ink-foreground: #e0e7ff;
+	--color-surface: #172033;
+	--color-surface-muted: #131c2e;
+	--color-surface-raised: #1e293b;
 
 	/* Semantic Colors - Dark Mode */
 	--color-success: #4ade80;
@@ -397,6 +422,176 @@ body {
 
 .card-interactive:active {
 	transform: scale(0.98);
+}
+
+/* =============================================
+   Page layout primitives
+============================================= */
+
+/* Shared page gutter: 4xl game surfaces, 6xl marketing surfaces. */
+.page-shell {
+	margin-inline: auto;
+	width: 100%;
+	max-width: 64rem;
+	padding-inline: 1rem;
+}
+
+.page-shell-wide {
+	margin-inline: auto;
+	width: 100%;
+	max-width: 76rem;
+	padding-inline: 1rem;
+}
+
+@media (min-width: 768px) {
+	.page-shell,
+	.page-shell-wide {
+		padding-inline: 1.5rem;
+	}
+}
+
+/* Vertical rhythm for marketing sections. */
+.section-block {
+	padding-block: 2.5rem;
+}
+
+@media (min-width: 768px) {
+	.section-block {
+		padding-block: 4rem;
+	}
+}
+
+/* =============================================
+   Brand surfaces
+============================================= */
+
+/* Soft aurora field used behind heroes. Decorative only. */
+.bg-aurora {
+	background-image:
+		radial-gradient(60% 55% at 12% 8%, rgb(99 102 241 / 0.16), transparent 70%),
+		radial-gradient(45% 45% at 88% 0%, rgb(217 70 239 / 0.12), transparent 65%),
+		radial-gradient(55% 55% at 70% 95%, rgb(249 115 22 / 0.08), transparent 70%);
+}
+
+.dark .bg-aurora {
+	background-image:
+		radial-gradient(60% 55% at 12% 8%, rgb(99 102 241 / 0.28), transparent 70%),
+		radial-gradient(45% 45% at 88% 0%, rgb(168 85 247 / 0.2), transparent 65%),
+		radial-gradient(55% 55% at 70% 95%, rgb(249 115 22 / 0.1), transparent 70%);
+}
+
+/* Faint grid overlay for premium/marketing bands. */
+.bg-grid-faint {
+	background-image:
+		linear-gradient(to right, rgb(99 102 241 / 0.07) 1px, transparent 1px),
+		linear-gradient(to bottom, rgb(99 102 241 / 0.07) 1px, transparent 1px);
+	background-size: 32px 32px;
+}
+
+/* Elevated card surface with brand-tinted border. */
+.surface-card {
+	background-color: var(--color-card);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-2xl);
+	box-shadow: var(--shadow-card);
+}
+
+.surface-card-hover {
+	transition:
+		transform 0.18s ease,
+		box-shadow 0.18s ease,
+		border-color 0.18s ease;
+}
+
+@media (hover: hover) {
+	.surface-card-hover:hover {
+		transform: translateY(-2px);
+		box-shadow: var(--shadow-lift);
+		border-color: rgb(99 102 241 / 0.35);
+	}
+}
+
+/* Inverted brand band (footer, premium hero). */
+.surface-ink {
+	background-color: var(--color-ink);
+	color: var(--color-ink-foreground);
+}
+
+/* =============================================
+   Type + chip helpers
+============================================= */
+
+.font-display {
+	font-family: var(--font-display);
+	letter-spacing: -0.02em;
+}
+
+.text-gradient {
+	background-image: linear-gradient(100deg, #4f46e5 5%, #7c3aed 50%, #d946ef 100%);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	border-radius: 999px;
+	padding: 0.2rem 0.6rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.tnum {
+	font-variant-numeric: tabular-nums;
+}
+
+/* =============================================
+   Entrance motion (reduced-motion safe)
+============================================= */
+
+@keyframes enter-up {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.animate-enter {
+	animation: enter-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: var(--enter-delay, 0ms);
+}
+
+@keyframes float-soft {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+}
+
+.animate-float {
+	animation: float-soft 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-enter,
+	.animate-float {
+		animation: none;
+	}
+
+	.surface-card-hover:hover {
+		transform: none;
+	}
 }
 
 /* Hexagon clip path for Spelling Bee */
@@ -595,6 +790,37 @@ select:focus-visible {
 	}
 	100% {
 		transform: translateX(100%);
+	}
+}
+
+@keyframes progress-indeterminate {
+	0% {
+		transform: translateX(-100%);
+	}
+	50% {
+		transform: translateX(0%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+@keyframes checkmark {
+	from {
+		stroke-dashoffset: 24;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+
+@keyframes status-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
 	}
 }
 
@@ -1134,8 +1360,19 @@ html[data-transition-type="fade"] {
 	.animate-tile-press,
 	.animate-success-burst,
 	.animate-float,
-	.animate-heartbeat {
+	.animate-heartbeat,
+	.animate-accordion-down,
+	.animate-accordion-up,
+	.animate-checkmark,
+	.animate-status-pulse,
+	.animate-progress-indeterminate {
 		animation: none !important;
+	}
+
+	/* Podium/celebration chrome is decorative motion only */
+	[class*="podium-"] {
+		animation: none !important;
+		transition: none !important;
 	}
 
 	/* Disable Tailwind built-in animations */

@@ -7,7 +7,6 @@ import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 // Force dynamic rendering - entitlement decides the premium badges
@@ -64,7 +63,6 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-8 pb-nav">
 				<div className="mx-auto w-full max-w-4xl space-y-6">
 					<div className="text-center">

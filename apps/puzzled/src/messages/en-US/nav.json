@@ -5,5 +5,9 @@
 	"leaderboard": "Leaderboard",
 	"pricing": "Pricing",
 	"profile": "Profile",
-	"main": "Main navigation"
+	"main": "Main navigation",
+	"support": "Support",
+	"menuTitle": "Menu",
+	"openMenu": "Open navigation menu",
+	"closeMenu": "Close navigation menu"
 }

@@ -47,19 +47,6 @@ export const localeShortNames: Record<Locale, string> = {
 }
 
 // ==========================================
-// Country/Region Codes (for flags)
-// ==========================================
-
-// ISO 3166-1 alpha-2 codes for Iconify circle-flags
-export const localeCountryCodes: Record<Locale, string> = {
-	'en-US': 'us',
-	'en-GB': 'gb',
-	'zh-HK': 'hk',
-	'zh-TW': 'tw',
-	'zh-CN': 'cn',
-}
-
-// ==========================================
 // Language Families (for fallback)
 // ==========================================
 

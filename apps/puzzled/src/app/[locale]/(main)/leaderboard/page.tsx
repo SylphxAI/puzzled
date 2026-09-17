@@ -11,7 +11,6 @@ import { type EngagementLeaderboardResult, getLeaderboard } from '@/lib/identity
 import { auth } from '@/lib/identity/server'
 import { getSdkConfig } from '@/lib/sdk-server'
 import { cn } from '@/lib/utils'
-import { Header } from '@/shared/components/layout'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
 type Props = {
@@ -208,7 +207,6 @@ export default async function LeaderboardPage({ params, searchParams }: Props) {
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-6">
 				<div className="mx-auto w-full max-w-2xl space-y-6">
 					<div className="flex items-center justify-between">

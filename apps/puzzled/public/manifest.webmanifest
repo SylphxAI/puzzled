@@ -1,13 +1,13 @@
 {
 	"name": "Puzzled",
 	"short_name": "Puzzled",
-	"description": "Daily puzzles to challenge your mind",
+	"description": "Daily brain games and puzzles. One free puzzle every day — word, logic, number and spatial play.",
 	"id": "/",
 	"scope": "/",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",
-	"theme_color": "#6366f1",
+	"theme_color": "#4f46e5",
 	"orientation": "portrait-primary",
 	"icons": [
 		{
@@ -62,29 +62,54 @@
 			"purpose": "maskable"
 		}
 	],
-	"categories": ["games", "entertainment"],
+	"categories": [
+		"games",
+		"entertainment",
+		"puzzle"
+	],
 	"shortcuts": [
 		{
 			"name": "Five",
 			"short_name": "Five",
 			"description": "Guess today's five-letter word",
 			"url": "/games/word-guess",
-			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+			"icons": [
+				{
+					"src": "/icons/icon-96.png",
+					"sizes": "96x96"
+				}
+			]
 		},
 		{
 			"name": "Threads",
 			"short_name": "Threads",
 			"description": "Group today's words into hidden categories",
 			"url": "/games/word-groups",
-			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+			"icons": [
+				{
+					"src": "/icons/icon-96.png",
+					"sizes": "96x96"
+				}
+			]
 		},
 		{
 			"name": "Crowns",
 			"short_name": "Crowns",
 			"description": "Place one crown per row, column, and region",
 			"url": "/games/crowns",
-			"icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+			"icons": [
+				{
+					"src": "/icons/icon-96.png",
+					"sizes": "96x96"
+				}
+			]
 		}
 	],
-	"prefer_related_applications": false
+	"prefer_related_applications": false,
+	"lang": "en",
+	"dir": "ltr",
+	"display_override": [
+		"standalone",
+		"minimal-ui"
+	]
 }

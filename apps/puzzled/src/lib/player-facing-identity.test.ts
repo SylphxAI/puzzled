@@ -141,16 +141,6 @@ const ALLOWED_INTERNAL: ReadonlyArray<{
 		value: 'connections-perfect',
 		rationale: 'Persisted achievement id; player-visible copy is name/description.',
 	},
-	{
-		file: 'src/features/gamification/components/daily-hero.tsx',
-		value: 'spelling-bee',
-		rationale: 'Decorative icon-map key for word-hive, never rendered as text.',
-	},
-	{
-		file: 'src/features/gamification/components/daily-hero.tsx',
-		value: 'letter-boxed',
-		rationale: 'Decorative icon-map key for word-box, never rendered as text.',
-	},
 ]
 
 type CorpusString = {

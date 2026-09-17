@@ -28,5 +28,6 @@
 	"historyEmpty": "No accepted finishes yet.",
 	"dailyStatusUnavailableTitle": "Today's completion is unavailable",
 	"dailyStatusUnavailableDescription": "We could not verify today's personal progress. Retry before treating a module as unfinished.",
-	"dailyStatusRetry": "Try again"
+	"dailyStatusRetry": "Try again",
+	"streakLabel": "Current streak: {days} days"
 }

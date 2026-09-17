@@ -19,8 +19,8 @@ const STATUS_COLORS: Record<LetterStatus, string> = {
 	correct: 'bg-correct text-white',
 	present: 'bg-present text-white',
 	absent: 'bg-absent text-white',
-	empty: 'bg-key-bg text-key-text',
-	pending: 'bg-key-bg text-key-text',
+	empty: 'bg-key text-key-text',
+	pending: 'bg-key text-key-text',
 }
 
 type KeyProps = {

@@ -1,15 +1,6 @@
 {
-	"metaTitle": "Daily Brain Games - Word Guess, Word Groups & Quiz",
-	"metaDescription": "Play free daily puzzles including word guessing, word grouping, and trivia quiz. Track your streak, compete on leaderboards, and challenge your mind every day.",
-	"welcome": "Welcome to Puzzled",
-	"tagline": "Daily puzzles to challenge your mind",
-	"todaysPuzzles": "Today's Puzzles",
-	"allGames": "All Games",
-	"seeAllGames": "See all games",
-	"yourStats": "Your Stats",
-	"streak": "Current Streak",
-	"playersToday": "players today",
-	"playersCompletedToday": "players completed today",
+	"metaTitle": "Free Daily Brain Games & Puzzles",
+	"metaDescription": "Play a free daily brain game — word, logic, number and spatial puzzles — then keep the habit going. One free puzzle every day, no account needed.",
 	"greeting": {
 		"morning": "Good morning",
 		"afternoon": "Good afternoon",
@@ -17,22 +8,101 @@
 		"night": "Late night puzzling?",
 		"default": "Ready to play"
 	},
-	"streakMessage": {
-		"none": "Start your streak today!",
-		"low": "Keep it going!",
-		"medium": "You're on fire!",
-		"high": "Incredible streak!",
-		"legend": "Legendary status!"
+	"hero": {
+		"guestTitle": "A free puzzle, every single day",
+		"memberReadyTitle": "Today's puzzle is ready",
+		"memberStreakTitle": "Your {days}-day streak is waiting",
+		"memberDoneTitle": "All done for today — nicely played",
+		"guestSubtitle": "Today's free ritual is {game}, and {count} players have already finished a puzzle today. No signup, no download — just a few minutes of real puzzling.",
+		"memberSubtitle": "Pick up where you left off: your streak, your stats and today's lineup are all here.",
+		"playCta": "Play {game}",
+		"browseCta": "Browse all games",
+		"freeChip": "Free today",
+		"streakChip": "{days}-day streak",
+		"featuredLabel": "Today's free puzzle",
+		"trustFree": "Free puzzle every day",
+		"trustAccount": "No account needed",
+		"trustReset": "New puzzles at midnight (HKT)",
+		"playersToday": "{count} players finished today",
+		"playersTodayNone": "Be the first to finish today",
+		"progressRingLabel": "{done} of {total} puzzles finished today",
+		"progressUnverified": "We could not load your saved progress just now. You can still play — we check your finish when you submit.",
+		"guestSubtitleNew": "Today's free ritual is {game}. No signup, no download — just a few minutes of real puzzling.",
+		"ogEyebrow": "Free daily puzzle",
+		"ogBadge": "Free puzzle every day"
 	},
-	"dailyChallenge": "Daily Challenge",
-	"completedAll": "All done for today!",
-	"comeBackTomorrow": "Come back tomorrow for fresh puzzles",
-	"gamesPlayed": "Played",
-	"bestStreak": "Best",
-	"progressUnverifiedTitle": "Today's progress couldn't be verified",
-	"progressUnverifiedDescription": "You can still play — the server checks your completion before you start.",
-	"streakMilestone": "{days} Day Streak!",
-	"streakMilestoneDesc": "Amazing dedication! Keep the momentum going.",
-	"unlockAll": "Unlock All Games",
-	"premiumBenefits": "Play unlimited puzzles, protect your streak & more"
+	"lineup": {
+		"title": "Today's lineup",
+		"subtitle": "One rotation, refreshed every day. The full catalog lives on the games page.",
+		"seeAll": "See all games",
+		"play": "Play",
+		"playAgain": "Play again",
+		"unlock": "Unlock",
+		"freeToday": "Free today",
+		"premium": "Premium"
+	},
+	"value": {
+		"dailyTitle": "A fresh set every day",
+		"dailyBody": "New puzzles land at midnight, Hong Kong time — the same set for everyone, so results compare fairly.",
+		"honestTitle": "Honest, verified results",
+		"honestBody": "Every finish is checked on the server, so streaks, times and place on the board actually mean something.",
+		"shareTitle": "Share without spoilers",
+		"shareBody": "Your result card shows the pattern and the time — never the answer. Send it without ruining anyone's day."
+	},
+	"member": {
+		"currentStreak": "Current streak",
+		"bestStreak": "Best streak",
+		"gamesPlayed": "Puzzles finished",
+		"viewStats": "View your stats"
+	},
+	"tomorrow": {
+		"title": "{game} is free tomorrow.",
+		"body": "Same ritual, new set.",
+		"cta": "See the catalog"
+	},
+	"how": {
+		"title": "How Puzzled works",
+		"subtitle": "One free puzzle a day, plus a full suite when you want to go deeper. Every module follows the same ritual: today's set, one finish, a result you can share.",
+		"step1Title": "Open today's puzzle",
+		"step1Body": "One module is free every day and needs no account. Sign in only if you want your streak and stats kept.",
+		"step2Title": "Solve it at your pace",
+		"step2Body": "Most puzzles take two to fifteen minutes. Difficulty levels let you warm up or push harder.",
+		"step3Title": "Keep the habit and share",
+		"step3Body": "Finish to extend your streak, then send a spoiler-free result card to whoever will race you."
+	},
+	"faq": {
+		"title": "Questions, answered",
+		"subtitle": "The short version of how Puzzled works.",
+		"free": {
+			"question": "Is Puzzled free?",
+			"answer": "Yes. One puzzle is free every day and never requires payment or an account. Premium adds the full suite, the archive, extra stats and streak freezes."
+		},
+		"account": {
+			"question": "Do I need an account to play?",
+			"answer": "No. You can finish today's free puzzle as a guest. An account keeps your streak, results and stats across devices."
+		},
+		"schedule": {
+			"question": "When do new puzzles appear?",
+			"answer": "Every day at midnight, Hong Kong time. Everyone plays the same set on the same day, which is what makes shared results comparable."
+		},
+		"streak": {
+			"question": "How do streaks work?",
+			"answer": "Finish at least one qualifying puzzle in a product day to extend your streak. A single missed day does not erase your history, and Premium streak freezes can cover a day away."
+		},
+		"share": {
+			"question": "Can I share my result without spoiling it?",
+			"answer": "Yes. The result card shows your solving pattern, the module and the day — never the solution. Anyone who opens it plays the same day's puzzle."
+		},
+		"catalog": {
+			"question": "Which puzzles are included?",
+			"answer": "Nineteen daily modules across words, logic, numbers, spatial play and light entertainment, all following the same daily ritual."
+		}
+	},
+	"final": {
+		"title": "Your next five minutes of puzzling",
+		"body": "Today's free puzzle is open now. {count} modules are waiting when you want more.",
+		"play": "Play {game}",
+		"explore": "Explore the catalog"
+	},
+	"todaysPuzzles": "Today's Puzzles"
 }

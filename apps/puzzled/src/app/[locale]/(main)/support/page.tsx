@@ -3,7 +3,7 @@ import { Clock, FileText, HelpCircle, Mail, MessageSquare } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { APP_NAME, SUPPORT_EMAIL } from '@/lib/config/app'
 import { Link } from '@/lib/i18n/routing'
-import { Footer, Header } from '@/shared/components/layout'
+import { Footer } from '@/shared/components/layout/footer'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -27,7 +27,6 @@ export default async function SupportPage({ params }: Props) {
 
 	return (
 		<>
-			<Header />
 			<main className="flex flex-1 flex-col px-4 py-8">
 				<div className="mx-auto w-full max-w-4xl space-y-8">
 					{/* Header */}
