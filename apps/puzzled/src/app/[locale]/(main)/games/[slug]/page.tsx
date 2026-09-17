@@ -1,28 +1,19 @@
-import { Button } from '@sylphx/ui'
-import { Crown, Lock } from 'lucide-react'
-import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
-import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
-import { gameSupportsDifficulty, getGameSlugs, isValidGameSlug } from '@/games/registry'
+import { Suspense } from 'react'
+import { GamePageContent } from '@/features/catalog/components/game-page-content'
+import { GamePageHero } from '@/features/catalog/components/game-page-hero'
+import { readMessage, relatedCatalogSlugs } from '@/features/catalog/lib/catalog'
+import { parseGameFaq, parseGameTips, requireGamePage } from '@/features/catalog/lib/game-page'
+import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
-import {
-	type DailyStatus,
-	getServerDailyStatus,
-	getServerStreakInfo,
-	hasServerProgressIdentity,
-	type StreakInfo,
-} from '@/lib/api/server'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import type { GameMode } from '@/lib/db/schema'
-import { slugToCamelCase } from '@/lib/game-slug'
-import { Link } from '@/lib/i18n/routing'
+import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
 import { currentUser } from '@/lib/identity/server'
-import { productDayKey } from '@/lib/product-day'
-import { DifficultySelectionView } from './difficulty-selection-view'
-import { GameDailyFallback } from './game-daily-fallback'
-import { GamePageClient } from './game-page-client'
+import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
+import { GamePlayArea } from './game-play-area'
+import { GamePlaySkeleton } from './game-play-skeleton'
 
 // Force dynamic rendering - puzzle data must be fresh
 export const dynamic = 'force-dynamic'
@@ -39,40 +30,64 @@ export async function generateStaticParams() {
 	return locales.flatMap((locale) => gameSlugs.map((slug) => ({ locale, slug })))
 }
 
+/**
+ * Module metadata.
+ *
+ * The registry decides whether the slug exists: an unregistered slug is turned
+ * into a real 404 here, so `/games/<unknown>` answers with the not-found
+ * document instead of a 200 shell that only renders the loading fallback. The
+ * canonical module slug also owns the canonical URL, so an inbound alias never
+ * competes with the module it resolves to.
+ */
 export async function generateMetadata({ params }: Props) {
 	const { locale, slug } = await params
-	const t = await getTranslations({ locale, namespace: 'games' })
+	const page = requireGamePage(slug)
+	const tGames = await getTranslations({ locale, namespace: 'games' })
+	const tCatalog = await getTranslations({ locale, namespace: 'catalog' })
 
-	// Use camelCase conversion for translation key lookup
-	const translationKey = slugToCamelCase(slug)
-	const gameName = t(`${translationKey}.name`, { defaultValue: 'Game' })
-	const gameDescription = t(`${translationKey}.description`, {
-		defaultValue: `Play ${gameName} on Puzzled - daily puzzles to challenge your mind`,
-	})
+	const translationKey = slugToCamelCase(page.slug)
+	const gameName = readMessage(tGames, `${translationKey}.name`, page.metadata.name)
+	const gameTagline = readMessage(tGames, `${translationKey}.tagline`, '')
+	const gameDescription = readMessage(
+		tGames,
+		`${translationKey}.description`,
+		page.metadata.description,
+	)
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: `/games/${page.slug}`,
 		title: gameName,
-		description: gameDescription,
-		openGraph: {
-			title: `${gameName} | Puzzled`,
-			description: gameDescription,
-		},
-		twitter: {
-			title: `${gameName} | Puzzled`,
-			description: gameDescription,
-		},
-	}
+		description: [gameTagline, gameDescription].filter(Boolean).join(' — '),
+		imagePath: ogImagePath({
+			title: gameName,
+			subtitle: gameTagline,
+			eyebrow: tCatalog(`category.${page.metadata.category}`),
+			theme: page.metadata.display.theme,
+		}),
+	})
 }
 
+/**
+ * Module landing page (`/games/<slug>`).
+ *
+ * The registry guard runs first, before any Suspense boundary, so an unknown
+ * slug is a 404 with no rendered shell. Everything else is server-rendered for
+ * every viewer — hero, rules, tips, FAQ and related modules — while the
+ * interactive part streams behind a skeleton: guests can still play today's
+ * free module, and a premium module still ends in the honest unlock path
+ * instead of a dead end. Play, validation, scoring and entitlement logic are
+ * untouched.
+ */
 export default async function GamePage({ params, searchParams }: Props) {
 	const { locale, slug } = await params
 	const { mode: modeParam, date: dateParam, difficulty: difficultyParam } = await searchParams
 	setRequestLocale(locale)
 
-	// Validate game slug using registry (SSOT)
-	if (!isValidGameSlug(slug)) {
-		notFound()
-	}
+	// Registry SSOT: canonical slug + module metadata, or a real 404.
+	const page = requireGamePage(slug)
+	const canonicalSlug = page.slug
+	const moduleMetadata = page.metadata
 
 	// Validate mode parameter
 	const validModes: GameMode[] = ['daily', 'archive']
@@ -81,250 +96,111 @@ export default async function GamePage({ params, searchParams }: Props) {
 		: 'daily'
 
 	// Check if game supports difficulty and validate difficulty parameter
-	const supportsDifficulty = gameSupportsDifficulty(slug)
+	const supportsDifficulty = gameSupportsDifficulty(canonicalSlug)
 	const difficulty: PuzzleDifficulty | undefined = supportsDifficulty
 		? PUZZLE_DIFFICULTY_VALUES.includes(difficultyParam as PuzzleDifficulty)
 			? (difficultyParam as PuzzleDifficulty)
 			: undefined
 		: undefined
 
-	const t = await getTranslations('games')
+	const tGames = await getTranslations('games')
+	const tCatalog = await getTranslations('catalog')
 
 	// Get user
 	const user = await currentUser()
 
 	// Get game name from translations using SSOT pattern
-	const translationKey = slugToCamelCase(slug)
-	const gameName = t(`${translationKey}.name`)
+	const translationKey = slugToCamelCase(canonicalSlug)
+	const gameName = readMessage(tGames, `${translationKey}.name`, moduleMetadata.name)
+	const gameDescription = readMessage(
+		tGames,
+		`${translationKey}.description`,
+		moduleMetadata.description,
+	)
+	const gameHighlight = readMessage(tGames, `${translationKey}.highlight`, '')
+	const difficultyLabels =
+		moduleMetadata.supportsDifficulty && moduleMetadata.difficultyLevels
+			? moduleMetadata.difficultyLevels.map((level) =>
+					readMessage(tGames, `${translationKey}.difficulty.${level.level}`, level.level),
+				)
+			: []
+
+	// Readable module content, server-rendered for every viewer.
+	const rulesKey = `${translationKey}.rules`
+	const rulesSource = tGames.has(rulesKey) ? tGames.raw(rulesKey) : null
+	const rules =
+		rulesSource && typeof rulesSource === 'object'
+			? Object.entries(rulesSource as Record<string, unknown>).flatMap(([key, value]) =>
+					key !== 'title' && typeof value === 'string' && value.trim() ? [value] : [],
+				)
+			: []
+	const tipsKey = `game.${canonicalSlug}.tips`
+	const faqKey = `game.${canonicalSlug}.faq`
+	const tips = parseGameTips(tCatalog.has(tipsKey) ? tCatalog.raw(tipsKey) : null)
+	const faq = parseGameFaq(tCatalog.has(faqKey) ? tCatalog.raw(faqKey) : null)
+	const relatedSlugs = relatedCatalogSlugs({
+		slug: canonicalSlug,
+		modules: getAllGameMetadata(),
+	})
 
 	// Check if user has access to this game
-	const hasAccess = await canAccessGame(user?.id ?? null, slug)
-	const todaysFreeGame = getTodaysFreeGame()
+	const hasAccess = await canAccessGame(user?.id ?? null, canonicalSlug)
+	const todaysFreeGame = canonicalizeGameSlug(getTodaysFreeGame())
+	const todaysFreeGameName = readMessage(
+		tGames,
+		`${slugToCamelCase(todaysFreeGame)}.name`,
+		playerTitle(todaysFreeGame),
+	)
+	// Access without the free rotation means entitlement, not luck.
+	const playsWithEntitlement = hasAccess && canonicalSlug !== todaysFreeGame
 
-	// Show paywall if user doesn't have access
-	if (!hasAccess) {
-		return (
-			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-6 p-4 text-center">
-					{/* Lock icon */}
-					<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-						<Lock className="h-10 w-10 text-primary" />
-					</div>
-
-					{/* Title */}
-					<div className="space-y-2">
-						<h1 className="text-2xl font-bold">{gameName}</h1>
-						<p className="text-muted-foreground">
-							{user
-								? 'This game requires a premium subscription'
-								: 'Sign in to play or upgrade to premium'}
-						</p>
-					</div>
-
-					{/* Free game hint */}
-					<div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-						<p>
-							Today's free game:{' '}
-							<Link
-								href={`/games/${todaysFreeGame}`}
-								className="font-medium text-primary underline"
-							>
-								{t(`${slugToCamelCase(todaysFreeGame)}.name`)}
-							</Link>
-						</p>
-					</div>
-
-					{/* Actions */}
-					<div className="flex flex-col gap-3 sm:flex-row">
-						{!user && (
-							<Link href={`/login?callbackUrl=/games/${slug}`}>
-								<Button variant="outline" className="w-full sm:w-auto">
-									Sign In
-								</Button>
-							</Link>
-						)}
-						<Link href="/pricing">
-							<Button className="w-full gap-2 sm:w-auto">
-								<Crown className="h-4 w-4" />
-								Unlock All Games
-							</Button>
-						</Link>
-					</div>
-
-					{/* Back to home */}
-					<Link href="/" className="text-sm text-muted-foreground hover:underline">
-						← Back to all games
-					</Link>
-				</main>
-			</div>
-		)
-	}
-
-	// For games with difficulty support, if no difficulty selected, show difficulty selection
-	if (supportsDifficulty && !difficulty && mode === 'daily') {
-		// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
-		// A read that cannot be verified stays unknown (null) instead of
-		// pretending "not completed": the client fetch after the player picks a
-		// difficulty re-checks completion server-side before serving a board.
-		const [easyStatus, mediumStatus, hardStatus] = await Promise.allSettled([
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'easy' }),
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'medium' }),
-			getServerDailyStatus({ gameSlug: slug, difficulty: 'hard' }),
-		])
-		for (const [level, result] of [
-			['easy', easyStatus],
-			['medium', mediumStatus],
-			['hard', hardStatus],
-		] as const) {
-			if (result.status === 'rejected') {
-				console.error(
-					`[GamePage] Failed to load difficulty completion status (${level}):`,
-					result.reason,
-				)
-			}
-		}
-		const completionStatus = deriveDifficultyCompletionStatus({
-			easy: easyStatus.status === 'fulfilled' ? easyStatus.value : null,
-			medium: mediumStatus.status === 'fulfilled' ? mediumStatus.value : null,
-			hard: hardStatus.status === 'fulfilled' ? hardStatus.value : null,
-		})
-
-		return (
-			<DifficultySelectionView
-				gameSlug={slug}
-				gameName={gameName}
-				locale={locale}
-				completionStatus={completionStatus.status}
-				completionStatusVerified={completionStatus.verified}
-			/>
-		)
-	}
-
-	// Fetch puzzle data based on mode
-	let puzzleStatus: DailyStatus | null = null
-	let puzzle: {
-		puzzleId: string
-		puzzleData: unknown
-		puzzleDate?: string
-	} | null = null
-	let streakInfo: StreakInfo | null = null
-	// Same archive admission the SSR read uses; the client fallback must not
-	// widen it (anonymous archive keeps reading today's board).
-	const archiveDate = mode === 'archive' && user && dateParam ? dateParam : undefined
-
-	try {
-		if (archiveDate) {
-			// Archive mode - get specific date's puzzle (premium only)
-			const archivePuzzle = await getServerDailyStatus({
-				gameSlug: slug,
-				puzzleDate: archiveDate,
-			})
-			puzzle = {
-				puzzleId: archivePuzzle.puzzle.id,
-				puzzleData: archivePuzzle.puzzle.puzzleData,
-				puzzleDate: archiveDate,
-			}
-		} else {
-			// One GetDaily snapshot for guests and accounts so admission and play
-			// cannot straddle the product-day reset or reopen a completed board.
-			// Streak is a separate read: a missing streak payload must not reopen
-			// or block the puzzle.
-			const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
-			const [statusResult, streakResult] = await Promise.allSettled([
-				getServerDailyStatus({ gameSlug: slug, difficulty }),
-				hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
-			])
-			if (statusResult.status === 'rejected') {
-				throw statusResult.reason
-			}
-			const statusData = statusResult.value
-			puzzleStatus = statusData
-			puzzle = {
-				puzzleId: statusData.puzzle.id,
-				puzzleData: statusData.puzzle.puzzleData,
-				puzzleDate: statusData.puzzle.puzzleDate,
-			}
-			streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
-		}
-	} catch (error) {
-		console.error('[GamePage] Failed to load puzzle data:', error)
-		// puzzle will remain null, showing error message
-	}
-
-	if (!puzzle?.puzzleData) {
-		// SSR Connect could not serve the board. The browser transport reaches the
-		// api through the public edge, so hand over to a client-side GetDaily
-		// instead of a retry link that repeats the same failing SSR request.
-		return (
-			<GameDailyFallback
-				slug={slug}
-				gameName={gameName}
-				locale={locale}
-				mode={mode}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
-				puzzleDate={archiveDate}
-				freeGameSlug={todaysFreeGame}
-			/>
-		)
-	}
-
-	// Use puzzle data from server
-	const puzzleDate = puzzle.puzzleDate || productDayKey()
-	const currentStreak = streakInfo?.currentStreak ?? 0
-
-	// Check if user has already completed today's daily puzzle (only applies to daily mode)
-	const hasCompletedToday = mode === 'daily' && (puzzleStatus?.hasCompleted ?? false)
-	const completedSession = puzzleStatus?.completedSession
-
-	// A completion without a result payload is still non-playable. Never reopen a
-	// server-accepted daily or invent a status to fill the card.
-	if (hasCompletedToday && !completedSession) {
-		return (
-			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-					<p className="text-lg font-medium">Already completed</p>
-					<Link href="/" className="text-sm text-primary underline">
-						Back to all games
-					</Link>
-				</main>
-			</div>
-		)
-	}
-
-	// Already completed view (server rendered, no game interaction needed)
-	if (hasCompletedToday && completedSession) {
-		return (
-			<AlreadyCompletedView
-				gameSlug={slug}
-				gameName={gameName}
-				puzzleDate={puzzleDate}
-				session={{
-					status: completedSession.status as 'won' | 'lost',
-					score: completedSession.score,
-					attempts: completedSession.attempts ?? 0,
-					completedAt: completedSession.completedAt,
-				}}
-				currentStreak={currentStreak}
-				locale={locale}
-				difficulty={difficulty}
-				supportsDifficulty={supportsDifficulty}
-			/>
-		)
-	}
-
-	// Active game view (client rendered with help modal support)
 	return (
-		<GamePageClient
-			slug={slug}
-			gameName={gameName}
-			puzzleDate={puzzleDate}
-			currentStreak={currentStreak}
-			mode={mode}
-			locale={locale}
-			puzzleId={puzzle.puzzleId}
-			puzzleData={puzzle.puzzleData}
-			difficulty={difficulty}
-		/>
+		<main className="flex-1">
+			<GamePageHero
+				slug={canonicalSlug}
+				locale={locale}
+				name={gameName}
+				description={gameDescription}
+				highlight={gameHighlight}
+				difficultyLabels={difficultyLabels}
+				duration={moduleMetadata.display.duration}
+				theme={moduleMetadata.display.theme}
+				category={moduleMetadata.category}
+				freeToday={canonicalSlug === todaysFreeGame}
+				canPlay={hasAccess}
+				isGuest={!user}
+				isPremium={playsWithEntitlement}
+			/>
+
+			<div id="play" className="page-shell py-6 md:py-8">
+				<Suspense fallback={<GamePlaySkeleton />}>
+					<GamePlayArea
+						slug={canonicalSlug}
+						locale={locale}
+						gameName={gameName}
+						mode={mode}
+						difficulty={difficulty}
+						supportsDifficulty={supportsDifficulty}
+						hasAccess={hasAccess}
+						hasUser={Boolean(user)}
+						gameCount={getAllGameMetadata().length}
+						theme={moduleMetadata.display.theme}
+						freeGameSlug={todaysFreeGame}
+						freeGameName={todaysFreeGameName}
+						dateParam={dateParam}
+					/>
+				</Suspense>
+			</div>
+
+			<GamePageContent
+				name={gameName}
+				rules={rules}
+				tips={tips}
+				faq={faq}
+				relatedSlugs={relatedSlugs}
+				freeGameSlug={todaysFreeGame}
+				isPremium={playsWithEntitlement}
+			/>
+		</main>
 	)
 }

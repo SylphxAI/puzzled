@@ -80,10 +80,10 @@ export function GameDailyFallback({
 	if (state.status === 'loading') {
 		return (
 			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-3 p-4 text-center">
+				<div className="flex flex-1 flex-col items-center justify-center gap-3 p-4 text-center">
 					<RotateCw className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
 					<output className="block text-sm text-muted-foreground">{t('loadingPuzzle')}</output>
-				</main>
+				</div>
 			</div>
 		)
 	}
@@ -110,13 +110,13 @@ export function GameDailyFallback({
 	if (snapshot?.kind === 'closed') {
 		return (
 			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+				<div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
 					<p className="text-lg font-medium">{t('alreadyCompleted')}</p>
 					<p className="text-sm text-muted-foreground">{t('completedNoResult')}</p>
-					<Link href="/" className="text-sm text-primary underline">
+					<Link href="/games" className="text-sm font-medium text-primary hover:underline">
 						{t('backToGames')}
 					</Link>
-				</main>
+				</div>
 			</div>
 		)
 	}
@@ -142,7 +142,7 @@ export function GameDailyFallback({
 	if (snapshot?.kind === 'denied') {
 		return (
 			<div className="flex flex-1 flex-col">
-				<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+				<div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
 					<div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
 						<Lock className="h-10 w-10 text-primary" aria-hidden="true" />
 					</div>
@@ -161,10 +161,10 @@ export function GameDailyFallback({
 							{t('todaysFreeGame')}
 						</Link>
 					) : null}
-					<Link href="/" className="text-sm text-muted-foreground hover:underline">
+					<Link href="/games" className="text-sm text-muted-foreground hover:underline">
 						← {t('backToGames')}
 					</Link>
-				</main>
+				</div>
 			</div>
 		)
 	}
@@ -172,17 +172,17 @@ export function GameDailyFallback({
 	// Fetch failed or the server served no board: honest, client-side retry.
 	return (
 		<div className="flex flex-1 flex-col">
-			<main className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
+			<div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
 				<p className="text-lg font-medium">{t('unavailableTitle')}</p>
 				<p className="text-sm text-muted-foreground">{t('unavailableDescription')}</p>
 				<Button type="button" onClick={() => dispatch({ type: 'retry' })}>
 					<RotateCw className="h-4 w-4" />
 					{tCommon('retry')}
 				</Button>
-				<Link href="/" className="text-sm text-muted-foreground hover:underline">
+				<Link href="/games" className="text-sm text-muted-foreground hover:underline">
 					← {t('backToGames')}
 				</Link>
-			</main>
+			</div>
 		</div>
 	)
 }

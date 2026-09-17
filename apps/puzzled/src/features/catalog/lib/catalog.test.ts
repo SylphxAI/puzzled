@@ -1,7 +1,14 @@
 import { describe, expect, test } from 'bun:test'
 import { getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import { slugToCamelCase } from '@/lib/game-slug'
-import { buildCatalogEntries, type CatalogEntry, filterCatalogEntries } from './catalog'
+import {
+	buildCatalogEntries,
+	type CatalogEntry,
+	filterCatalogEntries,
+	parseCatalogCategory,
+	readMessage,
+	relatedCatalogSlugs,
+} from './catalog'
 
 /**
  * Golden player titles per canonical slug. Deliberately independent from the
@@ -87,6 +94,17 @@ describe('buildCatalogEntries', () => {
 		}
 	})
 
+	test('carries each module colour theme, highlight key and category from the registry', () => {
+		const entries = build(false)
+
+		for (const moduleMetadata of getAllGameMetadata()) {
+			const entry = entryFor(entries, moduleMetadata.slug)
+			expect(entry.theme).toBe(moduleMetadata.display.theme)
+			expect(entry.highlightKey).toBe(moduleMetadata.display.highlightKey)
+			expect(entry.category).toBe(moduleMetadata.category)
+		}
+	})
+
 	test("marks only the product day's free module as free for a free viewer", () => {
 		const entries = build(false, 'crowns')
 
@@ -127,22 +145,108 @@ describe('buildCatalogEntries', () => {
 
 describe('filterCatalogEntries', () => {
 	const titled = [
-		{ slug: 'word-guess', title: 'Five' },
-		{ slug: 'crowns', title: 'Crowns' },
-		{ slug: 'sudoku', title: 'Sudoku' },
+		{ slug: 'word-guess', title: 'Five', category: 'word' },
+		{ slug: 'crowns', title: 'Crowns', category: 'logic' },
+		{ slug: 'sudoku', title: 'Sudoku', category: 'logic' },
 	] as const
 
 	test('keeps the full list for an empty query', () => {
-		expect(filterCatalogEntries(titled, '')).toEqual([...titled])
-		expect(filterCatalogEntries(titled, '   ')).toEqual([...titled])
+		expect(filterCatalogEntries(titled, {})).toEqual([...titled])
+		expect(filterCatalogEntries(titled, { query: '   ' })).toEqual([...titled])
+		expect(filterCatalogEntries(titled, { category: 'all' })).toEqual([...titled])
 	})
 
 	test('matches titles case-insensitively and trims the query', () => {
-		expect(filterCatalogEntries(titled, 'five').map((entry) => entry.slug)).toEqual(['word-guess'])
-		expect(filterCatalogEntries(titled, '  CRO ').map((entry) => entry.slug)).toEqual(['crowns'])
+		expect(filterCatalogEntries(titled, { query: 'five' }).map((entry) => entry.slug)).toEqual([
+			'word-guess',
+		])
+		expect(filterCatalogEntries(titled, { query: '  CRO ' }).map((entry) => entry.slug)).toEqual([
+			'crowns',
+		])
 	})
 
 	test('returns nothing when no title matches', () => {
-		expect(filterCatalogEntries(titled, 'checkers')).toEqual([])
+		expect(filterCatalogEntries(titled, { query: 'checkers' })).toEqual([])
+	})
+
+	test('filters by registry category and keeps registry order', () => {
+		expect(filterCatalogEntries(titled, { category: 'logic' }).map((entry) => entry.slug)).toEqual([
+			'crowns',
+			'sudoku',
+		])
+		expect(filterCatalogEntries(titled, { category: 'word' }).map((entry) => entry.slug)).toEqual([
+			'word-guess',
+		])
+	})
+
+	test('combines the title and category filters', () => {
+		expect(filterCatalogEntries(titled, { query: 'su', category: 'logic' })).toEqual([
+			{ slug: 'sudoku', title: 'Sudoku', category: 'logic' },
+		])
+		expect(filterCatalogEntries(titled, { query: 'sudoku', category: 'word' })).toEqual([])
+	})
+})
+
+describe('parseCatalogCategory', () => {
+	test('accepts registry categories and collapses everything else to all', () => {
+		expect(parseCatalogCategory('word')).toBe('word')
+		expect(parseCatalogCategory('spatial')).toBe('spatial')
+		expect(parseCatalogCategory(['logic', 'word'])).toBe('logic')
+		expect(parseCatalogCategory(undefined)).toBe('all')
+		expect(parseCatalogCategory('')).toBe('all')
+		expect(parseCatalogCategory('puzzle')).toBe('all')
+	})
+})
+
+describe('readMessage', () => {
+	const reader = (messages: Record<string, string>) => {
+		const read = (key: string) => {
+			const message = messages[key]
+			if (message === undefined) throw new Error(`missing ${key}`)
+			return message
+		}
+		return Object.assign(read, { has: (key: string) => key in messages })
+	}
+
+	test('prefers the translated message', () => {
+		expect(readMessage(reader({ 'games.sudoku.name': 'Sudoku' }), 'games.sudoku.name', 'X')).toBe(
+			'Sudoku',
+		)
+	})
+
+	test('falls back to registry copy without rendering the dotted key path', () => {
+		expect(readMessage(reader({}), 'games.sudoku.name', 'Sudoku')).toBe('Sudoku')
+	})
+})
+
+describe('relatedCatalogSlugs', () => {
+	const modules = getAllGameMetadata()
+
+	test('never relates a module to itself and respects the limit', () => {
+		for (const moduleMetadata of modules) {
+			const related = relatedCatalogSlugs({ slug: moduleMetadata.slug, modules })
+			expect(related).toHaveLength(3)
+			expect(related).not.toContain(moduleMetadata.slug)
+			expect(new Set(related).size).toBe(related.length)
+			for (const slug of related) {
+				expect(getGameSlugs()).toContain(slug)
+			}
+		}
+	})
+
+	test('leads with the same category before falling back to registry order', () => {
+		const related = relatedCatalogSlugs({ slug: 'sudoku', modules, limit: 3 })
+		const categoryBySlug = new Map(modules.map((module) => [module.slug, module.category]))
+
+		expect(related[0]).toBe('nonogram')
+		expect(related.filter((slug) => categoryBySlug.get(slug) === 'logic')).toHaveLength(3)
+	})
+
+	test('honours an explicit limit and an unknown current module', () => {
+		expect(relatedCatalogSlugs({ slug: 'sudoku', modules, limit: 1 })).toEqual(['nonogram'])
+		expect(relatedCatalogSlugs({ slug: 'not-a-module', modules, limit: 2 })).toEqual([
+			'word-guess',
+			'word-groups',
+		])
 	})
 })

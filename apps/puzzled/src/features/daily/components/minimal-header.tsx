@@ -77,7 +77,7 @@ export function MinimalHeader({
 					</Link>
 
 					<div className="flex items-center gap-1.5 sm:gap-2">
-						<h1 className="text-sm font-semibold sm:text-base">{gameName}</h1>
+						<p className="text-sm font-semibold sm:text-base">{gameName}</p>
 						<span className="text-xs text-muted-foreground sm:text-sm">
 							{formatPuzzleDate(puzzleDate, locale)}
 						</span>

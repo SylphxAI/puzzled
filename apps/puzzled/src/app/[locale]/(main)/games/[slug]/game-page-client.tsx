@@ -54,7 +54,7 @@ export function GamePageClient({
 			/>
 
 			{/* Game Content - centered vertically */}
-			<main className="flex flex-1 flex-col items-center justify-center px-3 py-4 sm:px-4">
+			<div className="flex flex-1 flex-col items-center justify-center">
 				<GameRenderer
 					slug={slug}
 					puzzleId={puzzleId}
@@ -63,7 +63,7 @@ export function GamePageClient({
 					mode={mode}
 					difficulty={difficulty}
 				/>
-			</main>
+			</div>
 		</div>
 	)
 }
