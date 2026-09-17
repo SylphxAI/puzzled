@@ -135,10 +135,13 @@ export function LegalDocument({
 									)}
 									{section.contactEmail && (
 										<p>
-											{/* Brand indigo at 4.5:1 or better on both the light and the dark surface. */}
+											{/*
+											 * `text-primary` carries both themes: indigo-600 in light,
+											 * light indigo in dark, each ≥4.5:1 on its surface.
+											 */}
 											<a
 												href={`mailto:${section.contactEmail}`}
-												className="inline-flex min-h-11 items-center font-semibold text-primary-hover underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:text-primary-light"
+												className="inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 											>
 												{section.contactEmail}
 											</a>
