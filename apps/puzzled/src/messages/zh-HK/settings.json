@@ -20,7 +20,8 @@
 		"privacy": "Privacy",
 		"privacyDesc": "Data & visibility",
 		"helpText": "Need help with your account?",
-		"helpLink": "Visit Help Center"
+		"helpLink": "Visit Help Center",
+		"sections": "設定分類"
 	},
 	"search": {
 		"placeholder": "Search settings...",
@@ -127,6 +128,17 @@
 			"push": "Push",
 			"email": "Email",
 			"manageAll": "Manage all notifications"
+		},
+		"signedInAs": "已以 {name} 登入",
+		"groups": {
+			"player": "你的玩家身分",
+			"playerDesc": "你在 Puzzled 的身份。",
+			"play": "遊玩與通知",
+			"playDesc": "遊戲外觀，以及我們何時聯絡你。",
+			"plan": "計劃與獎賞",
+			"planDesc": "你的訂閱，以及邀請好友的獎賞。",
+			"safety": "私隱與安全",
+			"safetyDesc": "其他人可以看到什麼，以及帳戶如何受到保護。"
 		}
 	},
 	"playerCard": {
@@ -160,7 +172,24 @@
 			"showcaseHint": "Featured on your profile",
 			"more": "+{count} more"
 		},
-		"securityBadge": "Security: {score}%"
+		"securityBadge": "Security: {score}%",
+		"pageTitle": "你的個人檔案",
+		"pageDescription": "你在 Puzzled 的身分，以及進度存放的位置。",
+		"eyebrow": "玩家卡",
+		"nameFallback": "Puzzled 玩家",
+		"identityTitle": "身分",
+		"identityDescription": "你的帳戶用來登入的名稱與聯絡方式。",
+		"progressTitle": "你的成績",
+		"progressDescription": "總計數字直接來自你完成的模組。",
+		"linksTitle": "接下來去哪裡",
+		"linksDescription": "使用這個身分的各項頁面。",
+		"recordLink": "查看你的統計",
+		"boardLink": "查看排行榜",
+		"settingsLink": "管理帳戶設定",
+		"privacyLink": "控制誰看到你的名稱",
+		"notLoaded": "未能載入",
+		"noFinishes": "尚未完成",
+		"progressNote": "部分成績未能載入，這些數字會留空，不會顯示零。"
 	},
 	"achievements": {
 		"title": "Achievement Showcase",
@@ -358,7 +387,17 @@
 		"saving": "Saving...",
 		"saved": "Profile updated",
 		"savedDescription": "Your changes have been saved",
-		"updateFailed": "Update failed"
+		"updateFailed": "Update failed",
+		"identityTitle": "顯示名稱與頭像",
+		"identityDescription": "你讓其他玩家看到的樣子。",
+		"editCta": "在帳戶中心編輯",
+		"identityNote": "顯示名稱與頭像來自你的帳戶個人檔案，在那裡更改會同步到 Puzzled 各處。",
+		"visibilityTitle": "公開顯示",
+		"visibilityDescription": "決定你的名稱是否出現在排行榜。",
+		"visibilityCta": "檢查公開設定",
+		"boardsTitle": "你在榜上的位置",
+		"boardsDescription": "看看你在各模組的分數排名。",
+		"boardsCta": "開啟排行榜"
 	},
 	"account": {
 		"title": "Account",
@@ -400,7 +439,22 @@
 			"github": "GitHub",
 			"microsoft": "Microsoft",
 			"facebook": "Facebook"
-		}
+		},
+		"signedInTitle": "已登入",
+		"signedInDescription": "此裝置正在使用的帳戶。",
+		"loading": "正在載入你的帳戶…",
+		"signedOut": "此裝置已登出。登入後即可管理帳戶。",
+		"centreTitle": "電子郵件、密碼與登入方式",
+		"centreDescription": "這些屬於你的帳戶中心，你的所有 Sylphx 應用共用同一處。",
+		"centreCta": "開啟帳戶中心",
+		"centreEmail": "更改電子郵件並重新驗證",
+		"centrePassword": "設定或更改密碼",
+		"centreDeletion": "刪除帳戶及其資料",
+		"centreNote": "會在新分頁開啟。",
+		"signOutTitle": "登出",
+		"signOutDescription": "結束此裝置的工作階段，你的進度仍保留在帳戶中。",
+		"signOut": "登出此裝置",
+		"signingOut": "正在登出…"
 	},
 	"connectedAccounts": {
 		"title": "Connected Accounts",
@@ -562,7 +616,19 @@
 		"sessions": {
 			"title": "Active Sessions",
 			"description": "Manage your active sessions across devices"
-		}
+		},
+		"protectionTitle": "登入保護",
+		"protectionDescription": "密碼、雙重驗證、通行密鑰與復原碼都在你的帳戶中心。",
+		"protectionCta": "開啟帳戶中心",
+		"protectionPassword": "更改密碼與通行密鑰",
+		"protectionTwoFactor": "設定雙重驗證",
+		"protectionRecovery": "無法登入時使用的復原碼",
+		"sessionsDescription": "你的帳戶中心就此帳戶回報的內容。",
+		"sessionsLoading": "正在檢查你的工作階段…",
+		"sessionsCount": "你的帳戶目前有 {count} 個使用中的工作階段。",
+		"sessionsUnavailableTitle": "工作階段未能載入",
+		"sessionsUnavailableBody": "工作階段清單沒有回應，因此不顯示數目。",
+		"signOutHere": "登出此裝置"
 	},
 	"securityAlerts": {
 		"title": "Security Alerts",
@@ -750,7 +816,9 @@
 			"streak": "Streak",
 			"digest": "Digest",
 			"mute": "Mute All"
-		}
+		},
+		"channelTitle": "推送與電子郵件",
+		"channelDescription": "開啟或關閉提醒，並選擇你想收到的類型。"
 	},
 	"pushNotifications": "推播通知",
 	"pushNotificationsDescription": "Manage your push notification preferences",
@@ -857,7 +925,18 @@
 			"permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased.",
 			"verifyTitle": "Verify Your Identity",
 			"verifyDescription": "For your security, please verify your identity before deleting your account."
-		}
+		},
+		"centreTitle": "你的帳戶中心",
+		"centreDescription": "私隱與資料控制由所有 Sylphx 應用共用，因此集中一處管理。",
+		"centreCta": "開啟私隱控制",
+		"centreVisibility": "個人檔案公開程度：誰可以找到你",
+		"centreData": "下載你的資料副本",
+		"centreDeletion": "刪除帳戶及其資料",
+		"centreNote": "會在新分頁開啟。",
+		"boardsTitle": "你在榜上的名稱",
+		"boardsDescription": "其他玩家開啟排行榜時會看到的內容。",
+		"boardsBody": "只有在公開顯示設定開啟時，你的名稱與分數才會出現在榜上。關閉後你會退出榜單，進度不會遺失。",
+		"boardsCta": "查看排行榜"
 	},
 	"sessions": {
 		"title": "活動工作階段",
@@ -888,5 +967,7 @@
 		"unknownDevice": "Unknown device",
 		"unknownBrowser": "Unknown browser",
 		"unknownLocation": "Unknown location"
-	}
+	},
+	"eyebrow": "你的帳戶",
+	"subtitle": "你的玩家身分、遊玩偏好，以及背後的設定。"
 }

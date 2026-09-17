@@ -1,35 +1,118 @@
 'use client'
 
-import { UserCircle } from 'lucide-react'
+import { Button } from '@sylphx/ui'
+import { BadgeCheck, ExternalLink, LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { AccountSection } from '@/lib/identity/react'
-import { SettingsPageHeader } from '@/shared/components/layout'
+import { useState } from 'react'
+import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
+import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
+
+/** The account centre that owns email, password, and sign-in methods. */
+const ACCOUNT_CENTRE_URL = 'https://platform.sylphx.com/settings'
+
+function initials(value: string): string {
+	const words = value.trim().split(/\s+/).slice(0, 2)
+	return words.map((word) => word[0]?.toUpperCase() ?? '').join('') || '?'
+}
 
 /**
- * Account Settings Client Component
+ * Account section.
  *
- * Uses the SDK's AccountSection component for:
- * - Email management
- * - Password change
- * - Connected accounts
- * - Account deletion
+ * The session the page already verified supplies the identity; email, password
+ * and sign-in method changes stay with the account authority, which this
+ * surface links to instead of pretending to own them.
  */
 export function AccountSettingsContent() {
 	const t = useTranslations('settings')
+	const { user, isLoading } = useSafeUser()
+	const { signOut } = useSafeAuth()
+	const [signingOut, setSigningOut] = useState(false)
+
+	const displayName = user?.name?.trim() || t('playerCard.nameFallback')
+
+	async function handleSignOut() {
+		setSigningOut(true)
+		try {
+			await signOut()
+			window.location.href = '/'
+		} finally {
+			setSigningOut(false)
+		}
+	}
 
 	return (
-		<div className="space-y-6">
-			<SettingsPageHeader
-				icon={UserCircle}
-				gradientClasses="from-primary/20 to-blue-500/20"
-				iconColorClass="text-primary"
+		<>
+			<ConsoleHeader
+				headingLevel={2}
 				title={t('account.title')}
 				description={t('account.description')}
 			/>
 
-			<div className="rounded-2xl border bg-card overflow-hidden p-6">
-				<AccountSection />
-			</div>
-		</div>
+			<ConsoleCard
+				title={t('account.signedInTitle')}
+				description={t('account.signedInDescription')}
+			>
+				{isLoading ? (
+					<p className="text-sm text-muted-foreground">{t('account.loading')}</p>
+				) : user ? (
+					<div className="flex items-start gap-4">
+						<span
+							className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 font-display text-base font-extrabold text-primary"
+							aria-hidden="true"
+						>
+							{initials(displayName)}
+						</span>
+						<div className="min-w-0">
+							<p className="font-semibold">{displayName}</p>
+							{user.email ? (
+								<p className="mt-0.5 truncate text-sm text-muted-foreground">{user.email}</p>
+							) : null}
+							{user.emailVerified ? (
+								<span className="chip mt-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+									<BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+									{t('playerCard.verified')}
+								</span>
+							) : null}
+						</div>
+					</div>
+				) : (
+					<p className="text-sm text-muted-foreground">{t('account.signedOut')}</p>
+				)}
+			</ConsoleCard>
+
+			<ConsoleCard
+				title={t('account.centreTitle')}
+				description={t('account.centreDescription')}
+				actions={
+					<Button asChild variant="outline" className="min-h-11 gap-2">
+						<a href={ACCOUNT_CENTRE_URL} target="_blank" rel="noopener noreferrer">
+							{t('account.centreCta')}
+							<ExternalLink className="h-4 w-4" aria-hidden="true" />
+						</a>
+					</Button>
+				}
+			>
+				<ul className="space-y-1.5 text-sm text-muted-foreground">
+					<li>{t('account.centreEmail')}</li>
+					<li>{t('account.centrePassword')}</li>
+					<li>{t('account.centreDeletion')}</li>
+				</ul>
+				<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+					{t('account.centreNote')}
+				</p>
+			</ConsoleCard>
+
+			<ConsoleCard title={t('account.signOutTitle')} description={t('account.signOutDescription')}>
+				<Button
+					variant="destructive"
+					onClick={handleSignOut}
+					disabled={signingOut}
+					className="min-h-11 gap-2"
+				>
+					<LogOut className="h-4 w-4" aria-hidden="true" />
+					{signingOut ? t('account.signingOut') : t('account.signOut')}
+				</Button>
+			</ConsoleCard>
+		</>
 	)
 }

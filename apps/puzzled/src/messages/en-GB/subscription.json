@@ -17,5 +17,29 @@
 		"earlyAccess": "Early access to new games"
 	},
 	"portalError": "Unable to open billing portal",
-	"portalErrorDescription": "Please try again or contact support if the problem persists."
+	"portalErrorDescription": "Please try again or contact support if the problem persists.",
+	"planTitle": "Your plan",
+	"planDescription": "What this account can play, and how to change it.",
+	"premiumPlan": "Premium",
+	"freePlan": "Free plan",
+	"premiumDescription": "Every module, the archive, deeper stats, and streak freezes.",
+	"freeDescription": "One free module every day, plus your streak, stats and boards.",
+	"included": "Included",
+	"manage": "Manage subscription",
+	"managing": "Opening portal…",
+	"benefits": {
+		"everyModule": "Every module, no daily limit",
+		"archive": "The archive of past puzzles",
+		"stats": "Deeper stats and history",
+		"freezes": "Streak freezes when life gets busy",
+		"freeModule": "Today's free module, every day",
+		"streak": "Streaks, stats and history",
+		"boards": "Leaderboards for every module"
+	},
+	"unknown": {
+		"title": "Your plan did not load",
+		"body": "The plan read did not come back, so no plan is named here rather than guessing.",
+		"retry": "Check again"
+	},
+	"portalNote": "The billing portal opens on Stripe, where you can change or cancel the plan."
 }

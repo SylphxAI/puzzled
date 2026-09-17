@@ -1,15 +1,18 @@
 'use client'
 
 /**
- * Error Boundary for Auth Routes
+ * Error boundary for the account surfaces.
  *
- * Catches errors in login, signup, password reset pages.
- * Must not call useErrorTracking (Monitoring context is not guaranteed).
+ * It must not assume the monitoring provider mounted, so it reports through the
+ * plain reporter and offers the two things a stuck visitor needs: another try,
+ * and a way back to playing.
  */
 
 import { Button } from '@sylphx/ui'
-import { AlertTriangle, Home, RefreshCw } from 'lucide-react'
+import { RefreshCw, TriangleAlert } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef } from 'react'
+import { Link } from '@/lib/i18n/routing'
 import { reportBoundaryError } from '@/lib/report-boundary-error'
 
 interface ErrorProps {
@@ -18,6 +21,7 @@ interface ErrorProps {
 }
 
 export default function AuthError({ error, reset }: ErrorProps) {
+	const t = useTranslations('auth')
 	const reported = useRef(false)
 
 	useEffect(() => {
@@ -27,29 +31,23 @@ export default function AuthError({ error, reset }: ErrorProps) {
 	}, [error])
 
 	return (
-		<div className="flex min-h-screen items-center justify-center p-4">
-			<div className="text-center max-w-sm">
-				<div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
-					<AlertTriangle className="h-6 w-6 text-destructive" />
-				</div>
+		<div className="surface-card p-6 text-center sm:p-8">
+			<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+				<TriangleAlert className="h-7 w-7 text-destructive" aria-hidden="true" />
+			</span>
+			<h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight">
+				{t('errorTitle')}
+			</h1>
+			<p className="mt-2 text-sm leading-relaxed text-muted-foreground">{t('errorBody')}</p>
 
-				<h1 className="text-lg font-bold mb-2">Authentication Error</h1>
-				<p className="text-muted-foreground text-sm mb-4">
-					Something went wrong. Please try again.
-				</p>
-
-				<div className="flex gap-2 justify-center">
-					<Button variant="outline" size="sm" onClick={reset}>
-						<RefreshCw className="h-4 w-4 mr-1.5" />
-						Retry
-					</Button>
-					<Button size="sm" asChild>
-						<a href="/">
-							<Home className="h-4 w-4 mr-1.5" />
-							Home
-						</a>
-					</Button>
-				</div>
+			<div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
+				<Button variant="outline" onClick={reset} className="min-h-11 gap-2">
+					<RefreshCw className="h-4 w-4" aria-hidden="true" />
+					{t('errorRetry')}
+				</Button>
+				<Button asChild className="min-h-11">
+					<Link href="/">{t('backToPlay')}</Link>
+				</Button>
 			</div>
 		</div>
 	)

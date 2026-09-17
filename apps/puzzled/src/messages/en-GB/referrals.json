@@ -19,9 +19,6 @@
 	"rewardInfo": "You and your friend both get a streak freeze when they sign up!",
 	"yourReferrals": "Your Referrals",
 	"referralProgress": "Track your referral progress",
-	"totalReferrals": "Total",
-	"completed": "Completed",
-	"pending": "Pending",
 	"expired": "Expired",
 	"recentReferrals": "Recent Referrals",
 	"noReferralsYet": "No referrals yet. Share your code to get started!",
@@ -32,5 +29,14 @@
 	"howItWorks": "How It Works",
 	"step1": "Share your unique referral code with friends",
 	"step2": "Your friend signs up using your code",
-	"step3": "You both receive a streak freeze as a reward!"
+	"step3": "You both receive a streak freeze as a reward!",
+	"loading": "Loading your referral code…",
+	"regenerate": "New code",
+	"unavailableTitle": "Referrals did not load",
+	"unavailableBody": "The referral read did not come back, so no code or counts are shown.",
+	"retry": "Try again",
+	"redemptions": "Redemptions",
+	"rewardsEarned": "Rewards earned",
+	"notReported": "Not reported",
+	"figuresNote": "These two figures are the redemption count your account reports; we do not split it into completed and pending."
 }

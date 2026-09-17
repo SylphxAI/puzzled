@@ -1,94 +1,67 @@
 import {
 	Bell,
+	ChevronRight,
 	CreditCard,
 	Gift,
-	LayoutDashboard,
 	Palette,
 	Shield,
 	ShieldCheck,
-	User,
+	UserCircle,
+	UserCog,
 } from 'lucide-react'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@/lib/identity/server'
+import { ConsoleCard } from '@/features/console/components/console-chrome'
+import { requireMember } from '@/features/console/lib/require-member'
+import { hasPremiumAccess } from '@/lib/billing/server'
+import { Link } from '@/lib/i18n/routing'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 
 type Props = {
 	params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props) {
-	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'common' })
-	return {
-		title: t('settings'),
-	}
+type SettingsLink = {
+	href: string
+	key:
+		| 'profile'
+		| 'account'
+		| 'preferences'
+		| 'notifications'
+		| 'security'
+		| 'subscription'
+		| 'referrals'
+		| 'privacy'
+	icon: typeof UserCircle
 }
 
-const settingsCards = [
+const GROUPS: { key: 'player' | 'play' | 'plan' | 'safety'; links: SettingsLink[] }[] = [
 	{
-		href: '/settings/profile',
-		icon: User,
-		labelKey: 'profile' as const,
-		descKey: 'profileDesc' as const,
-		color: 'from-blue-500/20 to-cyan-500/20',
-		iconColor: 'text-blue-500',
+		key: 'player',
+		links: [
+			{ href: '/settings/profile', key: 'profile', icon: UserCircle },
+			{ href: '/settings/account', key: 'account', icon: UserCog },
+		],
 	},
 	{
-		href: '/settings/account',
-		icon: Shield,
-		labelKey: 'account' as const,
-		descKey: 'accountDesc' as const,
-		color: 'from-purple-500/20 to-pink-500/20',
-		iconColor: 'text-purple-500',
+		key: 'play',
+		links: [
+			{ href: '/settings/preferences', key: 'preferences', icon: Palette },
+			{ href: '/settings/notifications', key: 'notifications', icon: Bell },
+		],
 	},
 	{
-		href: '/settings/preferences',
-		icon: Palette,
-		labelKey: 'preferences' as const,
-		descKey: 'preferencesDesc' as const,
-		color: 'from-green-500/20 to-emerald-500/20',
-		iconColor: 'text-green-500',
+		key: 'plan',
+		links: [
+			{ href: '/settings/subscription', key: 'subscription', icon: CreditCard },
+			{ href: '/settings/referrals', key: 'referrals', icon: Gift },
+		],
 	},
 	{
-		href: '/settings/notifications',
-		icon: Bell,
-		labelKey: 'notifications' as const,
-		descKey: 'notificationsDesc' as const,
-		color: 'from-amber-500/20 to-orange-500/20',
-		iconColor: 'text-amber-500',
-	},
-	{
-		href: '/settings/security',
-		icon: ShieldCheck,
-		labelKey: 'security' as const,
-		descKey: 'securityDesc' as const,
-		color: 'from-red-500/20 to-rose-500/20',
-		iconColor: 'text-red-500',
-	},
-	{
-		href: '/settings/subscription',
-		icon: CreditCard,
-		labelKey: 'subscription' as const,
-		descKey: 'subscriptionDesc' as const,
-		color: 'from-indigo-500/20 to-violet-500/20',
-		iconColor: 'text-indigo-500',
-	},
-	{
-		href: '/settings/referrals',
-		icon: Gift,
-		labelKey: 'referrals' as const,
-		descKey: 'referralsDesc' as const,
-		color: 'from-pink-500/20 to-fuchsia-500/20',
-		iconColor: 'text-pink-500',
-	},
-	{
-		href: '/settings/privacy',
-		icon: ShieldCheck,
-		labelKey: 'privacy' as const,
-		descKey: 'privacyDesc' as const,
-		color: 'from-slate-500/20 to-gray-500/20',
-		iconColor: 'text-slate-500',
+		key: 'safety',
+		links: [
+			{ href: '/settings/security', key: 'security', icon: ShieldCheck },
+			{ href: '/settings/privacy', key: 'privacy', icon: Shield },
+		],
 	},
 ]
 
@@ -96,49 +69,57 @@ export default async function SettingsOverviewPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
-
-	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings`)
-	}
-
 	const t = await getTranslations('settings')
+	const user = await requireMember({ locale, returnTo: '/settings' })
+	if (!user) return null
+	const isPremium = user?.id
+		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
+		: false
+	const displayName = user?.name?.trim() || user?.email || t('playerCard.nameFallback')
 
 	return (
-		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-center gap-3">
-				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-violet-500/20">
-					<LayoutDashboard className="h-6 w-6 text-primary" />
-				</div>
-				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('nav.overview')}</h1>
-					<p className="text-sm text-muted-foreground">{t('nav.overviewDesc')}</p>
-				</div>
+		<>
+			<div className="flex flex-wrap items-center gap-2">
+				<span className="chip bg-primary/10 text-primary">
+					{t('overview.signedInAs', { name: displayName })}
+				</span>
+				{isPremium ? (
+					<span className="chip bg-violet-500/10 text-violet-700 dark:text-violet-300">
+						{t('playerCard.premium')}
+					</span>
+				) : null}
 			</div>
 
-			{/* Quick Access Grid */}
-			<div className="grid gap-3 sm:grid-cols-2">
-				{settingsCards.map((card) => (
-					<Link
-						key={card.href}
-						href={`/${locale}${card.href}`}
-						className="group flex items-start gap-4 rounded-xl border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
-					>
-						<div
-							className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${card.color}`}
-						>
-							<card.icon className={`h-5 w-5 ${card.iconColor}`} />
-						</div>
-						<div className="min-w-0 flex-1">
-							<h3 className="font-medium leading-tight group-hover:text-primary">
-								{t(`nav.${card.labelKey}`)}
-							</h3>
-							<p className="mt-0.5 text-sm text-muted-foreground">{t(`nav.${card.descKey}`)}</p>
-						</div>
-					</Link>
-				))}
-			</div>
-		</div>
+			{GROUPS.map((group) => (
+				<ConsoleCard
+					key={group.key}
+					title={t(`overview.groups.${group.key}`)}
+					description={t(`overview.groups.${group.key}Desc`)}
+				>
+					<ul className="grid gap-2 sm:grid-cols-2">
+						{group.links.map(({ href, key, icon: Icon }) => (
+							<li key={href}>
+								<Link
+									href={href}
+									className="flex min-h-11 items-center gap-3 rounded-xl border border-border/70 bg-surface-muted/60 px-3 py-2.5 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+								>
+									<Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+									<span className="min-w-0 flex-1">
+										<span className="block text-sm font-semibold">{t(`nav.${key}`)}</span>
+										<span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+											{t(`nav.${key}Desc`)}
+										</span>
+									</span>
+									<ChevronRight
+										className="h-4 w-4 shrink-0 text-muted-foreground"
+										aria-hidden="true"
+									/>
+								</Link>
+							</li>
+						))}
+					</ul>
+				</ConsoleCard>
+			))}
+		</>
 	)
 }

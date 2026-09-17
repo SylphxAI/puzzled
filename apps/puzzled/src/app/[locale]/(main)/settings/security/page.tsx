@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@/lib/identity/server'
+import { requireMember } from '@/features/console/lib/require-member'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 import { SecuritySettingsContent } from './security-client'
 
 type Props = {
@@ -11,20 +11,20 @@ export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'settings' })
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: '/settings/security',
 		title: t('security.title'),
-	}
+		description: t('security.description'),
+		noindex: true,
+	})
 }
 
 export default async function SecuritySettingsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
-
-	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/security`)
-	}
+	await requireMember({ locale, returnTo: '/settings/security' })
 
 	return <SecuritySettingsContent />
 }

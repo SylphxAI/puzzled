@@ -1,37 +1,27 @@
 export const dynamic = 'force-dynamic'
 
-import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
+import { redirect } from '@/lib/i18n/routing'
 import { auth } from '@/lib/identity/server'
+import { AuthShell } from './_components/auth-shell'
 
 type Props = {
 	children: React.ReactNode
 	params: Promise<{ locale: string }>
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ * Account surfaces share one frame: brand panel beside the form on desktop,
+ * a mark plus a way back to play on mobile.
+ *
+ * Signed-in visitors leave immediately — these routes only exist for people
+ * who still need to authenticate.
+ */
+export default async function AuthLayout({ children, params }: Props) {
 	const { locale } = await params
-	const t = await getTranslations({ locale, namespace: 'auth' })
-
-	return {
-		title: t('signIn'),
-		description: t('signInDescription'),
-		robots: {
-			index: true,
-			follow: true,
-		},
-	}
-}
-
-export default async function AuthLayout({ children }: Props) {
-	// If user is already logged in, redirect to home
-	// Auth pages (login, signup, forgot-password) should not be accessible when logged in
 	const { userId } = await auth()
-
 	if (userId) {
-		redirect('/')
+		redirect({ href: '/', locale })
 	}
 
-	return children
+	return <AuthShell locale={locale}>{children}</AuthShell>
 }

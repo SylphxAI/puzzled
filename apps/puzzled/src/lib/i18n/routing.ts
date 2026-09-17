@@ -24,5 +24,6 @@ export const routing = defineRouting({
 	localeDetection: false,
 })
 
-// Export locale-aware navigation utilities
-export const { Link, usePathname, useRouter } = createNavigation(routing)
+// Export locale-aware navigation utilities. `redirect` keeps server guards on
+// the same locale resolution as `Link`, so a redirect never drops the prefix.
+export const { Link, redirect, usePathname, useRouter } = createNavigation(routing)

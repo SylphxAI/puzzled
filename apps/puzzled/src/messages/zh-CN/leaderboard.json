@@ -1,15 +1,51 @@
 {
-	"streak": "连胜",
-	"score": "分数",
-	"wins": "胜场",
-	"wantToCompete": "想要参与竞争？",
-	"premiumPrompt": "登录并升级 Premium 即可出现在排行榜上！",
 	"period": {
 		"today": "今日",
 		"week": "本周",
 		"all": "全部"
 	},
-	"noData": "暂无玩家，成为第一个吧！",
-	"yourRank": "Your Rank",
-	"topPlayers": "Top Players"
+	"title": "排行榜",
+	"metaDescription": "各模块今天、本周与全期的排行榜：谁完成了什么，以及你自己的位置。",
+	"eyebrow": "Puzzled 排行榜",
+	"description": "每次只显示一个模块、一个周期，与计分方式完全一致。只有选择公开身份的玩家会出现在榜上。",
+	"chip": "榜单：{module}",
+	"anonymous": "匿名玩家",
+	"scopeLabel": "排行榜周期",
+	"moduleLabel": "模块",
+	"loadingBoard": "正在加载榜单…",
+	"boardTitle": "{module} 排行榜",
+	"boardDescription": "范围：{period}。每列为该玩家在此周期的分数总和。",
+	"columns": {
+		"rank": "名次",
+		"player": "玩家",
+		"score": "分数"
+	},
+	"tableCaption": "{module}「{period}」排行榜：名次、玩家与分数",
+	"you": "你",
+	"empty": {
+		"title": "此榜单尚未有完成分数",
+		"body": "{module} 在此周期尚未有计入的分数。现在游玩，第一个分数可能就是你的。",
+		"play": "游玩 {module}"
+	},
+	"notes": {
+		"top": "显示 {module} 的前 {count} 名。",
+		"policy": "只有选择公开身份的玩家会列出。",
+		"viewerAway": "你在本周期暂未进入前 {count} 名。",
+		"guest": "访客记录会计入你的个人成绩，但不会显示在榜单上。",
+		"signIn": "登录以占一席位"
+	},
+	"unavailable": {
+		"title": "榜单无法加载",
+		"body": "排行榜读取没有回应，因此不显示任何行，也不会显示空表。",
+		"footnote": "请稍后重试。",
+		"retry": "重新加载此榜单"
+	},
+	"how": {
+		"title": "榜单如何运作",
+		"description": "这些数字背后的规则。",
+		"scores": "榜单会累加你在选定周期于该模块取得的每个有效分数。",
+		"visibility": "只有当你开启公开显示设置时，名称与分数才会出现在榜上。",
+		"boards": "每个模块都有分数榜：今天、本周与全期。",
+		"visibilityCta": "检查你的公开设置"
+	}
 }

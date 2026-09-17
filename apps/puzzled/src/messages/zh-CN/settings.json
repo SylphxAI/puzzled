@@ -20,7 +20,8 @@
 		"privacy": "Privacy",
 		"privacyDesc": "Data & visibility",
 		"helpText": "Need help with your account?",
-		"helpLink": "Visit Help Center"
+		"helpLink": "Visit Help Center",
+		"sections": "设置分类"
 	},
 	"search": {
 		"placeholder": "Search settings...",
@@ -127,6 +128,17 @@
 			"push": "Push",
 			"email": "Email",
 			"manageAll": "Manage all notifications"
+		},
+		"signedInAs": "已以 {name} 登录",
+		"groups": {
+			"player": "你的玩家身份",
+			"playerDesc": "你在 Puzzled 的身份。",
+			"play": "游玩与通知",
+			"playDesc": "游戏外观，以及我们何时联系你。",
+			"plan": "方案与奖励",
+			"planDesc": "你的订阅，以及邀请好友的奖励。",
+			"safety": "隐私与安全",
+			"safetyDesc": "其他人可以看到什么，以及账户如何受到保护。"
 		}
 	},
 	"playerCard": {
@@ -160,7 +172,24 @@
 			"showcaseHint": "Featured on your profile",
 			"more": "+{count} more"
 		},
-		"securityBadge": "Security: {score}%"
+		"securityBadge": "Security: {score}%",
+		"pageTitle": "你的个人资料",
+		"pageDescription": "你在 Puzzled 的身份，以及进度存放的位置。",
+		"eyebrow": "玩家卡",
+		"nameFallback": "Puzzled 玩家",
+		"identityTitle": "身份",
+		"identityDescription": "你的账户用来登录的名称与联系方式。",
+		"progressTitle": "你的成绩",
+		"progressDescription": "总计数字直接来自你完成的模块。",
+		"linksTitle": "接下来去哪里",
+		"linksDescription": "使用这个身份的各项页面。",
+		"recordLink": "查看你的统计",
+		"boardLink": "查看排行榜",
+		"settingsLink": "管理账户设置",
+		"privacyLink": "控制谁看到你的名称",
+		"notLoaded": "未能加载",
+		"noFinishes": "尚未完成",
+		"progressNote": "部分成绩未能加载，这些数字会留空，不会显示零。"
 	},
 	"achievements": {
 		"title": "Achievement Showcase",
@@ -358,7 +387,17 @@
 		"saving": "Saving...",
 		"saved": "Profile updated",
 		"savedDescription": "Your changes have been saved",
-		"updateFailed": "Update failed"
+		"updateFailed": "Update failed",
+		"identityTitle": "显示名称与头像",
+		"identityDescription": "你让其他玩家看到的样子。",
+		"editCta": "在账户中心编辑",
+		"identityNote": "显示名称与头像来自你的账户个人资料，在那里更改会同步到 Puzzled 各处。",
+		"visibilityTitle": "公开显示",
+		"visibilityDescription": "决定你的名称是否出现在排行榜。",
+		"visibilityCta": "检查公开设置",
+		"boardsTitle": "你在榜上的位置",
+		"boardsDescription": "看看你在各模块的分数排名。",
+		"boardsCta": "打开排行榜"
 	},
 	"account": {
 		"title": "Account",
@@ -400,7 +439,22 @@
 			"github": "GitHub",
 			"microsoft": "Microsoft",
 			"facebook": "Facebook"
-		}
+		},
+		"signedInTitle": "已登录",
+		"signedInDescription": "此设备正在使用的账户。",
+		"loading": "正在加载你的账户…",
+		"signedOut": "此设备已退出登录。登录后即可管理账户。",
+		"centreTitle": "电子邮箱、密码与登录方式",
+		"centreDescription": "这些属于你的账户中心，你的所有 Sylphx 应用共用同一处。",
+		"centreCta": "打开账户中心",
+		"centreEmail": "更改电子邮箱并重新验证",
+		"centrePassword": "设置或更改密码",
+		"centreDeletion": "删除账户及其数据",
+		"centreNote": "会在新标签页打开。",
+		"signOutTitle": "退出登录",
+		"signOutDescription": "结束此设备的会话，你的进度仍保留在账户中。",
+		"signOut": "退出此设备",
+		"signingOut": "正在退出…"
 	},
 	"connectedAccounts": {
 		"title": "Connected Accounts",
@@ -562,7 +616,19 @@
 		"sessions": {
 			"title": "Active Sessions",
 			"description": "Manage your active sessions across devices"
-		}
+		},
+		"protectionTitle": "登录保护",
+		"protectionDescription": "密码、双重验证、通行密钥与恢复码都在你的账户中心。",
+		"protectionCta": "打开账户中心",
+		"protectionPassword": "更改密码与通行密钥",
+		"protectionTwoFactor": "设置双重验证",
+		"protectionRecovery": "无法登录时使用的恢复码",
+		"sessionsDescription": "你的账户中心就此账户报告的内容。",
+		"sessionsLoading": "正在检查你的会话…",
+		"sessionsCount": "你的账户目前有 {count} 个活动会话。",
+		"sessionsUnavailableTitle": "会话未能加载",
+		"sessionsUnavailableBody": "会话列表没有回应，因此不显示数量。",
+		"signOutHere": "退出此设备"
 	},
 	"securityAlerts": {
 		"title": "Security Alerts",
@@ -750,7 +816,9 @@
 			"streak": "Streak",
 			"digest": "Digest",
 			"mute": "Mute All"
-		}
+		},
+		"channelTitle": "推送与电子邮件",
+		"channelDescription": "开启或关闭提醒，并选择你想收到的类型。"
 	},
 	"pushNotifications": "推送通知",
 	"pushNotificationsDescription": "Manage your push notification preferences",
@@ -857,7 +925,18 @@
 			"permanentActionDescription": "Once deleted, your account cannot be recovered. All data will be permanently erased.",
 			"verifyTitle": "Verify Your Identity",
 			"verifyDescription": "For your security, please verify your identity before deleting your account."
-		}
+		},
+		"centreTitle": "你的账户中心",
+		"centreDescription": "隐私与数据控制由所有 Sylphx 应用共用，因此集中一处管理。",
+		"centreCta": "打开隐私控制",
+		"centreVisibility": "个人资料公开程度：谁可以找到你",
+		"centreData": "下载你的数据副本",
+		"centreDeletion": "删除账户及其数据",
+		"centreNote": "会在新标签页打开。",
+		"boardsTitle": "你在榜上的名称",
+		"boardsDescription": "其他玩家打开排行榜时会看到的内容。",
+		"boardsBody": "只有在公开显示设置开启时，你的名称与分数才会出现在榜上。关闭后你会退出榜单，进度不会丢失。",
+		"boardsCta": "查看排行榜"
 	},
 	"sessions": {
 		"title": "活动会话",
@@ -888,5 +967,7 @@
 		"unknownDevice": "Unknown device",
 		"unknownBrowser": "Unknown browser",
 		"unknownLocation": "Unknown location"
-	}
+	},
+	"eyebrow": "你的账户",
+	"subtitle": "你的玩家身份、游玩偏好，以及背后的设置。"
 }

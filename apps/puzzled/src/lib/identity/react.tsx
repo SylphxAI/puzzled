@@ -415,20 +415,25 @@ export function usePlans() {
 export function useSafeBilling() {
 	return useBilling()
 }
-type ReferralStats = {
-	totalReferrals: number
-	completedReferrals: number
-	pendingReferrals: number
+/**
+ * Referral figures the commerce authority actually returns.
+ *
+ * `GetReferralStats` answers with an active code and a redemption count, so
+ * those are the only two numbers this hook can report. The former
+ * `completedReferrals` / `pendingReferrals` pair was a copy of the redemption
+ * count with a hard-coded zero, which read as live data on the settings page;
+ * they are gone rather than faked.
+ */
+export type ReferralStats = {
+	/** Redemptions the commerce authority reported, or null when unread. */
+	redemptions: number | null
 }
 
 export function useReferral() {
 	const { user } = useSafeUser()
 	const [code, setCode] = useState<string | null>(null)
-	const [stats, setStats] = useState<ReferralStats>({
-		totalReferrals: 0,
-		completedReferrals: 0,
-		pendingReferrals: 0,
-	})
+	// null means "the read did not report a count" — never rendered as a zero.
+	const [stats, setStats] = useState<ReferralStats>({ redemptions: null })
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<{ message?: string } | null>(null)
 
@@ -439,13 +444,9 @@ export function useReferral() {
 			(typeof record.active_code === 'string' && record.active_code.trim()) ||
 			(typeof record.code === 'string' && record.code.trim()) ||
 			null
-		const redemptions = typeof record.redemption_count === 'number' ? record.redemption_count : 0
+		const redemptions = typeof record.redemption_count === 'number' ? record.redemption_count : null
 		setCode(nextCode)
-		setStats({
-			totalReferrals: redemptions,
-			completedReferrals: redemptions,
-			pendingReferrals: 0,
-		})
+		setStats({ redemptions })
 	}, [])
 
 	useEffect(() => {

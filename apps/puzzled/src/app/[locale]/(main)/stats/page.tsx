@@ -1,25 +1,46 @@
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@sylphx/ui'
-import { BarChart3, Check, Flame, Star, Target, Trophy } from 'lucide-react'
-import Link from 'next/link'
+export const dynamic = 'force-dynamic'
+
+import { BarChart3, Check, Flame, Play, RefreshCw, Snowflake, Trophy } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
-import { Achievements } from '@/features/gamification/components/achievements'
+import {
+	ConsoleCard,
+	ConsoleHeader,
+	ConsoleStat,
+	HonestNotice,
+} from '@/features/console/components/console-chrome'
+import { FinishCalendarCard } from '@/features/console/components/finish-calendar'
+import { type Milestone, MilestoneRingsCard } from '@/features/console/components/milestone-rings'
+import { FinishHistoryCard, ModuleBreakdownCard } from '@/features/console/components/stats-tables'
+import {
+	buildFinishCalendar,
+	moduleStatRows,
+	winRatePercent,
+} from '@/features/console/lib/finish-activity'
+import { getNextAchievements } from '@/features/gamification'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerHistory,
 	getServerPersonalDailyResults,
 	getServerStreakInfo,
 	getServerUserStats,
-	type HistoryEntry,
 	hasServerProgressIdentity,
+	type PersonalDailyResult,
 	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
 import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { slugToCamelCase } from '@/lib/game-slug'
+import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
-import { cn } from '@/lib/utils'
+import { withPresentationDeadline } from '@/lib/presentation-document'
+import { productDayKey } from '@/lib/product-day'
+import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { GameIcon } from '@/shared/components/ui/game-icons'
+
+/** The server clamps history to 100 rows; the console asks for the ceiling. */
+const HISTORY_LIMIT = 100
+/** Rows shown inline before the list is trimmed. */
+const HISTORY_ROWS = 12
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -29,412 +50,376 @@ export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'stats' })
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: '/stats',
 		title: t('title'),
-	}
+		description: t('metaDescription'),
+		imagePath: ogImagePath({
+			title: t('title'),
+			subtitle: t('metaDescription'),
+			eyebrow: t('eyebrow'),
+		}),
+		// A personal progress surface is not search content.
+		noindex: true,
+	})
 }
 
-type GameStats = {
-	gamesPlayed: number
-	gamesWon: number
-	currentStreak: number
-	maxStreak: number
-	totalScore: number
-	averageAttempts: number | null
-	guessDistribution: Record<string, number> | null
-	perfectGames: number
-}
-
-const emptyStats: GameStats = {
-	gamesPlayed: 0,
-	gamesWon: 0,
-	currentStreak: 0,
-	maxStreak: 0,
-	totalScore: 0,
-	averageAttempts: null,
-	guessDistribution: null,
-	perfectGames: 0,
-}
-
-function toGameStats(stats: UserStats[string] | undefined): GameStats {
-	if (!stats) return emptyStats
-	return {
-		gamesPlayed: stats.gamesPlayed,
-		gamesWon: stats.gamesWon,
-		currentStreak: stats.currentStreak,
-		maxStreak: stats.maxStreak,
-		totalScore: stats.totalScore,
-		averageAttempts: stats.averageAttempts,
-		guessDistribution: stats.guessDistribution as Record<string, number> | null,
-		perfectGames: stats.perfectGames,
-	}
-}
-
+/**
+ * The stats console.
+ *
+ * Every number comes from Connect (`StatsService.GetUserStats`,
+ * `GetHistory`, `GamificationService.GetStreakInfo`) or from the product-day
+ * rotation. When a read does not come back the surface says so and offers a
+ * retry: it never prints a zero in place of a number it did not receive.
+ */
 export default async function StatsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
 	const t = await getTranslations('stats')
-	const tDaily = await getTranslations('daily')
 	const tGames = await getTranslations('games')
-	const tHome = await getTranslations('home')
-	const user = await currentUser()
-	const gameMetadata = getAllGameMetadata()
-	const todaysFreeGame = getTodaysFreeGame()
-	const isPremium = user?.id ? await hasPremiumAccess(user.id) : false
+	const tCommon = await getTranslations('common')
+
+	const user = await withPresentationDeadline(currentUser(), null)
 	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
+	const todaysFreeGame = getTodaysFreeGame()
+	const isPremium = user?.id
+		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
+		: false
 
-	const [userStatsResult, historyResult, personalResult, streakResult] = await Promise.allSettled(
-		hasProgressIdentity
-			? [
-					getServerUserStats(),
-					getServerHistory({ limit: 20 }),
-					getServerPersonalDailyResults({
-						gameSlugs: gameMetadata.map((game) => game.slug),
-						isGuest: !user,
-						isPremium,
-						freeGameSlug: todaysFreeGame,
-					}),
-					getServerStreakInfo(),
-				]
-			: [
-					Promise.resolve({} as UserStats),
-					Promise.resolve([] as HistoryEntry[]),
-					getServerPersonalDailyResults({
-						gameSlugs: gameMetadata.map((game) => game.slug),
-						isGuest: true,
-						isPremium: false,
-						freeGameSlug: todaysFreeGame,
-					}),
-					Promise.resolve(null as StreakInfo | null),
-				],
-	)
-
-	if (
-		userStatsResult.status === 'rejected' ||
-		historyResult.status === 'rejected' ||
-		personalResult.status === 'rejected'
-	) {
-		return (
-			<>
-				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-					<div className="mx-auto max-w-md text-center">
-						<div className="mb-6 flex justify-center">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-								<BarChart3 className="h-10 w-10 text-muted-foreground" />
-							</div>
-						</div>
-						<h1 className="mb-2 text-2xl font-bold">{t('unavailableTitle')}</h1>
-						<p className="mb-6 text-muted-foreground">{t('unavailableDescription')}</p>
-						<Button asChild>
-							<Link href={`/${locale}/stats`}>{t('retry')}</Link>
-						</Button>
-					</div>
-				</main>
-			</>
-		)
-	}
-
-	const userStats = userStatsResult.value
-	const history: HistoryEntry[] = historyResult.value
-	const personalResults = personalResult.value
-	const personalCompletions = Object.fromEntries(
-		Object.entries(personalResults).map(([gameSlug, result]) => [gameSlug, result.hasCompleted]),
-	)
-	const personalCompletionsAvailable = Object.values(personalResults).every(
-		(result) => result.statusAvailable,
-	)
-
-	const stats = Object.fromEntries(
-		(Object.entries(userStats) as [string, UserStats[string]][]).map(([gameSlug, gameStats]) => [
-			gameSlug,
-			toGameStats(gameStats),
-		]),
-	) as Record<string, GameStats>
-
-	const gameStats = gameMetadata.map((game) => ({
-		game,
-		stats: stats[game.slug] ?? emptyStats,
+	const modules = getAllGameMetadata().map((game) => ({
+		slug: game.slug,
+		name: tGames(`${slugToCamelCase(game.slug)}.name`, { defaultValue: game.name }),
 	}))
-	const playedGameStats = gameStats.filter(({ stats: gameStat }) => gameStat.gamesPlayed > 0)
-	const totalGamesPlayed = gameStats.reduce(
-		(sum, { stats: gameStat }) => sum + gameStat.gamesPlayed,
-		0,
-	)
-	const totalGamesWon = gameStats.reduce((sum, { stats: gameStat }) => sum + gameStat.gamesWon, 0)
-	const winRate = totalGamesPlayed > 0 ? Math.round((totalGamesWon / totalGamesPlayed) * 100) : 0
-	const dailyProgress = summarizeDailyProgress(
-		gameMetadata.map((game) => ({
-			completed: personalCompletions[game.slug] ?? false,
-			locked: !isPremium && game.slug !== todaysFreeGame,
-		})),
-	)
-	const wordGuessStats = stats['word-guess'] ?? emptyStats
-	const wordGroupsStats = stats['word-groups'] ?? emptyStats
-	const streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
-	const currentStreak = streakInfo?.currentStreak ?? 0
-	const maxStreak = streakInfo?.maxStreak ?? 0
+	const moduleNames = Object.fromEntries(modules.map((module) => [module.slug, module.name]))
 
-	if (
-		personalCompletionsAvailable &&
-		totalGamesPlayed === 0 &&
-		dailyProgress.completedCount === 0 &&
-		history.length === 0
-	) {
-		return (
-			<>
-				<main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
-					<div className="mx-auto max-w-md text-center">
-						<div className="mb-6 flex justify-center">
-							<div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-								<Trophy className="h-10 w-10 text-muted-foreground" />
-							</div>
-						</div>
-						<h1 className="mb-2 text-2xl font-bold">{t('noStatsYet')}</h1>
-						<p className="mb-6 text-muted-foreground">{t('playFirstGame')}</p>
-						<Button asChild>
-							<Link href={`/${locale}`}>{t('startPlaying')}</Link>
-						</Button>
-					</div>
-				</main>
-			</>
-		)
-	}
+	const [statsResult, historyResult, streakResult, personalResult] = await Promise.allSettled([
+		hasProgressIdentity ? getServerUserStats() : Promise.resolve(null as UserStats | null),
+		hasProgressIdentity ? getServerHistory({ limit: HISTORY_LIMIT }) : Promise.resolve(null),
+		hasProgressIdentity ? getServerStreakInfo() : Promise.resolve(null as StreakInfo | null),
+		getServerPersonalDailyResults({
+			gameSlugs: modules.map((module) => module.slug),
+			isGuest: !user,
+			isPremium,
+			freeGameSlug: todaysFreeGame,
+		}),
+	])
 
-	const featuredStat =
-		winRate >= 80
-			? 'winRate'
-			: totalGamesPlayed >= 3
-				? 'games'
-				: dailyProgress.completedCount > 0
-					? 'today'
-					: 'games'
+	// A guest without a progress identity has written nothing yet: that is an
+	// empty record, not a failed read.
+	const statsRead = statsResult.status === 'fulfilled' ? statsResult.value : null
+	const historyRead = historyResult.status === 'fulfilled' ? historyResult.value : null
+	const streakRead = streakResult.status === 'fulfilled' ? streakResult.value : null
+	const statsKnown = statsRead !== null || !hasProgressIdentity
+	const historyKnown = historyRead !== null || !hasProgressIdentity
+	const streakKnown = streakRead !== null
+
+	const personalResults: Record<string, PersonalDailyResult> =
+		personalResult.status === 'fulfilled' ? personalResult.value : {}
+	const personalAvailable =
+		personalResult.status === 'fulfilled' &&
+		Object.values(personalResults).length > 0 &&
+		Object.values(personalResults).every((result) => result.statusAvailable)
+
+	const moduleRows = moduleStatRows(statsRead ?? {}, modules)
+	const totalFinished = moduleRows.reduce((sum, row) => sum + row.played, 0)
+	const totalWon = moduleRows.reduce((sum, row) => sum + row.won, 0)
+	const winRate = winRatePercent(totalFinished, totalWon)
+	const history = historyRead ?? []
+	const calendar = buildFinishCalendar({ sessions: history, todayKey: productDayKey() })
+
+	// A ring needs both readings: totals for the win milestones and the streak
+	// payload for the streak one. Without the streak number a ring would paint a
+	// fabricated 0-day best, so the card states that it is unavailable instead.
+	const milestonesReadable = statsKnown && streakKnown
+	const milestones: Milestone[] = milestonesReadable
+		? getNextAchievements({
+				totalWins: moduleRows.length > 0 ? totalWon : 0,
+				maxStreak: streakRead?.maxStreak ?? 0,
+			}).map((achievement) => ({
+				id: achievement.id,
+				metric: achievement.category === 'streak' ? 'streak' : 'wins',
+				tier: achievement.tier,
+				progress: achievement.progress ?? 0,
+				target: achievement.target ?? 1,
+			}))
+		: []
+
+	const everythingUnreadable = hasProgressIdentity && !statsKnown && !historyKnown && !streakKnown
+	const nothingRecorded = statsKnown && totalFinished === 0 && historyKnown && history.length === 0
+
+	const memberLabel = user?.name?.trim() || user?.email || t('identity.player')
+	const streakChip = streakKnown && (streakRead?.currentStreak ?? 0) > 0
 
 	return (
-		<>
-			<main className="flex flex-1 flex-col px-4 py-6">
-				<div className="mx-auto w-full max-w-2xl space-y-6">
-					<h1 className="text-2xl font-bold">{t('title')}</h1>
-
-					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 text-center">
-						{featuredStat === 'winRate' && (
-							<>
-								<Target className="mx-auto h-10 w-10 text-stat-winrate" />
-								<div className="mt-2 text-5xl font-bold text-stat-winrate">{winRate}%</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('winRate')}</div>
-							</>
-						)}
-						{featuredStat === 'today' && (
-							<>
-								<Check className="mx-auto h-10 w-10 text-emerald-500" />
-								<div className="mt-2 text-5xl font-bold">
-									{dailyProgress.completedCount}/{dailyProgress.availableCount}
-								</div>
-								<div className="mt-1 text-sm text-muted-foreground">{tDaily('todaysProgress')}</div>
-							</>
-						)}
-						{featuredStat === 'games' && (
-							<>
-								<Trophy className="mx-auto h-10 w-10 text-primary" />
-								<div className="mt-2 text-5xl font-bold">{totalGamesPlayed}</div>
-								<div className="mt-1 text-sm text-muted-foreground">{t('gamesPlayed')}</div>
-							</>
-						)}
-					</div>
-
-					<div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-						<StatCard
-							icon={<Trophy className="h-4 w-4" />}
-							label={t('played')}
-							value={totalGamesPlayed}
-						/>
-						<StatCard
-							icon={<BarChart3 className="h-4 w-4" />}
-							label={t('winRate')}
-							value={`${winRate}%`}
-						/>
-						<StatCard
-							icon={<Flame className="h-4 w-4 text-stat-streak" />}
-							label={t('streak')}
-							value={currentStreak}
-						/>
-						<StatCard
-							icon={<Star className="h-4 w-4 text-amber-500" />}
-							label={t('best')}
-							value={maxStreak}
-						/>
-					</div>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>{tHome('todaysPuzzles')}</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							{personalCompletionsAvailable ? (
-								<>
-									<div className="flex items-end justify-between gap-3">
-										<div>
-											<p className="text-3xl font-bold tabular-nums">
-												{dailyProgress.completedCount}/{dailyProgress.availableCount}
-											</p>
-											<p className="text-sm text-muted-foreground">{tDaily('todaysProgress')}</p>
-										</div>
-										{dailyProgress.allCompleted && (
-											<div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-												<Check className="h-4 w-4" />
-												{tDaily('completed')}
-											</div>
-										)}
-									</div>
-									<div className="grid gap-2 sm:grid-cols-2">
-										{gameMetadata.map((game) => {
-											const locked = !isPremium && game.slug !== todaysFreeGame
-											if (locked) return null
-											const completed = personalCompletions[game.slug] ?? false
-											const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
-												defaultValue: game.name,
-											})
-											return (
-												<Link
-													key={game.slug}
-													href={`/${locale}/games/${game.slug}`}
-													className="flex items-center gap-2 rounded-lg bg-muted/40 p-2 text-sm hover:bg-muted"
-												>
-													<GameIcon slug={game.slug} size={20} aria-hidden="true" />
-													<span className="min-w-0 flex-1 truncate">{gameName}</span>
-													{completed && <Check className="h-4 w-4 text-emerald-500" />}
-												</Link>
-											)
-										})}
-									</div>
-								</>
+		<main className="page-shell-wide py-8 md:py-10">
+			<div className="space-y-6">
+				<ConsoleHeader
+					eyebrow={t('eyebrow')}
+					title={t('title')}
+					description={user ? t('descriptionMember', { name: memberLabel }) : t('descriptionGuest')}
+					chips={
+						<>
+							{user ? (
+								<span className="chip bg-primary/10 text-primary">{t('identity.member')}</span>
 							) : (
-								<div
-									className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4"
-									role="alert"
+								<span className="chip bg-amber-500/10 text-amber-700 dark:text-amber-400">
+									{t('identity.guest')}
+								</span>
+							)}
+							{isPremium ? (
+								<span className="chip bg-violet-500/10 text-violet-700 dark:text-violet-300">
+									{t('identity.premium')}
+								</span>
+							) : null}
+							{streakChip ? (
+								<span className="chip bg-stat-streak/10 text-stat-streak">
+									{t('identity.streakChip', { days: streakRead?.currentStreak ?? 0 })}
+								</span>
+							) : null}
+							{!user ? (
+								<Link
+									href="/login"
+									className="chip bg-muted text-foreground underline-offset-2 hover:underline"
 								>
-									<p className="font-medium">{t('dailyStatusUnavailableTitle')}</p>
-									<p className="mt-1 text-sm text-muted-foreground">
-										{t('dailyStatusUnavailableDescription')}
-									</p>
-									<Button asChild variant="outline" size="sm" className="mt-3">
-										<Link href={`/${locale}/stats`}>{t('dailyStatusRetry')}</Link>
-									</Button>
-								</div>
-							)}
-						</CardContent>
-					</Card>
+									{t('identity.signInCta')}
+								</Link>
+							) : null}
+						</>
+					}
+					actions={
+						<Link
+							href="/leaderboard"
+							className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+						>
+							<Trophy className="h-4 w-4" aria-hidden="true" />
+							{t('viewLeaderboard')}
+						</Link>
+					}
+				/>
 
-					{playedGameStats.map(({ game, stats: gameStat }) => {
-						const gameName = tGames(`${slugToCamelCase(game.slug)}.name`, {
-							defaultValue: game.name,
-						})
-						const moduleWinRate = Math.round((gameStat.gamesWon / gameStat.gamesPlayed) * 100)
-						return (
-							<Card key={game.slug}>
-								<CardHeader>
-									<CardTitle className="flex items-center gap-2">
-										<GameIcon slug={game.slug} size={24} aria-hidden="true" />
-										{gameName}
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
-										<div>
-											<div className="text-2xl font-bold">{gameStat.gamesPlayed}</div>
-											<div className="text-xs text-muted-foreground">{t('gamesPlayed')}</div>
-										</div>
-										<div>
-											<div className="text-2xl font-bold">{moduleWinRate}%</div>
-											<div className="text-xs text-muted-foreground">{t('winRate')}</div>
-										</div>
-										<div>
-											<div className="text-2xl font-bold">{gameStat.totalScore}</div>
-											<div className="text-xs text-muted-foreground">{t('best')}</div>
-										</div>
-									</div>
-								</CardContent>
-							</Card>
-						)
-					})}
+				{everythingUnreadable ? (
+					<HonestNotice
+						icon={BarChart3}
+						title={t('unavailableTitle')}
+						body={t('unavailableDescription')}
+						footnote={t('unavailableFootnote')}
+						action={{ href: '/stats', label: t('retry') }}
+					/>
+				) : null}
 
-					<Card>
-						<CardHeader>
-							<CardTitle>{t('historyTitle')}</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-2">
-							{history.length === 0 ? (
-								<p className="text-sm text-muted-foreground">{t('historyEmpty')}</p>
-							) : (
-								history.map((session) => {
-									const gameName = tGames(`${slugToCamelCase(session.gameSlug)}.name`, {
-										defaultValue: session.gameSlug,
-									})
-									return (
-										<div
-											key={`${session.gameSlug}-${session.puzzleId}-${session.puzzleDate}-${session.attempts}`}
-											className="flex items-center gap-3 rounded-lg bg-muted/40 p-2 text-sm"
-										>
-											<GameIcon slug={session.gameSlug} size={20} aria-hidden="true" />
-											<div className="min-w-0 flex-1">
-												<p className="truncate font-medium">{gameName}</p>
-												<p className="text-xs text-muted-foreground">
-													{session.puzzleDate} · {session.status} · {session.mode}
-												</p>
-											</div>
-											<span className="tabular-nums">{session.score}</span>
-										</div>
-									)
-								})
-							)}
-						</CardContent>
-					</Card>
+				{!everythingUnreadable && nothingRecorded ? (
+					<HonestNotice
+						tone="quiet"
+						icon={Play}
+						title={t('noStatsYet')}
+						body={t('playFirstGame')}
+						action={{ href: '/games', label: t('startPlaying') }}
+					/>
+				) : null}
 
-					<Card>
-						<CardContent className="pt-6">
-							<Achievements
-								stats={{
-									totalWins: totalGamesWon,
-									maxStreak,
-									wordleWins: wordGuessStats.gamesWon,
-									connectionsWins: wordGroupsStats.gamesWon,
-									wordleBestAttempts: wordGuessStats.guessDistribution?.['1']
-										? 1
-										: wordGuessStats.guessDistribution?.['2']
-											? 2
-											: undefined,
-									connectionsPerfectGames: wordGroupsStats.perfectGames,
-								}}
+				{!everythingUnreadable ? (
+					<>
+						<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+							<ConsoleStat
+								icon={Check}
+								label={t('played')}
+								value={statsKnown ? String(totalFinished) : t('unknownValue')}
+								srValue={statsKnown ? undefined : t('unknownSr')}
+								hint={
+									statsKnown
+										? totalFinished > 0
+											? t('playedHint', { modules: moduleRows.length })
+											: t('playedHintEmpty')
+										: undefined
+								}
 							/>
-						</CardContent>
-					</Card>
-				</div>
-			</main>
-		</>
-	)
-}
+							<ConsoleStat
+								icon={BarChart3}
+								label={t('winRate')}
+								tone="win"
+								value={
+									statsKnown
+										? winRate === null
+											? t('unknownValue')
+											: `${winRate}%`
+										: t('unknownValue')
+								}
+								srValue={
+									statsKnown ? (winRate === null ? t('winRateEmptySr') : undefined) : t('unknownSr')
+								}
+								hint={
+									statsKnown
+										? winRate === null
+											? t('winRateHintEmpty')
+											: t('winRateHint', { won: totalWon, played: totalFinished })
+										: undefined
+								}
+							/>
+							<ConsoleStat
+								icon={Flame}
+								label={t('streak')}
+								tone="streak"
+								value={streakKnown ? String(streakRead?.currentStreak ?? 0) : t('unknownValue')}
+								srValue={streakKnown ? undefined : t('unknownSr')}
+								hint={
+									streakKnown
+										? streakRead?.hasPlayedToday
+											? t('streakHintPlayed')
+											: t('streakHintOpen')
+										: undefined
+								}
+							/>
+							<ConsoleStat
+								icon={Trophy}
+								label={t('best')}
+								tone="best"
+								value={streakKnown ? String(streakRead?.maxStreak ?? 0) : t('unknownValue')}
+								srValue={streakKnown ? undefined : t('unknownSr')}
+								hint={streakKnown ? t('bestHint', { days: streakRead?.maxStreak ?? 0 }) : undefined}
+							/>
+						</div>
 
-function StatCard({
-	icon,
-	label,
-	value,
-	variant = 'default',
-}: {
-	icon: React.ReactNode
-	label: string
-	value: string | number
-	variant?: 'default' | 'muted'
-}) {
-	return (
-		<div
-			className={cn(
-				'flex flex-col items-center rounded-xl p-3 transition-all',
-				variant === 'default' ? 'bg-muted/50 hover:bg-muted' : 'bg-muted/20 opacity-60',
-			)}
-		>
-			{icon}
-			<span className="mt-1.5 text-xl font-bold tabular-nums">{value}</span>
-			<span className="text-[10px] text-muted-foreground">{label}</span>
-		</div>
+						<ConsoleCard
+							title={t('today.title')}
+							description={t('today.description')}
+							actions={
+								<Link
+									href="/"
+									className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+								>
+									{t('today.playCta')}
+								</Link>
+							}
+						>
+							{personalAvailable ? (
+								<ul className="grid gap-2 sm:grid-cols-2">
+									{modules.map((module) => {
+										const locked = !isPremium && module.slug !== todaysFreeGame
+										if (locked) return null
+										const result = personalResults[module.slug]
+										const done = result?.hasCompleted ?? false
+										return (
+											<li key={module.slug}>
+												<Link
+													href={`/games/${module.slug}`}
+													className="flex min-h-11 items-center gap-2 rounded-xl bg-surface-muted/70 px-3 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+												>
+													<GameIcon slug={module.slug} size={20} aria-hidden="true" />
+													<span className="min-w-0 flex-1 truncate">{module.name}</span>
+													{done ? (
+														<span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+															<Check className="h-4 w-4" aria-hidden="true" />
+															{t('today.done')}
+														</span>
+													) : (
+														<span className="text-xs text-muted-foreground">{t('today.open')}</span>
+													)}
+												</Link>
+											</li>
+										)
+									})}
+								</ul>
+							) : (
+								<HonestNotice
+									icon={RefreshCw}
+									title={t('dailyStatusUnavailableTitle')}
+									body={t('dailyStatusUnavailableDescription')}
+									action={{ href: '/stats', label: t('dailyStatusRetry') }}
+								/>
+							)}
+						</ConsoleCard>
+
+						<div className="grid gap-4 lg:grid-cols-2">
+							<ConsoleCard title={t('streakCard.title')} description={t('streakCard.description')}>
+								{streakKnown ? (
+									<>
+										<dl className="grid grid-cols-2 gap-4">
+											<div>
+												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+													{t('streak')}
+												</dt>
+												<dd className="mt-1 font-display text-3xl font-extrabold tnum">
+													{streakRead?.currentStreak ?? 0}
+												</dd>
+											</div>
+											<div>
+												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+													{t('best')}
+												</dt>
+												<dd className="mt-1 font-display text-3xl font-extrabold tnum">
+													{streakRead?.maxStreak ?? 0}
+												</dd>
+											</div>
+										</dl>
+										<ul className="mt-4 space-y-2 text-sm">
+											<li className="flex items-center gap-2">
+												<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
+												{streakRead?.hasPlayedToday
+													? t('streakCard.playedToday')
+													: t('streakCard.notPlayedToday')}
+											</li>
+											<li className="flex items-center gap-2">
+												<Snowflake className="h-4 w-4 text-primary" aria-hidden="true" />
+												{t('streakCard.freezes', { count: streakRead?.freezesAvailable ?? 0 })}
+											</li>
+										</ul>
+										{(streakRead?.freezesAvailable ?? 0) > 0 &&
+										streakRead?.autoFreezeEnabled !== undefined ? (
+											<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+												{streakRead.autoFreezeEnabled
+													? t('streakCard.autoFreezeOn')
+													: t('streakCard.autoFreezeOff')}
+											</p>
+										) : null}
+									</>
+								) : (
+									<HonestNotice
+										title={t('streakCard.unavailableTitle')}
+										body={t('streakCard.unavailableBody')}
+										action={{ href: '/stats', label: tCommon('retry') }}
+									/>
+								)}
+							</ConsoleCard>
+
+							{historyKnown ? (
+								<FinishCalendarCard calendar={calendar} locale={locale} />
+							) : (
+								<ConsoleCard title={t('calendar.title')} description={t('calendar.description')}>
+									<HonestNotice
+										title={t('calendar.unavailableTitle')}
+										body={t('calendar.unavailableBody')}
+										action={{ href: '/stats', label: tCommon('retry') }}
+									/>
+								</ConsoleCard>
+							)}
+						</div>
+
+						{statsKnown ? (
+							<ModuleBreakdownCard rows={moduleRows} />
+						) : (
+							<ConsoleCard title={t('modules.title')} description={t('modules.description')}>
+								<HonestNotice
+									title={t('modules.unavailableTitle')}
+									body={t('modules.unavailableBody')}
+									action={{ href: '/stats', label: tCommon('retry') }}
+								/>
+							</ConsoleCard>
+						)}
+
+						<MilestoneRingsCard milestones={milestones} unavailable={!milestonesReadable} />
+
+						{historyKnown ? (
+							<FinishHistoryCard
+								sessions={history.slice(0, HISTORY_ROWS)}
+								moduleNames={moduleNames}
+								locale={locale}
+							/>
+						) : null}
+					</>
+				) : null}
+			</div>
+		</main>
 	)
 }

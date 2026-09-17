@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@/lib/identity/server'
+import { ConsoleHeader } from '@/features/console/components/console-chrome'
+import { requireMember } from '@/features/console/lib/require-member'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 import { ReferralsContent } from './referrals-client'
 
 type Props = {
@@ -11,20 +12,27 @@ export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'referrals' })
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: '/settings/referrals',
 		title: t('title'),
-	}
+		description: t('description'),
+		noindex: true,
+	})
 }
 
 export default async function ReferralsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
+	await requireMember({ locale, returnTo: '/settings/referrals' })
 
-	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/referrals`)
-	}
+	const t = await getTranslations('referrals')
 
-	return <ReferralsContent />
+	return (
+		<>
+			<ConsoleHeader headingLevel={2} title={t('title')} description={t('description')} />
+			<ReferralsContent />
+		</>
+	)
 }

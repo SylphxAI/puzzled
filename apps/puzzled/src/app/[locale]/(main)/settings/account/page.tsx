@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@/lib/identity/server'
+import { requireMember } from '@/features/console/lib/require-member'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 import { AccountSettingsContent } from './account-client'
 
 type Props = {
@@ -11,20 +11,20 @@ export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'settings' })
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: '/settings/account',
 		title: t('account.title'),
-	}
+		description: t('account.description'),
+		noindex: true,
+	})
 }
 
 export default async function AccountSettingsPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
-
-	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/account`)
-	}
+	await requireMember({ locale, returnTo: '/settings/account' })
 
 	return <AccountSettingsContent />
 }

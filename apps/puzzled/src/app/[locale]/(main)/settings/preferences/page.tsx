@@ -1,9 +1,10 @@
 export const dynamic = 'force-dynamic'
 
-import { Globe, Palette, Sliders } from 'lucide-react'
-import { redirect } from 'next/navigation'
+import { Globe, Palette } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { currentUser } from '@/lib/identity/server'
+import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
+import { requireMember } from '@/features/console/lib/require-member'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 import { LanguageSwitcher } from '@/shared/components/layout'
 import { ThemeToggle } from '@/shared/components/theme'
 
@@ -15,67 +16,66 @@ export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
 	const t = await getTranslations({ locale, namespace: 'settings' })
 
-	return {
+	return buildPageMetadata({
+		locale,
+		path: '/settings/preferences',
 		title: t('preferences.title'),
-	}
+		description: t('preferences.description'),
+		noindex: true,
+	})
 }
 
 export default async function PreferencesPage({ params }: Props) {
 	const { locale } = await params
 	setRequestLocale(locale)
 
-	const user = await currentUser()
-
-	if (!user) {
-		redirect(`/${locale}/login?callbackUrl=/settings/preferences`)
-	}
+	await requireMember({ locale, returnTo: '/settings/preferences' })
 
 	const t = await getTranslations('settings')
 
 	return (
-		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-center gap-3">
-				<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20">
-					<Sliders className="h-6 w-6 text-violet-500" />
-				</div>
-				<div>
-					<h1 className="text-xl font-semibold tracking-tight">{t('preferences.title')}</h1>
-					<p className="text-sm text-muted-foreground">{t('preferences.description')}</p>
-				</div>
-			</div>
+		<>
+			<ConsoleHeader
+				headingLevel={2}
+				title={t('preferences.title')}
+				description={t('preferences.description')}
+			/>
 
-			{/* Appearance Section */}
-			<div className="rounded-2xl border bg-card p-6">
-				<div className="flex items-start gap-4">
-					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
-						<Palette className="h-5 w-5 text-violet-500" />
-					</div>
-					<div className="flex-1">
-						<h2 className="font-semibold">{t('preferences.appearance.title')}</h2>
-						<p className="mb-4 text-sm text-muted-foreground">
-							{t('preferences.appearance.description')}
+			<ConsoleCard
+				title={t('preferences.appearance.title')}
+				description={t('preferences.appearance.description')}
+			>
+				<div className="flex items-start gap-3">
+					<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
+						<Palette className="h-5 w-5 text-violet-500" aria-hidden="true" />
+					</span>
+					<div className="min-w-0 flex-1">
+						<p className="text-sm font-semibold">{t('preferences.appearance.theme')}</p>
+						<p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+							{t('preferences.appearance.themeDescription')}
 						</p>
 						<ThemeToggle showLabel />
 					</div>
 				</div>
-			</div>
+			</ConsoleCard>
 
-			{/* Language Section */}
-			<div className="rounded-2xl border bg-card p-6">
-				<div className="flex items-start gap-4">
-					<div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-						<Globe className="h-5 w-5 text-primary" />
-					</div>
-					<div className="flex-1">
-						<h2 className="font-semibold">{t('preferences.language.title')}</h2>
-						<p className="mb-4 text-sm text-muted-foreground">
-							{t('preferences.language.description')}
+			<ConsoleCard
+				title={t('preferences.language.title')}
+				description={t('preferences.language.description')}
+			>
+				<div className="flex items-start gap-3">
+					<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+						<Globe className="h-5 w-5 text-primary" aria-hidden="true" />
+					</span>
+					<div className="min-w-0 flex-1">
+						<p className="text-sm font-semibold">{t('preferences.language.language')}</p>
+						<p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+							{t('preferences.language.languageDescription')}
 						</p>
 						<LanguageSwitcher variant="button" />
 					</div>
 				</div>
-			</div>
-		</div>
+			</ConsoleCard>
+		</>
 	)
 }
