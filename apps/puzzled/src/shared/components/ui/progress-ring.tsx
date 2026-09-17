@@ -47,8 +47,9 @@ export function ProgressRing({
 			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
 				<defs>
 					<linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-						<stop offset="0%" stopColor="#6366f1" />
-						<stop offset="100%" stopColor="#d946ef" />
+						{/* Brand tokens, so the ring follows the theme instead of a frozen hex. */}
+						<stop offset="0%" stopColor="var(--color-primary)" />
+						<stop offset="100%" stopColor="var(--color-secondary)" />
 					</linearGradient>
 				</defs>
 				<circle
@@ -69,7 +70,8 @@ export function ProgressRing({
 					stroke={`url(#${gradientId})`}
 					strokeDasharray={`${dash} ${circumference - dash}`}
 					transform={`rotate(-90 ${size / 2} ${size / 2})`}
-					style={{ transition: 'stroke-dasharray 600ms cubic-bezier(0.22, 1, 0.36, 1)' }}
+					// Class-based so `motion-reduce` can switch the fill animation off.
+					className="transition-[stroke-dasharray] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
 				/>
 			</svg>
 			<span className="absolute inset-0 flex flex-col items-center justify-center">

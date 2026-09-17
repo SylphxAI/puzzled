@@ -1,6 +1,7 @@
 'use client'
 
 import { Monitor, Moon, Sun } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -10,13 +11,15 @@ type ThemeToggleProps = {
 	showLabel?: boolean
 }
 
+/** Theme keys; labels come from `common.theme` in every locale. */
 const themes = [
-	{ value: 'system', icon: Monitor, label: 'System' },
-	{ value: 'light', icon: Sun, label: 'Light' },
-	{ value: 'dark', icon: Moon, label: 'Dark' },
+	{ value: 'system', icon: Monitor, key: 'system' },
+	{ value: 'light', icon: Sun, key: 'light' },
+	{ value: 'dark', icon: Moon, key: 'dark' },
 ] as const
 
 export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) {
+	const t = useTranslations('common.theme')
 	const { theme, setTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
 
@@ -29,15 +32,15 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 		return (
 			<fieldset
 				className={cn('flex gap-1 rounded-lg bg-muted p-1 border-0', className)}
-				aria-label="Theme selection"
+				aria-label={t('title')}
 			>
-				{themes.map(({ value, icon: Icon, label }) => (
+				{themes.map(({ value, icon: Icon, key }) => (
 					<button
 						type="button"
 						key={value}
-						className="flex h-8 w-8 items-center justify-center rounded-md"
+						className="flex h-11 min-w-11 items-center justify-center rounded-md"
 						disabled
-						aria-label={`${label} theme (loading)`}
+						aria-label={t('selectionLoading', { theme: t(key) })}
 					>
 						<Icon className="h-4 w-4" aria-hidden="true" />
 					</button>
@@ -49,9 +52,9 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 	return (
 		<fieldset
 			className={cn('flex gap-1 rounded-lg bg-muted p-1 border-0', className)}
-			aria-label="Theme selection"
+			aria-label={t('title')}
 		>
-			{themes.map(({ value, icon: Icon, label }) => {
+			{themes.map(({ value, icon: Icon, key }) => {
 				const isActive = theme === value
 				return (
 					<button
@@ -59,16 +62,17 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 						key={value}
 						onClick={() => setTheme(value)}
 						className={cn(
-							'flex h-8 items-center justify-center gap-1.5 rounded-md px-2 transition-colors',
+							// 44px targets: the segmented control sits in a padded track.
+							'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-2 transition-colors',
 							isActive
 								? 'bg-background text-foreground shadow-sm'
 								: 'text-muted-foreground hover:text-foreground',
 						)}
-						aria-label={`Set theme to ${label}`}
+						aria-label={t('setTo', { theme: t(key) })}
 						aria-pressed={isActive}
 					>
 						<Icon className="h-4 w-4" aria-hidden="true" />
-						{showLabel && <span className="text-sm">{label}</span>}
+						{showLabel && <span className="text-sm">{t(key)}</span>}
 					</button>
 				)
 			})}
@@ -78,6 +82,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
 
 // Compact version for header
 export function ThemeToggleCompact({ className }: { className?: string }) {
+	const t = useTranslations('common.theme')
 	const { theme, setTheme, resolvedTheme } = useTheme()
 	const [mounted, setMounted] = useState(false)
 
@@ -89,9 +94,9 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 		return (
 			<button
 				type="button"
-				className={cn('flex h-10 w-10 items-center justify-center rounded-full', className)}
+				className={cn('flex h-11 w-11 items-center justify-center rounded-full', className)}
 				disabled
-				aria-label="Theme toggle (loading)"
+				aria-label={t('loading')}
 			>
 				<Sun className="h-5 w-5" aria-hidden="true" />
 			</button>
@@ -108,20 +113,20 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
 
 	const Icon = resolvedTheme === 'dark' ? Moon : theme === 'system' ? Monitor : Sun
 
-	const currentLabel = theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'
+	const currentLabel = theme === 'dark' ? t('dark') : theme === 'light' ? t('light') : t('system')
 
 	return (
 		<button
 			type="button"
 			onClick={cycleTheme}
 			className={cn(
-				'flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted',
+				'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-muted',
 				className,
 			)}
-			aria-label={`Toggle theme (current: ${currentLabel})`}
+			aria-label={t('toggle', { theme: currentLabel })}
 		>
 			<Icon className="h-5 w-5" aria-hidden="true" />
-			<span className="sr-only">Current theme: {currentLabel}</span>
+			<span className="sr-only">{t('current', { theme: currentLabel })}</span>
 		</button>
 	)
 }

@@ -5,6 +5,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "motion/react";
 import { forwardRef } from "react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 
 // Create motion-enhanced div
@@ -220,15 +221,17 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
 						className,
 					)}
 				>
-					<MotionDiv
-						initial={{ opacity: 0, scale: 0.95, y: -4 }}
-						animate={{ opacity: 1, scale: 1, y: 0 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-					>
-						<SelectScrollUpButton />
-						<div className="p-1">{children}</div>
-						<SelectScrollDownButton />
-					</MotionDiv>
+					<MotionPreferences>
+						<MotionDiv
+							initial={{ opacity: 0, scale: 0.95, y: -4 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+						>
+							<SelectScrollUpButton />
+							<div className="p-1">{children}</div>
+							<SelectScrollDownButton />
+						</MotionDiv>
+					</MotionPreferences>
 				</BaseSelect.Popup>
 			</BaseSelect.Positioner>
 		</BaseSelect.Portal>

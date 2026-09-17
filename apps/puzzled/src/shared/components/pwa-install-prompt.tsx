@@ -3,7 +3,7 @@
 import { Button } from '@sylphx/ui'
 import { Download, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PWA_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +14,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PWAInstallPrompt() {
 	const t = useTranslations('pwa')
+	const tCommon = useTranslations('common')
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
 	const [showPrompt, setShowPrompt] = useState(false)
 	const [isIOS, setIsIOS] = useState(false)
@@ -69,28 +70,45 @@ export function PWAInstallPrompt() {
 		setDeferredPrompt(null)
 	}
 
-	const handleDismiss = () => {
+	const handleDismiss = useCallback(() => {
 		setShowPrompt(false)
 		localStorage.setItem(PWA_PROMPT_DISMISSED_KEY, new Date().toISOString())
-	}
+	}, [])
+
+	// The prompt is not a dialog, so Escape has to dismiss it explicitly.
+	useEffect(() => {
+		if (!showPrompt) return
+
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') handleDismiss()
+		}
+
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [showPrompt, handleDismiss])
 
 	// Don't show if already installed or prompt not ready
 	if (isStandalone || !showPrompt) return null
 
 	return (
-		<div
+		// `<output>` is the native status region: the prompt is announced when it
+		// appears instead of silently covering content (audit P2-1).
+		<output
 			className={cn(
 				'fixed bottom-20 left-4 right-4 z-toast animate-in fade-in slide-in-from-bottom-4 duration-300',
 				'mx-auto max-w-md rounded-2xl border bg-card p-4 shadow-xl',
 			)}
+			aria-live="polite"
 		>
 			<button
 				type="button"
 				onClick={handleDismiss}
-				className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-				aria-label="Dismiss"
+				// 24px visual, 44px hit area: the card is too small for a bigger
+				// control without pushing the copy around.
+				className="absolute right-3 top-3 flex items-center justify-center rounded-full p-1 text-muted-foreground before:absolute before:-inset-2.5 before:content-[''] hover:bg-muted hover:text-foreground"
+				aria-label={tCommon('dismiss')}
 			>
-				<X className="h-4 w-4" />
+				<X className="h-4 w-4" aria-hidden="true" />
 			</button>
 
 			<div className="flex items-start gap-4">
@@ -122,6 +140,6 @@ export function PWAInstallPrompt() {
 					)}
 				</div>
 			</div>
-		</div>
+		</output>
 	)
 }

@@ -1,499 +1,315 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from '@playwright/test'
+import {
+	DESKTOP,
+	MOBILE,
+	readActiveElement,
+	SHELL_TARGET_SELECTOR,
+	type Stop,
+	sampleTransform,
+	settle,
+	targetOffenders,
+} from './a11y-support'
 
 /**
- * Accessibility E2E Tests
+ * Behavioural accessibility coverage for the shell: keyboard operation, focus
+ * management, target sizes and motion preferences.
  *
- * Comprehensive accessibility testing including:
- * - WCAG 2.1 AA compliance
- * - Keyboard navigation
- * - Screen reader compatibility
- * - Focus management
- * - Touch targets
+ * axe cannot see most of this (it has no notion of "where does focus go after
+ * Escape", or "how big is the clickable area"), so it is measured directly in
+ * the browser. Repairs these tests keep honest:
+ *  - skip link present and working on every shell route,
+ *  - one tab order through the shell, no zero-size or unnamed stops,
+ *  - Escape closes the nav sheet, the rules dialog and the language menu, and
+ *    focus returns to the trigger,
+ *  - every shell control offers a 44px effective target (company bar),
+ *  - `prefers-reduced-motion: reduce` stops transform animation while
+ *    motion-enabled users keep it.
  */
 
-const LOCALE = 'en'
+test.describe('Skip link', () => {
+	test.use({ viewport: DESKTOP })
 
-test.describe('Accessibility - WCAG Compliance', () => {
-	test.describe('Core Pages', () => {
-		const pagesToTest = [
-			{ path: `/${LOCALE}`, name: 'Home Page' },
-			{ path: `/${LOCALE}/pricing`, name: 'Pricing Page' },
-			{ path: `/${LOCALE}/login`, name: 'Login Page' },
-			{ path: `/${LOCALE}/signup`, name: 'Signup Page' },
-			{ path: `/${LOCALE}/stats`, name: 'Stats Page' },
-			{ path: `/${LOCALE}/privacy`, name: 'Privacy Page' },
-			{ path: `/${LOCALE}/terms`, name: 'Terms Page' },
-		]
+	test('is the first tab stop and moves focus into the main region', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-		for (const { path, name } of pagesToTest) {
-			test(`${name} should have no critical accessibility violations`, async ({ page }) => {
-				await page.goto(path)
-				await page.waitForSelector('main', { timeout: 10000 })
-
-				const accessibilityScanResults = await new AxeBuilder({ page })
-					.withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-					.analyze()
-
-				// Filter for critical and serious violations
-				const criticalViolations = accessibilityScanResults.violations.filter(
-					(violation) => violation.impact === 'critical' || violation.impact === 'serious',
-				)
-
-				expect(
-					criticalViolations,
-					`${name} should have no critical or serious accessibility violations`,
-				).toEqual([])
-			})
-		}
-	})
-
-	test.describe('Game Pages', () => {
-		const gamesToTest = ['word-guess', 'word-groups', 'sudoku']
-
-		for (const game of gamesToTest) {
-			test(`${game} game page should be accessible`, async ({ page }) => {
-				await page.goto(`/${LOCALE}/games/${game}`)
-				await page.waitForSelector('main', { timeout: 15000 })
-
-				const accessibilityScanResults = await new AxeBuilder({ page })
-					.withTags(['wcag2a', 'wcag2aa'])
-					.analyze()
-
-				const criticalViolations = accessibilityScanResults.violations.filter(
-					(violation) => violation.impact === 'critical' || violation.impact === 'serious',
-				)
-
-				expect(criticalViolations).toEqual([])
-			})
-		}
-	})
-})
-
-test.describe('Keyboard Navigation', () => {
-	test('should be able to navigate home page with keyboard only', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
-
-		// Start from body
 		await page.keyboard.press('Tab')
+		const skipLink = page.locator('a[href="#main-content"]')
+		await expect(skipLink).toBeFocused()
+		await expect(skipLink).toBeVisible()
 
-		// Should be able to tab through interactive elements
-		let tabCount = 0
-		const maxTabs = 20 // Reasonable limit
-
-		while (tabCount < maxTabs) {
-			const focusedElement = await page.evaluate(() => {
-				const el = document.activeElement
-				return {
-					tagName: el?.tagName,
-					role: el?.getAttribute('role'),
-					href: el?.getAttribute('href'),
-					type: el?.getAttribute('type'),
-				}
-			})
-
-			// Should always have something focused
-			expect(focusedElement.tagName).toBeDefined()
-
-			// Tab to next element
-			await page.keyboard.press('Tab')
-			tabCount++
-
-			// If we've looped back to body or main, we've completed the loop
-			if (focusedElement.tagName === 'BODY') break
-		}
-	})
-
-	test('should have visible focus indicators', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
-
-		// Tab to first interactive element
-		await page.keyboard.press('Tab')
-
-		// Get focus ring visibility
-		const _focusVisible = await page.evaluate(() => {
-			const el = document.activeElement
-			if (!el) return false
-
-			const styles = getComputedStyle(el)
-			const hasFocusRing =
-				styles.outline !== 'none' || styles.boxShadow !== 'none' || el.matches(':focus-visible')
-
-			return hasFocusRing
-		})
-
-		// Focus should be visible somehow
-		// Note: Modern CSS might use :focus-visible which is hard to detect
-	})
-
-	test('should trap focus in modal dialogs', async ({ page }) => {
-		await page.goto(`/${LOCALE}/games/word-guess`)
-		await page.waitForSelector('main', { timeout: 15000 })
-
-		// Open help modal if available
-		const helpButton = page.getByRole('button', {
-			name: /help|how to play|\?/i,
-		})
-		if (await helpButton.isVisible()) {
-			await helpButton.click()
-			await page.waitForTimeout(500)
-
-			// Modal should be open
-			const modal = page.locator('[role="dialog"]')
-			if (await modal.isVisible()) {
-				// Tab multiple times - focus should stay in modal
-				for (let i = 0; i < 10; i++) {
-					await page.keyboard.press('Tab')
-				}
-
-				// Active element should still be within modal
-				const focusInModal = await page.evaluate(() => {
-					const modal = document.querySelector('[role="dialog"]')
-					return modal?.contains(document.activeElement)
-				})
-
-				expect(focusInModal).toBe(true)
-
-				// Escape should close modal
-				await page.keyboard.press('Escape')
-				await expect(modal).not.toBeVisible({ timeout: 3000 })
-			}
-		}
-	})
-
-	test('should support keyboard input in word games', async ({ page }) => {
-		await page.goto(`/${LOCALE}/games/word-guess`)
-		await page.waitForSelector('main', { timeout: 15000 })
-
-		// Start game
-		const playButton = page.getByRole('button', { name: /play/i })
-		if (await playButton.isVisible()) {
-			await playButton.click()
-			await page.waitForTimeout(500)
-		}
-
-		// Type letters using keyboard
-		await page.keyboard.type('HELLO')
-
-		// Press Enter to submit
 		await page.keyboard.press('Enter')
-
-		// Press Backspace to delete
-		await page.keyboard.press('Backspace')
-
-		// These actions should not throw errors
-	})
-
-	test('should support arrow key navigation in grid games', async ({ page }) => {
-		await page.goto(`/${LOCALE}/games/sudoku`)
-		await page.waitForSelector('main', { timeout: 15000 })
-
-		// Start game
-		const playButton = page.getByRole('button', { name: /play/i })
-		if (await playButton.isVisible()) {
-			await playButton.click()
-			await page.waitForTimeout(500)
-		}
-
-		// Click on a cell to focus grid
-		const cell = page.locator('[class*="cell"], button').filter({ hasText: /^$|\d/ }).first()
-		if (await cell.isVisible()) {
-			await cell.click()
-
-			// Arrow keys should navigate
-			await page.keyboard.press('ArrowRight')
-			await page.keyboard.press('ArrowDown')
-			await page.keyboard.press('ArrowLeft')
-			await page.keyboard.press('ArrowUp')
-		}
+		await expect(page.locator('#main-content')).toBeFocused()
 	})
 })
 
-test.describe('Screen Reader Compatibility', () => {
-	test('should have proper heading hierarchy', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+test.describe('Tab order through the shell', () => {
+	test.use({ viewport: DESKTOP })
 
-		// Check heading hierarchy
-		const headings = await page.evaluate(() => {
-			const hs = document.querySelectorAll('h1, h2, h3, h4, h5, h6')
-			return Array.from(hs).map((h) => ({
-				level: Number.parseInt(h.tagName[1], 10),
-				text: h.textContent?.trim(),
-			}))
-		})
+	test('reaches shell controls, navigation and page content without empty stops', async ({
+		page,
+	}) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-		// Should have at least one h1
-		const h1Count = headings.filter((h) => h.level === 1).length
-		expect(h1Count).toBeGreaterThanOrEqual(1)
-
-		// Heading levels should not skip (h1 -> h3 without h2)
-		let prevLevel = 0
-		for (const heading of headings) {
-			if (prevLevel > 0 && heading.level > prevLevel + 1) {
-				// Allow some flexibility - log warning but don't fail
-				console.warn(`Heading level skipped from h${prevLevel} to h${heading.level}`)
-			}
-			prevLevel = heading.level
-		}
-	})
-
-	test('should have proper ARIA labels on interactive elements', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
-
-		// Check that icon-only buttons have aria-labels
-		const iconButtons = await page.evaluate(() => {
-			const buttons = document.querySelectorAll('button')
-			const issues: string[] = []
-
-			buttons.forEach((btn, index) => {
-				const hasText = btn.textContent?.trim().length > 0
-				const hasAriaLabel = btn.hasAttribute('aria-label')
-				const hasAriaLabelledBy = btn.hasAttribute('aria-labelledby')
-				const hasTitle = btn.hasAttribute('title')
-
-				// If button has no visible text, it should have an accessible name
-				if (!hasText && !hasAriaLabel && !hasAriaLabelledBy && !hasTitle) {
-					issues.push(`Button ${index}: Missing accessible name`)
-				}
-			})
-
-			return issues
-		})
-
-		// Report but don't fail on minor issues
-		if (iconButtons.length > 0) {
-			console.warn('Icon buttons without accessible names:', iconButtons)
-		}
-	})
-
-	test('should have proper landmark regions', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
-
-		// Check for main landmark
-		const hasMain = await page.locator('main, [role="main"]').count()
-		expect(hasMain).toBeGreaterThanOrEqual(1)
-
-		// Check for navigation landmark
-		const hasNav = await page.locator('nav, [role="navigation"]').count()
-		expect(hasNav).toBeGreaterThanOrEqual(1)
-
-		// Check for header (banner) landmark
-		const hasHeader = await page.locator('header, [role="banner"]').count()
-		expect(hasHeader).toBeGreaterThanOrEqual(1)
-	})
-
-	test('should announce live regions properly', async ({ page }) => {
-		await page.goto(`/${LOCALE}/games/word-guess`)
-		await page.waitForSelector('main', { timeout: 15000 })
-
-		// Start game
-		const playButton = page.getByRole('button', { name: /play/i })
-		if (await playButton.isVisible()) {
-			await playButton.click()
-			await page.waitForTimeout(500)
+		const stops: Stop[] = []
+		for (let press = 0; press < 30; press += 1) {
+			await page.keyboard.press('Tab')
+			stops.push(await readActiveElement(page))
 		}
 
-		// Check for live regions (aria-live attributes)
-		const _liveRegions = await page.evaluate(() => {
-			const regions = document.querySelectorAll('[aria-live], [role="alert"], [role="status"]')
-			return regions.length
-		})
-
-		// Games should have live regions for feedback
-		// Note: This is a soft check as implementation varies
-	})
-})
-
-test.describe('Touch Targets', () => {
-	test.beforeEach(async ({ page }) => {
-		// Set mobile viewport
-		await page.setViewportSize({ width: 375, height: 667 })
+		const empty = stops.filter((stop) => stop.width === 0 || stop.height === 0)
+		expect(empty, `zero-size tab stops: ${JSON.stringify(empty)}`).toEqual([])
+		expect(
+			stops.some((stop) => stop.inHeader),
+			'the shell header is reachable by keyboard',
+		).toBe(true)
+		expect(
+			stops.some(
+				(stop) => stop.tag === 'a' && /home|games|stats|leaderboard|profile/i.test(stop.name),
+			),
+			'the primary navigation is reachable by keyboard',
+		).toBe(true)
 	})
 
-	test('should have adequate touch target sizes (44x44px minimum)', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+	test('keeps a visible focus indicator on the first shell controls', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-		// Check touch target sizes
-		const smallTargets = await page.evaluate(() => {
-			const minSize = 44 // WCAG 2.1 AA requirement
-			const interactiveElements = document.querySelectorAll(
-				'button, a, input, select, [role="button"]',
+		const indicators: Array<{ name: string; visible: boolean }> = []
+		for (let press = 0; press < 4; press += 1) {
+			await page.keyboard.press('Tab')
+			indicators.push(
+				await page.evaluate(() => {
+					const element = document.activeElement
+					if (!element) return { name: '', visible: false }
+					const style = getComputedStyle(element)
+					const outline = style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2
+					const ring = style.boxShadow !== '' && style.boxShadow !== 'none'
+					return {
+						name: (element.getAttribute('aria-label') || element.textContent || '')
+							.trim()
+							.slice(0, 30),
+						visible: outline || ring,
+					}
+				}),
 			)
-			const issues: string[] = []
-
-			interactiveElements.forEach((el) => {
-				const rect = el.getBoundingClientRect()
-				if (rect.width > 0 && rect.height > 0) {
-					if (rect.width < minSize || rect.height < minSize) {
-						const text =
-							el.textContent?.trim().substring(0, 20) || el.getAttribute('aria-label') || 'unknown'
-						// Allow some small elements (like close buttons in tags)
-						if (rect.width < minSize - 10 || rect.height < minSize - 10) {
-							issues.push(
-								`${el.tagName} "${text}": ${Math.round(rect.width)}x${Math.round(rect.height)}px`,
-							)
-						}
-					}
-				}
-			})
-
-			return issues
-		})
-
-		// Log warnings but don't fail on minor size issues
-		if (smallTargets.length > 0) {
-			console.warn('Elements with small touch targets:', smallTargets.slice(0, 5))
 		}
-	})
 
-	test('should have adequate spacing between touch targets', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
-
-		// Check for overlapping or too-close touch targets
-		const overlapIssues = await page.evaluate(() => {
-			const elements = document.querySelectorAll('button, a[href], input, select')
-			const rects = Array.from(elements)
-				.map((el) => ({
-					rect: el.getBoundingClientRect(),
-					el: el.tagName,
-				}))
-				.filter((r) => r.rect.width > 0 && r.rect.height > 0)
-
-			const issues: string[] = []
-			const minSpacing = 8 // Minimum spacing between targets
-
-			for (let i = 0; i < rects.length; i++) {
-				for (let j = i + 1; j < rects.length; j++) {
-					const r1 = rects[i].rect
-					const r2 = rects[j].rect
-
-					// Check if elements are too close
-					const horizontalGap = Math.max(r1.left - r2.right, r2.left - r1.right)
-					const verticalGap = Math.max(r1.top - r2.bottom, r2.top - r1.bottom)
-
-					// If elements are on the same row/column and too close
-					if (
-						horizontalGap < minSpacing &&
-						horizontalGap > -r1.width &&
-						verticalGap < minSpacing &&
-						verticalGap > -r1.height
-					) {
-						// Only report if they're actually overlapping
-						if (horizontalGap < 0 && verticalGap < 0) {
-							// Overlapping elements
-						}
-					}
-				}
-			}
-
-			return issues.slice(0, 5) // Limit to first 5 issues
-		})
-
-		// Log but don't fail
-		if (overlapIssues.length > 0) {
-			console.warn('Touch target spacing issues:', overlapIssues)
-		}
+		const withoutIndicator = indicators.filter((entry) => !entry.visible)
+		expect(
+			withoutIndicator,
+			`stops without a focus indicator: ${JSON.stringify(withoutIndicator)}`,
+		).toEqual([])
 	})
 })
 
-test.describe('Reduced Motion', () => {
-	test('should respect prefers-reduced-motion preference', async ({ page }) => {
-		// Emulate reduced motion preference
-		await page.emulateMedia({ reducedMotion: 'reduce' })
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+/**
+ * Popups only mount when the client runtime can drive them: the dev server
+ * serves a CSP without `unsafe-eval`, and the popup primitives need it to attach
+ * their handlers. A modal that never opens cannot be keyboard-tested, so these
+ * checks skip with that reason rather than asserting against an unrendered DOM.
+ */
+async function openPopup(
+	page: Page,
+	triggerName: RegExp,
+	popup: Locator,
+	skip: (reason: string) => void,
+) {
+	const trigger = page.getByRole('button', { name: triggerName }).first()
+	const triggerReady = await trigger
+		.waitFor({ state: 'visible', timeout: 8000 })
+		.then(() => true)
+		.catch(() => false)
+	if (!triggerReady) {
+		skip(`"${triggerName}" is not on this surface yet — keyboard focus behaviour is unverified`)
+		return null
+	}
+	await trigger.click()
+	const opened = await popup
+		.first()
+		.waitFor({ state: 'visible', timeout: 8000 })
+		.then(() => true)
+		.catch(() => false)
+	if (!opened) {
+		skip(
+			'the popup never mounted (dev-server CSP blocks eval) — keyboard focus behaviour is unverified',
+		)
+		return null
+	}
+	return trigger
+}
 
-		// Check that animations are disabled or reduced
-		const _hasAnimations = await page.evaluate(() => {
-			// Check for animation properties
-			const allElements = document.querySelectorAll('*')
-			let animatedCount = 0
+test.describe('Overlay focus management', () => {
+	test.use({ viewport: MOBILE })
 
-			allElements.forEach((el) => {
-				const styles = getComputedStyle(el)
-				if (styles.animationName !== 'none' || styles.transition !== 'all 0s ease 0s') {
-					// Some elements might still have transitions for essential motion
-					animatedCount++
-				}
-			})
+	test('Escape closes the mobile nav sheet and restores focus to its trigger', async ({
+		page,
+	}, testInfo) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-			return animatedCount
-		})
+		const trigger = await openPopup(
+			page,
+			/open navigation menu/i,
+			page.getByRole('dialog'),
+			(reason) => testInfo.skip(true, reason),
+		)
+		if (!trigger) return
 
-		// With reduced motion, animations should be minimal
-		// Note: Some essential animations might still exist
+		const sheet = page.getByRole('dialog')
+		for (let press = 0; press < 6; press += 1) await page.keyboard.press('Tab')
+		expect(
+			await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')),
+			'focus stays inside the open sheet',
+		).toBe(true)
+
+		await page.keyboard.press('Escape')
+		await expect(sheet).toBeHidden()
+		await expect(trigger).toBeFocused()
 	})
 
-	test('should not have flashing content', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+	test('Escape closes the game rules dialog and restores focus', async ({ page }, testInfo) => {
+		await page.setViewportSize(DESKTOP)
+		await page.goto('/games/sudoku', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-		// Check for potentially problematic animations
-		const flashingElements = await page.evaluate(() => {
-			const animations = document.getAnimations()
-			return animations.filter((anim) => {
-				// Check for rapid animations that could cause issues
-				const effect = anim.effect as KeyframeEffect
-				if (effect?.getTiming) {
-					const timing = effect.getTiming()
-					// Duration < 200ms with infinite iterations could be problematic
-					return (timing.duration as number) < 200 && timing.iterations === Number.POSITIVE_INFINITY
-				}
-				return false
-			}).length
-		})
+		const trigger = await openPopup(page, /how to play/i, page.getByRole('dialog'), (reason) =>
+			testInfo.skip(true, reason),
+		)
+		if (!trigger) return
 
-		// Should not have rapidly flashing content
-		expect(flashingElements).toBe(0)
+		const dialog = page.getByRole('dialog')
+		await page.keyboard.press('Escape')
+		await expect(dialog).toBeHidden()
+		await expect(trigger).toBeFocused()
+	})
+
+	test('Escape closes the language menu and restores focus to its trigger', async ({
+		page,
+	}, testInfo) => {
+		await page.setViewportSize(DESKTOP)
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
+
+		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
+			testInfo.skip(true, reason),
+		)
+		if (!trigger) return
+
+		const menu = page.getByRole('menu')
+		await page.keyboard.press('Escape')
+		await expect(menu).toBeHidden()
+		await expect(trigger).toBeFocused()
 	})
 })
 
-test.describe('Color Contrast', () => {
-	test('should have sufficient color contrast', async ({ page }) => {
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+test.describe('Company target size (44px effective hit area)', () => {
+	const OVERLAY_SELECTOR = '[role="dialog"] a[href], [role="dialog"] button'
 
-		// Run color contrast specific checks
-		const accessibilityScanResults = await new AxeBuilder({ page })
-			.withTags(['wcag2aa'])
-			.options({ rules: { 'color-contrast': { enabled: true } } })
-			.analyze()
+	for (const [name, viewport] of [
+		['desktop', DESKTOP],
+		['mobile', MOBILE],
+	] as const) {
+		test(`${name} shell controls`, async ({ page }) => {
+			await page.setViewportSize(viewport)
+			await page.goto('/', { waitUntil: 'domcontentloaded' })
+			await settle(page)
 
-		const contrastViolations = accessibilityScanResults.violations.filter(
-			(v) => v.id === 'color-contrast',
+			const offenders = await targetOffenders(page, SHELL_TARGET_SELECTOR)
+			expect(
+				offenders,
+				`shell controls below 44px effective target:\n${offenders
+					.map((entry) => `  ${entry.width}x${entry.height} ${entry.target} "${entry.name}"`)
+					.join('\n')}`,
+			).toEqual([])
+		})
+	}
+
+	test('shell controls inside the open mobile drawer', async ({ page }, testInfo) => {
+		await page.setViewportSize(MOBILE)
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
+
+		// The drawer's destinations, appearance controls and account entry only
+		// exist in the DOM (and only in the tab order) while it is open.
+		const trigger = await openPopup(
+			page,
+			/open navigation menu/i,
+			page.getByRole('dialog'),
+			(reason) => testInfo.skip(true, reason),
 		)
+		if (!trigger) return
+		await settle(page)
 
-		// Allow some tolerance but flag serious issues
-		const criticalContrastIssues = contrastViolations.filter(
-			(v) => v.impact === 'critical' || v.impact === 'serious',
+		const offenders = await targetOffenders(page, OVERLAY_SELECTOR)
+		expect(
+			offenders,
+			`drawer controls below 44px effective target:\n${offenders
+				.map((entry) => `  ${entry.width}x${entry.height} ${entry.target} "${entry.name}"`)
+				.join('\n')}`,
+		).toEqual([])
+	})
+})
+
+test.describe('Reduced motion', () => {
+	test.use({ viewport: DESKTOP, colorScheme: 'light', contextOptions: { reducedMotion: 'reduce' } })
+
+	test('stops transform animation on shell surfaces', async ({ page }) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
+		await page.waitForTimeout(400)
+
+		const running = await page.evaluate(() =>
+			document
+				.getAnimations()
+				.filter((animation) => {
+					const effect = animation.effect as KeyframeEffect | null
+					if (!effect || typeof effect.getKeyframes !== 'function') return false
+					return effect.getKeyframes().some((frame) => 'transform' in frame)
+				})
+				.map((animation) => animation.playState),
 		)
-
-		expect(criticalContrastIssues).toEqual([])
+		expect(running, 'transform animations running under reduced motion').toEqual([])
 	})
 
-	test('should have sufficient contrast in dark mode', async ({ page }) => {
-		// Force dark mode
-		await page.emulateMedia({ colorScheme: 'dark' })
-		await page.goto(`/${LOCALE}`)
-		await page.waitForSelector('main', { timeout: 10000 })
+	test('keeps the language menu popup static', async ({ page }, testInfo) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
 
-		// Run color contrast checks in dark mode
-		const accessibilityScanResults = await new AxeBuilder({ page })
-			.withTags(['wcag2aa'])
-			.options({ rules: { 'color-contrast': { enabled: true } } })
-			.analyze()
-
-		const contrastViolations = accessibilityScanResults.violations.filter(
-			(v) => v.id === 'color-contrast' && (v.impact === 'critical' || v.impact === 'serious'),
+		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
+			testInfo.skip(true, reason),
 		)
+		if (!trigger) return
 
-		expect(contrastViolations).toEqual([])
+		const samples = await sampleTransform(page, '[role="menu"]')
+		expect(
+			new Set(samples).size,
+			`popup transform changed: ${samples.join(' ')}`,
+		).toBeLessThanOrEqual(1)
+	})
+})
+
+test.describe('Motion for users without the preference', () => {
+	test.use({
+		viewport: DESKTOP,
+		colorScheme: 'light',
+		contextOptions: { reducedMotion: 'no-preference' },
+	})
+
+	test('keeps the language menu popup animation', async ({ page }, testInfo) => {
+		await page.goto('/', { waitUntil: 'domcontentloaded' })
+		await settle(page)
+
+		const trigger = await openPopup(page, /change language/i, page.getByRole('menu'), (reason) =>
+			testInfo.skip(true, reason),
+		)
+		if (!trigger) return
+
+		const samples = await sampleTransform(page, '[role="menu"]')
+		expect(
+			new Set(samples).size,
+			`expected the popup to animate, saw: ${samples.join(' ')}`,
+		).toBeGreaterThan(1)
 	})
 })

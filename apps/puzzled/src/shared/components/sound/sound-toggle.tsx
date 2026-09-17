@@ -1,6 +1,7 @@
 'use client'
 
 import { Volume2, VolumeX } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useSound } from '@/shared/hooks'
@@ -16,6 +17,7 @@ type SoundToggleProps = {
  * State is persisted to localStorage.
  */
 function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
+	const t = useTranslations('common')
 	const { isMuted, toggleSound, isSupported } = useSound()
 	const [mounted, setMounted] = useState(false)
 
@@ -30,13 +32,14 @@ function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
 			<button
 				type="button"
 				className={cn(
-					'flex h-10 items-center justify-center gap-1.5 rounded-full px-2 transition-colors',
+					'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 transition-colors',
 					className,
 				)}
 				disabled
+				aria-label={showLabel ? t('sound') : t('soundToggleLoading')}
 			>
-				<Volume2 className="h-5 w-5" />
-				{showLabel && <span className="text-sm">Sound</span>}
+				<Volume2 className="h-5 w-5" aria-hidden="true" />
+				{showLabel && <span className="text-sm">{t('sound')}</span>}
 			</button>
 		)
 	}
@@ -46,21 +49,21 @@ function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
 	}
 
 	const Icon = isMuted ? VolumeX : Volume2
-	const label = isMuted ? 'Sound off' : 'Sound on'
+	const label = isMuted ? t('soundOff') : t('soundOn')
 
 	return (
 		<button
 			type="button"
 			onClick={toggleSound}
 			className={cn(
-				'flex h-10 items-center justify-center gap-1.5 rounded-full px-2 transition-colors hover:bg-muted',
+				'flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 transition-colors hover:bg-muted',
 				className,
 			)}
 			title={label}
 			aria-label={label}
 			aria-pressed={!isMuted}
 		>
-			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} />
+			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} aria-hidden="true" />
 			{showLabel && <span className="text-sm">{isMuted ? 'Off' : 'On'}</span>}
 		</button>
 	)
@@ -70,6 +73,7 @@ function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
  * Compact version for header - just the icon
  */
 export function SoundToggleCompact({ className }: { className?: string }) {
+	const t = useTranslations('common')
 	const { isMuted, toggleSound, isSupported } = useSound()
 	const [mounted, setMounted] = useState(false)
 
@@ -81,10 +85,11 @@ export function SoundToggleCompact({ className }: { className?: string }) {
 		return (
 			<button
 				type="button"
-				className={cn('flex h-10 w-10 items-center justify-center rounded-full', className)}
+				className={cn('flex h-11 w-11 items-center justify-center rounded-full', className)}
 				disabled
+				aria-label={t('soundToggleLoading')}
 			>
-				<Volume2 className="h-5 w-5" />
+				<Volume2 className="h-5 w-5" aria-hidden="true" />
 			</button>
 		)
 	}
@@ -94,21 +99,21 @@ export function SoundToggleCompact({ className }: { className?: string }) {
 	}
 
 	const Icon = isMuted ? VolumeX : Volume2
-	const label = isMuted ? 'Sound off (click to enable)' : 'Sound on (click to mute)'
+	const label = isMuted ? t('soundOff') : t('soundOn')
 
 	return (
 		<button
 			type="button"
 			onClick={toggleSound}
 			className={cn(
-				'flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted',
+				'flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-muted',
 				className,
 			)}
 			title={label}
 			aria-label={label}
 			aria-pressed={!isMuted}
 		>
-			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} />
+			<Icon className={cn('h-5 w-5', isMuted && 'text-muted-foreground')} aria-hidden="true" />
 		</button>
 	)
 }

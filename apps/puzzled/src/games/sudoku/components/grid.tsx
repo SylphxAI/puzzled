@@ -5,6 +5,7 @@
 
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { memo, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import type { SudokuCell as SudokuCellData } from '../types'
@@ -34,6 +35,7 @@ const SudokuCell = memo(function SudokuCell({
 	hasConflict,
 	onClick,
 }: CellProps) {
+	const t = useTranslations('common')
 	const handleClick = useCallback(() => onClick(row, col), [onClick, row, col])
 
 	const bgColor = useMemo(() => {
@@ -48,6 +50,18 @@ const SudokuCell = memo(function SudokuCell({
 			type="button"
 			onClick={handleClick}
 			style={{ backgroundColor: bgColor }}
+			/*
+			 * Cells only paint a glyph, so without a name an empty cell reaches
+			 * assistive tech as an unlabelled button (WCAG 4.1.2). The name gives
+			 * the position, then the digit the player placed or was given.
+			 */
+			aria-label={[
+				t('cellRow', { index: row + 1 }),
+				t('cellColumn', { index: col + 1 }),
+				cell.value ? String(cell.value) : null,
+			]
+				.filter(Boolean)
+				.join(', ')}
 			className={cn(
 				'flex cursor-pointer items-center justify-center',
 				'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
@@ -85,6 +99,7 @@ type Props = {
 }
 
 export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellClick }: Props) {
+	const t = useTranslations('games.sudoku')
 	const selectedValue = selectedCell ? userGrid[selectedCell.row]?.[selectedCell.col]?.value : null
 
 	// Pre-compute cell states to pass to memoized components
@@ -153,8 +168,11 @@ export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellCli
 		<div className="w-full">
 			<div className="relative mx-auto aspect-square w-full">
 				{/* Outer 3x3 grid of boxes */}
+				{/* biome-ignore lint/a11y/useSemanticElements: a sudoku board is a named group of controls, not a form fieldset */}
 				<div
 					className="absolute inset-0 grid"
+					role="group"
+					aria-label={t('name')}
 					style={{
 						gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
 						gridTemplateRows: 'repeat(3, minmax(0, 1fr))',

@@ -5,6 +5,7 @@ import { Check, ChevronRight, Circle } from "lucide-react";
 import { motion } from "motion/react";
 import { forwardRef } from "react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 
 // Create motion-enhanced div
@@ -257,14 +258,16 @@ const DropdownMenuContent = forwardRef<
 						className,
 					)}
 				>
-					<MotionDiv
-						initial={{ opacity: 0, scale: 0.95, y: -4 }}
-						animate={{ opacity: 1, scale: 1, y: 0 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="p-1"
-					>
-						{children}
-					</MotionDiv>
+					<MotionPreferences>
+						<MotionDiv
+							initial={{ opacity: 0, scale: 0.95, y: -4 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="p-1"
+						>
+							{children}
+						</MotionDiv>
+					</MotionPreferences>
 				</BaseMenu.Popup>
 			</BaseMenu.Positioner>
 		</BaseMenu.Portal>
@@ -362,15 +365,17 @@ const DropdownMenuCheckboxItem = forwardRef<
 	>
 		<span className="absolute left-2 flex h-4 w-4 items-center justify-center">
 			<BaseMenu.CheckboxItemIndicator keepMounted>
-				<MotionSpan
-					initial={{ opacity: 0, scale: 0 }}
-					animate={
-						checked ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
-					}
-					transition={{ type: "spring", stiffness: 500, damping: 20 }}
-				>
-					<Check className="h-4 w-4" />
-				</MotionSpan>
+				<MotionPreferences>
+					<MotionSpan
+						initial={{ opacity: 0, scale: 0 }}
+						animate={
+							checked ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
+						}
+						transition={{ type: "spring", stiffness: 500, damping: 20 }}
+					>
+						<Check className="h-4 w-4" />
+					</MotionSpan>
+				</MotionPreferences>
 			</BaseMenu.CheckboxItemIndicator>
 		</span>
 		{children}

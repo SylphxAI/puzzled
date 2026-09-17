@@ -43,6 +43,23 @@
 	"optionsAvailable": "个选项可选",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
+	"cellRow": "第 {index} 行",
+	"cellColumn": "第 {index} 列",
+	"sound": "音效",
+	"soundOn": "音效开（点击静音）",
+	"soundOff": "音效关（点击开启）",
+	"soundToggleLoading": "音效开关（加载中）",
+	"theme": {
+		"title": "主题选择",
+		"system": "跟随系统",
+		"light": "浅色",
+		"dark": "深色",
+		"loading": "主题开关（加载中）",
+		"selectionLoading": "{theme}主题（加载中）",
+		"setTo": "设置为{theme}主题",
+		"toggle": "切换主题（当前：{theme}）",
+		"current": "当前主题：{theme}"
+	},
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

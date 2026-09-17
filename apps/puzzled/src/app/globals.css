@@ -168,9 +168,13 @@
 	/* -----------------------------------------
 	   Colors - Stats
 	   ----------------------------------------- */
-	/* Stat colours are used as small text, so they carry AA contrast on white. */
+	/*
+	 * Stat colours are used as small text, so they carry AA contrast both on the
+	 * page surface and on their own 10% tint (the streak chip is
+	 * `bg-stat-streak/10 text-stat-streak`): #9a3412 is 6.2:1 on the tint.
+	 */
 	--color-stat-winrate: #15803d;
-	--color-stat-streak: #c2410c;
+	--color-stat-streak: #9a3412;
 	--color-stat-best: #b45309;
 
 	/* -----------------------------------------
@@ -217,7 +221,13 @@
 	--color-accent: #334155;
 	--color-accent-foreground: #f8fafc;
 	--color-muted: #334155;
-	--color-muted-foreground: #94a3b8;
+	/*
+	 * Muted text must stay legible on the raised surfaces as well as on the
+	 * page background: #a5b2c5 clears 4.5:1 on --color-muted (#334155, 4.8:1),
+	 * --color-card (#1e293b, 6.8:1) and --color-background (#0f172a, 8.3:1).
+	 * slate-400 (#94a3b8) only reached 4.0:1 on the muted chip surface.
+	 */
+	--color-muted-foreground: #a5b2c5;
 	--color-border: #475569;
 	--color-input: #334155;
 	--color-ring: #818cf8;

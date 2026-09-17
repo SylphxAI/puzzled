@@ -63,6 +63,7 @@ import {
 	useState,
 } from "react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 import {
 	Select,
@@ -318,44 +319,46 @@ function TextEditor({
 	};
 
 	const renderStatusIcon = () => (
-		<AnimatePresence mode="wait">
-			{state === "saving" && (
-				<motion.span
-					key="saving"
-					initial={{ opacity: 0, scale: 0.8 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.8 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-				</motion.span>
-			)}
-			{state === "success" && (
-				<motion.span
-					key="success"
-					initial={{ opacity: 0, scale: 0.5 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.5 }}
-					transition={{ type: "spring", stiffness: 400, damping: 15 }}
-					className="inline-flex text-success"
-				>
-					<Check className="h-4 w-4" />
-				</motion.span>
-			)}
-			{(state === "idle" || state === "error") && isHovered && !disabled && (
-				<motion.span
-					key="edit"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 0.6 }}
-					exit={{ opacity: 0 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-				</motion.span>
-			)}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence mode="wait">
+				{state === "saving" && (
+					<motion.span
+						key="saving"
+						initial={{ opacity: 0, scale: 0.8 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.8 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+					</motion.span>
+				)}
+				{state === "success" && (
+					<motion.span
+						key="success"
+						initial={{ opacity: 0, scale: 0.5 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.5 }}
+						transition={{ type: "spring", stiffness: 400, damping: 15 }}
+						className="inline-flex text-success"
+					>
+						<Check className="h-4 w-4" />
+					</motion.span>
+				)}
+				{(state === "idle" || state === "error") && isHovered && !disabled && (
+					<motion.span
+						key="edit"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 0.6 }}
+						exit={{ opacity: 0 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+					</motion.span>
+				)}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 
 	return (
@@ -369,6 +372,7 @@ function TextEditor({
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 		>
+			{/* Opacity-only crossfade: reducedMotion="user" keeps it by design */}
 			<AnimatePresence mode="wait">
 				{state === "editing" || state === "saving" || state === "error" ? (
 					<motion.div
@@ -493,15 +497,17 @@ function TextEditor({
 			</AnimatePresence>
 
 			{error && state === "error" && (
-				<motion.span
-					id={`${id}-error`}
-					initial={{ opacity: 0, y: -4 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="absolute left-0 top-full mt-1 text-xs text-error"
-					role="alert"
-				>
-					{error}
-				</motion.span>
+				<MotionPreferences>
+					<motion.span
+						id={`${id}-error`}
+						initial={{ opacity: 0, y: -4 }}
+						animate={{ opacity: 1, y: 0 }}
+						className="absolute left-0 top-full mt-1 text-xs text-error"
+						role="alert"
+					>
+						{error}
+					</motion.span>
+				</MotionPreferences>
 			)}
 		</div>
 	);
@@ -582,44 +588,46 @@ function SwitchEditor({
 	);
 
 	const renderStatusIcon = () => (
-		<AnimatePresence mode="wait">
-			{state === "saving" && (
-				<motion.span
-					key="saving"
-					initial={{ opacity: 0, scale: 0.8 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.8 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-				</motion.span>
-			)}
-			{state === "success" && (
-				<motion.span
-					key="success"
-					initial={{ opacity: 0, scale: 0.5 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.5 }}
-					transition={{ type: "spring", stiffness: 400, damping: 15 }}
-					className="inline-flex text-success"
-				>
-					<Check className="h-4 w-4" />
-				</motion.span>
-			)}
-			{(state === "idle" || state === "error") && isHovered && !disabled && (
-				<motion.span
-					key="edit"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 0.6 }}
-					exit={{ opacity: 0 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-				</motion.span>
-			)}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence mode="wait">
+				{state === "saving" && (
+					<motion.span
+						key="saving"
+						initial={{ opacity: 0, scale: 0.8 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.8 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+					</motion.span>
+				)}
+				{state === "success" && (
+					<motion.span
+						key="success"
+						initial={{ opacity: 0, scale: 0.5 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.5 }}
+						transition={{ type: "spring", stiffness: 400, damping: 15 }}
+						className="inline-flex text-success"
+					>
+						<Check className="h-4 w-4" />
+					</motion.span>
+				)}
+				{(state === "idle" || state === "error") && isHovered && !disabled && (
+					<motion.span
+						key="edit"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 0.6 }}
+						exit={{ opacity: 0 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+					</motion.span>
+				)}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 
 	return (
@@ -733,44 +741,46 @@ function SelectEditor({
 	);
 
 	const renderStatusIcon = () => (
-		<AnimatePresence mode="wait">
-			{state === "saving" && (
-				<motion.span
-					key="saving"
-					initial={{ opacity: 0, scale: 0.8 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.8 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-				</motion.span>
-			)}
-			{state === "success" && (
-				<motion.span
-					key="success"
-					initial={{ opacity: 0, scale: 0.5 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.5 }}
-					transition={{ type: "spring", stiffness: 400, damping: 15 }}
-					className="inline-flex text-success"
-				>
-					<Check className="h-4 w-4" />
-				</motion.span>
-			)}
-			{(state === "idle" || state === "error") && isHovered && !disabled && (
-				<motion.span
-					key="edit"
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 0.6 }}
-					exit={{ opacity: 0 }}
-					transition={iconTransition}
-					className="inline-flex"
-				>
-					<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-				</motion.span>
-			)}
-		</AnimatePresence>
+		<MotionPreferences>
+			<AnimatePresence mode="wait">
+				{state === "saving" && (
+					<motion.span
+						key="saving"
+						initial={{ opacity: 0, scale: 0.8 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.8 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+					</motion.span>
+				)}
+				{state === "success" && (
+					<motion.span
+						key="success"
+						initial={{ opacity: 0, scale: 0.5 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.5 }}
+						transition={{ type: "spring", stiffness: 400, damping: 15 }}
+						className="inline-flex text-success"
+					>
+						<Check className="h-4 w-4" />
+					</motion.span>
+				)}
+				{(state === "idle" || state === "error") && isHovered && !disabled && (
+					<motion.span
+						key="edit"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 0.6 }}
+						exit={{ opacity: 0 }}
+						transition={iconTransition}
+						className="inline-flex"
+					>
+						<Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+					</motion.span>
+				)}
+			</AnimatePresence>
+		</MotionPreferences>
 	);
 
 	return (

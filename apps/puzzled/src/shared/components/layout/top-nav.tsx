@@ -40,6 +40,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 								href={href}
 								aria-current={isActive ? 'page' : undefined}
 								className={cn(
+									// min-h-11 keeps the primary nav at the 44px company target.
 									'inline-flex min-h-11 items-center rounded-full px-3.5 text-sm font-semibold transition-colors',
 									isActive
 										? 'bg-primary/10 text-primary'
@@ -56,7 +57,7 @@ export function TopNav({ currentStreak = 0 }: TopNavProps) {
 					{currentStreak > 0 && (
 						<Link
 							href="/stats"
-							className="flex h-9 items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 text-sm font-semibold text-stat-streak transition-colors hover:bg-stat-streak/15"
+							className="flex h-11 min-w-11 items-center gap-1.5 rounded-full bg-stat-streak/10 px-3 text-sm font-semibold text-stat-streak transition-colors hover:bg-stat-streak/15"
 							aria-label={t('stats.streakLabel', { days: currentStreak })}
 						>
 							<Flame className="h-4 w-4" aria-hidden="true" />

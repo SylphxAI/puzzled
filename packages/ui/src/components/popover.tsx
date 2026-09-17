@@ -4,6 +4,7 @@ import { Popover as BasePopover } from "@base-ui/react/popover";
 import { motion } from "motion/react";
 import { forwardRef } from "react";
 import { duration, easing } from "../motion/config";
+import { MotionPreferences } from "../motion/motion-preferences";
 import { cn } from "../utils";
 
 // ==================
@@ -146,14 +147,16 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
 						className,
 					)}
 				>
-					<MotionDiv
-						initial={{ opacity: 0, scale: 0.95, y: -4 }}
-						animate={{ opacity: 1, scale: 1, y: 0 }}
-						transition={{ duration: duration.fast, ease: easing.easeOut }}
-						className="p-4"
-					>
-						{children}
-					</MotionDiv>
+					<MotionPreferences>
+						<MotionDiv
+							initial={{ opacity: 0, scale: 0.95, y: -4 }}
+							animate={{ opacity: 1, scale: 1, y: 0 }}
+							transition={{ duration: duration.fast, ease: easing.easeOut }}
+							className="p-4"
+						>
+							{children}
+						</MotionDiv>
+					</MotionPreferences>
 				</BasePopover.Popup>
 			</BasePopover.Positioner>
 		</BasePopover.Portal>

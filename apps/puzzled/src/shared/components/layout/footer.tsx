@@ -36,12 +36,17 @@ export async function Footer() {
 
 					<nav aria-label={t('playHeading')} className="text-sm">
 						<h2 className="font-display text-sm font-bold text-white">{t('playHeading')}</h2>
-						<ul className="mt-4 space-y-2.5">
+						{/*
+						 * Each footer destination owns a 44px target (company bar, WCAG
+						 * 2.5.8 friendly): the link carries the height and the list drops
+						 * the extra gap so the column does not double-space.
+						 */}
+						<ul className="mt-3 space-y-0">
 							{games.map((game) => (
 								<li key={game.slug}>
 									<Link
 										href={`/games/${game.slug}`}
-										className="text-white/70 transition-colors hover:text-white"
+										className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
 									>
 										{tGame(`games.${slugToCamelCase(game.slug)}.name`)}
 									</Link>
@@ -50,7 +55,7 @@ export async function Footer() {
 							<li>
 								<Link
 									href="/games"
-									className="font-semibold text-white/90 transition-colors hover:text-white"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 font-semibold text-white/90 transition-colors hover:text-white"
 								>
 									{t('allGames')} →
 								</Link>
@@ -60,27 +65,36 @@ export async function Footer() {
 
 					<nav aria-label={t('productHeading')} className="text-sm">
 						<h2 className="font-display text-sm font-bold text-white">{t('productHeading')}</h2>
-						<ul className="mt-4 space-y-2.5">
+						<ul className="mt-3 space-y-0">
 							<li>
-								<Link href="/pricing" className="text-white/70 transition-colors hover:text-white">
+								<Link
+									href="/pricing"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
 									{tNav('pricing')}
 								</Link>
 							</li>
 							<li>
-								<Link href="/stats" className="text-white/70 transition-colors hover:text-white">
+								<Link
+									href="/stats"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
 									{tNav('stats')}
 								</Link>
 							</li>
 							<li>
 								<Link
 									href="/leaderboard"
-									className="text-white/70 transition-colors hover:text-white"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
 								>
 									{tNav('leaderboard')}
 								</Link>
 							</li>
 							<li>
-								<Link href="/support" className="text-white/70 transition-colors hover:text-white">
+								<Link
+									href="/support"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
 									{tNav('support')}
 								</Link>
 							</li>
@@ -89,21 +103,27 @@ export async function Footer() {
 
 					<nav aria-label={t('legalHeading')} className="text-sm">
 						<h2 className="font-display text-sm font-bold text-white">{t('legalHeading')}</h2>
-						<ul className="mt-4 space-y-2.5">
+						<ul className="mt-3 space-y-0">
 							<li>
-								<Link href="/privacy" className="text-white/70 transition-colors hover:text-white">
+								<Link
+									href="/privacy"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
 									{t('privacy')}
 								</Link>
 							</li>
 							<li>
-								<Link href="/terms" className="text-white/70 transition-colors hover:text-white">
+								<Link
+									href="/terms"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
+								>
 									{t('terms')}
 								</Link>
 							</li>
 							<li>
 								<a
 									href={`mailto:${SUPPORT_EMAIL}`}
-									className="text-white/70 transition-colors hover:text-white"
+									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
 								>
 									{t('contact')}
 								</a>

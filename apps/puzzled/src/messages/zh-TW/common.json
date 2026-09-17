@@ -43,6 +43,23 @@
 	"optionsAvailable": "個選項可選",
 	"expandSection": "Expand section",
 	"collapseSection": "Collapse section",
+	"cellRow": "第 {index} 行",
+	"cellColumn": "第 {index} 列",
+	"sound": "音效",
+	"soundOn": "音效開（點一下靜音）",
+	"soundOff": "音效關（點一下開啟）",
+	"soundToggleLoading": "音效開關（載入中）",
+	"theme": {
+		"title": "主題選擇",
+		"system": "跟隨系統",
+		"light": "淺色",
+		"dark": "深色",
+		"loading": "主題開關（載入中）",
+		"selectionLoading": "{theme}主題（載入中）",
+		"setTo": "設定為{theme}主題",
+		"toggle": "切換主題（目前：{theme}）",
+		"current": "目前主題：{theme}"
+	},
 	"difficulty": {
 		"easy": "Easy",
 		"medium": "Medium",

@@ -1,4 +1,22 @@
+import { existsSync } from 'node:fs'
 import { defineConfig, devices } from '@playwright/test'
+
+/**
+ * Where the Chromium binary lives.
+ *
+ * CI and most dev machines use Playwright's bundled browser (leave this
+ * unset). Hosts that ship a system Chromium — and environments that stage
+ * browsers outside the Playwright cache — can point at it explicitly instead of
+ * downloading a second copy.
+ */
+function chromiumExecutable(): string | undefined {
+	const override = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?.trim()
+	if (override) return override
+	if (existsSync('/usr/bin/chromium')) return '/usr/bin/chromium'
+	return undefined
+}
+
+const executablePath = chromiumExecutable()
 
 /**
  * Playwright configuration for E2E and accessibility testing
@@ -7,8 +25,11 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
 	testDir: './e2e-tests',
 	testMatch: '*.e2e.ts',
-	// Maximum time one test can run
-	timeout: 30 * 1000,
+	// Maximum time one test can run. The a11y suite walks 14 routes x 4 modes
+	// against a dev server that compiles on first request, so the budget has to
+	// cover a slow cold start; CI runs against a built server and finishes far
+	// inside it.
+	timeout: 120 * 1000,
 	expect: {
 		// Maximum time expect() should wait for the condition to be met
 		timeout: 5000,
@@ -32,6 +53,7 @@ export default defineConfig({
 		trace: 'on-first-retry',
 		// Screenshot on failure
 		screenshot: 'only-on-failure',
+		...(executablePath ? { launchOptions: { executablePath } } : {}),
 	},
 
 	// Configure projects for major browsers

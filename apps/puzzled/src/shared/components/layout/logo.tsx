@@ -32,7 +32,8 @@ export function Logo({ showText = true, size = 'md', className, tone = 'default'
 		<Link
 			href="/"
 			className={cn(
-				'group flex items-center gap-2.5 rounded-xl font-bold outline-offset-4',
+				// min-h-11 keeps the wordmark a 44px target in every shell bar.
+				'group flex min-h-11 items-center gap-2.5 rounded-xl font-bold outline-offset-4',
 				tone === 'inverse' ? 'text-white' : 'text-foreground',
 				className,
 			)}
