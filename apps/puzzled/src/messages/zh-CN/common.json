@@ -5,6 +5,13 @@
 	"errorDescription": "出错了，请重试。",
 	"retry": "重试",
 	"refresh": "Refresh",
+	"notFound": {
+		"eyebrow": "404",
+		"title": "这个页面找不到，但谜题还在等你",
+		"description": "你找的页面不存在。今天的免费谜题仍在开放，每个每日游戏都能一键开玩。",
+		"playCta": "玩 {game} —— 今天的免费谜题",
+		"browseCta": "查看全部游戏"
+	},
 	"save": "保存",
 	"cancel": "取消",
 	"confirm": "确认",

@@ -120,5 +120,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
 	// Match all paths except static files
-	matcher: ['/((?!_next|monitoring|.*\\..*).*)', '/'],
+	// Everything else runs through the proxy: dot paths that are not real
+	// assets or metadata documents (e.g. `/index.html`) must reach the i18n
+	// rewrite so they land on the localised 404 instead of the app router with
+	// an invalid locale segment. `isProxySkippedPath` makes that decision.
+	matcher: ['/((?!_next|monitoring).*)'],
 }
