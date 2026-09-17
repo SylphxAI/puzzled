@@ -205,22 +205,24 @@ export function moduleStatRows(
 	stats: Record<string, { gamesPlayed: number; gamesWon: number; totalScore: number }>,
 	modules: readonly { slug: string; name: string }[],
 ): ModuleStatRow[] {
-	return modules
-		.map((module) => {
-			const entry = stats[module.slug]
-			const played = entry?.gamesPlayed ?? 0
-			if (played <= 0) return null
-			const won = entry?.gamesWon ?? 0
-			return {
-				slug: module.slug,
-				name: module.name,
-				played,
-				won,
-				winRate: winRatePercent(played, won),
-				// Connect reports `GetUserStats` without a best score for some modules;
-				// an absent value stays null rather than posing as a real zero.
-				bestScore: entry?.totalScore ?? null,
-			}
-		})
-		.filter((row): row is ModuleStatRow => row !== null)
+	const rows: (ModuleStatRow | null)[] = modules.map((module) => {
+		const entry = stats[module.slug]
+		const played = entry?.gamesPlayed ?? 0
+		if (played <= 0) return null
+		const won = entry?.gamesWon ?? 0
+		return {
+			slug: module.slug,
+			name: module.name,
+			played,
+			won,
+			winRate: winRatePercent(played, won),
+			// Connect reports `GetUserStats` without a best score for some modules;
+			// an absent value stays null rather than posing as a real zero.
+			bestScore: entry?.totalScore ?? null,
+		} satisfies ModuleStatRow
+	})
+
+	// A row exists only for a module the player actually finished; the type
+	// predicate is redundant here, so the filter stays a plain narrowing.
+	return rows.filter((row) => row !== null)
 }
