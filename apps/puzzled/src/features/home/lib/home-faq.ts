@@ -9,5 +9,5 @@
  * JSON-LD. Keeping the coordinates here lets the page and `home-faq.test.ts`
  * state them once.
  */
-export const HOME_FAQ_NAMESPACE = 'home'
+export const HOME_FAQ_NAMESPACE = 'home.faq'
 export const HOME_FAQ_KEYS = ['free', 'account', 'schedule', 'streak', 'share', 'catalog'] as const
