@@ -19,30 +19,37 @@ describe('ritualSharePath', () => {
 		expect(ritualSharePath('sudoku')).toBe('/games/sudoku')
 	})
 
-	test('includes day_key when valid', () => {
-		expect(ritualSharePath('sudoku', '2026-08-12')).toBe('/games/sudoku?date=2026-08-12')
+	test('carries the archive mode with the day_key', () => {
+		// The landing only resolves the shared day from an archive-mode request, so
+		// the share path must carry both halves of the contract (G1).
+		expect(ritualSharePath('sudoku', '2026-08-12')).toBe(
+			'/games/sudoku?mode=archive&date=2026-08-12',
+		)
 	})
 
 	test('canonicalizes retired slugs', () => {
-		expect(ritualSharePath('queens', '2026-08-13')).toBe('/games/crowns?date=2026-08-13')
+		expect(ritualSharePath('queens', '2026-08-13')).toBe(
+			'/games/crowns?mode=archive&date=2026-08-13',
+		)
 		expect(ritualSharePath('tango')).toBe('/games/duo')
 	})
 
-	test('ignores invalid date', () => {
+	test('ignores an invalid or impossible day', () => {
 		expect(ritualSharePath('sudoku', 'not-a-date')).toBe('/games/sudoku')
+		expect(ritualSharePath('sudoku', '2026-02-30')).toBe('/games/sudoku')
 	})
 })
 
 describe('ritualShareDeepLink', () => {
 	test('host + module + day', () => {
 		expect(ritualShareDeepLink('https://puzzled.gg', 'sudoku', '2026-08-12')).toBe(
-			'puzzled.gg/games/sudoku?date=2026-08-12',
+			'puzzled.gg/games/sudoku?mode=archive&date=2026-08-12',
 		)
 	})
 })
 
 describe('formatRitualShareText', () => {
-	test('won path is non-spoiler and deep-links module day', () => {
+	test('won path is non-spoiler and deep-links the shared day', () => {
 		const text = formatRitualShareText({
 			origin: 'https://puzzled.gg',
 			gameSlug: 'sudoku',
@@ -54,7 +61,7 @@ describe('formatRitualShareText', () => {
 		})
 		expect(text).toContain('🏆 Sudoku (Medium) • 2026-08-12')
 		expect(text).toContain('✅ 1 attempts')
-		expect(text).toContain('puzzled.gg/games/sudoku?date=2026-08-12')
+		expect(text).toContain('puzzled.gg/games/sudoku?mode=archive&date=2026-08-12')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 		expect(text.toLowerCase()).not.toContain('solution')
 	})
@@ -81,7 +88,7 @@ describe('formatRitualShareText', () => {
 			statLine: '⏱️ 1:23',
 		})
 		expect(text).toContain('🏆 Crossword Mini • 2026-08-13')
-		expect(text).toContain('puzzled.gg/games/crossword?date=2026-08-13')
+		expect(text).toContain('puzzled.gg/games/crossword?mode=archive&date=2026-08-13')
 		expect(text).not.toContain('Play at puzzled.gg')
 		expect(shareTextLooksNonSpoiler(text)).toBe(true)
 		expect(text.toLowerCase()).not.toMatch(/steam|answer|solution/)
@@ -98,6 +105,6 @@ describe('formatRitualShareText', () => {
 			difficultyLabel: 'medium',
 		})
 		expect(text).toContain('⏱️ 1:23')
-		expect(text).toContain('puzzled.gg/games/sudoku?date=2026-08-12')
+		expect(text).toContain('puzzled.gg/games/sudoku?mode=archive&date=2026-08-12')
 	})
 })
