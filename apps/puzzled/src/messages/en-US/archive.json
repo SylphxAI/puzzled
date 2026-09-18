@@ -1,0 +1,20 @@
+{
+	"metaTitle": "Puzzle archive",
+	"metaDescription": "Replay past daily puzzles from the Puzzled archive.",
+	"eyebrow": "Archive",
+	"title": "The archive",
+	"body": "Every past daily is still here. Pick a day and play it again.",
+	"guestTitle": "Sign in to open the archive",
+	"guestBody": "The archive is part of Puzzled Plus. Sign in to see the days you can play, or play today's free puzzle now.",
+	"signInCta": "Sign in",
+	"lockedTitle": "The archive is part of Puzzled Plus",
+	"lockedBody": "Plus opens the archive: every past daily, the full suite and deeper stats. Today's free puzzle stays open to everyone.",
+	"upgradeCta": "Unlock Puzzled Plus",
+	"playFreeToday": "Play today's free puzzle ({game})",
+	"listTitle": "Past days",
+	"listBody": "The last {count} product days, newest first. Each one opens the puzzle that ran that day.",
+	"playDayLabel": "Play {game} from {date}",
+	"play": "Play",
+	"playToday": "Play today's ritual ({game})",
+	"backToGames": "Back to all games"
+}
