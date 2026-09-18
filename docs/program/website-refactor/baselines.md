@@ -1,82 +1,104 @@
 # Baselines
 
-**Method:** each line is either **Measured** (with the probe that produced it), **Declared** (a value written in the repo, which describes intent rather than current behaviour), or **Unknown** (no evidence obtainable here, with what would obtain it). Nothing in this file is an aspiration presented as a measurement.
+**Provenance.** Live values were probed on **2026-09-18** against `https://puzzled.gg`, whose `/healthz` reports `git_commit_sha = 83bd8d4a3feeddb385ec785fd8c9f934da3f20dd` — "feat(web): SEO truth layer — sitemap, robots, 404, private-surface indexing (#143)", Thu 17 Sep 2026. That commit is an ancestor of `origin/main` and the deployment is **5 commits behind** `origin/main` (`5ff27cf`, "feat(web): redesign pricing, support and legal surfaces (#146)").
 
-Measured rows were taken on 2026-09-18 against `https://puzzled.gg`, which serves the currently deployed build. Source rows were read at `origin/main`.
+**Read this before quoting any live number.** Where source and live disagree below, the live value is the **deployed** layer, not a defect in `main`. The five commits between them are #145 (auth and console), #147 (catalog and game pages), #148 (WCAG 2.2 AA), #133 (Next bump) and #146. Module-page canonical/hreflang and console `noindex` landed inside those commits, so **live readback cannot evidence S4 for those routes until current main deploys.**
 
-## 1. SEO, metadata and structured data
+## 1. SEO, meta and structured data
 
-| # | Property | Value | Kind | Evidence |
+### Measured, live (deployed `83bd8d4`)
+
+| Surface | `<title>` | canonical | hreflang cluster | JSON-LD |
 | --- | --- | --- | --- | --- |
-| 1.1 | Home `<title>` | `Free Daily Brain Games & Puzzles \| Puzzled` | Measured | `GET /` |
-| 1.2 | Home meta description | Present, unique, 154 characters, product-specific | Measured | `GET /` |
-| 1.3 | Home canonical | `https://puzzled.gg` — bare origin, self-referential | Measured | `GET /` |
-| 1.4 | hreflang cluster | 6 alternates: `x-default`, `en-US`, `en-GB`, `zh-HK`, `zh-TW`, `zh-CN`, each pointing at the matching locale URL | Measured | `GET /` |
-| 1.5 | Open Graph | `og:title`, `og:description`, `og:url`, `og:site_name`, `og:locale` present | Measured | `GET /` |
-| 1.6 | Twitter card | `summary_large_image` with title, description, image | Measured | `GET /` |
-| 1.7 | Social image | Dynamic: `https://puzzled.gg/og?title=…` from `src/app/[locale]/og/route.tsx`, not a static file | Measured | `GET /`; `ogImagePath()` in `lib/seo/metadata.ts:149` |
-| 1.8 | JSON-LD | 3 blocks on the home page: `Organization`, `WebSite` (with a `SearchAction` targeting `/games?q={search_term_string}`), and a third | Measured | `GET /` |
-| 1.9 | Sitemap size | 125 `<loc>` entries = (6 public routes + 19 game slugs) × 5 locales | Measured | `GET /sitemap.xml` |
-| 1.10 | Sitemap alternates | Every entry carries the same hreflang cluster the HTML emits | Measured | `GET /sitemap.xml` |
-| 1.11 | `lastmod` | Deliberately absent; the app has no per-URL modification date | Declared | `src/app/sitemap.ts` comment |
-| 1.12 | robots.txt | `Allow: /`; disallows `/api/` and `/admin` under every locale prefix; declares the sitemap | Measured | `GET /robots.txt` |
-| 1.13 | Crawler route split | One table (`src/lib/seo/routes.ts`) feeds `sitemap.ts`, `robots.ts` and `scripts/seo-verify.ts` | Declared | `src/lib/seo/routes.ts`; `bun run verify:seo` |
-| 1.14 | Legacy canonicalisation | `/games/wordle` → 308 `/games/word-guess`; `/games/queens` → 308 `/games/crowns`; `/en` → 308 `/`; `/zh-Hans` → 308 `/zh-CN`; `/en-gb` → 307 `/en-GB` | Measured | HTTP probes |
-| 1.15 | SEO harness in CI | **Not run** — `bun run verify:seo` exists, `.github/workflows/ci.yml` never invokes it | Measured | `grep -c 'verify:seo\|seo-verify' .github/workflows/ci.yml` → 0 |
-| 1.16 | Rich-result coverage | `Organization` and `WebSite` only. No `Game`, `SoftwareApplication`, `FAQPage` or `BreadcrumbList` — so no module page is eligible for a game or FAQ rich result | Measured | `GET /`; no such block in any route inspected |
-| 1.17 | Sitemap `lastmod` freshness signal | Absent by design, so the sitemap publishes no freshness signal at all | Declared | `src/app/sitemap.ts` |
+| `/` | `Free Daily Brain Games & Puzzles | Puzzled` | `https://puzzled.gg` | 6 alternates: `x-default`, `en-US`, `en-GB`, `zh-HK`, `zh-TW`, `zh-CN` | `Organization`; `WebSite` + `SearchAction`/`EntryPoint`; `FAQPage` + `Question`/`Answer` |
+| `/stats` | `Statistics | Puzzled` | **absent** | **absent** | `Organization`; `WebSite` + `SearchAction` |
+| `/games/sudoku` | `Sudoku | Puzzled` | **absent** | **absent** | `Organization`; `WebSite` + `SearchAction` |
 
-**Baseline statement.** Metadata foundations are in good shape: unique titles and descriptions, self-referential canonicals, a correct six-entry hreflang cluster, a dynamic social image, and a sitemap and robots.txt generated from one shared route table. The gaps are at the edges — the contract harness is not wired into CI, and structured data stops at the site level, so no module page can earn a rich result.
+Also measured live on the game page: `og:title`, `og:description`, `og:url` (absent), `twitter:card = "summary"` — a small card, not `summary_large_image`, and no `og:image`. The home page does emit a dynamic card, `https://puzzled.gg/og?title=…`, with `og:image` and `twitter:image`.
+
+- `GET /robots.txt` → `Allow: /`, disallowing `/api/`, `/admin` and `/admin` under each of the four prefixed locales; `Sitemap: https://puzzled.gg/sitemap.xml`.
+- `GET /sitemap.xml` → **125** `<loc>` entries: (6 public routes + 19 game slugs) × 5 locales, each carrying the same `xhtml:link` alternates the HTML emits. No private surface present. No `lastmod`.
+- Redirects measured live: `/games/wordle` → **308** `/games/word-guess`; `/games/queens` → **308** `/games/crowns`; `/en` → **308** `/`; `/zh-Hans` → **308** `/zh-CN`; `/en-US/login` → **308** `/login`; `/en-gb` → **307** `/en-GB`. Next.js emits 308 for `permanent: true` rather than 301; the canonicalisation is permanent and no duplicate indexable URL results.
+- `GET /settings` while signed out → **307** `https://puzzled.gg/en-US/login` → **308** `https://puzzled.gg/login` — two hops (gap **G6**).
+
+### Declared, in `origin/main`
+
+`apps/puzzled/src/lib/seo/routes.ts` is one table — `PUBLIC_ROUTES`, `NOINDEX_ROUTE_PREFIXES`, `CRAWL_BLOCKED_ROUTE_PREFIXES` — consumed by `sitemap.ts`, `robots.ts` and `scripts/seo-verify.ts` (`bun run verify:seo`). `lib/seo/metadata.ts` `buildPageMetadata()` emits canonical, the hreflang cluster and the social card together and self-referentially; `[locale]/(main)/games/[slug]/page.tsx` and `(main)/settings/layout.tsx` both call it. `src/app/not-found.tsx` and `[locale]/not-found.tsx` render `shared/components/not-found-view.tsx`.
+
+### Enforcement
+
+None unattended: `grep -c 'verify:seo\|seo-verify' .github/workflows/ci.yml` → **0** (gap **G9**). The harness exists and is only run by hand.
+
+### Budget to adopt
+
+One self-referential canonical per indexable URL; the full 6-entry hreflang cluster (including `x-default`) on every public URL; a page-type JSON-LD node that validates, not only site-wide `Organization`/`WebSite`; sitemap restricted to public routes; `noindex` on every private HTML surface; `verify:seo` in CI against a served build.
 
 ## 2. Core Web Vitals
 
-| # | Property | Value | Kind | Evidence |
-| --- | --- | --- | --- | --- |
-| 2.1 | Repo thresholds | LCP 2500 ms, INP 200 ms, CLS 0.1 | Declared | `crates/puzzled-core/src/capabilities/presentation_policy/domain/web_vitals_thresholds.rs` |
-| 2.2 | Lab config | Lighthouse CI, **desktop** preset, `cpuSlowdownMultiplier: 1`, 3 runs, URLs `/`, `/pricing`, `/login`, `/signup` | Declared | `apps/puzzled/lighthouserc.json` |
-| 2.3 | Lab assertions | `categories:performance >= 0.9` (error), `accessibility >= 0.9` (error), `best-practices >= 0.9` (error), `seo >= 0.85` (warn); LCP `<= 2500` **warn**, FCP `<= 2000` warn, TBT `<= 300` warn, CLS `<= 0.1` **error** | Declared | `apps/puzzled/lighthouserc.json` |
-| 2.4 | Lab execution in CI | **Never runs** — no Lighthouse step in `.github/workflows/ci.yml` | Measured | `grep` over the workflow; six jobs, none is Lighthouse |
-| 2.5 | Mobile lab config | **None.** The only lab profile is desktop, on a route set that excludes every play surface | Measured | `apps/puzzled/lighthouserc.json` |
-| 2.6 | Field data (CrUX) | **Unknown** — no field dataset was reachable from this host, and the repo stores no field baseline | Unknown | Would need the CrUX API (origin `puzzled.gg`) or the observability store read back |
-| 2.7 | Field vitals collection | Client reporter exists (`features/analytics/components/web-vitals-reporter.tsx`, `web_vital` event, `lib/web-vitals.ts`) and posts to `/api/observability/analytics` | Declared | Source read |
-| 2.8 | Field vitals readback | **None** — nothing reads the collected `web_vital` events back (see `gaps.md` G7) | Measured | `/admin/system` reports database and Redis health only |
-| 2.9 | First-load JS byte budget | **None declared** | Measured | No budget configured anywhere in the app |
+### Declared thresholds in the repo
 
-**Baseline statement.** The repo has thresholds and a lab config, and neither is enforced: `bun run lighthouse` is not a CI step. The declared lab profile is desktop-only and covers `/`, `/pricing`, `/login`, `/signup` — not `/games/[slug]`, the page that actually carries the play surface and the heaviest client code. There is no mobile profile, no JavaScript byte budget, and no field baseline in the repo.
+`crates/puzzled-core/**/web_vitals_thresholds.rs`: **LCP 2500 ms, INP 200 ms, CLS 0.1**. These describe the product's intent and are not connected to any check.
 
-## 3. Accessibility (WCAG 2.2 AA)
+### Enforcement today
 
-| # | Property | Value | Kind | Evidence |
-| --- | --- | --- | --- | --- |
-| 3.1 | Automated suite | `e2e-tests/a11y.e2e.ts` plus `e2e-tests/accessibility.e2e.ts` with a shared `a11y-support.ts` | Declared | `bun run test:a11y` in `package.json` |
-| 3.2 | Broader E2E suite | Ten Playwright specs: accessibility, a11y, auth, games, navigation, responsive, responsive-games, settings, settings-profile, stats | Declared | `e2e-tests/`; `bun run test:e2e` |
-| 3.3 | Execution in CI | **Never runs** — `.github/workflows/ci.yml` has no Playwright job | Measured | Six jobs: lint-and-typecheck, security, migrations, unit-tests, build, rust-api |
-| 3.4 | Reduced-motion gating | `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by popover, dropdown-menu, select, tooltip, form-feedback and inline-editable; covered by `packages/ui/__tests__/motion-preferences.test.ts` and `apps/puzzled/src/shared/components/a11y-contract.test.ts` | Declared | Source read + test files |
-| 3.5 | Automated violation count | **Unknown** — the suite is not run in CI and was not executed here, so there is no current pass/fail figure | Unknown | Would need `bun run test:a11y` against a running server |
-| 3.6 | Manual keyboard and focus verification | **Unknown** — no record of a manual pass over the play and console flows | Unknown | Would need a recorded manual audit artefact |
+`apps/puzzled/lighthouserc.json` runs the **desktop** preset and asserts only `categories:performance >= 0.9`; `largest-contentful-paint`, `first-contentful-paint`, `total-blocking-time` and `speed-index` are all `warn`. `bun run lighthouse` (`lhci autorun`) exists but no CI job invokes it — `.github/workflows/ci.yml` has six jobs (`lint-and-typecheck`, `security`, `migrations`, `unit-tests`, `build`, `rust-api`) and no Lighthouse step (gap **G5**).
 
-**Baseline statement.** The tooling is in place and the reduced-motion work is real. What is missing is enforcement and a number: no CI job runs the suite, so there is no current violation count to improve against, and no manual keyboard/focus record for the flows WCAG 2.2 AA actually stresses.
+### Measured today (deployed `83bd8d4`)
 
-## 4. Analytics and error monitoring
-
-| # | Property | Value | Kind | Evidence |
-| --- | --- | --- | --- | --- |
-| 4.1 | Client event names in source | Exactly four: `web_vital`, `push_enabled`, `push_disabled`, `push_preferences_updated` | Measured | `grep` for `track('<name>'` across `apps/puzzled/src` |
-| 4.2 | Funnel events | **None** — no client event marks land, first serve, first finish, share or return | Measured | Same `grep` |
-| 4.3 | Server-side completion record | `ritual.completed` contract implemented (`build_ritual_completed`, `qualifies_as_ritual`) | Declared | `crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs` |
-| 4.4 | Ingest endpoints | `/api/observability/analytics`, `/api/observability/error-events`, `/api/observability/session-replays` — POST only | Measured | Route files under `src/app/api/observability/` |
-| 4.5 | Consent gating | `features/analytics/lib/consent.ts` plus `shared/components/layout/consent-banner.tsx`; analytics and replay gated | Declared | Source read |
-| 4.6 | Operator readback | **None in-product.** `/admin/system` (`features/admin/components/system-health.tsx`) reports database and Redis only. `game-dashboard.tsx` is per-game play statistics | Measured | Source read |
-| 4.7 | Error tracking | `error-events` ingest exists; every route group has an `error.tsx`; no admin view and no named external authority recorded in-repo | Measured | `find` over `src/app`; admin route list |
-| 4.8 | Session replay | Ingest endpoint and consent gate exist; no operator surface and no recorded retention policy found | Partial | Route file; no policy document located |
-
-**Baseline statement.** Instrumentation is thinner than any other layer. Four client events exist, none of them on the product's own funnel; the observability endpoints accept data that nothing reads back; and the growth loop `GROWTH-AND-VIRALITY.md` §2.2 describes — share rate, land rate, convert rate — is unmeasurable from client signals today. The one strong asset is the server-side `ritual.completed` record, which means the North Star itself is recomputable even though the client funnel around it is not.
-
-## 5. What each stage inherits
-
-| Stage | Inherits from this file |
+| Measure | Value |
 | --- | --- |
-| S4 | 1.15 and 1.17 are the first tasks: run the existing harness in CI, then extend structured data past `Organization`/`WebSite` |
-| S5 | 2.4, 2.5 and 2.9: enforce the existing lab config, add a mobile profile over the play routes, declare a JS byte budget |
-| S6 | 3.3, 3.5 and 3.6: wire the suite into CI, produce a violation count, record a manual keyboard and focus pass |
-| S7 | 4.2, 4.6, 4.7 and 4.8: build the funnel events, then the operator readback for errors and vitals |
+| `/games/sudoku` first-load script assets referenced in `<head>` | **30** unique `/_next/static/chunks/*.js` |
+| `/games/sudoku` stylesheets | 2 |
+| Third-party hints | 1 `dns-prefetch` (`js.stripe.com`) |
+| `/` HTML transfer | 266 KB |
+| `/games/sudoku` HTML transfer | 176 KB |
+
+**Field data: `Unknown`.** No RUM readback is reachable from this host, so no p75 LCP/INP/CLS exists to compare against the thresholds. The client already emits a `web_vital` event, so the measurement path exists; what is missing is a readable destination (gap **G7**).
+
+### Budget to adopt
+
+A **mobile** lab run over `/`, `/games`, `/games/[slug]`, `/stats` and `/settings` at the repo's own thresholds as **errors**, not warnings; a first-load JS byte budget per route (30 script assets on a game page is the current shape to beat); and field p75 as the arbiter once **G7** gives it a home.
+
+## 3. WCAG 2.2 AA
+
+### What exists
+
+`apps/puzzled/e2e-tests/a11y.e2e.ts`, `accessibility.e2e.ts` and `a11y-support.ts`; ten Playwright specs in total. `bun run test:a11y` runs the two a11y specs, `bun run test:e2e` the full set. `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by `popover`, `dropdown-menu`, `select`, `tooltip`, `form-feedback`, `inline-editable`, `dialog` and `page-transition`; it has its own test, and `apps/puzzled/src/shared/components/a11y-contract.test.ts` guards the app contract. The WCAG wave #148 is merged.
+
+### Enforcement
+
+**None.** CI runs no Playwright job, so neither a11y spec executes on a pull request (gap **G4**). The suite is a hand-run asset.
+
+### Baseline
+
+The suite runs in CI over every surface (marketing, catalog, module, auth, console, admin) with a violation failing the check; keyboard and focus paths on the play and console flows asserted explicitly rather than only via axe.
+
+## 4. Analytics, funnel and error monitoring
+
+### What exists
+
+| Layer | Today |
+| --- | --- |
+| Client events | `web_vital`, `push_enabled`, `push_disabled`, `push_preferences_updated` — the complete set of event names in `apps/puzzled/src` |
+| Consent | `shared/components/layout/consent-banner.tsx` + `features/analytics/lib/consent.ts` gate analytics and session replay |
+| Client sinks | `/api/observability/analytics`, `/api/observability/error-events`, `/api/observability/session-replays` (POST) |
+| Server record | `build_ritual_completed` (`crates/puzzled-core/src/capabilities/puzzle_play/domain/ritual_completion.rs`) — the server-authoritative `ritual.completed` contract, persisted by `capabilities/puzzle_play/adapters/game_sessions_db.rs` |
+| Operator view | `/admin/system` shows database and Redis health only (`features/admin/components/system-health.tsx`) |
+
+### Gaps
+
+**G8** — the client funnel (`land → serve → finish → share → return → subscribe`) is not instrumented; the share-rate / land-rate / convert-rate loop `GROWTH-AND-VIRALITY.md` §2.2 requires cannot be computed from client data. **G7** — no operator readback for client error rate or field vitals.
+
+### Baseline
+
+Every step of the funnel emits an event that can be tied to the server-side completion record; consent gating is asserted (nothing fires before it); and an operator can read error rate and field vitals in-product, or the external authority for them is named with a link.
+
+## 5. Baseline summary
+
+| Layer | Measured (deployed `83bd8d4`) | Declared in `main` | Gate today | Target budget |
+| --- | --- | --- | --- | --- |
+| SEO / meta | 125 sitemap URLs; robots disallows `/api` + `/admin`; module and stats routes **lack** canonical/hreflang/OG image | `buildPageMetadata` + `lib/seo/routes.ts` emit canonical, hreflang, cards, `noindex` | none (`verify:seo` not in CI) | `verify:seo` in CI; full cluster on every public URL |
+| Structured data | `Organization` + `WebSite` (+ `FAQPage` on home) | — | none | Page-type node validated per surface |
+| Core Web Vitals | no field data (`Unknown`); 30 head scripts on a game page | LCP 2500 / INP 200 / CLS 0.1 | desktop-only Lighthouse, warn-level, not in CI | Mobile lab at repo thresholds as errors + JS byte budget + field p75 |
+| WCAG 2.2 AA | 2 a11y specs, 10 e2e specs, all hand-run | `MotionConfig` reduced-motion gate across shared primitives | none | Suite in CI, violation fails |
+| Analytics / errors | 4 client events; server completion record exists; consent gating present | Observability endpoints accept POST | none | Six funnel steps + operator readback, consent asserted |
