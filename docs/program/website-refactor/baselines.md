@@ -31,7 +31,7 @@ None unattended: `grep -c 'verify:seo\|seo-verify' .github/workflows/ci.yml` →
 
 ### Budget to adopt
 
-One self-referential canonical per indexable URL; the full 6-entry hreflang cluster (including `x-default`) on every public URL; a page-type JSON-LD node that validates, not only site-wide `Organization`/`WebSite`; sitemap restricted to public routes; `noindex` on every private HTML surface; `verify:seo` in CI against a served build.
+One self-referential canonical per indexable URL; the full 6-entry hreflang cluster (including `x-default`) on every public URL; a page-type JSON-LD node that validates on every surface that earns one — `/` already emits `FAQPage` (6 `Question`/`Answer`), while `/stats` and `/games/[slug]` carry only site-wide `Organization`/`WebSite`; sitemap restricted to public routes; `noindex` on every private HTML surface; `verify:seo` in CI against a served build.
 
 ## 2. Core Web Vitals
 
@@ -41,29 +41,29 @@ One self-referential canonical per indexable URL; the full 6-entry hreflang clus
 
 ### Enforcement today
 
-`apps/puzzled/lighthouserc.json` runs the **desktop** preset and asserts only `categories:performance >= 0.9`; `largest-contentful-paint`, `first-contentful-paint`, `total-blocking-time` and `speed-index` are all `warn`. `bun run lighthouse` (`lhci autorun`) exists but no CI job invokes it — `.github/workflows/ci.yml` has six jobs (`lint-and-typecheck`, `security`, `migrations`, `unit-tests`, `build`, `rust-api`) and no Lighthouse step (gap **G5**).
+`apps/puzzled/lighthouserc.json` runs the **desktop** preset and asserts `categories:performance`, `categories:accessibility` and `categories:best-practices` at **error** (minScore 0.9) and `cumulative-layout-shift` at **error** (≤ 0.1); `categories:seo` is `warn` (minScore 0.85), and `largest-contentful-paint`, `first-contentful-paint`, `total-blocking-time` and `speed-index` are all `warn`. `bun run lighthouse` (`lhci autorun`) exists but no CI job invokes it — `.github/workflows/ci.yml` has six jobs (`lint-and-typecheck`, `security`, `migrations`, `unit-tests`, `build`, `rust-api`) and no Lighthouse step (gap **G5**).
 
 ### Measured today (deployed `83bd8d4`)
 
 | Measure | Value |
 | --- | --- |
-| `/games/sudoku` first-load script assets referenced in `<head>` | **30** unique `/_next/static/chunks/*.js` |
+| `/games/sudoku` first-load script assets referenced in `<head>` | **28** unique `/_next/static/chunks/*.js` (29 including the edge-injected `email-decode.min.js`) |
 | `/games/sudoku` stylesheets | 2 |
 | Third-party hints | 1 `dns-prefetch` (`js.stripe.com`) |
-| `/` HTML transfer | 266 KB |
-| `/games/sudoku` HTML transfer | 176 KB |
+| `/` HTML transfer | **269,501 bytes** (269 KB) |
+| `/games/sudoku` HTML transfer | **176,326 bytes** (176 KB) |
 
 **Field data: `Unknown`.** No RUM readback is reachable from this host, so no p75 LCP/INP/CLS exists to compare against the thresholds. The client already emits a `web_vital` event, so the measurement path exists; what is missing is a readable destination (gap **G7**).
 
 ### Budget to adopt
 
-A **mobile** lab run over `/`, `/games`, `/games/[slug]`, `/stats` and `/settings` at the repo's own thresholds as **errors**, not warnings; a first-load JS byte budget per route (30 script assets on a game page is the current shape to beat); and field p75 as the arbiter once **G7** gives it a home.
+A **mobile** lab run over `/`, `/games`, `/games/[slug]`, `/stats` and `/settings` at the repo's own thresholds as **errors**, not warnings; a first-load JS byte budget per route (28 script assets on a game page is the current shape to beat); and field p75 as the arbiter once **G7** gives it a home.
 
 ## 3. WCAG 2.2 AA
 
 ### What exists
 
-`apps/puzzled/e2e-tests/a11y.e2e.ts`, `accessibility.e2e.ts` and `a11y-support.ts`; ten Playwright specs in total. `bun run test:a11y` runs the two a11y specs, `bun run test:e2e` the full set. `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by `popover`, `dropdown-menu`, `select`, `tooltip`, `form-feedback`, `inline-editable`, `dialog` and `page-transition`; it has its own test, and `apps/puzzled/src/shared/components/a11y-contract.test.ts` guards the app contract. The WCAG wave #148 is merged.
+`apps/puzzled/e2e-tests/a11y.e2e.ts`, `accessibility.e2e.ts` and `a11y-support.ts`; ten Playwright specs in total. `bun run test:a11y` runs the two a11y specs, `bun run test:e2e` the full set. `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by `popover`, `dropdown-menu`, `select`, `tooltip`, `form-feedback` and `inline-editable`; `dialog.tsx` and `motion/page-transition.tsx` gate motion separately through `useReducedMotion` from `motion/use-reduced-motion.ts`. It has its own test, and `apps/puzzled/src/shared/components/a11y-contract.test.ts` guards the app contract. The WCAG wave #148 is merged.
 
 ### Enforcement
 
@@ -99,6 +99,6 @@ Every step of the funnel emits an event that can be tied to the server-side comp
 | --- | --- | --- | --- | --- |
 | SEO / meta | 125 sitemap URLs; robots disallows `/api` + `/admin`; module and stats routes **lack** canonical/hreflang/OG image | `buildPageMetadata` + `lib/seo/routes.ts` emit canonical, hreflang, cards, `noindex` | none (`verify:seo` not in CI) | `verify:seo` in CI; full cluster on every public URL |
 | Structured data | `Organization` + `WebSite` (+ `FAQPage` on home) | — | none | Page-type node validated per surface |
-| Core Web Vitals | no field data (`Unknown`); 30 head scripts on a game page | LCP 2500 / INP 200 / CLS 0.1 | desktop-only Lighthouse, warn-level, not in CI | Mobile lab at repo thresholds as errors + JS byte budget + field p75 |
+| Core Web Vitals | no field data (`Unknown`); 28 head scripts on a game page | LCP 2500 / INP 200 / CLS 0.1 | desktop-only Lighthouse, not run in CI (no mobile profile) | Mobile lab at repo thresholds as errors + JS byte budget + field p75 |
 | WCAG 2.2 AA | 2 a11y specs, 10 e2e specs, all hand-run | `MotionConfig` reduced-motion gate across shared primitives | none | Suite in CI, violation fails |
 | Analytics / errors | 4 client events; server completion record exists; consent gating present | Observability endpoints accept POST | none | Six funnel steps + operator readback, consent asserted |
