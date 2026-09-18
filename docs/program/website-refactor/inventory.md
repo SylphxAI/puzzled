@@ -35,7 +35,7 @@ Catalog slugs are owned by the game registry (`src/games/registry.ts`) and expan
 | --- | --- | --- | --- | --- |
 | `/stats` | public, `noindex` | Player statistics, streaks, history | Habit: see progress, return tomorrow | `src/app/[locale]/(main)/stats/page.tsx` |
 | `/leaderboard` | public, `noindex` | Leaderboard by `?period=` | Opt-in social comparison | `src/app/[locale]/(main)/leaderboard/page.tsx` |
-| `/profile` | redirect | No content — redirects to `/settings` | Legacy navigation entry | `src/app/[locale]/(main)/profile/page.tsx` |
+| `/profile` | auth, `noindex` | Player card: identity, record and streak; redirects to `/login?callbackUrl=/profile` only when signed out | See your own player card | `src/app/[locale]/(main)/profile/page.tsx` |
 
 ### Account console
 
@@ -85,7 +85,7 @@ Every admin route carries `robots: noindex` from `admin/layout.tsx` and is crawl
 
 ### Error and loading surfaces
 
-`error.tsx` at `global-error`, `[locale]`, `[locale]/(main)`, `[locale]/(main)/games/[slug]`, `[locale]/(auth)`, `[locale]/admin`. `loading.tsx` at `[locale]/(main)` and `[locale]/(main)/games/[slug]`. Branded 404 at `src/app/not-found.tsx`, `src/app/[locale]/not-found.tsx`, rendering `src/shared/components/not-found-view.tsx`.
+`error.tsx` at `global-error`, `[locale]`, `[locale]/(main)`, `[locale]/(main)/games/[slug]`, `[locale]/(auth)`, `[locale]/admin` — six in all. No `loading.tsx` boundary exists anywhere under `apps/puzzled/src/app` (`find apps/puzzled/src/app -name 'loading.tsx'` → none). Branded 404 at `src/app/not-found.tsx`, `src/app/[locale]/not-found.tsx`, rendering `src/shared/components/not-found-view.tsx`.
 
 ## 2. Pages that should exist
 

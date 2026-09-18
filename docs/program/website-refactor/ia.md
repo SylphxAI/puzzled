@@ -8,7 +8,7 @@
 
 `src/lib/seo/routes.ts` is the single table for what is public, what is `noindex`, and what is crawl-blocked, and it is consumed by three things: `sitemap.ts`, `robots.ts`, and `scripts/seo-verify.ts` (the harness run by `bun run verify:seo`). Public routes are `/`, `/games`, `/pricing`, `/support`, `/privacy`, `/terms`, plus every `/games/<slug>` expanded from the game registry. `/stats`, `/leaderboard`, `/settings`, `/profile` and the auth family are served as HTML but carry `noindex`. `/api` and `/admin` are crawl-blocked outright.
 
-Verified live: `https://puzzled.gg/robots.txt` disallows exactly `/api/` and `/admin` under each locale prefix, and `https://puzzled.gg/sitemap.xml` contains **125** `<loc>` entries — (6 public routes + 19 game slugs) × 5 locales — with no private surface present.
+Verified live: `https://puzzled.gg/robots.txt` allows `/` and disallows `/api/` and `/admin`, plus `/admin` under each of the four prefixed locales (`/en-GB/admin`, `/zh-HK/admin`, `/zh-TW/admin`, `/zh-CN/admin`); `/api/` is listed once, not repeated per locale. `https://puzzled.gg/sitemap.xml` contains **125** `<loc>` entries — (6 public routes + 19 game slugs) × 5 locales — with no private surface present.
 
 ### 1.2 URL scheme
 
@@ -36,17 +36,19 @@ Verified live: `https://puzzled.gg/robots.txt` disallows exactly `/api/` and `/a
 | Desktop top nav | `top-nav.tsx` | The five `showInTopNav` items, a streak chip linking to `/stats` when `currentStreak > 0`, theme toggle, language switcher, user menu |
 | Mobile bottom nav | `bottom-nav.tsx` | The four `showInBottomNav` items |
 | Mobile nav sheet | `mobile-nav-sheet.tsx` | All `NAV_ITEMS` plus `SUPPORT_NAV_ITEM`, appearance and language controls, account entry |
-| Inner-page header (mobile) | `header.tsx` | Back affordance, logo, title, sound, theme, language, user menu — `md:hidden` |
+| Play / inner-page header | `features/daily/components/minimal-header.tsx` | Back affordance, game name and date, streak, mode and difficulty badges, help and menu actions — rendered by `games/[slug]/game-page-client.tsx` |
 | Console chrome | `features/console/components/console-chrome.tsx` | `ConsoleHeader` / `ConsoleCard`, and the `SettingsNav` rail |
 | Footer | `footer.tsx` | Marketing and legal links |
 | Admin | `admin/layout.tsx` | Operator family, `noindex` |
+
+The only `md:hidden` nav elements in the tree are the menu trigger in `mobile-nav-sheet.tsx` and the bar in `bottom-nav.tsx`; the play surface renders `minimal-header.tsx`. No file named `header.tsx` exists.
 
 ### 1.4 Defects recorded in the current IA
 
 1. **The console redirect costs two hops on the default locale.** Measured live: `GET /settings` → **307** `https://puzzled.gg/en-US/login` → **308** `https://puzzled.gg/login`. The locale-aware `redirect()` in `settings/layout.tsx` emits a prefixed URL for a locale the routing config deliberately serves unprefixed, and the prefix-stripping redirect then normalizes it. One hop is enough; every signed-out console visit pays two round trips. Registered in [`gaps.md`](gaps.md) as **G6**.
 2. **The nav mixes intents in one flat group.** `NAV_ITEMS` holds playing (`/games`), tracking (`/stats`, `/leaderboard`), commercial (`/pricing`) and account (`/profile`) entries with only per-surface visibility flags, and `mobile-nav-sheet` then appends support. Nothing separates "play" from "account" from "site".
-4. **No archive destination exists.** The premium archive the destination promises has no addressable surface anywhere in the tree. Registered as **G2**.
-5. **Rules are not addressable.** `how-to-play-modal.tsx` is the only rules surface and it is a modal, so "explain rules in context" cannot be linked, indexed, or returned to.
+3. **No archive destination exists.** The premium archive the destination promises has no addressable surface anywhere in the tree. Registered as **G2**.
+4. **Rules are not addressable.** `how-to-play-modal.tsx` is the only rules surface and it is a modal, so "explain rules in context" cannot be linked, indexed, or returned to.
 
 ## 2. Target architecture
 
