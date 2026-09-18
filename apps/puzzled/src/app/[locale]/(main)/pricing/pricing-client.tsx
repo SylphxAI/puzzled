@@ -1,165 +1,145 @@
 'use client'
 
-import { Button, Card, CardContent, useToast } from '@sylphx/ui'
-import { Calendar, Check, Crown, Flame, Snowflake, Sparkles } from 'lucide-react'
+import { useToast } from '@sylphx/ui'
+import { Check, ExternalLink, Play } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
-import type { Plan } from '@/lib/identity/react'
+import {
+	annualSavingsPercent,
+	formatAmount,
+	selectPaidPlans,
+} from '@/features/marketing/lib/pricing-plans'
+import { Link } from '@/lib/i18n/routing'
 import { useBilling, usePlans } from '@/lib/identity/react'
 import { cn } from '@/lib/utils'
 
-/** Plan shape returned by the SDK config */
-type PlatformPlan = Plan
+type Interval = 'monthly' | 'annual'
 
-/** UI plan representation derived from platform plans */
-interface UIPlan {
-	id: string
-	slug: string
-	price: number
-	currency: string
-	period: 'perMonth' | 'perYear' | null
-	interval: 'monthly' | 'annual'
-	highlight: boolean
-	badge: string | null
-	badgeColor: string | null
-	trialDays?: number
-	savings?: string
-	features: string[]
+type PlanCardModel = {
+	key: string
+	name: string
+	subtitle: string
+	/** Null when the authority published no price: nothing is printed. */
+	amount: string | null
+	cadence: string | null
+	/** A derived rate line, e.g. the annual price expressed per month. */
+	rate: string | null
+	/** A saving computed from both authoritative prices. */
+	saving: string | null
+	features: readonly string[]
+	footnote: string | null
+	interval: Interval | null
+	slug: string | null
+	isFree: boolean
+}
+
+type PricingContentProps = {
+	locale: string
+	freeGameSlug: string
+	freeGameName: string
+	moduleCount: number
 }
 
 /**
- * Map platform plans to UI plan cards.
+ * Plan cards.
  *
- * Generates free + monthly + annual cards from the platform plan data.
- * Falls back to hardcoded structure if no plans are available.
+ * Prices are presentation of an authority: every figure is read through
+ * `usePlans()` from the server-bootstrapped app config, and a card with no
+ * price says so instead of printing a number. The previous build shipped
+ * hardcoded $4.99/$39.99 fallbacks plus a "POPULAR" badge, neither of which
+ * the billing system ever returned. Checkout, entitlement and the sign-in
+ * error mapping below are unchanged.
  */
-function buildUIPlans(platformPlans: PlatformPlan[]): UIPlan[] {
-	const plans: UIPlan[] = []
-
-	// Always show a free tier
-	plans.push({
-		id: 'free',
-		slug: 'free',
-		price: 0,
-		currency: 'usd',
-		period: null,
-		interval: 'monthly',
-		highlight: false,
-		badge: null,
-		badgeColor: null,
-		features: ['dailyPuzzle', 'basicStats'],
-	})
-
-	// Find the premium plan (first non-free plan with a monthly price)
-	const premiumPlan = platformPlans.find(
-		(p) => p.slug !== 'free' && p.monthlyPrice && p.monthlyPrice > 0,
-	)
-
-	if (premiumPlan) {
-		const features = premiumPlan.features ?? [
-			'allGames',
-			'streakFreeze',
-			'advancedStats',
-			'noAds',
-			'archive',
-		]
-
-		// Monthly card
-		plans.push({
-			id: 'premium',
-			slug: premiumPlan.slug,
-			price: premiumPlan.monthlyPrice!,
-			currency: 'usd',
-			period: 'perMonth',
-			interval: 'monthly',
-			highlight: true,
-			badge: 'popular',
-			badgeColor: 'bg-primary',
-			trialDays: 7,
-			features: [...features] as string[],
-		})
-
-		// Annual card (if annual price exists)
-		if (premiumPlan.annualPrice && premiumPlan.annualPrice > 0) {
-			plans.push({
-				id: 'annual',
-				slug: premiumPlan.slug,
-				price: premiumPlan.annualPrice,
-				currency: 'usd',
-				period: 'perYear',
-				interval: 'annual',
-				highlight: false,
-				badge: 'bestValue',
-				badgeColor: 'bg-emerald-500',
-				trialDays: 7,
-				savings: 'savePercent',
-				features: [...features] as string[],
-			})
-		}
-	} else {
-		// Fallback: hardcoded premium plans if platform returns nothing
-		const defaultFeatures = ['allGames', 'streakFreeze', 'advancedStats', 'noAds', 'archive']
-		plans.push({
-			id: 'premium',
-			slug: 'premium',
-			price: 499,
-			currency: 'usd',
-			period: 'perMonth',
-			interval: 'monthly',
-			highlight: true,
-			badge: 'popular',
-			badgeColor: 'bg-primary',
-			trialDays: 7,
-			features: defaultFeatures,
-		})
-		plans.push({
-			id: 'annual',
-			slug: 'premium',
-			price: 3999,
-			currency: 'usd',
-			period: 'perYear',
-			interval: 'annual',
-			highlight: false,
-			badge: 'bestValue',
-			badgeColor: 'bg-emerald-500',
-			trialDays: 7,
-			savings: 'savePercent',
-			features: defaultFeatures,
-		})
-	}
-
-	return plans
-}
-
-function formatCurrency(amount: number, currency: string, locale: string): string {
-	return new Intl.NumberFormat(locale, {
-		style: 'currency',
-		currency: currency.toUpperCase(),
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 2,
-	}).format(amount / 100)
-}
-
-export function PricingContent({ locale }: { locale: string }) {
-	const t = useTranslations('subscription')
-	const tPricing = useTranslations('pricing')
+export function PricingContent({
+	locale,
+	freeGameSlug,
+	freeGameName,
+	moduleCount,
+}: PricingContentProps) {
+	const t = useTranslations('pricing')
+	const tPlans = useTranslations('subscription')
 	const toast = useToast()
 	const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
 
-	// Plans are now fetched server-side via getAppConfig() and available via usePlans()
 	const configPlans = usePlans()
 	const { isPremium, subscription, createCheckout, isLoading } = useBilling()
 
-	const PLANS = buildUIPlans(configPlans)
+	const { monthly, annual, comparable } = selectPaidPlans(configPlans)
+	const monthlyPrice = monthly?.monthlyPrice ?? null
+	const annualPrice = annual?.annualPrice ?? null
+	const savingsPercent = annualSavingsPercent(monthlyPrice, annualPrice, comparable)
 
-	const handleCheckout = async (planSlug: string, interval: 'monthly' | 'annual' = 'monthly') => {
+	const premiumFeatures = [
+		t('plans.premiumFeatureSuite', { count: moduleCount }),
+		t('plans.premiumFeatureArchive'),
+		t('plans.premiumFeatureStats'),
+		t('plans.premiumFeatureFreeze'),
+	]
+
+	const cards: PlanCardModel[] = [
+		{
+			key: 'free',
+			name: tPlans('free'),
+			subtitle: t('plans.freeSubtitle'),
+			// Zero is a real amount: the free tier costs nothing, always.
+			amount: formatAmount(0, locale),
+			cadence: null,
+			rate: null,
+			saving: null,
+			features: [
+				t('plans.freeFeatureDaily'),
+				t('plans.freeFeatureAccount'),
+				t('plans.freeFeatureStreak'),
+			],
+			footnote: null,
+			interval: null,
+			slug: null,
+			isFree: true,
+		},
+		{
+			key: 'premium-monthly',
+			name: tPlans('premium'),
+			subtitle: t('plans.monthlySubtitle'),
+			amount: monthlyPrice ? formatAmount(monthlyPrice, locale) : null,
+			cadence: monthlyPrice ? tPlans('perMonth') : null,
+			rate: null,
+			saving: null,
+			// No trial chip: nothing in checkout starts a trial today
+			// (`createCheckout` throws `commerce_checkout_unconfigured` and no trial
+			// is created anywhere), so promising one would be a claim we cannot keep.
+			features: premiumFeatures,
+			footnote: monthlyPrice ? t('plans.cancelNote') : null,
+			interval: 'monthly',
+			slug: monthly?.slug ?? null,
+			isFree: false,
+		},
+		{
+			key: 'premium-annual',
+			name: tPlans('annual'),
+			subtitle: t('plans.annualSubtitle'),
+			amount: annualPrice ? formatAmount(annualPrice, locale) : null,
+			cadence: annualPrice ? tPlans('perYear') : null,
+			rate: annualPrice
+				? t('plans.billedYearly', { amount: formatAmount(annualPrice / 12, locale) })
+				: null,
+			saving:
+				savingsPercent !== null ? t('plans.savingVsMonthly', { percent: savingsPercent }) : null,
+			features: premiumFeatures,
+			footnote: annualPrice ? t('plans.annualNote') : null,
+			interval: 'annual',
+			slug: annual?.slug ?? null,
+			isFree: false,
+		},
+	]
+
+	const handleCheckout = async (planSlug: string, interval: Interval) => {
 		const planKey = interval === 'annual' ? `${planSlug}-annual` : planSlug
 		setCheckoutLoading(planKey)
 
 		try {
 			const checkoutUrl = await createCheckout(planSlug, interval)
 			// Show success toast before redirect
-			toast.success(tPricing('redirectingToCheckout'), tPricing('securePaymentMessage'))
+			toast.success(t('redirectingToCheckout'), t('securePaymentMessage'))
 			window.location.href = checkoutUrl
 		} catch (error) {
 			console.error('Checkout error:', error)
@@ -168,11 +148,11 @@ export function PricingContent({ locale }: { locale: string }) {
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 
 			if (errorMessage.includes('not authenticated') || errorMessage.includes('sign in')) {
-				toast.error(tPricing('signInRequired'), tPricing('signInToSubscribe'))
+				toast.error(t('signInRequired'), t('signInToSubscribe'))
 			} else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-				toast.error(tPricing('networkError'), tPricing('checkConnectionRetry'))
+				toast.error(t('networkError'), t('checkConnectionRetry'))
 			} else {
-				toast.error(tPricing('checkoutFailed'), tPricing('tryAgainLater'))
+				toast.error(t('checkoutFailed'), t('tryAgainLater'))
 			}
 		} finally {
 			setCheckoutLoading(null)
@@ -180,158 +160,104 @@ export function PricingContent({ locale }: { locale: string }) {
 	}
 
 	return (
-		<div className="mx-auto w-full max-w-4xl space-y-10">
-			{/* Hero */}
-			<div className="text-center">
-				<div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10">
-					<Crown className="h-8 w-8 text-primary" />
-				</div>
-				<h1 className="text-3xl font-bold sm:text-4xl">{tPricing('title')}</h1>
-				<p className="mt-3 text-lg text-muted-foreground">{tPricing('subtitle')}</p>
-				<p className="mt-2 text-sm text-muted-foreground">Join thousands of daily puzzlers</p>
-			</div>
+		<ul className="grid gap-4 lg:grid-cols-3">
+			{cards.map((card) => {
+				const isCurrentPlan = Boolean(
+					!card.isFree && isPremium && card.slug && subscription?.planSlug === card.slug,
+				)
+				const busy = checkoutLoading !== null
+				const cardKey = card.interval === 'annual' ? `${card.slug}-annual` : (card.slug ?? card.key)
 
-			{/* Value Props */}
-			<div className="grid gap-4 sm:grid-cols-3">
-				<div className="flex items-center gap-3 rounded-xl bg-muted/50 p-4">
-					<Sparkles className="h-6 w-6 text-purple-500" />
-					<div>
-						<p className="font-medium">{tPricing('valueProp1Title')}</p>
-						<p className="text-sm text-muted-foreground">{tPricing('valueProp1Desc')}</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-3 rounded-xl bg-muted/50 p-4">
-					<Snowflake className="h-6 w-6 text-cyan-500" />
-					<div>
-						<p className="font-medium">{tPricing('valueProp2Title')}</p>
-						<p className="text-sm text-muted-foreground">{tPricing('valueProp2Desc')}</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-3 rounded-xl bg-muted/50 p-4">
-					<Calendar className="h-6 w-6 text-blue-500" />
-					<div>
-						<p className="font-medium">{tPricing('valueProp3Title')}</p>
-						<p className="text-sm text-muted-foreground">{tPricing('valueProp3Desc')}</p>
-					</div>
-				</div>
-			</div>
+				return (
+					<li key={card.key} className="surface-card surface-card-hover flex flex-col p-5 sm:p-6">
+						<div>
+							<h3 className="font-display text-xl font-extrabold">{card.name}</h3>
+							<p className="mt-1 text-sm text-muted-foreground">{card.subtitle}</p>
+						</div>
 
-			{/* Plans */}
-			<div className="grid gap-6 sm:grid-cols-3">
-				{PLANS.map((plan) => {
-					const isCurrentPlan = isPremium && plan.slug === subscription?.planSlug
-					const isFree = plan.id === 'free'
-
-					return (
-						<Card
-							key={plan.id}
-							className={cn(
-								'relative overflow-hidden transition-all hover:shadow-xl',
-								plan.highlight && 'border-primary ring-2 ring-primary shadow-lg sm:scale-[1.05]',
-							)}
-						>
-							{plan.badge && (
-								<div
-									className={cn(
-										'absolute -right-8 top-6 rotate-45 px-10 py-1 text-xs font-semibold text-white',
-										plan.badgeColor,
+						<div className="mt-5">
+							{card.amount ? (
+								<p className="flex flex-wrap items-baseline gap-1.5">
+									<span className="font-display text-3xl font-extrabold tnum">{card.amount}</span>
+									{card.cadence && (
+										<span className="text-sm text-muted-foreground">{card.cadence}</span>
 									)}
+								</p>
+							) : (
+								<p className="font-display text-lg font-bold text-muted-foreground">
+									{t('plans.priceAtCheckout')}
+								</p>
+							)}
+
+							{card.rate && <p className="mt-1 text-sm tnum text-muted-foreground">{card.rate}</p>}
+
+							{card.saving && (
+								<p className="mt-3">
+									{/* emerald-800 on the raised surface keeps the label past 4.5:1. */}
+									<span className="chip bg-emerald-600/15 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-200">
+										{card.saving}
+									</span>
+								</p>
+							)}
+
+							{!card.amount && (
+								<p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+									{t('plans.priceAtCheckoutNote')}
+								</p>
+							)}
+						</div>
+
+						<ul className="mt-5 flex-1 space-y-2.5">
+							{card.features.map((feature) => (
+								<li key={feature} className="flex items-start gap-2.5">
+									<Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden="true" />
+									<span className="text-sm leading-relaxed text-muted-foreground">{feature}</span>
+								</li>
+							))}
+						</ul>
+
+						{card.footnote && (
+							<p className="mt-4 text-xs leading-relaxed text-muted-foreground">{card.footnote}</p>
+						)}
+
+						<div className="mt-5">
+							{card.isFree ? (
+								<Link
+									href={`/games/${freeGameSlug}`}
+									className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-5 font-semibold text-foreground transition-colors hover:border-primary/30 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
 								>
-									{tPricing(plan.badge)}
-								</div>
-							)}
-
-							<CardContent className="p-6">
-								<div className="mb-4">
-									<h3 className="text-xl font-bold">
-										{t(plan.id as 'free' | 'premium' | 'annual')}
-									</h3>
-									{plan.savings && (
-										<span className="inline-block mt-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
-											{tPricing(plan.savings)}
-										</span>
+									<Play className="h-4 w-4" aria-hidden="true" />
+									{t('plans.playFree', { game: freeGameName })}
+								</Link>
+							) : (
+								<button
+									type="button"
+									className={cn(
+										'inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+										card.key === 'premium-annual'
+											? 'bg-primary text-primary-foreground hover:bg-primary-hover'
+											: 'border border-border bg-background text-foreground hover:border-primary/30 hover:text-primary',
+										(isLoading || busy || isCurrentPlan) && 'cursor-not-allowed opacity-60',
 									)}
-								</div>
-
-								<div className="mb-6">
-									<div className="flex items-baseline gap-1">
-										<span className="text-4xl font-bold">
-											{formatCurrency(plan.price, plan.currency, locale)}
-										</span>
-										{plan.period && (
-											<span className="text-base text-muted-foreground">{t(plan.period)}</span>
-										)}
-									</div>
-									{plan.trialDays && (
-										<p className="mt-2 text-sm font-medium text-primary">
-											{tPricing('trialDays', { days: plan.trialDays })}
-										</p>
-									)}
-								</div>
-
-								{/* Feature list */}
-								<ul className="mb-6 space-y-3">
-									{plan.features.map((feature) => (
-										<li key={feature} className="flex items-start gap-3">
-											<Check className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
-											<span className="text-sm leading-tight">
-												{tPricing(`feature.${feature}`)}
-											</span>
-										</li>
-									))}
-								</ul>
-
-								<Button
-									className={cn('w-full', plan.highlight && 'bg-primary hover:bg-primary/90')}
-									variant={plan.highlight ? 'default' : 'outline'}
-									disabled={isFree || isCurrentPlan || isLoading || checkoutLoading !== null}
+									disabled={isLoading || busy || isCurrentPlan || !card.slug}
 									onClick={() => {
-										if (!isFree && !isCurrentPlan) {
-											handleCheckout(plan.slug, plan.interval)
-										}
+										if (card.slug) handleCheckout(card.slug, card.interval ?? 'monthly')
 									}}
 								>
-									{checkoutLoading === plan.id
-										? tPricing('processing')
+									{checkoutLoading === cardKey
+										? t('processing')
 										: isCurrentPlan
-											? t('currentPlan')
-											: isFree
-												? t('currentPlan')
-												: isPremium
-													? t('switchPlan')
-													: tPricing('startFreeTrial')}
-								</Button>
-							</CardContent>
-						</Card>
-					)
-				})}
-			</div>
-
-			{/* Streak Protection Callout */}
-			<Card className="overflow-hidden border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent">
-				<CardContent className="flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
-					<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500/20">
-						<Flame className="h-7 w-7 text-orange-500" />
-					</div>
-					<div className="flex-1">
-						<h3 className="text-lg font-bold">{tPricing('streakProtectionTitle')}</h3>
-						<p className="mt-1 text-sm text-muted-foreground">{tPricing('streakProtectionDesc')}</p>
-					</div>
-					<Button
-						variant="outline"
-						className="shrink-0 gap-2 border-orange-500/30 text-orange-600 hover:bg-orange-500/10 dark:text-orange-400"
-					>
-						<Snowflake className="h-4 w-4" />
-						{tPricing('learnAboutFreezes')}
-					</Button>
-				</CardContent>
-			</Card>
-
-			{/* FAQ */}
-			<div className="rounded-xl bg-muted/50 p-6 text-center">
-				<h3 className="mb-2 font-semibold">{tPricing('questionsTitle')}</h3>
-				<p className="text-sm text-muted-foreground">{tPricing('questionsDesc')}</p>
-			</div>
-		</div>
+											? tPlans('currentPlan')
+											: isPremium
+												? tPlans('switchPlan')
+												: t('subscribeCta')}
+									<ExternalLink className="h-4 w-4" aria-hidden="true" />
+								</button>
+							)}
+						</div>
+					</li>
+				)
+			})}
+		</ul>
 	)
 }

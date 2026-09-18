@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
-import { HomeFaq } from '@/features/home/components/home-faq'
 import { HomeHero, type HomeHeroGame } from '@/features/home/components/home-hero'
 import {
 	FinalCta,
@@ -12,6 +11,7 @@ import {
 	ValueStrip,
 } from '@/features/home/components/home-sections'
 import { type LineupEntry, TodayLineup } from '@/features/home/components/today-lineup'
+import { MarketingFaq } from '@/features/marketing/components'
 import { getAllGameMetadata } from '@/games/registry'
 import {
 	getServerPersonalDailyResults,
@@ -223,7 +223,14 @@ export default async function HomePage({ params }: Props) {
 			</div>
 
 			<HowItWorks />
-			<HomeFaq />
+			<MarketingFaq
+				id="home-faq"
+				title={tHome('faq.title')}
+				subtitle={tHome('faq.subtitle')}
+				itemsFrom="namespace"
+				namespace="home"
+				keys={['free', 'account', 'schedule', 'streak', 'share', 'catalog']}
+			/>
 			<FinalCta
 				freeGameSlug={todaysFreeGame}
 				freeGameName={freeGameName}

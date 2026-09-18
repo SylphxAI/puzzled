@@ -2,6 +2,17 @@
 	"privacy": {
 		"title": "隱私權政策",
 		"lastUpdated": "最後更新",
+		"revision": "2024-12-15",
+		"eyebrow": "法律文件",
+		"lead": "本政策說明 Puzzled 收集哪些資料、為何收集，以及你可以如何就此聯絡我們。",
+		"toc": {
+			"title": "本頁內容"
+		},
+		"cta": {
+			"title": "你可能也會需要的頁面",
+			"body": "《服務條款》涵蓋帳戶、訂閱與行為規範；支援頁面可協助處理帳戶與帳單問題。",
+			"support": "前往支援頁面"
+		},
 		"sections": {
 			"intro": {
 				"title": "簡介",
@@ -57,6 +68,17 @@
 	"terms": {
 		"title": "服務條款",
 		"lastUpdated": "最後更新",
+		"revision": "2024-12-15",
+		"eyebrow": "法律文件",
+		"lead": "本條款列出使用 Puzzled 時適用的規則，包括帳戶、訂閱與行為規範。",
+		"toc": {
+			"title": "本頁內容"
+		},
+		"cta": {
+			"title": "你可能也會需要的頁面",
+			"body": "《隱私權政策》說明會收集哪些資料及其用途；支援頁面可協助處理帳戶與帳單問題。",
+			"support": "前往支援頁面"
+		},
 		"sections": {
 			"acceptance": {
 				"title": "條款接受",
