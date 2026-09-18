@@ -134,6 +134,38 @@ function jsonLdOf(html: string): unknown[] {
 	return blocks
 }
 
+/**
+ * Flatten a JSON-LD block into its typed nodes.
+ *
+ * A page may publish a single node, an array of nodes, or one `@graph` wrapper
+ * (the catalog and game pages use `@graph` for their breadcrumb + entity pair).
+ * Callers assert on typed nodes, so unwrap the graph instead of silently
+ * treating the wrapper as a node without `@type`.
+ */
+function jsonLdNodes(html: string): Record<string, unknown>[] {
+	const nodes: Record<string, unknown>[] = []
+	for (const block of jsonLdOf(html)) {
+		if (block !== null && typeof block === 'object' && !('@graph' in block)) {
+			// A top-level block must declare its vocabulary itself.
+			const context = (block as { '@context'?: unknown })['@context']
+			if (context !== 'https://schema.org') {
+				throw new Error('JSON-LD block without the schema.org context')
+			}
+		}
+		const candidates = Array.isArray(block)
+			? block
+			: block !== null && typeof block === 'object' && '@graph' in block
+				? ((block as { '@graph': unknown })['@graph'] as unknown[])
+				: [block]
+		for (const candidate of candidates) {
+			if (candidate !== null && typeof candidate === 'object') {
+				nodes.push(candidate as Record<string, unknown>)
+			}
+		}
+	}
+	return nodes
+}
+
 function sitemapLocs(xml: string): string[] {
 	return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => decodeEntities(match[1]))
 }
@@ -446,15 +478,11 @@ async function main(): Promise<void> {
 		for (const path of structuredSample) {
 			const { status, html } = await fetchHtml(path)
 			assert(status === 200, `${path} answered ${status}`)
-			const blocks = jsonLdOf(html).filter(
-				(block): block is Record<string, unknown> => typeof block === 'object' && block !== null,
-			)
+			const blocks = jsonLdNodes(html)
 			assert(blocks.length > 0, `${path} has no JSON-LD`)
 			for (const block of blocks) {
-				assert(
-					block['@context'] === 'https://schema.org',
-					`${path} has a block without the schema.org context`,
-				)
+				// Nodes inside an `@graph` inherit the wrapper's context, so only a
+				// top-level block carries `@context` (asserted by jsonLdOf callers).
 				assert(typeof block['@type'] === 'string', `${path} has a block without @type`)
 				types.add(String(block['@type']))
 			}

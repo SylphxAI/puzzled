@@ -126,7 +126,7 @@ export async function GamePageHero({
 					</span>
 					<div className="min-w-0">
 						{freeToday ? (
-							<span className="chip bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+							<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
 								<Sparkles className="h-3 w-3" aria-hidden="true" />
 								{t('freeToday')}
 							</span>

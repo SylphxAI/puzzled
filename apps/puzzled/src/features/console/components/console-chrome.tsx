@@ -40,7 +40,12 @@ export function ConsoleHeader({
 	const Heading = headingLevel === 2 ? 'h2' : 'h1'
 
 	return (
-		<header className={cn('animate-enter', className)}>
+		/*
+		 * Page-level heading block, not a document banner: the shell already owns
+		 * the only `banner` landmark, and a second `<header>` inside `<main>`
+		 * would announce a competing one to screen readers.
+		 */
+		<div className={cn('animate-enter', className)}>
 			<div className="flex flex-wrap items-start justify-between gap-4">
 				<div className="min-w-0">
 					{eyebrow ? (
@@ -62,7 +67,7 @@ export function ConsoleHeader({
 					<div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
 				) : null}
 			</div>
-		</header>
+		</div>
 	)
 }
 

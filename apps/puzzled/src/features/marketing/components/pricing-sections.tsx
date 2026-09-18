@@ -92,7 +92,16 @@ export async function PricingComparison({ moduleCount }: { moduleCount: number }
 
 	return (
 		<MarketingSection id="compare" title={t('compare.title')} subtitle={t('compare.subtitle')}>
-			<div className="overflow-x-auto rounded-2xl border border-border/70 bg-card">
+			{/*
+			 * Keyboard-reachable scroll container: a wide comparison table on a
+			 * narrow screen is only usable if the region itself can be focused.
+			 */}
+			<section
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: scroll containers need focus for keyboard users
+				tabIndex={0}
+				aria-label={t('compare.title')}
+				className="overflow-x-auto rounded-2xl border border-border/70 bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+			>
 				<table className="w-full min-w-[34rem] border-collapse text-sm">
 					<caption className="sr-only">{t('compare.title')}</caption>
 					<thead>
@@ -120,7 +129,7 @@ export async function PricingComparison({ moduleCount }: { moduleCount: number }
 						))}
 					</tbody>
 				</table>
-			</div>
+			</section>
 		</MarketingSection>
 	)
 }

@@ -32,19 +32,19 @@ function _DifficultySelector({ options, selected, onSelect, className }: Difficu
 	> = {
 		easy: {
 			label: t('easy'),
-			color: 'text-emerald-600 dark:text-emerald-400',
+			color: 'text-emerald-700 dark:text-emerald-400',
 			bgColor: 'bg-emerald-500/10',
 			borderColor: 'border-emerald-500/30',
 		},
 		medium: {
 			label: t('medium'),
-			color: 'text-amber-600 dark:text-amber-400',
+			color: 'text-amber-700 dark:text-amber-400',
 			bgColor: 'bg-amber-500/10',
 			borderColor: 'border-amber-500/30',
 		},
 		hard: {
 			label: t('hard'),
-			color: 'text-red-600 dark:text-red-400',
+			color: 'text-red-700 dark:text-red-400',
 			bgColor: 'bg-red-500/10',
 			borderColor: 'border-red-500/30',
 		},
@@ -111,21 +111,21 @@ type DifficultyBadgeProps = {
 export function DifficultyBadge({ difficulty, showIcon = false, className }: DifficultyBadgeProps) {
 	const t = useTranslations('common.difficulty')
 
-	const config: Record<PuzzleDifficulty, { label: string; color: string; bg: string }> = {
+	const config: Record<PuzzleDifficulty, { label: string; badgeColor: string; badgeBg: string }> = {
 		easy: {
 			label: t('easy'),
-			color: 'text-emerald-600 dark:text-emerald-400',
-			bg: 'bg-emerald-500/10',
+			badgeColor: 'text-emerald-800 dark:text-emerald-300',
+			badgeBg: 'bg-emerald-500/15',
 		},
 		medium: {
 			label: t('medium'),
-			color: 'text-amber-600 dark:text-amber-400',
-			bg: 'bg-amber-500/10',
+			badgeColor: 'text-amber-800 dark:text-amber-300',
+			badgeBg: 'bg-amber-500/15',
 		},
 		hard: {
 			label: t('hard'),
-			color: 'text-red-600 dark:text-red-400',
-			bg: 'bg-red-500/10',
+			badgeColor: 'text-red-800 dark:text-red-300',
+			badgeBg: 'bg-red-500/15',
 		},
 	}
 
@@ -135,8 +135,10 @@ export function DifficultyBadge({ difficulty, showIcon = false, className }: Dif
 		<output
 			className={cn(
 				'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-				c.color,
-				c.bg,
+				// Small bold text needs a stronger ink/plate pair than the
+				// difficulty-button tint: these two pairs clear 4.5:1 on light.
+				c.badgeColor,
+				c.badgeBg,
 				className,
 			)}
 			aria-label={c.label}
