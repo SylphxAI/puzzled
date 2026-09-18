@@ -3,8 +3,6 @@
 	"loading": "載入中...",
 	"error": "發生錯誤",
 	"errorDescription": "發生錯誤，請重試。",
-	"retry": "重試",
-	"refresh": "Refresh",
 	"notFound": {
 		"eyebrow": "404",
 		"title": "搵唔到呢一頁，但謎題仍然等緊你",
@@ -12,6 +10,8 @@
 		"playCta": "玩 {game} —— 今日免費謎題",
 		"browseCta": "睇全部遊戲"
 	},
+	"retry": "重試",
+	"refresh": "Refresh",
 	"save": "儲存",
 	"cancel": "取消",
 	"confirm": "確認",

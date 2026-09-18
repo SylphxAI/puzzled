@@ -6,11 +6,12 @@ import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { PWA_PROMPT_DISMISSED_KEY } from '@/lib/storage-keys'
 import { cn } from '@/lib/utils'
-
-interface BeforeInstallPromptEvent extends Event {
-	prompt: () => Promise<void>
-	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
+import {
+	type BeforeInstallPromptEvent,
+	clearInstallPrompt,
+	getInstallPrompt,
+	onInstallPrompt,
+} from '@/shared/components/pwa-install-event'
 
 export function PWAInstallPrompt() {
 	const t = useTranslations('pwa')
@@ -39,14 +40,22 @@ export function PWAInstallPrompt() {
 		}
 
 		// Listen for beforeinstallprompt event (Android/Desktop Chrome)
-		const handleBeforeInstallPrompt = (e: Event) => {
-			e.preventDefault()
-			setDeferredPrompt(e as BeforeInstallPromptEvent)
+		const handleBeforeInstallPrompt = () => {
 			// Show prompt after a short delay (let user engage first)
 			setTimeout(() => setShowPrompt(true), 3000)
 		}
 
-		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+		// The event itself was captured at first paint (`pwa-install-event`);
+		// this component only decides whether to show the UI for it.
+		const alreadyCaptured = getInstallPrompt()
+		if (alreadyCaptured) {
+			setDeferredPrompt(alreadyCaptured)
+			handleBeforeInstallPrompt()
+		}
+		const unsubscribe = onInstallPrompt((event) => {
+			setDeferredPrompt(event)
+			handleBeforeInstallPrompt()
+		})
 
 		// For iOS, show instructions after delay
 		if (isIOSDevice && !standalone) {
@@ -54,7 +63,7 @@ export function PWAInstallPrompt() {
 		}
 
 		return () => {
-			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+			unsubscribe()
 		}
 	}, [])
 
@@ -68,6 +77,7 @@ export function PWAInstallPrompt() {
 			setShowPrompt(false)
 		}
 		setDeferredPrompt(null)
+		clearInstallPrompt()
 	}
 
 	const handleDismiss = useCallback(() => {

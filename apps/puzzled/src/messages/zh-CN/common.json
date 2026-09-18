@@ -3,8 +3,6 @@
 	"loading": "加载中...",
 	"error": "出错了",
 	"errorDescription": "出错了，请重试。",
-	"retry": "重试",
-	"refresh": "Refresh",
 	"notFound": {
 		"eyebrow": "404",
 		"title": "这个页面找不到，但谜题还在等你",
@@ -12,6 +10,8 @@
 		"playCta": "玩 {game} —— 今天的免费谜题",
 		"browseCta": "查看全部游戏"
 	},
+	"retry": "重试",
+	"refresh": "Refresh",
 	"save": "保存",
 	"cancel": "取消",
 	"confirm": "确认",

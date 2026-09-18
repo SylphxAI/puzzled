@@ -2,7 +2,8 @@
  * Web Vitals Reporting
  *
  * Tracks Core Web Vitals (CLS, INP, LCP) and other performance metrics (FCP, TTFB)
- * using the SDK's analytics service.
+ * and delivers them as ONE batched request per page view
+ * (`./web-vitals-batch.ts`), instead of the previous POST per metric.
  *
  * Only runs in production and only with user consent.
  *
@@ -20,62 +21,35 @@
 
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
 import { hasAnalyticsConsent } from './consent'
+import { createWebVitalsBatch } from './web-vitals-batch'
 
-// Buffer to collect metrics before SDK is ready
-const metricsBuffer: Metric[] = []
-let trackFn: ((event: string, properties: Record<string, unknown>) => void) | null = null
-
-function sendMetric(metric: Metric) {
-	// Only send in production
-	if (process.env.NODE_ENV !== 'production') return
-
-	// GDPR: Require explicit analytics consent before sending web vitals
-	if (!hasAnalyticsConsent()) return
-
-	const properties = {
-		metric_name: metric.name,
-		value: metric.value,
-		rating: metric.rating,
-		delta: metric.delta,
-		id: metric.id,
-		navigation_type: metric.navigationType,
-	}
-
-	// If track function is available, send immediately
-	if (trackFn) {
-		trackFn('web_vital', properties)
-	} else {
-		// Buffer until track function is set
-		metricsBuffer.push(metric)
-	}
-}
+/** Same endpoint the SDK analytics hook posts to; it forwards to the authority. */
+const WEB_VITALS_ENDPOINT = '/api/observability/analytics'
 
 /**
- * Set the track function from SDK
- * Call this when the SDK context is ready
+ * Deliver the batch out of the page's lifetime. `sendBeacon` survives unload;
+ * `fetch(keepalive)` is the fallback when the beacon queue is unavailable.
  */
-export function setWebVitalsTracker(
-	track: (event: string, properties: Record<string, unknown>) => void,
-) {
-	trackFn = track
-
-	// Flush buffered metrics
-	for (const metric of metricsBuffer) {
-		track('web_vital', {
-			metric_name: metric.name,
-			value: metric.value,
-			rating: metric.rating,
-			delta: metric.delta,
-			id: metric.id,
-			navigation_type: metric.navigationType,
-		})
+function deliver(body: string): void {
+	if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+		const blob = new Blob([body], { type: 'application/json' })
+		if (navigator.sendBeacon(WEB_VITALS_ENDPOINT, blob)) return
 	}
-	metricsBuffer.length = 0
+	void fetch(WEB_VITALS_ENDPOINT, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		credentials: 'same-origin',
+		body,
+		keepalive: true,
+	}).catch(() => undefined)
 }
 
 /**
- * Initialize web vitals reporting
- * Call this in the root layout or app component
+ * Initialize web vitals reporting.
+ *
+ * Listeners are registered immediately (Web Vitals replays buffered entries, so
+ * a late mount still sees the page's real LCP/CLS/FCP), and the single
+ * delivery happens when the page is hidden.
  */
 export function initWebVitals() {
 	// Only run in browser
@@ -84,10 +58,26 @@ export function initWebVitals() {
 	// Only run in production
 	if (process.env.NODE_ENV !== 'production') return
 
-	// Register all web vitals listeners
-	onCLS(sendMetric)
-	onINP(sendMetric)
-	onLCP(sendMetric)
-	onFCP(sendMetric)
-	onTTFB(sendMetric)
+	const batch = createWebVitalsBatch({ isAllowed: hasAnalyticsConsent, deliver })
+	const collect = (metric: Metric) =>
+		batch.record({
+			name: metric.name,
+			value: metric.value,
+			rating: metric.rating,
+			delta: metric.delta,
+			id: metric.id,
+			navigationType: metric.navigationType,
+		})
+
+	onCLS(collect)
+	onINP(collect)
+	onLCP(collect)
+	onFCP(collect)
+	onTTFB(collect)
+
+	const flushWhenHidden = () => {
+		if (document.visibilityState === 'hidden') batch.flush()
+	}
+	document.addEventListener('visibilitychange', flushWhenHidden)
+	window.addEventListener('pagehide', () => batch.flush())
 }

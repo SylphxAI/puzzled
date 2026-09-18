@@ -27,10 +27,14 @@ type HomeHeroProps = {
 	hasPlayedToday: boolean
 	completedCount: number
 	availableCount: number
-	playerCount: number
+	/** null = the social-proof read has not landed: no count is claimed. */
+	playerCount: number | null
 	/** True when personal progress could not be read: never shown as zero. */
 	progressUnverified: boolean
 }
+
+/** Everything the hero can render before any identity or aggregate read lands. */
+export type HomeHeroStaticProps = Pick<HomeHeroProps, 'locale' | 'dateLabel' | 'freeGame'>
 
 export async function HomeHero({
 	locale,
@@ -60,7 +64,14 @@ export async function HomeHero({
 		<section className="relative overflow-hidden border-b border-border/60 bg-aurora">
 			<div className="page-shell-wide pb-10 pt-8 md:pb-16 md:pt-14">
 				<div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-					<div className="animate-enter">
+					{/*
+					 * The fold text paints in the first frame, with no entrance
+					 * animation: Chrome only counts text as an LCP candidate once it is
+					 * painted at full opacity, so an opacity-animated hero leaves the
+					 * largest-contentful-paint slot to whatever else paints first (the
+					 * consent bar, on this page). Motion stays on the card beside it.
+					 */}
+					<div>
 						<p className="inline-flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
 							<GreetingLine className="font-semibold text-foreground" />
 							<span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/70 px-3 py-1 font-medium backdrop-blur">
@@ -87,7 +98,7 @@ export async function HomeHero({
 						<p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
 							{isMember
 								? t('hero.memberSubtitle')
-								: playerCount > 0
+								: playerCount !== null && playerCount > 0
 									? t('hero.guestSubtitle', {
 											game: freeGame.name,
 											count: formatNumber(playerCount, locale),
@@ -200,12 +211,14 @@ export async function HomeHero({
 								{t('hero.playCta', { game: freeGame.name })}
 							</Link>
 
-							<p className="relative mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-								<Users className="h-3.5 w-3.5" aria-hidden="true" />
-								{playerCount > 0
-									? t('hero.playersToday', { count: formatNumber(playerCount, locale) })
-									: t('hero.playersTodayNone')}
-							</p>
+							{playerCount !== null && (
+								<p className="relative mt-3 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+									<Users className="h-3.5 w-3.5" aria-hidden="true" />
+									{playerCount > 0
+										? t('hero.playersToday', { count: formatNumber(playerCount, locale) })
+										: t('hero.playersTodayNone')}
+								</p>
+							)}
 
 							{progressUnverified && (
 								<p className="relative mt-3 rounded-xl bg-accent-warm-soft px-3 py-2 text-xs text-accent-warm-foreground">
@@ -213,6 +226,85 @@ export async function HomeHero({
 								</p>
 							)}
 						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	)
+}
+
+/**
+ * The first-paint hero.
+ *
+ * It renders the same markup as `HomeHero` with the values a first-time visitor
+ * honestly has: guest copy, the free-rotation card and no personal numbers. Any
+ * member or social-proof figure then arrives through the streamed island in
+ * `page.tsx`, so nothing here claims a streak, a finish or a player count that
+ * the server has not proved yet.
+ */
+export function HomeHeroFallback(props: HomeHeroStaticProps) {
+	return (
+		<HomeHero
+			{...props}
+			isMember={false}
+			currentStreak={0}
+			hasPlayedToday={false}
+			completedCount={0}
+			availableCount={0}
+			playerCount={null}
+			progressUnverified={false}
+		/>
+	)
+}
+
+/**
+ * Reserved-space hero for viewers whose progress Identity owns but we have not
+ * read yet (a session or guest cookie is present).
+ *
+ * It carries no copy at all: the guest variant is wrong for a signed-in member,
+ * and zeros would be a claim we cannot back. The blocks match the real hero's
+ * geometry so the arrival of the real content does not move the page.
+ */
+export function HomeHeroSkeleton() {
+	return (
+		<section
+			className="relative overflow-hidden border-b border-border/60 bg-aurora"
+			aria-busy="true"
+		>
+			<div className="page-shell-wide pb-10 pt-8 md:pb-16 md:pt-14">
+				<div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+					<div>
+						<div className="h-7 w-56 animate-pulse rounded-full bg-muted" />
+						<div className="mt-6 h-8 w-full animate-pulse rounded-lg bg-muted sm:h-10" />
+						<div className="mt-3 h-8 w-4/5 animate-pulse rounded-lg bg-muted sm:h-10" />
+						<div className="mt-6 h-5 w-full animate-pulse rounded bg-muted" />
+						<div className="mt-2 h-5 w-3/4 animate-pulse rounded bg-muted" />
+						<div className="mt-6 flex flex-wrap gap-3">
+							<div className="h-12 w-48 animate-pulse rounded-2xl bg-muted" />
+							<div className="h-12 w-40 animate-pulse rounded-2xl bg-muted" />
+						</div>
+						<div className="mt-6 flex flex-wrap gap-5">
+							<div className="h-4 w-28 animate-pulse rounded bg-muted" />
+							<div className="h-4 w-32 animate-pulse rounded bg-muted" />
+							<div className="h-4 w-32 animate-pulse rounded bg-muted" />
+						</div>
+					</div>
+
+					<div className="rounded-3xl border border-border/70 bg-card p-5 shadow-glow md:p-6">
+						<div className="flex items-start gap-4">
+							<div className="h-14 w-14 shrink-0 animate-pulse rounded-2xl bg-muted" />
+							<div className="min-w-0 flex-1">
+								<div className="h-4 w-32 animate-pulse rounded bg-muted" />
+								<div className="mt-2 h-7 w-40 animate-pulse rounded bg-muted" />
+								<div className="mt-2 h-4 w-48 animate-pulse rounded bg-muted" />
+							</div>
+						</div>
+						<div className="mt-5 flex flex-wrap gap-2">
+							<div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+							<div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+						</div>
+						<div className="mt-5 h-12 w-full animate-pulse rounded-2xl bg-muted" />
+						<div className="mt-3 h-4 w-40 animate-pulse rounded bg-muted" />
 					</div>
 				</div>
 			</div>

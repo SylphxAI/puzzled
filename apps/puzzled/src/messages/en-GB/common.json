@@ -3,8 +3,6 @@
 	"loading": "Loading...",
 	"error": "Something went wrong",
 	"errorDescription": "Something went wrong. Please try again.",
-	"retry": "Try again",
-	"refresh": "Refresh",
 	"notFound": {
 		"eyebrow": "404",
 		"title": "This page is missing — the puzzle is not",
@@ -12,6 +10,8 @@
 		"playCta": "Play {game} — today's free puzzle",
 		"browseCta": "Browse all games"
 	},
+	"retry": "Try again",
+	"refresh": "Refresh",
 	"save": "Save",
 	"cancel": "Cancel",
 	"confirm": "Confirm",

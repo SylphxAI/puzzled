@@ -199,6 +199,13 @@ const nextConfig: NextConfig = {
 					{
 						// CSP: Restrictive policy with defense-in-depth
 						//
+						// Cloudflare Web Analytics: the zone injects
+						// `static.cloudflareinsights.com/beacon.min.js` into every HTML
+						// document and the beacon posts its RUM payload to
+						// `https://cloudflareinsights.com/cdn-cgi/rum`. Both hosts are
+						// allow-listed so the zone's own field measurement is not
+						// console-blocked on every page view.
+						//
 						// DESIGN DECISION: Using 'unsafe-inline' in script-src instead of nonces
 						//
 						// Rationale:
@@ -221,11 +228,11 @@ const nextConfig: NextConfig = {
 						key: 'Content-Security-Policy',
 						value: [
 							"default-src 'self'",
-							"script-src 'self' 'unsafe-inline' https://cdn.vercel-insights.com https://*.posthog.com https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com",
+							"script-src 'self' 'unsafe-inline' https://cdn.vercel-insights.com https://*.posthog.com https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com",
 							"style-src 'self' 'unsafe-inline'",
 							"img-src 'self' data: https: blob: https://www.googletagmanager.com https://www.google-analytics.com",
 							"font-src 'self' data:",
-							"connect-src 'self' https://*.posthog.com https://sylphx.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
+							"connect-src 'self' https://*.posthog.com https://sylphx.com https://*.sylphx.com https://api.stripe.com https://*.neon.tech https://www.google-analytics.com https://analytics.google.com https://cloudflareinsights.com https://api.iconify.design https://api.simplesvg.com https://api.unisvg.com wss:",
 							"frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
 							"object-src 'none'",
 							"base-uri 'self'",
@@ -245,6 +252,21 @@ const nextConfig: NextConfig = {
 		serverActions: {
 			bodySizeLimit: '2mb',
 		},
+		// UI-kit barrel: load only the modules a route imports.
+		//
+		// Measured on Turbopack 16.2.11: this flag ALONE produced byte-identical
+		// chunks for the workspace `@sylphx/ui` source package — it resolves subpaths
+		// through the package `exports`, and that package ships `src/*.tsx`, not a
+		// `dist` index. What actually removed the barrel closure from every route was
+		// `"sideEffects": false` in `packages/ui/package.json`, which lets the bundler
+		// drop the 36 `export *` re-exports a route never imports. The flag stays
+		// because it is the documented upstream mechanism and becomes the effective
+		// lever as soon as the package is consumed from `dist`.
+		//
+		// Regression guard: the first-load byte inventory in this PR (curl every
+		// `<script src>`, sum gzip bytes, fail on a budget). Manual today; the CI step
+		// that would make it automatic is proposed in the PR body.
+		optimizePackageImports: ['@sylphx/ui', '@base-ui/react'],
 	},
 }
 

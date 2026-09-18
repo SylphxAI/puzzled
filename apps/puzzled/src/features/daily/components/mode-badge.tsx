@@ -24,7 +24,7 @@ const MODE_CONFIG: Record<
 		icon: Target,
 		labelKey: 'daily',
 		bgColor: 'bg-emerald-500/10',
-		textColor: 'text-emerald-600 dark:text-emerald-400',
+		textColor: 'text-emerald-700 dark:text-emerald-400',
 	},
 	archive: {
 		icon: Calendar,
