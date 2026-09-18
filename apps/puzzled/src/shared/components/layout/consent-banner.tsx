@@ -13,10 +13,40 @@ import { CookieBanner, useSafeConsent } from '@/lib/identity/react'
 import { CONSENT_KEY, CONSENT_TIMESTAMP_KEY } from '@/lib/storage-keys'
 
 /**
+ * Mirror the SDK's stored decision onto the key client-side scripts read
+ * (`puzzled:consent:cookie`). Callers must have a settled decision.
+ */
+function mirrorStoredConsent(): void {
+	if (typeof window === 'undefined') return
+	const stored = window.localStorage.getItem('puzzled-consent')
+	if (!stored) return
+	let preferences: Record<string, boolean>
+	try {
+		preferences = JSON.parse(stored) as Record<string, boolean>
+	} catch {
+		return
+	}
+	const analyticsConsent = preferences.analytics === true
+	const timestamp = new Date().toISOString()
+	localStorage.setItem(CONSENT_KEY, analyticsConsent ? 'accepted' : 'declined')
+	localStorage.setItem(CONSENT_TIMESTAMP_KEY, timestamp)
+
+	// Dispatch event for client-side scripts listening
+	window.dispatchEvent(
+		new CustomEvent('consent-change', {
+			detail: {
+				status: analyticsConsent ? 'accepted' : 'declined',
+				timestamp,
+			},
+		}),
+	)
+}
+
+/**
  * Sync SDK consent state to localStorage for client-side scripts
  */
 function ConsentSync() {
-	const { hasConsent, hasConsented, isLoading, isConfigured } = useSafeConsent()
+	const { hasConsented, isLoading, isConfigured } = useSafeConsent()
 
 	useEffect(() => {
 		// Don't sync if SDK is not configured (SSR/prerendering)
@@ -25,21 +55,9 @@ function ConsentSync() {
 
 		// Sync to localStorage when consent state changes
 		if (hasConsented) {
-			const analyticsConsent = hasConsent('analytics')
-			localStorage.setItem(CONSENT_KEY, analyticsConsent ? 'accepted' : 'declined')
-			localStorage.setItem(CONSENT_TIMESTAMP_KEY, new Date().toISOString())
-
-			// Dispatch event for client-side scripts listening
-			window.dispatchEvent(
-				new CustomEvent('consent-change', {
-					detail: {
-						status: analyticsConsent ? 'accepted' : 'declined',
-						timestamp: new Date().toISOString(),
-					},
-				}),
-			)
+			mirrorStoredConsent()
 		}
-	}, [hasConsent, hasConsented, isLoading, isConfigured])
+	}, [hasConsented, isLoading, isConfigured])
 
 	return null
 }
@@ -50,8 +68,10 @@ function ConsentSync() {
  */
 function ConsentBannerInner() {
 	const handleSave = () => {
-		// SDK handles the save, localStorage sync happens via ConsentSync
-		// This callback is for any additional actions after save
+		// The SDK has stored the decision by the time it calls this, so mirror it
+		// now: without this, a player who opts in during a page view would only be
+		// visible to analytics on the next one.
+		mirrorStoredConsent()
 	}
 
 	return (

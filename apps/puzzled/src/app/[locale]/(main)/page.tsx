@@ -1,8 +1,14 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { cache, Suspense } from 'react'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
-import { HomeHero, type HomeHeroGame } from '@/features/home/components/home-hero'
+import {
+	HomeHero,
+	HomeHeroFallback,
+	type HomeHeroGame,
+	HomeHeroSkeleton,
+} from '@/features/home/components/home-hero'
 import {
 	FinalCta,
 	HowItWorks,
@@ -10,7 +16,11 @@ import {
 	TomorrowBand,
 	ValueStrip,
 } from '@/features/home/components/home-sections'
-import { type LineupEntry, TodayLineup } from '@/features/home/components/today-lineup'
+import {
+	type LineupEntry,
+	TodayLineup,
+	TodayLineupSkeleton,
+} from '@/features/home/components/today-lineup'
 import { MarketingFaq } from '@/features/marketing/components'
 import { getAllGameMetadata } from '@/games/registry'
 import {
@@ -23,7 +33,7 @@ import {
 } from '@/lib/api/server'
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { slugToCamelCase } from '@/lib/game-slug'
-import { currentUser } from '@/lib/identity/server'
+import { currentUser, type IdentityUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { PRODUCT_DAY_TZ, productDayKey } from '@/lib/product-day'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -60,12 +70,25 @@ function formatProductDay(date: Date, locale: string): string {
 	}).format(date)
 }
 
-export default async function HomePage({ params }: Props) {
-	const { locale } = await params
-	setRequestLocale(locale)
+type HomeFacts = {
+	user: IdentityUser | null
+	/** True when this viewer has progress Identity can own (session or guest id). */
+	hasIdentity: boolean
+	isPremium: boolean
+	streakInfo: StreakInfo | null
+	personalResults: Record<string, PersonalDailyResult>
+	/** null until the aggregate read lands: an unread count is never a zero. */
+	todayPlayerCount: number | null
+}
 
-	const t = await getTranslations()
-	const tHome = await getTranslations('home')
+/**
+ * Personal and social reads for the home page.
+ *
+ * This is the only part of home that touches Connect or Identity. Both streamed
+ * islands below read it through React `cache()`, so it costs one round of calls
+ * per request and the document shell never waits for it.
+ */
+const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 	const user = await withPresentationDeadline(currentUser(), null)
 
 	// Entitlement comes from the billing authority; a read failure stays free.
@@ -73,7 +96,201 @@ export default async function HomePage({ params }: Props) {
 		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
 		: false
 
-	// Today's free ritual comes from the product-day rotation.
+	const gameSlugs = getAllGameMetadata().map((game) => game.slug)
+	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
+
+	const [overviewResult, streakResult, personalResult] = await Promise.allSettled([
+		getServerTodayOverview(),
+		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
+		getServerPersonalDailyResults({
+			gameSlugs,
+			isGuest: !user,
+			isPremium,
+			freeGameSlug: getTodaysFreeGame(),
+		}),
+	])
+
+	let todayPlayerCount: number | null = null
+	if (overviewResult.status === 'fulfilled') {
+		todayPlayerCount = overviewResult.value.playerCount
+	} else {
+		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
+	}
+
+	let streakInfo: StreakInfo | null = null
+	if (streakResult.status === 'fulfilled') {
+		streakInfo = streakResult.value
+	} else {
+		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
+	}
+
+	let personalResults: Record<string, PersonalDailyResult>
+	if (personalResult.status === 'fulfilled') {
+		personalResults = personalResult.value
+	} else {
+		personalResults = Object.fromEntries(
+			gameSlugs.map((slug) => [
+				slug,
+				{ hasCompleted: false, completedSession: null, statusAvailable: false },
+			]),
+		)
+		console.error('[HomePage] Failed to fetch personal daily results:', personalResult.reason)
+	}
+
+	return { user, hasIdentity, isPremium, streakInfo, personalResults, todayPlayerCount }
+})
+
+type GameCatalogEntry = ReturnType<typeof getAllGameMetadata>[number]
+
+/**
+ * Home exposure stays small: today's free ritual leads, proved completions
+ * follow, the remaining slots rotate per product day. Every other module stays
+ * reachable on /games.
+ *
+ * Personal completion is best-effort: an unverified status never renders as a
+ * completed state or a score, and the free ritual stays playable.
+ */
+function deriveHomeView(input: {
+	gameMetadata: readonly GameCatalogEntry[]
+	personalResults: Record<string, PersonalDailyResult>
+	isPremium: boolean
+	freeGameSlug: string
+}) {
+	const exposure = deriveHomeExposure({
+		modules: input.gameMetadata.map((game) => ({ slug: game.slug, sortOrder: game.sortOrder })),
+		freeGameSlug: input.freeGameSlug,
+		completions: input.personalResults,
+		dayKey: productDayKey(),
+		limit: HOME_EXPOSURE_LIMIT,
+	})
+	const playState = deriveHomePlayState({
+		gameSlugs: input.gameMetadata.map((game) => game.slug),
+		personalResults: input.personalResults,
+		isPremium: input.isPremium,
+		freeGameSlug: input.freeGameSlug,
+	})
+	const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
+	return {
+		renderedGames,
+		progress: summarizeDailyProgress(progressGames),
+		progressUnverified: playState.hasUnverifiedStatus,
+	}
+}
+
+type LineupTranslator = (key: string) => string
+
+/** Lineup cards for the exposed slugs, in exposure order. */
+function buildLineup(input: {
+	renderedGames: ReturnType<typeof deriveHomeView>['renderedGames']
+	metadataBySlug: Map<string, GameCatalogEntry>
+	t: LineupTranslator
+}): LineupEntry[] {
+	return input.renderedGames.flatMap((game) => {
+		const metadata = input.metadataBySlug.get(game.slug)
+		if (!metadata) return []
+		const camel = slugToCamelCase(game.slug)
+		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'premium'
+		return [
+			{
+				slug: game.slug,
+				name: input.t(`games.${camel}.name`),
+				tagline: input.t(`games.${camel}.tagline`),
+				meta: [metadata.display.duration, input.t(`games.${camel}.highlight`)]
+					.filter(Boolean)
+					.join(' • '),
+				theme: metadata.display.theme,
+				status: status as LineupEntry['status'],
+				score: game.score ?? null,
+			},
+		]
+	})
+}
+
+/** Streamed hero: personal headline, streak chip, progress ring, social proof. */
+async function HomeHeroIsland({
+	locale,
+	dateLabel,
+	freeGame,
+}: {
+	locale: string
+	dateLabel: string
+	freeGame: HomeHeroGame
+}) {
+	const facts = await readHomeFacts()
+	const view = deriveHomeView({
+		gameMetadata: getAllGameMetadata(),
+		personalResults: facts.personalResults,
+		isPremium: facts.isPremium,
+		freeGameSlug: freeGame.slug,
+	})
+
+	return (
+		<HomeHero
+			locale={locale}
+			dateLabel={dateLabel}
+			freeGame={freeGame}
+			isMember={Boolean(facts.user)}
+			currentStreak={facts.streakInfo?.currentStreak ?? 0}
+			hasPlayedToday={facts.streakInfo?.hasPlayedToday ?? false}
+			completedCount={view.progress.completedCount}
+			availableCount={view.progress.availableCount}
+			playerCount={facts.todayPlayerCount}
+			// Only warn about unread progress when this viewer has progress to
+			// read: a brand-new guest has none, and a warning would be noise.
+			progressUnverified={view.progressUnverified && facts.hasIdentity}
+		/>
+	)
+}
+
+/** Streamed lineup: proved finishes, scores and the member stats band. */
+async function HomeLineupIsland({
+	freeGameSlug,
+	metadataBySlug,
+}: {
+	freeGameSlug: string
+	metadataBySlug: Map<string, GameCatalogEntry>
+}) {
+	const [t, facts] = await Promise.all([getTranslations(), readHomeFacts()])
+	const view = deriveHomeView({
+		gameMetadata: getAllGameMetadata(),
+		personalResults: facts.personalResults,
+		isPremium: facts.isPremium,
+		freeGameSlug,
+	})
+	const lineup = buildLineup({
+		renderedGames: view.renderedGames,
+		metadataBySlug,
+		t: t as LineupTranslator,
+	})
+
+	return (
+		<>
+			<TodayLineup games={lineup} showUnlock={!facts.isPremium} />
+			{facts.user ? (
+				<MemberStatsBand
+					currentStreak={facts.streakInfo?.currentStreak ?? 0}
+					bestStreak={facts.streakInfo?.maxStreak ?? 0}
+					totalGamesPlayed={facts.streakInfo?.totalGamesPlayed ?? 0}
+				/>
+			) : (
+				<ValueStrip />
+			)}
+		</>
+	)
+}
+
+export default async function HomePage({ params }: Props) {
+	const { locale } = await params
+	setRequestLocale(locale)
+
+	// Only network-free work happens before the first flush: the shell, the hero
+	// and the evergreen sections stream as soon as they are rendered, and the
+	// identity/Connect reads land in the islands below.
+	const t = await getTranslations()
+	const tHome = await getTranslations('home')
+	// Cookie-only read (no network): does this viewer have progress we owe them a
+	// placeholder for, rather than guest copy that may be wrong for a member?
+	const hasProgressIdentity = await hasServerProgressIdentity()
 	const todaysFreeGame = getTodaysFreeGame()
 	const freeGameRotation = getFreeGameRotation()
 	const todayIndex = freeGameRotation.indexOf(todaysFreeGame)
@@ -81,64 +298,6 @@ export default async function HomePage({ params }: Props) {
 
 	const gameMetadata = getAllGameMetadata()
 	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
-
-	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
-	let streakInfo: StreakInfo | null = null
-	let todayPlayerCount = 0
-	const [overviewResult, streakResult, personalResult] = await Promise.allSettled([
-		getServerTodayOverview(),
-		hasIdentity ? getServerStreakInfo() : Promise.resolve(null),
-		getServerPersonalDailyResults({
-			gameSlugs: gameMetadata.map((game) => game.slug),
-			isGuest: !user,
-			isPremium,
-			freeGameSlug: todaysFreeGame,
-		}),
-	])
-	if (overviewResult.status === 'fulfilled') {
-		todayPlayerCount = overviewResult.value.playerCount
-	} else {
-		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
-	}
-	if (streakResult.status === 'fulfilled') {
-		streakInfo = streakResult.value
-	} else {
-		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
-	}
-	const personalResults: Record<string, PersonalDailyResult> =
-		personalResult.status === 'fulfilled'
-			? personalResult.value
-			: Object.fromEntries(
-					gameMetadata.map((game) => [
-						game.slug,
-						{ hasCompleted: false, completedSession: null, statusAvailable: false },
-					]),
-				)
-	if (personalResult.status === 'rejected') {
-		console.error('[HomePage] Failed to fetch personal daily results:', personalResult.reason)
-	}
-
-	// Home exposure stays small: today's free ritual leads, proved completions
-	// follow, the remaining slots rotate per product day. Every other module
-	// stays reachable on /games.
-	const exposure = deriveHomeExposure({
-		modules: gameMetadata.map((game) => ({ slug: game.slug, sortOrder: game.sortOrder })),
-		freeGameSlug: todaysFreeGame,
-		completions: personalResults,
-		dayKey: productDayKey(),
-		limit: HOME_EXPOSURE_LIMIT,
-	})
-
-	// Personal completion is best-effort: an unverified status never renders as
-	// a completed state or a score, and the free ritual stays playable.
-	const playState = deriveHomePlayState({
-		gameSlugs: gameMetadata.map((game) => game.slug),
-		personalResults,
-		isPremium,
-		freeGameSlug: todaysFreeGame,
-	})
-	const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
-	const progress = summarizeDailyProgress(progressGames)
 
 	const freeGameMeta = metadataBySlug.get(todaysFreeGame)
 	const freeGameName = freeGameMeta
@@ -161,64 +320,65 @@ export default async function HomePage({ params }: Props) {
 				: [],
 	}
 
-	const lineup: LineupEntry[] = renderedGames.flatMap((game) => {
-		const metadata = metadataBySlug.get(game.slug)
-		if (!metadata) return []
-		const camel = slugToCamelCase(game.slug)
-		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'premium'
-		return [
-			{
-				slug: game.slug,
-				name: t(`games.${camel}.name`),
-				tagline: t(`games.${camel}.tagline`),
-				meta: [metadata.display.duration, t(`games.${camel}.highlight`)]
-					.filter(Boolean)
-					.join(' • '),
-				theme: metadata.display.theme,
-				status: status as LineupEntry['status'],
-				score: game.score ?? null,
-			},
-		]
+	// Rotation-only fallback: no completions are known yet, so nothing here can
+	// claim a finish or a score. It is exactly what a first-time visitor sees.
+	const rotationView = deriveHomeView({
+		gameMetadata,
+		personalResults: {},
+		isPremium: false,
+		freeGameSlug: todaysFreeGame,
+	})
+	const rotationLineup = buildLineup({
+		renderedGames: rotationView.renderedGames,
+		metadataBySlug,
+		t: t as LineupTranslator,
 	})
 
 	const tomorrowsFreeGameName = metadataBySlug.get(tomorrowsFreeGame)
 		? t(`games.${slugToCamelCase(tomorrowsFreeGame)}.name`)
 		: tomorrowsFreeGame
 
-	const currentStreak = streakInfo?.currentStreak ?? 0
-	const hasPlayedToday = streakInfo?.hasPlayedToday ?? false
-
 	return (
 		<main className="flex-1">
-			<HomeHero
-				locale={locale}
-				dateLabel={formatProductDay(new Date(), locale)}
-				freeGame={freeGame}
-				isMember={Boolean(user)}
-				currentStreak={currentStreak}
-				hasPlayedToday={hasPlayedToday}
-				completedCount={progress.completedCount}
-				availableCount={progress.availableCount}
-				playerCount={todayPlayerCount}
-				// Only warn about unread progress when this viewer has progress to
-				// read: a brand-new guest has none, and a warning would be noise.
-				progressUnverified={playState.hasUnverifiedStatus && hasIdentity}
-			/>
+			<Suspense
+				fallback={
+					hasProgressIdentity ? (
+						// Personal numbers are owed but unread: claim nothing, keep the
+						// geometry (`HomeHeroSkeleton`).
+						<HomeHeroSkeleton />
+					) : (
+						// A first-time visitor sees the real guest hero immediately — the
+						// same thing the island below renders for them, so nothing swaps.
+						<HomeHeroFallback
+							locale={locale}
+							dateLabel={formatProductDay(new Date(), locale)}
+							freeGame={freeGame}
+						/>
+					)
+				}
+			>
+				<HomeHeroIsland
+					locale={locale}
+					dateLabel={formatProductDay(new Date(), locale)}
+					freeGame={freeGame}
+				/>
+			</Suspense>
 
 			<div
 				className="animate-enter pt-8"
 				style={{ '--enter-delay': '80ms' } as React.CSSProperties}
 			>
-				<TodayLineup games={lineup} showUnlock={!isPremium} />
-				{user ? (
-					<MemberStatsBand
-						currentStreak={currentStreak}
-						bestStreak={streakInfo?.maxStreak ?? 0}
-						totalGamesPlayed={streakInfo?.totalGamesPlayed ?? 0}
-					/>
-				) : (
-					<ValueStrip />
-				)}
+				<Suspense
+					fallback={
+						hasProgressIdentity ? (
+							<TodayLineupSkeleton />
+						) : (
+							<TodayLineup games={rotationLineup} showUnlock />
+						)
+					}
+				>
+					<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
+				</Suspense>
 				<TomorrowBand gameName={tomorrowsFreeGameName} />
 			</div>
 
