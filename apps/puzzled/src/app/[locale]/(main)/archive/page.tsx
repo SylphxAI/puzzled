@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { Card, CardContent } from '@sylphx/ui'
 import { CalendarDays, Lock, Play, Sparkles } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { archiveAccess } from '@/features/daily/lib/archive-access'
+import { resolveArchiveAccess } from '@/features/daily/lib/archive-access'
 import {
 	ARCHIVE_WINDOW_DAYS,
 	archiveDays,
@@ -75,13 +75,13 @@ export default async function ArchivePage({ params }: Props) {
 	const tGames = await getTranslations('games')
 
 	const user = await withPresentationDeadline(currentUser(), null)
-	const isPremium = user?.id
-		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
-		: false
-
-	// Fail closed: an entitlement read that could not be verified arrives as
-	// `false`, so an unavailable Commerce answer is `locked`, never `open`.
-	const access = archiveAccess({ hasUser: Boolean(user), isPremium })
+	// Fail closed (see `archive-access.ts`): an entitlement read that rejects,
+	// times out or answers with anything but the boolean `true` resolves
+	// `locked`, never `open`.
+	const access = await resolveArchiveAccess({
+		userId: user?.id ?? null,
+		readPremium: hasPremiumAccess,
+	})
 
 	const todaysFreeGame = getTodaysFreeGame()
 	const freeName = tGames(`${slugToCamelCase(todaysFreeGame)}.name`, {
