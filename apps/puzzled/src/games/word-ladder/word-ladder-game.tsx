@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordLadder')
 
 	// Get puzzle from server data or generate from seed (deterministic)
@@ -52,6 +53,7 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'word-ladder',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Optimal path
 	})
@@ -130,12 +132,13 @@ export function WordLadderGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-ladder',
+			puzzleDate,
 			gameName: 'Rungs',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${steps} steps`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, game.state.path.length, startTime])
+	}, [game.state.endTime, game.state.path.length, startTime, puzzleDate])
 
 	// Get error message
 	const getErrorMessage = () => {

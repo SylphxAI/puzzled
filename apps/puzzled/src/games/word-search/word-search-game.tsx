@@ -26,9 +26,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
 	const [puzzle] = useState(() =>
@@ -50,6 +51,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'word-search',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 	})
 
@@ -135,12 +137,13 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-search',
+			puzzleDate,
 			gameName: 'Hunt',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Check if a cell is part of the current selection
 	const isInSelection = useCallback(

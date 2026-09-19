@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.nonogram')
 
 	// Get puzzle from server data or generate from seed (deterministic)
@@ -52,6 +53,7 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'nonogram',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
@@ -133,12 +135,13 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'nonogram',
+			puzzleDate,
 			gameName: 'Paint',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {

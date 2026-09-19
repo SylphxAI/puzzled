@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.patternMatch')
 
 	// Parse puzzle data from server (no client-side fallback)
@@ -54,6 +55,7 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props
 		gameSlug: 'pattern-match',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -105,12 +107,13 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData }: Props
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'pattern-match',
+			puzzleDate,
 			gameName: 'Match',
 			status: game.status === 'won' ? 'won' : 'lost',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, startTime])
+	}, [game.status, game.endTime, startTime, puzzleDate])
 
 	const isComplete = game.status === 'won' || game.status === 'gave_up'
 

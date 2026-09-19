@@ -27,9 +27,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const tCommon = useTranslations('common')
 
 	const [puzzle] = useState(() =>
@@ -51,6 +52,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'cryptogram',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 	})
 
@@ -104,12 +106,13 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'cryptogram',
+			puzzleDate,
 			gameName: 'Cipher',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Parse the encrypted text into words for display
 	const words = puzzle.puzzleData.encryptedText.split(' ')

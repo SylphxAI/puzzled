@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.arithmo')
 
 	// Get puzzle from server data
@@ -52,6 +53,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'arithmo',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 		isPerfectWin: (stats) => stats.attempts === 1,
 	})
@@ -131,13 +133,14 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'arithmo',
+			puzzleDate,
 			gameName: 'Arithmo',
 			status: game.state.isWon ? 'won' : 'lost',
 			attempts: typeof attempts === 'number' ? attempts : undefined,
 			statLine: emojis,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.results, game.state.guesses.length, game.state.isWon])
+	}, [game.state.results, game.state.guesses.length, game.state.isWon, puzzleDate])
 
 	// Get error message
 	const getErrorMessage = () => {

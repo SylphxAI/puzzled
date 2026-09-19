@@ -28,9 +28,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.blockSlide')
 
 	// Get puzzle from server data
@@ -54,6 +55,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'block-slide',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -106,12 +108,13 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'block-slide',
+			puzzleDate,
 			gameName: 'Slides',
 			status: game.status === 'won' ? 'won' : 'lost',
 			statLine: `⏱️ ${formatTimer(timeMs)} • ${game.moveCount} moves`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.status, game.endTime, game.moveCount, startTime])
+	}, [game.status, game.endTime, game.moveCount, startTime, puzzleDate])
 
 	// Reset game
 	const handleReset = useCallback(() => {
