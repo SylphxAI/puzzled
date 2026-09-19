@@ -26,9 +26,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.numberPath')
 	const tCommon = useTranslations('common')
 
@@ -50,6 +51,7 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'number-path',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -121,12 +123,13 @@ export function NumberPathGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'number-path',
+			puzzleDate,
 			gameName: 'Path',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	if (isReady) {
 		return (

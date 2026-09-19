@@ -22,9 +22,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordHive')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -50,6 +51,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-hive',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.attempts === stats.maxAttempts, // Queen Bee = all words
 	})
@@ -154,6 +156,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-hive',
+			puzzleDate,
 			gameName: 'Hive',
 			status: 'won',
 			statLine: `${game.score} points`,

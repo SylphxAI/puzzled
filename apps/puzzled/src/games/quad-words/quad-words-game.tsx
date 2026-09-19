@@ -27,6 +27,7 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
 const KEYBOARD_ROWS = [
@@ -35,7 +36,7 @@ const KEYBOARD_ROWS = [
 	['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DEL'],
 ]
 
-export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.quadWords')
 	const tCommon = useTranslations('common')
 
@@ -60,6 +61,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'quad-words',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -146,12 +148,13 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'quad-words',
+			puzzleDate,
 			gameName: 'Quad',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {

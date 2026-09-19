@@ -1,4 +1,4 @@
-import { BarChart3, Gamepad2, Home, Sparkles, Tag, Trophy, User } from 'lucide-react'
+import { BarChart3, CalendarDays, Gamepad2, Home, Sparkles, Tag, Trophy, User } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 export type NavItem = {
@@ -20,6 +20,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
 	{ href: '/', labelKey: 'home', icon: Home, showInBottomNav: true, showInTopNav: true },
 	{ href: '/games', labelKey: 'games', icon: Gamepad2, showInBottomNav: true, showInTopNav: true },
 	{ href: '/stats', labelKey: 'stats', icon: BarChart3, showInBottomNav: true, showInTopNav: true },
+	// Past product days. Premium-gated on the page itself, so it is a real
+	// destination for everyone: the surface answers with sign-in or the upgrade.
+	{ href: '/archive', labelKey: 'archive', icon: CalendarDays, showInTopNav: true },
 	{ href: '/leaderboard', labelKey: 'leaderboard', icon: Trophy, showInTopNav: true },
 	{ href: '/pricing', labelKey: 'pricing', icon: Sparkles, showInTopNav: true },
 	{ href: '/profile', labelKey: 'profile', icon: User, showInBottomNav: true },

@@ -82,7 +82,14 @@ Pricing: set commercially; document live price in ops, not in this doctrine file
 Preferred:
 
 - After several daily-puzzle-completer days: “Unlock your history.”  
-- On archive tap: soft gate with preview.  
+- On archive tap: the gate as shipped is **hard** and server-rendered — a guest
+  meets sign-in, a signed-in account without entitlement meets the upgrade path,
+  and neither sees a day list or a board (`PUZ-PLUS`, `apps/puzzled/src/app/`
+  `[locale]/(main)/archive/page.tsx` + `features/daily/lib/archive-access.ts`).
+  The soft gate described here is **not built**: a preview must not render or
+  serve past-day content without entitlement. If a preview is wanted, scope it as
+  metadata-only (how many days the archive holds, never a playable board) before
+  it lands.  
 - On advanced stats: soft gate.
 
 Disallowed:

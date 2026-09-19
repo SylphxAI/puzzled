@@ -4,11 +4,11 @@ import { GamePageContent } from '@/features/catalog/components/game-page-content
 import { GamePageHero } from '@/features/catalog/components/game-page-hero'
 import { readMessage, relatedCatalogSlugs } from '@/features/catalog/lib/catalog'
 import { parseGameFaq, parseGameTips, requireGamePage } from '@/features/catalog/lib/game-page'
+import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
-import type { GameMode } from '@/lib/db/schema'
 import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
 import { currentUser } from '@/lib/identity/server'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -71,8 +71,10 @@ export async function generateMetadata({ params }: Props) {
 /**
  * Module landing page (`/games/<slug>`).
  *
- * The registry guard runs first, before any Suspense boundary, so an unknown
- * slug is a 404 with no rendered shell. Everything else is server-rendered for
+ * A `?date=` deep link (the shared card) is an archive read for the day it
+ * names, with or without `mode=archive`; a request that names no past day is
+ * today's ritual. The registry guard runs first, before any Suspense boundary,
+ * so an unknown slug is a 404 with no rendered shell. Everything else is server-rendered for
  * every viewer — hero, rules, tips, FAQ and related modules — while the
  * interactive part streams behind a skeleton: guests can still play today's
  * free module, and a premium module still ends in the honest unlock path
@@ -89,11 +91,12 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const canonicalSlug = page.slug
 	const moduleMetadata = page.metadata
 
-	// Validate mode parameter
-	const validModes: GameMode[] = ['daily', 'archive']
-	const mode: GameMode = validModes.includes(modeParam as GameMode)
-		? (modeParam as GameMode)
-		: 'daily'
+	// Which product day this request is for. A dated deep link (the shared
+	// card) resolves the day it names, so a recipient lands on the shared day
+	// rather than today's board; today, the future and malformed days stay
+	// today's ritual. Serve, entitlement and the one-finish guard stay in
+	// Connect — this only picks the day to ask for.
+	const { mode, puzzleDate } = resolveGameDayRequest({ mode: modeParam, date: dateParam })
 
 	// Check if game supports difficulty and validate difficulty parameter
 	const supportsDifficulty = gameSupportsDifficulty(canonicalSlug)
@@ -187,7 +190,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 						theme={moduleMetadata.display.theme}
 						freeGameSlug={todaysFreeGame}
 						freeGameName={todaysFreeGameName}
-						dateParam={dateParam}
+						dateParam={puzzleDate}
 					/>
 				</Suspense>
 			</div>

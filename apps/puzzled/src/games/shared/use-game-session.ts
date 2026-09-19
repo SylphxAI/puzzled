@@ -21,6 +21,7 @@ import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
 import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
+import { finishRecordingFor } from './finish-recording'
 
 /** Final game outcome - what gets saved to database */
 type GameEndStatus = 'won' | 'lost'
@@ -106,7 +107,11 @@ export interface UseGameSessionOptions {
 	 */
 	guestPromptDelay?: number
 
-	/** Product day key (YYYY-MM-DD) forwarded to SubmitGuess when not archive. */
+	/**
+	 * Product day key (YYYY-MM-DD) the board was served for. A daily finish
+	 * forwards it only while it is still the product day; an archive finish
+	 * records it as the dated finish it is (see `finishRecordingFor`).
+	 */
 	puzzleDate?: string
 
 	/**
@@ -260,17 +265,23 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 
 			let finish: GameEndResult = { success: true }
 
-			// Save result (daily mode). puzzleId optional for deterministic free
-			// games — server resolves content by day_key.
-			if (mode === 'daily') {
+			// What this session records: today's ritual, or the day an archive
+			// board was served for. An archive finish with no day records nothing
+			// rather than letting the server read it as today's ritual.
+			const recording = finishRecordingFor({ mode, puzzleDate })
+
+			// Save result. puzzleId optional for deterministic free games —
+			// server resolves content by day_key.
+			if (recording.record) {
 				try {
 					const result = await saveResult({
 						status,
 						attempts: endData.attempts ?? 1,
 						timeSpentMs: finalTimeSpentMs,
 						puzzleId,
-						puzzleDate,
-						mode: 'daily' as const,
+						mode: recording.mode,
+						puzzleDate: recording.puzzleDate,
+						archiveDate: recording.archiveDate,
 						difficulty,
 						data: endData.data,
 					})
@@ -300,21 +311,21 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 				if (requireServerAccept) {
 					celebrate(endData)
 				}
+			}
 
-				if (!isLoggedIn) {
-					saveGuestCompletion({
-						status,
-						attempts: endData.attempts ?? 1,
-					})
-					incrementGuestGames()
-					if (shouldShowSignupPrompt) {
-						setTimeout(() => {
-							setShowGuestSignupPrompt(true)
-						}, guestPromptDelay)
-					}
+			// Guest local completion is a ritual affordance: the archive is a
+			// signed-in, entitled surface and keeps no guest marker.
+			if (mode === 'daily' && !isLoggedIn) {
+				saveGuestCompletion({
+					status,
+					attempts: endData.attempts ?? 1,
+				})
+				incrementGuestGames()
+				if (shouldShowSignupPrompt) {
+					setTimeout(() => {
+						setShowGuestSignupPrompt(true)
+					}, guestPromptDelay)
 				}
-			} else if (requireServerAccept) {
-				celebrate(endData)
 			}
 
 			return finish

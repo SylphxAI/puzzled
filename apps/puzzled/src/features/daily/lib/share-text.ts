@@ -8,13 +8,14 @@
  */
 
 import { canonicalizeGameSlug } from '@/lib/game-slug'
+import { isValidDayKey } from '@/lib/product-day'
 
 export type RitualShareInput = {
 	/** Absolute origin, e.g. https://puzzled.gg or window.location.origin */
 	origin: string
 	gameSlug: string
 	gameName: string
-	/** YYYY-MM-DD product day when known */
+	/** YYYY-MM-DD product day when known; makes the link an archive deep link */
 	puzzleDate?: string
 	status: 'won' | 'lost'
 	attempts?: number | null
@@ -31,19 +32,24 @@ export function shareHost(origin: string): string {
 
 /**
  * Module deep-link path (no locale prefix — app redirects).
- * Includes `date=` when day_key is known so landings stay on the shared day.
+ *
+ * When the day_key is known the link carries **both** halves of the archive
+ * contract: `mode=archive` and `date=YYYY-MM-DD`. The landing resolves a day
+ * only for an archive request, so a `date=` without the mode used to fall
+ * through to today's board — every recipient of a shared card landed on the
+ * wrong day. A day the calendar does not have is dropped rather than shared.
  */
 export function ritualSharePath(gameSlug: string, puzzleDate?: string): string {
 	const slug = canonicalizeGameSlug(gameSlug.trim())
 	if (!slug) return '/'
 	const base = `/games/${slug}`
-	if (puzzleDate && /^\d{4}-\d{2}-\d{2}$/.test(puzzleDate)) {
-		return `${base}?date=${puzzleDate}`
+	if (isValidDayKey(puzzleDate)) {
+		return `${base}?mode=archive&date=${(puzzleDate as string).trim()}`
 	}
 	return base
 }
 
-/** Compact deep-link for share text: `puzzled.gg/games/sudoku?date=2026-08-12`. */
+/** Compact deep-link for share text: `puzzled.gg/games/sudoku?mode=archive&date=2026-08-12`. */
 export function ritualShareDeepLink(origin: string, gameSlug: string, puzzleDate?: string): string {
 	const host = shareHost(origin) || 'puzzled.gg'
 	const path = ritualSharePath(gameSlug, puzzleDate)

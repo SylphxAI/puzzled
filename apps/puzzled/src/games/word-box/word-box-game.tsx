@@ -26,9 +26,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordBox')
 	const tCommon = useTranslations('common')
 
@@ -54,6 +55,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-box',
 		mode,
 		puzzleId,
+		puzzleDate,
 	})
 
 	// Game-specific state
@@ -100,12 +102,13 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-box',
+			puzzleDate,
 			gameName: 'Frame',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Keyboard handler
 	useEffect(() => {

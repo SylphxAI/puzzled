@@ -22,9 +22,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGroups')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -63,6 +64,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		gameSlug: 'word-groups',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (stats) => stats.mistakes === 0,
 	})
@@ -172,6 +174,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData }: Props) 
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-groups',
+			puzzleDate,
 			gameName: 'Threads',
 			status,
 			statLine: emojiGrid,

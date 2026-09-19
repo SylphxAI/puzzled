@@ -23,9 +23,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGuess')
 	const tCommon = useTranslations('common')
 	const tShare = useTranslations('share')
@@ -53,6 +54,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'word-guess',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: true,
 		isPerfectWin: (data) => data.attempts === 1,
 	})
@@ -167,6 +169,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'word-guess',
+			puzzleDate,
 			gameName: 'Five',
 			status,
 			attempts: status === 'won' ? attempts : undefined,

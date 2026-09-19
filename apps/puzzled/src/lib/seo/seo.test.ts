@@ -95,6 +95,17 @@ describe('route truth table', () => {
 		expect(isPrivateRoutePath('/stats-and-more')).toBe(false)
 	})
 
+	test('keeps the archive reachable but out of the index', () => {
+		// The archive surface is per-identity and premium-gated, so it must not be
+		// listed for crawlers — while staying crawlable so its own noindex is
+		// readable (a Disallow would hide the directive).
+		expect(isPrivateRoutePath('/archive')).toBe(true)
+		expect(isPrivateRoutePath('/zh-HK/archive')).toBe(true)
+		expect(PUBLIC_ROUTES.map((route) => route.path)).not.toContain('/archive')
+		expect(sitemap().some((entry) => new URL(entry.url).pathname.endsWith('/archive'))).toBe(false)
+		expect(robotsDisallowPaths()).not.toContain('/archive')
+	})
+
 	test('strips locale prefixes for path matching', () => {
 		expect(stripLocalePrefix('/zh-HK')).toBe('/')
 		expect(stripLocalePrefix('/zh-HK/games')).toBe('/games')

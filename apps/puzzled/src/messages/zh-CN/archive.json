@@ -1,0 +1,20 @@
+{
+	"metaTitle": "谜题存档",
+	"metaDescription": "重玩 Puzzled 存档中过往的每日谜题。",
+	"eyebrow": "存档",
+	"title": "存档",
+	"body": "每个过往的每日谜题都还在这里。选一天，再玩一次。",
+	"guestTitle": "登录后开启存档",
+	"guestBody": "存档属于 Puzzled Plus。登录即可查看你可玩的日期，或先玩今日免费谜题。",
+	"signInCta": "登录",
+	"lockedTitle": "存档属于 Puzzled Plus",
+	"lockedBody": "Plus 开启存档：所有过往每日谜题，以及完整游戏系列和更深入的统计。今日免费谜题仍对所有人开放。",
+	"upgradeCta": "解锁 Puzzled Plus",
+	"playFreeToday": "玩今日免费谜题（{game}）",
+	"listTitle": "过往日期",
+	"listBody": "最近 {count} 个产品日，最新在前。每一天都会开启当日运行的谜题。",
+	"playDayLabel": "玩 {date} 的 {game}",
+	"play": "开始",
+	"playToday": "玩今日的仪式（{game}）",
+	"backToGames": "返回所有游戏"
+}

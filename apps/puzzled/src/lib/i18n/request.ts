@@ -57,6 +57,7 @@ const GAME_TRANSLATIONS_EN: Record<string, Record<string, unknown>> = {
 
 import enGBAchievements from '@/messages/en-GB/achievements.json'
 import enGBAdmin from '@/messages/en-GB/admin.json'
+import enGBArchive from '@/messages/en-GB/archive.json'
 import enGBAuth from '@/messages/en-GB/auth.json'
 import enGBCalendar from '@/messages/en-GB/calendar.json'
 import enGBCatalog from '@/messages/en-GB/catalog.json'
@@ -88,6 +89,7 @@ import enGBTrial from '@/messages/en-GB/trial.json'
 import enGBWinBack from '@/messages/en-GB/win-back.json'
 import enUSAchievements from '@/messages/en-US/achievements.json'
 import enUSAdmin from '@/messages/en-US/admin.json'
+import enUSArchive from '@/messages/en-US/archive.json'
 import enUSAuth from '@/messages/en-US/auth.json'
 import enUSCalendar from '@/messages/en-US/calendar.json'
 import enUSCatalog from '@/messages/en-US/catalog.json'
@@ -119,6 +121,7 @@ import enUSTrial from '@/messages/en-US/trial.json'
 import enUSWinBack from '@/messages/en-US/win-back.json'
 import zhCNAchievements from '@/messages/zh-CN/achievements.json'
 import zhCNAdmin from '@/messages/zh-CN/admin.json'
+import zhCNArchive from '@/messages/zh-CN/archive.json'
 import zhCNAuth from '@/messages/zh-CN/auth.json'
 import zhCNCalendar from '@/messages/zh-CN/calendar.json'
 import zhCNCatalog from '@/messages/zh-CN/catalog.json'
@@ -150,6 +153,7 @@ import zhCNTrial from '@/messages/zh-CN/trial.json'
 import zhCNWinBack from '@/messages/zh-CN/win-back.json'
 import zhHKAchievements from '@/messages/zh-HK/achievements.json'
 import zhHKAdmin from '@/messages/zh-HK/admin.json'
+import zhHKArchive from '@/messages/zh-HK/archive.json'
 import zhHKAuth from '@/messages/zh-HK/auth.json'
 import zhHKCalendar from '@/messages/zh-HK/calendar.json'
 import zhHKCatalog from '@/messages/zh-HK/catalog.json'
@@ -181,6 +185,7 @@ import zhHKTrial from '@/messages/zh-HK/trial.json'
 import zhHKWinBack from '@/messages/zh-HK/win-back.json'
 import zhTWAchievements from '@/messages/zh-TW/achievements.json'
 import zhTWAdmin from '@/messages/zh-TW/admin.json'
+import zhTWArchive from '@/messages/zh-TW/archive.json'
 import zhTWAuth from '@/messages/zh-TW/auth.json'
 import zhTWCalendar from '@/messages/zh-TW/calendar.json'
 import zhTWCatalog from '@/messages/zh-TW/catalog.json'
@@ -224,6 +229,7 @@ interface LocaleMessages {
 	home: Messages
 	settings: Messages
 	admin: Messages
+	archive: Messages
 	legal: Messages
 	pagination: Messages
 	achievements: Messages
@@ -258,6 +264,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		home: enUSHome,
 		settings: enUSSettings,
 		admin: enUSAdmin,
+		archive: enUSArchive,
 		legal: enUSLegal,
 		pagination: enUSPagination,
 		achievements: enUSAchievements,
@@ -290,6 +297,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		home: enGBHome,
 		settings: enGBSettings,
 		admin: enGBAdmin,
+		archive: enGBArchive,
 		legal: enGBLegal,
 		pagination: enGBPagination,
 		achievements: enGBAchievements,
@@ -322,6 +330,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		home: zhHKHome,
 		settings: zhHKSettings,
 		admin: zhHKAdmin,
+		archive: zhHKArchive,
 		legal: zhHKLegal,
 		pagination: zhHKPagination,
 		achievements: zhHKAchievements,
@@ -354,6 +363,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		home: zhTWHome,
 		settings: zhTWSettings,
 		admin: zhTWAdmin,
+		archive: zhTWArchive,
 		legal: zhTWLegal,
 		pagination: zhTWPagination,
 		achievements: zhTWAchievements,
@@ -386,6 +396,7 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		home: zhCNHome,
 		settings: zhCNSettings,
 		admin: zhCNAdmin,
+		archive: zhCNArchive,
 		legal: zhCNLegal,
 		pagination: zhCNPagination,
 		achievements: zhCNAchievements,
