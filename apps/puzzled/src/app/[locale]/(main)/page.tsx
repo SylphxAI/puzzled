@@ -11,6 +11,7 @@ import {
 	ValueStrip,
 } from '@/features/home/components/home-sections'
 import { type LineupEntry, TodayLineup } from '@/features/home/components/today-lineup'
+import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from '@/features/home/lib/home-faq'
 import { MarketingFaq } from '@/features/marketing/components'
 import { getAllGameMetadata } from '@/games/registry'
 import {
@@ -228,8 +229,8 @@ export default async function HomePage({ params }: Props) {
 				title={tHome('faq.title')}
 				subtitle={tHome('faq.subtitle')}
 				itemsFrom="namespace"
-				namespace="home"
-				keys={['free', 'account', 'schedule', 'streak', 'share', 'catalog']}
+				namespace={HOME_FAQ_NAMESPACE}
+				keys={HOME_FAQ_KEYS}
 			/>
 			<FinalCta
 				freeGameSlug={todaysFreeGame}
