@@ -14,6 +14,25 @@ export const MOBILE = { width: 390, height: 844 }
 
 export async function settle(page: Page) {
 	await page.waitForLoadState('domcontentloaded')
+	// `domcontentloaded` alone is not enough: every route fades its content
+	// in through `.animate-enter` (`enter-up`, 0.5s — see globals.css), and
+	// axe composites an element's colour through its ancestors' opacity. An
+	// audit taken mid-fade therefore reports contrast failures that the same
+	// route does not have once it settles. Wait for the route's finite
+	// animations to finish before anything is measured; infinite ones
+	// (float, pulse, spin) are deliberately not waited on.
+	await page
+		.waitForFunction(
+			() =>
+				document.getAnimations().every((animation) => {
+					if (animation.playState !== 'running') return true
+					const iterations = animation.effect?.getComputedTiming().iterations
+					return iterations === Number.POSITIVE_INFINITY
+				}),
+			undefined,
+			{ timeout: 5000 },
+		)
+		.catch(() => undefined)
 }
 
 export type Stop = {
