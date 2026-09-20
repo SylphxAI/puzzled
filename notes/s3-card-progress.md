@@ -1,0 +1,13 @@
+# s3-card (result card — S3 slice 2, register row G3) — progress
+
+**Task:** implement the non-spoiler RESULT CARD for apps/puzzled (pure model + canvas PNG renderer + one-tap share wiring + i18n x5 + a11y/reduced-motion), with tests, rendered evidence, PR. Base: origin/main = 7523ba9. Worktree: $HOME/workspace/.worktrees/github.com/SylphxAI/puzzled/s3-card; branch s3/result-card. Prefix git/gh with env -u GH_TOKEN -u GITHUB_TOKEN.
+
+**Off-limits:** src/features/home/**, apps/puzzled/lighthouserc.json, .github/**, other register rows, other PRs' files, src/games/*/translations/**. No merge, no enqueue. Avoid PR #153 files (.github/workflows/ci.yml, e2e-tests/a11y-support.ts, e2e-tests/accessibility.e2e.ts, notes/s5-rebase-progress.md).
+
+## Log
+
+- [2026-09-21 ~00:50] **Recon done.** Worktree s3-card exists at 7523ba9 (clean). Only open PR: #153. Sibling branches s3-day / td-ssot / zh-games add only notes/AGENTS so far (no overlap). bun install started in worktree (shell session cool-coral, log /tmp/s3card-install.log).
+- Context read: protocol section 6; s3-direction.md; gaps.md G3 row; share-text.ts + tests; game-result.tsx + modal; theme-colors.ts (11 themes, Tailwind classes); request.ts (per-locale namespaces; Messages = Record<string,unknown>); already-completed-view.tsx (own share handler; NOT in this slice's named wiring files).
+- **Scope frozen:** NEW src/features/daily/lib/result-card.ts (model + text alternative; typed tile pattern, no free text); NEW result-card-render.ts (canvas 1080x1080, common chrome, theme palettes; paint + blob separated for testability); NEW share-result-card.ts (pure orchestration: files-capable share -> navigator.share; else download + text copy fallback; cancel handled); tests for all three. MOD game-result.tsx (new 'Share result card' primary button + optional props puzzleDate/currentStreak/pattern; existing text share kept); game-result-modal.tsx pass-through. Thread puzzleDate={puzzleDate} through all 21 GameResultModal call sites + scan guard test. i18n: extend src/messages/*/share.json (5 locales) with card strings + parity guard test. Update gaps.md G3 row ONLY (closed-at-source, live layer Unknown). Evidence: playwright chromium runs the real renderer bundle -> real PNG under $HOME/work/pz-program/evidence/s3-card/.
+- Day fallback: prefer prop puzzleDate; else productDayKey() for daily mode; else omit. Pattern = typed tiles (hit/near/miss) so no answer text can ride the model.
+- **Next:** commit this note + push; checkpoint 1 = model + tests (+ mutation proof).
