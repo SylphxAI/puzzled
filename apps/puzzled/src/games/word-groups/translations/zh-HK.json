@@ -1,0 +1,29 @@
+{
+	"tagline": "找出 4 組，每組 4 個",
+	"highlight": "4 個類別",
+	"description": "把 16 個詞分成 4 個類別",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "找出 4 個有共同點的項目為一組",
+		"rule2": "選取 4 個項目，然後按「提交」檢查",
+		"rule3": "整局共有 4 次答錯機會"
+	},
+	"submit": "提交",
+	"shuffle": "洗牌",
+	"deselect": "取消全選",
+	"mistakes": "剩餘錯誤次數",
+	"mistakesRemaining": "剩下 {remaining}／{total} 次錯誤",
+	"messages": {
+		"correct": "正確！",
+		"oneAway": "差一個…",
+		"incorrect": "不正確",
+		"gameOver": "下次再努力！"
+	},
+	"difficulty": {
+		"0": "簡單",
+		"1": "中等",
+		"2": "困難",
+		"3": "棘手"
+	}
+}

@@ -1,0 +1,29 @@
+{
+	"tagline": "找出 4 组，每组 4 个",
+	"highlight": "4 个类别",
+	"description": "把 16 个词分成 4 个类别",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "找出 4 个有共同点的项目为一组",
+		"rule2": "选取 4 个项目，然后按「提交」检查",
+		"rule3": "一局有 4 次答错机会"
+	},
+	"submit": "提交",
+	"shuffle": "洗牌",
+	"deselect": "取消全选",
+	"mistakes": "剩余错误次数",
+	"mistakesRemaining": "剩下 {remaining}/{total} 次错误",
+	"messages": {
+		"correct": "正确！",
+		"oneAway": "差一个…",
+		"incorrect": "不正确",
+		"gameOver": "下次再努力！"
+	},
+	"difficulty": {
+		"0": "简单",
+		"1": "中等",
+		"2": "困难",
+		"3": "棘手"
+	}
+}

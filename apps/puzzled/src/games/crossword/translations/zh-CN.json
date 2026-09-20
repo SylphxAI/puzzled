@@ -1,0 +1,21 @@
+{
+	"tagline": "5×5 方格 • 快速解谜",
+	"highlight": "5×5 谜题",
+	"description": "完成一个小巧的填字游戏",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "依据提示填满 5×5 方格",
+		"rule2": "点选方格并输入字母",
+		"rule3": "再次点选同一格可切换方向"
+	},
+	"startGame": "开始游戏",
+	"across": "横向",
+	"down": "纵向",
+	"selectCell": "点选方格开始",
+	"complete": "谜题完成！",
+	"messages": {
+		"correct": "正确！",
+		"incorrect": "再试一次"
+	}
+}

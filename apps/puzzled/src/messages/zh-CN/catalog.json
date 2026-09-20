@@ -103,35 +103,35 @@
 	"game": {
 		"word-guess": {
 			"tips": [
-				"Try an opening guess with no repeated letters so each tile teaches you something new.",
-				"Treat a gray letter as spent and save the remaining guesses for untested letters.",
-				"Move a yellow letter to a different slot before adding new letters to the row."
+				"第一次猜的时候，先选没有重复字母的词，这样每一格都能带来新线索。",
+				"灰色字母已经可以排除，把剩下的次数留给还没试过的字母。",
+				"先把黄色字母移到其他位置，再在同一行加入新字母。"
 			],
 			"faq": [
 				{
-					"question": "How does a round of Five end?",
-					"answer": "You have six guesses. The round closes when the word is solved or the last guess is used, and finished attempts are verified on the server."
+					"question": "Five 的一局怎么结束？",
+					"answer": "每局有六次猜测机会。猜中答案或用完最后一次机会，该局就会结束，完成的记录由服务器核实。"
 				},
 				{
-					"question": "Is the daily Five word the same for every player?",
-					"answer": "Yes. Everyone plays the same word on the same day, and the set flips at midnight Hong Kong time."
+					"question": "每天的 Five 答案所有玩家都一样吗？",
+					"answer": "是的。同一天所有玩家都使用同一个答案，并在香港时间午夜更新。"
 				}
 			]
 		},
 		"word-groups": {
 			"tips": [
-				"Read all sixteen words before submitting anything, and note the ones that fit two themes.",
-				"One away means three of your four picks are right, so swap a single word.",
-				"Leftover words that fit nowhere at first often turn out to be the final thread."
+				"提交之前先看完全部十六个词，并记下可能同时符合两组的词。",
+				"「差一个」表示四个词中有三个正确，只需换掉其中一个词。",
+				"一开始觉得无法归类的词，往往就是最后一组的关键。"
 			],
 			"faq": [
 				{
-					"question": "How many mistakes does Threads allow?",
-					"answer": "Four. Each rejected group of four costs one mistake, and the round ends when they are gone."
+					"question": "Threads 允许几次失误？",
+					"answer": "四次。每提交一次错误的组合就扣一次，用完四次该局就结束。"
 				},
 				{
-					"question": "What does one away mean in Threads?",
-					"answer": "Three of the four words you picked belong to a real thread and one does not, so change a single word."
+					"question": "Threads 的「差一个」是什么意思？",
+					"answer": "你选的四个词中，有三个属于同一组，只有一个不属于，因此只需换掉其中一个词。"
 				}
 			]
 		},
@@ -154,35 +154,35 @@
 		},
 		"crossword": {
 			"tips": [
-				"Fill the shortest across entries first; their letters give the down clues a head start.",
-				"Tap the same square twice to flip from across to down when a clue stalls.",
-				"Leave a stubborn clue for later and let the crossing letters narrow the options."
+				"先填最短的横向词，它的字母能为纵向提示提供线索。",
+				"遇到卡住的提示时，连续点同一格两次，即可从横向切换到纵向。",
+				"先跳过难缠的提示，让交叉的字母收窄可能的答案。"
 			],
 			"faq": [
 				{
-					"question": "How do I switch between across and down in Mini Grid?",
-					"answer": "Tap a square to select it and tap again to change direction, so one cell can serve two clues."
+					"question": "在 Mini Grid 如何切换横向和纵向？",
+					"answer": "点选方格后再点一次即可切换方向，同一格可以对应横向和纵向两条提示。"
 				},
 				{
-					"question": "How long does a Mini Grid puzzle take?",
-					"answer": "The estimate is about five minutes, and the grid is small enough for one sitting."
+					"question": "完成一道 Mini Grid 需要多久？",
+					"answer": "大约五分钟，方格够小，一次就能完成。"
 				}
 			]
 		},
 		"sudoku": {
 			"tips": [
-				"Look for a digit whose possible squares inside one box have shrunk to a single cell.",
-				"Use notes mode to list candidates, then clear them as soon as a placement rules them out.",
-				"When two cells in a box share the same pair of candidates, no other cell there can take them."
+				"留意某个数字在某个宫格内是否只剩一格可能，那就是答案。",
+				"用笔记模式列出候选数字，一旦确定位置就立即清除。",
+				"若同一宫格内有两格拥有相同的两个候选数字，该宫格其他格子就不能再填这两个数字。"
 			],
 			"faq": [
 				{
-					"question": "How do I know a Sudoku grid is finished?",
-					"answer": "Every row, column and 3×3 box holds the digits 1 to 9 once, and a complete grid with no conflicts closes the puzzle."
+					"question": "怎么知道 Sudoku 已经完成？",
+					"answer": "每一行、每一列和每个 3×3 宫格都恰好包含 1 到 9 各一次；填满且没有冲突，这道题就完成了。"
 				},
 				{
-					"question": "Does Sudoku offer difficulty settings?",
-					"answer": "Yes. Easy, medium and hard change how many cells start filled in, so harder boards leave more of the work to you."
+					"question": "Sudoku 有难度设置吗？",
+					"answer": "有。简单、中等、困难会改变一开始已填好的格数，难度越高，需要自己推理的部分越多。"
 				}
 			]
 		},
@@ -273,18 +273,18 @@
 		},
 		"crowns": {
 			"tips": [
-				"Eliminate the eight neighbors of every crown, since those squares can never hold another.",
-				"Small regions are quickest to pin down, so start with the tightest ones.",
-				"Once a row or column has its crown, treat every other square in it as unavailable."
+				"排除每个皇冠周围的八格，因为这些格子不可能再放皇冠。",
+				"范围最小的区域最快确定，先从最小的区域入手。",
+				"当某一行或某一列已放好皇冠，该行或该列其余格子就视为不可用。"
 			],
 			"faq": [
 				{
-					"question": "What is the aim in Crowns?",
-					"answer": "One crown in every row, column and colored region, with no two crowns touching, not even at a corner."
+					"question": "Crowns 的目标是什么？",
+					"answer": "每一行、每一列和每个颜色区域各放一个皇冠，而且任何两个皇冠都不能相邻，包括斜角。"
 				},
 				{
-					"question": "Does Crowns offer difficulty settings?",
-					"answer": "Yes. Easy uses a 5×5 board, medium 6×6 and hard 8×8, so larger boards ask for more deduction."
+					"question": "Crowns 有难度设置吗？",
+					"answer": "有。简单为 5×5 棋盘，中等 6×6，困难 8×8，棋盘越大越需要推理。"
 				}
 			]
 		},
