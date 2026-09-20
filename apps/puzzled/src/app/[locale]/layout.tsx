@@ -226,6 +226,11 @@ export default async function LocaleLayout({ children, params }: Props) {
 					}}
 				/>
 				<JsonLd baseUrl={baseUrl} />
+				{/* MUTATION (throwaway): blocking main-thread work in head */}
+				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: throwaway regression probe
+					dangerouslySetInnerHTML={{ __html: 'var t=Date.now();while(Date.now()-t<1200){};' }}
+				/>
 			</head>
 			<body className="antialiased">
 				<ThemeProvider>
