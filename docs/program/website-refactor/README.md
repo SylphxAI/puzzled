@@ -12,12 +12,9 @@ Source green, `GET /healthz` 200 and `GET /` 200 are **not** this oracle.
 
 ## Why this program exists
 
-The redesign wave is the reason. PRs #142–#148 landed between 2026-09-17 and 2026-09-18 and rebuilt the brand, shell, home, SEO truth layer, auth and console, catalog and game pages, and pricing/support/legal, plus a WCAG 2.2 AA conformance pass. Two PRs are still open and the wave did not finish:
+The redesign wave is the reason. PRs #142–#148 landed between 2026-09-17 and 2026-09-18 and rebuilt the brand, shell, home, SEO truth layer, auth and console, catalog and game pages, and pricing/support/legal, plus a WCAG 2.2 AA conformance pass. The wave is finished: **#144** landed as `861cfbd` and **#149** landed as `ad89b83` on 2026-09-20, so `main` carries the whole redesign wave. Two later fixes followed immediately, both needed because the wave was incomplete: **#151** (`878ca92`) restored the home FAQ's real copy where the wave shipped raw key paths, and **#152** (`3ab661a`) closed the `?date=` deep-link gap (**G1**) and added the archive surface (**G2**), both at source.
 
-- **#144** `perf(web): first-paint, bundle and third-party waste` — open, mergeable and CLEAN; all six checks (including Build) green as of 2026-09-18 15:19 UTC.
-- **#149** `fix(web): land the a11y review's cross-slice repairs` — open and **conflicting** with `main`, its checks green against a stale base.
-
-That is the immediate work. The program's job is what comes after it:
+That was the immediate work. The program's job is what comes after it:
 
 1. Every surface must meet one standard — marketing, core, auth **and** the post-login console. No second-class surface.
 2. The measurable quality layers — SEO and structured data, Core Web Vitals, WCAG 2.2 AA, analytics and error monitoring — need baselines, then budgets, then enforcement. Today the repo holds harnesses that nothing runs.
@@ -56,6 +53,7 @@ Ordering is a dependency statement, not a calendar. S4–S7 are independent of e
 
 | Stage | Status | Note |
 | --- | --- | --- |
-| S0 | Active | The four documents land in this branch |
-| S1 | Active | #144 mergeable and CLEAN, six checks green; #149 conflicting against `main` |
-| S2–S8 | Not started | Open gaps are enumerated in [`gaps.md`](gaps.md); baselines in [`baselines.md`](baselines.md) |
+| S0 | Landed | The four documents landed as docs. |
+| S1 | Landed | #144 → `861cfbd`, #149 → `ad89b83`, both on `main` 2026-09-20; the wave's remaining defects followed as #151 → `878ca92` (home FAQ real copy) and #152 → `3ab661a`. |
+| S2 | Active | Audit half complete; see [`s2-audit.md`](s2-audit.md). 13 checklist axes conform, 8 deviate (15 distinct defects), 4 unverifiable on the auditing host. Fixes in flight for the console copy, game copy and `/unsubscribe`; the catalog focus-ring deviation and the 360px coverage hole are recorded with owners. |
+| S3–S8 | Not started | Open gaps are enumerated in [`gaps.md`](gaps.md); baselines in [`baselines.md`](baselines.md) |
