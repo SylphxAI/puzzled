@@ -1,0 +1,26 @@
+{
+	"tagline": "數獨 • 籠內總和",
+	"highlight": "總和謎題",
+	"description": "加入籠內總和限制的數獨",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每行、每列與每個 3×3 宮格都填入 1 至 9",
+		"rule2": "每個籠內的數字總和必須等於籠上標示的數字",
+		"rule3": "同一個籠內不能有重複數字"
+	},
+	"startGame": "開始遊戲",
+	"complete": "謎題完成！",
+	"notes": "筆記",
+	"notesMode": "筆記模式",
+	"difficulty": {
+		"easy": "簡單",
+		"medium": "中等",
+		"hard": "困難"
+	},
+	"difficultyDescriptions": {
+		"easy": "已填 20 格，助你起步",
+		"medium": "已填 10 格 — 靠籠內總和推理",
+		"hard": "沒有提示數字，全靠籠內總和"
+	}
+}

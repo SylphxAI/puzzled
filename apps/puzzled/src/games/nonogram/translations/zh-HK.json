@@ -1,0 +1,30 @@
+{
+	"tagline": "10×10 方格 • 像素圖案",
+	"highlight": "圖片謎題",
+	"description": "填滿方格，還原隱藏圖案",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "依據數字提示填格",
+		"rule2": "數字代表連續填色的格數",
+		"rule3": "完成整幅方格就會看到圖案"
+	},
+	"startGame": "開始遊戲",
+	"fillMode": "填色",
+	"markMode": "標記",
+	"errors": "{count} 個錯誤",
+	"complete": "圖案完成！",
+	"messages": {
+		"incorrect": "這格不應填色"
+	},
+	"difficulty": {
+		"easy": "簡單",
+		"medium": "中等",
+		"hard": "困難"
+	},
+	"difficultyDescriptions": {
+		"easy": "5×5 小方格，圖案簡單",
+		"medium": "10×10，需要解讀的行列更多",
+		"hard": "15×15，細節更精細"
+	}
+}

@@ -1,0 +1,14 @@
+{
+	"tagline": "解讀名言 • 文字謎題",
+	"highlight": "經典名言",
+	"description": "用字母替換破解名言",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每個字母都被另一個字母取代",
+		"rule2": "找出替換規律，還原整句名言",
+		"rule3": "同一個字母永遠對應同一個替換字母"
+	},
+	"startGame": "開始遊戲",
+	"complete": "名言破解！"
+}

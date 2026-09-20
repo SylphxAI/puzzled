@@ -46,21 +46,35 @@ import wordSearchEn from '@/games/word-search/translations/en.json'
 // Locale overlays — partial copy is allowed
 // ==========================================
 
+import arithmoZhHK from '@/games/arithmo/translations/zh-HK.json'
+import blockSlideZhHK from '@/games/block-slide/translations/zh-HK.json'
 import crosswordZhCN from '@/games/crossword/translations/zh-CN.json'
 import crosswordZhHK from '@/games/crossword/translations/zh-HK.json'
 import crosswordZhTW from '@/games/crossword/translations/zh-TW.json'
+import cryptogramZhHK from '@/games/cryptogram/translations/zh-HK.json'
+import killerSudokuZhHK from '@/games/killer-sudoku/translations/zh-HK.json'
+import nonogramZhHK from '@/games/nonogram/translations/zh-HK.json'
+import numberPathZhHK from '@/games/number-path/translations/zh-HK.json'
+import patternMatchZhHK from '@/games/pattern-match/translations/zh-HK.json'
+import pipPlaceZhHK from '@/games/pip-place/translations/zh-HK.json'
+import quadWordsZhHK from '@/games/quad-words/translations/zh-HK.json'
 import queensZhCN from '@/games/queens/translations/zh-CN.json'
 import queensZhHK from '@/games/queens/translations/zh-HK.json'
 import queensZhTW from '@/games/queens/translations/zh-TW.json'
 import sudokuZhCN from '@/games/sudoku/translations/zh-CN.json'
 import sudokuZhHK from '@/games/sudoku/translations/zh-HK.json'
 import sudokuZhTW from '@/games/sudoku/translations/zh-TW.json'
+import tangoZhHK from '@/games/tango/translations/zh-HK.json'
+import wordBoxZhHK from '@/games/word-box/translations/zh-HK.json'
 import wordGroupsZhCN from '@/games/word-groups/translations/zh-CN.json'
 import wordGroupsZhHK from '@/games/word-groups/translations/zh-HK.json'
 import wordGroupsZhTW from '@/games/word-groups/translations/zh-TW.json'
 import wordGuessZhCN from '@/games/word-guess/translations/zh-CN.json'
 import wordGuessZhHK from '@/games/word-guess/translations/zh-HK.json'
 import wordGuessZhTW from '@/games/word-guess/translations/zh-TW.json'
+import wordHiveZhHK from '@/games/word-hive/translations/zh-HK.json'
+import wordLadderZhHK from '@/games/word-ladder/translations/zh-HK.json'
+import wordSearchZhHK from '@/games/word-search/translations/zh-HK.json'
 
 /** One module's copy: nested objects of strings, keyed as the module reads them. */
 export type GameCopy = Record<string, unknown>
@@ -137,12 +151,27 @@ export const GAME_TRANSLATIONS_BY_LOCALE: Partial<Record<Locale, GameMessages>> 
 		wordGuess: wordGuessZhCN,
 	},
 	'zh-HK': {
+		arithmo: arithmoZhHK,
+		blockSlide: blockSlideZhHK,
 		crossword: crosswordZhHK,
+		cryptogram: cryptogramZhHK,
+		killerSudoku: killerSudokuZhHK,
+		nonogram: nonogramZhHK,
+		numberPath: numberPathZhHK,
+		patternMatch: patternMatchZhHK,
+		pipPlace: pipPlaceZhHK,
+		quadWords: quadWordsZhHK,
 		queens: queensZhHK,
 		crowns: queensZhHK,
 		sudoku: sudokuZhHK,
+		tango: tangoZhHK,
+		duo: tangoZhHK,
+		wordBox: wordBoxZhHK,
 		wordGroups: wordGroupsZhHK,
 		wordGuess: wordGuessZhHK,
+		wordHive: wordHiveZhHK,
+		wordLadder: wordLadderZhHK,
+		wordSearch: wordSearchZhHK,
 	},
 	'zh-TW': {
 		crossword: crosswordZhTW,

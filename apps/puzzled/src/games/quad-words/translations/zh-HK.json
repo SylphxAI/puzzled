@@ -1,0 +1,18 @@
+{
+	"tagline": "4 個詞 • 9 次機會",
+	"highlight": "一次猜測 • 四個詞",
+	"description": "同時猜出 4 個隱藏詞語",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "在 9 次機會內猜出全部 4 個詞",
+		"rule2": "每次猜測同時套用到 4 個棋盤",
+		"rule3": "綠色 = 正確，黃色 = 位置不對，灰色 = 詞中沒有"
+	},
+	"startGame": "開始遊戲",
+	"complete": "謎題完成！",
+	"messages": {
+		"notEnoughLetters": "字母數目不足",
+		"notInWordList": "不在詞庫中"
+	}
+}
