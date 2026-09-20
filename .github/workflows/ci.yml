@@ -573,6 +573,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4.2.2
 
+      # The runner does not keep Playwright's browser cache under
+      # $HOME/.cache/ms-playwright, so pin one path for this job: letting the
+      # install below and the CHROME_PATH lookup after it resolve their own
+      # defaults is how they end up disagreeing.
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.0"
@@ -612,8 +619,14 @@ jobs:
       - name: Point CHROME_PATH at that Chromium
         run: |
           set -euo pipefail
-          bin="$(find "$HOME/.cache/ms-playwright"/chromium-* -maxdepth 2 -type f -name chrome -executable | sort | tail -1)"
-          test -n "$bin"
+          # The full Chromium build, not the headless shell: lhci launches
+          # Chrome with its own flags and needs a real browser binary.
+          bin="$(find "$PLAYWRIGHT_BROWSERS_PATH"/chromium-* -maxdepth 2 -type f -name chrome -executable | sort | tail -1)"
+          if [ -z "$bin" ]; then
+            echo "no Chromium under $PLAYWRIGHT_BROWSERS_PATH; install step did not land"
+            ls -la "$PLAYWRIGHT_BROWSERS_PATH" || true
+            exit 1
+          fi
           "$bin" --version
           echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
 
