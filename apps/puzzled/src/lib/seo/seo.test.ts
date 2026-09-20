@@ -68,6 +68,14 @@ describe('route truth table', () => {
 		}
 	})
 
+	test('composes the private list from the blocked and noindex lists', () => {
+		// One composition instead of a re-typed copy: the union is de-duplicated
+		// because `/admin` is crawl-blocked and noindexed at once, and the order
+		// is insertion order — the same array the literal held.
+		const expected = [...new Set([...CRAWL_BLOCKED_ROUTE_PREFIXES, ...NOINDEX_ROUTE_PREFIXES])]
+		expect([...PRIVATE_ROUTE_PREFIXES]).toEqual(expected)
+	})
+
 	test('crawl blocks are limited to surfaces that must not be crawled', () => {
 		expect([...CRAWL_BLOCKED_ROUTE_PREFIXES]).toEqual(['/api', '/admin'])
 		// User-facing destinations stay crawlable; `noindex` controls the index.
