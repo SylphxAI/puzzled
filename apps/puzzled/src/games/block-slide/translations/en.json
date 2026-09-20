@@ -15,5 +15,15 @@
 	"minMoves": "Min",
 	"reset": "Reset",
 	"giveUp": "Give Up",
-	"hint": "Tap a block then use arrows to move, or drag directly"
+	"hint": "Tap a block then use arrows to move, or drag directly",
+	"difficulty": {
+		"easy": "Easy",
+		"medium": "Medium",
+		"hard": "Hard"
+	},
+	"difficultyDescriptions": {
+		"easy": "Few moves — a quick warm-up",
+		"medium": "More pieces and a longer route",
+		"hard": "Many moves, and several ways to get stuck"
+	}
 }

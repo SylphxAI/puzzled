@@ -1,6 +1,7 @@
 import {
 	ArrowRight,
 	BarChart3,
+	Check,
 	Flame,
 	Play,
 	Share2,
@@ -11,6 +12,33 @@ import {
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
+
+/**
+ * The three trust bullets, moved out of the fold.
+ *
+ * They used to sit under the hero CTAs, where they read as sales reassurance
+ * beside the pitch. They are true and worth saying; they are not the day, so
+ * they sit with the evergreen explainer instead.
+ */
+export async function TrustBand() {
+	const t = await getTranslations('home')
+	const bullets = [t('hero.trustFree'), t('hero.trustAccount'), t('hero.trustReset')]
+
+	return (
+		<section className="pb-6">
+			<div className="page-shell-wide">
+				<ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+					{bullets.map((bullet) => (
+						<li key={bullet} className="inline-flex items-center gap-1.5">
+							<Check className="h-4 w-4 text-emerald-500" aria-hidden="true" />
+							{bullet}
+						</li>
+					))}
+				</ul>
+			</div>
+		</section>
+	)
+}
 
 /** Value props for first-time visitors — replaces an empty state, not a wall. */
 export async function ValueStrip() {

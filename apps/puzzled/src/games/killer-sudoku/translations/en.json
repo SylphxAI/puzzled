@@ -13,5 +13,15 @@
 	"startGame": "Start Game",
 	"complete": "Puzzle Complete!",
 	"notes": "Notes",
-	"notesMode": "Notes Mode"
+	"notesMode": "Notes Mode",
+	"difficulty": {
+		"easy": "Easy",
+		"medium": "Medium",
+		"hard": "Hard"
+	},
+	"difficultyDescriptions": {
+		"easy": "20 given digits to get you started",
+		"medium": "10 given digits — the cage sums do the work",
+		"hard": "No given digits, cage sums only"
+	}
 }

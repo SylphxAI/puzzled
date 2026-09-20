@@ -10,24 +10,13 @@
 	},
 	"hero": {
 		"guestTitle": "每天一題，免費開玩",
-		"memberReadyTitle": "今天的謎題已經準備好",
-		"memberStreakTitle": "你的 {days} 天連續紀錄在等你",
-		"memberDoneTitle": "今天全部完成，漂亮！",
-		"guestSubtitle": "今天的免費謎題是 {game}，今天已有 {count} 位玩家完成。不需註冊、不用下載，幾分鐘就能玩完。",
-		"memberSubtitle": "接續你的節奏：連續紀錄、統計數據和今天的陣容都在這裡。",
-		"playCta": "玩 {game}",
-		"browseCta": "看全部遊戲",
-		"freeChip": "今天免費",
 		"streakChip": "連續 {days} 天",
-		"featuredLabel": "今天的免費謎題",
 		"trustFree": "每天都有免費謎題",
 		"trustAccount": "不需註冊",
 		"trustReset": "香港時間午夜更新",
 		"playersToday": "今天已有 {count} 位玩家完成",
-		"playersTodayNone": "成為今天第一位完成的玩家",
 		"progressRingLabel": "今天已完成 {done} / {total} 題",
 		"progressUnverified": "暫時讀不到你的進度。你仍然可以玩，送出時我們會核對你的完成紀錄。",
-		"guestSubtitleNew": "今天的免費謎題是 {game}。不需註冊、不用下載，幾分鐘就能玩完。",
 		"ogEyebrow": "每日免費謎題",
 		"ogBadge": "每天一題免費"
 	},
@@ -104,5 +93,23 @@
 		"play": "玩 {game}",
 		"explore": "探索目錄"
 	},
-	"todaysPuzzles": "今日謎題"
+	"todaysPuzzles": "今日謎題",
+	"day": {
+		"puzzleNumber": "第 {number} 題",
+		"resetsIn": "距離重置",
+		"resetsAt": "香港時間午夜",
+		"title": "今天的{game}",
+		"titleMemberReady": "今天的{game}已準備好",
+		"titleMemberStreak": "你的 {days} 天連續紀錄等著你",
+		"titleMemberDone": "今天已完成 — 玩得漂亮",
+		"bodyGuest": "幾分鐘的真正解謎，不必註冊、不必下載。",
+		"bodyMember": "你的連續紀錄、統計與今日陣容，一按即到。",
+		"playToday": "玩今天的{game}",
+		"playAgain": "再玩一次",
+		"browseAll": "瀏覽所有遊戲",
+		"finishersToday": "今天已有 {count} 人完成",
+		"previewLabel": "今天的盤面",
+		"previewNote": "今天的{game}，以空白呈現。不劇透 — 只看得到盤面形狀，看不到答案。",
+		"freeToday": "今天免費"
+	}
 }
