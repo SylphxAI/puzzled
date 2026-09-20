@@ -638,11 +638,13 @@ jobs:
           NODE_ENV: production
           NEXT_PUBLIC_APP_URL: https://puzzled.gg
 
-      # apps/puzzled/lighthouserc.json is used unchanged: desktop preset over
-      # /, /pricing, /login and /signup at the repo's own assertions
-      # (performance/accessibility/best-practices >= 0.9 and CLS <= 0.1 at
-      # error, LCP/FCP/TBT/speed-index at warn). lhci starts `bun run start`
-      # itself on port 3000.
+      # apps/puzzled/lighthouserc.json is used unchanged: the mobile profile
+      # (Lighthouse defaults, no throttling override) over / and the module
+      # pages /games/word-search, /games/nonogram and /games/arithmo — slugs
+      # outside the free rotation, so the anonymous render branch is the same
+      # every day — at the S5 budgets: performance >= 0.9, LCP <= 2500 ms,
+      # CLS <= 0.1, TBT <= 300 ms, FCP <= 2000 ms and speed index <= 3000 ms,
+      # all at error. lhci starts `bun run start` itself on port 3000.
       - name: Lighthouse budget (bun run lighthouse)
         working-directory: apps/puzzled
         env:
