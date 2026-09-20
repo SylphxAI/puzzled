@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import { type PuzzledNotificationPreferences, usePuzzledPush } from '../hooks/use-puzzled-push'
 
@@ -13,9 +14,23 @@ interface NotificationPreferencesProps {
 }
 
 /**
+ * Ids the panel's push switch takes its accessible name and description from.
+ *
+ * The switch has no text of its own, so it is named by the heading and
+ * description it controls rather than by a decorative child. The panel renders
+ * once per settings page, so the ids are fixed rather than generated.
+ */
+const PUSH_HEADING_ID = 'push-notifications-heading'
+const PUSH_DESCRIPTION_ID = 'push-notifications-description'
+
+/**
  * Notification preferences UI
  *
  * Allows users to customize which notifications they receive.
+ *
+ * Every string comes from the 'settings' message catalogue
+ * (`settings.notifications.push.*`) so the surface is localized like the rest
+ * of the console.
  *
  * @example
  * ```tsx
@@ -27,6 +42,7 @@ export function NotificationPreferences({
 	variant = 'panel',
 	className,
 }: NotificationPreferencesProps) {
+	const t = useTranslations('settings')
 	const {
 		isSupported,
 		isEnabled,
@@ -74,9 +90,7 @@ export function NotificationPreferences({
 	if (!isSupported) {
 		return (
 			<div className={className}>
-				<p className="text-muted-foreground text-sm">
-					Push notifications are not supported in this browser.
-				</p>
+				<p className="text-muted-foreground text-sm">{t('notifications.push.unsupported')}</p>
 			</div>
 		)
 	}
@@ -114,11 +128,11 @@ export function NotificationPreferences({
 			<div className={className}>
 				<div className="flex items-center justify-between">
 					<div>
-						<p className="text-sm font-medium">Push Notifications</p>
+						<p className="text-sm font-medium">{t('notifications.push.heading')}</p>
 						<p className="text-xs text-muted-foreground">
 							{isEnabled
-								? 'Notifications are enabled'
-								: 'Enable notifications to get daily reminders'}
+								? t('notifications.push.inlineEnabled')
+								: t('notifications.push.inlineDisabled')}
 						</p>
 					</div>
 					<button
@@ -130,7 +144,7 @@ export function NotificationPreferences({
 								: 'bg-primary text-primary-foreground hover:bg-primary/90'
 						}`}
 					>
-						{isEnabled ? 'Disable' : 'Enable'}
+						{isEnabled ? t('notifications.push.disable') : t('notifications.push.enable')}
 					</button>
 				</div>
 			</div>
@@ -142,13 +156,19 @@ export function NotificationPreferences({
 			{/* Main toggle */}
 			<div className="flex items-center justify-between pb-4 border-b">
 				<div>
-					<h3 className="text-base font-semibold">Push Notifications</h3>
-					<p className="text-sm text-muted-foreground">
-						Get notified about puzzles, streaks, and more
+					<h3 id={PUSH_HEADING_ID} className="text-base font-semibold">
+						{t('notifications.push.heading')}
+					</h3>
+					<p id={PUSH_DESCRIPTION_ID} className="text-sm text-muted-foreground">
+						{t('notifications.push.description')}
 					</p>
 				</div>
 				<button
 					type="button"
+					role="switch"
+					aria-checked={isEnabled}
+					aria-labelledby={PUSH_HEADING_ID}
+					aria-describedby={PUSH_DESCRIPTION_ID}
 					onClick={isEnabled ? handleDisablePush : handleEnablePush}
 					className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
 						isEnabled ? 'bg-primary' : 'bg-muted'
@@ -171,31 +191,31 @@ export function NotificationPreferences({
 			{/* Preferences - only show if enabled */}
 			{isEnabled && (
 				<div className="mt-4 space-y-1">
-					<h4 className="text-sm font-medium mb-2">Notification Types</h4>
+					<h4 className="text-sm font-medium mb-2">{t('notifications.push.typesHeading')}</h4>
 
 					{isLoadingPreferences ? (
 						<div className="py-8 text-center text-muted-foreground text-sm">
-							Loading preferences...
+							{t('notifications.push.loading')}
 						</div>
 					) : (
 						<>
 							<PreferenceItem
-								label="Daily Puzzle Reminder"
-								description="Get reminded when the new daily puzzle is available"
+								label={t('notifications.push.dailyReminder')}
+								description={t('notifications.push.dailyReminderDescription')}
 								checked={localPrefs.pushDailyReminder}
 								onChange={() => handleToggle('pushDailyReminder')}
 							/>
 
 							<PreferenceItem
-								label="Streak Alerts"
-								description="Get a reminder before your streak is about to expire"
+								label={t('notifications.push.streakAlert')}
+								description={t('notifications.push.streakAlertDescription')}
 								checked={localPrefs.pushStreakAlert}
 								onChange={() => handleToggle('pushStreakAlert')}
 							/>
 
 							<PreferenceItem
-								label="New Games"
-								description="Get notified when new games are added"
+								label={t('notifications.push.newGames')}
+								description={t('notifications.push.newGamesDescription')}
 								checked={localPrefs.pushNewGames}
 								onChange={() => handleToggle('pushNewGames')}
 							/>
@@ -207,7 +227,7 @@ export function NotificationPreferences({
 									disabled={isSaving}
 									className="w-full px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90 disabled:opacity-50"
 								>
-									{isSaving ? 'Saving...' : 'Save Preferences'}
+									{isSaving ? t('notifications.push.saving') : t('notifications.push.save')}
 								</button>
 							</div>
 						</>
@@ -222,14 +242,14 @@ export function NotificationPreferences({
 						<BellIcon className="w-8 h-8 text-muted-foreground" />
 					</div>
 					<p className="text-sm text-muted-foreground mb-4">
-						Enable push notifications to customize your preferences
+						{t('notifications.push.enablePrompt')}
 					</p>
 					<button
 						type="button"
 						onClick={handleEnablePush}
 						className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-md hover:bg-primary/90"
 					>
-						Enable Notifications
+						{t('notifications.push.enableNotifications')}
 					</button>
 				</div>
 			)}
