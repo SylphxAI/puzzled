@@ -1,0 +1,28 @@
+{
+	"tagline": "華容道謎題 • 滑動取勝",
+	"highlight": "滑動謎題",
+	"description": "滑動方塊，為目標開路",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "以橫向或縱向滑動來移動方塊",
+		"rule2": "把紅色目標方塊移到最下方的出口",
+		"rule3": "嘗試用最少步數完成"
+	},
+	"startGame": "開始遊戲",
+	"moves": "步數",
+	"minMoves": "最少",
+	"reset": "重設",
+	"giveUp": "放棄",
+	"hint": "點選方塊後用方向鍵移動，或直接拖曳",
+	"difficulty": {
+		"easy": "簡單",
+		"medium": "中等",
+		"hard": "困難"
+	},
+	"difficultyDescriptions": {
+		"easy": "步數少 — 快速暖身",
+		"medium": "方塊更多，路線更長",
+		"hard": "步數多，而且有多種卡死的方式"
+	}
+}
