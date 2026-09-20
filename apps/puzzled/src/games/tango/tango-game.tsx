@@ -25,9 +25,10 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
-export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.tango')
 	const tCommon = useTranslations('common')
 
@@ -48,6 +49,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'duo',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -78,12 +80,13 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'duo',
+			puzzleDate,
 			gameName: 'Duo',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {

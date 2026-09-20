@@ -27,6 +27,7 @@ type Props = {
 	mode?: 'daily' | 'archive'
 	puzzleId?: string
 	puzzleData?: unknown
+	puzzleDate?: string
 }
 
 const REGION_COLORS = [
@@ -138,7 +139,7 @@ function pipAt(placed: PipPlaceTile[], cell: Cell): number | null {
 	return null
 }
 
-export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
+export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.pipPlace')
 	const tCommon = useTranslations('common')
 
@@ -158,6 +159,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		gameSlug: 'pip-place',
 		mode,
 		puzzleId,
+		puzzleDate,
 		enableStarBurst: false,
 	})
 
@@ -204,12 +206,13 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData }: Props) {
 		const text = formatRitualShareText({
 			origin: getBaseUrl('origin'),
 			gameSlug: 'pip-place',
+			puzzleDate,
 			gameName: 'Spots',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
 		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime])
+	}, [game.state.endTime, startTime, puzzleDate])
 
 	if (isReady) {
 		return (

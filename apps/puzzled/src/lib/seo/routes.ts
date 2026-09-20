@@ -63,6 +63,7 @@ export const CRAWL_BLOCKED_ROUTE_PREFIXES = ['/api', '/admin'] as const
  */
 export const NOINDEX_ROUTE_PREFIXES = [
 	'/admin',
+	'/archive',
 	'/settings',
 	'/profile',
 	'/stats',
@@ -80,6 +81,7 @@ export const NOINDEX_ROUTE_PREFIXES = [
 export const PRIVATE_ROUTE_PREFIXES = [
 	'/api',
 	'/admin',
+	'/archive',
 	'/settings',
 	'/profile',
 	'/stats',

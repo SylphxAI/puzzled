@@ -36,7 +36,10 @@ type GamePlayAreaProps = {
 	/** Today's free-rotation module, offered when the viewer cannot play. */
 	freeGameSlug: string
 	freeGameName: string
-	/** Archive day key from the query string, gated by the server read. */
+	/**
+	 * Archive day key resolved from the query string by the page. Connect admits
+	 * or refuses the read for this day; the client never widens it.
+	 */
 	dateParam?: string
 }
 
@@ -132,9 +135,13 @@ export async function GamePlayArea({
 		puzzleDate?: string
 	} | null = null
 	let streakInfo: StreakInfo | null = null
-	// Same archive admission the SSR read uses; the client fallback must not
-	// widen it (anonymous archive keeps reading today's board).
-	const archiveDate = mode === 'archive' && hasUser && dateParam ? dateParam : undefined
+	// The page resolved the day (a real calendar day strictly before the
+	// Asia/Hong_Kong product day; the mode flag alone never creates one) and the
+	// same day is forwarded to the client fallback, so SSR and browser reads ask
+	// for the same board. Admission stays Connect's: an archive read is refused
+	// with `premium_required` for a guest or a free account and lands on the
+	// honest unlock path: a signed-in account is not required to *ask*.
+	const archiveDate = mode === 'archive' && dateParam ? dateParam : undefined
 
 	try {
 		if (archiveDate) {
