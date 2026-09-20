@@ -13,7 +13,13 @@ import {
 import { Check, ChevronDown, Languages } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTransition } from 'react'
-import { type Locale, localeGroups, localeNames, localeShortNames } from '@/lib/i18n/config'
+import {
+	type Locale,
+	localeBadges,
+	localeGroups,
+	localeNames,
+	localeShortNames,
+} from '@/lib/i18n/config'
 import { usePathname, useRouter } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 
@@ -219,15 +225,6 @@ function LanguageDropdownContent({
 // Menu Item
 // ==========================================
 
-/** Compact badge letter for each locale (script-accurate, not flag-based). */
-const LOCALE_BADGES: Record<Locale, string> = {
-	'en-US': 'EN',
-	'en-GB': 'EN',
-	'zh-HK': '繁',
-	'zh-TW': '繁',
-	'zh-CN': '简',
-}
-
 interface LanguageMenuItemProps {
 	locale: Locale
 	isSelected: boolean
@@ -247,7 +244,7 @@ function LanguageMenuItem({ locale, isSelected, onSelect, disabled }: LanguageMe
 			disabled={disabled}
 		>
 			<span className="flex h-6 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold uppercase text-muted-foreground">
-				{LOCALE_BADGES[locale]}
+				{localeBadges[locale]}
 			</span>
 			<div className="flex flex-1 flex-col gap-0.5">
 				<span className={cn('text-sm', isSelected && 'font-medium')}>{localeNames[locale]}</span>

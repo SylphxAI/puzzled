@@ -40,3 +40,13 @@ Extra duplicate found (OUT of scope, report): src/lib/api/hooks.ts:854 GAME_NAME
 ## Next action
 Wait for BEFORE build; start server :3014; save verify:seo output + HTML captures under notes/td03-before/.
 
+
+## TD-03 (committed)
+Edit: apps/puzzled/src/lib/i18n/config.ts (LOCALE_REGISTRY: tag, ogLocale, english, native, short, badge, fallback, formats;
++ localeFacts() projection; derived localeNames/localeShortNames/localeBadges/localeFallbacks/localeFormats/localeGroups),
+apps/puzzled/src/lib/seo/metadata.ts (OG_LOCALES = localeFacts('ogLocale'); HREFLAG = localeFacts('tag')),
+apps/puzzled/src/shared/components/layout/language-switcher.tsx (LOCALE_BADGES map deleted; reads localeBadges).
+Kept: four dead private helpers untouched (register row #13 owns dead-code removal).
+BEFORE evidence: notes/td03-verify-seo-before.txt = "20 results: 18 pass, 0 fail"; 18 URLs captured in notes/td03-before/.
+Local checks on the TD-03 tree: typecheck exit 0; bun test src/lib/i18n src/lib/seo -> 37 pass, 0 fail; biome clean.
+
