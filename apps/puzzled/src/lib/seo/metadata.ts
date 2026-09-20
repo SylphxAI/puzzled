@@ -111,7 +111,7 @@ export async function buildPageMetadata({
 		title,
 		description,
 		...(noindex ? { robots: { index: false, follow: false } } : {}),
-		alternates: withAlternates ? { canonical, languages } : { canonical },
+		alternates: withAlternates ? { languages } : {},
 		openGraph: {
 			type,
 			siteName: 'Puzzled',
