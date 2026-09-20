@@ -818,7 +818,28 @@
 			"mute": "Mute All"
 		},
 		"channelTitle": "Push and email",
-		"channelDescription": "Turn reminders on or off, and choose which ones you want."
+		"channelDescription": "Turn reminders on or off, and choose which ones you want.",
+		"push": {
+			"unsupported": "Push notifications are not supported in this browser.",
+			"heading": "Push Notifications",
+			"inlineEnabled": "Notifications are enabled",
+			"inlineDisabled": "Enable notifications to get daily reminders",
+			"enable": "Enable",
+			"disable": "Disable",
+			"description": "Get notified about puzzles, streaks, and more",
+			"typesHeading": "Notification Types",
+			"loading": "Loading preferences...",
+			"dailyReminder": "Daily Puzzle Reminder",
+			"dailyReminderDescription": "Get reminded when the new daily puzzle is available",
+			"streakAlert": "Streak Alerts",
+			"streakAlertDescription": "Get a reminder before your streak is about to expire",
+			"newGames": "New Games",
+			"newGamesDescription": "Get notified when new games are added",
+			"saving": "Saving...",
+			"save": "Save Preferences",
+			"enablePrompt": "Enable push notifications to customize your preferences",
+			"enableNotifications": "Enable Notifications"
+		}
 	},
 	"pushNotifications": "Push Notifications",
 	"pushNotificationsDescription": "Manage your push notification preferences",

@@ -3,11 +3,20 @@
 import { Button, GamepadIcon } from '@sylphx/ui'
 import { CheckCircle, Loader2, Mail, XCircle } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Suspense, useEffect, useState } from 'react'
 import { Link } from '@/lib/i18n/routing'
 
 type UnsubscribeState = 'loading' | 'success' | 'error' | 'idle'
 
+/**
+ * Transactional unsubscribe surface.
+ *
+ * Reached from a link in a marketing email, so it has to speak the language of
+ * the email that sent the reader here: every string comes from the 'auth'
+ * message catalogue (the surface the S2 audit groups it under), including the
+ * failure copy the page states for itself.
+ */
 export default function UnsubscribePage() {
 	return (
 		<Suspense
@@ -23,6 +32,7 @@ export default function UnsubscribePage() {
 }
 
 function UnsubscribeContent() {
+	const t = useTranslations('auth')
 	const searchParams = useSearchParams()
 	const success = searchParams.get('success')
 	const error = searchParams.get('error')
@@ -42,17 +52,21 @@ function UnsubscribeContent() {
 					body: JSON.stringify({ token: unsubToken }),
 				})
 
-				const data = await response.json()
-
 				if (response.ok) {
 					setState('success')
 				} else {
+					// The route answers with an English message for API callers; the
+					// page states the outcome itself so the copy stays localized.
 					setState('error')
-					setErrorMessage(data.error || 'Failed to unsubscribe')
+					setErrorMessage(
+						response.status === 400
+							? t('unsubscribe.error.invalidToken')
+							: t('unsubscribe.error.failed'),
+					)
 				}
 			} catch {
 				setState('error')
-				setErrorMessage('Network error. Please try again.')
+				setErrorMessage(t('unsubscribe.error.network'))
 			}
 		}
 
@@ -62,22 +76,22 @@ function UnsubscribeContent() {
 			setState('error')
 			switch (error) {
 				case 'missing_token':
-					setErrorMessage('No unsubscribe token provided.')
+					setErrorMessage(t('unsubscribe.error.missingToken'))
 					break
 				case 'invalid_token':
-					setErrorMessage('Invalid or expired unsubscribe link.')
+					setErrorMessage(t('unsubscribe.error.invalidToken'))
 					break
 				case 'not_found':
-					setErrorMessage('User not found.')
+					setErrorMessage(t('unsubscribe.error.notFound'))
 					break
 				default:
-					setErrorMessage('Failed to unsubscribe. Please try again.')
+					setErrorMessage(t('unsubscribe.error.failed'))
 			}
 		} else if (token) {
 			// Handle POST-based unsubscribe
 			handleUnsubscribe(token)
 		}
-	}, [success, error, token])
+	}, [success, error, token, t])
 
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center px-4">
@@ -94,7 +108,7 @@ function UnsubscribeContent() {
 				{state === 'loading' && (
 					<div className="space-y-4">
 						<Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-						<p className="text-muted-foreground">Processing your request...</p>
+						<p className="text-muted-foreground">{t('unsubscribe.processing')}</p>
 					</div>
 				)}
 
@@ -103,14 +117,11 @@ function UnsubscribeContent() {
 					<div className="space-y-4">
 						<CheckCircle className="mx-auto h-12 w-12 text-correct" />
 						<div>
-							<h2 className="text-xl font-semibold">Unsubscribed Successfully</h2>
-							<p className="text-muted-foreground">
-								You've been unsubscribed from marketing emails. You'll still receive important
-								account notifications.
-							</p>
+							<h2 className="text-xl font-semibold">{t('unsubscribe.successTitle')}</h2>
+							<p className="text-muted-foreground">{t('unsubscribe.successDescription')}</p>
 						</div>
 						<Link href="/">
-							<Button className="w-full">Return to Puzzled</Button>
+							<Button className="w-full">{t('unsubscribe.returnHome')}</Button>
 						</Link>
 					</div>
 				)}
@@ -120,16 +131,16 @@ function UnsubscribeContent() {
 					<div className="space-y-4">
 						<XCircle className="mx-auto h-12 w-12 text-wrong" />
 						<div>
-							<h2 className="text-xl font-semibold">Unsubscribe Failed</h2>
+							<h2 className="text-xl font-semibold">{t('unsubscribe.failedTitle')}</h2>
 							<p className="text-muted-foreground">{errorMessage}</p>
 						</div>
 						<div className="space-y-2">
 							<Link href="/settings">
-								<Button className="w-full">Manage Email Preferences</Button>
+								<Button className="w-full">{t('unsubscribe.managePreferences')}</Button>
 							</Link>
 							<Link href="/">
 								<Button variant="outline" className="w-full">
-									Return to Puzzled
+									{t('unsubscribe.returnHome')}
 								</Button>
 							</Link>
 						</div>
@@ -141,19 +152,16 @@ function UnsubscribeContent() {
 					<div className="space-y-4">
 						<Mail className="mx-auto h-12 w-12 text-primary" />
 						<div>
-							<h2 className="text-xl font-semibold">Email Preferences</h2>
-							<p className="text-muted-foreground">
-								To manage your email preferences, please use the unsubscribe link in any of our
-								emails or visit your account settings.
-							</p>
+							<h2 className="text-xl font-semibold">{t('unsubscribe.idleTitle')}</h2>
+							<p className="text-muted-foreground">{t('unsubscribe.idleDescription')}</p>
 						</div>
 						<div className="space-y-2">
 							<Link href="/settings">
-								<Button className="w-full">Go to Settings</Button>
+								<Button className="w-full">{t('unsubscribe.goToSettings')}</Button>
 							</Link>
 							<Link href="/">
 								<Button variant="outline" className="w-full">
-									Return to Puzzled
+									{t('unsubscribe.returnHome')}
 								</Button>
 							</Link>
 						</div>
