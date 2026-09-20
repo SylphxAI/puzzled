@@ -1,17 +1,16 @@
-import { ToastProvider } from '@sylphx/ui'
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
-import { WebVitalsReporter } from '@/features/analytics'
-import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
+import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { ApiProvider } from '@/lib/api/provider'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
+import { DeferredMonitoring, DeferredToaster } from '@/shared/components/deferred-shell'
 import { PlatformProvider } from '@/shared/components/platform'
 import { ThemeProvider } from '@/shared/components/theme'
 import '../globals.css'
@@ -207,7 +206,10 @@ export default async function LocaleLayout({ children, params }: Props) {
 								try {
 									var theme = localStorage.getItem('theme');
 									var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-									if (theme === 'dark' || (!theme && systemDark)) {
+									// Stored value is next-themes' key: 'light' | 'dark' | 'system'.
+									// 'system' (the default) must follow the OS preference; treating it
+									// as unset is what closes the first-paint theme flash for it.
+									if (theme === 'dark' || ((!theme || theme === 'system') && systemDark)) {
 										document.documentElement.classList.add('dark');
 									} else if (theme === 'light') {
 										document.documentElement.classList.add('light');
@@ -228,16 +230,18 @@ export default async function LocaleLayout({ children, params }: Props) {
 			<body className="antialiased">
 				<ThemeProvider>
 					<PlatformProvider appId={config.app.id} config={config}>
-						<GlobalErrorHandler>
-							<SessionReplayProvider>
-								<WebVitalsReporter />
-								<ApiProvider>
-									<NextIntlClientProvider messages={messages}>
-										<ToastProvider>{children}</ToastProvider>
-									</NextIntlClientProvider>
-								</ApiProvider>
-							</SessionReplayProvider>
-						</GlobalErrorHandler>
+						<ApiProvider>
+							<NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+						</ApiProvider>
+						{/*
+						 * Attached at first paint, not on idle: Event Timing only reports the
+						 * interactions it observed, and INP would be biased by a late mount.
+						 * Delivery is still batched and only leaves on page hide.
+						 */}
+						<WebVitalsReporter />
+						{/* Off the first paint: hosted toasts and the observability client */}
+						<DeferredToaster />
+						<DeferredMonitoring />
 					</PlatformProvider>
 				</ThemeProvider>
 			</body>
