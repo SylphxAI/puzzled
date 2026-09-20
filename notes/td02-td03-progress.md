@@ -50,3 +50,24 @@ Kept: four dead private helpers untouched (register row #13 owns dead-code remov
 BEFORE evidence: notes/td03-verify-seo-before.txt = "20 results: 18 pass, 0 fail"; 18 URLs captured in notes/td03-before/.
 Local checks on the TD-03 tree: typecheck exit 0; bun test src/lib/i18n src/lib/seo -> 37 pass, 0 fail; biome clean.
 
+
+## TD-03 byte-identical proof (measured, base 7523ba9 -> 3c0f4b5)
+Method: production build (SKIP_ENV_VALIDATION=true NODE_ENV=production NEXT_PUBLIC_APP_URL=https://puzzled.gg),
+served with `bun run start -p 3014`, both revisions; 18 URLs captured (see capture-surface.sh) plus
+`bun run verify:seo --base http://localhost:3014`.
+- verify:seo BEFORE: "20 results: 18 pass, 0 fail" (notes/td03-verify-seo-before.txt)
+- verify:seo AFTER : "20 results: 18 pass, 0 fail" (notes/td03-verify-seo-after.txt)
+- `diff td03-verify-seo-before.txt td03-verify-seo-after.txt` -> no output (identical)
+- raw HTML: 16/18 files differ, 2 identical (robots.txt, sitemap.xml) - the delta is confined to
+  build-volatile tokens: /_next/static/<hash> asset paths, the RSC client-reference build id (`\"b\":\"...\"`)
+  and the page's live `fetchedAt` read timestamp.
+- CONTROL (same build captured twice, 30s apart): the SAME 16 files differ, proving that volatility is
+  per-run, not caused by the change.
+- After normalising exactly those three token classes: BASE vs TD-03 = 18/18 identical; control = 18/18 identical.
+- Visible text (script/style stripped, tags stripped, whitespace collapsed): 0 differing files.
+Scripts: notes/td03-final-proof2.py (normalisation + both comparisons), notes/capture-surface.sh.
+
+## Next action
+TD-02: set config.name to the translations name for the 13 drifting modules; update registry.test.ts:71/108;
+add src/games/module-name-ssot.test.ts guard; mutation-proof it; rebuild + re-capture.
+
