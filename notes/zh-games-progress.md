@@ -1,0 +1,1 @@
+2026-09-20T23:33:38Z S0: worktree zh-games on branch i18n/zh-games created from origin/main 7523ba9; 14 modules x 3 locales to add; existing zh overlays: crossword, queens, sudoku, word-groups, word-guess
