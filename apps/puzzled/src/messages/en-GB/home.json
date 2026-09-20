@@ -10,24 +10,13 @@
 	},
 	"hero": {
 		"guestTitle": "A free puzzle, every single day",
-		"memberReadyTitle": "Today's puzzle is ready",
-		"memberStreakTitle": "Your {days}-day streak is waiting",
-		"memberDoneTitle": "All done for today — nicely played",
-		"guestSubtitle": "Today's free ritual is {game}, and {count} players have already finished a puzzle today. No signup, no download — just a few minutes of real puzzling.",
-		"memberSubtitle": "Pick up where you left off: your streak, your stats and today's lineup are all here.",
-		"playCta": "Play {game}",
-		"browseCta": "Browse all games",
-		"freeChip": "Free today",
 		"streakChip": "{days}-day streak",
-		"featuredLabel": "Today's free puzzle",
 		"trustFree": "Free puzzle every day",
 		"trustAccount": "No account needed",
 		"trustReset": "New puzzles at midnight (HKT)",
 		"playersToday": "{count} players finished today",
-		"playersTodayNone": "Be the first to finish today",
 		"progressRingLabel": "{done} of {total} puzzles finished today",
 		"progressUnverified": "We could not load your saved progress just now. You can still play — we check your finish when you submit.",
-		"guestSubtitleNew": "Today's free ritual is {game}. No signup, no download — just a few minutes of real puzzling.",
 		"ogEyebrow": "Free daily puzzle",
 		"ogBadge": "Free puzzle every day"
 	},
@@ -104,5 +93,23 @@
 		"play": "Play {game}",
 		"explore": "Explore the catalog"
 	},
-	"todaysPuzzles": "Today's Puzzles"
+	"todaysPuzzles": "Today's Puzzles",
+	"day": {
+		"puzzleNumber": "Puzzle #{number}",
+		"resetsIn": "Resets in",
+		"resetsAt": "midnight in Hong Kong",
+		"title": "Today's {game}",
+		"titleMemberReady": "Today's {game} is ready",
+		"titleMemberStreak": "Your {days}-day streak is waiting",
+		"titleMemberDone": "All done for today — nicely played",
+		"bodyGuest": "A few minutes of real puzzling. No signup, no download, nothing to install.",
+		"bodyMember": "Your streak, your stats and today's lineup are one tap away.",
+		"playToday": "Play today's {game}",
+		"playAgain": "Play today again",
+		"browseAll": "Browse all games",
+		"finishersToday": "{count} finished today so far",
+		"previewLabel": "Today's board",
+		"previewNote": "Today's {game}, shown empty. No spoilers — the board reveals the shape, never the answer.",
+		"freeToday": "Free today"
+	}
 }

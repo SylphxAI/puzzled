@@ -3,17 +3,19 @@ import { cache, Suspense } from 'react'
 import { summarizeDailyProgress } from '@/features/daily/lib/daily-progress'
 import { deriveHomeExposure, HOME_EXPOSURE_LIMIT } from '@/features/daily/lib/home-exposure'
 import { deriveHomePlayState, scopeHomePlayState } from '@/features/daily/lib/home-play-state'
+import { getPuzzleNumber } from '@/features/daily/lib/puzzle-utils'
 import {
-	HomeHero,
-	HomeHeroFallback,
-	type HomeHeroGame,
-	HomeHeroSkeleton,
-} from '@/features/home/components/home-hero'
+	HomeDay,
+	HomeDayFallback,
+	type HomeDayGame,
+	HomeDaySkeleton,
+} from '@/features/home/components/home-day'
 import {
 	FinalCta,
 	HowItWorks,
 	MemberStatsBand,
 	TomorrowBand,
+	TrustBand,
 	ValueStrip,
 } from '@/features/home/components/home-sections'
 import {
@@ -207,15 +209,17 @@ function buildLineup(input: {
 	})
 }
 
-/** Streamed hero: personal headline, streak chip, progress ring, social proof. */
-async function HomeHeroIsland({
+/** Streamed day: the personal state, the streak and the social read. */
+async function HomeDayIsland({
 	locale,
 	dateLabel,
+	puzzleNumber,
 	freeGame,
 }: {
 	locale: string
 	dateLabel: string
-	freeGame: HomeHeroGame
+	puzzleNumber: number
+	freeGame: HomeDayGame
 }) {
 	const facts = await readHomeFacts()
 	const view = deriveHomeView({
@@ -226,9 +230,10 @@ async function HomeHeroIsland({
 	})
 
 	return (
-		<HomeHero
+		<HomeDay
 			locale={locale}
 			dateLabel={dateLabel}
+			puzzleNumber={puzzleNumber}
 			freeGame={freeGame}
 			isMember={Boolean(facts.user)}
 			currentStreak={facts.streakInfo?.currentStreak ?? 0}
@@ -304,22 +309,16 @@ export default async function HomePage({ params }: Props) {
 	const freeGameName = freeGameMeta
 		? t(`games.${slugToCamelCase(todaysFreeGame)}.name`)
 		: todaysFreeGame
-	const freeGame: HomeHeroGame = {
+	// The fold shows the day, not the catalogue: the tagline, the duration and
+	// the difficulty chips were metadata rows on a sales card and are gone.
+	const freeGame: HomeDayGame = {
 		slug: todaysFreeGame,
 		name: freeGameName,
-		tagline: freeGameMeta
-			? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`)
-			: tHome('lineup.premium'),
-		duration: freeGameMeta?.display.duration ?? '',
-		highlight: freeGameMeta ? t(freeGameMeta.display.highlightKey) : '',
 		theme: freeGameMeta?.display.theme ?? 'violet',
-		difficultyLabels:
-			freeGameMeta?.supportsDifficulty && freeGameMeta.difficultyLevels
-				? freeGameMeta.difficultyLevels.map((level) =>
-						t(`games.${slugToCamelCase(todaysFreeGame)}.difficulty.${level.level}`),
-					)
-				: [],
 	}
+	// The day has an identity: this is the puzzle number `getPuzzleNumber`
+	// already computes for the module and the product day.
+	const puzzleNumber = getPuzzleNumber(todaysFreeGame)
 
 	// Rotation-only fallback: no completions are known yet, so nothing here can
 	// claim a finish or a score. It is exactly what a first-time visitor sees.
@@ -345,22 +344,24 @@ export default async function HomePage({ params }: Props) {
 				fallback={
 					hasProgressIdentity ? (
 						// Personal numbers are owed but unread: claim nothing, keep the
-						// geometry (`HomeHeroSkeleton`).
-						<HomeHeroSkeleton />
+						// geometry (`HomeDaySkeleton`).
+						<HomeDaySkeleton />
 					) : (
-						// A first-time visitor sees the real guest hero immediately — the
-						// same thing the island below renders for them, so nothing swaps.
-						<HomeHeroFallback
+						// A first-time visitor sees the real visitor day immediately —
+						// the same thing the island below renders, so nothing swaps.
+						<HomeDayFallback
 							locale={locale}
 							dateLabel={formatProductDay(new Date(), locale)}
+							puzzleNumber={puzzleNumber}
 							freeGame={freeGame}
 						/>
 					)
 				}
 			>
-				<HomeHeroIsland
+				<HomeDayIsland
 					locale={locale}
 					dateLabel={formatProductDay(new Date(), locale)}
+					puzzleNumber={puzzleNumber}
 					freeGame={freeGame}
 				/>
 			</Suspense>
@@ -383,6 +384,8 @@ export default async function HomePage({ params }: Props) {
 				<TomorrowBand gameName={tomorrowsFreeGameName} />
 			</div>
 
+			{/* The three trust bullets left the fold: they sit with the explainer. */}
+			<TrustBand />
 			<HowItWorks />
 			<MarketingFaq
 				id="home-faq"
