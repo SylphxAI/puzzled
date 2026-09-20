@@ -383,6 +383,11 @@ export default async function HomePage({ params }: Props) {
 				<TomorrowBand gameName={tomorrowsFreeGameName} />
 			</div>
 
+			{/* MUTATION (throwaway): a control with no accessible name */}
+			<button type="button" className="rounded-full border border-border p-3">
+				<span aria-hidden="true">🔍</span>
+			</button>
+
 			<HowItWorks />
 			<MarketingFaq
 				id="home-faq"
