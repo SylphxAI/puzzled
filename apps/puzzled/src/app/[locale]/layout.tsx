@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google'
+import { Inter, JetBrains_Mono, Plus_Jakarta_Sans, Space_Grotesk } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -30,6 +30,24 @@ const plusJakarta = Plus_Jakarta_Sans({
 	subsets: ['latin'],
 	display: 'swap',
 	weight: ['600', '700', '800'],
+})
+
+/**
+ * Display face for the day surface only (`.day-surface`).
+ *
+ * The trio below is the default SaaS stack — Inter for body, Plus Jakarta for
+ * headings, JetBrains Mono for code — with no dedicated numeral voice, in a
+ * product where the streak, the timer and the puzzle number are the drama. This
+ * face is scoped to the day surface so the direction can be judged before it
+ * spreads; `preload: false` keeps it off the critical path (the hero text still
+ * paints in the first frame with the fallback face, because the type is not
+ * opacity-animated).
+ */
+const spaceGrotesk = Space_Grotesk({
+	variable: '--font-day-display-family',
+	subsets: ['latin'],
+	display: 'swap',
+	preload: false,
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -182,7 +200,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 		<html
 			lang={locale}
 			suppressHydrationWarning
-			className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable}`}
+			className={`${inter.variable} ${plusJakarta.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
 		>
 			<head>
 				{/* Color scheme for proper dark mode handling */}

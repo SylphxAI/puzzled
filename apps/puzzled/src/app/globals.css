@@ -472,6 +472,88 @@ body {
 }
 
 /* =============================================
+   The day surface (S3) — brand tokens, scoped
+=============================================
+
+   This slice exists so the direction can be judged before it spreads: every
+   token below is consumed inside `.day-surface` (the home page's first screen)
+   and nowhere else, so the rest of the shell keeps the palette it has.
+
+   Why a token layer is needed at all: the public shell wears Tailwind's default
+   SaaS palette — `--color-primary` is `#4f46e5` (indigo-600) and every shadow is
+   tinted `rgb(99 102 241)` (indigo-500) — while the modules already own eleven
+   distinct themes in `games/theme-colors.ts`. The day's ritual elements (the
+   date, the puzzle number, the streak and the countdown) move onto the warm
+   accent this product already declares for delight moments, and the board gets a
+   tile radius-and-shadow register of its own instead of the card's.
+
+   Text that carries the accent uses `--color-accent-warm-foreground`: white on
+   `#f97316` is 3.0:1 and the accent itself is 3.0:1 on white, so the hue is used
+   as fill and glow, and its ink form carries the words.
+*/
+.day-surface {
+	--day-display-family:
+		var(--font-day-display-family), var(--font-display-family), var(--font-sans-family),
+		ui-sans-serif, system-ui, sans-serif;
+	--day-accent: var(--color-accent-warm);
+	--day-accent-soft: var(--color-accent-warm-soft);
+	--day-accent-foreground: var(--color-accent-warm-foreground);
+	/* Tile scale: half the card radius, warm-tinted shadow. */
+	--day-tile-radius: 0.5rem;
+	--day-tile-shadow: 0 1px 2px 0 rgb(249 115 22 / 0.1);
+	--day-tile-shadow-hover: 0 4px 10px -2px rgb(249 115 22 / 0.22);
+}
+
+/* The day's display voice, and the numerals that are the drama. */
+.day-surface .day-display {
+	font-family: var(--day-display-family);
+	letter-spacing: -0.02em;
+}
+
+.day-surface .day-numeral {
+	font-family: var(--day-display-family);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Ritual chip: the warm accent, not the indigo primary. */
+.day-surface .day-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	border-radius: 9999px;
+	border: 1px solid rgb(249 115 22 / 0.25);
+	background-color: var(--day-accent-soft);
+	padding: 0.25rem 0.75rem;
+	font-weight: 500;
+	color: var(--day-accent-foreground);
+}
+
+/* The same chip, read as a label rather than a badge. */
+.day-surface .day-label {
+	border: 0;
+	background-color: transparent;
+	padding: 0;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+/* One tile of the module's board: the tile scale, not the card scale. */
+.day-surface .day-tile {
+	border-radius: var(--day-tile-radius);
+	background-color: var(--color-surface-muted);
+	box-shadow: var(--day-tile-shadow);
+	transition: box-shadow 0.15s ease;
+}
+
+@media (hover: hover) {
+	.day-surface .day-tile:hover {
+		box-shadow: var(--day-tile-shadow-hover);
+	}
+}
+
+/* =============================================
    Brand surfaces
 ============================================= */
 
