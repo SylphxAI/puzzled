@@ -129,7 +129,7 @@ export function AlreadyCompletedView({
 					)}
 				>
 					{isWin ? (
-						<Trophy className="h-12 w-12 text-emerald-500" />
+						<Trophy className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
 					) : (
 						<X className="h-12 w-12 text-muted-foreground" />
 					)}
@@ -139,7 +139,7 @@ export function AlreadyCompletedView({
 				{celebrationMessage && (
 					<p
 						className={cn(
-							'mb-1 text-2xl font-bold text-emerald-500',
+							'mb-1 text-2xl font-bold text-emerald-700 dark:text-emerald-400',
 							animate && 'animate-count-up opacity-0 stagger-1',
 						)}
 					>
@@ -186,7 +186,7 @@ export function AlreadyCompletedView({
 								<span
 									className={cn(
 										'text-xs font-medium',
-										isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground',
+										isWin ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground',
 									)}
 								>
 									{tResult('status')}
@@ -195,7 +195,7 @@ export function AlreadyCompletedView({
 							<span
 								className={cn(
 									'text-xl font-bold',
-									isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground',
+									isWin ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground',
 								)}
 							>
 								{isWin ? tResult('won') : tResult('lost')}

@@ -60,7 +60,11 @@ export function MinimalHeader({
 	const t = useTranslations('common')
 
 	return (
-		<header
+		/*
+		 * Game chrome, not a document banner: the shell already provides the one
+		 * `banner` landmark, so this stays a plain block to avoid a second one.
+		 */
+		<div
 			className={cn(
 				'sticky top-0 z-header border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
 				className,
@@ -124,6 +128,6 @@ export function MinimalHeader({
 					)}
 				</div>
 			</div>
-		</header>
+		</div>
 	)
 }

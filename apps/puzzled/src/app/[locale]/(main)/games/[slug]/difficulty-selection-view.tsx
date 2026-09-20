@@ -48,15 +48,15 @@ export function DifficultySelectionView({
 		easy: {
 			label: t('easy'),
 			description: t('easyDescription'),
-			color: 'text-emerald-600 dark:text-emerald-400',
-			bgColor: 'bg-emerald-500/5',
+			color: 'text-emerald-700 dark:text-emerald-400',
+			bgColor: 'bg-emerald-500/10',
 			borderColor: 'border-emerald-500/20 hover:border-emerald-500/40',
 			hoverBg: 'hover:bg-emerald-500/10',
 		},
 		medium: {
 			label: t('medium'),
 			description: t('mediumDescription'),
-			color: 'text-amber-600 dark:text-amber-400',
+			color: 'text-amber-700 dark:text-amber-400',
 			bgColor: 'bg-amber-500/5',
 			borderColor: 'border-amber-500/20 hover:border-amber-500/40',
 			hoverBg: 'hover:bg-amber-500/10',
@@ -64,7 +64,7 @@ export function DifficultySelectionView({
 		hard: {
 			label: t('hard'),
 			description: t('hardDescription'),
-			color: 'text-red-600 dark:text-red-400',
+			color: 'text-red-700 dark:text-red-400',
 			bgColor: 'bg-red-500/5',
 			borderColor: 'border-red-500/20 hover:border-red-500/40',
 			hoverBg: 'hover:bg-red-500/10',
@@ -144,7 +144,7 @@ export function DifficultySelectionView({
 												<div className="flex items-center gap-2">
 													<span className={cn('font-semibold', config.color)}>{config.label}</span>
 													{isCompleted === true && (
-														<span className="text-xs text-emerald-600 dark:text-emerald-400">
+														<span className="text-xs text-emerald-700 dark:text-emerald-400">
 															✓ Done
 														</span>
 													)}
@@ -173,8 +173,8 @@ export function DifficultySelectionView({
 
 					{/* All completed message */}
 					{allCompleted && (
-						<div className="mt-6 rounded-xl bg-emerald-500/10 p-4 text-center">
-							<p className="font-medium text-emerald-600 dark:text-emerald-400">
+						<div className="mt-6 rounded-xl bg-emerald-500/15 p-4 text-center">
+							<p className="font-medium text-emerald-700 dark:text-emerald-400">
 								🎉 {tDaily('allCompleteMessage')}
 							</p>
 							<p className="mt-1 text-sm text-muted-foreground">{tDaily('comeBackTomorrow')}</p>
