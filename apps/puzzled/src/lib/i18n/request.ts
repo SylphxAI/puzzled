@@ -1,55 +1,7 @@
 import { getRequestConfig } from 'next-intl/server'
 import { isValidLocale, type Locale, localeFallbacks } from './config'
+import { resolveGameMessages } from './game-messages'
 import { routing } from './routing'
-
-// ==========================================
-// Per-Game Translations (English only for now)
-// ==========================================
-
-// Explicit imports required for Turbopack (no dynamic imports with template literals)
-import arithmoEn from '@/games/arithmo/translations/en.json'
-import blockSlideEn from '@/games/block-slide/translations/en.json'
-import crosswordEn from '@/games/crossword/translations/en.json'
-import cryptogramEn from '@/games/cryptogram/translations/en.json'
-import killerSudokuEn from '@/games/killer-sudoku/translations/en.json'
-import nonogramEn from '@/games/nonogram/translations/en.json'
-import numberPathEn from '@/games/number-path/translations/en.json'
-import patternMatchEn from '@/games/pattern-match/translations/en.json'
-import pipPlaceEn from '@/games/pip-place/translations/en.json'
-import quadWordsEn from '@/games/quad-words/translations/en.json'
-import queensEn from '@/games/queens/translations/en.json'
-import sudokuEn from '@/games/sudoku/translations/en.json'
-import tangoEn from '@/games/tango/translations/en.json'
-import wordBoxEn from '@/games/word-box/translations/en.json'
-import wordGroupsEn from '@/games/word-groups/translations/en.json'
-import wordGuessEn from '@/games/word-guess/translations/en.json'
-import wordHiveEn from '@/games/word-hive/translations/en.json'
-import wordLadderEn from '@/games/word-ladder/translations/en.json'
-import wordSearchEn from '@/games/word-search/translations/en.json'
-
-const GAME_TRANSLATIONS_EN: Record<string, Record<string, unknown>> = {
-	arithmo: arithmoEn,
-	blockSlide: blockSlideEn,
-	crossword: crosswordEn,
-	cryptogram: cryptogramEn,
-	killerSudoku: killerSudokuEn,
-	nonogram: nonogramEn,
-	numberPath: numberPathEn,
-	patternMatch: patternMatchEn,
-	pipPlace: pipPlaceEn,
-	quadWords: quadWordsEn,
-	queens: queensEn,
-	crowns: queensEn,
-	sudoku: sudokuEn,
-	tango: tangoEn,
-	duo: tangoEn,
-	wordBox: wordBoxEn,
-	wordGroups: wordGroupsEn,
-	wordGuess: wordGuessEn,
-	wordHive: wordHiveEn,
-	wordLadder: wordLadderEn,
-	wordSearch: wordSearchEn,
-}
 
 // ==========================================
 // Namespace Imports (explicit for Turbopack)
@@ -469,11 +421,9 @@ function loadMessages(locale: Locale): Messages {
 
 	messages = deepMerge(messages, localeMessages as unknown as Messages)
 
-	// Add games namespace
-	messages.games = {}
-	for (const [gameKey, translations] of Object.entries(GAME_TRANSLATIONS_EN)) {
-		;(messages.games as Messages)[gameKey] = translations
-	}
+	// Add the games namespace, resolved for this locale: the module's own
+	// per-locale copy where it exists, English for every key it does not carry.
+	messages.games = resolveGameMessages(locale)
 
 	return messages
 }

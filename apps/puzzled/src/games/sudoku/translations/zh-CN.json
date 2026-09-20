@@ -1,0 +1,25 @@
+{
+	"tagline": "9×9 方格 • 经典逻辑",
+	"highlight": "经典谜题",
+	"description": "在 9×9 方格中填入 1 到 9",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每行填入 1 到 9",
+		"rule2": "每列填入 1 到 9",
+		"rule3": "每个 3×3 宫格填入 1 到 9"
+	},
+	"startGame": "开始游戏",
+	"difficulty": {
+		"easy": "简单",
+		"medium": "中等",
+		"hard": "困难"
+	},
+	"notes": "笔记",
+	"notesMode": "笔记模式",
+	"clear": "清除",
+	"complete": "谜题完成！",
+	"messages": {
+		"conflict": "这个数字与另一格冲突"
+	}
+}

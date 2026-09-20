@@ -1,0 +1,25 @@
+{
+	"tagline": "5 個字母 • 6 次機會",
+	"highlight": "6 次機會",
+	"description": "在 6 次機會內猜出這個 5 個字母的詞",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "在 6 次機會內猜出詞語",
+		"rule2": "每次猜測都必須是有效的 5 字母詞",
+		"rule3": "格子顏色會改變，顯示你的猜測有多接近",
+		"correct": "綠色代表字母正確",
+		"present": "黃色代表字母在詞裡，但位置不對",
+		"absent": "灰色代表詞裡沒有這個字母"
+	},
+	"keyboard": {
+		"enter": "輸入",
+		"delete": "刪除"
+	},
+	"messages": {
+		"notEnoughLetters": "字母數量不足",
+		"notInWordList": "不在詞庫中",
+		"correct": "太棒了！",
+		"gameOver": "答案是 {word}"
+	}
+}
