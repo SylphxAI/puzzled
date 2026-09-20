@@ -1,0 +1,21 @@
+{
+	"tagline": "8 个字符 • 数学谜题",
+	"highlight": "算式谜题",
+	"description": "6 次机会内猜出算式",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "在 6 次机会内猜出隐藏的算式",
+		"rule2": "每次猜测都必须是有效的算式",
+		"rule3": "颜色会显示你的猜测有多接近"
+	},
+	"startGame": "开始游戏",
+	"keyboard": {
+		"enter": "输入",
+		"delete": "删除"
+	},
+	"messages": {
+		"notComplete": "字符数量不足",
+		"invalid": "算式无效"
+	}
+}

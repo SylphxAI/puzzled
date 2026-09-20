@@ -1,0 +1,23 @@
+{
+	"tagline": "12 张卡 • 找出组合",
+	"highlight": "找组合",
+	"description": "找出 3 张一组、特征相符的卡",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每组 3 张卡，每项特征要全部相同或全部不同",
+		"rule2": "每张卡有 4 项特征：形状、颜色、填充、数量",
+		"rule3": "选出 3 张卡组成有效组合"
+	},
+	"startGame": "开始游戏",
+	"setsFound": "组已找到",
+	"clear": "清除",
+	"giveUp": "放弃",
+	"hint": "选 3 张卡，检查是否组成有效组合",
+	"complete": "全部组合找到！",
+	"messages": {
+		"correct": "有效组合！",
+		"notASet": "不是有效组合",
+		"alreadyFound": "已找到这组"
+	}
+}

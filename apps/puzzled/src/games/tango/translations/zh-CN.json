@@ -1,0 +1,15 @@
+{
+	"tagline": "平衡谜题 • ☀️ 与 🌙",
+	"highlight": "二元谜题",
+	"description": "每行每列都要平衡太阳与月亮",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每行每列的太阳和月亮数量必须相同",
+		"rule2": "同一行不能有超过 2 个相同符号",
+		"rule3": "所有行必须唯一，所有列必须唯一"
+	},
+	"startGame": "开始游戏",
+	"hasConflicts": "有格子违反规则",
+	"complete": "谜题完成！"
+}
