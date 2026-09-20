@@ -13,5 +13,15 @@
 	},
 	"startGame": "Start Game",
 	"hasConflicts": "Some crowns are in conflict",
-	"complete": "Puzzle Complete!"
+	"complete": "Puzzle Complete!",
+	"difficulty": {
+		"easy": "Easy",
+		"medium": "Medium",
+		"hard": "Hard"
+	},
+	"difficultyDescriptions": {
+		"easy": "A 5x5 board — one crown per row, column and region",
+		"medium": "A 6x6 board with more regions to reason about",
+		"hard": "An 8x8 board and the tightest constraints"
+	}
 }

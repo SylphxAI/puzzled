@@ -37,19 +37,19 @@ const NONOGRAM_DIFFICULTY_LEVELS: DifficultyLevelConfig[] = [
 	{
 		level: 'easy',
 		labelKey: 'common.difficulty.easy',
-		descriptionKey: 'games.nonogram.difficulty.easy',
+		descriptionKey: 'games.nonogram.difficultyDescriptions.easy',
 		params: { gridSize: 5 }, // Target: 5×5 grid (simpler patterns)
 	},
 	{
 		level: 'medium',
 		labelKey: 'common.difficulty.medium',
-		descriptionKey: 'games.nonogram.difficulty.medium',
+		descriptionKey: 'games.nonogram.difficultyDescriptions.medium',
 		params: { gridSize: 10 }, // Current: 10×10 grid
 	},
 	{
 		level: 'hard',
 		labelKey: 'common.difficulty.hard',
-		descriptionKey: 'games.nonogram.difficulty.hard',
+		descriptionKey: 'games.nonogram.difficultyDescriptions.hard',
 		params: { gridSize: 15 }, // Target: 15×15 grid (complex patterns)
 	},
 ]

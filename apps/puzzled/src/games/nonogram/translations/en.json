@@ -17,5 +17,15 @@
 	"complete": "Picture Complete!",
 	"messages": {
 		"incorrect": "That cell should not be filled"
+	},
+	"difficulty": {
+		"easy": "Easy",
+		"medium": "Medium",
+		"hard": "Hard"
+	},
+	"difficultyDescriptions": {
+		"easy": "A small 5x5 grid with a simple picture",
+		"medium": "10x10, more rows and columns to read",
+		"hard": "15x15 with fine detail"
 	}
 }

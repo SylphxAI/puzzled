@@ -22,5 +22,10 @@
 	"complete": "Puzzle Complete!",
 	"messages": {
 		"conflict": "This number conflicts with another cell"
+	},
+	"difficultyDescriptions": {
+		"easy": "49 cells filled — an easy start",
+		"medium": "39 cells filled — a balanced grid",
+		"hard": "Only 29 cells filled — few places to begin"
 	}
 }

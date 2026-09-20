@@ -29,19 +29,19 @@ const BLOCK_SLIDE_DIFFICULTY_LEVELS: DifficultyLevelConfig[] = [
 	{
 		level: 'easy',
 		labelKey: 'common.difficulty.easy',
-		descriptionKey: 'games.blockSlide.difficulty.easy',
+		descriptionKey: 'games.blockSlide.difficultyDescriptions.easy',
 		params: { minMoves: 4, maxMoves: 15 }, // 4-15 moves
 	},
 	{
 		level: 'medium',
 		labelKey: 'common.difficulty.medium',
-		descriptionKey: 'games.blockSlide.difficulty.medium',
+		descriptionKey: 'games.blockSlide.difficultyDescriptions.medium',
 		params: { minMoves: 16, maxMoves: 35 }, // 16-35 moves
 	},
 	{
 		level: 'hard',
 		labelKey: 'common.difficulty.hard',
-		descriptionKey: 'games.blockSlide.difficulty.hard',
+		descriptionKey: 'games.blockSlide.difficultyDescriptions.hard',
 		params: { minMoves: 36, maxMoves: 80 }, // 36-80 moves
 	},
 ]

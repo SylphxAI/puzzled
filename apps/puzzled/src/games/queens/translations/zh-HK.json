@@ -12,5 +12,15 @@
 	},
 	"startGame": "開始遊戲",
 	"hasConflicts": "有皇冠互相衝突",
-	"complete": "謎題完成！"
+	"complete": "謎題完成！",
+	"difficulty": {
+		"easy": "簡單",
+		"medium": "中等",
+		"hard": "困難"
+	},
+	"difficultyDescriptions": {
+		"easy": "5×5 棋盤，輕鬆上手",
+		"medium": "6×6 棋盤，區域更多",
+		"hard": "8×8 棋盤，推理要求最高"
+	}
 }

@@ -28,19 +28,19 @@ const QUEENS_DIFFICULTY_LEVELS: DifficultyLevelConfig[] = [
 	{
 		level: 'easy',
 		labelKey: 'common.difficulty.easy',
-		descriptionKey: 'games.queens.difficulty.easy',
+		descriptionKey: 'games.queens.difficultyDescriptions.easy',
 		params: { boardSize: 5 }, // 5×5 board
 	},
 	{
 		level: 'medium',
 		labelKey: 'common.difficulty.medium',
-		descriptionKey: 'games.queens.difficulty.medium',
+		descriptionKey: 'games.queens.difficultyDescriptions.medium',
 		params: { boardSize: 6 }, // 6×6 board
 	},
 	{
 		level: 'hard',
 		labelKey: 'common.difficulty.hard',
-		descriptionKey: 'games.queens.difficulty.hard',
+		descriptionKey: 'games.queens.difficultyDescriptions.hard',
 		params: { boardSize: 8 }, // 8×8 board
 	},
 ]

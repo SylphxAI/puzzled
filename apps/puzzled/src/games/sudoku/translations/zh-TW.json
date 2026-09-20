@@ -21,5 +21,10 @@
 	"complete": "謎題完成！",
 	"messages": {
 		"conflict": "這個數字與另一格衝突"
+	},
+	"difficultyDescriptions": {
+		"easy": "已填 49 格，輕鬆開始",
+		"medium": "已填 39 格，難度均衡",
+		"hard": "只填 29 格，起步位置不多"
 	}
 }

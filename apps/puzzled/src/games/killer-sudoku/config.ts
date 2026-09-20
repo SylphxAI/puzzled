@@ -30,19 +30,19 @@ const KILLER_SUDOKU_DIFFICULTY_LEVELS: DifficultyLevelConfig[] = [
 	{
 		level: 'easy',
 		labelKey: 'common.difficulty.easy',
-		descriptionKey: 'games.killerSudoku.difficulty.easy',
+		descriptionKey: 'games.killerSudoku.difficultyDescriptions.easy',
 		params: { givenDigits: 20 }, // 20 pre-filled cells
 	},
 	{
 		level: 'medium',
 		labelKey: 'common.difficulty.medium',
-		descriptionKey: 'games.killerSudoku.difficulty.medium',
+		descriptionKey: 'games.killerSudoku.difficultyDescriptions.medium',
 		params: { givenDigits: 10 }, // 10 pre-filled cells
 	},
 	{
 		level: 'hard',
 		labelKey: 'common.difficulty.hard',
-		descriptionKey: 'games.killerSudoku.difficulty.hard',
+		descriptionKey: 'games.killerSudoku.difficultyDescriptions.hard',
 		params: { givenDigits: 0 }, // Pure Killer Sudoku - no given digits
 	},
 ]

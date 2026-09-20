@@ -33,19 +33,19 @@ const SUDOKU_DIFFICULTY_LEVELS: DifficultyLevelConfig[] = [
 	{
 		level: 'easy',
 		labelKey: 'common.difficulty.easy',
-		descriptionKey: 'games.sudoku.difficulty.easy',
+		descriptionKey: 'games.sudoku.difficultyDescriptions.easy',
 		params: { removeCells: 32 }, // 49 givens (81 - 32)
 	},
 	{
 		level: 'medium',
 		labelKey: 'common.difficulty.medium',
-		descriptionKey: 'games.sudoku.difficulty.medium',
+		descriptionKey: 'games.sudoku.difficultyDescriptions.medium',
 		params: { removeCells: 42 }, // 39 givens
 	},
 	{
 		level: 'hard',
 		labelKey: 'common.difficulty.hard',
-		descriptionKey: 'games.sudoku.difficulty.hard',
+		descriptionKey: 'games.sudoku.difficultyDescriptions.hard',
 		params: { removeCells: 52 }, // 29 givens
 	},
 ]
