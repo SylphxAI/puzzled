@@ -79,3 +79,9 @@ Independent verification this run:
 Next: quick biome + typecheck on the split, commit the react split, full gates, push, open the TD-11 PR.
 Notes: worktree name is td-11 (td11f did not exist; the branch was already checked out here).
 Pending characterization: the dead worker's hooks gate log shows 1 failing test 'schema/migration parity (drizzle vs atlas)' - to be compared against base (likely environmental).
+
+## Recovery checkpoint 2 - react split committed
+- Commit a49cd44 'refactor(identity): split the browser identity chrome by concern behind a re-export barrel (TD-11)' pushed; origin/debt/td11-split == a49cd44.
+- Content: react.tsx 952 -> 44-line barrel + react/{context.tsx 141, auth.ts 230, hooks.ts 429, billing.tsx 76, ui.tsx 121}. The +89 line delta is per-file 'use client' + doc headers + imports + re-export block.
+- Scoped biome on all 6 files: exit 0 (37ms, no fixes).
+- Full gates started: lint, typecheck, unit tests, build.
