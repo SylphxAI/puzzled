@@ -8,6 +8,7 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import type { ResultCardTile } from '@/features/daily/lib/result-card'
 import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
@@ -255,6 +256,15 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		)
 	}
 
+	// Non-spoiler pattern for the shareable card: statuses only, never letters.
+	const cardPattern: ResultCardTile[][] = evaluations
+		.filter((row) => row.length > 0)
+		.map((row) =>
+			row.map((tile) =>
+				tile.status === 'correct' ? 'hit' : tile.status === 'present' ? 'near' : 'miss',
+			),
+		)
+
 	return (
 		<div className="flex w-full flex-col items-center gap-4 sm:gap-6">
 			{/* Guest Signup Prompt */}
@@ -280,6 +290,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="word-guess"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}
@@ -290,6 +301,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 				}}
 				solution={solution}
 				mode={mode}
+				pattern={cardPattern}
 				onShare={handleShare}
 			/>
 

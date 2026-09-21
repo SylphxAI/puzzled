@@ -300,6 +300,7 @@ export function CryptogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="cryptogram"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}

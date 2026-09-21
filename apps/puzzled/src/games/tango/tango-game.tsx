@@ -177,6 +177,7 @@ export function TangoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: 
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="duo"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}

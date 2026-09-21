@@ -200,6 +200,7 @@ export function CrosswordGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="crossword"
 				status="won"

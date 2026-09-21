@@ -267,6 +267,7 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="quad-words"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}
