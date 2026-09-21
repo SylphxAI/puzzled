@@ -28,7 +28,7 @@ export const wordSearchConfig: GameConfig<
 	WordSearchGuessResult
 > = {
 	slug: 'word-search',
-	name: 'Word Hunt',
+	name: 'Hunt',
 	description: 'Find hidden words in the grid',
 	IconComponent: WordSearchIcon,
 	sortOrder: 19,

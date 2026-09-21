@@ -68,7 +68,7 @@ describe('getGameConfig', () => {
 		const config = getGameConfig('word-guess')
 		expect(config).toBeDefined()
 		expect(config?.slug).toBe('word-guess')
-		expect(config?.name).toBe('Word Guess')
+		expect(config?.name).toBe('Five')
 	})
 
 	test('returns undefined for invalid slug', () => {
@@ -105,7 +105,7 @@ describe('getGameMetadata', () => {
 		const metadata = getGameMetadata('word-guess')
 		expect(metadata).toEqual({
 			slug: 'word-guess',
-			name: 'Word Guess',
+			name: 'Five',
 			description: expect.any(String),
 			sortOrder: expect.any(Number),
 			category: expect.any(String),

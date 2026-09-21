@@ -79,7 +79,7 @@ export const wordHiveConfig: GameConfig<
 	SpellingBeeGuessResult
 > = {
 	slug: 'word-hive',
-	name: 'Word Hive',
+	name: 'Hive',
 	description: 'Find words using 7 letters',
 	IconComponent: WordHiveIcon,
 	sortOrder: 3,

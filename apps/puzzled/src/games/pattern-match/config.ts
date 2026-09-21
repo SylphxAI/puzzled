@@ -57,7 +57,7 @@ export const patternMatchConfig: GameConfig<
 	PatternMatchGuessResult
 > = {
 	slug: 'pattern-match',
-	name: 'Pattern Match',
+	name: 'Match',
 	description: 'Find sets of 3 cards with matching patterns',
 	IconComponent: PatternMatchIcon,
 	sortOrder: 9,

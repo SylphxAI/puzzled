@@ -1,0 +1,45 @@
+$ bun run scripts/seo-verify.ts --base "http://localhost:3014"
+puzzled SEO contract harness — base http://localhost:3014
+
+PASS  robots.txt disallows the private route table of every locale
+      6 rules match lib/seo/routes.ts
+PASS  robots.txt leaves every user-facing route crawlable
+      12 noindex surfaces stay crawlable, /admin is blocked and noindexed
+PASS  robots.txt allows crawling and advertises the sitemap
+      Sitemap: https://puzzled.gg/sitemap.xml
+PASS  sitemap lists exactly the expected public path set
+      125 URLs = 25 paths × 5 locales, exactly
+PASS  sitemap lists no private or malformed surface
+      125 locs: none private, no trailing slashes, no queries
+PASS  sitemap uses the served locale prefixes
+      en-US un-prefixed; en-GB, zh-HK, zh-TW, zh-CN as served
+PASS  sitemap omits lastmod instead of faking freshness
+      no <lastmod> element
+PASS  sitemap carries a reciprocal hreflang cluster per entry
+      125 entries × 6 languages
+PASS  every sitemap URL returns 200
+      125 URLs answered 200
+PASS  every indexable page canonicalises to itself
+      125 canonicals equal the served URL
+PASS  hreflang is reciprocal including x-default
+      125 pages declare the cluster of their own path
+PASS  private surfaces are noindex or unreachable
+      65 surfaces: 15 redirect/404, 50 noindex
+PASS  unknown paths answer 404 with the branded, noindex body
+      7 unknown paths: 404 + branded body + noindex + catalogue link
+PASS  unknown game slug answers 404 without leaking an i18n key
+      404, title "Puzzled"
+PASS  JSON-LD parses and states real facts
+      5 pages, types: BreadcrumbList, FAQPage, ItemList, Organization, VideoGame, WebSite
+PASS  per-page JSON-LD is complete whenever a page emits it
+      /games/word-guess emits no per-game schema yet (page owner); the site-level blocks are asserted above
+PASS  the SearchAction target resolves
+      GET /games?q=crowns -> 200
+PASS  ?date= deep links canonicalise to the query-less page
+      4 dated URLs point at their base URL
+NOTE  scope
+      /[locale]/og is an image endpoint (og:image), not a search surface; left crawlable.
+NOTE  scope
+      Per-page JSON-LD (BreadcrumbList/VideoGame/FAQPage) belongs to the page owners; this harness only asserts the site-level blocks.
+
+20 results: 18 pass, 0 fail

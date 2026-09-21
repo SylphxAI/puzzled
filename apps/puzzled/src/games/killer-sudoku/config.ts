@@ -54,7 +54,7 @@ export const killerSudokuConfig: GameConfig<
 	KillerSudokuGuessResult
 > = {
 	slug: 'killer-sudoku',
-	name: 'Killer Sudoku',
+	name: 'Cage Sudoku',
 	description: 'Sudoku with cage sums',
 	IconComponent: KillerSudokuIcon,
 	sortOrder: 16,
