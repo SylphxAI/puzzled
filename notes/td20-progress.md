@@ -4,7 +4,7 @@ Branch `debt/td20-logger-seam` @ base origin/main `b199007999789d862ac236b94ba01
 Worktree: `/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-20`.
 
 ## Next action
-Gates running (full suite / lint / build); then PR + CI watch.
+Open PR + watch CI to green.
 
 ## Status
 - [x] worktree/branch off fetched origin/main
@@ -14,7 +14,9 @@ Gates running (full suite / lint / build); then PR + CI watch.
 - [x] migrate client sites: session-replay-provider.tsx (2), game-play-area.tsx (2), use-game-session.ts (1), global-error-handler.tsx (1), global-error.tsx (1), pricing-client.tsx (1), game-daily-fallback.tsx (1), notification-preferences.tsx (1 JSDoc)
 - [x] mutation proof: redaction broken -> RED (expected "[redacted]", received "member@example.com"); restored -> GREEN 8/8 - notes/td20-mutation.md
 - [x] census evidence: notes/td20-before.md (52 -> 10 raw; 42 production sites -> 0)
-- [ ] prove: full suite + typecheck + biome + production build (running; logs in pz-program/notes/td20-{suite,lint,build}.txt)
+- [x] prove: merged-tree gates all green (suite 1159/6/0; typecheck rc=0; biome rc=0; build rc=0) - notes/td20-proof.md
+- [x] merged origin/main (fd9f061) cleanly except generator.ts dead-block (TD-10 deletion kept) - ba611f2
+- [ ] PR + CI green
 - [ ] PR
 
 ## Deliberate exclusions
