@@ -1,4 +1,5 @@
 import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/app-config'
+import { env } from './env'
 
 /**
  * Load enabled OAuth providers for auth pages.
@@ -9,7 +10,7 @@ import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/app-config
  * buttons until the baked App ID is present.
  */
 export async function loadOAuthProviders(
-	appId: string | undefined = process.env.NEXT_PUBLIC_SYLPHX_APP_ID,
+	appId: string | undefined = env.NEXT_PUBLIC_SYLPHX_APP_ID,
 ): Promise<OAuthProvider[]> {
 	if (!appId?.trim()) return []
 	return getOAuthProviders({ appId })

@@ -1,3 +1,4 @@
+import { env } from '../env'
 import { destCommerceCredential } from './credentials'
 import {
 	destCommerceOrigin,
@@ -36,8 +37,8 @@ export type DestPeelConfig = {
 
 export function createConfig(opts: { secretKey?: string; platformUrl?: string }): DestPeelConfig {
 	return {
-		identityOrigin: destIdentityOrigin(opts.platformUrl ?? process.env.IDENTITY_API_ORIGIN),
-		commerceOrigin: destCommerceOrigin(process.env.COMMERCE_API_ORIGIN),
+		identityOrigin: destIdentityOrigin(opts.platformUrl ?? env.IDENTITY_API_ORIGIN),
+		commerceOrigin: destCommerceOrigin(env.COMMERCE_API_ORIGIN),
 		credential: destCommerceCredential(),
 	}
 }
@@ -45,7 +46,7 @@ export function createConfig(opts: { secretKey?: string; platformUrl?: string })
 export type SylphxConfig = ReturnType<typeof createConfig>
 
 function commerceOrigin(config?: DestPeelConfig): string {
-	return config?.commerceOrigin ?? destCommerceOrigin(process.env.COMMERCE_API_ORIGIN)
+	return config?.commerceOrigin ?? destCommerceOrigin(env.COMMERCE_API_ORIGIN)
 }
 
 function commerceCredential(config?: DestPeelConfig): string {
@@ -160,7 +161,7 @@ async function evaluateCommerceEntitlement(
 	if (!credential) {
 		return { isPremium: false, subscription: null }
 	}
-	const policyId = process.env.COMMERCE_ENTITLEMENT_POLICY_ID?.trim() || 'premium'
+	const policyId = env.COMMERCE_ENTITLEMENT_POLICY_ID?.trim() || 'premium'
 	const run = async (): Promise<CommercePremium> => {
 		const body = await destJson<{
 			entitlement?: {

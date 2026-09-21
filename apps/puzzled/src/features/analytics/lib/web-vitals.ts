@@ -20,6 +20,7 @@
 'use client'
 
 import { type Metric, onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals'
+import { env } from '@/lib/env'
 import { hasAnalyticsConsent } from './consent'
 import { createWebVitalsBatch } from './web-vitals-batch'
 
@@ -56,7 +57,7 @@ export function initWebVitals() {
 	if (typeof window === 'undefined') return
 
 	// Only run in production
-	if (process.env.NODE_ENV !== 'production') return
+	if (env.NODE_ENV !== 'production') return
 
 	const batch = createWebVitalsBatch({ isAllowed: hasAnalyticsConsent, deliver })
 	const collect = (metric: Metric) =>

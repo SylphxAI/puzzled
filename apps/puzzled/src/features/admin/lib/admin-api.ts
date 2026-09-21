@@ -10,6 +10,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
+import { env } from '@/lib/env'
 import { auth } from '@/lib/identity/server'
 import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
@@ -107,12 +108,12 @@ export async function checkAdminWithMfa(request: NextRequest): Promise<AdminChec
 			return { allowed: false, reason: 'rate_limited' }
 		}
 
-		if (!process.env.ADMIN_SECRET) {
+		if (!env.ADMIN_SECRET) {
 			await logAdminAccess('secret', false, ip)
 			return { allowed: false, reason: 'unauthorized' }
 		}
 
-		const isValidSecret = secureCompare(adminSecret, process.env.ADMIN_SECRET)
+		const isValidSecret = secureCompare(adminSecret, env.ADMIN_SECRET)
 		await logAdminAccess('secret', isValidSecret, ip)
 
 		if (!isValidSecret) {

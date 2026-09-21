@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { env } from '../env'
 import {
 	destIdentityJson,
 	destIdentityOrigin,
@@ -12,7 +13,7 @@ export function identityFail(status: number, error: string) {
 }
 
 export function identityOrigin(): string {
-	return destIdentityOrigin(process.env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(env.IDENTITY_API_ORIGIN)
 }
 
 export function destDevice(request: Request) {
