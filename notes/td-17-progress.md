@@ -86,13 +86,13 @@ Base: origin/main = b199007999789d862ac236b94ba010b1c3ff18e1 (fetched + verified
 - **Baseline** `env -u NODE_ENV bun test src` @ b1990079, before any edit:
   **1141 pass / 6 skip / 0 fail**; 34667 expect() calls; 1147 tests across 116 files; 98.07s
   (td17-tests-before.txt).
-- After: _pending - to fill with td17-tests-after.txt_ (same command).
-- `bun run typecheck`: _pending_ (tsc --noEmit + e2e config; includes scripts/** via **/*.ts).
-- `bun run lint` (biome check .): _pending_.
-- `SKIP_ENV_VALIDATION=true NODE_ENV=production bun run build`: _pending_.
+- **After** `env -u NODE_ENV bun test src` @ 6327b51: **1141 pass / 6 skip / 0 fail**; 34667 expect() calls; 1147 tests across 116 files; 102.61s (td17-tests-after.txt) - identical totals to the baseline.
+- `bun run typecheck` (tsc --noEmit && tsc --noEmit -p tsconfig.e2e.json): **exit 0** (td17-typecheck.txt).
+- `bun run lint` (biome check .): **exit 0**; 23 pre-existing infos (all `lint/style/useTemplate` in result-card files from #164; none in changed files) (td17-biome.txt).
+- `SKIP_ENV_VALIDATION=true NODE_ENV=production bun run build`: **exit 0**, full route table emitted; `git status --porcelain` clean after the build (td17-build.txt).
 - CI/build paths that could invoke the content tools: **none** - neither name appears in any workflow;
   build steps (next build, scripts/assert-document-route.mjs, cargo build) do not touch them.
 
 ## Next action
 
-_blank at first push: fill with proofs, then open PR._
+PR: opening against main (head 6327b51 + this notes update). TD-17 closes as: content tool KEPT (decision recorded), brand icons WIRED.
