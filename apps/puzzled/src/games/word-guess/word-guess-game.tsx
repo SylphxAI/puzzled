@@ -8,11 +8,10 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import type { ResultCardTile } from '@/features/daily/lib/result-card'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
 import { WordleIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { GameBoard, Keyboard } from './components'
@@ -143,6 +142,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		}
 	}, [gameStatus, guesses, endGame])
 
+	const shareResult = useResultShare()
 	const handleShare = async () => {
 		// Build emoji grid from evaluations
 		const emojiGrid = evaluations
@@ -167,26 +167,15 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		const status = gameStatus as 'won' | 'lost'
 		const attempts = guesses.length
 
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		const outcome = await shareResult({
 			gameSlug: 'word-guess',
 			puzzleDate,
-			gameName: 'Five',
 			status,
 			attempts: status === 'won' ? attempts : undefined,
 			statLine: emojiGrid,
 		})
 
-		try {
-			if (navigator.share) {
-				await navigator.share({ text })
-			} else {
-				await navigator.clipboard.writeText(text)
-				showToastMsg(tShare('copied'))
-			}
-		} catch {
-			// User cancelled sharing
-		}
+		if (outcome === 'copied') showToastMsg(tShare('copied'))
 	}
 
 	// Ready screen - show rules before gameplay

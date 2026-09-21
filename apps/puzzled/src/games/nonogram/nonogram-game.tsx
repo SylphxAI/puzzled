@@ -13,11 +13,10 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
 import { NonogramIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic } from '@/shared/hooks'
 import { NonogramGrid } from './components'
@@ -129,19 +128,17 @@ export function NonogramGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 	)
 
 	// Share result
+	const shareResult = useResultShare()
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		void shareResult({
 			gameSlug: 'nonogram',
 			puzzleDate,
-			gameName: 'Paint',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
-		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [shareResult, game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {

@@ -4,10 +4,10 @@ import { Button, Card, CardContent } from '@sylphx/ui'
 import { Check, ChevronRight, Clock, Flame, Gauge, Share2, Target, Trophy, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import type { PuzzleDifficulty } from '@/games/types'
 import { Link } from '@/lib/i18n/routing'
-import { cn, getBaseUrl } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { DifficultyBadge } from './difficulty-selector'
 import { NextPuzzleCountdown } from './next-puzzle-countdown'
 
@@ -85,12 +85,11 @@ export function AlreadyCompletedView({
 	// Get difficulty label for share text
 	const difficultyLabel = difficulty ? tDifficulty(difficulty) : null
 
+	const shareResult = useResultShare()
 	const handleShare = async () => {
 		// Non-spoiler card: module + day deep link only (no solution / grid).
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		const outcome = await shareResult({
 			gameSlug,
-			gameName,
 			// Wire day_key for landings; long locale date stays in UI above.
 			puzzleDate,
 			status: session.status,
@@ -99,16 +98,9 @@ export function AlreadyCompletedView({
 			currentStreak,
 		})
 
-		try {
-			if (navigator.share) {
-				await navigator.share({ text })
-			} else {
-				await navigator.clipboard.writeText(text)
-				setShowToast(true)
-				setTimeout(() => setShowToast(false), 2000)
-			}
-		} catch {
-			// User cancelled
+		if (outcome === 'copied') {
+			setShowToast(true)
+			setTimeout(() => setShowToast(false), 2000)
 		}
 	}
 

@@ -13,10 +13,9 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
 import { ArithmoIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { ArithmoGrid, ArithmoKeyboard } from './components'
@@ -120,6 +119,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 	}
 
 	// Share result
+	const shareResult = useResultShare()
 	const handleShare = useCallback(() => {
 		const emojis = game.state.results
 			.map((row) =>
@@ -130,17 +130,14 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 			.join('\n')
 
 		const attempts = game.state.isWon ? game.state.guesses.length : undefined
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		void shareResult({
 			gameSlug: 'arithmo',
 			puzzleDate,
-			gameName: 'Arithmo',
 			status: game.state.isWon ? 'won' : 'lost',
 			attempts: typeof attempts === 'number' ? attempts : undefined,
 			statLine: emojis,
 		})
-		void navigator.clipboard.writeText(text)
-	}, [game.state.results, game.state.guesses.length, game.state.isWon, puzzleDate])
+	}, [shareResult, game.state.results, game.state.guesses.length, game.state.isWon, puzzleDate])
 
 	// Get error message
 	const getErrorMessage = () => {
