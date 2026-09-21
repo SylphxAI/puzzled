@@ -32,8 +32,9 @@ exactly that.
   worktree clean afterwards (`git status --porcelain`: only the test file).
 - Full suite: `env -u NODE_ENV bun test src` -> 1143 pass / 6 skip / 0 fail; 34674 expect() calls; 1149 tests / 116 files in 105.26s (rc=0). TD-01 was 1141/6/0 over 1147 tests; the +2 are the new wiring tests.
 - typecheck: `turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui` -> 2/2 successful (puzzled: tsc --noEmit + e2e tsconfig; ui: cache hit), 12.8s, rc=0 | biome (bun run lint): rc=0, 23 pre-existing infos, 0 errors
-- PR: PENDING
+- PR: #172 https://github.com/SylphxAI/puzzled/pull/172 (head a5fe751 at open)
+- CI run 35559188280 (head a5fe751): 9/9 jobs pass - Lint & Type Check 45s, Security Scan 24s, Migration Integrity 11s, Unit Tests 1m48s, Rust API 1m52s, Build 2m32s, SEO Contract 1m22s, Accessibility 3m58s, Lighthouse Budgets 7m32s; watch-rc=0.
 
 ## Next actions
-1. Finish suite + typecheck, commit + push, open the PR with contract + evidence.
-2. Independent review (author cannot self-review) per company procedure, then CI.
+1. Independent review (author cannot self-review) per company procedure.
+2. After review: land via the merge queue; clean up this worktree once merged.
