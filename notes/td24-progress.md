@@ -13,3 +13,14 @@ Status: 2026-09-21 ~11:40 BST. Worktree: $HOME/workspace/.worktrees/github.com/S
 ## Environment notes
 - Full unit suite on this host: 1181 pass / 6 skip / 1 fail - the fail is `schema/migration parity` needing a dev postgres (docker daemon down, sudo blocked); reproduced identically at base d1fae28 (worktree td24-base). CI provides the DB.
 
+
+## Recovery run 2 (2026-09-21 ~23:58 BST, worker 2)
+
+- Verified remote: origin/debt/td24-i18n-dupes = 6bbaba7 (pushed); origin/main = be3f6dc2.
+- Worktree moved to $HOME/workspace/.worktrees/github.com/SylphxAI/puzzled/td24f on debt/td24-i18n-dupes @ 6bbaba7
+  (old td-24 worktree detached then removed; its node_modules/.turbo transplanted, so no reinstall needed).
+- Plan: (1) re-run script modes + test in td24f to confirm state; (2) normalisation slice (share.copied,
+  settings.security.signOutHere) with before/after resolved-catalogue dumps; (3) mutation proof (synthetic
+  dupe -> RED naming group; remove -> green) + suite-wiring evidence; (4) full gates; (5) rebase onto
+  be3f6dc2; push; open PR.
+- Resume: read this file first; the pushed branch is the handover.
