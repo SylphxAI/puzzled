@@ -6,15 +6,7 @@
 	"body": "每個過往的每日謎題都還在這裡。選一天，再玩一次。",
 	"guestTitle": "登入以開啟典藏",
 	"guestBody": "典藏屬於 Puzzled Plus。登入即可查看你可玩的日期，或先玩今日免費謎題。",
-	"signInCta": "登入",
 	"lockedTitle": "典藏屬於 Puzzled Plus",
 	"lockedBody": "Plus 開啟典藏：所有過往每日謎題，以及完整遊戲系列與更深入的統計。今日免費謎題仍開放給所有人。",
-	"upgradeCta": "解鎖 Puzzled Plus",
-	"playFreeToday": "玩今日免費謎題（{game}）",
-	"listTitle": "過往日子",
-	"listBody": "最近 {count} 個產品日，最新在前。每一天都會開啟當日運行的謎題。",
-	"playDayLabel": "玩 {date} 的 {game}",
-	"play": "開始",
-	"playToday": "玩今日的儀式（{game}）",
-	"backToGames": "返回所有遊戲"
+	"listBody": "最近 {count} 個產品日，最新在前。每一天都會開啟當日運行的謎題。"
 }

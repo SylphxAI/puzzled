@@ -2,11 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { GAME_CONFIGS } from '@/games/registry'
 import type { DifficultyLevelConfig } from '@/games/types'
 import { slugToCamelCase } from '@/lib/game-slug'
-import enGBCommon from '@/messages/en-GB/common.json'
-import enUSCommon from '@/messages/en-US/common.json'
-import zhCNCommon from '@/messages/zh-CN/common.json'
-import zhHKCommon from '@/messages/zh-HK/common.json'
-import zhTWCommon from '@/messages/zh-TW/common.json'
+import { resolveLocale } from '../../../scripts/i18n-resolved-catalogue'
 import { resolveGameMessages } from './game-messages'
 
 /**
@@ -28,15 +24,17 @@ const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
 type Locale = (typeof LOCALES)[number]
 
 /**
- * Namespace catalogues, as `request.ts` assembles them: a locale's own file
- * layered over its declared fallback (en-GB -> en-US, zh-TW -> zh-HK).
+ * Namespace catalogues, as `request.ts` assembles them: each locale's own files
+ * layered over its declared fallback (en-GB -> en-US, zh-TW -> zh-HK). Read
+ * through the same resolver the before/after proof uses, because an overlay
+ * locale carries only the keys its base does not supply.
  */
 const COMMON_BY_LOCALE: Record<Locale, Json> = {
-	'en-US': enUSCommon as Json,
-	'en-GB': { ...(enUSCommon as Json), ...(enGBCommon as Json) },
-	'zh-HK': zhHKCommon as Json,
-	'zh-TW': { ...(zhHKCommon as Json), ...(zhTWCommon as Json) },
-	'zh-CN': zhCNCommon as Json,
+	'en-US': resolveLocale('en-US').common as Json,
+	'en-GB': resolveLocale('en-GB').common as Json,
+	'zh-HK': resolveLocale('zh-HK').common as Json,
+	'zh-TW': resolveLocale('zh-TW').common as Json,
+	'zh-CN': resolveLocale('zh-CN').common as Json,
 }
 
 /** Deep lookup for a dotted path, or `undefined` when any segment is absent. */
