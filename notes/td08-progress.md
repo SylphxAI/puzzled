@@ -37,3 +37,17 @@
     green: "Compiled successfully in 8.5s", 118/118 static pages, build-exit=0.
   * Raw logs: $HOME/work/pz-program/notes/td08f-{unit,typecheck,lint,build,build2}.log
 - Next: re-run the mutation proof from scratch, then push refspec + open PR.
+- 2026-09-21 late evening - Mutation proof re-run from scratch on td08f (fresh run
+  by the recovery worker; the original worker's logs agree):
+  * before md5 e2ba6662af5e39c252a8a40b3e3b2920; sed deleted the mapper's
+    "canPlay: res.canPlay," line (occurrences after: 0).
+  * RED: 14 pass / 3 fail / 20 expect() calls - Ran 17 tests across 2 files
+    (235.00ms), red-exit=1; the three full-projection pins fail with
+    "- Expected  - 1 / + Received  + 0" (the dropped field).
+  * restore via git checkout -- daily.ts: md5 back to
+    e2ba6662af5e39c252a8a40b3e3b2920.
+  * GREEN: 17 pass / 0 fail / 24 expect() calls (246.00ms), green-exit=0.
+  * Worktree untouched after the sweep (git status --porcelain empty).
+  * Raw logs: $HOME/work/pz-program/notes/td08f-mutation-{red,green}.log
+- Next: open the PR (branch clean at this commit, gates green modulo the known
+  parity test).
