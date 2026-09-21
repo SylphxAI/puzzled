@@ -22,7 +22,8 @@ Recovery log, kept current. Started 2026-09-21 ~02:35 Europe/London.
 - [x] E. full suite + typecheck + lint - all green (see ### E and ### E2)
 - [x] F. mutation proof F1+F2 - red -> restore -> green (see ### F)
 - [x] G. PR opened: https://github.com/SylphxAI/puzzled/pull/169
-- Head: 03203da; final notes push follows (last push from this run).
+- [x] H. CI run 1 red (mock leak) -> fix + re-proof (### G); fix head pushed; CI re-run watched.
+- Head: 03203da at PR open; this fix commit updates the head.
 - [x] env: worktree node_modules was incomplete (killed sibling run); bun install --frozen-lockfile rc=0 (257 packages, lefthook synced); pre-commit hooks pass (biome + tsc 12.2s).
 
 ## Evidence log
@@ -81,5 +82,12 @@ index ca36235..befbd91 100644
 - F2 lib/audit (early return before logAuditEvent): bun test src/lib/audit/index.test.ts -> 0 pass / 2 fail; restore -> 2 pass / 0 fail.
 - sha256 after restore: admin-api.ts 0345615d..., audit-index.ts 0c3b34d7... (match saved copies).
 
+### G (CI run 1 red -> mock-leak fix -> re-proof)
+- CI run 35552186206 (head 50cfba0): Migration Integrity OK, Security OK, Lint & Type Check OK, Rust API OK; Unit Tests FAILED (1136 pass / 1 fail / 1 error) with "SyntaxError: Export named 'cookies' not found in module 'next/headers.js'" right after my src/lib/audit/index.test.ts group - the game-page.test.ts import chain broke.
+- Root cause: bun module mocks are process-wide for the whole run; my partial mock.module('next/headers', { headers }) replaced the module for every later file. Local repro: bun test src/lib/audit/index.test.ts src/features/catalog/lib/game-page.test.ts -> 2 pass / 1 fail / 1 error (same SyntaxError).
+- Fix (no production files touched): both new test files capture the real modules first and register COMPLETE mocks ({...real, seam}), and afterAll hands the real modules back.
+- Re-proof: game-page pair -> 11 pass / 0 fail; cookies seam probe standalone + after the audit test -> pass; full suite CI-shape command env -u NODE_ENV bun test src '.test.ts' (116 files incl tests/billing.test.ts) -> 1145 pass / 6 skip / 0 fail [71.32s] rc 0; CI env shape (NODE_ENV=test + DATABASE_URL + SKIP_ENV_VALIDATION) -> 1145 pass / 6 skip / 0 fail [101.24s] rc 0.
+- Mutations re-run on fixed tests: F1 red 0/3 -> green 3/0; F2 red 0/2 -> green 2/0; sha256 after restore matches saved copies (admin-api.ts 25bb3a39..., audit-index.ts 0c3b34d7...).
+
 ## Next action
-- Done: PR https://github.com/SylphxAI/puzzled/pull/169 (head includes this notes commit). No further pushes from this run.
+- CI re-run on this fix head; update PR body to cite it. If red, root-cause from the run log.

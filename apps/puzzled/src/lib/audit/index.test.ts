@@ -1,20 +1,33 @@
-import { describe, expect, mock, test } from 'bun:test'
+import { afterAll, describe, expect, mock, test } from 'bun:test'
+
+// Capture the real modules first: Bun module mocks live for the whole test run,
+// so each replacement below spreads the real surface and overrides only the seam.
+// A partial replacement crashes later files at import time (CI once saw
+// "Export named 'cookies' not found in module 'next/headers.js'").
+const realNextHeaders = await import('next/headers')
+const realDb = await import('@/lib/db')
 
 // Captures rows handed to the audit table write so the DB row itself is asserted,
 // not only that some helper was reached.
 const inserted: Record<string, unknown>[] = []
 
-mock.module('@/lib/db', () => ({
-	db: {
-		insert: () => ({
-			values: async (row: Record<string, unknown>) => {
-				inserted.push(row)
-			},
-		}),
+const dbSeam = new Proxy(realDb.db, {
+	get(target, prop) {
+		if (prop === 'insert') {
+			return () => ({
+				values: async (row: Record<string, unknown>) => {
+					inserted.push(row)
+				},
+			})
+		}
+		return Reflect.get(target, prop)
 	},
-}))
+})
+
+mock.module('@/lib/db', () => ({ ...realDb, db: dbSeam }))
 
 mock.module('next/headers', () => ({
+	...realNextHeaders,
 	headers: async () => ({
 		get: (name: string) => {
 			if (name === 'x-forwarded-for') return '203.0.113.7, 10.0.0.1'
@@ -23,6 +36,16 @@ mock.module('next/headers', () => ({
 		},
 	}),
 }))
+
+// Hand the real modules back for the rest of the run.
+afterAll(() => {
+	try {
+		mock.module('next/headers', () => realNextHeaders)
+		mock.module('@/lib/db', () => realDb)
+	} catch {
+		// the supersets above already keep later files import-safe
+	}
+})
 
 const { logAdminAccessAttempt } = await import('./index')
 
