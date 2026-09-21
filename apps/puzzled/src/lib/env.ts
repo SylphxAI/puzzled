@@ -18,6 +18,8 @@
  * src. A raw process.env.X read anywhere else bypasses the schema.
  */
 
+import { logger } from './logger'
+
 type EnvVar = {
 	name: string
 	required: boolean
@@ -208,19 +210,14 @@ export function validateEnv(env: EnvSource = process.env): void {
 
 	// Log warnings in development
 	if (warnings.length > 0 && env.NODE_ENV === 'development') {
-		console.warn('[ENV] Optional variables not configured:')
-		for (const warning of warnings) {
-			console.warn(`  - ${warning}`)
-		}
+		logger.warn('env.optional-vars-missing', { variables: warnings })
 	}
 
 	// SECURITY: Warn about missing security-critical vars in production
 	if (env.NODE_ENV === 'production') {
 		for (const varName of PRODUCTION_SECURITY_VARS) {
 			if (!env[varName]) {
-				console.warn(
-					`[ENV] SECURITY WARNING: ${varName} not set in production - endpoints may be vulnerable`,
-				)
+				logger.warn('env.security-var-missing', { variable: varName })
 			}
 		}
 	}
@@ -234,7 +231,7 @@ export function validateEnv(env: EnvSource = process.env): void {
 			'Please configure these in your .env file or environment.',
 		].join('\n')
 
-		console.error(message)
+		logger.error('env.invalid-configuration', { message })
 		throw new Error(message)
 	}
 }

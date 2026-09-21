@@ -17,6 +17,7 @@ import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'
 import { env } from '@/lib/env'
 import { useSafeBilling, useSafeUser, useSessionReplay } from '@/lib/identity/react'
+import { logger } from '@/lib/logger'
 import { getAdjustedSampleRate, getSessionReplayConfig } from '../lib'
 
 export interface SessionReplayProviderProps {
@@ -82,7 +83,7 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 			userId: user?.id,
 			onError: (error) => {
 				// Log but don't break the app
-				console.warn('[SessionReplay] Recording error:', error.message)
+				logger.warn('session-replay.recording-error', { message: error.message })
 			},
 		})
 
@@ -143,7 +144,7 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 		if (sessionId && !hasStartedRef.current) {
 			hasStartedRef.current = true
 			if (env.NODE_ENV === 'development') {
-				console.log('[SessionReplay] Recording started:', sessionId)
+				logger.debug('session-replay.recording-started', { sessionId })
 			}
 		}
 	}, [sessionId])

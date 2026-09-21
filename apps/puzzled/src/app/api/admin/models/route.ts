@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { adminCheckResponse, checkAdminWithMfa } from '@/features/admin'
 import { adminModelCatalog, ai } from '@/features/puzzle-generator/server'
+import { logger } from '@/lib/logger'
 
 export const runtime = 'nodejs' // Required for auth
 export const dynamic = 'force-dynamic' // Prevent static generation at build time
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
 			count: models.length,
 		})
 	} catch (error) {
-		console.error('[Models API] Error fetching models:', error)
+		logger.error('admin.models-fetch-failed', { error })
 		return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500 })
 	}
 }

@@ -34,7 +34,7 @@ const PUSH_DESCRIPTION_ID = 'push-notifications-description'
  *
  * @example
  * ```tsx
- * <NotificationPreferences onSave={(prefs) => console.log(prefs)} />
+ * <NotificationPreferences onSave={(prefs) => logger.info('push.preferences-saved', prefs)} />
  * ```
  */
 export function NotificationPreferences({

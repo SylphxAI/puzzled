@@ -4,14 +4,14 @@ Branch `debt/td20-logger-seam` @ base origin/main `b199007999789d862ac236b94ba01
 Worktree: `/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-20`.
 
 ## Next action
-After logger+tests commit: migrate server sites, then client sites, then mutation proof + full gates.
+Run mutation proof (redaction RED->GREEN), then full gates (suite/typecheck/biome/build), then PR.
 
 ## Status
 - [x] worktree/branch off fetched origin/main
 - [x] recon: 42 non-test `console.*` across 19 files (matches register); +10 hits in 2 test files (spy/silencers, kept)
-- [ ] `apps/puzzled/src/lib/logger.ts` + `apps/puzzled/src/lib/logger.test.ts`
-- [ ] migrate server sites: generator.ts (11), unsubscribe route (7), env.ts (4), page.tsx (3), report-boundary-error.ts (1), redis.ts (1), audit/index.ts (1), api/server.ts (1), admin-api.ts (1), api/admin/models/route.ts (1), validators/connections.ts (1)
-- [ ] migrate client sites: session-replay-provider.tsx (2), game-play-area.tsx (2), use-game-session.ts (1), global-error-handler.tsx (1), global-error.tsx (1), pricing-client.tsx (1), game-daily-fallback.tsx (1), notification-preferences.tsx (1 JSDoc)
+- [x] `apps/puzzled/src/lib/logger.ts` + `apps/puzzled/src/lib/logger.test.ts` (8/8 unit tests green; commit feda3e4)
+- [x] migrate server sites: generator.ts (11), unsubscribe route (7), env.ts (4), page.tsx (3), report-boundary-error.ts (1), redis.ts (1), audit/index.ts (1), api/server.ts (1), admin-api.ts (1), api/admin/models/route.ts (1), validators/connections.ts (1)
+- [x] migrate client sites: session-replay-provider.tsx (2), game-play-area.tsx (2), use-game-session.ts (1), global-error-handler.tsx (1), global-error.tsx (1), pricing-client.tsx (1), game-daily-fallback.tsx (1), notification-preferences.tsx (1 JSDoc)
 - [ ] mutation proof (break redaction -> RED; restore -> GREEN)
 - [ ] prove: full suite + typecheck + biome + production build
 - [ ] PR

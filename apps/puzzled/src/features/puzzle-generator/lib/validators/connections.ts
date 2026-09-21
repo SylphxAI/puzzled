@@ -3,6 +3,7 @@ import 'server-only'
 import { readFileSync } from 'node:fs'
 import wordListPath from 'word-list'
 import type { Category, CategoryLevel, ConnectionsPuzzle } from '@/games/word-groups/types'
+import { logger } from '@/lib/logger'
 import { parseLlmJsonResponse } from '../parse-utils'
 
 /**
@@ -226,10 +227,7 @@ export function validateConnectionsPuzzle(
 
 		// Log warnings if any (for monitoring, but puzzle is still valid)
 		if (warnings.length > 0) {
-			console.warn(
-				`[Connections Validator] ${puzzleId} has ${warnings.length} warning(s):`,
-				warnings,
-			)
+			logger.warn('connections-validator.warnings', { puzzleId, warnings })
 		}
 
 		return { valid: true, errors, warnings, puzzle }

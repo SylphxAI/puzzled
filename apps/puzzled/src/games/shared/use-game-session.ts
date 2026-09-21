@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGuestGameState } from '@/features/daily/hooks/use-guest-game-state'
 import { useSaveGameResult } from '@/features/gamification'
 import type { PuzzleDifficulty } from '@/games/types'
+import { logger } from '@/lib/logger'
 import { getGameSessionKey } from '@/lib/storage-keys'
 import { triggerHaptic, triggerSound, useGuestOnboarding } from '@/shared/hooks'
 import { finishRecordingFor } from './finish-recording'
@@ -296,7 +297,7 @@ export function useGameSession(options: UseGameSessionOptions): UseGameSessionRe
 						alreadyPlayed,
 					}
 				} catch (error) {
-					console.error(`[${gameSlug}] Failed to save result:`, error)
+					logger.error('game-session.save-failed', { gameSlug, error })
 					finish = {
 						success: false,
 						error: error instanceof Error ? error.message : 'save_failed',

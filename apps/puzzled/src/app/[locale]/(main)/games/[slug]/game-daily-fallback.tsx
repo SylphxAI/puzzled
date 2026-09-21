@@ -14,6 +14,7 @@ import type { GameSlug } from '@/games/how-to-play-registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
+import { logger } from '@/lib/logger'
 import { GamePageClient } from './game-page-client'
 
 type GameDailyFallbackProps = {
@@ -67,7 +68,7 @@ export function GameDailyFallback({
 				})
 				if (!cancelled) dispatch({ type: 'load-succeeded', snapshot })
 			} catch (error) {
-				console.error('[GameDailyFallback] Client GetDaily failed:', error)
+				logger.error('game-daily-fallback.load-failed', { error })
 				if (!cancelled) dispatch({ type: 'load-failed' })
 			}
 		})()

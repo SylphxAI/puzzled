@@ -10,6 +10,7 @@
 
 import { headers } from 'next/headers'
 import type { AuditAction, NewAuditLog } from '@/lib/db/schema'
+import { logger } from '@/lib/logger'
 
 /**
  * Log an audit event
@@ -34,7 +35,7 @@ async function logAuditEvent(
 			userAgent,
 		})
 	} catch (error) {
-		console.error('[Audit] Failed to log event:', error, params)
+		logger.error('audit.event-log-failed', { error, params })
 	}
 }
 

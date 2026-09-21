@@ -32,6 +32,7 @@ import {
 } from '@/gen/connect/puzzled/v1/stats_pb'
 import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
+import { logger } from '@/lib/logger'
 import { servedPuzzleId } from '@/lib/product-day'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -228,7 +229,7 @@ export async function getServerPersonalDailyResults(input: {
 				return status.hasCompleted
 			} catch (error) {
 				unavailableSlugs.add(gameSlug)
-				console.error(`[HomePage] Failed to read personal daily result for ${gameSlug}:`, error)
+				logger.error('home.personal-result-read-failed', { gameSlug, error })
 				throw error
 			}
 		},
