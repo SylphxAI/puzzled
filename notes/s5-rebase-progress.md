@@ -28,3 +28,9 @@
   * In-app cuts cannot find 2s: the LIGHTEST route (/unsubscribe, ~21 pre-paint nodes) measured with the EXACT lhci toolchain (2 runs, same mobile settings): LCP 3619.12 / 3178.68 -> median 3178.68, FAIL vs <=2500. Log: pz-program/evidence/s5/lhci-unsubscribe-floor.log. Game routes (~31 nodes) = 4135-4541 (run2 + this session's single run 4541).
   * Verdict: LCP<=2500 @lhci mobile-sim sits BELOW the harness floor for this app/stack (~3.2s even for the lightest page; framework+fonts+css+doc chain alone is charged ~2.9-3.5s in the sim traces). Banner fix kept (real 1.3s improvement); budget/profile decision needed from owner: (a) raise LCP budget to measured floor, (b) method change with data (devtools-throttling run in flight), (c) large deferred-JS program (estimated still ~3.0-3.5s).
   * App fix committed as WIP so it survives pod death (budgets still red; not a green-wash: numbers above).
+
+- Recovery#3 03:0x — OPTIONS MEASURED (APPLIED/devtools throttling, same fixed tree):
+  * word-search: perf 0.96 (LCP 2063.0, FCP 2063.0, TBT 113.2, SI 2460), perf 0.97 (LCP 2015.3, FCP 1940.9, TBT 112.3, SI 2369); / : perf 0.96 (LCP 2015.9, FCP 2015.9, TBT 112.9, SI 2848, CLS 0.0227). All budgets pass except FCP hovers at 2000 (1941 pass / 2016-2063 fail by <=63ms).
+  * Raw: /tmp/lh-dt.json, /tmp/lh-dt2.json, /tmp/lh-dt3.json -> copied to pz-program/evidence/s5/.
+- CI for head 63121c2 (pre-fix tree, mobile sim): red — / LCP 5564.124 (5909.6, 6057.8, 5564.1), ws 6036.26, nono 5650.19, arith 5881.97, perf 0.78-0.79. New run 35552065909 on edf0a33 (fixed tree) started 02:42 BST.
+- Options for owner: (1) LHCI settings -> throttlingMethod=devtools (numbers above; decide FCP budget 2000 vs measured ~2.0s; needs CI trial); (2) keep sim, raise LCP budget >= harness floor (lightest route 3178.68; game pages 4135-4541); (3) large deferred-JS program (estimated still 3.0-3.5s sim; 2.5 unreachable).
