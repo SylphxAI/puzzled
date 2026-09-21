@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { appSettings } from '@/lib/db/schema'
 import { aiResponseText } from '@/lib/identity/ai'
+import { logger } from '@/lib/logger'
 import { ai } from './ai-client'
 import { CONNECTIONS_SYSTEM_PROMPT, CONNECTIONS_USER_PROMPT } from './prompts/connections'
 import { CROSSWORD_SYSTEM_PROMPT, CROSSWORD_USER_PROMPT } from './prompts/crossword'
@@ -91,7 +92,7 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 
 	for (let attempt = 1; attempt <= maxRetries; attempt++) {
 		try {
-			console.log(`[${config.name}] Attempt ${attempt}/${maxRetries}`)
+			logger.info('puzzle-generator.attempt', { generator: config.name, attempt, maxRetries })
 
 			// Official Responses document on the Models door (system prompt ->
 			// `instructions`, user turn -> `input`, max_tokens ->
@@ -115,15 +116,19 @@ async function generateWithRetry<TParsed, TResult extends { valid: boolean; erro
 			const result = config.validate(parsed)
 
 			if (result.valid) {
-				console.log(`[${config.name}] Success on attempt ${attempt}`)
+				logger.info('puzzle-generator.attempt-succeeded', { generator: config.name, attempt })
 				config.onSuccess?.(result, attempt)
 				return result
 			}
 
 			lastErrors = result.errors
-			console.warn(`[${config.name}] Validation failed:`, result.errors)
+			logger.warn('puzzle-generator.validation-failed', {
+				generator: config.name,
+				attempt,
+				errors: result.errors,
+			})
 		} catch (error) {
-			console.error(`[${config.name}] Error on attempt ${attempt}:`, error)
+			logger.error('puzzle-generator.attempt-failed', { generator: config.name, attempt, error })
 			lastErrors = [error instanceof Error ? error.message : 'Unknown error']
 		}
 	}
@@ -178,7 +183,7 @@ export async function generateNonogramPuzzle(
 			validate: (parsed) => validateNonogramPuzzle(parsed!),
 			onSuccess: (result) => {
 				if (result.puzzleData?.theme) {
-					console.log(`[Nonogram Generator] Theme: ${result.puzzleData.theme}`)
+					logger.info('puzzle-generator.nonogram-theme', { theme: result.puzzleData.theme })
 				}
 			},
 		},
@@ -203,7 +208,7 @@ export async function generateCrosswordPuzzle(
 			onSuccess: (result) => {
 				const firstWord = result.puzzleData?.clues.across[0]?.answer
 				if (firstWord) {
-					console.log(`[Crossword Generator] First word: ${firstWord}`)
+					logger.info('puzzle-generator.crossword-first-word', { word: firstWord })
 				}
 			},
 		},

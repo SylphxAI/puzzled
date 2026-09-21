@@ -12,6 +12,7 @@
 
 import { env } from '@/lib/env'
 import { useGlobalErrorHandler } from '@/lib/identity/react'
+import { logger } from '@/lib/logger'
 
 interface GlobalErrorHandlerProps {
 	children: React.ReactNode
@@ -40,7 +41,7 @@ export function GlobalErrorHandler({ children }: GlobalErrorHandlerProps) {
 		handleRejections: true,
 		onCapture: (eventId) => {
 			if (eventId && env.NODE_ENV === 'development') {
-				console.log('[Sylphx] Error captured:', eventId)
+				logger.debug('monitoring.error-captured', { eventId })
 			}
 		},
 	})

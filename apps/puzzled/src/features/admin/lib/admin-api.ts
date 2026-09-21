@@ -12,6 +12,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { env } from '@/lib/env'
 import { auth } from '@/lib/identity/server'
+import { logger } from '@/lib/logger'
 import { redis } from '@/lib/redis'
 import { isAdminRole } from '@/lib/roles'
 
@@ -83,7 +84,7 @@ async function logAdminAccess(
 		ip,
 		userId: userId || 'anonymous',
 	}
-	console.warn('[ADMIN ACCESS]', JSON.stringify(logEntry))
+	logger.warn('admin.access-attempt', logEntry)
 	// Record the attempt in audit_logs; Redis stays the rate-limit counter only.
 	const { logAdminAccessAttempt } = await import('@/lib/audit')
 	await logAdminAccessAttempt({ method, success, ip, userId })

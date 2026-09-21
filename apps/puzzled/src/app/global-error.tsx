@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { logger } from '@/lib/logger'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -24,7 +25,7 @@ export default function GlobalError({ error, reset }: Props) {
 		reported.current = true
 
 		// Log to console - SDK context may not be available for global errors
-		console.error('[Global Error]', {
+		logger.error('global-error', {
 			name: error.name,
 			message: error.message,
 			digest: error.digest,

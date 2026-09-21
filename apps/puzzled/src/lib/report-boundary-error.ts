@@ -7,6 +7,13 @@
  * SylphxProvider" and hides the real crossword/play failure.
  */
 
+import { logger } from '@/lib/logger'
+
 export function reportBoundaryError(boundary: string, error: Error & { digest?: string }): void {
-	console.error(`[error-boundary:${boundary}]`, error.message, error.digest ?? '', error)
+	logger.error('error-boundary.report', {
+		boundary,
+		message: error.message,
+		digest: error.digest,
+		error,
+	})
 }

@@ -37,6 +37,7 @@ import {
 import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser, type IdentityUser } from '@/lib/identity/server'
+import { logger } from '@/lib/logger'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { PRODUCT_DAY_TZ, productDayKey } from '@/lib/product-day'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -117,14 +118,14 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 	if (overviewResult.status === 'fulfilled') {
 		todayPlayerCount = overviewResult.value.playerCount
 	} else {
-		console.error('[HomePage] Failed to fetch today overview:', overviewResult.reason)
+		logger.error('home.overview-failed', { reason: overviewResult.reason })
 	}
 
 	let streakInfo: StreakInfo | null = null
 	if (streakResult.status === 'fulfilled') {
 		streakInfo = streakResult.value
 	} else {
-		console.error('[HomePage] Failed to fetch streak info:', streakResult.reason)
+		logger.error('home.streak-failed', { reason: streakResult.reason })
 	}
 
 	let personalResults: Record<string, PersonalDailyResult>
@@ -137,7 +138,7 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 				{ hasCompleted: false, completedSession: null, statusAvailable: false },
 			]),
 		)
-		console.error('[HomePage] Failed to fetch personal daily results:', personalResult.reason)
+		logger.error('home.personal-results-failed', { reason: personalResult.reason })
 	}
 
 	return { user, hasIdentity, isPremium, streakInfo, personalResults, todayPlayerCount }

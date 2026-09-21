@@ -6,6 +6,7 @@ import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { notificationPreferences } from '@/lib/db/schema'
 import { env } from '@/lib/env'
+import { correlationIdFrom, logger } from '@/lib/logger'
 
 export const runtime = 'nodejs' // Required for crypto
 export const dynamic = 'force-dynamic' // Prevent static analysis at build time
@@ -46,7 +47,7 @@ function verifyUnsubscribeToken(token: string): string | null {
 	// Old format tokens are treated as expired for security
 	if (parts.length === 2) {
 		// Old format - no timestamp, treat as expired
-		console.log('[Unsubscribe] Legacy token format detected, treating as expired')
+		logger.info('unsubscribe.token-rejected', { reason: 'legacy-format' })
 		return null
 	}
 
@@ -61,13 +62,13 @@ function verifyUnsubscribeToken(token: string): string | null {
 
 		// Check if token is too old
 		if (now - tokenTime > TOKEN_EXPIRY_MS) {
-			console.log('[Unsubscribe] Token expired')
+			logger.info('unsubscribe.token-rejected', { reason: 'expired' })
 			return null
 		}
 
 		// Check if token is from the future (clock skew protection, allow 5 min)
 		if (tokenTime > now + 5 * MINUTE_MS) {
-			console.log('[Unsubscribe] Token from future, likely tampering')
+			logger.info('unsubscribe.token-rejected', { reason: 'future-timestamp' })
 			return null
 		}
 	} catch {
@@ -135,14 +136,22 @@ export async function POST(request: Request) {
 			})
 		}
 
-		console.log(`[Unsubscribe] User ${userId} unsubscribed from marketing emails`)
+		logger.info('unsubscribe.unsubscribed', {
+			userId,
+			source: 'link',
+			correlationId: correlationIdFrom(request.headers),
+		})
 
 		return NextResponse.json({
 			success: true,
 			message: 'Successfully unsubscribed from marketing emails',
 		})
 	} catch (error) {
-		console.error('[Unsubscribe] Error:', error)
+		logger.error('unsubscribe.failed', {
+			source: 'link',
+			error,
+			correlationId: correlationIdFrom(request.headers),
+		})
 		return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 })
 	}
 }
@@ -182,11 +191,19 @@ export async function GET(request: Request) {
 			})
 		}
 
-		console.log(`[Unsubscribe] User ${userId} unsubscribed via one-click`)
+		logger.info('unsubscribe.unsubscribed', {
+			userId,
+			source: 'one-click',
+			correlationId: correlationIdFrom(request.headers),
+		})
 
 		return NextResponse.redirect(new URL('/unsubscribe?success=true', request.url))
 	} catch (error) {
-		console.error('[Unsubscribe] Error:', error)
+		logger.error('unsubscribe.failed', {
+			source: 'one-click',
+			error,
+			correlationId: correlationIdFrom(request.headers),
+		})
 		return NextResponse.redirect(new URL('/unsubscribe?error=failed', request.url))
 	}
 }

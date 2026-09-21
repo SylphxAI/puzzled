@@ -11,6 +11,7 @@ import {
 } from '@/features/marketing/lib/pricing-plans'
 import { Link } from '@/lib/i18n/routing'
 import { useBilling, usePlans } from '@/lib/identity/react'
+import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 
 type Interval = 'monthly' | 'annual'
@@ -142,7 +143,7 @@ export function PricingContent({
 			toast.success(t('redirectingToCheckout'), t('securePaymentMessage'))
 			window.location.href = checkoutUrl
 		} catch (error) {
-			console.error('Checkout error:', error)
+			logger.error('pricing.checkout-failed', { error })
 
 			// Parse error message for user-friendly feedback
 			const errorMessage = error instanceof Error ? error.message : 'Unknown error'

@@ -1,6 +1,7 @@
 import IORedis from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
 import { env } from './env'
+import { logger } from './logger'
 
 // Redis is residual admin rate-limit I/O, not presentation boot.
 // Do not throw at import: web must listen without REDIS_URL (api owns KV).
@@ -22,7 +23,7 @@ function getRedis(): IORedis {
 		enableReadyCheck: false,
 	})
 	_redis.on('error', (err: Error) => {
-		console.error('[Redis] Connection error:', err.message)
+		logger.error('redis.connection-error', { message: err.message })
 	})
 	return _redis
 }

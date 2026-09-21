@@ -14,6 +14,7 @@ import {
 } from '@/lib/api/server'
 import type { GameMode } from '@/lib/db/schema'
 import { Link } from '@/lib/i18n/routing'
+import { logger } from '@/lib/logger'
 import { productDayKey } from '@/lib/product-day'
 import { DifficultySelectionView } from './difficulty-selection-view'
 import { GameDailyFallback } from './game-daily-fallback'
@@ -104,10 +105,7 @@ export async function GamePlayArea({
 			['hard', hardStatus],
 		] as const) {
 			if (result.status === 'rejected') {
-				console.error(
-					`[GamePage] Failed to load difficulty completion status (${level}):`,
-					result.reason,
-				)
+				logger.error('game-page.difficulty-status-failed', { level, reason: result.reason })
 			}
 		}
 		const completionStatus = deriveDifficultyCompletionStatus({
@@ -178,7 +176,7 @@ export async function GamePlayArea({
 			streakInfo = streakResult.status === 'fulfilled' ? streakResult.value : null
 		}
 	} catch (error) {
-		console.error('[GamePage] Failed to load puzzle data:', error)
+		logger.error('game-page.puzzle-data-failed', { error })
 		// puzzle will remain null, showing error message
 	}
 
