@@ -27,7 +27,6 @@ type Props = {
 export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordHive')
 	const tCommon = useTranslations('common')
-	const tShare = useTranslations('share')
 
 	// Parse puzzle data from server using client-safe parser
 	const [initialPuzzle] = useState(() => {
@@ -160,7 +159,7 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 			statLine: `${game.score} points`,
 		})
 
-		if (outcome === 'copied') showToastMsg(tShare('copied'))
+		if (outcome === 'copied') showToastMsg(tCommon('copied'))
 	}
 
 	// Ready screen

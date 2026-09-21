@@ -627,8 +627,7 @@
 		"sessionsLoading": "正在检查你的会话…",
 		"sessionsCount": "你的账户目前有 {count} 个活动会话。",
 		"sessionsUnavailableTitle": "会话未能加载",
-		"sessionsUnavailableBody": "会话列表没有回应，因此不显示数量。",
-		"signOutHere": "退出此设备"
+		"sessionsUnavailableBody": "会话列表没有回应，因此不显示数量。"
 	},
 	"securityAlerts": {
 		"title": "安全警报",

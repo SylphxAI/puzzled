@@ -13,7 +13,7 @@
  *   3. a recorded group that vanished - a stale baseline, regenerated with
  *      `bun run scripts/i18n-report-duplicate-values.ts --update-baseline`.
  *
- * The check itself is `checksAgainstBaseline` in the report script; this file
+ * The check itself is `diffAgainstBaseline` in the report script; this file
  * runs it inside the suite so CI enforces it, and proves the diff mechanics on
  * synthetic catalogues so a broken baseline loader cannot pass silently.
  */

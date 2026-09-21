@@ -627,8 +627,7 @@
 		"sessionsLoading": "Checking your sessions…",
 		"sessionsCount": "{count, plural, =1 {Your account has 1 active session.} other {Your account has # active sessions.}}",
 		"sessionsUnavailableTitle": "Sessions did not load",
-		"sessionsUnavailableBody": "The session list did not come back, so no count is shown.",
-		"signOutHere": "Sign out of this device"
+		"sessionsUnavailableBody": "The session list did not come back, so no count is shown."
 	},
 	"securityAlerts": {
 		"title": "Security Alerts",
