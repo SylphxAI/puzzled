@@ -13,3 +13,5 @@ Worktree: $HOME/workspace/.worktrees/github.com/SylphxAI/puzzled/td-22.
 ## If resumed
 - Next action: open the PR from debt/td22-casts (body draft: $HOME/work/td22-pr-body.md), or drain review comments if already open.
 - Do not merge/enqueue; no force-push after the PR exists; keep the worktree until the queue lands it.
+
+PR opened: https://github.com/SylphxAI/puzzled/pull/178 (head 7c8e5d7; CI will run on the final head)
