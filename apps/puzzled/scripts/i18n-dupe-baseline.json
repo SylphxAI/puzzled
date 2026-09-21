@@ -207,10 +207,6 @@
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
 			},
 			{
-				"value": "Copied to clipboard!",
-				"keys": ["common.copied", "share.copied"]
-			},
-			{
 				"value": "Copied!",
 				"keys": [
 					"referrals.copied",
@@ -993,10 +989,6 @@
 			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
-			},
-			{
-				"value": "Sign out of this device",
-				"keys": ["settings.account.signOut", "settings.security.signOutHere"]
 			},
 			{
 				"value": "Slug",
@@ -1472,10 +1464,6 @@
 				"keys": ["admin.analytics.conversionRate", "admin.dashboard.conversionRate"]
 			},
 			{
-				"value": "Copied to clipboard!",
-				"keys": ["common.copied", "share.copied"]
-			},
-			{
 				"value": "Copied!",
 				"keys": [
 					"referrals.copied",
@@ -2258,10 +2246,6 @@
 			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
-			},
-			{
-				"value": "Sign out of this device",
-				"keys": ["settings.account.signOut", "settings.security.signOutHere"]
 			},
 			{
 				"value": "Slug",
@@ -3021,10 +3005,6 @@
 				]
 			},
 			{
-				"value": "已複製到剪貼簿！",
-				"keys": ["common.copied", "share.copied"]
-			},
-			{
 				"value": "已複製！",
 				"keys": [
 					"referrals.copied",
@@ -3400,10 +3380,6 @@
 					"settings.account.signOutTitle",
 					"settings.sessions.signOut"
 				]
-			},
-			{
-				"value": "登出此裝置",
-				"keys": ["settings.account.signOut", "settings.security.signOutHere"]
 			},
 			{
 				"value": "發生錯誤",
@@ -4251,10 +4227,6 @@
 				]
 			},
 			{
-				"value": "已複製到剪貼簿！",
-				"keys": ["common.copied", "share.copied"]
-			},
-			{
 				"value": "已複製！",
 				"keys": [
 					"referrals.copied",
@@ -4626,10 +4598,6 @@
 					"settings.account.signOutTitle",
 					"settings.sessions.signOut"
 				]
-			},
-			{
-				"value": "登出此裝置",
-				"keys": ["settings.account.signOut", "settings.security.signOutHere"]
 			},
 			{
 				"value": "發生錯誤",
@@ -5510,10 +5478,6 @@
 				"keys": ["settings.subscription.features.included", "subscription.included"]
 			},
 			{
-				"value": "已复制到剪贴板！",
-				"keys": ["common.copied", "share.copied"]
-			},
-			{
 				"value": "已复制！",
 				"keys": [
 					"referrals.copied",
@@ -6095,10 +6059,6 @@
 			{
 				"value": "退出",
 				"keys": ["common.signOut", "settings.sessions.signOut"]
-			},
-			{
-				"value": "退出此设备",
-				"keys": ["settings.account.signOut", "settings.security.signOutHere"]
 			},
 			{
 				"value": "通知",
