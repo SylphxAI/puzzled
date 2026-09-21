@@ -17,6 +17,7 @@ import {
 	type IdentityUser,
 	type Plan,
 } from './dest'
+import type { CommercePremium } from './index'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -39,6 +40,9 @@ const AuthContext = createContext<AuthState>({
 
 const AppConfigContext = createContext<AppConfig>(EMPTY_APP_CONFIG)
 
+/** Server-resolved entitlement for this request; never resolved in the browser. */
+const BillingContext = createContext<CommercePremium | null>(null)
+
 async function readJson(response: Response): Promise<Record<string, unknown>> {
 	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
 }
@@ -46,12 +50,19 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
 export function SylphxProvider({
 	children,
 	config,
+	billing,
 }: {
 	children: ReactNode
 	appId?: string
 	config?: AppConfig
 	platformUrl?: string
 	afterSignOutUrl?: string
+	/**
+	 * The server-resolved entitlement snapshot (one EvaluateEntitlement per
+	 * request, threaded from the layout). Client surfaces read it as data and
+	 * never resolve a copy of their own.
+	 */
+	billing?: CommercePremium | null
 }) {
 	const [user, setUser] = useState<IdentityUser | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
@@ -115,7 +126,9 @@ export function SylphxProvider({
 	)
 	return (
 		<AppConfigContext.Provider value={config ?? EMPTY_APP_CONFIG}>
-			<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+			<BillingContext.Provider value={billing ?? null}>
+				<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+			</BillingContext.Provider>
 		</AppConfigContext.Provider>
 	)
 }
@@ -125,6 +138,7 @@ export function PlatformProvider(props: {
 	appId?: string
 	config?: AppConfig
 	platformUrl?: string
+	billing?: CommercePremium | null
 }) {
 	return <SylphxProvider {...props}>{props.children}</SylphxProvider>
 }
@@ -348,39 +362,22 @@ export function useResetPasswordForm(opts?: {
 
 export type { Plan }
 
-type BillingState = {
-	subscription: { planSlug?: string; status?: string } | null
-	isPremium: boolean
-	isLoading: boolean
-}
-
+/**
+ * Billing state for the chrome.
+ *
+ * The entitlement is the server's answer - resolved once per request from
+ * Commerce EvaluateEntitlement and threaded down as data - so this hook reads
+ * it and never evaluates a second copy. There is nothing to load: the value is
+ * present from the first paint, which is why `isLoading` is constant false.
+ * The actions below are the only client-side billing calls; both hand off to
+ * the billing authority through the API routes.
+ */
 export function useBilling() {
-	const [state, setState] = useState<BillingState>({
-		subscription: null,
-		isPremium: false,
-		isLoading: true,
-	})
-	useEffect(() => {
-		let cancelled = false
-		fetch('/api/identity/billing', { credentials: 'same-origin' })
-			.then(async (response) => {
-				const body = await readJson(response)
-				if (cancelled) return
-				setState({
-					subscription: (body.subscription as BillingState['subscription']) ?? null,
-					isPremium: body.isPremium === true,
-					isLoading: false,
-				})
-			})
-			.catch(() => {
-				if (!cancelled) setState({ subscription: null, isPremium: false, isLoading: false })
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [])
+	const billing = useContext(BillingContext)
 	return {
-		...state,
+		subscription: billing?.subscription ?? null,
+		isPremium: billing?.isPremium ?? false,
+		isLoading: false,
 		openPortal: async () => {
 			const response = await fetch('/api/identity/billing/portal', {
 				method: 'POST',

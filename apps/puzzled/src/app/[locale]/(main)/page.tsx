@@ -109,7 +109,7 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 		getServerPersonalDailyResults({
 			gameSlugs,
 			isGuest: !user,
-			isPremium,
+			userId: user?.id ?? null,
 			freeGameSlug: getTodaysFreeGame(),
 		}),
 	])
