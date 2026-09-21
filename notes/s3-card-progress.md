@@ -27,3 +27,6 @@
 - Evidence re-rendered FROM THE SHIPPED CATALOGUES (render2.mjs reads src/messages/<locale>/share.json): card-word-guess-2026-09-21.png 796410 B md5 1f7b5c11ee1c4af0de7160bb531a4355 (en-US, emerald); card-crossword-zh-HK-2026-09-21.png 810431 B md5 6044b3b10325a3941b62bce5a0307380 (zh-HK, blue). Captions printed = resultCardTextAlternative in both locales. README.md updated.
 - Checks: bunx tsc --noEmit rc=0 (log /tmp/s3card-tsc.log); card set (result-card, result-card-render, share-result-card, result-card-wiring, share-card-copy, share-text) 57 pass / 0 fail.
 - **Next:** commit+push checkpoint 4; checkpoint 5 = G3 row in docs/program/website-refactor/gaps.md (closed at source 2026-09-21 by this PR's branch, live layer Unknown); then open PR + <180-word deliverable.
+
+- [2026-09-21 ~01:26] **Checkpoint 5/5 done: G3 row closed at source.** docs/program/website-refactor/gaps.md row G3 ONLY: first cell gains *(closed at source)*; target cell replaced with closure narrative (branch s3/result-card; commits ec4fb22/4a246b5/f41f66e/57469f6; model allowlist -> renderer 1080x1080 -> one-tap share w/ download+copy fallback; 5-locale parity + wiring guards; evidence pointer notes/); live layer explicitly Unknown.
+- **Next:** open PR (base main) with <180-word deliverable: PR URL; what the card shows + how it's reached; mutation summary; evidence paths; not covered.
