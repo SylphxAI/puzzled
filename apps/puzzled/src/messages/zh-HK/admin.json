@@ -332,7 +332,8 @@
 			"impersonate_start": "開始模擬",
 			"impersonate_end": "結束模擬",
 			"feature_flag_toggle": "功能旗標切換",
-			"admin_action": "管理操作"
+			"admin_action": "管理操作",
+			"admin_access": "管理員存取"
 		},
 		"filters": {
 			"searchPlaceholder": "按資源 ID 或 IP 位址搜尋...",
