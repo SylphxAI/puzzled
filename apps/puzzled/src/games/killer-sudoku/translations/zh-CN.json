@@ -1,0 +1,26 @@
+{
+	"tagline": "数独 • 笼内总和",
+	"highlight": "总和谜题",
+	"description": "加入笼内总和限制的数独",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每行、每列和每个 3×3 宫格都填入 1 到 9",
+		"rule2": "每个笼内的数字总和必须等于笼上标示的数字",
+		"rule3": "同一个笼内不能有重复数字"
+	},
+	"startGame": "开始游戏",
+	"complete": "谜题完成！",
+	"notes": "笔记",
+	"notesMode": "笔记模式",
+	"difficulty": {
+		"easy": "简单",
+		"medium": "中等",
+		"hard": "困难"
+	},
+	"difficultyDescriptions": {
+		"easy": "已填 20 格，助你起步",
+		"medium": "已填 10 格 — 靠笼内总和推理",
+		"hard": "没有提示数字，全靠笼内总和"
+	}
+}

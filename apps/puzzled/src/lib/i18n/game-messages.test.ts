@@ -110,6 +110,34 @@ describe('game copy: locale selection', () => {
 		}
 	})
 
+	test('every registered module resolves its own zh-HK catalogue', () => {
+		const resolved = resolveGameMessages('zh-HK')
+
+		for (const key of Object.keys(GAME_TRANSLATIONS_EN)) {
+			const slug = GAME_COPY_SOURCES[key]
+			const file = join(translationDir(slug), 'zh-HK.json')
+
+			// The file must exist: a module whose copy still resolves to English
+			// wholesale is the gap this guard pins down.
+			expect({ key, slug, file: existsSync(file) }).toEqual({ key, slug, file: true })
+
+			// It must parse, carry at least one real translation, and be what the
+			// resolver actually serves — never silently ignored.
+			const overlay = readCopyFromDisk(slug, 'zh-HK.json')
+			const fileLeaves = leaves(overlay)
+			expect(fileLeaves.length).toBeGreaterThan(0)
+			for (const [path, value] of fileLeaves) {
+				expect({ key, path, resolved: getPath(resolved[key], path) }).toEqual({
+					key,
+					path,
+					resolved: value,
+				})
+			}
+			const english = GAME_TRANSLATIONS_EN[key] as Json
+			expect(fileLeaves.some(([path, value]) => getPath(english, path) !== value)).toBe(true)
+		}
+	})
+
 	test('a locale file is what the resolver returns, key for key', () => {
 		for (const locale of TRANSLATED_LOCALES) {
 			const resolved = resolveGameMessages(locale)

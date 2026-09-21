@@ -1,0 +1,23 @@
+{
+	"tagline": "一步一步 • 文字接龙",
+	"highlight": "文字接龙",
+	"description": "逐个字母改，把一个词变成另一个词",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每次只改一个字母",
+		"rule2": "每一步都必须是有效的词",
+		"rule3": "用最少步数到达目标词"
+	},
+	"startGame": "开始游戏",
+	"enterWord": "输入一个词…",
+	"submit": "出发",
+	"undo": "撤销",
+	"complete": "你做到了！",
+	"messages": {
+		"notInList": "不是有效的词",
+		"wrongLength": "词语长度必须相同",
+		"notOneChange": "必须只改一个字母",
+		"alreadyUsed": "这个词已经用过"
+	}
+}

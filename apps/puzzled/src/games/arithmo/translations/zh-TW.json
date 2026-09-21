@@ -1,0 +1,21 @@
+{
+	"tagline": "8 個字元 • 數學謎題",
+	"highlight": "算式謎題",
+	"description": "6 次機會內猜出算式",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "在 6 次機會內猜出隱藏的算式",
+		"rule2": "每次猜測都必須是有效的算式",
+		"rule3": "顏色會顯示你的猜測有多接近"
+	},
+	"startGame": "開始遊戲",
+	"keyboard": {
+		"enter": "輸入",
+		"delete": "刪除"
+	},
+	"messages": {
+		"notComplete": "字元數量不足",
+		"invalid": "算式無效"
+	}
+}
