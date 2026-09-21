@@ -36,7 +36,11 @@ commit into the branch and push (explicit refspec, read back via ls-remote).
 ## PR
 - **#170** https://github.com/SylphxAI/puzzled/pull/170 - head `845b4b8`, 78 files, +1240/-5771, base main.
 
+## CI
+- Run 35556608968 (head `54035c8`): **6/6 pass** - Lint & Type Check 57s, Migration Integrity 12s, Security Scan 19s,
+  Unit Tests 1m51s, Rust API 1m58s, Build 2m11s (includes the document-route check). Raw: `notes/td01-ci-watch.txt`.
+- Local: build RC=0 (`notes/td01-build.txt`), document-route RC=0 (`notes/td01-document-route.txt`).
+
 ## Next actions
-1. Watch CI on #170 (`notes/td01-ci-watch.txt`). If red, root-cause from the run log and fix in place.
-2. Independent review (author cannot self-review); orchestrator lane per company procedure.
-3. Build RC=0; document-route RC=0 (`notes/td01-document-route.txt`).
+1. Independent review (author cannot self-review); orchestrator lane per company procedure.
+2. After landing: TD-16 (messages registry guard) - orchestrator queue.
