@@ -32,3 +32,12 @@ Status: 2026-09-21 ~11:40 BST. Worktree: $HOME/workspace/.worktrees/github.com/S
   conflict-free (#178/#179 touch no TD-24 file).
 - Remote update was a fast-forward 2a8641c..21e7f9d; read back 21e7f9d7374fc087e4747129c8386779f360fd5c.
 - Next: before-dump + --check on the merged tree; normalisation; mutation proof; gates; PR.
+
+## Recovery run 2 - normalisation + proofs done (2026-09-22 ~01:15 BST)
+
+- Slice: "Copied to clipboard!" (share.copied -> common.copied; 4 sites + 3 bindings dropped) and "Sign out of this device" (settings.security.signOutHere -> settings.account.signOut; 1 site); keys deleted from en-US/zh-CN/zh-HK (en-GB/zh-TW inherit).
+- Proof: resolved dumps differ by EXACTLY the 10 removed keys (2 x 5 locales; none added/changed; 2724 -> 2722 leaves per locale). Baseline 1169 -> 1159 via --update-baseline; staleness RED captured in between; check green after.
+- Mutation proof: duplicate key added -> --check RED naming the group + suite 2 fail; reverted -> green + suite 6 pass.
+- Fixed the byte-equality baseline test (0a34aae): biome pre-commit re-formats the JSON (short arrays inline), so it now compares parsed content (would otherwise fail CI).
+- Commits pushed: 45660c7, d753378, 0a34aae. Evidence notes: td24-before.md, td24-proof.md, td24-mutation.md.
+- Next: full gates (suite running; then typecheck/lint/build), then PR.
