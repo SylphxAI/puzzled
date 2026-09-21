@@ -92,3 +92,6 @@ Local checks: test:unit 1079 pass / 6 skip / 0 fail; typecheck exit 0; biome cle
 - [x] 3. TD-02 commit + push (this note + notes/td02-guard-on-base.txt + notes/td02-recovery-proof.txt ride along).
 - [ ] 4. PR + checks; PR URL + head sha appended below once open.
 Resume note: if a later run resumes mid-step, read this section; the push, if unverified, is HEAD:refs/heads/debt/td02-td03-ssot.
+- [x] (recovery) TD-02 commit a3a4929 pushed: 5388514..a3a4929 HEAD -> debt/td02-td03-ssot; ls-remote readback a3a4929366f4577596506c50d266874c31067875;
+      lefthook pre-commit: biome 15 files no fixes; @sylphx/puzzled typecheck 12.785s ok.
+- [ ] Next: open PR (base main, head debt/td02-td03-ssot) with the TD-03/TD-02 summaries + not-in-scope list; then watch checks. PR URL + check status appended below.
