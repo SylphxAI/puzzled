@@ -97,3 +97,9 @@ Pending characterization: the dead worker's hooks gate log shows 1 failing test 
 - Forced typecheck: exit 0 (2/2 tasks, 0 cached, 8.959s). Build: exit 0 (next 16.3.3, 118/118 pages). assert-document-route: exit 0 (status=200, 381,566 bytes, 1789ms).
 - origin/main re-checked after fetch: still be3f6dc2 == merge-base; no rebase needed.
 - Raw evidence committed as notes/td11-proof.txt. Opening the PR next.
+
+## Recovery checkpoint 5 - PR open
+- PR: https://github.com/SylphxAI/puzzled/pull/181 (TD-11).
+- Done: hooks split (75a5f86) verified + react split (a49cd44) completed & verified; proofs in notes/td11-proof.txt; gates green (lint/typecheck/tests/build/assert; parity fail environmental).
+- Deferred (listed as follow-ups): word-guess words.ts move, puzzles.ts marker, nonogram/quad-words data moves, packages/ui behind TD-12.
+- No enqueue/merge performed (per instructions).
