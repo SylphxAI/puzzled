@@ -1,0 +1,87 @@
+./apps/puzzled/src/lib/config/app.ts:15:const _APP_EMAIL_NAME = APP_NAME
+./apps/puzzled/src/features/gamification/components/achievements.tsx:172:function _AchievementBadges({ stats }: AchievementsProps) {
+./apps/puzzled/src/games/arithmo/components/how-to-play.tsx:72:function _ArithmoHowToPlayTitle() {
+./apps/puzzled/src/games/block-slide/components/how-to-play.tsx:71:function _BlockSlideHowToPlayTitle() {
+./apps/puzzled/src/shared/components/ui/game-icons.tsx:118:const _CATEGORY_COLORS = {
+./apps/puzzled/src/features/gamification/lib/achievements.ts:329:const _CATEGORY_ICONS = {
+./apps/puzzled/src/features/gamification/lib/achievements.ts:340:const _CATEGORY_NAMES = {
+./apps/puzzled/src/features/puzzle-generator/lib/prompts/connections.ts:75:const _CONNECTIONS_THEMED_PROMPT = (
+./apps/puzzled/src/features/puzzle-generator/lib/prompts/crossword.ts:83:const _CROSSWORD_AVOID_WORDS_PROMPT = (
+./apps/puzzled/src/games/word-groups/components/how-to-play.tsx:67:function _ConnectionsHowToPlayTitle() {
+./apps/puzzled/src/games/crossword/components/how-to-play.tsx:54:function _CrosswordHowToPlayTitle() {
+./apps/puzzled/src/games/cryptogram/components/how-to-play.tsx:61:function _CryptogramHowToPlayTitle() {
+./apps/puzzled/src/features/daily/lib/puzzle-utils.ts:109:const _DAILY_PUZZLE_SYSTEM = {
+./apps/puzzled/src/games/nonogram/types.ts:45:const _DEFAULT_SIZE = 10
+./apps/puzzled/src/features/daily/components/difficulty-selector.tsx:26:function _DifficultySelector({ options, selected, onSelect, className }: DifficultySelectorProps) {
+./apps/puzzled/src/games/killer-sudoku/components/how-to-play.tsx:95:function _KillerSudokuHowToPlayTitle() {
+./apps/puzzled/src/games/word-box/types.ts:52:const _LETTERS_PER_SIDE = 3
+./apps/puzzled/src/games/word-box/components/how-to-play.tsx:126:function _LetterBoxedHowToPlayTitle() {
+./apps/puzzled/src/features/puzzle-generator/lib/prompts/nonogram.ts:81:const _NONOGRAM_AVOID_THEMES_PROMPT = (
+./apps/puzzled/src/features/puzzle-generator/lib/prompts/nonogram.ts:64:const _NONOGRAM_THEMED_PROMPT = (
+./apps/puzzled/src/games/nonogram/components/how-to-play.tsx:84:function _NonogramHowToPlayTitle() {
+./apps/puzzled/src/games/pattern-match/components/how-to-play.tsx:62:function _PatternMatchHowToPlayTitle() {
+./apps/puzzled/src/games/queens/components/how-to-play.tsx:81:function _QueensHowToPlayTitle() {
+./apps/puzzled/src/games/quad-words/components/how-to-play.tsx:75:function _QuordleHowToPlayTitle() {
+./apps/puzzled/src/shared/components/ui/game-icons.tsx:127:const _SHARE_SQUARES = {
+./apps/puzzled/src/shared/components/sound/sound-toggle.tsx:19:function _SoundToggle({ className, showLabel = false }: SoundToggleProps) {
+./apps/puzzled/src/games/word-hive/components/how-to-play.tsx:56:function _SpellingBeeHowToPlayTitle() {
+./apps/puzzled/src/games/sudoku/components/how-to-play.tsx:58:function _SudokuHowToPlayTitle() {
+./apps/puzzled/src/lib/storage-keys.ts:25:const _THEME_KEY = 'theme' // Standard next-themes key
+./apps/puzzled/src/features/gamification/lib/achievements.ts:321:const _TIER_BORDER_COLORS = {
+./apps/puzzled/src/lib/config/validation.ts:142:const _TIMING = {
+./apps/puzzled/src/games/word-box/types.ts:53:const _TOTAL_LETTERS = 12
+./apps/puzzled/src/games/tango/components/how-to-play.tsx:98:function _TangoHowToPlayTitle() {
+./apps/puzzled/src/lib/constants/time.ts:19:const _WEEK_SECONDS = 7 * DAY_SECONDS
+./apps/puzzled/src/games/word-hive/dictionary.ts:68:const _WORD_COUNTS = {
+./apps/puzzled/src/games/word-ladder/components/how-to-play.tsx:50:function _WordLadderHowToPlayTitle() {
+./apps/puzzled/src/games/word-search/components/how-to-play.tsx:53:function _WordSearchHowToPlayTitle() {
+./apps/puzzled/src/games/word-guess/components/how-to-play.tsx:75:function _WordleHowToPlayTitle() {
+./apps/puzzled/src/lib/config/validation.ts:81:const _adminPaginationSchema = z.object({
+./apps/puzzled/src/features/analytics/lib/consent.ts:115:function _clearConsentData(): void {
+./apps/puzzled/src/lib/config/validation.ts:124:const _currencySchema = z
+./apps/puzzled/src/lib/constants/time.ts:59:function _daysToMs(days: number): number {
+./apps/puzzled/src/games/word-hive/dictionary.ts:111:function _findPangrams(letters: string[], words: string[]): string[] {
+./apps/puzzled/src/games/shared/format.ts:15:function _formatTime(
+./apps/puzzled/src/games/registry.server.ts:163:async function _generateAllPuzzles(date: string): Promise<GenerationSummary> {
+./apps/puzzled/src/features/puzzle-generator/lib/generator.ts:251:async function _generateDailyPuzzles(date: string): Promise<DailyPuzzleResults> {
+./apps/puzzled/src/features/analytics/lib/consent.ts:37:function _getConsentPreferences(): ConsentPreferences {
+./apps/puzzled/src/games/word-groups/puzzles.ts:1043:function _getDailyPuzzle(): ConnectionsPuzzle {
+./apps/puzzled/src/games/sudoku/generator.ts:189:function _getDifficultyFromSeed(seed: number): 'easy' | 'medium' | 'hard' {
+./apps/puzzled/src/games/nonogram/generator.ts:886:function _getEffectivePuzzleCount(): number {
+./apps/puzzled/src/games/arithmo/equations.ts:28:function _getEquationCount(): number {
+./apps/puzzled/src/games/registry.ts:211:function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
+./apps/puzzled/src/games/registry.ts:196:function _getGamesWithDifficulty(): GameMetadata[] {
+./apps/puzzled/src/games/registry.ts:119:function _getHowToPlayContent(slug: string) {
+./apps/puzzled/src/games/nonogram/generator.ts:879:function _getPatternCount(): number {
+./apps/puzzled/src/games/word-guess/words.ts:17201:function _getPuzzleNumber(date: Date = new Date()): number {
+./apps/puzzled/src/games/word-groups/puzzles.ts:1050:function _getRandomPuzzle(): ConnectionsPuzzle {
+./apps/puzzled/src/games/queens/generator.ts:284:function _getSizeFromSeed(seed: number): number {
+./apps/puzzled/src/features/puzzle-generator/lib/generator.ts:217:function _getTodayDateString(): string {
+./apps/puzzled/src/features/puzzle-generator/lib/generator.ts:225:function _getTomorrowDateString(): string {
+./apps/puzzled/src/games/word-ladder/dictionary.ts:1945:function _getWordCount(): number {
+./apps/puzzled/src/games/word-hive/dictionary.ts:91:function _getWordsForLetters(letters: string[]): string[] {
+./apps/puzzled/src/games/tango/types.ts:55:function _hasConsecutiveViolation(
+./apps/puzzled/src/games/llm-generators.server.ts:163:function _hasLLMGenerator(slug: string): boolean {
+./apps/puzzled/src/features/puzzle-generator/lib/validators/nonogram.ts:151:function _hasUniqueSolution(puzzleData: NonogramPuzzleData, solution: NonogramSolution): boolean {
+./apps/puzzled/src/lib/constants/time.ts:87:function _hoursToMs(hours: number): number {
+./apps/puzzled/src/lib/redis.ts:209:const _impersonation = {
+./apps/puzzled/src/games/sudoku/types.ts:107:function _isCellCorrect(
+./apps/puzzled/src/games/crossword/types.ts:104:function _isClueCorrect(
+./apps/puzzled/src/games/word-hive/config.ts:66:function _isPangram(word: string, allLetters: string[]): boolean {
+./apps/puzzled/src/games/queens/generator.ts:17:function _isValidQueenPlacement(queens: [number, number][]): boolean {
+./apps/puzzled/src/lib/audit/index.ts:140:async function _logAchievementUnlock(
+./apps/puzzled/src/lib/audit/index.ts:104:async function _logGameComplete(
+./apps/puzzled/src/lib/audit/index.ts:122:async function _logStreakUpdate(
+./apps/puzzled/src/lib/audit/index.ts:85:async function _logUserAction(
+./apps/puzzled/src/lib/constants/time.ts:94:function _minutesToMs(minutes: number): number {
+./apps/puzzled/src/lib/config/validation.ts:75:const _paginationSchema = z.object({
+./apps/puzzled/src/games/shared/random.ts:77:function _pickRandomN<T>(array: T[], n: number, random: () => number): T[] {
+./apps/puzzled/src/lib/config/validation.ts:50:const _referralCodeSchema = z
+./apps/puzzled/src/games/shared/random.ts:54:function _seededShuffle<T>(array: T[], seed: number): T[] {
+./apps/puzzled/src/features/analytics/lib/consent.ts:83:function _setConsentStatus(status: 'accepted' | 'declined'): void {
+./apps/puzzled/src/features/daily/hooks/use-guest-game-state.ts:162:function _useGuestCompletionStatus() {
+./apps/puzzled/src/shared/hooks/use-haptic.ts:46:function _useHaptic() {
+./apps/puzzled/src/features/analytics/lib/sdk-analytics.ts:661:function _useJourneyStage(params: {
+./apps/puzzled/src/games/word-hive/generator.ts:187:function _validateLetterSet(config: ComputedLetterSet): {
+./apps/puzzled/src/games/word-ladder/generator.ts:141:function _validatePath(path: string[]): boolean {
+./apps/puzzled/src/games/sudoku/generator.ts:197:function _validateSudokuGrid(grid: number[][]): boolean {
