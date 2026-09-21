@@ -59,11 +59,6 @@ export function PatternMatchHowToPlay() {
 	)
 }
 
-function _PatternMatchHowToPlayTitle() {
-	const t = useTranslations('games.patternMatch')
-	return <>{t('howToPlay')}</>
-}
-
 function PatternExampleCard({
 	shape,
 	color,

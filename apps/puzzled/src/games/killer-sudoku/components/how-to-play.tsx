@@ -91,8 +91,3 @@ export function KillerSudokuHowToPlay() {
 		</div>
 	)
 }
-
-function _KillerSudokuHowToPlayTitle() {
-	const t = useTranslations('games.killerSudoku')
-	return <>{t('howToPlay')}</>
-}

@@ -76,24 +76,3 @@ Requirements:
 - Create something DIFFERENT from the example
 
 Return ONLY the JSON, no explanation.`
-
-/**
- * Prompt to avoid duplicate puzzles
- */
-const _CROSSWORD_AVOID_WORDS_PROMPT = (
-	usedWords: string[],
-) => `Generate a 5×5 Crossword Mini word square puzzle.
-
-IMPORTANT: Do NOT use any of these words (already used in recent puzzles):
-${usedWords.map((w) => `- ${w}`).join('\n')}
-
-Create a completely different word square with fresh words!
-
-Return ONLY valid JSON in the standard format:
-{
-  "grid": [[...], [...], [...], [...], [...]],  // 5×5 uppercase letters
-  "clues": {
-    "across": [{"number": 1, "clue": "..."}, ...],
-    "down": [{"number": 1, "clue": "..."}, ...]
-  }
-}`

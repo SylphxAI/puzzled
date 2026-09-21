@@ -100,16 +100,3 @@ export function isGridComplete(userGrid: SudokuCell[][], solution: number[][]): 
 	}
 	return true
 }
-
-/**
- * Check if user's current entry at a cell is correct
- */
-function _isCellCorrect(
-	userGrid: SudokuCell[][],
-	solution: number[][],
-	row: number,
-	col: number,
-): boolean {
-	const userValue = userGrid[row]?.[col]?.value
-	return userValue === solution[row]?.[col]
-}

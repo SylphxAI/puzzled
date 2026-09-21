@@ -71,8 +71,3 @@ export function QuordleHowToPlay() {
 		</div>
 	)
 }
-
-function _QuordleHowToPlayTitle() {
-	const t = useTranslations('games.quadWords')
-	return <>{t('howToPlay')}</>
-}

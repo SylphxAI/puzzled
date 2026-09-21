@@ -49,9 +49,6 @@ export type LetterBoxedGameState = {
 	endTime: number | null
 }
 
-const _LETTERS_PER_SIDE = 3
-const _TOTAL_LETTERS = 12
-
 /**
  * Get the side a letter belongs to
  */

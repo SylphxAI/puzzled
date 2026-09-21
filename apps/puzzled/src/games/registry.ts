@@ -113,15 +113,6 @@ export function isValidGameSlug(slug: string): slug is GameSlug {
 }
 
 /**
- * Get HowToPlayContent component for a game
- * Returns undefined if game not found or has no HowToPlay
- */
-function _getHowToPlayContent(slug: string) {
-	const config = GAME_CONFIGS[slug as GameSlug]
-	return config?.HowToPlayContent
-}
-
-/**
  * Get all games sorted by sortOrder
  */
 // biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
@@ -191,27 +182,10 @@ export function getAllGameMetadata(): GameMetadata[] {
 }
 
 /**
- * Get all games that support difficulty selection
- */
-function _getGamesWithDifficulty(): GameMetadata[] {
-	return getAllGameMetadata().filter((game) => game.supportsDifficulty)
-}
-
-/**
  * Check if a game supports difficulty selection
  */
 export function gameSupportsDifficulty(slug: string): boolean {
 	return getGameConfig(slug)?.supportsDifficulty ?? false
-}
-
-/**
- * Get difficulty levels for a game
- * Returns undefined if game doesn't support difficulty
- */
-function _getGameDifficultyLevels(slug: string): DifficultyLevelConfig[] | undefined {
-	const config = getGameConfig(slug)
-	if (!config?.supportsDifficulty) return undefined
-	return config.difficultyLevels
 }
 
 /**

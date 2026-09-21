@@ -57,38 +57,3 @@ Requirements:
 Be creative! Think of unique objects: telescope, cupcake, headphones, lighthouse, hot air balloon, etc.
 
 Return ONLY the JSON, no explanation.`
-
-/**
- * Themed prompt for specific categories
- */
-const _NONOGRAM_THEMED_PROMPT = (
-	theme: string,
-) => `Generate a Nonogram pixel art puzzle with the theme: "${theme}"
-
-The picture should clearly represent something related to this theme.
-
-Return ONLY valid JSON in the same format as before:
-{
-  "theme": "SPECIFIC OBJECT NAME",
-  "grid": [[...], [...], ...]  // 10×10 grid of 0s and 1s
-}
-
-Make sure the silhouette is recognizable as something related to "${theme}".`
-
-/**
- * Exclusion prompt to avoid duplicate themes
- */
-const _NONOGRAM_AVOID_THEMES_PROMPT = (
-	usedThemes: string[],
-) => `Generate a Nonogram pixel art puzzle.
-
-IMPORTANT: Do NOT create any of these themes (already used):
-${usedThemes.map((t) => `- ${t}`).join('\n')}
-
-Create something completely different and unique!
-
-Return ONLY valid JSON in the standard format:
-{
-  "theme": "UNIQUE OBJECT NAME",
-  "grid": [[...], [...], ...]  // 10×10 grid of 0s and 1s
-}`

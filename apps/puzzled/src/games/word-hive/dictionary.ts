@@ -64,53 +64,9 @@ export const SPELLING_BEE_DICTIONARY = {
 		loadDictionary().forEach(callback),
 }
 
-// Export word counts for debugging (lazy)
-const _WORD_COUNTS = {
-	get raw() {
-		loadDictionary()
-		return _wordCounts?.raw ?? 0
-	},
-	get filtered() {
-		loadDictionary()
-		return _wordCounts?.filtered ?? 0
-	},
-}
-
 /**
  * Check if a word is in the dictionary
  */
 function _isValidWord(word: string): boolean {
 	return SPELLING_BEE_DICTIONARY.has(word.toUpperCase())
-}
-
-/**
- * Get all words that can be formed from a set of letters
- * @param letters - Array of 7 letters (first is center)
- * @returns Array of valid words
- */
-function _getWordsForLetters(letters: string[]): string[] {
-	const letterSet = new Set(letters.map((l) => l.toUpperCase()))
-	const centerLetter = letters[0].toUpperCase()
-
-	return Array.from(SPELLING_BEE_DICTIONARY).filter((word) => {
-		// Word must contain center letter
-		if (!word.includes(centerLetter)) return false
-
-		// All letters in word must be in letter set
-		for (const char of word) {
-			if (!letterSet.has(char)) return false
-		}
-
-		return true
-	})
-}
-
-/**
- * Find pangrams (words using all 7 letters)
- */
-function _findPangrams(letters: string[], words: string[]): string[] {
-	return words.filter((word) => {
-		const wordLetters = new Set(word.split(''))
-		return letters.every((l) => wordLetters.has(l.toUpperCase()))
-	})
 }

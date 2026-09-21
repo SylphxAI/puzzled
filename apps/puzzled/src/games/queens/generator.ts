@@ -12,32 +12,6 @@ import { seededRandom, shuffleArray } from '@/games/shared/random'
 import type { QueensPuzzleData, QueensSolution } from './types'
 
 /**
- * Check if queens at positions are valid (no row/column conflicts, no adjacency)
- */
-function _isValidQueenPlacement(queens: [number, number][]): boolean {
-	const size = queens.length
-
-	for (let i = 0; i < size; i++) {
-		const [r1, c1] = queens[i]
-
-		for (let j = i + 1; j < size; j++) {
-			const [r2, c2] = queens[j]
-
-			// Same row
-			if (r1 === r2) return false
-
-			// Same column
-			if (c1 === c2) return false
-
-			// Adjacent (including diagonal)
-			if (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1) return false
-		}
-	}
-
-	return true
-}
-
-/**
  * Generate valid queen positions using backtracking
  */
 function generateQueenPositions(size: number, random: () => number): [number, number][] {

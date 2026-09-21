@@ -50,10 +50,6 @@ export function WordSearchHowToPlay() {
 	)
 }
 
-function _WordSearchHowToPlayTitle() {
-	return <>How to Play Word Hunt</>
-}
-
 function GridCell({ letter, highlighted = false }: { letter: string; highlighted?: boolean }) {
 	return (
 		<div

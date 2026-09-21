@@ -72,11 +72,6 @@ export function WordleHowToPlay() {
 	)
 }
 
-function _WordleHowToPlayTitle() {
-	const t = useTranslations('games.wordGuess')
-	return <>{t('howToPlay')}</>
-}
-
 type TileStatus = 'correct' | 'present' | 'absent'
 
 function WordleTile({ letter, status }: { letter: string; status: TileStatus }) {
