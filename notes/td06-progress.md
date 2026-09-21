@@ -18,7 +18,7 @@ Recovery log, kept current. Started 2026-09-21 ~02:35 Europe/London.
 - [x] A. enum + migration + atlas.sum (commit 451961c; pushed)
 - [x] B. lib/audit: logAdminAccessAttempt + unit test (2 pass)
 - [x] C. admin-api: logAdminAccess switch + caller test (3 pass)
-- [ ] D. messages x5 locales + filters ACTION_TYPES += admin_access
+- [x] D. messages x5 locales + filters ACTION_TYPES += admin_access (filter list line 30; admin_access in auditLogs.actions of all 5 locales)
 - [ ] E. targeted tests + full bun test src + typecheck + lint
 - [ ] F. mutation proof (red output, restore, green output)
 - [ ] G. open PR with evidence
@@ -60,5 +60,9 @@ index ca36235..befbd91 100644
 (pass) checkAdminWithMfa admin access logging > records a successful secret attempt in the audit log [0.16ms]
 (pass) checkAdminWithMfa admin access logging > records a rate-limited attempt in the audit log [0.37ms]
 
+### D (UI copy + filter)
+- audit-log-filters.tsx: ACTION_TYPES += 'admin_access'.
+- messages: auditLogs.actions.admin_access in all 5 locales (en-GB/en-US "Admin Access", zh-CN "管理员访问", zh-HK/zh-TW "管理員存取").
+
 ## Next action
-- D: messages auditLogs.actions.admin_access x5 locales + ACTION_TYPES += 'admin_access'.
+- E: full suite + CI-shaped typecheck + lint; then mutation proof; then PR.

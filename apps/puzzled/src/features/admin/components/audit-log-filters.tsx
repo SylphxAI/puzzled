@@ -27,6 +27,7 @@ const ACTION_TYPES = [
 	'streak_update',
 	'achievement_unlock',
 	'admin_action',
+	'admin_access',
 ] as const
 
 // Resource types for app-specific audit logs

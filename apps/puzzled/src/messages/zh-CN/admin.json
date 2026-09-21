@@ -332,7 +332,8 @@
 			"impersonate_start": "开始模拟",
 			"impersonate_end": "结束模拟",
 			"feature_flag_toggle": "功能标志切换",
-			"admin_action": "管理操作"
+			"admin_action": "管理操作",
+			"admin_access": "管理员访问"
 		},
 		"filters": {
 			"searchPlaceholder": "按资源 ID 或 IP 地址搜索...",
