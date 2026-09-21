@@ -33,13 +33,13 @@ import { tangoConfig } from './tango/config'
 import type {
 	DifficultyLevelConfig,
 	GameCategory,
-	GameConfig,
 	GameDifficulty,
 	GameDisplayMeta,
 	GameRegistry,
 	GameResult,
 	GameSkill,
 	GameSubmission,
+	RegisteredGameConfig,
 } from './types'
 import { wordBoxConfig } from './word-box/config'
 import { wordGroupsConfig } from './word-groups/config'
@@ -98,8 +98,7 @@ export function getGameSlugs(): string[] {
 /**
  * Get game config by slug
  */
-// biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
-export function getGameConfig(slug: string): GameConfig<any, any, any, any> | undefined {
+export function getGameConfig(slug: string): RegisteredGameConfig | undefined {
 	const key = catalogSlug(slug)
 	if (!key) return undefined
 	return GAME_CONFIGS[key]
@@ -115,8 +114,7 @@ export function isValidGameSlug(slug: string): slug is GameSlug {
 /**
  * Get all games sorted by sortOrder
  */
-// biome-ignore lint/suspicious/noExplicitAny: Registry returns union of all game configs
-export function getAllGames(): GameConfig<any, any, any, any>[] {
+export function getAllGames(): RegisteredGameConfig[] {
 	return Object.values(GAME_CONFIGS).sort((a, b) => a.sortOrder - b.sortOrder)
 }
 
@@ -241,8 +239,11 @@ export function validateAndScore(
 	if (!config) {
 		return { valid: false, error: `Unknown game: ${slug}` }
 	}
-	// biome-ignore lint/suspicious/noExplicitAny: Runtime validated slug guarantees matching types
-	return config.validateAndScore(solution as any, puzzleData as any, submission)
+	// The stored {solution, puzzleData} pair was produced by this same module
+	// (registry.server.ts stores whatever its generatePuzzle returned), and the
+	// registry cannot re-derive those types from a runtime slug - so the pair is
+	// handed over as opaque data and each game narrows what it receives.
+	return config.validateAndScore(solution, puzzleData, submission)
 }
 
 // ==========================================
