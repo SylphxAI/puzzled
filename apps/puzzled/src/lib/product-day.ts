@@ -20,6 +20,33 @@ export function formatDayKey(year: number, month: number, day: number): string {
 
 const DAY_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
+export type DayKeyParts = {
+	/** Four-digit civil year. */
+	year: number
+	/** 1-12. */
+	month: number
+	/** 1-31 (`Date.UTC` carries overflow; this is the shape, not the calendar). */
+	day: number
+}
+
+/**
+ * Parse a `YYYY-MM-DD` day key into its civil-date parts, or `undefined`.
+ *
+ * Shape-only on purpose - the behaviour both sides of the day-key code
+ * shared: `isValidDayKey` adds the real-calendar round-trip on top, while
+ * the day arithmetic (`ordinal0FromDayKey`, the archive's `shiftDayKey`)
+ * works on the parts and lets `Date.UTC` carry/normalise them. So
+ * `2026-02-30` parses here, and only the callers that need a real calendar
+ * day reject it. Surrounding whitespace is ignored; `undefined` and `null`
+ * do not parse.
+ */
+export function parseDayKey(value: string | undefined | null): DayKeyParts | undefined {
+	if (typeof value !== 'string') return undefined
+	const match = DAY_KEY_PATTERN.exec(value.trim())
+	if (!match) return undefined
+	return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) }
+}
+
 /**
  * True when `value` is a real calendar day in strict `YYYY-MM-DD` form.
  *
@@ -29,12 +56,9 @@ const DAY_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
  * have.
  */
 export function isValidDayKey(value: string | undefined | null): boolean {
-	if (typeof value !== 'string') return false
-	const match = DAY_KEY_PATTERN.exec(value.trim())
-	if (!match) return false
-	const year = Number(match[1])
-	const month = Number(match[2])
-	const day = Number(match[3])
+	const parts = parseDayKey(value)
+	if (!parts) return false
+	const { year, month, day } = parts
 	if (month < 1 || month > 12 || day < 1 || day > 31) return false
 	const utc = new Date(Date.UTC(year, month - 1, day))
 	return (
@@ -72,15 +96,12 @@ export function productDayKey(now: Date = new Date()): string {
 
 /** 0-based day-of-year for a `YYYY-MM-DD` civil date (Jan 1 = 0). */
 export function ordinal0FromDayKey(dayKey: string): number {
-	const match = DAY_KEY_PATTERN.exec(dayKey.trim())
-	if (!match) {
+	const parts = parseDayKey(dayKey)
+	if (!parts) {
 		throw new Error(`invalid_day_key:${dayKey}`)
 	}
-	const year = Number(match[1])
-	const month = Number(match[2])
-	const day = Number(match[3])
-	const utc = Date.UTC(year, month - 1, day)
-	const start = Date.UTC(year, 0, 1)
+	const utc = Date.UTC(parts.year, parts.month - 1, parts.day)
+	const start = Date.UTC(parts.year, 0, 1)
 	return Math.round((utc - start) / DAY_MS)
 }
 

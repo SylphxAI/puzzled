@@ -36,6 +36,14 @@ describe('archiveDayKeys', () => {
 	test('rejects a malformed day key', () => {
 		expect(() => archiveDayKeys('19-09-2026', 1)).toThrow('invalid_day_key')
 	})
+
+	test('rejects a shape-valid but impossible day at the gate', () => {
+		expect(() => archiveDayKeys('2026-02-30', 1)).toThrow('invalid_day_key')
+	})
+
+	test('reads the day key through the shared parser, whitespace and all', () => {
+		expect(archiveDayKeys(' 2026-03-01 ', 2)).toEqual(['2026-02-28', '2026-02-27'])
+	})
 })
 
 describe('archiveDays', () => {
