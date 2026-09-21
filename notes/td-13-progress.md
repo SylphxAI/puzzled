@@ -21,7 +21,7 @@ NOINDEX_ROUTE_PREFIXES. Prove sitemap/robots/SEO outputs byte-identical (quote b
 - 2026-09-21 ~01:5x (run 2): prior run died after 5290a99; remote was e03e3f7. Pushed recovery commits; strengthened guards; both mutations red then restored green; captures byte-identical. Host quirk observed: shell calls sometimes return empty (exit undefined) but still execute - always verify state before retrying a mutation.
 
 ## Next action
-Push this notes commit; open PR (branch debt/td13-seo-route-prefixes -> main).
+Done: PR https://github.com/SylphxAI/puzzled/pull/166 opened (head bb5d463f46e460e433524df4ebafe93ba273387e, base main).
 
 ## Evidence files ($HOME/work/pz-program/notes/)
 - td13-test-before.txt / td13-test-after.txt / td13-mut-a.txt / td13-mut-b.txt
