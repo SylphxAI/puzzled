@@ -10,6 +10,7 @@ import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
 import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
 import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
+import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
 import { GamePlayArea } from './game-play-area'
@@ -108,6 +109,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 
 	const tGames = await getTranslations('games')
 	const tCatalog = await getTranslations('catalog')
+	const tCommon = await getTranslations()
 
 	// Get user
 	const user = await currentUser()
@@ -124,7 +126,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 	const difficultyLabels =
 		moduleMetadata.supportsDifficulty && moduleMetadata.difficultyLevels
 			? moduleMetadata.difficultyLevels.map((level) =>
-					readMessage(tGames, `${translationKey}.difficulty.${level.level}`, level.level),
+					readMessage(tCommon, difficultyLabelKey(level.level), level.level),
 				)
 			: []
 
