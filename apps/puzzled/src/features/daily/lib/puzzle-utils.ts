@@ -104,8 +104,3 @@ function _getTimeUntilNextUTCMidnight(): {
 		seconds: Math.floor((diff % (1000 * 60)) / 1000),
 	}
 }
-
-// Export constants
-const _DAILY_PUZZLE_SYSTEM = {
-	DEFAULT_LAUNCH_DATE,
-} as const

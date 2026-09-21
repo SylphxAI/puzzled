@@ -69,11 +69,6 @@ export function ArithmoHowToPlay() {
 	)
 }
 
-function _ArithmoHowToPlayTitle() {
-	const t = useTranslations('games.arithmo')
-	return <>{t('howToPlay')}</>
-}
-
 function ArithmoCell({ char, status }: { char: string; status: 'correct' | 'present' | 'absent' }) {
 	return (
 		<div

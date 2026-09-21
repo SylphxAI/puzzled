@@ -1938,10 +1938,3 @@ export function getWordList(): Set<string> {
 function _isValidWord(word: string): boolean {
 	return WORD_SET.has(word.toLowerCase())
 }
-
-/**
- * Get word count
- */
-function _getWordCount(): number {
-	return WORD_SET.size
-}

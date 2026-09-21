@@ -67,8 +67,3 @@ export function BlockSlideHowToPlay() {
 		</div>
 	)
 }
-
-function _BlockSlideHowToPlayTitle() {
-	const t = useTranslations('games.blockSlide')
-	return <>{t('howToPlay')}</>
-}

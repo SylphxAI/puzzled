@@ -50,46 +50,6 @@ export const DEFAULT_SIZE = 6
 export const MAX_CONSECUTIVE = 2
 
 /**
- * Check if placing a value would cause more than 2 consecutive same symbols
- */
-function _hasConsecutiveViolation(
-	grid: TangoCell[][],
-	row: number,
-	col: number,
-	value: CellValue,
-): boolean {
-	if (!value) return false
-
-	const size = grid.length
-
-	// Check horizontal
-	let hCount = 1
-	// Check left
-	for (let c = col - 1; c >= 0 && grid[row][c].value === value; c--) {
-		hCount++
-	}
-	// Check right
-	for (let c = col + 1; c < size && grid[row][c].value === value; c++) {
-		hCount++
-	}
-	if (hCount > MAX_CONSECUTIVE) return true
-
-	// Check vertical
-	let vCount = 1
-	// Check up
-	for (let r = row - 1; r >= 0 && grid[r][col].value === value; r--) {
-		vCount++
-	}
-	// Check down
-	for (let r = row + 1; r < size && grid[r][col].value === value; r++) {
-		vCount++
-	}
-	if (vCount > MAX_CONSECUTIVE) return true
-
-	return false
-}
-
-/**
  * Get conflicts for the current grid state
  */
 export function getConflicts(grid: TangoCell[][]): { row: number; col: number }[] {

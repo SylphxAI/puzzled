@@ -64,6 +64,7 @@
 		"easy": "Easy",
 		"medium": "Medium",
 		"hard": "Hard",
+		"tricky": "Tricky",
 		"selectDifficulty": "Select Difficulty",
 		"chooseDifficulty": "Choose your challenge level",
 		"playOtherDifficulties": "Play Other Difficulties",

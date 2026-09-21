@@ -81,11 +81,6 @@ export function NonogramHowToPlay() {
 	)
 }
 
-function _NonogramHowToPlayTitle() {
-	const t = useTranslations('games.nonogram')
-	return <>{t('howToPlay')}</>
-}
-
 function NonogramCell({ filled = false }: { filled?: boolean }) {
 	return (
 		<div

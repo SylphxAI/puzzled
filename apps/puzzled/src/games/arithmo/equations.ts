@@ -8,7 +8,7 @@
  * Each seed produces a deterministic equation.
  */
 
-import { generateArithmoPuzzle, getEquationPoolCount } from './generator'
+import { generateArithmoPuzzle } from './generator'
 import type { ArithmoPuzzleData, ArithmoSolution } from './types'
 
 /**
@@ -20,11 +20,4 @@ export function getPuzzleFromSeed(seed: number): {
 	solution: ArithmoSolution
 } {
 	return generateArithmoPuzzle(seed)
-}
-
-/**
- * Get count of available equations
- */
-function _getEquationCount(): number {
-	return getEquationPoolCount()
 }

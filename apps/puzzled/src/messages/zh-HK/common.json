@@ -61,9 +61,10 @@
 		"current": "目前主題：{theme}"
 	},
 	"difficulty": {
-		"easy": "Easy",
-		"medium": "Medium",
-		"hard": "Hard",
+		"easy": "簡單",
+		"medium": "中等",
+		"hard": "困難",
+		"tricky": "棘手",
 		"selectDifficulty": "Select Difficulty",
 		"chooseDifficulty": "Choose your challenge level",
 		"playOtherDifficulties": "Play Other Difficulties",

@@ -58,10 +58,6 @@ export function CryptogramHowToPlay() {
 	)
 }
 
-function _CryptogramHowToPlayTitle() {
-	return <>How to Play Cryptogram</>
-}
-
 function CryptoLetter({
 	encrypted,
 	guess,

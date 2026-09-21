@@ -11,9 +11,6 @@ export const APP_NAME = 'Puzzled' as const
 /** Application domain (without protocol) */
 const APP_DOMAIN = 'puzzled.gg' as const
 
-/** Default sender email name */
-const _APP_EMAIL_NAME = APP_NAME
-
 /** Support email */
 export const SUPPORT_EMAIL = `support@${APP_DOMAIN}`
 

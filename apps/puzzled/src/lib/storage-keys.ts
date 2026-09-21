@@ -20,11 +20,6 @@ export const CONSENT_KEY = 'puzzled:consent:cookie'
 export const CONSENT_TIMESTAMP_KEY = 'puzzled:consent:timestamp'
 
 // ==========================================
-// Theme & Display
-// ==========================================
-const _THEME_KEY = 'theme' // Standard next-themes key
-
-// ==========================================
 // Sound & Audio
 // ==========================================
 export const SOUND_ENABLED_KEY = 'puzzled:sound:enabled'

@@ -1,0 +1,424 @@
+$ biome check .
+src/features/daily/lib/result-card-render.ts:53:11 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    51 │ 	return {
+    52 │ 		bg: '#0a0f1c',
+  > 53 │ 		bgWash: 'rgba(' + rgb + ', 0.08)',
+       │ 		        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    54 │ 		glow: 'rgba(' + rgb + ', 0.30)',
+    55 │ 		frame: 'rgba(255,255,255,0.10)',
+  
+  i Unsafe fix: Use a template literal.
+  
+     51  51 │   	return {
+     52  52 │   		bg: '#0a0f1c',
+     53     │ - → → bgWash:·'rgba('·+·rgb·+·',·0.08)',
+         53 │ + → → bgWash:·`rgba(${rgb},·0.08)`,
+     54  54 │   		glow: 'rgba(' + rgb + ', 0.30)',
+     55  55 │   		frame: 'rgba(255,255,255,0.10)',
+  
+
+src/features/daily/lib/result-card-render.ts:54:9 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    52 │ 		bg: '#0a0f1c',
+    53 │ 		bgWash: 'rgba(' + rgb + ', 0.08)',
+  > 54 │ 		glow: 'rgba(' + rgb + ', 0.30)',
+       │ 		      ^^^^^^^^^^^^^^^^^^^^^^^^^
+    55 │ 		frame: 'rgba(255,255,255,0.10)',
+    56 │ 		accent,
+  
+  i Unsafe fix: Use a template literal.
+  
+     52  52 │   		bg: '#0a0f1c',
+     53  53 │   		bgWash: 'rgba(' + rgb + ', 0.08)',
+     54     │ - → → glow:·'rgba('·+·rgb·+·',·0.30)',
+         54 │ + → → glow:·`rgba(${rgb},·0.30)`,
+     55  55 │   		frame: 'rgba(255,255,255,0.10)',
+     56  56 │   		accent,
+  
+
+src/features/daily/lib/result-card-render.ts:57:15 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    55 │ 		frame: 'rgba(255,255,255,0.10)',
+    56 │ 		accent,
+  > 57 │ 		accentSoft: 'rgba(' + rgb + ', 0.55)',
+       │ 		            ^^^^^^^^^^^^^^^^^^^^^^^^^
+    58 │ 		chipBg: 'rgba(255,255,255,0.06)',
+    59 │ 		chipStroke: 'rgba(255,255,255,0.14)',
+  
+  i Unsafe fix: Use a template literal.
+  
+     55  55 │   		frame: 'rgba(255,255,255,0.10)',
+     56  56 │   		accent,
+     57     │ - → → accentSoft:·'rgba('·+·rgb·+·',·0.55)',
+         57 │ + → → accentSoft:·`rgba(${rgb},·0.55)`,
+     58  58 │   		chipBg: 'rgba(255,255,255,0.06)',
+     59  59 │   		chipStroke: 'rgba(255,255,255,0.14)',
+  
+
+src/features/daily/lib/result-card-render.ts:123:14 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    121 │ 	const floor = Math.round(minPx)
+    122 │ 	while (px > floor) {
+  > 123 │ 		ctx.font = weight + ' ' + px + 'px ' + FONT_FAMILY
+        │ 		           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    124 │ 		if (ctx.measureText(text).width <= maxWidth) return px
+    125 │ 		px -= 2
+  
+  i Unsafe fix: Use a template literal.
+  
+    121 121 │   	const floor = Math.round(minPx)
+    122 122 │   	while (px > floor) {
+    123     │ - → → ctx.font·=·weight·+·'·'·+·px·+·'px·'·+·FONT_FAMILY
+        123 │ + → → ctx.font·=·`${weight}·${px}px·${FONT_FAMILY}`
+    124 124 │   		if (ctx.measureText(text).width <= maxWidth) return px
+    125 125 │   		px -= 2
+  
+
+src/features/daily/lib/result-card-render.ts:190:13 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    188 │ 	// Header: wordmark left, product day right (when the run has one).
+    189 │ 	ctx.fillStyle = palette.text
+  > 190 │ 	ctx.font = '700 ' + Math.round(36 * scale) + 'px ' + FONT_FAMILY
+        │ 	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    191 │ 	trackedText(ctx, 'PUZZLED', innerX, 168 * scale, 8 * scale)
+    192 │ 	if (model.dayDisplay) {
+  
+  i Unsafe fix: Use a template literal.
+  
+    188 188 │   	// Header: wordmark left, product day right (when the run has one).
+    189 189 │   	ctx.fillStyle = palette.text
+    190     │ - → ctx.font·=·'700·'·+·Math.round(36·*·scale)·+·'px·'·+·FONT_FAMILY
+        190 │ + → ctx.font·=·`700·${Math.round(36·*·scale)}px·${FONT_FAMILY}`
+    191 191 │   	trackedText(ctx, 'PUZZLED', innerX, 168 * scale, 8 * scale)
+    192 192 │   	if (model.dayDisplay) {
+  
+
+src/features/daily/lib/result-card-render.ts:195:14 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    193 │ 		ctx.textAlign = 'right'
+    194 │ 		ctx.fillStyle = palette.textMuted
+  > 195 │ 		ctx.font = '500 ' + Math.round(34 * scale) + 'px ' + FONT_FAMILY
+        │ 		           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    196 │ 		ctx.fillText(model.dayDisplay, innerX + innerW, 168 * scale)
+    197 │ 		ctx.textAlign = 'left'
+  
+  i Unsafe fix: Use a template literal.
+  
+    193 193 │   		ctx.textAlign = 'right'
+    194 194 │   		ctx.fillStyle = palette.textMuted
+    195     │ - → → ctx.font·=·'500·'·+·Math.round(34·*·scale)·+·'px·'·+·FONT_FAMILY
+        195 │ + → → ctx.font·=·`500·${Math.round(34·*·scale)}px·${FONT_FAMILY}`
+    196 196 │   		ctx.fillText(model.dayDisplay, innerX + innerW, 168 * scale)
+    197 197 │   		ctx.textAlign = 'left'
+  
+
+src/features/daily/lib/result-card-render.ts:202:13 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    200 │ 	// The module's name is the biggest thing on the card.
+    201 │ 	const titleSize = fitTextSize(ctx, model.gameName, innerW, 96 * scale, 54 * scale, '800')
+  > 202 │ 	ctx.font = '800 ' + titleSize + 'px ' + FONT_FAMILY
+        │ 	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    203 │ 	ctx.fillStyle = palette.text
+    204 │ 	ctx.fillText(model.gameName, innerX, 336 * scale)
+  
+  i Unsafe fix: Use a template literal.
+  
+    200 200 │   	// The module's name is the biggest thing on the card.
+    201 201 │   	const titleSize = fitTextSize(ctx, model.gameName, innerW, 96 * scale, 54 * scale, '800')
+    202     │ - → ctx.font·=·'800·'·+·titleSize·+·'px·'·+·FONT_FAMILY
+        202 │ + → ctx.font·=·`800·${titleSize}px·${FONT_FAMILY}`
+    203 203 │   	ctx.fillStyle = palette.text
+    204 204 │   	ctx.fillText(model.gameName, innerX, 336 * scale)
+  
+
+src/features/daily/lib/result-card-render.ts:207:13 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    206 │ 	// Status in the theme accent.
+  > 207 │ 	ctx.font = '700 ' + Math.round(46 * scale) + 'px ' + FONT_FAMILY
+        │ 	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    208 │ 	ctx.fillStyle = palette.accent
+    209 │ 	ctx.fillText(model.status === 'won' ? strings.statusWon : strings.statusLost, innerX, 418 * scale)
+  
+  i Unsafe fix: Use a template literal.
+  
+    205 205 │   
+    206 206 │   	// Status in the theme accent.
+    207     │ - → ctx.font·=·'700·'·+·Math.round(46·*·scale)·+·'px·'·+·FONT_FAMILY
+        207 │ + → ctx.font·=·`700·${Math.round(46·*·scale)}px·${FONT_FAMILY}`
+    208 208 │   	ctx.fillStyle = palette.accent
+    209 209 │   	ctx.fillText(model.status === 'won' ? strings.statusWon : strings.statusLost, innerX, 418 * scale)
+  
+
+src/features/daily/lib/result-card-render.ts:238:15 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    236 │ 			ctx.textAlign = 'center'
+    237 │ 			ctx.fillStyle = palette.textMuted
+  > 238 │ 			ctx.font = '600 ' + Math.round(30 * scale) + 'px ' + FONT_FAMILY
+        │ 			           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    239 │ 			ctx.fillText(chip.label, x + chipW / 2, chipY + 58 * scale)
+    240 │ 			const valueSize = fitTextSize(
+  
+  i Unsafe fix: Use a template literal.
+  
+    236 236 │   			ctx.textAlign = 'center'
+    237 237 │   			ctx.fillStyle = palette.textMuted
+    238     │ - → → → ctx.font·=·'600·'·+·Math.round(30·*·scale)·+·'px·'·+·FONT_FAMILY
+        238 │ + → → → ctx.font·=·`600·${Math.round(30·*·scale)}px·${FONT_FAMILY}`
+    239 239 │   			ctx.fillText(chip.label, x + chipW / 2, chipY + 58 * scale)
+    240 240 │   			const valueSize = fitTextSize(
+  
+
+src/features/daily/lib/result-card-render.ts:249:15 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    247 │ 			)
+    248 │ 			ctx.fillStyle = palette.text
+  > 249 │ 			ctx.font = '800 ' + valueSize + 'px ' + FONT_FAMILY
+        │ 			           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    250 │ 			ctx.fillText(chip.value, x + chipW / 2, chipY + 120 * scale)
+    251 │ 			ctx.textAlign = 'left'
+  
+  i Unsafe fix: Use a template literal.
+  
+    247 247 │   			)
+    248 248 │   			ctx.fillStyle = palette.text
+    249     │ - → → → ctx.font·=·'800·'·+·valueSize·+·'px·'·+·FONT_FAMILY
+        249 │ + → → → ctx.font·=·`800·${valueSize}px·${FONT_FAMILY}`
+    250 250 │   			ctx.fillText(chip.value, x + chipW / 2, chipY + 120 * scale)
+    251 251 │   			ctx.textAlign = 'left'
+  
+
+src/features/daily/lib/result-card-render.ts:296:13 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    294 │ 	ctx.textAlign = 'center'
+    295 │ 	ctx.fillStyle = palette.textMuted
+  > 296 │ 	ctx.font = '500 ' + Math.round(32 * scale) + 'px ' + FONT_FAMILY
+        │ 	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    297 │ 	ctx.fillText(model.deepLink, innerX + innerW / 2, 984 * scale)
+    298 │ 	ctx.textAlign = 'left'
+  
+  i Unsafe fix: Use a template literal.
+  
+    294 294 │   	ctx.textAlign = 'center'
+    295 295 │   	ctx.fillStyle = palette.textMuted
+    296     │ - → ctx.font·=·'500·'·+·Math.round(32·*·scale)·+·'px·'·+·FONT_FAMILY
+        296 │ + → ctx.font·=·`500·${Math.round(32·*·scale)}px·${FONT_FAMILY}`
+    297 297 │   	ctx.fillText(model.deepLink, innerX + innerW / 2, 984 * scale)
+    298 298 │   	ctx.textAlign = 'left'
+  
+
+src/features/daily/lib/result-card-render.ts:333:5 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    331 │ 			.replace(/^-+|-+$/g, '') || 'puzzled'
+    332 │ 	return model.dayKey
+  > 333 │ 		? 'puzzled-result-' + slug + '-' + model.dayKey + '.png'
+        │ 		  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    334 │ 		: 'puzzled-result-' + slug + '.png'
+    335 │ }
+  
+  i Unsafe fix: Use a template literal.
+  
+    331 331 │   			.replace(/^-+|-+$/g, '') || 'puzzled'
+    332 332 │   	return model.dayKey
+    333     │ - → → ?·'puzzled-result-'·+·slug·+·'-'·+·model.dayKey·+·'.png'
+        333 │ + → → ?·`puzzled-result-${slug}-${model.dayKey}.png`
+    334 334 │   		: 'puzzled-result-' + slug + '.png'
+    335 335 │   }
+  
+
+src/features/daily/lib/result-card-render.ts:334:5 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    332 │ 	return model.dayKey
+    333 │ 		? 'puzzled-result-' + slug + '-' + model.dayKey + '.png'
+  > 334 │ 		: 'puzzled-result-' + slug + '.png'
+        │ 		  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    335 │ }
+    336 │ 
+  
+  i Unsafe fix: Use a template literal.
+  
+    332 332 │   	return model.dayKey
+    333 333 │   		? 'puzzled-result-' + slug + '-' + model.dayKey + '.png'
+    334     │ - → → :·'puzzled-result-'·+·slug·+·'.png'
+        334 │ + → → :·`puzzled-result-${slug}.png`
+    335 335 │   }
+    336 336 │   
+  
+
+src/games/shared/result-card-wiring.test.ts:39:32 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    37 │ 		const missing = modalCallers
+    38 │ 			.filter((file) => !readFileSync(file, 'utf8').includes('puzzleDate={puzzleDate}'))
+  > 39 │ 			.map((file) => file.replace(SRC + '/', ''))
+       │ 			                            ^^^^^^^^^
+    40 │ 		expect(missing).toEqual([])
+    41 │ 	})
+  
+  i Unsafe fix: Use a template literal.
+  
+    37 37 │   		const missing = modalCallers
+    38 38 │   			.filter((file) => !readFileSync(file, 'utf8').includes('puzzleDate={puzzleDate}'))
+    39    │ - → → → .map((file)·=>·file.replace(SRC·+·'/',·''))
+       39 │ + → → → .map((file)·=>·file.replace(`${SRC}/`,·''))
+    40 40 │   		expect(missing).toEqual([])
+    41 41 │   	})
+  
+
+src/lib/i18n/share-card-copy.test.ts:97:11 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    95 │ 		for (const [locale, catalogue] of Object.entries(CATALOGS)) {
+    96 │ 			const card = cardBlock(catalogue)
+  > 97 │ 			expect(locale + ':' + Object.keys(card).sort().join(',')).toBe(
+       │ 			       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    98 │ 				locale + ':' + expected.join(','),
+    99 │ 			)
+  
+  i Unsafe fix: Use a template literal.
+  
+     95  95 │   		for (const [locale, catalogue] of Object.entries(CATALOGS)) {
+     96  96 │   			const card = cardBlock(catalogue)
+     97     │ - → → → expect(locale·+·':'·+·Object.keys(card).sort().join(',')).toBe(
+         97 │ + → → → expect(`${locale}:${Object.keys(card).sort().join(',')}`).toBe(
+     98  98 │   				locale + ':' + expected.join(','),
+     99  99 │   			)
+  
+
+src/lib/i18n/share-card-copy.test.ts:98:5 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+     96 │ 			const card = cardBlock(catalogue)
+     97 │ 			expect(locale + ':' + Object.keys(card).sort().join(',')).toBe(
+   > 98 │ 				locale + ':' + expected.join(','),
+        │ 				^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     99 │ 			)
+    100 │ 			for (const [key, value] of Object.entries(card)) {
+  
+  i Unsafe fix: Use a template literal.
+  
+     96  96 │   			const card = cardBlock(catalogue)
+     97  97 │   			expect(locale + ':' + Object.keys(card).sort().join(',')).toBe(
+     98     │ - → → → → locale·+·':'·+·expected.join(','),
+         98 │ + → → → → `${locale}:${expected.join(',')}`,
+     99  99 │   			)
+    100 100 │   			for (const [key, value] of Object.entries(card)) {
+  
+
+src/lib/i18n/share-card-copy.test.ts:102:12 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    100 │ 			for (const [key, value] of Object.entries(card)) {
+    101 │ 				const empty = typeof value !== 'string' || value.trim().length === 0
+  > 102 │ 				expect(locale + '.' + key + (empty ? ' IS EMPTY' : '')).toBe(locale + '.' + key)
+        │ 				       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    103 │ 			}
+    104 │ 		}
+  
+  i Unsafe fix: Use a template literal.
+  
+    100 100 │   			for (const [key, value] of Object.entries(card)) {
+    101 101 │   				const empty = typeof value !== 'string' || value.trim().length === 0
+    102     │ - → → → → expect(locale·+·'.'·+·key·+·(empty·?·'·IS·EMPTY'·:·'')).toBe(locale·+·'.'·+·key)
+        102 │ + → → → → expect(`${locale}.${key}${empty·?·'·IS·EMPTY'·:·''}`).toBe(locale·+·'.'·+·key)
+    103 103 │   			}
+    104 104 │   		}
+  
+
+src/lib/i18n/share-card-copy.test.ts:102:66 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    100 │ 			for (const [key, value] of Object.entries(card)) {
+    101 │ 				const empty = typeof value !== 'string' || value.trim().length === 0
+  > 102 │ 				expect(locale + '.' + key + (empty ? ' IS EMPTY' : '')).toBe(locale + '.' + key)
+        │ 				                                                             ^^^^^^^^^^^^^^^^^^
+    103 │ 			}
+    104 │ 		}
+  
+  i Unsafe fix: Use a template literal.
+  
+    100 100 │   			for (const [key, value] of Object.entries(card)) {
+    101 101 │   				const empty = typeof value !== 'string' || value.trim().length === 0
+    102     │ - → → → → expect(locale·+·'.'·+·key·+·(empty·?·'·IS·EMPTY'·:·'')).toBe(locale·+·'.'·+·key)
+        102 │ + → → → → expect(locale·+·'.'·+·key·+·(empty·?·'·IS·EMPTY'·:·'')).toBe(`${locale}.${key}`)
+    103 103 │   			}
+    104 104 │   		}
+  
+
+src/lib/i18n/share-card-copy.test.ts:112:13 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    110 │ 			for (const [key, placeholders] of Object.entries(REQUIRED_PLACEHOLDERS)) {
+    111 │ 				for (const placeholder of placeholders) {
+  > 112 │ 					expect(locale + '.' + key + ' {').toBe(
+        │ 					       ^^^^^^^^^^^^^^^^^^^^^^^^^
+    113 │ 						locale +
+    114 │ 							'.' +
+  
+  i Unsafe fix: Use a template literal.
+  
+    110 110 │   			for (const [key, placeholders] of Object.entries(REQUIRED_PLACEHOLDERS)) {
+    111 111 │   				for (const placeholder of placeholders) {
+    112     │ - → → → → → expect(locale·+·'.'·+·key·+·'·{').toBe(
+        112 │ + → → → → → expect(`${locale}.${key}·{`).toBe(
+    113 113 │   						locale +
+    114 114 │   							'.' +
+  
+
+src/lib/i18n/share-card-copy.test.ts:117:29 lint/style/useTemplate  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Template literals are preferred over string concatenation.
+  
+    115 │ 							key +
+    116 │ 							' ' +
+  > 117 │ 							(card[key]?.includes('{' + placeholder + '}') ? '{' : 'MISSING'),
+        │ 							                     ^^^^^^^^^^^^^^^^^^^^^^^
+    118 │ 					)
+    119 │ 				}
+  
+  i Unsafe fix: Use a template literal.
+  
+    115 115 │   							key +
+    116 116 │   							' ' +
+    117     │ - → → → → → → → (card[key]?.includes('{'·+·placeholder·+·'}')·?·'{'·:·'MISSING'),
+        117 │ + → → → → → → → (card[key]?.includes(`{${placeholder}}`)·?·'{'·:·'MISSING'),
+    118 118 │   					)
+    119 119 │   				}
+  
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 3.
+Checked 895 files in 436ms. No fixes applied.
+Found 23 infos.

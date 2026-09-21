@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import { GAME_CONFIGS } from '@/games/registry'
 import type { DifficultyLevelConfig } from '@/games/types'
-import { slugToCamelCase } from '@/lib/game-slug'
 import { resolveLocale } from '../../../scripts/i18n-resolved-catalogue'
+import { DIFFICULTY_LEVELS, difficultyLabelKey } from './difficulty'
 import { resolveGameMessages } from './game-messages'
 
 /**
@@ -14,8 +14,11 @@ import { resolveGameMessages } from './game-messages'
  * copy with `t()` and no fallback, so the featured module printed
  * `games.crowns.difficulty.easy` as literal text on the live site.
  *
- * The scan is the guard: a new module, a renamed key, or a locale with a
- * missing catalogue entry fails here instead of reaching a player's screen.
+ * TD-15 converged the labels: every difficulty name now resolves from the
+ * shared `common.difficulty.*` vocabulary, derived by `difficultyLabelKey`
+ * (including the Word Groups legend's numeric `0..3` index). The scan is the
+ * guard: a new module, a renamed key, a swapped level mapping, or a locale
+ * with a missing catalogue entry fails here instead of reaching a screen.
  */
 
 type Json = Record<string, unknown>
@@ -87,6 +90,8 @@ describe('difficulty copy: every declared key resolves in every locale', () => {
 		for (const locale of LOCALES) {
 			for (const { slug, levels } of difficultyModules()) {
 				for (const level of levels) {
+					// The config's declared key is the shared mapping, not a copy.
+					expect(level.labelKey).toBe(difficultyLabelKey(level.level))
 					const value = resolveCatalogueKey(locale, level.labelKey)
 					const where = { locale, slug, level: level.level, key: level.labelKey }
 					expect({ ...where, string: typeof value === 'string' }).toEqual({
@@ -125,13 +130,13 @@ describe('difficulty copy: every declared key resolves in every locale', () => {
 	})
 
 	test('the difficulty name each registered slug renders resolves in every locale', () => {
-		// This is the exact path the home card and the game hero build:
-		// `games.<slugToCamelCase(slug)>.difficulty.<level>`. It leaked
-		// `games.crowns.difficulty.easy` onto the live home page.
+		// The game hero renders each level's label from the shared vocabulary;
+		// the key is derived by `difficultyLabelKey`, never built from the
+		// module namespace (that leaked `games.crowns.difficulty.easy`).
 		for (const locale of LOCALES) {
 			for (const { slug, levels } of difficultyModules()) {
 				for (const level of levels) {
-					const key = `games.${slugToCamelCase(slug)}.difficulty.${level.level}`
+					const key = difficultyLabelKey(level.level)
 					const value = resolveCatalogueKey(locale, key)
 					const where = { locale, slug, level: level.level, key }
 					expect({ ...where, string: typeof value === 'string' }).toEqual({
@@ -141,6 +146,25 @@ describe('difficulty copy: every declared key resolves in every locale', () => {
 					expect(String(value)).not.toBe(key)
 				}
 			}
+		}
+	})
+
+	test('the numeric legend index maps onto the shared vocabulary', () => {
+		// Word Groups colours each category level 0..3; the legend must resolve
+		// those through the same shared labels a picker shows, one mapping only.
+		expect([...DIFFICULTY_LEVELS]).toEqual(['easy', 'medium', 'hard', 'tricky'])
+		for (const locale of LOCALES) {
+			DIFFICULTY_LEVELS.forEach((name, index) => {
+				const key = difficultyLabelKey(index)
+				expect(key).toBe(`common.difficulty.${name}`)
+				const value = resolveCatalogueKey(locale, key)
+				const where = { locale, index, key }
+				expect({ ...where, string: typeof value === 'string' }).toEqual({
+					...where,
+					string: true,
+				})
+				expect(String(value)).not.toBe(key)
+			})
 		}
 	})
 })

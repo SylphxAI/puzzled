@@ -51,11 +51,6 @@ export function CrosswordHowToPlay() {
 	)
 }
 
-function _CrosswordHowToPlayTitle() {
-	const t = useTranslations('games.crossword')
-	return <>{t('howToPlay')}</>
-}
-
 function CrosswordCell({ letter, number }: { letter: string; number?: number }) {
 	return (
 		<div className="relative flex h-8 w-8 items-center justify-center bg-background text-sm font-bold">

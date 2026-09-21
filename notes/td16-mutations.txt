@@ -1,0 +1,96 @@
+TD-16 mutation battery - raw evidence
+Branch: debt/td16-messages-guard | base: origin/main b1990079 (TD-01 #170)
+Guard: apps/puzzled/src/lib/i18n/message-catalogue.test.ts
+  before TD-16 (TD-01): 3 tests / 12 expect() calls
+  after  TD-16:        5 tests / 19 expect() calls
+
+Every case runs:
+  cd apps/puzzled && NO_COLOR=1 env -u NODE_ENV bun test src/lib/i18n/message-catalogue.test.ts
+
+Worktree state after the battery: `git status --porcelain` -> only
+message-catalogue.test.ts modified; request.ts hash still equals HEAD blob
+aec7a74fd0b8e888d076a5ad782d6c37eff0d4a7.
+
+== G0. The gap: what TD-01's three invariants did not catch ====================
+
+G1 - drop `settings: enGBSettings,` from LOCALE_MESSAGES (import + file kept)
+  cmd: perl -i -ne 'print unless /^\t\tsettings: enGBSettings,$/' apps/puzzled/src/lib/i18n/request.ts
+  old guard:  3 pass / 0 fail   (d1b-oldguard.txt) -> blind
+  biome:      lint/correctness/noUnusedImports at request.ts:16:8, 1 error (d1b-biome.txt)
+  reading:    the map no longer serves en-GB's settings deltas while the file is
+              present and imported; the tests see nothing. Lint sees the unused
+              import, but only because this cut happened to orphan the binding.
+
+G2 - swap `admin: enGBAdmin,` and `auth: enGBAuth,` (both bindings stay used)
+  cmd: perl -i -pe 's/^\t\tauth: enGBAuth,$/\t\tadmin: enGBAuth,/; s/^\t\tadmin: enGBAdmin,$/\t\tauth: enGBAdmin,/' apps/puzzled/src/lib/i18n/request.ts
+  old guard:  3 pass / 0 fail   (d2-oldguard.txt) -> blind
+  biome:      Checked 1 file in 38ms. No fixes applied. (d2-biome.txt)
+  typecheck:  no error by construction (Record<string, unknown> values, nothing unused)
+  reading:    en-GB serves auth strings for admin and admin strings for auth;
+              every pre-TD-16 gate stays green. This is the silent shape.
+
+== M1..M6. Extended guard: red, restore, green ==================================
+
+M1 - new file messages/en-US/zzz-probe.json (key not in other locales)
+  cmd: printf '{\n\t"zzzProbe": "td16 mutation probe"\n}\n' > apps/puzzled/src/messages/en-US/zzz-probe.json
+  RED (m1-red.txt):
+    (fail) request.ts imports exactly the files that exist on disk
+       19:-   "en-US/zzz-probe.json",
+    (fail) every locale resolves to the en-US leaf structure, per namespace
+       + "mismatches": [
+       +   "zzzProbe",
+    (fail) LOCALE_MESSAGES holds exactly the namespace files on disk, per locale
+       - "zzzProbe",
+    2 pass / 3 fail, 12 expect() calls
+  restore (rm) -> 5 pass / 0 fail (m1-green.txt)
+
+M2 - delete `import enUSCommon from '@/messages/en-US/common.json'`
+  cmd: perl -i -ne 'print unless /enUSCommon from/' apps/puzzled/src/lib/i18n/request.ts
+  RED (m2-red.txt):
+    (fail) request.ts imports exactly the files that exist on disk
+       19:-   "en-US/common.json",
+    (fail) every import is wired into LOCALE_MESSAGES at its own locale and namespace
+       + "en-US/common: enUSCommon has no import",
+    3 pass / 2 fail, 17 expect() calls
+  restore (cp) -> 5 pass / 0 fail (m2-green.txt)
+
+M3 - en-GB/settings.json nav.helpLink set to the en-US value ("Visit Help Center")
+  cmd: perl -i -pe 's/Visit Help Centre/Visit Help Center/' apps/puzzled/src/messages/en-GB/settings.json
+  RED (m3-red.txt):
+    (fail) overlay locales carry only the keys their fallback does not supply
+       +   "en-GB/settings.json",
+    4 pass / 1 fail, 16 expect() calls
+  restore (cp) -> 5 pass / 0 fail (m3-green.txt)
+
+M4 - drop the LOCALE_MESSAGES entry (same cut as G1)
+  RED (m4-red.txt):
+    (fail) every import is wired into LOCALE_MESSAGES at its own locale and namespace
+       + "enGBSettings (en-GB/settings.json) is wired 0 time(s)",
+    (fail) LOCALE_MESSAGES holds exactly the namespace files on disk, per locale
+       - "settings",   (under locale "en-GB")
+    3 pass / 2 fail, 15 expect() calls
+  restore (cp) -> 5 pass / 0 fail (m4-green.txt)
+
+M5 - swap the wiring (same cut as G2)
+  RED (m5-red.txt):
+    (fail) every import is wired into LOCALE_MESSAGES at its own locale and namespace
+       + "enGBAdmin is wired as en-GB/auth, not en-GB/admin",
+       + "enGBAuth is wired as en-GB/admin, not en-GB/auth",
+    4 pass / 1 fail, 18 expect() calls
+  restore (cp) -> 5 pass / 0 fail (m5-green.txt)
+
+M6 - copy en-US/pwa.json to en-GB/pwa.json (unregistered, fully redundant)
+  cmd: cp apps/puzzled/src/messages/en-US/pwa.json apps/puzzled/src/messages/en-GB/pwa.json
+  RED (m6-red.txt):
+    (fail) request.ts imports exactly the files that exist on disk
+       19:-   "en-GB/pwa.json",
+    (fail) overlay locales carry only the keys their fallback does not supply
+       +   "en-GB/pwa.json",
+    (fail) LOCALE_MESSAGES holds exactly the namespace files on disk, per locale
+       - "pwa",   (under locale "en-GB")
+    2 pass / 3 fail, 12 expect() calls
+  restore (rm) -> 5 pass / 0 fail (m6-green.txt)
+
+Raw logs (host scratch; prefer this file if the pod rotated): $HOME/work/td16-scratch/
+  {m1..m6}-red.txt, {m1..m6}-green.txt, d1b-oldguard.txt, d2-oldguard.txt,
+  d1b-biome.txt, d2-biome.txt
