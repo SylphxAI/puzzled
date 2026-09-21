@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 
 type ProviderIcon = (props: { className?: string; 'aria-hidden'?: boolean | 'true' }) => ReactNode
 
-const PROVIDER_ICONS = OAuthIcons as unknown as Record<string, ProviderIcon>
+const PROVIDER_ICONS: Record<string, ProviderIcon> = OAuthIcons
 
 /**
  * Field primitives shared by sign-in, sign-up and recovery.

@@ -440,7 +440,7 @@ export interface GameConfig<
 	 * @param puzzleData - Optional puzzle context
 	 * @returns Validation result with feedback
 	 */
-	validateGuess?: (solution: TSolution, guess: TGuess, puzzleData?: TPuzzleData) => TGuessResult
+	validateGuess?(solution: TSolution, guess: TGuess, puzzleData?: TPuzzleData): TGuessResult
 
 	/**
 	 * CORE VALIDATION FUNCTION - RUNS ON SERVER ONLY
@@ -464,11 +464,11 @@ export interface GameConfig<
 	 * @param submission - User's submission with game-specific data
 	 * @returns Validation result with server-calculated score
 	 */
-	validateAndScore: (
+	validateAndScore(
 		solution: TSolution,
 		puzzleData: TPuzzleData,
 		submission: GameSubmission,
-	) => GameResult
+	): GameResult
 
 	// ==========================================
 	// Game Lifecycle (optional)
@@ -552,8 +552,15 @@ export interface GameConfig<
 // ==========================================
 
 /**
- * Registry of all available games
- * Uses 'any' for flexibility - individual game configs are typed
+ * The registry's opaque view of a registered config.
+ *
+ * A game is resolved by a runtime slug, so its payload types cannot be known
+ * here: they are `unknown` at this boundary, and each module narrows the data
+ * it produced itself. The concrete signatures stay on the per-game configs.
  */
-// biome-ignore lint/suspicious/noExplicitAny: Generic registry requires any for flexibility
-export type GameRegistry = Record<string, GameConfig<any, any, any, any>>
+export type RegisteredGameConfig = GameConfig<unknown, unknown, unknown, unknown>
+
+/**
+ * Registry of all available games: metadata plus the opaque payload handlers.
+ */
+export type GameRegistry = Record<string, RegisteredGameConfig>

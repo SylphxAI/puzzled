@@ -38,6 +38,13 @@ export type SoundEffect =
 
 import { SOUND_ENABLED_KEY } from '@/lib/storage-keys'
 
+declare global {
+	interface Window {
+		/** Safari's prefixed AudioContext constructor; absent on engines that ship the standard name. */
+		webkitAudioContext?: typeof AudioContext
+	}
+}
+
 /**
  * Get or create a shared AudioContext
  * Using a singleton to avoid creating multiple contexts
@@ -50,10 +57,7 @@ function getAudioContext(): AudioContext | null {
 
 	if (!audioContext) {
 		try {
-			audioContext = new (
-				window.AudioContext ||
-				(window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
-			)()
+			audioContext = new (window.AudioContext || window.webkitAudioContext)()
 		} catch {
 			return null
 		}
