@@ -351,7 +351,7 @@ function loadMessages(locale: Locale): Messages {
 		messages = { ...fallbackMessages }
 	}
 
-	messages = deepMerge(messages, localeMessages as unknown as Messages)
+	messages = deepMerge(messages, localeMessages)
 
 	// Add the games namespace, resolved for this locale: the module's own
 	// per-locale copy where it exists, English for every key it does not carry.
