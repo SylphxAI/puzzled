@@ -77,23 +77,16 @@ export const NOINDEX_ROUTE_PREFIXES = [
 	'/challenge',
 ] as const
 
-/** Everything that must stay out of the sitemap: blocked plus noindexed. */
-export const PRIVATE_ROUTE_PREFIXES = [
-	'/api',
-	'/admin',
-	'/archive',
-	'/settings',
-	'/profile',
-	'/stats',
-	'/leaderboard',
-	'/login',
-	'/signup',
-	'/forgot-password',
-	'/reset-password',
-	'/verify-email',
-	'/unsubscribe',
-	'/challenge',
-] as const
+/**
+ * Everything that must stay out of the sitemap: blocked plus noindexed.
+ *
+ * Composed from the two lists above, so a private surface is registered in one
+ * place and cannot half-follow it into the sitemap. De-duplicated because
+ * `/admin` is crawl-blocked and noindexed at once.
+ */
+export const PRIVATE_ROUTE_PREFIXES: readonly string[] = [
+	...new Set([...CRAWL_BLOCKED_ROUTE_PREFIXES, ...NOINDEX_ROUTE_PREFIXES]),
+]
 
 /** Strip a known locale prefix so path matching works for every locale. */
 export function stripLocalePrefix(pathname: string): string {
