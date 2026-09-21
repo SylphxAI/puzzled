@@ -95,3 +95,8 @@ Resume note: if a later run resumes mid-step, read this section; the push, if un
 - [x] (recovery) TD-02 commit a3a4929 pushed: 5388514..a3a4929 HEAD -> debt/td02-td03-ssot; ls-remote readback a3a4929366f4577596506c50d266874c31067875;
       lefthook pre-commit: biome 15 files no fixes; @sylphx/puzzled typecheck 12.785s ok.
 - [ ] Next: open PR (base main, head debt/td02-td03-ssot) with the TD-03/TD-02 summaries + not-in-scope list; then watch checks. PR URL + check status appended below.
+- [x] (recovery) TD-03 normalised comparison re-checked with a fresh script over the stored captures (notes/td03-normalize-recheck.py; raw output notes/td03-normalize-recheck.out):
+      BASE vs TD-03: files=18 raw_differ=16 normalised_differ=0 []
+      control/TD-03 twice: files=18 raw_differ=16 normalised_differ=0 []
+      normdirs BASE vs TD-03: files=18 raw_differ=16 normalised_differ=0 []
+      VERDICT: all pairs identical after normalisation

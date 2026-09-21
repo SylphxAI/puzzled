@@ -1,0 +1,6 @@
+td03 normalise-recheck (3 recorded token classes), run 2026-09-21
+BASE vs TD-03: files=18 raw_differ=16 normalised_differ=0 []
+control/TD-03 twice: files=18 raw_differ=16 normalised_differ=0 []
+normdirs BASE vs TD-03: files=18 raw_differ=16 normalised_differ=0 []
+VERDICT: all pairs identical after normalisation
+PY_EXIT=0
