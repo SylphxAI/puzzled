@@ -55,11 +55,6 @@ export function SudokuHowToPlay() {
 	)
 }
 
-function _SudokuHowToPlayTitle() {
-	const t = useTranslations('games.sudoku')
-	return <>{t('howToPlay')}</>
-}
-
 function SudokuCell({ value, isGiven = false }: { value: number | null; isGiven?: boolean }) {
 	return (
 		<div

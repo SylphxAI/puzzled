@@ -64,11 +64,6 @@ export function ConnectionsHowToPlay() {
 	)
 }
 
-function _ConnectionsHowToPlayTitle() {
-	const t = useTranslations('games.wordGroups')
-	return <>{t('howToPlay')}</>
-}
-
 function CategoryWord({ word }: { word: string }) {
 	return <div className="rounded bg-muted px-2 py-1.5 text-center text-xs font-medium">{word}</div>
 }

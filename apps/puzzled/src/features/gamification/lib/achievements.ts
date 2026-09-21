@@ -318,36 +318,6 @@ export const TIER_BG_COLORS = {
 	diamond: 'bg-violet-500/10',
 } as const
 
-const _TIER_BORDER_COLORS = {
-	bronze: 'border-amber-600/30',
-	silver: 'border-gray-400/30',
-	gold: 'border-yellow-500/30',
-	platinum: 'border-cyan-400/30',
-	diamond: 'border-violet-400/30',
-} as const
-
-const _CATEGORY_ICONS = {
-	streak: 'mdi:fire',
-	wins: 'mdi:trophy',
-	score: 'mdi:star',
-	special: 'mdi:sparkles',
-	explorer: 'mdi:compass',
-	social: 'mdi:account-group',
-	dedication: 'mdi:clock',
-	secret: 'mdi:lock',
-} as const
-
-const _CATEGORY_NAMES = {
-	streak: 'Streak',
-	wins: 'Wins',
-	score: 'Score',
-	special: 'Special',
-	explorer: 'Explorer',
-	social: 'Social',
-	dedication: 'Dedication',
-	secret: 'Secret',
-} as const
-
 // Check achievements based on user stats
 export function checkAchievements(stats: {
 	totalWins: number

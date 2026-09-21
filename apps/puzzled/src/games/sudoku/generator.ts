@@ -12,7 +12,7 @@
 
 import { seededRandom, shuffleArray } from '@/games/shared/random'
 import type { SudokuPuzzleData } from './types'
-import { BOX_SIZE, GRID_SIZE, isValidPlacement } from './types'
+import { GRID_SIZE, isValidPlacement } from './types'
 
 /**
  * Generate a complete valid Sudoku grid using backtracking
@@ -181,53 +181,4 @@ export function generateSudokuPuzzle(
 			grid: solution,
 		},
 	}
-}
-
-/**
- * Get difficulty based on seed (cycles through difficulties)
- */
-function _getDifficultyFromSeed(seed: number): 'easy' | 'medium' | 'hard' {
-	const difficulties: ('easy' | 'medium' | 'hard')[] = ['easy', 'medium', 'hard']
-	return difficulties[Math.abs(seed) % 3]
-}
-
-/**
- * Validate a complete Sudoku grid
- */
-function _validateSudokuGrid(grid: number[][]): boolean {
-	// Check rows
-	for (let row = 0; row < GRID_SIZE; row++) {
-		const seen = new Set<number>()
-		for (let col = 0; col < GRID_SIZE; col++) {
-			const val = grid[row][col]
-			if (val < 1 || val > 9 || seen.has(val)) return false
-			seen.add(val)
-		}
-	}
-
-	// Check columns
-	for (let col = 0; col < GRID_SIZE; col++) {
-		const seen = new Set<number>()
-		for (let row = 0; row < GRID_SIZE; row++) {
-			const val = grid[row][col]
-			if (val < 1 || val > 9 || seen.has(val)) return false
-			seen.add(val)
-		}
-	}
-
-	// Check 3x3 boxes
-	for (let boxRow = 0; boxRow < 3; boxRow++) {
-		for (let boxCol = 0; boxCol < 3; boxCol++) {
-			const seen = new Set<number>()
-			for (let r = 0; r < BOX_SIZE; r++) {
-				for (let c = 0; c < BOX_SIZE; c++) {
-					const val = grid[boxRow * BOX_SIZE + r][boxCol * BOX_SIZE + c]
-					if (val < 1 || val > 9 || seen.has(val)) return false
-					seen.add(val)
-				}
-			}
-		}
-	}
-
-	return true
 }

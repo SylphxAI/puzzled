@@ -10,7 +10,6 @@
 
 import { seededRandom } from '@/games/shared/random'
 import { getWordList } from './dictionary'
-import { isOneLetterChange } from './types'
 
 /**
  * ⚠️ FROZEN: BFS to find shortest path between words
@@ -132,21 +131,6 @@ export function generateWordLadderPuzzle(seed: number): {
 		`Word Ladder generation failed for seed ${seed} after ${maxAttempts} attempts. ` +
 			`Dictionary may be incomplete or corrupted.`,
 	)
-}
-
-/**
- * Validate that a path is correct
- * Used for testing and verification
- */
-function _validatePath(path: string[]): boolean {
-	if (path.length < 2) return false
-
-	for (let i = 1; i < path.length; i++) {
-		if (!isOneLetterChange(path[i - 1], path[i])) {
-			return false
-		}
-	}
-	return true
 }
 
 /**

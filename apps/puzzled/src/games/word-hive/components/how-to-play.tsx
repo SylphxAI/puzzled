@@ -53,11 +53,6 @@ export function SpellingBeeHowToPlay() {
 	)
 }
 
-function _SpellingBeeHowToPlayTitle() {
-	const t = useTranslations('games.wordHive')
-	return <>{t('howToPlay')}</>
-}
-
 function HexLetter({ letter, isCenter }: { letter: string; isCenter: boolean }) {
 	return (
 		<div

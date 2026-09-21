@@ -122,8 +122,3 @@ export function LetterBoxedHowToPlay() {
 		</div>
 	)
 }
-
-function _LetterBoxedHowToPlayTitle() {
-	const t = useTranslations('games.wordBox')
-	return <>{t('howToPlay')}</>
-}

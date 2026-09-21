@@ -156,10 +156,3 @@ const LLM_GENERATORS: Record<string, LLMGenerator> = {
 export function getLLMGenerator(slug: string): LLMGenerator | undefined {
 	return LLM_GENERATORS[slug]
 }
-
-/**
- * Check if a game has LLM generation
- */
-function _hasLLMGenerator(slug: string): boolean {
-	return slug in LLM_GENERATORS
-}

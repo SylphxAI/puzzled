@@ -99,25 +99,6 @@ export function isClueFilled(
 }
 
 /**
- * Check if a clue is correctly solved
- */
-function _isClueCorrect(
-	userGrid: (string | null)[][],
-	solution: string[][],
-	clue: CrosswordClue,
-	direction: CrosswordDirection,
-): boolean {
-	for (let i = 0; i < clue.length; i++) {
-		const row = direction === 'across' ? clue.row : clue.row + i
-		const col = direction === 'across' ? clue.col + i : clue.col
-		if (userGrid[row]?.[col]?.toUpperCase() !== solution[row]?.[col]?.toUpperCase()) {
-			return false
-		}
-	}
-	return true
-}
-
-/**
  * True when every letter cell (non-null in the structure grid) has a letter.
  * Empty solution grids must NOT count as complete (leak-strip regression).
  */

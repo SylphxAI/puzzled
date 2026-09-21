@@ -65,15 +65,3 @@ function _seededShuffle<T>(array: T[], seed: number): T[] {
 export function pickRandom<T>(array: T[], random: () => number = Math.random): T {
 	return array[Math.floor(random() * array.length)]
 }
-
-/**
- * Pick n random elements from array (without replacement)
- *
- * @param array - Array to pick from
- * @param n - Number of elements to pick
- * @param random - Random function returning [0, 1)
- * @returns Array of n random elements
- */
-function _pickRandomN<T>(array: T[], n: number, random: () => number): T[] {
-	return shuffleArray(array, random).slice(0, n)
-}

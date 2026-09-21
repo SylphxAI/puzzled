@@ -54,13 +54,6 @@ function _hoursFromNow(hours: number, from: Date = new Date()): Date {
 }
 
 /**
- * Convert days to milliseconds
- */
-function _daysToMs(days: number): number {
-	return days * DAY_MS
-}
-
-/**
  * Convert days to seconds (for TTLs)
  */
 function _daysToSeconds(days: number): number {
@@ -79,18 +72,4 @@ function _hoursToSeconds(hours: number): number {
  */
 function _minutesToSeconds(minutes: number): number {
 	return minutes * MINUTE_SECONDS
-}
-
-/**
- * Convert hours to milliseconds
- */
-function _hoursToMs(hours: number): number {
-	return hours * HOUR_MS
-}
-
-/**
- * Convert minutes to milliseconds
- */
-function _minutesToMs(minutes: number): number {
-	return minutes * MINUTE_MS
 }

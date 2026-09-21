@@ -71,11 +71,3 @@ Requirements:
 - Category names should be descriptive but not give away the answer too easily
 
 Return ONLY the JSON, no explanation.`
-
-const _CONNECTIONS_THEMED_PROMPT = (
-	theme: string,
-) => `Generate a Connections puzzle with the theme: "${theme}"
-
-At least one category should relate to this theme, but don't make it too obvious.
-
-Return ONLY valid JSON in the same format as before.`
