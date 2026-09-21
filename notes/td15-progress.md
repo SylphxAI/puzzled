@@ -1,22 +1,24 @@
 # TD-15 progress - one difficulty vocabulary
 
-STATUS: recon - base b199007999789d862ac236b94ba010b1c3ff18e1 (origin/main, TD-01 #170)
-BRANCH: debt/td15-difficulty-vocab
-WORKTREE: /data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td15
-REGISTER: /data/sylphx/home/work/pz-program/notes/tech-debt-register.md row TD-15 (line 54)
+STATUS: implemented; mutation proof done (notes/td15-mutation.md); local gate2
+(suite/typecheck/lint/build) in flight; PR next.
+BRANCH: debt/td15-difficulty-vocab (worktree td15)
+BASE: b199007999789d862ac236b94ba010b1c3ff18e1
+
+## Commits so far
+1. skeleton (notes)
+2. before-map (notes/td15-before.md)
+3. code: helper + legend + hero + oracle test + common.json keys
+4. notes: mutation + progress
 
 ## Next action
-1. wire node_modules for this worktree (symlink from canonical clone apps/puzzled), confirm bun runs
-2. capture resolved-catalogue BEFORE dump into scratch dir /data/sylphx/home/work/pz-program/td15/
-3. write notes/td15-before.md (exact shape counts + consumer map, file:line)
-4. implement: helper src/lib/i18n/difficulty.ts + common.json keys + consumers + tests
-5. proof: compare before/after + sha256 per locale; suite/typecheck/biome/build
-6. mutation: swap DIFFICULTY_LEVELS -> mapping test red; restore green
-7. PR: one Ready PR, body carries before/after map + proof + mutation + status
+- fold gate2 results into notes/td15-proof.md; push; open the one Ready PR
+  with the before/after map + proof + mutation + status; report.
 
-## Facts
-- repo SylphxAI/puzzled; app at apps/puzzled; locales en-US(en base) en-GB(overlay) zh-HK(zh base) zh-TW(overlay) zh-CN
-- off-limits: src/games/*/translations/** , atlas/**, .github/**, src/lib/seo/**, other legs files
-- siblings in flight: td10 (underscore dead code - may delete _ConnectionsHowToPlayTitle from word-groups how-to-play.tsx), td16 (messages guard), td17 (generation scripts)
-- env: every git/gh command with env -u GH_TOKEN -u GITHUB_TOKEN prefix
-- proof tool: apps/puzzled/scripts/i18n-resolved-catalogue.ts (dump/compare/parity) - TD-01 helper
+## Design recap
+- src/lib/i18n/difficulty.ts: DIFFICULTY_LEVELS = easy|medium|hard|tricky +
+  difficultyLabelKey(n) -> common.difficulty.<level>. Numeric legend (word-groups
+  how-to-play) resolves through it; game-page hero reads common.difficulty too.
+- messages: en-US + tricky; zh-HK/zh-CN labels carry the translated strings the
+  game layer already shipped (D4-adjacent copy move, called out in the PR);
+  zh-TW/en-GB inherit (no overlay delta).
