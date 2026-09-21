@@ -41,3 +41,8 @@ Status: 2026-09-21 ~11:40 BST. Worktree: $HOME/workspace/.worktrees/github.com/S
 - Fixed the byte-equality baseline test (0a34aae): biome pre-commit re-formats the JSON (short arrays inline), so it now compares parsed content (would otherwise fail CI).
 - Commits pushed: 45660c7, d753378, 0a34aae. Evidence notes: td24-before.md, td24-proof.md, td24-mutation.md.
 - Next: full gates (suite running; then typecheck/lint/build), then PR.
+
+## Recovery run 2 - gates green (2026-09-22 ~00:05 BST)
+
+- Gates on 2f88742: suite 1194 pass / 6 skip / 1 fail (schema-parity; no dev postgres - environmental, CI has the DB), lint rc=0 (875 files, 23 pre-existing infos), typecheck rc=0 forced-uncached (2 packages, 9.5s), build rc=0 (next build).
+- Evidence: notes/td24-gates.md. PR next (drafted); will not enqueue.
