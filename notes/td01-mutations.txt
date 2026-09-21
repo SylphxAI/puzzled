@@ -1,0 +1,86 @@
+=== M1 RED: en-GB settings nav.helpLink set to the en-US value ===
++   "en-GB/settings.json",
++ ]
+
+- Expected  - 1
++ Received  + 3
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td01/apps/puzzled/src/lib/i18n/message-catalogue.test.ts:64:20)
+(fail) message catalogue wiring > overlay locales carry only the keys their fallback does not supply [21.76ms]
+(pass) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [50.97ms]
+
+ 2 pass
+ 1 fail
+ 9 expect() calls
+Ran 3 tests across 1 file. [162.00ms]
+=== M1 GREEN (restored) ===
+(pass) message catalogue wiring > request.ts imports exactly the files that exist on disk [5.57ms]
+(pass) message catalogue wiring > overlay locales carry only the keys their fallback does not supply [36.32ms]
+(pass) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [53.50ms]
+
+ 3 pass
+ 0 fail
+ 12 expect() calls
+Ran 3 tests across 1 file. [191.00ms]
+=== M2 RED: zh-TW/nav.json gains an unknown key ===
+error: expect(received).toEqual(expected)
+
+  {
+    "locale": "zh-TW",
+-   "mismatches": [],
++   "mismatches": [
++     "nav",
++   ],
+  }
+
+- Expected  - 1
++ Received  + 3
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td01/apps/puzzled/src/lib/i18n/message-catalogue.test.ts:82:35)
+(fail) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [35.90ms]
+
+ 2 pass
+ 1 fail
+ 11 expect() calls
+Ran 3 tests across 1 file. [147.00ms]
+=== M2 GREEN (restored) ===
+(pass) message catalogue wiring > request.ts imports exactly the files that exist on disk [4.54ms]
+(pass) message catalogue wiring > overlay locales carry only the keys their fallback does not supply [30.79ms]
+(pass) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [50.88ms]
+
+ 3 pass
+ 0 fail
+ 12 expect() calls
+Ran 3 tests across 1 file. [165.00ms]
+=== M3 RED: request.ts import points at a file that does not exist ===
+@@ -1,7 +1,7 @@
+  [
+-   "en-GB/admin.json",
++   "en-GB/admin-panel.json",
+    "en-GB/auth.json",
+    "en-GB/catalog.json",
+    "en-GB/legal.json",
+    "en-GB/pricing.json",
+    "en-GB/settings.json",
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td01/apps/puzzled/src/lib/i18n/message-catalogue.test.ts:54:20)
+(fail) message catalogue wiring > request.ts imports exactly the files that exist on disk [9.27ms]
+(pass) message catalogue wiring > overlay locales carry only the keys their fallback does not supply [44.02ms]
+(pass) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [44.81ms]
+
+ 2 pass
+ 1 fail
+ 11 expect() calls
+Ran 3 tests across 1 file. [193.00ms]
+=== M3 GREEN (restored) ===
+(pass) message catalogue wiring > request.ts imports exactly the files that exist on disk [5.19ms]
+(pass) message catalogue wiring > overlay locales carry only the keys their fallback does not supply [36.79ms]
+(pass) message catalogue wiring > every locale resolves to the en-US leaf structure, per namespace [45.15ms]
+
+ 3 pass
+ 0 fail
+ 12 expect() calls
+Ran 3 tests across 1 file. [172.00ms]

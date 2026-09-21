@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import enGBSettings from '../../../messages/en-GB/settings.json'
-import enUSSettings from '../../../messages/en-US/settings.json'
-import zhCNSettings from '../../../messages/zh-CN/settings.json'
-import zhHKSettings from '../../../messages/zh-HK/settings.json'
-import zhTWSettings from '../../../messages/zh-TW/settings.json'
+import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
 
 /**
  * The console's push panel (S2 audit, console finding 2 + 3).
@@ -20,11 +16,11 @@ import zhTWSettings from '../../../messages/zh-TW/settings.json'
  */
 
 const CATALOGUES: Record<string, unknown> = {
-	'en-US': enUSSettings,
-	'en-GB': enGBSettings,
-	'zh-HK': zhHKSettings,
-	'zh-TW': zhTWSettings,
-	'zh-CN': zhCNSettings,
+	'en-US': resolveLocale('en-US').settings,
+	'en-GB': resolveLocale('en-GB').settings,
+	'zh-HK': resolveLocale('zh-HK').settings,
+	'zh-TW': resolveLocale('zh-TW').settings,
+	'zh-CN': resolveLocale('zh-CN').settings,
 }
 
 let catalogue = CATALOGUES['en-US']

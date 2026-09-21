@@ -1,24 +1,24 @@
 import { describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { getGameSlugs } from '@/games/registry'
+import type { Locale } from '@/lib/i18n/config'
+import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
 
 /**
  * Catalog copy oracle.
  *
- * `catalog.json` is loaded per locale and a missing key renders as the dotted
- * key path, so the five files must stay structurally identical, and every
- * registered module must carry its own tips and FAQ in every locale.
+ * `catalog.json` is resolved per locale (an overlay locale ships only its
+ * deltas, so the fallback has to be applied) and a missing key renders as the
+ * dotted key path, so the five resolved catalogues must stay structurally
+ * identical, and every registered module must carry its own tips and FAQ in
+ * every locale.
  */
 
-const APP_ROOT = join(import.meta.dir, '..', '..', '..', '..')
 const LOCALES = ['en-US', 'en-GB', 'zh-HK', 'zh-TW', 'zh-CN'] as const
 
 type Json = Record<string, unknown>
 
 function readCatalog(locale: string): Json {
-	const path = join(APP_ROOT, 'src', 'messages', locale, 'catalog.json')
-	return JSON.parse(readFileSync(path, 'utf8')) as Json
+	return resolveLocale(locale as Locale).catalog as Json
 }
 
 /** Dotted path -> shape marker, so structural drift is reported per key. */
