@@ -24,3 +24,11 @@ Status: 2026-09-21 ~11:40 BST. Worktree: $HOME/workspace/.worktrees/github.com/S
   dupe -> RED naming group; remove -> green) + suite-wiring evidence; (4) full gates; (5) rebase onto
   be3f6dc2; push; open PR.
 - Resume: read this file first; the pushed branch is the handover.
+
+## Recovery run 2 - onto post-#178/#179 main (2026-09-22 ~00:35 BST)
+
+- Merged origin/main (be3f6dc2) into debt/td24-i18n-dupes as 21e7f9d "chore(notes): keep the pre-#178/#179
+  notes ref as a parent (no force-push; makes the remote update a fast-forward)" - the td10/td01 technique;
+  conflict-free (#178/#179 touch no TD-24 file).
+- Remote update was a fast-forward 2a8641c..21e7f9d; read back 21e7f9d7374fc087e4747129c8386779f360fd5c.
+- Next: before-dump + --check on the merged tree; normalisation; mutation proof; gates; PR.
