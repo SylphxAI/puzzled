@@ -46,3 +46,10 @@ Status: 2026-09-21 ~11:40 BST. Worktree: $HOME/workspace/.worktrees/github.com/S
 
 - Gates on 2f88742: suite 1194 pass / 6 skip / 1 fail (schema-parity; no dev postgres - environmental, CI has the DB), lint rc=0 (875 files, 23 pre-existing infos), typecheck rc=0 forced-uncached (2 packages, 9.5s), build rc=0 (next build).
 - Evidence: notes/td24-gates.md. PR next (drafted); will not enqueue.
+
+## Recovery run 2 - PR open (2026-09-22 ~00:08 BST)
+
+- PR #183 https://github.com/SylphxAI/puzzled/pull/183 — head debt/td24-i18n-dupes @ 9b605e9 (remote read back), base main.
+- Branch: 9 commits; brought onto be3f6dc2 by merge 21e7f9d (no force-push; fast-forward remote updates only).
+- Not enqueued; CI to run on the PR.
+- All deliverables: baseline 1169 -> 1159 groups; guard + staleness + --update-baseline; normalisation of 2 groups with byte-level proof; mutation proof; gates green (suite 1194/6/1 - postgres environmental; lint/typecheck/build rc=0).
