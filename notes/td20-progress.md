@@ -4,7 +4,7 @@ Branch `debt/td20-logger-seam` @ base origin/main `b199007999789d862ac236b94ba01
 Worktree: `/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-20`.
 
 ## Next action
-Open PR + watch CI to green.
+Watch CI to 9/9 on PR #176; then report.
 
 ## Status
 - [x] worktree/branch off fetched origin/main
@@ -16,7 +16,8 @@ Open PR + watch CI to green.
 - [x] census evidence: notes/td20-before.md (52 -> 10 raw; 42 production sites -> 0)
 - [x] prove: merged-tree gates all green (suite 1159/6/0; typecheck rc=0; biome rc=0; build rc=0) - notes/td20-proof.md
 - [x] merged origin/main (fd9f061) cleanly except generator.ts dead-block (TD-10 deletion kept) - ba611f2
-- [ ] PR + CI green
+- [x] PR open: https://github.com/SylphxAI/puzzled/pull/176 (head 332ff57)
+- [ ] CI green (watching)
 - [ ] PR
 
 ## Deliberate exclusions
