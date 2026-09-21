@@ -83,8 +83,9 @@ async function logAdminAccess(
 		userId: userId || 'anonymous',
 	}
 	console.warn('[ADMIN ACCESS]', JSON.stringify(logEntry))
-	const key = `admin-audit:${timestamp}:${method}:${ip}`
-	await redis.setex(key, 30 * 24 * 60 * 60, JSON.stringify(logEntry))
+	// Record the attempt in audit_logs; Redis stays the rate-limit counter only.
+	const { logAdminAccessAttempt } = await import('@/lib/audit')
+	await logAdminAccessAttempt({ method, success, ip, userId })
 }
 
 /** Admin check result */
