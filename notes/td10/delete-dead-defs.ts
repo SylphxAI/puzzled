@@ -35,6 +35,7 @@ for (const [file, list] of byFile) {
 			let hit = false
 			if (ts.isFunctionDeclaration(stmt) && stmt.name && stmt.name.text === t.name) hit = true
 			else if (ts.isClassDeclaration(stmt) && stmt.name && stmt.name.text === t.name) hit = true
+			else if (ts.isTypeAliasDeclaration(stmt) && stmt.name.text === t.name) hit = true
 			else if (ts.isVariableStatement(stmt)) {
 				const decls = stmt.declarationList.declarations
 				let idx = -1

@@ -1,0 +1,1392 @@
+bun test v1.4.2 (744846f84)
+
+src/proxy.test.ts:
+(pass) dest proxy inbound public routes > alias table feeds public /crowns and /duo [0.43ms]
+(pass) dest proxy inbound public routes > health probes skip middleware so they never hit /login [0.06ms]
+(pass) locale prefix recognition > locale roots are recognised as localised URLs [0.13ms]
+(pass) locale prefix recognition > lowercase locale prefixes are recognised (they 307 to canonical case) [0.01ms]
+(pass) locale prefix recognition > unprefixed and lookalike paths are not treated as localised [0.01ms]
+(pass) locale prefix recognition > a remembered language never double-prefixes a localised path [0.03ms]
+(pass) locale prefix recognition > a remembered language localises unprefixed paths [0.02ms]
+(pass) locale prefix recognition > no redirect when there is no stored language or it is the default [0.01ms]
+
+src/lib/oauth-providers.test.ts:
+(pass) loadOAuthProviders > does not throw when App ID is missing [0.45ms]
+
+src/lib/guest-day-id.test.ts:
+(pass) guest day id cookie mirror > mirrors an existing localStorage id onto puzzled_guest_id [0.47ms]
+(pass) guest day id cookie mirror > mints and mirrors when localStorage has no id [0.19ms]
+(pass) guest day id cookie mirror > returns null during SSR [0.01ms]
+
+src/lib/start-web.test.ts:
+(pass) puzzled web listen bind > overrides Kubernetes HOSTNAME and honors Knative PORT [0.07ms]
+(pass) puzzled web listen bind > falls back to 3000 when PORT is missing or invalid [0.02ms]
+(pass) puzzled web listen bind > resolves nested or flattened Next standalone server.js [0.16ms]
+(pass) puzzled web listen bind > entrypoint overrides Kubernetes HOSTNAME before loading standalone server [48.59ms]
+
+src/lib/presentation-document.test.ts:
+(pass) GET / presentation document > isHtmlDocument rejects empty bodies (healthz is not this oracle) [0.09ms]
+(pass) GET / presentation document > withPresentationDeadline returns fallback when the work never completes [202.49ms]
+(pass) GET / presentation document > withPresentationDeadline uses fallback when the work rejects [0.43ms]
+(pass) GET / presentation document > document timeout matches SSR Connect bound [0.05ms]
+(pass) GET / presentation document > document-route pin loads as ESM so CI can probe GET / [33.04ms]
+
+src/lib/free-rotation.test.ts:
+(pass) freeGameForDayKey > matches api game_slugs ordinal0 rotation [0.66ms]
+
+src/lib/player-facing-identity.test.ts:
+(pass) player-facing mark corpus > covers locales, translations, manifest, app/feature/game TSX copy, configs, data and achievements [212.22ms]
+(pass) player-facing mark corpus > contains no CATALOG §3.2 publisher marks [225.54ms]
+(pass) mark matching > ignores substring traps [0.23ms]
+(pass) mark matching > catches marks, inflections and misspellings [0.08ms]
+(pass) mark matching > keeps generic type names and our own titles legal (CATALOG §3.2) [0.04ms]
+(pass) mark matching > bans NYT product-title usages of The Mini / The Midi [0.02ms]
+
+src/lib/word-groups-bank-parity.test.ts:
+(pass) word-groups bank parity (TS ↔ Rust) > both banks exist and are non-trivial [1.62ms]
+(pass) word-groups bank parity (TS ↔ Rust) > every puzzle, category, word order and level match [0.93ms]
+(pass) word-groups bank parity (TS ↔ Rust) > no puzzle repeats a word or ships fewer than four categories [0.30ms]
+
+src/lib/streak-info.test.ts:
+(pass) projectStreakInfo > maps a complete accepted-session payload [0.07ms]
+(pass) projectStreakInfo > fails closed when the envelope is missing [0.05ms]
+(pass) projectStreakInfo > accepts integer bigint fields from protobuf JSON [0.09ms]
+(pass) projectStreakInfo > fails closed when a field is absent rather than coercing to zero [0.02ms]
+
+src/lib/site-origin.test.ts:
+(pass) resolveSiteOrigin > uses the request host for product-owned hosts [0.31ms]
+(pass) resolveSiteOrigin > never returns localhost when the request host is a real production host [0.07ms]
+(pass) resolveSiteOrigin > returns the production origin for puzzled.gg [0.13ms]
+(pass) resolveSiteOrigin > ignores spoofed hosts and falls back to the production origin [0.06ms]
+(pass) resolveSiteOrigin > public product hosts are always https (x-forwarded-proto cannot downgrade) [0.04ms]
+(pass) resolveSiteOrigin > configured origin wins over the request host [0.09ms]
+(pass) resolveSiteOrigin > falls back to VERCEL_URL when no origin is configured [0.03ms]
+(pass) resolveSiteOrigin > keeps localhost only for local dev [0.08ms]
+(pass) resolveSiteOrigin > rejects malformed host headers instead of emitting them [0.04ms]
+(pass) server base URL > production builds never fall back to localhost [0.17ms]
+(pass) server base URL > configured production URL wins over the fallback [0.03ms]
+(pass) server base URL > local dev keeps localhost [0.04ms]
+
+src/lib/report-boundary-error.test.ts:
+(pass) reportBoundaryError > does not throw without a Sylphx provider [0.20ms]
+
+src/lib/env.test.ts:
+(pass) web presentation boot env > validateEnv listens without DATABASE_URL, REDIS_URL, or SYLPHX_SECRET_KEY [0.11ms]
+(pass) web presentation boot env > register() does not fail-close web boot without Platform root secret [0.14ms]
+(pass) web presentation boot env > validateEnv still does not require api-owned secrets when a platform key is present [0.02ms]
+(pass) web presentation boot env > redis module import does not require REDIS_URL [109.96ms]
+(pass) env accessors (SSOT) > KNOWN_VARS carries the read inventory names [0.19ms]
+(pass) env accessors (SSOT) > accessors are raw and lazy: no defaults, value read at call time [0.05ms]
+
+src/lib/proxy-paths.test.ts:
+(pass) proxy path skipping > serves the root metadata documents outside locale routing [0.04ms]
+(pass) proxy path skipping > serves real static assets [0.04ms]
+(pass) proxy path skipping > sends app paths that merely look like files to the i18n rewrite [0.02ms]
+(pass) proxy path skipping > keeps internals and probes skipped [0.01ms]
+
+src/lib/design-tokens.test.ts:
+(pass) design token layer > derives project tokens from globals.css and defaults from Tailwind theme.css [0.03ms]
+(pass) design token layer > every token utility class in the app and ui sources resolves to a declared token [209.04ms]
+(pass) guard teeth > flags the production regression class bg-key-bg in every form it is written [0.14ms]
+(pass) guard teeth > accepts declared neighbours and arbitrary values that name no token [0.03ms]
+(pass) guard teeth > reports bg-key-bg from a className string literal, as the file scan does [0.06ms]
+
+src/lib/presentation-boot.test.ts:
+(pass) presentation boot auth gate > skips dest Identity chrome when Identity credentials are absent [0.05ms]
+(pass) presentation boot auth gate > enables dest Identity chrome when Identity product credentials are present [0.02ms]
+
+src/lib/utils.test.ts:
+(pass) cn > merges class names [3.26ms]
+(pass) cn > handles conditional classes [0.03ms]
+(pass) cn > merges tailwind classes correctly [0.24ms]
+(pass) formatNumber > formats numbers with locale separators [3.97ms]
+(pass) formatNumber > handles decimal numbers [0.04ms]
+(pass) sleep > delays execution [50.22ms]
+(pass) generateId > returns a valid UUID [0.26ms]
+(pass) generateId > generates unique IDs [0.28ms]
+(pass) getBaseUrl > returns localhost URL in server environment (default mode) [0.07ms]
+(pass) getBaseUrl > returns localhost URL in server environment (relative mode) [0.03ms]
+(pass) getBaseUrl > returns localhost URL in server environment (origin mode) [0.01ms]
+(pass) getServerBaseUrl > returns absolute URL without browser check [0.02ms]
+(pass) getServerBaseUrl > returns consistent URL across calls [0.02ms]
+(pass) cn edge cases > handles empty inputs [0.05ms]
+(pass) cn edge cases > handles null and undefined [0.03ms]
+(pass) cn edge cases > handles arrays of classes [0.02ms]
+(pass) cn edge cases > handles objects with boolean values [0.03ms]
+(pass) formatNumber edge cases > handles zero [0.09ms]
+(pass) formatNumber edge cases > handles negative numbers [0.03ms]
+(pass) formatNumber edge cases > handles very large numbers [0.04ms]
+
+src/lib/game-slug.test.ts:
+(pass) canonicalizeGameSlug > maps LinkedIn leftovers to CATALOG slugs [0.02ms]
+(pass) playerTitle > never uses LinkedIn or NYT product marks [0.11ms]
+
+src/lib/product-day.test.ts:
+(pass) productDayKey > timezone name matches ritual SSOT
+(pass) productDayKey > same calendar day when UTC and HKT agree [0.02ms]
+(pass) productDayKey > rolls at HKT midnight, not UTC midnight [0.03ms]
+(pass) isValidDayKey > accepts real calendar days [0.07ms]
+(pass) isValidDayKey > rejects impossible and malformed days [0.04ms]
+(pass) isValidDayKey > trims surrounding whitespace [0.01ms]
+(pass) parseDayKey > parses the parts of a well-formed key, trimming the edges [0.02ms]
+(pass) parseDayKey > is shape-only: impossible calendar days parse for the arithmetic [0.03ms]
+(pass) parseDayKey > rejects malformed shapes and non-strings [0.02ms]
+(pass) resolveArchiveDayKey > resolves a real past day [0.03ms]
+(pass) resolveArchiveDayKey > today is not an archive day [0.03ms]
+(pass) resolveArchiveDayKey > future, impossible and missing days are not archive days [0.02ms]
+(pass) resolveArchiveDayKey > the boundary is the HKT product day, not UTC midnight [0.03ms]
+(pass) ordinal0FromDayKey > Jan 1 is 0 [0.02ms]
+(pass) ordinal0FromDayKey > 2026-08-13 is 224 (matches chrono ordinal0) [0.02ms]
+(pass) ordinal0FromDayKey > rejects invalid keys [0.03ms]
+(pass) servedPuzzleId > accepts UUID, rejects puzzle-number fallback [0.06ms]
+
+src/lib/module-routes.test.ts:
+(pass) inbound module aliases > crowns and duo rewrite to canonical /games paths [0.13ms]
+(pass) inbound module aliases > enumerated locale prefixes never swallow /games/crowns or /games/duo [0.07ms]
+(pass) inbound module aliases > short module paths are public so middleware does not send them to /login [0.06ms]
+
+src/games/module-name-ssot.test.ts:
+(pass) module names: one canonical player-facing name per module > the scan covers the registered suite [1.16ms]
+(pass) module names: one canonical player-facing name per module > every registered module carries an English catalogue name [0.06ms]
+(pass) module names: one canonical player-facing name per module > config.name equals the English catalogue name [0.05ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE equals the English catalogue name [0.10ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE carries no entry for an unregistered module [0.90ms]
+
+src/games/module-conformance.test.ts:
+(pass) shared module conformance oracle > required surfaces match the protocol eight [0.01ms]
+(pass) shared module conformance oracle > missing server validator blocks admission [0.18ms]
+(pass) shared module conformance oracle > unknown slug is not reachable with complete-looking evidence [0.07ms]
+(pass) shared module conformance oracle > customer catalog matches interaction registry [0.04ms]
+(pass) shared module conformance oracle > every customer slug is protocol-complete with a server validator [0.83ms]
+(pass) shared module conformance oracle > a catalog slug without a server validator is not reachable [0.08ms]
+
+src/games/registry.test.ts:
+(pass) getSeedFromDate > generates consistent seed from date [0.03ms]
+(pass) getSeedFromDate > uses UTC date regardless of timezone [0.01ms]
+(pass) getSeedFromDate > handles single-digit months and days
+(pass) getGameSlugs > returns array of game slugs [0.02ms]
+(pass) getGameSlugs > contains expected games [0.01ms]
+(pass) isValidGameSlug > returns true for valid game slug [0.12ms]
+(pass) isValidGameSlug > returns false for invalid game slug [0.02ms]
+(pass) getGameConfig > returns config for valid slug [0.01ms]
+(pass) getGameConfig > returns undefined for invalid slug
+(pass) getAllGames > returns all games sorted by sortOrder [0.15ms]
+(pass) getAllGames > each game has required properties [0.06ms]
+(pass) getGameMetadata > returns metadata for valid slug [0.06ms]
+(pass) getGameMetadata > returns null for invalid slug [0.01ms]
+(pass) getAllGameMetadata > returns metadata for all games [0.10ms]
+(pass) getAllGameMetadata > games are sorted by sortOrder [0.05ms]
+(skip) shouldAlert > returns true when there are failures (server-only)
+(skip) shouldAlert > returns false when all successful (server-only)
+(skip) formatGenerationSummary > formats summary with all sections (server-only)
+(skip) formatGenerationSummary > uses appropriate icons for status (server-only)
+
+src/lib/seo/seo.test.ts:
+(pass) route truth table > lists the public surfaces and nothing else [0.11ms]
+(pass) route truth table > private prefixes cover the audit surfaces [0.02ms]
+(pass) route truth table > composes the private list from the blocked and noindex lists [0.02ms]
+(pass) route truth table > keeps the composed private list duplicate-free [0.01ms]
+(pass) route truth table > crawl blocks are limited to surfaces that must not be crawled [0.03ms]
+(pass) route truth table > recognises private paths in every locale prefix [0.04ms]
+(pass) route truth table > keeps public paths and lookalikes public [0.05ms]
+(pass) route truth table > keeps the archive reachable but out of the index [0.24ms]
+(pass) route truth table > strips locale prefixes for path matching [0.04ms]
+(pass) sitemap > lists every locale for every public route, once each [0.19ms]
+(pass) sitemap > never lists a private surface [0.43ms]
+(pass) sitemap > uses the served locale casing and no prefix for the default locale [0.09ms]
+(pass) sitemap > emits locale roots without a trailing slash [0.09ms]
+(pass) sitemap > carries the full reciprocal cluster on every entry [0.73ms]
+(pass) sitemap > omits lastModified rather than inventing one [0.04ms]
+(pass) robots > points at the sitemap and allows crawling by default [0.02ms]
+(pass) robots > disallows the crawl-blocked prefixes under every locale [0.05ms]
+(pass) robots > does not block a public route [0.02ms]
+(pass) robots > does not block a crawled-and-noindexed surface [0.06ms]
+(pass) metadata helper > localizedPath keeps the default locale un-prefixed [0.02ms]
+(pass) metadata helper > builds one cluster with x-default on the default locale [0.03ms]
+(pass) metadata helper > uses the bare origin for the site root, which is what is served [0.02ms]
+(pass) metadata helper > emits a self-referencing canonical with a complete social card [0.40ms]
+(pass) metadata helper > marks private surfaces noindex [0.07ms]
+(pass) metadata helper > honours an absolute image override [0.07ms]
+
+src/lib/identity/routes.test.ts:
+(pass) Identity dest login and recovery doors > login begin/complete uses Identity product credential, not Binding [0.46ms]
+(pass) Identity dest login and recovery doors > recovery posts dest /v1/account-recovery/start with product credential [0.11ms]
+(pass) Identity dest login and recovery doors > signup posts dest /v1/signup [0.11ms]
+
+src/lib/identity/dest.test.ts:
+(pass) Identity dest HTTP > parses dest snake_case principal_id [0.11ms]
+(pass) Identity dest HTTP > rejects suite-door {project}.api.sylphx.com as dest origin [0.04ms]
+(pass) Identity dest HTTP > never sends Binding on dest Identity [0.17ms]
+(pass) Identity dest HTTP > destJson refuses Binding headers [0.13ms]
+(pass) Identity dest HTTP > getLeaderboard calls Commerce dest with board activity_kind [0.43ms]
+(pass) Identity dest HTTP > getPlans and checkout hit Commerce dest ListPrices [0.46ms]
+(pass) Identity dest HTTP > openPortal lists dest Commerce invoices [0.12ms]
+(pass) Identity dest HTTP > getAppConfig lists dest Identity OIDC federations [0.27ms]
+(pass) Identity dest HTTP > Events and Observability dest peels accept product credentials [0.27ms]
+(pass) Identity dest HTTP > getSubscription evaluates Commerce dest entitlement [0.26ms]
+(pass) Identity dest HTTP > premium writer is EvaluateEntitlement enabled, not plan slug [0.10ms]
+(pass) Identity dest HTTP > chrome billing isPremium is EvaluateEntitlement enabled, not plan slug [0.11ms]
+(pass) Identity dest HTTP > each dest product uses its own credential without sibling fallback [0.05ms]
+(pass) Identity dest HTTP > commerce dest does not fall back to IDENTITY_API_KEY [0.05ms]
+
+src/lib/identity/ai.test.ts:
+(pass) Models door AI client (official Responses document) > posts the official Responses document to {origin}/responses [0.27ms]
+(pass) Models door AI client (official Responses document) > accepts message-item input and posts it unchanged [0.12ms]
+(pass) Models door AI client (official Responses document) > maps a non-streaming Responses document to visible text and usage [0.17ms]
+(pass) Models door AI client (official Responses document) > returns empty text when the model produced no output_text [0.02ms]
+(pass) Models door AI client (official Responses document) > surfaces the door error envelope and never falls back to a retired path [0.10ms]
+(pass) Models door AI client (official Responses document) > lists models from GET {origin}/models with the product credential [0.12ms]
+
+src/lib/audit/index.test.ts:
+(pass) logAdminAccessAttempt > inserts an admin_access row with method, success and ip [0.30ms]
+(pass) logAdminAccessAttempt > anonymous attempts record a null actorId [0.19ms]
+
+src/lib/i18n/routing.test.ts:
+(pass) locale-aware console redirect > the default locale redirects to an unprefixed /login (one hop) [0.34ms]
+(pass) locale-aware console redirect > non-default locales keep their prefix [0.09ms]
+
+src/lib/i18n/share-card-copy.test.ts:
+(pass) share.card copy > every locale carries the same card keys, all non-empty [0.16ms]
+(pass) share.card copy > each sentence keeps the placeholders it needs [0.12ms]
+(pass) share.card copy > no placeholder appears that the model does not supply [0.38ms]
+(pass) share.card copy > the surface and the catalogs agree in both directions [126.93ms]
+
+src/lib/i18n/game-messages.test.ts:
+(pass) game copy: locale selection > every translation file on disk is registered in the locale registry [46.75ms]
+(pass) game copy: locale selection > every registered module resolves its own zh-HK catalogue [21.25ms]
+(pass) game copy: locale selection > a locale file is what the resolver returns, key for key [37.07ms]
+(pass) game copy: locale selection > a key the locale file omits falls back to English, never to a blank [0.37ms]
+(pass) game copy: locale selection > every locale resolves every module to non-empty, non-key copy [2.54ms]
+(pass) game copy: locale selection > a module with no locale file stays English, whole and unchanged [0.59ms]
+(pass) game copy: locale selection > the daily-ritual modules carry Chinese copy in all three Chinese locales [0.33ms]
+(pass) game copy: fallback chain > the chain is base-first and always ends at English [0.04ms]
+(pass) game copy: fallback chain > a partial overlay merges over English, and a missing file means English [0.07ms]
+
+src/lib/i18n/difficulty-copy.test.ts:
+(pass) difficulty copy: every declared key resolves in every locale > the scan actually covers the modules that declare difficulty levels [0.12ms]
+(pass) difficulty copy: every declared key resolves in every locale > every labelKey resolves in the common catalogue of every locale [0.41ms]
+(pass) difficulty copy: every declared key resolves in every locale > every descriptionKey resolves in the games catalogue of every locale [2.32ms]
+(pass) difficulty copy: every declared key resolves in every locale > the difficulty name each registered slug renders resolves in every locale [2.32ms]
+
+src/lib/connect/health-query.keys.test.ts:
+(pass) health query keys > capability-scoped [0.02ms]
+
+src/lib/connect/puzzle-domain.test.ts:
+(pass) puzzle domain pure (puzzled.v1.PuzzleService) > GetPuzzle requires slug + seed [0.05ms]
+(pass) puzzle domain pure (puzzled.v1.PuzzleService) > GetDaily requires slug [0.02ms]
+(pass) puzzle domain pure (puzzled.v1.PuzzleService) > SubmitGuess validates status [0.04ms]
+(pass) puzzle domain pure (puzzled.v1.PuzzleService) > encodeSubmissionJson [0.04ms]
+
+src/lib/connect/stats-admission.test.ts:
+(pass) shouldUseSdkLeaderboardResidual > always blocks dual SDK residual under sole Connect [0.03ms]
+
+src/lib/connect/state-classification.test.ts:
+(pass) client state classification (arch §6) > server authoritative → tanstack [0.04ms]
+(pass) client state classification (arch §6) > client-owned cross-component → zustand ok [0.01ms]
+(pass) client state classification (arch §6) > local UI → react local
+
+src/lib/connect/transport.test.ts:
+(pass) Connect protocol transport > normalize + cache [0.12ms]
+(pass) Connect protocol transport > server resolution uses API_INTERNAL_URL only [0.05ms]
+(pass) Connect protocol transport > SSR Connect refuses same-origin and public site URLs [0.09ms]
+(pass) Connect protocol transport > production browser default is same-origin (edge-routed) [0.02ms]
+
+src/lib/connect/stats-product-authority.test.ts:
+(pass) Stats product authority > default connect (HARD PATH sole Connect) [0.03ms]
+(pass) Stats product authority > HARD PATH ignores rest dual residual opt-out env [0.02ms]
+(pass) Stats product authority > connect plans even when env requests rest [0.07ms]
+(pass) Stats product authority > fail-closed on invalid input under sole connect [0.02ms]
+
+src/lib/connect/already-played.test.ts:
+(pass) isAlreadyPlayedError > Connect AlreadyExists [0.09ms]
+(pass) isAlreadyPlayedError > message fallback [0.04ms]
+
+src/lib/connect/puzzle-product-authority.test.ts:
+(pass) Puzzle product authority > default connect (HARD PATH sole Connect) [0.02ms]
+(pass) Puzzle product authority > HARD PATH ignores rest dual residual opt-out env [0.01ms]
+(pass) Puzzle product authority > connect plans GetDaily fail-closed [0.05ms]
+(pass) Puzzle product authority > fail-closed on empty slug under sole connect [0.04ms]
+(pass) Puzzle product authority > dual REST residual always blocked [0.03ms]
+
+src/lib/connect/stats-domain.test.ts:
+(pass) stats domain pure (puzzled.v1.StatsService) > validate + clamp [0.03ms]
+(pass) stats domain pure (puzzled.v1.StatsService) > proto enum maps [0.03ms]
+
+src/lib/connect/serving-status.test.ts:
+(pass) puzzled Protobuf-ES ServingStatus SSOT > discriminants [0.02ms]
+(pass) puzzled Protobuf-ES ServingStatus SSOT > pure labels [0.04ms]
+
+src/lib/api/connect-fetch.test.ts:
+(pass) mergeServerConnectInit > keeps Connect Headers fields and adds cookie [0.17ms]
+(pass) mergeServerConnectInit > object-spread of Headers drops protocol fields (regression witness) [0.02ms]
+(pass) mergeServerConnectInit > aborts when the api never returns HTTP [1010.92ms]
+
+src/games/word-guess/validation.test.ts:
+(pass) word-guess validateAndScore > valid solutions > win on first attempt scores 100 points [0.33ms]
+(pass) word-guess validateAndScore > valid solutions > win on second attempt scores 85 points [0.05ms]
+(pass) word-guess validateAndScore > valid solutions > win on third attempt scores 70 points [0.07ms]
+(pass) word-guess validateAndScore > valid solutions > win on fourth attempt scores 55 points [0.07ms]
+(pass) word-guess validateAndScore > valid solutions > win on fifth attempt scores 40 points [0.05ms]
+(pass) word-guess validateAndScore > valid solutions > win on sixth attempt scores 25 points [1.66ms]
+(pass) word-guess validateAndScore > valid solutions > loss after 6 incorrect guesses scores 0 points [0.10ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects missing guesses data [0.16ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects empty guesses array [0.10ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects null data [0.03ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects invalid word in guesses [0.04ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects false win claim when final guess does not match [0.04ms]
+(pass) word-guess validateAndScore > invalid submissions > rejects false loss claim when final guess matches [0.11ms]
+(pass) word-guess validateAndScore > edge cases > handles lowercase guesses [0.04ms]
+(pass) word-guess validateAndScore > edge cases > handles mixed case guesses [0.04ms]
+(pass) word-guess validateAndScore > edge cases > validates all intermediate guesses are real words [0.07ms]
+
+src/games/word-guess/wordle.test.ts:
+(pass) evaluateGuess > basic letter matching > all correct letters [0.11ms]
+(pass) evaluateGuess > basic letter matching > all absent letters [0.03ms]
+(pass) evaluateGuess > basic letter matching > some present letters [0.03ms]
+(pass) evaluateGuess > basic letter matching > mixed correct and present [0.02ms]
+(pass) evaluateGuess > duplicate letter handling > guess has duplicate, solution has one - first correct [0.02ms]
+(pass) evaluateGuess > duplicate letter handling > guess has duplicate, solution has one - second correct [0.03ms]
+(pass) evaluateGuess > duplicate letter handling > solution has duplicate, guess has one [0.02ms]
+(pass) evaluateGuess > duplicate letter handling > both have duplicates - exact match [0.04ms]
+(pass) evaluateGuess > duplicate letter handling > triple letter in guess, double in solution [0.03ms]
+(pass) evaluateGuess > edge cases > same letter in different positions - correct takes priority [0.10ms]
+(pass) evaluateGuess > edge cases > handles case insensitivity implicitly [0.05ms]
+(pass) updateKeyboardState > adds absent letters [0.13ms]
+(pass) updateKeyboardState > present does not override correct [0.04ms]
+(pass) updateKeyboardState > correct overrides present [0.03ms]
+(pass) updateKeyboardState > correct overrides absent [0.02ms]
+(pass) updateKeyboardState > present overrides absent [0.02ms]
+(pass) updateKeyboardState > absent does not override existing status [0.02ms]
+(pass) updateKeyboardState > accumulates state across multiple evaluations [0.08ms]
+(pass) createInitialState > creates state with correct initial values [0.09ms]
+(pass) game flow scenarios > winning on first guess [0.06ms]
+(pass) game flow scenarios > losing after 6 incorrect guesses [0.07ms]
+(pass) game flow scenarios > word length constant is 5 [0.02ms]
+(pass) game flow scenarios > max guesses constant is 6 [0.01ms]
+(pass) real game scenarios > typical winning game - CRANE -> SLATE -> SHALE [0.22ms]
+(pass) real game scenarios > hard word with repeated letters - KNOLL [0.08ms]
+
+src/games/word-groups/connections.test.ts:
+(pass) findMatchingCategory > finds correct category when all words match [0.21ms]
+(pass) findMatchingCategory > returns null when words are from different categories [0.22ms]
+(pass) findMatchingCategory > returns null when only 3 words match [0.07ms]
+(pass) findMatchingCategory > ignores already solved categories [4.36ms]
+(pass) findMatchingCategory > finds category regardless of word order [0.12ms]
+(pass) countMatchingWords > counts all matching words in single category [0.23ms]
+(pass) countMatchingWords > counts partial matches - 3 from one category [0.10ms]
+(pass) countMatchingWords > counts partial matches - 2 from each of two categories [0.05ms]
+(pass) countMatchingWords > returns maximum match count across categories [0.06ms]
+(pass) countMatchingWords > returns 0 for non-existent words [0.04ms]
+(pass) countMatchingWords > excludes solved categories from matching [0.07ms]
+(pass) createInitialState > creates state with all 16 words [0.12ms]
+(pass) createInitialState > starts with empty selection [0.05ms]
+(pass) createInitialState > starts with no solved categories [0.02ms]
+(pass) createInitialState > starts with 0 mistakes [0.02ms]
+(pass) createInitialState > starts in playing status [0.02ms]
+(pass) createInitialState > starts with empty guess history [0.02ms]
+(pass) game constants > MAX_MISTAKES is 4 [0.02ms]
+(pass) game constants > WORDS_PER_CATEGORY is 4 [0.01ms]
+(pass) isOneAway detection > detects one-away when 3 words match [0.06ms]
+(pass) isOneAway detection > not one-away when 4 words match [0.04ms]
+(pass) isOneAway detection > not one-away when 2 words match [0.03ms]
+(pass) game flow scenarios > winning game - solve all 4 categories [0.18ms]
+(pass) game flow scenarios > losing game - 4 mistakes [0.06ms]
+(pass) game flow scenarios > game continues with 3 mistakes [0.03ms]
+(pass) score calculation > perfect game score - no mistakes [0.50ms]
+(pass) score calculation > score with 2 mistakes [0.02ms]
+(pass) score calculation > minimum score with 4 mistakes and loss [0.02ms]
+(pass) lastGuessWasOneAway state > starts as false [0.05ms]
+(pass) lastGuessWasOneAway state > is set to true after one-away wrong guess (3 matching words) [0.19ms]
+(pass) lastGuessWasOneAway state > is false after wrong guess with only 2 matching words [0.05ms]
+(pass) lastGuessWasOneAway state > is false after correct guess (4 matching words) [0.10ms]
+(pass) lastGuessWasOneAway state > should be cleared when new selection starts (reducer behavior) [0.20ms]
+(pass) connectionsReducer > SELECT_WORD > adds word to selection [0.40ms]
+(pass) connectionsReducer > SELECT_WORD > adds multiple words to selection [0.10ms]
+(pass) connectionsReducer > SELECT_WORD > does not add duplicate word [0.06ms]
+(pass) connectionsReducer > SELECT_WORD > does not add 5th word [0.17ms]
+(pass) connectionsReducer > SELECT_WORD > does nothing when game is won [0.04ms]
+(pass) connectionsReducer > SELECT_WORD > does nothing when game is lost [0.24ms]
+(pass) connectionsReducer > SELECT_WORD > clears lastGuessWasOneAway flag [0.09ms]
+(pass) connectionsReducer > DESELECT_WORD > removes word from selection [0.22ms]
+(pass) connectionsReducer > DESELECT_WORD > does nothing when game is won [0.09ms]
+(pass) connectionsReducer > CLEAR_SELECTION > clears all selected words [0.12ms]
+(pass) connectionsReducer > SUBMIT_GUESS > correct guess adds category to solved [0.32ms]
+(pass) connectionsReducer > SUBMIT_GUESS > correct guess removes words from remaining [0.16ms]
+(pass) connectionsReducer > SUBMIT_GUESS > correct guess adds to guess history [0.13ms]
+(pass) connectionsReducer > SUBMIT_GUESS > wrong guess increments mistakes [0.15ms]
+(pass) connectionsReducer > SUBMIT_GUESS > one-away wrong guess sets lastGuessWasOneAway [0.17ms]
+(pass) connectionsReducer > SUBMIT_GUESS > 4th mistake triggers loss [0.47ms]
+(pass) connectionsReducer > SUBMIT_GUESS > solving all 4 categories triggers win [0.39ms]
+(pass) connectionsReducer > SUBMIT_GUESS > does nothing with less than 4 words selected [0.15ms]
+(pass) connectionsReducer > SUBMIT_GUESS > does nothing when game is already won [0.04ms]
+(pass) connectionsReducer > SHUFFLE > shuffles remaining words [0.11ms]
+(pass) connectionsReducer > SHUFFLE > does nothing when game is won [0.03ms]
+(pass) connectionsReducer > RESET > resets to initial state with new puzzle [0.05ms]
+(pass) edge cases > selecting same word twice has no effect [0.03ms]
+(pass) edge cases > cannot select more than 4 words [0.02ms]
+(pass) edge cases > categories are case-sensitive [0.05ms]
+
+src/games/word-groups/validation.test.ts:
+(pass) word-groups validateAndScore > valid solutions > perfect game (0 mistakes) scores 100 points [0.41ms]
+(pass) word-groups validateAndScore > valid solutions > 1 mistake scores 75 points [0.08ms]
+(pass) word-groups validateAndScore > valid solutions > 2 mistakes scores 50 points [0.07ms]
+(pass) word-groups validateAndScore > valid solutions > 3 mistakes scores 25 points [0.16ms]
+(pass) word-groups validateAndScore > valid solutions > loss scores 0 points [0.09ms]
+(pass) word-groups validateAndScore > valid solutions > categories found in any order are valid [0.08ms]
+(pass) word-groups validateAndScore > valid solutions > words within category can be in any order [0.06ms]
+(pass) word-groups validateAndScore > invalid submissions > rejects missing foundCategories [0.04ms]
+(pass) word-groups validateAndScore > invalid submissions > rejects false win claim with incomplete categories [0.08ms]
+(pass) word-groups validateAndScore > invalid submissions > rejects false loss claim when all categories found [0.06ms]
+(pass) word-groups validateAndScore > invalid submissions > rejects category with wrong word count [0.07ms]
+(pass) word-groups validateAndScore > invalid submissions > rejects invalid category grouping [0.06ms]
+(pass) word-groups validateAndScore > edge cases > handles case-insensitive word matching [0.06ms]
+(pass) word-groups validateAndScore > edge cases > handles empty found categories as loss [0.03ms]
+(pass) word-groups validateAndScore > edge cases > high mistake count still scores minimum [0.04ms]
+
+src/games/word-box/validation.test.ts:
+(pass) word-box validateAndScore > valid solutions > loss scores 0 points [0.93ms]
+(pass) word-box validateAndScore > valid solutions > 2 words solution scores 100 points [0.10ms]
+(pass) word-box validateAndScore > invalid submissions > rejects win claim with missing words [0.03ms]
+(pass) word-box validateAndScore > invalid submissions > rejects win claim with empty words array [0.01ms]
+(pass) word-box validateAndScore > invalid submissions > rejects win claim when not all letters used [0.03ms]
+(pass) word-box validateAndScore > edge cases > handles null data for loss [0.02ms]
+(pass) word-box validateAndScore > edge cases > loss with undefined words is valid [0.02ms]
+(pass) word-box validateAndScore > score tiers > scoring formula: 2 words = 100 points [0.01ms]
+(pass) word-box validateAndScore > score tiers > scoring formula: 3 words = 80 points
+(pass) word-box validateAndScore > score tiers > scoring formula: 4 words = 60 points
+(pass) word-box validateAndScore > score tiers > scoring formula: 5+ words = 40 points
+
+src/games/nonogram/generator.test.ts:
+(pass) generateNonogramPuzzle > determinism > same seed produces same puzzle [0.43ms]
+(pass) generateNonogramPuzzle > determinism > different seeds can produce different puzzles [0.23ms]
+(pass) generateNonogramPuzzle > puzzle structure > has 10x10 grid [0.05ms]
+(pass) generateNonogramPuzzle > puzzle structure > has row clues for each row [0.03ms]
+(pass) generateNonogramPuzzle > puzzle structure > has column clues for each column [0.02ms]
+(pass) generateNonogramPuzzle > puzzle structure > has a theme [0.03ms]
+(pass) generateNonogramPuzzle > solution validity > solution contains only booleans [0.06ms]
+(pass) generateNonogramPuzzle > solution validity > row clues match solution [0.24ms]
+(pass) generateNonogramPuzzle > solution validity > column clues match solution [0.23ms]
+(pass) generateNonogramPuzzle > pattern variety > different seeds select different patterns [0.43ms]
+(pass) generateNonogramPuzzle > pattern variety > seeds wrap around pattern pool [0.03ms]
+(pass) generateNonogramPuzzle > transformations > same pattern index can have different orientations [1.13ms]
+(pass) nonogram patterns > patterns produce non-trivial puzzles [0.27ms]
+(pass) nonogram patterns > row clues are not all zeros [0.11ms]
+(pass) nonogram patterns > column clues are not all zeros [0.11ms]
+(pass) nonogram integration > daily puzzle simulation [0.11ms]
+(pass) nonogram integration > theme variety across a month [0.18ms]
+(pass) nonogram integration > clue sum matches filled cells [0.27ms]
+
+src/games/nonogram/validation.test.ts:
+(pass) nonogram validateAndScore > valid solutions > fast solve with no errors scores 500 points [0.14ms]
+(pass) nonogram validateAndScore > valid solutions > 100 second solve with no errors scores 450 points [0.04ms]
+(pass) nonogram validateAndScore > valid solutions > fast solve with 4 errors scores 400 points [0.04ms]
+(pass) nonogram validateAndScore > valid solutions > 120 second solve with 2 errors scores 390 points [0.06ms]
+(pass) nonogram validateAndScore > valid solutions > minimum score is 100 for wins [0.05ms]
+(pass) nonogram validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) nonogram validateAndScore > invalid submissions > rejects missing final grid [0.02ms]
+(pass) nonogram validateAndScore > invalid submissions > rejects invalid grid dimensions (wrong row count) [0.02ms]
+(pass) nonogram validateAndScore > invalid submissions > rejects invalid grid dimensions (wrong column count) [0.04ms]
+(pass) nonogram validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.02ms]
+(pass) nonogram validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.01ms]
+(pass) nonogram validateAndScore > edge cases > handles null data [0.02ms]
+(pass) nonogram validateAndScore > edge cases > handles missing errors field (defaults to 0) [0.02ms]
+(pass) nonogram validateAndScore > edge cases > all empty grid is incorrect (unless solution is all empty) [0.06ms]
+
+src/games/word-search/generator.test.ts:
+(pass) theme pool > has multiple themes [0.02ms]
+(pass) theme pool > count is consistent across calls [0.01ms]
+(pass) generateWordSearchPuzzle > determinism > same seed produces same puzzle [0.53ms]
+(pass) generateWordSearchPuzzle > determinism > different seeds produce different puzzles [0.31ms]
+(pass) generateWordSearchPuzzle > puzzle structure > has correct grid size [0.09ms]
+(pass) generateWordSearchPuzzle > puzzle structure > grid is filled (no empty cells) [0.19ms]
+(pass) generateWordSearchPuzzle > puzzle structure > has a theme [0.09ms]
+(pass) generateWordSearchPuzzle > puzzle structure > has word count [0.06ms]
+(pass) generateWordSearchPuzzle > puzzle structure > word count matches solution words [0.34ms]
+(pass) generateWordSearchPuzzle > solution validity > all words are uppercase [0.07ms]
+(pass) generateWordSearchPuzzle > solution validity > placements match words [0.06ms]
+(pass) generateWordSearchPuzzle > solution validity > words appear at correct positions in grid [0.46ms]
+(pass) generateWordSearchPuzzle > solution validity > placement start/end positions are consistent [0.08ms]
+(pass) generateWordSearchPuzzle > word placement > words fit within grid boundaries [0.37ms]
+(pass) generateWordSearchPuzzle > word placement > words have valid directions [0.23ms]
+(pass) generateWordSearchPuzzle > word placement > word length does not exceed grid size [0.41ms]
+(pass) word search themes > different seeds can select different themes [0.98ms]
+(pass) word search themes > words match their theme (spot check) [0.50ms]
+(pass) word search integration > daily puzzle simulation [0.19ms]
+(pass) word search integration > puzzle variety across seeds [6.48ms]
+(pass) word search integration > reasonable word counts [0.70ms]
+
+src/games/word-search/validation.test.ts:
+(pass) word-search validateAndScore > valid solutions > fast solve scores 500 points [0.11ms]
+(pass) word-search validateAndScore > valid solutions > 100 second solve scores 450 points [0.04ms]
+(pass) word-search validateAndScore > valid solutions > 200 second solve scores 400 points [0.02ms]
+(pass) word-search validateAndScore > valid solutions > minimum score is 100 for wins [0.48ms]
+(pass) word-search validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) word-search validateAndScore > invalid submissions > rejects missing foundWords data [0.02ms]
+(pass) word-search validateAndScore > invalid submissions > rejects invalid word in found words [0.03ms]
+(pass) word-search validateAndScore > invalid submissions > rejects false win claim with incomplete words [0.02ms]
+(pass) word-search validateAndScore > invalid submissions > rejects false loss claim when all words found [0.02ms]
+(pass) word-search validateAndScore > edge cases > handles null data [0.02ms]
+(pass) word-search validateAndScore > edge cases > empty found words array is a loss [0.02ms]
+(pass) word-search validateAndScore > edge cases > time penalty calculation - odd seconds [0.02ms]
+(pass) word-search validateAndScore > edge cases > words can be found in any order [0.02ms]
+
+src/games/pip-place/parse-client.test.ts:
+(pass) parsePipPlaceClientPayload > accepts leak-stripped GetDaily JSON [0.19ms]
+(pass) parsePipPlaceClientPayload > drops leaked solution and tiles from a stored row [0.05ms]
+(pass) parsePipPlaceClientPayload > accepts legacy wrapped {puzzleData, solution} without exposing solution [0.05ms]
+(pass) parsePipPlaceClientPayload > legacy global parser still throws on GetDaily wire form [0.05ms]
+
+src/games/pip-place/generator.test.ts:
+(pass) generatePipPlacePuzzle > same seed produces the same puzzle [3.02ms]
+(pass) generatePipPlacePuzzle > daily size is 4x5 double-3 with 10 tiles [0.18ms]
+(pass) generatePipPlacePuzzle > regions are 6–8 connected groups of size 2–4 with enough constraints [4.03ms]
+(pass) generatePipPlacePuzzle > stored tiles solve the generated constraints [2.37ms]
+(pass) fixture tilings > 2x3 A and B both solve the same constraints [0.05ms]
+
+src/games/pip-place/validation.test.ts:
+(pass) pip-place validateAndScore > valid solutions > fast solve scores 500 points [0.12ms]
+(pass) pip-place validateAndScore > valid solutions > 100 second solve scores 450 points [0.06ms]
+(pass) pip-place validateAndScore > valid solutions > 200 second solve scores 400 points [0.05ms]
+(pass) pip-place validateAndScore > valid solutions > minimum score is 100 for wins [0.06ms]
+(pass) pip-place validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) pip-place validateAndScore > valid solutions > accepts an alternate tiling that satisfies the same regions [0.04ms]
+(pass) pip-place validateAndScore > invalid submissions > rejects missing tiles data [0.03ms]
+(pass) pip-place validateAndScore > invalid submissions > rejects false win claim with incomplete tiles [0.05ms]
+(pass) pip-place validateAndScore > invalid submissions > rejects false loss claim with a solved tiling [0.04ms]
+(pass) pip-place validateAndScore > edge cases > handles null data [0.03ms]
+(pass) pip-place validateAndScore > edge cases > time penalty calculation - odd seconds [0.04ms]
+
+src/games/shared/share-deep-link-call-sites.test.ts:
+(pass) formatRitualShareText call sites > the share surfaces are the ones this audit expects [4.03ms]
+(pass) formatRitualShareText call sites > every share call passes the product day, so the link is dated [3.07ms]
+
+src/games/shared/random.test.ts:
+(pass) seededRandom > determinism > same seed produces same sequence [0.14ms]
+(pass) seededRandom > determinism > different seeds produce different sequences [3.01ms]
+(pass) seededRandom > range > always produces values in [0, 1) [0.43ms]
+(pass) seededRandom > distribution > produces reasonable distribution [0.69ms]
+(pass) seededRandom > frozen behavior (historical compatibility) > seed 0 produces known sequence [0.03ms]
+(pass) seededRandom > frozen behavior (historical compatibility) > sequence is reproducible across calls [0.08ms]
+(pass) shuffleArray > basic behavior > returns new array (does not mutate) [0.13ms]
+(pass) shuffleArray > basic behavior > contains same elements [0.04ms]
+(pass) shuffleArray > basic behavior > preserves length [0.02ms]
+(pass) shuffleArray > determinism > same seed produces same shuffle [0.02ms]
+(pass) shuffleArray > determinism > different seeds produce different shuffles [0.02ms]
+(pass) shuffleArray > edge cases > handles empty array [0.01ms]
+(pass) shuffleArray > edge cases > handles single element [0.06ms]
+(pass) shuffleArray > edge cases > handles two elements [0.07ms]
+(pass) shuffleArray > frozen behavior (historical compatibility) > specific shuffle is reproducible [0.02ms]
+(pass) pickRandom > basic behavior > returns element from array [0.03ms]
+(pass) pickRandom > basic behavior > can pick any element [0.16ms]
+(pass) pickRandom > determinism with seeded random > same seed picks same element [0.03ms]
+(pass) pickRandom > with Math.random (default) > works without explicit random function [0.02ms]
+(pass) pickRandom > edge cases > single element always returns that element [0.02ms]
+(pass) random utilities integration > puzzle generation simulation [0.03ms]
+(pass) random utilities integration > multiple picks from shuffled array [0.11ms]
+(pass) random utilities integration > consistent game board generation [0.10ms]
+
+src/games/shared/format.test.ts:
+(pass) formatTimer > seconds only > formats 0 seconds [0.13ms]
+(pass) formatTimer > seconds only > formats single digit seconds [0.02ms]
+(pass) formatTimer > seconds only > formats double digit seconds
+(pass) formatTimer > seconds only > formats 59 seconds
+(pass) formatTimer > minutes and seconds > formats 1 minute exactly
+(pass) formatTimer > minutes and seconds > formats 1 minute 30 seconds
+(pass) formatTimer > minutes and seconds > formats 5 minutes
+(pass) formatTimer > minutes and seconds > formats 10 minutes 15 seconds [0.04ms]
+(pass) formatTimer > minutes and seconds > formats 59 minutes 59 seconds
+(pass) formatTimer > hours, minutes, and seconds > formats 1 hour exactly
+(pass) formatTimer > hours, minutes, and seconds > formats 1 hour 15 minutes [0.01ms]
+(pass) formatTimer > hours, minutes, and seconds > formats 1 hour 30 minutes 45 seconds
+(pass) formatTimer > hours, minutes, and seconds > formats 2 hours 5 minutes 3 seconds
+(pass) formatTimer > edge cases > handles fractional milliseconds (floors)
+(pass) formatTimer > edge cases > handles 999 milliseconds (floors to 0) [0.01ms]
+(pass) isPerfectGame > returns true for won game with 0 mistakes [0.03ms]
+(pass) isPerfectGame > returns true for won game with undefined mistakes
+(pass) isPerfectGame > returns false for won game with mistakes
+(pass) isPerfectGame > returns false for lost game with 0 mistakes
+(pass) isPerfectGame > returns false for lost game with mistakes
+(pass) formatTimeScore > returns "Lost" for lost game [0.02ms]
+(pass) formatTimeScore > returns formatted time for won game with time [0.02ms]
+(pass) formatTimeScore > returns score points for won game without time but with score
+(pass) formatTimeScore > returns "Won" for won game without time or score
+(pass) formatTimeScore > prioritizes time over score [0.01ms]
+(pass) compareByTime > status comparison > winner ranks higher than loser [0.03ms]
+(pass) compareByTime > status comparison > loser ranks lower than winner
+(pass) compareByTime > status comparison > two losers compare equally by time
+(pass) compareByTime > time comparison among winners > faster time ranks higher
+(pass) compareByTime > time comparison among winners > slower time ranks lower
+(pass) compareByTime > time comparison among winners > equal times rank equally
+(pass) compareByTime > undefined time handling > defined time ranks higher than undefined [0.01ms]
+(pass) compareByTime > undefined time handling > two undefined times return NaN (Infinity - Infinity) [0.01ms]
+(pass) calculateWordleScore > winning scores > 1 attempt = 100 points [0.01ms]
+(pass) calculateWordleScore > winning scores > 2 attempts = 85 points
+(pass) calculateWordleScore > winning scores > 3 attempts = 70 points
+(pass) calculateWordleScore > winning scores > 4 attempts = 55 points
+(pass) calculateWordleScore > winning scores > 5 attempts = 40 points
+(pass) calculateWordleScore > winning scores > 6 attempts = 25 points (minimum)
+(pass) calculateWordleScore > winning scores > more than 6 attempts still gets minimum 25 points
+(pass) calculateWordleScore > losing scores > loss always returns 0 points [0.01ms]
+(pass) calculateWordleScore > score formula > each additional attempt costs 15 points [0.01ms]
+(pass) format utilities integration > leaderboard sorting scenario [0.05ms]
+(pass) format utilities integration > game result display scenario [0.02ms]
+(pass) format utilities integration > perfect game achievement check [0.02ms]
+
+src/games/shared/finish-recording.test.ts:
+(pass) finishRecordingFor > daily submits the served day while it is still the product day [0.20ms]
+(pass) finishRecordingFor > daily drops a day that rolled over, so the server derives it [0.02ms]
+(pass) finishRecordingFor > daily without a day keeps the original shape [0.02ms]
+(pass) finishRecordingFor > archive records the day it was served for, as archive [0.01ms]
+(pass) finishRecordingFor > archive without a real served day records nothing [0.04ms]
+
+src/games/shared/result-card-wiring.test.ts:
+(pass) result-card wiring > every GameResultModal call site dates the card with its product day [2.55ms]
+(pass) result-card wiring > the result surface offers the card share and keeps the text share [0.21ms]
+(pass) result-card wiring > the modal passes the card props straight through [0.17ms]
+
+src/games/pattern-match/validation.test.ts:
+(pass) pattern-match validateAndScore > valid solutions > fast solve with no mistakes scores 500 points [0.25ms]
+(pass) pattern-match validateAndScore > valid solutions > 100 second solve with no mistakes scores 450 points [0.04ms]
+(pass) pattern-match validateAndScore > valid solutions > fast solve with 3 mistakes scores 470 points [0.03ms]
+(pass) pattern-match validateAndScore > valid solutions > 100 second solve with 3 mistakes scores 420 points [0.03ms]
+(pass) pattern-match validateAndScore > valid solutions > minimum score is 100 for wins [0.02ms]
+(pass) pattern-match validateAndScore > valid solutions > loss scores 0 points [0.08ms]
+(pass) pattern-match validateAndScore > invalid submissions > rejects missing foundSets data [0.03ms]
+(pass) pattern-match validateAndScore > invalid submissions > rejects win claim with incomplete sets [0.04ms]
+(pass) pattern-match validateAndScore > invalid submissions > rejects false loss claim when all sets found [0.02ms]
+(pass) pattern-match validateAndScore > edge cases > handles null data [0.04ms]
+(pass) pattern-match validateAndScore > edge cases > handles missing mistakes field (defaults to 0) [0.04ms]
+(pass) pattern-match validateAndScore > edge cases > sets can be found in any order [0.04ms]
+(pass) pattern-match validateAndScore > edge cases > card IDs within set can be in any order [0.04ms]
+(pass) pattern-match validateAndScore > edge cases > empty found sets is a loss [0.02ms]
+(pass) pattern-match validateAndScore > edge cases > invalid set format (wrong length) is ignored [0.03ms]
+
+src/games/queens/generator.test.ts:
+(pass) generateQueensPuzzle > determinism > same seed produces same puzzle [3.47ms]
+(pass) generateQueensPuzzle > determinism > different seeds can produce different puzzles [5.77ms]
+(pass) generateQueensPuzzle > puzzle structure > has correct grid size for 5x5 [0.09ms]
+(pass) generateQueensPuzzle > puzzle structure > has correct grid size for 6x6 [0.97ms]
+(pass) generateQueensPuzzle > puzzle structure > has correct grid size for 7x7 [0.54ms]
+(pass) generateQueensPuzzle > puzzle structure > has correct grid size for 8x8 [1.13ms]
+(pass) generateQueensPuzzle > puzzle structure > has correct number of queens [2.95ms]
+(pass) generateQueensPuzzle > puzzle structure > default size is 6 [0.39ms]
+(pass) generateQueensPuzzle > queen placement validity > one queen per row [0.41ms]
+(pass) generateQueensPuzzle > queen placement validity > one queen per column [0.37ms]
+(pass) generateQueensPuzzle > queen placement validity > no adjacent queens (including diagonals) [2.00ms]
+(pass) generateQueensPuzzle > queen placement validity > queens are within bounds [0.51ms]
+(pass) generateQueensPuzzle > region validity > all cells are assigned to a region [0.60ms]
+(pass) generateQueensPuzzle > region validity > each region contains exactly one queen [2.36ms]
+(pass) generateQueensPuzzle > region validity > regions cover the entire grid exactly once [0.42ms]
+(pass) queens puzzle sizes > 5x5 puzzles are valid [0.06ms]
+(pass) queens puzzle sizes > 6x6 puzzles are valid [0.39ms]
+(pass) queens puzzle sizes > 7x7 puzzles are valid [0.39ms]
+(pass) queens puzzle sizes > 8x8 puzzles are valid [1.24ms]
+(pass) queens solution validation > generated solutions are valid for 5x5 [0.52ms]
+(pass) queens solution validation > generated solutions are valid for 6x6 [2.25ms]
+(pass) queens solution validation > generated solutions are valid for 7x7 [3.44ms]
+(pass) queens solution validation > generated solutions are valid for 8x8 [4.32ms]
+(pass) queens generator edge cases > throws for seeds that cannot find unique solution [0.69ms]
+(pass) queens generator edge cases > throws with informative error message [0.51ms]
+(pass) queens integration > daily puzzle simulation with working seeds [1.99ms]
+(pass) queens integration > puzzle variety exists across working seeds [2.69ms]
+(pass) queens integration > all sizes can generate valid puzzles [9.58ms]
+
+src/games/queens/validation.test.ts:
+(pass) queens validateAndScore > valid solutions > fast solve (0 seconds) scores 500 points [0.34ms]
+(pass) queens validateAndScore > valid solutions > 100 second solve scores 450 points [0.12ms]
+(pass) queens validateAndScore > valid solutions > 200 second solve scores 400 points [0.09ms]
+(pass) queens validateAndScore > valid solutions > minimum score is 100 for wins [0.06ms]
+(pass) queens validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) queens validateAndScore > invalid submissions > rejects missing final grid [0.04ms]
+(pass) queens validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.02ms]
+(pass) queens validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.05ms]
+(pass) queens validateAndScore > edge cases > empty grid is incorrect [0.05ms]
+(pass) queens validateAndScore > edge cases > handles null data [0.02ms]
+(pass) queens validateAndScore > edge cases > time penalty calculation - odd seconds [0.04ms]
+
+src/games/tango/generator.test.ts:
+(pass) generateTangoPuzzle > determinism > same seed produces same puzzle [2.62ms]
+(pass) generateTangoPuzzle > determinism > different seeds produce different puzzles [2.07ms]
+(pass) generateTangoPuzzle > puzzle structure > has correct grid size for 6x6 [1.83ms]
+(pass) generateTangoPuzzle > puzzle structure > has correct grid size for 8x8 [10.60ms]
+(pass) generateTangoPuzzle > puzzle structure > default size is 6 [1.35ms]
+(pass) generateTangoPuzzle > solution validity > solution contains only sun and moon [1.31ms]
+(pass) generateTangoPuzzle > solution validity > each row has equal suns and moons [11.63ms]
+(pass) generateTangoPuzzle > solution validity > each column has equal suns and moons [10.13ms]
+(pass) generateTangoPuzzle > solution validity > no more than 2 consecutive same symbols in rows [11.29ms]
+(pass) generateTangoPuzzle > solution validity > no more than 2 consecutive same symbols in columns [12.07ms]
+(pass) generateTangoPuzzle > solution validity > all rows are unique [13.88ms]
+(pass) generateTangoPuzzle > solution validity > all columns are unique [11.54ms]
+(pass) generateTangoPuzzle > initial grid (puzzle) > initial grid has some revealed cells [1.23ms]
+(pass) generateTangoPuzzle > initial grid (puzzle) > revealed cells match solution [1.20ms]
+(pass) getSizeFromSeed > returns 6 for most days [0.05ms]
+(pass) getSizeFromSeed > returns 8 for weekend days [0.01ms]
+(pass) getSizeFromSeed > cycles correctly [0.01ms]
+(pass) getSizeFromSeed > handles negative seeds
+(pass) tango integration > daily puzzle simulation [4.22ms]
+(pass) tango integration > puzzle variety across seeds [29.71ms]
+(pass) tango integration > 8x8 puzzles maintain all constraints [62.36ms]
+
+src/games/tango/validation.test.ts:
+(pass) tango validateAndScore > valid solutions > fast solve scores 500 points [1.53ms]
+(pass) tango validateAndScore > valid solutions > 100 second solve scores 450 points [0.15ms]
+(pass) tango validateAndScore > valid solutions > 200 second solve scores 400 points [0.10ms]
+(pass) tango validateAndScore > valid solutions > minimum score is 100 for wins [0.06ms]
+(pass) tango validateAndScore > valid solutions > loss scores 0 points [0.11ms]
+(pass) tango validateAndScore > invalid submissions > rejects missing grid data [0.03ms]
+(pass) tango validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.09ms]
+(pass) tango validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.09ms]
+(pass) tango validateAndScore > edge cases > handles null data [0.02ms]
+(pass) tango validateAndScore > edge cases > time penalty calculation - odd seconds [0.09ms]
+(pass) tango validateAndScore > edge cases > grid with empty cells is invalid [0.07ms]
+
+src/games/killer-sudoku/generator.test.ts:
+(pass) generateKillerSudokuPuzzle > determinism > same seed produces same puzzle [2.21ms]
+(pass) generateKillerSudokuPuzzle > determinism > different seeds produce different puzzles [1.29ms]
+(pass) generateKillerSudokuPuzzle > solution grid validity > solution is 9x9 grid [0.38ms]
+(pass) generateKillerSudokuPuzzle > solution grid validity > solution contains only digits 1-9 [3.97ms]
+(pass) generateKillerSudokuPuzzle > solution grid validity > each row contains 1-9 exactly once [3.25ms]
+(pass) generateKillerSudokuPuzzle > solution grid validity > each column contains 1-9 exactly once [3.12ms]
+(pass) generateKillerSudokuPuzzle > solution grid validity > each 3x3 box contains 1-9 exactly once [2.67ms]
+(pass) generateKillerSudokuPuzzle > cage structure > has cages array [0.29ms]
+(pass) generateKillerSudokuPuzzle > cage structure > cages cover all 81 cells [2.83ms]
+(pass) generateKillerSudokuPuzzle > cage structure > no cell belongs to multiple cages [3.65ms]
+(pass) generateKillerSudokuPuzzle > cage structure > cages have 2-5 cells [2.55ms]
+(pass) generateKillerSudokuPuzzle > cage structure > cages are connected (cells are adjacent) [3.83ms]
+(pass) generateKillerSudokuPuzzle > cage structure > cage cells are within grid bounds [3.00ms]
+(pass) generateKillerSudokuPuzzle > cage sums > cage sums match solution digits [2.58ms]
+(pass) generateKillerSudokuPuzzle > cage sums > cage sums are positive [2.36ms]
+(pass) generateKillerSudokuPuzzle > cage sums > no duplicate digits within a cage [2.68ms]
+(pass) generateKillerSudokuPuzzle > puzzle grid with given digits > default has no given digits [0.32ms]
+(pass) generateKillerSudokuPuzzle > puzzle grid with given digits > can generate with given digits [0.42ms]
+(pass) generateKillerSudokuPuzzle > puzzle grid with given digits > given digits match solution [0.32ms]
+(pass) generateKillerSudokuPuzzle > puzzle grid with given digits > different given counts [1.30ms]
+(pass) killer sudoku integration > working seeds produce valid puzzles [1.89ms]
+(pass) killer sudoku integration > puzzle variety across working seeds [5.03ms]
+(pass) killer sudoku integration > total of all cage sums equals sum of solution [2.84ms]
+
+src/games/killer-sudoku/validation.test.ts:
+(pass) killer-sudoku validateAndScore > valid solutions > fast solve with no mistakes scores 1000 points [0.12ms]
+(pass) killer-sudoku validateAndScore > valid solutions > 100 second solve with no mistakes scores 900 points [0.03ms]
+(pass) killer-sudoku validateAndScore > valid solutions > 500+ second solve caps time penalty at 500 [0.02ms]
+(pass) killer-sudoku validateAndScore > valid solutions > fast solve with 5 mistakes scores 750 points [0.02ms]
+(pass) killer-sudoku validateAndScore > valid solutions > 200 second solve with 3 mistakes scores 650 points [0.02ms]
+(pass) killer-sudoku validateAndScore > valid solutions > minimum score is 100 for wins [0.02ms]
+(pass) killer-sudoku validateAndScore > valid solutions > loss scores 0 points [0.02ms]
+(pass) killer-sudoku validateAndScore > invalid submissions > rejects missing grid data [0.02ms]
+(pass) killer-sudoku validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.02ms]
+(pass) killer-sudoku validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.01ms]
+(pass) killer-sudoku validateAndScore > edge cases > handles null data [0.02ms]
+(pass) killer-sudoku validateAndScore > edge cases > handles missing mistakes field (defaults to 0) [0.02ms]
+(pass) killer-sudoku validateAndScore > edge cases > validates each cell against solution [0.05ms]
+(pass) killer-sudoku validateAndScore > edge cases > grid with null cells is incorrect [0.04ms]
+
+src/games/number-path/generator.test.ts:
+(pass) generateNumberPathPuzzle > same seed produces the same puzzle [57.26ms]
+(pass) generateNumberPathPuzzle > size is 6x6 and includes 1 and n [2.04ms]
+(pass) generateNumberPathPuzzle > stored path solves the generated clues [38.48ms]
+(pass) countSolutions > 3x3 opposite-corner 1 and n has exactly two Hamiltonian paths [0.18ms]
+
+src/games/number-path/validation.test.ts:
+(pass) number-path validateAndScore > valid solutions > fast solve scores 500 points [0.15ms]
+(pass) number-path validateAndScore > valid solutions > 100 second solve scores 450 points [0.13ms]
+(pass) number-path validateAndScore > valid solutions > 200 second solve scores 400 points [0.03ms]
+(pass) number-path validateAndScore > valid solutions > minimum score is 100 for wins [0.03ms]
+(pass) number-path validateAndScore > valid solutions > loss scores 0 points [0.02ms]
+(pass) number-path validateAndScore > valid solutions > accepts an alternate Hamiltonian path that respects clues [0.03ms]
+(pass) number-path validateAndScore > invalid submissions > rejects missing path data [0.03ms]
+(pass) number-path validateAndScore > invalid submissions > rejects false win claim with incomplete path [0.02ms]
+(pass) number-path validateAndScore > invalid submissions > rejects false win that only matches stored seed path pinning [0.04ms]
+(pass) number-path validateAndScore > invalid submissions > rejects false loss claim with a solved path [0.02ms]
+(pass) number-path validateAndScore > edge cases > handles null data [0.02ms]
+(pass) number-path validateAndScore > edge cases > time penalty calculation - odd seconds [0.02ms]
+
+src/games/crossword/grid-fill.test.ts:
+(pass) isGridFilled > empty letter cells are not filled [0.05ms]
+(pass) isGridFilled > full letter grid is filled [0.03ms]
+(pass) isGridFilled > empty solution does not false-complete (leak-strip regression) [0.05ms]
+
+src/games/crossword/parse-client.test.ts:
+(pass) parseCrosswordClientPayload > accepts leak-stripped GetDaily JSON [0.22ms]
+(pass) parseCrosswordClientPayload > drops nested answers from a leaked stored row [0.07ms]
+(pass) parseCrosswordClientPayload > accepts legacy wrapped {puzzleData, solution} without exposing solution [0.04ms]
+(pass) parseCrosswordClientPayload > legacy global parser still throws on GetDaily wire form [0.04ms]
+
+src/games/crossword/generator.test.ts:
+(pass) word square pool > has multiple word squares [0.02ms]
+(pass) word square pool > count is consistent across calls [0.01ms]
+(pass) generateCrosswordPuzzle > determinism > same seed produces same puzzle [0.10ms]
+(pass) generateCrosswordPuzzle > determinism > different seeds can produce different puzzles [0.03ms]
+(pass) generateCrosswordPuzzle > grid structure > has 5 rows [0.01ms]
+(pass) generateCrosswordPuzzle > grid structure > all rows have at least 5 letters [0.14ms]
+(pass) generateCrosswordPuzzle > grid structure > all cells contain single uppercase letters [0.43ms]
+(pass) generateCrosswordPuzzle > grid structure > rows form valid words (uppercase letter strings) [0.14ms]
+(pass) generateCrosswordPuzzle > word square property > grid is square (rows = columns) [0.08ms]
+(pass) generateCrosswordPuzzle > clue structure > has across and down clues [0.02ms]
+(pass) generateCrosswordPuzzle > clue structure > has 5 across clues [0.05ms]
+(pass) generateCrosswordPuzzle > clue structure > has 5 down clues [0.03ms]
+(pass) generateCrosswordPuzzle > clue structure > clues have required properties [0.05ms]
+(pass) generateCrosswordPuzzle > clue structure > clue answers match grid row words (across) [0.08ms]
+(pass) generateCrosswordPuzzle > clue structure > clue lengths match answer lengths [0.11ms]
+(pass) generateCrosswordPuzzle > clue structure > clue lengths are at least 5 [0.09ms]
+(pass) generateCrosswordPuzzle > clue structure > clue texts are non-empty strings [0.10ms]
+(pass) generateCrosswordPuzzle > clue numbering > across clues start at row 0, col 0 [0.03ms]
+(pass) generateCrosswordPuzzle > clue numbering > down clues start at row 0 [0.02ms]
+(pass) generateCrosswordPuzzle > clue numbering > down clue numbers are 1-5 [0.05ms]
+(pass) generateCrosswordPuzzle > seed wrapping > negative seeds produce valid puzzles [0.02ms]
+(pass) generateCrosswordPuzzle > seed wrapping > large seeds wrap around pattern pool [0.02ms]
+(pass) crossword integration > daily puzzle simulation [0.05ms]
+(pass) crossword integration > puzzle variety across seeds [0.14ms]
+(pass) crossword integration > all patterns in pool are accessible [0.11ms]
+
+src/games/crossword/validation.test.ts:
+(pass) crossword validateAndScore > valid solutions > fast solve scores 500 points [0.07ms]
+(pass) crossword validateAndScore > valid solutions > 100 second solve scores 450 points [0.02ms]
+(pass) crossword validateAndScore > valid solutions > 200 second solve scores 400 points [0.02ms]
+(pass) crossword validateAndScore > valid solutions > minimum score is 100 for wins [0.02ms]
+(pass) crossword validateAndScore > valid solutions > loss scores 0 points [0.01ms]
+(pass) crossword validateAndScore > invalid submissions > rejects missing finalGrid data [0.02ms]
+(pass) crossword validateAndScore > invalid submissions > rejects non-array finalGrid [0.01ms]
+(pass) crossword validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.02ms]
+(pass) crossword validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.03ms]
+(pass) crossword validateAndScore > edge cases > handles null data [0.02ms]
+(pass) crossword validateAndScore > edge cases > time penalty calculation - odd seconds [0.02ms]
+(pass) crossword validateAndScore > edge cases > grid with empty cells where letters should be is incorrect [0.04ms]
+
+src/games/cryptogram/generator.test.ts:
+(pass) quote pool > has substantial number of quotes [0.02ms]
+(pass) quote pool > count is consistent across calls
+(pass) generateCryptogramPuzzle > determinism > same seed produces same puzzle [0.45ms]
+(pass) generateCryptogramPuzzle > determinism > different seeds produce different puzzles [0.11ms]
+(pass) generateCryptogramPuzzle > puzzle structure > has encrypted text [0.05ms]
+(pass) generateCryptogramPuzzle > puzzle structure > has author [0.03ms]
+(pass) generateCryptogramPuzzle > puzzle structure > has category [0.04ms]
+(pass) generateCryptogramPuzzle > puzzle structure > has unique letter count [0.04ms]
+(pass) generateCryptogramPuzzle > puzzle structure > has max hints [0.04ms]
+(pass) generateCryptogramPuzzle > solution structure > has original text [0.03ms]
+(pass) generateCryptogramPuzzle > solution structure > original text is uppercase [0.08ms]
+(pass) generateCryptogramPuzzle > solution structure > has cipher mapping [0.04ms]
+(pass) generateCryptogramPuzzle > solution structure > has reverse cipher mapping [0.07ms]
+(pass) generateCryptogramPuzzle > cipher validity > cipher is a bijection (one-to-one) [0.07ms]
+(pass) generateCryptogramPuzzle > cipher validity > reverse cipher inverts cipher [0.05ms]
+(pass) generateCryptogramPuzzle > cipher validity > cipher covers all 26 letters [0.05ms]
+(pass) generateCryptogramPuzzle > encryption validity > encrypted text can be decrypted to original [0.59ms]
+(pass) generateCryptogramPuzzle > encryption validity > encrypted text preserves non-letters [0.23ms]
+(pass) generateCryptogramPuzzle > encryption validity > encrypted text same length as original [0.16ms]
+(pass) generateCryptogramPuzzle > quote selection > quotes cycle through pool [0.05ms]
+(pass) generateCryptogramPuzzle > quote selection > consecutive seeds select different quotes [0.27ms]
+(pass) cryptogram categories > puzzles have valid categories [0.50ms]
+(pass) cryptogram categories > multiple categories represented [0.74ms]
+(pass) cryptogram integration > daily puzzle simulation [0.18ms]
+(pass) cryptogram integration > puzzle variety across seeds [0.67ms]
+(pass) cryptogram integration > all quotes have reasonable length [0.68ms]
+
+src/games/cryptogram/validation.test.ts:
+(pass) cryptogram validateAndScore > valid solutions > fast solve with no hints scores 500 points [0.10ms]
+(pass) cryptogram validateAndScore > valid solutions > 100 second solve with no hints scores 450 points [0.03ms]
+(pass) cryptogram validateAndScore > valid solutions > fast solve with 2 hints scores 400 points [0.03ms]
+(pass) cryptogram validateAndScore > valid solutions > 100 second solve with 3 hints scores 300 points [0.02ms]
+(pass) cryptogram validateAndScore > valid solutions > minimum score is 100 for wins [0.02ms]
+(pass) cryptogram validateAndScore > valid solutions > loss scores 0 points [0.02ms]
+(pass) cryptogram validateAndScore > invalid submissions > rejects missing guesses data [0.02ms]
+(pass) cryptogram validateAndScore > invalid submissions > rejects false win claim with incorrect guesses [0.02ms]
+(pass) cryptogram validateAndScore > invalid submissions > rejects false loss claim with correct guesses [0.02ms]
+(pass) cryptogram validateAndScore > edge cases > handles null data [0.01ms]
+(pass) cryptogram validateAndScore > edge cases > handles missing hintsUsed field (defaults to 0) [0.03ms]
+(pass) cryptogram validateAndScore > edge cases > partial guesses with missing letters is incorrect [0.05ms]
+(pass) cryptogram validateAndScore > edge cases > empty guesses object is incorrect [0.02ms]
+
+src/games/arithmo/generator.test.ts:
+(pass) equation pool > has substantial number of equations [0.02ms]
+(pass) equation pool > count is consistent across calls
+(pass) generateArithmoPuzzle > determinism > same seed produces same puzzle [0.02ms]
+(pass) generateArithmoPuzzle > determinism > different seeds produce different puzzles [0.01ms]
+(pass) generateArithmoPuzzle > puzzle structure > puzzle data has correct length
+(pass) generateArithmoPuzzle > puzzle structure > equation is exactly 8 characters [0.08ms]
+(pass) generateArithmoPuzzle > equation validity > equation is mathematically correct [0.74ms]
+(pass) generateArithmoPuzzle > equation validity > equation contains valid operators [0.16ms]
+(pass) generateArithmoPuzzle > equation validity > equation only contains valid characters [0.06ms]
+(pass) generateArithmoPuzzle > seed handling > handles seed 0 [0.01ms]
+(pass) generateArithmoPuzzle > seed handling > handles negative seeds [0.02ms]
+(pass) generateArithmoPuzzle > seed handling > handles large seeds
+(pass) generateArithmoPuzzle > seed handling > seed wraps around pool size [0.01ms]
+(pass) equation patterns > includes addition equations (NN+NN=NN) [0.17ms]
+(pass) equation patterns > includes subtraction equations (NN-NN=NN) [0.07ms]
+(pass) equation patterns > includes multiplication equations [0.10ms]
+(pass) equation patterns > includes division equations [0.07ms]
+(pass) equation patterns > includes order of operations equations [0.09ms]
+(pass) historical compatibility (FROZEN) > pool size is stable [0.01ms]
+(pass) historical compatibility (FROZEN) > specific seeds produce consistent equations [0.05ms]
+(pass) arithmo integration > daily puzzle simulation [0.07ms]
+(pass) arithmo integration > equation variety [0.23ms]
+
+src/games/arithmo/validation.test.ts:
+(pass) arithmo validateAndScore > valid solutions > win on first attempt scores 100 points [0.43ms]
+(pass) arithmo validateAndScore > valid solutions > win on second attempt scores 85 points [0.07ms]
+(pass) arithmo validateAndScore > valid solutions > win on third attempt scores 70 points [0.05ms]
+(pass) arithmo validateAndScore > valid solutions > win on fourth attempt scores 55 points [0.05ms]
+(pass) arithmo validateAndScore > valid solutions > win on fifth attempt scores 40 points [0.06ms]
+(pass) arithmo validateAndScore > valid solutions > win on sixth attempt scores 25 points [0.09ms]
+(pass) arithmo validateAndScore > valid solutions > loss scores 0 points [0.07ms]
+(pass) arithmo validateAndScore > invalid submissions > rejects missing guesses data [0.02ms]
+(pass) arithmo validateAndScore > invalid submissions > rejects empty guesses array [0.01ms]
+(pass) arithmo validateAndScore > invalid submissions > rejects invalid equation in guesses [0.02ms]
+(pass) arithmo validateAndScore > invalid submissions > rejects false win claim when final guess does not match [0.04ms]
+(pass) arithmo validateAndScore > invalid submissions > rejects false loss claim when final guess matches [0.03ms]
+(pass) arithmo validateAndScore > edge cases > handles null data [0.03ms]
+(pass) arithmo validateAndScore > edge cases > validates all intermediate guesses are valid equations [0.03ms]
+
+src/games/word-ladder/generator.test.ts:
+(pass) puzzle count > returns Infinity for algorithmic generation [0.02ms]
+(pass) generateWordLadderPuzzle > determinism > same seed produces same puzzle [14.88ms]
+(pass) generateWordLadderPuzzle > determinism > different seeds produce different puzzles [6.53ms]
+(pass) generateWordLadderPuzzle > puzzle structure > has start word [10.15ms]
+(pass) generateWordLadderPuzzle > puzzle structure > has end word [11.70ms]
+(pass) generateWordLadderPuzzle > puzzle structure > has path array [9.39ms]
+(pass) generateWordLadderPuzzle > puzzle structure > start and end are different [159.01ms]
+(pass) generateWordLadderPuzzle > path validity > path starts with start word [138.14ms]
+(pass) generateWordLadderPuzzle > path validity > path ends with end word [140.72ms]
+(pass) generateWordLadderPuzzle > path validity > each step in path differs by exactly one letter [148.79ms]
+(pass) generateWordLadderPuzzle > path validity > all words in path have same length [169.83ms]
+(pass) generateWordLadderPuzzle > path validity > all words are lowercase [162.43ms]
+(pass) generateWordLadderPuzzle > path quality > path length is reasonable (2-8 steps) [208.63ms]
+(pass) generateWordLadderPuzzle > path quality > word length is 3 or 4 letters [203.04ms]
+(pass) isOneLetterChange > returns true for single character difference [0.12ms]
+(pass) isOneLetterChange > returns false for identical words [0.01ms]
+(pass) isOneLetterChange > returns false for multiple differences [0.02ms]
+(pass) isOneLetterChange > returns false for different lengths [0.01ms]
+(pass) word ladder integration > daily puzzle simulation [11.06ms]
+(pass) word ladder integration > puzzle variety across seeds [309.85ms]
+(pass) word ladder integration > validates full path transformation [80.67ms]
+
+src/games/word-ladder/validation.test.ts:
+(pass) word-ladder validateAndScore > valid solutions > optimal path scores 100 points [0.73ms]
+(pass) word-ladder validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects win claim with missing path [0.03ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects win claim with empty path [0.06ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects win claim with single word path [0.02ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects path not starting with start word [2.02ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects path not ending with end word [0.13ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects invalid word in path [0.05ms]
+(pass) word-ladder validateAndScore > invalid submissions > rejects invalid step (more than one letter change) [0.15ms]
+(pass) word-ladder validateAndScore > edge cases > handles null data [0.03ms]
+(pass) word-ladder validateAndScore > edge cases > handles case insensitivity [0.05ms]
+(pass) word-ladder validateAndScore > edge cases > handles mixed case path [0.14ms]
+(pass) word-ladder validateAndScore > edge cases > loss with undefined path is valid [0.03ms]
+
+src/games/sudoku/generator.test.ts:
+(pass) generateSudokuPuzzle > determinism > same seed produces same puzzle [5.00ms]
+(pass) generateSudokuPuzzle > determinism > different seeds produce different puzzles [1.03ms]
+(pass) generateSudokuPuzzle > puzzle structure > has 9x9 grid [1.27ms]
+(pass) generateSudokuPuzzle > puzzle structure > default difficulty is medium [1.15ms]
+(pass) generateSudokuPuzzle > puzzle structure > respects difficulty setting [2.36ms]
+(pass) generateSudokuPuzzle > solution validity > solution contains only numbers 1-9 [0.96ms]
+(pass) generateSudokuPuzzle > solution validity > each row contains 1-9 exactly once [3.74ms]
+(pass) generateSudokuPuzzle > solution validity > each column contains 1-9 exactly once [3.66ms]
+(pass) generateSudokuPuzzle > solution validity > each 3x3 box contains 1-9 exactly once [3.60ms]
+(pass) generateSudokuPuzzle > puzzle grid (clues) > puzzle has some empty cells [0.88ms]
+(pass) generateSudokuPuzzle > puzzle grid (clues) > filled cells match solution [0.81ms]
+(pass) generateSudokuPuzzle > puzzle grid (clues) > easy puzzles have more clues than hard [35.93ms]
+(pass) generateSudokuPuzzle > difficulty clue counts > easy puzzles have 47-53 clues (32-35 removed) [0.39ms]
+(pass) generateSudokuPuzzle > difficulty clue counts > medium puzzles have 37-43 clues (42-45 removed) [1.78ms]
+(pass) generateSudokuPuzzle > difficulty clue counts > hard puzzles have 26-32 clues (52-55 removed) [16.00ms]
+(pass) sudoku solution validation > all generated solutions are valid sudoku grids [6.73ms]
+(pass) sudoku solution validation > solutions valid across all difficulties [19.18ms]
+(pass) sudoku integration > daily puzzle simulation [5.31ms]
+(pass) sudoku integration > puzzle variety across seeds [14.15ms]
+(pass) sudoku integration > difficulty progression [2.50ms]
+
+src/games/sudoku/validation.test.ts:
+(pass) sudoku validateAndScore > valid solutions > fast solve (0 seconds) with no mistakes scores 1000 points [0.20ms]
+(pass) sudoku validateAndScore > valid solutions > 100 second solve with no mistakes scores 900 points [0.05ms]
+(pass) sudoku validateAndScore > valid solutions > 500+ second solve with no mistakes scores 500 points [0.04ms]
+(pass) sudoku validateAndScore > valid solutions > fast solve with 5 mistakes scores 750 points [0.03ms]
+(pass) sudoku validateAndScore > valid solutions > 200 second solve with 3 mistakes scores 650 points [0.09ms]
+(pass) sudoku validateAndScore > valid solutions > minimum score is 100 for wins [0.06ms]
+(pass) sudoku validateAndScore > valid solutions > loss scores 0 points [0.03ms]
+(pass) sudoku validateAndScore > invalid submissions > rejects missing final grid [0.03ms]
+(pass) sudoku validateAndScore > invalid submissions > rejects invalid grid dimensions (wrong row count) [0.03ms]
+(pass) sudoku validateAndScore > invalid submissions > rejects invalid grid dimensions (wrong column count) [0.04ms]
+(pass) sudoku validateAndScore > invalid submissions > rejects false win claim with incorrect grid [0.03ms]
+(pass) sudoku validateAndScore > invalid submissions > rejects false loss claim with correct grid [0.03ms]
+(pass) sudoku validateAndScore > edge cases > handles null data [0.02ms]
+(pass) sudoku validateAndScore > edge cases > handles missing mistakes field (defaults to 0) [0.04ms]
+(pass) sudoku validateAndScore > edge cases > validates each cell against solution [0.11ms]
+
+src/games/word-hive/rank-labels.test.ts:
+(pass) word-hive rank ladder > covers every threshold rank exactly once, in order [0.04ms]
+(pass) word-hive rank ladder > does not reuse another publisher rank name as chrome [0.46ms]
+(pass) word-hive rank ladder > translation block matches the rendered ladder (no drift) [3.01ms]
+
+src/games/word-hive/validation.test.ts:
+(pass) word-hive validateAndScore > valid solutions > finding one 4-letter word scores 1 point [3.22ms]
+(pass) word-hive validateAndScore > valid solutions > finding one 5-letter word scores 5 points [0.07ms]
+(pass) word-hive validateAndScore > valid solutions > finding a pangram scores word length + 7 bonus [0.04ms]
+(pass) word-hive validateAndScore > valid solutions > finding multiple words sums scores [0.05ms]
+(pass) word-hive validateAndScore > valid solutions > finding all words calculates correct total [0.31ms]
+(pass) word-hive validateAndScore > valid solutions > empty found words scores 0 points [0.03ms]
+(pass) word-hive validateAndScore > invalid submissions > rejects missing foundWords data [0.22ms]
+(pass) word-hive validateAndScore > invalid submissions > rejects invalid word claim [0.12ms]
+(pass) word-hive validateAndScore > invalid submissions > rejects mix of valid and invalid words [0.04ms]
+(pass) word-hive validateAndScore > edge cases > handles null data [0.09ms]
+(pass) word-hive validateAndScore > edge cases > handles lowercase found words [0.07ms]
+(pass) word-hive validateAndScore > edge cases > handles mixed case found words [0.03ms]
+(pass) word-hive validateAndScore > edge cases > spelling bee always returns won status [0.02ms]
+
+src/games/quad-words/generator.test.ts:
+(pass) generateQuordlePuzzle > determinism > same seed produces same puzzle [0.15ms]
+(pass) generateQuordlePuzzle > determinism > different seeds produce different puzzles [0.06ms]
+(pass) generateQuordlePuzzle > puzzle structure > has exactly 4 words [0.47ms]
+(pass) generateQuordlePuzzle > puzzle structure > all words are at least 4 letters [0.63ms]
+(pass) generateQuordlePuzzle > puzzle structure > all words are uppercase [0.49ms]
+(pass) generateQuordlePuzzle > puzzle structure > all words contain only letters [0.46ms]
+(pass) generateQuordlePuzzle > word uniqueness > all 4 words are unique within a puzzle [0.79ms]
+(pass) generateQuordlePuzzle > solution consistency > puzzleData and solution contain same words [0.45ms]
+(pass) generateQuordlePuzzle > solution consistency > words tuple type is enforced [0.04ms]
+(pass) generateQuordlePuzzle > word variety > different seeds select different word combinations [1.37ms]
+(pass) generateQuordlePuzzle > word variety > word pool contains common English words [0.69ms]
+(pass) generateQuordlePuzzle > edge cases > seed 0 produces valid puzzle [0.03ms]
+(pass) generateQuordlePuzzle > edge cases > negative seeds produce valid puzzles [0.04ms]
+(pass) generateQuordlePuzzle > edge cases > large seeds produce valid puzzles [0.03ms]
+(pass) quordle integration > daily puzzle simulation [0.85ms]
+(pass) quordle integration > puzzles are playable (real English words) [0.74ms]
+(pass) quordle integration > no obvious duplicates across consecutive daily puzzles [0.18ms]
+
+src/games/quad-words/validation.test.ts:
+(pass) quad-words validateAndScore > valid solutions > 5 guesses with all boards solved scores 100 points [0.08ms]
+(pass) quad-words validateAndScore > valid solutions > 6 guesses scores 90 points [0.03ms]
+(pass) quad-words validateAndScore > valid solutions > 7 guesses scores 80 points [0.02ms]
+(pass) quad-words validateAndScore > valid solutions > 8 guesses scores 70 points [0.02ms]
+(pass) quad-words validateAndScore > valid solutions > 9 guesses scores 60 points [0.03ms]
+(pass) quad-words validateAndScore > valid solutions > minimum score is 40 for wins with many guesses [0.08ms]
+(pass) quad-words validateAndScore > valid solutions > loss with incomplete boards scores 0 points [0.02ms]
+(pass) quad-words validateAndScore > invalid submissions > rejects win claim without all boards solved [0.02ms]
+(pass) quad-words validateAndScore > invalid submissions > rejects loss claim when all boards solved [0.01ms]
+(pass) quad-words validateAndScore > invalid submissions > rejects too many guesses [0.03ms]
+(pass) quad-words validateAndScore > edge cases > handles missing solvedBoards [0.02ms]
+(pass) quad-words validateAndScore > edge cases > handles null data for loss [0.02ms]
+(pass) quad-words validateAndScore > edge cases > handles zero solved boards as loss [0.02ms]
+
+src/games/block-slide/solver.test.ts:
+(pass) Block Slide Solver > solves a simple puzzle [0.49ms]
+(pass) Block Slide Solver > detects unsolvable puzzle [0.07ms]
+(pass) Block Slide Solver > validates configuration correctly [0.07ms]
+(pass) Block Slide Generator > generates solvable puzzle for seed [2930.33ms]
+(pass) Block Slide Generator > produces deterministic results [2901.08ms]
+(skip) Block Slide Generator > generates different puzzles for different seeds
+(skip) Block Slide Generator > cycles through difficulty levels
+
+src/games/block-slide/validation.test.ts:
+(pass) block-slide validateAndScore > valid solutions > optimal solution under 60s scores 550 points [1.52ms]
+(pass) block-slide validateAndScore > valid solutions > optimal solution over 60s scores 500 points [0.04ms]
+(pass) block-slide validateAndScore > valid solutions > 5 extra moves over 60s scores 475 points [0.02ms]
+(pass) block-slide validateAndScore > valid solutions > 5 extra moves under 60s scores 525 points [0.02ms]
+(pass) block-slide validateAndScore > valid solutions > many extra moves scores minimum 100 points [0.01ms]
+(pass) block-slide validateAndScore > valid solutions > loss scores 0 points [0.02ms]
+(pass) block-slide validateAndScore > invalid submissions > rejects win claim with missing move count [0.04ms]
+(pass) block-slide validateAndScore > invalid submissions > rejects move count less than minimum [0.02ms]
+(pass) block-slide validateAndScore > invalid submissions > rejects move count of 0 when minimum is greater [0.02ms]
+(pass) block-slide validateAndScore > edge cases > time bonus boundary - exactly 60 seconds gets no bonus [0.01ms]
+(pass) block-slide validateAndScore > edge cases > time bonus boundary - 59999ms gets bonus [0.01ms]
+(pass) block-slide validateAndScore > edge cases > loss with missing move count is valid [0.02ms]
+(pass) block-slide validateAndScore > edge cases > exact minimum moves is valid [0.01ms]
+
+src/shared/components/boundary-error-view.test.ts:
+(pass) BoundaryErrorView > renders the resolved copy and the retry action [19.64ms]
+(pass) BoundaryErrorView > shows the raw error detail only when a surface asks for it [1.00ms]
+(pass) BoundaryErrorView > keeps extra actions after the retry button [0.60ms]
+(pass) error boundary wiring > every route error boundary renders and reports through the shared view [11.21ms]
+
+src/shared/components/a11y-contract.test.ts:
+(pass) Input error contract > associates and announces the error message [0.81ms]
+(pass) Input error contract > keeps the field valid and unassociated when there is no error [0.31ms]
+(pass) Input error contract > describes the field with the helper text when one is provided [0.15ms]
+(pass) Textarea error contract > associates and announces the error message [0.38ms]
+(pass) Form feedback contract > announces errors assertively [3.78ms]
+(pass) Form feedback contract > announces non-errors politely [0.61ms]
+(pass) Form feedback contract > renders nothing without a message [0.06ms]
+(pass) Form feedback contract > inline feedback keeps the alert role for errors [0.15ms]
+(pass) Motion gating contract > every Framer motion surface is gated behind the reduced-motion preference [6.29ms]
+(pass) Motion gating contract > the gate uses Framer reducedMotion="user" rather than a hand-rolled stub [0.15ms]
+
+src/features/daily/lib/daily-fallback-browser.test.ts:
+(pass) the fallback GetDaily carries the persisted guest-day id [5.29ms]
+
+src/features/daily/lib/day-request.test.ts:
+(pass) resolveGameDayRequest > a shared dated link resolves the shared day [0.08ms]
+(pass) resolveGameDayRequest > a legacy dated link without the flag resolves the same day [0.06ms]
+(pass) resolveGameDayRequest > the day before the product day is an archive day [0.02ms]
+(pass) resolveGameDayRequest > no day asks for today's ritual [0.05ms]
+(pass) resolveGameDayRequest > the flag never overrides the day [0.03ms]
+(pass) resolveGameDayRequest > a future day is not an archive day [0.02ms]
+(pass) resolveGameDayRequest > malformed and impossible days are ignored [0.06ms]
+(pass) resolveGameDayRequest > the roll-over is the HKT product day, not UTC midnight [0.07ms]
+
+src/features/daily/lib/result-card-render.test.ts:
+(pass) resultCardPalette > every module theme has a palette whose accent matches the theme pattern [0.22ms]
+(pass) resultCardPalette > covers exactly the themes the modules declare [0.04ms]
+(pass) paintResultCard > draws the module, the day, the status, the chips and the deep link [370.04ms]
+(pass) paintResultCard > never paints solution or answer content, even when it rides the input [0.27ms]
+(pass) paintResultCard > paints pattern tiles in the theme accent, near and miss fills [0.26ms]
+(pass) paintResultCard > keeps one common chrome across modules: same text, different palette [0.29ms]
+(pass) paintResultCard > renders the lost status through the same chrome [0.16ms]
+(pass) paintResultCard > is deterministic: two paints of one model record identical calls [0.21ms]
+(pass) paintResultCard > renders without a day or pattern, when the run has neither [0.09ms]
+(pass) resultCardBlob > returns null without a DOM so callers fall back to the text share [0.34ms]
+(pass) resultCardBlob > exports the card size the layout is designed for [0.01ms]
+(pass) resultCardFileName > names files per module and day [0.17ms]
+(pass) resultCardFileName > drops the day when the run has none [0.05ms]
+(pass) resultCardFileName > sanitizes unexpected slug characters [0.09ms]
+
+src/features/daily/lib/share-result-card.test.ts:
+(pass) shareResultCard > shares the image through the platform sheet when files are supported [0.39ms]
+(pass) shareResultCard > reports a dismissed sheet as cancelled and does nothing else [0.26ms]
+(pass) shareResultCard > falls back to download + caption copy when the sheet refuses the files [0.27ms]
+(pass) shareResultCard > falls back when sharing throws something other than an abort [0.12ms]
+(pass) shareResultCard > downloads even when the platform has no share() at all [0.10ms]
+(pass) shareResultCard > copies the caption alone when there is no document to download through [0.08ms]
+(pass) shareResultCard > stays honest when nothing is possible [0.04ms]
+(pass) shareResultCard > copies the caption when the image could not be rendered [0.06ms]
+(pass) shareResultCard > does not claim success when the clipboard refuses [0.08ms]
+(pass) shareRitualResultCard > renders with the injected renderer and shares the image [0.35ms]
+(pass) shareRitualResultCard > uses the text alternative as caption when no text share is given [0.24ms]
+(pass) shareRitualResultCard > survives a renderer that throws, falling back to the caption [0.13ms]
+
+src/features/daily/lib/daily-completion.test.ts:
+(pass) daily completion map > guests read the free module from GetDaily [0.26ms]
+(pass) daily completion map > non-premium users read only the free module [0.10ms]
+(pass) daily completion map > premium users read the suite and fail closed per module [0.15ms]
+
+src/features/daily/lib/home-exposure.test.ts:
+(pass) deriveHomeExposure > only a server-proved completion counts [0.05ms]
+(pass) deriveHomeExposure > is bounded by the limit and never duplicates a module [0.55ms]
+(pass) deriveHomeExposure > always leads with today's free module, whatever the day [1.02ms]
+(pass) deriveHomeExposure > includes server-proved completions when the day fill would not [0.06ms]
+(pass) deriveHomeExposure > fills the cap with the lowest-sortOrder proved completions and drops the surplus [0.12ms]
+(pass) deriveHomeExposure > keeps surplus proved completions reachable on /games [0.34ms]
+(pass) deriveHomeExposure > never treats unknown or unavailable status as completed [0.04ms]
+(pass) deriveHomeExposure > keeps the free module in front even when its status is unverified [0.05ms]
+(pass) deriveHomeExposure > does not duplicate a completed free module [0.05ms]
+(pass) deriveHomeExposure > is stable within a product day [0.10ms]
+(pass) deriveHomeExposure > varies across product days [0.44ms]
+(pass) deriveHomeExposure > shows the whole catalog when it is smaller than the limit [0.06ms]
+(pass) deriveHomeExposure > exposes nothing when the limit is not positive [0.05ms]
+(pass) deriveHomeExposure > fails closed for a non-finite limit [0.04ms]
+(pass) deriveHomeExposure > deduplicates repeated registrations [0.03ms]
+(pass) deriveHomeExposure > ignores a free-rotation slug that is not a registered module [0.02ms]
+(pass) deriveHomeExposure > bounds the shipped registry below the full catalog [0.14ms]
+
+src/features/daily/lib/daily-fallback.test.ts:
+(pass) daily snapshot classification > a served board is playable with the server day key [0.13ms]
+(pass) daily snapshot classification > a served puzzle id is carried through; synthetic numbers are dropped [0.07ms]
+(pass) daily snapshot classification > a server-accepted finish is never playable, even with a served board [0.23ms]
+(pass) daily snapshot classification > a finish without a result payload stays closed and unplayed [0.05ms]
+(pass) daily snapshot classification > an incomplete session payload is not invented into a result [0.05ms]
+(pass) daily snapshot classification > an empty or unparsable board is unavailable, never playable [0.07ms]
+(pass) daily load fallback > reads GetDaily over the browser transport and renders the served board [0.64ms]
+(pass) daily load fallback > a failed client fetch is an honest retry state, not a fake board [0.68ms]
+(pass) daily load fallback > a premium gate is a denied snapshot, not a retry loop [0.53ms]
+(pass) daily load fallback > a non-permission failure is still a retry state, not a denied gate [0.21ms]
+(pass) daily load fallback > a bare 403 without the product gate reason stays a retry, not an upsell [0.14ms]
+(pass) daily load fallback > a server-accepted finish reached by the fallback is rendered as completed [0.62ms]
+
+src/features/daily/lib/archive-access.test.ts:
+(pass) archiveAccess > an anonymous request is a guest, never a reader [0.03ms]
+(pass) archiveAccess > an account without Plus is locked [0.01ms]
+(pass) archiveAccess > only an entitled account is open
+(pass) readArchiveEntitlement > a commerce read that rejects is locked, never open [0.37ms]
+(pass) readArchiveEntitlement > a read that never answers inside the deadline is locked [5.26ms]
+(pass) readArchiveEntitlement > an answer that is not the boolean true is not entitlement [0.12ms]
+(pass) readArchiveEntitlement > only a resolved true opens the list [0.05ms]
+(pass) resolveArchiveAccess > an anonymous request is a guest even if Commerce would say yes [0.09ms]
+(pass) resolveArchiveAccess > a commerce read that fails is locked, never open [0.08ms]
+(pass) resolveArchiveAccess > a commerce read that never answers is locked [1000.28ms]
+(pass) resolveArchiveAccess > only a verified entitlement is open [0.30ms]
+
+src/features/daily/lib/daily-progress.test.ts:
+(pass) daily progress > does not count locked premium modules against the free ritual [0.09ms]
+(pass) daily progress > counts every playable module for premium suite depth [0.03ms]
+(pass) daily progress > does not celebrate an empty playable set [0.01ms]
+
+src/features/daily/lib/archive-days.test.ts:
+(pass) archiveDayKeys > lists the days before today, newest first, and excludes today [0.17ms]
+(pass) archiveDayKeys > defaults to the archive window [3.95ms]
+(pass) archiveDayKeys > crosses a month and a year boundary [1.58ms]
+(pass) archiveDayKeys > handles a leap day [0.07ms]
+(pass) archiveDayKeys > an empty or negative window lists nothing [0.04ms]
+(pass) archiveDayKeys > rejects a malformed day key [0.09ms]
+(pass) archiveDayKeys > rejects a shape-valid but impossible day at the gate [0.03ms]
+(pass) archiveDayKeys > reads the day key through the shared parser, whitespace and all [0.02ms]
+(pass) archiveDays > names the module that ran on each day [0.18ms]
+(pass) archiveDays > one rotation length of days covers every module exactly once [0.10ms]
+(pass) archivePlayPath > is the dated archive route in the existing module shape [0.03ms]
+
+src/features/daily/lib/result-card.test.ts:
+(pass) buildResultCard > labels the day, the module and a dated deep link [0.27ms]
+(pass) buildResultCard > falls back to no day when the key is invalid, and never fakes one [0.06ms]
+(pass) buildResultCard > never carries the solution or an answer grid, even when passed in [0.19ms]
+(pass) buildResultCard > coerces unknown tile values to miss, so no text can ride a pattern [0.15ms]
+(pass) buildResultCard > caps the pattern so a card can never become an answer-grid dump [0.28ms]
+(pass) buildResultCard > drops empty rows and a zero streak [0.14ms]
+(pass) resultCardTimeBand > buckets durations; exact durations never leave the device [0.04ms]
+(pass) formatCardDayKey > formats the product day zone-stably [0.66ms]
+(pass) resultCardChips > orders chips attempts, score, streak, time band; the fifth fact is dropped [0.16ms]
+(pass) resultCardChips > shows mistakes when no time band competes for the last slot [0.11ms]
+(pass) resultCardChips > omits chips with no data [0.10ms]
+(pass) resultCardTextAlternative > is a complete localized sentence with no leftover tokens [0.24ms]
+(pass) resultCardTextAlternative > stays clean when the run has almost no data [0.06ms]
+(pass) resultCardTextAlternative > describes the pattern in counts, never in content [0.15ms]
+
+src/features/daily/lib/share-text.test.ts:
+(pass) shareHost > strips scheme and trailing slash [0.02ms]
+(pass) ritualSharePath > module path only [0.01ms]
+(pass) ritualSharePath > carries the archive mode with the day_key [0.01ms]
+(pass) ritualSharePath > canonicalizes retired slugs [0.01ms]
+(pass) ritualSharePath > ignores an invalid or impossible day
+(pass) ritualShareDeepLink > host + module + day [0.01ms]
+(pass) formatRitualShareText > won path is non-spoiler and deep-links the shared day [0.19ms]
+(pass) formatRitualShareText > lost path no solution leak [0.05ms]
+(pass) formatRitualShareText > crossword flagship includes module path and day_key [0.08ms]
+(pass) formatRitualShareText > statLine override for time-based games [0.04ms]
+
+src/features/daily/lib/difficulty-completion.test.ts:
+(pass) difficulty completion status > projects server-verified completion marks [0.09ms]
+(pass) difficulty completion status > an unverifiable read stays unknown instead of not-completed [0.03ms]
+(pass) difficulty completion status > one unknown level does not fake the other levels [0.03ms]
+
+src/features/daily/lib/home-play-state.test.ts:
+(pass) home play state > keeps the daily ritual when the free module completion status is unknown [0.18ms]
+(pass) home play state > never renders a completion or score the server could not prove [0.04ms]
+(pass) home play state > a missing personal result is unknown, not completed [0.02ms]
+(pass) home play state > renders the server-proved score for a finished module [0.03ms]
+(pass) home play state > a proved finish without a score renders no score [0.02ms]
+(pass) home play state > anonymous visitors keep the free rotation and a clear upgrade path [0.11ms]
+(pass) home play state > premium accounts see the whole suite unlocked [0.08ms]
+(pass) home play scopes (bounded grid, full progress) > premium viewer: the badge keeps the full-registry denominator [0.32ms]
+(pass) home play scopes (bounded grid, full progress) > free viewer: the badge stays 1/1 and the grid stays bounded [0.20ms]
+(pass) home play scopes (bounded grid, full progress) > a non-exposed unverified module still lifts the unverified banner [0.13ms]
+
+src/features/console/lib/finish-activity.test.ts:
+(pass) day keys > round-trips a civil date [0.08ms]
+(pass) day keys > rejects malformed keys [0.01ms]
+(pass) day keys > shifts across month and year boundaries [0.04ms]
+(pass) dailyFinishCounts > counts completed daily sessions by product day [0.11ms]
+(pass) dailyFinishCounts > ignores archive plays, open sessions, and unparsable dates [0.03ms]
+(pass) buildFinishCalendar > aligns the last column to the week that contains today [3.15ms]
+(pass) buildFinishCalendar > marks the tail of the current week as future and out of range [0.16ms]
+(pass) buildFinishCalendar > reports finished days, longest run, and the current run [0.22ms]
+(pass) buildFinishCalendar > stops the current run when the product day is still open [0.15ms]
+(pass) buildFinishCalendar > fails closed on an invalid product day [0.05ms]
+(pass) winRatePercent > rounds to whole percentages [0.05ms]
+(pass) winRatePercent > returns null instead of a fabricated zero [0.02ms]
+(pass) moduleStatRows > keeps a missing best score null instead of posing as zero [0.15ms]
+(pass) moduleStatRows > keeps registry order and drops modules with no finishes [0.06ms]
+(pass) durationParts > splits milliseconds into minutes and seconds [0.06ms]
+
+src/features/puzzle-generator/lib/model-catalog.test.ts:
+(pass) admin model catalog (Models door document) > maps door rows to the admin shape without legacy fields [0.20ms]
+(pass) admin model catalog (Models door document) > sorts non-priority providers by display name without throwing [0.06ms]
+(pass) admin model catalog (Models door document) > skips rows without an id [0.04ms]
+(pass) admin model catalog (Models door document) > tolerates an empty catalog [0.06ms]
+
+src/features/puzzle-generator/lib/generator.test.ts:
+(pass) puzzle generator requests (Models door Responses document) > maps the chat-shaped config onto the official Responses document [0.96ms]
+
+src/features/marketing/lib/pricing-plans.test.ts:
+(pass) selectPaidPlans > reads both intervals from one price code [0.09ms]
+(pass) selectPaidPlans > keeps two price codes as two products and refuses to compare them [0.05ms]
+(pass) selectPaidPlans > an empty or free-only price list yields no prices [0.02ms]
+(pass) selectPaidPlans > ignores zero and missing amounts instead of inventing a price [0.02ms]
+(pass) selectPaidPlans > an annual-only price code never becomes the monthly price [0.03ms]
+(pass) annualSavingsPercent > computes the real saving for the annual interval [0.03ms]
+(pass) annualSavingsPercent > returns null when the intervals are not comparable
+(pass) annualSavingsPercent > returns null when a price is missing [0.01ms]
+(pass) annualSavingsPercent > returns null when the year does not cost less [0.01ms]
+(pass) annualSavingsPercent > never rounds a saving up [0.02ms]
+(pass) formatAmount > renders minor units with the currency symbol [0.71ms]
+
+src/features/analytics/lib/sdk-analytics.test.ts:
+(pass) useGameAnalytics analytics hook > renders without an SDK provider for dynamic game chunks [0.81ms]
+
+src/features/analytics/lib/web-vitals-batch.test.ts:
+(pass) web vitals batch > records nothing and delivers nothing without consent [0.47ms]
+(pass) web vitals batch > delivers one request per page view carrying every metric [0.90ms]
+(pass) web vitals batch > falls back to the last metric for the legacy keys when there is no LCP [0.20ms]
+(pass) web vitals batch > one page view never sends twice, and later metrics are not queued [0.10ms]
+(pass) web vitals batch > consent revoked before delivery drops the buffered metrics [0.10ms]
+(pass) web vitals batch > the latest value of a re-reported metric wins [0.08ms]
+(pass) web vitals batch > event shape stays flat key/value pairs for the authority [0.11ms]
+
+src/features/home/lib/home-faq.test.ts:
+(pass) home FAQ copy > every locale ships exactly the declared FAQ keys [3.51ms]
+(pass) home FAQ copy > every locale resolves real copy, never a raw key path [2.35ms]
+(pass) home FAQ call site > page.tsx hands MarketingFaq the shared coordinates [1.12ms]
+
+src/features/home/lib/day-boundary.test.ts:
+(pass) day boundary clock > the boundary is midnight in Asia/Hong_Kong, not UTC [0.19ms]
+(pass) day boundary clock > the label is zero-padded HH:MM:SS and never negative [0.23ms]
+
+src/features/catalog/lib/game-page.test.ts:
+(pass) resolveGamePage > returns the registry module and its canonical slug [0.13ms]
+(pass) resolveGamePage > canonicalises inbound aliases onto the registered module [0.05ms]
+(pass) resolveGamePage > returns null for anything unregistered [0.03ms]
+(pass) requireGamePage > rejects an unknown slug through notFound() [0.16ms]
+(pass) game page metadata > an unknown slug is rejected by generateMetadata, not rendered as a page [0.45ms]
+(pass) parseGameTips > keeps trimmed tips and drops blank or non-string entries [0.13ms]
+(pass) parseGameTips > returns nothing for a missing or malformed payload [0.02ms]
+(pass) parseGameFaq > keeps complete question/answer pairs and drops malformed entries [0.11ms]
+(pass) parseGameFaq > returns nothing for a missing payload [0.02ms]
+
+src/features/catalog/lib/catalog.test.ts:
+(pass) buildCatalogEntries > lists every registered module exactly once [0.21ms]
+(pass) buildCatalogEntries > maps every registry slug to its canonical player title [0.14ms]
+(pass) buildCatalogEntries > derives i18n keys from the canonical slug, not alias config keys [0.23ms]
+(pass) buildCatalogEntries > carries each module colour theme, highlight key and category from the registry [0.18ms]
+(pass) buildCatalogEntries > marks only the product day's free module as free for a free viewer [0.15ms]
+(pass) buildCatalogEntries > unlocks every module for a premium viewer while keeping the free badge [0.08ms]
+(pass) buildCatalogEntries > treats an inbound alias as the canonical free module [0.06ms]
+(pass) buildCatalogEntries > returns an empty list for an empty registry [0.02ms]
+(pass) filterCatalogEntries > keeps the full list for an empty query [0.10ms]
+(pass) filterCatalogEntries > matches titles case-insensitively and trims the query [0.08ms]
+(pass) filterCatalogEntries > returns nothing when no title matches [0.04ms]
+(pass) filterCatalogEntries > filters by registry category and keeps registry order [0.10ms]
+(pass) filterCatalogEntries > combines the title and category filters [0.03ms]
+(pass) parseCatalogCategory > accepts registry categories and collapses everything else to all [0.06ms]
+(pass) readMessage > prefers the translated message [0.08ms]
+(pass) readMessage > falls back to registry copy without rendering the dotted key path [0.02ms]
+(pass) relatedCatalogSlugs > never relates a module to itself and respects the limit [0.49ms]
+(pass) relatedCatalogSlugs > leads with the same category before falling back to registry order [0.19ms]
+(pass) relatedCatalogSlugs > honours an explicit limit and an unknown current module [0.06ms]
+
+src/features/catalog/lib/catalog-messages.test.ts:
+(pass) catalog messages > every locale exposes the same key structure [1.88ms]
+(pass) catalog messages > every registered module carries non-empty tips and FAQ in every locale [0.47ms]
+
+src/features/push/components/notification-preferences.a11y.test.ts:
+(pass) push settings panel — accessible name > names the main switch with the heading it controls [1.55ms]
+(pass) push settings panel — accessible name > states the switch position for assistive tech, not just colour [0.74ms]
+(pass) push settings panel — accessible name > names the switch in the reader's language [1.36ms]
+(pass) push settings panel — accessible name > renders no hardcoded English when the catalogue is not English [0.55ms]
+(pass) push settings panel — catalogue coverage > every locale carries the same push keys [0.31ms]
+
+src/features/admin/lib/admin-api.test.ts:
+[ADMIN ACCESS] {"timestamp":"2026-09-21T03:50:24.635Z","method":"secret","success":false,"ip":"198.51.100.9","userId":"anonymous"}
+(pass) checkAdminWithMfa admin access logging > records a failed secret attempt in the audit log [0.87ms]
+[ADMIN ACCESS] {"timestamp":"2026-09-21T03:50:24.636Z","method":"secret","success":true,"ip":"198.51.100.9","userId":"anonymous"}
+(pass) checkAdminWithMfa admin access logging > records a successful secret attempt in the audit log [0.18ms]
+[ADMIN ACCESS] {"timestamp":"2026-09-21T03:50:24.636Z","method":"secret","success":false,"ip":"198.51.100.9","userId":"anonymous"}
+(pass) checkAdminWithMfa admin access logging > records a rate-limited attempt in the audit log [0.19ms]
+
+6 tests skipped:
+(skip) shouldAlert > returns true when there are failures (server-only)
+(skip) shouldAlert > returns false when all successful (server-only)
+(skip) formatGenerationSummary > formats summary with all sections (server-only)
+(skip) formatGenerationSummary > uses appropriate icons for status (server-only)
+(skip) Block Slide Generator > generates different puzzles for different seeds
+(skip) Block Slide Generator > cycles through difficulty levels
+
+ 1138 pass
+ 6 skip
+ 0 fail
+ 34655 expect() calls
+Ran 1144 tests across 115 files. [104.06s]

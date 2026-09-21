@@ -31,3 +31,10 @@ Recovery log, kept current. Started 2026-09-21 ~03:42 Europe/London.
 - Delete list: notes/td10/delete-list.tsv (72 defs / 49 files). Out-of-scope: 4 defs in src/lib/i18n/config.ts.
 - Wide-pattern extras (let/nested) scanned separately; `_totalWinsToday` also looks dead (out of register scope) -> notes/td10/wide-scan-extras.tsv.
 - Next: delete the 72 via notes/td10/delete-dead-defs.ts, then run gates.
+
+### 3-4 delete + prove (2026-09-21 04:55)
+- Deleted 72 defs / 49 files with notes/td10/delete-dead-defs.ts (report: removed=72, skipped=[]); commit c02ef29 (+4/-1092; before/after 114 -> 42 defs).
+- Orphan cleanup after removals: 5 types + 2 config consts + unused imports; biome 0 errors / 0 warnings.
+- Zero-check: every deleted name 0 occurrences repo-wide; re-enumeration 42 defs / 29 files.
+- Gates green: lint 0/0; turbo typecheck 2/2; tests 1144 ran / 1138 pass / 6 skip / 0 fail [104.06s]; build OK (20.7s, 118/118 pages).
+- Evidence: notes/td10/ (+ proof.md). Next: open PR.
