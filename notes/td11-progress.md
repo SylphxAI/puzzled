@@ -61,3 +61,21 @@ All pieces are client modules ('use client' on each), matching the original dire
 
 ## Next action
 Commit this note + push, then split lib/api/hooks.ts.
+
+## Recovery checkpoint 1 - finisher resumed
+
+Resumed by the td11 finisher after the wave-6 restart (previous worker died mid-flight).
+
+State found in this worktree:
+- Committed+pushed: aa22f43 (scope + plan), 75a5f86 (api/hooks split); origin/debt/td11-split == 75a5f86.
+- Uncommitted WIP from the dead worker: lib/identity/react.tsx rewritten to a 44-line re-export barrel + new untracked dir lib/identity/react/ (context 141, auth 230, hooks 429, billing 76, ui 121) + .td11-scratch/ evidence dir (untracked; not for commit).
+
+Independent verification this run:
+- .td11-scratch/react.base.tsx is byte-identical to HEAD:react.tsx (952 lines).
+- Export-set equality re-run via .td11-scratch/extract-exports.mjs: react barrel 34 = 34 (diff clean); api/hooks barrel 43 = 43 (diff clean).
+- All split modules and both barrels start with 'use client'; grep for heredoc artifacts is clean.
+- Sorted-line multiset diff of base react.tsx vs the split shows only import/comment/export-wrapper deltas; no code line missing or altered.
+
+Next: quick biome + typecheck on the split, commit the react split, full gates, push, open the TD-11 PR.
+Notes: worktree name is td-11 (td11f did not exist; the branch was already checked out here).
+Pending characterization: the dead worker's hooks gate log shows 1 failing test 'schema/migration parity (drizzle vs atlas)' - to be compared against base (likely environmental).
