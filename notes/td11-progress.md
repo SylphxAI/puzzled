@@ -85,3 +85,10 @@ Pending characterization: the dead worker's hooks gate log shows 1 failing test 
 - Content: react.tsx 952 -> 44-line barrel + react/{context.tsx 141, auth.ts 230, hooks.ts 429, billing.tsx 76, ui.tsx 121}. The +89 line delta is per-file 'use client' + doc headers + imports + re-export block.
 - Scoped biome on all 6 files: exit 0 (37ms, no fixes).
 - Full gates started: lint, typecheck, unit tests, build.
+
+## Recovery checkpoint 3 - unit suite + lint
+- Unit suite (env -u NODE_ENV DATABASE_URL='postgresql://test:test@localhost:5432/test' SKIP_ENV_VALIDATION=true bun run test:unit): 1188 pass / 6 skip / 1 fail / 34908 expect() calls / 124 files / 86.02s - identical totals to the pre-restart run (1188/6/1, 85.19s).
+- The single fail is src/lib/db/schema-parity.test.ts (check-schema-parity.sh exits 2: 'no dev database available'; this host: no postgres listening, docker daemon down, no sudo postgres). No db files are touched by this diff - environmental, reproduced identically pre-restart.
+- Targeted: src/lib/identity/react.test.ts all 6 pass (imports the ./react barrel); session-replay billing test 3 pass.
+- Lint: exit 0 - 884 files, 23 infos (pre-split run: 879 files, 23 infos - unchanged).
+- Next: forced typecheck + build + assert-document-route; then proof file + PR.
