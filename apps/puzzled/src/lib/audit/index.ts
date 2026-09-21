@@ -58,6 +58,28 @@ export async function logAdminAction(
 }
 
 /**
+ * Log an admin access attempt (secret or session based)
+ */
+export async function logAdminAccessAttempt(attempt: {
+	method: 'secret' | 'session'
+	success: boolean
+	ip: string
+	userId?: string
+}): Promise<void> {
+	await logAuditEvent({
+		actorId: attempt.userId ?? null,
+		action: 'admin_access',
+		resourceType: 'admin_access',
+		resourceId: attempt.method,
+		metadata: {
+			method: attempt.method,
+			success: attempt.success,
+			ip: attempt.ip,
+		},
+	})
+}
+
+/**
  * Log user action (self-initiated)
  */
 async function _logUserAction(

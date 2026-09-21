@@ -15,13 +15,14 @@ Recovery log, kept current. Started 2026-09-21 ~02:35 Europe/London.
 - PR #165 (TD-05) OPEN, not merged; it edits admin-api.ts top-of-file block + env reads (~108-120) and lib/env.ts. Decision: my admin-api edit lives strictly in the logAdminAccess body; the audit fn is pulled in with an inline await load inside that function so the top-of-file block stays byte-identical (repo idiom: lib/identity/server.ts:86, lib/audit/index.ts:21).
 
 ## Steps
-- [x] A. enum + migration + atlas.sum (commit 1)
-- [ ] B. lib/audit: logAdminAccessAttempt + unit test
-- [ ] C. admin-api: logAdminAccess switch + caller test
+- [x] A. enum + migration + atlas.sum (commit 451961c; pushed)
+- [x] B. lib/audit: logAdminAccessAttempt + unit test (2 pass)
+- [x] C. admin-api: logAdminAccess switch + caller test (3 pass)
 - [ ] D. messages x5 locales + filters ACTION_TYPES += admin_access
 - [ ] E. targeted tests + full bun test src + typecheck + lint
 - [ ] F. mutation proof (red output, restore, green output)
 - [ ] G. open PR with evidence
+- [x] env: worktree node_modules was incomplete (killed sibling run); bun install --frozen-lockfile rc=0 (257 packages, lefthook synced); pre-commit hooks pass (biome + tsc 12.2s).
 
 ## Evidence log
 ### A (enum + migration)
@@ -45,5 +46,19 @@ index ca36235..befbd91 100644
 ```
 - grep -c admin_access atlas.sum = 1
 
+### B (audit module + test)
+- src/lib/audit/index.ts: +logAdminAccessAttempt; src/lib/audit/index.test.ts (new).
+- env -u NODE_ENV bun test src/lib/audit/index.test.ts -> 2 pass / 0 fail (bun v1.4.2):
+(pass) logAdminAccessAttempt > inserts an admin_access row with method, success and ip [32.73ms]
+(pass) logAdminAccessAttempt > anonymous attempts record a null actorId [0.23ms]
+
+### C (admin-api switch + test)
+- src/features/admin/lib/admin-api.ts: logAdminAccess body now records via audit_logs (inline await load); redis.setex removed; console.warn kept.
+- src/features/admin/lib/admin-api.test.ts (new).
+- env -u NODE_ENV bun test src/features/admin/lib/admin-api.test.ts -> 3 pass / 0 fail:
+(pass) checkAdminWithMfa admin access logging > records a failed secret attempt in the audit log [2.45ms]
+(pass) checkAdminWithMfa admin access logging > records a successful secret attempt in the audit log [0.16ms]
+(pass) checkAdminWithMfa admin access logging > records a rate-limited attempt in the audit log [0.37ms]
+
 ## Next action
-- B: add logAdminAccessAttempt to lib/audit/index.ts + src/lib/audit/index.test.ts (bun:test; mock @/lib/db + next/headers; assert inserted row shape).
+- D: messages auditLogs.actions.admin_access x5 locales + ACTION_TYPES += 'admin_access'.
