@@ -87,11 +87,14 @@ export const ratelimit = {
 async function redisGet<T>(key: string): Promise<T | null> {
 	const val = await redis.get(key)
 	if (val === null) return null
+	let parsed: unknown
 	try {
-		return JSON.parse(val) as T
+		parsed = JSON.parse(val)
 	} catch {
-		return val as unknown as T
+		// redisSet stores plain strings as-is; keep the raw value.
+		parsed = val
 	}
+	return parsed as T
 }
 
 async function redisSet(key: string, value: unknown, exSeconds?: number): Promise<void> {

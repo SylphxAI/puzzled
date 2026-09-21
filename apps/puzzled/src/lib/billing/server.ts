@@ -4,8 +4,9 @@
  * Premium access is dest Commerce EvaluateEntitlement (`enabled`).
  */
 
+import { cache } from 'react'
 import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
-import { isPremium } from '@/lib/identity'
+import { type CommercePremium, getBilling } from '@/lib/identity'
 import { getSdkConfig } from '@/lib/sdk-server'
 
 export { getTodaysFreeGame }
@@ -25,11 +26,23 @@ export function getFreeGameRotation(): readonly string[] {
 }
 
 /**
+ * The one server-resolved entitlement snapshot for an account.
+ *
+ * React caches this per request, so the layout and every page that needs the
+ * fact share a single Commerce EvaluateEntitlement read - the layout threads
+ * the same answer to the client tree as data. Fail-closed: getBilling catches
+ * its own errors and answers free.
+ */
+export const getServerBilling = cache(async (userId: string): Promise<CommercePremium> => {
+	return getBilling(getSdkConfig(), userId)
+})
+
+/**
  * Check if a user has premium access.
  * One writer: dest Commerce EvaluateEntitlement enabled.
  */
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
-	return isPremium(userId, getSdkConfig())
+	return (await getServerBilling(userId)).isPremium
 }
 
 /**
