@@ -18,3 +18,9 @@ Recovery log, kept current. Started 2026-09-21 ~03:42 Europe/London.
 ## Evidence log
 ### 0 setup
 - git worktree add rc=0; HEAD 976210e == origin/main.
+
+### 0b respawn (2026-09-21 04:37) - fresh base
+- Predecessor killed by EACCES wave after setup; enumeration+verify artifacts preserved in host notes dir and reused here.
+- origin/main moved: 976210e -> d6a5f5616e (#169 admin audit; 14 files; 1 overlap with td10 scope: apps/puzzled/src/lib/audit/index.ts).
+- Branch brought onto fresh main WITHOUT force-push: merge commit f4c921c keeps pre-#169 notes ref 0e44b5b as a parent (same technique as td01's 26ddd42); push was a fast-forward 0e44b5b..f4c921c.
+- Next: re-run per-name verification on this merged tree, then delete proven-dead defs.
