@@ -1,3 +1,4 @@
+import { env } from '../env'
 import { destCommerceCredential, destIdentityCredential } from './credentials'
 import {
 	type AppConfig,
@@ -13,7 +14,7 @@ export async function getAppConfig(_opts?: {
 	appId?: string
 	platformUrl?: string
 }): Promise<AppConfig> {
-	const identityOrigin = destIdentityOrigin(_opts?.platformUrl ?? process.env.IDENTITY_API_ORIGIN)
+	const identityOrigin = destIdentityOrigin(_opts?.platformUrl ?? env.IDENTITY_API_ORIGIN)
 	const identityCredential = destIdentityCredential()
 	const oauthProviders = identityCredential
 		? await destIdentityJson<{

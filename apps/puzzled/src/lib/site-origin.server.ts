@@ -9,6 +9,7 @@
 import 'server-only'
 
 import { headers } from 'next/headers'
+import { env } from './env'
 import { resolveSiteOrigin } from './site-origin'
 
 export async function getRequestSiteOrigin(): Promise<string> {
@@ -17,9 +18,9 @@ export async function getRequestSiteOrigin(): Promise<string> {
 		host: requestHeaders.get('host'),
 		forwardedHost: requestHeaders.get('x-forwarded-host'),
 		forwardedProto: requestHeaders.get('x-forwarded-proto'),
-		configuredUrl: process.env.NEXT_PUBLIC_APP_URL,
-		vercelUrl: process.env.VERCEL_URL,
-		nodeEnv: process.env.NODE_ENV,
-		port: process.env.PORT,
+		configuredUrl: env.NEXT_PUBLIC_APP_URL,
+		vercelUrl: env.VERCEL_URL,
+		nodeEnv: env.NODE_ENV,
+		port: env.PORT,
 	})
 }

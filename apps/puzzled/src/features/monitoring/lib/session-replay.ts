@@ -12,6 +12,7 @@
  */
 
 import { MINUTE_MS } from '@/lib/constants/time'
+import { env } from '@/lib/env'
 import type { PrivacyMode, SessionReplayConfig } from '@/lib/identity/react'
 
 /**
@@ -64,7 +65,7 @@ const SESSION_REPLAY_CONFIG: Partial<SessionReplayConfig> = {
  * Get session replay configuration based on environment
  */
 export function getSessionReplayConfig(): Partial<SessionReplayConfig> {
-	const isProduction = process.env.NODE_ENV === 'production'
+	const isProduction = env.NODE_ENV === 'production'
 
 	// Disable in non-production environments
 	if (!isProduction) {

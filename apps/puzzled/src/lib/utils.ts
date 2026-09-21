@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { env } from './env'
 import { resolveSiteOrigin } from './site-origin'
 
 export function cn(...inputs: ClassValue[]) {
@@ -46,10 +47,10 @@ export function getBaseUrl(mode: 'relative' | 'origin' = 'relative'): string {
  */
 export function getServerBaseUrl(): string {
 	return resolveSiteOrigin({
-		configuredUrl: process.env.NEXT_PUBLIC_APP_URL,
-		vercelUrl: process.env.VERCEL_URL,
-		nodeEnv: process.env.NODE_ENV,
-		port: process.env.PORT,
+		configuredUrl: env.NEXT_PUBLIC_APP_URL,
+		vercelUrl: env.VERCEL_URL,
+		nodeEnv: env.NODE_ENV,
+		port: env.PORT,
 	})
 }
 

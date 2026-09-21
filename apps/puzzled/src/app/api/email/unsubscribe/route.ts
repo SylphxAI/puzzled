@@ -5,13 +5,14 @@ import { z } from 'zod'
 import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { notificationPreferences } from '@/lib/db/schema'
+import { env } from '@/lib/env'
 
 export const runtime = 'nodejs' // Required for crypto
 export const dynamic = 'force-dynamic' // Prevent static analysis at build time
 
 // Lazy secret getter - only validates at request time, not at build time
 function getSecret(): string {
-	const secret = process.env.CRON_SECRET
+	const secret = env.CRON_SECRET
 	if (!secret) {
 		throw new Error('[Unsubscribe] Missing CRON_SECRET environment variable')
 	}

@@ -10,6 +10,7 @@
  * to demonstrate real error tracking integration.
  */
 
+import { env } from '@/lib/env'
 import { useGlobalErrorHandler } from '@/lib/identity/react'
 
 interface GlobalErrorHandlerProps {
@@ -38,7 +39,7 @@ export function GlobalErrorHandler({ children }: GlobalErrorHandlerProps) {
 		handleErrors: true,
 		handleRejections: true,
 		onCapture: (eventId) => {
-			if (eventId && process.env.NODE_ENV === 'development') {
+			if (eventId && env.NODE_ENV === 'development') {
 				console.log('[Sylphx] Error captured:', eventId)
 			}
 		},

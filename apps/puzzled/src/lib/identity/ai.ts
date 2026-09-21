@@ -1,3 +1,4 @@
+import { env } from '../env'
 import { destAiCredential } from './credentials'
 import { DEST_PEELS, destJson, destPeelOrigin } from './dest'
 
@@ -112,7 +113,7 @@ export type AIModelList = {
 }
 
 export function getAI() {
-	const origin = destPeelOrigin(DEST_PEELS.ai, process.env.AI_API_ORIGIN)
+	const origin = destPeelOrigin(DEST_PEELS.ai, env.AI_API_ORIGIN)
 	const key = destAiCredential() ?? ''
 	const createResponse = async (body: AIResponsesRequest) => {
 		return destJson<AIResponse>(origin, '/responses', {
