@@ -53,3 +53,9 @@
   parity test).
 - 2026-09-21 late evening - PR opened: https://github.com/SylphxAI/puzzled/pull/182 - head pushed by refspec and read back
   at every step; NOT enqueued and NOT merged (owner's call). CI lanes run on the PR.
+- Wrap-up: PR #182 https://github.com/SylphxAI/puzzled/pull/182 (base main). origin/main
+  still be3f6dc - no rebase needed. Scratch base worktree removed. td08f node_modules
+  is now a real install; the old symlinks are parked at $HOME/tmp/td08f-nm-links/.
+- Unfinished / next: CI lanes on PR #182 are the remaining external gate; not watched
+  to completion by this run. Known local-only fail: schema-parity (needs a dev
+  database; identical at base be3f6dc). No queue/merge action taken - owner's call.
