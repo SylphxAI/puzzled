@@ -141,9 +141,13 @@ export async function getLeaderboard(
 	}
 }
 
-type CommerceSubscription = { planSlug?: string; status?: string }
+export type CommerceSubscription = { planSlug?: string; status?: string }
 
-type CommercePremium = {
+/**
+ * One entitlement snapshot, resolved server-side (Commerce
+ * EvaluateEntitlement enabled) and threaded to the client as data.
+ */
+export type CommercePremium = {
 	isPremium: boolean
 	subscription: CommerceSubscription | null
 }

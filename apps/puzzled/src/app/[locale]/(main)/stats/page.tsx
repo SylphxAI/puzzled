@@ -101,7 +101,7 @@ export default async function StatsPage({ params }: Props) {
 		getServerPersonalDailyResults({
 			gameSlugs: modules.map((module) => module.slug),
 			isGuest: !user,
-			isPremium,
+			userId: user?.id ?? null,
 			freeGameSlug: todaysFreeGame,
 		}),
 	])

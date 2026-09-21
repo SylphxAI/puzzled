@@ -31,8 +31,10 @@ import {
 	StatsService,
 } from '@/gen/connect/puzzled/v1/stats_pb'
 import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
+import { getServerBilling } from '@/lib/billing/server'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
+import { withPresentationDeadline } from '@/lib/presentation-document'
 import { servedPuzzleId } from '@/lib/product-day'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
@@ -211,17 +213,34 @@ export type PersonalDailyResult = {
  * Personal home/progress today-state. GetTodayOverview is a public aggregate
  * for social proof, not a user's completion state; guests and accounts both
  * read GetDaily.has_completed / completed_session.
+ *
+ * The premium fact is resolved here, from the account id, through the same
+ * request-cached authority read the rendering page uses - never accepted as a
+ * loose boolean. Which modules are read for a viewer and which the page calls
+ * playable can therefore never disagree.
  */
 export async function getServerPersonalDailyResults(input: {
 	gameSlugs: readonly string[]
 	isGuest: boolean
-	isPremium: boolean
+	/** Signed-in account id; the entitlement is resolved from it. */
+	userId?: string | null
 	freeGameSlug: string
 }): Promise<Record<string, PersonalDailyResult>> {
+	const isPremium = input.userId
+		? (
+				await withPresentationDeadline(getServerBilling(input.userId), {
+					isPremium: false,
+					subscription: null,
+				})
+			).isPremium
+		: false
 	const statuses = new Map<string, DailyStatus>()
 	const unavailableSlugs = new Set<string>()
 	await loadDailyCompletionMap({
-		...input,
+		gameSlugs: input.gameSlugs,
+		isGuest: input.isGuest,
+		isPremium,
+		freeGameSlug: input.freeGameSlug,
 		read: async (gameSlug) => {
 			try {
 				const status = await getServerDailyStatus({ gameSlug })
