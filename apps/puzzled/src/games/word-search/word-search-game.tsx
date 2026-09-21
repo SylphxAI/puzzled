@@ -334,6 +334,7 @@ export function WordSearchGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="word-search"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}

@@ -46,21 +46,63 @@ import wordSearchEn from '@/games/word-search/translations/en.json'
 // Locale overlays — partial copy is allowed
 // ==========================================
 
+import arithmoZhCN from '@/games/arithmo/translations/zh-CN.json'
+import arithmoZhHK from '@/games/arithmo/translations/zh-HK.json'
+import arithmoZhTW from '@/games/arithmo/translations/zh-TW.json'
+import blockSlideZhCN from '@/games/block-slide/translations/zh-CN.json'
+import blockSlideZhHK from '@/games/block-slide/translations/zh-HK.json'
+import blockSlideZhTW from '@/games/block-slide/translations/zh-TW.json'
 import crosswordZhCN from '@/games/crossword/translations/zh-CN.json'
 import crosswordZhHK from '@/games/crossword/translations/zh-HK.json'
 import crosswordZhTW from '@/games/crossword/translations/zh-TW.json'
+import cryptogramZhCN from '@/games/cryptogram/translations/zh-CN.json'
+import cryptogramZhHK from '@/games/cryptogram/translations/zh-HK.json'
+import cryptogramZhTW from '@/games/cryptogram/translations/zh-TW.json'
+import killerSudokuZhCN from '@/games/killer-sudoku/translations/zh-CN.json'
+import killerSudokuZhHK from '@/games/killer-sudoku/translations/zh-HK.json'
+import killerSudokuZhTW from '@/games/killer-sudoku/translations/zh-TW.json'
+import nonogramZhCN from '@/games/nonogram/translations/zh-CN.json'
+import nonogramZhHK from '@/games/nonogram/translations/zh-HK.json'
+import nonogramZhTW from '@/games/nonogram/translations/zh-TW.json'
+import numberPathZhCN from '@/games/number-path/translations/zh-CN.json'
+import numberPathZhHK from '@/games/number-path/translations/zh-HK.json'
+import numberPathZhTW from '@/games/number-path/translations/zh-TW.json'
+import patternMatchZhCN from '@/games/pattern-match/translations/zh-CN.json'
+import patternMatchZhHK from '@/games/pattern-match/translations/zh-HK.json'
+import patternMatchZhTW from '@/games/pattern-match/translations/zh-TW.json'
+import pipPlaceZhCN from '@/games/pip-place/translations/zh-CN.json'
+import pipPlaceZhHK from '@/games/pip-place/translations/zh-HK.json'
+import pipPlaceZhTW from '@/games/pip-place/translations/zh-TW.json'
+import quadWordsZhCN from '@/games/quad-words/translations/zh-CN.json'
+import quadWordsZhHK from '@/games/quad-words/translations/zh-HK.json'
+import quadWordsZhTW from '@/games/quad-words/translations/zh-TW.json'
 import queensZhCN from '@/games/queens/translations/zh-CN.json'
 import queensZhHK from '@/games/queens/translations/zh-HK.json'
 import queensZhTW from '@/games/queens/translations/zh-TW.json'
 import sudokuZhCN from '@/games/sudoku/translations/zh-CN.json'
 import sudokuZhHK from '@/games/sudoku/translations/zh-HK.json'
 import sudokuZhTW from '@/games/sudoku/translations/zh-TW.json'
+import tangoZhCN from '@/games/tango/translations/zh-CN.json'
+import tangoZhHK from '@/games/tango/translations/zh-HK.json'
+import tangoZhTW from '@/games/tango/translations/zh-TW.json'
+import wordBoxZhCN from '@/games/word-box/translations/zh-CN.json'
+import wordBoxZhHK from '@/games/word-box/translations/zh-HK.json'
+import wordBoxZhTW from '@/games/word-box/translations/zh-TW.json'
 import wordGroupsZhCN from '@/games/word-groups/translations/zh-CN.json'
 import wordGroupsZhHK from '@/games/word-groups/translations/zh-HK.json'
 import wordGroupsZhTW from '@/games/word-groups/translations/zh-TW.json'
 import wordGuessZhCN from '@/games/word-guess/translations/zh-CN.json'
 import wordGuessZhHK from '@/games/word-guess/translations/zh-HK.json'
 import wordGuessZhTW from '@/games/word-guess/translations/zh-TW.json'
+import wordHiveZhCN from '@/games/word-hive/translations/zh-CN.json'
+import wordHiveZhHK from '@/games/word-hive/translations/zh-HK.json'
+import wordHiveZhTW from '@/games/word-hive/translations/zh-TW.json'
+import wordLadderZhCN from '@/games/word-ladder/translations/zh-CN.json'
+import wordLadderZhHK from '@/games/word-ladder/translations/zh-HK.json'
+import wordLadderZhTW from '@/games/word-ladder/translations/zh-TW.json'
+import wordSearchZhCN from '@/games/word-search/translations/zh-CN.json'
+import wordSearchZhHK from '@/games/word-search/translations/zh-HK.json'
+import wordSearchZhTW from '@/games/word-search/translations/zh-TW.json'
 
 /** One module's copy: nested objects of strings, keyed as the module reads them. */
 export type GameCopy = Record<string, unknown>
@@ -129,28 +171,73 @@ export const GAME_TRANSLATIONS_EN: GameMessages = {
  */
 export const GAME_TRANSLATIONS_BY_LOCALE: Partial<Record<Locale, GameMessages>> = {
 	'zh-CN': {
+		arithmo: arithmoZhCN,
+		blockSlide: blockSlideZhCN,
 		crossword: crosswordZhCN,
+		cryptogram: cryptogramZhCN,
+		killerSudoku: killerSudokuZhCN,
+		nonogram: nonogramZhCN,
+		numberPath: numberPathZhCN,
+		patternMatch: patternMatchZhCN,
+		pipPlace: pipPlaceZhCN,
+		quadWords: quadWordsZhCN,
 		queens: queensZhCN,
 		crowns: queensZhCN,
 		sudoku: sudokuZhCN,
+		tango: tangoZhCN,
+		duo: tangoZhCN,
+		wordBox: wordBoxZhCN,
 		wordGroups: wordGroupsZhCN,
 		wordGuess: wordGuessZhCN,
+		wordHive: wordHiveZhCN,
+		wordLadder: wordLadderZhCN,
+		wordSearch: wordSearchZhCN,
 	},
 	'zh-HK': {
+		arithmo: arithmoZhHK,
+		blockSlide: blockSlideZhHK,
 		crossword: crosswordZhHK,
+		cryptogram: cryptogramZhHK,
+		killerSudoku: killerSudokuZhHK,
+		nonogram: nonogramZhHK,
+		numberPath: numberPathZhHK,
+		patternMatch: patternMatchZhHK,
+		pipPlace: pipPlaceZhHK,
+		quadWords: quadWordsZhHK,
 		queens: queensZhHK,
 		crowns: queensZhHK,
 		sudoku: sudokuZhHK,
+		tango: tangoZhHK,
+		duo: tangoZhHK,
+		wordBox: wordBoxZhHK,
 		wordGroups: wordGroupsZhHK,
 		wordGuess: wordGuessZhHK,
+		wordHive: wordHiveZhHK,
+		wordLadder: wordLadderZhHK,
+		wordSearch: wordSearchZhHK,
 	},
 	'zh-TW': {
+		arithmo: arithmoZhTW,
+		blockSlide: blockSlideZhTW,
 		crossword: crosswordZhTW,
+		cryptogram: cryptogramZhTW,
+		killerSudoku: killerSudokuZhTW,
+		nonogram: nonogramZhTW,
+		numberPath: numberPathZhTW,
+		patternMatch: patternMatchZhTW,
+		pipPlace: pipPlaceZhTW,
+		quadWords: quadWordsZhTW,
 		queens: queensZhTW,
 		crowns: queensZhTW,
 		sudoku: sudokuZhTW,
+		tango: tangoZhTW,
+		duo: tangoZhTW,
+		wordBox: wordBoxZhTW,
 		wordGroups: wordGroupsZhTW,
 		wordGuess: wordGuessZhTW,
+		wordHive: wordHiveZhTW,
+		wordLadder: wordLadderZhTW,
+		wordSearch: wordSearchZhTW,
 	},
 }
 

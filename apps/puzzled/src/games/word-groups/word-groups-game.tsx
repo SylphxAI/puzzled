@@ -280,6 +280,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="word-groups"
 				status={gameStatus === 'playing' ? 'won' : gameStatus}

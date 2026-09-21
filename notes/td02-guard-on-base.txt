@@ -1,0 +1,95 @@
+bun test v1.4.2 (744846f84)
+
+src/games/module-name-ssot.test.ts:
+(pass) module names: one canonical player-facing name per module > the scan covers the registered suite [0.44ms]
+(pass) module names: one canonical player-facing name per module > every registered module carries an English catalogue name [0.42ms]
+67 | 			.map((row) => ({
+68 | 				slug: row.slug,
+69 | 				configName: row.configName,
+70 | 				catalogueName: row.catalogueName,
+71 | 			}))
+72 | 		expect(mismatches).toEqual([])
+                          ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "catalogueName": "Five",
++     "configName": "Word Guess",
++     "slug": "word-guess",
++   },
++   {
++     "catalogueName": "Threads",
++     "configName": "Word Groups",
++     "slug": "word-groups",
++   },
++   {
++     "catalogueName": "Hive",
++     "configName": "Word Hive",
++     "slug": "word-hive",
++   },
++   {
++     "catalogueName": "Mini Grid",
++     "configName": "Crossword Mini",
++     "slug": "crossword",
++   },
++   {
++     "catalogueName": "Paint",
++     "configName": "Nonogram",
++     "slug": "nonogram",
++   },
++   {
++     "catalogueName": "Rungs",
++     "configName": "Word Ladder",
++     "slug": "word-ladder",
++   },
++   {
++     "catalogueName": "Match",
++     "configName": "Pattern Match",
++     "slug": "pattern-match",
++   },
++   {
++     "catalogueName": "Slides",
++     "configName": "Block Slide",
++     "slug": "block-slide",
++   },
++   {
++     "catalogueName": "Frame",
++     "configName": "Word Box",
++     "slug": "word-box",
++   },
++   {
++     "catalogueName": "Quad",
++     "configName": "Quad Words",
++     "slug": "quad-words",
++   },
++   {
++     "catalogueName": "Cage Sudoku",
++     "configName": "Killer Sudoku",
++     "slug": "killer-sudoku",
++   },
++   {
++     "catalogueName": "Cipher",
++     "configName": "Cryptogram",
++     "slug": "cryptogram",
++   },
++   {
++     "catalogueName": "Hunt",
++     "configName": "Word Hunt",
++     "slug": "word-search",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 67
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-basecheck/apps/puzzled/src/games/module-name-ssot.test.ts:72:22)
+(fail) module names: one canonical player-facing name per module > config.name equals the English catalogue name [2.09ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE equals the English catalogue name [0.11ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE carries no entry for an unregistered module [0.15ms]
+
+ 4 pass
+ 1 fail
+ 8 expect() calls
+Ran 5 tests across 1 file. [207.00ms]

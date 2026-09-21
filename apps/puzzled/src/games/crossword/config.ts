@@ -30,7 +30,7 @@ export const crosswordConfig: GameConfig<
 	CrosswordGuessResult
 > = {
 	slug: 'crossword',
-	name: 'Crossword Mini',
+	name: 'Mini Grid',
 	description: 'Solve a 5×5 mini crossword puzzle',
 	IconComponent: CrosswordIcon,
 	sortOrder: 4,

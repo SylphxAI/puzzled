@@ -6,6 +6,7 @@
  */
 
 import { createConfig, type SylphxConfig } from '@/lib/identity'
+import { env } from './env'
 
 let cachedConfig: SylphxConfig | null = null
 
@@ -24,7 +25,7 @@ let cachedConfig: SylphxConfig | null = null
 export function getSdkConfig(): SylphxConfig {
 	if (!cachedConfig) {
 		cachedConfig = createConfig({
-			platformUrl: process.env.IDENTITY_API_ORIGIN,
+			platformUrl: env.IDENTITY_API_ORIGIN,
 		})
 	}
 	return cachedConfig

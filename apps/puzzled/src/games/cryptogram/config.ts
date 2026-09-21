@@ -29,7 +29,7 @@ export const cryptogramConfig: GameConfig<
 	CryptogramGuessResult
 > = {
 	slug: 'cryptogram',
-	name: 'Cryptogram',
+	name: 'Cipher',
 	description: 'Decrypt famous quotes by letter substitution',
 	IconComponent: CryptogramIcon,
 	sortOrder: 18,

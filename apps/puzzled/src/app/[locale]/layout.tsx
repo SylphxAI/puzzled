@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { ApiProvider } from '@/lib/api/provider'
+import { env } from '@/lib/env'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
@@ -189,8 +190,8 @@ export default async function LocaleLayout({ children, params }: Props) {
 		getMessages(),
 		withPresentationDeadline(
 			getAppConfig({
-				appId: process.env.NEXT_PUBLIC_SYLPHX_APP_ID,
-				platformUrl: process.env.IDENTITY_API_ORIGIN,
+				appId: env.NEXT_PUBLIC_SYLPHX_APP_ID,
+				platformUrl: env.IDENTITY_API_ORIGIN,
 			}),
 			EMPTY_APP_CONFIG,
 		),

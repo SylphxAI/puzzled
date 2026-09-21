@@ -1,3 +1,4 @@
+import { env } from '../env'
 import {
 	destEventsCredential,
 	destObservabilityCredential,
@@ -6,15 +7,15 @@ import {
 import { destCommerceOrigin, destEventsOrigin, destJson, destObservabilityOrigin } from './dest'
 
 export function commerceOrigin(): string {
-	return destCommerceOrigin(process.env.COMMERCE_API_ORIGIN)
+	return destCommerceOrigin(env.COMMERCE_API_ORIGIN)
 }
 
 export function eventsOrigin(): string {
-	return destEventsOrigin(process.env.EVENTS_API_ORIGIN)
+	return destEventsOrigin(env.EVENTS_API_ORIGIN)
 }
 
 export function observabilityOrigin(): string {
-	return destObservabilityOrigin(process.env.OBSERVABILITY_API_ORIGIN)
+	return destObservabilityOrigin(env.OBSERVABILITY_API_ORIGIN)
 }
 
 export function requireCommerceCredential(): string {

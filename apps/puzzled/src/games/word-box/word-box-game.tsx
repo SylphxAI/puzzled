@@ -334,6 +334,7 @@ export function WordBoxGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="word-box"
 				status="won"

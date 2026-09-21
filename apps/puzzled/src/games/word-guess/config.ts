@@ -94,7 +94,7 @@ export const wordGuessConfig: GameConfig<
 	WordleGuessResult
 > = {
 	slug: 'word-guess',
-	name: 'Word Guess',
+	name: 'Five',
 	description: 'Guess the 5-letter word in 6 tries',
 	IconComponent: WordGuessIcon,
 	sortOrder: 1,

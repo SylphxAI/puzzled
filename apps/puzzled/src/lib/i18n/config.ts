@@ -7,6 +7,13 @@
  * - zh-HK: 香港繁體中文
  * - zh-TW: 台灣正體中文
  * - zh-CN: 简体中文
+ *
+ * Every locale fact lives in one table, `LOCALE_REGISTRY`: the locale list, the
+ * display names, the fallback chain, the formatting preferences, the Open Graph
+ * codes, the hreflang tags and the language-menu badges are all derived from it,
+ * so adding or removing a locale is a one-entry edit and the compiler names every
+ * table that still has to answer for it. `lib/seo/metadata.ts` and the language
+ * switcher read the same registry instead of re-keying the facts.
  */
 
 // ==========================================
@@ -26,62 +33,133 @@ export type Locale = (typeof locales)[number]
 export const defaultLocale: Locale = 'en-US'
 
 // ==========================================
-// Display Names (in native language)
+// Locale registry (single source of truth)
 // ==========================================
 
-export const localeNames: Record<Locale, string> = {
-	'en-US': 'English (US)',
-	'en-GB': 'English (UK)',
-	'zh-HK': '繁體中文（香港）',
-	'zh-TW': '正體中文（台灣）',
-	'zh-CN': '简体中文',
+/** How a locale formats dates and numbers. */
+export type LocaleFormatPreferences = {
+	dateStyle: 'short' | 'medium' | 'long'
+	numberGrouping: boolean
+	currency: string
 }
 
-// Short names for compact display
-export const localeShortNames: Record<Locale, string> = {
-	'en-US': 'English',
-	'en-GB': 'English',
-	'zh-HK': '繁體中文',
-	'zh-TW': '正體中文',
-	'zh-CN': '简体中文',
+/** Everything the product knows about one locale. */
+export type LocaleFacts = {
+	/** BCP 47 tag: `<html lang>` and the hreflang cluster. */
+	tag: string
+	/** Open Graph locale code (`en_US`). */
+	ogLocale: string
+	/** English name, for operator and non-localised surfaces. */
+	english: string
+	/** Display name in the locale's own language. */
+	native: string
+	/** Compact native label for tight surfaces. */
+	short: string
+	/** Language-menu badge: the locale's script, not a flag. */
+	badge: string
+	/** Fallback locale when a key is missing; `null` is the base of its family. */
+	fallback: Locale | null
+	/** Date and number formatting preferences. */
+	formats: LocaleFormatPreferences
+}
+
+export const LOCALE_REGISTRY: Record<Locale, LocaleFacts> = {
+	'en-US': {
+		tag: 'en-US',
+		ogLocale: 'en_US',
+		english: 'English (US)',
+		native: 'English (US)',
+		short: 'English',
+		badge: 'EN',
+		fallback: null, // Base English
+		formats: { dateStyle: 'medium', numberGrouping: true, currency: 'USD' },
+	},
+	'en-GB': {
+		tag: 'en-GB',
+		ogLocale: 'en_GB',
+		english: 'English (UK)',
+		native: 'English (UK)',
+		short: 'English',
+		badge: 'EN',
+		fallback: 'en-US', // Falls back to US English
+		formats: { dateStyle: 'medium', numberGrouping: true, currency: 'GBP' },
+	},
+	'zh-HK': {
+		tag: 'zh-HK',
+		ogLocale: 'zh_HK',
+		english: 'Chinese (Traditional, Hong Kong)',
+		native: '繁體中文（香港）',
+		short: '繁體中文',
+		badge: '繁',
+		fallback: null, // Base Traditional Chinese
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'HKD' },
+	},
+	'zh-TW': {
+		tag: 'zh-TW',
+		ogLocale: 'zh_TW',
+		english: 'Chinese (Traditional, Taiwan)',
+		native: '正體中文（台灣）',
+		short: '正體中文',
+		badge: '繁',
+		fallback: 'zh-HK', // Falls back to HK Traditional
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'TWD' },
+	},
+	'zh-CN': {
+		tag: 'zh-CN',
+		ogLocale: 'zh_CN',
+		english: 'Chinese (Simplified)',
+		native: '简体中文',
+		short: '简体中文',
+		badge: '简',
+		fallback: null, // Base Simplified Chinese
+		formats: { dateStyle: 'long', numberGrouping: true, currency: 'CNY' },
+	},
+}
+
+/** Project one registry field across every locale. */
+export function localeFacts<K extends keyof LocaleFacts>(key: K): Record<Locale, LocaleFacts[K]> {
+	return Object.fromEntries(
+		locales.map((locale) => [locale, LOCALE_REGISTRY[locale][key]]),
+	) as Record<Locale, LocaleFacts[K]>
 }
 
 // ==========================================
-// Language Families (for fallback)
+// Derived locale facts
 // ==========================================
+
+/** Display names (in native language). */
+export const localeNames: Record<Locale, string> = localeFacts('native')
+
+/** Short names for compact display. */
+export const localeShortNames: Record<Locale, string> = localeFacts('short')
+
+/** Language-menu badges: the script, not a flag. */
+export const localeBadges: Record<Locale, string> = localeFacts('badge')
 
 // Fallback chain: if a key is missing, try the parent locale
-export const localeFallbacks: Record<Locale, Locale | null> = {
-	'en-US': null, // Base English
-	'en-GB': 'en-US', // Falls back to US English
-	'zh-HK': null, // Base Traditional Chinese
-	'zh-TW': 'zh-HK', // Falls back to HK Traditional
-	'zh-CN': null, // Base Simplified Chinese
+export const localeFallbacks: Record<Locale, Locale | null> = localeFacts('fallback')
+
+/** Date and number formatting preferences. */
+export const localeFormats: Record<Locale, LocaleFormatPreferences> = localeFacts('formats')
+
+/** Group locales by language family. */
+export type LocaleGroupName = 'english' | 'chinese'
+
+/** Language subtag (from each locale's own tag) -> its group in the menu. */
+const LANGUAGE_GROUPS: Record<string, LocaleGroupName> = {
+	en: 'english',
+	zh: 'chinese',
 }
 
-// Group locales by language family
-export const localeGroups = {
-	english: ['en-US', 'en-GB'] as const,
-	chinese: ['zh-HK', 'zh-TW', 'zh-CN'] as const,
+function groupLocales(group: LocaleGroupName): Locale[] {
+	return locales.filter(
+		(locale) => LANGUAGE_GROUPS[LOCALE_REGISTRY[locale].tag.split('-')[0]] === group,
+	)
 }
 
-// ==========================================
-// Formatting Preferences
-// ==========================================
-
-const _localeFormats: Record<
-	Locale,
-	{
-		dateStyle: 'short' | 'medium' | 'long'
-		numberGrouping: boolean
-		currency: string
-	}
-> = {
-	'en-US': { dateStyle: 'medium', numberGrouping: true, currency: 'USD' },
-	'en-GB': { dateStyle: 'medium', numberGrouping: true, currency: 'GBP' },
-	'zh-HK': { dateStyle: 'long', numberGrouping: true, currency: 'HKD' },
-	'zh-TW': { dateStyle: 'long', numberGrouping: true, currency: 'TWD' },
-	'zh-CN': { dateStyle: 'long', numberGrouping: true, currency: 'CNY' },
+export const localeGroups: Record<LocaleGroupName, Locale[]> = {
+	english: groupLocales('english'),
+	chinese: groupLocales('chinese'),
 }
 
 // ==========================================

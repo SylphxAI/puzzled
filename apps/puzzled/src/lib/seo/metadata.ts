@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { defaultLocale, type Locale, locales } from '@/lib/i18n/config'
+import { defaultLocale, type Locale, localeFacts, locales } from '@/lib/i18n/config'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 
 /**
@@ -13,22 +13,10 @@ import { getRequestSiteOrigin } from '@/lib/site-origin.server'
  */
 
 /** Open Graph locale codes for the supported locales. */
-const OG_LOCALES: Record<Locale, string> = {
-	'en-US': 'en_US',
-	'en-GB': 'en_GB',
-	'zh-HK': 'zh_HK',
-	'zh-TW': 'zh_TW',
-	'zh-CN': 'zh_CN',
-}
+const OG_LOCALES: Record<Locale, string> = localeFacts('ogLocale')
 
 /** BCP 47 tags used by `<html lang>` and the hreflang cluster. */
-export const HREFLANG: Record<Locale, string> = {
-	'en-US': 'en-US',
-	'en-GB': 'en-GB',
-	'zh-HK': 'zh-HK',
-	'zh-TW': 'zh-TW',
-	'zh-CN': 'zh-CN',
-}
+export const HREFLANG: Record<Locale, string> = localeFacts('tag')
 
 /** Locale-prefixed pathname; the default locale has no prefix. */
 export function localizedPath(locale: Locale | string, path = '/'): string {

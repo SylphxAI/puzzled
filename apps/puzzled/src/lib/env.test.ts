@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { register } from '../instrumentation'
-import { validateEnv } from './env'
+import { env, KNOWN_VARS, validateEnv } from './env'
 
 function processEnv(): Record<string, string | undefined> {
 	return process.env as Record<string, string | undefined>
@@ -69,6 +69,32 @@ describe('web presentation boot env', () => {
 			} else {
 				process.env.REDIS_URL = previous
 			}
+		}
+	})
+})
+
+describe('env accessors (SSOT)', () => {
+	test('KNOWN_VARS carries the read inventory names', () => {
+		const names = KNOWN_VARS.map((entry) => entry.name)
+		expect(new Set(names).size).toBe(names.length)
+		expect(names).toContain('NODE_ENV')
+		expect(names).toContain('NEXT_PUBLIC_APP_URL')
+		expect(names).toContain('ADMIN_SECRET')
+		expect(names).toContain('CRON_SECRET')
+		expect(names).toContain('REDIS_URL')
+		expect(names).toContain('DATABASE_URL')
+		expect(names).toContain('IDENTITY_API_KEY')
+	})
+
+	test('accessors are raw and lazy: no defaults, value read at call time', () => {
+		const previous = { ADMIN_SECRET: process.env.ADMIN_SECRET }
+		try {
+			delete process.env.ADMIN_SECRET
+			expect(env.ADMIN_SECRET).toBeUndefined()
+			process.env.ADMIN_SECRET = 'secret-at-call-time'
+			expect(env.ADMIN_SECRET).toBe('secret-at-call-time')
+		} finally {
+			restoreEnv(previous)
 		}
 	})
 })

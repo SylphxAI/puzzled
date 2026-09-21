@@ -1,0 +1,23 @@
+{
+	"tagline": "12 張卡 • 找出組合",
+	"highlight": "找組合",
+	"description": "找出 3 張一組、特徵相符的卡",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "每組 3 張卡，每項特徵要全部相同或全部不同",
+		"rule2": "每張卡有 4 項特徵：形狀、顏色、填充、數量",
+		"rule3": "選出 3 張卡組成有效組合"
+	},
+	"startGame": "開始遊戲",
+	"setsFound": "組已找到",
+	"clear": "清除",
+	"giveUp": "放棄",
+	"hint": "選 3 張卡，檢查是否組成有效組合",
+	"complete": "全部組合找到！",
+	"messages": {
+		"correct": "有效組合！",
+		"notASet": "不是有效組合",
+		"alreadyFound": "已找到這組"
+	}
+}

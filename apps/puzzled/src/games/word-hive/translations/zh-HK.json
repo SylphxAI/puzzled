@@ -1,0 +1,38 @@
+{
+	"tagline": "7 個字母 • 無限詞語",
+	"highlight": "找出詞語",
+	"description": "用 7 個字母可以拼出多少個詞？",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "用顯示的 7 個字母組成詞語",
+		"rule2": "每個詞都必須包含中間的字母",
+		"rule3": "詞語最少要有 4 個字母",
+		"rule4": "字母可以重複使用"
+	},
+	"messages": {
+		"tooShort": "詞語最少要有 4 個字母",
+		"missingCenter": "缺少中間字母",
+		"invalidLetter": "使用了無效字母",
+		"notInList": "不在詞庫中",
+		"alreadyFound": "已經找到！"
+	},
+	"shuffle": "洗牌",
+	"delete": "刪除",
+	"enter": "輸入",
+	"foundWords": "已找到的詞",
+	"pangram": "全字母句",
+	"pangramBonus": "+7 獎勵",
+	"ranks": {
+		"beginner": "起步",
+		"goodStart": "熱身",
+		"movingUp": "穩步",
+		"good": "敏銳",
+		"solid": "亮眼",
+		"nice": "出色",
+		"great": "耀眼",
+		"amazing": "高手",
+		"genius": "大師",
+		"queenBee": "完美蜂巢 👑"
+	}
+}

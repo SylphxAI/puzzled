@@ -1,0 +1,28 @@
+{
+	"tagline": "华容道谜题 • 滑动取胜",
+	"highlight": "滑动谜题",
+	"description": "滑动方块，为目标开路",
+	"howToPlay": "玩法",
+	"rules": {
+		"title": "玩法",
+		"rule1": "横向或纵向滑动来移动方块",
+		"rule2": "把红色目标方块移到最下方的出口",
+		"rule3": "尝试用最少步数完成"
+	},
+	"startGame": "开始游戏",
+	"moves": "步数",
+	"minMoves": "最少",
+	"reset": "重置",
+	"giveUp": "放弃",
+	"hint": "点选方块后用方向键移动，或直接拖拽",
+	"difficulty": {
+		"easy": "简单",
+		"medium": "中等",
+		"hard": "困难"
+	},
+	"difficultyDescriptions": {
+		"easy": "步数少 — 快速热身",
+		"medium": "方块更多，路线更长",
+		"hard": "步数多，而且有多种卡死的方式"
+	}
+}

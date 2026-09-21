@@ -1,15 +1,16 @@
 import IORedis from 'ioredis'
 import { RateLimiterRedis } from 'rate-limiter-flexible'
+import { env } from './env'
 
 // Redis is residual admin rate-limit I/O, not presentation boot.
 // Do not throw at import: web must listen without REDIS_URL (api owns KV).
-const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build'
+const IS_BUILD = env.NEXT_PHASE === 'phase-production-build'
 
 let _redis: IORedis | null = null
 
 function getRedis(): IORedis {
 	if (_redis) return _redis
-	const url = process.env.REDIS_URL
+	const url = env.REDIS_URL
 	if (!url) {
 		throw new Error(
 			'[Redis] REDIS_URL is required for residual admin rate-limit I/O. Platform injects the product URL; do not compose host or port. Presentation boot must not import this module.',

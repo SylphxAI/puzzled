@@ -15,6 +15,7 @@
 import { useEffect, useRef } from 'react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'
+import { env } from '@/lib/env'
 import { useSafeBilling, useSafeUser, useSessionReplay } from '@/lib/identity/react'
 import { getAdjustedSampleRate, getSessionReplayConfig } from '../lib'
 
@@ -29,7 +30,7 @@ export interface SessionReplayProviderProps {
  * Automatically links user context and handles consent changes.
  */
 export function SessionReplayProvider({ children }: SessionReplayProviderProps) {
-	const isProduction = process.env.NODE_ENV === 'production'
+	const isProduction = env.NODE_ENV === 'production'
 
 	// Only render the actual provider in production
 	if (!isProduction) {
@@ -141,7 +142,7 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 	useEffect(() => {
 		if (sessionId && !hasStartedRef.current) {
 			hasStartedRef.current = true
-			if (process.env.NODE_ENV === 'development') {
+			if (env.NODE_ENV === 'development') {
 				console.log('[SessionReplay] Recording started:', sessionId)
 			}
 		}

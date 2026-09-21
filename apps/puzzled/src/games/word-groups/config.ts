@@ -90,7 +90,7 @@ export const wordGroupsConfig: GameConfig<
 	ConnectionsGuessResult
 > = {
 	slug: 'word-groups',
-	name: 'Word Groups',
+	name: 'Threads',
 	description: 'Group 16 words into 4 categories of 4',
 	IconComponent: WordGroupsIcon,
 	sortOrder: 2,

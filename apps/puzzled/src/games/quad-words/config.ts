@@ -27,7 +27,7 @@ export const quadWordsConfig: GameConfig<
 	QuordleGuessResult
 > = {
 	slug: 'quad-words',
-	name: 'Quad Words',
+	name: 'Quad',
 	description: 'Solve 4 words at once',
 	IconComponent: QuadWordsIcon,
 	sortOrder: 15,

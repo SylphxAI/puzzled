@@ -33,7 +33,7 @@ export const wordBoxConfig: GameConfig<
 	LetterBoxedGuessResult
 > = {
 	slug: 'word-box',
-	name: 'Word Box',
+	name: 'Frame',
 	description: 'Connect letters around the box',
 	IconComponent: WordBoxIcon,
 	sortOrder: 14,

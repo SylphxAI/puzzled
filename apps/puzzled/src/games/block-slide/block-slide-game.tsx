@@ -219,6 +219,7 @@ export function BlockSlideGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="block-slide"
 				status={game.status === 'won' ? 'won' : 'lost'}

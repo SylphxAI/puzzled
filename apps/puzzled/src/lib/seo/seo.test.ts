@@ -68,6 +68,39 @@ describe('route truth table', () => {
 		}
 	})
 
+	test('composes the private list from the blocked and noindex lists', () => {
+		// One composition instead of a re-typed copy: the union is de-duplicated
+		// because `/admin` is crawl-blocked and noindexed at once, and the order
+		// is insertion order — the same array the literal held.
+		const expected = [...new Set([...CRAWL_BLOCKED_ROUTE_PREFIXES, ...NOINDEX_ROUTE_PREFIXES])]
+		expect([...PRIVATE_ROUTE_PREFIXES]).toEqual(expected)
+
+		// Pinned to the literal this composition replaced: an entry dropped from
+		// either source list has to be a deliberate edit here as well.
+		expect([...PRIVATE_ROUTE_PREFIXES]).toEqual([
+			'/api',
+			'/admin',
+			'/archive',
+			'/settings',
+			'/profile',
+			'/stats',
+			'/leaderboard',
+			'/login',
+			'/signup',
+			'/forgot-password',
+			'/reset-password',
+			'/verify-email',
+			'/unsubscribe',
+			'/challenge',
+		])
+	})
+
+	test('keeps the composed private list duplicate-free', () => {
+		// `/admin` sits in both source lists; the Set is what keeps a surface
+		// registered as both blocked and noindexed from appearing twice.
+		expect(new Set(PRIVATE_ROUTE_PREFIXES).size).toBe(PRIVATE_ROUTE_PREFIXES.length)
+	})
+
 	test('crawl blocks are limited to surfaces that must not be crawled', () => {
 		expect([...CRAWL_BLOCKED_ROUTE_PREFIXES]).toEqual(['/api', '/admin'])
 		// User-facing destinations stay crawlable; `noindex` controls the index.

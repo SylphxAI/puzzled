@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { env } from '../env'
 import { destIdentityCredential, destIdentityProjectId } from './credentials'
 import {
 	type AppConfig,
@@ -13,7 +14,7 @@ export const SESSION_COOKIE = 'sylphx_identity_session'
 export type { IdentityUser }
 
 function identityOrigin(): string {
-	return destIdentityOrigin(process.env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(env.IDENTITY_API_ORIGIN)
 }
 
 export async function sessionToken(): Promise<string | undefined> {
@@ -49,7 +50,7 @@ export async function setSessionCookie(token: string): Promise<void> {
 		httpOnly: true,
 		sameSite: 'lax',
 		path: '/',
-		secure: process.env.NODE_ENV === 'production',
+		secure: env.NODE_ENV === 'production',
 	})
 }
 

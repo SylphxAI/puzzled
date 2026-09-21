@@ -32,9 +32,9 @@ export type SiteOriginInput = {
 	configuredUrl?: string | null
 	/** VERCEL_URL (hostname, no scheme). */
 	vercelUrl?: string | null
-	/** process.env.NODE_ENV. */
+	/** Node environment (env.NODE_ENV at the call site). */
 	nodeEnv?: string | null
-	/** process.env.PORT for the local dev fallback. */
+	/** Listen port for the local dev fallback (env.PORT at the call site). */
 	port?: string | null
 }
 

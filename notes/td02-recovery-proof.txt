@@ -1,0 +1,62 @@
+bun test v1.4.2 (744846f84)
+
+src/games/module-name-ssot.test.ts:
+(pass) module names: one canonical player-facing name per module > the scan covers the registered suite [0.42ms]
+(pass) module names: one canonical player-facing name per module > every registered module carries an English catalogue name [0.23ms]
+(pass) module names: one canonical player-facing name per module > config.name equals the English catalogue name [0.43ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE equals the English catalogue name [0.05ms]
+(pass) module names: one canonical player-facing name per module > PLAYER_TITLE carries no entry for an unregistered module [0.12ms]
+
+src/games/registry.test.ts:
+(pass) getSeedFromDate > generates consistent seed from date [0.04ms]
+(pass) getSeedFromDate > uses UTC date regardless of timezone [0.01ms]
+(pass) getSeedFromDate > handles single-digit months and days
+(pass) getGameSlugs > returns array of game slugs [0.10ms]
+(pass) getGameSlugs > contains expected games [0.01ms]
+(pass) isValidGameSlug > returns true for valid game slug [0.04ms]
+(pass) isValidGameSlug > returns false for invalid game slug [0.02ms]
+(pass) getGameConfig > returns config for valid slug [0.02ms]
+(pass) getGameConfig > returns undefined for invalid slug
+(pass) getAllGames > returns all games sorted by sortOrder [0.20ms]
+(pass) getAllGames > each game has required properties [0.06ms]
+(pass) getGameMetadata > returns metadata for valid slug [0.14ms]
+(pass) getGameMetadata > returns null for invalid slug [0.01ms]
+(pass) getAllGameMetadata > returns metadata for all games [0.09ms]
+(pass) getAllGameMetadata > games are sorted by sortOrder [0.03ms]
+(skip) shouldAlert > returns true when there are failures (server-only)
+(skip) shouldAlert > returns false when all successful (server-only)
+(skip) formatGenerationSummary > formats summary with all sections (server-only)
+(skip) formatGenerationSummary > uses appropriate icons for status (server-only)
+
+src/lib/i18n/routing.test.ts:
+(pass) locale-aware console redirect > the default locale redirects to an unprefixed /login (one hop) [0.77ms]
+(pass) locale-aware console redirect > non-default locales keep their prefix [0.09ms]
+
+src/lib/i18n/game-messages.test.ts:
+(pass) game copy: locale selection > every translation file on disk is registered in the locale registry [10.54ms]
+(pass) game copy: locale selection > a locale file is what the resolver returns, key for key [7.15ms]
+(pass) game copy: locale selection > a key the locale file omits falls back to English, never to a blank [0.29ms]
+(pass) game copy: locale selection > every locale resolves every module to non-empty, non-key copy [6.04ms]
+(pass) game copy: locale selection > a module with no locale file stays English, whole and unchanged [2.22ms]
+(pass) game copy: locale selection > the daily-ritual modules carry Chinese copy in all three Chinese locales [0.30ms]
+(pass) game copy: fallback chain > the chain is base-first and always ends at English [0.04ms]
+(pass) game copy: fallback chain > a partial overlay merges over English, and a missing file means English [0.06ms]
+
+src/lib/i18n/difficulty-copy.test.ts:
+(pass) difficulty copy: every declared key resolves in every locale > the scan actually covers the modules that declare difficulty levels [0.19ms]
+(pass) difficulty copy: every declared key resolves in every locale > every labelKey resolves in the common catalogue of every locale [0.48ms]
+(pass) difficulty copy: every declared key resolves in every locale > every descriptionKey resolves in the games catalogue of every locale [2.18ms]
+(pass) difficulty copy: every declared key resolves in every locale > the difficulty name each registered slug renders resolves in every locale [1.26ms]
+
+4 tests skipped:
+(skip) shouldAlert > returns true when there are failures (server-only)
+(skip) shouldAlert > returns false when all successful (server-only)
+(skip) formatGenerationSummary > formats summary with all sections (server-only)
+(skip) formatGenerationSummary > uses appropriate icons for status (server-only)
+
+ 34 pass
+ 4 skip
+ 0 fail
+ 8435 expect() calls
+Ran 38 tests across 5 files. [243.00ms]
+TEST_EXIT=0

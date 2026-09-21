@@ -3,5 +3,32 @@
 	"copied": "已複製到剪貼簿！",
 	"text": "Puzzled - {game}\n{result}\n\n來 puzzled.gg 一起玩",
 	"share": "分享",
-	"copy": "複製"
+	"copy": "複製",
+	"card": {
+		"title": "Puzzled 成績卡",
+		"share": "分享成績卡",
+		"downloaded": "成績卡已儲存，說明文字已複製到剪貼簿。",
+		"copied": "說明文字已複製；此瀏覽器無法產生圖片。",
+		"unavailable": "此瀏覽器不支援分享功能。",
+		"statusWon": "完成！",
+		"statusLost": "這次沒成功",
+		"attemptsLabel": "嘗試次數",
+		"scoreLabel": "分數",
+		"streakLabel": "連續",
+		"timeLabel": "時間",
+		"mistakesLabel": "錯誤",
+		"timeUnder1m": "一分鐘內",
+		"timeUnder5m": "1-5 分鐘",
+		"timeOver5m": "超過 5 分鐘",
+		"attemptsOf": "{attempts} / {max}",
+		"attemptsCount": "{attempts} 次",
+		"scorePoints": "{score} 分",
+		"streakDays": "連續 {days} 天",
+		"patternSummary": "圖案：{hit} 中 / {near} 近 / {miss} 無",
+		"altOnDay": "（{day}）",
+		"altTemplate": "Puzzled 成績 — {game}{day}。{result}",
+		"altDetailsTemplate": " {details}。",
+		"altLinkTemplate": " 一起玩：{link}",
+		"detailSeparator": "、"
+	}
 }
