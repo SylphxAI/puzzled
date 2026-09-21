@@ -51,3 +51,5 @@
   * Raw logs: $HOME/work/pz-program/notes/td08f-mutation-{red,green}.log
 - Next: open the PR (branch clean at this commit, gates green modulo the known
   parity test).
+- 2026-09-21 late evening - PR opened: https://github.com/SylphxAI/puzzled/pull/182 - head pushed by refspec and read back
+  at every step; NOT enqueued and NOT merged (owner's call). CI lanes run on the PR.
