@@ -88,3 +88,22 @@ accepted result instead of inferring it from an index violation.
 - Focused tests green (recovery pass): `env -u NODE_ENV bun test src/lib/idempotency-key.test.ts src/lib/api/save-result-idempotency.test.ts`
   → `7 pass / 0 fail, 19 expect() calls` (bun test v1.4.2).
 - Implementation committed. Next: full gates (bun test, typecheck, lint, build), mutation proof, PR.
+
+## Gates + mutation proof (recovery pass, head 1c5ecfa code)
+
+- Full suite: `env -u NODE_ENV bun test` → **1195 pass / 6 skip / 1 fail**, 34,927 expect(), 1202 tests / 126 files / 93.06s.
+  The 1 fail is TD-04's `schema/migration parity` gate refusing to skip without a dev DB:
+  `schema-parity: no dev database available; set SCHEMA_PARITY_DEV_URL=postgresql://... or provide docker/host postgres` (status=2).
+  Reproduced on pristine `be3f6dc` (this change absent, scratch worktree, just that file): `0 pass / 1 fail` — same status=2 message.
+  This pod has no postgres server and no docker daemon (client tools only); my diff touches no schema/atlas/scripts path.
+- Typecheck `bunx tsc --noEmit` exit 0; `-p tsconfig.e2e.json` exit 0 (empty output both).
+- Lint `bun run lint` exit 0 — `Checked 876 files in 365ms. No fixes applied. Found 23 infos.` (none in TD-19 files).
+- Build `NEXT_PUBLIC_APP_URL=https://puzzled.gg SKIP_ENV_VALIDATION=true bun run build` exit 0 — `✓ Compiled successfully in 13.8s`, `Finished TypeScript in 14.4s`, 118/118 static pages.
+- Mutation A — regenerate key per retry attempt (`hooks.ts`, fresh mint per mutationFn run): retry test RED,
+  `Expected: "2902bfc2-..." Received: "e7a461c7-..."` at the same-key assertion; `0 pass / 2 fail`, exit 1. Restore → clean tree → `7 pass / 0 fail`, exit 0.
+- Mutation B — re-stamping an already-stamped intent regenerates (`idempotency-key.ts`): unit test RED
+  (`Expected: "cc5d18f3..." Received: "2aef8e23..."`); `4 pass / 1 fail`. Restore → `5 pass / 0 fail`, exit 0.
+- Evidence copies: `$HOME/work/pz-program/notes/td19-evidence-{unit,gates,mutation,base-parity}.txt`.
+
+## Status
+- [x] recon — [x] implement — [x] tests — [x] gates — [x] mutation proof — [ ] PR (next)
