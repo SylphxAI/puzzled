@@ -332,7 +332,8 @@
 			"impersonate_start": "Impersonate Start",
 			"impersonate_end": "Impersonate End",
 			"feature_flag_toggle": "Feature Flag Toggle",
-			"admin_action": "Admin Action"
+			"admin_action": "Admin Action",
+			"admin_access": "Admin Access"
 		},
 		"filters": {
 			"searchPlaceholder": "Search by resource ID or IP address...",
