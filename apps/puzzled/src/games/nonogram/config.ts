@@ -61,7 +61,7 @@ export const nonogramConfig: GameConfig<
 	NonogramGuessResult
 > = {
 	slug: 'nonogram',
-	name: 'Nonogram',
+	name: 'Paint',
 	description: 'Fill cells to reveal the hidden picture using number clues',
 	IconComponent: NonogramIcon,
 	sortOrder: 6,

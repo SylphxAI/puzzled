@@ -71,3 +71,24 @@ Scripts: notes/td03-final-proof2.py (normalisation + both comparisons), notes/ca
 TD-02: set config.name to the translations name for the 13 drifting modules; update registry.test.ts:71/108;
 add src/games/module-name-ssot.test.ts guard; mutation-proof it; rebuild + re-capture.
 
+
+## TD-02 (committed with this note)
+13 config names reconciled to the module's own translations/en.json name (the name every served surface resolves first):
+block-slide Block Slide->Slides; crossword Crossword Mini->Mini Grid; cryptogram Cryptogram->Cipher;
+killer-sudoku Killer Sudoku->Cage Sudoku; nonogram Nonogram->Paint; pattern-match Pattern Match->Match;
+quad-words Quad Words->Quad; word-box Word Box->Frame; word-groups Word Groups->Threads; word-guess Word Guess->Five;
+word-hive Word Hive->Hive; word-ladder Word Ladder->Rungs; word-search Word Hunt->Hunt.
+registry.test.ts:71,108 updated (Word Guess -> Five) because they pinned the drifted value.
+Guard: src/games/module-name-ssot.test.ts (5 tests). Mutation: block-slide reverted -> RED naming the offender; restored
+(blob 59ae7042) -> GREEN. Guard run against base 7523ba9 (temp detached worktree, removed) -> RED naming all 13.
+Local checks: test:unit 1079 pass / 6 skip / 0 fail; typecheck exit 0; biome clean.
+
+
+## Recovery run (2026-09-21, resumed after pod kill)
+- [x] 1. Staging verified: the 16-file TD-02 set (13 config.ts + guard test + registry.test.ts + this note; +120/-15); HEAD == refs/heads/debt/td02-td03-ssot == 5388514617b3001c88620441ff8cdfc0b926cede; ls-remote origin agrees.
+- [x] 2. Staged-tree proof: env -u NODE_ENV bun test src/games/module-name-ssot.test.ts src/games/registry.test.ts src/lib/i18n
+      => 34 pass / 4 skip / 0 fail; 8435 expect() calls; Ran 38 tests across 5 files. [243.00ms]; TEST_EXIT=0; guard suite 5/5 pass; raw: notes/td02-recovery-proof.txt.
+      Restore integrity: git hash-object block-slide/config.ts == 59ae7042c6bdc9f6683f2ead439aa63da6113845 (verified by the recovery run).
+- [x] 3. TD-02 commit + push (this note + notes/td02-guard-on-base.txt + notes/td02-recovery-proof.txt ride along).
+- [ ] 4. PR + checks; PR URL + head sha appended below once open.
+Resume note: if a later run resumes mid-step, read this section; the push, if unverified, is HEAD:refs/heads/debt/td02-td03-ssot.

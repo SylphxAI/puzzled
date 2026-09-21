@@ -86,7 +86,7 @@ export const blockSlideConfig: GameConfig<
 	BlockSlideGuessResult
 > = {
 	slug: 'block-slide',
-	name: 'Block Slide',
+	name: 'Slides',
 	description: 'Slide blocks to free the target',
 	IconComponent: BlockSlideIcon,
 	sortOrder: 10,

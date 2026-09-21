@@ -32,7 +32,7 @@ export const wordLadderConfig: GameConfig<
 	WordLadderGuessResult
 > = {
 	slug: 'word-ladder',
-	name: 'Word Ladder',
+	name: 'Rungs',
 	description: 'Transform one word into another, changing one letter at a time',
 	IconComponent: WordLadderIcon,
 	sortOrder: 7,
