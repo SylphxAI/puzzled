@@ -1,0 +1,27 @@
+bun test v1.4.2 (744846f84)
+
+src/lib/api/domain/daily.adapters.test.ts:
+(pass) getServerDailyStatus against a Connect fixture > maps the fixture to the pinned DailyStatus (server cache()d accessor) [4.91ms]
+(pass) getServerDailyStatus against a Connect fixture > difficulty empty on the wire falls back to the request difficulty [0.41ms]
+(pass) getServerTodaysPuzzle against the same fixture > maps the fixture to the pinned TodaysPuzzle [0.39ms]
+(pass) client surface runs the same mapper over the same fixture > fetchDailyStatusForClient equals the server mapping plus adapter fields [0.18ms]
+(pass) client surface runs the same mapper over the same fixture > fetchTodaysPuzzleForClient pins the puzzle projection plus adapter fields [0.11ms]
+(pass) client surface runs the same mapper over the same fixture > admission failure keeps the fail-closed ApiError surface [0.50ms]
+
+src/lib/api/domain/daily.test.ts:
+(pass) mapDailyStatus > pins every field of a completed lost session [0.07ms]
+(pass) mapDailyStatus > a completion that is not won/lost fails closed to null [0.06ms]
+(pass) mapDailyStatus > hasCompleted without a completion payload yields null [0.04ms]
+(pass) mapDailyStatus > a zero timestamp stays the epoch date (unchanged semantics) [0.04ms]
+(pass) mapDailyStatus > an out-of-range completedAtMs collapses to null [0.03ms]
+(pass) mapDailyStatus > non-UUID puzzle id is omitted; difficulty falls back to the request [0.04ms]
+(pass) mapDailyStatus > both difficulties empty yield null [0.02ms]
+(pass) mapDailyStatus > invalid puzzleDataJson yields null, never a throw [0.04ms]
+(pass) mapDailyStatus > empty puzzleDataJson yields null [0.02ms]
+(pass) mapTodaysPuzzle > pins the puzzle projection of the same fixture [0.03ms]
+(pass) mapTodaysPuzzle > served puzzle id gate and difficulty fallback match DailyStatus [0.02ms]
+
+ 17 pass
+ 0 fail
+ 24 expect() calls
+Ran 17 tests across 2 files. [220.00ms]
