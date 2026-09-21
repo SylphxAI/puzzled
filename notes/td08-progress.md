@@ -7,3 +7,17 @@
 - Next: open PR; watch CI lanes; paste CI URLs into the PR body; independent review
   arrives as a PR verdict; queue/merge is the owner's call.
 - Raw logs: `notes/td08-mutation-red.log`, `notes/td08-mutation-green.log`.
+
+## Recovery worker takeover (2026-09-21 late evening)
+
+- Original worker died mid-flight. Recovered state: worktree was clean at 6e47ba4;
+  moved .worktrees/.../puzzled/td08 -> .../td08f per handoff; node_modules symlinks
+  intact; origin/main still be3f6dc (no rebase needed yet).
+- Re-verified from the branch itself: createServerApi -> NONE in apps/puzzled/src;
+  mapDailyStatus/mapTodaysPuzzle single-sourced in lib/api/domain/daily.ts and used
+  by both server accessors and hooks helpers; useDailyStatus/useTodaysPuzzle have
+  0 call sites; 0283412..6e47ba4 is notes-only. Adapter tests (17 tests / 2 files)
+  and mutation logs read.
+- Progress mirrored to $HOME/work/pz-program/notes/td08-progress.md on each step.
+- Next: full gates (unit/typecheck/lint/build), own mutation re-run, push refspec,
+  open PR.
