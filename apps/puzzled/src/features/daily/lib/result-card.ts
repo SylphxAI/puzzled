@@ -84,7 +84,6 @@ export interface ResultCardModel {
 export interface ResultCardStrings {
 	statusWon: string
 	statusLost: string
-	dayLabel: string
 	attemptsLabel: string
 	scoreLabel: string
 	streakLabel: string

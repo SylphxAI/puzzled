@@ -3,5 +3,32 @@
 	"copied": "Copied to clipboard!",
 	"text": "Puzzled - {game}\n{result}",
 	"share": "Share",
-	"copy": "Copy"
+	"copy": "Copy",
+	"card": {
+		"title": "Puzzled result card",
+		"share": "Share result card",
+		"downloaded": "Card image saved; caption copied to the clipboard.",
+		"copied": "Caption copied to the clipboard; this browser could not build the image.",
+		"unavailable": "Sharing is not available in this browser.",
+		"statusWon": "Solved!",
+		"statusLost": "Not this time",
+		"attemptsLabel": "Attempts",
+		"scoreLabel": "Score",
+		"streakLabel": "Streak",
+		"timeLabel": "Time",
+		"mistakesLabel": "Mistakes",
+		"timeUnder1m": "Under a minute",
+		"timeUnder5m": "1-5 minutes",
+		"timeOver5m": "Over 5 minutes",
+		"attemptsOf": "{attempts} of {max}",
+		"attemptsCount": "{attempts} attempts",
+		"scorePoints": "{score} points",
+		"streakDays": "{days}-day streak",
+		"patternSummary": "Pattern: {hit} hit / {near} near / {miss} miss",
+		"altOnDay": " on {day}",
+		"altTemplate": "Puzzled - {game}{day}. {result}",
+		"altDetailsTemplate": " {details}.",
+		"altLinkTemplate": " Play: {link}",
+		"detailSeparator": ", "
+	}
 }

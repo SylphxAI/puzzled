@@ -84,7 +84,6 @@ export function GameResultCard({
 	const cardStrings: ResultCardStrings = {
 		statusWon: tShare('card.statusWon'),
 		statusLost: tShare('card.statusLost'),
-		dayLabel: tShare('card.dayLabel'),
 		attemptsLabel: tShare('card.attemptsLabel'),
 		scoreLabel: tShare('card.scoreLabel'),
 		streakLabel: tShare('card.streakLabel'),

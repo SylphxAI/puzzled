@@ -9,7 +9,6 @@ import {
 const STRINGS: ResultCardStrings = {
 	statusWon: 'Solved!',
 	statusLost: 'Not this time',
-	dayLabel: 'Day',
 	attemptsLabel: 'Attempts',
 	scoreLabel: 'Score',
 	streakLabel: 'Streak',
