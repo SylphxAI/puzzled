@@ -17,10 +17,17 @@ Done:
   full suite 1164 pass / 6 skip / 0 fail, 34,855 expect() calls,
   Ran 1170 tests across 120 files [86.60s].
 
+Rebased onto d1fae285 (TD-04/20/21 landed while this branch was open): one
+conflict in apps/puzzled/src/lib/api/server.ts (TD-20 logger import vs this
+change's presentation-document import) resolved by keeping both; tests, lint,
+typecheck, suite and build re-run on the rebased tree - see notes/td18-proof.md
+for all raw numbers.
+
 Next:
-1. production build (needs a real bun install in the worktree - symlinked
-   node_modules fails Turbopack's filesystem-root check).
-2. base-suite run on fd9f061 (scratch worktree) for the honest delta.
-3. push, open ONE PR titled about TD-18; body: two-authority problem, design,
-   consumer table (before/after), mutation raw, suite status.
-4. merge-order check against the queued branches (debt/td04, td20, td21).
+1. push the rebased commits and open ONE PR titled about TD-18; body: the
+two-authority problem, the design, the consumer table (before/after), mutation
+raw, suite status (incl. the env-only TD-04 gate failure that reproduces on
+pristine d1fae285).
+2. await independent review; the queue will merge once checks are green.
+3. note for the queue: debt/td22-casts rewrites the same logger line in
+   lib/api/server.ts and will need the same style of rebase.
