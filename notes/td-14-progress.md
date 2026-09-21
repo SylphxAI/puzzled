@@ -32,10 +32,10 @@ arithmetic normalises via Date.UTC) pinned in tests.
    NOTE: worktree had no node_modules; ran 'bun install --frozen-lockfile' (554 pkgs, 22.5s).
 5. [x] Commit ae46b76 'refactor(daily): read every day key through one shared parseDayKey (TD-14)';
    push pending at note time (host network flaky).
-6. [ ] Push readback + open PR.
+6. [x] Pushed (c561d7e); PR https://github.com/SylphxAI/puzzled/pull/167 opened (head c561d7e3817f48fe0bb9cdfaab77e4f5c101ea24, base main).
 
 ## Next action
-Push ae46b76 (refspec), read ref back; open PR (base main).
+Done - TD-14 complete (PR open for review).
 
 ## Evidence files ($HOME/work/pz-program/notes/)
 - td14-tests.txt (58 pass / 0 fail / 138 expect, 6 files)
