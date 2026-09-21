@@ -3,9 +3,18 @@
 /**
  * Consent Banner Wrapper
  *
- * Uses SDK's CookieBanner with localStorage sync.
- * This bridges SDK's server-side consent with client-side scripts
- * that need synchronous consent checks before SDK hydration.
+ * Uses SDK's CookieBanner with localStorage sync: the SDK owns the UI and the
+ * stored decision, this wrapper mirrors a settled decision onto the keys
+ * client-side scripts read (`puzzled:consent:cookie`).
+ *
+ * The (main) layout mounts this eagerly, not through the deferred shell: the
+ * banner is the largest contentful paint on mobile, so the S5 budget requires
+ * it in the first frame. Server rendering is safe - `useSafeConsent` starts
+ * from "no decision" on both sides of hydration, so the server output and the
+ * first client render match; a visitor whose decision is already stored is
+ * hidden before paint (see the settle script in `app/[locale]/layout.tsx` and
+ * the `[data-consent-banner]` rule in globals.css), so the banner never
+ * flashes and hydration stays consistent.
  */
 
 import { useEffect } from 'react'
@@ -82,10 +91,9 @@ function ConsentBannerInner() {
 /**
  * Consent Banner with localStorage sync
  *
- * Uses SDK's CookieBanner for UI and consent management,
- * and syncs consent state to localStorage for client-side scripts.
- *
- * Only renders when SylphxProvider is available (client-side).
+ * Uses SDK's CookieBanner for UI and consent management, and mirrors a
+ * settled decision onto the keys client-side scripts read. Renders eagerly:
+ * a visitor without a stored decision sees the banner in the first frame.
  */
 export function ConsentBanner() {
 	const { isConfigured } = useSafeConsent()

@@ -3,12 +3,14 @@
 import { DeferredOverlays } from '@/shared/components/deferred-shell'
 
 /**
- * Achievement toasts, the PWA install prompt and the consent banner.
+ * Achievement toasts and the PWA install prompt.
  *
- * All three are off the first paint: they mount after load on an idle frame and
+ * Both are off the first paint: they mount after load on an idle frame and
  * their modules are imported on demand (see `shared/components/deferred-shell`).
- * Consent still gates analytics from the send site, so nothing is reported
- * before an explicit opt-in.
+ * The consent banner is NOT part of this chunk - it is the largest paint on
+ * mobile, so the (main) layout renders it in the first frame; consent still
+ * gates analytics from the send site, so nothing is reported before an
+ * explicit opt-in.
  */
 export function LayoutOverlays({ maxStreak }: { maxStreak?: number | null }) {
 	return <DeferredOverlays maxStreak={maxStreak} />

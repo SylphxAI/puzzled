@@ -243,6 +243,36 @@ export default async function LocaleLayout({ children, params }: Props) {
 						`,
 					}}
 				/>
+				{/*
+				 * Consent settle check, before paint like the theme script above.
+				 *
+				 * The consent banner is the largest contentful paint on mobile, so it
+				 * has to render in the first frame - a stored decision must therefore
+				 * be honoured before the banner's first paint, or a settled visitor
+				 * would see it flash on every load. The test mirrors the SDK's
+				 * (`lib/identity/react.tsx`): any stored `puzzled-consent` value that
+				 * parses counts as a decision. CSS hides the banner under
+				 * `html[data-consent-decided]`; the React tree is untouched, so
+				 * hydration stays consistent.
+				 */}
+				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: Consent settle script with trusted static code
+					dangerouslySetInnerHTML={{
+						__html: `
+							(function() {
+								try {
+									var stored = localStorage.getItem('puzzled-consent');
+									if (!stored) return;
+									JSON.parse(stored);
+									document.documentElement.setAttribute('data-consent-decided', '');
+								} catch (error) {
+									// Unreadable storage or an unparsable value: leave the banner
+									// up - the SDK treats both the same way.
+								}
+							})();
+						`,
+					}}
+				/>
 				<JsonLd baseUrl={baseUrl} />
 			</head>
 			<body className="antialiased">

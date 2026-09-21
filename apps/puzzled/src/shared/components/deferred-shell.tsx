@@ -10,7 +10,7 @@
  *
  * - the toast host (sonner runtime),
  * - session replay, the global error handler and the web-vitals reporter,
- * - achievement toasts, the PWA install prompt and the consent banner.
+ * - achievement toasts and the PWA install prompt.
  *
  * Every path is bounded: the mount happens at the earliest of `load` + idle,
  * DOMContentLoaded + 2 s, 4 s after first paint, or the first interaction —
@@ -60,7 +60,7 @@ const RELEASE_CAP_MS = 4000
  *
  * The last two bounds exist because `load` can be held up indefinitely by a
  * slow or hung subresource (a third-party beacon, a font, a stray image), and
- * the consent banner, install prompt, error handler and vitals reporter must
+ * the install prompt, error handler and vitals reporter must
  * still appear on such a page.
  *
  * Returns a cancel function.
@@ -158,7 +158,7 @@ export function DeferredMonitoring() {
 	)
 }
 
-/** Achievement toasts, PWA install prompt and the consent banner. */
+/** Achievement toasts and the PWA install prompt. */
 export function DeferredOverlays({ maxStreak }: { maxStreak?: number | null }) {
 	return (
 		<DeferredMount>

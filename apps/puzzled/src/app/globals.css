@@ -1424,6 +1424,19 @@ html[data-transition-type="fade"] {
 }
 
 /* =============================================
+   Consent banner - settled visitors
+=============================================
+   The banner renders in the first frame - it is the mobile LCP element, see
+   `app/[locale]/layout.tsx`. A decision already stored in localStorage is
+   marked on <html> before paint by the settle script there, and this rule
+   keeps the banner from ever flashing for that visitor. The element stays in
+   the tree so React hydration finds exactly what the server rendered; the SDK
+   unmounts it for settled visitors once hydrated. */
+html[data-consent-decided] [data-consent-banner] {
+	display: none;
+}
+
+/* =============================================
    Reduced Motion (Accessibility)
 ============================================= */
 
