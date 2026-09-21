@@ -44,7 +44,9 @@ function shareHelperCallArguments(source: string): string[] {
 
 describe('share call sites after TD-21', () => {
 	const files = walk(SRC)
-	const direct = files.filter((file) => readFileSync(file, 'utf8').includes('formatRitualShareText({'))
+	const direct = files.filter((file) =>
+		readFileSync(file, 'utf8').includes('formatRitualShareText({'),
+	)
 	const surfaces = files.filter((file) => readFileSync(file, 'utf8').includes('shareResult({'))
 
 	test('the share surfaces are the ones this audit expects', () => {
@@ -68,4 +70,3 @@ describe('share call sites after TD-21', () => {
 		}
 	})
 })
-
