@@ -50,6 +50,7 @@ export const auditActionEnum = pgEnum('audit_action', [
 	'streak_update',
 	'achievement_unlock',
 	'admin_action',
+	'admin_access',
 ])
 
 /** Announcement display types */
