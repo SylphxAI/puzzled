@@ -107,3 +107,8 @@ accepted result instead of inferring it from an index violation.
 
 ## Status
 - [x] recon — [x] implement — [x] tests — [x] gates — [x] mutation proof — [ ] PR (next)
+
+## PR
+
+- PR #180: https://github.com/SylphxAI/puzzled/pull/180 — base `main` (`be3f6dc`), head `debt/td19-idempotency`.
+- Not enqueued, not merged (per brief). Branch head at PR time: 5b4761c (code 1bc9826 + notes commits).
