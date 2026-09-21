@@ -17,10 +17,11 @@ Base: origin/main = 7523ba9 (fetched 2026-09-21, still current). Remote branch =
    - `env -u NODE_ENV bun test src '.test.ts'` -> 1073 pass / 6 skip / 1 fail (1080 tests, 107 files, 132.98s).
      Fail: src/lib/api/connect-fetch.test.ts "mergeServerConnectInit > aborts when the api never returns HTTP" (4.64s; timing assertion SERVER_CONNECT_TIMEOUT_MS+1500 under parallel load).
    - Standalone re-run `env -u NODE_ENV bun test src tests -t 'aborts when the api never returns HTTP'` -> 1 pass / 0 fail. => pre-existing load flake; unrelated to env work; note in PR.
-4. [ ] Extend lib/env.ts (KNOWN_VARS registry + raw lazy getters).
-5. [ ] Replace reads: 34 code lines in 18 files + 2 comment rewrites in site-origin.ts.
-6. [ ] Prove: before/after counts, tests, typecheck, build.
-7. [ ] Commit + push + PR.
+4. [x] Extend lib/env.ts: KNOWN_VARS (22 names) + 22 lazy raw getters; the 2 unconsumed defaulted getters replaced (raw semantics preserved; documented in PR). env.test.ts +2 tests (raw/lazy contract, inventory).
+5. [x] Replace reads: 34 code lines in 18 files + 2 comment rewrites (site-origin.ts). AFTER count outside env.ts+tests = 2 (both planned: admin/error.tsx, lib/db/index.ts).
+   Committed 2fd4beb (21 files, +309/-44); pre-commit hook: biome clean on 21 files + tsc --noEmit + e2e tsconfig OK (16.5s).
+6. [ ] Prove: full suite, standalone typecheck, build; quote before/after counts.
+7. [~] Pushed 2fd4beb to origin; PR next.
 
 ## Decisions (locked 2026-09-21)
 - ALL env getters: raw + lazy (`string | undefined`). The 2 pre-existing getters are unconsumed in src and become raw: call sites need raw semantics (resolveSiteOrigin treats undefined as "not configured"; `=== 'development'` must stay false when NODE_ENV unset). Call-site defaults stay at their sites (`?.trim() || 'premium'`, resolver fallbacks, redis/db throws) => app behaviour identical.
@@ -32,4 +33,4 @@ Base: origin/main = 7523ba9 (fetched 2026-09-21, still current). Remote branch =
 - Expected after-count (same command, excluding lib/env.ts + tests): 2 (admin/error.tsx + lib/db/index.ts). All other reads -> env getters.
 
 ## Next action
-Edit lib/env.ts (step 4), then call sites (step 5).
+Step 6 proof (full suite + typecheck + build), then open PR. HEAD=2fd4beb (pushed).
