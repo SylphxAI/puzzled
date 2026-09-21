@@ -34,10 +34,10 @@ keep translation keys; global-error may stay separate with a stated reason.
 - Full unit lane (bun test src) running -> td07-tests-full.txt.
 
 ## Steps
-1-4 done; 5: PR to open.
+1-5 done: PR https://github.com/SylphxAI/puzzled/pull/168 opened (base main).
 
 ## Next action
-Check full lane result; open PR.
+Done - TD-07 complete (PR open for review). Full unit lane (bun test src) running in background -> td07-tests-full.txt.
 
 ## Notes
 - Host quirk: shell calls often return 'exit undefined' but execute anyway - verify state,
