@@ -220,6 +220,7 @@ export function PatternMatchGame({ mode = 'daily', puzzleId, puzzleData, puzzleD
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="pattern-match"
 				status={game.status === 'won' ? 'won' : 'lost'}

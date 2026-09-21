@@ -392,6 +392,7 @@ export function PipPlaceGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="pip-place"
 				status={game.state.gameStatus === 'won' ? 'won' : 'lost'}

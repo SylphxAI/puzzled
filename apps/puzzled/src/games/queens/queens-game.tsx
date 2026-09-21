@@ -229,6 +229,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="crowns"
 				status="won"

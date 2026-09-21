@@ -1,13 +1,23 @@
 'use client'
 
 import { Button } from '@sylphx/ui'
-import { BarChart3, Clock, Share2, Target, Trophy, Users } from 'lucide-react'
+import { BarChart3, Clock, Image, Share2, Target, Trophy, Users } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useState } from 'react'
 import { NextPuzzleCountdown } from '@/features/daily/components/next-puzzle-countdown'
+import {
+	buildResultCard,
+	type ResultCardStrings,
+	type ResultCardTile,
+	resultCardTextAlternative,
+} from '@/features/daily/lib/result-card'
+import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
+import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
-import { cn } from '@/lib/utils'
+import { productDayKey } from '@/lib/product-day'
+import { cn, getBaseUrl } from '@/lib/utils'
 
 type MissedCategory = {
 	name: string
@@ -31,6 +41,12 @@ type GameResultProps = {
 	onShare: () => void
 	/** For connections: categories the user didn't solve */
 	missedCategories?: MissedCategory[]
+	/** Product day (YYYY-MM-DD) the run was served for; labels the shareable card. */
+	puzzleDate?: string
+	/** Current streak, shown on the card when known. */
+	currentStreak?: number
+	/** Content-free pattern (hit / near / miss); modules opt in. */
+	pattern?: ResultCardTile[][]
 }
 
 // Category colors for displaying missed categories
@@ -49,12 +65,87 @@ export function GameResultCard({
 	mode,
 	onShare,
 	missedCategories,
+	puzzleDate,
+	currentStreak,
+	pattern,
 }: GameResultProps) {
-	const _locale = useLocale()
+	const locale = useLocale()
 	const t = useTranslations('gameResult')
 	const tCommon = useTranslations('common')
+	const tShare = useTranslations('share')
+	const tGames = useTranslations('games')
+	const [cardBusy, setCardBusy] = useState(false)
+	const [cardNotice, setCardNotice] = useState<string | null>(null)
 
 	const isWin = status === 'won'
+
+	// One copy object for the model, the image and the text alternative, so the
+	// card and the accessible sentence always speak the same words.
+	const cardStrings: ResultCardStrings = {
+		statusWon: tShare('card.statusWon'),
+		statusLost: tShare('card.statusLost'),
+		dayLabel: tShare('card.dayLabel'),
+		attemptsLabel: tShare('card.attemptsLabel'),
+		scoreLabel: tShare('card.scoreLabel'),
+		streakLabel: tShare('card.streakLabel'),
+		timeLabel: tShare('card.timeLabel'),
+		mistakesLabel: tShare('card.mistakesLabel'),
+		timeUnder1m: tShare('card.timeUnder1m'),
+		timeUnder5m: tShare('card.timeUnder5m'),
+		timeOver5m: tShare('card.timeOver5m'),
+		attemptsOf: tShare('card.attemptsOf'),
+		attemptsCount: tShare('card.attemptsCount'),
+		scorePoints: tShare('card.scorePoints'),
+		streakDays: tShare('card.streakDays'),
+		patternSummary: tShare('card.patternSummary'),
+		altOnDay: tShare('card.altOnDay'),
+		altTemplate: tShare('card.altTemplate'),
+		altDetailsTemplate: tShare('card.altDetailsTemplate'),
+		altLinkTemplate: tShare('card.altLinkTemplate'),
+		detailSeparator: tShare('card.detailSeparator'),
+	}
+
+	/** Card model for this result: non-spoiler by construction (see result-card.ts). */
+	const buildCard = () =>
+		buildResultCard({
+			origin: getBaseUrl('origin'),
+			gameSlug: gameType,
+			gameName: tGames(`${slugToCamelCase(gameType)}.name`, { defaultValue: gameType }),
+			theme: getHowToPlayConfig(gameType)?.display.theme ?? 'slate',
+			mode,
+			status,
+			locale,
+			// A daily finish still in its day can label itself; archive runs carry their own day.
+			puzzleDate: puzzleDate ?? (mode === 'daily' ? productDayKey() : undefined),
+			attempts: stats.attempts,
+			maxAttempts: stats.maxAttempts,
+			mistakes: stats.mistakes,
+			score: stats.score,
+			timeSpentMs: stats.timeSpentMs,
+			currentStreak,
+			pattern,
+		})
+
+	// The same sentence the share fallback copies; also the card's accessible text.
+	const cardAltText = resultCardTextAlternative(buildCard(), cardStrings)
+
+	const handleShareCard = async () => {
+		if (cardBusy) return
+		setCardBusy(true)
+		setCardNotice(null)
+		try {
+			const result = await shareRitualResultCard({
+				model: buildCard(),
+				strings: cardStrings,
+				title: tShare('card.title'),
+			})
+			if (result.outcome === 'downloaded') setCardNotice(tShare('card.downloaded'))
+			else if (result.outcome === 'copied') setCardNotice(tShare('card.copied'))
+			else if (result.outcome === 'unavailable') setCardNotice(tShare('card.unavailable'))
+		} finally {
+			setCardBusy(false)
+		}
+	}
 
 	// Fetch percentile for daily mode wins
 	const { data: percentileData } = useTodayPercentile(
@@ -228,10 +319,29 @@ export function GameResultCard({
 
 				{/* Actions */}
 				<div className="flex flex-col gap-2">
-					<Button onClick={onShare} className="w-full gap-2" size="lg">
-						<Share2 className="h-4 w-4" />
+					{/* The card is the primary share; the text share stays beside it. */}
+					<Button
+						onClick={handleShareCard}
+						className="w-full gap-2"
+						size="lg"
+						disabled={cardBusy}
+						aria-busy={cardBusy}
+					>
+						<Image className="h-4 w-4" aria-hidden="true" />
+						{tShare('card.share')}
+					</Button>
+
+					<Button onClick={onShare} variant="outline" className="w-full gap-2" size="lg">
+						<Share2 className="h-4 w-4" aria-hidden="true" />
 						{tCommon('share')}
 					</Button>
+
+					{cardNotice && (
+						<output className="block text-center text-xs text-muted-foreground">
+							{cardNotice}
+						</output>
+					)}
+					<p className="sr-only">{cardAltText}</p>
 
 					<Link
 						href="/"

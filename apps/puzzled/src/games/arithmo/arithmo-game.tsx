@@ -234,6 +234,7 @@ export function ArithmoGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }
 			{/* Game Result Modal */}
 			<GameResultModal
 				open={showResultModal}
+				puzzleDate={puzzleDate}
 				onClose={() => setShowResultModal(false)}
 				gameType="arithmo"
 				status={game.state.isWon ? 'won' : 'lost'}
