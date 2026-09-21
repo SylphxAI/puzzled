@@ -1,6 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
+import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 
 /**
  * Connections How-to-Play content
@@ -8,6 +9,7 @@ import { useTranslations } from 'next-intl'
  */
 export function ConnectionsHowToPlay() {
 	const t = useTranslations('games.wordGroups')
+	const tDifficulty = useTranslations()
 
 	return (
 		<div className="space-y-4">
@@ -38,25 +40,25 @@ export function ConnectionsHowToPlay() {
 				</div>
 			</div>
 
-			{/* Difficulty legend */}
+			{/* Difficulty legend: level names from the shared vocabulary */}
 			<div className="space-y-2">
 				<p className="text-sm font-medium">Difficulty Colors</p>
 				<div className="grid grid-cols-2 gap-2 text-xs">
 					<div className="flex items-center gap-2">
 						<div className="h-4 w-4 rounded bg-yellow-400" />
-						<span>{t('difficulty.0')}</span>
+						<span>{tDifficulty(difficultyLabelKey(0))}</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<div className="h-4 w-4 rounded bg-green-400" />
-						<span>{t('difficulty.1')}</span>
+						<span>{tDifficulty(difficultyLabelKey(1))}</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<div className="h-4 w-4 rounded bg-blue-400" />
-						<span>{t('difficulty.2')}</span>
+						<span>{tDifficulty(difficultyLabelKey(2))}</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<div className="h-4 w-4 rounded bg-purple-400" />
-						<span>{t('difficulty.3')}</span>
+						<span>{tDifficulty(difficultyLabelKey(3))}</span>
 					</div>
 				</div>
 			</div>
