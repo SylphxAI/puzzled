@@ -19,6 +19,7 @@ const STRINGS: ResultCardStrings = {
 	attemptsLabel: 'Attempts',
 	scoreLabel: 'Score',
 	streakLabel: 'Streak',
+	timeLabel: 'Time',
 	mistakesLabel: 'Mistakes',
 	timeUnder1m: 'Under a minute',
 	timeUnder5m: 'One to five minutes',
@@ -158,8 +159,18 @@ describe('formatCardDayKey', () => {
 })
 
 describe('resultCardChips', () => {
-	test('orders chips attempts, score, streak, mistakes and caps at four', () => {
+	test('orders chips attempts, score, streak, time band; the fifth fact is dropped', () => {
 		const model = buildResultCard(baseInput({ score: 1240, mistakes: 2, hintsUsed: 1 }))
+		expect(resultCardChips(model, STRINGS)).toEqual([
+			{ label: 'Attempts', value: '3 of 6' },
+			{ label: 'Score', value: '1240' },
+			{ label: 'Streak', value: '4' },
+			{ label: 'Time', value: 'One to five minutes' },
+		])
+	})
+
+	test('shows mistakes when no time band competes for the last slot', () => {
+		const model = buildResultCard(baseInput({ score: 1240, mistakes: 2, timeSpentMs: null }))
 		expect(resultCardChips(model, STRINGS)).toEqual([
 			{ label: 'Attempts', value: '3 of 6' },
 			{ label: 'Score', value: '1240' },
@@ -176,6 +187,7 @@ describe('resultCardChips', () => {
 				score: null,
 				mistakes: null,
 				currentStreak: null,
+				timeSpentMs: null,
 			}),
 		)
 		expect(resultCardChips(model, STRINGS)).toEqual([])
@@ -192,6 +204,7 @@ describe('resultCardTextAlternative', () => {
 		expect(alt).toContain('Solved!')
 		expect(alt).toContain('3 of 6')
 		expect(alt).toContain('4-day streak')
+		expect(alt).toContain('One to five minutes')
 		expect(alt).toContain('puzzled.gg/games/word-guess?mode=archive&date=2026-09-21')
 		expect(alt.toLowerCase()).not.toContain('solution')
 	})

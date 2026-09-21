@@ -88,6 +88,7 @@ export interface ResultCardStrings {
 	attemptsLabel: string
 	scoreLabel: string
 	streakLabel: string
+	timeLabel: string
 	mistakesLabel: string
 	timeUnder1m: string
 	timeUnder5m: string
@@ -220,6 +221,11 @@ export function resultCardChips(
 	}
 	if (model.currentStreak != null) {
 		chips.push({ label: strings.streakLabel, value: String(model.currentStreak) })
+	}
+	// The protocol lists the time band as a glanceable fact; it is banded, not exact.
+	const band = resultCardTimeBandText(model, strings)
+	if (band && chips.length < 4) {
+		chips.push({ label: strings.timeLabel, value: band })
 	}
 	if (model.mistakes != null && chips.length < 4) {
 		chips.push({ label: strings.mistakesLabel, value: String(model.mistakes) })
