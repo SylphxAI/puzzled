@@ -9,8 +9,8 @@ Base: origin/main = b199007 (fetched 2026-09-21). bun install --frozen-lockfile:
 3. [x] Tests: result-share.test.ts (resolver + 19 pinned texts + before/after matrix + decision table) + games/shared/result-share-wiring.test.ts (site scan) + share-deep-link-call-sites.test.ts rewritten to the TD-21 architecture.
 4. [x] Mutation proof: name resolution -> raw camel key: RED (6 pass / 7 fail; e.g. Received: "sudoku"); restored byte-identical (md5 ad3cdd7af2ad1a609c8a0ace703e3dbc), GREEN 13/0. Raw logs: notes/td21-mutation-red.txt / -green.txt.
 5. [x] Gates green: unit suite 1164 pass / 6 skip / 0 fail (1170 tests, 119 files); turbo typecheck 2/2; turbo lint green; next build Compiled successfully (build_exit=0; log /tmp/td21-build.txt).
-6. [ ] PR (single, titled TD-21).
+6. [x] PR #177 opened: https://github.com/SylphxAI/puzzled/pull/177 (head bdd6a0e, base main). No enqueue by worker.
 ## Next action
-Open the PR (body drafted from notes/td21-before.md + gates), then report.
+Await CI checks; orchestrator handles merge-queue. Deliverable + report sent.
 
 
