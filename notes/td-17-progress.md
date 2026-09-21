@@ -95,4 +95,4 @@ Base: origin/main = b199007999789d862ac236b94ba010b1c3ff18e1 (fetched + verified
 
 ## Next action
 
-PR: opening against main (head 6327b51 + this notes update). TD-17 closes as: content tool KEPT (decision recorded), brand icons WIRED.
+PR: https://github.com/SylphxAI/puzzled/pull/173 (base main; open for review). TD-17 closes as: content tool KEPT (decision recorded), brand icons WIRED. Local gates green (above).
