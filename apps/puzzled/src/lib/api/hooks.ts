@@ -8,6 +8,7 @@
  */
 
 import {
+	type MutateOptions,
 	type UseMutationOptions,
 	type UseQueryOptions,
 	useMutation,
@@ -47,6 +48,7 @@ import {
 	shouldUseRestPlayResidual,
 } from '@/lib/connect/puzzle-admission'
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
+import { withIdempotencyKey } from '@/lib/idempotency-key'
 import { servedPuzzleId } from '@/lib/product-day'
 
 // ==========================================
@@ -201,6 +203,11 @@ export type SaveResultInput = {
 	difficulty?: string
 	gameSlug: string
 	data?: unknown
+	/**
+	 * Client-minted submission key for this intent (TD-19). `useSaveResult`
+	 * stamps it once per call; callers normally omit it (tests may pin one).
+	 */
+	idempotencyKey?: string
 }
 
 export type SaveResultOutput = {
@@ -213,6 +220,58 @@ export type SaveResultOutput = {
 	error?: string
 }
 
+/**
+ * Submit one finished ritual through PuzzleService.SubmitGuess (sole Connect
+ * authority). Extracted from `useSaveResult` so the submit path can be exercised
+ * without a React renderer; `idempotencyKey` rides through to the wire.
+ */
+export async function submitSaveResult(input: SaveResultInput): Promise<SaveResultOutput> {
+	// Sole Connect authority: PuzzleService.SubmitGuess. No REST fallback.
+	if (input.status !== 'won' && input.status !== 'lost') {
+		throw new ApiError(400, 'status_required_won_or_lost', {
+			code: 'CONNECT_SUBMIT_STATUS',
+			message: 'status_required_won_or_lost',
+		})
+	}
+	const admit = await admitSubmitGuessViaConnect({
+		gameSlug: input.gameSlug,
+		difficulty: input.difficulty,
+		status: input.status,
+		attempts: input.attempts,
+		timeSpentMs: input.timeSpentMs,
+		submission: input.data,
+		puzzleId: servedPuzzleId(input.puzzleId),
+		puzzleDate: input.mode === 'archive' ? input.archiveDate : input.puzzleDate || undefined,
+		idempotencyKey: input.idempotencyKey,
+	})
+	if (admit.ok) {
+		const r = admit.response
+		return {
+			success: r.valid,
+			score: r.score,
+			session: undefined,
+			mode: input.mode ?? 'daily',
+			slice: r.slice || 'S2-puzzle-solution-connect',
+			authority: 'connect' as const,
+			error: r.error,
+		}
+	}
+	if (isAlreadyPlayedError(admit.error)) {
+		return {
+			success: true,
+			session: undefined,
+			mode: input.mode ?? 'daily',
+			slice: 'S2-puzzle-solution-connect',
+			authority: 'connect' as const,
+			error: 'already_played',
+		}
+	}
+	throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+		code: 'CONNECT_PLAY_FAIL_CLOSED',
+		message: admit.error || 'connect_play_fail_closed',
+	})
+}
+
 export function useSaveResult(
 	options?: Omit<
 		UseMutationOptions<SaveResultOutput, ApiError, SaveResultInput, unknown>,
@@ -223,52 +282,8 @@ export function useSaveResult(
 ) {
 	const queryClient = useQueryClient()
 
-	return useMutation({
-		mutationFn: async (input: SaveResultInput) => {
-			// Sole Connect authority: PuzzleService.SubmitGuess. No REST fallback.
-			if (input.status !== 'won' && input.status !== 'lost') {
-				throw new ApiError(400, 'status_required_won_or_lost', {
-					code: 'CONNECT_SUBMIT_STATUS',
-					message: 'status_required_won_or_lost',
-				})
-			}
-			const admit = await admitSubmitGuessViaConnect({
-				gameSlug: input.gameSlug,
-				difficulty: input.difficulty,
-				status: input.status,
-				attempts: input.attempts,
-				timeSpentMs: input.timeSpentMs,
-				submission: input.data,
-				puzzleId: servedPuzzleId(input.puzzleId),
-				puzzleDate: input.mode === 'archive' ? input.archiveDate : input.puzzleDate || undefined,
-			})
-			if (admit.ok) {
-				const r = admit.response
-				return {
-					success: r.valid,
-					score: r.score,
-					session: undefined,
-					mode: input.mode ?? 'daily',
-					slice: r.slice || 'S2-puzzle-solution-connect',
-					authority: 'connect' as const,
-					error: r.error,
-				}
-			}
-			if (isAlreadyPlayedError(admit.error)) {
-				return {
-					success: true,
-					session: undefined,
-					mode: input.mode ?? 'daily',
-					slice: 'S2-puzzle-solution-connect',
-					authority: 'connect' as const,
-					error: 'already_played',
-				}
-			}
-			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-				code: 'CONNECT_PLAY_FAIL_CLOSED',
-				message: admit.error || 'connect_play_fail_closed',
-			})
-		},
+	const mutation = useMutation({
+		mutationFn: submitSaveResult,
 		onSuccess: (data, variables) => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.userStats() })
 			queryClient.invalidateQueries({ queryKey: queryKeys.streakInfo() })
@@ -280,6 +295,22 @@ export function useSaveResult(
 		},
 		...options,
 	})
+
+	// TD-19: stamp one idempotency key per submission intent BEFORE the mutation
+	// starts. The automatic retry (provider.tsx `mutations.retry = 1`) re-runs
+	// `mutationFn` with the same variables, so a retry-after-timeout re-sends the
+	// same key — never a fresh one.
+	return {
+		...mutation,
+		mutate: (
+			input: SaveResultInput,
+			mutateOptions?: MutateOptions<SaveResultOutput, ApiError, SaveResultInput, unknown>,
+		) => mutation.mutate(withIdempotencyKey(input), mutateOptions),
+		mutateAsync: (
+			input: SaveResultInput,
+			mutateOptions?: MutateOptions<SaveResultOutput, ApiError, SaveResultInput, unknown>,
+		) => mutation.mutateAsync(withIdempotencyKey(input), mutateOptions),
+	}
 }
 
 // ==========================================

@@ -34,6 +34,12 @@ export type SubmitGuessInput = {
 	 */
 	puzzleId?: string
 	puzzleDate?: string
+	/**
+	 * Client-minted key naming one submission intent (TD-19). Minted once per
+	 * intent by `lib/idempotency-key`; rides the `X-Puzzled-Idempotency-Key`
+	 * request header so a retried SubmitGuess and its original carry one key.
+	 */
+	idempotencyKey?: string
 }
 
 export function validateGetPuzzleInput(input: GetPuzzleInput): string | null {

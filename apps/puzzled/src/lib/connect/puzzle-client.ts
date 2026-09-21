@@ -4,6 +4,7 @@
  */
 import { create } from '@bufbuild/protobuf'
 import { type Client, createClient } from '@connectrpc/connect'
+import { IDEMPOTENCY_KEY_HEADER } from '@/lib/idempotency-key'
 import {
 	GetDailyRequestSchema,
 	type GetDailyResponse,
@@ -90,6 +91,7 @@ export async function submitGuess(
 	const err = validateSubmitGuessInput(input)
 	if (err) throw new Error(err)
 	const c = client ?? createPuzzleServiceClient()
+	const idempotencyKey = input.idempotencyKey?.trim()
 	return c.submitGuess(
 		create(SubmitGuessRequestSchema, {
 			gameSlug: input.gameSlug.trim(),
@@ -101,5 +103,6 @@ export async function submitGuess(
 			puzzleId: input.puzzleId?.trim() || undefined,
 			puzzleDate: input.puzzleDate?.trim() || undefined,
 		}),
+		idempotencyKey ? { headers: { [IDEMPOTENCY_KEY_HEADER]: idempotencyKey } } : undefined,
 	)
 }
