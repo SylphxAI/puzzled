@@ -84,3 +84,7 @@ accepted result instead of inferring it from an index violation.
   `puzzle-product-authority.ts:55-63` passes the whole `SubmitGuessInput` through (key survives);
   `validateSubmitGuessInput` (puzzle-domain.ts:58-65) does not reject the extra field.
 - Next: focused tests → full gates → mutation proof → PR.
+
+- Focused tests green (recovery pass): `env -u NODE_ENV bun test src/lib/idempotency-key.test.ts src/lib/api/save-result-idempotency.test.ts`
+  → `7 pass / 0 fail, 19 expect() calls` (bun test v1.4.2).
+- Implementation committed. Next: full gates (bun test, typecheck, lint, build), mutation proof, PR.
