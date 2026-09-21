@@ -1,0 +1,43 @@
+DUP-VALUES-IN-en-US 235 values duplicated; 379 redundant occurrences; 2374 flattened values (strings > 2 chars, arrays by JSON)
+  DUP "Premium" x11 admin.users.premium | catalog.premium | catalog.premiumPanel.eyebrow | home.lineup.premium | pricing.compare.premiumColumn
+  DUP "Cancel" x8 admin.plans.cancel | admin.announcements.cancel | admin.featureFlags.cancel | common.cancel | settings.profile.cancel
+  DUP "Streak" x7 settings.overview.stats.streak | settings.playerCard.stats.currentStreak | settings.playerCard.stats.streak | settings.notifications.quickActions.streak | share.card.streakLabel
+  DUP "Settings" x6 admin.sidebar.settings | admin.dashboard.settings | admin.settings.title | common.settings | settings.title
+  DUP "Password" x6 auth.password | reauth.usePassword | reauth.password | settings.account.password.title | settings.security.password
+  DUP "Try again" x6 auth.errorRetry | common.retry | referrals.retry | settings.sessions.retry | stats.retry
+  DUP "Play {game}" x6 catalog.featuredPlay | catalog.closing.play | home.final.play | pricing.hero.freeCta | pricing.plans.playFree
+  DUP "Verified" x5 admin.users.verified | admin.users.tableHeaders.verified | settings.playerCard.verified | settings.profile.emailVerified | settings.email.verified
+  DUP "Refresh" x5 admin.games.refresh | admin.dlq.refresh | admin.auditLogs.filters.refresh | admin.system.refresh | common.refresh
+  DUP "Save" x5 admin.announcements.save | admin.featureFlags.save | common.save | settings.achievements.save | settings.profile.save
+DUP-VALUES-IN-en-GB 0 values duplicated; 0 redundant occurrences; 28 flattened values (strings > 2 chars, arrays by JSON)
+DUP-VALUES-IN-zh-HK 170 values duplicated; 222 redundant occurrences; 2374 flattened values (strings > 2 chars, arrays by JSON)
+  DUP "Premium" x6 admin.users.premium | home.lineup.premium | pricing.compare.premiumColumn | stats.identity.premium | subscription.premium
+  DUP "已驗證" x5 admin.users.verified | admin.users.tableHeaders.verified | settings.playerCard.verified | settings.profile.emailVerified | settings.email.verified
+  DUP "高級版" x5 catalog.premium | catalog.premiumPanel.eyebrow | settings.overview.badges.premium | settings.playerCard.premium | settings.subscription.premium
+  DUP "Refresh" x4 admin.games.refresh | admin.dlq.refresh | admin.system.refresh | common.refresh
+  DUP "電子郵件" x4 auth.email | settings.overview.quickNotifications.email | settings.profile.email | settings.notifications.overview.email
+  DUP "重設密碼" x4 auth.forgotPasswordTitle | auth.resetPasswordTitle | auth.resetPassword | support.resources.reset.title
+  DUP "玩 {game}" x4 home.final.play | pricing.hero.freeCta | pricing.plans.playFree | pricing.cta.play
+  DUP "排行榜" x4 leaderboard.title | nav.leaderboard | stats.viewLeaderboard | subscription.features.leaderboard
+  DUP "個人檔案" x4 nav.profile | settings.nav.profile | settings.search.sections.profile | settings.profile.title
+  DUP "已複製！" x4 referrals.copied | settings.referral.copied | settings.security.copied | settings.recoveryCodes.copied
+DUP-VALUES-IN-zh-TW 8 values duplicated; 9 redundant occurrences; 324 flattened values (strings > 2 chars, arrays by JSON)
+  DUP "已連結的帳號" x3 settings.overview.sections.account | settings.account.connectedAccounts | settings.connectedAccounts.title
+  DUP "看全部遊戲" x2 common.notFound.browseCta | home.lineup.seeAll
+  DUP "隱私政策" x2 consent.learnMore | support.resources.privacy.title
+  DUP "連續 {days} 天" x2 home.hero.streakChip | share.card.streakDays
+  DUP "今天免費" x2 home.lineup.freeToday | home.day.freeToday
+  DUP "每天一個免費模組" x2 pricing.hero.factFree | pricing.compare.rowSuiteFree
+  DUP "上傳照片" x2 settings.profile.avatarUpload.uploadPhoto | settings.profile.uploadPhoto
+  DUP "{date} 續訂" x2 settings.subscription.expiresOn | settings.subscription.renewsOn
+DUP-VALUES-IN-zh-CN 172 values duplicated; 225 redundant occurrences; 2374 flattened values (strings > 2 chars, arrays by JSON)
+  DUP "Premium" x6 admin.users.premium | home.lineup.premium | pricing.compare.premiumColumn | stats.identity.premium | subscription.premium
+  DUP "已验证" x5 admin.users.verified | admin.users.tableHeaders.verified | settings.playerCard.verified | settings.profile.emailVerified | settings.email.verified
+  DUP "高级版" x5 catalog.premium | catalog.premiumPanel.eyebrow | settings.overview.badges.premium | settings.playerCard.premium | settings.subscription.premium
+  DUP "Refresh" x4 admin.games.refresh | admin.dlq.refresh | admin.system.refresh | common.refresh
+  DUP "重置密码" x4 auth.forgotPasswordTitle | auth.resetPasswordTitle | auth.resetPassword | support.resources.reset.title
+  DUP "隐私政策" x4 consent.learnMore | footer.privacy | legal.privacy.title | support.resources.privacy.title
+  DUP "玩 {game}" x4 home.final.play | pricing.hero.freeCta | pricing.plans.playFree | pricing.cta.play
+  DUP "排行榜" x4 leaderboard.title | nav.leaderboard | stats.viewLeaderboard | subscription.features.leaderboard
+  DUP "个人资料" x4 nav.profile | settings.nav.profile | settings.search.sections.profile | settings.profile.title
+  DUP "已复制！" x4 referrals.copied | settings.referral.copied | settings.security.copied | settings.recoveryCodes.copied

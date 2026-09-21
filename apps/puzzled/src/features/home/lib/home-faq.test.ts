@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import type { Locale } from '@/lib/i18n/config'
+import { resolveLocale } from '../../../../scripts/i18n-resolved-catalogue'
 import { HOME_FAQ_KEYS, HOME_FAQ_NAMESPACE } from './home-faq'
 
 /**
- * Home FAQ copy oracle.
+ * Home FAQ copy oracle (reads the resolved catalogue: fallback chain applied).
  *
  * `MarketingFaq` renders `t(\`\${key}.question\`)` inside the namespace the page
  * hands it, and next-intl echoes the dotted path when a message is missing. A
@@ -37,10 +39,12 @@ function resolve(tree: Json, path: string): string {
 	return typeof current === 'string' ? current : path
 }
 
+/**
+ * The `home` namespace as the runtime resolves it: an overlay locale carries
+ * only its deltas on disk, so reading the file alone would miss the fallback.
+ */
 function loadHome(locale: string): Json {
-	return JSON.parse(
-		readFileSync(join(APP_ROOT, 'src', 'messages', locale, 'home.json'), 'utf8'),
-	) as Json
+	return resolveLocale(locale as Locale).home as Json
 }
 
 /**

@@ -1,34 +1,40 @@
 # TD-01 - message-catalogue overlays: progress log
 
-Worker is recovery-tolerant: update this file after every step; committed copies live at
-`notes/td01-progress.md` on branch `debt/td01-message-overlays` (push each step).
+Worker is recovery-tolerant: state after every step lands here and in `notes/td01-proof.md`;
+commit into the branch and push (explicit refspec, read back via ls-remote).
 
-## State @ 2026-09-21 ~03:55 BST
-- Worktree: `$HOME/workspace/.worktrees/github.com/SylphxAI/puzzled/td01`
-- Branch: `debt/td01-message-overlays`, based on origin/main `976210e` (fetched 2026-09-21 03:37 BST); no prior td01 branch existed (ls-remote empty).
-- Host notes: `$HOME/work/pz-program/notes/td01-progress.md`. Host env: NODE_ENV=production exported; tests as `env -u NODE_ENV bun test ...`; git/gh prefixed `env -u GH_TOKEN -u GITHUB_TOKEN`.
-
-## WAITING ON (before conversion starts)
-- PR #169 `debt/td06-admin-audit` edits `apps/puzzled/src/messages/*/admin.json` (all 5 locales; +2 -1 each) and is in the merge queue (orchestrator note 03:35: AWAITING_CHECKS pos 1). Company law: branch off the post-#169 main, never stack on a moving base.
-- Background watcher polls `gh pr view 169 --json state,mergedAt` every 60s (bounded 90 min).
+## State @ 2026-09-21 ~04:10 BST
+- Worktree: `$HOME/workspace/.worktrees/github.com/SylphxAI/puzzled/td01`; branch `debt/td01-message-overlays`.
+- Base: origin/main `d6a5f56` (post-#169). HEAD: `a27b0fe` (conversion commit) + uncommitted: 2 feature-test
+  adaptations, resolver warning fix, evidence notes (about to commit).
+- PR #169 (`debt/td06-admin-audit`) landed while this job started; branch was rebased onto it before any
+  work (no stale base), per company law.
 
 ## Done
-- RECON: request.ts (446 lines) + config.ts (189 lines) read. Fallback chain from LOCALE_REGISTRY: en-US(null) | en-GB->en-US | zh-HK(null) | zh-TW->zh-HK | zh-CN(null).
-  => Overlay locales per the ACTUAL chain: ONLY en-GB (over en-US) and zh-TW (over zh-HK). zh-CN is a base (fallback null) - its files must stay complete; the register row's 'zh-CN overlay over zh-HK' would need a fallback change = behaviour change, out of scope.
-- loadMessages = deepMerge({...fallbackMessages}, localeMessages); games namespace added via resolveGameMessages (untouched).
-- Consumers of messages/**: request.ts explicit imports; `player-facing-identity.test.ts` (scans whole src/messages tree; asserts >=1 entry per locale dir); `share-card-copy.test.ts`, `difficulty-copy.test.ts` (shallow spread - must become deep merge), `notification-preferences.a11y.test.ts` (raw catalogues - must become resolved). No existing messages key-parity guard found.
-- Proof-tool feasibility: bun CAN import `src/lib/i18n/game-messages.ts` (21 keys for en-GB) => the dump can include the games namespace = exactly loadMessages.
-- Duplicate-value probe (leaf strings, raw files, value at >=2 paths): en-GB 237, zh-HK 230, zh-TW 231, zh-CN 234, en-US 237. Register (e590b5c) said 232/168 with unknown definition - ours will be defined precisely in the script.
-- Preflight: only other open PR = #153 (s2/quality-gates; no messages files).
+- RECON: request.ts/config.ts; fallback chain en-US(null) | en-GB->en-US | zh-HK(null) | zh-TW->zh-HK |
+  zh-CN(null). Overlays = en-GB, zh-TW only; zh-CN is a base (register row's zh-CN-over-zh-HK idea would
+  change behaviour; out of scope).
+- Tools shipped: `scripts/i18n-resolved-catalogue.ts` (dump/compare/parity, mechanical replication of
+  loadMessages), `scripts/i18n-collapse-overlays.ts` (collapse + self-proof + request.ts sync),
+  `scripts/i18n-report-duplicate-values.ts` (register definition).
+- BEFORE dump at 26ddd42: 2723 leaves x 32 namespaces each locale; hashes in `notes/td01-proof.md`.
+- Conversion applied: 155 -> 118 files (37 deleted, 25 collapsed); request.ts pruned 74 lines;
+  LOCALE_MESSAGES = Partial; en-GB kept 7 files, zh-TW kept 18.
+- ZERO-DIFF proof: all 5 locales byte-identical (compare prints EQUAL x5, ZERO-DIFF); after-hashes equal
+  before-hashes.
+- Tests: 4 catalogue readers resolved (difficulty-copy, share-card-copy, notification-preferences.a11y) +
+  2 fs readers missed by the first grep, found by the failing suite and adapted (home-faq.test.ts,
+  catalog-messages.test.ts - both under src/features but test-only). Guard added:
+  `src/lib/i18n/message-catalogue.test.ts` (imports-vs-disk, delta-only overlays, structure parity).
+- Mutation proofs (raw in `notes/td01-mutations.txt`): redundant overlay value -> guard fail naming
+  en-GB/settings.json; extra key -> fail naming zh-TW/nav; dead import -> fail naming admin-panel.json;
+  each restored -> 3 pass / 0 fail, `git status --porcelain` clean.
+- Full suite: 1141 pass / 6 skip / 0 fail (1147 tests, 116 files, 114.65s) - `notes/td01-tests-full2.txt`.
+- typecheck RC=0 (both tsconfigs); lint RC=0 (23 pre-existing infos, 0 errors).
+- Duplicates report: `notes/td01-duplicates.txt` (235/235/170/170/172 vs register 232/168 at e590b5c).
 
-## Next actions (in order)
-1. (when #169 merges) fetch origin main; rebase branch onto new origin/main (no commits yet).
-2. Write scripts: `apps/puzzled/scripts/i18n-resolved-catalogue.ts` (dump/compare), `apps/puzzled/scripts/i18n-report-duplicate-values.ts`, `apps/puzzled/scripts/i18n-collapse-overlays.ts` (conversion + self-verify).
-3. BEFORE dump -> `$HOME/work/pz-program/notes/td01-before/<locale>.json` + sha256 per locale; commit scripts + proof note.
-4. Convert overlays; delete empty files; update request.ts imports + partial type.
-5. AFTER dump + comparator: expect zero diffs (prints first differing path on failure); quote counts.
-6. Adapt 3 tests to resolved catalogues; add guard `src/lib/i18n/message-catalogue.test.ts` (import-list vs disk; resolved structure parity per namespace vs en-US; encode exceptions w/ comments if base shows divergences).
-7. Guard mutation proof: break one overlay key -> red; restore -> green.
-8. Duplicates report output into notes.
-9. Gates: `env -u NODE_ENV bun test src`; typecheck; biome; `SKIP_ENV_VALIDATION=true NODE_ENV=production bun run build`.
-10. Push each step (explicit refspec heads, read back via ls-remote). PR: before/after counts, zero-diff proof, guard+mutation evidence.
+## Next actions
+1. Finish `bun run build` (running) -> record RC in `notes/td01-build.txt`.
+2. Commit remaining files + evidence; push; read ref back.
+3. Open ONE PR (body: before/after counts, zero-diff proof, guard + mutation evidence, checks).
+4. Hand off to independent review (per company workflow).

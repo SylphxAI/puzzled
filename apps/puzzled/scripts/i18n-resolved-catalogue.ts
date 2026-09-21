@@ -290,7 +290,7 @@ export function parity(): number {
 				for (const entry of extra.slice(0, 5)) console.log(`  EXTRA ${entry}`)
 			}
 		}
-		console.log(`PARITY-OK ${locale}`)
+		if (localeProblems === 0) console.log(`PARITY-OK ${locale}`)
 	}
 	if (problems === 0) {
 		console.log('PARITY-ZERO: every locale matches the en-US leaf structure')
