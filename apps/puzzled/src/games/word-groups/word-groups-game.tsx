@@ -8,10 +8,9 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
 import { ConnectionsIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { MistakeDots, SolvedCategory, WordGrid } from './components'
@@ -149,6 +148,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		}, 100)
 	}, [isShuffling, shuffle])
 
+	const shareResult = useResultShare()
 	const handleShare = async () => {
 		const emojiGrid = guessHistory
 			.map((guess) => {
@@ -171,25 +171,14 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 		// Generate engaging share text with personality
 		const status = gameStatus as 'won' | 'lost'
 
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		const outcome = await shareResult({
 			gameSlug: 'word-groups',
 			puzzleDate,
-			gameName: 'Threads',
 			status,
 			statLine: emojiGrid,
 		})
 
-		try {
-			if (navigator.share) {
-				await navigator.share({ text })
-			} else {
-				await navigator.clipboard.writeText(text)
-				showToastMessage(tShare('copied'))
-			}
-		} catch {
-			// User cancelled sharing
-		}
+		if (outcome === 'copied') showToastMessage(tShare('copied'))
 	}
 
 	// Sort solved categories by level for display

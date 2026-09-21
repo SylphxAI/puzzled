@@ -11,10 +11,10 @@ import {
 	type ResultCardTile,
 	resultCardTextAlternative,
 } from '@/features/daily/lib/result-card'
+import { resolveModuleDisplayName } from '@/features/daily/lib/result-share'
 import { shareRitualResultCard } from '@/features/daily/lib/share-result-card'
 import { type GameSlug, getHowToPlayConfig } from '@/games/how-to-play-registry'
 import { useTodayPercentile } from '@/lib/api'
-import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { productDayKey } from '@/lib/product-day'
 import { cn, getBaseUrl } from '@/lib/utils'
@@ -109,7 +109,7 @@ export function GameResultCard({
 		buildResultCard({
 			origin: getBaseUrl('origin'),
 			gameSlug: gameType,
-			gameName: tGames(`${slugToCamelCase(gameType)}.name`, { defaultValue: gameType }),
+			gameName: resolveModuleDisplayName(tGames, gameType),
 			theme: getHowToPlayConfig(gameType)?.display.theme ?? 'slate',
 			mode,
 			status,

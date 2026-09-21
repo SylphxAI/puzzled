@@ -13,11 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { cn, getBaseUrl } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import type { QueensPuzzleData, QueensSolution } from './types'
 import { REGION_COLORS } from './types'
 import { useQueens } from './use-queens'
@@ -80,19 +80,17 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	}, [game.state.isComplete, game.state.grid, endGame])
 
 	// Share result
+	const shareResult = useResultShare()
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
 
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		void shareResult({
 			gameSlug: 'crowns',
 			puzzleDate,
-			gameName: 'Crowns',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
-		void navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [shareResult, game.state.endTime, startTime, puzzleDate])
 
 	// Reset game
 	const handleReset = useCallback(() => {

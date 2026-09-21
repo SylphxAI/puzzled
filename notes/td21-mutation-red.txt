@@ -1,0 +1,568 @@
+bun test v1.4.2 (744846f84)
+
+src/features/daily/lib/result-share.test.ts:
+(pass) resolveModuleDisplayName > the scan covers the registered suite [0.03ms]
+109 | 			playerTitle: PLAYER_TITLE[canonicalizeGameSlug(slug)],
+110 | 		}))
+111 | 		const bad = rows.filter(
+112 | 			(r) => r.resolved !== r.catalogue || r.resolved !== r.config || r.resolved !== r.playerTitle,
+113 | 		)
+114 | 		expect(bad).toEqual([])
+                    ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "catalogue": "Five",
++     "config": "Five",
++     "playerTitle": "Five",
++     "resolved": "wordGuess",
++     "slug": "word-guess",
++   },
++   {
++     "catalogue": "Threads",
++     "config": "Threads",
++     "playerTitle": "Threads",
++     "resolved": "wordGroups",
++     "slug": "word-groups",
++   },
++   {
++     "catalogue": "Hive",
++     "config": "Hive",
++     "playerTitle": "Hive",
++     "resolved": "wordHive",
++     "slug": "word-hive",
++   },
++   {
++     "catalogue": "Mini Grid",
++     "config": "Mini Grid",
++     "playerTitle": "Mini Grid",
++     "resolved": "crossword",
++     "slug": "crossword",
++   },
++   {
++     "catalogue": "Sudoku",
++     "config": "Sudoku",
++     "playerTitle": "Sudoku",
++     "resolved": "sudoku",
++     "slug": "sudoku",
++   },
++   {
++     "catalogue": "Paint",
++     "config": "Paint",
++     "playerTitle": "Paint",
++     "resolved": "nonogram",
++     "slug": "nonogram",
++   },
++   {
++     "catalogue": "Rungs",
++     "config": "Rungs",
++     "playerTitle": "Rungs",
++     "resolved": "wordLadder",
++     "slug": "word-ladder",
++   },
++   {
++     "catalogue": "Arithmo",
++     "config": "Arithmo",
++     "playerTitle": "Arithmo",
++     "resolved": "arithmo",
++     "slug": "arithmo",
++   },
++   {
++     "catalogue": "Match",
++     "config": "Match",
++     "playerTitle": "Match",
++     "resolved": "patternMatch",
++     "slug": "pattern-match",
++   },
++   {
++     "catalogue": "Slides",
++     "config": "Slides",
++     "playerTitle": "Slides",
++     "resolved": "blockSlide",
++     "slug": "block-slide",
++   },
++   {
++     "catalogue": "Crowns",
++     "config": "Crowns",
++     "playerTitle": "Crowns",
++     "resolved": "crowns",
++     "slug": "crowns",
++   },
++   {
++     "catalogue": "Duo",
++     "config": "Duo",
++     "playerTitle": "Duo",
++     "resolved": "duo",
++     "slug": "duo",
++   },
++   {
++     "catalogue": "Frame",
++     "config": "Frame",
++     "playerTitle": "Frame",
++     "resolved": "wordBox",
++     "slug": "word-box",
++   },
++   {
++     "catalogue": "Quad",
++     "config": "Quad",
++     "playerTitle": "Quad",
++     "resolved": "quadWords",
++     "slug": "quad-words",
++   },
++   {
++     "catalogue": "Cage Sudoku",
++     "config": "Cage Sudoku",
++     "playerTitle": "Cage Sudoku",
++     "resolved": "killerSudoku",
++     "slug": "killer-sudoku",
++   },
++   {
++     "catalogue": "Cipher",
++     "config": "Cipher",
++     "playerTitle": "Cipher",
++     "resolved": "cryptogram",
++     "slug": "cryptogram",
++   },
++   {
++     "catalogue": "Hunt",
++     "config": "Hunt",
++     "playerTitle": "Hunt",
++     "resolved": "wordSearch",
++     "slug": "word-search",
++   },
++   {
++     "catalogue": "Path",
++     "config": "Path",
++     "playerTitle": "Path",
++     "resolved": "numberPath",
++     "slug": "number-path",
++   },
++   {
++     "catalogue": "Spots",
++     "config": "Spots",
++     "playerTitle": "Spots",
++     "resolved": "pipPlace",
++     "slug": "pip-place",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 135
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:114:15)
+(fail) resolveModuleDisplayName > resolves the same catalogue name every served surface shows [2.72ms]
+114 | 		expect(bad).toEqual([])
+115 | 	})
+116 | 
+117 | 	test('falls back to the registry title when the catalogue key is missing', () => {
+118 | 		const empty: ModuleMessageLookup = Object.assign((key: string) => key, { has: () => false })
+119 | 		expect(resolveModuleDisplayName(empty, 'killer-sudoku')).toBe('Cage Sudoku')
+                                                                 ^
+error: expect(received).toBe(expected)
+
+Expected: "Cage Sudoku"
+Received: "killerSudoku"
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:119:60)
+(fail) resolveModuleDisplayName > falls back to the registry title when the catalogue key is missing [0.33ms]
+128 | 			resolved: resolveModuleDisplayName(READER, slug),
+129 | 		}))
+130 | 		const drifted = rows
+131 | 			.filter((r) => r.literal !== r.resolved)
+132 | 			.map((r) => r.slug + ': ' + r.literal + ' -> ' + r.resolved)
+133 | 		expect(drifted).toEqual(['crossword: Crossword Mini -> Mini Grid'])
+                        ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "crossword: Crossword Mini -> Mini Grid",
++   "arithmo: Arithmo -> arithmo",
++   "block-slide: Slides -> blockSlide",
++   "crossword: Crossword Mini -> crossword",
++   "cryptogram: Cipher -> cryptogram",
++   "killer-sudoku: Cage Sudoku -> killerSudoku",
++   "nonogram: Paint -> nonogram",
++   "number-path: Path -> numberPath",
++   "pattern-match: Match -> patternMatch",
++   "pip-place: Spots -> pipPlace",
++   "quad-words: Quad -> quadWords",
++   "crowns: Crowns -> crowns",
++   "sudoku: Sudoku -> sudoku",
++   "duo: Duo -> duo",
++   "word-box: Frame -> wordBox",
++   "word-groups: Threads -> wordGroups",
++   "word-guess: Five -> wordGuess",
++   "word-hive: Hive -> wordHive",
++   "word-ladder: Rungs -> wordLadder",
++   "word-search: Hunt -> wordSearch",
+  ]
+
+- Expected  - 1
++ Received  + 19
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:133:19)
+(fail) share text: before vs after per converted site > 18 of 19 sites share the same name they shared before; crossword drift corrected [0.50ms]
+137 | 	test('every converted module builds its pinned share text', () => {
+138 | 		const bad = EXPECTED_TEXTS.map(([slug, expected]) => {
+139 | 			const built = buildResultShareText(READER, facts(slug), ORIGIN)
+140 | 			return built === expected ? null : { slug, built, expected }
+141 | 		}).filter((row) => row !== null)
+142 | 		expect(bad).toEqual([])
+                    ^
+error: expect(received).toEqual(expected)
+
+- []
++ [
++   {
++     "built": 
++ "🏆 arithmo • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/arithmo?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Arithmo • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/arithmo?mode=archive&date=2026-09-21"
++ ,
++     "slug": "arithmo",
++   },
++   {
++     "built": 
++ "🏆 blockSlide • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/block-slide?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Slides • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/block-slide?mode=archive&date=2026-09-21"
++ ,
++     "slug": "block-slide",
++   },
++   {
++     "built": 
++ "🏆 crossword • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/crossword?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Mini Grid • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/crossword?mode=archive&date=2026-09-21"
++ ,
++     "slug": "crossword",
++   },
++   {
++     "built": 
++ "🏆 cryptogram • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/cryptogram?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Cipher • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/cryptogram?mode=archive&date=2026-09-21"
++ ,
++     "slug": "cryptogram",
++   },
++   {
++     "built": 
++ "🏆 killerSudoku • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/killer-sudoku?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Cage Sudoku • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/killer-sudoku?mode=archive&date=2026-09-21"
++ ,
++     "slug": "killer-sudoku",
++   },
++   {
++     "built": 
++ "🏆 nonogram • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/nonogram?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Paint • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/nonogram?mode=archive&date=2026-09-21"
++ ,
++     "slug": "nonogram",
++   },
++   {
++     "built": 
++ "🏆 numberPath • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/number-path?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Path • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/number-path?mode=archive&date=2026-09-21"
++ ,
++     "slug": "number-path",
++   },
++   {
++     "built": 
++ "🏆 patternMatch • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/pattern-match?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Match • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/pattern-match?mode=archive&date=2026-09-21"
++ ,
++     "slug": "pattern-match",
++   },
++   {
++     "built": 
++ "🏆 pipPlace • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/pip-place?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Spots • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/pip-place?mode=archive&date=2026-09-21"
++ ,
++     "slug": "pip-place",
++   },
++   {
++     "built": 
++ "🏆 quadWords • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/quad-words?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Quad • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/quad-words?mode=archive&date=2026-09-21"
++ ,
++     "slug": "quad-words",
++   },
++   {
++     "built": 
++ "🏆 crowns • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/crowns?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Crowns • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/crowns?mode=archive&date=2026-09-21"
++ ,
++     "slug": "crowns",
++   },
++   {
++     "built": 
++ "🏆 sudoku • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/sudoku?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Sudoku • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/sudoku?mode=archive&date=2026-09-21"
++ ,
++     "slug": "sudoku",
++   },
++   {
++     "built": 
++ "🏆 duo • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/duo?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Duo • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/duo?mode=archive&date=2026-09-21"
++ ,
++     "slug": "duo",
++   },
++   {
++     "built": 
++ "🏆 wordBox • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-box?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Frame • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-box?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-box",
++   },
++   {
++     "built": 
++ "🏆 wordGroups • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-groups?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Threads • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-groups?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-groups",
++   },
++   {
++     "built": 
++ "🏆 wordGuess • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-guess?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Five • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-guess?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-guess",
++   },
++   {
++     "built": 
++ "🏆 wordHive • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-hive?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Hive • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-hive?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-hive",
++   },
++   {
++     "built": 
++ "🏆 wordLadder • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-ladder?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Rungs • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-ladder?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-ladder",
++   },
++   {
++     "built": 
++ "🏆 wordSearch • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-search?mode=archive&date=2026-09-21"
++ ,
++     "expected": 
++ "🏆 Hunt • 2026-09-21
++ ⏱️ 1:23
++ 
++ puzzled.gg/games/word-search?mode=archive&date=2026-09-21"
++ ,
++     "slug": "word-search",
++   },
++ ]
+
+- Expected  - 1
++ Received  + 287
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:142:15)
+(fail) share text: before vs after per converted site > every converted module builds its pinned share text [0.87ms]
+152 | 				attempts: 3,
+153 | 				statLine: '🟪🟧⬛\n⬛🟪🟧',
+154 | 			},
+155 | 			ORIGIN,
+156 | 		)
+157 | 		expect(text).toBe(
+                     ^
+error: expect(received).toBe(expected)
+
+- "🏆 Five • 2026-09-21
++ "🏆 wordGuess • 2026-09-21
+  🟪🟧⬛
+  ⬛🟪🟧
+  
+  puzzled.gg/games/word-guess?mode=archive&date=2026-09-21"
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:157:16)
+(fail) share text: before vs after per converted site > word-guess score grid is pinned byte-for-byte [0.23ms]
+160 | 	})
+161 | 
+162 | 	test('crossword never shares the drifted literal again', () => {
+163 | 		const text = buildResultShareText(READER, facts('crossword'), ORIGIN)
+164 | 		expect(text).not.toContain('Crossword Mini')
+165 | 		expect(text.startsWith('🏆 Mini Grid • 2026-09-21')).toBe(true)
+                                                             ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:165:56)
+(fail) share text: before vs after per converted site > crossword never shares the drifted literal again [0.34ms]
+165 | 		expect(text.startsWith('🏆 Mini Grid • 2026-09-21')).toBe(true)
+166 | 	})
+167 | 
+168 | 	test('a losing result keeps the shipped failed line', () => {
+169 | 		const text = buildResultShareText(READER, { gameSlug: 'sudoku', status: 'lost' }, ORIGIN)
+170 | 		expect(text).toContain('❌ Sudoku\n❌ Failed')
+                     ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "❌ Sudoku\n❌ Failed"
+Received: "❌ sudoku\n❌ Failed\n\npuzzled.gg/games/sudoku"
+
+      at <anonymous> (/data/sylphx/home/workspace/.worktrees/github.com/SylphxAI/puzzled/td-21/apps/puzzled/src/features/daily/lib/result-share.test.ts:170:16)
+(fail) share text: before vs after per converted site > a losing result keeps the shipped failed line [0.30ms]
+(pass) shareResultText decision table > uses the share sheet when available and passes the text through [0.29ms]
+(pass) shareResultText decision table > a cancelled share sheet stays silent (no clipboard write) [0.12ms]
+(pass) shareResultText decision table > a refused share falls through to the clipboard [0.08ms]
+(pass) shareResultText decision table > no share sheet means a plain clipboard copy [0.05ms]
+(pass) shareResultText decision table > neither share nor clipboard reports unavailable - never a silent claim [0.04ms]
+
+ 6 pass
+ 7 fail
+ 20 expect() calls
+Ran 13 tests across 1 file. [180.00ms]

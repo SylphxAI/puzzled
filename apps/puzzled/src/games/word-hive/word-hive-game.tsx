@@ -8,10 +8,9 @@ import { Celebration, StarBurst } from '@/features/celebration/components/celebr
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { getBaseUrl } from '@/lib/utils'
 import { SpellingBeeIcon } from '@/shared/components/ui/game-icons'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import { CurrentWord, Honeycomb, RankDisplay, WordList } from './components'
@@ -152,26 +151,16 @@ export function WordHiveGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate 
 		})
 	}
 
+	const shareResult = useResultShare()
 	const handleShare = async () => {
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		const outcome = await shareResult({
 			gameSlug: 'word-hive',
 			puzzleDate,
-			gameName: 'Hive',
 			status: 'won',
 			statLine: `${game.score} points`,
 		})
 
-		try {
-			if (navigator.share) {
-				await navigator.share({ text })
-			} else {
-				await navigator.clipboard.writeText(text)
-				showToastMsg(tShare('copied'))
-			}
-		} catch {
-			// User cancelled
-		}
+		if (outcome === 'copied') showToastMsg(tShare('copied'))
 	}
 
 	// Ready screen

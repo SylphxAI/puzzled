@@ -1,12 +1,17 @@
 /**
- * Every share call site carries the day (G1).
+ * Every share call site carries the day (G1); one helper owns the formatter (TD-21).
  *
  * `formatRitualShareText` emits the `?mode=archive&date=` deep link only when
  * the caller passes the product day, and G1 shipped half-closed because most
- * module share buttons passed nothing. Each game receives `puzzleDate` from
- * GameRenderer, so the day is in scope at every call site in `src/games`; this
- * walks them and fails if one stops passing it. Nothing else in the suite can
- * see a component's argument list without a React renderer.
+ * module share buttons passed nothing. TD-21 then converged the 20 share
+ * surfaces on one helper (useResultShare -> shareResult(...)), so the direct
+ * formatter calls now live in exactly two places: the helper itself and the
+ * module-conformance oracle. This audit keeps both facts true: every surface
+ * call still passes `puzzleDate` (the day flows through the helper's facts),
+ * and no module quietly grows its own formatter call again.
+ *
+ * Nothing else in the suite can see a component's argument list without a
+ * React renderer.
  */
 import { describe, expect, test } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -20,37 +25,46 @@ function walk(dir: string, out: string[] = []): string[] {
 		if (statSync(path).isDirectory()) {
 			if (entry === 'node_modules') continue
 			walk(path, out)
-		} else if (entry.endsWith('.tsx') && !entry.endsWith('.test.tsx')) {
+		} else if (/\.tsx?$/.test(entry) && !entry.includes('.test.')) {
 			out.push(path)
 		}
 	}
 	return out
 }
 
-/** The argument object of each `formatRitualShareText({ ... })` call. */
-function shareCallArguments(source: string): string[] {
+const rel = (file: string): string => file.replace(`${SRC}/`, '')
+
+/** The argument object of each `shareResult({ ... })` call on a surface. */
+function shareHelperCallArguments(source: string): string[] {
 	const calls: string[] = []
-	const pattern = /formatRitualShareText\(\{\n([\s\S]*?)\n\t{2}\}\)/g
+	const pattern = /shareResult\(\{\n([\s\S]*?)\n\t{2}\}\)/g
 	for (const match of source.matchAll(pattern)) calls.push(match[1])
 	return calls
 }
 
-describe('formatRitualShareText call sites', () => {
-	const files = walk(SRC).filter((file) =>
+describe('share call sites after TD-21', () => {
+	const files = walk(SRC)
+	const direct = files.filter((file) =>
 		readFileSync(file, 'utf8').includes('formatRitualShareText({'),
 	)
+	const surfaces = files.filter((file) => readFileSync(file, 'utf8').includes('shareResult({'))
 
 	test('the share surfaces are the ones this audit expects', () => {
-		// Every module, plus the post-finish result card.
-		expect(files.length).toBeGreaterThanOrEqual(20)
-		for (const file of files) {
-			expect(shareCallArguments(readFileSync(file, 'utf8')).length).toBeGreaterThanOrEqual(1)
+		// TD-21: only the one helper and the conformance oracle call the formatter.
+		expect(direct.map(rel).sort()).toEqual([
+			'features/daily/lib/result-share.ts',
+			'games/module-conformance.ts',
+		])
+		// Every game module plus the completed view calls the helper.
+		expect(surfaces.length).toBe(20)
+		for (const file of surfaces) {
+			expect(shareHelperCallArguments(readFileSync(file, 'utf8')).length).toBeGreaterThanOrEqual(1)
 		}
 	})
 
 	test('every share call passes the product day, so the link is dated', () => {
-		for (const file of files) {
-			for (const args of shareCallArguments(readFileSync(file, 'utf8'))) {
+		for (const file of surfaces) {
+			for (const args of shareHelperCallArguments(readFileSync(file, 'utf8'))) {
 				expect(`${file}:${args}`).toContain('puzzleDate')
 			}
 		}

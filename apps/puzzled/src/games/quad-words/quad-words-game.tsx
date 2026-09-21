@@ -13,11 +13,11 @@ import { Celebration } from '@/features/celebration/components/celebration'
 import { GameResultModal } from '@/features/daily/components/game-result-modal'
 import { GuestSignupPrompt } from '@/features/daily/components/guest-signup-prompt'
 import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
-import { formatRitualShareText } from '@/features/daily/lib/share-text'
+import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
 import { parsePuzzleDataClient } from '@/games/types'
-import { cn, getBaseUrl } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { triggerHaptic, triggerSound } from '@/shared/hooks'
 import type { LetterStatus, QuordlePuzzleData, QuordleSolution } from './types'
 import { evaluateGuess, MAX_GUESSES } from './types'
@@ -143,18 +143,16 @@ export function QuadWordsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [isReady, game, handleSubmit])
 
+	const shareResult = useResultShare()
 	const handleShare = useCallback(() => {
 		const timeMs = game.state.endTime && startTime ? game.state.endTime - startTime : 0
-		const text = formatRitualShareText({
-			origin: getBaseUrl('origin'),
+		void shareResult({
 			gameSlug: 'quad-words',
 			puzzleDate,
-			gameName: 'Quad',
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
 		})
-		navigator.clipboard.writeText(text)
-	}, [game.state.endTime, startTime, puzzleDate])
+	}, [shareResult, game.state.endTime, startTime, puzzleDate])
 
 	// Ready screen
 	if (isReady) {

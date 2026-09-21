@@ -1,0 +1,21 @@
+bun test v1.4.2 (744846f84)
+
+src/features/daily/lib/result-share.test.ts:
+(pass) resolveModuleDisplayName > the scan covers the registered suite [0.03ms]
+(pass) resolveModuleDisplayName > resolves the same catalogue name every served surface shows [0.64ms]
+(pass) resolveModuleDisplayName > falls back to the registry title when the catalogue key is missing [0.05ms]
+(pass) share text: before vs after per converted site > 18 of 19 sites share the same name they shared before; crossword drift corrected [0.39ms]
+(pass) share text: before vs after per converted site > every converted module builds its pinned share text [0.55ms]
+(pass) share text: before vs after per converted site > word-guess score grid is pinned byte-for-byte [0.04ms]
+(pass) share text: before vs after per converted site > crossword never shares the drifted literal again [0.07ms]
+(pass) share text: before vs after per converted site > a losing result keeps the shipped failed line [0.04ms]
+(pass) shareResultText decision table > uses the share sheet when available and passes the text through [0.26ms]
+(pass) shareResultText decision table > a cancelled share sheet stays silent (no clipboard write) [0.12ms]
+(pass) shareResultText decision table > a refused share falls through to the clipboard [0.09ms]
+(pass) shareResultText decision table > no share sheet means a plain clipboard copy [0.05ms]
+(pass) shareResultText decision table > neither share nor clipboard reports unavailable - never a silent claim [0.04ms]
+
+ 13 pass
+ 0 fail
+ 21 expect() calls
+Ran 13 tests across 1 file. [148.00ms]
