@@ -9,26 +9,23 @@
  */
 
 import { freeGameForDayKey } from '@/lib/free-rotation'
-import { formatDayKey, isValidDayKey } from '@/lib/product-day'
+import { formatDayKey, isValidDayKey, parseDayKey } from '@/lib/product-day'
 
 /** Days of history the archive index lists. */
 export const ARCHIVE_WINDOW_DAYS = 30
-
-const DAY_KEY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
 /**
  * Shift a civil day key by whole days.
  *
  * UTC arithmetic carries no DST, so this crosses month, year and leap
- * boundaries exactly. `invalid_day_key` is the same error shape the day-key
- * helpers use, so a bad key fails loudly instead of silently listing nothing.
+ * boundaries exactly. The key is read through the shared `parseDayKey`, so
+ * `invalid_day_key` is the same error shape the other day-key helpers use
+ * and a bad key fails loudly instead of silently listing nothing.
  */
 function shiftDayKey(dayKey: string, deltaDays: number): string {
-	const match = DAY_KEY_PATTERN.exec(dayKey.trim())
-	if (!match) throw new Error(`invalid_day_key:${dayKey}`)
-	const utc = new Date(
-		Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + deltaDays),
-	)
+	const parts = parseDayKey(dayKey)
+	if (!parts) throw new Error(`invalid_day_key:${dayKey}`)
+	const utc = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + deltaDays))
 	return formatDayKey(utc.getUTCFullYear(), utc.getUTCMonth() + 1, utc.getUTCDate())
 }
 

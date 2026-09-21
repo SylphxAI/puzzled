@@ -4,6 +4,7 @@ import {
 	isValidDayKey,
 	ordinal0FromDayKey,
 	PRODUCT_DAY_TZ,
+	parseDayKey,
 	productDayKey,
 	resolveArchiveDayKey,
 	servedPuzzleId,
@@ -50,6 +51,31 @@ describe('isValidDayKey', () => {
 
 	test('trims surrounding whitespace', () => {
 		expect(isValidDayKey(' 2026-08-12 ')).toBe(true)
+	})
+})
+
+describe('parseDayKey', () => {
+	test('parses the parts of a well-formed key, trimming the edges', () => {
+		expect(parseDayKey('2026-09-21')).toEqual({ year: 2026, month: 9, day: 21 })
+		expect(parseDayKey(' 2026-09-21 ')).toEqual({ year: 2026, month: 9, day: 21 })
+	})
+
+	test('is shape-only: impossible calendar days parse for the arithmetic', () => {
+		// The two old copies diverged exactly here: `isValidDayKey` rejected days
+		// the arithmetic accepted and carried through Date.UTC.
+		expect(parseDayKey('2026-02-30')).toEqual({ year: 2026, month: 2, day: 30 })
+		expect(isValidDayKey('2026-02-30')).toBe(false)
+		expect(ordinal0FromDayKey('2026-02-30')).toBe(60) // the arithmetic lands on 2026-03-02
+
+		expect(parseDayKey('2026-13-01')).toEqual({ year: 2026, month: 13, day: 1 })
+		expect(isValidDayKey('2026-13-01')).toBe(false)
+		expect(ordinal0FromDayKey('2026-13-01')).toBe(365) // the arithmetic lands on 2027-01-01
+	})
+
+	test('rejects malformed shapes and non-strings', () => {
+		for (const value of ['2026-9-21', '20260921', '2026/09/21', 'nope', '', undefined, null]) {
+			expect(parseDayKey(value)).toBeUndefined()
+		}
 	})
 })
 
