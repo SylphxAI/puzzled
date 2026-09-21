@@ -10,22 +10,22 @@
 import { describe, expect, test } from 'bun:test'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import enGBShare from '@/messages/en-GB/share.json'
-import enUSShare from '@/messages/en-US/share.json'
-import zhCNShare from '@/messages/zh-CN/share.json'
-import zhHKShare from '@/messages/zh-HK/share.json'
-import zhTWShare from '@/messages/zh-TW/share.json'
+import { resolveLocale } from '../../../scripts/i18n-resolved-catalogue'
 
 type Json = Record<string, unknown>
 
 const SRC = join(import.meta.dir, '..', '..')
 
+/**
+ * Resolved exactly as the runtime assembles them: overlay locales (en-GB over
+ * en-US, zh-TW over zh-HK) ship only their deltas over the base.
+ */
 const CATALOGS: Record<string, Json> = {
-	'en-US': enUSShare as Json,
-	'en-GB': enGBShare as Json,
-	'zh-HK': zhHKShare as Json,
-	'zh-TW': zhTWShare as Json,
-	'zh-CN': zhCNShare as Json,
+	'en-US': resolveLocale('en-US').share as Json,
+	'en-GB': resolveLocale('en-GB').share as Json,
+	'zh-HK': resolveLocale('zh-HK').share as Json,
+	'zh-TW': resolveLocale('zh-TW').share as Json,
+	'zh-CN': resolveLocale('zh-CN').share as Json,
 }
 
 /** Placeholders each key must keep, or its sentence loses a fact. */

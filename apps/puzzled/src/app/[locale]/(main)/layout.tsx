@@ -6,6 +6,7 @@ import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { BottomNav } from '@/shared/components/layout'
+import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { Footer } from '@/shared/components/layout/footer'
 import { LayoutTopNav } from './layout-nav'
 import { LayoutOverlays } from './layout-overlays'
@@ -107,6 +108,17 @@ export default function MainLayout({ children }: Props) {
 				{children}
 				<Footer />
 			</div>
+
+			{/*
+			 * Consent banner - deliberately not deferred, and outside the identity
+			 * Suspense above so its markup flushes with the shell rather than when
+			 * the streak read lands. It is the largest paint on mobile, so the LCP
+			 * budget (<= 2.5 s simulated) needs it in the first frame; mounting it
+			 * on idle put the largest paint at ~5.4-6.0 s. Settled visitors are
+			 * hidden before paint by the settle script in `[locale]/layout.tsx`;
+			 * the SDK keeps owning the UI and the stored decision.
+			 */}
+			<ConsentBanner />
 
 			{/* Fixed overlays - proper z-index stacking */}
 			<Suspense fallback={null}>

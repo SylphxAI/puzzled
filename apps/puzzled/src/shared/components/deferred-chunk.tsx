@@ -12,7 +12,6 @@
 import { Toaster } from '@sylphx/ui'
 import { AchievementChecker, AchievementToastProvider } from '@/features/gamification'
 import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
-import { ConsentBanner } from '@/shared/components/layout/consent-banner'
 import { PWAInstallPrompt } from '@/shared/components/pwa-install-prompt'
 
 export function DeferredToaster() {
@@ -34,8 +33,6 @@ export function DeferredOverlays({ maxStreak }: { maxStreak?: number | null }) {
 		<AchievementToastProvider>
 			<AchievementChecker maxStreak={maxStreak} />
 			<PWAInstallPrompt />
-			{/* SDK CookieBanner with localStorage sync for client-side scripts */}
-			<ConsentBanner />
 		</AchievementToastProvider>
 	)
 }

@@ -821,6 +821,10 @@ export function CookieBanner(props: {
 	if (hasConsented) return null
 	return (
 		<div
+			// Stable hook for the settled-visitor hide rule: the pre-paint script
+			// in app/[locale]/layout.tsx marks <html> and globals.css hides this
+			// node, so a visitor who already decided never sees a flash.
+			data-consent-banner=""
 			// Sits above the mobile bottom bar: overlapping it made the navigation
 			// unusable until consent was given.
 			className={

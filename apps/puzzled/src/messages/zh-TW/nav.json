@@ -1,14 +1,3 @@
 {
-	"home": "首頁",
-	"games": "遊戲",
-	"archive": "典藏",
-	"stats": "統計",
-	"leaderboard": "排行榜",
-	"pricing": "訂閱",
-	"profile": "個人檔案",
-	"main": "主導覽",
-	"support": "支援",
-	"menuTitle": "選單",
-	"openMenu": "開啟導覽選單",
-	"closeMenu": "關閉導覽選單"
+	"archive": "典藏"
 }

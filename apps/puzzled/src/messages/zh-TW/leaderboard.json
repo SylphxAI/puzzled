@@ -1,51 +1,10 @@
 {
-	"period": {
-		"today": "今日",
-		"week": "本週",
-		"all": "全部"
-	},
-	"title": "排行榜",
 	"metaDescription": "各模組今天、本週與全期的排行榜：誰完成了什麼，以及你自己的位置。",
-	"eyebrow": "Puzzled 排行榜",
 	"description": "一次只顯示一個模組、一個期間，與計分方式完全一致。只有選擇公開身分的玩家會出現在榜上。",
-	"chip": "榜單：{module}",
-	"anonymous": "匿名玩家",
-	"scopeLabel": "排行榜期間",
-	"moduleLabel": "模組",
-	"loadingBoard": "正在載入榜單…",
-	"boardTitle": "{module} 排行榜",
-	"boardDescription": "範圍：{period}。每列為該玩家在此期間的分數總和。",
-	"columns": {
-		"rank": "名次",
-		"player": "玩家",
-		"score": "分數"
-	},
-	"tableCaption": "{module}「{period}」排行榜：名次、玩家與分數",
-	"you": "你",
-	"empty": {
-		"title": "此榜單尚未有完成分數",
-		"body": "{module} 在此期間尚未有計入的分數。現在遊玩，第一個分數可能就是你的。",
-		"play": "遊玩 {module}"
-	},
-	"notes": {
-		"top": "顯示 {module} 的前 {count} 名。",
-		"policy": "只有選擇公開身分的玩家會列出。",
-		"viewerAway": "你在本期間暫未進入前 {count} 名。",
-		"guest": "訪客紀錄會計入你的個人成績，但不會顯示在榜單上。",
-		"signIn": "登入以佔一席位"
-	},
 	"unavailable": {
-		"title": "榜單無法載入",
-		"body": "排行榜讀取沒有回應，因此不顯示任何列，也不會顯示空表。",
-		"footnote": "請稍後再試。",
-		"retry": "重新載入此榜單"
+		"title": "榜單無法載入"
 	},
 	"how": {
-		"title": "榜單運作方式",
-		"description": "這些數字背後的規則。",
-		"scores": "榜單會累加你在選定期間於該模組取得的每個有效分數。",
-		"visibility": "只有當你開啟公開顯示設定時，名稱與分數才會出現在榜上。",
-		"boards": "每個模組都有分數榜：今天、本週與全期。",
-		"visibilityCta": "檢查你的公開設定"
+		"boards": "每個模組都有分數榜：今天、本週與全期。"
 	}
 }

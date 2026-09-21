@@ -7,38 +7,14 @@ import { routing } from './routing'
 // Namespace Imports (explicit for Turbopack)
 // ==========================================
 
-import enGBAchievements from '@/messages/en-GB/achievements.json'
 import enGBAdmin from '@/messages/en-GB/admin.json'
-import enGBArchive from '@/messages/en-GB/archive.json'
 import enGBAuth from '@/messages/en-GB/auth.json'
-import enGBCalendar from '@/messages/en-GB/calendar.json'
 import enGBCatalog from '@/messages/en-GB/catalog.json'
 // en-GB namespaces
-import enGBCommon from '@/messages/en-GB/common.json'
-import enGBConsent from '@/messages/en-GB/consent.json'
-import enGBDaily from '@/messages/en-GB/daily.json'
-import enGBFooter from '@/messages/en-GB/footer.json'
-import enGBGameResult from '@/messages/en-GB/game-result.json'
-import enGBHome from '@/messages/en-GB/home.json'
-import enGBLeaderboard from '@/messages/en-GB/leaderboard.json'
 import enGBLegal from '@/messages/en-GB/legal.json'
-import enGBModes from '@/messages/en-GB/modes.json'
-import enGBNav from '@/messages/en-GB/nav.json'
-import enGBOnboarding from '@/messages/en-GB/onboarding.json'
-import enGBPagination from '@/messages/en-GB/pagination.json'
-import enGBPremium from '@/messages/en-GB/premium.json'
 import enGBPricing from '@/messages/en-GB/pricing.json'
-import enGBPwa from '@/messages/en-GB/pwa.json'
-import enGBReauth from '@/messages/en-GB/reauth.json'
-import enGBReferrals from '@/messages/en-GB/referrals.json'
 import enGBSettings from '@/messages/en-GB/settings.json'
-import enGBShare from '@/messages/en-GB/share.json'
-import enGBStats from '@/messages/en-GB/stats.json'
-import enGBStreak from '@/messages/en-GB/streak.json'
-import enGBSubscription from '@/messages/en-GB/subscription.json'
 import enGBSupport from '@/messages/en-GB/support.json'
-import enGBTrial from '@/messages/en-GB/trial.json'
-import enGBWinBack from '@/messages/en-GB/win-back.json'
 import enUSAchievements from '@/messages/en-US/achievements.json'
 import enUSAdmin from '@/messages/en-US/admin.json'
 import enUSArchive from '@/messages/en-US/archive.json'
@@ -135,38 +111,25 @@ import zhHKSubscription from '@/messages/zh-HK/subscription.json'
 import zhHKSupport from '@/messages/zh-HK/support.json'
 import zhHKTrial from '@/messages/zh-HK/trial.json'
 import zhHKWinBack from '@/messages/zh-HK/win-back.json'
-import zhTWAchievements from '@/messages/zh-TW/achievements.json'
-import zhTWAdmin from '@/messages/zh-TW/admin.json'
 import zhTWArchive from '@/messages/zh-TW/archive.json'
 import zhTWAuth from '@/messages/zh-TW/auth.json'
-import zhTWCalendar from '@/messages/zh-TW/calendar.json'
 import zhTWCatalog from '@/messages/zh-TW/catalog.json'
 // zh-TW namespaces
 import zhTWCommon from '@/messages/zh-TW/common.json'
 import zhTWConsent from '@/messages/zh-TW/consent.json'
 import zhTWDaily from '@/messages/zh-TW/daily.json'
 import zhTWFooter from '@/messages/zh-TW/footer.json'
-import zhTWGameResult from '@/messages/zh-TW/game-result.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
-import zhTWLegal from '@/messages/zh-TW/legal.json'
-import zhTWModes from '@/messages/zh-TW/modes.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
-import zhTWOnboarding from '@/messages/zh-TW/onboarding.json'
-import zhTWPagination from '@/messages/zh-TW/pagination.json'
 import zhTWPremium from '@/messages/zh-TW/premium.json'
 import zhTWPricing from '@/messages/zh-TW/pricing.json'
-import zhTWPwa from '@/messages/zh-TW/pwa.json'
-import zhTWReauth from '@/messages/zh-TW/reauth.json'
 import zhTWReferrals from '@/messages/zh-TW/referrals.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
 import zhTWShare from '@/messages/zh-TW/share.json'
 import zhTWStats from '@/messages/zh-TW/stats.json'
-import zhTWStreak from '@/messages/zh-TW/streak.json'
 import zhTWSubscription from '@/messages/zh-TW/subscription.json'
 import zhTWSupport from '@/messages/zh-TW/support.json'
-import zhTWTrial from '@/messages/zh-TW/trial.json'
-import zhTWWinBack from '@/messages/zh-TW/win-back.json'
 
 // ==========================================
 // Message Registry
@@ -208,7 +171,13 @@ interface LocaleMessages {
 	winBack: Messages
 }
 
-const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
+/**
+ * A locale's namespace files. Partial on purpose: an overlay locale (one with a
+ * declared fallback in `./config`) ships only the keys its fallback does not
+ * carry, so its map omits whole namespaces and `loadMessages` fills them from the
+ * fallback.
+ */
+const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 	'en-US': {
 		common: enUSCommon,
 		auth: enUSAuth,
@@ -243,37 +212,13 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		winBack: enUSWinBack,
 	},
 	'en-GB': {
-		common: enGBCommon,
 		auth: enGBAuth,
-		nav: enGBNav,
-		home: enGBHome,
 		settings: enGBSettings,
 		admin: enGBAdmin,
-		archive: enGBArchive,
 		legal: enGBLegal,
-		pagination: enGBPagination,
-		achievements: enGBAchievements,
-		calendar: enGBCalendar,
 		catalog: enGBCatalog,
-		consent: enGBConsent,
-		daily: enGBDaily,
-		footer: enGBFooter,
-		gameResult: enGBGameResult,
-		leaderboard: enGBLeaderboard,
-		modes: enGBModes,
-		onboarding: enGBOnboarding,
-		premium: enGBPremium,
 		pricing: enGBPricing,
-		pwa: enGBPwa,
-		reauth: enGBReauth,
-		referrals: enGBReferrals,
-		share: enGBShare,
-		stats: enGBStats,
-		streak: enGBStreak,
-		subscription: enGBSubscription,
 		support: enGBSupport,
-		trial: enGBTrial,
-		winBack: enGBWinBack,
 	},
 	'zh-HK': {
 		common: zhHKCommon,
@@ -314,32 +259,19 @@ const LOCALE_MESSAGES: Record<Locale, LocaleMessages> = {
 		nav: zhTWNav,
 		home: zhTWHome,
 		settings: zhTWSettings,
-		admin: zhTWAdmin,
 		archive: zhTWArchive,
-		legal: zhTWLegal,
-		pagination: zhTWPagination,
-		achievements: zhTWAchievements,
-		calendar: zhTWCalendar,
 		catalog: zhTWCatalog,
 		consent: zhTWConsent,
 		daily: zhTWDaily,
 		footer: zhTWFooter,
-		gameResult: zhTWGameResult,
 		leaderboard: zhTWLeaderboard,
-		modes: zhTWModes,
-		onboarding: zhTWOnboarding,
 		premium: zhTWPremium,
 		pricing: zhTWPricing,
-		pwa: zhTWPwa,
-		reauth: zhTWReauth,
 		referrals: zhTWReferrals,
 		share: zhTWShare,
 		stats: zhTWStats,
-		streak: zhTWStreak,
 		subscription: zhTWSubscription,
 		support: zhTWSupport,
-		trial: zhTWTrial,
-		winBack: zhTWWinBack,
 	},
 	'zh-CN': {
 		common: zhCNCommon,
