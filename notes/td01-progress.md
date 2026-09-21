@@ -33,8 +33,10 @@ commit into the branch and push (explicit refspec, read back via ls-remote).
 - typecheck RC=0 (both tsconfigs); lint RC=0 (23 pre-existing infos, 0 errors).
 - Duplicates report: `notes/td01-duplicates.txt` (235/235/170/170/172 vs register 232/168 at e590b5c).
 
+## PR
+- **#170** https://github.com/SylphxAI/puzzled/pull/170 - head `845b4b8`, 78 files, +1240/-5771, base main.
+
 ## Next actions
-1. Finish `bun run build` (running) -> record RC in `notes/td01-build.txt`.
-2. Commit remaining files + evidence; push; read ref back.
-3. Open ONE PR (body: before/after counts, zero-diff proof, guard + mutation evidence, checks).
-4. Hand off to independent review (per company workflow).
+1. Watch CI on #170 (`notes/td01-ci-watch.txt`). If red, root-cause from the run log and fix in place.
+2. Independent review (author cannot self-review); orchestrator lane per company procedure.
+3. Build RC=0; document-route RC=0 (`notes/td01-document-route.txt`).
