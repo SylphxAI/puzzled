@@ -1,0 +1,44 @@
+TD-11 proof - branch debt/td11-split (base origin/main be3f6dc2)
+
+== line counts (wc -l; base = git show origin/main:<path>) ==
+lib/api/hooks.ts            1028 -> 62 (barrel)
+  lib/api/hooks/shared.ts          61
+  lib/api/hooks/play.ts           197
+  lib/api/hooks/stats.ts           99
+  lib/api/hooks/preferences.ts    126
+  lib/api/hooks/admin.ts          509
+  lib/api/hooks/profile.ts         65
+lib/identity/react.tsx       952 -> 44 (barrel)
+  lib/identity/react/context.tsx  141
+  lib/identity/react/auth.ts      230
+  lib/identity/react/hooks.ts     429
+  lib/identity/react/billing.tsx   76
+  lib/identity/react/ui.tsx       121
+
+== export-set equality (scoped extraction; base file vs barrel) ==
+react:   34 = 34, diff empty
+hooks:   43 = 43, diff empty
+
+== pure-move evidence (sorted-line multiset, blank lines dropped) ==
+react: only import/comment/export-wrapper deltas; no code line lost or altered.
+hooks: same; deltas = unpacked import blocks, barrel re-export entries, new headers.
+No heredoc/script artifacts in any split file (grep clean).
+
+== gates (this worktree, this tree) ==
+lint      bun run lint -> EXIT=0; 884 files; 23 infos (pre-split run: 879 files, 23 infos)
+typecheck bunx turbo typecheck --filter=@sylphx/puzzled --filter=@sylphx/ui --concurrency=1 --force
+          -> EXIT=0; 2/2 tasks; 0 cached; 8.959s (tsc --noEmit and the e2e tsconfig both executed)
+tests     env -u NODE_ENV DATABASE_URL='postgresql://test:test@localhost:5432/test' SKIP_ENV_VALIDATION=true bun run test:unit
+          -> 1188 pass / 6 skip / 1 fail / 34908 expect() / 124 files / 86.02s
+          the 1 fail: src/lib/db/schema-parity.test.ts - check-schema-parity.sh exits 2,
+          'no dev database available' (no postgres listener, no docker daemon, no sudo
+          postgres on this host). No db files are touched by this branch; identical failure
+          on the pre-restart run (1188/6/1, 85.19s).
+build     SKIP_ENV_VALIDATION=true NODE_ENV=production bun run build
+          -> EXIT=0; next 16.3.3 turbopack; compiled 11.8s; TypeScript enforced 15.0s; 118/118 static pages
+          node scripts/assert-document-route.mjs -> EXIT=0; GET / status=200 bytes=381566 ms=1789
+
+== refs ==
+base: origin/main be3f6dc2b4f486f07ef45752fb12b07669a3815f (merge-base == origin/main)
+branch: debt/td11-split pushed by explicit refspec; ls-remote read-back == local head at every push.
+PR: see notes/td11-progress.md (final checkpoint).

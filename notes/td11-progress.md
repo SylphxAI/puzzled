@@ -92,3 +92,8 @@ Pending characterization: the dead worker's hooks gate log shows 1 failing test 
 - Targeted: src/lib/identity/react.test.ts all 6 pass (imports the ./react barrel); session-replay billing test 3 pass.
 - Lint: exit 0 - 884 files, 23 infos (pre-split run: 879 files, 23 infos - unchanged).
 - Next: forced typecheck + build + assert-document-route; then proof file + PR.
+
+## Recovery checkpoint 4 - all gates green
+- Forced typecheck: exit 0 (2/2 tasks, 0 cached, 8.959s). Build: exit 0 (next 16.3.3, 118/118 pages). assert-document-route: exit 0 (status=200, 381,566 bytes, 1789ms).
+- origin/main re-checked after fetch: still be3f6dc2 == merge-base; no rebase needed.
+- Raw evidence committed as notes/td11-proof.txt. Opening the PR next.
