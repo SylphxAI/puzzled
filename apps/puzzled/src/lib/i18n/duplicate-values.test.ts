@@ -37,9 +37,13 @@ describe('resolved duplicate-value baseline', () => {
 		expect(driftProblems(drift)).toEqual([])
 	})
 
-	test('the baseline file is exactly what --update-baseline writes', () => {
-		const expected = serializeBaseline(allResolvedGroups())
-		expect(readFileSync(BASELINE_PATH, 'utf8')).toBe(expected)
+	test('the baseline file holds exactly what --update-baseline writes', () => {
+		// Content equality, not byte equality: the biome pre-commit hook re-formats
+		// the JSON (short key arrays inline), so the committed formatting is the
+		// formatter's while the content must stay exactly the generated one.
+		const recorded = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Baseline
+		const expected = JSON.parse(serializeBaseline(allResolvedGroups())) as Baseline
+		expect(recorded).toEqual(expected)
 	})
 })
 
