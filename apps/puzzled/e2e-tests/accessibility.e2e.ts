@@ -282,7 +282,10 @@ test.describe('Reduced motion', () => {
 		)
 		if (!trigger) return
 
-		const samples = await sampleTransform(page, '[role="menu"]')
+		// The motion lives on the popup's content wrapper; the Base UI Popup element
+		// that carries role="menu" never transforms, so sampling it would pass
+		// vacuously. Sample the wrapper the animation is on.
+		const samples = await sampleTransform(page, '[role="menu"] > *')
 		expect(
 			new Set(samples).size,
 			`popup transform changed: ${samples.join(' ')}`,
@@ -306,7 +309,9 @@ test.describe('Motion for users without the preference', () => {
 		)
 		if (!trigger) return
 
-		const samples = await sampleTransform(page, '[role="menu"]')
+		// See the reduced-motion case above: the animated node is the popup's content
+		// wrapper, not the role="menu" element itself.
+		const samples = await sampleTransform(page, '[role="menu"] > *')
 		expect(
 			new Set(samples).size,
 			`expected the popup to animate, saw: ${samples.join(' ')}`,

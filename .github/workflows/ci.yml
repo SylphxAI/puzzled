@@ -376,3 +376,291 @@ jobs:
         run: |
           export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:${PATH}"
           cargo test -p puzzled-core -p puzzled-server
+
+  # ==========================================
+  # Quality harnesses (program S4 / S5 / S6)
+  # ==========================================
+  #
+  # Three harnesses already existed in the repo with no CI caller
+  # (docs/program/website-refactor/gaps.md G9, G5, G4). Each is wired as its
+  # own job so a red SEO contract does not hide the a11y or budget verdict.
+  # All three measure a *served production build*: the harnesses assert real
+  # HTTP responses, not source.
+
+  seo-contract:
+    name: SEO Contract
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 30
+    needs: [lint-and-typecheck]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      - name: Build web (next build)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+
+      # apps/puzzled/scripts/seo-verify.ts asserts crawler truth against a
+      # served build, so the job serves one instead of measuring source.
+      - name: Serve the build on :3014
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3014 > "$RUNNER_TEMP/serve-seo.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o "$RUNNER_TEMP/probe.html" -w '%{http_code}' http://localhost:3014/ || true)"
+            if [ "$status" = "200" ]; then
+              echo "served build answered 200 on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "served build never answered 200 (last status ${status:-none})"
+          cat "$RUNNER_TEMP/serve-seo.log"
+          exit 1
+
+      - name: SEO contract harness (bun run verify:seo)
+        working-directory: apps/puzzled
+        run: bun run verify:seo --base http://localhost:3014
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
+  a11y:
+    name: Accessibility (WCAG 2.2 AA)
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 40
+    needs: [lint-and-typecheck]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # The suite drives a real Chromium; nothing on the runner image is
+      # assumed. Pinned by the @playwright/test version in bun.lock.
+      - name: Install Playwright Chromium
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium
+
+      - name: Build web (next build)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+
+      - name: Serve the build on :3015
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+        run: |
+          set -euo pipefail
+          bun run start -p 3015 > "$RUNNER_TEMP/serve-a11y.log" 2>&1 &
+          echo "SERVE_PID=$!" >> "$GITHUB_ENV"
+          for attempt in $(seq 1 60); do
+            status="$(curl -s -o "$RUNNER_TEMP/probe.html" -w '%{http_code}' http://localhost:3015/ || true)"
+            if [ "$status" = "200" ]; then
+              echo "served build answered 200 on attempt ${attempt}"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "served build never answered 200 (last status ${status:-none})"
+          cat "$RUNNER_TEMP/serve-a11y.log"
+          exit 1
+
+      # Actions sets CI=true, so playwright.config.ts deliberately leaves its
+      # webServer undefined: this job owns the server and points the suite at
+      # it with BASE_URL. Retries (2 on CI) are the config's own.
+      - name: WCAG 2.2 A/AA suite (bun run test:a11y)
+        working-directory: apps/puzzled
+        env:
+          BASE_URL: http://localhost:3015
+        run: bun run test:a11y
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-playwright-report
+          path: |
+            apps/puzzled/playwright-report
+            apps/puzzled/test-results
+          retention-days: 7
+
+      - name: Stop the served build
+        if: always()
+        run: |
+          if [ -n "${SERVE_PID:-}" ]; then kill "$SERVE_PID" 2>/dev/null || true; fi
+
+  lighthouse:
+    name: Lighthouse Budgets
+    runs-on: sylphx-linux-standard
+    timeout-minutes: 30
+    needs: [lint-and-typecheck]
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      # The runner does not keep Playwright's browser cache under
+      # $HOME/.cache/ms-playwright, so pin one path for this job: letting the
+      # install below and the CHROME_PATH lookup after it resolve their own
+      # defaults is how they end up disagreeing.
+      - name: Pin the Playwright browser cache
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+
+      - uses: actions/setup-node@v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Cache bun modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: bun install
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if bun install --fetch-retries=5 --fetch-retry-mintimeout=1000 --fetch-retry-maxtimeout=60000; then
+              exit 0
+            fi
+            echo "bun install attempt ${attempt} failed; clearing partial cache and retrying..."
+            rm -rf node_modules apps/*/node_modules packages/*/node_modules ~/.bun/install/cache 2>/dev/null || true
+            sleep $((attempt * 3))
+          done
+          echo "bun install failed after retries"
+          exit 1
+
+      # chromium-launcher (used by lhci) resolves CHROME_PATH first, then the
+      # image. Install the Playwright build so the browser is pinned by
+      # bun.lock instead of by whatever the runner happens to ship.
+      - name: Install Chromium for Lighthouse
+        working-directory: apps/puzzled
+        run: bunx playwright install --with-deps chromium
+
+      - name: Point CHROME_PATH at that Chromium
+        run: |
+          set -euo pipefail
+          # The full Chromium build, not the headless shell: lhci launches
+          # Chrome with its own flags and needs a real browser binary.
+          bin="$(find "$PLAYWRIGHT_BROWSERS_PATH"/chromium-* -maxdepth 2 -type f -name chrome -executable | sort | tail -1)"
+          if [ -z "$bin" ]; then
+            echo "no Chromium under $PLAYWRIGHT_BROWSERS_PATH; install step did not land"
+            ls -la "$PLAYWRIGHT_BROWSERS_PATH" || true
+            exit 1
+          fi
+          "$bin" --version
+          echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
+
+      - name: Build web (next build)
+        run: bun run build
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+
+      # apps/puzzled/lighthouserc.json is used unchanged: the mobile profile
+      # (Lighthouse mobile defaults with applied/devtools throttling — switched
+      # from lantern simulation on 2026-09-21 after it floored at ~3.2 s LCP on
+      # the lightest route; analysis in this PR) over / and the module
+      # pages /games/word-search, /games/nonogram and /games/arithmo — slugs
+      # outside the free rotation, so the anonymous render branch is the same
+      # every day — at the S5 budgets: performance >= 0.9, LCP <= 2500 ms,
+      # CLS <= 0.1, TBT <= 300 ms, FCP <= 2500 ms (raised from 2000 ms: under
+      # applied throttling FCP and LCP land on the same banner paint at ~2.0 s,
+      # inside run-to-run noise) and speed index <= 3000 ms, all at error.
+      # lhci starts `bun run start` itself on port 3000.
+      - name: Lighthouse budget (bun run lighthouse)
+        working-directory: apps/puzzled
+        env:
+          SKIP_ENV_VALIDATION: 'true'
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+        run: bun run lighthouse
+
+      - name: Upload the Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: apps/puzzled/.lighthouseci
+          retention-days: 7
