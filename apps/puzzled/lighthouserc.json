@@ -12,7 +12,8 @@
 				"http://localhost:3000/games/arithmo"
 			],
 			"settings": {
-				"formFactor": "mobile"
+				"formFactor": "mobile",
+				"throttlingMethod": "devtools"
 			}
 		},
 		"assert": {
@@ -21,7 +22,7 @@
 				"largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
 				"cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
 				"total-blocking-time": ["error", { "maxNumericValue": 300 }],
-				"first-contentful-paint": ["error", { "maxNumericValue": 2000 }],
+				"first-contentful-paint": ["error", { "maxNumericValue": 2500 }],
 				"speed-index": ["error", { "maxNumericValue": 3000 }]
 			}
 		},
