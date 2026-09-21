@@ -19,9 +19,10 @@ Recovery log, kept current. Started 2026-09-21 ~02:35 Europe/London.
 - [x] B. lib/audit: logAdminAccessAttempt + unit test (2 pass)
 - [x] C. admin-api: logAdminAccess switch + caller test (3 pass)
 - [x] D. messages x5 locales + filters ACTION_TYPES += admin_access (filter list line 30; admin_access in auditLogs.actions of all 5 locales)
-- [ ] E. targeted tests + full bun test src + typecheck + lint
-- [ ] F. mutation proof (red output, restore, green output)
-- [ ] G. open PR with evidence
+- [x] E. full suite + typecheck + lint - all green (see ### E and ### E2)
+- [x] F. mutation proof F1+F2 - red -> restore -> green (see ### F)
+- [x] G. PR opened: https://github.com/SylphxAI/puzzled/pull/169
+- Head: 03203da; final notes push follows (last push from this run).
 - [x] env: worktree node_modules was incomplete (killed sibling run); bun install --frozen-lockfile rc=0 (257 packages, lefthook synced); pre-commit hooks pass (biome + tsc 12.2s).
 
 ## Evidence log
@@ -64,5 +65,21 @@ index ca36235..befbd91 100644
 - audit-log-filters.tsx: ACTION_TYPES += 'admin_access'.
 - messages: auditLogs.actions.admin_access in all 5 locales (en-GB/en-US "Admin Access", zh-CN "管理员访问", zh-HK/zh-TW "管理員存取").
 
+### E (gates, pre-merge)
+- lint: bun run lint (apps/puzzled) -> rc 0: "Checked 842 files in 349ms. No fixes applied."
+- typecheck (CI shape, forced uncached): @sylphx/puzzled + @sylphx/ui tsc --noEmit -> 2 successful, rc 0 (cache bypass, force executing; 7.968s).
+- full suite: env -u NODE_ENV bun test src -> 1072 pass / 6 skip / 0 fail, 32972 expect() calls, Ran 1078 tests across 108 files [66.67s].
+
+### E2 (post-merge, head 03203da)
+- merged origin/main 976210e (includes #162-#168, incl. #165) - clean, no conflicts.
+- targeted post-merge: 5 pass / 0 fail (src/lib/audit/index.test.ts + src/features/admin/lib/admin-api.test.ts).
+- typecheck post-merge: cache miss, executing -> 2 successful, rc 0, 9.951s.
+- full suite post-merge: 1138 pass / 6 skip / 0 fail, 34655 expect() calls, Ran 1144 tests across 115 files [98.50s], full2_rc=0.
+
+### F (mutation proof; saved copies in /data/sylphx/home/work/pz-program/notes/td06-mutation/)
+- F1 admin-api (audit call -> return): bun test src/features/admin/lib/admin-api.test.ts -> 0 pass / 3 fail ('Expected length: 1 / Received length: 0'); restore via cp -> 3 pass / 0 fail; git status --porcelain empty between runs.
+- F2 lib/audit (early return before logAuditEvent): bun test src/lib/audit/index.test.ts -> 0 pass / 2 fail; restore -> 2 pass / 0 fail.
+- sha256 after restore: admin-api.ts 0345615d..., audit-index.ts 0c3b34d7... (match saved copies).
+
 ## Next action
-- E: full suite + CI-shaped typecheck + lint; then mutation proof; then PR.
+- Done: PR https://github.com/SylphxAI/puzzled/pull/169 (head includes this notes commit). No further pushes from this run.
