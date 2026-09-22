@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Gamepad2, Home, Sparkles, Tag, Trophy, User } from 'lucide-react'
+import { BarChart3, CalendarDays, Gamepad2, Home, Tag, Trophy, User } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 export type NavItem = {
@@ -24,7 +24,8 @@ export const NAV_ITEMS: readonly NavItem[] = [
 	// destination for everyone: the surface answers with sign-in or the upgrade.
 	{ href: '/archive', labelKey: 'archive', icon: CalendarDays, showInTopNav: true },
 	{ href: '/leaderboard', labelKey: 'leaderboard', icon: Trophy, showInTopNav: true },
-	{ href: '/pricing', labelKey: 'pricing', icon: Sparkles, showInTopNav: true },
+	/* Pricing is not a navigation destination: it lives in the footer and at
+	 * value points (the locked tile, the result card). The top row is play. */
 	{ href: '/profile', labelKey: 'profile', icon: User, showInBottomNav: true },
 ] as const
 
