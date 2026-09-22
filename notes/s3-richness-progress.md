@@ -61,3 +61,36 @@ D. result-card-render.ts: bg 0a0f1c -> 0e1226 (ink), text f8fafc -> faf6ef (warm
 4. notes/screenshots before/after via apps/puzzled/scripts/redesign-shots.ts pattern;
    RESTART dev server before shots (stale HMR after checkout is a real incident)
 5. final push + report
+
+## FINAL STATE (2026-09-22 17:31)
+Evidence complete: notes/screenshots/ holds 8 PNGs (before/after x desktop 1440x900 / mobile 390x844 x light/dark),
+captured via the feat/redesign-atmosphere `redesign-shots.ts` pattern (chromium, domcontentloaded + 2.5s).
+  before = base 7dd8e93 (worktree s3-before, BUILD_ID _K9Dn7wgXNwqkAB22c2zj, next start -p 3101)
+  after  = s3/richness-1 3b72b5d (worktree s3-richness, next start -p 3100)
+Note: both renders show `home.overview-failed` / `home.personal-result-read-failed` in server logs
+(server Connect requires API_INTERNAL_URL - no API on this host). The first screen still renders; the
+personal/social islands degrade to their unread-safe copy (the playerCount-null-safe pattern).
+
+### Verification (real output, not claims)
+- tsc --noEmit (apps/puzzled): CLEAN (exit 0, no errors) after fixing 3 syntax errors I introduced
+  (archive/page.tsx JSX balance x2, result-card-render.ts DISPLAY_FONT_FAMILY string) and adding
+  stripe/glow to DEFAULT_GAME_COLORS (theme-colors.ts:195).
+- bun run test:unit: 1 REAL failure I introduced (message-catalogue wiring: overlay locales carry only
+  the keys their fallback does not supply - zh-TW archive/leaderboard/stats redundant vs zh-HK) -
+  FIXED by `bun run scripts/i18n-collapse-overlays.ts --apply` (3 zh-TW files collapsed to deltas).
+  Remaining 5 failures are PRE-EXISTING / host-dependent, NOT mine: getBaseUrl x4 (expect 'localhost'
+  in server env, this host resolves https://puzzled.gg) and schema-parity (needs a dev postgres this
+  host lacks). Recorded honestly as such.
+- bun run build: SUCCESS (Compiled successfully, route table generated) for both base and head.
+
+### Branch state
+s3/richness-1 @ 3b72b5d pushed to origin (remote == local). No merge / enqueue / PR (per rules).
+Deliverable is code + evidence + this note on the branch.
+
+### Deliberately left out / not finished
+- 'before' shots use base 7dd8e93 exactly (s3-before worktree), so before/after is a true delta of my slice.
+- D result-card skin: palette + display-face wordmark changed; no-spoiler model UNTOUCHED (byte-identical
+  result-card.ts) - the share-card-copy tests confirm no placeholder/solution path can reach the card.
+- A game-tile identity is one GameTile change covering both today-lineup and /games (both use GameTile);
+  I did NOT restyle the hero/day surface (already on main via home-day.tsx) or touch globals.css beyond
+  appending .numeral (PR #184 owns globals.css + nav-items.ts - extended, never rewritten).
