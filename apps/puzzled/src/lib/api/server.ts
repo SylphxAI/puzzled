@@ -19,11 +19,7 @@ import {
 	GamificationService,
 	GetStreakInfoRequestSchema,
 } from '@/gen/connect/puzzled/v1/gamification_pb'
-import {
-	GetDailyRequestSchema,
-	type GetDailyResponse,
-	PuzzleService,
-} from '@/gen/connect/puzzled/v1/puzzle_pb'
+import { GetDailyRequestSchema, PuzzleService } from '@/gen/connect/puzzled/v1/puzzle_pb'
 import {
 	GetHistoryRequestSchema,
 	GetTodayOverviewRequestSchema,
@@ -31,11 +27,16 @@ import {
 	StatsService,
 } from '@/gen/connect/puzzled/v1/stats_pb'
 import { mergeServerConnectInit } from '@/lib/api/connect-fetch'
+import {
+	type DailyStatus,
+	mapDailyStatus,
+	mapTodaysPuzzle,
+	type TodaysPuzzle,
+} from '@/lib/api/domain/daily'
 import { getServerBilling } from '@/lib/billing/server'
 import { resolveServerConnectBaseUrl } from '@/lib/connect/transport'
 import { logger } from '@/lib/logger'
 import { withPresentationDeadline } from '@/lib/presentation-document'
-import { servedPuzzleId } from '@/lib/product-day'
 import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
 // ==========================================
@@ -44,32 +45,7 @@ import { projectStreakInfo, type StreakInfo } from '@/lib/streak-info'
 
 export type { StreakInfo }
 
-export type DailyStatus = {
-	hasCompleted: boolean
-	completedSession: {
-		status: 'won' | 'lost'
-		score: number | null
-		attempts: number | null
-		completedAt: Date | null
-	} | null
-	puzzle: {
-		id: string
-		puzzleNumber: number
-		puzzleDate: string
-		puzzleData: unknown
-		difficulty: string | null
-	}
-	canPlay: boolean
-	mode: 'daily'
-}
-
-export type TodaysPuzzle = {
-	puzzleId: string
-	puzzleNumber: number
-	puzzleDate: string
-	puzzleData: unknown
-	difficulty: string | null
-}
+export type { DailyStatus, TodaysPuzzle }
 
 export type UserStats = {
 	[gameSlug: string]: {
@@ -115,30 +91,6 @@ export async function hasServerProgressIdentity(): Promise<boolean> {
 		)
 }
 
-function parsePuzzleData(json: string): unknown {
-	if (!json) return null
-	try {
-		return JSON.parse(json)
-	} catch {
-		return null
-	}
-}
-
-function parseCompletedSession(res: GetDailyResponse): DailyStatus['completedSession'] {
-	const completion = res.completedSession
-	if (!res.hasCompleted || !completion) return null
-	if (completion.status !== 'won' && completion.status !== 'lost') return null
-
-	const completedAt =
-		completion.completedAtMs === undefined ? null : new Date(Number(completion.completedAtMs))
-	return {
-		status: completion.status,
-		score: completion.score ?? null,
-		attempts: completion.attempts ?? null,
-		completedAt: completedAt && !Number.isNaN(completedAt.getTime()) ? completedAt : null,
-	}
-}
-
 // ==========================================
 // Server data accessors (sole Connect)
 // ==========================================
@@ -158,20 +110,7 @@ export const getServerDailyStatus = cache(
 				puzzleDate: input.puzzleDate?.trim() || undefined,
 			}),
 		)
-		const completedSession = parseCompletedSession(res)
-		return {
-			hasCompleted: res.hasCompleted,
-			completedSession,
-			puzzle: {
-				id: servedPuzzleId(res.puzzleId) || '',
-				puzzleNumber: Number(res.puzzleNumber),
-				puzzleDate: res.puzzleDate,
-				puzzleData: parsePuzzleData(res.puzzleDataJson),
-				difficulty: res.difficulty || input.difficulty || null,
-			},
-			canPlay: res.canPlay,
-			mode: 'daily',
-		}
+		return mapDailyStatus(res, input.difficulty)
 	},
 )
 
@@ -185,13 +124,7 @@ export const getServerTodaysPuzzle = cache(
 				difficulty: (input.difficulty ?? '').trim(),
 			}),
 		)
-		return {
-			puzzleId: servedPuzzleId(res.puzzleId) || '',
-			puzzleNumber: Number(res.puzzleNumber),
-			puzzleDate: res.puzzleDate,
-			puzzleData: parsePuzzleData(res.puzzleDataJson),
-			difficulty: res.difficulty || input.difficulty || null,
-		}
+		return mapTodaysPuzzle(res, input.difficulty)
 	},
 )
 
@@ -352,10 +285,3 @@ export const getServerTodayOverview = cache(
 		}
 	},
 )
-
-/**
- * Back-compat shim deleted: no Hono clients exist. Use the typed accessors
- * above (getServerDailyStatus / getServerTodaysPuzzle / getServerStreakInfo /
- * getServerUserStats) from server components.
- */
-export const createServerApi = null as never

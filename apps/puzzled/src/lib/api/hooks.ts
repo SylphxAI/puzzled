@@ -50,6 +50,7 @@ import {
 import { getTodayPercentile, getUserStats } from '@/lib/connect/stats-client'
 import { withIdempotencyKey } from '@/lib/idempotency-key'
 import { servedPuzzleId } from '@/lib/product-day'
+import { mapDailyStatus, mapTodaysPuzzle } from './domain/daily'
 
 // ==========================================
 // Errors
@@ -108,6 +109,28 @@ export const queryKeys = {
 // Play (sole Connect)
 // ==========================================
 
+/**
+ * TD-08: the useDailyStatus query body - the same mapping as the server
+ * accessor (lib/api/domain/daily mapDailyStatus). slice/authority stay client
+ * adapter fields. Before TD-08 this copy hand-mapped the response and
+ * fabricated `{ status: 'won', stub: true }` completions instead of reading
+ * the RPC's completed_session.
+ */
+export async function fetchDailyStatusForClient(input: { gameSlug: string; difficulty?: string }) {
+	const admit = await admitGetDailyViaConnect(input)
+	if (admit.ok) {
+		return {
+			...mapDailyStatus(admit.response, input.difficulty),
+			slice: admit.response.slice || 'S2-daily-connect',
+			authority: 'connect' as const,
+		}
+	}
+	throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+		code: 'CONNECT_PLAY_FAIL_CLOSED',
+		message: admit.error || 'connect_play_fail_closed',
+	})
+}
+
 export function useDailyStatus(
 	gameSlug: string,
 	difficulty?: string,
@@ -115,40 +138,29 @@ export function useDailyStatus(
 ) {
 	return useQuery({
 		queryKey: queryKeys.dailyStatus(gameSlug, difficulty),
-		queryFn: async () => {
-			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
-			if (admit.ok) {
-				const r = admit.response
-				return {
-					hasCompleted: r.hasCompleted,
-					completedSession: r.hasCompleted ? { status: 'won', stub: true } : null,
-					puzzle: {
-						id: servedPuzzleId(r.puzzleId) || '',
-						puzzleNumber: r.puzzleNumber,
-						puzzleDate: r.puzzleDate,
-						puzzleData: r.puzzleDataJson
-							? (() => {
-									try {
-										return JSON.parse(r.puzzleDataJson)
-									} catch {
-										return null
-									}
-								})()
-							: null,
-						difficulty: r.difficulty || difficulty || null,
-					},
-					canPlay: r.canPlay,
-					mode: r.mode || 'daily',
-					slice: r.slice || 'S2-daily-connect',
-					authority: 'connect' as const,
-				}
-			}
-			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-				code: 'CONNECT_PLAY_FAIL_CLOSED',
-				message: admit.error || 'connect_play_fail_closed',
-			})
-		},
+		queryFn: () => fetchDailyStatusForClient({ gameSlug, difficulty }),
 		...options,
+	})
+}
+
+/**
+ * TD-08: the useTodaysPuzzle query body - the same mapping as the server
+ * accessor (lib/api/domain/daily mapTodaysPuzzle). slice/stub/authority stay
+ * client adapter fields.
+ */
+export async function fetchTodaysPuzzleForClient(input: { gameSlug: string; difficulty?: string }) {
+	const admit = await admitGetDailyViaConnect(input)
+	if (admit.ok) {
+		return {
+			...mapTodaysPuzzle(admit.response, input.difficulty),
+			slice: admit.response.slice || 'S2-daily-connect',
+			stub: admit.response.stub,
+			authority: 'connect' as const,
+		}
+	}
+	throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
+		code: 'CONNECT_PLAY_FAIL_CLOSED',
+		message: admit.error || 'connect_play_fail_closed',
 	})
 }
 
@@ -159,34 +171,7 @@ export function useTodaysPuzzle(
 ) {
 	return useQuery({
 		queryKey: queryKeys.todaysPuzzle(gameSlug, difficulty),
-		queryFn: async () => {
-			const admit = await admitGetDailyViaConnect({ gameSlug, difficulty })
-			if (admit.ok) {
-				const r = admit.response
-				return {
-					puzzleId: servedPuzzleId(r.puzzleId) || '',
-					puzzleNumber: r.puzzleNumber,
-					puzzleDate: r.puzzleDate,
-					puzzleData: r.puzzleDataJson
-						? (() => {
-								try {
-									return JSON.parse(r.puzzleDataJson)
-								} catch {
-									return null
-								}
-							})()
-						: null,
-					difficulty: r.difficulty || difficulty || null,
-					slice: r.slice || 'S2-daily-connect',
-					stub: r.stub,
-					authority: 'connect' as const,
-				}
-			}
-			throw new ApiError(503, admit.error || 'connect_play_fail_closed', {
-				code: 'CONNECT_PLAY_FAIL_CLOSED',
-				message: admit.error || 'connect_play_fail_closed',
-			})
-		},
+		queryFn: () => fetchTodaysPuzzleForClient({ gameSlug, difficulty }),
 		...options,
 	})
 }
