@@ -20,6 +20,11 @@ import { type ResultCardModel, type ResultCardStrings, resultCardChips } from '.
 
 export const RESULT_CARD_SIZE = 1080
 
+/* The shell's display face (Space Grotesk, per notes/redesign-spec.md): the wordmark
+ * on the card wears it, so the shared image and the site say the same brand. */
+const DISPLAY_FONT_FAMILY =
+	"'Space Grotesk', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+
 const FONT_FAMILY =
 	"'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Noto Sans TC', 'Noto Sans SC', sans-serif"
 
@@ -49,7 +54,7 @@ export interface ResultCardPalette {
  */
 function cardPalette(accent: string, rgb: string): ResultCardPalette {
 	return {
-		bg: '#0a0f1c',
+		bg: '#0e1226' /* midnight ink (redesign shell canvas) */,
 		bgWash: 'rgba(' + rgb + ', 0.08)',
 		glow: 'rgba(' + rgb + ', 0.30)',
 		frame: 'rgba(255,255,255,0.10)',
@@ -57,8 +62,8 @@ function cardPalette(accent: string, rgb: string): ResultCardPalette {
 		accentSoft: 'rgba(' + rgb + ', 0.55)',
 		chipBg: 'rgba(255,255,255,0.06)',
 		chipStroke: 'rgba(255,255,255,0.14)',
-		text: '#f8fafc',
-		textMuted: '#94a3b8',
+		text: '#faf6ef' /* warm paper (redesign shell ink) */,
+		textMuted: 'rgba(250, 246, 239, 0.62)',
 		tileNear: '#fbbf24',
 		tileMiss: 'rgba(255,255,255,0.10)',
 	}
@@ -187,7 +192,7 @@ export function paintResultCard(
 
 	// Header: wordmark left, product day right (when the run has one).
 	ctx.fillStyle = palette.text
-	ctx.font = '700 ' + Math.round(36 * scale) + 'px ' + FONT_FAMILY
+	ctx.font = '700 ' + Math.round(36 * scale) + 'px ' + DISPLAY_FONT_FAMILY
 	trackedText(ctx, 'PUZZLED', innerX, 168 * scale, 8 * scale)
 	if (model.dayDisplay) {
 		ctx.textAlign = 'right'
@@ -199,7 +204,7 @@ export function paintResultCard(
 
 	// The module's name is the biggest thing on the card.
 	const titleSize = fitTextSize(ctx, model.gameName, innerW, 96 * scale, 54 * scale, '800')
-	ctx.font = '800 ' + titleSize + 'px ' + FONT_FAMILY
+	ctx.font = '800 ' + titleSize + 'px ' + DISPLAY_FONT_FAMILY
 	ctx.fillStyle = palette.text
 	ctx.fillText(model.gameName, innerX, 336 * scale)
 

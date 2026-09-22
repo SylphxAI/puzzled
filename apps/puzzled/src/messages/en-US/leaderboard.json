@@ -23,8 +23,8 @@
 	"tableCaption": "{module} leaderboard for {period}: rank, player and score",
 	"you": "You",
 	"empty": {
-		"title": "No finished scores on this board yet",
-		"body": "{module} has no accepted scores in this period. Play it and the first score could be yours.",
+		"title": "This board is still warming up",
+		"body": "No {module} scores have landed in this period yet — the clock is running and the board is yours to set.",
 		"play": "Play {module}"
 	},
 	"notes": {

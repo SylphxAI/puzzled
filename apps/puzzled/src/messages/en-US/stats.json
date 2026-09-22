@@ -107,7 +107,7 @@
 	"modules": {
 		"title": "Modules",
 		"description": "What you have finished, module by module.",
-		"empty": "No module has a finished session yet.",
+		"empty": "Nothing here yet — your first finished session makes this page yours.",
 		"browse": "Browse modules",
 		"tableCaption": "Finished modules with wins, win rate and best score",
 		"module": "Module",

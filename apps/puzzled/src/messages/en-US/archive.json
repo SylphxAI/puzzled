@@ -16,5 +16,8 @@
 	"playDayLabel": "Play {game} from {date}",
 	"play": "Play",
 	"playToday": "Play today's ritual ({game})",
-	"backToGames": "Back to all games"
+	"backToGames": "Back to all games",
+	"emptyTitle": "The archive is still empty",
+	"emptyBody": "Every past daily lands here as the product days roll over — today is the ritual. Play it and tomorrow’s set takes its place.",
+	"emptyPlay": "Play today’s ritual ({game})"
 }

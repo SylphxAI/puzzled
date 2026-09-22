@@ -23,8 +23,8 @@
 	"tableCaption": "{module}「{period}」排行榜：名次、玩家與分數",
 	"you": "你",
 	"empty": {
-		"title": "此榜單尚未有完成分數",
-		"body": "{module} 在此期間尚未有計入的分數。現在遊玩，第一個分數可能就是你的。",
+		"title": "此榜單正在熱身中",
+		"body": "{module} 在此期間還沒有計分成績——比賽時鐘正在走，榜首由你來定。",
 		"play": "遊玩 {module}"
 	},
 	"notes": {

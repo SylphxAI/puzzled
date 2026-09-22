@@ -158,50 +158,71 @@ export default async function ArchivePage({ params }: Props) {
 					</Card>
 				) : (
 					<section className="mt-8">
-						<div className="flex items-center gap-3">
-							<CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
-							<h2 className="font-display text-xl font-bold">{t('listTitle')}</h2>
-						</div>
-						<p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-							{t('listBody', { count: ARCHIVE_WINDOW_DAYS })}
-						</p>
+						{days.length === 0 ? (
+							/* Warm empty state: never an empty grid as the default. */
+							<div className="rounded-2xl border border-border/70 bg-surface-muted/50 p-6">
+								<div className="flex items-center gap-3">
+									<CalendarDays className="h-5 w-5 text-accent-warm" aria-hidden="true" />
+									<h2 className="font-display text-xl font-bold">{t('emptyTitle')}</h2>
+								</div>
+								<p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+									{t('emptyBody')}
+								</p>
+								<Link
+									href={`/games/${todaysFreeGame}`}
+									className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-accent-warm/40 bg-accent-warm/10 px-5 text-sm font-semibold text-accent-warm-foreground transition-colors hover:bg-accent-warm/20"
+								>
+									{t('emptyPlay', { game: freeName })}
+								</Link>
+							</div>
+						) : (
+							<>
+								<div className="flex items-center gap-3">
+									<CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
+									<h2 className="font-display text-xl font-bold">{t('listTitle')}</h2>
+								</div>
+								<p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+									{t('listBody', { count: ARCHIVE_WINDOW_DAYS })}
+								</p>
 
-						<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-							{days.map((day) => (
-								<li key={day.dayKey}>
+								<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+									{days.map((day) => (
+										<li key={day.dayKey}>
+											<Link
+												href={archivePlayPath(day.gameSlug, day.dayKey)}
+												className="flex h-full min-h-11 items-center gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+												aria-label={t('playDayLabel', {
+													game: day.name,
+													date: formatDayKey(day.dayKey, locale),
+												})}
+											>
+												<GameIcon slug={day.gameSlug} size={22} aria-hidden="true" />
+												<span className="min-w-0 flex-1">
+													<span className="block truncate text-sm font-semibold">{day.name}</span>
+													<span className="block text-xs text-muted-foreground">
+														{formatDayKey(day.dayKey, locale)}
+													</span>
+												</span>
+												<Play className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+												<span className="sr-only">{t('play')}</span>
+											</Link>
+										</li>
+									))}
+								</ul>
+
+								<div className="mt-6 flex flex-wrap items-center gap-3">
 									<Link
-										href={archivePlayPath(day.gameSlug, day.dayKey)}
-										className="flex h-full min-h-11 items-center gap-3 rounded-2xl border border-border/70 bg-card p-4 transition-colors hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-										aria-label={t('playDayLabel', {
-											game: day.name,
-											date: formatDayKey(day.dayKey, locale),
-										})}
+										href={`/games/${todaysFreeGame}`}
+										className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
 									>
-										<GameIcon slug={day.gameSlug} size={22} aria-hidden="true" />
-										<span className="min-w-0 flex-1">
-											<span className="block truncate text-sm font-semibold">{day.name}</span>
-											<span className="block text-xs text-muted-foreground">
-												{formatDayKey(day.dayKey, locale)}
-											</span>
-										</span>
-										<Play className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-										<span className="sr-only">{t('play')}</span>
+										{t('playToday', { game: freeName })}
 									</Link>
-								</li>
-							))}
-						</ul>
-
-						<div className="mt-6 flex flex-wrap items-center gap-3">
-							<Link
-								href={`/games/${todaysFreeGame}`}
-								className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold transition-colors hover:border-primary/30 hover:text-primary"
-							>
-								{t('playToday', { game: freeName })}
-							</Link>
-							<Link href="/games" className="text-sm font-medium text-primary hover:underline">
-								{t('backToGames')}
-							</Link>
-						</div>
+									<Link href="/games" className="text-sm font-medium text-primary hover:underline">
+										{t('backToGames')}
+									</Link>
+								</div>
+							</>
+						)}
 					</section>
 				)}
 			</section>
