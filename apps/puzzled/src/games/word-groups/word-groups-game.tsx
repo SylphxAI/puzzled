@@ -27,7 +27,6 @@ type Props = {
 export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGroups')
 	const tCommon = useTranslations('common')
-	const tShare = useTranslations('share')
 
 	// Type-safe puzzle parsing via config - no type assertions needed
 	const [initialPuzzle] = useState(() => {
@@ -178,7 +177,7 @@ export function WordGroupsGame({ mode = 'daily', puzzleId, puzzleData, puzzleDat
 			statLine: emojiGrid,
 		})
 
-		if (outcome === 'copied') showToastMessage(tShare('copied'))
+		if (outcome === 'copied') showToastMessage(tCommon('copied'))
 	}
 
 	// Sort solved categories by level for display

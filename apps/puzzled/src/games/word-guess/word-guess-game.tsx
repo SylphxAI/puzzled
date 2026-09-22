@@ -29,7 +29,6 @@ type Props = {
 export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }: Props) {
 	const t = useTranslations('games.wordGuess')
 	const tCommon = useTranslations('common')
-	const tShare = useTranslations('share')
 
 	// Get puzzle from server data (client-safe - no config import)
 	const [puzzle] = useState(() =>
@@ -175,7 +174,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 			statLine: emojiGrid,
 		})
 
-		if (outcome === 'copied') showToastMsg(tShare('copied'))
+		if (outcome === 'copied') showToastMsg(tCommon('copied'))
 	}
 
 	// Ready screen - show rules before gameplay
@@ -310,7 +309,7 @@ export function WordGuessGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate
 					aria-live="assertive"
 					className="fixed bottom-24 left-1/2 -translate-x-1/2 animate-slide-up rounded-lg bg-foreground px-4 py-2 text-sm text-background shadow-lg"
 				>
-					{toastMessage || tShare('copied')}
+					{toastMessage || tCommon('copied')}
 				</div>
 			)}
 		</div>

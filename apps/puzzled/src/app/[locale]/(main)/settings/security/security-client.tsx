@@ -135,7 +135,7 @@ export function SecuritySettingsContent() {
 						className="min-h-11 gap-2"
 					>
 						<LogOut className="h-4 w-4" aria-hidden="true" />
-						{signingOut ? t('account.signingOut') : t('security.signOutHere')}
+						{signingOut ? t('account.signingOut') : t('account.signOut')}
 					</Button>
 				</div>
 			</ConsoleCard>

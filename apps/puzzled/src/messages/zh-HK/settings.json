@@ -627,8 +627,7 @@
 		"sessionsLoading": "正在檢查你的工作階段…",
 		"sessionsCount": "你的帳戶目前有 {count} 個使用中的工作階段。",
 		"sessionsUnavailableTitle": "工作階段未能載入",
-		"sessionsUnavailableBody": "工作階段清單沒有回應，因此不顯示數目。",
-		"signOutHere": "登出此裝置"
+		"sessionsUnavailableBody": "工作階段清單沒有回應，因此不顯示數目。"
 	},
 	"securityAlerts": {
 		"title": "安全警示",
