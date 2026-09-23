@@ -34,3 +34,13 @@ IN-SESSION from a fresh worktree. Branch: feat/redesign-atmosphere @ origin/main
   'could not read' states equally; the skin comparison is fair, the data is absent.
 - Next: result share card slice; per-game theme cards spread; empty states polish; retake shots
   against a live local stack; independent review before any landing.
+
+## 2026-09-23 ~02:5x BST — CI a11y lane was RED on this branch; fixed with evidence
+- Failing job: Accessibility (WCAG 2.2 AA), run 35747193624 — 20 specs (desktop-light + mobile-light of `notes` routes).
+- Root causes (axe, from the job log): (1) `bg-primary/10 text-primary` = #c2410c on #f4e4d8 = 4.17:1 (nav pills, bottom-nav, chips);
+  (2) footer language switcher `text-white/90` on the paper `bg-background` button = 1.06:1; (3) `text-amber-700` chips
+  tipped under 4.5 by the warmer page background.
+- Fixes on branch: light `--color-primary` #c2410c -> #9a3412 (hover #7c2d12) — text-on-tint now 5.8:1, text-on-paper 6.8:1, white-on-fill 7.3:1;
+  footer switcher gets `tone="inverse"` (transparent on ink band, white text); amber chips -> `text-amber-800` (6.4:1).
+- Evidence: LOCAL spec `bunx playwright test e2e-tests/a11y.e2e.ts -g light` against the dev server = **30 passed (0 failed)**;
+  dark re-run in progress; probe scripts committed (scripts/a11y-probe*.ts). Screenshots retaken on the final palette.

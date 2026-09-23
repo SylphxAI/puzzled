@@ -56,7 +56,7 @@ export function DifficultySelectionView({
 		medium: {
 			label: t('medium'),
 			description: t('mediumDescription'),
-			color: 'text-amber-700 dark:text-amber-400',
+			color: 'text-amber-800 dark:text-amber-400',
 			bgColor: 'bg-amber-500/5',
 			borderColor: 'border-amber-500/20 hover:border-amber-500/40',
 			hoverBg: 'hover:bg-amber-500/10',

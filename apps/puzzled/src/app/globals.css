@@ -126,8 +126,8 @@
 	   Colors - Brand
 	   ----------------------------------------- */
 	/* indigo-600 passes AA as both a fill (white text) and as text on white. */
-	--color-primary: #c2410c;
-	--color-primary-hover: #9a3412;
+	--color-primary: #9a3412;
+	--color-primary-hover: #7c2d12;
 	--color-primary-foreground: #fff7ed;
 	--color-ring: #ea580c;
 	--color-secondary: #9a3412;
