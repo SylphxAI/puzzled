@@ -174,7 +174,7 @@ export default async function StatsPage({ params }: Props) {
 								</span>
 							) : null}
 							{streakChip ? (
-								<span className="chip bg-stat-streak/10 text-stat-streak">
+								<span className="chip bg-accent-warm/10 text-accent-warm">
 									{t('identity.streakChip', { days: streakRead?.currentStreak ?? 0 })}
 								</span>
 							) : null}
@@ -340,7 +340,7 @@ export default async function StatsPage({ params }: Props) {
 												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 													{t('streak')}
 												</dt>
-												<dd className="mt-1 font-display text-3xl font-extrabold tnum">
+												<dd className="mt-1 font-display text-3xl font-extrabold tnum numeral">
 													{streakRead?.currentStreak ?? 0}
 												</dd>
 											</div>
@@ -348,14 +348,14 @@ export default async function StatsPage({ params }: Props) {
 												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 													{t('best')}
 												</dt>
-												<dd className="mt-1 font-display text-3xl font-extrabold tnum">
+												<dd className="mt-1 font-display text-3xl font-extrabold tnum numeral">
 													{streakRead?.maxStreak ?? 0}
 												</dd>
 											</div>
 										</dl>
 										<ul className="mt-4 space-y-2 text-sm">
 											<li className="flex items-center gap-2">
-												<Flame className="h-4 w-4 text-stat-streak" aria-hidden="true" />
+												<Flame className="h-4 w-4 text-accent-warm" aria-hidden="true" />
 												{streakRead?.hasPlayedToday
 													? t('streakCard.playedToday')
 													: t('streakCard.notPlayedToday')}

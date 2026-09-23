@@ -44,6 +44,10 @@ export interface GameColorClasses {
 	border: string
 	/** Radial gradient pattern for card backgrounds */
 	pattern: string
+	/** Accent stripe along the tile's top edge (static class string). */
+	stripe: string
+	/** Hover glow ring in the module's own hue (static class string). */
+	glow: string
 }
 
 /**
@@ -62,6 +66,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-emerald-500/30',
 		border: 'border-emerald-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(16,185,129,0.15),transparent_50%)]',
+		stripe: 'bg-emerald-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(16,185,129,0.45)] hover:ring-2 hover:ring-emerald-500/60',
 	},
 	cyan: {
 		gradient: 'from-cyan-500 to-teal-600',
@@ -71,6 +77,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-cyan-500/30',
 		border: 'border-cyan-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(6,182,212,0.15),transparent_50%)]',
+		stripe: 'bg-cyan-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(6,182,212,0.45)] hover:ring-2 hover:ring-cyan-500/60',
 	},
 	violet: {
 		gradient: 'from-violet-500 to-purple-600',
@@ -80,6 +88,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-violet-500/30',
 		border: 'border-violet-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.15),transparent_50%)]',
+		stripe: 'bg-violet-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(139,92,246,0.45)] hover:ring-2 hover:ring-violet-500/60',
 	},
 	amber: {
 		gradient: 'from-amber-500 to-orange-600',
@@ -89,6 +99,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-amber-500/30',
 		border: 'border-amber-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(245,158,11,0.15),transparent_50%)]',
+		stripe: 'bg-amber-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(245,158,11,0.45)] hover:ring-2 hover:ring-amber-500/60',
 	},
 	pink: {
 		gradient: 'from-pink-500 to-rose-600',
@@ -98,6 +110,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-pink-500/30',
 		border: 'border-pink-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(236,72,153,0.15),transparent_50%)]',
+		stripe: 'bg-pink-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(236,72,153,0.45)] hover:ring-2 hover:ring-pink-500/60',
 	},
 	rose: {
 		gradient: 'from-rose-500 to-pink-600',
@@ -107,6 +121,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-rose-500/30',
 		border: 'border-rose-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%)]',
+		stripe: 'bg-rose-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(244,63,94,0.45)] hover:ring-2 hover:ring-rose-500/60',
 	},
 	blue: {
 		gradient: 'from-blue-500 to-indigo-600',
@@ -116,6 +132,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-blue-500/30',
 		border: 'border-blue-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(59,130,246,0.15),transparent_50%)]',
+		stripe: 'bg-blue-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(59,130,246,0.45)] hover:ring-2 hover:ring-blue-500/60',
 	},
 	sky: {
 		gradient: 'from-sky-500 to-blue-600',
@@ -125,6 +143,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-sky-500/30',
 		border: 'border-sky-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(14,165,233,0.15),transparent_50%)]',
+		stripe: 'bg-sky-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(14,165,233,0.45)] hover:ring-2 hover:ring-sky-500/60',
 	},
 	orange: {
 		gradient: 'from-orange-500 to-red-600',
@@ -134,6 +154,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-orange-500/30',
 		border: 'border-orange-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(249,115,22,0.15),transparent_50%)]',
+		stripe: 'bg-orange-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(249,115,22,0.45)] hover:ring-2 hover:ring-orange-500/60',
 	},
 	lime: {
 		gradient: 'from-lime-500 to-green-600',
@@ -143,6 +165,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-lime-500/30',
 		border: 'border-lime-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(132,204,22,0.15),transparent_50%)]',
+		stripe: 'bg-lime-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(132,204,22,0.45)] hover:ring-2 hover:ring-lime-500/60',
 	},
 	slate: {
 		gradient: 'from-slate-500 to-gray-600',
@@ -152,6 +176,8 @@ const GAME_COLOR_THEMES: Record<GameColorTheme, GameColorClasses> = {
 		ring: 'ring-slate-500/30',
 		border: 'border-slate-500',
 		pattern: 'bg-[radial-gradient(circle_at_80%_20%,rgba(100,116,139,0.15),transparent_50%)]',
+		stripe: 'bg-slate-500',
+		glow: 'hover:shadow-[0_8px_24px_-6px_rgba(100,116,139,0.45)] hover:ring-2 hover:ring-slate-500/60',
 	},
 } as const
 
@@ -174,4 +200,6 @@ export const DEFAULT_GAME_COLORS: GameColorClasses = {
 	ring: 'ring-primary/30',
 	border: 'border-primary',
 	pattern: '',
+	stripe: 'bg-primary',
+	glow: 'hover:shadow-lift',
 }

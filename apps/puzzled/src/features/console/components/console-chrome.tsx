@@ -119,7 +119,7 @@ type ConsoleStatProps = {
 
 const STAT_TONES: Record<NonNullable<ConsoleStatProps['tone']>, string> = {
 	brand: 'text-primary',
-	streak: 'text-stat-streak',
+	streak: 'text-accent-warm',
 	win: 'text-stat-winrate',
 	best: 'text-amber-500',
 }
@@ -141,7 +141,7 @@ export function ConsoleStat({
 				</p>
 			</div>
 			<p
-				className="mt-2 font-display text-2xl font-extrabold tnum"
+				className="mt-2 font-display text-2xl font-extrabold tnum numeral"
 				aria-hidden={srValue ? 'true' : undefined}
 			>
 				{value}
