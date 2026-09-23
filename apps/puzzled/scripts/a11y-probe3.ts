@@ -7,7 +7,7 @@ const ctx = await browser.newContext({
 	colorScheme: 'light',
 })
 const page = await ctx.newPage()
-await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' }).catch(() => {})
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' }).catch(() => {})
 await page.waitForTimeout(2000)
 const r = await page.evaluate(() => {
 	const el = document.querySelector('.gap-3 > .truncate')

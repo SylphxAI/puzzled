@@ -8,12 +8,11 @@ for (const scheme of ['light', 'dark'] as const) {
 		colorScheme: scheme,
 	})
 	const page = await ctx.newPage()
-	await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
+	await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
 	await page.waitForTimeout(2000)
 	const report = await page.evaluate(() => {
 		const body = getComputedStyle(document.body)
 		const pricingLinks = document.querySelectorAll('a[href="/pricing"]').length
-		const nav = document.querySelector('nav[aria-label]')
 		const h1 = document.querySelector('h1')
 		const h1Font = h1 ? getComputedStyle(h1).fontFamily : 'none'
 		const doc = document.documentElement.className

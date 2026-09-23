@@ -7,7 +7,7 @@ const ctx = await browser.newContext({
 	colorScheme: 'light',
 })
 const page = await ctx.newPage()
-await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
+await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
 await page.waitForTimeout(2500)
 const report = await page.evaluate(() => {
 	const out: {

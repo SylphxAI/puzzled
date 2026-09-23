@@ -19,7 +19,7 @@ for (const t of targets) {
 			deviceScaleFactor: 1,
 		})
 		const page = await ctx.newPage()
-		await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
+		await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
 		await page.waitForTimeout(2500)
 		await page.screenshot({ path: `${OUT}/${TAG}-${t.name}-${scheme}.png` })
 		await ctx.close()

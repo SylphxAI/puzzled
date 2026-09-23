@@ -42,13 +42,11 @@ for (const route of routes) {
 				color: getComputedStyle(el).color,
 			}))
 		if (underlines.length) out.underline = underlines
-		const ambers = [...document.querySelectorAll('.text-amber-700')]
-			.slice(0, 4)
-			.map((el) => ({
-				t: (el.textContent || '').slice(0, 24),
-				cls: String(el.className).slice(0, 80),
-				bg: el.parentElement ? getComputedStyle(el.parentElement).backgroundColor : '',
-			}))
+		const ambers = [...document.querySelectorAll('.text-amber-700')].slice(0, 4).map((el) => ({
+			t: (el.textContent || '').slice(0, 24),
+			cls: String(el.className).slice(0, 80),
+			bg: el.parentElement ? getComputedStyle(el.parentElement).backgroundColor : '',
+		}))
 		if (ambers.length) out.amber = ambers
 		const pill = document.querySelector('a[aria-current="page"]')
 		if (pill)
@@ -65,6 +63,6 @@ for (const route of routes) {
 		if (sub.length) out.navExtra = sub
 		return out
 	})
-	console.log('ROUTE ' + route + ' ' + JSON.stringify(r).slice(0, 1800))
+	console.log(`ROUTE ${route} ${JSON.stringify(r).slice(0, 1800)}`)
 }
 await browser.close()
