@@ -44,3 +44,5 @@ IN-SESSION from a fresh worktree. Branch: feat/redesign-atmosphere @ origin/main
   footer switcher gets `tone="inverse"` (transparent on ink band, white text); amber chips -> `text-amber-800` (6.4:1).
 - Evidence: LOCAL spec `bunx playwright test e2e-tests/a11y.e2e.ts -g light` against the dev server = **30 passed (0 failed)**;
   dark re-run in progress; probe scripts committed (scripts/a11y-probe*.ts). Screenshots retaken on the final palette.
+
+- Dark rerun: 30 passed / 0 failed (same spec, -g dark). Full local matrix now green: 60/60.
