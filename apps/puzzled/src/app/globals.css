@@ -22,7 +22,7 @@
 	/* -----------------------------------------
 	   Font Families
 	   ----------------------------------------- */
-	--font-display: var(--font-display-family), var(--font-sans-family), ui-sans-serif, system-ui,
+	--font-display: var(--font-day-display-family), var(--font-display-family), var(--font-sans-family), ui-sans-serif, system-ui,
 		sans-serif;
 	--font-sans: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
 	--font-mono: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
@@ -41,20 +41,20 @@
 	/* -----------------------------------------
 	   Shadows (Brand-tinted - Puzzled signature)
 	   ----------------------------------------- */
-	--shadow-sm: 0 1px 2px 0 rgb(99 102 241 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--shadow: 0 2px 4px 0 rgb(99 102 241 / 0.08), 0 2px 4px 0 rgb(0 0 0 / 0.08);
-	--shadow-md: 0 4px 8px -1px rgb(99 102 241 / 0.1), 0 4px 8px -1px
+	--shadow-sm: 0 1px 2px 0 rgb(30 27 75 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	--shadow: 0 2px 4px 0 rgb(30 27 75 / 0.08), 0 2px 4px 0 rgb(0 0 0 / 0.08);
+	--shadow-md: 0 4px 8px -1px rgb(30 27 75 / 0.1), 0 4px 8px -1px
 		rgb(0 0 0 / 0.1);
-	--shadow-lg: 0 12px 24px -4px rgb(99 102 241 / 0.12), 0 12px 20px -4px
+	--shadow-lg: 0 12px 24px -4px rgb(30 27 75 / 0.14), 0 12px 20px -4px
 		rgb(0 0 0 / 0.1);
-	--shadow-card: 0 2px 8px 0 rgb(99 102 241 / 0.08), 0 2px 4px -1px
+	--shadow-card: 0 2px 8px 0 rgb(30 27 75 / 0.08), 0 2px 4px -1px
 		rgb(0 0 0 / 0.04);
-	--shadow-card-hover: 0 8px 24px -4px rgb(99 102 241 / 0.15), 0 6px 12px -4px
+	--shadow-card-hover: 0 8px 24px -4px rgb(234 88 12 / 0.16), 0 6px 12px -4px
 		rgb(0 0 0 / 0.08);
-	--shadow-lift: 0 18px 40px -18px rgb(79 70 229 / 0.35), 0 8px 16px -12px
+	--shadow-lift: 0 18px 40px -18px rgb(234 88 12 / 0.3), 0 8px 16px -12px
 		rgb(15 23 42 / 0.18);
-	--shadow-glow: 0 0 0 1px rgb(99 102 241 / 0.08), 0 24px 60px -28px
-		rgb(99 102 241 / 0.45);
+	--shadow-glow: 0 0 0 1px rgb(249 115 22 / 0.12), 0 24px 60px -28px
+		rgb(249 115 22 / 0.4);
 
 	/* -----------------------------------------
 	   Z-Index System
@@ -126,21 +126,21 @@
 	   Colors - Brand
 	   ----------------------------------------- */
 	/* indigo-600 passes AA as both a fill (white text) and as text on white. */
-	--color-primary: #4f46e5;
-	--color-primary-hover: #4338ca;
-	--color-primary-foreground: #ffffff;
-	--color-ring: #4f46e5;
-	--color-secondary: #8b5cf6;
+	--color-primary: #9a3412;
+	--color-primary-hover: #7c2d12;
+	--color-primary-foreground: #fff7ed;
+	--color-ring: #ea580c;
+	--color-secondary: #9a3412;
 	/* Warm accent used for delight moments (streaks, celebration, highlights) */
 	--color-accent-warm: #f97316;
 	--color-accent-warm-soft: #fff7ed;
 	--color-accent-warm-foreground: #7c2d12;
 	/* Deep brand ink used by marketing bands and the footer */
 	--color-ink: #1e1b4b;
-	--color-ink-muted: #4338ca;
-	--color-ink-foreground: #eef2ff;
-	--color-surface: #ffffff;
-	--color-surface-muted: #f8fafc;
+	--color-ink-muted: #3f3668;
+	--color-ink-foreground: #f6f1e7;
+	--color-surface: #fffdf8;
+	--color-surface-muted: #f6f0e6;
 	--color-surface-raised: #ffffff;
 
 	/* -----------------------------------------
@@ -187,22 +187,22 @@
 	/* -----------------------------------------
 	   Colors - UI (Light Mode defaults)
 	   ----------------------------------------- */
-	--color-background: #ffffff;
-	--color-foreground: #0f172a;
-	--color-card: #ffffff;
-	--color-card-foreground: #0f172a;
-	--color-accent: #f1f5f9;
-	--color-accent-foreground: #0f172a;
-	--color-muted: #f1f5f9;
-	--color-muted-foreground: #475569;
-	--color-border: #e2e8f0;
-	--color-input: #e2e8f0;
+	--color-background: #faf6ef;
+	--color-foreground: #241d3f;
+	--color-card: #fffdf8;
+	--color-card-foreground: #241d3f;
+	--color-accent: #f3ece1;
+	--color-accent-foreground: #241d3f;
+	--color-muted: #f3ece1;
+	--color-muted-foreground: #5b5170;
+	--color-border: #e6dccd;
+	--color-input: #e6dccd;
 
 	/* -----------------------------------------
 	   Colors - Keyboard
 	   ----------------------------------------- */
-	--color-key: #d1d5db;
-	--color-key-text: #1f2937;
+	--color-key: #e4d9c9;
+	--color-key-text: #2a2344;
 }
 
 /* -----------------------------------------
@@ -214,31 +214,31 @@
    Dark Mode Theme Overrides
    ----------------------------------------- */
 .dark {
-	--color-background: #0f172a;
-	--color-foreground: #f8fafc;
-	--color-card: #1e293b;
-	--color-card-foreground: #f8fafc;
-	--color-accent: #334155;
-	--color-accent-foreground: #f8fafc;
-	--color-muted: #334155;
+	--color-background: #0e1226;
+	--color-foreground: #f2ecdf;
+	--color-card: #191d38;
+	--color-card-foreground: #f2ecdf;
+	--color-accent: #2a2f52;
+	--color-accent-foreground: #f2ecdf;
+	--color-muted: #232846;
 	/*
 	 * Muted text must stay legible on the raised surfaces as well as on the
 	 * page background: #a5b2c5 clears 4.5:1 on --color-muted (#334155, 4.8:1),
 	 * --color-card (#1e293b, 6.8:1) and --color-background (#0f172a, 8.3:1).
 	 * slate-400 (#94a3b8) only reached 4.0:1 on the muted chip surface.
 	 */
-	--color-muted-foreground: #a5b2c5;
-	--color-border: #475569;
-	--color-input: #334155;
-	--color-ring: #818cf8;
-	--color-key: #374151;
-	--color-key-text: #f9fafb;
+	--color-muted-foreground: #a9a3c4;
+	--color-border: #383e6b;
+	--color-input: #2a2f52;
+	--color-ring: #fb923c;
+	--color-key: #2a2f52;
+	--color-key-text: #f2ecdf;
 	/*
 	 * On dark surfaces the brand colour must be legible as text, so the fill
 	 * turns light and its label turns dark ink (7.3:1 / 8.0:1).
 	 */
-	--color-primary: #a5b4fc;
-	--color-primary-hover: #c7d2fe;
+	--color-primary: #fb923c;
+	--color-primary-hover: #fdba74;
 	--color-primary-foreground: #1e1b4b;
 	--color-stat-winrate: #4ade80;
 	--color-stat-streak: #fb923c;
@@ -248,10 +248,10 @@
 	--color-accent-warm-foreground: #ffedd5;
 	--color-ink: #0b1020;
 	--color-ink-muted: #1e1b4b;
-	--color-ink-foreground: #e0e7ff;
-	--color-surface: #172033;
-	--color-surface-muted: #131c2e;
-	--color-surface-raised: #1e293b;
+	--color-ink-foreground: #f2ecdf;
+	--color-surface: #191d38;
+	--color-surface-muted: #141830;
+	--color-surface-raised: #232846;
 
 	/* Semantic Colors - Dark Mode */
 	--color-success: #4ade80;
@@ -560,23 +560,23 @@ body {
 /* Soft aurora field used behind heroes. Decorative only. */
 .bg-aurora {
 	background-image:
-		radial-gradient(60% 55% at 12% 8%, rgb(99 102 241 / 0.16), transparent 70%),
-		radial-gradient(45% 45% at 88% 0%, rgb(217 70 239 / 0.12), transparent 65%),
-		radial-gradient(55% 55% at 70% 95%, rgb(249 115 22 / 0.08), transparent 70%);
+		radial-gradient(60% 55% at 12% 8%, rgb(249 115 22 / 0.12), transparent 70%),
+		radial-gradient(45% 45% at 88% 0%, rgb(30 27 75 / 0.08), transparent 65%),
+		radial-gradient(55% 55% at 70% 95%, rgb(245 158 11 / 0.1), transparent 70%);
 }
 
 .dark .bg-aurora {
 	background-image:
-		radial-gradient(60% 55% at 12% 8%, rgb(99 102 241 / 0.28), transparent 70%),
-		radial-gradient(45% 45% at 88% 0%, rgb(168 85 247 / 0.2), transparent 65%),
-		radial-gradient(55% 55% at 70% 95%, rgb(249 115 22 / 0.1), transparent 70%);
+		radial-gradient(60% 55% at 12% 8%, rgb(249 115 22 / 0.18), transparent 70%),
+		radial-gradient(45% 45% at 88% 0%, rgb(76 64 142 / 0.22), transparent 65%),
+		radial-gradient(55% 55% at 70% 95%, rgb(245 158 11 / 0.12), transparent 70%);
 }
 
 /* Faint grid overlay for premium/marketing bands. */
 .bg-grid-faint {
 	background-image:
-		linear-gradient(to right, rgb(99 102 241 / 0.07) 1px, transparent 1px),
-		linear-gradient(to bottom, rgb(99 102 241 / 0.07) 1px, transparent 1px);
+		linear-gradient(to right, rgb(234 88 12 / 0.06) 1px, transparent 1px),
+		linear-gradient(to bottom, rgb(234 88 12 / 0.06) 1px, transparent 1px);
 	background-size: 32px 32px;
 }
 
@@ -599,7 +599,7 @@ body {
 	.surface-card-hover:hover {
 		transform: translateY(-2px);
 		box-shadow: var(--shadow-lift);
-		border-color: rgb(99 102 241 / 0.35);
+		border-color: rgb(249 115 22 / 0.35);
 	}
 }
 
@@ -619,7 +619,7 @@ body {
 }
 
 .text-gradient {
-	background-image: linear-gradient(100deg, #4f46e5 5%, #7c3aed 50%, #d946ef 100%);
+	background-image: linear-gradient(100deg, #ea580c 5%, #f59e0b 50%, #fbbf24 100%);
 	-webkit-background-clip: text;
 	background-clip: text;
 	color: transparent;
@@ -1526,4 +1526,11 @@ html[data-consent-decided] [data-consent-banner] {
 		animation-duration: 0.01ms !important;
 		animation-delay: 0s !important;
 	}
+}
+
+/* The numeral voice: mono + tabular — streaks, countdowns, puzzle numbers. */
+.numeral {
+	font-family: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.01em;
 }

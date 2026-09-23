@@ -15,7 +15,7 @@ export type Milestone = {
 }
 
 const TIER_CLASSES: Record<AchievementTier, string> = {
-	bronze: 'bg-amber-700/10 text-amber-700 dark:text-amber-500',
+	bronze: 'bg-amber-700/10 text-amber-800 dark:text-amber-500',
 	silver: 'bg-slate-500/10 text-slate-600 dark:text-slate-300',
 	gold: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
 	platinum: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',

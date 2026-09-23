@@ -164,7 +164,7 @@ export default async function StatsPage({ params }: Props) {
 							{user ? (
 								<span className="chip bg-primary/10 text-primary">{t('identity.member')}</span>
 							) : (
-								<span className="chip bg-amber-500/10 text-amber-700 dark:text-amber-400">
+								<span className="chip bg-amber-500/10 text-amber-800 dark:text-amber-400">
 									{t('identity.guest')}
 								</span>
 							)}

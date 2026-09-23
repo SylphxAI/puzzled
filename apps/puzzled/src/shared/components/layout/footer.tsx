@@ -30,7 +30,7 @@ export async function Footer() {
 						<Logo size="md" tone="inverse" />
 						<p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">{t('tagline')}</p>
 						<div className="mt-5">
-							<LanguageSwitcher variant="button" className="border-white/20 text-white/90" />
+							<LanguageSwitcher variant="button" tone="inverse" />
 						</div>
 					</div>
 
