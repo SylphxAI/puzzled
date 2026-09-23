@@ -46,3 +46,5 @@ refs/heads/s3/richness-1 (local branch s3/richness-1 stays checked out in the au
   (the 04:44 set was captured under different conditions — inconsistent totals). Final pixel diffs (AE):
   desktop home-light 11,481 / games-light 44,795 / home-dark 11,671 / games-dark 46,144;
   mobile home-light 10,992 / games-light 33,786 / home-dark 11,042 / games-dark 34,144.
+
+- PR: https://github.com/SylphxAI/puzzled/pull/186 (opened 05:2x BST; awaiting independent review).
