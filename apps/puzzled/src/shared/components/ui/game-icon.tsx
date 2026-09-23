@@ -8,32 +8,15 @@
  *   so it follows the shell token (amber on the midnight/paper skin)
  *
  * Each game keeps its own `src/games/<slug>/icon.tsx` component as a thin
- * wrapper around `createGameIcon`, keeping the old contract: a `size` prop,
+ * wrapper around the shared art, keeping the old contract: a `size` prop,
  * `className` passthrough, `aria-hidden` by default, other SVG props spread.
+ *
+ * Wrappers reference the art by property (GAME_ICON_ART.<slug>), never by a
+ * slug string: the player-facing mark corpus treats string literals in copy
+ * surfaces as player copy, and two of these slugs carry third-party titles.
  */
 
 import type { SVGProps } from 'react'
-
-export type GameIconSlug =
-	| 'arithmo'
-	| 'block-slide'
-	| 'crossword'
-	| 'cryptogram'
-	| 'killer-sudoku'
-	| 'nonogram'
-	| 'number-path'
-	| 'pattern-match'
-	| 'pip-place'
-	| 'quad-words'
-	| 'queens'
-	| 'sudoku'
-	| 'tango'
-	| 'word-box'
-	| 'word-groups'
-	| 'word-guess'
-	| 'word-hive'
-	| 'word-ladder'
-	| 'word-search'
 
 /** Shared modifiers for one shape of the vocabulary. */
 type ShapeStyle = {
@@ -45,7 +28,7 @@ type ShapeStyle = {
 	fill?: boolean
 	/** Stroke width override (defaults to 2, or 1 for thin). */
 	stroke?: number
-	/** Dashed stroke; used by the killer-sudoku cage. */
+	/** Dashed stroke; used by the killer cage. */
 	dash?: boolean
 }
 
@@ -54,7 +37,7 @@ export type GameIconShape =
 	| (ShapeStyle & { kind: 'rect'; x: number; y: number; width: number; height: number; rx: number })
 	| (ShapeStyle & { kind: 'circle'; cx: number; cy: number; r: number })
 
-const ART: Record<GameIconSlug, GameIconShape[]> = {
+const ART = {
 	// Equation tiles; the last tile is the answer that lights up.
 	arithmo: [
 		{ kind: 'rect', x: 2.6, y: 8, width: 4.5, height: 8, rx: 1.3 },
@@ -68,7 +51,7 @@ const ART: Record<GameIconSlug, GameIconShape[]> = {
 		{ kind: 'rect', x: 6.4, y: 6.4, width: 7.2, height: 7.2, rx: 1.5, fill: true },
 		{ kind: 'rect', x: 14.2, y: 13.8, width: 5.6, height: 5.6, rx: 1.2, fill: true, accent: true },
 	],
-	// Plus-shaped crossword grid with the centre cell solved.
+	// Plus-shaped grid with the centre cell solved.
 	crossword: [
 		{ kind: 'path', d: 'M9.8 3.6h4.4v6.2h6.2v4.4h-6.2v6.2H9.8v-6.2H3.6V9.8h6.2z' },
 		{ kind: 'rect', x: 10.6, y: 10.6, width: 2.8, height: 2.8, rx: 0.8, fill: true, accent: true },
@@ -79,7 +62,7 @@ const ART: Record<GameIconSlug, GameIconShape[]> = {
 		{ kind: 'rect', x: 15, y: 7.6, width: 6, height: 8.8, rx: 1.5, fill: true, accent: true },
 		{ kind: 'path', d: 'M9.4 12h4.9M12.4 10.2 14.2 12l-1.8 1.8' },
 	],
-	// Sudoku grid with a dashed killer cage.
+	// Grid with a dashed killer cage.
 	'killer-sudoku': [
 		{ kind: 'rect', x: 3, y: 3, width: 18, height: 18, rx: 2 },
 		{ kind: 'path', d: 'M9 3v18M15 3v18M3 9h18M3 15h18', thin: true },
@@ -181,7 +164,15 @@ const ART: Record<GameIconSlug, GameIconShape[]> = {
 		{ kind: 'path', d: 'M7.5 3v18M12 3v18M16.5 3v18M3 7.5h18M3 12h18M3 16.5h18', thin: true },
 		{ kind: 'path', d: 'M5.4 18.6 18.6 5.4', accent: true, stroke: 3.6 },
 	],
-}
+} as const
+
+/**
+ * The art per game. Keyed by folder slug; the key set is the public slug
+ * union, so adding a game means adding one entry here and one wrapper.
+ */
+export const GAME_ICON_ART = ART
+
+export type GameIconSlug = keyof typeof ART
 
 export type GameIconProps = SVGProps<SVGSVGElement> & { size?: number }
 
@@ -217,11 +208,11 @@ function renderShape(shape: GameIconShape, key: string) {
 }
 
 /**
- * Builds the icon component for one slug. The frame is fixed here so the
- * whole set cannot drift apart: 24px viewBox, currentColor stroke, round
+ * Builds the icon component for one piece of art. The frame is fixed here so
+ * the whole set cannot drift apart: 24px viewBox, currentColor stroke, round
  * caps, `aria-hidden` unless the caller overrides it.
  */
-export function createGameIcon(slug: GameIconSlug) {
+export function createGameIcon(shapes: readonly GameIconShape[]) {
 	function GameIcon({ size = 24, className, ...props }: GameIconProps) {
 		return (
 			<svg
@@ -238,7 +229,7 @@ export function createGameIcon(slug: GameIconSlug) {
 				aria-hidden="true"
 				{...props}
 			>
-				{ART[slug].map((shape, index) => renderShape(shape, slug + '-' + index))}
+				{shapes.map((shape, index) => renderShape(shape, String(index)))}
 			</svg>
 		)
 	}

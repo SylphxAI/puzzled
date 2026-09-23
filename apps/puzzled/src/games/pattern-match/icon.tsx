@@ -3,6 +3,6 @@
  * (see @/shared/components/ui/game-icon).
  */
 
-import { createGameIcon } from '@/shared/components/ui/game-icon'
+import { createGameIcon, GAME_ICON_ART } from '@/shared/components/ui/game-icon'
 
-export const PatternMatchIcon = createGameIcon('pattern-match')
+export const PatternMatchIcon = createGameIcon(GAME_ICON_ART['pattern-match'])

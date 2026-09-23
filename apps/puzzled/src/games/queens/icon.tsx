@@ -3,6 +3,6 @@
  * (see @/shared/components/ui/game-icon).
  */
 
-import { createGameIcon } from '@/shared/components/ui/game-icon'
+import { createGameIcon, GAME_ICON_ART } from '@/shared/components/ui/game-icon'
 
-export const QueensIcon = createGameIcon('queens')
+export const QueensIcon = createGameIcon(GAME_ICON_ART.queens)

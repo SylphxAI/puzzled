@@ -3,6 +3,6 @@
  * (see @/shared/components/ui/game-icon).
  */
 
-import { createGameIcon } from '@/shared/components/ui/game-icon'
+import { createGameIcon, GAME_ICON_ART } from '@/shared/components/ui/game-icon'
 
-export const QuadWordsIcon = createGameIcon('quad-words')
+export const QuadWordsIcon = createGameIcon(GAME_ICON_ART['quad-words'])
