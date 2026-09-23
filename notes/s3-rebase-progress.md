@@ -29,3 +29,20 @@ refs/heads/s3/richness-1 (local branch s3/richness-1 stays checked out in the au
 
 ## Next action
 - run gates (bun install / typecheck / test / biome / build), then screenshots, push, gh pr create.
+
+## 2026-09-23 05:0x-05:2x BST — parent finished the lane after it stalled twice
+- History: this lane died once on a host EACCES incident (fixed: agents/main/agent dir 0700->0755), was resumed,
+  and then stalled again mid-screenshot-retake (no writes after ~04:44). Parent finished the bounded remainder in-session.
+- [x] lint: `bun run lint` (apps/puzzled) exit 0, 26 infos, 0 errors — after fixing a biome format error in scripts/s3-shots.ts.
+- [x] typecheck: `bun run typecheck` (turbo) = 2 successful.
+- [x] test: `bun run test` — result appended below.
+- [x] screenshots: complete 8-file matrix retaken; before = clean worktree at main tip 561b132 (fullPage, home + /games,
+  desktop+mobile x light+dark) via apps/puzzled/scripts/s3-shots.ts; after = this branch (same matrix). The previous
+  mobile before pair was viewport-only (390x844) and inconsistent — replaced.
+- [x] push + PR: appended below (PR url).
+- Gates verbatim: lint exit 0 (26 infos, 0 errors); typecheck 2 successful; test 1214 pass / 6 skip / 5 fail (all 5 pre-existing: 4x getBaseUrl + schema/migration parity).
+- Pixel diffs (desktop, final sets): home-light 13,325; games-light 45,838; home-dark 15,254; games-dark 51,338.
+- FINAL evidence: all 16 shots retaken with one script (networkidle + lazy-scroll + fullPage) at 05:1x BST; after set replaced
+  (the 04:44 set was captured under different conditions — inconsistent totals). Final pixel diffs (AE):
+  desktop home-light 11,481 / games-light 44,795 / home-dark 11,671 / games-dark 46,144;
+  mobile home-light 10,992 / games-light 33,786 / home-dark 11,042 / games-dark 34,144.

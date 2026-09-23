@@ -11,6 +11,11 @@ const targets = [
 	{ name: 'mobile', width: 390, height: 844 },
 ] as const
 const schemes = ['light', 'dark'] as const
+// Home (full skin) + /games (every card's own hue — the S3 richness).
+const pages = [
+	{ suffix: '', path: '/' },
+	{ suffix: '-games', path: '/games' },
+] as const
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH })
 for (const t of targets) {
@@ -21,9 +26,22 @@ for (const t of targets) {
 			deviceScaleFactor: 1,
 		})
 		const page = await ctx.newPage()
-		await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
-		await page.waitForTimeout(2500)
-		await page.screenshot({ path: `${OUT}/${TAG}-${t.name}-${scheme}.png` })
+		for (const p of pages) {
+			await page
+				.goto(BASE + p.path, { waitUntil: 'domcontentloaded', timeout: 45000 })
+				.catch(() => {})
+			await page.waitForLoadState('networkidle').catch(() => {})
+			await page.waitForTimeout(1500)
+			// Trigger lazy content before the full-page capture, then return to the top.
+			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+			await page.waitForTimeout(1000)
+			await page.evaluate(() => window.scrollTo(0, 0))
+			await page.waitForTimeout(800)
+			await page.screenshot({
+				path: `${OUT}/${TAG}-${t.name}-${scheme}${p.suffix}.png`,
+				fullPage: true,
+			})
+		}
 		await ctx.close()
 	}
 }
