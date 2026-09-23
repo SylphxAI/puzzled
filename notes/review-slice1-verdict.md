@@ -59,3 +59,17 @@ Diff touches no test file and no module those tests exercise (name-status: globa
 - Hygiene: 5 probe scripts committed (a11y-probe{,2,3}.ts near-duplicates) — not unrelated edits, but repo-noise; cleanup candidate.
 
 Artifacts: /data/sylphx/home/tmp/review-slice1/ (step*.txt, contrast*.mjs). ~16 tool calls used.
+
+## Addendum (same session, ~03:2x)
+- 1c concrete anchor: the home h1 is features/home/components/home-day.tsx:106 with class font-display; .font-display -> var(--font-display) -> Space_Grotesk first (globals.css:25,616-617; layout.tsx:49-50).
+- Pushed: review/redesign-slice1 @ 71ba91e (verdict file). Author branch untouched.
+- CI re-read at this time (gh pr checks 184):
+Accessibility (WCAG 2.2 AA)	pass	4m9s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016473780	
+Build	pass	3m31s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107017102951	
+Lighthouse Budgets	pass	7m50s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016473797	
+Lint & Type Check	pass	43s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016193025	
+Migration Integrity	pass	12s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016192883	
+Rust API	pass	2m17s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016193129	
+SEO Contract	pass	56s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016473792	
+Security Scan	pass	19s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016193126	
+Unit Tests	pass	2m18s	https://github.com/SylphxAI/puzzled/actions/runs/35809041601/job/107016473849	
