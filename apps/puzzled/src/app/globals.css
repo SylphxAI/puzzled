@@ -640,13 +640,6 @@ body {
 .tnum {
 	font-variant-numeric: tabular-nums;
 }
-/* S3 richness: the numeral voice (per notes/redesign-spec.md). Mono + tabular —
- * streaks, times and counts. Added alongside .tnum so PR #184's globals work is
- * extended, never rewritten. */
-.numeral {
-	font-family: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
-	font-variant-numeric: tabular-nums;
-}
 
 /* =============================================
    Entrance motion (reduced-motion safe)
