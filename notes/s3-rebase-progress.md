@@ -48,3 +48,16 @@ refs/heads/s3/richness-1 (local branch s3/richness-1 stays checked out in the au
   mobile home-light 10,992 / games-light 33,786 / home-dark 11,042 / games-dark 34,144.
 
 - PR: https://github.com/SylphxAI/puzzled/pull/186 (opened 05:2x BST; awaiting independent review).
+
+## 2026-09-23 05:5x-06:1x BST — R1 (reviewer's hover check) resolved; root cause found
+- R1 confirmed: tile carried both `hover:shadow-lift` (shell) and the per-hue glow shadow — lift won and the glow shadow never painted
+  (probe: computed box-shadow on hover was the lift value; glow shadow absent).
+- Fix 1: removed `hover:shadow-lift` from GameTile; fallback themes keep it via `DEFAULT_GAME_COLORS.glow`. Verified: hover shadow
+  becomes `rgba(<hue>,0.45) 0px 8px 24px -6px`.
+- Fix 2 (root cause found): the hover BORDER was dead too, and not by accident — `apps/puzzled/src/app/globals.css:358-360` carries an
+  UNLAYERED `* { border-color: var(--color-border) }`. Unlayered CSS beats every layered Tailwind utility (cascade layers), so ALL
+  `border-*` / `hover:border-*` colour utilities have been silently dead app-wide (pre-existing on main). Reproduced: the same selector
+  works in a minimal page without that rule; not on /games (CDP matched rules show the `*` rule winning past the hover rule).
+- Contained fix here: glow's `hover:border-<hue>-500/60` → `hover:ring-2 hover:ring-<hue>-500/60` (rings ride the box-shadow chain,
+  unaffected by the `*` rule). Root-cause fix (move the `*` rule into `@layer base`) = app-wide visual change → separate follow-up.
+- Evidence tool committed: apps/puzzled/scripts/s3-hover-probe.ts — exit 0; prints hovered/boxShadow/hasGlowShadow/hasRing/ok.
