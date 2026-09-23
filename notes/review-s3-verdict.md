@@ -82,3 +82,53 @@ that is palette encoding, not missing stripes; the oklch RGBs are the correct ke
 - CI: `env -u GH_TOKEN -u GITHUB_TOKEN gh pr checks 186 -R SylphxAI/puzzled`
 
 Verdict: PASS. No blockers. M1 (zh copy) and R1 (hover) are worth a look before merge but neither contradicts an acceptance criterion of the slice.
+
+---
+
+## DELTA re-verification — head 01b352d (was 9f88d59), 2026-09-23 06:1x BST — VERDICT: DELTA PASS
+
+Scope of delta: `git diff --stat 9f88d59..01b352d` = 4 files, +68/-12 — exactly
+A apps/puzzled/scripts/s3-hover-probe.ts (43), M apps/puzzled/src/games/theme-colors.ts (22), M
+apps/puzzled/src/shared/components/games/game-tile.tsx (2), M notes/s3-rebase-progress.md (13).
+Nothing stray; nothing outside apps/puzzled/** + notes/**.
+
+Content verified
+- game-tile.tsx:62 — shell class string no longer carries `hover:shadow-lift` (tile still has hover:-translate-y-0.5, shadow-card,
+  focus-within ring).
+- theme-colors.ts — all 11 themes (:70,:81,:92,:103,:114,:125,:136,:147,:158,:169,:180) replace
+  `hover:border-<hue>-500/60` with `hover:ring-2 hover:ring-<hue>-500/60`; per-hue glow shadow string unchanged;
+  DEFAULT_GAME_COLORS (:204) keeps `hover:shadow-lift` for fallback themes.
+
+Probe reproduced (my own worktree pz-rev-s3-delta at 01b352d, dev server :3511, chromium, fresh server restarted after checkout)
+- Author probe `apps/puzzled/scripts/s3-hover-probe.ts`: PROBE_EXIT=0, JSON:
+  `{"hovered": true, "boxShadow": "rgba(0,0,0,0) 0px 0px 0px 0px, rgba(0,0,0,0) 0px 0px 0px 0px, rgba(0,0,0,0) 0px 0px 0px 0px,
+  oklab(0.695996 -0.162107 0.0511875 / 0.6) 0px 0px 0px 2px, rgba(16,185,129,0.45) 0px 8px 24px -6px}", "hasGlowShadow": true,
+  "hasRing": true, "ok": true}`
+- My independent probe (/tmp/rev-hover-independent.ts, own script): rest state = only shadow-card (no ring, no glow);
+  hover state = `... oklab(0.696 -0.162 0.051 / 0.6) 0px 0px 0px 2px, rgba(16,185,129,0.45) 0px 8px 24px -6px`.
+  hasLift = false — the --shadow-lift signature (globals.css:54 `0 18px 40px -18px … , 0 8px 16px -12px …`) is NOT applied on hover. veredict: DELTA-OK.
+
+Root-cause claim (author's deeper find) corroborated independently
+- On hover the tile's border-top-color resolves to `rgb(230, 220, 205)` == `var(--color-border)` (#e6dccd): the old
+  `hover:border-<hue>-500/60` utility genuinely never painted.
+- globals.css contains exactly one `@import "tailwindcss"` (line 1) and NO `@layer` directive before the
+  `* { border-color: var(--color-border) }` block at globals.css:358-360 → that rule is unlayered and therefore outranks every
+  layered Tailwind utility, app-wide. Confirmed by reading the file, not only by the probe.
+
+Residual (non-blocking, cosmetic)
+- `hover:ring-2` and the shell's `focus-within:ring-2 focus-within:ring-ring` set the same ring vars; a tile that is hovered AND
+  focus-within resolves the ring colour by emission order (may show the focus ring colour). Cosmetic.
+- The ring paints outside the border box; on a tight grid a later-DOM sibling tile can overlap its outer 2px. Cosmetic.
+- The app-wide deadness of `border-*` colour utilities (many call sites, e.g. archive/page.tsx:128/152/193/216,
+  games/page.tsx:138, difficulty-selection-view.tsx:53/61/69) is now DOCUMENTED but not fixed — deliberately out of this PR
+  (root-cause fix = wrap the rule in @layer base, an app-wide visual change). Agreed with that call.
+
+CI on the new head (run 35821244436, at 06:1x BST): 6 pass (Unit Tests, Lint & Type Check, SEO Contract, Migration Integrity,
+Rust API, Security Scan), 3 pending (Accessibility, Build, Lighthouse Budgets) — NOT yet 9/9 at the time of this check.
+
+Repro caveat for future reviewers: a fresh worktree CANNOT reuse the main clone's node_modules by symlink — turbopack aborts with
+"Symlink [project]/apps/puzzled/node_modules is invalid, it points out of the filesystem root". Workaround used: `cp -al` (hardlink
+copy) of root node_modules, apps/puzzled/node_modules and packages/ui/node_modules, then restart the dev server.
+
+VERDICT: DELTA PASS — R1 closed (glow shadow now paints, lift no longer wins), the deeper border/layer finding independently
+corroborated, no stray changes, nothing contradicts the earlier PASS.
