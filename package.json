@@ -29,7 +29,7 @@
 		"@bufbuild/protoc-gen-es": "^2.2.0",
 		"@commitlint/cli": "20.5.3",
 		"@commitlint/config-conventional": "20.5.3",
-		"@types/node": "25.9.8",
+		"@types/node": "26.6.1",
 		"lefthook": "2.1.14",
 		"turbo": "2.11.2"
 	},
