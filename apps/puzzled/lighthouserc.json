@@ -13,7 +13,8 @@
 			],
 			"settings": {
 				"formFactor": "mobile",
-				"throttlingMethod": "devtools"
+				"throttlingMethod": "devtools",
+				"chromeFlags": "--no-sandbox --headless=new"
 			}
 		},
 		"assert": {
