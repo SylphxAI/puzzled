@@ -1729,7 +1729,7 @@ dependencies = [
  "connectrpc-build",
  "jsonwebtoken",
  "puzzled-core",
- "rand 0.8.6",
+ "rand 0.10.2",
  "reqwest",
  "rsa",
  "serde",

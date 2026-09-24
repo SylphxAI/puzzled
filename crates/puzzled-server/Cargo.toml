@@ -43,7 +43,7 @@ connectrpc-build = { workspace = true }
 [dev-dependencies]
 axum = "0.8"
 puzzled-core = { path = "../puzzled-core" }
-rand = "0.8"
+rand = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 rsa = { version = "0.9", features = ["pem"] }
 serde_json = "1"
