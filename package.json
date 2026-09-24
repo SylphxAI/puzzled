@@ -2,7 +2,7 @@
 	"name": "puzzled-monorepo",
 	"version": "0.0.0",
 	"private": true,
-	"packageManager": "bun@1.4.0",
+	"packageManager": "bun@1.4.2",
 	"engines": {
 		"bun": ">=1.4.0"
 	},
