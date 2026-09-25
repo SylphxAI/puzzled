@@ -5,6 +5,7 @@ import { create } from '@bufbuild/protobuf'
 import { type Client, createClient } from '@connectrpc/connect'
 import {
 	CheckUsernameRequestSchema,
+	DeleteAccountDataRequestSchema,
 	GetNotificationPreferencesRequestSchema,
 	GetProfileRequestSchema,
 	type NotificationPreferences,
@@ -117,4 +118,13 @@ export async function updateEmailPreferences(
 	)
 	if (!res.preferences) throw new Error('preferences_unavailable')
 	return res.preferences
+}
+
+/** Erase every row keyed to the signed-in player. Returns the rows deleted. */
+export async function deleteAccountData(client?: PreferencesServiceClient): Promise<bigint> {
+	const c = client ?? createPreferencesServiceClient()
+	const res = await c.deleteAccountData(
+		create(DeleteAccountDataRequestSchema, { confirm: 'DELETE' }),
+	)
+	return res.rowsDeleted
 }

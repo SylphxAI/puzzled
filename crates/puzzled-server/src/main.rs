@@ -46,6 +46,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Platform JWKS loads and refreshes off the request path (async, bounded).
     let _jwks_refresher = puzzled_server::spawn_jwks_refresher();
 
+    // Audit-log retention: IPs stripped after 30 days, rows deleted after a year.
+    let _audit_retention =
+        puzzled_server::capabilities::jobs::adapters::jobs_db::spawn_audit_log_retention(
+            pool.clone(),
+        );
+
     let state = AppState::new(pool);
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let port = http_port();

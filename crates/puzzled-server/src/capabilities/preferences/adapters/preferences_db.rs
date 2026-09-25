@@ -61,7 +61,7 @@ pub async fn upsert_notification_preferences(
         ) VALUES (
             $1,
             COALESCE($2, true), COALESCE($3, true), COALESCE($4, true), COALESCE($5, true),
-            COALESCE($6, '09:00'), COALESCE($7, true), COALESCE($8, true), COALESCE($9, true),
+            COALESCE($6, '09:00'), COALESCE($7, true), COALESCE($8, true), COALESCE($9, false),
             now()
         )
         ON CONFLICT (user_id) DO UPDATE SET

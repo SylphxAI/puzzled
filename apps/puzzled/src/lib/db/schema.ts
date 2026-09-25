@@ -381,7 +381,7 @@ export const notificationPreferences = pgTable('notification_preferences', {
 	/** Weekly stats digest */
 	emailWeeklyDigest: boolean('email_weekly_digest').default(true).notNull(),
 	/** Marketing emails (CAN-SPAM compliant) */
-	emailMarketing: boolean('email_marketing').default(true).notNull(),
+	emailMarketing: boolean('email_marketing').default(false).notNull(),
 
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull(),
