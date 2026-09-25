@@ -1,9 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 import { SystemHealthDashboard } from '@/features/admin/components/system-health'
 
 export default async function AdminSystemPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.system')
 
 	return (

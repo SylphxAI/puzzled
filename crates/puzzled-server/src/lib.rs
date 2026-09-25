@@ -18,7 +18,7 @@ pub use shared::db_config;
 
 // Compatibility re-exports used by binary and integration surfaces.
 pub use capabilities::identity_access::contract::{
-    resolve_verified_identity, verify_platform_jwt, VerifiedIdentity,
+    resolve_verified_identity, spawn_jwks_refresher, verify_platform_jwt, VerifiedIdentity,
 };
 
 #[cfg(test)]

@@ -6,8 +6,11 @@
 
 import { FlaskConical } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 
 export default async function ExperimentsPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.experiments')
 
 	return (

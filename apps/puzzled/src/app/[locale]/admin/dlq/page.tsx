@@ -2,12 +2,15 @@ export const dynamic = 'force-dynamic'
 
 import { desc, sql } from 'drizzle-orm'
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 import { DLQDashboard } from '@/features/admin/components/dlq-dashboard'
 import { PAGINATION } from '@/lib/config/validation'
 import { db } from '@/lib/db'
 import { deadLetterQueue } from '@/lib/db/schema'
 
 export default async function AdminDLQPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.dlq')
 
 	// Server-side initial data (admin layout requires admin scope); the client

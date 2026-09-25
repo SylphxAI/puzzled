@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { Settings } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 
 /**
  * Admin Settings Page
@@ -10,6 +11,8 @@ import { getTranslations } from 'next-intl/server'
  * Platform settings (billing, auth) are managed in the platform admin.
  */
 export default async function AdminSettingsPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.settings')
 
 	return (

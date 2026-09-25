@@ -43,6 +43,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
+    // Platform JWKS loads and refreshes off the request path (async, bounded).
+    let _jwks_refresher = puzzled_server::spawn_jwks_refresher();
+
     let state = AppState::new(pool);
     let slice = if state.pool.is_some() { "S1" } else { "S0" };
     let port = http_port();

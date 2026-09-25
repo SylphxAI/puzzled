@@ -80,7 +80,7 @@ describe('env accessors (SSOT)', () => {
 		expect(names).toContain('NODE_ENV')
 		expect(names).toContain('NEXT_PUBLIC_APP_URL')
 		expect(names).toContain('ADMIN_SECRET')
-		expect(names).toContain('CRON_SECRET')
+		expect(names).toContain('EMAIL_UNSUBSCRIBE_SECRET')
 		expect(names).toContain('REDIS_URL')
 		expect(names).toContain('DATABASE_URL')
 		expect(names).toContain('IDENTITY_API_KEY')

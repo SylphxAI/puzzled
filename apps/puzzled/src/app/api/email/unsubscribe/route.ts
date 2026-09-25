@@ -1,5 +1,4 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { DAY_MS, MINUTE_MS } from '@/lib/constants/time'
@@ -11,13 +10,34 @@ import { correlationIdFrom, logger } from '@/lib/logger'
 export const runtime = 'nodejs' // Required for crypto
 export const dynamic = 'force-dynamic' // Prevent static analysis at build time
 
-// Lazy secret getter - only validates at request time, not at build time
+// Lazy secret getter - only validates at request time, not at build time.
+// A dedicated key: no other signer (cron, webhooks) can mint an unsubscribe token.
 function getSecret(): string {
-	const secret = env.CRON_SECRET
+	const secret = env.EMAIL_UNSUBSCRIBE_SECRET
 	if (!secret) {
-		throw new Error('[Unsubscribe] Missing CRON_SECRET environment variable')
+		throw new Error('[Unsubscribe] Missing EMAIL_UNSUBSCRIBE_SECRET environment variable')
 	}
 	return secret
+}
+
+/**
+ * Turn marketing email off for a user in one atomic statement.
+ *
+ * Known duplication: the Rust PreferencesService (UpdateEmailPreferences) is
+ * the authority for `notification_preferences`; this signed-link path writes
+ * the same row because that RPC requires a signed-in Platform identity and an
+ * emailed link carries none. Both writers upsert on the unique `user_id`, so
+ * neither can create a duplicate row. Retire this writer once the Rust service
+ * exposes a token-verified unsubscribe RPC.
+ */
+async function disableMarketingEmail(userId: string): Promise<void> {
+	await db
+		.insert(notificationPreferences)
+		.values({ userId, emailMarketing: false })
+		.onConflictDoUpdate({
+			target: notificationPreferences.userId,
+			set: { emailMarketing: false, updatedAt: new Date() },
+		})
 }
 
 // Token expiration: 30 days
@@ -119,22 +139,7 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: 'Invalid or expired unsubscribe link' }, { status: 400 })
 		}
 
-		// Update notificationPreferences (upsert - create if doesn't exist)
-		const existingPrefs = await db.query.notificationPreferences.findFirst({
-			where: eq(notificationPreferences.userId, userId),
-		})
-
-		if (existingPrefs) {
-			await db
-				.update(notificationPreferences)
-				.set({ emailMarketing: false, updatedAt: new Date() })
-				.where(eq(notificationPreferences.userId, userId))
-		} else {
-			await db.insert(notificationPreferences).values({
-				userId,
-				emailMarketing: false,
-			})
-		}
+		await disableMarketingEmail(userId)
 
 		logger.info('unsubscribe.unsubscribed', {
 			userId,
@@ -174,22 +179,7 @@ export async function GET(request: Request) {
 	}
 
 	try {
-		// Update notificationPreferences (upsert - create if doesn't exist)
-		const existingPrefs = await db.query.notificationPreferences.findFirst({
-			where: eq(notificationPreferences.userId, userId),
-		})
-
-		if (existingPrefs) {
-			await db
-				.update(notificationPreferences)
-				.set({ emailMarketing: false, updatedAt: new Date() })
-				.where(eq(notificationPreferences.userId, userId))
-		} else {
-			await db.insert(notificationPreferences).values({
-				userId,
-				emailMarketing: false,
-			})
-		}
+		await disableMarketingEmail(userId)
 
 		logger.info('unsubscribe.unsubscribed', {
 			userId,

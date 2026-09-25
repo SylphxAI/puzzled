@@ -3,12 +3,15 @@ export const dynamic = 'force-dynamic'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { requireAdmin } from '@/features/admin'
 import { GameDashboard } from '@/features/admin/components/game-dashboard'
 import { getGameConfig } from '@/games/registry'
 
 type Params = Promise<{ slug: string }>
 
 export default async function AdminGameDetailPage({ params }: { params: Params }) {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const { slug } = await params
 
 	// Validate game exists
