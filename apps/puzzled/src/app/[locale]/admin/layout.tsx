@@ -5,9 +5,12 @@ import { ShieldOff } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
 import { AdminCommandPalette, AdminError, requireAdmin } from '@/features/admin'
 import { AdminThemeToggle } from '@/features/admin/components/admin-theme-toggle'
 import { AdminSidebar } from '@/features/admin/components/sidebar'
+import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import '@/features/admin/admin.css'
 
 // Prevent admin pages from being indexed
@@ -61,17 +64,21 @@ export default async function AdminLayout({ children }: Props) {
 		return <AdminAccessDenied message="An unexpected error occurred." />
 	}
 
+	const messages = await getMessages()
+
 	return (
-		<div className="admin-theme flex min-h-screen">
-			<AdminSidebar />
-			<main className="flex-1 overflow-auto bg-[var(--admin-bg-base)]">
-				{/* Command Palette Header */}
-				<div className="sticky top-0 z-header flex h-14 items-center justify-end gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-base)]/80 px-8 backdrop-blur-sm">
-					<AdminThemeToggle />
-					<AdminCommandPalette />
-				</div>
-				<div className="mx-auto max-w-6xl p-8">{children}</div>
-			</main>
-		</div>
+		<NextIntlClientProvider messages={pickMessages(messages, [...CLIENT_NAMESPACES, 'admin'])}>
+			<div className="admin-theme flex min-h-screen">
+				<AdminSidebar />
+				<main className="flex-1 overflow-auto bg-[var(--admin-bg-base)]">
+					{/* Command Palette Header */}
+					<div className="sticky top-0 z-header flex h-14 items-center justify-end gap-2 border-b border-[var(--admin-border)] bg-[var(--admin-bg-base)]/80 px-8 backdrop-blur-sm">
+						<AdminThemeToggle />
+						<AdminCommandPalette />
+					</div>
+					<div className="mx-auto max-w-6xl p-8">{children}</div>
+				</main>
+			</div>
+		</NextIntlClientProvider>
 	)
 }

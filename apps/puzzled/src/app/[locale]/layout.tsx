@@ -7,6 +7,7 @@ import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-re
 import { ApiProvider } from '@/lib/api/provider'
 import { getServerBilling } from '@/lib/billing/server'
 import { env } from '@/lib/env'
+import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
@@ -118,11 +119,9 @@ export const viewport: Viewport = {
 }
 
 /**
- * Dynamic rendering required for fresh config.
- *
- * Without this, Next.js would cache the layout at build time,
- * and getAppConfig() would only run once (baking OAuth providers,
- * plans, etc. into static HTML).
+ * Dynamic rendering: the layout reads the request (origin headers, the
+ * session for `currentUser`). The app config it also reads is cached for five
+ * minutes in `getAppConfig`, so a render does not wait on identity.
  *
  * The proxy.ts handles i18n routing, so generateStaticParams is not needed.
  */
@@ -293,7 +292,9 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<ThemeProvider>
 					<PlatformProvider appId={config.app.id} config={config} billing={billing}>
 						<ApiProvider>
-							<NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
+								{children}
+							</NextIntlClientProvider>
 						</ApiProvider>
 						{/*
 						 * Attached at first paint, not on idle: Event Timing only reports the
