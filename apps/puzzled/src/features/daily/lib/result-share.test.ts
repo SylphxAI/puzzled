@@ -7,9 +7,8 @@
  * Crossword Mini 0x). The share text now resolves the name from the catalogue
  * through the same readMessage lookup the app uses.
  *
- * Call-site convergence (no module re-implements the mechanics) is guarded by
- * games/shared/result-share-wiring.test.ts; this file pins the helper itself:
- * the resolver, the exact strings, and the share decision table.
+ * This file pins the helper itself: the resolver, the exact strings, and the
+ * share decision table.
  */
 import { describe, expect, test } from 'bun:test'
 import { GAME_CONFIGS } from '@/games/registry'

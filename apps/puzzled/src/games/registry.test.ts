@@ -9,10 +9,6 @@ import {
 	isValidGameSlug,
 } from './registry'
 
-// NOTE: Server-only functions (shouldAlert, formatGenerationSummary) from registry.server
-// cannot be imported in test environment due to 'server-only' package restriction.
-// Those functions should be tested via integration tests or manually.
-
 describe('getSeedFromDate', () => {
 	test('generates consistent seed from date', () => {
 		const date = new Date('2024-12-25T00:00:00Z')
@@ -150,31 +146,5 @@ describe('getAllGameMetadata', () => {
 		for (let i = 1; i < allMetadata.length; i++) {
 			expect(allMetadata[i].sortOrder).toBeGreaterThanOrEqual(allMetadata[i - 1].sortOrder)
 		}
-	})
-})
-
-// ============================================================================
-// Server-only Tests (Skipped - cannot import 'server-only' modules in tests)
-// ============================================================================
-
-describe('shouldAlert', () => {
-	// These functions are in registry.server.ts which imports 'server-only'
-	// They are tested through integration tests or manual verification
-	test.skip('returns true when there are failures (server-only)', () => {
-		// shouldAlert({ failed: 1, ... }) => true
-	})
-
-	test.skip('returns false when all successful (server-only)', () => {
-		// shouldAlert({ failed: 0, ... }) => false
-	})
-})
-
-describe('formatGenerationSummary', () => {
-	test.skip('formats summary with all sections (server-only)', () => {
-		// formatGenerationSummary formats the summary string
-	})
-
-	test.skip('uses appropriate icons for status (server-only)', () => {
-		// Uses emoji icons for success/failure
 	})
 })

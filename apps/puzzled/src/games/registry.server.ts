@@ -8,8 +8,8 @@
  */
 
 import { getLLMGenerator } from './llm-generators.server'
-import { getAllGames, getGameConfig, isValidGameSlug } from './registry'
-import type { GenerationSummary, PuzzleDifficulty, PuzzleGenerationResult } from './types'
+import { getGameConfig, isValidGameSlug } from './registry'
+import type { PuzzleDifficulty, PuzzleGenerationResult } from './types'
 
 // ==========================================
 // Server-Only Puzzle Generation
@@ -154,62 +154,4 @@ export async function generateGamePuzzle(
 			},
 		}
 	}
-}
-
-/**
- * Generate puzzles for ALL registered games
- * Fully automatic - just add game to registry and it's included
- */
-async function _generateAllPuzzles(date: string): Promise<GenerationSummary> {
-	const allGames = getAllGames()
-	const results: PuzzleGenerationResult[] = []
-
-	// Generate all puzzles in parallel
-	const generations = await Promise.all(
-		allGames.map(async (config) => {
-			const { result, puzzleData, solution } = await generateGamePuzzle(config.slug, date)
-			return { result, puzzleData, solution }
-		}),
-	)
-
-	for (const gen of generations) {
-		results.push(gen.result)
-	}
-
-	const summary: GenerationSummary = {
-		date,
-		totalGames: results.length,
-		successful: results.filter((r) => r.success).length,
-		failed: results.filter((r) => !r.success).length,
-		results,
-	}
-
-	return summary
-}
-
-/**
- * Check if any generation failed (for alerting)
- */
-export function shouldAlert(summary: GenerationSummary): boolean {
-	return summary.failed > 0
-}
-
-/**
- * Format summary for logging/alerting
- */
-export function formatGenerationSummary(summary: GenerationSummary): string {
-	const lines = [
-		`📊 Puzzle Generation Summary for ${summary.date}`,
-		`Total: ${summary.totalGames} | ✅ Success: ${summary.successful} | ❌ Failed: ${summary.failed}`,
-		'',
-		'Details:',
-	]
-
-	for (const result of summary.results) {
-		const icon = result.success ? '✅' : '❌'
-		const status = result.success ? 'OK' : `Failed: ${result.error}`
-		lines.push(`${icon} ${result.gameName} (${result.strategy}): ${status}`)
-	}
-
-	return lines.join('\n')
 }
