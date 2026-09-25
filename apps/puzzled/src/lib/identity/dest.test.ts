@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
 import { getAppConfig } from './app-config'
 import {
 	destCommerceCredential,
@@ -25,6 +25,9 @@ import {
 import { destEventsJson, destObservabilityJson, destSessionReplayChunksPath } from './peels'
 
 const originalFetch = globalThis.fetch
+
+// `unstable_cache` needs Next's incremental cache; under bun test it runs the loader.
+mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
 
 describe('Identity dest HTTP', () => {
 	afterEach(() => {

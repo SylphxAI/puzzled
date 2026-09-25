@@ -1,5 +1,9 @@
 //! Score leaderboard read — parity with `server/api/routes/stats.ts` GET /leaderboard.
 
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
+
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -106,7 +110,37 @@ struct DisplayRow {
     avatar_url: Option<String>,
 }
 
+/// How long an all-time board is served from memory before it is summed again.
+///
+/// The all-time board aggregates every session of a game; it moves slowly, so
+/// one read per game and size per minute replaces one read per request.
+const ALL_TIME_TTL: Duration = Duration::from_secs(60);
+
+type AllTimeKey = (String, i32);
+type AllTimeCache = Mutex<HashMap<AllTimeKey, (Instant, Vec<LeaderboardEntry>)>>;
+
+/// Process-wide all-time board cache. Keys are bounded: valid game slugs times
+/// limits 1..=100.
+fn all_time_cache() -> &'static AllTimeCache {
+    static CACHE: OnceLock<AllTimeCache> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn cached_all_time(key: &AllTimeKey, now: Instant) -> Option<Vec<LeaderboardEntry>> {
+    let cache = all_time_cache().lock().ok()?;
+    let (stored_at, entries) = cache.get(key)?;
+    (now.duration_since(*stored_at) < ALL_TIME_TTL).then(|| entries.clone())
+}
+
+fn store_all_time(key: AllTimeKey, now: Instant, entries: &[LeaderboardEntry]) {
+    if let Ok(mut cache) = all_time_cache().lock() {
+        cache.insert(key, (now, entries.to_vec()));
+    }
+}
+
 /// Load score leaderboard rows from Postgres when pool is configured.
+///
+/// The all-time board is cached for [`ALL_TIME_TTL`]; today and week read live.
 pub async fn fetch_score_leaderboard(
     pool: &PgPool,
     query: &LeaderboardQuery,
@@ -119,6 +153,23 @@ pub async fn fetch_score_leaderboard(
         return Ok(Vec::new());
     }
 
+    if query.period != LeaderboardPeriod::All {
+        return read_score_leaderboard(pool, query).await;
+    }
+
+    let key = (query.game_slug.clone(), query.limit);
+    if let Some(entries) = cached_all_time(&key, Instant::now()) {
+        return Ok(entries);
+    }
+    let entries = read_score_leaderboard(pool, query).await?;
+    store_all_time(key, Instant::now(), &entries);
+    Ok(entries)
+}
+
+async fn read_score_leaderboard(
+    pool: &PgPool,
+    query: &LeaderboardQuery,
+) -> Result<Vec<LeaderboardEntry>, sqlx::Error> {
     let start = period_start(query.period);
     let limit = i64::from(query.limit);
 
@@ -180,7 +231,7 @@ pub async fn fetch_score_leaderboard(
     .fetch_all(pool)
     .await?;
 
-    let display_map: std::collections::HashMap<Uuid, DisplayFields> = display_rows
+    let display_map: HashMap<Uuid, DisplayFields> = display_rows
         .into_iter()
         .map(|row| {
             (
@@ -233,6 +284,25 @@ mod tests {
             LeaderboardQuery::from_params(Some("sudoku"), Some("score"), None, Some("101"))
                 .is_none()
         );
+    }
+
+    #[test]
+    fn all_time_cache_serves_until_the_ttl_expires() {
+        let key = ("cache-test-slug".to_string(), 7);
+        let stored_at = Instant::now();
+        let entries = enrich_leaderboard_entries(
+            &[RankScore {
+                user_id: Uuid::nil(),
+                total_score: 42,
+            }],
+            &HashMap::new(),
+        );
+        store_all_time(key.clone(), stored_at, &entries);
+
+        let fresh = cached_all_time(&key, stored_at + Duration::from_secs(59));
+        assert_eq!(fresh.map(|rows| rows.len()), Some(1));
+        assert!(cached_all_time(&key, stored_at + ALL_TIME_TTL).is_none());
+        assert!(cached_all_time(&("other".to_string(), 7), stored_at).is_none());
     }
 
     #[test]

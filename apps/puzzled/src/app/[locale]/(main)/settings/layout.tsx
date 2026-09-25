@@ -1,7 +1,9 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server'
 import type { ReactNode } from 'react'
 import { ConsoleHeader } from '@/features/console/components/console-chrome'
 import { SettingsNav } from '@/features/console/components/settings-nav'
+import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { redirect } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { buildPageMetadata } from '@/lib/seo/metadata'
@@ -39,18 +41,20 @@ export default async function SettingsLayout({ children, params }: Props) {
 		redirect({ href: { pathname: '/login', query: { callbackUrl: '/settings' } }, locale })
 	}
 
-	const t = await getTranslations('settings')
+	const [t, messages] = await Promise.all([getTranslations('settings'), getMessages()])
 
 	return (
-		<main className="page-shell-wide py-8 md:py-10">
-			<ConsoleHeader eyebrow={t('eyebrow')} title={t('title')} description={t('subtitle')} />
+		<NextIntlClientProvider messages={pickMessages(messages, [...CLIENT_NAMESPACES, 'settings'])}>
+			<main className="page-shell-wide py-8 md:py-10">
+				<ConsoleHeader eyebrow={t('eyebrow')} title={t('title')} description={t('subtitle')} />
 
-			<div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
-				<div className="md:w-56 md:shrink-0">
-					<SettingsNav />
+				<div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
+					<div className="md:w-56 md:shrink-0">
+						<SettingsNav />
+					</div>
+					<div className="min-w-0 flex-1 space-y-6">{children}</div>
 				</div>
-				<div className="min-w-0 flex-1 space-y-6">{children}</div>
-			</div>
-		</main>
+			</main>
+		</NextIntlClientProvider>
 	)
 }
