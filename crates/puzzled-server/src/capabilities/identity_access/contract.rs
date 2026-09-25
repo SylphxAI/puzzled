@@ -4,5 +4,6 @@
 //! internals (ADR-169 / engineering-standard cross-capability rule).
 
 pub use super::adapters::platform_jwt::{
-    resolve_verified_identity, verify_platform_jwt, JwtError, VerifiedIdentity,
+    resolve_verified_identity, spawn_jwks_refresher, verify_platform_jwt, JwtError,
+    VerifiedIdentity,
 };

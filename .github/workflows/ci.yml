@@ -36,6 +36,11 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.event.merge_group.head_sha || github.ref }}
   cancel-in-progress: true
 
+# Least privilege: every job only reads the repository. No job pushes, comments,
+# or uploads SARIF, so none needs a per-job write grant.
+permissions:
+  contents: read
+
 jobs:
   # ==========================================
   # Code Quality

@@ -4,6 +4,7 @@ import { count, desc, eq, gte } from 'drizzle-orm'
 import { Activity, AlertTriangle, Gamepad2, Server, Settings, TrendingUp, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { getLocale, getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 import { daysAgo } from '@/lib/constants/time'
 import { db } from '@/lib/db'
 import { auditLogs, deadLetterQueue, gameSessions } from '@/lib/db/schema'
@@ -57,6 +58,8 @@ async function getRecentActivity() {
 }
 
 export default async function AdminDashboard() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const locale = await getLocale()
 	const t = await getTranslations('admin.dashboard')
 	const [stats, recentActivity] = await Promise.all([getDashboardStats(), getRecentActivity()])

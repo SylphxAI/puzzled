@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { desc } from 'drizzle-orm'
 import { Bell } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 import { CreateAnnouncementButton } from '@/features/admin/components/announcement-editor'
 import { AnnouncementsList } from '@/features/admin/components/announcements-list'
 import { db } from '@/lib/db'
@@ -15,6 +16,8 @@ async function getAnnouncements() {
 }
 
 export default async function AdminAnnouncementsPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.announcements')
 	const allAnnouncements = await getAnnouncements()
 

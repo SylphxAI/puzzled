@@ -154,7 +154,7 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		description: 'Header secret for programmatic admin access; missing denies',
 	},
 	{
-		name: 'CRON_SECRET',
+		name: 'EMAIL_UNSUBSCRIBE_SECRET',
 		required: false,
 		description: 'HMAC secret for email unsubscribe tokens',
 	},
@@ -332,9 +332,9 @@ export const env = {
 	get ADMIN_SECRET(): string | undefined {
 		return process.env.ADMIN_SECRET
 	},
-	/** HMAC secret for email unsubscribe tokens */
-	get CRON_SECRET(): string | undefined {
-		return process.env.CRON_SECRET
+	/** HMAC key for email unsubscribe tokens; dedicated, shared with no other signer */
+	get EMAIL_UNSUBSCRIBE_SECRET(): string | undefined {
+		return process.env.EMAIL_UNSUBSCRIBE_SECRET
 	},
 	/** Residual admin rate-limit KV URL */
 	get REDIS_URL(): string | undefined {

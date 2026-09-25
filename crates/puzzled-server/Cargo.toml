@@ -23,14 +23,14 @@ chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sqlx = { version = "0.9", features = ["runtime-tokio", "tls-rustls", "postgres", "chrono", "uuid"] }
-tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["serde"] }
 jsonwebtoken = { version = "10.3", default-features = false, features = ["rust_crypto", "use_pem"] }
 base64 = "0.23"
 sha2 = "0.11"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 
 # technology-stack-profile: buffa + connectrpc
 connectrpc = { workspace = true }

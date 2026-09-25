@@ -1,9 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { getTranslations } from 'next-intl/server'
+import { requireAdmin } from '@/features/admin'
 import { GamesOverview } from '@/features/admin/components/games-overview'
 
 export default async function AdminGamesPage() {
+	// Each page re-checks admin: an RSC request for the page alone skips the layout.
+	await requireAdmin()
 	const t = await getTranslations('admin.games')
 
 	return (

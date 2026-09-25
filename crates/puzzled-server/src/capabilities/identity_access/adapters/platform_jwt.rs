@@ -4,10 +4,16 @@
 //! Caller-supplied `x-user-id` is never trusted as identity. Protected routes
 //! must present a Bearer JWT whose signature verifies against Platform JWKS
 //! (or an explicit test/dev decoding key). `sub` is the only accepted user id.
+//!
+//! JWKS is fetched off the request path: [`spawn_jwks_refresher`] runs one
+//! async task that loads the key set at startup, refreshes it every
+//! `JWKS_CACHE_TTL`, and refetches early (rate-limited) when a token names an
+//! unknown `kid`. Verification only reads an `Arc` snapshot, so no lock is held
+//! across network I/O and no tokio worker blocks.
 
 use std::collections::HashMap;
-use std::sync::{Mutex, OnceLock};
-use std::time::{Duration, Instant};
+use std::sync::{Arc, OnceLock, RwLock};
+use std::time::Duration;
 
 use axum::http::{header, HeaderMap, StatusCode};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
@@ -15,6 +21,10 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_JWKS_URL: &str = "https://api.sylphx.com/.well-known/jwks.json";
 const JWKS_CACHE_TTL: Duration = Duration::from_secs(300);
+/// Floor between two fetches, so unknown-`kid` tokens cannot drive a fetch per request.
+const JWKS_MIN_REFRESH_INTERVAL: Duration = Duration::from_secs(10);
+const JWKS_FETCH_TIMEOUT: Duration = Duration::from_secs(5);
+const JWKS_MAX_RETRY_BACKOFF: Duration = Duration::from_secs(60);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JwtError {
@@ -112,33 +122,47 @@ struct Jwk {
 }
 
 struct JwksCache {
-    fetched_at: Instant,
     keys: HashMap<String, DecodingKey>,
     /// keys without kid
     unkeyed: Vec<DecodingKey>,
 }
 
-static JWKS_CACHE: OnceLock<Mutex<Option<JwksCache>>> = OnceLock::new();
-static TEST_DECODING_KEY_PEM: OnceLock<Mutex<Option<String>>> = OnceLock::new();
-/// Process-lifetime blocking client. Must NOT be dropped inside an async
-/// context (tokio panics on runtime drop from async); keeping it static means
-/// it is never dropped per-request.
-static JWKS_BLOCKING_CLIENT: OnceLock<reqwest::blocking::Client> = OnceLock::new();
+/// Last good key set. The lock is held only to clone or swap the `Arc`.
+static JWKS_CACHE: RwLock<Option<Arc<JwksCache>>> = RwLock::new(None);
+/// Wakes the refresher early (unknown `kid`, empty cache). Permits coalesce.
+static JWKS_REFRESH: OnceLock<tokio::sync::Notify> = OnceLock::new();
 
-fn jwks_blocking_client() -> &'static reqwest::blocking::Client {
-    JWKS_BLOCKING_CLIENT.get_or_init(|| {
-        reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(5))
-            .build()
-            .expect("jwks blocking client")
-    })
+fn jwks_refresh_signal() -> &'static tokio::sync::Notify {
+    JWKS_REFRESH.get_or_init(tokio::sync::Notify::new)
 }
+
+fn jwks_snapshot() -> Option<Arc<JwksCache>> {
+    JWKS_CACHE
+        .read()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+}
+
+fn store_jwks(cache: JwksCache) {
+    *JWKS_CACHE
+        .write()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(cache));
+}
+
+/// Ask the refresher for an early fetch; never blocks and never fetches inline.
+fn request_jwks_refresh() {
+    jwks_refresh_signal().notify_one();
+}
+
+#[cfg(test)]
+static TEST_DECODING_KEY_PEM: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
 
 /// Shared lock so tests that install/clear the process-local test key do not
 /// race with each other (used by lib tests and this module's tests).
-pub fn test_key_lock() -> &'static Mutex<()> {
-    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(()))
+#[cfg(test)]
+pub fn test_key_lock() -> &'static std::sync::Mutex<()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    &LOCK
 }
 
 fn jwks_url() -> String {
@@ -163,28 +187,32 @@ fn expected_issuer() -> Option<String> {
 }
 
 /// Install a process-local decoding key for unit tests (RS256 PEM).
+///
+/// Compiled only under `cfg(test)`: a release binary has no override that
+/// verification would consult before the Platform key set.
+#[cfg(test)]
 pub fn install_test_decoding_key_pem(pem: &str) -> Result<(), String> {
     // Validate PEM shape early.
     let _ = DecodingKey::from_rsa_pem(pem.as_bytes()).map_err(|e| e.to_string())?;
-    let cell = TEST_DECODING_KEY_PEM.get_or_init(|| Mutex::new(None));
-    if let Ok(mut g) = cell.lock() {
-        *g = Some(pem.to_string());
-    }
+    *TEST_DECODING_KEY_PEM
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(pem.to_string());
     Ok(())
 }
 
+#[cfg(test)]
 pub fn clear_test_decoding_key() {
-    if let Some(cell) = TEST_DECODING_KEY_PEM.get() {
-        if let Ok(mut g) = cell.lock() {
-            *g = None;
-        }
-    }
+    *TEST_DECODING_KEY_PEM
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = None;
 }
 
+#[cfg(test)]
 fn test_decoding_key() -> Option<DecodingKey> {
     let pem = TEST_DECODING_KEY_PEM
-        .get()
-        .and_then(|c| c.lock().ok().and_then(|g| g.clone()))?;
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()?;
     DecodingKey::from_rsa_pem(pem.as_bytes()).ok()
 }
 
@@ -293,18 +321,21 @@ fn decode_with_key(token: &str, key: &DecodingKey) -> Result<PlatformClaims, Jwt
     Ok(data.claims)
 }
 
-fn fetch_jwks_blocking() -> Result<JwksCache, JwtError> {
-    let url = jwks_url();
-    let client = jwks_blocking_client();
+async fn fetch_jwks(client: &reqwest::Client, url: &str) -> Result<JwksCache, JwtError> {
     let doc: JwksDocument = client
-        .get(&url)
+        .get(url)
         .send()
+        .await
         .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?
         .error_for_status()
         .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?
         .json()
+        .await
         .map_err(|e| JwtError::JwksUnavailable(e.to_string()))?;
+    jwks_cache_from_document(doc)
+}
 
+fn jwks_cache_from_document(doc: JwksDocument) -> Result<JwksCache, JwtError> {
     let mut keys = HashMap::new();
     let mut unkeyed = Vec::new();
     for jwk in doc.keys {
@@ -327,26 +358,68 @@ fn fetch_jwks_blocking() -> Result<JwksCache, JwtError> {
             "JWKS contained no RSA keys".into(),
         ));
     }
-    Ok(JwksCache {
-        fetched_at: Instant::now(),
-        keys,
-        unkeyed,
-    })
+    Ok(JwksCache { keys, unkeyed })
 }
 
-fn jwks_cache_get() -> Result<std::sync::MutexGuard<'static, Option<JwksCache>>, JwtError> {
-    let cell = JWKS_CACHE.get_or_init(|| Mutex::new(None));
-    let mut guard = cell
-        .lock()
-        .map_err(|_| JwtError::JwksUnavailable("jwks mutex poisoned".into()))?;
-    let needs_refresh = match guard.as_ref() {
-        None => true,
-        Some(c) => c.fetched_at.elapsed() > JWKS_CACHE_TTL,
-    };
-    if needs_refresh {
-        *guard = Some(fetch_jwks_blocking()?);
+/// True when `PLATFORM_JWT_PUBLIC_KEY_PEM` holds a loadable key, so JWKS is never consulted.
+fn static_pem_configured() -> bool {
+    std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM")
+        .ok()
+        .and_then(|pem| decoding_key_from_pem_env(&pem))
+        .is_some()
+}
+
+/// Start the JWKS refresher on the current tokio runtime.
+///
+/// Returns `None` when a static PEM key is configured (JWKS unused). Call once
+/// from the composition root. The first fetch starts immediately; later ones
+/// run every `JWKS_CACHE_TTL`, on an early-refresh request (no sooner than
+/// `JWKS_MIN_REFRESH_INTERVAL` after the last fetch), or on retry backoff after
+/// a failure. The last good key set keeps serving while a refresh fails.
+pub fn spawn_jwks_refresher() -> Option<tokio::task::JoinHandle<()>> {
+    if static_pem_configured() {
+        return None;
     }
-    Ok(guard)
+    let client = match reqwest::Client::builder()
+        .timeout(JWKS_FETCH_TIMEOUT)
+        .build()
+    {
+        Ok(client) => client,
+        Err(error) => {
+            tracing::error!(%error, "jwks client build failed; Bearer verification will return 503");
+            return None;
+        }
+    };
+    let url = jwks_url();
+    Some(tokio::spawn(async move {
+        let signal = jwks_refresh_signal();
+        let mut failures: u32 = 0;
+        loop {
+            let wait = match fetch_jwks(&client, &url).await {
+                Ok(cache) => {
+                    store_jwks(cache);
+                    failures = 0;
+                    JWKS_CACHE_TTL
+                }
+                Err(error) => {
+                    failures = failures.saturating_add(1);
+                    tracing::warn!(
+                        ?error,
+                        failures,
+                        "jwks refresh failed; keeping last good key set"
+                    );
+                    JWKS_MIN_REFRESH_INTERVAL
+                        .saturating_mul(failures)
+                        .min(JWKS_MAX_RETRY_BACKOFF)
+                }
+            };
+            tokio::time::sleep(JWKS_MIN_REFRESH_INTERVAL.min(wait)).await;
+            tokio::select! {
+                () = tokio::time::sleep(wait.saturating_sub(JWKS_MIN_REFRESH_INTERVAL)) => {}
+                () = signal.notified() => {}
+            }
+        }
+    }))
 }
 
 fn header_kid(token: &str) -> Option<String> {
@@ -377,7 +450,8 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
         return Err(JwtError::MalformedToken);
     }
 
-    // Unit-test / local override key first.
+    // Unit-test override key first (compiled into test builds only).
+    #[cfg(test)]
     if let Some(key) = test_decoding_key() {
         let claims = decode_with_key(token, &key)?;
         return Ok(VerifiedIdentity {
@@ -407,13 +481,17 @@ pub fn verify_platform_jwt(token: &str) -> Result<VerifiedIdentity, JwtError> {
         }
     }
 
-    let cache = jwks_cache_get()?;
-    let cache = cache
-        .as_ref()
-        .ok_or_else(|| JwtError::JwksUnavailable("empty jwks cache".into()))?;
+    let Some(cache) = jwks_snapshot() else {
+        request_jwks_refresh();
+        return Err(JwtError::JwksUnavailable("jwks not loaded yet".into()));
+    };
 
     let mut last_err = JwtError::VerificationFailed("no keys tried".into());
     if let Some(kid) = header_kid(token) {
+        if !cache.keys.contains_key(&kid) {
+            // Possible key rotation: fetch early in the background.
+            request_jwks_refresh();
+        }
         if let Some(key) = cache.keys.get(&kid) {
             match decode_with_key(token, key) {
                 Ok(claims) => {
@@ -586,6 +664,39 @@ mod tests {
             "string-typed exp must fail closed for GHSA-h395, got {err:?}"
         );
         clear_test_decoding_key();
+    }
+
+    #[test]
+    fn unloaded_jwks_fails_closed_without_fetching_inline() {
+        let _g = lock();
+        clear_test_decoding_key();
+        if std::env::var("PLATFORM_JWT_PUBLIC_KEY_PEM").is_ok() {
+            return; // static PEM path; JWKS not consulted
+        }
+        let token = {
+            let claims = MintClaims {
+                sub: "cold_start".into(),
+                name: "Cold".into(),
+                exp: chrono::Utc::now().timestamp() + 3600,
+                scope: None,
+            };
+            let enc = EncodingKey::from_rsa_pem(TEST_PRIV_PEM.as_bytes()).expect("enc");
+            encode(&JwtHeader::new(Algorithm::RS256), &claims, &enc).expect("mint")
+        };
+        let err = verify_platform_jwt(&token).unwrap_err();
+        assert!(matches!(err, JwtError::JwksUnavailable(_)), "got {err:?}");
+        assert_eq!(err.status(), StatusCode::SERVICE_UNAVAILABLE);
+    }
+
+    #[test]
+    fn jwks_document_without_rsa_keys_is_rejected() {
+        let doc: JwksDocument =
+            serde_json::from_value(serde_json::json!({ "keys": [{ "kty": "EC", "kid": "k1" }] }))
+                .expect("doc");
+        assert!(matches!(
+            jwks_cache_from_document(doc),
+            Err(JwtError::JwksUnavailable(_))
+        ));
     }
 
     #[test]
