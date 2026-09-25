@@ -307,15 +307,17 @@ jobs:
 
       # The one web build: the SEO, a11y and Lighthouse harnesses serve this
       # artifact instead of each running next build again.
+      # Tarred, not uploaded as a tree: Turbopack links external server
+      # packages as symlinks under .next/node_modules, and an artifact upload
+      # would copy them away from their dependencies.
+      - name: Pack the web build
+        run: tar -C apps/puzzled --exclude=.next/cache --exclude=.next/standalone -cf web-build.tar .next
+
       - name: Share the web build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: |
-            apps/puzzled/.next
-            !apps/puzzled/.next/cache
-            !apps/puzzled/.next/standalone
-          include-hidden-files: true
+          path: web-build.tar
           if-no-files-found: error
           retention-days: 1
 
@@ -453,7 +455,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: web-build
-          path: apps/puzzled/.next
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       # apps/puzzled/scripts/seo-verify.ts asserts crawler truth against a
       # served build, so the job serves one instead of measuring source.
@@ -543,7 +547,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: web-build
-          path: apps/puzzled/.next
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       - name: Serve the build on :3015
         working-directory: apps/puzzled
@@ -663,7 +669,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: web-build
-          path: apps/puzzled/.next
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       # apps/puzzled/lighthouserc.json is used unchanged: the mobile profile
       # (Lighthouse mobile defaults with applied/devtools throttling — switched
