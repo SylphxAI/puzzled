@@ -28,7 +28,7 @@ export const file_puzzled_v1_jobs: GenFile =
  */
 export type RunRetentionJobRequest = Message<'puzzled.v1.RunRetentionJobRequest'> & {
 	/**
-	 * daily-reminder | win-back-emails
+	 * daily-reminder | win-back-emails | audit-log-retention
 	 *
 	 * @generated from field: string name = 1;
 	 */

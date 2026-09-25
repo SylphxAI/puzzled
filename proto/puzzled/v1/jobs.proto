@@ -20,7 +20,7 @@ import "google/protobuf/cpp_features.proto";
 // (email/push) are delivered through the Platform BaaS HTTP API.
 
 message RunRetentionJobRequest {
-  // daily-reminder | win-back-emails
+  // daily-reminder | win-back-emails | audit-log-retention
   string name = 1;
 }
 

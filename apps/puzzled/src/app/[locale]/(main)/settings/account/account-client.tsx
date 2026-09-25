@@ -1,10 +1,11 @@
 'use client'
 
-import { Button } from '@sylphx/ui'
-import { BadgeCheck, ExternalLink, LogOut } from 'lucide-react'
+import { Button, ConfirmDialog } from '@sylphx/ui'
+import { BadgeCheck, ExternalLink, LogOut, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
+import { deleteAccountData } from '@/lib/connect/preferences-client'
 import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 
@@ -28,6 +29,9 @@ export function AccountSettingsContent() {
 	const { user, isLoading } = useSafeUser()
 	const { signOut } = useSafeAuth()
 	const [signingOut, setSigningOut] = useState(false)
+	const [confirmingDelete, setConfirmingDelete] = useState(false)
+	const [deleting, setDeleting] = useState(false)
+	const [deleteFailed, setDeleteFailed] = useState(false)
 
 	const displayName = user?.name?.trim() || t('playerCard.nameFallback')
 
@@ -38,6 +42,19 @@ export function AccountSettingsContent() {
 			window.location.href = '/'
 		} finally {
 			setSigningOut(false)
+		}
+	}
+
+	async function handleDelete() {
+		setDeleting(true)
+		setDeleteFailed(false)
+		try {
+			await deleteAccountData()
+			await signOut()
+			window.location.href = '/'
+		} catch {
+			setDeleteFailed(true)
+			setDeleting(false)
 		}
 	}
 
@@ -118,6 +135,35 @@ export function AccountSettingsContent() {
 					{signingOut ? t('account.signingOut') : t('account.signOut')}
 				</Button>
 			</ConsoleCard>
+
+			{user ? (
+				<ConsoleCard title={t('account.deleteTitle')} description={t('account.deleteDescription')}>
+					<Button
+						variant="destructive"
+						onClick={() => setConfirmingDelete(true)}
+						disabled={deleting}
+						className="min-h-11 gap-2"
+					>
+						<Trash2 className="h-4 w-4" aria-hidden="true" />
+						{deleting ? t('account.deleting') : t('account.deleteCta')}
+					</Button>
+					{deleteFailed ? (
+						<p role="alert" className="mt-3 text-sm text-destructive">
+							{t('account.deleteFailed')}
+						</p>
+					) : null}
+					<ConfirmDialog
+						open={confirmingDelete}
+						onOpenChange={setConfirmingDelete}
+						title={t('account.deleteConfirmTitle')}
+						description={t('account.deleteConfirmDescription')}
+						confirmLabel={t('account.deleteConfirmCta')}
+						cancelLabel={t('account.deleteCancel')}
+						onConfirm={handleDelete}
+						variant="destructive"
+					/>
+				</ConsoleCard>
+			) : null}
 		</>
 	)
 }

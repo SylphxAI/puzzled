@@ -149,6 +149,17 @@ impl JobsService for JobsConnectService {
                 Ok(n) => (true, n, Vec::new()),
                 Err(errors) => (false, 0, errors),
             },
+            "audit-log-retention" => match &self.state.pool {
+                Some(pool) => match jobs_db::purge_audit_logs(pool).await {
+                    Ok((stripped, deleted)) => (
+                        true,
+                        u32::try_from(stripped + deleted).unwrap_or(u32::MAX),
+                        Vec::new(),
+                    ),
+                    Err(error) => (false, 0, vec![error]),
+                },
+                None => (false, 0, vec!["no database pool".to_string()]),
+            },
             other => {
                 return Err(ConnectError::new(
                     ErrorCode::InvalidArgument,

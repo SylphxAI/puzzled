@@ -87,6 +87,14 @@ message UpdateEmailPreferencesResponse {
   NotificationPreferences preferences = 1;
 }
 
+// Erase every row keyed to the signed-in player. `confirm` must be "DELETE".
+message DeleteAccountDataRequest {
+  string confirm = 1;
+}
+message DeleteAccountDataResponse {
+  uint64 rows_deleted = 1;
+}
+
 service PreferencesService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
@@ -94,4 +102,5 @@ service PreferencesService {
   rpc GetNotificationPreferences(GetNotificationPreferencesRequest) returns (GetNotificationPreferencesResponse);
   rpc UpdatePushPreferences(UpdatePushPreferencesRequest) returns (UpdatePushPreferencesResponse);
   rpc UpdateEmailPreferences(UpdateEmailPreferencesRequest) returns (UpdateEmailPreferencesResponse);
+  rpc DeleteAccountData(DeleteAccountDataRequest) returns (DeleteAccountDataResponse);
 }

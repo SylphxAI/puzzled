@@ -82,3 +82,54 @@ pub async fn record_win_back_email(
     .map_err(|e| format!("win-back record failed: {e}"))?;
     Ok(())
 }
+
+/// Days an audit row keeps the requester's IP address and user agent.
+pub const AUDIT_NETWORK_DATA_DAYS: i32 = 30;
+/// Days an audit row is kept at all.
+pub const AUDIT_ROW_DAYS: i32 = 365;
+
+/// Audit-log retention: strip IP and user agent after
+/// [`AUDIT_NETWORK_DATA_DAYS`], delete rows after [`AUDIT_ROW_DAYS`].
+/// Returns (rows stripped, rows deleted).
+pub async fn purge_audit_logs(pool: &PgPool) -> Result<(u64, u64), String> {
+    let stripped = sqlx::query(
+        r#"
+        UPDATE audit_logs SET ip_address = NULL, user_agent = NULL
+        WHERE created_at < now() - make_interval(days => $1)
+          AND (ip_address IS NOT NULL OR user_agent IS NOT NULL)
+        "#,
+    )
+    .bind(AUDIT_NETWORK_DATA_DAYS)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("audit network-data purge failed: {e}"))?
+    .rows_affected();
+    let deleted = sqlx::query(
+        r#"DELETE FROM audit_logs WHERE created_at < now() - make_interval(days => $1)"#,
+    )
+    .bind(AUDIT_ROW_DAYS)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("audit row purge failed: {e}"))?
+    .rows_affected();
+    Ok((stripped, deleted))
+}
+
+/// Run the audit-log retention at start-up and then once a day. It is
+/// idempotent, so several replicas running it is harmless; the JobsService
+/// `audit-log-retention` job runs the same purge on demand.
+pub fn spawn_audit_log_retention(pool: Option<PgPool>) -> Option<tokio::task::JoinHandle<()>> {
+    let pool = pool?;
+    Some(tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(24 * 60 * 60));
+        loop {
+            interval.tick().await;
+            match purge_audit_logs(&pool).await {
+                Ok((stripped, deleted)) => {
+                    tracing::info!(stripped, deleted, "audit-log retention ran");
+                }
+                Err(error) => tracing::warn!(%error, "audit-log retention failed"),
+            }
+        }
+    }))
+}

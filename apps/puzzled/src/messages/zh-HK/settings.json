@@ -454,7 +454,16 @@
 		"signOutTitle": "登出",
 		"signOutDescription": "結束此裝置的工作階段，你的進度仍保留在帳戶中。",
 		"signOut": "登出此裝置",
-		"signingOut": "正在登出…"
+		"signingOut": "正在登出…",
+		"deleteTitle": "刪除你的 Puzzled 資料",
+		"deleteDescription": "從 Puzzled 清除你的遊戲紀錄、統計、連續紀錄、個人檔案和通知設定。此操作無法復原。",
+		"deleteCta": "刪除我的資料",
+		"deleting": "正在刪除…",
+		"deleteFailed": "資料未有刪除。請再試一次，或聯絡支援。",
+		"deleteConfirmTitle": "刪除你所有 Puzzled 資料？",
+		"deleteConfirmDescription": "你的紀錄、統計、連續紀錄和設定會即時清除，無法復原。你會被登出。",
+		"deleteConfirmCta": "全部刪除",
+		"deleteCancel": "保留我的資料"
 	},
 	"connectedAccounts": {
 		"title": "已連結的帳戶",

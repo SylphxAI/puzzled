@@ -454,7 +454,16 @@
 		"signOutTitle": "Sign out",
 		"signOutDescription": "Ends the session on this device. Your progress stays with your account.",
 		"signOut": "Sign out of this device",
-		"signingOut": "Signing out…"
+		"signingOut": "Signing out…",
+		"deleteTitle": "Delete your Puzzled data",
+		"deleteDescription": "Erases your game history, stats, streaks, profile and notification settings from Puzzled. This cannot be undone.",
+		"deleteCta": "Delete my data",
+		"deleting": "Deleting…",
+		"deleteFailed": "Your data was not deleted. Try again, or contact support.",
+		"deleteConfirmTitle": "Delete all your Puzzled data?",
+		"deleteConfirmDescription": "Your history, stats, streaks and settings are erased now and cannot be recovered. You will be signed out.",
+		"deleteConfirmCta": "Delete everything",
+		"deleteCancel": "Keep my data"
 	},
 	"connectedAccounts": {
 		"title": "Connected Accounts",

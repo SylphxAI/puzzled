@@ -8,12 +8,14 @@ use connectrpc::{
 
 use super::identity::require_identity;
 use super::state::AppState;
+use crate::capabilities::preferences::adapters::account_deletion::delete_account_data;
 use crate::capabilities::preferences::adapters::preferences_db::{
     fetch_notification_preferences, fetch_user_preferences, upsert_notification_preferences,
     upsert_user_preferences, username_taken,
 };
 use crate::proto::puzzled::v1::{
-    CheckUsernameRequest, CheckUsernameResponse, GetNotificationPreferencesRequest,
+    CheckUsernameRequest, CheckUsernameResponse, DeleteAccountDataRequest,
+    DeleteAccountDataResponse, GetNotificationPreferencesRequest,
     GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse,
     NotificationPreferences, PreferencesService, Profile, UpdateEmailPreferencesRequest,
     UpdateEmailPreferencesResponse, UpdateProfileRequest, UpdateProfileResponse,
@@ -94,10 +96,11 @@ impl PreferencesConnectService {
                 .get("emailWeeklyDigest")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true),
+            // Marketing email is opt-in: absent means no.
             email_marketing: value
                 .get("emailMarketing")
                 .and_then(|v| v.as_bool())
-                .unwrap_or(true),
+                .unwrap_or(false),
             ..Default::default()
         }
     }
@@ -335,6 +338,43 @@ impl PreferencesService for PreferencesConnectService {
             preferences: prefs.into(),
             ..Default::default()
         })
+    }
+
+    async fn delete_account_data(
+        &self,
+        ctx: RequestContext,
+        request: ServiceRequest<'_, DeleteAccountDataRequest>,
+    ) -> ServiceResult<DeleteAccountDataResponse> {
+        let identity = require_identity(&ctx)?;
+        let req = request.to_owned_message();
+        if req.confirm != "DELETE" {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "confirmation_required",
+            ));
+        }
+        let Some(pool) = &self.state.pool else {
+            return Err(ConnectError::new(
+                ErrorCode::Unavailable,
+                "account_deletion_unavailable",
+            ));
+        };
+        match delete_account_data(pool, &identity.user_id).await {
+            Ok(rows_deleted) => {
+                tracing::info!(rows_deleted, "account data erased");
+                Response::ok(DeleteAccountDataResponse {
+                    rows_deleted,
+                    ..Default::default()
+                })
+            }
+            Err(error) => {
+                tracing::warn!(%error, "account deletion failed");
+                Err(ConnectError::new(
+                    ErrorCode::Internal,
+                    "account_deletion_failed",
+                ))
+            }
+        }
     }
 }
 
