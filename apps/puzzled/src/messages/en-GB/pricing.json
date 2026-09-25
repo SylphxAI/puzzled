@@ -1,10 +1,10 @@
 {
 	"plans": {
-		"premiumFeatureStats": "Stats across every module, not just the free one"
+		"premiumFeatureStats": "Stats across every puzzle, not just the free one"
 	},
 	"faq": {
 		"trial": {
-			"answer": "Not at the moment. Free is a tier rather than a trial: one module stays free every day for everyone, with no account and no card. Premium is the paid plan (monthly or yearly), and you can cancel it at any time — access runs to the end of the period you paid for."
+			"answer": "Not at the moment. Free is a tier rather than a trial: one puzzle stays free every day for everyone, with no account and no card. Premium is the paid plan (monthly or yearly), and you can cancel it at any time — access runs to the end of the period you paid for."
 		}
 	}
 }

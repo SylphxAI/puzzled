@@ -8,6 +8,7 @@ import {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from 'react'
 import {
@@ -637,80 +638,42 @@ function arrayBufferToB64(value: ArrayBuffer | null): string {
 	if (!value) return ''
 	return btoa(String.fromCharCode(...new Uint8Array(value)))
 }
-type DestAchievement = {
+type Achievement = {
 	unlocked: boolean
 	achievementId: string
 	achievement: { id: string }
 }
 
-function destUnlocks(raw: unknown): DestAchievement[] {
-	if (!Array.isArray(raw)) return []
-	return raw.flatMap((entry) => {
-		if (!entry || typeof entry !== 'object') return []
-		const record = entry as Record<string, unknown>
-		const id =
-			(typeof record.achievement_id === 'string' && record.achievement_id.trim()) ||
-			(typeof record.achievement_code === 'string' && record.achievement_code.trim()) ||
-			(typeof record.achievementId === 'string' && record.achievementId.trim()) ||
-			''
-		if (!id) return []
-		return [{ unlocked: true, achievementId: id, achievement: { id } }]
-	})
-}
-
+/**
+ * Achievements the player reached in this session.
+ *
+ * Unlocks are derived on the device from the player's stats and streak, so
+ * there is no server round trip. `unlock(id, meta, true)` records a milestone
+ * the player already held when the page loaded without announcing it.
+ */
 export function useSafeAchievements() {
-	const { user } = useSafeUser()
-	const [achievements, setAchievements] = useState<DestAchievement[]>([])
+	const [achievements, setAchievements] = useState<Achievement[]>([])
 	const [recentUnlock, setRecentUnlock] = useState<{ achievement: { id: string } } | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
 
-	useEffect(() => {
-		if (!user) {
-			setAchievements([])
-			setIsLoading(false)
-			return
-		}
-		let cancelled = false
-		fetch('/api/commerce/achievements', { credentials: 'same-origin' })
-			.then(async (response) => {
-				const body = await readJson(response)
-				if (cancelled) return
-				setAchievements(destUnlocks(body.unlocks))
-				setIsLoading(false)
-			})
-			.catch(() => {
-				if (!cancelled) setIsLoading(false)
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [user])
+	const seen = useRef(new Set<string>())
+
+	const unlock = useCallback(async (id?: string, _meta?: unknown, silent = false) => {
+		const achievementId = id?.trim()
+		if (!achievementId || seen.current.has(achievementId)) return
+		seen.current.add(achievementId)
+		setAchievements((current) => [
+			...current,
+			{ unlocked: true, achievementId, achievement: { id: achievementId } },
+		])
+		if (!silent) setRecentUnlock({ achievement: { id: achievementId } })
+	}, [])
 
 	return {
 		achievements,
-		unlock: async (id?: string, _meta?: unknown) => {
-			const activityKind = id?.trim()
-			if (!activityKind) return
-			const response = await fetch('/api/commerce/achievements', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ activityKind }),
-			})
-			const body = await readJson(response)
-			if (!response.ok) return
-			const next = destUnlocks(body.unlocks)
-			if (next.length > 0) {
-				setAchievements((current) => {
-					const seen = new Set(current.map((item) => item.achievementId))
-					return [...current, ...next.filter((item) => !seen.has(item.achievementId))]
-				})
-				setRecentUnlock({ achievement: { id: next[0]?.achievementId ?? activityKind } })
-			}
-		},
+		unlock,
 		recentUnlock,
-		dismissRecentUnlock: () => setRecentUnlock(null),
-		isLoading,
+		dismissRecentUnlock: useCallback(() => setRecentUnlock(null), []),
+		isLoading: false,
 		isConfigured: true,
 	}
 }

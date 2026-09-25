@@ -5,7 +5,7 @@
 	},
 	"faq": {
 		"accessibility": {
-			"answer": "Support varies by module, and an honest picture matters more than a slogan. In place today: a skip-to-content link on the main site; labels on the icon-only controls in the games; live regions that announce status and results in several modules; visible keyboard focus outlines; and custom animation switched off when your system asks for reduced motion. Known gap: some in-game control labels are still English only, whatever interface language you pick. If a module blocks you, email support with the module name and what happened, so the team can look at that case."
+			"answer": "Support varies by puzzle, and an honest picture matters more than a slogan. In place today: a skip-to-content link on the main site; labels on the icon-only controls in the games; live regions that announce status and results in several puzzles; visible keyboard focus outlines; and custom animation switched off when your system asks for reduced motion. Known gap: some in-game control labels are still English only, whatever interface language you pick. If a puzzle blocks you, email support with the puzzle name and what happened, so the team can look at that case."
 		}
 	},
 	"resources": {

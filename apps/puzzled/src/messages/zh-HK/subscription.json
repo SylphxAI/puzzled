@@ -23,19 +23,19 @@
 	"planDescription": "此帳戶可以玩什麼，以及如何更改。",
 	"premiumPlan": "Premium",
 	"freePlan": "免費計劃",
-	"premiumDescription": "所有模組、往期謎題庫、更深入的統計，以及連勝保護。",
-	"freeDescription": "每日一個免費模組，加上連勝、統計與排行榜。",
+	"premiumDescription": "所有遊戲、往期謎題庫、更深入的統計，以及連勝保護。",
+	"freeDescription": "每日一個免費遊戲，加上連勝、統計與排行榜。",
 	"included": "已包括",
 	"manage": "管理訂閱",
 	"managing": "正在開啟管理頁…",
 	"benefits": {
-		"everyModule": "所有模組，無每日限制",
+		"everyModule": "所有遊戲，無每日限制",
 		"archive": "往期謎題庫",
 		"stats": "更深入的統計與紀錄",
 		"freezes": "忙碌時可用的連勝保護",
-		"freeModule": "每日的免費模組",
+		"freeModule": "每日的免費遊戲",
 		"streak": "連勝、統計與紀錄",
-		"boards": "每個模組的排行榜"
+		"boards": "每個遊戲的排行榜"
 	},
 	"unknown": {
 		"title": "未能載入你的計劃",

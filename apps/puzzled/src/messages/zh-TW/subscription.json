@@ -1,12 +1,12 @@
 {
 	"planTitle": "你的方案",
 	"freePlan": "免費方案",
-	"premiumDescription": "所有模組、過往謎題庫、更深入的統計，以及連勝保護。",
-	"freeDescription": "每天一個免費模組，加上連勝、統計與排行榜。",
+	"premiumDescription": "所有遊戲、過往謎題庫、更深入的統計，以及連勝保護。",
+	"freeDescription": "每天一個免費遊戲，加上連勝、統計與排行榜。",
 	"included": "已包含",
 	"benefits": {
 		"archive": "過往謎題庫",
-		"freeModule": "每天的免費模組"
+		"freeModule": "每天的免費遊戲"
 	},
 	"unknown": {
 		"title": "無法載入你的方案",

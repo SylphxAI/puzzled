@@ -180,7 +180,7 @@
 		"identityTitle": "身份",
 		"identityDescription": "你的账户用来登录的名称与联系方式。",
 		"progressTitle": "你的成绩",
-		"progressDescription": "总计数字直接来自你完成的模块。",
+		"progressDescription": "总计数字直接来自你完成的游戏。",
 		"linksTitle": "接下来去哪里",
 		"linksDescription": "使用这个身份的各项页面。",
 		"recordLink": "查看你的统计",
@@ -396,7 +396,7 @@
 		"visibilityDescription": "决定你的名称是否出现在排行榜。",
 		"visibilityCta": "检查公开设置",
 		"boardsTitle": "你在榜上的位置",
-		"boardsDescription": "看看你在各模块的分数排名。",
+		"boardsDescription": "看看你在各游戏的分数排名。",
 		"boardsCta": "打开排行榜"
 	},
 	"account": {
@@ -445,7 +445,7 @@
 		"loading": "正在加载你的账户…",
 		"signedOut": "此设备已退出登录。登录后即可管理账户。",
 		"centreTitle": "电子邮箱、密码与登录方式",
-		"centreDescription": "这些属于你的账户中心，你的所有 Sylphx 应用共用同一处。",
+		"centreDescription": "这些登录资料在你的账户中心管理。",
 		"centreCta": "打开账户中心",
 		"centreEmail": "更改电子邮箱并重新验证",
 		"centrePassword": "设置或更改密码",
@@ -947,7 +947,7 @@
 			"verifyDescription": "为了保障安全，请先验证身份再删除账户。"
 		},
 		"centreTitle": "你的账户中心",
-		"centreDescription": "隐私与数据控制由所有 Sylphx 应用共用，因此集中一处管理。",
+		"centreDescription": "隐私与数据控制在你的账户中心管理。",
 		"centreCta": "打开隐私控制",
 		"centreVisibility": "个人资料公开程度：谁可以找到你",
 		"centreData": "下载你的数据副本",

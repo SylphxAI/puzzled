@@ -216,7 +216,7 @@
 			"permanentActionDescription": "帳號一經刪除便無法復原，所有資料將被永久清除。",
 			"verifyDescription": "為保障安全，請先驗證身分再刪除帳號。"
 		},
-		"centreDescription": "隱私與資料控制由所有 Sylphx 應用共用，因此集中一處管理。"
+		"centreDescription": "隱私與資料控制在你的帳戶中心管理。"
 	},
 	"sessions": {
 		"confirmRevokeDescription": "這會登出該裝置，需要重新登入才能存取你的帳號。",

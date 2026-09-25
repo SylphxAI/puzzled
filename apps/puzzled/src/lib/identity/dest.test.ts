@@ -61,9 +61,7 @@ describe('Identity dest HTTP', () => {
 	})
 
 	test('rejects suite-door {project}.api.sylphx.com as dest origin', () => {
-		expect(destIdentityOrigin('https://puzzled.api.sylphx.com')).toBe(
-			'https://api.identity.sylphx.com',
-		)
+		expect(destIdentityOrigin('https://puzzled.api.sylphx.com')).toBe('https://api.sylphx.com')
 	})
 
 	test('never sends Binding on dest Identity', async () => {
@@ -164,7 +162,7 @@ describe('Identity dest HTTP', () => {
 		const config = await getAppConfig()
 		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual(
 			expect.arrayContaining([
-				'https://api.identity.sylphx.com/v1/oidc/federations:list',
+				'https://api.sylphx.com/v1/oidc/federations:list',
 				'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.InvoicingService/ListPrices',
 			]),
 		)

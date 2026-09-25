@@ -51,9 +51,9 @@
 	},
 	"how": {
 		"title": "How Puzzled works",
-		"subtitle": "One free puzzle a day, plus a full suite when you want to go deeper. Every module follows the same ritual: today's set, one finish, a result you can share.",
+		"subtitle": "One free puzzle a day, plus a full suite when you want to go deeper. Every puzzle follows the same ritual: today's set, one finish, a result you can share.",
 		"step1Title": "Open today's puzzle",
-		"step1Body": "One module is free every day and needs no account. Sign in only if you want your streak and stats kept.",
+		"step1Body": "One puzzle is free every day and needs no account. Sign in only if you want your streak and stats kept.",
 		"step2Title": "Solve it at your pace",
 		"step2Body": "Most puzzles take two to fifteen minutes. Difficulty levels let you warm up or push harder.",
 		"step3Title": "Keep the habit and share",
@@ -76,20 +76,20 @@
 		},
 		"streak": {
 			"question": "How do streaks work?",
-			"answer": "Finish at least one qualifying puzzle in a product day to extend your streak. A single missed day does not erase your history, and Premium streak freezes can cover a day away."
+			"answer": "Finish at least one qualifying puzzle in a puzzle day to extend your streak. A single missed day does not erase your history, and Premium streak freezes can cover a day away."
 		},
 		"share": {
 			"question": "Can I share my result without spoiling it?",
-			"answer": "Yes. The result card shows your solving pattern, the module and the day — never the solution. Anyone who opens it plays the same day's puzzle."
+			"answer": "Yes. The result card shows your solving pattern, the puzzle and the day — never the solution. Anyone who opens it plays the same day's puzzle."
 		},
 		"catalog": {
 			"question": "Which puzzles are included?",
-			"answer": "Nineteen daily modules across words, logic, numbers, spatial play and light entertainment, all following the same daily ritual."
+			"answer": "Nineteen daily puzzles across words, logic, numbers, spatial play and light entertainment, all following the same daily ritual."
 		}
 	},
 	"final": {
 		"title": "Your next five minutes of puzzling",
-		"body": "Today's free puzzle is open now. {count} modules are waiting when you want more.",
+		"body": "Today's free puzzle is open now. {count} puzzles are waiting when you want more.",
 		"play": "Play {game}",
 		"explore": "Explore the catalog"
 	},

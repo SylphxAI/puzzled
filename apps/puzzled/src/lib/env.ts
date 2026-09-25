@@ -79,6 +79,12 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'Sylphx app id for the login surface; missing hides OAuth buttons',
 	},
+	{
+		name: 'NEXT_PUBLIC_ACCOUNT_PORTAL_URL',
+		required: false,
+		description:
+			"Auth's hosted Account Portal on the app domain; missing links account settings to /support",
+	},
 	// Deployment / dev host facts
 	{
 		name: 'VERCEL_URL',

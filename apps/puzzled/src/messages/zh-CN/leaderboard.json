@@ -5,13 +5,13 @@
 		"all": "全部"
 	},
 	"title": "排行榜",
-	"metaDescription": "各模块今天、本周与全期的排行榜：谁完成了什么，以及你自己的位置。",
+	"metaDescription": "各游戏今天、本周与全期的排行榜：谁完成了什么，以及你自己的位置。",
 	"eyebrow": "Puzzled 排行榜",
-	"description": "每次只显示一个模块、一个周期，与计分方式完全一致。只有选择公开身份的玩家会出现在榜上。",
+	"description": "每次只显示一个游戏、一个周期，与计分方式完全一致。只有选择公开身份的玩家会出现在榜上。",
 	"chip": "榜单：{module}",
 	"anonymous": "匿名玩家",
 	"scopeLabel": "排行榜周期",
-	"moduleLabel": "模块",
+	"moduleLabel": "游戏",
 	"loadingBoard": "正在加载榜单…",
 	"boardTitle": "{module} 排行榜",
 	"boardDescription": "范围：{period}。每列为该玩家在此周期的分数总和。",
@@ -43,9 +43,9 @@
 	"how": {
 		"title": "榜单如何运作",
 		"description": "这些数字背后的规则。",
-		"scores": "榜单会累加你在选定周期于该模块取得的每个有效分数。",
+		"scores": "榜单会累加你在选定周期于该游戏取得的每个有效分数。",
 		"visibility": "只有当你开启公开显示设置时，名称与分数才会出现在榜上。",
-		"boards": "每个模块都有分数榜：今天、本周与全期。",
+		"boards": "每个游戏都有分数榜：今天、本周与全期。",
 		"visibilityCta": "检查你的公开设置"
 	}
 }

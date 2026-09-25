@@ -5,13 +5,13 @@
 		"all": "全部"
 	},
 	"title": "排行榜",
-	"metaDescription": "各模組今日、本週與全期的排行榜：誰完成了什麼，以及你自己的位置。",
+	"metaDescription": "各遊戲今日、本週與全期的排行榜：誰完成了什麼，以及你自己的位置。",
 	"eyebrow": "Puzzled 排行榜",
-	"description": "每次只顯示一個模組、一個期間，與計分方式完全一致。只有選擇公開身分的玩家會出現在榜上。",
+	"description": "每次只顯示一個遊戲、一個期間，與計分方式完全一致。只有選擇公開身分的玩家會出現在榜上。",
 	"chip": "榜單：{module}",
 	"anonymous": "匿名玩家",
 	"scopeLabel": "排行榜期間",
-	"moduleLabel": "模組",
+	"moduleLabel": "遊戲",
 	"loadingBoard": "正在載入榜單…",
 	"boardTitle": "{module} 排行榜",
 	"boardDescription": "範圍：{period}。每列為該玩家在此期間的分數總和。",
@@ -43,9 +43,9 @@
 	"how": {
 		"title": "榜單運作方式",
 		"description": "這些數字背後的規則。",
-		"scores": "榜單會累加你在選定期間於該模組取得的每個有效分數。",
+		"scores": "榜單會累加你在選定期間於該遊戲取得的每個有效分數。",
 		"visibility": "只有當你開啟公開顯示設定時，名稱與分數才會出現在榜上。",
-		"boards": "每個模組都有分數榜：今日、本週與全期。",
+		"boards": "每個遊戲都有分數榜：今日、本週與全期。",
 		"visibilityCta": "檢查你的公開設定"
 	}
 }
