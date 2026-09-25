@@ -483,6 +483,10 @@ jobs:
         working-directory: apps/puzzled
         run: bun run verify:seo --base http://localhost:3014
 
+      - name: Show the server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/serve-seo.log" || true
+
       - name: Stop the served build
         if: always()
         run: |
