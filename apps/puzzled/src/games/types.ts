@@ -279,17 +279,6 @@ export type PuzzleGenerationResult = {
 }
 
 /**
- * Summary of all puzzle generations for monitoring
- */
-export type GenerationSummary = {
-	date: string
-	totalGames: number
-	successful: number
-	failed: number
-	results: PuzzleGenerationResult[]
-}
-
-/**
  * Display metadata for UI rendering
  * Translations use these keys: games.[slug].tagline, games.[slug].highlight
  *

@@ -63,7 +63,7 @@ A **mobile** lab run over `/`, `/games`, `/games/[slug]`, `/stats` and `/setting
 
 ### What exists
 
-`apps/puzzled/e2e-tests/a11y.e2e.ts`, `accessibility.e2e.ts` and `a11y-support.ts`; ten Playwright specs in total. `bun run test:a11y` runs the two a11y specs, `bun run test:e2e` the full set. `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by `popover`, `dropdown-menu`, `select`, `tooltip`, `form-feedback` and `inline-editable`; `dialog.tsx` and `motion/page-transition.tsx` gate motion separately through `useReducedMotion` from `motion/use-reduced-motion.ts`. It has its own test, and `apps/puzzled/src/shared/components/a11y-contract.test.ts` guards the app contract. The WCAG wave #148 is merged.
+`apps/puzzled/e2e-tests/a11y.e2e.ts`, `accessibility.e2e.ts` and `a11y-support.ts`; ten Playwright specs in total. `bun run test:a11y` runs the two a11y specs, `bun run test:e2e` the full set. `packages/ui/src/motion/motion-preferences.tsx` wraps `MotionConfig reducedMotion="user"` and is used by `dropdown-menu` and `form-feedback`; `dialog.tsx` gates motion separately through `useReducedMotion` from `motion/use-reduced-motion.ts`. It has its own test. The WCAG wave #148 is merged.
 
 ### Enforcement
 
