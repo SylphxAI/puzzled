@@ -23,6 +23,9 @@ on:
       - 'sylphx.toml'
       - 'scripts/**'
       - '.github/workflows/ci.yml'
+  # Nightly: the browser harnesses (a11y, Lighthouse) also run here, off the PR path.
+  schedule:
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 env:
@@ -116,11 +119,10 @@ jobs:
         with:
           bun-version: "1.4.0"
 
-      - name: Dependency vulnerability audit
-        # Report high+ vulns but do not block product security PRs on pre-existing
-        # transitive debt; secret detection below remains fail-closed.
-        continue-on-error: true
-        run: bun audit --audit-level=high
+      - name: Dependency vulnerability audit (shipped dependencies)
+        # Fail-closed on high+ advisories in what ships to players. Dev-only
+        # tooling (lhci and its browser download chain) is out of scope.
+        run: bun audit --audit-level=high --prod
 
       - name: Secret detection
         # Binary install (not the GH Action docker path): self-hosted
@@ -301,6 +303,23 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: 'true'
           NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+
+      # The one web build: the SEO, a11y and Lighthouse harnesses serve this
+      # artifact instead of each running next build again.
+      # Tarred, not uploaded as a tree: Turbopack links external server
+      # packages as symlinks under .next/node_modules, and an artifact upload
+      # would copy them away from their dependencies.
+      - name: Pack the web build
+        run: tar -C apps/puzzled --exclude=.next/cache --exclude=.next/standalone -cf web-build.tar .next
+
+      - name: Share the web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: web-build.tar
+          if-no-files-found: error
+          retention-days: 1
 
       - name: GET / document returns HTML while Connect hangs
         run: node scripts/assert-document-route.mjs
@@ -390,13 +409,15 @@ jobs:
   # (docs/program/website-refactor/gaps.md G9, G5, G4). Each is wired as its
   # own job so a red SEO contract does not hide the a11y or budget verdict.
   # All three measure a *served production build*: the harnesses assert real
-  # HTTP responses, not source.
+  # HTTP responses, not source. They serve the Build job's artifact rather
+  # than building again; SEO runs on every PR, a11y and Lighthouse run in the
+  # merge queue and nightly.
 
   seo-contract:
     name: SEO Contract
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint-and-typecheck]
+    needs: [build]
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -430,13 +451,13 @@ jobs:
           echo "bun install failed after retries"
           exit 1
 
-      - name: Build web (next build)
-        run: bun run build
-        working-directory: apps/puzzled
-        env:
-          SKIP_ENV_VALIDATION: 'true'
-          NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       # apps/puzzled/scripts/seo-verify.ts asserts crawler truth against a
       # served build, so the job serves one instead of measuring source.
@@ -466,6 +487,10 @@ jobs:
         working-directory: apps/puzzled
         run: bun run verify:seo --base http://localhost:3014
 
+      - name: Show the server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/serve-seo.log" || true
+
       - name: Stop the served build
         if: always()
         run: |
@@ -473,9 +498,12 @@ jobs:
 
   a11y:
     name: Accessibility (WCAG 2.2 AA)
+    # Merge queue and nightly only: a full browser suite on every PR push
+    # costs more than it catches before the queue does.
+    if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    needs: [lint-and-typecheck]
+    needs: [build]
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -515,13 +543,13 @@ jobs:
         working-directory: apps/puzzled
         run: bunx playwright install --with-deps chromium
 
-      - name: Build web (next build)
-        run: bun run build
-        working-directory: apps/puzzled
-        env:
-          SKIP_ENV_VALIDATION: 'true'
-          NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       - name: Serve the build on :3015
         working-directory: apps/puzzled
@@ -571,9 +599,11 @@ jobs:
 
   lighthouse:
     name: Lighthouse Budgets
+    # Merge queue and nightly only, like the a11y suite.
+    if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [lint-and-typecheck]
+    needs: [build]
 
     steps:
       - uses: actions/checkout@v4.2.2
@@ -635,13 +665,13 @@ jobs:
           "$bin" --version
           echo "CHROME_PATH=$bin" >> "$GITHUB_ENV"
 
-      - name: Build web (next build)
-        run: bun run build
-        working-directory: apps/puzzled
-        env:
-          SKIP_ENV_VALIDATION: 'true'
-          NODE_ENV: production
-          NEXT_PUBLIC_APP_URL: https://puzzled.gg
+      - name: Download the web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+
+      - name: Unpack the web build
+        run: tar -C apps/puzzled -xf web-build.tar
 
       # apps/puzzled/lighthouserc.json is used unchanged: the mobile profile
       # (Lighthouse mobile defaults with applied/devtools throttling — switched
