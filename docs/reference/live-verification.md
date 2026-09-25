@@ -3,7 +3,8 @@
 Re-runnable readbacks of the **Live** layer from
 [`docs/north-star/EVIDENCE-AND-ORACLES.md`](../north-star/EVIDENCE-AND-ORACLES.md) §1
 for the capability graph in [`docs/capabilities.md`](../capabilities.md):
-`PUZ-MODULE`, `PUZ-DAILY`, `PUZ-FREE`, `PUZ-SHARE`, `PUZ-PLUS`, `PUZ-MARKS`.
+`PUZ-MODULE`, `PUZ-DAILY`, `PUZ-FREE`, `PUZ-SHARE`, `PUZ-MARKS`. Puzzled sells
+no paid tier: every module and every past day is open to every player.
 
 The harness is Bun + `fetch` only (no dependencies, no new packages) and it
 never infers success from a proxy: every check prints `pass` / `fail` /
@@ -51,7 +52,9 @@ and runs the full check pipeline against them in-process: a healthy control
 stub must go green, and stub cases for the reviewed defects (health document
 absent, rotation 5xx on both attempts, deep link behind a login wall,
 grid-leak compare without a local solution, empty `puzzleDataJson`) must stay
-non-green. It never touches the network target and never writes.
+non-green. Stub and harness share a pinned clock (a `sudoku` day; a
+`word-guess` day for the no-local-solution case), so the self-test does not
+depend on the host date. It never touches the network target and never writes.
 
 `--expected-sha <sha>` asserts the `git_commit_sha` reported by `/healthz`
 (case-insensitive prefix match either direction, so a short SHA works). A
@@ -72,7 +75,7 @@ itself.
 ## What it writes
 
 Without `--play` the harness only reads (`GET /`, `GET /healthz`, `GET /readyz`,
-`GET /pricing`, `GET /games/...`, `GET /manifest.webmanifest`, and Connect
+`GET /games/...`, `GET /manifest.webmanifest`, and Connect
 `GetDaily` reads with a guest id — read-only requests; anonymous guest reads do
 not persist anything server-side).
 
@@ -102,17 +105,17 @@ locally solved grid appear as a byte count plus SHA-256, not as grid content.
 | --- | --- | --- |
 | `healthz` | `GET /healthz` is 200 and reports `git_commit_sha` (the live revision identity); with `--expected-sha`, that SHA must match the expected value | status, timing, body, reported SHA, expected SHA + match/mismatch |
 | `readyz` | `GET /readyz` is 200, every dependency not explicitly marked `required: false` is `ok`, and its SHA matches `/healthz` | dependency array, `slice`, `stub`, SHA pair |
-| `web-document` | `GET /` is 200 `text/html`; the canonical URL is not a localhost origin when the target is a real domain; the served HTML has a same-origin anchor to `/games/<today's free slug>` (one optional locale prefix; nested/off-site paths do not count) | canonical URL, matching and rejected hrefs, rendered-text excerpt |
-| `free-slug-discovery` | across the five rotation slugs (`word-guess`, `word-groups`, `crowns`, `sudoku`, `crossword`) exactly one `GetDaily` is 200 and the others are 403 `premium_required` (fail-closed); the served `puzzleDate` equals the local `Asia/Hong_Kong` day key; a 5xx/transport failure is retried once per slug and stays `indeterminate` — never a pass | per-slug HTTP status, Connect `code`/`message`, timings, verdict classification, both attempts when retried, server vs local day key |
-| `daily-serve` | the free slug returns 200 with a `puzzleDataJson` object carrying at least one key, a boolean/absent `hasCompleted` (false for a fresh guest), and no answer/solution keys anywhere in the response | parsed keys, `puzzleDate`/`puzzleNumber`/`mode`/`stub`, recursive key-scan findings |
+| `web-document` | `GET /` is 200 `text/html`; the canonical URL is not a localhost origin when the target is a real domain; the served HTML has a same-origin anchor to `/games/<today's pick>` (one optional locale prefix; nested/off-site paths do not count) | canonical URL, matching and rejected hrefs, rendered-text excerpt |
+| `free-slug-discovery` | today's pick is computed locally from the product day key (ordinal0 mod 5 over `word-guess`, `word-groups`, `crowns`, `sudoku`, `crossword`, the same rule as `apps/puzzled/src/lib/free-rotation.ts`); every rotation slug's `GetDaily` is 200 (a 4xx fails); today's pick's served `puzzleDate` equals the local `Asia/Hong_Kong` day key; a 5xx/transport failure is retried once per slug and stays `indeterminate` — never a pass | per-slug HTTP status, Connect `code`/`message`, timings, verdict classification, both attempts when retried, server vs local day key |
+| `daily-serve` | today's pick returns 200 with a `puzzleDataJson` object carrying at least one key, a boolean/absent `hasCompleted` (false for a fresh guest), and no answer/solution keys anywhere in the response | parsed keys, `puzzleDate`/`puzzleNumber`/`mode`/`stub`, recursive key-scan findings |
 | `finish-loop` (`--play`) | a genuine terminal is accepted server-side, `hasCompleted=true` + `completedSession` come back on re-read, and a second terminal for the same guest + module + product day is refused `already_played` | solver plan, both submit responses, re-read body |
 | `share-deep-link` | `/games/<free>?date=<product-day>` ends on the module path (`/games/<free>`, one optional locale prefix, same origin) with 200 HTML after a documented same-origin redirect; the landing carries no solution-shaped JSON keys and no locally solved solution signature. The harness *requests* the documented module+`?date=` shape, but the app-side `formatRitualShareText` output is not observed here — no format/non-spoiler claim is made. Without a local solution (modules the harness cannot solve) the signature compare is `unknown` | path, redirect chain, final path/origin, content type/bytes, leak-pattern hits, signature count + redacted SHA-256s |
-| `premium-fail-closed` | anonymous `GetDaily` for a past `puzzle_date` is 403 `premium_required`; `/pricing` is 200 and reachable from a gated (non-free) module page | archive request body, pricing response, `/pricing` hrefs on the gated surface |
+| `archive-open` | anonymous `GetDaily` for yesterday's `puzzle_date` on today's pick is 200; for a future `puzzle_date` (today + 2) it is 400 `future_puzzle_date`; a 5xx/transport failure is `unknown` | archive and future request bodies, Connect `code`/`message`, timings |
 | `marks-scan` | `CATALOG` §3.2 marks do not appear in `title` / meta / `JSON-LD` / manifest `short_name`-class fields, and no `JSON-LD`/canonical URL is a localhost origin on a non-local host; marks anywhere else are reported as warnings with exact context; a manifest that cannot be observed makes the dimension `unknown`, not a silent pass | per-target SHA-256, hard failures with zone + context, warnings with context, manifest fields/URL/state |
 
 Product day key: `Asia/Hong_Kong` calendar date (fixed UTC+8, no DST — the same
 shift the Rust `product_day_key` applies). The harness prefers the
-`puzzleDate` the server serves on the free `GetDaily` (recorded as
+`puzzleDate` the server serves on today's pick's `GetDaily` (recorded as
 `productDayKeySource: server GetDaily puzzleDate`), and *asserts* it equals the
 local HKT date (`product-day-key-matches-hkt`); it falls back to the local HKC
 date for the summary when discovery fails.
@@ -135,8 +138,8 @@ reports. It does **not** establish:
   remains the
   [metric oracle](../north-star/NORTH-STAR-METRIC.md) — this harness does not
   query the warehouse.
-- **Coverage**: authenticated/premium journeys (P4/P5), admin (P7), non-rotation
-  modules beyond today's free slug, client-rendered DOM state (the harness reads
+- **Coverage**: authenticated journeys (P4/P5), admin (P7), non-rotation
+  modules, puzzle content beyond today's pick, client-rendered DOM state (the harness reads
   served HTML, not a browser), email/push, and the share text as rendered in the
   product UI (`formatRitualShareText` output is **not** observed; only the
   requested module+`?date=` link and the landing leak checks are).
@@ -147,7 +150,7 @@ A check that cannot obtain its evidence never reports `pass`. A liveness or
 readiness probe that returns a non-200 **response** is a `fail`; a transport
 failure with no response is `unknown`. A rotation probe that only returns
 5xx/transport failures after its one retry is `unknown`/`indeterminate` (a 5xx
-is not evidence about the premium gate). A non-product page makes the mark scan
+is not evidence about serving). A non-product page makes the mark scan
 `unknown`. Every `unknown` except the explicit read-only finish-loop exemption
 (`not_attempted`) keeps the run non-green, exactly like a `fail`.
 
@@ -159,10 +162,10 @@ solution-key/signature scans — report `unknown` when the backing body was
 truncated, so a page cut off at the cap can never green a "no marks / no leak"
 claim.
 
-On days whose free module the harness cannot solve (`word-guess`,
+On days whose pick the harness cannot solve (`word-guess`,
 `word-groups`, `crossword`), the share signature compare has no local solution
 to check and reports `unknown`, so read-only runs are structurally non-green
-on those days. That is by design; run on a solvable free day (`sudoku`,
+on those days. That is by design; run on a solvable day (`sudoku`,
 `crowns`) or accept the `unknown`.
 
 ## Post-deploy expectations (2026-09-11 fix set)
@@ -180,7 +183,7 @@ harness problem:
 | `/games/crowns` | 308 -> `/games/games/crowns` -> 404 | 200 on the canonical module path |
 | `/crowns`, `/duo` inbound aliases | alias hop breaks (double prefix) | redirect to `/games/crowns` / `/games/duo`, final 200 |
 | `/privacy`, `/terms` (anonymous) | 307 to `/login` | public 200 |
-| `number-path`, `pip-place` (anonymous) | `404 unknown_game` | `403 premium_required` (known module, fail-closed) |
+| `number-path`, `pip-place` (anonymous) | `404 unknown_game` | known module (now 200: the paid tier is removed and every module is served) |
 | marks scan on `/` and the free module | 8 hard hits (`Wordle`, `Connections` in meta/JSON-LD) | 0 hard hits |
 | finish loop (`--play`) | pass (server-authoritative) | still pass; one finish per `(user, module, day_key)` |
 
@@ -188,8 +191,8 @@ Two different probe families cover the table. Run both and keep the raw
 output with the record that claims the deploy.
 
 ```bash
-# 1) Harness (healthz/readyz, rotation fail-closed, daily serve, share deep
-#    link, premium fail-closed, marks scan, finish loop):
+# 1) Harness (healthz/readyz, every rotation module served, daily serve,
+#    share deep link, archive open / future refused, marks scan, finish loop):
 bun run verify:live --expected-sha <deployed-sha> --play --json
 
 # 2) Surfaces the harness does not probe (compare each result to the table):
@@ -207,7 +210,7 @@ curl -sS -X POST https://puzzled.gg/puzzled.v1.PuzzleService/GetDaily \
 
 A green harness run alone is not the deploy evidence for this table: the
 harness has no check for `/games`, the alias/legal routes, or the two new
-modules. And on days whose free module the harness cannot solve
+modules. And on days whose pick the harness cannot solve
 (`word-guess`, `word-groups`, `crossword`) the share signature compare is
 `unknown` by design (see above), so the command exits non-zero on a complete
 deploy — run it on a `sudoku`/`crowns` day or accept the documented `unknown`.

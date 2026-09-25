@@ -12,7 +12,7 @@ const FOOTER_GAME_LIMIT = 8
  * Site footer.
  *
  * Server rendered: it carries the internal link graph search engines follow
- * (every game, the catalog, pricing, support, legal) and the language entry
+ * (every game, the catalog, support, legal) and the language entry
  * point, so it stays on every crawled page.
  */
 export async function Footer() {
@@ -66,14 +66,6 @@ export async function Footer() {
 					<nav aria-label={t('productHeading')} className="text-sm">
 						<h2 className="font-display text-sm font-bold text-white">{t('productHeading')}</h2>
 						<ul className="mt-3 space-y-0">
-							<li>
-								<Link
-									href="/pricing"
-									className="-mx-2 inline-flex min-h-11 min-w-11 items-center px-2 text-white/70 transition-colors hover:text-white"
-								>
-									{tNav('pricing')}
-								</Link>
-							</li>
 							<li>
 								<Link
 									href="/stats"

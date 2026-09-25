@@ -85,11 +85,10 @@ export function getSessionReplayConfig(): Partial<SessionReplayConfig> {
  * Returns adjusted sample rate or null to use default
  */
 export function getAdjustedSampleRate(options: {
-	isPremium?: boolean
 	isNewUser?: boolean
 	hasRecentErrors?: boolean
 }): number | null {
-	const { isPremium, isNewUser, hasRecentErrors } = options
+	const { isNewUser, hasRecentErrors } = options
 
 	// Always capture users who have had recent errors
 	if (hasRecentErrors) {
@@ -99,11 +98,6 @@ export function getAdjustedSampleRate(options: {
 	// Higher sampling for new users to understand onboarding issues
 	if (isNewUser) {
 		return 30
-	}
-
-	// Premium users - higher sampling for better support
-	if (isPremium) {
-		return 25
 	}
 
 	// Use default sampling rate

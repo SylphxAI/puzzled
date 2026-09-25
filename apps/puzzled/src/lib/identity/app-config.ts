@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { env } from '../env'
-import { destCommerceCredential, destIdentityCredential } from './credentials'
+import { destIdentityCredential } from './credentials'
 import {
 	type AppConfig,
 	DEST_CONSENT_PURPOSES,
@@ -8,9 +8,8 @@ import {
 	destIdentityOrigin,
 	EMPTY_APP_CONFIG,
 } from './dest'
-import { getPlans } from './index'
 
-/** Identity and commerce config changes rarely; one fetch serves every request for 5 minutes. */
+/** Identity config changes rarely; one fetch serves every request for 5 minutes. */
 const APP_CONFIG_TTL_SECONDS = 300
 
 function parseFederations(body: { providers?: unknown[]; federations?: unknown[] }): string[] {
@@ -37,10 +36,6 @@ async function fetchOAuthProviders(identityOrigin: string): Promise<string[]> {
 	return parseFederations(body)
 }
 
-async function fetchPlans() {
-	return destCommerceCredential() ? getPlans() : []
-}
-
 export async function getAppConfig(_opts?: {
 	secretKey?: string
 	appId?: string
@@ -48,23 +43,18 @@ export async function getAppConfig(_opts?: {
 }): Promise<AppConfig> {
 	const identityOrigin = destIdentityOrigin(_opts?.platformUrl ?? env.IDENTITY_API_ORIGIN)
 	/*
-	 * Both reads run in parallel and are cached for five minutes. A loader that
-	 * fails throws, so an outage is never cached: the next request tries again,
-	 * and this one falls back to an empty list.
+	 * Cached for five minutes. A loader that fails throws, so an outage is
+	 * never cached: the next request tries again, and this one falls back to an
+	 * empty list.
 	 */
-	const cacheOptions = { revalidate: APP_CONFIG_TTL_SECONDS }
-	const [oauthProviders, plans] = await Promise.all([
-		unstable_cache(
-			fetchOAuthProviders,
-			['identity-app-config', 'oauth-providers'],
-			cacheOptions,
-		)(identityOrigin).catch(() => [] as string[]),
-		unstable_cache(fetchPlans, ['identity-app-config', 'plans'], cacheOptions)().catch(() => []),
-	])
+	const oauthProviders = await unstable_cache(
+		fetchOAuthProviders,
+		['identity-app-config', 'oauth-providers'],
+		{ revalidate: APP_CONFIG_TTL_SECONDS },
+	)(identityOrigin).catch(() => [] as string[])
 
 	return {
 		...EMPTY_APP_CONFIG,
-		plans,
 		consentTypes: [...DEST_CONSENT_PURPOSES],
 		oauthProviders,
 		app: {

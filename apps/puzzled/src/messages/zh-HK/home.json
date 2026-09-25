@@ -26,9 +26,7 @@
 		"seeAll": "睇全部遊戲",
 		"play": "開始玩",
 		"playAgain": "再玩一次",
-		"unlock": "解鎖",
-		"freeToday": "今日免費",
-		"premium": "Premium"
+		"freeToday": "今日精選"
 	},
 	"value": {
 		"dailyTitle": "每日全新題目",
@@ -64,7 +62,7 @@
 		"subtitle": "用最短篇幅講清楚 Puzzled。",
 		"free": {
 			"question": "Puzzled 免費嗎？",
-			"answer": "是。每日有一題免費，毋須付款或註冊。Premium 會加入完整陣容、舊題庫、進階統計同連續紀錄保護。"
+			"answer": "係。每款謎題每日都免費,永遠毋須付款或者帳戶。"
 		},
 		"account": {
 			"question": "玩遊戲需要註冊帳戶嗎？",
@@ -76,7 +74,7 @@
 		},
 		"streak": {
 			"question": "連續紀錄點計？",
-			"answer": "每個遊戲日完成至少一題合格謎題，就會延續你嘅連續紀錄。偶爾錯過一日唔會清空歷史，Premium 連續紀錄保護仲可以幫你補一日。"
+			"answer": "每個謎題日完成至少一款合資格謎題,就可以延續連勝。偶爾漏咗一日,都唔會抹走你嘅紀錄。"
 		},
 		"share": {
 			"question": "分享成績會唔會劇透？",

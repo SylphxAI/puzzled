@@ -1,6 +1,5 @@
 //! Writer postconditions for ADR-169: functional core decides without shell I/O.
 
-use puzzled_core::billing_access::policy::is_free_plan;
 use puzzled_core::gamification::personal_streak::parse_day_key;
 use puzzled_core::identity_policy::guest_day_id::normalize_guest_user_id;
 use puzzled_core::jobs_policy::backoff::backoff_base_ms;
@@ -43,7 +42,6 @@ fn core_generates_and_scores_sudoku_without_shell() {
 fn capability_domains_decide_on_fixture_facts() {
     assert!(normalize_guest_user_id("a1b2c3d4-e5f6-7890-abcd-ef1234567890").is_some());
     assert_eq!(ANONYMOUS_DISPLAY_NAME, "Anonymous");
-    assert!(is_free_plan(None));
     assert_eq!(backoff_base_ms(0), 60_000);
     assert!(looks_like_email("player@example.com"));
     assert!(ERROR_CODES.contains(&"UNAUTHORIZED"));

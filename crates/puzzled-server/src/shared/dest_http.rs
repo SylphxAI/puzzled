@@ -8,7 +8,6 @@ use reqwest::header::{HeaderMap as ReqHeaderMap, HeaderValue, AUTHORIZATION, CON
 use serde_json::{json, Value};
 
 pub(crate) const DEST_EVENTS_ORIGIN: &str = "https://api.events.sylphx.com";
-pub(crate) const DEST_COMMERCE_ORIGIN: &str = "https://api.commerce.sylphx.com";
 const DEST_DELIVERIES: &str = "/v1/deliveries";
 
 pub(crate) fn dest_peel_origin(fallback: &str, raw: Option<&str>) -> String {
@@ -193,14 +192,6 @@ mod tests {
         assert_eq!(
             dest_peel_origin(DEST_EVENTS_ORIGIN, Some("https://puzzled.api.sylphx.com")),
             DEST_EVENTS_ORIGIN
-        );
-    }
-
-    #[test]
-    fn dest_commerce_origin_rejects_suite_door() {
-        assert_eq!(
-            dest_peel_origin(DEST_COMMERCE_ORIGIN, Some("https://puzzled.api.sylphx.com")),
-            DEST_COMMERCE_ORIGIN
         );
     }
 

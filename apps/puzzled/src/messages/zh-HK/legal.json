@@ -68,7 +68,7 @@
 	"terms": {
 		"title": "服務條款",
 		"lastUpdated": "最後更新",
-		"revision": "2024-12-15",
+		"revision": "2026-09-25",
 		"eyebrow": "法律文件",
 		"lead": "本條款列出使用 Puzzled 時適用的規則，包括帳戶、訂閱與行為規範。",
 		"toc": {
@@ -95,15 +95,6 @@
 					"accurate": "提供準確完整的資訊",
 					"secure": "保護您的登入憑證安全",
 					"responsible": "對您帳戶下的所有活動負責"
-				}
-			},
-			"subscription": {
-				"title": "訂閱與付款",
-				"content": "Premium 訂閱依您選擇的方案計費：",
-				"items": {
-					"billing": "訂閱按月或按年計費",
-					"cancel": "您可隨時取消；取消後可繼續使用至計費週期結束",
-					"refund": "購買後 7 天內可依我們的判斷提供退款"
 				}
 			},
 			"conduct": {

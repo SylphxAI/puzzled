@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 
-const FAQ_KEYS = ['start', 'rotation', 'premium', 'account', 'share'] as const
+const FAQ_KEYS = ['start', 'rotation', 'account', 'share'] as const
 
 /**
  * Catalog FAQ.

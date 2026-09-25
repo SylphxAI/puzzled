@@ -23,13 +23,10 @@ export const CLIENT_NAMESPACES = [
 	'modes',
 	'nav',
 	'onboarding',
-	'pricing',
 	'pwa',
-	'referrals',
 	'share',
 	'stats',
 	'streak',
-	'subscription',
 ] as const
 
 /** Keep only the named top-level namespaces; unknown names are ignored. */

@@ -12,14 +12,12 @@ for (const scheme of ['light', 'dark'] as const) {
 	await page.waitForTimeout(2000)
 	const report = await page.evaluate(() => {
 		const body = getComputedStyle(document.body)
-		const pricingLinks = document.querySelectorAll('a[href="/pricing"]').length
 		const h1 = document.querySelector('h1')
 		const h1Font = h1 ? getComputedStyle(h1).fontFamily : 'none'
 		const doc = document.documentElement.className
 		return {
 			bg: body.backgroundColor,
 			fg: body.color,
-			pricingLinks,
 			h1Font,
 			docClass: doc.slice(0, 60),
 		}

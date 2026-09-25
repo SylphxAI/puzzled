@@ -1,4 +1,4 @@
-import { Clock, Lock, Play, Sparkles } from 'lucide-react'
+import { Clock, Play, Sparkles } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import type { GameCategory } from '@/games/types'
@@ -22,19 +22,16 @@ type GamePageHeroProps = {
 	duration: string
 	theme: GameColorTheme
 	category: GameCategory
-	/** Today's free-rotation module: playable by everyone. */
+	/** Today's featured free-rotation module. */
 	freeToday: boolean
-	/** The viewer can start this module today (free rotation or entitlement). */
-	canPlay: boolean
 	/** No account on this request; sign-in keeps the streak. */
 	isGuest: boolean
-	isPremium: boolean
 }
 
 /**
  * Game page hero: breadcrumb, the page's only h1, the module facts and the
- * action that matches what this viewer may actually do today. The hero is
- * server-rendered for every viewer, including the ones who cannot play yet.
+ * play action. Every module is open to every player; the hero is
+ * server-rendered for every viewer.
  */
 export async function GamePageHero({
 	slug,
@@ -47,9 +44,7 @@ export async function GamePageHero({
 	theme,
 	category,
 	freeToday,
-	canPlay,
 	isGuest,
-	isPremium,
 }: GamePageHeroProps) {
 	const t = await getTranslations('catalog')
 	const tNav = await getTranslations('nav')
@@ -87,7 +82,7 @@ export async function GamePageHero({
 				publisher: { '@type': 'Organization', name: 'Puzzled' },
 				url: pageUrl,
 				inLanguage: 'en',
-				isAccessibleForFree: freeToday,
+				isAccessibleForFree: true,
 			},
 		],
 	}
@@ -130,12 +125,7 @@ export async function GamePageHero({
 								<Sparkles className="h-3 w-3" aria-hidden="true" />
 								{t('freeToday')}
 							</span>
-						) : (
-							<span className="chip bg-muted text-muted-foreground">
-								<Lock className="h-3 w-3" aria-hidden="true" />
-								{t('premium')}
-							</span>
-						)}
+						) : null}
 						<h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-balance md:text-4xl">
 							{name}
 						</h1>
@@ -161,27 +151,23 @@ export async function GamePageHero({
 					))}
 				</div>
 
-				{canPlay ? (
-					<div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-						<a
-							href="#play"
-							className={cn(
-								'inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-br px-6 font-semibold text-white shadow-md transition-transform hover:-translate-y-0.5 active:scale-[0.99]',
-								colors.gradient,
-							)}
-						>
-							<Play className="h-4 w-4" aria-hidden="true" />
-							{t('gamePage.playCta')}
-						</a>
-						<p className="text-sm text-muted-foreground">
-							{freeToday ? t('gamePage.freeNote') : isPremium ? t('gamePage.includedNote') : null}
-						</p>
-					</div>
-				) : (
-					<p className="mt-5 max-w-2xl text-sm text-muted-foreground">{t('gamePage.lockedNote')}</p>
-				)}
+				<div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+					<a
+						href="#play"
+						className={cn(
+							'inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-br px-6 font-semibold text-white shadow-md transition-transform hover:-translate-y-0.5 active:scale-[0.99]',
+							colors.gradient,
+						)}
+					>
+						<Play className="h-4 w-4" aria-hidden="true" />
+						{t('gamePage.playCta')}
+					</a>
+					{freeToday ? (
+						<p className="text-sm text-muted-foreground">{t('gamePage.freeNote')}</p>
+					) : null}
+				</div>
 
-				{isGuest && canPlay && (
+				{isGuest && (
 					<p className="mt-3 text-sm text-muted-foreground">
 						{t('gamePage.guestNote')}{' '}
 						<Link

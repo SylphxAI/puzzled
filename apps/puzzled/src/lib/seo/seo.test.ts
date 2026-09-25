@@ -42,7 +42,7 @@ function localeAgnosticPath(url: string): string {
 describe('route truth table', () => {
 	test('lists the public surfaces and nothing else', () => {
 		const paths = PUBLIC_ROUTES.map((route) => route.path)
-		expect(paths).toEqual(['/', '/games', '/pricing', '/support', '/privacy', '/terms'])
+		expect(paths).toEqual(['/', '/games', '/support', '/privacy', '/terms'])
 		for (const path of paths) {
 			expect(isPrivateRoutePath(path)).toBe(false)
 		}
@@ -129,7 +129,7 @@ describe('route truth table', () => {
 	})
 
 	test('keeps the archive reachable but out of the index', () => {
-		// The archive surface is per-identity and premium-gated, so it must not be
+		// The archive surface is per-identity, so it must not be
 		// listed for crawlers — while staying crawlable so its own noindex is
 		// readable (a Disallow would hide the directive).
 		expect(isPrivateRoutePath('/archive')).toBe(true)

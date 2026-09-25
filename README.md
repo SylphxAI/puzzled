@@ -13,7 +13,7 @@ Puzzled is a daily light brain-games platform: short, positive rituals under one
 |--|--|
 | Promise | Minutes a day, optional depth, shareable non-spoiler results |
 | NSM | Distinct users who complete ≥1 puzzle ritual per product day |
-| Money | Free daily finish floor; paid archive/suite/stats |
+| Money | Everything free; no paid tier is sold (paid tier is an open decision) |
 
 Repo entry: [`PROJECT.md`](PROJECT.md). North Star package: [`docs/north-star/README.md`](docs/north-star/README.md).
 

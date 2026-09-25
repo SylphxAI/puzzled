@@ -9,7 +9,7 @@
  *   (`statusAvailable`), never from a missing or failed read.
  * - An unverified module is reported as `statusUnknown` so the page can show a
  *   small, non-blocking notice instead of blanking the ritual.
- * - Lock/free state comes from entitlement + today's free rotation only.
+ * - Every module is playable; `isFreeToday` marks today's featured module.
  */
 
 export type HomePersonalResult = {
@@ -22,7 +22,6 @@ export type HomePersonalResult = {
 export type HomePlayStateInput = {
 	gameSlugs: readonly string[]
 	personalResults: Readonly<Record<string, HomePersonalResult | undefined>>
-	isPremium: boolean
 	freeGameSlug: string
 }
 
@@ -32,7 +31,6 @@ export type HomeGamePlayState = {
 	completed: boolean
 	/** Server-reported score; present only together with a proved finish. */
 	score?: string
-	locked: boolean
 	isFreeToday: boolean
 	/** The server could not prove today's completion state for this module. */
 	statusUnknown: boolean
@@ -55,7 +53,6 @@ export function deriveHomePlayState(input: HomePlayStateInput): HomePlayState {
 			slug,
 			completed,
 			score: score === null || score === undefined ? undefined : String(score),
-			locked: !input.isPremium && slug !== input.freeGameSlug,
 			isFreeToday: slug === input.freeGameSlug,
 			statusUnknown,
 		}
@@ -83,7 +80,7 @@ export type HomePlayScopes = {
  * Home renders only the bounded exposure (`docs/north-star/CATALOG.md` §1),
  * but the hero's "Today's progress" indicator must keep counting every module
  * the viewer can play today: re-basing the denominator on the exposed six
- * would show a premium viewer who proved 8 of 19 a false "6/6 all complete"
+ * would show a player who proved 8 of 19 a false "6/6 all complete"
  * (and would also narrow the unverified-status banner scope, #130).
  */
 export function scopeHomePlayState(

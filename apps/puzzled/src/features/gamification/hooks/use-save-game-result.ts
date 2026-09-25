@@ -81,7 +81,7 @@ export function useSaveGameResult(gameSlug: string) {
 	const saveResult = useCallback(
 		async (input: GameResultInput): Promise<SaveResultResponse> => {
 			// Logged-in Platform identity **or** guest free-ritual (stable day id
-			// attached by Connect transport). Server rejects guests on premium.
+			// attached by Connect transport).
 			// Don't save twice - set flag BEFORE async operation to prevent race condition
 			if (savedRef.current) {
 				return { success: false, error: 'Already saved' }

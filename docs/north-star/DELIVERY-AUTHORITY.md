@@ -26,7 +26,7 @@ A change **must not** merge if it:
 | # | Floor |
 |---|--------|
 | F1 | Deletes or hollows a **catalog game** without DELIVERY exception (see §4) |
-| F2 | Removes the **free daily ritual finish** for non-premium users |
+| F2 | Removes the **free daily ritual finish** for any player |
 | F3 | Restores **client-trusted** solutions, scores, or completion flags |
 | F4 | Reintroduces a **second play authority** (e.g. dual REST submit path) while claiming sole api |
 | F5 | Breaks golden journeys **P1–P7** without a successor oracle ([EVIDENCE-AND-ORACLES.md](EVIDENCE-AND-ORACLES.md)) |
@@ -128,7 +128,7 @@ Historical example: [history/pr64-attestation.md](history/pr64-attestation.md).
 | P2 | Share land → play |
 | P3 | Multi-module same day (if suite claims multi) |
 | P4 | Auth history/streak path |
-| P5 | Premium archive fail-closed / allow when entitled |
+| P5 | Archive: past days served to every player; future days refused |
 | P6 | api health + web serve |
 | P7 | Admin games list (if admin ships) |
 

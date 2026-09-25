@@ -26,9 +26,7 @@
 		"seeAll": "See all games",
 		"play": "Play",
 		"playAgain": "Play again",
-		"unlock": "Unlock",
-		"freeToday": "Free today",
-		"premium": "Premium"
+		"freeToday": "Today's pick"
 	},
 	"value": {
 		"dailyTitle": "A fresh set every day",
@@ -64,7 +62,7 @@
 		"subtitle": "The short version of how Puzzled works.",
 		"free": {
 			"question": "Is Puzzled free?",
-			"answer": "Yes. One puzzle is free every day and never requires payment or an account. Premium adds the full suite, the archive, extra stats and streak freezes."
+			"answer": "Yes. Every puzzle is free every day and never requires payment or an account."
 		},
 		"account": {
 			"question": "Do I need an account to play?",
@@ -76,7 +74,7 @@
 		},
 		"streak": {
 			"question": "How do streaks work?",
-			"answer": "Finish at least one qualifying puzzle in a puzzle day to extend your streak. A single missed day does not erase your history, and Premium streak freezes can cover a day away."
+			"answer": "Finish at least one qualifying puzzle in a puzzle day to extend your streak. A single missed day does not erase your history."
 		},
 		"share": {
 			"question": "Can I share my result without spoiling it?",

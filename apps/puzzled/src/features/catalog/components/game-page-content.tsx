@@ -20,7 +20,6 @@ type GamePageContentProps = {
 	relatedSlugs: readonly string[]
 	/** Today's free-rotation module. */
 	freeGameSlug: string
-	isPremium: boolean
 }
 
 /**
@@ -38,7 +37,6 @@ export async function GamePageContent({
 	faq,
 	relatedSlugs,
 	freeGameSlug,
-	isPremium,
 }: GamePageContentProps) {
 	const t = await getTranslations('catalog')
 	const tGames = await getTranslations('games')
@@ -66,7 +64,7 @@ export async function GamePageContent({
 					.filter(Boolean)
 					.join(' • '),
 				theme: metadata.display.theme,
-				status: metadata.slug === freeGameSlug ? ('free' as const) : ('premium' as const),
+				status: metadata.slug === freeGameSlug ? ('free' as const) : ('play' as const),
 			},
 		]
 	})
@@ -175,14 +173,11 @@ export async function GamePageContent({
 										meta={module.meta}
 										theme={module.theme}
 										status={module.status}
-										showUnlock={!isPremium}
 										index={index}
 										labels={{
 											play: t('open'),
 											playAgain: t('open'),
-											unlock: t('unlock'),
 											freeToday: t('freeToday'),
-											premium: t('premium'),
 										}}
 									/>
 								</li>

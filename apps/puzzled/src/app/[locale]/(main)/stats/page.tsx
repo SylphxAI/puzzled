@@ -28,7 +28,6 @@ import {
 	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
-import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { Link } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
@@ -83,10 +82,6 @@ export default async function StatsPage({ params }: Props) {
 
 	const user = await withPresentationDeadline(currentUser(), null)
 	const hasProgressIdentity = Boolean(user) || (await hasServerProgressIdentity())
-	const todaysFreeGame = getTodaysFreeGame()
-	const isPremium = user?.id
-		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
-		: false
 
 	const modules = getAllGameMetadata().map((game) => ({
 		slug: game.slug,
@@ -101,8 +96,6 @@ export default async function StatsPage({ params }: Props) {
 		getServerPersonalDailyResults({
 			gameSlugs: modules.map((module) => module.slug),
 			isGuest: !user,
-			userId: user?.id ?? null,
-			freeGameSlug: todaysFreeGame,
 		}),
 	])
 
@@ -168,11 +161,6 @@ export default async function StatsPage({ params }: Props) {
 									{t('identity.guest')}
 								</span>
 							)}
-							{isPremium ? (
-								<span className="chip bg-violet-500/10 text-violet-700 dark:text-violet-300">
-									{t('identity.premium')}
-								</span>
-							) : null}
 							{streakChip ? (
 								<span className="chip bg-accent-warm/10 text-accent-warm">
 									{t('identity.streakChip', { days: streakRead?.currentStreak ?? 0 })}
@@ -296,8 +284,6 @@ export default async function StatsPage({ params }: Props) {
 							{personalAvailable ? (
 								<ul className="grid gap-2 sm:grid-cols-2">
 									{modules.map((module) => {
-										const locked = !isPremium && module.slug !== todaysFreeGame
-										if (locked) return null
 										const result = personalResults[module.slug]
 										const done = result?.hasCompleted ?? false
 										return (

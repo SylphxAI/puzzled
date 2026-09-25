@@ -39,7 +39,6 @@
 		"player": "Puzzled 玩家",
 		"member": "会员",
 		"guest": "访客游玩",
-		"premium": "Premium",
 		"streakChip": "连续 {days} 天",
 		"signInCta": "登录以保留记录"
 	},

@@ -2,7 +2,7 @@
 
 /**
  * verify-live.ts — re-runnable Live-layer readbacks for the Puzzled capability
- * graph (PUZ-MODULE / PUZ-DAILY / PUZ-FREE / PUZ-SHARE / PUZ-PLUS / PUZ-MARKS).
+ * graph (PUZ-MODULE / PUZ-DAILY / PUZ-FREE / PUZ-SHARE / PUZ-MARKS).
  *
  * Layer: Live (docs/north-star/EVIDENCE-AND-ORACLES.md §1) for the revision the
  * target itself reports. Source/CI/Deploy layers are NOT established here, and
@@ -37,7 +37,7 @@ const DEFAULT_TIMEOUT_MS = 20_000
 const MAX_BODY_BYTES = 4 * 1024 * 1024
 const CONNECT_PREFIX = '/puzzled.v1.PuzzleService'
 
-/** Premium-free daily rotation (crates/puzzled-core …/game_slugs.rs FREE_GAME_ROTATION). */
+/** Daily rotation order (crates/puzzled-core …/game_slugs.rs FREE_GAME_ROTATION). */
 const FREE_ROTATION = ['word-guess', 'word-groups', 'crowns', 'sudoku', 'crossword'] as const
 
 /**
@@ -122,6 +122,8 @@ type Options = {
 	timeoutMs: number
 	expectedSha: string | null
 	selfTest: boolean
+	/** Pinned clock for the self-test; live runs use the host clock. */
+	now?: Date
 }
 
 type HttpResult = {
@@ -980,18 +982,26 @@ type DiscoveryResult = {
 	observedAtMs: number
 }
 
-type SlugVerdict = 'free' | 'fail-closed' | 'violation' | 'indeterminate'
+/**
+ * Today's pick on the product day-key calendar: product-day ordinal0
+ * (Jan 1 = 0) modulo the rotation length. Same rule as
+ * apps/puzzled/src/lib/free-rotation.ts `freeGameForDayKey`.
+ */
+export function featuredSlugForDayKey(dayKey: string): string {
+	const [year, month, day] = dayKey.split('-').map(Number)
+	const ordinal0 = Math.round((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 86_400_000)
+	return FREE_ROTATION[ordinal0 % FREE_ROTATION.length]
+}
+
+type SlugVerdict = 'served' | 'violation' | 'indeterminate'
 
 /**
- * Classify one rotation read. A 200 is today's free slug; a 403 with
- * `premium_required` is the fail-closed evidence; anything else is a
- * violation (4xx / unexpected 2xx) or indeterminate (5xx / transport error).
+ * Classify one rotation read. Every module is open to every player, so a 200
+ * is the only served shape; a 4xx / unexpected status is a violation and a
+ * 5xx / transport error is indeterminate (never rounded to a pass).
  */
 function classifySlugResult(result: ConnectResult): SlugVerdict {
-	if (result.httpStatus === 200) return 'free'
-	if (result.httpStatus === 403 && result.connectMessage === 'premium_required') {
-		return 'fail-closed'
-	}
+	if (result.httpStatus === 200) return 'served'
 	if (result.httpStatus === null || result.httpStatus >= 500) return 'indeterminate'
 	return 'violation'
 }
@@ -1003,6 +1013,8 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 		attempts: ConnectResult[]
 		retried: boolean
 	}
+	const localDayKey = productDayKey(options.now ?? new Date())
+	const featuredSlug = featuredSlugForDayKey(localDayKey)
 	const results: ProbedSlug[] = []
 	for (const slug of FREE_ROTATION) {
 		const probe = () =>
@@ -1018,7 +1030,7 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 		const attempts: ConnectResult[] = []
 		let result = await probe()
 		attempts.push(result)
-		// 5xx / transport failure is not evidence about the gate: retry once and
+		// 5xx / transport failure is not evidence about serving: retry once and
 		// keep both attempts. A retry that still fails stays indeterminate — a
 		// 5xx is never rounded to a pass.
 		if (result.httpStatus === null || result.httpStatus >= 500) {
@@ -1039,15 +1051,13 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 		firstAttemptHttpStatus: entry.attempts[0]?.httpStatus ?? null,
 		firstAttemptError: entry.attempts[0]?.error ?? null,
 	}))
-	const free = verdicts.filter((entry) => entry.verdict === 'free')
-	const failClosed = verdicts.filter((entry) => entry.verdict === 'fail-closed')
+	const served = verdicts.filter((entry) => entry.verdict === 'served')
 	const violations = verdicts.filter((entry) => entry.verdict === 'violation')
 	const indeterminate = verdicts.filter((entry) => entry.verdict === 'indeterminate')
-	const freeEntry = free[0] ?? null
-	const freeResultEntry = results.find((entry) => entry.slug === freeEntry?.slug) ?? null
-	const freeBody = freeResultEntry ? asRecord(freeResultEntry.result.bodyJson) : null
-	const puzzleDate = asString(freeBody?.puzzleDate)
-	const localDayKey = productDayKey()
+	const featuredEntry = results.find((entry) => entry.slug === featuredSlug) ?? null
+	const featuredServed = featuredEntry?.result.httpStatus === 200
+	const featuredBody = featuredServed ? asRecord(featuredEntry?.result.bodyJson) : null
+	const puzzleDate = asString(featuredBody?.puzzleDate)
 	const serverDayKey = isDayKey(puzzleDate) ? puzzleDate : null
 	const verdictText = verdicts
 		.map(
@@ -1059,60 +1069,42 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 				}`,
 		)
 		.join(' ')
-	const subResults: SubResult[] = []
-	subResults.push(
+	const allServed = served.length === FREE_ROTATION.length
+	const subResults: SubResult[] = [
 		sub(
-			'single-free-slug',
-			free.length === 1
-				? 'pass'
-				: free.length === 0 && violations.length === 0
-					? 'unknown'
-					: 'fail',
-			free.length === 1
-				? `free slug today = ${free[0].slug} (200)`
-				: `expected exactly one 200 across rotation; got ${free.length}: ${
-						free.map((entry) => entry.slug).join(',') || 'none'
-					} (${verdictText})`,
-		),
-	)
-	const failClosedOk = violations.length === 0 && free.length === 1 && failClosed.length === 4
-	subResults.push(
-		sub(
-			'non-free-fail-closed-403-premium-required',
-			violations.length > 0 ? 'fail' : failClosedOk ? 'pass' : 'unknown',
-			failClosedOk
-				? `all ${failClosed.length} non-free slugs → 403 premium_required`
+			'every-rotation-module-served-200',
+			violations.length > 0 ? 'fail' : allServed ? 'pass' : 'unknown',
+			allServed
+				? `all ${served.length} rotation modules → 200 (today's pick = ${featuredSlug})`
 				: `${verdictText}${
 						indeterminate.length > 0
-							? ' — indeterminate responses mean the gate could not be observed this run'
+							? ' — indeterminate responses mean serving could not be observed this run'
 							: ''
 					}`,
 		),
-	)
-	subResults.push(
 		sub(
 			'product-day-key-matches-hkt',
 			serverDayKey === null ? 'unknown' : serverDayKey === localDayKey ? 'pass' : 'fail',
 			serverDayKey === null
-				? `server puzzleDate missing/unparseable; local Asia/Hong_Kong expectation=${localDayKey}`
+				? `server puzzleDate for ${featuredSlug} missing/unparseable; local Asia/Hong_Kong expectation=${localDayKey}`
 				: `server puzzleDate=${serverDayKey} local Asia/Hong_Kong=${localDayKey}${
 						serverDayKey === localDayKey ? ' (match)' : ' (MISMATCH — stale or wrong day key)'
 					}`,
 		),
-	)
+	]
 	let puzzleData: unknown = null
-	if (freeBody && typeof freeBody.puzzleDataJson === 'string') {
-		puzzleData = safeJsonParse(freeBody.puzzleDataJson).value
+	if (featuredBody && typeof featuredBody.puzzleDataJson === 'string') {
+		puzzleData = safeJsonParse(featuredBody.puzzleDataJson).value
 	}
 	return {
 		check: {
 			id: 'free-slug-discovery',
-			title: "today's free module discovery (rotation)",
+			title: "today's pick + every rotation module served",
 			status: combine(subResults),
 			required: true,
 			unknownReason: null,
-			summary: `${freeEntry ? `free slug = ${freeEntry.slug}` : 'no free slug discovered'}; non-free fail-closed ${
-				failClosedOk ? 'ok' : 'NOT ok'
+			summary: `today's pick = ${featuredSlug} (${featuredEntry?.result.httpStatus ?? 'no response'}); every rotation module served ${
+				allServed ? 'ok' : 'NOT ok'
 			}; day key ${serverDayKey ?? 'missing'}${
 				serverDayKey && serverDayKey !== localDayKey ? ` MISMATCH vs local HKT ${localDayKey}` : ''
 			}`,
@@ -1131,14 +1123,15 @@ async function checkFreeSlugDiscovery(options: Options): Promise<DiscoveryResult
 					})),
 				})),
 				verdicts,
-				freeSlug: freeEntry?.slug ?? null,
+				freeSlug: featuredSlug,
+				freeSlugServed: featuredServed,
 				freeSlugPuzzleDate: puzzleDate ?? null,
 				expectedLocalProductDayKey: localDayKey,
 			},
 		},
-		freeSlug: freeEntry?.slug ?? null,
-		freeResult: freeResultEntry?.result ?? null,
-		productDayKeyFromServer: isDayKey(puzzleDate) ? puzzleDate : null,
+		freeSlug: featuredServed ? featuredSlug : null,
+		freeResult: featuredServed ? (featuredEntry?.result ?? null) : null,
+		productDayKeyFromServer: serverDayKey,
 		puzzleData,
 		observedAtMs: Date.now(),
 	}
@@ -1182,7 +1175,7 @@ async function checkDailyServe(
 			required: true,
 			unknownReason: 'indeterminate',
 			summary: 'no free slug discovered; GetDaily serve cannot be asserted',
-			sub: [sub('free-slug-required', 'unknown', 'discovery did not yield exactly one free slug')],
+			sub: [sub('free-slug-required', 'unknown', "today's pick was not served 200")],
 			evidence: { freeSlug: null },
 		}
 	}
@@ -1428,9 +1421,7 @@ async function checkShareDeepLink(
 				required: true,
 				unknownReason: 'indeterminate',
 				summary: 'free slug unknown; deep link cannot be exercised',
-				sub: [
-					sub('free-slug-required', 'unknown', 'discovery did not yield exactly one free slug'),
-				],
+				sub: [sub('free-slug-required', 'unknown', "today's pick was not served 200")],
 				evidence: { freeSlug: null },
 			},
 		}
@@ -1590,82 +1581,66 @@ async function checkShareDeepLink(
 	}
 }
 
-async function checkPremiumFailClosed(
+async function checkArchiveOpen(
 	options: Options,
 	discovery: DiscoveryResult,
 	productDayKeyValue: string,
 ): Promise<Check> {
 	const pastDate = shiftDayKey(productDayKeyValue, -1)
-	const archiveSlug = discovery.freeSlug ?? 'sudoku'
+	const futureDate = shiftDayKey(productDayKeyValue, 2)
+	const archiveSlug = discovery.freeSlug ?? featuredSlugForDayKey(productDayKeyValue)
 	const archive = await connectUnary(
 		options.base,
 		'GetDaily',
 		{ gameSlug: archiveSlug, puzzleDate: pastDate },
 		{ guestId: null, timeoutMs: options.timeoutMs },
 	)
-	const archiveFailClosed =
-		archive.httpStatus === 403 && archive.connectMessage === 'premium_required'
-	const pricingUrl = `${options.base}/pricing`
-	const pricing = await httpRequest(pricingUrl, {
-		headers: { accept: 'text/html,application/xhtml+xml' },
-		timeoutMs: options.timeoutMs,
-	})
-	const pricingOk =
-		pricing.httpStatus === 200 && Boolean(pricing.contentType?.toLowerCase().includes('text/html'))
-	const gatedSlug = FREE_ROTATION.find((slug) => slug !== discovery.freeSlug) ?? 'word-guess'
-	const gated = await httpRequest(`${options.base}/games/${gatedSlug}`, {
-		headers: { accept: 'text/html,application/xhtml+xml' },
-		timeoutMs: options.timeoutMs,
-	})
-	const gatedPricingHrefs = Array.from(
-		gated.bodyText.matchAll(/href=["']([^"']*\/pricing[^"']*)["']/gi),
-	).map((match) => match[1])
-	const gatedUpgradePathOk = gated.httpStatus === 200 && gatedPricingHrefs.length > 0
+	const future = await connectUnary(
+		options.base,
+		'GetDaily',
+		{ gameSlug: archiveSlug, puzzleDate: futureDate },
+		{ guestId: null, timeoutMs: options.timeoutMs },
+	)
+	const futureRefused = future.httpStatus === 400 && future.connectMessage === 'future_puzzle_date'
 	const subResults: SubResult[] = [
 		sub(
-			'archive-fails-closed-anonymous',
-			// A 5xx/transport failure is not evidence about the archive gate
+			'archive-served-anonymous',
+			// A 5xx/transport failure is not evidence about archive serving
 			// (same rule as the rotation probes): unknown, never a pass.
 			archive.httpStatus === null || archive.httpStatus >= 500
 				? 'unknown'
-				: archiveFailClosed
+				: archive.httpStatus === 200
 					? 'pass'
 					: 'fail',
-			`anonymous GetDaily(${archiveSlug}, puzzleDate=${pastDate}) → ${archive.httpStatus ?? archive.error}:${
-				archive.connectMessage ?? '?'
+			`anonymous GetDaily(${archiveSlug}, puzzleDate=${pastDate}) → ${archive.httpStatus ?? archive.error}${
+				archive.connectMessage ? `:${archive.connectMessage}` : ''
 			}`,
 		),
 		sub(
-			'pricing-200',
-			pricing.httpStatus === null ? 'unknown' : pricingOk ? 'pass' : 'fail',
-			`GET /pricing → ${pricing.httpStatus ?? pricing.error}; content-type=${pricing.contentType ?? 'none'}`,
-		),
-		sub(
-			'upgrade-path-from-gated-surface',
-			gated.httpStatus === null ? 'unknown' : gatedUpgradePathOk ? 'pass' : 'fail',
-			`GET /games/${gatedSlug} (non-free today) → ${gated.httpStatus ?? gated.error}; /pricing hrefs=${JSON.stringify(
-				gatedPricingHrefs,
-			)}`,
+			'future-date-refused-400',
+			future.httpStatus === null || future.httpStatus >= 500
+				? 'unknown'
+				: futureRefused
+					? 'pass'
+					: 'fail',
+			`anonymous GetDaily(${archiveSlug}, puzzleDate=${futureDate}) → ${future.httpStatus ?? future.error}:${
+				future.connectMessage ?? '?'
+			} (expected 400 future_puzzle_date)`,
 		),
 	]
 	return {
-		id: 'premium-fail-closed',
-		title: 'premium fail-closed + upgrade path',
+		id: 'archive-open',
+		title: 'archive served, future refused',
 		status: combine(subResults),
 		required: true,
 		unknownReason: null,
-		summary: `archive ${archiveSlug}@${pastDate} → ${archive.httpStatus ?? 'no response'}:${archive.connectMessage ?? '?'}; /pricing → ${
-			pricing.httpStatus ?? 'no response'
-		}; gated /games/${gatedSlug} /pricing hrefs=${gatedPricingHrefs.length}`,
+		summary: `archive ${archiveSlug}@${pastDate} → ${archive.httpStatus ?? 'no response'}; future ${archiveSlug}@${futureDate} → ${
+			future.httpStatus ?? 'no response'
+		}:${future.connectMessage ?? '?'}`,
 		sub: subResults,
 		evidence: {
 			archiveRequest: { gameSlug: archiveSlug, puzzleDate: pastDate, ...connectEvidence(archive) },
-			pricing: httpEvidence(pricing),
-			gatedSurface: {
-				slug: gatedSlug,
-				...httpEvidence(gated),
-				pricingHrefs: gatedPricingHrefs,
-			},
+			futureRequest: { gameSlug: archiveSlug, puzzleDate: futureDate, ...connectEvidence(future) },
 		},
 	}
 }
@@ -2017,7 +1992,7 @@ async function checkFinishLoop(
 			required: true,
 			unknownReason: 'indeterminate',
 			summary: 'free slug unknown; no terminal can be submitted',
-			sub: [sub('free-slug-required', 'unknown', 'discovery did not yield exactly one free slug')],
+			sub: [sub('free-slug-required', 'unknown', "today's pick was not served 200")],
 			evidence: { attempted: true, guestId: options.guest, freeSlug: null },
 		}
 	}
@@ -2199,9 +2174,12 @@ type StubConfig = {
 	healthz?: StubResponse
 	/** Returns this status for every rotation GetDaily probe (e.g. 525). */
 	rotationStatusAll?: number
-	/** Free module slug (default sudoku; set word-guess for the unsolvable day). */
-	freeSlug?: string
-	/** puzzleDataJson served for the free module (default a unique sudoku). */
+	/**
+	 * Pinned clock shared by the stub and the harness. Today's pick is derived
+	 * from it with `featuredSlugForDayKey` (default SELF_TEST_NOW, a sudoku day).
+	 */
+	now?: Date
+	/** puzzleDataJson served by GetDaily (default a unique sudoku). */
 	puzzleDataJson?: string
 	/** Exact path overrides (e.g. a share landing that redirects to /login). */
 	routes?: Record<string, StubResponse>
@@ -2218,6 +2196,11 @@ type StubRequest = {
 type StubHandler = (request: StubRequest) => StubResponse
 
 const STUB_SHA = '0123456789abcdef0123456789abcdef01234567'
+
+/** 2026-01-04 HKT noon: product-day ordinal0 3, today's pick = sudoku. */
+const SELF_TEST_NOW = new Date('2026-01-04T04:00:00.000Z')
+/** 2026-01-06 HKT noon: product-day ordinal0 5, today's pick = word-guess. */
+const SELF_TEST_WORD_GUESS_DAY = new Date('2026-01-06T04:00:00.000Z')
 
 /** Known unique-solution puzzle (classic fixture; also used by solver tests). */
 const STUB_SUDOKU_GRID: Array<Array<number | null>> = [
@@ -2249,8 +2232,8 @@ function makeStubConfigHandler(config: StubConfig): StubHandler {
 	return ({ path, headers, body }) => {
 		const host = headers.host ?? '127.0.0.1'
 		const origin = `http://${host}`
-		const freeSlug = config.freeSlug ?? 'sudoku'
-		const dayKey = productDayKey()
+		const dayKey = productDayKey(config.now ?? SELF_TEST_NOW)
+		const freeSlug = featuredSlugForDayKey(dayKey)
 		const override = config.routes?.[path]
 		if (override) return override
 		if (path === `${CONNECT_PREFIX}/GetDaily`) {
@@ -2263,24 +2246,20 @@ function makeStubConfigHandler(config: StubConfig): StubHandler {
 			}
 			const parsed = asRecord(safeJsonParse(body).value) ?? {}
 			const slug = asString(parsed.gameSlug) ?? ''
-			const requestedDate = asString(parsed.puzzleDate)
-			if (requestedDate && requestedDate !== dayKey) {
-				return jsonStub({ code: 'permission_denied', message: 'premium_required' }, 403)
+			const requestedDate = asString(parsed.puzzleDate) ?? dayKey
+			if (requestedDate > dayKey) {
+				return jsonStub({ code: 'invalid_argument', message: 'future_puzzle_date' }, 400)
 			}
-			if (slug === freeSlug) {
-				return jsonStub({
-					gameSlug: slug,
-					puzzleNumber: 1,
-					puzzleDate: dayKey,
-					canPlay: true,
-					mode: 'daily',
-					slice: 'S2-daily-connect',
-					puzzleDataJson:
-						config.puzzleDataJson ??
-						JSON.stringify({ difficulty: 'medium', grid: STUB_SUDOKU_GRID }),
-				})
-			}
-			return jsonStub({ code: 'permission_denied', message: 'premium_required' }, 403)
+			return jsonStub({
+				gameSlug: slug,
+				puzzleNumber: 1,
+				puzzleDate: requestedDate,
+				canPlay: true,
+				mode: requestedDate === dayKey ? 'daily' : 'archive',
+				slice: 'S2-daily-connect',
+				puzzleDataJson:
+					config.puzzleDataJson ?? JSON.stringify({ difficulty: 'medium', grid: STUB_SUDOKU_GRID }),
+			})
 		}
 		if (path === `${CONNECT_PREFIX}/SubmitGuess`) {
 			return jsonStub({ code: 'unimplemented', message: 'self-test is read-only' }, 501)
@@ -2300,13 +2279,10 @@ function makeStubConfigHandler(config: StubConfig): StubHandler {
 		if (path === '/') {
 			return htmlStub(config.homeHtml ?? defaultStubHomeHtml(origin, freeSlug))
 		}
-		if (path === `/games/${freeSlug}`) {
-			return htmlStub(`<!doctype html><html><body><h1>${freeSlug}</h1></body></html>`)
-		}
 		if (path.startsWith('/games/')) {
-			return htmlStub('<html><body><a href="/pricing">Upgrade</a></body></html>')
+			const slug = path.slice('/games/'.length)
+			return htmlStub(`<!doctype html><html><body><h1>${slug}</h1></body></html>`)
 		}
-		if (path === '/pricing') return htmlStub('<!doctype html><html><body>Pricing</body></html>')
 		if (path === '/login') return htmlStub('<!doctype html><html><body>Sign in</body></html>')
 		if (path === '/manifest.webmanifest') {
 			return jsonStub({ name: 'Puzzled', short_name: 'Puzzled', description: 'self-test stub' })
@@ -2404,7 +2380,7 @@ const SELF_TEST_CASES: SelfTestCase[] = [
 		config: { rotationStatusAll: 525 },
 		expect: (report) => {
 			const problems: string[] = []
-			if (report.ok) problems.push('run is green although the rotation gate was never observed')
+			if (report.ok) problems.push('run is green although rotation serving was never observed')
 			const discovery = report.checks.find((entry) => entry.id === 'free-slug-discovery')
 			if (!discovery) {
 				problems.push('free-slug-discovery check missing')
@@ -2433,7 +2409,7 @@ const SELF_TEST_CASES: SelfTestCase[] = [
 				)
 			}
 			if (report.summary.indeterminate < 1) {
-				problems.push('indeterminate count is 0 while the gate is unobserved')
+				problems.push('indeterminate count is 0 while rotation serving is unobserved')
 			}
 			return problems
 		},
@@ -2462,7 +2438,7 @@ const SELF_TEST_CASES: SelfTestCase[] = [
 		// Reviewer F2 case 2: no local solution => leak compare is unknown, not pass.
 		id: 'f2-share-leak-compare-unknown-without-solution',
 		config: {
-			freeSlug: 'word-guess',
+			now: SELF_TEST_WORD_GUESS_DAY,
 			puzzleDataJson: JSON.stringify({ wordLength: 5, maxAttempts: 6 }),
 		},
 		expect: (report) => {
@@ -2542,6 +2518,7 @@ async function runSelfTest(): Promise<number> {
 				timeoutMs: 5_000,
 				expectedSha: null,
 				selfTest: false,
+				now: testCase.config.now ?? SELF_TEST_NOW,
 			}
 			const { report } = await runReport(options)
 			const exitCode = report.ok ? 0 : 1
@@ -2607,7 +2584,8 @@ async function runReport(options: Options): Promise<{ report: Report }> {
 	const discovery = await checkFreeSlugDiscovery(options)
 	const serve = await checkDailyServe(discovery, options.guest, options.guestProvided)
 	const web = await checkWebDocument(options, discovery)
-	const productDayKeyValue = discovery.productDayKeyFromServer ?? productDayKey()
+	const productDayKeyValue =
+		discovery.productDayKeyFromServer ?? productDayKey(options.now ?? new Date())
 	const productDayKeySource = discovery.productDayKeyFromServer
 		? 'server GetDaily puzzleDate'
 		: 'local Asia/Hong_Kong (UTC+8)'
@@ -2623,7 +2601,7 @@ async function runReport(options: Options): Promise<{ report: Report }> {
 		productDayKeySource,
 		terminalPlan,
 	)
-	const premium = await checkPremiumFailClosed(options, discovery, productDayKeyValue)
+	const archive = await checkArchiveOpen(options, discovery, productDayKeyValue)
 	const marks = await checkMarksScan(options, discovery, web.result, web.canonicalLocalhost)
 	const finish = await checkFinishLoop(
 		options,
@@ -2641,7 +2619,7 @@ async function runReport(options: Options): Promise<{ report: Report }> {
 		discovery.check,
 		serve,
 		share.check,
-		premium,
+		archive,
 		marks,
 		finish,
 	)

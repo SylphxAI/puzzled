@@ -136,10 +136,9 @@ test.describe('Navigation', () => {
 			await page.goto(`/${LOCALE}`)
 			await expect(page.locator('main')).toBeVisible({ timeout: 15000 })
 
-			// Pricing page - might redirect or show content
-			const pricingResponse = await page.goto(`/${LOCALE}/pricing`)
-			// Should either load successfully or redirect
-			expect(pricingResponse?.status()).toBeLessThan(500)
+			// Catalog page
+			const catalogResponse = await page.goto(`/${LOCALE}/games`)
+			expect(catalogResponse?.status()).toBeLessThan(500)
 
 			// Terms page
 			const termsResponse = await page.goto(`/${LOCALE}/terms`)

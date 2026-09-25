@@ -9,7 +9,6 @@ import {
 	type StreakInfo,
 	type UserStats,
 } from '@/lib/api/server'
-import { hasPremiumAccess } from '@/lib/billing/server'
 import { Link, redirect } from '@/lib/i18n/routing'
 import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
@@ -65,8 +64,6 @@ export default async function ProfilePage({ params }: Props) {
 		return null
 	}
 
-	const isPremium = await withPresentationDeadline(hasPremiumAccess(user.id), false)
-
 	const [statsResult, streakResult] = await Promise.allSettled([
 		getServerUserStats(),
 		getServerStreakInfo(),
@@ -99,18 +96,11 @@ export default async function ProfilePage({ params }: Props) {
 					title={t('playerCard.pageTitle')}
 					description={t('playerCard.pageDescription')}
 					chips={
-						<>
-							{isPremium ? (
-								<span className="chip bg-violet-500/10 text-violet-700 dark:text-violet-300">
-									{t('playerCard.premium')}
-								</span>
-							) : null}
-							{user.emailVerified ? (
-								<span className="chip bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-									{t('playerCard.verified')}
-								</span>
-							) : null}
-						</>
+						user.emailVerified ? (
+							<span className="chip bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+								{t('playerCard.verified')}
+							</span>
+						) : null
 					}
 				/>
 

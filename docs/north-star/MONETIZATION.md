@@ -1,9 +1,9 @@
 # Monetization — free floor and subscription
 
-**Status:** Normative  
-**Revision:** 2026-08-13  
-**Model:** SaaS subscription (Games-class), habit before wall  
-**Billing authority:** Sylphx Platform billing; app fail-closed on entitlement checks (ADR-170)
+**Status:** Direction only; nothing is sold today  
+**Revision:** 2026-09-25  
+**Model:** SaaS subscription (Games-class), habit before wall; not live  
+**Billing authority:** none. The Sylphx commerce service this relied on does not exist, so the paid tier, pricing page, checkout, billing portal and referrals were removed on 2026-09-25 and every feature is free. Whether to sell a paid tier again is open issue [#235](https://github.com/SylphxAI/puzzled/issues/235); a return uses Stripe (the merchant-payments exception in the owner architecture standard), not a Sylphx service.
 
 ---
 

@@ -23,7 +23,6 @@ const VIEWPORTS = [
 const PAGES = [
 	{ path: '/', name: 'Home Page' },
 	{ path: '/games', name: 'Catalog Page' },
-	{ path: '/pricing', name: 'Pricing Page' },
 	{ path: '/login', name: 'Login Page' },
 	{ path: '/signup', name: 'Signup Page' },
 	{ path: '/stats', name: 'Stats Page' },

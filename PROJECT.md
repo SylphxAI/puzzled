@@ -17,7 +17,7 @@ Sylphx deployment manifest, pure game rules, and application workflows.
 | **Catalog** | Unbounded *class* of light daily puzzles + honest entertainment oracles |
 | **Basis** | Day key · game module · ritual run · result card · entitlement |
 | **NSM** | Distinct users who complete ≥1 puzzle ritual per product day |
-| **Money** | Free daily finish floor; paid archive/suite/stats |
+| **Money** | Everything free; no paid tier is sold (paid tier is an open decision) |
 
 Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilities.md](docs/capabilities.md). Field contract: [docs/north-star/README.md](docs/north-star/README.md).
 
@@ -37,7 +37,7 @@ Destination: [docs/vision.md](docs/vision.md). Identity graph: [docs/capabilitie
   Health, Puzzle, Stats, Preferences, Gamification, Admin, Jobs. Identity from
   Platform JWT (Bearer or session cookie).
 - **web** (Next.js, `apps/puzzled`): presentation only. Generated Connect
-  client; Platform SDK for auth/billing/flags/AI. No backend authority.
+  client; Platform SDK for auth/flags/AI. No backend authority, no billing.
 - **core** (`crates/puzzled-core`): pure game rules, validation, scoring,
   policy.
 - **Content**: `apps/puzzled/scripts/generate-content.ts` imports day-keyed

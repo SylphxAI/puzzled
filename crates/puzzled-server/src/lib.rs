@@ -326,43 +326,68 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn connect_get_daily_denies_non_rotation_game_without_premium() {
-        // Platform billing is unreachable in tests -> non-premium; only the
-        // free-rotation game is playable (fail-closed gate).
-        let app = router(AppState::new(None));
-        let token = mint_test_token("user_free_01");
-        let response = match app
-            .oneshot(build_connect_request_with_auth(
-                "/puzzled.v1.PuzzleService/GetDaily",
-                Body::from(r#"{"gameSlug":"arithmo","difficulty":"medium"}"#),
-                &token,
-            ))
-            .await
-        {
-            Ok(response) => response,
-            Err(error) => panic!("connect GetDaily premium gate: {error}"),
-        };
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    async fn connect_get_daily_serves_every_game_without_a_paid_tier() {
+        // Puzzled sells no paid tier: every game, not only today's featured
+        // one, is served to a plain account with no billing read at all.
+        for slug in puzzled_core::puzzle_play::game_slugs::FREE_GAME_ROTATION {
+            let app = router(AppState::new(None));
+            let token = mint_test_token("user_free_01");
+            let body = format!(r#"{{"gameSlug":"{slug}"}}"#);
+            let response = match app
+                .oneshot(build_connect_request_with_auth(
+                    "/puzzled.v1.PuzzleService/GetDaily",
+                    Body::from(body),
+                    &token,
+                ))
+                .await
+            {
+                Ok(response) => response,
+                Err(error) => panic!("connect GetDaily {slug}: {error}"),
+            };
+            assert_eq!(response.status(), StatusCode::OK, "{slug} must be served");
+            let json = body_json(response).await;
+            assert_eq!(json["canPlay"], true, "{slug} must be playable");
+        }
     }
 
     #[tokio::test]
-    async fn connect_get_daily_denies_archive_without_premium() {
+    async fn connect_get_daily_serves_archive_without_a_paid_tier() {
         let app = router(AppState::new(None));
         let token = mint_test_token("user_free_02");
-        let free_slug = today_free_slug();
-        let body = format!(r#"{{"gameSlug":"{free_slug}","puzzleDate":"2020-01-01"}}"#);
         let response = match app
             .oneshot(build_connect_request_with_auth(
                 "/puzzled.v1.PuzzleService/GetDaily",
-                Body::from(body),
+                Body::from(r#"{"gameSlug":"word-guess","puzzleDate":"2026-01-01"}"#),
                 &token,
             ))
             .await
         {
             Ok(response) => response,
-            Err(error) => panic!("connect GetDaily archive gate: {error}"),
+            Err(error) => panic!("connect GetDaily archive: {error}"),
         };
-        assert_eq!(response.status(), StatusCode::FORBIDDEN);
+        assert_eq!(response.status(), StatusCode::OK);
+        let json = body_json(response).await;
+        assert_eq!(json["canPlay"], true);
+    }
+
+    #[tokio::test]
+    async fn connect_get_daily_refuses_a_future_day() {
+        let app = router(AppState::new(None));
+        let token = mint_test_token("user_free_03");
+        let response = match app
+            .oneshot(build_connect_request_with_auth(
+                "/puzzled.v1.PuzzleService/GetDaily",
+                Body::from(r#"{"gameSlug":"word-guess","puzzleDate":"2999-01-01"}"#),
+                &token,
+            ))
+            .await
+        {
+            Ok(response) => response,
+            Err(error) => panic!("connect GetDaily future: {error}"),
+        };
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        let json = body_json(response).await;
+        assert!(connect_error_message(&json).contains("future_puzzle_date"));
     }
 
     #[tokio::test]
@@ -519,8 +544,7 @@ mod tests {
         let app = router(AppState::new(None));
         let token = mint_test_token("user_test_01");
         let free_slug = today_free_slug();
-        // When sudoku is not today's free game the premium gate returns 403
-        // before validation; when it is, the empty submission must be invalid.
+        // An empty submission for a served puzzle must be invalid.
         let body = format!(
             r#"{{"gameSlug":"{free_slug}","difficulty":"easy","status":"won","attempts":1,"timeSpentMs":"1000","submissionJson":"{{}}"}}"#
         );
@@ -546,14 +570,14 @@ mod tests {
             );
             assert_eq!(json["slice"], "S2-puzzle-solution-connect");
         } else {
-            // Free today, but no content store / generator in tests -> unserved.
+            // No content store / generator in tests -> unserved.
             assert_eq!(response.status(), StatusCode::NOT_FOUND);
         }
     }
 
     #[tokio::test]
     async fn connect_submit_guess_rejects_unserved_puzzle() {
-        // Free-rotation game passes the premium gate. Without a content DB:
+        // Without a content DB:
         // - free-rotation slugs densify via deterministic generation
         // - non-rotation modules must fail closed (404 unserved) — no accept-any.
         let app = router(AppState::new(None));
@@ -593,11 +617,6 @@ mod tests {
         use chrono::Utc;
         use puzzled_core::puzzle_play::crossword_generate::generate_crossword_puzzle;
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
-
-        // Premium gate: only free-rotation day can finish as guest.
-        if today_free_slug() != "crossword" {
-            return;
-        }
 
         let app = router(AppState::new(None));
         let today = product_day_key(Utc::now());
@@ -661,9 +680,6 @@ mod tests {
 
     #[tokio::test]
     async fn connect_get_daily_word_groups_serves_non_stub_puzzle_data() {
-        if today_free_slug() != "word-groups" {
-            return;
-        }
         let app = router(AppState::new(None));
         let response = match app
             .oneshot(build_connect_request(
@@ -701,10 +717,6 @@ mod tests {
     async fn connect_word_groups_free_floor_guest_can_finish_win() {
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 
-        if today_free_slug() != "word-groups" {
-            return;
-        }
-
         let app = router(AppState::new(None));
         let today = product_day_key(chrono::Utc::now());
         let seed = i64::from(get_puzzle_number(today, None));
@@ -737,10 +749,6 @@ mod tests {
     async fn connect_word_groups_free_floor_guest_can_finish_loss() {
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
         use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
-
-        if today_free_slug() != "word-groups" {
-            return;
-        }
 
         let app = router(AppState::new(None));
         let today = product_day_key(chrono::Utc::now());
@@ -785,9 +793,6 @@ mod tests {
 
     #[tokio::test]
     async fn connect_word_groups_rejects_false_win() {
-        if today_free_slug() != "word-groups" {
-            return;
-        }
         let app = router(AppState::new(None));
         let submission = serde_json::json!({
             "foundCategories": [["APPLE", "BANANA", "CHERRY", "DATE"]],
@@ -875,15 +880,6 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect GetDaily word-guess: {error}"),
         };
-        if today_free_slug() != "word-guess" {
-            assert_eq!(response.status(), StatusCode::FORBIDDEN);
-            let json = body_json(response).await;
-            assert!(
-                connect_error_message(&json).contains("premium_required"),
-                "non-free word-guess must be premium_required: {json}"
-            );
-            return;
-        }
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
         assert_eq!(json["gameSlug"], "word-guess");
@@ -919,15 +915,6 @@ mod tests {
             Ok(response) => response,
             Err(error) => panic!("connect GetDaily crowns: {error}"),
         };
-        if today_free_slug() != "crowns" {
-            assert_eq!(response.status(), StatusCode::FORBIDDEN);
-            let json = body_json(response).await;
-            assert!(
-                connect_error_message(&json).contains("premium_required"),
-                "non-free crowns must be premium_required: {json}"
-            );
-            return;
-        }
         assert_eq!(response.status(), StatusCode::OK);
         let json = body_json(response).await;
         assert_eq!(json["gameSlug"], "crowns");
@@ -954,10 +941,6 @@ mod tests {
     async fn connect_word_guess_free_floor_guest_can_finish_win() {
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
         use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
-
-        if today_free_slug() != "word-guess" {
-            return;
-        }
 
         let app = router(AppState::new(None));
         let today = product_day_key(chrono::Utc::now());
@@ -994,10 +977,6 @@ mod tests {
     async fn connect_crowns_free_floor_guest_can_finish_win() {
         use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
         use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle;
-
-        if today_free_slug() != "crowns" {
-            return;
-        }
 
         let app = router(AppState::new(None));
         let today = product_day_key(chrono::Utc::now());
@@ -1046,9 +1025,6 @@ mod tests {
 
     #[tokio::test]
     async fn connect_crowns_free_floor_guest_can_finish_loss() {
-        if today_free_slug() != "crowns" {
-            return;
-        }
         let app = router(AppState::new(None));
         let empty = vec![vec![false; 6]; 6];
         let submission = serde_json::json!({ "finalGrid": empty });

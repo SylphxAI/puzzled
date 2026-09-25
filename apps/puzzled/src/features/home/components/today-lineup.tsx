@@ -16,15 +16,13 @@ export type LineupEntry = {
 
 type TodayLineupProps = {
 	games: readonly LineupEntry[]
-	/** Premium viewer without access sees the unlock path. */
-	showUnlock: boolean
 }
 
 /**
  * The bounded home exposure: today's free ritual first, proved finishes next,
  * then the day's rotation. The full catalog stays on /games.
  */
-export async function TodayLineup({ games, showUnlock }: TodayLineupProps) {
+export async function TodayLineup({ games }: TodayLineupProps) {
 	const t = await getTranslations('home')
 
 	return (
@@ -57,14 +55,11 @@ export async function TodayLineup({ games, showUnlock }: TodayLineupProps) {
 								theme={game.theme}
 								status={game.status}
 								score={game.score}
-								showUnlock={showUnlock}
 								index={index}
 								labels={{
 									play: t('lineup.play'),
 									playAgain: t('lineup.playAgain'),
-									unlock: t('lineup.unlock'),
 									freeToday: t('lineup.freeToday'),
-									premium: t('lineup.premium'),
 								}}
 							/>
 						</li>

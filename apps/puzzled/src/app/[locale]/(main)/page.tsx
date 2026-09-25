@@ -34,7 +34,7 @@ import {
 	type PersonalDailyResult,
 	type StreakInfo,
 } from '@/lib/api/server'
-import { getFreeGameRotation, getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { FREE_GAME_ROTATION, getTodaysFreeGame } from '@/lib/free-rotation'
 import { slugToCamelCase } from '@/lib/game-slug'
 import { currentUser, type IdentityUser } from '@/lib/identity/server'
 import { logger } from '@/lib/logger'
@@ -78,7 +78,6 @@ type HomeFacts = {
 	user: IdentityUser | null
 	/** True when this viewer has progress Identity can own (session or guest id). */
 	hasIdentity: boolean
-	isPremium: boolean
 	streakInfo: StreakInfo | null
 	personalResults: Record<string, PersonalDailyResult>
 	/** null until the aggregate read lands: an unread count is never a zero. */
@@ -95,11 +94,6 @@ type HomeFacts = {
 const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 	const user = await withPresentationDeadline(currentUser(), null)
 
-	// Entitlement comes from the billing authority; a read failure stays free.
-	const isPremium = user?.id
-		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
-		: false
-
 	const gameSlugs = getAllGameMetadata().map((game) => game.slug)
 	const hasIdentity = Boolean(user) || (await hasServerProgressIdentity())
 
@@ -109,8 +103,6 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 		getServerPersonalDailyResults({
 			gameSlugs,
 			isGuest: !user,
-			userId: user?.id ?? null,
-			freeGameSlug: getTodaysFreeGame(),
 		}),
 	])
 
@@ -141,7 +133,7 @@ const readHomeFacts = cache(async (): Promise<HomeFacts> => {
 		logger.error('home.personal-results-failed', { reason: personalResult.reason })
 	}
 
-	return { user, hasIdentity, isPremium, streakInfo, personalResults, todayPlayerCount }
+	return { user, hasIdentity, streakInfo, personalResults, todayPlayerCount }
 })
 
 type GameCatalogEntry = ReturnType<typeof getAllGameMetadata>[number]
@@ -157,7 +149,6 @@ type GameCatalogEntry = ReturnType<typeof getAllGameMetadata>[number]
 function deriveHomeView(input: {
 	gameMetadata: readonly GameCatalogEntry[]
 	personalResults: Record<string, PersonalDailyResult>
-	isPremium: boolean
 	freeGameSlug: string
 }) {
 	const exposure = deriveHomeExposure({
@@ -170,7 +161,6 @@ function deriveHomeView(input: {
 	const playState = deriveHomePlayState({
 		gameSlugs: input.gameMetadata.map((game) => game.slug),
 		personalResults: input.personalResults,
-		isPremium: input.isPremium,
 		freeGameSlug: input.freeGameSlug,
 	})
 	const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
@@ -193,7 +183,7 @@ function buildLineup(input: {
 		const metadata = input.metadataBySlug.get(game.slug)
 		if (!metadata) return []
 		const camel = slugToCamelCase(game.slug)
-		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'premium'
+		const status = game.isFreeToday ? 'free' : game.completed ? 'solved' : 'play'
 		return [
 			{
 				slug: game.slug,
@@ -226,7 +216,6 @@ async function HomeDayIsland({
 	const view = deriveHomeView({
 		gameMetadata: getAllGameMetadata(),
 		personalResults: facts.personalResults,
-		isPremium: facts.isPremium,
 		freeGameSlug: freeGame.slug,
 	})
 
@@ -261,7 +250,6 @@ async function HomeLineupIsland({
 	const view = deriveHomeView({
 		gameMetadata: getAllGameMetadata(),
 		personalResults: facts.personalResults,
-		isPremium: facts.isPremium,
 		freeGameSlug,
 	})
 	const lineup = buildLineup({
@@ -272,7 +260,7 @@ async function HomeLineupIsland({
 
 	return (
 		<>
-			<TodayLineup games={lineup} showUnlock={!facts.isPremium} />
+			<TodayLineup games={lineup} />
 			{facts.user ? (
 				<MemberStatsBand
 					currentStreak={facts.streakInfo?.currentStreak ?? 0}
@@ -299,9 +287,8 @@ export default async function HomePage({ params }: Props) {
 	// placeholder for, rather than guest copy that may be wrong for a member?
 	const hasProgressIdentity = await hasServerProgressIdentity()
 	const todaysFreeGame = getTodaysFreeGame()
-	const freeGameRotation = getFreeGameRotation()
-	const todayIndex = freeGameRotation.indexOf(todaysFreeGame)
-	const tomorrowsFreeGame = freeGameRotation[(todayIndex + 1) % freeGameRotation.length]
+	const todayIndex = FREE_GAME_ROTATION.indexOf(todaysFreeGame)
+	const tomorrowsFreeGame = FREE_GAME_ROTATION[(todayIndex + 1) % FREE_GAME_ROTATION.length]
 
 	const gameMetadata = getAllGameMetadata()
 	const metadataBySlug = new Map(gameMetadata.map((game) => [game.slug, game]))
@@ -326,7 +313,6 @@ export default async function HomePage({ params }: Props) {
 	const rotationView = deriveHomeView({
 		gameMetadata,
 		personalResults: {},
-		isPremium: false,
 		freeGameSlug: todaysFreeGame,
 	})
 	const rotationLineup = buildLineup({
@@ -373,11 +359,7 @@ export default async function HomePage({ params }: Props) {
 			>
 				<Suspense
 					fallback={
-						hasProgressIdentity ? (
-							<TodayLineupSkeleton />
-						) : (
-							<TodayLineup games={rotationLineup} showUnlock />
-						)
+						hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
 					}
 				>
 					<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
