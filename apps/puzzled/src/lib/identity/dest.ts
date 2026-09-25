@@ -1,4 +1,4 @@
-const IDENTITY_API_ORIGIN = 'https://api.identity.sylphx.com'
+const IDENTITY_API_ORIGIN = 'https://api.sylphx.com'
 const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
 const COMMERCE_API_ORIGIN = 'https://api.commerce.sylphx.com'
 const OBSERVABILITY_API_ORIGIN = 'https://api.observability.sylphx.com'

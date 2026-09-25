@@ -5,10 +5,11 @@ import { ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
 import { Link } from '@/lib/i18n/routing'
+import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { useSafeUser } from '@/lib/identity/react'
 
-/** The account centre that owns the display name and avatar. */
-const PROFILE_CENTRE_URL = 'https://platform.sylphx.com/settings/profile'
+/** Auth's Account Portal on the app domain, or the in-app support page. */
+const ACCOUNT_PORTAL = accountPortalLink()
 
 /**
  * Profile section.
@@ -35,9 +36,11 @@ export function ProfileSettingsContent() {
 				description={t('profile.identityDescription')}
 				actions={
 					<Button asChild variant="outline" className="min-h-11 gap-2">
-						<a href={PROFILE_CENTRE_URL} target="_blank" rel="noopener noreferrer">
+						<a {...accountPortalAnchor(ACCOUNT_PORTAL)}>
 							{t('profile.editCta')}
-							<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							{ACCOUNT_PORTAL.external ? (
+								<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							) : null}
 						</a>
 					</Button>
 				}

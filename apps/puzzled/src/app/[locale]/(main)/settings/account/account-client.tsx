@@ -5,10 +5,11 @@ import { BadgeCheck, ExternalLink, LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
+import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { useSafeAuth, useSafeUser } from '@/lib/identity/react'
 
-/** The account centre that owns email, password, and sign-in methods. */
-const ACCOUNT_CENTRE_URL = 'https://platform.sylphx.com/settings'
+/** Auth's Account Portal on the app domain, or the in-app support page. */
+const ACCOUNT_PORTAL = accountPortalLink()
 
 function initials(value: string): string {
 	const words = value.trim().split(/\s+/).slice(0, 2)
@@ -85,9 +86,11 @@ export function AccountSettingsContent() {
 				description={t('account.centreDescription')}
 				actions={
 					<Button asChild variant="outline" className="min-h-11 gap-2">
-						<a href={ACCOUNT_CENTRE_URL} target="_blank" rel="noopener noreferrer">
+						<a {...accountPortalAnchor(ACCOUNT_PORTAL)}>
 							{t('account.centreCta')}
-							<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							{ACCOUNT_PORTAL.external ? (
+								<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							) : null}
 						</a>
 					</Button>
 				}
@@ -97,9 +100,11 @@ export function AccountSettingsContent() {
 					<li>{t('account.centrePassword')}</li>
 					<li>{t('account.centreDeletion')}</li>
 				</ul>
-				<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-					{t('account.centreNote')}
-				</p>
+				{ACCOUNT_PORTAL.external ? (
+					<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+						{t('account.centreNote')}
+					</p>
+				) : null}
 			</ConsoleCard>
 
 			<ConsoleCard title={t('account.signOutTitle')} description={t('account.signOutDescription')}>

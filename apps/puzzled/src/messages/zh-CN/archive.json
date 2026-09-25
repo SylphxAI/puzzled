@@ -12,12 +12,12 @@
 	"upgradeCta": "解锁 Puzzled Plus",
 	"playFreeToday": "玩今日免费谜题（{game}）",
 	"listTitle": "过往日期",
-	"listBody": "最近 {count} 个产品日，最新在前。每一天都会开启当日运行的谜题。",
+	"listBody": "最近 {count} 个游戏日，最新在前。每一天都会开启当日运行的谜题。",
 	"playDayLabel": "玩 {date} 的 {game}",
 	"play": "开始",
 	"playToday": "玩今日的仪式（{game}）",
 	"backToGames": "返回所有游戏",
 	"emptyTitle": "存档还是空的",
-	"emptyBody": "随着产品日一天天推进，过去的每日谜题都会出现在这里——今天的才是正题。玩一局，明天的新题就会接上。",
+	"emptyBody": "随着游戏日一天天推进，过去的每日谜题都会出现在这里——今天的才是正题。玩一局，明天的新题就会接上。",
 	"emptyPlay": "玩今天的仪式谜题（{game}）"
 }

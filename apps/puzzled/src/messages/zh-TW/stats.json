@@ -1,28 +1,28 @@
 {
 	"unavailableTitle": "統計資料無法載入",
 	"dailyStatusUnavailableTitle": "今日進度無法載入",
-	"dailyStatusUnavailableDescription": "此頁面無法確認今天哪些模組已完成，重試後再判斷模組是否仍開放。",
+	"dailyStatusUnavailableDescription": "此頁面無法確認今天哪些遊戲已完成，重試後再判斷遊戲是否仍開放。",
 	"streakLabel": "目前連續 {days} 天",
-	"descriptionMember": "{name}，你好。這裡的資料全部來自你完成的模組。",
+	"descriptionMember": "{name}，你好。這裡的資料全部來自你完成的遊戲。",
 	"streakHintPlayed": "你今天已遊玩",
 	"streakHintOpen": "今天仍可遊玩",
 	"today": {
 		"title": "今天",
-		"description": "以香港謎題日計算，今天可遊玩的模組。"
+		"description": "以香港謎題日計算，今天可遊玩的遊戲。"
 	},
 	"streakCard": {
-		"description": "當天完成一個合資格模組即可累積連勝。",
-		"playedToday": "你今天已完成一個模組",
+		"description": "當天完成一個合資格遊戲即可累積連勝。",
+		"playedToday": "你今天已完成一個遊戲",
 		"notPlayedToday": "今天仍開放",
 		"autoFreezeOn": "已開啟自動保護：若你中斷一天，會在還有存貨時自動使用。",
 		"unavailableTitle": "連勝資料無法載入"
 	},
 	"calendar": {
-		"description": "每格代表謎題時鐘（香港時間）的一天。方格填滿代表你當天完成了模組。",
+		"description": "每格代表謎題時鐘（香港時間）的一天。方格填滿代表你當天完成了遊戲。",
 		"unavailableTitle": "活動紀錄無法載入",
 		"todayLabel": "今天"
 	},
 	"modules": {
-		"unavailableTitle": "模組數據無法載入"
+		"unavailableTitle": "遊戲數據無法載入"
 	}
 }

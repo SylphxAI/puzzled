@@ -4,14 +4,15 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ConsoleCard, ConsoleHeader } from '@/features/console/components/console-chrome'
 import { requireMember } from '@/features/console/lib/require-member'
 import { Link } from '@/lib/i18n/routing'
+import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { buildPageMetadata } from '@/lib/seo/metadata'
 
 type Props = {
 	params: Promise<{ locale: string }>
 }
 
-/** The account centre that owns privacy and data controls. */
-const PRIVACY_CENTRE_URL = 'https://platform.sylphx.com/settings/privacy'
+/** Auth's Account Portal on the app domain, or the in-app support page. */
+const ACCOUNT_PORTAL = accountPortalLink()
 
 export async function generateMetadata({ params }: Props) {
 	const { locale } = await params
@@ -47,9 +48,11 @@ export default async function PrivacySettingsPage({ params }: Props) {
 				description={t('privacy.centreDescription')}
 				actions={
 					<Button asChild className="min-h-11 gap-2">
-						<a href={PRIVACY_CENTRE_URL} target="_blank" rel="noopener noreferrer">
+						<a {...accountPortalAnchor(ACCOUNT_PORTAL)}>
 							{t('privacy.centreCta')}
-							<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							{ACCOUNT_PORTAL.external ? (
+								<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							) : null}
 						</a>
 					</Button>
 				}
@@ -68,9 +71,11 @@ export default async function PrivacySettingsPage({ params }: Props) {
 						{t('privacy.centreDeletion')}
 					</li>
 				</ul>
-				<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-					{t('privacy.centreNote')}
-				</p>
+				{ACCOUNT_PORTAL.external ? (
+					<p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+						{t('privacy.centreNote')}
+					</p>
+				) : null}
 			</ConsoleCard>
 
 			<ConsoleCard

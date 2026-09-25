@@ -5,13 +5,13 @@
 		"all": "All Time"
 	},
 	"title": "Leaderboard",
-	"metaDescription": "Module leaderboards for today, this week and all time — who finished what, and where your own score sits.",
+	"metaDescription": "Puzzle leaderboards for today, this week and all time — who finished what, and where your own score sits.",
 	"eyebrow": "Puzzled boards",
-	"description": "One module and one period at a time, exactly as scores are counted. Only players who chose to appear publicly are listed.",
+	"description": "One puzzle and one period at a time, exactly as scores are counted. Only players who chose to appear publicly are listed.",
 	"chip": "Board: {module}",
 	"anonymous": "Anonymous player",
 	"scopeLabel": "Leaderboard period",
-	"moduleLabel": "Module",
+	"moduleLabel": "Puzzle",
 	"loadingBoard": "Loading board…",
 	"boardTitle": "{module} board",
 	"boardDescription": "Scope: {period}. Each row is a player's accepted total for this period.",
@@ -43,9 +43,9 @@
 	"how": {
 		"title": "How boards work",
 		"description": "The rules behind these numbers.",
-		"scores": "A board adds up every accepted score you set on that module during the selected period.",
+		"scores": "A board adds up every accepted score you set on that puzzle during the selected period.",
 		"visibility": "Your name and score appear only while your public visibility setting is on.",
-		"boards": "Score boards run for every module: today, this week, and all time.",
+		"boards": "Score boards run for every puzzle: today, this week, and all time.",
 		"visibilityCta": "Review your visibility"
 	}
 }

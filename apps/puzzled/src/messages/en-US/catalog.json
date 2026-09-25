@@ -2,7 +2,7 @@
 	"metaTitle": "All games",
 	"metaDescription": "Browse every daily puzzle on Puzzled — today's free game plus the full suite of word, logic, and number rituals.",
 	"title": "All games",
-	"subtitle": "{count} daily modules under one ritual. One is free every day, and everyone plays the same set — refreshed at midnight Hong Kong time.",
+	"subtitle": "{count} daily puzzles under one ritual. One is free every day, and everyone plays the same set — refreshed at midnight Hong Kong time.",
 	"heroEyebrow": "Daily puzzle suite",
 	"searchLabel": "Filter games by title",
 	"searchPlaceholder": "Filter games by title…",
@@ -22,60 +22,60 @@
 	"unlock": "Unlock with Premium",
 	"showing": "Showing {count} of {total} games",
 	"clearFilter": "Clear filters",
-	"emptyTitle": "No modules match those filters",
+	"emptyTitle": "No puzzles match those filters",
 	"emptyDescription": "Try a different title, or clear the filters to see the whole suite.",
 	"featuredPlay": "Play {game}",
-	"featuredNote": "Open to everyone today — no account needed. Tomorrow another module takes its place.",
+	"featuredNote": "Open to everyone today — no account needed. Tomorrow another puzzle takes its place.",
 	"suiteTitle": "The whole suite",
-	"suiteBody": "The free rotation covers one module a day. Premium opens the other {count} modules, plus the archive, deeper stats and streak freezes.",
-	"suiteBodyPremium": "Every module is open with your Premium, plus the archive, deeper stats and streak freezes.",
+	"suiteBody": "The free rotation covers one puzzle a day. Premium opens the other {count} puzzles, plus the archive, deeper stats and streak freezes.",
+	"suiteBodyPremium": "Every puzzle is open with your Premium, plus the archive, deeper stats and streak freezes.",
 	"ritual": {
 		"title": "How a Puzzled day works",
-		"body": "One product day, one shared set. The ritual is identical for a free player and a member; only the number of open modules changes.",
-		"step1Title": "Pick today's module",
-		"step1Body": "The free rotation opens one module for everyone. Premium opens all {count} modules on the same daily set.",
+		"body": "One puzzle day, one shared set. The ritual is identical for a free player and a member; only the number of open puzzles changes.",
+		"step1Title": "Pick today's puzzle",
+		"step1Body": "The free rotation opens one puzzle for everyone. Premium opens all {count} puzzles on the same daily set.",
 		"step2Title": "Solve at your own pace",
-		"step2Body": "Most modules take two to ten minutes, and the ones with difficulty levels let you warm up or push harder.",
+		"step2Body": "Most puzzles take two to ten minutes, and the ones with difficulty levels let you warm up or push harder.",
 		"step3Title": "Keep the habit",
 		"step3Body": "One finish a day extends your streak, and every finished attempt is verified on the server before it counts."
 	},
 	"premiumPanel": {
 		"eyebrow": "Premium",
 		"title": "What Premium adds",
-		"body": "The free module stays free forever. Premium is for players who want the whole suite open on the same day.",
-		"item1": "All {count} modules, every day",
+		"body": "The free puzzle stays free forever. Premium is for players who want the whole suite open on the same day.",
+		"item1": "All {count} puzzles, every day",
 		"item2": "The archive of past daily sets",
 		"item3": "Deeper stats and history",
 		"item4": "Streak freezes for days away",
 		"cta": "See plans and pricing",
-		"note": "One module stays free for everyone, every day, with no account required."
+		"note": "One puzzle stays free for everyone, every day, with no account required."
 	},
 	"faq": {
 		"title": "Before you start",
 		"body": "The short version of how this catalog works.",
 		"start": {
 			"question": "Where should I start?",
-			"answer": "Open today's free module — it needs no account and no payment. The rest of the suite opens with Premium."
+			"answer": "Open today's free puzzle — it needs no account and no payment. The rest of the suite opens with Premium."
 		},
 		"rotation": {
-			"question": "How does the free module rotate?",
-			"answer": "One module is free each day and the rotation flips at midnight, Hong Kong time. Everyone gets the same module on the same day."
+			"question": "How does the free puzzle rotate?",
+			"answer": "One puzzle is free each day and the rotation flips at midnight, Hong Kong time. Everyone gets the same puzzle on the same day."
 		},
 		"premium": {
 			"question": "What does Premium include?",
-			"answer": "Every module in the suite on the same daily set, the archive of past days, deeper stats and streak freezes."
+			"answer": "Every puzzle in the suite on the same daily set, the archive of past days, deeper stats and streak freezes."
 		},
 		"account": {
 			"question": "Do I need an account?",
-			"answer": "No. The free module is playable as a guest; an account keeps your streak, results and stats across devices."
+			"answer": "No. The free puzzle is playable as a guest; an account keeps your streak, results and stats across devices."
 		},
 		"share": {
 			"question": "Can I share a result without spoiling it?",
-			"answer": "Yes. Result cards show the module, the day and your solving pattern — never the solution."
+			"answer": "Yes. Result cards show the puzzle, the day and your solving pattern — never the solution."
 		}
 	},
 	"closing": {
-		"title": "Today's module is waiting",
+		"title": "Today's puzzle is waiting",
 		"body": "One free puzzle every day, plus the whole suite when you want more of the same ritual.",
 		"play": "Play {game}",
 		"home": "Back to home",
@@ -90,14 +90,14 @@
 		"guestSignIn": "Sign in to keep your streak.",
 		"lockedNote": "Premium opens the whole suite on the same daily set, along with the archive, deeper stats and streak freezes.",
 		"lockedTitle": "Part of Premium",
-		"lockedBody": "Premium opens all {count} modules every day, plus the archive, deeper stats and streak freezes. One module stays free for everyone.",
+		"lockedBody": "Premium opens all {count} puzzles every day, plus the archive, deeper stats and streak freezes. One puzzle stays free for everyone.",
 		"lockedCta": "See what Premium adds",
 		"lockedSignIn": "Sign in",
-		"todaysFree": "Today's free module:",
+		"todaysFree": "Today's free puzzle:",
 		"howToPlayTitle": "How to play {game}",
 		"tipsTitle": "Tips and strategy for {game}",
 		"faqTitle": "Questions about {game}",
-		"relatedTitle": "More modules to try",
+		"relatedTitle": "More puzzles to try",
 		"relatedAll": "See all games"
 	},
 	"game": {

@@ -1,17 +1,17 @@
 {
 	"metaTitle": "定价：每日免费谜题，Premium 解锁全套谜题",
-	"metaDescription": "每天有一个模块免费，无需账户。比较 Free 与 Premium：当天其余谜题、谜题历史、所有模块的统计数据与连胜冻结。",
+	"metaDescription": "每天有一个游戏免费，无需账户。比较 Free 与 Premium：当天其余谜题、谜题历史、所有游戏的统计数据与连胜冻结。",
 	"hero": {
 		"eyebrow": "定价",
 		"title": "每天一款免费谜题，Premium 带你玩得更深入。",
-		"lead": "当天的免费模块无需账户、无需信用卡。Premium 解锁当天其余谜题、谜题历史、所有模块的统计数据与连胜冻结，随时可以取消。",
-		"factFree": "每天一个免费模块",
+		"lead": "当天的免费游戏无需账户、无需信用卡。Premium 解锁当天其余谜题、谜题历史、所有游戏的统计数据与连胜冻结，随时可以取消。",
+		"factFree": "每天一个免费游戏",
 		"factNoAccount": "无需账户",
 		"playersToday": "今天已有 {count} 位玩家完成谜题",
 		"freeCta": "玩 {game}",
 		"plansCta": "比较方案",
-		"todayTitle": "今日免费模块",
-		"rotationBody": "{rotating} 个模块轮流成为每日免费谜题，全部 {total} 个模块每天更新。",
+		"todayTitle": "今日免费游戏",
+		"rotationBody": "{rotating} 个游戏轮流成为每日免费谜题，全部 {total} 个游戏每天更新。",
 		"todayOpen": "打开 {game}",
 		"rotationNote": "新谜题于香港时间午夜更新。"
 	},
@@ -23,15 +23,15 @@
 		"billedYearly": "{amount}/月，按年收费",
 		"savingVsMonthly": "比月费节省 {percent}%",
 		"cancelNote": "随时可在控制台取消；使用权至已付款期间结束。",
-		"freeSubtitle": "每天一个模块，无需账户",
+		"freeSubtitle": "每天一个游戏，无需账户",
 		"monthlySubtitle": "Premium，按月收费",
 		"annualSubtitle": "Premium，按年收费",
-		"freeFeatureDaily": "每天都有当天的免费模块",
+		"freeFeatureDaily": "每天都有当天的免费游戏",
 		"freeFeatureAccount": "无需账户和信用卡即可游玩",
 		"freeFeatureStreak": "登录即可保存连胜与统计",
-		"premiumFeatureSuite": "当天其余谜题 — 全部 {count} 个模块",
+		"premiumFeatureSuite": "当天其余谜题 — 全部 {count} 个游戏",
 		"premiumFeatureArchive": "谜题历史：重玩错过的过去日期",
-		"premiumFeatureStats": "所有模块的统计数据，不限于免费模块",
+		"premiumFeatureStats": "所有游戏的统计数据，不限于免费游戏",
 		"premiumFeatureFreeze": "连胜冻结，缺席一天也不会中断连胜",
 		"playFree": "玩 {game}",
 		"annualNote": "与月费同一方案，每年收费一次。"
@@ -55,15 +55,15 @@
 		"featureColumn": "您可获得",
 		"freeColumn": "Free",
 		"premiumColumn": "Premium",
-		"rowSuite": "当天模块",
-		"rowSuiteFree": "每天一个免费模块",
-		"rowSuitePremium": "全部 {count} 个模块",
+		"rowSuite": "当天游戏",
+		"rowSuiteFree": "每天一个免费游戏",
+		"rowSuitePremium": "全部 {count} 个游戏",
 		"rowArchive": "谜题历史",
 		"rowArchiveFree": "仅限当天",
 		"rowArchivePremium": "任何过去日期",
 		"rowStats": "统计数据",
-		"rowStatsFree": "您本人与当天免费模块",
-		"rowStatsPremium": "所有模块",
+		"rowStatsFree": "您本人与当天免费游戏",
+		"rowStatsPremium": "所有游戏",
 		"rowFreeze": "连胜冻结",
 		"rowFreezeFree": "不包含",
 		"rowFreezePremium": "包含"
@@ -77,7 +77,7 @@
 		},
 		"trial": {
 			"question": "有提供免费试用吗？",
-			"answer": "目前没有。Free 是正式方案而非试用：每天都有一款模块免费，人人可用，无需账户和信用卡。Premium 是付费方案（月付或年付），可随时取消，使用权至已付款期间结束。"
+			"answer": "目前没有。Free 是正式方案而非试用：每天都有一款游戏免费，人人可用，无需账户和信用卡。Premium 是付费方案（月付或年付），可随时取消，使用权至已付款期间结束。"
 		},
 		"price": {
 			"question": "价格从何而来？",
@@ -100,7 +100,7 @@
 		"title": "今天的免费谜题已经开放",
 		"body": "{game} 今天免费，无需账户。当您想要其余谜题时，Premium 随时在这里。",
 		"play": "玩 {game}",
-		"browse": "查看全部 {count} 个模块"
+		"browse": "查看全部 {count} 个游戏"
 	},
 	"subscribeCta": "订阅",
 	"processing": "处理中…",

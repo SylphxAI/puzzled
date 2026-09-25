@@ -9,9 +9,11 @@ import {
 	ConsoleHeader,
 	HonestNotice,
 } from '@/features/console/components/console-chrome'
+import { accountPortalAnchor, accountPortalLink } from '@/lib/identity/account-portal'
 import { useSafeAuth } from '@/lib/identity/react'
 
-const ACCOUNT_CENTRE_SECURITY_URL = 'https://platform.sylphx.com/settings/security'
+/** Auth's Account Portal on the app domain, or the in-app support page. */
+const ACCOUNT_PORTAL = accountPortalLink()
 
 type SessionsState =
 	| { status: 'loading' }
@@ -77,9 +79,11 @@ export function SecuritySettingsContent() {
 				description={t('security.protectionDescription')}
 				actions={
 					<Button asChild variant="outline" className="min-h-11 gap-2">
-						<a href={ACCOUNT_CENTRE_SECURITY_URL} target="_blank" rel="noopener noreferrer">
+						<a {...accountPortalAnchor(ACCOUNT_PORTAL)}>
 							{t('security.protectionCta')}
-							<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							{ACCOUNT_PORTAL.external ? (
+								<ExternalLink className="h-4 w-4" aria-hidden="true" />
+							) : null}
 						</a>
 					</Button>
 				}

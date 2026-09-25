@@ -180,7 +180,7 @@
 		"identityTitle": "Identity",
 		"identityDescription": "The name and address your account signs in with.",
 		"progressTitle": "Your record",
-		"progressDescription": "Totals straight from the modules you finished.",
+		"progressDescription": "Totals straight from the puzzles you finished.",
 		"linksTitle": "Where to next",
 		"linksDescription": "The surfaces that use this identity.",
 		"recordLink": "Open your stats",
@@ -396,7 +396,7 @@
 		"visibilityDescription": "Decide whether your name appears on leaderboards.",
 		"visibilityCta": "Review visibility settings",
 		"boardsTitle": "Your place on the boards",
-		"boardsDescription": "See how your scores compare for each module.",
+		"boardsDescription": "See how your scores compare for each puzzle.",
 		"boardsCta": "Open the leaderboard"
 	},
 	"account": {
@@ -445,7 +445,7 @@
 		"loading": "Loading your account…",
 		"signedOut": "This device is signed out. Sign in to manage your account.",
 		"centreTitle": "Email, password and sign-in methods",
-		"centreDescription": "These belong to your account centre, one place for every Sylphx app you use.",
+		"centreDescription": "Your sign-in details are managed in your account centre.",
 		"centreCta": "Open account centre",
 		"centreEmail": "Change your email address and re-verify it",
 		"centrePassword": "Set or change your password",
@@ -947,7 +947,7 @@
 			"verifyDescription": "For your security, please verify your identity before deleting your account."
 		},
 		"centreTitle": "Your account centre",
-		"centreDescription": "Privacy and data controls are shared across every Sylphx app, so they are managed in one place.",
+		"centreDescription": "Privacy and data controls are managed in your account centre.",
 		"centreCta": "Open privacy controls",
 		"centreVisibility": "Profile visibility: who can find you",
 		"centreData": "Download a copy of your data",

@@ -4,18 +4,21 @@ import { useEffect, useState } from 'react'
 import { formatCountdown, msUntilNextProductDay } from '@/features/home/lib/day-boundary'
 import { cn } from '@/lib/utils'
 
+const timeLeft = () => formatCountdown(msUntilNextProductDay(new Date()))
+
 /**
- * Time left in the product day, ticking once a second.
+ * Time left until the next daily puzzles, ticking once a second.
  *
- * The server renders the placeholder and the first client tick fills it in, so
- * the markup never depends on the host clock and there is no hydration
- * mismatch. It is a clock, not copy: nothing here is a claim the server owes.
+ * The server renders the time left at render time, so the first paint shows a
+ * real countdown; the client corrects it on its first tick. The text differs
+ * by the seconds between render and hydration, which `suppressHydrationWarning`
+ * allows.
  */
 export function DayCountdown({ className }: { className?: string }) {
-	const [label, setLabel] = useState<string | null>(null)
+	const [label, setLabel] = useState(timeLeft)
 
 	useEffect(() => {
-		const tick = () => setLabel(formatCountdown(msUntilNextProductDay(new Date())))
+		const tick = () => setLabel(timeLeft())
 		tick()
 		const interval = setInterval(tick, 1000)
 		return () => clearInterval(interval)
@@ -23,7 +26,7 @@ export function DayCountdown({ className }: { className?: string }) {
 
 	return (
 		<span className={cn('day-numeral tabular-nums', className)} suppressHydrationWarning>
-			{label ?? '--:--:--'}
+			{label}
 		</span>
 	)
 }

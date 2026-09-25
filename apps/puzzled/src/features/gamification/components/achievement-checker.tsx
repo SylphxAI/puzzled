@@ -24,7 +24,7 @@ export function AchievementChecker({ maxStreak = null }: AchievementCheckerProps
 	const lastCheck = useRef<number>(0)
 	const hasChecked = useRef(false)
 
-	// SDK achievements hook - tracks state server-side (SSR-safe)
+	// Session achievements, derived on the device from stats and streak
 	const {
 		achievements: sdkAchievements,
 		unlock,
@@ -40,7 +40,7 @@ export function AchievementChecker({ maxStreak = null }: AchievementCheckerProps
 		staleTime: 10000,
 	})
 
-	// Show toast when SDK reports a recent unlock
+	// Show a toast for a milestone reached during this session
 	useEffect(() => {
 		if (recentUnlock) {
 			// Find local achievement definition for rich display data
@@ -63,11 +63,10 @@ export function AchievementChecker({ maxStreak = null }: AchievementCheckerProps
 		if (now - lastCheck.current < CHECK_INTERVAL_MS) return
 		lastCheck.current = now
 
-		// Prevent checking on initial load
-		if (!hasChecked.current) {
-			hasChecked.current = true
-			return
-		}
+		// The first pass records milestones the player already holds without
+		// announcing them; later passes announce only what is new.
+		const baseline = !hasChecked.current
+		hasChecked.current = true
 
 		// Build set of already unlocked achievement IDs
 		const unlockedIds = new Set(
@@ -94,20 +93,24 @@ export function AchievementChecker({ maxStreak = null }: AchievementCheckerProps
 		const connectionsWins = userStats.connections?.gamesWon ?? 0
 		const connectionsPerfectGames = userStats.connections?.perfectGames ?? undefined
 
-		// Check and unlock achievements via SDK
+		// Record each milestone the stats now satisfy
 		const checkAndUnlock = async (
 			id: string,
 			condition: boolean,
 			localDef: (typeof ACHIEVEMENTS)[number],
 		) => {
 			if (condition && !unlockedIds.has(id)) {
-				await unlock(id, {
-					name: localDef.name,
-					description: localDef.description,
-					points: getTierPoints(localDef.tier),
-					tier: localDef.tier,
-					icon: localDef.icon,
-				})
+				await unlock(
+					id,
+					{
+						name: localDef.name,
+						description: localDef.description,
+						points: getTierPoints(localDef.tier),
+						tier: localDef.tier,
+						icon: localDef.icon,
+					},
+					baseline,
+				)
 			}
 		}
 

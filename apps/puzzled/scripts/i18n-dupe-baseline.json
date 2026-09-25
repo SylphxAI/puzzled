@@ -538,10 +538,6 @@
 				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
 			},
 			{
-				"value": "Module",
-				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
 				"value": "Name",
 				"keys": ["admin.featureFlags.name", "auth.name"]
 			},
@@ -783,6 +779,10 @@
 			{
 				"value": "Push Notifications",
 				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
+			},
+			{
+				"value": "Puzzle",
+				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
 			},
 			{
 				"value": "Puzzle #{number}",
@@ -1092,11 +1092,11 @@
 				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
 			},
 			{
-				"value": "Today's free module",
+				"value": "Today's free puzzle",
 				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
 			},
 			{
-				"value": "Today's free module, every day",
+				"value": "Today's free puzzle, every day",
 				"keys": ["pricing.plans.freeFeatureDaily", "subscription.benefits.freeModule"]
 			},
 			{
@@ -1795,10 +1795,6 @@
 				"keys": ["gameResult.mistakes", "share.card.mistakesLabel"]
 			},
 			{
-				"value": "Module",
-				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
 				"value": "Name",
 				"keys": ["admin.featureFlags.name", "auth.name"]
 			},
@@ -2040,6 +2036,10 @@
 			{
 				"value": "Push Notifications",
 				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
+			},
+			{
+				"value": "Puzzle",
+				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
 			},
 			{
 				"value": "Puzzle #{number}",
@@ -2349,11 +2349,11 @@
 				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
 			},
 			{
-				"value": "Today's free module",
+				"value": "Today's free puzzle",
 				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
 			},
 			{
-				"value": "Today's free module, every day",
+				"value": "Today's free puzzle, every day",
 				"keys": ["pricing.plans.freeFeatureDaily", "subscription.benefits.freeModule"]
 			},
 			{
@@ -2736,7 +2736,7 @@
 				"keys": ["catalog.freeToday", "home.day.freeToday", "home.lineup.freeToday"]
 			},
 			{
-				"value": "今日免費模組",
+				"value": "今日免費遊戲",
 				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
 			},
 			{
@@ -2823,6 +2823,10 @@
 			{
 				"value": "全部複製",
 				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "全部遊戲",
+				"keys": ["footer.allGames", "stats.modules.allModules"]
 			},
 			{
 				"value": "公開個人檔案",
@@ -3111,7 +3115,7 @@
 			},
 			{
 				"value": "所有遊戲",
-				"keys": ["catalog.metaTitle", "catalog.title"]
+				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
 			},
 			{
 				"value": "排行榜",
@@ -3269,10 +3273,6 @@
 				]
 			},
 			{
-				"value": "模組",
-				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
 				"value": "檔案庫",
 				"keys": ["archive.eyebrow", "archive.title", "nav.archive"]
 			},
@@ -3297,7 +3297,7 @@
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
 			{
-				"value": "每日一個免費模組",
+				"value": "每日一個免費遊戲",
 				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
 			},
 			{
@@ -3584,7 +3584,14 @@
 			},
 			{
 				"value": "遊戲",
-				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
+				"keys": [
+					"admin.games.title",
+					"admin.sidebar.games",
+					"leaderboard.moduleLabel",
+					"nav.games",
+					"stats.history.module",
+					"stats.modules.module"
+				]
 			},
 			{
 				"value": "遊玩過去的謎題",
@@ -3946,7 +3953,7 @@
 				"keys": ["home.day.freeToday", "home.lineup.freeToday"]
 			},
 			{
-				"value": "今日免費模組",
+				"value": "今日免費遊戲",
 				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
 			},
 			{
@@ -4033,6 +4040,10 @@
 			{
 				"value": "全部複製",
 				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "全部遊戲",
+				"keys": ["footer.allGames", "stats.modules.allModules"]
 			},
 			{
 				"value": "公開個人檔案",
@@ -4329,7 +4340,7 @@
 			},
 			{
 				"value": "所有遊戲",
-				"keys": ["catalog.metaTitle", "catalog.title"]
+				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
 			},
 			{
 				"value": "按自己的節奏解題",
@@ -4495,10 +4506,6 @@
 				]
 			},
 			{
-				"value": "模組",
-				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
 				"value": "歡迎回來",
 				"keys": ["auth.welcomeBack", "settings.overview.welcomeBack"]
 			},
@@ -4511,7 +4518,7 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
-				"value": "每天一個免費模組",
+				"value": "每天一個免費遊戲",
 				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
 			},
 			{
@@ -4789,7 +4796,14 @@
 			},
 			{
 				"value": "遊戲",
-				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
+				"keys": [
+					"admin.games.title",
+					"admin.sidebar.games",
+					"leaderboard.moduleLabel",
+					"nav.games",
+					"stats.history.module",
+					"stats.modules.module"
+				]
 			},
 			{
 				"value": "遊玩過去的謎題",
@@ -5177,7 +5191,7 @@
 				"keys": ["home.day.freeToday", "home.lineup.freeToday"]
 			},
 			{
-				"value": "今日免费模块",
+				"value": "今日免费游戏",
 				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
 			},
 			{
@@ -5251,6 +5265,10 @@
 			{
 				"value": "全部复制",
 				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
+			},
+			{
+				"value": "全部游戏",
+				"keys": ["footer.allGames", "stats.modules.allModules"]
 			},
 			{
 				"value": "公开个人资料",
@@ -5601,7 +5619,7 @@
 			},
 			{
 				"value": "所有游戏",
-				"keys": ["catalog.metaTitle", "catalog.title"]
+				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
 			},
 			{
 				"value": "打开账户中心",
@@ -5779,10 +5797,6 @@
 				"keys": ["settings.nav.overview", "settings.security.tabs.overview"]
 			},
 			{
-				"value": "模块",
-				"keys": ["leaderboard.moduleLabel", "stats.history.module", "stats.modules.module"]
-			},
-			{
 				"value": "欢迎回来",
 				"keys": ["auth.welcomeBack", "settings.overview.welcomeBack"]
 			},
@@ -5795,7 +5809,7 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
-				"value": "每天一个免费模块",
+				"value": "每天一个免费游戏",
 				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
 			},
 			{
@@ -5844,7 +5858,14 @@
 			},
 			{
 				"value": "游戏",
-				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
+				"keys": [
+					"admin.games.title",
+					"admin.sidebar.games",
+					"leaderboard.moduleLabel",
+					"nav.games",
+					"stats.history.module",
+					"stats.modules.module"
+				]
 			},
 			{
 				"value": "游玩过去的谜题",

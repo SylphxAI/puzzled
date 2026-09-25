@@ -23,19 +23,19 @@
 	"planDescription": "此账户可以玩什么，以及如何更改。",
 	"premiumPlan": "Premium",
 	"freePlan": "免费方案",
-	"premiumDescription": "所有模块、往期谜题库、更深入的统计，以及连胜保护。",
-	"freeDescription": "每天一个免费模块，加上连胜、统计与排行榜。",
+	"premiumDescription": "所有游戏、往期谜题库、更深入的统计，以及连胜保护。",
+	"freeDescription": "每天一个免费游戏，加上连胜、统计与排行榜。",
 	"included": "已包含",
 	"manage": "管理订阅",
 	"managing": "正在打开管理页…",
 	"benefits": {
-		"everyModule": "所有模块，无每日限制",
+		"everyModule": "所有游戏，无每日限制",
 		"archive": "往期谜题库",
 		"stats": "更深入的统计与记录",
 		"freezes": "忙碌时可用的连胜保护",
-		"freeModule": "每天的免费模块",
+		"freeModule": "每天的免费游戏",
 		"streak": "连胜、统计与记录",
-		"boards": "每个模块的排行榜"
+		"boards": "每个游戏的排行榜"
 	},
 	"unknown": {
 		"title": "无法加载你的方案",
