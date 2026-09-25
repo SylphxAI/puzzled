@@ -1,13 +1,11 @@
 const IDENTITY_API_ORIGIN = 'https://api.sylphx.com'
 const EVENTS_API_ORIGIN = 'https://api.events.sylphx.com'
-const COMMERCE_API_ORIGIN = 'https://api.commerce.sylphx.com'
 const OBSERVABILITY_API_ORIGIN = 'https://api.observability.sylphx.com'
 const AI_API_ORIGIN = 'https://api.models.sylphx.ai/v1'
 
 export const DEST_PEELS = {
 	identity: IDENTITY_API_ORIGIN,
 	events: EVENTS_API_ORIGIN,
-	commerce: COMMERCE_API_ORIGIN,
 	observability: OBSERVABILITY_API_ORIGIN,
 	ai: AI_API_ORIGIN,
 } as const
@@ -21,14 +19,6 @@ export const DEST_CONSENT_PURPOSES = [
 ] as const
 
 export type DestConsentPurpose = (typeof DEST_CONSENT_PURPOSES)[number]
-
-export type Plan = {
-	slug: string
-	name: string
-	monthlyPrice?: number
-	annualPrice?: number
-	features?: string[]
-}
 
 export type IdentityPrincipal = {
 	principalId: string
@@ -48,7 +38,6 @@ export type IdentityUser = {
 }
 
 export type AppConfig = {
-	plans: Plan[]
 	consentTypes: DestConsentPurpose[]
 	oauthProviders: string[]
 	app: { id: string; name: string; slug: string }
@@ -56,7 +45,6 @@ export type AppConfig = {
 }
 
 export const EMPTY_APP_CONFIG: AppConfig = {
-	plans: [],
 	consentTypes: [...DEST_CONSENT_PURPOSES],
 	oauthProviders: [],
 	app: { id: 'puzzled', name: 'Puzzled', slug: 'puzzled' },
@@ -94,10 +82,6 @@ export function destIdentityOrigin(raw?: string | null): string {
 
 export function destEventsOrigin(raw?: string | null): string {
 	return destPeelOrigin(EVENTS_API_ORIGIN, raw)
-}
-
-export function destCommerceOrigin(raw?: string | null): string {
-	return destPeelOrigin(COMMERCE_API_ORIGIN, raw)
 }
 
 export function destObservabilityOrigin(raw?: string | null): string {
@@ -156,15 +140,6 @@ export function destSessionChallengeId(raw: unknown): string | undefined {
 	const record = asRecord(raw)
 	const challenge = asRecord(record?.challenge) ?? record
 	return readText(challenge, ['challenge_id', 'challengeId'])
-}
-
-/** Commerce dest EvaluateEntitlement enabled gate (one premium writer). */
-export function destEntitlementEnabled(body: unknown): boolean {
-	const record = asRecord(body)
-	if (!record) return false
-	const entitlement = asRecord(record.entitlement) ?? record
-	const value = asRecord(entitlement.value)
-	return value?.enabled === true
 }
 
 export async function destJson<T>(

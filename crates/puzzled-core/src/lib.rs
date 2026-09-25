@@ -15,7 +15,6 @@ pub use capabilities::puzzle_play::sudoku_scoring::{
 };
 
 // Capability roots for shell/application imports
-pub use capabilities::billing_access;
 pub use capabilities::gamification;
 pub use capabilities::identity_policy;
 pub use capabilities::jobs_policy;

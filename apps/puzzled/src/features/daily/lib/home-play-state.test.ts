@@ -43,7 +43,6 @@ describe('home play state', () => {
 				sudoku: unverified,
 				crossword: notRead,
 			},
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -53,7 +52,6 @@ describe('home play state', () => {
 
 		const freeGame = game(state, 'sudoku')
 		expect(freeGame.isFreeToday).toBe(true)
-		expect(freeGame.locked).toBe(false)
 		expect(freeGame.completed).toBe(false)
 		expect(freeGame.score).toBeUndefined()
 		expect(freeGame.statusUnknown).toBe(true)
@@ -69,7 +67,6 @@ describe('home play state', () => {
 					statusAvailable: false,
 				},
 			},
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -83,7 +80,6 @@ describe('home play state', () => {
 		const state = deriveHomePlayState({
 			gameSlugs: ['sudoku'],
 			personalResults: {},
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -99,7 +95,6 @@ describe('home play state', () => {
 			personalResults: {
 				sudoku: { hasCompleted: true, completedSession: { score: 1200 }, statusAvailable: true },
 			},
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -116,7 +111,6 @@ describe('home play state', () => {
 			personalResults: {
 				sudoku: { hasCompleted: true, completedSession: { score: null }, statusAvailable: true },
 			},
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -125,30 +119,18 @@ describe('home play state', () => {
 		expect(freeGame.score).toBeUndefined()
 	})
 
-	test('anonymous visitors keep the free rotation and a clear upgrade path', () => {
+	test('every module is playable; only the featured one is marked free today', () => {
 		const state = deriveHomePlayState({
 			gameSlugs: slugs,
 			personalResults: Object.fromEntries(slugs.map((slug) => [slug, notRead])),
-			isPremium: false,
 			freeGameSlug: 'sudoku',
 		})
 
-		expect(game(state, 'sudoku').locked).toBe(false)
-		for (const slug of slugs.filter((entry) => entry !== 'sudoku')) {
-			expect(game(state, slug).locked).toBe(true)
-		}
-	})
-
-	test('premium accounts see the whole suite unlocked', () => {
-		const state = deriveHomePlayState({
-			gameSlugs: slugs,
-			personalResults: Object.fromEntries(slugs.map((slug) => [slug, notRead])),
-			isPremium: true,
-			freeGameSlug: 'sudoku',
-		})
-
-		expect(state.games.every((entry) => !entry.locked)).toBe(true)
-		expect(game(state, 'sudoku').isFreeToday).toBe(true)
+		expect(state.games.map((entry) => entry.slug)).toEqual([...slugs])
+		expect(state.games.filter((entry) => entry.isFreeToday).map((entry) => entry.slug)).toEqual([
+			'sudoku',
+		])
+		expect(state.games.some((entry) => 'locked' in entry)).toBe(false)
 	})
 })
 
@@ -203,14 +185,13 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		})
 	}
 
-	test('premium viewer: the badge keeps the full-registry denominator', () => {
+	test('the badge keeps the full-registry denominator', () => {
 		const registrySlugs = registryModules().map((module) => module.slug)
 		const personalResults = provedResults(provedSlugs)
 		const exposure = exposureFor('2026-09-11', personalResults)
 		const playState = deriveHomePlayState({
 			gameSlugs: registrySlugs,
 			personalResults,
-			isPremium: true,
 			freeGameSlug: 'sudoku',
 		})
 
@@ -228,26 +209,6 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		expect(progress.allCompleted).toBe(false)
 	})
 
-	test('free viewer: the badge stays 1/1 and the grid stays bounded', () => {
-		const personalResults = provedResults(provedSlugs)
-		const exposure = exposureFor('2026-09-11', personalResults)
-		const playState = deriveHomePlayState({
-			gameSlugs: registryModules().map((module) => module.slug),
-			personalResults,
-			isPremium: false,
-			freeGameSlug: 'sudoku',
-		})
-
-		const { renderedGames, progressGames } = scopeHomePlayState(playState, exposure.slugs)
-
-		expect(renderedGames).toHaveLength(HOME_EXPOSURE_LIMIT)
-		expect(summarizeDailyProgress(progressGames)).toEqual({
-			completedCount: 1,
-			availableCount: 1,
-			allCompleted: true,
-		})
-	})
-
 	test('a non-exposed unverified module still lifts the unverified banner', () => {
 		const personalResults: Record<string, HomePersonalResult> = {
 			...provedResults(provedSlugs),
@@ -257,7 +218,6 @@ describe('home play scopes (bounded grid, full progress)', () => {
 		const playState = deriveHomePlayState({
 			gameSlugs: registryModules().map((module) => module.slug),
 			personalResults,
-			isPremium: true,
 			freeGameSlug: 'sudoku',
 		})
 

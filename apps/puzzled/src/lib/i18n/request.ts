@@ -12,7 +12,6 @@ import enGBAuth from '@/messages/en-GB/auth.json'
 import enGBCatalog from '@/messages/en-GB/catalog.json'
 // en-GB namespaces
 import enGBLegal from '@/messages/en-GB/legal.json'
-import enGBPricing from '@/messages/en-GB/pricing.json'
 import enGBSettings from '@/messages/en-GB/settings.json'
 import enGBSupport from '@/messages/en-GB/support.json'
 import enUSAchievements from '@/messages/en-US/achievements.json'
@@ -34,19 +33,13 @@ import enUSModes from '@/messages/en-US/modes.json'
 import enUSNav from '@/messages/en-US/nav.json'
 import enUSOnboarding from '@/messages/en-US/onboarding.json'
 import enUSPagination from '@/messages/en-US/pagination.json'
-import enUSPremium from '@/messages/en-US/premium.json'
-import enUSPricing from '@/messages/en-US/pricing.json'
 import enUSPwa from '@/messages/en-US/pwa.json'
 import enUSReauth from '@/messages/en-US/reauth.json'
-import enUSReferrals from '@/messages/en-US/referrals.json'
 import enUSSettings from '@/messages/en-US/settings.json'
 import enUSShare from '@/messages/en-US/share.json'
 import enUSStats from '@/messages/en-US/stats.json'
 import enUSStreak from '@/messages/en-US/streak.json'
-import enUSSubscription from '@/messages/en-US/subscription.json'
 import enUSSupport from '@/messages/en-US/support.json'
-import enUSTrial from '@/messages/en-US/trial.json'
-import enUSWinBack from '@/messages/en-US/win-back.json'
 import zhCNAchievements from '@/messages/zh-CN/achievements.json'
 import zhCNAdmin from '@/messages/zh-CN/admin.json'
 import zhCNArchive from '@/messages/zh-CN/archive.json'
@@ -66,19 +59,13 @@ import zhCNModes from '@/messages/zh-CN/modes.json'
 import zhCNNav from '@/messages/zh-CN/nav.json'
 import zhCNOnboarding from '@/messages/zh-CN/onboarding.json'
 import zhCNPagination from '@/messages/zh-CN/pagination.json'
-import zhCNPremium from '@/messages/zh-CN/premium.json'
-import zhCNPricing from '@/messages/zh-CN/pricing.json'
 import zhCNPwa from '@/messages/zh-CN/pwa.json'
 import zhCNReauth from '@/messages/zh-CN/reauth.json'
-import zhCNReferrals from '@/messages/zh-CN/referrals.json'
 import zhCNSettings from '@/messages/zh-CN/settings.json'
 import zhCNShare from '@/messages/zh-CN/share.json'
 import zhCNStats from '@/messages/zh-CN/stats.json'
 import zhCNStreak from '@/messages/zh-CN/streak.json'
-import zhCNSubscription from '@/messages/zh-CN/subscription.json'
 import zhCNSupport from '@/messages/zh-CN/support.json'
-import zhCNTrial from '@/messages/zh-CN/trial.json'
-import zhCNWinBack from '@/messages/zh-CN/win-back.json'
 import zhHKAchievements from '@/messages/zh-HK/achievements.json'
 import zhHKAdmin from '@/messages/zh-HK/admin.json'
 import zhHKArchive from '@/messages/zh-HK/archive.json'
@@ -98,19 +85,13 @@ import zhHKModes from '@/messages/zh-HK/modes.json'
 import zhHKNav from '@/messages/zh-HK/nav.json'
 import zhHKOnboarding from '@/messages/zh-HK/onboarding.json'
 import zhHKPagination from '@/messages/zh-HK/pagination.json'
-import zhHKPremium from '@/messages/zh-HK/premium.json'
-import zhHKPricing from '@/messages/zh-HK/pricing.json'
 import zhHKPwa from '@/messages/zh-HK/pwa.json'
 import zhHKReauth from '@/messages/zh-HK/reauth.json'
-import zhHKReferrals from '@/messages/zh-HK/referrals.json'
 import zhHKSettings from '@/messages/zh-HK/settings.json'
 import zhHKShare from '@/messages/zh-HK/share.json'
 import zhHKStats from '@/messages/zh-HK/stats.json'
 import zhHKStreak from '@/messages/zh-HK/streak.json'
-import zhHKSubscription from '@/messages/zh-HK/subscription.json'
 import zhHKSupport from '@/messages/zh-HK/support.json'
-import zhHKTrial from '@/messages/zh-HK/trial.json'
-import zhHKWinBack from '@/messages/zh-HK/win-back.json'
 import zhTWArchive from '@/messages/zh-TW/archive.json'
 import zhTWAuth from '@/messages/zh-TW/auth.json'
 import zhTWCatalog from '@/messages/zh-TW/catalog.json'
@@ -122,13 +103,9 @@ import zhTWFooter from '@/messages/zh-TW/footer.json'
 import zhTWHome from '@/messages/zh-TW/home.json'
 import zhTWLeaderboard from '@/messages/zh-TW/leaderboard.json'
 import zhTWNav from '@/messages/zh-TW/nav.json'
-import zhTWPremium from '@/messages/zh-TW/premium.json'
-import zhTWPricing from '@/messages/zh-TW/pricing.json'
-import zhTWReferrals from '@/messages/zh-TW/referrals.json'
 import zhTWSettings from '@/messages/zh-TW/settings.json'
 import zhTWShare from '@/messages/zh-TW/share.json'
 import zhTWStats from '@/messages/zh-TW/stats.json'
-import zhTWSubscription from '@/messages/zh-TW/subscription.json'
 import zhTWSupport from '@/messages/zh-TW/support.json'
 
 // ==========================================
@@ -157,18 +134,12 @@ interface LocaleMessages {
 	leaderboard: Messages
 	modes: Messages
 	onboarding: Messages
-	premium: Messages
-	pricing: Messages
 	pwa: Messages
 	reauth: Messages
-	referrals: Messages
 	share: Messages
 	stats: Messages
 	streak: Messages
-	subscription: Messages
 	support: Messages
-	trial: Messages
-	winBack: Messages
 }
 
 /**
@@ -198,18 +169,12 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		leaderboard: enUSLeaderboard,
 		modes: enUSModes,
 		onboarding: enUSOnboarding,
-		premium: enUSPremium,
-		pricing: enUSPricing,
 		pwa: enUSPwa,
 		reauth: enUSReauth,
-		referrals: enUSReferrals,
 		share: enUSShare,
 		stats: enUSStats,
 		streak: enUSStreak,
-		subscription: enUSSubscription,
 		support: enUSSupport,
-		trial: enUSTrial,
-		winBack: enUSWinBack,
 	},
 	'en-GB': {
 		auth: enGBAuth,
@@ -217,7 +182,6 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		admin: enGBAdmin,
 		legal: enGBLegal,
 		catalog: enGBCatalog,
-		pricing: enGBPricing,
 		support: enGBSupport,
 	},
 	'zh-HK': {
@@ -240,18 +204,12 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		leaderboard: zhHKLeaderboard,
 		modes: zhHKModes,
 		onboarding: zhHKOnboarding,
-		premium: zhHKPremium,
-		pricing: zhHKPricing,
 		pwa: zhHKPwa,
 		reauth: zhHKReauth,
-		referrals: zhHKReferrals,
 		share: zhHKShare,
 		stats: zhHKStats,
 		streak: zhHKStreak,
-		subscription: zhHKSubscription,
 		support: zhHKSupport,
-		trial: zhHKTrial,
-		winBack: zhHKWinBack,
 	},
 	'zh-TW': {
 		common: zhTWCommon,
@@ -265,12 +223,8 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		daily: zhTWDaily,
 		footer: zhTWFooter,
 		leaderboard: zhTWLeaderboard,
-		premium: zhTWPremium,
-		pricing: zhTWPricing,
-		referrals: zhTWReferrals,
 		share: zhTWShare,
 		stats: zhTWStats,
-		subscription: zhTWSubscription,
 		support: zhTWSupport,
 	},
 	'zh-CN': {
@@ -293,18 +247,12 @@ const LOCALE_MESSAGES: Record<Locale, Partial<LocaleMessages>> = {
 		leaderboard: zhCNLeaderboard,
 		modes: zhCNModes,
 		onboarding: zhCNOnboarding,
-		premium: zhCNPremium,
-		pricing: zhCNPricing,
 		pwa: zhCNPwa,
 		reauth: zhCNReauth,
-		referrals: zhCNReferrals,
 		share: zhCNShare,
 		stats: zhCNStats,
 		streak: zhCNStreak,
-		subscription: zhCNSubscription,
 		support: zhCNSupport,
-		trial: zhCNTrial,
-		winBack: zhCNWinBack,
 	},
 }
 

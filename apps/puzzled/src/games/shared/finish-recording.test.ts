@@ -1,7 +1,7 @@
 /**
  * Archive finishes (F3): the recording decision, without a React renderer.
  *
- * An archive board is premium-gated and dated; the kernel records one finish
+ * An archive board is dated; the kernel records one finish
  * per (user, module, day_key) for past days too, so the client must record the
  * day it was served for — and must never let a missing day fall through to the
  * server's "today" default as a ritually-counted daily finish.

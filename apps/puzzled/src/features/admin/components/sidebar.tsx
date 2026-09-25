@@ -6,7 +6,6 @@ import {
 	ArrowLeft,
 	BarChart3,
 	Bell,
-	CreditCard,
 	FileText,
 	FlaskConical,
 	Gamepad2,
@@ -22,7 +21,6 @@ import { cn } from '@/lib/utils'
 type NavItemKey =
 	| 'dashboard'
 	| 'analytics'
-	| 'plansAndPricing'
 	| 'users'
 	| 'games'
 	| 'announcements'
@@ -40,7 +38,6 @@ const navItems: Array<{
 }> = [
 	{ href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
 	{ href: '/admin/analytics', labelKey: 'analytics', icon: BarChart3 },
-	{ href: '/admin/plans', labelKey: 'plansAndPricing', icon: CreditCard },
 	{ href: '/admin/users', labelKey: 'users', icon: Users },
 	{ href: '/admin/games', labelKey: 'games', icon: Gamepad2 },
 	{ href: '/admin/announcements', labelKey: 'announcements', icon: Bell },

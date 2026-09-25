@@ -2,14 +2,12 @@ import {
 	ArrowRight,
 	Check,
 	Clock,
-	CreditCard,
 	KeyRound,
 	Lock,
 	type LucideIcon,
 	Mail,
 	ScrollText,
 	ShieldCheck,
-	Sparkles,
 } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import {
@@ -47,24 +45,16 @@ const FAQ_KEYS = [
 /** Fields a support message needs before a person can act on it. */
 const INCLUDE_KEYS = ['account', 'game', 'detail', 'screenshot'] as const
 
-type ResourceKey = 'reset' | 'subscription' | 'pricing' | 'privacy' | 'terms'
+type ResourceKey = 'reset' | 'privacy' | 'terms'
 
 /** Routes that exist today; the FAQ answers point at the same destinations. */
 const RESOURCES: Record<ResourceKey, { href: string; icon: LucideIcon }> = {
 	reset: { href: '/forgot-password', icon: KeyRound },
-	subscription: { href: '/settings/subscription', icon: CreditCard },
-	pricing: { href: '/pricing', icon: Sparkles },
 	privacy: { href: '/privacy', icon: ShieldCheck },
 	terms: { href: '/terms', icon: ScrollText },
 }
 
-const RESOURCE_KEYS: readonly ResourceKey[] = [
-	'reset',
-	'subscription',
-	'pricing',
-	'privacy',
-	'terms',
-]
+const RESOURCE_KEYS: readonly ResourceKey[] = ['reset', 'privacy', 'terms']
 
 const PRIMARY_CTA =
 	'inline-flex h-12 items-center gap-2 rounded-2xl bg-primary px-6 font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition-transform hover:-translate-y-0.5 hover:bg-primary-hover active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'

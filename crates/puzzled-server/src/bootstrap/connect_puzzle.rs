@@ -26,9 +26,7 @@ use puzzled_core::puzzle_play::crossword_generate::{
 use puzzled_core::puzzle_play::daily_time::{get_puzzle_number, product_day_key};
 use puzzled_core::puzzle_play::domain::scoring::SubmissionStatus;
 use puzzled_core::puzzle_play::game_flows::build_daily_status;
-use puzzled_core::puzzle_play::game_slugs::{
-    canonicalize_game_slug, is_game_free_today, is_valid_game_slug,
-};
+use puzzled_core::puzzle_play::game_slugs::{canonicalize_game_slug, is_valid_game_slug};
 use puzzled_core::puzzle_play::queens_generate::generate_queens_puzzle_with_size;
 use puzzled_core::puzzle_play::word_groups_generate::generate_word_groups_puzzle;
 use puzzled_core::puzzle_play::word_guess_generate::generate_word_guess_puzzle;
@@ -46,7 +44,6 @@ use crate::proto::puzzled::v1::{
     DailyCompletion, GetDailyRequest, GetDailyResponse, GetPuzzleRequest, GetPuzzleResponse,
     PuzzleService, SubmitGuessRequest, SubmitGuessResponse,
 };
-use crate::shared::platform_billing::is_premium;
 
 const SLICE_PUZZLE: &str = "S2-puzzle-connect";
 const SLICE_DAILY: &str = "S2-daily-connect";
@@ -101,44 +98,19 @@ impl PuzzleConnectService {
         Ok(())
     }
 
-    /// Enforce premium gating for a served puzzle (ADR-170).
+    /// Admit a served puzzle date: today or any past product day.
     ///
-    /// - Archive reads (date != today) always require premium.
-    /// - Non-rotation games require premium.
-    /// - The daily free-rotation game is playable by everyone.
-    async fn enforce_play_access(
-        &self,
-        user_id: Option<&str>,
-        game_slug: &str,
-        date: chrono::NaiveDate,
-    ) -> Result<(), ConnectError> {
-        // Product day-key SSOT (Asia/Hong_Kong) — not client local, not legacy UTC.
-        let today = product_day_key(Utc::now());
-        if date != today {
-            // Archive access is a premium feature.
-            return self.require_premium(user_id).await;
-        }
-        if !is_game_free_today(game_slug, today) {
-            return self.require_premium(user_id).await;
+    /// Every game and every past day is open to every player; Puzzled sells no
+    /// paid tier. A future day is refused so no one can read tomorrow's
+    /// solution early.
+    fn enforce_play_access(date: NaiveDate) -> Result<(), ConnectError> {
+        if date > product_day_key(Utc::now()) {
+            return Err(ConnectError::new(
+                ErrorCode::InvalidArgument,
+                "future_puzzle_date",
+            ));
         }
         Ok(())
-    }
-
-    async fn require_premium(&self, user_id: Option<&str>) -> Result<(), ConnectError> {
-        let Some(uid) = user_id else {
-            return Err(ConnectError::new(
-                ErrorCode::PermissionDenied,
-                "premium_required",
-            ));
-        };
-        if is_premium(uid).await {
-            Ok(())
-        } else {
-            Err(ConnectError::new(
-                ErrorCode::PermissionDenied,
-                "premium_required",
-            ))
-        }
     }
 }
 
@@ -319,9 +291,7 @@ impl PuzzleService for PuzzleConnectService {
         let puzzle_date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
         let is_archive = puzzle_date != today;
 
-        // Server-enforced premium gating (archive + non-rotation games).
-        self.enforce_play_access(identity.as_deref(), game_slug, puzzle_date)
-            .await?;
+        Self::enforce_play_access(puzzle_date)?;
 
         // Resolve the served puzzle: stored row first, then documented
         // deterministic generators (every FREE_GAME_ROTATION slug).
@@ -455,7 +425,6 @@ impl PuzzleService for PuzzleConnectService {
             ));
         };
         // Platform auth **or** stable guest-day id (free-ritual protocol default).
-        // Premium/archive still fail closed via enforce_play_access.
         self.adopt_guest_progress_if_needed(&ctx).await?;
         let uid = self.identity_for_submit(&ctx)?;
 
@@ -476,9 +445,7 @@ impl PuzzleService for PuzzleConnectService {
         let now = Utc::now();
         let today = product_day_key(now);
         let date = date_from_string(req.puzzle_date.as_deref()).unwrap_or(today);
-        // Server-enforced premium gating (archive + non-rotation games).
-        self.enforce_play_access(Some(&uid), game_slug, date)
-            .await?;
+        Self::enforce_play_access(date)?;
         let difficulty = {
             let d = req.difficulty.trim();
             if d.is_empty() {

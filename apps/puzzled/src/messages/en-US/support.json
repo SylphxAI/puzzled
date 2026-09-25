@@ -1,9 +1,9 @@
 {
 	"title": "Support & Help",
-	"description": "Email the Puzzled support team about your account, games, subscription or data. A person replies, usually within 24-48 hours.",
+	"description": "Email the Puzzled support team about your account, games or data. A person replies, usually within 24-48 hours.",
 	"hero": {
 		"eyebrow": "Support",
-		"lead": "Email the support team about your account, progress, billing or a bug. One inbox, read by people — there is no phone line and no live chat.",
+		"lead": "Email the support team about your account, progress or a bug. One inbox, read by people — there is no phone line and no live chat.",
 		"factHuman": "Replies from the support team",
 		"factReply": "Response within 24-48 hours",
 		"emailCta": "Email support",
@@ -18,10 +18,10 @@
 	},
 	"contact": {
 		"title": "Talk to a person",
-		"subtitle": "The support inbox takes playing, account and billing questions. Privacy and legal requests have their own addresses.",
+		"subtitle": "The support inbox takes playing and account questions. Privacy and legal requests have their own addresses.",
 		"support": {
-			"title": "Playing, account and billing",
-			"body": "Sign-in trouble, a puzzle that misbehaved, a question about Premium, or feedback on a puzzle — write to support and the team will pick it up."
+			"title": "Playing and account",
+			"body": "Sign-in trouble, a puzzle that misbehaved, or feedback on a puzzle — write to support and the team will pick it up."
 		},
 		"data": {
 			"title": "Privacy and legal",
@@ -43,25 +43,13 @@
 			"question": "I played as a guest — is that progress saved?",
 			"answer": "A guest finish counts for the day you played, and the free daily puzzle never needs an account. The result is stored against a guest id in that browser, not against an account, so it does not follow you to another device and it is not carried into an account if you sign in later. A signed-in account is what keeps the streak, results and stats across devices."
 		},
-		"cancel": {
-			"question": "How do I cancel Premium?",
-			"answer": "Sign in, open Settings → Subscription and use 'Manage Subscription'. You can cancel any time, and the free daily puzzle keeps working either way."
-		},
-		"afterCancel": {
-			"question": "What happens after I cancel?",
-			"answer": "Premium continues until the end of the period you already paid for, then the account returns to the free tier: the daily free puzzle stays, the rest of the suite locks. Premium access is decided by the server each time it is checked, not stored in the app, so what you see follows the billing state."
-		},
-		"refunds": {
-			"question": "Can I get a refund?",
-			"answer": "Refund requests go through the support inbox: write to {email} from the address on your account and include the purchase date. The Terms of Service describe refunds as at our discretion within 7 days of purchase."
-		},
 		"dayStart": {
 			"question": "When does a new puzzle day start?",
 			"answer": "Everything runs on Hong Kong time (UTC+8, no daylight saving): a new daily set appears at midnight, and every player gets the same set for that day. Results and streaks use that same clock."
 		},
 		"streak": {
 			"question": "Why did my streak end?",
-			"answer": "A streak day means finishing at least one qualifying puzzle in a puzzle day. Finish none and the current streak ends — your best streak and past results stay. Premium includes streak freezes: an available freeze can cover a missed day, and with auto-freeze turned on one is used for you."
+			"answer": "A streak day means finishing at least one qualifying puzzle in a puzzle day. Finish none and the current streak ends — your best streak and past results stay."
 		},
 		"accessibility": {
 			"question": "Is Puzzled accessible?",
@@ -79,21 +67,13 @@
 			"title": "Reset your password",
 			"body": "Ask for a reset link when you cannot sign in."
 		},
-		"subscription": {
-			"title": "Manage subscription",
-			"body": "Cancel or review Premium. Sign-in required."
-		},
-		"pricing": {
-			"title": "Plans and pricing",
-			"body": "What Premium includes and what stays free."
-		},
 		"privacy": {
 			"title": "Privacy Policy",
 			"body": "What is collected and the rights you have."
 		},
 		"terms": {
 			"title": "Terms of Service",
-			"body": "The rules, billing terms and refund window."
+			"body": "The rules for using Puzzled."
 		}
 	},
 	"cta": {

@@ -465,13 +465,7 @@ async function main(): Promise<void> {
 
 	// ── structured data ─────────────────────────────────────────────────────
 	const gameLoc = locs.find((loc) => /\/games\/[a-z-]+$/.test(loc))
-	const structuredSample = [
-		'/',
-		'/games',
-		gameLoc ? localPath(gameLoc) : '/games',
-		'/pricing',
-		'/zh-TW',
-	]
+	const structuredSample = ['/', '/games', gameLoc ? localPath(gameLoc) : '/games', '/zh-TW']
 
 	await check('JSON-LD parses and states real facts', async () => {
 		const types = new Set<string>()

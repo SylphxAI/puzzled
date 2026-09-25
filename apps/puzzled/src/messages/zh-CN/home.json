@@ -26,9 +26,7 @@
 		"seeAll": "查看全部游戏",
 		"play": "开始玩",
 		"playAgain": "再玩一次",
-		"unlock": "解锁",
-		"freeToday": "今天免费",
-		"premium": "Premium"
+		"freeToday": "今日精选"
 	},
 	"value": {
 		"dailyTitle": "每天全新题目",
@@ -64,7 +62,7 @@
 		"subtitle": "用最短篇幅说清楚 Puzzled。",
 		"free": {
 			"question": "Puzzled 免费吗？",
-			"answer": "是。每天有一题免费，无需付款或注册。Premium 会加入完整阵容、旧题库、进阶统计和连续纪录保护。"
+			"answer": "是的。每款谜题每天都免费,永远无需付款或账户。"
 		},
 		"account": {
 			"question": "玩游戏需要注册账号吗？",
@@ -76,7 +74,7 @@
 		},
 		"streak": {
 			"question": "连续纪录怎么算？",
-			"answer": "每个游戏日完成至少一题合格谜题，就能延续连续纪录。偶尔错过一天不会清空历史，Premium 连续纪录保护还能帮你补一天。"
+			"answer": "每个谜题日完成至少一款合格谜题,即可延续连胜。偶尔漏掉一天,也不会抹去你的记录。"
 		},
 		"share": {
 			"question": "分享成绩会剧透吗？",

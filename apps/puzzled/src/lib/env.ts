@@ -103,11 +103,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		description: 'Identity dest origin override',
 	},
 	{
-		name: 'COMMERCE_API_ORIGIN',
-		required: false,
-		description: 'Commerce dest origin override',
-	},
-	{
 		name: 'EVENTS_API_ORIGIN',
 		required: false,
 		description: 'Events dest origin override',
@@ -132,11 +127,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		name: 'IDENTITY_ORGANIZATION_ID',
 		required: false,
 		description: 'Identity organization id; required for dest admission',
-	},
-	{
-		name: 'COMMERCE_API_KEY',
-		required: false,
-		description: 'Commerce product key; required when Commerce is called',
 	},
 	{
 		name: 'EVENTS_API_KEY',
@@ -173,11 +163,6 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		name: 'DATABASE_URL',
 		required: false,
 		description: 'Postgres connection string for product reads (audit logs)',
-	},
-	{
-		name: 'COMMERCE_ENTITLEMENT_POLICY_ID',
-		required: false,
-		description: 'Entitlement policy id; the call site defaults to premium',
 	},
 ]
 
@@ -294,10 +279,6 @@ export const env = {
 	get IDENTITY_API_ORIGIN(): string | undefined {
 		return process.env.IDENTITY_API_ORIGIN
 	},
-	/** Commerce dest origin override */
-	get COMMERCE_API_ORIGIN(): string | undefined {
-		return process.env.COMMERCE_API_ORIGIN
-	},
 	/** Events dest origin override */
 	get EVENTS_API_ORIGIN(): string | undefined {
 		return process.env.EVENTS_API_ORIGIN
@@ -317,10 +298,6 @@ export const env = {
 	/** Identity organization id */
 	get IDENTITY_ORGANIZATION_ID(): string | undefined {
 		return process.env.IDENTITY_ORGANIZATION_ID
-	},
-	/** Commerce product key */
-	get COMMERCE_API_KEY(): string | undefined {
-		return process.env.COMMERCE_API_KEY
 	},
 	/** Events product key */
 	get EVENTS_API_KEY(): string | undefined {
@@ -349,9 +326,5 @@ export const env = {
 	/** Postgres connection string */
 	get DATABASE_URL(): string | undefined {
 		return process.env.DATABASE_URL
-	},
-	/** Entitlement policy id (call site defaults to premium) */
-	get COMMERCE_ENTITLEMENT_POLICY_ID(): string | undefined {
-		return process.env.COMMERCE_ENTITLEMENT_POLICY_ID
 	},
 }

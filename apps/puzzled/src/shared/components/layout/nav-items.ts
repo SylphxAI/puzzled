@@ -20,12 +20,9 @@ export const NAV_ITEMS: readonly NavItem[] = [
 	{ href: '/', labelKey: 'home', icon: Home, showInBottomNav: true, showInTopNav: true },
 	{ href: '/games', labelKey: 'games', icon: Gamepad2, showInBottomNav: true, showInTopNav: true },
 	{ href: '/stats', labelKey: 'stats', icon: BarChart3, showInBottomNav: true, showInTopNav: true },
-	// Past product days. Premium-gated on the page itself, so it is a real
-	// destination for everyone: the surface answers with sign-in or the upgrade.
+	// Past product days: open to every signed-in player; a guest is asked to sign in.
 	{ href: '/archive', labelKey: 'archive', icon: CalendarDays, showInTopNav: true },
 	{ href: '/leaderboard', labelKey: 'leaderboard', icon: Trophy, showInTopNav: true },
-	/* Pricing is not a navigation destination: it lives in the footer and at
-	 * value points (the locked tile, the result card). The top row is play. */
 	{ href: '/profile', labelKey: 'profile', icon: User, showInBottomNav: true },
 ] as const
 

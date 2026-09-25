@@ -21,12 +21,6 @@ export function destIdentityProjectId(
 	return destProductCredential(['IDENTITY_ORGANIZATION_ID'], env)
 }
 
-export function destCommerceCredential(
-	env: Record<string, string | undefined> = process.env,
-): string | undefined {
-	return destProductCredential(['COMMERCE_API_KEY'], env)
-}
-
 export function destEventsCredential(
 	env: Record<string, string | undefined> = process.env,
 ): string | undefined {
@@ -51,16 +45,6 @@ export function requireDestIdentityCredential(
 	const credential = destIdentityCredential(env)
 	if (!credential) {
 		throw new Error('Identity dest requires IDENTITY_API_KEY')
-	}
-	return credential
-}
-
-export function requireDestCommerceCredential(
-	env: Record<string, string | undefined> = process.env,
-): string {
-	const credential = destCommerceCredential(env)
-	if (!credential) {
-		throw new Error('Commerce dest requires COMMERCE_API_KEY')
 	}
 	return credential
 }

@@ -134,7 +134,6 @@ describe('deriveHomeExposure', () => {
 		const catalogSlugs = buildCatalogEntries({
 			modules: registry,
 			freeGameSlug: 'sudoku',
-			isPremium: true,
 		}).map((entry) => entry.slug)
 		for (const slug of ['word-ladder', 'arithmo']) {
 			expect(exposure.slugs).not.toContain(slug)

@@ -60,16 +60,6 @@ export default async function TermsPage({ params }: Props) {
 			],
 		},
 		{
-			id: 'subscription',
-			title: t('sections.subscription.title'),
-			paragraphs: [t('sections.subscription.content')],
-			bullets: [
-				t('sections.subscription.items.billing'),
-				t('sections.subscription.items.cancel'),
-				t('sections.subscription.items.refund'),
-			],
-		},
-		{
 			id: 'conduct',
 			title: t('sections.conduct.title'),
 			paragraphs: [t('sections.conduct.content')],

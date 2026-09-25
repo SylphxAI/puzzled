@@ -64,10 +64,10 @@ For each shipped module:
 
 ### 2.3 Free-floor oracle
 
-On a free (non-premium) identity:
+On any identity, guest included:
 
-1. Can complete today’s free ritual without payment.  
-2. Archive (if gated) fails closed with clear upgrade path—not silent 500.
+1. Can complete today’s ritual, and any other module, without payment.  
+2. Archive serves past days; a future day is refused, not silently served.
 
 ### 2.4 Share oracle
 
@@ -75,13 +75,6 @@ After finish:
 
 1. Card payload contains no solution.  
 2. Deep link opens the correct module for day_key.
-
-### 2.5 Premium oracle
-
-With active subscription mock/live:
-
-1. Archive allowed when entitled.  
-2. On billing uncertainty: free floor still works; premium features fail closed.
 
 ---
 
@@ -93,7 +86,7 @@ With active subscription mock/live:
 | **P2** | Share card → land as new guest → play same day | New potential daily puzzle completers |
 | **P3** | Second module same day | Optional; does not break P1 |
 | **P4** | Auth: sign in → streak/history visible | No identity spoof |
-| **P5** | Premium: archive access when entitled | Fail-closed otherwise |
+| **P5** | Archive: open a past day | Served; a future day is refused |
 | **P6** | Health: api `/healthz` + web ready | Deploy liveness |
 | **P7** | Admin: list games / basic ops | Operator path |
 

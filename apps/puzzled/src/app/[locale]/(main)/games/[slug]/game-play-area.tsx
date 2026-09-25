@@ -1,9 +1,7 @@
 import { getTranslations } from 'next-intl/server'
-import { GameUnlockPanel } from '@/features/catalog/components/game-unlock-panel'
 import { AlreadyCompletedView } from '@/features/daily/components/already-completed-view'
 import { deriveDifficultyCompletionStatus } from '@/features/daily/lib/difficulty-completion'
 import type { GameSlug } from '@/games/registry'
-import type { GameColorTheme } from '@/games/theme-colors'
 import type { PuzzleDifficulty } from '@/games/types'
 import {
 	type DailyStatus,
@@ -27,16 +25,8 @@ type GamePlayAreaProps = {
 	mode: GameMode
 	difficulty?: PuzzleDifficulty
 	supportsDifficulty: boolean
-	/** The viewer can start this module today (free rotation or entitlement). */
-	hasAccess: boolean
 	/** A signed-in account made this request. */
 	hasUser: boolean
-	/** Registered module count, used by the unlock panel copy. */
-	gameCount: number
-	theme: GameColorTheme
-	/** Today's free-rotation module, offered when the viewer cannot play. */
-	freeGameSlug: string
-	freeGameName: string
 	/**
 	 * Archive day key resolved from the query string by the page. Connect admits
 	 * or refuses the read for this day; the client never widens it.
@@ -47,10 +37,9 @@ type GamePlayAreaProps = {
 /**
  * The interactive part of a module page.
  *
- * Entitlement was resolved by the page; this component only renders what the
- * viewer is allowed to do and keeps the play behaviour byte-for-byte the same:
- * the difficulty chooser, the server board, the client GetDaily fallback, the
- * completed card, and the honest unlock path for premium modules.
+ * Every module is open to every player; this component renders the play flow:
+ * the difficulty chooser, the server board, the client GetDaily fallback and
+ * the completed card.
  *
  * It renders inside a Suspense boundary, so a slow Connect read streams behind
  * the skeleton instead of delaying the page's own content — and, because the
@@ -64,30 +53,10 @@ export async function GamePlayArea({
 	mode,
 	difficulty,
 	supportsDifficulty,
-	hasAccess,
 	hasUser,
-	gameCount,
-	theme,
-	freeGameSlug,
-	freeGameName,
 	dateParam,
 }: GamePlayAreaProps) {
 	const tDaily = await getTranslations('daily')
-
-	if (!hasAccess) {
-		// Honest unlock path: what premium adds, the sign-in route for guests and
-		// today's free module — never a dead end, never a fake board.
-		return (
-			<GameUnlockPanel
-				slug={slug}
-				gameCount={gameCount}
-				isGuest={!hasUser}
-				freeGameSlug={freeGameSlug}
-				freeGameName={freeGameName}
-				theme={theme}
-			/>
-		)
-	}
 
 	if (supportsDifficulty && !difficulty && mode === 'daily') {
 		// GetDaily is identity-agnostic: session cookie or puzzled_guest_id.
@@ -136,14 +105,13 @@ export async function GamePlayArea({
 	// The page resolved the day (a real calendar day strictly before the
 	// Asia/Hong_Kong product day; the mode flag alone never creates one) and the
 	// same day is forwarded to the client fallback, so SSR and browser reads ask
-	// for the same board. Admission stays Connect's: an archive read is refused
-	// with `premium_required` for a guest or a free account and lands on the
-	// honest unlock path: a signed-in account is not required to *ask*.
+	// for the same board. Admission stays Connect's: every past day is open to
+	// every player, and a future day is refused.
 	const archiveDate = mode === 'archive' && dateParam ? dateParam : undefined
 
 	try {
 		if (archiveDate) {
-			// Archive mode - get specific date's puzzle (premium only)
+			// Archive mode - get specific date's puzzle
 			const archivePuzzle = await getServerDailyStatus({
 				gameSlug: slug,
 				puzzleDate: archiveDate,
@@ -193,7 +161,6 @@ export async function GamePlayArea({
 				difficulty={difficulty}
 				supportsDifficulty={supportsDifficulty}
 				puzzleDate={archiveDate}
-				freeGameSlug={freeGameSlug}
 			/>
 		)
 	}

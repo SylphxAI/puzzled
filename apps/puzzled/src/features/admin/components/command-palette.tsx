@@ -8,13 +8,10 @@ import {
 	ArrowLeft,
 	BarChart3,
 	Bell,
-	CreditCard,
 	FileText,
 	FlaskConical,
 	Gamepad2,
 	LayoutDashboard,
-	Plus,
-	RefreshCw,
 	Search,
 	Settings,
 	Users,
@@ -91,15 +88,6 @@ export function AdminCommandPalette() {
 			group: 'navigation',
 		},
 		{
-			id: 'nav-plans',
-			label: t('sidebar.plansAndPricing'),
-			icon: CreditCard,
-			action: () => navigate('/admin/plans'),
-			keywords: ['pricing', 'subscription', 'billing', 'stripe'],
-			shortcut: 'G P',
-			group: 'navigation',
-		},
-		{
 			id: 'nav-games',
 			label: t('sidebar.games'),
 			icon: Gamepad2,
@@ -173,25 +161,6 @@ export function AdminCommandPalette() {
 			group: 'navigation',
 		},
 		// Actions
-		{
-			id: 'action-seed-plans',
-			label: t('commandPalette.seedPlans'),
-			icon: Plus,
-			action: () => {
-				navigate('/admin/plans')
-				// The plans page will have the seed button
-			},
-			keywords: ['create', 'init', 'setup'],
-			group: 'actions',
-		},
-		{
-			id: 'action-sync-stripe',
-			label: t('commandPalette.syncStripe'),
-			icon: RefreshCw,
-			action: () => navigate('/admin/plans'),
-			keywords: ['stripe', 'billing', 'update'],
-			group: 'actions',
-		},
 		{
 			id: 'action-view-errors',
 			label: t('commandPalette.viewErrors'),

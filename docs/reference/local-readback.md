@@ -76,7 +76,7 @@ origin resolver. A production build ignores a loopback
 
 | Check | Locally | Why |
 | --- | --- | --- |
-| `free-slug-discovery`, `daily-serve`, `premium-fail-closed` | pass | Real GetDaily against the real schema and rotation. |
+| `free-slug-discovery`, `daily-serve`, `archive-open` | pass | Real GetDaily against the real schema and rotation. |
 | `finish-loop` | pass on a revision that records honest losses | Terminal recorded, `hasCompleted` on re-read, second submit refused `already_played`. On a revision that still hard-codes the win claim this check fails with `Invalid win claim …` — that failure is the point of the check, not a local artifact. |
 | `web-document`, `marks-scan` | pass | The web layer is what renders canonical/JSON-LD/CTA; loopback targets are accepted as-is. |
 | `share-deep-link` | `unknown` | The harness cannot solve the free module, so the solution signature stays unknown; the landing-page shape and non-spoiler checks still run. |

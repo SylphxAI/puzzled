@@ -1,20 +1,8 @@
-import {
-	Bell,
-	ChevronRight,
-	CreditCard,
-	Gift,
-	Palette,
-	Shield,
-	ShieldCheck,
-	UserCircle,
-	UserCog,
-} from 'lucide-react'
+import { Bell, ChevronRight, Palette, Shield, ShieldCheck, UserCircle, UserCog } from 'lucide-react'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { ConsoleCard } from '@/features/console/components/console-chrome'
 import { requireMember } from '@/features/console/lib/require-member'
-import { hasPremiumAccess } from '@/lib/billing/server'
 import { Link } from '@/lib/i18n/routing'
-import { withPresentationDeadline } from '@/lib/presentation-document'
 
 type Props = {
 	params: Promise<{ locale: string }>
@@ -22,19 +10,11 @@ type Props = {
 
 type SettingsLink = {
 	href: string
-	key:
-		| 'profile'
-		| 'account'
-		| 'preferences'
-		| 'notifications'
-		| 'security'
-		| 'subscription'
-		| 'referrals'
-		| 'privacy'
+	key: 'profile' | 'account' | 'preferences' | 'notifications' | 'security' | 'privacy'
 	icon: typeof UserCircle
 }
 
-const GROUPS: { key: 'player' | 'play' | 'plan' | 'safety'; links: SettingsLink[] }[] = [
+const GROUPS: { key: 'player' | 'play' | 'safety'; links: SettingsLink[] }[] = [
 	{
 		key: 'player',
 		links: [
@@ -47,13 +27,6 @@ const GROUPS: { key: 'player' | 'play' | 'plan' | 'safety'; links: SettingsLink[
 		links: [
 			{ href: '/settings/preferences', key: 'preferences', icon: Palette },
 			{ href: '/settings/notifications', key: 'notifications', icon: Bell },
-		],
-	},
-	{
-		key: 'plan',
-		links: [
-			{ href: '/settings/subscription', key: 'subscription', icon: CreditCard },
-			{ href: '/settings/referrals', key: 'referrals', icon: Gift },
 		],
 	},
 	{
@@ -72,9 +45,6 @@ export default async function SettingsOverviewPage({ params }: Props) {
 	const t = await getTranslations('settings')
 	const user = await requireMember({ locale, returnTo: '/settings' })
 	if (!user) return null
-	const isPremium = user?.id
-		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
-		: false
 	const displayName = user?.name?.trim() || user?.email || t('playerCard.nameFallback')
 
 	return (
@@ -83,11 +53,6 @@ export default async function SettingsOverviewPage({ params }: Props) {
 				<span className="chip bg-primary/10 text-primary">
 					{t('overview.signedInAs', { name: displayName })}
 				</span>
-				{isPremium ? (
-					<span className="chip bg-violet-500/10 text-violet-700 dark:text-violet-300">
-						{t('playerCard.premium')}
-					</span>
-				) : null}
 			</div>
 
 			{GROUPS.map((group) => (

@@ -1,27 +1,17 @@
 import { afterEach, describe, expect, mock, test } from 'bun:test'
 import { getAppConfig } from './app-config'
 import {
-	destCommerceCredential,
 	destEventsCredential,
 	destIdentityProjectId,
 	destObservabilityCredential,
 } from './credentials'
 import {
-	destEntitlementEnabled,
+	DEST_PEELS,
 	destIdentityJson,
 	destIdentityOrigin,
 	destIdentityPrincipal,
 	destJson,
 } from './dest'
-import {
-	createCheckout,
-	getBilling,
-	getLeaderboard,
-	getPlans,
-	getSubscription,
-	isPremium,
-	openPortal,
-} from './index'
 import { destEventsJson, destObservabilityJson, destSessionReplayChunksPath } from './peels'
 
 const originalFetch = globalThis.fetch
@@ -33,8 +23,6 @@ describe('Identity dest HTTP', () => {
 	afterEach(() => {
 		globalThis.fetch = originalFetch
 		delete process.env.IDENTITY_API_ORIGIN
-		delete process.env.COMMERCE_API_ORIGIN
-		delete process.env.COMMERCE_API_KEY
 		delete process.env.IDENTITY_API_KEY
 		delete process.env.EVENTS_API_KEY
 		delete process.env.OBSERVABILITY_API_KEY
@@ -89,83 +77,18 @@ describe('Identity dest HTTP', () => {
 		).rejects.toThrow('Binding')
 	})
 
-	test('getLeaderboard calls Commerce dest with board activity_kind', async () => {
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		const fetchMock = mockFetch({
-			ok: true,
-			body: {
-				entries: [{ rank: 1, account_id: 'principal-a', activity_count: 9 }],
-			},
-		})
-		const result = await getLeaderboard({}, 'puzzled-sudoku-all', 'principal-a', { limit: 5 })
-		expect(fetchMock.mock.calls[0]?.[0]).toBe(
-			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.EngagementService/ListEngagementLeaderboard',
-		)
-		const init = fetchMock.mock.calls[0]?.[1] as RequestInit
-		const headers = init.headers as Record<string, string>
-		expect(headers.Authorization).toBe('Bearer commerce_key_a')
-		expect(JSON.parse(String(init.body))).toEqual(
-			expect.objectContaining({
-				activity_kind: 'puzzled-sudoku-all',
-				page: expect.objectContaining({ page_size: 5 }),
-			}),
-		)
-		expect(result.entries[0]?.userId).toBe('principal-a')
-		expect(result.entries[0]?.value).toBe(9)
-		expect(result.currentUserEntry?.isCurrentUser).toBe(true)
-	})
-
-	test('getPlans and checkout hit Commerce dest ListPrices', async () => {
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		const fetchMock = mockFetch({
-			ok: true,
-			body: {
-				prices: [
-					{
-						price_code: 'premium',
-						display_name: 'Premium',
-						cadence: { unit: 'BILLING_CADENCE_UNIT_MONTH' },
-						tiers: [{ unit_minor: { numerator: 499, denominator: 1 } }],
-					},
-				],
-			},
-		})
-		const plans = await getPlans({})
-		expect(fetchMock.mock.calls[0]?.[0]).toBe(
-			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.InvoicingService/ListPrices',
-		)
-		expect(plans[0]).toEqual(
-			expect.objectContaining({ slug: 'premium', name: 'Premium', monthlyPrice: 499 }),
-		)
-		await expect(createCheckout({}, { planSlug: 'premium', interval: 'monthly' })).rejects.toThrow(
-			'commerce_checkout_unconfigured',
-		)
-	})
-
-	test('openPortal lists dest Commerce invoices', async () => {
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		const fetchMock = mockFetch({ ok: true, body: { invoices: [] } })
-		const url = await openPortal({}, 'principal-a')
-		expect(fetchMock.mock.calls[0]?.[0]).toBe(
-			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.InvoicingService/ListInvoices',
-		)
-		expect(url).toBe('/settings/subscription')
-	})
-
 	test('getAppConfig lists dest Identity OIDC federations', async () => {
 		process.env.IDENTITY_API_KEY = 'identity_org_key_a'
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
 		const fetchMock = mockFetch({
 			ok: true,
-			body: { providers: [{ federation_id: 'google' }], prices: [] },
+			body: { providers: [{ federation_id: 'google' }] },
 		})
 		const config = await getAppConfig()
-		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual(
-			expect.arrayContaining([
-				'https://api.sylphx.com/v1/oidc/federations:list',
-				'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.InvoicingService/ListPrices',
-			]),
-		)
+		// Identity is the only config read; Puzzled sells no paid tier, so no
+		// price list is fetched from anywhere.
+		expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+			'https://api.sylphx.com/v1/oidc/federations:list',
+		])
 		expect(config.oauthProviders).toEqual(['google'])
 		expect(config.consentTypes).toContain('analytics')
 	})
@@ -204,63 +127,12 @@ describe('Identity dest HTTP', () => {
 		)
 	})
 
-	test('getSubscription evaluates Commerce dest entitlement', async () => {
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		const fetchMock = mockFetch({
-			ok: true,
-			body: { entitlement: { value: { enabled: true }, entitlement_code: 'premium' } },
-		})
-		const subscription = await getSubscription({}, 'principal-a')
-		expect(fetchMock.mock.calls[0]?.[0]).toBe(
-			'https://api.commerce.sylphx.com/v1/sylphx.commerce.v1.EntitlementService/EvaluateEntitlement',
-		)
-		expect(subscription).toEqual({ planSlug: 'premium', status: 'active' })
-	})
-
-	test('premium writer is EvaluateEntitlement enabled, not plan slug', async () => {
-		expect(
-			destEntitlementEnabled({
-				entitlement: { value: { enabled: true }, entitlement_code: 'custom' },
-			}),
-		).toBe(true)
-		expect(
-			destEntitlementEnabled({
-				entitlement: { value: { enabled: false }, entitlement_code: 'premium' },
-			}),
-		).toBe(false)
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		mockFetch({
-			ok: true,
-			body: { entitlement: { value: { enabled: true }, entitlement_code: 'custom' } },
-		})
-		expect(await isPremium('principal-a')).toBe(true)
-	})
-
-	test('chrome billing isPremium is EvaluateEntitlement enabled, not plan slug', async () => {
-		process.env.COMMERCE_API_KEY = 'commerce_key_a'
-		mockFetch({
-			ok: true,
-			body: { entitlement: { value: { enabled: true }, entitlement_code: 'custom' } },
-		})
-		const billing = await getBilling({}, 'principal-a')
-		expect(billing.isPremium).toBe(true)
-		expect(billing.subscription).toEqual({ planSlug: 'custom', status: 'active' })
-		mockFetch({
-			ok: true,
-			body: { entitlement: { value: { enabled: false }, entitlement_code: 'premium' } },
-		})
-		const free = await getBilling({}, 'principal-a')
-		expect(free.isPremium).toBe(false)
-		expect(free.subscription).toEqual({ planSlug: 'free', status: 'inactive' })
-	})
-
 	test('each dest product uses its own credential without sibling fallback', () => {
 		const sibling = {
 			IDENTITY_API_KEY: 'identity_org_key_a',
 			SYLPHX_PROJECT_ID: 'proj_x',
 			SYLPHX_SECRET_KEY: 'sk_prod_x',
 		}
-		expect(destCommerceCredential(sibling)).toBeUndefined()
 		expect(destEventsCredential(sibling)).toBeUndefined()
 		expect(destObservabilityCredential(sibling)).toBeUndefined()
 		expect(destIdentityProjectId(sibling)).toBeUndefined()
@@ -268,9 +140,9 @@ describe('Identity dest HTTP', () => {
 		expect(destSessionReplayChunksPath('session-a')).toBe('/v1/session-replays/session-a:chunks')
 	})
 
-	test('commerce dest does not fall back to IDENTITY_API_KEY', async () => {
-		process.env.IDENTITY_API_KEY = 'identity_org_key_a'
-		await expect(getPlans({})).rejects.toThrow('COMMERCE_API_KEY')
+	test('no dest peel names a commerce product', () => {
+		expect(Object.keys(DEST_PEELS)).not.toContain('commerce')
+		expect(Object.values(DEST_PEELS).some((origin) => origin.includes('commerce'))).toBe(false)
 	})
 })
 

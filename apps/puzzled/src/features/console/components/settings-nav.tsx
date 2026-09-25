@@ -1,16 +1,6 @@
 'use client'
 
-import {
-	Bell,
-	CreditCard,
-	Gift,
-	LayoutDashboard,
-	Palette,
-	Shield,
-	ShieldCheck,
-	User,
-	UserCircle,
-} from 'lucide-react'
+import { Bell, LayoutDashboard, Palette, Shield, ShieldCheck, User, UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
@@ -22,8 +12,6 @@ const SETTINGS_LINKS = [
 	{ href: '/settings/preferences', key: 'preferences', icon: Palette },
 	{ href: '/settings/notifications', key: 'notifications', icon: Bell },
 	{ href: '/settings/security', key: 'security', icon: ShieldCheck },
-	{ href: '/settings/subscription', key: 'subscription', icon: CreditCard },
-	{ href: '/settings/referrals', key: 'referrals', icon: Gift },
 	{ href: '/settings/privacy', key: 'privacy', icon: Shield },
 ] as const
 

@@ -8,8 +8,8 @@ import { resolveGameDayRequest } from '@/features/daily/lib/day-request'
 import { gameSupportsDifficulty, getAllGameMetadata, getGameSlugs } from '@/games/registry'
 import type { PuzzleDifficulty } from '@/games/types'
 import { PUZZLE_DIFFICULTY_VALUES } from '@/games/types'
-import { canAccessGame, getTodaysFreeGame } from '@/lib/billing/server'
-import { canonicalizeGameSlug, playerTitle, slugToCamelCase } from '@/lib/game-slug'
+import { getTodaysFreeGame } from '@/lib/free-rotation'
+import { canonicalizeGameSlug, slugToCamelCase } from '@/lib/game-slug'
 import { difficultyLabelKey } from '@/lib/i18n/difficulty'
 import { currentUser } from '@/lib/identity/server'
 import { buildPageMetadata, ogImagePath } from '@/lib/seo/metadata'
@@ -77,10 +77,8 @@ export async function generateMetadata({ params }: Props) {
  * today's ritual. The registry guard runs first, before any Suspense boundary,
  * so an unknown slug is a 404 with no rendered shell. Everything else is server-rendered for
  * every viewer — hero, rules, tips, FAQ and related modules — while the
- * interactive part streams behind a skeleton: guests can still play today's
- * free module, and a premium module still ends in the honest unlock path
- * instead of a dead end. Play, validation, scoring and entitlement logic are
- * untouched.
+ * interactive part streams behind a skeleton. Every module is open to every
+ * player, guests included.
  */
 export default async function GamePage({ params, searchParams }: Props) {
 	const { locale, slug } = await params
@@ -148,16 +146,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 		modules: getAllGameMetadata(),
 	})
 
-	// Check if user has access to this game
-	const hasAccess = await canAccessGame(user?.id ?? null, canonicalSlug)
 	const todaysFreeGame = canonicalizeGameSlug(getTodaysFreeGame())
-	const todaysFreeGameName = readMessage(
-		tGames,
-		`${slugToCamelCase(todaysFreeGame)}.name`,
-		playerTitle(todaysFreeGame),
-	)
-	// Access without the free rotation means entitlement, not luck.
-	const playsWithEntitlement = hasAccess && canonicalSlug !== todaysFreeGame
 
 	return (
 		<main className="flex-1">
@@ -172,9 +161,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 				theme={moduleMetadata.display.theme}
 				category={moduleMetadata.category}
 				freeToday={canonicalSlug === todaysFreeGame}
-				canPlay={hasAccess}
 				isGuest={!user}
-				isPremium={playsWithEntitlement}
 			/>
 
 			<div id="play" className="page-shell py-6 md:py-8">
@@ -186,12 +173,7 @@ export default async function GamePage({ params, searchParams }: Props) {
 						mode={mode}
 						difficulty={difficulty}
 						supportsDifficulty={supportsDifficulty}
-						hasAccess={hasAccess}
 						hasUser={Boolean(user)}
-						gameCount={getAllGameMetadata().length}
-						theme={moduleMetadata.display.theme}
-						freeGameSlug={todaysFreeGame}
-						freeGameName={todaysFreeGameName}
 						dateParam={puzzleDate}
 					/>
 				</Suspense>
@@ -204,7 +186,6 @@ export default async function GamePage({ params, searchParams }: Props) {
 				faq={faq}
 				relatedSlugs={relatedSlugs}
 				freeGameSlug={todaysFreeGame}
-				isPremium={playsWithEntitlement}
 			/>
 		</main>
 	)

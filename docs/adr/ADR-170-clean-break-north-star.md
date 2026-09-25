@@ -48,8 +48,8 @@ clean-break end state that replaces all of it.
   served puzzle (`puzzle_id`/`puzzle_date`, never a client seed), validates the
   final submission against the server's solution via the pure per-game dispatch
   (all 17 games), rejects already-played, and persists verified results.
-  Guests count toward daily puzzle completers on free-rotation finishes; premium/archive remain
-  auth + entitlement gated.
+  Guests count toward daily puzzle completers on qualifying finishes; archive
+  finishes never count.
 - Completion is server-derived; `has_completed` client input is deleted.
 
 ### 3. Services (Connect)
@@ -73,13 +73,16 @@ clean-break end state that replaces all of it.
 - `streak-at-risk` is not an app job: streak state is platform-owned and
   campaigns belong to platform engagement tooling.
 
-### 5. Premium gating (server-enforced)
+### 5. Play admission (server-enforced)
 
-- Archive reads and non-rotation games require an active premium subscription
-  (Platform `/billing/subscription`, app-secret auth, fail-closed to free).
-- The daily free-rotation game (**product day-key** day-of-year rotation in
-  `Asia/Hong_Kong`, same SSOT as daily puzzle completers) is playable by everyone, including guests.
-  Legacy UTC dual-oracles in residual billing tests are not product authority.
+- Superseded 2026-09-25: there is no premium gate. Puzzled sells no paid tier,
+  and the commerce service the gate read does not exist. Every module and
+  every past day is served to every player, guests included; a future
+  `puzzle_date` is refused (`future_puzzle_date`) so no one reads tomorrow's
+  solution early.
+- The featured rotation ("today's pick", **product day-key** day-of-year
+  rotation in `Asia/Hong_Kong`, same SSOT as daily puzzle completers) only
+  chooses what home and the catalog lead with.
 
 ### 5.1 Ritual completion / daily puzzle completers instrumentation (S0)
 

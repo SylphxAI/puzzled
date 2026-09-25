@@ -1,13 +1,9 @@
 /**
- * Summarize the modules a player can actually play today.
- *
- * Locked premium modules remain visible on the home page, but they must not
- * make the free daily ritual look unfinished. Completion values are already
- * derived from Connect; this helper only chooses the honest progress denominator.
+ * Summarize today's progress across every module. Completion values are
+ * already derived from Connect; this helper only counts them.
  */
 export type DailyProgressGame = {
 	completed: boolean
-	locked?: boolean
 }
 
 export type DailyProgress = {
@@ -17,9 +13,8 @@ export type DailyProgress = {
 }
 
 export function summarizeDailyProgress(games: readonly DailyProgressGame[]): DailyProgress {
-	const availableGames = games.filter((game) => !game.locked)
-	const completedCount = availableGames.filter((game) => game.completed).length
-	const availableCount = availableGames.length
+	const completedCount = games.filter((game) => game.completed).length
+	const availableCount = games.length
 
 	return {
 		completedCount,

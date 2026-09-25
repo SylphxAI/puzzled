@@ -2,29 +2,22 @@ import { describe, expect, test } from 'bun:test'
 import { summarizeDailyProgress } from './daily-progress'
 
 describe('daily progress', () => {
-	test('does not count locked premium modules against the free ritual', () => {
+	test('counts every module: all are playable', () => {
 		expect(
-			summarizeDailyProgress([
-				{ completed: true },
-				{ completed: false, locked: true },
-				{ completed: false, locked: true },
-			]),
-		).toEqual({ completedCount: 1, availableCount: 1, allCompleted: true })
-	})
-
-	test('counts every playable module for premium suite depth', () => {
-		expect(
-			summarizeDailyProgress([
-				{ completed: true },
-				{ completed: false },
-				{ completed: true },
-				{ completed: false, locked: true },
-			]),
+			summarizeDailyProgress([{ completed: true }, { completed: false }, { completed: true }]),
 		).toEqual({ completedCount: 2, availableCount: 3, allCompleted: false })
 	})
 
-	test('does not celebrate an empty playable set', () => {
-		expect(summarizeDailyProgress([{ completed: false, locked: true }])).toEqual({
+	test('celebrates a fully completed set', () => {
+		expect(summarizeDailyProgress([{ completed: true }, { completed: true }])).toEqual({
+			completedCount: 2,
+			availableCount: 2,
+			allCompleted: true,
+		})
+	})
+
+	test('does not celebrate an empty set', () => {
+		expect(summarizeDailyProgress([])).toEqual({
 			completedCount: 0,
 			availableCount: 0,
 			allCompleted: false,

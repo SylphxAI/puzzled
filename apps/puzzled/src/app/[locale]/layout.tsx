@@ -5,13 +5,11 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { WebVitalsReporter } from '@/features/analytics/components/web-vitals-reporter'
 import { ApiProvider } from '@/lib/api/provider'
-import { getServerBilling } from '@/lib/billing/server'
 import { env } from '@/lib/env'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
 import { EMPTY_APP_CONFIG } from '@/lib/identity/dest'
-import { currentUser } from '@/lib/identity/server'
 import { withPresentationDeadline } from '@/lib/presentation-document'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { DeferredMonitoring, DeferredToaster } from '@/shared/components/deferred-shell'
@@ -119,8 +117,8 @@ export const viewport: Viewport = {
 }
 
 /**
- * Dynamic rendering: the layout reads the request (origin headers, the
- * session for `currentUser`). The app config it also reads is cached for five
+ * Dynamic rendering: the layout reads the request (origin headers). The app
+ * config it also reads is cached for five
  * minutes in `getAppConfig`, so a render does not wait on identity.
  *
  * The proxy.ts handles i18n routing, so generateStaticParams is not needed.
@@ -187,7 +185,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 	// Enable static rendering
 	setRequestLocale(locale)
 
-	const [messages, config, user] = await Promise.all([
+	const [messages, config] = await Promise.all([
 		getMessages(),
 		withPresentationDeadline(
 			getAppConfig({
@@ -196,18 +194,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 			}),
 			EMPTY_APP_CONFIG,
 		),
-		withPresentationDeadline(currentUser(), null),
 	])
-
-	/*
-	 * One server-resolved entitlement for this request, threaded to the client
-	 * tree as data: the layout resolves the same snapshot the pages read
-	 * (React-cached, so one EvaluateEntitlement per request) and the browser
-	 * renderers (billing badge, plan cards, replay sampling) state its answer
-	 * instead of resolving a second copy. No account, an unread session or an
-	 * unanswered read all stay null and render fail-closed on the client.
-	 */
-	const billing = user?.id ? await withPresentationDeadline(getServerBilling(user.id), null) : null
 
 	return (
 		<html
@@ -290,7 +277,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 			</head>
 			<body className="antialiased">
 				<ThemeProvider>
-					<PlatformProvider appId={config.app.id} config={config} billing={billing}>
+					<PlatformProvider appId={config.app.id} config={config}>
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
 								{children}

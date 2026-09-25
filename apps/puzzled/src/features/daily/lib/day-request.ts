@@ -13,8 +13,8 @@
  * archive badge can never render over today's board.
  *
  * Admission and entitlement are not decided here: the page forwards the day to
- * Connect, where the kernel serves the dated puzzle, enforces premium on an
- * archive read, and derives completion for (identity, module, day_key).
+ * Connect, where the kernel serves the dated puzzle, refuses a future day, and
+ * derives completion for (identity, module, day_key).
  */
 
 import type { GameMode } from '@/lib/db/schema'

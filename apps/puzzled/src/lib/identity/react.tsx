@@ -11,14 +11,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import {
-	type AppConfig,
-	DEST_CONSENT_PURPOSES,
-	EMPTY_APP_CONFIG,
-	type IdentityUser,
-	type Plan,
-} from './dest'
-import type { CommercePremium } from './index'
+import { type AppConfig, DEST_CONSENT_PURPOSES, EMPTY_APP_CONFIG, type IdentityUser } from './dest'
 
 type AuthState = {
 	user: IdentityUser | null
@@ -41,9 +34,6 @@ const AuthContext = createContext<AuthState>({
 
 const AppConfigContext = createContext<AppConfig>(EMPTY_APP_CONFIG)
 
-/** Server-resolved entitlement for this request; never resolved in the browser. */
-const BillingContext = createContext<CommercePremium | null>(null)
-
 async function readJson(response: Response): Promise<Record<string, unknown>> {
 	return ((await response.json().catch(() => null)) as Record<string, unknown> | null) ?? {}
 }
@@ -51,19 +41,12 @@ async function readJson(response: Response): Promise<Record<string, unknown>> {
 export function SylphxProvider({
 	children,
 	config,
-	billing,
 }: {
 	children: ReactNode
 	appId?: string
 	config?: AppConfig
 	platformUrl?: string
 	afterSignOutUrl?: string
-	/**
-	 * The server-resolved entitlement snapshot (one EvaluateEntitlement per
-	 * request, threaded from the layout). Client surfaces read it as data and
-	 * never resolve a copy of their own.
-	 */
-	billing?: CommercePremium | null
 }) {
 	const [user, setUser] = useState<IdentityUser | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
@@ -127,9 +110,7 @@ export function SylphxProvider({
 	)
 	return (
 		<AppConfigContext.Provider value={config ?? EMPTY_APP_CONFIG}>
-			<BillingContext.Provider value={billing ?? null}>
-				<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-			</BillingContext.Provider>
+			<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 		</AppConfigContext.Provider>
 	)
 }
@@ -139,7 +120,6 @@ export function PlatformProvider(props: {
 	appId?: string
 	config?: AppConfig
 	platformUrl?: string
-	billing?: CommercePremium | null
 }) {
 	return <SylphxProvider {...props}>{props.children}</SylphxProvider>
 }
@@ -361,156 +341,6 @@ export function useResetPasswordForm(opts?: {
 	}
 }
 
-export type { Plan }
-
-/**
- * Billing state for the chrome.
- *
- * The entitlement is the server's answer - resolved once per request from
- * Commerce EvaluateEntitlement and threaded down as data - so this hook reads
- * it and never evaluates a second copy. There is nothing to load: the value is
- * present from the first paint, which is why `isLoading` is constant false.
- * The actions below are the only client-side billing calls; both hand off to
- * the billing authority through the API routes.
- */
-export function useBilling() {
-	const billing = useContext(BillingContext)
-	return {
-		subscription: billing?.subscription ?? null,
-		isPremium: billing?.isPremium ?? false,
-		isLoading: false,
-		openPortal: async () => {
-			const response = await fetch('/api/identity/billing/portal', {
-				method: 'POST',
-				credentials: 'same-origin',
-			})
-			const body = await readJson(response)
-			const url = typeof body.portalUrl === 'string' ? body.portalUrl : ''
-			if (!response.ok || !url) throw new Error('commerce_portal_failed')
-			window.location.assign(url)
-			return url
-		},
-		createCheckout: async (plan?: unknown, interval?: unknown) => {
-			const response = await fetch('/api/identity/billing/checkout', {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				credentials: 'same-origin',
-				body: JSON.stringify({ planSlug: plan, interval }),
-			})
-			const body = await readJson(response)
-			const url = typeof body.checkoutUrl === 'string' ? body.checkoutUrl : ''
-			if (!response.ok || !url) {
-				throw new Error(typeof body.error === 'string' ? body.error : 'checkout_failed')
-			}
-			return url
-		},
-	}
-}
-
-export function usePlans() {
-	return useContext(AppConfigContext).plans
-}
-export function useSafeBilling() {
-	return useBilling()
-}
-/**
- * Referral figures the commerce authority actually returns.
- *
- * `GetReferralStats` answers with an active code and a redemption count, so
- * those are the only two numbers this hook can report. The former
- * `completedReferrals` / `pendingReferrals` pair was a copy of the redemption
- * count with a hard-coded zero, which read as live data on the settings page;
- * they are gone rather than faked.
- */
-export type ReferralStats = {
-	/** Redemptions the commerce authority reported, or null when unread. */
-	redemptions: number | null
-}
-
-export function useReferral() {
-	const { user } = useSafeUser()
-	const [code, setCode] = useState<string | null>(null)
-	// null means "the read did not report a count" — never rendered as a zero.
-	const [stats, setStats] = useState<ReferralStats>({ redemptions: null })
-	const [isLoading, setIsLoading] = useState(true)
-	const [error, setError] = useState<{ message?: string } | null>(null)
-
-	const applyStats = useCallback((body: Record<string, unknown>) => {
-		const record =
-			body.stats && typeof body.stats === 'object' ? (body.stats as Record<string, unknown>) : body
-		const nextCode =
-			(typeof record.active_code === 'string' && record.active_code.trim()) ||
-			(typeof record.code === 'string' && record.code.trim()) ||
-			null
-		const redemptions = typeof record.redemption_count === 'number' ? record.redemption_count : null
-		setCode(nextCode)
-		setStats({ redemptions })
-	}, [])
-
-	useEffect(() => {
-		if (!user) {
-			setIsLoading(false)
-			return
-		}
-		let cancelled = false
-		fetch('/api/commerce/referrals', { credentials: 'same-origin' })
-			.then(async (response) => {
-				const body = await readJson(response)
-				if (cancelled) return
-				if (!response.ok) {
-					setError({
-						message: typeof body.error === 'string' ? body.error : 'commerce_referrals_failed',
-					})
-					setIsLoading(false)
-					return
-				}
-				applyStats(body)
-				setError(null)
-				setIsLoading(false)
-			})
-			.catch((caught) => {
-				if (cancelled) return
-				setError({
-					message: caught instanceof Error ? caught.message : 'commerce_referrals_failed',
-				})
-				setIsLoading(false)
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [applyStats, user])
-
-	const link = code ? `/signup?ref=${encodeURIComponent(code)}` : ''
-	const copy = async (value: string) => {
-		if (!value) return
-		await navigator.clipboard.writeText(value)
-	}
-	return {
-		code,
-		stats,
-		link,
-		isLoading,
-		error,
-		copyCode: async () => copy(code ?? ''),
-		copyLink: async () => copy(link),
-		regenerateCode: async () => {
-			const response = await fetch('/api/commerce/referrals', {
-				method: 'POST',
-				credentials: 'same-origin',
-			})
-			const body = await readJson(response)
-			if (!response.ok) {
-				setError({
-					message: typeof body.error === 'string' ? body.error : 'commerce_referrals_failed',
-				})
-				return
-			}
-			const next = typeof body.code === 'string' ? body.code.trim() : ''
-			if (next) setCode(next)
-			setError(null)
-		},
-	}
-}
 export function useAnalytics() {
 	return {
 		track: async (event?: string, props?: Record<string, unknown>) => {
@@ -863,17 +693,6 @@ export function SecuritySettings() {
 export function UserProfile(_props: Record<string, unknown>) {
 	return <AccountSection />
 }
-export function BillingSection() {
-	const { subscription, isPremium, isLoading } = useBilling()
-	if (isLoading) return <p>Loading billing…</p>
-	return (
-		<div>
-			<p>{isPremium ? 'Premium' : 'Free Plan'}</p>
-			{subscription?.planSlug ? <p>Plan {subscription.planSlug}</p> : null}
-		</div>
-	)
-}
-
 function OAuthIcon({ className }: { className?: string }) {
 	return <span className={className} aria-hidden />
 }

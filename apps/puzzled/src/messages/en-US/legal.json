@@ -68,9 +68,9 @@
 	"terms": {
 		"title": "Terms of Service",
 		"lastUpdated": "Last Updated",
-		"revision": "2024-12-15",
+		"revision": "2026-09-25",
 		"eyebrow": "Legal",
-		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts, subscriptions, and conduct.",
+		"lead": "These terms set out the rules that apply when you use Puzzled, including accounts and conduct.",
 		"toc": {
 			"title": "On this page"
 		},
@@ -95,15 +95,6 @@
 					"accurate": "Provide accurate and complete information",
 					"secure": "Keep your login credentials secure",
 					"responsible": "Be responsible for all activity under your account"
-				}
-			},
-			"subscription": {
-				"title": "Subscriptions & Payments",
-				"content": "Premium subscriptions are billed according to your chosen plan:",
-				"items": {
-					"billing": "Subscriptions are billed monthly or annually",
-					"cancel": "You may cancel at any time; access continues until the end of the billing period",
-					"refund": "Refunds are provided at our discretion within 7 days of purchase"
 				}
 			},
 			"conduct": {

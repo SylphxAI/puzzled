@@ -10,10 +10,6 @@
 				]
 			},
 			{
-				"value": "2024-12-15",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "Account",
 				"keys": [
 					"settings.account.title",
@@ -38,8 +34,7 @@
 				"keys": [
 					"admin.announcements.active",
 					"admin.plans.active",
-					"settings.notifications.overview.enabled",
-					"settings.subscription.active"
+					"settings.notifications.overview.enabled"
 				]
 			},
 			{
@@ -67,24 +62,12 @@
 				"keys": ["catalog.metaTitle", "catalog.title", "footer.allGames"]
 			},
 			{
-				"value": "All games unlimited",
-				"keys": [
-					"settings.subscription.features.allGames",
-					"subscription.features.allGames",
-					"trial.allGamesUnlimited"
-				]
-			},
-			{
 				"value": "Analytics",
 				"keys": [
 					"admin.analytics.title",
 					"admin.sidebar.analytics",
 					"settings.privacy.analytics.title"
 				]
-			},
-			{
-				"value": "Annual",
-				"keys": ["admin.plans.annual", "subscription.annual"]
 			},
 			{
 				"value": "Apple",
@@ -146,10 +129,6 @@
 				"keys": ["common.notFound.browseCta", "home.day.browseAll"]
 			},
 			{
-				"value": "Can I get a refund?",
-				"keys": ["pricing.faq.refund.question", "support.faq.refunds.question"]
-			},
-			{
 				"value": "Cancel",
 				"keys": [
 					"admin.announcements.cancel",
@@ -208,20 +187,11 @@
 			},
 			{
 				"value": "Copied!",
-				"keys": [
-					"referrals.copied",
-					"settings.recoveryCodes.copied",
-					"settings.referral.copied",
-					"settings.security.copied"
-				]
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
 			{
 				"value": "Copy All",
 				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
-			},
-			{
-				"value": "Copy Link",
-				"keys": ["referrals.copy", "settings.playerCard.copyLink", "settings.referral.copyLink"]
 			},
 			{
 				"value": "Create Announcement",
@@ -230,10 +200,6 @@
 			{
 				"value": "Current Password",
 				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
-			},
-			{
-				"value": "Current Plan",
-				"keys": ["settings.subscription.currentPlan", "subscription.currentPlan"]
 			},
 			{
 				"value": "Current Streak",
@@ -270,10 +236,6 @@
 			{
 				"value": "Dead Letter Queue",
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
-			},
-			{
-				"value": "Deeper stats and history",
-				"keys": ["catalog.premiumPanel.item3", "subscription.benefits.stats"]
 			},
 			{
 				"value": "Delete",
@@ -365,8 +327,7 @@
 					"admin.dlq.stats.failed",
 					"admin.dlq.status.failed",
 					"gameResult.lost",
-					"settings.security.loginHistory.failed",
-					"settings.subscription.status.failed"
+					"settings.security.loginHistory.failed"
 				]
 			},
 			{
@@ -390,21 +351,8 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
-				"value": "Free",
-				"keys": [
-					"daily.freeToday",
-					"pricing.compare.freeColumn",
-					"settings.subscription.free",
-					"subscription.free"
-				]
-			},
-			{
 				"value": "Free puzzle every day",
 				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
-			},
-			{
-				"value": "Free today",
-				"keys": ["catalog.freeToday", "home.day.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "Games",
@@ -448,10 +396,6 @@
 				]
 			},
 			{
-				"value": "How do I cancel Premium?",
-				"keys": ["pricing.faq.cancel.question", "support.faq.cancel.question"]
-			},
-			{
 				"value": "IP Address",
 				"keys": ["admin.auditLogs.details.ipAddress", "admin.auditLogs.table.ip"]
 			},
@@ -464,36 +408,12 @@
 				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
 			},
 			{
-				"value": "Included",
-				"keys": [
-					"pricing.compare.rowFreezePremium",
-					"settings.subscription.features.included",
-					"subscription.included"
-				]
-			},
-			{
-				"value": "Invite Friends",
-				"keys": ["referrals.inviteFriends", "settings.referral.title"]
-			},
-			{
-				"value": "Join me on Puzzled!",
-				"keys": ["referrals.shareTitle", "settings.referral.emailSubject"]
-			},
-			{
-				"value": "Joined",
-				"keys": ["admin.users.tableHeaders.joined", "settings.referral.stats.converted"]
-			},
-			{
 				"value": "Last Updated",
 				"keys": ["legal.privacy.lastUpdated", "legal.terms.lastUpdated"]
 			},
 			{
 				"value": "Leaderboard",
 				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
-			},
-			{
-				"value": "Leaderboard access",
-				"keys": ["settings.subscription.features.leaderboards", "subscription.features.leaderboard"]
 			},
 			{
 				"value": "Legal",
@@ -517,10 +437,6 @@
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
 				]
-			},
-			{
-				"value": "Manage subscription",
-				"keys": ["subscription.manage", "support.resources.subscription.title"]
 			},
 			{
 				"value": "Manage your active sessions across devices",
@@ -565,16 +481,8 @@
 				"keys": ["admin.auditLogs.pagination.next", "common.next", "pagination.next"]
 			},
 			{
-				"value": "No account needed",
-				"keys": ["home.hero.trustAccount", "pricing.hero.factNoAccount"]
-			},
-			{
 				"value": "Not connected",
 				"keys": ["settings.account.notConnected", "settings.connectedAccounts.notConnected"]
-			},
-			{
-				"value": "Not included",
-				"keys": ["pricing.compare.rowFreezeFree", "settings.subscription.features.notIncluded"]
 			},
 			{
 				"value": "Not loaded",
@@ -643,11 +551,7 @@
 			},
 			{
 				"value": "Pending",
-				"keys": [
-					"admin.dlq.stats.pending",
-					"admin.dlq.status.pending",
-					"settings.subscription.status.pending"
-				]
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
 			},
 			{
 				"value": "Plans & Pricing",
@@ -664,23 +568,12 @@
 				]
 			},
 			{
-				"value": "Play Now",
-				"keys": ["streak.playNow", "winBack.day7.cta"]
-			},
-			{
 				"value": "Play past puzzles",
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
 				"value": "Play {game}",
-				"keys": [
-					"catalog.closing.play",
-					"catalog.featuredPlay",
-					"home.final.play",
-					"pricing.cta.play",
-					"pricing.hero.freeCta",
-					"pricing.plans.playFree"
-				]
+				"keys": ["catalog.closing.play", "catalog.featuredPlay", "home.final.play"]
 			},
 			{
 				"value": "Played",
@@ -701,22 +594,6 @@
 				]
 			},
 			{
-				"value": "Premium",
-				"keys": [
-					"admin.users.premium",
-					"catalog.premium",
-					"catalog.premiumPanel.eyebrow",
-					"home.lineup.premium",
-					"pricing.compare.premiumColumn",
-					"settings.overview.badges.premium",
-					"settings.playerCard.premium",
-					"settings.subscription.premium",
-					"stats.identity.premium",
-					"subscription.premium",
-					"subscription.premiumPlan"
-				]
-			},
-			{
 				"value": "Premium Only",
 				"keys": [
 					"admin.announcements.premiumOnly",
@@ -731,10 +608,6 @@
 			{
 				"value": "Previous",
 				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
-			},
-			{
-				"value": "Pricing",
-				"keys": ["admin.plans.pricing", "nav.pricing", "pricing.hero.eyebrow"]
 			},
 			{
 				"value": "Privacy",
@@ -789,10 +662,6 @@
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
 			},
 			{
-				"value": "Puzzle archive",
-				"keys": ["archive.metaTitle", "pricing.compare.rowArchive"]
-			},
-			{
 				"value": "Puzzled player",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -818,10 +687,6 @@
 				"keys": ["settings.preferences.appearance.reduceMotion", "settings.reduceMotion"]
 			},
 			{
-				"value": "Referrals",
-				"keys": ["referrals.title", "settings.nav.referrals"]
-			},
-			{
 				"value": "Refresh",
 				"keys": [
 					"admin.auditLogs.filters.refresh",
@@ -838,10 +703,6 @@
 			{
 				"value": "Remove Admin",
 				"keys": ["admin.users.removeAdmin", "admin.users.removeAdminBulk"]
-			},
-			{
-				"value": "Renews on {date}",
-				"keys": ["settings.subscription.expiresOn", "settings.subscription.renewsOn"]
 			},
 			{
 				"value": "Reset your password",
@@ -968,7 +829,6 @@
 				"value": "Share",
 				"keys": [
 					"common.share",
-					"referrals.share",
 					"settings.playerCard.share",
 					"settings.playerCard.shareProfile",
 					"share.share"
@@ -983,10 +843,6 @@
 				"keys": ["auth.signUp", "common.signUp"]
 			},
 			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "catalog.gamePage.lockedSignIn"]
-			},
-			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
 			},
@@ -995,16 +851,8 @@
 				"keys": ["admin.plans.planSlug", "admin.plans.slug"]
 			},
 			{
-				"value": "Something went wrong",
-				"keys": ["common.error", "pricing.checkoutFailed"]
-			},
-			{
 				"value": "Start Playing",
 				"keys": ["settings.overview.startPlaying", "stats.startPlaying"]
-			},
-			{
-				"value": "Statistics",
-				"keys": ["pricing.compare.rowStats", "stats.title"]
 			},
 			{
 				"value": "Status",
@@ -1025,27 +873,6 @@
 			{
 				"value": "Streak Alerts",
 				"keys": ["settings.notifications.push.streakAlert", "settings.pushStreakAlert"]
-			},
-			{
-				"value": "Streak Freeze",
-				"keys": ["premium.streakFreezeTitle", "settings.streakFreeze.title"]
-			},
-			{
-				"value": "Streak freeze protection",
-				"keys": ["onboarding.streakFreeze", "settings.subscription.features.streakFreeze"]
-			},
-			{
-				"value": "Subscribe",
-				"keys": ["pricing.subscribeCta", "subscription.subscribe"]
-			},
-			{
-				"value": "Subscription",
-				"keys": [
-					"settings.nav.subscription",
-					"settings.overview.sections.subscription",
-					"settings.search.sections.subscription",
-					"settings.subscription.title"
-				]
 			},
 			{
 				"value": "Support",
@@ -1092,12 +919,8 @@
 				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
 			},
 			{
-				"value": "Today's free puzzle",
-				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
-			},
-			{
-				"value": "Today's free puzzle, every day",
-				"keys": ["pricing.plans.freeFeatureDaily", "subscription.benefits.freeModule"]
+				"value": "Today's pick",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "Total Users",
@@ -1108,7 +931,6 @@
 				"keys": [
 					"auth.errorRetry",
 					"common.retry",
-					"referrals.retry",
 					"settings.sessions.retry",
 					"stats.dailyStatusRetry",
 					"stats.retry"
@@ -1123,28 +945,6 @@
 				"keys": [
 					"settings.security.loginHistory.unknownLocation",
 					"settings.sessions.unknownLocation"
-				]
-			},
-			{
-				"value": "Unlock with Premium",
-				"keys": [
-					"catalog.unlock",
-					"daily.unlockPremium",
-					"daily.unlockWithPremium",
-					"premium.unlockWithPremium"
-				]
-			},
-			{
-				"value": "Upgrade",
-				"keys": ["daily.upgrade", "modes.upgrade", "subscription.upgrade"]
-			},
-			{
-				"value": "Upgrade to Premium",
-				"keys": [
-					"onboarding.upgradeToPremium",
-					"settings.subscription.upgrade",
-					"settings.subscription.upgradeTitle",
-					"settings.subscription.upgradeToPremium"
 				]
 			},
 			{
@@ -1248,10 +1048,6 @@
 					"settings.notifications.overview.emailActive",
 					"settings.notifications.overview.pushActive"
 				]
-			},
-			{
-				"value": "{days} days left in trial",
-				"keys": ["settings.subscription.trialDaysLeft", "trial.daysLeft"]
 			},
 			{
 				"value": "{days}-day streak",
@@ -1267,10 +1063,6 @@
 				]
 			},
 			{
-				"value": "2024-12-15",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
-			},
-			{
 				"value": "Account",
 				"keys": [
 					"settings.account.title",
@@ -1295,8 +1087,7 @@
 				"keys": [
 					"admin.announcements.active",
 					"admin.plans.active",
-					"settings.notifications.overview.enabled",
-					"settings.subscription.active"
+					"settings.notifications.overview.enabled"
 				]
 			},
 			{
@@ -1324,24 +1115,12 @@
 				"keys": ["catalog.metaTitle", "catalog.title", "footer.allGames"]
 			},
 			{
-				"value": "All games unlimited",
-				"keys": [
-					"settings.subscription.features.allGames",
-					"subscription.features.allGames",
-					"trial.allGamesUnlimited"
-				]
-			},
-			{
 				"value": "Analytics",
 				"keys": [
 					"admin.analytics.title",
 					"admin.sidebar.analytics",
 					"settings.privacy.analytics.title"
 				]
-			},
-			{
-				"value": "Annual",
-				"keys": ["admin.plans.annual", "subscription.annual"]
 			},
 			{
 				"value": "Apple",
@@ -1403,10 +1182,6 @@
 				"keys": ["common.notFound.browseCta", "home.day.browseAll"]
 			},
 			{
-				"value": "Can I get a refund?",
-				"keys": ["pricing.faq.refund.question", "support.faq.refunds.question"]
-			},
-			{
 				"value": "Cancel",
 				"keys": [
 					"admin.announcements.cancel",
@@ -1465,20 +1240,11 @@
 			},
 			{
 				"value": "Copied!",
-				"keys": [
-					"referrals.copied",
-					"settings.recoveryCodes.copied",
-					"settings.referral.copied",
-					"settings.security.copied"
-				]
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
 			{
 				"value": "Copy All",
 				"keys": ["settings.recoveryCodes.copy", "settings.security.copyAll"]
-			},
-			{
-				"value": "Copy Link",
-				"keys": ["referrals.copy", "settings.playerCard.copyLink", "settings.referral.copyLink"]
 			},
 			{
 				"value": "Create Announcement",
@@ -1487,10 +1253,6 @@
 			{
 				"value": "Current Password",
 				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
-			},
-			{
-				"value": "Current Plan",
-				"keys": ["settings.subscription.currentPlan", "subscription.currentPlan"]
 			},
 			{
 				"value": "Current Streak",
@@ -1527,10 +1289,6 @@
 			{
 				"value": "Dead Letter Queue",
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
-			},
-			{
-				"value": "Deeper stats and history",
-				"keys": ["catalog.premiumPanel.item3", "subscription.benefits.stats"]
 			},
 			{
 				"value": "Delete",
@@ -1622,8 +1380,7 @@
 					"admin.dlq.stats.failed",
 					"admin.dlq.status.failed",
 					"gameResult.lost",
-					"settings.security.loginHistory.failed",
-					"settings.subscription.status.failed"
+					"settings.security.loginHistory.failed"
 				]
 			},
 			{
@@ -1647,21 +1404,8 @@
 				"keys": ["auth.forgotPassword", "auth.forgotPasswordTitle"]
 			},
 			{
-				"value": "Free",
-				"keys": [
-					"daily.freeToday",
-					"pricing.compare.freeColumn",
-					"settings.subscription.free",
-					"subscription.free"
-				]
-			},
-			{
 				"value": "Free puzzle every day",
 				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
-			},
-			{
-				"value": "Free today",
-				"keys": ["catalog.freeToday", "home.day.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "Games",
@@ -1705,10 +1449,6 @@
 				]
 			},
 			{
-				"value": "How do I cancel Premium?",
-				"keys": ["pricing.faq.cancel.question", "support.faq.cancel.question"]
-			},
-			{
 				"value": "IP Address",
 				"keys": ["admin.auditLogs.details.ipAddress", "admin.auditLogs.table.ip"]
 			},
@@ -1721,36 +1461,12 @@
 				"keys": ["admin.announcements.inactive", "admin.plans.inactive"]
 			},
 			{
-				"value": "Included",
-				"keys": [
-					"pricing.compare.rowFreezePremium",
-					"settings.subscription.features.included",
-					"subscription.included"
-				]
-			},
-			{
-				"value": "Invite Friends",
-				"keys": ["referrals.inviteFriends", "settings.referral.title"]
-			},
-			{
-				"value": "Join me on Puzzled!",
-				"keys": ["referrals.shareTitle", "settings.referral.emailSubject"]
-			},
-			{
-				"value": "Joined",
-				"keys": ["admin.users.tableHeaders.joined", "settings.referral.stats.converted"]
-			},
-			{
 				"value": "Last Updated",
 				"keys": ["legal.privacy.lastUpdated", "legal.terms.lastUpdated"]
 			},
 			{
 				"value": "Leaderboard",
 				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
-			},
-			{
-				"value": "Leaderboard access",
-				"keys": ["settings.subscription.features.leaderboards", "subscription.features.leaderboard"]
 			},
 			{
 				"value": "Legal",
@@ -1774,10 +1490,6 @@
 					"settings.privacy.profileVisibility.publicProfileDescription",
 					"settings.profile.publicProfileDescription"
 				]
-			},
-			{
-				"value": "Manage subscription",
-				"keys": ["subscription.manage", "support.resources.subscription.title"]
 			},
 			{
 				"value": "Manage your active sessions across devices",
@@ -1822,16 +1534,8 @@
 				"keys": ["admin.auditLogs.pagination.next", "common.next", "pagination.next"]
 			},
 			{
-				"value": "No account needed",
-				"keys": ["home.hero.trustAccount", "pricing.hero.factNoAccount"]
-			},
-			{
 				"value": "Not connected",
 				"keys": ["settings.account.notConnected", "settings.connectedAccounts.notConnected"]
-			},
-			{
-				"value": "Not included",
-				"keys": ["pricing.compare.rowFreezeFree", "settings.subscription.features.notIncluded"]
 			},
 			{
 				"value": "Not loaded",
@@ -1900,11 +1604,7 @@
 			},
 			{
 				"value": "Pending",
-				"keys": [
-					"admin.dlq.stats.pending",
-					"admin.dlq.status.pending",
-					"settings.subscription.status.pending"
-				]
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
 			},
 			{
 				"value": "Plans & Pricing",
@@ -1921,23 +1621,12 @@
 				]
 			},
 			{
-				"value": "Play Now",
-				"keys": ["streak.playNow", "winBack.day7.cta"]
-			},
-			{
 				"value": "Play past puzzles",
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
 				"value": "Play {game}",
-				"keys": [
-					"catalog.closing.play",
-					"catalog.featuredPlay",
-					"home.final.play",
-					"pricing.cta.play",
-					"pricing.hero.freeCta",
-					"pricing.plans.playFree"
-				]
+				"keys": ["catalog.closing.play", "catalog.featuredPlay", "home.final.play"]
 			},
 			{
 				"value": "Played",
@@ -1958,22 +1647,6 @@
 				]
 			},
 			{
-				"value": "Premium",
-				"keys": [
-					"admin.users.premium",
-					"catalog.premium",
-					"catalog.premiumPanel.eyebrow",
-					"home.lineup.premium",
-					"pricing.compare.premiumColumn",
-					"settings.overview.badges.premium",
-					"settings.playerCard.premium",
-					"settings.subscription.premium",
-					"stats.identity.premium",
-					"subscription.premium",
-					"subscription.premiumPlan"
-				]
-			},
-			{
 				"value": "Premium Only",
 				"keys": [
 					"admin.announcements.premiumOnly",
@@ -1988,10 +1661,6 @@
 			{
 				"value": "Previous",
 				"keys": ["admin.auditLogs.pagination.previous", "pagination.previous"]
-			},
-			{
-				"value": "Pricing",
-				"keys": ["admin.plans.pricing", "nav.pricing", "pricing.hero.eyebrow"]
 			},
 			{
 				"value": "Privacy",
@@ -2046,10 +1715,6 @@
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
 			},
 			{
-				"value": "Puzzle archive",
-				"keys": ["archive.metaTitle", "pricing.compare.rowArchive"]
-			},
-			{
 				"value": "Puzzled player",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -2075,10 +1740,6 @@
 				"keys": ["settings.preferences.appearance.reduceMotion", "settings.reduceMotion"]
 			},
 			{
-				"value": "Referrals",
-				"keys": ["referrals.title", "settings.nav.referrals"]
-			},
-			{
 				"value": "Refresh",
 				"keys": [
 					"admin.auditLogs.filters.refresh",
@@ -2095,10 +1756,6 @@
 			{
 				"value": "Remove Admin",
 				"keys": ["admin.users.removeAdmin", "admin.users.removeAdminBulk"]
-			},
-			{
-				"value": "Renews on {date}",
-				"keys": ["settings.subscription.expiresOn", "settings.subscription.renewsOn"]
 			},
 			{
 				"value": "Reset your password",
@@ -2225,7 +1882,6 @@
 				"value": "Share",
 				"keys": [
 					"common.share",
-					"referrals.share",
 					"settings.playerCard.share",
 					"settings.playerCard.shareProfile",
 					"share.share"
@@ -2240,10 +1896,6 @@
 				"keys": ["auth.signUp", "common.signUp"]
 			},
 			{
-				"value": "Sign in",
-				"keys": ["archive.signInCta", "catalog.gamePage.lockedSignIn"]
-			},
-			{
 				"value": "Sign out",
 				"keys": ["settings.account.signOutTitle", "settings.sessions.signOut"]
 			},
@@ -2252,16 +1904,8 @@
 				"keys": ["admin.plans.planSlug", "admin.plans.slug"]
 			},
 			{
-				"value": "Something went wrong",
-				"keys": ["common.error", "pricing.checkoutFailed"]
-			},
-			{
 				"value": "Start Playing",
 				"keys": ["settings.overview.startPlaying", "stats.startPlaying"]
-			},
-			{
-				"value": "Statistics",
-				"keys": ["pricing.compare.rowStats", "stats.title"]
 			},
 			{
 				"value": "Status",
@@ -2282,27 +1926,6 @@
 			{
 				"value": "Streak Alerts",
 				"keys": ["settings.notifications.push.streakAlert", "settings.pushStreakAlert"]
-			},
-			{
-				"value": "Streak Freeze",
-				"keys": ["premium.streakFreezeTitle", "settings.streakFreeze.title"]
-			},
-			{
-				"value": "Streak freeze protection",
-				"keys": ["onboarding.streakFreeze", "settings.subscription.features.streakFreeze"]
-			},
-			{
-				"value": "Subscribe",
-				"keys": ["pricing.subscribeCta", "subscription.subscribe"]
-			},
-			{
-				"value": "Subscription",
-				"keys": [
-					"settings.nav.subscription",
-					"settings.overview.sections.subscription",
-					"settings.search.sections.subscription",
-					"settings.subscription.title"
-				]
 			},
 			{
 				"value": "Support",
@@ -2349,12 +1972,8 @@
 				"keys": ["stats.streakCard.notPlayedToday", "stats.streakHintOpen"]
 			},
 			{
-				"value": "Today's free puzzle",
-				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
-			},
-			{
-				"value": "Today's free puzzle, every day",
-				"keys": ["pricing.plans.freeFeatureDaily", "subscription.benefits.freeModule"]
+				"value": "Today's pick",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "Total Users",
@@ -2365,7 +1984,6 @@
 				"keys": [
 					"auth.errorRetry",
 					"common.retry",
-					"referrals.retry",
 					"settings.sessions.retry",
 					"stats.dailyStatusRetry",
 					"stats.retry"
@@ -2380,28 +1998,6 @@
 				"keys": [
 					"settings.security.loginHistory.unknownLocation",
 					"settings.sessions.unknownLocation"
-				]
-			},
-			{
-				"value": "Unlock with Premium",
-				"keys": [
-					"catalog.unlock",
-					"daily.unlockPremium",
-					"daily.unlockWithPremium",
-					"premium.unlockWithPremium"
-				]
-			},
-			{
-				"value": "Upgrade",
-				"keys": ["daily.upgrade", "modes.upgrade", "subscription.upgrade"]
-			},
-			{
-				"value": "Upgrade to Premium",
-				"keys": [
-					"onboarding.upgradeToPremium",
-					"settings.subscription.upgrade",
-					"settings.subscription.upgradeTitle",
-					"settings.subscription.upgradeToPremium"
 				]
 			},
 			{
@@ -2507,10 +2103,6 @@
 				]
 			},
 			{
-				"value": "{days} days left in trial",
-				"keys": ["settings.subscription.trialDaysLeft", "trial.daysLeft"]
-			},
-			{
 				"value": "{days}-day streak",
 				"keys": ["home.hero.streakChip", "share.card.streakDays", "stats.identity.streakChip"]
 			}
@@ -2522,10 +2114,6 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
-			},
-			{
-				"value": "2024-12-15",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小時內回覆",
@@ -2598,10 +2186,6 @@
 				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
 			},
 			{
-				"value": "Free",
-				"keys": ["daily.freeToday", "pricing.compare.freeColumn"]
-			},
-			{
 				"value": "Games Played",
 				"keys": ["admin.analytics.gamesChart", "admin.dashboard.gamesPlayed"]
 			},
@@ -2631,17 +2215,6 @@
 			{
 				"value": "Password",
 				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
-				"value": "Premium",
-				"keys": [
-					"admin.users.premium",
-					"home.lineup.premium",
-					"pricing.compare.premiumColumn",
-					"stats.identity.premium",
-					"subscription.premium",
-					"subscription.premiumPlan"
-				]
 			},
 			{
 				"value": "Premium Only",
@@ -2704,10 +2277,6 @@
 				]
 			},
 			{
-				"value": "{date} 續期",
-				"keys": ["settings.subscription.expiresOn", "settings.subscription.renewsOn"]
-			},
-			{
 				"value": "一般",
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
@@ -2732,16 +2301,8 @@
 				"keys": ["leaderboard.period.today", "stats.calendar.todayLabel", "stats.today.title"]
 			},
 			{
-				"value": "今日免費",
-				"keys": ["catalog.freeToday", "home.day.freeToday", "home.lineup.freeToday"]
-			},
-			{
-				"value": "今日免費遊戲",
-				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
-			},
-			{
-				"value": "今日已有 {count} 位玩家完成謎題",
-				"keys": ["auth.brandPanel.proofPlayers", "pricing.hero.playersToday"]
+				"value": "今日精選",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "你可能也會需要的頁面",
@@ -2750,10 +2311,6 @@
 			{
 				"value": "你的名稱",
 				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
-			},
-			{
-				"value": "使用中",
-				"keys": ["settings.notifications.overview.enabled", "settings.subscription.active"]
 			},
 			{
 				"value": "使用更緊密的排版與更小的間距",
@@ -2813,10 +2370,6 @@
 				]
 			},
 			{
-				"value": "免費",
-				"keys": ["admin.users.free", "settings.subscription.free", "subscription.free"]
-			},
-			{
 				"value": "全部",
 				"keys": ["catalog.filterAll", "leaderboard.period.all"]
 			},
@@ -2843,7 +2396,6 @@
 				"value": "分享",
 				"keys": [
 					"common.share",
-					"referrals.share",
 					"settings.playerCard.share",
 					"settings.playerCard.shareProfile",
 					"share.share"
@@ -2900,18 +2452,6 @@
 				]
 			},
 			{
-				"value": "升級",
-				"keys": ["daily.upgrade", "modes.upgrade", "subscription.upgrade"]
-			},
-			{
-				"value": "升級至高級版",
-				"keys": [
-					"settings.subscription.upgrade",
-					"settings.subscription.upgradeTitle",
-					"settings.subscription.upgradeToPremium"
-				]
-			},
-			{
 				"value": "取消",
 				"keys": [
 					"common.cancel",
@@ -2920,10 +2460,6 @@
 					"settings.security.cancel",
 					"settings.sessions.cancel"
 				]
-			},
-			{
-				"value": "可以退款嗎？",
-				"keys": ["pricing.faq.refund.question", "support.faq.refunds.question"]
 			},
 			{
 				"value": "啟用雙重驗證",
@@ -2943,15 +2479,7 @@
 			},
 			{
 				"value": "失敗",
-				"keys": [
-					"gameResult.lost",
-					"settings.security.loginHistory.failed",
-					"settings.subscription.status.failed"
-				]
-			},
-			{
-				"value": "如何取消 Premium？",
-				"keys": ["pricing.faq.cancel.question", "support.faq.cancel.question"]
+				"keys": ["gameResult.lost", "settings.security.loginHistory.failed"]
 			},
 			{
 				"value": "安全",
@@ -3010,12 +2538,7 @@
 			},
 			{
 				"value": "已複製！",
-				"keys": [
-					"referrals.copied",
-					"settings.recoveryCodes.copied",
-					"settings.referral.copied",
-					"settings.security.copied"
-				]
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
 			{
 				"value": "已解決",
@@ -3068,11 +2591,7 @@
 			},
 			{
 				"value": "待處理",
-				"keys": [
-					"admin.dlq.stats.pending",
-					"admin.dlq.status.pending",
-					"settings.subscription.status.pending"
-				]
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
 			},
 			{
 				"value": "從未使用",
@@ -3088,11 +2607,7 @@
 			},
 			{
 				"value": "成功",
-				"keys": [
-					"gameResult.won",
-					"settings.security.loginHistory.success",
-					"settings.subscription.status.succeeded"
-				]
+				"keys": ["gameResult.won", "settings.security.loginHistory.success"]
 			},
 			{
 				"value": "成就",
@@ -3103,10 +2618,6 @@
 				]
 			},
 			{
-				"value": "我們想念您！",
-				"keys": ["winBack.day7.subject", "winBack.day7.title"]
-			},
-			{
 				"value": "我們收集的資料",
 				"keys": [
 					"legal.privacy.sections.dataCollection.title",
@@ -3115,24 +2626,11 @@
 			},
 			{
 				"value": "所有遊戲",
-				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
+				"keys": ["catalog.metaTitle", "catalog.title"]
 			},
 			{
 				"value": "排行榜",
-				"keys": [
-					"leaderboard.title",
-					"nav.leaderboard",
-					"stats.viewLeaderboard",
-					"subscription.features.leaderboard"
-				]
-			},
-			{
-				"value": "推播通知",
-				"keys": ["settings.pushNotifications", "subscription.features.push"]
-			},
-			{
-				"value": "推薦",
-				"keys": ["settings.nav.referrals", "settings.notifications.recommended"]
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
 			},
 			{
 				"value": "推送",
@@ -3166,20 +2664,12 @@
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
 			{
-				"value": "方案",
-				"keys": ["admin.users.tableHeaders.plan", "pricing.plans.title"]
-			},
-			{
 				"value": "方案與定價",
-				"keys": [
-					"admin.plans.title",
-					"admin.sidebar.plansAndPricing",
-					"support.resources.pricing.title"
-				]
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
 			},
 			{
 				"value": "日期",
-				"keys": ["settings.subscription.date", "stats.calendar.tableDay", "stats.history.day"]
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
 			},
 			{
 				"value": "時間",
@@ -3196,10 +2686,6 @@
 			{
 				"value": "更新失敗",
 				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
-			},
-			{
-				"value": "更深入的統計與紀錄",
-				"keys": ["catalog.premiumPanel.item3", "subscription.benefits.stats"]
 			},
 			{
 				"value": "最佳",
@@ -3297,16 +2783,8 @@
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
 			{
-				"value": "每日一個免費遊戲",
-				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
-			},
-			{
 				"value": "每日提醒",
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
-			},
-			{
-				"value": "比較方案",
-				"keys": ["catalog.closing.pricing", "pricing.hero.plansCta"]
 			},
 			{
 				"value": "沒有安全警示",
@@ -3341,15 +2819,6 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
-				"value": "玩 {game}",
-				"keys": [
-					"home.final.play",
-					"pricing.cta.play",
-					"pricing.hero.freeCta",
-					"pricing.plans.playFree"
-				]
-			},
-			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -3368,7 +2837,6 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"catalog.gamePage.lockedSignIn",
 					"common.signIn"
 				]
 			},
@@ -3382,16 +2850,8 @@
 				]
 			},
 			{
-				"value": "發生錯誤",
-				"keys": ["common.error", "pricing.checkoutFailed"]
-			},
-			{
 				"value": "目前密碼",
 				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
-			},
-			{
-				"value": "目前方案",
-				"keys": ["settings.subscription.currentPlan", "subscription.currentPlan"]
 			},
 			{
 				"value": "目前連勝",
@@ -3427,20 +2887,8 @@
 				"keys": ["admin.auditLogs.title", "admin.sidebar.auditLogs"]
 			},
 			{
-				"value": "立即遊戲",
-				"keys": ["streak.playNow", "winBack.day7.cta"]
-			},
-			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
-			},
-			{
-				"value": "管理訂閱",
-				"keys": [
-					"settings.subscription.manageSubscription",
-					"subscription.manage",
-					"support.resources.subscription.title"
-				]
 			},
 			{
 				"value": "精簡模式",
@@ -3471,22 +2919,6 @@
 				]
 			},
 			{
-				"value": "複製連結",
-				"keys": ["referrals.copy", "settings.playerCard.copyLink", "settings.referral.copyLink"]
-			},
-			{
-				"value": "訂閱",
-				"keys": [
-					"nav.pricing",
-					"pricing.subscribeCta",
-					"settings.nav.subscription",
-					"settings.overview.sections.subscription",
-					"settings.search.sections.subscription",
-					"settings.subscription.title",
-					"subscription.subscribe"
-				]
-			},
-			{
 				"value": "設定",
 				"keys": [
 					"admin.sidebar.settings",
@@ -3510,10 +2942,6 @@
 			{
 				"value": "請輸入有效的電子郵件地址",
 				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
-			},
-			{
-				"value": "謎題歷史",
-				"keys": ["premium.archiveTitle", "pricing.compare.rowArchive"]
 			},
 			{
 				"value": "讓你的個人檔案顯示於 puzzled.gg/u/{username}",
@@ -3555,18 +2983,6 @@
 				]
 			},
 			{
-				"value": "連勝凍結",
-				"keys": [
-					"premium.streakFreezeTitle",
-					"pricing.compare.rowFreeze",
-					"settings.streakFreeze.title"
-				]
-			},
-			{
-				"value": "連勝凍結保護",
-				"keys": ["onboarding.streakFreeze", "settings.subscription.features.streakFreeze"]
-			},
-			{
 				"value": "連勝警示",
 				"keys": [
 					"settings.notifications.push.streakAlert",
@@ -3598,10 +3014,6 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "邀請好友",
-				"keys": ["referrals.inviteFriends", "settings.referral.title"]
-			},
-			{
 				"value": "重新產生代碼",
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
@@ -3620,7 +3032,6 @@
 					"admin.dlq.actions.retry",
 					"auth.errorRetry",
 					"common.retry",
-					"referrals.retry",
 					"stats.dailyStatusRetry",
 					"stats.retry"
 				]
@@ -3720,16 +3131,6 @@
 			{
 				"value": "驗證失敗",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
-			},
-			{
-				"value": "高級版",
-				"keys": [
-					"catalog.premium",
-					"catalog.premiumPanel.eyebrow",
-					"settings.overview.badges.premium",
-					"settings.playerCard.premium",
-					"settings.subscription.premium"
-				]
 			}
 		],
 		"zh-TW": [
@@ -3739,10 +3140,6 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
-			},
-			{
-				"value": "2024-12-15",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小時內回覆",
@@ -3815,10 +3212,6 @@
 				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
 			},
 			{
-				"value": "Free",
-				"keys": ["daily.freeToday", "pricing.compare.freeColumn"]
-			},
-			{
 				"value": "Games Played",
 				"keys": ["admin.analytics.gamesChart", "admin.dashboard.gamesPlayed"]
 			},
@@ -3848,17 +3241,6 @@
 			{
 				"value": "Password",
 				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
-				"value": "Premium",
-				"keys": [
-					"admin.users.premium",
-					"home.lineup.premium",
-					"pricing.compare.premiumColumn",
-					"stats.identity.premium",
-					"subscription.premium",
-					"subscription.premiumPlan"
-				]
 			},
 			{
 				"value": "Premium Only",
@@ -3921,10 +3303,6 @@
 				]
 			},
 			{
-				"value": "{date} 續訂",
-				"keys": ["settings.subscription.expiresOn", "settings.subscription.renewsOn"]
-			},
-			{
 				"value": "一般",
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
@@ -3949,12 +3327,8 @@
 				"keys": ["stats.calendar.todayLabel", "stats.today.title"]
 			},
 			{
-				"value": "今天免費",
-				"keys": ["home.day.freeToday", "home.lineup.freeToday"]
-			},
-			{
-				"value": "今日免費遊戲",
-				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
+				"value": "今日精選",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "你可能也會需要的頁面",
@@ -3963,10 +3337,6 @@
 			{
 				"value": "你的名稱",
 				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
-			},
-			{
-				"value": "使用中",
-				"keys": ["settings.notifications.overview.enabled", "settings.subscription.active"]
 			},
 			{
 				"value": "使用更緊密的排版與更小的間距",
@@ -4026,14 +3396,6 @@
 				]
 			},
 			{
-				"value": "免費",
-				"keys": ["admin.users.free", "settings.subscription.free", "subscription.free"]
-			},
-			{
-				"value": "免費方案",
-				"keys": ["settings.subscription.freePlan", "subscription.freePlan"]
-			},
-			{
 				"value": "全部",
 				"keys": ["catalog.filterAll", "leaderboard.period.all"]
 			},
@@ -4064,7 +3426,6 @@
 				"value": "分享",
 				"keys": [
 					"common.share",
-					"referrals.share",
 					"settings.playerCard.share",
 					"settings.playerCard.shareProfile",
 					"share.share"
@@ -4125,18 +3486,6 @@
 				]
 			},
 			{
-				"value": "升級",
-				"keys": ["daily.upgrade", "modes.upgrade", "subscription.upgrade"]
-			},
-			{
-				"value": "升級至高級版",
-				"keys": [
-					"settings.subscription.upgrade",
-					"settings.subscription.upgradeTitle",
-					"settings.subscription.upgradeToPremium"
-				]
-			},
-			{
 				"value": "取消",
 				"keys": [
 					"common.cancel",
@@ -4145,10 +3494,6 @@
 					"settings.security.cancel",
 					"settings.sessions.cancel"
 				]
-			},
-			{
-				"value": "可以退款嗎？",
-				"keys": ["pricing.faq.refund.question", "support.faq.refunds.question"]
 			},
 			{
 				"value": "啟用雙重驗證",
@@ -4168,15 +3513,7 @@
 			},
 			{
 				"value": "失敗",
-				"keys": [
-					"gameResult.lost",
-					"settings.security.loginHistory.failed",
-					"settings.subscription.status.failed"
-				]
-			},
-			{
-				"value": "如何取消 Premium？",
-				"keys": ["pricing.faq.cancel.question", "support.faq.cancel.question"]
+				"keys": ["gameResult.lost", "settings.security.loginHistory.failed"]
 			},
 			{
 				"value": "安全",
@@ -4218,10 +3555,6 @@
 				]
 			},
 			{
-				"value": "已包含",
-				"keys": ["settings.subscription.features.included", "subscription.included"]
-			},
-			{
 				"value": "已失敗",
 				"keys": ["admin.dlq.stats.failed", "admin.dlq.status.failed"]
 			},
@@ -4239,12 +3572,7 @@
 			},
 			{
 				"value": "已複製！",
-				"keys": [
-					"referrals.copied",
-					"settings.recoveryCodes.copied",
-					"settings.referral.copied",
-					"settings.security.copied"
-				]
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
 			{
 				"value": "已解決",
@@ -4297,11 +3625,7 @@
 			},
 			{
 				"value": "待處理",
-				"keys": [
-					"admin.dlq.stats.pending",
-					"admin.dlq.status.pending",
-					"settings.subscription.status.pending"
-				]
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
 			},
 			{
 				"value": "從未使用",
@@ -4313,11 +3637,7 @@
 			},
 			{
 				"value": "成功",
-				"keys": [
-					"gameResult.won",
-					"settings.security.loginHistory.success",
-					"settings.subscription.status.succeeded"
-				]
+				"keys": ["gameResult.won", "settings.security.loginHistory.success"]
 			},
 			{
 				"value": "成就",
@@ -4328,10 +3648,6 @@
 				]
 			},
 			{
-				"value": "我們想念您！",
-				"keys": ["winBack.day7.subject", "winBack.day7.title"]
-			},
-			{
 				"value": "我們收集的資料",
 				"keys": [
 					"legal.privacy.sections.dataCollection.title",
@@ -4340,7 +3656,7 @@
 			},
 			{
 				"value": "所有遊戲",
-				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
+				"keys": ["catalog.metaTitle", "catalog.title"]
 			},
 			{
 				"value": "按自己的節奏解題",
@@ -4348,12 +3664,7 @@
 			},
 			{
 				"value": "排行榜",
-				"keys": [
-					"leaderboard.title",
-					"nav.leaderboard",
-					"stats.viewLeaderboard",
-					"subscription.features.leaderboard"
-				]
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
 			},
 			{
 				"value": "推播",
@@ -4364,15 +3675,7 @@
 			},
 			{
 				"value": "推播通知",
-				"keys": [
-					"settings.notifications.push.heading",
-					"settings.pushNotifications",
-					"subscription.features.push"
-				]
-			},
-			{
-				"value": "推薦",
-				"keys": ["settings.nav.referrals", "settings.notifications.recommended"]
+				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
 			},
 			{
 				"value": "提高安全",
@@ -4399,20 +3702,12 @@
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
 			{
-				"value": "方案",
-				"keys": ["admin.users.tableHeaders.plan", "pricing.plans.title"]
-			},
-			{
 				"value": "方案與定價",
-				"keys": [
-					"admin.plans.title",
-					"admin.sidebar.plansAndPricing",
-					"support.resources.pricing.title"
-				]
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
 			},
 			{
 				"value": "日期",
-				"keys": ["settings.subscription.date", "stats.calendar.tableDay", "stats.history.day"]
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
 			},
 			{
 				"value": "時間",
@@ -4429,10 +3724,6 @@
 			{
 				"value": "更新失敗",
 				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
-			},
-			{
-				"value": "更深入的統計與紀錄",
-				"keys": ["catalog.premiumPanel.item3", "subscription.benefits.stats"]
 			},
 			{
 				"value": "最佳",
@@ -4518,20 +3809,12 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
-				"value": "每天一個免費遊戲",
-				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
-			},
-			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
 			{
 				"value": "每日提醒",
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
-			},
-			{
-				"value": "比較方案",
-				"keys": ["catalog.closing.pricing", "pricing.hero.plansCta"]
 			},
 			{
 				"value": "沒有安全警示",
@@ -4566,15 +3849,6 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
-				"value": "玩 {game}",
-				"keys": [
-					"home.final.play",
-					"pricing.cta.play",
-					"pricing.hero.freeCta",
-					"pricing.plans.playFree"
-				]
-			},
-			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -4593,7 +3867,6 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"catalog.gamePage.lockedSignIn",
 					"common.signIn"
 				]
 			},
@@ -4607,16 +3880,8 @@
 				]
 			},
 			{
-				"value": "發生錯誤",
-				"keys": ["common.error", "pricing.checkoutFailed"]
-			},
-			{
 				"value": "目前密碼",
 				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
-			},
-			{
-				"value": "目前方案",
-				"keys": ["settings.subscription.currentPlan", "subscription.currentPlan"]
 			},
 			{
 				"value": "目前連勝",
@@ -4639,20 +3904,8 @@
 				"keys": ["admin.auditLogs.title", "admin.sidebar.auditLogs"]
 			},
 			{
-				"value": "立即遊戲",
-				"keys": ["streak.playNow", "winBack.day7.cta"]
-			},
-			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
-			},
-			{
-				"value": "管理訂閱",
-				"keys": [
-					"settings.subscription.manageSubscription",
-					"subscription.manage",
-					"support.resources.subscription.title"
-				]
 			},
 			{
 				"value": "精簡模式",
@@ -4683,22 +3936,6 @@
 				]
 			},
 			{
-				"value": "複製連結",
-				"keys": ["referrals.copy", "settings.playerCard.copyLink", "settings.referral.copyLink"]
-			},
-			{
-				"value": "訂閱",
-				"keys": [
-					"nav.pricing",
-					"pricing.subscribeCta",
-					"settings.nav.subscription",
-					"settings.overview.sections.subscription",
-					"settings.search.sections.subscription",
-					"settings.subscription.title",
-					"subscription.subscribe"
-				]
-			},
-			{
 				"value": "設定",
 				"keys": [
 					"admin.sidebar.settings",
@@ -4722,10 +3959,6 @@
 			{
 				"value": "請輸入有效的電子郵件地址",
 				"keys": ["auth.emailInvalid", "settings.email.invalidEmail"]
-			},
-			{
-				"value": "謎題歷史",
-				"keys": ["premium.archiveTitle", "pricing.compare.rowArchive"]
 			},
 			{
 				"value": "讓你的個人檔案顯示於 puzzled.gg/u/{username}",
@@ -4767,18 +4000,6 @@
 				]
 			},
 			{
-				"value": "連勝凍結",
-				"keys": [
-					"premium.streakFreezeTitle",
-					"pricing.compare.rowFreeze",
-					"settings.streakFreeze.title"
-				]
-			},
-			{
-				"value": "連勝凍結保護",
-				"keys": ["onboarding.streakFreeze", "settings.subscription.features.streakFreeze"]
-			},
-			{
 				"value": "連勝警示",
 				"keys": [
 					"settings.notifications.push.streakAlert",
@@ -4810,10 +4031,6 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "邀請好友",
-				"keys": ["referrals.inviteFriends", "settings.referral.title"]
-			},
-			{
 				"value": "重新產生代碼",
 				"keys": ["settings.recoveryCodes.confirmRegenerate", "settings.recoveryCodes.regenerate"]
 			},
@@ -4832,7 +4049,6 @@
 					"admin.dlq.actions.retry",
 					"auth.errorRetry",
 					"common.retry",
-					"referrals.retry",
 					"stats.dailyStatusRetry",
 					"stats.retry"
 				]
@@ -4945,16 +4161,6 @@
 			{
 				"value": "驗證失敗",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
-			},
-			{
-				"value": "高級版",
-				"keys": [
-					"catalog.premium",
-					"catalog.premiumPanel.eyebrow",
-					"settings.overview.badges.premium",
-					"settings.playerCard.premium",
-					"settings.subscription.premium"
-				]
 			}
 		],
 		"zh-CN": [
@@ -4964,10 +4170,6 @@
 					"settings.overview.moreAchievements",
 					"settings.playerCard.achievementsSection.more"
 				]
-			},
-			{
-				"value": "2024-12-15",
-				"keys": ["legal.privacy.revision", "legal.terms.revision"]
 			},
 			{
 				"value": "24-48 小时内回复",
@@ -5044,10 +4246,6 @@
 				"keys": ["admin.featureFlags.title", "admin.sidebar.featureFlags"]
 			},
 			{
-				"value": "Free",
-				"keys": ["daily.freeToday", "pricing.compare.freeColumn"]
-			},
-			{
 				"value": "Games Played",
 				"keys": ["admin.analytics.gamesChart", "admin.dashboard.gamesPlayed"]
 			},
@@ -5077,17 +4275,6 @@
 			{
 				"value": "Password",
 				"keys": ["reauth.password", "reauth.usePassword"]
-			},
-			{
-				"value": "Premium",
-				"keys": [
-					"admin.users.premium",
-					"home.lineup.premium",
-					"pricing.compare.premiumColumn",
-					"stats.identity.premium",
-					"subscription.premium",
-					"subscription.premiumPlan"
-				]
 			},
 			{
 				"value": "Premium Only",
@@ -5150,10 +4337,6 @@
 				]
 			},
 			{
-				"value": "{date} 续订",
-				"keys": ["settings.subscription.expiresOn", "settings.subscription.renewsOn"]
-			},
-			{
 				"value": "一般",
 				"keys": ["auth.passwordStrength.fair", "settings.overview.protectionLevels.fair"]
 			},
@@ -5187,12 +4370,8 @@
 				"keys": ["stats.calendar.todayLabel", "stats.today.title"]
 			},
 			{
-				"value": "今天免费",
-				"keys": ["home.day.freeToday", "home.lineup.freeToday"]
-			},
-			{
-				"value": "今日免费游戏",
-				"keys": ["auth.brandPanel.proofLabel", "pricing.hero.todayTitle"]
+				"value": "今日精选",
+				"keys": ["catalog.freeToday", "home.lineup.freeToday"]
 			},
 			{
 				"value": "从未使用",
@@ -5213,10 +4392,6 @@
 			{
 				"value": "你的名称",
 				"keys": ["auth.namePlaceholder", "settings.profile.displayNamePlaceholder"]
-			},
-			{
-				"value": "使用中",
-				"keys": ["settings.notifications.overview.enabled", "settings.subscription.active"]
 			},
 			{
 				"value": "使用更紧凑的排版和更小的间距",
@@ -5249,14 +4424,6 @@
 					"settings.preferences.title",
 					"settings.search.sections.preferences"
 				]
-			},
-			{
-				"value": "免费",
-				"keys": ["admin.users.free", "settings.subscription.free", "subscription.free"]
-			},
-			{
-				"value": "免费方案",
-				"keys": ["settings.subscription.freePlan", "subscription.freePlan"]
 			},
 			{
 				"value": "全部",
@@ -5297,7 +4464,6 @@
 				"value": "分享",
 				"keys": [
 					"common.share",
-					"referrals.share",
 					"settings.playerCard.share",
 					"settings.playerCard.shareProfile",
 					"share.share"
@@ -5345,18 +4511,6 @@
 				"keys": ["auth.unsubscribe.goToSettings", "settings.email.goToSettings"]
 			},
 			{
-				"value": "升级",
-				"keys": ["daily.upgrade", "modes.upgrade", "subscription.upgrade"]
-			},
-			{
-				"value": "升级到高级版",
-				"keys": [
-					"settings.subscription.upgrade",
-					"settings.subscription.upgradeTitle",
-					"settings.subscription.upgradeToPremium"
-				]
-			},
-			{
 				"value": "历史",
 				"keys": ["modes.archive", "stats.historyTitle"]
 			},
@@ -5390,16 +4544,8 @@
 				"keys": ["settings.account.disconnect", "settings.connectedAccounts.disconnect"]
 			},
 			{
-				"value": "可以退款吗？",
-				"keys": ["pricing.faq.refund.question", "support.faq.refunds.question"]
-			},
-			{
 				"value": "启用双重验证",
 				"keys": ["settings.security.enableMfa", "settings.securityScore.checks.enableTwoFactor"]
-			},
-			{
-				"value": "复制链接",
-				"keys": ["referrals.copy", "settings.playerCard.copyLink", "settings.referral.copyLink"]
 			},
 			{
 				"value": "天",
@@ -5411,15 +4557,7 @@
 			},
 			{
 				"value": "失败",
-				"keys": [
-					"gameResult.lost",
-					"settings.security.loginHistory.failed",
-					"settings.subscription.status.failed"
-				]
-			},
-			{
-				"value": "如何取消 Premium？",
-				"keys": ["pricing.faq.cancel.question", "support.faq.cancel.question"]
+				"keys": ["gameResult.lost", "settings.security.loginHistory.failed"]
 			},
 			{
 				"value": "存档",
@@ -5492,17 +4630,8 @@
 				]
 			},
 			{
-				"value": "已包含",
-				"keys": ["settings.subscription.features.included", "subscription.included"]
-			},
-			{
 				"value": "已复制！",
-				"keys": [
-					"referrals.copied",
-					"settings.recoveryCodes.copied",
-					"settings.referral.copied",
-					"settings.security.copied"
-				]
+				"keys": ["settings.recoveryCodes.copied", "settings.security.copied"]
 			},
 			{
 				"value": "已失败",
@@ -5559,10 +4688,6 @@
 				"keys": ["settings.account.password.currentPassword", "settings.email.confirmPassword"]
 			},
 			{
-				"value": "当前方案",
-				"keys": ["settings.subscription.currentPlan", "subscription.currentPlan"]
-			},
-			{
 				"value": "当前连胜",
 				"keys": [
 					"settings.overview.stats.currentStreak",
@@ -5572,11 +4697,7 @@
 			},
 			{
 				"value": "待处理",
-				"keys": [
-					"admin.dlq.stats.pending",
-					"admin.dlq.status.pending",
-					"settings.subscription.status.pending"
-				]
+				"keys": ["admin.dlq.stats.pending", "admin.dlq.status.pending"]
 			},
 			{
 				"value": "快捷操作",
@@ -5592,11 +4713,7 @@
 			},
 			{
 				"value": "成功",
-				"keys": [
-					"gameResult.won",
-					"settings.security.loginHistory.success",
-					"settings.subscription.status.succeeded"
-				]
+				"keys": ["gameResult.won", "settings.security.loginHistory.success"]
 			},
 			{
 				"value": "成就",
@@ -5607,10 +4724,6 @@
 				]
 			},
 			{
-				"value": "我们想念您！",
-				"keys": ["winBack.day7.subject", "winBack.day7.title"]
-			},
-			{
 				"value": "我们收集的数据",
 				"keys": [
 					"legal.privacy.sections.dataCollection.title",
@@ -5619,7 +4732,7 @@
 			},
 			{
 				"value": "所有游戏",
-				"keys": ["catalog.metaTitle", "catalog.title", "pricing.compare.rowStatsPremium"]
+				"keys": ["catalog.metaTitle", "catalog.title"]
 			},
 			{
 				"value": "打开账户中心",
@@ -5631,20 +4744,11 @@
 			},
 			{
 				"value": "排行榜",
-				"keys": [
-					"leaderboard.title",
-					"nav.leaderboard",
-					"stats.viewLeaderboard",
-					"subscription.features.leaderboard"
-				]
+				"keys": ["leaderboard.title", "nav.leaderboard", "stats.viewLeaderboard"]
 			},
 			{
 				"value": "推荐",
-				"keys": [
-					"admin.experiments.recommendation",
-					"settings.nav.referrals",
-					"settings.notifications.recommended"
-				]
+				"keys": ["admin.experiments.recommendation", "settings.notifications.recommended"]
 			},
 			{
 				"value": "推送",
@@ -5655,11 +4759,7 @@
 			},
 			{
 				"value": "推送通知",
-				"keys": [
-					"settings.notifications.push.heading",
-					"settings.pushNotifications",
-					"subscription.features.push"
-				]
+				"keys": ["settings.notifications.push.heading", "settings.pushNotifications"]
 			},
 			{
 				"value": "提高安全",
@@ -5686,20 +4786,12 @@
 				"keys": ["auth.newPassword", "settings.account.password.newPassword"]
 			},
 			{
-				"value": "方案",
-				"keys": ["admin.users.tableHeaders.plan", "pricing.plans.title"]
-			},
-			{
 				"value": "方案与定价",
-				"keys": [
-					"admin.plans.title",
-					"admin.sidebar.plansAndPricing",
-					"support.resources.pricing.title"
-				]
+				"keys": ["admin.plans.title", "admin.sidebar.plansAndPricing"]
 			},
 			{
 				"value": "日期",
-				"keys": ["settings.subscription.date", "stats.calendar.tableDay", "stats.history.day"]
+				"keys": ["stats.calendar.tableDay", "stats.history.day"]
 			},
 			{
 				"value": "时间",
@@ -5716,10 +4808,6 @@
 			{
 				"value": "更新失败",
 				"keys": ["settings.achievements.saveFailed", "settings.profile.updateFailed"]
-			},
-			{
-				"value": "更深入的统计与记录",
-				"keys": ["catalog.premiumPanel.item3", "subscription.benefits.stats"]
 			},
 			{
 				"value": "最佳",
@@ -5809,20 +4897,12 @@
 				"keys": ["admin.dlq.title", "admin.sidebar.dlq"]
 			},
 			{
-				"value": "每天一个免费游戏",
-				"keys": ["pricing.compare.rowSuiteFree", "pricing.hero.factFree"]
-			},
-			{
 				"value": "每日",
 				"keys": ["modes.daily", "settings.notifications.quickActions.daily"]
 			},
 			{
 				"value": "每日提醒",
 				"keys": ["settings.overview.quickNotifications.daily", "settings.pushDailyReminder"]
-			},
-			{
-				"value": "比较方案",
-				"keys": ["catalog.closing.pricing", "pricing.hero.plansCta"]
 			},
 			{
 				"value": "没有安全警报",
@@ -5876,15 +4956,6 @@
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
 			},
 			{
-				"value": "玩 {game}",
-				"keys": [
-					"home.final.play",
-					"pricing.cta.play",
-					"pricing.hero.freeCta",
-					"pricing.plans.playFree"
-				]
-			},
-			{
 				"value": "玩家卡",
 				"keys": ["settings.playerCard.eyebrow", "settings.playerCard.title"]
 			},
@@ -5907,7 +4978,6 @@
 					"admin.auditLogs.actions.login",
 					"archive.signInCta",
 					"auth.signIn",
-					"catalog.gamePage.lockedSignIn",
 					"common.signIn"
 				]
 			},
@@ -5916,28 +4986,12 @@
 				"keys": ["common.confirm", "settings.security.confirm"]
 			},
 			{
-				"value": "立即游戏",
-				"keys": ["streak.playNow", "winBack.day7.cta"]
-			},
-			{
 				"value": "管理操作",
 				"keys": ["admin.auditLogs.actions.admin_action", "admin.auditLogs.stats.adminActions"]
 			},
 			{
-				"value": "管理订阅",
-				"keys": [
-					"settings.subscription.manageSubscription",
-					"subscription.manage",
-					"support.resources.subscription.title"
-				]
-			},
-			{
 				"value": "紧凑模式",
 				"keys": ["settings.compactMode", "settings.preferences.appearance.compactMode"]
-			},
-			{
-				"value": "统计数据",
-				"keys": ["pricing.compare.rowStats", "stats.title"]
 			},
 			{
 				"value": "编辑",
@@ -5973,18 +5027,6 @@
 				]
 			},
 			{
-				"value": "订阅",
-				"keys": [
-					"nav.pricing",
-					"pricing.subscribeCta",
-					"settings.nav.subscription",
-					"settings.overview.sections.subscription",
-					"settings.search.sections.subscription",
-					"settings.subscription.title",
-					"subscription.subscribe"
-				]
-			},
-			{
 				"value": "让你的个人资料显示在 puzzled.gg/u/{username}",
 				"keys": [
 					"settings.privacy.profileVisibility.publicProfileDescription",
@@ -6007,14 +5049,6 @@
 					"settings.security.goToAccountSettings",
 					"settings.securityScore.checks.setPassword"
 				]
-			},
-			{
-				"value": "试用期还剩 {days} 天",
-				"keys": ["settings.subscription.trialDaysRemaining", "trial.daysLeft"]
-			},
-			{
-				"value": "谜题历史",
-				"keys": ["premium.archiveTitle", "pricing.compare.rowArchive"]
 			},
 			{
 				"value": "账户",
@@ -6058,18 +5092,6 @@
 				]
 			},
 			{
-				"value": "连胜冻结",
-				"keys": [
-					"premium.streakFreezeTitle",
-					"pricing.compare.rowFreeze",
-					"settings.streakFreeze.title"
-				]
-			},
-			{
-				"value": "连胜冻结保护",
-				"keys": ["onboarding.streakFreeze", "settings.subscription.features.streakFreeze"]
-			},
-			{
 				"value": "连胜警报",
 				"keys": [
 					"settings.notifications.push.streakAlert",
@@ -6090,10 +5112,6 @@
 					"settings.overview.sections.notifications",
 					"settings.preferences.notifications.title"
 				]
-			},
-			{
-				"value": "邀请好友",
-				"keys": ["referrals.inviteFriends", "settings.referral.title"]
 			},
 			{
 				"value": "邮箱",
@@ -6129,7 +5147,6 @@
 					"admin.dlq.actions.retry",
 					"auth.errorRetry",
 					"common.retry",
-					"referrals.retry",
 					"settings.sessions.retry",
 					"stats.dailyStatusRetry",
 					"stats.retry"
@@ -6188,16 +5205,6 @@
 			{
 				"value": "验证失败",
 				"keys": ["auth.verificationFailed", "settings.security.verificationFailed"]
-			},
-			{
-				"value": "高级版",
-				"keys": [
-					"catalog.premium",
-					"catalog.premiumPanel.eyebrow",
-					"settings.overview.badges.premium",
-					"settings.playerCard.premium",
-					"settings.subscription.premium"
-				]
 			}
 		]
 	}

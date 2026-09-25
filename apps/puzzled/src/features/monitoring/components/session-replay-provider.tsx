@@ -16,7 +16,7 @@ import { useEffect, useRef } from 'react'
 import { hasAnalyticsConsent, onConsentChange } from '@/features/analytics'
 import { WEEK_MS } from '@/lib/constants/time'
 import { env } from '@/lib/env'
-import { useSafeBilling, useSafeUser, useSessionReplay } from '@/lib/identity/react'
+import { useSafeUser, useSessionReplay } from '@/lib/identity/react'
 import { logger } from '@/lib/logger'
 import { getAdjustedSampleRate, getSessionReplayConfig } from '../lib'
 
@@ -47,7 +47,6 @@ export function SessionReplayProvider({ children }: SessionReplayProviderProps) 
  */
 function SessionReplayInner({ children }: { children: React.ReactNode }) {
 	const { user } = useSafeUser()
-	const { isPremium } = useSafeBilling()
 
 	// Track whether we've started recording
 	const hasStartedRef = useRef(false)
@@ -59,10 +58,7 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 		: false
 
 	// Calculate sample rate based on user segment
-	const adjustedRate = getAdjustedSampleRate({
-		isPremium,
-		isNewUser,
-	})
+	const adjustedRate = getAdjustedSampleRate({ isNewUser })
 
 	// Get config with potential sample rate override
 	const config = getSessionReplayConfig()
@@ -101,17 +97,6 @@ function SessionReplayInner({ children }: { children: React.ReactNode }) {
 
 		return unsubscribe
 	}, [isRecording, stop])
-
-	// Mark session with user context when user changes
-	useEffect(() => {
-		if (user?.id && isRecording) {
-			// User context is automatically linked via userId prop
-			// Add custom marker for premium status changes
-			if (isPremium) {
-				markConversion('premium_user')
-			}
-		}
-	}, [user?.id, isPremium, isRecording, markConversion])
 
 	// Expose replay functions globally for error boundary integration
 	useEffect(() => {

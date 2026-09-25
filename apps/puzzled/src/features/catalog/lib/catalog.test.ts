@@ -37,11 +37,10 @@ const CANONICAL_TITLES: Record<string, string> = {
 	'pip-place': 'Spots',
 }
 
-function build(isPremium: boolean, freeGameSlug = 'sudoku'): CatalogEntry[] {
+function build(freeGameSlug = 'sudoku'): CatalogEntry[] {
 	return buildCatalogEntries({
 		modules: getAllGameMetadata(),
 		freeGameSlug,
-		isPremium,
 	})
 }
 
@@ -53,7 +52,7 @@ function entryFor(entries: readonly CatalogEntry[], slug: string): CatalogEntry 
 
 describe('buildCatalogEntries', () => {
 	test('lists every registered module exactly once', () => {
-		const entries = build(false)
+		const entries = build()
 		const registryOrder = getAllGameMetadata().map((game) => game.slug)
 
 		expect(entries.map((entry) => entry.slug)).toEqual(registryOrder)
@@ -62,7 +61,7 @@ describe('buildCatalogEntries', () => {
 	})
 
 	test('maps every registry slug to its canonical player title', () => {
-		const entries = build(false)
+		const entries = build()
 
 		expect(Object.keys(CANONICAL_TITLES).sort()).toEqual([...getGameSlugs()].sort())
 		for (const entry of entries) {
@@ -71,7 +70,7 @@ describe('buildCatalogEntries', () => {
 	})
 
 	test('derives i18n keys from the canonical slug, not alias config keys', () => {
-		const entries = build(false)
+		const entries = build()
 
 		// Multi-word slugs are the interesting case; literal expectations keep
 		// the camelCase transform independently pinned from the shared helper.
@@ -95,7 +94,7 @@ describe('buildCatalogEntries', () => {
 	})
 
 	test('carries each module colour theme, highlight key and category from the registry', () => {
-		const entries = build(false)
+		const entries = build()
 
 		for (const moduleMetadata of getAllGameMetadata()) {
 			const entry = entryFor(entries, moduleMetadata.slug)
@@ -105,41 +104,21 @@ describe('buildCatalogEntries', () => {
 		}
 	})
 
-	test("marks only the product day's free module as free for a free viewer", () => {
-		const entries = build(false, 'crowns')
+	test("marks only the product day's featured module as free today", () => {
+		const entries = build('crowns')
 
-		const freeEntries = entries.filter((entry) => entry.freeToday)
-		expect(freeEntries.map((entry) => entry.slug)).toEqual(['crowns'])
-		expect(freeEntries[0]?.locked).toBe(false)
-
-		for (const entry of entries) {
-			if (entry.slug === 'crowns') continue
-			expect(entry.freeToday).toBe(false)
-			expect(entry.locked).toBe(true)
-		}
-	})
-
-	test('unlocks every module for a premium viewer while keeping the free badge', () => {
-		const entries = build(true, 'crowns')
-
-		expect(entries.every((entry) => entry.locked === false)).toBe(true)
 		expect(entries.filter((entry) => entry.freeToday).map((entry) => entry.slug)).toEqual([
 			'crowns',
 		])
 	})
 
-	test('treats an inbound alias as the canonical free module', () => {
-		const entries = build(false, 'queens')
-		const crowns = entryFor(entries, 'crowns')
-
-		expect(crowns.freeToday).toBe(true)
-		expect(crowns.locked).toBe(false)
+	test('treats an inbound alias as the canonical featured module', () => {
+		const entries = build('queens')
+		expect(entryFor(entries, 'crowns').freeToday).toBe(true)
 	})
 
 	test('returns an empty list for an empty registry', () => {
-		expect(buildCatalogEntries({ modules: [], freeGameSlug: 'sudoku', isPremium: false })).toEqual(
-			[],
-		)
+		expect(buildCatalogEntries({ modules: [], freeGameSlug: 'sudoku' })).toEqual([])
 	})
 })
 

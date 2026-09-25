@@ -3,7 +3,6 @@
 		"overviewDesc": "儀表板與快速操作",
 		"account": "帳號",
 		"accountDesc": "已連結帳號與電子郵件",
-		"referralsDesc": "邀請好友，賺取獎勵",
 		"privacy": "隱私",
 		"privacyDesc": "資料與可見度",
 		"helpText": "帳號需要協助嗎？",
@@ -51,20 +50,6 @@
 			"addPasskey": "新增通行金鑰",
 			"recoveryCodesDesc": "帳號的備用存取方式"
 		}
-	},
-	"streakFreeze": {
-		"purchaseDesc": "高級版會員每月可獲得 {count} 次凍結",
-		"premiumBenefitDesc": "升級高級版可獲得額外凍結"
-	},
-	"referral": {
-		"description": "分享 Puzzled，一起賺取獎勵",
-		"shareText": "一起玩 Puzzled！每日腦力遊戲挑戰你的思維 🧩",
-		"emailSubject": "一起玩 Puzzled！",
-		"stats": {
-			"rewards": "獎勵"
-		},
-		"nextReward": "下個獎勵",
-		"premiumBonus": "高級版：推薦獎勵雙倍！"
 	},
 	"profile": {
 		"description": "管理你的公開個人檔案與個人資訊",
@@ -152,13 +137,6 @@
 		"confirmRegenerateWarning": "這會讓目前的代碼失效",
 		"confirmRegenerateDescription": "所有現有復原碼會立即失效。請務必將新代碼儲存在安全的地方。"
 	},
-	"subscription": {
-		"currentPlanDescription": "查看你目前的訂閱方案與帳單資訊",
-		"expiresOn": "{date} 續訂",
-		"renewsOn": "{date} 續訂",
-		"lifetimeAccessDescription": "感謝你永久支持！你可以永遠無限使用所有高級版功能。",
-		"manageDescription": "更新你的訂閱、付款方式與帳單資訊"
-	},
 	"preferences": {
 		"appearance": {
 			"reduceMotionDescription": "減少動畫與轉場效果"
@@ -210,7 +188,6 @@
 			"dangerZoneDescription": "會永久影響你帳號且無法復原的操作",
 			"deleteButton": "刪除我的帳號",
 			"warningDescription": "刪除帳號是永久性的，你所有資料將永遠被清除。",
-			"deleteSubscription": "你的訂閱（將被取消）",
 			"confirmButton": "永久刪除帳號",
 			"deleting": "正在刪除你的帳號…",
 			"permanentActionDescription": "帳號一經刪除便無法復原，所有資料將被永久清除。",

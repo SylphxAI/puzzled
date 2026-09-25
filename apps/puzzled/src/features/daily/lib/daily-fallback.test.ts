@@ -214,27 +214,7 @@ describe('daily load fallback', () => {
 		expect(calls).toHaveLength(2)
 	})
 
-	test('a premium gate is a denied snapshot, not a retry loop', async () => {
-		stubConnectFetch(
-			() =>
-				new Response(JSON.stringify({ code: 'permission_denied', message: 'premium_required' }), {
-					status: 403,
-					headers: { 'content-type': 'application/json' },
-				}),
-		)
-
-		const snapshot = await loadDailySnapshot(
-			{ gameSlug: 'crossword' },
-			createPuzzleServiceClient(CONNECT_BASE),
-		)
-
-		expect(snapshot).toEqual({ kind: 'denied' })
-
-		const state = dailyLoadReducer(initialDailyLoadState, { type: 'load-succeeded', snapshot })
-		expect(state).toEqual({ status: 'ready', snapshot: { kind: 'denied' } })
-	})
-
-	test('a non-permission failure is still a retry state, not a denied gate', async () => {
+	test('a server failure is a retry state', async () => {
 		stubConnectFetch(
 			() =>
 				new Response(JSON.stringify({ code: 'internal', message: 'boom' }), {
@@ -248,7 +228,7 @@ describe('daily load fallback', () => {
 		).rejects.toThrow()
 	})
 
-	test('a bare 403 without the product gate reason stays a retry, not an upsell', async () => {
+	test('a bare 403 stays a retry', async () => {
 		stubConnectFetch(() => new Response('forbidden', { status: 403 }))
 
 		await expect(

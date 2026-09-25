@@ -64,7 +64,6 @@ scaffolding crates without release/security/isolation ownership.
 | `generation_jobs` | Plan/execute platform generation jobs | pure job policy/backoff | job HTTP + webhooks |
 | `product_policy` | Shared limits, codes, enums, app constants | pure product policy | composition only |
 | `privacy` | PII scrub / privacy sanitize | pure privacy rules | adapters at edges |
-| `billing_access` | Premium/free access policy | pure billing policy | shell evaluation at edges |
 | `presentation_policy` | Motion/color/vitals pure parity constants | pure presentation policy | none (no product HTTP) |
 | `platform_health` | Liveness/readiness probes | none | bootstrap health routes |
 

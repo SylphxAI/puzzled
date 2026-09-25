@@ -11,15 +11,13 @@ import {
 	readMessage,
 } from '@/features/catalog/lib/catalog'
 import { getAllGameMetadata } from '@/games/registry'
-import { getTodaysFreeGame, hasPremiumAccess } from '@/lib/billing/server'
+import { getTodaysFreeGame } from '@/lib/free-rotation'
 import { Link } from '@/lib/i18n/routing'
-import { currentUser } from '@/lib/identity/server'
-import { withPresentationDeadline } from '@/lib/presentation-document'
 import { buildPageMetadata, localizedPath, ogImagePath } from '@/lib/seo/metadata'
 import { getRequestSiteOrigin } from '@/lib/site-origin.server'
 import { GameTile } from '@/shared/components/games/game-tile'
 
-// Force dynamic rendering - entitlement decides the premium badges
+// Force dynamic rendering - the featured module follows the product day
 export const dynamic = 'force-dynamic'
 
 type Props = {
@@ -48,11 +46,9 @@ export async function generateMetadata({ params }: Props) {
  * Full catalog page (`/games`).
  *
  * Every registered module stays reachable here, in its own colour theme: the
- * day's free rotation leads, the rest of the suite follows with honest premium
- * marking, and the page explains the daily ritual for a first-time visitor.
- * Data is registry + free rotation (static/pure) and one fail-closed
- * entitlement read, so an unavailable identity/commerce read degrades to
- * "premium" instead of crashing.
+ * day's featured module leads, the rest of the suite follows, and the page
+ * explains the daily ritual for a first-time visitor. Every module is open to
+ * every player. Data is registry + free rotation (static/pure).
  */
 export default async function GamesCatalogPage({ params, searchParams }: Props) {
 	const { locale } = await params
@@ -63,15 +59,9 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 	// Catalog entry keys are root-qualified (`games.wordGuess.name`).
 	const tRoot = await getTranslations()
 
-	const user = await withPresentationDeadline(currentUser(), null)
-	const isPremium = user?.id
-		? await withPresentationDeadline(hasPremiumAccess(user.id), false)
-		: false
-
 	const entries = buildCatalogEntries({
 		modules: getAllGameMetadata(),
 		freeGameSlug: getTodaysFreeGame(),
-		isPremium,
 	}).map((entry) => ({
 		...entry,
 		title: readMessage(tRoot, entry.titleKey, entry.canonicalTitle),
@@ -124,9 +114,7 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 						{t('suiteTitle')}
 					</h2>
 					<p className="mt-2 max-w-2xl text-muted-foreground">
-						{isPremium
-							? t('suiteBodyPremium')
-							: t('suiteBody', { count: Math.max(entries.length - 1, 0) })}
+						{t('suiteBody', { count: entries.length })}
 					</p>
 
 					{visibleEntries.length === 0 ? (
@@ -150,15 +138,12 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 										tagline={entry.tagline}
 										meta={[entry.duration, entry.highlight].filter(Boolean).join(' • ')}
 										theme={entry.theme}
-										status={entry.freeToday ? 'free' : 'premium'}
-										showUnlock={!isPremium}
+										status={entry.freeToday ? 'free' : 'play'}
 										index={index}
 										labels={{
 											play: t('play'),
 											playAgain: t('play'),
-											unlock: t('unlock'),
 											freeToday: t('freeToday'),
-											premium: t('premium'),
 										}}
 									/>
 								</li>
@@ -194,12 +179,6 @@ export default async function GamesCatalogPage({ params, searchParams }: Props) 
 							>
 								{t('closing.home')}
 								<ArrowRight className="h-4 w-4" aria-hidden="true" />
-							</Link>
-							<Link
-								href="/pricing"
-								className="inline-flex h-12 items-center rounded-2xl px-4 font-semibold text-primary transition-colors hover:bg-primary/10"
-							>
-								{t('closing.pricing')}
 							</Link>
 						</div>
 					</div>

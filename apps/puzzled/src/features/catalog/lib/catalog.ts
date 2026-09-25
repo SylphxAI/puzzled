@@ -4,8 +4,7 @@
  * The `/games` page lists the whole registered suite (home stays bounded).
  * This module maps registry metadata to the player-facing entry shape and
  * applies the optional title and category filters. It is pure: the page
- * resolves the i18n keys and reads today's free rotation and premium
- * entitlement.
+ * resolves the i18n keys and reads today's free rotation.
  */
 
 import type { GameMetadata } from '@/games/registry'
@@ -36,10 +35,8 @@ export type CatalogEntry = {
 	theme: GameColorTheme
 	/** Registry category, used by the catalog filter and related modules. */
 	category: GameCategory
-	/** Today's free-rotation module: playable without premium. */
+	/** Today's featured free-rotation module. */
 	freeToday: boolean
-	/** Premium gate for this viewer today (false for premium viewers + free module). */
-	locked: boolean
 }
 
 /**
@@ -50,14 +47,11 @@ export function buildCatalogEntries(input: {
 	modules: readonly GameMetadata[]
 	/** Free-rotation slug for the product day. */
 	freeGameSlug: string
-	/** Viewer's premium entitlement; false when it could not be proved. */
-	isPremium: boolean
 }): CatalogEntry[] {
 	const freeSlug = canonicalizeGameSlug(input.freeGameSlug)
 
 	return input.modules.map((module) => {
 		const translationSlug = slugToCamelCase(module.slug)
-		const freeToday = module.slug === freeSlug
 
 		return {
 			slug: module.slug,
@@ -68,8 +62,7 @@ export function buildCatalogEntries(input: {
 			duration: module.display.duration,
 			theme: module.display.theme,
 			category: module.category,
-			freeToday,
-			locked: !input.isPremium && !freeToday,
+			freeToday: module.slug === freeSlug,
 		}
 	})
 }

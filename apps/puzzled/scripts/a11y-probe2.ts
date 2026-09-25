@@ -8,7 +8,7 @@ const ctx = await browser.newContext({
 })
 const page = await ctx.newPage()
 
-const routes = ['/', '/games', '/stats', '/support', '/pricing', '/leaderboard', '/privacy']
+const routes = ['/', '/games', '/stats', '/support', '/leaderboard', '/privacy']
 for (const route of routes) {
 	await page.goto(BASE + route, { waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {})
 	await page.waitForTimeout(1200)

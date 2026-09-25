@@ -1,17 +1,16 @@
-import { Check, Crown, Lock, Sparkles } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import { Link } from '@/lib/i18n/routing'
 import { cn } from '@/lib/utils'
 import { GameIcon } from '@/shared/components/ui/game-icons'
 
-export type GameTileStatus = 'free' | 'premium' | 'solved'
+/** `free`: today's featured module. `play`: any other module. `solved`: a proved finish. */
+export type GameTileStatus = 'free' | 'play' | 'solved'
 
 type GameTileLabels = {
 	play: string
 	playAgain: string
-	unlock: string
 	freeToday: string
-	premium: string
 }
 
 type GameTileProps = {
@@ -25,8 +24,6 @@ type GameTileProps = {
 	/** Proved score for solved tiles; never invented. */
 	score?: string | null
 	labels: GameTileLabels
-	/** Renders the "Unlock" affordance for premium viewers without access. */
-	showUnlock?: boolean
 	className?: string
 	/** Stagger helper for entrance motion. */
 	index?: number
@@ -35,8 +32,7 @@ type GameTileProps = {
 /**
  * Catalog/home tile for one daily module.
  *
- * The title owns the stretched link so the whole tile is one target, while the
- * premium call to action stays a separate, reachable link (no nested anchors).
+ * The title owns the stretched link so the whole tile is one target.
  */
 export function GameTile({
 	slug,
@@ -47,7 +43,6 @@ export function GameTile({
 	status,
 	score,
 	labels,
-	showUnlock = false,
 	className,
 	index = 0,
 }: GameTileProps) {
@@ -94,12 +89,6 @@ export function GameTile({
 						{score ? score : labels.playAgain}
 					</span>
 				)}
-				{status === 'premium' && (
-					<span className="chip bg-muted text-muted-foreground">
-						<Lock className="h-3 w-3" aria-hidden="true" />
-						{labels.premium}
-					</span>
-				)}
 			</div>
 
 			<h3 className="relative mt-3.5 font-display text-base font-bold leading-tight">
@@ -112,22 +101,10 @@ export function GameTile({
 
 			<div className="relative mt-3 flex items-center justify-between gap-2 text-xs">
 				<span className="font-medium text-muted-foreground">{meta}</span>
-				{free || solved ? (
-					<span className={cn('font-semibold', colors.text)}>
-						{solved ? labels.playAgain : labels.play} →
-					</span>
-				) : null}
+				<span className={cn('font-semibold', colors.text)}>
+					{solved ? labels.playAgain : labels.play} →
+				</span>
 			</div>
-
-			{showUnlock && status === 'premium' && (
-				<Link
-					href="/pricing"
-					className="relative z-10 mt-3 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
-				>
-					<Crown className="h-3.5 w-3.5" aria-hidden="true" />
-					{labels.unlock}
-				</Link>
-			)}
 		</div>
 	)
 }

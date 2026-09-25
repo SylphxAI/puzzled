@@ -110,26 +110,6 @@ const PAGES: readonly PageCase[] = [
 	},
 	{ name: 'word-guess', path: '/games/word-guess', shell: true },
 	{
-		name: 'pricing',
-		path: '/pricing',
-		shell: true,
-		owned: [
-			{
-				rule: 'color-contrast',
-				selector: '.bg-emerald-500, .border-primary > .absolute, .text-orange-600, .inline-block',
-				nodes: 3,
-				owner:
-					'plan ribbon + badge tints: app/[locale]/(main)/pricing/pricing-client.tsx (PR #146)',
-			},
-			{
-				rule: 'heading-order',
-				selector: 'main .text-xl',
-				nodes: 0,
-				owner: 'plan card titles: app/[locale]/(main)/pricing/pricing-client.tsx (PR #146)',
-			},
-		],
-	},
-	{
 		name: 'login',
 		path: '/login',
 		shell: false,
