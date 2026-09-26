@@ -1,37 +1,37 @@
 # Puzzled
 
-Puzzled is a daily light brain-games platform: short, positive rituals under one module protocol.
+Short daily brain games at [puzzled.gg](https://puzzled.gg): a few minutes a
+day, one shared puzzle for everyone, and a result card you can share without
+spoiling the answer. Every game is free to play.
 
-- Ordinary: https://puzzled.gg — named public customer domain (`puzzled.gg`). DNS and TLS are active. A document GET `/` 200 is reachability of the web document, not the product contract.
-- Preview: none — no product-owned current preview URL. GitHub Pages is absent. `https://puzzled-gg.vercel.app` is leftover Vercel (`DEPLOYMENT_NOT_FOUND`) and is not production.
-- Vision: [`docs/vision.md`](docs/vision.md)
-- Capabilities: [`docs/capabilities.md`](docs/capabilities.md)
+- Product vision: [docs/vision.md](docs/vision.md)
+- Capabilities and their status: [docs/capabilities.md](docs/capabilities.md)
 
-## Product
+## How it is built
 
-| | |
-|--|--|
-| Promise | Minutes a day, optional depth, shareable non-spoiler results |
-| NSM | Distinct users who complete ≥1 puzzle ritual per product day |
-| Money | Everything free; no paid tier is sold (paid tier is an open decision) |
-
-Repo entry: [`PROJECT.md`](PROJECT.md). North Star package: [`docs/north-star/README.md`](docs/north-star/README.md).
-
-## System
-
-```
-edge -> /puzzled.v1.* /healthz /readyz -> api (Rust, sole authority)
-      -> /*                             -> web (Next.js, no backend authority)
+```text
+browser -> /puzzled.v1.*, /healthz, /readyz -> api (Rust)
+        -> everything else                  -> web (Next.js)
 ```
 
-- **api** (`crates/puzzled-server`): Connect RPC only. Identity from Platform JWT.
-- **web** (`apps/puzzled`): presentation only. Generated Connect client; Platform SDK for auth/billing/flags.
-- **core** (`crates/puzzled-core`): pure game rules, validation, scoring, policy.
-- **db**: Atlas-managed Postgres; the api service is the single runtime writer.
+- **api** ([crates/puzzled-server](crates/puzzled-server)): a
+  [Connect](https://connectrpc.com) RPC server. It is the only service that
+  decides game results and the only one that writes to the database.
+- **core** ([crates/puzzled-core](crates/puzzled-core)): the game rules,
+  answer checking and scoring, with no I/O.
+- **web** ([apps/puzzled](apps/puzzled)): the Next.js site. It renders pages
+  and calls the api through a generated Connect client.
+- **db**: PostgreSQL, with schema migrations managed by Atlas.
 
-## Local
+Every game implements the same module interface: a daily puzzle keyed to the
+date in Hong Kong time, a run, a finish, and a result card.
+
+## Develop
+
+Requires [Bun](https://bun.sh) and a Rust toolchain.
 
 ```bash
+bun install
 bun run lint
 bun run typecheck
 bun run test
