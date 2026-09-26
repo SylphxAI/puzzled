@@ -4,9 +4,9 @@
  */
 
 import { useCallback, useEffect, useReducer } from 'react'
-import type { SudokuPuzzleClientData, SudokuSolution } from './config'
+import type { SudokuPuzzleClientData } from './config'
 import type { SudokuCell, SudokuState } from './types'
-import { GRID_SIZE, isGridComplete } from './types'
+import { GRID_SIZE, isGridSolved } from './types'
 
 // Actions for the reducer
 type SudokuAction =
@@ -17,7 +17,7 @@ type SudokuAction =
 	| { type: 'ADD_NOTE'; value: number }
 	| { type: 'REMOVE_NOTE'; value: number }
 	| { type: 'MOVE'; direction: 'up' | 'down' | 'left' | 'right' }
-	| { type: 'CHECK_COMPLETION'; solution: SudokuSolution }
+	| { type: 'CHECK_COMPLETION' }
 	| { type: 'RESET' }
 
 function createInitialState(puzzleData: SudokuPuzzleClientData): SudokuState {
@@ -50,7 +50,6 @@ function sudokuReducer(
 	state: SudokuState,
 	action: SudokuAction,
 	puzzleData: SudokuPuzzleClientData,
-	solution: SudokuSolution,
 ): SudokuState {
 	switch (action.type) {
 		case 'SELECT_CELL': {
@@ -124,7 +123,7 @@ function sudokuReducer(
 			}
 
 			// Check completion after setting a value
-			const isNowComplete = isGridComplete(newGrid, solution.grid)
+			const isNowComplete = isGridSolved(newGrid)
 
 			return {
 				...state,
@@ -226,7 +225,7 @@ function sudokuReducer(
 		}
 
 		case 'CHECK_COMPLETION': {
-			const isComplete = isGridComplete(state.userGrid, action.solution.grid)
+			const isComplete = isGridSolved(state.userGrid)
 
 			return {
 				...state,
@@ -256,12 +255,9 @@ export type UseSudokuReturn = {
 	getConflictingCells: () => Set<string>
 }
 
-export function useSudoku(
-	puzzleData: SudokuPuzzleClientData,
-	solution: SudokuSolution,
-): UseSudokuReturn {
+export function useSudoku(puzzleData: SudokuPuzzleClientData): UseSudokuReturn {
 	const [state, dispatch] = useReducer(
-		(s: SudokuState, a: SudokuAction) => sudokuReducer(s, a, puzzleData, solution),
+		(s: SudokuState, a: SudokuAction) => sudokuReducer(s, a, puzzleData),
 		puzzleData,
 		createInitialState,
 	)
@@ -326,8 +322,8 @@ export function useSudoku(
 	}, [])
 
 	const checkCompletion = useCallback(() => {
-		dispatch({ type: 'CHECK_COMPLETION', solution })
-	}, [solution])
+		dispatch({ type: 'CHECK_COMPLETION' })
+	}, [])
 
 	const reset = useCallback(() => {
 		dispatch({ type: 'RESET' })
