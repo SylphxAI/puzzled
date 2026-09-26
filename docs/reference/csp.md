@@ -60,3 +60,12 @@ origin. Violations before hydration are not captured.
 `bun test src/lib/csp.test.ts` covers the policy and the proxy. In a browser,
 listen for `securitypolicyviolation` from document start and visit the key
 pages; the count must be zero.
+
+## Hydration and streamed boundaries
+
+Streamed Suspense boundaries (the top nav, for one) can hydrate after the
+session request has resolved, and the timing shifts with the policy. So
+`useSafeUser` renders the server's loading state during any hydrating render
+(`useSyncExternalStore` server snapshot) and switches right after. Rendering
+the resolved session there broke hydration with React error #418 on the
+second page view after #256.
