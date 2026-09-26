@@ -1,28 +1,27 @@
-//! Error capture into Sylphx Observability (OBS-ERRORS).
-//!
-//! One occurrence per captured error, posted to the Observability error API
+//! Error capture into Sylphx Observability (OBS-ERRORS) through the Sylphx
+//! SDK: `sylphx::observability` `error_groups().capture` on api.sylphx.com
 //! with the environment's Access key (`SYLPHX_API_KEY`, minted and injected
 //! by the platform). Captures panics and every 5xx response.
 //!
+//! The service groups by exception type and in-app frames (never by release)
+//! and scrubs secrets, tokens, card numbers and email addresses before
+//! storing. This module never attaches a request or response body, so auth
+//! and billing payloads cannot reach an error report.
+//!
 //! Observability is a soft dependency: capture runs on a spawned task with a
 //! short timeout, never blocks or fails a request, and without a key only
-//! logs. Messages, stacks, and tags are scrubbed of email addresses, secrets,
-//! and URL query strings; request and response bodies are never attached.
-//!
-//! The generated SDK method (`sylphx::observability` on api.sylphx.com) is not
-//! served yet; this module moves to it when it is (see docs/observability.md).
+//! logs.
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::OnceLock;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::Duration;
 
 use axum::extract::{MatchedPath, Request};
 use axum::middleware::Next;
 use axum::response::Response;
-use serde_json::{json, Value};
+use sylphx::observability::{CaptureErrorRequest, ErrorEvent, StackFrame};
 
-const DEFAULT_ORIGIN: &str = "https://api.observability.sylphx.com";
-const CAPTURE_PATH: &str = "/v1/error-events:captureException";
+/// The key's own org, project and environment.
+pub const PARENT: &str = "orgs/-/projects/-/envs/-";
 const TIMEOUT: Duration = Duration::from_secs(3);
 
 /// One error to capture.
@@ -32,22 +31,20 @@ pub struct ErrorReport {
     pub message: String,
     /// Route template (never a concrete path with ids or a query string).
     pub route: Option<String>,
-    /// Backtrace or stack text, when available.
-    pub stack: Option<String>,
+    /// Source location, for panics.
+    pub file: Option<String>,
+    pub line: Option<u32>,
     pub tags: Vec<(String, String)>,
 }
 
 struct Sink {
-    client: reqwest::Client,
-    url: String,
-    key: Option<String>,
+    client: Option<sylphx::Client>,
     service: String,
-    release: Option<String>,
+    release: String,
     environment: Option<String>,
 }
 
 static SINK: OnceLock<Sink> = OnceLock::new();
-static SEQ: AtomicU64 = AtomicU64::new(0);
 
 fn env(name: &str) -> Option<String> {
     std::env::var(name)
@@ -58,21 +55,25 @@ fn env(name: &str) -> Option<String> {
 
 /// Reads the platform environment and installs the panic hook. Call once at startup.
 pub fn init() {
-    let origin = env("SYLPHX_OBSERVABILITY_URL").unwrap_or_else(|| DEFAULT_ORIGIN.to_owned());
-    let sink = Sink {
-        client: reqwest::Client::builder()
+    let client = env("SYLPHX_API_KEY").and_then(|key| {
+        sylphx::HttpTransport::builder()
+            .api_key(key)
             .timeout(TIMEOUT)
+            .max_retries(1)
             .build()
-            .unwrap_or_default(),
-        url: format!("{}{CAPTURE_PATH}", origin.trim_end_matches('/')),
-        key: env("SYLPHX_API_KEY"),
-        service: env("SYLPHX_SERVICE_NAME").unwrap_or_else(|| "api".to_owned()),
-        release: env("SYLPHX_GIT_COMMIT_SHA"),
-        environment: env("SYLPHX_ENVIRONMENT_TYPE"),
-    };
-    if sink.key.is_none() {
+            .map(sylphx::Client::new)
+            .map_err(|error| tracing::warn!(%error, "observability client not built"))
+            .ok()
+    });
+    if client.is_none() {
         tracing::warn!("observability capture off: SYLPHX_API_KEY is not set");
     }
+    let sink = Sink {
+        client,
+        service: env("SYLPHX_SERVICE_NAME").unwrap_or_else(|| "api".to_owned()),
+        release: env("SYLPHX_GIT_COMMIT_SHA").unwrap_or_default(),
+        environment: env("SYLPHX_ENVIRONMENT_TYPE"),
+    };
     if SINK.set(sink).is_err() {
         return;
     }
@@ -84,153 +85,79 @@ pub fn init() {
             .map(|s| (*s).to_owned())
             .or_else(|| info.payload().downcast_ref::<String>().cloned())
             .unwrap_or_else(|| "panic".to_owned());
-        let location = info
-            .location()
-            .map(|l| format!("{}:{}", l.file(), l.line()));
         capture(ErrorReport {
             exception_type: "panic".to_owned(),
             message,
-            stack: location,
+            file: info.location().map(|l| l.file().to_owned()),
+            line: info.location().map(|l| l.line()),
             ..ErrorReport::default()
         });
         previous(info);
     }));
 }
 
-/// Removes email addresses, credentials, and URL query strings.
-pub fn scrub(text: &str) -> String {
-    text.split_inclusive(char::is_whitespace)
-        .map(|word| {
-            let bare = word.trim_end();
-            let tail = &word[bare.len()..];
-            let lower = bare.to_ascii_lowercase();
-            let is_email = bare.split_once('@').is_some_and(|(user, domain)| {
-                !user.is_empty() && domain.contains('.') && !domain.starts_with('.')
-            });
-            let is_secret = [
-                "sylphx_sk_",
-                "sylphx_pk_",
-                "sk_live_",
-                "sk_test_",
-                "pk_live_",
-                "pk_test_",
-                "eyj",
-            ]
-            .iter()
-            .any(|p| {
-                lower
-                    .trim_start_matches(|c: char| !c.is_ascii_alphanumeric())
-                    .starts_with(p)
-            });
-            if is_email {
-                format!("[email]{tail}")
-            } else if is_secret {
-                format!("[secret]{tail}")
-            } else if let Some((head, _)) = bare.split_once('?').filter(|(h, _)| h.contains('/')) {
-                format!("{head}{tail}")
-            } else {
-                word.to_owned()
-            }
-        })
-        .collect()
-}
-
-fn clip(text: String, max: usize) -> String {
-    if text.len() <= max {
-        return text;
-    }
-    let mut end = max;
-    while !text.is_char_boundary(end) {
-        end -= 1;
-    }
-    text[..end].to_owned()
-}
-
-fn normalized(text: &str) -> String {
-    text.chars()
-        .map(|c| if c.is_ascii_digit() { '0' } else { c })
-        .collect()
-}
-
-fn attribute(key: &str, value: &str) -> Value {
-    json!({ "key": key, "value": { "stringValue": clip(scrub(value), 1000) } })
-}
-
-/// The request body for one occurrence; public for tests.
-pub fn capture_body(
+/// The error event for one occurrence; public for tests.
+pub fn error_event(
     report: &ErrorReport,
     service: &str,
-    release: Option<&str>,
+    release: &str,
     environment: Option<&str>,
-) -> Value {
-    let message = clip(scrub(&report.message), 1000);
-    let stack = report.stack.as_deref().map(|s| clip(scrub(s), 8000));
-    // Group by type, route, and the message with digits folded, so ids do not split groups.
-    let signature = format!(
-        "{}\n{}\n{}",
-        report.exception_type,
-        report.route.as_deref().unwrap_or(""),
-        normalized(&message)
-    );
-    let mut tags: Vec<Value> = report
-        .tags
-        .iter()
-        .take(32)
-        .map(|(k, v)| attribute(k, v))
-        .collect();
-    if let Some(environment) = environment {
-        tags.push(attribute("environment", environment));
+) -> ErrorEvent {
+    let mut event = ErrorEvent::default();
+    event.exception_type = report.exception_type.clone();
+    event.message = report.message.chars().take(2000).collect();
+    event.service_name = service.to_owned();
+    event.release = release.to_owned();
+    for (key, value) in report.tags.iter().take(60) {
+        event.tags.insert(key.clone(), value.clone());
     }
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-    let key = format!(
-        "{}-{}-{}-{}",
-        service,
-        now.as_nanos(),
-        std::process::id(),
-        SEQ.fetch_add(1, Ordering::Relaxed)
-    );
-    json!({
-        "idempotencyKey": key,
-        "event": {
-            "service": service,
-            "release": release,
-            "fingerprint": {
-                "exceptionType": clip(report.exception_type.clone(), 200),
-                "stackSignature": clip(signature, 2000),
-                "culprit": report.route.as_deref().map(scrub).unwrap_or_default(),
-            },
-            "message": message,
-            "route": report.route.as_deref().map(scrub),
-            "tags": tags,
-            "extra": stack.map(|s| vec![json!({ "key": "stack", "value": { "stringValue": s } })]).unwrap_or_default(),
-        }
-    })
+    if let Some(environment) = environment {
+        event
+            .tags
+            .insert("environment".to_owned(), environment.to_owned());
+    }
+    if let Some(route) = &report.route {
+        let route = route.split(['?', '#']).next().unwrap_or_default();
+        event.tags.insert("route".to_owned(), route.to_owned());
+        // Group 5xx responses by route and status, not by the message.
+        event.fingerprint = format!("{}\n{route}", report.exception_type);
+    }
+    if let Some(file) = &report.file {
+        let mut frame = StackFrame::default();
+        frame.file_path = file.clone();
+        frame.line = report
+            .line
+            .map_or(0, |l| i32::try_from(l).unwrap_or(i32::MAX));
+        frame.app_frame = !file.contains("/.cargo/") && !file.starts_with("/rustc/");
+        event.stack_frames = vec![frame];
+    }
+    event
 }
 
 /// Captures one error on a background task. Never blocks, never fails.
 pub fn capture(report: ErrorReport) {
     let Some(sink) = SINK.get() else { return };
-    tracing::error!(exception_type = %report.exception_type, route = ?report.route, "{}", scrub(&report.message));
-    let Some(key) = sink.key.clone() else { return };
+    tracing::error!(exception_type = %report.exception_type, route = ?report.route, "{}", report.message);
+    if sink.client.is_none() {
+        return;
+    }
     let Ok(handle) = tokio::runtime::Handle::try_current() else {
         return;
     };
-    let body = capture_body(
+    let mut request = CaptureErrorRequest::default();
+    request.parent = PARENT.to_owned();
+    request.error_event = Some(error_event(
         &report,
         &sink.service,
-        sink.release.as_deref(),
+        &sink.release,
         sink.environment.as_deref(),
-    );
-    let request = sink.client.post(&sink.url).bearer_auth(key).json(&body);
+    ));
     handle.spawn(async move {
-        match request.send().await {
-            Ok(response) if response.status().is_success() => {}
-            Ok(response) => {
-                tracing::warn!(status = %response.status(), "observability capture refused")
-            }
-            Err(error) => tracing::warn!(%error, "observability capture failed"),
+        let Some(client) = SINK.get().and_then(|s| s.client.as_ref()) else {
+            return;
+        };
+        if let Err(error) = client.observability().error_groups().capture(request).await {
+            tracing::warn!(%error, "observability capture failed");
         }
     });
 }
@@ -262,49 +189,47 @@ mod tests {
     use super::*;
 
     #[test]
-    fn scrub_removes_emails_secrets_and_queries() {
-        assert_eq!(
-            scrub("for jane@example.com key sylphx_sk_live_abc at /pay?card=1 ok"),
-            "for [email] key [secret] at /pay ok"
-        );
-    }
-
-    #[test]
-    fn equal_errors_share_a_fingerprint_and_ids_do_not_split_them() {
+    fn server_errors_group_by_route_and_status() {
         let a = ErrorReport {
             exception_type: "HTTP 500".into(),
-            message: "job 123 failed".into(),
-            route: Some("/jobs/{id}".into()),
+            message: "POST /jobs/{id} returned 500".into(),
+            route: Some("/jobs/{id}?x=1".into()),
             ..Default::default()
-        };
-        let b = ErrorReport {
-            message: "job 987 failed".into(),
-            ..a.clone()
         };
         let c = ErrorReport {
             exception_type: "HTTP 502".into(),
             ..a.clone()
         };
-        let fp = |r: &ErrorReport| {
-            capture_body(r, "api", Some("abc"), None)["event"]["fingerprint"].clone()
-        };
-        assert_eq!(fp(&a), fp(&b));
-        assert_ne!(fp(&a), fp(&c));
-        let one = capture_body(&a, "api", None, None);
-        let two = capture_body(&a, "api", None, None);
-        assert_ne!(one["idempotencyKey"], two["idempotencyKey"]);
+        let event = error_event(&a, "api", "abc", Some("production"));
+        assert_eq!(event.fingerprint, "HTTP 500\n/jobs/{id}");
+        assert_ne!(
+            event.fingerprint,
+            error_event(&c, "api", "abc", None).fingerprint
+        );
+        assert_eq!(
+            event.tags.get("route").map(String::as_str),
+            Some("/jobs/{id}")
+        );
+        assert_eq!(
+            event.tags.get("environment").map(String::as_str),
+            Some("production")
+        );
+        assert_eq!(event.release, "abc");
     }
 
     #[test]
-    fn body_never_carries_an_email() {
+    fn panics_carry_their_location_as_an_app_frame() {
         let r = ErrorReport {
-            exception_type: "E".into(),
-            message: "bad user a@b.co".into(),
-            stack: Some("at x (a@b.co)".into()),
+            exception_type: "panic".into(),
+            message: "boom".into(),
+            file: Some("crates/app/src/main.rs".into()),
+            line: Some(12),
             ..Default::default()
         };
-        assert!(!capture_body(&r, "api", None, Some("production"))
-            .to_string()
-            .contains("a@b.co"));
+        let event = error_event(&r, "api", "", None);
+        assert_eq!(event.stack_frames.len(), 1);
+        assert!(event.stack_frames[0].app_frame);
+        assert_eq!(event.stack_frames[0].line, 12);
+        assert!(event.fingerprint.is_empty());
     }
 }

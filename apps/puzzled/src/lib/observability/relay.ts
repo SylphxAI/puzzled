@@ -1,15 +1,15 @@
 /**
  * The browser error relay: `POST <relay path>` on this app's own origin.
  *
- * The browser holds no Observability key (there is no publishable-key ingest
- * yet), so it posts a small report here and the server captures it with the
+ * The browser holds no Observability key (direct capture needs a publishable
+ * key with observability:ingest, SylphxAI/cloud#9401), so it posts a small report here and the server captures it with the
  * environment key. The report is bounded, same-origin only, rate limited per
- * client, and scrubbed again by `captureException`.
+ * client; the service scrubs it before storing.
  */
 
 import { type Breadcrumb, captureException } from './capture'
 
-const MAX_BODY_BYTES = 16_384
+const MAX_BODY_BYTES = 32_768
 const WINDOW_MS = 60_000
 const PER_WINDOW = 20
 const recent = new Map<string, { start: number; count: number }>()
@@ -94,7 +94,7 @@ export async function relayBrowserError(request: Request): Promise<Response> {
 	await captureException(error, {
 		service: `${process.env.SYLPHX_SERVICE_NAME || 'web'}-browser`,
 		exceptionType: text(report.type, 200) ?? 'Error',
-		stack: text(report.stack, 8000) ?? '',
+		stack: text(report.stack, 16_000) ?? '',
 		route: text(report.path, 500),
 		breadcrumbs,
 		tags,

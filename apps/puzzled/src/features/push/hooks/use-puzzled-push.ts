@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 import { useNotificationPreferences, useUpdatePushPreferences } from '@/lib/api'
 import { MINUTE_MS } from '@/lib/constants/time'
-import { useAnalytics, useNotifications } from '@/lib/identity/react'
+import { useNotifications } from '@/lib/identity/react'
 
 /**
  * Puzzled-specific notification types
@@ -67,7 +67,6 @@ export interface PuzzledNotificationPreferences {
  * ```
  */
 export function usePuzzledPush() {
-	const { track } = useAnalytics()
 	const {
 		isSupported,
 		isSubscribed,
@@ -92,25 +91,16 @@ export function usePuzzledPush() {
 	const requestPermission = useCallback(async () => {
 		const success = await subscribe()
 
-		if (success) {
-			track('push_enabled', {
-				source: 'puzzled',
-			})
-		}
-
 		return success
-	}, [subscribe, track])
+	}, [subscribe])
 
 	/**
 	 * Disable push notifications
 	 */
 	const disablePush = useCallback(async () => {
 		await unsubscribe()
-		track('push_disabled', {
-			source: 'puzzled',
-		})
 		return true
-	}, [unsubscribe, track])
+	}, [unsubscribe])
 
 	/**
 	 * Get notification preferences from server
@@ -133,12 +123,9 @@ export function usePuzzledPush() {
 					refetchPreferences()
 				},
 			})
-			track('push_preferences_updated', {
-				...updates,
-			})
 			return true
 		},
-		[updateMutation, track, refetchPreferences],
+		[updateMutation, refetchPreferences],
 	)
 
 	return {

@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
 	transpilePackages: [],
 	// Enable React strict mode for better development experience
 	reactStrictMode: true,
+	// Maps are moved out of the served static directory in the Dockerfile and
+	// uploaded to Sylphx Observability at startup; the site never serves them.
+	productionBrowserSourceMaps: true,
 
 	// Redirects: active locale aliases and real game renames only.
 	// Removed locales (es/ja/ko/de/fr/pt-BR/it/nl/pl/tr/id/th/vi) and dead

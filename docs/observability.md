@@ -1,34 +1,55 @@
 # Where errors go
 
 Puzzled sends server and browser errors to **Sylphx Observability**, our own
-error-monitoring service. There is no third-party error SDK, script or host.
+error-monitoring service, through the Sylphx SDK on `api.sylphx.com`
+(`observability.errorGroups.capture`). There is no third-party error SDK,
+script or host.
 
 | Source | Path | Code |
 | --- | --- | --- |
-| Next.js server (route handlers, server components, actions, proxy) | `onRequestError` in `apps/puzzled/src/instrumentation.ts` | `apps/puzzled/src/lib/observability/capture.ts` |
+| Next.js server (route handlers, server components, actions, proxy) | `onRequestError` in `apps/puzzled/src/instrumentation.ts` | `apps/puzzled/src/lib/observability/capture.ts` (`@sylphx/sdk`) |
 | Browser (uncaught errors, unhandled rejections, error boundaries) | same-origin `POST /api/observability/errors`, captured server side | `lib/observability/browser.ts`, `lib/observability/relay.ts` |
-| Rust api (every 5xx, every panic) | axum middleware and panic hook | `crates/puzzled-server/src/observability.rs` |
+| Rust api (every 5xx, every panic) | axum middleware and panic hook | `crates/puzzled-server/src/observability.rs` (`sylphx` crate) |
 
-## Key and endpoint
+## Key and SDK route
 
-- Capture posts to `https://api.observability.sylphx.com/v1/error-events:captureException`
-  with the environment's `SYLPHX_API_KEY`, which the platform mints and injects.
-  The key never reaches the browser; that is why the browser posts to the relay.
-- The generated SDK route on api.sylphx.com is not served yet
-  (SylphxAI/cloud#9256); the code moves to it when it is.
+- Capture calls `errorGroups.capture` with parent `orgs/-/projects/-/envs/-`
+  (the key's own environment) and the environment's `SYLPHX_API_KEY`, which
+  the platform mints and injects. The key needs `observability:ingest`.
+  Until SylphxAI/cloud#8933 / #9258 land, Puzzled's key is billing-only and
+  capture is refused with 403.
 - Capture is a soft dependency: it never throws, gives up after 3 s, and never
-  fails a request. A refused capture logs `[observability] capture refused: <status>`
-  (web) or `observability capture refused` (api).
-- The key must carry the Observability ingest scope. Until SylphxAI/cloud#9257
-  lands, Puzzled's key is billing-only and capture returns 403.
+  fails a request. A refused capture logs `[observability] capture failed`
+  (web) or `observability capture failed` (api).
+- The browser holds no key, so it posts to the same-origin relay. Direct
+  browser capture waits on a publishable key with ingest (SylphxAI/cloud#9401).
+
+## Source maps
+
+- `next.config.ts` sets `productionBrowserSourceMaps`. The Dockerfile moves
+  every `.map` out of `.next/static` into `.next/source-maps`, so the site
+  never serves a map (`/_next/static/**/*.map` returns 404).
+- At startup, `register()` calls `uploadSourceMaps()`
+  (`lib/observability/source-maps.ts`). It uploads the maps for release
+  `SYLPHX_GIT_COMMIT_SHA`, each keyed to its served file URL
+  (`/_next/static/<path>.js`), and skips maps already stored for the release.
+  The service maps minified browser frames to source at ingest.
 
 ## Privacy
 
-Messages, stacks, breadcrumbs and tags are scrubbed of email addresses,
-credentials and URL query strings before they leave the process. No request
-or response body and no header is attached. The api reports the route
-template and status only. The relay accepts same-origin reports only, at most
-16 KB each and 20 per client per minute; a page sends at most 10.
+The service parses the raw stack and scrubs secrets, tokens, card numbers and
+email addresses before storing. No request or response body and no header is
+attached. The api reports the route template and status only. The relay
+accepts same-origin reports only, at most 32 KB each and 20 per client per
+minute; a page sends at most 10.
+
+## Removed with the legacy host
+
+The analytics (`/api/observability/analytics`) and session-replay
+(`/api/observability/session-replays`) routes posted to the legacy
+Observability host with `OBSERVABILITY_API_KEY`, which was never set, so they
+never delivered. They, their hooks, the Web Vitals reporter and the game
+analytics batcher are deleted. The SDK has no analytics or replay surface yet.
 
 ## Production check
 
@@ -45,10 +66,10 @@ curl -X POST https://puzzled.gg/observability/test \
   -H "authorization: Bearer $SYLPHX_API_KEY" -d '{"nonce":"n2"}'
 ```
 
-Read the occurrences back:
+Read back with the same key:
 
-```bash
-curl -X POST https://api.observability.sylphx.com/v1/error-groups:query \
-  -H "authorization: Bearer $SYLPHX_API_KEY" -H 'content-type: application/json' \
-  -d '{"timeRange":{"startTime":"<ISO>","endTime":"<ISO>"},"page":{"limit":50}}'
+```ts
+import { Sylphx } from '@sylphx/sdk'
+const sx = new Sylphx()
+await sx.observability.errorGroups.list({ parent: 'orgs/-/projects/-/envs/-', pageSize: 50 })
 ```

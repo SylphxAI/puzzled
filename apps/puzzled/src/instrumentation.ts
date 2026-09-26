@@ -6,6 +6,11 @@ export async function register() {
 	// DATABASE_URL / REDIS_URL belong to api. SYLPHX_SECRET_KEY is not injected
 	// without an explicit BaaS binding (ADR-3418). HTTP listen is the postcondition.
 	validateEnv()
+	// Browser source maps for this release, fire and forget (docs/observability.md).
+	if (process.env.NEXT_RUNTIME === 'nodejs') {
+		const { uploadSourceMaps } = await import('@/lib/observability/source-maps')
+		void uploadSourceMaps()
+	}
 }
 
 /**

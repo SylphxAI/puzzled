@@ -1808,6 +1808,7 @@ dependencies = [
  "serde_json",
  "sha2 0.11.0",
  "sqlx",
+ "sylphx",
  "tokio",
  "tower",
  "tracing",
@@ -1979,6 +1980,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "futures-util",
+ "h2",
  "http",
  "http-body",
  "http-body-util",
@@ -2567,6 +2569,23 @@ name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
+
+[[package]]
+name = "sylphx"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00922b53c85dbe9dc3c2431fb20af1764d420e13844d48a7e025b9cc321cfd3e"
+dependencies = [
+ "base64 0.22.1",
+ "ed25519-dalek",
+ "fastrand",
+ "p256",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "uuid",
+]
 
 [[package]]
 name = "syn"

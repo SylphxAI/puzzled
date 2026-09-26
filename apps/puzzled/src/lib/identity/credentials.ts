@@ -27,12 +27,6 @@ export function destEventsCredential(
 	return destProductCredential(['EVENTS_API_KEY'], env)
 }
 
-export function destObservabilityCredential(
-	env: Record<string, string | undefined> = process.env,
-): string | undefined {
-	return destProductCredential(['OBSERVABILITY_API_KEY'], env)
-}
-
 export function destAiCredential(
 	env: Record<string, string | undefined> = process.env,
 ): string | undefined {
