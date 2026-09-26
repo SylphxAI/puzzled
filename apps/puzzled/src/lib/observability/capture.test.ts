@@ -89,24 +89,40 @@ describe('relayBrowserError', () => {
 })
 
 describe('uploadSourceMaps', () => {
-	it('uploads only this release’s missing maps, under their served URL path', async () => {
-		const dir = await mkdtemp(join(tmpdir(), 'maps-'))
+	it('stores each map under the script that references it, skipping maps already stored', async () => {
+		const root = await mkdtemp(join(tmpdir(), 'maps-'))
+		const staticDir = join(root, 'static')
+		const dir = join(root, 'source-maps')
+		await mkdir(join(staticDir, 'chunks', 'app'), { recursive: true })
 		await mkdir(join(dir, 'chunks', 'app'), { recursive: true })
-		await writeFile(join(dir, 'chunks', 'app', 'page-1a2b.js.map'), '{"version":3}')
+		// Turbopack names maps by their own hash, not after the script.
+		await writeFile(
+			join(staticDir, 'chunks', 'app', 'page-1a2b.js'),
+			'x()\n//# sourceMappingURL=9zz.js.map',
+		)
+		await writeFile(join(dir, 'chunks', 'app', '9zz.js.map'), '{"version":3}')
+		await writeFile(
+			join(staticDir, 'chunks', 'main-9f8e.js'),
+			'y()\n//# sourceMappingURL=main-9f8e.js.map',
+		)
 		await writeFile(join(dir, 'chunks', 'main-9f8e.js.map'), '{"version":3}')
-		expect(fileUrlFor(dir, join(dir, 'chunks', 'app', 'page-1a2b.js.map'))).toBe(
+		await writeFile(join(staticDir, 'chunks', 'no-map.js'), 'z()')
+		expect(fileUrlFor(staticDir, join(staticDir, 'chunks', 'app', 'page-1a2b.js'))).toBe(
 			'/_next/static/chunks/app/page-1a2b.js',
+		)
+		expect(fileUrlFor(staticDir, join(staticDir, 'chunks', 'app', '[locale]', 'layout-1.js'))).toBe(
+			'/_next/static/chunks/app/%5Blocale%5D/layout-1.js',
 		)
 		const posted: unknown[] = []
 		const client = {
 			call: async (call: { method: string; body?: unknown }) => {
 				if (call.method === 'GET')
-					return { sourceMaps: [{ fileUrl: '/_next/static/chunks/main-9f8e.js' }] }
+					return { source_maps: [{ file_url: '/_next/static/chunks/main-9f8e.js' }] }
 				posted.push(call.body)
 				return {}
 			},
 		} as never
-		expect(await uploadSourceMaps({ dir, env, client })).toBe(1)
+		expect(await uploadSourceMaps({ dir, staticDir, env, client })).toBe(1)
 		expect(posted).toEqual([
 			{
 				release: 'abc123',

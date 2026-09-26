@@ -10,13 +10,19 @@
  * outside the served static directory (see the Dockerfile), so the public
  * site never serves source.
  *
+ * A map is stored under the URL of the script that references it. Turbopack
+ * (Next 16.3) names a map by its own hash, not after its script
+ * (`04-ub1jo11w84.js` ends with `sourceMappingURL=1stdvz8n07l61.js.map`), so
+ * the pairing reads each served script's `sourceMappingURL` comment instead of
+ * deriving the script name from the map file name.
+ *
  * `@sylphx/sdk` 0.31.0 predates `observability.sourceMaps`, so this calls the
  * same contract methods through the SDK client's `call`; switch to
  * `sx.observability.sourceMaps.list/create` when the SDK publishes them.
  */
 
 import { readdir, readFile } from 'node:fs/promises'
-import { join, relative, sep } from 'node:path'
+import { dirname, join, relative, sep } from 'node:path'
 import { Sylphx } from '@sylphx/sdk'
 import { PARENT } from './capture'
 
@@ -28,19 +34,38 @@ export const SOURCE_MAP_DIR = '.next/source-maps'
 /** The URL path the maps' files are served under. */
 export const STATIC_PREFIX = '/_next/static'
 
-async function mapFiles(dir: string): Promise<string[]> {
-	const entries = await readdir(dir, { withFileTypes: true, recursive: true }).catch(() => [])
-	return entries
-		.filter((entry) => entry.isFile() && entry.name.endsWith('.js.map'))
-		.map((entry) => join(entry.parentPath, entry.name))
+/** Where the served scripts live, relative to the server's working directory. */
+export const STATIC_DIR = '.next/static'
+
+const SOURCE_MAPPING_URL = /\/\/# sourceMappingURL=([^\s'"]+)\s*$/
+
+/** `/_next/static/chunks/app/page-3f2a.js` for `<staticDir>/chunks/app/page-3f2a.js`. */
+export function fileUrlFor(staticDir: string, script: string): string {
+	// Browsers report the served, percent-encoded URL (`app/%5Blocale%5D/…`).
+	return `${STATIC_PREFIX}/${relative(staticDir, script).split(sep).map(encodeURIComponent).join('/')}`
 }
 
-/** `/_next/static/chunks/app/page-3f2a.js` for `<dir>/chunks/app/page-3f2a.js.map`. */
-export function fileUrlFor(dir: string, file: string): string {
-	return `${STATIC_PREFIX}/${relative(dir, file)
-		.split(sep)
-		.join('/')
-		.replace(/\.map$/, '')}`
+/** Each served script that names a map present in `mapDir`, with that map's path. */
+export async function scriptMaps(
+	staticDir: string,
+	mapDir: string,
+): Promise<{ fileUrl: string; mapFile: string }[]> {
+	const entries = await readdir(staticDir, { withFileTypes: true, recursive: true }).catch(() => [])
+	const pairs: { fileUrl: string; mapFile: string }[] = []
+	for (const entry of entries) {
+		if (!(entry.isFile() && entry.name.endsWith('.js'))) continue
+		const script = join(entry.parentPath, entry.name)
+		const tail = (await readFile(script, 'utf8')).slice(-512)
+		const reference = SOURCE_MAPPING_URL.exec(tail)?.[1]
+		if (!reference || reference.includes(':')) continue
+		const mapFile = join(mapDir, relative(staticDir, join(dirname(script), reference)))
+		const present = await readFile(mapFile).then(
+			() => true,
+			() => false,
+		)
+		if (present) pairs.push({ fileUrl: fileUrlFor(staticDir, script), mapFile })
+	}
+	return pairs
 }
 
 async function uploaded(client: Client, release: string): Promise<Set<string>> {
@@ -69,25 +94,24 @@ async function uploaded(client: Client, release: string): Promise<Set<string>> {
 
 /** Uploads missing maps for this release. Never throws; resolves to the number uploaded. */
 export async function uploadSourceMaps(
-	options: { dir?: string; env?: Env; client?: Client } = {},
+	options: { dir?: string; staticDir?: string; env?: Env; client?: Client } = {},
 ): Promise<number> {
 	const env = options.env ?? process.env
 	const release = env.SYLPHX_GIT_COMMIT_SHA?.trim()
 	const dir = options.dir ?? SOURCE_MAP_DIR
 	if (!release || (!options.client && !env.SYLPHX_API_KEY?.trim())) return 0
 	try {
-		const files = await mapFiles(dir)
-		if (files.length === 0) return 0
+		const pairs = await scriptMaps(options.staticDir ?? STATIC_DIR, dir)
+		if (pairs.length === 0) return 0
 		const client = options.client ?? new Sylphx({ apiKey: env.SYLPHX_API_KEY, timeoutMs: 30_000 })
 		const done = await uploaded(client, release)
 		let count = 0
-		for (const file of files) {
-			const fileUrl = fileUrlFor(dir, file)
+		for (const { fileUrl, mapFile } of pairs) {
 			if (done.has(fileUrl)) continue
 			await client.call({
 				method: 'POST',
 				path: `/v1/${PARENT}/source_maps`,
-				body: { release, fileUrl, content: await readFile(file, 'utf8') },
+				body: { release, fileUrl, content: await readFile(mapFile, 'utf8') },
 				bodyType: 'sylphx.observability.v1.SourceMap',
 				responseType: 'sylphx.observability.v1.SourceMap',
 				mutation: true,

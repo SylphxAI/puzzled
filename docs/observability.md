@@ -31,8 +31,11 @@ script or host.
   never serves a map (`/_next/static/**/*.map` returns 404).
 - At startup, `register()` calls `uploadSourceMaps()`
   (`lib/observability/source-maps.ts`). It uploads the maps for release
-  `SYLPHX_GIT_COMMIT_SHA`, each keyed to its served file URL
-  (`/_next/static/<path>.js`), and skips maps already stored for the release.
+  `SYLPHX_GIT_COMMIT_SHA` and skips maps already stored for the release. Each
+  map is keyed to the served URL of the script whose `sourceMappingURL`
+  names it (Turbopack names maps by their own hash), with each path segment
+  percent-encoded as browsers report it (`app/%5Blocale%5D/…`). The runtime
+  image therefore carries both `.next/static` and `.next/source-maps`.
   The service maps minified browser frames to source at ingest.
 
 ## Privacy
