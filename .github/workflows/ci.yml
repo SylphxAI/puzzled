@@ -51,7 +51,7 @@ jobs:
 
   lint-and-typecheck:
     name: Lint & Type Check
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 20
 
     steps:
@@ -107,7 +107,7 @@ jobs:
 
   security:
     name: Security Scan
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 20
 
     steps:
@@ -169,11 +169,14 @@ jobs:
 
   migrations:
     name: Migration Integrity
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4.2.2
+
+      - name: Every job runs on our own runners
+        run: bash .github/scripts/check-ci-runner-profile.sh
 
       - name: Setup Atlas
         run: |
@@ -210,7 +213,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 20
     needs: [lint-and-typecheck]
 
@@ -261,7 +264,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [lint-and-typecheck, migrations, unit-tests]
 
@@ -355,25 +358,33 @@ jobs:
           cargo build --locked --release -p puzzled-server
   rust-api:
     name: Rust API
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
-    # Postgres for the Puzzled Plus flow test (buy, unlock, family, cancel,
-    # refund); it creates its own throwaway database.
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      PUZZLED_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
       PUZZLED_REQUIRE_DB_TESTS: "1"
 
     steps:
       - uses: actions/checkout@v4.2.2
+
+      # Postgres for the Puzzled Plus flow test (buy, unlock, family, cancel,
+      # refund); it creates its own throwaway database. Our runners cannot run
+      # `services:` containers, so this is a host-native scratch server with a
+      # job-private data dir and port.
+      - name: Start scratch Postgres
+        run: |
+          set -euo pipefail
+          if ! ls -d /usr/lib/postgresql/*/bin >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq postgresql
+          fi
+          PG_BIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -1)"
+          PGDATA="${RUNNER_TEMP}/pg-${GITHUB_RUN_ID}-${GITHUB_JOB}"
+          PGPORT="$((20000 + RANDOM % 20000))"
+          rm -rf "${PGDATA}"
+          LC_ALL=C "${PG_BIN}/initdb" -D "${PGDATA}" -U postgres --auth=trust --locale=C -E UTF8 >/dev/null
+          LC_ALL=C "${PG_BIN}/pg_ctl" -D "${PGDATA}" -w -l "${PGDATA}.log" \
+            -o "-p ${PGPORT} -k ${RUNNER_TEMP} -c listen_addresses=127.0.0.1" start
+          echo "PUZZLED_TEST_DATABASE_URL=postgres://postgres:postgres@127.0.0.1:${PGPORT}/postgres" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -429,7 +440,7 @@ jobs:
 
   seo-contract:
     name: SEO Contract
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [build]
 
@@ -515,7 +526,7 @@ jobs:
     # Merge queue and nightly only: a full browser suite on every PR push
     # costs more than it catches before the queue does.
     if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 40
     needs: [build]
 
@@ -615,7 +626,7 @@ jobs:
     name: Lighthouse Budgets
     # Merge queue and nightly only, like the a11y suite.
     if: contains(fromJSON('["merge_group", "schedule", "workflow_dispatch"]'), github.event_name)
-    runs-on: ubuntu-latest
+    runs-on: sylphx-linux-standard
     timeout-minutes: 30
     needs: [build]
 
