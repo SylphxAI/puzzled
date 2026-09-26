@@ -6,7 +6,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import type { SudokuCell as SudokuCellData } from '../types'
 import { BOX_SIZE } from '../types'
@@ -38,18 +38,20 @@ const SudokuCell = memo(function SudokuCell({
 	const t = useTranslations('common')
 	const handleClick = useCallback(() => onClick(row, col), [onClick, row, col])
 
-	const bgColor = useMemo(() => {
-		if (isSelected) return 'rgba(99, 102, 241, 0.3)'
-		if (isHighlighted) return '#f1f5f9'
-		if (isSameValue) return 'rgba(99, 102, 241, 0.1)'
-		return '#ffffff'
-	}, [isSelected, isHighlighted, isSameValue])
+	// Selection is amber, its row, column and box are muted, and matching
+	// digits get a light amber wash: the same cues in light and dark.
+	const background = isSelected
+		? 'bg-accent-warm/70'
+		: isSameValue
+			? 'bg-accent-warm/25'
+			: isHighlighted
+				? 'bg-muted'
+				: 'bg-card'
 
 	return (
 		<button
 			type="button"
 			onClick={handleClick}
-			style={{ backgroundColor: bgColor }}
 			/*
 			 * Cells only paint a glyph, so without a name an empty cell reaches
 			 * assistive tech as an unlabelled button (WCAG 4.1.2). The name gives
@@ -63,22 +65,24 @@ const SudokuCell = memo(function SudokuCell({
 				.filter(Boolean)
 				.join(', ')}
 			className={cn(
-				'flex cursor-pointer items-center justify-center',
-				'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary',
-				cell.isGiven && 'font-bold text-slate-900',
-				!cell.isGiven && cell.value && 'text-indigo-600',
-				hasConflict && !cell.isGiven && 'text-red-500',
+				'flex cursor-pointer items-center justify-center transition-colors duration-fast [-webkit-tap-highlight-color:transparent]',
+				'focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+				background,
+				cell.isGiven && 'font-semibold text-foreground',
+				!cell.isGiven && cell.value && 'font-medium text-info',
+				hasConflict && !cell.isGiven && 'text-destructive',
+				isSelected && 'text-[#1a1712]',
 			)}
 		>
 			{cell.value ? (
-				<span className="text-[11px] leading-none xs:text-sm sm:text-base">{cell.value}</span>
+				<span className="text-lg leading-none tnum sm:text-xl">{cell.value}</span>
 			) : cell.notes.size > 0 ? (
 				<span className="grid h-full w-full grid-cols-3 grid-rows-3 p-px">
 					{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
 						<span
 							key={n}
 							className={cn(
-								'flex items-center justify-center text-[6px] font-medium leading-none text-slate-500 xs:text-[7px] sm:text-[8px]',
+								'flex items-center justify-center text-[8px] font-medium leading-none text-muted-foreground sm:text-[9px]',
 								!cell.notes.has(n) && 'opacity-0',
 							)}
 						>
@@ -135,7 +139,7 @@ export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellCli
 				gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
 				gridTemplateRows: 'repeat(3, minmax(0, 1fr))',
 				gap: '1px',
-				backgroundColor: '#cbd5e1', // slate-300 for thin cell borders
+				backgroundColor: 'var(--color-border)', // thin cell rules
 			}}
 		>
 			{[0, 1, 2].flatMap((r) =>
@@ -177,8 +181,10 @@ export function SudokuGrid({ userGrid, selectedCell, conflictingCells, onCellCli
 						gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
 						gridTemplateRows: 'repeat(3, minmax(0, 1fr))',
 						gap: '2px',
-						backgroundColor: '#1e293b', // slate-800 for thick box borders
+						backgroundColor: 'var(--color-foreground)', // box rules in ink
 						padding: '2px',
+						borderRadius: '10px',
+						overflow: 'hidden',
 					}}
 				>
 					{[0, 1, 2].flatMap((br) => [0, 1, 2].map((bc) => renderBox(br, bc)))}

@@ -73,5 +73,6 @@
 		"hardDescription": "Test your limits"
 	},
 	"help": "玩法",
-	"menu": "更多"
+	"menu": "更多",
+	"reset": "重新開始"
 }
