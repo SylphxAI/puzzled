@@ -1,3 +1,5 @@
+![Puzzled](https://mark.sylphx.com/api/v1/mark/hero.svg?type=grid&color=0%3A9a3412%2C50%3Af97316%2C100%3Afb923c&text=Puzzled&desc=Short%20daily%20brain%20games)
+
 # Puzzled
 
 Short daily brain games at [puzzled.gg](https://puzzled.gg): a few minutes a
