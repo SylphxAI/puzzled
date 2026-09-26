@@ -37,8 +37,9 @@ watch_paths = [
 [[services]]
 name = "web"
 port = 3000
-# Presentation root is HTTP-ready (no separate /health).
-health = { path = "/" }
+# Readiness answers from the Next.js process and calls nothing. Probing "/"
+# rendered the home page (about 20 api reads) every 5 seconds.
+health = { path = "/api/health" }
 # ADR-5140: presentation is web. Platform injects API_INTERNAL_URL for private
 # web → api calls (connect graph). The web service has no backend authority
 # and must boot without DATABASE_URL / REDIS_URL / SYLPHX_SECRET_KEY
