@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { logger } from '@/lib/logger'
+import { reportError } from '@/lib/observability/browser'
 
 type Props = {
 	error: Error & { digest?: string }
@@ -12,9 +12,8 @@ type Props = {
  * Global error boundary for the entire application
  * This catches errors in the root layout and other critical failures.
  *
- * Note: Cannot use SDK hooks here because SylphxProvider may not be mounted
- * when global errors occur. Falls back to console logging.
- * The GlobalErrorHandler component handles runtime errors within the app.
+ * It cannot use provider hooks (the providers may not be mounted), so it
+ * reports through the plain relay client to Sylphx Observability.
  */
 export default function GlobalError({ error, reset }: Props) {
 	const reported = useRef(false)
@@ -24,13 +23,7 @@ export default function GlobalError({ error, reset }: Props) {
 		if (reported.current) return
 		reported.current = true
 
-		// Log to console - SDK context may not be available for global errors
-		logger.error('global-error', {
-			name: error.name,
-			message: error.message,
-			digest: error.digest,
-			stack: error.stack,
-		})
+		reportError(error, { boundary: 'global', digest: error.digest })
 	}, [error])
 
 	return (

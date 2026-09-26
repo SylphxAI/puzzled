@@ -1,8 +1,10 @@
 //! HTTP router composition root.
 //!
 //! Sole surface: Connect RPC services (healthz/readyz probes + Connect
-//! fallback). The hand-rolled REST surface is deleted (ADR-170). The one
-//! non-Connect write is the Stripe webhook, which Stripe calls, not clients.
+//! fallback). The hand-rolled REST surface is deleted (ADR-170). The
+//! non-Connect writes are the Stripe webhook, which Stripe calls, not clients,
+//! and the key-guarded Observability test trigger (docs/observability.md).
+//! Every 5xx is captured into Sylphx Observability.
 
 use axum::routing::{get, post};
 use axum::Router;
@@ -16,6 +18,7 @@ use super::connect_preferences::preferences_connect_service;
 use super::connect_puzzle::puzzle_connect_service;
 use super::connect_stats::stats_connect_service;
 use super::health::{healthz, readyz};
+use super::observability_test::observability_test;
 use super::state::AppState;
 use crate::capabilities::identity_access::adapters::auth_session::attach_auth_session;
 
@@ -35,11 +38,15 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/webhooks/stripe", post(stripe_webhook))
+        .route("/observability/test", post(observability_test))
         .with_state(state)
         .fallback_service(connect.into_axum_service())
         // Sylphx Auth end-user sessions are checked once, before any service.
         .layer(axum::middleware::from_fn_with_state(
             auth,
             attach_auth_session,
+        ))
+        .layer(axum::middleware::from_fn(
+            crate::observability::capture_server_errors,
         ))
 }

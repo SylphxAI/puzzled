@@ -16,6 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
+    puzzled_server::observability::init();
 
     // Cold-start + managed DNS: allow longer first connect so free-floor ritual
     // persist is not permanently demoted to S0 on a transient 3s timeout.

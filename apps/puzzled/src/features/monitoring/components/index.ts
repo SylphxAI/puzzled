@@ -2,5 +2,5 @@
  * Monitoring Components
  */
 
-export { GlobalErrorHandler } from './global-error-handler'
+export { ErrorCapture } from './error-capture'
 export { SessionReplayProvider } from './session-replay-provider'

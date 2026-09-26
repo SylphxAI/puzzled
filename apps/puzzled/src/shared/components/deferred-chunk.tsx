@@ -11,7 +11,7 @@
 
 import { Toaster } from '@sylphx/ui'
 import { AchievementChecker, AchievementToastProvider } from '@/features/gamification'
-import { GlobalErrorHandler, SessionReplayProvider } from '@/features/monitoring'
+import { SessionReplayProvider } from '@/features/monitoring'
 import { PWAInstallPrompt } from '@/shared/components/pwa-install-prompt'
 
 export function DeferredToaster() {
@@ -19,13 +19,9 @@ export function DeferredToaster() {
 }
 
 export function DeferredMonitoring() {
-	// Both wrappers render their children unchanged: mounting them without
-	// children only installs their listeners.
-	return (
-		<GlobalErrorHandler>
-			<SessionReplayProvider>{null}</SessionReplayProvider>
-		</GlobalErrorHandler>
-	)
+	// Renders its children unchanged: mounting it without children only
+	// installs its listeners. Error capture is not deferred (see `ErrorCapture`).
+	return <SessionReplayProvider>{null}</SessionReplayProvider>
 }
 
 export function DeferredOverlays({ maxStreak }: { maxStreak?: number | null }) {

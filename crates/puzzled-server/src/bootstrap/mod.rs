@@ -11,6 +11,7 @@ mod connect_stats;
 mod health;
 mod identity;
 mod lifecycle;
+mod observability_test;
 mod router;
 mod state;
 

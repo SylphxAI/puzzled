@@ -65,6 +65,9 @@ path_prefixes = [
   "/readyz",
   # Stripe posts subscription and payment events here (signature-verified).
   "/webhooks/stripe",
+  # Key-guarded production check for error capture (docs/observability.md).
+  # The web service's own trigger is /api/observability/test.
+  "/observability/test",
 ]
 # Platform cron callbacks target the api JobsService (retention jobs); the web
 # residual executor is deleted (ADR-170).

@@ -9,7 +9,7 @@
  * initial route bundle:
  *
  * - the toast host (sonner runtime),
- * - session replay, the global error handler and the web-vitals reporter,
+ * - session replay and the web-vitals reporter,
  * - achievement toasts and the PWA install prompt.
  *
  * Every path is bounded: the mount happens at the earliest of `load` + idle,
@@ -149,7 +149,7 @@ export function DeferredToaster() {
 	)
 }
 
-/** Session replay, error handler and web-vitals reporter. */
+/** Session replay and web-vitals reporter. */
 export function DeferredMonitoring() {
 	return (
 		<DeferredMount>

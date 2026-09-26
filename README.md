@@ -16,6 +16,7 @@ family plan ([pricing and policy](docs/north-star/MONETIZATION.md)).
 ```text
 browser -> /puzzled.v1.*, /healthz, /readyz -> api (Rust)
 Stripe  -> /webhooks/stripe                 -> api (Rust)
+ops     -> /observability/test              -> api (Rust)
         -> everything else                  -> web (Next.js)
 ```
 
@@ -29,6 +30,9 @@ Stripe  -> /webhooks/stripe                 -> api (Rust)
 - **web** ([apps/puzzled](apps/puzzled)): the Next.js site. It renders pages
   and calls the api through a generated Connect client.
 - **db**: PostgreSQL, with schema migrations managed by Atlas.
+
+Server and browser errors go to Sylphx Observability; see
+[docs/observability.md](docs/observability.md).
 
 Every game implements the same module interface: a daily puzzle keyed to the
 date in Hong Kong time, a run, a finish, and a result card.
