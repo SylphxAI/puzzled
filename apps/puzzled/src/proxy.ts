@@ -4,6 +4,7 @@
  * Combines:
  * 1. Sylphx Auth (token refresh, route protection, auth routes)
  * 2. next-intl (i18n routing)
+ * 3. The per-request Content Security Policy nonce (lib/csp.ts)
  *
  * Auth routes are handled by Sylphx middleware:
  * - /auth/callback — OAuth callback
@@ -12,8 +13,9 @@
  * No manual /api/auth/* routes needed.
  */
 
-import { type NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import createMiddleware from 'next-intl/middleware'
+import { buildCsp, createNonce, NONCE_HEADER } from '@/lib/csp'
 import { defaultLocale, isValidLocale, type Locale, locales } from '@/lib/i18n/config'
 import { routing } from '@/lib/i18n/routing'
 import { isInboundPublicPath, isProxySkippedPath } from '@/lib/proxy-paths'
@@ -70,7 +72,23 @@ export function rememberedLocaleRedirect(
 // Combined Proxy — Identity dest owns sessions; suite-door middleware is dead.
 // =============================================================================
 
-export async function proxy(request: NextRequest) {
+/**
+ * Every response carries a fresh nonce CSP. The request is rebuilt with the
+ * nonce so Next.js and the layout can put it on the page's scripts.
+ */
+export async function proxy(incoming: NextRequest) {
+	const nonce = createNonce()
+	const csp = buildCsp(nonce, { dev: process.env.NODE_ENV === 'development' })
+	const headers = new Headers(incoming.headers)
+	headers.set(NONCE_HEADER, nonce)
+	headers.set('Content-Security-Policy', csp)
+	const request = new NextRequest(incoming, { headers })
+	const response = await route(request)
+	response.headers.set('Content-Security-Policy', csp)
+	return response
+}
+
+async function route(request: NextRequest): Promise<NextResponse> {
 	const { pathname } = request.nextUrl
 
 	// =========================================================================
@@ -79,7 +97,7 @@ export async function proxy(request: NextRequest) {
 
 	// Skip files with extensions, Next.js internals, API routes
 	if (isProxySkippedPath(pathname)) {
-		return NextResponse.next()
+		return NextResponse.next({ request: { headers: request.headers } })
 	}
 
 	// =========================================================================

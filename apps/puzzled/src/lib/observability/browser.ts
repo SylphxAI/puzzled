@@ -6,6 +6,10 @@
  *
  * Reports carry the error, its stack, the page path (never the query string),
  * and the last navigation breadcrumbs. At most 10 reports leave one page load.
+ *
+ * Content Security Policy violations are reported the same way, one per
+ * directive and blocked origin, so a policy regression shows up as an error
+ * group (`CSPViolation`, tag handler=csp).
  */
 
 export const RELAY_PATH = '/api/observability/errors'
@@ -76,14 +80,39 @@ export function installBrowserErrorCapture(): () => void {
 	const onRejection = (event: PromiseRejectionEvent) =>
 		reportError(event.reason, { handler: 'unhandledrejection' })
 	const onNavigate = () => addBreadcrumb('navigation', path())
+	const onViolation = (event: SecurityPolicyViolationEvent) => {
+		const violation = new Error(cspViolationMessage(event))
+		violation.name = 'CSPViolation'
+		reportError(violation, { handler: 'csp', disposition: event.disposition })
+	}
 	window.addEventListener('error', onError)
 	window.addEventListener('unhandledrejection', onRejection)
+	document.addEventListener('securitypolicyviolation', onViolation)
 	window.addEventListener('popstate', onNavigate)
 	addBreadcrumb('navigation', path())
 	return () => {
 		window.removeEventListener('error', onError)
 		window.removeEventListener('unhandledrejection', onRejection)
+		document.removeEventListener('securitypolicyviolation', onViolation)
 		window.removeEventListener('popstate', onNavigate)
 		state.installed = false
 	}
+}
+
+/**
+ * One stable message per directive and blocked source: the blocked URL keeps
+ * only its origin (no path or query), and inline or eval blocks keep their
+ * keyword, so the same fault always lands in the same error group.
+ */
+export function cspViolationMessage(event: {
+	effectiveDirective: string
+	blockedURI: string
+}): string {
+	let blocked = event.blockedURI || 'unknown'
+	try {
+		blocked = new URL(blocked).origin
+	} catch {
+		// 'inline', 'eval', 'wasm-eval' and similar keywords are not URLs.
+	}
+	return `CSP ${event.effectiveDirective} blocked ${blocked}`
 }

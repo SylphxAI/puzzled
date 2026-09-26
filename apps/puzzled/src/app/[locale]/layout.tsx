@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { ErrorCapture } from '@/features/monitoring/components/error-capture'
 import { ApiProvider } from '@/lib/api/provider'
+import { NONCE_HEADER } from '@/lib/csp'
 import { CLIENT_NAMESPACES, pickMessages } from '@/lib/i18n/client-messages'
 import { routing } from '@/lib/i18n/routing'
 import { getAppConfig } from '@/lib/identity/app-config'
@@ -146,6 +148,8 @@ function JsonLd({ baseUrl }: { baseUrl: string }) {
 export default async function LocaleLayout({ children, params }: Props) {
 	const { locale } = await params
 	const baseUrl = await getRequestSiteOrigin()
+	// The proxy's per-request CSP nonce; inline scripts run only with it.
+	const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
 
 	// Validate locale
 	if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
@@ -178,6 +182,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				<link rel="dns-prefetch" href="https://js.stripe.com" />
 				{/* FOUC prevention: Apply theme class before React hydration */}
 				<script
+					nonce={nonce}
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: Theme script with trusted static code
 					dangerouslySetInnerHTML={{
 						__html: `
@@ -217,6 +222,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 				 * hydration stays consistent.
 				 */}
 				<script
+					nonce={nonce}
 					// biome-ignore lint/security/noDangerouslySetInnerHtml: Consent settle script with trusted static code
 					dangerouslySetInnerHTML={{
 						__html: `
@@ -239,7 +245,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 			<body className="antialiased">
 				{/* At first paint, outside the providers, so early errors are captured too. */}
 				<ErrorCapture />
-				<ThemeProvider>
+				<ThemeProvider nonce={nonce}>
 					<PlatformProvider appId={config.app.id} config={config}>
 						<ApiProvider>
 							<NextIntlClientProvider messages={pickMessages(messages, CLIENT_NAMESPACES)}>
