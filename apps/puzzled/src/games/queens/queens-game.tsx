@@ -16,9 +16,8 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { cn } from '@/lib/utils'
-import type { QueensPuzzleData, QueensSolution } from './types'
+import { parseQueensClientPayload } from './parse-client'
 import { REGION_COLORS } from './types'
 import { useQueens } from './use-queens'
 
@@ -33,9 +32,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	const t = useTranslations('games.queens')
 	const tCommon = useTranslations('common')
 
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<QueensPuzzleData, QueensSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseQueensClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -62,7 +59,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	const gameEndedRef = useRef(false)
 
 	// Game hook
-	const game = useQueens(puzzle.puzzleData, puzzle.solution)
+	const game = useQueens(puzzle)
 	const conflictingCells = game.getConflictingCells()
 
 	// Handle game completion - in useEffect to avoid render-phase side effects
@@ -134,7 +131,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 		)
 	}
 
-	const size = puzzle.puzzleData.size
+	const size = puzzle.size
 	const cellSize = size <= 6 ? 'w-12 h-12' : size <= 7 ? 'w-10 h-10' : 'w-9 h-9'
 
 	return (
@@ -166,7 +163,7 @@ export function QueensGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				>
 					{Array.from({ length: size }, (_, row) =>
 						Array.from({ length: size }, (_, col) => {
-							const region = puzzle.puzzleData.regions[row][col]
+							const region = puzzle.regions[row][col]
 							const hasQueen = game.state.grid[row][col]
 							const isSelected =
 								game.state.selectedCell?.row === row && game.state.selectedCell?.col === col

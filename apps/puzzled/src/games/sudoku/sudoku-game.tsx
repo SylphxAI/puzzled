@@ -16,10 +16,9 @@ import { HowToPlayModal } from '@/features/daily/components/how-to-play-modal'
 import { useResultShare } from '@/features/daily/hooks/use-result-share'
 import { formatTimer } from '@/games/shared/format'
 import { useGameSession } from '@/games/shared/use-game-session'
-import { parsePuzzleDataClient } from '@/games/types'
 import { SudokuIcon } from '@/shared/components/ui/game-icons'
 import { SudokuGrid, SudokuNumberPad } from './components'
-import type { SudokuPuzzleClientData, SudokuSolution } from './types'
+import { parseSudokuClientPayload } from './parse-client'
 import { useSudoku } from './use-sudoku'
 
 type Props = {
@@ -33,9 +32,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	const t = useTranslations('games.sudoku')
 
 	// Type-safe puzzle parsing - no config import needed
-	const [puzzle] = useState(() =>
-		parsePuzzleDataClient<SudokuPuzzleClientData, SudokuSolution>(puzzleData),
-	)
+	const [puzzle] = useState(() => parseSudokuClientPayload(puzzleData))
 
 	// ==========================================
 	// useGameSession: Consolidates 200+ lines of boilerplate
@@ -62,7 +59,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 	const gameEndedRef = useRef(false)
 
 	// Game hook
-	const game = useSudoku(puzzle.puzzleData, puzzle.solution)
+	const game = useSudoku(puzzle)
 	const conflictingCells = game.getConflictingCells()
 
 	// Handle game completion - in useEffect to avoid render-phase side effects
@@ -88,9 +85,9 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 			puzzleDate,
 			status: 'won',
 			statLine: `⏱️ ${formatTimer(timeMs)}`,
-			difficultyLabel: puzzle.puzzleData.difficulty,
+			difficultyLabel: puzzle.difficulty,
 		})
-	}, [shareResult, game.state.endTime, startTime, puzzle.puzzleData.difficulty, puzzleDate])
+	}, [shareResult, game.state.endTime, startTime, puzzle.difficulty, puzzleDate])
 
 	// Ready screen
 	if (isReady) {
@@ -136,7 +133,7 @@ export function SudokuGame({ mode = 'daily', puzzleId, puzzleData, puzzleDate }:
 				{/* Header with help button */}
 				<div className="flex w-full items-center justify-between">
 					<div className="text-sm text-muted-foreground">
-						{t('name')} ({t(`difficulty.${puzzle.puzzleData.difficulty}`)})
+						{t('name')} ({t(`difficulty.${puzzle.difficulty}`)})
 					</div>
 					<Button variant="ghost" size="sm" onClick={() => setShowHelpModal(true)}>
 						<HelpCircle className="h-4 w-4" />

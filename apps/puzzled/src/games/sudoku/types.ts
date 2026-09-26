@@ -87,15 +87,19 @@ export function isValidPlacement(
 }
 
 /**
- * Check if the grid is completely and correctly filled
+ * True when every cell holds 1-9 and every row, column and box holds each
+ * digit once. The daily puzzle has one solution, so a grid that keeps the
+ * rules is that solution; the server still checks the finish on submit. The
+ * browser never receives the solution.
  */
-export function isGridComplete(userGrid: SudokuCell[][], solution: number[][]): boolean {
+export function isGridSolved(userGrid: SudokuCell[][]): boolean {
+	const values = userGrid.map((row) => row.map((cell) => cell.value))
+	if (values.length !== GRID_SIZE) return false
 	for (let row = 0; row < GRID_SIZE; row++) {
 		for (let col = 0; col < GRID_SIZE; col++) {
-			const userValue = userGrid[row]?.[col]?.value
-			const solutionValue = solution[row]?.[col]
-
-			if (userValue !== solutionValue) return false
+			const value = values[row]?.[col]
+			if (typeof value !== 'number' || value < 1 || value > 9) return false
+			if (!isValidPlacement(values, row, col, value)) return false
 		}
 	}
 	return true

@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useReducer } from 'react'
-import type { QueensPuzzleData, QueensSolution } from './config'
+import type { QueensPuzzleData } from './config'
 import type { QueensGameState } from './types'
 import { getConflicts, isSolved } from './types'
 
@@ -150,10 +150,7 @@ export type UseQueensReturn = {
 	queenCount: number
 }
 
-export function useQueens(
-	puzzleData: QueensPuzzleData,
-	_solution: QueensSolution,
-): UseQueensReturn {
+export function useQueens(puzzleData: QueensPuzzleData): UseQueensReturn {
 	const [state, dispatch] = useReducer(
 		(s: QueensGameState, a: QueensAction) => queensReducer(s, a, puzzleData),
 		puzzleData,
