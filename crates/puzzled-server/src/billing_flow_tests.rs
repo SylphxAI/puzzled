@@ -215,11 +215,29 @@ fn complete_checkout(
     let n = fake.next;
     let now = chrono::Utc::now().timestamp();
     let sub = format!("sub_{n}");
+    // Stripe copies `subscription_data[metadata]` from this customer's checkout.
+    let mut metadata = serde_json::Map::new();
+    metadata.insert("user_id".into(), json!(user));
+    if let Some(form) = fake
+        .checkouts
+        .iter()
+        .rev()
+        .find(|f| f.get("customer").map(String::as_str) == Some(customer))
+    {
+        for (key, value) in form {
+            if let Some(name) = key
+                .strip_prefix("subscription_data[metadata][")
+                .and_then(|k| k.strip_suffix(']'))
+            {
+                metadata.insert(name.to_string(), json!(value));
+            }
+        }
+    }
     fake.subscriptions.insert(
         sub.clone(),
         json!({"id": sub, "customer": customer, "status": "active",
                "current_period_end": now + 30 * 86_400, "cancel_at_period_end": false,
-               "start_date": now, "metadata": {"user_id": user},
+               "start_date": now, "metadata": metadata,
                "items": {"data": [{"price": {"lookup_key": lookup_key}}]}}),
     );
     let invoice = format!("in_{n}");
@@ -298,10 +316,23 @@ fn token(sub: &str) -> String {
 }
 
 async fn call(app: &Router, path: &str, body: Value, bearer: Option<&str>) -> (StatusCode, Value) {
+    call_with_cookie(app, path, body, bearer, None).await
+}
+
+async fn call_with_cookie(
+    app: &Router,
+    path: &str,
+    body: Value,
+    bearer: Option<&str>,
+    cookie: Option<&str>,
+) -> (StatusCode, Value) {
     let mut request = Request::builder()
         .method(Method::POST)
         .uri(path)
         .header("content-type", "application/json");
+    if let Some(cookie) = cookie {
+        request = request.header("cookie", cookie);
+    }
     if let Some(token) = bearer {
         request = request.header("authorization", format!("Bearer {token}"));
     }
@@ -425,12 +456,44 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     .await;
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
-    // Checkout carries the account, the plan and the chosen currency.
-    let (status, checkout) = call(
+    // Sign-up records the first-touch tags from the landing cookie, once.
+    let tryit = "puzzled_attr=s%3Dtryit%26m%3Dreferral%26c%3Ddaily%26r%3Dres_42%26p%3D%252Fdaily%26at%3D1790000000000";
+    let record = "/puzzled.v1.PreferencesService/RecordSignupAttribution";
+    let (status, body) =
+        call_with_cookie(&app, record, json!({}), Some(&buyer_token), Some(tryit)).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    assert_eq!(body["recorded"], true);
+    let later = "puzzled_attr=s%3Dsomewhere-else";
+    let (_, body) =
+        call_with_cookie(&app, record, json!({}), Some(&buyer_token), Some(later)).await;
+    assert!(
+        !body["recorded"].as_bool().unwrap_or(false),
+        "first touch wins: {body}"
+    );
+    let (status, _) = call_with_cookie(&app, record, json!({}), None, Some(tryit)).await;
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+    let stored: (Option<String>, Option<String>, Option<String>) =
+        sqlx::query_as(r#"SELECT "utm_source", "ref", "landing_path" FROM "account_attribution""#)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    assert_eq!(
+        stored,
+        (
+            Some("tryit".into()),
+            Some("res_42".into()),
+            Some("/daily".into())
+        )
+    );
+
+    // Checkout carries the account, the plan, the chosen currency and the
+    // account's tags (not the later cookie on this request).
+    let (status, checkout) = call_with_cookie(
         &app,
         "/puzzled.v1.BillingService/CreateCheckout",
         json!({"planId": "individual_monthly", "locale": "en-GB", "currency": "gbp"}),
         Some(&buyer_token),
+        Some(later),
     )
     .await;
     assert_eq!(status, StatusCode::OK, "{checkout}");
@@ -439,6 +502,8 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     assert_eq!(form["line_items[0][price]"], "price_im");
     assert_eq!(form["currency"], "gbp");
     assert_eq!(form["subscription_data[metadata][user_id]"], buyer);
+    assert_eq!(form["subscription_data[metadata][utm_source]"], "tryit");
+    assert_eq!(form["subscription_data[metadata][ref]"], "res_42");
     assert_eq!(
         form["success_url"],
         "https://puzzled.test/en-GB/settings/subscription?checkout=success"
@@ -488,6 +553,19 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     assert_eq!(subscription["entitled"], true);
     assert_eq!(subscription["source"], "plus");
     assert_eq!(subscription["planId"], "individual_monthly");
+    let tags: (Option<Value>,) = sqlx::query_as(
+        r#"SELECT "attribution" FROM "billing_subscriptions" WHERE "stripe_subscription_id" = $1"#,
+    )
+    .bind(&sub)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+    assert_eq!(
+        tags.0,
+        Some(
+            json!({"utm_source": "tryit", "utm_medium": "referral", "utm_campaign": "daily", "ref": "res_42"})
+        )
+    );
     assert!(
         subscription.get("refundUntilMs").is_some(),
         "{subscription}"
@@ -591,14 +669,20 @@ async fn buy_unlock_share_cancel_refund_and_lock_again() {
     // Family plan: the owner shares with members up to four people.
     let owner = "0b6f7d3e-2222-4a4a-9c9c-000000000002";
     let owner_token = token(owner);
-    let (status, _) = call(
+    let (status, _) = call_with_cookie(
         &app,
         "/puzzled.v1.BillingService/CreateCheckout",
         json!({"planId": "family_monthly"}),
         Some(&owner_token),
+        Some("puzzled_attr=s%3Dnewsletter"),
     )
     .await;
     assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        fake.lock().unwrap().checkouts[1]["subscription_data[metadata][utm_source]"],
+        "newsletter",
+        "without an account row the landing cookie is used"
+    );
     let owner_customer = fake.lock().unwrap().checkouts[1]["customer"].clone();
     let family_sub =
         complete_checkout(&fake, &owner_customer, owner, "puzzled_family_monthly", 799);

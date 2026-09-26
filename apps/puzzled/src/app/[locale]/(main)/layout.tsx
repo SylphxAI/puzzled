@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { cache, Suspense } from 'react'
+import { AttributionCapture } from '@/features/analytics/components/attribution-capture'
 import { GuestIdentityBootstrap } from '@/features/daily/components/guest-identity-bootstrap'
 import { getServerStreakInfo, hasServerProgressIdentity } from '@/lib/api/server'
 import { currentUser } from '@/lib/identity/server'
@@ -119,6 +120,7 @@ export default function MainLayout({ children }: Props) {
 			 * the SDK keeps owning the UI and the stored decision.
 			 */}
 			<ConsentBanner />
+			<AttributionCapture />
 
 			{/* Fixed overlays - proper z-index stacking */}
 			<Suspense fallback={null}>

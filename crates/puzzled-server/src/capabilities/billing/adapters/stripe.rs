@@ -42,6 +42,9 @@ pub struct StripeSubscription {
     pub cancel_at_period_end: bool,
     pub start_date: i64,
     pub user_id: Option<String>,
+    /// First-touch campaign tags copied into metadata at checkout
+    /// (`utm_source` ... `ref`), as a JSON object; None when there are none.
+    pub attribution: Option<Value>,
 }
 
 /// When the prices were read, and what they were.
@@ -292,7 +295,25 @@ pub fn parse_subscription(body: &Value) -> Option<StripeSubscription> {
             .pointer("/metadata/user_id")
             .and_then(Value::as_str)
             .map(str::to_string),
+        attribution: attribution_from_metadata(body.get("metadata")),
     })
+}
+
+/// The campaign tags in a Stripe metadata object.
+fn attribution_from_metadata(metadata: Option<&Value>) -> Option<Value> {
+    let metadata = metadata?.as_object()?;
+    let tags: serde_json::Map<String, Value> = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "ref",
+    ]
+    .into_iter()
+    .filter_map(|key| Some((key.to_string(), metadata.get(key)?.clone())))
+    .collect();
+    (!tags.is_empty()).then_some(Value::Object(tags))
 }
 
 fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
@@ -439,12 +460,16 @@ mod tests {
         let body = json!({
             "id": "sub_1", "customer": "cus_1", "status": "active",
             "current_period_end": 2_000, "cancel_at_period_end": false, "start_date": 1_000,
-            "metadata": {"user_id": "u1"},
+            "metadata": {"user_id": "u1", "utm_source": "tryit", "ref": "r1"},
             "items": {"data": [{"price": {"lookup_key": "puzzled_family_monthly"}}]}
         });
         let sub = parse_subscription(&body).expect("subscription");
         assert_eq!(sub.plan_id, Some("family_monthly"));
         assert_eq!(sub.user_id.as_deref(), Some("u1"));
+        assert_eq!(
+            sub.attribution,
+            Some(json!({"utm_source": "tryit", "ref": "r1"}))
+        );
     }
 
     #[test]

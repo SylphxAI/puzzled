@@ -69,6 +69,7 @@ export default async function PrivacyPage({ params }: Props) {
 				t('sections.dataCollection.items.game'),
 				t('sections.dataCollection.items.payment'),
 				t('sections.dataCollection.items.technical'),
+				t('sections.dataCollection.items.referral'),
 			],
 		},
 		{

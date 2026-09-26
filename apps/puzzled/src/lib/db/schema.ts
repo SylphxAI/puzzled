@@ -625,6 +625,8 @@ export const billingSubscriptions = pgTable(
 		cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false).notNull(),
 		startedAt: timestamp('started_at').notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+		/** First-touch campaign tags copied from Stripe metadata at checkout */
+		attribution: jsonb('attribution'),
 	},
 	(table) => [index('billing_subscriptions_user_id_idx').on(table.userId)],
 )
@@ -651,6 +653,24 @@ export const billingLedger = pgTable(
 	},
 	(table) => [index('billing_ledger_user_id_idx').on(table.userId)],
 )
+
+/**
+ * First-touch campaign tags (utm_*, ref) of the landing that led to sign-up,
+ * one row per account, written once when the account is created.
+ */
+export const accountAttribution = pgTable('account_attribution', {
+	/** Platform user ID (no FK) */
+	userId: uuid('user_id').primaryKey(),
+	utmSource: text('utm_source'),
+	utmMedium: text('utm_medium'),
+	utmCampaign: text('utm_campaign'),
+	utmTerm: text('utm_term'),
+	utmContent: text('utm_content'),
+	ref: text('ref'),
+	landingPath: text('landing_path'),
+	landedAt: timestamp('landed_at'),
+	recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+})
 
 /** A family plan owner and the invite code members join with. */
 export const familyGroups = pgTable('family_groups', {

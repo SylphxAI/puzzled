@@ -93,6 +93,7 @@ describe('route truth table', () => {
 			'/unsubscribe',
 			'/challenge',
 			'/family',
+			'/daily',
 		])
 	})
 

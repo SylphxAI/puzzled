@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { destIdentityCall, identityFail, issueSessionCookie } from '@/lib/identity/http'
+import { recordSignupAttribution } from '@/lib/identity/signup-attribution'
 
 export async function POST(request: Request) {
 	const body = (await request.json().catch(() => null)) as {
@@ -31,7 +32,9 @@ export async function POST(request: Request) {
 				captcha_token: (body.captchaToken ?? body.captcha_token ?? '').trim(),
 			},
 		})
-		await issueSessionCookie(completed)
+		const accessToken = await issueSessionCookie(completed)
+		// Credit the link that brought this player (first-touch tags, if any).
+		await recordSignupAttribution(accessToken, request.headers.get('cookie'))
 		return NextResponse.json({ authority: 'sylphx-identity' })
 	} catch {
 		return identityFail(401, 'identity_rejected')

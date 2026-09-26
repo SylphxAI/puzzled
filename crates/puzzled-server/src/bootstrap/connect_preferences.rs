@@ -17,9 +17,10 @@ use crate::proto::puzzled::v1::{
     CheckUsernameRequest, CheckUsernameResponse, DeleteAccountDataRequest,
     DeleteAccountDataResponse, GetNotificationPreferencesRequest,
     GetNotificationPreferencesResponse, GetProfileRequest, GetProfileResponse,
-    NotificationPreferences, PreferencesService, Profile, UpdateEmailPreferencesRequest,
-    UpdateEmailPreferencesResponse, UpdateProfileRequest, UpdateProfileResponse,
-    UpdatePushPreferencesRequest, UpdatePushPreferencesResponse,
+    NotificationPreferences, PreferencesService, Profile, RecordSignupAttributionRequest,
+    RecordSignupAttributionResponse, UpdateEmailPreferencesRequest, UpdateEmailPreferencesResponse,
+    UpdateProfileRequest, UpdateProfileResponse, UpdatePushPreferencesRequest,
+    UpdatePushPreferencesResponse,
 };
 
 #[derive(Clone)]
@@ -393,6 +394,38 @@ impl PreferencesService for PreferencesConnectService {
                 ))
             }
         }
+    }
+
+    async fn record_signup_attribution(
+        &self,
+        ctx: RequestContext,
+        _request: ServiceRequest<'_, RecordSignupAttributionRequest>,
+    ) -> ServiceResult<RecordSignupAttributionResponse> {
+        let identity = require_identity(&ctx)?;
+        let tags = ctx
+            .headers()
+            .get_all(axum::http::header::COOKIE)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .find_map(puzzled_core::attribution::from_cookie_header);
+        let (Some(tags), Some(pool)) = (tags, &self.state.pool) else {
+            return Response::ok(RecordSignupAttributionResponse::default());
+        };
+        let recorded =
+            crate::capabilities::preferences::adapters::attribution_db::record_attribution(
+                pool,
+                &identity.user_id,
+                &tags,
+            )
+            .await
+            .map_err(|error| {
+                tracing::warn!(%error, "signup attribution failed");
+                ConnectError::new(ErrorCode::Unavailable, "attribution_unavailable")
+            })?;
+        Response::ok(RecordSignupAttributionResponse {
+            recorded,
+            ..Default::default()
+        })
     }
 }
 

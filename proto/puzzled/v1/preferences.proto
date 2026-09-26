@@ -95,6 +95,15 @@ message DeleteAccountDataResponse {
   uint64 rows_deleted = 1;
 }
 
+// Record the first-touch campaign tags (the `puzzled_attr` cookie on this
+// request) on a newly created account. The web sign-up route calls it once;
+// a repeat or an untagged request changes nothing.
+message RecordSignupAttributionRequest {}
+
+message RecordSignupAttributionResponse {
+  bool recorded = 1;
+}
+
 service PreferencesService {
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
@@ -103,4 +112,5 @@ service PreferencesService {
   rpc UpdatePushPreferences(UpdatePushPreferencesRequest) returns (UpdatePushPreferencesResponse);
   rpc UpdateEmailPreferences(UpdateEmailPreferencesRequest) returns (UpdateEmailPreferencesResponse);
   rpc DeleteAccountData(DeleteAccountDataRequest) returns (DeleteAccountDataResponse);
+  rpc RecordSignupAttribution(RecordSignupAttributionRequest) returns (RecordSignupAttributionResponse);
 }

@@ -231,6 +231,12 @@ impl BillingService for BillingConnectService {
         let identity = Self::account(&ctx)?;
         let (pool, stripe) = self.store()?;
         let req = request.to_owned_message();
+        let landing = ctx
+            .headers()
+            .get_all(axum::http::header::COOKIE)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .find_map(puzzled_core::attribution::from_cookie_header);
         match service::create_checkout(
             pool,
             stripe,
@@ -240,6 +246,7 @@ impl BillingService for BillingConnectService {
             req.plan_id.trim(),
             req.locale.trim(),
             &req.currency,
+            landing.as_ref(),
         )
         .await
         {

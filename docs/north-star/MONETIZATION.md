@@ -111,6 +111,19 @@ end of Times Puzzles in pounds. We do not undercut on cost.
   with their own accounts. The subscriber can remove members and reset the
   link. Members lose access when the plan ends.
 
+### Referral attribution
+
+A landing with campaign tags (`utm_*`, `ref`; Tryit links use
+`utm_source=tryit&utm_medium=referral&utm_campaign=…&ref=<result id>`) is kept
+first-touch for 30 days in the `puzzled_attr` first-party cookie, only after
+analytics consent (declining clears it). Email sign-up stores it once in
+`account_attribution`. Checkout copies the account's tags (or, without them,
+the cookie) into the Stripe subscription metadata, which is read back into
+`billing_subscriptions.attribution`. Gap: an OAuth sign-up completes at Sylphx
+Identity with no Puzzled sign-up hook, so its account row is not written; its
+subscription still carries the cookie's tags. `/daily` redirects to today's
+free game and keeps the query string.
+
 ## 6. Conversion moments (ethical)
 
 Allowed: the unlock panel on a paid game or past day (with today's free game

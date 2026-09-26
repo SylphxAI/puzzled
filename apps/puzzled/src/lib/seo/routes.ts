@@ -76,6 +76,7 @@ export const NOINDEX_ROUTE_PREFIXES = [
 	'/unsubscribe',
 	'/challenge',
 	'/family',
+	'/daily',
 ] as const
 
 /**
