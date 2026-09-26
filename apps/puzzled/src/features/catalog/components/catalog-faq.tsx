@@ -30,9 +30,7 @@ export async function CatalogFaq() {
 	return (
 		<section className="section-block pt-0">
 			<div className="page-shell-wide">
-				<h2 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">
-					{t('faq.title')}
-				</h2>
+				<h2 className="font-display text-2xl md:text-3xl">{t('faq.title')}</h2>
 				<p className="mt-2 max-w-2xl text-muted-foreground">{t('faq.body')}</p>
 
 				<div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -41,7 +39,7 @@ export async function CatalogFaq() {
 							key={faq.question}
 							className="group rounded-2xl border border-border/70 bg-card px-5 py-4 open:shadow-card"
 						>
-							<summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-1 font-display text-base font-bold marker:content-none">
+							<summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-1 font-display text-base marker:content-none">
 								{faq.question}
 								<ChevronDown
 									className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"

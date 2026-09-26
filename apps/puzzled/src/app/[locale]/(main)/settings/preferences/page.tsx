@@ -46,8 +46,8 @@ export default async function PreferencesPage({ params }: Props) {
 				description={t('preferences.appearance.description')}
 			>
 				<div className="flex items-start gap-3">
-					<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10">
-						<Palette className="h-5 w-5 text-violet-500" aria-hidden="true" />
+					<span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
+						<Palette className="h-5 w-5 text-foreground" aria-hidden="true" />
 					</span>
 					<div className="min-w-0 flex-1">
 						<p className="text-sm font-semibold">{t('preferences.appearance.theme')}</p>

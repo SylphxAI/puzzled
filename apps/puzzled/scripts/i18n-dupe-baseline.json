@@ -16,6 +16,7 @@
 			{
 				"value": "Account",
 				"keys": [
+					"nav.account",
 					"settings.account.title",
 					"settings.nav.account",
 					"settings.search.sections.account"
@@ -360,10 +361,6 @@
 				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
 			},
 			{
-				"value": "Free puzzle every day",
-				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
-			},
-			{
 				"value": "Games",
 				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
 			},
@@ -589,8 +586,8 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "Play {game}",
-				"keys": ["catalog.closing.play", "catalog.featuredPlay", "home.final.play"]
+				"value": "Play today's free puzzle",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "Played",
@@ -681,6 +678,10 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
+			},
+			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Puzzled player",
@@ -941,7 +942,12 @@
 			},
 			{
 				"value": "Today",
-				"keys": ["leaderboard.period.today", "stats.calendar.todayLabel", "stats.today.title"]
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
 			},
 			{
 				"value": "Today is still open",
@@ -1098,6 +1104,7 @@
 			{
 				"value": "Account",
 				"keys": [
+					"nav.account",
 					"settings.account.title",
 					"settings.nav.account",
 					"settings.search.sections.account"
@@ -1442,10 +1449,6 @@
 				"keys": ["daily.freeToday", "plus.pricing.freeTitle"]
 			},
 			{
-				"value": "Free puzzle every day",
-				"keys": ["home.hero.ogBadge", "home.hero.trustFree"]
-			},
-			{
 				"value": "Games",
 				"keys": ["admin.games.title", "admin.sidebar.games", "nav.games"]
 			},
@@ -1671,8 +1674,8 @@
 				"keys": ["modes.archiveDesc", "onboarding.puzzleArchive"]
 			},
 			{
-				"value": "Play {game}",
-				"keys": ["catalog.closing.play", "catalog.featuredPlay", "home.final.play"]
+				"value": "Play today's free puzzle",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "Played",
@@ -1763,6 +1766,10 @@
 			{
 				"value": "Puzzle #{number}",
 				"keys": ["daily.puzzleNumber", "home.day.puzzleNumber"]
+			},
+			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
 			},
 			{
 				"value": "Puzzled player",
@@ -2023,7 +2030,12 @@
 			},
 			{
 				"value": "Today",
-				"keys": ["leaderboard.period.today", "stats.calendar.todayLabel", "stats.today.title"]
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
 			},
 			{
 				"value": "Today is still open",
@@ -2287,6 +2299,10 @@
 				]
 			},
 			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -2360,7 +2376,12 @@
 			},
 			{
 				"value": "今日",
-				"keys": ["leaderboard.period.today", "stats.calendar.todayLabel", "stats.today.title"]
+				"keys": [
+					"leaderboard.period.today",
+					"nav.today",
+					"stats.calendar.todayLabel",
+					"stats.today.title"
+				]
 			},
 			{
 				"value": "今日精選",
@@ -2646,6 +2667,7 @@
 			{
 				"value": "帳戶",
 				"keys": [
+					"nav.account",
 					"settings.account.title",
 					"settings.nav.account",
 					"settings.search.sections.account"
@@ -2883,6 +2905,10 @@
 			{
 				"value": "狀態",
 				"keys": ["admin.dlq.table.status", "gameResult.status"]
+			},
+			{
+				"value": "玩今日免費謎題",
+				"keys": ["daily.notReadyCta", "daily.todaysFreeGame"]
 			},
 			{
 				"value": "玩家",
@@ -3136,10 +3162,6 @@
 				"keys": ["archive.play", "catalog.open"]
 			},
 			{
-				"value": "開始 {game}",
-				"keys": ["catalog.closing.play", "catalog.featuredPlay"]
-			},
-			{
 				"value": "開始玩",
 				"keys": ["footer.playHeading", "home.lineup.play"]
 			},
@@ -3338,6 +3360,10 @@
 				]
 			},
 			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -3412,6 +3438,10 @@
 			{
 				"value": "今天",
 				"keys": ["stats.calendar.todayLabel", "stats.today.title"]
+			},
+			{
+				"value": "今日",
+				"keys": ["leaderboard.period.today", "nav.today"]
 			},
 			{
 				"value": "今日精選",
@@ -3748,10 +3778,6 @@
 			{
 				"value": "所有遊戲",
 				"keys": ["catalog.metaTitle", "catalog.title"]
-			},
-			{
-				"value": "按自己的節奏解題",
-				"keys": ["catalog.ritual.step2Title", "home.how.step2Title"]
 			},
 			{
 				"value": "排行榜",
@@ -4178,10 +4204,6 @@
 				"keys": ["archive.play", "catalog.open"]
 			},
 			{
-				"value": "開始 {game}",
-				"keys": ["catalog.closing.play", "catalog.featuredPlay"]
-			},
-			{
 				"value": "開始玩",
 				"keys": ["footer.playHeading", "home.lineup.play"]
 			},
@@ -4397,6 +4419,10 @@
 				]
 			},
 			{
+				"value": "Puzzled Plus",
+				"keys": ["nav.plus", "plus.name"]
+			},
+			{
 				"value": "Puzzled 玩家",
 				"keys": ["settings.playerCard.nameFallback", "stats.identity.player"]
 			},
@@ -4480,6 +4506,10 @@
 			{
 				"value": "今天",
 				"keys": ["stats.calendar.todayLabel", "stats.today.title"]
+			},
+			{
+				"value": "今日",
+				"keys": ["leaderboard.period.today", "nav.today"]
 			},
 			{
 				"value": "今日精选",
@@ -4792,10 +4822,6 @@
 				"keys": ["archive.play", "catalog.open"]
 			},
 			{
-				"value": "开始 {game}",
-				"keys": ["catalog.closing.play", "catalog.featuredPlay"]
-			},
-			{
 				"value": "开始游戏",
 				"keys": ["catalog.play", "common.play", "settings.overview.startPlaying"]
 			},
@@ -4857,10 +4883,6 @@
 			{
 				"value": "打开账户中心",
 				"keys": ["settings.account.centreCta", "settings.security.protectionCta"]
-			},
-			{
-				"value": "按自己的节奏解题",
-				"keys": ["catalog.ritual.step2Title", "home.how.step2Title"]
 			},
 			{
 				"value": "排行榜",
@@ -5186,6 +5208,7 @@
 			{
 				"value": "账户",
 				"keys": [
+					"nav.account",
 					"settings.account.title",
 					"settings.nav.account",
 					"settings.search.sections.account"

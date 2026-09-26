@@ -1,4 +1,4 @@
-import { Clock, Play, Sparkles } from 'lucide-react'
+import { Clock, Play } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import { type GameColorTheme, getGameColors } from '@/games/theme-colors'
 import type { GameCategory } from '@/games/types'
@@ -88,96 +88,104 @@ export async function GamePageHero({
 	}
 
 	return (
-		<section className="relative overflow-hidden border-b border-border/60 bg-aurora">
-			<div className="page-shell-wide pb-8 pt-6 md:pb-10 md:pt-10">
-				<nav aria-label={t('breadcrumbLabel')} className="text-sm text-muted-foreground">
-					<ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+		<section className={cn('relative text-[#1a1712]', colors.bg)}>
+			<div className="page-shell-wide pb-8 pt-4 md:pb-12 md:pt-6">
+				<nav aria-label={t('breadcrumbLabel')} className="text-[13px] text-[#1a1712]/70">
+					<ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
 						<li>
-							<Link href="/" className="transition-colors hover:text-foreground">
+							<Link href="/" className="inline-flex min-h-11 items-center hover:text-[#1a1712]">
 								{tNav('home')}
 							</Link>
 						</li>
 						<li aria-hidden="true">/</li>
 						<li>
-							<Link href="/games" className="transition-colors hover:text-foreground">
+							<Link
+								href="/games"
+								className="inline-flex min-h-11 items-center hover:text-[#1a1712]"
+							>
 								{t('title')}
 							</Link>
 						</li>
 						<li aria-hidden="true">/</li>
-						<li aria-current="page" className="font-semibold text-foreground">
+						<li aria-current="page" className="font-semibold text-[#1a1712]">
 							{name}
 						</li>
 					</ol>
 				</nav>
 
-				<div className="mt-5 flex items-start gap-4">
-					<span
-						className={cn(
-							'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-md',
-							colors.gradient,
-						)}
-					>
-						<GameIcon slug={slug} size={28} />
-					</span>
+				<div className="mt-2 grid items-center gap-6 md:grid-cols-[1fr_auto] md:gap-12">
 					<div className="min-w-0">
 						{freeToday ? (
-							<span className="chip bg-emerald-500/12 text-emerald-700 dark:text-emerald-400">
-								<Sparkles className="h-3 w-3" aria-hidden="true" />
+							<span className="inline-flex rounded-full bg-[#1a1712] px-2.5 py-1 text-xs font-semibold text-[#fbf9f4]">
 								{t('freeToday')}
 							</span>
 						) : null}
-						<h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-balance md:text-4xl">
+						<h1 className="mt-3 font-display text-[2.5rem] leading-[1.02] text-balance md:text-6xl">
 							{name}
 						</h1>
-						<p className="mt-2 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+						<p className="mt-3 max-w-xl text-[17px] leading-relaxed text-[#1a1712]/80">
 							{description}
 						</p>
+
+						<ul className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-medium text-[#1a1712]/75">
+							<li className="inline-flex items-center gap-1">
+								<Clock className="h-3.5 w-3.5" aria-hidden="true" />
+								{duration}
+							</li>
+							{highlight ? (
+								<li>
+									<span aria-hidden="true">· </span>
+									{highlight}
+								</li>
+							) : null}
+							<li>
+								<span aria-hidden="true">· </span>
+								{t(`category.${category}`)}
+							</li>
+							{difficultyLabels.length > 0 ? (
+								<li>
+									<span aria-hidden="true">· </span>
+									{difficultyLabels.join(' / ')}
+								</li>
+							) : null}
+						</ul>
+
+						<div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+							<a
+								href="#play"
+								className="pressable inline-flex h-12 items-center gap-2 rounded-full bg-[#1a1712] px-7 text-[16px] font-semibold text-[#fbf9f4] transition-opacity hover:opacity-90"
+							>
+								<Play className="h-4 w-4" fill="currentColor" aria-hidden="true" />
+								{t('gamePage.playCta')}
+							</a>
+							{freeToday ? (
+								<p className="text-sm text-[#1a1712]/75">{t('gamePage.freeNote')}</p>
+							) : null}
+						</div>
+
+						{isGuest && (
+							<p className="mt-3 text-sm text-[#1a1712]/75">
+								{t('gamePage.guestNote')}{' '}
+								<Link
+									href={`/login?callbackUrl=/games/${slug}`}
+									className="font-semibold text-[#1a1712] underline underline-offset-4"
+								>
+									{t('gamePage.guestSignIn')}
+								</Link>
+							</p>
+						)}
+					</div>
+
+					<div
+						className={cn(
+							'hidden h-48 w-48 items-center justify-center rounded-[2.5rem] bg-white/35 md:flex lg:h-60 lg:w-60',
+							colors.onField,
+						)}
+						aria-hidden="true"
+					>
+						<GameIcon slug={slug} size={112} />
 					</div>
 				</div>
-
-				<div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-					<span className="chip bg-background/80 text-muted-foreground">
-						<Clock className="h-3 w-3" aria-hidden="true" />
-						{duration}
-					</span>
-					<span className={cn('chip bg-background/80', colors.text)}>{highlight}</span>
-					<span className="chip bg-background/80 text-muted-foreground">
-						{t(`category.${category}`)}
-					</span>
-					{difficultyLabels.map((label) => (
-						<span key={label} className="chip bg-background/80 text-muted-foreground">
-							{label}
-						</span>
-					))}
-				</div>
-
-				<div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
-					<a
-						href="#play"
-						className={cn(
-							'inline-flex h-12 items-center gap-2 rounded-2xl bg-gradient-to-br px-6 font-semibold text-white shadow-md transition-transform hover:-translate-y-0.5 active:scale-[0.99]',
-							colors.gradient,
-						)}
-					>
-						<Play className="h-4 w-4" aria-hidden="true" />
-						{t('gamePage.playCta')}
-					</a>
-					{freeToday ? (
-						<p className="text-sm text-muted-foreground">{t('gamePage.freeNote')}</p>
-					) : null}
-				</div>
-
-				{isGuest && (
-					<p className="mt-3 text-sm text-muted-foreground">
-						{t('gamePage.guestNote')}{' '}
-						<Link
-							href={`/login?callbackUrl=/games/${slug}`}
-							className="font-semibold text-primary hover:underline"
-						>
-							{t('gamePage.guestSignIn')}
-						</Link>
-					</p>
-				)}
 			</div>
 
 			<script

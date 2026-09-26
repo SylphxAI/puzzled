@@ -21,8 +21,8 @@ type SettingsPageHeaderProps = {
  * ```tsx
  * <SettingsPageHeader
  *   icon={UserCircle}
- *   gradientClasses="from-rose-500/20 to-pink-500/20"
- *   iconColorClass="text-rose-500"
+ *   gradientClasses="from-destructive/20 to-pink-500/20"
+ *   iconColorClass="text-destructive"
  *   title={t('profile.title')}
  *   description={t('profile.description')}
  * />

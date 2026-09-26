@@ -25,5 +25,8 @@
 	"completedNoResult": "你已完成今日謎題，暫時無法顯示結果詳情。",
 	"statusUnknown": "狀態未確認",
 	"difficultyStatusUnverified": "無法確認你今日已完成哪些難度，系統會在你開始前核對。",
-	"todaysFreeGame": "玩今日免費謎題"
+	"todaysFreeGame": "玩今日免費謎題",
+	"notReadyTitle": "今日嘅{game}仲未準備好",
+	"notReadyBody": "今日暫時未有{game}謎題。今日嘅免費謎題已經可以玩。",
+	"notReadyCta": "玩今日免費謎題"
 }

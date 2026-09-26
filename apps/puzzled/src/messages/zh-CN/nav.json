@@ -9,5 +9,9 @@
 	"support": "支持",
 	"menuTitle": "菜单",
 	"openMenu": "打开导航菜单",
-	"closeMenu": "关闭导航菜单"
+	"closeMenu": "关闭导航菜单",
+	"today": "今日",
+	"account": "账户",
+	"plus": "Puzzled Plus",
+	"plusShort": "Plus"
 }

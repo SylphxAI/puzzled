@@ -104,9 +104,7 @@ export default async function ArchivePage({ params }: Props) {
 		<main className="flex-1">
 			<section className="page-shell py-10 md:py-14">
 				<p className="text-xs font-semibold uppercase tracking-wide text-primary">{t('eyebrow')}</p>
-				<h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
-					{t('title')}
-				</h1>
+				<h1 className="mt-2 font-display text-3xl md:text-4xl">{t('title')}</h1>
 				<p className="mt-3 max-w-2xl text-muted-foreground">{t('body')}</p>
 
 				{isGuest ? (
@@ -114,7 +112,7 @@ export default async function ArchivePage({ params }: Props) {
 						<CardContent className="flex flex-col gap-4 p-6">
 							<div className="flex items-center gap-3">
 								<Lock className="h-5 w-5 text-primary" aria-hidden="true" />
-								<h2 className="font-display text-lg font-bold">{t('guestTitle')}</h2>
+								<h2 className="font-display text-lg">{t('guestTitle')}</h2>
 							</div>
 							<p className="text-sm text-muted-foreground">{t('guestBody')}</p>
 							<div className="flex flex-wrap items-center gap-3">
@@ -138,7 +136,7 @@ export default async function ArchivePage({ params }: Props) {
 						<CardContent className="flex flex-col gap-4 p-6">
 							<div className="flex items-center gap-3">
 								<Lock className="h-5 w-5 text-primary" aria-hidden="true" />
-								<h2 className="font-display text-lg font-bold">{tPlus('archiveTitle')}</h2>
+								<h2 className="font-display text-lg">{tPlus('archiveTitle')}</h2>
 							</div>
 							<p className="text-sm text-muted-foreground">
 								{tPlus('body', { game: freeName, count: getAllGameMetadata().length })}
@@ -166,7 +164,7 @@ export default async function ArchivePage({ params }: Props) {
 							<div className="rounded-2xl border border-border/70 bg-surface-muted/50 p-6">
 								<div className="flex items-center gap-3">
 									<CalendarDays className="h-5 w-5 text-accent-warm" aria-hidden="true" />
-									<h2 className="font-display text-xl font-bold">{t('emptyTitle')}</h2>
+									<h2 className="font-display text-xl">{t('emptyTitle')}</h2>
 								</div>
 								<p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
 									{t('emptyBody')}
@@ -182,7 +180,7 @@ export default async function ArchivePage({ params }: Props) {
 							<>
 								<div className="flex items-center gap-3">
 									<CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
-									<h2 className="font-display text-xl font-bold">{t('listTitle')}</h2>
+									<h2 className="font-display text-xl">{t('listTitle')}</h2>
 								</div>
 								<p className="mt-2 max-w-2xl text-sm text-muted-foreground">
 									{t('listBody', { count: ARCHIVE_WINDOW_DAYS })}

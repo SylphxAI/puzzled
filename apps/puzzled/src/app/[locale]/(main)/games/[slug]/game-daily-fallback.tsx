@@ -135,20 +135,50 @@ export function GameDailyFallback({
 		)
 	}
 
-	// Fetch failed or the server served no board: honest, client-side retry.
-	return (
-		<div className="flex flex-1 flex-col">
-			<div className="flex flex-1 flex-col items-center justify-center gap-4 p-4 text-center">
-				<p className="text-lg font-medium">{t('unavailableTitle')}</p>
-				<p className="text-sm text-muted-foreground">{t('unavailableDescription')}</p>
-				<Button type="button" onClick={() => dispatch({ type: 'retry' })}>
-					<RotateCw className="h-4 w-4" />
-					{tCommon('retry')}
-				</Button>
-				<Link href="/games" className="text-sm text-muted-foreground hover:underline">
-					← {t('backToGames')}
+	// The server answered but has no board for this day: say so, and point at
+	// the puzzle that is ready. A retry would ask the same question again.
+	if (snapshot?.kind === 'unavailable') {
+		return (
+			<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+				<p className="font-display text-2xl leading-tight">
+					{t('notReadyTitle', { game: gameName })}
+				</p>
+				<p className="text-[15px] text-muted-foreground">{t('notReadyBody', { game: gameName })}</p>
+				<Link
+					href="/"
+					className="pressable mt-2 inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+				>
+					{t('notReadyCta')}
+				</Link>
+				<Link
+					href="/games"
+					className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground"
+				>
+					{t('backToGames')}
 				</Link>
 			</div>
+		)
+	}
+
+	// The fetch failed: a client-side retry.
+	return (
+		<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border bg-card px-6 py-8 text-center shadow-card">
+			<p className="font-display text-2xl leading-tight">{t('unavailableTitle')}</p>
+			<p className="text-[15px] text-muted-foreground">{t('unavailableDescription')}</p>
+			<Button
+				type="button"
+				className="mt-2 rounded-full"
+				onClick={() => dispatch({ type: 'retry' })}
+			>
+				<RotateCw className="h-4 w-4" aria-hidden="true" />
+				{tCommon('retry')}
+			</Button>
+			<Link
+				href="/games"
+				className="inline-flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground"
+			>
+				{t('backToGames')}
+			</Link>
 		</div>
 	)
 }

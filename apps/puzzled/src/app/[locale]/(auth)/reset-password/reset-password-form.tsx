@@ -49,9 +49,7 @@ export function ResetPasswordForm() {
 				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
 					<TriangleAlert className="h-7 w-7 text-destructive" aria-hidden="true" />
 				</span>
-				<h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight">
-					{t('invalidResetLink')}
-				</h1>
+				<h1 className="mt-4 font-display text-2xl">{t('invalidResetLink')}</h1>
 				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
 					{t('invalidResetLinkDescription')}
 				</p>
@@ -68,15 +66,10 @@ export function ResetPasswordForm() {
 	if (success) {
 		return (
 			<div className="surface-card p-6 text-center sm:p-8">
-				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
-					<CircleCheck
-						className="h-7 w-7 text-emerald-600 dark:text-emerald-400"
-						aria-hidden="true"
-					/>
+				<span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-success/10">
+					<CircleCheck className="h-7 w-7 text-success" aria-hidden="true" />
 				</span>
-				<h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight">
-					{t('passwordResetSuccess')}
-				</h1>
+				<h1 className="mt-4 font-display text-2xl">{t('passwordResetSuccess')}</h1>
 				<p className="mt-2 text-sm leading-relaxed text-muted-foreground">
 					{t('passwordResetSuccessDescription')}
 				</p>
@@ -109,9 +102,7 @@ export function ResetPasswordForm() {
 
 	return (
 		<div className="surface-card p-5 sm:p-7">
-			<h1 className="font-display text-2xl font-extrabold tracking-tight">
-				{t('resetPasswordTitle')}
-			</h1>
+			<h1 className="font-display text-2xl">{t('resetPasswordTitle')}</h1>
 			<p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
 				{t('resetPasswordDescription')}
 			</p>

@@ -11,9 +11,6 @@
 	"hero": {
 		"guestTitle": "A free puzzle, every single day",
 		"streakChip": "{days}-day streak",
-		"trustFree": "Free puzzle every day",
-		"trustAccount": "No account needed",
-		"trustReset": "New puzzles at midnight (HKT)",
 		"playersToday": "{count} players finished today",
 		"progressRingLabel": "{done} of {total} puzzles finished today",
 		"progressUnverified": "We could not load your saved progress just now. You can still play — we check your finish when you submit.",
@@ -47,16 +44,6 @@
 		"body": "Same ritual, new set.",
 		"cta": "See the catalog"
 	},
-	"how": {
-		"title": "How Puzzled works",
-		"subtitle": "One free puzzle a day, plus a full suite when you want to go deeper. Every puzzle follows the same ritual: today's set, one finish, a result you can share.",
-		"step1Title": "Open today's puzzle",
-		"step1Body": "One puzzle is free every day and needs no account. Sign in only if you want your streak and stats kept.",
-		"step2Title": "Solve it at your pace",
-		"step2Body": "Most puzzles take two to fifteen minutes. Difficulty levels let you warm up or push harder.",
-		"step3Title": "Keep the habit and share",
-		"step3Body": "Finish to extend your streak, then send a spoiler-free result card to whoever will race you."
-	},
 	"faq": {
 		"title": "Questions, answered",
 		"subtitle": "The short version of how Puzzled works.",
@@ -85,12 +72,6 @@
 			"answer": "Nineteen daily puzzles across words, logic, numbers, spatial play and light entertainment, all following the same daily ritual."
 		}
 	},
-	"final": {
-		"title": "Your next five minutes of puzzling",
-		"body": "Today's free puzzle is open now. {count} puzzles are waiting when you want more.",
-		"play": "Play {game}",
-		"explore": "Explore the catalog"
-	},
 	"todaysPuzzles": "Today's Puzzles",
 	"day": {
 		"puzzleNumber": "Puzzle #{number}",
@@ -106,8 +87,6 @@
 		"playAgain": "Play today again",
 		"browseAll": "Browse all games",
 		"finishersToday": "{count} finished today so far",
-		"previewLabel": "Today's board",
-		"previewNote": "Today's {game}, shown empty. No spoilers — the board reveals the shape, never the answer.",
 		"freeToday": "Free today"
 	}
 }

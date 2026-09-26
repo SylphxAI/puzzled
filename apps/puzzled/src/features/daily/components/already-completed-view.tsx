@@ -115,13 +115,13 @@ export function AlreadyCompletedView({
 					className={cn(
 						'mb-4 flex h-24 w-24 items-center justify-center rounded-full',
 						isWin
-							? 'bg-gradient-to-br from-emerald-400/20 via-green-500/20 to-emerald-600/20'
+							? 'bg-gradient-to-br from-success/20 via-success/20 to-success/20'
 							: 'bg-gradient-to-br from-muted to-muted/50',
 						isWin && animate && 'animate-achievement-unlock',
 					)}
 				>
 					{isWin ? (
-						<Trophy className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
+						<Trophy className="h-12 w-12 text-success" />
 					) : (
 						<X className="h-12 w-12 text-muted-foreground" />
 					)}
@@ -131,7 +131,7 @@ export function AlreadyCompletedView({
 				{celebrationMessage && (
 					<p
 						className={cn(
-							'mb-1 text-2xl font-bold text-emerald-700 dark:text-emerald-400',
+							'mb-1 text-2xl font-bold text-success',
 							animate && 'animate-count-up opacity-0 stagger-1',
 						)}
 					>
@@ -156,7 +156,7 @@ export function AlreadyCompletedView({
 			<Card
 				className={cn(
 					'w-full overflow-hidden',
-					isWin && 'border-emerald-500/30',
+					isWin && 'border-success/30',
 					animate && 'animate-slide-up-fade opacity-0 stagger-2',
 				)}
 			>
@@ -166,30 +166,25 @@ export function AlreadyCompletedView({
 						<div
 							className={cn(
 								'flex flex-col items-center rounded-xl p-4',
-								isWin ? 'bg-emerald-500/10' : 'bg-muted/50',
+								isWin ? 'bg-success/10' : 'bg-muted/50',
 							)}
 						>
 							<div className="mb-2 flex items-center gap-1.5">
 								{isWin ? (
-									<Check className="h-4 w-4 text-emerald-500" />
+									<Check className="h-4 w-4 text-success" />
 								) : (
 									<Target className="h-4 w-4 text-muted-foreground" />
 								)}
 								<span
 									className={cn(
 										'text-xs font-medium',
-										isWin ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground',
+										isWin ? 'text-success' : 'text-muted-foreground',
 									)}
 								>
 									{tResult('status')}
 								</span>
 							</div>
-							<span
-								className={cn(
-									'text-xl font-bold',
-									isWin ? 'text-emerald-700 dark:text-emerald-400' : 'text-foreground',
-								)}
-							>
+							<span className={cn('text-xl font-bold', isWin ? 'text-success' : 'text-foreground')}>
 								{isWin ? tResult('won') : tResult('lost')}
 							</span>
 						</div>
@@ -206,11 +201,9 @@ export function AlreadyCompletedView({
 
 					{/* Streak indicator (if streak > 0) */}
 					{currentStreak > 0 && (
-						<div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-orange-500/10 px-4 py-3">
-							<Flame className="h-5 w-5 text-orange-500" />
-							<span className="font-semibold text-orange-600 dark:text-orange-400">
-								{currentStreak} day streak!
-							</span>
+						<div className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-stat-streak/10 px-4 py-3">
+							<Flame className="h-5 w-5 text-stat-streak" />
+							<span className="font-semibold text-stat-streak">{currentStreak} day streak!</span>
 						</div>
 					)}
 				</CardContent>

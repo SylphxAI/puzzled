@@ -74,13 +74,13 @@ export async function GamePageContent({
 			{rules.length > 0 && (
 				<section className="section-block">
 					<div className="page-shell">
-						<h2 className="font-display text-2xl font-extrabold tracking-tight">
+						<h2 className="font-display text-[1.625rem] leading-tight">
 							{t('gamePage.howToPlayTitle', { game: name })}
 						</h2>
 						<ol className="mt-5 space-y-2.5">
 							{rules.map((rule, index) => (
 								<li key={rule} className="flex gap-3.5 text-sm leading-relaxed">
-									<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary tnum">
+									<span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground tnum">
 										{index + 1}
 									</span>
 									<span className="pt-0.5">{rule}</span>
@@ -94,16 +94,19 @@ export async function GamePageContent({
 			{tips.length > 0 && (
 				<section className="section-block pt-0">
 					<div className="page-shell">
-						<h2 className="font-display text-2xl font-extrabold tracking-tight">
+						<h2 className="font-display text-[1.625rem] leading-tight">
 							{t('gamePage.tipsTitle', { game: name })}
 						</h2>
-						<ul className="mt-5 space-y-3">
+						<ul className="mt-3 border-t border-border">
 							{tips.map((tip) => (
 								<li
 									key={tip}
-									className="flex gap-3.5 rounded-2xl border border-border/70 bg-card p-4 text-sm leading-relaxed"
+									className="flex gap-3.5 border-b border-border py-3.5 text-[15px] leading-relaxed"
 								>
-									<Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+									<Lightbulb
+										className="mt-1 h-4 w-4 shrink-0 text-muted-foreground"
+										aria-hidden="true"
+									/>
 									<span>{tip}</span>
 								</li>
 							))}
@@ -115,23 +118,20 @@ export async function GamePageContent({
 			{faq.length > 0 && (
 				<section className="section-block pt-0">
 					<div className="page-shell">
-						<h2 className="font-display text-2xl font-extrabold tracking-tight">
+						<h2 className="font-display text-[1.625rem] leading-tight">
 							{t('gamePage.faqTitle', { game: name })}
 						</h2>
-						<div className="mt-5 space-y-3">
+						<div className="mt-3 border-t border-border">
 							{faq.map((item) => (
-								<details
-									key={item.question}
-									className="group rounded-2xl border border-border/70 bg-card px-5 py-4 open:shadow-card"
-								>
-									<summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-1 font-display text-base font-bold marker:content-none">
+								<details key={item.question} className="group border-b border-border">
+									<summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3.5 text-[15px] font-semibold marker:content-none [&::-webkit-details-marker]:hidden">
 										{item.question}
 										<ChevronDown
 											className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
 											aria-hidden="true"
 										/>
 									</summary>
-									<p className="mt-2.5 text-sm leading-relaxed text-muted-foreground">
+									<p className="pb-4 pr-8 text-[15px] leading-relaxed text-muted-foreground">
 										{item.answer}
 									</p>
 								</details>
@@ -151,19 +151,19 @@ export async function GamePageContent({
 				<section className="section-block pt-0">
 					<div className="page-shell">
 						<div className="flex flex-wrap items-end justify-between gap-3">
-							<h2 className="font-display text-2xl font-extrabold tracking-tight">
+							<h2 className="font-display text-[1.625rem] leading-tight">
 								{t('gamePage.relatedTitle')}
 							</h2>
 							<Link
 								href="/games"
-								className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+								className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline-offset-4 hover:underline"
 							>
 								{t('gamePage.relatedAll')}
 								<ArrowRight className="h-4 w-4" aria-hidden="true" />
 							</Link>
 						</div>
 
-						<ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+						<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
 							{related.map((module, index) => (
 								<li key={module.slug} className="h-full">
 									<GameTile

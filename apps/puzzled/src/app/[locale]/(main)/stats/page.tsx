@@ -157,7 +157,7 @@ export default async function StatsPage({ params }: Props) {
 							{user ? (
 								<span className="chip bg-primary/10 text-primary">{t('identity.member')}</span>
 							) : (
-								<span className="chip bg-amber-500/10 text-amber-800 dark:text-amber-400">
+								<span className="chip bg-accent-warm/10 text-accent-warm-foreground">
 									{t('identity.guest')}
 								</span>
 							)}
@@ -209,7 +209,7 @@ export default async function StatsPage({ params }: Props) {
 
 				{!everythingUnreadable ? (
 					<>
-						<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+						<div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
 							<ConsoleStat
 								icon={Check}
 								label={t('played')}
@@ -275,14 +275,14 @@ export default async function StatsPage({ params }: Props) {
 							actions={
 								<Link
 									href="/"
-									className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+									className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-semibold underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 								>
 									{t('today.playCta')}
 								</Link>
 							}
 						>
 							{personalAvailable ? (
-								<ul className="grid gap-2 sm:grid-cols-2">
+								<ul className="divide-y divide-border overflow-hidden rounded-xl border border-border sm:grid sm:grid-cols-2 sm:divide-y-0 sm:gap-px sm:bg-border">
 									{modules.map((module) => {
 										const result = personalResults[module.slug]
 										const done = result?.hasCompleted ?? false
@@ -290,12 +290,12 @@ export default async function StatsPage({ params }: Props) {
 											<li key={module.slug}>
 												<Link
 													href={`/games/${module.slug}`}
-													className="flex min-h-11 items-center gap-2 rounded-xl bg-surface-muted/70 px-3 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+													className="flex min-h-12 items-center gap-3 bg-card px-3.5 text-[15px] transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
 												>
 													<GameIcon slug={module.slug} size={20} aria-hidden="true" />
 													<span className="min-w-0 flex-1 truncate">{module.name}</span>
 													{done ? (
-														<span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+														<span className="flex items-center gap-1 text-xs font-semibold text-success">
 															<Check className="h-4 w-4" aria-hidden="true" />
 															{t('today.done')}
 														</span>
@@ -326,7 +326,7 @@ export default async function StatsPage({ params }: Props) {
 												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 													{t('streak')}
 												</dt>
-												<dd className="mt-1 font-display text-3xl font-extrabold tnum numeral">
+												<dd className="mt-1 font-display text-3xl tnum numeral">
 													{streakRead?.currentStreak ?? 0}
 												</dd>
 											</div>
@@ -334,7 +334,7 @@ export default async function StatsPage({ params }: Props) {
 												<dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 													{t('best')}
 												</dt>
-												<dd className="mt-1 font-display text-3xl font-extrabold tnum numeral">
+												<dd className="mt-1 font-display text-3xl tnum numeral">
 													{streakRead?.maxStreak ?? 0}
 												</dd>
 											</div>

@@ -206,7 +206,7 @@ export async function GamePlayArea({
 	if (hasCompletedToday && !completedSession) {
 		return (
 			<div className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-3xl border border-border/70 bg-card p-6 text-center">
-				<p className="font-display text-lg font-bold">{tDaily('alreadyCompleted')}</p>
+				<p className="font-display text-lg">{tDaily('alreadyCompleted')}</p>
 				<Link href="/games" className="text-sm font-medium text-primary hover:underline">
 					{tDaily('backToGames')}
 				</Link>

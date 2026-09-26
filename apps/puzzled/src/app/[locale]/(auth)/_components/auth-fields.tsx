@@ -180,8 +180,8 @@ function PasswordStrength({ value }: { value: string }) {
 						className={cn(
 							'h-full rounded-full transition-all',
 							score <= 1 && 'bg-destructive',
-							score > 1 && score <= 3 && 'bg-amber-500',
-							score >= 4 && 'bg-emerald-500',
+							score > 1 && score <= 3 && 'bg-accent-warm',
+							score >= 4 && 'bg-success',
 						)}
 						style={{ width: `${(score / 5) * 100}%` }}
 					/>
@@ -196,7 +196,7 @@ function PasswordStrength({ value }: { value: string }) {
 						<Check
 							className={cn(
 								'h-3.5 w-3.5 shrink-0',
-								check.met ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground/50',
+								check.met ? 'text-success' : 'text-muted-foreground/50',
 							)}
 							aria-hidden="true"
 						/>

@@ -1,3 +1,6 @@
 {
-	"unavailableDescription": "無法載入今日謎題，請檢查網路後再試。"
+	"unavailableDescription": "無法載入今日謎題，請檢查網路後再試。",
+	"notReadyTitle": "今天的{game}還沒準備好",
+	"notReadyBody": "今天還沒有{game}謎題。今天的免費謎題已經可以玩了。",
+	"notReadyCta": "玩今天的免費謎題"
 }

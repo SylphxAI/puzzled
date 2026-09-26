@@ -27,9 +27,7 @@ export function MarketingCta({ title, body, children, note, className }: Marketi
 						aria-hidden="true"
 					/>
 					<div className="relative">
-						<h2 className="font-display text-2xl font-extrabold tracking-tight text-balance text-white md:text-3xl">
-							{title}
-						</h2>
+						<h2 className="font-display text-2xl text-balance text-white md:text-3xl">{title}</h2>
 						{body && (
 							<p className="mx-auto mt-3 max-w-xl text-sm text-white/75 md:text-base">{body}</p>
 						)}

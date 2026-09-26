@@ -4,8 +4,9 @@
  * One vocabulary for every game icon so the set reads as a family:
  * - 24px grid and 2px round-cap strokes in `currentColor`
  * - 1px construction lines at 35% opacity for grids, cages and baselines
- * - exactly one warm accent detail per icon, painted with `text-accent-warm`
- *   so it follows the shell token (amber on the midnight/paper skin)
+ * - exactly one accent detail per icon, painted with `--icon-accent` (amber
+ *   by default); a game's pastel field sets it to ink, so the glyph there is
+ *   one colour, like a printed puzzle-book section mark
  *
  * Each game keeps its own `src/games/<slug>/icon.tsx` component as a thin
  * wrapper around the shared art, keeping the old contract: a `size` prop,
@@ -179,7 +180,7 @@ export type GameIconProps = SVGProps<SVGSVGElement> & { size?: number }
 function renderShape(shape: GameIconShape, key: string) {
 	const { accent = false, fill = false, thin = false, stroke, dash = false } = shape
 	const style = {
-		className: accent ? 'text-accent-warm' : undefined,
+		className: accent ? 'text-[var(--icon-accent,var(--color-accent-warm))]' : undefined,
 		fill: fill ? 'currentColor' : 'none',
 		strokeWidth: stroke ?? (thin ? 1 : 2),
 		opacity: thin ? 0.35 : undefined,

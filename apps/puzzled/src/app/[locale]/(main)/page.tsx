@@ -10,14 +10,7 @@ import {
 	type HomeDayGame,
 	HomeDaySkeleton,
 } from '@/features/home/components/home-day'
-import {
-	FinalCta,
-	HowItWorks,
-	MemberStatsBand,
-	TomorrowBand,
-	TrustBand,
-	ValueStrip,
-} from '@/features/home/components/home-sections'
+import { MemberStatsBand, TomorrowBand, ValueStrip } from '@/features/home/components/home-sections'
 import {
 	type LineupEntry,
 	TodayLineup,
@@ -303,6 +296,8 @@ export default async function HomePage({ params }: Props) {
 		slug: todaysFreeGame,
 		name: freeGameName,
 		theme: freeGameMeta?.display.theme ?? 'violet',
+		tagline: freeGameMeta ? t(`games.${slugToCamelCase(todaysFreeGame)}.tagline`) : undefined,
+		duration: freeGameMeta?.display.duration,
 	}
 	// The day has an identity: this is the puzzle number `getPuzzleNumber`
 	// already computes for the module and the product day.
@@ -353,23 +348,14 @@ export default async function HomePage({ params }: Props) {
 				/>
 			</Suspense>
 
-			<div
-				className="animate-enter pt-8"
-				style={{ '--enter-delay': '80ms' } as React.CSSProperties}
+			<Suspense
+				fallback={
+					hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
+				}
 			>
-				<Suspense
-					fallback={
-						hasProgressIdentity ? <TodayLineupSkeleton /> : <TodayLineup games={rotationLineup} />
-					}
-				>
-					<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
-				</Suspense>
-				<TomorrowBand gameName={tomorrowsFreeGameName} />
-			</div>
-
-			{/* The three trust bullets left the fold: they sit with the explainer. */}
-			<TrustBand />
-			<HowItWorks />
+				<HomeLineupIsland freeGameSlug={todaysFreeGame} metadataBySlug={metadataBySlug} />
+			</Suspense>
+			<TomorrowBand gameName={tomorrowsFreeGameName} />
 			<MarketingFaq
 				id="home-faq"
 				title={tHome('faq.title')}
@@ -377,11 +363,6 @@ export default async function HomePage({ params }: Props) {
 				itemsFrom="namespace"
 				namespace={HOME_FAQ_NAMESPACE}
 				keys={HOME_FAQ_KEYS}
-			/>
-			<FinalCta
-				freeGameSlug={todaysFreeGame}
-				freeGameName={freeGameName}
-				gameCount={gameMetadata.length}
 			/>
 		</main>
 	)

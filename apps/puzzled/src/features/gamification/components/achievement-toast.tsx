@@ -71,18 +71,18 @@ export function AchievementToast({
 
 				<div className="relative flex items-center gap-3 p-4">
 					{/* Achievement icon */}
-					<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 animate-achievement-unlock">
+					<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-warm/20 to-accent-warm/20 animate-achievement-unlock">
 						{achievement.icon ? (
 							<span className="text-2xl">{achievement.icon}</span>
 						) : (
-							<Award className="h-6 w-6 text-yellow-500" />
+							<Award className="h-6 w-6 text-accent-warm-foreground" />
 						)}
 					</div>
 
 					{/* Content */}
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-2">
-							<span className="text-xs font-medium uppercase tracking-wide text-yellow-600 dark:text-yellow-400">
+							<span className="text-xs font-medium uppercase tracking-wide text-accent-warm-foreground">
 								{t('unlocked')}
 							</span>
 						</div>

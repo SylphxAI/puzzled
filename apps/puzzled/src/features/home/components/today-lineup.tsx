@@ -26,25 +26,25 @@ export async function TodayLineup({ games }: TodayLineupProps) {
 	const t = await getTranslations('home')
 
 	return (
-		<section className="section-block">
+		<section className="pb-10 md:pb-14">
 			<div className="page-shell-wide">
-				<div className="flex flex-wrap items-end justify-between gap-3">
+				<div className="flex items-end justify-between gap-3 border-b border-border pb-3">
 					<div>
-						<h2 className="font-display text-2xl font-extrabold tracking-tight md:text-3xl">
+						<h2 className="font-display text-[1.625rem] leading-tight md:text-3xl">
 							{t('lineup.title')}
 						</h2>
-						<p className="mt-1.5 text-sm text-muted-foreground">{t('lineup.subtitle')}</p>
+						<p className="mt-1 text-sm text-muted-foreground">{t('lineup.subtitle')}</p>
 					</div>
 					<Link
 						href="/games"
-						className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
+						className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-semibold text-foreground underline-offset-4 hover:underline"
 					>
 						{t('lineup.seeAll')}
 						<ArrowRight className="h-4 w-4" aria-hidden="true" />
 					</Link>
 				</div>
 
-				<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
 					{games.map((game, index) => (
 						<li key={game.slug} className="h-full">
 							<GameTile
@@ -80,15 +80,17 @@ export async function TodayLineup({ games }: TodayLineupProps) {
  */
 export function TodayLineupSkeleton() {
 	return (
-		<section className="section-block" aria-busy="true">
+		<section className="pb-10 md:pb-14" aria-busy="true">
 			<div className="page-shell-wide">
-				<div className="h-8 w-56 animate-pulse rounded-lg bg-muted" />
-				<div className="mt-3 h-4 w-72 animate-pulse rounded bg-muted" />
-				<ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="border-b border-border pb-3">
+					<div className="h-8 w-56 animate-pulse rounded-lg bg-muted" />
+					<div className="mt-2 h-4 w-72 animate-pulse rounded bg-muted" />
+				</div>
+				<ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
 					{Array.from({ length: 6 }, (_, index) => (
 						<li
 							key={index}
-							className="h-48 animate-pulse rounded-2xl border border-border bg-card"
+							className="aspect-[4/5] animate-pulse rounded-2xl border border-border bg-card"
 						/>
 					))}
 				</ul>

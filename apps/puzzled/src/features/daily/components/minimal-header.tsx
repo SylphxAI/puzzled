@@ -66,64 +66,43 @@ export function MinimalHeader({
 		 */
 		<div
 			className={cn(
-				'sticky top-0 z-header border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+				'sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-sticky border-b border-hairline bg-background/85 backdrop-blur-xl md:top-16',
 				className,
 			)}
 		>
-			<div className="mx-auto flex h-12 max-w-3xl items-center justify-between px-3 sm:h-14 sm:px-4">
-				{/* Left: Back + Game Info */}
-				<div className="flex items-center gap-2 sm:gap-3">
-					<Link href="/" className="flex items-center">
-						<Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
-							<ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-							<span className="sr-only">{t('back')}</span>
-						</Button>
+			<div className="mx-auto flex h-12 max-w-3xl items-center justify-between gap-2 px-1 sm:px-3">
+				<div className="flex min-w-0 items-center gap-1">
+					<Link
+						href="/"
+						className="pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-foreground hover:bg-muted"
+					>
+						<ArrowLeft className="h-5 w-5" aria-hidden="true" />
+						<span className="sr-only">{t('back')}</span>
 					</Link>
-
-					<div className="flex items-center gap-1.5 sm:gap-2">
-						<p className="text-sm font-semibold sm:text-base">{gameName}</p>
-						<span className="text-xs text-muted-foreground sm:text-sm">
+					<p className="min-w-0 truncate text-[15px]">
+						<span className="font-semibold">{gameName}</span>
+						<span className="ml-1.5 text-muted-foreground">
 							{formatPuzzleDate(puzzleDate, locale)}
 						</span>
-					</div>
+					</p>
 				</div>
 
-				{/* Right: Streak + Mode + Difficulty + Actions */}
-				<div className="flex items-center gap-1.5 sm:gap-2">
-					{/* Streak indicator */}
+				<div className="flex shrink-0 items-center gap-1">
 					{currentStreak > 0 && (
 						<StreakBar currentStreak={currentStreak} variant="compact" showMilestone={false} />
 					)}
-
-					{/* Mode badge */}
 					<ModeBadge mode={mode} />
-
-					{/* Difficulty badge (for games that support it) */}
 					{difficulty && <DifficultyBadge difficulty={difficulty} />}
-
-					{/* Help button */}
 					{onHelpClick && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-8 w-8 sm:h-9 sm:w-9"
-							onClick={onHelpClick}
-						>
-							<HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-							<span className="sr-only">Help</span>
+						<Button variant="ghost" size="icon" onClick={onHelpClick}>
+							<HelpCircle className="h-5 w-5" aria-hidden="true" />
+							<span className="sr-only">{t('help')}</span>
 						</Button>
 					)}
-
-					{/* Menu button */}
 					{onMenuClick && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-8 w-8 sm:h-9 sm:w-9"
-							onClick={onMenuClick}
-						>
-							<MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
-							<span className="sr-only">Menu</span>
+						<Button variant="ghost" size="icon" onClick={onMenuClick}>
+							<MoreVertical className="h-5 w-5" aria-hidden="true" />
+							<span className="sr-only">{t('menu')}</span>
 						</Button>
 					)}
 				</div>

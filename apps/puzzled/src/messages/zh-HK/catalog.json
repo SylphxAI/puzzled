@@ -25,7 +25,6 @@
 	"featuredPlay": "開始 {game}",
 	"featuredNote": "今日開放給所有人，無需帳戶。明日會輪到另一款遊戲。",
 	"suiteTitle": "完整遊戲系列",
-	"suiteBody": "全套 {count} 款謎題每日向所有人開放,大家玩同一套題目。",
 	"ritual": {
 		"title": "Puzzled 的每日流程",
 		"body": "每個謎題日,一套共同題目,每位玩家都一樣。",
@@ -55,12 +54,6 @@
 			"question": "分享成績會劇透嗎？",
 			"answer": "不會。成績卡只顯示遊戲、日期與你的解題圖案，不會顯示答案。"
 		}
-	},
-	"closing": {
-		"title": "今日的遊戲正在等你",
-		"body": "每款謎題每日都開放。可以由今日精選開始,亦可以玩晒成套。",
-		"play": "開始 {game}",
-		"home": "返回主頁"
 	},
 	"breadcrumbLabel": "瀏覽路徑",
 	"gamePage": {

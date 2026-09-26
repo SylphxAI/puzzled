@@ -20,18 +20,18 @@ export function DifficultyBadge({ difficulty, showIcon = false, className }: Dif
 	const config: Record<PuzzleDifficulty, { label: string; badgeColor: string; badgeBg: string }> = {
 		easy: {
 			label: t('easy'),
-			badgeColor: 'text-emerald-800 dark:text-emerald-300',
-			badgeBg: 'bg-emerald-500/15',
+			badgeColor: 'text-success',
+			badgeBg: 'bg-success/15',
 		},
 		medium: {
 			label: t('medium'),
-			badgeColor: 'text-amber-800 dark:text-amber-300',
-			badgeBg: 'bg-amber-500/15',
+			badgeColor: 'text-accent-warm-foreground',
+			badgeBg: 'bg-accent-warm/15',
 		},
 		hard: {
 			label: t('hard'),
-			badgeColor: 'text-red-800 dark:text-red-300',
-			badgeBg: 'bg-red-500/15',
+			badgeColor: 'text-destructive',
+			badgeBg: 'bg-destructive/15',
 		},
 	}
 

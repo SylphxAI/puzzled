@@ -84,7 +84,7 @@ export function LegalDocument({
 
 					{/* Mobile: the native disclosure keeps the list keyboard operable. */}
 					<details className="group surface-card lg:hidden">
-						<summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-display text-sm font-bold marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+						<summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-display text-sm marker:content-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
 							{tocTitle}
 							<ChevronDown
 								className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
@@ -114,7 +114,7 @@ export function LegalDocument({
 							>
 								<h2
 									id={`${section.id}-heading`}
-									className="font-display text-xl font-extrabold tracking-tight text-balance md:text-2xl"
+									className="font-display text-xl text-balance md:text-2xl"
 								>
 									{section.title}
 								</h2>

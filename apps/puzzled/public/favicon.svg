@@ -1,16 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Puzzled">
-  <defs>
-    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366f1"/>
-      <stop offset="52%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#d946ef"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="96" fill="url(#brand)"/>
-  <g fill="#ffffff">
-    <rect x="84" y="84" width="156" height="156" rx="44"/>
-    <rect x="272" y="84" width="156" height="156" rx="44"/>
-    <rect x="84" y="272" width="156" height="156" rx="44"/>
-    <rect x="272" y="272" width="156" height="156" rx="44" fill-opacity="0.6"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><style>.g{fill:#1A1712}.h{stroke:#F7F3EA}@media (prefers-color-scheme:dark){.g{fill:#F7F3EA}.h{stroke:#1A1712}}</style><rect class="g" width="64" height="64" rx="14"/><path class="h" d="M21 23a11 11 0 1 1 16.5 9.53Q32 35.6 32 39" fill="none" stroke-width="8" stroke-linecap="round"/><rect x="27" y="46" width="10" height="10" rx="2.6" fill="#F4B42A"/></svg>

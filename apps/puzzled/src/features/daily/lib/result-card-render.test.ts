@@ -139,22 +139,11 @@ function recordingContext() {
 }
 
 describe('resultCardPalette', () => {
-	test('every module theme has a palette whose accent matches the theme pattern', () => {
-		// theme-colors.ts embeds the theme's rgba() triple in its Tailwind
-		// pattern class; the canvas palette must carry the same colour, or the
-		// card and the module would visibly diverge.
+	test('every module theme has a palette whose colours come from the theme', () => {
 		for (const theme of THEMES) {
 			const palette = resultCardPalette(theme)
-			const pattern = getGameColors(theme).pattern
-			const match = pattern.match(/rgba\((\d+),(\d+),(\d+)/)
-			expect(match).not.toBeNull()
-			if (!match) continue
-			const hex =
-				'#' +
-				[match[1], match[2], match[3]]
-					.map((part) => Number(part).toString(16).padStart(2, '0'))
-					.join('')
-			expect(palette.accent).toBe(hex)
+			expect(palette.accent).toBe(getGameColors(theme).hex)
+			expect(palette.tileHit).toBe(getGameColors(theme).deepHex)
 		}
 	})
 
@@ -200,6 +189,7 @@ describe('paintResultCard', () => {
 		paintResultCard(rec.ctx, model, STRINGS)
 		const palette = resultCardPalette('emerald')
 		expect(rec.fills).toContain(palette.accent)
+		expect(rec.fills).toContain(palette.tileHit)
 		expect(rec.fills).toContain(palette.tileNear)
 		expect(rec.fills).toContain(palette.tileMiss)
 	})

@@ -101,7 +101,7 @@ export function SubscriptionPanel({ view, locale, fromCheckout }: Props) {
 						<p>{t('viaFamily')}</p>
 					) : (
 						<>
-							<p className="font-display text-lg font-bold">
+							<p className="font-display text-lg">
 								{view.planId ? t(`plan.${view.planId}`) : null}
 							</p>
 							<p>{t(`status.${statusKey}`)}</p>

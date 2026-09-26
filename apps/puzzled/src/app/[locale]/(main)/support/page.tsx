@@ -130,7 +130,7 @@ export default async function SupportPage({ params }: Props) {
 						className="surface-card shadow-glow animate-enter p-5 md:p-6"
 						style={{ '--enter-delay': '120ms' } as React.CSSProperties}
 					>
-						<h2 className="font-display text-base font-bold">{t('include.title')}</h2>
+						<h2 className="font-display text-base">{t('include.title')}</h2>
 						<ul className="mt-3 space-y-2.5 text-sm leading-relaxed text-muted-foreground">
 							{INCLUDE_KEYS.map((key) => (
 								<li key={key} className="flex gap-2.5">
@@ -154,7 +154,7 @@ export default async function SupportPage({ params }: Props) {
 						<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
 							<Mail className="h-5 w-5" aria-hidden="true" />
 						</span>
-						<h3 className="mt-3 font-display text-base font-bold">{t('contact.support.title')}</h3>
+						<h3 className="mt-3 font-display text-base">{t('contact.support.title')}</h3>
 						<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
 							{t('contact.support.body')}
 						</p>
@@ -171,7 +171,7 @@ export default async function SupportPage({ params }: Props) {
 						<span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
 							<Lock className="h-5 w-5" aria-hidden="true" />
 						</span>
-						<h3 className="mt-3 font-display text-base font-bold">{t('contact.data.title')}</h3>
+						<h3 className="mt-3 font-display text-base">{t('contact.data.title')}</h3>
 						<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
 							{t('contact.data.body', { privacy: PRIVACY_EMAIL, legal: LEGAL_EMAIL })}
 						</p>
@@ -216,7 +216,7 @@ export default async function SupportPage({ params }: Props) {
 								>
 									<Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
 									<span>
-										<span className="block font-display text-base font-bold">
+										<span className="block font-display text-base">
 											{t(`resources.${key}.title`)}
 										</span>
 										<span className="mt-1 block text-sm leading-relaxed text-muted-foreground">

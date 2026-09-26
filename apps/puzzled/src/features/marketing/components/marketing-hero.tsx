@@ -34,10 +34,8 @@ export function MarketingHero({
 	className,
 }: MarketingHeroProps) {
 	return (
-		<section
-			className={cn('relative overflow-hidden border-b border-border/60 bg-aurora', className)}
-		>
-			<div className="page-shell-wide pb-10 pt-8 md:pb-14 md:pt-12">
+		<section className={cn('relative', className)}>
+			<div className="page-shell-wide pb-8 pt-8 md:pb-12 md:pt-14">
 				<div
 					className={cn(
 						'animate-enter',
@@ -45,14 +43,12 @@ export function MarketingHero({
 					)}
 				>
 					<div>
-						{eyebrow && (
-							<p className="chip bg-background/80 text-primary backdrop-blur">{eyebrow}</p>
-						)}
-						<h1 className="mt-4 font-display text-[1.75rem] font-extrabold leading-[1.12] tracking-tight text-balance sm:text-[2.25rem] lg:text-[2.75rem]">
+						{eyebrow && <p className="eyebrow">{eyebrow}</p>}
+						<h1 className="mt-2 font-display text-[2.125rem] leading-[1.06] text-balance sm:text-5xl lg:text-[3.5rem]">
 							{title}
 						</h1>
 						{lead && (
-							<p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+							<p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-muted-foreground md:text-lg">
 								{lead}
 							</p>
 						)}
@@ -61,7 +57,7 @@ export function MarketingHero({
 								{facts.map((fact) => (
 									<li
 										key={fact}
-										className="chip border border-border/70 bg-background/80 text-muted-foreground"
+										className="chip border border-border bg-card font-medium text-muted-foreground"
 									>
 										{fact}
 									</li>

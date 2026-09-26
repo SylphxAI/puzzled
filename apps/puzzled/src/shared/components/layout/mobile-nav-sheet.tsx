@@ -17,7 +17,7 @@ import { SoundToggleCompact } from '@/shared/components/sound'
 import { ThemeToggleCompact } from '@/shared/components/theme'
 import { LanguageSwitcher } from './language-switcher'
 import { Logo } from './logo'
-import { isActivePath, NAV_ITEMS, SUPPORT_NAV_ITEM } from './nav-items'
+import { isActivePath, NAV_ITEMS, SECONDARY_NAV_ITEMS } from './nav-items'
 import { UserMenu } from './user-menu'
 
 /**
@@ -28,7 +28,7 @@ import { UserMenu } from './user-menu'
 export function MobileNavSheet({ currentStreak = 0 }: { currentStreak?: number }) {
 	const t = useTranslations()
 	const pathname = usePathname()
-	const items = [...NAV_ITEMS, SUPPORT_NAV_ITEM]
+	const items = [...NAV_ITEMS, ...SECONDARY_NAV_ITEMS]
 
 	return (
 		<Sheet>
@@ -41,7 +41,7 @@ export function MobileNavSheet({ currentStreak = 0 }: { currentStreak?: number }
 					<Menu className="h-5 w-5" aria-hidden="true" />
 				</button>
 			</SheetTrigger>
-			<SheetContent side="right" className="w-[min(20rem,88vw)] gap-0 p-0" hideCloseButton>
+			<SheetContent side="right" className="w-[min(20rem,88vw)] gap-0 p-0 pt-safe" hideCloseButton>
 				<SheetHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-4 text-left">
 					<div>
 						<SheetTitle className="sr-only">{t('nav.menuTitle')}</SheetTitle>
@@ -69,7 +69,7 @@ export function MobileNavSheet({ currentStreak = 0 }: { currentStreak?: number }
 									aria-current={isActive ? 'page' : undefined}
 									className={cn(
 										'flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors',
-										isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted',
+										isActive ? 'bg-muted text-foreground' : 'text-foreground hover:bg-muted',
 									)}
 								>
 									<Icon className="h-5 w-5" aria-hidden="true" />

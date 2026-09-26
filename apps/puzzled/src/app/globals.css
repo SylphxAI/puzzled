@@ -2,16 +2,15 @@
 @plugin 'tailwindcss-animate';
 
 /* =============================================
-   Tailwind v4 CSS First Configuration
+   Puzzled design tokens (2026-09-26 redesign)
    =============================================
-   All theme configuration lives here.
-   No tailwind.config.ts needed.
+   Ink and paper, one amber accent, a serif display voice and the system
+   UI face. The record of why each value is what it is lives in
+   docs/design/system.md; change a token there and here together.
 ============================================= */
 
 @theme {
-	/* -----------------------------------------
-	   Breakpoints
-	   ----------------------------------------- */
+	/* Breakpoints */
 	--breakpoint-xs: 400px;
 	--breakpoint-sm: 640px;
 	--breakpoint-md: 768px;
@@ -19,336 +18,274 @@
 	--breakpoint-xl: 1280px;
 	--breakpoint-2xl: 1536px;
 
-	/* -----------------------------------------
-	   Font Families
-	   ----------------------------------------- */
-	--font-display: var(--font-day-display-family), var(--font-display-family), var(--font-sans-family), ui-sans-serif, system-ui,
-		sans-serif;
-	--font-sans: var(--font-sans-family), ui-sans-serif, system-ui, sans-serif;
-	--font-mono: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
+	/* Type: Fraunces for display, the platform UI face for everything else. */
+	--font-display: var(--font-display-family), "Iowan Old Style", "Palatino Linotype", Georgia, var(--font-cjk-serif), serif;
+	--font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, var(--font-cjk-sans), sans-serif;
+	--font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
-	/* -----------------------------------------
-	   Border Radius (Playful, rounded - Puzzled signature)
-	   ----------------------------------------- */
-	--radius-sm: 0.375rem;
-	--radius-md: 0.5rem;
-	--radius-lg: 0.75rem;
-	--radius-xl: 0.875rem;
-	--radius-2xl: 1rem;
-	--radius-3xl: 1.5rem;
-	--radius-4xl: 2rem;
+	/* Radius: continuous, iOS-like steps. */
+	--radius-xs: 0.25rem;
+	--radius-sm: 0.5rem;
+	--radius-md: 0.625rem;
+	--radius-lg: 0.875rem;
+	--radius-xl: 1.125rem;
+	--radius-2xl: 1.375rem;
+	--radius-3xl: 1.75rem;
+	--radius-4xl: 2.25rem;
 
-	/* -----------------------------------------
-	   Shadows (Brand-tinted - Puzzled signature)
-	   ----------------------------------------- */
-	--shadow-sm: 0 1px 2px 0 rgb(30 27 75 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--shadow: 0 2px 4px 0 rgb(30 27 75 / 0.08), 0 2px 4px 0 rgb(0 0 0 / 0.08);
-	--shadow-md: 0 4px 8px -1px rgb(30 27 75 / 0.1), 0 4px 8px -1px
-		rgb(0 0 0 / 0.1);
-	--shadow-lg: 0 12px 24px -4px rgb(30 27 75 / 0.14), 0 12px 20px -4px
-		rgb(0 0 0 / 0.1);
-	--shadow-card: 0 2px 8px 0 rgb(30 27 75 / 0.08), 0 2px 4px -1px
-		rgb(0 0 0 / 0.04);
-	--shadow-card-hover: 0 8px 24px -4px rgb(234 88 12 / 0.16), 0 6px 12px -4px
-		rgb(0 0 0 / 0.08);
-	--shadow-lift: 0 18px 40px -18px rgb(234 88 12 / 0.3), 0 8px 16px -12px
-		rgb(15 23 42 / 0.18);
-	--shadow-glow: 0 0 0 1px rgb(249 115 22 / 0.12), 0 24px 60px -28px
-		rgb(249 115 22 / 0.4);
+	/* Elevation: neutral ink shadows, never tinted. */
+	--shadow-xs: 0 1px 1px 0 rgb(26 23 18 / 0.04);
+	--shadow-sm: 0 1px 2px 0 rgb(26 23 18 / 0.06);
+	--shadow: 0 1px 2px 0 rgb(26 23 18 / 0.05), 0 2px 8px -2px rgb(26 23 18 / 0.08);
+	--shadow-md: 0 1px 2px 0 rgb(26 23 18 / 0.05), 0 6px 16px -6px rgb(26 23 18 / 0.14);
+	--shadow-lg: 0 2px 4px 0 rgb(26 23 18 / 0.04), 0 16px 36px -12px rgb(26 23 18 / 0.2);
+	--shadow-card: 0 1px 2px 0 rgb(26 23 18 / 0.04), 0 1px 0 0 rgb(26 23 18 / 0.02);
+	--shadow-card-hover: 0 1px 2px 0 rgb(26 23 18 / 0.05), 0 10px 24px -12px rgb(26 23 18 / 0.2);
+	--shadow-lift: 0 2px 4px 0 rgb(26 23 18 / 0.04), 0 18px 40px -18px rgb(26 23 18 / 0.28);
+	--shadow-glow: 0 0 0 1px rgb(26 23 18 / 0.06), 0 24px 60px -30px rgb(26 23 18 / 0.3);
+	--shadow-sheet: 0 -1px 0 0 rgb(26 23 18 / 0.06), 0 -16px 40px -16px rgb(26 23 18 / 0.25);
 
-	/* -----------------------------------------
-	   Z-Index System
-	   Unified with sylphx canonical values (see CLAUDE.md)
-	   ----------------------------------------- */
+	/* Z-index */
 	--z-index-base: 0;
 	--z-index-dropdown: 10;
 	--z-index-sticky: 20;
-	--z-index-header: 40; /* sticky headers */
-	--z-index-bottom-nav: 45; /* mobile bottom nav (above header, below popover) */
-	--z-index-popover: 50; /* Select, DropdownMenu, Popover */
-	--z-index-modal: 60; /* Dialog, AlertDialog */
-	--z-index-tooltip: 70; /* Tooltip */
-	--z-index-drawer: 80; /* Sheet, MobileSidebar */
-	--z-index-toast: 90; /* Toast notifications */
-	--z-index-overlay: 100; /* KeyboardHint, fullscreen overlays */
+	--z-index-header: 40;
+	--z-index-bottom-nav: 45;
+	--z-index-popover: 50;
+	--z-index-modal: 60;
+	--z-index-tooltip: 70;
+	--z-index-drawer: 80;
+	--z-index-toast: 90;
+	--z-index-overlay: 100;
 
-	/* -----------------------------------------
-	   Duration Scale (aligned with ui/motion/config.ts)
-	   Use semantic tokens: duration-fast, duration-normal, etc.
-	   ----------------------------------------- */
-	/* Tailwind v4 reads named durations from --transition-duration-*. */
+	/* Motion: short, eased out; springs only on direct manipulation. */
 	--transition-duration-instant: 0ms;
-	--transition-duration-fast: 100ms; /* micro-interactions: hover, focus */
-	--transition-duration-normal: 150ms; /* standard transitions */
-	--transition-duration-medium: 200ms; /* slightly longer transitions */
-	--transition-duration-slow: 300ms; /* modals, page transitions */
-	--transition-duration-slower: 400ms; /* complex choreography */
-	--transition-duration-slowest: 500ms; /* dramatic reveals */
+	--transition-duration-fast: 120ms;
+	--transition-duration-normal: 180ms;
+	--transition-duration-medium: 240ms;
+	--transition-duration-slow: 320ms;
+	--transition-duration-slower: 420ms;
+	--transition-duration-slowest: 560ms;
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-	/* -----------------------------------------
-	   Spacing (Layout)
-	   ----------------------------------------- */
+	/* Layout */
 	--spacing-header-height: 56px;
-	--spacing-bottom-nav-height: 64px;
+	--spacing-bottom-nav-height: 58px;
 	--spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
 	--spacing-safe-top: env(safe-area-inset-top, 0px);
 	--spacing-touch-target-min: 44px;
 
-	/* -----------------------------------------
-	   Transition Timing Functions
-	   ----------------------------------------- */
-	--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-	--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-	--ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-	/* -----------------------------------------
-	   Animations
-	   ----------------------------------------- */
+	/* Animations */
 	--animate-streak-pulse: streak-pulse 2s ease-in-out infinite;
 	--animate-milestone-glow: milestone-glow 3s ease-in-out infinite;
 	--animate-progress-fill: progress-fill 0.5s ease-out forwards;
 	--animate-progress-indeterminate: progress-indeterminate 1.4s ease-in-out infinite;
-	--animate-fade-in: fade-in 0.2s ease-out;
-	--animate-slide-up: slide-up 0.3s ease-out;
+	--animate-fade-in: fade-in 0.18s ease-out;
+	--animate-slide-up: slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 	--animate-flip: flip 0.5s ease-in-out;
 	--animate-bounce: bounce 0.6s ease-in-out;
-	--animate-shake: shake 0.5s ease-in-out;
+	--animate-shake: shake 0.4s ease-in-out;
 	--animate-shimmer: shimmer 2s infinite;
 	--animate-checkmark: checkmark 0.3s ease-out forwards;
 	--animate-status-pulse: status-pulse 2s ease-in-out infinite;
 	--animate-collapsible-down: collapsible-down 0.2s ease-out;
 	--animate-collapsible-up: collapsible-up 0.2s ease-out;
-	/* Base UI disclosure states reuse the collapsible timing. */
 	--animate-accordion-down: collapsible-down 0.2s ease-out;
 	--animate-accordion-up: collapsible-up 0.2s ease-out;
 
-	/* -----------------------------------------
-	   Colors - Brand
-	   ----------------------------------------- */
-	/* indigo-600 passes AA as both a fill (white text) and as text on white. */
-	--color-primary: #9a3412;
-	--color-primary-hover: #7c2d12;
-	--color-primary-foreground: #fff7ed;
-	--color-ring: #ea580c;
-	--color-secondary: #9a3412;
-	/* Warm accent used for delight moments (streaks, celebration, highlights) */
-	--color-accent-warm: #f97316;
-	--color-accent-warm-soft: #fff7ed;
-	--color-accent-warm-foreground: #7c2d12;
-	/* Deep brand ink used by marketing bands and the footer */
-	--color-ink: #1e1b4b;
-	--color-ink-muted: #3f3668;
-	--color-ink-foreground: #f6f1e7;
-	--color-surface: #fffdf8;
-	--color-surface-muted: #f6f0e6;
+	/* Brand. Primary is ink: the one filled action per screen. */
+	--color-primary: #1a1712;
+	--color-primary-hover: #37322a;
+	--color-primary-foreground: #fbf9f4;
+	--color-ring: #2458d6;
+	--color-secondary: #1a1712;
+	/* Amber is the brand accent: a fill, never small text on paper. */
+	--color-accent-warm: #f4b42a;
+	--color-accent-warm-soft: #fcf0d2;
+	--color-accent-warm-foreground: #6e4a00;
+	--color-ink: #1a1712;
+	--color-ink-muted: #2a2620;
+	--color-ink-foreground: #f7f3ea;
+	--color-surface: #ffffff;
+	--color-surface-muted: #f1ede4;
 	--color-surface-raised: #ffffff;
 
-	/* -----------------------------------------
-	   Colors - Semantic
-	   ----------------------------------------- */
-	--color-success: #22c55e;
+	/* Semantic */
+	--color-success: #176a3b;
 	--color-success-foreground: #ffffff;
-	--color-warning: #f59e0b;
+	--color-warning: #9a5b00;
 	--color-warning-foreground: #ffffff;
-	--color-error: #ef4444;
+	--color-error: #a82b23;
 	--color-error-foreground: #ffffff;
-	--color-info: #3b82f6;
+	--color-info: #2458d6;
 	--color-info-foreground: #ffffff;
-	--color-destructive: #ef4444;
+	--color-destructive: #a82b23;
 	--color-destructive-foreground: #ffffff;
 
-	/* -----------------------------------------
-	   Colors - Game
-	   ----------------------------------------- */
-	--color-correct: #22c55e;
-	--color-present: #eab308;
-	--color-absent: #64748b;
-	--color-wrong: #ef4444;
+	/* Game feedback: the familiar trio, tuned to the paper ground. */
+	--color-correct: #4a9a5c;
+	--color-present: #d4a21f;
+	--color-absent: #7b756a;
+	--color-wrong: #c0352b;
 
-	/* -----------------------------------------
-	   Colors - Stats
-	   ----------------------------------------- */
-	/*
-	 * Stat colours are used as small text, so they carry AA contrast both on the
-	 * page surface and on their own 10% tint (the streak chip is
-	 * `bg-stat-streak/10 text-stat-streak`): #9a3412 is 6.2:1 on the tint.
-	 */
-	--color-stat-winrate: #15803d;
-	--color-stat-streak: #9a3412;
-	--color-stat-best: #b45309;
+	/* Stats (used as small text: AA on paper and on their 10% tint). */
+	--color-stat-winrate: #176a3b;
+	--color-stat-streak: #a4480f;
+	--color-stat-best: #6e4a00;
 
-	/* -----------------------------------------
-	   Colors - Rankings
-	   ----------------------------------------- */
-	--color-rank-gold: #eab308;
-	--color-rank-silver: #64748b;
-	--color-rank-bronze: #d97706;
+	/* Rankings */
+	--color-rank-gold: #d4a21f;
+	--color-rank-silver: #8a8579;
+	--color-rank-bronze: #a4661f;
 
-	/* -----------------------------------------
-	   Colors - UI (Light Mode defaults)
-	   ----------------------------------------- */
-	--color-background: #faf6ef;
-	--color-foreground: #241d3f;
-	--color-card: #fffdf8;
-	--color-card-foreground: #241d3f;
-	--color-accent: #f3ece1;
-	--color-accent-foreground: #241d3f;
-	--color-muted: #f3ece1;
-	--color-muted-foreground: #5b5170;
-	--color-border: #e6dccd;
-	--color-input: #e6dccd;
+	/* UI (light) */
+	--color-background: #f7f4ee;
+	--color-foreground: #1a1712;
+	--color-card: #ffffff;
+	--color-card-foreground: #1a1712;
+	--color-accent: #efeae0;
+	--color-accent-foreground: #1a1712;
+	--color-muted: #efeae0;
+	--color-muted-foreground: #5f584c;
+	--color-border: #e4ded2;
+	--color-input: #d9d2c4;
+	--color-hairline: rgb(26 23 18 / 0.1);
 
-	/* -----------------------------------------
-	   Colors - Keyboard
-	   ----------------------------------------- */
-	--color-key: #e4d9c9;
-	--color-key-text: #2a2344;
+	/* Keyboard */
+	--color-key: #e6e0d4;
+	--color-key-text: #1a1712;
 }
 
-/* -----------------------------------------
-   Dark Mode Custom Variant
-   ----------------------------------------- */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* -----------------------------------------
-   Dark Mode Theme Overrides
-   ----------------------------------------- */
+/* Dark mode is its own palette: warm charcoal, not inverted paper. */
 .dark {
-	--color-background: #0e1226;
-	--color-foreground: #f2ecdf;
-	--color-card: #191d38;
-	--color-card-foreground: #f2ecdf;
-	--color-accent: #2a2f52;
-	--color-accent-foreground: #f2ecdf;
-	--color-muted: #232846;
-	/*
-	 * Muted text must stay legible on the raised surfaces as well as on the
-	 * page background: #a5b2c5 clears 4.5:1 on --color-muted (#334155, 4.8:1),
-	 * --color-card (#1e293b, 6.8:1) and --color-background (#0f172a, 8.3:1).
-	 * slate-400 (#94a3b8) only reached 4.0:1 on the muted chip surface.
-	 */
-	--color-muted-foreground: #a9a3c4;
-	--color-border: #383e6b;
-	--color-input: #2a2f52;
-	--color-ring: #fb923c;
-	--color-key: #2a2f52;
-	--color-key-text: #f2ecdf;
-	/*
-	 * On dark surfaces the brand colour must be legible as text, so the fill
-	 * turns light and its label turns dark ink (7.3:1 / 8.0:1).
-	 */
-	--color-primary: #fb923c;
-	--color-primary-hover: #fdba74;
-	--color-primary-foreground: #1e1b4b;
-	--color-stat-winrate: #4ade80;
-	--color-stat-streak: #fb923c;
-	--color-stat-best: #fbbf24;
-	--color-accent-warm: #fb923c;
-	--color-accent-warm-soft: rgb(124 45 18 / 0.25);
-	--color-accent-warm-foreground: #ffedd5;
-	--color-ink: #0b1020;
-	--color-ink-muted: #1e1b4b;
-	--color-ink-foreground: #f2ecdf;
-	--color-surface: #191d38;
-	--color-surface-muted: #141830;
-	--color-surface-raised: #232846;
+	--color-background: #121110;
+	--color-foreground: #f2eee6;
+	--color-card: #1c1b18;
+	--color-card-foreground: #f2eee6;
+	--color-accent: #26241f;
+	--color-accent-foreground: #f2eee6;
+	--color-muted: #26241f;
+	--color-muted-foreground: #aaa396;
+	--color-border: #2f2c27;
+	--color-input: #3a3630;
+	--color-hairline: rgb(242 238 230 / 0.1);
+	--color-ring: #7ea6ff;
+	--color-key: #34312b;
+	--color-key-text: #f2eee6;
+	--color-primary: #f2eee6;
+	--color-primary-hover: #ffffff;
+	--color-primary-foreground: #121110;
+	--color-secondary: #f2eee6;
+	--color-stat-winrate: #6fcf8e;
+	--color-stat-streak: #f39a5b;
+	--color-stat-best: #f4c55c;
+	--color-accent-warm: #f4b42a;
+	--color-accent-warm-soft: rgb(244 180 42 / 0.14);
+	--color-accent-warm-foreground: #f7cf73;
+	--color-ink: #080807;
+	--color-ink-muted: #1c1b18;
+	--color-ink-foreground: #f2eee6;
+	--color-surface: #1c1b18;
+	--color-surface-muted: #171614;
+	--color-surface-raised: #252320;
+	--color-success: #6fcf8e;
+	--color-warning: #f4c55c;
+	--color-error: #f27b70;
+	--color-info: #7ea6ff;
+	--color-destructive: #f27b70;
+	--color-correct: #4f9a61;
+	--color-present: #c49a24;
+	--color-absent: #4b4740;
+	--color-wrong: #e0584c;
 
-	/* Semantic Colors - Dark Mode */
-	--color-success: #4ade80;
-	--color-warning: #fbbf24;
-	--color-error: #f87171;
-	--color-info: #60a5fa;
-	--color-destructive: #f87171;
-
-	/* Shadows - Dark Mode (glow effect) */
-	--shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 0 2px 0 rgb(129 140 248 / 0.1);
-	--shadow: 0 2px 6px 0 rgb(0 0 0 / 0.5), 0 0 4px 0 rgb(129 140 248 / 0.12);
-	--shadow-md: 0 4px 10px -1px rgb(0 0 0 / 0.5), 0 0 8px 0
-		rgb(129 140 248 / 0.1);
-	--shadow-lg: 0 12px 24px -3px rgb(0 0 0 / 0.5), 0 0 16px 0
-		rgb(129 140 248 / 0.12);
-	--shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(129 140 248 / 0.1);
-	--shadow-card-hover: 0 8px 24px -4px rgb(0 0 0 / 0.4), 0 0 12px 0
-		rgb(129 140 248 / 0.15);
+	--shadow-xs: 0 1px 1px 0 rgb(0 0 0 / 0.3);
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+	--shadow: 0 1px 2px 0 rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+	--shadow-md: 0 6px 16px -6px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.04);
+	--shadow-lg: 0 16px 36px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.05);
+	--shadow-card: 0 0 0 1px rgb(255 255 255 / 0.02);
+	--shadow-card-hover: 0 10px 24px -12px rgb(0 0 0 / 0.7), 0 0 0 1px rgb(255 255 255 / 0.06);
+	--shadow-lift: 0 18px 40px -18px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.06);
+	--shadow-glow: 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 60px -30px rgb(0 0 0 / 0.8);
+	--shadow-sheet: 0 -1px 0 0 rgb(255 255 255 / 0.06), 0 -16px 40px -16px rgb(0 0 0 / 0.8);
 }
 
-/* =============================================
-   CSS Variables (Non-Tailwind)
-   =============================================
-   These are used directly in CSS, not via Tailwind classes
-============================================= */
+/* CJK faces for the locales we ship. */
+:root {
+	--font-cjk-sans: "PingFang TC", "PingFang HK", "Noto Sans TC", "Microsoft JhengHei";
+	--font-cjk-serif: "Songti TC", "Noto Serif TC", "PMingLiU";
+}
+:lang(zh-CN) {
+	--font-cjk-sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei";
+	--font-cjk-serif: "Songti SC", "Noto Serif SC", "SimSun";
+}
 
 :root {
-	/* Toast Variants - Light mode */
-	--toast-success-bg: #f0fdf4;
-	--toast-success-text: #166534;
-	--toast-success-border: rgb(34 197 94 / 0.5);
-	--toast-error-bg: #fef2f2;
-	--toast-error-text: #991b1b;
-	--toast-error-border: rgb(239 68 68 / 0.5);
-	--toast-warning-bg: #fffbeb;
-	--toast-warning-text: #92400e;
-	--toast-warning-border: rgb(245 158 11 / 0.5);
-	--toast-info-bg: #eff6ff;
-	--toast-info-text: #1e40af;
-	--toast-info-border: rgb(59 130 246 / 0.5);
+	--toast-success-bg: #edf7f0;
+	--toast-success-text: #145a32;
+	--toast-success-border: rgb(29 122 69 / 0.35);
+	--toast-error-bg: #fbeeec;
+	--toast-error-text: #8f231b;
+	--toast-error-border: rgb(192 53 43 / 0.35);
+	--toast-warning-bg: #fcf3df;
+	--toast-warning-text: #6e4a00;
+	--toast-warning-border: rgb(154 91 0 / 0.35);
+	--toast-info-bg: #edf2fc;
+	--toast-info-text: #1b3f99;
+	--toast-info-border: rgb(36 88 214 / 0.35);
 
-	/* Gamification Colors (RGB for alpha manipulation) */
-	--streak-fire: 255 100 50;
-	--streak-glow: 255 150 50;
-	--achievement-gold: 255 200 50;
-	--premium-purple: 139 92 246;
-	--milestone-bronze: 205 127 50;
-	--milestone-silver: 192 192 192;
-	--milestone-gold: 255 215 0;
+	--streak-fire: 228 118 40;
+	--streak-glow: 244 180 42;
+	--achievement-gold: 244 180 42;
+	--premium-purple: 26 23 18;
+	--milestone-bronze: 164 102 31;
+	--milestone-silver: 138 133 121;
+	--milestone-gold: 244 180 42;
 
-	/* Celebration Colors */
-	--celebration-green: #22c55e;
-	--celebration-yellow: #eab308;
-	--celebration-blue: #3b82f6;
-	--celebration-pink: #ec4899;
-	--celebration-orange: #f97316;
-	--celebration-purple: #8b5cf6;
+	--celebration-green: #4a9a5c;
+	--celebration-yellow: #f4b42a;
+	--celebration-blue: #2458d6;
+	--celebration-pink: #d9577e;
+	--celebration-orange: #e47628;
+	--celebration-purple: #6f55c8;
 
-	/* Game-specific accent shadows */
-	--shadow-game: 0 4px 16px -2px rgb(99 102 241 / 0.2);
-	--shadow-success: 0 4px 16px -2px rgb(34 197 94 / 0.25);
-	--shadow-celebration: 0 0 50px 12px rgb(99 102 241 / 0.2);
-	--shadow-tile: 0 2px 4px 0 rgb(99 102 241 / 0.1), 0 1px 2px 0
-		rgb(0 0 0 / 0.05);
-	--shadow-tile-hover: 0 4px 8px -1px rgb(99 102 241 / 0.15), 0 2px 4px 0
-		rgb(0 0 0 / 0.08);
-	--shadow-button: 0 2px 6px -1px rgb(99 102 241 / 0.12), 0 2px 4px -1px
-		rgb(0 0 0 / 0.06);
+	--shadow-game: 0 1px 2px 0 rgb(26 23 18 / 0.05), 0 8px 24px -12px rgb(26 23 18 / 0.18);
+	--shadow-success: 0 8px 24px -12px rgb(29 122 69 / 0.4);
+	--shadow-celebration: 0 0 50px 12px rgb(244 180 42 / 0.18);
+	--shadow-tile: 0 1px 0 0 rgb(26 23 18 / 0.08);
+	--shadow-tile-hover: 0 2px 6px -2px rgb(26 23 18 / 0.18);
+	--shadow-button: 0 1px 2px 0 rgb(26 23 18 / 0.08);
 
-	/* Scrollbar compensation */
 	--scrollbar-width: 0px;
 }
 
 .dark {
-	/* Toast Variants - Dark mode */
-	--toast-success-bg: rgb(22 101 52 / 0.2);
-	--toast-success-text: #bbf7d0;
-	--toast-success-border: rgb(74 222 128 / 0.5);
-	--toast-error-bg: rgb(153 27 27 / 0.2);
-	--toast-error-text: #fecaca;
-	--toast-error-border: rgb(248 113 113 / 0.5);
-	--toast-warning-bg: rgb(146 64 14 / 0.2);
-	--toast-warning-text: #fef08a;
-	--toast-warning-border: rgb(251 191 36 / 0.5);
-	--toast-info-bg: rgb(30 64 175 / 0.2);
-	--toast-info-text: #bfdbfe;
-	--toast-info-border: rgb(96 165 250 / 0.5);
+	--toast-success-bg: rgb(111 207 142 / 0.12);
+	--toast-success-text: #b8ebc8;
+	--toast-success-border: rgb(111 207 142 / 0.35);
+	--toast-error-bg: rgb(242 123 112 / 0.12);
+	--toast-error-text: #f9c6c0;
+	--toast-error-border: rgb(242 123 112 / 0.35);
+	--toast-warning-bg: rgb(244 197 92 / 0.12);
+	--toast-warning-text: #f7dc9c;
+	--toast-warning-border: rgb(244 197 92 / 0.35);
+	--toast-info-bg: rgb(126 166 255 / 0.12);
+	--toast-info-text: #c8d8ff;
+	--toast-info-border: rgb(126 166 255 / 0.35);
 
-	/* Dark mode shadows */
-	--shadow-game: 0 4px 20px -2px rgb(129 140 248 / 0.3);
-	--shadow-success: 0 4px 20px -2px rgb(74 222 128 / 0.3);
-	--shadow-celebration: 0 0 60px 15px rgb(129 140 248 / 0.25);
-	--shadow-tile: 0 2px 6px 0 rgb(0 0 0 / 0.4), 0 0 4px 0 rgb(129 140 248 / 0.15);
-	--shadow-tile-hover: 0 4px 12px -1px rgb(0 0 0 / 0.4), 0 0 8px 0
-		rgb(129 140 248 / 0.2);
-	--shadow-button: 0 2px 8px -1px rgb(0 0 0 / 0.4), 0 0 4px 0
-		rgb(129 140 248 / 0.15);
+	--shadow-game: 0 0 0 1px rgb(255 255 255 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.7);
+	--shadow-success: 0 8px 24px -12px rgb(111 207 142 / 0.35);
+	--shadow-celebration: 0 0 60px 15px rgb(244 180 42 / 0.15);
+	--shadow-tile: 0 1px 0 0 rgb(0 0 0 / 0.5);
+	--shadow-tile-hover: 0 2px 8px -2px rgb(0 0 0 / 0.6);
+	--shadow-button: 0 1px 2px 0 rgb(0 0 0 / 0.4);
 }
 
 /* =============================================
@@ -371,6 +308,25 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	overscroll-behavior-y: contain;
+	text-rendering: optimizeLegibility;
+	-webkit-text-size-adjust: 100%;
+	-webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+	background: var(--color-accent-warm-soft);
+	color: var(--color-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }
 
 /* =============================================
@@ -472,79 +428,55 @@ body {
 }
 
 /* =============================================
-   The day surface (S3) — brand tokens, scoped
-=============================================
-
-   This slice exists so the direction can be judged before it spreads: every
-   token below is consumed inside `.day-surface` (the home page's first screen)
-   and nowhere else, so the rest of the shell keeps the palette it has.
-
-   Why a token layer is needed at all: the public shell wears Tailwind's default
-   SaaS palette — `--color-primary` is `#4f46e5` (indigo-600) and every shadow is
-   tinted `rgb(99 102 241)` (indigo-500) — while the modules already own eleven
-   distinct themes in `games/theme-colors.ts`. The day's ritual elements (the
-   date, the puzzle number, the streak and the countdown) move onto the warm
-   accent this product already declares for delight moments, and the board gets a
-   tile radius-and-shadow register of its own instead of the card's.
-
-   Text that carries the accent uses `--color-accent-warm-foreground`: white on
-   `#f97316` is 3.0:1 and the accent itself is 3.0:1 on white, so the hue is used
-   as fill and glow, and its ink form carries the words.
-*/
+   The day surface: the date, the puzzle number and the clock
+============================================= */
 .day-surface {
-	--day-display-family:
-		var(--font-day-display-family), var(--font-display-family), var(--font-sans-family),
-		ui-sans-serif, system-ui, sans-serif;
+	--day-display-family: var(--font-display);
 	--day-accent: var(--color-accent-warm);
 	--day-accent-soft: var(--color-accent-warm-soft);
 	--day-accent-foreground: var(--color-accent-warm-foreground);
-	/* Tile scale: half the card radius, warm-tinted shadow. */
 	--day-tile-radius: 0.5rem;
-	--day-tile-shadow: 0 1px 2px 0 rgb(249 115 22 / 0.1);
-	--day-tile-shadow-hover: 0 4px 10px -2px rgb(249 115 22 / 0.22);
+	--day-tile-shadow: var(--shadow-tile);
+	--day-tile-shadow-hover: var(--shadow-tile-hover);
 }
 
-/* The day's display voice, and the numerals that are the drama. */
 .day-surface .day-display {
 	font-family: var(--day-display-family);
 	letter-spacing: -0.02em;
 }
 
 .day-surface .day-numeral {
-	font-family: var(--day-display-family);
 	font-variant-numeric: tabular-nums;
 }
 
-/* Ritual chip: the warm accent, not the indigo primary. */
 .day-surface .day-chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.375rem;
 	border-radius: 9999px;
-	border: 1px solid rgb(249 115 22 / 0.25);
-	background-color: var(--day-accent-soft);
+	border: 1px solid var(--color-border);
+	background-color: var(--color-card);
 	padding: 0.25rem 0.75rem;
 	font-weight: 500;
-	color: var(--day-accent-foreground);
+	color: var(--color-foreground);
 }
 
-/* The same chip, read as a label rather than a badge. */
 .day-surface .day-label {
 	border: 0;
 	background-color: transparent;
 	padding: 0;
 	font-size: 0.6875rem;
 	font-weight: 600;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
+	color: var(--color-muted-foreground);
 }
 
-/* One tile of the module's board: the tile scale, not the card scale. */
 .day-surface .day-tile {
 	border-radius: var(--day-tile-radius);
 	background-color: var(--color-surface-muted);
 	box-shadow: var(--day-tile-shadow);
-	transition: box-shadow 0.15s ease;
+	transition: box-shadow var(--transition-duration-normal) var(--ease-out);
 }
 
 @media (hover: hover) {
@@ -557,30 +489,23 @@ body {
    Brand surfaces
 ============================================= */
 
-/* Soft aurora field used behind heroes. Decorative only. */
+/* Paper grain for heroes: one soft light, no colour wash. Decorative only. */
 .bg-aurora {
-	background-image:
-		radial-gradient(60% 55% at 12% 8%, rgb(249 115 22 / 0.12), transparent 70%),
-		radial-gradient(45% 45% at 88% 0%, rgb(30 27 75 / 0.08), transparent 65%),
-		radial-gradient(55% 55% at 70% 95%, rgb(245 158 11 / 0.1), transparent 70%);
+	background-image: radial-gradient(80% 60% at 50% 0%, rgb(255 255 255 / 0.7), transparent 70%);
 }
 
 .dark .bg-aurora {
-	background-image:
-		radial-gradient(60% 55% at 12% 8%, rgb(249 115 22 / 0.18), transparent 70%),
-		radial-gradient(45% 45% at 88% 0%, rgb(76 64 142 / 0.22), transparent 65%),
-		radial-gradient(55% 55% at 70% 95%, rgb(245 158 11 / 0.12), transparent 70%);
+	background-image: radial-gradient(80% 60% at 50% 0%, rgb(255 255 255 / 0.035), transparent 70%);
 }
 
-/* Faint grid overlay for premium/marketing bands. */
+/* Graph-paper rule, the puzzle-book texture. */
 .bg-grid-faint {
 	background-image:
-		linear-gradient(to right, rgb(234 88 12 / 0.06) 1px, transparent 1px),
-		linear-gradient(to bottom, rgb(234 88 12 / 0.06) 1px, transparent 1px);
-	background-size: 32px 32px;
+		linear-gradient(to right, var(--color-hairline) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--color-hairline) 1px, transparent 1px);
+	background-size: 28px 28px;
 }
 
-/* Elevated card surface with brand-tinted border. */
 .surface-card {
 	background-color: var(--color-card);
 	border: 1px solid var(--color-border);
@@ -590,23 +515,50 @@ body {
 
 .surface-card-hover {
 	transition:
-		transform 0.18s ease,
-		box-shadow 0.18s ease,
-		border-color 0.18s ease;
+		transform var(--transition-duration-normal) var(--ease-out),
+		box-shadow var(--transition-duration-normal) var(--ease-out),
+		border-color var(--transition-duration-normal) var(--ease-out);
 }
 
 @media (hover: hover) {
 	.surface-card-hover:hover {
 		transform: translateY(-2px);
 		box-shadow: var(--shadow-lift);
-		border-color: rgb(249 115 22 / 0.35);
+		border-color: var(--color-input);
 	}
 }
 
-/* Inverted brand band (footer, premium hero). */
+.surface-card-hover:active {
+	transform: scale(0.985);
+	transition-duration: var(--transition-duration-fast);
+}
+
 .surface-ink {
 	background-color: var(--color-ink);
 	color: var(--color-ink-foreground);
+}
+
+/* Hairline rule between editorial sections. */
+.rule {
+	border-top: 1px solid var(--color-border);
+}
+
+/* Small uppercase label above a heading. */
+.eyebrow {
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-muted-foreground);
+}
+
+/* Pressed state for any tappable surface: the haptic-like response. */
+.pressable {
+	transition: transform var(--transition-duration-fast) var(--ease-out);
+	-webkit-tap-highlight-color: transparent;
+}
+.pressable:active {
+	transform: scale(0.97);
 }
 
 /* =============================================
@@ -615,14 +567,14 @@ body {
 
 .font-display {
 	font-family: var(--font-display);
-	letter-spacing: -0.02em;
+	letter-spacing: -0.015em;
+	font-weight: 600;
+	font-feature-settings: "lnum";
 }
 
+/* Kept for existing call sites: brand emphasis is ink, not a gradient. */
 .text-gradient {
-	background-image: linear-gradient(100deg, #ea580c 5%, #f59e0b 50%, #fbbf24 100%);
-	-webkit-background-clip: text;
-	background-clip: text;
-	color: transparent;
+	color: inherit;
 }
 
 .chip {
@@ -657,7 +609,7 @@ body {
 }
 
 .animate-enter {
-	animation: enter-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation: enter-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 	animation-delay: var(--enter-delay, 0ms);
 }
 
@@ -1528,9 +1480,9 @@ html[data-consent-decided] [data-consent-banner] {
 	}
 }
 
-/* The numeral voice: mono + tabular — streaks, countdowns, puzzle numbers. */
+/* The numeral voice: the UI face with tabular figures — streaks, clocks, puzzle numbers. */
 .numeral {
-	font-family: var(--font-mono-family), ui-monospace, SFMono-Regular, monospace;
+	font-family: var(--font-sans);
 	font-variant-numeric: tabular-nums;
 	letter-spacing: -0.01em;
 }

@@ -51,10 +51,10 @@ type GameResultProps = {
 
 // Category colors for displaying missed categories
 const CATEGORY_COLORS: Record<0 | 1 | 2 | 3, { bg: string; text: string }> = {
-	0: { bg: 'bg-yellow-300', text: 'text-yellow-900' },
-	1: { bg: 'bg-emerald-400', text: 'text-emerald-950' },
-	2: { bg: 'bg-sky-400', text: 'text-sky-950' },
-	3: { bg: 'bg-violet-400', text: 'text-violet-950' },
+	0: { bg: 'bg-accent-warm', text: 'text-accent-warm-foreground' },
+	1: { bg: 'bg-success', text: 'text-success' },
+	2: { bg: 'bg-info', text: 'text-info' },
+	3: { bg: 'bg-muted', text: 'text-foreground' },
 }
 
 export function GameResultCard({
@@ -198,30 +198,19 @@ export function GameResultCard({
 				{getAnnouncementMessage()}
 			</output>
 
-			<div
-				className={cn(
-					'rounded-2xl border-2 p-6',
-					isWin
-						? 'border-correct/30 bg-gradient-to-b from-correct/10 to-correct/5'
-						: 'border-muted bg-gradient-to-b from-muted/50 to-muted/30',
-				)}
-			>
+			<div className="px-5 pb-5 pt-3 sm:p-6">
 				{/* Header */}
 				<div className="mb-6 text-center">
 					<div
 						className={cn(
-							'mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full',
-							isWin ? 'bg-correct/20' : 'bg-muted',
+							'mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl',
+							isWin ? 'bg-accent-warm text-[#1a1712]' : 'bg-muted text-muted-foreground',
 						)}
 						aria-hidden="true"
 					>
-						{isWin ? (
-							<Trophy className="h-8 w-8 text-correct" />
-						) : (
-							<Target className="h-8 w-8 text-muted-foreground" />
-						)}
+						{isWin ? <Trophy className="h-7 w-7" /> : <Target className="h-7 w-7" />}
 					</div>
-					<h3 className={cn('text-xl font-bold', isWin ? 'text-correct' : 'text-muted-foreground')}>
+					<h3 className="font-display text-[1.75rem] leading-tight">
 						{isWin ? t('congratulations') : t('gameOver')}
 					</h3>
 					{solution && !isWin && (
@@ -263,7 +252,7 @@ export function GameResultCard({
 								percentileData.percentile != null &&
 								percentileData.percentile > 0 && (
 									<span className="flex items-center gap-1.5 text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-700">
-										<Trophy className="h-3.5 w-3.5 text-amber-500" />
+										<Trophy className="h-3.5 w-3.5 text-accent-warm-foreground" />
 										{percentileData.percentile >= 50
 											? t('beatPercent', { percent: percentileData.percentile })
 											: t('topPercent', {
@@ -284,7 +273,7 @@ export function GameResultCard({
 				</div>
 
 				{/* Stats Grid */}
-				<div className="mb-6 grid grid-cols-2 gap-3">
+				<div className="mb-6 flex divide-x divide-border rounded-2xl border border-border">
 					{/* Attempts (Wordle/Connections) */}
 					{stats.attempts !== undefined && stats.maxAttempts !== undefined && (
 						<StatBox
@@ -330,7 +319,7 @@ export function GameResultCard({
 						{tShare('card.share')}
 					</Button>
 
-					<Button onClick={onShare} variant="outline" className="w-full gap-2" size="lg">
+					<Button onClick={onShare} variant="secondary" className="w-full gap-2" size="lg">
 						<Share2 className="h-4 w-4" aria-hidden="true" />
 						{tCommon('share')}
 					</Button>
@@ -344,7 +333,7 @@ export function GameResultCard({
 
 					<Link
 						href="/"
-						className="flex flex-1 items-center justify-center rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+						className="flex min-h-11 flex-1 items-center justify-center rounded-full px-4 text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
 					>
 						{t('backToHome')}
 					</Link>
@@ -373,18 +362,13 @@ function StatBox({
 	highlight: boolean
 }) {
 	return (
-		<div
-			className={cn(
-				'flex flex-col items-center rounded-xl p-3',
-				highlight ? 'bg-correct/10 text-correct' : 'bg-muted/50 text-muted-foreground',
-			)}
-		>
-			<div className="mb-1 flex items-center gap-1.5">
-				{icon}
-				<span className="text-xs font-medium">{label}</span>
-			</div>
-			<span className={cn('text-lg font-bold', highlight ? 'text-correct' : 'text-foreground')}>
+		<div className="flex flex-1 flex-col items-center px-2 py-3">
+			<span className={cn('font-display text-2xl leading-none tnum', highlight && 'text-success')}>
 				{value}
+			</span>
+			<span className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
+				{icon}
+				{label}
 			</span>
 		</div>
 	)

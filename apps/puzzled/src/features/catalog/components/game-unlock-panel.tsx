@@ -35,7 +35,7 @@ export async function GameUnlockPanel({
 				<span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
 					<Lock className="h-7 w-7" aria-hidden="true" />
 				</span>
-				<h2 className="font-display text-xl font-extrabold tracking-tight md:text-2xl">
+				<h2 className="font-display text-xl md:text-2xl">
 					{archive ? t('archiveTitle') : t('title')}
 				</h2>
 				<p className="text-sm leading-relaxed text-muted-foreground">
