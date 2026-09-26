@@ -2,16 +2,14 @@
  * Where a player manages their email, password, sign-in methods, privacy and
  * account deletion.
  *
- * That is Auth's hosted Account Portal on Puzzled's own domain, set at build as
- * `NEXT_PUBLIC_ACCOUNT_PORTAL_URL`. Until it is set, the links open Puzzled's
- * support page, where the team handles these requests. Players are never sent
- * to a Sylphx console.
+ * That will be Auth's hosted Account Portal, passed in by a server component
+ * once Auth publishes its URL. Until then the links open Puzzled's support
+ * page, where the team handles these requests. Players are never sent to a
+ * Sylphx console.
  */
 export type AccountPortalLink = { href: string; external: boolean }
 
-export function accountPortalLink(
-	configured: string | undefined = process.env.NEXT_PUBLIC_ACCOUNT_PORTAL_URL,
-): AccountPortalLink {
+export function accountPortalLink(configured?: string): AccountPortalLink {
 	const value = configured?.trim()
 	if (value) {
 		try {

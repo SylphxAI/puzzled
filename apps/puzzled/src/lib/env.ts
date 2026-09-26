@@ -68,24 +68,12 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 		required: false,
 		description: 'Next.js phase; phase-production-build relaxes the Redis connect',
 	},
-	// Public browser config (baked at image build)
-	{
-		name: 'NEXT_PUBLIC_APP_URL',
-		required: false,
-		description: 'Configured site origin; falls back to the request origin',
-	},
-	{
-		name: 'NEXT_PUBLIC_SYLPHX_APP_ID',
-		required: false,
-		description: 'Sylphx app id for the login surface; missing hides OAuth buttons',
-	},
-	{
-		name: 'NEXT_PUBLIC_ACCOUNT_PORTAL_URL',
-		required: false,
-		description:
-			"Auth's hosted Account Portal on the app domain; missing links account settings to /support",
-	},
 	// Deployment / dev host facts
+	{
+		name: 'SYLPHX_PUBLIC_URL',
+		required: false,
+		description: 'Public site origin the platform sets on each service at runtime',
+	},
 	{
 		name: 'VERCEL_URL',
 		required: false,
@@ -98,9 +86,9 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 	},
 	// Dest peels (platform-injected origins)
 	{
-		name: 'IDENTITY_API_ORIGIN',
+		name: 'SYLPHX_AUTH_URL',
 		required: false,
-		description: 'Identity dest origin override',
+		description: 'Sylphx Auth origin (Enable Auth binding); defaults to https://api.sylphx.com',
 	},
 	{
 		name: 'EVENTS_API_ORIGIN',
@@ -119,14 +107,19 @@ export const KNOWN_VARS: readonly EnvVar[] = [
 	},
 	// Product credentials (read through lib/identity/credentials.ts)
 	{
-		name: 'IDENTITY_API_KEY',
+		name: 'SYLPHX_AUTH_SECRET_KEY',
 		required: false,
-		description: 'Identity product key; required when Identity is called',
+		description: 'Sylphx Auth instance secret key (Enable Auth binding); redeems sign-in tickets',
 	},
 	{
-		name: 'IDENTITY_ORGANIZATION_ID',
+		name: 'SYLPHX_AUTH_ORGANIZATION_ID',
 		required: false,
-		description: 'Identity organization id; required for dest admission',
+		description: 'Sylphx Auth organization id (Enable Auth binding)',
+	},
+	{
+		name: 'SYLPHX_PUBLISHABLE_KEY',
+		required: false,
+		description: 'Sylphx Auth publishable key (auth:public); sign-up, sign-in and social start',
 	},
 	{
 		name: 'EVENTS_API_KEY',
@@ -260,24 +253,22 @@ export const env = {
 		return process.env.NEXT_PHASE
 	},
 	/** Configured site origin (baked at build) */
-	get NEXT_PUBLIC_APP_URL(): string | undefined {
-		return process.env.NEXT_PUBLIC_APP_URL
-	},
 	/** Sylphx app id for the login surface (baked at build) */
-	get NEXT_PUBLIC_SYLPHX_APP_ID(): string | undefined {
-		return process.env.NEXT_PUBLIC_SYLPHX_APP_ID
-	},
 	/** Deployment hostname fallback */
 	get VERCEL_URL(): string | undefined {
 		return process.env.VERCEL_URL
+	},
+	/** Public site origin (platform, runtime) */
+	get SYLPHX_PUBLIC_URL(): string | undefined {
+		return process.env.SYLPHX_PUBLIC_URL
 	},
 	/** Listen port for the local dev fallback */
 	get PORT(): string | undefined {
 		return process.env.PORT
 	},
-	/** Identity dest origin override */
-	get IDENTITY_API_ORIGIN(): string | undefined {
-		return process.env.IDENTITY_API_ORIGIN
+	/** Sylphx Auth origin (Enable Auth binding) */
+	get SYLPHX_AUTH_URL(): string | undefined {
+		return process.env.SYLPHX_AUTH_URL
 	},
 	/** Events dest origin override */
 	get EVENTS_API_ORIGIN(): string | undefined {
@@ -291,13 +282,13 @@ export const env = {
 	get AI_API_ORIGIN(): string | undefined {
 		return process.env.AI_API_ORIGIN
 	},
-	/** Identity product key */
-	get IDENTITY_API_KEY(): string | undefined {
-		return process.env.IDENTITY_API_KEY
+	/** Sylphx Auth instance secret key */
+	get SYLPHX_AUTH_SECRET_KEY(): string | undefined {
+		return process.env.SYLPHX_AUTH_SECRET_KEY
 	},
-	/** Identity organization id */
-	get IDENTITY_ORGANIZATION_ID(): string | undefined {
-		return process.env.IDENTITY_ORGANIZATION_ID
+	/** Sylphx Auth organization id */
+	get SYLPHX_AUTH_ORGANIZATION_ID(): string | undefined {
+		return process.env.SYLPHX_AUTH_ORGANIZATION_ID
 	},
 	/** Events product key */
 	get EVENTS_API_KEY(): string | undefined {

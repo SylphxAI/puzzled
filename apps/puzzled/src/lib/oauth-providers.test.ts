@@ -1,10 +1,13 @@
-import { describe, expect, test } from 'bun:test'
-import { loadOAuthProviders } from './oauth-providers'
+import { describe, expect, mock, test } from 'bun:test'
+
+mock.module('next/cache', () => ({ unstable_cache: <T>(load: T) => load }))
+
+const { loadOAuthProviders } = await import('./oauth-providers')
 
 describe('loadOAuthProviders', () => {
-	test('does not throw when App ID is missing', async () => {
-		await expect(loadOAuthProviders(undefined)).resolves.toEqual([])
-		await expect(loadOAuthProviders('')).resolves.toEqual([])
-		await expect(loadOAuthProviders('   ')).resolves.toEqual([])
+	test('shows no social buttons while Auth is not enabled', async () => {
+		delete process.env.SYLPHX_PUBLISHABLE_KEY
+		delete process.env.SYLPHX_AUTH_SECRET_KEY
+		await expect(loadOAuthProviders()).resolves.toEqual([])
 	})
 })

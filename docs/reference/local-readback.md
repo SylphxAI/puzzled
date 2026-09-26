@@ -69,7 +69,7 @@ With that mapping the canonical resolves to `https://puzzled.gg` (public hosts
 are always https), which is what production must advertise. Without it the
 local run still passes; it just never exercises the non-loopback branch of the
 origin resolver. A production build ignores a loopback
-`NEXT_PUBLIC_APP_URL` and falls back to `https://puzzled.gg`, so a local
+`SYLPHX_PUBLIC_URL` and falls back to `https://puzzled.gg`, so a local
 *production* `next build` also does not need the mapping.
 
 ## What the local run can and cannot assert

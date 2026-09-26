@@ -23,20 +23,15 @@ describe('Connect protocol transport', () => {
 			resolveConnectBaseUrl(
 				{
 					API_INTERNAL_URL: 'http://api.svc:8080/',
-					NEXT_PUBLIC_CONNECT_URL: 'https://public.example',
 					NODE_ENV: 'production',
 				} as Record<string, string>,
 				{ isServer: true },
 			),
 		).toBe('http://api.svc:8080')
 		expect(
-			resolveConnectBaseUrl(
-				{
-					NEXT_PUBLIC_CONNECT_URL: 'https://puzzled.gg',
-					NODE_ENV: 'production',
-				} as Record<string, string>,
-				{ isServer: true },
-			),
+			resolveConnectBaseUrl({ NODE_ENV: 'production' } as Record<string, string>, {
+				isServer: true,
+			}),
 		).not.toBe('https://puzzled.gg')
 		expect(
 			resolveConnectBaseUrl({ NODE_ENV: 'production' } as Record<string, string>, {
@@ -54,7 +49,6 @@ describe('Connect protocol transport', () => {
 		expect(() =>
 			resolveServerConnectBaseUrl({
 				NODE_ENV: 'production',
-				NEXT_PUBLIC_CONNECT_URL: 'https://puzzled.gg',
 			}),
 		).toThrow(/API_INTERNAL_URL/)
 		expect(() => resolveServerConnectBaseUrl({ NODE_ENV: 'production' })).toThrow(
@@ -68,15 +62,6 @@ describe('Connect protocol transport', () => {
 				isServer: false,
 			}),
 		).toBe('')
-		expect(
-			resolveConnectBaseUrl(
-				{
-					NEXT_PUBLIC_CONNECT_URL: 'https://public.example',
-					NODE_ENV: 'production',
-				} as Record<string, string>,
-				{ isServer: false },
-			),
-		).toBe('https://public.example')
 		expect(resolveConnectBaseUrl({} as Record<string, string>, { isServer: false })).toBe(
 			'http://127.0.0.1:3001',
 		)

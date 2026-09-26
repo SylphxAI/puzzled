@@ -9,12 +9,12 @@ import {
 	type IdentityUser,
 } from './dest'
 
-export const IDENTITY_API_ORIGIN = destIdentityOrigin()
+export const AUTH_API_ORIGIN = destIdentityOrigin()
 export const SESSION_COOKIE = 'sylphx_identity_session'
 export type { IdentityUser }
 
 function identityOrigin(): string {
-	return destIdentityOrigin(process.env.SYLPHX_AUTH_URL ?? env.IDENTITY_API_ORIGIN)
+	return destIdentityOrigin(env.SYLPHX_AUTH_URL)
 }
 
 export async function sessionToken(): Promise<string | undefined> {

@@ -5,9 +5,9 @@
  * Live defect (2026-09-10): https://puzzled.gg emitted
  * `<link rel="canonical" href="http://localhost:3000">` and JSON-LD
  * `"url":"http://localhost:3000"` because the origin fell back to
- * http://localhost:3000 when NEXT_PUBLIC_APP_URL / VERCEL_URL were unset.
+ * http://localhost:3000 when SYLPHX_PUBLIC_URL / VERCEL_URL were unset.
  *
- * Resolution order under test: configured NEXT_PUBLIC_APP_URL → request host
+ * Resolution order under test: configured SYLPHX_PUBLIC_URL → request host
  * (x-forwarded-host, then host) only for product-owned hostnames
  * (puzzled.gg / *.puzzled.gg / *.sylphx.app / loopback in dev) → VERCEL_URL →
  * deterministic production origin → localhost only for local dev/test.
@@ -19,7 +19,7 @@ import { describe, expect, test } from 'bun:test'
 import { PRODUCTION_SITE_ORIGIN, resolveSiteOrigin } from './site-origin'
 import { getBaseUrl, getServerBaseUrl } from './utils'
 
-const ORIGIN_ENV_KEYS = ['NODE_ENV', 'NEXT_PUBLIC_APP_URL', 'VERCEL_URL', 'PORT'] as const
+const ORIGIN_ENV_KEYS = ['NODE_ENV', 'SYLPHX_PUBLIC_URL', 'VERCEL_URL', 'PORT'] as const
 
 const runtimeEnv = process.env as Record<string, string | undefined>
 
@@ -165,7 +165,7 @@ describe('server base URL', () => {
 	})
 
 	test('configured production URL wins over the fallback', () => {
-		withEnv({ NODE_ENV: 'production', NEXT_PUBLIC_APP_URL: 'https://puzzled.gg' }, () => {
+		withEnv({ NODE_ENV: 'production', SYLPHX_PUBLIC_URL: 'https://puzzled.gg' }, () => {
 			expect(getServerBaseUrl()).toBe('https://puzzled.gg')
 		})
 	})

@@ -27,7 +27,7 @@ export function generateId() {
  * - getBaseUrl('origin'): For absolute URLs that need the actual origin (auth, sharing)
  * - getServerBaseUrl(): For server-side only code (workflows, cron jobs)
  *
- * Non-request priority: NEXT_PUBLIC_APP_URL > VERCEL_URL > production origin
+ * Non-request priority: SYLPHX_PUBLIC_URL (platform, runtime) > VERCEL_URL > production origin
  * > localhost (dev/test only). Request-scoped metadata should use
  * getRequestSiteOrigin() so the served origin wins.
  */
@@ -47,7 +47,7 @@ export function getBaseUrl(mode: 'relative' | 'origin' = 'relative'): string {
  */
 export function getServerBaseUrl(): string {
 	return resolveSiteOrigin({
-		configuredUrl: env.NEXT_PUBLIC_APP_URL,
+		configuredUrl: env.SYLPHX_PUBLIC_URL,
 		vercelUrl: env.VERCEL_URL,
 		nodeEnv: env.NODE_ENV,
 		port: env.PORT,

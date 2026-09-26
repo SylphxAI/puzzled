@@ -55,11 +55,10 @@ impl AuthSessions {
         }
     }
 
-    /// `SYLPHX_AUTH_URL` (bound by Enable Auth), else `IDENTITY_API_ORIGIN`,
-    /// else `https://api.sylphx.com`.
+    /// `SYLPHX_AUTH_URL` (bound by Enable Auth), else `https://api.sylphx.com`.
     #[must_use]
     pub fn from_env() -> Self {
-        let url = ["SYLPHX_AUTH_URL", "IDENTITY_API_ORIGIN"]
+        let url = ["SYLPHX_AUTH_URL"]
             .iter()
             .find_map(|name| {
                 std::env::var(name)

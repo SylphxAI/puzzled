@@ -54,7 +54,7 @@ describe('generateId', () => {
 describe('getBaseUrl', () => {
 	test('returns localhost URL in server environment (default mode)', () => {
 		// In Node/Bun test environment, window is undefined
-		// Without VERCEL_URL or NEXT_PUBLIC_APP_URL, falls back to localhost
+		// Without VERCEL_URL or SYLPHX_PUBLIC_URL, falls back to localhost
 		const url = getBaseUrl()
 		expect(url).toContain('localhost')
 	})

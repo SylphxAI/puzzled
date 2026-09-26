@@ -18,7 +18,7 @@ export async function getRequestSiteOrigin(): Promise<string> {
 		host: requestHeaders.get('host'),
 		forwardedHost: requestHeaders.get('x-forwarded-host'),
 		forwardedProto: requestHeaders.get('x-forwarded-proto'),
-		configuredUrl: env.NEXT_PUBLIC_APP_URL,
+		configuredUrl: env.SYLPHX_PUBLIC_URL,
 		vercelUrl: env.VERCEL_URL,
 		nodeEnv: env.NODE_ENV,
 		port: env.PORT,

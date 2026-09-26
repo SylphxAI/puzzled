@@ -1,17 +1,9 @@
 import { getOAuthProviders, type OAuthProvider } from '@/lib/identity/app-config'
-import { env } from './env'
 
 /**
- * Load enabled OAuth providers for auth pages.
- *
- * NEXT_PUBLIC_SYLPHX_APP_ID is baked at image build. Live web may have the
- * runtime secret while the compiled page still sees an empty App ID; do not
- * fail the login surface with 500 — serve password sign-in with no OAuth
- * buttons until the baked App ID is present.
+ * Social sign-in buttons for the auth pages: the providers Puzzled's Sylphx
+ * Auth instance can use now, read on the server (no build-time value).
  */
-export async function loadOAuthProviders(
-	appId: string | undefined = env.NEXT_PUBLIC_SYLPHX_APP_ID,
-): Promise<OAuthProvider[]> {
-	if (!appId?.trim()) return []
-	return getOAuthProviders({ appId })
+export async function loadOAuthProviders(): Promise<OAuthProvider[]> {
+	return getOAuthProviders()
 }
